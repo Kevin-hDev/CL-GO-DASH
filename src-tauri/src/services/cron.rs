@@ -49,9 +49,14 @@ fn write_crontab(content: &str) -> Result<(), String> {
 }
 
 fn remove_clgo_entries(crontab: &str) -> String {
+    let wrapper = wrapper_path();
     crontab
         .lines()
-        .filter(|line| !line.contains(CRON_TAG))
+        .filter(|line| {
+            // Remove lines with our tag OR lines pointing to our wrapper
+            !line.contains(CRON_TAG) && !line.contains(&wrapper)
+                && !line.contains("go-heartbeat-wrapper")
+        })
         .collect::<Vec<_>>()
         .join("\n")
 }
