@@ -128,6 +128,55 @@ pub fn read_existing_cron_time() -> Option<String> {
     None
 }
 
+/// Parse all cron entries that point to the heartbeat wrapper.
+/// Returns Vec of (minute, hour, day, month) for untracked entries.
+pub fn find_untracked_cron_entries(known_ids: &[String]) -> Vec<CronEntry> {
+    let crontab = match read_crontab() {
+        Ok(c) => c,
+        Err(_) => return Vec::new(),
+    };
+
+    let wrapper = wrapper_path();
+    let mut entries = Vec::new();
+
+    for line in crontab.lines() {
+        let trimmed = line.trim();
+        if trimmed.is_empty() || trimmed.starts_with('#') {
+            continue;
+        }
+        // Must contain our wrapper path
+        if !trimmed.contains(&wrapper) && !trimmed.contains("go-heartbeat-wrapper") {
+            continue;
+        }
+
+        let parts: Vec<&str> = trimmed.split_whitespace().collect();
+        if parts.len() < 5 {
+            continue;
+        }
+
+        let min: u8 = match parts[0].parse() { Ok(v) => v, Err(_) => continue };
+        let hour: u8 = match parts[1].parse() { Ok(v) => v, Err(_) => continue };
+        let day = parts[2].to_string();
+        let month = parts[3].to_string();
+
+        // Check if this entry has a known ID
+        let has_known_id = known_ids.iter().any(|id| trimmed.contains(id.as_str()));
+        if !has_known_id {
+            entries.push(CronEntry { minute: min, hour, day, month });
+        }
+    }
+
+    entries
+}
+
+#[derive(Debug)]
+pub struct CronEntry {
+    pub minute: u8,
+    pub hour: u8,
+    pub day: String,
+    pub month: String,
+}
+
 /// Remove all CL-GO entries from crontab
 pub fn clear_crontab() -> Result<(), String> {
     let current = read_crontab()?;
