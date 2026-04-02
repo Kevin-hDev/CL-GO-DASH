@@ -30,7 +30,16 @@ export function MarkdownViewer({
 }
 
 function renderMarkdown(md: string): string {
-  return md
+  // Strip YAML frontmatter (--- ... ---)
+  let cleaned = md;
+  if (cleaned.startsWith("---")) {
+    const end = cleaned.indexOf("---", 3);
+    if (end > 0) {
+      cleaned = cleaned.slice(end + 3).trim();
+    }
+  }
+
+  return cleaned
     .split("\n\n")
     .map((block) => {
       const trimmed = block.trim();
