@@ -22,6 +22,19 @@ pub fn list_wakeups() -> Result<Vec<ScheduledWakeup>, String> {
         cfg::write_config(&config)?;
     }
 
+    // Migrate old "HH:MM" format to "YYYY-MM-DDTHH:MM"
+    let mut needs_save = false;
+    for w in &mut config.scheduled_wakeups {
+        if !w.time.contains('T') && w.time.contains(':') {
+            let today = chrono::Local::now().format("%Y-%m-%d").to_string();
+            w.time = format!("{}T{}", today, w.time);
+            needs_save = true;
+        }
+    }
+    if needs_save {
+        cfg::write_config(&config)?;
+    }
+
     Ok(config.scheduled_wakeups)
 }
 
@@ -158,7 +171,8 @@ pub fn get_warnings() -> Result<Vec<log_reader::LogEntry>, String> {
 }
 
 fn validate_time(time: &str) -> Result<(), String> {
-    let re = regex::Regex::new(r"^\d{2}:\d{2}$")
+    // Accept HH:MM or YYYY-MM-DDTHH:MM
+    let re = regex::Regex::new(r"^(\d{4}-\d{2}-\d{2}T)?\d{2}:\d{2}$")
         .map_err(|e| format!("Regex error: {}", e))?;
     if !re.is_match(time) {
         return Err(format!("Invalid time: {}", time));

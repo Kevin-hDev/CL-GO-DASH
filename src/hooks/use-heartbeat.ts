@@ -7,6 +7,7 @@ export function useHeartbeat() {
   const [wakeups, setWakeups] = useState<ScheduledWakeup[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hbActive, setHbActive] = useState(false);
+  const [stopAt, setStopAtState] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -16,6 +17,7 @@ export function useHeartbeat() {
       ]);
       setWakeups(list);
       setHbActive(hb.active);
+      setStopAtState(hb.stop_at);
       if (list.length > 0 && !selectedId) {
         setSelectedId(list[0].id);
       }
@@ -30,7 +32,12 @@ export function useHeartbeat() {
 
   const addWakeup = useCallback(async () => {
     try {
-      const w = await api.createWakeup({ time: "08:00", mode: "auto" });
+      // Default: demain 08h00
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(8, 0, 0, 0);
+      const defaultTime = tomorrow.toISOString().slice(0, 16);
+      const w = await api.createWakeup({ time: defaultTime, mode: "auto" });
       setWakeups((prev) => [...prev, w]);
       setSelectedId(w.id);
     } catch (e) {
@@ -79,7 +86,18 @@ export function useHeartbeat() {
     removeWakeup,
     toggleHeartbeat,
     runWakeup,
+    stopAt,
+    setStopAt,
   };
+
+  async function setStopAt(value: string | null) {
+    try {
+      await api.setStopAt(value);
+      setStopAtState(value);
+    } catch (e) {
+      console.error("Failed to set stop_at:", e);
+    }
+  }
 
   async function runWakeup(id: string) {
     try {

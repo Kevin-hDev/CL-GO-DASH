@@ -40,6 +40,52 @@
   background: var(--pulse-muted);
 }
 
+.stop-at-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 1px solid var(--edge);
+}
+
+.stop-at-label {
+  font-size: var(--text-xs);
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stop-at-input {
+  flex: 1;
+  padding: 2px var(--space-xs);
+  font-size: var(--text-xs);
+  font-family: var(--font-sans);
+  background: var(--void);
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+}
+
+.stop-at-input:focus {
+  outline: none;
+  border-color: var(--pulse);
+}
+
+.toggle-sm {
+  width: 28px;
+  height: 16px;
+  border-radius: 8px;
+}
+
+.toggle-sm::after {
+  width: 12px;
+  height: 12px;
+}
+
+.toggle-sm.on::after {
+  transform: translateX(12px);
+}
+
 .toggle {
   width: 36px;
   height: 20px;

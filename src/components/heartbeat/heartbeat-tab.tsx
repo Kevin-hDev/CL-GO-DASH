@@ -30,6 +30,7 @@ export function HeartbeatTab(): { list: React.ReactNode; detail: React.ReactNode
         wakeups={hb.wakeups} selectedId={hb.selectedId}
         onSelect={hb.setSelectedId} onAdd={hb.addWakeup}
         heartbeatActive={hb.hbActive} onToggleHeartbeat={hb.toggleHeartbeat}
+        stopAt={hb.stopAt} onStopAtChange={hb.setStopAt}
         onContextMenu={onCtx}
         activeSubTab={sub} onSubTabChange={setSub}
       />

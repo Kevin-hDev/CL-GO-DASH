@@ -56,31 +56,33 @@ fn remove_clgo_entries(crontab: &str) -> String {
         .join("\n")
 }
 
-/// Build a cron line: "MM HH * * * /path/to/wrapper.sh # CL-GO Heartbeat <id>"
-fn build_cron_line(time_hhmm: &str, wakeup_id: &str) -> Result<String, String> {
-    let parts: Vec<&str> = time_hhmm.split(':').collect();
-    if parts.len() != 2 {
-        return Err(format!("Invalid time format: {}", time_hhmm));
-    }
+/// Build a cron line from "HH:MM" or "YYYY-MM-DDTHH:MM"
+fn build_cron_line(time_str: &str, wakeup_id: &str) -> Result<String, String> {
+    // Parse: "2026-04-03T22:00" or "22:00"
+    let (day, month, hour, minute) = if time_str.contains('T') {
+        let parts: Vec<&str> = time_str.split('T').collect();
+        let date_parts: Vec<&str> = parts[0].split('-').collect();
+        let time_parts: Vec<&str> = parts[1].split(':').collect();
+        let d: u8 = date_parts.get(2).unwrap_or(&"*").parse().unwrap_or(0);
+        let m: u8 = date_parts.get(1).unwrap_or(&"*").parse().unwrap_or(0);
+        let h: u8 = time_parts[0].parse().map_err(|_| "Invalid hour")?;
+        let min: u8 = time_parts[1].parse().map_err(|_| "Invalid minute")?;
+        (format!("{}", d), format!("{}", m), h, min)
+    } else {
+        let parts: Vec<&str> = time_str.split(':').collect();
+        if parts.len() != 2 {
+            return Err(format!("Invalid time: {}", time_str));
+        }
+        let h: u8 = parts[0].parse().map_err(|_| "Invalid hour")?;
+        let min: u8 = parts[1].parse().map_err(|_| "Invalid minute")?;
+        ("*".to_string(), "*".to_string(), h, min)
+    };
 
-    let hour: u8 = parts[0]
-        .parse()
-        .map_err(|_| format!("Invalid hour: {}", parts[0]))?;
-    let minute: u8 = parts[1]
-        .parse()
-        .map_err(|_| format!("Invalid minute: {}", parts[1]))?;
-
-    if hour > 23 || minute > 59 {
-        return Err(format!("Time out of range: {}", time_hhmm));
-    }
-
+    // MM HH DD MM * /path # tag id
     Ok(format!(
-        "{} {} * * * {} {} {}",
-        minute,
-        hour,
-        wrapper_path(),
-        CRON_TAG,
-        wakeup_id
+        "{} {} {} {} * {} {} {}",
+        minute, hour, day, month,
+        wrapper_path(), CRON_TAG, wakeup_id
     ))
 }
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import type { ScheduledWakeup } from "@/types/config";
 import { ModeSelector } from "./mode-selector";
 import { SignalDot } from "./signal-dot";
+import { DatetimeInput } from "@/components/ui/datetime-input";
 import "./heartbeat-detail.css";
 
 interface HeartbeatDetailProps {
@@ -62,12 +63,11 @@ export function HeartbeatDetail({
       <div className="detail-content">
         <div className="form-card">
           <div className="form-group">
-            <label className="form-label">Heure</label>
-            <input
-              type="time"
-              className="form-input"
+            <label className="form-label">Date & heure</label>
+            <DatetimeInput
               value={time}
-              onChange={(e) => setTime(e.target.value)}
+              onChange={setTime}
+              className="form-input"
             />
           </div>
           <div className="form-group">
