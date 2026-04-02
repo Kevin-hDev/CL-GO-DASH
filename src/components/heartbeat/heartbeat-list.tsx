@@ -13,6 +13,7 @@ interface HeartbeatListProps {
   onToggleHeartbeat: (active: boolean) => void;
   stopAt: string | null;
   onStopAtChange: (value: string | null) => void;
+  sessionRunning: boolean;
   onContextMenu: (e: React.MouseEvent, id: string) => void;
   activeSubTab: "planned" | "warning";
   onSubTabChange: (tab: "planned" | "warning") => void;
@@ -96,7 +97,7 @@ export function HeartbeatList(props: HeartbeatListProps) {
             onClick={() => onSelect(w.id)}
             onContextMenu={(e) => onContextMenu(e, w.id)}
           >
-            <SignalDot state={w.active ? "ok" : "idle"} />
+            <SignalDot state={w.active ? (props.sessionRunning ? "live" : "ok") : "idle"} />
             <div className="item-content">
               <div className="item-title">{formatWakeupTime(w.time)}</div>
               <div className="item-meta">

@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { useHeartbeat } from "@/hooks/use-heartbeat";
+import { useSessionStatus } from "@/hooks/use-session-status";
 import { HeartbeatList } from "./heartbeat-list";
 import { HeartbeatDetail } from "./heartbeat-detail";
 import { Warnings } from "./warnings";
@@ -11,6 +12,7 @@ interface CtxState { x: number; y: number; id: string }
 
 export function HeartbeatTab(): { list: React.ReactNode; detail: React.ReactNode } {
   const hb = useHeartbeat();
+  const sessionStatus = useSessionStatus();
   const [sub, setSub] = useState<SubTab>("planned");
   const [ctx, setCtx] = useState<CtxState | null>(null);
 
@@ -31,6 +33,7 @@ export function HeartbeatTab(): { list: React.ReactNode; detail: React.ReactNode
         onSelect={hb.setSelectedId} onAdd={hb.addWakeup}
         heartbeatActive={hb.hbActive} onToggleHeartbeat={hb.toggleHeartbeat}
         stopAt={hb.stopAt} onStopAtChange={hb.setStopAt}
+        sessionRunning={sessionStatus === "live"}
         onContextMenu={onCtx}
         activeSubTab={sub} onSubTabChange={setSub}
       />
