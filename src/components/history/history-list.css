@@ -88,3 +88,16 @@
   font-size: var(--text-sm);
   text-align: center;
 }
+
+.rename-input {
+  width: 100%;
+  padding: 2px var(--space-xs);
+  font-size: var(--text-sm);
+  font-family: var(--font-sans);
+  background: var(--void);
+  border: 1px solid var(--pulse);
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+  outline: none;
+  box-shadow: 0 0 0 2px var(--pulse-muted);
+}

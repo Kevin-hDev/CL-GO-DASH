@@ -76,6 +76,18 @@ export function useSessions() {
     items, recent, archive,
     selectedId, detail, loading,
     subTab, setSubTab,
-    loadDetail, renameSession, deleteSession,
+    loadDetail, renameSession, deleteSession, cleanup,
   };
+
+  async function cleanup() {
+    // Delete sessions beyond 60 (archive overflow)
+    try {
+      const overflow = await api.listSessions(100, 60);
+      for (const s of overflow) {
+        await api.deleteSessionFile(s.file_path);
+      }
+    } catch {
+      // Silent — cleanup is best-effort
+    }
+  }
 }

@@ -3,6 +3,7 @@ import { AppLayout } from "@/components/layout/app-layout";
 import { useTheme } from "@/hooks/use-theme";
 import { HeartbeatTab } from "@/components/heartbeat/heartbeat-tab";
 import { HistoryTab } from "@/components/history/history-tab";
+import { PersonalityTab } from "@/components/personality/personality-tab";
 import type { TabId } from "@/components/layout/sidebar";
 
 export default function App() {
@@ -11,14 +12,12 @@ export default function App() {
 
   const hbTab = HeartbeatTab();
   const histTab = HistoryTab();
+  const persTab = PersonalityTab();
 
   const tabs: Record<TabId, { list: React.ReactNode; detail: React.ReactNode }> = {
     heartbeat: hbTab,
     history: histTab,
-    personality: {
-      list: <Placeholder label="personality" />,
-      detail: <Placeholder label="personality — detail" />,
-    },
+    personality: persTab,
   };
 
   const tab = tabs[activeTab];
@@ -32,13 +31,5 @@ export default function App() {
       listContent={tab.list}
       detailContent={tab.detail}
     />
-  );
-}
-
-function Placeholder({ label }: { label: string }) {
-  return (
-    <div style={{ padding: "var(--space-lg)", color: "var(--ink-faint)" }}>
-      {label}
-    </div>
   );
 }

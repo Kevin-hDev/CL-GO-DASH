@@ -1,5 +1,7 @@
+import { useState, useRef, useEffect } from "react";
 import type { SessionMeta } from "@/types/session";
 import { SignalDot } from "@/components/heartbeat/signal-dot";
+import { useKeyboard } from "@/hooks/use-keyboard";
 import "./history-list.css";
 
 type SubTab = "recent" | "archive";
@@ -11,6 +13,9 @@ interface HistoryListProps {
   subTab: SubTab;
   onSubTabChange: (tab: SubTab) => void;
   onContextMenu: (e: React.MouseEvent, session: SessionMeta) => void;
+  renamingId: string | null;
+  onRename: (id: string, name: string) => void;
+  onCancelRename: () => void;
 }
 
 const MODE_BADGE: Record<string, string> = {
@@ -52,6 +57,9 @@ export function HistoryList({
   subTab,
   onSubTabChange,
   onContextMenu,
+  renamingId,
+  onRename,
+  onCancelRename,
 }: HistoryListProps) {
   return (
     <>
@@ -82,7 +90,15 @@ export function HistoryList({
           >
             <SignalDot state={s.duration_minutes > 0 ? "ok" : "error"} />
             <div className="hist-item-body">
-              <div className="hist-item-name">{sessionTitle(s)}</div>
+              {renamingId === s.id ? (
+                <RenameInput
+                  defaultValue={sessionTitle(s)}
+                  onConfirm={(name) => onRename(s.id, name)}
+                  onCancel={onCancelRename}
+                />
+              ) : (
+                <div className="hist-item-name">{sessionTitle(s)}</div>
+              )}
               <div className="hist-item-meta">
                 {formatDate(s.start)} · {formatDuration(s.duration_minutes)}
               </div>
@@ -97,5 +113,35 @@ export function HistoryList({
         )}
       </div>
     </>
+  );
+}
+
+function RenameInput({
+  defaultValue,
+  onConfirm,
+  onCancel,
+}: {
+  defaultValue: string;
+  onConfirm: (name: string) => void;
+  onCancel: () => void;
+}) {
+  const [val, setVal] = useState(defaultValue);
+  const ref = useRef<HTMLInputElement>(null);
+
+  useEffect(() => { ref.current?.focus(); ref.current?.select(); }, []);
+
+  useKeyboard({
+    onEscape: onCancel,
+    onEnter: () => { if (val.trim()) onConfirm(val.trim()); },
+  });
+
+  return (
+    <input
+      ref={ref}
+      className="rename-input"
+      value={val}
+      onChange={(e) => setVal(e.target.value)}
+      onBlur={() => { if (val.trim()) onConfirm(val.trim()); else onCancel(); }}
+    />
   );
 }

@@ -22,6 +22,9 @@ pub fn run() {
             commands::get_session_detail,
             commands::rename_session,
             commands::delete_session_file,
+            commands::list_personality_files,
+            commands::read_personality_file,
+            commands::open_in_editor,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
