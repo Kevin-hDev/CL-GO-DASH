@@ -66,6 +66,10 @@ pub fn list_wakeups() -> Result<Vec<ScheduledWakeup>, String> {
 
     if needs_save {
         cfg::write_config(&config)?;
+    }
+
+    // Always sync cron with current state (agent may have changed config.json)
+    if config.heartbeat.active {
         sync_cron_from_config(&config.scheduled_wakeups)?;
     }
 
