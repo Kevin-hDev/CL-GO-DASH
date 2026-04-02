@@ -8,6 +8,7 @@ import "./heartbeat-detail.css";
 interface HeartbeatDetailProps {
   wakeup: ScheduledWakeup;
   onSave: (wakeup: ScheduledWakeup) => void;
+  onToggleActive: (wakeup: ScheduledWakeup) => void;
   onDelete: (id: string) => void;
   onRun: (id: string) => void;
 }
@@ -15,6 +16,7 @@ interface HeartbeatDetailProps {
 export function HeartbeatDetail({
   wakeup,
   onSave,
+  onToggleActive,
   onDelete,
   onRun,
 }: HeartbeatDetailProps) {
@@ -41,11 +43,12 @@ export function HeartbeatDetail({
       <div className="detail-header">
         <div className="detail-title-row">
           <SignalDot state={wakeup.active ? "ok" : "idle"} />
+          <div
+            className={`toggle ${wakeup.active ? "on" : ""}`}
+            onClick={() => onToggleActive({ ...wakeup, active: !wakeup.active })}
+          />
           <div className="detail-title">
-            Réveil {wakeup.time}
-            <span className="detail-status">
-              {wakeup.active ? " · actif" : " · inactif"}
-            </span>
+            {wakeup.active ? "Actif" : "Inactif"}
           </div>
         </div>
         <div className="detail-actions">

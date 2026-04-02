@@ -44,7 +44,7 @@ export function HeartbeatTab(): { list: React.ReactNode; detail: React.ReactNode
   } else if (!hb.selected) {
     detail = <div style={{ padding: "var(--space-lg)", color: "var(--ink-faint)" }}>Sélectionne un réveil</div>;
   } else {
-    detail = <HeartbeatDetail wakeup={hb.selected} onSave={hb.saveWakeup} onDelete={hb.removeWakeup} onRun={hb.runWakeup} />;
+    detail = <HeartbeatDetail wakeup={hb.selected} onSave={hb.saveWakeup} onToggleActive={hb.saveWakeup} onDelete={hb.removeWakeup} onRun={hb.runWakeup} />;
   }
 
   return { list, detail };

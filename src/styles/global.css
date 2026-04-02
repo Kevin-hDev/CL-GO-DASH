@@ -50,6 +50,36 @@ body::before {
   }
 }
 
+/* Toggle switch — shared component */
+.toggle {
+  width: 36px;
+  height: 20px;
+  border-radius: 10px;
+  background: var(--ink-faint);
+  cursor: pointer;
+  position: relative;
+  transition: background var(--ease-smooth);
+  flex-shrink: 0;
+}
+
+.toggle.on { background: var(--pulse); }
+
+.toggle::after {
+  content: "";
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 16px; height: 16px;
+  border-radius: var(--radius-full);
+  background: #fff;
+  transition: transform var(--ease-smooth);
+}
+
+.toggle.on::after { transform: translateX(16px); }
+
+.toggle-sm { width: 28px; height: 16px; border-radius: 8px; }
+.toggle-sm::after { width: 12px; height: 12px; }
+.toggle-sm.on::after { transform: translateX(12px); }
+
 ::-webkit-scrollbar {
   width: 4px;
 }
