@@ -9,7 +9,6 @@ export async function createWakeup(params: {
   time: string;
   mode: string;
   prompt?: string;
-  stop_at?: string;
 }): Promise<ScheduledWakeup> {
   return invoke<ScheduledWakeup>("create_wakeup", params);
 }
@@ -32,4 +31,10 @@ export async function setHeartbeatActive(
   active: boolean,
 ): Promise<void> {
   return invoke("set_heartbeat_active", { active });
+}
+
+export async function setStopAt(
+  stopAt: string | null,
+): Promise<void> {
+  return invoke("set_stop_at", { stopAt });
 }

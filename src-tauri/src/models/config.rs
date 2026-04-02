@@ -57,8 +57,6 @@ pub struct ScheduledWakeup {
     #[serde(default)]
     pub prompt: Option<String>,
     pub active: bool,
-    #[serde(default)]
-    pub stop_at: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

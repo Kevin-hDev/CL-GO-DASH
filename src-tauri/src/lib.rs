@@ -15,6 +15,7 @@ pub fn run() {
             commands::delete_wakeup,
             commands::get_heartbeat_config,
             commands::set_heartbeat_active,
+            commands::set_stop_at,
             commands::run_wakeup,
             commands::get_session_status,
             commands::get_warnings,

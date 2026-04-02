@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import type { ScheduledWakeup } from "@/types/config";
-import { SignalDot, type SignalState } from "./signal-dot";
+import { SignalDot } from "./signal-dot";
 import "./heartbeat-list.css";
 
 interface HeartbeatListProps {
@@ -11,7 +11,6 @@ interface HeartbeatListProps {
   heartbeatActive: boolean;
   onToggleHeartbeat: (active: boolean) => void;
   onContextMenu: (e: React.MouseEvent, id: string) => void;
-  sessionSignal: SignalState;
   activeSubTab: "planned" | "warning";
   onSubTabChange: (tab: "planned" | "warning") => void;
 }
@@ -31,7 +30,6 @@ export function HeartbeatList({
   heartbeatActive,
   onToggleHeartbeat,
   onContextMenu,
-  sessionSignal,
   activeSubTab,
   onSubTabChange,
 }: HeartbeatListProps) {
@@ -70,7 +68,7 @@ export function HeartbeatList({
             onClick={() => onSelect(w.id)}
             onContextMenu={(e) => onContextMenu(e, w.id)}
           >
-            <SignalDot state={w.active ? sessionSignal : "idle"} />
+            <SignalDot state={w.active ? "ok" : "idle"} />
             <div className="item-content">
               <div className="item-title">Réveil {w.time}</div>
               <div className="item-meta">

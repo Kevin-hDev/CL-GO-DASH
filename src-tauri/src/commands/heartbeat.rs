@@ -5,7 +5,23 @@ use uuid::Uuid;
 
 #[tauri::command]
 pub fn list_wakeups() -> Result<Vec<ScheduledWakeup>, String> {
-    let config = cfg::read_config()?;
+    let mut config = cfg::read_config()?;
+
+    // Auto-migrate: if no scheduled_wakeups but heartbeat exists, create one
+    if config.scheduled_wakeups.is_empty() {
+        let hb = &config.heartbeat;
+        let time = cron::read_existing_cron_time().unwrap_or_else(|| "08:00".to_string());
+        let wakeup = ScheduledWakeup {
+            id: Uuid::new_v4().to_string(),
+            time,
+            mode: hb.mode.clone(),
+            prompt: None,
+            active: hb.active,
+        };
+        config.scheduled_wakeups.push(wakeup);
+        cfg::write_config(&config)?;
+    }
+
     Ok(config.scheduled_wakeups)
 }
 
@@ -14,7 +30,6 @@ pub fn create_wakeup(
     time: String,
     mode: String,
     prompt: Option<String>,
-    stop_at: Option<String>,
 ) -> Result<ScheduledWakeup, String> {
     validate_time(&time)?;
     validate_mode(&mode)?;
@@ -25,7 +40,6 @@ pub fn create_wakeup(
         mode,
         prompt,
         active: true,
-        stop_at,
     };
 
     let mut config = cfg::read_config()?;
@@ -83,6 +97,14 @@ pub fn set_heartbeat_active(active: bool) -> Result<(), String> {
         sync_cron_from_config(&config.scheduled_wakeups)?;
     }
 
+    Ok(())
+}
+
+#[tauri::command]
+pub fn set_stop_at(stop_at: Option<String>) -> Result<(), String> {
+    let mut config = cfg::read_config()?;
+    config.heartbeat.stop_at = stop_at;
+    cfg::write_config(&config)?;
     Ok(())
 }
 

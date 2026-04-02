@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import type { ScheduledWakeup } from "@/types/config";
 import { ModeSelector } from "./mode-selector";
+import { SignalDot } from "./signal-dot";
 import "./heartbeat-detail.css";
 
 interface HeartbeatDetailProps {
@@ -19,35 +20,39 @@ export function HeartbeatDetail({
   const [time, setTime] = useState(wakeup.time);
   const [mode, setMode] = useState(wakeup.mode);
   const [prompt, setPrompt] = useState(wakeup.prompt ?? "");
-  const [stopAt, setStopAt] = useState(wakeup.stop_at ?? "");
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     setTime(wakeup.time);
     setMode(wakeup.mode);
     setPrompt(wakeup.prompt ?? "");
-    setStopAt(wakeup.stop_at ?? "");
+    setSaved(false);
   }, [wakeup]);
 
   function handleSave() {
-    onSave({
-      ...wakeup,
-      time,
-      mode,
-      prompt: prompt || null,
-      stop_at: stopAt || null,
-    });
+    onSave({ ...wakeup, time, mode, prompt: prompt || null });
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
   }
 
   return (
     <>
       <div className="detail-header">
-        <div className="detail-title">Réveil {wakeup.time}</div>
+        <div className="detail-title-row">
+          <SignalDot state={wakeup.active ? "ok" : "idle"} />
+          <div className="detail-title">
+            Réveil {wakeup.time}
+            <span className="detail-status">
+              {wakeup.active ? " · actif" : " · inactif"}
+            </span>
+          </div>
+        </div>
         <div className="detail-actions">
           <button className="btn btn-primary" onClick={() => onRun(wakeup.id)}>
             ▶ Run
           </button>
           <button className="btn" onClick={handleSave}>
-            Sauvegarder
+            {saved ? "✓ Sauvegardé" : "Sauvegarder"}
           </button>
           <button className="btn btn-danger" onClick={() => onDelete(wakeup.id)}>
             Supprimer
@@ -56,25 +61,14 @@ export function HeartbeatDetail({
       </div>
       <div className="detail-content">
         <div className="form-card">
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">Heure</label>
-              <input
-                type="time"
-                className="form-input"
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Stop at</label>
-              <input
-                type="datetime-local"
-                className="form-input"
-                value={stopAt}
-                onChange={(e) => setStopAt(e.target.value)}
-              />
-            </div>
+          <div className="form-group">
+            <label className="form-label">Heure</label>
+            <input
+              type="time"
+              className="form-input"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+            />
           </div>
           <div className="form-group">
             <label className="form-label">Mode</label>

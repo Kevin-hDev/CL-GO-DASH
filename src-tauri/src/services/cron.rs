@@ -107,6 +107,25 @@ pub fn sync_crontab(
     write_crontab(&cleaned)
 }
 
+/// Read the first CL-GO cron time, or any cron entry time as fallback
+pub fn read_existing_cron_time() -> Option<String> {
+    let crontab = read_crontab().ok()?;
+    for line in crontab.lines() {
+        let trimmed = line.trim();
+        if trimmed.is_empty() || trimmed.starts_with('#') {
+            continue;
+        }
+        // Cron format: MIN HOUR ...
+        let parts: Vec<&str> = trimmed.split_whitespace().collect();
+        if parts.len() >= 2 {
+            let min: u8 = parts[0].parse().ok()?;
+            let hour: u8 = parts[1].parse().ok()?;
+            return Some(format!("{:02}:{:02}", hour, min));
+        }
+    }
+    None
+}
+
 /// Remove all CL-GO entries from crontab
 pub fn clear_crontab() -> Result<(), String> {
     let current = read_crontab()?;

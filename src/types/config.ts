@@ -40,7 +40,6 @@ export interface ScheduledWakeup {
   mode: string;
   prompt: string | null;
   active: boolean;
-  stop_at: string | null;
 }
 
 export interface RubeUsage {
