@@ -1,5 +1,6 @@
 pub mod config;
 pub mod cron;
+pub mod file_watcher;
 pub mod log_reader;
 pub mod session_detail;
 pub mod session_parser;

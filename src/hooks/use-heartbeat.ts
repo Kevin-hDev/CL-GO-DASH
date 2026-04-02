@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import type { ScheduledWakeup } from "@/types/config";
 import { invoke } from "@tauri-apps/api/core";
 import * as api from "@/services/heartbeat";
+import { useFsEvent } from "./use-fs-event";
 
 export function useHeartbeat() {
   const [wakeups, setWakeups] = useState<ScheduledWakeup[]>([]);
@@ -26,9 +27,10 @@ export function useHeartbeat() {
     }
   }, [selectedId]);
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  useEffect(() => { load(); }, [load]);
+
+  // Auto-refresh when config.json changes on disk
+  useFsEvent("fs:config-changed", load);
 
   const addWakeup = useCallback(async () => {
     try {

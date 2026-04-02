@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import type { SessionMeta, SessionDetail } from "@/types/session";
 import * as api from "@/services/sessions";
+import { useFsEvent } from "./use-fs-event";
 
 type SubTab = "recent" | "archive";
 
@@ -29,6 +30,7 @@ export function useSessions() {
   }, [selectedId]);
 
   useEffect(() => { loadList(); }, [loadList]);
+  useFsEvent("fs:sessions-changed", loadList);
 
   const loadDetail = useCallback(async (id: string) => {
     setSelectedId(id);

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import type { PersonalityFile } from "@/types/personality";
 import * as api from "@/services/personality";
+import { useFsEvent } from "@/hooks/use-fs-event";
 import { PersonalityList } from "./personality-list";
 import { MarkdownViewer } from "./markdown-viewer";
 
@@ -10,9 +11,22 @@ export function PersonalityTab(): { list: React.ReactNode; detail: React.ReactNo
   const [content, setContent] = useState<string>("");
   const [fileName, setFileName] = useState<string>("");
 
-  useEffect(() => {
+  const loadFiles = useCallback(() => {
     api.listFiles().then(setFiles).catch(console.error);
   }, []);
+
+  useEffect(() => { loadFiles(); }, [loadFiles]);
+
+  // Reload when files change on disk
+  useFsEvent("fs:personality-changed", loadFiles);
+
+  // Reload content of selected file when it changes
+  const reloadContent = useCallback(() => {
+    if (selectedPath) {
+      api.readFile(selectedPath).then(setContent).catch(console.error);
+    }
+  }, [selectedPath]);
+  useFsEvent("fs:personality-changed", reloadContent);
 
   const handleSelect = useCallback(async (path: string) => {
     setSelectedPath(path);
