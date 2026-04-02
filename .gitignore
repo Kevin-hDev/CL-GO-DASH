@@ -1,0 +1,7 @@
+node_modules/
+dist/
+target/
+*.ips
+app-icon.png
+src-tauri/gen/
+.DS_Store

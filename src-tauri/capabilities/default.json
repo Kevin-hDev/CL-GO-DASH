@@ -1,0 +1,38 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "CL-GO Dashboard capabilities",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "fs:default",
+    {
+      "identifier": "fs:allow-read-text-file",
+      "allow": [
+        { "path": "$HOME/.local/share/cl-go/**" },
+        { "path": "$HOME/.claude/projects/-Users-kevinh-Projects/**" }
+      ]
+    },
+    {
+      "identifier": "fs:allow-write-text-file",
+      "allow": [
+        { "path": "$HOME/.local/share/cl-go/**" }
+      ]
+    },
+    {
+      "identifier": "fs:allow-exists",
+      "allow": [
+        { "path": "$HOME/.local/share/cl-go/**" },
+        { "path": "$HOME/.claude/projects/-Users-kevinh-Projects/**" }
+      ]
+    },
+    "shell:default",
+    {
+      "identifier": "shell:allow-execute",
+      "allow": [
+        { "name": "crontab", "cmd": "crontab", "args": true },
+        { "name": "open-app", "cmd": "open", "args": true }
+      ]
+    }
+  ]
+}

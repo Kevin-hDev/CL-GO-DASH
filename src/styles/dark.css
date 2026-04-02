@@ -1,0 +1,18 @@
+[data-theme="dark"] {
+  --void: #131316;
+  --shell: #1a1a1e;
+  --surface: #222228;
+  --surface-hover: #2a2a32;
+  --edge: rgba(255, 255, 255, 0.08);
+  --ink: #e8e8ec;
+  --ink-muted: #8e8e96;
+  --ink-faint: #55555c;
+  --pulse: #4a8fe2;
+  --pulse-muted: rgba(74, 143, 226, 0.15);
+  --signal-idle: #55555c;
+  --signal-live: #e2b842;
+  --signal-error: #d94444;
+  --signal-ok: #3db86a;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2);
+  --noise-opacity: 0.025;
+}

@@ -1,0 +1,9 @@
+.list-panel {
+  width: var(--list-width);
+  min-width: var(--list-width);
+  background: var(--shell);
+  border-right: 1px solid var(--edge);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
