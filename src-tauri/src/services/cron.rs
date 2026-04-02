@@ -78,11 +78,11 @@ fn build_cron_line(time_str: &str, wakeup_id: &str) -> Result<String, String> {
         ("*".to_string(), "*".to_string(), h, min)
     };
 
-    // MM HH DD MM * /path # tag id
+    // MM HH DD MM * /path <id> # tag id
     Ok(format!(
-        "{} {} {} {} * {} {} {}",
+        "{} {} {} {} * {} {} {} {}",
         minute, hour, day, month,
-        wrapper_path(), CRON_TAG, wakeup_id
+        wrapper_path(), wakeup_id, CRON_TAG, wakeup_id
     ))
 }
 
