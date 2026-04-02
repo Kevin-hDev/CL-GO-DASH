@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import type { ScheduledWakeup } from "@/types/config";
 import { invoke } from "@tauri-apps/api/core";
 import * as api from "@/services/heartbeat";
@@ -71,6 +71,34 @@ export function useHeartbeat() {
     } catch (e) {
       console.error("Failed to toggle:", e);
     }
+  }, []);
+
+  // Check stop_at every 30s — disable heartbeat when time is reached
+  const stopAtRef = useRef(stopAt);
+  stopAtRef.current = stopAt;
+  const hbActiveRef = useRef(hbActive);
+  hbActiveRef.current = hbActive;
+
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      const sa = stopAtRef.current;
+      if (!sa || !hbActiveRef.current) return;
+
+      const stopTime = new Date(sa).getTime();
+      const now = Date.now();
+      if (now >= stopTime) {
+        try {
+          await api.setHeartbeatActive(false);
+          setHbActive(false);
+          await api.setStopAt(null);
+          setStopAtState(null);
+        } catch (e) {
+          console.error("Stop at trigger failed:", e);
+        }
+      }
+    }, 30_000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const selected = wakeups.find((w) => w.id === selectedId) ?? null;
