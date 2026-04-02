@@ -32,29 +32,40 @@ pub fn list_wakeups() -> Result<Vec<ScheduledWakeup>, String> {
         }
     }
 
-    // Import untracked cron entries (created by agents outside the dashboard)
-    let known_ids: Vec<String> = config.scheduled_wakeups.iter().map(|w| w.id.clone()).collect();
-    let untracked = cron::find_untracked_cron_entries(&known_ids);
-    for entry in untracked {
-        let year = chrono::Local::now().format("%Y").to_string();
-        let day = if entry.day.as_str() == "*" { "01" } else { &entry.day };
-        let month = if entry.month.as_str() == "*" { "01" } else { &entry.month };
-        let time = format!("{}-{:0>2}-{:0>2}T{:02}:{:02}", year, month, day, entry.hour, entry.minute);
+    // Import untracked cron entries (one-time, only if none tracked yet)
+    // Check marker to avoid re-importing on every reload
+    let marker_path = dirs::home_dir()
+        .expect("home")
+        .join(".local/share/cl-go/logs/heartbeat/.cron-synced");
 
-        let wakeup = ScheduledWakeup {
-            id: Uuid::new_v4().to_string(),
-            time,
-            mode: config.heartbeat.mode.clone(),
-            prompt: None,
-            active: true,
-        };
-        config.scheduled_wakeups.push(wakeup);
-        needs_save = true;
+    let untracked = if !marker_path.exists() {
+        let known_ids: Vec<String> = config.scheduled_wakeups.iter()
+            .map(|w| w.id.clone()).collect();
+        cron::find_untracked_cron_entries(&known_ids)
+    } else {
+        Vec::new()
+    };
+
+    if !untracked.is_empty() {
+        for entry in untracked {
+            let year = chrono::Local::now().format("%Y").to_string();
+            let day = if entry.day.as_str() == "*" { "01" } else { &entry.day };
+            let month = if entry.month.as_str() == "*" { "01" } else { &entry.month };
+            let time = format!("{}-{:0>2}-{:0>2}T{:02}:{:02}",
+                year, month, day, entry.hour, entry.minute);
+            config.scheduled_wakeups.push(ScheduledWakeup {
+                id: Uuid::new_v4().to_string(),
+                time, mode: config.heartbeat.mode.clone(),
+                prompt: None, active: true,
+            });
+            needs_save = true;
+        }
+        // Write marker so we don't re-import
+        let _ = std::fs::write(&marker_path, "synced");
     }
 
     if needs_save {
         cfg::write_config(&config)?;
-        // Resync crontab with new IDs
         sync_cron_from_config(&config.scheduled_wakeups)?;
     }
 
