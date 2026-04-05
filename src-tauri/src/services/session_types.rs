@@ -38,6 +38,9 @@ pub struct RawEntry {
     pub session_id: Option<String>,
     pub version: Option<String>,
     pub message: Option<RawMessage>,
+    /// Content field for queue-operation entries (headless prompt)
+    pub content: Option<String>,
+    pub entrypoint: Option<String>,
     #[serde(rename = "durationMs")]
     pub duration_ms: Option<u64>,
     #[serde(rename = "messageCount")]

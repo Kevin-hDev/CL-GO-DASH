@@ -1,18 +1,21 @@
 import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import type { PersonalityFile } from "@/types/personality";
 import * as api from "@/services/personality";
 import { useFsEvent } from "@/hooks/use-fs-event";
+import { showToast } from "@/lib/toast-emitter";
 import { PersonalityList } from "./personality-list";
 import { MarkdownViewer } from "./markdown-viewer";
 
 export function PersonalityTab(): { list: React.ReactNode; detail: React.ReactNode } {
+  const { t } = useTranslation();
   const [files, setFiles] = useState<PersonalityFile[]>([]);
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
   const [content, setContent] = useState<string>("");
   const [fileName, setFileName] = useState<string>("");
 
   const loadFiles = useCallback(() => {
-    api.listFiles().then(setFiles).catch(console.error);
+    api.listFiles().then(setFiles).catch(() => showToast(t("personality.failedToLoad")));
   }, []);
 
   useEffect(() => { loadFiles(); }, [loadFiles]);
@@ -23,7 +26,7 @@ export function PersonalityTab(): { list: React.ReactNode; detail: React.ReactNo
   // Reload content of selected file when it changes
   const reloadContent = useCallback(() => {
     if (selectedPath) {
-      api.readFile(selectedPath).then(setContent).catch(console.error);
+      api.readFile(selectedPath).then(setContent).catch(() => showToast(t("personality.failedToLoad")));
     }
   }, [selectedPath]);
   useFsEvent("fs:personality-changed", reloadContent);
@@ -36,14 +39,14 @@ export function PersonalityTab(): { list: React.ReactNode; detail: React.ReactNo
       const name = path.split("/").pop() ?? "";
       setFileName(name);
     } catch (e) {
-      console.error("Failed to read:", e);
-      setContent("Erreur de lecture");
+      showToast(t("personality.failedToRead"));
+      setContent("Failed to read file");
     }
   }, []);
 
   const handleOpen = useCallback(() => {
     if (selectedPath) {
-      api.openInEditor(selectedPath).catch(console.error);
+      api.openInEditor(selectedPath).catch(() => showToast(t("personality.failedToLoad")));
     }
   }, [selectedPath]);
 
@@ -59,7 +62,7 @@ export function PersonalityTab(): { list: React.ReactNode; detail: React.ReactNo
   if (!selectedPath) {
     detail = (
       <div style={{ padding: "var(--space-lg)", color: "var(--ink-faint)" }}>
-        Sélectionne un fichier
+        {t("personality.selectFile")}
       </div>
     );
   } else {

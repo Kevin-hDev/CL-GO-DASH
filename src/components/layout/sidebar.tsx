@@ -1,57 +1,139 @@
-import { type ReactNode } from "react";
-import "./sidebar.css";
+import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
+import { Pulse, ClipboardText, UserCircle, Gear } from "@/components/ui/icons";
+import type { Icon } from "@phosphor-icons/react";
+import logoSrc from "@/assets/logo.png";
 
-export type TabId = "heartbeat" | "history" | "personality";
+export type TabId = "heartbeat" | "history" | "personality" | "settings";
 
 interface NavItem {
   id: TabId;
-  icon: ReactNode;
-  label: string;
+  icon: Icon;
+  i18nKey: string;
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { id: "heartbeat", icon: "⏱", label: "Heartbeat" },
-  { id: "history", icon: "📋", label: "Historique" },
-  { id: "personality", icon: "👤", label: "Personnalité" },
+  { id: "heartbeat", icon: Pulse, i18nKey: "nav.heartbeat" },
+  { id: "history", icon: ClipboardText, i18nKey: "nav.history" },
+  { id: "personality", icon: UserCircle, i18nKey: "nav.personality" },
 ];
+
+const ICON_SIZE = 24;
 
 interface SidebarProps {
   activeTab: TabId;
   onTabChange: (tab: TabId) => void;
-  theme: "dark" | "light";
-  onThemeToggle: () => void;
 }
 
-export function Sidebar({
-  activeTab,
-  onTabChange,
-  theme,
-  onThemeToggle,
-}: SidebarProps) {
+export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
+  const { t } = useTranslation();
   return (
-    <nav className="sidebar-nav">
-      <div className="sidebar-logo">
-        <div className="logo-dot" />
-        <span className="logo-text">CL-GO</span>
+    <nav
+      className={cn(
+        "group/sb flex flex-col overflow-hidden",
+        "bg-[var(--shell)] border-r border-[var(--edge)]",
+        "z-10",
+      )}
+      style={{
+        width: "var(--sidebar-collapsed)",
+        minWidth: "var(--sidebar-collapsed)",
+        transition: "width 200ms ease-out, min-width 200ms ease-out",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.width = "var(--sidebar-expanded)";
+        e.currentTarget.style.minWidth = "var(--sidebar-expanded)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.width = "var(--sidebar-collapsed)";
+        e.currentTarget.style.minWidth = "var(--sidebar-collapsed)";
+      }}
+    >
+      {/* Logo */}
+      <div
+        className="flex items-center gap-3 whitespace-nowrap overflow-hidden"
+        style={{ paddingLeft: 8, paddingTop: 18, paddingBottom: 24 }}
+      >
+        <img src={logoSrc} alt="CL-GO" style={{ width: "2.5rem", height: "2.5rem", borderRadius: 6, flexShrink: 0 }} />
+        <span style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--ink)" }} className="opacity-0 group-hover/sb:opacity-100 transition-opacity duration-150">
+          CL-GO
+        </span>
       </div>
 
-      <div className="nav-items">
+      {/* Nav items */}
+      <div className="flex flex-col gap-2 flex-1">
         {NAV_ITEMS.map((item) => (
           <div
             key={item.id}
-            className={`nav-item ${activeTab === item.id ? "active" : ""}`}
             onClick={() => onTabChange(item.id)}
+            className={cn(
+              "relative flex items-center gap-3 cursor-pointer",
+              "whitespace-nowrap",
+              "transition-all duration-200 ease-out",
+            )}
+            style={{
+              paddingLeft: 10,
+              paddingTop: 10,
+              paddingBottom: 10,
+              marginLeft: 6,
+              marginRight: 6,
+              borderRadius: "var(--radius-md)",
+              background: activeTab === item.id ? "var(--pulse-muted)" : undefined,
+            }}
           >
-            <div className="nav-icon">{item.icon}</div>
-            <span className="nav-label">{item.label}</span>
+            <item.icon
+              size={ICON_SIZE}
+              weight={activeTab === item.id ? "fill" : "regular"}
+              className={cn(
+                "shrink-0 text-[var(--ink-muted)]",
+                activeTab === item.id && "text-[var(--pulse)]",
+              )}
+            />
+            <span
+              className={cn(
+                "text-sm text-[var(--ink-muted)]",
+                "opacity-0 group-hover/sb:opacity-100",
+                "transition-opacity duration-150",
+                activeTab === item.id && "text-[var(--pulse)] font-medium",
+              )}
+            >
+              {t(item.i18nKey)}
+            </span>
           </div>
         ))}
       </div>
 
-      <div className="theme-toggle" onClick={onThemeToggle}>
-        <div className="nav-icon">{theme === "dark" ? "🌙" : "☀️"}</div>
-        <span className="theme-toggle-label">
-          {theme === "dark" ? "Dark mode" : "Light mode"}
+      {/* Settings */}
+      <div
+        onClick={() => onTabChange("settings")}
+        className={cn(
+          "flex items-center gap-3 cursor-pointer",
+          "whitespace-nowrap",
+          "transition-all duration-200 ease-out",
+        )}
+        style={{
+          paddingLeft: 10,
+          paddingTop: 10,
+          paddingBottom: 10,
+          marginLeft: 6,
+          marginRight: 6,
+          marginBottom: 12,
+          borderRadius: "var(--radius-md)",
+          background: activeTab === "settings" ? "var(--pulse-muted)" : undefined,
+        }}
+      >
+        <Gear
+          size={ICON_SIZE}
+          weight={activeTab === "settings" ? "fill" : "regular"}
+          className={cn(
+            "shrink-0 text-[var(--ink-faint)]",
+            activeTab === "settings" && "text-[var(--pulse)]",
+          )}
+        />
+        <span className={cn(
+          "text-xs opacity-0 group-hover/sb:opacity-100 transition-opacity duration-150",
+          activeTab === "settings" ? "text-[var(--pulse)]" : "text-[var(--ink-faint)]",
+        )}>
+          {t("nav.settings")}
         </span>
       </div>
     </nav>

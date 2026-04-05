@@ -1,6 +1,17 @@
+@import "tailwindcss";
 @import "./tokens.css";
-@import "./dark.css";
-@import "./light.css";
+@import "./themes/light.css";
+@import "./themes/dark.css";
+@import "./themes/orange.css";
+
+@theme {
+  --font-sans: "Geist Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: "Geist Mono", "SF Mono", monospace;
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+}
 
 *,
 *::before,
@@ -79,6 +90,25 @@ body::before {
 .toggle-sm { width: 28px; height: 16px; border-radius: 8px; }
 .toggle-sm::after { width: 12px; height: 12px; }
 .toggle-sm.on::after { transform: translateX(12px); }
+
+/* Shared form input */
+.form-input {
+  width: 100%;
+  padding: var(--space-sm);
+  font-size: var(--text-sm);
+  font-family: var(--font-sans);
+  background: var(--void);
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+  transition: border-color var(--ease-smooth);
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--pulse);
+  box-shadow: 0 0 0 2px var(--pulse-muted);
+}
 
 ::-webkit-scrollbar {
   width: 4px;

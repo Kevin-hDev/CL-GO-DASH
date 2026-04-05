@@ -1,7 +1,0 @@
-.detail-panel {
-  flex: 1;
-  background: var(--void);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}

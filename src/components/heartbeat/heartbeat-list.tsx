@@ -1,8 +1,9 @@
 import { useCallback, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import type { ScheduledWakeup } from "@/types/config";
-import { SignalDot } from "./signal-dot";
 import { DatetimeInput } from "@/components/ui/datetime-input";
-import "./heartbeat-list.css";
+import { Plus } from "@/components/ui/icons";
+import { WakeupItem } from "./wakeup-item";
 
 interface HeartbeatListProps {
   wakeups: ScheduledWakeup[];
@@ -17,25 +18,13 @@ interface HeartbeatListProps {
   onContextMenu: (e: React.MouseEvent, id: string) => void;
   activeSubTab: "planned" | "warning";
   onSubTabChange: (tab: "planned" | "warning") => void;
+  renamingId?: string | null;
+  onRename?: (id: string, name: string) => void;
+  onCancelRename?: () => void;
 }
-
-function formatWakeupTime(time: string): string {
-  if (time.includes("T")) {
-    const d = new Date(time);
-    const months = ["jan", "fév", "mars", "avr", "mai", "juin",
-      "juil", "août", "sept", "oct", "nov", "déc"];
-    const hh = String(d.getHours()).padStart(2, "0");
-    const mm = String(d.getMinutes()).padStart(2, "0");
-    return `${d.getDate()} ${months[d.getMonth()]}. · ${hh}h${mm}`;
-  }
-  return `Réveil ${time.replace(":", "h")}`;
-}
-
-const MODE_BADGE: Record<string, string> = {
-  auto: "auto", explorer: "explorer", free: "free", evolve: "evolve",
-};
 
 export function HeartbeatList(props: HeartbeatListProps) {
+  const { t } = useTranslation();
   const {
     wakeups, selectedId, onSelect, onAdd,
     heartbeatActive, onToggleHeartbeat,
@@ -58,59 +47,92 @@ export function HeartbeatList(props: HeartbeatListProps) {
 
   return (
     <>
-      <div className="list-header">
-        <span className="list-title">Réveils</span>
+      {/* Header */}
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "14px 16px", borderBottom: "1px solid var(--edge)",
+      }}>
+        <span style={{
+          fontSize: "var(--text-sm)", fontWeight: 600,
+          textTransform: "uppercase", letterSpacing: "0.5px", color: "var(--ink-muted)",
+        }}>
+          {t("heartbeat.wakeups")}
+        </span>
         <div
           className={`toggle ${heartbeatActive ? "on" : ""}`}
           onClick={() => onToggleHeartbeat(!heartbeatActive)}
         />
       </div>
-      <div className="stop-at-row">
-        <span className="stop-at-label">Stop at</span>
+
+      {/* Stop at */}
+      <div style={{
+        display: "flex", alignItems: "center", gap: 8,
+        padding: "10px 16px", borderBottom: "1px solid var(--edge)",
+      }}>
+        <span style={{
+          fontSize: "var(--text-xs)", textTransform: "uppercase",
+          letterSpacing: "0.5px", color: "var(--ink-faint)",
+        }}>
+          {t("heartbeat.stopAt")}
+        </span>
         <div
           className={`toggle toggle-sm ${stopAt !== null ? "on" : ""}`}
           onClick={handleStopAtToggle}
         />
         {stopAt !== null && (
-          <DatetimeInput
-            value={stopAt}
-            onChange={onStopAtChange}
-            className="stop-at-input"
-          />
+          <DatetimeInput value={stopAt} onChange={onStopAtChange} className="form-input" />
         )}
       </div>
-      <div className="list-tabs">
-        <div
-          className={`list-tab ${activeSubTab === "planned" ? "active" : ""}`}
-          onClick={() => onSubTabChange("planned")}
-        >Planifiés</div>
-        <div
-          className={`list-tab ${activeSubTab === "warning" ? "active" : ""}`}
-          onClick={() => onSubTabChange("warning")}
-        >Warning</div>
-      </div>
-      <div className="list-content">
-        {wakeups.map((w) => (
+
+      {/* Sub-tabs */}
+      <div style={{
+        display: "flex", gap: 6,
+        padding: "10px 16px", borderBottom: "1px solid var(--edge)",
+      }}>
+        {(["planned", "warning"] as const).map((tab) => (
           <div
-            key={w.id}
-            className={`list-item ${selectedId === w.id ? "active" : ""}`}
-            onClick={() => onSelect(w.id)}
-            onContextMenu={(e) => onContextMenu(e, w.id)}
+            key={tab}
+            onClick={() => onSubTabChange(tab)}
+            style={{
+              padding: "6px 12px", fontSize: "var(--text-sm)",
+              borderRadius: "var(--radius-sm)", cursor: "pointer",
+              color: activeSubTab === tab ? "var(--pulse)" : "var(--ink-muted)",
+              background: activeSubTab === tab ? "var(--pulse-muted)" : "transparent",
+            }}
           >
-            <SignalDot state={w.active ? (props.sessionRunning ? "live" : "ok") : "idle"} />
-            <div className="item-content">
-              <div className="item-title">{formatWakeupTime(w.time)}</div>
-              <div className="item-meta">
-                --{w.mode} · {w.active ? "actif" : "inactif"}
-              </div>
-            </div>
-            <div className={`item-badge ${MODE_BADGE[w.mode] ?? ""}`}>
-              {w.mode}
-            </div>
+            {t(`heartbeat.${tab}`)}
           </div>
         ))}
-        <div className="list-add" onClick={onAdd}>+ Planifier un réveil</div>
       </div>
+
+      {/* Wakeup list — only when Planned tab is active */}
+      {activeSubTab === "planned" && <div style={{ flex: 1, overflowY: "auto", padding: 8 }}>
+        {wakeups.map((w) => (
+          <WakeupItem
+            key={w.id}
+            wakeup={w}
+            selected={selectedId === w.id}
+            sessionRunning={props.sessionRunning}
+            onSelect={onSelect}
+            onContextMenu={onContextMenu}
+            renaming={props.renamingId === w.id}
+            onRename={props.onRename}
+            onCancelRename={props.onCancelRename}
+          />
+        ))}
+        <div
+          onClick={onAdd}
+          style={{
+            display: "flex", alignItems: "center", justifyContent: "center",
+            gap: 6, padding: "10px 12px", margin: 8,
+            border: "1px dashed var(--edge)", borderRadius: "var(--radius-sm)",
+            color: "var(--ink-faint)", fontSize: "var(--text-sm)", cursor: "pointer",
+          }}
+        >
+          <Plus size={14} weight="bold" />
+          {t("heartbeat.scheduleWakeup")}
+        </div>
+      </div>}
     </>
   );
 }

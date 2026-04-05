@@ -1,9 +1,20 @@
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { ArrowSquareOut } from "@phosphor-icons/react";
 import "./markdown-viewer.css";
 
 interface MarkdownViewerProps {
   content: string;
   fileName: string;
   onOpenEditor: () => void;
+}
+
+function stripFrontmatter(md: string): string {
+  if (md.startsWith("---")) {
+    const end = md.indexOf("---", 3);
+    if (end > 0) return md.slice(end + 3).trim();
+  }
+  return md;
 }
 
 export function MarkdownViewer({
@@ -16,70 +27,16 @@ export function MarkdownViewer({
       <div className="md-header">
         <div className="md-title">{fileName}</div>
         <button className="btn" onClick={onOpenEditor}>
-          ↗ MWeb
+          <ArrowSquareOut size={14} /> Open
         </button>
       </div>
       <div className="md-scroll">
-        <div
-          className="md-view"
-          dangerouslySetInnerHTML={{ __html: renderMarkdown(content) }}
-        />
+        <div className="md-view">
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {stripFrontmatter(content)}
+          </ReactMarkdown>
+        </div>
       </div>
     </>
   );
-}
-
-function renderMarkdown(md: string): string {
-  // Strip YAML frontmatter (--- ... ---)
-  let cleaned = md;
-  if (cleaned.startsWith("---")) {
-    const end = cleaned.indexOf("---", 3);
-    if (end > 0) {
-      cleaned = cleaned.slice(end + 3).trim();
-    }
-  }
-
-  return cleaned
-    .split("\n\n")
-    .map((block) => {
-      const trimmed = block.trim();
-      if (trimmed.startsWith("# ")) {
-        return `<h1>${esc(trimmed.slice(2))}</h1>`;
-      }
-      if (trimmed.startsWith("## ")) {
-        return `<h2>${esc(trimmed.slice(3))}</h2>`;
-      }
-      if (trimmed.startsWith("### ")) {
-        return `<h3>${esc(trimmed.slice(4))}</h3>`;
-      }
-      if (trimmed.startsWith("> ")) {
-        const quote = trimmed
-          .split("\n")
-          .map((l) => esc(l.replace(/^>\s?/, "")))
-          .join("<br>");
-        return `<blockquote>${quote}</blockquote>`;
-      }
-      if (trimmed.startsWith("- ")) {
-        const items = trimmed
-          .split("\n")
-          .map((l) => `<li>${inlineFormat(esc(l.replace(/^-\s/, "")))}</li>`)
-          .join("");
-        return `<ul>${items}</ul>`;
-      }
-      return `<p>${inlineFormat(esc(trimmed))}</p>`;
-    })
-    .join("");
-}
-
-function esc(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-}
-
-function inlineFormat(s: string): string {
-  return s
-    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-    .replace(/`(.+?)`/g, "<code>$1</code>");
 }

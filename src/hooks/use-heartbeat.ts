@@ -3,6 +3,7 @@ import type { ScheduledWakeup } from "@/types/config";
 import { invoke } from "@tauri-apps/api/core";
 import * as api from "@/services/heartbeat";
 import { useFsEvent } from "./use-fs-event";
+import { showToast } from "@/lib/toast-emitter";
 
 export function useHeartbeat() {
   const [wakeups, setWakeups] = useState<ScheduledWakeup[]>([]);
@@ -23,7 +24,7 @@ export function useHeartbeat() {
         setSelectedId(list[0].id);
       }
     } catch (e) {
-      console.error("Failed to load heartbeat:", e);
+      showToast("Failed to load heartbeat");
     }
   }, [selectedId]);
 
@@ -43,7 +44,7 @@ export function useHeartbeat() {
       setWakeups((prev) => [...prev, w]);
       setSelectedId(w.id);
     } catch (e) {
-      console.error("Failed to create:", e);
+      showToast("Failed to create");
     }
   }, []);
 
@@ -52,7 +53,7 @@ export function useHeartbeat() {
       await api.updateWakeup(w);
       setWakeups((prev) => prev.map((x) => (x.id === w.id ? w : x)));
     } catch (e) {
-      console.error("Failed to save:", e);
+      showToast("Failed to save");
     }
   }, []);
 
@@ -62,7 +63,7 @@ export function useHeartbeat() {
       setWakeups((prev) => prev.filter((w) => w.id !== id));
       setSelectedId(null);
     } catch (e) {
-      console.error("Failed to delete:", e);
+      showToast("Failed to delete");
     }
   }, []);
 
@@ -71,7 +72,7 @@ export function useHeartbeat() {
       await api.setHeartbeatActive(active);
       setHbActive(active);
     } catch (e) {
-      console.error("Failed to toggle:", e);
+      showToast("Failed to toggle");
     }
   }, []);
 
@@ -95,7 +96,7 @@ export function useHeartbeat() {
           await api.setStopAt(null);
           setStopAtState(null);
         } catch (e) {
-          console.error("Stop at trigger failed:", e);
+          showToast("Stop at trigger failed");
         }
       }
     }, 30_000);
@@ -125,7 +126,7 @@ export function useHeartbeat() {
       await api.setStopAt(value);
       setStopAtState(value);
     } catch (e) {
-      console.error("Failed to set stop_at:", e);
+      showToast("Failed to set stop_at");
     }
   }
 
@@ -133,7 +134,7 @@ export function useHeartbeat() {
     try {
       await invoke("run_wakeup", { id });
     } catch (e) {
-      console.error("Failed to run:", e);
+      showToast("Failed to run");
     }
   }
 }

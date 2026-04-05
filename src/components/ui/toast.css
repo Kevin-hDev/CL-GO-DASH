@@ -35,6 +35,19 @@
   color: var(--pulse);
 }
 
+.toast-check {
+  background: var(--surface);
+  border: 1px solid var(--edge);
+  color: var(--ink-muted);
+  padding: var(--space-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+}
+
 @keyframes toast-in {
   from {
     opacity: 0;

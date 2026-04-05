@@ -5,7 +5,7 @@ use std::path::PathBuf;
 
 fn sessions_dir() -> PathBuf {
     let home = dirs::home_dir().expect("cannot resolve home");
-    home.join(".claude/projects/-Users-kevinh-Projects")
+    home.join(".claude/projects/-Users-kevinh")
 }
 
 fn names_file() -> PathBuf {
@@ -74,6 +74,11 @@ fn parse_meta(path: &PathBuf, names: &HashMap<String, String>) -> Result<Session
         }
     }
 
+    // Headless sessions: default to "auto" if no mode detected
+    if mode == "unknown" {
+        mode = "auto".to_string();
+    }
+
     let tail = if lines.len() > 10 { lines.len() - 10 } else { 0 };
     for line in &lines[tail..] {
         if let Ok(e) = serde_json::from_str::<RawEntry>(line) {
@@ -126,6 +131,17 @@ fn compute_duration_minutes(start: &str, end: &str) -> f64 {
 }
 
 fn detect_mode(entry: &RawEntry, mode: &mut String) {
+    // Check queue-operation content (headless sessions)
+    if let Some(ref content) = entry.content {
+        for m in ["auto", "explorer", "free", "evolve"] {
+            if content.contains(&format!("--{}", m)) {
+                *mode = m.to_string();
+                return;
+            }
+        }
+    }
+
+    // Check message content (interactive sessions)
     if let Some(ref msg) = entry.message {
         if let Some(ref c) = msg.content {
             let text = content_to_string(c);

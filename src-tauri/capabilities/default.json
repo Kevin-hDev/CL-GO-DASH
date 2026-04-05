@@ -10,7 +10,7 @@
       "identifier": "fs:allow-read-text-file",
       "allow": [
         { "path": "$HOME/.local/share/cl-go/**" },
-        { "path": "$HOME/.claude/projects/-Users-kevinh-Projects/**" }
+        { "path": "$HOME/.claude/projects/-Users-kevinh/**" }
       ]
     },
     {
@@ -23,7 +23,7 @@
       "identifier": "fs:allow-exists",
       "allow": [
         { "path": "$HOME/.local/share/cl-go/**" },
-        { "path": "$HOME/.claude/projects/-Users-kevinh-Projects/**" }
+        { "path": "$HOME/.claude/projects/-Users-kevinh/**" }
       ]
     },
     "shell:default",

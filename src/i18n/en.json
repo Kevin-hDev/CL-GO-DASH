@@ -1,0 +1,67 @@
+{
+  "nav": {
+    "heartbeat": "Heartbeat",
+    "history": "History",
+    "personality": "Personality",
+    "settings": "Settings"
+  },
+  "heartbeat": {
+    "wakeups": "Wakeups",
+    "stopAt": "Stop at",
+    "planned": "Planned",
+    "warning": "Warning",
+    "scheduleWakeup": "Schedule wakeup",
+    "active": "Active",
+    "inactive": "Inactive",
+    "run": "Run",
+    "save": "Save",
+    "saved": "Saved",
+    "delete": "Delete",
+    "dateTime": "Date & time",
+    "mode": "Mode",
+    "promptLabel": "Prompt (optional)",
+    "promptPlaceholder": "Loaded as context on wakeup...",
+    "selectWakeup": "Select a wakeup",
+    "noErrors": "No errors detected"
+  },
+  "history": {
+    "sessions": "Sessions",
+    "recent": "Recent",
+    "archive": "Archive",
+    "favorites": "Favorites",
+    "addFavorite": "Add to favorites",
+    "removeFavorite": "Remove from favorites",
+    "noFavorites": "No favorites yet",
+    "noSessions": "No sessions",
+    "rename": "Rename",
+    "delete": "Delete",
+    "loading": "Loading...",
+    "selectSession": "Select a session",
+    "noMessages": "No messages in this session",
+    "live": "LIVE",
+    "duration": "Duration",
+    "messages": "Messages",
+    "mode": "Mode",
+    "version": "Version",
+    "download": "Download as Markdown",
+    "prompt": "Prompt",
+    "jackson": "Jackson"
+  },
+  "personality": {
+    "files": "Files",
+    "selectFile": "Select a file",
+    "open": "Open",
+    "failedToLoad": "Failed to load",
+    "failedToRead": "Failed to read file"
+  },
+  "settings": {
+    "title": "Settings",
+    "theme": "Theme",
+    "fontSize": "Font size",
+    "fontFamily": "Font family",
+    "fontPreview": "The quick brown fox",
+    "light": "Light",
+    "dark": "Dark",
+    "orange": "Orange"
+  }
+}

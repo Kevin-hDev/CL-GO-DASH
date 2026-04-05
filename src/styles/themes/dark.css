@@ -1,0 +1,50 @@
+/* Chill_Desk dark — violet (#9b7fff) remplacé par orange (#f97316) */
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* shadcn/ui tokens (HSL) */
+  --background: 240 10% 12%;
+  --foreground: 36 10% 90%;
+  --card: 240 10% 15%;
+  --card-foreground: 36 10% 90%;
+  --popover: 240 10% 15%;
+  --popover-foreground: 36 10% 90%;
+  --primary: 25 95% 53%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 240 9% 16%;
+  --secondary-foreground: 36 10% 90%;
+  --muted: 240 5% 20%;
+  --muted-foreground: 0 0% 60%;
+  --accent: 240 9% 16%;
+  --accent-foreground: 36 10% 90%;
+  --destructive: 0 72% 50%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 0 0% 100% / 0.08;
+  --input: 0 0% 100% / 0.08;
+  --ring: 25 95% 53%;
+
+  /* Chill_Desk original tokens (violet���orange) */
+  --bg-base: #1c1c22;
+  --bg-gradient-start: #1c1c22;
+  --bg-gradient-end: #26262e;
+  --accent-glow: #f9731620;
+  --sidebar-active: #f9731615;
+
+  /* Legacy dashboard tokens */
+  --void: #1c1c22;
+  --shell: #222228;
+  --surface: #2a2a32;
+  --surface-hover: #32323c;
+  --edge: rgba(255, 255, 255, 0.082);
+  --ink: #e8e6e3;
+  --ink-muted: #9a9a9a;
+  --ink-faint: #5a5a64;
+  --pulse: #f97316;
+  --pulse-muted: rgba(249, 115, 22, 0.15);
+  --signal-idle: #5a5a64;
+  --signal-live: #f59e0b;
+  --signal-error: #ef4444;
+  --signal-ok: #22c55e;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2);
+  --noise-opacity: 0.025;
+}

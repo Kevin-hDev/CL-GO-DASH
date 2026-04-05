@@ -5,11 +5,26 @@ type FsEvent =
   | "fs:config-changed"
   | "fs:sessions-changed"
   | "fs:personality-changed"
-  | "fs:logs-changed";
+  | "fs:logs-changed"
+  | "fs:session-message"
+  | "fs:monitoring-changed"
+  | "fs:frictions-changed";
 
 export function useFsEvent(event: FsEvent, callback: () => void) {
   useEffect(() => {
     const unlisten = listen(event, callback);
+    return () => {
+      unlisten.then((fn) => fn());
+    };
+  }, [event, callback]);
+}
+
+export function useFsEventWithPayload<T>(
+  event: FsEvent,
+  callback: (payload: T) => void,
+) {
+  useEffect(() => {
+    const unlisten = listen<T>(event, (e) => callback(e.payload));
     return () => {
       unlisten.then((fn) => fn());
     };

@@ -1,10 +1,12 @@
 import { useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import type { SessionMeta } from "@/types/session";
 import { SignalDot } from "@/components/heartbeat/signal-dot";
+import { Star } from "@phosphor-icons/react";
 import { useKeyboard } from "@/hooks/use-keyboard";
 import "./history-list.css";
 
-type SubTab = "recent" | "archive";
+type SubTab = "recent" | "archive" | "favorites";
 
 interface HistoryListProps {
   items: SessionMeta[];
@@ -16,13 +18,11 @@ interface HistoryListProps {
   renamingId: string | null;
   onRename: (id: string, name: string) => void;
   onCancelRename: () => void;
+  isFavorite: (id: string) => boolean;
 }
 
 const MODE_BADGE: Record<string, string> = {
-  auto: "auto",
-  explorer: "explorer",
-  free: "free",
-  evolve: "evolve",
+  auto: "auto", explorer: "explorer", free: "free", evolve: "evolve",
 };
 
 function formatDuration(minutes: number): string {
@@ -36,52 +36,51 @@ function formatDuration(minutes: number): string {
 function formatDate(iso: string): string {
   if (!iso) return "";
   const d = new Date(iso);
-  const day = d.getDate();
-  const months = ["jan", "fév", "mars", "avr", "mai", "juin",
-    "juil", "août", "sept", "oct", "nov", "déc"];
-  const month = months[d.getMonth()];
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const hh = String(d.getHours()).padStart(2, "0");
   const mm = String(d.getMinutes()).padStart(2, "0");
-  return `${day} ${month}. · ${hh}h${mm}`;
+  return `${d.getDate()} ${months[d.getMonth()]}. · ${hh}h${mm}`;
 }
 
 function sessionTitle(s: SessionMeta): string {
-  if (s.custom_name) return s.custom_name;
-  return `Session ${formatDate(s.start).split(" ·")[0]}`;
+  return s.custom_name || `Session ${formatDate(s.start).split(" ·")[0]}`;
 }
 
 export function HistoryList({
-  items,
-  selectedId,
-  onSelect,
-  subTab,
-  onSubTabChange,
-  onContextMenu,
-  renamingId,
-  onRename,
-  onCancelRename,
+  items, selectedId, onSelect, subTab, onSubTabChange,
+  onContextMenu, renamingId, onRename, onCancelRename, isFavorite,
 }: HistoryListProps) {
+  const { t } = useTranslation();
+
+  const displayed = subTab === "favorites"
+    ? items.filter((s) => isFavorite(s.id))
+    : items;
+
+  const tabs: { id: SubTab; label: string }[] = [
+    { id: "recent", label: t("history.recent") },
+    { id: "favorites", label: `★ ${t("history.favorites")}` },
+    { id: "archive", label: t("history.archive") },
+  ];
+
   return (
     <>
       <div className="hist-header">
         <span className="hist-title">Sessions</span>
       </div>
       <div className="hist-tabs">
-        <div
-          className={`hist-tab ${subTab === "recent" ? "active" : ""}`}
-          onClick={() => onSubTabChange("recent")}
-        >
-          Récent
-        </div>
-        <div
-          className={`hist-tab ${subTab === "archive" ? "active" : ""}`}
-          onClick={() => onSubTabChange("archive")}
-        >
-          Archive
-        </div>
+        {tabs.map((tab) => (
+          <div
+            key={tab.id}
+            className={`hist-tab ${subTab === tab.id ? "active" : ""}`}
+            onClick={() => onSubTabChange(tab.id)}
+          >
+            {tab.label}
+          </div>
+        ))}
       </div>
       <div className="hist-content">
-        {items.map((s) => (
+        {displayed.map((s) => (
           <div
             key={s.id}
             className={`hist-item ${selectedId === s.id ? "active" : ""}`}
@@ -97,7 +96,16 @@ export function HistoryList({
                   onCancel={onCancelRename}
                 />
               ) : (
-                <div className="hist-item-name">{sessionTitle(s)}</div>
+                <div className="hist-item-name">
+                  {isFavorite(s.id) && (
+                    <Star size={12} weight="fill" style={{
+                      color: "var(--signal-live)",
+                      marginRight: 4,
+                      verticalAlign: "middle",
+                    }} />
+                  )}
+                  {sessionTitle(s)}
+                </div>
               )}
               <div className="hist-item-meta">
                 {formatDate(s.start)} · {formatDuration(s.duration_minutes)}
@@ -108,8 +116,10 @@ export function HistoryList({
             </div>
           </div>
         ))}
-        {items.length < 1 && (
-          <div className="hist-empty">Aucune session</div>
+        {displayed.length < 1 && (
+          <div className="hist-empty">
+            {subTab === "favorites" ? t("history.noFavorites") : t("history.noSessions")}
+          </div>
         )}
       </div>
     </>
@@ -117,9 +127,7 @@ export function HistoryList({
 }
 
 function RenameInput({
-  defaultValue,
-  onConfirm,
-  onCancel,
+  defaultValue, onConfirm, onCancel,
 }: {
   defaultValue: string;
   onConfirm: (name: string) => void;

@@ -1,11 +1,11 @@
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, type ReactNode } from "react";
 import { useClickOutside } from "@/hooks/use-click-outside";
 import { useKeyboard } from "@/hooks/use-keyboard";
 import "./context-menu.css";
 
 export interface ContextMenuItem {
   label: string;
-  icon?: string;
+  icon?: ReactNode;
   danger?: boolean;
   onClick: () => void;
 }
@@ -43,7 +43,7 @@ export function ContextMenu({ x, y, items, onClose }: ContextMenuProps) {
           className={`context-item ${item.danger ? "danger" : ""}`}
           onClick={() => handleClick(item)}
         >
-          {item.icon && <span>{item.icon}</span>}
+          {item.icon && <span style={{ display: "flex", alignItems: "center" }}>{item.icon}</span>}
           {item.label}
         </div>
       ))}

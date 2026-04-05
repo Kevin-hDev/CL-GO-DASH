@@ -6,7 +6,7 @@ use std::path::PathBuf;
 
 fn sessions_dir() -> PathBuf {
     let home = dirs::home_dir().expect("cannot resolve home");
-    home.join(".claude/projects/-Users-kevinh-Projects")
+    home.join(".claude/projects/-Users-kevinh")
 }
 
 pub fn get_detail(session_id: &str) -> Result<SessionDetail, String> {

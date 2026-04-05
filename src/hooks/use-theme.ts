@@ -1,23 +1,33 @@
 import { useState, useCallback, useEffect } from "react";
 
-type Theme = "dark" | "light";
+export type Theme = "light" | "dark" | "orange";
+
+const THEMES: Theme[] = ["light", "dark", "orange"];
 
 function getInitialTheme(): Theme {
   const saved = localStorage.getItem("clgo-theme");
-  return saved === "light" ? "light" : "dark";
+  if (saved && THEMES.includes(saved as Theme)) return saved as Theme;
+  return "dark";
 }
 
 export function useTheme() {
-  const [theme, setTheme] = useState<Theme>(getInitialTheme);
+  const [theme, setThemeState] = useState<Theme>(getInitialTheme);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
     localStorage.setItem("clgo-theme", theme);
   }, [theme]);
 
-  const toggle = useCallback(() => {
-    setTheme((t) => (t === "dark" ? "light" : "dark"));
+  const setTheme = useCallback((t: Theme) => {
+    setThemeState(t);
   }, []);
 
-  return { theme, toggle } as const;
+  const toggle = useCallback(() => {
+    setThemeState((t) => {
+      const idx = THEMES.indexOf(t);
+      return THEMES[(idx + 1) % THEMES.length];
+    });
+  }, []);
+
+  return { theme, setTheme, toggle } as const;
 }

@@ -1,10 +1,12 @@
+/* Layout & spacing tokens — shared across all themes */
+/* All values in rem so they scale with font-size setting */
 :root {
-  --space-xs: 4px;
-  --space-sm: 8px;
-  --space-md: 16px;
-  --space-lg: 24px;
-  --space-xl: 32px;
-  --space-2xl: 48px;
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
 
   --radius-sm: 4px;
   --radius-md: 6px;
@@ -15,13 +17,13 @@
 
   --font-sans: "Geist Sans", -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: "Geist Mono", "SF Mono", monospace;
-  --text-xs: 11px;
-  --text-sm: 13px;
-  --text-base: 14px;
-  --text-lg: 16px;
-  --text-xl: 20px;
+  --text-xs: 0.6875rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.875rem;
+  --text-lg: 1rem;
+  --text-xl: 1.25rem;
 
-  --sidebar-collapsed: 56px;
-  --sidebar-expanded: 200px;
-  --list-width: 260px;
+  --sidebar-collapsed: 3.5rem;
+  --sidebar-expanded: 12.5rem;
+  --list-width: 16.25rem;
 }

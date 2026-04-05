@@ -8,6 +8,7 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .setup(|app| {
             services::file_watcher::start(app.handle());
+            services::session_tail::start(app.handle());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

@@ -39,6 +39,7 @@ export interface ScheduledWakeup {
   time: string;
   mode: string;
   prompt: string | null;
+  name: string | null;
   active: boolean;
 }
 

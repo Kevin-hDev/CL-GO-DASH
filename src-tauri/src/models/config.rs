@@ -56,6 +56,8 @@ pub struct ScheduledWakeup {
     pub mode: String,
     #[serde(default)]
     pub prompt: Option<String>,
+    #[serde(default)]
+    pub name: Option<String>,
     pub active: bool,
 }
 

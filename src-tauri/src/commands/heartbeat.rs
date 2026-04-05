@@ -16,6 +16,7 @@ pub fn list_wakeups() -> Result<Vec<ScheduledWakeup>, String> {
             time,
             mode: hb.mode.clone(),
             prompt: None,
+            name: None,
             active: hb.active,
         };
         config.scheduled_wakeups.push(wakeup);
@@ -56,7 +57,7 @@ pub fn list_wakeups() -> Result<Vec<ScheduledWakeup>, String> {
             config.scheduled_wakeups.push(ScheduledWakeup {
                 id: Uuid::new_v4().to_string(),
                 time, mode: config.heartbeat.mode.clone(),
-                prompt: None, active: true,
+                prompt: None, name: None, active: true,
             });
             needs_save = true;
         }
@@ -90,6 +91,7 @@ pub fn create_wakeup(
         time,
         mode,
         prompt,
+        name: None,
         active: true,
     };
 
@@ -186,15 +188,27 @@ pub fn run_wakeup(id: String) -> Result<(), String> {
         .expect("cannot resolve home")
         .join(".local/share/cl-go/scripts/heartbeat/go-heartbeat-wrapper.sh");
 
-    let wrapper_str = wrapper.to_string_lossy().to_string();
+    // Write a launcher script that sets env vars and calls the wrapper
+    let launcher = std::env::temp_dir().join(format!("clgo-run-{}.sh", &id[..8]));
+    let prompt_escaped = wakeup.prompt.as_deref().unwrap_or("").replace('"', r#"\""#);
+    let script = format!(
+        "#!/bin/bash\nexport CLGO_WAKEUP_ID=\"{}\"\nexport CLGO_WAKEUP_PROMPT=\"{}\"\nexec \"{}\" \"$CLGO_WAKEUP_ID\"\n",
+        id, prompt_escaped, wrapper.display(),
+    );
+    std::fs::write(&launcher, &script).map_err(|e| e.to_string())?;
 
-    // Open Terminal.app with the wrapper script
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let perms = std::fs::Permissions::from_mode(0o700);
+        std::fs::set_permissions(&launcher, perms).map_err(|e| e.to_string())?;
+    }
+
     Command::new("open")
-        .args(["-a", "Terminal.app", &wrapper_str])
+        .args(["-a", "Terminal.app", &launcher.to_string_lossy().to_string()])
         .spawn()
         .map_err(|e| format!("Cannot open Terminal: {}", e))?;
 
-    let _ = wakeup; // wakeup context used for future prompt injection
     Ok(())
 }
 

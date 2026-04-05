@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import type { SessionMeta, SessionDetail } from "@/types/session";
 import * as api from "@/services/sessions";
 import { useFsEvent } from "./use-fs-event";
+import { showToast } from "@/lib/toast-emitter";
 
-type SubTab = "recent" | "archive";
+type SubTab = "recent" | "archive" | "favorites";
 
 export function useSessions() {
   const [recent, setRecent] = useState<SessionMeta[]>([]);
@@ -12,6 +13,10 @@ export function useSessions() {
   const [detail, setDetail] = useState<SessionDetail | null>(null);
   const [subTab, setSubTab] = useState<SubTab>("recent");
   const [loading, setLoading] = useState(false);
+  const selectedRef = useRef<string | null>(null);
+
+  // Keep ref in sync for use in callbacks
+  selectedRef.current = selectedId;
 
   const loadList = useCallback(async () => {
     try {
@@ -21,16 +26,34 @@ export function useSessions() {
       ]);
       setRecent(r);
       setArchive(a);
-      if (r.length > 0 && !selectedId) {
+      if (r.length > 0 && !selectedRef.current) {
         setSelectedId(r[0].id);
       }
     } catch (e) {
-      console.error("Failed to load sessions:", e);
+      showToast("Failed to load sessions");
     }
-  }, [selectedId]);
+  }, []);
 
   useEffect(() => { loadList(); }, [loadList]);
-  useFsEvent("fs:sessions-changed", loadList);
+
+  const refreshDetail = useCallback(async () => {
+    const id = selectedRef.current;
+    if (!id) return;
+    try {
+      const d = await api.getSessionDetail(id);
+      setDetail(d);
+    } catch {
+      // Silent — detail refresh is best-effort
+    }
+  }, []);
+
+  // Auto-refresh list + detail when session files change
+  const onSessionsChanged = useCallback(() => {
+    loadList();
+    refreshDetail();
+  }, [loadList, refreshDetail]);
+
+  useFsEvent("fs:sessions-changed", onSessionsChanged);
 
   const loadDetail = useCallback(async (id: string) => {
     setSelectedId(id);
@@ -39,7 +62,7 @@ export function useSessions() {
       const d = await api.getSessionDetail(id);
       setDetail(d);
     } catch (e) {
-      console.error("Failed to load detail:", e);
+      showToast("Failed to load detail");
       setDetail(null);
     } finally {
       setLoading(false);
@@ -54,7 +77,7 @@ export function useSessions() {
       setRecent(update);
       setArchive(update);
     } catch (e) {
-      console.error("Failed to rename:", e);
+      showToast("Failed to rename");
     }
   }, []);
 
@@ -68,11 +91,12 @@ export function useSessions() {
         setDetail(null);
       }
     } catch (e) {
-      console.error("Failed to delete:", e);
+      showToast("Failed to delete");
     }
   }, [selectedId]);
 
-  const items = subTab === "recent" ? recent : archive;
+  const allSessions = [...recent, ...archive];
+  const items = subTab === "recent" ? recent : subTab === "archive" ? archive : allSessions;
 
   return {
     items, recent, archive,
@@ -82,14 +106,13 @@ export function useSessions() {
   };
 
   async function cleanup() {
-    // Delete sessions beyond 60 (archive overflow)
     try {
       const overflow = await api.listSessions(100, 60);
       for (const s of overflow) {
         await api.deleteSessionFile(s.file_path);
       }
     } catch {
-      // Silent — cleanup is best-effort
+      // Silent
     }
   }
 }

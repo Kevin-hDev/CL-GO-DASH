@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback, createContext, useContext } from "react";
 import type { ReactNode } from "react";
+import { Check } from "@/components/ui/icons";
+import { registerToast } from "@/lib/toast-emitter";
 import "./toast.css";
 
-type ToastType = "success" | "error" | "info";
+type ToastType = "success" | "error" | "info" | "check";
 
 interface Toast {
   id: number;
@@ -30,6 +32,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     setToasts((prev) => [...prev, { id, message, type }]);
   }, []);
 
+  useEffect(() => { registerToast(show); }, [show]);
+
   const remove = useCallback((id: number) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
@@ -47,10 +51,20 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 }
 
 function ToastItem({ toast, onDone }: { toast: Toast; onDone: () => void }) {
+  const duration = toast.type === "check" ? 2000 : 3000;
+
   useEffect(() => {
-    const timer = setTimeout(onDone, 3000);
+    const timer = setTimeout(onDone, duration);
     return () => clearTimeout(timer);
-  }, [onDone]);
+  }, [onDone, duration]);
+
+  if (toast.type === "check") {
+    return (
+      <div className="toast toast-check">
+        <Check size={18} weight="bold" />
+      </div>
+    );
+  }
 
   return (
     <div className={`toast toast-${toast.type}`}>

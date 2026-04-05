@@ -1,0 +1,67 @@
+{
+  "nav": {
+    "heartbeat": "Heartbeat",
+    "history": "Historique",
+    "personality": "Personnalité",
+    "settings": "Paramètres"
+  },
+  "heartbeat": {
+    "wakeups": "Réveils",
+    "stopAt": "Arrêt à",
+    "planned": "Planifiés",
+    "warning": "Alertes",
+    "scheduleWakeup": "Planifier un réveil",
+    "active": "Actif",
+    "inactive": "Inactif",
+    "run": "Lancer",
+    "save": "Sauvegarder",
+    "saved": "Sauvegardé",
+    "delete": "Supprimer",
+    "dateTime": "Date & heure",
+    "mode": "Mode",
+    "promptLabel": "Prompt (optionnel)",
+    "promptPlaceholder": "Chargé en contexte au réveil...",
+    "selectWakeup": "Sélectionne un réveil",
+    "noErrors": "Aucune erreur détectée"
+  },
+  "history": {
+    "sessions": "Sessions",
+    "recent": "Récent",
+    "archive": "Archive",
+    "favorites": "Favoris",
+    "addFavorite": "Ajouter aux favoris",
+    "removeFavorite": "Retirer des favoris",
+    "noFavorites": "Aucun favori",
+    "noSessions": "Aucune session",
+    "rename": "Renommer",
+    "delete": "Supprimer",
+    "loading": "Chargement...",
+    "selectSession": "Sélectionne une session",
+    "noMessages": "Aucun message dans cette session",
+    "live": "EN COURS",
+    "duration": "Durée",
+    "messages": "Messages",
+    "mode": "Mode",
+    "version": "Version",
+    "download": "Télécharger en Markdown",
+    "prompt": "Prompt",
+    "jackson": "Jackson"
+  },
+  "personality": {
+    "files": "Fichiers",
+    "selectFile": "Sélectionne un fichier",
+    "open": "Ouvrir",
+    "failedToLoad": "Échec du chargement",
+    "failedToRead": "Échec de la lecture"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "theme": "Thème",
+    "fontSize": "Taille de police",
+    "fontFamily": "Police d'écriture",
+    "fontPreview": "Le vif zéphyr jubile",
+    "light": "Clair",
+    "dark": "Sombre",
+    "orange": "Orange"
+  }
+}
