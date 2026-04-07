@@ -17,7 +17,7 @@ interface ChatInputProps {
   isStreaming: boolean;
   thinkingEnabled: boolean;
   files?: DroppedFile[];
-  onSend: (text: string) => void;
+  onSend: (text: string, files?: DroppedFile[]) => void;
   onStop: () => void;
   onFileImport: () => void;
   onModelChange: (model: string) => void;
@@ -25,26 +25,30 @@ interface ChatInputProps {
   onSkillLoaded?: (content: string | null) => void;
   onRemoveFile?: (index: number) => void;
   onPreviewFile?: (file: DroppedFile) => void;
+  onClearFiles?: () => void;
 }
 
 export function ChatInput({
   modelName, ollamaRunning, isStreaming, thinkingEnabled, files,
   onSend, onStop, onFileImport, onModelChange, onToggleThinking, onSkillLoaded,
-  onRemoveFile, onPreviewFile,
+  onRemoveFile, onPreviewFile, onClearFiles,
 }: ChatInputProps) {
   const { t } = useTranslation();
   const [text, setText] = useState("");
   const { ref, resize } = useAutoResize(200);
   const slash = useSlashCommands();
 
-  const hasContent = text.trim().length > 0;
+  const hasText = text.trim().length > 0;
+  const hasFiles = files != null && files.length > 0;
+  const hasContent = hasText || hasFiles;
 
   const handleSend = useCallback(() => {
     if (!hasContent) return;
-    onSend(text.trim());
+    onSend(text.trim(), hasFiles ? files : undefined);
     setText("");
+    onClearFiles?.();
     if (ref.current) ref.current.style.height = "auto";
-  }, [text, hasContent, onSend, ref]);
+  }, [text, hasContent, hasFiles, files, onSend, onClearFiles, ref]);
 
   const handleChange = useCallback((value: string) => {
     setText(value);

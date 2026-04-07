@@ -110,8 +110,9 @@ export function ChatView({ sessionId, model, onModelChange, onTokenCountChange }
             files={fileDrop.files}
             onRemoveFile={fileDrop.removeFile}
             onPreviewFile={setPreview}
-            onSend={chat.sendMessage}
+            onSend={(text, sentFiles) => chat.sendMessage(text, sentFiles)}
             onStop={chat.stop}
+            onClearFiles={fileDrop.clearFiles}
             onFileImport={async () => {
               const result = await openFileDialog({ multiple: true });
               if (!result) return;

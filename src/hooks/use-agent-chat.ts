@@ -92,11 +92,19 @@ export function useAgentChat(sessionId: string | null, model: string) {
     });
   }, [sessionId, model, startStream, buildMessages]);
 
-  const sendMessage = useCallback(async (text: string) => {
-    if (!sessionId || !text.trim()) return;
+  const sendMessage = useCallback(async (text: string, sentFiles?: { name: string; path?: string }[]) => {
+    if (!sessionId) return;
+    if (!text.trim() && (!sentFiles || sentFiles.length < 1)) return;
+    const fileAttachments = (sentFiles ?? []).map((f) => ({
+      name: f.name,
+      path: f.path ?? "",
+      mime_type: "",
+      size: 0,
+    }));
     const userMsg: AgentMessage = {
-      id: crypto.randomUUID(), role: "user", content: text,
-      files: [], timestamp: new Date().toISOString(),
+      id: crypto.randomUUID(), role: "user",
+      content: text || `[${(sentFiles ?? []).map((f) => f.name).join(", ")}]`,
+      files: fileAttachments, timestamp: new Date().toISOString(),
     };
     // Sauvegarder le message user
     invoke("add_messages_to_session", {
