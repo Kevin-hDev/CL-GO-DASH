@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { MessageActions } from "./message-actions";
 import { EditMessage } from "./edit-message";
-import { FileText } from "@/components/ui/icons";
 import "./messages.css";
 
 interface FileInfo {
@@ -34,6 +33,7 @@ export function UserMessage({
   }
 
   const hasFiles = files && files.length > 0;
+  const hasText = content.trim().length > 0;
 
   return (
     <div className="msg-user">
@@ -44,41 +44,66 @@ export function UserMessage({
         onEdit={onEdit ? () => setEditing(true) : undefined}
       />
       <div>
-        <div className="msg-user-bubble">{content}</div>
+        {hasText && <div className="msg-user-bubble">{content}</div>}
         {hasFiles && (
           <div style={{
-            display: "flex", gap: 6, marginTop: 6,
-            justifyContent: "flex-end", flexWrap: "wrap",
+            display: "flex", gap: 8, justifyContent: "flex-end",
+            flexWrap: "wrap", marginTop: hasText ? 8 : 0,
           }}>
             {files.map((f, i) => (
-              <div
-                key={`${f.name}-${i}`}
-                onClick={() => onFileClick?.(f)}
-                style={{
-                  display: "flex", alignItems: "center", gap: 4,
-                  padding: "4px 8px", borderRadius: "var(--radius-sm)",
-                  border: "1px solid var(--edge)", background: "var(--shell)",
-                  cursor: "pointer", fontSize: "var(--text-xs)",
-                  color: "var(--ink-muted)",
-                }}
-              >
-                {f.thumbnail ? (
-                  <img src={f.thumbnail} alt={f.name} style={{
-                    width: 32, height: 32, objectFit: "cover", borderRadius: 4,
-                  }} />
-                ) : (
-                  <FileText size={14} style={{ color: "var(--ink-faint)" }} />
-                )}
-                <span style={{
-                  maxWidth: 80, overflow: "hidden",
-                  textOverflow: "ellipsis", whiteSpace: "nowrap",
-                }}>
-                  {f.name}
-                </span>
-              </div>
+              <FileCard key={`${f.name}-${i}`} file={f} onClick={() => onFileClick?.(f)} />
             ))}
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+function FileCard({ file, onClick }: { file: FileInfo; onClick: () => void }) {
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+  const isImg = ["png", "jpg", "jpeg", "gif", "webp"].includes(ext);
+
+  if (isImg && file.thumbnail) {
+    return (
+      <div
+        onClick={onClick}
+        style={{
+          width: 100, height: 100, borderRadius: 8,
+          overflow: "hidden", cursor: "pointer",
+          border: "1px solid var(--edge)",
+        }}
+      >
+        <img src={file.thumbnail} alt="" style={{
+          width: "100%", height: "100%", objectFit: "cover",
+        }} />
+      </div>
+    );
+  }
+
+  return (
+    <div
+      onClick={onClick}
+      style={{
+        width: 100, height: 100, borderRadius: 8,
+        border: "1px solid var(--edge)", background: "var(--shell)",
+        cursor: "pointer", display: "flex", flexDirection: "column",
+        justifyContent: "space-between", padding: 10,
+      }}
+    >
+      <div style={{
+        fontSize: "var(--text-xs)", color: "var(--ink)",
+        overflow: "hidden", textOverflow: "ellipsis",
+        display: "-webkit-box", WebkitLineClamp: 2,
+        WebkitBoxOrient: "vertical",
+      }}>
+        {file.name}
+      </div>
+      <div style={{
+        fontSize: "var(--text-xs)", color: "var(--ink-faint)",
+        textTransform: "uppercase", fontWeight: 600,
+      }}>
+        {ext}
       </div>
     </div>
   );

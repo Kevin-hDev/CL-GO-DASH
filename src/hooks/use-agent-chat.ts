@@ -107,7 +107,7 @@ export function useAgentChat(sessionId: string | null, model: string) {
     }));
     const userMsg: AgentMessage = {
       id: crypto.randomUUID(), role: "user",
-      content: text || `[${(sentFiles ?? []).map((f) => f.name).join(", ")}]`,
+      content: text,
       files: fileAttachments, timestamp: new Date().toISOString(),
     };
     // Sauvegarder le message user

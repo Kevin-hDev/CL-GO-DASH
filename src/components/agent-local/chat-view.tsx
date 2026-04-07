@@ -75,6 +75,13 @@ export function ChatView({ sessionId, model, onModelChange, onTokenCountChange }
             isStreaming={chat.isStreaming}
             onReload={chat.reload}
             onEdit={chat.edit}
+            onFileClick={(f) => setPreview({
+              name: f.name,
+              path: f.path,
+              type: "",
+              size: 0,
+              preview: f.thumbnail,
+            })}
           />
           <div ref={bottomRef} />
         </div>

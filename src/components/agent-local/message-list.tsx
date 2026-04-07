@@ -12,11 +12,12 @@ interface MessageListProps {
   isStreaming: boolean;
   onReload?: (messageId: string) => void;
   onEdit?: (messageId: string, newContent: string) => void;
+  onFileClick?: (file: { name: string; path?: string; thumbnail?: string }) => void;
 }
 
 export function MessageList({
   messages, streamingContent, streamingThinking, isStreaming,
-  onReload, onEdit,
+  onReload, onEdit, onFileClick,
 }: MessageListProps) {
   return (
     <>
@@ -29,6 +30,7 @@ export function MessageList({
               files={msg.files}
               onReload={onReload ? () => onReload(msg.id) : undefined}
               onEdit={onEdit ? (c) => onEdit(msg.id, c) : undefined}
+              onFileClick={onFileClick}
             />
           );
         }
