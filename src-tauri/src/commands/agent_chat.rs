@@ -65,6 +65,15 @@ pub async fn save_agent_session(session: AgentSession) -> Result<(), String> {
 }
 
 #[tauri::command]
+pub async fn add_messages_to_session(
+    id: String,
+    messages: Vec<crate::services::agent_local::types_session::AgentMessage>,
+    tokens: u32,
+) -> Result<(), String> {
+    session_store::add_messages(&id, messages, tokens).await
+}
+
+#[tauri::command]
 pub async fn create_agent_session(
     name: String,
     model: String,

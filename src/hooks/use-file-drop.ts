@@ -1,12 +1,13 @@
 import { useState, useCallback } from "react";
+import { readFile, stat } from "@tauri-apps/plugin-fs";
 
 const MAX_FILES = 15;
 const MAX_SIZE = 20 * 1024 * 1024;
-const IMAGE_TYPES = ["image/png", "image/jpeg", "image/gif", "image/webp"];
+const IMAGE_EXTS = ["png", "jpg", "jpeg", "gif", "webp"];
 
 export interface DroppedFile {
-  file: File;
   name: string;
+  path?: string;
   type: string;
   size: number;
   preview?: string;
@@ -19,27 +20,49 @@ export function useFileDrop() {
 
   const addFiles = useCallback(async (fileList: FileList | File[]) => {
     const newFiles = Array.from(fileList);
-    const total = files.length + newFiles.length;
-
-    if (total > MAX_FILES) {
+    if (files.length + newFiles.length > MAX_FILES) {
       setError(`Maximum ${MAX_FILES} fichiers`);
       return;
     }
-
-    const oversized = newFiles.find((f) => f.size > MAX_SIZE);
-    if (oversized) {
-      setError(`${oversized.name} dépasse 20MB`);
-      return;
-    }
-
     setError(null);
     const dropped: DroppedFile[] = await Promise.all(
       newFiles.map(async (f) => {
-        const isImage = IMAGE_TYPES.includes(f.type);
+        const isImage = f.type.startsWith("image/");
         const preview = isImage ? await readAsDataUrl(f) : undefined;
-        return { file: f, name: f.name, type: f.type, size: f.size, preview };
+        return { name: f.name, type: f.type, size: f.size, preview };
       }),
     );
+    setFiles((prev) => [...prev, ...dropped]);
+  }, [files.length]);
+
+  const addByPaths = useCallback(async (paths: string[]) => {
+    if (files.length + paths.length > MAX_FILES) {
+      setError(`Maximum ${MAX_FILES} fichiers`);
+      return;
+    }
+    setError(null);
+    const dropped: DroppedFile[] = [];
+    for (const p of paths) {
+      try {
+        const meta = await stat(p);
+        const name = p.split("/").pop() ?? p;
+        const ext = name.split(".").pop()?.toLowerCase() ?? "";
+        const size = meta.size ?? 0;
+        if (size > MAX_SIZE) {
+          setError(`${name} dépasse 20MB`);
+          continue;
+        }
+        let preview: string | undefined;
+        if (IMAGE_EXTS.includes(ext)) {
+          const bytes = await readFile(p);
+          const blob = new Blob([bytes]);
+          preview = URL.createObjectURL(blob);
+        }
+        dropped.push({ name, path: p, type: ext, size, preview });
+      } catch (e: unknown) {
+        console.error("Erreur ajout fichier:", e);
+      }
+    }
     setFiles((prev) => [...prev, ...dropped]);
   }, [files.length]);
 
@@ -52,7 +75,7 @@ export function useFileDrop() {
     setError(null);
   }, []);
 
-  return { files, dragging, error, addFiles, removeFile, clearFiles, setDragging };
+  return { files, dragging, error, addFiles, addByPaths, removeFile, clearFiles, setDragging };
 }
 
 function readAsDataUrl(file: File): Promise<string> {

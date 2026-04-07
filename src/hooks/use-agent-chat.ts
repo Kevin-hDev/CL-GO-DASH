@@ -69,24 +69,19 @@ export function useAgentChat(sessionId: string | null, model: string) {
             thinking: s.streamingThinking || undefined,
             files: [], timestamp: new Date().toISOString(),
           };
-          const newTokens = s.tokenCount + evalCount + promptTokens;
-          const newMessages = [...s.messages, assistantMsg];
-          // Sauvegarder la session
+          const addedTokens = evalCount + promptTokens;
           if (sessionId) {
-            invoke("save_agent_session", {
-              session: {
-                id: sessionId, name: "", model,
-                created_at: new Date().toISOString(),
-                thinking_enabled: false,
-                accumulated_tokens: newTokens,
-                messages: newMessages,
-              },
-            }).catch((e: unknown) => console.warn("Save session:", e));
+            invoke("add_messages_to_session", {
+              id: sessionId,
+              messages: [assistantMsg],
+              tokens: addedTokens,
+            }).catch((e: unknown) => console.error("Save assistant msg:", e));
           }
           return {
-            ...s, messages: newMessages,
+            ...s, messages: [...s.messages, assistantMsg],
             streamingContent: "", streamingThinking: "",
-            isStreaming: false, tps: finalTps, tokenCount: newTokens,
+            isStreaming: false, tps: finalTps,
+            tokenCount: s.tokenCount + addedTokens,
           };
         });
       },
@@ -103,6 +98,10 @@ export function useAgentChat(sessionId: string | null, model: string) {
       id: crypto.randomUUID(), role: "user", content: text,
       files: [], timestamp: new Date().toISOString(),
     };
+    // Sauvegarder le message user
+    invoke("add_messages_to_session", {
+      id: sessionId, messages: [userMsg], tokens: 0,
+    }).catch((e: unknown) => console.error("Save user msg:", e));
     await doStream([...state.messages, userMsg]);
   }, [sessionId, state.messages, doStream]);
 

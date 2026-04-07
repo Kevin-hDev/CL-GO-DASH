@@ -57,6 +57,7 @@ pub fn run() {
             commands::list_agent_sessions,
             commands::get_agent_session,
             commands::save_agent_session,
+            commands::add_messages_to_session,
             commands::create_agent_session,
             commands::rename_agent_session,
             commands::delete_agent_session,

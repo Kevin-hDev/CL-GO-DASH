@@ -73,6 +73,17 @@ pub async fn save(session: &AgentSession) -> Result<(), String> {
     Ok(())
 }
 
+pub async fn add_messages(
+    id: &str,
+    new_messages: Vec<crate::services::agent_local::types_session::AgentMessage>,
+    tokens: u32,
+) -> Result<(), String> {
+    let mut session = get(id).await?;
+    session.messages.extend(new_messages);
+    session.accumulated_tokens += tokens;
+    save(&session).await
+}
+
 pub async fn rename(id: &str, name: &str) -> Result<(), String> {
     let mut session = get(id).await?;
     session.name = name.to_string();

@@ -115,13 +115,9 @@ export function ChatView({ sessionId, model, onModelChange, onTokenCountChange }
             onFileImport={async () => {
               const result = await openFileDialog({ multiple: true });
               if (!result) return;
-              const paths = Array.isArray(result) ? result : [result];
-              const files = paths.map((p) => {
-                const pathStr = String(p);
-                const name = pathStr.split("/").pop() ?? pathStr;
-                return new File([], name);
-              });
-              fileDrop.addFiles(files);
+              const raw = Array.isArray(result) ? result : [result];
+              const paths = raw.map((p) => String(p));
+              fileDrop.addByPaths(paths);
             }}
             onModelChange={(m) => onModelChange?.(m)}
             onToggleThinking={() => setThinking(!thinking)}
