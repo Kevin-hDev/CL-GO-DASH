@@ -3,7 +3,33 @@
     "heartbeat": "Heartbeat",
     "history": "History",
     "personality": "Personality",
-    "settings": "Settings"
+    "settings": "Settings",
+    "agentLocal": "Agent Local",
+    "ollama": "Ollama"
+  },
+  "agentLocal": {
+    "title": "Conversations",
+    "noConversations": "No conversations",
+    "selectOrCreate": "Select or create a conversation",
+    "placeholder": "How can I help you?",
+    "dropFiles": "Drop files here",
+    "thinking": "Thinking",
+    "reload": "Reload",
+    "edit": "Edit",
+    "copy": "Copy",
+    "exportMd": "Download as Markdown",
+    "search": "Search in conversation"
+  },
+  "ollama": {
+    "title": "Ollama",
+    "noModels": "No models installed",
+    "selectModel": "Select a model",
+    "edit": "Edit",
+    "editing": "Editing",
+    "save": "Save",
+    "cancel": "Cancel",
+    "searchPlaceholder": "Search a model...",
+    "install": "Install"
   },
   "heartbeat": {
     "wakeups": "Wakeups",

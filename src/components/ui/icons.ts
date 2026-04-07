@@ -2,6 +2,8 @@ export {
   Pulse,
   ClipboardText,
   UserCircle,
+  ChatCircle,
+  Sliders,
   Moon,
   Sun,
   Fire,

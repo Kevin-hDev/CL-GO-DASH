@@ -1,10 +1,10 @@
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
-import { Pulse, ClipboardText, UserCircle, Gear } from "@/components/ui/icons";
+import { Pulse, ClipboardText, UserCircle, ChatCircle, Sliders, Gear } from "@/components/ui/icons";
 import type { Icon } from "@phosphor-icons/react";
 import logoSrc from "@/assets/logo.png";
 
-export type TabId = "heartbeat" | "history" | "personality" | "settings";
+export type TabId = "heartbeat" | "history" | "personality" | "agent-local" | "ollama" | "settings";
 
 interface NavItem {
   id: TabId;
@@ -16,6 +16,8 @@ const NAV_ITEMS: NavItem[] = [
   { id: "heartbeat", icon: Pulse, i18nKey: "nav.heartbeat" },
   { id: "history", icon: ClipboardText, i18nKey: "nav.history" },
   { id: "personality", icon: UserCircle, i18nKey: "nav.personality" },
+  { id: "agent-local", icon: ChatCircle, i18nKey: "nav.agentLocal" },
+  { id: "ollama", icon: Sliders, i18nKey: "nav.ollama" },
 ];
 
 const ICON_SIZE = 24;

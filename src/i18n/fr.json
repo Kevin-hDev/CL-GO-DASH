@@ -3,7 +3,33 @@
     "heartbeat": "Heartbeat",
     "history": "Historique",
     "personality": "Personnalité",
-    "settings": "Paramètres"
+    "settings": "Paramètres",
+    "agentLocal": "Agent Local",
+    "ollama": "Ollama"
+  },
+  "agentLocal": {
+    "title": "Conversations",
+    "noConversations": "Aucune conversation",
+    "selectOrCreate": "Sélectionne ou crée une conversation",
+    "placeholder": "Comment puis-je vous aider ?",
+    "dropFiles": "Déposer les fichiers ici",
+    "thinking": "Réflexion",
+    "reload": "Recharger",
+    "edit": "Modifier",
+    "copy": "Copier",
+    "exportMd": "Télécharger en Markdown",
+    "search": "Rechercher dans la conversation"
+  },
+  "ollama": {
+    "title": "Ollama",
+    "noModels": "Aucun modèle installé",
+    "selectModel": "Sélectionne un modèle",
+    "edit": "Modifier",
+    "editing": "Édition",
+    "save": "Sauvegarder",
+    "cancel": "Annuler",
+    "searchPlaceholder": "Rechercher un modèle...",
+    "install": "Installer"
   },
   "heartbeat": {
     "wakeups": "Réveils",

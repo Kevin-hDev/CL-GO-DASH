@@ -14,7 +14,7 @@ export function useFsEvent(event: FsEvent, callback: () => void) {
   useEffect(() => {
     const unlisten = listen(event, callback);
     return () => {
-      unlisten.then((fn) => fn());
+      unlisten.then((fn) => fn()).catch(() => {});
     };
   }, [event, callback]);
 }
@@ -26,7 +26,7 @@ export function useFsEventWithPayload<T>(
   useEffect(() => {
     const unlisten = listen<T>(event, (e) => callback(e.payload));
     return () => {
-      unlisten.then((fn) => fn());
+      unlisten.then((fn) => fn()).catch(() => {});
     };
   }, [event, callback]);
 }
