@@ -26,6 +26,7 @@ export function MessageList({
             <UserMessage
               key={msg.id}
               content={msg.content}
+              files={msg.files}
               onReload={onReload ? () => onReload(msg.id) : undefined}
               onEdit={onEdit ? (c) => onEdit(msg.id, c) : undefined}
             />

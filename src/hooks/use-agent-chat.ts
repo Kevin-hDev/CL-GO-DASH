@@ -92,7 +92,10 @@ export function useAgentChat(sessionId: string | null, model: string) {
     });
   }, [sessionId, model, startStream, buildMessages]);
 
-  const sendMessage = useCallback(async (text: string, sentFiles?: { name: string; path?: string }[]) => {
+  const sendMessage = useCallback(async (
+    text: string,
+    sentFiles?: { name: string; path?: string; preview?: string }[],
+  ) => {
     if (!sessionId) return;
     if (!text.trim() && (!sentFiles || sentFiles.length < 1)) return;
     const fileAttachments = (sentFiles ?? []).map((f) => ({
@@ -100,6 +103,7 @@ export function useAgentChat(sessionId: string | null, model: string) {
       path: f.path ?? "",
       mime_type: "",
       size: 0,
+      thumbnail: f.preview,
     }));
     const userMsg: AgentMessage = {
       id: crypto.randomUUID(), role: "user",

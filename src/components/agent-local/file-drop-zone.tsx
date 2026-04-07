@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 
 interface FileDropZoneProps {
@@ -9,22 +9,27 @@ interface FileDropZoneProps {
 }
 
 export function FileDropZone({ dragging, onDragChange, onDropPaths, children }: FileDropZoneProps) {
+  const dragRef = useRef(onDragChange);
+  const dropRef = useRef(onDropPaths);
+  dragRef.current = onDragChange;
+  dropRef.current = onDropPaths;
+
   useEffect(() => {
     const unlisten = getCurrentWebview().onDragDropEvent((event) => {
       if (event.payload.type === "over") {
-        onDragChange(true);
+        dragRef.current(true);
       } else if (event.payload.type === "drop") {
-        onDragChange(false);
+        dragRef.current(false);
         if (event.payload.paths.length > 0) {
-          onDropPaths(event.payload.paths);
+          dropRef.current(event.payload.paths);
         }
       } else {
-        onDragChange(false);
+        dragRef.current(false);
       }
     });
 
     return () => { unlisten.then((fn) => fn()).catch(() => {}); };
-  }, [onDragChange, onDropPaths]);
+  }, []);
 
   return (
     <div style={{ position: "relative", height: "100%" }}>
