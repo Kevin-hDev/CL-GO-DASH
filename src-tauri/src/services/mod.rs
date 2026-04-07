@@ -1,3 +1,4 @@
+pub mod agent_local;
 pub mod config;
 pub mod cron;
 pub mod file_watcher;

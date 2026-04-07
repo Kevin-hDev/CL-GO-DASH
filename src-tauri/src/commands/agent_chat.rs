@@ -1,0 +1,101 @@
+use crate::services::agent_local::ollama_stream;
+use crate::services::agent_local::{session_store, tab_store};
+use crate::services::agent_local::types_ollama::{
+    ChatMessage, ChatOptions, ChatRequest, StreamEvent,
+};
+use crate::services::agent_local::types_session::{
+    AgentSession, AgentSessionMeta, TabState,
+};
+use crate::ActiveStreams;
+use tauri::ipc::Channel;
+use tokio_util::sync::CancellationToken;
+
+#[tauri::command]
+pub async fn chat_stream(
+    session_id: String,
+    model: String,
+    messages: Vec<ChatMessage>,
+    tools: Vec<serde_json::Value>,
+    think: bool,
+    on_event: Channel<StreamEvent>,
+    streams: tauri::State<'_, ActiveStreams>,
+) -> Result<(), String> {
+    let cancel = CancellationToken::new();
+    streams.0.lock().await.insert(session_id.clone(), cancel.clone());
+
+    let request = ChatRequest {
+        model,
+        messages,
+        stream: true,
+        tools: if tools.is_empty() { None } else { Some(tools) },
+        options: Some(ChatOptions { num_ctx: Some(32768) }),
+        keep_alive: None,
+    };
+
+    let result = ollama_stream::stream_chat(&on_event, &request, cancel).await;
+    streams.0.lock().await.remove(&session_id);
+    let _ = think;
+    result.map(|_| ())
+}
+
+#[tauri::command]
+pub async fn cancel_agent_request(
+    session_id: String,
+    streams: tauri::State<'_, ActiveStreams>,
+) -> Result<(), String> {
+    if let Some(token) = streams.0.lock().await.get(&session_id) {
+        token.cancel();
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn list_agent_sessions() -> Result<Vec<AgentSessionMeta>, String> {
+    session_store::list().await
+}
+
+#[tauri::command]
+pub async fn get_agent_session(id: String) -> Result<AgentSession, String> {
+    session_store::get(&id).await
+}
+
+#[tauri::command]
+pub async fn create_agent_session(
+    name: String,
+    model: String,
+) -> Result<AgentSession, String> {
+    session_store::create(&name, &model).await
+}
+
+#[tauri::command]
+pub async fn rename_agent_session(id: String, name: String) -> Result<(), String> {
+    session_store::rename(&id, &name).await
+}
+
+#[tauri::command]
+pub async fn delete_agent_session(id: String) -> Result<(), String> {
+    session_store::delete(&id).await
+}
+
+#[tauri::command]
+pub async fn export_agent_session_markdown(id: String) -> Result<String, String> {
+    session_store::export_markdown(&id).await
+}
+
+#[tauri::command]
+pub async fn truncate_session_at(
+    session_id: String,
+    message_id: String,
+) -> Result<(), String> {
+    session_store::truncate_at(&session_id, &message_id).await
+}
+
+#[tauri::command]
+pub async fn get_tab_state() -> Result<TabState, String> {
+    tab_store::get_state().await
+}
+
+#[tauri::command]
+pub async fn save_tab_state(state: TabState) -> Result<(), String> {
+    tab_store::save_state(&state).await
+}
