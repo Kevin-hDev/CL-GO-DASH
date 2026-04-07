@@ -135,8 +135,9 @@ export function ChatView({ sessionId, model, onModelChange, onTokenCountChange }
       </div>
       {preview && (
         <FilePreview
-          src={preview.preview ?? preview.name}
           name={preview.name}
+          path={preview.path}
+          thumbnail={preview.preview}
           isImage={!!preview.preview}
           onClose={() => setPreview(null)}
         />
