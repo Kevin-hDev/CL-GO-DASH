@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { CaretRight, CaretDown } from "@/components/ui/icons";
-import "./chat.css";
+import "./messages.css";
 
 interface ThinkingSectionProps {
   content: string;

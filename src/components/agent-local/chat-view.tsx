@@ -1,28 +1,49 @@
-import { useState, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { open as openFileDialog } from "@tauri-apps/plugin-dialog";
 import { DownloadSimple } from "@/components/ui/icons";
 import { MessageList } from "./message-list";
 import { ChatInput } from "./chat-input";
 import { TpsDisplay } from "./tps-display";
 import { FileDropZone } from "./file-drop-zone";
 import { FilePreview } from "./file-preview";
-import { SearchBar } from "./search-bar";
 import { useAgentChat } from "@/hooks/use-agent-chat";
 import { useOllamaStatus } from "@/hooks/use-ollama-status";
 import { useFileDrop, type DroppedFile } from "@/hooks/use-file-drop";
-import { useSearchInChat } from "@/hooks/use-search-in-chat";
+import scrollDownIcon from "@/assets/fleche.png";
+import "./chat.css";
 
 interface ChatViewProps {
   sessionId: string;
   model: string;
+  onModelChange?: (model: string) => void;
+  onTokenCountChange?: (count: number) => void;
 }
 
-export function ChatView({ sessionId, model }: ChatViewProps) {
+export function ChatView({ sessionId, model, onModelChange, onTokenCountChange }: ChatViewProps) {
   const chat = useAgentChat(sessionId, model);
   const ollamaRunning = useOllamaStatus();
   const fileDrop = useFileDrop();
-  const search = useSearchInChat(chat.messages);
   const [preview, setPreview] = useState<DroppedFile | null>(null);
+  const [thinking, setThinking] = useState(false);
+
+  useEffect(() => {
+    onTokenCountChange?.(chat.tokenCount);
+  }, [chat.tokenCount, onTokenCountChange]);
+
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const [isAtBottom, setIsAtBottom] = useState(true);
+
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setIsAtBottom(el.scrollHeight - el.scrollTop - el.clientHeight < 80);
+  }, []);
+
+  const scrollToBottom = useCallback(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, []);
 
   const handleExport = useCallback(async () => {
     try {
@@ -45,41 +66,68 @@ export function ChatView({ sessionId, model }: ChatViewProps) {
       onDragChange={fileDrop.setDragging}
       onDrop={(fl) => fileDrop.addFiles(fl)}
     >
-      <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-        {search.visible && (
-          <SearchBar
-            query={search.query}
-            onChange={search.setQuery}
-            matchCount={search.matchCount}
-            onClose={search.toggle}
+      <div className="chat-zone">
+        <div className="chat-messages" ref={scrollRef} onScroll={handleScroll}>
+          <MessageList
+            messages={chat.messages}
+            streamingContent={chat.streamingContent}
+            streamingThinking={chat.streamingThinking}
+            isStreaming={chat.isStreaming}
+            onReload={chat.reload}
+            onEdit={chat.edit}
           />
-        )}
-        <MessageList
-          messages={chat.messages}
-          streamingContent={chat.streamingContent}
-          streamingThinking={chat.streamingThinking}
-          isStreaming={chat.isStreaming}
-        />
-        <div style={{
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "var(--space-xs) var(--space-md)",
-        }}>
-          <TpsDisplay tps={chat.tps} tokenCount={chat.tokenCount} isStreaming={chat.isStreaming} />
-          <button className="msg-action-btn" onClick={handleExport} title="Export Markdown">
-            <DownloadSimple size={14} />
-          </button>
+          <div ref={bottomRef} />
         </div>
-        <ChatInput
-          modelName={model}
-          ollamaRunning={ollamaRunning}
-          isStreaming={chat.isStreaming}
-          files={fileDrop.files}
-          onSend={chat.sendMessage}
-          onStop={chat.stop}
-          onFileImport={() => {}}
-          onRemoveFile={fileDrop.removeFile}
-          onPreviewFile={setPreview}
-        />
+
+        {!isAtBottom && (
+          <button className="scroll-bottom-btn" onClick={scrollToBottom}>
+            <img src={scrollDownIcon} alt="" style={{ width: 20, height: 20 }} />
+          </button>
+        )}
+
+        <div className="chat-input-area">
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <TpsDisplay
+              tps={chat.tps}
+              tokenCount={chat.tokenCount}
+              isStreaming={chat.isStreaming}
+            />
+            {chat.messages.length > 0 && (
+              <button
+                className="msg-action-btn"
+                onClick={handleExport}
+                title="Export Markdown"
+              >
+                <DownloadSimple size={14} />
+              </button>
+            )}
+          </div>
+          <ChatInput
+            modelName={model}
+            ollamaRunning={ollamaRunning}
+            isStreaming={chat.isStreaming}
+            thinkingEnabled={thinking}
+            files={fileDrop.files}
+            onRemoveFile={fileDrop.removeFile}
+            onPreviewFile={setPreview}
+            onSend={chat.sendMessage}
+            onStop={chat.stop}
+            onFileImport={async () => {
+              const result = await openFileDialog({ multiple: true });
+              if (!result) return;
+              const paths = Array.isArray(result) ? result : [result];
+              const files = paths.map((p) => {
+                const pathStr = String(p);
+                const name = pathStr.split("/").pop() ?? pathStr;
+                return new File([], name);
+              });
+              fileDrop.addFiles(files);
+            }}
+            onModelChange={(m) => onModelChange?.(m)}
+            onToggleThinking={() => setThinking(!thinking)}
+            onSkillLoaded={chat.setSkill}
+          />
+        </div>
       </div>
       {preview && (
         <FilePreview

@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConversationList } from "./conversation-list";
@@ -13,12 +13,13 @@ export function AgentLocalTab(): { list: React.ReactNode; detail: React.ReactNod
   const { t } = useTranslation();
   const { sessions, create, rename, remove } = useAgentSessions();
   const tabState = useAgentTabs();
+  const [tokenCount, setTokenCount] = useState(0);
 
   const activeSession = tabState.activeSessionId
     ? sessions.find((s) => s.id.localeCompare(tabState.activeSessionId!) === 0)
     : null;
   const model = activeSession?.model ?? "qwen3.5:latest";
-  const contextBar = useContextBar(model, 0);
+  const contextBar = useContextBar(model, tokenCount);
 
   const handleCreate = useCallback(async () => {
     const session = await create("Nouvelle conversation", "qwen3.5:latest");
@@ -47,9 +48,9 @@ export function AgentLocalTab(): { list: React.ReactNode; detail: React.ReactNod
   );
 
   const detail = (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
       {tabState.tabs.length > 0 && (
-        <>
+        <div style={{ flexShrink: 0 }}>
           <TabBar
             tabs={tabState.tabs}
             activeIndex={tabState.activeIndex}
@@ -59,14 +60,19 @@ export function AgentLocalTab(): { list: React.ReactNode; detail: React.ReactNod
             onRename={tabState.renameTab}
           />
           <ContextBar percentage={contextBar.percentage} color={contextBar.color} />
-        </>
+        </div>
       )}
       {tabState.activeSessionId ? (
-        <ChatView sessionId={tabState.activeSessionId} model={model} />
+        <div style={{ flex: 1, minHeight: 0, overflow: "hidden" }}>
+          <ChatView
+            sessionId={tabState.activeSessionId}
+            model={model}
+            onModelChange={() => {}}
+            onTokenCountChange={setTokenCount}
+          />
+        </div>
       ) : (
-        <div style={{
-          flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
-        }}>
+        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <EmptyState message={t("agentLocal.selectOrCreate")} />
         </div>
       )}

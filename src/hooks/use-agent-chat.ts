@@ -1,6 +1,7 @@
-import { useState, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import { useAgentStream } from "./use-agent-stream";
-import type { AgentMessage } from "@/types/agent";
+import type { AgentMessage, AgentSession } from "@/types/agent";
 
 interface ChatState {
   messages: AgentMessage[];
@@ -13,49 +14,49 @@ interface ChatState {
 
 export function useAgentChat(sessionId: string | null, model: string) {
   const [state, setState] = useState<ChatState>({
-    messages: [],
-    streamingContent: "",
-    streamingThinking: "",
-    isStreaming: false,
-    tps: 0,
-    tokenCount: 0,
+    messages: [], streamingContent: "", streamingThinking: "",
+    isStreaming: false, tps: 0, tokenCount: 0,
   });
-
+  const skillRef = useRef<string | null>(null);
   const { startStream, stopStream } = useAgentStream();
 
-  const sendMessage = useCallback(async (text: string) => {
-    if (!sessionId || !text.trim()) return;
-
-    const userMsg: AgentMessage = {
-      id: crypto.randomUUID(),
-      role: "user",
-      content: text,
-      files: [],
-      timestamp: new Date().toISOString(),
-    };
-
-    setState((s) => ({
-      ...s,
-      messages: [...s.messages, userMsg],
-      streamingContent: "",
-      streamingThinking: "",
-      isStreaming: true,
-      tps: 0,
-    }));
-
-    await startStream(sessionId, model, [...state.messages, userMsg], [], false, {
-      onToken: (content, tokenCount, tps) => {
+  useEffect(() => {
+    if (!sessionId) return;
+    invoke<AgentSession>("get_agent_session", { id: sessionId })
+      .then((session) => {
         setState((s) => ({
-          ...s,
-          streamingContent: s.streamingContent + content,
-          tps,
-          tokenCount,
+          ...s, messages: session.messages,
+          tokenCount: session.accumulated_tokens,
+        }));
+      })
+      .catch((e: unknown) => console.warn("Session load:", e));
+  }, [sessionId]);
+
+  const buildMessages = useCallback((msgs: AgentMessage[]): AgentMessage[] => {
+    if (!skillRef.current) return msgs;
+    const systemMsg: AgentMessage = {
+      id: "system-skill", role: "user", content: skillRef.current,
+      files: [], timestamp: new Date().toISOString(),
+    };
+    return [systemMsg, ...msgs];
+  }, []);
+
+  const doStream = useCallback(async (msgs: AgentMessage[]) => {
+    if (!sessionId) return;
+    setState((s) => ({
+      ...s, messages: msgs, streamingContent: "", streamingThinking: "",
+      isStreaming: true, tps: 0,
+    }));
+    const toSend = buildMessages(msgs);
+    await startStream(sessionId, model, toSend, [], false, {
+      onToken: (content, _tc, tps) => {
+        setState((s) => ({
+          ...s, streamingContent: s.streamingContent + content, tps,
         }));
       },
       onThinking: (content) => {
         setState((s) => ({
-          ...s,
-          streamingThinking: s.streamingThinking + content,
+          ...s, streamingThinking: s.streamingThinking + content,
         }));
       },
       onToolCall: () => {},
@@ -63,21 +64,29 @@ export function useAgentChat(sessionId: string | null, model: string) {
       onDone: (evalCount, finalTps, promptTokens) => {
         setState((s) => {
           const assistantMsg: AgentMessage = {
-            id: crypto.randomUUID(),
-            role: "assistant",
+            id: crypto.randomUUID(), role: "assistant",
             content: s.streamingContent,
             thinking: s.streamingThinking || undefined,
-            files: [],
-            timestamp: new Date().toISOString(),
+            files: [], timestamp: new Date().toISOString(),
           };
+          const newTokens = s.tokenCount + evalCount + promptTokens;
+          const newMessages = [...s.messages, assistantMsg];
+          // Sauvegarder la session
+          if (sessionId) {
+            invoke("save_agent_session", {
+              session: {
+                id: sessionId, name: "", model,
+                created_at: new Date().toISOString(),
+                thinking_enabled: false,
+                accumulated_tokens: newTokens,
+                messages: newMessages,
+              },
+            }).catch((e: unknown) => console.warn("Save session:", e));
+          }
           return {
-            ...s,
-            messages: [...s.messages, assistantMsg],
-            streamingContent: "",
-            streamingThinking: "",
-            isStreaming: false,
-            tps: finalTps,
-            tokenCount: s.tokenCount + evalCount + promptTokens,
+            ...s, messages: newMessages,
+            streamingContent: "", streamingThinking: "",
+            isStreaming: false, tps: finalTps, tokenCount: newTokens,
           };
         });
       },
@@ -86,12 +95,45 @@ export function useAgentChat(sessionId: string | null, model: string) {
         console.error("Stream error:", message);
       },
     });
-  }, [sessionId, model, state.messages, startStream]);
+  }, [sessionId, model, startStream, buildMessages]);
+
+  const sendMessage = useCallback(async (text: string) => {
+    if (!sessionId || !text.trim()) return;
+    const userMsg: AgentMessage = {
+      id: crypto.randomUUID(), role: "user", content: text,
+      files: [], timestamp: new Date().toISOString(),
+    };
+    await doStream([...state.messages, userMsg]);
+  }, [sessionId, state.messages, doStream]);
+
+  const reload = useCallback(async (messageId: string) => {
+    if (!sessionId) return;
+    const idx = state.messages.findIndex((m) => m.id.localeCompare(messageId) === 0);
+    if (idx < 0) return;
+    await invoke("truncate_session_at", { sessionId, messageId }).catch(() => {});
+    await doStream(state.messages.slice(0, idx + 1));
+  }, [sessionId, state.messages, doStream]);
+
+  const edit = useCallback(async (messageId: string, newContent: string) => {
+    if (!sessionId) return;
+    const idx = state.messages.findIndex((m) => m.id.localeCompare(messageId) === 0);
+    if (idx < 0) return;
+    await invoke("truncate_session_at", { sessionId, messageId }).catch(() => {});
+    const newMsg: AgentMessage = {
+      id: crypto.randomUUID(), role: "user", content: newContent,
+      files: [], timestamp: new Date().toISOString(),
+    };
+    await doStream([...state.messages.slice(0, idx), newMsg]);
+  }, [sessionId, state.messages, doStream]);
 
   const stop = useCallback(async () => {
     if (sessionId) await stopStream(sessionId);
     setState((s) => ({ ...s, isStreaming: false }));
   }, [sessionId, stopStream]);
 
-  return { ...state, sendMessage, stop };
+  const setSkill = useCallback((content: string | null) => {
+    skillRef.current = content;
+  }, []);
+
+  return { ...state, sendMessage, reload, edit, stop, setSkill };
 }

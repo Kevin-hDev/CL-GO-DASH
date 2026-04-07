@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { ArrowsClockwise, Pencil, Copy, Check } from "@/components/ui/icons";
-import "./chat.css";
+import "./messages.css";
 
 interface MessageActionsProps {
   role: "user" | "assistant";

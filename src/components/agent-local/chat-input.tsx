@@ -6,6 +6,7 @@ import { useSlashCommands } from "@/hooks/use-slash-commands";
 import { SendStopButton } from "./send-stop-button";
 import { OllamaIndicator } from "./ollama-indicator";
 import { SlashAutocomplete } from "./slash-autocomplete";
+import { ModelSelector } from "./model-selector";
 import { FileThumbnail } from "./file-thumbnail";
 import type { DroppedFile } from "@/hooks/use-file-drop";
 import "./chat.css";
@@ -14,24 +15,29 @@ interface ChatInputProps {
   modelName: string;
   ollamaRunning: boolean;
   isStreaming: boolean;
+  thinkingEnabled: boolean;
   files?: DroppedFile[];
   onSend: (text: string) => void;
   onStop: () => void;
   onFileImport: () => void;
+  onModelChange: (model: string) => void;
+  onToggleThinking: () => void;
+  onSkillLoaded?: (content: string | null) => void;
   onRemoveFile?: (index: number) => void;
   onPreviewFile?: (file: DroppedFile) => void;
 }
 
 export function ChatInput({
-  modelName, ollamaRunning, isStreaming, files,
-  onSend, onStop, onFileImport, onRemoveFile, onPreviewFile,
+  modelName, ollamaRunning, isStreaming, thinkingEnabled, files,
+  onSend, onStop, onFileImport, onModelChange, onToggleThinking, onSkillLoaded,
+  onRemoveFile, onPreviewFile,
 }: ChatInputProps) {
   const { t } = useTranslation();
   const [text, setText] = useState("");
-  const { ref, resize } = useAutoResize();
+  const { ref, resize } = useAutoResize(200);
   const slash = useSlashCommands();
 
-  const hasContent = text.trim().length > 0 || (files && files.length > 0);
+  const hasContent = text.trim().length > 0;
 
   const handleSend = useCallback(() => {
     if (!hasContent) return;
@@ -62,29 +68,28 @@ export function ChatInput({
     : "hidden" as const;
 
   return (
-    <div className="chat-input-wrap">
-      <div className="chat-input-box">
-        {slash.showDropdown && (
-          <SlashAutocomplete
-            skills={slash.skills}
-            onSelect={(skill) => { slash.selectSkill(skill); setText(""); }}
-          />
-        )}
-        <textarea
-          ref={ref}
-          value={text}
-          onChange={(e) => handleChange(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={t("agentLocal.placeholder")}
-          className="chat-textarea"
-          rows={1}
+    <div className="chat-input-bubble">
+      {slash.showDropdown && (
+        <SlashAutocomplete
+          skills={slash.skills}
+          onSelect={async (skill) => {
+            const content = await slash.selectSkill(skill);
+            onSkillLoaded?.(content);
+            setText("");
+          }}
         />
-        <div style={{ position: "absolute", right: 8, bottom: 8 }}>
-          <SendStopButton state={buttonState} onSend={handleSend} onStop={onStop} />
-        </div>
-      </div>
+      )}
+      <textarea
+        ref={ref}
+        value={text}
+        onChange={(e) => handleChange(e.target.value)}
+        onKeyDown={handleKeyDown}
+        placeholder={t("agentLocal.placeholder")}
+        className="chat-textarea"
+        rows={2}
+      />
       {files && files.length > 0 && (
-        <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 6, padding: "0 var(--space-sm)", flexWrap: "wrap" }}>
           {files.map((f, i) => (
             <FileThumbnail
               key={`${f.name}-${i}`}
@@ -95,14 +100,19 @@ export function ChatInput({
           ))}
         </div>
       )}
-      <div className="chat-input-footer">
-        <button className="conv-add-btn" onClick={onFileImport}>
-          <Plus size={14} />
+      <div className="chat-input-row3">
+        <button className="chat-plus-btn" onClick={onFileImport}>
+          <Plus size={16} />
         </button>
-        <div className="chat-model-info">
-          <span>{modelName}</span>
-          <OllamaIndicator running={ollamaRunning} />
-        </div>
+        <div className="chat-input-spacer" />
+        <OllamaIndicator running={ollamaRunning} />
+        <ModelSelector
+          selectedModel={modelName}
+          onSelect={onModelChange}
+          thinkingEnabled={thinkingEnabled}
+          onToggleThinking={onToggleThinking}
+        />
+        <SendStopButton state={buttonState} onSend={handleSend} onStop={onStop} />
       </div>
     </div>
   );

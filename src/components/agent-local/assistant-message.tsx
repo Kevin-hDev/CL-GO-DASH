@@ -1,7 +1,7 @@
 import { CodeBlock } from "./code-block";
 import { ThinkingSection } from "./thinking-section";
 import { MessageActions } from "./message-actions";
-import "./chat.css";
+import "./messages.css";
 
 interface AssistantMessageProps {
   content: string;

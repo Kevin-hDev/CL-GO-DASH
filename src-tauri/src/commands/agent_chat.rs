@@ -60,6 +60,11 @@ pub async fn get_agent_session(id: String) -> Result<AgentSession, String> {
 }
 
 #[tauri::command]
+pub async fn save_agent_session(session: AgentSession) -> Result<(), String> {
+    session_store::save(&session).await
+}
+
+#[tauri::command]
 pub async fn create_agent_session(
     name: String,
     model: String,

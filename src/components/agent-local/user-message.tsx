@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { MessageActions } from "./message-actions";
 import { EditMessage } from "./edit-message";
-import "./chat.css";
+import "./messages.css";
 
 interface UserMessageProps {
   content: string;

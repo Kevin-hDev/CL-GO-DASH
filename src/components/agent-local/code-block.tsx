@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { Copy, Check } from "@/components/ui/icons";
-import "./chat.css";
+import "./messages.css";
 
 interface CodeBlockProps {
   code: string;
