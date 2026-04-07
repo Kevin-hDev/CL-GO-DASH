@@ -10,7 +10,8 @@
       "identifier": "fs:allow-read-text-file",
       "allow": [
         { "path": "$HOME/.local/share/cl-go/**" },
-        { "path": "$HOME/.claude/projects/-Users-kevinh/**" }
+        { "path": "$HOME/.claude/projects/-Users-kevinh/**" },
+        { "path": "$HOME/.claude/skills/**" }
       ]
     },
     {
@@ -23,9 +24,35 @@
       "identifier": "fs:allow-exists",
       "allow": [
         { "path": "$HOME/.local/share/cl-go/**" },
-        { "path": "$HOME/.claude/projects/-Users-kevinh/**" }
+        { "path": "$HOME/.claude/projects/-Users-kevinh/**" },
+        { "path": "$HOME/.claude/skills/**" }
       ]
     },
+    {
+      "identifier": "fs:allow-read-file",
+      "allow": [
+        { "path": "**" }
+      ]
+    },
+    {
+      "identifier": "fs:allow-stat",
+      "allow": [
+        { "path": "**" }
+      ]
+    },
+    {
+      "identifier": "fs:allow-mkdir",
+      "allow": [
+        { "path": "$HOME/.local/share/cl-go/**" }
+      ]
+    },
+    {
+      "identifier": "fs:allow-rename",
+      "allow": [
+        { "path": "$HOME/.local/share/cl-go/**" }
+      ]
+    },
+    "dialog:default",
     "shell:default",
     {
       "identifier": "shell:allow-execute",

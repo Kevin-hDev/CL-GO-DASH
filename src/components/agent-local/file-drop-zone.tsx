@@ -1,36 +1,33 @@
-import { useCallback, type ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
+import { getCurrentWebview } from "@tauri-apps/api/webview";
 
 interface FileDropZoneProps {
   dragging: boolean;
   onDragChange: (dragging: boolean) => void;
-  onDrop: (files: FileList) => void;
+  onDropPaths: (paths: string[]) => void;
   children: ReactNode;
 }
 
-export function FileDropZone({ dragging, onDragChange, onDrop, children }: FileDropZoneProps) {
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    onDragChange(true);
-  }, [onDragChange]);
+export function FileDropZone({ dragging, onDragChange, onDropPaths, children }: FileDropZoneProps) {
+  useEffect(() => {
+    const unlisten = getCurrentWebview().onDragDropEvent((event) => {
+      if (event.payload.type === "over") {
+        onDragChange(true);
+      } else if (event.payload.type === "drop") {
+        onDragChange(false);
+        if (event.payload.paths.length > 0) {
+          onDropPaths(event.payload.paths);
+        }
+      } else {
+        onDragChange(false);
+      }
+    });
 
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    if (e.currentTarget.contains(e.relatedTarget as Node)) return;
-    onDragChange(false);
-  }, [onDragChange]);
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    onDragChange(false);
-    if (e.dataTransfer.files.length > 0) onDrop(e.dataTransfer.files);
-  }, [onDragChange, onDrop]);
+    return () => { unlisten.then((fn) => fn()).catch(() => {}); };
+  }, [onDragChange, onDropPaths]);
 
   return (
-    <div
-      style={{ position: "relative", height: "100%" }}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-    >
+    <div style={{ position: "relative", height: "100%" }}>
       {children}
       {dragging && (
         <div style={{

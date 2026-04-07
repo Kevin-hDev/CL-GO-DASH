@@ -64,7 +64,7 @@ export function ChatView({ sessionId, model, onModelChange, onTokenCountChange }
     <FileDropZone
       dragging={fileDrop.dragging}
       onDragChange={fileDrop.setDragging}
-      onDrop={(fl) => fileDrop.addFiles(fl)}
+      onDropPaths={(paths) => fileDrop.addByPaths(paths)}
     >
       <div className="chat-zone">
         <div className="chat-messages" ref={scrollRef} onScroll={handleScroll}>
