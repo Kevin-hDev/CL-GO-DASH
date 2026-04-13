@@ -1,7 +1,20 @@
 use crate::services::agent_local::types_session::{AgentSession, AgentSessionMeta};
 use chrono::Utc;
+use std::collections::HashMap;
 use std::path::PathBuf;
+use std::sync::LazyLock;
+use tokio::sync::Mutex;
 use uuid::Uuid;
+
+static SESSION_LOCKS: LazyLock<Mutex<HashMap<String, std::sync::Arc<Mutex<()>>>>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
+
+async fn lock_session(id: &str) -> std::sync::Arc<Mutex<()>> {
+    let mut map = SESSION_LOCKS.lock().await;
+    map.entry(id.to_string())
+        .or_insert_with(|| std::sync::Arc::new(Mutex::new(())))
+        .clone()
+}
 
 fn sessions_dir() -> PathBuf {
     dirs::data_local_dir()
@@ -66,7 +79,8 @@ pub async fn save(session: &AgentSession) -> Result<(), String> {
     let dir = sessions_dir();
     tokio::fs::create_dir_all(&dir).await.map_err(|e| e.to_string())?;
     let path = dir.join(format!("{}.json", session.id));
-    let tmp = dir.join(format!(".{}.tmp", session.id));
+    // Fichier tmp unique par appel pour éviter les races entre saves concurrents
+    let tmp = dir.join(format!(".{}.{}.tmp", session.id, Uuid::new_v4()));
     let data = serde_json::to_string_pretty(session).map_err(|e| e.to_string())?;
     tokio::fs::write(&tmp, &data).await.map_err(|e| e.to_string())?;
     tokio::fs::rename(&tmp, &path).await.map_err(|e| e.to_string())?;
@@ -78,6 +92,8 @@ pub async fn add_messages(
     new_messages: Vec<crate::services::agent_local::types_session::AgentMessage>,
     tokens: u32,
 ) -> Result<(), String> {
+    let lock = lock_session(id).await;
+    let _guard = lock.lock().await;
     let mut session = get(id).await?;
     session.messages.extend(new_messages);
     session.accumulated_tokens += tokens;

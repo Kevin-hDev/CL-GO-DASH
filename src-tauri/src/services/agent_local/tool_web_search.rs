@@ -11,13 +11,14 @@ const KEYRING_USER: &str = "brave_api_key";
 
 pub async fn web_search(query: &str) -> Result<Vec<SearchResult>, String> {
     if let Ok(key) = get_brave_key() {
-        if let Ok(results) = brave_search(query, &key).await {
-            if !results.is_empty() {
-                return Ok(results);
-            }
+        return brave_search(query, &key).await;
+    }
+    if let Ok(results) = searxng_search(query).await {
+        if !results.is_empty() {
+            return Ok(results);
         }
     }
-    searxng_search(query).await
+    Err("Recherche web indisponible. Configure une clé API Brave Search dans les paramètres (gratuit sur brave.com/search/api) ou lance SearXNG en local sur le port 8080.".to_string())
 }
 
 async fn brave_search(query: &str, api_key: &str) -> Result<Vec<SearchResult>, String> {

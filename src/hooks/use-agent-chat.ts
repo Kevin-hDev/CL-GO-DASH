@@ -18,6 +18,7 @@ export function useAgentChat(sessionId: string | null, model: string) {
     isStreaming: false, tps: 0, tokenCount: 0,
   });
   const skillRef = useRef<string | null>(null);
+  const savingRef = useRef(false);
   const { startStream, stopStream } = useAgentStream();
 
   useEffect(() => {
@@ -48,7 +49,7 @@ export function useAgentChat(sessionId: string | null, model: string) {
       isStreaming: true, tps: 0,
     }));
     const toSend = buildMessages(msgs);
-    await startStream(sessionId, model, toSend, [], false, {
+    await startStream(sessionId, model, toSend, [], true, {
       onToken: (content, _tc, tps) => {
         setState((s) => ({
           ...s, streamingContent: s.streamingContent + content, tps,
@@ -63,19 +64,26 @@ export function useAgentChat(sessionId: string | null, model: string) {
       onToolResult: () => {},
       onDone: (evalCount, finalTps, promptTokens) => {
         setState((s) => {
+          if (!s.streamingContent && !s.streamingThinking) {
+            return { ...s, isStreaming: false, tps: finalTps };
+          }
           const assistantMsg: AgentMessage = {
             id: crypto.randomUUID(), role: "assistant",
             content: s.streamingContent,
             thinking: s.streamingThinking || undefined,
             files: [], timestamp: new Date().toISOString(),
           };
-          const addedTokens = evalCount + promptTokens;
-          if (sessionId) {
+          const addedTokens = (evalCount || 0) + (promptTokens || 0);
+          // Sauvegarder une seule fois (garde StrictMode)
+          if (!savingRef.current && sessionId) {
+            savingRef.current = true;
             invoke("add_messages_to_session", {
               id: sessionId,
               messages: [assistantMsg],
               tokens: addedTokens,
-            }).catch((e: unknown) => console.error("Save assistant msg:", e));
+            })
+              .catch((e: unknown) => console.error("Save assistant msg:", e))
+              .finally(() => { savingRef.current = false; });
           }
           return {
             ...s, messages: [...s.messages, assistantMsg],
@@ -110,8 +118,8 @@ export function useAgentChat(sessionId: string | null, model: string) {
       content: text,
       files: fileAttachments, timestamp: new Date().toISOString(),
     };
-    // Sauvegarder le message user
-    invoke("add_messages_to_session", {
+    // Sauvegarder le message user avant de lancer le stream
+    await invoke("add_messages_to_session", {
       id: sessionId, messages: [userMsg], tokens: 0,
     }).catch((e: unknown) => console.error("Save user msg:", e));
     await doStream([...state.messages, userMsg]);

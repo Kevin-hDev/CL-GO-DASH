@@ -12,6 +12,23 @@ pub async fn stream_chat(
     request: &ChatRequest,
     cancel: CancellationToken,
 ) -> Result<StreamResult, String> {
+    stream_chat_inner(on_event, request, cancel, true).await
+}
+
+pub async fn stream_chat_no_done(
+    on_event: &Channel<StreamEvent>,
+    request: &ChatRequest,
+    cancel: CancellationToken,
+) -> Result<StreamResult, String> {
+    stream_chat_inner(on_event, request, cancel, false).await
+}
+
+async fn stream_chat_inner(
+    on_event: &Channel<StreamEvent>,
+    request: &ChatRequest,
+    cancel: CancellationToken,
+    emit_done: bool,
+) -> Result<StreamResult, String> {
     let client = reqwest::Client::new();
     let resp = client
         .post(format!("{BASE_URL}/api/chat"))
@@ -38,7 +55,7 @@ pub async fn stream_chat(
                 match line {
                     Ok(Some(text)) => {
                         if let Err(e) = process_chunk(
-                            &text, on_event, &mut token_count, &mut first_token, &mut result,
+                            &text, on_event, &mut token_count, &mut first_token, &mut result, emit_done,
                         ) {
                             let _ = on_event.send(StreamEvent::Error { message: e.clone() });
                             return Err(e);
@@ -63,6 +80,7 @@ fn process_chunk(
     token_count: &mut u32,
     first_token: &mut Option<std::time::Instant>,
     result: &mut StreamResult,
+    should_emit_done: bool,
 ) -> Result<(), String> {
     let chunk: serde_json::Value =
         serde_json::from_str(text).map_err(|e| format!("JSON invalide: {e}"))?;
@@ -70,7 +88,10 @@ fn process_chunk(
     if chunk["done"].as_bool() == Some(true) {
         result.eval_count = chunk["eval_count"].as_u64().unwrap_or(0) as u32;
         result.prompt_tokens = chunk["prompt_eval_count"].as_u64().unwrap_or(0) as u32;
-        return emit_done(on_event, &chunk);
+        if should_emit_done {
+            return emit_done(on_event, &chunk);
+        }
+        return Ok(());
     }
 
     let msg = &chunk["message"];

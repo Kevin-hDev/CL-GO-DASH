@@ -9,11 +9,16 @@ const LOCAL_URL: &str = "http://localhost:11434";
 const REGISTRY_URL: &str = "https://ollama.com";
 
 pub async fn search_models(query: &str) -> Result<Vec<RegistryModel>, String> {
-    let client = Client::new();
-    let url = format!("{REGISTRY_URL}/api/search?q={}", urlencoded(query));
+    let client = Client::builder()
+        .timeout(std::time::Duration::from_secs(15))
+        .build()
+        .map_err(|e| e.to_string())?;
+
+    // Scrape la page de recherche Ollama (pas d'API JSON publique)
+    let url = format!("{REGISTRY_URL}/search?q={}", urlencoded(query));
     let resp = client
         .get(&url)
-        .timeout(std::time::Duration::from_secs(10))
+        .header("User-Agent", "CL-GO-DASH/1.0")
         .send()
         .await
         .map_err(|e| format!("Recherche impossible: {e}"))?;
@@ -22,24 +27,32 @@ pub async fn search_models(query: &str) -> Result<Vec<RegistryModel>, String> {
         return Err(format!("Erreur registre: {}", resp.status()));
     }
 
-    let json: serde_json::Value = resp.json().await.map_err(|e| e.to_string())?;
-    let models = json["models"]
-        .as_array()
-        .or_else(|| json["items"].as_array())
-        .unwrap_or(&Vec::new())
-        .iter()
-        .map(|m| RegistryModel {
-            name: m["name"].as_str().unwrap_or_default().to_string(),
-            description: m["description"].as_str().unwrap_or_default().to_string(),
-            tags: m["tags"]
-                .as_array()
-                .map(|a| a.iter().filter_map(|v| v.as_str().map(String::from)).collect())
-                .unwrap_or_default(),
-            is_installed: false,
-        })
-        .collect();
+    let html = resp.text().await.map_err(|e| e.to_string())?;
+    Ok(parse_search_html(&html))
+}
 
-    Ok(models)
+fn parse_search_html(html: &str) -> Vec<RegistryModel> {
+    let mut models = Vec::new();
+    // Les résultats sont dans des liens <a href="/library/MODEL_NAME">
+    // avec le nom du modèle et une description
+    for line in html.lines() {
+        let trimmed = line.trim();
+        if let Some(start) = trimmed.find("href=\"/library/") {
+            let after = &trimmed[start + 15..];
+            if let Some(end) = after.find('"') {
+                let name = after[..end].to_string();
+                if !name.is_empty() && !name.contains('/') && !models.iter().any(|m: &RegistryModel| m.name == name) {
+                    models.push(RegistryModel {
+                        name,
+                        description: String::new(),
+                        tags: vec![],
+                        is_installed: false,
+                    });
+                }
+            }
+        }
+    }
+    models
 }
 
 pub async fn pull_model(

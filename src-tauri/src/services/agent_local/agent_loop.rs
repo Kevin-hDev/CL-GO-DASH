@@ -19,7 +19,9 @@ pub async fn run_agent_loop(
     working_dir: PathBuf,
     cancel: CancellationToken,
 ) -> Result<u32, String> {
-    let mut accumulated_tokens: u32 = 0;
+    let mut total_eval: u32 = 0;
+    let mut total_prompt: u32 = 0;
+    let start = std::time::Instant::now();
 
     for turn in 0..MAX_TURNS {
         if cancel.is_cancelled() {
@@ -27,9 +29,11 @@ pub async fn run_agent_loop(
         }
 
         let request = build_request(model, messages, &tools, think);
-        let result = ollama_stream::stream_chat(on_event, &request, cancel.clone()).await?;
+        // Pas de Done intermédiaire — le frontend n'en attend qu'un seul
+        let result = ollama_stream::stream_chat_no_done(on_event, &request, cancel.clone()).await?;
 
-        accumulated_tokens += result.eval_count + result.prompt_tokens;
+        total_eval += result.eval_count;
+        total_prompt += result.prompt_tokens;
 
         let assistant_msg = build_assistant_message(&result);
         messages.push(assistant_msg);
@@ -68,8 +72,18 @@ pub async fn run_agent_loop(
         }
     }
 
+    // Un seul Done à la fin avec les totaux
+    let elapsed_ns = start.elapsed().as_nanos() as u64;
+    let final_tps = if elapsed_ns > 0 { total_eval as f64 / (elapsed_ns as f64 / 1e9) } else { 0.0 };
+    let _ = on_event.send(StreamEvent::Done {
+        eval_count: total_eval,
+        eval_duration_ns: elapsed_ns,
+        final_tps,
+        prompt_tokens: total_prompt,
+    });
+
     decharge_gpu(model).await;
-    Ok(accumulated_tokens)
+    Ok(total_eval + total_prompt)
 }
 
 fn build_request(
@@ -78,14 +92,19 @@ fn build_request(
     tools: &[serde_json::Value],
     think: bool,
 ) -> ChatRequest {
-    let _ = think;
+    let mut options = ChatOptions { num_ctx: Some(32768) };
+    if think {
+        // Ollama utilise num_ctx pour le thinking budget
+        options.num_ctx = Some(65536);
+    }
     ChatRequest {
         model: model.to_string(),
         messages: messages.to_vec(),
         stream: true,
         tools: if tools.is_empty() { None } else { Some(tools.to_vec()) },
-        options: Some(ChatOptions { num_ctx: Some(32768) }),
+        options: Some(options),
         keep_alive: None,
+        think: if think { Some(true) } else { None },
     }
 }
 

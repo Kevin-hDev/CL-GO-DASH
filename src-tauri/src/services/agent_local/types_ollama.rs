@@ -64,6 +64,8 @@ pub struct ChatRequest {
     pub options: Option<ChatOptions>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub keep_alive: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub think: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

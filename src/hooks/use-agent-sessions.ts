@@ -37,5 +37,12 @@ export function useAgentSessions() {
     await refresh();
   }, [refresh]);
 
-  return { sessions, loading, refresh, create, rename, remove };
+  const updateModel = useCallback(async (id: string, model: string) => {
+    const session = await invoke<{ id: string; name: string; model: string; messages: unknown[]; accumulated_tokens: number }>("get_agent_session", { id });
+    session.model = model;
+    await invoke("save_agent_session", { session });
+    await refresh();
+  }, [refresh]);
+
+  return { sessions, loading, refresh, create, rename, remove, updateModel };
 }

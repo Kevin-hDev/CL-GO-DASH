@@ -1,5 +1,6 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { invoke } from "@tauri-apps/api/core";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConversationList } from "./conversation-list";
 import { TabBar } from "./tab-bar";
@@ -9,22 +10,39 @@ import { useAgentSessions } from "@/hooks/use-agent-sessions";
 import { useAgentTabs } from "@/hooks/use-agent-tabs";
 import { useContextBar } from "@/hooks/use-context-bar";
 
+interface OllamaModel {
+  name: string;
+}
+
+function useDefaultModel(): string {
+  const [defaultModel, setDefaultModel] = useState("gemma4:e4b");
+  useEffect(() => {
+    invoke<OllamaModel[]>("list_ollama_models")
+      .then((models) => {
+        if (models.length > 0) setDefaultModel(models[0].name);
+      })
+      .catch(() => {});
+  }, []);
+  return defaultModel;
+}
+
 export function AgentLocalTab(): { list: React.ReactNode; detail: React.ReactNode } {
   const { t } = useTranslation();
-  const { sessions, create, rename, remove } = useAgentSessions();
+  const { sessions, create, rename, remove, updateModel } = useAgentSessions();
   const tabState = useAgentTabs();
   const [tokenCount, setTokenCount] = useState(0);
+  const defaultModel = useDefaultModel();
 
   const activeSession = tabState.activeSessionId
     ? sessions.find((s) => s.id.localeCompare(tabState.activeSessionId!) === 0)
     : null;
-  const model = activeSession?.model ?? "qwen3.5:latest";
+  const model = activeSession?.model ?? defaultModel;
   const contextBar = useContextBar(model, tokenCount);
 
   const handleCreate = useCallback(async () => {
-    const session = await create("Nouvelle conversation", "qwen3.5:latest");
+    const session = await create("Nouvelle conversation", defaultModel);
     await tabState.addTab(session.id, session.name);
-  }, [create, tabState]);
+  }, [create, tabState, defaultModel]);
 
   const handleSelect = useCallback(async (id: string) => {
     const idx = tabState.tabs.findIndex((tab) => tab.session_id.localeCompare(id) === 0);
@@ -67,7 +85,11 @@ export function AgentLocalTab(): { list: React.ReactNode; detail: React.ReactNod
           <ChatView
             sessionId={tabState.activeSessionId}
             model={model}
-            onModelChange={() => {}}
+            onModelChange={(m) => {
+              if (tabState.activeSessionId && updateModel) {
+                updateModel(tabState.activeSessionId, m);
+              }
+            }}
             onTokenCountChange={setTokenCount}
           />
         </div>

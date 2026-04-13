@@ -55,8 +55,15 @@ export function useFileDrop() {
         let preview: string | undefined;
         if (IMAGE_EXTS.includes(ext)) {
           const bytes = await readFile(p);
-          const blob = new Blob([bytes]);
-          preview = URL.createObjectURL(blob);
+          let binary = "";
+          for (let i = 0; i < bytes.length; i++) {
+            binary += String.fromCharCode(bytes[i]);
+          }
+          const mimeMap: Record<string, string> = {
+            png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg",
+            gif: "image/gif", webp: "image/webp",
+          };
+          preview = `data:${mimeMap[ext] ?? "image/png"};base64,${btoa(binary)}`;
         }
         dropped.push({ name, path: p, type: ext, size, preview });
       } catch (e: unknown) {

@@ -1,7 +1,8 @@
-use crate::services::agent_local::ollama_stream;
+use crate::services::agent_local::agent_loop;
+use crate::services::agent_local::tool_dispatcher;
 use crate::services::agent_local::{session_store, tab_store};
 use crate::services::agent_local::types_ollama::{
-    ChatMessage, ChatOptions, ChatRequest, StreamEvent,
+    ChatMessage, StreamEvent,
 };
 use crate::services::agent_local::types_session::{
     AgentSession, AgentSessionMeta, TabState,
@@ -23,18 +24,27 @@ pub async fn chat_stream(
     let cancel = CancellationToken::new();
     streams.0.lock().await.insert(session_id.clone(), cancel.clone());
 
-    let request = ChatRequest {
-        model,
-        messages,
-        stream: true,
-        tools: if tools.is_empty() { None } else { Some(tools) },
-        options: Some(ChatOptions { num_ctx: Some(32768) }),
-        keep_alive: None,
+    let final_tools = if tools.is_empty() {
+        tool_dispatcher::get_tool_definitions()
+    } else {
+        tools
     };
 
-    let result = ollama_stream::stream_chat(&on_event, &request, cancel).await;
+    let working_dir = std::env::current_dir().unwrap_or_else(|_| dirs::home_dir().unwrap());
+    let mut msgs = messages;
+
+    let result = agent_loop::run_agent_loop(
+        &on_event,
+        &mut msgs,
+        &model,
+        final_tools,
+        think,
+        working_dir,
+        cancel,
+    )
+    .await;
+
     streams.0.lock().await.remove(&session_id);
-    let _ = think;
     result.map(|_| ())
 }
 
