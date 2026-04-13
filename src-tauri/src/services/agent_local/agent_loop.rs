@@ -70,6 +70,9 @@ pub async fn run_agent_loop(
                 tool_name: Some(name.clone()),
             });
         }
+
+        // Signaler la fin du tour au frontend
+        let _ = on_event.send(StreamEvent::TurnEnd {});
     }
 
     // Un seul Done à la fin avec les totaux

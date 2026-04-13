@@ -117,6 +117,7 @@ pub enum StreamEvent {
         content: String,
         is_error: bool,
     },
+    TurnEnd {},
     Done {
         eval_count: u32,
         eval_duration_ns: u64,

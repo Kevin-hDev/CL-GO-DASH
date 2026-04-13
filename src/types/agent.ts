@@ -72,8 +72,26 @@ export interface AgentMessage {
   thinking?: string;
   tool_calls?: ToolCallRequest[];
   tool_name?: string;
+  tool_activities?: ToolActivityRecord[];
+  segments?: SavedSegment[];
   files: FileAttachment[];
   timestamp: string;
+}
+
+export interface SavedSegment {
+  thinking?: string;
+  tools: ToolActivityRecord[];
+  content: string;
+}
+
+export interface ToolActivityRecord {
+  name: string;
+  summary: string;
+  result?: string;
+  is_error?: boolean;
+  content?: string;
+  old_text?: string;
+  new_text?: string;
 }
 
 export interface ToolCallRequest {
@@ -126,5 +144,6 @@ export type StreamEvent =
   | { event: "thinking"; data: { content: string } }
   | { event: "toolCall"; data: { name: string; arguments: Record<string, unknown> } }
   | { event: "toolResult"; data: { name: string; content: string; isError: boolean } }
+  | { event: "turnEnd"; data: Record<string, never> }
   | { event: "done"; data: { evalCount: number; evalDurationNs: number; finalTps: number; promptTokens: number } }
   | { event: "error"; data: { message: string } };

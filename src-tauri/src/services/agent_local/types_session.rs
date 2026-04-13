@@ -32,8 +32,36 @@ pub struct AgentMessage {
     pub tool_calls: Option<Vec<ToolCallRequest>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tool_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tool_activities: Option<Vec<ToolActivityRecord>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub segments: Option<Vec<SavedSegment>>,
     pub files: Vec<FileAttachment>,
     pub timestamp: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ToolActivityRecord {
+    pub name: String,
+    pub summary: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub result: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub is_error: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub content: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub old_text: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub new_text: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SavedSegment {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub thinking: Option<String>,
+    pub tools: Vec<ToolActivityRecord>,
+    pub content: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

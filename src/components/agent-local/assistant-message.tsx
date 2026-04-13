@@ -1,21 +1,27 @@
 import { CodeBlock } from "./code-block";
 import { ThinkingSection } from "./thinking-section";
 import { MessageActions } from "./message-actions";
+import { SavedToolBubble } from "./tool-bubble";
+import type { ToolActivityRecord } from "@/types/agent";
 import "./messages.css";
 
 interface AssistantMessageProps {
   content: string;
   thinking?: string;
+  toolActivities?: ToolActivityRecord[];
   isStreaming?: boolean;
   onReload?: () => void;
 }
 
 export function AssistantMessage({
-  content, thinking, isStreaming, onReload,
+  content, thinking, toolActivities, isStreaming, onReload,
 }: AssistantMessageProps) {
   return (
     <div className="msg-assistant">
       {thinking && <ThinkingSection content={thinking} />}
+      {toolActivities && toolActivities.length > 0 && (
+        <SavedToolBubble tools={toolActivities} />
+      )}
       <div style={{ display: "flex", gap: 4, alignItems: "flex-start" }}>
         <div className="msg-assistant-content">
           {renderMarkdown(content)}

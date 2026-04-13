@@ -70,8 +70,10 @@ export function ChatView({ sessionId, model, onModelChange, onTokenCountChange }
         <div className="chat-messages" ref={scrollRef} onScroll={handleScroll}>
           <MessageList
             messages={chat.messages}
-            streamingContent={chat.streamingContent}
-            streamingThinking={chat.streamingThinking}
+            completedSegments={chat.completedSegments}
+            currentContent={chat.currentContent}
+            currentThinking={chat.currentThinking}
+            currentTools={chat.currentTools}
             isStreaming={chat.isStreaming}
             onReload={chat.reload}
             onEdit={chat.edit}

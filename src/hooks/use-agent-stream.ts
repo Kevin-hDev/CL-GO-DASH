@@ -33,6 +33,7 @@ interface StreamCallbacks {
   onThinking: (content: string) => void;
   onToolCall: (name: string, args: Record<string, unknown>) => void;
   onToolResult: (name: string, content: string, isError: boolean) => void;
+  onTurnEnd: () => void;
   onDone: (evalCount: number, finalTps: number, promptTokens: number) => void;
   onError: (message: string) => void;
 }
@@ -64,6 +65,9 @@ export function useAgentStream() {
           break;
         case "toolResult":
           callbacks.onToolResult(event.data.name, event.data.content, event.data.isError);
+          break;
+        case "turnEnd":
+          callbacks.onTurnEnd();
           break;
         case "done":
           callbacks.onDone(event.data.evalCount, event.data.finalTps, event.data.promptTokens);
