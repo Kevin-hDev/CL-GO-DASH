@@ -5,7 +5,7 @@ use crate::services::agent_local::types_ollama::{
     ChatMessage, StreamEvent,
 };
 use crate::services::agent_local::types_session::{
-    AgentSession, AgentSessionMeta, TabState,
+    AgentMessage, AgentSession, AgentSessionMeta, TabState,
 };
 use crate::ActiveStreams;
 use tauri::ipc::Channel;
@@ -112,6 +112,15 @@ pub async fn truncate_session_at(
     message_id: String,
 ) -> Result<(), String> {
     session_store::truncate_at(&session_id, &message_id).await
+}
+
+#[tauri::command]
+pub async fn truncate_and_replace_at(
+    session_id: String,
+    message_id: String,
+    replacement: Option<AgentMessage>,
+) -> Result<(), String> {
+    session_store::truncate_and_replace(&session_id, &message_id, replacement).await
 }
 
 #[tauri::command]

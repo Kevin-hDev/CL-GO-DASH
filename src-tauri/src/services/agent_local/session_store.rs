@@ -79,7 +79,6 @@ pub async fn save(session: &AgentSession) -> Result<(), String> {
     let dir = sessions_dir();
     tokio::fs::create_dir_all(&dir).await.map_err(|e| e.to_string())?;
     let path = dir.join(format!("{}.json", session.id));
-    // Fichier tmp unique par appel pour éviter les races entre saves concurrents
     let tmp = dir.join(format!(".{}.{}.tmp", session.id, Uuid::new_v4()));
     let data = serde_json::to_string_pretty(session).map_err(|e| e.to_string())?;
     tokio::fs::write(&tmp, &data).await.map_err(|e| e.to_string())?;
@@ -127,9 +126,36 @@ pub async fn export_markdown(id: &str) -> Result<String, String> {
 }
 
 pub async fn truncate_at(session_id: &str, message_id: &str) -> Result<(), String> {
+    let lock = lock_session(session_id).await;
+    let _guard = lock.lock().await;
     let mut session = get(session_id).await?;
     if let Some(idx) = session.messages.iter().position(|m| m.id == message_id) {
         session.messages.truncate(idx);
+        save(&session).await?;
+    }
+    Ok(())
+}
+
+pub async fn truncate_and_replace(
+    session_id: &str,
+    message_id: &str,
+    replacement: Option<crate::services::agent_local::types_session::AgentMessage>,
+) -> Result<(), String> {
+    let lock = lock_session(session_id).await;
+    let _guard = lock.lock().await;
+    let mut session = get(session_id).await?;
+    if let Some(idx) = session.messages.iter().position(|m| m.id == message_id) {
+        match replacement {
+            // Edit : supprime le message cible et tout ce qui suit, ajoute le nouveau
+            Some(new_msg) => {
+                session.messages.truncate(idx);
+                session.messages.push(new_msg);
+            }
+            // Reload : garde le message cible, supprime tout ce qui suit
+            None => {
+                session.messages.truncate(idx + 1);
+            }
+        }
         save(&session).await?;
     }
     Ok(())

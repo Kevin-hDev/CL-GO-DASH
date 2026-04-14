@@ -1,25 +1,19 @@
 import { TerminalWindow, Spinner } from "@phosphor-icons/react";
 import type { ToolActivity } from "@/hooks/agent-chat-utils";
 import type { ToolActivityRecord } from "@/types/agent";
+import { ContentPreview, DiffPreview, WebResultsPreview } from "./tool-previews";
 
 const TOOL_COLORS: Record<string, string> = {
-  shell: "#f97316",
-  read_file: "#3db86a",
-  write_file: "#e2b842",
-  edit_file: "#e2b842",
-  list_dir: "#4a8fe2",
-  web_search: "#9b7fff",
-  web_fetch: "#9b7fff",
+  shell: "#f97316", read_file: "#3db86a",
+  write_file: "#e2b842", edit_file: "#e2b842",
+  list_dir: "#4a8fe2", web_search: "#9b7fff", web_fetch: "#9b7fff",
 };
 
 const BUBBLE_STYLE = {
-  width: "85%",
-  background: "#0d0d0f",
+  width: "85%", background: "#0d0d0f",
   border: "1px solid rgba(255,255,255,0.06)",
   borderRadius: "var(--radius-md, 8px)",
-  padding: "10px 14px",
-  alignSelf: "center" as const,
-  margin: "6px auto",
+  padding: "10px 14px", alignSelf: "center" as const, margin: "6px auto",
 };
 
 const HEADER_STYLE = {
@@ -31,8 +25,7 @@ const HEADER_STYLE = {
 
 const ROW_STYLE = {
   display: "flex", alignItems: "baseline", gap: 8,
-  fontSize: "11px", fontFamily: "var(--font-mono, monospace)",
-  lineHeight: 1.6,
+  fontSize: "11px", fontFamily: "var(--font-mono, monospace)", lineHeight: 1.6,
 };
 
 function toolSummary(t: ToolActivity): string {
@@ -46,46 +39,21 @@ function toolSummary(t: ToolActivity): string {
   return JSON.stringify(a).slice(0, 80);
 }
 
-// Streaming tool bubble (pendant que GEMMA travaille)
 export function ToolBubble({ tools }: { tools: ToolActivity[] }) {
   if (tools.length === 0) return null;
   return (
     <div style={BUBBLE_STYLE}>
-      <div style={HEADER_STYLE}>
-        <TerminalWindow size={12} weight="bold" />
-        Tools
-      </div>
+      <div style={HEADER_STYLE}><TerminalWindow size={12} weight="bold" /> Tools</div>
       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
         {tools.map((t, i) => {
-          // Masquer le contenu write_file si un edit_file sur le même path le précède
-          const writeAfterEdit = t.name === "write_file" && i > 0
-            && tools.slice(0, i).some((prev) =>
-              prev.name === "edit_file" && String(prev.args.path) === String(t.args.path));
-
+          const skipWrite = t.name === "write_file" && i > 0
+            && tools.slice(0, i).some((p) => p.name === "edit_file" && String(p.args.path) === String(t.args.path));
           return (
             <div key={i}>
-              <div style={ROW_STYLE}>
-                <span style={{ color: TOOL_COLORS[t.name] ?? "#888", fontWeight: 600, flexShrink: 0, minWidth: 70 }}>
-                  {t.name}
-                </span>
-                <span style={{ color: "#999", wordBreak: "break-all", flex: 1 }}>
-                  {toolSummary(t)}
-                </span>
-                {!t.result && (
-                  <Spinner size={12} style={{ color: "#666", animation: "spin 1s linear infinite", flexShrink: 0 }} />
-                )}
-                {t.result && (
-                  <span style={{ color: t.isError ? "#f87171" : "#4ade80", flexShrink: 0, fontSize: "10px" }}>
-                    {t.isError ? "✗" : "✓"}
-                  </span>
-                )}
-              </div>
-              {t.name === "write_file" && !writeAfterEdit && typeof t.args.content === "string" && (
-                <ContentPreview content={t.args.content} />
-              )}
-              {t.name === "edit_file" && typeof t.args.old_string === "string" && (
-                <DiffPreview oldText={t.args.old_string} newText={String(t.args.new_string ?? "")} />
-              )}
+              <ToolRow name={t.name} summary={toolSummary(t)} done={!!t.result} isError={t.isError} />
+              {t.name === "write_file" && !skipWrite && typeof t.args.content === "string" && <ContentPreview content={t.args.content} />}
+              {t.name === "edit_file" && typeof t.args.old_string === "string" && <DiffPreview oldText={t.args.old_string} newText={String(t.args.new_string ?? "")} />}
+              {(t.name === "web_search" || t.name === "web_fetch") && t.result && <WebResultsPreview content={t.result} isSearch={t.name === "web_search"} />}
             </div>
           );
         })}
@@ -94,42 +62,21 @@ export function ToolBubble({ tools }: { tools: ToolActivity[] }) {
   );
 }
 
-// Saved tool bubble (persisté dans le message assistant)
 export function SavedToolBubble({ tools }: { tools: ToolActivityRecord[] }) {
   if (tools.length === 0) return null;
   return (
     <div style={BUBBLE_STYLE}>
-      <div style={HEADER_STYLE}>
-        <TerminalWindow size={12} weight="bold" />
-        Tools
-      </div>
+      <div style={HEADER_STYLE}><TerminalWindow size={12} weight="bold" /> Tools</div>
       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
         {tools.map((t, i) => {
-          const writeAfterEdit = t.name === "write_file" && i > 0
-            && tools.slice(0, i).some((prev) =>
-              prev.name === "edit_file" && prev.summary === t.summary);
-
+          const skipWrite = t.name === "write_file" && i > 0
+            && tools.slice(0, i).some((p) => p.name === "edit_file" && p.summary === t.summary);
           return (
             <div key={i}>
-              <div style={ROW_STYLE}>
-                <span style={{ color: TOOL_COLORS[t.name] ?? "#888", fontWeight: 600, flexShrink: 0, minWidth: 70 }}>
-                  {t.name}
-                </span>
-                <span style={{ color: "#999", wordBreak: "break-all", flex: 1 }}>
-                  {t.summary}
-                </span>
-                {t.is_error != null && (
-                  <span style={{ color: t.is_error ? "#f87171" : "#4ade80", flexShrink: 0, fontSize: "10px" }}>
-                    {t.is_error ? "✗" : "✓"}
-                  </span>
-                )}
-              </div>
-              {t.content && !writeAfterEdit && (
-                <ContentPreview content={t.content} />
-              )}
-              {t.old_text != null && t.new_text != null && (
-                <DiffPreview oldText={t.old_text} newText={t.new_text} />
-              )}
+              <ToolRow name={t.name} summary={t.summary} done={t.is_error != null} isError={t.is_error} />
+              {t.content && !skipWrite && <ContentPreview content={t.content} />}
+              {t.old_text != null && t.new_text != null && <DiffPreview oldText={t.old_text} newText={t.new_text} />}
+              {(t.name === "web_search" || t.name === "web_fetch") && t.result && <WebResultsPreview content={t.result} isSearch={t.name === "web_search"} />}
             </div>
           );
         })}
@@ -138,76 +85,15 @@ export function SavedToolBubble({ tools }: { tools: ToolActivityRecord[] }) {
   );
 }
 
-const LINE_STYLE: React.CSSProperties = {
-  display: "flex",
-  fontFamily: "var(--font-mono, monospace)",
-  fontSize: "var(--text-xs, 11px)",
-  lineHeight: 1.7,
-};
-
-const NUM_STYLE: React.CSSProperties = {
-  width: 32, textAlign: "right", paddingRight: 8,
-  color: "#555", userSelect: "none", flexShrink: 0,
-};
-
-const PREFIX_STYLE: React.CSSProperties = {
-  width: 16, textAlign: "center", flexShrink: 0, userSelect: "none",
-};
-
-const CODE_STYLE: React.CSSProperties = {
-  flex: 1, whiteSpace: "pre-wrap", wordBreak: "break-all",
-  paddingRight: 8,
-};
-
-function ContentPreview({ content }: { content: string }) {
-  const lines = content.split("\n");
+function ToolRow({ name, summary, done, isError }: {
+  name: string; summary: string; done: boolean; isError?: boolean;
+}) {
   return (
-    <div style={{
-      marginTop: 6, borderRadius: 4, overflow: "hidden",
-      border: "1px solid rgba(255,255,255,0.06)",
-    }}>
-      {lines.map((line, i) => (
-        <div key={i} style={{
-          ...LINE_STYLE,
-          background: "rgba(34, 197, 94, 0.15)",
-        }}>
-          <span style={NUM_STYLE}>{i + 1}</span>
-          <span style={{ ...PREFIX_STYLE, color: "#22c55e" }}>+</span>
-          <span style={{ ...CODE_STYLE, color: "#86efac" }}>{line}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function DiffPreview({ oldText, newText }: { oldText: string; newText: string }) {
-  const oldLines = oldText.split("\n");
-  const newLines = newText.split("\n");
-  return (
-    <div style={{
-      marginTop: 6, borderRadius: 4, overflow: "hidden",
-      border: "1px solid rgba(255,255,255,0.06)",
-    }}>
-      {oldLines.map((line, i) => (
-        <div key={`old-${i}`} style={{
-          ...LINE_STYLE,
-          background: "rgba(220, 38, 38, 0.15)",
-        }}>
-          <span style={NUM_STYLE}>{i + 1}</span>
-          <span style={{ ...PREFIX_STYLE, color: "#ef4444" }}>-</span>
-          <span style={{ ...CODE_STYLE, color: "#fca5a5" }}>{line}</span>
-        </div>
-      ))}
-      {newLines.map((line, i) => (
-        <div key={`new-${i}`} style={{
-          ...LINE_STYLE,
-          background: "rgba(34, 197, 94, 0.15)",
-        }}>
-          <span style={NUM_STYLE}>{i + 1}</span>
-          <span style={{ ...PREFIX_STYLE, color: "#22c55e" }}>+</span>
-          <span style={{ ...CODE_STYLE, color: "#86efac" }}>{line}</span>
-        </div>
-      ))}
+    <div style={ROW_STYLE}>
+      <span style={{ color: TOOL_COLORS[name] ?? "#888", fontWeight: 600, flexShrink: 0, minWidth: 70 }}>{name}</span>
+      <span style={{ color: "#999", wordBreak: "break-all", flex: 1 }}>{summary}</span>
+      {!done && <Spinner size={12} style={{ color: "#666", animation: "spin 1s linear infinite", flexShrink: 0 }} />}
+      {done && <span style={{ color: isError ? "#f87171" : "#4ade80", flexShrink: 0, fontSize: "10px" }}>{isError ? "✗" : "✓"}</span>}
     </div>
   );
 }

@@ -43,7 +43,7 @@ export function UserMessage({
         onReload={onReload}
         onEdit={onEdit ? () => setEditing(true) : undefined}
       />
-      <div>
+      <div className="msg-user-wrap">
         {hasText && <div className="msg-user-bubble">{content}</div>}
         {hasFiles && (
           <div style={{

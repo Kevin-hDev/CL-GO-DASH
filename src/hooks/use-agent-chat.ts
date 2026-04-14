@@ -111,6 +111,10 @@ export function useAgentChat(sessionId: string | null, model: string) {
   ) => {
     if (!sessionId) return;
     if (!text.trim() && (!sentFiles || sentFiles.length < 1)) return;
+    // Attendre que le save du message assistant précédent soit terminé
+    while (savingRef.current) {
+      await new Promise((r) => setTimeout(r, 50));
+    }
     const files = (sentFiles ?? []).map((f) => ({
       name: f.name, path: f.path ?? "", mime_type: "", size: 0, thumbnail: f.preview,
     }));
@@ -127,7 +131,10 @@ export function useAgentChat(sessionId: string | null, model: string) {
     if (!sessionId) return;
     const idx = state.messages.findIndex((m) => m.id === messageId);
     if (idx < 0) return;
-    await invoke("truncate_session_at", { sessionId, messageId }).catch(() => {});
+    // Reload : garde le message cible, supprime tout ce qui suit (atomique)
+    await invoke("truncate_and_replace_at", {
+      sessionId, messageId, replacement: null,
+    }).catch((e: unknown) => console.error("Truncate:", e));
     await doStream(state.messages.slice(0, idx + 1));
   }, [sessionId, state.messages, doStream]);
 
@@ -135,11 +142,14 @@ export function useAgentChat(sessionId: string | null, model: string) {
     if (!sessionId) return;
     const idx = state.messages.findIndex((m) => m.id === messageId);
     if (idx < 0) return;
-    await invoke("truncate_session_at", { sessionId, messageId }).catch(() => {});
     const newMsg: AgentMessage = {
       id: crypto.randomUUID(), role: "user", content: newContent,
       files: [], timestamp: new Date().toISOString(),
     };
+    // Edit : remplace le message cible par le nouveau, supprime tout ce qui suit (atomique)
+    await invoke("truncate_and_replace_at", {
+      sessionId, messageId, replacement: newMsg,
+    }).catch((e: unknown) => console.error("Truncate+replace:", e));
     await doStream([...state.messages.slice(0, idx), newMsg]);
   }, [sessionId, state.messages, doStream]);
 

@@ -43,27 +43,23 @@ export function MessageList({
         return null;
       })}
 
-      {/* Segments terminés (tours précédents) */}
+      {/* Segments terminés (tours précédents) — ordre : thinking → content → tools */}
       {isStreaming && completedSegments.map((seg, i) => (
         <div key={`seg-${i}`}>
           {seg.thinking && <ThinkingSection content={seg.thinking} />}
+          {seg.content && <AssistantMessage content={seg.content} />}
           {seg.tools.length > 0 && <ToolBubble tools={seg.tools} />}
-          {seg.content && (
-            <div className="msg-assistant">
-              <div className="msg-assistant-content">{seg.content}</div>
-            </div>
-          )}
         </div>
       ))}
 
-      {/* Segment en cours */}
-      {isStreaming && currentTools.length > 0 && <ToolBubble tools={currentTools} />}
+      {/* Segment en cours — même ordre */}
       {isStreaming && !currentContent && currentTools.length < 1 && completedSegments.length < 1 && (
         <LoadingIndicator />
       )}
       {isStreaming && (currentContent || currentThinking) && (
         <AssistantMessage content={currentContent} thinking={currentThinking} isStreaming />
       )}
+      {isStreaming && currentTools.length > 0 && <ToolBubble tools={currentTools} />}
     </>
   );
 }
@@ -77,12 +73,10 @@ function SegmentedAssistantMessage({
         {msg.segments.map((seg, i) => (
           <div key={`${msg.id}-seg-${i}`}>
             {seg.thinking && <ThinkingSection content={seg.thinking} />}
-            {seg.tools.length > 0 && <SavedToolBubble tools={seg.tools} />}
             {seg.content && (
-              <div className="msg-assistant">
-                <div className="msg-assistant-content">{seg.content}</div>
-              </div>
+              <AssistantMessage content={seg.content} />
             )}
+            {seg.tools.length > 0 && <SavedToolBubble tools={seg.tools} />}
           </div>
         ))}
       </>

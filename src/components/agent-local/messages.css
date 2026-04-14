@@ -8,13 +8,21 @@
   padding-right: var(--space-md);
 }
 
-.msg-user-bubble {
+.msg-user-wrap {
   max-width: 75%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.msg-user-bubble {
   border-radius: 18px 18px 4px 18px;
   padding: var(--space-sm) var(--space-md);
   font-size: var(--text-sm);
   white-space: pre-wrap;
-  word-break: break-word;
+  overflow-wrap: break-word;
+  word-break: normal;
   background: var(--surface);
   color: var(--ink);
   border: 1px solid var(--edge);
