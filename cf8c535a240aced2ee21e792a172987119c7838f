@@ -1,0 +1,77 @@
+# Contexte CL-GO-DASH — État au 14 avril 2026
+
+## Ce qui fonctionne dans l'agent local
+
+- Chat multi-onglet avec GEMMA 4 E4B via Ollama
+- Streaming temps réel (Channel Tauri)
+- Outils disponibles : shell, read_file, write_file, edit_file, list_dir, web_search, web_fetch
+- Persistance sessions (JSON par conversation) avec mutex par session
+- Reload/edit atomiques (truncate_and_replace_at)
+- Segments ordonnés (thinking → content → tools) avec TurnEnd entre les tours
+- Affichage diff style historique (numéros de ligne, rouge/vert)
+- Preview web_search (titres + URLs en violet)
+- Images/fichiers texte transmis à GEMMA
+- Clé Brave API stockée dans keychain
+
+## Ce qui NE fonctionne PAS encore
+
+### Sécurité (à faire MAINTENANT — étapes 1+2)
+
+- Pas de validation commandes destructrices (patterns dangereux shell, privilege escalation, disk format, arrêt système, fork bomb, etc.)
+- Patterns de référence dans ~/.claude/hooks/cl-go-security-guard.sh et cl-go-bash-guard.sh
+- Pas de validation chemins dans tool_files.rs (path traversal, canonicalize, whitelist)
+- Pas de limite taille fichier (prévu 20MB)
+- Pas de catch_unwind sur pdf-extract (peut paniquer)
+- Messages d'erreur qui leakent des chemins internes
+
+### Workspace autorisé (décision Kevin)
+
+Racines où LLM peut écrire sans confirmation :
+- ~/.local/share/cl-go/
+- ~/.ollama
+- /tmp
+- ~/Projects/
+
+### Ollama tab
+
+- Modelfile viewer ok mais SAVE ne fonctionne pas
+- System prompt par modèle (pas universel) devrait être éditable dans l'onglet Ollama
+- La fiche ressemble à un fact sheet technique, pas à un éditeur
+
+### Outils à ajouter (étape 3)
+
+- Renommer shell → bash
+- Nouveau tool grep (crate grep de ripgrep, limite 250 lignes)
+- Nouveau tool glob (crate ignore, limite 100 résultats)
+
+## Références clés
+
+- Docs projet : CL-GO-DASH/CL-GO-DASH-output/agent-local-specs.md
+- Roadmap : CL-GO-DASH/CL-GO-DASH-output/roadmap-agent-local.md
+- Recherche Ollama (protocole) : CL-GO-DASH/docs/web-research/resultat/recherche-1-ollama-tool-calling.md
+- Code source Claude Code leaké (architecture) : ~/Projects/claude-code/
+- Hooks sécurité Kevin (patterns à reprendre) : ~/.claude/hooks/cl-go-*.sh
+
+## Bugs connus à vérifier encore
+
+- Messages user qui disparaissent sur reload/edit : corrigé ce commit, à retester
+- Messages de GEMMA pas intercalés entre tool blocks : dépend du comportement de GEMMA (small model, émet texte surtout à la fin). Architecture segments en place, prête si GEMMA devient plus verbeux.
+
+## Règles CLAUDE.md à respecter (via hooks)
+
+- Max 200 lignes par fichier code (hook PreToolUse bloque)
+- 10 règles sécurité CLAUDE.md
+- 8 règles structure
+
+## Pour la prochaine session
+
+Plan C confirmé par Kevin :
+
+1. Module security.rs (check_destructive_command, validate_path, sanitize_error)
+2. Intégration dans tool_shell + tool_files
+3. Outils bash/grep/glob dédiés
+4. Durcissement (tailles, catch_unwind)
+5. UI permissions dans settings
+6. Modelfile save + system prompt éditable
+
+Kevin veut que ce soit propre, pas à la va-vite. Comparaison explicite avec Claude Code qui a beaucoup de lignes de validation bash.
