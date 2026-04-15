@@ -21,7 +21,7 @@ export function ModelInstallButton({
 
   const handleAction = useCallback(async () => {
     setBusy(true);
-    setStatus("Démarrage…");
+    setStatus(t("ollama.starting"));
     setPercent(0);
 
     const channel = new Channel<PullProgress>();
@@ -58,7 +58,7 @@ export function ModelInstallButton({
   if (isInstalled && !hasUpdate) {
     return (
       <div
-        title="Installé et à jour"
+        title={t("ollama.installedUpToDate")}
         style={{
           display: "flex", alignItems: "center",
           color: "var(--pulse)",
@@ -74,9 +74,9 @@ export function ModelInstallButton({
       <button
         className="ollama-btn ollama-btn-primary"
         onClick={handleAction}
-        title="Une nouvelle version est disponible"
+        title={t("ollama.updateAvailable")}
       >
-        Update
+        {t("ollama.update")}
       </button>
     );
   }

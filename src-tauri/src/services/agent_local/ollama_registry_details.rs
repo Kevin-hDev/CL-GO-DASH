@@ -20,7 +20,8 @@ static CONTEXT_RE: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r#"(\d+)K context"#).unwrap()
 });
 static README_RE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r#"(?s)<h2[^>]*>Readme</h2>.*?<div class="prose[^"]*"[^>]*>(.*?)</div>\s*</section>"#).unwrap()
+    Regex::new(r#"(?s)<textarea[^>]*\bid="editor"[^>]*\bname="markdown"[^>]*>(.*?)</textarea\s*>"#)
+        .unwrap()
 });
 static TAG_ROW: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(
@@ -83,8 +84,8 @@ fn parse_details_html(name: &str, html: &str) -> RegistryModelDetails {
 
     let description_long_markdown = README_RE
         .captures(html)
-        .and_then(|c| c.get(1).map(|m| m.as_str().to_string()))
-        .map(|raw_html| htmd::convert(&raw_html).unwrap_or(raw_html))
+        .and_then(|c| c.get(1).map(|m| html_decode(m.as_str()).trim().to_string()))
+        .map(absolutize_urls)
         .unwrap_or_default();
 
     RegistryModelDetails {
@@ -117,10 +118,33 @@ fn parse_tags_html(html: &str) -> Vec<RegistryTag> {
     tags
 }
 
+fn absolutize_urls(md: String) -> String {
+    // URLs /assets/... et /library/... → https://ollama.com/...
+    md.replace("](/assets/", "](https://ollama.com/assets/")
+        .replace("](/library/", "](https://ollama.com/library/")
+        .replace("src=\"/assets/", "src=\"https://ollama.com/assets/")
+        .replace("src=\"/library/", "src=\"https://ollama.com/library/")
+        .replace("href=\"/library/", "href=\"https://ollama.com/library/")
+}
+
+static NUMERIC_ENTITY: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"&#(\d+);").unwrap());
+
 fn html_decode(s: &str) -> String {
-    s.replace("&amp;", "&")
+    let named = s
+        .replace("&amp;", "&")
         .replace("&lt;", "<")
         .replace("&gt;", ">")
         .replace("&quot;", "\"")
-        .replace("&#39;", "'")
+        .replace("&apos;", "'");
+    NUMERIC_ENTITY
+        .replace_all(&named, |caps: &regex::Captures| {
+            caps[1]
+                .parse::<u32>()
+                .ok()
+                .and_then(char::from_u32)
+                .map(|c| c.to_string())
+                .unwrap_or_else(|| caps[0].to_string())
+        })
+        .into_owned()
 }

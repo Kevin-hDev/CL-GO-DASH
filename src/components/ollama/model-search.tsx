@@ -68,7 +68,7 @@ export function ModelSearch({
             padding: "var(--space-md)", fontSize: "var(--text-xs)",
             color: "var(--ink-faint)", fontStyle: "italic",
           }}>
-            Tape un nom (ex : gemma, qwen, mistral) puis Entrée
+            {t("ollama.searchHint")}
           </div>
         )}
         {results.map((m) => {

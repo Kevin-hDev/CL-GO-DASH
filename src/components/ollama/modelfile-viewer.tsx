@@ -83,11 +83,11 @@ export function ModelfileViewer({ modelName }: ModelfileViewerProps) {
       <div className="ollama-detail-header">
         <span className="ollama-detail-name">{modelName}</span>
         <button className="ollama-btn" onClick={() => setMode("edit-modelfile")}>
-          Éditer modelfile
+          {t("ollama.editModelfile")}
         </button>
       </div>
 
-      <Section title="System prompt" onEdit={() => setMode("edit-system")}>
+      <Section title={t("ollama.systemPrompt")} editLabel={t("ollama.edit")} onEdit={() => setMode("edit-system")}>
         <div style={{
           fontSize: "var(--text-sm)",
           color: systemPrompt ? "var(--ink)" : "var(--ink-faint)",
@@ -95,14 +95,14 @@ export function ModelfileViewer({ modelName }: ModelfileViewerProps) {
           fontStyle: systemPrompt ? "normal" : "italic",
           maxHeight: 200, overflow: "auto",
         }}>
-          {systemPrompt || "(aucun system prompt défini)"}
+          {systemPrompt || t("ollama.noSystemPrompt")}
         </div>
       </Section>
 
-      <Section title="Paramètres" onEdit={() => setMode("edit-parameters")}>
+      <Section title={t("ollama.parameters")} editLabel={t("ollama.edit")} onEdit={() => setMode("edit-parameters")}>
         {parameters.length === 0 ? (
           <div style={{ fontStyle: "italic", color: "var(--ink-faint)", fontSize: "var(--text-sm)" }}>
-            (aucun paramètre — Ollama utilise ses valeurs par défaut)
+            {t("ollama.noParameters")}
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -132,8 +132,8 @@ export function ModelfileViewer({ modelName }: ModelfileViewerProps) {
 }
 
 function Section({
-  title, onEdit, children,
-}: { title: string; onEdit: () => void; children: React.ReactNode }) {
+  title, editLabel, onEdit, children,
+}: { title: string; editLabel: string; onEdit: () => void; children: React.ReactNode }) {
   return (
     <div style={{ padding: "var(--space-md)", borderBottom: "1px solid var(--edge)" }}>
       <div style={{
@@ -147,7 +147,7 @@ function Section({
           {title}
         </span>
         <button className="ollama-btn ollama-btn-primary" onClick={onEdit}>
-          Éditer
+          {editLabel}
         </button>
       </div>
       {children}

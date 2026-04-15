@@ -49,6 +49,7 @@ pub fn run() {
             commands::search_ollama_models,
             commands::get_registry_model_details,
             commands::list_registry_tags,
+            commands::translate_description,
             commands::pull_ollama_model,
             commands::delete_ollama_model,
             commands::get_modelfile,

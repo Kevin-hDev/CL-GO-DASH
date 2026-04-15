@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
 import { Check } from "@/components/ui/icons";
 import { useOllamaModels } from "@/hooks/use-ollama-models";
@@ -15,6 +16,7 @@ interface ModelVariantsListProps {
 export function ModelVariantsList({
   familyName, selectedVariant, onSelectVariant, onBack,
 }: ModelVariantsListProps) {
+  const { t } = useTranslation();
   const { models: localModels } = useOllamaModels();
   const [tags, setTags] = useState<RegistryTag[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,7 +55,7 @@ export function ModelVariantsList({
           padding: "var(--space-md)", fontSize: "var(--text-sm)",
           color: "var(--ink-faint)",
         }}>
-          Chargement des variantes…
+          {t("ollama.loadingVariants")}
         </div>
       )}
 
@@ -101,7 +103,7 @@ export function ModelVariantsList({
                   color: "#ea580c",
                   fontWeight: 600,
                 }}>
-                  update
+                  {t("ollama.update")}
                 </span>
               )}
               {installed && !hasUpdate && (

@@ -35,7 +35,7 @@ export function SystemPromptEditor({
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <div className="ollama-detail-header">
         <span className="ollama-detail-name">
-          {modelName} — System prompt
+          {modelName} — {t("ollama.systemPrompt")}
         </span>
         <div style={{ display: "flex", gap: 8 }}>
           <button className="ollama-btn" onClick={onCancel} disabled={saving}>
@@ -63,7 +63,7 @@ export function SystemPromptEditor({
       <textarea
         value={system}
         onChange={(e) => setSystem(e.target.value)}
-        placeholder="Définis le comportement et la personnalité du modèle…"
+        placeholder={t("ollama.systemPromptPlaceholder")}
         style={{
           flex: 1, padding: "var(--space-md)",
           fontSize: "var(--text-sm)", fontFamily: "var(--font-sans)",

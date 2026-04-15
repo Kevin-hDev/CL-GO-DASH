@@ -1,6 +1,8 @@
 use crate::services::agent_local::ollama_client::OllamaClient;
 use crate::services::agent_local::ollama_registry;
 use crate::services::agent_local::ollama_registry_details;
+use crate::services::agent_local::translation_cache;
+use crate::services::agent_local::translator;
 use crate::services::agent_local::types_ollama::{
     ModelInfo, OllamaModel, PullProgress, RegistryModel, RegistryModelDetails, RegistryTag,
 };
@@ -42,6 +44,26 @@ pub async fn get_registry_model_details(name: String) -> Result<RegistryModelDet
 #[tauri::command]
 pub async fn list_registry_tags(name: String) -> Result<Vec<RegistryTag>, String> {
     ollama_registry_details::fetch_model_tags(&name).await
+}
+
+#[tauri::command]
+pub async fn translate_description(
+    model_name: String,
+    text: String,
+    target_lang: String,
+    translator_model: Option<String>,
+) -> Result<String, String> {
+    if let Some(cached) = translation_cache::get_cached(&model_name, &target_lang).await {
+        return Ok(cached);
+    }
+    let translated = translator::translate_text(
+        &text,
+        &target_lang,
+        translator_model.as_deref(),
+    )
+    .await?;
+    translation_cache::set_cached(&model_name, &target_lang, &translated).await?;
+    Ok(translated)
 }
 
 #[tauri::command]

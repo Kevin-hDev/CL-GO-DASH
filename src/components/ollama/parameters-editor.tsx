@@ -53,7 +53,7 @@ export function ParametersEditor({
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <div className="ollama-detail-header">
         <span className="ollama-detail-name">
-          {modelName} — Paramètres
+          {modelName} — {t("ollama.parameters")}
         </span>
         <div style={{ display: "flex", gap: 8 }}>
           <button className="ollama-btn" onClick={onCancel} disabled={saving}>
@@ -103,7 +103,7 @@ export function ParametersEditor({
               className="ollama-btn"
               onClick={() => removeRow(idx)}
               style={{ padding: "6px 10px" }}
-              title="Supprimer"
+              title={t("ollama.remove")}
             >
               ×
             </button>
@@ -115,7 +115,7 @@ export function ParametersEditor({
           onClick={addRow}
           style={{ alignSelf: "flex-start", marginTop: 4 }}
         >
-          + Ajouter un paramètre
+          {t("ollama.addParameter")}
         </button>
 
         <div style={{
@@ -124,10 +124,7 @@ export function ParametersEditor({
           color: "var(--ink-faint)",
           lineHeight: 1.6,
         }}>
-          Paramètres courants : <code>num_ctx</code> (fenêtre de contexte),{" "}
-          <code>num_predict</code> (tokens max en sortie, -1 = illimité),{" "}
-          <code>temperature</code>, <code>top_k</code>, <code>top_p</code>,{" "}
-          <code>repeat_penalty</code>, <code>stop</code> (répétable).
+          {t("ollama.commonParameters")} {t("ollama.commonParametersHint")}
         </div>
       </div>
     </div>
