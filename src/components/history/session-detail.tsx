@@ -3,7 +3,8 @@ import { useLottie } from "lottie-react";
 import { useToast } from "@/components/ui/toast";
 import { DownloadSimple } from "@/components/ui/icons";
 import { useLiveSession } from "@/hooks/use-live-session";
-import type { SessionDetail } from "@/types/session";
+import { ConversationView } from "./conversation-view";
+import type { SessionDetail, SessionEntry } from "@/types/session";
 import thinkingAnimation from "@/assets/thinking-loader.json";
 import scrollDownIcon from "@/assets/fleche.png";
 import "./session-detail.css";
@@ -48,13 +49,13 @@ function toMarkdown(detail: SessionDetail): string {
 }
 
 export function SessionDetailView({ detail, isLive }: SessionDetailViewProps) {
-  const { meta, messages: loadedMessages } = detail;
-  const liveMessages = useLiveSession(isLive === true);
+  const { meta, entries: loadedEntries } = detail;
+  const liveEntries = useLiveSession(isLive === true);
 
-  const messages = useMemo(() => {
-    if (!isLive || liveMessages.length === 0) return loadedMessages;
-    return [...loadedMessages, ...liveMessages];
-  }, [loadedMessages, liveMessages, isLive]);
+  const entries: SessionEntry[] = useMemo(() => {
+    if (!isLive || liveEntries.length === 0) return loadedEntries;
+    return [...loadedEntries, ...liveEntries];
+  }, [loadedEntries, liveEntries, isLive]);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -63,11 +64,11 @@ export function SessionDetailView({ detail, isLive }: SessionDetailViewProps) {
 
   // Only auto-scroll if user is already at the bottom
   useEffect(() => {
-    if (messages.length > prevCountRef.current && isAtBottom) {
+    if (entries.length > prevCountRef.current && isAtBottom) {
       bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }
-    prevCountRef.current = messages.length;
-  }, [messages.length, isAtBottom]);
+    prevCountRef.current = entries.length;
+  }, [entries.length, isAtBottom]);
 
   const handleScroll = useCallback(() => {
     const el = scrollContainerRef.current;
@@ -124,16 +125,9 @@ export function SessionDetailView({ detail, isLive }: SessionDetailViewProps) {
             <MetaCard value={meta.version || "?"} label="Version" />
           </div>
           <div className="sd-conversation">
-            {messages.map((msg, i) => (
-              <div key={i} className={`sd-msg sd-msg-${msg.role}`}>
-                <div className="sd-msg-role">
-                  {msg.role === "user" ? "Prompt" : "Jackson"}
-                </div>
-                <div className="sd-msg-text">{msg.content}</div>
-              </div>
-            ))}
+            <ConversationView entries={entries} />
             {isLive && <ThinkingIndicator />}
-            {messages.length < 1 && !isLive && (
+            {entries.length < 1 && !isLive && (
               <div className="sd-empty">No messages in this session</div>
             )}
             <div ref={bottomRef} />

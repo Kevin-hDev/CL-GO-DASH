@@ -1,28 +1,22 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useFsEventWithPayload } from "./use-fs-event";
-
-interface LiveMessage {
-  role: string;
-  content: string;
-  timestamp: string;
-}
+import type { SessionEntry } from "@/types/session";
 
 export function useLiveSession(isLive: boolean) {
-  const [messages, setMessages] = useState<LiveMessage[]>([]);
+  const [entries, setEntries] = useState<SessionEntry[]>([]);
   const activeRef = useRef(isLive);
   activeRef.current = isLive;
 
-  const onNewMessages = useCallback((payload: LiveMessage[]) => {
+  const onNew = useCallback((payload: SessionEntry[]) => {
     if (!activeRef.current) return;
-    setMessages((prev) => [...prev, ...payload]);
+    setEntries((prev) => [...prev, ...payload]);
   }, []);
 
-  useFsEventWithPayload<LiveMessage[]>("fs:session-message", onNewMessages);
+  useFsEventWithPayload<SessionEntry[]>("fs:session-message", onNew);
 
-  // Reset when session state changes
   useEffect(() => {
-    if (!isLive) setMessages([]);
+    if (!isLive) setEntries([]);
   }, [isLive]);
 
-  return messages;
+  return entries;
 }
