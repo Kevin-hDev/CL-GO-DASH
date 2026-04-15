@@ -26,6 +26,9 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
+  max-width: 720px;
+  margin: 0 auto;
+  width: 100%;
   min-width: 0;
 }
 
@@ -42,9 +45,7 @@
 
 .chat-input-bubble {
   position: relative;
-  flex: 1;
-  max-width: 720px;
-  margin: 0 auto;
+  width: 100%;
   border-radius: 16px;
   border: 1px solid var(--edge);
   background: var(--surface);
@@ -125,7 +126,7 @@
 
 .scroll-bottom-btn {
   position: absolute;
-  bottom: 100px;
+  bottom: 60px;
   right: 20px;
   width: 40px;
   height: 40px;

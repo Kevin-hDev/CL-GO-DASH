@@ -1,41 +1,41 @@
-/* Chill_Desk dark — violet (#9b7fff) remplacé par orange (#f97316) */
+/* Dark theme — near-black */
 [data-theme="dark"] {
   color-scheme: dark;
 
   /* shadcn/ui tokens (HSL) */
-  --background: 240 10% 12%;
+  --background: 240 8% 5%;
   --foreground: 36 10% 90%;
-  --card: 240 10% 15%;
+  --card: 240 6% 10%;
   --card-foreground: 36 10% 90%;
-  --popover: 240 10% 15%;
+  --popover: 240 6% 10%;
   --popover-foreground: 36 10% 90%;
   --primary: 25 95% 53%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 240 9% 16%;
+  --secondary: 240 6% 10%;
   --secondary-foreground: 36 10% 90%;
-  --muted: 240 5% 20%;
+  --muted: 240 7% 14%;
   --muted-foreground: 0 0% 60%;
-  --accent: 240 9% 16%;
+  --accent: 240 6% 10%;
   --accent-foreground: 36 10% 90%;
   --destructive: 0 72% 50%;
   --destructive-foreground: 0 0% 100%;
-  --border: 0 0% 100% / 0.08;
-  --input: 0 0% 100% / 0.08;
+  --border: 0 0% 100% / 0.06;
+  --input: 0 0% 100% / 0.06;
   --ring: 25 95% 53%;
 
-  /* Chill_Desk original tokens (violet���orange) */
-  --bg-base: #1c1c22;
-  --bg-gradient-start: #1c1c22;
-  --bg-gradient-end: #26262e;
+  /* Chill_Desk original tokens */
+  --bg-base: #0b0b0d;
+  --bg-gradient-start: #0b0b0d;
+  --bg-gradient-end: #121215;
   --accent-glow: #f9731620;
   --sidebar-active: #f9731615;
 
   /* Legacy dashboard tokens */
-  --void: #1c1c22;
-  --shell: #222228;
-  --surface: #2a2a32;
-  --surface-hover: #32323c;
-  --edge: rgba(255, 255, 255, 0.082);
+  --void: #0b0b0d;
+  --shell: #111114;
+  --surface: #111114;
+  --surface-hover: #1a1a1f;
+  --edge: rgba(255, 255, 255, 0.06);
   --ink: #e8e6e3;
   --ink-muted: #9a9a9a;
   --ink-faint: #5a5a64;
@@ -45,6 +45,6 @@
   --signal-live: #f59e0b;
   --signal-error: #ef4444;
   --signal-ok: #22c55e;
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2);
-  --noise-opacity: 0.025;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3);
+  --noise-opacity: 0.02;
 }

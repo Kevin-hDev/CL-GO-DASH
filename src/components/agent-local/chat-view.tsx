@@ -1,7 +1,5 @@
 import { useState, useRef, useCallback } from "react";
-import { invoke } from "@tauri-apps/api/core";
 import { open as openFileDialog } from "@tauri-apps/plugin-dialog";
-import { DownloadSimple } from "@/components/ui/icons";
 import { MessageList } from "./message-list";
 import { ChatInput } from "./chat-input";
 import { FileDropZone } from "./file-drop-zone";
@@ -48,21 +46,6 @@ export function ChatView({ sessionId, model, onModelChange }: ChatViewProps) {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
-  const handleExport = useCallback(async () => {
-    try {
-      const md = await invoke<string>("export_agent_session_markdown", { id: sessionId });
-      const blob = new Blob([md], { type: "text/markdown" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `conversation-${sessionId.slice(0, 8)}.md`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (e: unknown) {
-      console.warn("Export erreur:", e);
-    }
-  }, [sessionId]);
-
   return (
     <FileDropZone
       dragging={fileDrop.dragging}
@@ -98,17 +81,6 @@ export function ChatView({ sessionId, model, onModelChange }: ChatViewProps) {
         )}
 
         <div className="chat-input-area">
-          {chat.messages.length > 0 && (
-            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              <button
-                className="msg-action-btn"
-                onClick={handleExport}
-                title="Export Markdown"
-              >
-                <DownloadSimple size={14} />
-              </button>
-            </div>
-          )}
           <div className="chat-input-column">
             {permissions.current && (
               <PermissionDialog

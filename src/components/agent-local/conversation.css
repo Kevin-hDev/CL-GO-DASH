@@ -69,8 +69,7 @@
 .tab-bar {
   display: flex;
   align-items: center;
-  border-bottom: 1px solid var(--edge);
-  background: var(--shell);
+  background: var(--void);
   min-height: 36px;
   padding: 0 var(--space-xs);
   gap: 2px;
@@ -83,14 +82,15 @@
   padding: var(--space-xs) var(--space-sm);
   font-size: var(--text-xs);
   color: var(--ink-muted);
-  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  background: var(--surface-hover);
+  border-radius: var(--radius-sm);
   cursor: pointer;
   max-width: 160px;
   transition: all var(--ease-smooth);
 }
 
 .tab-item:hover {
-  background: var(--surface-hover);
+  background: #23232a;
 }
 
 .tab-item.active {
