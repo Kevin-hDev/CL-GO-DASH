@@ -10,7 +10,9 @@ import { ModelSelector } from "./model-selector";
 import { FileThumbnail } from "./file-thumbnail";
 import { ContextProgress } from "./context-progress";
 import { TpsDisplay } from "./tps-display";
+import { PermissionModeSelector } from "./permission-mode-selector";
 import type { DroppedFile } from "@/hooks/use-file-drop";
+import type { PermissionMode } from "@/hooks/use-permission-mode";
 import "./chat.css";
 
 interface ChatInputProps {
@@ -23,6 +25,8 @@ interface ChatInputProps {
   contextMax: number;
   tps: number;
   lastRequestTokens: number;
+  permissionMode: PermissionMode;
+  onPermissionModeChange: (mode: PermissionMode) => void;
   onSend: (text: string, files?: DroppedFile[]) => void;
   onStop: () => void;
   onFileImport: () => void;
@@ -37,6 +41,7 @@ interface ChatInputProps {
 export function ChatInput({
   modelName, ollamaRunning, isStreaming, thinkingEnabled, files,
   contextUsed, contextMax, tps, lastRequestTokens,
+  permissionMode, onPermissionModeChange,
   onSend, onStop, onFileImport, onModelChange, onToggleThinking, onSkillLoaded,
   onRemoveFile, onPreviewFile, onClearFiles,
 }: ChatInputProps) {
@@ -116,8 +121,9 @@ export function ChatInput({
           <Plus size={16} />
         </button>
         <ContextProgress used={contextUsed} max={contextMax} />
-        <TpsDisplay tps={tps} lastRequestTokens={lastRequestTokens} isStreaming={isStreaming} />
+        <PermissionModeSelector mode={permissionMode} onChange={onPermissionModeChange} />
         <div className="chat-input-spacer" />
+        <TpsDisplay tps={tps} lastRequestTokens={lastRequestTokens} isStreaming={isStreaming} />
         <OllamaIndicator running={ollamaRunning} />
         <ModelSelector
           selectedModel={modelName}

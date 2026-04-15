@@ -34,6 +34,7 @@ interface StreamCallbacks {
   onToolCall: (name: string, args: Record<string, unknown>) => void;
   onToolResult: (name: string, content: string, isError: boolean) => void;
   onTurnEnd: () => void;
+  onPermissionRequest: (id: string, toolName: string, args: Record<string, unknown>) => void;
   onDone: (evalCount: number, finalTps: number, promptTokens: number) => void;
   onError: (message: string) => void;
 }
@@ -68,6 +69,9 @@ export function useAgentStream() {
           break;
         case "turnEnd":
           callbacks.onTurnEnd();
+          break;
+        case "permissionRequest":
+          callbacks.onPermissionRequest(event.data.id, event.data.toolName, event.data.arguments);
           break;
         case "done":
           callbacks.onDone(event.data.evalCount, event.data.finalTps, event.data.promptTokens);

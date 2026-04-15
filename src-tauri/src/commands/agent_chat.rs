@@ -40,6 +40,7 @@ pub async fn chat_stream(
         final_tools,
         think,
         working_dir,
+        session_id.clone(),
         cancel,
     )
     .await;

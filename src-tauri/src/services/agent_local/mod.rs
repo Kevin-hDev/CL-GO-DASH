@@ -1,5 +1,7 @@
 pub mod agent_loop;
+pub mod agent_settings;
 pub mod modelfile_parser;
+pub mod permission_gate;
 pub mod security;
 pub mod file_processor;
 pub mod file_processor_docs;
@@ -13,6 +15,7 @@ pub mod session_store;
 pub mod tab_store;
 pub mod token_counter;
 pub mod tool_dispatcher;
+pub mod tool_executor;
 pub mod tool_bash;
 pub mod tool_files;
 pub mod tool_glob;

@@ -10,6 +10,9 @@ import { useAgentChat } from "@/hooks/use-agent-chat";
 import { useOllamaStatus } from "@/hooks/use-ollama-status";
 import { useContextProgress } from "@/hooks/use-context-progress";
 import { useFileDrop, type DroppedFile } from "@/hooks/use-file-drop";
+import { usePermissionMode } from "@/hooks/use-permission-mode";
+import { usePermissionRequests } from "@/hooks/use-permission-requests";
+import { PermissionDialog } from "./permission-dialog";
 import scrollDownIcon from "@/assets/fleche.png";
 import "./chat.css";
 
@@ -20,7 +23,11 @@ interface ChatViewProps {
 }
 
 export function ChatView({ sessionId, model, onModelChange }: ChatViewProps) {
-  const chat = useAgentChat(sessionId, model);
+  const permissions = usePermissionRequests();
+  const permMode = usePermissionMode();
+  const chat = useAgentChat(sessionId, model, (id, toolName, args) =>
+    permissions.enqueue({ id, toolName, arguments: args })
+  );
   const ollamaRunning = useOllamaStatus();
   const fileDrop = useFileDrop();
   const context = useContextProgress(model, chat.tokenCount);
@@ -102,7 +109,14 @@ export function ChatView({ sessionId, model, onModelChange }: ChatViewProps) {
               </button>
             </div>
           )}
-          <ChatInput
+          <div className="chat-input-column">
+            {permissions.current && (
+              <PermissionDialog
+                request={permissions.current}
+                onDecide={permissions.respond}
+              />
+            )}
+            <ChatInput
             modelName={model}
             ollamaRunning={ollamaRunning}
             isStreaming={chat.isStreaming}
@@ -112,6 +126,8 @@ export function ChatView({ sessionId, model, onModelChange }: ChatViewProps) {
             contextMax={context.max}
             tps={chat.tps}
             lastRequestTokens={chat.lastRequestTokens}
+            permissionMode={permMode.mode}
+            onPermissionModeChange={permMode.change}
             onRemoveFile={fileDrop.removeFile}
             onPreviewFile={setPreview}
             onSend={(text, sentFiles) => chat.sendMessage(text, sentFiles)}
@@ -128,6 +144,7 @@ export function ChatView({ sessionId, model, onModelChange }: ChatViewProps) {
             onToggleThinking={() => setThinking(!thinking)}
             onSkillLoaded={chat.setSkill}
           />
+          </div>
         </div>
       </div>
       {preview && (

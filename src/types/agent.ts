@@ -164,5 +164,6 @@ export type StreamEvent =
   | { event: "toolCall"; data: { name: string; arguments: Record<string, unknown> } }
   | { event: "toolResult"; data: { name: string; content: string; isError: boolean } }
   | { event: "turnEnd"; data: Record<string, never> }
+  | { event: "permissionRequest"; data: { id: string; toolName: string; arguments: Record<string, unknown> } }
   | { event: "done"; data: { evalCount: number; evalDurationNs: number; finalTps: number; promptTokens: number } }
   | { event: "error"; data: { message: string } };

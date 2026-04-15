@@ -1,5 +1,6 @@
+use crate::services::agent_local::agent_settings;
 use crate::services::agent_local::ollama_stream;
-use crate::services::agent_local::tool_dispatcher;
+use crate::services::agent_local::tool_executor;
 use crate::services::agent_local::types_ollama::{
     ChatMessage, ChatRequest, StreamEvent,
 };
@@ -17,6 +18,7 @@ pub async fn run_agent_loop(
     tools: Vec<serde_json::Value>,
     think: bool,
     working_dir: PathBuf,
+    session_id: String,
     cancel: CancellationToken,
 ) -> Result<u32, String> {
     let mut total_eval: u32 = 0;
@@ -29,14 +31,11 @@ pub async fn run_agent_loop(
         }
 
         let request = build_request(model, messages, &tools, think);
-        // Pas de Done intermédiaire — le frontend n'en attend qu'un seul
         let result = ollama_stream::stream_chat_no_done(on_event, &request, cancel.clone()).await?;
 
         total_eval += result.eval_count;
         total_prompt += result.prompt_tokens;
-
-        let assistant_msg = build_assistant_message(&result);
-        messages.push(assistant_msg);
+        messages.push(build_assistant_message(&result));
 
         if result.tool_calls.is_empty() {
             break;
@@ -49,35 +48,27 @@ pub async fn run_agent_loop(
             break;
         }
 
-        let tool_results = tool_dispatcher::dispatch_multiple(
+        let mode = agent_settings::get_permission_mode().await;
+        tool_executor::run_tools(
+            on_event,
+            messages,
             &result.tool_calls,
             &working_dir,
+            &mode,
+            &session_id,
+            cancel.clone(),
         )
         .await;
 
-        for (i, tr) in tool_results.iter().enumerate() {
-            let (name, _): &(String, serde_json::Value) = &result.tool_calls[i];
-            let _ = on_event.send(StreamEvent::ToolResult {
-                name: name.clone(),
-                content: tr.content.clone(),
-                is_error: tr.is_error,
-            });
-            messages.push(ChatMessage {
-                role: "tool".to_string(),
-                content: tr.content.clone(),
-                images: None,
-                tool_calls: None,
-                tool_name: Some(name.clone()),
-            });
-        }
-
-        // Signaler la fin du tour au frontend
         let _ = on_event.send(StreamEvent::TurnEnd {});
     }
 
-    // Un seul Done à la fin avec les totaux
     let elapsed_ns = start.elapsed().as_nanos() as u64;
-    let final_tps = if elapsed_ns > 0 { total_eval as f64 / (elapsed_ns as f64 / 1e9) } else { 0.0 };
+    let final_tps = if elapsed_ns > 0 {
+        total_eval as f64 / (elapsed_ns as f64 / 1e9)
+    } else {
+        0.0
+    };
     let _ = on_event.send(StreamEvent::Done {
         eval_count: total_eval,
         eval_duration_ns: elapsed_ns,
@@ -95,8 +86,6 @@ fn build_request(
     tools: &[serde_json::Value],
     think: bool,
 ) -> ChatRequest {
-    // Aucun override : on laisse Ollama utiliser le num_ctx du modelfile ou son défaut.
-    // L'utilisateur configure les paramètres via l'onglet Ollama (PARAMETER num_ctx X).
     ChatRequest {
         model: model.to_string(),
         messages: messages.to_vec(),

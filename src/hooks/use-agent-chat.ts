@@ -17,7 +17,11 @@ interface ChatState {
   lastRequestTokens: number;
 }
 
-export function useAgentChat(sessionId: string | null, model: string) {
+export function useAgentChat(
+  sessionId: string | null,
+  model: string,
+  onPermissionRequest?: (id: string, toolName: string, args: Record<string, unknown>) => void,
+) {
   const [state, setState] = useState<ChatState>({
     messages: [], completedSegments: [],
     currentContent: "", currentThinking: "", currentTools: [],
@@ -69,6 +73,7 @@ export function useAgentChat(sessionId: string | null, model: string) {
         }
         return { ...s, currentTools: tools };
       }),
+      onPermissionRequest: (id, toolName, args) => onPermissionRequest?.(id, toolName, args),
       onTurnEnd: () => setState((s) => ({
         ...s,
         completedSegments: [...s.completedSegments, {
@@ -111,7 +116,7 @@ export function useAgentChat(sessionId: string | null, model: string) {
       }),
       onError: (msg) => { setState((s) => ({ ...s, isStreaming: false })); console.error("Stream:", msg); },
     });
-  }, [sessionId, model, startStream, buildMessages]);
+  }, [sessionId, model, startStream, buildMessages, onPermissionRequest]);
 
   const sendMessage = useCallback(async (
     text: string, sentFiles?: { name: string; path?: string; preview?: string }[],

@@ -71,6 +71,9 @@ pub fn run() {
             commands::truncate_and_replace_at,
             commands::get_tab_state,
             commands::save_tab_state,
+            commands::get_agent_settings,
+            commands::set_permission_mode,
+            commands::respond_to_permission,
             // Agent Local — Tools
             commands::list_skills,
             commands::load_skill,

@@ -20,6 +20,18 @@
     "exportMd": "Télécharger en Markdown",
     "search": "Rechercher dans la conversation"
   },
+  "permissionMode": {
+    "title": "Mode",
+    "autoLabel": "Auto permissions",
+    "manualLabel": "Manuel permissions",
+    "toggleHint": "Changer de mode (Shift+Tab)"
+  },
+  "permissionDialog": {
+    "title": "Autoriser à {{action}} ?",
+    "allow": "Autoriser une fois",
+    "allowSession": "Toujours autoriser",
+    "deny": "Refuser"
+  },
   "ollama": {
     "title": "Ollama",
     "noModels": "Aucun modèle installé",
