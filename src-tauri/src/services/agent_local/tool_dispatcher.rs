@@ -1,14 +1,16 @@
-use crate::services::agent_local::{tool_files, tool_shell, tool_web_fetch, tool_web_search};
+use crate::services::agent_local::{
+    tool_bash, tool_files, tool_glob, tool_grep, tool_web_fetch, tool_web_search,
+};
 use crate::services::agent_local::types_tools::ToolResult;
 use serde_json::Value;
 use std::path::Path;
 
 pub async fn dispatch(tool_name: &str, args: &Value, working_dir: &Path) -> ToolResult {
     match tool_name {
-        "shell" => {
+        "bash" => {
             let cmd = args["command"].as_str().unwrap_or("");
             let timeout = args["timeout"].as_u64();
-            match tool_shell::execute_shell(cmd, working_dir, timeout).await {
+            match tool_bash::execute_shell(cmd, working_dir, timeout).await {
                 Ok(out) => ToolResult {
                     content: format!("{}\n{}", out.stdout, out.stderr).trim().to_string(),
                     is_error: out.exit_code != 0,
@@ -34,6 +36,17 @@ pub async fn dispatch(tool_name: &str, args: &Value, working_dir: &Path) -> Tool
         "list_dir" => {
             let path = args["path"].as_str().unwrap_or(".");
             tool_files::list_dir(path, working_dir).await
+        }
+        "grep" => {
+            let pattern = args["pattern"].as_str().unwrap_or("");
+            let path = args["path"].as_str();
+            let glob_filter = args["glob"].as_str();
+            tool_grep::grep(pattern, path, glob_filter, working_dir).await
+        }
+        "glob" => {
+            let pattern = args["pattern"].as_str().unwrap_or("");
+            let path = args["path"].as_str();
+            tool_glob::glob_files(pattern, path, working_dir).await
         }
         "web_search" => {
             let query = args["query"].as_str().unwrap_or("");
@@ -76,7 +89,7 @@ pub async fn dispatch_multiple(
 
 pub fn get_tool_definitions() -> Vec<Value> {
     vec![
-        tool_def("shell", "Exécuter une commande shell", serde_json::json!({
+        tool_def("bash", "Exécuter une commande shell (bash)", serde_json::json!({
             "type": "object",
             "properties": {
                 "command": {"type": "string", "description": "Commande à exécuter"},
@@ -114,6 +127,23 @@ pub fn get_tool_definitions() -> Vec<Value> {
                 "path": {"type": "string", "description": "Chemin du répertoire"}
             },
             "required": ["path"]
+        })),
+        tool_def("grep", "Rechercher un motif regex dans les fichiers (max 250 résultats, respecte .gitignore)", serde_json::json!({
+            "type": "object",
+            "properties": {
+                "pattern": {"type": "string", "description": "Motif regex à rechercher"},
+                "path": {"type": "string", "description": "Dossier de recherche (défaut: working dir)"},
+                "glob": {"type": "string", "description": "Filtre glob sur les fichiers (ex: '*.rs')"}
+            },
+            "required": ["pattern"]
+        })),
+        tool_def("glob", "Lister les fichiers correspondant à un motif glob (max 100 résultats, respecte .gitignore)", serde_json::json!({
+            "type": "object",
+            "properties": {
+                "pattern": {"type": "string", "description": "Motif glob (ex: '**/*.ts', 'src/**/*.rs')"},
+                "path": {"type": "string", "description": "Racine de recherche (défaut: working dir)"}
+            },
+            "required": ["pattern"]
         })),
         tool_def("web_search", "Rechercher sur le web", serde_json::json!({
             "type": "object",

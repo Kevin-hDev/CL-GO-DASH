@@ -1,39 +1,48 @@
+use crate::services::agent_local::security;
 use crate::services::agent_local::types_tools::ToolResult;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 const MAX_READ_SIZE: u64 = 20 * 1024 * 1024;
 const MAX_LIST_ENTRIES: usize = 500;
 
+fn resolve_read_path(path: &str, working_dir: &Path) -> PathBuf {
+    let p = Path::new(path);
+    if p.is_absolute() { p.to_path_buf() } else { working_dir.join(p) }
+}
+
+fn resolve_write_path(path: &str, working_dir: &Path) -> Result<PathBuf, String> {
+    let p = Path::new(path);
+    let raw = if p.is_absolute() { p.to_path_buf() } else { working_dir.join(p) };
+    security::validate_write_path(&raw)
+}
+
 pub async fn read_file(path: &str, working_dir: &Path) -> ToolResult {
-    let resolved = match resolve_safe_path(path, working_dir) {
-        Ok(p) => p,
-        Err(e) => return ToolResult { content: e, is_error: true },
-    };
+    let resolved = resolve_read_path(path, working_dir);
     match tokio::fs::metadata(&resolved).await {
         Ok(meta) if meta.len() > MAX_READ_SIZE => {
             ToolResult { content: "Fichier trop volumineux (max 20MB)".into(), is_error: true }
         }
-        Err(e) => ToolResult { content: format!("Fichier introuvable: {e}"), is_error: true },
+        Err(e) => ToolResult { content: security::sanitize_error(e), is_error: true },
         _ => match tokio::fs::read_to_string(&resolved).await {
             Ok(content) => ToolResult { content, is_error: false },
-            Err(e) => ToolResult { content: format!("Erreur lecture: {e}"), is_error: true },
+            Err(e) => ToolResult { content: security::sanitize_error(e), is_error: true },
         },
     }
 }
 
 pub async fn write_file(path: &str, content: &str, working_dir: &Path) -> ToolResult {
-    let resolved = match resolve_safe_path(path, working_dir) {
+    let resolved = match resolve_write_path(path, working_dir) {
         Ok(p) => p,
         Err(e) => return ToolResult { content: e, is_error: true },
     };
     if let Some(parent) = resolved.parent() {
         if let Err(e) = tokio::fs::create_dir_all(parent).await {
-            return ToolResult { content: format!("Erreur création dossier: {e}"), is_error: true };
+            return ToolResult { content: security::sanitize_error(e), is_error: true };
         }
     }
     match tokio::fs::write(&resolved, content).await {
         Ok(()) => ToolResult { content: format!("Écrit: {}", resolved.display()), is_error: false },
-        Err(e) => ToolResult { content: format!("Erreur écriture: {e}"), is_error: true },
+        Err(e) => ToolResult { content: security::sanitize_error(e), is_error: true },
     }
 }
 
@@ -43,13 +52,13 @@ pub async fn edit_file(
     new_string: &str,
     working_dir: &Path,
 ) -> ToolResult {
-    let resolved = match resolve_safe_path(path, working_dir) {
+    let resolved = match resolve_write_path(path, working_dir) {
         Ok(p) => p,
         Err(e) => return ToolResult { content: e, is_error: true },
     };
     let content = match tokio::fs::read_to_string(&resolved).await {
         Ok(c) => c,
-        Err(e) => return ToolResult { content: format!("Erreur lecture: {e}"), is_error: true },
+        Err(e) => return ToolResult { content: security::sanitize_error(e), is_error: true },
     };
     let count = content.matches(old_string).count();
     if count == 0 {
@@ -64,15 +73,12 @@ pub async fn edit_file(
     let updated = content.replacen(old_string, new_string, 1);
     match tokio::fs::write(&resolved, &updated).await {
         Ok(()) => ToolResult { content: format!("Modifié: {}", resolved.display()), is_error: false },
-        Err(e) => ToolResult { content: format!("Erreur écriture: {e}"), is_error: true },
+        Err(e) => ToolResult { content: security::sanitize_error(e), is_error: true },
     }
 }
 
 pub async fn list_dir(path: &str, working_dir: &Path) -> ToolResult {
-    let resolved = match resolve_safe_path(path, working_dir) {
-        Ok(p) => p,
-        Err(e) => return ToolResult { content: e, is_error: true },
-    };
+    let resolved = resolve_read_path(path, working_dir);
     let mut entries = Vec::new();
     let mut stack = vec![(resolved.clone(), 0u32)];
 
@@ -106,13 +112,4 @@ pub async fn list_dir(path: &str, working_dir: &Path) -> ToolResult {
         }
     }
     ToolResult { content: entries.join("\n"), is_error: false }
-}
-
-fn resolve_safe_path(path: &str, working_dir: &Path) -> Result<std::path::PathBuf, String> {
-    if path.contains("..") {
-        return Err("Chemin interdit (contient '..')".into());
-    }
-    let p = Path::new(path);
-    let resolved = if p.is_absolute() { p.to_path_buf() } else { working_dir.join(p) };
-    Ok(resolved)
 }

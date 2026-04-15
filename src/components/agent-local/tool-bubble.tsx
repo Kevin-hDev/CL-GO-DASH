@@ -4,9 +4,10 @@ import type { ToolActivityRecord } from "@/types/agent";
 import { ContentPreview, DiffPreview, WebResultsPreview } from "./tool-previews";
 
 const TOOL_COLORS: Record<string, string> = {
-  shell: "#f97316", read_file: "#3db86a",
+  bash: "#f97316", read_file: "#3db86a",
   write_file: "#e2b842", edit_file: "#e2b842",
-  list_dir: "#4a8fe2", web_search: "#9b7fff", web_fetch: "#9b7fff",
+  list_dir: "#4a8fe2", grep: "#4a8fe2", glob: "#4a8fe2",
+  web_search: "#9b7fff", web_fetch: "#9b7fff",
 };
 
 const BUBBLE_STYLE = {
@@ -30,7 +31,9 @@ const ROW_STYLE = {
 
 function toolSummary(t: ToolActivity): string {
   const a = t.args;
-  if (t.name === "shell") return String(a.command ?? "");
+  if (t.name === "bash") return String(a.command ?? "");
+  if (t.name === "grep") return String(a.pattern ?? "");
+  if (t.name === "glob") return String(a.pattern ?? "");
   if (t.name === "read_file" || t.name === "write_file") return String(a.path ?? "");
   if (t.name === "edit_file") return String(a.path ?? "");
   if (t.name === "list_dir") return String(a.path ?? ".");

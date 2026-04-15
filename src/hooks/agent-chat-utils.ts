@@ -17,10 +17,12 @@ export function toolsToRecords(tools: ToolActivity[]): ToolActivityRecord[] {
   return tools.map((t) => {
     const a = t.args;
     let summary = "";
-    if (t.name === "shell") summary = String(a.command ?? "");
+    if (t.name === "bash") summary = String(a.command ?? "");
     else if (t.name === "read_file" || t.name === "write_file") summary = String(a.path ?? "");
     else if (t.name === "edit_file") summary = String(a.path ?? "");
     else if (t.name === "list_dir") summary = String(a.path ?? ".");
+    else if (t.name === "grep") summary = String(a.pattern ?? "");
+    else if (t.name === "glob") summary = String(a.pattern ?? "");
     else if (t.name === "web_search") summary = String(a.query ?? "");
     else if (t.name === "web_fetch") summary = String(a.url ?? "");
     else summary = JSON.stringify(a).slice(0, 80);

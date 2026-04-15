@@ -1,3 +1,4 @@
+use crate::services::agent_local::security;
 use crate::services::agent_local::types_tools::ShellOutput;
 use std::path::Path;
 use tokio::process::Command;
@@ -12,6 +13,15 @@ pub async fn execute_shell(
     working_dir: &Path,
     timeout_secs: Option<u64>,
 ) -> Result<ShellOutput, String> {
+    if let Err(reason) = security::check_destructive_command(command) {
+        return Ok(ShellOutput {
+            stdout: String::new(),
+            stderr: reason,
+            exit_code: -1,
+            timed_out: false,
+        });
+    }
+
     let secs = timeout_secs.unwrap_or(DEFAULT_TIMEOUT);
     let (shell, flag) = detect_shell();
 
