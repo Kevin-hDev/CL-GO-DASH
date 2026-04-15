@@ -8,6 +8,24 @@ export interface OllamaModel {
   is_moe: boolean;
   context_length: number;
   capabilities: ("completion" | "vision" | "thinking" | "tools")[];
+  digest_short: string;
+  aliases: string[];
+}
+
+export interface RegistryModelDetails {
+  name: string;
+  description_short: string;
+  description_long_markdown: string;
+  capabilities: string[];
+  sizes: string[];
+  context_length: number | null;
+}
+
+export interface RegistryTag {
+  name: string;
+  digest_short: string;
+  size_gb: number | null;
+  context_length: number | null;
 }
 
 export interface ModelInfo {

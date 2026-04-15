@@ -42,13 +42,13 @@ impl OllamaClient {
             .as_array()
             .ok_or("Réponse invalide")?;
 
-        let mut result = Vec::new();
+        let mut raw = Vec::new();
         for m in models {
             let name = m["name"].as_str().unwrap_or_default().to_string();
             let info = self.show_model(&name).await.ok();
-            result.push(build_model_from_tags(m, info));
+            raw.push(build_model_from_tags(m, info));
         }
-        Ok(result)
+        Ok(dedupe_by_digest(raw))
     }
 
     pub async fn get_modelfile(&self, name: &str) -> Result<String, String> {
@@ -134,6 +134,33 @@ impl OllamaClient {
     }
 }
 
+fn dedupe_by_digest(models: Vec<OllamaModel>) -> Vec<OllamaModel> {
+    use std::collections::HashMap;
+    let mut groups: HashMap<String, Vec<OllamaModel>> = HashMap::new();
+    let mut no_digest: Vec<OllamaModel> = Vec::new();
+    for m in models {
+        if m.digest_short.is_empty() {
+            no_digest.push(m);
+        } else {
+            groups.entry(m.digest_short.clone()).or_default().push(m);
+        }
+    }
+    let mut result: Vec<OllamaModel> = Vec::new();
+    for (_digest, mut group) in groups {
+        group.sort_by(|a, b| {
+            let al = a.name.ends_with(":latest");
+            let bl = b.name.ends_with(":latest");
+            al.cmp(&bl).then_with(|| a.name.len().cmp(&b.name.len()))
+        });
+        let mut primary = group.remove(0);
+        primary.aliases = group.into_iter().map(|m| m.name).collect();
+        result.push(primary);
+    }
+    result.extend(no_digest);
+    result.sort_by(|a, b| a.name.cmp(&b.name));
+    result
+}
+
 fn needs_from_override(from: Option<&str>) -> bool {
     match from {
         None => true,
@@ -147,6 +174,12 @@ fn build_model_from_tags(
 ) -> OllamaModel {
     let name = m["name"].as_str().unwrap_or_default().to_string();
     let details = &m["details"];
+    let digest_short: String = m["digest"]
+        .as_str()
+        .unwrap_or_default()
+        .chars()
+        .take(12)
+        .collect();
     OllamaModel {
         name,
         size: m["size"].as_u64().unwrap_or(0),
@@ -169,6 +202,8 @@ fn build_model_from_tags(
             || vec!["completion".to_string()],
             |i| i.capabilities,
         ),
+        digest_short,
+        aliases: Vec::new(),
     }
 }
 

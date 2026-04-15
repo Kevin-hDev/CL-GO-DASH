@@ -11,6 +11,8 @@ pub struct OllamaModel {
     pub is_moe: bool,
     pub context_length: u64,
     pub capabilities: Vec<String>,
+    pub digest_short: String,
+    pub aliases: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -51,6 +53,24 @@ pub struct RegistryModel {
     pub description: String,
     pub tags: Vec<String>,
     pub is_installed: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RegistryModelDetails {
+    pub name: String,
+    pub description_short: String,
+    pub description_long_markdown: String,
+    pub capabilities: Vec<String>,
+    pub sizes: Vec<String>,
+    pub context_length: Option<u64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RegistryTag {
+    pub name: String,
+    pub digest_short: String,
+    pub size_gb: Option<f64>,
+    pub context_length: Option<u64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

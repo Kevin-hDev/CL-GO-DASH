@@ -1,7 +1,8 @@
 use crate::services::agent_local::ollama_client::OllamaClient;
 use crate::services::agent_local::ollama_registry;
+use crate::services::agent_local::ollama_registry_details;
 use crate::services::agent_local::types_ollama::{
-    ModelInfo, OllamaModel, PullProgress, RegistryModel,
+    ModelInfo, OllamaModel, PullProgress, RegistryModel, RegistryModelDetails, RegistryTag,
 };
 use tauri::ipc::Channel;
 use tauri::Emitter;
@@ -31,6 +32,16 @@ pub async fn is_ollama_running(
 #[tauri::command]
 pub async fn search_ollama_models(query: String) -> Result<Vec<RegistryModel>, String> {
     ollama_registry::search_models(&query).await
+}
+
+#[tauri::command]
+pub async fn get_registry_model_details(name: String) -> Result<RegistryModelDetails, String> {
+    ollama_registry_details::fetch_model_details(&name).await
+}
+
+#[tauri::command]
+pub async fn list_registry_tags(name: String) -> Result<Vec<RegistryTag>, String> {
+    ollama_registry_details::fetch_model_tags(&name).await
 }
 
 #[tauri::command]

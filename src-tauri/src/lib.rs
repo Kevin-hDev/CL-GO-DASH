@@ -47,6 +47,8 @@ pub fn run() {
             commands::show_ollama_model,
             commands::is_ollama_running,
             commands::search_ollama_models,
+            commands::get_registry_model_details,
+            commands::list_registry_tags,
             commands::pull_ollama_model,
             commands::delete_ollama_model,
             commands::get_modelfile,

@@ -5,6 +5,7 @@ pub mod file_processor;
 pub mod file_processor_docs;
 pub mod ollama_client;
 pub mod ollama_registry;
+pub mod ollama_registry_details;
 pub mod ollama_stream;
 pub mod session_store;
 pub mod tab_store;
