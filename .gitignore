@@ -8,3 +8,5 @@ src-tauri/gen/
 docs/
 CLAUDE.md
 .worktrees/
+CL-GO-DASH-output/
+repo/
