@@ -147,18 +147,6 @@
   box-shadow: 0 0 0 2px var(--pulse-muted);
 }
 
-/* Context bar */
-.context-bar {
-  height: 3px;
-  width: 100%;
-  background: var(--edge);
-}
-
-.context-bar-fill {
-  height: 100%;
-  transition: width 300ms ease-out;
-}
-
 /* Ollama indicator */
 .ollama-dot {
   display: inline-block;

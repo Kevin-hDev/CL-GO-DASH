@@ -94,6 +94,7 @@ export interface AgentMessage {
   segments?: SavedSegment[];
   files: FileAttachment[];
   timestamp: string;
+  tokens?: number;
 }
 
 export interface SavedSegment {

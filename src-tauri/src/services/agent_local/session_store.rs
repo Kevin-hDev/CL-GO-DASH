@@ -88,14 +88,20 @@ pub async fn save(session: &AgentSession) -> Result<(), String> {
 
 pub async fn add_messages(
     id: &str,
-    new_messages: Vec<crate::services::agent_local::types_session::AgentMessage>,
+    mut new_messages: Vec<crate::services::agent_local::types_session::AgentMessage>,
     tokens: u32,
 ) -> Result<(), String> {
     let lock = lock_session(id).await;
     let _guard = lock.lock().await;
     let mut session = get(id).await?;
+    // Affecter tous les tokens au dernier message ajouté (l'assistant typiquement)
+    if tokens > 0 {
+        if let Some(last) = new_messages.last_mut() {
+            last.tokens = tokens;
+        }
+    }
     session.messages.extend(new_messages);
-    session.accumulated_tokens += tokens;
+    session.accumulated_tokens = session.messages.iter().map(|m| m.tokens).sum();
     save(&session).await
 }
 
@@ -131,6 +137,7 @@ pub async fn truncate_at(session_id: &str, message_id: &str) -> Result<(), Strin
     let mut session = get(session_id).await?;
     if let Some(idx) = session.messages.iter().position(|m| m.id == message_id) {
         session.messages.truncate(idx);
+        session.accumulated_tokens = session.messages.iter().map(|m| m.tokens).sum();
         save(&session).await?;
     }
     Ok(())
@@ -156,6 +163,7 @@ pub async fn truncate_and_replace(
                 session.messages.truncate(idx + 1);
             }
         }
+        session.accumulated_tokens = session.messages.iter().map(|m| m.tokens).sum();
         save(&session).await?;
     }
     Ok(())

@@ -5,10 +5,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ConversationList } from "./conversation-list";
 import { TabBar } from "./tab-bar";
 import { ChatView } from "./chat-view";
-import { ContextBar } from "./context-bar";
 import { useAgentSessions } from "@/hooks/use-agent-sessions";
 import { useAgentTabs } from "@/hooks/use-agent-tabs";
-import { useContextBar } from "@/hooks/use-context-bar";
 
 interface OllamaModel {
   name: string;
@@ -30,14 +28,12 @@ export function AgentLocalTab(): { list: React.ReactNode; detail: React.ReactNod
   const { t } = useTranslation();
   const { sessions, create, rename, remove, updateModel } = useAgentSessions();
   const tabState = useAgentTabs();
-  const [tokenCount, setTokenCount] = useState(0);
   const defaultModel = useDefaultModel();
 
   const activeSession = tabState.activeSessionId
     ? sessions.find((s) => s.id.localeCompare(tabState.activeSessionId!) === 0)
     : null;
   const model = activeSession?.model ?? defaultModel;
-  const contextBar = useContextBar(model, tokenCount);
 
   const handleCreate = useCallback(async () => {
     const session = await create("Nouvelle conversation", defaultModel);
@@ -77,7 +73,6 @@ export function AgentLocalTab(): { list: React.ReactNode; detail: React.ReactNod
             onAdd={handleCreate}
             onRename={tabState.renameTab}
           />
-          <ContextBar percentage={contextBar.percentage} color={contextBar.color} />
         </div>
       )}
       {tabState.activeSessionId ? (
@@ -90,7 +85,6 @@ export function AgentLocalTab(): { list: React.ReactNode; detail: React.ReactNod
                 updateModel(tabState.activeSessionId, m);
               }
             }}
-            onTokenCountChange={setTokenCount}
           />
         </div>
       ) : (

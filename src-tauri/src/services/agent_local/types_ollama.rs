@@ -120,6 +120,7 @@ pub struct ToolCallFunction {
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase", tag = "event", content = "data")]
 pub enum StreamEvent {
+    #[serde(rename_all = "camelCase")]
     Token {
         content: String,
         token_count: u32,
@@ -132,12 +133,14 @@ pub enum StreamEvent {
         name: String,
         arguments: serde_json::Value,
     },
+    #[serde(rename_all = "camelCase")]
     ToolResult {
         name: String,
         content: String,
         is_error: bool,
     },
     TurnEnd {},
+    #[serde(rename_all = "camelCase")]
     Done {
         eval_count: u32,
         eval_duration_ns: u64,

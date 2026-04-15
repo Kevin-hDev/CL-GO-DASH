@@ -1,14 +1,14 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { open as openFileDialog } from "@tauri-apps/plugin-dialog";
 import { DownloadSimple } from "@/components/ui/icons";
 import { MessageList } from "./message-list";
 import { ChatInput } from "./chat-input";
-import { TpsDisplay } from "./tps-display";
 import { FileDropZone } from "./file-drop-zone";
 import { FilePreview } from "./file-preview";
 import { useAgentChat } from "@/hooks/use-agent-chat";
 import { useOllamaStatus } from "@/hooks/use-ollama-status";
+import { useContextProgress } from "@/hooks/use-context-progress";
 import { useFileDrop, type DroppedFile } from "@/hooks/use-file-drop";
 import scrollDownIcon from "@/assets/fleche.png";
 import "./chat.css";
@@ -17,19 +17,15 @@ interface ChatViewProps {
   sessionId: string;
   model: string;
   onModelChange?: (model: string) => void;
-  onTokenCountChange?: (count: number) => void;
 }
 
-export function ChatView({ sessionId, model, onModelChange, onTokenCountChange }: ChatViewProps) {
+export function ChatView({ sessionId, model, onModelChange }: ChatViewProps) {
   const chat = useAgentChat(sessionId, model);
   const ollamaRunning = useOllamaStatus();
   const fileDrop = useFileDrop();
+  const context = useContextProgress(model, chat.tokenCount);
   const [preview, setPreview] = useState<DroppedFile | null>(null);
   const [thinking, setThinking] = useState(false);
-
-  useEffect(() => {
-    onTokenCountChange?.(chat.tokenCount);
-  }, [chat.tokenCount, onTokenCountChange]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -95,13 +91,8 @@ export function ChatView({ sessionId, model, onModelChange, onTokenCountChange }
         )}
 
         <div className="chat-input-area">
-          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            <TpsDisplay
-              tps={chat.tps}
-              tokenCount={chat.tokenCount}
-              isStreaming={chat.isStreaming}
-            />
-            {chat.messages.length > 0 && (
+          {chat.messages.length > 0 && (
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
               <button
                 className="msg-action-btn"
                 onClick={handleExport}
@@ -109,14 +100,18 @@ export function ChatView({ sessionId, model, onModelChange, onTokenCountChange }
               >
                 <DownloadSimple size={14} />
               </button>
-            )}
-          </div>
+            </div>
+          )}
           <ChatInput
             modelName={model}
             ollamaRunning={ollamaRunning}
             isStreaming={chat.isStreaming}
             thinkingEnabled={thinking}
             files={fileDrop.files}
+            contextUsed={context.used}
+            contextMax={context.max}
+            tps={chat.tps}
+            lastRequestTokens={chat.lastRequestTokens}
             onRemoveFile={fileDrop.removeFile}
             onPreviewFile={setPreview}
             onSend={(text, sentFiles) => chat.sendMessage(text, sentFiles)}

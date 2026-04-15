@@ -8,6 +8,8 @@ import { OllamaIndicator } from "./ollama-indicator";
 import { SlashAutocomplete } from "./slash-autocomplete";
 import { ModelSelector } from "./model-selector";
 import { FileThumbnail } from "./file-thumbnail";
+import { ContextProgress } from "./context-progress";
+import { TpsDisplay } from "./tps-display";
 import type { DroppedFile } from "@/hooks/use-file-drop";
 import "./chat.css";
 
@@ -17,6 +19,10 @@ interface ChatInputProps {
   isStreaming: boolean;
   thinkingEnabled: boolean;
   files?: DroppedFile[];
+  contextUsed: number;
+  contextMax: number;
+  tps: number;
+  lastRequestTokens: number;
   onSend: (text: string, files?: DroppedFile[]) => void;
   onStop: () => void;
   onFileImport: () => void;
@@ -30,6 +36,7 @@ interface ChatInputProps {
 
 export function ChatInput({
   modelName, ollamaRunning, isStreaming, thinkingEnabled, files,
+  contextUsed, contextMax, tps, lastRequestTokens,
   onSend, onStop, onFileImport, onModelChange, onToggleThinking, onSkillLoaded,
   onRemoveFile, onPreviewFile, onClearFiles,
 }: ChatInputProps) {
@@ -108,6 +115,8 @@ export function ChatInput({
         <button className="chat-plus-btn" onClick={onFileImport}>
           <Plus size={16} />
         </button>
+        <ContextProgress used={contextUsed} max={contextMax} />
+        <TpsDisplay tps={tps} lastRequestTokens={lastRequestTokens} isStreaming={isStreaming} />
         <div className="chat-input-spacer" />
         <OllamaIndicator running={ollamaRunning} />
         <ModelSelector

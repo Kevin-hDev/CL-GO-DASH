@@ -38,6 +38,8 @@ pub struct AgentMessage {
     pub segments: Option<Vec<SavedSegment>>,
     pub files: Vec<FileAttachment>,
     pub timestamp: DateTime<Utc>,
+    #[serde(default)]
+    pub tokens: u32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

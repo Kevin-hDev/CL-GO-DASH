@@ -2,21 +2,33 @@ import "./chat.css";
 
 interface TpsDisplayProps {
   tps: number;
-  tokenCount: number;
+  lastRequestTokens: number;
   isStreaming: boolean;
 }
 
-export function TpsDisplay({ tps, tokenCount, isStreaming }: TpsDisplayProps) {
-  if (tokenCount < 1 && !isStreaming) return null;
+function formatTokens(n: number): string {
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}K`;
+  return String(n);
+}
 
-  const formattedTokens = tokenCount >= 1000
-    ? `${(tokenCount / 1000).toFixed(1)}K`
-    : String(tokenCount);
+export function TpsDisplay({ tps, lastRequestTokens, isStreaming }: TpsDisplayProps) {
+  if (lastRequestTokens < 1 && !isStreaming) return null;
 
   return (
-    <div className="tps-display">
+    <div
+      className="tps-display"
+      style={{
+        display: "flex", alignItems: "center", gap: 8,
+        fontSize: "var(--text-xs)",
+        color: "var(--ink-faint)",
+        fontFamily: "var(--font-mono)",
+        padding: "0 8px",
+        whiteSpace: "nowrap",
+      }}
+      title="Tokens utilisés pendant la dernière requête"
+    >
       {(isStreaming || tps > 0) && <span>{tps.toFixed(1)} t/s</span>}
-      <span>{formattedTokens} tokens</span>
+      {lastRequestTokens > 0 && <span>{formatTokens(lastRequestTokens)} tokens</span>}
     </div>
   );
 }

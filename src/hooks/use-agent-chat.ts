@@ -14,13 +14,14 @@ interface ChatState {
   isStreaming: boolean;
   tps: number;
   tokenCount: number;
+  lastRequestTokens: number;
 }
 
 export function useAgentChat(sessionId: string | null, model: string) {
   const [state, setState] = useState<ChatState>({
     messages: [], completedSegments: [],
     currentContent: "", currentThinking: "", currentTools: [],
-    isStreaming: false, tps: 0, tokenCount: 0,
+    isStreaming: false, tps: 0, tokenCount: 0, lastRequestTokens: 0,
   });
   const skillRef = useRef<string | null>(null);
   const savingRef = useRef(false);
@@ -80,7 +81,13 @@ export function useAgentChat(sessionId: string | null, model: string) {
         if (s.currentContent || s.currentThinking || s.currentTools.length > 0) {
           all.push({ thinking: s.currentThinking, tools: s.currentTools, content: s.currentContent });
         }
-        if (all.length === 0) return { ...s, isStreaming: false, tps: finalTps };
+        const tokens = (evalCount || 0) + (promptTokens || 0);
+        if (all.length === 0) {
+          return {
+            ...s, isStreaming: false, tps: finalTps,
+            tokenCount: s.tokenCount + tokens, lastRequestTokens: tokens,
+          };
+        }
 
         const built = buildSegmentedMessage(all);
         const msg: AgentMessage = {
@@ -89,7 +96,6 @@ export function useAgentChat(sessionId: string | null, model: string) {
           tool_activities: built.toolRecords, segments: built.segments,
           files: [], timestamp: new Date().toISOString(),
         };
-        const tokens = (evalCount || 0) + (promptTokens || 0);
         if (!savingRef.current && sessionId) {
           savingRef.current = true;
           invoke("add_messages_to_session", { id: sessionId, messages: [msg], tokens })
@@ -99,7 +105,8 @@ export function useAgentChat(sessionId: string | null, model: string) {
         return {
           ...s, messages: [...s.messages, msg], completedSegments: [],
           currentContent: "", currentThinking: "", currentTools: [],
-          isStreaming: false, tps: finalTps, tokenCount: s.tokenCount + tokens,
+          isStreaming: false, tps: finalTps,
+          tokenCount: s.tokenCount + tokens, lastRequestTokens: tokens,
         };
       }),
       onError: (msg) => { setState((s) => ({ ...s, isStreaming: false })); console.error("Stream:", msg); },
@@ -127,16 +134,26 @@ export function useAgentChat(sessionId: string | null, model: string) {
     await doStream([...state.messages, userMsg]);
   }, [sessionId, state.messages, doStream]);
 
+  const syncTokenCount = useCallback(async () => {
+    if (!sessionId) return;
+    try {
+      const session = await invoke<AgentSession>("get_agent_session", { id: sessionId });
+      setState((s) => ({ ...s, tokenCount: session.accumulated_tokens }));
+    } catch (e: unknown) {
+      console.warn("syncTokenCount:", e);
+    }
+  }, [sessionId]);
+
   const reload = useCallback(async (messageId: string) => {
     if (!sessionId) return;
     const idx = state.messages.findIndex((m) => m.id === messageId);
     if (idx < 0) return;
-    // Reload : garde le message cible, supprime tout ce qui suit (atomique)
     await invoke("truncate_and_replace_at", {
       sessionId, messageId, replacement: null,
     }).catch((e: unknown) => console.error("Truncate:", e));
+    await syncTokenCount();
     await doStream(state.messages.slice(0, idx + 1));
-  }, [sessionId, state.messages, doStream]);
+  }, [sessionId, state.messages, doStream, syncTokenCount]);
 
   const edit = useCallback(async (messageId: string, newContent: string) => {
     if (!sessionId) return;
@@ -146,12 +163,12 @@ export function useAgentChat(sessionId: string | null, model: string) {
       id: crypto.randomUUID(), role: "user", content: newContent,
       files: [], timestamp: new Date().toISOString(),
     };
-    // Edit : remplace le message cible par le nouveau, supprime tout ce qui suit (atomique)
     await invoke("truncate_and_replace_at", {
       sessionId, messageId, replacement: newMsg,
     }).catch((e: unknown) => console.error("Truncate+replace:", e));
+    await syncTokenCount();
     await doStream([...state.messages.slice(0, idx), newMsg]);
-  }, [sessionId, state.messages, doStream]);
+  }, [sessionId, state.messages, doStream, syncTokenCount]);
 
   const stop = useCallback(async () => {
     if (sessionId) await stopStream(sessionId);
