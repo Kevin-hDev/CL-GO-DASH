@@ -1,7 +1,7 @@
 use crate::services::agent_local::ollama_stream;
 use crate::services::agent_local::tool_dispatcher;
 use crate::services::agent_local::types_ollama::{
-    ChatMessage, ChatOptions, ChatRequest, StreamEvent,
+    ChatMessage, ChatRequest, StreamEvent,
 };
 use std::path::PathBuf;
 use tauri::ipc::Channel;
@@ -95,17 +95,14 @@ fn build_request(
     tools: &[serde_json::Value],
     think: bool,
 ) -> ChatRequest {
-    let mut options = ChatOptions { num_ctx: Some(32768) };
-    if think {
-        // Ollama utilise num_ctx pour le thinking budget
-        options.num_ctx = Some(65536);
-    }
+    // Aucun override : on laisse Ollama utiliser le num_ctx du modelfile ou son défaut.
+    // L'utilisateur configure les paramètres via l'onglet Ollama (PARAMETER num_ctx X).
     ChatRequest {
         model: model.to_string(),
         messages: messages.to_vec(),
         stream: true,
         tools: if tools.is_empty() { None } else { Some(tools.to_vec()) },
-        options: Some(options),
+        options: None,
         keep_alive: None,
         think: if think { Some(true) } else { None },
     }

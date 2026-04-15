@@ -1,4 +1,5 @@
 pub mod agent_loop;
+pub mod modelfile_parser;
 pub mod security;
 pub mod file_processor;
 pub mod file_processor_docs;

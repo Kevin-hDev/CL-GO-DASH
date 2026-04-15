@@ -51,6 +51,8 @@ pub fn run() {
             commands::delete_ollama_model,
             commands::get_modelfile,
             commands::update_modelfile,
+            commands::update_system_prompt,
+            commands::update_parameters,
             // Agent Local — Chat + Sessions
             commands::chat_stream,
             commands::cancel_agent_request,

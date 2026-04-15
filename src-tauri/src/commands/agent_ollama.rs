@@ -73,3 +73,27 @@ pub async fn update_modelfile(
     let _ = app.emit("modelfile-updated", &name);
     Ok(())
 }
+
+#[tauri::command]
+pub async fn update_system_prompt(
+    app: tauri::AppHandle,
+    name: String,
+    system: String,
+    ollama: tauri::State<'_, OllamaClient>,
+) -> Result<(), String> {
+    ollama.update_system_prompt(&name, &system).await?;
+    let _ = app.emit("modelfile-updated", &name);
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn update_parameters(
+    app: tauri::AppHandle,
+    name: String,
+    parameters: Vec<(String, String)>,
+    ollama: tauri::State<'_, OllamaClient>,
+) -> Result<(), String> {
+    ollama.update_parameters(&name, parameters).await?;
+    let _ = app.emit("modelfile-updated", &name);
+    Ok(())
+}
