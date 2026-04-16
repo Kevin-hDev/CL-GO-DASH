@@ -14,7 +14,7 @@ fn sanitize(s: &str) -> String {
 
 fn translations_dir() -> PathBuf {
     let mut p = dirs::home_dir().unwrap_or_else(|| PathBuf::from("/tmp"));
-    p.push(".local/share/cl-go");
+    p.push(".local/share/cl-go-dash");
     p.push("translations");
     p
 }
@@ -35,7 +35,7 @@ fn get_bundled(model: &str, lang: &str) -> Option<String> {
 }
 
 pub async fn get_cached(model: &str, lang: &str) -> Option<String> {
-    // 1. Override utilisateur (~/.local/share/cl-go/translations/)
+    // 1. Override utilisateur (~/.local/share/cl-go-dash/translations/)
     let path = translation_path(model, lang);
     if let Ok(text) = tokio::fs::read_to_string(&path).await {
         return Some(text);

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import type { AgentSessionMeta } from "@/types/agent";
 
 export function useAgentSessions() {
@@ -19,6 +20,15 @@ export function useAgentSessions() {
 
   useEffect(() => {
     refresh();
+  }, [refresh]);
+
+  useEffect(() => {
+    const unlisten = listen("wakeup-completed", () => {
+      refresh();
+    });
+    return () => {
+      unlisten.then((fn) => fn()).catch(() => {});
+    };
   }, [refresh]);
 
   const create = useCallback(async (name: string, model: string) => {

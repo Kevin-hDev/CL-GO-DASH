@@ -5,20 +5,16 @@ use std::thread;
 use tauri::{AppHandle, Emitter};
 
 const EVENT_CONFIG: &str = "fs:config-changed";
-const EVENT_SESSIONS: &str = "fs:sessions-changed";
 const EVENT_PERSONALITY: &str = "fs:personality-changed";
 const EVENT_LOGS: &str = "fs:logs-changed";
-const EVENT_MONITORING: &str = "fs:monitoring-changed";
-const EVENT_FRICTIONS: &str = "fs:frictions-changed";
 
 pub fn start(app: &AppHandle) {
     let home = dirs::home_dir().expect("cannot resolve home");
 
     let paths: Vec<(PathBuf, &'static str)> = vec![
-        (home.join(".local/share/cl-go"), EVENT_CONFIG),
-        (home.join(".claude/projects/-Users-kevinh"), EVENT_SESSIONS),
-        (home.join(".local/share/cl-go/memory/core"), EVENT_PERSONALITY),
-        (home.join(".local/share/cl-go/logs/heartbeat"), EVENT_LOGS),
+        (home.join(".local/share/cl-go-dash"), EVENT_CONFIG),
+        (home.join(".local/share/cl-go-dash/memory/core"), EVENT_PERSONALITY),
+        (home.join(".local/share/cl-go-dash/logs/heartbeat"), EVENT_LOGS),
     ];
 
     let handle = app.clone();
@@ -58,16 +54,10 @@ pub fn start(app: &AppHandle) {
                     let path_str = changed_path.to_string_lossy();
                     let event_name = if path_str.contains("config.json") {
                         EVENT_CONFIG
-                    } else if path_str.contains("-Users-kevinh") && path_str.contains(".jsonl") {
-                        EVENT_SESSIONS
                     } else if path_str.contains("memory/core") {
                         EVENT_PERSONALITY
                     } else if path_str.contains("logs/heartbeat") {
                         EVENT_LOGS
-                    } else if path_str.ends_with("monitoring.md") {
-                        EVENT_MONITORING
-                    } else if path_str.ends_with("frictions.md") {
-                        EVENT_FRICTIONS
                     } else {
                         continue;
                     };

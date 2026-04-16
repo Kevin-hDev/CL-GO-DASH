@@ -1,11 +1,49 @@
-use crate::services::agent_local::types_ollama::{ChatRequest, StreamEvent, StreamResult};
+use crate::services::agent_local::types_ollama::{ChatMessage, ChatRequest, StreamEvent, StreamResult};
 use futures_util::StreamExt;
+use std::time::Duration;
 use tauri::ipc::Channel;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio_util::io::StreamReader;
 use tokio_util::sync::CancellationToken;
 
 const BASE_URL: &str = "http://localhost:11434";
+const COLLECT_TIMEOUT_SECS: u64 = 60;
+
+/// Appel Ollama non-interactif (sans streaming UI).
+/// Utilisé par le scheduler pour les réveils : le prompt est envoyé, la réponse
+/// complète est accumulée, et on renvoie (contenu, tokens).
+pub async fn collect_chat(model: &str, messages: Vec<ChatMessage>) -> Result<(String, u32), String> {
+    let body = serde_json::json!({
+        "model": model,
+        "messages": messages,
+        "stream": false,
+    });
+
+    let client = reqwest::Client::builder()
+        .timeout(Duration::from_secs(COLLECT_TIMEOUT_SECS))
+        .build()
+        .map_err(|e| format!("Client HTTP : {e}"))?;
+
+    let resp = client
+        .post(format!("{BASE_URL}/api/chat"))
+        .json(&body)
+        .send()
+        .await
+        .map_err(|e| format!("Connexion Ollama impossible : {e}"))?;
+
+    if !resp.status().is_success() {
+        return Err(format!("Ollama HTTP {}", resp.status()));
+    }
+
+    let value: serde_json::Value = resp
+        .json()
+        .await
+        .map_err(|e| format!("Réponse Ollama invalide : {e}"))?;
+
+    let content = value["message"]["content"].as_str().unwrap_or("").to_string();
+    let tokens = value["eval_count"].as_u64().unwrap_or(0) as u32;
+    Ok((content, tokens))
+}
 
 pub async fn stream_chat(
     on_event: &Channel<StreamEvent>,

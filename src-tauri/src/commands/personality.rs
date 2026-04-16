@@ -12,12 +12,12 @@ pub struct PersonalityFile {
 
 fn memory_core() -> PathBuf {
     let home = dirs::home_dir().expect("cannot resolve home");
-    home.join(".local/share/cl-go/memory/core")
+    home.join(".local/share/cl-go-dash/memory/core")
 }
 
 fn inbox_dir() -> PathBuf {
     let home = dirs::home_dir().expect("cannot resolve home");
-    home.join(".local/share/cl-go/inbox")
+    home.join(".local/share/cl-go-dash/inbox")
 }
 
 const CORE_FILES: &[(&str, &str)] = &[

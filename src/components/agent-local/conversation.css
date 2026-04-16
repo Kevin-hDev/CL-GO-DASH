@@ -3,33 +3,28 @@
 .conv-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: var(--space-md);
+  padding: var(--space-sm);
   border-bottom: 1px solid var(--edge);
 }
 
-.conv-title {
-  font-size: var(--text-sm);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--ink-muted);
-}
-
-.conv-add-btn {
+.conv-new-btn {
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: var(--space-xs);
+  gap: var(--space-xs);
+  width: 100%;
+  padding: var(--space-sm);
   border-radius: var(--radius-sm);
-  color: var(--ink-faint);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--ink-muted);
   cursor: pointer;
   transition: all var(--ease-smooth);
   border: none;
   background: none;
+  text-align: left;
 }
 
-.conv-add-btn:hover {
+.conv-new-btn:hover {
   color: var(--pulse);
   background: var(--pulse-muted);
 }
@@ -43,6 +38,7 @@
 .conv-item {
   display: flex;
   align-items: center;
+  gap: var(--space-xs);
   padding: var(--space-sm);
   border-radius: var(--radius-sm);
   cursor: pointer;
@@ -65,12 +61,29 @@
   background: var(--pulse-muted);
 }
 
+.conv-icon {
+  flex-shrink: 0;
+  color: var(--ink-muted);
+}
+
+.conv-item.active .conv-icon {
+  color: var(--pulse);
+}
+
+.conv-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  mask-image: linear-gradient(to right, black calc(100% - 20px), transparent);
+  -webkit-mask-image: linear-gradient(to right, black calc(100% - 20px), transparent);
+}
+
 /* Tab Bar */
 .tab-bar {
   display: flex;
   align-items: center;
   background: var(--void);
-  min-height: 36px;
+  min-height: 32px;
   padding: 0 var(--space-xs);
   gap: 2px;
 }

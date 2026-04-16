@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import { useAgentStream } from "./use-agent-stream";
 import { buildSegmentedMessage } from "./agent-chat-utils";
 import type { ToolActivity, StreamSegment } from "./agent-chat-utils";
@@ -33,11 +34,23 @@ export function useAgentChat(
 
   useEffect(() => {
     if (!sessionId) return;
-    invoke<AgentSession>("get_agent_session", { id: sessionId })
-      .then((session) => setState((s) => ({
-        ...s, messages: session.messages, tokenCount: session.accumulated_tokens,
-      })))
-      .catch((e: unknown) => console.warn("Session load:", e));
+    const loadSession = () => {
+      invoke<AgentSession>("get_agent_session", { id: sessionId })
+        .then((session) => setState((s) => ({
+          ...s, messages: session.messages, tokenCount: session.accumulated_tokens,
+        })))
+        .catch((e: unknown) => console.warn("Session load:", e));
+    };
+    loadSession();
+
+    const unlisten = listen<{ session_id: string }>("wakeup-completed", (e) => {
+      if (e.payload?.session_id === sessionId) {
+        loadSession();
+      }
+    });
+    return () => {
+      unlisten.then((fn) => fn()).catch(() => {});
+    };
   }, [sessionId]);
 
   const buildMessages = useCallback((msgs: AgentMessage[]): AgentMessage[] => {

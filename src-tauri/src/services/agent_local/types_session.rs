@@ -10,6 +10,8 @@ pub struct AgentSession {
     pub thinking_enabled: bool,
     pub accumulated_tokens: u32,
     pub messages: Vec<AgentMessage>,
+    #[serde(default)]
+    pub is_heartbeat: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -19,6 +21,8 @@ pub struct AgentSessionMeta {
     pub created_at: DateTime<Utc>,
     pub model: String,
     pub message_count: usize,
+    #[serde(default)]
+    pub is_heartbeat: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -3,12 +3,8 @@ import { listen } from "@tauri-apps/api/event";
 
 type FsEvent =
   | "fs:config-changed"
-  | "fs:sessions-changed"
   | "fs:personality-changed"
-  | "fs:logs-changed"
-  | "fs:session-message"
-  | "fs:monitoring-changed"
-  | "fs:frictions-changed";
+  | "fs:logs-changed";
 
 export function useFsEvent(event: FsEvent, callback: () => void) {
   useEffect(() => {

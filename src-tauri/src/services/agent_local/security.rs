@@ -24,7 +24,7 @@ static S7_EVAL_REGEX: LazyLock<Regex> =
 pub fn allowed_write_roots() -> Vec<PathBuf> {
     let mut raw = Vec::with_capacity(4);
     if let Some(home) = dirs::home_dir() {
-        raw.push(home.join(".local/share/cl-go"));
+        raw.push(home.join(".local/share/cl-go-dash"));
         raw.push(home.join(".ollama"));
         raw.push(home.join("Projects"));
     }
@@ -70,7 +70,7 @@ pub fn validate_write_path(path: &Path) -> Result<PathBuf, String> {
         Ok(canonical)
     } else {
         Err(
-            "Écriture interdite hors des zones autorisées (~/.local/share/cl-go, ~/.ollama, /tmp, ~/Projects)"
+            "Écriture interdite hors des zones autorisées (~/.local/share/cl-go-dash, ~/.ollama, /tmp, ~/Projects)"
                 .into(),
         )
     }

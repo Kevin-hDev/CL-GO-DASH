@@ -17,13 +17,21 @@ async fn lock_session(id: &str) -> std::sync::Arc<Mutex<()>> {
 }
 
 fn sessions_dir() -> PathBuf {
-    dirs::data_local_dir()
+    dirs::home_dir()
         .unwrap_or_else(|| PathBuf::from("/tmp"))
-        .join("cl-go")
+        .join(".local/share/cl-go-dash")
         .join("agent-sessions")
 }
 
 pub async fn create(name: &str, model: &str) -> Result<AgentSession, String> {
+    create_with_flags(name, model, false).await
+}
+
+pub async fn create_with_flags(
+    name: &str,
+    model: &str,
+    is_heartbeat: bool,
+) -> Result<AgentSession, String> {
     let session = AgentSession {
         id: Uuid::new_v4().to_string(),
         name: name.to_string(),
@@ -32,9 +40,40 @@ pub async fn create(name: &str, model: &str) -> Result<AgentSession, String> {
         thinking_enabled: false,
         accumulated_tokens: 0,
         messages: Vec::new(),
+        is_heartbeat,
     };
     save(&session).await?;
     Ok(session)
+}
+
+/// Cherche la conversation heartbeat existante pour un modèle donné.
+/// Retourne la plus récente si plusieurs existent, `None` sinon.
+pub async fn find_heartbeat_session(model: &str) -> Result<Option<String>, String> {
+    let dir = sessions_dir();
+    if !dir.exists() {
+        return Ok(None);
+    }
+    let mut read_dir = tokio::fs::read_dir(&dir)
+        .await
+        .map_err(|e| e.to_string())?;
+    let mut best: Option<(chrono::DateTime<Utc>, String)> = None;
+    while let Ok(Some(entry)) = read_dir.next_entry().await {
+        let path = entry.path();
+        if path.extension().and_then(|e| e.to_str()) != Some("json") {
+            continue;
+        }
+        if let Ok(data) = tokio::fs::read_to_string(&path).await {
+            if let Ok(session) = serde_json::from_str::<AgentSession>(&data) {
+                if session.is_heartbeat && session.model == model {
+                    let candidate = (session.created_at, session.id);
+                    if best.as_ref().map(|b| candidate.0 > b.0).unwrap_or(true) {
+                        best = Some(candidate);
+                    }
+                }
+            }
+        }
+    }
+    Ok(best.map(|(_, id)| id))
 }
 
 pub async fn get(id: &str) -> Result<AgentSession, String> {
@@ -67,6 +106,7 @@ pub async fn list() -> Result<Vec<AgentSessionMeta>, String> {
                     created_at: session.created_at,
                     model: session.model,
                     message_count: session.messages.len(),
+                    is_heartbeat: session.is_heartbeat,
                 });
             }
         }

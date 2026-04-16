@@ -39,8 +39,8 @@
   --ink: #1a1a1a;
   --ink-muted: #6b6b6b;
   --ink-faint: #a0a0a0;
-  --pulse: #ea6c10;
-  --pulse-muted: rgba(234, 108, 16, 0.12);
+  --pulse: #c2410c;
+  --pulse-muted: rgba(194, 65, 12, 0.12);
   --signal-idle: #b0b0b8;
   --signal-live: #d4a017;
   --signal-error: #dc2626;

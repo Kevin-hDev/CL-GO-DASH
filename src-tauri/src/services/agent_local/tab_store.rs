@@ -2,9 +2,9 @@ use crate::services::agent_local::types_session::TabState;
 use std::path::PathBuf;
 
 fn tab_file() -> PathBuf {
-    dirs::data_local_dir()
+    dirs::home_dir()
         .unwrap_or_else(|| PathBuf::from("/tmp"))
-        .join("cl-go")
+        .join(".local/share/cl-go-dash")
         .join("agent-tabs.json")
 }
 

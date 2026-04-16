@@ -21,4 +21,6 @@ export {
   CaretRight,
   DownloadSimple,
   FileText,
+  Clock,
+  CaretLeft,
 } from "@phosphor-icons/react";

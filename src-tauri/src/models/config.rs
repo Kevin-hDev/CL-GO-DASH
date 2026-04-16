@@ -1,69 +1,38 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(default)]
 pub struct ClgoConfig {
-    pub version: String,
-    pub projects_root: String,
-    pub claude_projects: String,
-    pub heartbeat: HeartbeatConfig,
-    pub communication: CommunicationConfig,
-    #[serde(default)]
-    pub hooks: HooksConfig,
-    #[serde(default)]
     pub scheduled_wakeups: Vec<ScheduledWakeup>,
-    #[serde(default)]
-    pub scheduled_tasks: Vec<serde_json::Value>,
-    #[serde(default)]
-    pub rube_usage: Option<RubeUsage>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct HeartbeatConfig {
-    pub active: bool,
-    pub mode: String,
-    pub stop_at: Option<String>,
-    pub interval_minutes: u32,
-    #[serde(default)]
-    pub started_at: Option<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CommunicationConfig {
-    pub provider: String,
-    pub chat_id: String,
+    pub heartbeat: HeartbeatConfig,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
-pub struct HooksConfig {
-    #[serde(default)]
-    pub post_explorer: Vec<HookEntry>,
-    #[serde(default)]
-    pub post_auto: Vec<HookEntry>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct HookEntry {
-    pub name: String,
-    pub command: Vec<String>,
-    #[serde(default)]
-    pub cwd: Option<String>,
+#[serde(default)]
+pub struct HeartbeatConfig {
+    pub global_paused: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ScheduledWakeup {
     pub id: String,
-    pub time: String,
-    pub mode: String,
+    pub name: String,
+    pub model: String,
+    pub provider: String,
+    pub prompt: String,
+    pub schedule: WakeupSchedule,
     #[serde(default)]
-    pub prompt: Option<String>,
-    #[serde(default)]
-    pub name: Option<String>,
+    pub description: String,
     pub active: bool,
+    #[serde(default)]
+    pub paused_by_global: bool,
+    pub created_at: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct RubeUsage {
-    pub month: Option<String>,
-    pub count: u32,
-    pub limit: u32,
+#[serde(tag = "kind", rename_all = "lowercase")]
+pub enum WakeupSchedule {
+    Once { datetime: String },
+    Daily { time: String },
+    Weekly { weekday: u8, time: String },
 }

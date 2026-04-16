@@ -13,22 +13,20 @@
     {
       "identifier": "fs:allow-read-text-file",
       "allow": [
-        { "path": "$HOME/.local/share/cl-go/**" },
-        { "path": "$HOME/.claude/projects/-Users-kevinh/**" },
+        { "path": "$HOME/.local/share/cl-go-dash/**" },
         { "path": "$HOME/.claude/skills/**" }
       ]
     },
     {
       "identifier": "fs:allow-write-text-file",
       "allow": [
-        { "path": "$HOME/.local/share/cl-go/**" }
+        { "path": "$HOME/.local/share/cl-go-dash/**" }
       ]
     },
     {
       "identifier": "fs:allow-exists",
       "allow": [
-        { "path": "$HOME/.local/share/cl-go/**" },
-        { "path": "$HOME/.claude/projects/-Users-kevinh/**" },
+        { "path": "$HOME/.local/share/cl-go-dash/**" },
         { "path": "$HOME/.claude/skills/**" }
       ]
     },
@@ -47,13 +45,13 @@
     {
       "identifier": "fs:allow-mkdir",
       "allow": [
-        { "path": "$HOME/.local/share/cl-go/**" }
+        { "path": "$HOME/.local/share/cl-go-dash/**" }
       ]
     },
     {
       "identifier": "fs:allow-rename",
       "allow": [
-        { "path": "$HOME/.local/share/cl-go/**" }
+        { "path": "$HOME/.local/share/cl-go-dash/**" }
       ]
     },
     "dialog:default",
@@ -61,7 +59,6 @@
     {
       "identifier": "shell:allow-execute",
       "allow": [
-        { "name": "crontab", "cmd": "crontab", "args": true },
         { "name": "open-app", "cmd": "open", "args": true }
       ]
     }

@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { Plus, Pencil, Trash } from "@/components/ui/icons";
+import { Plus, Pencil, Trash, ChatCircle } from "@/components/ui/icons";
 import { ContextMenu, type ContextMenuItem } from "@/components/ui/context-menu";
 import { useKeyboard } from "@/hooks/use-keyboard";
 import type { AgentSessionMeta } from "@/types/agent";
@@ -57,9 +57,9 @@ export function ConversationList({
   return (
     <>
       <div className="conv-header">
-        <span className="conv-title">{t("agentLocal.title")}</span>
-        <button className="conv-add-btn" onClick={onCreate}>
+        <button className="conv-new-btn" onClick={onCreate}>
           <Plus size={14} weight="bold" />
+          <span>{t("agentLocal.newSession")}</span>
         </button>
       </div>
       <div className="conv-list">
@@ -84,7 +84,12 @@ export function ConversationList({
                     if (e.key.startsWith("Esc")) setRenamingId(null);
                   }}
                 />
-              ) : s.name}
+              ) : (
+                <>
+                  <ChatCircle size={14} weight={active ? "fill" : "regular"} className="conv-icon" />
+                  <span className="conv-name">{s.name}</span>
+                </>
+              )}
             </div>
           );
         })}

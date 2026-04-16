@@ -1,0 +1,40 @@
+import { useTranslation } from "react-i18next";
+import { Pulse, Plus } from "@/components/ui/icons";
+import type { ScheduledWakeup } from "@/types/wakeup";
+import { WakeupCard } from "./wakeup-card";
+
+interface WakeupGridProps {
+  wakeups: ScheduledWakeup[];
+  onSelect: (id: string) => void;
+  onCreate: () => void;
+}
+
+export function WakeupGrid({ wakeups, onSelect, onCreate }: WakeupGridProps) {
+  const { t } = useTranslation();
+
+  return (
+    <div className="wk-main">
+      <div className="wk-header">
+        <div className="wk-header-title">
+          <Pulse size={20} weight="regular" />
+          <span>{t("heartbeat.title")}</span>
+        </div>
+        <div className="wk-header-subtitle">{t("heartbeat.subtitle")}</div>
+        <button className="wk-new-btn" onClick={onCreate} type="button">
+          <Plus size={14} weight="bold" />
+          {t("heartbeat.newWakeup")}
+        </button>
+      </div>
+
+      {wakeups.length === 0 ? (
+        <div className="wk-empty">{t("heartbeat.empty")}</div>
+      ) : (
+        <div className="wk-grid">
+          {wakeups.map((w) => (
+            <WakeupCard key={w.id} wakeup={w} onClick={() => onSelect(w.id)} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

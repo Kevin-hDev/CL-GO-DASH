@@ -36,9 +36,10 @@ export function AgentLocalTab(): { list: React.ReactNode; detail: React.ReactNod
   const model = activeSession?.model ?? defaultModel;
 
   const handleCreate = useCallback(async () => {
-    const session = await create("Nouvelle conversation", defaultModel);
+    const name = t("agentLocal.newSession");
+    const session = await create(name, defaultModel);
     await tabState.addTab(session.id, session.name);
-  }, [create, tabState, defaultModel]);
+  }, [create, tabState, defaultModel, t]);
 
   const handleSelect = useCallback(async (id: string) => {
     const idx = tabState.tabs.findIndex((tab) => tab.session_id.localeCompare(id) === 0);

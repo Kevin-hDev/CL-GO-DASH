@@ -1,242 +1,191 @@
-use crate::models::ScheduledWakeup;
-use crate::services::{config as cfg, cron, log_reader, watcher};
-use std::process::Command;
+use crate::models::{HeartbeatConfig, ScheduledWakeup, WakeupSchedule};
+use crate::services::config as cfg;
+use crate::services::scheduler::Scheduler;
+use serde::Deserialize;
+use tauri::State;
 use uuid::Uuid;
+
+#[derive(Debug, Deserialize)]
+pub struct CreateWakeupInput {
+    pub name: String,
+    pub model: String,
+    pub provider: String,
+    pub prompt: String,
+    pub schedule: WakeupSchedule,
+    #[serde(default)]
+    pub description: String,
+}
 
 #[tauri::command]
 pub fn list_wakeups() -> Result<Vec<ScheduledWakeup>, String> {
-    let mut config = cfg::read_config()?;
-
-    // Auto-migrate: if no scheduled_wakeups but heartbeat exists, create one
-    if config.scheduled_wakeups.is_empty() {
-        let hb = &config.heartbeat;
-        let time = cron::read_existing_cron_time().unwrap_or_else(|| "08:00".to_string());
-        let wakeup = ScheduledWakeup {
-            id: Uuid::new_v4().to_string(),
-            time,
-            mode: hb.mode.clone(),
-            prompt: None,
-            name: None,
-            active: hb.active,
-        };
-        config.scheduled_wakeups.push(wakeup);
-        cfg::write_config(&config)?;
-    }
-
-    // Migrate old "HH:MM" format to "YYYY-MM-DDTHH:MM"
-    let mut needs_save = false;
-    for w in &mut config.scheduled_wakeups {
-        if !w.time.contains('T') && w.time.contains(':') {
-            let today = chrono::Local::now().format("%Y-%m-%d").to_string();
-            w.time = format!("{}T{}", today, w.time);
-            needs_save = true;
-        }
-    }
-
-    // Import untracked cron entries (one-time, only if none tracked yet)
-    // Check marker to avoid re-importing on every reload
-    let marker_path = dirs::home_dir()
-        .expect("home")
-        .join(".local/share/cl-go/logs/heartbeat/.cron-synced");
-
-    let untracked = if !marker_path.exists() {
-        let known_ids: Vec<String> = config.scheduled_wakeups.iter()
-            .map(|w| w.id.clone()).collect();
-        cron::find_untracked_cron_entries(&known_ids)
-    } else {
-        Vec::new()
-    };
-
-    if !untracked.is_empty() {
-        for entry in untracked {
-            let year = chrono::Local::now().format("%Y").to_string();
-            let day = if entry.day.as_str() == "*" { "01" } else { &entry.day };
-            let month = if entry.month.as_str() == "*" { "01" } else { &entry.month };
-            let time = format!("{}-{:0>2}-{:0>2}T{:02}:{:02}",
-                year, month, day, entry.hour, entry.minute);
-            config.scheduled_wakeups.push(ScheduledWakeup {
-                id: Uuid::new_v4().to_string(),
-                time, mode: config.heartbeat.mode.clone(),
-                prompt: None, name: None, active: true,
-            });
-            needs_save = true;
-        }
-        // Write marker so we don't re-import
-        let _ = std::fs::write(&marker_path, "synced");
-    }
-
-    if needs_save {
-        cfg::write_config(&config)?;
-    }
-
-    // Always sync cron with current state (agent may have changed config.json)
-    if config.heartbeat.active {
-        sync_cron_from_config(&config.scheduled_wakeups)?;
-    }
-
+    let config = cfg::read_config()?;
     Ok(config.scheduled_wakeups)
 }
 
 #[tauri::command]
 pub fn create_wakeup(
-    time: String,
-    mode: String,
-    prompt: Option<String>,
+    input: CreateWakeupInput,
+    scheduler: State<'_, Scheduler>,
 ) -> Result<ScheduledWakeup, String> {
-    validate_time(&time)?;
-    validate_mode(&mode)?;
+    validate_provider(&input.provider)?;
+    validate_non_empty(&input.name, "name")?;
+    validate_non_empty(&input.model, "model")?;
+    validate_non_empty(&input.prompt, "prompt")?;
+    validate_schedule(&input.schedule)?;
 
     let wakeup = ScheduledWakeup {
         id: Uuid::new_v4().to_string(),
-        time,
-        mode,
-        prompt,
-        name: None,
+        name: input.name,
+        model: input.model,
+        provider: input.provider,
+        prompt: input.prompt,
+        schedule: input.schedule,
+        description: input.description,
         active: true,
+        paused_by_global: false,
+        created_at: chrono::Utc::now().to_rfc3339(),
     };
 
     let mut config = cfg::read_config()?;
     config.scheduled_wakeups.push(wakeup.clone());
     cfg::write_config(&config)?;
-    sync_cron_from_config(&config.scheduled_wakeups)?;
+    scheduler.notify_config_changed();
 
     Ok(wakeup)
 }
 
 #[tauri::command]
-pub fn update_wakeup(wakeup: ScheduledWakeup) -> Result<(), String> {
-    validate_time(&wakeup.time)?;
-    validate_mode(&wakeup.mode)?;
+pub fn update_wakeup(
+    wakeup: ScheduledWakeup,
+    scheduler: State<'_, Scheduler>,
+) -> Result<(), String> {
+    validate_provider(&wakeup.provider)?;
+    validate_non_empty(&wakeup.name, "name")?;
+    validate_non_empty(&wakeup.model, "model")?;
+    validate_non_empty(&wakeup.prompt, "prompt")?;
+    validate_schedule(&wakeup.schedule)?;
 
     let mut config = cfg::read_config()?;
     let idx = config
         .scheduled_wakeups
         .iter()
-        .position(|w| w.id.as_str() == wakeup.id.as_str())
+        .position(|w| w.id == wakeup.id)
         .ok_or_else(|| format!("Wakeup {} not found", wakeup.id))?;
 
     config.scheduled_wakeups[idx] = wakeup;
     cfg::write_config(&config)?;
-    sync_cron_from_config(&config.scheduled_wakeups)?;
+    scheduler.notify_config_changed();
 
     Ok(())
 }
 
 #[tauri::command]
-pub fn delete_wakeup(id: String) -> Result<(), String> {
+pub fn delete_wakeup(id: String, scheduler: State<'_, Scheduler>) -> Result<(), String> {
     let mut config = cfg::read_config()?;
-    config.scheduled_wakeups.retain(|w| w.id.as_str() != id.as_str());
+    config.scheduled_wakeups.retain(|w| w.id != id);
     cfg::write_config(&config)?;
-    sync_cron_from_config(&config.scheduled_wakeups)?;
-
+    scheduler.notify_config_changed();
     Ok(())
 }
 
 #[tauri::command]
-pub fn get_heartbeat_config() -> Result<crate::models::HeartbeatConfig, String> {
+pub fn set_wakeup_active(
+    id: String,
+    active: bool,
+    scheduler: State<'_, Scheduler>,
+) -> Result<(), String> {
+    let mut config = cfg::read_config()?;
+
+    if config.heartbeat.global_paused {
+        return Err("Réveils en veille — désactive d'abord le master switch.".into());
+    }
+
+    let w = config
+        .scheduled_wakeups
+        .iter_mut()
+        .find(|w| w.id == id)
+        .ok_or_else(|| format!("Wakeup {} not found", id))?;
+    w.active = active;
+    w.paused_by_global = false;
+
+    cfg::write_config(&config)?;
+    scheduler.notify_config_changed();
+    Ok(())
+}
+
+#[tauri::command]
+pub fn set_global_paused(paused: bool, scheduler: State<'_, Scheduler>) -> Result<(), String> {
+    let mut config = cfg::read_config()?;
+
+    if paused {
+        for w in &mut config.scheduled_wakeups {
+            if w.active {
+                w.paused_by_global = true;
+                w.active = false;
+            }
+        }
+    } else {
+        for w in &mut config.scheduled_wakeups {
+            if w.paused_by_global {
+                w.active = true;
+                w.paused_by_global = false;
+            }
+        }
+    }
+
+    config.heartbeat.global_paused = paused;
+    cfg::write_config(&config)?;
+    scheduler.notify_config_changed();
+    Ok(())
+}
+
+#[tauri::command]
+pub fn get_heartbeat_config() -> Result<HeartbeatConfig, String> {
     let config = cfg::read_config()?;
     Ok(config.heartbeat)
 }
 
-#[tauri::command]
-pub fn set_heartbeat_active(active: bool) -> Result<(), String> {
-    let mut config = cfg::read_config()?;
-    config.heartbeat.active = active;
-    cfg::write_config(&config)?;
+const ALLOWED_PROVIDERS: &[&str] = &["ollama"];
 
-    if !active {
-        cron::clear_crontab()?;
-    } else {
-        sync_cron_from_config(&config.scheduled_wakeups)?;
-    }
-
-    Ok(())
-}
-
-#[tauri::command]
-pub fn set_stop_at(stop_at: Option<String>) -> Result<(), String> {
-    let mut config = cfg::read_config()?;
-    config.heartbeat.stop_at = stop_at;
-    cfg::write_config(&config)?;
-    Ok(())
-}
-
-fn sync_cron_from_config(wakeups: &[ScheduledWakeup]) -> Result<(), String> {
-    let active: Vec<(String, String)> = wakeups
-        .iter()
-        .filter(|w| w.active)
-        .map(|w| (w.id.clone(), w.time.clone()))
-        .collect();
-
-    if active.is_empty() {
-        cron::clear_crontab()
-    } else {
-        cron::sync_crontab(&active)
-    }
-}
-
-#[tauri::command]
-pub fn run_wakeup(id: String) -> Result<(), String> {
-    let config = cfg::read_config()?;
-    let wakeup = config
-        .scheduled_wakeups
-        .iter()
-        .find(|w| w.id.as_str() == id.as_str())
-        .ok_or_else(|| format!("Wakeup {} not found", id))?;
-
-    let wrapper = dirs::home_dir()
-        .expect("cannot resolve home")
-        .join(".local/share/cl-go/scripts/heartbeat/go-heartbeat-wrapper.sh");
-
-    // Write a launcher script that sets env vars and calls the wrapper
-    let launcher = std::env::temp_dir().join(format!("clgo-run-{}.sh", &id[..8]));
-    let prompt_escaped = wakeup.prompt.as_deref().unwrap_or("").replace('"', r#"\""#);
-    let script = format!(
-        "#!/bin/bash\nexport CLGO_WAKEUP_ID=\"{}\"\nexport CLGO_WAKEUP_PROMPT=\"{}\"\nexec \"{}\" \"$CLGO_WAKEUP_ID\"\n",
-        id, prompt_escaped, wrapper.display(),
-    );
-    std::fs::write(&launcher, &script).map_err(|e| e.to_string())?;
-
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        let perms = std::fs::Permissions::from_mode(0o700);
-        std::fs::set_permissions(&launcher, perms).map_err(|e| e.to_string())?;
-    }
-
-    Command::new("open")
-        .args(["-a", "Terminal.app", &launcher.to_string_lossy().to_string()])
-        .spawn()
-        .map_err(|e| format!("Cannot open Terminal: {}", e))?;
-
-    Ok(())
-}
-
-#[tauri::command]
-pub fn get_session_status() -> Result<watcher::SessionStatus, String> {
-    Ok(watcher::check_session_status())
-}
-
-#[tauri::command]
-pub fn get_warnings() -> Result<Vec<log_reader::LogEntry>, String> {
-    log_reader::read_warnings()
-}
-
-fn validate_time(time: &str) -> Result<(), String> {
-    // Accept HH:MM or YYYY-MM-DDTHH:MM
-    let re = regex::Regex::new(r"^(\d{4}-\d{2}-\d{2}T)?\d{2}:\d{2}$")
-        .map_err(|e| format!("Regex error: {}", e))?;
-    if !re.is_match(time) {
-        return Err(format!("Invalid time: {}", time));
-    }
-    Ok(())
-}
-
-fn validate_mode(mode: &str) -> Result<(), String> {
-    const VALID: &[&str] = &["auto", "explorer", "free", "evolve"];
-    if VALID.contains(&mode) {
+fn validate_provider(provider: &str) -> Result<(), String> {
+    if ALLOWED_PROVIDERS.contains(&provider) {
         Ok(())
     } else {
-        Err(format!("Invalid mode: {}", mode))
+        Err(format!("Provider non supporté : {}", provider))
     }
+}
+
+fn validate_non_empty(value: &str, field: &str) -> Result<(), String> {
+    if value.trim().is_empty() {
+        Err(format!("Champ {} requis", field))
+    } else {
+        Ok(())
+    }
+}
+
+fn validate_schedule(schedule: &WakeupSchedule) -> Result<(), String> {
+    let time_re = regex::Regex::new(r"^\d{2}:\d{2}$").map_err(|e| e.to_string())?;
+    let dt_re = regex::Regex::new(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$").map_err(|e| e.to_string())?;
+
+    match schedule {
+        WakeupSchedule::Once { datetime } => {
+            if !dt_re.is_match(datetime) {
+                return Err(format!("Datetime invalide : {} (attendu YYYY-MM-DDTHH:MM)", datetime));
+            }
+        }
+        WakeupSchedule::Daily { time } => {
+            if !time_re.is_match(time) {
+                return Err(format!("Heure invalide : {} (attendu HH:MM)", time));
+            }
+        }
+        WakeupSchedule::Weekly { weekday, time } => {
+            if *weekday > 6 {
+                return Err(format!("Jour invalide : {} (0..6 attendu)", weekday));
+            }
+            if !time_re.is_match(time) {
+                return Err(format!("Heure invalide : {} (attendu HH:MM)", time));
+            }
+        }
+    }
+    Ok(())
 }

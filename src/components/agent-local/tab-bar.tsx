@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { Plus, X } from "@/components/ui/icons";
 import type { TabInfo } from "@/types/agent";
 import "./conversation.css";
@@ -15,8 +16,14 @@ interface TabBarProps {
 export function TabBar({ tabs, activeIndex, onSelect, onClose, onAdd, onRename }: TabBarProps) {
   const [renamingIdx, setRenamingIdx] = useState<number | null>(null);
 
+  const handleBarMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 0) return;
+    if (e.target !== e.currentTarget) return;
+    getCurrentWindow().startDragging().catch(() => { /* ignore */ });
+  };
+
   return (
-    <div className="tab-bar">
+    <div className="tab-bar" onMouseDown={handleBarMouseDown}>
       {tabs.map((tab, i) => {
         const active = i === activeIndex;
         const renaming = renamingIdx != null && renamingIdx === i;

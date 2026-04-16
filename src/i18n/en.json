@@ -1,7 +1,6 @@
 {
   "nav": {
     "heartbeat": "Heartbeat",
-    "history": "History",
     "personality": "Personality",
     "settings": "Settings",
     "agentLocal": "Agent Local",
@@ -9,6 +8,7 @@
   },
   "agentLocal": {
     "title": "Conversations",
+    "newSession": "New session",
     "noConversations": "No conversations",
     "selectOrCreate": "Select or create a conversation",
     "placeholder": "How can I help you?",
@@ -77,46 +77,62 @@
     "delete": "Delete"
   },
   "heartbeat": {
-    "wakeups": "Wakeups",
-    "stopAt": "Stop at",
-    "planned": "Planned",
-    "warning": "Warning",
-    "scheduleWakeup": "Schedule wakeup",
-    "active": "Active",
-    "inactive": "Inactive",
-    "run": "Run",
-    "save": "Save",
-    "saved": "Saved",
+    "title": "Wakeups",
+    "subtitle": "Automate scheduled tasks for any LLM",
+    "empty": "No wakeup configured yet. Click New wakeup to start.",
+    "newWakeup": "New wakeup",
+    "edit": "Edit",
     "delete": "Delete",
-    "dateTime": "Date & time",
-    "mode": "Mode",
-    "promptLabel": "Prompt (optional)",
-    "promptPlaceholder": "Loaded as context on wakeup...",
-    "selectWakeup": "Select a wakeup",
-    "noErrors": "No errors detected"
-  },
-  "history": {
-    "sessions": "Sessions",
-    "recent": "Recent",
-    "archive": "Archive",
-    "favorites": "Favorites",
-    "addFavorite": "Add to favorites",
-    "removeFavorite": "Remove from favorites",
-    "noFavorites": "No favorites yet",
-    "noSessions": "No sessions",
-    "rename": "Rename",
-    "delete": "Delete",
-    "loading": "Loading...",
-    "selectSession": "Select a session",
-    "noMessages": "No messages in this session",
-    "live": "LIVE",
-    "duration": "Duration",
-    "messages": "Messages",
-    "mode": "Mode",
-    "version": "Version",
-    "download": "Download as Markdown",
-    "prompt": "Prompt",
-    "jackson": "Jackson"
+    "confirmDelete": "Confirm deletion",
+    "pausedHint": "Wakeups paused — disable the master switch",
+    "badges": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "fields": {
+      "name": "Name",
+      "provider": "Provider",
+      "model": "Model",
+      "schedule": "Schedule",
+      "description": "Description",
+      "prompt": "Prompt"
+    },
+    "sidebar": {
+      "title": "Wakeups",
+      "pause": "Pause all",
+      "resume": "Resume",
+      "empty": "No active wakeup",
+      "pausedEmpty": "Wakeups paused"
+    },
+    "form": {
+      "createTitle": "New wakeup",
+      "editTitle": "Edit wakeup",
+      "name": "Name",
+      "provider": "Provider",
+      "model": "Model",
+      "pickModel": "Pick a model",
+      "ollamaDown": "Ollama unavailable",
+      "prompt": "Prompt",
+      "description": "Description (short)",
+      "schedule": "Schedule",
+      "cancel": "Cancel",
+      "create": "Create",
+      "save": "Save",
+      "scheduleKind": {
+        "once": "Once",
+        "daily": "Daily",
+        "weekly": "Weekly"
+      },
+      "weekdays": {
+        "0": "Monday",
+        "1": "Tuesday",
+        "2": "Wednesday",
+        "3": "Thursday",
+        "4": "Friday",
+        "5": "Saturday",
+        "6": "Sunday"
+      }
+    }
   },
   "personality": {
     "files": "Files",

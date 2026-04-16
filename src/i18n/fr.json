@@ -1,7 +1,6 @@
 {
   "nav": {
     "heartbeat": "Heartbeat",
-    "history": "Historique",
     "personality": "Personnalité",
     "settings": "Paramètres",
     "agentLocal": "Agent Local",
@@ -9,6 +8,7 @@
   },
   "agentLocal": {
     "title": "Conversations",
+    "newSession": "Nouvelle session",
     "noConversations": "Aucune conversation",
     "selectOrCreate": "Sélectionne ou crée une conversation",
     "placeholder": "Comment puis-je vous aider ?",
@@ -77,46 +77,62 @@
     "delete": "Supprimer"
   },
   "heartbeat": {
-    "wakeups": "Réveils",
-    "stopAt": "Arrêt à",
-    "planned": "Planifiés",
-    "warning": "Alertes",
-    "scheduleWakeup": "Planifier un réveil",
-    "active": "Actif",
-    "inactive": "Inactif",
-    "run": "Lancer",
-    "save": "Sauvegarder",
-    "saved": "Sauvegardé",
+    "title": "Réveils",
+    "subtitle": "Créer des réveils automatisés pour planifier différentes tâches",
+    "empty": "Aucun réveil configuré. Clique sur Nouveau réveil pour commencer.",
+    "newWakeup": "Nouveau réveil",
+    "edit": "Modifier",
     "delete": "Supprimer",
-    "dateTime": "Date & heure",
-    "mode": "Mode",
-    "promptLabel": "Prompt (optionnel)",
-    "promptPlaceholder": "Chargé en contexte au réveil...",
-    "selectWakeup": "Sélectionne un réveil",
-    "noErrors": "Aucune erreur détectée"
-  },
-  "history": {
-    "sessions": "Sessions",
-    "recent": "Récent",
-    "archive": "Archive",
-    "favorites": "Favoris",
-    "addFavorite": "Ajouter aux favoris",
-    "removeFavorite": "Retirer des favoris",
-    "noFavorites": "Aucun favori",
-    "noSessions": "Aucune session",
-    "rename": "Renommer",
-    "delete": "Supprimer",
-    "loading": "Chargement...",
-    "selectSession": "Sélectionne une session",
-    "noMessages": "Aucun message dans cette session",
-    "live": "EN COURS",
-    "duration": "Durée",
-    "messages": "Messages",
-    "mode": "Mode",
-    "version": "Version",
-    "download": "Télécharger en Markdown",
-    "prompt": "Prompt",
-    "jackson": "Jackson"
+    "confirmDelete": "Confirmer la suppression",
+    "pausedHint": "Réveils en veille — désactive le master switch",
+    "badges": {
+      "active": "Actif",
+      "inactive": "Inactif"
+    },
+    "fields": {
+      "name": "Nom",
+      "provider": "Provider",
+      "model": "Modèle",
+      "schedule": "Planification",
+      "description": "Description",
+      "prompt": "Prompt"
+    },
+    "sidebar": {
+      "title": "Réveils",
+      "pause": "Mettre en veille",
+      "resume": "Reprendre",
+      "empty": "Aucun réveil actif",
+      "pausedEmpty": "Réveils en veille"
+    },
+    "form": {
+      "createTitle": "Nouveau réveil",
+      "editTitle": "Modifier le réveil",
+      "name": "Nom",
+      "provider": "Provider",
+      "model": "Modèle",
+      "pickModel": "Choisir un modèle",
+      "ollamaDown": "Ollama indisponible",
+      "prompt": "Prompt",
+      "description": "Description (courte)",
+      "schedule": "Planification",
+      "cancel": "Annuler",
+      "create": "Créer",
+      "save": "Enregistrer",
+      "scheduleKind": {
+        "once": "Ponctuel",
+        "daily": "Journalier",
+        "weekly": "Hebdo"
+      },
+      "weekdays": {
+        "0": "Lundi",
+        "1": "Mardi",
+        "2": "Mercredi",
+        "3": "Jeudi",
+        "4": "Vendredi",
+        "5": "Samedi",
+        "6": "Dimanche"
+      }
+    }
   },
   "personality": {
     "files": "Fichiers",

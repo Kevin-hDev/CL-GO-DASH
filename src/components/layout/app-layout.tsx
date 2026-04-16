@@ -7,6 +7,7 @@ interface AppLayoutProps {
   onTabChange: (tab: TabId) => void;
   listContent: ReactNode;
   detailContent: ReactNode;
+  hideDetailDrag?: boolean;
 }
 
 export function AppLayout({
@@ -14,6 +15,7 @@ export function AppLayout({
   onTabChange,
   listContent,
   detailContent,
+  hideDetailDrag = false,
 }: AppLayoutProps) {
   return (
     <div
@@ -49,7 +51,7 @@ export function AppLayout({
           border: "1px solid var(--edge)",
         }}
       >
-        <DragRegion />
+        {!hideDetailDrag && <DragRegion />}
         {detailContent}
       </div>
     </div>

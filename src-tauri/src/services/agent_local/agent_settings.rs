@@ -15,9 +15,9 @@ impl Default for AgentSettings {
 }
 
 fn settings_path() -> PathBuf {
-    dirs::data_local_dir()
+    dirs::home_dir()
         .unwrap_or_else(|| PathBuf::from("/tmp"))
-        .join("cl-go")
+        .join(".local/share/cl-go-dash")
         .join("agent-settings.json")
 }
 
