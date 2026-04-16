@@ -145,7 +145,16 @@ pub fn get_heartbeat_config() -> Result<HeartbeatConfig, String> {
     Ok(config.heartbeat)
 }
 
-const ALLOWED_PROVIDERS: &[&str] = &["ollama"];
+const ALLOWED_PROVIDERS: &[&str] = &[
+    "ollama",
+    "groq",
+    "google",
+    "mistral",
+    "cerebras",
+    "openrouter",
+    "openai",
+    "deepseek",
+];
 
 fn validate_provider(provider: &str) -> Result<(), String> {
     if ALLOWED_PROVIDERS.contains(&provider) {

@@ -5,6 +5,7 @@ import { HeartbeatTab } from "@/components/heartbeat/heartbeat-tab";
 import { PersonalityTab } from "@/components/personality/personality-tab";
 import { AgentLocalTab } from "@/components/agent-local/agent-local-tab";
 import { OllamaTab } from "@/components/ollama/ollama-tab";
+import { ApiKeysTab } from "@/components/api-keys/api-keys-tab";
 import { SettingsTab } from "@/components/settings/settings-tab";
 import type { TabId } from "@/components/layout/sidebar";
 
@@ -16,6 +17,7 @@ export default function App() {
   const persTab = PersonalityTab();
   const agentTab = AgentLocalTab();
   const ollamaTab = OllamaTab();
+  const apiKeysTab = ApiKeysTab();
   const settTab = SettingsTab({ theme, onThemeChange: setTheme });
 
   const tabs: Record<TabId, { list: React.ReactNode; detail: React.ReactNode }> = {
@@ -23,6 +25,7 @@ export default function App() {
     personality: persTab,
     "agent-local": agentTab,
     ollama: ollamaTab,
+    "api-keys": apiKeysTab,
     settings: settTab,
   };
 

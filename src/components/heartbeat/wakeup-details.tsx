@@ -42,6 +42,21 @@ export function WakeupDetails({
         </button>
         <div className="wk-details-title">
           <span className="wk-details-model">{wakeup.model}</span>
+          {wakeup.provider !== "ollama" && (
+            <span
+              style={{
+                fontSize: 10,
+                padding: "2px 6px",
+                background: "var(--surface)",
+                borderRadius: 4,
+                color: "var(--ink-muted)",
+                textTransform: "uppercase",
+                letterSpacing: "0.3px",
+              }}
+            >
+              {wakeup.provider}
+            </span>
+          )}
           <ActiveBadge active={wakeup.active} />
         </div>
         <div className="wk-details-actions">

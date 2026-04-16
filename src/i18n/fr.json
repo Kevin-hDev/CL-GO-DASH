@@ -4,7 +4,64 @@
     "personality": "Personnalité",
     "settings": "Paramètres",
     "agentLocal": "Agent Local",
-    "ollama": "Ollama"
+    "ollama": "Ollama",
+    "apiKeys": "Clé API"
+  },
+  "apiKeys": {
+    "main": {
+      "title": "Clés API",
+      "connectorsBtn": "Connecteurs API"
+    },
+    "sidebar": {
+      "configured": "Configurés",
+      "empty": "Aucun provider configuré"
+    },
+    "empty": {
+      "title": "Aucun provider configuré",
+      "subtitle": "Ajoute une clé API pour accéder à des LLM distants (Groq, Gemini, Mistral…) ou des services de recherche web (Brave, Exa, Firecrawl).",
+      "addConnector": "Connecteurs API"
+    },
+    "details": {
+      "connected": "Connecté",
+      "edit": "Modifier",
+      "delete": "Supprimer",
+      "freeTier": "Free tier",
+      "signupLink": "Inscription",
+      "openSite": "Ouvrir le site",
+      "apiKey": "Clé API",
+      "confirmDelete": "Confirmer la suppression"
+    },
+    "dialog": {
+      "addTitle": "Ajouter {{name}}",
+      "editTitle": "Modifier {{name}}",
+      "apiKey": "Clé API",
+      "keyPlaceholder": "Colle ta clé API ici",
+      "keyPlaceholderEdit": "Laisser vide pour garder la clé actuelle",
+      "getKeyAt": "Obtenir une clé sur {{name}}",
+      "description": "Description",
+      "testing": "Test de la clé en cours…",
+      "testOk": "Clé valide, provider connecté.",
+      "cancel": "Annuler",
+      "addAndTest": "Ajouter et tester",
+      "save": "Enregistrer",
+      "clearKey": "Effacer la clé"
+    },
+    "picker": {
+      "title": "Ajouter un provider",
+      "allConfigured": "Tous les providers du catalogue sont déjà configurés."
+    },
+    "connectors": {
+      "title": "Connecteurs API",
+      "subtitle": "Ajoutez des sources de données à votre instance.",
+      "search": "Rechercher des connecteurs…",
+      "empty": "Aucun connecteur ne correspond à la recherche.",
+      "tabs": {
+        "all": "Tous",
+        "llm": "AI / LLM",
+        "search": "Recherche",
+        "scraping": "Scraping"
+      }
+    }
   },
   "agentLocal": {
     "title": "Conversations",
@@ -18,7 +75,17 @@
     "edit": "Modifier",
     "copy": "Copier",
     "exportMd": "Télécharger en Markdown",
-    "search": "Rechercher dans la conversation"
+    "search": "Rechercher dans la conversation",
+    "modelSearch": "Rechercher un modèle…",
+    "modelEmpty": "Aucun modèle ne correspond.",
+    "thinkingToggle": "Réflexion étendue"
+  },
+  "switchModel": {
+    "title": "Changement de modèle",
+    "description": "Tu passes de {{from}} à {{to}}. Que veux-tu faire avec la conversation actuelle ?",
+    "remember": "Mémoriser mon choix pour cette session",
+    "newSession": "Nouvelle session",
+    "continue": "Continuer dans cette session"
   },
   "permissionMode": {
     "title": "Mode",
@@ -112,6 +179,7 @@
       "model": "Modèle",
       "pickModel": "Choisir un modèle",
       "ollamaDown": "Ollama indisponible",
+      "noToolCapable": "Aucun modèle tool-capable",
       "prompt": "Prompt",
       "description": "Description (courte)",
       "schedule": "Planification",

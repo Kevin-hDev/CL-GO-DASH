@@ -1,0 +1,106 @@
+/* === Connectors Modal — plein écran === */
+.ak-connectors-modal {
+  background: var(--shell);
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-md);
+  width: 100%;
+  max-width: 960px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.ak-connectors-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: var(--space-lg);
+  padding-bottom: var(--space-md);
+}
+
+.ak-connectors-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.ak-connectors-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.ak-connectors-subtitle {
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+}
+
+/* === Onglets catégories === */
+.ak-connectors-tabs {
+  display: flex;
+  gap: var(--space-md);
+  padding: 0 var(--space-lg);
+  border-bottom: 1px solid var(--edge);
+}
+
+.ak-connectors-tab {
+  padding: 10px 2px;
+  background: transparent;
+  border: none;
+  color: var(--ink-muted);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color var(--ease-smooth), border-color var(--ease-smooth);
+}
+
+.ak-connectors-tab:hover {
+  color: var(--ink);
+}
+
+.ak-connectors-tab.active {
+  color: var(--ink);
+  border-bottom-color: var(--pulse);
+}
+
+/* === Search bar === */
+.ak-connectors-search {
+  position: relative;
+  margin: var(--space-md) var(--space-lg) 0;
+}
+
+.ak-connectors-search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ink-muted);
+  pointer-events: none;
+}
+
+.ak-connectors-search-input {
+  width: 100%;
+  padding: 10px 12px 10px 36px;
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: var(--text-sm);
+  font-family: inherit;
+  transition: border-color var(--ease-smooth);
+}
+
+.ak-connectors-search-input:focus {
+  outline: none;
+  border-color: var(--pulse);
+  box-shadow: 0 0 0 2px var(--pulse-muted);
+}
+
+.ak-connectors-search-input::placeholder {
+  color: var(--ink-faint);
+}

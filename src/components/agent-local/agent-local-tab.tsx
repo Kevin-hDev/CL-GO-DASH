@@ -12,34 +12,44 @@ interface OllamaModel {
   name: string;
 }
 
-function useDefaultModel(): string {
-  const [defaultModel, setDefaultModel] = useState("gemma4:e4b");
+function useDefaultModel(): { model: string; provider: string } {
+  const [state, setState] = useState({ model: "gemma4:e4b", provider: "ollama" });
   useEffect(() => {
     invoke<OllamaModel[]>("list_ollama_models")
       .then((models) => {
-        if (models.length > 0) setDefaultModel(models[0].name);
+        if (models.length > 0) setState({ model: models[0].name, provider: "ollama" });
       })
       .catch(() => {});
   }, []);
-  return defaultModel;
+  return state;
 }
 
 export function AgentLocalTab(): { list: React.ReactNode; detail: React.ReactNode } {
   const { t } = useTranslation();
   const { sessions, create, rename, remove, updateModel } = useAgentSessions();
   const tabState = useAgentTabs();
-  const defaultModel = useDefaultModel();
+  const { model: defaultModel, provider: defaultProvider } = useDefaultModel();
 
   const activeSession = tabState.activeSessionId
     ? sessions.find((s) => s.id.localeCompare(tabState.activeSessionId!) === 0)
     : null;
   const model = activeSession?.model ?? defaultModel;
+  const provider = activeSession?.provider ?? defaultProvider;
 
   const handleCreate = useCallback(async () => {
     const name = t("agentLocal.newSession");
-    const session = await create(name, defaultModel);
+    const session = await create(name, defaultModel, defaultProvider);
     await tabState.addTab(session.id, session.name);
-  }, [create, tabState, defaultModel, t]);
+  }, [create, tabState, defaultModel, defaultProvider, t]);
+
+  const handleCreateWithModel = useCallback(
+    async (newModel: string, newProvider: string) => {
+      const name = t("agentLocal.newSession");
+      const session = await create(name, newModel, newProvider);
+      await tabState.addTab(session.id, session.name);
+    },
+    [create, tabState, t],
+  );
 
   const handleSelect = useCallback(async (id: string) => {
     const idx = tabState.tabs.findIndex((tab) => tab.session_id.localeCompare(id) === 0);
@@ -81,11 +91,13 @@ export function AgentLocalTab(): { list: React.ReactNode; detail: React.ReactNod
           <ChatView
             sessionId={tabState.activeSessionId}
             model={model}
-            onModelChange={(m) => {
+            provider={provider}
+            onApplySwitch={(m, p) => {
               if (tabState.activeSessionId && updateModel) {
-                updateModel(tabState.activeSessionId, m);
+                updateModel(tabState.activeSessionId, m, p);
               }
             }}
+            onNewSession={handleCreateWithModel}
           />
         </div>
       ) : (

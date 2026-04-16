@@ -1,0 +1,131 @@
+.ms-trigger {
+  font-size: var(--text-xs);
+  color: var(--ink-faint);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.ms-dropdown {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  margin-bottom: 4px;
+  width: 300px;
+  max-height: 380px;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--edge);
+  background: var(--shell);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+  z-index: 50;
+  overflow: hidden;
+}
+
+.ms-search {
+  position: relative;
+  padding: 8px;
+  border-bottom: 1px solid var(--edge);
+}
+
+.ms-search-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ink-faint);
+  pointer-events: none;
+}
+
+.ms-search-input {
+  width: 100%;
+  padding: 6px 8px 6px 28px;
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: var(--text-xs);
+  font-family: inherit;
+  outline: none;
+}
+
+.ms-search-input:focus {
+  border-color: var(--pulse);
+}
+
+.ms-thinking {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  border-bottom: 1px solid var(--edge);
+}
+
+.ms-thinking:hover {
+  background: var(--surface);
+}
+
+.ms-list {
+  overflow-y: auto;
+  flex: 1;
+}
+
+.ms-empty {
+  padding: var(--space-md);
+  font-size: var(--text-xs);
+  color: var(--ink-faint);
+  text-align: center;
+}
+
+.ms-section {
+  padding: var(--space-xs) var(--space-md);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: var(--shell);
+  position: sticky;
+  top: 0;
+}
+
+.ms-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px var(--space-md);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  color: var(--ink);
+  transition: background var(--ease-smooth);
+}
+
+.ms-item:hover {
+  background: var(--pulse-muted);
+}
+
+.ms-item.active {
+  color: var(--pulse);
+}
+
+.ms-item-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ms-item-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.ms-hint {
+  color: var(--ink-faint);
+  font-size: 10px;
+}

@@ -7,6 +7,8 @@ pub struct AgentSession {
     pub name: String,
     pub created_at: DateTime<Utc>,
     pub model: String,
+    #[serde(default = "default_provider")]
+    pub provider: String,
     pub thinking_enabled: bool,
     pub accumulated_tokens: u32,
     pub messages: Vec<AgentMessage>,
@@ -20,9 +22,15 @@ pub struct AgentSessionMeta {
     pub name: String,
     pub created_at: DateTime<Utc>,
     pub model: String,
+    #[serde(default = "default_provider")]
+    pub provider: String,
     pub message_count: usize,
     #[serde(default)]
     pub is_heartbeat: bool,
+}
+
+fn default_provider() -> String {
+    "ollama".to_string()
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

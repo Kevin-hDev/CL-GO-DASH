@@ -13,5 +13,6 @@ export default defineConfig({
     port: 5173,
     strictPort: true,
   },
-  envPrefix: ["VITE_", "TAURI_"],
+  // CVE-2023-46115 : ne PAS exposer les variables d'env TAURI_ au frontend
+  envPrefix: ["VITE_"],
 });

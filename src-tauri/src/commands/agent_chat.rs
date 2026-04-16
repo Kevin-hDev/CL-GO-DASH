@@ -7,6 +7,7 @@ use crate::services::agent_local::types_ollama::{
 use crate::services::agent_local::types_session::{
     AgentMessage, AgentSession, AgentSessionMeta, TabState,
 };
+use crate::services::llm;
 use crate::ActiveStreams;
 use tauri::ipc::Channel;
 use tokio_util::sync::CancellationToken;
@@ -18,35 +19,46 @@ pub async fn chat_stream(
     messages: Vec<ChatMessage>,
     tools: Vec<serde_json::Value>,
     think: bool,
+    provider: Option<String>,
     on_event: Channel<StreamEvent>,
     streams: tauri::State<'_, ActiveStreams>,
 ) -> Result<(), String> {
     let cancel = CancellationToken::new();
     streams.0.lock().await.insert(session_id.clone(), cancel.clone());
 
-    let final_tools = if tools.is_empty() {
-        tool_dispatcher::get_tool_definitions()
+    let provider = provider.unwrap_or_else(|| "ollama".to_string());
+
+    let result = if provider == "ollama" {
+        let final_tools = if tools.is_empty() {
+            tool_dispatcher::get_tool_definitions()
+        } else {
+            tools
+        };
+
+        let working_dir = std::env::current_dir().unwrap_or_else(|_| dirs::home_dir().unwrap());
+        let mut msgs = messages;
+
+        agent_loop::run_agent_loop(
+            &on_event,
+            &mut msgs,
+            &model,
+            final_tools,
+            think,
+            working_dir,
+            session_id.clone(),
+            cancel,
+        )
+        .await
+        .map(|_| ())
     } else {
-        tools
+        // Phase 6 : chat texte LLM API (sans tools, Phase 7 ajoute les tools).
+        llm::stream::stream_chat(&on_event, &provider, &model, &messages, cancel)
+            .await
+            .map(|_| ())
     };
 
-    let working_dir = std::env::current_dir().unwrap_or_else(|_| dirs::home_dir().unwrap());
-    let mut msgs = messages;
-
-    let result = agent_loop::run_agent_loop(
-        &on_event,
-        &mut msgs,
-        &model,
-        final_tools,
-        think,
-        working_dir,
-        session_id.clone(),
-        cancel,
-    )
-    .await;
-
     streams.0.lock().await.remove(&session_id);
-    result.map(|_| ())
+    result
 }
 
 #[tauri::command]
@@ -88,8 +100,10 @@ pub async fn add_messages_to_session(
 pub async fn create_agent_session(
     name: String,
     model: String,
+    provider: Option<String>,
 ) -> Result<AgentSession, String> {
-    session_store::create(&name, &model).await
+    let provider = provider.unwrap_or_else(|| "ollama".to_string());
+    session_store::create_with_provider(&name, &model, &provider).await
 }
 
 #[tauri::command]

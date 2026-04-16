@@ -1,106 +1,129 @@
-import { useState, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useClickOutside } from "@/hooks/use-click-outside";
 import { useKeyboard } from "@/hooks/use-keyboard";
-import { Check } from "@/components/ui/icons";
-import { useOllamaModels } from "@/hooks/use-ollama-models";
-import { idMatch } from "@/lib/utils";
-import type { OllamaModel } from "@/types/agent";
+import { Check, MagnifyingGlass } from "@/components/ui/icons";
+import {
+  useAvailableModels,
+  type AvailableModel,
+} from "@/hooks/use-available-models";
+import "./model-selector.css";
 
 interface ModelSelectorProps {
   selectedModel: string;
-  onSelect: (model: string) => void;
+  selectedProvider: string;
+  onSelect: (model: string, provider: string) => void;
   thinkingEnabled: boolean;
   onToggleThinking: () => void;
 }
 
 export function ModelSelector({
-  selectedModel, onSelect, thinkingEnabled, onToggleThinking,
+  selectedModel,
+  selectedProvider,
+  onSelect,
+  thinkingEnabled,
+  onToggleThinking,
 }: ModelSelectorProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
   const ref = useRef<HTMLDivElement>(null);
-  const { groupedByFamily } = useOllamaModels();
+  const { groups } = useAvailableModels();
 
   useClickOutside(ref, () => setOpen(false));
   useKeyboard({ onEscape: () => setOpen(false) });
 
-  const hasThinking = Object.values(groupedByFamily)
-    .flat()
-    .find((m) => idMatch(m.name, selectedModel))
-    ?.capabilities.includes("thinking");
+  const selectedEntry = useMemo(() => {
+    const list = groups.get(selectedProvider);
+    return list?.find((m) => m.id === selectedModel) ?? null;
+  }, [groups, selectedProvider, selectedModel]);
+
+  const showThinkingToggle = selectedEntry?.supports_thinking ?? false;
+
+  const filteredGroups = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return groups;
+    const out = new Map<string, AvailableModel[]>();
+    for (const [key, models] of groups.entries()) {
+      const kept = models.filter((m) => m.id.toLowerCase().includes(q));
+      if (kept.length > 0) out.set(key, kept);
+    }
+    return out;
+  }, [groups, query]);
 
   return (
     <div ref={ref} style={{ position: "relative" }}>
       <button
+        type="button"
         onClick={() => setOpen(!open)}
-        style={{
-          fontSize: "var(--text-xs)", color: "var(--ink-faint)",
-          background: "none", border: "none", cursor: "pointer",
-        }}
+        className="ms-trigger"
       >
         {selectedModel}
-        {thinkingEnabled && hasThinking && (
+        {thinkingEnabled && showThinkingToggle && (
           <span style={{ marginLeft: 4, color: "var(--pulse)" }}>Étendue</span>
         )}
       </button>
       {open && (
-        <div style={{
-          position: "absolute", bottom: "100%", right: 0, marginBottom: 4,
-          width: 260, maxHeight: 320, overflowY: "auto",
-          borderRadius: "var(--radius-md)", border: "1px solid var(--edge)",
-          background: "var(--shell)", boxShadow: "var(--shadow-card)", zIndex: 50,
-        }}>
-          {hasThinking && (
-            <div
-              onClick={onToggleThinking}
-              style={{
-                display: "flex", justifyContent: "space-between", alignItems: "center",
-                padding: "var(--space-sm) var(--space-md)",
-                fontSize: "var(--text-xs)", cursor: "pointer",
-                borderBottom: "1px solid var(--edge)",
-              }}
-            >
-              <span>Réflexion étendue</span>
-              <span style={{ color: thinkingEnabled ? "var(--pulse)" : "var(--ink-faint)" }}>
+        <div className="ms-dropdown">
+          <div className="ms-search">
+            <MagnifyingGlass size={14} className="ms-search-icon" />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={t("agentLocal.modelSearch")}
+              className="ms-search-input"
+              autoFocus
+            />
+          </div>
+
+          {showThinkingToggle && (
+            <div className="ms-thinking" onClick={onToggleThinking}>
+              <span>{t("agentLocal.thinkingToggle")}</span>
+              <span
+                style={{
+                  color: thinkingEnabled ? "var(--pulse)" : "var(--ink-faint)",
+                }}
+              >
                 {thinkingEnabled ? "ON" : "OFF"}
               </span>
             </div>
           )}
-          {Object.entries(groupedByFamily).map(([family, models]) => (
-            <div key={family}>
-              <div style={{
-                padding: "var(--space-xs) var(--space-md)",
-                fontSize: "var(--text-xs)", fontWeight: 600,
-                color: "var(--ink-faint)", textTransform: "uppercase",
-                letterSpacing: "0.5px",
-              }}>
-                {family}
-              </div>
-              {models.map((m: OllamaModel) => {
-                const sel = idMatch(m.name, selectedModel);
-                return (
-                  <div
-                    key={m.name}
-                    onClick={() => { onSelect(m.name); setOpen(false); }}
-                    style={{
-                      display: "flex", justifyContent: "space-between", alignItems: "center",
-                      padding: "6px var(--space-md)",
-                      fontSize: "var(--text-xs)", cursor: "pointer",
-                      color: sel ? "var(--pulse)" : "var(--ink)",
-                      transition: "background var(--ease-smooth)",
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.background = "var(--pulse-muted)"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-                  >
-                    <span>{m.name}</span>
-                    <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                      <span style={{ color: "var(--ink-faint)" }}>{m.parameter_size}</span>
-                      {sel && <Check size={12} />}
-                    </span>
+
+          <div className="ms-list">
+            {filteredGroups.size === 0 ? (
+              <div className="ms-empty">{t("agentLocal.modelEmpty")}</div>
+            ) : (
+              Array.from(filteredGroups.entries()).map(([providerId, models]) => (
+                <div key={providerId}>
+                  <div className="ms-section">
+                    {models[0]?.provider_name ?? providerId}
                   </div>
-                );
-              })}
-            </div>
-          ))}
+                  {models.map((m) => {
+                    const isSelected =
+                      m.id === selectedModel && m.provider_id === selectedProvider;
+                    return (
+                      <div
+                        key={`${m.provider_id}:${m.id}`}
+                        className={`ms-item ${isSelected ? "active" : ""}`}
+                        onClick={() => {
+                          onSelect(m.id, m.provider_id);
+                          setOpen(false);
+                          setQuery("");
+                        }}
+                      >
+                        <span className="ms-item-name">{m.id}</span>
+                        <span className="ms-item-right">
+                          {m.hint && <span className="ms-hint">{m.hint}</span>}
+                          {isSelected && <Check size={12} />}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ))
+            )}
+          </div>
         </div>
       )}
     </div>

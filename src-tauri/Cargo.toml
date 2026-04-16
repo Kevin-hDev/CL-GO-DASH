@@ -54,6 +54,15 @@ base64 = "0.22"
 # Keyring
 keyring = { version = "3.6", features = ["apple-native", "windows-native", "sync-secret-service"] }
 
+# Zeroize mémoire pour les secrets (clés API)
+zeroize = { version = "1.8", features = ["derive"] }
+
+# Trait async (pour abstraction providers LLM)
+async-trait = "0.1"
+
+# Streaming SSE (pour client LLM unifié)
+eventsource-stream = "0.2"
+
 # Shell cross-platform
 which = "7"
 

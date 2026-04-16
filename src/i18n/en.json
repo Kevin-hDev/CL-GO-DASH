@@ -4,7 +4,64 @@
     "personality": "Personality",
     "settings": "Settings",
     "agentLocal": "Agent Local",
-    "ollama": "Ollama"
+    "ollama": "Ollama",
+    "apiKeys": "API Keys"
+  },
+  "apiKeys": {
+    "main": {
+      "title": "API Keys",
+      "connectorsBtn": "API Connectors"
+    },
+    "sidebar": {
+      "configured": "Configured",
+      "empty": "No provider configured"
+    },
+    "empty": {
+      "title": "No provider configured",
+      "subtitle": "Add an API key to access remote LLMs (Groq, Gemini, Mistral…) or web search services (Brave, Exa, Firecrawl).",
+      "addConnector": "API Connectors"
+    },
+    "details": {
+      "connected": "Connected",
+      "edit": "Edit",
+      "delete": "Delete",
+      "freeTier": "Free tier",
+      "signupLink": "Sign up",
+      "openSite": "Open site",
+      "apiKey": "API key",
+      "confirmDelete": "Confirm deletion"
+    },
+    "dialog": {
+      "addTitle": "Add {{name}}",
+      "editTitle": "Edit {{name}}",
+      "apiKey": "API key",
+      "keyPlaceholder": "Paste your API key here",
+      "keyPlaceholderEdit": "Leave empty to keep current key",
+      "getKeyAt": "Get a key on {{name}}",
+      "description": "Description",
+      "testing": "Testing key…",
+      "testOk": "Key valid, provider connected.",
+      "cancel": "Cancel",
+      "addAndTest": "Add and test",
+      "save": "Save",
+      "clearKey": "Clear key"
+    },
+    "picker": {
+      "title": "Add a provider",
+      "allConfigured": "All catalog providers are already configured."
+    },
+    "connectors": {
+      "title": "API Connectors",
+      "subtitle": "Add data sources to your instance.",
+      "search": "Search connectors…",
+      "empty": "No connector matches the search.",
+      "tabs": {
+        "all": "All",
+        "llm": "AI / LLM",
+        "search": "Search",
+        "scraping": "Scraping"
+      }
+    }
   },
   "agentLocal": {
     "title": "Conversations",
@@ -17,8 +74,18 @@
     "reload": "Reload",
     "edit": "Edit",
     "copy": "Copy",
+    "modelSearch": "Search a model…",
+    "modelEmpty": "No matching model.",
+    "thinkingToggle": "Extended thinking",
     "exportMd": "Download as Markdown",
     "search": "Search in conversation"
+  },
+  "switchModel": {
+    "title": "Model change",
+    "description": "Switching from {{from}} to {{to}}. What do you want to do with the current conversation?",
+    "remember": "Remember my choice for this session",
+    "newSession": "New session",
+    "continue": "Continue in this session"
   },
   "permissionMode": {
     "title": "Mode",
@@ -112,6 +179,7 @@
       "model": "Model",
       "pickModel": "Pick a model",
       "ollamaDown": "Ollama unavailable",
+      "noToolCapable": "No tool-capable model",
       "prompt": "Prompt",
       "description": "Description (short)",
       "schedule": "Schedule",

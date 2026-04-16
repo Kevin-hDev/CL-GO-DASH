@@ -4,6 +4,7 @@ use crate::services::agent_local::session_store;
 use crate::services::agent_local::types_ollama::ChatMessage;
 use crate::services::agent_local::types_session::AgentMessage;
 use crate::services::config as cfg;
+use crate::services::llm;
 use crate::services::scheduler::log;
 use chrono::Utc;
 use tauri::{AppHandle, Emitter};
@@ -47,21 +48,26 @@ pub async fn fire_wakeup(app: AppHandle, wakeup: ScheduledWakeup) {
 }
 
 async fn dispatch(_app: &AppHandle, wakeup: &ScheduledWakeup) -> Result<(String, u32), String> {
-    // 1. Appel Ollama EN PREMIER : si fail, on ne crée aucune session vide.
-    let (reply, tokens) = ollama_stream::collect_chat(
-        &wakeup.model,
-        vec![ChatMessage {
-            role: "user".into(),
-            content: wakeup.prompt.clone(),
-            images: None,
-            tool_calls: None,
-            tool_name: None,
-        }],
-    )
-    .await?;
+    // 1. Appel LLM EN PREMIER : si fail, on ne crée aucune session vide.
+    //    Route selon provider : Ollama (local) ou LLM API (via catalog).
+    let (reply, tokens) = if wakeup.provider == "ollama" {
+        ollama_stream::collect_chat(
+            &wakeup.model,
+            vec![ChatMessage {
+                role: "user".into(),
+                content: wakeup.prompt.clone(),
+                images: None,
+                tool_calls: None,
+                tool_name: None,
+            }],
+        )
+        .await?
+    } else {
+        llm::collect_chat(&wakeup.provider, &wakeup.model, &wakeup.prompt).await?
+    };
 
     // 2. Ollama a répondu → on peut créer/trouver la session et append les messages.
-    let session_id = find_or_create_heartbeat_session(&wakeup.model).await?;
+    let session_id = find_or_create_heartbeat_session(&wakeup.provider, &wakeup.model).await?;
 
     let user_msg = AgentMessage {
         id: Uuid::new_v4().to_string(),
@@ -95,12 +101,19 @@ async fn dispatch(_app: &AppHandle, wakeup: &ScheduledWakeup) -> Result<(String,
     Ok((session_id, tokens))
 }
 
-async fn find_or_create_heartbeat_session(model: &str) -> Result<String, String> {
-    if let Some(id) = session_store::find_heartbeat_session(model).await? {
+async fn find_or_create_heartbeat_session(
+    provider: &str,
+    model: &str,
+) -> Result<String, String> {
+    if let Some(id) = session_store::find_heartbeat_session(provider, model).await? {
         return Ok(id);
     }
-    let name = format!("Heartbeat • {}", model);
-    let session = session_store::create_with_flags(&name, model, true).await?;
+    let name = if provider == "ollama" {
+        format!("Heartbeat • {}", model)
+    } else {
+        format!("Heartbeat • {} • {}", provider, model)
+    };
+    let session = session_store::create_with_flags(&name, model, provider, true).await?;
     Ok(session.id)
 }
 

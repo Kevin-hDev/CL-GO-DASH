@@ -70,6 +70,8 @@ export interface AgentSession {
   name: string;
   created_at: string;
   model: string;
+  /** Provider (ex: "ollama", "groq", "google", …). Défaut "ollama". */
+  provider: string;
   thinking_enabled: boolean;
   accumulated_tokens: number;
   messages: AgentMessage[];
@@ -80,6 +82,7 @@ export interface AgentSessionMeta {
   name: string;
   created_at: string;
   model: string;
+  provider: string;
   message_count: number;
 }
 

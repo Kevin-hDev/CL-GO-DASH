@@ -23,4 +23,7 @@ export {
   FileText,
   Clock,
   CaretLeft,
+  Key,
+  MagnifyingGlass,
+  ArrowSquareOut,
 } from "@phosphor-icons/react";

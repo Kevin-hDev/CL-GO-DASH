@@ -1,13 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { invoke } from "@tauri-apps/api/core";
 import { X } from "@/components/ui/icons";
 import type { CreateWakeupInput, ScheduledWakeup, WakeupSchedule } from "@/types/wakeup";
+import { useAvailableModels } from "@/hooks/use-available-models";
 import { SchedulePicker } from "./schedule-picker";
-
-interface OllamaModel {
-  name: string;
-}
 
 interface NewWakeupDialogProps {
   initial: ScheduledWakeup | null;
@@ -27,29 +23,34 @@ export function NewWakeupDialog({
   onUpdate,
 }: NewWakeupDialogProps) {
   const { t } = useTranslation();
+  const { groups } = useAvailableModels();
   const [name, setName] = useState(initial?.name ?? "");
+  const [provider, setProvider] = useState(initial?.provider ?? "ollama");
   const [model, setModel] = useState(initial?.model ?? "");
   const [prompt, setPrompt] = useState(initial?.prompt ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [schedule, setSchedule] = useState<WakeupSchedule>(
     initial?.schedule ?? defaultSchedule(),
   );
-  const [models, setModels] = useState<string[]>([]);
-  const [ollamaError, setOllamaError] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const availableProviders = useMemo(() => {
+    return Array.from(groups.keys()).map((id) => ({
+      id,
+      display_name: groups.get(id)?.[0]?.provider_name ?? id,
+    }));
+  }, [groups]);
+
+  const toolCapableModels = useMemo(() => {
+    return (groups.get(provider) ?? []).filter((m) => m.supports_tools);
+  }, [groups, provider]);
+
   useEffect(() => {
-    invoke<OllamaModel[]>("list_ollama_models")
-      .then((ms) => {
-        setModels(ms.map((m) => m.name));
-        setOllamaError(false);
-      })
-      .catch(() => {
-        setModels([]);
-        setOllamaError(true);
-      });
-  }, []);
+    if (!toolCapableModels.find((m) => m.id === model)) {
+      setModel(toolCapableModels[0]?.id ?? "");
+    }
+  }, [provider, toolCapableModels, model]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -68,9 +69,9 @@ export function NewWakeupDialog({
     setError(null);
     try {
       if (initial) {
-        await onUpdate({ ...initial, name, model, prompt, description, schedule });
+        await onUpdate({ ...initial, name, provider, model, prompt, description, schedule });
       } else {
-        await onCreate({ name, model, provider: "ollama", prompt, description, schedule });
+        await onCreate({ name, model, provider, prompt, description, schedule });
       }
       onClose();
     } catch (err) {
@@ -80,7 +81,7 @@ export function NewWakeupDialog({
     }
   };
 
-  const disabled = submitting || ollamaError;
+  const disabled = submitting || toolCapableModels.length === 0;
   const title = initial ? t("heartbeat.form.editTitle") : t("heartbeat.form.createTitle");
 
   return (
@@ -109,8 +110,18 @@ export function NewWakeupDialog({
           <div className="wk-form-row">
             <div className="wk-form-field">
               <label className="wk-form-label">{t("heartbeat.form.provider")}</label>
-              <select className="wk-input" value="ollama" disabled>
-                <option value="ollama">Ollama</option>
+              <select
+                className="wk-input"
+                value={provider}
+                onChange={(e) => setProvider(e.target.value)}
+              >
+                {availableProviders.length === 0 ? (
+                  <option value="ollama">Ollama</option>
+                ) : (
+                  availableProviders.map((p) => (
+                    <option key={p.id} value={p.id}>{p.display_name}</option>
+                  ))
+                )}
               </select>
             </div>
 
@@ -121,13 +132,15 @@ export function NewWakeupDialog({
                 value={model}
                 onChange={(e) => setModel(e.target.value)}
                 required
-                disabled={ollamaError}
+                disabled={toolCapableModels.length === 0}
               >
                 <option value="" disabled>
-                  {ollamaError ? t("heartbeat.form.ollamaDown") : t("heartbeat.form.pickModel")}
+                  {toolCapableModels.length === 0
+                    ? t("heartbeat.form.noToolCapable")
+                    : t("heartbeat.form.pickModel")}
                 </option>
-                {models.map((m) => (
-                  <option key={m} value={m}>{m}</option>
+                {toolCapableModels.map((m) => (
+                  <option key={m.id} value={m.id}>{m.id}</option>
                 ))}
               </select>
             </div>

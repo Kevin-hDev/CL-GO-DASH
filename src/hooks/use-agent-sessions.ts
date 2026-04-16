@@ -31,11 +31,18 @@ export function useAgentSessions() {
     };
   }, [refresh]);
 
-  const create = useCallback(async (name: string, model: string) => {
-    const session = await invoke<AgentSessionMeta>("create_agent_session", { name, model });
-    await refresh();
-    return session;
-  }, [refresh]);
+  const create = useCallback(
+    async (name: string, model: string, provider: string = "ollama") => {
+      const session = await invoke<AgentSessionMeta>("create_agent_session", {
+        name,
+        model,
+        provider,
+      });
+      await refresh();
+      return session;
+    },
+    [refresh],
+  );
 
   const rename = useCallback(async (id: string, name: string) => {
     await invoke("rename_agent_session", { id, name });
@@ -47,12 +54,16 @@ export function useAgentSessions() {
     await refresh();
   }, [refresh]);
 
-  const updateModel = useCallback(async (id: string, model: string) => {
-    const session = await invoke<{ id: string; name: string; model: string; messages: unknown[]; accumulated_tokens: number }>("get_agent_session", { id });
-    session.model = model;
-    await invoke("save_agent_session", { session });
-    await refresh();
-  }, [refresh]);
+  const updateModel = useCallback(
+    async (id: string, model: string, provider: string = "ollama") => {
+      const session = await invoke<Record<string, unknown>>("get_agent_session", { id });
+      session.model = model;
+      session.provider = provider;
+      await invoke("save_agent_session", { session });
+      await refresh();
+    },
+    [refresh],
+  );
 
   return { sessions, loading, refresh, create, rename, remove, updateModel };
 }

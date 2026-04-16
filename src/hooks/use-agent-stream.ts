@@ -45,6 +45,7 @@ export function useAgentStream() {
   const startStream = useCallback(async (
     sessionId: string,
     model: string,
+    provider: string,
     messages: AgentMessage[],
     tools: unknown[],
     think: boolean,
@@ -129,6 +130,7 @@ export function useAgentStream() {
     await invoke("chat_stream", {
       sessionId,
       model,
+      provider,
       messages: chatMessages,
       tools,
       think,

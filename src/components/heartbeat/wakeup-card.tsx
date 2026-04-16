@@ -11,7 +11,25 @@ export function WakeupCard({ wakeup, onClick }: WakeupCardProps) {
     <button className="wk-card" onClick={onClick} type="button">
       <div className="wk-card-row wk-card-row-top">
         <span className="wk-card-model">{wakeup.model}</span>
-        <ActiveBadge active={wakeup.active} />
+        <span style={{ display: "flex", gap: 4, alignItems: "center" }}>
+          {wakeup.provider !== "ollama" && (
+            <span
+              style={{
+                fontSize: 10,
+                padding: "2px 6px",
+                background: "var(--surface)",
+                borderRadius: 4,
+                color: "var(--ink-muted)",
+                textTransform: "uppercase",
+                letterSpacing: "0.3px",
+              }}
+              title={wakeup.provider}
+            >
+              {wakeup.provider}
+            </span>
+          )}
+          <ActiveBadge active={wakeup.active} />
+        </span>
       </div>
       <div className="wk-card-row">
         <ScheduleBadge schedule={wakeup.schedule} />

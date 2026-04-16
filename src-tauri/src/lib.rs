@@ -24,6 +24,8 @@ pub fn run() {
             if let Err(e) = migrate_legacy_storage() {
                 eprintln!("[storage migration] {}", e);
             }
+            // Migration one-shot : ancien keyring user "brave_api_key" → "brave"
+            services::agent_local::tool_web_search::migrate_legacy_brave_key();
             if let Err(e) = ollama_lifecycle::start_sidecar(app.handle()) {
                 eprintln!("[ollama] sidecar start failed: {}", e);
             }
@@ -82,6 +84,20 @@ pub fn run() {
             commands::list_skills,
             commands::load_skill,
             commands::set_brave_api_key,
+            // API Keys (multi-provider)
+            commands::set_api_key,
+            commands::delete_api_key,
+            commands::has_api_key,
+            commands::list_configured_providers,
+            commands::test_api_key,
+            // LLM providers
+            commands::list_llm_providers_catalog,
+            commands::list_llm_models,
+            commands::test_llm_connection,
+            commands::supports_tool_use,
+            // Search providers
+            commands::list_search_providers_catalog,
+            commands::test_search_connection,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application");

@@ -21,6 +21,7 @@ interface ChatState {
 export function useAgentChat(
   sessionId: string | null,
   model: string,
+  provider: string,
   onPermissionRequest?: (id: string, toolName: string, args: Record<string, unknown>) => void,
 ) {
   const [state, setState] = useState<ChatState>({
@@ -69,7 +70,7 @@ export function useAgentChat(
       currentContent: "", currentThinking: "", currentTools: [],
       isStreaming: true, tps: 0,
     }));
-    await startStream(sessionId, model, buildMessages(msgs), [], true, {
+    await startStream(sessionId, model, provider, buildMessages(msgs), [], true, {
       onToken: (content, _tc, tps) =>
         setState((s) => ({ ...s, currentContent: s.currentContent + content, tps })),
       onThinking: (content) =>
@@ -129,7 +130,7 @@ export function useAgentChat(
       }),
       onError: (msg) => { setState((s) => ({ ...s, isStreaming: false })); console.error("Stream:", msg); },
     });
-  }, [sessionId, model, startStream, buildMessages, onPermissionRequest]);
+  }, [sessionId, model, provider, startStream, buildMessages, onPermissionRequest]);
 
   const sendMessage = useCallback(async (
     text: string, sentFiles?: { name: string; path?: string; preview?: string }[],

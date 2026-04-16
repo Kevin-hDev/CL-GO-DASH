@@ -24,12 +24,21 @@ fn sessions_dir() -> PathBuf {
 }
 
 pub async fn create(name: &str, model: &str) -> Result<AgentSession, String> {
-    create_with_flags(name, model, false).await
+    create_with_flags(name, model, "ollama", false).await
+}
+
+pub async fn create_with_provider(
+    name: &str,
+    model: &str,
+    provider: &str,
+) -> Result<AgentSession, String> {
+    create_with_flags(name, model, provider, false).await
 }
 
 pub async fn create_with_flags(
     name: &str,
     model: &str,
+    provider: &str,
     is_heartbeat: bool,
 ) -> Result<AgentSession, String> {
     let session = AgentSession {
@@ -37,6 +46,7 @@ pub async fn create_with_flags(
         name: name.to_string(),
         created_at: Utc::now(),
         model: model.to_string(),
+        provider: provider.to_string(),
         thinking_enabled: false,
         accumulated_tokens: 0,
         messages: Vec::new(),
@@ -46,9 +56,12 @@ pub async fn create_with_flags(
     Ok(session)
 }
 
-/// Cherche la conversation heartbeat existante pour un modèle donné.
+/// Cherche la conversation heartbeat existante pour un couple (provider, model).
 /// Retourne la plus récente si plusieurs existent, `None` sinon.
-pub async fn find_heartbeat_session(model: &str) -> Result<Option<String>, String> {
+pub async fn find_heartbeat_session(
+    provider: &str,
+    model: &str,
+) -> Result<Option<String>, String> {
     let dir = sessions_dir();
     if !dir.exists() {
         return Ok(None);
@@ -64,7 +77,8 @@ pub async fn find_heartbeat_session(model: &str) -> Result<Option<String>, Strin
         }
         if let Ok(data) = tokio::fs::read_to_string(&path).await {
             if let Ok(session) = serde_json::from_str::<AgentSession>(&data) {
-                if session.is_heartbeat && session.model == model {
+                let matches_provider = session.provider == provider;
+                if session.is_heartbeat && matches_provider && session.model == model {
                     let candidate = (session.created_at, session.id);
                     if best.as_ref().map(|b| candidate.0 > b.0).unwrap_or(true) {
                         best = Some(candidate);
@@ -105,6 +119,7 @@ pub async fn list() -> Result<Vec<AgentSessionMeta>, String> {
                     name: session.name,
                     created_at: session.created_at,
                     model: session.model,
+                    provider: session.provider,
                     message_count: session.messages.len(),
                     is_heartbeat: session.is_heartbeat,
                 });

@@ -1,85 +1,41 @@
-use crate::services::agent_local::types_tools::SearchResult;
-use reqwest::Client;
-use std::time::Duration;
+//! Wrapper léger sur `services::search` — conserve l'interface historique
+//! pour l'agent tool `web_search` tout en déléguant au nouveau module search.
 
-const BRAVE_URL: &str = "https://api.search.brave.com/res/v1/web/search";
-const SEARXNG_URL: &str = "http://localhost:8080/search";
-const MAX_RESULTS: usize = 10;
-const TIMEOUT: Duration = Duration::from_secs(10);
-const KEYRING_SERVICE: &str = "cl-go-dash";
-const KEYRING_USER: &str = "brave_api_key";
+use crate::services::agent_local::types_tools::SearchResult;
+use crate::services::api_keys;
+use crate::services::search;
 
 pub async fn web_search(query: &str) -> Result<Vec<SearchResult>, String> {
-    if let Ok(key) = get_brave_key() {
-        return brave_search(query, &key).await;
-    }
-    if let Ok(results) = searxng_search(query).await {
-        if !results.is_empty() {
-            return Ok(results);
-        }
-    }
-    Err("Recherche web indisponible. Configure une clé API Brave Search dans les paramètres (gratuit sur brave.com/search/api) ou lance SearXNG en local sur le port 8080.".to_string())
+    search::run_search(query).await
 }
 
-async fn brave_search(query: &str, api_key: &str) -> Result<Vec<SearchResult>, String> {
-    let client = Client::new();
-    let resp = client
-        .get(BRAVE_URL)
-        .query(&[("q", query), ("count", &MAX_RESULTS.to_string())])
-        .header("X-Subscription-Token", api_key)
-        .timeout(TIMEOUT)
-        .send()
-        .await
-        .map_err(|e| format!("Brave: {e}"))?;
-
-    let json: serde_json::Value = resp.json().await.map_err(|e| e.to_string())?;
-    let results = json["web"]["results"]
-        .as_array()
-        .unwrap_or(&Vec::new())
-        .iter()
-        .take(MAX_RESULTS)
-        .map(|r| SearchResult {
-            title: r["title"].as_str().unwrap_or("").to_string(),
-            url: r["url"].as_str().unwrap_or("").to_string(),
-            snippet: r["description"].as_str().unwrap_or("").to_string(),
-        })
-        .collect();
-    Ok(results)
-}
-
-async fn searxng_search(query: &str) -> Result<Vec<SearchResult>, String> {
-    let client = Client::new();
-    let resp = client
-        .get(SEARXNG_URL)
-        .query(&[("q", query), ("format", "json")])
-        .timeout(TIMEOUT)
-        .send()
-        .await
-        .map_err(|e| format!("SearXNG: {e}"))?;
-
-    let json: serde_json::Value = resp.json().await.map_err(|e| e.to_string())?;
-    let results = json["results"]
-        .as_array()
-        .unwrap_or(&Vec::new())
-        .iter()
-        .take(MAX_RESULTS)
-        .map(|r| SearchResult {
-            title: r["title"].as_str().unwrap_or("").to_string(),
-            url: r["url"].as_str().unwrap_or("").to_string(),
-            snippet: r["content"].as_str().unwrap_or("").to_string(),
-        })
-        .collect();
-    Ok(results)
-}
-
-fn get_brave_key() -> Result<String, String> {
-    let entry = keyring::Entry::new(KEYRING_SERVICE, KEYRING_USER)
-        .map_err(|e| e.to_string())?;
-    entry.get_password().map_err(|e| e.to_string())
-}
-
+/// Compat : ancienne commande `set_brave_api_key` → route vers `api_keys::set_key("brave", ...)`.
 pub fn set_brave_key(key: &str) -> Result<(), String> {
-    let entry = keyring::Entry::new(KEYRING_SERVICE, KEYRING_USER)
-        .map_err(|e| e.to_string())?;
-    entry.set_password(key).map_err(|e| e.to_string())
+    api_keys::set_key("brave", key)
+}
+
+/// Migration one-shot au démarrage : l'ancienne version stockait la clé Brave
+/// sous le user `brave_api_key`. On la copie vers `brave` (nouveau nom canonique)
+/// et on supprime l'ancienne entrée.
+pub fn migrate_legacy_brave_key() {
+    use keyring::Entry;
+    const KEYRING_SERVICE: &str = "cl-go-dash";
+    const LEGACY_USER: &str = "brave_api_key";
+
+    // Si déjà migré, rien à faire
+    if api_keys::has_key("brave") {
+        return;
+    }
+
+    let Ok(legacy_entry) = Entry::new(KEYRING_SERVICE, LEGACY_USER) else {
+        return;
+    };
+    let Ok(legacy_key) = legacy_entry.get_password() else {
+        return;
+    };
+
+    if api_keys::set_key("brave", &legacy_key).is_ok() {
+        let _ = legacy_entry.delete_credential();
+        eprintln!("[migration] clé Brave migrée : brave_api_key → brave");
+    }
 }

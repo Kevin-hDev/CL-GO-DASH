@@ -4,11 +4,27 @@ Application desktop (Tauri 2 + React 19) pour discuter avec des LLM locaux via O
 
 ## Fonctionnalités
 
-- **Agent Local** : chat avec n'importe quel modèle Ollama installé, gestion des conversations en onglets, permissions manuelles/auto sur les outils (bash, write_file, web_fetch)
-- **Réveils** : scheduler interne qui prompt un LLM à heure fixe (ponctuel / journalier / hebdomadaire), réponses stockées dans une conversation dédiée par modèle
+- **Agent Local** : chat avec n'importe quel modèle Ollama installé ou via API distant (Groq, Gemini, Mistral, OpenAI, OpenRouter…), gestion des conversations en onglets, permissions manuelles/auto sur les outils (bash, write_file, web_fetch)
+- **Réveils** : scheduler interne qui prompt un LLM à heure fixe (ponctuel / journalier / hebdomadaire), réponses stockées dans une conversation dédiée par modèle. Supporte Ollama local + providers API tool-capable.
+- **Clés API** : gestion centralisée des providers LLM et search (Brave, Exa, Firecrawl) via un onglet dédié. Clés stockées dans le **keystore OS natif** (macOS Keychain, Windows DPAPI, Linux Secret Service) — jamais en clair sur disque.
 - **Ollama embarqué** : plus besoin d'installer Ollama.app séparément — le binaire est bundlé dans l'application
 - **Personnalité** : édition des fichiers Markdown dans `~/.local/share/cl-go-dash/memory/core/`
 - **Ollama browser** : recherche de modèles, pull, édition de modelfiles
+
+## Providers supportés (free-tier friendly)
+
+| Type | Provider | Free tier |
+|---|---|---|
+| LLM | [Groq](https://console.groq.com/keys) | 14 400 req/day |
+| LLM | [Google Gemini](https://aistudio.google.com/app/apikey) | 1M tokens/min |
+| LLM | [Mistral](https://console.mistral.ai/api-keys) | 1B tokens/month |
+| LLM | [Cerebras](https://cloud.cerebras.ai/) | 1M tokens/day |
+| LLM | [OpenRouter](https://openrouter.ai/settings/keys) | 30+ free models |
+| LLM | [OpenAI](https://platform.openai.com/api-keys) | $5 signup credits |
+| LLM | [DeepSeek](https://platform.deepseek.com/api_keys) | Low-cost ($0.30/Mtok) |
+| Search | [Brave Search](https://api-dashboard.search.brave.com/app/keys) | 2 000 req/month |
+| Search | [Exa](https://dashboard.exa.ai/api-keys) | 1 000 req/month |
+| Scraping | [Firecrawl](https://www.firecrawl.dev/app/api-keys) | 500 crédits |
 
 ## Stack technique
 

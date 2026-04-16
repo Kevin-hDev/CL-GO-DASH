@@ -17,6 +17,7 @@ import "./chat.css";
 
 interface ChatInputProps {
   modelName: string;
+  providerName: string;
   ollamaRunning: boolean;
   isStreaming: boolean;
   thinkingEnabled: boolean;
@@ -24,13 +25,12 @@ interface ChatInputProps {
   contextUsed: number;
   contextMax: number;
   tps: number;
-  lastRequestTokens: number;
   permissionMode: PermissionMode;
   onPermissionModeChange: (mode: PermissionMode) => void;
   onSend: (text: string, files?: DroppedFile[]) => void;
   onStop: () => void;
   onFileImport: () => void;
-  onModelChange: (model: string) => void;
+  onModelChange: (model: string, provider: string) => void;
   onToggleThinking: () => void;
   onSkillLoaded?: (content: string | null) => void;
   onRemoveFile?: (index: number) => void;
@@ -39,8 +39,8 @@ interface ChatInputProps {
 }
 
 export function ChatInput({
-  modelName, ollamaRunning, isStreaming, thinkingEnabled, files,
-  contextUsed, contextMax, tps, lastRequestTokens,
+  modelName, providerName, ollamaRunning, isStreaming, thinkingEnabled, files,
+  contextUsed, contextMax, tps,
   permissionMode, onPermissionModeChange,
   onSend, onStop, onFileImport, onModelChange, onToggleThinking, onSkillLoaded,
   onRemoveFile, onPreviewFile, onClearFiles,
@@ -123,10 +123,11 @@ export function ChatInput({
         <ContextProgress used={contextUsed} max={contextMax} />
         <PermissionModeSelector mode={permissionMode} onChange={onPermissionModeChange} />
         <div className="chat-input-spacer" />
-        <TpsDisplay tps={tps} lastRequestTokens={lastRequestTokens} isStreaming={isStreaming} />
+        <TpsDisplay tps={tps} isStreaming={isStreaming} />
         <OllamaIndicator running={ollamaRunning} />
         <ModelSelector
           selectedModel={modelName}
+          selectedProvider={providerName}
           onSelect={onModelChange}
           thinkingEnabled={thinkingEnabled}
           onToggleThinking={onToggleThinking}

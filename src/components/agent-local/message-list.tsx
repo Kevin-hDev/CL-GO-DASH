@@ -67,6 +67,23 @@ export function MessageList({
 function SegmentedAssistantMessage({
   msg, onReload,
 }: { msg: AgentMessage; onReload?: (id: string) => void }) {
+  const tokensFooter = msg.tokens && msg.tokens > 0 ? (
+    <div
+      style={{
+        fontSize: "11px",
+        color: "var(--ink-faint)",
+        fontFamily: "var(--font-mono, monospace)",
+        padding: "0 var(--space-md)",
+        marginTop: -4,
+        marginBottom: "var(--space-sm)",
+        opacity: 0.7,
+      }}
+      title="Tokens consommés par cet échange (input + output)"
+    >
+      {formatTokens(msg.tokens)} tokens
+    </div>
+  ) : null;
+
   if (msg.segments && msg.segments.length > 0) {
     return (
       <>
@@ -79,16 +96,25 @@ function SegmentedAssistantMessage({
             {seg.tools.length > 0 && <SavedToolBubble tools={seg.tools} />}
           </div>
         ))}
+        {tokensFooter}
       </>
     );
   }
   return (
-    <AssistantMessage
-      content={msg.content} thinking={msg.thinking}
-      toolActivities={msg.tool_activities}
-      onReload={onReload ? () => onReload(msg.id) : undefined}
-    />
+    <>
+      <AssistantMessage
+        content={msg.content} thinking={msg.thinking}
+        toolActivities={msg.tool_activities}
+        onReload={onReload ? () => onReload(msg.id) : undefined}
+      />
+      {tokensFooter}
+    </>
   );
+}
+
+function formatTokens(n: number): string {
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}K`;
+  return String(n);
 }
 
 function LoadingIndicator() {
