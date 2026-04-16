@@ -3,24 +3,29 @@ mod models;
 mod services;
 
 use services::agent_local::ollama_client::OllamaClient;
+use services::ollama_lifecycle::{self, OllamaSidecar};
 use services::scheduler::Scheduler;
 use std::collections::HashMap;
-use tauri::Manager;
+use tauri::{Manager, RunEvent, WindowEvent};
 use tokio::sync::Mutex;
 use tokio_util::sync::CancellationToken;
 
 pub struct ActiveStreams(pub Mutex<HashMap<String, CancellationToken>>);
 
 pub fn run() {
-    tauri::Builder::default()
+    let app = tauri::Builder::default()
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
         .manage(OllamaClient::new())
         .manage(ActiveStreams(Mutex::new(HashMap::new())))
+        .manage(OllamaSidecar::new())
         .setup(|app| {
             if let Err(e) = migrate_legacy_storage() {
                 eprintln!("[storage migration] {}", e);
+            }
+            if let Err(e) = ollama_lifecycle::start_sidecar(app.handle()) {
+                eprintln!("[ollama] sidecar start failed: {}", e);
             }
             services::file_watcher::start(app.handle());
             let scheduler = Scheduler::spawn(app.handle().clone());
@@ -78,8 +83,18 @@ pub fn run() {
             commands::load_skill,
             commands::set_brave_api_key,
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application");
+
+    app.run(|app_handle, event| match event {
+        RunEvent::ExitRequested { .. } => {
+            ollama_lifecycle::stop_sidecar(app_handle);
+        }
+        RunEvent::WindowEvent { event: WindowEvent::CloseRequested { .. }, .. } => {
+            ollama_lifecycle::stop_sidecar(app_handle);
+        }
+        _ => {}
+    });
 }
 
 /// One-shot migration: copie depuis l'ancien dossier ~/.local/share/cl-go/
