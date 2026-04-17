@@ -49,6 +49,7 @@ export function ConnectorsModal({
       return (
         p.display_name.toLowerCase().includes(q) ||
         p.short_description.toLowerCase().includes(q) ||
+        p.short_description_en.toLowerCase().includes(q) ||
         p.id.toLowerCase().includes(q)
       );
     });

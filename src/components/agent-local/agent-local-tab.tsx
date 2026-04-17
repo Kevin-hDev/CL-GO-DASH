@@ -1,12 +1,13 @@
 import { useState, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
-import { EmptyState } from "@/components/ui/empty-state";
 import { ConversationList } from "./conversation-list";
 import { TabBar } from "./tab-bar";
 import { ChatView } from "./chat-view";
+import { WelcomeView } from "./welcome-view";
 import { useAgentSessions } from "@/hooks/use-agent-sessions";
 import { useAgentTabs } from "@/hooks/use-agent-tabs";
+import { useProjects } from "@/hooks/use-projects";
 
 interface OllamaModel {
   name: string;
@@ -26,8 +27,9 @@ function useDefaultModel(): { model: string; provider: string } {
 
 export function AgentLocalTab(): { list: React.ReactNode; detail: React.ReactNode } {
   const { t } = useTranslation();
-  const { sessions, create, rename, remove, updateModel } = useAgentSessions();
+  const { sessions, refresh, create, rename, remove, updateModel } = useAgentSessions();
   const tabState = useAgentTabs();
+  const projectsHook = useProjects();
   const { model: defaultModel, provider: defaultProvider } = useDefaultModel();
 
   const activeSession = tabState.activeSessionId
@@ -51,6 +53,34 @@ export function AgentLocalTab(): { list: React.ReactNode; detail: React.ReactNod
     [create, tabState, t],
   );
 
+  const handleWelcomeSend = useCallback(
+    async (text: string, projectId?: string) => {
+      const name = text.slice(0, 40).trim() || t("agentLocal.newSession");
+      const session = await create(name, defaultModel, defaultProvider, projectId);
+      await tabState.addTab(session.id, session.name);
+      const { invoke } = await import("@tauri-apps/api/core");
+      const userMsg = {
+        id: crypto.randomUUID(),
+        role: "user",
+        content: text,
+        files: [],
+        timestamp: new Date().toISOString(),
+        tokens: 0,
+      };
+      await invoke("add_messages_to_session", { id: session.id, messages: [userMsg], tokens: 0 });
+    },
+    [create, tabState, defaultModel, defaultProvider, t],
+  );
+
+  const handleCreateInProject = useCallback(
+    async (projectId: string) => {
+      const name = t("agentLocal.newSession");
+      const session = await create(name, defaultModel, defaultProvider, projectId);
+      await tabState.addTab(session.id, session.name);
+    },
+    [create, tabState, defaultModel, defaultProvider, t],
+  );
+
   const handleSelect = useCallback(async (id: string) => {
     const idx = tabState.tabs.findIndex((tab) => tab.session_id.localeCompare(id) === 0);
     if (idx >= 0) {
@@ -64,11 +94,17 @@ export function AgentLocalTab(): { list: React.ReactNode; detail: React.ReactNod
   const list = (
     <ConversationList
       sessions={sessions}
+      projects={projectsHook.projects}
       selectedId={tabState.activeSessionId}
       onSelect={handleSelect}
       onCreate={handleCreate}
       onRename={rename}
       onDelete={remove}
+      onNewSessionInProject={handleCreateInProject}
+      onRenameProject={projectsHook.rename}
+      onDeleteProject={projectsHook.remove}
+      onOpenFolder={projectsHook.openFolder}
+      onReorderProjects={projectsHook.reorder}
     />
   );
 
@@ -92,6 +128,9 @@ export function AgentLocalTab(): { list: React.ReactNode; detail: React.ReactNod
             sessionId={tabState.activeSessionId}
             model={model}
             provider={provider}
+            projects={projectsHook.projects}
+            onAddProject={projectsHook.add}
+            onSessionsRefresh={refresh}
             onApplySwitch={(m, p) => {
               if (tabState.activeSessionId && updateModel) {
                 updateModel(tabState.activeSessionId, m, p);
@@ -101,8 +140,15 @@ export function AgentLocalTab(): { list: React.ReactNode; detail: React.ReactNod
           />
         </div>
       ) : (
-        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <EmptyState message={t("agentLocal.selectOrCreate")} />
+        <div style={{ flex: 1, minHeight: 0, overflow: "hidden" }}>
+          <WelcomeView
+            model={defaultModel}
+            provider={defaultProvider}
+            projects={projectsHook.projects}
+            onAddProject={projectsHook.add}
+            onSend={handleWelcomeSend}
+            onModelChange={() => {}}
+          />
         </div>
       )}
     </div>

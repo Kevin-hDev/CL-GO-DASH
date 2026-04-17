@@ -2,6 +2,7 @@ import { useState, useRef, useCallback } from "react";
 import { open as openFileDialog } from "@tauri-apps/plugin-dialog";
 import { MessageList } from "./message-list";
 import { ChatInput } from "./chat-input";
+import { ProjectSelector } from "./project-selector";
 import { FileDropZone } from "./file-drop-zone";
 import { FilePreview } from "./file-preview";
 import { SwitchModelDialog } from "./switch-model-dialog";
@@ -11,7 +12,9 @@ import { useContextProgress } from "@/hooks/use-context-progress";
 import { useFileDrop, type DroppedFile } from "@/hooks/use-file-drop";
 import { usePermissionMode } from "@/hooks/use-permission-mode";
 import { usePermissionRequests } from "@/hooks/use-permission-requests";
+import { useSessionProject } from "@/hooks/use-session-project";
 import { PermissionDialog } from "./permission-dialog";
+import type { Project } from "@/types/agent";
 import scrollDownIcon from "@/assets/fleche.png";
 import "./chat.css";
 
@@ -21,6 +24,9 @@ interface ChatViewProps {
   sessionId: string;
   model: string;
   provider: string;
+  projects: Project[];
+  onAddProject: (path: string) => Promise<Project>;
+  onSessionsRefresh?: () => void;
   /** Applique le changement dans la session courante (model + provider). */
   onApplySwitch?: (model: string, provider: string) => void;
   /** Crée une nouvelle session avec le nouveau modèle/provider. */
@@ -36,6 +42,9 @@ export function ChatView({
   sessionId,
   model,
   provider,
+  projects,
+  onAddProject,
+  onSessionsRefresh,
   onApplySwitch,
   onNewSession,
 }: ChatViewProps) {
@@ -51,6 +60,7 @@ export function ChatView({
   const [thinking, setThinking] = useState(false);
   const [pendingSwitch, setPendingSwitch] = useState<PendingSwitch | null>(null);
   const rememberedRef = useRef<SwitchChoice | null>(null);
+  const proj = useSessionProject(sessionId, projects, onAddProject, chat.messages.length > 0);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -143,7 +153,10 @@ export function ChatView({
               onPermissionModeChange={permMode.change}
               onRemoveFile={fileDrop.removeFile}
               onPreviewFile={setPreview}
-              onSend={(text, sentFiles) => chat.sendMessage(text, sentFiles)}
+              onSend={(text, sentFiles) => {
+                chat.sendMessage(text, sentFiles, proj.selectedProject?.path, proj.selectedProjectId ?? undefined)
+                  .then(() => { if (proj.selectedProjectId) onSessionsRefresh?.(); });
+              }}
               onStop={chat.stop}
               onClearFiles={fileDrop.clearFiles}
               onFileImport={async () => {
@@ -156,6 +169,14 @@ export function ChatView({
               onModelChange={handleModelSelect}
               onToggleThinking={() => setThinking(!thinking)}
               onSkillLoaded={chat.setSkill}
+            />
+            <ProjectSelector
+              projects={projects}
+              selectedProjectId={proj.selectedProjectId}
+              locked={proj.locked}
+              hidden={proj.hidden}
+              onSelect={proj.setSelectedProjectId}
+              onAddProject={proj.handleAddProject}
             />
           </div>
         </div>

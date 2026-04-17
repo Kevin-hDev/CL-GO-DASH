@@ -8,6 +8,7 @@ pub mod favorite_models;
 pub mod heartbeat;
 pub mod llm;
 pub mod personality;
+pub mod projects;
 pub mod search;
 
 pub use agent_chat::*;
@@ -20,4 +21,5 @@ pub use favorite_models::*;
 pub use heartbeat::*;
 pub use llm::*;
 pub use personality::*;
+pub use projects::*;
 pub use search::*;

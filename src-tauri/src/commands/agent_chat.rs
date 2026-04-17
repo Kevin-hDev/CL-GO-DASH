@@ -20,6 +20,7 @@ pub async fn chat_stream(
     tools: Vec<serde_json::Value>,
     think: bool,
     provider: Option<String>,
+    working_dir: Option<String>,
     on_event: Channel<StreamEvent>,
     streams: tauri::State<'_, ActiveStreams>,
 ) -> Result<(), String> {
@@ -28,6 +29,15 @@ pub async fn chat_stream(
 
     let provider = provider.unwrap_or_else(|| "ollama".to_string());
 
+    let resolve_dir = |wd: &Option<String>| -> std::path::PathBuf {
+        wd.as_ref()
+            .map(std::path::PathBuf::from)
+            .filter(|p| p.is_dir())
+            .unwrap_or_else(|| {
+                std::env::current_dir().unwrap_or_else(|_| dirs::home_dir().unwrap())
+            })
+    };
+
     let result = if provider == "ollama" {
         let final_tools = if tools.is_empty() {
             tool_dispatcher::get_tool_definitions()
@@ -35,8 +45,9 @@ pub async fn chat_stream(
             tools
         };
 
-        let working_dir = std::env::current_dir().unwrap_or_else(|_| dirs::home_dir().unwrap());
+        let working_dir = resolve_dir(&working_dir);
         let mut msgs = messages;
+        prepend_working_dir_context(&mut msgs, &working_dir);
 
         agent_loop::run_agent_loop(
             &on_event,
@@ -60,10 +71,12 @@ pub async fn chat_stream(
             vec![]
         };
         let openai_tools = llm::agent_loop::convert_tools_to_openai(&final_tools);
-        let working_dir = std::env::current_dir().unwrap_or_else(|_| dirs::home_dir().unwrap());
+        let working_dir = resolve_dir(&working_dir);
         let mut msgs = messages;
         if !openai_tools.is_empty() {
-            prepend_tool_system_prompt(&mut msgs);
+            prepend_tool_system_prompt(&mut msgs, &working_dir);
+        } else {
+            prepend_working_dir_context(&mut msgs, &working_dir);
         }
         llm::agent_loop::run_agent_loop(
             &on_event,
@@ -107,19 +120,45 @@ Respond directly WITHOUT any tool for:
 - Keep going until the task is fully resolved
 - When in doubt: respond directly, no tool needed";
 
-fn prepend_tool_system_prompt(messages: &mut Vec<ChatMessage>) {
+fn prepend_tool_system_prompt(messages: &mut Vec<ChatMessage>, working_dir: &std::path::Path) {
     let has_system = messages.first().is_some_and(|m| m.role == "system");
     if has_system {
         return;
     }
+    let dir_info = format!(
+        "\n\n## Working directory\nYou are working in: {}\nAll file paths are relative to this directory unless specified otherwise.",
+        working_dir.display()
+    );
     messages.insert(0, ChatMessage {
         role: "system".to_string(),
-        content: TOOL_SYSTEM_PROMPT.to_string(),
+        content: format!("{TOOL_SYSTEM_PROMPT}{dir_info}"),
         images: None,
         tool_calls: None,
         tool_name: None,
         tool_call_id: None,
     });
+}
+
+fn prepend_working_dir_context(messages: &mut Vec<ChatMessage>, working_dir: &std::path::Path) {
+    let has_system = messages.first().is_some_and(|m| m.role == "system");
+    let dir_info = format!(
+        "You are working in the directory: {}. All file operations use this as the base directory.",
+        working_dir.display()
+    );
+    if has_system {
+        if let Some(first) = messages.first_mut() {
+            first.content = format!("{}\n\n{}", first.content, dir_info);
+        }
+    } else {
+        messages.insert(0, ChatMessage {
+            role: "system".to_string(),
+            content: dir_info,
+            images: None,
+            tool_calls: None,
+            tool_name: None,
+            tool_call_id: None,
+        });
+    }
 }
 
 #[tauri::command]
@@ -162,9 +201,10 @@ pub async fn create_agent_session(
     name: String,
     model: String,
     provider: Option<String>,
+    project_id: Option<String>,
 ) -> Result<AgentSession, String> {
     let provider = provider.unwrap_or_else(|| "ollama".to_string());
-    session_store::create_with_provider(&name, &model, &provider).await
+    session_store::create_full(&name, &model, &provider, false, project_id).await
 }
 
 #[tauri::command]

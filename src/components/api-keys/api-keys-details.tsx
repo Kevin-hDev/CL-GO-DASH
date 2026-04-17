@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-shell";
 import { Key, Pencil, Trash, ArrowSquareOut } from "@/components/ui/icons";
-import type { ProviderSpec } from "@/types/api";
+import { getProviderDescription, type ProviderSpec } from "@/types/api";
 
 interface ProviderQuota {
   available: boolean;
@@ -21,7 +21,7 @@ export function ApiKeysDetails({
   onEdit,
   onDelete,
 }: ApiKeysDetailsProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [quota, setQuota] = useState<ProviderQuota | null>(null);
   const [quotaLoading, setQuotaLoading] = useState(false);
@@ -56,7 +56,7 @@ export function ApiKeysDetails({
           <div className="ak-detail-text">
             <div className="ak-detail-name">{provider.display_name}</div>
             <div className="ak-detail-description">
-              {provider.short_description}
+              {getProviderDescription(provider, i18n.language)}
             </div>
             <div className="ak-detail-badges">
               <span className="ak-badge">{provider.category.toUpperCase()}</span>

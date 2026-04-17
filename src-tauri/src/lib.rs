@@ -105,6 +105,13 @@ pub fn run() {
             commands::list_favorite_models,
             commands::add_favorite_model,
             commands::remove_favorite_model,
+            // Projects
+            commands::list_projects,
+            commands::add_project,
+            commands::rename_project,
+            commands::delete_project,
+            commands::reorder_projects,
+            commands::open_project_folder,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application");

@@ -50,6 +50,7 @@ export function useAgentStream() {
     tools: unknown[],
     think: boolean,
     callbacks: StreamCallbacks,
+    workingDir?: string,
   ) => {
     streamingRef.current = true;
 
@@ -134,6 +135,7 @@ export function useAgentStream() {
       messages: chatMessages,
       tools,
       think,
+      workingDir: workingDir ?? null,
       onEvent: channel,
     });
   }, []);

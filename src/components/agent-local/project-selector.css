@@ -1,0 +1,91 @@
+.project-selector-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-xs);
+}
+
+.project-selector-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: 20px;
+  border: 1px solid var(--edge);
+  background: transparent;
+  color: var(--ink-muted);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  transition: all var(--ease-smooth);
+  white-space: nowrap;
+}
+
+.project-selector-btn:hover {
+  color: var(--ink);
+  border-color: var(--ink-faint);
+}
+
+.project-selector-indicator {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  color: var(--ink-faint);
+  font-size: var(--text-xs);
+  white-space: nowrap;
+}
+
+.project-dropdown {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 0;
+  min-width: 260px;
+  max-width: 360px;
+  background: var(--surface);
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-xs);
+  z-index: 50;
+}
+
+.project-dropdown-search {
+  width: 100%;
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--ink);
+  font-size: var(--text-xs);
+  outline: none;
+  margin-bottom: var(--space-xs);
+}
+
+.project-dropdown-search::placeholder { color: var(--ink-faint); }
+
+.project-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
+  transition: background var(--ease-smooth);
+}
+
+.project-dropdown-item:hover { background: var(--surface-hover); }
+.project-dropdown-item.selected { color: var(--ink); }
+
+.project-dropdown-empty {
+  padding: var(--space-xs) var(--space-sm);
+  font-size: var(--text-xs);
+  color: var(--ink-faint);
+}
+
+.project-dropdown-sep {
+  height: 1px;
+  background: var(--edge);
+  margin: var(--space-xs) 0;
+}

@@ -65,6 +65,22 @@
       }
     }
   },
+  "welcome": {
+    "title": "What should we work on?"
+  },
+  "projects": {
+    "title": "Projects",
+    "discussions": "Discussions",
+    "workInFolder": "Work in a folder",
+    "search": "Search projects",
+    "noFolder": "No folder",
+    "noMatch": "No folder found",
+    "addNew": "Add a new project",
+    "openFolder": "Open folder",
+    "rename": "Rename",
+    "delete": "Delete",
+    "noDiscussion": "No discussions"
+  },
   "agentLocal": {
     "title": "Conversations",
     "newSession": "New session",

@@ -27,4 +27,11 @@ export {
   MagnifyingGlass,
   ArrowSquareOut,
   Star,
+  FolderSimple,
+  FolderSimplePlus,
+  FolderOpen,
+  DotsThreeVertical,
+  Hand,
+  PencilSimple,
+  ChatCircleDots,
 } from "@phosphor-icons/react";

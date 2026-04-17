@@ -65,6 +65,14 @@ export interface RegistryModel {
   is_installed: boolean;
 }
 
+export interface Project {
+  id: string;
+  name: string;
+  path: string;
+  order: number;
+  created_at: string;
+}
+
 export interface AgentSession {
   id: string;
   name: string;
@@ -75,6 +83,7 @@ export interface AgentSession {
   thinking_enabled: boolean;
   accumulated_tokens: number;
   messages: AgentMessage[];
+  project_id?: string;
 }
 
 export interface AgentSessionMeta {
@@ -84,6 +93,7 @@ export interface AgentSessionMeta {
   model: string;
   provider: string;
   message_count: number;
+  project_id?: string;
 }
 
 export interface AgentMessage {

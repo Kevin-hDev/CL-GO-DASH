@@ -31,6 +31,7 @@ export interface ProviderSpec {
   signup_url: string;
   free_tier_label: string;
   short_description: string;
+  short_description_en: string;
   /** Pour les providers LLM — absent pour search/scraping */
   base_url?: string;
   models_endpoint?: string;
@@ -50,3 +51,7 @@ export interface ConfiguredProvider {
 export type TestKeyResult =
   | { ok: true }
   | { ok: false; error: string };
+
+export function getProviderDescription(provider: ProviderSpec, lang: string): string {
+  return lang === "fr" ? provider.short_description : provider.short_description_en;
+}

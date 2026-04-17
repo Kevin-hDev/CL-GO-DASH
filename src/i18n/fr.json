@@ -65,6 +65,22 @@
       }
     }
   },
+  "welcome": {
+    "title": "On se lance sur quoi ?"
+  },
+  "projects": {
+    "title": "Projets",
+    "discussions": "Discussions",
+    "workInFolder": "Travailler dans un dossier",
+    "search": "Rechercher des projets",
+    "noFolder": "Aucun dossier",
+    "noMatch": "Aucun dossier trouvé",
+    "addNew": "Ajouter un nouveau projet",
+    "openFolder": "Ouvrir le dossier",
+    "rename": "Renommer",
+    "delete": "Supprimer",
+    "noDiscussion": "Aucune discussion"
+  },
   "agentLocal": {
     "title": "Conversations",
     "newSession": "Nouvelle session",
