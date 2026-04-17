@@ -26,8 +26,10 @@
       "edit": "Modifier",
       "delete": "Supprimer",
       "freeTier": "Free tier",
-      "signupLink": "Inscription",
+      "signupLink": "Site",
       "openSite": "Ouvrir le site",
+      "quota": "Quota",
+      "quotaUnavailable": "Non disponible",
       "apiKey": "Clé API",
       "confirmDelete": "Confirmer la suppression"
     },

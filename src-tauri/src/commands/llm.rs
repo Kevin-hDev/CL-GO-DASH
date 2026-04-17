@@ -50,6 +50,13 @@ pub fn supports_tool_use(provider_id: String, model_id: String) -> bool {
     tool_capable::supports_tools(&provider_id, &model_id)
 }
 
+#[tauri::command]
+pub async fn get_provider_quota(
+    provider_id: String,
+) -> Result<Option<crate::services::llm::quota::ProviderQuota>, String> {
+    Ok(crate::services::llm::quota::fetch_quota(&provider_id).await)
+}
+
 /// Providers où TOUS les modèles sont disponibles gratuitement.
 fn is_provider_all_free(provider_id: &str) -> bool {
     matches!(provider_id, "groq" | "cerebras" | "google")

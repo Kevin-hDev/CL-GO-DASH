@@ -12,6 +12,7 @@ pub mod stream;
 mod stream_convert;
 mod stream_http;
 mod stream_tools;
+pub mod quota;
 pub mod tool_capable;
 pub mod types;
 

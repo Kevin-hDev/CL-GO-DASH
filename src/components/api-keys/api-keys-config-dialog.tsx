@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { open } from "@tauri-apps/plugin-shell";
 import { X, ArrowSquareOut } from "@/components/ui/icons";
 import type { ProviderSpec } from "@/types/api";
 
@@ -101,15 +102,14 @@ export function ApiKeysConfigDialog({
               autoFocus
               required={!alreadyConfigured}
             />
-            <a
-              href={provider.signup_url}
-              target="_blank"
-              rel="noreferrer"
+            <button
+              type="button"
               className="ak-signup-inline"
+              onClick={() => open(provider.signup_url)}
             >
               {t("apiKeys.dialog.getKeyAt", { name: provider.display_name })}
               <ArrowSquareOut size={12} />
-            </a>
+            </button>
           </div>
 
           <div className="wk-form-field">

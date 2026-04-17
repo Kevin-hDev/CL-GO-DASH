@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Plus } from "@/components/ui/icons";
 import { useApiKeys } from "@/hooks/use-api-keys";
@@ -32,6 +32,13 @@ export function ApiKeysTab(): { list: React.ReactNode; detail: React.ReactNode }
     useApiKeys();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [dialog, setDialog] = useState<DialogState>({ kind: "none" });
+
+  // Auto-sélectionne le premier provider si aucun n'est sélectionné.
+  useEffect(() => {
+    if (selectedId === null && configured.length > 0) {
+      setSelectedId(configured[0].id);
+    }
+  }, [selectedId, configured]);
 
   const selected = selectedId
     ? configured.find((p) => p.id === selectedId) ?? null

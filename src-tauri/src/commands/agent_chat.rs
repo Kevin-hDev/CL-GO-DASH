@@ -62,6 +62,9 @@ pub async fn chat_stream(
         let openai_tools = llm::agent_loop::convert_tools_to_openai(&final_tools);
         let working_dir = std::env::current_dir().unwrap_or_else(|_| dirs::home_dir().unwrap());
         let mut msgs = messages;
+        if !openai_tools.is_empty() {
+            prepend_tool_system_prompt(&mut msgs);
+        }
         llm::agent_loop::run_agent_loop(
             &on_event,
             &provider,
@@ -78,6 +81,45 @@ pub async fn chat_stream(
 
     streams.0.lock().await.remove(&session_id);
     result
+}
+
+const TOOL_SYSTEM_PROMPT: &str = "\
+You are a helpful assistant with access to tools.
+
+## When to use tools
+Use a tool ONLY when:
+- The user asks to act on files (read, write, edit)
+- The user asks to run a command
+- The user asks for a web search or recent information
+- You cannot answer accurately without external data
+
+## When NOT to use tools
+Respond directly WITHOUT any tool for:
+- Normal conversation
+- Creative tasks (stories, poems, essays)
+- Questions you can answer from your own knowledge
+- Explanations, summaries, translations
+
+## Rules
+- Think BEFORE each tool call: is it truly necessary?
+- Never guess file content — read it first
+- If you lack information to call a tool, ask the user
+- Keep going until the task is fully resolved
+- When in doubt: respond directly, no tool needed";
+
+fn prepend_tool_system_prompt(messages: &mut Vec<ChatMessage>) {
+    let has_system = messages.first().is_some_and(|m| m.role == "system");
+    if has_system {
+        return;
+    }
+    messages.insert(0, ChatMessage {
+        role: "system".to_string(),
+        content: TOOL_SYSTEM_PROMPT.to_string(),
+        images: None,
+        tool_calls: None,
+        tool_name: None,
+        tool_call_id: None,
+    });
 }
 
 #[tauri::command]

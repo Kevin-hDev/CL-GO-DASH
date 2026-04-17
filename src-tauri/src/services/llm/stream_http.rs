@@ -49,6 +49,11 @@ pub async fn post_chat_request(
         .await
         .map_err(|e| format!("Connexion {} échouée: {e}", spec.display_name))?;
 
+    // Capture des headers rate-limit Groq pour le quota.
+    if provider_id == "groq" {
+        super::quota::update_groq_limits(resp.headers());
+    }
+
     let status = resp.status();
     if !status.is_success() {
         let body = resp.text().await.unwrap_or_default();

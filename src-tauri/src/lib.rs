@@ -97,6 +97,7 @@ pub fn run() {
             commands::list_llm_models,
             commands::test_llm_connection,
             commands::supports_tool_use,
+            commands::get_provider_quota,
             // Search providers
             commands::list_search_providers_catalog,
             commands::test_search_connection,

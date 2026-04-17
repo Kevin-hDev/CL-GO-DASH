@@ -1,7 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { invoke } from "@tauri-apps/api/core";
+import { open } from "@tauri-apps/plugin-shell";
 import { Key, Pencil, Trash, ArrowSquareOut } from "@/components/ui/icons";
 import type { ProviderSpec } from "@/types/api";
+
+interface ProviderQuota {
+  available: boolean;
+  label: string;
+}
 
 interface ApiKeysDetailsProps {
   provider: ProviderSpec;
@@ -16,6 +23,19 @@ export function ApiKeysDetails({
 }: ApiKeysDetailsProps) {
   const { t } = useTranslation();
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [quota, setQuota] = useState<ProviderQuota | null>(null);
+  const [quotaLoading, setQuotaLoading] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    setQuota(null);
+    setQuotaLoading(true);
+    invoke<ProviderQuota | null>("get_provider_quota", { providerId: provider.id })
+      .then((q) => { if (!cancelled) setQuota(q); })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setQuotaLoading(false); });
+    return () => { cancelled = true; };
+  }, [provider.id]);
 
   const handleDeleteClick = async () => {
     if (confirmDelete) {
@@ -71,16 +91,27 @@ export function ApiKeysDetails({
           <span className="ak-detail-label">{t("apiKeys.details.freeTier")}</span>
           <span className="ak-detail-value">{provider.free_tier_label}</span>
         </div>
+
+        <div className="ak-detail-row">
+          <span className="ak-detail-label">{t("apiKeys.details.quota")}</span>
+          <span className="ak-detail-value">
+            {quotaLoading
+              ? "..."
+              : quota
+                ? quota.label
+                : t("apiKeys.details.quotaUnavailable")}
+          </span>
+        </div>
+
         <div className="ak-detail-row">
           <span className="ak-detail-label">{t("apiKeys.details.signupLink")}</span>
-          <a
-            href={provider.signup_url}
-            target="_blank"
-            rel="noreferrer"
+          <button
+            type="button"
             className="ak-signup-link"
+            onClick={() => open(provider.signup_url)}
           >
             {t("apiKeys.details.openSite")} <ArrowSquareOut size={12} />
-          </a>
+          </button>
         </div>
         <div className="ak-detail-row">
           <span className="ak-detail-label">{t("apiKeys.details.apiKey")}</span>
