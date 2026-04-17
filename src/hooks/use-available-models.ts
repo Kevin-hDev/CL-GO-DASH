@@ -12,7 +12,7 @@ export interface AvailableModel {
   supports_tools: boolean;
   supports_vision?: boolean;
   supports_thinking?: boolean;
-  /** Libellé secondaire (taille modèle, context, etc.) */
+  is_free?: boolean;
   hint?: string;
 }
 
@@ -21,6 +21,8 @@ interface LlmModelInfo {
   owned_by?: string;
   context_length?: number;
   supports_tools: boolean;
+  supports_vision?: boolean;
+  is_free?: boolean;
 }
 
 /**
@@ -77,6 +79,8 @@ export function useAvailableModels() {
               provider_name: spec.display_name,
               is_local: false,
               supports_tools: m.supports_tools,
+              supports_vision: m.supports_vision ?? false,
+              is_free: m.is_free ?? false,
               hint: m.context_length ? `${Math.round(m.context_length / 1000)}K ctx` : undefined,
             }),
           );

@@ -2,11 +2,13 @@ import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useClickOutside } from "@/hooks/use-click-outside";
 import { useKeyboard } from "@/hooks/use-keyboard";
-import { Check, MagnifyingGlass } from "@/components/ui/icons";
+import { MagnifyingGlass } from "@/components/ui/icons";
 import {
   useAvailableModels,
   type AvailableModel,
 } from "@/hooks/use-available-models";
+import { useFavoriteModels } from "@/hooks/use-favorite-models";
+import { ModelSelectorList } from "./model-selector-list";
 import "./model-selector.css";
 
 interface ModelSelectorProps {
@@ -29,6 +31,7 @@ export function ModelSelector({
   const [query, setQuery] = useState("");
   const ref = useRef<HTMLDivElement>(null);
   const { groups } = useAvailableModels();
+  const { favorites, isFavorite, toggle: toggleFav } = useFavoriteModels();
 
   useClickOutside(ref, () => setOpen(false));
   useKeyboard({ onEscape: () => setOpen(false) });
@@ -91,38 +94,19 @@ export function ModelSelector({
           )}
 
           <div className="ms-list">
-            {filteredGroups.size === 0 ? (
-              <div className="ms-empty">{t("agentLocal.modelEmpty")}</div>
-            ) : (
-              Array.from(filteredGroups.entries()).map(([providerId, models]) => (
-                <div key={providerId}>
-                  <div className="ms-section">
-                    {models[0]?.provider_name ?? providerId}
-                  </div>
-                  {models.map((m) => {
-                    const isSelected =
-                      m.id === selectedModel && m.provider_id === selectedProvider;
-                    return (
-                      <div
-                        key={`${m.provider_id}:${m.id}`}
-                        className={`ms-item ${isSelected ? "active" : ""}`}
-                        onClick={() => {
-                          onSelect(m.id, m.provider_id);
-                          setOpen(false);
-                          setQuery("");
-                        }}
-                      >
-                        <span className="ms-item-name">{m.id}</span>
-                        <span className="ms-item-right">
-                          {m.hint && <span className="ms-hint">{m.hint}</span>}
-                          {isSelected && <Check size={12} />}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              ))
-            )}
+            <ModelSelectorList
+              groups={filteredGroups}
+              favorites={favorites}
+              isFavorite={isFavorite}
+              onToggleFavorite={toggleFav}
+              selectedModel={selectedModel}
+              selectedProvider={selectedProvider}
+              onSelect={(model, provider) => {
+                onSelect(model, provider);
+                setOpen(false);
+                setQuery("");
+              }}
+            />
           </div>
         </div>
       )}

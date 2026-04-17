@@ -40,17 +40,30 @@ pub fn parse_models_list(
             let context_length = m["context_length"]
                 .as_u64()
                 .or_else(|| m["context_window"].as_u64())
+                .or_else(|| m["max_context_length"].as_u64())
                 .map(|v| v as u32);
-            // OpenRouter expose `supported_parameters` incluant "tools"
+            // OpenRouter: `supported_parameters` incluant "tools"
+            // Mistral: `capabilities.function_calling: true`
             let supports_tools = m["supported_parameters"]
                 .as_array()
                 .map(|arr| arr.iter().any(|v| v.as_str() == Some("tools")))
-                .unwrap_or(false);
+                .unwrap_or(false)
+                || m["capabilities"]["function_calling"].as_bool().unwrap_or(false);
+            // Mistral: `capabilities.vision`, OpenRouter: `architecture.modality` contient "image"
+            let supports_vision = m["capabilities"]["vision"].as_bool().unwrap_or(false)
+                || m["architecture"]["modality"]
+                    .as_str()
+                    .map(|s| s.contains("image"))
+                    .unwrap_or(false);
+            let is_free = is_price_free(&m["pricing"]["prompt"])
+                && is_price_free(&m["pricing"]["completion"]);
             Some(ModelInfo {
                 id,
                 owned_by,
                 context_length,
                 supports_tools,
+                supports_vision,
+                is_free,
             })
         })
         .collect();
@@ -90,6 +103,14 @@ pub fn parse_chat_response(body: &serde_json::Value) -> Result<ChatResponse, Llm
         usage,
         finish_reason,
     })
+}
+
+/// Prix = "0" ou absent → gratuit.
+fn is_price_free(v: &serde_json::Value) -> bool {
+    match v.as_str() {
+        Some(s) => s == "0" || s == "0.0" || s == "0.00",
+        None => v.is_null(),
+    }
 }
 
 /// Mappe un statut HTTP d'erreur vers un `LlmError` approprié.

@@ -59,6 +59,7 @@ async fn dispatch(_app: &AppHandle, wakeup: &ScheduledWakeup) -> Result<(String,
                 images: None,
                 tool_calls: None,
                 tool_name: None,
+                tool_call_id: None,
             }],
         )
         .await?

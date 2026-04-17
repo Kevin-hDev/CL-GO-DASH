@@ -1,10 +1,10 @@
 //! Client Brave Search API.
 //!
 //! Déplacé depuis `services/agent_local/tool_web_search.rs`.
-//! Utilise `api_keys::get_key("brave")` pour charger la clé.
+//! Utilise `api_key_cache::get_key("brave")` pour charger la clé.
 
 use crate::services::agent_local::types_tools::SearchResult;
-use crate::services::api_keys;
+use crate::services::api_key_cache;
 use reqwest::Client;
 use std::time::Duration;
 
@@ -13,7 +13,7 @@ const MAX_RESULTS: usize = 10;
 const TIMEOUT: Duration = Duration::from_secs(10);
 
 pub async fn search(query: &str) -> Result<Vec<SearchResult>, String> {
-    let key = api_keys::get_key("brave")?;
+    let key = api_key_cache::get_key("brave")?;
     let client = Client::new();
     let resp = client
         .get(URL)

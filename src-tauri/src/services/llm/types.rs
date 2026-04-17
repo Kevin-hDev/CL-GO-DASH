@@ -72,9 +72,12 @@ pub struct ModelInfo {
     pub owned_by: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub context_length: Option<u32>,
-    /// Flag renvoyé par certains providers (OpenRouter notamment)
     #[serde(default)]
     pub supports_tools: bool,
+    #[serde(default)]
+    pub supports_vision: bool,
+    #[serde(default)]
+    pub is_free: bool,
 }
 
 /// Erreurs du module LLM. Volontairement basées sur `String` pour cohérence

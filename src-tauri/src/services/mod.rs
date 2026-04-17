@@ -1,6 +1,8 @@
 pub mod agent_local;
+pub mod api_key_cache;
 pub mod api_keys;
 pub mod config;
+pub mod favorite_models;
 pub mod file_watcher;
 pub mod llm;
 pub mod ollama_lifecycle;

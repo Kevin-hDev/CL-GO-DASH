@@ -1,22 +1,33 @@
+//! Agent loop pour providers LLM API (OpenAI-compat).
+//!
+//! Miroir de `agent_local/agent_loop.rs` côté Ollama : boucle chat + tool_calls + exec
+//! jusqu'à ce que le modèle n'appelle plus d'outil. Réutilise `tool_executor::run_tools`
+//! pour dispatcher et gérer les permissions.
+
+use super::stream;
 use crate::services::agent_local::agent_settings;
-use crate::services::agent_local::ollama_stream;
 use crate::services::agent_local::tool_executor;
 use crate::services::agent_local::types_ollama::{
-    ChatMessage, ChatRequest, StreamEvent,
+    ChatMessage, StreamEvent, StreamResult, ToolCallFunction, ToolCallOllama,
 };
 use std::path::PathBuf;
 use tauri::ipc::Channel;
 use tokio_util::sync::CancellationToken;
 
 const MAX_TURNS: usize = 50;
-const BASE_URL: &str = "http://localhost:11434";
+
+/// Les tool defs d'Ollama sont déjà au format OpenAI `{type: "function", function: {...}}`.
+/// Cette fonction est l'identité — gardée pour lisibilité et future divergence.
+pub fn convert_tools_to_openai(tools: &[serde_json::Value]) -> Vec<serde_json::Value> {
+    tools.to_vec()
+}
 
 pub async fn run_agent_loop(
     on_event: &Channel<StreamEvent>,
-    messages: &mut Vec<ChatMessage>,
+    provider_id: &str,
     model: &str,
-    tools: Vec<serde_json::Value>,
-    think: bool,
+    messages: &mut Vec<ChatMessage>,
+    tools: &[serde_json::Value],
     working_dir: PathBuf,
     session_id: String,
     cancel: CancellationToken,
@@ -30,8 +41,9 @@ pub async fn run_agent_loop(
             return Err("Annulé".to_string());
         }
 
-        let request = build_request(model, messages, &tools, think);
-        let result = ollama_stream::stream_chat_no_done(on_event, &request, cancel.clone()).await?;
+        let result =
+            stream::stream_chat_no_done(on_event, provider_id, model, messages, tools, cancel.clone())
+                .await?;
 
         total_eval += result.eval_count;
         total_prompt += result.prompt_tokens;
@@ -48,6 +60,8 @@ pub async fn run_agent_loop(
             break;
         }
 
+        // Snapshot longueur avant push des tool results → patch post-run.
+        let before = messages.len();
         let mode = agent_settings::get_permission_mode().await;
         tool_executor::run_tools(
             on_event,
@@ -59,6 +73,15 @@ pub async fn run_agent_loop(
             cancel.clone(),
         )
         .await;
+
+        // Patch : assigne tool_call_id aux messages role:"tool" juste poussés,
+        // dans l'ordre des tool_calls. Requis pour OpenAI-compat au tour suivant.
+        let pushed = &mut messages[before..];
+        for (i, msg) in pushed.iter_mut().enumerate() {
+            if msg.role == "tool" {
+                msg.tool_call_id = result.tool_call_ids.get(i).cloned();
+            }
+        }
 
         let _ = on_event.send(StreamEvent::TurnEnd {});
     }
@@ -76,30 +99,10 @@ pub async fn run_agent_loop(
         prompt_tokens: total_prompt,
     });
 
-    decharge_gpu(model).await;
     Ok(total_eval + total_prompt)
 }
 
-fn build_request(
-    model: &str,
-    messages: &[ChatMessage],
-    tools: &[serde_json::Value],
-    think: bool,
-) -> ChatRequest {
-    ChatRequest {
-        model: model.to_string(),
-        messages: messages.to_vec(),
-        stream: true,
-        tools: if tools.is_empty() { None } else { Some(tools.to_vec()) },
-        options: None,
-        keep_alive: None,
-        think: if think { Some(true) } else { None },
-    }
-}
-
-fn build_assistant_message(
-    result: &crate::services::agent_local::types_ollama::StreamResult,
-) -> ChatMessage {
+fn build_assistant_message(result: &StreamResult) -> ChatMessage {
     let tool_calls = if result.tool_calls.is_empty() {
         None
     } else {
@@ -108,9 +111,9 @@ fn build_assistant_message(
                 .tool_calls
                 .iter()
                 .enumerate()
-                .map(|(i, (name, args))| crate::services::agent_local::types_ollama::ToolCallOllama {
+                .map(|(i, (name, args))| ToolCallOllama {
                     id: result.tool_call_ids.get(i).cloned(),
-                    function: crate::services::agent_local::types_ollama::ToolCallFunction {
+                    function: ToolCallFunction {
                         name: name.clone(),
                         arguments: args.clone(),
                     },
@@ -126,17 +129,4 @@ fn build_assistant_message(
         tool_name: None,
         tool_call_id: None,
     }
-}
-
-async fn decharge_gpu(model: &str) {
-    let client = reqwest::Client::new();
-    let _ = client
-        .post(format!("{BASE_URL}/api/chat"))
-        .json(&serde_json::json!({
-            "model": model,
-            "messages": [],
-            "keep_alive": "0"
-        }))
-        .send()
-        .await;
 }

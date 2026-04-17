@@ -104,10 +104,16 @@ pub struct ChatMessage {
     pub tool_calls: Option<Vec<ToolCallOllama>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tool_name: Option<String>,
+    /// Requis par OpenAI-compat pour les messages `role: "tool"` — ignoré par Ollama.
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub tool_call_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ToolCallOllama {
+    /// ID assigné par les providers OpenAI-compat (ex: "call_abc123"). Absent pour Ollama.
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub id: Option<String>,
     pub function: ToolCallFunction,
 }
 
@@ -163,6 +169,8 @@ pub struct StreamResult {
     pub content: String,
     pub thinking: String,
     pub tool_calls: Vec<(String, serde_json::Value)>,
+    /// IDs OpenAI-compat alignés avec `tool_calls` (vide pour Ollama).
+    pub tool_call_ids: Vec<String>,
     pub eval_count: u32,
     pub prompt_tokens: u32,
 }

@@ -12,8 +12,8 @@
   bottom: 100%;
   right: 0;
   margin-bottom: 4px;
-  width: 300px;
-  max-height: 380px;
+  width: 340px;
+  max-height: 420px;
   display: flex;
   flex-direction: column;
   border-radius: var(--radius-md);
@@ -81,27 +81,67 @@
   text-align: center;
 }
 
-.ms-section {
-  padding: var(--space-xs) var(--space-md);
-  font-size: 10px;
+/* Provider header — collapsable */
+.ms-provider {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px var(--space-md);
+  font-size: 11px;
   font-weight: 600;
-  color: var(--ink-faint);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  color: var(--ink);
+  cursor: pointer;
   background: var(--shell);
   position: sticky;
   top: 0;
+  z-index: 1;
+  user-select: none;
+  border-bottom: 1px solid var(--edge);
 }
 
+.ms-provider:hover {
+  background: var(--surface);
+}
+
+.ms-provider-caret {
+  display: flex;
+  align-items: center;
+  color: var(--ink-faint);
+}
+
+.ms-provider-name {
+  flex: 1;
+}
+
+.ms-provider-count {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--ink-faint);
+}
+
+/* Favoris header */
+.ms-section-fav {
+  padding: 6px var(--space-md);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--pulse);
+  background: var(--shell);
+  border-bottom: 1px solid var(--edge);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+/* Model item */
 .ms-item {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 6px var(--space-md);
+  padding: 5px var(--space-md);
   font-size: var(--text-xs);
   cursor: pointer;
   color: var(--ink);
   transition: background var(--ease-smooth);
+  gap: 6px;
 }
 
 .ms-item:hover {
@@ -112,7 +152,12 @@
   color: var(--pulse);
 }
 
+.ms-item-paid {
+  opacity: 0.4;
+}
+
 .ms-item-name {
+  flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -128,4 +173,45 @@
 .ms-hint {
   color: var(--ink-faint);
   font-size: 10px;
+}
+
+/* Star favorite toggle */
+.ms-star {
+  display: flex;
+  align-items: center;
+  color: var(--ink-faint);
+  opacity: 0.3;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: opacity 0.15s, color 0.15s;
+}
+
+.ms-item:hover .ms-star {
+  opacity: 0.7;
+}
+
+.ms-star-on {
+  color: var(--pulse);
+  opacity: 1 !important;
+}
+
+/* Badges capabilities */
+.ms-badge-vision,
+.ms-badge-tools {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 3px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.ms-badge-vision {
+  color: #8b5cf6;
+  background: rgba(139, 92, 246, 0.15);
+}
+
+.ms-badge-tools {
+  color: var(--pulse);
+  background: rgba(234, 88, 12, 0.15);
 }

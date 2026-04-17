@@ -2,7 +2,10 @@
 //!
 //! Principe de sécurité : aucune clé ne doit jamais être exposée au frontend.
 //! Les commandes Tauri exposent set/delete/has/list/test, mais JAMAIS get.
-//! Le Rust charge la clé uniquement au moment de l'appel HTTPS et la libère ensuite.
+//!
+//! Pour éviter les popups Keychain répétées en dev (binaire non signé),
+//! la liste des providers configurés est maintenue dans un fichier JSON.
+//! Le Keychain n'est accédé que lors d'un appel API réel (get_key).
 
 use keyring::Entry;
 use reqwest::Client;
@@ -12,28 +15,77 @@ use zeroize::Zeroizing;
 const KEYRING_SERVICE: &str = "cl-go-dash";
 const TEST_TIMEOUT: Duration = Duration::from_secs(10);
 
-/// Liste des provider_ids connus. Sert à énumérer les clés configurées
-/// (keyring n'expose pas d'API `list_entries`, on doit itérer sur une liste).
-pub const KNOWN_PROVIDERS: &[&str] = &[
-    // LLM providers free-tier
-    "groq",
-    "google",
-    "mistral",
-    "cerebras",
-    "openrouter",
-    "openai",
-    "deepseek",
-    // Search / scraping providers
-    "brave",
-    "exa",
-    "firecrawl",
-    "serpapi",
-    "google_cse",
+fn registry_path() -> std::path::PathBuf {
+    let home = dirs::home_dir().expect("cannot resolve home directory");
+    home.join(".local/share/cl-go-dash/configured-providers.json")
+}
+
+fn read_registry() -> Vec<String> {
+    let path = registry_path();
+    let content = match std::fs::read_to_string(&path) {
+        Ok(c) => c,
+        Err(_) => return Vec::new(),
+    };
+    serde_json::from_str(&content).unwrap_or_default()
+}
+
+fn write_registry(ids: &[String]) -> Result<(), String> {
+    let path = registry_path();
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent).map_err(|e| format!("mkdir: {e}"))?;
+    }
+    let json = serde_json::to_string_pretty(ids).map_err(|e| format!("json: {e}"))?;
+    let tmp = path.with_extension("tmp");
+    std::fs::write(&tmp, &json).map_err(|e| format!("write: {e}"))?;
+    std::fs::rename(&tmp, &path).map_err(|e| format!("rename: {e}"))?;
+    Ok(())
+}
+
+fn add_to_registry(provider_id: &str) -> Result<(), String> {
+    let mut ids = read_registry();
+    if !ids.iter().any(|id| id == provider_id) {
+        ids.push(provider_id.to_string());
+        write_registry(&ids)?;
+    }
+    Ok(())
+}
+
+fn remove_from_registry(provider_id: &str) -> Result<(), String> {
+    let mut ids = read_registry();
+    let before = ids.len();
+    ids.retain(|id| id != provider_id);
+    if ids.len() != before {
+        write_registry(&ids)?;
+    }
+    Ok(())
+}
+
+const KNOWN_PROVIDERS: &[&str] = &[
+    "groq", "google", "mistral", "cerebras", "openrouter",
+    "openai", "deepseek", "brave", "exa", "firecrawl", "serpapi", "google_cse",
 ];
 
+/// Migration one-shot : si le registre n'existe pas encore, le crée
+/// en scannant le Keychain. Déclenche les popups UNE DERNIÈRE FOIS.
+pub fn migrate_registry_if_needed() {
+    let path = registry_path();
+    if path.exists() {
+        return;
+    }
+    let mut found = Vec::new();
+    for id in KNOWN_PROVIDERS {
+        let Ok(entry) = Entry::new(KEYRING_SERVICE, id) else { continue };
+        if entry.get_password().is_ok() {
+            found.push(id.to_string());
+        }
+    }
+    let _ = write_registry(&found);
+    if !found.is_empty() {
+        eprintln!("[api_keys] registre créé avec {} providers", found.len());
+    }
+}
+
 /// Charge une clé API depuis le keystore OS.
-/// La clé est wrappée dans `Zeroizing<String>` — elle sera effacée de la mémoire
-/// à la libération du scope.
 pub fn get_key(provider_id: &str) -> Result<Zeroizing<String>, String> {
     let entry =
         Entry::new(KEYRING_SERVICE, provider_id).map_err(|e| format!("keyring entry: {e}"))?;
@@ -43,46 +95,37 @@ pub fn get_key(provider_id: &str) -> Result<Zeroizing<String>, String> {
     Ok(Zeroizing::new(key))
 }
 
-/// Stocke une clé API dans le keystore OS.
+/// Stocke une clé API dans le keystore OS + registre local.
 pub fn set_key(provider_id: &str, key: &str) -> Result<(), String> {
     let entry =
         Entry::new(KEYRING_SERVICE, provider_id).map_err(|e| format!("keyring entry: {e}"))?;
     entry
         .set_password(key)
-        .map_err(|e| format!("keyring set: {e}"))
+        .map_err(|e| format!("keyring set: {e}"))?;
+    add_to_registry(provider_id)?;
+    Ok(())
 }
 
-/// Supprime une clé API du keystore OS.
+/// Supprime une clé API du keystore OS + registre local.
 pub fn delete_key(provider_id: &str) -> Result<(), String> {
     let entry =
         Entry::new(KEYRING_SERVICE, provider_id).map_err(|e| format!("keyring entry: {e}"))?;
-    entry
-        .delete_credential()
-        .map_err(|e| format!("keyring delete: {e}"))
+    let _ = entry.delete_credential();
+    remove_from_registry(provider_id)?;
+    Ok(())
 }
 
-/// Vérifie si une clé est configurée pour ce provider.
+/// Vérifie si une clé est configurée (via registre local, pas de Keychain).
 pub fn has_key(provider_id: &str) -> bool {
-    let Ok(entry) = Entry::new(KEYRING_SERVICE, provider_id) else {
-        return false;
-    };
-    entry.get_password().is_ok()
+    read_registry().iter().any(|id| id == provider_id)
 }
 
-/// Retourne les provider_ids pour lesquels une clé est configurée.
+/// Retourne les provider_ids configurés (via registre local, pas de Keychain).
 pub fn list_configured() -> Vec<String> {
-    KNOWN_PROVIDERS
-        .iter()
-        .filter(|id| has_key(id))
-        .map(|s| s.to_string())
-        .collect()
+    read_registry()
 }
 
-/// Teste qu'une clé API fonctionne en appelant l'endpoint `/models` (ou équivalent)
-/// du provider. Retourne `Ok(())` si 2xx, sinon un message d'erreur human-friendly.
-///
-/// Note Phase 1 : mapping hardcodé ici. Sera déplacé dans `services/llm/catalog.rs`
-/// en Phase 2 pour centraliser.
+/// Teste qu'une clé API fonctionne via l'endpoint `/models` du provider.
 pub async fn test_key(provider_id: &str) -> Result<(), String> {
     let key = get_key(provider_id)?;
     let client = Client::builder()
@@ -129,11 +172,7 @@ pub async fn test_key(provider_id: &str) -> Result<(), String> {
         "serpapi" => client
             .get("https://serpapi.com/account")
             .query(&[("api_key", key.as_str())]),
-        "google_cse" => {
-            // Nécessite aussi un CX (search engine ID) — pas testable seulement avec la clé
-            // On accepte la clé sans test réel pour google_cse
-            return Ok(());
-        }
+        "google_cse" => return Ok(()),
         other => return Err(format!("Provider inconnu : {}", other)),
     };
 

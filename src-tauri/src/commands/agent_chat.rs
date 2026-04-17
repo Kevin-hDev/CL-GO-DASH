@@ -51,10 +51,29 @@ pub async fn chat_stream(
         .await
         .map(|_| ())
     } else {
-        // Phase 6 : chat texte LLM API (sans tools, Phase 7 ajoute les tools).
-        llm::stream::stream_chat(&on_event, &provider, &model, &messages, cancel)
-            .await
-            .map(|_| ())
+        // Chat LLM API : tools uniquement si le modèle les supporte.
+        use crate::services::llm::tool_capable;
+        let model_supports = tool_capable::supports_tools(&provider, &model);
+        let final_tools = if model_supports {
+            if tools.is_empty() { tool_dispatcher::get_tool_definitions() } else { tools }
+        } else {
+            vec![]
+        };
+        let openai_tools = llm::agent_loop::convert_tools_to_openai(&final_tools);
+        let working_dir = std::env::current_dir().unwrap_or_else(|_| dirs::home_dir().unwrap());
+        let mut msgs = messages;
+        llm::agent_loop::run_agent_loop(
+            &on_event,
+            &provider,
+            &model,
+            &mut msgs,
+            &openai_tools,
+            working_dir,
+            session_id.clone(),
+            cancel,
+        )
+        .await
+        .map(|_| ())
     };
 
     streams.0.lock().await.remove(&session_id);

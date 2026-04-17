@@ -26,6 +26,8 @@ pub fn run() {
             }
             // Migration one-shot : ancien keyring user "brave_api_key" → "brave"
             services::agent_local::tool_web_search::migrate_legacy_brave_key();
+            // Migration registre providers (Keychain → fichier local, une seule fois)
+            services::api_keys::migrate_registry_if_needed();
             if let Err(e) = ollama_lifecycle::start_sidecar(app.handle()) {
                 eprintln!("[ollama] sidecar start failed: {}", e);
             }
@@ -98,6 +100,10 @@ pub fn run() {
             // Search providers
             commands::list_search_providers_catalog,
             commands::test_search_connection,
+            // Favorite models
+            commands::list_favorite_models,
+            commands::add_favorite_model,
+            commands::remove_favorite_model,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application");

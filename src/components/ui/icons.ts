@@ -26,4 +26,5 @@ export {
   Key,
   MagnifyingGlass,
   ArrowSquareOut,
+  Star,
 } from "@phosphor-icons/react";

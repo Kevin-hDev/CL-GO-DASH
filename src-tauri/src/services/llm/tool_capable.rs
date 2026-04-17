@@ -53,6 +53,31 @@ pub fn supports_tools(provider_id: &str, model_id: &str) -> bool {
     }
 }
 
+/// Détection vision par patterns. Modèles connus pour supporter les images.
+pub fn supports_vision(provider_id: &str, model_id: &str) -> bool {
+    let model = model_id.to_lowercase();
+    match provider_id {
+        "groq" => model.starts_with("llama-4") || model.contains("vision"),
+        "google" => model.contains("gemini"),
+        "mistral" => {
+            model.starts_with("mistral-large")
+                || model.starts_with("mistral-small-3")
+                || model.starts_with("pixtral")
+        }
+        "cerebras" => false,
+        "openrouter" => true,
+        "openai" => {
+            model.starts_with("gpt-4o")
+                || model.starts_with("gpt-4-turbo")
+                || model.starts_with("gpt-5")
+                || model.starts_with("o4")
+                || model.starts_with("o3")
+        }
+        "deepseek" => model.contains("chat"),
+        _ => false,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

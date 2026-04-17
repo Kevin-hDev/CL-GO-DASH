@@ -4,7 +4,7 @@
 //! Auth : header `x-api-key`
 
 use crate::services::agent_local::types_tools::SearchResult;
-use crate::services::api_keys;
+use crate::services::api_key_cache;
 use reqwest::Client;
 use std::time::Duration;
 
@@ -13,7 +13,7 @@ const MAX_RESULTS: usize = 10;
 const TIMEOUT: Duration = Duration::from_secs(15);
 
 pub async fn search(query: &str) -> Result<Vec<SearchResult>, String> {
-    let key = api_keys::get_key("exa")?;
+    let key = api_key_cache::get_key("exa")?;
     let client = Client::new();
 
     let payload = serde_json::json!({

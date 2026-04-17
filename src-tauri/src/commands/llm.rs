@@ -16,11 +16,24 @@ pub fn list_llm_providers_catalog() -> Vec<ProviderSpec> {
 pub async fn list_llm_models(provider_id: String) -> Result<Vec<ModelInfo>, String> {
     let provider = OpenAiCompatProvider::new(&provider_id).map_err(String::from)?;
     let mut models = provider.list_models().await.map_err(String::from)?;
-    // Enrichit le flag supports_tools via les patterns hardcodés
-    // (l'API ne le renvoie pas pour la plupart des providers)
+    // Dédupliquer (Mistral renvoie des doublons comme voxtral-mini-latest).
+    let mut seen = std::collections::HashSet::new();
+    models.retain(|m| seen.insert(m.id.clone()));
+    let all_free = is_provider_all_free(&provider_id);
     for m in &mut models {
         if !m.supports_tools {
             m.supports_tools = tool_capable::supports_tools(&provider_id, &m.id);
+        }
+        if !m.supports_vision {
+            m.supports_vision = tool_capable::supports_vision(&provider_id, &m.id);
+        }
+        // Providers entièrement free : tous les modèles sont gratuits.
+        // OpenRouter : détecté dans le parsing via `pricing`.
+        // Mistral free patterns : hardcodé ci-dessous.
+        if all_free {
+            m.is_free = true;
+        } else if provider_id == "mistral" {
+            m.is_free = is_mistral_free(&m.id);
         }
     }
     Ok(models)
@@ -35,4 +48,17 @@ pub async fn test_llm_connection(provider_id: String) -> Result<(), String> {
 #[tauri::command]
 pub fn supports_tool_use(provider_id: String, model_id: String) -> bool {
     tool_capable::supports_tools(&provider_id, &model_id)
+}
+
+/// Providers où TOUS les modèles sont disponibles gratuitement.
+fn is_provider_all_free(provider_id: &str) -> bool {
+    matches!(provider_id, "groq" | "cerebras" | "google")
+}
+
+/// Modèles Mistral gratuits (Experiment plan).
+fn is_mistral_free(model_id: &str) -> bool {
+    let id = model_id.to_lowercase();
+    id.contains("devstral") || id.contains("magistral") || id.contains("ministral")
+        || id.contains("pixtral") || id.contains("codestral-mamba")
+        || id.contains("open-mistral") || id.contains("mistral-small")
 }

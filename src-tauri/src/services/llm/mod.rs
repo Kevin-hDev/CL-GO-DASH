@@ -4,10 +4,14 @@
 //! exposent une API OpenAI-compatible. Un seul client (`openai_compat.rs`) les couvre tous
 //! en changeant `base_url` et `api_key`.
 
+pub mod agent_loop;
 pub mod catalog;
 pub mod openai_compat;
 mod openai_compat_parsing;
 pub mod stream;
+mod stream_convert;
+mod stream_http;
+mod stream_tools;
 pub mod tool_capable;
 pub mod types;
 

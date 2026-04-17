@@ -46,7 +46,7 @@ export function ChatView({
   );
   const ollamaRunning = useOllamaStatus();
   const fileDrop = useFileDrop();
-  const context = useContextProgress(model, chat.tokenCount);
+  const context = useContextProgress(model, chat.tokenCount, provider);
   const [preview, setPreview] = useState<DroppedFile | null>(null);
   const [thinking, setThinking] = useState(false);
   const [pendingSwitch, setPendingSwitch] = useState<PendingSwitch | null>(null);
