@@ -1,7 +1,7 @@
 use crate::services::agent_local::types_ollama::{ChatMessage, ChatRequest, StreamEvent, StreamResult};
+use crate::services::agent_local::stream_events::AgentEventEmitter;
 use futures_util::StreamExt;
 use std::time::Duration;
-use tauri::ipc::Channel;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio_util::io::StreamReader;
 use tokio_util::sync::CancellationToken;
@@ -46,7 +46,7 @@ pub async fn collect_chat(model: &str, messages: Vec<ChatMessage>) -> Result<(St
 }
 
 pub async fn stream_chat(
-    on_event: &Channel<StreamEvent>,
+    on_event: &AgentEventEmitter,
     request: &ChatRequest,
     cancel: CancellationToken,
 ) -> Result<StreamResult, String> {
@@ -54,7 +54,7 @@ pub async fn stream_chat(
 }
 
 pub async fn stream_chat_no_done(
-    on_event: &Channel<StreamEvent>,
+    on_event: &AgentEventEmitter,
     request: &ChatRequest,
     cancel: CancellationToken,
 ) -> Result<StreamResult, String> {
@@ -62,7 +62,7 @@ pub async fn stream_chat_no_done(
 }
 
 async fn stream_chat_inner(
-    on_event: &Channel<StreamEvent>,
+    on_event: &AgentEventEmitter,
     request: &ChatRequest,
     cancel: CancellationToken,
     emit_done: bool,
@@ -114,7 +114,7 @@ async fn stream_chat_inner(
 
 fn process_chunk(
     text: &str,
-    on_event: &Channel<StreamEvent>,
+    on_event: &AgentEventEmitter,
     token_count: &mut u32,
     first_token: &mut Option<std::time::Instant>,
     result: &mut StreamResult,
@@ -176,7 +176,7 @@ fn process_chunk(
     Ok(())
 }
 
-fn emit_done(on_event: &Channel<StreamEvent>, chunk: &serde_json::Value) -> Result<(), String> {
+fn emit_done(on_event: &AgentEventEmitter, chunk: &serde_json::Value) -> Result<(), String> {
     let ec = chunk["eval_count"].as_u64().unwrap_or(0) as u32;
     let ed = chunk["eval_duration"].as_u64().unwrap_or(1);
     let pt = chunk["prompt_eval_count"].as_u64().unwrap_or(0) as u32;

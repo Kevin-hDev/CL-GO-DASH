@@ -1,12 +1,12 @@
 use crate::services::agent_local::permission_gate::{self, PermissionDecision};
+use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::tool_dispatcher;
 use crate::services::agent_local::types_ollama::{ChatMessage, StreamEvent};
 use crate::services::agent_local::types_tools::ToolResult;
-use tauri::ipc::Channel;
 use tokio_util::sync::CancellationToken;
 
 pub async fn run_tools(
-    on_event: &Channel<StreamEvent>,
+    on_event: &AgentEventEmitter,
     messages: &mut Vec<ChatMessage>,
     tool_calls: &[(String, serde_json::Value)],
     working_dir: &std::path::Path,
@@ -38,7 +38,7 @@ pub async fn run_tools(
 }
 
 async fn check_allowed(
-    on_event: &Channel<StreamEvent>,
+    on_event: &AgentEventEmitter,
     name: &str,
     args: &serde_json::Value,
     session_id: &str,
@@ -61,7 +61,7 @@ async fn check_allowed(
 }
 
 fn push_tool_result(
-    on_event: &Channel<StreamEvent>,
+    on_event: &AgentEventEmitter,
     messages: &mut Vec<ChatMessage>,
     name: &str,
     tr: ToolResult,

@@ -2,21 +2,10 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useAgentStream } from "./use-agent-stream";
-import { buildSegmentedMessage } from "./agent-chat-utils";
-import type { ToolActivity, StreamSegment } from "./agent-chat-utils";
+import { EMPTY_CHAT_STATE, type ChatState } from "./agent-chat-stream-callbacks";
 import type { AgentMessage, AgentSession } from "@/types/agent";
 
-interface ChatState {
-  messages: AgentMessage[];
-  completedSegments: StreamSegment[];
-  currentContent: string;
-  currentThinking: string;
-  currentTools: ToolActivity[];
-  isStreaming: boolean;
-  tps: number;
-  tokenCount: number;
-  lastRequestTokens: number;
-}
+const MAX_DELIVERED_PERMISSIONS = 64;
 
 export function useAgentChat(
   sessionId: string | null,
@@ -24,114 +13,96 @@ export function useAgentChat(
   provider: string,
   onPermissionRequest?: (id: string, toolName: string, args: Record<string, unknown>) => void,
 ) {
-  const [state, setState] = useState<ChatState>({
-    messages: [], completedSegments: [],
-    currentContent: "", currentThinking: "", currentTools: [],
-    isStreaming: false, tps: 0, tokenCount: 0, lastRequestTokens: 0,
-  });
+  const [state, setState] = useState<ChatState>(EMPTY_CHAT_STATE);
   const skillRef = useRef<string | null>(null);
   const savingRef = useRef(false);
-  const { startStream, stopStream } = useAgentStream();
+  const sessionRef = useRef(sessionId);
+  const deliveredPermissionsRef = useRef<Set<string>>(new Set());
+  const permissionRequestRef = useRef(onPermissionRequest);
+  const { startStream, stopStream, subscribeToStream, getStreamSnapshot } = useAgentStream();
+
+  sessionRef.current = sessionId;
+  permissionRequestRef.current = onPermissionRequest;
+
+  const deliverPermission = useCallback((id: string, toolName: string, args: Record<string, unknown>) => {
+    const delivered = deliveredPermissionsRef.current;
+    if (delivered.has(id)) return;
+    delivered.add(id);
+    while (delivered.size > MAX_DELIVERED_PERMISSIONS) {
+      const first = delivered.values().next().value;
+      if (!first) break;
+      delivered.delete(first);
+    }
+    permissionRequestRef.current?.(id, toolName, args);
+  }, []);
 
   useEffect(() => {
+    setState(EMPTY_CHAT_STATE);
+    deliveredPermissionsRef.current.clear();
     if (!sessionId) return;
-    const loadSession = () => {
-      invoke<AgentSession>("get_agent_session", { id: sessionId })
-        .then((session) => setState((s) => ({
-          ...s, messages: session.messages, tokenCount: session.accumulated_tokens,
-        })))
-        .catch((e: unknown) => console.warn("Session load:", e));
+
+    let alive = true;
+    const applySnapshot = (snapshot: ReturnType<typeof getStreamSnapshot>) => {
+      if (!snapshot || !alive || sessionRef.current !== sessionId) return;
+      const { pendingPermissions, completed, error, ...chatState } = snapshot;
+      void completed;
+      void error;
+      setState(chatState);
+      for (const request of pendingPermissions) {
+        deliverPermission(request.id, request.toolName, request.arguments);
+      }
     };
-    loadSession();
+
+    const unsubscribe = subscribeToStream(sessionId, applySnapshot);
+    applySnapshot(getStreamSnapshot(sessionId));
+
+    invoke<AgentSession>("get_agent_session", { id: sessionId })
+      .then((session) => {
+        if (!alive || sessionRef.current !== sessionId) return;
+        const snapshot = getStreamSnapshot(sessionId);
+        if (snapshot) {
+          applySnapshot(snapshot);
+          return;
+        }
+        setState((s) => ({
+          ...s,
+          messages: session.messages,
+          tokenCount: session.accumulated_tokens,
+        }));
+      })
+      .catch((e: unknown) => console.warn("Session load:", e));
 
     const unlisten = listen<{ session_id: string }>("wakeup-completed", (e) => {
-      if (e.payload?.session_id === sessionId) {
-        loadSession();
+      if (e.payload?.session_id === sessionId && sessionRef.current === sessionId) {
+        invoke<AgentSession>("get_agent_session", { id: sessionId })
+          .then((session) => setState((s) => ({ ...s, messages: session.messages, tokenCount: session.accumulated_tokens })))
+          .catch((e: unknown) => console.warn("Session reload:", e));
       }
     });
     return () => {
+      alive = false;
+      unsubscribe();
       unlisten.then((fn) => fn()).catch(() => {});
     };
-  }, [sessionId]);
+  }, [sessionId, subscribeToStream, getStreamSnapshot, deliverPermission]);
 
   const buildMessages = useCallback((msgs: AgentMessage[]): AgentMessage[] => {
     if (!skillRef.current) return msgs;
-    const sys: AgentMessage = {
-      id: "system-skill", role: "user", content: skillRef.current,
-      files: [], timestamp: new Date().toISOString(),
-    };
-    return [sys, ...msgs];
+    return [{ id: "system-skill", role: "user", content: skillRef.current, files: [], timestamp: new Date().toISOString() }, ...msgs];
   }, []);
 
-  const doStream = useCallback(async (msgs: AgentMessage[], workingDir?: string) => {
-    if (!sessionId) return;
-    setState((s) => ({
-      ...s, messages: msgs, completedSegments: [],
-      currentContent: "", currentThinking: "", currentTools: [],
-      isStreaming: true, tps: 0,
-    }));
-    await startStream(sessionId, model, provider, buildMessages(msgs), [], true, {
-      onToken: (content, _tc, tps) =>
-        setState((s) => ({ ...s, currentContent: s.currentContent + content, tps })),
-      onThinking: (content) =>
-        setState((s) => ({ ...s, currentThinking: s.currentThinking + content })),
-      onToolCall: (name, args) =>
-        setState((s) => ({ ...s, currentTools: [...s.currentTools, { name, args }] })),
-      onToolResult: (name, content, isError) => setState((s) => {
-        const tools = [...s.currentTools];
-        for (let i = tools.length - 1; i >= 0; i--) {
-          if (tools[i].name === name && !tools[i].result) {
-            tools[i] = { ...tools[i], result: content, isError };
-            break;
-          }
-        }
-        return { ...s, currentTools: tools };
-      }),
-      onPermissionRequest: (id, toolName, args) => onPermissionRequest?.(id, toolName, args),
-      onTurnEnd: () => setState((s) => ({
-        ...s,
-        completedSegments: [...s.completedSegments, {
-          thinking: s.currentThinking, tools: s.currentTools, content: s.currentContent,
-        }],
-        currentContent: "", currentThinking: "", currentTools: [],
-      })),
-      onDone: (evalCount, finalTps, promptTokens) => setState((s) => {
-        const all = [...s.completedSegments];
-        if (s.currentContent || s.currentThinking || s.currentTools.length > 0) {
-          all.push({ thinking: s.currentThinking, tools: s.currentTools, content: s.currentContent });
-        }
-        const tokens = (evalCount || 0) + (promptTokens || 0);
-        if (all.length === 0) {
-          return {
-            ...s, isStreaming: false, tps: finalTps,
-            tokenCount: s.tokenCount + tokens, lastRequestTokens: tokens,
-          };
-        }
-
-        const built = buildSegmentedMessage(all);
-        const msg: AgentMessage = {
-          id: crypto.randomUUID(), role: "assistant",
-          content: built.content, thinking: built.thinking,
-          tool_activities: built.toolRecords, segments: built.segments,
-          files: [], timestamp: new Date().toISOString(),
-          tokens,
-        };
-        if (!savingRef.current && sessionId) {
-          savingRef.current = true;
-          invoke("add_messages_to_session", { id: sessionId, messages: [msg], tokens })
-            .catch((e: unknown) => console.error("Save assistant msg:", e))
-            .finally(() => { savingRef.current = false; });
-        }
-        return {
-          ...s, messages: [...s.messages, msg], completedSegments: [],
-          currentContent: "", currentThinking: "", currentTools: [],
-          isStreaming: false, tps: finalTps,
-          tokenCount: s.tokenCount + tokens, lastRequestTokens: tokens,
-        };
-      }),
-      onError: (msg) => { setState((s) => ({ ...s, isStreaming: false })); console.error("Stream:", msg); },
-    }, workingDir);
-  }, [sessionId, model, provider, startStream, buildMessages, onPermissionRequest]);
+  const doStream = useCallback(async (msgs: AgentMessage[], streamSession: string, workingDir?: string) => {
+    await startStream(
+      streamSession,
+      model,
+      provider,
+      buildMessages(msgs),
+      [],
+      true,
+      { displayMessages: msgs, baseTokenCount: state.tokenCount },
+      workingDir,
+    );
+  }, [model, provider, startStream, buildMessages, state.tokenCount]);
 
   const sendMessage = useCallback(async (
     text: string,
@@ -139,64 +110,41 @@ export function useAgentChat(
     workingDir?: string,
     projectId?: string,
   ) => {
-    if (!sessionId) return;
-    if (!text.trim() && (!sentFiles || sentFiles.length < 1)) return;
-    while (savingRef.current) {
-      await new Promise((r) => setTimeout(r, 50));
-    }
+    if (!sessionId || (!text.trim() && (!sentFiles || sentFiles.length < 1))) return;
+    while (savingRef.current) await new Promise((r) => setTimeout(r, 50));
     if (projectId && state.messages.length === 0) {
       const session = await invoke<Record<string, unknown>>("get_agent_session", { id: sessionId });
-      if (!session.project_id) {
-        session.project_id = projectId;
-        await invoke("save_agent_session", { session }).catch(() => {});
-      }
+      if (!session.project_id) { session.project_id = projectId; await invoke("save_agent_session", { session }).catch(() => {}); }
     }
-    const files = (sentFiles ?? []).map((f) => ({
-      name: f.name, path: f.path ?? "", mime_type: "", size: 0, thumbnail: f.preview,
-    }));
-    const userMsg: AgentMessage = {
-      id: crypto.randomUUID(), role: "user", content: text,
-      files, timestamp: new Date().toISOString(),
-    };
-    await invoke("add_messages_to_session", { id: sessionId, messages: [userMsg], tokens: 0 })
-      .catch((e: unknown) => console.error("Save user msg:", e));
-    await doStream([...state.messages, userMsg], workingDir);
+    const files = (sentFiles ?? []).map((f) => ({ name: f.name, path: f.path ?? "", mime_type: "", size: 0, thumbnail: f.preview }));
+    const userMsg: AgentMessage = { id: crypto.randomUUID(), role: "user", content: text, files, timestamp: new Date().toISOString() };
+    await invoke("add_messages_to_session", { id: sessionId, messages: [userMsg], tokens: 0 }).catch((e: unknown) => console.error("Save user msg:", e));
+    await doStream([...state.messages, userMsg], sessionId, workingDir);
   }, [sessionId, state.messages, doStream]);
 
   const syncTokenCount = useCallback(async () => {
     if (!sessionId) return;
-    try {
-      const session = await invoke<AgentSession>("get_agent_session", { id: sessionId });
-      setState((s) => ({ ...s, tokenCount: session.accumulated_tokens }));
-    } catch (e: unknown) {
-      console.warn("syncTokenCount:", e);
-    }
+    const session = await invoke<AgentSession>("get_agent_session", { id: sessionId }).catch(() => null);
+    if (session) setState((s) => ({ ...s, tokenCount: session.accumulated_tokens }));
   }, [sessionId]);
 
   const reload = useCallback(async (messageId: string) => {
     if (!sessionId) return;
     const idx = state.messages.findIndex((m) => m.id === messageId);
     if (idx < 0) return;
-    await invoke("truncate_and_replace_at", {
-      sessionId, messageId, replacement: null,
-    }).catch((e: unknown) => console.error("Truncate:", e));
+    await invoke("truncate_and_replace_at", { sessionId, messageId, replacement: null }).catch((e: unknown) => console.error("Truncate:", e));
     await syncTokenCount();
-    await doStream(state.messages.slice(0, idx + 1));
+    await doStream(state.messages.slice(0, idx + 1), sessionId);
   }, [sessionId, state.messages, doStream, syncTokenCount]);
 
   const edit = useCallback(async (messageId: string, newContent: string) => {
     if (!sessionId) return;
     const idx = state.messages.findIndex((m) => m.id === messageId);
     if (idx < 0) return;
-    const newMsg: AgentMessage = {
-      id: crypto.randomUUID(), role: "user", content: newContent,
-      files: [], timestamp: new Date().toISOString(),
-    };
-    await invoke("truncate_and_replace_at", {
-      sessionId, messageId, replacement: newMsg,
-    }).catch((e: unknown) => console.error("Truncate+replace:", e));
+    const newMsg: AgentMessage = { id: crypto.randomUUID(), role: "user", content: newContent, files: [], timestamp: new Date().toISOString() };
+    await invoke("truncate_and_replace_at", { sessionId, messageId, replacement: newMsg }).catch((e: unknown) => console.error("Truncate+replace:", e));
     await syncTokenCount();
-    await doStream([...state.messages.slice(0, idx), newMsg]);
+    await doStream([...state.messages.slice(0, idx), newMsg], sessionId);
   }, [sessionId, state.messages, doStream, syncTokenCount]);
 
   const stop = useCallback(async () => {
@@ -205,6 +153,7 @@ export function useAgentChat(
   }, [sessionId, stopStream]);
 
   const setSkill = useCallback((content: string | null) => { skillRef.current = content; }, []);
+  const ready = state.messages.length > 0 || !sessionId;
 
-  return { ...state, sendMessage, reload, edit, stop, setSkill };
+  return { ...state, ready, sendMessage, reload, edit, stop, setSkill };
 }

@@ -5,16 +5,16 @@
 
 use super::stream_http::post_chat_request;
 use super::stream_tools::ToolCallAccumulator;
+use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::types_ollama::{ChatMessage, StreamEvent, StreamResult};
 use eventsource_stream::Eventsource;
 use futures_util::StreamExt;
-use tauri::ipc::Channel;
 use tokio_util::sync::CancellationToken;
 
 /// Variante sans `Done` final — utilisée par l'agent loop qui émet son propre `Done`
 /// après avoir agrégé tous les tours.
 pub async fn stream_chat_no_done(
-    on_event: &Channel<StreamEvent>,
+    on_event: &AgentEventEmitter,
     provider_id: &str,
     model: &str,
     messages: &[ChatMessage],
@@ -27,7 +27,7 @@ pub async fn stream_chat_no_done(
 }
 
 async fn consume_stream(
-    on_event: &Channel<StreamEvent>,
+    on_event: &AgentEventEmitter,
     resp: reqwest::Response,
     cancel: CancellationToken,
 ) -> Result<(StreamResult, u32, std::time::Instant), String> {
@@ -71,7 +71,7 @@ async fn consume_stream(
 
 fn process_chunk(
     data: &str,
-    on_event: &Channel<StreamEvent>,
+    on_event: &AgentEventEmitter,
     token_count: &mut u32,
     first_token: &mut Option<std::time::Instant>,
     result: &mut StreamResult,

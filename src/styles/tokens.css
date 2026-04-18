@@ -8,8 +8,8 @@
   --space-xl: 2rem;
   --space-2xl: 3rem;
 
-  --radius-sm: 4px;
-  --radius-md: 6px;
+  --radius-sm: 8px;
+  --radius-md: 10px;
   --radius-full: 50%;
 
   --ease-smooth: 200ms ease-out;

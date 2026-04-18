@@ -32,6 +32,18 @@
   min-width: var(--list-width);
 }
 
+/* Sidebar nav items: centered when collapsed, left-aligned when expanded */
+.sb-nav-item {
+  gap: 0;
+  justify-content: center;
+}
+
+.group\/sb:hover .sb-nav-item {
+  gap: 9px;
+  justify-content: flex-start;
+  padding-left: 14px;
+}
+
 .app-detail-panel {
   flex: 1;
   display: flex;

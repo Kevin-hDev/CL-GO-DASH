@@ -87,13 +87,12 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
             className={cn(
               "relative flex items-center cursor-pointer",
               "whitespace-nowrap",
-              "gap-0 group-hover/sb:gap-3",
-              "justify-center group-hover/sb:justify-start",
+              "sb-nav-item",
               "transition-all duration-200 ease-out",
             )}
             style={{
-              paddingTop: 10,
-              paddingBottom: 10,
+              paddingTop: 5,
+              paddingBottom: 5,
               marginLeft: 6,
               marginRight: 6,
               borderRadius: "var(--radius-md)",
@@ -143,8 +142,7 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
         className={cn(
           "flex items-center cursor-pointer",
           "whitespace-nowrap",
-          "gap-0 group-hover/sb:gap-3",
-          "justify-center group-hover/sb:justify-start",
+          "sb-nav-item",
           "transition-all duration-200 ease-out",
         )}
         style={{

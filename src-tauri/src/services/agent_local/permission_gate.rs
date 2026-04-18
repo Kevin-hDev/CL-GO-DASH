@@ -1,8 +1,8 @@
+use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::types_ollama::StreamEvent;
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
 use std::sync::LazyLock;
-use tauri::ipc::Channel;
 use tokio::sync::{oneshot, Mutex};
 use tokio_util::sync::CancellationToken;
 
@@ -23,7 +23,7 @@ static PENDING: LazyLock<Mutex<HashMap<String, oneshot::Sender<PermissionDecisio
     LazyLock::new(|| Mutex::new(HashMap::new()));
 
 pub async fn request(
-    on_event: &Channel<StreamEvent>,
+    on_event: &AgentEventEmitter,
     tool_name: &str,
     arguments: &Value,
     cancel: CancellationToken,

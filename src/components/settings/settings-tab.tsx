@@ -38,7 +38,7 @@ export function SettingsTab({ theme, onThemeChange }: SettingsTabProps): {
             key={tab.id}
             onClick={() => setSubTab(tab.id)}
             style={{
-              padding: "var(--space-sm)",
+              padding: "5px var(--space-sm)",
               borderRadius: "var(--radius-sm)",
               cursor: "pointer",
               fontSize: "var(--text-sm)",

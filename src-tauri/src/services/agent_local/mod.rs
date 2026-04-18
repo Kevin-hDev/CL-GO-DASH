@@ -1,5 +1,6 @@
 pub mod agent_loop;
 pub mod agent_settings;
+pub mod chat_prompts;
 pub mod modelfile_parser;
 pub mod permission_gate;
 pub mod security;
@@ -13,6 +14,7 @@ pub mod translator;
 pub mod ollama_stream;
 pub mod session_ops;
 pub mod session_store;
+pub mod stream_events;
 pub mod tab_store;
 pub mod token_counter;
 pub mod tool_dispatcher;

@@ -1,7 +1,8 @@
 import { useRef, useCallback } from "react";
-import { invoke, Channel } from "@tauri-apps/api/core";
+import { invoke } from "@tauri-apps/api/core";
 import { readFile } from "@tauri-apps/plugin-fs";
-import type { StreamEvent, AgentMessage } from "@/types/agent";
+import { agentStreamManager, type StreamSnapshot } from "./agent-stream-manager";
+import type { AgentMessage } from "@/types/agent";
 
 const IMAGE_EXTS = ["png", "jpg", "jpeg", "gif", "webp"];
 const TEXT_EXTS = [
@@ -28,15 +29,9 @@ function uint8ToBase64(bytes: Uint8Array): string {
   return btoa(binary);
 }
 
-interface StreamCallbacks {
-  onToken: (content: string, tokenCount: number, tps: number) => void;
-  onThinking: (content: string) => void;
-  onToolCall: (name: string, args: Record<string, unknown>) => void;
-  onToolResult: (name: string, content: string, isError: boolean) => void;
-  onTurnEnd: () => void;
-  onPermissionRequest: (id: string, toolName: string, args: Record<string, unknown>) => void;
-  onDone: (evalCount: number, finalTps: number, promptTokens: number) => void;
-  onError: (message: string) => void;
+interface StreamStartState {
+  displayMessages: AgentMessage[];
+  baseTokenCount: number;
 }
 
 export function useAgentStream() {
@@ -49,49 +44,21 @@ export function useAgentStream() {
     messages: AgentMessage[],
     tools: unknown[],
     think: boolean,
-    callbacks: StreamCallbacks,
+    startState: StreamStartState,
     workingDir?: string,
   ) => {
     streamingRef.current = true;
-
-    const channel = new Channel<StreamEvent>();
-    channel.onmessage = (event: StreamEvent) => {
-      switch (event.event) {
-        case "token":
-          callbacks.onToken(event.data.content, event.data.tokenCount, event.data.tps);
-          break;
-        case "thinking":
-          callbacks.onThinking(event.data.content);
-          break;
-        case "toolCall":
-          callbacks.onToolCall(event.data.name, event.data.arguments);
-          break;
-        case "toolResult":
-          callbacks.onToolResult(event.data.name, event.data.content, event.data.isError);
-          break;
-        case "turnEnd":
-          callbacks.onTurnEnd();
-          break;
-        case "permissionRequest":
-          callbacks.onPermissionRequest(event.data.id, event.data.toolName, event.data.arguments);
-          break;
-        case "done":
-          callbacks.onDone(event.data.evalCount, event.data.finalTps, event.data.promptTokens);
-          streamingRef.current = false;
-          break;
-        case "error":
-          callbacks.onError(event.data.message);
-          streamingRef.current = false;
-          break;
-      }
-    };
+    agentStreamManager.startSession(
+      sessionId,
+      startState.displayMessages,
+      startState.baseTokenCount,
+    );
 
     const chatMessages = await Promise.all(messages.map(async (m) => {
       let images: string[] | null = null;
       let content = m.content;
 
       if (m.files && m.files.length > 0) {
-        // Images → champ images (base64 pour Ollama vision)
         const imageFiles = m.files.filter((f) => f.path && isImageFile(f.name));
         if (imageFiles.length > 0) {
           images = [];
@@ -99,22 +66,21 @@ export function useAgentStream() {
             try {
               const bytes = await readFile(f.path);
               images.push(uint8ToBase64(bytes));
-            } catch (e) {
-              console.warn("Image read failed:", f.path, e);
+            } catch {
+              console.warn("Lecture image impossible.");
             }
           }
           if (images.length === 0) images = null;
         }
 
-        // Fichiers texte → contenu ajouté au message
         const textFiles = m.files.filter((f) => f.path && isTextFile(f.name));
         for (const f of textFiles) {
           try {
             const bytes = await readFile(f.path);
             const text = new TextDecoder().decode(bytes);
             content += `\n\n--- Fichier: ${f.name} ---\n${text}`;
-          } catch (e) {
-            console.warn("Text file read failed:", f.path, e);
+          } catch {
+            console.warn("Lecture fichier texte impossible.");
           }
         }
       }
@@ -128,22 +94,45 @@ export function useAgentStream() {
       };
     }));
 
-    await invoke("chat_stream", {
-      sessionId,
-      model,
-      provider,
-      messages: chatMessages,
-      tools,
-      think,
-      workingDir: workingDir ?? null,
-      onEvent: channel,
-    });
+    try {
+      await invoke("chat_stream", {
+        sessionId,
+        model,
+        provider,
+        messages: chatMessages,
+        tools,
+        think,
+        workingDir: workingDir ?? null,
+      });
+    } catch {
+      agentStreamManager.failSession(sessionId);
+      streamingRef.current = false;
+    }
   }, []);
 
   const stopStream = useCallback(async (sessionId: string) => {
     await invoke("cancel_agent_request", { sessionId });
     streamingRef.current = false;
+    agentStreamManager.stopSession(sessionId);
   }, []);
 
-  return { startStream, stopStream, isStreaming: () => streamingRef.current };
+  const subscribeToStream = useCallback(
+    (sessionId: string, listener: (snapshot: StreamSnapshot) => void) =>
+      agentStreamManager.subscribe(sessionId, listener),
+    [],
+  );
+
+  const getStreamSnapshot = useCallback(
+    (sessionId: string) => agentStreamManager.getSnapshot(sessionId),
+    [],
+  );
+
+  return {
+    startStream,
+    stopStream,
+    subscribeToStream,
+    getStreamSnapshot,
+    isStreaming: (sessionId?: string) =>
+      sessionId ? agentStreamManager.isStreaming(sessionId) : streamingRef.current,
+  };
 }

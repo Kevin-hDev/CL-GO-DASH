@@ -1,18 +1,18 @@
 use crate::services::agent_local::agent_settings;
 use crate::services::agent_local::ollama_stream;
+use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::tool_executor;
 use crate::services::agent_local::types_ollama::{
     ChatMessage, ChatRequest, StreamEvent,
 };
 use std::path::PathBuf;
-use tauri::ipc::Channel;
 use tokio_util::sync::CancellationToken;
 
 const MAX_TURNS: usize = 50;
 const BASE_URL: &str = "http://localhost:11434";
 
 pub async fn run_agent_loop(
-    on_event: &Channel<StreamEvent>,
+    on_event: &AgentEventEmitter,
     messages: &mut Vec<ChatMessage>,
     model: &str,
     tools: Vec<serde_json::Value>,

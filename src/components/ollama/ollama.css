@@ -31,7 +31,7 @@
 }
 
 .ollama-model-item {
-  padding: var(--space-sm);
+  padding: 5px var(--space-sm);
   border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: var(--text-sm);

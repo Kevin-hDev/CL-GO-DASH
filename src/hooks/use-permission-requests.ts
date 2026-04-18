@@ -1,6 +1,8 @@
 import { useState, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 
+const MAX_PERMISSION_QUEUE = 32;
+
 export interface PermissionRequest {
   id: string;
   toolName: string;
@@ -13,7 +15,7 @@ export function usePermissionRequests() {
   const [queue, setQueue] = useState<PermissionRequest[]>([]);
 
   const enqueue = useCallback((req: PermissionRequest) => {
-    setQueue((q) => [...q, req]);
+    setQueue((q) => [...q.filter((item) => item.id !== req.id), req].slice(-MAX_PERMISSION_QUEUE));
   }, []);
 
   const respond = useCallback(async (id: string, decision: PermissionDecision) => {
