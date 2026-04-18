@@ -26,10 +26,10 @@ interface ChatViewProps {
   projects: Project[];
   onAddProject: (path: string) => Promise<Project>;
   onSessionsRefresh?: () => void;
-  /** Applique le changement dans la session courante (model + provider). */
   onApplySwitch?: (model: string, provider: string) => void;
-  /** Crée une nouvelle session avec le nouveau modèle/provider. */
   onNewSession?: (model: string, provider: string) => void;
+  initialMessage?: string;
+  onInitialMessageSent?: () => void;
 }
 
 interface PendingSwitch {
@@ -46,6 +46,8 @@ export function ChatView({
   onSessionsRefresh,
   onApplySwitch,
   onNewSession,
+  initialMessage,
+  onInitialMessageSent,
 }: ChatViewProps) {
   const permissions = usePermissionRequests();
   const permMode = usePermissionMode();
@@ -59,6 +61,14 @@ export function ChatView({
   const [pendingSwitch, setPendingSwitch] = useState<PendingSwitch | null>(null);
   const rememberedRef = useRef<SwitchChoice | null>(null);
   const proj = useSessionProject(sessionId, projects, onAddProject, chat.messages.length > 0);
+  const initialSent = useRef(false);
+
+  useEffect(() => {
+    if (initialMessage && !initialSent.current) {
+      initialSent.current = true;
+      chat.sendMessage(initialMessage, []).then(() => onInitialMessageSent?.());
+    }
+  }, [initialMessage]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);

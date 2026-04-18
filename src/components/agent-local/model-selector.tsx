@@ -63,7 +63,7 @@ export function ModelSelector({
       >
         {selectedModel}
         {thinkingEnabled && showThinkingToggle && (
-          <span style={{ marginLeft: 4, color: "var(--pulse)" }}>Étendue</span>
+          <span style={{ marginLeft: 4, color: "var(--select-text)" }}>Étendue</span>
         )}
       </button>
       {open && (

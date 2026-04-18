@@ -4,6 +4,7 @@ import {
   FolderSimple, FolderOpen, DotsThreeVertical, PencilSimple,
   X, ChatsCircle, CaretRight,
 } from "@/components/ui/icons";
+import { WastebasketIcon } from "@/components/ui/wastebasket-icon";
 import { ComposeIcon } from "@/components/ui/compose-icon";
 import { ContextMenu, type ContextMenuItem } from "@/components/ui/context-menu";
 import { useKeyboard } from "@/hooks/use-keyboard";
@@ -52,9 +53,15 @@ export function ProjectSection({
     { label: t("projects.delete", "Supprimer"), icon: <X size={14} />, onClick: () => onDeleteProject(project.id) },
   ];
 
+  const handleSessionMenu = useCallback((e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    const rect = e.currentTarget.getBoundingClientRect();
+    setSessionCtx({ x: rect.right, y: rect.bottom, id });
+  }, []);
+
   const sessionMenuItems: ContextMenuItem[] = sessionCtx ? [
     { label: t("history.rename"), icon: <PencilSimple size={14} />, onClick: () => { setRenamingSessionId(sessionCtx.id); setTimeout(() => sessionInputRef.current?.focus(), 0); } },
-    { label: t("history.delete"), icon: <X size={14} />, onClick: () => onDeleteSession(sessionCtx.id) },
+    { label: t("history.delete"), icon: <WastebasketIcon size={14} />, onClick: () => onDeleteSession(sessionCtx.id) },
   ] : [];
 
   const handleRename = useCallback((value: string) => {
@@ -87,6 +94,7 @@ export function ProjectSection({
             ref={inputRef}
             className="conv-rename"
             defaultValue={project.name}
+            onFocus={(e) => e.target.select()}
             onClick={(e) => e.stopPropagation()}
             onBlur={(e) => handleRename(e.target.value)}
             onKeyDown={(e) => {
@@ -119,13 +127,13 @@ export function ProjectSection({
             key={s.id}
             className={`conv-item conv-session-indented ${active ? "active" : ""}`}
             onClick={() => onSelect(s.id)}
-            onContextMenu={(e) => { e.preventDefault(); setSessionCtx({ x: e.clientX, y: e.clientY, id: s.id }); }}
           >
             {isRenaming ? (
               <input
                 ref={sessionInputRef}
                 className="conv-rename"
                 defaultValue={s.name}
+                onFocus={(e) => e.target.select()}
                 onBlur={(e) => handleSessionRename(s.id, e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key.startsWith("Ent")) handleSessionRename(s.id, e.currentTarget.value);
@@ -136,6 +144,12 @@ export function ProjectSection({
               <>
                 <ChatsCircle size={14} weight={active ? "fill" : "regular"} className="conv-icon" />
                 <span className="conv-name">{displaySessionName(s.name, t)}</span>
+                <button
+                  className="conv-session-menu-btn"
+                  onClick={(e) => handleSessionMenu(e, s.id)}
+                >
+                  <DotsThreeVertical size={14} />
+                </button>
               </>
             )}
           </div>

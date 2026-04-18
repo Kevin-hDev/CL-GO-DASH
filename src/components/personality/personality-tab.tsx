@@ -44,6 +44,12 @@ export function PersonalityTab(): { list: React.ReactNode; detail: React.ReactNo
     }
   }, []);
 
+  useEffect(() => {
+    if (!selectedPath && files.length > 0) {
+      handleSelect(files[0].path);
+    }
+  }, [files, selectedPath, handleSelect]);
+
   const handleOpen = useCallback(() => {
     if (selectedPath) {
       api.openInEditor(selectedPath).catch(() => showToast(t("personality.failedToLoad")));

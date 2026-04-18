@@ -81,6 +81,10 @@
     "delete": "Supprimer",
     "noDiscussion": "Aucune discussion"
   },
+  "history": {
+    "rename": "Renommer",
+    "delete": "Supprimer"
+  },
   "agentLocal": {
     "title": "Conversations",
     "newSession": "Nouvelle session",
@@ -235,6 +239,11 @@
     "fontPreview": "Le vif zéphyr jubile",
     "light": "Clair",
     "dark": "Sombre",
-    "orange": "Orange"
+    "orange": "Orange",
+    "tabs": {
+      "general": "Général",
+      "ollama": "Ollama",
+      "apiKeys": "Clés API"
+    }
   }
 }

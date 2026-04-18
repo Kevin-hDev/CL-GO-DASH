@@ -9,14 +9,13 @@ interface AppLayoutProps {
   onTabChange: (tab: TabId) => void;
   listContent: ReactNode;
   detailContent: ReactNode;
-  hideDetailDrag?: boolean;
   onShowWelcome?: () => void;
 }
 
 export function AppLayout({
   activeTab, onTabChange,
   listContent, detailContent,
-  hideDetailDrag = false, onShowWelcome,
+  onShowWelcome,
 }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -39,6 +38,15 @@ export function AppLayout({
         </div>
       </div>
       <div className="app-detail-panel">
+        <DragRegion
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 1,
+          }}
+        />
         {detailContent}
       </div>
     </div>

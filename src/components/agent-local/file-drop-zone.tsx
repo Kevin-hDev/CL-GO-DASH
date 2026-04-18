@@ -44,7 +44,7 @@ export function FileDropZone({ dragging, onDragChange, onDropPaths, children }: 
           border: "2px dashed var(--pulse)",
           borderRadius: "var(--radius-md)",
         }}>
-          <span style={{ fontSize: "var(--text-sm)", color: "var(--pulse)" }}>
+          <span style={{ fontSize: "var(--text-sm)", color: "var(--select-text)" }}>
             Déposer les fichiers ici
           </span>
         </div>

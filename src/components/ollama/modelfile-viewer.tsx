@@ -11,13 +11,27 @@ type Mode = "view" | "edit-system" | "edit-parameters" | "edit-modelfile";
 
 interface ModelfileViewerProps {
   modelName: string;
+  onDeleted?: () => void;
 }
 
-export function ModelfileViewer({ modelName }: ModelfileViewerProps) {
+export function ModelfileViewer({ modelName, onDeleted }: ModelfileViewerProps) {
   const { t } = useTranslation();
   const [modelfile, setModelfile] = useState("");
   const [mode, setMode] = useState<Mode>("view");
   const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      await invoke("delete_ollama_model", { name: modelName });
+      onDeleted?.();
+    } catch (e: unknown) {
+      console.warn("Erreur suppression modèle:", e);
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const systemPrompt = useMemo(() => extractSystemPrompt(modelfile), [modelfile]);
   const parameters = useMemo(() => extractParameters(modelfile), [modelfile]);
@@ -82,6 +96,15 @@ export function ModelfileViewer({ modelName }: ModelfileViewerProps) {
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <div className="ollama-detail-header">
         <span className="ollama-detail-name">{modelName}</span>
+        <button
+          className="ollama-btn"
+          onClick={handleDelete}
+          disabled={deleting}
+          style={{ marginLeft: 12 }}
+        >
+          {t("ollama.remove")}
+        </button>
+        <div style={{ flex: 1 }} />
         <button className="ollama-btn" onClick={() => setMode("edit-modelfile")}>
           {t("ollama.editModelfile")}
         </button>

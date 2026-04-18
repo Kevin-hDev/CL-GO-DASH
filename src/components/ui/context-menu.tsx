@@ -1,4 +1,5 @@
 import { useRef, useCallback, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { useClickOutside } from "@/hooks/use-click-outside";
 import { useKeyboard } from "@/hooks/use-keyboard";
 import "./context-menu.css";
@@ -31,7 +32,7 @@ export function ContextMenu({ x, y, items, onClose }: ContextMenuProps) {
     [onClose],
   );
 
-  return (
+  return createPortal(
     <div
       ref={ref}
       className="context-menu"
@@ -47,6 +48,7 @@ export function ContextMenu({ x, y, items, onClose }: ContextMenuProps) {
           {item.label}
         </div>
       ))}
-    </div>
+    </div>,
+    document.body,
   );
 }

@@ -40,4 +40,5 @@
   border-radius: 10px;
   background: var(--void);
   border: 1px solid var(--edge);
+  position: relative;
 }

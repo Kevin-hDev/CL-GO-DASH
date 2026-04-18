@@ -1,16 +1,14 @@
-import { useOllamaModels } from "@/hooks/use-ollama-models";
 import { idMatch } from "@/lib/utils";
 import type { OllamaModel } from "@/types/agent";
 import "./ollama.css";
 
 interface ModelfileListProps {
+  models: OllamaModel[];
   selectedModel: string | null;
   onSelect: (name: string) => void;
 }
 
-export function ModelfileList({ selectedModel, onSelect }: ModelfileListProps) {
-  const { models } = useOllamaModels();
-
+export function ModelfileList({ models, selectedModel, onSelect }: ModelfileListProps) {
   return (
     <div style={{ flex: 1, overflowY: "auto", padding: "var(--space-sm)" }}>
       {models.map((m: OllamaModel) => (

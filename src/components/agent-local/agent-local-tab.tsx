@@ -38,11 +38,9 @@ export function AgentLocalTab(): { list: React.ReactNode; detail: React.ReactNod
   const model = activeSession?.model ?? defaultModel;
   const provider = activeSession?.provider ?? defaultProvider;
 
-  const handleCreate = useCallback(async () => {
-    const name = t("agentLocal.newSession");
-    const session = await create(name, defaultModel, defaultProvider);
-    await tabState.addTab(session.id, session.name);
-  }, [create, tabState, defaultModel, defaultProvider, t]);
+  const handleCreate = useCallback(() => {
+    tabState.deselectTab();
+  }, [tabState]);
 
   const handleCreateWithModel = useCallback(
     async (newModel: string, newProvider: string) => {
@@ -53,21 +51,14 @@ export function AgentLocalTab(): { list: React.ReactNode; detail: React.ReactNod
     [create, tabState, t],
   );
 
+  const [pendingMessage, setPendingMessage] = useState<string | null>(null);
+
   const handleWelcomeSend = useCallback(
     async (text: string, projectId?: string) => {
       const name = text.slice(0, 40).trim() || t("agentLocal.newSession");
       const session = await create(name, defaultModel, defaultProvider, projectId);
+      setPendingMessage(text);
       await tabState.addTab(session.id, session.name);
-      const { invoke } = await import("@tauri-apps/api/core");
-      const userMsg = {
-        id: crypto.randomUUID(),
-        role: "user",
-        content: text,
-        files: [],
-        timestamp: new Date().toISOString(),
-        tokens: 0,
-      };
-      await invoke("add_messages_to_session", { id: session.id, messages: [userMsg], tokens: 0 });
     },
     [create, tabState, defaultModel, defaultProvider, t],
   );
@@ -82,12 +73,16 @@ export function AgentLocalTab(): { list: React.ReactNode; detail: React.ReactNod
   );
 
   const handleSelect = useCallback(async (id: string) => {
-    const idx = tabState.tabs.findIndex((tab) => tab.session_id.localeCompare(id) === 0);
-    if (idx >= 0) {
-      await tabState.selectTab(idx);
+    const existingIdx = tabState.tabs.findIndex((tab) => tab.session_id.localeCompare(id) === 0);
+    if (existingIdx >= 0) {
+      await tabState.selectTab(existingIdx);
+      return;
+    }
+    const label = sessions.find((s) => s.id.localeCompare(id) === 0)?.name ?? "Chat";
+    if (tabState.activeIndex >= 0 && tabState.activeIndex < tabState.tabs.length) {
+      await tabState.updateTab(tabState.activeIndex, id, label);
     } else {
-      const s = sessions.find((s) => s.id.localeCompare(id) === 0);
-      await tabState.addTab(id, s?.name ?? "Chat");
+      await tabState.addTab(id, label);
     }
   }, [tabState, sessions]);
 
@@ -115,10 +110,12 @@ export function AgentLocalTab(): { list: React.ReactNode; detail: React.ReactNod
           <TabBar
             tabs={tabState.tabs}
             activeIndex={tabState.activeIndex}
+            canAddTab={tabState.canAddTab}
             onSelect={tabState.selectTab}
             onClose={tabState.closeTab}
             onAdd={handleCreate}
             onRename={tabState.renameTab}
+            onReorder={tabState.reorderTabs}
           />
         </div>
       )}
@@ -137,6 +134,8 @@ export function AgentLocalTab(): { list: React.ReactNode; detail: React.ReactNod
               }
             }}
             onNewSession={handleCreateWithModel}
+            initialMessage={pendingMessage ?? undefined}
+            onInitialMessageSent={() => setPendingMessage(null)}
           />
         </div>
       ) : (

@@ -81,6 +81,10 @@
     "delete": "Delete",
     "noDiscussion": "No discussions"
   },
+  "history": {
+    "rename": "Rename",
+    "delete": "Delete"
+  },
   "agentLocal": {
     "title": "Conversations",
     "newSession": "New session",
@@ -235,6 +239,11 @@
     "fontPreview": "The quick brown fox",
     "light": "Light",
     "dark": "Dark",
-    "orange": "Orange"
+    "orange": "Orange",
+    "tabs": {
+      "general": "General",
+      "ollama": "Ollama",
+      "apiKeys": "API Keys"
+    }
   }
 }

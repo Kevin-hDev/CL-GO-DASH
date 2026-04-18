@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Pencil, Trash, ChatsCircle, CaretRight } from "@/components/ui/icons";
+import { Pencil, DotsThreeVertical, ChatsCircle, CaretRight } from "@/components/ui/icons";
+import { WastebasketIcon } from "@/components/ui/wastebasket-icon";
 import { ComposeIcon } from "@/components/ui/compose-icon";
 import { ContextMenu, type ContextMenuItem } from "@/components/ui/context-menu";
 import { ProjectSection } from "./project-section";
@@ -87,14 +88,15 @@ export function ConversationList({
     };
   }, [drag.draggingId, drag.onHover, drag.onRelease]);
 
-  const handleCtx = useCallback((e: React.MouseEvent, id: string) => {
-    e.preventDefault();
-    setCtx({ x: e.clientX, y: e.clientY, id });
+  const handleSessionMenu = useCallback((e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    const rect = e.currentTarget.getBoundingClientRect();
+    setCtx({ x: rect.right, y: rect.bottom, id });
   }, []);
 
   const ctxItems: ContextMenuItem[] = ctx ? [
     { label: t("history.rename"), icon: <Pencil size={14} />, onClick: () => { setRenamingId(ctx.id); setTimeout(() => inputRef.current?.focus(), 0); } },
-    { label: t("history.delete"), icon: <Trash size={14} />, danger: true, onClick: () => onDelete(ctx.id) },
+    { label: t("history.delete"), icon: <WastebasketIcon size={14} />, onClick: () => onDelete(ctx.id) },
   ] : [];
 
   const handleRenameSubmit = (id: string, value: string) => {
@@ -173,13 +175,13 @@ export function ConversationList({
                   key={s.id}
                   className={`conv-item ${active ? "active" : ""}`}
                   onClick={() => onSelect(s.id)}
-                  onContextMenu={(e) => handleCtx(e, s.id)}
                 >
                   {renaming ? (
                     <input
                       ref={inputRef}
                       className="conv-rename"
                       defaultValue={s.name}
+                      onFocus={(e) => e.target.select()}
                       onBlur={(e) => handleRenameSubmit(s.id, e.target.value)}
                       onKeyDown={(e) => {
                         if (e.key.startsWith("Ent")) handleRenameSubmit(s.id, e.currentTarget.value);
@@ -190,6 +192,12 @@ export function ConversationList({
                     <>
                       <ChatsCircle size={14} weight={active ? "fill" : "regular"} className="conv-icon" />
                       <span className="conv-name">{displaySessionName(s.name, t)}</span>
+                      <button
+                        className="conv-session-menu-btn"
+                        onClick={(e) => handleSessionMenu(e, s.id)}
+                      >
+                        <DotsThreeVertical size={14} />
+                      </button>
                     </>
                   )}
                 </div>

@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { useOllamaModels } from "@/hooks/use-ollama-models";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ModelfileList } from "./modelfile-list";
 import { ModelfileViewer } from "./modelfile-viewer";
@@ -13,6 +14,7 @@ type SubTab = "modelfile" | "models";
 
 export function OllamaTab(): { list: React.ReactNode; detail: React.ReactNode } {
   const { t } = useTranslation();
+  const ollamaModels = useOllamaModels();
   const [subTab, setSubTab] = useState<SubTab>("modelfile");
   const [selectedInstalled, setSelectedInstalled] = useState<string | null>(null);
   const [selectedFamily, setSelectedFamily] = useState<string | null>(null);
@@ -20,6 +22,12 @@ export function OllamaTab(): { list: React.ReactNode; detail: React.ReactNode } 
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<RegistryModel[]>([]);
   const [searching, setSearching] = useState(false);
+
+  useEffect(() => {
+    if (!selectedInstalled && ollamaModels.models.length > 0) {
+      setSelectedInstalled(ollamaModels.models[0].name);
+    }
+  }, [ollamaModels.models, selectedInstalled]);
 
   const list = (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
@@ -36,6 +44,7 @@ export function OllamaTab(): { list: React.ReactNode; detail: React.ReactNode } 
       </div>
       {subTab === "modelfile" ? (
         <ModelfileList
+          models={ollamaModels.models}
           selectedModel={selectedInstalled}
           onSelect={setSelectedInstalled}
         />
@@ -63,7 +72,12 @@ export function OllamaTab(): { list: React.ReactNode; detail: React.ReactNode } 
 
   const detail = (() => {
     if (subTab === "modelfile" && selectedInstalled) {
-      return <ModelfileViewer modelName={selectedInstalled} />;
+      return (
+        <ModelfileViewer
+          modelName={selectedInstalled}
+          onDeleted={() => setSelectedInstalled(null)}
+        />
+      );
     }
     if (subTab === "models" && selectedFamily) {
       return (
