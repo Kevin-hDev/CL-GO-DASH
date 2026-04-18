@@ -33,8 +33,8 @@
 }
 
 .ak-connector-card:hover:not(:disabled) {
-  background: var(--pulse-muted);
-  border-color: var(--pulse);
+  background: var(--select-bg);
+  border-color: var(--select-text);
 }
 
 .ak-connector-card.configured {

@@ -31,7 +31,7 @@ export function FontSizeSlider({ value, onChange, onDecrease, onIncrease }: Font
                 fontSize: "var(--text-xs)", fontFamily: "var(--font-mono)",
                 borderRadius: "var(--radius-sm)", cursor: "pointer",
                 border: size === value ? "1px solid var(--pulse)" : "1px solid var(--edge)",
-                color: size === value ? "var(--pulse)" : "var(--ink-muted)",
+                color: size === value ? "var(--select-text)" : "var(--ink-muted)",
                 background: size === value ? "var(--pulse-muted)" : "transparent",
                 transition: "all 200ms ease-out",
               }}

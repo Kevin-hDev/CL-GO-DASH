@@ -48,7 +48,7 @@
 }
 
 .md-view strong {
-  color: var(--pulse);
+  color: var(--select-text);
 }
 
 .md-view code {

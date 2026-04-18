@@ -68,7 +68,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: var(--pulse);
+  color: var(--select-text);
   text-decoration: none;
   font-size: var(--text-xs);
 }
@@ -110,8 +110,8 @@
 }
 
 .ak-picker-card:hover {
-  background: var(--pulse-muted);
-  border-color: var(--pulse);
+  background: var(--select-bg);
+  border-color: var(--select-text);
 }
 
 .ak-picker-card-body {
@@ -150,10 +150,10 @@
 }
 
 .ak-picker-card-tier {
-  color: var(--pulse);
+  color: var(--select-text);
 }
 
 .ak-picker-card-plus {
-  color: var(--pulse);
+  color: var(--select-text);
   flex-shrink: 0;
 }

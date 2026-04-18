@@ -52,7 +52,7 @@
 }
 
 .ms-search-input:focus {
-  border-color: var(--pulse);
+  border-color: var(--select-text);
 }
 
 .ms-thinking {
@@ -124,7 +124,7 @@
   padding: 6px var(--space-md);
   font-size: 11px;
   font-weight: 600;
-  color: var(--pulse);
+  color: var(--select-text);
   background: var(--shell);
   border-bottom: 1px solid var(--edge);
   position: sticky;
@@ -145,11 +145,11 @@
 }
 
 .ms-item:hover {
-  background: var(--pulse-muted);
+  background: var(--select-bg);
 }
 
 .ms-item.active {
-  color: var(--pulse);
+  color: var(--select-text);
 }
 
 .ms-item-paid {
@@ -191,7 +191,7 @@
 }
 
 .ms-star-on {
-  color: var(--pulse);
+  color: var(--select-text);
   opacity: 1 !important;
 }
 
@@ -212,6 +212,6 @@
 }
 
 .ms-badge-tools {
-  color: var(--pulse);
+  color: var(--select-text);
   background: rgba(234, 88, 12, 0.15);
 }

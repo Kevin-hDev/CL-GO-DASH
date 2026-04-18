@@ -79,7 +79,7 @@
   text-align: left;
 }
 
-.perm-mode-option:hover { background: var(--pulse-muted); }
+.perm-mode-option:hover { background: var(--select-bg); }
 
 .perm-mode-option-label { font-weight: 500; }
 

@@ -12,7 +12,7 @@
 
 .wk-toggle-pill[data-active="true"] {
   background: var(--pulse);
-  border-color: var(--pulse);
+  border-color: var(--select-text);
 }
 
 .wk-toggle-pill:disabled {

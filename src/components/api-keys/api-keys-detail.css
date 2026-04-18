@@ -30,7 +30,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--pulse);
+  color: var(--select-text);
   flex-shrink: 0;
 }
 
@@ -134,7 +134,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: var(--pulse);
+  color: var(--select-text);
   text-decoration: none;
   font-size: var(--text-xs);
 }

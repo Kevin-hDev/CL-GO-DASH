@@ -65,7 +65,7 @@
 
 .ak-connectors-tab.active {
   color: var(--ink);
-  border-bottom-color: var(--pulse);
+  border-bottom-color: var(--select-text);
 }
 
 /* === Search bar === */
@@ -97,7 +97,7 @@
 
 .ak-connectors-search-input:focus {
   outline: none;
-  border-color: var(--pulse);
+  border-color: var(--select-text);
   box-shadow: 0 0 0 2px var(--pulse-muted);
 }
 

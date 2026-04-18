@@ -61,7 +61,7 @@ export function ModelInstallButton({
         title={t("ollama.installedUpToDate")}
         style={{
           display: "flex", alignItems: "center",
-          color: "var(--pulse)",
+          color: "var(--select-text)",
         }}
       >
         <Check size={18} />

@@ -9,7 +9,6 @@ interface ThemeSelectorProps {
 const THEMES: { id: Theme; label: string; bg: string; accent: string; text: string }[] = [
   { id: "light", label: "Light", bg: "#f5f3f0", accent: "#ea6c10", text: "#1a1a1a" },
   { id: "dark", label: "Dark", bg: "#1c1c22", accent: "#f97316", text: "#e8e6e3" },
-  { id: "orange", label: "Orange", bg: "#2b1508", accent: "#f97316", text: "#f8f0e4" },
 ];
 
 export function ThemeSelector({ value, onChange }: ThemeSelectorProps) {
@@ -46,7 +45,7 @@ export function ThemeSelector({ value, onChange }: ThemeSelectorProps) {
               </div>
               <div style={{
                 fontSize: "var(--text-sm)", fontWeight: active ? 600 : 400,
-                color: active ? "var(--pulse)" : "var(--ink)",
+                color: active ? "var(--select-text)" : "var(--ink)",
                 textAlign: "center",
               }}>
                 {t.label}
@@ -54,7 +53,7 @@ export function ThemeSelector({ value, onChange }: ThemeSelectorProps) {
               {active && (
                 <div style={{
                   position: "absolute", top: 8, right: 8,
-                  color: "var(--pulse)",
+                  color: "var(--select-text)",
                 }}>
                   <Check size={16} weight="bold" />
                 </div>

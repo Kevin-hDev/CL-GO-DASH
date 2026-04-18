@@ -25,7 +25,7 @@
 }
 
 .empty-action:hover {
-  border-color: var(--pulse);
-  color: var(--pulse);
-  background: var(--pulse-muted);
+  border-color: var(--select-text);
+  color: var(--select-text);
+  background: var(--select-bg);
 }

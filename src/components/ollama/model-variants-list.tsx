@@ -107,7 +107,7 @@ export function ModelVariantsList({
                 </span>
               )}
               {installed && !hasUpdate && (
-                <Check size={14} style={{ color: "var(--pulse)" }} />
+                <Check size={14} style={{ color: "var(--select-text)" }} />
               )}
             </div>
           );

@@ -98,7 +98,7 @@ export function ModelSearch({
                   </div>
                 )}
               </div>
-              {installed && <Check size={14} style={{ color: "var(--pulse)" }} />}
+              {installed && <Check size={14} style={{ color: "var(--select-text)" }} />}
             </div>
           );
         })}

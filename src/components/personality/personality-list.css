@@ -34,7 +34,7 @@
 }
 
 .pers-item.active {
-  background: var(--pulse-muted);
+  background: var(--select-bg);
 }
 
 .pers-icon {

@@ -89,7 +89,7 @@
 
 .wk-input:focus {
   outline: none;
-  border-color: var(--pulse);
+  border-color: var(--select-text);
   box-shadow: 0 0 0 2px var(--pulse-muted);
 }
 
@@ -127,8 +127,8 @@
 }
 
 .wk-schedule-tab.active {
-  background: var(--pulse-muted);
-  color: var(--pulse);
+  background: var(--select-bg);
+  color: var(--select-text);
 }
 
 .wk-schedule-row {

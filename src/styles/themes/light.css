@@ -42,6 +42,8 @@
   --ink-faint: #a0a0a0;
   --pulse: #c2410c;
   --pulse-muted: rgba(194, 65, 12, 0.12);
+  --select-bg: #e5e2dd;
+  --select-text: #1a1a1a;
   --signal-idle: #b0b0b8;
   --signal-live: #d4a017;
   --signal-error: #dc2626;

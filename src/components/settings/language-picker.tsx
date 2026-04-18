@@ -43,12 +43,12 @@ export function LanguagePicker() {
               <span style={{
                 fontSize: "var(--text-sm)",
                 fontWeight: active ? 600 : 400,
-                color: active ? "var(--pulse)" : "var(--ink)",
+                color: active ? "var(--select-text)" : "var(--ink)",
               }}>
                 {lang.label}
               </span>
               {active && (
-                <div style={{ position: "absolute", top: 6, right: 6, color: "var(--pulse)" }}>
+                <div style={{ position: "absolute", top: 6, right: 6, color: "var(--select-text)" }}>
                   <Check size={14} weight="bold" />
                 </div>
               )}

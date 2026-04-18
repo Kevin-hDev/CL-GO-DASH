@@ -1,8 +1,8 @@
 import { useState, useCallback, useEffect } from "react";
 
-export type Theme = "light" | "dark" | "orange";
+export type Theme = "light" | "dark";
 
-const THEMES: Theme[] = ["light", "dark", "orange"];
+const THEMES: Theme[] = ["light", "dark"];
 
 function getInitialTheme(): Theme {
   const saved = localStorage.getItem("clgo-theme");

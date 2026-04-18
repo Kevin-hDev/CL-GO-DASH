@@ -26,8 +26,8 @@
 }
 
 .ollama-subtab.active {
-  color: var(--pulse);
-  border-bottom-color: var(--pulse);
+  color: var(--select-text);
+  border-bottom-color: var(--select-text);
 }
 
 .ollama-model-item {
@@ -50,8 +50,8 @@
 }
 
 .ollama-model-item.active {
-  color: var(--pulse);
-  background: var(--pulse-muted);
+  color: var(--select-text);
+  background: var(--select-bg);
 }
 
 .ollama-detail-header {
@@ -80,7 +80,7 @@
 }
 
 .ollama-btn:hover {
-  background: var(--pulse-muted);
+  background: var(--select-bg);
 }
 
 .ollama-btn-primary {
@@ -106,7 +106,7 @@
 }
 
 .ollama-search-input:focus {
-  border-color: var(--pulse);
+  border-color: var(--select-text);
   box-shadow: 0 0 0 2px var(--pulse-muted);
 }
 
@@ -179,7 +179,7 @@
   line-height: 1.6;
 }
 .ollama-readme a {
-  color: var(--pulse);
+  color: var(--select-text);
   text-decoration: none;
 }
 .ollama-readme a:hover {

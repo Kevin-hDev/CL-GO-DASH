@@ -48,9 +48,9 @@
 }
 
 .wk-new-btn:hover {
-  background: var(--pulse-muted);
-  color: var(--pulse);
-  border-color: var(--pulse);
+  background: var(--select-bg);
+  color: var(--select-text);
+  border-color: var(--select-text);
 }
 
 .wk-empty {

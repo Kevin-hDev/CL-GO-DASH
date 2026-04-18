@@ -108,7 +108,7 @@
   align-items: center;
 }
 
-.chat-plus-btn:hover { color: var(--pulse); background: var(--pulse-muted); }
+.chat-plus-btn:hover { color: var(--select-text); background: var(--select-bg); }
 
 .chat-model-info {
   display: flex;

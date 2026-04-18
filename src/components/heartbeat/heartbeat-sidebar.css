@@ -31,7 +31,7 @@
 
 .wk-sidebar-toggle[data-on="true"] {
   background: var(--pulse);
-  border-color: var(--pulse);
+  border-color: var(--select-text);
 }
 
 .wk-sidebar-toggle .wk-toggle-dot {
@@ -81,8 +81,8 @@
 }
 
 .wk-sidebar-item.active {
-  background: var(--pulse-muted);
-  color: var(--pulse);
+  background: var(--select-bg);
+  color: var(--select-text);
 }
 
 .wk-sidebar-model {
@@ -96,7 +96,7 @@
 }
 
 .wk-sidebar-item.active .wk-sidebar-model {
-  color: var(--pulse);
+  color: var(--select-text);
 }
 
 .wk-sidebar-schedule {

@@ -31,7 +31,7 @@ export function FontFamilyPicker({ value, onChange }: FontFamilyPickerProps) {
             <span style={{
               fontFamily: font.value,
               fontSize: "var(--text-sm)",
-              color: font.id === value ? "var(--pulse)" : "var(--ink)",
+              color: font.id === value ? "var(--select-text)" : "var(--ink)",
             }}>
               {font.label}
             </span>

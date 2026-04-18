@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
-import { Pulse, UserCircle, ChatCircle, Sliders, Gear, Key } from "@/components/ui/icons";
+import { Pulse, UserCircle, ChatsCircle, Sliders, Gear, Key } from "@/components/ui/icons";
 import type { Icon } from "@phosphor-icons/react";
 import logoSrc from "@/assets/logo.png";
 import { DragRegion } from "./drag-region";
@@ -14,14 +14,14 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { id: "agent-local", icon: ChatCircle, i18nKey: "nav.agentLocal" },
+  { id: "agent-local", icon: ChatsCircle, i18nKey: "nav.agentLocal" },
   { id: "heartbeat", icon: Pulse, i18nKey: "nav.heartbeat" },
   { id: "ollama", icon: Sliders, i18nKey: "nav.ollama" },
   { id: "api-keys", icon: Key, i18nKey: "nav.apiKeys" },
   { id: "personality", icon: UserCircle, i18nKey: "nav.personality" },
 ];
 
-const ICON_SIZE = 24;
+const ICON_SIZE = 20;
 
 interface SidebarProps {
   activeTab: TabId;
@@ -70,7 +70,7 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
       {/* Logo */}
       <div
         className="flex items-center gap-3 whitespace-nowrap overflow-hidden"
-        style={{ paddingLeft: 8, paddingTop: 8, paddingBottom: 24 }}
+        style={{ paddingLeft: 8, paddingTop: 8, paddingBottom: 16 }}
       >
         <img src={logoSrc} alt="CL-GO" style={{ width: "2.5rem", height: "2.5rem", borderRadius: 6, flexShrink: 0 }} />
         <span style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--ink)" }} className="opacity-0 group-hover/sb:opacity-100 transition-opacity duration-150">
@@ -79,7 +79,7 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
       </div>
 
       {/* Nav items */}
-      <div className="flex flex-col gap-2 flex-1">
+      <div className="flex flex-col flex-1" style={{ gap: 2 }}>
         {NAV_ITEMS.map((item) => (
           <div
             key={item.id}
@@ -96,7 +96,7 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
               marginLeft: 6,
               marginRight: 6,
               borderRadius: "var(--radius-md)",
-              background: activeTab === item.id ? "var(--pulse-muted)" : undefined,
+              background: activeTab === item.id ? "var(--surface-hover)" : undefined,
             }}
           >
             <item.icon
@@ -104,7 +104,7 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
               weight={activeTab === item.id ? "fill" : "regular"}
               className={cn(
                 "shrink-0 text-[var(--ink-muted)]",
-                activeTab === item.id && "text-[var(--pulse)]",
+                activeTab === item.id && "text-[var(--ink)]",
               )}
             />
             <span
@@ -112,7 +112,7 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
                 "text-sm text-[var(--ink-muted)]",
                 "opacity-0 group-hover/sb:opacity-100",
                 "transition-opacity duration-150",
-                activeTab === item.id && "text-[var(--pulse)] font-medium",
+                activeTab === item.id && "text-[var(--ink)] font-medium",
               )}
             >
               {t(item.i18nKey)}
@@ -137,7 +137,7 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
           marginRight: 6,
           marginBottom: 12,
           borderRadius: "var(--radius-md)",
-          background: activeTab === "settings" ? "var(--pulse-muted)" : undefined,
+          background: activeTab === "settings" ? "var(--surface-hover)" : undefined,
         }}
       >
         <Gear
@@ -145,12 +145,12 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
           weight={activeTab === "settings" ? "fill" : "regular"}
           className={cn(
             "shrink-0 text-[var(--ink-faint)]",
-            activeTab === "settings" && "text-[var(--pulse)]",
+            activeTab === "settings" && "text-[var(--ink)]",
           )}
         />
         <span className={cn(
           "text-xs opacity-0 group-hover/sb:opacity-100 transition-opacity duration-150",
-          activeTab === "settings" ? "text-[var(--pulse)]" : "text-[var(--ink-faint)]",
+          activeTab === "settings" ? "text-[var(--ink)]" : "text-[var(--ink-faint)]",
         )}>
           {t("nav.settings")}
         </span>

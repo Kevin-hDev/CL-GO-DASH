@@ -30,9 +30,9 @@
 }
 
 .toast-info {
-  background: var(--pulse-muted);
+  background: var(--select-bg);
   border: 1px solid rgba(74, 143, 226, 0.3);
-  color: var(--pulse);
+  color: var(--select-text);
 }
 
 .toast-check {

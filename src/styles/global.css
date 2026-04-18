@@ -2,7 +2,6 @@
 @import "./tokens.css";
 @import "./themes/light.css";
 @import "./themes/dark.css";
-@import "./themes/orange.css";
 
 @theme {
   --font-sans: "Geist Sans", -apple-system, BlinkMacSystemFont, sans-serif;
