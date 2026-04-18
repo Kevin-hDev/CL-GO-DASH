@@ -1,8 +1,9 @@
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::types_ollama::StreamEvent;
 use serde_json::Value;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::sync::LazyLock;
+use std::time::{Duration, Instant};
 use tokio::sync::{oneshot, Mutex};
 use tokio_util::sync::CancellationToken;
 
@@ -53,16 +54,25 @@ pub async fn respond(id: &str, decision: PermissionDecision) {
     }
 }
 
-static ALLOWED: LazyLock<Mutex<HashMap<String, HashSet<String>>>> =
+const SESSION_ALLOW_TTL: Duration = Duration::from_secs(3600);
+
+static ALLOWED: LazyLock<Mutex<HashMap<String, HashMap<String, Instant>>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 
 pub async fn is_allowed(session_id: &str, tool: &str) -> bool {
-    ALLOWED
-        .lock()
-        .await
-        .get(session_id)
-        .map(|s| s.contains(tool))
-        .unwrap_or(false)
+    let mut guard = ALLOWED.lock().await;
+    let session_map = match guard.get_mut(session_id) {
+        Some(m) => m,
+        None => return false,
+    };
+    match session_map.get(tool) {
+        Some(granted_at) if granted_at.elapsed() < SESSION_ALLOW_TTL => true,
+        Some(_) => {
+            session_map.remove(tool);
+            false
+        }
+        None => false,
+    }
 }
 
 pub async fn mark_allowed(session_id: &str, tool: &str) {
@@ -71,7 +81,7 @@ pub async fn mark_allowed(session_id: &str, tool: &str) {
         .await
         .entry(session_id.to_string())
         .or_default()
-        .insert(tool.to_string());
+        .insert(tool.to_string(), Instant::now());
 }
 
 pub async fn clear_session(session_id: &str) {

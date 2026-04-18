@@ -7,7 +7,7 @@ const LINE_STYLE: React.CSSProperties = {
 
 const NUM_STYLE: React.CSSProperties = {
   width: 32, textAlign: "right", paddingRight: 8,
-  color: "#555", userSelect: "none", flexShrink: 0,
+  color: "var(--ink-muted)", userSelect: "none", flexShrink: 0,
 };
 
 const PREFIX_STYLE: React.CSSProperties = {
@@ -29,8 +29,8 @@ export function ContentPreview({ content }: { content: string }) {
       {lines.map((line, i) => (
         <div key={i} style={{ ...LINE_STYLE, background: "rgba(34, 197, 94, 0.15)" }}>
           <span style={NUM_STYLE}>{i + 1}</span>
-          <span style={{ ...PREFIX_STYLE, color: "#22c55e" }}>+</span>
-          <span style={{ ...CODE_STYLE, color: "#86efac" }}>{line}</span>
+          <span style={{ ...PREFIX_STYLE, color: "var(--signal-ok)" }}>+</span>
+          <span style={{ ...CODE_STYLE, color: "var(--signal-ok)" }}>{line}</span>
         </div>
       ))}
     </div>
@@ -48,15 +48,15 @@ export function DiffPreview({ oldText, newText }: { oldText: string; newText: st
       {oldLines.map((line, i) => (
         <div key={`old-${i}`} style={{ ...LINE_STYLE, background: "rgba(220, 38, 38, 0.15)" }}>
           <span style={NUM_STYLE}>{i + 1}</span>
-          <span style={{ ...PREFIX_STYLE, color: "#ef4444" }}>-</span>
-          <span style={{ ...CODE_STYLE, color: "#fca5a5" }}>{line}</span>
+          <span style={{ ...PREFIX_STYLE, color: "var(--signal-error)" }}>-</span>
+          <span style={{ ...CODE_STYLE, color: "var(--signal-error)" }}>{line}</span>
         </div>
       ))}
       {newLines.map((line, i) => (
         <div key={`new-${i}`} style={{ ...LINE_STYLE, background: "rgba(34, 197, 94, 0.15)" }}>
           <span style={NUM_STYLE}>{i + 1}</span>
-          <span style={{ ...PREFIX_STYLE, color: "#22c55e" }}>+</span>
-          <span style={{ ...CODE_STYLE, color: "#86efac" }}>{line}</span>
+          <span style={{ ...PREFIX_STYLE, color: "var(--signal-ok)" }}>+</span>
+          <span style={{ ...CODE_STYLE, color: "var(--signal-ok)" }}>{line}</span>
         </div>
       ))}
     </div>
@@ -79,8 +79,8 @@ export function WebResultsPreview({ content, isSearch }: { content: string; isSe
           const url = lines[1] ?? "";
           return (
             <div key={i} style={{ marginBottom: i < blocks.length - 1 ? 6 : 0 }}>
-              <div style={{ color: "#c4b5fd", fontWeight: 600 }}>{title}</div>
-              <div style={{ color: "#7c6fbf", fontSize: "10px", wordBreak: "break-all" }}>{url}</div>
+              <div style={{ color: "var(--pulse)", fontWeight: 600 }}>{title}</div>
+              <div style={{ color: "var(--ink-faint)", fontSize: "10px", wordBreak: "break-all" }}>{url}</div>
             </div>
           );
         })}
@@ -93,7 +93,7 @@ export function WebResultsPreview({ content, isSearch }: { content: string; isSe
       marginTop: 6, padding: "6px 8px", borderRadius: 4,
       background: "rgba(155, 127, 255, 0.06)",
       border: "1px solid rgba(155, 127, 255, 0.12)",
-      fontSize: "10px", color: "#999",
+      fontSize: "10px", color: "var(--ink-muted)",
       whiteSpace: "pre-wrap", wordBreak: "break-all",
       maxHeight: 150, overflow: "hidden",
     }}>

@@ -8,8 +8,9 @@ use crate::services::agent_local::types_ollama::{
 use std::path::PathBuf;
 use tokio_util::sync::CancellationToken;
 
-const MAX_TURNS: usize = 50;
-const BASE_URL: &str = "http://localhost:11434";
+use crate::services::agent_local::OLLAMA_BASE_URL;
+
+const MAX_TURNS: usize = 30;
 
 pub async fn run_agent_loop(
     on_event: &AgentEventEmitter,
@@ -131,7 +132,7 @@ fn build_assistant_message(
 async fn decharge_gpu(model: &str) {
     let client = reqwest::Client::new();
     let _ = client
-        .post(format!("{BASE_URL}/api/chat"))
+        .post(format!("{OLLAMA_BASE_URL}/api/chat"))
         .json(&serde_json::json!({
             "model": model,
             "messages": [],

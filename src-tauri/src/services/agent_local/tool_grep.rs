@@ -1,3 +1,4 @@
+use crate::services::agent_local::security;
 use crate::services::agent_local::types_tools::ToolResult;
 use grep_regex::RegexMatcher;
 use grep_searcher::{Searcher, Sink, SinkMatch};
@@ -15,6 +16,10 @@ pub async fn grep(
     let pattern = pattern.to_string();
     let glob_filter = glob_filter.map(|s| s.to_string());
     let root = resolve_root(path, working_dir);
+
+    if let Err(e) = security::validate_read_path(&root, working_dir) {
+        return ToolResult { content: e, is_error: true };
+    }
 
     let result = tokio::task::spawn_blocking(move || grep_blocking(&pattern, &root, glob_filter.as_deref()))
         .await;

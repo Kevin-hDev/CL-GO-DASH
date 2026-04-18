@@ -20,7 +20,7 @@ function useDefaultModel(): { model: string; provider: string } {
       .then((models) => {
         if (models.length > 0) setState({ model: models[0].name, provider: "ollama" });
       })
-      .catch(() => {});
+      .catch((e) => console.warn("Ollama models:", e));
   }, []);
   return state;
 }

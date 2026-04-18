@@ -32,7 +32,7 @@ export function ApiKeysDetails({
     setQuotaLoading(true);
     invoke<ProviderQuota | null>("get_provider_quota", { providerId: provider.id })
       .then((q) => { if (!cancelled) setQuota(q); })
-      .catch(() => {})
+      .catch((e) => console.warn("Quota load:", e))
       .finally(() => { if (!cancelled) setQuotaLoading(false); });
     return () => { cancelled = true; };
   }, [provider.id]);

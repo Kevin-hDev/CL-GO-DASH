@@ -152,13 +152,9 @@ pub async fn test_key(provider_id: &str) -> Result<(), String> {
         "deepseek" => client
             .get("https://api.deepseek.com/v1/models")
             .bearer_auth(&*key),
-        "google" => {
-            let url = format!(
-                "https://generativelanguage.googleapis.com/v1beta/models?key={}",
-                &*key
-            );
-            client.get(url)
-        }
+        "google" => client
+            .get("https://generativelanguage.googleapis.com/v1beta/models")
+            .header("x-goog-api-key", key.as_str()),
         "brave" => client
             .get("https://api.search.brave.com/res/v1/web/search?q=test&count=1")
             .header("X-Subscription-Token", &*key),
@@ -171,7 +167,7 @@ pub async fn test_key(provider_id: &str) -> Result<(), String> {
             .bearer_auth(&*key),
         "serpapi" => client
             .get("https://serpapi.com/account")
-            .query(&[("api_key", key.as_str())]),
+            .header("Authorization", format!("Bearer {}", key.as_str())),
         "google_cse" => return Ok(()),
         other => return Err(format!("Provider inconnu : {}", other)),
     };

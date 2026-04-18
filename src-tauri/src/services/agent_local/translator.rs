@@ -1,7 +1,6 @@
+use crate::services::agent_local::OLLAMA_BASE_URL;
 use reqwest::Client;
 use std::time::Duration;
-
-const BASE_URL: &str = "http://localhost:11434";
 const DEFAULT_MODEL: &str = "gemma4:e2b";
 const TIMEOUT: Duration = Duration::from_secs(600);
 const CHUNK_MAX_CHARS: usize = 8000;
@@ -113,7 +112,7 @@ async fn translate_chunk(
         .map_err(|e| e.to_string())?;
 
     let resp = client
-        .post(format!("{BASE_URL}/api/chat"))
+        .post(format!("{OLLAMA_BASE_URL}/api/chat"))
         .json(&serde_json::json!({
             "model": model,
             "messages": [

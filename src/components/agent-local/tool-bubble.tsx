@@ -11,7 +11,7 @@ const TOOL_COLORS: Record<string, string> = {
 };
 
 const BUBBLE_STYLE = {
-  width: "85%", background: "#0d0d0f",
+  width: "85%", background: "var(--void)",
   border: "1px solid rgba(255,255,255,0.06)",
   borderRadius: "var(--radius-md, 8px)",
   padding: "10px 14px", alignSelf: "center" as const, margin: "6px auto",
@@ -20,7 +20,7 @@ const BUBBLE_STYLE = {
 const HEADER_STYLE = {
   display: "flex", alignItems: "center", gap: 6,
   marginBottom: 8, opacity: 0.5,
-  fontSize: "11px", color: "#888",
+  fontSize: "11px", color: "var(--ink-muted)",
   textTransform: "uppercase" as const, letterSpacing: "0.5px",
 };
 
@@ -93,10 +93,10 @@ function ToolRow({ name, summary, done, isError }: {
 }) {
   return (
     <div style={ROW_STYLE}>
-      <span style={{ color: TOOL_COLORS[name] ?? "#888", fontWeight: 600, flexShrink: 0, minWidth: 70 }}>{name}</span>
-      <span style={{ color: "#999", wordBreak: "break-all", flex: 1 }}>{summary}</span>
-      {!done && <Spinner size={12} style={{ color: "#666", animation: "spin 1s linear infinite", flexShrink: 0 }} />}
-      {done && <span style={{ color: isError ? "#f87171" : "#4ade80", flexShrink: 0, fontSize: "10px" }}>{isError ? "✗" : "✓"}</span>}
+      <span style={{ color: TOOL_COLORS[name] ?? "var(--ink-muted)", fontWeight: 600, flexShrink: 0, minWidth: 70 }}>{name}</span>
+      <span style={{ color: "var(--ink-muted)", wordBreak: "break-all", flex: 1 }}>{summary}</span>
+      {!done && <Spinner size={12} style={{ color: "var(--ink-faint)", animation: "spin 1s linear infinite", flexShrink: 0 }} />}
+      {done && <span style={{ color: isError ? "var(--signal-error)" : "var(--signal-ok)", flexShrink: 0, fontSize: "10px" }}>{isError ? "✗" : "✓"}</span>}
     </div>
   );
 }

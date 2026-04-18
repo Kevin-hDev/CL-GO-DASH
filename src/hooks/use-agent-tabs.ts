@@ -12,7 +12,7 @@ export function useAgentTabs() {
     invoke<TabState>("get_tab_state").then((state) => {
       setTabs(state.tabs);
       setActiveIndex(state.active_index);
-    }).catch(() => {});
+    }).catch((e) => console.warn("Tab state load:", e));
   }, []);
 
   const persist = useCallback(async (next: TabInfo[], idx: number) => {
@@ -20,7 +20,7 @@ export function useAgentTabs() {
     setActiveIndex(idx);
     await invoke("save_tab_state", {
       state: { tabs: next, active_index: idx },
-    }).catch(() => {});
+    }).catch((e) => console.warn("Tab state save:", e));
   }, []);
 
   const addTab = useCallback(async (sessionId: string, label: string) => {

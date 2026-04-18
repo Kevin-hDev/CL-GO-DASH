@@ -14,7 +14,7 @@ export function useSessionProject(
   useEffect(() => {
     invoke<AgentSession>("get_agent_session", { id: sessionId })
       .then((s) => setSelectedProjectId(s.project_id ?? null))
-      .catch(() => {});
+      .catch((e) => console.warn("Session project load:", e));
   }, [sessionId]);
 
   const selectedProject = projects.find((p) => p.id === selectedProjectId);

@@ -1,10 +1,24 @@
 use crate::services::agent_local::types_session::{AgentSession, AgentSessionMeta};
 use chrono::Utc;
+use regex::Regex;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::LazyLock;
 use tokio::sync::Mutex;
 use uuid::Uuid;
+
+static SESSION_ID_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"^[a-f0-9\-]+$").unwrap());
+
+pub fn validate_session_id(id: &str) -> Result<(), String> {
+    if id.is_empty() || id.len() > 64 {
+        return Err("Identifiant de session invalide".into());
+    }
+    if !SESSION_ID_REGEX.is_match(id) {
+        return Err("Identifiant de session invalide".into());
+    }
+    Ok(())
+}
 
 static SESSION_LOCKS: LazyLock<Mutex<HashMap<String, std::sync::Arc<Mutex<()>>>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
@@ -102,6 +116,7 @@ pub async fn find_heartbeat_session(
 }
 
 pub async fn get(id: &str) -> Result<AgentSession, String> {
+    validate_session_id(id)?;
     let path = sessions_dir().join(format!("{id}.json"));
     let data = tokio::fs::read_to_string(&path)
         .await
@@ -143,6 +158,7 @@ pub async fn list() -> Result<Vec<AgentSessionMeta>, String> {
 }
 
 pub async fn save(session: &AgentSession) -> Result<(), String> {
+    validate_session_id(&session.id)?;
     let dir = sessions_dir();
     tokio::fs::create_dir_all(&dir).await.map_err(|e| e.to_string())?;
     let path = dir.join(format!("{}.json", session.id));
@@ -158,6 +174,7 @@ pub async fn add_messages(
     mut new_messages: Vec<crate::services::agent_local::types_session::AgentMessage>,
     tokens: u32,
 ) -> Result<(), String> {
+    validate_session_id(id)?;
     let lock = lock_session(id).await;
     let _guard = lock.lock().await;
     let mut session = get(id).await?;
@@ -173,12 +190,14 @@ pub async fn add_messages(
 }
 
 pub async fn rename(id: &str, name: &str) -> Result<(), String> {
+    validate_session_id(id)?;
     let mut session = get(id).await?;
     session.name = name.to_string();
     save(&session).await
 }
 
 pub async fn delete(id: &str) -> Result<(), String> {
+    validate_session_id(id)?;
     let path = sessions_dir().join(format!("{id}.json"));
     tokio::fs::remove_file(&path).await.map_err(|e| format!("Erreur suppression: {e}"))
 }
@@ -186,3 +205,7 @@ pub async fn delete(id: &str) -> Result<(), String> {
 pub use super::session_ops::{
     clear_project_id, export_markdown, truncate_and_replace, truncate_at,
 };
+
+#[path = "session_store_tests.rs"]
+#[cfg(test)]
+mod tests;

@@ -5,9 +5,10 @@ use std::path::{Path, PathBuf};
 const MAX_READ_SIZE: u64 = 20 * 1024 * 1024;
 const MAX_LIST_ENTRIES: usize = 500;
 
-fn resolve_read_path(path: &str, working_dir: &Path) -> PathBuf {
+fn resolve_read_path(path: &str, working_dir: &Path) -> Result<PathBuf, String> {
     let p = Path::new(path);
-    if p.is_absolute() { p.to_path_buf() } else { working_dir.join(p) }
+    let raw = if p.is_absolute() { p.to_path_buf() } else { working_dir.join(p) };
+    security::validate_read_path(&raw, working_dir)
 }
 
 fn resolve_write_path(path: &str, working_dir: &Path) -> Result<PathBuf, String> {
@@ -17,7 +18,10 @@ fn resolve_write_path(path: &str, working_dir: &Path) -> Result<PathBuf, String>
 }
 
 pub async fn read_file(path: &str, working_dir: &Path) -> ToolResult {
-    let resolved = resolve_read_path(path, working_dir);
+    let resolved = match resolve_read_path(path, working_dir) {
+        Ok(p) => p,
+        Err(e) => return ToolResult { content: e, is_error: true },
+    };
     match tokio::fs::metadata(&resolved).await {
         Ok(meta) if meta.len() > MAX_READ_SIZE => {
             ToolResult { content: "Fichier trop volumineux (max 20MB)".into(), is_error: true }
@@ -78,7 +82,10 @@ pub async fn edit_file(
 }
 
 pub async fn list_dir(path: &str, working_dir: &Path) -> ToolResult {
-    let resolved = resolve_read_path(path, working_dir);
+    let resolved = match resolve_read_path(path, working_dir) {
+        Ok(p) => p,
+        Err(e) => return ToolResult { content: e, is_error: true },
+    };
     let mut entries = Vec::new();
     let mut stack = vec![(resolved.clone(), 0u32)];
 

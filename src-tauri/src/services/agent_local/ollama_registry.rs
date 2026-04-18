@@ -1,11 +1,10 @@
 use crate::services::agent_local::types_ollama::{PullProgress, RegistryModel};
+use crate::services::agent_local::OLLAMA_BASE_URL;
 use futures_util::StreamExt;
 use reqwest::Client;
 use tauri::ipc::Channel;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio_util::io::StreamReader;
-
-const LOCAL_URL: &str = "http://localhost:11434";
 const REGISTRY_URL: &str = "https://ollama.com";
 
 pub async fn search_models(query: &str) -> Result<Vec<RegistryModel>, String> {
@@ -65,7 +64,7 @@ pub async fn pull_model(
         .map_err(|e| e.to_string())?;
 
     let resp = client
-        .post(format!("{LOCAL_URL}/api/pull"))
+        .post(format!("{OLLAMA_BASE_URL}/api/pull"))
         .json(&serde_json::json!({ "model": name, "stream": true }))
         .send()
         .await
@@ -100,7 +99,7 @@ pub async fn pull_model(
 pub async fn delete_model(name: &str) -> Result<(), String> {
     let client = Client::new();
     let resp = client
-        .delete(format!("{LOCAL_URL}/api/delete"))
+        .delete(format!("{OLLAMA_BASE_URL}/api/delete"))
         .json(&serde_json::json!({ "model": name }))
         .send()
         .await

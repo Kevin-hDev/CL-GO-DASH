@@ -217,7 +217,7 @@ fn start_ollama_polling(handle: tauri::AppHandle) {
 
         loop {
             let running = client
-                .get("http://localhost:11434/api/tags")
+                .get(format!("{}/api/tags", services::agent_local::OLLAMA_BASE_URL))
                 .send()
                 .await
                 .is_ok();

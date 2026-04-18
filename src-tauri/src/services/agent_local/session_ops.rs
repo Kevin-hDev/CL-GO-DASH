@@ -1,6 +1,7 @@
-use super::session_store::{get, list, lock_session, save};
+use super::session_store::{get, list, lock_session, save, validate_session_id};
 
 pub async fn export_markdown(id: &str) -> Result<String, String> {
+    validate_session_id(id)?;
     let session = get(id).await?;
     let mut md = format!("# {}\n\n", session.name);
     for msg in &session.messages {
@@ -16,6 +17,7 @@ pub async fn export_markdown(id: &str) -> Result<String, String> {
 }
 
 pub async fn truncate_at(session_id: &str, message_id: &str) -> Result<(), String> {
+    validate_session_id(session_id)?;
     let lock = lock_session(session_id).await;
     let _guard = lock.lock().await;
     let mut session = get(session_id).await?;
@@ -32,6 +34,7 @@ pub async fn truncate_and_replace(
     message_id: &str,
     replacement: Option<crate::services::agent_local::types_session::AgentMessage>,
 ) -> Result<(), String> {
+    validate_session_id(session_id)?;
     let lock = lock_session(session_id).await;
     let _guard = lock.lock().await;
     let mut session = get(session_id).await?;

@@ -1,3 +1,4 @@
+use crate::services::agent_local::security;
 use crate::services::agent_local::types_tools::ToolResult;
 use globset::Glob;
 use ignore::WalkBuilder;
@@ -12,6 +13,10 @@ pub async fn glob_files(
 ) -> ToolResult {
     let pattern = pattern.to_string();
     let root = resolve_root(path, working_dir);
+
+    if let Err(e) = security::validate_read_path(&root, working_dir) {
+        return ToolResult { content: e, is_error: true };
+    }
 
     let result = tokio::task::spawn_blocking(move || glob_blocking(&pattern, &root)).await;
     match result {

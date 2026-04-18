@@ -1,12 +1,11 @@
 use crate::services::agent_local::types_ollama::{ChatMessage, ChatRequest, StreamEvent, StreamResult};
 use crate::services::agent_local::stream_events::AgentEventEmitter;
+use crate::services::agent_local::OLLAMA_BASE_URL;
 use futures_util::StreamExt;
 use std::time::Duration;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio_util::io::StreamReader;
 use tokio_util::sync::CancellationToken;
-
-const BASE_URL: &str = "http://localhost:11434";
 const COLLECT_TIMEOUT_SECS: u64 = 60;
 
 /// Appel Ollama non-interactif (sans streaming UI).
@@ -25,7 +24,7 @@ pub async fn collect_chat(model: &str, messages: Vec<ChatMessage>) -> Result<(St
         .map_err(|e| format!("Client HTTP : {e}"))?;
 
     let resp = client
-        .post(format!("{BASE_URL}/api/chat"))
+        .post(format!("{OLLAMA_BASE_URL}/api/chat"))
         .json(&body)
         .send()
         .await
@@ -69,7 +68,7 @@ async fn stream_chat_inner(
 ) -> Result<StreamResult, String> {
     let client = reqwest::Client::new();
     let resp = client
-        .post(format!("{BASE_URL}/api/chat"))
+        .post(format!("{OLLAMA_BASE_URL}/api/chat"))
         .json(request)
         .send()
         .await

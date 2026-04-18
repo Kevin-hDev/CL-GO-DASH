@@ -14,7 +14,7 @@ use crate::services::agent_local::types_ollama::{
 use std::path::PathBuf;
 use tokio_util::sync::CancellationToken;
 
-const MAX_TURNS: usize = 50;
+const MAX_TURNS: usize = 30;
 
 /// Les tool defs d'Ollama sont déjà au format OpenAI `{type: "function", function: {...}}`.
 /// Cette fonction est l'identité — gardée pour lisibilité et future divergence.

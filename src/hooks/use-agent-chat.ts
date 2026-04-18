@@ -114,7 +114,7 @@ export function useAgentChat(
     while (savingRef.current) await new Promise((r) => setTimeout(r, 50));
     if (projectId && state.messages.length === 0) {
       const session = await invoke<Record<string, unknown>>("get_agent_session", { id: sessionId });
-      if (!session.project_id) { session.project_id = projectId; await invoke("save_agent_session", { session }).catch(() => {}); }
+      if (!session.project_id) { session.project_id = projectId; await invoke("save_agent_session", { session }).catch((e: unknown) => console.error("Save session:", e)); }
     }
     const files = (sentFiles ?? []).map((f) => ({ name: f.name, path: f.path ?? "", mime_type: "", size: 0, thumbnail: f.preview }));
     const userMsg: AgentMessage = { id: crypto.randomUUID(), role: "user", content: text, files, timestamp: new Date().toISOString() };
