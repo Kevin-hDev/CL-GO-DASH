@@ -25,7 +25,7 @@ function useDefaultModel(): { model: string; provider: string } {
   return state;
 }
 
-export function AgentLocalTab(): { list: React.ReactNode; detail: React.ReactNode } {
+export function AgentLocalTab(): { list: React.ReactNode; detail: React.ReactNode; onCreate: () => void; onShowWelcome: () => void } {
   const { t } = useTranslation();
   const { sessions, refresh, create, rename, remove, updateModel } = useAgentSessions();
   const tabState = useAgentTabs();
@@ -154,5 +154,5 @@ export function AgentLocalTab(): { list: React.ReactNode; detail: React.ReactNod
     </div>
   );
 
-  return { list, detail };
+  return { list, detail, onCreate: handleCreate, onShowWelcome: tabState.deselectTab };
 }

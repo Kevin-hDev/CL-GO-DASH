@@ -1,4 +1,5 @@
-import { CaretRight, X } from "@/components/ui/icons";
+import sendIcon from "@/assets/bouton-send.png";
+import stopIcon from "@/assets/bouton-arret.png";
 import "./chat.css";
 
 type ButtonState = "hidden" | "send" | "stop";
@@ -10,15 +11,16 @@ interface SendStopButtonProps {
 }
 
 export function SendStopButton({ state, onSend, onStop }: SendStopButtonProps) {
-  if (state === "hidden") return null;
-
-  const isSend = state === "send";
+  const isStop = state === "stop";
+  const disabled = state === "hidden";
   return (
     <button
-      className={`send-btn ${isSend ? "send" : "stop"}`}
-      onClick={isSend ? onSend : onStop}
+      className={`send-btn ${isStop ? "stop" : "send"}`}
+      onClick={isStop ? onStop : onSend}
+      disabled={disabled}
+      style={{ opacity: disabled ? 0.35 : undefined }}
     >
-      {isSend ? <CaretRight size={16} weight="bold" /> : <X size={14} />}
+      <img src={isStop ? stopIcon : sendIcon} alt="" style={{ width: 33, height: 33 }} />
     </button>
   );
 }

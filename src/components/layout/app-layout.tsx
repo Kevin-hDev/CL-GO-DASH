@@ -1,6 +1,8 @@
-import { type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Sidebar, type TabId } from "./sidebar";
 import { DragRegion } from "./drag-region";
+import { WindowToolbar } from "./window-toolbar";
+import "./app-layout.css";
 
 interface AppLayoutProps {
   activeTab: TabId;
@@ -8,50 +10,35 @@ interface AppLayoutProps {
   listContent: ReactNode;
   detailContent: ReactNode;
   hideDetailDrag?: boolean;
+  onShowWelcome?: () => void;
 }
 
 export function AppLayout({
-  activeTab,
-  onTabChange,
-  listContent,
-  detailContent,
-  hideDetailDrag = false,
+  activeTab, onTabChange,
+  listContent, detailContent,
+  hideDetailDrag = false, onShowWelcome,
 }: AppLayoutProps) {
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
   return (
-    <div
-      className="flex h-screen"
-      style={{
-        padding: 6,
-        gap: 6,
-        background: "var(--void)",
-      }}
-    >
-      <div
-        className="flex overflow-hidden"
-        style={{
-          borderRadius: 10,
-          background: "var(--shell)",
-          border: "1px solid var(--edge)",
-        }}
-      >
+    <div className={`app-root ${sidebarOpen ? "" : "sidebar-hidden"}`}>
+      <WindowToolbar
+        sidebarOpen={sidebarOpen}
+        onToggleSidebar={() => setSidebarOpen((o) => !o)}
+        onBack={() => {}}
+        onForward={() => {}}
+        onNewSession={() => onShowWelcome?.()}
+        canGoBack={false}
+        canGoForward={false}
+      />
+      <div className={`app-sidebar-block ${sidebarOpen ? "" : "app-sidebar-hidden"}`}>
         <Sidebar activeTab={activeTab} onTabChange={onTabChange} />
-        <div
-          className="bg-[var(--shell)] flex flex-col overflow-hidden"
-          style={{ width: "var(--list-width)", minWidth: "var(--list-width)" }}
-        >
+        <div className="app-list-panel">
           <DragRegion />
           {listContent}
         </div>
       </div>
-      <div
-        className="flex-1 flex flex-col overflow-hidden"
-        style={{
-          borderRadius: 10,
-          background: "var(--void)",
-          border: "1px solid var(--edge)",
-        }}
-      >
-        {!hideDetailDrag && <DragRegion />}
+      <div className="app-detail-panel">
         {detailContent}
       </div>
     </div>

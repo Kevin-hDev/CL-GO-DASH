@@ -34,4 +34,5 @@ export {
   Hand,
   PencilSimple,
   ChatCircleDots,
+  ChatsCircle,
 } from "@phosphor-icons/react";

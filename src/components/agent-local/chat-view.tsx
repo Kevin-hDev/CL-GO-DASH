@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { open as openFileDialog } from "@tauri-apps/plugin-dialog";
 import { MessageList } from "./message-list";
 import { ChatInput } from "./chat-input";
@@ -7,7 +7,6 @@ import { FileDropZone } from "./file-drop-zone";
 import { FilePreview } from "./file-preview";
 import { SwitchModelDialog } from "./switch-model-dialog";
 import { useAgentChat } from "@/hooks/use-agent-chat";
-import { useOllamaStatus } from "@/hooks/use-ollama-status";
 import { useContextProgress } from "@/hooks/use-context-progress";
 import { useFileDrop, type DroppedFile } from "@/hooks/use-file-drop";
 import { usePermissionMode } from "@/hooks/use-permission-mode";
@@ -53,7 +52,6 @@ export function ChatView({
   const chat = useAgentChat(sessionId, model, provider, (id, toolName, args) =>
     permissions.enqueue({ id, toolName, arguments: args }),
   );
-  const ollamaRunning = useOllamaStatus();
   const fileDrop = useFileDrop();
   const context = useContextProgress(model, chat.tokenCount, provider);
   const [preview, setPreview] = useState<DroppedFile | null>(null);
@@ -65,16 +63,41 @@ export function ChatView({
   const scrollRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
+  const following = useRef(true);
 
   const handleScroll = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
-    setIsAtBottom(el.scrollHeight - el.scrollTop - el.clientHeight < 80);
+    const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+    setIsAtBottom(atBottom);
+    if (atBottom) following.current = true;
+  }, []);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      if (e.deltaY < 0) following.current = false;
+    };
+    el.addEventListener("wheel", onWheel, { passive: true });
+    return () => el.removeEventListener("wheel", onWheel);
   }, []);
 
   const scrollToBottom = useCallback(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    const el = scrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+    following.current = true;
   }, []);
+
+  useEffect(() => {
+    following.current = true;
+  }, [chat.messages.length]);
+
+  useEffect(() => {
+    if (!following.current) return;
+    const el = scrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [chat.currentContent]);
 
   const handleModelSelect = useCallback(
     (newModel: string, newProvider: string) => {
@@ -112,6 +135,7 @@ export function ChatView({
             currentThinking={chat.currentThinking}
             currentTools={chat.currentTools}
             isStreaming={chat.isStreaming}
+            tps={chat.tps}
             onReload={chat.reload}
             onEdit={chat.edit}
             onFileClick={(f) => setPreview({
@@ -142,13 +166,11 @@ export function ChatView({
             <ChatInput
               modelName={model}
               providerName={provider}
-              ollamaRunning={ollamaRunning}
               isStreaming={chat.isStreaming}
               thinkingEnabled={thinking}
               files={fileDrop.files}
               contextUsed={context.used}
               contextMax={context.max}
-              tps={chat.tps}
               permissionMode={permMode.mode}
               onPermissionModeChange={permMode.change}
               onRemoveFile={fileDrop.removeFile}

@@ -15,6 +15,7 @@ interface MessageListProps {
   currentThinking: string;
   currentTools: ToolActivity[];
   isStreaming: boolean;
+  tps: number;
   onReload?: (messageId: string) => void;
   onEdit?: (messageId: string, newContent: string) => void;
   onFileClick?: (file: { name: string; path?: string; thumbnail?: string }) => void;
@@ -22,11 +23,13 @@ interface MessageListProps {
 
 export function MessageList({
   messages, completedSegments, currentContent, currentThinking,
-  currentTools, isStreaming, onReload, onEdit, onFileClick,
+  currentTools, isStreaming, tps, onReload, onEdit, onFileClick,
 }: MessageListProps) {
+  const lastAssistantIdx = findLastIndex(messages, (m) => m.role === "assistant");
+
   return (
     <>
-      {messages.map((msg) => {
+      {messages.map((msg, idx) => {
         if (msg.role === "user") {
           return (
             <UserMessage
@@ -38,12 +41,17 @@ export function MessageList({
           );
         }
         if (msg.role === "assistant") {
-          return <SegmentedAssistantMessage key={msg.id} msg={msg} onReload={onReload} />;
+          const isLast = idx === lastAssistantIdx && !isStreaming;
+          return (
+            <SegmentedAssistantMessage
+              key={msg.id} msg={msg} onReload={onReload}
+              tps={isLast ? tps : 0}
+            />
+          );
         }
         return null;
       })}
 
-      {/* Segments terminés (tours précédents) — ordre : thinking → content → tools */}
       {isStreaming && completedSegments.map((seg, i) => (
         <div key={`seg-${i}`}>
           {seg.thinking && <ThinkingSection content={seg.thinking} />}
@@ -52,7 +60,6 @@ export function MessageList({
         </div>
       ))}
 
-      {/* Segment en cours — même ordre */}
       {isStreaming && !currentContent && currentTools.length < 1 && completedSegments.length < 1 && (
         <LoadingIndicator />
       )}
@@ -65,56 +72,44 @@ export function MessageList({
 }
 
 function SegmentedAssistantMessage({
-  msg, onReload,
-}: { msg: AgentMessage; onReload?: (id: string) => void }) {
-  const tokensFooter = msg.tokens && msg.tokens > 0 ? (
-    <div
-      style={{
-        fontSize: "11px",
-        color: "var(--ink-faint)",
-        fontFamily: "var(--font-mono, monospace)",
-        padding: "0 var(--space-md)",
-        marginTop: -4,
-        marginBottom: "var(--space-sm)",
-        opacity: 0.7,
-      }}
-      title="Tokens consommés par cet échange (input + output)"
-    >
-      {formatTokens(msg.tokens)} tokens
-    </div>
-  ) : null;
-
+  msg, onReload, tps,
+}: { msg: AgentMessage; onReload?: (id: string) => void; tps: number }) {
   if (msg.segments && msg.segments.length > 0) {
+    const lastSegIdx = msg.segments.length - 1;
     return (
       <>
         {msg.segments.map((seg, i) => (
           <div key={`${msg.id}-seg-${i}`}>
             {seg.thinking && <ThinkingSection content={seg.thinking} />}
             {seg.content && (
-              <AssistantMessage content={seg.content} />
+              <AssistantMessage
+                content={seg.content}
+                tokens={i === lastSegIdx ? msg.tokens : undefined}
+                tps={i === lastSegIdx ? tps : undefined}
+              />
             )}
             {seg.tools.length > 0 && <SavedToolBubble tools={seg.tools} />}
           </div>
         ))}
-        {tokensFooter}
       </>
     );
   }
   return (
-    <>
-      <AssistantMessage
-        content={msg.content} thinking={msg.thinking}
-        toolActivities={msg.tool_activities}
-        onReload={onReload ? () => onReload(msg.id) : undefined}
-      />
-      {tokensFooter}
-    </>
+    <AssistantMessage
+      content={msg.content} thinking={msg.thinking}
+      toolActivities={msg.tool_activities}
+      onReload={onReload ? () => onReload(msg.id) : undefined}
+      tokens={msg.tokens}
+      tps={tps}
+    />
   );
 }
 
-function formatTokens(n: number): string {
-  if (n >= 1000) return `${(n / 1000).toFixed(1)}K`;
-  return String(n);
+function findLastIndex<T>(arr: T[], pred: (item: T) => boolean): number {
+  for (let i = arr.length - 1; i >= 0; i--) {
+    if (pred(arr[i])) return i;
+  }
+  return -1;
 }
 
 function LoadingIndicator() {

@@ -1,0 +1,44 @@
+.window-toolbar {
+  position: fixed;
+  top:8px;
+  left: 83px;
+  display: flex;
+  align-items: center;
+  gap: 0px;
+  z-index: 100;
+  -webkit-app-region: no-drag;
+}
+
+.toolbar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: none;
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: all var(--ease-smooth);
+  padding: 0;
+}
+
+.toolbar-btn:hover {
+  color: var(--ink);
+  background: var(--surface-hover);
+}
+
+.toolbar-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.toolbar-btn:disabled:hover {
+  background: none;
+  color: var(--ink-muted);
+}
+
+.toolbar-btn:first-child {
+  margin-right: 2px;
+}

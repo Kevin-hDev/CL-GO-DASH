@@ -41,7 +41,11 @@ export function useAgentTabs() {
     await persist(next, activeIndex);
   }, [tabs, activeIndex, persist]);
 
+  const deselectTab = useCallback(async () => {
+    setActiveIndex(-1);
+  }, []);
+
   const activeSessionId = tabs[activeIndex]?.session_id ?? null;
 
-  return { tabs, activeIndex, activeSessionId, addTab, closeTab, selectTab, renameTab };
+  return { tabs, activeIndex, activeSessionId, addTab, closeTab, selectTab, renameTab, deselectTab };
 }

@@ -34,7 +34,6 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
     <nav
       className={cn(
         "group/sb flex flex-col overflow-hidden relative",
-        "bg-[var(--shell)]",
         "z-10",
       )}
       style={{

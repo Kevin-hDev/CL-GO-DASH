@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import { open as openFileDialog } from "@tauri-apps/plugin-dialog";
 import { ChatInput } from "./chat-input";
 import { ProjectSelector } from "./project-selector";
-import { useOllamaStatus } from "@/hooks/use-ollama-status";
 import { usePermissionMode } from "@/hooks/use-permission-mode";
 import type { Project } from "@/types/agent";
 import type { DroppedFile } from "@/hooks/use-file-drop";
@@ -22,7 +21,6 @@ export function WelcomeView({
   model, provider, projects, onAddProject, onSend, onModelChange,
 }: WelcomeViewProps) {
   const { t } = useTranslation();
-  const ollamaRunning = useOllamaStatus();
   const permMode = usePermissionMode();
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [leaving, setLeaving] = useState(false);
@@ -53,12 +51,10 @@ export function WelcomeView({
           <ChatInput
             modelName={model}
             providerName={provider}
-            ollamaRunning={ollamaRunning}
             isStreaming={false}
             thinkingEnabled={false}
             contextUsed={0}
             contextMax={0}
-            tps={0}
             permissionMode={permMode.mode}
             onPermissionModeChange={permMode.change}
             onSend={handleSend}

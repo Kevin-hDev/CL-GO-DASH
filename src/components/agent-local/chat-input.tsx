@@ -1,15 +1,13 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Plus } from "@/components/ui/icons";
 import { useAutoResize } from "@/hooks/use-auto-resize";
 import { useSlashCommands } from "@/hooks/use-slash-commands";
 import { SendStopButton } from "./send-stop-button";
-import { OllamaIndicator } from "./ollama-indicator";
 import { SlashAutocomplete } from "./slash-autocomplete";
 import { ModelSelector } from "./model-selector";
 import { FileThumbnail } from "./file-thumbnail";
 import { ContextProgress } from "./context-progress";
-import { TpsDisplay } from "./tps-display";
 import { PermissionModeSelector } from "./permission-mode-selector";
 import type { DroppedFile } from "@/hooks/use-file-drop";
 import type { PermissionMode } from "@/hooks/use-permission-mode";
@@ -18,13 +16,11 @@ import "./chat.css";
 interface ChatInputProps {
   modelName: string;
   providerName: string;
-  ollamaRunning: boolean;
   isStreaming: boolean;
   thinkingEnabled: boolean;
   files?: DroppedFile[];
   contextUsed: number;
   contextMax: number;
-  tps: number;
   permissionMode: PermissionMode;
   onPermissionModeChange: (mode: PermissionMode) => void;
   onSend: (text: string, files?: DroppedFile[]) => void;
@@ -39,8 +35,8 @@ interface ChatInputProps {
 }
 
 export function ChatInput({
-  modelName, providerName, ollamaRunning, isStreaming, thinkingEnabled, files,
-  contextUsed, contextMax, tps,
+  modelName, providerName, isStreaming, thinkingEnabled, files,
+  contextUsed, contextMax,
   permissionMode, onPermissionModeChange,
   onSend, onStop, onFileImport, onModelChange, onToggleThinking, onSkillLoaded,
   onRemoveFile, onPreviewFile, onClearFiles,
@@ -78,6 +74,15 @@ export function ChatInput({
       else onStop();
     }
   }, [handleSend, onStop, slash]);
+
+  useEffect(() => {
+    if (!isStreaming) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key.startsWith("Esc")) onStop();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [isStreaming, onStop]);
 
   const buttonState = isStreaming ? "stop" as const
     : hasContent ? "send" as const
@@ -122,9 +127,6 @@ export function ChatInput({
         </button>
         <ContextProgress used={contextUsed} max={contextMax} />
         <PermissionModeSelector mode={permissionMode} onChange={onPermissionModeChange} />
-        <div className="chat-input-spacer" />
-        <TpsDisplay tps={tps} isStreaming={isStreaming} />
-        <OllamaIndicator running={ollamaRunning} />
         <ModelSelector
           selectedModel={modelName}
           selectedProvider={providerName}
@@ -132,6 +134,7 @@ export function ChatInput({
           thinkingEnabled={thinkingEnabled}
           onToggleThinking={onToggleThinking}
         />
+        <div className="chat-input-spacer" />
         <SendStopButton state={buttonState} onSend={handleSend} onStop={onStop} />
       </div>
     </div>

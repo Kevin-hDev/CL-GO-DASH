@@ -1,49 +1,47 @@
-.context-progress {
+.context-ring {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 120px;
-  height: 22px;
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 6px;
-  overflow: hidden;
   flex-shrink: 0;
+  cursor: default;
 }
 
-.context-progress-fill {
+.context-ring::after {
+  content: attr(data-tooltip);
   position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  min-width: 6px;
-  clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 50%, calc(100% - 6px) 100%, 0 100%);
-  transition: width 350ms cubic-bezier(0.4, 0, 0.2, 1),
-              background 250ms ease;
-}
-
-.context-progress[data-color="green"] .context-progress-fill {
-  background: linear-gradient(90deg, #166534, #22c55e);
-}
-.context-progress[data-color="yellow"] .context-progress-fill {
-  background: linear-gradient(90deg, #a16207, #eab308);
-}
-.context-progress[data-color="orange"] .context-progress-fill {
-  background: linear-gradient(90deg, #9a3412, #f97316);
-}
-.context-progress[data-color="red"] .context-progress-fill {
-  background: linear-gradient(90deg, #991b1b, #ef4444);
-}
-
-.context-progress-text {
-  position: relative;
-  z-index: 1;
-  font-size: 10px;
-  font-weight: 600;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 11px;
   font-family: var(--font-mono);
   color: #fff;
-  letter-spacing: 0.02em;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  padding: 4px 8px;
   pointer-events: none;
+  opacity: 0;
+  transition: opacity 150ms ease;
+  transition-delay: 0ms;
+}
+
+.context-ring:hover::after {
+  opacity: 1;
+  transition-delay: 500ms;
+}
+
+.context-ring-track {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.1);
+}
+
+.context-ring-fill {
+  fill: none;
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: center;
+  transition: stroke-dashoffset 350ms cubic-bezier(0.4, 0, 0.2, 1),
+              stroke 250ms ease;
 }

@@ -114,6 +114,7 @@ export function useAgentChat(
           content: built.content, thinking: built.thinking,
           tool_activities: built.toolRecords, segments: built.segments,
           files: [], timestamp: new Date().toISOString(),
+          tokens,
         };
         if (!savingRef.current && sessionId) {
           savingRef.current = true;

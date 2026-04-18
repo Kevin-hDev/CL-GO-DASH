@@ -1,0 +1,43 @@
+.app-root {
+  display: flex;
+  height: 100vh;
+  padding: 6px;
+  gap: 6px;
+  background: transparent;
+}
+
+.app-sidebar-block {
+  display: flex;
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--shell-translucent);
+  border: 1px solid var(--edge);
+  flex-shrink: 0;
+  width: auto;
+  transition: margin-left 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.app-sidebar-block.app-sidebar-hidden {
+  margin-left: calc(-1 * (var(--sidebar-collapsed) + var(--list-width) + 20px));
+  opacity: 0;
+  pointer-events: none;
+}
+
+.app-list-panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  width: var(--list-width);
+  min-width: var(--list-width);
+}
+
+.app-detail-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--void);
+  border: 1px solid var(--edge);
+}

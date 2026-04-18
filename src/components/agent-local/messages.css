@@ -3,9 +3,7 @@
   display: flex;
   justify-content: flex-end;
   margin-bottom: var(--space-md);
-  gap: var(--space-xs);
-  align-items: flex-start;
-  padding-right: var(--space-md);
+  padding: var(--space-sm) var(--space-md) var(--space-sm) var(--space-sm);
 }
 
 .msg-user-wrap {
@@ -31,6 +29,7 @@
 /* Assistant messages */
 .msg-assistant {
   margin-bottom: var(--space-md);
+  padding: var(--space-sm);
 }
 
 .msg-assistant-content {
@@ -46,12 +45,17 @@
   display: flex;
   gap: 2px;
   opacity: 0;
-  transition: opacity var(--ease-smooth);
+  transition: opacity 500ms ease-out;
+  position: relative;
+  top: 4px;
+  height: 0;
+  overflow: visible;
 }
 
 .msg-user:hover .msg-actions,
 .msg-assistant:hover .msg-actions {
   opacity: 1;
+  transition: opacity 150ms ease-in;
 }
 
 .msg-action-btn {
@@ -122,4 +126,21 @@
   font-family: var(--font-mono);
   background: var(--void);
   margin: 0;
+}
+
+.msg-stats-inline {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 11px;
+  font-family: var(--font-mono, monospace);
+  color: #f97316;
+  margin-left: 4px;
+  position: relative;
+  top: 10px;
+}
+
+[data-theme="dark"] .msg-user-bubble {
+  border-color: transparent;
+  background: #1e1e22;
 }

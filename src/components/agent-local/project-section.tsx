@@ -2,8 +2,9 @@ import { useState, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import {
   FolderSimple, FolderOpen, DotsThreeVertical, PencilSimple,
-  X, ChatCircle, Plus, CaretRight,
+  X, ChatsCircle, CaretRight,
 } from "@/components/ui/icons";
+import { ComposeIcon } from "@/components/ui/compose-icon";
 import { ContextMenu, type ContextMenuItem } from "@/components/ui/context-menu";
 import { useKeyboard } from "@/hooks/use-keyboard";
 import type { AgentSessionMeta, Project } from "@/types/agent";
@@ -103,7 +104,7 @@ export function ProjectSection({
                 <DotsThreeVertical size={14} />
               </button>
               <button className="conv-project-action-btn" onClick={(e) => { e.stopPropagation(); onNewSession(project.id); }}>
-                <Plus size={12} weight="bold" />
+                <ComposeIcon size={12} />
               </button>
             </div>
           </>
@@ -133,7 +134,7 @@ export function ProjectSection({
               />
             ) : (
               <>
-                <ChatCircle size={14} weight={active ? "fill" : "regular"} className="conv-icon" />
+                <ChatsCircle size={14} weight={active ? "fill" : "regular"} className="conv-icon" />
                 <span className="conv-name">{displaySessionName(s.name, t)}</span>
               </>
             )}

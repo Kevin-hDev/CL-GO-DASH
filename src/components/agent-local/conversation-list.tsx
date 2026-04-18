@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Plus, Pencil, Trash, ChatCircle, CaretRight } from "@/components/ui/icons";
+import { Pencil, Trash, ChatsCircle, CaretRight } from "@/components/ui/icons";
+import { ComposeIcon } from "@/components/ui/compose-icon";
 import { ContextMenu, type ContextMenuItem } from "@/components/ui/context-menu";
 import { ProjectSection } from "./project-section";
 import { useKeyboard } from "@/hooks/use-keyboard";
@@ -112,7 +113,7 @@ export function ConversationList({
     <>
       <div className="conv-header">
         <button className="conv-new-btn" onClick={onCreate}>
-          <Plus size={14} weight="bold" />
+          <ComposeIcon size={14} />
           <span>{t("agentLocal.newSession")}</span>
         </button>
       </div>
@@ -187,7 +188,7 @@ export function ConversationList({
                     />
                   ) : (
                     <>
-                      <ChatCircle size={14} weight={active ? "fill" : "regular"} className="conv-icon" />
+                      <ChatsCircle size={14} weight={active ? "fill" : "regular"} className="conv-icon" />
                       <span className="conv-name">{displaySessionName(s.name, t)}</span>
                     </>
                   )}

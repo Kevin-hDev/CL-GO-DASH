@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { AppLayout } from "@/components/layout/app-layout";
 import { useTheme } from "@/hooks/use-theme";
 import { HeartbeatTab } from "@/components/heartbeat/heartbeat-tab";
@@ -31,13 +31,18 @@ export default function App() {
 
   const tab = tabs[activeTab];
 
+  const handleShowWelcome = useCallback(() => {
+    setActiveTab("agent-local");
+    agentTab.onShowWelcome?.();
+  }, [agentTab]);
+
   return (
     <AppLayout
       activeTab={activeTab}
       onTabChange={setActiveTab}
       listContent={tab.list}
       detailContent={tab.detail}
-      hideDetailDrag={activeTab === "agent-local"}
+      onShowWelcome={handleShowWelcome}
     />
   );
 }

@@ -37,12 +37,6 @@ export function UserMessage({
 
   return (
     <div className="msg-user">
-      <MessageActions
-        role="user"
-        content={content}
-        onReload={onReload}
-        onEdit={onEdit ? () => setEditing(true) : undefined}
-      />
       <div className="msg-user-wrap">
         {hasText && <div className="msg-user-bubble">{content}</div>}
         {hasFiles && (
@@ -55,6 +49,12 @@ export function UserMessage({
             ))}
           </div>
         )}
+        <MessageActions
+          role="user"
+          content={content}
+          onReload={onReload}
+          onEdit={onEdit ? () => setEditing(true) : undefined}
+        />
       </div>
     </div>
   );

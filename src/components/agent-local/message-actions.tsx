@@ -7,9 +7,10 @@ interface MessageActionsProps {
   content: string;
   onReload?: () => void;
   onEdit?: () => void;
+  children?: React.ReactNode;
 }
 
-export function MessageActions({ role, content, onReload, onEdit }: MessageActionsProps) {
+export function MessageActions({ role, content, onReload, onEdit, children }: MessageActionsProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = useCallback(async () => {
@@ -33,6 +34,7 @@ export function MessageActions({ role, content, onReload, onEdit }: MessageActio
       <button className="msg-action-btn" onClick={handleCopy}>
         {copied ? <Check size={14} /> : <Copy size={14} />}
       </button>
+      {children}
     </div>
   );
 }

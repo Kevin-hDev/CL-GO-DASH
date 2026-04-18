@@ -33,6 +33,7 @@
   /* Legacy dashboard tokens */
   --void: #f5f3f0;
   --shell: #ede9e4;
+  --shell-translucent: rgba(237, 233, 228, 0.92);
   --surface: #ffffff;
   --surface-hover: #faf8f5;
   --edge: #e5e2dd;
