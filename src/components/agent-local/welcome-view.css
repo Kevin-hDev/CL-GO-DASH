@@ -16,12 +16,21 @@
   max-width: 720px;
 }
 
+@font-face {
+  font-family: "Pacifico";
+  src: url("../../assets/fonts/Pacifico-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 .welcome-title {
-  font-size: var(--text-xl);
-  font-weight: 500;
+  font-family: "Pacifico", cursive;
+  font-size: 2rem;
+  font-weight: 400;
   color: var(--ink-muted);
   margin: 0;
-  overflow: hidden;
+  padding-bottom: 8px;
   white-space: nowrap;
 }
 

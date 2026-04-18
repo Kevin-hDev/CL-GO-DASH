@@ -2,8 +2,10 @@ import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import { UserCircle, ChatsCircle, Gear } from "@/components/ui/icons";
 import type { Icon } from "@phosphor-icons/react";
+import { ThemedIcon } from "@/components/ui/themed-icon";
 import logoSrc from "@/assets/logo.png";
-import heartbeatSrc from "@/assets/heartbeat.png";
+import heartbeatDark from "@/assets/heartbeat.png";
+import heartbeatLight from "@/assets/heartbeat-light.png";
 import { DragRegion } from "./drag-region";
 
 export type TabId = "heartbeat" | "personality" | "agent-local" | "settings";
@@ -11,13 +13,15 @@ export type TabId = "heartbeat" | "personality" | "agent-local" | "settings";
 interface NavItem {
   id: TabId;
   icon?: Icon;
-  imgSrc?: string;
+  imgDark?: string;
+  imgLight?: string;
+  iconSize?: string;
   i18nKey: string;
 }
 
 const NAV_ITEMS: NavItem[] = [
   { id: "agent-local", icon: ChatsCircle, i18nKey: "nav.agentLocal" },
-  { id: "heartbeat", imgSrc: heartbeatSrc, i18nKey: "nav.heartbeat" },
+  { id: "heartbeat", imgDark: heartbeatDark, imgLight: heartbeatLight, iconSize: "1.44rem", i18nKey: "nav.heartbeat" },
   { id: "personality", icon: UserCircle, i18nKey: "nav.personality" },
 ];
 
@@ -108,13 +112,12 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
                   activeTab === item.id && "text-[var(--ink)]",
                 )}
               />
-            ) : item.imgSrc ? (
-              <img
-                src={item.imgSrc}
-                alt=""
+            ) : item.imgDark && item.imgLight ? (
+              <ThemedIcon
+                darkSrc={item.imgDark}
+                lightSrc={item.imgLight}
+                size={item.iconSize ?? ICON_SIZE}
                 style={{
-                  width: ICON_SIZE,
-                  height: ICON_SIZE,
                   flexShrink: 0,
                   opacity: activeTab === item.id ? 1 : 0.5,
                   transition: "opacity 200ms ease-out",

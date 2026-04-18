@@ -5,10 +5,10 @@ export type FontSize = (typeof FONT_SIZES)[number];
 
 export const FONT_FAMILIES = [
   { id: "system", label: "System Default", value: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' },
-  { id: "sf-pro", label: "SF Pro", value: '"SF Pro Display", "SF Pro", -apple-system, sans-serif' },
+  { id: "jetbrains", label: "JetBrains Mono", value: '"JetBrains Mono", "Fira Code", monospace' },
   { id: "helvetica", label: "Helvetica Neue", value: '"Helvetica Neue", Helvetica, Arial, sans-serif' },
   { id: "menlo", label: "Menlo", value: 'Menlo, "SF Mono", Consolas, monospace' },
-  { id: "georgia", label: "Georgia", value: 'Georgia, "Times New Roman", serif' },
+  { id: "ui-mono", label: "UI Monospace", value: 'ui-monospace, "SF Mono", "Cascadia Code", monospace' },
 ] as const;
 
 export type FontFamilyId = (typeof FONT_FAMILIES)[number]["id"];

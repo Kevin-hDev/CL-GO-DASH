@@ -34,6 +34,12 @@ body {
 }
 
 
+/* Themed icon toggle */
+[data-theme="dark"] .themed-icon-light { display: none; }
+[data-theme="dark"] .themed-icon-dark { display: inline; }
+[data-theme="light"] .themed-icon-dark { display: none; }
+[data-theme="light"] .themed-icon-light { display: inline; }
+
 @keyframes pulse-live {
   0%,
   100% {

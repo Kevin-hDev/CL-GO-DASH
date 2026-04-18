@@ -2,11 +2,16 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useOllamaModels } from "@/hooks/use-ollama-models";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ThemedIcon } from "@/components/ui/themed-icon";
 import { ModelfileList } from "./modelfile-list";
 import { ModelfileViewer } from "./modelfile-viewer";
 import { ModelSearch } from "./model-search";
 import { ModelVariantsList } from "./model-variants-list";
 import { ModelProfile } from "./model-profile";
+import modelfileDark from "@/assets/modelfile.png";
+import modelfileLight from "@/assets/modelfile-light.png";
+import modelsDark from "@/assets/models.png";
+import modelsLight from "@/assets/models-light.png";
 import type { RegistryModel } from "@/types/agent";
 import "./ollama.css";
 
@@ -38,7 +43,11 @@ export function OllamaTab(): { list: React.ReactNode; detail: React.ReactNode } 
             className={`ollama-subtab ${subTab === tab ? "active" : ""}`}
             onClick={() => setSubTab(tab)}
           >
-            {tab === "modelfile" ? "Modelfile" : "Models"}
+            {tab === "modelfile" ? (
+              <><ThemedIcon darkSrc={modelfileDark} lightSrc={modelfileLight} size="1.6rem" /> Modelfile</>
+            ) : (
+              <><ThemedIcon darkSrc={modelsDark} lightSrc={modelsLight} size="1.6rem" /> Models</>
+            )}
           </button>
         ))}
       </div>
