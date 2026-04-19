@@ -67,3 +67,40 @@ pub fn prepend_working_dir_context(
         });
     }
 }
+
+pub fn prepend_agent_md_context(messages: &mut Vec<ChatMessage>, agent_md: Option<String>) {
+    let content = match agent_md {
+        Some(c) if !c.is_empty() => c,
+        _ => return,
+    };
+
+    let has_system = messages.first().is_some_and(|m| m.role == "system");
+    if has_system {
+        if let Some(first) = messages.first_mut() {
+            first.content = format!("{}\n\n{}", content, first.content);
+        }
+    } else {
+        messages.insert(0, ChatMessage {
+            role: "system".to_string(),
+            content,
+            images: None,
+            tool_calls: None,
+            tool_name: None,
+            tool_call_id: None,
+        });
+    }
+}
+
+pub fn prepare_messages(
+    messages: &mut Vec<ChatMessage>,
+    working_dir: &std::path::Path,
+    has_tools: bool,
+    agent_md: Option<String>,
+) {
+    if has_tools {
+        prepend_tool_system_prompt(messages, working_dir);
+        prepend_agent_md_context(messages, agent_md);
+    } else {
+        prepend_working_dir_context(messages, working_dir);
+    }
+}

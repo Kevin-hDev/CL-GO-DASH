@@ -1,7 +1,6 @@
 use crate::services::agent_local::agent_loop;
-use crate::services::agent_local::chat_prompts::{
-    prepend_tool_system_prompt, prepend_working_dir_context,
-};
+use crate::services::agent_local::agent_md;
+use crate::services::agent_local::chat_prompts::prepare_messages;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::tool_dispatcher;
 use crate::services::agent_local::types_ollama::{ChatMessage, StreamEvent};
@@ -88,7 +87,8 @@ async fn run_stream_task(
 
         let working_dir = resolve_dir(&working_dir);
         let mut msgs = messages;
-        prepend_working_dir_context(&mut msgs, &working_dir);
+        let agent_md_content = agent_md::load_agent_md(Some(working_dir.as_path())).await;
+        prepare_messages(&mut msgs, &working_dir, true, agent_md_content);
 
         agent_loop::run_agent_loop(
             &on_event,
@@ -114,11 +114,12 @@ async fn run_stream_task(
         let openai_tools = llm::agent_loop::convert_tools_to_openai(&final_tools);
         let working_dir = resolve_dir(&working_dir);
         let mut msgs = messages;
-        if !openai_tools.is_empty() {
-            prepend_tool_system_prompt(&mut msgs, &working_dir);
+        let agent_md_content = if model_supports {
+            agent_md::load_agent_md(Some(working_dir.as_path())).await
         } else {
-            prepend_working_dir_context(&mut msgs, &working_dir);
-        }
+            None
+        };
+        prepare_messages(&mut msgs, &working_dir, model_supports, agent_md_content);
         llm::agent_loop::run_agent_loop(
             &on_event,
             &provider,

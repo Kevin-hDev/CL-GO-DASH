@@ -28,6 +28,8 @@ pub mod tool_web_fetch;
 pub mod tool_web_fetch_ip;
 #[cfg(test)]
 pub mod tool_web_fetch_tests;
+#[cfg(test)]
+pub mod chat_prompts_tests;
 pub mod tool_web_search;
 pub mod types_ollama;
 pub mod types_session;
