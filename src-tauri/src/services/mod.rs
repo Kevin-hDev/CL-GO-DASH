@@ -8,3 +8,4 @@ pub mod llm;
 pub mod ollama_lifecycle;
 pub mod scheduler;
 pub mod search;
+pub mod terminal;
