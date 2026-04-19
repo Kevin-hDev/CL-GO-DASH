@@ -56,6 +56,8 @@ pub struct AgentMessage {
     pub timestamp: DateTime<Utc>,
     #[serde(default)]
     pub tokens: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub skill_name: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

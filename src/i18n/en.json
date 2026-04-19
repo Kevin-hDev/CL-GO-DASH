@@ -260,5 +260,11 @@
     "emptyGlobal": "No global AGENT.md found",
     "emptyProject": "No project AGENT.md found",
     "toolCapableOnly": "Only injected for tool-capable models"
+  },
+  "skills": {
+    "sourceUser": "User",
+    "sourceProject": "Project",
+    "noResults": "No skills found",
+    "badge": "Skill"
   }
 }

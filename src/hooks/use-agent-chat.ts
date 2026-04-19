@@ -14,7 +14,6 @@ export function useAgentChat(
   onPermissionRequest?: (id: string, toolName: string, args: Record<string, unknown>) => void,
 ) {
   const [state, setState] = useState<ChatState>(EMPTY_CHAT_STATE);
-  const skillRef = useRef<string | null>(null);
   const savingRef = useRef(false);
   const sessionRef = useRef(sessionId);
   const deliveredPermissionsRef = useRef<Set<string>>(new Set());
@@ -86,47 +85,55 @@ export function useAgentChat(
     };
   }, [sessionId, subscribeToStream, getStreamSnapshot, deliverPermission]);
 
-  const buildMessages = useCallback((msgs: AgentMessage[]): AgentMessage[] => {
-    if (!skillRef.current) return msgs;
-    const skillMsg: AgentMessage = {
-      id: "system-skill",
-      role: "user",
-      content: `The user has loaded the following skill. Follow its instructions exactly:\n\n${skillRef.current}`,
-      files: [],
-      timestamp: new Date().toISOString(),
-    };
-    return [skillMsg, ...msgs];
-  }, []);
-
-  const doStream = useCallback(async (msgs: AgentMessage[], streamSession: string, workingDir?: string) => {
+  const doStream = useCallback(async (
+    llmMsgs: AgentMessage[],
+    displayMsgs: AgentMessage[],
+    streamSession: string,
+    workingDir?: string,
+  ) => {
     await startStream(
       streamSession,
       model,
       provider,
-      buildMessages(msgs),
+      llmMsgs,
       [],
       true,
-      { displayMessages: msgs, baseTokenCount: state.tokenCount },
+      { displayMessages: displayMsgs, baseTokenCount: state.tokenCount },
       workingDir,
     );
-  }, [model, provider, startStream, buildMessages, state.tokenCount]);
+  }, [model, provider, startStream, state.tokenCount]);
 
   const sendMessage = useCallback(async (
     text: string,
     sentFiles?: { name: string; path?: string; preview?: string }[],
     workingDir?: string,
     projectId?: string,
+    skillContent?: string,
+    skillName?: string,
   ) => {
-    if (!sessionId || (!text.trim() && (!sentFiles || sentFiles.length < 1))) return;
+    const hasText = !!text.trim();
+    const hasFiles = !!sentFiles && sentFiles.length > 0;
+    const hasSkill = !!skillContent;
+    if (!sessionId || (!hasText && !hasFiles && !hasSkill)) return;
     while (savingRef.current) await new Promise((r) => setTimeout(r, 50));
     if (projectId && state.messages.length === 0) {
       const session = await invoke<Record<string, unknown>>("get_agent_session", { id: sessionId });
       if (!session.project_id) { session.project_id = projectId; await invoke("save_agent_session", { session }).catch((e: unknown) => console.error("Save session:", e)); }
     }
     const files = (sentFiles ?? []).map((f) => ({ name: f.name, path: f.path ?? "", mime_type: "", size: 0, thumbnail: f.preview }));
-    const userMsg: AgentMessage = { id: crypto.randomUUID(), role: "user", content: text, files, timestamp: new Date().toISOString() };
+    const userMsg: AgentMessage = {
+      id: crypto.randomUUID(), role: "user", content: text || "",
+      files, timestamp: new Date().toISOString(),
+      skill_name: skillName,
+    };
+    const displayMsgs = [...state.messages, userMsg];
+    const llmMsgs = [...state.messages];
+    if (skillContent) {
+      llmMsgs.push({ id: "skill-" + crypto.randomUUID(), role: "user", content: `The user has loaded the following skill. Follow its instructions exactly:\n\n${skillContent}`, files: [], timestamp: new Date().toISOString() });
+    }
+    llmMsgs.push(userMsg);
     await invoke("add_messages_to_session", { id: sessionId, messages: [userMsg], tokens: 0 }).catch((e: unknown) => console.error("Save user msg:", e));
-    await doStream([...state.messages, userMsg], sessionId, workingDir);
+    await doStream(llmMsgs, displayMsgs, sessionId, workingDir);
   }, [sessionId, state.messages, doStream]);
 
   const syncTokenCount = useCallback(async () => {
@@ -141,7 +148,8 @@ export function useAgentChat(
     if (idx < 0) return;
     await invoke("truncate_and_replace_at", { sessionId, messageId, replacement: null }).catch((e: unknown) => console.error("Truncate:", e));
     await syncTokenCount();
-    await doStream(state.messages.slice(0, idx + 1), sessionId);
+    const msgs = state.messages.slice(0, idx + 1);
+    await doStream(msgs, msgs, sessionId);
   }, [sessionId, state.messages, doStream, syncTokenCount]);
 
   const edit = useCallback(async (messageId: string, newContent: string) => {
@@ -151,7 +159,8 @@ export function useAgentChat(
     const newMsg: AgentMessage = { id: crypto.randomUUID(), role: "user", content: newContent, files: [], timestamp: new Date().toISOString() };
     await invoke("truncate_and_replace_at", { sessionId, messageId, replacement: newMsg }).catch((e: unknown) => console.error("Truncate+replace:", e));
     await syncTokenCount();
-    await doStream([...state.messages.slice(0, idx), newMsg], sessionId);
+    const msgs = [...state.messages.slice(0, idx), newMsg];
+    await doStream(msgs, msgs, sessionId);
   }, [sessionId, state.messages, doStream, syncTokenCount]);
 
   const stop = useCallback(async () => {
@@ -159,8 +168,7 @@ export function useAgentChat(
     setState((s) => ({ ...s, isStreaming: false }));
   }, [sessionId, stopStream]);
 
-  const setSkill = useCallback((content: string | null) => { skillRef.current = content; }, []);
   const ready = state.messages.length > 0 || !sessionId;
 
-  return { ...state, ready, sendMessage, reload, edit, stop, setSkill };
+  return { ...state, ready, sendMessage, reload, edit, stop };
 }

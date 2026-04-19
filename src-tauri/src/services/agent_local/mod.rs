@@ -23,6 +23,7 @@ pub mod tool_bash;
 pub mod tool_files;
 pub mod tool_glob;
 pub mod tool_grep;
+pub mod skill_parser;
 pub mod tool_skill_loader;
 pub mod tool_web_fetch;
 pub mod tool_web_fetch_ip;

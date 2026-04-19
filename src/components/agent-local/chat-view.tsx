@@ -30,6 +30,8 @@ interface ChatViewProps {
   onNewSession?: (model: string, provider: string) => void;
   initialMessage?: string;
   initialWorkingDir?: string;
+  initialSkillContent?: string;
+  initialSkillName?: string;
   onInitialMessageSent?: () => void;
 }
 
@@ -49,6 +51,8 @@ export function ChatView({
   onNewSession,
   initialMessage,
   initialWorkingDir,
+  initialSkillContent,
+  initialSkillName,
   onInitialMessageSent,
 }: ChatViewProps) {
   const permissions = usePermissionRequests();
@@ -66,10 +70,10 @@ export function ChatView({
   const initialSent = useRef(false);
 
   useEffect(() => {
-    if (initialMessage && !initialSent.current) {
+    if ((initialMessage || initialSkillContent) && !initialSent.current) {
       initialSent.current = true;
       const workingDir = initialWorkingDir ?? proj.selectedProject?.path;
-      chat.sendMessage(initialMessage, [], workingDir, proj.selectedProjectId ?? undefined).then(() => onInitialMessageSent?.());
+      chat.sendMessage(initialMessage || "", [], workingDir, proj.selectedProjectId ?? undefined, initialSkillContent, initialSkillName).then(() => onInitialMessageSent?.());
     }
   }, [initialMessage]);
 
@@ -188,8 +192,8 @@ export function ChatView({
               onPermissionModeChange={permMode.change}
               onRemoveFile={fileDrop.removeFile}
               onPreviewFile={setPreview}
-              onSend={(text, sentFiles) => {
-                chat.sendMessage(text, sentFiles, proj.selectedProject?.path, proj.selectedProjectId ?? undefined)
+              onSend={(text, sentFiles, skillContent, skillName) => {
+                chat.sendMessage(text, sentFiles, proj.selectedProject?.path, proj.selectedProjectId ?? undefined, skillContent, skillName)
                   .then(() => { if (proj.selectedProjectId) onSessionsRefresh?.(); });
               }}
               onStop={chat.stop}
@@ -203,7 +207,6 @@ export function ChatView({
               }}
               onModelChange={handleModelSelect}
               onToggleThinking={() => setThinking(!thinking)}
-              onSkillLoaded={chat.setSkill}
             />
             <ProjectSelector
               projects={projects}

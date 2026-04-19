@@ -24,14 +24,14 @@
 
 .slash-item:hover,
 .slash-item.active {
-  background: var(--pulse-muted);
+  background: var(--accent);
 }
 
 .slash-item-icon {
   flex-shrink: 0;
   width: 20px;
   height: 20px;
-  color: var(--pulse);
+  color: var(--ink-muted);
   opacity: 0.7;
 }
 

@@ -20,8 +20,8 @@ const K_DOWN = "ArrowDown";
 const K_ENTER = "Enter";
 const K_ESC = "Escape";
 
-function getEventKey(e: React.KeyboardEvent | KeyboardEvent): string {
-  return e["key" as keyof typeof e] as string;
+function eventKey(e: React.KeyboardEvent | KeyboardEvent): string {
+  return (e as unknown as Record<string, string>)["key"];
 }
 
 interface ChatInputProps {
@@ -34,12 +34,11 @@ interface ChatInputProps {
   contextMax: number;
   permissionMode: PermissionMode;
   onPermissionModeChange: (mode: PermissionMode) => void;
-  onSend: (text: string, files?: DroppedFile[]) => void;
+  onSend: (text: string, files?: DroppedFile[], skillContent?: string, skillName?: string) => void;
   onStop: () => void;
   onFileImport: () => void;
   onModelChange: (model: string, provider: string) => void;
   onToggleThinking: () => void;
-  onSkillLoaded?: (content: string | null) => void;
   onRemoveFile?: (index: number) => void;
   onPreviewFile?: (file: DroppedFile) => void;
   onClearFiles?: () => void;
@@ -49,7 +48,7 @@ export function ChatInput({
   modelName, providerName, isStreaming, thinkingEnabled, files,
   contextUsed, contextMax,
   permissionMode, onPermissionModeChange,
-  onSend, onStop, onFileImport, onModelChange, onToggleThinking, onSkillLoaded,
+  onSend, onStop, onFileImport, onModelChange, onToggleThinking,
   onRemoveFile, onPreviewFile, onClearFiles,
 }: ChatInputProps) {
   const { t } = useTranslation();
@@ -57,6 +56,7 @@ export function ChatInput({
   const { ref, resize } = useAutoResize(200);
   const slash = useSlashCommands();
   const [activeSkill, setActiveSkill] = useState<SkillInfo | null>(null);
+  const skillContentRef = useRef<string | null>(null);
   const bubbleRef = useRef<HTMLDivElement>(null);
 
   const hasText = text.trim().length > 0;
@@ -65,13 +65,13 @@ export function ChatInput({
 
   const handleSend = useCallback(() => {
     if (!hasContent) return;
-    onSend(text.trim(), hasFiles ? files : undefined);
+    onSend(text.trim(), hasFiles ? files : undefined, skillContentRef.current ?? undefined, activeSkill?.name);
     setText("");
     setActiveSkill(null);
-    onSkillLoaded?.(null);
+    skillContentRef.current = null;
     onClearFiles?.();
     if (ref.current) ref.current.style.height = "auto";
-  }, [text, hasContent, hasFiles, files, onSend, onClearFiles, onSkillLoaded, ref]);
+  }, [text, hasContent, hasFiles, files, onSend, onClearFiles, ref]);
 
   const handleChange = useCallback((value: string) => {
     setText(value);
@@ -83,18 +83,19 @@ export function ChatInput({
     const result = await slash.selectSkill(skill);
     if (result) {
       setActiveSkill(result.skill);
-      onSkillLoaded?.(result.content);
-      setText("");
+      skillContentRef.current = result.content;
+      const lastSlash = text.lastIndexOf("/");
+      setText(lastSlash > 0 ? text.slice(0, lastSlash).trimEnd() : "");
     }
-  }, [slash, onSkillLoaded]);
+  }, [slash, text]);
 
   const handleRemoveSkill = useCallback(() => {
     setActiveSkill(null);
-    onSkillLoaded?.(null);
-  }, [onSkillLoaded]);
+    skillContentRef.current = null;
+  }, []);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    const pressed = getEventKey(e);
+    const pressed = eventKey(e);
     if (slash.showDropdown) {
       if (pressed === K_UP) { e.preventDefault(); slash.moveUp(); return; }
       if (pressed === K_DOWN) { e.preventDefault(); slash.moveDown(); return; }
@@ -118,7 +119,7 @@ export function ChatInput({
   useEffect(() => {
     if (!isStreaming) return;
     const handler = (e: KeyboardEvent) => {
-      if (getEventKey(e) === K_ESC) onStop();
+      if (eventKey(e) === K_ESC) onStop();
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);

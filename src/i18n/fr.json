@@ -260,5 +260,11 @@
     "emptyGlobal": "Aucun AGENT.md global trouvé",
     "emptyProject": "Aucun AGENT.md de projet trouvé",
     "toolCapableOnly": "Injecté uniquement pour les modèles avec outils"
+  },
+  "skills": {
+    "sourceUser": "Personnel",
+    "sourceProject": "Projet",
+    "noResults": "Aucun skill trouvé",
+    "badge": "Skill"
   }
 }

@@ -21,14 +21,18 @@ export function useSlashCommands() {
     : skills;
 
   const handleInput = useCallback((text: string) => {
-    if (text.startsWith("/")) {
-      setShowDropdown(true);
-      setFilter(text.slice(1));
-      setActiveIndex(0);
-    } else {
-      setShowDropdown(false);
-      setFilter("");
+    const lastSlash = text.lastIndexOf("/");
+    if (lastSlash >= 0) {
+      const afterSlash = text.slice(lastSlash + 1);
+      if (!afterSlash.includes(" ")) {
+        setShowDropdown(true);
+        setFilter(afterSlash);
+        setActiveIndex(0);
+        return;
+      }
     }
+    setShowDropdown(false);
+    setFilter("");
   }, []);
 
   const selectSkill = useCallback(async (skill: SkillInfo) => {

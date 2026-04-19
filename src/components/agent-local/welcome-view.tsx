@@ -13,7 +13,7 @@ interface WelcomeViewProps {
   provider: string;
   projects: Project[];
   onAddProject: (path: string) => Promise<Project>;
-  onSend: (text: string, projectId?: string) => void;
+  onSend: (text: string, projectId?: string, skillContent?: string, skillName?: string) => void;
   onModelChange: (model: string, provider: string) => void;
 }
 
@@ -33,11 +33,11 @@ export function WelcomeView({
     setSelectedProjectId(project.id);
   }, [onAddProject]);
 
-  const handleSend = useCallback((text: string, _files?: DroppedFile[]) => {
-    if (!text.trim()) return;
+  const handleSend = useCallback((text: string, _files?: DroppedFile[], skillContent?: string, skillName?: string) => {
+    if (!text.trim() && !skillContent) return;
     setLeaving(true);
     setTimeout(() => {
-      onSend(text, selectedProjectId ?? undefined);
+      onSend(text, selectedProjectId ?? undefined, skillContent, skillName);
     }, 350);
   }, [onSend, selectedProjectId]);
 

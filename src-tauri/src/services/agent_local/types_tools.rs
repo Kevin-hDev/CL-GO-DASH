@@ -42,4 +42,5 @@ pub struct SkillInfo {
     pub name: String,
     pub description: String,
     pub path: String,
+    pub source: String,
 }

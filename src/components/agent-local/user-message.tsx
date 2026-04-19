@@ -12,13 +12,14 @@ interface FileInfo {
 interface UserMessageProps {
   content: string;
   files?: FileInfo[];
+  skillName?: string;
   onReload?: () => void;
   onEdit?: (newContent: string) => void;
   onFileClick?: (file: FileInfo) => void;
 }
 
 export function UserMessage({
-  content, files, onReload, onEdit, onFileClick,
+  content, files, skillName, onReload, onEdit, onFileClick,
 }: UserMessageProps) {
   const [editing, setEditing] = useState(false);
 
@@ -38,7 +39,29 @@ export function UserMessage({
   return (
     <div className="msg-user">
       <div className="msg-user-wrap">
-        {hasText && <div className="msg-user-bubble">{content}</div>}
+        {(hasText || skillName) && (
+          <div className="msg-user-bubble">
+            {hasText && content}
+            {skillName && (
+              <span style={{
+                display: "inline-flex", alignItems: "center", gap: 4,
+                padding: "1px 7px 1px 5px", marginLeft: hasText ? 8 : 0,
+                borderRadius: "var(--radius-sm)",
+                background: "var(--pulse-muted)",
+                color: "var(--pulse)",
+                fontSize: "var(--text-xs)",
+                fontWeight: 500,
+                verticalAlign: "middle",
+              }}>
+                <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <rect x="3" y="3" width="14" height="14" rx="3" />
+                  <path d="M8 7l4 3-4 3" />
+                </svg>
+                {skillName}
+              </span>
+            )}
+          </div>
+        )}
         {hasFiles && (
           <div style={{
             display: "flex", gap: 8, justifyContent: "flex-end",

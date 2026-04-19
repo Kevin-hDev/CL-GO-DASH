@@ -107,6 +107,7 @@ export interface AgentMessage {
   segments?: SavedSegment[];
   files: FileAttachment[];
   timestamp: string;
+  skill_name?: string;
   tokens?: number;
 }
 
@@ -163,6 +164,7 @@ export interface SkillInfo {
   name: string;
   description: string;
   path: string;
+  source: string;
 }
 
 export interface PullProgress {

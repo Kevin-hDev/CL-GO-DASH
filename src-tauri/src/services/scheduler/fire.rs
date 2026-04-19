@@ -82,6 +82,7 @@ async fn dispatch(_app: &AppHandle, wakeup: &ScheduledWakeup) -> Result<(String,
         files: Vec::new(),
         timestamp: Utc::now(),
         tokens: 0,
+        skill_name: None,
     };
 
     let assistant_msg = AgentMessage {
@@ -96,6 +97,7 @@ async fn dispatch(_app: &AppHandle, wakeup: &ScheduledWakeup) -> Result<(String,
         files: Vec::new(),
         timestamp: Utc::now(),
         tokens,
+        skill_name: None,
     };
 
     session_store::add_messages(&session_id, vec![user_msg, assistant_msg], tokens).await?;
