@@ -30,8 +30,7 @@ interface ChatViewProps {
   onNewSession?: (model: string, provider: string) => void;
   initialMessage?: string;
   initialWorkingDir?: string;
-  initialSkillContent?: string;
-  initialSkillName?: string;
+  initialSkills?: { name: string; content: string }[];
   onInitialMessageSent?: () => void;
 }
 
@@ -51,8 +50,7 @@ export function ChatView({
   onNewSession,
   initialMessage,
   initialWorkingDir,
-  initialSkillContent,
-  initialSkillName,
+  initialSkills,
   onInitialMessageSent,
 }: ChatViewProps) {
   const permissions = usePermissionRequests();
@@ -70,10 +68,10 @@ export function ChatView({
   const initialSent = useRef(false);
 
   useEffect(() => {
-    if ((initialMessage || initialSkillContent) && !initialSent.current) {
+    if ((initialMessage || (initialSkills && initialSkills.length > 0)) && !initialSent.current) {
       initialSent.current = true;
       const workingDir = initialWorkingDir ?? proj.selectedProject?.path;
-      chat.sendMessage(initialMessage || "", [], workingDir, proj.selectedProjectId ?? undefined, initialSkillContent, initialSkillName).then(() => onInitialMessageSent?.());
+      chat.sendMessage(initialMessage || "", [], workingDir, proj.selectedProjectId ?? undefined, initialSkills).then(() => onInitialMessageSent?.());
     }
   }, [initialMessage]);
 
@@ -192,8 +190,8 @@ export function ChatView({
               onPermissionModeChange={permMode.change}
               onRemoveFile={fileDrop.removeFile}
               onPreviewFile={setPreview}
-              onSend={(text, sentFiles, skillContent, skillName) => {
-                chat.sendMessage(text, sentFiles, proj.selectedProject?.path, proj.selectedProjectId ?? undefined, skillContent, skillName)
+              onSend={(text, sentFiles, skills) => {
+                chat.sendMessage(text, sentFiles, proj.selectedProject?.path, proj.selectedProjectId ?? undefined, skills)
                   .then(() => { if (proj.selectedProjectId) onSessionsRefresh?.(); });
               }}
               onStop={chat.stop}

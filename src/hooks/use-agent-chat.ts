@@ -108,12 +108,11 @@ export function useAgentChat(
     sentFiles?: { name: string; path?: string; preview?: string }[],
     workingDir?: string,
     projectId?: string,
-    skillContent?: string,
-    skillName?: string,
+    skills?: { name: string; content: string }[],
   ) => {
     const hasText = !!text.trim();
     const hasFiles = !!sentFiles && sentFiles.length > 0;
-    const hasSkill = !!skillContent;
+    const hasSkill = !!skills && skills.length > 0;
     if (!sessionId || (!hasText && !hasFiles && !hasSkill)) return;
     while (savingRef.current) await new Promise((r) => setTimeout(r, 50));
     if (projectId && state.messages.length === 0) {
@@ -121,15 +120,18 @@ export function useAgentChat(
       if (!session.project_id) { session.project_id = projectId; await invoke("save_agent_session", { session }).catch((e: unknown) => console.error("Save session:", e)); }
     }
     const files = (sentFiles ?? []).map((f) => ({ name: f.name, path: f.path ?? "", mime_type: "", size: 0, thumbnail: f.preview }));
+    const skillNames = hasSkill ? skills.map((s) => s.name) : undefined;
     const userMsg: AgentMessage = {
       id: crypto.randomUUID(), role: "user", content: text || "",
       files, timestamp: new Date().toISOString(),
-      skill_name: skillName,
+      skill_names: skillNames,
     };
     const displayMsgs = [...state.messages, userMsg];
     const llmMsgs = [...state.messages];
-    if (skillContent) {
-      llmMsgs.push({ id: "skill-" + crypto.randomUUID(), role: "user", content: `The user has loaded the following skill. Follow its instructions exactly:\n\n${skillContent}`, files: [], timestamp: new Date().toISOString() });
+    if (hasSkill) {
+      for (const s of skills) {
+        llmMsgs.push({ id: "skill-" + crypto.randomUUID(), role: "user", content: `The user has loaded the following skill. Follow its instructions exactly:\n\n${s.content}`, files: [], timestamp: new Date().toISOString() });
+      }
     }
     llmMsgs.push(userMsg);
     await invoke("add_messages_to_session", { id: sessionId, messages: [userMsg], tokens: 0 }).catch((e: unknown) => console.error("Save user msg:", e));

@@ -34,7 +34,7 @@ interface ChatInputProps {
   contextMax: number;
   permissionMode: PermissionMode;
   onPermissionModeChange: (mode: PermissionMode) => void;
-  onSend: (text: string, files?: DroppedFile[], skillContent?: string, skillName?: string) => void;
+  onSend: (text: string, files?: DroppedFile[], skills?: { name: string; content: string }[]) => void;
   onStop: () => void;
   onFileImport: () => void;
   onModelChange: (model: string, provider: string) => void;
@@ -55,23 +55,26 @@ export function ChatInput({
   const [text, setText] = useState("");
   const { ref, resize } = useAutoResize(200);
   const slash = useSlashCommands();
-  const [activeSkill, setActiveSkill] = useState<SkillInfo | null>(null);
-  const skillContentRef = useRef<string | null>(null);
+  const [activeSkills, setActiveSkills] = useState<SkillInfo[]>([]);
+  const skillContentsRef = useRef<Map<string, string>>(new Map());
   const bubbleRef = useRef<HTMLDivElement>(null);
 
   const hasText = text.trim().length > 0;
   const hasFiles = files != null && files.length > 0;
-  const hasContent = hasText || hasFiles || !!activeSkill;
+  const hasContent = hasText || hasFiles || activeSkills.length > 0;
 
   const handleSend = useCallback(() => {
     if (!hasContent) return;
-    onSend(text.trim(), hasFiles ? files : undefined, skillContentRef.current ?? undefined, activeSkill?.name);
+    const skills = activeSkills.length > 0
+      ? activeSkills.map((s) => ({ name: s.name, content: skillContentsRef.current.get(s.name) ?? "" }))
+      : undefined;
+    onSend(text.trim(), hasFiles ? files : undefined, skills);
     setText("");
-    setActiveSkill(null);
-    skillContentRef.current = null;
+    setActiveSkills([]);
+    skillContentsRef.current.clear();
     onClearFiles?.();
     if (ref.current) ref.current.style.height = "auto";
-  }, [text, hasContent, hasFiles, files, onSend, onClearFiles, ref]);
+  }, [text, hasContent, hasFiles, files, activeSkills, onSend, onClearFiles, ref]);
 
   const handleChange = useCallback((value: string) => {
     setText(value);
@@ -80,18 +83,19 @@ export function ChatInput({
   }, [resize, slash]);
 
   const handleSelectSkill = useCallback(async (skill: SkillInfo) => {
+    if (activeSkills.some((s) => s.name === skill.name)) return;
     const result = await slash.selectSkill(skill);
     if (result) {
-      setActiveSkill(result.skill);
-      skillContentRef.current = result.content;
+      setActiveSkills((prev) => [...prev, result.skill]);
+      skillContentsRef.current.set(result.skill.name, result.content);
       const lastSlash = text.lastIndexOf("/");
       setText(lastSlash > 0 ? text.slice(0, lastSlash).trimEnd() : "");
     }
-  }, [slash, text]);
+  }, [slash, text, activeSkills]);
 
-  const handleRemoveSkill = useCallback(() => {
-    setActiveSkill(null);
-    skillContentRef.current = null;
+  const handleRemoveSkill = useCallback((name: string) => {
+    setActiveSkills((prev) => prev.filter((s) => s.name !== name));
+    skillContentsRef.current.delete(name);
   }, []);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
@@ -150,9 +154,11 @@ export function ChatInput({
           onSelect={handleSelectSkill}
         />
       )}
-      {activeSkill && (
-        <div style={{ padding: "var(--space-xs) var(--space-sm) 0" }}>
-          <SkillBadge skill={activeSkill} onRemove={handleRemoveSkill} />
+      {activeSkills.length > 0 && (
+        <div style={{ padding: "var(--space-xs) var(--space-sm) 0", display: "flex", gap: 6, flexWrap: "wrap" }}>
+          {activeSkills.map((s) => (
+            <SkillBadge key={s.name} skill={s} onRemove={() => handleRemoveSkill(s.name)} />
+          ))}
         </div>
       )}
       <textarea

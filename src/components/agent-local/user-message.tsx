@@ -12,14 +12,14 @@ interface FileInfo {
 interface UserMessageProps {
   content: string;
   files?: FileInfo[];
-  skillName?: string;
+  skillNames?: string[];
   onReload?: () => void;
   onEdit?: (newContent: string) => void;
   onFileClick?: (file: FileInfo) => void;
 }
 
 export function UserMessage({
-  content, files, skillName, onReload, onEdit, onFileClick,
+  content, files, skillNames, onReload, onEdit, onFileClick,
 }: UserMessageProps) {
   const [editing, setEditing] = useState(false);
 
@@ -39,13 +39,13 @@ export function UserMessage({
   return (
     <div className="msg-user">
       <div className="msg-user-wrap">
-        {(hasText || skillName) && (
+        {(hasText || (skillNames && skillNames.length > 0)) && (
           <div className="msg-user-bubble">
             {hasText && content}
-            {skillName && (
-              <span style={{
+            {skillNames && skillNames.map((name) => (
+              <span key={name} style={{
                 display: "inline-flex", alignItems: "center", gap: 4,
-                padding: "1px 7px 1px 5px", marginLeft: hasText ? 8 : 0,
+                padding: "1px 7px 1px 5px", marginLeft: 6,
                 borderRadius: "var(--radius-sm)",
                 background: "var(--pulse-muted)",
                 color: "var(--pulse)",
@@ -57,9 +57,9 @@ export function UserMessage({
                   <rect x="3" y="3" width="14" height="14" rx="3" />
                   <path d="M8 7l4 3-4 3" />
                 </svg>
-                {skillName}
+                {name}
               </span>
-            )}
+            ))}
           </div>
         )}
         {hasFiles && (

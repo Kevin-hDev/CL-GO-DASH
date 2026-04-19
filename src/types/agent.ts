@@ -107,7 +107,7 @@ export interface AgentMessage {
   segments?: SavedSegment[];
   files: FileAttachment[];
   timestamp: string;
-  skill_name?: string;
+  skill_names?: string[];
   tokens?: number;
 }
 

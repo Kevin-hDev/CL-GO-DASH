@@ -24,7 +24,7 @@
 
 .slash-item:hover,
 .slash-item.active {
-  background: var(--accent);
+  background: hsla(0, 0%, 100%, 0.08);
 }
 
 .slash-item-icon {

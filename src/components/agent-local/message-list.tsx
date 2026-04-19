@@ -34,7 +34,7 @@ export function MessageList({
           return (
             <UserMessage
               key={msg.id} content={msg.content} files={msg.files}
-              skillName={msg.skill_name}
+              skillNames={msg.skill_names}
               onReload={onReload ? () => onReload(msg.id) : undefined}
               onEdit={onEdit ? (c) => onEdit(msg.id, c) : undefined}
               onFileClick={onFileClick}

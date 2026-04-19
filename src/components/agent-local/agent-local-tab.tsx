@@ -55,19 +55,17 @@ export function AgentLocalTab(): { list: React.ReactNode; detail: React.ReactNod
 
   const [pendingMessage, setPendingMessage] = useState<string | null>(null);
   const [pendingWorkingDir, setPendingWorkingDir] = useState<string | undefined>(undefined);
-  const [pendingSkillContent, setPendingSkillContent] = useState<string | undefined>(undefined);
-  const [pendingSkillName, setPendingSkillName] = useState<string | undefined>(undefined);
+  const [pendingSkills, setPendingSkills] = useState<{ name: string; content: string }[] | undefined>(undefined);
 
   const handleWelcomeSend = useCallback(
-    async (text: string, projectId?: string, skillContent?: string, skillName?: string) => {
+    async (text: string, projectId?: string, skills?: { name: string; content: string }[]) => {
       const name = text.slice(0, 40).trim() || t("agentLocal.newSession");
       const m = welcomeModel ?? { model: defaultModel, provider: defaultProvider };
       const project = projectId ? projectsHook.projects.find((p) => p.id === projectId) : undefined;
       const session = await create(name, m.model, m.provider, projectId);
       setPendingMessage(text);
       setPendingWorkingDir(project?.path);
-      setPendingSkillContent(skillContent);
-      setPendingSkillName(skillName);
+      setPendingSkills(skills);
       setWelcomeModel(null);
       await tabState.addTab(session.id, session.name);
     },
@@ -147,9 +145,8 @@ export function AgentLocalTab(): { list: React.ReactNode; detail: React.ReactNod
             onNewSession={handleCreateWithModel}
             initialMessage={pendingMessage ?? undefined}
             initialWorkingDir={pendingWorkingDir}
-            initialSkillContent={pendingSkillContent}
-            initialSkillName={pendingSkillName}
-            onInitialMessageSent={() => { setPendingMessage(null); setPendingWorkingDir(undefined); setPendingSkillContent(undefined); setPendingSkillName(undefined); }}
+            initialSkills={pendingSkills}
+            onInitialMessageSent={() => { setPendingMessage(null); setPendingWorkingDir(undefined); setPendingSkills(undefined); }}
           />
         </div>
       ) : (
