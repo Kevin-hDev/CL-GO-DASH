@@ -103,7 +103,7 @@ export function AgentLocalTab(): { list: React.ReactNode; detail: React.ReactNod
       onSelect={handleSelect}
       onCreate={handleCreate}
       onRename={rename}
-      onDelete={remove}
+      onDelete={async (id: string) => { await tabState.closeBySessionId(id); await remove(id); }}
       onNewSessionInProject={handleCreateInProject}
       onRenameProject={projectsHook.rename}
       onDeleteProject={projectsHook.remove}

@@ -65,6 +65,14 @@ export function useAgentTabs() {
     await persist(next, index);
   }, [tabs, persist]);
 
+  const closeBySessionId = useCallback(async (sessionId: string) => {
+    const index = tabs.findIndex((t) => t.session_id === sessionId);
+    if (index < 0) return;
+    const next = tabs.filter((_, i) => i !== index);
+    const newIdx = activeIndex >= next.length ? Math.max(0, next.length - 1) : activeIndex;
+    await persist(next, newIdx);
+  }, [tabs, activeIndex, persist]);
+
   const deselectTab = useCallback(async () => {
     setActiveIndex(-1);
   }, []);
@@ -74,6 +82,6 @@ export function useAgentTabs() {
 
   return {
     tabs, activeIndex, activeSessionId, canAddTab,
-    addTab, closeTab, selectTab, renameTab, updateTab, reorderTabs, deselectTab,
+    addTab, closeTab, closeBySessionId, selectTab, renameTab, updateTab, reorderTabs, deselectTab,
   };
 }

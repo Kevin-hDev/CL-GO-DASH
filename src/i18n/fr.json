@@ -101,7 +101,9 @@
     "search": "Rechercher dans la conversation",
     "modelSearch": "Rechercher un modèle…",
     "modelEmpty": "Aucun modèle ne correspond.",
-    "thinkingToggle": "Réflexion étendue"
+    "thinkingToggle": "Réflexion étendue",
+    "send": "Envoyer",
+    "cancel": "Annuler"
   },
   "switchModel": {
     "title": "Changement de modèle",
