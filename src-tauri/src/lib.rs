@@ -112,6 +112,9 @@ pub fn run() {
             commands::delete_project,
             commands::reorder_projects,
             commands::open_project_folder,
+            // Agent MD
+            commands::read_agent_md,
+            commands::write_agent_md,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application");
