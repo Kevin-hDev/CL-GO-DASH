@@ -44,7 +44,7 @@ export function ModelSearch({
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+    <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
       <div style={{ padding: "var(--space-sm)" }}>
         <input
           className="ollama-search-input"
@@ -54,7 +54,7 @@ export function ModelSearch({
           placeholder={t("ollama.searchPlaceholder")}
         />
       </div>
-      <div style={{ flex: 1, overflowY: "auto", padding: "var(--space-sm)" }}>
+      <div style={{ flex: 1, overflowY: "auto", padding: "var(--space-sm)", paddingBottom: 20 }}>
         {searching && (
           <div style={{
             padding: "var(--space-md)", fontSize: "var(--text-sm)",

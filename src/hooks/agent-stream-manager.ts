@@ -47,8 +47,8 @@ function ensureListener() {
   return listenPromise;
 }
 
-function startSession(sessionId: string, messages: AgentMessage[], tokenCount: number) {
-  ensureListener();
+async function startSession(sessionId: string, messages: AgentMessage[], tokenCount: number) {
+  await ensureListener();
   const record = getOrCreateRecord(sessionId);
   clearCleanup(record);
   record.state = createManagedStreamState(messages, tokenCount);

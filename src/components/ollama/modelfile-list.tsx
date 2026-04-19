@@ -10,7 +10,7 @@ interface ModelfileListProps {
 
 export function ModelfileList({ models, selectedModel, onSelect }: ModelfileListProps) {
   return (
-    <div style={{ flex: 1, overflowY: "auto", padding: "var(--space-sm)" }}>
+    <div style={{ flex: 1, overflowY: "auto", padding: "var(--space-sm)", paddingBottom: 20 }}>
       {models.map((m: OllamaModel) => (
         <div
           key={m.name}

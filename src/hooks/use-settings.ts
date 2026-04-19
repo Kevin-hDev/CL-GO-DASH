@@ -36,7 +36,7 @@ export function useSettings() {
   }, [fontSize]);
 
   useEffect(() => {
-    document.documentElement.style.setProperty("--font-sans", fontFamily.value);
+    document.body.style.fontFamily = fontFamily.value;
     localStorage.setItem("clgo-font-family", fontFamilyId);
   }, [fontFamilyId, fontFamily.value]);
 

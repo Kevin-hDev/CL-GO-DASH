@@ -74,6 +74,22 @@ async fn stream_chat_inner(
         .await
         .map_err(|e| format!("Connexion Ollama impossible: {e}"))?;
 
+    if !resp.status().is_success() {
+        let status = resp.status();
+        let body = resp.text().await.unwrap_or_default();
+        if let Some(retry_req) = build_retry_request(request, &body) {
+            let feature = if retry_req.think != request.think { "thinking" }
+                else if retry_req.tools != request.tools { "tools" }
+                else { "images" };
+            eprintln!("[ollama-stream] modèle sans {feature}, retry");
+            return Box::pin(stream_chat_inner(on_event, &retry_req, cancel, emit_done)).await;
+        }
+        let msg = format!("Ollama HTTP {status}: {body}");
+        eprintln!("[ollama-stream] {msg}");
+        let _ = on_event.send(StreamEvent::Error { message: "Erreur serveur Ollama".into() });
+        return Err(msg);
+    }
+
     let byte_stream = resp
         .bytes_stream()
         .map(|r| r.map_err(|e| std::io::Error::other(e)));
@@ -111,6 +127,26 @@ async fn stream_chat_inner(
     Ok(result)
 }
 
+fn build_retry_request(request: &ChatRequest, error_body: &str) -> Option<ChatRequest> {
+    let mut retry = request.clone();
+    let mut changed = false;
+    if error_body.contains("does not support thinking") && request.think == Some(true) {
+        retry.think = None;
+        changed = true;
+    }
+    if error_body.contains("does not support tools") && request.tools.is_some() {
+        retry.tools = None;
+        changed = true;
+    }
+    if error_body.contains("does not support images") {
+        for msg in &mut retry.messages {
+            msg.images = None;
+        }
+        changed = true;
+    }
+    if changed { Some(retry) } else { None }
+}
+
 fn process_chunk(
     text: &str,
     on_event: &AgentEventEmitter,
@@ -121,6 +157,11 @@ fn process_chunk(
 ) -> Result<(), String> {
     let chunk: serde_json::Value =
         serde_json::from_str(text).map_err(|e| format!("JSON invalide: {e}"))?;
+
+    if let Some(err) = chunk["error"].as_str() {
+        eprintln!("[ollama-stream] erreur modèle: {err}");
+        return Err(format!("Ollama: {err}"));
+    }
 
     if chunk["done"].as_bool() == Some(true) {
         result.eval_count = chunk["eval_count"].as_u64().unwrap_or(0) as u32;

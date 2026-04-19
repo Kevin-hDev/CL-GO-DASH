@@ -150,7 +150,8 @@ function finishStream(state: ManagedStreamState, event: Extract<StreamEvent, { e
   const all = state.currentContent || state.currentThinking || state.currentTools.length > 0
     ? appendCurrentSegment(state)
     : state.completedSegments;
-  const tokens = (event.data.evalCount || 0) + (event.data.promptTokens || 0);
+  const outputTokens = event.data.evalCount || 0;
+  const promptTokens = event.data.promptTokens || 0;
   const next = {
     ...state,
     completedSegments: [],
@@ -159,8 +160,8 @@ function finishStream(state: ManagedStreamState, event: Extract<StreamEvent, { e
     currentTools: [],
     isStreaming: false,
     tps: event.data.finalTps,
-    tokenCount: state.tokenCount + tokens,
-    lastRequestTokens: tokens,
+    tokenCount: state.tokenCount + outputTokens + promptTokens,
+    lastRequestTokens: outputTokens,
     pendingPermissions: [],
     completed: true,
   };
@@ -175,11 +176,11 @@ function finishStream(state: ManagedStreamState, event: Extract<StreamEvent, { e
     segments: built.segments,
     files: [],
     timestamp: new Date().toISOString(),
-    tokens,
+    tokens: outputTokens,
   };
   return {
     state: { ...next, messages: [...next.messages, assistantMessage] },
     assistantMessage,
-    assistantTokens: tokens,
+    assistantTokens: outputTokens,
   };
 }

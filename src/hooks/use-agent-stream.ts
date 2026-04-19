@@ -48,7 +48,7 @@ export function useAgentStream() {
     workingDir?: string,
   ) => {
     streamingRef.current = true;
-    agentStreamManager.startSession(
+    await agentStreamManager.startSession(
       sessionId,
       startState.displayMessages,
       startState.baseTokenCount,

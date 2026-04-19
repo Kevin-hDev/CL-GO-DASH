@@ -1,5 +1,6 @@
 {
   "nav": {
+    "appName": "CL-GO",
     "heartbeat": "Heartbeat",
     "personality": "Personality",
     "settings": "Settings",

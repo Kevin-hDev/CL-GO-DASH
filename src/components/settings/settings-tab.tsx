@@ -31,8 +31,8 @@ export function SettingsTab({ theme, onThemeChange }: SettingsTabProps): {
   ];
 
   const list = (
-    <>
-      <div style={{ padding: "var(--space-sm)" }}>
+    <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, overflow: "hidden" }}>
+      <div style={{ padding: "var(--space-sm)", flexShrink: 0 }}>
         {subTabs.map((tab) => (
           <div
             key={tab.id}
@@ -53,9 +53,11 @@ export function SettingsTab({ theme, onThemeChange }: SettingsTabProps): {
           </div>
         ))}
       </div>
-      {subTab === "ollama" && ollamaTab.list}
-      {subTab === "api-keys" && apiKeysTab.list}
-    </>
+      <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, overflow: "hidden" }}>
+        {subTab === "ollama" && ollamaTab.list}
+        {subTab === "api-keys" && apiKeysTab.list}
+      </div>
+    </div>
   );
 
   const detail = (() => {

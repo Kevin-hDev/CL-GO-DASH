@@ -78,7 +78,7 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
       >
         <img src={logoSrc} alt="CL-GO" style={{ width: "2.5rem", height: "2.5rem", borderRadius: 6, flexShrink: 0 }} />
         <span style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--ink)" }} className="opacity-0 group-hover/sb:opacity-100 transition-opacity duration-150">
-          CL-GO
+          {t("nav.appName")}
         </span>
       </div>
 

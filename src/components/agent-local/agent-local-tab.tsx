@@ -31,12 +31,14 @@ export function AgentLocalTab(): { list: React.ReactNode; detail: React.ReactNod
   const tabState = useAgentTabs();
   const projectsHook = useProjects();
   const { model: defaultModel, provider: defaultProvider } = useDefaultModel();
+  const [welcomeModel, setWelcomeModel] = useState<{ model: string; provider: string } | null>(null);
 
   const activeSession = tabState.activeSessionId
     ? sessions.find((s) => s.id.localeCompare(tabState.activeSessionId!) === 0)
     : null;
-  const model = activeSession?.model ?? defaultModel;
-  const provider = activeSession?.provider ?? defaultProvider;
+  const currentDefault = welcomeModel ?? { model: defaultModel, provider: defaultProvider };
+  const model = activeSession?.model ?? currentDefault.model;
+  const provider = activeSession?.provider ?? currentDefault.provider;
 
   const handleCreate = useCallback(() => {
     tabState.deselectTab();
@@ -56,11 +58,13 @@ export function AgentLocalTab(): { list: React.ReactNode; detail: React.ReactNod
   const handleWelcomeSend = useCallback(
     async (text: string, projectId?: string) => {
       const name = text.slice(0, 40).trim() || t("agentLocal.newSession");
-      const session = await create(name, defaultModel, defaultProvider, projectId);
+      const m = welcomeModel ?? { model: defaultModel, provider: defaultProvider };
+      const session = await create(name, m.model, m.provider, projectId);
       setPendingMessage(text);
+      setWelcomeModel(null);
       await tabState.addTab(session.id, session.name);
     },
-    [create, tabState, defaultModel, defaultProvider, t],
+    [create, tabState, defaultModel, defaultProvider, welcomeModel, t],
   );
 
   const handleCreateInProject = useCallback(
@@ -141,12 +145,12 @@ export function AgentLocalTab(): { list: React.ReactNode; detail: React.ReactNod
       ) : (
         <div style={{ flex: 1, minHeight: 0, overflow: "hidden" }}>
           <WelcomeView
-            model={defaultModel}
-            provider={defaultProvider}
+            model={currentDefault.model}
+            provider={currentDefault.provider}
             projects={projectsHook.projects}
             onAddProject={projectsHook.add}
             onSend={handleWelcomeSend}
-            onModelChange={() => {}}
+            onModelChange={(m, p) => setWelcomeModel({ model: m, provider: p })}
           />
         </div>
       )}
