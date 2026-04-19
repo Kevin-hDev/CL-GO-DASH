@@ -1,5 +1,8 @@
 pub mod pty_session;
 
+#[cfg(test)]
+mod tests;
+
 use pty_session::PtySession;
 use std::collections::HashMap;
 use std::io::Read;
