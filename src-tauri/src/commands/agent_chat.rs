@@ -3,6 +3,7 @@ use crate::services::agent_local::agent_md;
 use crate::services::agent_local::chat_prompts::prepare_messages;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::tool_dispatcher;
+use crate::services::agent_local::tool_skill_loader;
 use crate::services::agent_local::types_ollama::{ChatMessage, StreamEvent};
 use crate::services::llm;
 use crate::ActiveStreams;
@@ -88,7 +89,12 @@ async fn run_stream_task(
         let working_dir = resolve_dir(&working_dir);
         let mut msgs = messages;
         let agent_md_content = agent_md::load_agent_md(Some(working_dir.as_path())).await;
-        prepare_messages(&mut msgs, &working_dir, true, agent_md_content);
+        let skills_list = tool_skill_loader::list_skills().await.unwrap_or_default();
+        let skills_tuples: Vec<(String, String)> = skills_list
+            .iter()
+            .map(|s| (s.name.clone(), s.description.clone()))
+            .collect();
+        prepare_messages(&mut msgs, &working_dir, true, agent_md_content, &skills_tuples);
 
         agent_loop::run_agent_loop(
             &on_event,
@@ -119,7 +125,17 @@ async fn run_stream_task(
         } else {
             None
         };
-        prepare_messages(&mut msgs, &working_dir, model_supports, agent_md_content);
+        let skills_tuples: Vec<(String, String)> = if model_supports {
+            tool_skill_loader::list_skills()
+                .await
+                .unwrap_or_default()
+                .iter()
+                .map(|s| (s.name.clone(), s.description.clone()))
+                .collect()
+        } else {
+            vec![]
+        };
+        prepare_messages(&mut msgs, &working_dir, model_supports, agent_md_content, &skills_tuples);
         llm::agent_loop::run_agent_loop(
             &on_event,
             &provider,

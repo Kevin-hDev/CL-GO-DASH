@@ -1,6 +1,7 @@
 use crate::services::agent_local::{
     tool_bash, tool_files, tool_glob, tool_grep, tool_web_fetch, tool_web_search,
 };
+use crate::services::agent_local::tool_skill_loader;
 use crate::services::agent_local::types_tools::ToolResult;
 use serde_json::Value;
 use std::path::Path;
@@ -66,6 +67,16 @@ pub async fn dispatch(tool_name: &str, args: &Value, working_dir: &Path) -> Tool
             let url = args["url"].as_str().unwrap_or("");
             match tool_web_fetch::fetch_url(url).await {
                 Ok(content) => ToolResult { content, is_error: false },
+                Err(e) => ToolResult { content: e, is_error: true },
+            }
+        }
+        "load_skill" => {
+            let name = args["skill_name"].as_str().unwrap_or("");
+            match tool_skill_loader::load_skill(name).await {
+                Ok(content) => ToolResult {
+                    content: format!("Skill '{name}' loaded. Follow its instructions:\n\n{content}"),
+                    is_error: false,
+                },
                 Err(e) => ToolResult { content: e, is_error: true },
             }
         }
@@ -158,6 +169,13 @@ pub fn get_tool_definitions() -> Vec<Value> {
                 "url": {"type": "string", "description": "URL à récupérer"}
             },
             "required": ["url"]
+        })),
+        tool_def("load_skill", "Charger un skill par son nom. Utilise cet outil quand l'utilisateur mentionne un skill ou que la tâche correspond à un skill disponible.", serde_json::json!({
+            "type": "object",
+            "properties": {
+                "skill_name": {"type": "string", "description": "Nom exact du skill à charger (tel qu'affiché dans la liste des skills disponibles)"}
+            },
+            "required": ["skill_name"]
         })),
     ]
 }

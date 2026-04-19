@@ -96,11 +96,35 @@ pub fn prepare_messages(
     working_dir: &std::path::Path,
     has_tools: bool,
     agent_md: Option<String>,
+    skills: &[(String, String)],
 ) {
     if has_tools {
         prepend_tool_system_prompt(messages, working_dir);
+        if !skills.is_empty() {
+            prepend_skills_listing(messages, skills);
+        }
         prepend_agent_md_context(messages, agent_md);
     } else {
         prepend_working_dir_context(messages, working_dir);
+    }
+}
+
+fn prepend_skills_listing(messages: &mut Vec<ChatMessage>, skills: &[(String, String)]) {
+    let listing = skills
+        .iter()
+        .map(|(name, desc)| format!("- {name}: {desc}"))
+        .collect::<Vec<_>>()
+        .join("\n");
+
+    let section = format!(
+        "\n\n## Available skills\n\
+         The following skills are available. Use the `load_skill` tool to load one when relevant.\n\
+         {listing}"
+    );
+
+    if let Some(first) = messages.first_mut() {
+        if first.role == "system" {
+            first.content.push_str(&section);
+        }
     }
 }
