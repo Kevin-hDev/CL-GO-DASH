@@ -1,0 +1,110 @@
+.terminal-tab-bar {
+  display: flex;
+  align-items: center;
+  height: 32px;
+  background: var(--shell);
+  border-bottom: 1px solid var(--edge);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  user-select: none;
+}
+
+.terminal-tab-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.terminal-tab-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  height: 100%;
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: transform 200ms ease;
+}
+
+.terminal-tab-item:hover {
+  color: var(--ink);
+}
+
+.terminal-tab-item.active-multi {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="light"] .terminal-tab-item.active-multi {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.terminal-tab-item.dragging {
+  opacity: 0.5;
+}
+
+.terminal-tab-close {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--ink-muted);
+  cursor: pointer;
+  padding: 2px;
+  line-height: 1;
+}
+
+.terminal-tab-item:hover .terminal-tab-close {
+  display: flex;
+}
+
+.terminal-tab-close:hover {
+  color: var(--ink);
+}
+
+.terminal-tab-rename {
+  background: transparent;
+  border: 1px solid var(--edge);
+  color: var(--ink);
+  font-size: var(--text-xs);
+  width: 100px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  outline: none;
+}
+
+.terminal-tab-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: none;
+  border: none;
+  color: var(--ink-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.terminal-tab-add:hover {
+  color: var(--ink);
+}
+
+.terminal-tab-bar-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--ink-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.terminal-tab-bar-close:hover {
+  color: var(--ink);
+}
