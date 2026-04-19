@@ -8,6 +8,7 @@ import { WelcomeView } from "./welcome-view";
 import { useAgentSessions } from "@/hooks/use-agent-sessions";
 import { useAgentTabs } from "@/hooks/use-agent-tabs";
 import { useProjects } from "@/hooks/use-projects";
+import { useTerminal } from "@/hooks/use-terminal";
 
 interface OllamaModel {
   name: string;
@@ -30,12 +31,18 @@ export function AgentLocalTab(): { list: React.ReactNode; detail: React.ReactNod
   const { sessions, refresh, create, rename, remove, updateModel } = useAgentSessions();
   const tabState = useAgentTabs();
   const projectsHook = useProjects();
-  const { model: defaultModel, provider: defaultProvider } = useDefaultModel();
-  const [welcomeModel, setWelcomeModel] = useState<{ model: string; provider: string } | null>(null);
 
   const activeSession = tabState.activeSessionId
     ? sessions.find((s) => s.id.localeCompare(tabState.activeSessionId!) === 0)
     : null;
+  const activeProject = activeSession?.project_id
+    ? projectsHook.projects.find((p) => p.id === activeSession.project_id)
+    : null;
+  const terminalCwd = activeProject?.path || "";
+  const terminal = useTerminal(terminalCwd);
+  const { model: defaultModel, provider: defaultProvider } = useDefaultModel();
+  const [welcomeModel, setWelcomeModel] = useState<{ model: string; provider: string } | null>(null);
+
   const currentDefault = welcomeModel ?? { model: defaultModel, provider: defaultProvider };
   const model = activeSession?.model ?? currentDefault.model;
   const provider = activeSession?.provider ?? currentDefault.provider;
@@ -120,11 +127,20 @@ export function AgentLocalTab(): { list: React.ReactNode; detail: React.ReactNod
             tabs={tabState.tabs}
             activeIndex={tabState.activeIndex}
             canAddTab={tabState.canAddTab}
+            sessionId={tabState.activeSessionId ?? null}
+            terminalOpen={terminal.isOpen}
             onSelect={tabState.selectTab}
             onClose={tabState.closeTab}
             onAdd={handleCreate}
             onRename={tabState.renameTab}
             onReorder={tabState.reorderTabs}
+            onToggleTerminal={() => {
+              if (!terminal.isOpen && terminal.tabs.length === 0) {
+                terminal.addTab(terminalCwd);
+              } else {
+                terminal.togglePanel();
+              }
+            }}
           />
         </div>
       )}
@@ -147,6 +163,7 @@ export function AgentLocalTab(): { list: React.ReactNode; detail: React.ReactNod
             initialWorkingDir={pendingWorkingDir}
             initialSkills={pendingSkills}
             onInitialMessageSent={() => { setPendingMessage(null); setPendingWorkingDir(undefined); setPendingSkills(undefined); }}
+            terminalState={terminal}
           />
         </div>
       ) : (

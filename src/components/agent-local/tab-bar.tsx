@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { Plus, X } from "@/components/ui/icons";
+import { TerminalSquare } from "lucide-react";
 import { setInternalDrag } from "@/lib/internal-drag";
 import type { TabInfo } from "@/types/agent";
 import "./conversation.css";
@@ -9,18 +10,21 @@ interface TabBarProps {
   tabs: TabInfo[];
   activeIndex: number;
   canAddTab: boolean;
+  sessionId: string | null;
+  terminalOpen: boolean;
   onSelect: (index: number) => void;
   onClose: (index: number) => void;
   onAdd: () => void;
   onRename: (index: number, label: string) => void;
   onReorder: (from: number, to: number) => void;
+  onToggleTerminal: () => void;
 }
 
 const DRAG_THRESHOLD = 5;
 
 export function TabBar({
-  tabs, activeIndex, canAddTab,
-  onSelect, onClose, onAdd, onRename, onReorder,
+  tabs, activeIndex, canAddTab, sessionId, terminalOpen,
+  onSelect, onClose, onAdd, onRename, onReorder, onToggleTerminal,
 }: TabBarProps) {
   const [renamingIdx, setRenamingIdx] = useState<number | null>(null);
   const [dragIdx, setDragIdx] = useState<number | null>(null);
@@ -165,6 +169,32 @@ export function TabBar({
       {canAddTab && (
         <button className="tab-add" onClick={onAdd}>
           <Plus size={14} />
+        </button>
+      )}
+      {sessionId && (
+        <button
+          className="terminal-toggle-btn"
+          onClick={(e) => { e.stopPropagation(); onToggleTerminal(); }}
+          style={{
+            marginLeft: "auto",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 28,
+            height: 28,
+            background: "none",
+            border: "none",
+            color: terminalOpen ? "var(--pulse)" : "var(--ink-muted)",
+            cursor: "pointer",
+          }}
+          onMouseEnter={(e) => {
+            if (!terminalOpen) (e.currentTarget as HTMLElement).style.color = "var(--ink)";
+          }}
+          onMouseLeave={(e) => {
+            if (!terminalOpen) (e.currentTarget as HTMLElement).style.color = "var(--ink-muted)";
+          }}
+        >
+          <TerminalSquare size={16} />
         </button>
       )}
     </div>

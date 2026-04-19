@@ -13,6 +13,8 @@ import { usePermissionMode } from "@/hooks/use-permission-mode";
 import { usePermissionRequests } from "@/hooks/use-permission-requests";
 import { useSessionProject } from "@/hooks/use-session-project";
 import { PermissionDialog } from "./permission-dialog";
+import { TerminalPanel } from "@/components/terminal/terminal-panel";
+import { useTerminal } from "@/hooks/use-terminal";
 import type { Project } from "@/types/agent";
 import scrollDownIcon from "@/assets/fleche.png";
 import "./chat.css";
@@ -32,6 +34,7 @@ interface ChatViewProps {
   initialWorkingDir?: string;
   initialSkills?: { name: string; content: string }[];
   onInitialMessageSent?: () => void;
+  terminalState: ReturnType<typeof useTerminal>;
 }
 
 interface PendingSwitch {
@@ -52,6 +55,7 @@ export function ChatView({
   initialWorkingDir,
   initialSkills,
   onInitialMessageSent,
+  terminalState,
 }: ChatViewProps) {
   const permissions = usePermissionRequests();
   const permMode = usePermissionMode();
@@ -216,6 +220,22 @@ export function ChatView({
             />
           </div>
         </div>
+        <TerminalPanel
+          tabs={terminalState.tabs}
+          activeTabId={terminalState.activeTabId}
+          isOpen={terminalState.isOpen}
+          panelHeight={terminalState.panelHeight}
+          onAddTab={terminalState.addTab}
+          onCloseTab={terminalState.closeTab}
+          onSelectTab={terminalState.setActiveTab}
+          onRenameTab={terminalState.renameTab}
+          onReorderTabs={terminalState.reorderTabs}
+          onTogglePanel={terminalState.togglePanel}
+          onPtyReady={terminalState.setPtyId}
+          onResize={terminalState.resizePanel}
+          onSetMaxHeight={terminalState.setMaxHeight}
+          defaultCwd={proj.selectedProject?.path || ""}
+        />
       </div>
       {preview && (
         <FilePreview
