@@ -54,17 +54,20 @@ export function AgentLocalTab(): { list: React.ReactNode; detail: React.ReactNod
   );
 
   const [pendingMessage, setPendingMessage] = useState<string | null>(null);
+  const [pendingWorkingDir, setPendingWorkingDir] = useState<string | undefined>(undefined);
 
   const handleWelcomeSend = useCallback(
     async (text: string, projectId?: string) => {
       const name = text.slice(0, 40).trim() || t("agentLocal.newSession");
       const m = welcomeModel ?? { model: defaultModel, provider: defaultProvider };
+      const project = projectId ? projectsHook.projects.find((p) => p.id === projectId) : undefined;
       const session = await create(name, m.model, m.provider, projectId);
       setPendingMessage(text);
+      setPendingWorkingDir(project?.path);
       setWelcomeModel(null);
       await tabState.addTab(session.id, session.name);
     },
-    [create, tabState, defaultModel, defaultProvider, welcomeModel, t],
+    [create, tabState, defaultModel, defaultProvider, welcomeModel, t, projectsHook.projects],
   );
 
   const handleCreateInProject = useCallback(
@@ -139,7 +142,8 @@ export function AgentLocalTab(): { list: React.ReactNode; detail: React.ReactNod
             }}
             onNewSession={handleCreateWithModel}
             initialMessage={pendingMessage ?? undefined}
-            onInitialMessageSent={() => setPendingMessage(null)}
+            initialWorkingDir={pendingWorkingDir}
+            onInitialMessageSent={() => { setPendingMessage(null); setPendingWorkingDir(undefined); }}
           />
         </div>
       ) : (

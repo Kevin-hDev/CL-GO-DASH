@@ -246,5 +246,19 @@
       "ollama": "Ollama",
       "apiKeys": "Clés API"
     }
+  },
+  "agentMd": {
+    "title": "Instructions Agent",
+    "subtitle": "Les fichiers AGENT.md fournissent des instructions persistantes aux LLM capables d'utiliser des outils",
+    "globalTab": "Global",
+    "projectTab": "Projet",
+    "globalDescription": "Ces instructions s'appliquent à toutes les conversations avec des modèles capables d'utiliser des outils.",
+    "projectDescription": "Ces instructions s'appliquent uniquement aux conversations dans ce projet.",
+    "placeholder": "Écris tes instructions ici...\n\nExemple :\n# Règles\n- Explique toujours avant d'agir\n- Réponds toujours en français",
+    "saved": "Instructions sauvegardées",
+    "noProject": "Sélectionne un projet pour modifier les instructions de projet.",
+    "emptyGlobal": "Aucun AGENT.md global trouvé",
+    "emptyProject": "Aucun AGENT.md de projet trouvé",
+    "toolCapableOnly": "Injecté uniquement pour les modèles avec outils"
   }
 }

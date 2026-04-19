@@ -29,6 +29,7 @@ interface ChatViewProps {
   onApplySwitch?: (model: string, provider: string) => void;
   onNewSession?: (model: string, provider: string) => void;
   initialMessage?: string;
+  initialWorkingDir?: string;
   onInitialMessageSent?: () => void;
 }
 
@@ -47,6 +48,7 @@ export function ChatView({
   onApplySwitch,
   onNewSession,
   initialMessage,
+  initialWorkingDir,
   onInitialMessageSent,
 }: ChatViewProps) {
   const permissions = usePermissionRequests();
@@ -66,7 +68,8 @@ export function ChatView({
   useEffect(() => {
     if (initialMessage && !initialSent.current) {
       initialSent.current = true;
-      chat.sendMessage(initialMessage, []).then(() => onInitialMessageSent?.());
+      const workingDir = initialWorkingDir ?? proj.selectedProject?.path;
+      chat.sendMessage(initialMessage, [], workingDir, proj.selectedProjectId ?? undefined).then(() => onInitialMessageSent?.());
     }
   }, [initialMessage]);
 
