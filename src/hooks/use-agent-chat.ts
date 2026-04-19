@@ -88,7 +88,14 @@ export function useAgentChat(
 
   const buildMessages = useCallback((msgs: AgentMessage[]): AgentMessage[] => {
     if (!skillRef.current) return msgs;
-    return [{ id: "system-skill", role: "user", content: skillRef.current, files: [], timestamp: new Date().toISOString() }, ...msgs];
+    const skillMsg: AgentMessage = {
+      id: "system-skill",
+      role: "user",
+      content: `The user has loaded the following skill. Follow its instructions exactly:\n\n${skillRef.current}`,
+      files: [],
+      timestamp: new Date().toISOString(),
+    };
+    return [skillMsg, ...msgs];
   }, []);
 
   const doStream = useCallback(async (msgs: AgentMessage[], streamSession: string, workingDir?: string) => {

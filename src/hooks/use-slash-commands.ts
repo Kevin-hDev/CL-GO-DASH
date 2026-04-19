@@ -6,6 +6,7 @@ export function useSlashCommands() {
   const [skills, setSkills] = useState<SkillInfo[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [filter, setFilter] = useState("");
+  const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
     invoke<SkillInfo[]>("list_skills")
@@ -14,13 +15,16 @@ export function useSlashCommands() {
   }, []);
 
   const filtered = filter
-    ? skills.filter((s) => s.name.toLowerCase().includes(filter.toLowerCase()))
+    ? skills.filter((s) =>
+        s.name.toLowerCase().includes(filter.toLowerCase())
+        || s.description.toLowerCase().includes(filter.toLowerCase()))
     : skills;
 
   const handleInput = useCallback((text: string) => {
     if (text.startsWith("/")) {
       setShowDropdown(true);
       setFilter(text.slice(1));
+      setActiveIndex(0);
     } else {
       setShowDropdown(false);
       setFilter("");
@@ -30,19 +34,38 @@ export function useSlashCommands() {
   const selectSkill = useCallback(async (skill: SkillInfo) => {
     setShowDropdown(false);
     setFilter("");
+    setActiveIndex(0);
     try {
       const content = await invoke<string>("load_skill", { name: skill.name });
-      return content;
+      return { content, skill };
     } catch (e: unknown) {
       console.warn("Erreur chargement skill:", e);
       return null;
     }
   }, []);
 
+  const moveUp = useCallback(() => {
+    setActiveIndex((i) => (i > 0 ? i - 1 : filtered.length - 1));
+  }, [filtered.length]);
+
+  const moveDown = useCallback(() => {
+    setActiveIndex((i) => (i < filtered.length - 1 ? i + 1 : 0));
+  }, [filtered.length]);
+
   const close = useCallback(() => {
     setShowDropdown(false);
     setFilter("");
+    setActiveIndex(0);
   }, []);
 
-  return { skills: filtered, showDropdown, handleInput, selectSkill, close };
+  return {
+    skills: filtered,
+    showDropdown,
+    activeIndex,
+    handleInput,
+    selectSkill,
+    moveUp,
+    moveDown,
+    close,
+  };
 }

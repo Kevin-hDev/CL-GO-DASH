@@ -1,42 +1,58 @@
+import { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import type { SkillInfo } from "@/types/agent";
+import "./slash-autocomplete.css";
 
 interface SlashAutocompleteProps {
   skills: SkillInfo[];
+  activeIndex: number;
   onSelect: (skill: SkillInfo) => void;
 }
 
-export function SlashAutocomplete({ skills, onSelect }: SlashAutocompleteProps) {
-  if (skills.length < 1) return null;
+function SkillIcon() {
+  return (
+    <svg className="slash-item-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <rect x="3" y="3" width="14" height="14" rx="3" />
+      <path d="M8 7l4 3-4 3" />
+    </svg>
+  );
+}
+
+export function SlashAutocomplete({ skills, activeIndex, onSelect }: SlashAutocompleteProps) {
+  const { t } = useTranslation();
+  const listRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const active = listRef.current?.children[activeIndex] as HTMLElement | undefined;
+    active?.scrollIntoView({ block: "nearest" });
+  }, [activeIndex]);
+
+  if (skills.length < 1) {
+    return (
+      <div className="slash-dropdown">
+        <div className="slash-empty">{t("skills.noResults")}</div>
+      </div>
+    );
+  }
 
   return (
-    <div style={{
-      position: "absolute", bottom: "100%", marginBottom: 4, left: 0,
-      width: 280, maxHeight: 200, overflowY: "auto",
-      borderRadius: "var(--radius-md)", border: "1px solid var(--edge)",
-      background: "var(--shell)", boxShadow: "var(--shadow-card)", zIndex: 50,
-    }}>
-      {skills.map((skill) => (
+    <div className="slash-dropdown" ref={listRef}>
+      {skills.map((skill, i) => (
         <div
-          key={skill.name}
+          key={skill.path}
+          className={`slash-item ${i === activeIndex ? "active" : ""}`}
           onClick={() => onSelect(skill)}
-          style={{
-            padding: "var(--space-sm) var(--space-md)", cursor: "pointer",
-            transition: "background var(--ease-smooth)",
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = "var(--pulse-muted)"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
         >
-          <div style={{ fontSize: "var(--text-sm)", color: "var(--ink)" }}>
-            /{skill.name}
+          <SkillIcon />
+          <div className="slash-item-body">
+            <span className="slash-item-name">{skill.name}</span>
+            {skill.description && (
+              <span className="slash-item-desc">{skill.description}</span>
+            )}
           </div>
-          {skill.description && (
-            <div style={{
-              fontSize: "var(--text-xs)", color: "var(--ink-faint)",
-              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-            }}>
-              {skill.description}
-            </div>
-          )}
+          <span className="slash-item-source">
+            {t(`skills.source${skill.source === "project" ? "Project" : "User"}`)}
+          </span>
         </div>
       ))}
     </div>
