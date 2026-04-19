@@ -263,6 +263,11 @@
     "emptyProject": "No project AGENT.md found",
     "toolCapableOnly": "Only injected for tool-capable models"
   },
+  "terminal": {
+    "title": "Terminal",
+    "newTab": "New terminal",
+    "processExited": "Process exited with code {{code}}"
+  },
   "skills": {
     "sourceUser": "User",
     "sourceProject": "Project",
