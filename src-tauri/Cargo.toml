@@ -66,6 +66,9 @@ eventsource-stream = "0.2"
 # Shell cross-platform
 which = "7"
 
+# Terminal PTY cross-platform
+portable-pty = "0.9"
+
 # Token counting (goliapkg — supporte LLaMA, Qwen, DeepSeek, Mistral)
 tiktoken = "3.1"
 
