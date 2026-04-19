@@ -1,6 +1,7 @@
 pub const OLLAMA_BASE_URL: &str = "http://localhost:11434";
 
 pub mod agent_loop;
+pub mod agent_md;
 pub mod agent_settings;
 pub mod chat_prompts;
 pub mod modelfile_parser;

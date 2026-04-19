@@ -83,3 +83,6 @@ globset = "0.4"
 
 # Traductions pré-bundlées (embarquées dans le binaire)
 include_dir = "0.7"
+
+[dev-dependencies]
+tempfile = "3"
