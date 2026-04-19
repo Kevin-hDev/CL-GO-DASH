@@ -20,6 +20,7 @@ pub fn run() {
         .manage(OllamaClient::new())
         .manage(ActiveStreams(Mutex::new(HashMap::new())))
         .manage(OllamaSidecar::new())
+        .manage(services::terminal::PtyManager::new())
         .setup(|app| {
             if let Err(e) = migrate_legacy_storage() {
                 eprintln!("[storage migration] {}", e);
@@ -115,15 +116,26 @@ pub fn run() {
             // Agent MD
             commands::read_agent_md,
             commands::write_agent_md,
+            // Terminal PTY
+            commands::pty_spawn,
+            commands::pty_write,
+            commands::pty_resize,
+            commands::pty_kill,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application");
 
     app.run(|app_handle, event| match event {
         RunEvent::ExitRequested { .. } => {
+            if let Some(pty) = app_handle.try_state::<services::terminal::PtyManager>() {
+                pty.kill_all();
+            }
             ollama_lifecycle::stop_sidecar(app_handle);
         }
         RunEvent::WindowEvent { event: WindowEvent::CloseRequested { .. }, .. } => {
+            if let Some(pty) = app_handle.try_state::<services::terminal::PtyManager>() {
+                pty.kill_all();
+            }
             ollama_lifecycle::stop_sidecar(app_handle);
         }
         _ => {}
