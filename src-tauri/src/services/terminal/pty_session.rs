@@ -29,6 +29,13 @@ impl PtySession {
 
         let shell = default_shell();
         let mut cmd = CommandBuilder::new(&shell);
+        cmd.env("TERM", "xterm-256color");
+        // Empêche zsh de basculer en mode vi si EDITOR contient "vi"
+        if let Ok(editor) = std::env::var("EDITOR") {
+            if editor.contains("vi") {
+                cmd.env("EDITOR", "");
+            }
+        }
 
         if let Some(dir) = cwd {
             cmd.cwd(dir);
