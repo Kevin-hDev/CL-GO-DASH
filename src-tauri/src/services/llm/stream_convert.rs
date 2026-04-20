@@ -57,9 +57,18 @@ pub fn message_to_openai(msg: &ChatMessage) -> Value {
             obj
         }
         _ => {
-            // system, user — content toujours string simple.
-            // Les images Ollama ne sont pas converties (format incompatible).
-            // Le support vision multimodal pour API sera ajouté séparément.
+            if let Some(images) = &msg.images {
+                if !images.is_empty() {
+                    let mut parts = vec![json!({"type": "text", "text": msg.content})];
+                    for img in images {
+                        parts.push(json!({
+                            "type": "image_url",
+                            "image_url": { "url": format!("data:image/png;base64,{}", img) }
+                        }));
+                    }
+                    return json!({ "role": msg.role, "content": parts });
+                }
+            }
             json!({ "role": msg.role, "content": msg.content })
         }
     }

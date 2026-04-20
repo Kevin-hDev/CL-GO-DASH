@@ -14,6 +14,7 @@ pub async fn post_chat_request(
     model: &str,
     messages: &[ChatMessage],
     tools: &[serde_json::Value],
+    think: bool,
 ) -> Result<reqwest::Response, String> {
     let spec = catalog::find(provider_id)
         .ok_or_else(|| format!("provider inconnu : {}", provider_id))?;
@@ -30,6 +31,14 @@ pub async fn post_chat_request(
     });
     if let Some(max) = spec.default_max_tokens {
         payload["max_tokens"] = max.into();
+    }
+    if think {
+        match provider_id {
+            "deepseek" => { payload["reasoning_effort"] = "high".into(); }
+            "openai" => { payload["reasoning"] = serde_json::json!({"effort": "high"}); }
+            "google" => { payload["generationConfig"] = serde_json::json!({"thinkingConfig": {"thinkingBudget": 0}}); }
+            _ => {}
+        }
     }
     if !tools.is_empty() {
         payload["tools"] = serde_json::Value::Array(tools.to_vec());

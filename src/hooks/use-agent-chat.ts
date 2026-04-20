@@ -12,6 +12,8 @@ export function useAgentChat(
   model: string,
   provider: string,
   onPermissionRequest?: (id: string, toolName: string, args: Record<string, unknown>) => void,
+  supportsTools?: boolean,
+  supportsThinking?: boolean,
 ) {
   const [state, setState] = useState<ChatState>(EMPTY_CHAT_STATE);
   const savingRef = useRef(false);
@@ -100,8 +102,10 @@ export function useAgentChat(
       true,
       { displayMessages: displayMsgs, baseTokenCount: state.tokenCount },
       workingDir,
+      supportsTools,
+      supportsThinking,
     );
-  }, [model, provider, startStream, state.tokenCount]);
+  }, [model, provider, startStream, state.tokenCount, supportsTools, supportsThinking]);
 
   const sendMessage = useCallback(async (
     text: string,

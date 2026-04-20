@@ -19,9 +19,10 @@ pub async fn stream_chat_no_done(
     model: &str,
     messages: &[ChatMessage],
     tools: &[serde_json::Value],
+    think: bool,
     cancel: CancellationToken,
 ) -> Result<StreamResult, String> {
-    let resp = post_chat_request(provider_id, model, messages, tools).await?;
+    let resp = post_chat_request(provider_id, model, messages, tools, think).await?;
     let (result, _, _) = consume_stream(on_event, resp, cancel).await?;
     Ok(result)
 }
@@ -83,19 +84,33 @@ fn process_chunk(
     };
     if let Some(choice) = chunk["choices"].as_array().and_then(|a| a.first()) {
         let delta = &choice["delta"];
+        if let Some(thinking) = delta["reasoning_content"].as_str()
+            .or_else(|| delta["reasoning"].as_str())
+        {
+            if !thinking.is_empty() {
+                result.thinking.push_str(thinking);
+                *token_count += 1;
+                let _ = on_event.send(StreamEvent::Thinking {
+                    content: thinking.to_string(),
+                });
+            }
+        }
         if let Some(content) = delta["content"].as_str() {
             if !content.is_empty() {
-                result.content.push_str(content);
-                *token_count += 1;
-                if first_token.is_none() {
-                    *first_token = Some(std::time::Instant::now());
+                let cleaned = clean_think_tags(content);
+                if !cleaned.is_empty() {
+                    result.content.push_str(&cleaned);
+                    *token_count += 1;
+                    if first_token.is_none() {
+                        *first_token = Some(std::time::Instant::now());
+                    }
+                    let tps = compute_tps(*token_count, *first_token);
+                    let _ = on_event.send(StreamEvent::Token {
+                        content: cleaned,
+                        token_count: *token_count,
+                        tps,
+                    });
                 }
-                let tps = compute_tps(*token_count, *first_token);
-                let _ = on_event.send(StreamEvent::Token {
-                    content: content.to_string(),
-                    token_count: *token_count,
-                    tps,
-                });
             }
         }
         if let Some(tcs) = delta["tool_calls"].as_array() {
@@ -106,6 +121,14 @@ fn process_chunk(
         result.eval_count = usage.get("completion_tokens").and_then(|v| v.as_u64()).unwrap_or(0) as u32;
         result.prompt_tokens = usage.get("prompt_tokens").and_then(|v| v.as_u64()).unwrap_or(0) as u32;
     }
+}
+
+fn clean_think_tags(content: &str) -> String {
+    content
+        .replace("<think>", "")
+        .replace("</think>", "")
+        .replace("/think", "")
+        .replace("/no_think", "")
 }
 
 fn compute_tps(count: u32, first: Option<std::time::Instant>) -> f64 {

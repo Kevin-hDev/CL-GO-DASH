@@ -28,6 +28,7 @@ pub async fn run_agent_loop(
     model: &str,
     messages: &mut Vec<ChatMessage>,
     tools: &[serde_json::Value],
+    think: bool,
     working_dir: PathBuf,
     session_id: String,
     cancel: CancellationToken,
@@ -42,7 +43,7 @@ pub async fn run_agent_loop(
         }
 
         let result =
-            stream::stream_chat_no_done(on_event, provider_id, model, messages, tools, cancel.clone())
+            stream::stream_chat_no_done(on_event, provider_id, model, messages, tools, think, cancel.clone())
                 .await?;
 
         total_eval += result.eval_count;

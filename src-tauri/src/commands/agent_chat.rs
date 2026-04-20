@@ -20,6 +20,8 @@ pub async fn chat_stream(
     think: bool,
     provider: Option<String>,
     working_dir: Option<String>,
+    supports_tools: Option<bool>,
+    supports_thinking: Option<bool>,
     streams: tauri::State<'_, ActiveStreams>,
 ) -> Result<(), String> {
     let cancel = CancellationToken::new();
@@ -40,6 +42,8 @@ pub async fn chat_stream(
             think,
             provider,
             working_dir,
+            supports_tools,
+            supports_thinking,
             cancel,
         )
         .await;
@@ -68,6 +72,8 @@ async fn run_stream_task(
     think: bool,
     provider: String,
     working_dir: Option<String>,
+    supports_tools_hint: Option<bool>,
+    supports_thinking_hint: Option<bool>,
     cancel: CancellationToken,
 ) -> Result<(), String> {
     let resolve_dir = |wd: &Option<String>| -> std::path::PathBuf {
@@ -109,10 +115,13 @@ async fn run_stream_task(
         .await
         .map(|_| ())
     } else {
-        // Chat LLM API : tools uniquement si le modèle les supporte.
         use crate::services::llm::tool_capable;
-        let model_supports = tool_capable::supports_tools(&provider, &model);
-        let final_tools = if model_supports {
+        let model_supports_tools = supports_tools_hint
+            .unwrap_or_else(|| tool_capable::supports_tools(&provider, &model));
+        let model_supports_thinking = supports_thinking_hint
+            .unwrap_or_else(|| tool_capable::supports_thinking(&provider, &model));
+
+        let final_tools = if model_supports_tools {
             if tools.is_empty() { tool_dispatcher::get_tool_definitions() } else { tools }
         } else {
             vec![]
@@ -120,12 +129,8 @@ async fn run_stream_task(
         let openai_tools = llm::agent_loop::convert_tools_to_openai(&final_tools);
         let working_dir = resolve_dir(&working_dir);
         let mut msgs = messages;
-        let agent_md_content = if model_supports {
-            agent_md::load_agent_md(Some(working_dir.as_path())).await
-        } else {
-            None
-        };
-        let skills_tuples: Vec<(String, String)> = if model_supports {
+        let agent_md_content = agent_md::load_agent_md(Some(working_dir.as_path())).await;
+        let skills_tuples: Vec<(String, String)> = if model_supports_tools {
             tool_skill_loader::list_skills()
                 .await
                 .unwrap_or_default()
@@ -135,13 +140,15 @@ async fn run_stream_task(
         } else {
             vec![]
         };
-        prepare_messages(&mut msgs, &working_dir, model_supports, agent_md_content, &skills_tuples, &model);
+        prepare_messages(&mut msgs, &working_dir, model_supports_tools, agent_md_content, &skills_tuples, &model);
+        let think_active = think && model_supports_thinking;
         llm::agent_loop::run_agent_loop(
             &on_event,
             &provider,
             &model,
             &mut msgs,
             &openai_tools,
+            think_active,
             working_dir,
             session_id.clone(),
             cancel,

@@ -9,16 +9,23 @@
 //! Pour OpenRouter : l'API `/models` expose un champ `supports_tools` par modèle.
 //! Cette fonction retourne `true` en permissif, on se fiera au flag API côté UI.
 
+fn strip_org_prefix(model_id: &str) -> &str {
+    model_id.rsplit_once('/').map(|(_, name)| name).unwrap_or(model_id)
+}
+
 pub fn supports_tools(provider_id: &str, model_id: &str) -> bool {
-    let model = model_id.to_lowercase();
+    let model = strip_org_prefix(model_id).to_lowercase();
     match provider_id {
         "groq" => {
             model.starts_with("llama-3.3")
-                || model.starts_with("llama-3.1-70b")
-                || model.starts_with("llama-3.1-8b")
+                || model.starts_with("llama-3.1")
                 || model.starts_with("llama-4")
-                || model.starts_with("mixtral-8x")
+                || model.starts_with("mixtral")
                 || model.starts_with("deepseek")
+                || model.starts_with("gemma")
+                || model.starts_with("qwen")
+                || model.starts_with("compound")
+                || model.starts_with("mistral")
         }
         "google" => {
             let has_gemini = model.contains("gemini");
@@ -29,10 +36,13 @@ pub fn supports_tools(provider_id: &str, model_id: &str) -> bool {
         "mistral" => {
             model.starts_with("mistral-large")
                 || model.starts_with("mistral-medium")
-                || model.starts_with("mistral-small-3")
+                || model.starts_with("mistral-small")
                 || model.starts_with("codestral")
+                || model.starts_with("devstral")
+                || model.starts_with("magistral")
                 || model.starts_with("open-mistral-nemo")
                 || model.starts_with("ministral")
+                || model.starts_with("pixtral")
         }
         "cerebras" => {
             model.starts_with("llama-3.1")
@@ -53,9 +63,23 @@ pub fn supports_tools(provider_id: &str, model_id: &str) -> bool {
     }
 }
 
+/// Détection thinking/reasoning par patterns.
+pub fn supports_thinking(provider_id: &str, model_id: &str) -> bool {
+    let model = strip_org_prefix(model_id).to_lowercase();
+    match provider_id {
+        "deepseek" => model.contains("reasoner") || model.contains("r1"),
+        "groq" => model.contains("r1") || model.contains("qwq"),
+        "openai" => model.starts_with("o3") || model.starts_with("o4"),
+        "google" => model.contains("thinking") || model.contains("pro"),
+        "openrouter" => true,
+        "mistral" => model.contains("thinking"),
+        _ => false,
+    }
+}
+
 /// Détection vision par patterns. Modèles connus pour supporter les images.
 pub fn supports_vision(provider_id: &str, model_id: &str) -> bool {
-    let model = model_id.to_lowercase();
+    let model = strip_org_prefix(model_id).to_lowercase();
     match provider_id {
         "groq" => model.starts_with("llama-4") || model.contains("vision"),
         "google" => model.contains("gemini"),
@@ -112,6 +136,21 @@ mod tests {
         assert!(supports_tools("openai", "gpt-5.4"));
         assert!(supports_tools("openai", "o4-mini"));
         assert!(!supports_tools("openai", "text-embedding-3-small"));
+    }
+
+    #[test]
+    fn org_prefixed_model_ids() {
+        assert!(supports_tools("groq", "meta-llama/llama-4-scout-17b-16e-instruct"));
+        assert!(supports_tools("groq", "qwen/qwen3-32b"));
+        assert!(supports_tools("groq", "deepseek/deepseek-r1-distill-llama-70b"));
+        assert!(!supports_tools("groq", "unknown-org/whisper-large-v3"));
+    }
+
+    #[test]
+    fn mistral_devstral() {
+        assert!(supports_tools("mistral", "devstral-small-latest"));
+        assert!(supports_tools("mistral", "magistral-medium-latest"));
+        assert!(supports_tools("mistral", "pixtral-large-latest"));
     }
 
     #[test]

@@ -104,6 +104,11 @@ async fn stream_chat_inner(
             _ = cancel.cancelled() => {
                 return Err("Annulé".to_string());
             }
+            _ = tokio::time::sleep(std::time::Duration::from_secs(300)) => {
+                let msg = "Timeout : aucune réponse d'Ollama depuis 5 min".to_string();
+                let _ = on_event.send(StreamEvent::Error { message: msg.clone() });
+                return Err(msg);
+            }
             line = lines.next_line() => {
                 match line {
                     Ok(Some(text)) => {
