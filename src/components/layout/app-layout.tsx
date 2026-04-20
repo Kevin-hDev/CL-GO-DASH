@@ -39,6 +39,7 @@ export function AppLayout({
       </div>
       <div className="app-detail-panel">
         <DragRegion
+          height={22}
           style={{
             position: "absolute",
             top: 0,

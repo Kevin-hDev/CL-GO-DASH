@@ -31,7 +31,7 @@ export function MessageActions({ role, content, onReload, onEdit, children }: Me
           <Pencil size={14} />
         </button>
       )}
-      <button className="msg-action-btn" onClick={handleCopy}>
+      <button className="msg-action-btn" onClick={handleCopy} style={{ position: "relative", top: -2 }}>
         {copied ? <Check size={14} /> : <Copy size={14} />}
       </button>
       {children}

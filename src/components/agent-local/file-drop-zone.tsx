@@ -34,20 +34,15 @@ export function FileDropZone({ dragging, onDragChange, onDropPaths, children }: 
   }, []);
 
   return (
-    <div style={{ position: "relative", height: "100%" }}>
+    <div style={{ position: "relative", height: "100%", overflow: "hidden", borderRadius: "inherit" }}>
       {children}
       {dragging && (
         <div style={{
-          position: "absolute", inset: 0, zIndex: 40,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          background: "rgba(28, 28, 34, 0.8)",
-          border: "2px dashed var(--pulse)",
-          borderRadius: "var(--radius-md)",
-        }}>
-          <span style={{ fontSize: "var(--text-sm)", color: "var(--select-text)" }}>
-            Déposer les fichiers ici
-          </span>
-        </div>
+          position: "absolute", top: 2, right: 2, bottom: 2, left: 12, zIndex: 40,
+          pointerEvents: "none",
+          border: "2px solid var(--pulse)",
+          borderRadius: "14px",
+        }} />
       )}
     </div>
   );

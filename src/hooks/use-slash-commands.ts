@@ -23,8 +23,11 @@ export function useSlashCommands() {
   const handleInput = useCallback((text: string) => {
     const lastSlash = text.lastIndexOf("/");
     if (lastSlash >= 0) {
+      const before = lastSlash === 0 ? "" : text[lastSlash - 1];
+      const isWordStart = before === "" || before === " " || before === "\n";
       const afterSlash = text.slice(lastSlash + 1);
-      if (!afterSlash.includes(" ")) {
+      const isSlashCommand = isWordStart && !afterSlash.includes(" ") && !afterSlash.includes("/");
+      if (isSlashCommand) {
         setShowDropdown(true);
         setFilter(afterSlash);
         setActiveIndex(0);

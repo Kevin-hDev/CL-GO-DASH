@@ -109,7 +109,7 @@ export function ChatInput({
         if (selected) handleSelectSkill(selected);
         return;
       }
-      if (pressed === K_ESC) { e.preventDefault(); slash.close(); setText(""); return; }
+      if (pressed === K_ESC) { e.preventDefault(); slash.close(); return; }
     }
     if (pressed === K_ENTER && !e.shiftKey) {
       e.preventDefault();
@@ -134,7 +134,6 @@ export function ChatInput({
     const handler = (e: MouseEvent) => {
       if (bubbleRef.current && !bubbleRef.current.contains(e.target as Node)) {
         slash.close();
-        setText("");
       }
     };
     document.addEventListener("mousedown", handler);
