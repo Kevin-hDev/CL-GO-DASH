@@ -1,4 +1,6 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
+import { homeDir, join } from "@tauri-apps/api/path";
+import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
 
 export interface TerminalTab {
   id: string;
@@ -26,6 +28,38 @@ function folderName(cwd: string): string {
   return parts[parts.length - 1] || "Terminal";
 }
 
+interface SavedTab {
+  label: string;
+  cwd: string;
+}
+
+async function getTabsPath(): Promise<string> {
+  const home = await homeDir();
+  return join(home, ".local", "share", "cl-go-dash", "terminal-tabs.json");
+}
+
+async function loadSavedTabs(): Promise<SavedTab[]> {
+  try {
+    const path = await getTabsPath();
+    const text = await readTextFile(path);
+    return JSON.parse(text) as SavedTab[];
+  } catch (err) {
+    // File absent on first launch — not an error worth surfacing
+    console.debug("[terminal-tabs] no saved tabs:", err);
+    return [];
+  }
+}
+
+async function saveTabs(tabs: { label: string; cwd: string }[]): Promise<void> {
+  try {
+    const path = await getTabsPath();
+    const data = tabs.map(({ label, cwd }) => ({ label, cwd }));
+    await writeTextFile(path, JSON.stringify(data));
+  } catch (err) {
+    console.warn("[terminal-tabs] failed to save tabs:", err);
+  }
+}
+
 export function useTerminal(defaultCwd: string) {
   const [state, setState] = useState<TerminalState>({
     tabs: [],
@@ -34,7 +68,33 @@ export function useTerminal(defaultCwd: string) {
     panelHeight: DEFAULT_HEIGHT,
   });
 
+  const [loaded, setLoaded] = useState(false);
   const maxHeightRef = useRef(0);
+
+  useEffect(() => {
+    loadSavedTabs().then((saved) => {
+      if (saved.length > 0) {
+        const tabs = saved.map((s) => ({
+          id: generateId(),
+          ptyId: null,
+          label: s.label,
+          cwd: s.cwd,
+        }));
+        setState((prev) => ({
+          ...prev,
+          tabs,
+          activeTabId: tabs[0].id,
+          isOpen: false,
+        }));
+      }
+      setLoaded(true);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!loaded) return;
+    saveTabs(state.tabs);
+  }, [state.tabs, loaded]);
 
   const addTab = useCallback((cwd?: string) => {
     const dir = cwd || defaultCwd;
