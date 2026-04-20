@@ -58,17 +58,19 @@ export function TerminalInstance({
     termRef.current = term;
     fitRef.current = fit;
 
+    const isMac = navigator.userAgent.includes("Mac");
+
     term.attachCustomKeyEventHandler((e) => {
       if (e.type !== "keydown") return true;
-      const meta = e.metaKey || e.ctrlKey;
 
-      // Cmd+J / Ctrl+J : toggle terminal — laisser remonter au window listener
-      if (meta && e.code === "KeyJ") {
+      // Toggle terminal : Cmd+J (macOS) ou Ctrl+J (Linux/Windows)
+      const toggleMod = isMac ? e.metaKey : e.ctrlKey;
+      if (toggleMod && e.code === "KeyJ") {
         onTogglePanel?.();
         return false;
       }
 
-      // Cmd+C : copie la sélection si elle existe, sinon Ctrl+C (SIGINT)
+      // Cmd+C (macOS) : copie la sélection si elle existe, sinon passe au shell
       if (e.metaKey && e.code === "KeyC") {
         const selection = term.getSelection();
         if (selection) {
@@ -78,7 +80,7 @@ export function TerminalInstance({
         return true;
       }
 
-      // Cmd+V : paste — on laisse le navigateur gérer via l'événement paste natif
+      // Cmd+V (macOS) : paste via événement natif
       if (e.metaKey && e.code === "KeyV") {
         return true;
       }

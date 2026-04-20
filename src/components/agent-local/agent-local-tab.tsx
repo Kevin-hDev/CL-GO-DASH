@@ -49,10 +49,9 @@ export function AgentLocalTab(): { list: React.ReactNode; detail: React.ReactNod
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      const pressed = e.key;
-      const isMac = e.metaKey && pressed === "j";
-      const isOther = e.ctrlKey && pressed === "j";
-      if (!isMac && !isOther) return;
+      const onMac = navigator.userAgent.includes("Mac");
+      const toggle = onMac ? (e.metaKey && e.code === "KeyJ") : (e.ctrlKey && e.code === "KeyJ");
+      if (!toggle) return;
       if (!tabState.activeSessionId) return;
       const target = e.target as HTMLElement;
       const isEditableTarget =
