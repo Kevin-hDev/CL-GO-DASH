@@ -45,6 +45,7 @@ export function TerminalInstance({
       fontSize: 13,
       cursorBlink: true,
       allowProposedApi: true,
+      rightClickSelectsWord: true,
     });
 
     const fit = new FitAddon();
@@ -54,6 +55,33 @@ export function TerminalInstance({
     fit.fit();
     termRef.current = term;
     fitRef.current = fit;
+
+    term.attachCustomKeyEventHandler((e) => {
+      const isCopy = e.metaKey && e.code === "KeyC" && e.type === "keydown";
+      const isPaste = e.metaKey && e.code === "KeyV" && e.type === "keydown";
+
+      // Cmd+C (macOS): copie la sélection si elle existe, sinon laisse passer Ctrl+C (SIGINT)
+      if (isCopy) {
+        const selection = term.getSelection();
+        if (selection) {
+          navigator.clipboard.writeText(selection);
+          return false;
+        }
+        return true;
+      }
+
+      // Cmd+V (macOS): colle depuis le presse-papiers
+      if (isPaste) {
+        navigator.clipboard.readText().then((text) => {
+          if (text && ptyIdRef.current !== null) {
+            invoke("pty_write", { id: ptyIdRef.current, data: text }).catch(() => {});
+          }
+        });
+        return false;
+      }
+
+      return true;
+    });
 
     invoke<number>("pty_spawn", {
       cwd: cwd || null,
