@@ -6,7 +6,8 @@ use tokio::time::{timeout, Duration};
 
 const MAX_LINES: usize = 2000;
 const MAX_BYTES: usize = 50 * 1024;
-const DEFAULT_TIMEOUT: u64 = 30;
+const DEFAULT_TIMEOUT: u64 = 120;
+const MAX_TIMEOUT: u64 = 600;
 
 pub async fn execute_shell(
     command: &str,
@@ -22,7 +23,7 @@ pub async fn execute_shell(
         });
     }
 
-    let secs = timeout_secs.unwrap_or(DEFAULT_TIMEOUT);
+    let secs = timeout_secs.unwrap_or(DEFAULT_TIMEOUT).min(MAX_TIMEOUT);
     let (shell, flag) = detect_shell();
 
     let mut child = Command::new(&shell)

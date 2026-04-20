@@ -16,6 +16,9 @@ interface MessageListProps {
   currentTools: ToolActivity[];
   isStreaming: boolean;
   tps: number;
+  totalElapsedMs: number;
+  segmentStartedAt: number | null;
+  liveTokenCount: number;
   onReload?: (messageId: string) => void;
   onEdit?: (messageId: string, newContent: string) => void;
   onFileClick?: (file: { name: string; path?: string; thumbnail?: string }) => void;
@@ -23,7 +26,8 @@ interface MessageListProps {
 
 export function MessageList({
   messages, completedSegments, currentContent, currentThinking,
-  currentTools, isStreaming, tps, onReload, onEdit, onFileClick,
+  currentTools, isStreaming, tps, totalElapsedMs, segmentStartedAt,
+  liveTokenCount, onReload, onEdit, onFileClick,
 }: MessageListProps) {
   const lastAssistantIdx = findLastIndex(messages, (m) => m.role === "assistant");
 
@@ -47,6 +51,7 @@ export function MessageList({
             <SegmentedAssistantMessage
               key={msg.id} msg={msg} onReload={onReload}
               tps={isLast ? tps : 0}
+              totalElapsedMs={isLast ? totalElapsedMs : 0}
             />
           );
         }
@@ -65,7 +70,10 @@ export function MessageList({
         <LoadingIndicator />
       )}
       {isStreaming && (currentContent || currentThinking) && (
-        <AssistantMessage content={currentContent} thinking={currentThinking} isStreaming />
+        <AssistantMessage
+          content={currentContent} thinking={currentThinking} isStreaming
+          segmentStartedAt={segmentStartedAt} liveTokenCount={liveTokenCount}
+        />
       )}
       {isStreaming && currentTools.length > 0 && <ToolBubble tools={currentTools} />}
     </>
@@ -73,8 +81,8 @@ export function MessageList({
 }
 
 function SegmentedAssistantMessage({
-  msg, onReload, tps,
-}: { msg: AgentMessage; onReload?: (id: string) => void; tps: number }) {
+  msg, onReload, tps, totalElapsedMs,
+}: { msg: AgentMessage; onReload?: (id: string) => void; tps: number; totalElapsedMs: number }) {
   if (msg.segments && msg.segments.length > 0) {
     const lastSegIdx = msg.segments.length - 1;
     return (
@@ -87,6 +95,7 @@ function SegmentedAssistantMessage({
                 content={seg.content}
                 tokens={i === lastSegIdx ? msg.tokens : undefined}
                 tps={i === lastSegIdx ? tps : undefined}
+                totalElapsedMs={i === lastSegIdx ? totalElapsedMs : undefined}
               />
             )}
             {seg.tools.length > 0 && <SavedToolBubble tools={seg.tools} />}

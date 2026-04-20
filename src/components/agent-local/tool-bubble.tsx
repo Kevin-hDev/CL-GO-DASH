@@ -53,7 +53,7 @@ export function ToolBubble({ tools }: { tools: ToolActivity[] }) {
             && tools.slice(0, i).some((p) => p.name === "edit_file" && String(p.args.path) === String(t.args.path));
           return (
             <div key={i}>
-              <ToolRow name={t.name} summary={toolSummary(t)} done={!!t.result} isError={t.isError} />
+              <ToolRow name={t.name} summary={toolSummary(t)} done={!!t.result} isError={t.isError} errorMessage={t.isError ? t.result : undefined} />
               {t.name === "write_file" && !skipWrite && typeof t.args.content === "string" && <ContentPreview content={t.args.content} />}
               {t.name === "edit_file" && typeof t.args.old_string === "string" && <DiffPreview oldText={t.args.old_string} newText={String(t.args.new_string ?? "")} />}
               {(t.name === "web_search" || t.name === "web_fetch") && t.result && <WebResultsPreview content={t.result} isSearch={t.name === "web_search"} />}
@@ -76,7 +76,7 @@ export function SavedToolBubble({ tools }: { tools: ToolActivityRecord[] }) {
             && tools.slice(0, i).some((p) => p.name === "edit_file" && p.summary === t.summary);
           return (
             <div key={i}>
-              <ToolRow name={t.name} summary={t.summary} done={t.is_error != null} isError={t.is_error} />
+              <ToolRow name={t.name} summary={t.summary} done={t.is_error != null} isError={t.is_error} errorMessage={t.is_error ? t.result : undefined} />
               {t.content && !skipWrite && <ContentPreview content={t.content} />}
               {t.old_text != null && t.new_text != null && <DiffPreview oldText={t.old_text} newText={t.new_text} />}
               {(t.name === "web_search" || t.name === "web_fetch") && t.result && <WebResultsPreview content={t.result} isSearch={t.name === "web_search"} />}
@@ -88,15 +88,29 @@ export function SavedToolBubble({ tools }: { tools: ToolActivityRecord[] }) {
   );
 }
 
-function ToolRow({ name, summary, done, isError }: {
-  name: string; summary: string; done: boolean; isError?: boolean;
+const ERROR_STYLE = {
+  color: "var(--signal-error)",
+  fontSize: "10px",
+  fontFamily: "var(--font-mono, monospace)",
+  lineHeight: 1.4,
+  marginTop: 2,
+  marginLeft: 78,
+  opacity: 0.85,
+  wordBreak: "break-word" as const,
+};
+
+function ToolRow({ name, summary, done, isError, errorMessage }: {
+  name: string; summary: string; done: boolean; isError?: boolean; errorMessage?: string;
 }) {
   return (
-    <div style={ROW_STYLE}>
-      <span style={{ color: TOOL_COLORS[name] ?? "var(--ink-muted)", fontWeight: 600, flexShrink: 0, minWidth: 70 }}>{name}</span>
-      <span style={{ color: "var(--ink-muted)", wordBreak: "break-all", flex: 1 }}>{summary}</span>
-      {!done && <Spinner size={12} style={{ color: "var(--ink-faint)", animation: "spin 1s linear infinite", flexShrink: 0 }} />}
-      {done && <span style={{ color: isError ? "var(--signal-error)" : "var(--signal-ok)", flexShrink: 0, fontSize: "10px" }}>{isError ? "✗" : "✓"}</span>}
+    <div>
+      <div style={ROW_STYLE}>
+        <span style={{ color: TOOL_COLORS[name] ?? "var(--ink-muted)", fontWeight: 600, flexShrink: 0, minWidth: 70 }}>{name}</span>
+        <span style={{ color: "var(--ink-muted)", wordBreak: "break-all", flex: 1 }}>{summary}</span>
+        {!done && <Spinner size={12} style={{ color: "var(--ink-faint)", animation: "spin 1s linear infinite", flexShrink: 0 }} />}
+        {done && <span style={{ color: isError ? "var(--signal-error)" : "var(--signal-ok)", flexShrink: 0, fontSize: "10px" }}>{isError ? "✗" : "✓"}</span>}
+      </div>
+      {isError && errorMessage && <div style={ERROR_STYLE}>{errorMessage}</div>}
     </div>
   );
 }

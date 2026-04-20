@@ -94,7 +94,7 @@ async fn run_stream_task(
             .iter()
             .map(|s| (s.name.clone(), s.description.clone()))
             .collect();
-        prepare_messages(&mut msgs, &working_dir, true, agent_md_content, &skills_tuples);
+        prepare_messages(&mut msgs, &working_dir, true, agent_md_content, &skills_tuples, &model);
 
         agent_loop::run_agent_loop(
             &on_event,
@@ -135,7 +135,7 @@ async fn run_stream_task(
         } else {
             vec![]
         };
-        prepare_messages(&mut msgs, &working_dir, model_supports, agent_md_content, &skills_tuples);
+        prepare_messages(&mut msgs, &working_dir, model_supports, agent_md_content, &skills_tuples, &model);
         llm::agent_loop::run_agent_loop(
             &on_event,
             &provider,

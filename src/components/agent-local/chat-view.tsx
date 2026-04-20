@@ -155,6 +155,9 @@ export function ChatView({
             currentTools={chat.currentTools}
             isStreaming={chat.isStreaming}
             tps={chat.tps}
+            totalElapsedMs={chat.totalElapsedMs}
+            segmentStartedAt={chat.segmentStartedAt}
+            liveTokenCount={chat.liveTokenCount}
             onReload={chat.reload}
             onEdit={chat.edit}
             onFileClick={(f) => setPreview({

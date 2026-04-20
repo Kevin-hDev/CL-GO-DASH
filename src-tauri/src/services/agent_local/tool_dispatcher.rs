@@ -100,83 +100,129 @@ pub async fn dispatch_multiple(
 
 pub fn get_tool_definitions() -> Vec<Value> {
     vec![
-        tool_def("bash", "Exécuter une commande shell (bash)", serde_json::json!({
-            "type": "object",
-            "properties": {
-                "command": {"type": "string", "description": "Commande à exécuter"},
-                "timeout": {"type": "integer", "description": "Timeout en secondes"}
-            },
-            "required": ["command"]
-        })),
-        tool_def("read_file", "Lire le contenu d'un fichier", serde_json::json!({
-            "type": "object",
-            "properties": {
-                "path": {"type": "string", "description": "Chemin du fichier"}
-            },
-            "required": ["path"]
-        })),
-        tool_def("write_file", "Écrire dans un fichier", serde_json::json!({
-            "type": "object",
-            "properties": {
-                "path": {"type": "string", "description": "Chemin du fichier"},
-                "content": {"type": "string", "description": "Contenu à écrire"}
-            },
-            "required": ["path", "content"]
-        })),
-        tool_def("edit_file", "Modifier un fichier (remplacement exact)", serde_json::json!({
-            "type": "object",
-            "properties": {
-                "path": {"type": "string", "description": "Chemin du fichier"},
-                "old_string": {"type": "string", "description": "Texte à remplacer (unique)"},
-                "new_string": {"type": "string", "description": "Nouveau texte"}
-            },
-            "required": ["path", "old_string", "new_string"]
-        })),
-        tool_def("list_dir", "Lister le contenu d'un répertoire", serde_json::json!({
-            "type": "object",
-            "properties": {
-                "path": {"type": "string", "description": "Chemin du répertoire"}
-            },
-            "required": ["path"]
-        })),
-        tool_def("grep", "Rechercher un motif regex dans les fichiers (max 250 résultats, respecte .gitignore)", serde_json::json!({
-            "type": "object",
-            "properties": {
-                "pattern": {"type": "string", "description": "Motif regex à rechercher"},
-                "path": {"type": "string", "description": "Dossier de recherche (défaut: working dir)"},
-                "glob": {"type": "string", "description": "Filtre glob sur les fichiers (ex: '*.rs')"}
-            },
-            "required": ["pattern"]
-        })),
-        tool_def("glob", "Lister les fichiers correspondant à un motif glob (max 100 résultats, respecte .gitignore)", serde_json::json!({
-            "type": "object",
-            "properties": {
-                "pattern": {"type": "string", "description": "Motif glob (ex: '**/*.ts', 'src/**/*.rs')"},
-                "path": {"type": "string", "description": "Racine de recherche (défaut: working dir)"}
-            },
-            "required": ["pattern"]
-        })),
-        tool_def("web_search", "Rechercher sur le web", serde_json::json!({
-            "type": "object",
-            "properties": {
-                "query": {"type": "string", "description": "Requête de recherche"}
-            },
-            "required": ["query"]
-        })),
-        tool_def("web_fetch", "Récupérer le contenu d'une URL", serde_json::json!({
-            "type": "object",
-            "properties": {
-                "url": {"type": "string", "description": "URL à récupérer"}
-            },
-            "required": ["url"]
-        })),
-        tool_def("load_skill", "Charger un skill par son nom. Utilise cet outil quand l'utilisateur mentionne un skill ou que la tâche correspond à un skill disponible.", serde_json::json!({
-            "type": "object",
-            "properties": {
-                "skill_name": {"type": "string", "description": "Nom exact du skill à charger (tel qu'affiché dans la liste des skills disponibles)"}
-            },
-            "required": ["skill_name"]
-        })),
+        tool_def(
+            "bash",
+            "Execute any shell command on the user's system. Use for system commands, git, \
+             package managers, compilers, process management, and any task requiring shell execution. \
+             Default timeout is 120s (2 min). For long-running commands (du on large dirs, builds, \
+             installs), set a higher timeout up to 600s (10 min).",
+            serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "command": {"type": "string", "description": "Shell command to execute"},
+                    "timeout": {"type": "integer", "description": "Timeout in seconds (default: 120, max: 600)"}
+                },
+                "required": ["command"]
+            }),
+        ),
+        tool_def(
+            "read_file",
+            "Read any file on the system. Accepts absolute or relative paths. \
+             You can access any file the user can access.",
+            serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "path": {"type": "string", "description": "File path (absolute or relative to working dir)"}
+                },
+                "required": ["path"]
+            }),
+        ),
+        tool_def(
+            "write_file",
+            "Create a new file or overwrite an existing file.",
+            serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "path": {"type": "string", "description": "File path to write to"},
+                    "content": {"type": "string", "description": "Content to write"}
+                },
+                "required": ["path", "content"]
+            }),
+        ),
+        tool_def(
+            "edit_file",
+            "Modify an existing file by replacing an exact string match. \
+             Prefer this over write_file for modifications.",
+            serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "path": {"type": "string", "description": "File path to edit"},
+                    "old_string": {"type": "string", "description": "Exact text to find (must be unique in file)"},
+                    "new_string": {"type": "string", "description": "Replacement text"}
+                },
+                "required": ["path", "old_string", "new_string"]
+            }),
+        ),
+        tool_def(
+            "list_dir",
+            "List the contents of a directory.",
+            serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "path": {"type": "string", "description": "Directory path to list"}
+                },
+                "required": ["path"]
+            }),
+        ),
+        tool_def(
+            "grep",
+            "Search file contents with regex patterns. Max 250 results, respects .gitignore.",
+            serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "pattern": {"type": "string", "description": "Regex pattern to search for"},
+                    "path": {"type": "string", "description": "Directory to search in (default: working dir)"},
+                    "glob": {"type": "string", "description": "File filter glob (e.g. '*.rs', '*.ts')"}
+                },
+                "required": ["pattern"]
+            }),
+        ),
+        tool_def(
+            "glob",
+            "Find files by name patterns. Max 100 results, respects .gitignore.",
+            serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "pattern": {"type": "string", "description": "Glob pattern (e.g. '**/*.ts', 'src/**/*.rs')"},
+                    "path": {"type": "string", "description": "Root directory (default: working dir)"}
+                },
+                "required": ["pattern"]
+            }),
+        ),
+        tool_def(
+            "web_search",
+            "Search the web for current information, documentation, or solutions.",
+            serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "Search query"}
+                },
+                "required": ["query"]
+            }),
+        ),
+        tool_def(
+            "web_fetch",
+            "Fetch and extract content from a URL.",
+            serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "url": {"type": "string", "description": "URL to fetch"}
+                },
+                "required": ["url"]
+            }),
+        ),
+        tool_def(
+            "load_skill",
+            "Load a skill by name for specialized workflows. \
+             Use when the user mentions a skill or the task matches an available skill.",
+            serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "skill_name": {"type": "string", "description": "Exact skill name from the available skills list"}
+                },
+                "required": ["skill_name"]
+            }),
+        ),
     ]
 }
 
