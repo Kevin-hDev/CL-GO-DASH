@@ -2,7 +2,6 @@ import { useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { Terminal } from "@xterm/xterm";
-import { WebglAddon } from "@xterm/addon-webgl";
 import { FitAddon } from "@xterm/addon-fit";
 import "@xterm/xterm/css/xterm.css";
 
@@ -51,14 +50,6 @@ export function TerminalInstance({
     const fit = new FitAddon();
     term.loadAddon(fit);
     term.open(containerRef.current);
-
-    try {
-      const webgl = new WebglAddon();
-      webgl.onContextLoss(() => webgl.dispose());
-      term.loadAddon(webgl);
-    } catch {
-      // fallback au canvas renderer
-    }
 
     fit.fit();
     termRef.current = term;

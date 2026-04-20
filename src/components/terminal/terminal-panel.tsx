@@ -63,7 +63,7 @@ export function TerminalPanel({
       });
     } else if (mounted) {
       setAnimatedHeight(0);
-      const timer = setTimeout(() => setMounted(false), 700);
+      const timer = setTimeout(() => setMounted(false), 400);
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
