@@ -41,6 +41,7 @@ export function TerminalPanel({
   const panelRef = useRef<HTMLDivElement>(null);
   const resizing = useRef(false);
   const [closing, setClosing] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
 
   useEffect(() => {
     const updateMax = () => {
@@ -63,6 +64,7 @@ export function TerminalPanel({
     (e: React.PointerEvent) => {
       e.preventDefault();
       resizing.current = true;
+      setIsResizing(true);
       const startY = e.clientY;
       const startH = panelHeight;
 
@@ -74,6 +76,7 @@ export function TerminalPanel({
 
       const onUp = () => {
         resizing.current = false;
+        setIsResizing(false);
         window.removeEventListener("pointermove", onMove);
         window.removeEventListener("pointerup", onUp);
       };
@@ -109,7 +112,7 @@ export function TerminalPanel({
   return (
     <div
       ref={panelRef}
-      className={`terminal-panel ${closing ? "closing" : ""}`}
+      className={`terminal-panel ${closing ? "closing" : ""} ${isResizing ? "resizing" : ""}`}
       style={{ height }}
     >
       <div

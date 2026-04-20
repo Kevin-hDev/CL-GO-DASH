@@ -115,8 +115,12 @@ export function TerminalInstance({
 
   useEffect(() => {
     if (isVisible && fitRef.current) {
-      fitRef.current.fit();
-      termRef.current?.focus();
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          fitRef.current?.fit();
+          termRef.current?.focus();
+        });
+      });
     }
   }, [isVisible]);
 

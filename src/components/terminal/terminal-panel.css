@@ -10,6 +10,10 @@
   height: 0 !important;
 }
 
+.terminal-panel.resizing {
+  transition: none;
+}
+
 .terminal-resize-handle {
   height: 4px;
   cursor: ns-resize;
