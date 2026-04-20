@@ -98,7 +98,9 @@ export function TerminalInstance({
     });
 
     const resizeObserver = new ResizeObserver(() => {
-      fit.fit();
+      if (containerRef.current && containerRef.current.offsetWidth > 0) {
+        fit.fit();
+      }
     });
     resizeObserver.observe(containerRef.current!);
 
@@ -143,7 +145,10 @@ export function TerminalInstance({
       style={{
         width: "100%",
         height: "100%",
-        display: isVisible ? "block" : "none",
+        visibility: isVisible ? "visible" : "hidden",
+        position: isVisible ? "relative" : "absolute",
+        top: 0,
+        left: 0,
       }}
     />
   );
