@@ -64,7 +64,7 @@ export function ChatInput({
   const hasContent = hasText || hasFiles || activeSkills.length > 0;
 
   const handleSend = useCallback(() => {
-    if (!hasContent) return;
+    if (!hasContent || isStreaming) return;
     const skills = activeSkills.length > 0
       ? activeSkills.map((s) => ({ name: s.name, content: skillContentsRef.current.get(s.name) ?? "" }))
       : undefined;
@@ -74,7 +74,7 @@ export function ChatInput({
     skillContentsRef.current.clear();
     onClearFiles?.();
     if (ref.current) ref.current.style.height = "auto";
-  }, [text, hasContent, hasFiles, files, activeSkills, onSend, onClearFiles, ref]);
+  }, [text, hasContent, hasFiles, files, activeSkills, isStreaming, onSend, onClearFiles, ref]);
 
   const handleChange = useCallback((value: string) => {
     setText(value);

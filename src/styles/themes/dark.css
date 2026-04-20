@@ -4,19 +4,19 @@
 
   /* shadcn/ui tokens (HSL) */
   --background: 240 8% 5%;
-  --foreground: 36 10% 90%;
+  --foreground: 0 0% 64%;
   --card: 240 6% 10%;
-  --card-foreground: 36 10% 90%;
+  --card-foreground: 0 0% 64%;
   --popover: 240 6% 10%;
-  --popover-foreground: 36 10% 90%;
+  --popover-foreground: 0 0% 64%;
   --primary: 25 95% 53%;
   --primary-foreground: 0 0% 100%;
   --secondary: 240 6% 10%;
-  --secondary-foreground: 36 10% 90%;
+  --secondary-foreground: 0 0% 64%;
   --muted: 240 7% 14%;
   --muted-foreground: 0 0% 60%;
   --accent: 240 6% 10%;
-  --accent-foreground: 36 10% 90%;
+  --accent-foreground: 0 0% 64%;
   --destructive: 0 72% 50%;
   --destructive-foreground: 0 0% 100%;
   --border: 0 0% 100% / 0.06;
@@ -32,18 +32,18 @@
 
   /* Legacy dashboard tokens */
   --void: #050b0f;
-  --shell: #111114;
-  --shell-translucent: rgba(17, 17, 20, 0.97);
-  --surface: #111114;
+  --shell: #18181c;
+  --shell-translucent: rgba(24, 24, 28, 0.99);
+  --surface: #111119;
   --surface-hover: #1a1a1f;
   --edge: rgba(255, 255, 255, 0.06);
-  --ink: #e8e6e3;
+  --ink: #a3a3a3;
   --ink-muted: #9a9a9a;
   --ink-faint: #5a5a64;
   --pulse: #ea580c;
   --pulse-muted: rgba(234, 88, 12, 0.15);
   --select-bg: #1a1a1f;
-  --select-text: #e8e6e3;
+  --select-text: #a3a3a3;
   --signal-idle: #5a5a64;
   --signal-live: #f59e0b;
   --signal-error: #ef4444;

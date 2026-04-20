@@ -114,13 +114,15 @@ export function ChatView({
 
   useEffect(() => {
     following.current = true;
+    const el = scrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
   }, [chat.messages.length]);
 
   useEffect(() => {
     if (!following.current) return;
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
-  }, [chat.currentContent]);
+  }, [chat.currentContent, chat.currentThinking, chat.currentTools.length]);
 
   const handleModelSelect = useCallback(
     (newModel: string, newProvider: string) => {
