@@ -47,6 +47,30 @@ export function AgentLocalTab(): { list: React.ReactNode; detail: React.ReactNod
   const model = activeSession?.model ?? currentDefault.model;
   const provider = activeSession?.provider ?? currentDefault.provider;
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const pressed = e.key;
+      const isMac = e.metaKey && pressed === "j";
+      const isOther = e.ctrlKey && pressed === "j";
+      if (!isMac && !isOther) return;
+      if (!tabState.activeSessionId) return;
+      const target = e.target as HTMLElement;
+      const isEditableTarget =
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target.isContentEditable;
+      if (isEditableTarget) return;
+      e.preventDefault();
+      if (!terminal.isOpen && terminal.tabs.length === 0) {
+        terminal.addTab(terminalCwd);
+      } else {
+        terminal.togglePanel();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [tabState.activeSessionId, terminal, terminalCwd]);
+
   const handleCreate = useCallback(() => {
     tabState.deselectTab();
   }, [tabState]);
