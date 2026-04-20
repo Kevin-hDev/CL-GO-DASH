@@ -154,6 +154,7 @@ export function TerminalPanel({
               isVisible={tab.id === activeTabId}
               onPtyReady={onPtyReady}
               onExit={handleExit}
+              onTogglePanel={onTogglePanel}
             />
           ))}
         </div>

@@ -11,6 +11,7 @@ interface TerminalInstanceProps {
   isVisible: boolean;
   onPtyReady: (tabId: string, ptyId: number) => void;
   onExit: (tabId: string) => void;
+  onTogglePanel?: () => void;
 }
 
 function getThemeColors() {
@@ -30,6 +31,7 @@ export function TerminalInstance({
   isVisible,
   onPtyReady,
   onExit,
+  onTogglePanel,
 }: TerminalInstanceProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const termRef = useRef<Terminal | null>(null);
@@ -57,31 +59,42 @@ export function TerminalInstance({
     fitRef.current = fit;
 
     term.attachCustomKeyEventHandler((e) => {
-      const isCopy = e.metaKey && e.code === "KeyC" && e.type === "keydown";
-      const isPaste = e.metaKey && e.code === "KeyV" && e.type === "keydown";
+      if (e.type !== "keydown") return true;
+      const meta = e.metaKey || e.ctrlKey;
 
-      // Cmd+C (macOS): copie la sélection si elle existe, sinon laisse passer Ctrl+C (SIGINT)
-      if (isCopy) {
+      // Cmd+J / Ctrl+J : toggle terminal — laisser remonter au window listener
+      if (meta && e.code === "KeyJ") {
+        onTogglePanel?.();
+        return false;
+      }
+
+      // Cmd+C : copie la sélection si elle existe, sinon Ctrl+C (SIGINT)
+      if (e.metaKey && e.code === "KeyC") {
         const selection = term.getSelection();
         if (selection) {
-          navigator.clipboard.writeText(selection);
+          navigator.clipboard.writeText(selection).catch(() => {});
           return false;
         }
         return true;
       }
 
-      // Cmd+V (macOS): colle depuis le presse-papiers
-      if (isPaste) {
-        navigator.clipboard.readText().then((text) => {
-          if (text && ptyIdRef.current !== null) {
-            invoke("pty_write", { id: ptyIdRef.current, data: text }).catch(() => {});
-          }
-        });
-        return false;
+      // Cmd+V : paste — on laisse le navigateur gérer via l'événement paste natif
+      if (e.metaKey && e.code === "KeyV") {
+        return true;
       }
 
       return true;
     });
+
+    // Paste via l'événement natif (pas besoin de readText permission)
+    const pasteHandler = (e: ClipboardEvent) => {
+      const text = e.clipboardData?.getData("text");
+      if (text && ptyIdRef.current !== null) {
+        invoke("pty_write", { id: ptyIdRef.current, data: text }).catch(() => {});
+        e.preventDefault();
+      }
+    };
+    containerRef.current.addEventListener("paste", pasteHandler);
 
     invoke<number>("pty_spawn", {
       cwd: cwd || null,
@@ -123,7 +136,9 @@ export function TerminalInstance({
     });
     resizeObserver.observe(containerRef.current!);
 
+    const container = containerRef.current;
     return () => {
+      container?.removeEventListener("paste", pasteHandler);
       resizeObserver.disconnect();
       unlisten1.then((fn) => fn());
       unlisten2.then((fn) => fn());
