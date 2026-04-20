@@ -68,10 +68,12 @@ export function TerminalPanel({
     }
   }, [isOpen]);
 
+  const prevHeightRef = useRef(panelHeight);
   useEffect(() => {
-    if (isOpen && !isResizing) {
+    if (isOpen && !isResizing && prevHeightRef.current !== panelHeight) {
       setAnimatedHeight(panelHeight);
     }
+    prevHeightRef.current = panelHeight;
   }, [panelHeight, isOpen, isResizing]);
 
   const handleResizeStart = useCallback(
