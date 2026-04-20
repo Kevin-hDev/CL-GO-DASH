@@ -40,7 +40,8 @@ export function TerminalPanel({
 }: TerminalPanelProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const resizing = useRef(false);
-  const [closing, setClosing] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [animatedHeight, setAnimatedHeight] = useState(0);
   const [isResizing, setIsResizing] = useState(false);
 
   useEffect(() => {
@@ -53,12 +54,25 @@ export function TerminalPanel({
   }, [onSetMaxHeight]);
 
   useEffect(() => {
-    if (!isOpen && tabs.length === 0) {
-      setClosing(true);
-      const timer = setTimeout(() => setClosing(false), 700);
+    if (isOpen) {
+      setMounted(true);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setAnimatedHeight(panelHeight);
+        });
+      });
+    } else if (mounted) {
+      setAnimatedHeight(0);
+      const timer = setTimeout(() => setMounted(false), 700);
       return () => clearTimeout(timer);
     }
-  }, [isOpen, tabs.length]);
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (isOpen && !isResizing) {
+      setAnimatedHeight(panelHeight);
+    }
+  }, [panelHeight, isOpen, isResizing]);
 
   const handleResizeStart = useCallback(
     (e: React.PointerEvent) => {
@@ -72,6 +86,7 @@ export function TerminalPanel({
         if (!resizing.current) return;
         const delta = startY - ev.clientY;
         onResize(startH + delta);
+        setAnimatedHeight(startH + delta);
       };
 
       const onUp = () => {
@@ -105,15 +120,13 @@ export function TerminalPanel({
     [onCloseTab]
   );
 
-  if (!isOpen && !closing) return null;
-
-  const height = isOpen ? panelHeight : 0;
+  if (!mounted) return null;
 
   return (
     <div
       ref={panelRef}
-      className={`terminal-panel ${closing ? "closing" : ""} ${isResizing ? "resizing" : ""}`}
-      style={{ height }}
+      className={`terminal-panel ${isResizing ? "resizing" : ""}`}
+      style={{ height: animatedHeight }}
     >
       <div
         className="terminal-resize-handle"
