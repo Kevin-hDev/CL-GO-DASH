@@ -91,6 +91,7 @@ export function useAgentChat(
     displayMsgs: AgentMessage[],
     streamSession: string,
     workingDir?: string,
+    baseTokenCountOverride?: number,
   ) => {
     await startStream(
       streamSession,
@@ -99,7 +100,7 @@ export function useAgentChat(
       llmMsgs,
       [],
       true,
-      { displayMessages: displayMsgs, baseTokenCount: state.tokenCount },
+      { displayMessages: displayMsgs, baseTokenCount: baseTokenCountOverride ?? state.tokenCount },
       workingDir,
       supportsTools,
       supportsThinking,
@@ -141,20 +142,24 @@ export function useAgentChat(
     await doStream(llmMsgs, displayMsgs, sessionId, workingDir);
   }, [sessionId, state.messages, doStream]);
 
-  const syncTokenCount = useCallback(async () => {
-    if (!sessionId) return;
+  const syncTokenCount = useCallback(async (): Promise<number> => {
+    if (!sessionId) return state.tokenCount;
     const session = await invoke<AgentSession>("get_agent_session", { id: sessionId }).catch(() => null);
-    if (session) setState((s) => ({ ...s, tokenCount: session.accumulated_tokens }));
-  }, [sessionId]);
+    if (session) {
+      setState((s) => ({ ...s, tokenCount: session.accumulated_tokens }));
+      return session.accumulated_tokens;
+    }
+    return state.tokenCount;
+  }, [sessionId, state.tokenCount]);
 
   const reload = useCallback(async (messageId: string) => {
     if (!sessionId) return;
     const idx = state.messages.findIndex((m) => m.id === messageId);
     if (idx < 0) return;
     await invoke("truncate_and_replace_at", { sessionId, messageId, replacement: null }).catch((e: unknown) => console.error("Truncate:", e));
-    await syncTokenCount();
+    const freshTokenCount = await syncTokenCount();
     const msgs = state.messages.slice(0, idx + 1);
-    await doStream(msgs, msgs, sessionId);
+    await doStream(msgs, msgs, sessionId, undefined, freshTokenCount);
   }, [sessionId, state.messages, doStream, syncTokenCount]);
 
   const edit = useCallback(async (messageId: string, newContent: string) => {
@@ -163,9 +168,9 @@ export function useAgentChat(
     if (idx < 0) return;
     const newMsg: AgentMessage = { id: crypto.randomUUID(), role: "user", content: newContent, files: [], timestamp: new Date().toISOString() };
     await invoke("truncate_and_replace_at", { sessionId, messageId, replacement: newMsg }).catch((e: unknown) => console.error("Truncate+replace:", e));
-    await syncTokenCount();
+    const freshTokenCount = await syncTokenCount();
     const msgs = [...state.messages.slice(0, idx), newMsg];
-    await doStream(msgs, msgs, sessionId);
+    await doStream(msgs, msgs, sessionId, undefined, freshTokenCount);
   }, [sessionId, state.messages, doStream, syncTokenCount]);
 
   const stop = useCallback(async () => {
