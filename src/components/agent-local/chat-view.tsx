@@ -158,6 +158,7 @@ export function ChatView({
             totalElapsedMs={chat.totalElapsedMs}
             segmentStartedAt={chat.segmentStartedAt}
             liveTokenCount={chat.liveTokenCount}
+            error={chat.error}
             onReload={chat.reload}
             onEdit={chat.edit}
             onFileClick={(f) => setPreview({

@@ -18,6 +18,7 @@ export interface ChatState {
   streamStartedAt: number | null;
   segmentStartedAt: number | null;
   totalElapsedMs: number;
+  error?: string;
 }
 
 export interface PermissionRequestState {
@@ -64,6 +65,7 @@ export function toChatState(state: ManagedStreamState): ChatState {
     streamStartedAt: state.streamStartedAt,
     segmentStartedAt: state.segmentStartedAt,
     totalElapsedMs: state.totalElapsedMs,
+    error: state.error,
   };
 }
 
@@ -126,7 +128,7 @@ export function applyStreamEvent(
     case "error":
       next.isStreaming = false;
       next.completed = true;
-      next.error = "Le flux s'est interrompu.";
+      next.error = event.data.message || "Le flux s'est interrompu.";
       break;
   }
   return { state: next };

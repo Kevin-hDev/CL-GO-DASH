@@ -70,8 +70,8 @@ pub fn supports_thinking(provider_id: &str, model_id: &str) -> bool {
         "deepseek" => model.contains("reasoner") || model.contains("r1"),
         "groq" => model.contains("r1") || model.contains("qwq"),
         "openai" => model.starts_with("o3") || model.starts_with("o4"),
-        "google" => model.contains("thinking") || model.contains("pro"),
-        "openrouter" => true,
+        "google" => model.contains("thinking"),
+        "openrouter" => false,
         "mistral" => model.contains("thinking"),
         _ => false,
     }
@@ -89,7 +89,7 @@ pub fn supports_vision(provider_id: &str, model_id: &str) -> bool {
                 || model.starts_with("pixtral")
         }
         "cerebras" => false,
-        "openrouter" => true,
+        "openrouter" => false,
         "openai" => {
             model.starts_with("gpt-4o")
                 || model.starts_with("gpt-4-turbo")
@@ -97,7 +97,7 @@ pub fn supports_vision(provider_id: &str, model_id: &str) -> bool {
                 || model.starts_with("o4")
                 || model.starts_with("o3")
         }
-        "deepseek" => model.contains("chat"),
+        "deepseek" => model.contains("vl"),
         _ => false,
     }
 }

@@ -49,11 +49,18 @@ pub fn parse_models_list(
                 .map(|arr| arr.iter().any(|v| v.as_str() == Some("tools")))
                 .unwrap_or(false)
                 || m["capabilities"]["function_calling"].as_bool().unwrap_or(false);
-            // Mistral: `capabilities.vision`, OpenRouter: `architecture.modality` contient "image"
+            let is_chat = m["capabilities"]["completion_chat"].as_bool().unwrap_or(true);
+            if !is_chat && m["capabilities"].is_object() {
+                return None;
+            }
             let supports_vision = m["capabilities"]["vision"].as_bool().unwrap_or(false)
                 || m["architecture"]["modality"]
                     .as_str()
-                    .map(|s| s.contains("image"))
+                    .map(|s| s.contains("image->") || s.contains("image+"))
+                    .unwrap_or(false)
+                || m["architecture"]["input_modalities"]
+                    .as_array()
+                    .map(|arr| arr.iter().any(|v| v.as_str() == Some("image")))
                     .unwrap_or(false);
             let is_free = is_price_free(&m["pricing"]["prompt"])
                 && is_price_free(&m["pricing"]["completion"]);

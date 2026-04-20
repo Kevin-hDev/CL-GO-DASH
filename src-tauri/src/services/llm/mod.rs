@@ -6,10 +6,11 @@
 
 pub mod agent_loop;
 pub mod catalog;
+pub mod model_registry;
 pub mod openai_compat;
 mod openai_compat_parsing;
 pub mod stream;
-mod stream_convert;
+pub mod stream_convert;
 mod stream_http;
 mod stream_tools;
 pub mod quota;

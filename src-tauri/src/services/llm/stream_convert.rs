@@ -1,15 +1,7 @@
-//! Conversion des messages format Ollama (interne) vers payload OpenAI-compat.
-//!
-//! Différences clés :
-//! - `role: "tool"` OpenAI requiert `tool_call_id` (pas `tool_name`)
-//! - `tool_calls[].function.arguments` OpenAI est un **string JSON**, pas un objet
-//! - `tool_calls[].id` requis, `type: "function"` requis
-
 use crate::services::agent_local::types_ollama::ChatMessage;
 use serde_json::{json, Value};
 
-/// Convertit un `ChatMessage` (Ollama) vers le format de message OpenAI-compat.
-pub fn message_to_openai(msg: &ChatMessage) -> Value {
+pub fn message_to_openai(msg: &ChatMessage, provider_id: &str) -> Value {
     match msg.role.as_str() {
         "tool" => {
             let mut obj = json!({
@@ -56,25 +48,61 @@ pub fn message_to_openai(msg: &ChatMessage) -> Value {
             }
             obj
         }
-        _ => {
+        "user" => {
             if let Some(images) = &msg.images {
                 if !images.is_empty() {
                     let mut parts = vec![json!({"type": "text", "text": msg.content})];
                     for img in images {
-                        parts.push(json!({
-                            "type": "image_url",
-                            "image_url": { "url": format!("data:image/png;base64,{}", img) }
-                        }));
+                        parts.push(build_image_part(img, provider_id));
                     }
-                    return json!({ "role": msg.role, "content": parts });
+                    return json!({ "role": "user", "content": parts });
                 }
             }
+            json!({ "role": "user", "content": msg.content })
+        }
+        _ => {
             json!({ "role": msg.role, "content": msg.content })
         }
     }
 }
 
-/// Convertit un batch de messages vers un array JSON OpenAI-compat.
-pub fn messages_to_openai(messages: &[ChatMessage]) -> Vec<Value> {
-    messages.iter().map(message_to_openai).collect()
+fn build_image_part(base64_data: &str, provider_id: &str) -> Value {
+    let data_url = format!("data:image/png;base64,{base64_data}");
+    match provider_id {
+        "mistral" => json!({
+            "type": "image_url",
+            "image_url": data_url,
+        }),
+        "google" => json!({
+            "type": "image_url",
+            "image_url": { "url": data_url },
+        }),
+        _ => json!({
+            "type": "image_url",
+            "image_url": { "url": data_url },
+        }),
+    }
+}
+
+pub fn messages_to_openai(messages: &[ChatMessage], provider_id: &str) -> Vec<Value> {
+    messages.iter().map(|m| message_to_openai(m, provider_id)).collect()
+}
+
+pub fn strip_images(messages: &mut [ChatMessage]) {
+    for msg in messages.iter_mut() {
+        if msg.role == "user" {
+            if let Some(images) = &msg.images {
+                if !images.is_empty() {
+                    let count = images.len();
+                    let note = if count == 1 {
+                        "\n\n[1 image was attached but this model does not support vision]"
+                    } else {
+                        "\n\n[Images were attached but this model does not support vision]"
+                    };
+                    msg.content.push_str(note);
+                    msg.images = None;
+                }
+            }
+        }
+    }
 }

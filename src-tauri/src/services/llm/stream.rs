@@ -1,18 +1,12 @@
-//! Streaming chat SSE pour providers OpenAI-compat (avec support tools).
-//!
-//! Émet des `StreamEvent` compatibles avec le pattern Ollama : le frontend consomme
-//! le stream de la même manière quel que soit le provider.
-
-use super::stream_http::post_chat_request;
+use super::stream_http::{post_chat_request, RequestConfig, RequestError};
 use super::stream_tools::ToolCallAccumulator;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::types_ollama::{ChatMessage, StreamEvent, StreamResult};
+use crate::services::llm::stream_convert;
 use eventsource_stream::Eventsource;
 use futures_util::StreamExt;
 use tokio_util::sync::CancellationToken;
 
-/// Variante sans `Done` final — utilisée par l'agent loop qui émet son propre `Done`
-/// après avoir agrégé tous les tours.
 pub async fn stream_chat_no_done(
     on_event: &AgentEventEmitter,
     provider_id: &str,
@@ -22,9 +16,32 @@ pub async fn stream_chat_no_done(
     think: bool,
     cancel: CancellationToken,
 ) -> Result<StreamResult, String> {
-    let resp = post_chat_request(provider_id, model, messages, tools, think).await?;
-    let (result, _, _) = consume_stream(on_event, resp, cancel).await?;
-    Ok(result)
+    let cfg = RequestConfig { provider_id, model, messages, tools, think };
+    match post_chat_request(&cfg).await {
+        Ok(resp) => {
+            let (result, _, _) = consume_stream(on_event, resp, cancel).await?;
+            Ok(result)
+        }
+        Err(RequestError::RetryWithoutTools(msg)) => {
+            eprintln!("[llm stream] retry sans tools: {msg}");
+            let cfg2 = RequestConfig { provider_id, model, messages, tools: &[], think };
+            let resp = post_chat_request(&cfg2).await.map_err(|e| e.to_string())?;
+            let (result, _, _) = consume_stream(on_event, resp, cancel).await?;
+            Ok(result)
+        }
+        Err(RequestError::RetryWithoutImages(msg)) => {
+            eprintln!("[llm stream] retry sans images: {msg}");
+            let mut msgs_clean = messages.to_vec();
+            stream_convert::strip_images(&mut msgs_clean);
+            let cfg2 = RequestConfig {
+                provider_id, model, messages: &msgs_clean, tools, think,
+            };
+            let resp = post_chat_request(&cfg2).await.map_err(|e| e.to_string())?;
+            let (result, _, _) = consume_stream(on_event, resp, cancel).await?;
+            Ok(result)
+        }
+        Err(RequestError::Fatal(msg)) => Err(msg),
+    }
 }
 
 async fn consume_stream(
@@ -53,7 +70,6 @@ async fn consume_stream(
         }
     }
 
-    // Finalise tool_calls accumulés et émet un event par tool.
     let (tool_calls, ids) = acc.finalize();
     for (i, (name, args)) in tool_calls.iter().enumerate() {
         let _ = on_event.send(StreamEvent::ToolCall {

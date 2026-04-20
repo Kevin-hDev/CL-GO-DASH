@@ -19,6 +19,7 @@ interface MessageListProps {
   totalElapsedMs: number;
   segmentStartedAt: number | null;
   liveTokenCount: number;
+  error?: string;
   onReload?: (messageId: string) => void;
   onEdit?: (messageId: string, newContent: string) => void;
   onFileClick?: (file: { name: string; path?: string; thumbnail?: string }) => void;
@@ -27,7 +28,7 @@ interface MessageListProps {
 export function MessageList({
   messages, completedSegments, currentContent, currentThinking,
   currentTools, isStreaming, tps, totalElapsedMs, segmentStartedAt,
-  liveTokenCount, onReload, onEdit, onFileClick,
+  liveTokenCount, error, onReload, onEdit, onFileClick,
 }: MessageListProps) {
   const lastAssistantIdx = findLastIndex(messages, (m) => m.role === "assistant");
 
@@ -76,6 +77,16 @@ export function MessageList({
         />
       )}
       {isStreaming && currentTools.length > 0 && <ToolBubble tools={currentTools} />}
+
+      {error && !isStreaming && (
+        <div style={{
+          color: "var(--signal-error)", fontSize: "12px",
+          fontFamily: "var(--font-mono, monospace)",
+          padding: "8px 14px", margin: "6px 0", opacity: 0.9,
+        }}>
+          {error}
+        </div>
+      )}
     </>
   );
 }

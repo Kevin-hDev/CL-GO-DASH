@@ -36,6 +36,7 @@ pub fn run() {
             let scheduler = Scheduler::spawn(app.handle().clone());
             app.manage(scheduler);
             start_ollama_polling(app.handle().clone());
+            tauri::async_runtime::spawn(services::llm::model_registry::init());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

@@ -45,9 +45,8 @@ export function useAgentChat(
     let alive = true;
     const applySnapshot = (snapshot: ReturnType<typeof getStreamSnapshot>) => {
       if (!snapshot || !alive || sessionRef.current !== sessionId) return;
-      const { pendingPermissions, completed, error, ...chatState } = snapshot;
+      const { pendingPermissions, completed, ...chatState } = snapshot;
       void completed;
-      void error;
       setState(chatState);
       for (const request of pendingPermissions) {
         deliverPermission(request.id, request.toolName, request.arguments);

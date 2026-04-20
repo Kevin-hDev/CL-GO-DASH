@@ -115,11 +115,19 @@ async fn run_stream_task(
         .await
         .map(|_| ())
     } else {
-        use crate::services::llm::tool_capable;
-        let model_supports_tools = supports_tools_hint
-            .unwrap_or_else(|| tool_capable::supports_tools(&provider, &model));
-        let model_supports_thinking = supports_thinking_hint
-            .unwrap_or_else(|| tool_capable::supports_thinking(&provider, &model));
+        use crate::services::llm::{model_registry, tool_capable};
+        let registry_caps = model_registry::lookup(&provider, &model).await;
+        let model_supports_tools = supports_tools_hint.unwrap_or_else(|| {
+            registry_caps.as_ref().map(|c| c.supports_tools).unwrap_or(false)
+                || tool_capable::supports_tools(&provider, &model)
+        });
+        let model_supports_thinking = supports_thinking_hint.unwrap_or_else(|| {
+            registry_caps.as_ref().map(|c| c.supports_thinking).unwrap_or(false)
+                || tool_capable::supports_thinking(&provider, &model)
+        });
+
+        let model_supports_vision = registry_caps.as_ref().map(|c| c.supports_vision).unwrap_or(false)
+            || tool_capable::supports_vision(&provider, &model);
 
         let final_tools = if model_supports_tools {
             if tools.is_empty() { tool_dispatcher::get_tool_definitions() } else { tools }
@@ -129,6 +137,9 @@ async fn run_stream_task(
         let openai_tools = llm::agent_loop::convert_tools_to_openai(&final_tools);
         let working_dir = resolve_dir(&working_dir);
         let mut msgs = messages;
+        if !model_supports_vision {
+            llm::stream_convert::strip_images(&mut msgs);
+        }
         let agent_md_content = agent_md::load_agent_md(Some(working_dir.as_path())).await;
         let skills_tuples: Vec<(String, String)> = if model_supports_tools {
             tool_skill_loader::list_skills()
