@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { Plus, X } from "@/components/ui/icons";
+import { TerminalSquare, X as XIcon, Plus } from "lucide-react";
 import type { TerminalTab } from "@/hooks/use-terminal";
 import "./terminal-tab-bar.css";
 
@@ -15,16 +15,6 @@ interface TerminalTabBarProps {
 }
 
 const DRAG_THRESHOLD = 5;
-const ENTER = "Enter";
-const ESCAPE = "Escape";
-
-function pressedEnter(e: React.KeyboardEvent | KeyboardEvent): boolean {
-  return e.code === "Enter" || e.code === "NumpadEnter";
-}
-
-function pressedEscape(e: React.KeyboardEvent | KeyboardEvent): boolean {
-  return e.code === "Escape";
-}
 
 export function TerminalTabBar({
   tabs,
@@ -36,48 +26,23 @@ export function TerminalTabBar({
   onReorder,
   onClosePanel,
 }: TerminalTabBarProps) {
-  void ENTER;
-  void ESCAPE;
-
   const [editingTabId, setEditingTabId] = useState<string | null>(null);
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
   const barRef = useRef<HTMLDivElement>(null);
   const startRef = useRef<{ x: number; idx: number } | null>(null);
   const draggingRef = useRef(false);
+  const tabWidthRef = useRef(0);
   const isMulti = tabs.length > 1;
 
   const handlePointerDown = useCallback((e: React.PointerEvent, idx: number) => {
     if (e.button !== 0 || editingTabId !== null) return;
     e.stopPropagation();
     startRef.current = { x: e.clientX, idx };
+
+    const el = (e.currentTarget as HTMLElement);
+    tabWidthRef.current = el.offsetWidth;
   }, [editingTabId]);
-
-  const commitRename = useCallback(
-    (tabId: string, value: string) => {
-      onRename(tabId, value);
-      setEditingTabId(null);
-    },
-    [onRename]
-  );
-
-  const handleRenameBlur = useCallback(
-    (e: React.FocusEvent<HTMLInputElement>, tabId: string) => {
-      commitRename(tabId, e.target.value);
-    },
-    [commitRename]
-  );
-
-  const handleRenameInput = useCallback(
-    (e: React.KeyboardEvent<HTMLInputElement>, tabId: string) => {
-      if (pressedEnter(e)) {
-        commitRename(tabId, e.currentTarget.value);
-      } else if (pressedEscape(e)) {
-        setEditingTabId(null);
-      }
-    },
-    [commitRename]
-  );
 
   useEffect(() => {
     const onMove = (e: PointerEvent) => {
@@ -89,15 +54,17 @@ export function TerminalTabBar({
       }
       if (!barRef.current) return;
       const items = barRef.current.querySelectorAll<HTMLElement>("[data-term-tab-idx]");
+      let found: number | null = null;
       for (const el of items) {
         const rect = el.getBoundingClientRect();
+        const idx = Number(el.dataset.termTabIdx);
+        if (idx === startRef.current!.idx) continue;
         if (e.clientX >= rect.left && e.clientX <= rect.right) {
-          const idx = Number(el.dataset.termTabIdx);
-          setHoverIdx(idx !== startRef.current!.idx ? idx : null);
-          return;
+          found = idx;
+          break;
         }
       }
-      setHoverIdx(null);
+      setHoverIdx(found);
     };
 
     const onUp = () => {
@@ -118,21 +85,23 @@ export function TerminalTabBar({
     };
   }, [hoverIdx, onReorder]);
 
+  function getTransform(i: number): string {
+    if (dragIdx === null || hoverIdx === null || i === dragIdx) return "none";
+    const w = tabWidthRef.current;
+    if (dragIdx < hoverIdx) {
+      if (i > dragIdx && i <= hoverIdx) return `translateX(-${w}px)`;
+    } else if (dragIdx > hoverIdx) {
+      if (i < dragIdx && i >= hoverIdx) return `translateX(${w}px)`;
+    }
+    return "none";
+  }
+
   return (
     <div className="terminal-tab-bar" ref={barRef}>
       {tabs.map((tab, i) => {
         const isSelected = tab.id === activeTabId;
         const isDragged = dragIdx === i;
         const isEditing = editingTabId === tab.id;
-
-        let transform = "none";
-        if (hoverIdx !== null && dragIdx !== null && !isDragged) {
-          if (dragIdx < hoverIdx && i > dragIdx && i <= hoverIdx) {
-            transform = "translateX(-100%)";
-          } else if (dragIdx > hoverIdx && i < dragIdx && i >= hoverIdx) {
-            transform = "translateX(100%)";
-          }
-        }
 
         return (
           <div
@@ -143,30 +112,44 @@ export function TerminalTabBar({
               isSelected && isMulti ? "active-multi" : "",
               isDragged ? "dragging" : "",
             ].join(" ")}
-            style={{ transform }}
+            style={{ transform: getTransform(i) }}
             onClick={() => { if (!draggingRef.current) onSelect(tab.id); }}
             onPointerDown={(e) => handlePointerDown(e, i)}
             onDoubleClick={() => setEditingTabId(tab.id)}
           >
+            <div
+              className="terminal-tab-icon-wrap"
+              onClick={(e) => {
+                e.stopPropagation();
+                onClose(tab.id);
+              }}
+            >
+              <span className="tab-icon-terminal">
+                <TerminalSquare size={12} />
+              </span>
+              <span className="tab-icon-close">
+                <XIcon size={10} />
+              </span>
+            </div>
             {isEditing ? (
               <input
                 autoFocus
                 className="terminal-tab-rename"
                 defaultValue={tab.label}
                 onFocus={(e) => e.target.select()}
-                onBlur={(e) => handleRenameBlur(e, tab.id)}
-                onKeyDown={(e) => handleRenameInput(e, tab.id)}
+                onBlur={(e) => { onRename(tab.id, e.target.value); setEditingTabId(null); }}
+                onKeyDown={(e) => {
+                  if (e.code === "Enter" || e.code === "NumpadEnter") {
+                    onRename(tab.id, e.currentTarget.value);
+                    setEditingTabId(null);
+                  }
+                  if (e.code === "Escape") setEditingTabId(null);
+                }}
                 onClick={(e) => e.stopPropagation()}
               />
             ) : (
               <span>{tab.label}</span>
             )}
-            <button
-              className="terminal-tab-close"
-              onClick={(e) => { e.stopPropagation(); onClose(tab.id); }}
-            >
-              <X size={10} />
-            </button>
           </div>
         );
       })}
@@ -174,7 +157,7 @@ export function TerminalTabBar({
         <Plus size={14} />
       </button>
       <button className="terminal-tab-bar-close" onClick={onClosePanel}>
-        <X size={14} />
+        <XIcon size={14} />
       </button>
     </div>
   );

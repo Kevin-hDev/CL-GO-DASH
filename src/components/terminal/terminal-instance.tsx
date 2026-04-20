@@ -17,11 +17,11 @@ interface TerminalInstanceProps {
 function getThemeColors() {
   const style = getComputedStyle(document.documentElement);
   return {
-    background: style.getPropertyValue("--shell").trim() || "#111114",
+    background: style.getPropertyValue("--void").trim() || "#050b0f",
     foreground: style.getPropertyValue("--ink").trim() || "#e8e6e3",
-    cursor: style.getPropertyValue("--pulse").trim() || "#ea580c",
-    cursorAccent: style.getPropertyValue("--shell").trim() || "#111114",
-    selectionBackground: "rgba(234,88,12,0.3)",
+    cursor: style.getPropertyValue("--ink").trim() || "#e8e6e3",
+    cursorAccent: style.getPropertyValue("--void").trim() || "#050b0f",
+    selectionBackground: "rgba(255,255,255,0.15)",
   };
 }
 

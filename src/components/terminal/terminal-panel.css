@@ -1,5 +1,5 @@
 .terminal-panel {
-  background: var(--shell);
+  background: var(--void);
   border-top: 1px solid var(--edge);
   overflow: hidden;
   flex-shrink: 0;

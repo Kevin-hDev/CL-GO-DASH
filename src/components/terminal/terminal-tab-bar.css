@@ -2,7 +2,7 @@
   display: flex;
   align-items: center;
   height: 32px;
-  background: var(--shell);
+  background: var(--void);
   border-bottom: 1px solid var(--edge);
   overflow-x: auto;
   overflow-y: hidden;
@@ -45,22 +45,36 @@
   opacity: 0.5;
 }
 
-.terminal-tab-close {
-  display: none;
-  background: none;
-  border: none;
-  color: var(--ink-muted);
-  cursor: pointer;
-  padding: 2px;
-  line-height: 1;
+/* Icône terminal devant le label — taille fixe, pas de décalage au hover */
+.terminal-tab-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  transition: background 150ms ease;
 }
 
-.terminal-tab-item:hover .terminal-tab-close {
+.terminal-tab-icon-wrap .tab-icon-terminal {
   display: flex;
 }
 
-.terminal-tab-close:hover {
-  color: var(--ink);
+.terminal-tab-icon-wrap .tab-icon-close {
+  display: none;
+}
+
+.terminal-tab-item:hover .terminal-tab-icon-wrap {
+  background: var(--ink-faint);
+}
+
+.terminal-tab-item:hover .terminal-tab-icon-wrap .tab-icon-terminal {
+  display: none;
+}
+
+.terminal-tab-item:hover .terminal-tab-icon-wrap .tab-icon-close {
+  display: flex;
 }
 
 .terminal-tab-rename {

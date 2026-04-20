@@ -184,7 +184,7 @@ export function TabBar({
             height: 28,
             background: "none",
             border: "none",
-            color: terminalOpen ? "var(--pulse)" : "var(--ink-muted)",
+            color: terminalOpen ? "var(--ink)" : "var(--ink-muted)",
             cursor: "pointer",
           }}
           onMouseEnter={(e) => {
