@@ -33,6 +33,7 @@ interface ChatViewProps {
   initialMessage?: string;
   initialWorkingDir?: string;
   initialSkills?: { name: string; content: string }[];
+  initialFiles?: DroppedFile[];
   onInitialMessageSent?: () => void;
   terminalState: ReturnType<typeof useTerminal>;
 }
@@ -54,6 +55,7 @@ export function ChatView({
   initialMessage,
   initialWorkingDir,
   initialSkills,
+  initialFiles,
   onInitialMessageSent,
   terminalState,
 }: ChatViewProps) {
@@ -72,10 +74,12 @@ export function ChatView({
   const initialSent = useRef(false);
 
   useEffect(() => {
-    if ((initialMessage || (initialSkills && initialSkills.length > 0)) && !initialSent.current) {
+    const hasInitialContent = initialMessage || (initialFiles && initialFiles.length > 0) || (initialSkills && initialSkills.length > 0);
+    if (hasInitialContent && !initialSent.current) {
       initialSent.current = true;
       const workingDir = initialWorkingDir ?? proj.selectedProject?.path;
-      chat.sendMessage(initialMessage || "", [], workingDir, proj.selectedProjectId ?? undefined, initialSkills).then(() => onInitialMessageSent?.());
+      const files = initialFiles?.map((f) => ({ name: f.name, path: f.path, preview: f.preview }));
+      chat.sendMessage(initialMessage || "", files, workingDir, proj.selectedProjectId ?? undefined, initialSkills).then(() => onInitialMessageSent?.());
     }
   }, [initialMessage]);
 

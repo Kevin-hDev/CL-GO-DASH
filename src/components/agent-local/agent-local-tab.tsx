@@ -9,6 +9,7 @@ import { useAgentSessions } from "@/hooks/use-agent-sessions";
 import { useAgentTabs } from "@/hooks/use-agent-tabs";
 import { useProjects } from "@/hooks/use-projects";
 import { useTerminal } from "@/hooks/use-terminal";
+import type { DroppedFile } from "@/hooks/use-file-drop";
 
 interface OllamaModel {
   name: string;
@@ -86,9 +87,10 @@ export function AgentLocalTab(): { list: React.ReactNode; detail: React.ReactNod
   const [pendingMessage, setPendingMessage] = useState<string | null>(null);
   const [pendingWorkingDir, setPendingWorkingDir] = useState<string | undefined>(undefined);
   const [pendingSkills, setPendingSkills] = useState<{ name: string; content: string }[] | undefined>(undefined);
+  const [pendingFiles, setPendingFiles] = useState<DroppedFile[] | undefined>(undefined);
 
   const handleWelcomeSend = useCallback(
-    async (text: string, projectId?: string, skills?: { name: string; content: string }[]) => {
+    async (text: string, files?: DroppedFile[], projectId?: string, skills?: { name: string; content: string }[]) => {
       const name = text.slice(0, 40).trim() || t("agentLocal.newSession");
       const m = welcomeModel ?? { model: defaultModel, provider: defaultProvider };
       const project = projectId ? projectsHook.projects.find((p) => p.id === projectId) : undefined;
@@ -96,6 +98,7 @@ export function AgentLocalTab(): { list: React.ReactNode; detail: React.ReactNod
       setPendingMessage(text);
       setPendingWorkingDir(project?.path);
       setPendingSkills(skills);
+      setPendingFiles(files && files.length > 0 ? files : undefined);
       setWelcomeModel(null);
       await tabState.addTab(session.id, session.name);
     },
@@ -185,7 +188,8 @@ export function AgentLocalTab(): { list: React.ReactNode; detail: React.ReactNod
             initialMessage={pendingMessage ?? undefined}
             initialWorkingDir={pendingWorkingDir}
             initialSkills={pendingSkills}
-            onInitialMessageSent={() => { setPendingMessage(null); setPendingWorkingDir(undefined); setPendingSkills(undefined); }}
+            initialFiles={pendingFiles}
+            onInitialMessageSent={() => { setPendingMessage(null); setPendingWorkingDir(undefined); setPendingSkills(undefined); setPendingFiles(undefined); }}
             terminalState={terminal}
           />
         </div>

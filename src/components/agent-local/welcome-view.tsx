@@ -3,9 +3,10 @@ import { useTranslation } from "react-i18next";
 import { open as openFileDialog } from "@tauri-apps/plugin-dialog";
 import { ChatInput } from "./chat-input";
 import { ProjectSelector } from "./project-selector";
+import { FileDropZone } from "./file-drop-zone";
 import { usePermissionMode } from "@/hooks/use-permission-mode";
+import { useFileDrop, type DroppedFile } from "@/hooks/use-file-drop";
 import type { Project } from "@/types/agent";
-import type { DroppedFile } from "@/hooks/use-file-drop";
 import "./welcome-view.css";
 
 interface WelcomeViewProps {
@@ -13,7 +14,7 @@ interface WelcomeViewProps {
   provider: string;
   projects: Project[];
   onAddProject: (path: string) => Promise<Project>;
-  onSend: (text: string, projectId?: string, skills?: { name: string; content: string }[]) => void;
+  onSend: (text: string, files?: DroppedFile[], projectId?: string, skills?: { name: string; content: string }[]) => void;
   onModelChange: (model: string, provider: string) => void;
 }
 
@@ -22,6 +23,7 @@ export function WelcomeView({
 }: WelcomeViewProps) {
   const { t } = useTranslation();
   const permMode = usePermissionMode();
+  const fileDrop = useFileDrop();
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [leaving, setLeaving] = useState(false);
 
@@ -33,46 +35,61 @@ export function WelcomeView({
     setSelectedProjectId(project.id);
   }, [onAddProject]);
 
-  const handleSend = useCallback((text: string, _files?: DroppedFile[], skills?: { name: string; content: string }[]) => {
-    if (!text.trim() && (!skills || skills.length < 1)) return;
+  const handleSend = useCallback((text: string, files?: DroppedFile[], skills?: { name: string; content: string }[]) => {
+    const hasFiles = files && files.length > 0;
+    if (!text.trim() && !hasFiles && (!skills || skills.length < 1)) return;
     setLeaving(true);
     setTimeout(() => {
-      onSend(text, selectedProjectId ?? undefined, skills);
+      onSend(text, files, selectedProjectId ?? undefined, skills);
     }, 350);
   }, [onSend, selectedProjectId]);
 
   return (
-    <div className={`welcome-zone ${leaving ? "welcome-leaving" : ""}`}>
-      <div className="welcome-content">
-        <h1 className={`welcome-title ${leaving ? "welcome-title-leave" : ""}`}>
-          {t("welcome.title")}
-        </h1>
-        <div className={`welcome-input-wrap ${leaving ? "welcome-input-leave" : ""}`}>
-          <ChatInput
-            modelName={model}
-            providerName={provider}
-            isStreaming={false}
-            thinkingEnabled={false}
-            contextUsed={0}
-            contextMax={0}
-            permissionMode={permMode.mode}
-            onPermissionModeChange={permMode.change}
-            onSend={handleSend}
-            onStop={() => {}}
-            onFileImport={() => {}}
-            onModelChange={onModelChange}
-            onToggleThinking={() => {}}
-          />
-          <ProjectSelector
-            projects={projects}
-            selectedProjectId={selectedProjectId}
-            locked={false}
-            hidden={false}
-            onSelect={setSelectedProjectId}
-            onAddProject={handleAddProject}
-          />
+    <FileDropZone
+      dragging={fileDrop.dragging}
+      onDragChange={fileDrop.setDragging}
+      onDropPaths={(paths) => fileDrop.addByPaths(paths)}
+    >
+      <div className={`welcome-zone ${leaving ? "welcome-leaving" : ""}`}>
+        <div className="welcome-content">
+          <h1 className={`welcome-title ${leaving ? "welcome-title-leave" : ""}`}>
+            {t("welcome.title")}
+          </h1>
+          <div className={`welcome-input-wrap ${leaving ? "welcome-input-leave" : ""}`}>
+            <ChatInput
+              modelName={model}
+              providerName={provider}
+              isStreaming={false}
+              thinkingEnabled={false}
+              files={fileDrop.files}
+              contextUsed={0}
+              contextMax={0}
+              permissionMode={permMode.mode}
+              onPermissionModeChange={permMode.change}
+              onSend={handleSend}
+              onStop={() => {}}
+              onRemoveFile={fileDrop.removeFile}
+              onClearFiles={fileDrop.clearFiles}
+              onFileImport={async () => {
+                const result = await openFileDialog({ multiple: true });
+                if (!result) return;
+                const raw = Array.isArray(result) ? result : [result];
+                fileDrop.addByPaths(raw.map((p) => String(p)));
+              }}
+              onModelChange={onModelChange}
+              onToggleThinking={() => {}}
+            />
+            <ProjectSelector
+              projects={projects}
+              selectedProjectId={selectedProjectId}
+              locked={false}
+              hidden={false}
+              onSelect={setSelectedProjectId}
+              onAddProject={handleAddProject}
+            />
+          </div>
         </div>
       </div>
-    </div>
+    </FileDropZone>
   );
 }
