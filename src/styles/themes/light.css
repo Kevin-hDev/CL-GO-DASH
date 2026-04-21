@@ -14,7 +14,7 @@
   --secondary: 36 15% 90%;
   --secondary-foreground: 0 0% 10%;
   --muted: 36 15% 90%;
-  --muted-foreground: 0 0% 42%;
+  --muted-foreground: 0 0% 28%;
   --accent: 36 15% 90%;
   --accent-foreground: 0 0% 10%;
   --destructive: 0 72% 50%;
@@ -33,13 +33,13 @@
   /* Legacy dashboard tokens */
   --void: #f5f3f0;
   --shell: #ede9e4;
-  --shell-translucent: rgba(237, 233, 228, 0.92);
+  --shell-translucent: rgba(237, 233, 228, 0.80);
   --surface: #ffffff;
   --surface-hover: #faf8f5;
   --edge: #e5e2dd;
   --ink: #1a1a1a;
-  --ink-muted: #6b6b6b;
-  --ink-faint: #a0a0a0;
+  --ink-muted: #3d3d3d;
+  --ink-faint: #5c5c5c;
   --pulse: #c2410c;
   --pulse-muted: rgba(194, 65, 12, 0.12);
   --select-bg: #e5e2dd;

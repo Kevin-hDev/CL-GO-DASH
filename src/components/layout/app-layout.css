@@ -2,7 +2,7 @@
   display: flex;
   height: 100vh;
   padding: 1px;
-  gap: 1px;
+  gap: 3px;
   background: transparent;
 }
 
@@ -11,11 +11,19 @@
   overflow: hidden;
   border-radius: 16px;
   background: var(--shell-translucent);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--edge);
   flex-shrink: 0;
   width: auto;
+  animation: keep-compositing 1s linear infinite;
   transition: margin-left 0.6s cubic-bezier(0.4, 0, 0.2, 1),
               opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes keep-compositing {
+  0%, 100% { transform: translateZ(0); }
+  50% { transform: translateZ(0.1px); }
 }
 
 .app-sidebar-block.app-sidebar-hidden {
