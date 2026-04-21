@@ -1,7 +1,8 @@
-import { useState, type ReactNode } from "react";
+import { useState, useCallback, useEffect, type ReactNode } from "react";
 import { Sidebar, type TabId } from "./sidebar";
 import { DragRegion } from "./drag-region";
 import { WindowToolbar } from "./window-toolbar";
+import { SearchDialog } from "./search-dialog";
 import "./app-layout.css";
 
 interface AppLayoutProps {
@@ -14,6 +15,8 @@ interface AppLayoutProps {
   onForward: () => void;
   canGoBack: boolean;
   canGoForward: boolean;
+  onSearchSelect: (sessionId: string) => void;
+  onNewSession?: () => void;
 }
 
 export function AppLayout({
@@ -21,17 +24,58 @@ export function AppLayout({
   listContent, detailContent,
   onShowWelcome,
   onBack, onForward, canGoBack, canGoForward,
+  onSearchSelect, onNewSession,
 }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  const openSearch = useCallback(() => setSearchOpen(true), []);
+  const closeSearch = useCallback(() => setSearchOpen(false), []);
+  const toggleSidebar = useCallback(() => setSidebarOpen((o) => !o), []);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const mod = navigator.userAgent.includes("Mac") ? e.metaKey : e.ctrlKey;
+      if (!mod) return;
+
+      switch (e.code) {
+        case "KeyB":
+          e.preventDefault();
+          toggleSidebar();
+          break;
+        case "KeyG":
+          e.preventDefault();
+          setSearchOpen((o) => !o);
+          break;
+        case "ArrowLeft":
+          e.preventDefault();
+          onBack();
+          break;
+        case "ArrowRight":
+          e.preventDefault();
+          onForward();
+          break;
+        case "KeyN":
+          if (e.altKey) {
+            e.preventDefault();
+            onNewSession?.();
+          }
+          break;
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [toggleSidebar, onBack, onForward, onNewSession]);
 
   return (
     <div className={`app-root ${sidebarOpen ? "" : "sidebar-hidden"}`}>
       <WindowToolbar
         sidebarOpen={sidebarOpen}
-        onToggleSidebar={() => setSidebarOpen((o) => !o)}
+        onToggleSidebar={toggleSidebar}
         onBack={onBack}
         onForward={onForward}
         onNewSession={() => onShowWelcome?.()}
+        onSearch={openSearch}
         canGoBack={canGoBack}
         canGoForward={canGoForward}
       />
@@ -55,6 +99,11 @@ export function AppLayout({
         />
         {detailContent}
       </div>
+      <SearchDialog
+        open={searchOpen}
+        onClose={closeSearch}
+        onSelect={onSearchSelect}
+      />
     </div>
   );
 }

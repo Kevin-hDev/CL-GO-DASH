@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSettings } from "@/hooks/use-settings";
 import type { Theme } from "@/hooks/use-theme";
-import { GearSix, Key, Sliders, Info, ChatCircleDots } from "@/components/ui/icons";
+import { GearSix, Key, Sliders, Info, ChatCircleDots, Keyboard } from "@/components/ui/icons";
 import { ThemedIcon } from "@/components/ui/themed-icon";
 import { GeneralSettings } from "./general-settings";
 import { AdvancedSettings } from "./advanced-settings";
+import { ShortcutsSettings } from "./shortcuts-settings";
 import { LlmExplorer } from "./llm-explorer";
 import { OllamaTab } from "@/components/ollama/ollama-tab";
 import { ApiKeysTab } from "@/components/api-keys/api-keys-tab";
@@ -13,7 +14,7 @@ import ollamaDark from "@/assets/ollama.png";
 import ollamaLight from "@/assets/ollama-light.png";
 import type { Icon } from "@phosphor-icons/react";
 
-type SettingsSubTab = "general" | "ollama" | "api-keys" | "llm" | "advanced" | "about";
+type SettingsSubTab = "general" | "ollama" | "api-keys" | "llm" | "advanced" | "shortcuts" | "about";
 
 interface SubTabDef {
   id: SettingsSubTab;
@@ -29,6 +30,7 @@ const SUB_TABS: SubTabDef[] = [
   { id: "api-keys", i18n: "settings.tabs.apiKeys", icon: Key },
   { id: "llm", i18n: "settings.tabs.llm", icon: ChatCircleDots },
   { id: "advanced", i18n: "settings.tabs.advanced", icon: Sliders },
+  { id: "shortcuts", i18n: "settings.tabs.shortcuts", icon: Keyboard },
   { id: "about", i18n: "settings.tabs.about", icon: Info },
 ];
 
@@ -125,6 +127,7 @@ export function SettingsTab({ theme, onThemeChange, activeSubTab, onSubTabChange
     if (subTab === "api-keys") return apiKeysTab.detail;
     if (subTab === "llm") return <LlmExplorer />;
     if (subTab === "advanced") return <AdvancedSettings />;
+    if (subTab === "shortcuts") return <ShortcutsSettings />;
     return null;
   })();
 

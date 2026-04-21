@@ -110,6 +110,16 @@ export function AgentLocalTab(props?: AgentLocalTabProps): { list: React.ReactNo
     [create, tabState, defaultModel, defaultProvider, welcomeModel, t, projectsHook.projects],
   );
 
+  const handleAutoRename = useCallback(
+    async (id: string, name: string) => {
+      await rename(id, name);
+      if (tabState.activeIndex >= 0) {
+        await tabState.renameTab(tabState.activeIndex, name);
+      }
+    },
+    [rename, tabState],
+  );
+
   const handleCreateInProject = useCallback(
     async (projectId: string) => {
       const name = t("agentLocal.newSession");
@@ -223,6 +233,7 @@ export function AgentLocalTab(props?: AgentLocalTabProps): { list: React.ReactNo
               }
             }}
             onNewSession={handleCreateWithModel}
+            onAutoRename={handleAutoRename}
             initialMessage={pendingMessage ?? undefined}
             initialWorkingDir={pendingWorkingDir}
             initialSkills={pendingSkills}

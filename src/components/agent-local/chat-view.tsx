@@ -30,6 +30,7 @@ interface ChatViewProps {
   onSessionsRefresh?: () => void;
   onApplySwitch?: (model: string, provider: string) => void;
   onNewSession?: (model: string, provider: string) => void;
+  onAutoRename?: (id: string, name: string) => void;
   initialMessage?: string;
   initialWorkingDir?: string;
   initialSkills?: { name: string; content: string }[];
@@ -52,6 +53,7 @@ export function ChatView({
   onSessionsRefresh,
   onApplySwitch,
   onNewSession,
+  onAutoRename,
   initialMessage,
   initialWorkingDir,
   initialSkills,
@@ -205,8 +207,15 @@ export function ChatView({
               onRemoveFile={fileDrop.removeFile}
               onPreviewFile={setPreview}
               onSend={(text, sentFiles, skills) => {
+                const isFirst = chat.messages.length < 1;
                 chat.sendMessage(text, sentFiles, proj.selectedProject?.path, proj.selectedProjectId ?? undefined, skills)
-                  .then(() => { if (proj.selectedProjectId) onSessionsRefresh?.(); });
+                  .then(() => {
+                    if (proj.selectedProjectId) onSessionsRefresh?.();
+                    if (isFirst && text.trim()) {
+                      const autoName = text.slice(0, 40).trim();
+                      if (autoName) onAutoRename?.(sessionId, autoName);
+                    }
+                  });
               }}
               onStop={chat.stop}
               onClearFiles={fileDrop.clearFiles}

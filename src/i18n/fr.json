@@ -252,6 +252,7 @@
       "apiKeys": "Clés API",
       "llm": "LLM",
       "advanced": "Avancé",
+      "shortcuts": "Raccourcis clavier",
       "about": "À propos"
     },
     "general": {
@@ -302,6 +303,14 @@
       "yes": "Oui",
       "no": "Non"
     },
+    "shortcuts": {
+      "toggleTerminal": "Ouvrir/fermer le terminal",
+      "toggleSidebar": "Ouvrir/fermer la sidebar",
+      "goBack": "Précédent",
+      "goForward": "Suivant",
+      "newSession": "Nouvelle session",
+      "searchDialog": "Rechercher une conversation"
+    },
     "confirm": {
       "deleteModel": "Confirmer ?"
     }
@@ -330,5 +339,11 @@
     "sourceProject": "Projet",
     "noResults": "Aucun skill trouvé",
     "badge": "Skill"
+  },
+  "search": {
+    "placeholder": "Rechercher des conversations…",
+    "recent": "Conversations récentes",
+    "results": "Résultats",
+    "empty": "Aucune conversation trouvée"
   }
 }

@@ -1,7 +1,9 @@
 import { useState, useRef, useCallback, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { Plus, X } from "@/components/ui/icons";
 import { TerminalSquare } from "lucide-react";
+import { Tooltip } from "@/components/ui/tooltip";
 import { setInternalDrag } from "@/lib/internal-drag";
 import type { TabInfo } from "@/types/agent";
 import "./conversation.css";
@@ -22,10 +24,14 @@ interface TabBarProps {
 
 const DRAG_THRESHOLD = 5;
 
+const IS_MAC = navigator.userAgent.includes("Mac");
+const MOD = IS_MAC ? "⌘" : "Ctrl+";
+
 export function TabBar({
   tabs, activeIndex, canAddTab, sessionId, terminalOpen,
   onSelect, onClose, onAdd, onRename, onReorder, onToggleTerminal,
 }: TabBarProps) {
+  const { t } = useTranslation();
   const [renamingIdx, setRenamingIdx] = useState<number | null>(null);
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [dropIdx, setDropIdx] = useState<number | null>(null);
@@ -172,11 +178,12 @@ export function TabBar({
         </button>
       )}
       {sessionId && (
+        <span style={{ marginLeft: "auto" }}>
+        <Tooltip label={`${t("settings.shortcuts.toggleTerminal")} (${MOD}J)`} align="right">
         <button
           className="terminal-toggle-btn"
           onClick={(e) => { e.stopPropagation(); onToggleTerminal(); }}
           style={{
-            marginLeft: "auto",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -196,6 +203,8 @@ export function TabBar({
         >
           <TerminalSquare size={16} />
         </button>
+        </Tooltip>
+        </span>
       )}
     </div>
   );

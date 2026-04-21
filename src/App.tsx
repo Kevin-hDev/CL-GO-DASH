@@ -57,6 +57,10 @@ export default function App() {
     agentTab.onShowWelcome?.();
   }, [agentTab, push]);
 
+  const handleSearchSelect = useCallback((sessionId: string) => {
+    push({ tab: "agent-local", sessionId });
+  }, [push]);
+
   return (
     <AppLayout
       activeTab={activeTab}
@@ -68,6 +72,8 @@ export default function App() {
       onForward={goForward}
       canGoBack={canGoBack}
       canGoForward={canGoForward}
+      onSearchSelect={handleSearchSelect}
+      onNewSession={handleShowWelcome}
     />
   );
 }

@@ -38,6 +38,10 @@
   justify-content: center;
 }
 
+.sb-nav-item:hover {
+  background: var(--surface-hover);
+}
+
 .group\/sb:hover .sb-nav-item {
   gap: 9px;
   justify-content: flex-start;

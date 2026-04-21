@@ -252,6 +252,7 @@
       "apiKeys": "API Keys",
       "llm": "LLM",
       "advanced": "Advanced",
+      "shortcuts": "Keyboard Shortcuts",
       "about": "About"
     },
     "general": {
@@ -302,6 +303,14 @@
       "yes": "Yes",
       "no": "No"
     },
+    "shortcuts": {
+      "toggleTerminal": "Toggle terminal",
+      "toggleSidebar": "Toggle sidebar",
+      "goBack": "Go back",
+      "goForward": "Go forward",
+      "newSession": "New session",
+      "searchDialog": "Search conversations"
+    },
     "confirm": {
       "deleteModel": "Confirm?"
     }
@@ -330,5 +339,11 @@
     "sourceProject": "Project",
     "noResults": "No skills found",
     "badge": "Skill"
+  },
+  "search": {
+    "placeholder": "Search conversations…",
+    "recent": "Recent conversations",
+    "results": "Results",
+    "empty": "No conversation found"
   }
 }

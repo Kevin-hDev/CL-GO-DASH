@@ -135,8 +135,8 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
           "transition-all duration-200 ease-out",
         )}
         style={{
-          paddingTop: 10,
-          paddingBottom: 10,
+          paddingTop: 5,
+          paddingBottom: 5,
           marginLeft: 6,
           marginRight: 6,
           marginBottom: 12,

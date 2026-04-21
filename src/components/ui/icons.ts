@@ -37,4 +37,5 @@ export {
   ChatsCircle,
   GearSix,
   Info,
+  Keyboard,
 } from "@phosphor-icons/react";
