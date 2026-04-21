@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSettings } from "@/hooks/use-settings";
 import type { Theme } from "@/hooks/use-theme";
@@ -35,13 +35,26 @@ const SUB_TABS: SubTabDef[] = [
 interface SettingsTabProps {
   theme: Theme;
   onThemeChange: (theme: Theme) => void;
+  activeSubTab?: string;
+  onSubTabChange?: (subTab: string) => void;
 }
 
-export function SettingsTab({ theme, onThemeChange }: SettingsTabProps): {
+export function SettingsTab({ theme, onThemeChange, activeSubTab, onSubTabChange }: SettingsTabProps): {
   list: React.ReactNode;
   detail: React.ReactNode;
 } {
-  const [subTab, setSubTab] = useState<SettingsSubTab>("general");
+  const [subTab, setSubTabState] = useState<SettingsSubTab>("general");
+
+  useEffect(() => {
+    if (activeSubTab && SUB_TABS.some((t) => t.id.startsWith(activeSubTab))) {
+      setSubTabState(activeSubTab as SettingsSubTab);
+    }
+  }, [activeSubTab]);
+
+  const setSubTab = (id: SettingsSubTab) => {
+    setSubTabState(id);
+    onSubTabChange?.(id);
+  };
   const settings = useSettings();
   const { t } = useTranslation();
 

@@ -7,10 +7,19 @@ import { showToast } from "@/lib/toast-emitter";
 import { PersonalityList } from "./personality-list";
 import { MarkdownViewer } from "./markdown-viewer";
 
-export function PersonalityTab(): { list: React.ReactNode; detail: React.ReactNode } {
+interface PersonalityTabProps {
+  activePath?: string | null;
+  onPathChange?: (path: string | null) => void;
+}
+
+export function PersonalityTab(props?: PersonalityTabProps): { list: React.ReactNode; detail: React.ReactNode } {
   const { t } = useTranslation();
   const [files, setFiles] = useState<PersonalityFile[]>([]);
-  const [selectedPath, setSelectedPath] = useState<string | null>(null);
+  const [selectedPath, setSelectedPathState] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (props?.activePath !== undefined) setSelectedPathState(props.activePath);
+  }, [props?.activePath]);
   const [content, setContent] = useState<string>("");
   const [fileName, setFileName] = useState<string>("");
   const [injectionState, setInjectionState] = useState<Record<string, boolean>>({});
@@ -36,6 +45,11 @@ export function PersonalityTab(): { list: React.ReactNode; detail: React.ReactNo
     }
   }, [selectedPath]);
   useFsEvent("fs:personality-changed", reloadContent);
+
+  const setSelectedPath = (path: string | null) => {
+    setSelectedPathState(path);
+    props?.onPathChange?.(path);
+  };
 
   const handleSelect = useCallback(async (path: string) => {
     setSelectedPath(path);

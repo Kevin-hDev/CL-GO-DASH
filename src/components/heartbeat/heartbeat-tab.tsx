@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useWakeups } from "@/hooks/use-wakeups";
 import { formatSchedule } from "@/lib/wakeup-format";
@@ -14,10 +14,24 @@ type DialogState =
   | { kind: "create" }
   | { kind: "edit"; wakeup: ScheduledWakeup };
 
-export function HeartbeatTab(): { list: React.ReactNode; detail: React.ReactNode } {
+interface HeartbeatTabProps {
+  activeWakeupId?: string | null;
+  onWakeupChange?: (id: string | null) => void;
+}
+
+export function HeartbeatTab(props?: HeartbeatTabProps): { list: React.ReactNode; detail: React.ReactNode } {
   const { t } = useTranslation();
   const { wakeups, globalPaused, setPaused, toggle, remove, create, update } = useWakeups();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedIdState] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (props?.activeWakeupId !== undefined) setSelectedIdState(props.activeWakeupId);
+  }, [props?.activeWakeupId]);
+
+  const setSelectedId = (id: string | null) => {
+    setSelectedIdState(id);
+    props?.onWakeupChange?.(id);
+  };
   const [dialog, setDialog] = useState<DialogState>({ kind: "none" });
 
   const selected = selectedId ? wakeups.find((w) => w.id === selectedId) ?? null : null;

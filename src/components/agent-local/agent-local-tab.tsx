@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
 import { ConversationList } from "./conversation-list";
@@ -27,7 +27,12 @@ function useDefaultModel(): { model: string; provider: string } {
   return state;
 }
 
-export function AgentLocalTab(): { list: React.ReactNode; detail: React.ReactNode; onCreate: () => void; onShowWelcome: () => void } {
+interface AgentLocalTabProps {
+  requestedSessionId?: string | null;
+  onSessionChange?: (id: string | null) => void;
+}
+
+export function AgentLocalTab(props?: AgentLocalTabProps): { list: React.ReactNode; detail: React.ReactNode; onCreate: () => void; onShowWelcome: () => void } {
   const { t } = useTranslation();
   const { sessions, refresh, create, rename, remove, updateModel } = useAgentSessions();
   const tabState = useAgentTabs();
@@ -113,6 +118,39 @@ export function AgentLocalTab(): { list: React.ReactNode; detail: React.ReactNod
     },
     [create, tabState, defaultModel, defaultProvider, t],
   );
+
+  const prevSessionRef = useRef(tabState.activeSessionId);
+  useEffect(() => {
+    if (tabState.activeSessionId !== prevSessionRef.current) {
+      prevSessionRef.current = tabState.activeSessionId;
+      props?.onSessionChange?.(tabState.activeSessionId ?? null);
+    }
+  }, [tabState.activeSessionId, props?.onSessionChange]);
+
+  useEffect(() => {
+    if (props?.requestedSessionId === undefined) return;
+    const requested = props.requestedSessionId;
+    if (requested === tabState.activeSessionId) return;
+    if (requested === null) {
+      tabState.deselectTab();
+    } else {
+      handleSelectById(requested);
+    }
+  }, [props?.requestedSessionId]);
+
+  const handleSelectById = useCallback(async (id: string) => {
+    const existingIdx = tabState.tabs.findIndex((tab) => tab.session_id.localeCompare(id) === 0);
+    if (existingIdx >= 0) {
+      await tabState.selectTab(existingIdx);
+      return;
+    }
+    const label = sessions.find((s) => s.id.localeCompare(id) === 0)?.name ?? "Chat";
+    if (tabState.activeIndex >= 0 && tabState.activeIndex < tabState.tabs.length) {
+      await tabState.updateTab(tabState.activeIndex, id, label);
+    } else {
+      await tabState.addTab(id, label);
+    }
+  }, [tabState, sessions]);
 
   const handleSelect = useCallback(async (id: string) => {
     const existingIdx = tabState.tabs.findIndex((tab) => tab.session_id.localeCompare(id) === 0);

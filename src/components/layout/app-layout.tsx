@@ -10,12 +10,17 @@ interface AppLayoutProps {
   listContent: ReactNode;
   detailContent: ReactNode;
   onShowWelcome?: () => void;
+  onBack: () => void;
+  onForward: () => void;
+  canGoBack: boolean;
+  canGoForward: boolean;
 }
 
 export function AppLayout({
   activeTab, onTabChange,
   listContent, detailContent,
   onShowWelcome,
+  onBack, onForward, canGoBack, canGoForward,
 }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -24,11 +29,11 @@ export function AppLayout({
       <WindowToolbar
         sidebarOpen={sidebarOpen}
         onToggleSidebar={() => setSidebarOpen((o) => !o)}
-        onBack={() => {}}
-        onForward={() => {}}
+        onBack={onBack}
+        onForward={onForward}
         onNewSession={() => onShowWelcome?.()}
-        canGoBack={false}
-        canGoForward={false}
+        canGoBack={canGoBack}
+        canGoForward={canGoForward}
       />
       <div className={`app-sidebar-block ${sidebarOpen ? "" : "app-sidebar-hidden"}`}>
         <Sidebar activeTab={activeTab} onTabChange={onTabChange} />
