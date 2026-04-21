@@ -1,7 +1,9 @@
 import { useTranslation } from "react-i18next";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
 import { ArrowSquareOut } from "@phosphor-icons/react";
+import "github-markdown-css/github-markdown.css";
 import "./markdown-viewer.css";
 
 interface MarkdownViewerProps {
@@ -34,8 +36,8 @@ export function MarkdownViewer({
         </button>
       </div>
       <div className="md-scroll">
-        <div className="md-view">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+        <div className="markdown-body">
+          <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
             {stripFrontmatter(content)}
           </ReactMarkdown>
         </div>
