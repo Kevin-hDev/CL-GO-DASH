@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, type ReactNode } from "react";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { Sidebar, type TabId } from "./sidebar";
 import { DragRegion } from "./drag-region";
 import { WindowToolbar } from "./window-toolbar";
@@ -28,6 +29,20 @@ export function AppLayout({
 }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
+
+  useEffect(() => {
+    const win = getCurrentWindow();
+    let timer: ReturnType<typeof setTimeout>;
+    win.isFullscreen().then(setFullscreen).catch(() => {});
+    const unlisten = win.onResized(() => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        win.isFullscreen().then(setFullscreen).catch(() => {});
+      }, 80);
+    });
+    return () => { clearTimeout(timer); unlisten.then((fn) => fn()).catch(() => {}); };
+  }, []);
 
   const openSearch = useCallback(() => setSearchOpen(true), []);
   const closeSearch = useCallback(() => setSearchOpen(false), []);
@@ -68,7 +83,7 @@ export function AppLayout({
   }, [toggleSidebar, onBack, onForward, onNewSession]);
 
   return (
-    <div className={`app-root ${sidebarOpen ? "" : "sidebar-hidden"}`}>
+    <div className={`app-root ${sidebarOpen ? "" : "sidebar-hidden"} ${fullscreen ? "is-fullscreen" : ""}`}>
       <WindowToolbar
         sidebarOpen={sidebarOpen}
         onToggleSidebar={toggleSidebar}
