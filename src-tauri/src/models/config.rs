@@ -5,6 +5,29 @@ use serde::{Deserialize, Serialize};
 pub struct ClgoConfig {
     pub scheduled_wakeups: Vec<ScheduledWakeup>,
     pub heartbeat: HeartbeatConfig,
+    pub advanced: AdvancedSettings,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
+pub struct AdvancedSettings {
+    pub autostart: bool,
+    pub start_hidden: bool,
+    pub show_tray: bool,
+    pub default_model: String,
+    pub keep_alive: String,
+}
+
+impl Default for AdvancedSettings {
+    fn default() -> Self {
+        Self {
+            autostart: false,
+            start_hidden: false,
+            show_tray: true,
+            default_model: String::new(),
+            keep_alive: "5m".to_string(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]

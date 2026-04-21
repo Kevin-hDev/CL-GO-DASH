@@ -1,4 +1,4 @@
-use crate::models::{ClgoConfig, HeartbeatConfig, ScheduledWakeup};
+use crate::models::{AdvancedSettings, ClgoConfig, HeartbeatConfig, ScheduledWakeup};
 use std::fs;
 use std::path::PathBuf;
 
@@ -31,6 +31,11 @@ pub fn read_config() -> Result<ClgoConfig, String> {
 
     if let Some(hb) = obj.get("heartbeat") {
         config.heartbeat = serde_json::from_value::<HeartbeatConfig>(hb.clone())
+            .unwrap_or_default();
+    }
+
+    if let Some(adv) = obj.get("advanced") {
+        config.advanced = serde_json::from_value::<AdvancedSettings>(adv.clone())
             .unwrap_or_default();
     }
 

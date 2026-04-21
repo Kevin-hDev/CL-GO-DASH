@@ -35,4 +35,6 @@ export {
   PencilSimple,
   ChatCircleDots,
   ChatsCircle,
+  GearSix,
+  Info,
 } from "@phosphor-icons/react";

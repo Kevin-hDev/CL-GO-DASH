@@ -2,7 +2,7 @@ import { useState, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import {
   FolderSimple, FolderOpen, DotsThreeVertical, PencilSimple,
-  X, ChatsCircle, CaretRight,
+  X, ChatsCircle,
 } from "@/components/ui/icons";
 import { WastebasketIcon } from "@/components/ui/wastebasket-icon";
 import { ComposeIcon } from "@/components/ui/compose-icon";
@@ -104,7 +104,6 @@ export function ProjectSection({
           />
         ) : (
           <>
-            <CaretRight size={10} className={`conv-collapse-chevron ${collapsed ? "" : "conv-collapse-open"}`} />
             <FolderSimple size={14} className="conv-icon" />
             <span className="conv-project-name">{project.name}</span>
             <div className="conv-project-actions">
@@ -157,8 +156,8 @@ export function ProjectSection({
       })}
 
       {!collapsed && sessions.length === 0 && (
-        <div className="conv-session-indented" style={{ color: "var(--ink-faint)", fontSize: "var(--text-xs)", padding: "var(--space-xs) 0" }}>
-          {t("projects.noDiscussion", "Aucune discussion")}
+        <div className="conv-session-indented" style={{ color: "var(--ink-faint)", fontSize: "var(--text-xs)", paddingTop: "var(--space-xs)", paddingBottom: "var(--space-xs)" }}>
+          {t("projects.noDiscussion")}
         </div>
       )}
 

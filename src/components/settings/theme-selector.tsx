@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Check } from "@/components/ui/icons";
 import type { Theme } from "@/hooks/use-theme";
 
@@ -6,62 +7,68 @@ interface ThemeSelectorProps {
   onChange: (theme: Theme) => void;
 }
 
-const THEMES: { id: Theme; label: string; bg: string; accent: string; text: string }[] = [
-  { id: "light", label: "Light", bg: "#f5f3f0", accent: "#ea6c10", text: "#1a1a1a" },
-  { id: "dark", label: "Dark", bg: "#1c1c22", accent: "#f97316", text: "#e8e6e3" },
+const THEMES: { id: Theme; i18n: string; bg: string; accent: string; text: string }[] = [
+  { id: "light", i18n: "settings.light", bg: "#f5f3f0", accent: "#ea6c10", text: "#1a1a1a" },
+  { id: "dark", i18n: "settings.dark", bg: "#1c1c22", accent: "#f97316", text: "#e8e6e3" },
 ];
 
 export function ThemeSelector({ value, onChange }: ThemeSelectorProps) {
+  const { t } = useTranslation();
+
   return (
-    <div>
-      <label style={{
-        display: "block", fontSize: "var(--text-xs)", color: "var(--ink-muted)",
-        textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 12,
-      }}>
-        Theme
-      </label>
-      <div style={{ display: "flex", gap: 12 }}>
-        {THEMES.map((t) => {
-          const active = t.id === value;
-          return (
-            <div
-              key={t.id}
-              onClick={() => onChange(t.id)}
-              style={{
-                flex: 1, padding: 16, borderRadius: "var(--radius-md)",
-                cursor: "pointer", position: "relative",
-                border: active ? "2px solid var(--pulse)" : "1px solid var(--edge)",
-                transition: "all 200ms ease-out",
-              }}
-            >
-              {/* Preview swatch */}
-              <div style={{
-                height: 48, borderRadius: "var(--radius-sm)", marginBottom: 10,
-                background: t.bg, border: "1px solid rgba(128,128,128,0.15)",
-                display: "flex", alignItems: "flex-end", padding: 6, gap: 4,
-              }}>
-                <div style={{ width: 20, height: 4, borderRadius: 2, background: t.accent }} />
-                <div style={{ width: 12, height: 4, borderRadius: 2, background: t.text, opacity: 0.3 }} />
-              </div>
-              <div style={{
-                fontSize: "var(--text-sm)", fontWeight: active ? 600 : 400,
-                color: active ? "var(--select-text)" : "var(--ink)",
-                textAlign: "center",
-              }}>
-                {t.label}
-              </div>
-              {active && (
-                <div style={{
-                  position: "absolute", top: 8, right: 8,
-                  color: "var(--select-text)",
-                }}>
-                  <Check size={16} weight="bold" />
-                </div>
-              )}
+    <div style={{ display: "flex", gap: 10 }}>
+      {THEMES.map((theme) => {
+        const active = theme.id === value;
+        return (
+          <div
+            key={theme.id}
+            onClick={() => onChange(theme.id)}
+            style={{
+              width: 100,
+              padding: 10,
+              borderRadius: "var(--radius-sm)",
+              cursor: "pointer",
+              position: "relative",
+              border: `1px solid ${active ? "var(--ink-faint)" : "var(--edge)"}`,
+              background: active ? "var(--surface)" : "transparent",
+              transition: "all 200ms ease-out",
+            }}
+          >
+            <div style={{
+              height: 36,
+              borderRadius: 4,
+              marginBottom: 6,
+              background: theme.bg,
+              border: "1px solid rgba(128,128,128,0.15)",
+              display: "flex",
+              alignItems: "flex-end",
+              padding: 4,
+              gap: 3,
+            }}>
+              <div style={{ width: 14, height: 3, borderRadius: 2, background: theme.accent }} />
+              <div style={{ width: 8, height: 3, borderRadius: 2, background: theme.text, opacity: 0.3 }} />
             </div>
-          );
-        })}
-      </div>
+            <div style={{
+              fontSize: "var(--text-xs)",
+              fontWeight: active ? 600 : 400,
+              color: active ? "var(--ink)" : "var(--ink-muted)",
+              textAlign: "center",
+            }}>
+              {t(theme.i18n)}
+            </div>
+            {active && (
+              <div style={{
+                position: "absolute",
+                top: 6,
+                right: 6,
+                color: "var(--ink)",
+              }}>
+                <Check size={12} weight="bold" />
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

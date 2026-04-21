@@ -80,7 +80,7 @@
     "openFolder": "Open folder",
     "rename": "Rename",
     "delete": "Delete",
-    "noDiscussion": "No discussions"
+    "noDiscussion": "No sessions"
   },
   "history": {
     "rename": "Rename",
@@ -249,7 +249,44 @@
     "tabs": {
       "general": "General",
       "ollama": "Ollama",
-      "apiKeys": "API Keys"
+      "apiKeys": "API Keys",
+      "advanced": "Advanced",
+      "about": "About"
+    },
+    "general": {
+      "themeTitle": "Theme",
+      "themeDesc": "App appearance",
+      "fontSizeTitle": "Font size",
+      "fontSizeDesc": "Text size in the app",
+      "fontFamilyTitle": "Font family",
+      "fontFamilyDesc": "Font used in the app",
+      "languageTitle": "Language",
+      "languageDesc": "Interface language"
+    },
+    "advanced": {
+      "autostartTitle": "Launch at startup",
+      "autostartDesc": "Open CL-GO automatically when the Mac starts",
+      "startHiddenTitle": "Start hidden",
+      "startHiddenDesc": "Start in the background without opening the window",
+      "trayTitle": "Menu bar icon",
+      "trayDesc": "Keep CL-GO in the macOS menu bar",
+      "defaultModelTitle": "Default model",
+      "defaultModelDesc": "Model used by default for new conversations",
+      "keepAliveTitle": "Unload model",
+      "keepAliveDesc": "Time before freeing model memory",
+      "searchModel": "Search a model…",
+      "keepAlive": {
+        "immediately": "Immediately",
+        "2min": "After 2 min",
+        "5min": "After 5 min",
+        "10min": "After 10 min",
+        "15min": "After 15 min",
+        "30min": "After 30 min",
+        "onClose": "On app close"
+      }
+    },
+    "confirm": {
+      "deleteModel": "Confirm?"
     }
   },
   "agentMd": {

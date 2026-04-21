@@ -2,23 +2,29 @@
 
 .ollama-subtabs {
   display: flex;
-  border-bottom: 1px solid var(--edge);
+  gap: 2px;
+  padding: 4px;
+  margin: var(--space-sm) var(--space-sm) 0;
+  background: var(--surface-hover);
+  border-radius: var(--radius-md);
 }
 
 .ollama-subtab {
   flex: 1;
-  padding: var(--space-sm) 0;
+  padding: 6px 0;
   font-size: var(--text-xs);
   font-weight: 500;
   text-align: center;
   color: var(--ink-muted);
-  border-bottom: 2px solid transparent;
   cursor: pointer;
   transition: all var(--ease-smooth);
   background: none;
-  border-top: none;
-  border-left: none;
-  border-right: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
 .ollama-subtab:hover {
@@ -26,8 +32,9 @@
 }
 
 .ollama-subtab.active {
-  color: var(--select-text);
-  border-bottom-color: var(--select-text);
+  color: var(--ink);
+  background: var(--surface);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .ollama-model-item {
@@ -106,8 +113,7 @@
 }
 
 .ollama-search-input:focus {
-  border-color: var(--select-text);
-  box-shadow: 0 0 0 2px var(--pulse-muted);
+  border-color: var(--edge);
 }
 
 .ollama-profile-table {

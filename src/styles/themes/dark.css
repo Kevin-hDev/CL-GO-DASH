@@ -35,14 +35,14 @@
   --shell: #18181c;
   --shell-translucent: rgba(24, 24, 28, 0.99);
   --surface: #111119;
-  --surface-hover: #1a1a1f;
+  --surface-hover: #232328;
   --edge: rgba(255, 255, 255, 0.06);
   --ink: #a3a3a3;
   --ink-muted: #9a9a9a;
   --ink-faint: #5a5a64;
   --pulse: #ea580c;
   --pulse-muted: rgba(234, 88, 12, 0.15);
-  --select-bg: #1a1a1f;
+  --select-bg: #252530;
   --select-text: #a3a3a3;
   --signal-idle: #5a5a64;
   --signal-live: #f59e0b;

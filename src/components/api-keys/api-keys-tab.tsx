@@ -4,10 +4,10 @@ import { Plus } from "@/components/ui/icons";
 import { useApiKeys } from "@/hooks/use-api-keys";
 import type { ProviderSpec } from "@/types/api";
 import { ApiKeysSidebar } from "./api-keys-sidebar";
-import { ApiKeysEmpty } from "./api-keys-empty";
 import { ApiKeysDetails } from "./api-keys-details";
 import { ApiKeysConfigDialog } from "./api-keys-config-dialog";
 import { ConnectorsModal } from "./connectors-modal";
+import { EmptyState } from "@/components/ui/empty-state";
 import "./api-keys.css";
 import "./api-keys-main.css";
 import "./api-keys-detail.css";
@@ -22,7 +22,6 @@ type DialogState =
       kind: "config";
       provider: ProviderSpec;
       alreadyConfigured: boolean;
-      /** Où revenir après la fermeture du config-dialog. */
       returnTo: "connectors" | "none";
     };
 
@@ -33,7 +32,6 @@ export function ApiKeysTab(): { list: React.ReactNode; detail: React.ReactNode }
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [dialog, setDialog] = useState<DialogState>({ kind: "none" });
 
-  // Auto-sélectionne le premier provider si aucun n'est sélectionné.
   useEffect(() => {
     if (selectedId === null && configured.length > 0) {
       setSelectedId(configured[0].id);
@@ -69,18 +67,6 @@ export function ApiKeysTab(): { list: React.ReactNode; detail: React.ReactNode }
 
   const detail = (
     <>
-      <div className="ak-main-header">
-        <div className="ak-main-title">{t("apiKeys.main.title")}</div>
-        <button
-          type="button"
-          className="ak-connectors-btn"
-          onClick={() => setDialog({ kind: "connectors" })}
-        >
-          <Plus size={14} weight="bold" />
-          {t("apiKeys.main.connectorsBtn")}
-        </button>
-      </div>
-
       {selected ? (
         <ApiKeysDetails
           provider={selected}
@@ -93,9 +79,28 @@ export function ApiKeysTab(): { list: React.ReactNode; detail: React.ReactNode }
             })
           }
           onDelete={handleDelete}
+          onAddConnector={() => setDialog({ kind: "connectors" })}
         />
       ) : (
-        <ApiKeysEmpty />
+        <div style={{ padding: 24, flex: 1, display: "flex", flexDirection: "column" }}>
+          <div style={{ maxWidth: 600, width: "100%", margin: "0 auto" }}>
+            <div style={{
+              display: "flex", alignItems: "center",
+              justifyContent: "space-between", marginBottom: 28,
+            }}>
+              <h2 style={{ fontSize: "var(--text-xl)", fontWeight: 700, color: "var(--ink)", margin: 0 }}>
+                {t("apiKeys.main.title")}
+              </h2>
+              <button type="button" className="ak-connectors-btn" onClick={() => setDialog({ kind: "connectors" })}>
+                <Plus size={14} weight="bold" />
+                {t("apiKeys.main.connectorsBtn")}
+              </button>
+            </div>
+          </div>
+          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <EmptyState message={t("apiKeys.empty.title")} />
+          </div>
+        </div>
       )}
 
       {dialog.kind === "connectors" && (

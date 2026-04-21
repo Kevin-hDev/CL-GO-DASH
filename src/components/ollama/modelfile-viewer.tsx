@@ -4,8 +4,8 @@ import { invoke } from "@tauri-apps/api/core";
 import { ModelfileEditor } from "./modelfile-editor";
 import { SystemPromptEditor } from "./system-prompt-editor";
 import { ParametersEditor } from "./parameters-editor";
+import { ModelfileView } from "./modelfile-view";
 import { extractSystemPrompt, extractParameters } from "./modelfile-utils";
-import "./ollama.css";
 
 type Mode = "view" | "edit-system" | "edit-parameters" | "edit-modelfile";
 
@@ -93,87 +93,16 @@ export function ModelfileViewer({ modelName, onDeleted }: ModelfileViewerProps) 
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      <div className="ollama-detail-header">
-        <span className="ollama-detail-name">{modelName}</span>
-        <button
-          className="ollama-btn"
-          onClick={handleDelete}
-          disabled={deleting}
-          style={{ marginLeft: 12 }}
-        >
-          {t("ollama.remove")}
-        </button>
-        <div style={{ flex: 1 }} />
-        <button className="ollama-btn" onClick={() => setMode("edit-modelfile")}>
-          {t("ollama.editModelfile")}
-        </button>
-      </div>
-
-      <Section title={t("ollama.systemPrompt")} editLabel={t("ollama.edit")} onEdit={() => setMode("edit-system")}>
-        <div style={{
-          fontSize: "var(--text-sm)",
-          color: systemPrompt ? "var(--ink)" : "var(--ink-faint)",
-          whiteSpace: "pre-wrap", lineHeight: 1.5,
-          fontStyle: systemPrompt ? "normal" : "italic",
-          maxHeight: 200, overflow: "auto",
-        }}>
-          {systemPrompt || t("ollama.noSystemPrompt")}
-        </div>
-      </Section>
-
-      <Section title={t("ollama.parameters")} editLabel={t("ollama.edit")} onEdit={() => setMode("edit-parameters")}>
-        {parameters.length === 0 ? (
-          <div style={{ fontStyle: "italic", color: "var(--ink-faint)", fontSize: "var(--text-sm)" }}>
-            {t("ollama.noParameters")}
-          </div>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            {parameters.map((p, i) => (
-              <div key={i} style={{
-                display: "flex", gap: 12,
-                fontSize: "var(--text-xs)",
-                fontFamily: "var(--font-mono)",
-              }}>
-                <span style={{ color: "var(--ink-muted)", minWidth: 140 }}>{p.key}</span>
-                <span style={{ color: "var(--ink)" }}>{p.value}</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </Section>
-
-      <pre style={{
-        flex: 1, overflow: "auto", padding: "var(--space-md)",
-        fontSize: "var(--text-xs)", fontFamily: "var(--font-mono)",
-        color: "var(--ink-muted)", whiteSpace: "pre-wrap", margin: 0,
-      }}>
-        {modelfile}
-      </pre>
-    </div>
-  );
-}
-
-function Section({
-  title, editLabel, onEdit, children,
-}: { title: string; editLabel: string; onEdit: () => void; children: React.ReactNode }) {
-  return (
-    <div style={{ padding: "var(--space-md)", borderBottom: "1px solid var(--edge)" }}>
-      <div style={{
-        display: "flex", alignItems: "center",
-        justifyContent: "space-between", marginBottom: "var(--space-sm)",
-      }}>
-        <span style={{
-          fontSize: "var(--text-xs)", color: "var(--ink-faint)",
-          textTransform: "uppercase", letterSpacing: "0.05em",
-        }}>
-          {title}
-        </span>
-        <button className="ollama-btn ollama-btn-primary" onClick={onEdit}>
-          {editLabel}
-        </button>
-      </div>
-      {children}
-    </div>
+    <ModelfileView
+      modelName={modelName}
+      systemPrompt={systemPrompt}
+      parameters={parameters}
+      modelfile={modelfile}
+      deleting={deleting}
+      onDelete={handleDelete}
+      onEditSystem={() => setMode("edit-system")}
+      onEditParameters={() => setMode("edit-parameters")}
+      onEditModelfile={() => setMode("edit-modelfile")}
+    />
   );
 }

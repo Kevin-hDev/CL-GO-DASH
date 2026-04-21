@@ -42,6 +42,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::get_config,
             commands::save_config,
+            commands::get_advanced_settings,
+            commands::set_advanced_settings,
             commands::list_wakeups,
             commands::create_wakeup,
             commands::update_wakeup,

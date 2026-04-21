@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Pencil, DotsThreeVertical, ChatsCircle, CaretRight } from "@/components/ui/icons";
+import { Pencil, DotsThreeVertical, ChatsCircle } from "@/components/ui/icons";
 import { WastebasketIcon } from "@/components/ui/wastebasket-icon";
 import { ComposeIcon } from "@/components/ui/compose-icon";
 import { ContextMenu, type ContextMenuItem } from "@/components/ui/context-menu";
@@ -126,7 +126,6 @@ export function ConversationList({
               className="conv-section-label conv-section-toggle"
               onClick={() => setProjectsCollapsed((c) => !c)}
             >
-              <CaretRight size={10} className={`conv-collapse-chevron ${projectsCollapsed ? "" : "conv-collapse-open"}`} />
               {t("projects.title", "Projets")}
             </div>
             {!projectsCollapsed && displayOrder.map((id) => {
@@ -163,7 +162,6 @@ export function ConversationList({
                 className="conv-section-label conv-section-toggle"
                 onClick={() => setDiscussionsCollapsed((c) => !c)}
               >
-                <CaretRight size={10} className={`conv-collapse-chevron ${discussionsCollapsed ? "" : "conv-collapse-open"}`} />
                 {t("projects.discussions", "Discussions")}
               </div>
             )}
@@ -173,7 +171,7 @@ export function ConversationList({
               return (
                 <div
                   key={s.id}
-                  className={`conv-item ${active ? "active" : ""}`}
+                  className={`conv-item conv-session-indented ${active ? "active" : ""}`}
                   onClick={() => onSelect(s.id)}
                 >
                   {renaming ? (

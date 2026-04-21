@@ -6,6 +6,7 @@ import { WakeupGrid } from "./wakeup-grid";
 import { WakeupDetails } from "./wakeup-details";
 import { NewWakeupDialog } from "./new-wakeup-dialog";
 import type { ScheduledWakeup } from "@/types/wakeup";
+import { RoundToggle } from "./round-toggle";
 import "./heartbeat.css";
 
 type DialogState =
@@ -34,19 +35,11 @@ export function HeartbeatTab(): { list: React.ReactNode; detail: React.ReactNode
     <div className="wk-sidebar">
       <div className="wk-sidebar-header">
         <span className="wk-sidebar-title">{t("heartbeat.sidebar.title")}</span>
-        <button
-          className="wk-sidebar-toggle"
-          data-on={!globalPaused}
-          onClick={() => setPaused(!globalPaused)}
-          type="button"
-          title={
-            globalPaused
-              ? t("heartbeat.sidebar.resume")
-              : t("heartbeat.sidebar.pause")
-          }
-        >
-          <span className="wk-toggle-dot" />
-        </button>
+        <RoundToggle
+          checked={!globalPaused}
+          onChange={(on) => setPaused(!on)}
+          title={globalPaused ? t("heartbeat.sidebar.resume") : t("heartbeat.sidebar.pause")}
+        />
       </div>
       <div className="wk-sidebar-list">
         {activeWakeups.length === 0 ? (

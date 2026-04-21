@@ -80,7 +80,7 @@
     "openFolder": "Ouvrir le dossier",
     "rename": "Renommer",
     "delete": "Supprimer",
-    "noDiscussion": "Aucune discussion"
+    "noDiscussion": "Aucune session"
   },
   "history": {
     "rename": "Renommer",
@@ -249,7 +249,44 @@
     "tabs": {
       "general": "Général",
       "ollama": "Ollama",
-      "apiKeys": "Clés API"
+      "apiKeys": "Clés API",
+      "advanced": "Avancé",
+      "about": "À propos"
+    },
+    "general": {
+      "themeTitle": "Thème",
+      "themeDesc": "Apparence de l'application",
+      "fontSizeTitle": "Taille de police",
+      "fontSizeDesc": "Taille du texte dans l'application",
+      "fontFamilyTitle": "Police d'écriture",
+      "fontFamilyDesc": "Police utilisée dans l'application",
+      "languageTitle": "Langue",
+      "languageDesc": "Langue de l'interface"
+    },
+    "advanced": {
+      "autostartTitle": "Lancer au démarrage",
+      "autostartDesc": "Ouvrir CL-GO automatiquement au démarrage du Mac",
+      "startHiddenTitle": "Démarrage masqué",
+      "startHiddenDesc": "Démarrer en arrière-plan sans ouvrir la fenêtre",
+      "trayTitle": "Icône dans la barre",
+      "trayDesc": "Garder CL-GO dans la barre des menus macOS",
+      "defaultModelTitle": "Modèle par défaut",
+      "defaultModelDesc": "Modèle utilisé par défaut pour les nouvelles conversations",
+      "keepAliveTitle": "Décharger le modèle",
+      "keepAliveDesc": "Durée avant de libérer la mémoire du modèle",
+      "searchModel": "Rechercher un modèle…",
+      "keepAlive": {
+        "immediately": "Immédiatement",
+        "2min": "Après 2 min",
+        "5min": "Après 5 min",
+        "10min": "Après 10 min",
+        "15min": "Après 15 min",
+        "30min": "Après 30 min",
+        "onClose": "À la fermeture"
+      }
+    },
+    "confirm": {
+      "deleteModel": "Confirmer ?"
     }
   },
   "agentMd": {

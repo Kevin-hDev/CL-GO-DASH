@@ -54,27 +54,13 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
         e.currentTarget.style.minWidth = "var(--sidebar-collapsed)";
       }}
     >
-      {/* Separator with top fade */}
-      <div
-        style={{
-          position: "absolute",
-          top: 0,
-          right: 0,
-          bottom: 0,
-          width: 1,
-          background:
-            "linear-gradient(to bottom, transparent 0, transparent 50px, var(--edge) 90px, var(--edge) 100%)",
-          pointerEvents: "none",
-        }}
-      />
-
       {/* Drag region for traffic lights */}
       <DragRegion />
 
       {/* Logo */}
       <div
         className="flex items-center gap-3 whitespace-nowrap overflow-hidden"
-        style={{ paddingLeft: 8, paddingTop: 8, paddingBottom: 16 }}
+        style={{ paddingLeft: 5, paddingTop: 8, paddingBottom: 16 }}
       >
         <img src={logoSrc} alt="CL-GO" style={{ width: "2.5rem", height: "2.5rem", borderRadius: 6, flexShrink: 0 }} />
         <span style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--ink)" }} className="opacity-0 group-hover/sb:opacity-100 transition-opacity duration-150">

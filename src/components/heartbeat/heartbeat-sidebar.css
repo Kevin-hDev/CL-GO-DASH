@@ -9,7 +9,6 @@
   align-items: center;
   justify-content: space-between;
   padding: var(--space-sm) var(--space-md);
-  border-bottom: 1px solid var(--edge);
 }
 
 .wk-sidebar-title {
