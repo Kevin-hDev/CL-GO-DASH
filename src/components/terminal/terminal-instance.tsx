@@ -131,15 +131,20 @@ export function TerminalInstance({
       }
     });
 
+    let resizeTimer: ReturnType<typeof setTimeout>;
     const resizeObserver = new ResizeObserver(() => {
-      if (containerRef.current && containerRef.current.offsetWidth > 0) {
-        fit.fit();
-      }
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        if (containerRef.current && containerRef.current.offsetWidth > 0) {
+          fit.fit();
+        }
+      }, 100);
     });
     resizeObserver.observe(containerRef.current!);
 
     const container = containerRef.current;
     return () => {
+      clearTimeout(resizeTimer);
       container?.removeEventListener("paste", pasteHandler);
       resizeObserver.disconnect();
       unlisten1.then((fn) => fn());

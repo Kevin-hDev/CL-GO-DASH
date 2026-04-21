@@ -57,4 +57,11 @@
   background: var(--void);
   border: 1px solid var(--edge);
   position: relative;
+  transition: border-radius 700ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-hidden .app-detail-panel {
+  border-radius: 0 16px 16px 0;
+  border-left: none;
+  padding-left: 19px;
 }
