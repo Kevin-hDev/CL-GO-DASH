@@ -2,7 +2,7 @@
   "nav": {
     "appName": "CL-GO",
     "heartbeat": "Heartbeat",
-    "personality": "Personality",
+    "personality": "/cl-go",
     "settings": "Settings",
     "agentLocal": "Agent Local",
     "ollama": "Ollama",
@@ -228,7 +228,7 @@
     }
   },
   "personality": {
-    "files": "Files",
+    "files": "Core",
     "selectFile": "Select a file",
     "open": "Open",
     "failedToLoad": "Failed to load",

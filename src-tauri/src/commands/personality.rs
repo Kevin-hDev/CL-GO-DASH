@@ -10,55 +10,57 @@ pub struct PersonalityFile {
     pub description: String,
 }
 
-fn memory_core() -> PathBuf {
+fn data_root() -> PathBuf {
     let home = dirs::home_dir().expect("cannot resolve home");
-    home.join(".local/share/cl-go-dash/memory/core")
+    home.join(".local/share/cl-go-dash")
+}
+
+fn memory_core() -> PathBuf {
+    data_root().join("memory/core")
 }
 
 fn inbox_dir() -> PathBuf {
-    let home = dirs::home_dir().expect("cannot resolve home");
-    home.join(".local/share/cl-go-dash/inbox")
+    data_root().join("inbox")
 }
+
+const ROOT_FILES: &[(&str, &str)] = &[
+    ("AGENT.md", "Instructions agent"),
+];
 
 const CORE_FILES: &[(&str, &str)] = &[
     ("identity.md", "Qui est Jackson"),
-    ("me.md", "Message à soi-même"),
     ("principles.md", "Règles et valeurs"),
-    ("note-to-self.md", "Notes personnelles"),
     ("user.md", "Profil de Kevin"),
 ];
 
 const INBOX_FILES: &[(&str, &str)] = &[
-    ("notes.md", "Notes de travail"),
     ("idea-discovery.md", "Idées en attente"),
 ];
 
 #[tauri::command]
 pub fn list_personality_files() -> Result<Vec<PersonalityFile>, String> {
+    let root = data_root();
     let core = memory_core();
     let inbox = inbox_dir();
 
     let mut files: Vec<PersonalityFile> = Vec::new();
 
-    for (name, desc) in CORE_FILES {
-        let path = core.join(name);
-        if path.exists() {
-            files.push(PersonalityFile {
-                name: name.to_string(),
-                path: path.to_string_lossy().to_string(),
-                description: desc.to_string(),
-            });
-        }
-    }
+    let sources: &[(&PathBuf, &[(&str, &str)])] = &[
+        (&root, ROOT_FILES),
+        (&core, CORE_FILES),
+        (&inbox, INBOX_FILES),
+    ];
 
-    for (name, desc) in INBOX_FILES {
-        let path = inbox.join(name);
-        if path.exists() {
-            files.push(PersonalityFile {
-                name: name.to_string(),
-                path: path.to_string_lossy().to_string(),
-                description: desc.to_string(),
-            });
+    for (dir, entries) in sources {
+        for (name, desc) in *entries {
+            let path = dir.join(name);
+            if path.exists() {
+                files.push(PersonalityFile {
+                    name: name.to_string(),
+                    path: path.to_string_lossy().to_string(),
+                    description: desc.to_string(),
+                });
+            }
         }
     }
 
@@ -69,10 +71,8 @@ pub fn list_personality_files() -> Result<Vec<PersonalityFile>, String> {
 pub fn read_personality_file(path: String) -> Result<String, String> {
     let p = PathBuf::from(&path);
 
-    // Validate path is under allowed directories
-    let core = memory_core();
-    let inbox = inbox_dir();
-    if !p.starts_with(&core) && !p.starts_with(&inbox) {
+    let root = data_root();
+    if !p.starts_with(&root) {
         return Err("Invalid path".to_string());
     }
 
@@ -87,19 +87,15 @@ pub fn open_in_editor(path: String) -> Result<(), String> {
         return Err("File not found".to_string());
     }
 
-    // Try MWeb first, fallback to default editor
-    let mweb = Command::new("open")
-        .args(["-a", "MWeb", &path])
-        .spawn();
+    #[cfg(target_os = "macos")]
+    let result = Command::new("open").arg(&path).spawn();
 
-    match mweb {
-        Ok(_) => Ok(()),
-        Err(_) => {
-            Command::new("open")
-                .arg(&path)
-                .spawn()
-                .map_err(|e| format!("Cannot open: {}", e))?;
-            Ok(())
-        }
-    }
+    #[cfg(target_os = "linux")]
+    let result = Command::new("xdg-open").arg(&path).spawn();
+
+    #[cfg(target_os = "windows")]
+    let result = Command::new("cmd").args(["/c", "start", "", &path]).spawn();
+
+    result.map_err(|e| format!("Cannot open: {}", e))?;
+    Ok(())
 }
