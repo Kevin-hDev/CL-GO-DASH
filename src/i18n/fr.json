@@ -250,6 +250,7 @@
       "general": "Général",
       "ollama": "Ollama",
       "apiKeys": "Clés API",
+      "llm": "LLM",
       "advanced": "Avancé",
       "about": "À propos"
     },
@@ -284,6 +285,22 @@
         "30min": "Après 30 min",
         "onClose": "À la fermeture"
       }
+    },
+    "llm": {
+      "searchPlaceholder": "Rechercher un modèle…",
+      "families": "Familles",
+      "back": "Retour",
+      "maxInput": "Contexte (entrée)",
+      "maxOutput": "Sortie max",
+      "inputCost": "Coût entrée",
+      "outputCost": "Coût sortie",
+      "vision": "Vision",
+      "tools": "Tools",
+      "reasoning": "Raisonnement",
+      "caching": "Prompt caching",
+      "webSearch": "Recherche web",
+      "yes": "Oui",
+      "no": "Non"
     },
     "confirm": {
       "deleteModel": "Confirmer ?"

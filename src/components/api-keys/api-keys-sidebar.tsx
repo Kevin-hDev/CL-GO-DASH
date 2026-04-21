@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { ProviderIcon } from "@/lib/provider-icons";
 import type { ProviderSpec } from "@/types/api";
 
 interface ApiKeysSidebarProps {
@@ -28,7 +29,7 @@ export function ApiKeysSidebar({
               className={`ak-sidebar-item ${selectedId === p.id ? "active" : ""}`}
               onClick={() => onSelect(p.id)}
             >
-              <span className="ak-sidebar-dot" />
+              <ProviderIcon providerId={p.id} displayName={p.display_name} size={18} />
               <span>{p.display_name}</span>
             </button>
           ))

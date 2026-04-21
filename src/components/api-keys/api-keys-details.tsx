@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-shell";
-import { Key, Pencil, Trash, ArrowSquareOut, Plus } from "@/components/ui/icons";
+import { Pencil, Trash, ArrowSquareOut, Plus } from "@/components/ui/icons";
 import { SettingsCard } from "@/components/settings/settings-card";
+import { ProviderIcon } from "@/lib/provider-icons";
 import { getProviderDescription, type ProviderSpec } from "@/types/api";
 
 interface ProviderQuota {
@@ -52,7 +53,7 @@ export function ApiKeysDetails({ provider, onEdit, onDelete, onAddConnector }: A
           justifyContent: "space-between", marginBottom: 28,
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div className="ak-detail-icon"><Key size={28} weight="regular" /></div>
+            <ProviderIcon providerId={provider.id} displayName={provider.display_name} size={36} />
             <div>
               <h2 style={{ fontSize: "var(--text-xl)", fontWeight: 700, color: "var(--ink)", margin: 0 }}>
                 {provider.display_name}

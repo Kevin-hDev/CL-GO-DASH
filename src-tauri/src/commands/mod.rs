@@ -12,6 +12,7 @@ pub mod llm;
 pub mod personality;
 pub mod projects;
 pub mod search;
+pub mod registry;
 pub mod terminal;
 
 pub use agent_chat::*;
@@ -27,5 +28,6 @@ pub use heartbeat::*;
 pub use llm::*;
 pub use personality::*;
 pub use projects::*;
+pub use registry::*;
 pub use search::*;
 pub use terminal::*;

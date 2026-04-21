@@ -14,6 +14,7 @@ const GITHUB_RAW_URL: &str =
 pub struct ModelEntry {
     pub litellm_provider: Option<String>,
     pub max_input_tokens: Option<u64>,
+    pub max_output_tokens: Option<u64>,
     pub max_tokens: Option<u64>,
     #[serde(default)]
     pub supports_vision: bool,
@@ -21,6 +22,18 @@ pub struct ModelEntry {
     pub supports_function_calling: bool,
     #[serde(default)]
     pub supports_reasoning: bool,
+    #[serde(default)]
+    pub supports_prompt_caching: bool,
+    #[serde(default)]
+    pub supports_audio_input: bool,
+    #[serde(default)]
+    pub supports_audio_output: bool,
+    #[serde(default)]
+    pub supports_web_search: bool,
+    #[serde(default)]
+    pub supports_response_schema: bool,
+    #[serde(default)]
+    pub supports_system_messages: bool,
     pub input_cost_per_token: Option<f64>,
     pub output_cost_per_token: Option<f64>,
     pub mode: Option<String>,
@@ -41,10 +54,20 @@ fn cache_path() -> PathBuf {
 }
 
 fn parse_registry(json: &str) -> HashMap<String, ModelEntry> {
-    serde_json::from_str(json).unwrap_or_default()
+    let raw: HashMap<String, serde_json::Value> = match serde_json::from_str(json) {
+        Ok(m) => m,
+        Err(_) => return HashMap::new(),
+    };
+    let mut result = HashMap::with_capacity(raw.len());
+    for (key, val) in raw {
+        if let Ok(entry) = serde_json::from_value::<ModelEntry>(val) {
+            result.insert(key, entry);
+        }
+    }
+    result
 }
 
-fn get_lock() -> &'static RwLock<HashMap<String, ModelEntry>> {
+pub(crate) fn get_lock() -> &'static RwLock<HashMap<String, ModelEntry>> {
     REGISTRY.get_or_init(|| {
         let data = std::fs::read_to_string(cache_path())
             .ok()

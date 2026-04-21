@@ -107,6 +107,11 @@ pub fn run() {
             // Search providers
             commands::list_search_providers_catalog,
             commands::test_search_connection,
+            // LLM Registry
+            commands::search_registry,
+            commands::get_registry_model,
+            commands::list_registry_families,
+            commands::list_family_models,
             // Favorite models
             commands::list_favorite_models,
             commands::add_favorite_model,

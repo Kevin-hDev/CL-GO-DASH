@@ -7,6 +7,7 @@
 pub mod agent_loop;
 pub mod catalog;
 pub mod model_registry;
+pub mod registry_search;
 pub mod openai_compat;
 mod openai_compat_parsing;
 pub mod stream;

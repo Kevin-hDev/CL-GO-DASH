@@ -12,6 +12,22 @@
   --radius-lg: 8px;
 }
 
+@font-face {
+  font-family: "Pacifico";
+  src: url("../assets/fonts/Pacifico-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Rancho";
+  src: url("../assets/fonts/Rancho-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 *,
 *::before,
 *::after {
@@ -39,6 +55,11 @@ body {
 [data-theme="dark"] .themed-icon-dark { display: inline; }
 [data-theme="light"] .themed-icon-dark { display: none; }
 [data-theme="light"] .themed-icon-light { display: inline; }
+
+/* Monochrome provider icons — invert in dark theme */
+[data-theme="dark"] .provider-icon-mono {
+  filter: invert(0.7);
+}
 
 @keyframes pulse-live {
   0%,

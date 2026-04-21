@@ -9,6 +9,8 @@ export const FONT_FAMILIES = [
   { id: "helvetica", label: "Helvetica Neue", value: '"Helvetica Neue", Helvetica, Arial, sans-serif' },
   { id: "menlo", label: "Menlo", value: 'Menlo, "SF Mono", Consolas, monospace' },
   { id: "ui-mono", label: "UI Monospace", value: 'ui-monospace, "SF Mono", "Cascadia Code", monospace' },
+  { id: "pacifico", label: "Pacifico", value: '"Pacifico", cursive' },
+  { id: "rancho", label: "Rancho", value: '"Rancho", cursive' },
 ] as const;
 
 export type FontFamilyId = (typeof FONT_FAMILIES)[number]["id"];
@@ -36,7 +38,7 @@ export function useSettings() {
   }, [fontSize]);
 
   useEffect(() => {
-    document.body.style.fontFamily = fontFamily.value;
+    document.documentElement.style.setProperty("--font-sans", fontFamily.value);
     localStorage.setItem("clgo-font-family", fontFamilyId);
   }, [fontFamilyId, fontFamily.value]);
 

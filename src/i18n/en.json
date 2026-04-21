@@ -250,6 +250,7 @@
       "general": "General",
       "ollama": "Ollama",
       "apiKeys": "API Keys",
+      "llm": "LLM",
       "advanced": "Advanced",
       "about": "About"
     },
@@ -284,6 +285,22 @@
         "30min": "After 30 min",
         "onClose": "On app close"
       }
+    },
+    "llm": {
+      "searchPlaceholder": "Search a model…",
+      "families": "Families",
+      "back": "Back",
+      "maxInput": "Context (input)",
+      "maxOutput": "Max output",
+      "inputCost": "Input cost",
+      "outputCost": "Output cost",
+      "vision": "Vision",
+      "tools": "Tools",
+      "reasoning": "Reasoning",
+      "caching": "Prompt caching",
+      "webSearch": "Web search",
+      "yes": "Yes",
+      "no": "No"
     },
     "confirm": {
       "deleteModel": "Confirm?"
