@@ -6,6 +6,7 @@ pub mod favorite_models;
 pub mod file_watcher;
 pub mod llm;
 pub mod ollama_lifecycle;
+pub mod personality_injection;
 pub mod scheduler;
 pub mod search;
 pub mod terminal;

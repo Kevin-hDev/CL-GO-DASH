@@ -13,17 +13,23 @@ export function PersonalityTab(): { list: React.ReactNode; detail: React.ReactNo
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
   const [content, setContent] = useState<string>("");
   const [fileName, setFileName] = useState<string>("");
+  const [injectionState, setInjectionState] = useState<Record<string, boolean>>({});
 
   const loadFiles = useCallback(() => {
     api.listFiles().then(setFiles).catch(() => showToast(t("personality.failedToLoad")));
   }, []);
 
-  useEffect(() => { loadFiles(); }, [loadFiles]);
+  const loadInjectionState = useCallback(() => {
+    api.getInjectionState().then(setInjectionState).catch(() => {});
+  }, []);
 
-  // Reload when files change on disk
+  useEffect(() => {
+    loadFiles();
+    loadInjectionState();
+  }, [loadFiles, loadInjectionState]);
+
   useFsEvent("fs:personality-changed", loadFiles);
 
-  // Reload content of selected file when it changes
   const reloadContent = useCallback(() => {
     if (selectedPath) {
       api.readFile(selectedPath).then(setContent).catch(() => showToast(t("personality.failedToLoad")));
@@ -36,9 +42,8 @@ export function PersonalityTab(): { list: React.ReactNode; detail: React.ReactNo
     try {
       const text = await api.readFile(path);
       setContent(text);
-      const name = path.split("/").pop() ?? "";
-      setFileName(name);
-    } catch (e) {
+      setFileName(path.split("/").pop() ?? "");
+    } catch {
       showToast(t("personality.failedToRead"));
       setContent("Failed to read file");
     }
@@ -56,11 +61,24 @@ export function PersonalityTab(): { list: React.ReactNode; detail: React.ReactNo
     }
   }, [selectedPath]);
 
+  const handleToggleInjection = useCallback(async (enabled: boolean) => {
+    if (fileName === "AGENT.md") return;
+    try {
+      await api.setInjectionState(fileName, enabled);
+      setInjectionState((prev) => ({ ...prev, [fileName]: enabled }));
+    } catch {
+      showToast(t("personality.failedToLoad"));
+    }
+  }, [fileName]);
+
   const list = (
     <PersonalityList
       files={files}
       selectedPath={selectedPath}
+      injectionState={injectionState}
+      selectedFileName={fileName}
       onSelect={handleSelect}
+      onToggleInjection={handleToggleInjection}
     />
   );
 

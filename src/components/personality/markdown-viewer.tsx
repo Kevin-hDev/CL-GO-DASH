@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ArrowSquareOut } from "@phosphor-icons/react";
@@ -22,12 +23,14 @@ export function MarkdownViewer({
   fileName,
   onOpenEditor,
 }: MarkdownViewerProps) {
+  const { t } = useTranslation();
+
   return (
     <>
       <div className="md-header">
         <div className="md-title">{fileName}</div>
         <button className="btn" onClick={onOpenEditor}>
-          <ArrowSquareOut size={14} /> Open
+          <ArrowSquareOut size={14} /> {t("personality.open")}
         </button>
       </div>
       <div className="md-scroll">

@@ -12,3 +12,11 @@ export async function readFile(path: string): Promise<string> {
 export async function openInEditor(path: string): Promise<void> {
   return invoke("open_in_editor", { path });
 }
+
+export async function getInjectionState(): Promise<Record<string, boolean>> {
+  return invoke<Record<string, boolean>>("get_injection_state");
+}
+
+export async function setInjectionState(name: string, enabled: boolean): Promise<void> {
+  return invoke("set_injection_state", { name, enabled });
+}

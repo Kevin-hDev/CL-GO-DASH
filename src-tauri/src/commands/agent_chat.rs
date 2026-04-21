@@ -1,6 +1,7 @@
 use crate::services::agent_local::agent_loop;
 use crate::services::agent_local::agent_md;
 use crate::services::agent_local::chat_prompts::prepare_messages;
+use crate::services::personality_injection;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::tool_dispatcher;
 use crate::services::agent_local::tool_skill_loader;
@@ -95,6 +96,8 @@ async fn run_stream_task(
         let working_dir = resolve_dir(&working_dir);
         let mut msgs = messages;
         let agent_md_content = agent_md::load_agent_md(Some(working_dir.as_path())).await;
+        let personality = personality_injection::load_injected_contents();
+        let agent_md_content = merge_personality(agent_md_content, personality);
         let skills_list = tool_skill_loader::list_skills().await.unwrap_or_default();
         let skills_tuples: Vec<(String, String)> = skills_list
             .iter()
@@ -141,6 +144,8 @@ async fn run_stream_task(
             llm::stream_convert::strip_images(&mut msgs);
         }
         let agent_md_content = agent_md::load_agent_md(Some(working_dir.as_path())).await;
+        let personality = personality_injection::load_injected_contents();
+        let agent_md_content = merge_personality(agent_md_content, personality);
         let skills_tuples: Vec<(String, String)> = if model_supports_tools {
             tool_skill_loader::list_skills()
                 .await
@@ -166,6 +171,15 @@ async fn run_stream_task(
         )
         .await
         .map(|_| ())
+    }
+}
+
+fn merge_personality(agent_md: Option<String>, personality: Option<String>) -> Option<String> {
+    match (agent_md, personality) {
+        (Some(a), Some(p)) => Some(format!("{a}\n\n{p}")),
+        (Some(a), None) => Some(a),
+        (None, Some(p)) => Some(p),
+        (None, None) => None,
     }
 }
 

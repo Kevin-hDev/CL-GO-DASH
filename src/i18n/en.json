@@ -231,6 +231,9 @@
     "files": "Core",
     "selectFile": "Select a file",
     "open": "Open",
+    "inject": "Context",
+    "injected": "Injected",
+    "alwaysInjected": "Always injected",
     "failedToLoad": "Failed to load",
     "failedToRead": "Failed to read file"
   },

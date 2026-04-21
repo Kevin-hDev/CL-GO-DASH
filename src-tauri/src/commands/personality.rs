@@ -1,4 +1,6 @@
+use crate::services::personality_injection;
 use serde::Serialize;
+use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
@@ -98,4 +100,16 @@ pub fn open_in_editor(path: String) -> Result<(), String> {
 
     result.map_err(|e| format!("Cannot open: {}", e))?;
     Ok(())
+}
+
+#[tauri::command]
+pub fn get_injection_state() -> Result<HashMap<String, bool>, String> {
+    Ok(personality_injection::read_state())
+}
+
+#[tauri::command]
+pub fn set_injection_state(name: String, enabled: bool) -> Result<(), String> {
+    let mut state = personality_injection::read_state();
+    state.insert(name, enabled);
+    personality_injection::write_state(&state)
 }

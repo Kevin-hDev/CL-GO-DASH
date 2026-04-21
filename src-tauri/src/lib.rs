@@ -52,6 +52,8 @@ pub fn run() {
             commands::list_personality_files,
             commands::read_personality_file,
             commands::open_in_editor,
+            commands::get_injection_state,
+            commands::set_injection_state,
             // Agent Local — Ollama
             commands::list_ollama_models,
             commands::show_ollama_model,
