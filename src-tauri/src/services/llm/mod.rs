@@ -18,6 +18,15 @@ pub mod quota;
 pub mod tool_capable;
 pub mod types;
 
+pub(crate) fn sanitize_log_body(body: &str) -> String {
+    let truncated = if body.len() > 200 {
+        &body[..body.char_indices().nth(200).map(|(i, _)| i).unwrap_or(body.len())]
+    } else {
+        body
+    };
+    truncated.replace(|c: char| c.is_control(), " ")
+}
+
 /// Helper non-streaming pour appels simples (utilisé par le scheduler heartbeat).
 /// Retourne (contenu, tokens_totaux).
 pub async fn collect_chat(

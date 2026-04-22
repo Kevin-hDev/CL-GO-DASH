@@ -4,6 +4,7 @@ import { invoke } from "@tauri-apps/api/core";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
+import rehypeSanitize from "rehype-sanitize";
 import { ModelInstallButton } from "./model-install-button";
 import { TranslationControls } from "./translation-controls";
 import { SettingsCard } from "@/components/settings/settings-card";
@@ -139,7 +140,7 @@ export function ModelProfile({ familyName, variantFullName }: ModelProfileProps)
             lineHeight: 1.6,
           }}
         >
-          <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
+          <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw, rehypeSanitize]}>
             {translated ?? details.description_long_markdown}
           </ReactMarkdown>
         </div>

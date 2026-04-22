@@ -26,8 +26,15 @@ pub async fn chat_stream(
     supports_thinking: Option<bool>,
     streams: tauri::State<'_, ActiveStreams>,
 ) -> Result<(), String> {
+    const MAX_ACTIVE_STREAMS: usize = 32;
     let cancel = CancellationToken::new();
-    streams.0.lock().await.insert(session_id.clone(), cancel.clone());
+    {
+        let mut map = streams.0.lock().await;
+        if map.len() >= MAX_ACTIVE_STREAMS {
+            return Err("Trop de flux actifs simultanément".to_string());
+        }
+        map.insert(session_id.clone(), cancel.clone());
+    }
 
     let provider = provider.unwrap_or_else(|| "ollama".to_string());
     let stream_session = session_id.clone();
@@ -212,7 +219,7 @@ pub async fn cancel_agent_request(
     session_id: String,
     streams: tauri::State<'_, ActiveStreams>,
 ) -> Result<(), String> {
-    if let Some(token) = streams.0.lock().await.get(&session_id) {
+    if let Some(token) = streams.0.lock().await.remove(&session_id) {
         token.cancel();
     }
     Ok(())

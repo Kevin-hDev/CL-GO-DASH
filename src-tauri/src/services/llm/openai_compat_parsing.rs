@@ -137,7 +137,7 @@ pub async fn map_error_status(resp: Response) -> LlmError {
         }
         _ => {
             let body = resp.text().await.unwrap_or_default();
-            eprintln!("[llm] HTTP {} — {}", status, body);
+            eprintln!("[llm] HTTP {} — {}", status, super::sanitize_log_body(&body));
             LlmError::Http {
                 status,
                 message: "erreur serveur provider".into(),

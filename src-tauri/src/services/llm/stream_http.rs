@@ -90,7 +90,7 @@ pub async fn post_chat_request(cfg: &RequestConfig<'_>) -> Result<reqwest::Respo
     let status = resp.status();
     if !status.is_success() {
         let body = resp.text().await.unwrap_or_default();
-        eprintln!("[llm stream] HTTP {} — {}", status, body);
+        eprintln!("[llm stream] HTTP {} — {}", status, super::sanitize_log_body(&body));
         return Err(classify_error(status.as_u16(), &body, spec.display_name));
     }
     Ok(resp)

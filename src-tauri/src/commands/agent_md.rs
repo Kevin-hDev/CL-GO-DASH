@@ -4,8 +4,14 @@ fn global_agent_md_path() -> PathBuf {
     crate::services::paths::data_dir().join("AGENT.md")
 }
 
-fn project_agent_md_path(project_dir: &str) -> PathBuf {
-    PathBuf::from(project_dir).join("AGENT.md")
+fn validate_project_dir(dir: &str) -> Result<PathBuf, String> {
+    let p = PathBuf::from(dir);
+    let canonical = p.canonicalize().map_err(|_| "Dossier introuvable".to_string())?;
+    let home = dirs::home_dir().ok_or("Erreur système")?;
+    if !canonical.starts_with(&home) {
+        return Err("Chemin non autorisé".to_string());
+    }
+    Ok(canonical.join("AGENT.md"))
 }
 
 #[derive(serde::Serialize)]
@@ -25,7 +31,7 @@ pub async fn read_agent_md(project_dir: Option<String>) -> Result<AgentMdInfo, S
         .filter(|s| !s.trim().is_empty());
 
     let (project_content, project_path) = if let Some(ref dir) = project_dir {
-        let p = project_agent_md_path(dir);
+        let p = validate_project_dir(dir)?;
         let content = tokio::fs::read_to_string(&p)
             .await
             .ok()
@@ -53,7 +59,7 @@ pub async fn write_agent_md(
         "global" => global_agent_md_path(),
         "project" => {
             let dir = project_dir.ok_or("project_dir requis pour scope 'project'")?;
-            project_agent_md_path(&dir)
+            validate_project_dir(&dir)?
         }
         _ => return Err("Scope invalide".to_string()),
     };
@@ -88,9 +94,9 @@ mod tests {
     }
 
     #[test]
-    fn project_agent_md_path_joins_correctly() {
-        let p = project_agent_md_path("/some/project");
-        assert_eq!(p, PathBuf::from("/some/project/AGENT.md"));
+    fn validate_project_dir_rejects_outside_home() {
+        let result = validate_project_dir("/etc");
+        assert!(result.is_err());
     }
 
     #[tokio::test]

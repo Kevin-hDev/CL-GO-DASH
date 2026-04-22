@@ -70,15 +70,17 @@ pub fn list_personality_files() -> Result<Vec<PersonalityFile>, String> {
 
 #[tauri::command]
 pub fn read_personality_file(path: String) -> Result<String, String> {
-    let p = PathBuf::from(&path);
-
-    let root = data_root();
-    if !p.starts_with(&root) {
-        return Err("Invalid path".to_string());
+    let canonical = PathBuf::from(&path)
+        .canonicalize()
+        .map_err(|_| "Fichier introuvable".to_string())?;
+    let root = data_root()
+        .canonicalize()
+        .map_err(|_| "Erreur système".to_string())?;
+    if !canonical.starts_with(&root) {
+        return Err("Chemin non autorisé".to_string());
     }
-
-    fs::read_to_string(&p)
-        .map_err(|e| format!("Cannot read: {}", e))
+    fs::read_to_string(&canonical)
+        .map_err(|_| "Erreur de lecture".to_string())
 }
 
 #[tauri::command]
