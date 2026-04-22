@@ -56,6 +56,17 @@
   padding-left: 11px;
 }
 
+.sidebar-resize-handle {
+  width: 4px;
+  cursor: ew-resize;
+  flex-shrink: 0;
+  transition: background var(--ease-smooth);
+}
+
+.sidebar-resize-handle:hover {
+  background: var(--edge);
+}
+
 .app-detail-panel {
   flex: 1;
   display: flex;

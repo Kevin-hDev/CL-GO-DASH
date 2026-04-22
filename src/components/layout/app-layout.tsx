@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, type ReactNode } from "react";
+import { useState, useCallback, useEffect, useRef, type ReactNode } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { Sidebar, type TabId } from "./sidebar";
 import { DragRegion } from "./drag-region";
@@ -42,6 +42,32 @@ export function AppLayout({
       }, 80);
     });
     return () => { clearTimeout(timer); unlisten.then((fn) => fn()).catch(() => {}); };
+  }, []);
+
+  const [listWidth, setListWidth] = useState<number | null>(null);
+  const dragging = useRef(false);
+
+  const handleResizeStart = useCallback((e: React.PointerEvent) => {
+    e.preventDefault();
+    dragging.current = true;
+    const startX = e.clientX;
+    const listEl = (e.target as HTMLElement).closest(".app-sidebar-block")?.querySelector(".app-list-panel") as HTMLElement;
+    if (!listEl) return;
+    const startListW = listEl.getBoundingClientRect().width;
+
+    const onMove = (ev: PointerEvent) => {
+      const delta = ev.clientX - startX;
+      const newList = startListW + delta;
+      if (newList >= startListW) setListWidth(newList);
+      else setListWidth(null);
+    };
+    const onUp = () => {
+      dragging.current = false;
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
   }, []);
 
   const openSearch = useCallback(() => setSearchOpen(true), []);
@@ -96,10 +122,14 @@ export function AppLayout({
       />
       <div className={`app-sidebar-block ${sidebarOpen ? "" : "app-sidebar-hidden"}`}>
         <Sidebar activeTab={activeTab} onTabChange={onTabChange} />
-        <div className="app-list-panel">
+        <div
+          className="app-list-panel"
+          style={listWidth ? { width: listWidth, minWidth: listWidth } : undefined}
+        >
           <DragRegion />
           {listContent}
         </div>
+        <div className="sidebar-resize-handle" onPointerDown={handleResizeStart} />
       </div>
       <div className="app-detail-panel">
         <DragRegion
