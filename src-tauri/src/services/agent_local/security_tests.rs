@@ -66,22 +66,26 @@ mod tests {
     // --- validate_write_path ---
 
     #[test]
-    fn write_path_allows_tmp() {
-        let p = std::path::Path::new("/tmp/test-cl-go-security.txt");
-        let _ = std::fs::remove_file(p);
-        assert!(validate_write_path(p).is_ok());
+    fn write_path_allows_temp_dir() {
+        let tmp = std::env::temp_dir();
+        let p = tmp.join("test-cl-go-security.txt");
+        let _ = std::fs::remove_file(&p);
+        assert!(validate_write_path(&p).is_ok());
     }
 
     #[test]
+    #[cfg(unix)]
     fn write_path_blocks_etc() {
         let p = std::path::Path::new("/etc/evil.conf");
         assert!(validate_write_path(p).is_err());
     }
 
     #[test]
+    #[cfg(unix)]
     fn write_path_blocks_traversal() {
-        let p = std::path::Path::new("/tmp/../etc/passwd");
-        assert!(validate_write_path(p).is_err());
+        let tmp = std::env::temp_dir();
+        let p = tmp.join("../etc/passwd");
+        assert!(validate_write_path(&p).is_err());
     }
 
     // --- sanitize_error ---
@@ -98,40 +102,42 @@ mod tests {
     // --- validate_read_path (mission 1.1) ---
 
     #[test]
-    fn read_path_allows_tmp() {
-        let working = std::path::Path::new("/tmp");
-        let p = std::path::Path::new("/tmp/some-file.txt");
-        assert!(validate_read_path(p, working).is_ok());
+    fn read_path_allows_temp() {
+        let tmp = std::env::temp_dir();
+        let working = &tmp;
+        let p = tmp.join("some-file.txt");
+        assert!(validate_read_path(&p, working).is_ok());
     }
 
     #[test]
     fn read_path_allows_file_under_working_dir() {
-        // Utilise /tmp lui-même qui existe toujours
-        let working = std::path::Path::new("/tmp");
+        let working = std::env::temp_dir();
         let raw = working.join(".");
-        assert!(validate_read_path(&raw, working).is_ok());
+        assert!(validate_read_path(&raw, &working).is_ok());
     }
 
     #[test]
+    #[cfg(unix)]
     fn read_path_blocks_traversal_outside_home() {
-        let working = std::path::Path::new("/tmp");
+        let working = std::env::temp_dir();
         let p = std::path::Path::new("/etc/passwd");
-        assert!(validate_read_path(p, working).is_err());
+        assert!(validate_read_path(p, &working).is_err());
     }
 
     #[test]
+    #[cfg(unix)]
     fn read_path_blocks_dev() {
-        let working = std::path::Path::new("/tmp");
+        let working = std::env::temp_dir();
         let p = std::path::Path::new("/dev/null");
-        assert!(validate_read_path(p, working).is_err());
+        assert!(validate_read_path(p, &working).is_err());
     }
 
     #[test]
     fn read_path_allows_home_subpath() {
         if let Some(home) = dirs::home_dir() {
             let target = home.join(".local/share/cl-go-dash/test.json");
-            let working = std::path::Path::new("/tmp");
-            assert!(validate_read_path(&target, working).is_ok());
+            let working = std::env::temp_dir();
+            assert!(validate_read_path(&target, &working).is_ok());
         }
     }
 }

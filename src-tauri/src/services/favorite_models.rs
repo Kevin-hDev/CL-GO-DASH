@@ -12,8 +12,7 @@ pub struct FavoriteModel {
 }
 
 fn favorites_path() -> PathBuf {
-    let home = dirs::home_dir().expect("cannot resolve home directory");
-    home.join(".local/share/cl-go-dash/favorite-models.json")
+    crate::services::paths::data_dir().join("favorite-models.json")
 }
 
 pub fn list() -> Vec<FavoriteModel> {

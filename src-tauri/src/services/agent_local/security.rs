@@ -16,6 +16,10 @@ const DESTRUCTIVE_PATTERNS: &[&str] = &[
     "init 0",
     "init 6",
     ":(){:|:&};:",
+    "del /f /s /q",
+    "rd /s /q",
+    "format c:",
+    "format d:",
 ];
 
 static S7_EVAL_REGEX: LazyLock<Regex> =
@@ -23,12 +27,12 @@ static S7_EVAL_REGEX: LazyLock<Regex> =
 
 pub fn allowed_write_roots() -> Vec<PathBuf> {
     let mut raw = Vec::with_capacity(4);
+    raw.push(crate::services::paths::data_dir());
     if let Some(home) = dirs::home_dir() {
-        raw.push(home.join(".local/share/cl-go-dash"));
         raw.push(home.join(".ollama"));
         raw.push(home.join("Projects"));
     }
-    raw.push(PathBuf::from("/tmp"));
+    raw.push(std::env::temp_dir());
     raw.into_iter()
         .map(|p| p.canonicalize().unwrap_or(p))
         .collect()
@@ -56,7 +60,7 @@ pub fn allowed_read_roots() -> Vec<PathBuf> {
     if let Some(home) = dirs::home_dir() {
         raw.push(home.clone());
     }
-    raw.push(PathBuf::from("/tmp"));
+    raw.push(std::env::temp_dir());
     raw.into_iter()
         .map(|p| p.canonicalize().unwrap_or(p))
         .collect()
@@ -108,7 +112,7 @@ pub fn validate_write_path(path: &Path) -> Result<PathBuf, String> {
         Ok(canonical)
     } else {
         Err(
-            "Écriture interdite hors des zones autorisées (~/.local/share/cl-go-dash, ~/.ollama, /tmp, ~/Projects)"
+            "Écriture interdite hors des zones autorisées (data, .ollama, temp, Projects)"
                 .into(),
         )
     }

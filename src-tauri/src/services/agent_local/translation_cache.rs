@@ -13,10 +13,7 @@ fn sanitize(s: &str) -> String {
 }
 
 fn translations_dir() -> PathBuf {
-    let mut p = dirs::home_dir().unwrap_or_else(|| PathBuf::from("/tmp"));
-    p.push(".local/share/cl-go-dash");
-    p.push("translations");
-    p
+    crate::services::paths::data_dir().join("translations")
 }
 
 fn filename(model: &str, lang: &str) -> String {

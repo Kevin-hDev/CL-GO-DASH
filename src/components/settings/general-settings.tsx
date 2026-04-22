@@ -25,7 +25,7 @@ const FONT_FAMILY_OPTIONS: SelectOption[] = FONT_FAMILIES.map((f) => ({
 
 const LANGUAGE_OPTIONS: SelectOption[] = [
   { value: "en", label: "English" },
-  { value: "fr", label: "Francais" },
+  { value: "fr", label: "Français" },
 ];
 
 export function GeneralSettings({ theme, onThemeChange, settings }: GeneralSettingsProps) {

@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
+import { IS_MAC } from "@/lib/platform";
 import "@xterm/xterm/css/xterm.css";
 
 interface TerminalInstanceProps {
@@ -58,20 +59,19 @@ export function TerminalInstance({
     termRef.current = term;
     fitRef.current = fit;
 
-    const isMac = navigator.userAgent.includes("Mac");
-
     term.attachCustomKeyEventHandler((e) => {
       if (e.type !== "keydown") return true;
 
       // Toggle terminal : Cmd+J (macOS) ou Ctrl+J (Linux/Windows)
-      const toggleMod = isMac ? e.metaKey : e.ctrlKey;
+      const toggleMod = IS_MAC ? e.metaKey : e.ctrlKey;
       if (toggleMod && e.code === "KeyJ") {
         onTogglePanel?.();
         return false;
       }
 
-      // Cmd+C (macOS) : copie la sélection si elle existe, sinon passe au shell
-      if (e.metaKey && e.code === "KeyC") {
+      const copyPasteMod = IS_MAC ? e.metaKey : e.ctrlKey;
+
+      if (copyPasteMod && e.code === "KeyC") {
         const selection = term.getSelection();
         if (selection) {
           navigator.clipboard.writeText(selection).catch(() => {});
@@ -80,8 +80,7 @@ export function TerminalInstance({
         return true;
       }
 
-      // Cmd+V (macOS) : paste via événement natif
-      if (e.metaKey && e.code === "KeyV") {
+      if (copyPasteMod && e.code === "KeyV") {
         return true;
       }
 

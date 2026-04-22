@@ -5,10 +5,7 @@ use std::path::PathBuf;
 const SKILL_FILENAMES: &[&str] = &["skill.md", "SKILL.md"];
 
 fn skills_dir() -> PathBuf {
-    dirs::home_dir()
-        .unwrap_or_else(|| PathBuf::from("/"))
-        .join(".local/share/cl-go-dash")
-        .join("skills")
+    crate::services::paths::data_dir().join("skills")
 }
 
 pub async fn list_skills() -> Result<Vec<SkillInfo>, String> {

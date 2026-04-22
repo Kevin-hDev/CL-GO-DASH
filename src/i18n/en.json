@@ -123,7 +123,13 @@
     "title": "Allow {{action}}?",
     "allow": "Allow once",
     "allowSession": "Always allow",
-    "deny": "Deny"
+    "deny": "Deny",
+    "tools": {
+      "write_file": "write a file",
+      "edit_file": "edit a file",
+      "bash": "run a command",
+      "web_fetch": "fetch a URL"
+    }
   },
   "ollama": {
     "title": "Ollama",
@@ -268,11 +274,11 @@
     },
     "advanced": {
       "autostartTitle": "Launch at startup",
-      "autostartDesc": "Open CL-GO automatically when the Mac starts",
+      "autostartDesc": "Open CL-GO automatically at system startup",
       "startHiddenTitle": "Start hidden",
       "startHiddenDesc": "Start in the background without opening the window",
       "trayTitle": "Menu bar icon",
-      "trayDesc": "Keep CL-GO in the macOS menu bar",
+      "trayDesc": "Keep CL-GO in the system tray",
       "defaultModelTitle": "Default model",
       "defaultModelDesc": "Model used by default for new conversations",
       "keepAliveTitle": "Unload model",
@@ -355,5 +361,8 @@
     "github": "GitHub",
     "viewOnGithub": "View on GitHub",
     "description": "Agentic desktop app for local and cloud LLMs."
+  },
+  "errors": {
+    "crashMessage": "An error occurred. Please restart the application."
   }
 }

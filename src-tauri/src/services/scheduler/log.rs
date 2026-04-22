@@ -19,9 +19,7 @@ pub struct WakeupRun {
 }
 
 fn log_path() -> PathBuf {
-    dirs::home_dir()
-        .unwrap_or_else(|| PathBuf::from("/tmp"))
-        .join(".local/share/cl-go-dash")
+    crate::services::paths::data_dir()
         .join("logs")
         .join("wakeups.jsonl")
 }

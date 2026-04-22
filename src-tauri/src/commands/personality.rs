@@ -13,8 +13,7 @@ pub struct PersonalityFile {
 }
 
 fn data_root() -> PathBuf {
-    let home = dirs::home_dir().expect("cannot resolve home");
-    home.join(".local/share/cl-go-dash")
+    crate::services::paths::data_dir()
 }
 
 fn memory_core() -> PathBuf {

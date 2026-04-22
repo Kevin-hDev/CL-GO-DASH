@@ -48,9 +48,7 @@ pub struct ModelCapabilities {
 }
 
 fn cache_path() -> PathBuf {
-    dirs::home_dir()
-        .unwrap_or_default()
-        .join(".local/share/cl-go-dash/litellm-models.json")
+    crate::services::paths::data_dir().join("litellm-models.json")
 }
 
 fn parse_registry(json: &str) -> HashMap<String, ModelEntry> {

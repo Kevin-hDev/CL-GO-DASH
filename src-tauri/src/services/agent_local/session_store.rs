@@ -31,10 +31,7 @@ pub(crate) async fn lock_session(id: &str) -> std::sync::Arc<Mutex<()>> {
 }
 
 fn sessions_dir() -> PathBuf {
-    dirs::home_dir()
-        .unwrap_or_else(|| PathBuf::from("/tmp"))
-        .join(".local/share/cl-go-dash")
-        .join("agent-sessions")
+    crate::services::paths::data_dir().join("agent-sessions")
 }
 
 pub async fn create(name: &str, model: &str) -> Result<AgentSession, String> {

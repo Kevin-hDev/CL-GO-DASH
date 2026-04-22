@@ -1,15 +1,7 @@
 use std::path::Path;
 
-const DATA_DIR_NAME: &str = ".local/share/cl-go-dash";
-
-fn data_dir() -> std::path::PathBuf {
-    dirs::home_dir()
-        .unwrap_or_else(|| std::path::PathBuf::from("/tmp"))
-        .join(DATA_DIR_NAME)
-}
-
 pub async fn load_agent_md(project_dir: Option<&Path>) -> Option<String> {
-    load_agent_md_from(data_dir().as_path(), project_dir).await
+    load_agent_md_from(crate::services::paths::data_dir().as_path(), project_dir).await
 }
 
 pub async fn load_agent_md_from(

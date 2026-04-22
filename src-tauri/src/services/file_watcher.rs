@@ -9,12 +9,12 @@ const EVENT_PERSONALITY: &str = "fs:personality-changed";
 const EVENT_LOGS: &str = "fs:logs-changed";
 
 pub fn start(app: &AppHandle) {
-    let home = dirs::home_dir().expect("cannot resolve home");
+    let base = crate::services::paths::data_dir();
 
     let paths: Vec<(PathBuf, &'static str)> = vec![
-        (home.join(".local/share/cl-go-dash"), EVENT_CONFIG),
-        (home.join(".local/share/cl-go-dash/memory/core"), EVENT_PERSONALITY),
-        (home.join(".local/share/cl-go-dash/logs/heartbeat"), EVENT_LOGS),
+        (base.clone(), EVENT_CONFIG),
+        (base.join("memory/core"), EVENT_PERSONALITY),
+        (base.join("logs/heartbeat"), EVENT_LOGS),
     ];
 
     let handle = app.clone();
@@ -51,12 +51,16 @@ pub fn start(app: &AppHandle) {
 
                 // Determine which event to emit
                 for changed_path in &event.paths {
-                    let path_str = changed_path.to_string_lossy();
-                    let event_name = if path_str.contains("config.json") {
+                    let normalized: String = changed_path
+                        .components()
+                        .map(|c| c.as_os_str().to_string_lossy().into_owned())
+                        .collect::<Vec<_>>()
+                        .join("/");
+                    let event_name = if normalized.contains("config.json") {
                         EVENT_CONFIG
-                    } else if path_str.contains("memory/core") {
+                    } else if normalized.contains("memory/core") {
                         EVENT_PERSONALITY
-                    } else if path_str.contains("logs/heartbeat") {
+                    } else if normalized.contains("logs/heartbeat") {
                         EVENT_LOGS
                     } else {
                         continue;

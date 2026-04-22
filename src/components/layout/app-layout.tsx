@@ -4,6 +4,7 @@ import { Sidebar, type TabId } from "./sidebar";
 import { DragRegion } from "./drag-region";
 import { WindowToolbar } from "./window-toolbar";
 import { SearchDialog } from "./search-dialog";
+import { IS_MAC } from "@/lib/platform";
 import "./app-layout.css";
 
 interface AppLayoutProps {
@@ -76,7 +77,7 @@ export function AppLayout({
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      const mod = navigator.userAgent.includes("Mac") ? e.metaKey : e.ctrlKey;
+      const mod = IS_MAC ? e.metaKey : e.ctrlKey;
       if (!mod) return;
 
       switch (e.code) {

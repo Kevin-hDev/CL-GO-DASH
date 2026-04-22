@@ -1,10 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { SettingsCard } from "./settings-card";
+import { MOD_LABEL, ALT_LABEL } from "@/lib/platform";
 import "./shortcuts-settings.css";
-
-const IS_MAC = navigator.userAgent.includes("Mac");
-const MOD = IS_MAC ? "⌘" : "Ctrl";
-const ALT = IS_MAC ? "⌥" : "Alt";
 
 interface Shortcut {
   i18n: string;
@@ -12,12 +9,12 @@ interface Shortcut {
 }
 
 const SHORTCUTS: Shortcut[] = [
-  { i18n: "settings.shortcuts.toggleTerminal", keys: [MOD, "J"] },
-  { i18n: "settings.shortcuts.toggleSidebar", keys: [MOD, "B"] },
-  { i18n: "settings.shortcuts.goBack", keys: [MOD, "◀"] },
-  { i18n: "settings.shortcuts.goForward", keys: [MOD, "▶"] },
-  { i18n: "settings.shortcuts.newSession", keys: [ALT, MOD, "N"] },
-  { i18n: "settings.shortcuts.searchDialog", keys: [MOD, "G"] },
+  { i18n: "settings.shortcuts.toggleTerminal", keys: [MOD_LABEL, "J"] },
+  { i18n: "settings.shortcuts.toggleSidebar", keys: [MOD_LABEL, "B"] },
+  { i18n: "settings.shortcuts.goBack", keys: [MOD_LABEL, "◀"] },
+  { i18n: "settings.shortcuts.goForward", keys: [MOD_LABEL, "▶"] },
+  { i18n: "settings.shortcuts.newSession", keys: [ALT_LABEL, MOD_LABEL, "N"] },
+  { i18n: "settings.shortcuts.searchDialog", keys: [MOD_LABEL, "G"] },
 ];
 
 export function ShortcutsSettings() {

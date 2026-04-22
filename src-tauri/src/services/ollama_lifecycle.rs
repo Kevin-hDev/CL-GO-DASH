@@ -29,7 +29,7 @@ fn ollama_binary_path(app: &AppHandle) -> Result<PathBuf, String> {
     let path = resource_dir
         .join("resources")
         .join("ollama-bundle")
-        .join("ollama");
+        .join(if cfg!(windows) { "ollama.exe" } else { "ollama" });
     if !path.exists() {
         return Err(format!("Binaire Ollama introuvable : {}", path.display()));
     }
@@ -45,14 +45,16 @@ pub fn start_sidecar(app: &AppHandle) -> Result<bool, String> {
     let binary = ollama_binary_path(app)?;
     let bundle_dir = binary.parent().ok_or("no parent dir")?.to_path_buf();
 
-    let child = Command::new(&binary)
-        .arg("serve")
+    let mut cmd = Command::new(&binary);
+    cmd.arg("serve")
         .current_dir(&bundle_dir)
-        .env("DYLD_LIBRARY_PATH", &bundle_dir)
         .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .spawn()
-        .map_err(|e| format!("spawn ollama: {e}"))?;
+        .stderr(Stdio::null());
+    #[cfg(target_os = "macos")]
+    cmd.env("DYLD_LIBRARY_PATH", &bundle_dir);
+    #[cfg(target_os = "linux")]
+    cmd.env("LD_LIBRARY_PATH", &bundle_dir);
+    let child = cmd.spawn().map_err(|e| format!("spawn ollama: {e}"))?;
 
     eprintln!("[ollama] sidecar démarré pid={}", child.id());
 
@@ -81,6 +83,10 @@ fn kill_process(child: &mut Child) {
     #[cfg(unix)]
     unsafe {
         libc::kill(pid as i32, libc::SIGTERM);
+    }
+    #[cfg(not(unix))]
+    {
+        let _ = child.kill();
     }
 
     let start = std::time::Instant::now();

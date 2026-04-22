@@ -3,8 +3,7 @@ use std::fs;
 use std::path::PathBuf;
 
 fn config_path() -> PathBuf {
-    let home = dirs::home_dir().expect("cannot resolve home directory");
-    home.join(".local/share/cl-go-dash/config.json")
+    crate::services::paths::data_dir().join("config.json")
 }
 
 /// Lecture tolérante du config :

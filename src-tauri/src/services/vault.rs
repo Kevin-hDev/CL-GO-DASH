@@ -23,8 +23,7 @@ struct VaultFile {
 }
 
 pub fn vault_path() -> std::path::PathBuf {
-    let home = dirs::home_dir().expect("cannot resolve home directory");
-    home.join(".local/share/cl-go-dash/secrets.enc")
+    crate::services::paths::data_dir().join("secrets.enc")
 }
 
 pub fn load_or_create_master_key() -> Result<Zeroizing<Vec<u8>>, String> {

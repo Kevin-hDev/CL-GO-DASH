@@ -1,4 +1,5 @@
 import { Component, type ReactNode } from "react";
+import i18n from "@/i18n";
 
 interface Props {
   children: ReactNode;
@@ -28,7 +29,7 @@ export class ErrorBoundary extends Component<Props, State> {
           textAlign: "center",
           fontSize: "var(--text-sm)",
         }}>
-          Une erreur est survenue. Relance l'application.
+          {i18n.t("errors.crashMessage")}
         </div>
       );
     }

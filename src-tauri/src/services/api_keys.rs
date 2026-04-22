@@ -16,8 +16,7 @@ static STATE: std::sync::LazyLock<Mutex<Option<VaultState>>> =
     std::sync::LazyLock::new(|| Mutex::new(None));
 
 fn registry_path() -> std::path::PathBuf {
-    let home = dirs::home_dir().expect("cannot resolve home directory");
-    home.join(".local/share/cl-go-dash/configured-providers.json")
+    crate::services::paths::data_dir().join("configured-providers.json")
 }
 
 fn read_registry() -> Vec<String> {

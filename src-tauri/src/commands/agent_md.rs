@@ -1,10 +1,7 @@
 use std::path::PathBuf;
 
 fn global_agent_md_path() -> PathBuf {
-    dirs::home_dir()
-        .unwrap_or_else(|| PathBuf::from("/tmp"))
-        .join(".local/share/cl-go-dash")
-        .join("AGENT.md")
+    crate::services::paths::data_dir().join("AGENT.md")
 }
 
 fn project_agent_md_path(project_dir: &str) -> PathBuf {
@@ -87,7 +84,7 @@ mod tests {
     #[test]
     fn global_agent_md_path_ends_correctly() {
         let p = global_agent_md_path();
-        assert!(p.ends_with(".local/share/cl-go-dash/AGENT.md"));
+        assert!(p.ends_with("AGENT.md"), "expected path to end with AGENT.md, got: {:?}", p);
     }
 
     #[test]

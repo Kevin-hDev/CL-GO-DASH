@@ -184,9 +184,19 @@ fn sync_autostart(handle: &tauri::AppHandle, enabled: bool) {
     }
 }
 
+fn tray_lang() -> &'static str {
+    let lang_env = std::env::var("LANG").unwrap_or_default();
+    if lang_env.to_lowercase().starts_with("fr") { "fr" } else { "en" }
+}
+
 fn create_tray(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
-    let show = MenuItem::with_id(app, "show", "Afficher", true, None::<&str>)?;
-    let quit = MenuItem::with_id(app, "quit", "Quitter", true, None::<&str>)?;
+    let (show_label, quit_label) = if tray_lang() == "fr" {
+        ("Afficher", "Quitter")
+    } else {
+        ("Show", "Quit")
+    };
+    let show = MenuItem::with_id(app, "show", show_label, true, None::<&str>)?;
+    let quit = MenuItem::with_id(app, "quit", quit_label, true, None::<&str>)?;
     let menu = Menu::with_items(app, &[&show, &quit])?;
 
     TrayIconBuilder::new()

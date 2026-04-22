@@ -3,9 +3,7 @@ use std::fs;
 use std::path::PathBuf;
 
 fn data_root() -> PathBuf {
-    dirs::home_dir()
-        .expect("cannot resolve home")
-        .join(".local/share/cl-go-dash")
+    crate::services::paths::data_dir()
 }
 
 fn state_path() -> PathBuf {

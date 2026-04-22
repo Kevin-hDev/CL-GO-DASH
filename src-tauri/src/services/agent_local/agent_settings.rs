@@ -15,10 +15,7 @@ impl Default for AgentSettings {
 }
 
 fn settings_path() -> PathBuf {
-    dirs::home_dir()
-        .unwrap_or_else(|| PathBuf::from("/tmp"))
-        .join(".local/share/cl-go-dash")
-        .join("agent-settings.json")
+    crate::services::paths::data_dir().join("agent-settings.json")
 }
 
 pub async fn load() -> AgentSettings {

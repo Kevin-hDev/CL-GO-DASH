@@ -8,13 +8,6 @@ interface Props {
   onDecide: (id: string, decision: PermissionDecision) => void;
 }
 
-const TOOL_LABELS: Record<string, string> = {
-  write_file: "écrire un fichier",
-  edit_file: "modifier un fichier",
-  bash: "exécuter une commande",
-  web_fetch: "récupérer une URL",
-};
-
 function extractTarget(args: Record<string, unknown>): string {
   const keys = ["path", "command", "url"];
   for (const k of keys) {
@@ -39,7 +32,7 @@ export function PermissionDialog({ request, onDecide }: Props) {
   }, [request.id, onDecide]);
 
   const target = extractTarget(request.arguments);
-  const action = TOOL_LABELS[request.toolName] ?? request.toolName;
+  const action = t(`permissionDialog.tools.${request.toolName}`, { defaultValue: request.toolName });
   const title = t("permissionDialog.title", { action });
 
   return (

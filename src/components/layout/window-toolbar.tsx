@@ -2,11 +2,8 @@ import { useTranslation } from "react-i18next";
 import { SidebarToggleIcon, ArrowLeftIcon, ArrowRightIcon, SearchIcon } from "./toolbar-icons";
 import { ComposeIcon } from "@/components/ui/compose-icon";
 import { Tooltip } from "@/components/ui/tooltip";
+import { IS_MAC, MOD, ALT } from "@/lib/platform";
 import "./window-toolbar.css";
-
-const IS_MAC = navigator.userAgent.includes("Mac");
-const MOD = IS_MAC ? "⌘" : "Ctrl+";
-const ALT = IS_MAC ? "⌥" : "Alt+";
 
 interface WindowToolbarProps {
   sidebarOpen: boolean;
@@ -27,7 +24,7 @@ export function WindowToolbar({
   const { t } = useTranslation();
 
   return (
-    <div className="window-toolbar">
+    <div className={`window-toolbar${IS_MAC ? " is-mac" : ""}`}>
       <Tooltip label={`${t("settings.shortcuts.toggleSidebar")} (${MOD}B)`}>
         <button className="toolbar-btn" onClick={onToggleSidebar}>
           <SidebarToggleIcon size={16} />

@@ -5,6 +5,7 @@ import { Plus, X } from "@/components/ui/icons";
 import { TerminalSquare } from "lucide-react";
 import { Tooltip } from "@/components/ui/tooltip";
 import { setInternalDrag } from "@/lib/internal-drag";
+import { MOD } from "@/lib/platform";
 import type { TabInfo } from "@/types/agent";
 import "./conversation.css";
 
@@ -23,9 +24,6 @@ interface TabBarProps {
 }
 
 const DRAG_THRESHOLD = 5;
-
-const IS_MAC = navigator.userAgent.includes("Mac");
-const MOD = IS_MAC ? "⌘" : "Ctrl+";
 
 export function TabBar({
   tabs, activeIndex, canAddTab, sessionId, terminalOpen,
