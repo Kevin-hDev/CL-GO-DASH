@@ -135,13 +135,9 @@ pub fn run() {
         .expect("error while building tauri application");
 
     app.run(|app_handle, event| match event {
-        RunEvent::ExitRequested { .. } => {
-            if let Some(pty) = app_handle.try_state::<services::terminal::PtyManager>() {
-                pty.kill_all();
-            }
-            ollama_lifecycle::stop_sidecar(app_handle);
-        }
-        RunEvent::WindowEvent { event: WindowEvent::CloseRequested { .. }, .. } => {
+        RunEvent::ExitRequested { .. }
+        | RunEvent::Exit
+        | RunEvent::WindowEvent { event: WindowEvent::CloseRequested { .. }, .. } => {
             if let Some(pty) = app_handle.try_state::<services::terminal::PtyManager>() {
                 pty.kill_all();
             }

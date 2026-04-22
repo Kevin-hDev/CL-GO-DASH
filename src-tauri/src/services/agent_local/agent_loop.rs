@@ -87,13 +87,18 @@ fn build_request(
     tools: &[serde_json::Value],
     think: bool,
 ) -> ChatRequest {
+    let keep_alive = crate::services::config::read_config()
+        .map(|c| c.advanced.keep_alive)
+        .unwrap_or_else(|_| "5m".to_string());
+    let keep_alive = if keep_alive == "forever" { "-1m".to_string() } else { keep_alive };
+
     ChatRequest {
         model: model.to_string(),
         messages: messages.to_vec(),
         stream: true,
         tools: if tools.is_empty() { None } else { Some(tools.to_vec()) },
         options: None,
-        keep_alive: None,
+        keep_alive: Some(keep_alive),
         think: Some(think),
     }
 }
@@ -130,6 +135,12 @@ fn build_assistant_message(
 }
 
 async fn decharge_gpu(model: &str) {
+    let keep_alive = crate::services::config::read_config()
+        .map(|c| c.advanced.keep_alive)
+        .unwrap_or_else(|_| "5m".to_string());
+    if keep_alive != "0" {
+        return;
+    }
     let client = reqwest::Client::new();
     let _ = client
         .post(format!("{OLLAMA_BASE_URL}/api/chat"))
