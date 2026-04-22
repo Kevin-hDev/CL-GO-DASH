@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-shell";
-import { Pencil, Trash, ArrowSquareOut, Plus } from "@/components/ui/icons";
+import { Pencil, Trash, ArrowSquareOut } from "@/components/ui/icons";
 import { SettingsCard } from "@/components/settings/settings-card";
 import { ProviderIcon } from "@/lib/provider-icons";
 import { getProviderDescription, type ProviderSpec } from "@/types/api";
@@ -64,8 +64,7 @@ export function ApiKeysDetails({ provider, onEdit, onDelete, onAddConnector }: A
             </div>
           </div>
           <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-            <button type="button" className="ak-connectors-btn" onClick={onAddConnector} style={{ marginRight: 8 }}>
-              <Plus size={14} weight="bold" />
+            <button type="button" className="ak-connectors-btn" onClick={onAddConnector} style={{ marginRight: 8, whiteSpace: "nowrap" }}>
               {t("apiKeys.main.connectorsBtn")}
             </button>
             <button type="button" className="ak-icon-btn" onClick={onEdit} title={t("apiKeys.details.edit")}>

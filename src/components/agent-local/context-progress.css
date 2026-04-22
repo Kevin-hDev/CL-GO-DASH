@@ -17,25 +17,24 @@
   white-space: nowrap;
   font-size: 11px;
   font-family: var(--font-mono);
-  color: #fff;
-  background: rgba(0, 0, 0, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #1a1a1a;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 6px;
   padding: 4px 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
   pointer-events: none;
   opacity: 0;
-  transition: opacity 150ms ease;
-  transition-delay: 0ms;
+  transition: opacity 80ms ease;
 }
 
 .context-ring:hover::after {
   opacity: 1;
-  transition-delay: 500ms;
 }
 
 .context-ring-track {
   fill: none;
-  stroke: rgba(255, 255, 255, 0.1);
+  stroke: rgba(128, 128, 128, 0.25);
 }
 
 .context-ring-fill {

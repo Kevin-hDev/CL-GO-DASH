@@ -2,12 +2,20 @@
   font-size: var(--text-xs);
   color: var(--ink-faint);
   background: none;
-  border: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-family: inherit;
   position: relative;
-  top: 2px;
+  top: 3px;
   left: -3px;
+  padding: 3px 6px;
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+
+.ms-trigger:hover {
+  border-color: var(--edge);
+  background: var(--surface);
 }
 
 .ms-dropdown {
