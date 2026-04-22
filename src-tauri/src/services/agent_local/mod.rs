@@ -44,7 +44,10 @@ pub mod chat_prompts_tests;
 #[cfg(test)]
 pub mod chat_prompts_chat_tests;
 pub mod tool_web_search;
+pub mod tool_result_budget;
 pub mod types_ollama;
 pub mod types_session;
 pub mod project_store;
 pub mod types_tools;
+#[cfg(test)]
+pub mod tool_result_budget_tests;

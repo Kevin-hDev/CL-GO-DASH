@@ -2,6 +2,7 @@ use crate::services::agent_local::agent_settings;
 use crate::services::agent_local::ollama_stream;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::tool_executor;
+use crate::services::agent_local::tool_result_budget;
 use crate::services::agent_local::types_ollama::{
     ChatMessage, ChatRequest, StreamEvent,
 };
@@ -31,6 +32,7 @@ pub async fn run_agent_loop(
             return Err("Annulé".to_string());
         }
 
+        tool_result_budget::apply_budget(messages);
         let request = build_request(model, messages, &tools, think);
         let result = ollama_stream::stream_chat_no_done(on_event, &request, cancel.clone()).await?;
 
