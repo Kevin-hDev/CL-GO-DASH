@@ -136,7 +136,7 @@ fn build_retry_request(request: &ChatRequest, error_body: &str) -> Option<ChatRe
     let mut retry = request.clone();
     let mut changed = false;
     if error_body.contains("does not support thinking") && request.think == Some(true) {
-        retry.think = None;
+        retry.think = Some(false);
         changed = true;
     }
     if error_body.contains("does not support tools") && request.tools.is_some() {

@@ -94,7 +94,7 @@ fn build_request(
         tools: if tools.is_empty() { None } else { Some(tools.to_vec()) },
         options: None,
         keep_alive: None,
-        think: if think { Some(true) } else { None },
+        think: Some(think),
     }
 }
 
