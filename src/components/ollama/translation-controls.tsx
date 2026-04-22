@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
+import { CustomSelect } from "@/components/ui/custom-select";
 import "./ollama.css";
 
 const LANGUAGES: { code: string; label: string }[] = [
@@ -77,28 +78,15 @@ export function TranslationControls({
         </button>
       )}
 
-      <select
-        value={currentLang ?? ""}
-        onChange={(e) => {
-          const lang = e.target.value;
-          if (lang) translate(lang);
-        }}
-        disabled={loading}
-        style={{
-          padding: "4px 8px",
-          background: "var(--void)",
-          border: "1px solid var(--edge)",
-          borderRadius: "var(--radius-sm)",
-          color: "var(--ink)",
-          fontSize: "var(--text-xs)",
-          cursor: "pointer",
-        }}
-      >
-        <option value="">{t("ollama.translate")}</option>
-        {LANGUAGES.map((l) => (
-          <option key={l.code} value={l.code}>{l.label}</option>
-        ))}
-      </select>
+      <div style={{ width: 120 }}>
+        <CustomSelect
+          value={currentLang ?? ""}
+          onChange={(lang) => { if (lang) translate(lang); }}
+          disabled={loading}
+          placeholder={t("ollama.translate")}
+          options={LANGUAGES.map((l) => ({ value: l.code, label: l.label }))}
+        />
+      </div>
     </div>
   );
 }

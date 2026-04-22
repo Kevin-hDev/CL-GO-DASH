@@ -89,8 +89,7 @@
 
 .wk-input:focus {
   outline: none;
-  border-color: var(--select-text);
-  box-shadow: 0 0 0 2px var(--pulse-muted);
+  border-color: var(--edge);
 }
 
 .wk-input:disabled {

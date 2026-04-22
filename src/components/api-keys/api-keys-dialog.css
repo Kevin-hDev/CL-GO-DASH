@@ -5,8 +5,8 @@
   width: 100%;
   margin-top: var(--space-md);
   padding: 10px;
-  background: #ef4444;
-  border: 1px solid #ef4444;
+  background: #b91c1c;
+  border: 1px solid #b91c1c;
   border-radius: var(--radius-sm);
   color: white;
   font-size: var(--text-sm);
@@ -16,25 +16,27 @@
 }
 
 @keyframes ak-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
-  50% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(185, 28, 28, 0.5); }
+  50% { box-shadow: 0 0 0 6px rgba(185, 28, 28, 0); }
 }
 
-/* Bouton "Effacer la clé" outline */
+/* Bouton "Effacer la clé" — même style que Annuler */
 .ak-btn-danger-outline {
   margin-right: auto;
-  padding: 8px 12px;
+  padding: 8px 16px;
   background: transparent;
-  border: 1px solid rgba(239, 68, 68, 0.4);
+  border: 1px solid var(--edge);
   border-radius: var(--radius-sm);
-  color: #ef4444;
+  color: var(--ink-muted);
   font-size: var(--text-sm);
+  font-weight: 500;
   cursor: pointer;
   transition: all var(--ease-smooth);
 }
 
 .ak-btn-danger-outline:hover {
-  background: rgba(239, 68, 68, 0.15);
+  background: var(--surface-hover);
+  color: var(--ink);
 }
 
 /* Message de résultat de test — succès ou erreur */

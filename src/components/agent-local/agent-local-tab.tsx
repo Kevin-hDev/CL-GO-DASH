@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import { ConversationList } from "./conversation-list";
 import { TabBar } from "./tab-bar";
 import { ChatView } from "./chat-view";
@@ -11,19 +12,41 @@ import { useProjects } from "@/hooks/use-projects";
 import { useTerminal } from "@/hooks/use-terminal";
 import type { DroppedFile } from "@/hooks/use-file-drop";
 
-interface OllamaModel {
-  name: string;
+interface AdvancedState {
+  default_model: string;
 }
 
 function useDefaultModel(): { model: string; provider: string } {
-  const [state, setState] = useState({ model: "gemma4:e4b", provider: "ollama" });
-  useEffect(() => {
-    invoke<OllamaModel[]>("list_ollama_models")
-      .then((models) => {
-        if (models.length > 0) setState({ model: models[0].name, provider: "ollama" });
+  const [state, setState] = useState({ model: "", provider: "ollama" });
+
+  const load = useCallback(() => {
+    invoke<AdvancedState>("get_advanced_settings")
+      .then((s) => {
+        if (s.default_model) {
+          const idx = s.default_model.indexOf(":");
+          if (idx > 0) {
+            setState({
+              provider: s.default_model.slice(0, idx),
+              model: s.default_model.slice(idx + 1),
+            });
+            return;
+          }
+        }
+        invoke<{ name: string }[]>("list_ollama_models")
+          .then((models) => {
+            if (models.length > 0) setState({ model: models[0].name, provider: "ollama" });
+          })
+          .catch(() => {});
       })
-      .catch((e) => console.warn("Ollama models:", e));
+      .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    load();
+    const unsub = listen("fs:config-changed", load);
+    return () => { unsub.then((f) => f()).catch(() => {}); };
+  }, [load]);
+
   return state;
 }
 

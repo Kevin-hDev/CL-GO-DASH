@@ -43,10 +43,7 @@ export function AdvancedSettings() {
   }, []);
 
   const modelGroups = useMemo((): SelectGroup[] => {
-    const result: SelectGroup[] = [{
-      label: "—",
-      options: [{ value: "", label: "—" }],
-    }];
+    const result: SelectGroup[] = [];
     for (const [, models] of groups) {
       if (models.length === 0) continue;
       result.push({
@@ -54,6 +51,7 @@ export function AdvancedSettings() {
         options: models.map((m) => ({
           value: `${m.provider_id}:${m.id}`,
           label: m.id,
+          dimmed: !m.is_free && !m.is_local,
         })),
       });
     }

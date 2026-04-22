@@ -38,4 +38,5 @@ export {
   GearSix,
   Info,
   Keyboard,
+  BookOpenText,
 } from "@phosphor-icons/react";

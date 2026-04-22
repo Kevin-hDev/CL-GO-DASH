@@ -36,6 +36,22 @@ export function ApiKeysDetails({ provider, onEdit, onDelete, onAddConnector }: A
     return () => { cancelled = true; };
   }, [provider.id]);
 
+  useEffect(() => {
+    if (!confirmDelete) return;
+    const timer = setTimeout(() => setConfirmDelete(false), 5000);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key.startsWith("Esc")) {
+        e.preventDefault();
+        setConfirmDelete(false);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [confirmDelete]);
+
   const handleDeleteClick = async () => {
     if (confirmDelete) {
       await onDelete();

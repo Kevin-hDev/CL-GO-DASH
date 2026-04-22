@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { X } from "@/components/ui/icons";
+import { CustomSelect } from "@/components/ui/custom-select";
 import type { CreateWakeupInput, ScheduledWakeup, WakeupSchedule } from "@/types/wakeup";
 import { useAvailableModels } from "@/hooks/use-available-models";
 import { SchedulePicker } from "./schedule-picker";
@@ -110,39 +111,30 @@ export function NewWakeupDialog({
           <div className="wk-form-row">
             <div className="wk-form-field">
               <label className="wk-form-label">{t("heartbeat.form.provider")}</label>
-              <select
-                className="wk-input"
+              <CustomSelect
                 value={provider}
-                onChange={(e) => setProvider(e.target.value)}
-              >
-                {availableProviders.length === 0 ? (
-                  <option value="ollama">Ollama</option>
-                ) : (
-                  availableProviders.map((p) => (
-                    <option key={p.id} value={p.id}>{p.display_name}</option>
-                  ))
-                )}
-              </select>
+                onChange={setProvider}
+                options={
+                  availableProviders.length === 0
+                    ? [{ value: "ollama", label: "Ollama" }]
+                    : availableProviders.map((p) => ({ value: p.id, label: p.display_name }))
+                }
+              />
             </div>
 
             <div className="wk-form-field">
               <label className="wk-form-label">{t("heartbeat.form.model")}</label>
-              <select
-                className="wk-input"
+              <CustomSelect
                 value={model}
-                onChange={(e) => setModel(e.target.value)}
-                required
+                onChange={setModel}
                 disabled={toolCapableModels.length === 0}
-              >
-                <option value="" disabled>
-                  {toolCapableModels.length === 0
+                placeholder={
+                  toolCapableModels.length === 0
                     ? t("heartbeat.form.noToolCapable")
-                    : t("heartbeat.form.pickModel")}
-                </option>
-                {toolCapableModels.map((m) => (
-                  <option key={m.id} value={m.id}>{m.id}</option>
-                ))}
-              </select>
+                    : t("heartbeat.form.pickModel")
+                }
+                options={toolCapableModels.map((m) => ({ value: m.id, label: m.id }))}
+              />
             </div>
           </div>
 

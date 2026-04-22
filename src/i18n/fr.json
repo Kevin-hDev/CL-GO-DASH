@@ -346,5 +346,14 @@
     "recent": "Conversations récentes",
     "results": "Résultats",
     "empty": "Aucune conversation trouvée"
+  },
+  "about": {
+    "version": "Version",
+    "runtime": "Runtime",
+    "tauri": "Tauri",
+    "os": "Système",
+    "github": "GitHub",
+    "viewOnGithub": "Voir sur GitHub",
+    "description": "Application desktop agentique pour LLM locaux et cloud."
   }
 }

@@ -8,6 +8,7 @@ export interface SelectOption {
   value: string;
   label: string;
   icon?: React.ReactNode;
+  dimmed?: boolean;
 }
 
 export interface SelectGroup {
@@ -38,16 +39,7 @@ export function SettingsSelect({
   const [query, setQuery] = useState("");
   const ref = useRef<HTMLDivElement>(null);
 
-  const defaultCollapsed = useMemo(() => {
-    if (!groups) return {};
-    const map: Record<string, boolean> = {};
-    for (const g of groups) {
-      map[g.label] = true;
-    }
-    return map;
-  }, [groups]);
-
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>(defaultCollapsed);
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
 
   const close = useCallback(() => {
     setOpen(false);
@@ -70,7 +62,8 @@ export function SettingsSelect({
   }, [allOptions, query, searchable]);
 
   const current = allOptions.find((o) => o.value === value);
-  const displayLabel = current?.label ?? placeholder ?? "—";
+  const fallbackLabel = value && value.includes(":") ? value.split(":").slice(1).join(":") : value;
+  const displayLabel = current?.label ?? (value ? fallbackLabel : placeholder) ?? "—";
   const isOverflowing = displayLabel.length > 20;
 
   const handleSelect = (val: string) => {
@@ -79,13 +72,13 @@ export function SettingsSelect({
   };
 
   const toggleGroup = (label: string) => {
-    setCollapsed((prev) => ({ ...prev, [label]: !prev[label] }));
+    setCollapsed((prev) => ({ ...prev, [label]: !(prev[label] ?? true) }));
   };
 
   const renderOption = (opt: SelectOption) => (
     <div
       key={opt.value}
-      className={`ss-option ${opt.value === value ? "active" : ""}`}
+      className={`ss-option ${opt.value === value ? "active" : ""} ${opt.dimmed ? "ss-option-dimmed" : ""}`}
       onClick={() => handleSelect(opt.value)}
     >
       <div className="ss-option-check">
@@ -116,7 +109,7 @@ export function SettingsSelect({
               <span>{g.label}</span>
               <span className="ss-group-count">{g.options.length}</span>
             </div>
-            {!isCollapsed && g.options.map(renderOption)}
+            {!isCollapsed && sortedOptions(g.options).map(renderOption)}
           </div>
         );
       });
@@ -129,6 +122,9 @@ export function SettingsSelect({
 
     return <div className="ss-empty">--</div>;
   };
+
+  const sortedOptions = (opts: SelectOption[]) =>
+    [...opts].sort((a, b) => (a.dimmed ? 1 : 0) - (b.dimmed ? 1 : 0));
 
   return (
     <div className={`ss-wrap ${open ? "open" : ""}`} ref={ref}>
