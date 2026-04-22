@@ -20,11 +20,16 @@ pub fn get_tool_definitions() -> Vec<Value> {
         tool_def(
             "read_file",
             "Read any file on the system. Accepts absolute or relative paths. \
-             You can access any file the user can access.",
+             Output is formatted with line numbers (cat -n format: `{line_number}\\t{content}`). \
+             Use offset and limit to read only a portion of large files. \
+             Default limit is 2000 lines. If more lines remain, a continuation message indicates \
+             the next offset to use.",
             serde_json::json!({
                 "type": "object",
                 "properties": {
-                    "path": {"type": "string", "description": "File path (absolute or relative to working dir)"}
+                    "path": {"type": "string", "description": "File path (absolute or relative to working dir)"},
+                    "offset": {"type": "integer", "description": "Starting line (0-based, default: 0)"},
+                    "limit": {"type": "integer", "description": "Max number of lines to return (default: 2000)"}
                 },
                 "required": ["path"]
             }),

@@ -25,7 +25,9 @@ pub async fn dispatch(tool_name: &str, args: &Value, working_dir: &Path) -> Tool
         }
         "read_file" => {
             let path = args["path"].as_str().unwrap_or("");
-            tool_files::read_file(path, working_dir).await
+            let offset = args["offset"].as_u64().unwrap_or(0) as usize;
+            let limit = args["limit"].as_u64().unwrap_or(tool_files::DEFAULT_LIMIT as u64) as usize;
+            tool_files::read_file(path, working_dir, offset, limit).await
         }
         "write_file" => {
             let path = args["path"].as_str().unwrap_or("");

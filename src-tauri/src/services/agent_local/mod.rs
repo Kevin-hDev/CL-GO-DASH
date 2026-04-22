@@ -36,6 +36,8 @@ pub mod tool_web_fetch_ip;
 #[cfg(test)]
 pub mod tool_web_fetch_tests;
 #[cfg(test)]
+pub mod tool_files_tests;
+#[cfg(test)]
 pub mod chat_prompts_tests;
 #[cfg(test)]
 pub mod chat_prompts_chat_tests;

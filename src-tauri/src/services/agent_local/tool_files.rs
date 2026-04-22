@@ -4,6 +4,7 @@ use std::path::{Path, PathBuf};
 
 const MAX_READ_SIZE: u64 = 20 * 1024 * 1024;
 const MAX_LIST_ENTRIES: usize = 500;
+pub const DEFAULT_LIMIT: usize = 2000;
 
 fn resolve_read_path(path: &str, working_dir: &Path) -> Result<PathBuf, String> {
     let p = Path::new(path);
@@ -17,21 +18,42 @@ fn resolve_write_path(path: &str, working_dir: &Path) -> Result<PathBuf, String>
     security::validate_write_path(&raw)
 }
 
-pub async fn read_file(path: &str, working_dir: &Path) -> ToolResult {
+pub async fn read_file(path: &str, working_dir: &Path, offset: usize, limit: usize) -> ToolResult {
     let resolved = match resolve_read_path(path, working_dir) {
         Ok(p) => p,
         Err(e) => return ToolResult { content: e, is_error: true },
     };
     match tokio::fs::metadata(&resolved).await {
         Ok(meta) if meta.len() > MAX_READ_SIZE => {
-            ToolResult { content: "Fichier trop volumineux (max 20MB)".into(), is_error: true }
+            return ToolResult {
+                content: "Fichier trop volumineux (max 20MB)".into(),
+                is_error: true,
+            };
         }
-        Err(e) => ToolResult { content: security::sanitize_error(e), is_error: true },
-        _ => match tokio::fs::read_to_string(&resolved).await {
-            Ok(content) => ToolResult { content, is_error: false },
-            Err(e) => ToolResult { content: security::sanitize_error(e), is_error: true },
-        },
+        Err(e) => return ToolResult { content: security::sanitize_error(e), is_error: true },
+        _ => {}
     }
+    let raw = match tokio::fs::read_to_string(&resolved).await {
+        Ok(c) => c,
+        Err(e) => return ToolResult { content: security::sanitize_error(e), is_error: true },
+    };
+    let lines: Vec<&str> = raw.lines().collect();
+    let total = lines.len();
+    let start = offset.min(total);
+    let end = (start + limit).min(total);
+    let slice = &lines[start..end];
+    let mut output = String::with_capacity(slice.len() * 80);
+    for (i, line) in slice.iter().enumerate() {
+        let line_num = start + i + 1;
+        output.push_str(&format!("{line_num}\t{line}\n"));
+    }
+    let remaining = total.saturating_sub(end);
+    if remaining > 0 {
+        output.push_str(&format!(
+            "\n[{remaining} ligne(s) restante(s) — utilise offset={end} pour la suite]"
+        ));
+    }
+    ToolResult { content: output, is_error: false }
 }
 
 pub async fn write_file(path: &str, content: &str, working_dir: &Path) -> ToolResult {
