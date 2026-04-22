@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { open as openFileDialog } from "@tauri-apps/plugin-dialog";
 import { MessageList } from "./message-list";
 import { ChatInput } from "./chat-input";
@@ -12,14 +12,14 @@ import { useFileDrop, type DroppedFile } from "@/hooks/use-file-drop";
 import { usePermissionMode } from "@/hooks/use-permission-mode";
 import { usePermissionRequests } from "@/hooks/use-permission-requests";
 import { useSessionProject } from "@/hooks/use-session-project";
+import { useChatScroll } from "@/hooks/use-chat-scroll";
+import { useModelSwitch } from "@/hooks/use-model-switch";
 import { PermissionDialog } from "./permission-dialog";
 import { TerminalPanel } from "@/components/terminal/terminal-panel";
 import { useTerminal } from "@/hooks/use-terminal";
 import type { Project } from "@/types/agent";
 import scrollDownIcon from "@/assets/fleche.png";
 import "./chat.css";
-
-type SwitchChoice = "new" | "continue";
 
 interface ChatViewProps {
   sessionId: string;
@@ -39,11 +39,6 @@ interface ChatViewProps {
   onToggleThinking: () => void;
   onInitialMessageSent?: () => void;
   terminalState: ReturnType<typeof useTerminal>;
-}
-
-interface PendingSwitch {
-  model: string;
-  provider: string;
 }
 
 export function ChatView({
@@ -74,8 +69,6 @@ export function ChatView({
   const fileDrop = useFileDrop();
   const context = useContextProgress(model, chat.tokenCount, provider);
   const [preview, setPreview] = useState<DroppedFile | null>(null);
-  const [pendingSwitch, setPendingSwitch] = useState<PendingSwitch | null>(null);
-  const rememberedRef = useRef<SwitchChoice | null>(null);
   const proj = useSessionProject(sessionId, projects, onAddProject, chat.messages.length > 0);
   const initialSent = useRef(false);
 
@@ -89,67 +82,20 @@ export function ChatView({
     }
   }, [initialMessage]);
 
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const bottomRef = useRef<HTMLDivElement>(null);
-  const [isAtBottom, setIsAtBottom] = useState(true);
-  const following = useRef(true);
+  const { scrollRef, bottomRef, isAtBottom, scrollToBottom, handleScroll } = useChatScroll({
+    messagesLength: chat.messages.length,
+    currentContent: chat.currentContent,
+    currentThinking: chat.currentThinking,
+    currentToolsLength: chat.currentTools.length,
+  });
 
-  const handleScroll = useCallback(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
-    setIsAtBottom(atBottom);
-    if (atBottom) following.current = true;
-  }, []);
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const onWheel = (e: WheelEvent) => {
-      if (e.deltaY < 0) following.current = false;
-    };
-    el.addEventListener("wheel", onWheel, { passive: true });
-    return () => el.removeEventListener("wheel", onWheel);
-  }, []);
-
-  const scrollToBottom = useCallback(() => {
-    const el = scrollRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
-    following.current = true;
-  }, []);
-
-  useEffect(() => {
-    following.current = true;
-    const el = scrollRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
-  }, [chat.messages.length]);
-
-  useEffect(() => {
-    if (!following.current) return;
-    const el = scrollRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
-  }, [chat.currentContent, chat.currentThinking, chat.currentTools.length]);
-
-  const handleModelSelect = useCallback(
-    (newModel: string, newProvider: string) => {
-      if (newModel === model && newProvider === provider) return;
-      const hasMessages = chat.messages.length > 0;
-      if (!hasMessages) {
-        onApplySwitch?.(newModel, newProvider);
-        return;
-      }
-      if (rememberedRef.current === "continue") {
-        onApplySwitch?.(newModel, newProvider);
-        return;
-      }
-      if (rememberedRef.current === "new") {
-        onNewSession?.(newModel, newProvider);
-        return;
-      }
-      setPendingSwitch({ model: newModel, provider: newProvider });
-    },
-    [model, provider, chat.messages.length, onApplySwitch, onNewSession],
-  );
+  const { pendingSwitch, setPendingSwitch, handleModelSelect, rememberedRef } = useModelSwitch({
+    currentModel: model,
+    currentProvider: provider,
+    messagesLength: chat.messages.length,
+    onApplySwitch,
+    onNewSession,
+  });
 
   return (
     <FileDropZone

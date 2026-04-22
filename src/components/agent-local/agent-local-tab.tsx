@@ -1,7 +1,4 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { useTranslation } from "react-i18next";
-import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
 import { ConversationList } from "./conversation-list";
 import { TabBar } from "./tab-bar";
 import { ChatView } from "./chat-view";
@@ -10,45 +7,8 @@ import { useAgentSessions } from "@/hooks/use-agent-sessions";
 import { useAgentTabs } from "@/hooks/use-agent-tabs";
 import { useProjects } from "@/hooks/use-projects";
 import { useTerminal } from "@/hooks/use-terminal";
-import type { DroppedFile } from "@/hooks/use-file-drop";
-
-interface AdvancedState {
-  default_model: string;
-}
-
-function useDefaultModel(): { model: string; provider: string } {
-  const [state, setState] = useState({ model: "", provider: "ollama" });
-
-  const load = useCallback(() => {
-    invoke<AdvancedState>("get_advanced_settings")
-      .then((s) => {
-        if (s.default_model) {
-          const idx = s.default_model.indexOf(":");
-          if (idx > 0) {
-            setState({
-              provider: s.default_model.slice(0, idx),
-              model: s.default_model.slice(idx + 1),
-            });
-            return;
-          }
-        }
-        invoke<{ name: string }[]>("list_ollama_models")
-          .then((models) => {
-            if (models.length > 0) setState({ model: models[0].name, provider: "ollama" });
-          })
-          .catch(() => {});
-      })
-      .catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    load();
-    const unsub = listen("fs:config-changed", load);
-    return () => { unsub.then((f) => f()).catch(() => {}); };
-  }, [load]);
-
-  return state;
-}
+import { useDefaultModel } from "@/hooks/use-default-model";
+import { useSessionActions } from "@/hooks/use-session-actions";
 
 interface AgentLocalTabProps {
   requestedSessionId?: string | null;
@@ -56,7 +16,6 @@ interface AgentLocalTabProps {
 }
 
 export function AgentLocalTab(props?: AgentLocalTabProps): { list: React.ReactNode; detail: React.ReactNode; onCreate: () => void; onShowWelcome: () => void } {
-  const { t } = useTranslation();
   const { sessions, refresh, create, rename, remove, updateModel } = useAgentSessions();
   const tabState = useAgentTabs();
   const projectsHook = useProjects();
@@ -76,6 +35,9 @@ export function AgentLocalTab(props?: AgentLocalTabProps): { list: React.ReactNo
   const currentDefault = welcomeModel ?? { model: defaultModel, provider: defaultProvider };
   const model = activeSession?.model ?? currentDefault.model;
   const provider = activeSession?.provider ?? currentDefault.provider;
+
+  const sessionActions = useSessionActions({ create, tabState, rename, defaultModel, defaultProvider, welcomeModel, setWelcomeModel, projectsHook });
+  const { pendingMessage, setPendingMessage, pendingWorkingDir, setPendingWorkingDir, pendingSkills, setPendingSkills, pendingFiles, setPendingFiles, handleCreate, handleCreateWithModel, handleWelcomeSend, handleAutoRename, handleCreateInProject } = sessionActions;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -99,59 +61,6 @@ export function AgentLocalTab(props?: AgentLocalTabProps): { list: React.ReactNo
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [tabState.activeSessionId, terminal, terminalCwd]);
-
-  const handleCreate = useCallback(() => {
-    tabState.deselectTab();
-  }, [tabState]);
-
-  const handleCreateWithModel = useCallback(
-    async (newModel: string, newProvider: string) => {
-      const name = t("agentLocal.newSession");
-      const session = await create(name, newModel, newProvider);
-      await tabState.addTab(session.id, session.name);
-    },
-    [create, tabState, t],
-  );
-
-  const [pendingMessage, setPendingMessage] = useState<string | null>(null);
-  const [pendingWorkingDir, setPendingWorkingDir] = useState<string | undefined>(undefined);
-  const [pendingSkills, setPendingSkills] = useState<{ name: string; content: string }[] | undefined>(undefined);
-  const [pendingFiles, setPendingFiles] = useState<DroppedFile[] | undefined>(undefined);
-
-  const handleWelcomeSend = useCallback(
-    async (text: string, files?: DroppedFile[], projectId?: string, skills?: { name: string; content: string }[]) => {
-      const name = text.slice(0, 40).trim() || t("agentLocal.newSession");
-      const m = welcomeModel ?? { model: defaultModel, provider: defaultProvider };
-      const project = projectId ? projectsHook.projects.find((p) => p.id === projectId) : undefined;
-      const session = await create(name, m.model, m.provider, projectId);
-      setPendingMessage(text);
-      setPendingWorkingDir(project?.path);
-      setPendingSkills(skills);
-      setPendingFiles(files && files.length > 0 ? files : undefined);
-      setWelcomeModel(null);
-      await tabState.addTab(session.id, session.name);
-    },
-    [create, tabState, defaultModel, defaultProvider, welcomeModel, t, projectsHook.projects],
-  );
-
-  const handleAutoRename = useCallback(
-    async (id: string, name: string) => {
-      await rename(id, name);
-      if (tabState.activeIndex >= 0) {
-        await tabState.renameTab(tabState.activeIndex, name);
-      }
-    },
-    [rename, tabState],
-  );
-
-  const handleCreateInProject = useCallback(
-    async (projectId: string) => {
-      const name = t("agentLocal.newSession");
-      const session = await create(name, defaultModel, defaultProvider, projectId);
-      await tabState.addTab(session.id, session.name);
-    },
-    [create, tabState, defaultModel, defaultProvider, t],
-  );
 
   const prevSessionRef = useRef(tabState.activeSessionId);
   useEffect(() => {
