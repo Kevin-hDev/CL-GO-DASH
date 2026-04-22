@@ -90,9 +90,9 @@
 .thinking-content {
   margin-top: var(--space-xs);
   padding-left: var(--space-sm);
-  border-left: 2px solid var(--edge);
+  border-left: 2px solid #4A9EE8;
   font-size: var(--text-xs);
-  color: var(--ink-faint);
+  color: #4A9EE8;
   white-space: pre-wrap;
   max-height: 240px;
   overflow-y: auto;

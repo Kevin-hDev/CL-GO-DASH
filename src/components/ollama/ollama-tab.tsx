@@ -35,7 +35,7 @@ export function OllamaTab(): { list: React.ReactNode; detail: React.ReactNode } 
   }, [ollamaModels.models, selectedInstalled]);
 
   const list = (
-    <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, marginTop: -30 }}>
+    <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
       <div className="ollama-subtabs">
         {(["modelfile", "models"] as const).map((tab) => (
           <button
