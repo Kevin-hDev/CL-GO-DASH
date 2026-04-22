@@ -6,6 +6,7 @@
 
 use super::stream;
 use crate::services::agent_local::agent_settings;
+use crate::services::agent_local::circuit_breaker;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::tool_executor;
 use crate::services::agent_local::tool_result_budget;
@@ -37,6 +38,7 @@ pub async fn run_agent_loop(
     let mut total_eval: u32 = 0;
     let mut total_prompt: u32 = 0;
     let start = std::time::Instant::now();
+    let mut breaker = circuit_breaker::CircuitBreaker::new();
 
     for turn in 0..MAX_TURNS {
         if cancel.is_cancelled() {
@@ -60,6 +62,11 @@ pub async fn run_agent_loop(
             let _ = on_event.send(StreamEvent::Error {
                 message: "Limite de tours atteinte".to_string(),
             });
+            break;
+        }
+
+        if let Err(msg) = breaker.check(&result.tool_calls) {
+            let _ = on_event.send(StreamEvent::Error { message: msg });
             break;
         }
 
