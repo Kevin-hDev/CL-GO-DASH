@@ -6,7 +6,11 @@ use services::agent_local::ollama_client::OllamaClient;
 use services::ollama_lifecycle::{self, OllamaSidecar};
 use services::scheduler::Scheduler;
 use std::collections::HashMap;
-use tauri::{Manager, RunEvent, WindowEvent};
+use tauri::{
+    menu::{Menu, MenuItem},
+    tray::TrayIconBuilder,
+    Manager, RunEvent, WindowEvent,
+};
 use tokio::sync::Mutex;
 use tokio_util::sync::CancellationToken;
 
@@ -17,6 +21,10 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_autostart::init(
+            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+            None,
+        ))
         .manage(OllamaClient::new())
         .manage(ActiveStreams(Mutex::new(HashMap::new())))
         .manage(OllamaSidecar::new())
@@ -31,6 +39,24 @@ pub fn run() {
             if let Err(e) = ollama_lifecycle::start_sidecar(app.handle()) {
                 eprintln!("[ollama] sidecar start failed: {}", e);
             }
+
+            let config = services::config::read_config().unwrap_or_default();
+
+            // Autostart : synchronise l'état OS avec le setting
+            sync_autostart(app.handle(), config.advanced.autostart);
+
+            // Start hidden : masque la fenêtre si activé
+            if config.advanced.start_hidden {
+                if let Some(win) = app.get_webview_window("main") {
+                    let _ = win.hide();
+                }
+            }
+
+            // Tray icon
+            if config.advanced.show_tray {
+                let _ = create_tray(app);
+            }
+
             services::file_watcher::start(app.handle());
             let scheduler = Scheduler::spawn(app.handle().clone());
             app.manage(scheduler);
@@ -145,6 +171,49 @@ pub fn run() {
         }
         _ => {}
     });
+}
+
+fn sync_autostart(handle: &tauri::AppHandle, enabled: bool) {
+    use tauri_plugin_autostart::ManagerExt;
+    let manager = handle.autolaunch();
+    let current = manager.is_enabled().unwrap_or(false);
+    if enabled && !current {
+        let _ = manager.enable();
+    } else if !enabled && current {
+        let _ = manager.disable();
+    }
+}
+
+fn create_tray(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+    let show = MenuItem::with_id(app, "show", "Afficher", true, None::<&str>)?;
+    let quit = MenuItem::with_id(app, "quit", "Quitter", true, None::<&str>)?;
+    let menu = Menu::with_items(app, &[&show, &quit])?;
+
+    TrayIconBuilder::new()
+        .icon(tauri::image::Image::from_bytes(include_bytes!("../icons/tray.png"))?)
+        .menu(&menu)
+        .tooltip("CL-GO")
+        .show_menu_on_left_click(false)
+        .on_menu_event(|app, event| match event.id().as_ref() {
+            "show" => {
+                if let Some(win) = app.get_webview_window("main") {
+                    let _ = win.show();
+                    let _ = win.set_focus();
+                }
+            }
+            "quit" => app.exit(0),
+            _ => {}
+        })
+        .on_tray_icon_event(|tray, event| {
+            if let tauri::tray::TrayIconEvent::Click { .. } = event {
+                if let Some(win) = tray.app_handle().get_webview_window("main") {
+                    let _ = win.show();
+                    let _ = win.set_focus();
+                }
+            }
+        })
+        .build(app)?;
+    Ok(())
 }
 
 /// One-shot migration: copie depuis l'ancien dossier ~/.local/share/cl-go/

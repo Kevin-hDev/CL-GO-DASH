@@ -18,7 +18,20 @@ pub fn get_advanced_settings() -> Result<AdvancedSettings, String> {
 }
 
 #[tauri::command]
-pub fn set_advanced_settings(settings: AdvancedSettings) -> Result<(), String> {
+pub fn set_advanced_settings(
+    app: tauri::AppHandle,
+    settings: AdvancedSettings,
+) -> Result<(), String> {
+    use tauri_plugin_autostart::ManagerExt;
+
+    let manager = app.autolaunch();
+    let current = manager.is_enabled().unwrap_or(false);
+    if settings.autostart && !current {
+        let _ = manager.enable();
+    } else if !settings.autostart && current {
+        let _ = manager.disable();
+    }
+
     let mut config = config_service::read_config()?;
     config.advanced = settings;
     config_service::write_config(&config)
