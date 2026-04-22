@@ -16,10 +16,12 @@ interface WelcomeViewProps {
   onAddProject: (path: string) => Promise<Project>;
   onSend: (text: string, files?: DroppedFile[], projectId?: string, skills?: { name: string; content: string }[]) => void;
   onModelChange: (model: string, provider: string) => void;
+  thinking: boolean;
+  onToggleThinking: () => void;
 }
 
 export function WelcomeView({
-  model, provider, projects, onAddProject, onSend, onModelChange,
+  model, provider, projects, onAddProject, onSend, onModelChange, thinking, onToggleThinking,
 }: WelcomeViewProps) {
   const { t } = useTranslation();
   const permMode = usePermissionMode();
@@ -60,7 +62,7 @@ export function WelcomeView({
               modelName={model}
               providerName={provider}
               isStreaming={false}
-              thinkingEnabled={false}
+              thinkingEnabled={thinking}
               files={fileDrop.files}
               contextUsed={0}
               contextMax={0}
@@ -77,7 +79,7 @@ export function WelcomeView({
                 fileDrop.addByPaths(raw.map((p) => String(p)));
               }}
               onModelChange={onModelChange}
-              onToggleThinking={() => {}}
+              onToggleThinking={onToggleThinking}
             />
             <ProjectSelector
               projects={projects}

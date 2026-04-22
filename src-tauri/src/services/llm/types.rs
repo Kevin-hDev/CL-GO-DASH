@@ -77,6 +77,8 @@ pub struct ModelInfo {
     #[serde(default)]
     pub supports_vision: bool,
     #[serde(default)]
+    pub supports_thinking: bool,
+    #[serde(default)]
     pub is_free: bool,
 }
 

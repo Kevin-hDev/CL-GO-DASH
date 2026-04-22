@@ -23,6 +23,8 @@ export function useAgentChat(
   const { startStream, stopStream, subscribeToStream, getStreamSnapshot } = useAgentStream();
 
   sessionRef.current = sessionId;
+  const thinkingRef = useRef(supportsThinking);
+  thinkingRef.current = supportsThinking;
   permissionRequestRef.current = onPermissionRequest;
 
   const deliverPermission = useCallback((id: string, toolName: string, args: Record<string, unknown>) => {
@@ -99,13 +101,13 @@ export function useAgentChat(
       provider,
       llmMsgs,
       [],
-      true,
+      thinkingRef.current ?? false,
       { displayMessages: displayMsgs, baseTokenCount: baseTokenCountOverride ?? state.tokenCount },
       workingDir,
       supportsTools,
-      supportsThinking,
+      thinkingRef.current,
     );
-  }, [model, provider, startStream, state.tokenCount, supportsTools, supportsThinking]);
+  }, [model, provider, startStream, state.tokenCount, supportsTools]);
 
   const sendMessage = useCallback(async (
     text: string,

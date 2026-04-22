@@ -71,7 +71,11 @@ pub fn supports_thinking(provider_id: &str, model_id: &str) -> bool {
         "groq" => model.contains("r1") || model.contains("qwq"),
         "openai" => model.starts_with("o3") || model.starts_with("o4"),
         "google" => model.contains("thinking"),
-        "openrouter" => false,
+        "openrouter" => {
+            model.contains("r1") || model.contains("qwq")
+                || model.contains("thinking") || model.contains("reasoner")
+                || model.starts_with("o3") || model.starts_with("o4")
+        }
         "mistral" => model.contains("thinking"),
         _ => false,
     }

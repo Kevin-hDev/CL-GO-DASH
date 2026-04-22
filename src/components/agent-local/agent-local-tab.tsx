@@ -71,6 +71,7 @@ export function AgentLocalTab(props?: AgentLocalTabProps): { list: React.ReactNo
   const terminal = useTerminal(terminalCwd);
   const { model: defaultModel, provider: defaultProvider } = useDefaultModel();
   const [welcomeModel, setWelcomeModel] = useState<{ model: string; provider: string } | null>(null);
+  const [thinking, setThinking] = useState(false);
 
   const currentDefault = welcomeModel ?? { model: defaultModel, provider: defaultProvider };
   const model = activeSession?.model ?? currentDefault.model;
@@ -261,6 +262,8 @@ export function AgentLocalTab(props?: AgentLocalTabProps): { list: React.ReactNo
             initialWorkingDir={pendingWorkingDir}
             initialSkills={pendingSkills}
             initialFiles={pendingFiles}
+            thinking={thinking}
+            onToggleThinking={() => setThinking((v) => !v)}
             onInitialMessageSent={() => { setPendingMessage(null); setPendingWorkingDir(undefined); setPendingSkills(undefined); setPendingFiles(undefined); }}
             terminalState={terminal}
           />
@@ -274,6 +277,8 @@ export function AgentLocalTab(props?: AgentLocalTabProps): { list: React.ReactNo
             onAddProject={projectsHook.add}
             onSend={handleWelcomeSend}
             onModelChange={(m, p) => setWelcomeModel({ model: m, provider: p })}
+            thinking={thinking}
+            onToggleThinking={() => setThinking((v) => !v)}
           />
         </div>
       )}

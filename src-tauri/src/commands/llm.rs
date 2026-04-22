@@ -30,6 +30,8 @@ pub async fn list_llm_models(provider_id: String) -> Result<Vec<ModelInfo>, Stri
             Some(caps) => {
                 m.supports_tools = m.supports_tools || caps.supports_tools;
                 m.supports_vision = caps.supports_vision;
+                m.supports_thinking = caps.supports_thinking
+                    || tool_capable::supports_thinking(&provider_id, &m.id);
             }
             None => {
                 if !m.supports_tools {
@@ -38,6 +40,7 @@ pub async fn list_llm_models(provider_id: String) -> Result<Vec<ModelInfo>, Stri
                 if !m.supports_vision {
                     m.supports_vision = tool_capable::supports_vision(&provider_id, &m.id);
                 }
+                m.supports_thinking = tool_capable::supports_thinking(&provider_id, &m.id);
             }
         }
         if all_free {

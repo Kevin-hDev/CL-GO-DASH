@@ -70,6 +70,7 @@ pub fn parse_models_list(
                 context_length,
                 supports_tools,
                 supports_vision,
+                supports_thinking: false,
                 is_free,
             })
         })

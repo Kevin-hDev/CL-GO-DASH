@@ -50,8 +50,12 @@ pub async fn post_chat_request(cfg: &RequestConfig<'_>) -> Result<reqwest::Respo
     }
     if cfg.think {
         match cfg.provider_id {
-            "deepseek" | "google" => { payload["reasoning_effort"] = "high".into(); }
-            "openai" => { payload["reasoning"] = serde_json::json!({"effort": "high"}); }
+            "deepseek" | "google" | "openrouter" => {
+                payload["reasoning_effort"] = "high".into();
+            }
+            "openai" => {
+                payload["reasoning"] = serde_json::json!({"effort": "high"});
+            }
             _ => {}
         }
     }

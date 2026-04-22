@@ -35,6 +35,8 @@ interface ChatViewProps {
   initialWorkingDir?: string;
   initialSkills?: { name: string; content: string }[];
   initialFiles?: DroppedFile[];
+  thinking: boolean;
+  onToggleThinking: () => void;
   onInitialMessageSent?: () => void;
   terminalState: ReturnType<typeof useTerminal>;
 }
@@ -58,6 +60,8 @@ export function ChatView({
   initialWorkingDir,
   initialSkills,
   initialFiles,
+  thinking,
+  onToggleThinking,
   onInitialMessageSent,
   terminalState,
 }: ChatViewProps) {
@@ -65,11 +69,11 @@ export function ChatView({
   const permMode = usePermissionMode();
   const chat = useAgentChat(sessionId, model, provider, (id, toolName, args) =>
     permissions.enqueue({ id, toolName, arguments: args }),
+    undefined, thinking,
   );
   const fileDrop = useFileDrop();
   const context = useContextProgress(model, chat.tokenCount, provider);
   const [preview, setPreview] = useState<DroppedFile | null>(null);
-  const [thinking, setThinking] = useState(false);
   const [pendingSwitch, setPendingSwitch] = useState<PendingSwitch | null>(null);
   const rememberedRef = useRef<SwitchChoice | null>(null);
   const proj = useSessionProject(sessionId, projects, onAddProject, chat.messages.length > 0);
@@ -227,7 +231,7 @@ export function ChatView({
                 fileDrop.addByPaths(paths);
               }}
               onModelChange={handleModelSelect}
-              onToggleThinking={() => setThinking(!thinking)}
+              onToggleThinking={onToggleThinking}
             />
             <ProjectSelector
               projects={projects}
