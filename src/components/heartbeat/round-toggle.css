@@ -1,0 +1,98 @@
+.round-toggle {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 36px;
+  border: 1.5px solid var(--edge);
+  background: var(--surface-hover);
+  overflow: hidden;
+  border-radius: 50%;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.round-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.rt-layer {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  transition: 0.5s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  font-family: var(--font-sans, sans-serif);
+  color: var(--ink-faint);
+}
+
+.rt-base {
+  font-weight: 600;
+  color: white;
+  background-color: var(--pulse);
+}
+
+.rt-split div {
+  position: absolute;
+  width: 100%;
+  height: 50%;
+  left: 0;
+  transition: 0.5s;
+}
+
+.rt-split div:first-child {
+  top: 0;
+  background-color: var(--surface-hover);
+  transform: translateY(0);
+  transition-delay: 0s;
+}
+
+.rt-split div:last-child {
+  bottom: 0;
+  background-color: var(--surface-hover);
+  border-top: 1px solid var(--edge);
+  transform: translateY(0);
+  transition-delay: 0s;
+}
+
+.rt-slide-r {
+  background-color: var(--surface);
+  transform: translateX(0);
+  border-left: 1px solid var(--edge);
+  transition-delay: 0.5s;
+}
+
+.rt-slide-l {
+  background-color: var(--shell, var(--surface));
+  transform: translateX(0);
+  border-right: 1px solid var(--edge);
+  transition-delay: 1s;
+}
+
+.round-toggle input:checked ~ .rt-split div:first-child {
+  transform: translateY(-100%);
+  transition-delay: 1s;
+}
+
+.round-toggle input:checked ~ .rt-split div:last-child {
+  transform: translateY(100%);
+  transition-delay: 1s;
+}
+
+.round-toggle input:checked ~ .rt-slide-r {
+  transform: translateX(100%);
+  transition-delay: 0.5s;
+}
+
+.round-toggle input:checked ~ .rt-slide-l {
+  transform: translateX(-100%);
+  transition-delay: 0s;
+}
