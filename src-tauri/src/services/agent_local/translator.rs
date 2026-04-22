@@ -131,13 +131,13 @@ async fn translate_chunk(
     if !resp.status().is_success() {
         let status = resp.status();
         let body = resp.text().await.unwrap_or_default();
-        eprintln!("[translator] HTTP error status={status} body={body}");
+        eprintln!("[translator] HTTP error status={status} body={}", crate::services::llm::sanitize_log_body(&body));
         if status.as_u16() == 404 {
             return Err(format!(
                 "Modèle '{model}' non installé. Installe-le via l'onglet Models."
             ));
         }
-        return Err(format!("Échec traduction ({status}) : {body}"));
+        return Err(format!("Échec traduction (HTTP {status})"));
     }
 
     let json: serde_json::Value = resp.json().await.map_err(|e| e.to_string())?;

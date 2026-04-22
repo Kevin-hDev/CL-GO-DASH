@@ -35,6 +35,8 @@ impl PtyManager {
         }
     }
 
+    const MAX_PTY_SESSIONS: usize = 16;
+
     pub fn spawn(
         &self,
         app: &AppHandle,
@@ -42,6 +44,12 @@ impl PtyManager {
         cols: u16,
         rows: u16,
     ) -> Result<u32, String> {
+        {
+            let sessions = self.sessions.lock().map_err(|e| format!("lock: {e}"))?;
+            if sessions.len() >= Self::MAX_PTY_SESSIONS {
+                return Err("Trop de terminaux ouverts".to_string());
+            }
+        }
         let id = NEXT_ID.fetch_add(1, Ordering::Relaxed);
         let (session, reader) = PtySession::spawn(cwd, cols, rows)?;
 

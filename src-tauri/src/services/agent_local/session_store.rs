@@ -170,6 +170,8 @@ pub async fn save(session: &AgentSession) -> Result<(), String> {
     Ok(())
 }
 
+const MAX_MESSAGES_PER_SESSION: usize = 2000;
+
 pub async fn add_messages(
     id: &str,
     mut new_messages: Vec<crate::services::agent_local::types_session::AgentMessage>,
@@ -179,13 +181,16 @@ pub async fn add_messages(
     let lock = lock_session(id).await;
     let _guard = lock.lock().await;
     let mut session = get(id).await?;
-    // Affecter tous les tokens au dernier message ajouté (l'assistant typiquement)
     if tokens > 0 {
         if let Some(last) = new_messages.last_mut() {
             last.tokens = tokens;
         }
     }
     session.messages.extend(new_messages);
+    if session.messages.len() > MAX_MESSAGES_PER_SESSION {
+        let excess = session.messages.len() - MAX_MESSAGES_PER_SESSION;
+        session.messages.drain(..excess);
+    }
     session.accumulated_tokens = session.messages.iter().map(|m| m.tokens).sum();
     save(&session).await
 }

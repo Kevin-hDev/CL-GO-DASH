@@ -4,7 +4,7 @@ use keyring::Entry;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use zeroize::Zeroizing;
+use zeroize::{Zeroize, Zeroizing};
 
 const KEYRING_SERVICE: &str = "cl-go-dash";
 const MASTER_KEY_USER: &str = "master-key";
@@ -91,8 +91,10 @@ pub fn read_vault(master_key: &[u8]) -> Result<HashMap<String, String>, String> 
         return Ok(HashMap::new());
     }
     let bytes = std::fs::read(&path).map_err(|e| format!("read vault: {e}"))?;
-    let plaintext = decrypt(master_key, &bytes)?;
-    serde_json::from_slice(&plaintext).map_err(|e| format!("vault json: {e}"))
+    let mut plaintext = decrypt(master_key, &bytes)?;
+    let result = serde_json::from_slice(&plaintext).map_err(|e| format!("vault json: {e}"));
+    plaintext.zeroize();
+    result
 }
 
 pub fn write_vault(master_key: &[u8], map: &HashMap<String, String>) -> Result<(), String> {
@@ -100,8 +102,9 @@ pub fn write_vault(master_key: &[u8], map: &HashMap<String, String>) -> Result<(
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent).map_err(|e| format!("mkdir: {e}"))?;
     }
-    let plaintext = serde_json::to_vec(map).map_err(|e| format!("json: {e}"))?;
+    let mut plaintext = serde_json::to_vec(map).map_err(|e| format!("json: {e}"))?;
     let encrypted = encrypt(master_key, &plaintext)?;
+    plaintext.zeroize();
 
     let tmp = path.with_extension("tmp");
     std::fs::write(&tmp, &encrypted).map_err(|e| format!("write: {e}"))?;

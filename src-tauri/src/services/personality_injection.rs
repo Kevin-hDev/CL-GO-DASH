@@ -47,6 +47,9 @@ pub fn load_injected_contents() -> Option<String> {
         if !enabled {
             continue;
         }
+        if name.contains("..") || name.contains('/') || name.contains('\\') {
+            continue;
+        }
         let path = core.join(name);
         let path = if path.exists() {
             path
