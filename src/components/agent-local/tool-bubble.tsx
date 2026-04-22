@@ -11,7 +11,7 @@ const TOOL_COLORS: Record<string, string> = {
 };
 
 const BUBBLE_STYLE = {
-  width: "85%", background: "var(--void)",
+  width: "100%", maxWidth: "660px", background: "var(--void)",
   border: "1px solid rgba(255,255,255,0.06)",
   borderRadius: "var(--radius-md, 8px)",
   padding: "10px 14px", alignSelf: "center" as const, margin: "6px auto",
