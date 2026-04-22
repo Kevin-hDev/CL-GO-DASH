@@ -106,12 +106,13 @@
   padding: var(--space-xs) var(--space-sm);
   font-size: var(--text-xs);
   color: var(--ink-muted);
-  background: var(--void);
+  background: transparent;
   border-radius: var(--radius-md);
   cursor: pointer;
   max-width: 140px;
-  overflow: hidden;
+  overflow: visible;
   transition: all var(--ease-smooth);
+  position: relative;
 }
 
 .tab-item > span {
@@ -126,13 +127,24 @@
 }
 
 .tab-item:hover {
-  background: var(--surface-hover);
+  color: var(--ink);
 }
 
 .tab-item.active {
   color: var(--ink);
-  background: var(--surface-hover);
+  background: transparent;
   font-weight: 500;
+}
+
+.tab-item.active::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 10%;
+  right: 10%;
+  height: 1.5px;
+  background: linear-gradient(to right, transparent, var(--ink-faint), transparent);
+  border-radius: 1px;
 }
 
 .tab-close {
