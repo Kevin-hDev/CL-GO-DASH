@@ -2,6 +2,10 @@ node_modules/
 dist/
 target/
 *.ips
+*.log
+*.dmg
+.env
+.env.*
 app-icon.png
 src-tauri/gen/
 .DS_Store

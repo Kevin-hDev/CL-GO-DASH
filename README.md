@@ -1,14 +1,15 @@
 # CL-GO-DASH
 
-Application desktop (Tauri 2 + React 19) pour discuter avec des LLM locaux via Ollama et planifier des réveils automatisés qui envoient des prompts à intervalles réguliers.
+Application desktop agentique (Tauri 2 + React 19) pour LLM locaux via Ollama et providers cloud (Groq, Gemini, Mistral, OpenAI, OpenRouter, DeepSeek, Cerebras). Chat en onglets, outils (bash, fichiers, web), réveils automatisés, terminal intégré.
 
 ## Fonctionnalités
 
-- **Agent Local** : chat avec n'importe quel modèle Ollama installé ou via API distant (Groq, Gemini, Mistral, OpenAI, OpenRouter…), gestion des conversations en onglets, permissions manuelles/auto sur les outils (bash, write_file, web_fetch)
-- **Réveils** : scheduler interne qui prompt un LLM à heure fixe (ponctuel / journalier / hebdomadaire), réponses stockées dans une conversation dédiée par modèle. Supporte Ollama local + providers API tool-capable.
-- **Clés API** : gestion centralisée des providers LLM et search (Brave, Exa, Firecrawl) via un onglet dédié. Clés stockées dans le **keystore OS natif** (macOS Keychain, Windows DPAPI, Linux Secret Service) — jamais en clair sur disque.
+- **Agent Local** : chat avec n'importe quel modèle Ollama ou provider cloud, gestion des conversations en onglets, permissions manuelles/auto sur les outils (bash, write_file, web_fetch), réflexion approfondie (thinking)
+- **Réveils** : scheduler interne qui prompt un LLM à heure fixe (ponctuel / journalier / hebdomadaire), réponses stockées dans une conversation dédiée par modèle
+- **Clés API** : gestion centralisée des providers LLM et search. Clés stockées dans un **vault chiffré XChaCha20-Poly1305** (master key dans le keyring OS) — jamais en clair sur disque, jamais exposées au frontend
 - **Ollama embarqué** : plus besoin d'installer Ollama.app séparément — le binaire est bundlé dans l'application
-- **Personnalité** : édition des fichiers Markdown dans `~/.local/share/cl-go-dash/memory/core/`
+- **Terminal intégré** : PTY cross-platform avec onglets, raccourci Cmd/Ctrl+J
+- **Personnalité** : édition des fichiers Markdown de contexte
 - **Ollama browser** : recherche de modèles, pull, édition de modelfiles
 
 ## Providers supportés (free-tier friendly)
@@ -31,11 +32,12 @@ Application desktop (Tauri 2 + React 19) pour discuter avec des LLM locaux via O
 - **Backend** : Rust + Tauri 2
 - **Frontend** : React 19 + TypeScript + Vite
 - **LLM runtime** : Ollama (embarqué comme sidecar)
-- **File watching** : crate `notify` (FSEvents sur macOS)
+- **Sécurité** : vault XChaCha20-Poly1305, master key dans keyring OS (macOS Keychain / Windows DPAPI / Linux Secret Service)
+- **File watching** : crate `notify` (FSEvents macOS, inotify Linux, ReadDirectoryChangesW Windows)
 
 ## Prérequis
 
-- macOS (Apple Silicon M1/M2/M3/M4/M5)
+- macOS (Apple Silicon ou Intel), Linux, ou Windows
 - Node.js 20+
 - Rust (via `rustup`)
 - **Git LFS** : requis pour cloner le repo (le binaire Ollama bundlé y est stocké)
@@ -44,7 +46,13 @@ Application desktop (Tauri 2 + React 19) pour discuter avec des LLM locaux via O
 
 ```bash
 # 1. Installer Git LFS (une fois par machine)
+# macOS :
 brew install git-lfs
+# Linux :
+sudo apt install git-lfs   # ou equiv. pour votre distro
+# Windows :
+winget install GitHub.GitLFS
+
 git lfs install
 
 # 2. Cloner le repo
@@ -61,9 +69,10 @@ npm install
 
 ```bash
 npm run tauri dev       # Mode dev (hot reload)
-npm run tauri build     # Build release (.app + .dmg)
+npm run tauri build     # Build release (.app + .dmg / .msi / .deb)
 npx tsc --noEmit        # Check TypeScript
 cd src-tauri && cargo check    # Check Rust
+cd src-tauri && cargo clippy --all-targets  # Lint strict
 cd src-tauri && cargo test     # Tests unitaires
 ```
 
@@ -72,14 +81,23 @@ cd src-tauri && cargo test     # Tests unitaires
 ```
 src-tauri/                # Backend Rust + Tauri
 ├── src/
-│   ├── commands/         # Tauri IPC commands (agent, heartbeat, personality, ...)
-│   ├── services/         # Logique métier
-│   │   ├── agent_local/  # Ollama client, session store, outils
+│   ├── commands/         # Tauri IPC (agent_chat, heartbeat, personality, api_keys, llm, ...)
+│   ├── services/
+│   │   ├── agent_local/  # Ollama client, session store, outils, permission gate
+│   │   ├── llm/          # Client unifié OpenAI-compat, catalog, streaming SSE
+│   │   ├── search/       # Brave, Exa, Firecrawl + routing
 │   │   ├── scheduler/    # Scheduler Tokio interne (réveils)
+│   │   ├── terminal/     # PTY cross-platform (portable-pty)
+│   │   ├── paths.rs      # Chemin data centralisé cross-platform
+│   │   ├── vault.rs      # Vault chiffré XChaCha20-Poly1305
+│   │   ├── api_keys.rs   # Gestion clés API (Zeroizing en mémoire)
 │   │   ├── config.rs     # Lecture/écriture config.json tolérante
-│   │   ├── file_watcher.rs  # Watch FS pour auto-refresh
+│   │   ├── stream_utils.rs  # compute_tps, clean_think_tags partagés
 │   │   └── ollama_lifecycle.rs  # Gestion du sidecar Ollama
-│   └── models/config.rs  # Schémas ScheduledWakeup, HeartbeatConfig
+│   ├── tray.rs           # Tray icon (labels FR/EN dynamiques)
+│   ├── storage_migration.rs  # Migration one-shot depuis CL-GO legacy
+│   ├── ollama_polling.rs # Polling status Ollama
+│   └── models/           # Schémas ScheduledWakeup, HeartbeatConfig
 └── resources/ollama-bundle/  # Binaire Ollama + libs (via Git LFS)
 
 src/                      # Frontend React
@@ -88,22 +106,29 @@ src/                      # Frontend React
 │   ├── heartbeat/        # Grid réveils, popup création, détails
 │   ├── ollama/           # Modelfile editor, model browser
 │   ├── personality/      # Markdown viewer
-│   └── layout/           # Sidebar, drag region
-├── hooks/                # useWakeups, useAgentChat, useAgentSessions, ...
+│   ├── settings/         # Général, raccourcis, avancé, about
+│   ├── terminal/         # Terminal intégré PTY
+│   ├── api-keys/         # Configuration clés API
+│   ├── layout/           # Sidebar, toolbar, drag region
+│   └── ui/               # Primitives réutilisables
+├── hooks/                # Logique extraite par domaine
+├── lib/                  # platform.ts (détection OS)
 ├── types/                # Types TS alignés sur Rust
 └── i18n/                 # FR + EN
 ```
 
 ## Stockage local
 
-Toutes les données utilisateur sont dans `~/.local/share/cl-go-dash/` :
+Données dans `~/.local/share/cl-go-dash/` (macOS/Linux) ou `%APPDATA%\cl-go-dash` (Windows) :
 
 | Chemin | Contenu |
 |---|---|
+| `secrets.enc` | Vault chiffré contenant les clés API |
+| `configured-providers.json` | Registry des providers configurés |
+| `config.json` | Heartbeat config + scheduled_wakeups + advanced settings |
 | `agent-sessions/*.json` | Conversations Agent Local |
 | `agent-settings.json` | Mode permissions (auto/manuel) |
 | `agent-tabs.json` | État des onglets ouverts |
-| `config.json` | Heartbeat config + scheduled_wakeups |
 | `memory/core/*.md` | Fichiers de personnalité |
 | `logs/wakeups.jsonl` | Historique d'exécution des réveils (rolling 500 lignes) |
 
@@ -114,16 +139,18 @@ L'application embarque **Ollama** comme sidecar pour éviter toute dépendance e
 - Au démarrage, l'app vérifie si un daemon Ollama tourne déjà sur `localhost:11434`
 - Si oui (Ollama.app déjà installée), elle l'utilise tel quel
 - Si non, elle lance son propre binaire bundlé
-- À la fermeture, le sidecar est arrêté proprement (SIGTERM + grace period 3s)
+- À la fermeture, le sidecar est arrêté proprement (SIGTERM Unix / kill Windows + grace period 3s)
 
 **Les modèles sont partagés** avec Ollama.app si elle est installée (`~/.ollama/models/`).
 
-## Règles internes
+## Sécurité
 
-- **Stockage des secrets** (clés API à venir) : keystore OS natif via `tauri-plugin-secure-storage` — jamais dans des fichiers config en clair
-- **Écriture atomique** : tous les fichiers de config sont écrits en `.tmp` + rename
-- **Fichiers < 200 lignes** : tout fichier code est découpé si nécessaire
-- **Pas de crontab système** : le scheduler est interne à l'app (Tokio), nécessite l'app ouverte pour que les réveils se déclenchent
+- **Vault chiffré** : clés API chiffrées XChaCha20-Poly1305, master key dans le keyring OS natif
+- **Zéroïsation** : tous les secrets en mémoire dans `Zeroizing<String>`, buffers intermédiaires zéroïsés après usage
+- **JS ne voit jamais une clé** : aucune commande Tauri n'expose `get_api_key`
+- **Path traversal** : canonicalize + starts_with sur tout chemin venant du frontend
+- **Collections bornées** : ActiveStreams (32), PTY sessions (16), messages par session (2000)
+- **Logs filtrés** : body HTTP providers tronqué à 200 chars, jamais de secret dans les logs
 
 ## Licence
 
