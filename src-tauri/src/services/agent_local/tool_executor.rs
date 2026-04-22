@@ -28,10 +28,7 @@ pub async fn run_tools(
         let tr = if allowed {
             tool_dispatcher::dispatch(name, args, working_dir).await
         } else {
-            ToolResult {
-                content: "L'utilisateur a refusé cette action.".to_string(),
-                is_error: true,
-            }
+            ToolResult::err("L'utilisateur a refusé cette action.")
         };
         push_tool_result(on_event, messages, name, tr);
     }
@@ -70,6 +67,7 @@ fn push_tool_result(
         name: name.to_string(),
         content: tr.content.clone(),
         is_error: tr.is_error,
+        truncated: tr.truncated,
     });
     messages.push(ChatMessage {
         role: "tool".to_string(),

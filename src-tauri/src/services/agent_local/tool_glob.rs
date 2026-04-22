@@ -15,16 +15,13 @@ pub async fn glob_files(
     let root = resolve_root(path, working_dir);
 
     if let Err(e) = security::validate_read_path(&root, working_dir) {
-        return ToolResult { content: e, is_error: true };
+        return ToolResult::err(e);
     }
 
     let result = tokio::task::spawn_blocking(move || glob_blocking(&pattern, &root)).await;
     match result {
         Ok(r) => r,
-        Err(e) => ToolResult {
-            content: format!("Erreur interne: {e}"),
-            is_error: true,
-        },
+        Err(e) => ToolResult::err(format!("Erreur interne: {e}")),
     }
 }
 
@@ -41,10 +38,7 @@ fn resolve_root(path: Option<&str>, working_dir: &Path) -> PathBuf {
 fn glob_blocking(pattern: &str, root: &Path) -> ToolResult {
     let matcher = match Glob::new(pattern) {
         Ok(g) => g.compile_matcher(),
-        Err(e) => return ToolResult {
-            content: format!("Pattern glob invalide : {e}"),
-            is_error: true,
-        },
+        Err(e) => return ToolResult::err(format!("Pattern glob invalide : {e}")),
     };
 
     let walk = WalkBuilder::new(root).hidden(false).git_ignore(true).build();
@@ -78,5 +72,5 @@ fn glob_blocking(pattern: &str, root: &Path) -> ToolResult {
     if output.is_empty() {
         output = "(aucun résultat)".into();
     }
-    ToolResult { content: output, is_error: false }
+    ToolResult::ok(output)
 }
