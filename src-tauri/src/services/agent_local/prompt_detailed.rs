@@ -2,7 +2,7 @@ use std::path::Path;
 
 pub fn build(working_dir: &Path) -> String {
     format!(
-        "{IDENTITY}\n\n{CAPABILITIES}\n\n{}\n\n{TOOLS}\n\n{CODE}\n\n{GIT}\n\n{SAFETY}\n\n{ERRORS}\n\n{STYLE}",
+        "{IDENTITY}\n\n{CAPABILITIES}\n\n{}\n\n{TOOLS}\n\n{WEB_SEARCH}\n\n{CODE}\n\n{GIT}\n\n{SAFETY}\n\n{ERRORS}\n\n{STYLE}",
         env_section(working_dir),
     )
 }
@@ -41,8 +41,10 @@ fn env_section(working_dir: &Path) -> String {
     let os = std::env::consts::OS;
     let arch = std::env::consts::ARCH;
     let shell = std::env::var("SHELL").unwrap_or_else(|_| "unknown".into());
+    let date = chrono::Local::now().format("%Y-%m-%d");
     format!(
         "# Environment\n\n\
+         - Current date: {date}\n\
          - Platform: {os} ({arch})\n\
          - Shell: {shell}\n\
          - Primary working directory: {}\n\n\
@@ -125,6 +127,16 @@ Read the error, check your assumptions, try a focused fix.
 Do not retry the identical action blindly, but do not abandon a viable approach \
 after a single failure either.
 If you are genuinely stuck after investigation, ask the user for guidance.";
+
+const WEB_SEARCH: &str = "\
+# Web search
+
+When you search the web:
+- Compare result dates against the current date. Discard outdated sources on fast-moving topics.
+- Cross-reference important claims across 2-3 sources before presenting them as fact.
+- Prefer official sources: docs, repos, author blogs. Distrust aggregators and SEO content.
+- Read the full page (web_fetch) before citing — snippets can be misleading.
+- If sources contradict, report the disagreement instead of picking one silently.";
 
 const STYLE: &str = "\
 # Style

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 
-export type PermissionMode = "auto" | "manual";
+export type PermissionMode = "auto" | "manual" | "chat";
 
 interface AgentSettings {
   permission_mode: PermissionMode;
@@ -33,7 +33,9 @@ export function usePermissionMode() {
   }, []);
 
   const toggle = useCallback(() => {
-    change(mode === "auto" ? "manual" : "auto");
+    const cycle: PermissionMode[] = ["chat", "manual", "auto"];
+    const idx = cycle.indexOf(mode);
+    change(cycle[(idx + 1) % cycle.length]);
   }, [mode, change]);
 
   useEffect(() => {

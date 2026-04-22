@@ -1,5 +1,6 @@
 use crate::services::agent_local::agent_loop;
 use crate::services::agent_local::agent_md;
+use crate::services::agent_local::agent_settings;
 use crate::services::agent_local::chat_prompts::prepare_messages;
 use crate::services::personality_injection;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
@@ -86,24 +87,40 @@ async fn run_stream_task(
             })
     };
 
+    let mode = agent_settings::get_permission_mode().await;
+    let is_chat = mode == "chat";
+
     if provider == "ollama" {
         let final_tools = if tools.is_empty() {
-            tool_dispatcher::get_tool_definitions()
+            if is_chat {
+                tool_dispatcher::get_chat_tool_definitions()
+            } else {
+                tool_dispatcher::get_tool_definitions()
+            }
         } else {
             tools
         };
 
         let working_dir = resolve_dir(&working_dir);
         let mut msgs = messages;
-        let agent_md_content = agent_md::load_agent_md(Some(working_dir.as_path())).await;
-        let personality = personality_injection::load_injected_contents();
-        let agent_md_content = merge_personality(agent_md_content, personality);
-        let skills_list = tool_skill_loader::list_skills().await.unwrap_or_default();
-        let skills_tuples: Vec<(String, String)> = skills_list
-            .iter()
-            .map(|s| (s.name.clone(), s.description.clone()))
-            .collect();
-        prepare_messages(&mut msgs, &working_dir, true, agent_md_content, &skills_tuples, &model);
+        let agent_md_content = if is_chat {
+            None
+        } else {
+            let raw = agent_md::load_agent_md(Some(working_dir.as_path())).await;
+            let personality = personality_injection::load_injected_contents();
+            merge_personality(raw, personality)
+        };
+        let skills_tuples: Vec<(String, String)> = if is_chat {
+            vec![]
+        } else {
+            tool_skill_loader::list_skills()
+                .await
+                .unwrap_or_default()
+                .iter()
+                .map(|s| (s.name.clone(), s.description.clone()))
+                .collect()
+        };
+        prepare_messages(&mut msgs, &working_dir, true, agent_md_content, &skills_tuples, &model, &mode);
 
         agent_loop::run_agent_loop(
             &on_event,
@@ -132,7 +149,9 @@ async fn run_stream_task(
         let model_supports_vision = registry_caps.as_ref().map(|c| c.supports_vision).unwrap_or(false)
             || tool_capable::supports_vision(&provider, &model);
 
-        let final_tools = if model_supports_tools {
+        let final_tools = if is_chat {
+            tool_dispatcher::get_chat_tool_definitions()
+        } else if model_supports_tools {
             if tools.is_empty() { tool_dispatcher::get_tool_definitions() } else { tools }
         } else {
             vec![]
@@ -143,20 +162,25 @@ async fn run_stream_task(
         if !model_supports_vision {
             llm::stream_convert::strip_images(&mut msgs);
         }
-        let agent_md_content = agent_md::load_agent_md(Some(working_dir.as_path())).await;
-        let personality = personality_injection::load_injected_contents();
-        let agent_md_content = merge_personality(agent_md_content, personality);
-        let skills_tuples: Vec<(String, String)> = if model_supports_tools {
+        let agent_md_content = if is_chat {
+            None
+        } else {
+            let raw = agent_md::load_agent_md(Some(working_dir.as_path())).await;
+            let personality = personality_injection::load_injected_contents();
+            merge_personality(raw, personality)
+        };
+        let skills_tuples: Vec<(String, String)> = if is_chat || !model_supports_tools {
+            vec![]
+        } else {
             tool_skill_loader::list_skills()
                 .await
                 .unwrap_or_default()
                 .iter()
                 .map(|s| (s.name.clone(), s.description.clone()))
                 .collect()
-        } else {
-            vec![]
         };
-        prepare_messages(&mut msgs, &working_dir, model_supports_tools, agent_md_content, &skills_tuples, &model);
+        let has_tools = is_chat || model_supports_tools;
+        prepare_messages(&mut msgs, &working_dir, has_tools, agent_md_content, &skills_tuples, &model, &mode);
         let think_active = think && model_supports_thinking;
         llm::agent_loop::run_agent_loop(
             &on_event,

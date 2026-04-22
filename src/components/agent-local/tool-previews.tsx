@@ -79,7 +79,7 @@ export function WebResultsPreview({ content, isSearch }: { content: string; isSe
           const url = lines[1] ?? "";
           return (
             <div key={i} style={{ marginBottom: i < blocks.length - 1 ? 6 : 0 }}>
-              <div style={{ color: "var(--pulse)", fontWeight: 600 }}>{title}</div>
+              <div style={{ color: "#9b7fff", fontWeight: 600 }}>{title}</div>
               <div style={{ color: "var(--ink-faint)", fontSize: "10px", wordBreak: "break-all" }}>{url}</div>
             </div>
           );

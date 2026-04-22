@@ -9,7 +9,7 @@ interface Props {
   onChange: (mode: PermissionMode) => void;
 }
 
-const MODES: PermissionMode[] = ["manual", "auto"];
+const MODES: PermissionMode[] = ["chat", "manual", "auto"];
 
 export function PermissionModeSelector({ mode, onChange }: Props) {
   const { t } = useTranslation();
@@ -29,10 +29,14 @@ export function PermissionModeSelector({ mode, onChange }: Props) {
       }
       switch (pressed) {
         case "1":
-          onChange("manual");
+          onChange("chat");
           setOpen(false);
           break;
         case "2":
+          onChange("manual");
+          setOpen(false);
+          break;
+        case "3":
           onChange("auto");
           setOpen(false);
           break;

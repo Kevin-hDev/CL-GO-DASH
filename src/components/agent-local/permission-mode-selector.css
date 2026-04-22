@@ -44,6 +44,10 @@
   color: #a16207;
 }
 
+.perm-mode-chat {
+  color: #1d4ed8;
+}
+
 .perm-mode-dropdown {
   position: absolute;
   bottom: calc(100% + 6px);

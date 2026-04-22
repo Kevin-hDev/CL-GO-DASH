@@ -114,6 +114,7 @@
   },
   "permissionMode": {
     "title": "Mode",
+    "chatLabel": "Chat",
     "autoLabel": "Auto permissions",
     "manualLabel": "Manuel permissions",
     "toggleHint": "Changer de mode (Shift+Tab)"

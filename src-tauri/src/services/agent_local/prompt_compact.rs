@@ -2,7 +2,7 @@ use std::path::Path;
 
 pub fn build(working_dir: &Path) -> String {
     format!(
-        "{IDENTITY}\n\n{CAPABILITIES}\n\n{}\n\n{TOOLS}\n\n{SAFETY}\n\n{STYLE}",
+        "{IDENTITY}\n\n{CAPABILITIES}\n\n{}\n\n{TOOLS}\n\n{WEB_SEARCH}\n\n{SAFETY}\n\n{STYLE}",
         env_section(working_dir),
     )
 }
@@ -34,8 +34,10 @@ fn env_section(working_dir: &Path) -> String {
     let os = std::env::consts::OS;
     let arch = std::env::consts::ARCH;
     let shell = std::env::var("SHELL").unwrap_or_else(|_| "unknown".into());
+    let date = chrono::Local::now().format("%Y-%m-%d");
     format!(
         "# Environment\n\
+         - Current date: {date}\n\
          - Platform: {os} ({arch})\n\
          - Shell: {shell}\n\
          - Primary working directory: {}\n\
@@ -71,6 +73,16 @@ For actions that are hard to reverse or destructive, ask the user for confirmati
 - Killing processes, modifying system configuration
 - Any action that could cause data loss
 When in doubt, ask before acting.";
+
+const WEB_SEARCH: &str = "\
+# Web search
+
+When you search the web:
+- Compare result dates against the current date. Discard outdated sources on fast-moving topics.
+- Cross-reference important claims across 2-3 sources before presenting them as fact.
+- Prefer official sources: docs, repos, author blogs. Distrust aggregators and SEO content.
+- Read the full page (web_fetch) before citing — snippets can be misleading.
+- If sources contradict, report the disagreement instead of picking one silently.";
 
 const STYLE: &str = "\
 # Style

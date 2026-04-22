@@ -5,6 +5,8 @@ pub mod agent_md;
 pub mod agent_settings;
 pub mod chat_prompts;
 pub mod model_size;
+pub mod prompt_chat_compact;
+pub mod prompt_chat_detailed;
 pub mod prompt_compact;
 pub mod prompt_detailed;
 pub mod modelfile_parser;
@@ -20,6 +22,7 @@ pub mod session_ops;
 pub mod session_store;
 pub mod stream_events;
 pub mod tab_store;
+pub mod tool_definitions;
 pub mod tool_dispatcher;
 pub mod tool_executor;
 pub mod tool_bash;
@@ -34,6 +37,8 @@ pub mod tool_web_fetch_ip;
 pub mod tool_web_fetch_tests;
 #[cfg(test)]
 pub mod chat_prompts_tests;
+#[cfg(test)]
+pub mod chat_prompts_chat_tests;
 pub mod tool_web_search;
 pub mod types_ollama;
 pub mod types_session;

@@ -1,6 +1,8 @@
 use crate::services::agent_local::model_size::{self, PromptTier};
 use crate::services::agent_local::types_ollama::ChatMessage;
-use crate::services::agent_local::{prompt_compact, prompt_detailed};
+use crate::services::agent_local::{
+    prompt_chat_compact, prompt_chat_detailed, prompt_compact, prompt_detailed,
+};
 
 fn build_system_message(content: String) -> ChatMessage {
     ChatMessage {
@@ -63,8 +65,11 @@ pub fn prepare_messages(
     agent_md: Option<String>,
     skills: &[(String, String)],
     model: &str,
+    mode: &str,
 ) {
-    if has_tools {
+    if mode == "chat" {
+        prepend_chat_system_prompt(messages, working_dir, model);
+    } else if has_tools {
         prepend_tool_system_prompt(messages, working_dir, model);
         if !skills.is_empty() {
             prepend_skills_listing(messages, skills);
@@ -73,6 +78,22 @@ pub fn prepare_messages(
     } else {
         prepend_working_dir_context(messages, working_dir);
     }
+}
+
+fn prepend_chat_system_prompt(
+    messages: &mut Vec<ChatMessage>,
+    working_dir: &std::path::Path,
+    model: &str,
+) {
+    if messages.first().is_some_and(|m| m.role == "system") {
+        return;
+    }
+    let tier = model_size::detect_tier(model);
+    let prompt = match tier {
+        PromptTier::Compact => prompt_chat_compact::build(working_dir),
+        PromptTier::Detailed => prompt_chat_detailed::build(working_dir),
+    };
+    messages.insert(0, build_system_message(prompt));
 }
 
 fn prepend_skills_listing(messages: &mut Vec<ChatMessage>, skills: &[(String, String)]) {
