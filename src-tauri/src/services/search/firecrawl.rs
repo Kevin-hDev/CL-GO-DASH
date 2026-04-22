@@ -7,7 +7,7 @@
 //! Auth : `Authorization: Bearer {key}`
 
 use crate::services::agent_local::types_tools::SearchResult;
-use crate::services::api_key_cache;
+use crate::services::api_keys;
 use reqwest::Client;
 use std::time::Duration;
 
@@ -17,7 +17,7 @@ const MAX_RESULTS: usize = 10;
 const TIMEOUT: Duration = Duration::from_secs(30);
 
 pub async fn search(query: &str) -> Result<Vec<SearchResult>, String> {
-    let key = api_key_cache::get_key("firecrawl")?;
+    let key = api_keys::get_key("firecrawl")?;
     let client = Client::new();
 
     let payload = serde_json::json!({
@@ -64,7 +64,7 @@ pub async fn search(query: &str) -> Result<Vec<SearchResult>, String> {
 }
 
 pub async fn test_connection() -> Result<(), String> {
-    let key = api_key_cache::get_key("firecrawl")?;
+    let key = api_keys::get_key("firecrawl")?;
     let client = Client::new();
 
     let resp = client

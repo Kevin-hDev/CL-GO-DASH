@@ -6,7 +6,7 @@
 use super::catalog::{self, ProviderSpec};
 use super::openai_compat_parsing::{build_payload, map_error_status, parse_chat_response, parse_models_list};
 use super::types::{ChatRequest, ChatResponse, LlmError, ModelInfo};
-use crate::services::api_key_cache;
+use crate::services::api_keys;
 use reqwest::Client;
 use std::time::Duration;
 
@@ -32,7 +32,7 @@ impl OpenAiCompatProvider {
 
     /// Appelle `/models` pour récupérer la liste des modèles disponibles.
     pub async fn list_models(&self) -> Result<Vec<ModelInfo>, LlmError> {
-        let key = api_key_cache::get_key(self.spec.id).map_err(|_| LlmError::Unauthorized)?;
+        let key = api_keys::get_key(self.spec.id).map_err(|_| LlmError::Unauthorized)?;
         let url = format!("{}{}", self.spec.base_url, self.spec.models_endpoint);
 
         let resp = self
@@ -55,9 +55,8 @@ impl OpenAiCompatProvider {
     }
 
     /// Appelle `/chat/completions` en mode non-streaming.
-    /// Le streaming SSE sera ajouté en Phase 6 (méthode `chat_completion_stream`).
     pub async fn chat_completion(&self, req: ChatRequest) -> Result<ChatResponse, LlmError> {
-        let key = api_key_cache::get_key(self.spec.id).map_err(|_| LlmError::Unauthorized)?;
+        let key = api_keys::get_key(self.spec.id).map_err(|_| LlmError::Unauthorized)?;
         let url = format!("{}/chat/completions", self.spec.base_url);
         let payload = build_payload(&req, false);
 

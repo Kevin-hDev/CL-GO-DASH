@@ -3,7 +3,7 @@
 //! Supporté : DeepSeek (/user/balance), OpenRouter (/credits), Groq (headers).
 //! Les autres providers n'exposent pas d'endpoint → retourne None.
 
-use crate::services::api_key_cache;
+use crate::services::api_keys;
 use reqwest::Client;
 use serde::Serialize;
 use std::collections::HashMap;
@@ -64,7 +64,7 @@ fn fetch_groq() -> Option<ProviderQuota> {
 }
 
 async fn fetch_deepseek() -> Option<ProviderQuota> {
-    let key = api_key_cache::get_key("deepseek").ok()?;
+    let key = api_keys::get_key("deepseek").ok()?;
     let client = Client::builder().timeout(TIMEOUT).build().ok()?;
     let resp = client
         .get("https://api.deepseek.com/user/balance")
@@ -91,7 +91,7 @@ async fn fetch_deepseek() -> Option<ProviderQuota> {
 }
 
 async fn fetch_openrouter() -> Option<ProviderQuota> {
-    let key = api_key_cache::get_key("openrouter").ok()?;
+    let key = api_keys::get_key("openrouter").ok()?;
     let client = Client::builder().timeout(TIMEOUT).build().ok()?;
     let resp = client
         .get("https://openrouter.ai/api/v1/credits")

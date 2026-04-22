@@ -1,6 +1,6 @@
 use super::stream_convert::messages_to_openai;
 use crate::services::agent_local::types_ollama::ChatMessage;
-use crate::services::api_key_cache;
+use crate::services::api_keys;
 use crate::services::llm::catalog;
 use std::time::Duration;
 
@@ -34,7 +34,7 @@ impl std::fmt::Display for RequestError {
 pub async fn post_chat_request(cfg: &RequestConfig<'_>) -> Result<reqwest::Response, RequestError> {
     let spec = catalog::find(cfg.provider_id)
         .ok_or_else(|| RequestError::Fatal(format!("provider inconnu : {}", cfg.provider_id)))?;
-    let key = api_key_cache::get_key(cfg.provider_id)
+    let key = api_keys::get_key(cfg.provider_id)
         .map_err(|_| RequestError::Fatal(format!("clé API non configurée pour {}", spec.display_name)))?;
     let url = format!("{}/chat/completions", spec.base_url);
     let openai_messages = messages_to_openai(cfg.messages, cfg.provider_id);

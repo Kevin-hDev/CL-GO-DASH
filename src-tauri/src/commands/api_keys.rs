@@ -3,19 +3,17 @@
 //! IMPORTANT : aucune commande ne retourne la clé en clair au frontend.
 //! set/delete/has/list/test seulement.
 
-use crate::services::{api_key_cache, api_keys};
+use crate::services::api_keys;
 
 #[tauri::command]
 pub async fn set_api_key(provider: String, key: String) -> Result<(), String> {
     api_keys::set_key(&provider, &key)?;
-    api_key_cache::invalidate(&provider);
     Ok(())
 }
 
 #[tauri::command]
 pub async fn delete_api_key(provider: String) -> Result<(), String> {
     api_keys::delete_key(&provider)?;
-    api_key_cache::invalidate(&provider);
     Ok(())
 }
 

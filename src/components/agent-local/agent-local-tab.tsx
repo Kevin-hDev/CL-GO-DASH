@@ -186,26 +186,12 @@ export function AgentLocalTab(props?: AgentLocalTabProps): { list: React.ReactNo
     }
   }, [tabState, sessions]);
 
-  const handleSelect = useCallback(async (id: string) => {
-    const existingIdx = tabState.tabs.findIndex((tab) => tab.session_id.localeCompare(id) === 0);
-    if (existingIdx >= 0) {
-      await tabState.selectTab(existingIdx);
-      return;
-    }
-    const label = sessions.find((s) => s.id.localeCompare(id) === 0)?.name ?? "Chat";
-    if (tabState.activeIndex >= 0 && tabState.activeIndex < tabState.tabs.length) {
-      await tabState.updateTab(tabState.activeIndex, id, label);
-    } else {
-      await tabState.addTab(id, label);
-    }
-  }, [tabState, sessions]);
-
   const list = (
     <ConversationList
       sessions={sessions}
       projects={projectsHook.projects}
       selectedId={tabState.activeSessionId}
-      onSelect={handleSelect}
+      onSelect={handleSelectById}
       onCreate={handleCreate}
       onRename={rename}
       onDelete={async (id: string) => { await tabState.closeBySessionId(id); await remove(id); }}

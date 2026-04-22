@@ -1,7 +1,7 @@
 //! Client Brave Search API avec rate limiter (1 req/s, free tier).
 
 use crate::services::agent_local::types_tools::SearchResult;
-use crate::services::api_key_cache;
+use crate::services::api_keys;
 use reqwest::Client;
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
@@ -36,7 +36,7 @@ async fn wait_rate_limit() {
 
 pub async fn search(query: &str) -> Result<Vec<SearchResult>, String> {
     wait_rate_limit().await;
-    let key = api_key_cache::get_key("brave")?;
+    let key = api_keys::get_key("brave")?;
     let client = Client::new();
     let resp = client
         .get(URL)

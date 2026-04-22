@@ -1,5 +1,4 @@
 pub mod agent_local;
-pub mod api_key_cache;
 pub mod api_keys;
 pub mod config;
 pub mod favorite_models;
@@ -10,5 +9,6 @@ pub mod paths;
 pub mod personality_injection;
 pub mod scheduler;
 pub mod search;
+pub mod stream_utils;
 pub mod terminal;
 pub mod vault;

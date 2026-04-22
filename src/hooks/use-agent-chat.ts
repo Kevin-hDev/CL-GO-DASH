@@ -100,7 +100,6 @@ export function useAgentChat(
       model,
       provider,
       llmMsgs,
-      [],
       thinkingRef.current ?? false,
       { displayMessages: displayMsgs, baseTokenCount: baseTokenCountOverride ?? state.tokenCount },
       workingDir,
