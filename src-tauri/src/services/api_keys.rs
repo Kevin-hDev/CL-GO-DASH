@@ -1,19 +1,19 @@
-//! Gestion générique des clés API via le keystore OS natif (crate `keyring`).
-//!
-//! Principe de sécurité : aucune clé ne doit jamais être exposée au frontend.
-//! Les commandes Tauri exposent set/delete/has/list/test, mais JAMAIS get.
-//!
-//! Pour éviter les popups Keychain répétées en dev (binaire non signé),
-//! la liste des providers configurés est maintenue dans un fichier JSON.
-//! Le Keychain n'est accédé que lors d'un appel API réel (get_key).
-
-use keyring::Entry;
-use reqwest::Client;
+use std::collections::HashMap;
+use std::sync::Mutex;
 use std::time::Duration;
+
+use reqwest::Client;
 use zeroize::Zeroizing;
 
-const KEYRING_SERVICE: &str = "cl-go-dash";
-const TEST_TIMEOUT: Duration = Duration::from_secs(10);
+use super::vault;
+
+struct VaultState {
+    master_key: Zeroizing<Vec<u8>>,
+    keys: HashMap<String, Zeroizing<String>>,
+}
+
+static STATE: std::sync::LazyLock<Mutex<Option<VaultState>>> =
+    std::sync::LazyLock::new(|| Mutex::new(None));
 
 fn registry_path() -> std::path::PathBuf {
     let home = dirs::home_dir().expect("cannot resolve home directory");
@@ -60,98 +60,98 @@ fn remove_from_registry(provider_id: &str) -> Result<(), String> {
     Ok(())
 }
 
-const KNOWN_PROVIDERS: &[&str] = &[
-    "groq", "google", "mistral", "cerebras", "openrouter",
-    "openai", "deepseek", "brave", "exa", "firecrawl", "serpapi", "google_cse",
-];
+fn flush_vault(s: &VaultState) -> Result<(), String> {
+    let raw: HashMap<String, String> = s
+        .keys
+        .iter()
+        .map(|(k, v)| (k.clone(), v.as_str().to_string()))
+        .collect();
+    vault::write_vault(&s.master_key, &raw)
+}
 
-/// Migration one-shot : si le registre n'existe pas encore, le crée
-/// en scannant le Keychain. Déclenche les popups UNE DERNIÈRE FOIS.
-pub fn migrate_registry_if_needed() {
-    let path = registry_path();
-    if path.exists() {
-        return;
-    }
-    let mut found = Vec::new();
-    for id in KNOWN_PROVIDERS {
-        let Ok(entry) = Entry::new(KEYRING_SERVICE, id) else { continue };
-        if entry.get_password().is_ok() {
-            found.push(id.to_string());
+pub fn init() -> Result<(), String> {
+    let master_key = vault::load_or_create_master_key()?;
+    let mut raw_map = vault::read_vault(&master_key)?;
+
+    let marker = vault::vault_path().with_file_name(".vault-migrated");
+    if !marker.exists() {
+        let legacy = vault::read_legacy_keychain_keys();
+        if !legacy.is_empty() {
+            for (id, key) in &legacy {
+                raw_map.entry(id.clone()).or_insert_with(|| key.clone());
+            }
+            eprintln!("[vault] migrated {} keys from keychain", legacy.len());
         }
+        vault::write_vault(&master_key, &raw_map)?;
+        let mut registry = read_registry();
+        for id in raw_map.keys() {
+            if !registry.contains(id) {
+                registry.push(id.clone());
+            }
+        }
+        let _ = write_registry(&registry);
+        let _ = std::fs::write(&marker, b"ok");
     }
-    let _ = write_registry(&found);
-    if !found.is_empty() {
-        eprintln!("[api_keys] registre créé avec {} providers", found.len());
-    }
+
+    let keys = raw_map
+        .into_iter()
+        .map(|(k, v)| (k, Zeroizing::new(v)))
+        .collect();
+    let mut state = STATE.lock().map_err(|e| format!("lock: {e}"))?;
+    *state = Some(VaultState { master_key, keys });
+    Ok(())
 }
 
-/// Charge une clé API depuis le keystore OS.
 pub fn get_key(provider_id: &str) -> Result<Zeroizing<String>, String> {
-    let entry =
-        Entry::new(KEYRING_SERVICE, provider_id).map_err(|e| format!("keyring entry: {e}"))?;
-    let key = entry
-        .get_password()
-        .map_err(|e| format!("keyring get: {e}"))?;
-    Ok(Zeroizing::new(key))
+    let state = STATE.lock().map_err(|e| format!("lock: {e}"))?;
+    let s = state.as_ref().ok_or("vault not initialized")?;
+    s.keys
+        .get(provider_id)
+        .cloned()
+        .ok_or_else(|| format!("no key for {provider_id}"))
 }
 
-/// Stocke une clé API dans le keystore OS + registre local.
 pub fn set_key(provider_id: &str, key: &str) -> Result<(), String> {
-    let entry =
-        Entry::new(KEYRING_SERVICE, provider_id).map_err(|e| format!("keyring entry: {e}"))?;
-    entry
-        .set_password(key)
-        .map_err(|e| format!("keyring set: {e}"))?;
+    let mut state = STATE.lock().map_err(|e| format!("lock: {e}"))?;
+    let s = state.as_mut().ok_or("vault not initialized")?;
+    s.keys
+        .insert(provider_id.to_string(), Zeroizing::new(key.to_string()));
+    flush_vault(s)?;
     add_to_registry(provider_id)?;
     Ok(())
 }
 
-/// Supprime une clé API du keystore OS + registre local.
 pub fn delete_key(provider_id: &str) -> Result<(), String> {
-    let entry =
-        Entry::new(KEYRING_SERVICE, provider_id).map_err(|e| format!("keyring entry: {e}"))?;
-    let _ = entry.delete_credential();
+    let mut state = STATE.lock().map_err(|e| format!("lock: {e}"))?;
+    let s = state.as_mut().ok_or("vault not initialized")?;
+    s.keys.remove(provider_id);
+    flush_vault(s)?;
     remove_from_registry(provider_id)?;
     Ok(())
 }
 
-/// Vérifie si une clé est configurée (via registre local, pas de Keychain).
 pub fn has_key(provider_id: &str) -> bool {
     read_registry().iter().any(|id| id == provider_id)
 }
 
-/// Retourne les provider_ids configurés (via registre local, pas de Keychain).
 pub fn list_configured() -> Vec<String> {
     read_registry()
 }
 
-/// Teste qu'une clé API fonctionne via l'endpoint `/models` du provider.
 pub async fn test_key(provider_id: &str) -> Result<(), String> {
     let key = get_key(provider_id)?;
     let client = Client::builder()
-        .timeout(TEST_TIMEOUT)
+        .timeout(Duration::from_secs(10))
         .build()
         .map_err(|e| format!("http client: {e}"))?;
 
-    let builder = match provider_id {
-        "groq" => client
-            .get("https://api.groq.com/openai/v1/models")
-            .bearer_auth(&*key),
-        "openai" => client
-            .get("https://api.openai.com/v1/models")
-            .bearer_auth(&*key),
-        "openrouter" => client
-            .get("https://openrouter.ai/api/v1/models")
-            .bearer_auth(&*key),
-        "cerebras" => client
-            .get("https://api.cerebras.ai/v1/models")
-            .bearer_auth(&*key),
-        "mistral" => client
-            .get("https://api.mistral.ai/v1/models")
-            .bearer_auth(&*key),
-        "deepseek" => client
-            .get("https://api.deepseek.com/v1/models")
-            .bearer_auth(&*key),
+    let resp = match provider_id {
+        "groq" => client.get("https://api.groq.com/openai/v1/models").bearer_auth(&*key),
+        "openai" => client.get("https://api.openai.com/v1/models").bearer_auth(&*key),
+        "openrouter" => client.get("https://openrouter.ai/api/v1/models").bearer_auth(&*key),
+        "cerebras" => client.get("https://api.cerebras.ai/v1/models").bearer_auth(&*key),
+        "mistral" => client.get("https://api.mistral.ai/v1/models").bearer_auth(&*key),
+        "deepseek" => client.get("https://api.deepseek.com/v1/models").bearer_auth(&*key),
         "google" => client
             .get("https://generativelanguage.googleapis.com/v1beta/models")
             .header("x-goog-api-key", key.as_str()),
@@ -170,12 +170,10 @@ pub async fn test_key(provider_id: &str) -> Result<(), String> {
             .header("Authorization", format!("Bearer {}", key.as_str())),
         "google_cse" => return Ok(()),
         other => return Err(format!("Provider inconnu : {}", other)),
-    };
-
-    let resp = builder
-        .send()
-        .await
-        .map_err(|e| format!("network: {e}"))?;
+    }
+    .send()
+    .await
+    .map_err(|e| format!("network: {e}"))?;
 
     match resp.status().as_u16() {
         200..=299 => Ok(()),

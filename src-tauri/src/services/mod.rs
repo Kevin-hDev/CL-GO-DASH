@@ -10,3 +10,4 @@ pub mod personality_injection;
 pub mod scheduler;
 pub mod search;
 pub mod terminal;
+pub mod vault;

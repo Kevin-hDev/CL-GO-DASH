@@ -25,10 +25,9 @@ pub fn run() {
             if let Err(e) = migrate_legacy_storage() {
                 eprintln!("[storage migration] {}", e);
             }
-            // Migration one-shot : ancien keyring user "brave_api_key" → "brave"
-            services::agent_local::tool_web_search::migrate_legacy_brave_key();
-            // Migration registre providers (Keychain → fichier local, une seule fois)
-            services::api_keys::migrate_registry_if_needed();
+            if let Err(e) = services::api_keys::init() {
+                eprintln!("[vault] init failed: {}", e);
+            }
             if let Err(e) = ollama_lifecycle::start_sidecar(app.handle()) {
                 eprintln!("[ollama] sidecar start failed: {}", e);
             }
