@@ -363,6 +363,9 @@
     "description": "Application desktop agentique pour LLM locaux et cloud."
   },
   "errors": {
-    "crashMessage": "Une erreur est survenue. Relance l'application."
+    "crashMessage": "Une erreur est survenue. Relance l'application.",
+    "operationFailed": "L'opération a échoué. Réessaye.",
+    "streamStartFailed": "Le flux n'a pas pu démarrer.",
+    "streamInterrupted": "Le flux s'est interrompu."
   }
 }

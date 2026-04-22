@@ -30,6 +30,10 @@ pub(crate) async fn lock_session(id: &str) -> std::sync::Arc<Mutex<()>> {
         .clone()
 }
 
+pub async fn remove_session_lock(id: &str) {
+    SESSION_LOCKS.lock().await.remove(id);
+}
+
 fn sessions_dir() -> PathBuf {
     crate::services::paths::data_dir().join("agent-sessions")
 }

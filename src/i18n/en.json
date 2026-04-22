@@ -363,6 +363,9 @@
     "description": "Agentic desktop app for local and cloud LLMs."
   },
   "errors": {
-    "crashMessage": "An error occurred. Please restart the application."
+    "crashMessage": "An error occurred. Please restart the application.",
+    "operationFailed": "Operation failed. Please try again.",
+    "streamStartFailed": "Stream could not start.",
+    "streamInterrupted": "Stream was interrupted."
   }
 }

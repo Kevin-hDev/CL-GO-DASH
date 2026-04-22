@@ -25,7 +25,8 @@ export function SystemPromptEditor({
       await invoke("update_system_prompt", { name: modelName, system });
       onSave(system);
     } catch (e: unknown) {
-      setError(String(e));
+      console.warn("[system-prompt save]", e);
+      setError(t("errors.operationFailed"));
     } finally {
       setSaving(false);
     }

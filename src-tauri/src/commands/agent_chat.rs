@@ -64,6 +64,9 @@ pub async fn chat_stream(
             .await
             .remove(&stream_session);
 
+        crate::services::agent_local::permission_gate::clear_session(&stream_session).await;
+        crate::services::agent_local::session_store::remove_session_lock(&stream_session).await;
+
         if let Err(message) = result {
             let _ = emitter.send(StreamEvent::Error { message });
         }

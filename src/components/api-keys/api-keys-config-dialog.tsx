@@ -55,7 +55,8 @@ export function ApiKeysConfigDialog({
       setTestState({ kind: "ok" });
       setTimeout(() => onClose(), 500);
     } catch (err) {
-      setTestState({ kind: "error", message: String(err) });
+      console.warn("[api-key test]", err);
+      setTestState({ kind: "error", message: t("errors.operationFailed") });
     } finally {
       setSubmitting(false);
     }

@@ -3,7 +3,7 @@ use std::sync::Mutex;
 use std::time::Duration;
 
 use reqwest::Client;
-use zeroize::Zeroizing;
+use zeroize::{Zeroize, Zeroizing};
 
 use super::vault;
 
@@ -60,12 +60,16 @@ fn remove_from_registry(provider_id: &str) -> Result<(), String> {
 }
 
 fn flush_vault(s: &VaultState) -> Result<(), String> {
-    let raw: HashMap<String, String> = s
+    let mut raw: HashMap<String, String> = s
         .keys
         .iter()
         .map(|(k, v)| (k.clone(), v.as_str().to_string()))
         .collect();
-    vault::write_vault(&s.master_key, &raw)
+    let result = vault::write_vault(&s.master_key, &raw);
+    for val in raw.values_mut() {
+        val.zeroize();
+    }
+    result
 }
 
 pub fn init() -> Result<(), String> {

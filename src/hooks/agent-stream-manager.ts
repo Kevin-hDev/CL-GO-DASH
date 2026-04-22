@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
+import i18n from "@/i18n";
 import {
   applyStreamEvent, createManagedStreamState, toChatState,
   type ChatState, type ManagedStreamState, type PermissionRequestState,
@@ -69,7 +70,7 @@ function failSession(sessionId: string) {
   const record = records.get(sessionId);
   if (!record) return;
   record.state = { ...record.state, isStreaming: false, completed: true,
-    error: "Le flux n'a pas pu demarrer.", updatedAt: Date.now() };
+    error: i18n.t("errors.streamStartFailed"), updatedAt: Date.now() };
   notify(record);
   scheduleCleanup(sessionId, record);
 }

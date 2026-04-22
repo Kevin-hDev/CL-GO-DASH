@@ -76,7 +76,8 @@ export function NewWakeupDialog({
       }
       onClose();
     } catch (err) {
-      setError(String(err));
+      console.warn("[wakeup create]", err);
+      setError(t("errors.operationFailed"));
     } finally {
       setSubmitting(false);
     }

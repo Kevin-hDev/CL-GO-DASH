@@ -1,6 +1,7 @@
 import { buildSegmentedMessage } from "./agent-chat-utils";
 import type { StreamSegment, ToolActivity } from "./agent-chat-utils";
 import type { AgentMessage, StreamEvent } from "@/types/agent";
+import i18n from "@/i18n";
 
 const MAX_PENDING_PERMISSIONS = 32;
 
@@ -128,7 +129,7 @@ export function applyStreamEvent(
     case "error":
       next.isStreaming = false;
       next.completed = true;
-      next.error = event.data.message || "Le flux s'est interrompu.";
+      next.error = event.data.message || i18n.t("errors.streamInterrupted");
       break;
   }
   return { state: next };
