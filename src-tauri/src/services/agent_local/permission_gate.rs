@@ -126,3 +126,40 @@ pub async fn mark_allowed(session_id: &str, tool: &str) {
 pub async fn clear_session(session_id: &str) {
     ALLOWED.lock().await.remove(session_id);
 }
+
+pub fn is_data_dir_write(tool_name: &str, args: &serde_json::Value) -> bool {
+    if !matches!(tool_name, "write_file" | "edit_file") {
+        return false;
+    }
+    let Some(path_str) = args["path"].as_str() else { return false };
+    let path = std::path::Path::new(path_str);
+    let data_dir = crate::services::paths::data_dir();
+    let canonical = path.canonicalize().unwrap_or_else(|_| {
+        path.parent()
+            .and_then(|p| p.canonicalize().ok())
+            .map(|p| p.join(path.file_name().unwrap_or_default()))
+            .unwrap_or_else(|| path.to_path_buf())
+    });
+    let data_canonical = data_dir.canonicalize().unwrap_or(data_dir);
+    canonical.starts_with(&data_canonical)
+}
+
+pub async fn check_data_dir_write(
+    on_event: &AgentEventEmitter,
+    name: &str,
+    args: &serde_json::Value,
+    session_id: &str,
+    cancel: CancellationToken,
+) -> bool {
+    if !is_data_dir_write(name, args) {
+        return true;
+    }
+    match request(on_event, name, args, cancel).await {
+        PermissionDecision::Allow => true,
+        PermissionDecision::AllowSession => {
+            mark_allowed(session_id, name).await;
+            true
+        }
+        PermissionDecision::Deny => false,
+    }
+}

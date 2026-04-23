@@ -1,3 +1,4 @@
+use crate::services::agent_local::permission_gate;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::tool_dispatcher;
 use crate::services::agent_local::tool_hooks::{run_post_hooks, run_pre_hooks, PreHookDecision};
@@ -127,8 +128,7 @@ pub async fn run_with_parallel_reads(
             // Exécute le write séquentiellement
             let (name, args) = &tool_calls[i];
 
-            // Pre-hook sur le write
-            let (write_denied, write_modified_args);
+            let write_modified_args;
             match run_pre_hooks(name, args) {
                 PreHookDecision::Deny(msg) => {
                     let tr = tool_dispatcher::enrich_error(ToolResult::err(msg), name);
@@ -136,17 +136,19 @@ pub async fn run_with_parallel_reads(
                     i += 1;
                     continue;
                 }
-                PreHookDecision::AllowModified(new_args) => {
-                    write_modified_args = Some(new_args);
-                    write_denied = false;
-                }
-                PreHookDecision::Allow => {
-                    write_modified_args = None;
-                    write_denied = false;
-                }
+                PreHookDecision::AllowModified(new_args) => { write_modified_args = Some(new_args); }
+                PreHookDecision::Allow => { write_modified_args = None; }
             }
-            let _ = write_denied;
             let effective_write_args = write_modified_args.as_ref().unwrap_or(args);
+
+            if !permission_gate::check_data_dir_write(
+                on_event, name, effective_write_args, session_id, cancel.clone(),
+            ).await {
+                let tr = ToolResult::err("L'utilisateur a refusé cette action.");
+                ordered_results.push((name.as_str(), tr));
+                i += 1;
+                continue;
+            }
 
             let tr = match check_write_guard(name, effective_write_args, working_dir, write_guard) {
                 Err(msg) => tool_dispatcher::enrich_error(ToolResult::err(msg), name),

@@ -25,17 +25,17 @@ const DESTRUCTIVE_PATTERNS: &[&str] = &[
 static S7_EVAL_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r#"eval\s+"?\$"#).unwrap());
 
-pub fn allowed_write_roots() -> Vec<PathBuf> {
-    let mut raw = Vec::with_capacity(4);
-    raw.push(crate::services::paths::data_dir());
-    if let Some(home) = dirs::home_dir() {
-        raw.push(home.join(".ollama"));
-        raw.push(home.join("Projects"));
-    }
-    raw.push(std::env::temp_dir());
-    raw.into_iter()
-        .map(|p| p.canonicalize().unwrap_or(p))
+fn config_allowed_paths() -> Vec<PathBuf> {
+    crate::services::config::read_config()
+        .map(|c| c.advanced.allowed_paths)
+        .unwrap_or_default()
+        .into_iter()
+        .map(PathBuf::from)
         .collect()
+}
+
+pub fn allowed_write_roots() -> Vec<PathBuf> {
+    allowed_read_roots()
 }
 
 pub fn check_destructive_command(cmd: &str) -> Result<(), String> {
@@ -56,10 +56,8 @@ pub fn check_destructive_command(cmd: &str) -> Result<(), String> {
 }
 
 pub fn allowed_read_roots() -> Vec<PathBuf> {
-    let mut raw = Vec::with_capacity(3);
-    if let Some(home) = dirs::home_dir() {
-        raw.push(home.clone());
-    }
+    let mut raw = config_allowed_paths();
+    raw.push(crate::services::paths::data_dir());
     raw.push(std::env::temp_dir());
     raw.into_iter()
         .map(|p| p.canonicalize().unwrap_or(p))

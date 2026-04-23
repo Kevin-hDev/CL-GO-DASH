@@ -292,7 +292,12 @@
         "15min": "Après 15 min",
         "30min": "Après 30 min",
         "onClose": "À la fermeture"
-      }
+      },
+      "fileAccessTitle": "Accès fichiers",
+      "fileAccessDesc": "Dossiers accessibles par le LLM pour la lecture et l'écriture de fichiers",
+      "addPath": "Ajouter un dossier",
+      "resetPaths": "Réinitialiser",
+      "fullDisk": "Tout le disque"
     },
     "llm": {
       "searchPlaceholder": "Rechercher un modèle…",

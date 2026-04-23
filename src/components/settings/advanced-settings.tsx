@@ -6,6 +6,7 @@ import { RoundToggle } from "@/components/heartbeat/round-toggle";
 import { SettingsCard } from "./settings-card";
 import { SettingsRow } from "./settings-row";
 import { SettingsSelect, type SelectOption, type SelectGroup } from "./settings-select";
+import { PathListEditor } from "./path-list-editor";
 
 interface AdvancedState {
   autostart: boolean;
@@ -13,6 +14,7 @@ interface AdvancedState {
   show_tray: boolean;
   default_model: string;
   keep_alive: string;
+  allowed_paths: string[];
 }
 
 const DEFAULTS: AdvancedState = {
@@ -21,6 +23,7 @@ const DEFAULTS: AdvancedState = {
   show_tray: true,
   default_model: "",
   keep_alive: "5m",
+  allowed_paths: ["/"],
 };
 
 export function AdvancedSettings() {
@@ -134,6 +137,32 @@ export function AdvancedSettings() {
               onChange={(v) => save({ keep_alive: v })}
             />
           </SettingsRow>
+        </SettingsCard>
+
+        <h3 style={{
+          fontSize: "var(--text-base)",
+          fontWeight: 600,
+          color: "var(--ink)",
+          marginTop: 28,
+          marginBottom: 12,
+        }}>
+          {t("settings.advanced.fileAccessTitle")}
+        </h3>
+
+        <SettingsCard>
+          <div style={{ padding: "14px 20px" }}>
+            <div style={{
+              fontSize: "var(--text-xs)",
+              color: "var(--ink-muted)",
+              marginBottom: 12,
+            }}>
+              {t("settings.advanced.fileAccessDesc")}
+            </div>
+            <PathListEditor
+              paths={state.allowed_paths}
+              onChange={(paths) => save({ allowed_paths: paths })}
+            />
+          </div>
         </SettingsCard>
       </div>
     </div>

@@ -63,7 +63,7 @@ mod tests {
         assert!(check_destructive_command("eval 'echo static'").is_ok());
     }
 
-    // --- validate_write_path ---
+    // --- validate_write_path (default = full disk) ---
 
     #[test]
     fn write_path_allows_temp_dir() {
@@ -74,18 +74,17 @@ mod tests {
     }
 
     #[test]
-    #[cfg(unix)]
-    fn write_path_blocks_etc() {
-        let p = std::path::Path::new("/etc/evil.conf");
-        assert!(validate_write_path(p).is_err());
+    fn write_path_allows_data_dir() {
+        let p = crate::services::paths::data_dir().join("test.json");
+        assert!(validate_write_path(&p).is_ok());
     }
 
     #[test]
-    #[cfg(unix)]
-    fn write_path_blocks_traversal() {
-        let tmp = std::env::temp_dir();
-        let p = tmp.join("../etc/passwd");
-        assert!(validate_write_path(&p).is_err());
+    fn write_path_allows_app_data_dir() {
+        let data = crate::services::paths::data_dir();
+        let _ = std::fs::create_dir_all(&data);
+        let p = data.join("write-test.json");
+        assert!(validate_write_path(&p).is_ok());
     }
 
     // --- sanitize_error ---
@@ -99,7 +98,7 @@ mod tests {
         assert_eq!(sanitize_error(e), "Fichier introuvable");
     }
 
-    // --- validate_read_path (mission 1.1) ---
+    // --- validate_read_path (default = full disk) ---
 
     #[test]
     fn read_path_allows_temp() {
@@ -117,19 +116,11 @@ mod tests {
     }
 
     #[test]
-    #[cfg(unix)]
-    fn read_path_blocks_traversal_outside_home() {
-        let working = std::env::temp_dir();
-        let p = std::path::Path::new("/etc/passwd");
-        assert!(validate_read_path(p, &working).is_err());
-    }
-
-    #[test]
-    #[cfg(unix)]
-    fn read_path_blocks_dev() {
-        let working = std::env::temp_dir();
-        let p = std::path::Path::new("/dev/null");
-        assert!(validate_read_path(p, &working).is_err());
+    fn read_path_allows_app_data_dir() {
+        let data = crate::services::paths::data_dir();
+        let _ = std::fs::create_dir_all(&data);
+        let p = data.join("read-test.json");
+        assert!(validate_read_path(&p, &std::env::temp_dir()).is_ok());
     }
 
     #[test]
@@ -139,5 +130,24 @@ mod tests {
             let working = std::env::temp_dir();
             assert!(validate_read_path(&target, &working).is_ok());
         }
+    }
+
+    // --- implicit paths always allowed ---
+
+    #[test]
+    fn data_dir_always_allowed() {
+        let data = crate::services::paths::data_dir();
+        let _ = std::fs::create_dir_all(&data);
+        let p = data.join("test-security-check.json");
+        assert!(validate_read_path(&p, &std::env::temp_dir()).is_ok());
+        assert!(validate_write_path(&p).is_ok());
+    }
+
+    #[test]
+    fn temp_dir_always_allowed() {
+        let tmp = std::env::temp_dir();
+        let p = tmp.join("cl-go-test-file.txt");
+        assert!(validate_read_path(&p, &tmp).is_ok());
+        assert!(validate_write_path(&p).is_ok());
     }
 }

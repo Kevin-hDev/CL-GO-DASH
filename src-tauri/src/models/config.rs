@@ -16,6 +16,7 @@ pub struct AdvancedSettings {
     pub show_tray: bool,
     pub default_model: String,
     pub keep_alive: String,
+    pub allowed_paths: Vec<String>,
 }
 
 impl Default for AdvancedSettings {
@@ -26,8 +27,16 @@ impl Default for AdvancedSettings {
             show_tray: true,
             default_model: String::new(),
             keep_alive: "5m".to_string(),
+            allowed_paths: default_allowed_paths(),
         }
     }
+}
+
+fn default_allowed_paths() -> Vec<String> {
+    #[cfg(target_os = "windows")]
+    { vec!["C:\\".to_string()] }
+    #[cfg(not(target_os = "windows"))]
+    { vec!["/".to_string()] }
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]

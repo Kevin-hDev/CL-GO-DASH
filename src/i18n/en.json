@@ -292,7 +292,12 @@
         "15min": "After 15 min",
         "30min": "After 30 min",
         "onClose": "On app close"
-      }
+      },
+      "fileAccessTitle": "File Access",
+      "fileAccessDesc": "Folders the LLM can read and write to",
+      "addPath": "Add folder",
+      "resetPaths": "Reset",
+      "fullDisk": "Full disk"
     },
     "llm": {
       "searchPlaceholder": "Search a model…",
