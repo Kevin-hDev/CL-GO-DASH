@@ -50,7 +50,10 @@ pub mod types_session;
 pub mod project_store;
 pub mod types_tools;
 pub mod circuit_breaker;
+pub mod write_guard;
 #[cfg(test)]
 pub mod tool_result_budget_tests;
 #[cfg(test)]
 pub mod circuit_breaker_tests;
+#[cfg(test)]
+pub mod write_guard_tests;

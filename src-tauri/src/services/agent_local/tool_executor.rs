@@ -3,6 +3,7 @@ use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::tool_dispatcher;
 use crate::services::agent_local::types_ollama::{ChatMessage, StreamEvent};
 use crate::services::agent_local::types_tools::ToolResult;
+use crate::services::agent_local::write_guard::WriteGuard;
 use tokio_util::sync::CancellationToken;
 
 pub async fn run_tools(
@@ -13,23 +14,40 @@ pub async fn run_tools(
     mode: &str,
     session_id: &str,
     cancel: CancellationToken,
+    write_guard: &mut WriteGuard,
 ) {
-    if mode != "manual" {
-        let results = tool_dispatcher::dispatch_multiple(tool_calls, working_dir).await;
-        for (i, tr) in results.into_iter().enumerate() {
-            let name = &tool_calls[i].0;
-            push_tool_result(on_event, messages, name, tr);
-        }
-        return;
-    }
-
     for (name, args) in tool_calls {
-        let allowed = check_allowed(on_event, name, args, session_id, cancel.clone()).await;
-        let tr = if allowed {
-            tool_dispatcher::dispatch(name, args, working_dir).await
+        // Pre-check : write guard avant tout dispatch
+        if matches!(name.as_str(), "write_file" | "edit_file") {
+            let path_str = args["path"].as_str().unwrap_or("");
+            let p = std::path::Path::new(path_str);
+            let resolved = if p.is_absolute() { p.to_path_buf() } else { working_dir.join(p) };
+            if let Err(msg) = write_guard.check_write(&resolved) {
+                push_tool_result(on_event, messages, name, ToolResult::err(msg));
+                continue;
+            }
+        }
+
+        let tr = if mode == "manual" {
+            let allowed = check_allowed(on_event, name, args, session_id, cancel.clone()).await;
+            if allowed {
+                tool_dispatcher::dispatch(name, args, working_dir).await
+            } else {
+                ToolResult::err("L'utilisateur a refusé cette action.")
+            }
         } else {
-            ToolResult::err("L'utilisateur a refusé cette action.")
+            tool_dispatcher::dispatch(name, args, working_dir).await
         };
+
+        // Post-action : record read après exécution réussie
+        if name == "read_file" && !tr.is_error {
+            if let Some(path_str) = args["path"].as_str() {
+                let p = std::path::Path::new(path_str);
+                let resolved = if p.is_absolute() { p.to_path_buf() } else { working_dir.join(p) };
+                write_guard.record_read(&resolved);
+            }
+        }
+
         push_tool_result(on_event, messages, name, tr);
     }
 }

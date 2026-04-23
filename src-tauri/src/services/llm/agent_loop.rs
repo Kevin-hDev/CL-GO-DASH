@@ -13,6 +13,7 @@ use crate::services::agent_local::tool_result_budget;
 use crate::services::agent_local::types_ollama::{
     ChatMessage, StreamEvent, StreamResult, ToolCallFunction, ToolCallOllama,
 };
+use crate::services::agent_local::write_guard::WriteGuard;
 use std::path::PathBuf;
 use tokio_util::sync::CancellationToken;
 
@@ -39,6 +40,7 @@ pub async fn run_agent_loop(
     let mut total_prompt: u32 = 0;
     let start = std::time::Instant::now();
     let mut breaker = circuit_breaker::CircuitBreaker::new();
+    let mut write_guard = WriteGuard::new();
 
     for turn in 0..MAX_TURNS {
         if cancel.is_cancelled() {
@@ -81,6 +83,7 @@ pub async fn run_agent_loop(
             &mode,
             &session_id,
             cancel.clone(),
+            &mut write_guard,
         )
         .await;
 
