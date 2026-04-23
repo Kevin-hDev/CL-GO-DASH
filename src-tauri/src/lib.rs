@@ -180,6 +180,9 @@ pub fn run() {
             commands::check_app_update,
             commands::download_app_update,
             commands::check_ollama_updates,
+            // Ollama setup
+            commands::is_ollama_installed,
+            commands::download_ollama,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application");

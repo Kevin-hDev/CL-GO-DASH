@@ -1,6 +1,6 @@
 [package]
 name = "cl-go-dash"
-version = "0.6.4"
+version = "0.6.5"
 edition = "2021"
 
 [lib]
@@ -35,6 +35,7 @@ futures-util = "0.3"
 
 # Locale detection cross-plateforme
 sys-locale = "0.3"
+tempfile = "3"
 
 # HTML -> Markdown
 htmd = "0.5"
@@ -102,4 +103,3 @@ notify = { version = "7", features = ["macos_fsevent"] }
 libc = "0.2"
 
 [dev-dependencies]
-tempfile = "3"

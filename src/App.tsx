@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useTranslation } from "react-i18next";
 import { AppLayout } from "@/components/layout/app-layout";
+import { OllamaSetupScreen } from "@/components/ollama/ollama-setup-screen";
 import { useTheme } from "@/hooks/use-theme";
 import { useTabHistory } from "@/hooks/use-tab-history";
 import { HeartbeatTab } from "@/components/heartbeat/heartbeat-tab";
@@ -23,8 +25,10 @@ export default function App() {
   const { theme, setTheme } = useTheme();
   const { t } = useTranslation();
   const [vaultError, setVaultError] = useState<string | null>(null);
+  const [ollamaReady, setOllamaReady] = useState<boolean | null>(null);
 
   useEffect(() => {
+    invoke<boolean>("is_ollama_installed").then(setOllamaReady).catch(() => setOllamaReady(true));
     const unlisten = listen<string>("vault-init-failed", (e) => {
       setVaultError(e.payload);
     });
@@ -71,6 +75,10 @@ export default function App() {
   const handleSearchSelect = useCallback((sessionId: string) => {
     push({ tab: "agent-local", sessionId });
   }, [push]);
+
+  if (ollamaReady === false) {
+    return <OllamaSetupScreen onComplete={() => setOllamaReady(true)} />;
+  }
 
   return (
     <>

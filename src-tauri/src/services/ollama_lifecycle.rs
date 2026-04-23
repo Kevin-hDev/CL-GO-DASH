@@ -21,19 +21,21 @@ fn port_open() -> bool {
     .is_ok()
 }
 
-fn ollama_binary_path(app: &AppHandle) -> Result<PathBuf, String> {
-    let resource_dir = app
-        .path()
-        .resource_dir()
-        .map_err(|e| format!("resource_dir: {e}"))?;
-    let path = resource_dir
-        .join("resources")
-        .join("ollama-bundle")
-        .join(if cfg!(windows) { "ollama.exe" } else { "ollama" });
+pub fn ollama_bundle_dir() -> PathBuf {
+    crate::services::paths::data_dir().join("ollama-bundle")
+}
+
+pub fn ollama_binary_path() -> Result<PathBuf, String> {
+    let binary_name = if cfg!(windows) { "ollama.exe" } else { "ollama" };
+    let path = ollama_bundle_dir().join(binary_name);
     if !path.exists() {
-        return Err(format!("Binaire Ollama introuvable : {}", path.display()));
+        return Err("ollama-not-installed".into());
     }
     Ok(path)
+}
+
+pub fn is_ollama_ready() -> bool {
+    port_open() || ollama_binary_path().is_ok()
 }
 
 pub fn start_sidecar(app: &AppHandle) -> Result<bool, String> {
@@ -42,7 +44,7 @@ pub fn start_sidecar(app: &AppHandle) -> Result<bool, String> {
         return Ok(false);
     }
 
-    let binary = ollama_binary_path(app)?;
+    let binary = ollama_binary_path()?;
     let bundle_dir = binary.parent().ok_or("no parent dir")?.to_path_buf();
 
     let child = Command::new(&binary)

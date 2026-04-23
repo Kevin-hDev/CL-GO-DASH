@@ -380,5 +380,12 @@
     "modelUpdate": "Mettre à jour",
     "version": "Version {{version}}",
     "updating": "Mise à jour…"
+  },
+  "ollamaSetup": {
+    "title": "Configuration d'Ollama",
+    "description": "Ollama permet de faire tourner des modèles d'IA directement sur ta machine. Le téléchargement inclut le support GPU pour de meilleures performances.",
+    "download": "Télécharger Ollama",
+    "extracting": "Installation en cours…",
+    "error": "Échec du téléchargement. Vérifie ta connexion et réessaye."
   }
 }

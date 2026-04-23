@@ -17,6 +17,8 @@ pub mod terminal;
 pub mod app_update;
 pub mod app_update_install;
 pub mod ollama_updates;
+pub mod ollama_setup;
+pub mod ollama_extract;
 
 pub use agent_chat::*;
 pub use agent_md::*;
@@ -37,3 +39,4 @@ pub use terminal::*;
 pub use app_update::*;
 pub use app_update_install::*;
 pub use ollama_updates::*;
+pub use ollama_setup::*;
