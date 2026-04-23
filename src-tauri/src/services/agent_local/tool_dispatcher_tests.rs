@@ -1,4 +1,5 @@
 use crate::services::agent_local::types_tools::ToolResult;
+use crate::services::agent_local::tool_dispatcher::enrich_error;
 
 // On réexporte les fonctions privées via un module test helper
 // en les dupliquant ici pour éviter de les rendre pub dans prod.
@@ -110,4 +111,40 @@ fn truncate_utf8_safe() {
         out.content.contains(&format!("[{omitted} chars omis]")),
         "Le nombre de chars omis doit être correct"
     );
+}
+
+#[test]
+fn error_hint_edit_not_found() {
+    let result = ToolResult::err("Chaîne non trouvée dans le fichier".to_string());
+    let out = enrich_error(result, "edit_file");
+    assert!(out.is_error);
+    assert!(out.content.contains("[HINT:"), "Un hint doit être injecté pour 'non trouvée'");
+    assert!(out.content.contains("read_file"));
+}
+
+#[test]
+fn error_hint_edit_multiple() {
+    let result = ToolResult::err("La chaîne apparaît 3 fois dans le fichier".to_string());
+    let out = enrich_error(result, "edit_file");
+    assert!(out.is_error);
+    assert!(out.content.contains("[HINT:"), "Un hint doit être injecté pour les occurrences multiples");
+    assert!(out.content.contains("old_string"));
+}
+
+#[test]
+fn error_hint_bash_timeout() {
+    let result = ToolResult::err("Timeout: commande dépassée".to_string());
+    let out = enrich_error(result, "bash");
+    assert!(out.is_error);
+    assert!(out.content.contains("[HINT:"), "Un hint doit être injecté pour Timeout");
+    assert!(out.content.contains("timeout"));
+}
+
+#[test]
+fn no_hint_on_success() {
+    let result = ToolResult::ok("Tout s'est bien passé".to_string());
+    let out = enrich_error(result, "bash");
+    assert!(!out.is_error);
+    assert!(!out.content.contains("[HINT:"), "Aucun hint ne doit être ajouté sur un succès");
+    assert_eq!(out.content, "Tout s'est bien passé");
 }

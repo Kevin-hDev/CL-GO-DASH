@@ -141,7 +141,37 @@ async fn dispatch_inner(tool_name: &str, args: &Value, working_dir: &Path) -> To
     }
 }
 
+/// Injecte un hint correctif dans le résultat d'erreur selon le pattern détecté.
+pub(crate) fn enrich_error(mut result: ToolResult, tool_name: &str) -> ToolResult {
+    if !result.is_error {
+        return result;
+    }
+    let hint = match tool_name {
+        "edit_file" if result.content.contains("non trouvée") => {
+            "\n\n[HINT: Utiliser read_file pour vérifier le contenu exact, puis copier-coller la chaîne exacte dans old_string]"
+        }
+        "edit_file" if result.content.contains("fois") => {
+            "\n\n[HINT: old_string apparaît plusieurs fois. Ajouter plus de contexte (lignes avant/après) pour rendre la correspondance unique]"
+        }
+        "bash" if result.content.contains("command not found") => {
+            "\n\n[HINT: Commande introuvable. Vérifier l'orthographe ou installer le paquet nécessaire]"
+        }
+        "bash" if result.content.contains("Timeout") => {
+            "\n\n[HINT: Timeout dépassé. Augmenter le paramètre timeout ou utiliser une approche plus efficace]"
+        }
+        "write_file" | "edit_file" if result.content.contains("non lu") => {
+            "\n\n[HINT: Le write guard exige de lire le fichier avant de le modifier. Appeler read_file d'abord]"
+        }
+        _ => "",
+    };
+    if !hint.is_empty() {
+        result.content.push_str(hint);
+    }
+    result
+}
+
 pub async fn dispatch(tool_name: &str, args: &Value, working_dir: &Path) -> ToolResult {
     let result = dispatch_inner(tool_name, args, working_dir).await;
-    truncate_result(result, tool_name)
+    let result = truncate_result(result, tool_name);
+    enrich_error(result, tool_name)
 }
