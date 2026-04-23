@@ -1,5 +1,4 @@
 use serde::Serialize;
-use tauri::ipc::Channel;
 
 const GITHUB_REPO: &str = "Kevin-hDev/CL-GO-DASH";
 
@@ -7,14 +6,7 @@ const GITHUB_REPO: &str = "Kevin-hDev/CL-GO-DASH";
 #[serde(rename_all = "camelCase")]
 pub struct AppUpdateInfo {
     pub version: String,
-    pub dmg_url: String,
-}
-
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct DownloadProgress {
-    pub completed: u64,
-    pub total: u64,
+    pub asset_url: String,
 }
 
 #[tauri::command]
@@ -49,115 +41,42 @@ pub async fn check_app_update() -> Result<Option<AppUpdateInfo>, String> {
         return Ok(None);
     }
 
-    let dmg_url = json["assets"]
-        .as_array()
-        .and_then(|assets| {
-            assets.iter().find_map(|a| {
-                let name = a["name"].as_str().unwrap_or_default();
-                if name.ends_with(".dmg") {
-                    a["browser_download_url"].as_str().map(|s| s.to_string())
-                } else {
-                    None
-                }
-            })
-        })
-        .unwrap_or_default();
-
-    if dmg_url.is_empty() {
+    let asset_url = find_platform_asset(&json).unwrap_or_default();
+    if asset_url.is_empty() {
         return Ok(None);
     }
 
     Ok(Some(AppUpdateInfo {
         version: tag.to_string(),
-        dmg_url,
+        asset_url,
     }))
 }
 
-#[tauri::command]
-pub async fn download_app_update(
-    app: tauri::AppHandle,
-    dmg_url: String,
-    on_progress: Channel<DownloadProgress>,
-) -> Result<(), String> {
-    let client = reqwest::Client::new();
-    let resp = client
-        .get(&dmg_url)
-        .header("User-Agent", "CL-GO-DASH")
-        .send()
-        .await
-        .map_err(|e| format!("network: {}", e))?;
+fn find_platform_asset(json: &serde_json::Value) -> Option<String> {
+    let assets = json["assets"].as_array()?;
+    let ext = platform_extension();
 
-    if !resp.status().is_success() {
-        return Err("download failed".into());
-    }
-
-    let total = resp.content_length().unwrap_or(0);
-    let tmp = std::env::temp_dir().join("CL-GO-update.dmg");
-
-    let mut file = tokio::fs::File::create(&tmp)
-        .await
-        .map_err(|e| format!("fs: {}", e))?;
-
-    use tokio::io::AsyncWriteExt;
-    use futures_util::StreamExt;
-
-    let mut stream = resp.bytes_stream();
-    let mut downloaded: u64 = 0;
-
-    while let Some(chunk) = stream.next().await {
-        let chunk = chunk.map_err(|e| format!("stream: {}", e))?;
-        file.write_all(&chunk)
-            .await
-            .map_err(|e| format!("write: {}", e))?;
-        downloaded += chunk.len() as u64;
-        let _ = on_progress.send(DownloadProgress {
-            completed: downloaded,
-            total,
-        });
-    }
-
-    file.flush().await.map_err(|e| format!("flush: {}", e))?;
-    drop(file);
-
-    spawn_update_script(&tmp)?;
-    app.exit(0);
-
-    Ok(())
+    assets.iter().find_map(|a| {
+        let name = a["name"].as_str().unwrap_or_default();
+        if name.ends_with(ext) {
+            a["browser_download_url"].as_str().map(|s| s.to_string())
+        } else {
+            None
+        }
+    })
 }
 
-fn spawn_update_script(dmg_path: &std::path::Path) -> Result<(), String> {
-    let dmg = dmg_path.display().to_string();
-    let script = format!(
-        r#"#!/bin/bash
-sleep 1
-while pgrep -x "CL-GO" > /dev/null 2>&1; do sleep 0.5; done
-VOL=$(hdiutil attach "{dmg}" -nobrowse -noverify 2>/dev/null | grep "/Volumes/" | sed 's/.*\/Volumes/\/Volumes/')
-if [ -z "$VOL" ]; then exit 1; fi
-if [ -d "$VOL/CL-GO.app" ]; then
-  rm -rf /Applications/CL-GO.app
-  cp -Rf "$VOL/CL-GO.app" /Applications/CL-GO.app
-fi
-hdiutil detach "$VOL" -quiet 2>/dev/null
-rm -f "{dmg}"
-open /Applications/CL-GO.app
-"#
-    );
-
-    let script_path = std::env::temp_dir().join("cl-go-update.sh");
-    std::fs::write(&script_path, &script).map_err(|e| format!("script: {}", e))?;
-
-    std::process::Command::new("bash")
-        .arg(&script_path)
-        .stdin(std::process::Stdio::null())
-        .stdout(std::process::Stdio::null())
-        .stderr(std::process::Stdio::null())
-        .spawn()
-        .map_err(|e| format!("spawn: {}", e))?;
-
-    Ok(())
+fn platform_extension() -> &'static str {
+    if cfg!(target_os = "macos") {
+        ".dmg"
+    } else if cfg!(target_os = "windows") {
+        ".msi"
+    } else {
+        ".AppImage"
+    }
 }
 
-fn version_gt(remote: &str, local: &str) -> bool {
+pub(crate) fn version_gt(remote: &str, local: &str) -> bool {
     let parse = |s: &str| -> Vec<u64> {
         s.split('.')
             .map(|p| p.parse::<u64>().unwrap_or(0))

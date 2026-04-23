@@ -84,7 +84,7 @@ interface ItemData {
   name: string;
   sub: string;
   fullName?: string;
-  dmgUrl?: string;
+  assetUrl?: string;
 }
 
 function buildItems(app: AppUpdate | null, models: OllamaModelUpdate[]): ItemData[] {
@@ -95,7 +95,7 @@ function buildItems(app: AppUpdate | null, models: OllamaModelUpdate[]): ItemDat
       type: "app",
       name: "CL-GO",
       sub: `Version ${app.version}`,
-      dmgUrl: app.dmgUrl,
+      assetUrl: app.assetUrl,
     });
   }
   for (const m of models) {
@@ -174,8 +174,8 @@ function BubbleItem({
         <button
           className="update-bubble-btn"
           onClick={() => {
-            if (item.type === "app" && item.dmgUrl) {
-              onDownloadApp(item.dmgUrl);
+            if (item.type === "app" && item.assetUrl) {
+              onDownloadApp(item.assetUrl);
             } else if (item.fullName) {
               onPullModel(item.fullName);
             }

@@ -7,7 +7,7 @@ const CHECK_INTERVAL_MS = 60 * 60 * 1000;
 
 export interface AppUpdate {
   version: string;
-  dmgUrl: string;
+  assetUrl: string;
 }
 
 interface DownloadProgress {
@@ -65,7 +65,7 @@ export function useUpdateChecker() {
     };
   }, [checkAll]);
 
-  const downloadAppUpdate = useCallback(async (dmgUrl: string) => {
+  const downloadAppUpdate = useCallback(async (assetUrl: string) => {
     setAppDownloading(true);
     setAppPercent(0);
 
@@ -78,7 +78,7 @@ export function useUpdateChecker() {
     };
 
     try {
-      await invoke("download_app_update", { dmgUrl, onProgress: channel });
+      await invoke("download_app_update", { assetUrl, onProgress: channel });
       setAppUpdate(null);
     } catch {
       /* download failed */
