@@ -14,19 +14,22 @@
       "identifier": "fs:allow-read-text-file",
       "allow": [
         { "path": "$HOME/.local/share/cl-go-dash/**" },
+        { "path": "$APPDATA/cl-go-dash/**" },
         { "path": "$HOME/.claude/skills/**" }
       ]
     },
     {
       "identifier": "fs:allow-write-text-file",
       "allow": [
-        { "path": "$HOME/.local/share/cl-go-dash/**" }
+        { "path": "$HOME/.local/share/cl-go-dash/**" },
+        { "path": "$APPDATA/cl-go-dash/**" }
       ]
     },
     {
       "identifier": "fs:allow-exists",
       "allow": [
         { "path": "$HOME/.local/share/cl-go-dash/**" },
+        { "path": "$APPDATA/cl-go-dash/**" },
         { "path": "$HOME/.claude/skills/**" }
       ]
     },
@@ -45,13 +48,15 @@
     {
       "identifier": "fs:allow-mkdir",
       "allow": [
-        { "path": "$HOME/.local/share/cl-go-dash/**" }
+        { "path": "$HOME/.local/share/cl-go-dash/**" },
+        { "path": "$APPDATA/cl-go-dash/**" }
       ]
     },
     {
       "identifier": "fs:allow-rename",
       "allow": [
-        { "path": "$HOME/.local/share/cl-go-dash/**" }
+        { "path": "$HOME/.local/share/cl-go-dash/**" },
+        { "path": "$APPDATA/cl-go-dash/**" }
       ]
     },
     "autostart:allow-enable",

@@ -45,16 +45,13 @@ pub fn start_sidecar(app: &AppHandle) -> Result<bool, String> {
     let binary = ollama_binary_path(app)?;
     let bundle_dir = binary.parent().ok_or("no parent dir")?.to_path_buf();
 
-    let mut cmd = Command::new(&binary);
-    cmd.arg("serve")
+    let child = Command::new(&binary)
+        .arg("serve")
         .current_dir(&bundle_dir)
         .stdout(Stdio::null())
-        .stderr(Stdio::null());
-    #[cfg(target_os = "macos")]
-    cmd.env("DYLD_LIBRARY_PATH", &bundle_dir);
-    #[cfg(target_os = "linux")]
-    cmd.env("LD_LIBRARY_PATH", &bundle_dir);
-    let child = cmd.spawn().map_err(|e| format!("spawn ollama: {e}"))?;
+        .stderr(Stdio::null())
+        .spawn()
+        .map_err(|e| format!("spawn ollama: {e}"))?;
 
     eprintln!("[ollama] sidecar démarré pid={}", child.id());
 

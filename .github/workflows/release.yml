@@ -33,8 +33,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          lfs: true
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -56,10 +54,15 @@ jobs:
             libgtk-3-dev \
             libayatana-appindicator3-dev \
             librsvg2-dev \
-            patchelf
+            patchelf \
+            zstd
 
       - name: Install npm dependencies
         run: npm ci
+
+      - name: Download Ollama binary
+        run: cd src-tauri && bash scripts/download-ollama.sh
+        shell: bash
 
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
