@@ -31,7 +31,7 @@
 .conv-list {
   flex: 1;
   overflow-y: auto;
-  padding: var(--space-sm);
+  padding: 0 var(--space-sm) var(--space-sm);
 }
 
 .conv-item {
