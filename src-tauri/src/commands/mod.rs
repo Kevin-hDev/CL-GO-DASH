@@ -14,6 +14,8 @@ pub mod projects;
 pub mod search;
 pub mod registry;
 pub mod terminal;
+pub mod app_update;
+pub mod ollama_updates;
 
 pub use agent_chat::*;
 pub use agent_md::*;
@@ -31,3 +33,5 @@ pub use projects::*;
 pub use registry::*;
 pub use search::*;
 pub use terminal::*;
+pub use app_update::*;
+pub use ollama_updates::*;

@@ -367,5 +367,12 @@
     "operationFailed": "L'opération a échoué. Réessaye.",
     "streamStartFailed": "Le flux n'a pas pu démarrer.",
     "streamInterrupted": "Le flux s'est interrompu."
+  },
+  "updates": {
+    "tooltip": "Mises à jour disponibles",
+    "appUpdate": "Mettre à jour",
+    "modelUpdate": "Mettre à jour",
+    "version": "Version {{version}}",
+    "updating": "Mise à jour…"
   }
 }

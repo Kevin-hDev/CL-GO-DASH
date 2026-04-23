@@ -4,6 +4,8 @@ import { Sidebar, type TabId } from "./sidebar";
 import { DragRegion } from "./drag-region";
 import { WindowToolbar } from "./window-toolbar";
 import { SearchDialog } from "./search-dialog";
+import { UpdateNotifications } from "./update-notifications";
+import { useUpdateChecker } from "@/hooks/use-update-checker";
 import { IS_MAC } from "@/lib/platform";
 import "./app-layout.css";
 
@@ -30,7 +32,9 @@ export function AppLayout({
 }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [updatesOpen, setUpdatesOpen] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
+  const updates = useUpdateChecker();
 
   useEffect(() => {
     const win = getCurrentWindow();
@@ -74,6 +78,8 @@ export function AppLayout({
   const openSearch = useCallback(() => setSearchOpen(true), []);
   const closeSearch = useCallback(() => setSearchOpen(false), []);
   const toggleSidebar = useCallback(() => setSidebarOpen((o) => !o), []);
+  const toggleUpdates = useCallback(() => setUpdatesOpen((o) => !o), []);
+  const closeUpdates = useCallback(() => setUpdatesOpen(false), []);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -118,6 +124,8 @@ export function AppLayout({
         onForward={onForward}
         onNewSession={() => onShowWelcome?.()}
         onSearch={openSearch}
+        onToggleUpdates={toggleUpdates}
+        updatesCount={updates.totalCount}
         canGoBack={canGoBack}
         canGoForward={canGoForward}
       />
@@ -149,6 +157,15 @@ export function AppLayout({
         open={searchOpen}
         onClose={closeSearch}
         onSelect={onSearchSelect}
+      />
+      <UpdateNotifications
+        open={updatesOpen}
+        onClose={closeUpdates}
+        appUpdate={updates.appUpdate}
+        ollamaUpdates={updates.ollamaUpdates}
+        pulling={updates.pulling}
+        onPullModel={updates.pullModel}
+        anchorLeft={IS_MAC ? 197 : 122}
       />
     </div>
   );

@@ -3,6 +3,7 @@ import { SidebarToggleIcon, ArrowLeftIcon, ArrowRightIcon, SearchIcon } from "./
 import { ComposeIcon } from "@/components/ui/compose-icon";
 import { Tooltip } from "@/components/ui/tooltip";
 import { IS_MAC, MOD, ALT } from "@/lib/platform";
+import updateIcon from "@/assets/update.png";
 import "./window-toolbar.css";
 
 interface WindowToolbarProps {
@@ -12,6 +13,8 @@ interface WindowToolbarProps {
   onForward: () => void;
   onNewSession: () => void;
   onSearch: () => void;
+  onToggleUpdates: () => void;
+  updatesCount: number;
   canGoBack: boolean;
   canGoForward: boolean;
 }
@@ -19,6 +22,7 @@ interface WindowToolbarProps {
 export function WindowToolbar({
   sidebarOpen, onToggleSidebar,
   onBack, onForward, onNewSession, onSearch,
+  onToggleUpdates, updatesCount,
   canGoBack, canGoForward,
 }: WindowToolbarProps) {
   const { t } = useTranslation();
@@ -45,6 +49,13 @@ export function WindowToolbar({
           <SearchIcon size={16} />
         </button>
       </Tooltip>
+      {sidebarOpen && updatesCount > 0 && (
+        <Tooltip label={t("updates.tooltip")}>
+          <button className="toolbar-btn toolbar-btn-update" onClick={onToggleUpdates}>
+            <img src={updateIcon} alt="" style={{ width: 16, height: 16 }} />
+          </button>
+        </Tooltip>
+      )}
       {!sidebarOpen && (
         <Tooltip label={`${t("settings.shortcuts.newSession")} (${ALT}${MOD}N)`}>
           <button className="toolbar-btn" onClick={onNewSession}>

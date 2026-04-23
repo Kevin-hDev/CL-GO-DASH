@@ -1,0 +1,131 @@
+.update-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 199;
+}
+
+.update-list {
+  position: fixed;
+  top: 42px;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.update-bubble {
+  width: 320px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 1px solid var(--edge);
+  border-radius: 14px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
+  opacity: 0;
+  transform: translateY(-12px);
+  animation: bubble-in 500ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.update-bubble.bubble-closing {
+  animation: bubble-out 400ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes bubble-in {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bubble-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+}
+
+.update-bubble-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.update-bubble-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.update-bubble-name {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.update-bubble-sub {
+  font-size: var(--text-xs);
+  color: var(--ink-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.update-bubble-btn {
+  flex-shrink: 0;
+  padding: 4px 12px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  font-family: var(--font-sans);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--pulse);
+  color: white;
+  cursor: pointer;
+  transition: opacity var(--ease-smooth);
+  white-space: nowrap;
+}
+
+.update-bubble-btn:hover {
+  opacity: 0.85;
+}
+
+.update-bubble-progress {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  min-width: 100px;
+}
+
+.update-bubble-progress-bar {
+  width: 100px;
+  height: 5px;
+  background: var(--edge);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.update-bubble-progress-fill {
+  height: 100%;
+  background: var(--pulse);
+  transition: width 200ms ease-out;
+}
+
+.update-bubble-progress-text {
+  font-size: 10px;
+  color: var(--ink-faint);
+}

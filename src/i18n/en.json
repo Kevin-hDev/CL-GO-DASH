@@ -367,5 +367,12 @@
     "operationFailed": "Operation failed. Please try again.",
     "streamStartFailed": "Stream could not start.",
     "streamInterrupted": "Stream was interrupted."
+  },
+  "updates": {
+    "tooltip": "Updates available",
+    "appUpdate": "Update",
+    "modelUpdate": "Update",
+    "version": "Version {{version}}",
+    "updating": "Updating…"
   }
 }
