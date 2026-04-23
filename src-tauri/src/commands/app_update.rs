@@ -75,6 +75,7 @@ pub async fn check_app_update() -> Result<Option<AppUpdateInfo>, String> {
 
 #[tauri::command]
 pub async fn download_app_update(
+    app: tauri::AppHandle,
     dmg_url: String,
     on_progress: Channel<DownloadProgress>,
 ) -> Result<(), String> {
@@ -118,10 +119,40 @@ pub async fn download_app_update(
     file.flush().await.map_err(|e| format!("flush: {}", e))?;
     drop(file);
 
-    std::process::Command::new("open")
-        .arg(&tmp)
+    spawn_update_script(&tmp)?;
+    app.exit(0);
+
+    Ok(())
+}
+
+fn spawn_update_script(dmg_path: &std::path::Path) -> Result<(), String> {
+    let dmg = dmg_path.display().to_string();
+    let script = format!(
+        r#"#!/bin/bash
+sleep 1
+while pgrep -x "CL-GO" > /dev/null 2>&1; do sleep 0.5; done
+VOL=$(hdiutil attach "{dmg}" -nobrowse -noverify 2>/dev/null | grep "/Volumes/" | sed 's/.*\/Volumes/\/Volumes/')
+if [ -z "$VOL" ]; then exit 1; fi
+if [ -d "$VOL/CL-GO.app" ]; then
+  rm -rf /Applications/CL-GO.app
+  cp -Rf "$VOL/CL-GO.app" /Applications/CL-GO.app
+fi
+hdiutil detach "$VOL" -quiet 2>/dev/null
+rm -f "{dmg}"
+open /Applications/CL-GO.app
+"#
+    );
+
+    let script_path = std::env::temp_dir().join("cl-go-update.sh");
+    std::fs::write(&script_path, &script).map_err(|e| format!("script: {}", e))?;
+
+    std::process::Command::new("bash")
+        .arg(&script_path)
+        .stdin(std::process::Stdio::null())
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
         .spawn()
-        .map_err(|e| format!("open: {}", e))?;
+        .map_err(|e| format!("spawn: {}", e))?;
 
     Ok(())
 }
