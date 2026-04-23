@@ -1,6 +1,25 @@
 use crate::services::agent_local::types_ollama::ChatMessage;
 
 const MAX_TOTAL_RESULT_CHARS: usize = 100_000;
+
+/// Supprime les dossiers de résultats persistés datant de plus de 24h.
+pub fn cleanup_old_results() {
+    let persist_dir = crate::services::paths::data_dir().join("tool-results");
+    if let Ok(entries) = std::fs::read_dir(&persist_dir) {
+        let cutoff = std::time::SystemTime::now()
+            .checked_sub(std::time::Duration::from_secs(86400))
+            .unwrap_or(std::time::SystemTime::UNIX_EPOCH);
+        for entry in entries.flatten() {
+            if let Ok(meta) = entry.metadata() {
+                if let Ok(modified) = meta.modified() {
+                    if modified < cutoff {
+                        let _ = std::fs::remove_dir_all(entry.path());
+                    }
+                }
+            }
+        }
+    }
+}
 pub const CLEARED_PLACEHOLDER: &str =
     "[Résultat précédent tronqué — relancer le tool si nécessaire]";
 

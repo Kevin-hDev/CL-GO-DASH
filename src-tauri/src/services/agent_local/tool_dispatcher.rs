@@ -3,6 +3,7 @@ use crate::services::agent_local::{
 };
 use crate::services::agent_local::tool_skill_loader;
 use crate::services::agent_local::types_tools::ToolResult;
+use crate::services::paths::data_dir;
 use serde_json::Value;
 use std::path::Path;
 
@@ -34,7 +35,8 @@ fn max_chars_for_tool(name: &str) -> Option<usize> {
 }
 
 /// Tronque le résultat si dépassement du seuil. Ne touche jamais les erreurs.
-fn truncate_result(mut result: ToolResult, tool_name: &str) -> ToolResult {
+/// Quand tronqué, sauvegarde le résultat complet sur disque et inclut le chemin dans le message.
+fn truncate_result(mut result: ToolResult, tool_name: &str, session_id: &str) -> ToolResult {
     if result.is_error {
         return result;
     }
@@ -46,16 +48,37 @@ fn truncate_result(mut result: ToolResult, tool_name: &str) -> ToolResult {
         return result;
     }
 
+    // Sauvegarder le résultat complet sur disque
+    let persist_path = persist_result(&result.content, session_id);
+
     // Preview UTF-8-safe : on prend PREVIEW_SIZE caractères au plus
     let preview: String = result.content.chars().take(PREVIEW_SIZE).collect();
     let omitted = total - PREVIEW_SIZE;
     let total_kb = total / 1024;
 
+    let file_hint = match persist_path {
+        Some(p) => format!("\n[Résultat complet disponible : {}]", p),
+        None => String::new(),
+    };
+
     result.content = format!(
-        "[Résultat tronqué — {total_kb} Ko total, preview ci-dessous]\n{preview}\n[{omitted} chars omis]"
+        "[Résultat tronqué — {total_kb} Ko total, preview ci-dessous]{file_hint}\n{preview}\n[{omitted} chars omis]"
     );
     result.truncated = true;
     result
+}
+
+/// Persiste le contenu complet dans data_dir()/tool-results/{session_id}/{uuid}.txt.
+/// Retourne le chemin du fichier si la sauvegarde a réussi.
+fn persist_result(content: &str, session_id: &str) -> Option<String> {
+    let dir = data_dir()
+        .join("tool-results")
+        .join(session_id);
+    std::fs::create_dir_all(&dir).ok()?;
+    let file_name = format!("{}.txt", uuid::Uuid::new_v4());
+    let path = dir.join(&file_name);
+    std::fs::write(&path, content).ok()?;
+    Some(path.to_string_lossy().into_owned())
 }
 
 async fn dispatch_inner(tool_name: &str, args: &Value, working_dir: &Path) -> ToolResult {
@@ -170,8 +193,8 @@ pub(crate) fn enrich_error(mut result: ToolResult, tool_name: &str) -> ToolResul
     result
 }
 
-pub async fn dispatch(tool_name: &str, args: &Value, working_dir: &Path) -> ToolResult {
+pub async fn dispatch(tool_name: &str, args: &Value, working_dir: &Path, session_id: &str) -> ToolResult {
     let result = dispatch_inner(tool_name, args, working_dir).await;
-    let result = truncate_result(result, tool_name);
+    let result = truncate_result(result, tool_name, session_id);
     enrich_error(result, tool_name)
 }

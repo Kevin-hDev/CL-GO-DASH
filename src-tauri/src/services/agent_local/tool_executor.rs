@@ -51,6 +51,7 @@ pub async fn run_tools_with_eager(
             cancel,
             write_guard,
             eager_results.as_mut(),
+            session_id,
         )
         .await;
     }
@@ -75,7 +76,7 @@ async fn run_sequential(
 
         let allowed = check_allowed(on_event, name, args, session_id, cancel.clone()).await;
         let tr = if allowed {
-            tool_dispatcher::dispatch(name, args, working_dir).await
+            tool_dispatcher::dispatch(name, args, working_dir, session_id).await
         } else {
             ToolResult::err("L'utilisateur a refusé cette action.")
         };

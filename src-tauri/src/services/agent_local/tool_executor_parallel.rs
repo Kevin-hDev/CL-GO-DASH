@@ -30,6 +30,7 @@ pub async fn run_with_parallel_reads(
     cancel: CancellationToken,
     write_guard: &mut WriteGuard,
     mut eager_results: Option<&mut HashMap<usize, ToolResult>>,
+    session_id: &str,
 ) {
     let mut read_batch: Vec<(usize, &str, &serde_json::Value)> = Vec::new();
     let mut ordered_results: Vec<(&str, ToolResult)> = Vec::new();
@@ -72,7 +73,7 @@ pub async fn run_with_parallel_reads(
                             .iter()
                             .map(|&pos| {
                                 let (_, name, args) = chunk[pos];
-                                tool_dispatcher::dispatch(name, args, working_dir)
+                                tool_dispatcher::dispatch(name, args, working_dir, session_id)
                             })
                             .collect();
                         let dispatched = join_all(futs).await;
@@ -102,7 +103,7 @@ pub async fn run_with_parallel_reads(
                     if cancel.is_cancelled() {
                         ToolResult::err("Annulé.")
                     } else {
-                        tool_dispatcher::dispatch(name, args, working_dir).await
+                        tool_dispatcher::dispatch(name, args, working_dir, session_id).await
                     }
                 }
             };

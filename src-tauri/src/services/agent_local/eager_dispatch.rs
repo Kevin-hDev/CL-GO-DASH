@@ -15,6 +15,7 @@ const MAX_EAGER: usize = 10;
 pub async fn collect_eager_results(
     mut rx: mpsc::UnboundedReceiver<(usize, String, serde_json::Value)>,
     working_dir: PathBuf,
+    session_id: String,
 ) -> HashMap<usize, ToolResult> {
     let mut handles: Vec<tokio::task::JoinHandle<(usize, ToolResult)>> = Vec::new();
     let mut count = 0;
@@ -25,8 +26,9 @@ pub async fn collect_eager_results(
         }
         count += 1;
         let wd = working_dir.clone();
+        let sid = session_id.clone();
         let handle = tokio::spawn(async move {
-            let result = tool_dispatcher::dispatch(&name, &args, &wd).await;
+            let result = tool_dispatcher::dispatch(&name, &args, &wd, &sid).await;
             (idx, result)
         });
         handles.push(handle);

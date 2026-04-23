@@ -32,6 +32,9 @@ pub async fn run_agent_loop(
     let mut breaker = circuit_breaker::CircuitBreaker::new();
     let mut write_guard = WriteGuard::new();
 
+    // Cleanup des résultats persistés > 24h (une fois par session)
+    tool_result_budget::cleanup_old_results();
+
     for turn in 0..MAX_TURNS {
         if cancel.is_cancelled() {
             return Err("Annulé".to_string());
@@ -44,7 +47,7 @@ pub async fn run_agent_loop(
         let (tool_tx, tool_rx) = tokio::sync::mpsc::unbounded_channel();
         let eager_working_dir = working_dir.clone();
         let eager_handle = tokio::spawn(
-            eager_dispatch::collect_eager_results(tool_rx, eager_working_dir)
+            eager_dispatch::collect_eager_results(tool_rx, eager_working_dir, session_id.clone())
         );
 
         let result = ollama_stream::stream_chat_with_tool_notify(
