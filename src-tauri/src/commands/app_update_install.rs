@@ -146,6 +146,7 @@ fn spawn_windows_update(_: &std::path::Path) -> Result<(), String> {
     Err("not Windows".into())
 }
 
+#[cfg(unix)]
 fn run_shell_script(content: &str) -> Result<(), String> {
     let path = std::env::temp_dir().join("cl-go-update.sh");
     std::fs::write(&path, content).map_err(|e| format!("script: {}", e))?;
