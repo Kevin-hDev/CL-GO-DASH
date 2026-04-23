@@ -36,7 +36,7 @@ if [ "${PLATFORM}" = "linux" ]; then
   if [ -n "${MISSING}" ]; then
     info "Installation des dépendances :${MISSING}"
     if command -v apt-get &>/dev/null; then
-      sudo apt-get update -qq && sudo apt-get install -y ${MISSING} || fail "Échec de l'installation des dépendances."
+      sudo apt-get install -y ${MISSING} || fail "Échec de l'installation des dépendances. Lance : sudo apt-get install${MISSING}"
     elif command -v dnf &>/dev/null; then
       sudo dnf install -y ${MISSING} || fail "Échec de l'installation des dépendances."
     else
