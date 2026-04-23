@@ -37,10 +37,9 @@ Application desktop agentique (Tauri 2 + React 19) pour LLM locaux via Ollama et
 
 ## Prérequis
 
-- macOS (Apple Silicon ou Intel), Linux, ou Windows
+- macOS (Apple Silicon), Linux, ou Windows
 - Node.js 20+
 - Rust (via `rustup`)
-- **Git LFS** : requis pour cloner le repo (le binaire Ollama bundlé y est stocké)
 
 ## Installation
 
@@ -70,29 +69,17 @@ Les mises à jour sont automatiques : une notification apparaît dans l'app quan
 
 ## Développement
 
-### Prérequis
-- **Git LFS** : requis pour cloner le repo (le binaire Ollama bundlé y est stocké)
-
 ```bash
-# 1. Installer Git LFS (une fois par machine)
-# macOS :
-brew install git-lfs
-# Linux :
-sudo apt install git-lfs   # ou equiv. pour votre distro
-# Windows :
-winget install GitHub.GitLFS
-
-git lfs install
-
-# 2. Cloner le repo
+# 1. Cloner le repo
 git clone https://github.com/Kevin-hDev/CL-GO-DASH.git
 cd CL-GO-DASH
 
-# 3. Installer les dépendances
+# 2. Installer les dépendances
 npm install
-```
 
-> **Sans Git LFS**, le clone récupérera seulement les pointeurs texte des gros fichiers (binaire Ollama, libs Metal). L'app ne pourra pas démarrer le sidecar.
+# 3. Télécharger le binaire Ollama pour votre OS
+cd src-tauri && bash scripts/download-ollama.sh
+```
 
 ## Commandes
 
