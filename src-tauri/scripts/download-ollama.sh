@@ -13,8 +13,8 @@ esac
 DEST="resources/ollama-bundle"
 BASE_URL="https://github.com/ollama/ollama/releases/download/v${OLLAMA_VERSION}"
 SHA_URL="${BASE_URL}/sha256sum.txt"
+TMP_EXTRACT=$(mktemp -d)
 
-# Nettoyage complet avant extraction
 rm -rf "${DEST}"
 mkdir -p "${DEST}"
 
@@ -28,7 +28,6 @@ esac
 echo "→ Téléchargement Ollama v${OLLAMA_VERSION} (${OS}/${ARCH})..."
 curl -fSL --progress-bar -o "/tmp/${ARCHIVE}" "${BASE_URL}/${ARCHIVE}"
 
-# Vérification SHA256
 echo "→ Vérification intégrité..."
 EXPECTED=$(curl -fsSL "${SHA_URL}" | grep "${ARCHIVE}" | awk '{print $1}')
 if [ -n "${EXPECTED}" ]; then
@@ -38,31 +37,44 @@ if [ -n "${EXPECTED}" ]; then
     ACTUAL=$(shasum -a 256 "/tmp/${ARCHIVE}" | awk '{print $1}')
   fi
   if [ "${ACTUAL}" != "${EXPECTED}" ]; then
-    echo "✗ SHA256 invalide — fichier corrompu ou altéré" >&2
+    echo "✗ SHA256 invalide" >&2
     rm -f "/tmp/${ARCHIVE}"
     exit 1
   fi
   echo "✓ SHA256 OK"
 fi
 
-# Extraction
+echo "→ Extraction..."
 case "${OS}" in
   darwin)
-    tar -xzf "/tmp/${ARCHIVE}" -C "${DEST}" --strip-components=1
-    chmod +x "${DEST}/ollama"
+    tar -xzf "/tmp/${ARCHIVE}" -C "${TMP_EXTRACT}"
     ;;
   linux)
     if command -v zstd &>/dev/null; then
-      zstd -d "/tmp/${ARCHIVE}" --stdout | tar -x -C "${DEST}" --strip-components=1
+      zstd -d "/tmp/${ARCHIVE}" --stdout | tar -x -C "${TMP_EXTRACT}"
     else
-      tar --zstd -xf "/tmp/${ARCHIVE}" -C "${DEST}" --strip-components=1
+      tar --zstd -xf "/tmp/${ARCHIVE}" -C "${TMP_EXTRACT}"
     fi
-    chmod +x "${DEST}/ollama"
     ;;
   windows|mingw*|msys*|cygwin*)
-    unzip -o -q "/tmp/${ARCHIVE}" -d "${DEST}"
+    unzip -o -q "/tmp/${ARCHIVE}" -d "${TMP_EXTRACT}"
     ;;
 esac
 
-rm -f "/tmp/${ARCHIVE}"
+# Déplacer le contenu vers DEST (gère les archives avec ou sans dossier parent)
+INNER=$(find "${TMP_EXTRACT}" -maxdepth 1 -mindepth 1)
+INNER_COUNT=$(echo "${INNER}" | wc -l | tr -d ' ')
+if [ "${INNER_COUNT}" = "1" ] && [ -d "${INNER}" ]; then
+  cp -Rf "${INNER}/"* "${DEST}/" 2>/dev/null || true
+  cp -Rf "${INNER}/".[!.]* "${DEST}/" 2>/dev/null || true
+else
+  cp -Rf "${TMP_EXTRACT}/"* "${DEST}/" 2>/dev/null || true
+fi
+
+rm -rf "${TMP_EXTRACT}" "/tmp/${ARCHIVE}"
+
+if [ "${OS}" != "windows" ] && [ -f "${DEST}/ollama" ]; then
+  chmod +x "${DEST}/ollama"
+fi
+
 echo "✓ Ollama v${OLLAMA_VERSION} (${OS}/${ARCH}) → ${DEST}/"
