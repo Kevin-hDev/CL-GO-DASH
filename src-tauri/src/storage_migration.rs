@@ -35,6 +35,17 @@ pub fn run() -> Result<(), String> {
         }
     }
 
+    #[cfg(target_os = "windows")]
+    {
+        let home = dirs::home_dir().ok_or("cannot resolve home")?;
+        let wrong_path = home.join(".local").join("share").join("cl-go-dash");
+        let win_marker = new.join(".migrated-from-unix-path");
+        if !win_marker.exists() && wrong_path.exists() {
+            copy_items(&wrong_path, &new);
+            let _ = fs::write(&win_marker, b"ok");
+        }
+    }
+
     Ok(())
 }
 

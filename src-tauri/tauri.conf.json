@@ -4,8 +4,8 @@
   "version": "0.6.0",
   "identifier": "com.clgo.dash",
   "build": {
-    "beforeDevCommand": "npm run dev",
-    "beforeBuildCommand": "npm run build",
+    "beforeDevCommand": "[ -f src-tauri/resources/ollama-bundle/ollama ] || (cd src-tauri && bash scripts/download-ollama.sh); npm run dev",
+    "beforeBuildCommand": "[ -f src-tauri/resources/ollama-bundle/ollama ] || (cd src-tauri && bash scripts/download-ollama.sh); npm run build",
     "devUrl": "http://localhost:5173",
     "frontendDist": "../dist"
   },
