@@ -47,15 +47,12 @@ pub struct ChatRequest {
     pub tools: Vec<ToolDefinition>,
     pub max_tokens: Option<u32>,
     pub temperature: Option<f32>,
-    pub stream: bool,
 }
 
 #[derive(Debug, Clone)]
 pub struct ChatResponse {
     pub content: String,
-    pub tool_calls: Vec<ToolCall>,
     pub usage: TokenUsage,
-    pub finish_reason: String,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]

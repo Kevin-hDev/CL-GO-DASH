@@ -27,22 +27,6 @@ pub struct ShellOutput {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ProcessedFile {
-    pub name: String,
-    pub mime_type: String,
-    pub content: FileContent,
-    pub size: u64,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", tag = "type", content = "data")]
-pub enum FileContent {
-    Text(String),
-    Image(String),
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SearchResult {
     pub title: String,
     pub url: String,

@@ -33,21 +33,6 @@ pub struct ModelInfo {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ModelProfile {
-    pub name: String,
-    pub parameter_size: String,
-    pub file_size: u64,
-    pub architecture: String,
-    pub context_length: u64,
-    pub family: String,
-    pub quantization: String,
-    pub capabilities: Vec<String>,
-    pub is_moe: bool,
-    pub has_audio: bool,
-    pub license: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RegistryModel {
     pub name: String,
     pub description: String,

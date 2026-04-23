@@ -13,10 +13,6 @@ pub struct SearchProviderSpec {
     pub short_description_en: &'static str,
 }
 
-pub fn find(provider_id: &str) -> Option<&'static SearchProviderSpec> {
-    SEARCH_PROVIDERS.iter().find(|p| p.id == provider_id)
-}
-
 pub const SEARCH_PROVIDERS: &[SearchProviderSpec] = &[
     SearchProviderSpec {
         id: "brave",

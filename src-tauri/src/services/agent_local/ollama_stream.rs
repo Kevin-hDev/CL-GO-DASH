@@ -45,22 +45,6 @@ pub async fn collect_chat(model: &str, messages: Vec<ChatMessage>) -> Result<(St
     Ok((content, tokens))
 }
 
-pub async fn stream_chat(
-    on_event: &AgentEventEmitter,
-    request: &ChatRequest,
-    cancel: CancellationToken,
-) -> Result<StreamResult, String> {
-    stream_chat_inner(on_event, request, cancel, true, None).await
-}
-
-pub async fn stream_chat_no_done(
-    on_event: &AgentEventEmitter,
-    request: &ChatRequest,
-    cancel: CancellationToken,
-) -> Result<StreamResult, String> {
-    stream_chat_inner(on_event, request, cancel, false, None).await
-}
-
 /// Variante avec eager dispatch : les tool calls sont envoyés via `tool_tx` dès réception.
 pub async fn stream_chat_with_tool_notify(
     on_event: &AgentEventEmitter,

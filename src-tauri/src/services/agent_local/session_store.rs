@@ -38,18 +38,6 @@ fn sessions_dir() -> PathBuf {
     crate::services::paths::data_dir().join("agent-sessions")
 }
 
-pub async fn create(name: &str, model: &str) -> Result<AgentSession, String> {
-    create_with_flags(name, model, "ollama", false).await
-}
-
-pub async fn create_with_provider(
-    name: &str,
-    model: &str,
-    provider: &str,
-) -> Result<AgentSession, String> {
-    create_with_flags(name, model, provider, false).await
-}
-
 pub async fn create_with_flags(
     name: &str,
     model: &str,

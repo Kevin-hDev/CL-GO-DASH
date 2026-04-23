@@ -23,26 +23,11 @@ pub fn is_read_only(name: &str) -> bool {
     )
 }
 
-/// Entrée dans le batch : nom, args effectifs (éventuellement modifiés), index global.
+/// Entrée dans le batch : nom, args effectifs, index global.
 struct BatchEntry<'a> {
     global_idx: usize,
     name: &'a str,
-    /// Soit une référence sur les args originaux, soit les args modifiés par AllowModified.
-    effective_args: EffectiveArgs<'a>,
-}
-
-enum EffectiveArgs<'a> {
-    Borrowed(&'a Value),
-    Owned(Value),
-}
-
-impl<'a> EffectiveArgs<'a> {
-    fn as_ref(&self) -> &Value {
-        match self {
-            EffectiveArgs::Borrowed(v) => v,
-            EffectiveArgs::Owned(v) => v,
-        }
-    }
+    effective_args: &'a Value,
 }
 
 /// Mode auto : les read-only consécutifs sont parallélisés, les writes sont séquentiels.
@@ -82,7 +67,7 @@ pub async fn run_with_parallel_reads(
                     let mut chunk_results: Vec<Option<ToolResult>> = vec![None; chunk.len()];
 
                     for (pos, entry) in chunk.iter().enumerate() {
-                        let args = entry.effective_args.as_ref();
+                        let args = entry.effective_args;
                         if let Some(ref mut eager) = eager_results.as_deref_mut() {
                             if let Some(tr) = eager.remove(&entry.global_idx) {
                                 post_record_read(entry.name, args, working_dir, &tr, write_guard);
@@ -100,14 +85,14 @@ pub async fn run_with_parallel_reads(
                             .iter()
                             .map(|&pos| {
                                 let entry = &chunk[pos];
-                                let args = entry.effective_args.as_ref();
+                                let args = entry.effective_args;
                                 tool_dispatcher::dispatch(entry.name, args, working_dir, session_id)
                             })
                             .collect();
                         let dispatched = join_all(futs).await;
                         for (pos, tr) in pending_indices.iter().zip(dispatched.into_iter()) {
                             let entry = &chunk[*pos];
-                            let args = entry.effective_args.as_ref();
+                            let args = entry.effective_args;
                             post_record_read(entry.name, args, working_dir, &tr, write_guard);
                             let tr = run_post_hooks(entry.name, args, tr);
                             chunk_results[*pos] = Some(tr);
@@ -128,7 +113,6 @@ pub async fn run_with_parallel_reads(
             // Exécute le write séquentiellement
             let (name, args) = &tool_calls[i];
 
-            let write_modified_args;
             match run_pre_hooks(name, args) {
                 PreHookDecision::Deny(msg) => {
                     let tr = tool_dispatcher::enrich_error(ToolResult::err(msg), name);
@@ -136,10 +120,9 @@ pub async fn run_with_parallel_reads(
                     i += 1;
                     continue;
                 }
-                PreHookDecision::AllowModified(new_args) => { write_modified_args = Some(new_args); }
-                PreHookDecision::Allow => { write_modified_args = None; }
+                PreHookDecision::Allow => {}
             }
-            let effective_write_args = write_modified_args.as_ref().unwrap_or(args);
+            let effective_write_args = args;
 
             if !permission_gate::check_data_dir_write(
                 on_event, name, effective_write_args, session_id, cancel.clone(),
@@ -171,18 +154,11 @@ pub async fn run_with_parallel_reads(
                     let tr = tool_dispatcher::enrich_error(ToolResult::err(msg), name);
                     ordered_results.push((name.as_str(), tr));
                 }
-                PreHookDecision::AllowModified(new_args) => {
-                    read_batch.push(BatchEntry {
-                        global_idx: i,
-                        name: name.as_str(),
-                        effective_args: EffectiveArgs::Owned(new_args),
-                    });
-                }
                 PreHookDecision::Allow => {
                     read_batch.push(BatchEntry {
                         global_idx: i,
                         name: name.as_str(),
-                        effective_args: EffectiveArgs::Borrowed(args),
+                        effective_args: args,
                     });
                 }
             }

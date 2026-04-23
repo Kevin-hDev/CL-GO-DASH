@@ -70,24 +70,15 @@ async fn run_sequential(
 ) {
     for (name, args) in tool_calls {
         // Pre-hook : path traversal, fichiers sensibles, etc.
-        let (blocked, effective_args_owned);
         match run_pre_hooks(name, args) {
             PreHookDecision::Deny(msg) => {
                 let tr = tool_dispatcher::enrich_error(ToolResult::err(msg), name);
                 push_tool_result(on_event, messages, name, tr);
                 continue;
             }
-            PreHookDecision::AllowModified(new_args) => {
-                effective_args_owned = Some(new_args);
-                blocked = false;
-            }
-            PreHookDecision::Allow => {
-                effective_args_owned = None;
-                blocked = false;
-            }
+            PreHookDecision::Allow => {}
         }
-        let _ = blocked;
-        let effective_args = effective_args_owned.as_ref().unwrap_or(args);
+        let effective_args = args;
 
         if let Err(msg) = check_write_guard(name, effective_args, working_dir, write_guard) {
             let tr = tool_dispatcher::enrich_error(ToolResult::err(msg), name);

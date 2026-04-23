@@ -1,6 +1,6 @@
 //! Helpers de parsing/construction pour `openai_compat.rs`.
 
-use super::types::{ChatRequest, ChatResponse, LlmError, ModelInfo, TokenUsage, ToolCall};
+use super::types::{ChatRequest, ChatResponse, LlmError, ModelInfo, TokenUsage};
 use reqwest::Response;
 
 /// Construit le payload JSON pour `POST /chat/completions`.
@@ -81,22 +81,9 @@ pub fn parse_models_list(
 
 /// Parse la réponse de `POST /chat/completions` (non-streaming).
 pub fn parse_chat_response(body: &serde_json::Value) -> Result<ChatResponse, LlmError> {
-    let choice = &body["choices"][0];
-    let msg = &choice["message"];
-    let content = msg["content"].as_str().unwrap_or("").to_string();
-
-    let tool_calls: Vec<ToolCall> = msg["tool_calls"]
-        .as_array()
-        .map(|arr| {
-            arr.iter()
-                .filter_map(|tc| serde_json::from_value(tc.clone()).ok())
-                .collect()
-        })
-        .unwrap_or_default();
-
-    let finish_reason = choice["finish_reason"]
+    let content = body["choices"][0]["message"]["content"]
         .as_str()
-        .unwrap_or("stop")
+        .unwrap_or("")
         .to_string();
 
     let usage = TokenUsage {
@@ -105,12 +92,7 @@ pub fn parse_chat_response(body: &serde_json::Value) -> Result<ChatResponse, Llm
         total_tokens: body["usage"]["total_tokens"].as_u64().unwrap_or(0) as u32,
     };
 
-    Ok(ChatResponse {
-        content,
-        tool_calls,
-        usage,
-        finish_reason,
-    })
+    Ok(ChatResponse { content, usage })
 }
 
 /// Prix = "0" ou absent → gratuit.

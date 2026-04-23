@@ -26,7 +26,7 @@ pub async fn execute_shell(
     let secs = timeout_secs.unwrap_or(DEFAULT_TIMEOUT).min(MAX_TIMEOUT);
     let (shell, flag) = detect_shell();
 
-    let mut child = Command::new(&shell)
+    let child = Command::new(&shell)
         .args([&flag, command])
         .current_dir(working_dir)
         .stdout(std::process::Stdio::piped())

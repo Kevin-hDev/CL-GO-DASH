@@ -44,7 +44,6 @@ pub struct ModelCapabilities {
     pub supports_tools: bool,
     pub supports_vision: bool,
     pub supports_thinking: bool,
-    pub max_input_tokens: Option<u64>,
 }
 
 fn cache_path() -> PathBuf {
@@ -160,7 +159,6 @@ pub async fn lookup(provider_id: &str, model_id: &str) -> Option<ModelCapabiliti
         supports_tools: entry.supports_function_calling,
         supports_vision: entry.supports_vision,
         supports_thinking: entry.supports_reasoning,
-        max_input_tokens: entry.max_input_tokens,
     })
 }
 
@@ -195,6 +193,3 @@ fn is_non_chat_name(model_id: &str) -> bool {
     non_chat.iter().any(|kw| id.contains(kw))
 }
 
-pub async fn model_count() -> usize {
-    get_lock().read().await.len()
-}

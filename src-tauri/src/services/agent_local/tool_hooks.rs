@@ -3,7 +3,6 @@ use serde_json::Value;
 
 pub enum PreHookDecision {
     Allow,
-    AllowModified(Value),
     Deny(String),
 }
 

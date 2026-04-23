@@ -26,10 +26,6 @@ impl OpenAiCompatProvider {
         Ok(Self { spec, client })
     }
 
-    pub fn provider_id(&self) -> &str {
-        self.spec.id
-    }
-
     /// Appelle `/models` pour récupérer la liste des modèles disponibles.
     pub async fn list_models(&self) -> Result<Vec<ModelInfo>, LlmError> {
         let key = api_keys::get_key(self.spec.id).map_err(|_| LlmError::Unauthorized)?;
