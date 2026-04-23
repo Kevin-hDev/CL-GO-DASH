@@ -1,10 +1,13 @@
 use crate::services::agent_local::permission_gate::{self, PermissionDecision};
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::tool_dispatcher;
-use crate::services::agent_local::types_ollama::{ChatMessage, StreamEvent};
+use crate::services::agent_local::types_ollama::ChatMessage;
 use crate::services::agent_local::types_tools::ToolResult;
 use crate::services::agent_local::write_guard::WriteGuard;
 use tokio_util::sync::CancellationToken;
+
+use super::tool_executor_helpers::{check_write_guard, post_record_read, push_tool_result};
+use super::tool_executor_parallel::run_with_parallel_reads;
 
 pub async fn run_tools(
     on_event: &AgentEventEmitter,
@@ -16,38 +19,41 @@ pub async fn run_tools(
     cancel: CancellationToken,
     write_guard: &mut WriteGuard,
 ) {
+    if mode == "manual" {
+        run_sequential(
+            on_event, messages, tool_calls, working_dir, session_id, cancel, write_guard,
+        )
+        .await;
+    } else {
+        run_with_parallel_reads(on_event, messages, tool_calls, working_dir, cancel, write_guard)
+            .await;
+    }
+}
+
+/// Mode manuel : permission demandée un par un, exécution séquentielle.
+async fn run_sequential(
+    on_event: &AgentEventEmitter,
+    messages: &mut Vec<ChatMessage>,
+    tool_calls: &[(String, serde_json::Value)],
+    working_dir: &std::path::Path,
+    session_id: &str,
+    cancel: CancellationToken,
+    write_guard: &mut WriteGuard,
+) {
     for (name, args) in tool_calls {
-        // Pre-check : write guard avant tout dispatch
-        if matches!(name.as_str(), "write_file" | "edit_file") {
-            let path_str = args["path"].as_str().unwrap_or("");
-            let p = std::path::Path::new(path_str);
-            let resolved = if p.is_absolute() { p.to_path_buf() } else { working_dir.join(p) };
-            if let Err(msg) = write_guard.check_write(&resolved) {
-                push_tool_result(on_event, messages, name, ToolResult::err(msg));
-                continue;
-            }
+        if let Err(msg) = check_write_guard(name, args, working_dir, write_guard) {
+            push_tool_result(on_event, messages, name, ToolResult::err(msg));
+            continue;
         }
 
-        let tr = if mode == "manual" {
-            let allowed = check_allowed(on_event, name, args, session_id, cancel.clone()).await;
-            if allowed {
-                tool_dispatcher::dispatch(name, args, working_dir).await
-            } else {
-                ToolResult::err("L'utilisateur a refusé cette action.")
-            }
-        } else {
+        let allowed = check_allowed(on_event, name, args, session_id, cancel.clone()).await;
+        let tr = if allowed {
             tool_dispatcher::dispatch(name, args, working_dir).await
+        } else {
+            ToolResult::err("L'utilisateur a refusé cette action.")
         };
 
-        // Post-action : record read après exécution réussie
-        if name == "read_file" && !tr.is_error {
-            if let Some(path_str) = args["path"].as_str() {
-                let p = std::path::Path::new(path_str);
-                let resolved = if p.is_absolute() { p.to_path_buf() } else { working_dir.join(p) };
-                write_guard.record_read(&resolved);
-            }
-        }
-
+        post_record_read(name, args, working_dir, &tr, write_guard);
         push_tool_result(on_event, messages, name, tr);
     }
 }
@@ -73,26 +79,4 @@ async fn check_allowed(
         }
         PermissionDecision::Deny => false,
     }
-}
-
-fn push_tool_result(
-    on_event: &AgentEventEmitter,
-    messages: &mut Vec<ChatMessage>,
-    name: &str,
-    tr: ToolResult,
-) {
-    let _ = on_event.send(StreamEvent::ToolResult {
-        name: name.to_string(),
-        content: tr.content.clone(),
-        is_error: tr.is_error,
-        truncated: tr.truncated,
-    });
-    messages.push(ChatMessage {
-        role: "tool".to_string(),
-        content: tr.content,
-        images: None,
-        tool_calls: None,
-        tool_name: Some(name.to_string()),
-        tool_call_id: None,
-    });
 }

@@ -145,36 +145,3 @@ pub async fn dispatch(tool_name: &str, args: &Value, working_dir: &Path) -> Tool
     let result = dispatch_inner(tool_name, args, working_dir).await;
     truncate_result(result, tool_name)
 }
-
-pub async fn dispatch_multiple(
-    tool_calls: &[(String, Value)],
-    working_dir: &Path,
-) -> Vec<ToolResult> {
-    let is_web = |n: &str| n == "web_search" || n == "web_fetch";
-    let mut results: Vec<Option<ToolResult>> = vec![None; tool_calls.len()];
-
-    let parallel_futs: Vec<_> = tool_calls
-        .iter()
-        .enumerate()
-        .filter(|(_, (n, _))| !is_web(n))
-        .map(|(i, (n, a))| {
-            let fut = dispatch(n, a, working_dir);
-            async move { (i, fut.await) }
-        })
-        .collect();
-
-    for (i, result) in futures_util::future::join_all(parallel_futs).await {
-        results[i] = Some(result);
-    }
-
-    for (i, (name, args)) in tool_calls.iter().enumerate() {
-        if is_web(name) {
-            results[i] = Some(dispatch(name, args, working_dir).await);
-        }
-    }
-
-    results
-        .into_iter()
-        .map(|r| r.unwrap_or_else(|| ToolResult::err(String::new())))
-        .collect()
-}
