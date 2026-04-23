@@ -56,8 +56,8 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
       {/* Drag region for traffic lights */}
       <DragRegion />
 
-      {/* Nav items */}
-      <div className="flex flex-col flex-1" style={{ gap: 2 }}>
+      {/* Nav items — paddingTop aligne avec "Nouvelle session" du panneau liste */}
+      <div className="flex flex-col flex-1" style={{ gap: 2, paddingTop: 8 }}>
         {NAV_ITEMS.map((item) => (
           <div
             key={item.id}
