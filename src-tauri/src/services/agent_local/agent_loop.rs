@@ -1,10 +1,14 @@
 use crate::services::agent_local::agent_settings;
+use crate::services::agent_local::circuit_breaker;
+use crate::services::agent_local::eager_dispatch;
 use crate::services::agent_local::ollama_stream;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::tool_executor;
+use crate::services::agent_local::tool_result_budget;
 use crate::services::agent_local::types_ollama::{
     ChatMessage, ChatRequest, StreamEvent,
 };
+use crate::services::agent_local::write_guard::WriteGuard;
 use std::path::PathBuf;
 use tokio_util::sync::CancellationToken;
 
@@ -25,32 +29,61 @@ pub async fn run_agent_loop(
     let mut total_eval: u32 = 0;
     let mut total_prompt: u32 = 0;
     let start = std::time::Instant::now();
+    let mut breaker = circuit_breaker::CircuitBreaker::new();
+    let mut write_guard = WriteGuard::new();
+
+    // Cleanup des résultats persistés > 24h (une fois par session)
+    tool_result_budget::cleanup_old_results();
 
     for turn in 0..MAX_TURNS {
         if cancel.is_cancelled() {
             return Err("Annulé".to_string());
         }
 
+        tool_result_budget::apply_budget(messages);
         let request = build_request(model, messages, &tools, think);
-        let result = ollama_stream::stream_chat_no_done(on_event, &request, cancel.clone()).await?;
+
+        // Eager dispatch : lancer les read-only tools dès qu'ils arrivent dans le stream
+        let (tool_tx, tool_rx) = tokio::sync::mpsc::unbounded_channel();
+        let eager_working_dir = working_dir.clone();
+        let eager_handle = tokio::spawn(
+            eager_dispatch::collect_eager_results(tool_rx, eager_working_dir, session_id.clone())
+        );
+
+        let result = ollama_stream::stream_chat_with_tool_notify(
+            on_event, &request, cancel.clone(), tool_tx,
+        ).await?;
+
+        // Le sender est droppé quand le stream se termine → le receiver se ferme
+        // et collect_eager_results peut retourner ses résultats.
 
         total_eval += result.eval_count;
         total_prompt += result.prompt_tokens;
         messages.push(build_assistant_message(&result));
 
         if result.tool_calls.is_empty() {
+            eager_handle.abort();
             break;
         }
 
         if turn == MAX_TURNS - 1 {
+            eager_handle.abort();
             let _ = on_event.send(StreamEvent::Error {
                 message: "Limite de tours atteinte".to_string(),
             });
             break;
         }
 
+        if let Err(msg) = breaker.check(&result.tool_calls) {
+            eager_handle.abort();
+            let _ = on_event.send(StreamEvent::Error { message: msg });
+            break;
+        }
+
+        let eager_results = eager_handle.await.unwrap_or_default();
+
         let mode = agent_settings::get_permission_mode().await;
-        tool_executor::run_tools(
+        tool_executor::run_tools_with_eager(
             on_event,
             messages,
             &result.tool_calls,
@@ -58,6 +91,8 @@ pub async fn run_agent_loop(
             &mode,
             &session_id,
             cancel.clone(),
+            &mut write_guard,
+            Some(eager_results),
         )
         .await;
 

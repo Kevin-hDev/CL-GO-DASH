@@ -4,6 +4,8 @@ use std::path::{Path, PathBuf};
 
 const MAX_READ_SIZE: u64 = 20 * 1024 * 1024;
 const MAX_LIST_ENTRIES: usize = 500;
+pub const DEFAULT_LIMIT: usize = 2000;
+const MAX_LIMIT: usize = 50_000;
 
 fn resolve_read_path(path: &str, working_dir: &Path) -> Result<PathBuf, String> {
     let p = Path::new(path);
@@ -17,36 +19,55 @@ fn resolve_write_path(path: &str, working_dir: &Path) -> Result<PathBuf, String>
     security::validate_write_path(&raw)
 }
 
-pub async fn read_file(path: &str, working_dir: &Path) -> ToolResult {
+pub async fn read_file(path: &str, working_dir: &Path, offset: usize, limit: usize) -> ToolResult {
     let resolved = match resolve_read_path(path, working_dir) {
         Ok(p) => p,
-        Err(e) => return ToolResult { content: e, is_error: true },
+        Err(e) => return ToolResult::err(e),
     };
     match tokio::fs::metadata(&resolved).await {
         Ok(meta) if meta.len() > MAX_READ_SIZE => {
-            ToolResult { content: "Fichier trop volumineux (max 20MB)".into(), is_error: true }
+            return ToolResult::err("Fichier trop volumineux (max 20MB)");
         }
-        Err(e) => ToolResult { content: security::sanitize_error(e), is_error: true },
-        _ => match tokio::fs::read_to_string(&resolved).await {
-            Ok(content) => ToolResult { content, is_error: false },
-            Err(e) => ToolResult { content: security::sanitize_error(e), is_error: true },
-        },
+        Err(e) => return ToolResult::err(security::sanitize_error(e)),
+        _ => {}
     }
+    let raw = match tokio::fs::read_to_string(&resolved).await {
+        Ok(c) => c,
+        Err(e) => return ToolResult::err(security::sanitize_error(e)),
+    };
+    let lines: Vec<&str> = raw.lines().collect();
+    let total = lines.len();
+    let start = offset.min(total);
+    let limit = limit.min(MAX_LIMIT);
+    let end = start.saturating_add(limit).min(total);
+    let slice = &lines[start..end];
+    let mut output = String::with_capacity(slice.len() * 80);
+    for (i, line) in slice.iter().enumerate() {
+        let line_num = start + i + 1;
+        output.push_str(&format!("{line_num}\t{line}\n"));
+    }
+    let remaining = total.saturating_sub(end);
+    if remaining > 0 {
+        output.push_str(&format!(
+            "\n[{remaining} ligne(s) restante(s) — utilise offset={end} pour la suite]"
+        ));
+    }
+    ToolResult::ok(output)
 }
 
 pub async fn write_file(path: &str, content: &str, working_dir: &Path) -> ToolResult {
     let resolved = match resolve_write_path(path, working_dir) {
         Ok(p) => p,
-        Err(e) => return ToolResult { content: e, is_error: true },
+        Err(e) => return ToolResult::err(e),
     };
     if let Some(parent) = resolved.parent() {
         if let Err(e) = tokio::fs::create_dir_all(parent).await {
-            return ToolResult { content: security::sanitize_error(e), is_error: true };
+            return ToolResult::err(security::sanitize_error(e));
         }
     }
     match tokio::fs::write(&resolved, content).await {
-        Ok(()) => ToolResult { content: format!("Écrit: {}", resolved.display()), is_error: false },
-        Err(e) => ToolResult { content: security::sanitize_error(e), is_error: true },
+        Ok(()) => ToolResult::ok(format!("Écrit: {}", resolved.display())),
+        Err(e) => ToolResult::err(security::sanitize_error(e)),
     }
 }
 
@@ -58,33 +79,30 @@ pub async fn edit_file(
 ) -> ToolResult {
     let resolved = match resolve_write_path(path, working_dir) {
         Ok(p) => p,
-        Err(e) => return ToolResult { content: e, is_error: true },
+        Err(e) => return ToolResult::err(e),
     };
     let content = match tokio::fs::read_to_string(&resolved).await {
         Ok(c) => c,
-        Err(e) => return ToolResult { content: security::sanitize_error(e), is_error: true },
+        Err(e) => return ToolResult::err(security::sanitize_error(e)),
     };
     let count = content.matches(old_string).count();
     if count == 0 {
-        return ToolResult { content: "Chaîne non trouvée".into(), is_error: true };
+        return ToolResult::err("Chaîne non trouvée");
     }
     if count > 1 {
-        return ToolResult {
-            content: format!("Chaîne trouvée {count} fois (doit être unique)"),
-            is_error: true,
-        };
+        return ToolResult::err(format!("Chaîne trouvée {count} fois (doit être unique)"));
     }
     let updated = content.replacen(old_string, new_string, 1);
     match tokio::fs::write(&resolved, &updated).await {
-        Ok(()) => ToolResult { content: format!("Modifié: {}", resolved.display()), is_error: false },
-        Err(e) => ToolResult { content: security::sanitize_error(e), is_error: true },
+        Ok(()) => ToolResult::ok(format!("Modifié: {}", resolved.display())),
+        Err(e) => ToolResult::err(security::sanitize_error(e)),
     }
 }
 
 pub async fn list_dir(path: &str, working_dir: &Path) -> ToolResult {
     let resolved = match resolve_read_path(path, working_dir) {
         Ok(p) => p,
-        Err(e) => return ToolResult { content: e, is_error: true },
+        Err(e) => return ToolResult::err(e),
     };
     let mut entries = Vec::new();
     let mut stack = vec![(resolved.clone(), 0u32)];
@@ -118,5 +136,5 @@ pub async fn list_dir(path: &str, working_dir: &Path) -> ToolResult {
             }
         }
     }
-    ToolResult { content: entries.join("\n"), is_error: false }
+    ToolResult::ok(entries.join("\n"))
 }

@@ -11,13 +11,17 @@ pub mod prompt_compact;
 pub mod prompt_detailed;
 pub mod modelfile_parser;
 pub mod permission_gate;
+#[cfg(test)]
+pub mod permission_gate_tests;
 pub mod security;
 pub mod ollama_client;
 pub mod ollama_registry;
 pub mod ollama_registry_details;
 pub mod translation_cache;
 pub mod translator;
+pub mod eager_dispatch;
 pub mod ollama_stream;
+pub mod ollama_stream_process;
 pub mod session_ops;
 pub mod session_store;
 pub mod stream_events;
@@ -25,6 +29,11 @@ pub mod tab_store;
 pub mod tool_definitions;
 pub mod tool_dispatcher;
 pub mod tool_executor;
+pub mod tool_executor_helpers;
+pub mod tool_executor_parallel;
+pub mod tool_hooks;
+#[cfg(test)]
+pub mod tool_hooks_tests;
 pub mod tool_bash;
 pub mod tool_files;
 pub mod tool_glob;
@@ -36,11 +45,24 @@ pub mod tool_web_fetch_ip;
 #[cfg(test)]
 pub mod tool_web_fetch_tests;
 #[cfg(test)]
+pub mod tool_files_tests;
+#[cfg(test)]
+pub mod tool_dispatcher_tests;
+#[cfg(test)]
 pub mod chat_prompts_tests;
 #[cfg(test)]
 pub mod chat_prompts_chat_tests;
 pub mod tool_web_search;
+pub mod tool_result_budget;
 pub mod types_ollama;
 pub mod types_session;
 pub mod project_store;
 pub mod types_tools;
+pub mod circuit_breaker;
+pub mod write_guard;
+#[cfg(test)]
+pub mod tool_result_budget_tests;
+#[cfg(test)]
+pub mod circuit_breaker_tests;
+#[cfg(test)]
+pub mod write_guard_tests;

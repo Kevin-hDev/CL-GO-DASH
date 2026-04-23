@@ -6,15 +6,71 @@
 
 use super::stream;
 use crate::services::agent_local::agent_settings;
+use crate::services::agent_local::circuit_breaker;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::tool_executor;
+use crate::services::agent_local::tool_result_budget;
 use crate::services::agent_local::types_ollama::{
     ChatMessage, StreamEvent, StreamResult, ToolCallFunction, ToolCallOllama,
 };
+use crate::services::agent_local::write_guard::WriteGuard;
 use std::path::PathBuf;
 use tokio_util::sync::CancellationToken;
 
 const MAX_TURNS: usize = 30;
+const MAX_RETRIES: usize = 2;
+const RETRY_DELAY_MS: u64 = 2000;
+
+fn is_retryable_error(error: &str) -> bool {
+    error.contains("429")
+        || error.contains("rate limit")
+        || error.contains("Rate limit")
+        || error.contains("503")
+        || error.contains("502")
+        || error.contains("timeout")
+        || error.contains("Timeout")
+        || error.contains("ETIMEDOUT")
+        || error.contains("ECONNRESET")
+}
+
+async fn retry_stream(
+    on_event: &AgentEventEmitter,
+    provider_id: &str,
+    model: &str,
+    messages: &[ChatMessage],
+    tools: &[serde_json::Value],
+    think: bool,
+    cancel: CancellationToken,
+) -> Result<StreamResult, String> {
+    let mut last_error = String::new();
+    for attempt in 0..=MAX_RETRIES {
+        if cancel.is_cancelled() {
+            return Err("Annulé".to_string());
+        }
+        if attempt > 0 {
+            let _ = on_event.send(StreamEvent::Error {
+                message: format!("Retry {attempt}/{MAX_RETRIES} après erreur : {last_error}"),
+            });
+            tokio::time::sleep(tokio::time::Duration::from_millis(
+                RETRY_DELAY_MS * attempt as u64,
+            ))
+            .await;
+        }
+        match stream::stream_chat_no_done(
+            on_event, provider_id, model, messages, tools, think, cancel.clone(),
+        )
+        .await
+        {
+            Ok(result) => return Ok(result),
+            Err(e) if is_retryable_error(&e) && attempt < MAX_RETRIES => {
+                last_error = e;
+                continue;
+            }
+            Err(e) => return Err(e),
+        }
+    }
+    Err(last_error)
+}
 
 /// Les tool defs d'Ollama sont déjà au format OpenAI `{type: "function", function: {...}}`.
 /// Cette fonction est l'identité — gardée pour lisibilité et future divergence.
@@ -36,14 +92,17 @@ pub async fn run_agent_loop(
     let mut total_eval: u32 = 0;
     let mut total_prompt: u32 = 0;
     let start = std::time::Instant::now();
+    let mut breaker = circuit_breaker::CircuitBreaker::new();
+    let mut write_guard = WriteGuard::new();
 
     for turn in 0..MAX_TURNS {
         if cancel.is_cancelled() {
             return Err("Annulé".to_string());
         }
 
+        tool_result_budget::apply_budget(messages);
         let result =
-            stream::stream_chat_no_done(on_event, provider_id, model, messages, tools, think, cancel.clone())
+            retry_stream(on_event, provider_id, model, messages, tools, think, cancel.clone())
                 .await?;
 
         total_eval += result.eval_count;
@@ -61,6 +120,11 @@ pub async fn run_agent_loop(
             break;
         }
 
+        if let Err(msg) = breaker.check(&result.tool_calls) {
+            let _ = on_event.send(StreamEvent::Error { message: msg });
+            break;
+        }
+
         // Snapshot longueur avant push des tool results → patch post-run.
         let before = messages.len();
         let mode = agent_settings::get_permission_mode().await;
@@ -72,6 +136,7 @@ pub async fn run_agent_loop(
             &mode,
             &session_id,
             cancel.clone(),
+            &mut write_guard,
         )
         .await;
 

@@ -152,6 +152,7 @@ export interface TabInfo {
 export interface ToolResult {
   content: string;
   is_error: boolean;
+  truncated?: boolean;
 }
 
 export interface SearchResult {
@@ -177,7 +178,7 @@ export type StreamEvent =
   | { event: "token"; data: { content: string; tokenCount: number; tps: number } }
   | { event: "thinking"; data: { content: string } }
   | { event: "toolCall"; data: { name: string; arguments: Record<string, unknown> } }
-  | { event: "toolResult"; data: { name: string; content: string; isError: boolean } }
+  | { event: "toolResult"; data: { name: string; content: string; isError: boolean; truncated?: boolean } }
   | { event: "turnEnd"; data: Record<string, never> }
   | { event: "permissionRequest"; data: { id: string; toolName: string; arguments: Record<string, unknown> } }
   | { event: "done"; data: { evalCount: number; evalDurationNs: number; finalTps: number; promptTokens: number } }

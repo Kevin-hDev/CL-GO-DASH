@@ -143,6 +143,8 @@ pub enum StreamEvent {
         name: String,
         content: String,
         is_error: bool,
+        #[serde(default)]
+        truncated: bool,
     },
     TurnEnd {},
     #[serde(rename_all = "camelCase")]

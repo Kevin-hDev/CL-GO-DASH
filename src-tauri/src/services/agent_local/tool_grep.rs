@@ -18,7 +18,7 @@ pub async fn grep(
     let root = resolve_root(path, working_dir);
 
     if let Err(e) = security::validate_read_path(&root, working_dir) {
-        return ToolResult { content: e, is_error: true };
+        return ToolResult::err(e);
     }
 
     let result = tokio::task::spawn_blocking(move || grep_blocking(&pattern, &root, glob_filter.as_deref()))
@@ -26,7 +26,7 @@ pub async fn grep(
 
     match result {
         Ok(r) => r,
-        Err(e) => ToolResult { content: format!("Erreur interne: {e}"), is_error: true },
+        Err(e) => ToolResult::err(format!("Erreur interne: {e}")),
     }
 }
 
@@ -43,10 +43,7 @@ fn resolve_root(path: Option<&str>, working_dir: &Path) -> PathBuf {
 fn grep_blocking(pattern: &str, root: &Path, glob_filter: Option<&str>) -> ToolResult {
     let matcher = match RegexMatcher::new(pattern) {
         Ok(m) => m,
-        Err(e) => return ToolResult {
-            content: format!("Pattern regex invalide : {e}"),
-            is_error: true,
-        },
+        Err(e) => return ToolResult::err(format!("Pattern regex invalide : {e}")),
     };
 
     let mut walk_builder = WalkBuilder::new(root);
@@ -55,17 +52,11 @@ fn grep_blocking(pattern: &str, root: &Path, glob_filter: Option<&str>) -> ToolR
     if let Some(g) = glob_filter {
         let mut ov = OverrideBuilder::new(root);
         if let Err(e) = ov.add(g) {
-            return ToolResult {
-                content: format!("Glob invalide : {e}"),
-                is_error: true,
-            };
+            return ToolResult::err(format!("Glob invalide : {e}"));
         }
         match ov.build() {
             Ok(overrides) => { walk_builder.overrides(overrides); }
-            Err(e) => return ToolResult {
-                content: format!("Glob invalide : {e}"),
-                is_error: true,
-            },
+            Err(e) => return ToolResult::err(format!("Glob invalide : {e}")),
         }
     }
 
@@ -101,7 +92,7 @@ fn grep_blocking(pattern: &str, root: &Path, glob_filter: Option<&str>) -> ToolR
     if output.is_empty() {
         output = "(aucun résultat)".into();
     }
-    ToolResult { content: output, is_error: false }
+    ToolResult::ok(output)
 }
 
 struct MatchSink<'a> {

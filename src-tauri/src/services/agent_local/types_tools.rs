@@ -4,6 +4,18 @@ use serde::{Deserialize, Serialize};
 pub struct ToolResult {
     pub content: String,
     pub is_error: bool,
+    #[serde(default)]
+    pub truncated: bool,
+}
+
+impl ToolResult {
+    pub fn ok(content: impl Into<String>) -> Self {
+        Self { content: content.into(), is_error: false, truncated: false }
+    }
+
+    pub fn err(content: impl Into<String>) -> Self {
+        Self { content: content.into(), is_error: true, truncated: false }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
