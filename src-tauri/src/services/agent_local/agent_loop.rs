@@ -1,5 +1,6 @@
 use crate::services::agent_local::agent_settings;
 use crate::services::agent_local::circuit_breaker;
+use crate::services::agent_local::eager_dispatch;
 use crate::services::agent_local::ollama_stream;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::tool_executor;
@@ -38,7 +39,21 @@ pub async fn run_agent_loop(
 
         tool_result_budget::apply_budget(messages);
         let request = build_request(model, messages, &tools, think);
-        let result = ollama_stream::stream_chat_no_done(on_event, &request, cancel.clone()).await?;
+
+        // Eager dispatch : lancer les read-only tools dès qu'ils arrivent dans le stream
+        let (tool_tx, tool_rx) = tokio::sync::mpsc::unbounded_channel();
+        let eager_working_dir = working_dir.clone();
+        let eager_handle = tokio::spawn(
+            eager_dispatch::collect_eager_results(tool_rx, eager_working_dir)
+        );
+
+        let result = ollama_stream::stream_chat_with_tool_notify(
+            on_event, &request, cancel.clone(), tool_tx,
+        ).await?;
+
+        // Le sender est droppé quand le stream se termine → le receiver se ferme
+        // et collect_eager_results peut retourner ses résultats.
+        let eager_results = eager_handle.await.unwrap_or_default();
 
         total_eval += result.eval_count;
         total_prompt += result.prompt_tokens;
@@ -61,7 +76,7 @@ pub async fn run_agent_loop(
         }
 
         let mode = agent_settings::get_permission_mode().await;
-        tool_executor::run_tools(
+        tool_executor::run_tools_with_eager(
             on_event,
             messages,
             &result.tool_calls,
@@ -70,6 +85,7 @@ pub async fn run_agent_loop(
             &session_id,
             cancel.clone(),
             &mut write_guard,
+            Some(eager_results),
         )
         .await;
 

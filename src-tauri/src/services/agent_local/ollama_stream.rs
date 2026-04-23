@@ -1,16 +1,17 @@
 use crate::services::agent_local::types_ollama::{ChatMessage, ChatRequest, StreamEvent, StreamResult};
 use crate::services::agent_local::stream_events::AgentEventEmitter;
+use crate::services::agent_local::ollama_stream_process::process_chunk;
 use crate::services::agent_local::OLLAMA_BASE_URL;
 use futures_util::StreamExt;
 use std::time::Duration;
 use tokio::io::{AsyncBufReadExt, BufReader};
+use tokio::sync::mpsc;
 use tokio_util::io::StreamReader;
 use tokio_util::sync::CancellationToken;
+
 const COLLECT_TIMEOUT_SECS: u64 = 60;
 
 /// Appel Ollama non-interactif (sans streaming UI).
-/// Utilisé par le scheduler pour les réveils : le prompt est envoyé, la réponse
-/// complète est accumulée, et on renvoie (contenu, tokens).
 pub async fn collect_chat(model: &str, messages: Vec<ChatMessage>) -> Result<(String, u32), String> {
     let body = serde_json::json!({
         "model": model,
@@ -49,7 +50,7 @@ pub async fn stream_chat(
     request: &ChatRequest,
     cancel: CancellationToken,
 ) -> Result<StreamResult, String> {
-    stream_chat_inner(on_event, request, cancel, true).await
+    stream_chat_inner(on_event, request, cancel, true, None).await
 }
 
 pub async fn stream_chat_no_done(
@@ -57,7 +58,17 @@ pub async fn stream_chat_no_done(
     request: &ChatRequest,
     cancel: CancellationToken,
 ) -> Result<StreamResult, String> {
-    stream_chat_inner(on_event, request, cancel, false).await
+    stream_chat_inner(on_event, request, cancel, false, None).await
+}
+
+/// Variante avec eager dispatch : les tool calls sont envoyés via `tool_tx` dès réception.
+pub async fn stream_chat_with_tool_notify(
+    on_event: &AgentEventEmitter,
+    request: &ChatRequest,
+    cancel: CancellationToken,
+    tool_tx: mpsc::UnboundedSender<(usize, String, serde_json::Value)>,
+) -> Result<StreamResult, String> {
+    stream_chat_inner(on_event, request, cancel, false, Some(tool_tx)).await
 }
 
 async fn stream_chat_inner(
@@ -65,6 +76,7 @@ async fn stream_chat_inner(
     request: &ChatRequest,
     cancel: CancellationToken,
     emit_done: bool,
+    tool_tx: Option<mpsc::UnboundedSender<(usize, String, serde_json::Value)>>,
 ) -> Result<StreamResult, String> {
     let client = reqwest::Client::new();
     let resp = client
@@ -82,7 +94,7 @@ async fn stream_chat_inner(
                 else if retry_req.tools != request.tools { "tools" }
                 else { "images" };
             eprintln!("[ollama-stream] modèle sans {feature}, retry");
-            return Box::pin(stream_chat_inner(on_event, &retry_req, cancel, emit_done)).await;
+            return Box::pin(stream_chat_inner(on_event, &retry_req, cancel, emit_done, tool_tx)).await;
         }
         let msg = format!("Ollama HTTP {status}: {body}");
         eprintln!("[ollama-stream] {msg}");
@@ -113,7 +125,8 @@ async fn stream_chat_inner(
                 match line {
                     Ok(Some(text)) => {
                         if let Err(e) = process_chunk(
-                            &text, on_event, &mut token_count, &mut first_token, &mut result, emit_done,
+                            &text, on_event, &mut token_count, &mut first_token,
+                            &mut result, emit_done, tool_tx.as_ref(),
                         ) {
                             let _ = on_event.send(StreamEvent::Error { message: e.clone() });
                             return Err(e);
@@ -151,89 +164,3 @@ fn build_retry_request(request: &ChatRequest, error_body: &str) -> Option<ChatRe
     }
     if changed { Some(retry) } else { None }
 }
-
-fn process_chunk(
-    text: &str,
-    on_event: &AgentEventEmitter,
-    token_count: &mut u32,
-    first_token: &mut Option<std::time::Instant>,
-    result: &mut StreamResult,
-    should_emit_done: bool,
-) -> Result<(), String> {
-    let chunk: serde_json::Value =
-        serde_json::from_str(text).map_err(|e| format!("JSON invalide: {e}"))?;
-
-    if let Some(err) = chunk["error"].as_str() {
-        eprintln!("[ollama-stream] erreur modèle: {err}");
-        return Err(format!("Ollama: {err}"));
-    }
-
-    if chunk["done"].as_bool() == Some(true) {
-        result.eval_count = chunk["eval_count"].as_u64().unwrap_or(0) as u32;
-        result.prompt_tokens = chunk["prompt_eval_count"].as_u64().unwrap_or(0) as u32;
-        if should_emit_done {
-            return emit_done(on_event, &chunk);
-        }
-        return Ok(());
-    }
-
-    let msg = &chunk["message"];
-
-    if let Some(thinking) = msg["thinking"].as_str() {
-        if !thinking.is_empty() {
-            result.thinking.push_str(thinking);
-            let _ = on_event.send(StreamEvent::Thinking {
-                content: thinking.to_string(),
-            });
-        }
-    }
-
-    if let Some(content) = msg["content"].as_str() {
-        let cleaned = clean_think_tags(content);
-        if !cleaned.is_empty() {
-            result.content.push_str(&cleaned);
-            *token_count += 1;
-            if first_token.is_none() {
-                *first_token = Some(std::time::Instant::now());
-            }
-            let tps = compute_tps(*token_count, *first_token);
-            let _ = on_event.send(StreamEvent::Token {
-                content: cleaned,
-                token_count: *token_count,
-                tps,
-            });
-        }
-    }
-
-    if let Some(tool_calls) = msg["tool_calls"].as_array() {
-        for tc in tool_calls {
-            let func = &tc["function"];
-            let name = func["name"].as_str().unwrap_or("").to_string();
-            let args = func["arguments"].clone();
-            result.tool_calls.push((name.clone(), args.clone()));
-            let _ = on_event.send(StreamEvent::ToolCall {
-                name,
-                arguments: args,
-            });
-        }
-    }
-
-    Ok(())
-}
-
-fn emit_done(on_event: &AgentEventEmitter, chunk: &serde_json::Value) -> Result<(), String> {
-    let ec = chunk["eval_count"].as_u64().unwrap_or(0) as u32;
-    let ed = chunk["eval_duration"].as_u64().unwrap_or(1);
-    let pt = chunk["prompt_eval_count"].as_u64().unwrap_or(0) as u32;
-    let final_tps = if ed > 0 { ec as f64 / (ed as f64 / 1e9) } else { 0.0 };
-
-    let _ = on_event.send(StreamEvent::Done {
-        eval_count: ec,
-        eval_duration_ns: ed,
-        final_tps,
-        prompt_tokens: pt,
-    });
-    Ok(())
-}
-
-use crate::services::stream_utils::{compute_tps, clean_think_tags};

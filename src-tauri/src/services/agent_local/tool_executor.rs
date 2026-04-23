@@ -4,6 +4,7 @@ use crate::services::agent_local::tool_dispatcher;
 use crate::services::agent_local::types_ollama::ChatMessage;
 use crate::services::agent_local::types_tools::ToolResult;
 use crate::services::agent_local::write_guard::WriteGuard;
+use std::collections::HashMap;
 use tokio_util::sync::CancellationToken;
 
 use super::tool_executor_helpers::{check_write_guard, post_record_read, push_tool_result};
@@ -19,14 +20,39 @@ pub async fn run_tools(
     cancel: CancellationToken,
     write_guard: &mut WriteGuard,
 ) {
+    run_tools_with_eager(
+        on_event, messages, tool_calls, working_dir, mode, session_id, cancel, write_guard, None,
+    )
+    .await;
+}
+
+pub async fn run_tools_with_eager(
+    on_event: &AgentEventEmitter,
+    messages: &mut Vec<ChatMessage>,
+    tool_calls: &[(String, serde_json::Value)],
+    working_dir: &std::path::Path,
+    mode: &str,
+    session_id: &str,
+    cancel: CancellationToken,
+    write_guard: &mut WriteGuard,
+    mut eager_results: Option<HashMap<usize, ToolResult>>,
+) {
     if mode == "manual" {
         run_sequential(
             on_event, messages, tool_calls, working_dir, session_id, cancel, write_guard,
         )
         .await;
     } else {
-        run_with_parallel_reads(on_event, messages, tool_calls, working_dir, cancel, write_guard)
-            .await;
+        run_with_parallel_reads(
+            on_event,
+            messages,
+            tool_calls,
+            working_dir,
+            cancel,
+            write_guard,
+            eager_results.as_mut(),
+        )
+        .await;
     }
 }
 
