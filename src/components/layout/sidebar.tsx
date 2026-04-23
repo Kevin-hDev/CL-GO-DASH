@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import { UserCircle, ChatsCircle, Gear } from "@/components/ui/icons";
 import type { Icon } from "@phosphor-icons/react";
 import { ThemedIcon } from "@/components/ui/themed-icon";
-import logoSrc from "@/assets/logo.png";
 import heartbeatDark from "@/assets/heartbeat.png";
 import heartbeatLight from "@/assets/heartbeat-light.png";
 import { DragRegion } from "./drag-region";
@@ -56,17 +55,6 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
     >
       {/* Drag region for traffic lights */}
       <DragRegion />
-
-      {/* Logo */}
-      <div
-        className="flex items-center gap-3 whitespace-nowrap overflow-hidden"
-        style={{ paddingLeft: 5, paddingTop: 8, paddingBottom: 16 }}
-      >
-        <img src={logoSrc} alt="CL-GO" style={{ width: "2.5rem", height: "2.5rem", borderRadius: 6, flexShrink: 0 }} />
-        <span style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--ink)" }} className="opacity-0 group-hover/sb:opacity-100 transition-opacity duration-150">
-          {t("nav.appName")}
-        </span>
-      </div>
 
       {/* Nav items */}
       <div className="flex flex-col flex-1" style={{ gap: 2 }}>
