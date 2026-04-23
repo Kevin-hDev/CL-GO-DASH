@@ -1,4 +1,6 @@
 use crate::services::agent_local::tool_files::{read_file, DEFAULT_LIMIT};
+// MAX_LIMIT est 50_000 — on le réimporte pour les tests de borne
+const MAX_LIMIT: usize = 50_000;
 use std::io::Write;
 use tempfile::NamedTempFile;
 
@@ -125,5 +127,55 @@ async fn read_file_default_limit() {
     assert!(
         result.content.contains("offset=2000"),
         "doit indiquer offset=2000 pour la suite"
+    );
+}
+
+#[tokio::test]
+async fn read_file_limit_capped_at_max() {
+    // Un fichier de 100 lignes, on demande limit = usize::MAX (overflow potentiel)
+    let lines: Vec<String> = (1..=100).map(|i| format!("row{i}")).collect();
+    let lines_ref: Vec<&str> = lines.iter().map(|s| s.as_str()).collect();
+    let f = make_temp_file(&lines_ref);
+    let working_dir = f.path().parent().unwrap();
+    let result = read_file(
+        f.path().to_str().unwrap(),
+        working_dir,
+        0,
+        usize::MAX, // valeur extrême — doit être bornée à MAX_LIMIT
+    )
+    .await;
+    assert!(!result.is_error, "ne doit pas être une erreur");
+    // Toutes les 100 lignes doivent être présentes (100 < MAX_LIMIT)
+    assert!(
+        result.content.contains("100\trow100"),
+        "la ligne 100 doit être présente"
+    );
+    // Pas de message de continuation (toutes les lignes lues)
+    assert!(
+        !result.content.contains("restante"),
+        "ne doit pas avoir de message de continuation"
+    );
+}
+
+#[tokio::test]
+async fn read_file_limit_overflow_with_large_offset() {
+    // Test que saturating_add empêche l'overflow : offset + limit ne doit pas déborder
+    let lines: Vec<String> = (1..=10).map(|i| format!("row{i}")).collect();
+    let lines_ref: Vec<&str> = lines.iter().map(|s| s.as_str()).collect();
+    let f = make_temp_file(&lines_ref);
+    let working_dir = f.path().parent().unwrap();
+    // offset = MAX_LIMIT - 1, limit = MAX_LIMIT → saturating_add bornerait à 2*MAX_LIMIT-1
+    // mais le fichier n'a que 10 lignes donc start = min(MAX_LIMIT-1, 10) = 10
+    let result = read_file(
+        f.path().to_str().unwrap(),
+        working_dir,
+        MAX_LIMIT - 1,
+        MAX_LIMIT,
+    )
+    .await;
+    assert!(!result.is_error, "ne doit pas paniquer ni déborder");
+    assert!(
+        result.content.trim().is_empty(),
+        "offset au-delà de la fin → contenu vide"
     );
 }

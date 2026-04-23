@@ -42,7 +42,8 @@ async fn run_sequential(
 ) {
     for (name, args) in tool_calls {
         if let Err(msg) = check_write_guard(name, args, working_dir, write_guard) {
-            push_tool_result(on_event, messages, name, ToolResult::err(msg));
+            let tr = tool_dispatcher::enrich_error(ToolResult::err(msg), name);
+            push_tool_result(on_event, messages, name, tr);
             continue;
         }
 

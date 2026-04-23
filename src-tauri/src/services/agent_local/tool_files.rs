@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 const MAX_READ_SIZE: u64 = 20 * 1024 * 1024;
 const MAX_LIST_ENTRIES: usize = 500;
 pub const DEFAULT_LIMIT: usize = 2000;
+const MAX_LIMIT: usize = 50_000;
 
 fn resolve_read_path(path: &str, working_dir: &Path) -> Result<PathBuf, String> {
     let p = Path::new(path);
@@ -37,7 +38,8 @@ pub async fn read_file(path: &str, working_dir: &Path, offset: usize, limit: usi
     let lines: Vec<&str> = raw.lines().collect();
     let total = lines.len();
     let start = offset.min(total);
-    let end = (start + limit).min(total);
+    let limit = limit.min(MAX_LIMIT);
+    let end = start.saturating_add(limit).min(total);
     let slice = &lines[start..end];
     let mut output = String::with_capacity(slice.len() * 80);
     for (i, line) in slice.iter().enumerate() {

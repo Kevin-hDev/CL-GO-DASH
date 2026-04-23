@@ -6,6 +6,8 @@ use crate::services::agent_local::write_guard::WriteGuard;
 use futures_util::future::join_all;
 use tokio_util::sync::CancellationToken;
 
+const MAX_PARALLEL: usize = 10;
+
 use super::tool_executor_helpers::{
     check_write_guard, post_record_read, push_tool_result,
 };
@@ -35,17 +37,25 @@ pub async fn run_with_parallel_reads(
         let is_write = !is_last && !is_read_only(tool_calls[i].0.as_str());
 
         if is_last || is_write {
-            // Flush le batch read-only accumulé
+            // Flush le batch read-only accumulé, par chunks de MAX_PARALLEL
             if !read_batch.is_empty() {
                 let batch: Vec<_> = std::mem::take(&mut read_batch);
-                let futs: Vec<_> = batch
-                    .iter()
-                    .map(|(_, name, args)| tool_dispatcher::dispatch(name, args, working_dir))
-                    .collect();
-                let results = join_all(futs).await;
-                for ((_, name, args), tr) in batch.iter().zip(results.into_iter()) {
-                    post_record_read(name, args, working_dir, &tr, write_guard);
-                    ordered_results.push((name, tr));
+                for chunk in batch.chunks(MAX_PARALLEL) {
+                    if cancel.is_cancelled() {
+                        for (_, name, _) in chunk {
+                            ordered_results.push((name, ToolResult::err("Annulé.")));
+                        }
+                        continue;
+                    }
+                    let futs: Vec<_> = chunk
+                        .iter()
+                        .map(|(_, name, args)| tool_dispatcher::dispatch(name, args, working_dir))
+                        .collect();
+                    let results = join_all(futs).await;
+                    for ((_, name, args), tr) in chunk.iter().zip(results.into_iter()) {
+                        post_record_read(name, args, working_dir, &tr, write_guard);
+                        ordered_results.push((name, tr));
+                    }
                 }
             }
 
@@ -56,7 +66,7 @@ pub async fn run_with_parallel_reads(
             // Exécute le write séquentiellement
             let (name, args) = &tool_calls[i];
             let tr = match check_write_guard(name, args, working_dir, write_guard) {
-                Err(msg) => ToolResult::err(msg),
+                Err(msg) => tool_dispatcher::enrich_error(ToolResult::err(msg), name),
                 Ok(()) => {
                     if cancel.is_cancelled() {
                         ToolResult::err("Annulé.")

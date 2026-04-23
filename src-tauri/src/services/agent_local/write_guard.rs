@@ -1,6 +1,8 @@
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
+const MAX_READ_PATHS: usize = 1000;
+
 pub struct WriteGuard {
     read_paths: HashSet<PathBuf>,
 }
@@ -11,7 +13,11 @@ impl WriteGuard {
     }
 
     /// Enregistre qu'un fichier a été lu dans cette session.
+    /// Collection bornée à MAX_READ_PATHS — au-delà, les nouveaux ajouts sont ignorés.
     pub fn record_read(&mut self, path: &Path) {
+        if self.read_paths.len() >= MAX_READ_PATHS {
+            return;
+        }
         if let Ok(canonical) = path.canonicalize() {
             self.read_paths.insert(canonical);
         } else {

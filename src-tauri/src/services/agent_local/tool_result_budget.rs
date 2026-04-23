@@ -20,10 +20,10 @@ pub fn apply_budget(messages: &mut [ChatMessage]) {
         .map(|(i, _)| i)
         .collect();
 
-    // 2. Calculer le total des chars
+    // 2. Calculer le total des chars (Unicode — pas des octets)
     let total: usize = tool_indices
         .iter()
-        .map(|&i| messages[i].content.len())
+        .map(|&i| messages[i].content.chars().count())
         .sum();
 
     // 3. Si sous le budget, rien à faire
@@ -40,7 +40,7 @@ pub fn apply_budget(messages: &mut [ChatMessage]) {
         if remaining <= MAX_TOTAL_RESULT_CHARS {
             break;
         }
-        remaining -= messages[idx].content.len();
+        remaining -= messages[idx].content.chars().count();
         messages[idx].content = CLEARED_PLACEHOLDER.to_string();
     }
 }
