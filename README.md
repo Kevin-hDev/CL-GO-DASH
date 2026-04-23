@@ -44,6 +44,31 @@ Application desktop agentique (Tauri 2 + React 19) pour LLM locaux via Ollama et
 
 ## Installation
 
+### macOS / Linux (une commande)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Kevin-hDev/CL-GO-DASH/main/install.sh | bash
+```
+
+Télécharge la dernière release, installe l'app et la lance automatiquement.
+- **macOS** : installe dans `/Applications/`
+- **Linux** : installe dans `~/.local/bin/` (dépendances système installées automatiquement)
+
+### Windows
+
+Télécharge le `.msi` depuis la [dernière release](https://github.com/Kevin-hDev/CL-GO-DASH/releases/latest) et lance l'installateur.
+
+### Mises à jour
+
+Les mises à jour sont automatiques : une notification apparaît dans l'app quand une nouvelle version est disponible. Un clic et l'app se met à jour toute seule.
+
+---
+
+## Développement
+
+### Prérequis
+- **Git LFS** : requis pour cloner le repo (le binaire Ollama bundlé y est stocké)
+
 ```bash
 # 1. Installer Git LFS (une fois par machine)
 # macOS :
