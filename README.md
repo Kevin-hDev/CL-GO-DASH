@@ -54,9 +54,13 @@ Télécharge la dernière release, installe l'app et la lance automatiquement.
 - **macOS** : installe dans `/Applications/`
 - **Linux** : installe dans `~/.local/bin/` (dépendances système installées automatiquement)
 
-### Windows
+### Windows (PowerShell)
 
-Télécharge le `.msi` depuis la [dernière release](https://github.com/Kevin-hDev/CL-GO-DASH/releases/latest) et lance l'installateur.
+```powershell
+irm https://raw.githubusercontent.com/Kevin-hDev/CL-GO-DASH/main/install.ps1 | iex
+```
+
+Télécharge la dernière release, lance l'installateur `.msi` automatiquement.
 
 ### Mises à jour
 
