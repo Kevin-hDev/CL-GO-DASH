@@ -116,7 +116,7 @@ export function AppLayout({
   }, [toggleSidebar, onBack, onForward, onNewSession]);
 
   return (
-    <div className={`app-root ${sidebarOpen ? "" : "sidebar-hidden"} ${fullscreen ? "is-fullscreen" : ""}`}>
+    <div className={`app-root ${IS_MAC ? "os-mac" : "os-other"} ${sidebarOpen ? "" : "sidebar-hidden"} ${fullscreen ? "is-fullscreen" : ""}`}>
       <WindowToolbar
         sidebarOpen={sidebarOpen}
         onToggleSidebar={toggleSidebar}

@@ -1,4 +1,6 @@
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { listen } from "@tauri-apps/api/event";
+import { useTranslation } from "react-i18next";
 import { AppLayout } from "@/components/layout/app-layout";
 import { useTheme } from "@/hooks/use-theme";
 import { useTabHistory } from "@/hooks/use-tab-history";
@@ -19,6 +21,15 @@ export default function App() {
     });
 
   const { theme, setTheme } = useTheme();
+  const { t } = useTranslation();
+  const [vaultError, setVaultError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const unlisten = listen<string>("vault-init-failed", (e) => {
+      setVaultError(e.payload);
+    });
+    return () => { unlisten.then((fn) => fn()).catch(() => {}); };
+  }, []);
 
   const hbTab = HeartbeatTab({
     activeWakeupId: nav.wakeupId,
@@ -62,6 +73,16 @@ export default function App() {
   }, [push]);
 
   return (
+    <>
+    {vaultError && (
+      <div style={{
+        position: "fixed", top: 0, left: 0, right: 0, zIndex: 9999,
+        padding: "8px 16px", background: "#991b1b", color: "white",
+        fontSize: "var(--text-xs)", textAlign: "center", cursor: "pointer",
+      }} onClick={() => setVaultError(null)}>
+        {t("errors.keyringFailed")}
+      </div>
+    )}
     <AppLayout
       activeTab={activeTab}
       onTabChange={(t) => push({ tab: t })}
@@ -75,5 +96,6 @@ export default function App() {
       onSearchSelect={handleSearchSelect}
       onNewSession={handleShowWelcome}
     />
+    </>
   );
 }

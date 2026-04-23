@@ -9,7 +9,7 @@ use services::agent_local::ollama_client::OllamaClient;
 use services::ollama_lifecycle::{self, OllamaSidecar};
 use services::scheduler::Scheduler;
 use std::collections::HashMap;
-use tauri::{Manager, RunEvent, WindowEvent};
+use tauri::{Emitter, Manager, RunEvent, WindowEvent};
 use tokio::sync::Mutex;
 use tokio_util::sync::CancellationToken;
 
@@ -36,6 +36,7 @@ pub fn run() {
             }
             if let Err(e) = services::api_keys::init() {
                 eprintln!("[vault] init failed: {}", e);
+                let _ = app.emit("vault-init-failed", e.to_string());
             }
             if let Err(e) = ollama_lifecycle::start_sidecar(app.handle()) {
                 eprintln!("[ollama] sidecar start failed: {}", e);
@@ -50,6 +51,14 @@ pub fn run() {
             if config.advanced.start_hidden {
                 if let Some(win) = app.get_webview_window("main") {
                     let _ = win.hide();
+                }
+            }
+
+            // Linux/Windows : décorations standard (pas de titlebar overlay)
+            #[cfg(not(target_os = "macos"))]
+            {
+                if let Some(win) = app.get_webview_window("main") {
+                    let _ = win.set_decorations(true);
                 }
             }
 

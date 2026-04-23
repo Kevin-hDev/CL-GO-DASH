@@ -1,34 +1,37 @@
-/// One-shot migration: copie depuis l'ancien dossier ~/.local/share/cl-go/
-/// (utilisé par CL-GO) vers ~/.local/share/cl-go-dash/ au premier démarrage
-/// de cette nouvelle version. L'ancien dossier est laissé intact (CL-GO continue
-/// d'y écrire). N'écrase rien si le nouveau dossier existe déjà.
+use crate::services::paths::data_dir;
+
 pub fn run() -> Result<(), String> {
     use std::fs;
 
-    let home = dirs::home_dir().ok_or("cannot resolve home")?;
-    let new = home.join(".local/share/cl-go-dash");
+    let new = data_dir();
 
     fs::create_dir_all(new.join("logs"))
         .map_err(|e| format!("create logs dir: {}", e))?;
 
-    // Migration 1 : ~/.local/share/cl-go/ (legacy CL-GO)
-    let cl_go_legacy = home.join(".local/share/cl-go");
-    let legacy_marker = new.join(".migrated-from-cl-go");
-    if !legacy_marker.exists() && cl_go_legacy.exists() {
-        copy_items(&cl_go_legacy, &new);
-        let _ = fs::write(&legacy_marker, b"ok");
+    #[cfg(not(target_os = "windows"))]
+    {
+        let home = dirs::home_dir().ok_or("cannot resolve home")?;
+
+        let cl_go_legacy = home.join(".local/share/cl-go");
+        let legacy_marker = new.join(".migrated-from-cl-go");
+        if !legacy_marker.exists() && cl_go_legacy.exists() {
+            copy_items(&cl_go_legacy, &new);
+            let _ = fs::write(&legacy_marker, b"ok");
+        }
     }
 
-    // Migration 2 : ~/Library/Application Support/cl-go-dash/ (bug Phase 2 macOS)
-    let app_support_wrong = dirs::data_local_dir().and_then(|d| {
-        let p = d.join("cl-go-dash");
-        if p != new { Some(p) } else { None }
-    });
-    let appsupport_marker = new.join(".migrated-from-appsupport");
-    if let Some(wrong) = app_support_wrong {
-        if !appsupport_marker.exists() && wrong.exists() {
-            copy_items(&wrong, &new);
-            let _ = fs::write(&appsupport_marker, b"ok");
+    #[cfg(target_os = "macos")]
+    {
+        let app_support_wrong = dirs::data_local_dir().and_then(|d| {
+            let p = d.join("cl-go-dash");
+            if p != new { Some(p) } else { None }
+        });
+        let appsupport_marker = new.join(".migrated-from-appsupport");
+        if let Some(wrong) = app_support_wrong {
+            if !appsupport_marker.exists() && wrong.exists() {
+                copy_items(&wrong, &new);
+                let _ = fs::write(&appsupport_marker, b"ok");
+            }
         }
     }
 

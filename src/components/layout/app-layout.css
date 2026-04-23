@@ -84,3 +84,15 @@
   border-left: none;
   padding-left: 19px;
 }
+
+/* Linux/Windows : fond opaque, pas de blur ni d'animation compositor */
+.app-root.os-other {
+  background: var(--void);
+}
+
+.os-other .app-sidebar-block {
+  background: var(--shell);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  animation: none;
+}

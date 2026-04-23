@@ -371,7 +371,8 @@
     "crashMessage": "Une erreur est survenue. Relance l'application.",
     "operationFailed": "L'opération a échoué. Réessaye.",
     "streamStartFailed": "Le flux n'a pas pu démarrer.",
-    "streamInterrupted": "Le flux s'est interrompu."
+    "streamInterrupted": "Le flux s'est interrompu.",
+    "keyringFailed": "Impossible d'accéder au trousseau de clés. Installe gnome-keyring ou kwallet pour stocker les clés API."
   },
   "updates": {
     "tooltip": "Mises à jour disponibles",

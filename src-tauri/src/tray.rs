@@ -5,8 +5,8 @@ use tauri::{
 };
 
 fn tray_lang() -> &'static str {
-    let lang_env = std::env::var("LANG").unwrap_or_default();
-    if lang_env.to_lowercase().starts_with("fr") { "fr" } else { "en" }
+    let locale = sys_locale::get_locale().unwrap_or_default();
+    if locale.to_lowercase().starts_with("fr") { "fr" } else { "en" }
 }
 
 pub fn create_tray(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
