@@ -3,6 +3,7 @@ use serde::Serialize;
 const GITHUB_REPO: &str = "Kevin-hDev/CL-GO-DASH";
 
 #[derive(Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct AppUpdateInfo {
     pub version: String,
     pub download_url: String,
