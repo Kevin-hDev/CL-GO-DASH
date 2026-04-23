@@ -28,12 +28,17 @@ pub async fn chat_stream(
 ) -> Result<(), String> {
     const MAX_ACTIVE_STREAMS: usize = 32;
     let cancel = CancellationToken::new();
+    let generation = crate::STREAM_GENERATION.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     {
         let mut map = streams.0.lock().await;
         if map.len() >= MAX_ACTIVE_STREAMS {
             return Err("Trop de flux actifs simultanément".to_string());
         }
-        map.insert(session_id.clone(), cancel.clone());
+        // Cancel l'ancien stream s'il existe pour cette session
+        if let Some((old_token, _)) = map.remove(&session_id) {
+            old_token.cancel();
+        }
+        map.insert(session_id.clone(), (cancel.clone(), generation));
     }
 
     let provider = provider.unwrap_or_else(|| "ollama".to_string());
@@ -57,18 +62,31 @@ pub async fn chat_stream(
         )
         .await;
 
-        task_app
-            .state::<ActiveStreams>()
-            .0
-            .lock()
-            .await
-            .remove(&stream_session);
+        // Cleanup : ne supprime que si NOTRE génération est encore active
+        // (une nouvelle requête a pu remplacer notre entrée)
+        let is_current = {
+            let state = task_app.state::<ActiveStreams>();
+            let mut map = state.0.lock().await;
+            match map.get(&stream_session) {
+                Some((_, gen)) if *gen == generation => {
+                    map.remove(&stream_session);
+                    true
+                }
+                _ => false,
+            }
+        };
 
-        crate::services::agent_local::permission_gate::clear_session(&stream_session).await;
-        crate::services::agent_local::session_store::remove_session_lock(&stream_session).await;
+        if is_current {
+            crate::services::agent_local::permission_gate::clear_session(&stream_session).await;
+            crate::services::agent_local::session_store::remove_session_lock(&stream_session).await;
+        }
 
         if let Err(message) = result {
-            let _ = emitter.send(StreamEvent::Error { message });
+            // Ne pas envoyer l'erreur "Annulé" — le frontend gère déjà le cancel
+            // via stopSession(). Envoyer ce message tuerait un nouveau stream.
+            if is_current && message != "Annulé" {
+                let _ = emitter.send(StreamEvent::Error { message });
+            }
         }
     });
 
@@ -222,7 +240,7 @@ pub async fn cancel_agent_request(
     session_id: String,
     streams: tauri::State<'_, ActiveStreams>,
 ) -> Result<(), String> {
-    if let Some(token) = streams.0.lock().await.remove(&session_id) {
+    if let Some((token, _)) = streams.0.lock().await.remove(&session_id) {
         token.cancel();
     }
     Ok(())

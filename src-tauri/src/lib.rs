@@ -13,7 +13,9 @@ use tauri::{Manager, RunEvent, WindowEvent};
 use tokio::sync::Mutex;
 use tokio_util::sync::CancellationToken;
 
-pub struct ActiveStreams(pub Mutex<HashMap<String, CancellationToken>>);
+pub struct ActiveStreams(pub Mutex<HashMap<String, (CancellationToken, u64)>>);
+
+static STREAM_GENERATION: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
 pub fn run() {
     let app = tauri::Builder::default()
@@ -155,6 +157,9 @@ pub fn run() {
             commands::pty_write,
             commands::pty_resize,
             commands::pty_kill,
+            // Updates
+            commands::check_app_update,
+            commands::check_ollama_updates,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application");
