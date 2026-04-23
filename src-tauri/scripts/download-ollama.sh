@@ -44,7 +44,7 @@ if [ -n "${EXPECTED}" ]; then
   echo "✓ SHA256 OK"
 fi
 
-echo "→ Extraction (binaire uniquement)..."
+echo "→ Extraction (bundle complet avec libs GPU)..."
 case "${OS}" in
   darwin)
     tar -xzf "/tmp/${ARCHIVE}" -C "${TMP_EXTRACT}"
@@ -61,19 +61,21 @@ case "${OS}" in
     ;;
 esac
 
-# Copier uniquement le binaire ollama (pas les libs GPU — Ollama les télécharge au besoin)
-BINARY=$(find "${TMP_EXTRACT}" -name "ollama" -o -name "ollama.exe" | head -1)
-if [ -z "${BINARY}" ]; then
-  echo "✗ Binaire ollama introuvable dans l'archive" >&2
-  rm -rf "${TMP_EXTRACT}" "/tmp/${ARCHIVE}"
-  exit 1
+# Déplacer le contenu vers DEST (gère les archives avec ou sans dossier parent)
+INNER=$(find "${TMP_EXTRACT}" -maxdepth 1 -mindepth 1)
+INNER_COUNT=$(echo "${INNER}" | wc -l | tr -d ' ')
+if [ "${INNER_COUNT}" = "1" ] && [ -d "${INNER}" ]; then
+  cp -Rf "${INNER}/"* "${DEST}/" 2>/dev/null || true
+  cp -Rf "${INNER}/".[!.]* "${DEST}/" 2>/dev/null || true
+else
+  cp -Rf "${TMP_EXTRACT}/"* "${DEST}/" 2>/dev/null || true
 fi
 
-cp "${BINARY}" "${DEST}/"
+rm -rf "${TMP_EXTRACT}" "/tmp/${ARCHIVE}"
 
 if [ "${OS}" != "windows" ] && [ -f "${DEST}/ollama" ]; then
   chmod +x "${DEST}/ollama"
 fi
 
-rm -rf "${TMP_EXTRACT}" "/tmp/${ARCHIVE}"
-echo "✓ Ollama v${OLLAMA_VERSION} (${OS}/${ARCH}) → ${DEST}/"
+SIZE=$(du -sh "${DEST}" | awk '{print $1}')
+echo "✓ Ollama v${OLLAMA_VERSION} (${OS}/${ARCH}) → ${DEST}/ (${SIZE})"
