@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { open } from "@tauri-apps/plugin-shell";
 import { ThemedIcon } from "@/components/ui/themed-icon";
 import type { AppUpdate, OllamaModelUpdate, PullingState } from "@/hooks/use-update-checker";
 import logoIcon from "@/assets/logo.png";
@@ -9,22 +8,23 @@ import ollamaLight from "@/assets/ollama-light.png";
 import "./update-notifications.css";
 
 interface UpdateNotificationsProps {
-  open: boolean;
+  isOpen: boolean;
   onClose: () => void;
   appUpdate: AppUpdate | null;
   ollamaUpdates: OllamaModelUpdate[];
   pulling: PullingState | null;
+  appDownloading: boolean;
+  appPercent: number;
   onPullModel: (fullName: string) => void;
+  onDownloadApp: (dmgUrl: string) => void;
   anchorLeft: number;
 }
 
 export function UpdateNotifications({
-  open: isOpen,
-  onClose,
-  appUpdate,
-  ollamaUpdates,
-  pulling,
-  onPullModel,
+  isOpen, onClose,
+  appUpdate, ollamaUpdates,
+  pulling, appDownloading, appPercent,
+  onPullModel, onDownloadApp,
   anchorLeft,
 }: UpdateNotificationsProps) {
   const { t } = useTranslation();
@@ -57,11 +57,7 @@ export function UpdateNotifications({
   return (
     <>
       <div className="update-overlay" onClick={handleClose} />
-      <div
-        ref={listRef}
-        className="update-list"
-        style={{ left: anchorLeft }}
-      >
+      <div ref={listRef} className="update-list" style={{ left: anchorLeft }}>
         {items.map((item, i) => (
           <BubbleItem
             key={item.id}
@@ -70,7 +66,10 @@ export function UpdateNotifications({
             closing={closing}
             totalCount={items.length}
             pulling={pulling}
+            appDownloading={appDownloading}
+            appPercent={appPercent}
             onPullModel={onPullModel}
+            onDownloadApp={onDownloadApp}
             t={t}
           />
         ))}
@@ -85,7 +84,7 @@ interface ItemData {
   name: string;
   sub: string;
   fullName?: string;
-  downloadUrl?: string;
+  dmgUrl?: string;
 }
 
 function buildItems(app: AppUpdate | null, models: OllamaModelUpdate[]): ItemData[] {
@@ -96,7 +95,7 @@ function buildItems(app: AppUpdate | null, models: OllamaModelUpdate[]): ItemDat
       type: "app",
       name: "CL-GO",
       sub: `Version ${app.version}`,
-      downloadUrl: app.downloadUrl,
+      dmgUrl: app.dmgUrl,
     });
   }
   for (const m of models) {
@@ -117,18 +116,28 @@ interface BubbleItemProps {
   closing: boolean;
   totalCount: number;
   pulling: PullingState | null;
+  appDownloading: boolean;
+  appPercent: number;
   onPullModel: (fullName: string) => void;
+  onDownloadApp: (dmgUrl: string) => void;
   t: (kk: string, opts?: Record<string, string>) => string;
 }
 
-function BubbleItem({ item, index, closing, totalCount, pulling, onPullModel, t }: BubbleItemProps) {
+function BubbleItem({
+  item, index, closing, totalCount,
+  pulling, appDownloading, appPercent,
+  onPullModel, onDownloadApp, t,
+}: BubbleItemProps) {
   const delay = closing
     ? (totalCount - 1 - index) * 80
     : index * 80;
 
-  const isPulling = pulling
+  const isOllamaPulling = pulling
     ? !pulling.fullName.localeCompare(item.fullName ?? "")
     : false;
+
+  const showProgress = item.type === "app" ? appDownloading : isOllamaPulling;
+  const percent = item.type === "app" ? appPercent : (pulling?.percent ?? 0);
 
   return (
     <div
@@ -151,24 +160,22 @@ function BubbleItem({ item, index, closing, totalCount, pulling, onPullModel, t 
         <span className="update-bubble-sub">{item.sub}</span>
       </div>
 
-      {isPulling && pulling ? (
+      {showProgress ? (
         <div className="update-bubble-progress">
           <div className="update-bubble-progress-bar">
             <div
               className="update-bubble-progress-fill"
-              style={{ width: `${pulling.percent}%` }}
+              style={{ width: `${percent}%` }}
             />
           </div>
-          <span className="update-bubble-progress-text">
-            {pulling.percent}%
-          </span>
+          <span className="update-bubble-progress-text">{percent}%</span>
         </div>
       ) : (
         <button
           className="update-bubble-btn"
           onClick={() => {
-            if (item.type === "app" && item.downloadUrl) {
-              open(item.downloadUrl);
+            if (item.type === "app" && item.dmgUrl) {
+              onDownloadApp(item.dmgUrl);
             } else if (item.fullName) {
               onPullModel(item.fullName);
             }

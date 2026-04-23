@@ -159,6 +159,7 @@ pub fn run() {
             commands::pty_kill,
             // Updates
             commands::check_app_update,
+            commands::download_app_update,
             commands::check_ollama_updates,
         ])
         .build(tauri::generate_context!())

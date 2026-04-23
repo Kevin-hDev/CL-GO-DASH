@@ -7,7 +7,12 @@ const CHECK_INTERVAL_MS = 60 * 60 * 1000;
 
 export interface AppUpdate {
   version: string;
-  downloadUrl: string;
+  dmgUrl: string;
+}
+
+interface DownloadProgress {
+  completed: number;
+  total: number;
 }
 
 export interface OllamaModelUpdate {
@@ -26,6 +31,8 @@ export function useUpdateChecker() {
   const [appUpdate, setAppUpdate] = useState<AppUpdate | null>(null);
   const [ollamaUpdates, setOllamaUpdates] = useState<OllamaModelUpdate[]>([]);
   const [pulling, setPulling] = useState<PullingState | null>(null);
+  const [appDownloading, setAppDownloading] = useState(false);
+  const [appPercent, setAppPercent] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval>>(undefined);
 
   const checkAll = useCallback(async () => {
@@ -58,6 +65,28 @@ export function useUpdateChecker() {
     };
   }, [checkAll]);
 
+  const downloadAppUpdate = useCallback(async (dmgUrl: string) => {
+    setAppDownloading(true);
+    setAppPercent(0);
+
+    const channel = new Channel<DownloadProgress>();
+    channel.onmessage = (event: DownloadProgress) => {
+      const pct = event.total > 0
+        ? Math.round((event.completed / event.total) * 100)
+        : 0;
+      setAppPercent(pct);
+    };
+
+    try {
+      await invoke("download_app_update", { dmgUrl, onProgress: channel });
+      setAppUpdate(null);
+    } catch {
+      /* download failed */
+    } finally {
+      setAppDownloading(false);
+    }
+  }, []);
+
   const pullModel = useCallback(async (fullName: string) => {
     setPulling({ fullName, percent: 0, status: "" });
 
@@ -81,5 +110,9 @@ export function useUpdateChecker() {
 
   const totalCount = (appUpdate ? 1 : 0) + ollamaUpdates.length;
 
-  return { appUpdate, ollamaUpdates, pulling, totalCount, pullModel, checkAll };
+  return {
+    appUpdate, ollamaUpdates, pulling,
+    appDownloading, appPercent,
+    totalCount, pullModel, downloadAppUpdate, checkAll,
+  };
 }

@@ -159,12 +159,15 @@ export function AppLayout({
         onSelect={onSearchSelect}
       />
       <UpdateNotifications
-        open={updatesOpen}
+        isOpen={updatesOpen}
         onClose={closeUpdates}
         appUpdate={updates.appUpdate}
         ollamaUpdates={updates.ollamaUpdates}
         pulling={updates.pulling}
+        appDownloading={updates.appDownloading}
+        appPercent={updates.appPercent}
         onPullModel={updates.pullModel}
+        onDownloadApp={updates.downloadAppUpdate}
         anchorLeft={IS_MAC ? 197 : 122}
       />
     </div>
