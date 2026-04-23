@@ -1,6 +1,7 @@
 use crate::services::agent_local::permission_gate::{self, PermissionDecision};
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::tool_dispatcher;
+use crate::services::agent_local::tool_hooks::{run_post_hooks, run_pre_hooks, PreHookDecision};
 use crate::services::agent_local::types_ollama::ChatMessage;
 use crate::services::agent_local::types_tools::ToolResult;
 use crate::services::agent_local::write_guard::WriteGuard;
@@ -68,20 +69,41 @@ async fn run_sequential(
     write_guard: &mut WriteGuard,
 ) {
     for (name, args) in tool_calls {
-        if let Err(msg) = check_write_guard(name, args, working_dir, write_guard) {
+        // Pre-hook : path traversal, fichiers sensibles, etc.
+        let (blocked, effective_args_owned);
+        match run_pre_hooks(name, args) {
+            PreHookDecision::Deny(msg) => {
+                let tr = tool_dispatcher::enrich_error(ToolResult::err(msg), name);
+                push_tool_result(on_event, messages, name, tr);
+                continue;
+            }
+            PreHookDecision::AllowModified(new_args) => {
+                effective_args_owned = Some(new_args);
+                blocked = false;
+            }
+            PreHookDecision::Allow => {
+                effective_args_owned = None;
+                blocked = false;
+            }
+        }
+        let _ = blocked;
+        let effective_args = effective_args_owned.as_ref().unwrap_or(args);
+
+        if let Err(msg) = check_write_guard(name, effective_args, working_dir, write_guard) {
             let tr = tool_dispatcher::enrich_error(ToolResult::err(msg), name);
             push_tool_result(on_event, messages, name, tr);
             continue;
         }
 
-        let allowed = check_allowed(on_event, name, args, session_id, cancel.clone()).await;
+        let allowed = check_allowed(on_event, name, effective_args, session_id, cancel.clone()).await;
         let tr = if allowed {
-            tool_dispatcher::dispatch(name, args, working_dir, session_id).await
+            tool_dispatcher::dispatch(name, effective_args, working_dir, session_id).await
         } else {
             ToolResult::err("L'utilisateur a refusé cette action.")
         };
 
-        post_record_read(name, args, working_dir, &tr, write_guard);
+        let tr = run_post_hooks(name, effective_args, tr);
+        post_record_read(name, effective_args, working_dir, &tr, write_guard);
         push_tool_result(on_event, messages, name, tr);
     }
 }
