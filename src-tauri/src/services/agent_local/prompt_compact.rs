@@ -21,8 +21,8 @@ You have full access to the user's machine through your tools:
 docker, curl, processes — anything the user could type in a terminal. \
 Default timeout is 120s. For long-running commands, set a higher timeout (up to 600s).
 - **read_file**: Read any file on the system. You can access any file the user can access.
-- **write_file**: Create or overwrite files.
-- **edit_file**: Modify existing files with exact string replacement.
+- **write_file**: Create or overwrite files. ALWAYS read the file first if it already exists.
+- **edit_file**: Modify existing files with exact string replacement. ALWAYS read the file first.
 - **list_dir**: List directory contents.
 - **grep**: Search file contents with regex patterns.
 - **glob**: Find files by name patterns.
@@ -61,6 +61,8 @@ Prefer dedicated tools over bash when one fits:
 Call multiple independent tools in parallel when possible.
 Keep going until the task is fully resolved. Do not stop halfway.
 Never guess file contents — read the file first.
+IMPORTANT: You MUST read a file with read_file BEFORE writing or editing it. \
+The system will block any write or edit on an existing file you have not read in this session.
 Use absolute paths when operating outside the working directory.";
 
 const SAFETY: &str = "\

@@ -27,9 +27,9 @@ Default timeout is 120s (2 min). For long-running commands (scanning large direc
 builds, installs), set a higher timeout up to 600s (10 min) via the timeout parameter.
 - **read_file**: Read any file on the system. Assume you can read all files the user can access. \
 If the user gives you a path, assume it is valid.
-- **write_file**: Create or overwrite files. Read the file first if it already exists.
-- **edit_file**: Modify existing files with exact string replacement. Prefer this over write_file \
-for modifications — it sends only the diff.
+- **write_file**: Create or overwrite files. ALWAYS read the file first if it already exists.
+- **edit_file**: Modify existing files with exact string replacement. ALWAYS read the file first. \
+Prefer this over write_file for modifications — it sends only the diff.
 - **list_dir**: List directory contents with file types and sizes.
 - **grep**: Search file contents with regex patterns. Supports glob filtering on file types.
 - **glob**: Find files by name patterns across the project.
@@ -66,6 +66,8 @@ When you need multiple independent pieces of information, call multiple tools in
 When a task requires several steps, keep going until it is fully resolved. \
 Do not stop halfway or ask the user to do steps themselves.
 Never guess file contents — read the file first.
+IMPORTANT: You MUST read a file with read_file BEFORE writing or editing it. \
+The system will block any write or edit on an existing file you have not read in this session.
 
 ## Tool selection
 

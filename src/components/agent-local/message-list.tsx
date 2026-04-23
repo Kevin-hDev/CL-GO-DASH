@@ -78,15 +78,7 @@ export function MessageList({
       )}
       {isStreaming && currentTools.length > 0 && <ToolBubble tools={currentTools} />}
 
-      {error && !isStreaming && (
-        <div style={{
-          color: "var(--signal-error)", fontSize: "12px",
-          fontFamily: "var(--font-mono, monospace)",
-          padding: "8px 14px", margin: "6px 0", opacity: 0.9,
-        }}>
-          {error}
-        </div>
-      )}
+      {error && !isStreaming && <ErrorBubble message={error} />}
     </>
   );
 }
@@ -131,6 +123,23 @@ function findLastIndex<T>(arr: T[], pred: (item: T) => boolean): number {
     if (pred(arr[i])) return i;
   }
   return -1;
+}
+
+function ErrorBubble({ message }: { message: string }) {
+  return (
+    <div style={{
+      width: "100%", maxWidth: "660px",
+      background: "rgba(239, 68, 68, 0.06)",
+      border: "1px solid rgba(239, 68, 68, 0.2)",
+      borderRadius: "var(--radius-md, 8px)",
+      padding: "10px 14px", alignSelf: "center", margin: "6px auto",
+      color: "var(--signal-error)", fontSize: "12px",
+      fontFamily: "var(--font-mono, monospace)", lineHeight: 1.5,
+      wordBreak: "break-word",
+    }}>
+      {message}
+    </div>
+  );
 }
 
 function LoadingIndicator() {
