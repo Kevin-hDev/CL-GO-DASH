@@ -115,7 +115,7 @@ async fn check_allowed(
     session_id: &str,
     cancel: CancellationToken,
 ) -> bool {
-    if !permission_gate::requires_permission(name) {
+    if !permission_gate::requires_permission(name, args) {
         return true;
     }
     if permission_gate::is_allowed(session_id, name).await {

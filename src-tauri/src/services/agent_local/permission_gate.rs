@@ -1,5 +1,6 @@
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::types_ollama::StreamEvent;
+use regex::Regex;
 use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::LazyLock;
@@ -14,10 +15,48 @@ pub enum PermissionDecision {
     Deny,
 }
 
-const GATED_TOOLS: &[&str] = &["bash", "write_file", "edit_file", "web_fetch"];
+const GATED_TOOLS: &[&str] = &["write_file", "edit_file", "web_fetch"];
 
-pub fn requires_permission(tool_name: &str) -> bool {
-    GATED_TOOLS.contains(&tool_name)
+static SAFE_BASH_PATTERNS: LazyLock<Vec<Regex>> = LazyLock::new(|| {
+    [
+        r"^ls\b",
+        r"^cat\b",
+        r"^head\b",
+        r"^tail\b",
+        r"^wc\b",
+        r"^grep\b",
+        r"^find\b",
+        r"^git\s+(status|log|diff|branch|show|remote|tag)\b",
+        r"^pwd$",
+        r"^echo\b",
+        r"^which\b",
+        r"^cargo\s+(check|test|clippy|build)\b",
+        r"^npx\s+tsc\b",
+        r"^npm\s+run\b",
+        r"^tree\b",
+        r"^file\b",
+        r"^stat\b",
+        r"^du\b",
+        r"^df\b",
+    ]
+    .into_iter()
+    .filter_map(|p| Regex::new(p).ok())
+    .collect()
+});
+
+fn is_safe_bash(command: &str) -> bool {
+    let trimmed = command.trim();
+    SAFE_BASH_PATTERNS.iter().any(|re| re.is_match(trimmed))
+}
+
+pub fn requires_permission(tool_name: &str, args: &serde_json::Value) -> bool {
+    match tool_name {
+        "bash" => {
+            let cmd = args["command"].as_str().unwrap_or("");
+            !is_safe_bash(cmd)
+        }
+        _ => GATED_TOOLS.contains(&tool_name),
+    }
 }
 
 static PENDING: LazyLock<Mutex<HashMap<String, oneshot::Sender<PermissionDecision>>>> =

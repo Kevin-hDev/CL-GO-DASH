@@ -11,6 +11,8 @@ pub mod prompt_compact;
 pub mod prompt_detailed;
 pub mod modelfile_parser;
 pub mod permission_gate;
+#[cfg(test)]
+pub mod permission_gate_tests;
 pub mod security;
 pub mod ollama_client;
 pub mod ollama_registry;
