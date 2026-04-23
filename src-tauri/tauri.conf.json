@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/nicholasVilela/tauri-rs/refs/heads/master/crates/tauri-utils/schema.json",
   "productName": "CL-GO",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "identifier": "com.clgo.dash",
   "build": {
     "beforeDevCommand": "[ -f src-tauri/resources/ollama-bundle/ollama ] || (cd src-tauri && bash scripts/download-ollama.sh); npm run dev",
