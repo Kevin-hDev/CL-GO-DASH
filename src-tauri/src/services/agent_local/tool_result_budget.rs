@@ -23,19 +23,33 @@ pub fn cleanup_old_results() {
 pub const CLEARED_PLACEHOLDER: &str =
     "[Résultat précédent tronqué — relancer le tool si nécessaire]";
 
+const PERSIST_MARKER: &str = "[Résultat complet disponible : ";
+
+/// Extrait le chemin du fichier persistant s'il est présent dans le contenu.
+fn extract_persist_path(content: &str) -> Option<&str> {
+    let start = content.find(PERSIST_MARKER)? + PERSIST_MARKER.len();
+    let end = content[start..].find(']')? + start;
+    Some(&content[start..end])
+}
+
+/// Vérifie si un message a déjà été tronqué (commence par CLEARED_PLACEHOLDER).
+fn is_cleared(content: &str) -> bool {
+    content.starts_with(CLEARED_PLACEHOLDER)
+}
+
 /// Applique un budget sur les anciens tool results.
 ///
 /// Si la somme totale des chars des messages `role="tool"` dépasse
 /// `MAX_TOTAL_RESULT_CHARS`, les plus anciens sont remplacés par
 /// `CLEARED_PLACEHOLDER` jusqu'à redescendre sous le budget.
 /// Les 2 derniers tool results sont toujours préservés.
-/// Les messages déjà tronqués (content == CLEARED_PLACEHOLDER) ne comptent pas.
+/// Les messages déjà tronqués (commençant par CLEARED_PLACEHOLDER) ne comptent pas.
 pub fn apply_budget(messages: &mut [ChatMessage]) {
     // 1. Collecter les indices des messages role="tool" non déjà tronqués
     let tool_indices: Vec<usize> = messages
         .iter()
         .enumerate()
-        .filter(|(_, m)| m.role == "tool" && m.content != CLEARED_PLACEHOLDER)
+        .filter(|(_, m)| m.role == "tool" && !is_cleared(&m.content))
         .map(|(i, _)| i)
         .collect();
 
@@ -60,7 +74,10 @@ pub fn apply_budget(messages: &mut [ChatMessage]) {
             break;
         }
         remaining -= messages[idx].content.chars().count();
-        messages[idx].content = CLEARED_PLACEHOLDER.to_string();
+        let persist_info = extract_persist_path(&messages[idx].content)
+            .map(|p| format!(" Fichier complet : {p}"))
+            .unwrap_or_default();
+        messages[idx].content = format!("{CLEARED_PLACEHOLDER}{persist_info}");
     }
 }
 
@@ -143,6 +160,29 @@ mod unit_tests {
         // user message non touché
         assert_eq!(msgs[0].content, big);
         // 2 tool results sous 100k ensemble (60k+60k=120k > 100k mais 2 derniers préservés)
+        assert_eq!(msgs[1].content, big);
+        assert_eq!(msgs[2].content, big);
+    }
+
+    #[test]
+    fn preserves_persist_path_when_clearing() {
+        // Si le contenu contient un lien vers le fichier persistant, il doit être conservé
+        let path = "/tmp/cl-go/tool-results/abc123/result.txt";
+        let big_with_link = format!(
+            "{}\n[Résultat complet disponible : {path}]",
+            "x".repeat(60_000)
+        );
+        let big = "x".repeat(60_000);
+        let mut msgs = vec![
+            tool_msg(&big_with_link),
+            tool_msg(&big),
+            tool_msg(&big),
+        ];
+        apply_budget(&mut msgs);
+        // Le 1er doit être tronqué mais conserver le lien
+        let expected = format!("{CLEARED_PLACEHOLDER} Fichier complet : {path}");
+        assert_eq!(msgs[0].content, expected, "le lien persistant doit être conservé");
+        // Les 2 derniers préservés
         assert_eq!(msgs[1].content, big);
         assert_eq!(msgs[2].content, big);
     }

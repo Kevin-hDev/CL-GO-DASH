@@ -56,17 +56,18 @@ pub async fn run_agent_loop(
 
         // Le sender est droppé quand le stream se termine → le receiver se ferme
         // et collect_eager_results peut retourner ses résultats.
-        let eager_results = eager_handle.await.unwrap_or_default();
 
         total_eval += result.eval_count;
         total_prompt += result.prompt_tokens;
         messages.push(build_assistant_message(&result));
 
         if result.tool_calls.is_empty() {
+            eager_handle.abort();
             break;
         }
 
         if turn == MAX_TURNS - 1 {
+            eager_handle.abort();
             let _ = on_event.send(StreamEvent::Error {
                 message: "Limite de tours atteinte".to_string(),
             });
@@ -74,9 +75,12 @@ pub async fn run_agent_loop(
         }
 
         if let Err(msg) = breaker.check(&result.tool_calls) {
+            eager_handle.abort();
             let _ = on_event.send(StreamEvent::Error { message: msg });
             break;
         }
+
+        let eager_results = eager_handle.await.unwrap_or_default();
 
         let mode = agent_settings::get_permission_mode().await;
         tool_executor::run_tools_with_eager(

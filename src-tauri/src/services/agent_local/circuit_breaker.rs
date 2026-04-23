@@ -35,11 +35,30 @@ impl CircuitBreaker {
     }
 }
 
+fn normalize_json(value: &serde_json::Value) -> String {
+    match value {
+        serde_json::Value::Object(map) => {
+            let mut pairs: Vec<_> = map.iter().collect();
+            pairs.sort_by_key(|(k, _)| k.as_str());
+            let entries: Vec<String> = pairs
+                .into_iter()
+                .map(|(k, v)| format!("{}:{}", k, normalize_json(v)))
+                .collect();
+            format!("{{{}}}", entries.join(","))
+        }
+        serde_json::Value::Array(arr) => {
+            let entries: Vec<String> = arr.iter().map(normalize_json).collect();
+            format!("[{}]", entries.join(","))
+        }
+        _ => value.to_string(),
+    }
+}
+
 fn compute_signature(tool_calls: &[(String, serde_json::Value)]) -> u64 {
     let mut hasher = DefaultHasher::new();
     for (name, args) in tool_calls {
         name.hash(&mut hasher);
-        args.to_string().hash(&mut hasher);
+        normalize_json(args).hash(&mut hasher);
     }
     hasher.finish()
 }

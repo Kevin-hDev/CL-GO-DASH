@@ -42,6 +42,27 @@ mod tests {
     }
 
     #[test]
+    fn trips_on_reordered_json_keys() {
+        // Deux tool_calls identiques en valeur mais avec clés JSON dans un ordre différent
+        // doivent produire la même signature → détecter la boucle
+        let mut breaker = CircuitBreaker::new();
+
+        let call_ab = vec![("write_file".to_string(), json!({ "path": "x", "content": "y" }))];
+        let call_ba = vec![("write_file".to_string(), json!({ "content": "y", "path": "x" }))];
+
+        // 1er appel (ab) : OK
+        assert!(breaker.check(&call_ab).is_ok());
+        // 2ème appel (ba, clés inversées) : même signature normalisée → compteur = 2, OK
+        assert!(breaker.check(&call_ba).is_ok());
+        // 3ème appel (ab) : compteur = 3 → ERREUR circuit breaker
+        let result = breaker.check(&call_ab);
+        assert!(
+            result.is_err(),
+            "les clés inversées doivent être détectées comme identiques"
+        );
+    }
+
+    #[test]
     fn resets_on_different_call() {
         let mut breaker = CircuitBreaker::new();
         let same = call("bash", 99);
