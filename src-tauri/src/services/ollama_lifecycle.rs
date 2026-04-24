@@ -5,6 +5,8 @@ use std::sync::Mutex;
 use std::time::Duration;
 use tauri::{AppHandle, Manager};
 
+use crate::services::gpu_detect;
+
 pub struct OllamaSidecar(pub Mutex<Option<Child>>);
 
 impl OllamaSidecar {
@@ -47,11 +49,27 @@ pub fn start_sidecar(app: &AppHandle) -> Result<bool, String> {
     let binary = ollama_binary_path()?;
     let bundle_dir = binary.parent().ok_or("no parent dir")?.to_path_buf();
 
+    let log_dir = crate::services::paths::data_dir().join("logs");
+    let _ = std::fs::create_dir_all(&log_dir);
+    let stderr_file = std::fs::File::create(log_dir.join("ollama-sidecar.log"))
+        .map_err(|e| format!("log file: {e}"))?;
+
     let mut cmd = Command::new(&binary);
     cmd.arg("serve")
         .current_dir(&bundle_dir)
         .stdout(Stdio::null())
-        .stderr(Stdio::null());
+        .stderr(Stdio::from(stderr_file));
+
+    let gpu = gpu_detect::detect();
+    eprintln!("[ollama] GPU détecté : {:?}", gpu);
+
+    #[cfg(target_os = "windows")]
+    {
+        if matches!(gpu, gpu_detect::GpuVendor::Amd) {
+            cmd.env("OLLAMA_VULKAN", "1");
+            eprintln!("[ollama] AMD détecté sur Windows → OLLAMA_VULKAN=1");
+        }
+    }
 
     #[cfg(target_os = "windows")]
     {

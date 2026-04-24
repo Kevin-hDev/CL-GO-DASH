@@ -1,11 +1,11 @@
 # CL-GO-DASH
 
 Desktop app agentique pour LLM locaux et cloud (style Claude Code). Tauri 2 + React 19, macOS/Linux/Windows.
-Données dans `~/.local/share/cl-go-dash/` (macOS/Linux) ou `%APPDATA%\cl-go-dash` (Windows), centralisé via `services::paths::data_dir()`.
+Données dans `~/.local/share/cl-go-dash/` sur les 3 OS, centralisé via `services::paths::data_dir()`.
 
 ## Stack
 - Tauri 2 (Rust) + React 19 + TypeScript + Vite
-- Ollama embarqué en sidecar (`src-tauri/resources/ollama-bundle/`, téléchargé via `scripts/download-ollama.sh`)
+- Ollama téléchargé au premier lancement dans `~/.local/share/cl-go-dash/ollama-bundle/` (dev: `scripts/download-ollama.sh`)
 - Vault chiffré XChaCha20-Poly1305 (master key dans le keyring OS, 1 seul accès au démarrage)
 - Scheduler Tokio interne (pas de crontab)
 - File watching via crate `notify` (FSEvents macOS, inotify Linux, ReadDirectoryChangesW Windows)
@@ -34,7 +34,8 @@ Données dans `~/.local/share/cl-go-dash/` (macOS/Linux) ou `%APPDATA%\cl-go-das
 - `services/config.rs` — lecture tolérante de `config.json`
 - `services/terminal/` — PTY cross-platform (portable-pty)
 - `tray.rs` — création tray icon (labels FR/EN dynamiques)
-- `storage_migration.rs` — migration one-shot depuis CL-GO legacy
+- `services/gpu_detect.rs` — détection GPU (sysfs Linux, PowerShell Windows)
+- `storage_migration.rs` — migration legacy + init structure premier lancement
 - `ollama_polling.rs` — polling status Ollama (événement `ollama-status`)
 - `models/config.rs` — `ScheduledWakeup`, `WakeupSchedule` (enum `kind` once/daily/weekly)
 
@@ -45,7 +46,7 @@ Données dans `~/.local/share/cl-go-dash/` (macOS/Linux) ou `%APPDATA%\cl-go-das
 - `lib/platform.ts` — détection OS centralisée (`IS_MAC`, `MOD`, `ALT`, `MOD_KEY`)
 - `i18n/` — traductions FR/EN (`en.json`, `fr.json`)
 
-## Data sources (`~/.local/share/cl-go-dash/` ou `%APPDATA%\cl-go-dash`)
+## Data sources (`~/.local/share/cl-go-dash/` sur les 3 OS)
 
 - `secrets.enc` — vault chiffré contenant les clés API
 - `configured-providers.json` — registry des providers configurés
@@ -58,7 +59,7 @@ Données dans `~/.local/share/cl-go-dash/` (macOS/Linux) ou `%APPDATA%\cl-go-das
 
 ## Rules
 
-- **Paths** : TOUJOURS utiliser `crate::services::paths::data_dir()` — JAMAIS hardcoder le chemin. macOS/Linux = `~/.local/share/cl-go-dash`, Windows = `%APPDATA%\cl-go-dash`
+- **Paths** : TOUJOURS utiliser `crate::services::paths::data_dir()` — JAMAIS hardcoder le chemin. Chemin unifié `~/.local/share/cl-go-dash` sur les 3 OS
 - **Clés API** : vault chiffré XChaCha20 (`vault.rs`), master key unique dans le keyring OS (`keyring` crate). Les clés vivent en `Zeroizing<String>` en mémoire, zéroïsées après usage
 - **JS ne voit JAMAIS une clé** : les commandes Tauri exposent `set_api_key / delete_api_key / has_api_key / list_configured_providers / test_api_key` — aucune n'expose `get`. Rust charge la clé au moment de l'appel HTTPS et la zéroïse après
 - **Collections bornées** : `ActiveStreams` max 32, PTY sessions max 16, messages par session max 2000
@@ -71,6 +72,35 @@ Données dans `~/.local/share/cl-go-dash/` (macOS/Linux) ou `%APPDATA%\cl-go-das
 - String slicing UTF-8 safe : `char_indices()`, jamais byte slice
 - File watcher debounce 200ms
 - Ollama téléchargé via `cd src-tauri && bash scripts/download-ollama.sh` (pas de Git LFS)
+
+## Release
+
+### Process pour publier une nouvelle version
+
+1. Tu bumpes la version dans les **3 fichiers** :
+   - `package.json` → `"version": "X.Y.Z"`
+   - `src-tauri/Cargo.toml` → `version = "X.Y.Z"`
+   - `src-tauri/tauri.conf.json` → `"version": "X.Y.Z"`
+2. Tu commit + push sur `main`
+3. Tu crées la release avec `gh release create vX.Y.Z --title "CL-GO vX.Y.Z" --notes "..."`
+4. Le CI `.github/workflows/release.yml` se déclenche automatiquement sur le tag `v*`
+5. Le CI build en parallèle sur 3 OS et attache les assets à la release :
+   - `macos-latest` (aarch64) → `.dmg`
+   - `ubuntu-22.04` (x64) → `.AppImage` + `.deb`
+   - `windows-latest` (x64) → NSIS installer (`.exe`)
+
+### Build local (dev uniquement)
+
+```bash
+npm run tauri build
+# macOS : target/release/bundle/dmg/CL-GO_X.Y.Z_aarch64.dmg
+```
+
+### Points importants
+
+- Le CI ne bundle PAS Ollama — il est téléchargé au premier lancement par l'app
+- Pas de code signing — macOS Gatekeeper peut bloquer si téléchargé via navigateur (d'où le script `install.sh` qui utilise `curl`)
+- La release est créée en mode draft par le CI, il faut la publier manuellement sur GitHub si besoin
 
 ## i18n
 - Tu gères les traductions Français/anglais quand tu ajoutes du texte dans l'application, tu ne codes aucun texte en dur
