@@ -18,6 +18,12 @@
   background: var(--surface);
 }
 
+.ms-trigger-empty {
+  border-color: var(--edge);
+  border-style: dashed;
+  color: var(--ink-faint);
+}
+
 .ms-dropdown {
   position: absolute;
   bottom: 100%;

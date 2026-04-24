@@ -59,9 +59,9 @@ export function ModelSelector({
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="ms-trigger"
+        className={`ms-trigger${selectedModel ? "" : " ms-trigger-empty"}`}
       >
-        {selectedModel}
+        {selectedModel || t("agentLocal.selectModel")}
         {thinkingEnabled && showThinkingToggle && (
           <span style={{ marginLeft: 4, color: "var(--select-text)" }}>{t("agentLocal.thinkingToggle")}</span>
         )}

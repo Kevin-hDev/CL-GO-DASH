@@ -99,6 +99,7 @@
     "copy": "Copy",
     "modelSearch": "Search a model…",
     "modelEmpty": "No matching model.",
+    "selectModel": "Choose a model",
     "thinkingToggle": "Extended thinking",
     "exportMd": "Download as Markdown",
     "search": "Search in conversation",

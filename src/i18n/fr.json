@@ -101,6 +101,7 @@
     "search": "Rechercher dans la conversation",
     "modelSearch": "Rechercher un modèle…",
     "modelEmpty": "Aucun modèle ne correspond.",
+    "selectModel": "Choisir un modèle",
     "thinkingToggle": "Réflexion étendue",
     "send": "Envoyer",
     "cancel": "Annuler"

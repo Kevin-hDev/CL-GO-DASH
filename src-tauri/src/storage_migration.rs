@@ -37,12 +37,88 @@ pub fn run() -> Result<(), String> {
 
     #[cfg(target_os = "windows")]
     {
-        let home = dirs::home_dir().ok_or("cannot resolve home")?;
-        let wrong_path = home.join(".local").join("share").join("cl-go-dash");
-        let win_marker = new.join(".migrated-from-unix-path");
-        if !win_marker.exists() && wrong_path.exists() {
-            copy_items(&wrong_path, &new);
-            let _ = fs::write(&win_marker, b"ok");
+        let appdata = dirs::data_dir().map(|d| d.join("cl-go-dash"));
+        let win_marker = new.join(".migrated-from-appdata");
+        if let Some(old) = appdata {
+            if !win_marker.exists() && old.exists() {
+                copy_items(&old, &new);
+                let _ = fs::write(&win_marker, b"ok");
+            }
+        }
+    }
+
+    init_base_structure(&new)?;
+
+    Ok(())
+}
+
+fn init_base_structure(base: &std::path::Path) -> Result<(), String> {
+    use std::fs;
+
+    let dirs = [
+        "memory/core",
+        "memory/archive",
+        "memory/episodes",
+        "memory/hypotheses",
+        "memory/knowledge",
+        "memory/procedures",
+        "inbox",
+        "skills",
+        "agent-sessions",
+        "tool-results",
+        "translations",
+        "logs/heartbeat",
+    ];
+    for d in &dirs {
+        fs::create_dir_all(base.join(d))
+            .map_err(|e| format!("create {d}: {e}"))?;
+    }
+
+    let json_defaults: &[(&str, &str)] = &[
+        ("config.json", "{}"),
+        ("agent-settings.json", "{\"permissionMode\":\"auto\"}"),
+        ("agent-tabs.json", "[]"),
+        ("configured-providers.json", "[]"),
+        ("favorite-models.json", "[]"),
+        ("projects.json", "[]"),
+        ("terminal-tabs.json", "[]"),
+        ("inbox/pending.json", "[]"),
+        (
+            "personality-injection.json",
+            "{\
+                \"identity.md\":false,\
+                \"principles.md\":false,\
+                \"user.md\":false,\
+                \"idea-discovery.md\":false\
+            }",
+        ),
+    ];
+    for (name, content) in json_defaults {
+        let path = base.join(name);
+        if !path.exists() {
+            fs::write(&path, content)
+                .map_err(|e| format!("write {name}: {e}"))?;
+        }
+    }
+
+    let empty_files = [
+        "AGENT.md",
+        "memory/core/identity.md",
+        "memory/core/principles.md",
+        "memory/core/user.md",
+        "memory/archive/INDEX.md",
+        "memory/episodes/INDEX.md",
+        "memory/hypotheses/INDEX.md",
+        "memory/knowledge/INDEX.md",
+        "memory/procedures/INDEX.md",
+        "memory/explorer-log.yaml",
+        "inbox/idea-discovery.md",
+    ];
+    for name in &empty_files {
+        let path = base.join(name);
+        if !path.exists() {
+            fs::write(&path, b"")
+                .map_err(|e| format!("write {name}: {e}"))?;
         }
     }
 

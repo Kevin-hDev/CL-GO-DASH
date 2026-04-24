@@ -1,5 +1,6 @@
 pub mod agent_local;
 pub mod api_keys;
+pub mod gpu_detect;
 pub mod config;
 pub mod favorite_models;
 pub mod file_watcher;

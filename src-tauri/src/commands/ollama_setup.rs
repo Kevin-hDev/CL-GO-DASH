@@ -27,13 +27,7 @@ pub async fn download_ollama(
         return Ok(());
     }
 
-    let archive_name = if cfg!(target_os = "macos") {
-        "ollama-darwin.tgz"
-    } else if cfg!(target_os = "windows") {
-        "ollama-windows-amd64.zip"
-    } else {
-        "ollama-linux-amd64.tar.zst"
-    };
+    let archive_name = select_archive_name();
 
     let url = format!(
         "https://github.com/ollama/ollama/releases/download/v{}/{}",
@@ -72,6 +66,28 @@ pub async fn download_ollama(
 #[tauri::command]
 pub async fn start_ollama_sidecar(app: tauri::AppHandle) -> Result<bool, String> {
     crate::services::ollama_lifecycle::start_sidecar(&app)
+}
+
+fn select_archive_name() -> &'static str {
+    if cfg!(target_os = "macos") {
+        return "ollama-darwin.tgz";
+    }
+
+    use crate::services::gpu_detect::{self, GpuVendor};
+    let gpu = gpu_detect::detect();
+    eprintln!("[ollama] GPU détecté : {:?}", gpu);
+
+    if cfg!(target_os = "windows") {
+        match gpu {
+            GpuVendor::Amd => "ollama-windows-amd64-rocm.zip",
+            _ => "ollama-windows-amd64.zip",
+        }
+    } else {
+        match gpu {
+            GpuVendor::Amd => "ollama-linux-amd64-rocm.tar.zst",
+            _ => "ollama-linux-amd64.tar.zst",
+        }
+    }
 }
 
 async fn download_file(
