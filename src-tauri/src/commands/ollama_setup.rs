@@ -69,6 +69,11 @@ pub async fn download_ollama(
     Ok(())
 }
 
+#[tauri::command]
+pub async fn start_ollama_sidecar(app: tauri::AppHandle) -> Result<bool, String> {
+    crate::services::ollama_lifecycle::start_sidecar(&app)
+}
+
 async fn download_file(
     url: &str,
     dest: &std::path::Path,

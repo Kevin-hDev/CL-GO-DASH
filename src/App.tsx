@@ -77,7 +77,18 @@ export default function App() {
   }, [push]);
 
   if (ollamaReady === false) {
-    return <OllamaSetupScreen onComplete={() => setOllamaReady(true)} />;
+    return (
+      <div style={{
+        width: "100vw", height: "100vh",
+        background: "var(--void)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+      }}>
+        <OllamaSetupScreen onComplete={() => {
+          invoke("start_ollama_sidecar").catch(() => {});
+          setOllamaReady(true);
+        }} />
+      </div>
+    );
   }
 
   return (

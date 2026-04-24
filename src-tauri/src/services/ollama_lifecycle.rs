@@ -47,13 +47,19 @@ pub fn start_sidecar(app: &AppHandle) -> Result<bool, String> {
     let binary = ollama_binary_path()?;
     let bundle_dir = binary.parent().ok_or("no parent dir")?.to_path_buf();
 
-    let child = Command::new(&binary)
-        .arg("serve")
+    let mut cmd = Command::new(&binary);
+    cmd.arg("serve")
         .current_dir(&bundle_dir)
         .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .spawn()
-        .map_err(|e| format!("spawn ollama: {e}"))?;
+        .stderr(Stdio::null());
+
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
+    }
+
+    let child = cmd.spawn().map_err(|e| format!("spawn ollama: {e}"))?;
 
     eprintln!("[ollama] sidecar démarré pid={}", child.id());
 

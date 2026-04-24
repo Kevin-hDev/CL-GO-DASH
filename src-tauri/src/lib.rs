@@ -183,6 +183,7 @@ pub fn run() {
             // Ollama setup
             commands::is_ollama_installed,
             commands::download_ollama,
+            commands::start_ollama_sidecar,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application");
