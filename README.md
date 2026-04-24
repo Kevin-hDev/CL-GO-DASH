@@ -155,10 +155,12 @@ Données dans `~/.local/share/cl-go-dash/` sur les 3 OS :
 
 L'application embarque **Ollama** comme sidecar pour éviter toute dépendance externe :
 
+- Au premier lancement, un écran de setup télécharge Ollama automatiquement dans `~/.local/share/cl-go-dash/ollama-bundle/`
 - Au démarrage, l'app vérifie si un daemon Ollama tourne déjà sur `localhost:11434`
 - Si oui (Ollama.app déjà installée), elle l'utilise tel quel
-- Si non, elle lance son propre binaire bundlé
+- Si non, elle lance son propre binaire téléchargé
 - À la fermeture, le sidecar est arrêté proprement (SIGTERM Unix / kill Windows + grace period 3s)
+- Sur Linux, détection GPU automatique (AMD → archive ROCm, Nvidia → archive standard avec CUDA)
 
 **Les modèles sont partagés** avec Ollama.app si elle est installée (`~/.ollama/models/`).
 

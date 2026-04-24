@@ -215,6 +215,114 @@ src/components/personality/personality-tab.tsx   # Toggles injection contexte
 
 ---
 
+## Ollama — téléchargement au premier lancement
+
+Depuis v0.6.5, Ollama n'est plus bundlé dans l'app. Il est téléchargé au premier lancement :
+
+1. L'app appelle `is_ollama_installed()` → vérifie si le port 11434 est ouvert OU si le binaire existe dans `~/.local/share/cl-go-dash/ollama-bundle/`
+2. Si non → affiche l'écran de setup → `download_ollama()` télécharge l'archive depuis GitHub Releases
+3. Archive extraite dans `~/.local/share/cl-go-dash/ollama-bundle/`
+4. Validation post-extraction : le binaire `ollama` (ou `ollama.exe`) doit exister, sinon erreur
+
+### Choix de l'archive par OS
+
+| OS | Archive | Détection GPU |
+|---|---|---|
+| macOS | `ollama-darwin.tgz` | Non (Metal intégré) |
+| Windows | `ollama-windows-amd64.zip` | Non (archive standard uniquement) |
+| Linux | `ollama-linux-amd64.tar.zst` ou `-rocm.tar.zst` | Oui (sysfs `/sys/class/drm/card*/device/vendor`) |
+
+**Fichiers** : `commands/ollama_setup.rs`, `commands/ollama_extract.rs`, `services/gpu_detect.rs`
+
+### Validations du download (v0.6.7)
+
+- Taille minimum 10 MB (détecte les pages HTML ou downloads incomplets)
+- Refus si Content-Type `text/html`
+- Vérification que le binaire existe après extraction
+- Cleanup automatique en cas d'échec (archive temp + dossier dest)
+- PowerShell : `CREATE_NO_WINDOW` pour ne pas flasher de terminal
+
+---
+
+## Data directory
+
+Depuis v0.6.6, le chemin est unifié sur les 3 OS : `~/.local/share/cl-go-dash/`
+
+- macOS/Linux : `~/.local/share/cl-go-dash/`
+- Windows : `C:\Users\<user>\.local\share\cl-go-dash\`
+
+**Migration automatique** : si des données existent dans l'ancien emplacement (`%APPDATA%\cl-go-dash` sur Windows, `~/Library/Application Support/cl-go-dash` sur macOS), elles sont copiées automatiquement.
+
+**Initialisation** : au premier lancement, `init_base_structure()` crée tous les dossiers et fichiers par défaut (memory/core, skills, inbox, config.json, AGENT.md, etc.).
+
+**Fichiers** : `services/paths.rs`, `storage_migration.rs`
+
+---
+
+## Problèmes connus — GPU
+
+### Windows : GPU AMD non utilisé
+
+**Symptôme** : Ollama tourne en mode CPU malgré un GPU AMD (ex: Radeon RX 7800 XT).
+
+**Ce qui a été tenté** :
+- v0.6.6 : détection GPU via PowerShell `Get-CimInstance Win32_VideoController` + téléchargement de `ollama-windows-amd64-rocm.zip`
+- **Résultat** : le zip ROCm n'est PAS un bundle autonome sur Windows — c'est un complément au bundle principal. Le télécharger seul ne fonctionne pas (ollama.exe absent).
+- v0.6.7 : revert — Windows utilise toujours `ollama-windows-amd64.zip` (archive standard)
+
+**Pistes non explorées** :
+- Télécharger les DEUX archives (standard + ROCm) et merger dans le même dossier
+- Vérifier si l'archive standard inclut déjà le support ROCm (comme elle inclut CUDA)
+- Vérifier la documentation Ollama sur le support AMD Windows — peut nécessiter l'installation d'Ollama via l'installeur officiel (`OllamaSetup.exe`) qui gère les drivers ROCm
+- Tester si les drivers AMD ROCm sont installés sur la machine Windows
+
+### Linux : GPU AMD non testé
+
+**Symptôme** : la détection GPU fonctionne (lecture sysfs), l'archive ROCm est téléchargée, mais pas encore testé en conditions réelles.
+
+### macOS : pas de problème GPU
+
+Metal est intégré nativement dans l'archive `ollama-darwin.tgz`. Aucune détection nécessaire.
+
+---
+
+## Problèmes connus — Dépendances
+
+### Windows : dépendances non installées automatiquement
+
+**Symptôme** : l'installateur NSIS installe l'app mais ne gère pas les dépendances système (WebView2, VC++ Runtime). Si manquantes, l'app peut ne pas se lancer.
+
+**Ce qui a été tenté** : rien encore — le NSIS généré par Tauri est censé inclure WebView2 bootstrapper.
+
+**Pistes** :
+- Vérifier si `tauri.conf.json` > `bundle` > `windows` a les bons paramètres pour WebView2
+- Tester sur une machine Windows vierge (sans Visual Studio ni dev tools)
+- Vérifier les logs du NSIS installer
+
+### Linux : dépendances gérées par install.sh
+
+Le script `install.sh` installe `libwebkit2gtk-4.1-0` et `libgtk-3-0` automatiquement via apt/dnf. Pas de problème signalé.
+
+### macOS : aucune dépendance externe
+
+Tout est inclus dans le `.app`.
+
+---
+
+## Problèmes connus — Affichage
+
+### Linux : fenêtre transparente
+
+**Symptôme** : le fond de l'application est transparent au lieu d'être opaque.
+
+**Ce qui a été tenté** : rien encore.
+
+**Pistes** :
+- Vérifier les paramètres `decorations` et `transparent` dans `tauri.conf.json`
+- Peut être lié au compositor (Wayland vs X11) ou au thème GTK
+
+---
+
 ## Points d'attention
 
 - **Repo public** : obligatoire pour que l'API GitHub Releases fonctionne sans token d'authentification
