@@ -7,7 +7,7 @@ Application desktop agentique (Tauri 2 + React 19) pour LLM locaux via Ollama et
 - **Agent Local** : chat avec n'importe quel modèle Ollama ou provider cloud, gestion des conversations en onglets, permissions manuelles/auto sur les outils (bash, write_file, web_fetch), réflexion approfondie (thinking)
 - **Réveils** : scheduler interne qui prompt un LLM à heure fixe (ponctuel / journalier / hebdomadaire), réponses stockées dans une conversation dédiée par modèle
 - **Clés API** : gestion centralisée des providers LLM et search. Clés stockées dans un **vault chiffré XChaCha20-Poly1305** (master key dans le keyring OS) — jamais en clair sur disque, jamais exposées au frontend
-- **Ollama embarqué** : plus besoin d'installer Ollama.app séparément — le binaire est bundlé dans l'application
+- **Ollama embarqué** : téléchargé au premier lancement, plus besoin d'installer Ollama séparément
 - **Terminal intégré** : PTY cross-platform avec onglets, raccourci Cmd/Ctrl+J
 - **Personnalité** : édition des fichiers Markdown de contexte
 - **Ollama browser** : recherche de modèles, pull, édition de modelfiles
@@ -59,7 +59,9 @@ Télécharge la dernière release, installe l'app et la lance automatiquement.
 irm https://raw.githubusercontent.com/Kevin-hDev/CL-GO-DASH/main/install.ps1 | iex
 ```
 
-Télécharge la dernière release, lance l'installateur `.msi` automatiquement.
+Télécharge la dernière release, lance l'installeur automatiquement.
+
+> **Windows Defender** : au premier lancement, l'« Accès contrôlé aux dossiers » peut bloquer `ollama.exe` (binaire non signé). Cliquer sur « Autoriser » dans la notification — ça ne redemande plus ensuite.
 
 ### Mises à jour
 
@@ -85,7 +87,7 @@ cd src-tauri && bash scripts/download-ollama.sh
 
 ```bash
 npm run tauri dev       # Mode dev (hot reload)
-npm run tauri build     # Build release (.app + .dmg / .msi / .deb)
+npm run tauri build     # Build release (.dmg / .exe / .AppImage + .deb)
 npx tsc --noEmit        # Check TypeScript
 cd src-tauri && cargo check    # Check Rust
 cd src-tauri && cargo clippy --all-targets  # Lint strict
@@ -114,7 +116,7 @@ src-tauri/                # Backend Rust + Tauri
 │   ├── storage_migration.rs  # Migration one-shot depuis CL-GO legacy
 │   ├── ollama_polling.rs # Polling status Ollama
 │   └── models/           # Schémas ScheduledWakeup, HeartbeatConfig
-└── resources/ollama-bundle/  # Binaire Ollama + libs (via Git LFS)
+└── resources/              # Icônes et ressources statiques
 
 src/                      # Frontend React
 ├── components/
@@ -135,7 +137,7 @@ src/                      # Frontend React
 
 ## Stockage local
 
-Données dans `~/.local/share/cl-go-dash/` (macOS/Linux) ou `%APPDATA%\cl-go-dash` (Windows) :
+Données dans `~/.local/share/cl-go-dash/` sur les 3 OS :
 
 | Chemin | Contenu |
 |---|---|
@@ -147,6 +149,7 @@ Données dans `~/.local/share/cl-go-dash/` (macOS/Linux) ou `%APPDATA%\cl-go-das
 | `agent-tabs.json` | État des onglets ouverts |
 | `memory/core/*.md` | Fichiers de personnalité |
 | `logs/wakeups.jsonl` | Historique d'exécution des réveils (rolling 500 lignes) |
+| `logs/ollama-sidecar.log` | Logs stderr du sidecar Ollama (écrasé à chaque démarrage) |
 
 ## Ollama — sidecar embarqué
 

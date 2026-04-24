@@ -224,3 +224,4 @@ src/components/personality/personality-tab.tsx   # Toggles injection contexte
 - **Chemins Windows** : toujours utiliser `split(/[\\/]/)` côté frontend pour extraire un nom de fichier d'un path — `split("/")` ne fonctionne pas avec les backslash Windows
 - **ROCm Linux** : production-ready (v7.2.2), auto-détecté par `select_archive_name()`. Le bundle ROCm est téléchargé automatiquement pour les GPU AMD
 - **ROCm Windows** : pas fiable pour Ollama (avril 2026), Vulkan utilisé à la place
+- **Windows Defender — Accès contrôlé aux dossiers** : au premier lancement, `ollama.exe` (binaire non signé) peut être bloqué par la protection anti-ransomware quand il essaie d'écrire sur le disque (modèles dans `~/.ollama/models/`). L'utilisateur doit cliquer "Autoriser" dans la notification — ça ne redemande plus ensuite. Pas de contournement possible sans code signing
