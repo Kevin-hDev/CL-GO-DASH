@@ -56,7 +56,7 @@ export function PersonalityTab(props?: PersonalityTabProps): { list: React.React
     try {
       const text = await api.readFile(path);
       setContent(text);
-      setFileName(path.split("/").pop() ?? "");
+      setFileName(path.split(/[\\/]/).pop() ?? "");
     } catch {
       showToast(t("personality.failedToRead"));
       setContent("Failed to read file");
