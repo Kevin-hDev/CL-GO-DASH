@@ -294,6 +294,12 @@
         "30min": "After 30 min",
         "onClose": "On app close"
       },
+      "hardwareAccelTitle": "Hardware Acceleration",
+      "hardwareAccelDesc": "Inference engine for local models",
+      "hardwareAccelCpu": "CPU",
+      "hardwareAccelGpu": "GPU",
+      "hardwareAccelRestart": "Restart Ollama",
+      "hardwareAccelRestarted": "Ollama restarted",
       "fileAccessTitle": "File Access",
       "fileAccessDesc": "Folders the LLM can read and write to",
       "addPath": "Add folder",

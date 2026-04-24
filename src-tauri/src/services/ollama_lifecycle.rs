@@ -60,14 +60,19 @@ pub fn start_sidecar(app: &AppHandle) -> Result<bool, String> {
         .stdout(Stdio::null())
         .stderr(Stdio::from(stderr_file));
 
+    let config = crate::services::config::read_config().unwrap_or_default();
+    let accel = config.advanced.hardware_accel.as_str();
     let gpu = gpu_detect::detect();
-    eprintln!("[ollama] GPU détecté : {:?}", gpu);
+    eprintln!("[ollama] GPU : {:?}, accel : {accel}", gpu);
 
-    #[cfg(target_os = "windows")]
-    {
+    if accel == "cpu" {
+        cmd.env("OLLAMA_LLM_LIBRARY", "cpu");
+        eprintln!("[ollama] mode CPU forcé");
+    } else {
+        #[cfg(target_os = "windows")]
         if matches!(gpu, gpu_detect::GpuVendor::Amd) {
             cmd.env("OLLAMA_VULKAN", "1");
-            eprintln!("[ollama] AMD détecté sur Windows → OLLAMA_VULKAN=1");
+            eprintln!("[ollama] AMD Windows → OLLAMA_VULKAN=1");
         }
     }
 

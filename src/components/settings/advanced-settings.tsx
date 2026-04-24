@@ -2,11 +2,14 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
 import { useAvailableModels } from "@/hooks/use-available-models";
+import { IS_MAC } from "@/lib/platform";
+import { showToast } from "@/lib/toast-emitter";
 import { RoundToggle } from "@/components/heartbeat/round-toggle";
 import { SettingsCard } from "./settings-card";
 import { SettingsRow } from "./settings-row";
 import { SettingsSelect, type SelectOption, type SelectGroup } from "./settings-select";
 import { PathListEditor } from "./path-list-editor";
+import { HardwareAccelControl } from "./hardware-accel-control";
 
 interface AdvancedState {
   autostart: boolean;
@@ -15,6 +18,7 @@ interface AdvancedState {
   default_model: string;
   keep_alive: string;
   allowed_paths: string[];
+  hardware_accel: string;
 }
 
 const DEFAULTS: AdvancedState = {
@@ -24,6 +28,7 @@ const DEFAULTS: AdvancedState = {
   default_model: "",
   keep_alive: "5m",
   allowed_paths: ["/"],
+  hardware_accel: "gpu",
 };
 
 export function AdvancedSettings() {
@@ -61,6 +66,14 @@ export function AdvancedSettings() {
     return result;
   }, [groups]);
 
+  const [accelChanged, setAccelChanged] = useState(false);
+  const [restarting, setRestarting] = useState(false);
+
+  const hardwareAccelOptions = useMemo((): SelectOption[] => [
+    { value: "cpu", label: t("settings.advanced.hardwareAccelCpu") },
+    { value: "gpu", label: t("settings.advanced.hardwareAccelGpu") },
+  ], [t]);
+
   const keepAliveOptions = useMemo((): SelectOption[] => [
     { value: "0", label: t("settings.advanced.keepAlive.immediately") },
     { value: "2m", label: t("settings.advanced.keepAlive.2min") },
@@ -71,17 +84,13 @@ export function AdvancedSettings() {
     { value: "forever", label: t("settings.advanced.keepAlive.onClose") },
   ], [t]);
 
+  const titleStyle = { fontSize: "var(--text-xl)", fontWeight: 700, color: "var(--ink)", marginBottom: 28 } as const;
+  const subStyle = { fontSize: "var(--text-base)", fontWeight: 600, color: "var(--ink)", marginTop: 28, marginBottom: 12 } as const;
+
   return (
     <div style={{ padding: 24, overflowY: "auto", flex: 1 }}>
       <div style={{ maxWidth: 600, width: "100%", margin: "0 auto" }}>
-        <h2 style={{
-          fontSize: "var(--text-xl)",
-          fontWeight: 700,
-          color: "var(--ink)",
-          marginBottom: 28,
-        }}>
-          {t("settings.tabs.advanced")}
-        </h2>
+        <h2 style={titleStyle}>{t("settings.tabs.advanced")}</h2>
 
         <SettingsCard>
           <SettingsRow
@@ -137,25 +146,38 @@ export function AdvancedSettings() {
               onChange={(v) => save({ keep_alive: v })}
             />
           </SettingsRow>
+
+          {!IS_MAC && (
+            <SettingsRow
+              title={t("settings.advanced.hardwareAccelTitle")}
+              description={t("settings.advanced.hardwareAccelDesc")}
+            >
+              <HardwareAccelControl
+                options={hardwareAccelOptions}
+                value={state.hardware_accel}
+                changed={accelChanged}
+                restarting={restarting}
+                onSelect={(v) => { save({ hardware_accel: v }); setAccelChanged(true); }}
+                onRestart={async () => {
+                  setRestarting(true);
+                  try {
+                    await invoke("restart_ollama_sidecar");
+                    showToast(t("settings.advanced.hardwareAccelRestarted"), "success");
+                    setAccelChanged(false);
+                  } catch { showToast("Restart failed", "error"); }
+                  finally { setRestarting(false); }
+                }}
+                restartLabel={t("settings.advanced.hardwareAccelRestart")}
+              />
+            </SettingsRow>
+          )}
         </SettingsCard>
 
-        <h3 style={{
-          fontSize: "var(--text-base)",
-          fontWeight: 600,
-          color: "var(--ink)",
-          marginTop: 28,
-          marginBottom: 12,
-        }}>
-          {t("settings.advanced.fileAccessTitle")}
-        </h3>
+        <h3 style={subStyle}>{t("settings.advanced.fileAccessTitle")}</h3>
 
         <SettingsCard>
           <div style={{ padding: "14px 20px" }}>
-            <div style={{
-              fontSize: "var(--text-xs)",
-              color: "var(--ink-muted)",
-              marginBottom: 12,
-            }}>
+            <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-muted)", marginBottom: 12 }}>
               {t("settings.advanced.fileAccessDesc")}
             </div>
             <PathListEditor

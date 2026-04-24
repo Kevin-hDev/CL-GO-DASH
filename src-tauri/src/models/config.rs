@@ -17,6 +17,7 @@ pub struct AdvancedSettings {
     pub default_model: String,
     pub keep_alive: String,
     pub allowed_paths: Vec<String>,
+    pub hardware_accel: String,
 }
 
 impl Default for AdvancedSettings {
@@ -28,6 +29,7 @@ impl Default for AdvancedSettings {
             default_model: String::new(),
             keep_alive: "5m".to_string(),
             allowed_paths: default_allowed_paths(),
+            hardware_accel: "gpu".to_string(),
         }
     }
 }

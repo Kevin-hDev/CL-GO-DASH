@@ -88,6 +88,13 @@ pub async fn start_ollama_sidecar(app: tauri::AppHandle) -> Result<bool, String>
     crate::services::ollama_lifecycle::start_sidecar(&app)
 }
 
+#[tauri::command]
+pub async fn restart_ollama_sidecar(app: tauri::AppHandle) -> Result<bool, String> {
+    crate::services::ollama_lifecycle::stop_sidecar(&app);
+    tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+    crate::services::ollama_lifecycle::start_sidecar(&app)
+}
+
 fn select_archive_name() -> &'static str {
     if cfg!(target_os = "macos") {
         return "ollama-darwin.tgz";
