@@ -70,7 +70,7 @@ fn platform_extension() -> &'static str {
     if cfg!(target_os = "macos") {
         ".dmg"
     } else if cfg!(target_os = "windows") {
-        ".msi"
+        "-setup.exe"
     } else {
         ".AppImage"
     }

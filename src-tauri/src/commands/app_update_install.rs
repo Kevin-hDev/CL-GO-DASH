@@ -30,7 +30,7 @@ pub async fn download_app_update(
     let ext = if cfg!(target_os = "macos") {
         "dmg"
     } else if cfg!(target_os = "windows") {
-        "msi"
+        "exe"
     } else {
         "AppImage"
     };
@@ -129,10 +129,12 @@ fn spawn_linux_update(_: &std::path::Path) -> Result<(), String> {
 }
 
 #[cfg(target_os = "windows")]
-fn spawn_windows_update(msi: &std::path::Path) -> Result<(), String> {
-    let msi_str = msi.display().to_string();
-    std::process::Command::new("cmd")
-        .args(["/C", "start", "/wait", "msiexec", "/i", &msi_str, "/passive"])
+fn spawn_windows_update(installer: &std::path::Path) -> Result<(), String> {
+    use std::os::windows::process::CommandExt;
+    let path_str = installer.display().to_string();
+    std::process::Command::new(&path_str)
+        .arg("/S")
+        .creation_flags(0x08000000)
         .stdin(std::process::Stdio::null())
         .stdout(std::process::Stdio::null())
         .stderr(std::process::Stdio::null())

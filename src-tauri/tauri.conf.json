@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/nicholasVilela/tauri-rs/refs/heads/master/crates/tauri-utils/schema.json",
   "productName": "CL-GO",
-  "version": "0.6.8",
+  "version": "0.6.9",
   "identifier": "com.clgo.dash",
   "build": {
     "beforeDevCommand": "npm run dev",
