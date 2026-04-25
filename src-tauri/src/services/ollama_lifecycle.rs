@@ -23,6 +23,53 @@ fn port_open() -> bool {
     .is_ok()
 }
 
+fn pid_file_path() -> PathBuf {
+    crate::services::paths::data_dir().join("ollama-sidecar.pid")
+}
+
+fn save_pid(pid: u32) {
+    let _ = std::fs::write(pid_file_path(), pid.to_string());
+}
+
+fn read_saved_pid() -> Option<u32> {
+    std::fs::read_to_string(pid_file_path()).ok()?.trim().parse().ok()
+}
+
+fn clear_pid_file() {
+    let _ = std::fs::remove_file(pid_file_path());
+}
+
+fn kill_orphan_sidecar() {
+    let Some(pid) = read_saved_pid() else { return };
+    clear_pid_file();
+
+    #[cfg(unix)]
+    {
+        let alive = unsafe { libc::kill(pid as i32, 0) == 0 };
+        if !alive { return; }
+        eprintln!("[ollama] orphelin détecté pid={pid}, kill");
+        unsafe { libc::kill(pid as i32, libc::SIGTERM); }
+        let start = std::time::Instant::now();
+        while start.elapsed() < Duration::from_secs(3) {
+            if unsafe { libc::kill(pid as i32, 0) != 0 } {
+                eprintln!("[ollama] orphelin {pid} arrêté");
+                return;
+            }
+            std::thread::sleep(Duration::from_millis(100));
+        }
+        eprintln!("[ollama] SIGKILL orphelin {pid}");
+        unsafe { libc::kill(pid as i32, libc::SIGKILL); }
+    }
+
+    #[cfg(windows)]
+    {
+        let _ = Command::new("taskkill")
+            .args(["/PID", &pid.to_string(), "/F"])
+            .output();
+        eprintln!("[ollama] orphelin {pid} tué (taskkill)");
+    }
+}
+
 pub fn ollama_bundle_dir() -> PathBuf {
     crate::services::paths::data_dir().join("ollama-bundle")
 }
@@ -41,6 +88,8 @@ pub fn is_ollama_ready() -> bool {
 }
 
 pub fn start_sidecar(app: &AppHandle) -> Result<bool, String> {
+    kill_orphan_sidecar();
+
     if port_open() {
         eprintln!("[ollama] daemon externe détecté sur 11434, sidecar ignoré");
         return Ok(false);
@@ -83,8 +132,9 @@ pub fn start_sidecar(app: &AppHandle) -> Result<bool, String> {
     }
 
     let child = cmd.spawn().map_err(|e| format!("spawn ollama: {e}"))?;
-
-    eprintln!("[ollama] sidecar démarré pid={}", child.id());
+    let pid = child.id();
+    save_pid(pid);
+    eprintln!("[ollama] sidecar démarré pid={pid}");
 
     let state = app.state::<OllamaSidecar>();
     let mut guard = state.0.lock().map_err(|e| e.to_string())?;
@@ -97,11 +147,13 @@ pub fn stop_sidecar(app: &AppHandle) {
     let state = app.state::<OllamaSidecar>();
     let mut guard = match state.0.lock() {
         Ok(g) => g,
-        Err(_) => return,
+        Err(poisoned) => poisoned.into_inner(),
     };
 
-    let Some(mut child) = guard.take() else { return };
-    kill_process(&mut child);
+    if let Some(mut child) = guard.take() {
+        kill_process(&mut child);
+    }
+    clear_pid_file();
 }
 
 fn kill_process(child: &mut Child) {
