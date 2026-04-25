@@ -11,6 +11,7 @@ import { SettingsCard } from "@/components/settings/settings-card";
 import { useOllamaModels } from "@/hooks/use-ollama-models";
 import type { RegistryModelDetails, RegistryTag, ModelInfo } from "@/types/agent";
 import "./ollama.css";
+import "./ollama-details.css";
 
 interface ModelProfileProps {
   familyName: string;

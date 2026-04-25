@@ -1,4 +1,5 @@
 pub mod agent_chat;
+pub(crate) mod agent_chat_task;
 pub mod agent_md;
 pub mod agent_sessions;
 pub mod agent_ollama;

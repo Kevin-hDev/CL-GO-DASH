@@ -23,31 +23,50 @@ fn port_open() -> bool {
     .is_ok()
 }
 
-fn pid_file_path() -> PathBuf {
-    crate::services::paths::data_dir().join("ollama-sidecar.pid")
-}
-
-fn save_pid(pid: u32) {
-    let _ = std::fs::write(pid_file_path(), pid.to_string());
-}
-
-fn read_saved_pid() -> Option<u32> {
-    std::fs::read_to_string(pid_file_path()).ok()?.trim().parse().ok()
-}
-
-fn clear_pid_file() {
-    let _ = std::fs::remove_file(pid_file_path());
-}
+fn pid_file_path() -> PathBuf { crate::services::paths::data_dir().join("ollama-sidecar.pid") }
+fn save_pid(pid: u32) { let _ = std::fs::write(pid_file_path(), pid.to_string()); }
+fn read_saved_pid() -> Option<u32> { std::fs::read_to_string(pid_file_path()).ok()?.trim().parse().ok() }
+fn clear_pid_file() { let _ = std::fs::remove_file(pid_file_path()); }
 
 fn kill_orphan_sidecar() {
     let Some(pid) = read_saved_pid() else { return };
     clear_pid_file();
 
+    if !is_ollama_process(pid) {
+        eprintln!("[ollama] pid={pid} n'est plus ollama, ignoré");
+        return;
+    }
+
+    eprintln!("[ollama] orphelin détecté pid={pid}, kill");
+    kill_pid(pid);
+}
+
+fn is_ollama_process(pid: u32) -> bool {
     #[cfg(unix)]
     {
-        let alive = unsafe { libc::kill(pid as i32, 0) == 0 };
-        if !alive { return; }
-        eprintln!("[ollama] orphelin détecté pid={pid}, kill");
+        let output = Command::new("ps")
+            .args(["-p", &pid.to_string(), "-o", "comm="])
+            .output();
+        match output {
+            Ok(o) => String::from_utf8_lossy(&o.stdout).trim().contains("ollama"),
+            Err(_) => false,
+        }
+    }
+    #[cfg(windows)]
+    {
+        let output = Command::new("tasklist")
+            .args(["/FI", &format!("PID eq {pid}"), "/NH", "/FO", "CSV"])
+            .output();
+        match output {
+            Ok(o) => String::from_utf8_lossy(&o.stdout).to_lowercase().contains("ollama"),
+            Err(_) => false,
+        }
+    }
+}
+
+fn kill_pid(pid: u32) {
+    #[cfg(unix)]
+    {
         unsafe { libc::kill(pid as i32, libc::SIGTERM); }
         let start = std::time::Instant::now();
         while start.elapsed() < Duration::from_secs(3) {
@@ -60,13 +79,11 @@ fn kill_orphan_sidecar() {
         eprintln!("[ollama] SIGKILL orphelin {pid}");
         unsafe { libc::kill(pid as i32, libc::SIGKILL); }
     }
-
     #[cfg(windows)]
     {
         let _ = Command::new("taskkill")
             .args(["/PID", &pid.to_string(), "/F"])
             .output();
-        eprintln!("[ollama] orphelin {pid} tué (taskkill)");
     }
 }
 
@@ -82,7 +99,6 @@ pub fn ollama_binary_path() -> Result<PathBuf, String> {
     }
     Ok(path)
 }
-
 pub fn is_ollama_ready() -> bool {
     port_open() || ollama_binary_path().is_ok()
 }

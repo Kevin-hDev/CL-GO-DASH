@@ -99,7 +99,7 @@ export function useUpdateChecker() {
     };
 
     try {
-      await invoke("pull_ollama_model", { name: fullName, onProgress: channel });
+      await invoke("pull_ollama_model", { name: fullName, isUpdate: true, onProgress: channel });
       setOllamaUpdates((prev) => prev.filter((u) => u.fullName !== fullName));
     } catch {
       /* pull failed */

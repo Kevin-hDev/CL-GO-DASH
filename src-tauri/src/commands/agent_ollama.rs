@@ -79,7 +79,8 @@ pub async fn pull_ollama_model(
     let cancel = CancellationToken::new();
     { *pull_cancel.0.lock().await = Some(cancel.clone()); }
 
-    let result = ollama_registry::pull_model(&name, &on_progress, &cancel).await;
+    let mut digests = Vec::new();
+    let result = ollama_registry::pull_model(&name, &on_progress, &cancel, &mut digests).await;
 
     { *pull_cancel.0.lock().await = None; }
 
@@ -88,8 +89,8 @@ pub async fn pull_ollama_model(
         Err(ref e) if e == "cancelled" => {
             if !is_update {
                 tokio::time::sleep(std::time::Duration::from_millis(500)).await;
-                let cleaned = ollama_registry::cleanup_partial_blobs();
-                eprintln!("[pull] cancel {name} — {cleaned} fichiers partiels supprimés");
+                let cleaned = ollama_registry::cleanup_partial_blobs(&digests);
+                eprintln!("[pull] cancel {name} — {cleaned} fichiers partiels supprimés (digests: {digests:?})");
                 let _ = ollama_registry::delete_model(&name).await;
             }
             Err("cancelled".to_string())

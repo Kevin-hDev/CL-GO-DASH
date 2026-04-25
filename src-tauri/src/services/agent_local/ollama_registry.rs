@@ -59,6 +59,7 @@ pub async fn pull_model(
     name: &str,
     on_progress: &Channel<PullProgress>,
     cancel: &CancellationToken,
+    pulled_digests: &mut Vec<String>,
 ) -> Result<(), String> {
     let client = Client::builder()
         .timeout(std::time::Duration::from_secs(3600))
@@ -76,6 +77,7 @@ pub async fn pull_model(
         .bytes_stream()
         .map(|r| r.map_err(|e| std::io::Error::other(e)));
     let mut lines = BufReader::new(StreamReader::new(byte_stream)).lines();
+    let digests = pulled_digests;
 
     loop {
         tokio::select! {
@@ -87,16 +89,15 @@ pub async fn pull_model(
                 let Some(line) = line else { break };
                 if let Ok(chunk) = serde_json::from_str::<serde_json::Value>(&line) {
                     let status = chunk["status"].as_str().unwrap_or("").to_string();
+                    if let Some(digest) = extract_digest(&status) {
+                        if !digests.contains(&digest) { digests.push(digest); }
+                    }
                     let completed = chunk["completed"].as_u64();
                     let total = chunk["total"].as_u64();
                     let _ = on_progress.send(PullProgress {
-                        status: status.clone(),
-                        completed,
-                        total,
+                        status: status.clone(), completed, total,
                     });
-                    if status == "success" {
-                        return Ok(());
-                    }
+                    if status == "success" { return Ok(()); }
                     if let Some(err) = chunk["error"].as_str() {
                         return Err(err.to_string());
                     }
@@ -107,24 +108,28 @@ pub async fn pull_model(
     Ok(())
 }
 
-pub fn cleanup_partial_blobs() -> usize {
+fn extract_digest(status: &str) -> Option<String> {
+    let trimmed = status.strip_prefix("pulling ")?;
+    let digest = trimmed.trim();
+    if digest.len() >= 12 { Some(digest.to_string()) } else { None }
+}
+
+pub fn cleanup_partial_blobs(digests: &[String]) -> usize {
     let blobs_dir = dirs::home_dir()
         .map(|h| h.join(".ollama/models/blobs"))
         .unwrap_or_default();
-
-    if !blobs_dir.is_dir() {
-        return 0;
-    }
+    if !blobs_dir.is_dir() { return 0; }
 
     let mut count = 0;
     if let Ok(entries) = std::fs::read_dir(&blobs_dir) {
         for entry in entries.flatten() {
             let name = entry.file_name();
             let name_str = name.to_string_lossy();
-            if name_str.contains("-partial") {
-                if std::fs::remove_file(entry.path()).is_ok() {
-                    count += 1;
-                }
+            if !name_str.contains("-partial") { continue; }
+            let matches = digests.is_empty()
+                || digests.iter().any(|d| name_str.contains(d));
+            if matches && std::fs::remove_file(entry.path()).is_ok() {
+                count += 1;
             }
         }
     }

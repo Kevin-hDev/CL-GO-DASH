@@ -5,6 +5,7 @@ import { Check } from "@/components/ui/icons";
 import { useOllamaModels } from "@/hooks/use-ollama-models";
 import type { RegistryModel } from "@/types/agent";
 import "./ollama.css";
+import "./ollama-details.css";
 
 interface ModelSearchProps {
   query: string;

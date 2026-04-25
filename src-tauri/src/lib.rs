@@ -1,3 +1,4 @@
+mod app_events;
 mod commands;
 mod models;
 mod ollama_polling;
@@ -11,7 +12,7 @@ use services::scheduler::Scheduler;
 use std::collections::HashMap;
 #[cfg(target_os = "linux")]
 use tauri::Emitter;
-use tauri::{Manager, RunEvent, WindowEvent};
+use tauri::Manager;
 use tokio::sync::Mutex;
 use tokio_util::sync::CancellationToken;
 
@@ -57,7 +58,7 @@ pub fn run() {
             let config = services::config::read_config().unwrap_or_default();
 
             // Autostart : synchronise l'état OS avec le setting
-            sync_autostart(app.handle(), config.advanced.autostart);
+            app_events::sync_autostart(app.handle(), config.advanced.autostart);
 
             // Start hidden : masque la fenêtre si activé
             if config.advanced.start_hidden {
@@ -193,27 +194,6 @@ pub fn run() {
         .build(tauri::generate_context!())
         .expect("error while building tauri application");
 
-    app.run(|app_handle, event| match event {
-        RunEvent::ExitRequested { .. }
-        | RunEvent::Exit
-        | RunEvent::WindowEvent { event: WindowEvent::CloseRequested { .. }, .. } => {
-            if let Some(pty) = app_handle.try_state::<services::terminal::PtyManager>() {
-                pty.kill_all();
-            }
-            ollama_lifecycle::stop_sidecar(app_handle);
-        }
-        _ => {}
-    });
-}
-
-fn sync_autostart(handle: &tauri::AppHandle, enabled: bool) {
-    use tauri_plugin_autostart::ManagerExt;
-    let manager = handle.autolaunch();
-    let current = manager.is_enabled().unwrap_or(false);
-    if enabled && !current {
-        let _ = manager.enable();
-    } else if !enabled && current {
-        let _ = manager.disable();
-    }
+    app.run(|app_handle, event| app_events::handle_run_event(app_handle, event));
 }
 
