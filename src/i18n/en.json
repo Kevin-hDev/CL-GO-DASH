@@ -146,6 +146,7 @@
     "updateAvailable": "A new version is available",
     "installedUpToDate": "Installed and up to date",
     "starting": "Starting…",
+    "pullError": "Download error",
     "editModelfile": "Edit modelfile",
     "systemPrompt": "System prompt",
     "parameters": "Parameters",

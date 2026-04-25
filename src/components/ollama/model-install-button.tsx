@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { invoke, Channel } from "@tauri-apps/api/core";
 import { Check } from "@/components/ui/icons";
@@ -11,6 +11,12 @@ interface ModelInstallButtonProps {
   hasUpdate: boolean;
 }
 
+const BTN_WIDTH = 88;
+
+function isEscapeKey(e: KeyboardEvent): boolean {
+  return e.code === "Escape";
+}
+
 export function ModelInstallButton({
   fullName, isInstalled, hasUpdate,
 }: ModelInstallButtonProps) {
@@ -18,8 +24,10 @@ export function ModelInstallButton({
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("");
   const [percent, setPercent] = useState(0);
+  const cancelledRef = useRef(false);
 
-  const handleAction = useCallback(async () => {
+  const handleInstall = useCallback(async () => {
+    cancelledRef.current = false;
     setBusy(true);
     setStatus(t("ollama.starting"));
     setPercent(0);
@@ -33,24 +41,51 @@ export function ModelInstallButton({
     };
 
     try {
-      await invoke("pull_ollama_model", { name: fullName, onProgress: channel });
+      await invoke("pull_ollama_model", {
+        name: fullName,
+        isUpdate: isInstalled && hasUpdate,
+        onProgress: channel,
+      });
       setStatus("");
-    } catch (e: unknown) {
-      setStatus(`Erreur : ${e}`);
+    } catch {
+      if (!cancelledRef.current) setStatus(t("ollama.pullError"));
     } finally {
       setBusy(false);
     }
-  }, [fullName]);
+  }, [fullName, isInstalled, hasUpdate, t]);
+
+  const handleCancel = useCallback(async () => {
+    cancelledRef.current = true;
+    await invoke("cancel_pull_ollama_model").catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!busy) return;
+    const onEsc = (e: KeyboardEvent) => {
+      if (isEscapeKey(e)) handleCancel();
+    };
+    window.addEventListener("keydown", onEsc);
+    return () => window.removeEventListener("keydown", onEsc);
+  }, [busy, handleCancel]);
 
   if (busy) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
-        <div className="ollama-progress-bar">
-          <div className="ollama-progress-fill" style={{ width: `${percent}%` }} />
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
+          <div className="ollama-progress-bar">
+            <div className="ollama-progress-fill" style={{ width: `${percent}%` }} />
+          </div>
+          <span style={{ fontSize: "var(--text-xs)", color: "var(--ink-faint)" }}>
+            {status}
+          </span>
         </div>
-        <span style={{ fontSize: "var(--text-xs)", color: "var(--ink-faint)" }}>
-          {status}
-        </span>
+        <button
+          className="ollama-btn ollama-btn-cancel"
+          style={{ width: BTN_WIDTH }}
+          onClick={handleCancel}
+        >
+          {t("ollama.cancel")}
+        </button>
       </div>
     );
   }
@@ -73,7 +108,8 @@ export function ModelInstallButton({
     return (
       <button
         className="ollama-btn ollama-btn-primary"
-        onClick={handleAction}
+        style={{ width: BTN_WIDTH }}
+        onClick={handleInstall}
         title={t("ollama.updateAvailable")}
       >
         {t("ollama.update")}
@@ -82,7 +118,11 @@ export function ModelInstallButton({
   }
 
   return (
-    <button className="ollama-btn ollama-btn-primary" onClick={handleAction}>
+    <button
+      className="ollama-btn ollama-btn-primary"
+      style={{ width: BTN_WIDTH }}
+      onClick={handleInstall}
+    >
       {t("ollama.install")}
     </button>
   );

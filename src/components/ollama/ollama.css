@@ -101,6 +101,16 @@
   opacity: 0.9;
 }
 
+.ollama-btn-cancel {
+  border: 1px solid var(--signal-error);
+  color: var(--signal-error);
+  background: none;
+}
+
+.ollama-btn-cancel:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
 .ollama-search-input {
   width: 100%;
   padding: calc(var(--space-sm) - 4px) var(--space-md);

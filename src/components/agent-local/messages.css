@@ -40,20 +40,19 @@
   word-break: break-word;
 }
 
-/* Actions au survol */
+/* Actions au survol — pas de transition CSS (bug compositor WKWebView) */
 .msg-actions {
   display: flex;
   align-items: center;
   gap: 2px;
   opacity: 0;
-  transition: opacity 500ms ease-out;
+  pointer-events: none;
   margin-top: 4px;
 }
 
-.msg-user:hover .msg-actions,
-.msg-assistant:hover .msg-actions {
+.msg-hovered .msg-actions {
   opacity: 1;
-  transition: opacity 150ms ease-in;
+  pointer-events: auto;
 }
 
 .msg-action-btn {

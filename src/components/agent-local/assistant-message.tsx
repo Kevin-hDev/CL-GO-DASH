@@ -3,6 +3,7 @@ import { ThinkingSection } from "./thinking-section";
 import { MessageActions } from "./message-actions";
 import { SavedToolBubble } from "./tool-bubble";
 import { StreamingStats, formatTotalElapsed } from "./streaming-stats";
+import { useHoverClass } from "@/hooks/use-hover-class";
 import type { ToolActivityRecord } from "@/types/agent";
 import "./messages.css";
 
@@ -28,12 +29,13 @@ export function AssistantMessage({
   content, thinking, toolActivities, isStreaming, onReload,
   tokens, tps, totalElapsedMs, segmentStartedAt, liveTokenCount,
 }: AssistantMessageProps) {
+  const hoverRef = useHoverClass();
   const hasTokens = tokens != null && tokens > 0;
   const hasTps = tps != null && tps > 0.1;
   const totalTime = formatTotalElapsed(totalElapsedMs ?? 0);
 
   return (
-    <div className="msg-assistant">
+    <div className="msg-assistant" ref={hoverRef}>
       {thinking && <ThinkingSection content={thinking} />}
       {toolActivities && toolActivities.length > 0 && (
         <SavedToolBubble tools={toolActivities} />

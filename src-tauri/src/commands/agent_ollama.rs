@@ -6,8 +6,10 @@ use crate::services::agent_local::translator;
 use crate::services::agent_local::types_ollama::{
     ModelInfo, OllamaModel, PullProgress, RegistryModel, RegistryModelDetails, RegistryTag,
 };
+use crate::PullCancel;
 use tauri::ipc::Channel;
 use tauri::Emitter;
+use tokio_util::sync::CancellationToken;
 
 #[tauri::command]
 pub async fn list_ollama_models(
@@ -70,10 +72,39 @@ pub async fn translate_description(
 pub async fn pull_ollama_model(
     app: tauri::AppHandle,
     name: String,
+    is_update: bool,
     on_progress: Channel<PullProgress>,
+    pull_cancel: tauri::State<'_, PullCancel>,
 ) -> Result<(), String> {
-    ollama_registry::pull_model(&name, &on_progress).await?;
-    let _ = app.emit("ollama-models-changed", ());
+    let cancel = CancellationToken::new();
+    { *pull_cancel.0.lock().await = Some(cancel.clone()); }
+
+    let result = ollama_registry::pull_model(&name, &on_progress, &cancel).await;
+
+    { *pull_cancel.0.lock().await = None; }
+
+    match result {
+        Ok(()) => { let _ = app.emit("ollama-models-changed", ()); Ok(()) }
+        Err(ref e) if e == "cancelled" => {
+            if !is_update {
+                tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+                let cleaned = ollama_registry::cleanup_partial_blobs();
+                eprintln!("[pull] cancel {name} — {cleaned} fichiers partiels supprimés");
+                let _ = ollama_registry::delete_model(&name).await;
+            }
+            Err("cancelled".to_string())
+        }
+        Err(e) => Err(e),
+    }
+}
+
+#[tauri::command]
+pub async fn cancel_pull_ollama_model(
+    pull_cancel: tauri::State<'_, PullCancel>,
+) -> Result<(), String> {
+    if let Some(cancel) = pull_cancel.0.lock().await.take() {
+        cancel.cancel();
+    }
     Ok(())
 }
 

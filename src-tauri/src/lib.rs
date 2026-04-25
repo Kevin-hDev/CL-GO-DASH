@@ -16,6 +16,7 @@ use tokio::sync::Mutex;
 use tokio_util::sync::CancellationToken;
 
 pub struct ActiveStreams(pub Mutex<HashMap<String, (CancellationToken, u64)>>);
+pub struct PullCancel(pub Mutex<Option<CancellationToken>>);
 
 static STREAM_GENERATION: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
@@ -30,6 +31,7 @@ pub fn run() {
         ))
         .manage(OllamaClient::new())
         .manage(ActiveStreams(Mutex::new(HashMap::new())))
+        .manage(PullCancel(Mutex::new(None)))
         .manage(OllamaSidecar::new())
         .manage(services::terminal::PtyManager::new())
         .setup(|app| {
@@ -110,6 +112,7 @@ pub fn run() {
             commands::list_registry_tags,
             commands::translate_description,
             commands::pull_ollama_model,
+            commands::cancel_pull_ollama_model,
             commands::delete_ollama_model,
             commands::get_modelfile,
             commands::update_modelfile,

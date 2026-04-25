@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { MessageActions } from "./message-actions";
 import { EditMessage } from "./edit-message";
+import { useHoverClass } from "@/hooks/use-hover-class";
 import "./messages.css";
 
 interface FileInfo {
@@ -13,14 +14,16 @@ interface UserMessageProps {
   content: string;
   files?: FileInfo[];
   skillNames?: string[];
+  isStreaming?: boolean;
   onReload?: () => void;
   onEdit?: (newContent: string) => void;
   onFileClick?: (file: FileInfo) => void;
 }
 
 export function UserMessage({
-  content, files, skillNames, onReload, onEdit, onFileClick,
+  content, files, skillNames, isStreaming, onReload, onEdit, onFileClick,
 }: UserMessageProps) {
+  const hoverRef = useHoverClass();
   const [editing, setEditing] = useState(false);
 
   if (editing && onEdit) {
@@ -37,7 +40,7 @@ export function UserMessage({
   const hasText = content.trim().length > 0;
 
   return (
-    <div className="msg-user">
+    <div className="msg-user" ref={hoverRef}>
       <div className="msg-user-wrap">
         {(hasText || (skillNames && skillNames.length > 0)) && (
           <div className="msg-user-bubble">
@@ -75,6 +78,7 @@ export function UserMessage({
         <MessageActions
           role="user"
           content={content}
+          isStreaming={isStreaming}
           onReload={onReload}
           onEdit={onEdit ? () => setEditing(true) : undefined}
         />

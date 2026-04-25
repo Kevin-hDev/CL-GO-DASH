@@ -5,12 +5,13 @@ import "./messages.css";
 interface MessageActionsProps {
   role: "user" | "assistant";
   content: string;
+  isStreaming?: boolean;
   onReload?: () => void;
   onEdit?: () => void;
   children?: React.ReactNode;
 }
 
-export function MessageActions({ role, content, onReload, onEdit, children }: MessageActionsProps) {
+export function MessageActions({ role, content, isStreaming, onReload, onEdit, children }: MessageActionsProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = useCallback(async () => {
@@ -21,7 +22,7 @@ export function MessageActions({ role, content, onReload, onEdit, children }: Me
 
   return (
     <div className="msg-actions">
-      {onReload && (
+      {onReload && !isStreaming && (
         <button className="msg-action-btn" onClick={onReload}>
           <ArrowsClockwise size={14} />
         </button>
@@ -31,7 +32,7 @@ export function MessageActions({ role, content, onReload, onEdit, children }: Me
           <Pencil size={14} />
         </button>
       )}
-      <button className="msg-action-btn" onClick={handleCopy} style={{ position: "relative", top: -2 }}>
+      <button className="msg-action-btn" onClick={handleCopy}>
         {copied ? <Check size={14} /> : <Copy size={14} />}
       </button>
       {children}

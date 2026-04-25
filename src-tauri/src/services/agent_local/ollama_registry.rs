@@ -5,6 +5,7 @@ use reqwest::Client;
 use tauri::ipc::Channel;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio_util::io::StreamReader;
+use tokio_util::sync::CancellationToken;
 const REGISTRY_URL: &str = "https://ollama.com";
 
 pub async fn search_models(query: &str) -> Result<Vec<RegistryModel>, String> {
@@ -57,6 +58,7 @@ fn parse_search_html(html: &str) -> Vec<RegistryModel> {
 pub async fn pull_model(
     name: &str,
     on_progress: &Channel<PullProgress>,
+    cancel: &CancellationToken,
 ) -> Result<(), String> {
     let client = Client::builder()
         .timeout(std::time::Duration::from_secs(3600))
@@ -75,25 +77,58 @@ pub async fn pull_model(
         .map(|r| r.map_err(|e| std::io::Error::other(e)));
     let mut lines = BufReader::new(StreamReader::new(byte_stream)).lines();
 
-    while let Some(line) = lines.next_line().await.map_err(|e| e.to_string())? {
-        if let Ok(chunk) = serde_json::from_str::<serde_json::Value>(&line) {
-            let status = chunk["status"].as_str().unwrap_or("").to_string();
-            let completed = chunk["completed"].as_u64();
-            let total = chunk["total"].as_u64();
-            let _ = on_progress.send(PullProgress {
-                status: status.clone(),
-                completed,
-                total,
-            });
-            if status == "success" {
-                return Ok(());
+    loop {
+        tokio::select! {
+            _ = cancel.cancelled() => {
+                return Err("cancelled".to_string());
             }
-            if let Some(err) = chunk["error"].as_str() {
-                return Err(err.to_string());
+            line = lines.next_line() => {
+                let line = line.map_err(|e| e.to_string())?;
+                let Some(line) = line else { break };
+                if let Ok(chunk) = serde_json::from_str::<serde_json::Value>(&line) {
+                    let status = chunk["status"].as_str().unwrap_or("").to_string();
+                    let completed = chunk["completed"].as_u64();
+                    let total = chunk["total"].as_u64();
+                    let _ = on_progress.send(PullProgress {
+                        status: status.clone(),
+                        completed,
+                        total,
+                    });
+                    if status == "success" {
+                        return Ok(());
+                    }
+                    if let Some(err) = chunk["error"].as_str() {
+                        return Err(err.to_string());
+                    }
+                }
             }
         }
     }
     Ok(())
+}
+
+pub fn cleanup_partial_blobs() -> usize {
+    let blobs_dir = dirs::home_dir()
+        .map(|h| h.join(".ollama/models/blobs"))
+        .unwrap_or_default();
+
+    if !blobs_dir.is_dir() {
+        return 0;
+    }
+
+    let mut count = 0;
+    if let Ok(entries) = std::fs::read_dir(&blobs_dir) {
+        for entry in entries.flatten() {
+            let name = entry.file_name();
+            let name_str = name.to_string_lossy();
+            if name_str.contains("-partial") {
+                if std::fs::remove_file(entry.path()).is_ok() {
+                    count += 1;
+                }
+            }
+        }
+    }
+    count
 }
 
 pub async fn delete_model(name: &str) -> Result<(), String> {
