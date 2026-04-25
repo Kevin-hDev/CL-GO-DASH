@@ -8,6 +8,7 @@ import { useAgentTabs } from "@/hooks/use-agent-tabs";
 import { useProjects } from "@/hooks/use-projects";
 import { useTerminal } from "@/hooks/use-terminal";
 import { useDefaultModel } from "@/hooks/use-default-model";
+import { useAvailableModels } from "@/hooks/use-available-models";
 import { useSessionActions } from "@/hooks/use-session-actions";
 
 interface AgentLocalTabProps {
@@ -32,9 +33,26 @@ export function AgentLocalTab(props?: AgentLocalTabProps): { list: React.ReactNo
   const [welcomeModel, setWelcomeModel] = useState<{ model: string; provider: string } | null>(null);
   const [thinking, setThinking] = useState(false);
 
+  const { groups: availableModels } = useAvailableModels();
+
   const currentDefault = welcomeModel ?? { model: defaultModel, provider: defaultProvider };
   const model = activeSession?.model ?? currentDefault.model;
   const provider = activeSession?.provider ?? currentDefault.provider;
+
+  useEffect(() => {
+    if (!model || availableModels.size === 0) return;
+    const providerModels = availableModels.get(provider);
+    const stillExists = providerModels?.some((m) => m.id === model);
+    if (stillExists) return;
+    const allModels = Array.from(availableModels.values()).flat();
+    if (allModels.length === 0) return;
+    const fallback = allModels[0];
+    if (tabState.activeSessionId) {
+      updateModel(tabState.activeSessionId, fallback.id, fallback.provider_id);
+    } else {
+      setWelcomeModel({ model: fallback.id, provider: fallback.provider_id });
+    }
+  }, [availableModels, model, provider, tabState.activeSessionId, updateModel]);
 
   const sessionActions = useSessionActions({ create, tabState, rename, defaultModel, defaultProvider, welcomeModel, setWelcomeModel, projectsHook });
   const { pendingMessage, setPendingMessage, pendingWorkingDir, setPendingWorkingDir, pendingSkills, setPendingSkills, pendingFiles, setPendingFiles, handleCreate, handleCreateWithModel, handleWelcomeSend, handleAutoRename, handleCreateInProject } = sessionActions;

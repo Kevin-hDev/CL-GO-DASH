@@ -190,6 +190,14 @@ pub async fn rename(id: &str, name: &str) -> Result<(), String> {
     save(&session).await
 }
 
+pub async fn update_model(id: &str, model: &str, provider: &str) -> Result<(), String> {
+    validate_session_id(id)?;
+    let mut session = get(id).await?;
+    session.model = model.to_string();
+    session.provider = provider.to_string();
+    save(&session).await
+}
+
 pub async fn delete(id: &str) -> Result<(), String> {
     validate_session_id(id)?;
     let path = sessions_dir().join(format!("{id}.json"));

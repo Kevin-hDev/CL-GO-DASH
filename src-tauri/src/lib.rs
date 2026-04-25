@@ -124,6 +124,7 @@ pub fn run() {
             commands::add_messages_to_session,
             commands::create_agent_session,
             commands::rename_agent_session,
+            commands::update_session_model,
             commands::delete_agent_session,
             commands::export_agent_session_markdown,
             commands::truncate_session_at,

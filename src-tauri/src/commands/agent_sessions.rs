@@ -44,6 +44,11 @@ pub async fn rename_agent_session(id: String, name: String) -> Result<(), String
 }
 
 #[tauri::command]
+pub async fn update_session_model(id: String, model: String, provider: String) -> Result<(), String> {
+    session_store::update_model(&id, &model, &provider).await
+}
+
+#[tauri::command]
 pub async fn delete_agent_session(id: String) -> Result<(), String> {
     session_store::delete(&id).await
 }

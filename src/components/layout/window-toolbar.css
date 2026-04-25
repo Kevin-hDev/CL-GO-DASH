@@ -11,7 +11,8 @@
 }
 
 .window-toolbar.is-mac {
-  left: 83px;
+  top: 12px;
+  left: 78px;
 }
 
 .is-fullscreen.sidebar-hidden .window-toolbar {

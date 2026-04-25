@@ -199,7 +199,7 @@ export function TabBar({
             if (!terminalOpen) (e.currentTarget as HTMLElement).style.color = "var(--ink-muted)";
           }}
         >
-          <TerminalSquare size={16} />
+          <TerminalSquare size={18} />
         </button>
         </Tooltip>
         </span>

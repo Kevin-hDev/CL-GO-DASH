@@ -57,10 +57,7 @@ export function useAgentSessions() {
 
   const updateModel = useCallback(
     async (id: string, model: string, provider: string = "ollama") => {
-      const session = await invoke<Record<string, unknown>>("get_agent_session", { id });
-      session.model = model;
-      session.provider = provider;
-      await invoke("save_agent_session", { session });
+      await invoke("update_session_model", { id, model, provider });
       await refresh();
     },
     [refresh],
