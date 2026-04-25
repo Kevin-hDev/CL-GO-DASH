@@ -37,6 +37,7 @@ interface StreamStartState {
 
 export function useAgentStream() {
   const streamingRef = useRef(false);
+  const generationRef = useRef<number | null>(null);
 
   const startStream = useCallback(async (
     sessionId: string,
@@ -101,7 +102,7 @@ export function useAgentStream() {
     });
 
     try {
-      await invoke("chat_stream", {
+      const gen = await invoke<number>("chat_stream", {
         sessionId,
         model,
         provider,
@@ -112,6 +113,7 @@ export function useAgentStream() {
         supportsTools: supportsTools ?? null,
         supportsThinking: supportsThinking ?? null,
       });
+      generationRef.current = gen;
     } catch {
       agentStreamManager.failSession(sessionId);
       streamingRef.current = false;
@@ -119,7 +121,9 @@ export function useAgentStream() {
   }, []);
 
   const stopStream = useCallback(async (sessionId: string) => {
-    await invoke("cancel_agent_request", { sessionId });
+    const gen = generationRef.current;
+    generationRef.current = null;
+    await invoke("cancel_agent_request", { sessionId, generation: gen });
     streamingRef.current = false;
     agentStreamManager.stopSession(sessionId);
   }, []);

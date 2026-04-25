@@ -25,7 +25,7 @@ pub async fn chat_stream(
     supports_tools: Option<bool>,
     supports_thinking: Option<bool>,
     streams: tauri::State<'_, ActiveStreams>,
-) -> Result<(), String> {
+) -> Result<u64, String> {
     const MAX_ACTIVE_STREAMS: usize = 32;
     let cancel = CancellationToken::new();
     let generation = crate::STREAM_GENERATION.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
@@ -34,12 +34,12 @@ pub async fn chat_stream(
         if map.len() >= MAX_ACTIVE_STREAMS {
             return Err("Trop de flux actifs simultanément".to_string());
         }
-        // Cancel l'ancien stream s'il existe pour cette session
         if let Some((old_token, _)) = map.remove(&session_id) {
             old_token.cancel();
         }
         map.insert(session_id.clone(), (cancel.clone(), generation));
     }
+    eprintln!("[stream] start session={session_id} gen={generation}");
 
     let provider = provider.unwrap_or_else(|| "ollama".to_string());
     let stream_session = session_id.clone();
@@ -90,7 +90,7 @@ pub async fn chat_stream(
         }
     });
 
-    Ok(())
+    Ok(generation)
 }
 
 async fn run_stream_task(
@@ -238,10 +238,19 @@ fn merge_personality(agent_md: Option<String>, personality: Option<String>) -> O
 #[tauri::command]
 pub async fn cancel_agent_request(
     session_id: String,
+    generation: Option<u64>,
     streams: tauri::State<'_, ActiveStreams>,
 ) -> Result<(), String> {
-    if let Some((token, _)) = streams.0.lock().await.remove(&session_id) {
-        token.cancel();
+    let mut map = streams.0.lock().await;
+    if let Some((token, gen)) = map.get(&session_id) {
+        if generation.is_none() || generation == Some(*gen) {
+            let token = token.clone();
+            let gen = *gen;
+            map.remove(&session_id);
+            drop(map);
+            token.cancel();
+            eprintln!("[cancel] session={session_id} gen={gen}");
+        }
     }
     Ok(())
 }
