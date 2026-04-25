@@ -3,6 +3,7 @@ import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import i18n from "@/i18n";
 import {
   applyStreamEvent, createManagedStreamState, toChatState,
+  finishPartialStream,
   type ChatState, type ManagedStreamState, type PermissionRequestState,
 } from "./agent-chat-stream-callbacks";
 import type { AgentMessage, StreamEvent } from "@/types/agent";
@@ -62,8 +63,12 @@ async function startSession(sessionId: string, messages: AgentMessage[], tokenCo
 function stopSession(sessionId: string) {
   const record = records.get(sessionId);
   if (!record) return;
-  record.state = { ...record.state, isStreaming: false, updatedAt: Date.now() };
+  const result = finishPartialStream(record.state);
+  record.state = result.state;
   notify(record);
+  if (result.assistantMessage && !record.state.persisted) {
+    persistAssistant(sessionId, record, result.assistantMessage, 0);
+  }
 }
 
 function failSession(sessionId: string) {

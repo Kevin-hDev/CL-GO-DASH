@@ -23,17 +23,12 @@ export interface ChatState {
 }
 
 export interface PermissionRequestState {
-  id: string;
-  toolName: string;
-  arguments: Record<string, unknown>;
+  id: string; toolName: string; arguments: Record<string, unknown>;
 }
 
 export interface ManagedStreamState extends ChatState {
   pendingPermissions: PermissionRequestState[];
-  completed: boolean;
-  persisted: boolean;
-  updatedAt: number;
-  error?: string;
+  completed: boolean; persisted: boolean; updatedAt: number; error?: string;
 }
 
 export const EMPTY_CHAT_STATE: ChatState = {
@@ -136,10 +131,7 @@ export function applyStreamEvent(
 }
 
 function applyToolResult(
-  tools: ToolActivity[],
-  name: string,
-  content: string,
-  isError: boolean,
+  tools: ToolActivity[], name: string, content: string, isError: boolean,
 ): ToolActivity[] {
   const next = [...tools];
   for (let i = next.length - 1; i >= 0; i--) {
@@ -152,64 +144,54 @@ function applyToolResult(
 }
 
 function appendCurrentSegment(state: ChatState): StreamSegment[] {
-  return [
-    ...state.completedSegments,
-    {
-      thinking: state.currentThinking,
-      tools: state.currentTools,
-      content: state.currentContent,
-    },
-  ];
+  return [...state.completedSegments, {
+    thinking: state.currentThinking, tools: state.currentTools, content: state.currentContent,
+  }];
 }
 
 function addPermission(
-  requests: PermissionRequestState[],
-  request: PermissionRequestState,
+  requests: PermissionRequestState[], request: PermissionRequestState,
 ): PermissionRequestState[] {
-  const filtered = requests.filter((item) => item.id !== request.id);
-  return [...filtered, request].slice(-MAX_PENDING_PERMISSIONS);
+  return [...requests.filter((r) => r.id !== request.id), request].slice(-MAX_PENDING_PERMISSIONS);
+}
+
+export function finishPartialStream(state: ManagedStreamState): StreamApplyResult {
+  return finalizeStream(state, 0, 0, state.tps);
 }
 
 function finishStream(state: ManagedStreamState, event: Extract<StreamEvent, { event: "done" }>) {
+  return finalizeStream(
+    state,
+    event.data.evalCount || 0,
+    event.data.promptTokens || 0,
+    event.data.finalTps,
+  );
+}
+
+function finalizeStream(
+  state: ManagedStreamState, outputTokens: number, promptTokens: number, tps: number,
+): StreamApplyResult {
   const all = state.currentContent || state.currentThinking || state.currentTools.length > 0
-    ? appendCurrentSegment(state)
-    : state.completedSegments;
-  const outputTokens = event.data.evalCount || 0;
-  const promptTokens = event.data.promptTokens || 0;
+    ? appendCurrentSegment(state) : state.completedSegments;
   const totalMs = state.streamStartedAt ? Date.now() - state.streamStartedAt : 0;
-  const next = {
-    ...state,
-    completedSegments: [],
-    currentContent: "",
-    currentThinking: "",
-    currentTools: [],
-    isStreaming: false,
-    tps: event.data.finalTps,
+  const next: ManagedStreamState = {
+    ...state, completedSegments: [], currentContent: "", currentThinking: "",
+    currentTools: [], isStreaming: false, tps,
     tokenCount: state.tokenCount + outputTokens + promptTokens,
-    lastRequestTokens: outputTokens,
-    liveTokenCount: 0,
-    streamStartedAt: null,
-    segmentStartedAt: null,
-    totalElapsedMs: totalMs,
-    pendingPermissions: [],
-    completed: true,
+    lastRequestTokens: outputTokens, liveTokenCount: 0,
+    streamStartedAt: null, segmentStartedAt: null, totalElapsedMs: totalMs,
+    pendingPermissions: [], completed: true, updatedAt: Date.now(),
   };
   if (all.length === 0) return { state: next };
   const built = buildSegmentedMessage(all);
   const assistantMessage: AgentMessage = {
-    id: crypto.randomUUID(),
-    role: "assistant",
-    content: built.content,
-    thinking: built.thinking,
-    tool_activities: built.toolRecords,
-    segments: built.segments,
-    files: [],
-    timestamp: new Date().toISOString(),
+    id: crypto.randomUUID(), role: "assistant", content: built.content,
+    thinking: built.thinking, tool_activities: built.toolRecords,
+    segments: built.segments, files: [], timestamp: new Date().toISOString(),
     tokens: outputTokens,
   };
   return {
     state: { ...next, messages: [...next.messages, assistantMessage] },
-    assistantMessage,
-    assistantTokens: outputTokens,
+    assistantMessage, assistantTokens: outputTokens,
   };
 }

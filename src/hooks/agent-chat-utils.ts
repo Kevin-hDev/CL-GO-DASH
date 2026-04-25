@@ -67,3 +67,36 @@ export interface SavedSegment {
   tools: ToolActivityRecord[];
   content: string;
 }
+
+interface ChatMsg {
+  role: string;
+  content: string;
+  images?: string[] | null;
+  tool_calls?: unknown[] | null;
+  tool_name?: string | null;
+}
+
+function rebuildArgs(name: string, summary: string): Record<string, string> {
+  if (name === "web_search" || name === "grep" || name === "glob") return { query: summary };
+  if (name === "web_fetch") return { url: summary };
+  if (name === "bash") return { command: summary };
+  if (["read_file", "write_file", "edit_file", "list_dir"].includes(name)) return { path: summary };
+  return { input: summary };
+}
+
+export function expandToolActivities(
+  activities: ToolActivityRecord[], content: string,
+): ChatMsg[] {
+  const msgs: ChatMsg[] = [];
+  const toolCalls = activities.map((t) => ({
+    function: { name: t.name, arguments: rebuildArgs(t.name, t.summary) },
+  }));
+  msgs.push({ role: "assistant", content: "", tool_calls: toolCalls });
+  for (const t of activities) {
+    msgs.push({ role: "tool", content: t.result ?? "", tool_name: t.name });
+  }
+  if (content) {
+    msgs.push({ role: "assistant", content });
+  }
+  return msgs;
+}

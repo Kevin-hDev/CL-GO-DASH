@@ -2,6 +2,7 @@ import { useRef, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { readFile } from "@tauri-apps/plugin-fs";
 import { agentStreamManager, type StreamSnapshot } from "./agent-stream-manager";
+import { expandToolActivities } from "./agent-chat-utils";
 import type { AgentMessage } from "@/types/agent";
 
 const IMAGE_EXTS = ["png", "jpg", "jpeg", "gif", "webp"];
@@ -55,7 +56,7 @@ export function useAgentStream() {
       startState.baseTokenCount,
     );
 
-    const chatMessages = await Promise.all(messages.map(async (m) => {
+    const resolved = await Promise.all(messages.map(async (m) => {
       let images: string[] | null = null;
       let content = m.content;
 
@@ -86,14 +87,18 @@ export function useAgentStream() {
         }
       }
 
-      return {
-        role: m.role,
-        content,
-        images,
-        tool_calls: m.tool_calls ?? null,
-        tool_name: m.tool_name ?? null,
-      };
+      return { message: m, content, images };
     }));
+
+    const chatMessages = resolved.flatMap(({ message: m, content, images }) => {
+      if (m.role === "assistant" && m.tool_activities && m.tool_activities.length > 0 && !m.tool_calls) {
+        return expandToolActivities(m.tool_activities, content);
+      }
+      return [{
+        role: m.role, content, images,
+        tool_calls: m.tool_calls ?? null, tool_name: m.tool_name ?? null,
+      }];
+    });
 
     try {
       await invoke("chat_stream", {
