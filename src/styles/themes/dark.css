@@ -32,17 +32,17 @@
 
   /* Legacy dashboard tokens */
   --void: #050b0f;
-  --shell: #18181c;
-  --shell-translucent: rgba(24, 24, 28, 0.85);
+  --shell: #222228;
+  --shell-translucent: rgba(34, 34, 40, 0.85);
   --surface: #111119;
-  --surface-hover: #232328;
+  --surface-hover: rgba(200, 200, 210, 0.08);
   --edge: rgba(255, 255, 255, 0.06);
   --ink: #a3a3a3;
   --ink-muted: #9a9a9a;
   --ink-faint: #5a5a64;
   --pulse: #ea580c;
   --pulse-muted: rgba(234, 88, 12, 0.15);
-  --select-bg: #252530;
+  --select-bg: rgba(200, 200, 210, 0.12);
   --select-text: #a3a3a3;
   --signal-idle: #5a5a64;
   --signal-live: #f59e0b;

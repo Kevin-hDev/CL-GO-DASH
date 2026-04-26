@@ -135,7 +135,12 @@
   margin-left: 4px;
 }
 
+[data-theme="light"] .msg-user-bubble {
+  background: rgba(215, 215, 220, 0.40);
+  border-color: transparent;
+}
+
 [data-theme="dark"] .msg-user-bubble {
   border-color: transparent;
-  background: #1e1e22;
+  background: rgba(30, 30, 34, 0.55);
 }

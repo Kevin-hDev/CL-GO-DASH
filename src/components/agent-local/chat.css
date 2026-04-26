@@ -149,7 +149,12 @@
 .chat-loading { display: flex; align-items: center; margin-bottom: var(--space-md); }
 .chat-loading-lottie { width: 48px; height: 48px; }
 
+[data-theme="light"] .chat-input-bubble {
+  background: rgba(215, 215, 220, 0.40);
+  border-color: transparent;
+}
+
 [data-theme="dark"] .chat-input-bubble {
   border-color: transparent;
-  background: #252529;
+  background: rgba(37, 37, 41, 0.55);
 }

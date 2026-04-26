@@ -9,7 +9,7 @@
   --card-foreground: 0 0% 10%;
   --popover: 0 0% 100%;
   --popover-foreground: 0 0% 10%;
-  --primary: 25 95% 48%;
+  --primary: 25 95% 58%;
   --primary-foreground: 0 0% 100%;
   --secondary: 36 15% 90%;
   --secondary-foreground: 0 0% 10%;
@@ -21,7 +21,7 @@
   --destructive-foreground: 0 0% 100%;
   --border: 30 10% 88%;
   --input: 30 10% 88%;
-  --ring: 25 95% 48%;
+  --ring: 25 95% 58%;
 
   /* Chill_Desk original tokens */
   --bg-base: #f5f3f0;
@@ -31,17 +31,17 @@
   --sidebar-active: #f9731615;
 
   /* Legacy dashboard tokens */
-  --void: #f5f3f0;
-  --shell: #ede9e4;
-  --shell-translucent: rgba(237, 233, 228, 0.80);
+  --void: #f7f7f9;
+  --shell: #eaeaed;
+  --shell-translucent: rgba(234, 234, 237, 0.80);
   --surface: #ffffff;
   --surface-hover: #faf8f5;
   --edge: #e5e2dd;
   --ink: #1a1a1a;
   --ink-muted: #3d3d3d;
   --ink-faint: #5c5c5c;
-  --pulse: #c2410c;
-  --pulse-muted: rgba(194, 65, 12, 0.12);
+  --pulse: #f97316;
+  --pulse-muted: rgba(249, 115, 22, 0.12);
   --select-bg: #e5e2dd;
   --select-text: #1a1a1a;
   --signal-idle: #b0b0b8;
