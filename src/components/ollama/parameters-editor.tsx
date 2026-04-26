@@ -15,9 +15,13 @@ export function ParametersEditor({
   modelName, initialParameters, onSave, onCancel,
 }: ParametersEditorProps) {
   const { t } = useTranslation();
-  const [params, setParams] = useState<ModelParameter[]>(
-    initialParameters.length > 0 ? initialParameters : [{ key: "", value: "" }],
-  );
+  const [params, setParams] = useState<ModelParameter[]>(() => {
+    const base = initialParameters.length > 0 ? [...initialParameters] : [];
+    const keys = new Set(base.map((p) => p.key));
+    if (!keys.has("num_ctx")) base.push({ key: "num_ctx", value: "" });
+    if (!keys.has("num_predict")) base.push({ key: "num_predict", value: "" });
+    return base;
+  });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

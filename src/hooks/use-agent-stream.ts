@@ -49,6 +49,7 @@ export function useAgentStream() {
     workingDir?: string,
     supportsTools?: boolean,
     supportsThinking?: boolean,
+    permissionMode?: string,
   ) => {
     streamingRef.current = true;
     await agentStreamManager.startSession(
@@ -112,6 +113,7 @@ export function useAgentStream() {
         workingDir: workingDir ?? null,
         supportsTools: supportsTools ?? null,
         supportsThinking: supportsThinking ?? null,
+        permissionMode: permissionMode ?? null,
       });
       generationRef.current = gen;
     } catch {

@@ -61,10 +61,10 @@ export function ChatView({
   terminalState,
 }: ChatViewProps) {
   const permissions = usePermissionRequests();
-  const permMode = usePermissionMode();
+  const permMode = usePermissionMode(sessionId);
   const chat = useAgentChat(sessionId, model, provider, (id, toolName, args) =>
     permissions.enqueue({ id, toolName, arguments: args }),
-    undefined, thinking,
+    undefined, thinking, permMode.mode,
   );
   const fileDrop = useFileDrop();
   const context = useContextProgress(model, chat.tokenCount, provider);

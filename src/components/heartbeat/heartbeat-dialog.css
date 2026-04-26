@@ -23,6 +23,13 @@
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
 
+[data-theme="dark"] .wk-dialog {
+  background: rgba(37, 37, 41, 0.70);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-color: transparent;
+}
+
 .wk-dialog-header {
   display: flex;
   align-items: center;
@@ -169,6 +176,11 @@
   background: transparent;
   border: 1px solid var(--edge);
   color: var(--ink-muted);
+}
+
+[data-theme="dark"] .wk-btn-secondary {
+  background: rgba(37, 37, 41, 0.70);
+  border-color: transparent;
 }
 
 .wk-btn-secondary:hover {

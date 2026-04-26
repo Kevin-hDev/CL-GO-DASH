@@ -30,6 +30,12 @@ pub fn run() {
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
             None,
         ))
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            if let Some(w) = app.get_webview_window("main") {
+                let _ = w.unminimize();
+                let _ = w.set_focus();
+            }
+        }))
         .manage(OllamaClient::new())
         .manage(ActiveStreams(Mutex::new(HashMap::new())))
         .manage(PullCancel(Mutex::new(None)))

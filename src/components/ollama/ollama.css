@@ -149,3 +149,10 @@
   transition: width 200ms ease-out;
 }
 
+[data-theme="dark"] .mf-raw-block {
+  background: rgba(37, 37, 41, 0.55) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-color: transparent !important;
+}
+

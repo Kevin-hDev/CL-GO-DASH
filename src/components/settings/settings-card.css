@@ -4,6 +4,13 @@
   border-radius: var(--radius-md);
 }
 
+[data-theme="dark"] .settings-card {
+  background: rgba(37, 37, 41, 0.55);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-color: transparent;
+}
+
 .settings-row {
   display: flex;
   align-items: center;

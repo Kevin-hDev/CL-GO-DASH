@@ -14,6 +14,7 @@ import { ApiKeysTab } from "@/components/api-keys/api-keys-tab";
 import ollamaDark from "@/assets/ollama.png";
 import ollamaLight from "@/assets/ollama-light.png";
 import type { Icon } from "@phosphor-icons/react";
+import "./settings-tab.css";
 
 type SettingsSubTab = "general" | "ollama" | "api-keys" | "llm" | "advanced" | "shortcuts" | "about";
 
@@ -71,20 +72,7 @@ export function SettingsTab({ theme, onThemeChange, activeSubTab, onSubTabChange
           <div
             key={tab.id}
             onClick={() => setSubTab(tab.id)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              padding: "5px var(--space-sm)",
-              borderRadius: "var(--radius-sm)",
-              cursor: "pointer",
-              fontSize: "var(--text-sm)",
-              color: subTab === tab.id ? "var(--ink)" : "var(--ink-muted)",
-              background: subTab === tab.id ? "var(--surface-hover)" : "transparent",
-              fontWeight: subTab === tab.id ? 500 : 400,
-              marginBottom: 2,
-              transition: "all 200ms ease",
-            }}
+            className={`settings-subtab${subTab === tab.id ? " active" : ""}`}
           >
             {tab.icon ? (
               <tab.icon

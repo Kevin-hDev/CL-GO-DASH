@@ -4,8 +4,48 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CL-GO</title>
+    <script>
+      (function() {
+        var t = localStorage.getItem("clgo-theme");
+        if (t !== "light" && t !== "dark") t = "dark";
+        document.documentElement.setAttribute("data-theme", t);
+      })();
+    </script>
+    <link rel="preload" href="/splash-icon.png" as="image" />
+    <link rel="preload" href="/splash-icon-light.png" as="image" />
+    <style>
+      #splash {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+      }
+      [data-theme="dark"] #splash {
+        background: rgba(34, 34, 40, 0.85);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+      }
+      [data-theme="light"] #splash {
+        background: rgba(234, 234, 237, 0.80);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+      }
+      #splash .splash-icon {
+        width: 96px;
+        height: 96px;
+        display: none;
+      }
+      [data-theme="dark"] #splash .splash-dark { display: block; }
+      [data-theme="light"] #splash .splash-light { display: block; }
+    </style>
   </head>
   <body>
+    <div id="splash">
+      <img class="splash-icon splash-dark" src="/splash-icon.png" alt="" />
+      <img class="splash-icon splash-light" src="/splash-icon-light.png" alt="" />
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

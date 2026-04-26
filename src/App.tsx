@@ -35,6 +35,7 @@ export default function App() {
     return () => { unlisten.then((fn) => fn()).catch(() => {}); };
   }, []);
 
+
   const hbTab = HeartbeatTab({
     activeWakeupId: nav.wakeupId,
     onWakeupChange: (id) => push({ wakeupId: id }),

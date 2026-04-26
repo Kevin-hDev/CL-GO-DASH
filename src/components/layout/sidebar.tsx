@@ -136,16 +136,16 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
           size={ICON_SIZE}
           weight={activeTab === "settings" ? "fill" : "regular"}
           className={cn(
-            "shrink-0 text-[var(--ink-faint)]",
+            "shrink-0 text-[var(--ink-muted)]",
             activeTab === "settings" && "text-[var(--ink)]",
           )}
         />
         <span className={cn(
-          "text-xs",
+          "text-sm text-[var(--ink-muted)]",
           "w-0 overflow-hidden opacity-0",
           "group-hover/sb:w-auto group-hover/sb:overflow-visible group-hover/sb:opacity-100",
           "transition-opacity duration-150",
-          activeTab === "settings" ? "text-[var(--ink)]" : "text-[var(--ink-faint)]",
+          activeTab === "settings" && "text-[var(--ink)] font-medium",
         )}>
           {t("nav.settings")}
         </span>

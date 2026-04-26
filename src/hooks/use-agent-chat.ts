@@ -14,6 +14,7 @@ export function useAgentChat(
   onPermissionRequest?: (id: string, toolName: string, args: Record<string, unknown>) => void,
   supportsTools?: boolean,
   supportsThinking?: boolean,
+  permissionMode?: string,
 ) {
   const [state, setState] = useState<ChatState>(EMPTY_CHAT_STATE);
   const savingRef = useRef(false);
@@ -26,6 +27,8 @@ export function useAgentChat(
   const thinkingRef = useRef(supportsThinking);
   thinkingRef.current = supportsThinking;
   permissionRequestRef.current = onPermissionRequest;
+  const permModeRef = useRef(permissionMode);
+  permModeRef.current = permissionMode;
 
   const deliverPermission = useCallback((id: string, toolName: string, args: Record<string, unknown>) => {
     const delivered = deliveredPermissionsRef.current;
@@ -94,6 +97,7 @@ export function useAgentChat(
     streamSession: string,
     workingDir?: string,
     baseTokenCountOverride?: number,
+    permissionMode?: string,
   ) => {
     await startStream(
       streamSession,
@@ -105,6 +109,7 @@ export function useAgentChat(
       workingDir,
       supportsTools,
       thinkingRef.current,
+      permissionMode,
     );
   }, [model, provider, startStream, state.tokenCount, supportsTools]);
 
@@ -140,7 +145,7 @@ export function useAgentChat(
     }
     llmMsgs.push(userMsg);
     await invoke("add_messages_to_session", { id: sessionId, messages: [userMsg], tokens: 0 }).catch((e: unknown) => console.error("Save user msg:", e));
-    await doStream(llmMsgs, displayMsgs, sessionId, workingDir);
+    await doStream(llmMsgs, displayMsgs, sessionId, workingDir, undefined, permModeRef.current);
   }, [sessionId, state.messages, doStream]);
 
   const syncTokenCount = useCallback(async (): Promise<number> => {
@@ -160,7 +165,7 @@ export function useAgentChat(
     await invoke("truncate_and_replace_at", { sessionId, messageId, replacement: null }).catch((e: unknown) => console.error("Truncate:", e));
     const freshTokenCount = await syncTokenCount();
     const msgs = state.messages.slice(0, idx + 1);
-    await doStream(msgs, msgs, sessionId, undefined, freshTokenCount);
+    await doStream(msgs, msgs, sessionId, undefined, freshTokenCount, permModeRef.current);
   }, [sessionId, state.messages, doStream, syncTokenCount]);
 
   const edit = useCallback(async (messageId: string, newContent: string) => {
@@ -171,7 +176,7 @@ export function useAgentChat(
     await invoke("truncate_and_replace_at", { sessionId, messageId, replacement: newMsg }).catch((e: unknown) => console.error("Truncate+replace:", e));
     const freshTokenCount = await syncTokenCount();
     const msgs = [...state.messages.slice(0, idx), newMsg];
-    await doStream(msgs, msgs, sessionId, undefined, freshTokenCount);
+    await doStream(msgs, msgs, sessionId, undefined, freshTokenCount, permModeRef.current);
   }, [sessionId, state.messages, doStream, syncTokenCount]);
 
   const stop = useCallback(async () => {

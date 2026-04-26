@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 
 export type PermissionMode = "auto" | "manual" | "chat";
@@ -7,24 +7,48 @@ interface AgentSettings {
   permission_mode: PermissionMode;
 }
 
-export function usePermissionMode() {
-  const [mode, setMode] = useState<PermissionMode>("auto");
+const sessionModes = new Map<string, PermissionMode>();
+let defaultMode: PermissionMode = "auto";
+
+export function usePermissionMode(sessionId?: string) {
+  const resolvedMode = sessionId && sessionModes.has(sessionId)
+    ? sessionModes.get(sessionId)!
+    : defaultMode;
+
+  const [mode, setMode] = useState<PermissionMode>(resolvedMode);
   const [loaded, setLoaded] = useState(false);
+  const sessionRef = useRef(sessionId);
+  sessionRef.current = sessionId;
 
   useEffect(() => {
     invoke<AgentSettings>("get_agent_settings")
       .then((s) => {
-        setMode(s.permission_mode);
+        defaultMode = s.permission_mode;
+        if (!sessionId || !sessionModes.has(sessionId)) {
+          setMode(defaultMode);
+        }
         setLoaded(true);
       })
-      .catch((e) => {
-        console.warn("get_agent_settings:", e);
-        setLoaded(true);
-      });
+      .catch(() => setLoaded(true));
   }, []);
+
+  useEffect(() => {
+    if (!sessionId) return;
+    const stored = sessionModes.get(sessionId);
+    if (stored) {
+      setMode(stored);
+    } else {
+      setMode(defaultMode);
+    }
+  }, [sessionId]);
 
   const change = useCallback(async (next: PermissionMode) => {
     setMode(next);
+    const sid = sessionRef.current;
+    if (sid) {
+      sessionModes.set(sid, next);
+    }
+    defaultMode = next;
     try {
       await invoke("set_permission_mode", { mode: next });
     } catch (e) {

@@ -1,3 +1,4 @@
+use crate::services::agent_local::modelfile_parser::{parse_modelfile, ParsedModelfile};
 use crate::services::agent_local::ollama_client::OllamaClient;
 use crate::services::agent_local::ollama_registry;
 use crate::services::agent_local::ollama_registry_details;
@@ -75,7 +76,10 @@ pub async fn pull_ollama_model(
     is_update: bool,
     on_progress: Channel<PullProgress>,
     pull_cancel: tauri::State<'_, PullCancel>,
+    ollama: tauri::State<'_, OllamaClient>,
 ) -> Result<(), String> {
+    let saved = if is_update { save_customizations(&ollama, &name).await } else { None };
+
     let cancel = CancellationToken::new();
     { *pull_cancel.0.lock().await = Some(cancel.clone()); }
 
@@ -85,7 +89,13 @@ pub async fn pull_ollama_model(
     { *pull_cancel.0.lock().await = None; }
 
     match result {
-        Ok(()) => { let _ = app.emit("ollama-models-changed", ()); Ok(()) }
+        Ok(()) => {
+            if let Some(perso) = saved {
+                restore_customizations(&ollama, &name, &perso).await;
+            }
+            let _ = app.emit("ollama-models-changed", ());
+            Ok(())
+        }
         Err(ref e) if e == "cancelled" => {
             if !is_update {
                 tokio::time::sleep(std::time::Duration::from_millis(500)).await;
@@ -96,6 +106,35 @@ pub async fn pull_ollama_model(
             Err("cancelled".to_string())
         }
         Err(e) => Err(e),
+    }
+}
+
+async fn save_customizations(
+    ollama: &OllamaClient,
+    name: &str,
+) -> Option<ParsedModelfile> {
+    let modelfile = match ollama.get_modelfile(name).await {
+        Ok(mf) => mf,
+        Err(_) => return None,
+    };
+    let parsed = parse_modelfile(&modelfile);
+    let has_system = parsed.system.as_ref().is_some_and(|s| !s.trim().is_empty());
+    let has_params = !parsed.parameters.is_empty();
+    if has_system || has_params { Some(parsed) } else { None }
+}
+
+async fn restore_customizations(
+    ollama: &OllamaClient,
+    name: &str,
+    saved: &ParsedModelfile,
+) {
+    let mut restored = ParsedModelfile::default();
+    restored.from = Some(name.to_string());
+    restored.system = saved.system.clone();
+    restored.parameters = saved.parameters.clone();
+    let payload = restored.to_api_payload(name);
+    if let Err(e) = ollama.post_create(&payload).await {
+        eprintln!("[pull] restore perso {name} échoué: {e}");
     }
 }
 

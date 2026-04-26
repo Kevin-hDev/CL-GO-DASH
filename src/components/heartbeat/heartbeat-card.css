@@ -82,3 +82,10 @@
   background: rgba(245, 158, 11, 0.15);
   color: #f59e0b;
 }
+
+[data-theme="dark"] .wk-card {
+  background: rgba(37, 37, 41, 0.55);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-color: transparent;
+}

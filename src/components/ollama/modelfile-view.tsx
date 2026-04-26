@@ -96,7 +96,7 @@ export function ModelfileView({
           </ViewSection>
         </SettingsCard>
 
-        <pre style={{
+        <pre className="mf-raw-block" style={{
           marginTop: 16, padding: "var(--space-md)",
           fontSize: "var(--text-xs)", fontFamily: "var(--font-mono)",
           color: "var(--ink-faint)", whiteSpace: "pre-wrap",

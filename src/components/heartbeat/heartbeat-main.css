@@ -53,6 +53,13 @@
   border-color: var(--select-text);
 }
 
+[data-theme="dark"] .wk-new-btn {
+  background: rgba(37, 37, 41, 0.55);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-color: transparent;
+}
+
 .wk-empty {
   padding: var(--space-xl);
   text-align: center;

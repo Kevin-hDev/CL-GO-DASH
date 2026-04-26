@@ -33,6 +33,7 @@ pub(crate) async fn run_stream_task(
     working_dir: Option<String>,
     supports_tools_hint: Option<bool>,
     supports_thinking_hint: Option<bool>,
+    permission_mode_override: Option<String>,
     cancel: CancellationToken,
 ) -> Result<(), String> {
     let resolve_dir = |wd: &Option<String>| -> std::path::PathBuf {
@@ -44,7 +45,10 @@ pub(crate) async fn run_stream_task(
             })
     };
 
-    let mode = agent_settings::get_permission_mode().await;
+    let mode = match permission_mode_override {
+        Some(m) if matches!(m.as_str(), "auto" | "manual" | "chat") => m,
+        _ => agent_settings::get_permission_mode().await,
+    };
     let is_chat = mode == "chat";
 
     if provider == "ollama" {

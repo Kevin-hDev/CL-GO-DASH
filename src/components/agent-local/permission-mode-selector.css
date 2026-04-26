@@ -46,7 +46,7 @@
 }
 
 .perm-mode-chat {
-  color: #1d4ed8;
+  color: #4A9EE8;
 }
 
 .perm-mode-dropdown {
@@ -62,11 +62,11 @@
   z-index: 50;
 }
 
-.perm-mode-dropdown-header {
-  padding: 6px 8px 4px;
-  font-size: var(--text-xs);
-  color: var(--ink-faint);
-  font-weight: 500;
+[data-theme="dark"] .perm-mode-dropdown {
+  background: rgba(37, 37, 41, 0.55);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-color: transparent;
 }
 
 .perm-mode-option {

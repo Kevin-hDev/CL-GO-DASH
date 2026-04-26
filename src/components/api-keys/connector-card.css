@@ -3,6 +3,8 @@
   padding: var(--space-md) var(--space-lg) var(--space-lg);
   display: grid;
   grid-template-columns: 1fr 1fr;
+  grid-auto-rows: min-content;
+  align-content: start;
   gap: var(--space-sm);
   overflow-y: auto;
   flex: 1;
@@ -30,6 +32,11 @@
   cursor: pointer;
   transition: background var(--ease-smooth), border-color var(--ease-smooth);
   position: relative;
+}
+
+[data-theme="dark"] .ak-connector-card {
+  background: rgba(37, 37, 41, 0.70);
+  border-color: transparent;
 }
 
 .ak-connector-card:hover:not(:disabled) {

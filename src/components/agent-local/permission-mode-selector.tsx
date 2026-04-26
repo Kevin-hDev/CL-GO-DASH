@@ -66,7 +66,6 @@ export function PermissionModeSelector({ mode, onChange }: Props) {
 
       {open && (
         <div className="perm-mode-dropdown" role="menu">
-          <div className="perm-mode-dropdown-header">{t("permissionMode.title")}</div>
           {MODES.map((m, i) => (
             <button
               key={m}

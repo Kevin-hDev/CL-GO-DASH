@@ -100,7 +100,7 @@ impl OllamaClient {
         self.post_create(&payload).await
     }
 
-    async fn post_create(&self, payload: &serde_json::Value) -> Result<(), String> {
+    pub(crate) async fn post_create(&self, payload: &serde_json::Value) -> Result<(), String> {
         let mut enriched = payload.clone();
         if let Some(obj) = enriched.as_object_mut() {
             obj.insert("stream".into(), serde_json::json!(false));

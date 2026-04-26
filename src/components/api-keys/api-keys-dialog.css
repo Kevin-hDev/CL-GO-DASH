@@ -111,6 +111,11 @@
   transition: background var(--ease-smooth), border-color var(--ease-smooth);
 }
 
+[data-theme="dark"] .ak-picker-card {
+  background: rgba(37, 37, 41, 0.55);
+  border-color: transparent;
+}
+
 .ak-picker-card:hover {
   background: var(--select-bg);
   border-color: var(--select-text);

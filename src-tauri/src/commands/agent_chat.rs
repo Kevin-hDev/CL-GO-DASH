@@ -18,6 +18,7 @@ pub async fn chat_stream(
     working_dir: Option<String>,
     supports_tools: Option<bool>,
     supports_thinking: Option<bool>,
+    permission_mode: Option<String>,
     streams: tauri::State<'_, ActiveStreams>,
 ) -> Result<u64, String> {
     const MAX_ACTIVE_STREAMS: usize = 32;
@@ -52,6 +53,7 @@ pub async fn chat_stream(
             working_dir,
             supports_tools,
             supports_thinking,
+            permission_mode,
             cancel,
         )
         .await;

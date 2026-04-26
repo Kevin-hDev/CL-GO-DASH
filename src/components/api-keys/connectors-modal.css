@@ -5,11 +5,18 @@
   border-radius: var(--radius-md);
   width: 100%;
   max-width: 960px;
-  max-height: 85vh;
+  height: 85vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] .ak-connectors-modal {
+  background: rgba(37, 37, 41, 0.70);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-color: transparent;
 }
 
 .ak-connectors-header {
@@ -86,19 +93,13 @@
 .ak-connectors-search-input {
   width: 100%;
   padding: 10px 12px 10px 36px;
-  border: 1px solid var(--edge);
+  border: none;
   border-radius: var(--radius-sm);
   background: var(--surface);
   color: var(--ink);
   font-size: var(--text-sm);
   font-family: inherit;
-  transition: border-color var(--ease-smooth);
-}
-
-.ak-connectors-search-input:focus {
   outline: none;
-  border-color: var(--select-text);
-  box-shadow: 0 0 0 2px var(--pulse-muted);
 }
 
 .ak-connectors-search-input::placeholder {
