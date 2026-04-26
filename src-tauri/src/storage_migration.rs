@@ -6,7 +6,7 @@ pub fn run() -> Result<(), String> {
     let new = data_dir();
 
     fs::create_dir_all(new.join("logs"))
-        .map_err(|e| format!("create logs dir: {}", e))?;
+        .map_err(|e| { eprintln!("[migration] logs dir: {e}"); "Erreur d'initialisation des données".to_string() })?;
 
     #[cfg(not(target_os = "windows"))]
     {
@@ -71,7 +71,7 @@ fn init_base_structure(base: &std::path::Path) -> Result<(), String> {
     ];
     for d in &dirs {
         fs::create_dir_all(base.join(d))
-            .map_err(|e| format!("create {d}: {e}"))?;
+            .map_err(|e| { eprintln!("[migration] create {d}: {e}"); "Erreur d'initialisation des données".to_string() })?;
     }
 
     let json_defaults: &[(&str, &str)] = &[
@@ -97,7 +97,7 @@ fn init_base_structure(base: &std::path::Path) -> Result<(), String> {
         let path = base.join(name);
         if !path.exists() {
             fs::write(&path, content)
-                .map_err(|e| format!("write {name}: {e}"))?;
+                .map_err(|e| { eprintln!("[migration] write {name}: {e}"); "Erreur d'initialisation des données".to_string() })?;
         }
     }
 
@@ -118,7 +118,7 @@ fn init_base_structure(base: &std::path::Path) -> Result<(), String> {
         let path = base.join(name);
         if !path.exists() {
             fs::write(&path, b"")
-                .map_err(|e| format!("write {name}: {e}"))?;
+                .map_err(|e| { eprintln!("[migration] write {name}: {e}"); "Erreur d'initialisation des données".to_string() })?;
         }
     }
 
@@ -148,13 +148,33 @@ fn copy_items(src: &std::path::Path, dst: &std::path::Path) {
     }
 }
 
+const MAX_COPY_DEPTH: u32 = 10;
+
 fn copy_recursive(src: &std::path::Path, dst: &std::path::Path) -> std::io::Result<()> {
+    copy_recursive_inner(src, dst, dst, 0)
+}
+
+fn copy_recursive_inner(
+    src: &std::path::Path,
+    dst: &std::path::Path,
+    root_dst: &std::path::Path,
+    depth: u32,
+) -> std::io::Result<()> {
     use std::fs;
+    if depth > MAX_COPY_DEPTH {
+        return Err(std::io::Error::other("profondeur de copie maximale dépassée"));
+    }
     if src.is_dir() {
         fs::create_dir_all(dst)?;
         for entry in fs::read_dir(src)? {
             let entry = entry?;
-            copy_recursive(&entry.path(), &dst.join(entry.file_name()))?;
+            let target = dst.join(entry.file_name());
+            let canonical = fs::canonicalize(&dst)?.join(entry.file_name());
+            if !canonical.starts_with(fs::canonicalize(root_dst)?) {
+                eprintln!("[migration] path traversal bloqué: {}", target.display());
+                continue;
+            }
+            copy_recursive_inner(&entry.path(), &target, root_dst, depth + 1)?;
         }
     } else {
         if let Some(parent) = dst.parent() {

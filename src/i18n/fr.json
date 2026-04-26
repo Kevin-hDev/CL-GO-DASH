@@ -397,7 +397,8 @@
     "ollamaWaiting": "Connexion à Ollama perdue ({{seconds}}s) — reconnexion en cours…",
     "ollamaReconnected": "Ollama reconnecté",
     "ollamaReconnecting": "Ollama reconnecté — relance dans {{seconds}}s…",
-    "keyringFailed": "Impossible d'accéder au trousseau de clés. Installe gnome-keyring ou kwallet pour stocker les clés API."
+    "keyringFailed": "Impossible d'accéder au trousseau de clés. Installe gnome-keyring ou kwallet pour stocker les clés API.",
+    "ollamaRestartFailed": "Le redémarrage d'Ollama a échoué"
   },
   "updates": {
     "tooltip": "Mises à jour disponibles",

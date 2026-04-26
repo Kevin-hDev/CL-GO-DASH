@@ -50,7 +50,7 @@ export function OllamaSettingsSection({
       showToast(msg, "success");
       setAccelChanged(false);
     } catch {
-      showToast("Restart failed", "error");
+      showToast(t("errors.ollamaRestartFailed"), "error");
     } finally {
       setRestarting(false);
     }

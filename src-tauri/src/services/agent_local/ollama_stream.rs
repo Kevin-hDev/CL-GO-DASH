@@ -100,8 +100,8 @@ async fn stream_chat_inner(
             eprintln!("[ollama-stream] modèle sans {feature}, retry");
             return Box::pin(stream_chat_inner(on_event, &retry_req, cancel, emit_done, tool_tx)).await;
         }
-        let msg = format!("Ollama HTTP {status}: {body}");
-        eprintln!("[ollama-stream] {msg}");
+        eprintln!("[ollama-stream] HTTP {status}: {body}");
+        let msg = format!("Ollama HTTP {status}");
         let _ = on_event.send(StreamEvent::Error { message: "Erreur serveur Ollama".into(), is_connection: false });
         return Err(msg);
     }

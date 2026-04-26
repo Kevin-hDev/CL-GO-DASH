@@ -14,7 +14,7 @@ pub async fn download_file(
         .header("User-Agent", "CL-GO-DASH")
         .send()
         .await
-        .map_err(|e| format!("network: {e}"))?;
+        .map_err(|e| { eprintln!("[ollama-dl] network: {e}"); "Erreur réseau lors du téléchargement".to_string() })?;
 
     if !resp.status().is_success() {
         return Err(format!("téléchargement refusé (HTTP {})", resp.status()));
@@ -40,7 +40,7 @@ pub async fn download_file(
 
     let mut file = tokio::fs::File::create(dest)
         .await
-        .map_err(|e| format!("fs: {e}"))?;
+        .map_err(|e| { eprintln!("[ollama-dl] fs create: {e}"); "Erreur d'écriture sur le disque".to_string() })?;
 
     use futures_util::StreamExt;
     use tokio::io::AsyncWriteExt;
@@ -49,10 +49,10 @@ pub async fn download_file(
     let mut downloaded: u64 = 0;
 
     while let Some(chunk) = stream.next().await {
-        let chunk = chunk.map_err(|e| format!("stream: {e}"))?;
+        let chunk = chunk.map_err(|e| { eprintln!("[ollama-dl] stream: {e}"); "Erreur pendant le téléchargement".to_string() })?;
         file.write_all(&chunk)
             .await
-            .map_err(|e| format!("write: {e}"))?;
+            .map_err(|e| { eprintln!("[ollama-dl] write: {e}"); "Erreur d'écriture sur le disque".to_string() })?;
         downloaded += chunk.len() as u64;
         let _ = on_progress.send(OllamaSetupProgress {
             completed: downloaded,
@@ -61,11 +61,11 @@ pub async fn download_file(
         });
     }
 
-    file.flush().await.map_err(|e| format!("flush: {e}"))?;
+    file.flush().await.map_err(|e| { eprintln!("[ollama-dl] flush: {e}"); "Erreur d'écriture sur le disque".to_string() })?;
 
     let size = tokio::fs::metadata(dest)
         .await
-        .map_err(|e| format!("metadata: {e}"))?
+        .map_err(|e| { eprintln!("[ollama-dl] metadata: {e}"); "Erreur de vérification du fichier".to_string() })?
         .len();
     if size < MIN_ARCHIVE_BYTES {
         let _ = tokio::fs::remove_file(dest).await;

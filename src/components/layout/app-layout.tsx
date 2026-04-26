@@ -10,6 +10,10 @@ import { IS_MAC } from "@/lib/platform";
 import { GpuStatusBadge } from "@/components/agent-local/gpu-status-badge";
 import "./app-layout.css";
 
+const GPU_BADGE_OFFSET = 12;
+const UPDATES_ANCHOR_MAC = 197;
+const UPDATES_ANCHOR_OTHER = 122;
+
 interface AppLayoutProps {
   activeTab: TabId;
   onTabChange: (tab: TabId) => void;
@@ -143,8 +147,8 @@ export function AppLayout({
           {listContent}
           <div style={{
             position: "absolute",
-            bottom: 12,
-            right: 12,
+            bottom: GPU_BADGE_OFFSET,
+            right: GPU_BADGE_OFFSET,
           }}>
             <GpuStatusBadge />
           </div>
@@ -179,7 +183,7 @@ export function AppLayout({
         appPercent={updates.appPercent}
         onPullModel={updates.pullModel}
         onDownloadApp={updates.downloadAppUpdate}
-        anchorLeft={IS_MAC ? 197 : 122}
+        anchorLeft={IS_MAC ? UPDATES_ANCHOR_MAC : UPDATES_ANCHOR_OTHER}
       />
     </div>
   );

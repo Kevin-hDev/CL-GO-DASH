@@ -55,7 +55,10 @@ pub async fn download_ollama(on_progress: Channel<OllamaSetupProgress>) -> Resul
     });
 
     let _ = std::fs::remove_dir_all(&dest);
-    std::fs::create_dir_all(&dest).map_err(|e| format!("mkdir: {e}"))?;
+    std::fs::create_dir_all(&dest).map_err(|e| {
+        eprintln!("[ollama-setup] mkdir {}: {e}", dest.display());
+        "Impossible de créer le dossier d'installation".to_string()
+    })?;
 
     if let Err(err) = super::ollama_extract::extract_archive(&tmp, &dest, archive_name, binary_name)
     {

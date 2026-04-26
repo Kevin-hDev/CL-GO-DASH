@@ -1,5 +1,11 @@
 use std::process::Command;
 
+const VRAM_TIER_HIGH_MB: u64 = 24_000;
+const VRAM_TIER_MID_MB: u64 = 12_000;
+const CTX_HIGH: u32 = 32768;
+const CTX_MID: u32 = 16384;
+const CTX_LOW: u32 = 8192;
+
 pub fn detect_vram_mb() -> Option<u64> {
     #[cfg(target_os = "macos")]
     { return detect_macos(); }
@@ -13,9 +19,9 @@ pub fn detect_vram_mb() -> Option<u64> {
 
 pub fn compute_default_num_ctx() -> u32 {
     match detect_vram_mb() {
-        Some(mb) if mb >= 24_000 => 32768,
-        Some(mb) if mb >= 12_000 => 16384,
-        _ => 8192,
+        Some(mb) if mb >= VRAM_TIER_HIGH_MB => CTX_HIGH,
+        Some(mb) if mb >= VRAM_TIER_MID_MB => CTX_MID,
+        _ => CTX_LOW,
     }
 }
 

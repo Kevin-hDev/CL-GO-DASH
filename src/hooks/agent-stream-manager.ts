@@ -6,13 +6,14 @@ import {
   finishPartialStream,
   type ChatState, type ManagedStreamState, type PermissionRequestState,
 } from "./agent-chat-stream-callbacks";
+import {
+  MAX_EVENTS_PER_SESSION,
+  enforceSessionLimit, scheduleCleanup, clearCleanup, trimSubscribers,
+  type StreamRecord,
+} from "./agent-stream-cleanup";
 import type { AgentMessage, StreamEvent } from "@/types/agent";
 
 const EVENT_NAME = "agent-stream-event";
-const MAX_SESSIONS = 64;
-const MAX_EVENTS_PER_SESSION = 4096;
-const MAX_SUBSCRIBERS_PER_SESSION = 32;
-const CLEANUP_DELAY_MS = 5 * 60 * 1000;
 
 interface StreamEnvelope { sessionId: string; event: StreamEvent }
 
@@ -24,15 +25,6 @@ export interface StreamSnapshot extends ChatState {
 }
 
 type Subscriber = (snapshot: StreamSnapshot) => void;
-
-interface StreamRecord {
-  state: ManagedStreamState;
-  history: StreamEvent[];
-  subscribers: Map<number, Subscriber>;
-  nextSubscriberId: number;
-  cleanupTimer: ReturnType<typeof setTimeout> | null;
-  started: boolean;
-}
 
 const records = new Map<string, StreamRecord>();
 let listenPromise: Promise<UnlistenFn> | null = null;
@@ -78,7 +70,7 @@ function failSession(sessionId: string) {
   record.state = { ...record.state, isStreaming: false, completed: true,
     error: i18n.t("errors.streamStartFailed"), updatedAt: Date.now() };
   notify(record);
-  scheduleCleanup(sessionId, record);
+  scheduleCleanup(sessionId, record, records);
 }
 
 function getSnapshot(sessionId: string): StreamSnapshot | null {
@@ -96,13 +88,13 @@ function subscribe(sessionId: string, subscriber: Subscriber): () => void {
   const record = getOrCreateRecord(sessionId);
   clearCleanup(record);
   const id = record.nextSubscriberId++;
-  record.subscribers.set(id, subscriber);
+  record.subscribers.set(id, subscriber as (s: unknown) => void);
   trimSubscribers(record);
   if (record.started) subscriber(snapshot(record.state));
   return () => {
     record.subscribers.delete(id);
     if (record.state.completed && record.subscribers.size === 0) {
-      scheduleCleanup(sessionId, record);
+      scheduleCleanup(sessionId, record, records);
     }
   };
 }
@@ -123,7 +115,7 @@ function handleStreamEvent(sessionId: string, event: StreamEvent) {
     persistAssistant(sessionId, record, result.assistantMessage, result.assistantTokens ?? 0);
   }
   if (record.state.completed && record.subscribers.size === 0) {
-    scheduleCleanup(sessionId, record);
+    scheduleCleanup(sessionId, record, records);
   }
 }
 
@@ -152,14 +144,14 @@ function getOrCreateRecord(sessionId: string): StreamRecord {
     started: false,
   };
   records.set(sessionId, record);
-  enforceSessionLimit();
+  enforceSessionLimit(records);
   return record;
 }
 
 function notify(record: StreamRecord) {
   if (!record.started) return;
   const value = snapshot(record.state);
-  for (const subscriber of record.subscribers.values()) subscriber(value);
+  for (const subscriber of record.subscribers.values()) (subscriber as Subscriber)(value);
 }
 
 function snapshot(state: ManagedStreamState): StreamSnapshot {
@@ -170,38 +162,8 @@ function snapshot(state: ManagedStreamState): StreamSnapshot {
   };
 }
 
-function trimSubscribers(record: StreamRecord) {
-  while (record.subscribers.size > MAX_SUBSCRIBERS_PER_SESSION) {
-    const first = record.subscribers.keys().next().value;
-    if (first === undefined) break;
-    record.subscribers.delete(first);
-  }
-}
-
 function touchSession(sessionId: string, record: StreamRecord) {
   records.delete(sessionId);
   records.set(sessionId, record);
-  enforceSessionLimit();
-}
-
-function enforceSessionLimit() {
-  for (const [sessionId, record] of records) {
-    if (records.size <= MAX_SESSIONS) return;
-    if (record.state.isStreaming || record.subscribers.size > 0) continue;
-    clearCleanup(record); records.delete(sessionId);
-  }
-}
-
-function scheduleCleanup(sessionId: string, record: StreamRecord) {
-  clearCleanup(record);
-  record.cleanupTimer = setTimeout(() => {
-    if (record.subscribers.size === 0 && !record.state.isStreaming) {
-      records.delete(sessionId);
-    }
-  }, CLEANUP_DELAY_MS);
-}
-
-function clearCleanup(record: StreamRecord) {
-  if (record.cleanupTimer) clearTimeout(record.cleanupTimer);
-  record.cleanupTimer = null;
+  enforceSessionLimit(records);
 }

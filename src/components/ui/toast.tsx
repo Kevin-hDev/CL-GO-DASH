@@ -23,6 +23,8 @@ export function useToast() {
   return useContext(ToastContext);
 }
 
+const MAX_TOASTS = 10;
+
 const DEFAULT_DURATIONS: Record<ToastType, number> = {
   success: 3000,
   error: 3000,
@@ -38,7 +40,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const show = useCallback((message: string, type: ToastType = "info", duration?: number) => {
     const id = nextId++;
     const ms = duration ?? DEFAULT_DURATIONS[type];
-    setToasts((prev) => [...prev, { id, message, type, duration: ms }]);
+    setToasts((prev) => [...prev, { id, message, type, duration: ms }].slice(-MAX_TOASTS));
   }, []);
 
   useEffect(() => { registerToast(show); }, [show]);

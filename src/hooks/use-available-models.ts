@@ -72,7 +72,7 @@ async function fetchCloudModels(): Promise<Map<string, AvailableModel[]>> {
       );
       if (mapped.length > 0) result.set(spec.id, mapped);
     } catch (e) {
-      console.warn(`[models] ${spec.id}:`, e);
+      console.warn(`[models] ${spec.id}: fetch failed`);
     }
   }
   return result;
@@ -92,7 +92,7 @@ async function fetchAllModels(): Promise<Map<string, AvailableModel[]>> {
     const cloud = await fetchCloudModels();
     for (const [k, v] of cloud) result.set(k, v);
   } catch (e) {
-    console.warn("[models] catalog:", e);
+    console.warn("[models] catalog fetch failed");
   }
 
   cachedGroups = result;

@@ -1,6 +1,8 @@
 use crate::services::gpu_detect::GpuVendor;
 use crate::models::config::AdvancedSettings;
 
+const GPU_OVERHEAD_BYTES: &str = "1073741824";
+
 pub fn build_env_vars(
     config: &AdvancedSettings,
     gpu: &GpuVendor,
@@ -31,7 +33,7 @@ pub fn build_env_vars(
         vars.push(("OLLAMA_LLM_LIBRARY".into(), "cpu".into()));
     } else {
         if !matches!(gpu, GpuVendor::Unknown) {
-            vars.push(("OLLAMA_GPU_OVERHEAD".into(), "1073741824".into()));
+            vars.push(("OLLAMA_GPU_OVERHEAD".into(), GPU_OVERHEAD_BYTES.into()));
         }
 
         #[cfg(target_os = "windows")]

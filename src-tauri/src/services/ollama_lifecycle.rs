@@ -75,7 +75,11 @@ pub fn start_sidecar(app: &AppHandle) -> Result<bool, String> {
         cmd.env(key, val);
     }
     eprintln!("[ollama] GPU : {:?}, accel : {}", gpu, config.advanced.hardware_accel);
-    eprintln!("[ollama] env : {:?}", env_vars.iter().map(|(k, v)| format!("{k}={v}")).collect::<Vec<_>>());
+    let safe_vars: Vec<_> = env_vars.iter()
+        .filter(|(k, _)| !k.contains("KEY") && !k.contains("TOKEN") && !k.contains("SECRET"))
+        .map(|(k, v)| format!("{k}={v}"))
+        .collect();
+    eprintln!("[ollama] env : {:?}", safe_vars);
 
     #[cfg(target_os = "linux")]
     {

@@ -397,7 +397,8 @@
     "ollamaWaiting": "Connection to Ollama lost ({{seconds}}s) — reconnecting…",
     "ollamaReconnected": "Ollama reconnected",
     "ollamaReconnecting": "Ollama reconnected — retrying in {{seconds}}s…",
-    "keyringFailed": "Cannot access keyring. Install gnome-keyring or kwallet to store API keys."
+    "keyringFailed": "Cannot access keyring. Install gnome-keyring or kwallet to store API keys.",
+    "ollamaRestartFailed": "Ollama restart failed"
   },
   "updates": {
     "tooltip": "Updates available",

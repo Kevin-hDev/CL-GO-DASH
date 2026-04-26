@@ -12,7 +12,9 @@ pub fn save_pid(pid: u32) {
 }
 
 pub fn read_saved_pid() -> Option<u32> {
-    std::fs::read_to_string(pid_file_path()).ok()?.trim().parse().ok()
+    let pid: u32 = std::fs::read_to_string(pid_file_path()).ok()?.trim().parse().ok()?;
+    if pid < 2 { return None; }
+    Some(pid)
 }
 
 pub fn clear_pid_file() {
@@ -96,16 +98,26 @@ pub fn tree_kill(pid: u32) {
     }
 }
 
+const MAX_CHILDREN: usize = 256;
+const MAX_DEPTH: u32 = 10;
+
 #[cfg(unix)]
 fn collect_children(sys: &System, parent: Pid) -> Vec<Pid> {
     let mut result = Vec::new();
+    collect_children_inner(sys, parent, &mut result, 0);
+    result
+}
+
+#[cfg(unix)]
+fn collect_children_inner(sys: &System, parent: Pid, result: &mut Vec<Pid>, depth: u32) {
+    if depth >= MAX_DEPTH || result.len() >= MAX_CHILDREN { return; }
     for (pid, proc) in sys.processes() {
+        if result.len() >= MAX_CHILDREN { return; }
         if proc.parent() == Some(parent) {
             result.push(*pid);
-            result.extend(collect_children(sys, *pid));
+            collect_children_inner(sys, *pid, result, depth + 1);
         }
     }
-    result
 }
 
 pub fn kill_process(child: &mut Child) {
