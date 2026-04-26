@@ -36,3 +36,8 @@ pub fn set_advanced_settings(
     config.advanced = settings;
     config_service::write_config(&config)
 }
+
+#[tauri::command]
+pub fn get_effective_context_length() -> u32 {
+    crate::services::gpu_detect::compute_default_num_ctx()
+}

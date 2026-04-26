@@ -1,89 +1,17 @@
-use std::net::TcpStream;
 use std::path::PathBuf;
 use std::process::{Child, Command, Stdio};
 use std::sync::Mutex;
-use std::time::Duration;
 use tauri::{AppHandle, Manager};
 
 use crate::services::gpu_detect;
+use crate::services::ollama_kill;
+use crate::services::ollama_port;
 
 pub struct OllamaSidecar(pub Mutex<Option<Child>>);
 
 impl OllamaSidecar {
     pub fn new() -> Self {
         Self(Mutex::new(None))
-    }
-}
-
-fn port_open() -> bool {
-    TcpStream::connect_timeout(
-        &"127.0.0.1:11434".parse().unwrap(),
-        Duration::from_millis(500),
-    )
-    .is_ok()
-}
-
-fn pid_file_path() -> PathBuf { crate::services::paths::data_dir().join("ollama-sidecar.pid") }
-fn save_pid(pid: u32) { let _ = std::fs::write(pid_file_path(), pid.to_string()); }
-fn read_saved_pid() -> Option<u32> { std::fs::read_to_string(pid_file_path()).ok()?.trim().parse().ok() }
-fn clear_pid_file() { let _ = std::fs::remove_file(pid_file_path()); }
-
-fn kill_orphan_sidecar() {
-    let Some(pid) = read_saved_pid() else { return };
-    clear_pid_file();
-
-    if !is_ollama_process(pid) {
-        eprintln!("[ollama] pid={pid} n'est plus ollama, ignoré");
-        return;
-    }
-
-    eprintln!("[ollama] orphelin détecté pid={pid}, kill");
-    kill_pid(pid);
-}
-
-fn is_ollama_process(pid: u32) -> bool {
-    #[cfg(unix)]
-    {
-        let output = Command::new("ps")
-            .args(["-p", &pid.to_string(), "-o", "comm="])
-            .output();
-        match output {
-            Ok(o) => String::from_utf8_lossy(&o.stdout).trim().contains("ollama"),
-            Err(_) => false,
-        }
-    }
-    #[cfg(windows)]
-    {
-        let output = Command::new("tasklist")
-            .args(["/FI", &format!("PID eq {pid}"), "/NH", "/FO", "CSV"])
-            .output();
-        match output {
-            Ok(o) => String::from_utf8_lossy(&o.stdout).to_lowercase().contains("ollama"),
-            Err(_) => false,
-        }
-    }
-}
-
-fn kill_pid(pid: u32) {
-    #[cfg(unix)]
-    {
-        unsafe { libc::kill(pid as i32, libc::SIGTERM); }
-        let start = std::time::Instant::now();
-        while start.elapsed() < Duration::from_secs(3) {
-            if unsafe { libc::kill(pid as i32, 0) != 0 } {
-                eprintln!("[ollama] orphelin {pid} arrêté");
-                return;
-            }
-            std::thread::sleep(Duration::from_millis(100));
-        }
-        eprintln!("[ollama] SIGKILL orphelin {pid}");
-        unsafe { libc::kill(pid as i32, libc::SIGKILL); }
-    }
-    #[cfg(windows)]
-    {
-        let _ = Command::new("taskkill")
-            .args(["/PID", &pid.to_string(), "/F"])
-            .output();
     }
 }
 
@@ -99,17 +27,30 @@ pub fn ollama_binary_path() -> Result<PathBuf, String> {
     }
     Ok(path)
 }
+
 pub fn is_ollama_ready() -> bool {
-    port_open() || ollama_binary_path().is_ok()
+    ollama_port::is_port_open(ollama_port::get_port()) || ollama_binary_path().is_ok()
 }
 
 pub fn start_sidecar(app: &AppHandle) -> Result<bool, String> {
-    kill_orphan_sidecar();
+    ollama_kill::kill_orphan_sidecar();
 
-    if port_open() {
-        eprintln!("[ollama] daemon externe détecté sur 11434, sidecar ignoré");
+    let port = ollama_port::find_free_port();
+
+    if ollama_port::detect_existing_instance(port) {
+        eprintln!("[ollama] daemon existant détecté sur {port}, sidecar ignoré");
+        ollama_port::set_port(port);
         return Ok(false);
     }
+
+    if ollama_port::detect_existing_instance(11434) {
+        eprintln!("[ollama] daemon système détecté sur 11434, réutilisation");
+        ollama_port::set_port(11434);
+        return Ok(false);
+    }
+
+    ollama_port::set_port(port);
+    eprintln!("[ollama] port sélectionné : {port}");
 
     let binary = ollama_binary_path()?;
     let bundle_dir = binary.parent().ok_or("no parent dir")?.to_path_buf();
@@ -126,31 +67,37 @@ pub fn start_sidecar(app: &AppHandle) -> Result<bool, String> {
         .stderr(Stdio::from(stderr_file));
 
     let config = crate::services::config::read_config().unwrap_or_default();
-    let accel = config.advanced.hardware_accel.as_str();
     let gpu = gpu_detect::detect();
-    eprintln!("[ollama] GPU : {:?}, accel : {accel}", gpu);
+    let env_vars = crate::services::ollama_env::build_env_vars(
+        &config.advanced, &gpu, port,
+    );
+    for (key, val) in &env_vars {
+        cmd.env(key, val);
+    }
+    eprintln!("[ollama] GPU : {:?}, accel : {}", gpu, config.advanced.hardware_accel);
+    eprintln!("[ollama] env : {:?}", env_vars.iter().map(|(k, v)| format!("{k}={v}")).collect::<Vec<_>>());
 
-    if accel == "cpu" {
-        cmd.env("OLLAMA_LLM_LIBRARY", "cpu");
-        eprintln!("[ollama] mode CPU forcé");
-    } else {
-        #[cfg(target_os = "windows")]
-        if matches!(gpu, gpu_detect::GpuVendor::Amd) {
-            cmd.env("OLLAMA_VULKAN", "1");
-            eprintln!("[ollama] AMD Windows → OLLAMA_VULKAN=1");
+    #[cfg(target_os = "linux")]
+    {
+        let lib_dir = bundle_dir.join("lib/ollama");
+        if lib_dir.is_dir() {
+            let existing = std::env::var("LD_LIBRARY_PATH").unwrap_or_default();
+            let new_path = format!("{}:{existing}", lib_dir.display());
+            cmd.env("LD_LIBRARY_PATH", new_path);
+            eprintln!("[ollama] LD_LIBRARY_PATH prépend {}", lib_dir.display());
         }
     }
 
     #[cfg(target_os = "windows")]
     {
         use std::os::windows::process::CommandExt;
-        cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
+        cmd.creation_flags(0x08000000);
     }
 
     let child = cmd.spawn().map_err(|e| format!("spawn ollama: {e}"))?;
     let pid = child.id();
-    save_pid(pid);
-    eprintln!("[ollama] sidecar démarré pid={pid}");
+    ollama_kill::save_pid(pid);
+    eprintln!("[ollama] sidecar démarré pid={pid} port={port}");
 
     let state = app.state::<OllamaSidecar>();
     let mut guard = state.0.lock().map_err(|e| e.to_string())?;
@@ -167,34 +114,7 @@ pub fn stop_sidecar(app: &AppHandle) {
     };
 
     if let Some(mut child) = guard.take() {
-        kill_process(&mut child);
+        ollama_kill::kill_process(&mut child);
     }
-    clear_pid_file();
-}
-
-fn kill_process(child: &mut Child) {
-    let pid = child.id();
-    eprintln!("[ollama] kill sidecar pid={pid}");
-
-    #[cfg(unix)]
-    unsafe {
-        libc::kill(pid as i32, libc::SIGTERM);
-    }
-    #[cfg(not(unix))]
-    {
-        let _ = child.kill();
-    }
-
-    let start = std::time::Instant::now();
-    while start.elapsed() < Duration::from_secs(3) {
-        if let Ok(Some(_)) = child.try_wait() {
-            eprintln!("[ollama] sidecar arrêté proprement");
-            return;
-        }
-        std::thread::sleep(Duration::from_millis(100));
-    }
-
-    eprintln!("[ollama] SIGKILL après timeout");
-    let _ = child.kill();
-    let _ = child.wait();
+    ollama_kill::clear_pid_file();
 }

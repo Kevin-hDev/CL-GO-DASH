@@ -18,6 +18,7 @@ pub mod terminal;
 pub mod app_update;
 pub mod app_update_install;
 pub mod ollama_updates;
+pub mod ollama_download;
 pub mod ollama_setup;
 pub mod ollama_extract;
 

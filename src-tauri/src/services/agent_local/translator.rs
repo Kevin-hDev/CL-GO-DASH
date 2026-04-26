@@ -1,4 +1,4 @@
-use crate::services::agent_local::OLLAMA_BASE_URL;
+use crate::services::agent_local::ollama_base_url;
 use reqwest::Client;
 use std::time::Duration;
 const DEFAULT_MODEL: &str = "gemma4:e2b";
@@ -112,7 +112,7 @@ async fn translate_chunk(
         .map_err(|e| e.to_string())?;
 
     let resp = client
-        .post(format!("{OLLAMA_BASE_URL}/api/chat"))
+        .post(format!("{}/api/chat", ollama_base_url()))
         .json(&serde_json::json!({
             "model": model,
             "messages": [

@@ -92,6 +92,7 @@ pub fn run() {
             commands::save_config,
             commands::get_advanced_settings,
             commands::set_advanced_settings,
+            commands::get_effective_context_length,
             commands::list_wakeups,
             commands::create_wakeup,
             commands::update_wakeup,
@@ -190,6 +191,7 @@ pub fn run() {
             commands::download_ollama,
             commands::start_ollama_sidecar,
             commands::restart_ollama_sidecar,
+            commands::check_model_fits_vram,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application");

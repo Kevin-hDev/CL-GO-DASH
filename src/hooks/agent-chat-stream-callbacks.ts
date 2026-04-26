@@ -20,6 +20,7 @@ export interface ChatState {
   segmentStartedAt: number | null;
   totalElapsedMs: number;
   error?: string;
+  isConnectionError?: boolean;
 }
 
 export interface PermissionRequestState {
@@ -28,7 +29,7 @@ export interface PermissionRequestState {
 
 export interface ManagedStreamState extends ChatState {
   pendingPermissions: PermissionRequestState[];
-  completed: boolean; persisted: boolean; updatedAt: number; error?: string;
+  completed: boolean; persisted: boolean; updatedAt: number; error?: string; isConnectionError?: boolean;
 }
 
 export const EMPTY_CHAT_STATE: ChatState = {
@@ -62,6 +63,7 @@ export function toChatState(state: ManagedStreamState): ChatState {
     segmentStartedAt: state.segmentStartedAt,
     totalElapsedMs: state.totalElapsedMs,
     error: state.error,
+    isConnectionError: state.isConnectionError,
   };
 }
 
@@ -125,6 +127,7 @@ export function applyStreamEvent(
       next.isStreaming = false;
       next.completed = true;
       next.error = event.data.message || i18n.t("errors.streamInterrupted");
+      next.isConnectionError = (event.data as Record<string, unknown>).isConnection === true;
       break;
   }
   return { state: next };

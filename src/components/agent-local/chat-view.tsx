@@ -117,6 +117,11 @@ export function ChatView({
             segmentStartedAt={chat.segmentStartedAt}
             liveTokenCount={chat.liveTokenCount}
             error={chat.error}
+            isConnectionError={chat.isConnectionError}
+            onRetry={() => {
+              const lastUser = [...chat.messages].reverse().find((m) => m.role === "user");
+              if (lastUser) chat.reload(lastUser.id);
+            }}
             onReload={chat.reload}
             onEdit={chat.edit}
             onFileClick={(f) => setPreview({

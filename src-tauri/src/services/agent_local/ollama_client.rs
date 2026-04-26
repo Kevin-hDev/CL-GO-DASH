@@ -2,7 +2,7 @@ use crate::services::agent_local::modelfile_parser::{
     merge_parameter, parse_modelfile, parse_param_value,
 };
 use crate::services::agent_local::types_ollama::{ModelInfo, OllamaModel};
-use crate::services::agent_local::OLLAMA_BASE_URL;
+use crate::services::agent_local::ollama_base_url;
 use reqwest::Client;
 use std::time::Duration;
 const TIMEOUT: Duration = Duration::from_secs(5);
@@ -22,7 +22,7 @@ impl OllamaClient {
 
     pub async fn is_running(&self) -> bool {
         self.client
-            .get(format!("{OLLAMA_BASE_URL}/api/tags"))
+            .get(format!("{}/api/tags", ollama_base_url()))
             .timeout(TIMEOUT)
             .send()
             .await
@@ -32,7 +32,7 @@ impl OllamaClient {
     pub async fn list_models(&self) -> Result<Vec<OllamaModel>, String> {
         let resp = self
             .client
-            .get(format!("{OLLAMA_BASE_URL}/api/tags"))
+            .get(format!("{}/api/tags", ollama_base_url()))
             .send()
             .await
             .map_err(|e| format!("Connexion Ollama impossible: {e}"))?;
@@ -107,7 +107,7 @@ impl OllamaClient {
         }
         let resp = self
             .client
-            .post(format!("{OLLAMA_BASE_URL}/api/create"))
+            .post(format!("{}/api/create", ollama_base_url()))
             .json(&enriched)
             .send()
             .await
@@ -123,7 +123,7 @@ impl OllamaClient {
     pub async fn show_model(&self, name: &str) -> Result<ModelInfo, String> {
         let resp = self
             .client
-            .post(format!("{OLLAMA_BASE_URL}/api/show"))
+            .post(format!("{}/api/show", ollama_base_url()))
             .json(&serde_json::json!({ "model": name }))
             .send()
             .await

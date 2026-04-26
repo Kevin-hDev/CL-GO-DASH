@@ -7,6 +7,7 @@ import { SearchDialog } from "./search-dialog";
 import { UpdateNotifications } from "./update-notifications";
 import { useUpdateChecker } from "@/hooks/use-update-checker";
 import { IS_MAC } from "@/lib/platform";
+import { GpuStatusBadge } from "@/components/agent-local/gpu-status-badge";
 import "./app-layout.css";
 
 interface AppLayoutProps {
@@ -133,10 +134,20 @@ export function AppLayout({
         <Sidebar activeTab={activeTab} onTabChange={onTabChange} />
         <div
           className="app-list-panel"
-          style={listWidth ? { width: listWidth, minWidth: listWidth } : undefined}
+          style={{
+            ...(listWidth ? { width: listWidth, minWidth: listWidth } : {}),
+            position: "relative",
+          }}
         >
           <DragRegion />
           {listContent}
+          <div style={{
+            position: "absolute",
+            bottom: 12,
+            right: 12,
+          }}>
+            <GpuStatusBadge />
+          </div>
         </div>
         <div className="sidebar-resize-handle" onPointerDown={handleResizeStart} />
       </div>

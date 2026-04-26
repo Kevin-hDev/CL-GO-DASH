@@ -145,8 +145,11 @@ pub enum StreamEvent {
         final_tps: f64,
         prompt_tokens: u32,
     },
+    #[serde(rename_all = "camelCase")]
     Error {
         message: String,
+        #[serde(default)]
+        is_connection: bool,
     },
 }
 

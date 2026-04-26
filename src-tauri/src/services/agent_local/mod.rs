@@ -1,4 +1,6 @@
-pub const OLLAMA_BASE_URL: &str = "http://localhost:11434";
+pub fn ollama_base_url() -> String {
+    crate::services::ollama_port::base_url()
+}
 
 pub mod agent_loop;
 pub mod agent_md;

@@ -32,12 +32,21 @@ export function useContextProgress(
       try {
         const info = await invoke<ModelInfo>("show_ollama_model", { name: model });
         const fromModelfile = parseNumCtxFromModelfile(info.modelfile);
-        setMax(fromModelfile ?? info.context_length ?? 0);
+        if (fromModelfile) {
+          setMax(fromModelfile);
+          return;
+        }
+        const modelCtx = info.context_length ?? 0;
+        const effectiveCtx = await invoke<number>("get_effective_context_length").catch(() => 0);
+        if (effectiveCtx > 0 && modelCtx > 0) {
+          setMax(Math.min(modelCtx, effectiveCtx));
+        } else {
+          setMax(effectiveCtx || modelCtx);
+        }
       } catch {
         setMax(0);
       }
     } else {
-      // LLM API : récupère context_length via list_llm_models.
       try {
         const models = await invoke<LlmModelInfo[]>("list_llm_models", { providerId: provider });
         const found = models.find((m) => m.id === model);

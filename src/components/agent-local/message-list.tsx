@@ -3,6 +3,7 @@ import { UserMessage } from "./user-message";
 import { AssistantMessage } from "./assistant-message";
 import { ToolBubble, SavedToolBubble } from "./tool-bubble";
 import { ThinkingSection } from "./thinking-section";
+import { ErrorBubble } from "./error-bubble";
 import type { AgentMessage } from "@/types/agent";
 import type { ToolActivity, StreamSegment } from "@/hooks/agent-chat-utils";
 import thinkingAnimation from "@/assets/thinking-loader.json";
@@ -20,6 +21,8 @@ interface MessageListProps {
   segmentStartedAt: number | null;
   liveTokenCount: number;
   error?: string;
+  isConnectionError?: boolean;
+  onRetry?: () => void;
   onReload?: (messageId: string) => void;
   onEdit?: (messageId: string, newContent: string) => void;
   onFileClick?: (file: { name: string; path?: string; thumbnail?: string }) => void;
@@ -28,7 +31,7 @@ interface MessageListProps {
 export function MessageList({
   messages, completedSegments, currentContent, currentThinking,
   currentTools, isStreaming, tps, totalElapsedMs, segmentStartedAt,
-  liveTokenCount, error, onReload, onEdit, onFileClick,
+  liveTokenCount, error, isConnectionError, onRetry, onReload, onEdit, onFileClick,
 }: MessageListProps) {
   const lastAssistantIdx = findLastIndex(messages, (m) => m.role === "assistant");
 
@@ -78,7 +81,13 @@ export function MessageList({
       )}
       {isStreaming && currentTools.length > 0 && <ToolBubble tools={currentTools} />}
 
-      {error && !isStreaming && <ErrorBubble message={error} />}
+      {error && !isStreaming && (
+        <ErrorBubble
+          message={error}
+          isConnection={isConnectionError}
+          onRetry={onRetry}
+        />
+      )}
     </>
   );
 }
@@ -123,23 +132,6 @@ function findLastIndex<T>(arr: T[], pred: (item: T) => boolean): number {
     if (pred(arr[i])) return i;
   }
   return -1;
-}
-
-function ErrorBubble({ message }: { message: string }) {
-  return (
-    <div style={{
-      width: "100%", maxWidth: "660px",
-      background: "rgba(239, 68, 68, 0.06)",
-      border: "1px solid rgba(239, 68, 68, 0.2)",
-      borderRadius: "var(--radius-md, 8px)",
-      padding: "10px 14px", alignSelf: "center", margin: "6px auto",
-      color: "var(--signal-error)", fontSize: "12px",
-      fontFamily: "var(--font-mono, monospace)", lineHeight: 1.5,
-      wordBreak: "break-word",
-    }}>
-      {message}
-    </div>
-  );
 }
 
 function LoadingIndicator() {

@@ -1,11 +1,16 @@
 pub mod agent_local;
 pub mod api_keys;
 pub mod gpu_detect;
+pub mod gpu_vram;
 pub mod config;
 pub mod favorite_models;
 pub mod file_watcher;
 pub mod llm;
+pub mod ollama_env;
+pub mod ollama_kill;
 pub mod ollama_lifecycle;
+pub mod ollama_port;
+pub mod ollama_ps;
 pub mod paths;
 pub mod personality_injection;
 pub mod scheduler;

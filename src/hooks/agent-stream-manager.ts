@@ -20,6 +20,7 @@ export interface StreamSnapshot extends ChatState {
   pendingPermissions: PermissionRequestState[];
   completed: boolean;
   error?: string;
+  isConnectionError?: boolean;
 }
 
 type Subscriber = (snapshot: StreamSnapshot) => void;
@@ -165,6 +166,7 @@ function snapshot(state: ManagedStreamState): StreamSnapshot {
   return {
     ...toChatState(state), pendingPermissions: [...state.pendingPermissions],
     completed: state.completed, error: state.error,
+    isConnectionError: state.isConnectionError,
   };
 }
 

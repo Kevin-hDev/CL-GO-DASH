@@ -1,6 +1,6 @@
 [package]
 name = "cl-go-dash"
-version = "0.7.2"
+version = "0.7.3"
 edition = "2021"
 
 [lib]
@@ -91,6 +91,9 @@ grep-regex = "0.1"
 grep-searcher = "0.1"
 ignore = "0.4"
 globset = "0.4"
+
+# Process tree (tree-kill sidecar Ollama)
+sysinfo = { version = "0.35", default-features = false, features = ["system"] }
 
 # Traductions pré-bundlées (embarquées dans le binaire)
 include_dir = "0.7"

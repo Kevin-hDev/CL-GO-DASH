@@ -12,7 +12,7 @@ use crate::services::agent_local::write_guard::WriteGuard;
 use std::path::PathBuf;
 use tokio_util::sync::CancellationToken;
 
-use crate::services::agent_local::OLLAMA_BASE_URL;
+use crate::services::agent_local::ollama_base_url;
 
 const MAX_TURNS: usize = 30;
 
@@ -70,13 +70,14 @@ pub async fn run_agent_loop(
             eager_handle.abort();
             let _ = on_event.send(StreamEvent::Error {
                 message: "Limite de tours atteinte".to_string(),
+                is_connection: false,
             });
             break;
         }
 
         if let Err(msg) = breaker.check(&result.tool_calls) {
             eager_handle.abort();
-            let _ = on_event.send(StreamEvent::Error { message: msg });
+            let _ = on_event.send(StreamEvent::Error { message: msg, is_connection: false });
             break;
         }
 
@@ -178,7 +179,7 @@ async fn decharge_gpu(model: &str) {
     }
     let client = reqwest::Client::new();
     let _ = client
-        .post(format!("{OLLAMA_BASE_URL}/api/chat"))
+        .post(format!("{}/api/chat", ollama_base_url()))
         .json(&serde_json::json!({
             "model": model,
             "messages": [],

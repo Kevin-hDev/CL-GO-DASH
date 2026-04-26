@@ -10,10 +10,11 @@ interface Toast {
   id: number;
   message: string;
   type: ToastType;
+  duration: number;
 }
 
 interface ToastContextValue {
-  show: (message: string, type?: ToastType) => void;
+  show: (message: string, type?: ToastType, duration?: number) => void;
 }
 
 const ToastContext = createContext<ToastContextValue>({ show: () => {} });
@@ -22,14 +23,22 @@ export function useToast() {
   return useContext(ToastContext);
 }
 
+const DEFAULT_DURATIONS: Record<ToastType, number> = {
+  success: 3000,
+  error: 3000,
+  info: 3000,
+  check: 2000,
+};
+
 let nextId = 0;
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
-  const show = useCallback((message: string, type: ToastType = "info") => {
+  const show = useCallback((message: string, type: ToastType = "info", duration?: number) => {
     const id = nextId++;
-    setToasts((prev) => [...prev, { id, message, type }]);
+    const ms = duration ?? DEFAULT_DURATIONS[type];
+    setToasts((prev) => [...prev, { id, message, type, duration: ms }]);
   }, []);
 
   useEffect(() => { registerToast(show); }, [show]);
@@ -51,12 +60,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 }
 
 function ToastItem({ toast, onDone }: { toast: Toast; onDone: () => void }) {
-  const duration = toast.type === "check" ? 2000 : 3000;
-
   useEffect(() => {
-    const timer = setTimeout(onDone, duration);
+    const timer = setTimeout(onDone, toast.duration);
     return () => clearTimeout(timer);
-  }, [onDone, duration]);
+  }, [onDone, toast.duration]);
 
   if (toast.type === "check") {
     return (

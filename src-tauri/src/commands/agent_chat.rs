@@ -79,7 +79,8 @@ pub async fn chat_stream(
             // Ne pas envoyer l'erreur "Annulé" — le frontend gère déjà le cancel
             // via stopSession(). Envoyer ce message tuerait un nouveau stream.
             if is_current && message != "Annulé" {
-                let _ = emitter.send(StreamEvent::Error { message });
+                let is_conn = message == "ollama_connection_lost";
+                let _ = emitter.send(StreamEvent::Error { message, is_connection: is_conn });
             }
         }
     });

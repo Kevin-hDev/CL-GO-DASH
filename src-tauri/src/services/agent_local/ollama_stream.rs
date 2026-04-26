@@ -1,7 +1,7 @@
 use crate::services::agent_local::types_ollama::{ChatMessage, ChatRequest, StreamEvent, StreamResult};
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::ollama_stream_process::process_chunk;
-use crate::services::agent_local::OLLAMA_BASE_URL;
+use crate::services::agent_local::ollama_base_url;
 use futures_util::StreamExt;
 use std::time::Duration;
 use tokio::io::{AsyncBufReadExt, BufReader};
@@ -25,11 +25,17 @@ pub async fn collect_chat(model: &str, messages: Vec<ChatMessage>) -> Result<(St
         .map_err(|e| format!("Client HTTP : {e}"))?;
 
     let resp = client
-        .post(format!("{OLLAMA_BASE_URL}/api/chat"))
+        .post(format!("{}/api/chat", ollama_base_url()))
         .json(&body)
         .send()
         .await
-        .map_err(|e| format!("Connexion Ollama impossible : {e}"))?;
+        .map_err(|e| {
+            if e.is_connect() || e.is_timeout() {
+                "ollama_connection_lost".to_string()
+            } else {
+                format!("Ollama: {e}")
+            }
+        })?;
 
     if !resp.status().is_success() {
         return Err(format!("Ollama HTTP {}", resp.status()));
@@ -63,12 +69,26 @@ async fn stream_chat_inner(
     tool_tx: Option<mpsc::UnboundedSender<(usize, String, serde_json::Value)>>,
 ) -> Result<StreamResult, String> {
     let client = reqwest::Client::new();
-    let resp = client
-        .post(format!("{OLLAMA_BASE_URL}/api/chat"))
+    let resp = match client
+        .post(format!("{}/api/chat", ollama_base_url()))
         .json(request)
         .send()
         .await
-        .map_err(|e| format!("Connexion Ollama impossible: {e}"))?;
+    {
+        Ok(r) => r,
+        Err(e) => {
+            let msg = if e.is_connect() || e.is_timeout() {
+                "ollama_connection_lost".to_string()
+            } else {
+                format!("Ollama: {e}")
+            };
+            let _ = on_event.send(StreamEvent::Error {
+                message: msg.clone(),
+                is_connection: e.is_connect() || e.is_timeout(),
+            });
+            return Err(msg);
+        }
+    };
 
     if !resp.status().is_success() {
         let status = resp.status();
@@ -82,7 +102,7 @@ async fn stream_chat_inner(
         }
         let msg = format!("Ollama HTTP {status}: {body}");
         eprintln!("[ollama-stream] {msg}");
-        let _ = on_event.send(StreamEvent::Error { message: "Erreur serveur Ollama".into() });
+        let _ = on_event.send(StreamEvent::Error { message: "Erreur serveur Ollama".into(), is_connection: false });
         return Err(msg);
     }
 
@@ -102,7 +122,7 @@ async fn stream_chat_inner(
             }
             _ = tokio::time::sleep(std::time::Duration::from_secs(300)) => {
                 let msg = "Timeout : aucune réponse d'Ollama depuis 5 min".to_string();
-                let _ = on_event.send(StreamEvent::Error { message: msg.clone() });
+                let _ = on_event.send(StreamEvent::Error { message: msg.clone(), is_connection: false });
                 return Err(msg);
             }
             line = lines.next_line() => {
@@ -112,14 +132,18 @@ async fn stream_chat_inner(
                             &text, on_event, &mut token_count, &mut first_token,
                             &mut result, emit_done, tool_tx.as_ref(),
                         ) {
-                            let _ = on_event.send(StreamEvent::Error { message: e.clone() });
+                            let _ = on_event.send(StreamEvent::Error { message: e.clone(), is_connection: false });
                             return Err(e);
                         }
                     }
                     Ok(None) => break,
                     Err(e) => {
-                        let msg = format!("Erreur lecture stream: {e}");
-                        let _ = on_event.send(StreamEvent::Error { message: msg.clone() });
+                        let is_conn = e.kind() == std::io::ErrorKind::ConnectionReset
+                            || e.kind() == std::io::ErrorKind::ConnectionAborted
+                            || e.kind() == std::io::ErrorKind::UnexpectedEof
+                            || e.to_string().contains("decoding");
+                        let msg = "ollama_connection_lost".to_string();
+                        let _ = on_event.send(StreamEvent::Error { message: msg.clone(), is_connection: is_conn });
                         return Err(msg);
                     }
                 }

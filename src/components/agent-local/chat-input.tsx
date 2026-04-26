@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Plus } from "@/components/ui/icons";
 import { useAutoResize } from "@/hooks/use-auto-resize";
 import { useSlashCommands } from "@/hooks/use-slash-commands";
+import { useActiveSkills } from "@/hooks/use-active-skills";
 import { SendStopButton } from "./send-stop-button";
 import { SlashAutocomplete } from "./slash-autocomplete";
 import { SkillBadge } from "./skill-badge";
@@ -12,7 +13,6 @@ import { ContextProgress } from "./context-progress";
 import { PermissionModeSelector } from "./permission-mode-selector";
 import type { DroppedFile } from "@/hooks/use-file-drop";
 import type { PermissionMode } from "@/hooks/use-permission-mode";
-import type { SkillInfo } from "@/types/agent";
 import "./chat.css";
 
 const K_UP = "ArrowUp";
@@ -55,48 +55,27 @@ export function ChatInput({
   const [text, setText] = useState("");
   const { ref, resize } = useAutoResize(200);
   const slash = useSlashCommands();
-  const [activeSkills, setActiveSkills] = useState<SkillInfo[]>([]);
-  const skillContentsRef = useRef<Map<string, string>>(new Map());
+  const skills = useActiveSkills(slash, text, setText);
   const bubbleRef = useRef<HTMLDivElement>(null);
 
   const hasText = text.trim().length > 0;
   const hasFiles = files != null && files.length > 0;
-  const hasContent = hasText || hasFiles || activeSkills.length > 0;
+  const hasContent = hasText || hasFiles || skills.activeSkills.length > 0;
 
   const handleSend = useCallback(() => {
     if (!hasContent || isStreaming) return;
-    const skills = activeSkills.length > 0
-      ? activeSkills.map((s) => ({ name: s.name, content: skillContentsRef.current.get(s.name) ?? "" }))
-      : undefined;
-    onSend(text.trim(), hasFiles ? files : undefined, skills);
+    onSend(text.trim(), hasFiles ? files : undefined, skills.getSkillsPayload());
     setText("");
-    setActiveSkills([]);
-    skillContentsRef.current.clear();
+    skills.clearSkills();
     onClearFiles?.();
     if (ref.current) ref.current.style.height = "auto";
-  }, [text, hasContent, hasFiles, files, activeSkills, isStreaming, onSend, onClearFiles, ref]);
+  }, [text, hasContent, hasFiles, files, skills, isStreaming, onSend, onClearFiles, ref]);
 
   const handleChange = useCallback((value: string) => {
     setText(value);
     resize();
     slash.handleInput(value);
   }, [resize, slash]);
-
-  const handleSelectSkill = useCallback(async (skill: SkillInfo) => {
-    if (activeSkills.some((s) => s.name === skill.name)) return;
-    const result = await slash.selectSkill(skill);
-    if (result) {
-      setActiveSkills((prev) => [...prev, result.skill]);
-      skillContentsRef.current.set(result.skill.name, result.content);
-      const lastSlash = text.lastIndexOf("/");
-      setText(lastSlash > 0 ? text.slice(0, lastSlash).trimEnd() : "");
-    }
-  }, [slash, text, activeSkills]);
-
-  const handleRemoveSkill = useCallback((name: string) => {
-    setActiveSkills((prev) => prev.filter((s) => s.name !== name));
-    skillContentsRef.current.delete(name);
-  }, []);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     const pressed = eventKey(e);
@@ -106,25 +85,18 @@ export function ChatInput({
       if (pressed === K_ENTER) {
         e.preventDefault();
         const selected = slash.skills[slash.activeIndex];
-        if (selected) handleSelectSkill(selected);
+        if (selected) skills.handleSelectSkill(selected);
         return;
       }
       if (pressed === K_ESC) { e.preventDefault(); slash.close(); return; }
     }
-    if (pressed === K_ENTER && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-    if (pressed === K_ESC) {
-      onStop();
-    }
-  }, [handleSend, onStop, slash, handleSelectSkill]);
+    if (pressed === K_ENTER && !e.shiftKey) { e.preventDefault(); handleSend(); }
+    if (pressed === K_ESC) onStop();
+  }, [handleSend, onStop, slash, skills]);
 
   useEffect(() => {
     if (!isStreaming) return;
-    const handler = (e: KeyboardEvent) => {
-      if (eventKey(e) === K_ESC) onStop();
-    };
+    const handler = (e: KeyboardEvent) => { if (eventKey(e) === K_ESC) onStop(); };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [isStreaming, onStop]);
@@ -132,9 +104,7 @@ export function ChatInput({
   useEffect(() => {
     if (!slash.showDropdown) return;
     const handler = (e: MouseEvent) => {
-      if (bubbleRef.current && !bubbleRef.current.contains(e.target as Node)) {
-        slash.close();
-      }
+      if (bubbleRef.current && !bubbleRef.current.contains(e.target as Node)) slash.close();
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -150,13 +120,13 @@ export function ChatInput({
         <SlashAutocomplete
           skills={slash.skills}
           activeIndex={slash.activeIndex}
-          onSelect={handleSelectSkill}
+          onSelect={skills.handleSelectSkill}
         />
       )}
-      {activeSkills.length > 0 && (
+      {skills.activeSkills.length > 0 && (
         <div style={{ padding: "var(--space-xs) var(--space-sm) 0", display: "flex", gap: 6, flexWrap: "wrap" }}>
-          {activeSkills.map((s) => (
-            <SkillBadge key={s.name} skill={s} onRemove={() => handleRemoveSkill(s.name)} />
+          {skills.activeSkills.map((s) => (
+            <SkillBadge key={s.name} skill={s} onRemove={() => skills.handleRemoveSkill(s.name)} />
           ))}
         </div>
       )}

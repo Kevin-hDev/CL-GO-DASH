@@ -1,5 +1,5 @@
 use crate::services;
-use crate::services::ollama_lifecycle;
+use crate::services::{ollama_kill, ollama_lifecycle};
 use tauri::{Manager, RunEvent, WindowEvent};
 
 pub fn handle_run_event(app_handle: &tauri::AppHandle, event: RunEvent) {
@@ -13,6 +13,7 @@ pub fn handle_run_event(app_handle: &tauri::AppHandle, event: RunEvent) {
             if let Some(pty) = app_handle.try_state::<services::terminal::PtyManager>() {
                 pty.kill_all();
             }
+            ollama_kill::release_vram_blocking();
             ollama_lifecycle::stop_sidecar(app_handle);
         }
         _ => {}

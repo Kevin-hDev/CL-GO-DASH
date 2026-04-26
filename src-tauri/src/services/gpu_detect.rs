@@ -4,20 +4,35 @@ pub enum GpuVendor {
     Nvidia,
     Amd,
     Intel,
+    Apple,
     Unknown,
 }
 
+pub use crate::services::gpu_vram::{compute_default_num_ctx, detect_vram_mb};
+
 pub fn detect() -> GpuVendor {
+    #[cfg(target_os = "macos")]
+    { return detect_macos(); }
     #[cfg(target_os = "linux")]
-    {
-        return detect_linux();
-    }
+    { return detect_linux(); }
     #[cfg(target_os = "windows")]
-    {
-        return detect_windows();
-    }
-    #[cfg(not(any(target_os = "linux", target_os = "windows")))]
+    { return detect_windows(); }
+    #[cfg(not(any(target_os = "macos", target_os = "linux", target_os = "windows")))]
     GpuVendor::Unknown
+}
+
+#[cfg(target_os = "macos")]
+fn detect_macos() -> GpuVendor {
+    let output = std::process::Command::new("sysctl")
+        .args(["-n", "machdep.cpu.brand_string"])
+        .output();
+    match output {
+        Ok(o) => {
+            let brand = String::from_utf8_lossy(&o.stdout).to_lowercase();
+            if brand.contains("apple") { GpuVendor::Apple } else { GpuVendor::Unknown }
+        }
+        Err(_) => GpuVendor::Unknown,
+    }
 }
 
 #[cfg(target_os = "linux")]
@@ -55,7 +70,7 @@ fn detect_windows() -> GpuVendor {
     #[cfg(target_os = "windows")]
     {
         use std::os::windows::process::CommandExt;
-        cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
+        cmd.creation_flags(0x08000000);
     }
 
     let output = match cmd.output() {

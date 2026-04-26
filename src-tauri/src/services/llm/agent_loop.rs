@@ -50,6 +50,7 @@ async fn retry_stream(
         if attempt > 0 {
             let _ = on_event.send(StreamEvent::Error {
                 message: format!("Retry {attempt}/{MAX_RETRIES} après erreur : {last_error}"),
+                is_connection: false,
             });
             tokio::time::sleep(tokio::time::Duration::from_millis(
                 RETRY_DELAY_MS * attempt as u64,
@@ -116,12 +117,13 @@ pub async fn run_agent_loop(
         if turn == MAX_TURNS - 1 {
             let _ = on_event.send(StreamEvent::Error {
                 message: "Limite de tours atteinte".to_string(),
+                is_connection: false,
             });
             break;
         }
 
         if let Err(msg) = breaker.check(&result.tool_calls) {
-            let _ = on_event.send(StreamEvent::Error { message: msg });
+            let _ = on_event.send(StreamEvent::Error { message: msg, is_connection: false });
             break;
         }
 

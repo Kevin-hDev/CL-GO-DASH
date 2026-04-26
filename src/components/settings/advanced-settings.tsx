@@ -2,14 +2,12 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
 import { useAvailableModels } from "@/hooks/use-available-models";
-import { IS_MAC } from "@/lib/platform";
-import { showToast } from "@/lib/toast-emitter";
 import { RoundToggle } from "@/components/heartbeat/round-toggle";
 import { SettingsCard } from "./settings-card";
 import { SettingsRow } from "./settings-row";
-import { SettingsSelect, type SelectOption, type SelectGroup } from "./settings-select";
+import { SettingsSelect, type SelectGroup } from "./settings-select";
 import { PathListEditor } from "./path-list-editor";
-import { HardwareAccelControl } from "./hardware-accel-control";
+import { OllamaSettingsSection } from "./ollama-settings-section";
 
 interface AdvancedState {
   autostart: boolean;
@@ -19,6 +17,8 @@ interface AdvancedState {
   keep_alive: string;
   allowed_paths: string[];
   hardware_accel: string;
+  multi_model: boolean;
+  show_gpu_status: boolean;
 }
 
 const DEFAULTS: AdvancedState = {
@@ -29,6 +29,8 @@ const DEFAULTS: AdvancedState = {
   keep_alive: "5m",
   allowed_paths: ["/"],
   hardware_accel: "gpu",
+  multi_model: false,
+  show_gpu_status: false,
 };
 
 export function AdvancedSettings() {
@@ -65,24 +67,6 @@ export function AdvancedSettings() {
     }
     return result;
   }, [groups]);
-
-  const [accelChanged, setAccelChanged] = useState(false);
-  const [restarting, setRestarting] = useState(false);
-
-  const hardwareAccelOptions = useMemo((): SelectOption[] => [
-    { value: "cpu", label: t("settings.advanced.hardwareAccelCpu") },
-    { value: "gpu", label: t("settings.advanced.hardwareAccelGpu") },
-  ], [t]);
-
-  const keepAliveOptions = useMemo((): SelectOption[] => [
-    { value: "0", label: t("settings.advanced.keepAlive.immediately") },
-    { value: "2m", label: t("settings.advanced.keepAlive.2min") },
-    { value: "5m", label: t("settings.advanced.keepAlive.5min") },
-    { value: "10m", label: t("settings.advanced.keepAlive.10min") },
-    { value: "15m", label: t("settings.advanced.keepAlive.15min") },
-    { value: "30m", label: t("settings.advanced.keepAlive.30min") },
-    { value: "forever", label: t("settings.advanced.keepAlive.onClose") },
-  ], [t]);
 
   const titleStyle = { fontSize: "var(--text-xl)", fontWeight: 700, color: "var(--ink)", marginBottom: 28 } as const;
   const subStyle = { fontSize: "var(--text-base)", fontWeight: 600, color: "var(--ink)", marginTop: 28, marginBottom: 12 } as const;
@@ -136,42 +120,17 @@ export function AdvancedSettings() {
             />
           </SettingsRow>
 
-          <SettingsRow
-            title={t("settings.advanced.keepAliveTitle")}
-            description={t("settings.advanced.keepAliveDesc")}
-          >
-            <SettingsSelect
-              options={keepAliveOptions}
-              value={state.keep_alive}
-              onChange={(v) => save({ keep_alive: v })}
-            />
-          </SettingsRow>
-
-          {!IS_MAC && (
-            <SettingsRow
-              title={t("settings.advanced.hardwareAccelTitle")}
-              description={t("settings.advanced.hardwareAccelDesc")}
-            >
-              <HardwareAccelControl
-                options={hardwareAccelOptions}
-                value={state.hardware_accel}
-                changed={accelChanged}
-                restarting={restarting}
-                onSelect={(v) => { save({ hardware_accel: v }); setAccelChanged(true); }}
-                onRestart={async () => {
-                  setRestarting(true);
-                  try {
-                    await invoke("restart_ollama_sidecar");
-                    showToast(t("settings.advanced.hardwareAccelRestarted"), "success");
-                    setAccelChanged(false);
-                  } catch { showToast("Restart failed", "error"); }
-                  finally { setRestarting(false); }
-                }}
-                restartLabel={t("settings.advanced.hardwareAccelRestart")}
-              />
-            </SettingsRow>
-          )}
         </SettingsCard>
+
+        <h3 style={subStyle}>{t("settings.advanced.ollamaTitle")}</h3>
+
+        <OllamaSettingsSection
+          keepAlive={state.keep_alive}
+          hardwareAccel={state.hardware_accel}
+          multiModel={state.multi_model}
+          showGpuStatus={state.show_gpu_status}
+          onSave={save}
+        />
 
         <h3 style={subStyle}>{t("settings.advanced.fileAccessTitle")}</h3>
 

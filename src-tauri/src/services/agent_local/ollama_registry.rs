@@ -1,5 +1,5 @@
 use crate::services::agent_local::types_ollama::{PullProgress, RegistryModel};
-use crate::services::agent_local::OLLAMA_BASE_URL;
+use crate::services::agent_local::ollama_base_url;
 use futures_util::StreamExt;
 use reqwest::Client;
 use tauri::ipc::Channel;
@@ -67,7 +67,7 @@ pub async fn pull_model(
         .map_err(|e| e.to_string())?;
 
     let resp = client
-        .post(format!("{OLLAMA_BASE_URL}/api/pull"))
+        .post(format!("{}/api/pull", ollama_base_url()))
         .json(&serde_json::json!({ "model": name, "stream": true }))
         .send()
         .await
@@ -139,7 +139,7 @@ pub fn cleanup_partial_blobs(digests: &[String]) -> usize {
 pub async fn delete_model(name: &str) -> Result<(), String> {
     let client = Client::new();
     let resp = client
-        .delete(format!("{OLLAMA_BASE_URL}/api/delete"))
+        .delete(format!("{}/api/delete", ollama_base_url()))
         .json(&serde_json::json!({ "model": name }))
         .send()
         .await

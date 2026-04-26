@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { invoke, Channel } from "@tauri-apps/api/core";
 import { Check } from "@/components/ui/icons";
+import { showToast } from "@/lib/toast-emitter";
 import type { PullProgress } from "@/types/agent";
 import "./ollama.css";
 
@@ -9,6 +10,7 @@ interface ModelInstallButtonProps {
   fullName: string;
   isInstalled: boolean;
   hasUpdate: boolean;
+  sizeGb?: number;
 }
 
 const BTN_WIDTH = 88;
@@ -18,7 +20,7 @@ function isEscapeKey(e: KeyboardEvent): boolean {
 }
 
 export function ModelInstallButton({
-  fullName, isInstalled, hasUpdate,
+  fullName, isInstalled, hasUpdate, sizeGb,
 }: ModelInstallButtonProps) {
   const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
@@ -27,6 +29,14 @@ export function ModelInstallButton({
   const cancelledRef = useRef(false);
 
   const handleInstall = useCallback(async () => {
+    if (sizeGb && sizeGb > 0) {
+      const sizeBytes = Math.round(sizeGb * 1_073_741_824);
+      const fits = await invoke<boolean>("check_model_fits_vram", { sizeBytes }).catch(() => true);
+      if (!fits) {
+        showToast(t("ollama.vramWarning"), "info", 4000);
+      }
+    }
+
     cancelledRef.current = false;
     setBusy(true);
     setStatus(t("ollama.starting"));

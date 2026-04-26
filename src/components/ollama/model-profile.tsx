@@ -91,6 +91,7 @@ export function ModelProfile({ familyName, variantFullName }: ModelProfileProps)
               fullName={variantFullName}
               isInstalled={Boolean(installedLocal)}
               hasUpdate={hasUpdate}
+              sizeGb={currentTag?.size_gb ?? undefined}
             />
           )}
         </div>

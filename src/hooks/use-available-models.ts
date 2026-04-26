@@ -133,9 +133,13 @@ export function useAvailableModels() {
     refresh();
     const unsubOllama = listen("ollama-models-changed", refreshOllama);
     const unsubFs = listen("fs:config-changed", refresh);
+    const unsubStatus = listen<boolean>("ollama-status", (e) => {
+      if (e.payload) setTimeout(refreshOllama, 2000);
+    });
     return () => {
       unsubOllama.then((f) => f()).catch(() => {});
       unsubFs.then((f) => f()).catch(() => {});
+      unsubStatus.then((f) => f()).catch(() => {});
     };
   }, [refresh, refreshOllama]);
 
