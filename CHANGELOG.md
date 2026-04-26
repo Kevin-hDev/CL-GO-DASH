@@ -1,5 +1,29 @@
 # Changelog
 
+## v0.7.6
+
+### Features
+
+- **Per-session permission mode**: each conversation now has its own mode (Chat/Manual/Auto) independent of others
+- **Ollama model updates preserve customizations**: system prompt and parameters are saved before pull and restored after
+- **Splash screen**: app icon displayed on themed background while the app loads
+- **Single instance**: prevents opening duplicate windows when double-clicking the app icon (macOS/Linux/Windows)
+
+### UI / Theming
+
+- **Dark theme**: translucent background applied to model selector dropdown, permission mode dropdown, project directory dropdown, heartbeat cards/dialog/button, settings cards/selects, API connectors modal/cards, and Ollama modelfile raw block
+- **Dark theme**: model selector provider and favorites headers now transparent (no opaque shell background)
+- **Dark theme**: removed border on model selector search input and API connectors search input
+- **Light theme**: user message bubbles use translucent gray (0.45 opacity)
+- **Light theme**: chat input uses translucent gray background (0.80 opacity)
+- **Settings subtabs**: added hover effect on mouse over
+- **Sidebar**: settings icon and text now match the color of other nav items
+- **Model selector dropdown**: opens to the right instead of left to avoid sidebar overlap
+- **Permission mode dropdown**: removed "Mode" header line, Chat mode color changed to thinking blue (#4A9EE8)
+- **API connectors modal**: fixed size (85vh) with top-aligned grid to prevent layout shift between tabs
+- **Ollama Modelfile tab**: extended active tab indicator by 3px for visual balance
+- **Ollama parameters editor**: `num_ctx` and `num_predict` rows shown by default
+
 ## v0.7.5
 
 ### UI / Theming
