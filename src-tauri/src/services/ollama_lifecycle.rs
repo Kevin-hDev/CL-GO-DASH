@@ -75,8 +75,14 @@ pub fn start_sidecar(app: &AppHandle) -> Result<bool, String> {
         cmd.env(key, val);
     }
     eprintln!("[ollama] GPU : {:?}, accel : {}", gpu, config.advanced.hardware_accel);
+    const SAFE_TO_LOG: &[&str] = &[
+        "OLLAMA_HOST", "OLLAMA_FLASH_ATTENTION", "OLLAMA_KV_CACHE_TYPE",
+        "OLLAMA_NUM_PARALLEL", "OLLAMA_NO_CLOUD", "OLLAMA_CONTEXT_LENGTH",
+        "OLLAMA_MAX_LOADED_MODELS", "OLLAMA_KEEP_ALIVE", "OLLAMA_LLM_LIBRARY",
+        "OLLAMA_GPU_OVERHEAD", "OLLAMA_VULKAN",
+    ];
     let safe_vars: Vec<_> = env_vars.iter()
-        .filter(|(k, _)| !k.contains("KEY") && !k.contains("TOKEN") && !k.contains("SECRET"))
+        .filter(|(k, _)| SAFE_TO_LOG.contains(&k.as_str()))
         .map(|(k, v)| format!("{k}={v}"))
         .collect();
     eprintln!("[ollama] env : {:?}", safe_vars);
