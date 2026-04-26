@@ -2,6 +2,7 @@
   "name": "cl-go-dash",
   "version": "0.7.5",
   "description": "",
+  "license": "Apache-2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
