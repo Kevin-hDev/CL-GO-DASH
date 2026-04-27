@@ -87,8 +87,9 @@
 
 /* Linux/Windows : fond opaque, pas de blur ni d'animation compositor */
 .app-root.os-other {
-  background: var(--void);
-  padding: 3px;
+  background: var(--app-frame);
+  padding: 5px;
+  gap: 4px;
 }
 
 .os-other .app-sidebar-block {

@@ -32,6 +32,7 @@
 
   /* Legacy dashboard tokens */
   --void: #f7f7f9;
+  --app-frame: #d8d8dc;
   --shell: #eaeaed;
   --shell-translucent: rgba(234, 234, 237, 0.80);
   --surface: #ffffff;
@@ -42,7 +43,7 @@
   --ink-faint: #5c5c5c;
   --pulse: #f97316;
   --pulse-muted: rgba(249, 115, 22, 0.12);
-  --select-bg: #e5e2dd;
+  --select-bg: #faf8f5;
   --select-text: #1a1a1a;
   --signal-idle: #b0b0b8;
   --signal-live: #d4a017;
