@@ -41,14 +41,6 @@ export function AppLayout({
   const [fullscreen, setFullscreen] = useState(false);
   const updates = useUpdateChecker();
 
-  useEffect(() => {
-    const splash = document.getElementById("splash");
-    if (!splash) return;
-    const timer = setTimeout(() => {
-      requestAnimationFrame(() => splash.remove());
-    }, 150);
-    return () => clearTimeout(timer);
-  }, []);
 
   useEffect(() => {
     const win = getCurrentWindow();

@@ -77,6 +77,18 @@ export default function App() {
     push({ tab: "agent-local", sessionId });
   }, [push]);
 
+  useEffect(() => {
+    if (ollamaReady !== null) {
+      const splash = document.getElementById("splash");
+      if (splash) {
+        const timer = setTimeout(() => {
+          requestAnimationFrame(() => splash.remove());
+        }, 150);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [ollamaReady]);
+
   if (ollamaReady === false) {
     return (
       <div style={{

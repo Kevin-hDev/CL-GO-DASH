@@ -57,8 +57,10 @@ pub fn run() {
                     });
                 }
             }
-            if let Err(e) = ollama_lifecycle::start_sidecar(app.handle()) {
-                eprintln!("[ollama] sidecar start failed: {}", e);
+            if ollama_lifecycle::ollama_binary_path().is_ok() {
+                if let Err(e) = ollama_lifecycle::start_sidecar(app.handle()) {
+                    eprintln!("[ollama] sidecar start failed: {}", e);
+                }
             }
 
             let config = services::config::read_config().unwrap_or_default();
