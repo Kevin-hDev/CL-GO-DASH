@@ -1,0 +1,33 @@
+=== CONTEXT: Splash screen + Ollama first-launch fix ===
+
+PROBLEM:
+On first launch (Linux/Windows), Ollama is not yet downloaded.
+Two issues were found:
+
+1. SPLASH BLOCKS SETUP SCREEN
+   - The splash (#splash div in index.html) covers the entire viewport at z-index 9999
+   - It was previously removed in AppLayout's useEffect
+   - But on first launch, ollamaReady === false → App renders OllamaSetupScreen, NOT AppLayout
+   - AppLayout never mounts → splash never removed → user can't click the download button
+
+   FIX: Splash removal moved to App.tsx, triggered by useEffect watching ollamaReady.
+   When ollamaReady resolves to ANY value (true or false), the splash is removed.
+   This covers both paths: setup screen (false) and normal app (true → AppLayout).
+
+2. SIDECAR LAUNCHED WITHOUT BINARY
+   - lib.rs setup() called start_sidecar() unconditionally
+   - On first launch, ollama binary doesn't exist yet → start_sidecar errors
+   - Not a crash (error is caught), but unnecessary noise + orphan kill attempt
+
+   FIX: start_sidecar() now gated behind ollama_binary_path().is_ok()
+
+FILES CHANGED:
+- src/App.tsx — splash removal useEffect added, watches ollamaReady
+- src/components/layout/app-layout.tsx — splash useEffect removed (was here before)
+- src-tauri/src/lib.rs — sidecar start gated behind binary existence
+
+IF PROBLEM PERSISTS ON LINUX:
+- Check that #splash div exists in the DOM (inspect element)
+- Check that ollamaReady state transitions happen (console.log in the useEffect)
+- The 150ms setTimeout + rAF might need adjustment if Linux renders slower
+- Verify is_ollama_installed IPC command returns false correctly on Linux
