@@ -68,7 +68,11 @@ export function OllamaSetupScreen({ onComplete }: OllamaSetupScreenProps) {
           <span style={{
             fontSize: "var(--text-xs)", color: "var(--ink-faint)", textAlign: "center",
           }}>
-            {status === "extracting" ? t("ollamaSetup.extracting") : `${percent}%`}
+            {status === "extracting"
+              ? t("ollamaSetup.extracting")
+              : status === "downloading-rocm"
+                ? `${t("ollamaSetup.downloadingGpu")} ${percent}%`
+                : `${percent}%`}
           </span>
         </div>
       ) : (
@@ -82,9 +86,17 @@ export function OllamaSetupScreen({ onComplete }: OllamaSetupScreenProps) {
       )}
 
       {error && (
-        <span style={{ fontSize: "var(--text-xs)", color: "#e66", textAlign: "center" }}>
-          {t("ollamaSetup.error")}
-        </span>
+        <div style={{ textAlign: "center", maxWidth: 400 }}>
+          <span style={{ fontSize: "var(--text-xs)", color: "#e66" }}>
+            {t("ollamaSetup.error")}
+          </span>
+          <p style={{
+            fontSize: "var(--text-xs)", color: "var(--ink-faint)",
+            margin: "6px 0 0", wordBreak: "break-word",
+          }}>
+            {error}
+          </p>
+        </div>
       )}
     </div>
   );

@@ -31,6 +31,7 @@ export function useUpdateChecker() {
   const [appUpdate, setAppUpdate] = useState<AppUpdate | null>(null);
   const [ollamaUpdates, setOllamaUpdates] = useState<OllamaModelUpdate[]>([]);
   const [pulling, setPulling] = useState<PullingState | null>(null);
+  const pullingRef = useRef(false);
   const [appDownloading, setAppDownloading] = useState(false);
   const [appPercent, setAppPercent] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval>>(undefined);
@@ -55,6 +56,7 @@ export function useUpdateChecker() {
     checkAll();
     timerRef.current = setInterval(checkAll, CHECK_INTERVAL_MS);
     const unlisten = listen("ollama-models-changed", () => {
+      if (pullingRef.current) return;
       invoke<OllamaModelUpdate[]>("check_ollama_updates")
         .then(setOllamaUpdates)
         .catch(() => {});
@@ -88,6 +90,7 @@ export function useUpdateChecker() {
   }, []);
 
   const pullModel = useCallback(async (fullName: string) => {
+    pullingRef.current = true;
     setPulling({ fullName, percent: 0, status: "" });
 
     const channel = new Channel<PullProgress>();
@@ -104,6 +107,7 @@ export function useUpdateChecker() {
     } catch {
       /* pull failed */
     } finally {
+      pullingRef.current = false;
       setPulling(null);
     }
   }, []);

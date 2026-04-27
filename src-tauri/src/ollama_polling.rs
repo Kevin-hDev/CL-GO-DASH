@@ -42,6 +42,11 @@ pub fn start(handle: tauri::AppHandle) {
                 restart_attempts = 0;
                 emit_gpu_status(&handle, &client, &base).await;
             } else {
+                if crate::services::ollama_lifecycle::ollama_binary_path().is_err() {
+                    tokio::time::sleep(POLL_INTERVAL).await;
+                    continue;
+                }
+
                 consecutive_failures += 1;
                 if consecutive_failures >= FAILURES_BEFORE_RESTART
                     && restart_attempts < MAX_RESTART_ATTEMPTS

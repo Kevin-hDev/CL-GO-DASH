@@ -19,40 +19,12 @@ pub async fn is_ollama_installed() -> bool {
 
 #[tauri::command]
 pub async fn download_ollama(on_progress: Channel<OllamaSetupProgress>) -> Result<(), String> {
-    let dest = ollama_lifecycle::ollama_bundle_dir();
-    let binary_name = if cfg!(windows) {
-        "ollama.exe"
-    } else {
-        "ollama"
-    };
-    if dest.join(binary_name).exists() {
+    if ollama_lifecycle::ollama_binary_path().is_ok() {
         return Ok(());
     }
 
-    let archive_name = select_archive_name();
-
-    let url = format!(
-        "https://github.com/ollama/ollama/releases/download/v{}/{}",
-        OLLAMA_VERSION, archive_name
-    );
-
-    let _ = on_progress.send(OllamaSetupProgress {
-        completed: 0,
-        total: 0,
-        status: "downloading".into(),
-    });
-
-    let tmp = std::env::temp_dir().join(format!("cl-go-ollama-{}", archive_name));
-    if let Err(err) = download_file(&url, &tmp, &on_progress).await {
-        let _ = std::fs::remove_file(&tmp);
-        return Err(err);
-    }
-
-    let _ = on_progress.send(OllamaSetupProgress {
-        completed: 0,
-        total: 0,
-        status: "extracting".into(),
-    });
+    let dest = ollama_lifecycle::ollama_bundle_dir();
+    let archives = archives_to_download();
 
     let _ = std::fs::remove_dir_all(&dest);
     std::fs::create_dir_all(&dest).map_err(|e| {
@@ -60,40 +32,63 @@ pub async fn download_ollama(on_progress: Channel<OllamaSetupProgress>) -> Resul
         "Impossible de créer le dossier d'installation".to_string()
     })?;
 
-    if let Err(err) = super::ollama_extract::extract_archive(&tmp, &dest, archive_name, binary_name)
-    {
-        let _ = std::fs::remove_dir_all(&dest);
+    for (i, archive_name) in archives.iter().enumerate() {
+        let url = format!(
+            "https://github.com/ollama/ollama/releases/download/v{}/{}",
+            OLLAMA_VERSION, archive_name
+        );
+
+        let status = if i == 0 { "downloading" } else { "downloading-rocm" };
+        let _ = on_progress.send(OllamaSetupProgress {
+            completed: 0,
+            total: 0,
+            status: status.into(),
+        });
+
+        let tmp = std::env::temp_dir().join(format!("cl-go-ollama-{}", archive_name));
+        if let Err(err) = download_file(&url, &tmp, &on_progress).await {
+            let _ = std::fs::remove_file(&tmp);
+            let _ = std::fs::remove_dir_all(&dest);
+            return Err(err);
+        }
+
+        let _ = on_progress.send(OllamaSetupProgress {
+            completed: 0,
+            total: 0,
+            status: "extracting".into(),
+        });
+
+        if let Err(err) =
+            super::ollama_extract::extract_overlay(&tmp, &dest, archive_name)
+        {
+            let _ = std::fs::remove_dir_all(&dest);
+            let _ = std::fs::remove_file(&tmp);
+            return Err(err);
+        }
         let _ = std::fs::remove_file(&tmp);
-        return Err(err);
     }
-    let _ = std::fs::remove_file(&tmp);
+
+    let binary = ollama_lifecycle::ollama_binary_path().map_err(|_| {
+        let _ = std::fs::remove_dir_all(&dest);
+        "installation incomplète: binaire Ollama introuvable".to_string()
+    })?;
 
     #[cfg(unix)]
     {
-        let bin = dest.join("ollama");
-        if bin.exists() {
-            use std::os::unix::fs::PermissionsExt;
-            let _ = std::fs::set_permissions(&bin, std::fs::Permissions::from_mode(0o755));
-        }
+        use std::os::unix::fs::PermissionsExt;
+        let _ = std::fs::set_permissions(&binary, std::fs::Permissions::from_mode(0o755));
     }
 
     #[cfg(target_os = "macos")]
     {
-        let bin = dest.join("ollama");
-        if bin.exists() {
-            let _ = std::process::Command::new("xattr")
-                .args(["-d", "com.apple.quarantine"])
-                .arg(&bin)
-                .output();
-            eprintln!("[ollama] quarantine attribute supprimé");
-        }
+        let _ = std::process::Command::new("xattr")
+            .args(["-d", "com.apple.quarantine"])
+            .arg(&binary)
+            .output();
+        eprintln!("[ollama] quarantine attribute supprimé");
     }
 
-    if !dest.join(binary_name).is_file() {
-        let _ = std::fs::remove_dir_all(&dest);
-        return Err("installation incomplète: binaire Ollama introuvable".into());
-    }
-
+    eprintln!("[ollama-setup] installé: {}", binary.display());
     Ok(())
 }
 
@@ -117,15 +112,12 @@ pub async fn check_model_fits_vram(size_bytes: u64) -> bool {
     model_mb < vram_mb
 }
 
-fn select_archive_name() -> &'static str {
+fn archives_to_download() -> Vec<&'static str> {
     if cfg!(target_os = "macos") {
-        return "ollama-darwin.tgz";
+        return vec!["ollama-darwin.tgz"];
     }
-
     if cfg!(target_os = "windows") {
-        // Sous Windows, le zip ROCm est un complément au bundle principal,
-        // pas un remplaçant autonome du CLI.
-        return "ollama-windows-amd64.zip";
+        return vec!["ollama-windows-amd64.zip"];
     }
 
     use crate::services::gpu_detect::{self, GpuVendor};
@@ -133,8 +125,11 @@ fn select_archive_name() -> &'static str {
     eprintln!("[ollama] GPU détecté : {:?}", gpu);
 
     match gpu {
-        GpuVendor::Amd => "ollama-linux-amd64-rocm.tar.zst",
-        _ => "ollama-linux-amd64.tar.zst",
+        GpuVendor::Amd => vec![
+            "ollama-linux-amd64.tar.zst",
+            "ollama-linux-amd64-rocm.tar.zst",
+        ],
+        _ => vec!["ollama-linux-amd64.tar.zst"],
     }
 }
 

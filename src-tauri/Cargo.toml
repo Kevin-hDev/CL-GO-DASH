@@ -83,6 +83,11 @@ portable-pty = "0.9"
 # Token counting (goliapkg — supporte LLaMA, Qwen, DeepSeek, Mistral)
 tiktoken = "3.1"
 
+# Archive extraction (Ollama bundle)
+zstd = "0.13"
+tar = "0.4"
+flate2 = "1"
+
 # Existants
 regex = "1"
 notify = "7"

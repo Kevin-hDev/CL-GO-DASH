@@ -72,7 +72,7 @@ export function ModelVariantsList({
         {tags.map((tag) => {
           const local = findLocal(tag.name);
           const installed = Boolean(local);
-          const hasUpdate = installed && local?.digest_short !== tag.digest_short;
+          const hasUpdate = installed && !local?.is_customized && local?.digest_short !== tag.digest_short;
           const fullName = `${familyName}:${tag.name}`;
           const isActive = selectedVariant ? selectedVariant === fullName : false;
 

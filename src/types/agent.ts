@@ -10,6 +10,7 @@ export interface OllamaModel {
   capabilities: ("completion" | "vision" | "thinking" | "tools")[];
   digest_short: string;
   aliases: string[];
+  is_customized: boolean;
 }
 
 export interface RegistryModelDetails {

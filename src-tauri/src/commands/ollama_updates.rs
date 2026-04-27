@@ -44,6 +44,9 @@ pub async fn check_ollama_updates(
             }
             let tag_name = model.name.split(':').nth(1).unwrap_or("latest");
 
+            if model.is_customized {
+                continue;
+            }
             if let Some(rtag) = tags.iter().find(|t| t.name == tag_name) {
                 if model.digest_short != rtag.digest_short {
                     updates.push(OllamaModelUpdate {

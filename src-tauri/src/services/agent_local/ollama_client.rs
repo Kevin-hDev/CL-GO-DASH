@@ -176,9 +176,11 @@ fn build_model_from_tags(
     let digest_short: String = m["digest"]
         .as_str()
         .unwrap_or_default()
+        .trim_start_matches("sha256:")
         .chars()
         .take(12)
         .collect();
+    let is_customized = info.as_ref().is_some_and(|i| has_customizations(&i.modelfile));
     OllamaModel {
         name,
         size: m["size"].as_u64().unwrap_or(0),
@@ -203,7 +205,18 @@ fn build_model_from_tags(
         ),
         digest_short,
         aliases: Vec::new(),
+        is_customized,
     }
+}
+
+fn has_customizations(modelfile: &str) -> bool {
+    for line in modelfile.lines() {
+        let trimmed = line.trim().to_uppercase();
+        if trimmed.starts_with("SYSTEM ") || trimmed.starts_with("PARAMETER ") {
+            return true;
+        }
+    }
+    false
 }
 
 fn parse_show_response(name: &str, json: &serde_json::Value) -> ModelInfo {

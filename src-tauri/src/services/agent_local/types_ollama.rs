@@ -13,6 +13,7 @@ pub struct OllamaModel {
     pub capabilities: Vec<String>,
     pub digest_short: String,
     pub aliases: Vec<String>,
+    pub is_customized: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

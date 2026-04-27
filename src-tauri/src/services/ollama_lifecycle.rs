@@ -21,11 +21,16 @@ pub fn ollama_bundle_dir() -> PathBuf {
 
 pub fn ollama_binary_path() -> Result<PathBuf, String> {
     let binary_name = if cfg!(windows) { "ollama.exe" } else { "ollama" };
-    let path = ollama_bundle_dir().join(binary_name);
-    if !path.exists() {
-        return Err("ollama-not-installed".into());
+    let bundle = ollama_bundle_dir();
+    let in_bin = bundle.join("bin").join(binary_name);
+    if in_bin.exists() {
+        return Ok(in_bin);
     }
-    Ok(path)
+    let at_root = bundle.join(binary_name);
+    if at_root.exists() {
+        return Ok(at_root);
+    }
+    Err("ollama-not-installed".into())
 }
 
 pub fn is_ollama_ready() -> bool {
@@ -53,7 +58,7 @@ pub fn start_sidecar(app: &AppHandle) -> Result<bool, String> {
     eprintln!("[ollama] port sélectionné : {port}");
 
     let binary = ollama_binary_path()?;
-    let bundle_dir = binary.parent().ok_or("no parent dir")?.to_path_buf();
+    let bundle_dir = ollama_bundle_dir();
 
     let log_dir = crate::services::paths::data_dir().join("logs");
     let _ = std::fs::create_dir_all(&log_dir);

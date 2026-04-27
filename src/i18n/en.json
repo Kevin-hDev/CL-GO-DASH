@@ -412,6 +412,7 @@
     "description": "Ollama lets you run AI models locally on your machine. The download includes GPU support for better performance.",
     "download": "Download Ollama",
     "extracting": "Installing…",
-    "error": "Download failed. Check your connection and try again."
+    "downloadingGpu": "Downloading GPU support…",
+    "error": "Installation failed. Details below."
   }
 }

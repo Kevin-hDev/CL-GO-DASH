@@ -1,60 +1,38 @@
 use std::path::Path;
 
-pub fn extract_archive(
+pub fn extract_overlay(
     archive: &Path,
     dest: &Path,
     name: &str,
-    expected_binary: &str,
 ) -> Result<(), String> {
-    let tmp = tempfile::tempdir().map_err(|e| format!("tmpdir: {e}"))?;
-
     if name.ends_with(".tgz") || name.ends_with(".tar.gz") {
-        run_cmd(
-            "tar",
-            &[
-                "-xzf",
-                &archive.display().to_string(),
-                "-C",
-                &tmp.path().display().to_string(),
-            ],
-        )?;
+        extract_tar_gz(archive, dest)?;
     } else if name.ends_with(".tar.zst") {
-        run_cmd(
-            "tar",
-            &[
-                "--zstd",
-                "-xf",
-                &archive.display().to_string(),
-                "-C",
-                &tmp.path().display().to_string(),
-            ],
-        )?;
+        extract_tar_zst(archive, dest)?;
     } else if name.ends_with(".zip") {
-        extract_zip(archive, tmp.path())?;
+        extract_zip(archive, dest)?;
     } else {
         return Err(format!("format inconnu: {name}"));
     }
-
-    move_inner_to_dest(tmp.path(), dest)?;
-
-    if !dest.join(expected_binary).is_file() {
-        return Err(format!(
-            "installation incomplète: {} absent après extraction",
-            expected_binary
-        ));
-    }
-
     Ok(())
 }
 
-fn run_cmd(program: &str, args: &[&str]) -> Result<(), String> {
-    let status = std::process::Command::new(program)
-        .args(args)
-        .status()
-        .map_err(|e| format!("{program}: {e}"))?;
-    if !status.success() {
-        return Err(format!("{program} failed"));
-    }
+fn extract_tar_gz(archive: &Path, dest: &Path) -> Result<(), String> {
+    let file = std::fs::File::open(archive)
+        .map_err(|e| format!("ouverture archive: {e}"))?;
+    let gz = flate2::read::GzDecoder::new(file);
+    let mut tar = tar::Archive::new(gz);
+    tar.unpack(dest).map_err(|e| format!("extraction tar.gz: {e}"))?;
+    Ok(())
+}
+
+fn extract_tar_zst(archive: &Path, dest: &Path) -> Result<(), String> {
+    let file = std::fs::File::open(archive)
+        .map_err(|e| format!("ouverture archive: {e}"))?;
+    let zst = zstd::Decoder::new(file)
+        .map_err(|e| format!("décompression zstd: {e}"))?;
+    let mut tar = tar::Archive::new(zst);
+    tar.unpack(dest).map_err(|e| format!("extraction tar.zst: {e}"))?;
     Ok(())
 }
 
@@ -82,43 +60,12 @@ fn extract_zip(archive: &Path, dest: &Path) -> Result<(), String> {
     }
     #[cfg(not(target_os = "windows"))]
     {
-        run_cmd(
-            "unzip",
-            &[
-                "-o",
-                "-q",
-                &archive.display().to_string(),
-                "-d",
-                &dest.display().to_string(),
-            ],
-        )?;
-    }
-    Ok(())
-}
-
-fn move_inner_to_dest(tmp: &Path, dest: &Path) -> Result<(), String> {
-    let entries: Vec<_> = std::fs::read_dir(tmp)
-        .map_err(|e| format!("readdir: {e}"))?
-        .filter_map(|e| e.ok())
-        .collect();
-    if entries.is_empty() {
-        return Err("archive vide après extraction".into());
-    }
-
-    let source = if entries.len() == 1 && entries[0].path().is_dir() {
-        entries[0].path()
-    } else {
-        tmp.to_path_buf()
-    };
-
-    for entry in std::fs::read_dir(&source).map_err(|e| format!("readdir: {e}"))? {
-        let entry = entry.map_err(|e| format!("entry: {e}"))?;
-        let target = dest.join(entry.file_name());
-        if entry.path().is_dir() {
-            copy_dir_recursive(&entry.path(), &target)?;
-        } else {
-            std::fs::copy(entry.path(), &target).map_err(|e| format!("copy: {e}"))?;
-        }
+        let file = std::fs::File::open(archive)
+            .map_err(|e| format!("ouverture zip: {e}"))?;
+        let mut zip_archive = zip::ZipArchive::new(file)
+            .map_err(|e| format!("lecture zip: {e}"))?;
+        zip_archive.extract(dest)
+            .map_err(|e| format!("extraction zip: {e}"))?;
     }
     Ok(())
 }
@@ -126,18 +73,4 @@ fn move_inner_to_dest(tmp: &Path, dest: &Path) -> Result<(), String> {
 #[cfg(target_os = "windows")]
 fn ps_single_quote(path: &Path) -> String {
     path.display().to_string().replace('\'', "''")
-}
-
-fn copy_dir_recursive(src: &Path, dst: &Path) -> Result<(), String> {
-    std::fs::create_dir_all(dst).map_err(|e| format!("mkdir: {e}"))?;
-    for entry in std::fs::read_dir(src).map_err(|e| format!("readdir: {e}"))? {
-        let entry = entry.map_err(|e| format!("entry: {e}"))?;
-        let target = dst.join(entry.file_name());
-        if entry.path().is_dir() {
-            copy_dir_recursive(&entry.path(), &target)?;
-        } else {
-            std::fs::copy(entry.path(), &target).map_err(|e| format!("copy: {e}"))?;
-        }
-    }
-    Ok(())
 }

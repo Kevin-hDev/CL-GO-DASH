@@ -664,6 +664,7 @@ dependencies = [
  "dirs 6.0.0",
  "dom_smoothie",
  "eventsource-stream",
+ "flate2",
  "futures-util",
  "globset",
  "grep",
@@ -686,6 +687,7 @@ dependencies = [
  "serde_json",
  "sys-locale",
  "sysinfo",
+ "tar",
  "tauri",
  "tauri-build",
  "tauri-plugin-autostart",
@@ -701,6 +703,7 @@ dependencies = [
  "which",
  "zeroize",
  "zip 8.5.0",
+ "zstd",
 ]
 
 [[package]]
@@ -5259,6 +5262,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "tar"
+version = "0.4.45"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "22692a6476a21fa75fdfc11d452fda482af402c008cdbaf3476414e122040973"
+dependencies = [
+ "filetime",
+ "libc",
+ "xattr",
+]
+
+[[package]]
 name = "target-lexicon"
 version = "0.12.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7172,6 +7186,16 @@ dependencies = [
  "libc",
  "once_cell",
  "pkg-config",
+]
+
+[[package]]
+name = "xattr"
+version = "1.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "32e45ad4206f6d2479085147f02bc2ef834ac85886624a23575ae137c8aa8156"
+dependencies = [
+ "libc",
+ "rustix",
 ]
 
 [[package]]
