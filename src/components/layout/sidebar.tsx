@@ -53,7 +53,6 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
         e.currentTarget.style.minWidth = "var(--sidebar-collapsed)";
       }}
     >
-      {/* Drag region for traffic lights */}
       <DragRegion />
 
       {/* Nav items — paddingTop aligne avec "Nouvelle session" du panneau liste */}

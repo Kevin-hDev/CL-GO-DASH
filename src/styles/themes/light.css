@@ -34,6 +34,7 @@
   --void: #f7f7f9;
   --app-frame: #d8d8dc;
   --shell: #eaeaed;
+  --shell-opaque: #eaeaed;
   --shell-translucent: rgba(234, 234, 237, 0.80);
   --surface: #ffffff;
   --surface-hover: #faf8f5;

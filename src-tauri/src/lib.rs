@@ -75,11 +75,11 @@ pub fn run() {
                 }
             }
 
-            // Linux/Windows : décorations standard (pas de titlebar overlay)
+            // Linux/Windows : désactiver les décorations natives, boutons custom React
             #[cfg(not(target_os = "macos"))]
             {
                 if let Some(win) = app.get_webview_window("main") {
-                    let _ = win.set_decorations(true);
+                    let _ = win.set_decorations(false);
                 }
             }
 

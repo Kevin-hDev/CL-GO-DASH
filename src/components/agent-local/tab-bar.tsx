@@ -37,10 +37,21 @@ export function TabBar({
   const ghostRef = useRef<HTMLDivElement | null>(null);
   const startPos = useRef<{ x: number; y: number; idx: number } | null>(null);
   const isDragging = useRef(false);
+  const lastBarClick = useRef(0);
 
   const handleBarMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 0) return;
     if (e.target !== e.currentTarget) return;
+    const now = Date.now();
+    if (now - lastBarClick.current < 300) {
+      lastBarClick.current = 0;
+      const win = getCurrentWindow();
+      win.isMaximized()
+        .then((m) => (m ? win.unmaximize() : win.maximize()))
+        .catch(() => {});
+      return;
+    }
+    lastBarClick.current = now;
     getCurrentWindow().startDragging().catch(() => {});
   };
 

@@ -8,6 +8,7 @@ import { UpdateNotifications } from "./update-notifications";
 import { useUpdateChecker } from "@/hooks/use-update-checker";
 import { IS_MAC } from "@/lib/platform";
 import { GpuStatusBadge } from "@/components/agent-local/gpu-status-badge";
+import { WindowControls } from "./window-controls";
 import "./app-layout.css";
 
 const GPU_BADGE_OFFSET = 12;
@@ -123,6 +124,7 @@ export function AppLayout({
 
   return (
     <div className={`app-root ${IS_MAC ? "os-mac" : "os-other"} ${sidebarOpen ? "" : "sidebar-hidden"} ${fullscreen ? "is-fullscreen" : ""}`}>
+      <WindowControls />
       <WindowToolbar
         sidebarOpen={sidebarOpen}
         onToggleSidebar={toggleSidebar}
