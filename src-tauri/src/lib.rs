@@ -80,6 +80,7 @@ pub fn run() {
             {
                 if let Some(win) = app.get_webview_window("main") {
                     let _ = win.set_decorations(false);
+                    let _ = win.set_shadow(false);
                 }
             }
 
