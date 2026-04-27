@@ -73,6 +73,6 @@ jobs:
           tagName: ${{ inputs.version || github.ref_name }}
           releaseName: "CL-GO ${{ inputs.version || github.ref_name }}"
           releaseBody: ""
-          releaseDraft: true
+          releaseDraft: false
           prerelease: false
           args: --target ${{ matrix.target }} --bundles ${{ matrix.bundles }}
