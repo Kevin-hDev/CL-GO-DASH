@@ -220,7 +220,8 @@ src/components/personality/personality-tab.tsx   # Toggles injection contexte
 Depuis v0.6.5, Ollama n'est plus bundlé dans l'app. Il est téléchargé au premier lancement :
 
 1. L'app appelle `is_ollama_installed()` → vérifie si le port 11434 est ouvert OU si le binaire existe dans `~/.local/share/cl-go-dash/ollama-bundle/`
-2. Si non → affiche l'écran de setup → `download_ollama()` télécharge l'archive depuis GitHub Releases
+2. Le sidecar n'est lancé au setup que si le binaire existe (`ollama_binary_path().is_ok()`) — évite une erreur inutile au premier lancement
+3. Si non installé → affiche l'écran de setup → `download_ollama()` télécharge l'archive depuis GitHub Releases
 3. Archive extraite dans `~/.local/share/cl-go-dash/ollama-bundle/`
 4. Validation post-extraction : le binaire `ollama` (ou `ollama.exe`) doit exister, sinon erreur
 
@@ -320,6 +321,41 @@ Tout est inclus dans le `.app`.
 **Pistes** :
 - Vérifier les paramètres `decorations` et `transparent` dans `tauri.conf.json`
 - Peut être lié au compositor (Wayland vs X11) ou au thème GTK
+
+---
+
+## Single instance (v0.7.6)
+
+Plugin `tauri-plugin-single-instance` — empêche d'ouvrir l'app en double sur les 3 OS. Si une instance tourne déjà, la deuxième tentative remet le focus sur la fenêtre existante.
+
+**Fichier** : `src-tauri/src/lib.rs` (plugin init)
+
+---
+
+## Comportement bouton fermer (v0.7.6)
+
+| OS | Bouton croix | Effet |
+|---|---|---|
+| **macOS** | ❌ rouge | Hide la fenêtre (l'app reste dans le Dock). Clic Dock → re-show. Cmd+Q → quitte vraiment |
+| **Linux** | ❌ | Ferme l'app + cleanup sidecar |
+| **Windows** | ❌ | Ferme l'app + cleanup sidecar |
+
+Sur macOS, `CloseRequested` est intercepté dans `on_window_event` → `win.hide()` + `api.prevent_close()`. Le cleanup (kill sidecar, kill PTY) ne se déclenche que sur `Exit`/`ExitRequested`, pas sur `CloseRequested`. Le clic Dock est géré via `RunEvent::Reopen` → `win.show()` + `set_focus()`.
+
+**Fichiers** : `src-tauri/src/lib.rs` (on_window_event), `src-tauri/src/app_events.rs` (RunEvent handler)
+
+---
+
+## Splash screen (v0.7.6)
+
+Au lancement, un écran avec l'icône de l'app s'affiche pendant que React charge :
+
+- Fond blur + transparent adapté au thème (dark/light), détecté via `localStorage("clgo-theme")`
+- Icône différente par thème (`splash-icon.png` dark, `splash-icon-light.png` light)
+- Images preloadées via `<link rel="preload">`
+- Retiré instantanément (pas de fade) quand `ollamaReady` résout — couvre les deux chemins : setup screen (premier lancement) et app normale
+
+**Fichiers** : `index.html` (splash HTML/CSS/script), `src/App.tsx` (useEffect removal), `public/splash-icon.png`, `public/splash-icon-light.png`
 
 ---
 

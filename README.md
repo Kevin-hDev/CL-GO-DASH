@@ -145,7 +145,7 @@ Données dans `~/.local/share/cl-go-dash/` sur les 3 OS :
 | `configured-providers.json` | Registry des providers configurés |
 | `config.json` | Heartbeat config + scheduled_wakeups + advanced settings |
 | `agent-sessions/*.json` | Conversations Agent Local |
-| `agent-settings.json` | Mode permissions (auto/manuel) |
+| `agent-settings.json` | Mode permissions par défaut (auto/manuel/chat) |
 | `agent-tabs.json` | État des onglets ouverts |
 | `memory/core/*.md` | Fichiers de personnalité |
 | `logs/wakeups.jsonl` | Historique d'exécution des réveils (rolling 500 lignes) |
@@ -175,4 +175,4 @@ L'application embarque **Ollama** comme sidecar pour éviter toute dépendance e
 
 ## Licence
 
-Privé — projet personnel.
+[Apache License 2.0](LICENSE)
