@@ -67,7 +67,7 @@ export function useFilePreview(sessionId: string | null, operations: FileOperati
       additions: 0,
       deletions: 0,
     };
-    setFallbackOps((items) => [fallback, ...items.filter((item) => item.id !== fallback.id)]);
+    setFallbackOps((items) => [fallback, ...items.filter((item) => item.id !== fallback.id)].slice(0, MAX_TABS));
     openOperation(fallback);
   }, [operations, openOperation]);
 
