@@ -27,16 +27,10 @@ impl WriteGuard {
     }
 
     /// Vérifie si on peut écrire dans ce fichier.
-    /// OK si : le fichier n'existe pas, ou il a été lu dans cette session.
-    pub fn check_write(&self, path: &Path) -> Result<(), String> {
-        if !path.exists() {
-            return Ok(());
-        }
-        let canonical = path.canonicalize().unwrap_or_else(|_| path.to_path_buf());
-        if self.read_paths.contains(&canonical) {
-            Ok(())
-        } else {
-            Err("Fichier existant non lu dans cette session. Utiliser read_file d'abord.".to_string())
-        }
+    /// Le system prompt instruit le LLM de toujours lire avant d'écrire.
+    /// Le guard enregistre les lectures mais ne bloque plus les écritures
+    /// car le blocage causait des boucles mortes entre les agent loops.
+    pub fn check_write(&self, _path: &Path) -> Result<(), String> {
+        Ok(())
     }
 }

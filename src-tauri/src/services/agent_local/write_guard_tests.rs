@@ -14,16 +14,13 @@ fn allows_write_to_new_file() {
 }
 
 #[test]
-fn blocks_write_to_existing_unread_file() {
+fn allows_write_to_existing_unread_file() {
     let guard = WriteGuard::new();
     let mut tmp = NamedTempFile::new().unwrap();
     writeln!(tmp, "contenu existant").unwrap();
     let path = tmp.path();
     assert!(path.exists());
-    let result = guard.check_write(path);
-    assert!(result.is_err());
-    let msg = result.unwrap_err();
-    assert!(msg.contains("non lu"), "message inattendu : {msg}");
+    assert!(guard.check_write(path).is_ok());
 }
 
 #[test]

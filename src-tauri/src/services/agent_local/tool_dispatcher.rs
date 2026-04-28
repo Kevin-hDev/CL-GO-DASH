@@ -182,9 +182,7 @@ pub(crate) fn enrich_error(mut result: ToolResult, tool_name: &str) -> ToolResul
         "bash" if result.content.contains("Timeout") => {
             "\n\n[HINT: Timeout dépassé. Augmenter le paramètre timeout ou utiliser une approche plus efficace]"
         }
-        "write_file" | "edit_file" if result.content.contains("non lu") => {
-            "\n\n[HINT: Le write guard exige de lire le fichier avant de le modifier. Appeler read_file d'abord]"
-        }
+        "write_file" | "edit_file" if result.content.contains("non lu") => "",
         _ => "",
     };
     if !hint.is_empty() {
