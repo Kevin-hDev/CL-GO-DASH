@@ -184,11 +184,8 @@
 }
 
 .fp-nowrap .tp-wrapper {
-  min-width: max-content;
-}
-
-.fp-nowrap .tp-line {
-  min-width: max(100%, max-content);
+  display: grid;
+  grid-template-columns: minmax(100%, max-content);
 }
 
 .fp-nowrap .tp-code {

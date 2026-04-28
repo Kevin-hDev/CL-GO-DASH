@@ -66,11 +66,8 @@
   overflow-y: hidden;
   scrollbar-width: thin;
   scrollbar-color: var(--ink-faint) transparent;
-  min-width: 0;
-}
-
-.tp-nowrap .tp-line {
-  min-width: max(100%, max-content);
+  display: grid;
+  grid-template-columns: minmax(100%, max-content);
 }
 
 .tp-nowrap .tp-code {
