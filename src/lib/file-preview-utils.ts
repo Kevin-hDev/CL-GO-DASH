@@ -67,6 +67,7 @@ function toolToOperation(
       timestamp,
       oldText: tool.old_text,
       newText: tool.new_text,
+      startLine: tool.start_line,
       additions: countLines(tool.new_text),
       deletions: countLines(tool.old_text),
     };

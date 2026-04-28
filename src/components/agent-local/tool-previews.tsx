@@ -4,12 +4,17 @@ import { shouldWrapFile } from "@/lib/code-language";
 import "./tool-previews.css";
 import "@/components/file-preview/file-preview-highlight.css";
 
-function CodeLines({ lines, mode, path }: { lines: string[]; mode: "ok" | "error"; path?: string }) {
+function CodeLines({ lines, mode, path, startLine = 1 }: {
+  lines: string[];
+  mode: "ok" | "error";
+  path?: string;
+  startLine?: number;
+}) {
   return (
     <>
       {lines.map((line, i) => (
         <div key={`${mode}-${i}`} className={`tp-line tp-line-${mode}`}>
-          <span className="tp-num">{i + 1}</span>
+          <span className="tp-num">{startLine + i}</span>
           <span className={`tp-prefix tp-prefix-${mode}`}>{mode === "ok" ? "+" : "-"}</span>
           {path
             ? <span className={`tp-code tp-code-${mode}`} dangerouslySetInnerHTML={{ __html: line || " " }} />
@@ -42,7 +47,12 @@ export function ContentPreview({ content, path }: { content: string; path?: stri
   );
 }
 
-export function DiffPreview({ oldText, newText, path }: { oldText: string; newText: string; path?: string }) {
+export function DiffPreview({ oldText, newText, path, startLine = 1 }: {
+  oldText: string;
+  newText: string;
+  path?: string;
+  startLine?: number;
+}) {
   const oldLines = useMemo(() => path ? highlightLines(oldText, path) : oldText.split("\n"), [oldText, path]);
   const newLines = useMemo(() => path ? highlightLines(newText, path) : newText.split("\n"), [newText, path]);
   const wrap = !path || shouldWrapFile(path);
@@ -50,8 +60,8 @@ export function DiffPreview({ oldText, newText, path }: { oldText: string; newTe
   if (wrap) {
     return (
       <div className="tp-wrapper">
-        <CodeLines lines={oldLines} mode="error" path={path} />
-        <CodeLines lines={newLines} mode="ok" path={path} />
+        <CodeLines lines={oldLines} mode="error" path={path} startLine={startLine} />
+        <CodeLines lines={newLines} mode="ok" path={path} startLine={startLine} />
       </div>
     );
   }
@@ -59,8 +69,8 @@ export function DiffPreview({ oldText, newText, path }: { oldText: string; newTe
   return (
     <div className="tp-wrapper tp-nowrap">
       <div className="tp-inner">
-        <CodeLines lines={oldLines} mode="error" path={path} />
-        <CodeLines lines={newLines} mode="ok" path={path} />
+        <CodeLines lines={oldLines} mode="error" path={path} startLine={startLine} />
+        <CodeLines lines={newLines} mode="ok" path={path} startLine={startLine} />
       </div>
     </div>
   );

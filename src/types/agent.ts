@@ -126,6 +126,7 @@ export interface ToolActivityRecord {
   content?: string;
   old_text?: string;
   new_text?: string;
+  start_line?: number;
 }
 
 export interface ToolCallRequest {

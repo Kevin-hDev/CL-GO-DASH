@@ -74,6 +74,8 @@ pub struct ToolActivityRecord {
     pub old_text: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub new_text: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub start_line: Option<u32>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -92,9 +92,13 @@ pub async fn edit_file(
     if count > 1 {
         return ToolResult::err(format!("Chaîne trouvée {count} fois (doit être unique)"));
     }
+    let start_line = content[..content.find(old_string).unwrap_or(0)]
+        .chars()
+        .filter(|c| *c == '\n')
+        .count() + 1;
     let updated = content.replacen(old_string, new_string, 1);
     match tokio::fs::write(&resolved, &updated).await {
-        Ok(()) => ToolResult::ok(format!("Modifié: {}", resolved.display())),
+        Ok(()) => ToolResult::ok(format!("Modifié: {} (ligne {})", resolved.display(), start_line)),
         Err(e) => ToolResult::err(security::sanitize_error(e)),
     }
 }

@@ -9,6 +9,7 @@ export interface FileOperation {
   content?: string;
   oldText?: string;
   newText?: string;
+  startLine?: number;
   additions: number;
   deletions: number;
 }
