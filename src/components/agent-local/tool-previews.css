@@ -67,6 +67,10 @@
   scrollbar-color: var(--ink-faint) transparent;
 }
 
+.tp-nowrap .tp-line {
+  min-width: max-content;
+}
+
 .tp-nowrap .tp-code {
   white-space: pre;
   word-break: normal;
