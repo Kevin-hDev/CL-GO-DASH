@@ -1,5 +1,40 @@
 # Changelog
 
+## v0.7.9
+
+### Features
+
+- **File Preview Panel**: new side panel to view files created/edited by the agent during a session
+  - Opens via button next to the terminal toggle in the tab bar
+  - Summary tab lists all modified files with diff stats (+N -M)
+  - Click a file to preview its content with syntax highlighting
+  - Slide animation on open/close, fullscreen mode with smooth transition
+  - Resizable panel via drag handle on the left edge
+  - Keyboard shortcut: `Option+Cmd+B` (macOS) / `Alt+Ctrl+B` (Linux/Windows)
+  - Right-click tab → "Open with..." to open in external editor (VS Code, Zed, Sublime, etc.)
+  - Tabs persist when closing/reopening the panel
+- **Syntax highlighting in tool bubbles**: code previews in chat now show colored syntax (37 languages via lowlight)
+- **Real line numbers in edit diffs**: edit diffs now show the actual file line numbers instead of starting at 1
+- **Auto word-wrap detection**: text/markdown files wrap lines, code files use horizontal scroll — in both chat bubbles and panel
+- **File extension icons**: vscode-icons for 20+ file types (ts, rs, py, go, css, json, yaml, etc.)
+
+### UI / Theming
+
+- **Tool bubble width**: now matches chat input width (720px)
+- **Diff colors**: consistent green/red backgrounds across chat and panel, with proper CSS tokens for both dark and light themes
+- **Line backgrounds**: full-width coverage in horizontal scroll mode (code files)
+
+### Fixes
+
+- **Edit diffs show correct line numbers** from the actual file position
+- **Panel fullscreen** slides smoothly instead of popping
+- **Panel resize** responds instantly (no 300ms lag from CSS transition)
+- **Light theme** file preview colors now render correctly
+
+### i18n
+
+- Added French and English translations for all file preview strings (14 keys)
+
 ## v0.7.6
 
 ### Features
