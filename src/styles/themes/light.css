@@ -35,6 +35,14 @@
   --signal-info: #3b82f6;
   --signal-info-bg: rgba(59, 130, 246, 0.12);
 
+  /* Diff line backgrounds */
+  --diff-add-bg: rgba(22, 163, 74, 0.14);
+  --diff-add-gutter: rgba(22, 163, 74, 0.12);
+  --diff-del-bg: rgba(220, 38, 38, 0.14);
+  --diff-del-gutter: rgba(220, 38, 38, 0.12);
+  --diff-add-line-bg: rgba(22, 163, 74, 0.08);
+  --diff-del-line-bg: rgba(220, 38, 38, 0.08);
+
   /* Tool colors */
   --tool-bash: #ea580c;
   --tool-file-read: #16a34a;
