@@ -1,0 +1,82 @@
+.fp-tabs {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+}
+
+.fp-tabs-files {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.fp-tabs-files::-webkit-scrollbar {
+  display: none;
+}
+
+.fp-tab {
+  height: 28px;
+  max-width: 172px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 13px;
+  background: transparent;
+  color: var(--ink-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.fp-tab.active,
+.fp-tab:hover {
+  background: var(--surface-hover);
+  color: var(--ink);
+}
+
+.fp-tab-icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.fp-tab-close {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  color: var(--ink);
+  background: var(--surface-hover);
+  border-radius: 999px;
+}
+
+.fp-tab:hover .fp-tab-close {
+  opacity: 1;
+}
+
+.fp-tab:hover .fp-tab-file-icon {
+  opacity: 0;
+}
+
+.fp-tab-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.fp-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}

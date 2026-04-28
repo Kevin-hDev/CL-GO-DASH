@@ -53,7 +53,7 @@ export function WindowToolbar({
           <SearchIcon size={16} />
         </button>
       </Tooltip>
-      <Tooltip label={`Aperçu fichiers (${ALT}${MOD}B)`}>
+      <Tooltip label={`${t("filePreview.togglePanel")} (${ALT}${MOD}B)`}>
         <button
           className={`toolbar-btn${previewOpen ? " toolbar-btn-active" : ""}`}
           onClick={onTogglePreview}

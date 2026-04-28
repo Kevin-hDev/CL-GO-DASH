@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Maximize2, Minimize2 } from "lucide-react";
 import { detectPreviewEditors, openPreviewFile, openPreviewWithEditor } from "@/services/file-preview";
 import type { FileOperation, FilePreviewActiveTab, PreviewEditor } from "@/types/file-preview";
@@ -25,6 +26,7 @@ interface FilePreviewPanelProps {
 }
 
 export function FilePreviewPanel(props: FilePreviewPanelProps) {
+  const { t } = useTranslation();
   const [editors, setEditors] = useState<PreviewEditor[]>([]);
   const activeOperation = props.tabs.find((tab) => tab.id === props.activeTab);
 
@@ -59,7 +61,7 @@ export function FilePreviewPanel(props: FilePreviewPanelProps) {
         <button
           className="fp-icon-btn"
           onClick={() => props.onFullscreenChange(!props.fullscreen)}
-          title={props.fullscreen ? "Réduire" : "Plein écran"}
+          title={props.fullscreen ? t("filePreview.reduce") : t("filePreview.fullscreen")}
         >
           {props.fullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
         </button>
@@ -79,7 +81,7 @@ export function FilePreviewPanel(props: FilePreviewPanelProps) {
               operation={activeOperation}
               baseDir={props.baseDir}
             />
-            {editors.length === 0 && <div className="fp-editor-note">Aucun éditeur externe détecté.</div>}
+            {editors.length === 0 && <div className="fp-editor-note">{t("filePreview.noEditor")}</div>}
             <div className="fp-code-scroll">
               <FilePreviewContent operation={activeOperation} baseDir={props.baseDir} />
             </div>

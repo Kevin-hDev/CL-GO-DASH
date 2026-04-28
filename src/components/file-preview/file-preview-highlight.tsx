@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { codeToHtml } from "shiki";
 import { languageFromPath } from "@/lib/code-language";
 
@@ -20,6 +21,7 @@ function useCurrentTheme(): string {
 }
 
 export function FilePreviewHighlight({ code, path, mode = "normal" }: FilePreviewHighlightProps) {
+  const { t } = useTranslation();
   const [html, setHtml] = useState("");
   const appTheme = useCurrentTheme();
 
@@ -40,7 +42,7 @@ export function FilePreviewHighlight({ code, path, mode = "normal" }: FilePrevie
     return () => { alive = false; };
   }, [code, path, mode, appTheme]);
 
-  if (!html) return <div className="fp-empty">Coloration du fichier...</div>;
+  if (!html) return <div className="fp-empty">{t("filePreview.highlighting")}</div>;
   return <div className="fp-shiki" dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
