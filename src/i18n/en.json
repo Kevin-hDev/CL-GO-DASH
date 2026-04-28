@@ -389,6 +389,21 @@
     "viewOnGithub": "View on GitHub",
     "description": "Agentic desktop app for local and cloud LLMs."
   },
+  "filePreview": {
+    "noFiles": "No files created or modified in this session.",
+    "filesModified": "Modified files",
+    "loading": "Reading file...",
+    "fileNotFound": "The file could not be read. It may have been deleted or moved.",
+    "highlighting": "Highlighting file...",
+    "noDiff": "No changes to display.",
+    "togglePanel": "File preview",
+    "reduce": "Reduce",
+    "fullscreen": "Full screen",
+    "noEditor": "No external editor detected.",
+    "open": "Open",
+    "openWith": "Open with...",
+    "noEditorDetected": "No editor detected"
+  },
   "errors": {
     "crashMessage": "An error occurred. Please restart the application.",
     "operationFailed": "Operation failed. Please try again.",

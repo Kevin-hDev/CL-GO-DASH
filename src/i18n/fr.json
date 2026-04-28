@@ -389,6 +389,21 @@
     "viewOnGithub": "Voir sur GitHub",
     "description": "Application desktop agentique pour LLM locaux et cloud."
   },
+  "filePreview": {
+    "noFiles": "Aucun fichier créé ou modifié dans cette session.",
+    "filesModified": "Fichiers modifiés",
+    "loading": "Lecture du fichier...",
+    "fileNotFound": "Le fichier n'a pas pu être lu. Il a peut-être été supprimé ou déplacé.",
+    "highlighting": "Coloration du fichier...",
+    "noDiff": "Aucune modification à afficher.",
+    "togglePanel": "Aperçu fichiers",
+    "reduce": "Réduire",
+    "fullscreen": "Plein écran",
+    "noEditor": "Aucun éditeur externe détecté.",
+    "open": "Ouvrir",
+    "openWith": "Ouvrir avec...",
+    "noEditorDetected": "Aucun éditeur détecté"
+  },
   "errors": {
     "crashMessage": "Une erreur est survenue. Relance l'application.",
     "operationFailed": "L'opération a échoué. Réessaye.",

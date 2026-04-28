@@ -26,12 +26,13 @@ interface MessageListProps {
   onReload?: (messageId: string) => void;
   onEdit?: (messageId: string, newContent: string) => void;
   onFileClick?: (file: { name: string; path?: string; thumbnail?: string }) => void;
+  onFilePreview?: (path: string) => void;
 }
 
 export function MessageList({
   messages, completedSegments, currentContent, currentThinking,
   currentTools, isStreaming, tps, totalElapsedMs, segmentStartedAt,
-  liveTokenCount, error, isConnectionError, onRetry, onReload, onEdit, onFileClick,
+  liveTokenCount, error, isConnectionError, onRetry, onReload, onEdit, onFileClick, onFilePreview,
 }: MessageListProps) {
   const lastAssistantIdx = findLastIndex(messages, (m) => m.role === "assistant");
 
@@ -54,6 +55,7 @@ export function MessageList({
           return (
             <SegmentedAssistantMessage
               key={msg.id} msg={msg} onReload={onReload}
+              onFilePreview={onFilePreview}
               tps={isLast ? tps : 0}
               totalElapsedMs={isLast ? totalElapsedMs : 0}
             />
@@ -66,7 +68,7 @@ export function MessageList({
         <div key={`seg-${i}`}>
           {seg.thinking && <ThinkingSection content={seg.thinking} />}
           {seg.content && <AssistantMessage content={seg.content} />}
-          {seg.tools.length > 0 && <ToolBubble tools={seg.tools} />}
+          {seg.tools.length > 0 && <ToolBubble tools={seg.tools} onFilePreview={onFilePreview} />}
         </div>
       ))}
 
@@ -79,7 +81,7 @@ export function MessageList({
           segmentStartedAt={segmentStartedAt} liveTokenCount={liveTokenCount}
         />
       )}
-      {isStreaming && currentTools.length > 0 && <ToolBubble tools={currentTools} />}
+      {isStreaming && currentTools.length > 0 && <ToolBubble tools={currentTools} onFilePreview={onFilePreview} />}
 
       {error && !isStreaming && (
         <ErrorBubble
@@ -93,8 +95,8 @@ export function MessageList({
 }
 
 function SegmentedAssistantMessage({
-  msg, onReload, tps, totalElapsedMs,
-}: { msg: AgentMessage; onReload?: (id: string) => void; tps: number; totalElapsedMs: number }) {
+  msg, onReload, onFilePreview, tps, totalElapsedMs,
+}: { msg: AgentMessage; onReload?: (id: string) => void; onFilePreview?: (path: string) => void; tps: number; totalElapsedMs: number }) {
   if (msg.segments && msg.segments.length > 0) {
     const lastSegIdx = msg.segments.length - 1;
     return (
@@ -110,7 +112,7 @@ function SegmentedAssistantMessage({
                 totalElapsedMs={i === lastSegIdx ? totalElapsedMs : undefined}
               />
             )}
-            {seg.tools.length > 0 && <SavedToolBubble tools={seg.tools} />}
+            {seg.tools.length > 0 && <SavedToolBubble tools={seg.tools} onFilePreview={onFilePreview} />}
           </div>
         ))}
       </>

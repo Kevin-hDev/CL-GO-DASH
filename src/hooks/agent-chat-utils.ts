@@ -35,8 +35,15 @@ export function toolsToRecords(tools: ToolActivity[]): ToolActivityRecord[] {
       content: t.name === "write_file" ? String(a.content ?? "") : undefined,
       old_text: t.name === "edit_file" ? String(a.old_string ?? "") : undefined,
       new_text: t.name === "edit_file" ? String(a.new_string ?? "") : undefined,
+      start_line: parseStartLine(t.result),
     };
   });
+}
+
+function parseStartLine(result?: string): number | undefined {
+  if (!result) return undefined;
+  const match = /\(ligne (\d+)\)/.exec(result);
+  return match ? Number(match[1]) : undefined;
 }
 
 export function segmentsToRecords(segments: StreamSegment[]): ToolActivityRecord[] {

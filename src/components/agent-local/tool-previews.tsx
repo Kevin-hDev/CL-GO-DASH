@@ -1,39 +1,77 @@
+import { useMemo } from "react";
+import { highlightLines } from "@/lib/highlight";
+import { shouldWrapFile } from "@/lib/code-language";
 import "./tool-previews.css";
+import "@/components/file-preview/file-preview-highlight.css";
 
-export function ContentPreview({ content }: { content: string }) {
-  const lines = content.split("\n");
+function CodeLines({ lines, mode, path, startLine = 1 }: {
+  lines: string[];
+  mode: "ok" | "error";
+  path?: string;
+  startLine?: number;
+}) {
   return (
-    <div className="tp-wrapper">
+    <>
       {lines.map((line, i) => (
-        <div key={i} className="tp-line tp-line-ok">
-          <span className="tp-num">{i + 1}</span>
-          <span className="tp-prefix tp-prefix-ok">+</span>
-          <span className="tp-code tp-code-ok">{line}</span>
+        <div key={`${mode}-${i}`} className={`tp-line tp-line-${mode}`}>
+          <span className="tp-num">{startLine + i}</span>
+          <span className={`tp-prefix tp-prefix-${mode}`}>{mode === "ok" ? "+" : "-"}</span>
+          {path
+            ? <span className={`tp-code tp-code-${mode}`} dangerouslySetInnerHTML={{ __html: line || " " }} />
+            : <span className={`tp-code tp-code-${mode}`}>{line}</span>
+          }
         </div>
       ))}
+    </>
+  );
+}
+
+export function ContentPreview({ content, path }: { content: string; path?: string }) {
+  const lines = useMemo(() => path ? highlightLines(content, path) : content.split("\n"), [content, path]);
+  const wrap = !path || shouldWrapFile(path);
+
+  if (wrap) {
+    return (
+      <div className="tp-wrapper">
+        <CodeLines lines={lines} mode="ok" path={path} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="tp-wrapper tp-nowrap">
+      <div className="tp-inner">
+        <CodeLines lines={lines} mode="ok" path={path} />
+      </div>
     </div>
   );
 }
 
-export function DiffPreview({ oldText, newText }: { oldText: string; newText: string }) {
-  const oldLines = oldText.split("\n");
-  const newLines = newText.split("\n");
+export function DiffPreview({ oldText, newText, path, startLine = 1 }: {
+  oldText: string;
+  newText: string;
+  path?: string;
+  startLine?: number;
+}) {
+  const oldLines = useMemo(() => path ? highlightLines(oldText, path) : oldText.split("\n"), [oldText, path]);
+  const newLines = useMemo(() => path ? highlightLines(newText, path) : newText.split("\n"), [newText, path]);
+  const wrap = !path || shouldWrapFile(path);
+
+  if (wrap) {
+    return (
+      <div className="tp-wrapper">
+        <CodeLines lines={oldLines} mode="error" path={path} startLine={startLine} />
+        <CodeLines lines={newLines} mode="ok" path={path} startLine={startLine} />
+      </div>
+    );
+  }
+
   return (
-    <div className="tp-wrapper">
-      {oldLines.map((line, i) => (
-        <div key={`old-${i}`} className="tp-line tp-line-error">
-          <span className="tp-num">{i + 1}</span>
-          <span className="tp-prefix tp-prefix-error">-</span>
-          <span className="tp-code tp-code-error">{line}</span>
-        </div>
-      ))}
-      {newLines.map((line, i) => (
-        <div key={`new-${i}`} className="tp-line tp-line-ok">
-          <span className="tp-num">{i + 1}</span>
-          <span className="tp-prefix tp-prefix-ok">+</span>
-          <span className="tp-code tp-code-ok">{line}</span>
-        </div>
-      ))}
+    <div className="tp-wrapper tp-nowrap">
+      <div className="tp-inner">
+        <CodeLines lines={oldLines} mode="error" path={path} startLine={startLine} />
+        <CodeLines lines={newLines} mode="ok" path={path} startLine={startLine} />
+      </div>
     </div>
   );
 }

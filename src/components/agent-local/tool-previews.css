@@ -61,6 +61,23 @@
   color: var(--signal-error);
 }
 
+.tp-wrapper.tp-nowrap {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ink-faint) transparent;
+}
+
+.tp-nowrap .tp-inner {
+  min-width: max-content;
+}
+
+.tp-nowrap .tp-code {
+  white-space: pre;
+  word-break: normal;
+  flex: none;
+}
+
 /* WebResultsPreview */
 .tp-web-wrapper {
   margin-top: 6px;

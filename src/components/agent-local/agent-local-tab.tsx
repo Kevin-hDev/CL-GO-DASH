@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { ConversationList } from "./conversation-list";
 import { TabBar } from "./tab-bar";
-import { ChatView } from "./chat-view";
+import { AgentChatDetail } from "./agent-chat-detail";
 import { WelcomeView } from "./welcome-view";
 import { useAgentSessions } from "@/hooks/use-agent-sessions";
 import { useAgentTabs } from "@/hooks/use-agent-tabs";
@@ -10,13 +10,13 @@ import { useTerminal } from "@/hooks/use-terminal";
 import { useDefaultModel } from "@/hooks/use-default-model";
 import { useAvailableModels } from "@/hooks/use-available-models";
 import { useSessionActions } from "@/hooks/use-session-actions";
+import { useFilePreview } from "@/hooks/use-file-preview";
+import { useAgentLocalShortcuts } from "@/hooks/use-agent-local-shortcuts";
+import type { FileOperation } from "@/types/file-preview";
+import type { AgentLocalTabProps } from "./agent-local-tab-types";
+import "./agent-local-tab.css";
 
-interface AgentLocalTabProps {
-  requestedSessionId?: string | null;
-  onSessionChange?: (id: string | null) => void;
-}
-
-export function AgentLocalTab(props?: AgentLocalTabProps): { list: React.ReactNode; detail: React.ReactNode; onCreate: () => void; onShowWelcome: () => void } {
+export function AgentLocalTab(props?: AgentLocalTabProps): { list: React.ReactNode; detail: React.ReactNode; onCreate: () => void; onShowWelcome: () => void; previewOpen: boolean; onTogglePreview: () => void } {
   const { sessions, refresh, create, rename, remove, updateModel } = useAgentSessions();
   const tabState = useAgentTabs();
   const projectsHook = useProjects();
@@ -32,12 +32,14 @@ export function AgentLocalTab(props?: AgentLocalTabProps): { list: React.ReactNo
   const { model: defaultModel, provider: defaultProvider } = useDefaultModel();
   const [welcomeModel, setWelcomeModel] = useState<{ model: string; provider: string } | null>(null);
   const [thinking, setThinking] = useState(false);
+  const [fileOperations, setFileOperations] = useState<FileOperation[]>([]);
 
   const { groups: availableModels } = useAvailableModels();
 
   const currentDefault = welcomeModel ?? { model: defaultModel, provider: defaultProvider };
   const model = activeSession?.model ?? currentDefault.model;
   const provider = activeSession?.provider ?? currentDefault.provider;
+  const filePreview = useFilePreview(tabState.activeSessionId ?? null, fileOperations);
 
   useEffect(() => {
     if (!model || availableModels.size === 0) return;
@@ -57,28 +59,14 @@ export function AgentLocalTab(props?: AgentLocalTabProps): { list: React.ReactNo
   const sessionActions = useSessionActions({ create, tabState, rename, defaultModel, defaultProvider, welcomeModel, setWelcomeModel, projectsHook });
   const { pendingMessage, setPendingMessage, pendingWorkingDir, setPendingWorkingDir, pendingSkills, setPendingSkills, pendingFiles, setPendingFiles, handleCreate, handleCreateWithModel, handleWelcomeSend, handleAutoRename, handleCreateInProject } = sessionActions;
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const onMac = navigator.userAgent.includes("Mac");
-      const toggle = onMac ? (e.metaKey && e.code === "KeyJ") : (e.ctrlKey && e.code === "KeyJ");
-      if (!toggle) return;
-      if (!tabState.activeSessionId) return;
-      const target = e.target as HTMLElement;
-      const isEditableTarget =
-        target instanceof HTMLInputElement ||
-        target instanceof HTMLTextAreaElement ||
-        target.isContentEditable;
-      if (isEditableTarget) return;
-      e.preventDefault();
-      if (!terminal.isOpen && terminal.tabs.length === 0) {
-        terminal.addTab(terminalCwd);
-      } else {
-        terminal.togglePanel();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [tabState.activeSessionId, terminal, terminalCwd]);
+  useAgentLocalShortcuts({
+    activeSessionId: tabState.activeSessionId,
+    terminalOpen: terminal.isOpen,
+    terminalTabsCount: terminal.tabs.length,
+    terminalCwd,
+    onAddTerminalTab: terminal.addTab,
+    onToggleTerminal: terminal.togglePanel,
+  });
 
   const prevSessionRef = useRef(tabState.activeSessionId);
   useEffect(() => {
@@ -140,11 +128,14 @@ export function AgentLocalTab(props?: AgentLocalTabProps): { list: React.ReactNo
             canAddTab={tabState.canAddTab}
             sessionId={tabState.activeSessionId ?? null}
             terminalOpen={terminal.isOpen}
+            previewOpen={filePreview.open}
+
             onSelect={tabState.selectTab}
             onClose={tabState.closeTab}
             onAdd={handleCreate}
             onRename={tabState.renameTab}
             onReorder={tabState.reorderTabs}
+            onTogglePreview={filePreview.toggleOpen}
             onToggleTerminal={() => {
               if (!terminal.isOpen && terminal.tabs.length === 0) {
                 terminal.addTab(terminalCwd);
@@ -156,31 +147,34 @@ export function AgentLocalTab(props?: AgentLocalTabProps): { list: React.ReactNo
         </div>
       )}
       {tabState.activeSessionId ? (
-        <div style={{ flex: 1, minHeight: 0, overflow: "hidden" }}>
-          <ChatView
-            sessionId={tabState.activeSessionId}
-            model={model}
-            provider={provider}
-            projects={projectsHook.projects}
-            onAddProject={projectsHook.add}
-            onSessionsRefresh={refresh}
-            onApplySwitch={(m, p) => {
-              if (tabState.activeSessionId && updateModel) {
-                updateModel(tabState.activeSessionId, m, p);
-              }
-            }}
-            onNewSession={handleCreateWithModel}
-            onAutoRename={handleAutoRename}
-            initialMessage={pendingMessage ?? undefined}
-            initialWorkingDir={pendingWorkingDir}
-            initialSkills={pendingSkills}
-            initialFiles={pendingFiles}
-            thinking={thinking}
-            onToggleThinking={() => setThinking((v) => !v)}
-            onInitialMessageSent={() => { setPendingMessage(null); setPendingWorkingDir(undefined); setPendingSkills(undefined); setPendingFiles(undefined); }}
-            terminalState={terminal}
-          />
-        </div>
+        <AgentChatDetail
+          sessionId={tabState.activeSessionId}
+          model={model}
+          provider={provider}
+          projects={projectsHook.projects}
+          activeProjectPath={activeProject?.path}
+          pendingMessage={pendingMessage}
+          pendingWorkingDir={pendingWorkingDir}
+          pendingSkills={pendingSkills}
+          pendingFiles={pendingFiles}
+          thinking={thinking}
+          terminal={terminal}
+          filePreview={filePreview}
+          fileOperations={fileOperations}
+          onAddProject={projectsHook.add}
+          onSessionsRefresh={refresh}
+          onUpdateModel={updateModel}
+          onNewSession={handleCreateWithModel}
+          onAutoRename={handleAutoRename}
+          onToggleThinking={() => setThinking((v) => !v)}
+          onInitialMessageSent={() => {
+            setPendingMessage(null);
+            setPendingWorkingDir(undefined);
+            setPendingSkills(undefined);
+            setPendingFiles(undefined);
+          }}
+          onFileOperationsChange={setFileOperations}
+        />
       ) : (
         <div style={{ flex: 1, minHeight: 0, overflow: "hidden" }}>
           <WelcomeView
@@ -198,5 +192,12 @@ export function AgentLocalTab(props?: AgentLocalTabProps): { list: React.ReactNo
     </div>
   );
 
-  return { list, detail, onCreate: handleCreate, onShowWelcome: tabState.deselectTab };
+  return {
+    list,
+    detail,
+    onCreate: handleCreate,
+    onShowWelcome: tabState.deselectTab,
+    previewOpen: filePreview.open,
+    onTogglePreview: filePreview.toggleOpen,
+  };
 }

@@ -14,10 +14,12 @@ import { usePermissionRequests } from "@/hooks/use-permission-requests";
 import { useSessionProject } from "@/hooks/use-session-project";
 import { useChatScroll } from "@/hooks/use-chat-scroll";
 import { useModelSwitch } from "@/hooks/use-model-switch";
+import { useSessionFiles } from "@/hooks/use-session-files";
 import { PermissionDialog } from "./permission-dialog";
 import { TerminalPanel } from "@/components/terminal/terminal-panel";
 import { useTerminal } from "@/hooks/use-terminal";
 import type { Project } from "@/types/agent";
+import type { FileOperation } from "@/types/file-preview";
 import scrollDownIcon from "@/assets/fleche.png";
 import "./chat.css";
 
@@ -39,6 +41,8 @@ interface ChatViewProps {
   onToggleThinking: () => void;
   onInitialMessageSent?: () => void;
   terminalState: ReturnType<typeof useTerminal>;
+  onFileOperationsChange?: (operations: FileOperation[]) => void;
+  onFilePreviewPath?: (path: string) => void;
 }
 
 export function ChatView({
@@ -59,6 +63,8 @@ export function ChatView({
   onToggleThinking,
   onInitialMessageSent,
   terminalState,
+  onFileOperationsChange,
+  onFilePreviewPath,
 }: ChatViewProps) {
   const permissions = usePermissionRequests();
   const permMode = usePermissionMode(sessionId);
@@ -70,7 +76,12 @@ export function ChatView({
   const context = useContextProgress(model, chat.tokenCount, provider);
   const [preview, setPreview] = useState<DroppedFile | null>(null);
   const proj = useSessionProject(sessionId, projects, onAddProject, chat.messages.length > 0);
+  const fileOperations = useSessionFiles(chat.messages);
   const initialSent = useRef(false);
+
+  useEffect(() => {
+    onFileOperationsChange?.(fileOperations);
+  }, [fileOperations, onFileOperationsChange]);
 
   useEffect(() => {
     const hasInitialContent = initialMessage || (initialFiles && initialFiles.length > 0) || (initialSkills && initialSkills.length > 0);
@@ -131,6 +142,7 @@ export function ChatView({
               size: 0,
               preview: f.thumbnail,
             })}
+            onFilePreview={onFilePreviewPath}
           />
           <div ref={bottomRef} />
         </div>

@@ -1,0 +1,168 @@
+.fp-code {
+  min-width: max-content;
+  padding: 8px 0 18px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.fp-shiki pre {
+  margin: 0;
+  padding: 8px 0 18px;
+  background: transparent !important;
+  overflow: visible;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.fp-shiki code {
+  display: grid;
+  min-width: max-content;
+  white-space: pre;
+}
+
+.fp-shiki .line {
+  display: block;
+  min-height: 20px;
+  padding-right: 22px;
+}
+
+.fp-shiki .line::before {
+  content: attr(data-line);
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  display: inline-block;
+  width: 62px;
+  padding-right: 12px;
+  text-align: right;
+  color: var(--ink-faint);
+  background: var(--void);
+  user-select: none;
+}
+
+.fp-shiki .line.is-add {
+  background: var(--diff-add-bg);
+}
+
+.fp-shiki .line.is-add::before {
+  background: var(--diff-add-gutter);
+}
+
+.fp-shiki .line.is-del {
+  background: var(--signal-error-bg);
+}
+
+.fp-shiki .line.is-del::before {
+  background: var(--diff-del-gutter);
+}
+
+
+.fp-code-row {
+  display: grid;
+  grid-template-columns: 62px 28px minmax(0, 1fr);
+  min-height: 20px;
+  color: var(--ink);
+}
+
+.fp-code-row.is-add {
+  background: var(--diff-add-bg);
+}
+
+.fp-code-row.is-del {
+  background: var(--signal-error-bg);
+}
+
+.fp-code-row.is-fold {
+  margin: 8px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-hover);
+  color: var(--ink-faint);
+}
+
+.fp-code-num {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  padding-right: 12px;
+  text-align: right;
+  color: var(--ink-faint);
+  background: var(--void);
+  user-select: none;
+}
+
+.fp-code-row.is-add .fp-code-num {
+  background: var(--diff-add-gutter);
+}
+
+.fp-code-row.is-del .fp-code-num {
+  background: var(--diff-del-gutter);
+}
+
+.fp-code-prefix {
+  color: var(--ink-faint);
+  user-select: none;
+}
+
+.fp-code-row.is-add .fp-code-prefix {
+  color: var(--signal-ok);
+}
+
+.fp-code-row.is-del .fp-code-prefix {
+  color: var(--signal-error);
+}
+
+.fp-code-text {
+  padding-right: 22px;
+  white-space: pre;
+}
+
+/* ── @git-diff-view/react overrides ── */
+
+.fp-diff-view {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ink-faint) transparent;
+}
+
+.fp-diff-view::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+.fp-diff-view::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.fp-diff-view::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: var(--ink-faint);
+}
+
+.fp-diff-view .diff-tailwindcss-wrapper,
+.fp-diff-view .diff-style-root,
+.fp-diff-view .diff-view-wrapper {
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.fp-diff-view .diff-tailwindcss-wrapper[data-theme="dark"] .diff-style-root {
+  --diff-plain-content--: var(--void);
+  --diff-expand-content--: var(--surface-hover);
+  --diff-plain-lineNumber--: var(--void);
+  --diff-expand-lineNumber--: var(--surface-hover);
+  --diff-plain-lineNumber-color--: var(--ink-faint);
+  --diff-expand-lineNumber-color--: var(--ink-faint);
+  --diff-add-content--: var(--diff-add-bg);
+  --diff-del-content--: var(--diff-del-bg);
+  --diff-add-lineNumber--: var(--diff-add-gutter);
+  --diff-del-lineNumber--: var(--diff-del-gutter);
+  --diff-hunk-content--: var(--surface-hover);
+  --diff-hunk-lineNumber--: var(--surface-hover);
+  --diff-expand-lineNumber-color--: var(--ink-faint);
+  --diff-hunk-content-color--: var(--ink-faint);
+  color: var(--ink);
+}

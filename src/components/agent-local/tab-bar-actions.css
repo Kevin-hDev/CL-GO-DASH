@@ -1,0 +1,25 @@
+.tab-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.tab-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+
+.tab-action-btn:hover,
+.tab-action-btn.active {
+  color: var(--ink);
+  background: var(--surface-hover);
+}
