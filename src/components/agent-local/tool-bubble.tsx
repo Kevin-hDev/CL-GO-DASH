@@ -58,8 +58,8 @@ export function ToolBubble({
           return (
             <div key={i}>
               <ToolRow name={t.name} summary={toolSummary(t)} done={!!t.result} isError={t.isError} errorMessage={t.isError ? t.result : undefined} onFilePreview={onFilePreview} />
-              {t.name === "write_file" && !skipWrite && typeof t.args.content === "string" && <ContentPreview content={t.args.content} />}
-              {t.name === "edit_file" && typeof t.args.old_string === "string" && <DiffPreview oldText={t.args.old_string} newText={String(t.args.new_string ?? "")} />}
+              {t.name === "write_file" && !skipWrite && typeof t.args.content === "string" && <ContentPreview content={t.args.content} path={toolSummary(t)} />}
+              {t.name === "edit_file" && typeof t.args.old_string === "string" && <DiffPreview oldText={t.args.old_string} newText={String(t.args.new_string ?? "")} path={toolSummary(t)} />}
               {(t.name === "web_search" || t.name === "web_fetch") && t.result && <WebResultsPreview content={t.result} isSearch={t.name === "web_search"} />}
             </div>
           );
@@ -84,8 +84,8 @@ export function SavedToolBubble({
           return (
             <div key={i}>
               <ToolRow name={t.name} summary={t.summary} done={t.is_error != null} isError={t.is_error} errorMessage={t.is_error ? t.result : undefined} onFilePreview={onFilePreview} />
-              {t.content && !skipWrite && <ContentPreview content={t.content} />}
-              {t.old_text != null && t.new_text != null && <DiffPreview oldText={t.old_text} newText={t.new_text} />}
+              {t.content && !skipWrite && <ContentPreview content={t.content} path={t.summary} />}
+              {t.old_text != null && t.new_text != null && <DiffPreview oldText={t.old_text} newText={t.new_text} path={t.summary} />}
               {(t.name === "web_search" || t.name === "web_fetch") && t.result && <WebResultsPreview content={t.result} isSearch={t.name === "web_search"} />}
             </div>
           );
