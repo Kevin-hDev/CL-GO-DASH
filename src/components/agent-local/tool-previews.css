@@ -66,8 +66,10 @@
   overflow-y: hidden;
   scrollbar-width: thin;
   scrollbar-color: var(--ink-faint) transparent;
-  display: grid;
-  grid-template-columns: minmax(100%, max-content);
+}
+
+.tp-nowrap .tp-inner {
+  min-width: max-content;
 }
 
 .tp-nowrap .tp-code {

@@ -4,22 +4,40 @@ import { shouldWrapFile } from "@/lib/code-language";
 import "./tool-previews.css";
 import "@/components/file-preview/file-preview-highlight.css";
 
+function CodeLines({ lines, mode, path }: { lines: string[]; mode: "ok" | "error"; path?: string }) {
+  return (
+    <>
+      {lines.map((line, i) => (
+        <div key={`${mode}-${i}`} className={`tp-line tp-line-${mode}`}>
+          <span className="tp-num">{i + 1}</span>
+          <span className={`tp-prefix tp-prefix-${mode}`}>{mode === "ok" ? "+" : "-"}</span>
+          {path
+            ? <span className={`tp-code tp-code-${mode}`} dangerouslySetInnerHTML={{ __html: line || " " }} />
+            : <span className={`tp-code tp-code-${mode}`}>{line}</span>
+          }
+        </div>
+      ))}
+    </>
+  );
+}
+
 export function ContentPreview({ content, path }: { content: string; path?: string }) {
   const lines = useMemo(() => path ? highlightLines(content, path) : content.split("\n"), [content, path]);
   const wrap = !path || shouldWrapFile(path);
 
+  if (wrap) {
+    return (
+      <div className="tp-wrapper">
+        <CodeLines lines={lines} mode="ok" path={path} />
+      </div>
+    );
+  }
+
   return (
-    <div className={`tp-wrapper ${wrap ? "" : "tp-nowrap"}`}>
-      {lines.map((line, i) => (
-        <div key={i} className="tp-line tp-line-ok">
-          <span className="tp-num">{i + 1}</span>
-          <span className="tp-prefix tp-prefix-ok">+</span>
-          {path
-            ? <span className="tp-code tp-code-ok" dangerouslySetInnerHTML={{ __html: line || " " }} />
-            : <span className="tp-code tp-code-ok">{line}</span>
-          }
-        </div>
-      ))}
+    <div className="tp-wrapper tp-nowrap">
+      <div className="tp-inner">
+        <CodeLines lines={lines} mode="ok" path={path} />
+      </div>
     </div>
   );
 }
@@ -29,28 +47,21 @@ export function DiffPreview({ oldText, newText, path }: { oldText: string; newTe
   const newLines = useMemo(() => path ? highlightLines(newText, path) : newText.split("\n"), [newText, path]);
   const wrap = !path || shouldWrapFile(path);
 
+  if (wrap) {
+    return (
+      <div className="tp-wrapper">
+        <CodeLines lines={oldLines} mode="error" path={path} />
+        <CodeLines lines={newLines} mode="ok" path={path} />
+      </div>
+    );
+  }
+
   return (
-    <div className={`tp-wrapper ${wrap ? "" : "tp-nowrap"}`}>
-      {oldLines.map((line, i) => (
-        <div key={`old-${i}`} className="tp-line tp-line-error">
-          <span className="tp-num">{i + 1}</span>
-          <span className="tp-prefix tp-prefix-error">-</span>
-          {path
-            ? <span className="tp-code tp-code-error" dangerouslySetInnerHTML={{ __html: line || " " }} />
-            : <span className="tp-code tp-code-error">{line}</span>
-          }
-        </div>
-      ))}
-      {newLines.map((line, i) => (
-        <div key={`new-${i}`} className="tp-line tp-line-ok">
-          <span className="tp-num">{i + 1}</span>
-          <span className="tp-prefix tp-prefix-ok">+</span>
-          {path
-            ? <span className="tp-code tp-code-ok" dangerouslySetInnerHTML={{ __html: line || " " }} />
-            : <span className="tp-code tp-code-ok">{line}</span>
-          }
-        </div>
-      ))}
+    <div className="tp-wrapper tp-nowrap">
+      <div className="tp-inner">
+        <CodeLines lines={oldLines} mode="error" path={path} />
+        <CodeLines lines={newLines} mode="ok" path={path} />
+      </div>
     </div>
   );
 }
