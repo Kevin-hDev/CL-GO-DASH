@@ -1,0 +1,99 @@
+/* Syntax highlight colors — uses hljs-* classes from lowlight */
+
+[data-theme="dark"] .fp-code-scroll .hljs-keyword,
+[data-theme="dark"] .fp-code-scroll .hljs-selector-tag,
+[data-theme="dark"] .fp-code-scroll .hljs-built_in {
+  color: #c678dd;
+}
+
+[data-theme="dark"] .fp-code-scroll .hljs-string,
+[data-theme="dark"] .fp-code-scroll .hljs-doctag {
+  color: #98c379;
+}
+
+[data-theme="dark"] .fp-code-scroll .hljs-number,
+[data-theme="dark"] .fp-code-scroll .hljs-literal {
+  color: #d19a66;
+}
+
+[data-theme="dark"] .fp-code-scroll .hljs-comment {
+  color: #5c6370;
+  font-style: italic;
+}
+
+[data-theme="dark"] .fp-code-scroll .hljs-type,
+[data-theme="dark"] .fp-code-scroll .hljs-title {
+  color: #e5c07b;
+}
+
+[data-theme="dark"] .fp-code-scroll .hljs-attr,
+[data-theme="dark"] .fp-code-scroll .hljs-attribute {
+  color: #d19a66;
+}
+
+[data-theme="dark"] .fp-code-scroll .hljs-variable,
+[data-theme="dark"] .fp-code-scroll .hljs-template-variable {
+  color: #e06c75;
+}
+
+[data-theme="dark"] .fp-code-scroll .hljs-meta {
+  color: #61aeee;
+}
+
+[data-theme="dark"] .fp-code-scroll .hljs-regexp {
+  color: #56b6c2;
+}
+
+[data-theme="dark"] .fp-code-scroll .hljs-operator {
+  color: #56b6c2;
+}
+
+/* Light theme */
+
+[data-theme="light"] .fp-code-scroll .hljs-keyword,
+[data-theme="light"] .fp-code-scroll .hljs-selector-tag,
+[data-theme="light"] .fp-code-scroll .hljs-built_in {
+  color: #a626a4;
+}
+
+[data-theme="light"] .fp-code-scroll .hljs-string,
+[data-theme="light"] .fp-code-scroll .hljs-doctag {
+  color: #50a14f;
+}
+
+[data-theme="light"] .fp-code-scroll .hljs-number,
+[data-theme="light"] .fp-code-scroll .hljs-literal {
+  color: #986801;
+}
+
+[data-theme="light"] .fp-code-scroll .hljs-comment {
+  color: #a0a1a7;
+  font-style: italic;
+}
+
+[data-theme="light"] .fp-code-scroll .hljs-type,
+[data-theme="light"] .fp-code-scroll .hljs-title {
+  color: #c18401;
+}
+
+[data-theme="light"] .fp-code-scroll .hljs-attr,
+[data-theme="light"] .fp-code-scroll .hljs-attribute {
+  color: #986801;
+}
+
+[data-theme="light"] .fp-code-scroll .hljs-variable,
+[data-theme="light"] .fp-code-scroll .hljs-template-variable {
+  color: #e45649;
+}
+
+[data-theme="light"] .fp-code-scroll .hljs-meta {
+  color: #4078f2;
+}
+
+[data-theme="light"] .fp-code-scroll .hljs-regexp {
+  color: #0184bc;
+}
+
+[data-theme="light"] .fp-code-scroll .hljs-operator {
+  color: #0184bc;
+}

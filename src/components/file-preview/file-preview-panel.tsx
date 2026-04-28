@@ -11,6 +11,7 @@ import { FilePreviewTabs } from "./file-preview-tabs";
 import "./file-preview-panel.css";
 import "./file-preview-tabs.css";
 import "./file-preview-code.css";
+import "./file-preview-highlight.css";
 
 interface FilePreviewPanelProps {
   open: boolean;
