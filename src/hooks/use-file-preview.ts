@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { fileNameFromPath } from "@/lib/file-preview-utils";
 import { IS_MAC } from "@/lib/platform";
 import type { FileOperation, FilePreviewActiveTab } from "@/types/file-preview";
 
 const MAX_TABS = 6;
+const MIN_WIDTH = 360;
+const DEFAULT_WIDTH = 520;
 const MAX_STORED_TABS = 6;
 
 function storageKey(sessionId: string | null): string {
@@ -27,6 +29,8 @@ export function useFilePreview(sessionId: string | null, operations: FileOperati
   const [activeTab, setActiveTab] = useState<FilePreviewActiveTab>("summary");
   const [tabIds, setTabIds] = useState<string[]>(() => readStoredTabs(sessionId));
   const [fallbackOps, setFallbackOps] = useState<FileOperation[]>([]);
+  const [width, setWidth] = useState(DEFAULT_WIDTH);
+  const resizeRef = useRef<{ startX: number; startWidth: number } | null>(null);
 
   const allOperations = useMemo(() => [...operations, ...fallbackOps], [operations, fallbackOps]);
   const operationById = useMemo(() => new Map(allOperations.map((op) => [op.id, op])), [allOperations]);
@@ -81,6 +85,29 @@ export function useFilePreview(sessionId: string | null, operations: FileOperati
     setActiveTab((current) => current || "summary");
   }, []);
 
+  const startResize = useCallback((event: React.PointerEvent) => {
+    event.preventDefault();
+    resizeRef.current = { startX: event.clientX, startWidth: width };
+  }, [width]);
+
+  useEffect(() => {
+    const onMove = (event: PointerEvent) => {
+      if (!resizeRef.current) return;
+      const delta = resizeRef.current.startX - event.clientX;
+      const maxWidth = Math.max(MIN_WIDTH, window.innerWidth - 120);
+      setWidth(Math.min(maxWidth, Math.max(MIN_WIDTH, resizeRef.current.startWidth + delta)));
+    };
+    const onUp = () => {
+      resizeRef.current = null;
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    };
+  }, []);
+
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
       const mod = IS_MAC ? event.metaKey : event.ctrlKey;
@@ -97,6 +124,7 @@ export function useFilePreview(sessionId: string | null, operations: FileOperati
     fullscreen,
     activeTab,
     tabs,
+    width,
     setOpen,
     setFullscreen,
     setActiveTab,
@@ -104,5 +132,6 @@ export function useFilePreview(sessionId: string | null, operations: FileOperati
     openOperation,
     openPath,
     closeTab,
+    startResize,
   };
 }

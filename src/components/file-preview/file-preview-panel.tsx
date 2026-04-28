@@ -14,6 +14,7 @@ import "./file-preview-code.css";
 interface FilePreviewPanelProps {
   open: boolean;
   fullscreen: boolean;
+  width: number;
   operations: FileOperation[];
   tabs: FileOperation[];
   activeTab: FilePreviewActiveTab;
@@ -23,6 +24,7 @@ interface FilePreviewPanelProps {
   onActiveTabChange: (tab: FilePreviewActiveTab) => void;
   onOpenOperation: (operation: FileOperation) => void;
   onCloseTab: (id: string) => void;
+  onResizeStart: (event: React.PointerEvent) => void;
 }
 
 export function FilePreviewPanel(props: FilePreviewPanelProps) {
@@ -45,9 +47,11 @@ export function FilePreviewPanel(props: FilePreviewPanelProps) {
 
   return (
     <aside
-      className={`fp-panel ${props.fullscreen ? "fullscreen" : ""}`}
+      className={`fp-panel ${props.open ? "open" : ""} ${props.fullscreen ? "fullscreen" : ""}`}
+      style={{ "--fp-width": `${props.width}px` } as React.CSSProperties}
       aria-hidden={!props.open}
     >
+      <div className="fp-resize" onPointerDown={props.onResizeStart} />
       <div className="fp-head">
         <FilePreviewTabs
           tabs={props.tabs}

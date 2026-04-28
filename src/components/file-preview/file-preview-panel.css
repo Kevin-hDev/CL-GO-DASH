@@ -1,10 +1,26 @@
 .fp-panel {
+  position: relative;
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  width: 0 !important;
   height: 100%;
   overflow: hidden;
   border-left: 1px solid var(--edge);
   background: var(--void);
+  box-shadow: var(--shadow-card);
+  transform: translateX(100%);
+  opacity: 0;
+  pointer-events: none;
+  flex-shrink: 0;
+  transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1), opacity 220ms ease;
+}
+
+.fp-panel.open {
+  width: var(--fp-width) !important;
+  transform: translateX(0);
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .fp-panel.fullscreen {
@@ -12,6 +28,20 @@
   inset: 0;
   z-index: 40;
   width: auto !important;
+}
+
+.fp-resize {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 6px;
+  cursor: ew-resize;
+  z-index: 2;
+}
+
+.fp-resize:hover {
+  background: var(--edge);
 }
 
 .fp-head {
