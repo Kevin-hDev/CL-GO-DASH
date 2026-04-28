@@ -6,7 +6,6 @@
 }
 
 .tab-action-btn {
-  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -23,20 +22,4 @@
 .tab-action-btn.active {
   color: var(--ink);
   background: var(--surface-hover);
-}
-
-.tab-action-badge {
-  position: absolute;
-  top: 1px;
-  right: 1px;
-  min-width: 13px;
-  height: 13px;
-  padding: 0 3px;
-  border-radius: 999px;
-  background: var(--signal-ok);
-  color: var(--void);
-  font-size: 9px;
-  font-family: var(--font-mono);
-  line-height: 13px;
-  text-align: center;
 }

@@ -185,6 +185,11 @@ pub fn run() {
             commands::list_favorite_models,
             commands::add_favorite_model,
             commands::remove_favorite_model,
+            // File preview
+            commands::read_file_preview,
+            commands::detect_preview_editors,
+            commands::open_preview_file,
+            commands::open_preview_with_editor,
             // Projects
             commands::list_projects,
             commands::add_project,

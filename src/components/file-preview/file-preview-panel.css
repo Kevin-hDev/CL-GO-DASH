@@ -13,7 +13,10 @@
   opacity: 0;
   pointer-events: none;
   flex-shrink: 0;
-  transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1), opacity 220ms ease;
+  transition:
+    transform 300ms cubic-bezier(0.4, 0, 0.2, 1),
+    width 300ms cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 220ms ease;
 }
 
 .fp-panel.open {
@@ -27,7 +30,11 @@
   position: absolute;
   inset: 0;
   z-index: 40;
-  width: auto !important;
+  width: 100% !important;
+  transform: translateX(0);
+  transition:
+    width 300ms cubic-bezier(0.4, 0, 0.2, 1),
+    inset 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .fp-resize {

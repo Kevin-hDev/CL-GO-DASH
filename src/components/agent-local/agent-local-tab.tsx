@@ -16,7 +16,7 @@ import type { FileOperation } from "@/types/file-preview";
 import type { AgentLocalTabProps } from "./agent-local-tab-types";
 import "./agent-local-tab.css";
 
-export function AgentLocalTab(props?: AgentLocalTabProps): { list: React.ReactNode; detail: React.ReactNode; onCreate: () => void; onShowWelcome: () => void; previewOpen: boolean; previewCount: number; onTogglePreview: () => void } {
+export function AgentLocalTab(props?: AgentLocalTabProps): { list: React.ReactNode; detail: React.ReactNode; onCreate: () => void; onShowWelcome: () => void; previewOpen: boolean; onTogglePreview: () => void } {
   const { sessions, refresh, create, rename, remove, updateModel } = useAgentSessions();
   const tabState = useAgentTabs();
   const projectsHook = useProjects();
@@ -129,7 +129,7 @@ export function AgentLocalTab(props?: AgentLocalTabProps): { list: React.ReactNo
             sessionId={tabState.activeSessionId ?? null}
             terminalOpen={terminal.isOpen}
             previewOpen={filePreview.open}
-            previewCount={fileOperations.length}
+
             onSelect={tabState.selectTab}
             onClose={tabState.closeTab}
             onAdd={handleCreate}
@@ -198,7 +198,6 @@ export function AgentLocalTab(props?: AgentLocalTabProps): { list: React.ReactNo
     onCreate: handleCreate,
     onShowWelcome: tabState.deselectTab,
     previewOpen: filePreview.open,
-    previewCount: fileOperations.length,
     onTogglePreview: filePreview.toggleOpen,
   };
 }

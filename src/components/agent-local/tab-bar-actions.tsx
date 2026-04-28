@@ -10,7 +10,6 @@ interface TabBarActionsProps {
   sessionId: string | null;
   terminalOpen: boolean;
   previewOpen: boolean;
-  previewCount: number;
   onAdd: () => void;
   onToggleTerminal: () => void;
   onTogglePreview: () => void;
@@ -21,7 +20,6 @@ export function TabBarActions({
   sessionId,
   terminalOpen,
   previewOpen,
-  previewCount,
   onAdd,
   onToggleTerminal,
   onTogglePreview,
@@ -49,9 +47,6 @@ export function TabBarActions({
                 <rect x="1" y="2" width="14" height="12" rx="2" />
                 <line x1="10" y1="2" x2="10" y2="14" />
               </svg>
-              {!previewOpen && previewCount > 0 && (
-                <span className="tab-action-badge">{previewCount}</span>
-              )}
             </button>
           </Tooltip>
           <Tooltip label={`${t("settings.shortcuts.toggleTerminal")} (${MOD}J)`} align="right">
