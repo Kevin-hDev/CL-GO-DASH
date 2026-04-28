@@ -128,6 +128,9 @@ export default function App() {
       canGoForward={canGoForward}
       onSearchSelect={handleSearchSelect}
       onNewSession={handleShowWelcome}
+      previewOpen={agentTab.previewOpen}
+      previewCount={agentTab.previewCount}
+      onTogglePreview={agentTab.onTogglePreview}
     />
     </>
   );

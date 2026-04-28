@@ -27,6 +27,9 @@ interface AppLayoutProps {
   canGoForward: boolean;
   onSearchSelect: (sessionId: string) => void;
   onNewSession?: () => void;
+  previewOpen?: boolean;
+  previewCount?: number;
+  onTogglePreview?: () => void;
 }
 
 export function AppLayout({
@@ -35,6 +38,7 @@ export function AppLayout({
   onShowWelcome,
   onBack, onForward, canGoBack, canGoForward,
   onSearchSelect, onNewSession,
+  previewOpen, previewCount, onTogglePreview,
 }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -136,6 +140,9 @@ export function AppLayout({
         updatesCount={updates.totalCount}
         canGoBack={canGoBack}
         canGoForward={canGoForward}
+        previewOpen={previewOpen ?? false}
+        previewCount={previewCount ?? 0}
+        onTogglePreview={onTogglePreview ?? (() => {})}
       />
       <div className={`app-sidebar-block ${sidebarOpen ? "" : "app-sidebar-hidden"}`}>
         <Sidebar activeTab={activeTab} onTabChange={onTabChange} />

@@ -17,6 +17,9 @@ interface WindowToolbarProps {
   updatesCount: number;
   canGoBack: boolean;
   canGoForward: boolean;
+  previewOpen: boolean;
+  previewCount: number;
+  onTogglePreview: () => void;
 }
 
 export function WindowToolbar({
@@ -24,6 +27,7 @@ export function WindowToolbar({
   onBack, onForward, onNewSession, onSearch,
   onToggleUpdates, updatesCount,
   canGoBack, canGoForward,
+  previewOpen, previewCount, onTogglePreview,
 }: WindowToolbarProps) {
   const { t } = useTranslation();
 
@@ -47,6 +51,20 @@ export function WindowToolbar({
       <Tooltip label={`${t("settings.shortcuts.searchDialog")} (${MOD}G)`}>
         <button className="toolbar-btn" onClick={onSearch}>
           <SearchIcon size={16} />
+        </button>
+      </Tooltip>
+      <Tooltip label={`Aperçu fichiers (${ALT}${MOD}B)`}>
+        <button
+          className={`toolbar-btn${previewOpen ? " toolbar-btn-active" : ""}`}
+          onClick={onTogglePreview}
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="1" y="2" width="14" height="12" rx="2" />
+            <line x1="10" y1="2" x2="10" y2="14" />
+          </svg>
+          {previewCount > 0 && (
+            <span className="toolbar-badge">{previewCount}</span>
+          )}
         </button>
       </Tooltip>
       {sidebarOpen && updatesCount > 0 && (
