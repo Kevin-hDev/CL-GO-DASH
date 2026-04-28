@@ -183,7 +183,12 @@
   color: var(--signal-error);
 }
 
+.fp-nowrap .tp-wrapper {
+  min-width: max-content;
+}
+
 .fp-nowrap .tp-code {
   white-space: pre;
   word-break: normal;
+  flex: none;
 }
