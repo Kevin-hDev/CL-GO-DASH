@@ -1,6 +1,7 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { highlightLines } from "@/lib/highlight";
 import { shouldWrapFile } from "@/lib/code-language";
+import { readFilePreview } from "@/services/file-preview";
 import "./tool-previews.css";
 import "@/components/file-preview/file-preview-highlight.css";
 
@@ -26,6 +27,27 @@ function CodeLines({ lines, mode, path, startLine = 1 }: {
   );
 }
 
+function useFindStartLine(path?: string, newText?: string, oldText?: string, fallback?: number): number {
+  const [line, setLine] = useState(fallback ?? 1);
+
+  useEffect(() => {
+    if (fallback) { setLine(fallback); return; }
+    if (!path) return;
+    const needle = newText ?? oldText ?? "";
+    if (!needle) return;
+
+    readFilePreview(path)
+      .then((content) => {
+        const idx = content.indexOf(needle);
+        if (idx < 0) return;
+        setLine(content.slice(0, idx).split("\n").length);
+      })
+      .catch(() => {});
+  }, [path, newText, oldText, fallback]);
+
+  return line;
+}
+
 export function ContentPreview({ content, path }: { content: string; path?: string }) {
   const lines = useMemo(() => path ? highlightLines(content, path) : content.split("\n"), [content, path]);
   const wrap = !path || shouldWrapFile(path);
@@ -47,12 +69,13 @@ export function ContentPreview({ content, path }: { content: string; path?: stri
   );
 }
 
-export function DiffPreview({ oldText, newText, path, startLine = 1 }: {
+export function DiffPreview({ oldText, newText, path, startLine }: {
   oldText: string;
   newText: string;
   path?: string;
   startLine?: number;
 }) {
+  const resolvedLine = useFindStartLine(path, newText, oldText, startLine);
   const oldLines = useMemo(() => path ? highlightLines(oldText, path) : oldText.split("\n"), [oldText, path]);
   const newLines = useMemo(() => path ? highlightLines(newText, path) : newText.split("\n"), [newText, path]);
   const wrap = !path || shouldWrapFile(path);
@@ -60,8 +83,8 @@ export function DiffPreview({ oldText, newText, path, startLine = 1 }: {
   if (wrap) {
     return (
       <div className="tp-wrapper">
-        <CodeLines lines={oldLines} mode="error" path={path} startLine={startLine} />
-        <CodeLines lines={newLines} mode="ok" path={path} startLine={startLine} />
+        <CodeLines lines={oldLines} mode="error" path={path} startLine={resolvedLine} />
+        <CodeLines lines={newLines} mode="ok" path={path} startLine={resolvedLine} />
       </div>
     );
   }
@@ -69,8 +92,8 @@ export function DiffPreview({ oldText, newText, path, startLine = 1 }: {
   return (
     <div className="tp-wrapper tp-nowrap">
       <div className="tp-inner">
-        <CodeLines lines={oldLines} mode="error" path={path} startLine={startLine} />
-        <CodeLines lines={newLines} mode="ok" path={path} startLine={startLine} />
+        <CodeLines lines={oldLines} mode="error" path={path} startLine={resolvedLine} />
+        <CodeLines lines={newLines} mode="ok" path={path} startLine={resolvedLine} />
       </div>
     </div>
   );
