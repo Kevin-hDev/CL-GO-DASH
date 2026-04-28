@@ -118,6 +118,14 @@ npm run tauri build
 - Tu ne hardcodes JAMAIS une couleur dans un composant — tu utilises `var(--token)` ou tu crées le token manquant dans les deux thèmes
 - Les couleurs macOS traffic lights (#ff5f57, #febc2e, #28c840) dans `window-controls.css` sont l'exception : standard OS, pas de token
 
+### Classes CSS — règles de nommage
+- Tu préfixes TOUTES les classes par un identifiant unique du composant (`ms-` pour model-selector, `pe-` pour parameters-editor, etc.)
+- AVANT de créer un préfixe, tu vérifies avec `grep` qu'il n'est pas déjà utilisé dans un autre fichier CSS — les collisions de noms cassent l'UI silencieusement
+- Tu ne définis JAMAIS une classe déjà définie dans un autre fichier CSS — si elle existe, tu l'utilises telle quelle
+- Les classes partagées (`.ollama-btn`, `.form-input`, `.toggle`) vivent dans `global.css` ou le CSS parent du domaine (`ollama.css`)
+- Les sous-classes (`.ollama-btn-primary`) doivent re-déclarer `background` dans leur `:hover` si le parent a un `:hover` qui change le fond
+- Tu testes toujours sur les deux thèmes (dark + light) après un changement CSS
+
 ### OS-specific
 - Détection centralisée dans `src/lib/platform.ts` (`IS_MAC`, `IS_LINUX`, `IS_WINDOWS`)
 - Classes CSS `.os-mac` / `.os-other` sur le root pour les différences visuelles
