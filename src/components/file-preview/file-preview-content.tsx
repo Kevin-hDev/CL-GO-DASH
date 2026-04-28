@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { readFilePreview } from "@/services/file-preview";
 import type { FileOperation } from "@/types/file-preview";
 import { FilePreviewDiff } from "./file-preview-diff";
-import "@/components/agent-local/tool-previews.css";
+import { FilePreviewHighlight } from "./file-preview-highlight";
 
 interface FilePreviewContentProps {
   operation: FileOperation;
@@ -40,17 +40,5 @@ export function FilePreviewContent({ operation, baseDir }: FilePreviewContentPro
   if (operation.type === "edit") {
     return <FilePreviewDiff operation={operation} currentContent={state.content} />;
   }
-
-  const lines = state.content.split("\n");
-  return (
-    <div className="tp-wrapper" style={{ margin: 0, border: "none", borderRadius: 0 }}>
-      {lines.map((line, i) => (
-        <div key={i} className="tp-line tp-line-ok">
-          <span className="tp-num">{i + 1}</span>
-          <span className="tp-prefix tp-prefix-ok">+</span>
-          <span className="tp-code tp-code-ok">{line}</span>
-        </div>
-      ))}
-    </div>
-  );
+  return <FilePreviewHighlight code={state.content} path={operation.path} mode="add" />;
 }
