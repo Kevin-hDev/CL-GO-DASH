@@ -1,13 +1,15 @@
 import { useMemo } from "react";
 import { highlightLines } from "@/lib/highlight";
+import { shouldWrapFile } from "@/lib/code-language";
 import "./tool-previews.css";
 import "@/components/file-preview/file-preview-highlight.css";
 
 export function ContentPreview({ content, path }: { content: string; path?: string }) {
   const lines = useMemo(() => path ? highlightLines(content, path) : content.split("\n"), [content, path]);
+  const wrap = !path || shouldWrapFile(path);
 
   return (
-    <div className="tp-wrapper">
+    <div className={`tp-wrapper ${wrap ? "" : "tp-nowrap"}`}>
       {lines.map((line, i) => (
         <div key={i} className="tp-line tp-line-ok">
           <span className="tp-num">{i + 1}</span>
@@ -25,9 +27,10 @@ export function ContentPreview({ content, path }: { content: string; path?: stri
 export function DiffPreview({ oldText, newText, path }: { oldText: string; newText: string; path?: string }) {
   const oldLines = useMemo(() => path ? highlightLines(oldText, path) : oldText.split("\n"), [oldText, path]);
   const newLines = useMemo(() => path ? highlightLines(newText, path) : newText.split("\n"), [newText, path]);
+  const wrap = !path || shouldWrapFile(path);
 
   return (
-    <div className="tp-wrapper">
+    <div className={`tp-wrapper ${wrap ? "" : "tp-nowrap"}`}>
       {oldLines.map((line, i) => (
         <div key={`old-${i}`} className="tp-line tp-line-error">
           <span className="tp-num">{i + 1}</span>
