@@ -1,0 +1,19 @@
+.agent-detail-with-preview {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.fp-panel-handle {
+  width: 6px;
+  background: transparent;
+  cursor: ew-resize;
+  transition: background 150ms;
+}
+
+.fp-panel-handle:hover,
+.fp-panel-handle[data-resize-handle-active] {
+  background: var(--edge);
+}
