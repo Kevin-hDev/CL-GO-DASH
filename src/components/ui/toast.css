@@ -24,8 +24,8 @@
 }
 
 .toast-error {
-  background: rgba(217, 68, 68, 0.15);
-  border: 1px solid rgba(217, 68, 68, 0.3);
+  background: var(--signal-error-bg);
+  border: 1px solid rgba(239, 68, 68, 0.3);
   color: var(--signal-error);
 }
 

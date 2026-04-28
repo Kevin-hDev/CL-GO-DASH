@@ -4,10 +4,10 @@ import type { ToolActivityRecord } from "@/types/agent";
 import { ContentPreview, DiffPreview, WebResultsPreview } from "./tool-previews";
 
 const TOOL_COLORS: Record<string, string> = {
-  bash: "#f97316", read_file: "#3db86a",
-  write_file: "#e2b842", edit_file: "#e2b842",
-  list_dir: "#4a8fe2", grep: "#4a8fe2", glob: "#4a8fe2",
-  web_search: "#9b7fff", web_fetch: "#9b7fff",
+  bash: "var(--tool-bash)", read_file: "var(--tool-file-read)",
+  write_file: "var(--tool-file-write)", edit_file: "var(--tool-file-write)",
+  list_dir: "var(--tool-search)", grep: "var(--tool-search)", glob: "var(--tool-search)",
+  web_search: "var(--tool-web)", web_fetch: "var(--tool-web)",
 };
 
 const BUBBLE_STYLE = {

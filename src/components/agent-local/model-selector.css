@@ -42,7 +42,7 @@
 }
 
 [data-theme="dark"] .ms-dropdown {
-  background: rgba(37, 37, 41, 0.55);
+  background: var(--surface-glass);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 }
@@ -226,7 +226,7 @@
 }
 
 .ms-badge-vision {
-  color: #8b5cf6;
+  color: var(--tool-web);
   background: rgba(139, 92, 246, 0.15);
 }
 

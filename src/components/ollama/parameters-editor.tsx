@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
 import type { ModelParameter } from "./modelfile-utils";
 import "./ollama.css";
+import "./parameters-editor.css";
 
 interface ParametersEditorProps {
   modelName: string;
@@ -54,12 +55,12 @@ export function ParametersEditor({
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+    <div className="pe-root">
       <div className="ollama-detail-header">
         <span className="ollama-detail-name">
           {modelName} — {t("ollama.parameters")}
         </span>
-        <div style={{ display: "flex", gap: 8 }}>
+        <div className="pe-actions">
           <button className="ollama-btn" onClick={onCancel} disabled={saving}>
             {t("ollama.cancel")}
           </button>
@@ -74,39 +75,29 @@ export function ParametersEditor({
       </div>
 
       {error && (
-        <div style={{
-          padding: "var(--space-sm) var(--space-md)",
-          color: "#e66", fontSize: "var(--text-xs)",
-          background: "rgba(230,102,102,0.08)",
-          borderBottom: "1px solid var(--edge)",
-        }}>
+        <div className="pe-error">
           {error}
         </div>
       )}
 
-      <div style={{
-        flex: 1, overflow: "auto",
-        padding: "var(--space-md)",
-        display: "flex", flexDirection: "column", gap: 8,
-      }}>
+      <div className="pe-body">
         {params.map((p, idx) => (
-          <div key={idx} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <div key={idx} className="pe-row">
             <input
               value={p.key}
               onChange={(e) => updateRow(idx, "key", e.target.value)}
               placeholder="num_ctx"
-              style={inputStyle(180)}
+              className="pe-input pe-input-key"
             />
             <input
               value={p.value}
               onChange={(e) => updateRow(idx, "value", e.target.value)}
               placeholder="32768"
-              style={{ ...inputStyle(0), flex: 1 }}
+              className="pe-input pe-input-value"
             />
             <button
-              className="ollama-btn"
+              className="ollama-btn pe-remove-btn"
               onClick={() => removeRow(idx)}
-              style={{ padding: "6px 10px" }}
               title={t("ollama.remove")}
             >
               ×
@@ -115,19 +106,13 @@ export function ParametersEditor({
         ))}
 
         <button
-          className="ollama-btn"
+          className="ollama-btn pe-add-btn"
           onClick={addRow}
-          style={{ alignSelf: "flex-start", marginTop: 4 }}
         >
           {t("ollama.addParameter")}
         </button>
 
-        <div style={{
-          marginTop: "var(--space-md)",
-          fontSize: "var(--text-xs)",
-          color: "var(--ink-faint)",
-          lineHeight: 1.6,
-        }}>
+        <div className="pe-hint">
           {t("ollama.commonParameters")} {t("ollama.commonParametersHint")}
         </div>
       </div>
@@ -135,16 +120,3 @@ export function ParametersEditor({
   );
 }
 
-function inputStyle(width: number): React.CSSProperties {
-  return {
-    width: width || undefined,
-    padding: "6px 10px",
-    background: "var(--void)",
-    border: "1px solid var(--edge)",
-    borderRadius: "var(--radius-sm)",
-    color: "var(--ink)",
-    fontSize: "var(--text-xs)",
-    fontFamily: "var(--font-mono)",
-    outline: "none",
-  };
-}

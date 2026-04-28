@@ -22,7 +22,7 @@ export default function App() {
       personalityPath: null,
     });
 
-  const { theme, setTheme } = useTheme();
+  const { theme, choice, setTheme } = useTheme();
   const { t } = useTranslation();
   const [vaultError, setVaultError] = useState<string | null>(null);
   const [ollamaReady, setOllamaReady] = useState<boolean | null>(null);
@@ -53,6 +53,7 @@ export default function App() {
 
   const settTab = SettingsTab({
     theme,
+    themeChoice: choice,
     onThemeChange: setTheme,
     activeSubTab: nav.settingsSubTab,
     onSubTabChange: (sub) => push({ settingsSubTab: sub }),
@@ -109,7 +110,7 @@ export default function App() {
     {vaultError && (
       <div style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 9999,
-        padding: "8px 16px", background: "#991b1b", color: "white",
+        padding: "8px 16px", background: "var(--signal-error)", color: "white",
         fontSize: "var(--text-xs)", textAlign: "center", cursor: "pointer",
       }} onClick={() => setVaultError(null)}>
         {t("errors.keyringFailed")}

@@ -12,6 +12,7 @@ import { useOllamaModels } from "@/hooks/use-ollama-models";
 import type { RegistryModelDetails, RegistryTag, ModelInfo } from "@/types/agent";
 import "./ollama.css";
 import "./ollama-details.css";
+import "./model-profile.css";
 
 interface ModelProfileProps {
   familyName: string;
@@ -68,7 +69,7 @@ export function ModelProfile({ familyName, variantFullName }: ModelProfileProps)
 
   if (loading) {
     return (
-      <div style={{ padding: "var(--space-md)", fontSize: "var(--text-sm)", color: "var(--ink-faint)" }}>
+      <div className="mp-loading">
         {t("ollama.loadingProfile")}
       </div>
     );
@@ -77,13 +78,10 @@ export function ModelProfile({ familyName, variantFullName }: ModelProfileProps)
   const rows = buildSpecRows(t, details, currentTag, localInfo);
 
   return (
-    <div style={{ overflowY: "auto", flex: 1 }}>
-      <div style={{ padding: 24, maxWidth: 600, width: "100%", margin: "0 auto" }}>
-        <div style={{
-          display: "flex", alignItems: "center",
-          justifyContent: "space-between", marginBottom: 8,
-        }}>
-          <h2 style={{ fontSize: "var(--text-xl)", fontWeight: 700, color: "var(--ink)", margin: 0 }}>
+    <div className="mp-root">
+      <div className="mp-inner">
+        <div className="mp-header">
+          <h2 className="mp-title">
             {displayName}
           </h2>
           {variantFullName && (
@@ -97,24 +95,19 @@ export function ModelProfile({ familyName, variantFullName }: ModelProfileProps)
         </div>
 
         {details?.description_short && (
-          <div style={{
-            fontSize: "var(--text-sm)", color: "var(--ink-muted)",
-            lineHeight: 1.5, marginBottom: 28,
-          }}>
+          <div className="mp-description">
             {details.description_short}
           </div>
         )}
 
         <SettingsCard>
           {rows.map((r, i) => (
-            <div key={i} style={{
-              display: "flex", justifyContent: "space-between", alignItems: "center",
-              padding: "10px 20px",
-              borderBottom: i < rows.length - 1 ? "1px solid var(--edge)" : "none",
-              fontSize: "var(--text-sm)",
-            }}>
-              <span style={{ color: "var(--ink-muted)", fontSize: "var(--text-xs)" }}>{r.label}</span>
-              <span style={{ color: "var(--ink)", fontFamily: r.mono ? "var(--font-mono)" : undefined, fontSize: r.mono ? "var(--text-xs)" : undefined }}>
+            <div
+              key={i}
+              className={`mp-spec-row${i < rows.length - 1 ? " mp-spec-row-border" : ""}`}
+            >
+              <span className="mp-spec-label">{r.label}</span>
+              <span className={r.mono ? "mp-spec-value-mono" : "mp-spec-value"}>
                 {r.value}
               </span>
             </div>
@@ -122,7 +115,7 @@ export function ModelProfile({ familyName, variantFullName }: ModelProfileProps)
         </SettingsCard>
 
         {details?.description_long_markdown && (
-          <div style={{ marginTop: 24 }}>
+          <div className="mp-translation-wrapper">
             <TranslationControls
               modelName={familyName}
               originalText={details.description_long_markdown}
@@ -134,14 +127,7 @@ export function ModelProfile({ familyName, variantFullName }: ModelProfileProps)
       </div>
 
       {details?.description_long_markdown && (
-        <div
-          className="ollama-readme"
-          style={{
-            padding: "0 24px 24px",
-            fontSize: "var(--text-sm)", color: "var(--ink)",
-            lineHeight: 1.6,
-          }}
-        >
+        <div className="ollama-readme mp-readme">
           <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw, rehypeSanitize]}>
             {translated ?? details.description_long_markdown}
           </ReactMarkdown>

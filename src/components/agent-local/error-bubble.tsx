@@ -29,8 +29,8 @@ export function ErrorBubble({ message, isConnection, onRetry }: ErrorBubbleProps
   return (
     <div style={{
       ...BUBBLE_STYLE,
-      background: "rgba(239, 68, 68, 0.06)",
-      border: "1px solid rgba(239, 68, 68, 0.2)",
+      background: "var(--signal-error-bg)",
+      border: "1px solid color-mix(in srgb, var(--signal-error) 20%, transparent)",
       color: "var(--signal-error)",
     }}>
       {message === "ollama_connection_lost" ? t("errors.ollamaConnectionLost") : message}
@@ -82,8 +82,8 @@ function ConnectionErrorBubble({ onRetry }: { onRetry: () => void }) {
     return (
       <div style={{
         ...BUBBLE_STYLE,
-        background: "rgba(34, 197, 94, 0.06)",
-        border: "1px solid rgba(34, 197, 94, 0.2)",
+        background: "var(--signal-ok-bg)",
+        border: "1px solid color-mix(in srgb, var(--signal-ok) 20%, transparent)",
         color: "var(--signal-ok)",
       }}>
         {t("errors.ollamaReconnecting", { seconds: countdown })}
@@ -94,8 +94,8 @@ function ConnectionErrorBubble({ onRetry }: { onRetry: () => void }) {
   return (
     <div style={{
       ...BUBBLE_STYLE,
-      background: "rgba(239, 68, 68, 0.06)",
-      border: "1px solid rgba(239, 68, 68, 0.2)",
+      background: "var(--signal-error-bg)",
+      border: "1px solid color-mix(in srgb, var(--signal-error) 20%, transparent)",
       color: "var(--signal-error)",
     }}>
       {t("errors.ollamaWaiting", { seconds: elapsed })}

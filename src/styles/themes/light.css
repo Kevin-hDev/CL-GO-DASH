@@ -1,36 +1,7 @@
-/* Light — base Chill_Desk warm off-white, accent orange */
+/* Light theme — warm off-white, accent orange */
 [data-theme="light"] {
   color-scheme: light;
 
-  /* shadcn/ui tokens (HSL) */
-  --background: 36 20% 95%;
-  --foreground: 0 0% 10%;
-  --card: 0 0% 100%;
-  --card-foreground: 0 0% 10%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 0 0% 10%;
-  --primary: 25 95% 58%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 36 15% 90%;
-  --secondary-foreground: 0 0% 10%;
-  --muted: 36 15% 90%;
-  --muted-foreground: 0 0% 28%;
-  --accent: 36 15% 90%;
-  --accent-foreground: 0 0% 10%;
-  --destructive: 0 72% 50%;
-  --destructive-foreground: 0 0% 100%;
-  --border: 30 10% 88%;
-  --input: 30 10% 88%;
-  --ring: 25 95% 58%;
-
-  /* Chill_Desk original tokens */
-  --bg-base: #f5f3f0;
-  --bg-gradient-start: #f5f3f0;
-  --bg-gradient-end: #ede9e4;
-  --accent-glow: #f9731620;
-  --sidebar-active: #f9731615;
-
-  /* Legacy dashboard tokens */
   --void: #f7f7f9;
   --app-frame: #d8d8dc;
   --shell: #eaeaed;
@@ -51,4 +22,23 @@
   --signal-error: #dc2626;
   --signal-ok: #16a34a;
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.04);
+
+  /* Surface variants */
+  --surface-glass: rgba(220, 220, 225, 0.55);
+  --surface-overlay: rgba(220, 220, 225, 0.70);
+
+  /* Signal backgrounds (alpha) */
+  --signal-ok-bg: rgba(22, 163, 74, 0.12);
+  --signal-error-bg: rgba(220, 38, 38, 0.12);
+  --signal-warning: #eab308;
+  --signal-warning-bg: rgba(234, 179, 8, 0.12);
+  --signal-info: #3b82f6;
+  --signal-info-bg: rgba(59, 130, 246, 0.12);
+
+  /* Tool colors */
+  --tool-bash: #ea580c;
+  --tool-file-read: #16a34a;
+  --tool-file-write: #ca8a04;
+  --tool-search: #2563eb;
+  --tool-web: #7c3aed;
 }

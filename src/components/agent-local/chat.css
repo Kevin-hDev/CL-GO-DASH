@@ -122,8 +122,8 @@
 
 
 .ollama-dot { display: inline-block; width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
-.ollama-dot.connected { background: #166534; animation: pulse-dot 2s ease-in-out infinite; }
-.ollama-dot.disconnected { background: #991b1b; }
+.ollama-dot.connected { background: var(--signal-ok); animation: pulse-dot 2s ease-in-out infinite; }
+.ollama-dot.disconnected { background: var(--signal-error); }
 @keyframes pulse-dot { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
 
 .scroll-bottom-btn {
@@ -156,5 +156,5 @@
 
 [data-theme="dark"] .chat-input-bubble {
   border-color: transparent;
-  background: rgba(37, 37, 41, 0.55);
+  background: var(--surface-glass);
 }

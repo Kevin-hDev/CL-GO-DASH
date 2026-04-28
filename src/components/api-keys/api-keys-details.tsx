@@ -6,6 +6,7 @@ import { Pencil, Trash, ArrowSquareOut } from "@/components/ui/icons";
 import { SettingsCard } from "@/components/settings/settings-card";
 import { ProviderIcon } from "@/lib/provider-icons";
 import { getProviderDescription, type ProviderSpec } from "@/types/api";
+import "./api-keys-details.css";
 
 interface ProviderQuota {
   available: boolean;
@@ -62,25 +63,22 @@ export function ApiKeysDetails({ provider, onEdit, onDelete, onAddConnector }: A
   };
 
   return (
-    <div style={{ padding: 24, overflowY: "auto", flex: 1 }}>
-      <div style={{ maxWidth: 600, width: "100%", margin: "0 auto" }}>
-        <div style={{
-          display: "flex", alignItems: "flex-start",
-          justifyContent: "space-between", marginBottom: 28,
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+    <div className="akd-scroll">
+      <div className="akd-inner">
+        <div className="akd-header">
+          <div className="akd-provider-info">
             <ProviderIcon providerId={provider.id} displayName={provider.display_name} size={36} />
             <div>
-              <h2 style={{ fontSize: "var(--text-xl)", fontWeight: 700, color: "var(--ink)", margin: 0 }}>
+              <h2 className="akd-provider-name">
                 {provider.display_name}
               </h2>
-              <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-muted)", marginTop: 2 }}>
+              <div className="akd-provider-desc">
                 {getProviderDescription(provider, i18n.language)}
               </div>
             </div>
           </div>
-          <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-            <button type="button" className="ak-connectors-btn" onClick={onAddConnector} style={{ marginRight: 8, whiteSpace: "nowrap" }}>
+          <div className="akd-header-actions">
+            <button type="button" className="ak-connectors-btn" onClick={onAddConnector}>
               {t("apiKeys.main.connectorsBtn")}
             </button>
             <button type="button" className="ak-icon-btn" onClick={onEdit} title={t("apiKeys.details.edit")}>
@@ -107,7 +105,7 @@ export function ApiKeysDetails({ provider, onEdit, onDelete, onAddConnector }: A
         </SettingsCard>
 
         {confirmDelete && (
-          <button type="button" className="ak-confirm-delete" onClick={handleDeleteClick} style={{ marginTop: 16 }}>
+          <button type="button" className="ak-confirm-delete" onClick={handleDeleteClick}>
             {t("apiKeys.details.confirmDelete")}
           </button>
         )}
@@ -120,20 +118,12 @@ function DetailRow({ label, value, children, last }: {
   label: string; value?: string; children?: React.ReactNode; last?: boolean;
 }) {
   return (
-    <div style={{
-      display: "flex", justifyContent: "space-between", alignItems: "center",
-      padding: "10px 20px",
-      borderBottom: last ? "none" : "1px solid var(--edge)",
-      fontSize: "var(--text-sm)",
-    }}>
-      <span style={{
-        color: "var(--ink-muted)", fontSize: "var(--text-xs)",
-        fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.5px",
-      }}>
+    <div className={`akd-row ${last ? "" : "akd-row-border"}`}>
+      <span className="akd-row-label">
         {label}
       </span>
       {children ?? (
-        <span style={{ color: "var(--ink)", fontFamily: "var(--font-mono)" }}>{value}</span>
+        <span className="akd-row-value">{value}</span>
       )}
     </div>
   );

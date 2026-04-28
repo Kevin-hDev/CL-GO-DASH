@@ -1,0 +1,65 @@
+/* ollama-setup-screen.css — OllamaSetupScreen component */
+
+.oss-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 24px;
+  padding: 40px;
+}
+
+.oss-title {
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0;
+}
+
+.oss-description {
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+  text-align: center;
+  max-width: 400px;
+  margin: 0;
+}
+
+.oss-download-block {
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.oss-status-text {
+  font-size: var(--text-xs);
+  color: var(--ink-faint);
+  text-align: center;
+}
+
+.oss-download-btn {
+  padding: 8px 24px;
+  font-size: var(--text-sm);
+}
+
+.oss-error-block {
+  text-align: center;
+  max-width: 400px;
+}
+
+.oss-error-label {
+  font-size: var(--text-xs);
+  color: var(--signal-error);
+}
+
+.oss-error-detail {
+  font-size: var(--text-xs);
+  color: var(--ink-faint);
+  margin: 6px 0 0;
+  word-break: break-word;
+}
+
+.oss-progress-bar {
+  width: 100%;
+}

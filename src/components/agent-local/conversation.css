@@ -378,12 +378,12 @@
 }
 
 .ollama-dot.connected {
-  background: #166534;
+  background: var(--signal-ok);
   animation: pulse-dot 2s ease-in-out infinite;
 }
 
 .ollama-dot.disconnected {
-  background: #991b1b;
+  background: var(--signal-error);
 }
 
 @keyframes pulse-dot {

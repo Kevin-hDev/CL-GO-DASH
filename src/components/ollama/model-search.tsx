@@ -6,6 +6,7 @@ import { useOllamaModels } from "@/hooks/use-ollama-models";
 import type { RegistryModel } from "@/types/agent";
 import "./ollama.css";
 import "./ollama-details.css";
+import "./model-search.css";
 
 interface ModelSearchProps {
   query: string;
@@ -45,8 +46,8 @@ export function ModelSearch({
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
-      <div style={{ padding: "6px var(--space-sm) 0" }}>
+    <div className="msearch-root">
+      <div className="msearch-bar">
         <input
           className="ollama-search-input"
           value={query}
@@ -55,20 +56,14 @@ export function ModelSearch({
           placeholder={t("ollama.searchPlaceholder")}
         />
       </div>
-      <div style={{ flex: 1, overflowY: "auto", padding: "2px var(--space-sm) 20px" }}>
+      <div className="msearch-results">
         {searching && (
-          <div style={{
-            padding: "var(--space-md)", fontSize: "var(--text-sm)",
-            color: "var(--ink-faint)",
-          }}>
+          <div className="msearch-loading">
             {t("history.loading")}
           </div>
         )}
         {!searching && results.length === 0 && query.trim() === "" && (
-          <div style={{
-            padding: "var(--space-md)", fontSize: "var(--text-xs)",
-            color: "var(--ink-faint)", fontStyle: "italic",
-          }}>
+          <div className="msearch-hint">
             {t("ollama.searchHint")}
           </div>
         )}
@@ -78,28 +73,20 @@ export function ModelSearch({
           return (
             <div
               key={m.name}
-              className={`ollama-model-item ${isActive ? "active" : ""}`}
+              className={`ollama-model-item msearch-item-row ${isActive ? "active" : ""}`}
               onClick={() => onSelectFamily(m.name)}
-              style={{
-                display: "flex", justifyContent: "space-between", alignItems: "center",
-                cursor: "pointer",
-              }}
             >
-              <div style={{ minWidth: 0, flex: 1 }}>
-                <div style={{ fontSize: "var(--text-sm)", color: "var(--ink)" }}>
+              <div className="msearch-item-content">
+                <div className="msearch-item-name">
                   {m.name}
                 </div>
                 {m.description && (
-                  <div style={{
-                    fontSize: "var(--text-xs)", color: "var(--ink-faint)",
-                    maxWidth: 200, overflow: "hidden",
-                    textOverflow: "ellipsis", whiteSpace: "nowrap",
-                  }}>
+                  <div className="msearch-item-desc">
                     {m.description}
                   </div>
                 )}
               </div>
-              {installed && <Check size={14} style={{ color: "var(--select-text)" }} />}
+              {installed && <Check size={14} className="msearch-installed-icon" />}
             </div>
           );
         })}

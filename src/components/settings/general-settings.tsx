@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import type { Theme } from "@/hooks/use-theme";
+import type { ThemeChoice } from "@/hooks/use-theme";
 import type { useSettings } from "@/hooks/use-settings";
 import { FONT_SIZES, FONT_FAMILIES } from "@/hooks/use-settings";
 import { SettingsCard } from "./settings-card";
@@ -8,8 +8,8 @@ import { SettingsSelect, type SelectOption } from "./settings-select";
 import { ThemeSelector } from "./theme-selector";
 
 interface GeneralSettingsProps {
-  theme: Theme;
-  onThemeChange: (theme: Theme) => void;
+  themeChoice: ThemeChoice;
+  onThemeChange: (theme: ThemeChoice) => void;
   settings: ReturnType<typeof useSettings>;
 }
 
@@ -28,7 +28,7 @@ const LANGUAGE_OPTIONS: SelectOption[] = [
   { value: "fr", label: "Français" },
 ];
 
-export function GeneralSettings({ theme, onThemeChange, settings }: GeneralSettingsProps) {
+export function GeneralSettings({ themeChoice, onThemeChange, settings }: GeneralSettingsProps) {
   const { t, i18n } = useTranslation();
 
   const changeLang = (lang: string) => {
@@ -53,7 +53,7 @@ export function GeneralSettings({ theme, onThemeChange, settings }: GeneralSetti
             title={t("settings.general.themeTitle")}
             description={t("settings.general.themeDesc")}
           >
-            <ThemeSelector value={theme} onChange={onThemeChange} />
+            <ThemeSelector value={themeChoice} onChange={onThemeChange} />
           </SettingsRow>
 
           <SettingsRow

@@ -35,7 +35,7 @@
 }
 
 [data-theme="dark"] .ak-connector-card {
-  background: rgba(37, 37, 41, 0.70);
+  background: var(--surface-overlay);
   border-color: transparent;
 }
 
@@ -96,7 +96,7 @@
 }
 
 .ak-connector-card-keyicon {
-  color: #eab308;
+  color: var(--signal-warning);
 }
 
 .ak-connector-card-action {
@@ -118,6 +118,6 @@
 }
 
 .ak-connector-card-action.done {
-  background: rgba(34, 197, 94, 0.15);
-  color: #4ade80;
+  background: var(--signal-ok-bg);
+  color: var(--signal-ok);
 }

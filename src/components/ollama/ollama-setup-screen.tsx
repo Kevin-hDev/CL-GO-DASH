@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { invoke, Channel } from "@tauri-apps/api/core";
 import "./ollama.css";
+import "./ollama-setup-screen.css";
 
 interface OllamaSetupProgress {
   completed: number;
@@ -43,31 +44,20 @@ export function OllamaSetupScreen({ onComplete }: OllamaSetupScreenProps) {
   }, [onComplete]);
 
   return (
-    <div style={{
-      display: "flex", flexDirection: "column", alignItems: "center",
-      justifyContent: "center", height: "100%", gap: 24, padding: 40,
-    }}>
-      <h2 style={{
-        fontSize: "var(--text-xl)", fontWeight: 700,
-        color: "var(--ink)", margin: 0,
-      }}>
+    <div className="oss-container">
+      <h2 className="oss-title">
         {t("ollamaSetup.title")}
       </h2>
-      <p style={{
-        fontSize: "var(--text-sm)", color: "var(--ink-muted)",
-        textAlign: "center", maxWidth: 400, margin: 0,
-      }}>
+      <p className="oss-description">
         {t("ollamaSetup.description")}
       </p>
 
       {downloading ? (
-        <div style={{ width: 300, display: "flex", flexDirection: "column", gap: 8 }}>
-          <div className="ollama-progress-bar" style={{ width: "100%" }}>
+        <div className="oss-download-block">
+          <div className="ollama-progress-bar oss-progress-bar">
             <div className="ollama-progress-fill" style={{ width: `${percent}%` }} />
           </div>
-          <span style={{
-            fontSize: "var(--text-xs)", color: "var(--ink-faint)", textAlign: "center",
-          }}>
+          <span className="oss-status-text">
             {status === "extracting"
               ? t("ollamaSetup.extracting")
               : status === "downloading-rocm"
@@ -77,8 +67,7 @@ export function OllamaSetupScreen({ onComplete }: OllamaSetupScreenProps) {
         </div>
       ) : (
         <button
-          className="ollama-btn ollama-btn-primary"
-          style={{ padding: "8px 24px", fontSize: "var(--text-sm)" }}
+          className="ollama-btn ollama-btn-primary oss-download-btn"
           onClick={handleDownload}
         >
           {t("ollamaSetup.download")}
@@ -86,14 +75,11 @@ export function OllamaSetupScreen({ onComplete }: OllamaSetupScreenProps) {
       )}
 
       {error && (
-        <div style={{ textAlign: "center", maxWidth: 400 }}>
-          <span style={{ fontSize: "var(--text-xs)", color: "#e66" }}>
+        <div className="oss-error-block">
+          <span className="oss-error-label">
             {t("ollamaSetup.error")}
           </span>
-          <p style={{
-            fontSize: "var(--text-xs)", color: "var(--ink-faint)",
-            margin: "6px 0 0", wordBreak: "break-word",
-          }}>
+          <p className="oss-error-detail">
             {error}
           </p>
         </div>

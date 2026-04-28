@@ -5,6 +5,7 @@ import { Check } from "@/components/ui/icons";
 import { useOllamaModels } from "@/hooks/use-ollama-models";
 import type { RegistryTag, OllamaModel } from "@/types/agent";
 import "./ollama.css";
+import "./model-variants-list.css";
 
 interface ModelVariantsListProps {
   familyName: string;
@@ -37,38 +38,27 @@ export function ModelVariantsList({
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
+    <div className="mvl-root">
       <button
         onClick={onBack}
-        className="ollama-btn"
-        style={{
-          margin: "var(--space-sm)",
-          display: "flex", alignItems: "center", gap: 6,
-          justifyContent: "flex-start",
-        }}
+        className="ollama-btn mvl-back-btn"
       >
         ← {familyName}
       </button>
 
       {loading && (
-        <div style={{
-          padding: "var(--space-md)", fontSize: "var(--text-sm)",
-          color: "var(--ink-faint)",
-        }}>
+        <div className="mvl-loading">
           {t("ollama.loadingVariants")}
         </div>
       )}
 
       {error && (
-        <div style={{
-          padding: "var(--space-md)", fontSize: "var(--text-xs)",
-          color: "#e66",
-        }}>
+        <div className="mvl-error">
           {error}
         </div>
       )}
 
-      <div style={{ flex: 1, overflowY: "auto", padding: "var(--space-sm)", paddingBottom: 20 }}>
+      <div className="mvl-list">
         {tags.map((tag) => {
           const local = findLocal(tag.name);
           const installed = Boolean(local);
@@ -79,35 +69,25 @@ export function ModelVariantsList({
           return (
             <div
               key={tag.name}
-              className={`ollama-model-item ${isActive ? "active" : ""}`}
+              className={`ollama-model-item mvl-item-row ${isActive ? "active" : ""}`}
               onClick={() => onSelectVariant(fullName)}
-              style={{
-                display: "flex", justifyContent: "space-between",
-                alignItems: "center", cursor: "pointer",
-              }}
             >
-              <div style={{ minWidth: 0, flex: 1 }}>
-                <div style={{ fontSize: "var(--text-sm)", color: "var(--ink)" }}>
+              <div className="mvl-item-content">
+                <div className="mvl-item-name">
                   {tag.name}
                 </div>
-                <div style={{
-                  fontSize: "var(--text-xs)", color: "var(--ink-faint)",
-                }}>
+                <div className="mvl-item-meta">
                   {tag.size_gb ? `${tag.size_gb} GB` : "—"}
                   {tag.context_length ? ` · ${(tag.context_length / 1024).toFixed(0)}K ctx` : ""}
                 </div>
               </div>
               {hasUpdate && (
-                <span style={{
-                  fontSize: "var(--text-xs)",
-                  color: "#ea580c",
-                  fontWeight: 600,
-                }}>
+                <span className="mvl-update-badge">
                   {t("ollama.update")}
                 </span>
               )}
               {installed && !hasUpdate && (
-                <Check size={14} style={{ color: "var(--select-text)" }} />
+                <Check size={14} className="mvl-installed-icon" />
               )}
             </div>
           );

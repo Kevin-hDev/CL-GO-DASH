@@ -102,6 +102,7 @@
 }
 
 .ollama-btn-primary:hover {
+  background: var(--pulse);
   opacity: 0.9;
 }
 
@@ -112,7 +113,7 @@
 }
 
 .ollama-btn-cancel:hover {
-  background: rgba(239, 68, 68, 0.1);
+  background: var(--signal-error-bg);
 }
 
 .ollama-profile-table {
@@ -149,10 +150,4 @@
   transition: width 200ms ease-out;
 }
 
-[data-theme="dark"] .mf-raw-block {
-  background: rgba(37, 37, 41, 0.55) !important;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-color: transparent !important;
-}
 

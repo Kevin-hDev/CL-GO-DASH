@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSettings } from "@/hooks/use-settings";
-import type { Theme } from "@/hooks/use-theme";
+import type { Theme, ThemeChoice } from "@/hooks/use-theme";
 import { GearSix, Key, Sliders, Info, BookOpenText, Keyboard } from "@/components/ui/icons";
 import { ThemedIcon } from "@/components/ui/themed-icon";
 import { GeneralSettings } from "./general-settings";
@@ -38,12 +38,13 @@ const SUB_TABS: SubTabDef[] = [
 
 interface SettingsTabProps {
   theme: Theme;
-  onThemeChange: (theme: Theme) => void;
+  themeChoice: ThemeChoice;
+  onThemeChange: (theme: ThemeChoice) => void;
   activeSubTab?: string;
   onSubTabChange?: (subTab: string) => void;
 }
 
-export function SettingsTab({ theme, onThemeChange, activeSubTab, onSubTabChange }: SettingsTabProps): {
+export function SettingsTab({ themeChoice, onThemeChange, activeSubTab, onSubTabChange }: SettingsTabProps): {
   list: React.ReactNode;
   detail: React.ReactNode;
 } {
@@ -106,7 +107,7 @@ export function SettingsTab({ theme, onThemeChange, activeSubTab, onSubTabChange
     if (subTab === "general") {
       return (
         <GeneralSettings
-          theme={theme}
+          themeChoice={themeChoice}
           onThemeChange={onThemeChange}
           settings={settings}
         />

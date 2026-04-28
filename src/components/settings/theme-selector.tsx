@@ -1,15 +1,16 @@
 import { useTranslation } from "react-i18next";
 import { Check } from "@/components/ui/icons";
-import type { Theme } from "@/hooks/use-theme";
+import type { ThemeChoice } from "@/hooks/use-theme";
 
 interface ThemeSelectorProps {
-  value: Theme;
-  onChange: (theme: Theme) => void;
+  value: ThemeChoice;
+  onChange: (theme: ThemeChoice) => void;
 }
 
-const THEMES: { id: Theme; i18n: string; bg: string; accent: string; text: string }[] = [
+const THEMES: { id: ThemeChoice; i18n: string; bg: string; accent: string; text: string }[] = [
   { id: "light", i18n: "settings.light", bg: "#f5f3f0", accent: "#ea6c10", text: "#1a1a1a" },
   { id: "dark", i18n: "settings.dark", bg: "#1c1c22", accent: "#f97316", text: "#e8e6e3" },
+  { id: "system", i18n: "settings.system", bg: "linear-gradient(135deg, #f5f3f0 50%, #1c1c22 50%)", accent: "#ea6c10", text: "#1a1a1a" },
 ];
 
 export function ThemeSelector({ value, onChange }: ThemeSelectorProps) {

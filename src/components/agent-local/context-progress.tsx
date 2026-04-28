@@ -15,10 +15,10 @@ function colorForPercentage(p: number): ColorKey {
 }
 
 const FILL_COLORS: Record<ColorKey, string> = {
-  blue: "#60a5fa",
-  yellow: "#eab308",
-  orange: "#f97316",
-  red: "#ef4444",
+  blue: "var(--signal-info)",
+  yellow: "var(--signal-warning)",
+  orange: "var(--tool-bash)",
+  red: "var(--signal-error)",
 };
 
 function formatTokens(n: number): string {

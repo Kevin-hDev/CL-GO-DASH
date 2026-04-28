@@ -24,7 +24,7 @@
 }
 
 [data-theme="dark"] .wk-dialog {
-  background: rgba(37, 37, 41, 0.70);
+  background: var(--surface-overlay);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-color: transparent;
@@ -144,10 +144,10 @@
 }
 
 .wk-form-error {
-  color: #ef4444;
+  color: var(--signal-error);
   font-size: var(--text-xs);
   padding: var(--space-sm);
-  background: rgba(239, 68, 68, 0.1);
+  background: var(--signal-error-bg);
   border: 1px solid rgba(239, 68, 68, 0.3);
   border-radius: var(--radius-sm);
 }
@@ -179,7 +179,7 @@
 }
 
 [data-theme="dark"] .wk-btn-secondary {
-  background: rgba(37, 37, 41, 0.70);
+  background: var(--surface-overlay);
   border-color: transparent;
 }
 

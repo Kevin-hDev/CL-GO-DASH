@@ -255,6 +255,7 @@
     "fontPreview": "The quick brown fox",
     "light": "Light",
     "dark": "Dark",
+    "system": "System",
     "orange": "Orange",
     "tabs": {
       "general": "General",

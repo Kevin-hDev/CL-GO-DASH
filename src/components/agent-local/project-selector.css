@@ -91,7 +91,7 @@
 }
 
 [data-theme="dark"] .project-dropdown {
-  background: rgba(37, 37, 41, 0.55);
+  background: var(--surface-glass);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-color: transparent;

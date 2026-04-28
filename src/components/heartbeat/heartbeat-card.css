@@ -67,8 +67,8 @@
 }
 
 .wk-badge-active {
-  background: rgba(34, 197, 94, 0.12);
-  color: #22c55e;
+  background: var(--signal-ok-bg);
+  color: var(--signal-ok);
   border: 1px solid rgba(34, 197, 94, 0.3);
 }
 
@@ -79,12 +79,12 @@
 }
 
 .wk-badge-schedule {
-  background: rgba(245, 158, 11, 0.15);
-  color: #f59e0b;
+  background: var(--signal-warning-bg);
+  color: var(--signal-warning);
 }
 
 [data-theme="dark"] .wk-card {
-  background: rgba(37, 37, 41, 0.55);
+  background: var(--surface-glass);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-color: transparent;

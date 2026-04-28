@@ -102,6 +102,27 @@ npm run tauri build
 - Pas de code signing — macOS Gatekeeper peut bloquer si téléchargé via navigateur (d'où le script `install.sh` qui utilise `curl`)
 - La release est créée en mode draft par le CI, il faut la publier manuellement sur GitHub si besoin
 
+## CSS / Styling
+
+### Convention unique
+- **CSS colocalisé** = pattern par défaut (fichier `.css` par composant pour tout style structurel)
+- **Tailwind utilities** = autorisé pour layout simple (`flex`, `gap-2`, `items-center`, `p-2`), interdit pour les couleurs
+- **Inline `style={{}}`** = uniquement pour les valeurs dynamiques calculées au runtime (width en %, position calculée)
+- **Tailwind arbitrary `text-[var(...)]`** = interdit, tu utilises CSS colocalisé à la place
+- **`cn()`** depuis `src/lib/utils.ts` pour les classes conditionnelles
+
+### Tokens
+- **Source de vérité layout** : `src/styles/tokens.css` (spacing, radius, typo, fonts — partagé entre thèmes)
+- **Source de vérité couleurs** : `src/styles/themes/dark.css` + `light.css` (une seule couche de tokens)
+- **`@theme` dans global.css** : contient les fonts et radius pour Tailwind (doit rester aligné sur tokens.css)
+- Tu ne hardcodes JAMAIS une couleur dans un composant — tu utilises `var(--token)` ou tu crées le token manquant dans les deux thèmes
+- Les couleurs macOS traffic lights (#ff5f57, #febc2e, #28c840) dans `window-controls.css` sont l'exception : standard OS, pas de token
+
+### OS-specific
+- Détection centralisée dans `src/lib/platform.ts` (`IS_MAC`, `IS_LINUX`, `IS_WINDOWS`)
+- Classes CSS `.os-mac` / `.os-other` sur le root pour les différences visuelles
+- Classe `.is-mac` sur le toolbar pour le positionnement
+
 ## i18n
 - Tu gères les traductions Français/anglais quand tu ajoutes du texte dans l'application, tu ne codes aucun texte en dur
 - Messages d'erreur visibles : toujours via clés i18n, jamais `String(err)` brut

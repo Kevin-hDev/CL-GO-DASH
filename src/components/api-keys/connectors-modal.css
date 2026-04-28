@@ -13,7 +13,7 @@
 }
 
 [data-theme="dark"] .ak-connectors-modal {
-  background: rgba(37, 37, 41, 0.70);
+  background: var(--surface-overlay);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-color: transparent;

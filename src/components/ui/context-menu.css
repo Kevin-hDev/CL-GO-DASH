@@ -30,6 +30,6 @@
 }
 
 .context-item.danger:hover {
-  background: rgba(217, 68, 68, 0.1);
+  background: var(--signal-error-bg);
   color: var(--signal-error);
 }
