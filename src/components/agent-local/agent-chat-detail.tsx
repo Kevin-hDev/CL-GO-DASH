@@ -69,11 +69,11 @@ export function AgentChatDetail(props: AgentChatDetailProps) {
   return (
     <div className="agent-detail-with-preview">
       <Group id="file-preview-panel-sizes" orientation="horizontal">
-        <Panel id="chat" defaultSize={65} minSize={30}>
+        <Panel id="chat" defaultSize={65} minSize={30} style={{ overflow: "hidden" }}>
           {chatView}
         </Panel>
         <Separator className="fp-panel-handle" />
-        <Panel id="preview" defaultSize={35} minSize={20} maxSize={70}>
+        <Panel id="preview" defaultSize={35} minSize={20} maxSize={70} style={{ minWidth: 0 }}>
           <FilePreviewPanel
             open={props.filePreview.open}
             fullscreen={props.filePreview.fullscreen}

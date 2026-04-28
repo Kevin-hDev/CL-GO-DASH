@@ -128,11 +128,14 @@ export function AgentLocalTab(props?: AgentLocalTabProps): { list: React.ReactNo
             canAddTab={tabState.canAddTab}
             sessionId={tabState.activeSessionId ?? null}
             terminalOpen={terminal.isOpen}
+            previewOpen={filePreview.open}
+            previewCount={fileOperations.length}
             onSelect={tabState.selectTab}
             onClose={tabState.closeTab}
             onAdd={handleCreate}
             onRename={tabState.renameTab}
             onReorder={tabState.reorderTabs}
+            onTogglePreview={filePreview.toggleOpen}
             onToggleTerminal={() => {
               if (!terminal.isOpen && terminal.tabs.length === 0) {
                 terminal.addTab(terminalCwd);
