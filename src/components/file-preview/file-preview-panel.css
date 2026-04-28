@@ -188,7 +188,7 @@
 }
 
 .fp-nowrap .tp-line {
-  min-width: max-content;
+  min-width: max(100%, max-content);
 }
 
 .fp-nowrap .tp-code {

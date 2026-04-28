@@ -68,7 +68,7 @@
 }
 
 .tp-nowrap .tp-line {
-  min-width: max-content;
+  min-width: max(100%, max-content);
 }
 
 .tp-nowrap .tp-code {
