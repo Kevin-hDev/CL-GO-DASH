@@ -170,9 +170,7 @@ pub(crate) fn enrich_error(mut result: ToolResult, tool_name: &str) -> ToolResul
         return result;
     }
     let hint = match tool_name {
-        "edit_file" if result.content.contains("non trouvée") => {
-            "\n\n[HINT: Utiliser read_file pour vérifier le contenu exact, puis copier-coller la chaîne exacte dans old_string]"
-        }
+        "edit_file" if result.content.contains("non trouvée") => "",
         "edit_file" if result.content.contains("fois") => {
             "\n\n[HINT: old_string apparaît plusieurs fois. Ajouter plus de contexte (lignes avant/après) pour rendre la correspondance unique]"
         }
@@ -182,7 +180,6 @@ pub(crate) fn enrich_error(mut result: ToolResult, tool_name: &str) -> ToolResul
         "bash" if result.content.contains("Timeout") => {
             "\n\n[HINT: Timeout dépassé. Augmenter le paramètre timeout ou utiliser une approche plus efficace]"
         }
-        "write_file" | "edit_file" if result.content.contains("non lu") => "",
         _ => "",
     };
     if !hint.is_empty() {

@@ -152,12 +152,11 @@ fn truncate_utf8_safe() {
 }
 
 #[test]
-fn error_hint_edit_not_found() {
+fn error_no_hint_edit_not_found() {
     let result = ToolResult::err("Chaîne non trouvée dans le fichier".to_string());
     let out = enrich_error(result, "edit_file");
     assert!(out.is_error);
-    assert!(out.content.contains("[HINT:"), "Un hint doit être injecté pour 'non trouvée'");
-    assert!(out.content.contains("read_file"));
+    assert!(!out.content.contains("[HINT:"), "Pas de hint pour 'non trouvée' — le LLM gère seul");
 }
 
 #[test]
