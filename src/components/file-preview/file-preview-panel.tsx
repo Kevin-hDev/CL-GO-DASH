@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Maximize2, Minimize2 } from "lucide-react";
 import { detectPreviewEditors, openPreviewFile, openPreviewWithEditor } from "@/services/file-preview";
 import type { FileOperation, FilePreviewActiveTab, PreviewEditor } from "@/types/file-preview";
+import { shouldWrapFile } from "@/lib/code-language";
 import { FilePreviewBreadcrumb } from "./file-preview-breadcrumb";
 import { FilePreviewContent } from "./file-preview-content";
 import { FilePreviewSummary } from "./file-preview-summary";
@@ -87,7 +88,7 @@ export function FilePreviewPanel(props: FilePreviewPanelProps) {
               baseDir={props.baseDir}
             />
             {editors.length === 0 && <div className="fp-editor-note">{t("filePreview.noEditor")}</div>}
-            <div className="fp-code-scroll">
+            <div className={`fp-code-scroll ${shouldWrapFile(activeOperation.path) ? "" : "fp-nowrap"}`}>
               <FilePreviewContent operation={activeOperation} baseDir={props.baseDir} />
             </div>
           </>

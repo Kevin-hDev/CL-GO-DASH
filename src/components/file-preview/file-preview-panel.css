@@ -182,3 +182,8 @@
 .fp-del {
   color: var(--signal-error);
 }
+
+.fp-nowrap .tp-code {
+  white-space: pre;
+  word-break: normal;
+}
