@@ -61,10 +61,12 @@
   color: var(--signal-error);
 }
 
-.tp-nowrap {
+.tp-wrapper.tp-nowrap {
   overflow-x: auto;
+  overflow-y: hidden;
   scrollbar-width: thin;
   scrollbar-color: var(--ink-faint) transparent;
+  min-width: 0;
 }
 
 .tp-nowrap .tp-line {
