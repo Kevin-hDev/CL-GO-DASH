@@ -60,6 +60,7 @@ export function AgentChatDetail(props: AgentChatDetailProps) {
         open={props.filePreview.open}
         fullscreen={props.filePreview.fullscreen}
         width={props.filePreview.width}
+        resizing={props.filePreview.resizing}
         operations={props.fileOperations}
         tabs={props.filePreview.tabs}
         activeTab={props.filePreview.activeTab}

@@ -15,6 +15,7 @@ interface FilePreviewPanelProps {
   open: boolean;
   fullscreen: boolean;
   width: number;
+  resizing: boolean;
   operations: FileOperation[];
   tabs: FileOperation[];
   activeTab: FilePreviewActiveTab;
@@ -47,7 +48,7 @@ export function FilePreviewPanel(props: FilePreviewPanelProps) {
 
   return (
     <aside
-      className={`fp-panel ${props.open ? "open" : ""} ${props.fullscreen ? "fullscreen" : ""}`}
+      className={`fp-panel ${props.open ? "open" : ""} ${props.fullscreen ? "fullscreen" : ""} ${props.resizing ? "resizing" : ""}`}
       style={{ "--fp-width": `${props.width}px` } as React.CSSProperties}
       aria-hidden={!props.open}
     >

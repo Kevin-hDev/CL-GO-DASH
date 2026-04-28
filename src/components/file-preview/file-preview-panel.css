@@ -26,6 +26,10 @@
   pointer-events: auto;
 }
 
+.fp-panel.resizing {
+  transition: none;
+}
+
 .fp-panel.fullscreen {
   position: absolute;
   inset: 0;

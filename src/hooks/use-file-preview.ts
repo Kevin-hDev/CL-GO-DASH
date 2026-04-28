@@ -30,6 +30,7 @@ export function useFilePreview(sessionId: string | null, operations: FileOperati
   const [tabIds, setTabIds] = useState<string[]>(() => readStoredTabs(sessionId));
   const [fallbackOps, setFallbackOps] = useState<FileOperation[]>([]);
   const [width, setWidth] = useState(DEFAULT_WIDTH);
+  const [resizing, setResizing] = useState(false);
   const resizeRef = useRef<{ startX: number; startWidth: number } | null>(null);
 
   const allOperations = useMemo(() => [...operations, ...fallbackOps], [operations, fallbackOps]);
@@ -88,6 +89,7 @@ export function useFilePreview(sessionId: string | null, operations: FileOperati
   const startResize = useCallback((event: React.PointerEvent) => {
     event.preventDefault();
     resizeRef.current = { startX: event.clientX, startWidth: width };
+    setResizing(true);
   }, [width]);
 
   useEffect(() => {
@@ -99,6 +101,7 @@ export function useFilePreview(sessionId: string | null, operations: FileOperati
     };
     const onUp = () => {
       resizeRef.current = null;
+      setResizing(false);
     };
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
@@ -125,6 +128,7 @@ export function useFilePreview(sessionId: string | null, operations: FileOperati
     activeTab,
     tabs,
     width,
+    resizing,
     setOpen,
     setFullscreen,
     setActiveTab,
