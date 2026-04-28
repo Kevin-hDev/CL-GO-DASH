@@ -117,3 +117,36 @@
   padding-right: 22px;
   white-space: pre;
 }
+
+/* ── @git-diff-view/react overrides ── */
+
+.fp-diff-view {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.fp-diff-view .diff-tailwindcss-wrapper,
+.fp-diff-view .diff-style-root,
+.fp-diff-view .diff-view-wrapper {
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.fp-diff-view .diff-tailwindcss-wrapper[data-theme="dark"] .diff-style-root {
+  --diff-plain-content--: var(--void);
+  --diff-expand-content--: var(--surface-hover);
+  --diff-plain-lineNumber--: var(--void);
+  --diff-expand-lineNumber--: var(--surface-hover);
+  --diff-plain-lineNumber-color--: var(--ink-faint);
+  --diff-expand-lineNumber-color--: var(--ink-faint);
+  --diff-add-content--: var(--diff-add-bg);
+  --diff-del-content--: var(--diff-del-bg);
+  --diff-add-lineNumber--: var(--diff-add-gutter);
+  --diff-del-lineNumber--: var(--diff-del-gutter);
+  --diff-hunk-content--: var(--surface-hover);
+  --diff-hunk-lineNumber--: var(--surface-hover);
+  --diff-expand-lineNumber-color--: var(--ink-faint);
+  --diff-hunk-content-color--: var(--ink-faint);
+  color: var(--ink);
+}
