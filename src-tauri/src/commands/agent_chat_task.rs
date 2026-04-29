@@ -41,7 +41,7 @@ pub(crate) async fn run_stream_task(
             .map(std::path::PathBuf::from)
             .filter(|p| p.is_dir())
             .unwrap_or_else(|| {
-                std::env::current_dir().unwrap_or_else(|_| dirs::home_dir().unwrap())
+                dirs::home_dir().unwrap_or_else(|| std::env::current_dir().unwrap())
             })
     };
 
