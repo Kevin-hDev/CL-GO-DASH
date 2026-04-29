@@ -38,6 +38,8 @@ export function TerminalInstance({
   const termRef = useRef<Terminal | null>(null);
   const fitRef = useRef<FitAddon | null>(null);
   const ptyIdRef = useRef<number | null>(null);
+  const spawnedRef = useRef(false);
+  const unlistenRefs = useRef<{ u1: (() => void) | null; u2: (() => void) | null }>({ u1: null, u2: null });
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -54,15 +56,12 @@ export function TerminalInstance({
     const fit = new FitAddon();
     term.loadAddon(fit);
     term.open(containerRef.current);
-
-    fit.fit();
     termRef.current = term;
     fitRef.current = fit;
 
     term.attachCustomKeyEventHandler((e) => {
       if (e.type !== "keydown") return true;
 
-      // Toggle terminal : Cmd+J (macOS) ou Ctrl+J (Linux/Windows)
       const toggleMod = IS_MAC ? e.metaKey : e.ctrlKey;
       if (toggleMod && e.code === "KeyJ") {
         onTogglePanel?.();
@@ -87,7 +86,6 @@ export function TerminalInstance({
       return true;
     });
 
-    // Paste via l'événement natif (pas besoin de readText permission)
     const pasteHandler = (e: ClipboardEvent) => {
       const text = e.clipboardData?.getData("text");
       if (text && ptyIdRef.current !== null) {
@@ -96,39 +94,6 @@ export function TerminalInstance({
       }
     };
     containerRef.current.addEventListener("paste", pasteHandler);
-
-    invoke<number>("pty_spawn", {
-      cwd: cwd || null,
-      cols: term.cols,
-      rows: term.rows,
-    }).then((id) => {
-      ptyIdRef.current = id;
-      onPtyReady(tabId, id);
-
-      term.onData((data) => {
-        invoke("pty_write", { id, data }).catch(() => {});
-      });
-
-      term.onResize(({ cols, rows }) => {
-        invoke("pty_resize", { id, cols, rows }).catch(() => {});
-      });
-    }).catch(() => {
-      term.writeln(`\r\nTerminal failed to start\r\n`);
-    });
-
-    const unlisten1 = listen<{ id: number; data: string }>("pty-output", (event) => {
-      if (event.payload.id === ptyIdRef.current) {
-        term.write(event.payload.data);
-      }
-    });
-
-    const unlisten2 = listen<{ id: number; code: number }>("pty-exit", (event) => {
-      if (event.payload.id === ptyIdRef.current) {
-        term.writeln(`\r\n[Process exited with code ${event.payload.code}]`);
-        ptyIdRef.current = null;
-        onExit(tabId);
-      }
-    });
 
     let resizeTimer: ReturnType<typeof setTimeout>;
     const resizeObserver = new ResizeObserver(() => {
@@ -146,8 +111,8 @@ export function TerminalInstance({
       clearTimeout(resizeTimer);
       container?.removeEventListener("paste", pasteHandler);
       resizeObserver.disconnect();
-      unlisten1.then((fn) => fn());
-      unlisten2.then((fn) => fn());
+      if (unlistenRefs.current.u1) unlistenRefs.current.u1();
+      if (unlistenRefs.current.u2) unlistenRefs.current.u2();
       if (ptyIdRef.current !== null) {
         invoke("pty_kill", { id: ptyIdRef.current }).catch(() => {});
       }
@@ -156,7 +121,54 @@ export function TerminalInstance({
   }, []);
 
   useEffect(() => {
-    if (isVisible && fitRef.current) {
+    if (!isVisible || spawnedRef.current || !termRef.current || !fitRef.current) return;
+    spawnedRef.current = true;
+
+    const term = termRef.current;
+    const fit = fitRef.current;
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        fit.fit();
+
+        invoke<number>("pty_spawn", {
+          cwd: cwd || null,
+          cols: term.cols,
+          rows: term.rows,
+        }).then((id) => {
+          ptyIdRef.current = id;
+          onPtyReady(tabId, id);
+
+          term.onData((data) => {
+            invoke("pty_write", { id, data }).catch(() => {});
+          });
+
+          term.onResize(({ cols, rows }) => {
+            invoke("pty_resize", { id, cols, rows }).catch(() => {});
+          });
+        }).catch(() => {
+          term.writeln(`\r\nTerminal failed to start\r\n`);
+        });
+
+        listen<{ id: number; data: string }>("pty-output", (event) => {
+          if (event.payload.id === ptyIdRef.current) {
+            term.write(event.payload.data);
+          }
+        }).then((fn) => { unlistenRefs.current.u1 = fn; });
+
+        listen<{ id: number; code: number }>("pty-exit", (event) => {
+          if (event.payload.id === ptyIdRef.current) {
+            term.writeln(`\r\n[Process exited with code ${event.payload.code}]`);
+            ptyIdRef.current = null;
+            onExit(tabId);
+          }
+        }).then((fn) => { unlistenRefs.current.u2 = fn; });
+      });
+    });
+  }, [isVisible]);
+
+  useEffect(() => {
+    if (isVisible && spawnedRef.current && fitRef.current) {
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           fitRef.current?.fit();
