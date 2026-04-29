@@ -3,14 +3,15 @@ import type { useTerminal } from "@/hooks/use-terminal";
 
 interface ChatTerminalProps {
   terminal: ReturnType<typeof useTerminal>;
-  defaultCwd: string;
 }
 
-export function ChatTerminal({ terminal, defaultCwd }: ChatTerminalProps) {
+export function ChatTerminal({ terminal }: ChatTerminalProps) {
   return (
     <TerminalPanel
       tabs={terminal.tabs}
       activeTabId={terminal.activeTabId}
+      allTabs={terminal.allTabs()}
+      activeGroupKey={terminal.groupKey}
       isOpen={terminal.isOpen}
       panelHeight={terminal.panelHeight}
       onAddTab={terminal.addTab}
@@ -22,7 +23,6 @@ export function ChatTerminal({ terminal, defaultCwd }: ChatTerminalProps) {
       onPtyReady={terminal.setPtyId}
       onResize={terminal.resizePanel}
       onSetMaxHeight={terminal.setMaxHeight}
-      defaultCwd={defaultCwd}
     />
   );
 }

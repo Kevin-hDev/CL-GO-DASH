@@ -3,17 +3,18 @@ import { renderHook, act } from "@testing-library/react";
 import { useTerminal } from "../use-terminal";
 
 describe("useTerminal", () => {
+  const GROUP_KEY = "test-project";
   const DEFAULT_CWD = "/Users/test/project";
 
   it("starts with no tabs, closed panel", () => {
-    const { result } = renderHook(() => useTerminal(DEFAULT_CWD));
+    const { result } = renderHook(() => useTerminal(GROUP_KEY, DEFAULT_CWD));
     expect(result.current.tabs).toEqual([]);
     expect(result.current.isOpen).toBe(false);
     expect(result.current.activeTabId).toBeNull();
   });
 
   it("addTab creates a tab with folder name as label", () => {
-    const { result } = renderHook(() => useTerminal(DEFAULT_CWD));
+    const { result } = renderHook(() => useTerminal(GROUP_KEY, DEFAULT_CWD));
     act(() => { result.current.addTab("/Users/test/my-app"); });
     expect(result.current.tabs).toHaveLength(1);
     expect(result.current.tabs[0].label).toBe("my-app");
@@ -22,14 +23,14 @@ describe("useTerminal", () => {
   });
 
   it("addTab without cwd uses defaultCwd", () => {
-    const { result } = renderHook(() => useTerminal(DEFAULT_CWD));
+    const { result } = renderHook(() => useTerminal(GROUP_KEY, DEFAULT_CWD));
     act(() => { result.current.addTab(); });
     expect(result.current.tabs[0].cwd).toBe(DEFAULT_CWD);
     expect(result.current.tabs[0].label).toBe("project");
   });
 
   it("closeTab removes the tab", () => {
-    const { result } = renderHook(() => useTerminal(DEFAULT_CWD));
+    const { result } = renderHook(() => useTerminal(GROUP_KEY, DEFAULT_CWD));
     act(() => { result.current.addTab("/a"); });
     act(() => { result.current.addTab("/b"); });
     const idToClose = result.current.tabs[0].id;
@@ -39,7 +40,7 @@ describe("useTerminal", () => {
   });
 
   it("closing last tab sets isOpen to false", () => {
-    const { result } = renderHook(() => useTerminal(DEFAULT_CWD));
+    const { result } = renderHook(() => useTerminal(GROUP_KEY, DEFAULT_CWD));
     act(() => { result.current.addTab(); });
     const id = result.current.tabs[0].id;
     act(() => { result.current.closeTab(id); });
@@ -48,7 +49,7 @@ describe("useTerminal", () => {
   });
 
   it("renameTab updates the label", () => {
-    const { result } = renderHook(() => useTerminal(DEFAULT_CWD));
+    const { result } = renderHook(() => useTerminal(GROUP_KEY, DEFAULT_CWD));
     act(() => { result.current.addTab(); });
     const id = result.current.tabs[0].id;
     act(() => { result.current.renameTab(id, "My Terminal"); });
@@ -56,7 +57,7 @@ describe("useTerminal", () => {
   });
 
   it("reorderTabs moves tab from index 0 to 2", () => {
-    const { result } = renderHook(() => useTerminal(DEFAULT_CWD));
+    const { result } = renderHook(() => useTerminal(GROUP_KEY, DEFAULT_CWD));
     act(() => { result.current.addTab("/a"); });
     act(() => { result.current.addTab("/b"); });
     act(() => { result.current.addTab("/c"); });
@@ -65,7 +66,7 @@ describe("useTerminal", () => {
   });
 
   it("togglePanel opens and closes", () => {
-    const { result } = renderHook(() => useTerminal(DEFAULT_CWD));
+    const { result } = renderHook(() => useTerminal(GROUP_KEY, DEFAULT_CWD));
     act(() => { result.current.addTab(); });
     expect(result.current.isOpen).toBe(true);
     act(() => { result.current.togglePanel(); });
@@ -75,27 +76,27 @@ describe("useTerminal", () => {
   });
 
   it("togglePanel without tabs does nothing", () => {
-    const { result } = renderHook(() => useTerminal(DEFAULT_CWD));
+    const { result } = renderHook(() => useTerminal(GROUP_KEY, DEFAULT_CWD));
     act(() => { result.current.togglePanel(); });
     expect(result.current.isOpen).toBe(false);
   });
 
   it("resizePanel clamps to maxHeight", () => {
-    const { result } = renderHook(() => useTerminal(DEFAULT_CWD));
+    const { result } = renderHook(() => useTerminal(GROUP_KEY, DEFAULT_CWD));
     act(() => { result.current.setMaxHeight(400); });
     act(() => { result.current.resizePanel(9999); });
     expect(result.current.panelHeight).toBe(400);
   });
 
   it("resizePanel clamps to minHeight", () => {
-    const { result } = renderHook(() => useTerminal(DEFAULT_CWD));
+    const { result } = renderHook(() => useTerminal(GROUP_KEY, DEFAULT_CWD));
     act(() => { result.current.setMaxHeight(400); });
     act(() => { result.current.resizePanel(10); });
     expect(result.current.panelHeight).toBe(80);
   });
 
   it("setPtyId updates the ptyId of a tab", () => {
-    const { result } = renderHook(() => useTerminal(DEFAULT_CWD));
+    const { result } = renderHook(() => useTerminal(GROUP_KEY, DEFAULT_CWD));
     act(() => { result.current.addTab(); });
     const id = result.current.tabs[0].id;
     act(() => { result.current.setPtyId(id, 42); });
@@ -103,7 +104,7 @@ describe("useTerminal", () => {
   });
 
   it("closing active tab switches to next available", () => {
-    const { result } = renderHook(() => useTerminal(DEFAULT_CWD));
+    const { result } = renderHook(() => useTerminal(GROUP_KEY, DEFAULT_CWD));
     act(() => { result.current.addTab("/a"); });
     act(() => { result.current.addTab("/b"); });
     act(() => { result.current.addTab("/c"); });

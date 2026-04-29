@@ -62,7 +62,6 @@ export function TerminalInstance({
     term.attachCustomKeyEventHandler((e) => {
       if (e.type !== "keydown") return true;
 
-      // Toggle terminal : Cmd+J (macOS) ou Ctrl+J (Linux/Windows)
       const toggleMod = IS_MAC ? e.metaKey : e.ctrlKey;
       if (toggleMod && e.code === "KeyJ") {
         onTogglePanel?.();
@@ -87,7 +86,6 @@ export function TerminalInstance({
       return true;
     });
 
-    // Paste via l'événement natif (pas besoin de readText permission)
     const pasteHandler = (e: ClipboardEvent) => {
       const text = e.clipboardData?.getData("text");
       if (text && ptyIdRef.current !== null) {
@@ -97,11 +95,17 @@ export function TerminalInstance({
     };
     containerRef.current.addEventListener("paste", pasteHandler);
 
+    let disposed = false;
+
     invoke<number>("pty_spawn", {
       cwd: cwd || null,
-      cols: term.cols,
-      rows: term.rows,
+      cols: term.cols || 80,
+      rows: term.rows || 24,
     }).then((id) => {
+      if (disposed) {
+        invoke("pty_kill", { id }).catch(() => {});
+        return;
+      }
       ptyIdRef.current = id;
       onPtyReady(tabId, id);
 
@@ -113,7 +117,9 @@ export function TerminalInstance({
         invoke("pty_resize", { id, cols, rows }).catch(() => {});
       });
     }).catch(() => {
-      term.writeln(`\r\nTerminal failed to start\r\n`);
+      if (!disposed) {
+        term.writeln(`\r\nTerminal failed to start\r\n`);
+      }
     });
 
     const unlisten1 = listen<{ id: number; data: string }>("pty-output", (event) => {
@@ -143,6 +149,7 @@ export function TerminalInstance({
 
     const container = containerRef.current;
     return () => {
+      disposed = true;
       clearTimeout(resizeTimer);
       container?.removeEventListener("paste", pasteHandler);
       resizeObserver.disconnect();
