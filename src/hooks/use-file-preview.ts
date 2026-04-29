@@ -5,7 +5,7 @@ import type { FileOperation, FilePreviewActiveTab } from "@/types/file-preview";
 
 const MAX_TABS = 6;
 const MIN_WIDTH = 360;
-const DEFAULT_WIDTH = 520;
+const DEFAULT_WIDTH = MIN_WIDTH;
 const MAX_STORED_TABS = 6;
 
 function storageKey(sessionId: string | null): string {

@@ -391,7 +391,7 @@
   },
   "filePreview": {
     "noFiles": "No files created or modified in this session.",
-    "filesModified": "Modified files",
+    "filesModified": "Files",
     "loading": "Reading file...",
     "fileNotFound": "The file could not be read. It may have been deleted or moved.",
     "highlighting": "Highlighting file...",

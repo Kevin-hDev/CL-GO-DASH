@@ -13,13 +13,14 @@
 }
 
 .fp-summary-title span {
-  min-width: 28px;
-  height: 28px;
+  min-width: 18px;
+  height: 18px;
   border-radius: 999px;
   background: var(--surface-hover);
   color: var(--ink-muted);
   text-align: center;
-  line-height: 28px;
+  line-height: 18px;
+  font-size: var(--text-xs);
 }
 
 .fp-summary-row {

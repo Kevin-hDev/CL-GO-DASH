@@ -24,8 +24,13 @@ export function FileTabMenu({ x, y, editors, onOpen, onOpenWith, onClose }: File
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
     };
+    const closeOnClick = () => onClose();
     window.addEventListener("keydown", closeOnEscape);
-    return () => window.removeEventListener("keydown", closeOnEscape);
+    window.addEventListener("pointerdown", closeOnClick);
+    return () => {
+      window.removeEventListener("keydown", closeOnEscape);
+      window.removeEventListener("pointerdown", closeOnClick);
+    };
   }, [onClose]);
 
   const suffix = ` (${t("filePreview.default", "par défaut")})`;
