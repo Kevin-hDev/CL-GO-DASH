@@ -1,187 +1,175 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { homeDir, join } from "@tauri-apps/api/path";
-import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
+import { homeDir } from "@tauri-apps/api/path";
+import { loadSavedGroups, saveGroups } from "./terminal-persistence";
+import { generateId, folderName } from "./terminal-types";
+import type { TerminalTab, TerminalGroup } from "./terminal-types";
 
-export interface TerminalTab {
-  id: string;
-  ptyId: number | null;
-  label: string;
-  cwd: string;
-}
-
-export interface TerminalState {
-  tabs: TerminalTab[];
-  activeTabId: string | null;
-  isOpen: boolean;
-  panelHeight: number;
-}
+export type { TerminalTab, TerminalGroup };
+export { DEFAULT_GROUP_KEY } from "./terminal-types";
 
 const DEFAULT_HEIGHT = 120;
 const MIN_HEIGHT = 80;
 
-function generateId(): string {
-  return crypto.randomUUID();
-}
-
-function folderName(cwd: string): string {
-  const parts = cwd.replace(/[\\/]$/, "").split(/[\\/]/);
-  return parts[parts.length - 1] || "Terminal";
-}
-
-interface SavedTab {
-  label: string;
-  cwd: string;
-}
-
-async function getTabsPath(): Promise<string> {
-  const home = await homeDir();
-  return join(home, ".local", "share", "cl-go-dash", "terminal-tabs.json");
-}
-
-async function loadSavedTabs(): Promise<SavedTab[]> {
-  try {
-    const path = await getTabsPath();
-    const text = await readTextFile(path);
-    return JSON.parse(text) as SavedTab[];
-  } catch (err) {
-    // File absent on first launch — not an error worth surfacing
-    console.debug("[terminal-tabs] no saved tabs:", err);
-    return [];
-  }
-}
-
-async function saveTabs(tabs: { label: string; cwd: string }[]): Promise<void> {
-  try {
-    const path = await getTabsPath();
-    const data = tabs.map(({ label, cwd }) => ({ label, cwd }));
-    await writeTextFile(path, JSON.stringify(data));
-  } catch (err) {
-    console.warn("[terminal-tabs] failed to save tabs:", err);
-  }
-}
-
-export function useTerminal(defaultCwd: string) {
-  const [state, setState] = useState<TerminalState>({
-    tabs: [],
-    activeTabId: null,
-    isOpen: false,
-    panelHeight: DEFAULT_HEIGHT,
-  });
-
+export function useTerminal(groupKey: string, defaultCwd: string) {
+  const [groups, setGroups] = useState<Map<string, TerminalGroup>>(new Map());
+  const [global, setGlobal] = useState({ isOpen: false, panelHeight: DEFAULT_HEIGHT });
+  const [resolvedCwd, setResolvedCwd] = useState(defaultCwd);
   const [loaded, setLoaded] = useState(false);
   const maxHeightRef = useRef(0);
 
   useEffect(() => {
-    loadSavedTabs().then((saved) => {
-      if (saved.length > 0) {
-        const tabs = saved.map((s) => ({
-          id: generateId(),
-          ptyId: null,
-          label: s.label,
-          cwd: s.cwd,
-        }));
-        setState((prev) => ({
-          ...prev,
-          tabs,
-          activeTabId: tabs[0].id,
-          isOpen: false,
-        }));
+    if (defaultCwd) {
+      setResolvedCwd(defaultCwd);
+    } else {
+      homeDir().then(setResolvedCwd).catch(() => {});
+    }
+  }, [defaultCwd]);
+
+  useEffect(() => {
+    loadSavedGroups().then((saved) => {
+      const map = new Map<string, TerminalGroup>();
+      for (const [key, tabs] of Object.entries(saved)) {
+        map.set(key, {
+          tabs: tabs.map((t) => ({ id: generateId(), ptyId: null, label: t.label, cwd: t.cwd })),
+          activeTabId: null,
+        });
       }
+      for (const [, group] of map) {
+        if (group.tabs.length > 0) group.activeTabId = group.tabs[0].id;
+      }
+      setGroups(map);
       setLoaded(true);
     });
   }, []);
 
   useEffect(() => {
     if (!loaded) return;
-    saveTabs(state.tabs);
-  }, [state.tabs, loaded]);
+    saveGroups(groups);
+  }, [groups, loaded]);
+
+  const currentGroup = groups.get(groupKey) ?? { tabs: [], activeTabId: null };
+
+  const allTabs = useCallback((): { tab: TerminalTab; groupKey: string }[] => {
+    const result: { tab: TerminalTab; groupKey: string }[] = [];
+    for (const [key, group] of groups) {
+      for (const tab of group.tabs) result.push({ tab, groupKey: key });
+    }
+    return result;
+  }, [groups]);
 
   const addTab = useCallback((cwd?: string) => {
-    const dir = cwd || defaultCwd;
-    const tab: TerminalTab = {
-      id: generateId(),
-      ptyId: null,
-      label: folderName(dir),
-      cwd: dir,
-    };
-    setState((prev) => ({
-      ...prev,
-      tabs: [...prev.tabs, tab],
-      activeTabId: tab.id,
-      isOpen: true,
-    }));
+    const dir = cwd || resolvedCwd;
+    const tab: TerminalTab = { id: generateId(), ptyId: null, label: folderName(dir), cwd: dir };
+    setGroups((prev) => {
+      const next = new Map(prev);
+      const group = next.get(groupKey) ?? { tabs: [], activeTabId: null };
+      next.set(groupKey, { tabs: [...group.tabs, tab], activeTabId: tab.id });
+      return next;
+    });
+    setGlobal((prev) => ({ ...prev, isOpen: true }));
     return tab.id;
-  }, [defaultCwd]);
+  }, [groupKey, resolvedCwd]);
 
   const closeTab = useCallback((id: string) => {
-    setState((prev) => {
-      const filtered = prev.tabs.filter((t) => t.id !== id);
-      let nextActive = prev.activeTabId;
-      if (prev.activeTabId === id) {
-        const closedIdx = prev.tabs.findIndex((t) => t.id === id);
-        const next = filtered[Math.min(closedIdx, filtered.length - 1)];
-        nextActive = next?.id ?? null;
+    setGroups((prev) => {
+      const next = new Map(prev);
+      const group = next.get(groupKey);
+      if (!group) return prev;
+      const filtered = group.tabs.filter((t) => t.id !== id);
+      let nextActive = group.activeTabId;
+      if (group.activeTabId === id) {
+        const closedIdx = group.tabs.findIndex((t) => t.id === id);
+        const nextTab = filtered[Math.min(closedIdx, filtered.length - 1)];
+        nextActive = nextTab?.id ?? null;
       }
-      return {
-        ...prev,
-        tabs: filtered,
-        activeTabId: nextActive,
-        isOpen: filtered.length > 0,
-      };
+      next.set(groupKey, { tabs: filtered, activeTabId: nextActive });
+      return next;
     });
-  }, []);
+    setGlobal((prev) => {
+      const group = groups.get(groupKey);
+      if (!group) return prev;
+      if (group.tabs.filter((t) => t.id !== id).length === 0) return { ...prev, isOpen: false };
+      return prev;
+    });
+  }, [groupKey, groups]);
 
   const setActiveTab = useCallback((id: string) => {
-    setState((prev) => ({ ...prev, activeTabId: id }));
-  }, []);
+    setGroups((prev) => {
+      const next = new Map(prev);
+      const group = next.get(groupKey);
+      if (!group) return prev;
+      next.set(groupKey, { ...group, activeTabId: id });
+      return next;
+    });
+  }, [groupKey]);
 
   const renameTab = useCallback((id: string, label: string) => {
-    setState((prev) => ({
-      ...prev,
-      tabs: prev.tabs.map((t) => (t.id === id ? { ...t, label } : t)),
-    }));
-  }, []);
+    setGroups((prev) => {
+      const next = new Map(prev);
+      const group = next.get(groupKey);
+      if (!group) return prev;
+      next.set(groupKey, { ...group, tabs: group.tabs.map((t) => (t.id === id ? { ...t, label } : t)) });
+      return next;
+    });
+  }, [groupKey]);
 
   const reorderTabs = useCallback((fromIndex: number, toIndex: number) => {
-    setState((prev) => {
-      const tabs = [...prev.tabs];
+    setGroups((prev) => {
+      const next = new Map(prev);
+      const group = next.get(groupKey);
+      if (!group) return prev;
+      const tabs = [...group.tabs];
       const [moved] = tabs.splice(fromIndex, 1);
       tabs.splice(toIndex, 0, moved);
-      return { ...prev, tabs };
+      next.set(groupKey, { ...group, tabs });
+      return next;
     });
-  }, []);
+  }, [groupKey]);
 
   const togglePanel = useCallback(() => {
-    setState((prev) => {
-      if (prev.isOpen) {
-        return { ...prev, isOpen: false };
-      }
-      if (prev.tabs.length === 0) {
-        return prev;
-      }
+    setGlobal((prev) => {
+      if (prev.isOpen) return { ...prev, isOpen: false };
+      if (currentGroup.tabs.length === 0) return prev;
       return { ...prev, isOpen: true };
     });
-  }, []);
+  }, [currentGroup.tabs.length]);
 
   const setPtyId = useCallback((tabId: string, ptyId: number) => {
-    setState((prev) => ({
-      ...prev,
-      tabs: prev.tabs.map((t) => (t.id === tabId ? { ...t, ptyId } : t)),
-    }));
+    setGroups((prev) => {
+      const next = new Map(prev);
+      for (const [key, group] of next) {
+        if (group.tabs.some((t) => t.id === tabId)) {
+          next.set(key, { ...group, tabs: group.tabs.map((t) => (t.id === tabId ? { ...t, ptyId } : t)) });
+          break;
+        }
+      }
+      return next;
+    });
   }, []);
 
   const resizePanel = useCallback((height: number) => {
-    const maxH = maxHeightRef.current;
-    const clamped = Math.max(MIN_HEIGHT, Math.min(height, maxH));
-    setState((prev) => ({ ...prev, panelHeight: clamped }));
+    const clamped = Math.max(MIN_HEIGHT, Math.min(height, maxHeightRef.current));
+    setGlobal((prev) => ({ ...prev, panelHeight: clamped }));
   }, []);
 
-  const setMaxHeight = useCallback((maxH: number) => {
-    maxHeightRef.current = maxH;
+  const setMaxHeight = useCallback((maxH: number) => { maxHeightRef.current = maxH; }, []);
+
+  const removeGroup = useCallback((key: string) => {
+    setGroups((prev) => { const next = new Map(prev); next.delete(key); return next; });
   }, []);
+
+  const getGroupPtyIds = useCallback((key: string): number[] => {
+    const group = groups.get(key);
+    if (!group) return [];
+    return group.tabs.filter((t) => t.ptyId !== null).map((t) => t.ptyId!);
+  }, [groups]);
 
   return {
-    ...state,
+    tabs: currentGroup.tabs,
+    activeTabId: currentGroup.activeTabId,
+    isOpen: global.isOpen,
+    panelHeight: global.panelHeight,
+    allTabs,
     addTab,
     closeTab,
     setActiveTab,
@@ -191,5 +179,8 @@ export function useTerminal(defaultCwd: string) {
     setPtyId,
     resizePanel,
     setMaxHeight,
+    removeGroup,
+    getGroupPtyIds,
+    groupKey,
   };
 }
