@@ -27,8 +27,12 @@ impl PtySession {
             .openpty(size)
             .map_err(|e| format!("openpty failed: {}", e))?;
 
-        let shell = default_shell();
+        let shell = default_shell()?;
         let mut cmd = CommandBuilder::new(&shell);
+
+        #[cfg(unix)]
+        cmd.arg("-l");
+
         cmd.env("TERM", "xterm-256color");
         // Empêche zsh de basculer en mode vi si EDITOR contient "vi"
         if let Ok(editor) = std::env::var("EDITOR") {
@@ -38,6 +42,10 @@ impl PtySession {
         }
 
         if let Some(dir) = cwd {
+            let path = std::path::Path::new(dir);
+            if !path.is_absolute() || !path.is_dir() {
+                return Err("Invalid working directory".to_string());
+            }
             cmd.cwd(dir);
         }
 
@@ -65,7 +73,12 @@ impl PtySession {
         Ok((session, reader))
     }
 
+    const MAX_WRITE_BYTES: usize = 65_536;
+
     pub fn write(&self, data: &[u8]) -> Result<(), String> {
+        if data.len() > Self::MAX_WRITE_BYTES {
+            return Err("Write payload too large".to_string());
+        }
         let mut w = self.writer.lock().map_err(|e| format!("lock: {}", e))?;
         w.write_all(data).map_err(|e| format!("write: {}", e))?;
         w.flush().map_err(|e| format!("flush: {}", e))?;
@@ -96,13 +109,18 @@ impl PtySession {
     }
 }
 
-fn default_shell() -> String {
+fn default_shell() -> Result<String, String> {
     #[cfg(unix)]
     {
-        std::env::var("SHELL").unwrap_or_else(|_| "/bin/bash".to_string())
+        let shell = std::env::var("SHELL").unwrap_or_else(|_| "/bin/bash".to_string());
+        let path = std::path::Path::new(&shell);
+        if !path.is_absolute() || !path.is_file() {
+            return Err("Invalid shell binary".to_string());
+        }
+        Ok(shell)
     }
     #[cfg(windows)]
     {
-        "powershell.exe".to_string()
+        Ok("powershell.exe".to_string())
     }
 }

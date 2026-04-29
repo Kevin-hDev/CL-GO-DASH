@@ -112,8 +112,8 @@ export function TerminalInstance({
       term.onResize(({ cols, rows }) => {
         invoke("pty_resize", { id, cols, rows }).catch(() => {});
       });
-    }).catch((err) => {
-      term.writeln(`\r\nError: ${err}\r\n`);
+    }).catch(() => {
+      term.writeln(`\r\nTerminal failed to start\r\n`);
     });
 
     const unlisten1 = listen<{ id: number; data: string }>("pty-output", (event) => {
