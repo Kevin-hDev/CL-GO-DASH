@@ -30,7 +30,8 @@ export function AgentLocalTab(props?: AgentLocalTabProps): { list: React.ReactNo
     : null;
   const terminalGroupKey = activeProject?.id || "__default__";
   const terminalCwd = activeProject?.path || "";
-  const terminal = useTerminal(terminalGroupKey, terminalCwd);
+  const validGroupKeys = projectsHook.projects.map((p) => p.id);
+  const terminal = useTerminal(terminalGroupKey, terminalCwd, validGroupKeys);
   const { model: defaultModel, provider: defaultProvider } = useDefaultModel();
   const [welcomeModel, setWelcomeModel] = useState<{ model: string; provider: string } | null>(null);
   const [thinking, setThinking] = useState(false);

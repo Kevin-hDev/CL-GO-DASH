@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { homeDir } from "@tauri-apps/api/path";
 import { loadSavedGroups, saveGroups } from "./terminal-persistence";
-import { generateId, folderName } from "./terminal-types";
+import { generateId, folderName, DEFAULT_GROUP_KEY } from "./terminal-types";
 import type { TerminalTab, TerminalGroup } from "./terminal-types";
 
 export type { TerminalTab, TerminalGroup };
@@ -10,7 +10,7 @@ export { DEFAULT_GROUP_KEY } from "./terminal-types";
 const DEFAULT_HEIGHT = 120;
 const MIN_HEIGHT = 80;
 
-export function useTerminal(groupKey: string, defaultCwd: string) {
+export function useTerminal(groupKey: string, defaultCwd: string, validGroupKeys?: string[]) {
   const [groups, setGroups] = useState<Map<string, TerminalGroup>>(new Map());
   const [global, setGlobal] = useState({ isOpen: false, panelHeight: DEFAULT_HEIGHT });
   const [resolvedCwd, setResolvedCwd] = useState(defaultCwd);
@@ -36,6 +36,14 @@ export function useTerminal(groupKey: string, defaultCwd: string) {
       }
       for (const [, group] of map) {
         if (group.tabs.length > 0) group.activeTabId = group.tabs[0].id;
+      }
+      if (validGroupKeys) {
+        const validSet = new Set([...validGroupKeys, DEFAULT_GROUP_KEY]);
+        for (const key of map.keys()) {
+          if (!validSet.has(key)) {
+            map.delete(key);
+          }
+        }
       }
       setGroups(map);
       setLoaded(true);
