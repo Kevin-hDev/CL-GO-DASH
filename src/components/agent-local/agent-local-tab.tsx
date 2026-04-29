@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import { ConversationList } from "./conversation-list";
 import { TabBar } from "./tab-bar";
 import { AgentChatDetail } from "./agent-chat-detail";
@@ -27,8 +28,9 @@ export function AgentLocalTab(props?: AgentLocalTabProps): { list: React.ReactNo
   const activeProject = activeSession?.project_id
     ? projectsHook.projects.find((p) => p.id === activeSession.project_id)
     : null;
+  const terminalGroupKey = activeProject?.id || "__default__";
   const terminalCwd = activeProject?.path || "";
-  const terminal = useTerminal(terminalCwd);
+  const terminal = useTerminal(terminalGroupKey, terminalCwd);
   const { model: defaultModel, provider: defaultProvider } = useDefaultModel();
   const [welcomeModel, setWelcomeModel] = useState<{ model: string; provider: string } | null>(null);
   const [thinking, setThinking] = useState(false);
@@ -112,7 +114,14 @@ export function AgentLocalTab(props?: AgentLocalTabProps): { list: React.ReactNo
       onDelete={async (id: string) => { await tabState.closeBySessionId(id); await remove(id); }}
       onNewSessionInProject={handleCreateInProject}
       onRenameProject={projectsHook.rename}
-      onDeleteProject={projectsHook.remove}
+      onDeleteProject={async (projectId: string) => {
+        const ptyIds = terminal.getGroupPtyIds(projectId);
+        for (const id of ptyIds) {
+          invoke("pty_kill", { id }).catch(() => {});
+        }
+        terminal.removeGroup(projectId);
+        await projectsHook.remove(projectId);
+      }}
       onOpenFolder={projectsHook.openFolder}
       onReorderProjects={projectsHook.reorder}
     />

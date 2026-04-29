@@ -17,7 +17,7 @@ import { useModelSwitch } from "@/hooks/use-model-switch";
 import { useSessionFiles } from "@/hooks/use-session-files";
 import { PermissionDialog } from "./permission-dialog";
 import { TerminalPanel } from "@/components/terminal/terminal-panel";
-import { useTerminal } from "@/hooks/use-terminal";
+import type { useTerminal } from "@/hooks/use-terminal";
 import type { Project } from "@/types/agent";
 import type { FileOperation } from "@/types/file-preview";
 import scrollDownIcon from "@/assets/fleche.png";
@@ -209,6 +209,8 @@ export function ChatView({
         <TerminalPanel
           tabs={terminalState.tabs}
           activeTabId={terminalState.activeTabId}
+          allTabs={terminalState.allTabs()}
+          activeGroupKey={terminalState.groupKey}
           isOpen={terminalState.isOpen}
           panelHeight={terminalState.panelHeight}
           onAddTab={terminalState.addTab}
@@ -220,7 +222,6 @@ export function ChatView({
           onPtyReady={terminalState.setPtyId}
           onResize={terminalState.resizePanel}
           onSetMaxHeight={terminalState.setMaxHeight}
-          defaultCwd={proj.selectedProject?.path || ""}
         />
       </div>
       {preview && (
