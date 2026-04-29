@@ -124,8 +124,16 @@ fn command_available(command: &str) -> bool {
             || Path::new("/Applications/TextEdit.app").exists();
     }
 
+    #[cfg(target_os = "windows")]
+    if command == "notepad.exe" {
+        return Path::new("C:\\Windows\\notepad.exe").exists()
+            || Path::new("C:\\Windows\\System32\\notepad.exe").exists();
+    }
+
     Command::new(command)
         .arg("--version")
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
         .output()
         .map(|output| output.status.success() || !output.stdout.is_empty())
         .unwrap_or(false)
