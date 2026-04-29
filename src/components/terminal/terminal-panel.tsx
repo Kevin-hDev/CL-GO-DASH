@@ -8,6 +8,8 @@ import "./terminal-panel.css";
 interface TerminalPanelProps {
   tabs: TerminalTab[];
   activeTabId: string | null;
+  allTabs: { tab: TerminalTab; groupKey: string }[];
+  activeGroupKey: string;
   isOpen: boolean;
   panelHeight: number;
   onAddTab: (cwd?: string) => void;
@@ -19,12 +21,13 @@ interface TerminalPanelProps {
   onPtyReady: (tabId: string, ptyId: number) => void;
   onResize: (height: number) => void;
   onSetMaxHeight: (maxH: number) => void;
-  defaultCwd: string;
 }
 
 export function TerminalPanel({
   tabs,
   activeTabId,
+  allTabs,
+  activeGroupKey,
   isOpen,
   panelHeight,
   onAddTab,
@@ -36,7 +39,6 @@ export function TerminalPanel({
   onPtyReady,
   onResize,
   onSetMaxHeight,
-  defaultCwd,
 }: TerminalPanelProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const resizing = useRef(false);
@@ -140,18 +142,18 @@ export function TerminalPanel({
           activeTabId={activeTabId}
           onSelect={onSelectTab}
           onClose={handleTabClose}
-          onAdd={() => onAddTab(defaultCwd)}
+          onAdd={() => onAddTab()}
           onRename={onRenameTab}
           onReorder={onReorderTabs}
           onClosePanel={onTogglePanel}
         />
         <div className="terminal-instances">
-          {tabs.map((tab) => (
+          {allTabs.map(({ tab, groupKey }) => (
             <TerminalInstance
               key={tab.id}
               tabId={tab.id}
               cwd={tab.cwd}
-              isVisible={tab.id === activeTabId}
+              isVisible={groupKey === activeGroupKey && tab.id === activeTabId}
               onPtyReady={onPtyReady}
               onExit={handleExit}
               onTogglePanel={onTogglePanel}
