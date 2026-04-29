@@ -95,11 +95,17 @@ export function TerminalInstance({
     };
     containerRef.current.addEventListener("paste", pasteHandler);
 
+    let disposed = false;
+
     invoke<number>("pty_spawn", {
       cwd: cwd || null,
       cols: term.cols || 80,
       rows: term.rows || 24,
     }).then((id) => {
+      if (disposed) {
+        invoke("pty_kill", { id }).catch(() => {});
+        return;
+      }
       ptyIdRef.current = id;
       onPtyReady(tabId, id);
 
@@ -111,7 +117,9 @@ export function TerminalInstance({
         invoke("pty_resize", { id, cols, rows }).catch(() => {});
       });
     }).catch(() => {
-      term.writeln(`\r\nTerminal failed to start\r\n`);
+      if (!disposed) {
+        term.writeln(`\r\nTerminal failed to start\r\n`);
+      }
     });
 
     const unlisten1 = listen<{ id: number; data: string }>("pty-output", (event) => {
@@ -141,6 +149,7 @@ export function TerminalInstance({
 
     const container = containerRef.current;
     return () => {
+      disposed = true;
       clearTimeout(resizeTimer);
       container?.removeEventListener("paste", pasteHandler);
       resizeObserver.disconnect();
