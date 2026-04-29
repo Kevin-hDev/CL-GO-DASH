@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Maximize2, Minimize2 } from "lucide-react";
-import { detectPreviewEditors, openPreviewFile, openPreviewWithEditor } from "@/services/file-preview";
-import type { FileOperation, FilePreviewActiveTab, PreviewEditor } from "@/types/file-preview";
+import { openPreviewFile, openPreviewWithEditor } from "@/services/file-preview";
+import type { FileOperation, FilePreviewActiveTab } from "@/types/file-preview";
 import { shouldWrapFile } from "@/lib/code-language";
 import { FilePreviewBreadcrumb } from "./file-preview-breadcrumb";
 import { FilePreviewContent } from "./file-preview-content";
@@ -31,20 +30,14 @@ interface FilePreviewPanelProps {
 
 export function FilePreviewPanel(props: FilePreviewPanelProps) {
   const { t } = useTranslation();
-  const [editors, setEditors] = useState<PreviewEditor[]>([]);
   const activeOperation = props.tabs.find((tab) => tab.id === props.activeTab);
-
-  useEffect(() => {
-    if (!props.open) return;
-    detectPreviewEditors().then(setEditors).catch(() => setEditors([]));
-  }, [props.open]);
 
   const openDefault = (operation: FileOperation) => {
     openPreviewFile(operation.path, props.baseDir).catch(() => {});
   };
 
-  const openWith = (operation: FileOperation, editorId: string) => {
-    openPreviewWithEditor(operation.path, editorId, props.baseDir).catch(() => {});
+  const openWith = (operation: FileOperation, editorPath: string) => {
+    openPreviewWithEditor(operation.path, editorPath, props.baseDir).catch(() => {});
   };
 
   return (
@@ -58,7 +51,7 @@ export function FilePreviewPanel(props: FilePreviewPanelProps) {
         <FilePreviewTabs
           tabs={props.tabs}
           activeTab={props.activeTab}
-          editors={editors}
+          baseDir={props.baseDir}
           onSelect={props.onActiveTabChange}
           onClose={props.onCloseTab}
           onOpenDefault={openDefault}
@@ -87,7 +80,6 @@ export function FilePreviewPanel(props: FilePreviewPanelProps) {
               operation={activeOperation}
               baseDir={props.baseDir}
             />
-            {editors.length === 0 && <div className="fp-editor-note">{t("filePreview.noEditor")}</div>}
             <div className={`fp-code-scroll ${shouldWrapFile(activeOperation.path) ? "" : "fp-nowrap"}`}>
               <FilePreviewContent operation={activeOperation} baseDir={props.baseDir} />
             </div>

@@ -15,8 +15,9 @@ export interface FileOperation {
 }
 
 export interface PreviewEditor {
-  id: string;
-  label: string;
+  name: string;
+  path: string;
+  is_default: boolean;
 }
 
 export type FilePreviewActiveTab = "summary" | string;

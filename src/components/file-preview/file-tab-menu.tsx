@@ -9,8 +9,13 @@ interface FileTabMenuProps {
   y: number;
   editors: PreviewEditor[];
   onOpen: () => void;
-  onOpenWith: (editorId: string) => void;
+  onOpenWith: (editorPath: string) => void;
   onClose: () => void;
+}
+
+function editorLabel(editor: PreviewEditor, suffix: string): string {
+  if (editor.is_default) return `${editor.name}${suffix}`;
+  return editor.name;
 }
 
 export function FileTabMenu({ x, y, editors, onOpen, onOpenWith, onClose }: FileTabMenuProps) {
@@ -22,6 +27,8 @@ export function FileTabMenu({ x, y, editors, onOpen, onOpenWith, onClose }: File
     window.addEventListener("keydown", closeOnEscape);
     return () => window.removeEventListener("keydown", closeOnEscape);
   }, [onClose]);
+
+  const suffix = ` (${t("filePreview.default", "par défaut")})`;
 
   return createPortal(
     <div
@@ -36,13 +43,13 @@ export function FileTabMenu({ x, y, editors, onOpen, onOpenWith, onClose }: File
       <div className="fp-menu-label">{t("filePreview.openWith")}</div>
       {editors.length === 0 ? (
         <div className="fp-menu-empty">{t("filePreview.noEditorDetected")}</div>
-      ) : editors.map((editor) => (
+      ) : editors.map((editor, idx) => (
         <button
-          key={editor.id}
+          key={idx}
           className="fp-menu-item"
-          onClick={() => onOpenWith(editor.id)}
+          onClick={() => onOpenWith(editor.path)}
         >
-          {editor.label}
+          {editorLabel(editor, suffix)}
         </button>
       ))}
     </div>,

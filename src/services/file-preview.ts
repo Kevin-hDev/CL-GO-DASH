@@ -5,14 +5,14 @@ export function readFilePreview(path: string, baseDir?: string) {
   return invoke<string>("read_file_preview", { path, baseDir });
 }
 
-export function detectPreviewEditors() {
-  return invoke<PreviewEditor[]>("detect_preview_editors");
+export function detectEditorsForFile(path: string, baseDir?: string) {
+  return invoke<PreviewEditor[]>("detect_editors_for_file", { path, baseDir });
 }
 
 export function openPreviewFile(path: string, baseDir?: string) {
   return invoke("open_preview_file", { path, baseDir });
 }
 
-export function openPreviewWithEditor(path: string, editor: string, baseDir?: string) {
-  return invoke("open_preview_with_editor", { path, editor, baseDir });
+export function openPreviewWithEditor(path: string, editorPath: string, baseDir?: string) {
+  return invoke("open_preview_with_editor", { path, editorPath, baseDir });
 }
