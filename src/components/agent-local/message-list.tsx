@@ -4,12 +4,15 @@ import { AssistantMessage } from "./assistant-message";
 import { ToolBubble, SavedToolBubble } from "./tool-bubble";
 import { ThinkingSection } from "./thinking-section";
 import { ErrorBubble } from "./error-bubble";
+import { CompressionIndicator } from "./compression-indicator";
+import { useCompression } from "@/hooks/use-compression";
 import type { AgentMessage } from "@/types/agent";
 import type { ToolActivity, StreamSegment } from "@/hooks/agent-chat-utils";
 import thinkingAnimation from "@/assets/thinking-loader.json";
 import "./chat.css";
 
 interface MessageListProps {
+  sessionId: string;
   messages: AgentMessage[];
   completedSegments: StreamSegment[];
   currentContent: string;
@@ -30,11 +33,12 @@ interface MessageListProps {
 }
 
 export function MessageList({
-  messages, completedSegments, currentContent, currentThinking,
+  sessionId, messages, completedSegments, currentContent, currentThinking,
   currentTools, isStreaming, tps, totalElapsedMs, segmentStartedAt,
   liveTokenCount, error, isConnectionError, onRetry, onReload, onEdit, onFileClick, onFilePreview,
 }: MessageListProps) {
   const lastAssistantIdx = findLastIndex(messages, (m) => m.role === "assistant");
+  const { isCompressing } = useCompression(sessionId);
 
   return (
     <>
@@ -73,7 +77,7 @@ export function MessageList({
       ))}
 
       {isStreaming && !currentContent && currentTools.length < 1 && completedSegments.length < 1 && (
-        <LoadingIndicator />
+        isCompressing ? <CompressionIndicator /> : <LoadingIndicator />
       )}
       {isStreaming && (currentContent || currentThinking) && (
         <AssistantMessage

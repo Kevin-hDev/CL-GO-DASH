@@ -117,6 +117,7 @@ export function ChatView({
       <div className="chat-zone">
         <div className="chat-messages" ref={scrollRef} onScroll={handleScroll}>
           <MessageList
+            sessionId={sessionId}
             messages={chat.messages}
             completedSegments={chat.completedSegments}
             currentContent={chat.currentContent}

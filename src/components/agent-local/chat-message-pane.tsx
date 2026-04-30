@@ -4,6 +4,7 @@ import type { ToolActivity, StreamSegment } from "@/hooks/agent-chat-utils";
 import type { AgentMessage } from "@/types/agent";
 
 interface ChatMessagePaneProps {
+  sessionId: string;
   scrollRef: React.RefObject<HTMLDivElement | null>;
   bottomRef: React.RefObject<HTMLDivElement | null>;
   isAtBottom: boolean;
@@ -33,6 +34,7 @@ export function ChatMessagePane(props: ChatMessagePaneProps) {
     <>
       <div className="chat-messages" ref={props.scrollRef} onScroll={props.onScroll}>
         <MessageList
+          sessionId={props.sessionId}
           messages={props.messages}
           completedSegments={props.completedSegments}
           currentContent={props.currentContent}
