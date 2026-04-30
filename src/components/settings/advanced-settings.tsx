@@ -19,6 +19,8 @@ interface AdvancedState {
   hardware_accel: string;
   multi_model: boolean;
   show_gpu_status: boolean;
+  compression_enabled: boolean;
+  compression_threshold: number;
 }
 
 const DEFAULTS: AdvancedState = {
@@ -31,6 +33,8 @@ const DEFAULTS: AdvancedState = {
   hardware_accel: "gpu",
   multi_model: false,
   show_gpu_status: false,
+  compression_enabled: true,
+  compression_threshold: 85,
 };
 
 export function AdvancedSettings() {
@@ -131,6 +135,40 @@ export function AdvancedSettings() {
           showGpuStatus={state.show_gpu_status}
           onSave={save}
         />
+
+        <h3 style={subStyle}>{t("settings.advanced.compressionTitle")}</h3>
+
+        <SettingsCard>
+          <SettingsRow
+            title={t("settings.advanced.compressionEnabledTitle")}
+            description={t("settings.advanced.compressionEnabledDesc")}
+          >
+            <RoundToggle
+              checked={state.compression_enabled}
+              onChange={(v) => save({ compression_enabled: v })}
+            />
+          </SettingsRow>
+
+          <SettingsRow
+            title={t("settings.advanced.compressionThresholdTitle")}
+            description={t("settings.advanced.compressionThresholdDesc")}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={state.compression_threshold}
+                disabled={!state.compression_enabled}
+                onChange={(e) => save({ compression_threshold: Number(e.target.value) })}
+                style={{ width: 120, opacity: state.compression_enabled ? 1 : 0.4, cursor: state.compression_enabled ? "pointer" : "not-allowed" }}
+              />
+              <span style={{ fontSize: "var(--text-sm)", color: "var(--ink-muted)", minWidth: 36, textAlign: "right" }}>
+                {state.compression_threshold}%
+              </span>
+            </div>
+          </SettingsRow>
+        </SettingsCard>
 
         <h3 style={subStyle}>{t("settings.advanced.fileAccessTitle")}</h3>
 

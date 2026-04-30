@@ -319,7 +319,12 @@
       "fileAccessDesc": "Folders the LLM can read and write to",
       "addPath": "Add folder",
       "resetPaths": "Reset",
-      "fullDisk": "Full disk"
+      "fullDisk": "Full disk",
+      "compressionTitle": "Compression",
+      "compressionEnabledTitle": "Automatic compression",
+      "compressionEnabledDesc": "Automatically summarizes the conversation when the context approaches its limit",
+      "compressionThresholdTitle": "Compression threshold",
+      "compressionThresholdDesc": "Percentage of the context window at which compression triggers"
     },
     "llm": {
       "searchPlaceholder": "Search a model…",
