@@ -1,5 +1,6 @@
 use crate::services::agent_local::agent_settings;
 use crate::services::agent_local::circuit_breaker;
+use crate::services::agent_local::compress_hook;
 use crate::services::agent_local::eager_dispatch;
 use crate::services::agent_local::ollama_stream;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
@@ -25,6 +26,8 @@ pub async fn run_agent_loop(
     working_dir: PathBuf,
     session_id: String,
     cancel: CancellationToken,
+    native_context: u64,
+    configured_context: u64,
 ) -> Result<u32, String> {
     let mut total_eval: u32 = 0;
     let mut total_prompt: u32 = 0;
@@ -41,6 +44,7 @@ pub async fn run_agent_loop(
         }
 
         tool_result_budget::apply_budget(messages);
+        compress_hook::try_auto_compress(on_event, messages, model, native_context, configured_context, cancel.clone()).await;
         let request = build_request(model, messages, &tools, think);
 
         // Eager dispatch : lancer les read-only tools dès qu'ils arrivent dans le stream

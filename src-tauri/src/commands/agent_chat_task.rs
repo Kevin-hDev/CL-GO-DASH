@@ -100,6 +100,8 @@ pub(crate) async fn run_stream_task(
             working_dir,
             session_id.clone(),
             cancel,
+            0,
+            0,
         )
         .await
         .map(|_| ())
@@ -176,6 +178,8 @@ pub(crate) async fn run_stream_task(
             working_dir,
             session_id.clone(),
             cancel,
+            0,
+            0,
         )
         .await
         .map(|_| ())

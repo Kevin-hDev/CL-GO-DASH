@@ -6,6 +6,9 @@
 
 pub mod agent_loop;
 pub mod catalog;
+pub mod compress_hook;
+mod retry;
+mod stream_silent;
 pub mod model_registry;
 pub mod registry_search;
 pub mod openai_compat;

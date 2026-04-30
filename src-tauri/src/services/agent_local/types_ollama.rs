@@ -152,6 +152,9 @@ pub enum StreamEvent {
         #[serde(default)]
         is_connection: bool,
     },
+    Compressing {
+        status: String,
+    },
 }
 
 #[derive(Debug, Default)]

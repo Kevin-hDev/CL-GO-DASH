@@ -140,3 +140,5 @@ fn process_chunk(
 }
 
 use crate::services::stream_utils::{compute_tps, clean_think_tags};
+
+pub use super::stream_silent::collect_chat_silent;
