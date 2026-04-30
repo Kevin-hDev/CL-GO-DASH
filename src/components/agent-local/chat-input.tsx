@@ -42,6 +42,7 @@ interface ChatInputProps {
   onRemoveFile?: (index: number) => void;
   onPreviewFile?: (file: DroppedFile) => void;
   onClearFiles?: () => void;
+  onBuiltInCommand?: (name: string) => void;
 }
 
 export function ChatInput({
@@ -49,13 +50,13 @@ export function ChatInput({
   contextUsed, contextMax,
   permissionMode, onPermissionModeChange,
   onSend, onStop, onFileImport, onModelChange, onToggleThinking,
-  onRemoveFile, onPreviewFile, onClearFiles,
+  onRemoveFile, onPreviewFile, onClearFiles, onBuiltInCommand,
 }: ChatInputProps) {
   const { t } = useTranslation();
   const [text, setText] = useState("");
   const { ref, resize } = useAutoResize(200);
   const slash = useSlashCommands();
-  const skills = useActiveSkills(slash, text, setText);
+  const skills = useActiveSkills(slash, text, setText, onBuiltInCommand);
   const bubbleRef = useRef<HTMLDivElement>(null);
 
   const hasText = text.trim().length > 0;

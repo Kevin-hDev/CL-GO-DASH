@@ -215,6 +215,8 @@ pub fn run() {
             commands::start_ollama_sidecar,
             commands::restart_ollama_sidecar,
             commands::check_model_fits_vram,
+            // Compression manuelle
+            commands::compress_conversation,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application");

@@ -1,5 +1,6 @@
 pub mod agent_chat;
 pub(crate) mod agent_chat_task;
+pub mod compress;
 pub mod agent_md;
 pub mod agent_sessions;
 pub mod agent_ollama;
@@ -45,3 +46,4 @@ pub use app_update::*;
 pub use app_update_install::*;
 pub use ollama_updates::*;
 pub use ollama_setup::*;
+pub use compress::*;
