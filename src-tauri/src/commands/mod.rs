@@ -9,6 +9,7 @@ pub mod api_keys;
 pub mod config;
 pub mod favorite_models;
 pub mod file_preview;
+pub mod file_preview_editors;
 pub mod heartbeat;
 pub mod llm;
 pub mod personality;

@@ -108,6 +108,7 @@ httpdate = "1.0.3"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 notify = { version = "7", features = ["macos_fsevent"] }
+core-foundation = "0.10"
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"

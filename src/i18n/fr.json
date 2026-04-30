@@ -391,7 +391,7 @@
   },
   "filePreview": {
     "noFiles": "Aucun fichier créé ou modifié dans cette session.",
-    "filesModified": "Fichiers modifiés",
+    "filesModified": "Fichiers",
     "loading": "Lecture du fichier...",
     "fileNotFound": "Le fichier n'a pas pu être lu. Il a peut-être été supprimé ou déplacé.",
     "highlighting": "Coloration du fichier...",

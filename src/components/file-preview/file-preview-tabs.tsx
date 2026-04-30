@@ -1,36 +1,46 @@
-import { useEffect, useState } from "react";
-import type { FileOperation, FilePreviewActiveTab } from "@/types/file-preview";
-import type { PreviewEditor } from "@/types/file-preview";
+import { useState } from "react";
+import { detectEditorsForFile } from "@/services/file-preview";
+import type { FileOperation, FilePreviewActiveTab, PreviewEditor } from "@/types/file-preview";
 import { FileTabMenu } from "./file-tab-menu";
 import { FilePreviewTab } from "./file-preview-tab";
 
 interface FilePreviewTabsProps {
   tabs: FileOperation[];
   activeTab: FilePreviewActiveTab;
-  editors: PreviewEditor[];
+  baseDir?: string;
   onSelect: (id: FilePreviewActiveTab) => void;
   onClose: (id: string) => void;
   onOpenDefault: (operation: FileOperation) => void;
-  onOpenWith: (operation: FileOperation, editorId: string) => void;
+  onOpenWith: (operation: FileOperation, editorPath: string) => void;
 }
 
 export function FilePreviewTabs({
   tabs,
   activeTab,
-  editors,
+  baseDir,
   onSelect,
   onClose,
   onOpenDefault,
   onOpenWith,
 }: FilePreviewTabsProps) {
-  const [menu, setMenu] = useState<{ x: number; y: number; operation: FileOperation } | null>(null);
+  const [menu, setMenu] = useState<{
+    x: number;
+    y: number;
+    operation: FileOperation;
+    editors: PreviewEditor[];
+  } | null>(null);
 
-  useEffect(() => {
-    if (!menu) return;
-    const close = () => setMenu(null);
-    window.addEventListener("pointerdown", close);
-    return () => window.removeEventListener("pointerdown", close);
-  }, [menu]);
+  const handleContextMenu = (event: React.MouseEvent, tab: FileOperation) => {
+    event.preventDefault();
+    event.stopPropagation();
+    detectEditorsForFile(tab.path, baseDir)
+      .then((editors) => {
+        setMenu({ x: event.clientX, y: event.clientY, operation: tab, editors });
+      })
+      .catch(() => {
+        setMenu({ x: event.clientX, y: event.clientY, operation: tab, editors: [] });
+      });
+  };
 
   return (
     <div className="fp-tabs">
@@ -49,11 +59,7 @@ export function FilePreviewTabs({
             active={activeTab === tab.id}
             onSelect={() => onSelect(tab.id)}
             onClose={() => onClose(tab.id)}
-            onContextMenu={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              setMenu({ x: event.clientX, y: event.clientY, operation: tab });
-            }}
+            onContextMenu={(event) => handleContextMenu(event, tab)}
           />
         ))}
       </div>
@@ -61,13 +67,13 @@ export function FilePreviewTabs({
         <FileTabMenu
           x={menu.x}
           y={menu.y}
-          editors={editors}
+          editors={menu.editors}
           onOpen={() => {
             onOpenDefault(menu.operation);
             setMenu(null);
           }}
-          onOpenWith={(editorId) => {
-            onOpenWith(menu.operation, editorId);
+          onOpenWith={(editorPath) => {
+            onOpenWith(menu.operation, editorPath);
             setMenu(null);
           }}
           onClose={() => setMenu(null)}
