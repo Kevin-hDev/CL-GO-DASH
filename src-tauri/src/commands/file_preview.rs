@@ -55,6 +55,7 @@ pub fn open_preview_with_editor(
     editor_path: String,
 ) -> Result<(), String> {
     let resolved = resolve_preview_path(&path, base_dir.as_deref())?;
+    validate_editor_path(&editor_path)?;
 
     #[cfg(target_os = "macos")]
     return spawn_cmd("open", &[
@@ -71,6 +72,40 @@ pub fn open_preview_with_editor(
         std::ffi::OsStr::new(&editor_path),
         resolved.as_os_str(),
     ]);
+}
+
+fn validate_editor_path(editor_path: &str) -> Result<(), String> {
+    if editor_path.is_empty() || editor_path.contains('\0') {
+        return Err("Éditeur non autorisé".into());
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        let p = Path::new(editor_path);
+        if !p.is_absolute() || !p.extension().is_some_and(|e| e == "app") || !p.is_dir() {
+            return Err("Éditeur non autorisé".into());
+        }
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        let p = Path::new(editor_path);
+        if !p.is_absolute() || !p.extension().is_some_and(|e| e == "exe") || !p.is_file() {
+            return Err("Éditeur non autorisé".into());
+        }
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        if !editor_path.ends_with(".desktop") {
+            return Err("Éditeur non autorisé".into());
+        }
+        if editor_path.contains('/') || editor_path.contains("..") {
+            return Err("Éditeur non autorisé".into());
+        }
+    }
+
+    Ok(())
 }
 
 fn resolve_preview_path(path: &str, base_dir: Option<&str>) -> Result<PathBuf, String> {
