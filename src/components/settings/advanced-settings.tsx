@@ -8,6 +8,7 @@ import { SettingsRow } from "./settings-row";
 import { SettingsSelect, type SelectGroup } from "./settings-select";
 import { PathListEditor } from "./path-list-editor";
 import { OllamaSettingsSection } from "./ollama-settings-section";
+import "./compression-slider.css";
 
 interface AdvancedState {
   autostart: boolean;
@@ -161,6 +162,7 @@ export function AdvancedSettings() {
                 value={state.compression_threshold}
                 disabled={!state.compression_enabled}
                 onChange={(e) => save({ compression_threshold: Number(e.target.value) })}
+                className="compression-slider"
                 style={{ width: 120, opacity: state.compression_enabled ? 1 : 0.4, cursor: state.compression_enabled ? "pointer" : "not-allowed" }}
               />
               <span style={{ fontSize: "var(--text-sm)", color: "var(--ink-muted)", minWidth: 36, textAlign: "right" }}>
