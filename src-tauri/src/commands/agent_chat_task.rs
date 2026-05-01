@@ -31,12 +31,15 @@ fn is_compress_command(messages: &[ChatMessage]) -> bool {
 
 async fn handle_compress_command(
     on_event: &AgentEventEmitter,
+    session_id: &str,
     messages: &[ChatMessage],
     model: &str,
     provider: &str,
     cancel: CancellationToken,
 ) -> Result<(), String> {
+    use crate::services::agent_local::session_store;
     use crate::services::agent_local::types_ollama::StreamEvent;
+    use crate::services::agent_local::types_session::AgentMessage;
     use crate::services::compress::{engine, prompt};
 
     let _ = on_event.send(StreamEvent::Compressing { status: "start".to_string() });
@@ -62,16 +65,32 @@ async fn handle_compress_command(
     };
 
     let summary = prompt::extract_summary(&summary_raw);
+    let summary_content = prompt::format_summary_message(&summary, false);
+
+    // Sauvegarder la session compressée
+    let compressed_msg = AgentMessage {
+        id: uuid::Uuid::new_v4().to_string(),
+        role: "assistant".to_string(),
+        content: summary_content,
+        thinking: None,
+        tool_calls: None,
+        tool_name: None,
+        tool_activities: None,
+        segments: None,
+        files: vec![],
+        timestamp: chrono::Utc::now(),
+        tokens: 0,
+        skill_names: None,
+    };
+
+    if let Ok(mut session) = session_store::get(session_id).await {
+        session.messages = vec![compressed_msg];
+        session.accumulated_tokens = 0;
+        let _ = session_store::save(&session).await;
+    }
 
     let _ = on_event.send(StreamEvent::Compressing { status: "done".to_string() });
-
-    let summary_content = prompt::format_summary_message(&summary, false);
-    let _ = on_event.send(StreamEvent::Token {
-        content: summary_content,
-        token_count: 0,
-        tps: 0.0,
-    });
-
+    let _ = on_event.send(StreamEvent::CompressionComplete {});
     let _ = on_event.send(StreamEvent::Done {
         eval_count: 0,
         eval_duration_ns: 0,
@@ -107,7 +126,7 @@ pub(crate) async fn run_stream_task(
 
     // Interception : /compress déclenche la compression manuelle
     if is_compress_command(&messages) {
-        return handle_compress_command(&on_event, &messages, &model, &provider, cancel).await;
+        return handle_compress_command(&on_event, &session_id, &messages, &model, &provider, cancel).await;
     }
 
     let mode = match permission_mode_override {

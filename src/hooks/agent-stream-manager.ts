@@ -107,6 +107,23 @@ function handleStreamEvent(sessionId: string, event: StreamEvent) {
   if (record.history.length > MAX_EVENTS_PER_SESSION) {
     record.history.splice(0, record.history.length - MAX_EVENTS_PER_SESSION);
   }
+
+  // Compression terminée : recharger la session depuis le store
+  if (event.event === "compressionComplete") {
+    invoke<{ messages: AgentMessage[]; accumulated_tokens: number }>(
+      "get_agent_session", { id: sessionId },
+    ).then((session) => {
+      record.state = {
+        ...record.state,
+        messages: session.messages,
+        tokenCount: session.accumulated_tokens,
+        persisted: true,
+      };
+      notify(record);
+    }).catch(() => {});
+    return;
+  }
+
   const result = applyStreamEvent(record.state, event);
   record.state = result.state;
   touchSession(sessionId, record);

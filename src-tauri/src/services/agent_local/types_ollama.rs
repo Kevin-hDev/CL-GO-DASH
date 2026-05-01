@@ -155,6 +155,7 @@ pub enum StreamEvent {
     Compressing {
         status: String,
     },
+    CompressionComplete {},
 }
 
 #[derive(Debug, Default)]
