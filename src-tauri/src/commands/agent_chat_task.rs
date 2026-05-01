@@ -68,7 +68,17 @@ async fn handle_compress_command(
     let summary_content = prompt::format_summary_message(&summary, false);
 
     // Estimer les tokens du résumé
-    let summary_tokens = (summary_content.len() / 4) as u32;
+    let summary_chat_msg = ChatMessage {
+        role: "assistant".to_string(),
+        content: summary_content.clone(),
+        images: None,
+        tool_calls: None,
+        tool_name: None,
+        tool_call_id: None,
+    };
+    let summary_tokens = crate::services::compress::token_estimate::estimate_tokens(
+        &[summary_chat_msg],
+    );
 
     let compressed_msg = AgentMessage {
         id: uuid::Uuid::new_v4().to_string(),
@@ -81,13 +91,13 @@ async fn handle_compress_command(
         segments: None,
         files: vec![],
         timestamp: chrono::Utc::now(),
-        tokens: summary_tokens,
+        tokens: summary_tokens as u32,
         skill_names: None,
     };
 
     if let Ok(mut session) = session_store::get(session_id).await {
         session.messages = vec![compressed_msg];
-        session.accumulated_tokens = summary_tokens;
+        session.accumulated_tokens = summary_tokens as u32;
         let _ = session_store::save(&session).await;
     }
 
