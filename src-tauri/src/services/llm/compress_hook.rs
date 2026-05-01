@@ -38,12 +38,21 @@ pub async fn try_auto_compress(
 
     let _ = on_event.send(StreamEvent::Compressing { status: "start".to_string() });
 
+    let last_assistant = messages
+        .iter()
+        .rev()
+        .find(|m| m.role == "assistant")
+        .cloned();
+
     let compress_msgs = engine::build_compression_request_content(messages, None);
     match stream::collect_chat_silent(provider_id, model, &compress_msgs, cancel.clone()).await {
         Ok(result) => {
             let summary = prompt::extract_summary(&result.content);
             engine::apply_compression(messages, &summary, true);
-            save_compressed_session(session_id, &summary).await;
+            if let Some(last) = &last_assistant {
+                messages.push(last.clone());
+            }
+            save_compressed_session(session_id, &summary, last_assistant.as_ref()).await;
         }
         Err(e) => {
             if !cancel.is_cancelled() {
@@ -56,7 +65,11 @@ pub async fn try_auto_compress(
     let _ = on_event.send(StreamEvent::CompressionComplete {});
 }
 
-async fn save_compressed_session(session_id: &str, summary: &str) {
+async fn save_compressed_session(
+    session_id: &str,
+    summary: &str,
+    last_assistant: Option<&ChatMessage>,
+) {
     let summary_content = prompt::format_summary_message(summary, true);
     let summary_chat = ChatMessage {
         role: "assistant".to_string(),
@@ -68,7 +81,7 @@ async fn save_compressed_session(session_id: &str, summary: &str) {
     };
     let summary_tokens = token_estimate::estimate_tokens(&[summary_chat]) as u32;
 
-    let compressed_msg = AgentMessage {
+    let summary_msg = AgentMessage {
         id: uuid::Uuid::new_v4().to_string(),
         role: "assistant".to_string(),
         content: summary_content,
@@ -83,9 +96,29 @@ async fn save_compressed_session(session_id: &str, summary: &str) {
         skill_names: None,
     };
 
+    let mut session_messages = vec![summary_msg];
+
+    if let Some(last) = last_assistant {
+        let last_tokens = token_estimate::estimate_tokens(&[last.clone()]) as u32;
+        session_messages.push(AgentMessage {
+            id: uuid::Uuid::new_v4().to_string(),
+            role: "assistant".to_string(),
+            content: last.content.clone(),
+            thinking: None,
+            tool_calls: None,
+            tool_name: None,
+            tool_activities: None,
+            segments: None,
+            files: vec![],
+            timestamp: chrono::Utc::now(),
+            tokens: last_tokens,
+            skill_names: None,
+        });
+    }
+
     if let Ok(mut session) = session_store::get(session_id).await {
-        session.messages = vec![compressed_msg];
-        session.accumulated_tokens = summary_tokens;
+        session.messages = session_messages;
+        session.accumulated_tokens = session.messages.iter().map(|m| m.tokens).sum();
         let _ = session_store::save(&session).await;
     }
 }
