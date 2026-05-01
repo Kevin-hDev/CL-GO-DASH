@@ -11,6 +11,11 @@
   border-color: transparent;
 }
 
+[data-theme="dark"] .settings-card:has(.ss-wrap.open) {
+  z-index: 10;
+  position: relative;
+}
+
 .settings-row {
   display: flex;
   align-items: center;

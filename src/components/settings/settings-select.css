@@ -42,10 +42,6 @@
   transition: transform 200ms ease-out;
 }
 
-.ss-wrap.open {
-  z-index: 101;
-}
-
 .ss-wrap.open .ss-trigger-icon {
   transform: rotate(180deg);
 }
