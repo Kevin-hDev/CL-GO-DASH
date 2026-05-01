@@ -67,7 +67,9 @@ async fn handle_compress_command(
     let summary = prompt::extract_summary(&summary_raw);
     let summary_content = prompt::format_summary_message(&summary, false);
 
-    // Sauvegarder la session compressée
+    // Estimer les tokens du résumé
+    let summary_tokens = (summary_content.len() / 4) as u32;
+
     let compressed_msg = AgentMessage {
         id: uuid::Uuid::new_v4().to_string(),
         role: "assistant".to_string(),
@@ -79,13 +81,13 @@ async fn handle_compress_command(
         segments: None,
         files: vec![],
         timestamp: chrono::Utc::now(),
-        tokens: 0,
+        tokens: summary_tokens,
         skill_names: None,
     };
 
     if let Ok(mut session) = session_store::get(session_id).await {
         session.messages = vec![compressed_msg];
-        session.accumulated_tokens = 0;
+        session.accumulated_tokens = summary_tokens;
         let _ = session_store::save(&session).await;
     }
 
