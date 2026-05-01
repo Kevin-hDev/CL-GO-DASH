@@ -1,8 +1,3 @@
-pub fn compression_system_prompt() -> &'static str {
-    "You are a conversation compressor. \
-     Your task is to produce an exhaustive, structured summary."
-}
-
 pub fn build_compression_prompt(custom_instructions: Option<&str>) -> String {
     let mut prompt = String::from(PREAMBLE);
     prompt.push_str(ANALYSIS_INSTRUCTION);
@@ -71,8 +66,7 @@ verbatim citations where possible.
 
 ";
 
-const TRAILER: &str = "\
-
+const TRAILER: &str = "\n\
 REMINDER: Do NOT call any tools. Respond with plain text only — an <analysis> block \
 followed by a <summary> block. Tool calls will be rejected and you will fail the task.";
 
@@ -141,13 +135,6 @@ mod tests {
         let prompt = build_compression_prompt(Some("Focus on Rust code"));
         assert!(prompt.contains("Focus on Rust code"));
         assert!(prompt.contains("Additional Instructions"));
-    }
-
-    #[test]
-    fn system_prompt_is_concise() {
-        let sys = compression_system_prompt();
-        assert!(sys.len() < 200);
-        assert!(sys.contains("compressor"));
     }
 
     #[test]
