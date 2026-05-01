@@ -1,0 +1,464 @@
+{
+  "nav": {
+    "appName": "CL-GO",
+    "heartbeat": "Heartbeat",
+    "personality": "/cl-go",
+    "settings": "Impostazioni",
+    "agentLocal": "Agent Local",
+    "ollama": "Ollama",
+    "apiKeys": "Chiavi API"
+  },
+  "apiKeys": {
+    "main": {
+      "title": "Chiavi API",
+      "connectorsBtn": "Connettori API"
+    },
+    "sidebar": {
+      "configured": "Configurato",
+      "empty": "Nessun provider configurato"
+    },
+    "empty": {
+      "title": "Nessun provider configurato",
+      "subtitle": "Aggiungi una chiave API per accedere agli LLM remoti (Groq, Gemini, Mistral…) o ai servizi di ricerca web (Brave, Exa, Firecrawl).",
+      "addConnector": "Connettori API"
+    },
+    "details": {
+      "connected": "Connesso",
+      "edit": "Modifica",
+      "delete": "Elimina",
+      "freeTier": "Piano gratuito",
+      "signupLink": "Sito web",
+      "openSite": "Apri il sito",
+      "quota": "Quota",
+      "quotaUnavailable": "Non disponibile",
+      "apiKey": "Chiave API",
+      "confirmDelete": "Conferma eliminazione"
+    },
+    "dialog": {
+      "addTitle": "Aggiungi {{name}}",
+      "editTitle": "Modifica {{name}}",
+      "apiKey": "Chiave API",
+      "keyPlaceholder": "Incolla qui la tua chiave API",
+      "keyPlaceholderEdit": "Lascia vuoto per mantenere la chiave attuale",
+      "getKeyAt": "Ottieni una chiave su {{name}}",
+      "description": "Descrizione",
+      "testing": "Test della chiave in corso…",
+      "testOk": "Chiave valida, provider connesso.",
+      "cancel": "Annulla",
+      "addAndTest": "Aggiungi e testa",
+      "save": "Salva",
+      "clearKey": "Cancella chiave"
+    },
+    "picker": {
+      "title": "Aggiungi un provider",
+      "allConfigured": "Tutti i provider del catalogo sono già configurati."
+    },
+    "connectors": {
+      "title": "Connettori API",
+      "subtitle": "Aggiungi sorgenti dati alla tua istanza.",
+      "search": "Cerca connettori…",
+      "empty": "Nessun connettore corrisponde alla ricerca.",
+      "tabs": {
+        "all": "Tutti",
+        "llm": "AI / LLM",
+        "search": "Ricerca",
+        "scraping": "Scraping"
+      }
+    }
+  },
+  "welcome": {
+    "title": "Cosa facciamo oggi?"
+  },
+  "projects": {
+    "title": "Progetti",
+    "discussions": "Discussioni",
+    "workInFolder": "Lavora in una cartella",
+    "search": "Cerca progetti",
+    "noFolder": "Nessuna cartella",
+    "noMatch": "Nessuna cartella trovata",
+    "addNew": "Aggiungi un nuovo progetto",
+    "openFolder": "Apri cartella",
+    "rename": "Rinomina",
+    "delete": "Elimina",
+    "noDiscussion": "Nessuna sessione"
+  },
+  "history": {
+    "rename": "Rinomina",
+    "delete": "Elimina"
+  },
+  "agentLocal": {
+    "title": "Conversazioni",
+    "newSession": "Nuova sessione",
+    "noConversations": "Nessuna conversazione",
+    "selectOrCreate": "Seleziona o crea una conversazione",
+    "placeholder": "Come posso aiutarti?",
+    "dropFiles": "Trascina i file qui",
+    "thinking": "Elaborazione in corso",
+    "reload": "Ricarica",
+    "edit": "Modifica",
+    "copy": "Copia",
+    "modelSearch": "Cerca un modello…",
+    "modelEmpty": "Nessun modello corrispondente.",
+    "selectModel": "Scegli un modello",
+    "thinkingToggle": "Ragionamento esteso",
+    "exportMd": "Scarica come Markdown",
+    "search": "Cerca nella conversazione",
+    "send": "Invia",
+    "cancel": "Annulla",
+    "compression": "Compression",
+    "searchBarPlaceholder": "Cerca...",
+    "resultCount_one": "{{count}} risultato",
+    "resultCount_other": "{{count}} risultati",
+    "favorites": "Preferiti",
+    "freeCount": "{{free}} free / {{total}}",
+    "thinkingDuration": "Ragionato per {{seconds}}s",
+    "tools": "Tools",
+    "tokens": "tokens",
+    "tps": "t/s",
+    "fileReadError": "Impossibile leggere il file"
+  },
+  "switchModel": {
+    "title": "Cambio modello",
+    "description": "Passaggio da {{from}} a {{to}}. Cosa vuoi fare con la conversazione corrente?",
+    "remember": "Ricorda la mia scelta per questa sessione",
+    "newSession": "Nuova sessione",
+    "continue": "Continua in questa sessione"
+  },
+  "permissionMode": {
+    "title": "Modalità",
+    "chatLabel": "Chat",
+    "autoLabel": "Permessi automatici",
+    "manualLabel": "Permessi manuali",
+    "toggleHint": "Cambia modalità (Shift+Tab)"
+  },
+  "permissionDialog": {
+    "title": "Autorizzare {{action}}?",
+    "allow": "Consenti una volta",
+    "allowSession": "Consenti sempre",
+    "deny": "Nega",
+    "tools": {
+      "write_file": "scrivere un file",
+      "edit_file": "modificare un file",
+      "bash": "eseguire un comando",
+      "web_fetch": "recuperare un URL"
+    }
+  },
+  "ollama": {
+    "title": "Ollama",
+    "noModels": "Nessun modello installato",
+    "selectModel": "Seleziona un modello",
+    "edit": "Modifica",
+    "editing": "Modifica in corso",
+    "save": "Salva",
+    "cancel": "Annulla",
+    "searchPlaceholder": "Cerca un modello...",
+    "install": "Installa",
+    "update": "Aggiorna",
+    "updateAvailable": "È disponibile una nuova versione",
+    "installedUpToDate": "Installato e aggiornato",
+    "starting": "Avvio in corso…",
+    "pullError": "Errore di download",
+    "vramWarning": "Questo modello potrebbe superare la VRAM disponibile",
+    "editModelfile": "Modifica Modelfile",
+    "systemPrompt": "System prompt",
+    "parameters": "Parametri",
+    "noSystemPrompt": "(nessun System prompt definito)",
+    "noParameters": "(nessun parametro — Ollama usa i valori predefiniti)",
+    "addParameter": "+ Aggiungi un parametro",
+    "commonParameters": "Parametri comuni:",
+    "commonParametersHint": "num_ctx (finestra di contesto), num_predict (token di output massimi, -1 = illimitato), temperature, top_k, top_p, repeat_penalty, stop (ripetibile).",
+    "systemPromptPlaceholder": "Definisci il comportamento e la personalità del modello…",
+    "description": "Descrizione",
+    "translate": "Traduci…",
+    "translating": "Traduzione in corso…",
+    "original": "Originale",
+    "searchHint": "Digita un nome (es. gemma, qwen, mistral) poi premi Invio",
+    "loadingProfile": "Caricamento profilo…",
+    "loadingVariants": "Caricamento varianti…",
+    "capabilities": "Funzionalità",
+    "fileSize": "Dimensione file",
+    "context": "Contesto",
+    "architecture": "Architettura",
+    "moe": "MoE",
+    "yes": "Sì",
+    "no": "No",
+    "digest": "Digest",
+    "quantization": "Quantizzazione",
+    "paramsLabel": "Parametri",
+    "contextTokens": "K token",
+    "remove": "Rimuovi",
+    "delete": "Elimina",
+    "modelfileTab": "Modelfile",
+    "modelsTab": "Modelli"
+  },
+  "heartbeat": {
+    "title": "Wakeups",
+    "subtitle": "Automatizza le attività pianificate per qualsiasi LLM",
+    "empty": "Nessun wakeup configurato. Clicca su Nuovo wakeup per iniziare.",
+    "newWakeup": "Nuovo wakeup",
+    "edit": "Modifica",
+    "delete": "Elimina",
+    "confirmDelete": "Conferma eliminazione",
+    "pausedHint": "Wakeup in pausa — disabilita l'interruttore principale",
+    "badges": {
+      "active": "Attivo",
+      "inactive": "Inattivo"
+    },
+    "fields": {
+      "name": "Nome",
+      "provider": "Provider",
+      "model": "Modello",
+      "schedule": "Pianificazione",
+      "description": "Descrizione",
+      "prompt": "Prompt"
+    },
+    "sidebar": {
+      "title": "Wakeups",
+      "pause": "Metti in pausa tutto",
+      "resume": "Riprendi",
+      "empty": "Nessun wakeup attivo",
+      "pausedEmpty": "Wakeup in pausa"
+    },
+    "form": {
+      "createTitle": "Nuovo wakeup",
+      "editTitle": "Modifica wakeup",
+      "name": "Nome",
+      "provider": "Provider",
+      "model": "Modello",
+      "pickModel": "Scegli un modello",
+      "ollamaDown": "Ollama non disponibile",
+      "noToolCapable": "Nessun modello con supporto strumenti",
+      "prompt": "Prompt",
+      "description": "Descrizione (breve)",
+      "schedule": "Pianificazione",
+      "cancel": "Annulla",
+      "create": "Crea",
+      "save": "Salva",
+      "scheduleKind": {
+        "once": "Una volta",
+        "daily": "Ogni giorno",
+        "weekly": "Ogni settimana"
+      },
+      "weekdays": {
+        "0": "Lunedì",
+        "1": "Martedì",
+        "2": "Mercoledì",
+        "3": "Giovedì",
+        "4": "Venerdì",
+        "5": "Sabato",
+        "6": "Domenica"
+      }
+    }
+  },
+  "personality": {
+    "files": "Principale",
+    "selectFile": "Seleziona un file",
+    "open": "Apri",
+    "inject": "Contesto",
+    "injected": "Iniettato",
+    "alwaysInjected": "Sempre iniettato",
+    "failedToLoad": "Caricamento fallito",
+    "failedToRead": "Lettura del file fallita"
+  },
+  "settings": {
+    "title": "Impostazioni",
+    "theme": "Tema",
+    "fontSize": "Dimensione carattere",
+    "fontFamily": "Famiglia di caratteri",
+    "fontPreview": "Pranzo d'acqua fa volti sghembi",
+    "light": "Chiaro",
+    "dark": "Scuro",
+    "system": "Sistema",
+    "orange": "Arancione",
+    "tabs": {
+      "general": "Generale",
+      "ollama": "Ollama",
+      "apiKeys": "Chiavi API",
+      "llm": "LLM",
+      "advanced": "Avanzate",
+      "shortcuts": "Scorciatoie da tastiera",
+      "about": "Informazioni"
+    },
+    "general": {
+      "themeTitle": "Tema",
+      "themeDesc": "Aspetto dell'app",
+      "fontSizeTitle": "Dimensione carattere",
+      "fontSizeDesc": "Dimensione del testo nell'app",
+      "fontFamilyTitle": "Famiglia di caratteri",
+      "fontFamilyDesc": "Font utilizzato nell'app",
+      "languageTitle": "Lingua",
+      "languageDesc": "Lingua dell'interfaccia"
+    },
+    "advanced": {
+      "autostartTitle": "Avvia all'avvio",
+      "autostartDesc": "Apri CL-GO automaticamente all'avvio del sistema",
+      "startHiddenTitle": "Avvio nascosto",
+      "startHiddenDesc": "Avvia in background senza aprire la finestra",
+      "trayTitle": "Icona nella barra dei menu",
+      "trayDesc": "Mantieni CL-GO nel vassoio di sistema",
+      "defaultModelTitle": "Modello predefinito",
+      "defaultModelDesc": "Modello usato di default per le nuove conversazioni",
+      "keepAliveTitle": "Scarica modello",
+      "keepAliveDesc": "Tempo prima di liberare la memoria del modello",
+      "searchModel": "Cerca un modello…",
+      "keepAlive": {
+        "immediately": "Immediatamente",
+        "2min": "Dopo 2 min",
+        "5min": "Dopo 5 min",
+        "10min": "Dopo 10 min",
+        "15min": "Dopo 15 min",
+        "30min": "Dopo 30 min",
+        "onClose": "Alla chiusura dell'app"
+      },
+      "hardwareAccelTitle": "Accelerazione hardware",
+      "hardwareAccelDesc": "Motore di inferenza per i modelli locali",
+      "hardwareAccelCpu": "CPU",
+      "hardwareAccelGpu": "GPU",
+      "hardwareAccelRestart": "Riavvia Ollama",
+      "hardwareAccelRestarted": "Ollama riavviato",
+      "ollamaExternalReused": "Ollama esterno riutilizzato",
+      "restartRequiredTitle": "Riavvio necessario",
+      "restartRequiredDesc": "Le modifiche verranno applicate dopo il riavvio di Ollama",
+      "ollamaTitle": "Ollama",
+      "multiModelTitle": "Carica più modelli",
+      "multiModelDesc": "Mantieni più modelli in VRAM contemporaneamente (richiede più memoria GPU)",
+      "showGpuStatusTitle": "Mostra stato GPU",
+      "showGpuStatusDesc": "Visualizza l'indicatore CPU/GPU e l'utilizzo della VRAM nella chat",
+      "vramTableTitle": "VRAM richiesta per modello",
+      "vramTableDesc": "VRAM stimata necessaria in base alla dimensione del modello e alla quantizzazione",
+      "vramTableSize": "Dimensione",
+      "vramFormula": "dimensione modello + (contesto/1000 × 0.5 GB) + 0.5 GB",
+      "fileAccessTitle": "Accesso ai file",
+      "fileAccessDesc": "Cartelle che l'LLM può leggere e scrivere",
+      "addPath": "Aggiungi cartella",
+      "resetPaths": "Reimposta",
+      "fullDisk": "Disco intero",
+      "compressionTitle": "Compressione",
+      "compressionEnabledTitle": "Compressione automatica",
+      "compressionEnabledDesc": "Riassume automaticamente la conversazione quando il contesto si avvicina al limite",
+      "compressionThresholdTitle": "Soglia di compressione",
+      "compressionThresholdDesc": "Percentuale della finestra di contesto alla quale si attiva la compressione"
+    },
+    "llm": {
+      "searchPlaceholder": "Cerca un modello…",
+      "families": "Famiglie",
+      "back": "Indietro",
+      "maxInput": "Contesto (input)",
+      "maxOutput": "Output massimo",
+      "inputCost": "Costo input",
+      "outputCost": "Costo output",
+      "vision": "Visione",
+      "tools": "Strumenti",
+      "reasoning": "Ragionamento",
+      "caching": "Prompt caching",
+      "webSearch": "Ricerca web",
+      "yes": "Sì",
+      "no": "No"
+    },
+    "shortcuts": {
+      "toggleTerminal": "Mostra/nascondi Terminal",
+      "toggleSidebar": "Mostra/nascondi barra laterale",
+      "goBack": "Indietro",
+      "goForward": "Avanti",
+      "newSession": "Nuova sessione",
+      "searchDialog": "Cerca conversazioni"
+    },
+    "confirm": {
+      "deleteModel": "Confermare?"
+    }
+  },
+  "agentMd": {
+    "title": "Istruzioni agente",
+    "subtitle": "I file AGENT.md forniscono istruzioni persistenti agli LLM con supporto strumenti",
+    "globalTab": "Globale",
+    "projectTab": "Progetto",
+    "globalDescription": "Queste istruzioni si applicano a tutte le conversazioni con modelli dotati di strumenti.",
+    "projectDescription": "Queste istruzioni si applicano solo alle conversazioni all'interno di questo progetto.",
+    "placeholder": "Scrivi le tue istruzioni qui...\n\nEsempio:\n# Regole\n- Spiega sempre prima di agire\n- Usa l'italiano per tutte le risposte",
+    "saved": "Istruzioni salvate",
+    "noProject": "Seleziona un progetto per modificare le istruzioni a livello di progetto.",
+    "emptyGlobal": "Nessun AGENT.md globale trovato",
+    "emptyProject": "Nessun AGENT.md di progetto trovato",
+    "toolCapableOnly": "Iniettato solo per i modelli con supporto strumenti"
+  },
+  "terminal": {
+    "title": "Terminal",
+    "newTab": "Nuovo Terminal",
+    "processExited": "Processo terminato con codice {{code}}",
+    "failedToStart": "Impossibile avviare il Terminal"
+  },
+  "skills": {
+    "sourceUser": "Utente",
+    "sourceProject": "Progetto",
+    "noResults": "Nessun Skill trovato",
+    "badge": "Skill"
+  },
+  "search": {
+    "placeholder": "Cerca conversazioni…",
+    "recent": "Conversazioni recenti",
+    "results": "Risultati",
+    "empty": "Nessuna conversazione trovata"
+  },
+  "about": {
+    "version": "Versione",
+    "runtime": "Runtime",
+    "tauri": "Tauri",
+    "os": "Sistema",
+    "github": "GitHub",
+    "viewOnGithub": "Visualizza su GitHub",
+    "description": "App desktop agentique per LLM locali e cloud."
+  },
+  "filePreview": {
+    "noFiles": "Nessun file creato o modificato in questa sessione.",
+    "filesModified": "File",
+    "loading": "Lettura del file in corso...",
+    "fileNotFound": "Impossibile leggere il file. Potrebbe essere stato eliminato o spostato.",
+    "highlighting": "Evidenziazione del file in corso...",
+    "noDiff": "Nessuna modifica da visualizzare.",
+    "togglePanel": "Anteprima file",
+    "reduce": "Riduci",
+    "fullscreen": "Schermo intero",
+    "noEditor": "Nessun editor esterno rilevato.",
+    "open": "Apri",
+    "openWith": "Apri con...",
+    "noEditorDetected": "Nessun editor rilevato"
+  },
+  "errors": {
+    "crashMessage": "Si è verificato un errore. Riavvia l'applicazione.",
+    "operationFailed": "Operazione fallita. Riprova.",
+    "streamStartFailed": "Impossibile avviare lo stream.",
+    "streamInterrupted": "Lo stream è stato interrotto.",
+    "ollamaConnectionLost": "Connessione a Ollama persa",
+    "ollamaWaiting": "Connessione a Ollama persa ({{seconds}}s) — riconnessione in corso…",
+    "ollamaReconnected": "Ollama riconnesso",
+    "ollamaReconnecting": "Ollama riconnesso — nuovo tentativo tra {{seconds}}s…",
+    "keyringFailed": "Impossibile accedere al keyring. Installa gnome-keyring o kwallet per memorizzare le chiavi API.",
+    "ollamaRestartFailed": "Riavvio di Ollama fallito",
+    "maxFiles": "Massimo {{max}} file",
+    "fileTooLarge": "{{name}} supera i 20 MB"
+  },
+  "updates": {
+    "tooltip": "Aggiornamenti disponibili",
+    "appUpdate": "Aggiorna",
+    "modelUpdate": "Aggiorna",
+    "version": "Versione {{version}}",
+    "updating": "Aggiornamento in corso…"
+  },
+  "a11y": {
+    "close": "Chiudi",
+    "minimize": "Minimizza",
+    "maximize": "Massimizza"
+  },
+  "wakeupFormat": {
+    "daily": "Ogni giorno",
+    "weekly": "Ogni settimana"
+  },
+  "ollamaSetup": {
+    "title": "Configurazione Ollama",
+    "description": "Ollama ti permette di eseguire modelli AI localmente sul tuo computer. Il download include il supporto GPU per prestazioni migliori.",
+    "download": "Scarica Ollama",
+    "extracting": "Installazione in corso…",
+    "downloadingGpu": "Download del supporto GPU in corso…",
+    "error": "Installazione fallita. Dettagli di seguito."
+  }
+}

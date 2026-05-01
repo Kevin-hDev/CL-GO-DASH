@@ -4,6 +4,7 @@ import { listen } from "@tauri-apps/api/event";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import { IS_MAC } from "@/lib/platform";
+import i18n from "@/i18n";
 import "@xterm/xterm/css/xterm.css";
 
 interface TerminalInstanceProps {
@@ -118,7 +119,7 @@ export function TerminalInstance({
       });
     }).catch(() => {
       if (!disposed) {
-        term.writeln(`\r\nTerminal failed to start\r\n`);
+        term.writeln(`\r\n${i18n.t("terminal.failedToStart")}\r\n`);
       }
     });
 
@@ -130,7 +131,7 @@ export function TerminalInstance({
 
     const unlisten2 = listen<{ id: number; code: number }>("pty-exit", (event) => {
       if (event.payload.id === ptyIdRef.current) {
-        term.writeln(`\r\n[Process exited with code ${event.payload.code}]`);
+        term.writeln(`\r\n[${i18n.t("terminal.processExited", { code: event.payload.code })}]`);
         ptyIdRef.current = null;
         onExit(tabId);
       }

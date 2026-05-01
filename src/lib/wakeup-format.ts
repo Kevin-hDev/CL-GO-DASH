@@ -1,10 +1,15 @@
 import type { WakeupSchedule } from "@/types/wakeup";
+import i18n from "@/i18n";
 
-const MONTHS_FR = [
-  "jan", "fév", "mar", "avr", "mai", "jun",
-  "jul", "aoû", "sep", "oct", "nov", "déc",
-];
-const WEEKDAYS_FR = ["lun", "mar", "mer", "jeu", "ven", "sam", "dim"];
+function shortMonth(monthIndex: number): string {
+  const date = new Date(2000, monthIndex);
+  return new Intl.DateTimeFormat(i18n.language, { month: "short" }).format(date);
+}
+
+function shortWeekday(dayIndex: number): string {
+  const date = new Date(2000, 0, 3 + dayIndex);
+  return new Intl.DateTimeFormat(i18n.language, { weekday: "short" }).format(date);
+}
 
 function parseHM(time: string): { h: number; m: number } | null {
   const match = /^(\d{2}):(\d{2})$/.exec(time);
@@ -21,19 +26,19 @@ export function formatSchedule(schedule: WakeupSchedule): string {
     case "once": {
       const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(schedule.datetime);
       if (!m) return schedule.datetime;
-      const month = MONTHS_FR[parseInt(m[2], 10) - 1] ?? "?";
+      const month = shortMonth(parseInt(m[2], 10) - 1);
       return `${parseInt(m[3], 10)} ${month} · ${formatTime(parseInt(m[4], 10), parseInt(m[5], 10))}`;
     }
     case "daily": {
       const parsed = parseHM(schedule.time);
       if (!parsed) return schedule.time;
-      return `${formatTime(parsed.h, parsed.m)} · Journalier`;
+      return `${formatTime(parsed.h, parsed.m)} · ${i18n.t("wakeupFormat.daily")}`;
     }
     case "weekly": {
       const parsed = parseHM(schedule.time);
-      const day = WEEKDAYS_FR[schedule.weekday] ?? "?";
+      const day = shortWeekday(schedule.weekday);
       if (!parsed) return day;
-      return `${day} ${formatTime(parsed.h, parsed.m)} · Hebdo`;
+      return `${day} ${formatTime(parsed.h, parsed.m)} · ${i18n.t("wakeupFormat.weekly")}`;
     }
   }
 }

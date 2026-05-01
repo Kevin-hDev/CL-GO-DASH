@@ -1,0 +1,464 @@
+{
+  "nav": {
+    "appName": "CL-GO",
+    "heartbeat": "Heartbeat",
+    "personality": "/cl-go",
+    "settings": "设置",
+    "agentLocal": "本地助手",
+    "ollama": "Ollama",
+    "apiKeys": "API 密钥"
+  },
+  "apiKeys": {
+    "main": {
+      "title": "API 密钥",
+      "connectorsBtn": "API 连接器"
+    },
+    "sidebar": {
+      "configured": "已配置",
+      "empty": "暂无已配置的提供商"
+    },
+    "empty": {
+      "title": "暂无已配置的提供商",
+      "subtitle": "添加 API 密钥以访问远程 LLM（Groq、Gemini、Mistral…）或网络搜索服务（Brave、Exa、Firecrawl）。",
+      "addConnector": "API 连接器"
+    },
+    "details": {
+      "connected": "已连接",
+      "edit": "编辑",
+      "delete": "删除",
+      "freeTier": "免费套餐",
+      "signupLink": "官网",
+      "openSite": "打开网站",
+      "quota": "配额",
+      "quotaUnavailable": "不可用",
+      "apiKey": "API 密钥",
+      "confirmDelete": "确认删除"
+    },
+    "dialog": {
+      "addTitle": "添加 {{name}}",
+      "editTitle": "编辑 {{name}}",
+      "apiKey": "API 密钥",
+      "keyPlaceholder": "在此粘贴您的 API 密钥",
+      "keyPlaceholderEdit": "留空则保留当前密钥",
+      "getKeyAt": "在 {{name}} 获取密钥",
+      "description": "描述",
+      "testing": "正在验证密钥…",
+      "testOk": "密钥有效，提供商已连接。",
+      "cancel": "取消",
+      "addAndTest": "添加并验证",
+      "save": "保存",
+      "clearKey": "清除密钥"
+    },
+    "picker": {
+      "title": "添加提供商",
+      "allConfigured": "所有目录中的提供商均已配置。"
+    },
+    "connectors": {
+      "title": "API 连接器",
+      "subtitle": "为您的实例添加数据源。",
+      "search": "搜索连接器…",
+      "empty": "没有符合搜索条件的连接器。",
+      "tabs": {
+        "all": "全部",
+        "llm": "AI / LLM",
+        "search": "搜索",
+        "scraping": "抓取"
+      }
+    }
+  },
+  "welcome": {
+    "title": "今天我们做什么？"
+  },
+  "projects": {
+    "title": "项目",
+    "discussions": "对话",
+    "workInFolder": "在文件夹中工作",
+    "search": "搜索项目",
+    "noFolder": "无文件夹",
+    "noMatch": "未找到文件夹",
+    "addNew": "添加新项目",
+    "openFolder": "打开文件夹",
+    "rename": "重命名",
+    "delete": "删除",
+    "noDiscussion": "暂无会话"
+  },
+  "history": {
+    "rename": "重命名",
+    "delete": "删除"
+  },
+  "agentLocal": {
+    "title": "对话",
+    "newSession": "新建会话",
+    "noConversations": "暂无对话",
+    "selectOrCreate": "选择或创建一个对话",
+    "placeholder": "有什么可以帮您的？",
+    "dropFiles": "将文件拖放到此处",
+    "thinking": "思考中",
+    "reload": "重新加载",
+    "edit": "编辑",
+    "copy": "复制",
+    "modelSearch": "搜索模型…",
+    "modelEmpty": "没有匹配的模型。",
+    "selectModel": "选择模型",
+    "thinkingToggle": "深度思考",
+    "exportMd": "下载为 Markdown",
+    "search": "在对话中搜索",
+    "send": "发送",
+    "cancel": "取消",
+    "compression": "Compression",
+    "searchBarPlaceholder": "搜索...",
+    "resultCount_one": "{{count}} 条结果",
+    "resultCount_other": "{{count}} 条结果",
+    "favorites": "收藏",
+    "freeCount": "{{free}} free / {{total}}",
+    "thinkingDuration": "思考了 {{seconds}}s",
+    "tools": "Tools",
+    "tokens": "tokens",
+    "tps": "t/s",
+    "fileReadError": "无法读取文件"
+  },
+  "switchModel": {
+    "title": "切换模型",
+    "description": "正在从 {{from}} 切换到 {{to}}。您希望如何处理当前对话？",
+    "remember": "记住本次会话的选择",
+    "newSession": "新建会话",
+    "continue": "在当前会话中继续"
+  },
+  "permissionMode": {
+    "title": "模式",
+    "chatLabel": "聊天",
+    "autoLabel": "自动权限",
+    "manualLabel": "手动权限",
+    "toggleHint": "切换模式（Shift+Tab）"
+  },
+  "permissionDialog": {
+    "title": "允许 {{action}}？",
+    "allow": "允许一次",
+    "allowSession": "始终允许",
+    "deny": "拒绝",
+    "tools": {
+      "write_file": "写入文件",
+      "edit_file": "编辑文件",
+      "bash": "执行命令",
+      "web_fetch": "访问网址"
+    }
+  },
+  "ollama": {
+    "title": "Ollama",
+    "noModels": "未安装任何模型",
+    "selectModel": "选择模型",
+    "edit": "编辑",
+    "editing": "编辑中",
+    "save": "保存",
+    "cancel": "取消",
+    "searchPlaceholder": "搜索模型...",
+    "install": "安装",
+    "update": "更新",
+    "updateAvailable": "有新版本可用",
+    "installedUpToDate": "已安装且为最新版本",
+    "starting": "启动中…",
+    "pullError": "下载错误",
+    "vramWarning": "该模型可能超出您的可用 VRAM",
+    "editModelfile": "编辑 Modelfile",
+    "systemPrompt": "System prompt",
+    "parameters": "参数",
+    "noSystemPrompt": "（未定义 System prompt）",
+    "noParameters": "（无参数 — Ollama 使用默认值）",
+    "addParameter": "+ 添加参数",
+    "commonParameters": "常用参数：",
+    "commonParametersHint": "num_ctx（上下文窗口）、num_predict（最大输出 token 数，-1 = 无限制）、temperature、top_k、top_p、repeat_penalty、stop（可重复）。",
+    "systemPromptPlaceholder": "定义模型的行为和个性…",
+    "description": "描述",
+    "translate": "翻译…",
+    "translating": "翻译中…",
+    "original": "原文",
+    "searchHint": "输入名称（如 gemma、qwen、mistral）后按 Enter",
+    "loadingProfile": "正在加载配置…",
+    "loadingVariants": "正在加载变体…",
+    "capabilities": "能力",
+    "fileSize": "文件大小",
+    "context": "上下文",
+    "architecture": "架构",
+    "moe": "MoE",
+    "yes": "是",
+    "no": "否",
+    "digest": "Digest",
+    "quantization": "量化",
+    "paramsLabel": "参数",
+    "contextTokens": "K token",
+    "remove": "移除",
+    "delete": "删除",
+    "modelfileTab": "Modelfile",
+    "modelsTab": "模型"
+  },
+  "heartbeat": {
+    "title": "定时唤醒",
+    "subtitle": "为任意 LLM 自动化计划任务",
+    "empty": "尚未配置任何唤醒。点击「新建唤醒」开始。",
+    "newWakeup": "新建唤醒",
+    "edit": "编辑",
+    "delete": "删除",
+    "confirmDelete": "确认删除",
+    "pausedHint": "唤醒已暂停 — 请关闭主开关",
+    "badges": {
+      "active": "活跃",
+      "inactive": "未激活"
+    },
+    "fields": {
+      "name": "名称",
+      "provider": "提供商",
+      "model": "模型",
+      "schedule": "计划",
+      "description": "描述",
+      "prompt": "提示词"
+    },
+    "sidebar": {
+      "title": "定时唤醒",
+      "pause": "全部暂停",
+      "resume": "恢复",
+      "empty": "无活跃唤醒",
+      "pausedEmpty": "唤醒已暂停"
+    },
+    "form": {
+      "createTitle": "新建唤醒",
+      "editTitle": "编辑唤醒",
+      "name": "名称",
+      "provider": "提供商",
+      "model": "模型",
+      "pickModel": "选择模型",
+      "ollamaDown": "Ollama 不可用",
+      "noToolCapable": "无支持工具的模型",
+      "prompt": "提示词",
+      "description": "描述（简短）",
+      "schedule": "计划",
+      "cancel": "取消",
+      "create": "创建",
+      "save": "保存",
+      "scheduleKind": {
+        "once": "一次",
+        "daily": "每天",
+        "weekly": "每周"
+      },
+      "weekdays": {
+        "0": "周一",
+        "1": "周二",
+        "2": "周三",
+        "3": "周四",
+        "4": "周五",
+        "5": "周六",
+        "6": "周日"
+      }
+    }
+  },
+  "personality": {
+    "files": "核心",
+    "selectFile": "选择文件",
+    "open": "打开",
+    "inject": "上下文",
+    "injected": "已注入",
+    "alwaysInjected": "始终注入",
+    "failedToLoad": "加载失败",
+    "failedToRead": "读取文件失败"
+  },
+  "settings": {
+    "title": "设置",
+    "theme": "主题",
+    "fontSize": "字体大小",
+    "fontFamily": "字体",
+    "fontPreview": "春风送暖入屠苏",
+    "light": "浅色",
+    "dark": "深色",
+    "system": "跟随系统",
+    "orange": "橙色",
+    "tabs": {
+      "general": "通用",
+      "ollama": "Ollama",
+      "apiKeys": "API 密钥",
+      "llm": "LLM",
+      "advanced": "高级",
+      "shortcuts": "键盘快捷键",
+      "about": "关于"
+    },
+    "general": {
+      "themeTitle": "主题",
+      "themeDesc": "应用外观",
+      "fontSizeTitle": "字体大小",
+      "fontSizeDesc": "应用中的文字大小",
+      "fontFamilyTitle": "字体",
+      "fontFamilyDesc": "应用中使用的字体",
+      "languageTitle": "语言",
+      "languageDesc": "界面语言"
+    },
+    "advanced": {
+      "autostartTitle": "开机启动",
+      "autostartDesc": "系统启动时自动打开 CL-GO",
+      "startHiddenTitle": "后台启动",
+      "startHiddenDesc": "在后台启动，不打开窗口",
+      "trayTitle": "菜单栏图标",
+      "trayDesc": "在系统托盘中保留 CL-GO",
+      "defaultModelTitle": "默认模型",
+      "defaultModelDesc": "新对话默认使用的模型",
+      "keepAliveTitle": "卸载模型",
+      "keepAliveDesc": "释放模型内存前的等待时间",
+      "searchModel": "搜索模型…",
+      "keepAlive": {
+        "immediately": "立即",
+        "2min": "2 分钟后",
+        "5min": "5 分钟后",
+        "10min": "10 分钟后",
+        "15min": "15 分钟后",
+        "30min": "30 分钟后",
+        "onClose": "关闭应用时"
+      },
+      "hardwareAccelTitle": "硬件加速",
+      "hardwareAccelDesc": "本地模型的推理引擎",
+      "hardwareAccelCpu": "CPU",
+      "hardwareAccelGpu": "GPU",
+      "hardwareAccelRestart": "重启 Ollama",
+      "hardwareAccelRestarted": "Ollama 已重启",
+      "ollamaExternalReused": "使用外部 Ollama",
+      "restartRequiredTitle": "需要重启",
+      "restartRequiredDesc": "重启 Ollama 后更改将生效",
+      "ollamaTitle": "Ollama",
+      "multiModelTitle": "加载多个模型",
+      "multiModelDesc": "同时在 VRAM 中保留多个模型（需要更多 GPU 内存）",
+      "showGpuStatusTitle": "显示 GPU 状态",
+      "showGpuStatusDesc": "在聊天中显示 CPU/GPU 指示器及 VRAM 使用情况",
+      "vramTableTitle": "各模型所需 VRAM",
+      "vramTableDesc": "根据模型大小和量化方式估算所需 VRAM",
+      "vramTableSize": "大小",
+      "vramFormula": "模型大小 + (上下文/1000 × 0.5 GB) + 0.5 GB",
+      "fileAccessTitle": "文件访问",
+      "fileAccessDesc": "LLM 可读写的文件夹",
+      "addPath": "添加文件夹",
+      "resetPaths": "重置",
+      "fullDisk": "完整磁盘",
+      "compressionTitle": "压缩",
+      "compressionEnabledTitle": "自动压缩",
+      "compressionEnabledDesc": "当上下文接近上限时自动总结对话",
+      "compressionThresholdTitle": "压缩阈值",
+      "compressionThresholdDesc": "触发压缩的上下文窗口使用百分比"
+    },
+    "llm": {
+      "searchPlaceholder": "搜索模型…",
+      "families": "系列",
+      "back": "返回",
+      "maxInput": "上下文（输入）",
+      "maxOutput": "最大输出",
+      "inputCost": "输入费用",
+      "outputCost": "输出费用",
+      "vision": "视觉",
+      "tools": "工具",
+      "reasoning": "推理",
+      "caching": "提示词缓存",
+      "webSearch": "网络搜索",
+      "yes": "是",
+      "no": "否"
+    },
+    "shortcuts": {
+      "toggleTerminal": "切换 Terminal",
+      "toggleSidebar": "切换侧边栏",
+      "goBack": "返回",
+      "goForward": "前进",
+      "newSession": "新建会话",
+      "searchDialog": "搜索对话"
+    },
+    "confirm": {
+      "deleteModel": "确认删除？"
+    }
+  },
+  "agentMd": {
+    "title": "助手指令",
+    "subtitle": "AGENT.md 文件为支持工具的 LLM 提供持久化指令",
+    "globalTab": "全局",
+    "projectTab": "项目",
+    "globalDescription": "这些指令适用于所有支持工具的模型对话。",
+    "projectDescription": "这些指令仅适用于该项目内的对话。",
+    "placeholder": "在此编写您的指令...\n\n示例：\n# 规则\n- 操作前先解释\n- 所有回复使用中文",
+    "saved": "指令已保存",
+    "noProject": "请选择一个项目以编辑项目级指令。",
+    "emptyGlobal": "未找到全局 AGENT.md",
+    "emptyProject": "未找到项目 AGENT.md",
+    "toolCapableOnly": "仅注入到支持工具的模型"
+  },
+  "terminal": {
+    "title": "Terminal",
+    "newTab": "新建 Terminal",
+    "processExited": "进程已退出，退出码 {{code}}",
+    "failedToStart": "Terminal 启动失败"
+  },
+  "skills": {
+    "sourceUser": "用户",
+    "sourceProject": "项目",
+    "noResults": "未找到 Skill",
+    "badge": "Skill"
+  },
+  "search": {
+    "placeholder": "搜索对话…",
+    "recent": "最近对话",
+    "results": "结果",
+    "empty": "未找到对话"
+  },
+  "about": {
+    "version": "版本",
+    "runtime": "运行时",
+    "tauri": "Tauri",
+    "os": "系统",
+    "github": "GitHub",
+    "viewOnGithub": "在 GitHub 上查看",
+    "description": "面向本地和云端 LLM 的智能桌面应用。"
+  },
+  "filePreview": {
+    "noFiles": "本次会话中未创建或修改任何文件。",
+    "filesModified": "文件",
+    "loading": "正在读取文件...",
+    "fileNotFound": "无法读取该文件，它可能已被删除或移动。",
+    "highlighting": "正在高亮文件...",
+    "noDiff": "没有可显示的更改。",
+    "togglePanel": "文件预览",
+    "reduce": "缩小",
+    "fullscreen": "全屏",
+    "noEditor": "未检测到外部编辑器。",
+    "open": "打开",
+    "openWith": "打开方式...",
+    "noEditorDetected": "未检测到编辑器"
+  },
+  "errors": {
+    "crashMessage": "发生错误，请重启应用。",
+    "operationFailed": "操作失败，请重试。",
+    "streamStartFailed": "流无法启动。",
+    "streamInterrupted": "流传输被中断。",
+    "ollamaConnectionLost": "与 Ollama 的连接已断开",
+    "ollamaWaiting": "与 Ollama 的连接已断开（{{seconds}}s）— 正在重连…",
+    "ollamaReconnected": "Ollama 已重新连接",
+    "ollamaReconnecting": "Ollama 已重新连接 — 将在 {{seconds}}s 后重试…",
+    "keyringFailed": "无法访问密钥环。请安装 gnome-keyring 或 kwallet 以存储 API 密钥。",
+    "ollamaRestartFailed": "Ollama 重启失败",
+    "maxFiles": "最多 {{max}} 个文件",
+    "fileTooLarge": "{{name}} 超过 20MB"
+  },
+  "updates": {
+    "tooltip": "有可用更新",
+    "appUpdate": "更新",
+    "modelUpdate": "更新",
+    "version": "版本 {{version}}",
+    "updating": "更新中…"
+  },
+  "a11y": {
+    "close": "关闭",
+    "minimize": "最小化",
+    "maximize": "最大化"
+  },
+  "wakeupFormat": {
+    "daily": "每天",
+    "weekly": "每周"
+  },
+  "ollamaSetup": {
+    "title": "Ollama 安装",
+    "description": "Ollama 让您在本地机器上运行 AI 模型。下载包含 GPU 支持以获得更佳性能。",
+    "download": "下载 Ollama",
+    "extracting": "正在安装…",
+    "downloadingGpu": "正在下载 GPU 支持…",
+    "error": "安装失败，详情如下。"
+  }
+}

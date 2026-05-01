@@ -104,7 +104,18 @@
     "selectModel": "Choisir un modèle",
     "thinkingToggle": "Réflexion étendue",
     "send": "Envoyer",
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "compression": "Compression",
+    "searchBarPlaceholder": "Rechercher…",
+    "resultCount_one": "{{count}} résultat",
+    "resultCount_other": "{{count}} résultats",
+    "favorites": "Favoris",
+    "freeCount": "{{free}} gratuit / {{total}}",
+    "thinkingDuration": "A réfléchi pendant {{seconds}}s",
+    "tools": "Outils",
+    "tokens": "tokens",
+    "tps": "t/s",
+    "fileReadError": "Impossible de lire le fichier"
   },
   "switchModel": {
     "title": "Changement de modèle",
@@ -176,7 +187,9 @@
     "paramsLabel": "Paramètres",
     "contextTokens": "K tokens",
     "remove": "Supprimer",
-    "delete": "Supprimer"
+    "delete": "Supprimer",
+    "modelfileTab": "Modelfile",
+    "modelsTab": "Modèles"
   },
   "heartbeat": {
     "title": "Réveils",
@@ -371,7 +384,8 @@
   "terminal": {
     "title": "Terminal",
     "newTab": "Nouveau terminal",
-    "processExited": "Processus terminé avec le code {{code}}"
+    "processExited": "Processus terminé avec le code {{code}}",
+    "failedToStart": "Le terminal n'a pas pu démarrer"
   },
   "skills": {
     "sourceUser": "Personnel",
@@ -419,7 +433,9 @@
     "ollamaReconnected": "Ollama reconnecté",
     "ollamaReconnecting": "Ollama reconnecté — relance dans {{seconds}}s…",
     "keyringFailed": "Impossible d'accéder au trousseau de clés. Installe gnome-keyring ou kwallet pour stocker les clés API.",
-    "ollamaRestartFailed": "Le redémarrage d'Ollama a échoué"
+    "ollamaRestartFailed": "Le redémarrage d'Ollama a échoué",
+    "maxFiles": "Maximum {{max}} fichiers",
+    "fileTooLarge": "{{name}} dépasse 20 Mo"
   },
   "updates": {
     "tooltip": "Mises à jour disponibles",
@@ -427,6 +443,15 @@
     "modelUpdate": "Mettre à jour",
     "version": "Version {{version}}",
     "updating": "Mise à jour…"
+  },
+  "a11y": {
+    "close": "Fermer",
+    "minimize": "Réduire",
+    "maximize": "Agrandir"
+  },
+  "wakeupFormat": {
+    "daily": "Journalier",
+    "weekly": "Hebdo"
   },
   "ollamaSetup": {
     "title": "Configuration d'Ollama",

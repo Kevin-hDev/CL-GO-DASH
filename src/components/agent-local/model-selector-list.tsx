@@ -49,7 +49,7 @@ export function ModelSelectorList({
     <>
       {favModels.length > 0 && (
         <div>
-          <div className="ms-section ms-section-fav">★ Favoris</div>
+          <div className="ms-section ms-section-fav">★ {t("agentLocal.favorites")}</div>
           {favModels.map((m) => (
             <ModelItem
               key={`fav:${m.provider_id}:${m.id}`}
@@ -76,7 +76,7 @@ export function ModelSelectorList({
               <span className="ms-provider-name">{name}</span>
               <span className="ms-provider-count">
                 {freeCount > 0 && freeCount < models.length
-                  ? `${freeCount} free / ${models.length}`
+                  ? t("agentLocal.freeCount", { free: freeCount, total: models.length })
                   : `${models.length}`}
               </span>
             </div>

@@ -1,0 +1,464 @@
+{
+  "nav": {
+    "appName": "CL-GO",
+    "heartbeat": "Heartbeat",
+    "personality": "/cl-go",
+    "settings": "設定",
+    "agentLocal": "ローカルエージェント",
+    "ollama": "Ollama",
+    "apiKeys": "API キー"
+  },
+  "apiKeys": {
+    "main": {
+      "title": "API キー",
+      "connectorsBtn": "API コネクター"
+    },
+    "sidebar": {
+      "configured": "設定済み",
+      "empty": "プロバイダーが設定されていません"
+    },
+    "empty": {
+      "title": "プロバイダーが設定されていません",
+      "subtitle": "API キーを追加してリモート LLM（Groq、Gemini、Mistral…）やウェブ検索サービス（Brave、Exa、Firecrawl）にアクセスしましょう。",
+      "addConnector": "API コネクター"
+    },
+    "details": {
+      "connected": "接続済み",
+      "edit": "編集",
+      "delete": "削除",
+      "freeTier": "無料枠",
+      "signupLink": "ウェブサイト",
+      "openSite": "サイトを開く",
+      "quota": "クォータ",
+      "quotaUnavailable": "取得不可",
+      "apiKey": "API キー",
+      "confirmDelete": "削除の確認"
+    },
+    "dialog": {
+      "addTitle": "{{name}} を追加",
+      "editTitle": "{{name}} を編集",
+      "apiKey": "API キー",
+      "keyPlaceholder": "API キーをここに貼り付けてください",
+      "keyPlaceholderEdit": "空白のままにすると現在のキーを保持します",
+      "getKeyAt": "{{name}} でキーを取得",
+      "description": "説明",
+      "testing": "キーを確認中…",
+      "testOk": "キーが有効です。プロバイダーに接続しました。",
+      "cancel": "キャンセル",
+      "addAndTest": "追加してテスト",
+      "save": "保存",
+      "clearKey": "キーをクリア"
+    },
+    "picker": {
+      "title": "プロバイダーを追加",
+      "allConfigured": "カタログのすべてのプロバイダーはすでに設定されています。"
+    },
+    "connectors": {
+      "title": "API コネクター",
+      "subtitle": "インスタンスにデータソースを追加します。",
+      "search": "コネクターを検索…",
+      "empty": "検索に一致するコネクターがありません。",
+      "tabs": {
+        "all": "すべて",
+        "llm": "AI / LLM",
+        "search": "検索",
+        "scraping": "スクレイピング"
+      }
+    }
+  },
+  "welcome": {
+    "title": "今日は何をしましょうか？"
+  },
+  "projects": {
+    "title": "プロジェクト",
+    "discussions": "ディスカッション",
+    "workInFolder": "フォルダで作業",
+    "search": "プロジェクトを検索",
+    "noFolder": "フォルダなし",
+    "noMatch": "フォルダが見つかりません",
+    "addNew": "新しいプロジェクトを追加",
+    "openFolder": "フォルダを開く",
+    "rename": "名前を変更",
+    "delete": "削除",
+    "noDiscussion": "セッションなし"
+  },
+  "history": {
+    "rename": "名前を変更",
+    "delete": "削除"
+  },
+  "agentLocal": {
+    "title": "会話",
+    "newSession": "新しいセッション",
+    "noConversations": "会話がありません",
+    "selectOrCreate": "会話を選択または作成してください",
+    "placeholder": "何かお手伝いできますか？",
+    "dropFiles": "ここにファイルをドロップ",
+    "thinking": "考え中",
+    "reload": "再読み込み",
+    "edit": "編集",
+    "copy": "コピー",
+    "modelSearch": "モデルを検索…",
+    "modelEmpty": "一致するモデルがありません。",
+    "selectModel": "モデルを選択",
+    "thinkingToggle": "拡張思考",
+    "exportMd": "Markdown としてダウンロード",
+    "search": "会話内を検索",
+    "send": "送信",
+    "cancel": "キャンセル",
+    "compression": "Compression",
+    "searchBarPlaceholder": "検索...",
+    "resultCount_one": "{{count}} 件",
+    "resultCount_other": "{{count}} 件",
+    "favorites": "お気に入り",
+    "freeCount": "{{free}} free / {{total}}",
+    "thinkingDuration": "{{seconds}}秒間考えました",
+    "tools": "Tools",
+    "tokens": "tokens",
+    "tps": "t/s",
+    "fileReadError": "ファイルを読み取れませんでした"
+  },
+  "switchModel": {
+    "title": "モデルの変更",
+    "description": "{{from}} から {{to}} に切り替えます。現在の会話はどうしますか？",
+    "remember": "このセッションの選択を記憶する",
+    "newSession": "新しいセッション",
+    "continue": "このセッションを続ける"
+  },
+  "permissionMode": {
+    "title": "モード",
+    "chatLabel": "チャット",
+    "autoLabel": "自動許可",
+    "manualLabel": "手動許可",
+    "toggleHint": "モードを切り替え（Shift+Tab）"
+  },
+  "permissionDialog": {
+    "title": "{{action}} を許可しますか？",
+    "allow": "一度だけ許可",
+    "allowSession": "常に許可",
+    "deny": "拒否",
+    "tools": {
+      "write_file": "ファイルを書き込む",
+      "edit_file": "ファイルを編集する",
+      "bash": "コマンドを実行する",
+      "web_fetch": "URL を取得する"
+    }
+  },
+  "ollama": {
+    "title": "Ollama",
+    "noModels": "インストール済みのモデルがありません",
+    "selectModel": "モデルを選択",
+    "edit": "編集",
+    "editing": "編集中",
+    "save": "保存",
+    "cancel": "キャンセル",
+    "searchPlaceholder": "モデルを検索...",
+    "install": "インストール",
+    "update": "更新",
+    "updateAvailable": "新しいバージョンが利用可能です",
+    "installedUpToDate": "インストール済み・最新",
+    "starting": "起動中…",
+    "pullError": "ダウンロードエラー",
+    "vramWarning": "このモデルは利用可能な VRAM を超える可能性があります",
+    "editModelfile": "Modelfile を編集",
+    "systemPrompt": "System prompt",
+    "parameters": "パラメーター",
+    "noSystemPrompt": "（System prompt が定義されていません）",
+    "noParameters": "（パラメーターなし — Ollama のデフォルト設定を使用）",
+    "addParameter": "+ パラメーターを追加",
+    "commonParameters": "よく使うパラメーター：",
+    "commonParametersHint": "num_ctx（コンテキストウィンドウ）、num_predict（最大出力トークン数、-1 = 無制限）、temperature、top_k、top_p、repeat_penalty、stop（繰り返し可能）。",
+    "systemPromptPlaceholder": "モデルの動作とキャラクターを定義してください…",
+    "description": "説明",
+    "translate": "翻訳…",
+    "translating": "翻訳中…",
+    "original": "原文",
+    "searchHint": "名前を入力（例：gemma、qwen、mistral）してEnterを押してください",
+    "loadingProfile": "プロフィールを読み込み中…",
+    "loadingVariants": "バリアントを読み込み中…",
+    "capabilities": "機能",
+    "fileSize": "ファイルサイズ",
+    "context": "コンテキスト",
+    "architecture": "アーキテクチャ",
+    "moe": "MoE",
+    "yes": "はい",
+    "no": "いいえ",
+    "digest": "Digest",
+    "quantization": "量子化",
+    "paramsLabel": "パラメーター",
+    "contextTokens": "K トークン",
+    "remove": "削除",
+    "delete": "削除",
+    "modelfileTab": "Modelfile",
+    "modelsTab": "モデル"
+  },
+  "heartbeat": {
+    "title": "ウェイクアップ",
+    "subtitle": "任意の LLM にスケジュールタスクを自動化",
+    "empty": "ウェイクアップが設定されていません。「新しいウェイクアップ」をクリックして開始してください。",
+    "newWakeup": "新しいウェイクアップ",
+    "edit": "編集",
+    "delete": "削除",
+    "confirmDelete": "削除の確認",
+    "pausedHint": "ウェイクアップが一時停止中 — マスタースイッチを無効にしてください",
+    "badges": {
+      "active": "有効",
+      "inactive": "無効"
+    },
+    "fields": {
+      "name": "名前",
+      "provider": "プロバイダー",
+      "model": "モデル",
+      "schedule": "スケジュール",
+      "description": "説明",
+      "prompt": "プロンプト"
+    },
+    "sidebar": {
+      "title": "ウェイクアップ",
+      "pause": "すべて一時停止",
+      "resume": "再開",
+      "empty": "有効なウェイクアップなし",
+      "pausedEmpty": "ウェイクアップ一時停止中"
+    },
+    "form": {
+      "createTitle": "新しいウェイクアップ",
+      "editTitle": "ウェイクアップを編集",
+      "name": "名前",
+      "provider": "プロバイダー",
+      "model": "モデル",
+      "pickModel": "モデルを選択",
+      "ollamaDown": "Ollama が利用できません",
+      "noToolCapable": "ツール対応モデルがありません",
+      "prompt": "プロンプト",
+      "description": "説明（短め）",
+      "schedule": "スケジュール",
+      "cancel": "キャンセル",
+      "create": "作成",
+      "save": "保存",
+      "scheduleKind": {
+        "once": "一回のみ",
+        "daily": "毎日",
+        "weekly": "毎週"
+      },
+      "weekdays": {
+        "0": "月曜日",
+        "1": "火曜日",
+        "2": "水曜日",
+        "3": "木曜日",
+        "4": "金曜日",
+        "5": "土曜日",
+        "6": "日曜日"
+      }
+    }
+  },
+  "personality": {
+    "files": "コア",
+    "selectFile": "ファイルを選択",
+    "open": "開く",
+    "inject": "コンテキスト",
+    "injected": "注入済み",
+    "alwaysInjected": "常に注入",
+    "failedToLoad": "読み込みに失敗しました",
+    "failedToRead": "ファイルの読み取りに失敗しました"
+  },
+  "settings": {
+    "title": "設定",
+    "theme": "テーマ",
+    "fontSize": "フォントサイズ",
+    "fontFamily": "フォントファミリー",
+    "fontPreview": "日本語テスト：漢字とひらがなとカタカナ",
+    "light": "ライト",
+    "dark": "ダーク",
+    "system": "システム",
+    "orange": "オレンジ",
+    "tabs": {
+      "general": "一般",
+      "ollama": "Ollama",
+      "apiKeys": "API キー",
+      "llm": "LLM",
+      "advanced": "詳細設定",
+      "shortcuts": "キーボードショートカット",
+      "about": "このアプリについて"
+    },
+    "general": {
+      "themeTitle": "テーマ",
+      "themeDesc": "アプリの外観",
+      "fontSizeTitle": "フォントサイズ",
+      "fontSizeDesc": "アプリ内のテキストサイズ",
+      "fontFamilyTitle": "フォントファミリー",
+      "fontFamilyDesc": "アプリで使用するフォント",
+      "languageTitle": "言語",
+      "languageDesc": "インターフェース言語"
+    },
+    "advanced": {
+      "autostartTitle": "起動時に開く",
+      "autostartDesc": "システム起動時に CL-GO を自動的に開く",
+      "startHiddenTitle": "バックグラウンドで起動",
+      "startHiddenDesc": "ウィンドウを開かずにバックグラウンドで起動する",
+      "trayTitle": "メニューバーアイコン",
+      "trayDesc": "システムトレイに CL-GO を表示し続ける",
+      "defaultModelTitle": "デフォルトモデル",
+      "defaultModelDesc": "新しい会話でデフォルトで使用するモデル",
+      "keepAliveTitle": "モデルのアンロード",
+      "keepAliveDesc": "モデルのメモリを解放するまでの時間",
+      "searchModel": "モデルを検索…",
+      "keepAlive": {
+        "immediately": "すぐに",
+        "2min": "2分後",
+        "5min": "5分後",
+        "10min": "10分後",
+        "15min": "15分後",
+        "30min": "30分後",
+        "onClose": "アプリを閉じたとき"
+      },
+      "hardwareAccelTitle": "ハードウェアアクセラレーション",
+      "hardwareAccelDesc": "ローカルモデルの推論エンジン",
+      "hardwareAccelCpu": "CPU",
+      "hardwareAccelGpu": "GPU",
+      "hardwareAccelRestart": "Ollama を再起動",
+      "hardwareAccelRestarted": "Ollama が再起動されました",
+      "ollamaExternalReused": "外部 Ollama を再利用中",
+      "restartRequiredTitle": "再起動が必要です",
+      "restartRequiredDesc": "変更は Ollama の再起動後に適用されます",
+      "ollamaTitle": "Ollama",
+      "multiModelTitle": "複数モデルを読み込む",
+      "multiModelDesc": "複数のモデルを同時に VRAM に保持する（より多くの GPU メモリが必要）",
+      "showGpuStatusTitle": "GPU 状態を表示",
+      "showGpuStatusDesc": "チャットに CPU/GPU インジケーターと VRAM 使用量を表示する",
+      "vramTableTitle": "モデルごとに必要な VRAM",
+      "vramTableDesc": "モデルサイズと量子化に基づいた推定 VRAM",
+      "vramTableSize": "サイズ",
+      "vramFormula": "モデルサイズ + （コンテキスト÷1000 × 0.5 GB）+ 0.5 GB",
+      "fileAccessTitle": "ファイルアクセス",
+      "fileAccessDesc": "LLM が読み書きできるフォルダー",
+      "addPath": "フォルダーを追加",
+      "resetPaths": "リセット",
+      "fullDisk": "フルディスク",
+      "compressionTitle": "圧縮",
+      "compressionEnabledTitle": "自動圧縮",
+      "compressionEnabledDesc": "コンテキストが上限に近づくと自動的に会話を要約します",
+      "compressionThresholdTitle": "圧縮しきい値",
+      "compressionThresholdDesc": "圧縮が発動するコンテキストウィンドウの使用率"
+    },
+    "llm": {
+      "searchPlaceholder": "モデルを検索…",
+      "families": "ファミリー",
+      "back": "戻る",
+      "maxInput": "コンテキスト（入力）",
+      "maxOutput": "最大出力",
+      "inputCost": "入力コスト",
+      "outputCost": "出力コスト",
+      "vision": "ビジョン",
+      "tools": "ツール",
+      "reasoning": "推論",
+      "caching": "プロンプトキャッシュ",
+      "webSearch": "ウェブ検索",
+      "yes": "はい",
+      "no": "いいえ"
+    },
+    "shortcuts": {
+      "toggleTerminal": "Terminal の表示切替",
+      "toggleSidebar": "サイドバーの表示切替",
+      "goBack": "戻る",
+      "goForward": "進む",
+      "newSession": "新しいセッション",
+      "searchDialog": "会話を検索"
+    },
+    "confirm": {
+      "deleteModel": "確認しますか？"
+    }
+  },
+  "agentMd": {
+    "title": "エージェント指示",
+    "subtitle": "AGENT.md ファイルはツール対応 LLM に永続的な指示を提供します",
+    "globalTab": "グローバル",
+    "projectTab": "プロジェクト",
+    "globalDescription": "これらの指示はツール対応モデルとのすべての会話に適用されます。",
+    "projectDescription": "これらの指示はこのプロジェクト内の会話にのみ適用されます。",
+    "placeholder": "指示をここに書いてください...\n\n例：\n# ルール\n- 行動する前に必ず説明する\n- すべての返答に日本語を使用する",
+    "saved": "指示を保存しました",
+    "noProject": "プロジェクトレベルの指示を編集するにはプロジェクトを選択してください。",
+    "emptyGlobal": "グローバル AGENT.md が見つかりません",
+    "emptyProject": "プロジェクト AGENT.md が見つかりません",
+    "toolCapableOnly": "ツール対応モデルにのみ注入されます"
+  },
+  "terminal": {
+    "title": "Terminal",
+    "newTab": "新しい Terminal",
+    "processExited": "プロセスがコード {{code}} で終了しました",
+    "failedToStart": "Terminal を起動できませんでした"
+  },
+  "skills": {
+    "sourceUser": "ユーザー",
+    "sourceProject": "プロジェクト",
+    "noResults": "Skill が見つかりません",
+    "badge": "Skill"
+  },
+  "search": {
+    "placeholder": "会話を検索…",
+    "recent": "最近の会話",
+    "results": "結果",
+    "empty": "会話が見つかりません"
+  },
+  "about": {
+    "version": "バージョン",
+    "runtime": "ランタイム",
+    "tauri": "Tauri",
+    "os": "システム",
+    "github": "GitHub",
+    "viewOnGithub": "GitHub で見る",
+    "description": "ローカルおよびクラウド LLM 向けのエージェント型デスクトップアプリ。"
+  },
+  "filePreview": {
+    "noFiles": "このセッションで作成または変更されたファイルはありません。",
+    "filesModified": "ファイル",
+    "loading": "ファイルを読み込み中...",
+    "fileNotFound": "ファイルを読み取れませんでした。削除または移動された可能性があります。",
+    "highlighting": "ファイルをハイライト中...",
+    "noDiff": "表示する変更がありません。",
+    "togglePanel": "ファイルプレビュー",
+    "reduce": "縮小",
+    "fullscreen": "全画面",
+    "noEditor": "外部エディターが検出されませんでした。",
+    "open": "開く",
+    "openWith": "アプリで開く...",
+    "noEditorDetected": "エディターが検出されませんでした"
+  },
+  "errors": {
+    "crashMessage": "エラーが発生しました。アプリケーションを再起動してください。",
+    "operationFailed": "操作に失敗しました。もう一度お試しください。",
+    "streamStartFailed": "ストリームを開始できませんでした。",
+    "streamInterrupted": "ストリームが中断されました。",
+    "ollamaConnectionLost": "Ollama への接続が失われました",
+    "ollamaWaiting": "Ollama への接続が失われました（{{seconds}}秒）— 再接続中…",
+    "ollamaReconnected": "Ollama に再接続しました",
+    "ollamaReconnecting": "Ollama に再接続しました — {{seconds}}秒後に再試行…",
+    "keyringFailed": "キーリングにアクセスできません。API キーを保存するには gnome-keyring または kwallet をインストールしてください。",
+    "ollamaRestartFailed": "Ollama の再起動に失敗しました",
+    "maxFiles": "最大 {{max}} ファイル",
+    "fileTooLarge": "{{name}} は 20MB を超えています"
+  },
+  "updates": {
+    "tooltip": "アップデートが利用可能です",
+    "appUpdate": "更新",
+    "modelUpdate": "更新",
+    "version": "バージョン {{version}}",
+    "updating": "更新中…"
+  },
+  "a11y": {
+    "close": "閉じる",
+    "minimize": "最小化",
+    "maximize": "最大化"
+  },
+  "wakeupFormat": {
+    "daily": "毎日",
+    "weekly": "毎週"
+  },
+  "ollamaSetup": {
+    "title": "Ollama セットアップ",
+    "description": "Ollama を使うとローカルマシン上で AI モデルを実行できます。ダウンロードにはパフォーマンス向上のための GPU サポートが含まれています。",
+    "download": "Ollama をダウンロード",
+    "extracting": "インストール中…",
+    "downloadingGpu": "GPU サポートをダウンロード中…",
+    "error": "インストールに失敗しました。詳細は以下を確認してください。"
+  }
+}

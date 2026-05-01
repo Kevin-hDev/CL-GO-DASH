@@ -104,7 +104,18 @@
     "exportMd": "Download as Markdown",
     "search": "Search in conversation",
     "send": "Send",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "compression": "Compression",
+    "searchBarPlaceholder": "Search...",
+    "resultCount_one": "{{count}} result",
+    "resultCount_other": "{{count}} results",
+    "favorites": "Favorites",
+    "freeCount": "{{free}} free / {{total}}",
+    "thinkingDuration": "Thought for {{seconds}}s",
+    "tools": "Tools",
+    "tokens": "tokens",
+    "tps": "t/s",
+    "fileReadError": "Could not read file"
   },
   "switchModel": {
     "title": "Model change",
@@ -176,7 +187,9 @@
     "paramsLabel": "Parameters",
     "contextTokens": "K tokens",
     "remove": "Remove",
-    "delete": "Delete"
+    "delete": "Delete",
+    "modelfileTab": "Modelfile",
+    "modelsTab": "Models"
   },
   "heartbeat": {
     "title": "Wakeups",
@@ -371,7 +384,8 @@
   "terminal": {
     "title": "Terminal",
     "newTab": "New terminal",
-    "processExited": "Process exited with code {{code}}"
+    "processExited": "Process exited with code {{code}}",
+    "failedToStart": "Terminal failed to start"
   },
   "skills": {
     "sourceUser": "User",
@@ -419,7 +433,9 @@
     "ollamaReconnected": "Ollama reconnected",
     "ollamaReconnecting": "Ollama reconnected — retrying in {{seconds}}s…",
     "keyringFailed": "Cannot access keyring. Install gnome-keyring or kwallet to store API keys.",
-    "ollamaRestartFailed": "Ollama restart failed"
+    "ollamaRestartFailed": "Ollama restart failed",
+    "maxFiles": "Maximum {{max}} files",
+    "fileTooLarge": "{{name}} exceeds 20MB"
   },
   "updates": {
     "tooltip": "Updates available",
@@ -427,6 +443,15 @@
     "modelUpdate": "Update",
     "version": "Version {{version}}",
     "updating": "Updating…"
+  },
+  "a11y": {
+    "close": "Close",
+    "minimize": "Minimize",
+    "maximize": "Maximize"
+  },
+  "wakeupFormat": {
+    "daily": "Daily",
+    "weekly": "Weekly"
   },
   "ollamaSetup": {
     "title": "Ollama Setup",

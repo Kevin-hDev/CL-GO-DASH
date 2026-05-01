@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { readFile, stat } from "@tauri-apps/plugin-fs";
+import i18n from "@/i18n";
 
 const MAX_FILES = 15;
 const MAX_SIZE = 20 * 1024 * 1024;
@@ -21,7 +22,7 @@ export function useFileDrop() {
   const addFiles = useCallback(async (fileList: FileList | File[]) => {
     const newFiles = Array.from(fileList);
     if (files.length + newFiles.length > MAX_FILES) {
-      setError(`Maximum ${MAX_FILES} fichiers`);
+      setError(i18n.t("errors.maxFiles", { max: MAX_FILES }));
       return;
     }
     setError(null);
@@ -37,7 +38,7 @@ export function useFileDrop() {
 
   const addByPaths = useCallback(async (paths: string[]) => {
     if (files.length + paths.length > MAX_FILES) {
-      setError(`Maximum ${MAX_FILES} fichiers`);
+      setError(i18n.t("errors.maxFiles", { max: MAX_FILES }));
       return;
     }
     setError(null);
@@ -49,7 +50,7 @@ export function useFileDrop() {
         const ext = name.split(".").pop()?.toLowerCase() ?? "";
         const size = meta.size ?? 0;
         if (size > MAX_SIZE) {
-          setError(`${name} dépasse 20MB`);
+          setError(i18n.t("errors.fileTooLarge", { name }));
           continue;
         }
         let preview: string | undefined;

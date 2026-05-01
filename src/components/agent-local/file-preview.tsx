@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { X } from "@/components/ui/icons";
 import { useClickOutside } from "@/hooks/use-click-outside";
 import { useKeyboard } from "@/hooks/use-keyboard";
@@ -13,6 +14,7 @@ interface FilePreviewProps {
 }
 
 export function FilePreview({ name, path, thumbnail, isImage, onClose }: FilePreviewProps) {
+  const { t } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
   const [textContent, setTextContent] = useState<string | null>(null);
   const [loading, setLoading] = useState(!isImage);
@@ -26,8 +28,8 @@ export function FilePreview({ name, path, thumbnail, isImage, onClose }: FilePre
     readTextFile(path)
       .then(setTextContent)
       .catch((e: unknown) => {
-        console.error("Erreur lecture fichier:", e);
-        setTextContent(`Impossible de lire le fichier: ${name}`);
+        console.error("File read error:", e);
+        setTextContent(t("agentLocal.fileReadError"));
       })
       .finally(() => setLoading(false));
   }, [path, isImage, name]);
@@ -62,7 +64,7 @@ export function FilePreview({ name, path, thumbnail, isImage, onClose }: FilePre
             borderRadius: "var(--radius-md)", color: "var(--ink-faint)",
             fontSize: "var(--text-sm)",
           }}>
-            Chargement...
+            {t("filePreview.loading")}
           </div>
         ) : (
           <pre style={{

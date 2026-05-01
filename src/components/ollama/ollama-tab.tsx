@@ -44,9 +44,9 @@ export function OllamaTab(): { list: React.ReactNode; detail: React.ReactNode } 
             onClick={() => setSubTab(tab)}
           >
             {tab === "modelfile" ? (
-              <><ThemedIcon darkSrc={modelfileDark} lightSrc={modelfileLight} size="1.2rem" /> Modelfile</>
+              <><ThemedIcon darkSrc={modelfileDark} lightSrc={modelfileLight} size="1.2rem" /> {t("ollama.modelfileTab")}</>
             ) : (
-              <><ThemedIcon darkSrc={modelsDark} lightSrc={modelsLight} size="1.2rem" /> Models</>
+              <><ThemedIcon darkSrc={modelsDark} lightSrc={modelsLight} size="1.2rem" /> {t("ollama.modelsTab")}</>
             )}
           </button>
         ))}

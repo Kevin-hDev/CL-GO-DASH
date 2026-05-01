@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { CaretRight, CaretDown } from "@/components/ui/icons";
 import "./messages.css";
 
@@ -8,12 +9,13 @@ interface ThinkingSectionProps {
 }
 
 export function ThinkingSection({ content, durationMs }: ThinkingSectionProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
 
   if (!content) return null;
 
   const seconds = durationMs ? (durationMs / 1000).toFixed(1) : null;
-  const label = seconds ? `A réfléchi pendant ${seconds}s` : "Réflexion";
+  const label = seconds ? t("agentLocal.thinkingDuration", { seconds }) : t("agentLocal.thinking");
 
   return (
     <div>

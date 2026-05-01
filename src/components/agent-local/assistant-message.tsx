@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { CodeBlock } from "./code-block";
 import { ThinkingSection } from "./thinking-section";
 import { MessageActions } from "./message-actions";
@@ -29,6 +30,7 @@ export function AssistantMessage({
   content, thinking, toolActivities, isStreaming, onReload,
   tokens, tps, totalElapsedMs, segmentStartedAt, liveTokenCount,
 }: AssistantMessageProps) {
+  const { t } = useTranslation();
   const hoverRef = useHoverClass();
   const hasTokens = tokens != null && tokens > 0;
   const hasTps = tps != null && tps > 0.1;
@@ -56,9 +58,9 @@ export function AssistantMessage({
           {(hasTokens || hasTps || totalTime) && (
             <span className="msg-stats-inline">
               {totalTime && <><span>{totalTime}</span><span>·</span></>}
-              {hasTokens && <span>{formatTokens(tokens!)} tokens</span>}
+              {hasTokens && <span>{formatTokens(tokens!)} {t("agentLocal.tokens")}</span>}
               {hasTokens && hasTps && <span>·</span>}
-              {hasTps && <span>{tps!.toFixed(1)} t/s</span>}
+              {hasTps && <span>{tps!.toFixed(1)} {t("agentLocal.tps")}</span>}
             </span>
           )}
         </MessageActions>

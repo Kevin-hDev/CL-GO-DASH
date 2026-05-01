@@ -1,4 +1,5 @@
 import { useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { X } from "@/components/ui/icons";
 
 interface SearchBarProps {
@@ -9,6 +10,7 @@ interface SearchBarProps {
 }
 
 export function SearchBar({ query, onChange, matchCount, onClose }: SearchBarProps) {
+  const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { inputRef.current?.focus(); }, []);
@@ -24,7 +26,7 @@ export function SearchBar({ query, onChange, matchCount, onClose }: SearchBarPro
         value={query}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={(e) => { if (e.key.startsWith("Esc")) onClose(); }}
-        placeholder="Rechercher..."
+        placeholder={t("agentLocal.searchBarPlaceholder")}
         style={{
           flex: 1, background: "transparent",
           fontSize: "var(--text-sm)", color: "var(--ink)",
@@ -33,7 +35,7 @@ export function SearchBar({ query, onChange, matchCount, onClose }: SearchBarPro
       />
       {query && (
         <span style={{ fontSize: "var(--text-xs)", color: "var(--ink-faint)" }}>
-          {matchCount} résultat{matchCount !== 1 ? "s" : ""}
+          {t("agentLocal.resultCount", { count: matchCount })}
         </span>
       )}
       <button className="msg-action-btn" onClick={onClose}>
