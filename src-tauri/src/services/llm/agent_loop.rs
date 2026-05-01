@@ -53,7 +53,7 @@ pub async fn run_agent_loop(
         }
 
         tool_result_budget::apply_budget(messages);
-        compress_hook::try_auto_compress(on_event, provider_id, model, messages, native_context, configured_context, last_prompt + last_eval, cancel.clone()).await;
+        compress_hook::try_auto_compress(on_event, provider_id, model, messages, &session_id, native_context, configured_context, last_prompt + last_eval, cancel.clone()).await;
         let result =
             retry::retry_stream(on_event, provider_id, model, messages, tools, think, cancel.clone())
                 .await?;
@@ -63,6 +63,9 @@ pub async fn run_agent_loop(
         last_prompt = result.prompt_tokens;
         last_eval = result.eval_count;
         messages.push(build_assistant_message(&result));
+
+        // Check post-réponse : compresser si le seuil a été dépassé pendant la génération
+        compress_hook::try_auto_compress(on_event, provider_id, model, messages, &session_id, native_context, configured_context, last_prompt + last_eval, cancel.clone()).await;
 
         if result.tool_calls.is_empty() {
             break;

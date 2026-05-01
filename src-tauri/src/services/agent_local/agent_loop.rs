@@ -46,7 +46,7 @@ pub async fn run_agent_loop(
         }
 
         tool_result_budget::apply_budget(messages);
-        compress_hook::try_auto_compress(on_event, messages, model, native_context, configured_context, last_prompt + last_eval, cancel.clone()).await;
+        compress_hook::try_auto_compress(on_event, messages, model, &session_id, native_context, configured_context, last_prompt + last_eval, cancel.clone()).await;
         let request = build_request(model, messages, &tools, think);
 
         // Eager dispatch : lancer les read-only tools dès qu'ils arrivent dans le stream
@@ -68,6 +68,9 @@ pub async fn run_agent_loop(
         last_prompt = result.prompt_tokens;
         last_eval = result.eval_count;
         messages.push(build_assistant_message(&result));
+
+        // Check post-réponse : compresser si le seuil a été dépassé pendant la génération
+        compress_hook::try_auto_compress(on_event, messages, model, &session_id, native_context, configured_context, last_prompt + last_eval, cancel.clone()).await;
 
         if result.tool_calls.is_empty() {
             eager_handle.abort();

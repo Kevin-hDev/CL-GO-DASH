@@ -9,9 +9,14 @@ pub struct ContextWindows {
 pub async fn resolve_ollama(model: &str) -> ContextWindows {
     let info = fetch_ollama_model_info(model).await;
     let native = info.context_length;
-    let configured = info
-        .num_ctx_from_modelfile
-        .unwrap_or(native);
+    let configured = info.num_ctx_from_modelfile.unwrap_or_else(|| {
+        let hardware_default = crate::services::gpu_detect::compute_default_num_ctx() as u64;
+        if hardware_default > 0 && native > 0 {
+            hardware_default.min(native)
+        } else {
+            native
+        }
+    });
     ContextWindows { native, configured }
 }
 
