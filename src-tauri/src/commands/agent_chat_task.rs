@@ -148,6 +148,8 @@ pub(crate) async fn run_stream_task(
     let is_chat = mode == "chat";
 
     if provider == "ollama" {
+        let ctx = crate::services::compress::context_resolve::resolve_ollama(&model).await;
+
         let final_tools = if tools.is_empty() {
             if is_chat {
                 tool_dispatcher::get_chat_tool_definitions()
@@ -196,13 +198,14 @@ pub(crate) async fn run_stream_task(
             working_dir,
             session_id.clone(),
             cancel,
-            0,
-            0,
+            ctx.native,
+            ctx.configured,
         )
         .await
         .map(|_| ())
     } else {
         use crate::services::llm::{model_registry, tool_capable};
+        let ctx = crate::services::compress::context_resolve::resolve_api(&provider, &model).await;
         let registry_caps = model_registry::lookup(&provider, &model).await;
         let model_supports_tools = supports_tools_hint.unwrap_or_else(|| {
             registry_caps.as_ref().map(|c| c.supports_tools).unwrap_or(false)
@@ -274,8 +277,8 @@ pub(crate) async fn run_stream_task(
             working_dir,
             session_id.clone(),
             cancel,
-            0,
-            0,
+            ctx.native,
+            ctx.configured,
         )
         .await
         .map(|_| ())
