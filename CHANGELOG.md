@@ -1,5 +1,24 @@
 # Changelog
 
+## v0.8.0
+
+### Features
+
+- **Context compression** — automatic and manual (`/compress`) conversation compression when token threshold is reached
+- **Compression settings** — enable/disable toggle and threshold slider (0-100%, default 85%) in Settings > Advanced
+- **Model eligibility** — compression available for models with native context >= 128k tokens
+- **Dynamic architecture detection** — reads context length from any Ollama model architecture (Gemma, Qwen, LLaMA, Mistral, etc.)
+- **All providers supported** — works with Ollama, Anthropic, OpenAI, Groq, Gemini and all OpenAI-compatible APIs
+- **Post-response compression** — threshold check after each LLM response, not just before
+- **Last response preserved** — the most recent LLM response is always kept visible after compression
+- **Compression animation** — orange pulsing "Compression" indicator with Lottie loader at bottom of chat
+
+### Fixes
+
+- **Token counting** — context ring now uses real Ollama token count (`context_tokens` = last prompt + eval) instead of accumulating prompt tokens across requests
+- **Per-message token display** — shows output tokens for that response only, not total context
+- **Context window detection** — correctly reads `OLLAMA_CONTEXT_LENGTH` env var when no modelfile `num_ctx` is set
+
 ## v0.7.9
 
 - **File Preview Panel** — side panel to view files created/edited by the agent (syntax highlighting, diffs, fullscreen, resize, open in external editor)
