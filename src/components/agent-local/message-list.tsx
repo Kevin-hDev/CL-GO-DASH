@@ -76,8 +76,9 @@ export function MessageList({
         </div>
       ))}
 
-      {isStreaming && !currentContent && currentTools.length < 1 && completedSegments.length < 1 && (
-        isCompressing ? <CompressionIndicator /> : <LoadingIndicator />
+      {isCompressing && <CompressionIndicator />}
+      {isStreaming && !isCompressing && !currentContent && currentTools.length < 1 && completedSegments.length < 1 && (
+        <LoadingIndicator />
       )}
       {isStreaming && (currentContent || currentThinking) && (
         <AssistantMessage
