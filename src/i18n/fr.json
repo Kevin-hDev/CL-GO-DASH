@@ -287,7 +287,9 @@
       "fontFamilyTitle": "Police d'écriture",
       "fontFamilyDesc": "Police utilisée dans l'application",
       "languageTitle": "Langue",
-      "languageDesc": "Langue de l'interface"
+      "languageDesc": "Langue de l'interface",
+      "responseLangTitle": "Langue de réponse du LLM",
+      "responseLangDesc": "Langue dans laquelle le modèle IA répondra"
     },
     "advanced": {
       "autostartTitle": "Lancer au démarrage",

@@ -38,6 +38,38 @@ pub fn set_advanced_settings(
 }
 
 #[tauri::command]
+pub fn patch_advanced_settings(
+    app: tauri::AppHandle,
+    patch: serde_json::Value,
+) -> Result<(), String> {
+    use tauri_plugin_autostart::ManagerExt;
+
+    let mut config = config_service::read_config()?;
+    let mut current = serde_json::to_value(&config.advanced)
+        .map_err(|e| e.to_string())?;
+
+    if let (Some(base), Some(updates)) = (current.as_object_mut(), patch.as_object()) {
+        for (k, v) in updates {
+            base.insert(k.clone(), v.clone());
+        }
+    }
+
+    let merged: AdvancedSettings = serde_json::from_value(current)
+        .map_err(|e| e.to_string())?;
+
+    let manager = app.autolaunch();
+    let enabled = manager.is_enabled().unwrap_or(false);
+    if merged.autostart && !enabled {
+        let _ = manager.enable();
+    } else if !merged.autostart && enabled {
+        let _ = manager.disable();
+    }
+
+    config.advanced = merged;
+    config_service::write_config(&config)
+}
+
+#[tauri::command]
 pub fn get_effective_context_length() -> u32 {
     crate::services::gpu_detect::compute_default_num_ctx()
 }

@@ -83,26 +83,6 @@ export function AdvancedSettings() {
 
         <SettingsCard>
           <SettingsRow
-            title={t("settings.advanced.autostartTitle")}
-            description={t("settings.advanced.autostartDesc")}
-          >
-            <RoundToggle
-              checked={state.autostart}
-              onChange={(v) => save({ autostart: v })}
-            />
-          </SettingsRow>
-
-          <SettingsRow
-            title={t("settings.advanced.startHiddenTitle")}
-            description={t("settings.advanced.startHiddenDesc")}
-          >
-            <RoundToggle
-              checked={state.start_hidden}
-              onChange={(v) => save({ start_hidden: v })}
-            />
-          </SettingsRow>
-
-          <SettingsRow
             title={t("settings.advanced.trayTitle")}
             description={t("settings.advanced.trayDesc")}
           >

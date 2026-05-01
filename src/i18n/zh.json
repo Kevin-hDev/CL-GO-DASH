@@ -287,7 +287,9 @@
       "fontFamilyTitle": "字体",
       "fontFamilyDesc": "应用中使用的字体",
       "languageTitle": "语言",
-      "languageDesc": "界面语言"
+      "languageDesc": "界面语言",
+      "responseLangTitle": "LLM 回复语言",
+      "responseLangDesc": "AI 模型回复使用的语言"
     },
     "advanced": {
       "autostartTitle": "开机启动",

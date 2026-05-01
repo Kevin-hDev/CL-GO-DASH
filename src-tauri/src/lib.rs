@@ -110,6 +110,7 @@ pub fn run() {
             commands::save_config,
             commands::get_advanced_settings,
             commands::set_advanced_settings,
+            commands::patch_advanced_settings,
             commands::get_effective_context_length,
             commands::list_wakeups,
             commands::create_wakeup,

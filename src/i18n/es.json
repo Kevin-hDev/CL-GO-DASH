@@ -287,7 +287,9 @@
       "fontFamilyTitle": "Familia tipográfica",
       "fontFamilyDesc": "Fuente utilizada en la aplicación",
       "languageTitle": "Idioma",
-      "languageDesc": "Idioma de la interfaz"
+      "languageDesc": "Idioma de la interfaz",
+      "responseLangTitle": "Idioma de respuesta del LLM",
+      "responseLangDesc": "Idioma en el que responderá el modelo de IA"
     },
     "advanced": {
       "autostartTitle": "Iniciar al arranque",

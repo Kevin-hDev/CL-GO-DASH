@@ -61,7 +61,7 @@ fn prepare_tool_capable_injects_agent_md() {
     let mut msgs = vec![make_user_msg("hello")];
     let agent_md = Some("Tu réponds en français.".to_string());
     let wd = std::path::Path::new("/tmp/project");
-    prepare_messages(&mut msgs, wd, true, agent_md, &[], TEST_MODEL_SMALL, "auto");
+    prepare_messages(&mut msgs, wd, true, agent_md, &[], TEST_MODEL_SMALL, "auto", "");
     let sys = &msgs[0];
     assert_eq!(sys.role, "system");
     assert!(sys.content.contains("Tu réponds en français."));
@@ -73,7 +73,7 @@ fn prepare_tool_capable_injects_tool_prompt() {
     let mut msgs = vec![make_user_msg("hello")];
     let agent_md = Some("Use JSON output.".to_string());
     let wd = std::path::Path::new("/tmp/project");
-    prepare_messages(&mut msgs, wd, true, agent_md, &[], TEST_MODEL_LARGE, "auto");
+    prepare_messages(&mut msgs, wd, true, agent_md, &[], TEST_MODEL_LARGE, "auto", "");
     let sys = &msgs[0];
     assert!(sys.content.contains("Use JSON output."));
     assert!(sys.content.contains("autonomous"));
@@ -83,7 +83,7 @@ fn prepare_tool_capable_injects_tool_prompt() {
 fn prepare_not_tool_capable_no_agent_md() {
     let mut msgs = vec![make_user_msg("hello")];
     let wd = std::path::Path::new("/tmp/project");
-    prepare_messages(&mut msgs, wd, false, None, &[], TEST_MODEL_SMALL, "auto");
+    prepare_messages(&mut msgs, wd, false, None, &[], TEST_MODEL_SMALL, "auto", "");
     let sys = &msgs[0];
     assert!(sys.content.contains("/tmp/project"));
 }
@@ -92,7 +92,7 @@ fn prepare_not_tool_capable_no_agent_md() {
 fn prepare_tool_capable_no_agent_md_file() {
     let mut msgs = vec![make_user_msg("hello")];
     let wd = std::path::Path::new("/tmp/project");
-    prepare_messages(&mut msgs, wd, true, None, &[], TEST_MODEL_SMALL, "auto");
+    prepare_messages(&mut msgs, wd, true, None, &[], TEST_MODEL_SMALL, "auto", "");
     let sys = &msgs[0];
     assert!(sys.content.contains("autonomous"));
     assert!(sys.content.contains("/tmp/project"));
@@ -109,7 +109,7 @@ fn prepare_existing_system_prompt_preserved() {
         make_user_msg("hello"),
     ];
     let wd = std::path::Path::new("/tmp/project");
-    prepare_messages(&mut msgs, wd, true, Some("Agent rules".to_string()), &[], TEST_MODEL_LARGE, "auto");
+    prepare_messages(&mut msgs, wd, true, Some("Agent rules".to_string()), &[], TEST_MODEL_LARGE, "auto", "");
     assert_eq!(msgs.len(), 2);
     let sys = &msgs[0];
     assert!(sys.content.contains("Custom system prompt from frontend"));
@@ -126,7 +126,7 @@ fn prepare_with_skills_injects_listing() {
         ("Test Greeting".to_string(), "Force une salutation".to_string()),
         ("Debug Helper".to_string(), "Aide au debug".to_string()),
     ];
-    prepare_messages(&mut msgs, wd, true, None, &skills, TEST_MODEL_SMALL, "auto");
+    prepare_messages(&mut msgs, wd, true, None, &skills, TEST_MODEL_SMALL, "auto", "");
     let sys = &msgs[0];
     assert!(sys.content.contains("Test Greeting"));
     assert!(sys.content.contains("Force une salutation"));
@@ -138,7 +138,7 @@ fn prepare_without_tools_no_skills() {
     let mut msgs = vec![make_user_msg("hello")];
     let wd = std::path::Path::new("/tmp/project");
     let skills = vec![("Test Greeting".to_string(), "Force une salutation".to_string())];
-    prepare_messages(&mut msgs, wd, false, None, &skills, TEST_MODEL_SMALL, "auto");
+    prepare_messages(&mut msgs, wd, false, None, &skills, TEST_MODEL_SMALL, "auto", "");
     let sys = &msgs[0];
     assert!(!sys.content.contains("Test Greeting"));
 }
@@ -147,7 +147,7 @@ fn prepare_without_tools_no_skills() {
 fn prepare_empty_skills_no_section() {
     let mut msgs = vec![make_user_msg("hello")];
     let wd = std::path::Path::new("/tmp/project");
-    prepare_messages(&mut msgs, wd, true, None, &[], TEST_MODEL_SMALL, "auto");
+    prepare_messages(&mut msgs, wd, true, None, &[], TEST_MODEL_SMALL, "auto", "");
     let sys = &msgs[0];
     assert!(!sys.content.contains("Available skills"));
 }
@@ -156,7 +156,7 @@ fn prepare_empty_skills_no_section() {
 fn small_model_gets_compact_prompt() {
     let mut msgs = vec![make_user_msg("hello")];
     let wd = std::path::Path::new("/tmp/project");
-    prepare_messages(&mut msgs, wd, true, None, &[], TEST_MODEL_SMALL, "auto");
+    prepare_messages(&mut msgs, wd, true, None, &[], TEST_MODEL_SMALL, "auto", "");
     let sys = &msgs[0];
     assert!(!sys.content.contains("Working with git"));
     assert!(sys.content.contains("autonomous"));
@@ -166,7 +166,7 @@ fn small_model_gets_compact_prompt() {
 fn large_model_gets_detailed_prompt() {
     let mut msgs = vec![make_user_msg("hello")];
     let wd = std::path::Path::new("/tmp/project");
-    prepare_messages(&mut msgs, wd, true, None, &[], TEST_MODEL_LARGE, "auto");
+    prepare_messages(&mut msgs, wd, true, None, &[], TEST_MODEL_LARGE, "auto", "");
     let sys = &msgs[0];
     assert!(sys.content.contains("Working with git"));
     assert!(sys.content.contains("Error handling"));

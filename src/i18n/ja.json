@@ -287,7 +287,9 @@
       "fontFamilyTitle": "フォントファミリー",
       "fontFamilyDesc": "アプリで使用するフォント",
       "languageTitle": "言語",
-      "languageDesc": "インターフェース言語"
+      "languageDesc": "インターフェース言語",
+      "responseLangTitle": "LLM 応答言語",
+      "responseLangDesc": "AIモデルが応答する言語"
     },
     "advanced": {
       "autostartTitle": "起動時に開く",

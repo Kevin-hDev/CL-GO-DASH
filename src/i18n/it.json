@@ -287,7 +287,9 @@
       "fontFamilyTitle": "Famiglia di caratteri",
       "fontFamilyDesc": "Font utilizzato nell'app",
       "languageTitle": "Lingua",
-      "languageDesc": "Lingua dell'interfaccia"
+      "languageDesc": "Lingua dell'interfaccia",
+      "responseLangTitle": "Lingua di risposta del LLM",
+      "responseLangDesc": "Lingua in cui il modello IA risponderà"
     },
     "advanced": {
       "autostartTitle": "Avvia all'avvio",

@@ -1,7 +1,10 @@
+import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { invoke } from "@tauri-apps/api/core";
 import type { ThemeChoice } from "@/hooks/use-theme";
 import type { useSettings } from "@/hooks/use-settings";
 import { FONT_SIZES, FONT_FAMILIES } from "@/hooks/use-settings";
+import { RoundToggle } from "@/components/heartbeat/round-toggle";
 import { SettingsCard } from "./settings-card";
 import { SettingsRow } from "./settings-row";
 import { SettingsSelect, type SelectOption } from "./settings-select";
@@ -11,6 +14,12 @@ interface GeneralSettingsProps {
   themeChoice: ThemeChoice;
   onThemeChange: (theme: ThemeChoice) => void;
   settings: ReturnType<typeof useSettings>;
+}
+
+interface StartupState {
+  autostart: boolean;
+  start_hidden: boolean;
+  response_language: string;
 }
 
 const FONT_SIZE_OPTIONS: SelectOption[] = FONT_SIZES.map((s) => ({
@@ -33,8 +42,42 @@ const LANGUAGE_OPTIONS: SelectOption[] = [
   { value: "ja", label: "日本語" },
 ];
 
+const RESPONSE_LANGUAGE_OPTIONS: SelectOption[] = [
+  { value: "", label: "—" },
+  { value: "English", label: "English" },
+  { value: "French", label: "Français" },
+  { value: "German", label: "Deutsch" },
+  { value: "Spanish", label: "Español" },
+  { value: "Italian", label: "Italiano" },
+  { value: "Chinese", label: "中文" },
+  { value: "Japanese", label: "日本語" },
+];
+
 export function GeneralSettings({ themeChoice, onThemeChange, settings }: GeneralSettingsProps) {
   const { t, i18n } = useTranslation();
+  const [startup, setStartup] = useState<StartupState>({
+    autostart: false,
+    start_hidden: false,
+    response_language: "",
+  });
+
+  useEffect(() => {
+    invoke<Record<string, unknown>>("get_advanced_settings")
+      .then((s) => setStartup({
+        autostart: s.autostart as boolean ?? false,
+        start_hidden: s.start_hidden as boolean ?? false,
+        response_language: s.response_language as string ?? "",
+      }))
+      .catch(() => {});
+  }, []);
+
+  const saveAdvanced = useCallback((patch: Partial<StartupState>) => {
+    setStartup((prev) => {
+      const next = { ...prev, ...patch };
+      invoke("patch_advanced_settings", { patch }).catch(() => {});
+      return next;
+    });
+  }, []);
 
   const changeLang = (lang: string) => {
     i18n.changeLanguage(lang);
@@ -91,6 +134,39 @@ export function GeneralSettings({ themeChoice, onThemeChange, settings }: Genera
               options={LANGUAGE_OPTIONS}
               value={i18n.language}
               onChange={changeLang}
+            />
+          </SettingsRow>
+
+          <SettingsRow
+            title={t("settings.general.responseLangTitle")}
+            description={t("settings.general.responseLangDesc")}
+          >
+            <SettingsSelect
+              options={RESPONSE_LANGUAGE_OPTIONS}
+              value={startup.response_language}
+              onChange={(v) => saveAdvanced({ response_language: v })}
+            />
+          </SettingsRow>
+        </SettingsCard>
+
+        <SettingsCard>
+          <SettingsRow
+            title={t("settings.advanced.autostartTitle")}
+            description={t("settings.advanced.autostartDesc")}
+          >
+            <RoundToggle
+              checked={startup.autostart}
+              onChange={(v) => saveAdvanced({ autostart: v })}
+            />
+          </SettingsRow>
+
+          <SettingsRow
+            title={t("settings.advanced.startHiddenTitle")}
+            description={t("settings.advanced.startHiddenDesc")}
+          >
+            <RoundToggle
+              checked={startup.start_hidden}
+              onChange={(v) => saveAdvanced({ start_hidden: v })}
             />
           </SettingsRow>
         </SettingsCard>

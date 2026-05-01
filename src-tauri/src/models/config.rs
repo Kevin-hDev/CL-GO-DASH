@@ -22,6 +22,7 @@ pub struct AdvancedSettings {
     pub show_gpu_status: bool,
     pub compression_enabled: bool,
     pub compression_threshold: u8,
+    pub response_language: String,
 }
 
 impl Default for AdvancedSettings {
@@ -38,6 +39,7 @@ impl Default for AdvancedSettings {
             show_gpu_status: false,
             compression_enabled: true,
             compression_threshold: 85,
+            response_language: String::new(),
         }
     }
 }

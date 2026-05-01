@@ -147,6 +147,9 @@ pub(crate) async fn run_stream_task(
         _ => agent_settings::get_permission_mode().await,
     };
     let is_chat = mode == "chat";
+    let response_language = crate::services::config::read_config()
+        .map(|c| c.advanced.response_language)
+        .unwrap_or_default();
 
     if provider == "ollama" {
         let ctx = crate::services::compress::context_resolve::resolve_ollama(&model).await;
@@ -188,6 +191,7 @@ pub(crate) async fn run_stream_task(
             &skills_tuples,
             &model,
             &mode,
+            &response_language,
         );
 
         agent_loop::run_agent_loop(
@@ -266,6 +270,7 @@ pub(crate) async fn run_stream_task(
             &skills_tuples,
             &model,
             &mode,
+            &response_language,
         );
         let think_active = think && model_supports_thinking;
         llm::agent_loop::run_agent_loop(

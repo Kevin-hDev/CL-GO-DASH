@@ -66,6 +66,7 @@ pub fn prepare_messages(
     skills: &[(String, String)],
     model: &str,
     mode: &str,
+    response_language: &str,
 ) {
     if mode == "chat" {
         prepend_chat_system_prompt(messages, working_dir, model);
@@ -78,6 +79,7 @@ pub fn prepare_messages(
     } else {
         prepend_working_dir_context(messages, working_dir);
     }
+    append_response_language(messages, response_language);
 }
 
 fn prepend_chat_system_prompt(
@@ -94,6 +96,16 @@ fn prepend_chat_system_prompt(
         PromptTier::Detailed => prompt_chat_detailed::build(working_dir),
     };
     messages.insert(0, build_system_message(prompt));
+}
+
+fn append_response_language(messages: &mut Vec<ChatMessage>, lang: &str) {
+    if lang.is_empty() {
+        return;
+    }
+    let instruction = format!("\n\nYou MUST respond in {lang}. All your answers, explanations and communications must be in {lang}.");
+    if let Some(first) = messages.first_mut().filter(|m| m.role == "system") {
+        first.content.push_str(&instruction);
+    }
 }
 
 fn prepend_skills_listing(messages: &mut Vec<ChatMessage>, skills: &[(String, String)]) {
