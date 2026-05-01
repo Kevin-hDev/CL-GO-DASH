@@ -38,10 +38,10 @@ async fn fetch_ollama_model_info(model: &str) -> OllamaModelContext {
         Err(_) => return OllamaModelContext { context_length: 0, num_ctx_from_modelfile: None },
     };
 
-    let context_length = json
-        .pointer("/model_info/general.context_length")
-        .and_then(|v| v.as_u64())
-        .or_else(|| json.pointer("/model_info/llama.context_length").and_then(|v| v.as_u64()))
+    let mi = &json["model_info"];
+    let arch = mi["general.architecture"].as_str().unwrap_or("");
+    let context_length = mi[format!("{arch}.context_length")]
+        .as_u64()
         .unwrap_or(0);
 
     let num_ctx = json

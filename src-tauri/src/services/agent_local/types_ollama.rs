@@ -145,6 +145,7 @@ pub enum StreamEvent {
         eval_duration_ns: u64,
         final_tps: f64,
         prompt_tokens: u32,
+        context_tokens: u32,
     },
     #[serde(rename_all = "camelCase")]
     Error {

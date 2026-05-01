@@ -179,7 +179,11 @@ pub async fn add_messages(
         let excess = session.messages.len() - MAX_MESSAGES_PER_SESSION;
         session.messages.drain(..excess);
     }
-    session.accumulated_tokens = session.messages.iter().map(|m| m.tokens).sum();
+    if tokens > 0 {
+        session.accumulated_tokens = tokens;
+    } else {
+        session.accumulated_tokens = session.messages.iter().map(|m| m.tokens).sum();
+    }
     save(&session).await
 }
 

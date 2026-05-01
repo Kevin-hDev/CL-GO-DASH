@@ -91,6 +91,7 @@ pub fn emit_done(on_event: &AgentEventEmitter, chunk: &serde_json::Value) -> Res
         eval_duration_ns: ed,
         final_tps,
         prompt_tokens: pt,
+        context_tokens: pt + ec,
     });
     Ok(())
 }

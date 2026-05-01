@@ -108,6 +108,7 @@ async fn handle_compress_command(
         eval_duration_ns: 0,
         final_tps: 0.0,
         prompt_tokens: 0,
+        context_tokens: summary_tokens as u32,
     });
 
     Ok(())

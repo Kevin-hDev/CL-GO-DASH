@@ -41,6 +41,8 @@ pub async fn run_agent_loop(
 ) -> Result<u32, String> {
     let mut total_eval: u32 = 0;
     let mut total_prompt: u32 = 0;
+    let mut last_prompt: u32 = 0;
+    let mut last_eval: u32 = 0;
     let start = std::time::Instant::now();
     let mut breaker = circuit_breaker::CircuitBreaker::new();
     let mut write_guard = WriteGuard::new();
@@ -58,6 +60,8 @@ pub async fn run_agent_loop(
 
         total_eval += result.eval_count;
         total_prompt += result.prompt_tokens;
+        last_prompt = result.prompt_tokens;
+        last_eval = result.eval_count;
         messages.push(build_assistant_message(&result));
 
         if result.tool_calls.is_empty() {
@@ -115,6 +119,7 @@ pub async fn run_agent_loop(
         eval_duration_ns: elapsed_ns,
         final_tps,
         prompt_tokens: total_prompt,
+        context_tokens: last_prompt + last_eval,
     });
 
     Ok(total_eval + total_prompt)
