@@ -195,10 +195,10 @@ function finalizeStream(
     id: crypto.randomUUID(), role: "assistant", content: built.content,
     thinking: built.thinking, tool_activities: built.toolRecords,
     segments: built.segments, files: [], timestamp: new Date().toISOString(),
-    tokens: contextTokens > 0 ? contextTokens : outputTokens,
+    tokens: outputTokens,
   };
   return {
     state: { ...next, messages: [...next.messages, assistantMessage] },
-    assistantMessage, assistantTokens: contextTokens > 0 ? contextTokens : outputTokens,
+    assistantMessage, assistantTokens: outputTokens,
   };
 }

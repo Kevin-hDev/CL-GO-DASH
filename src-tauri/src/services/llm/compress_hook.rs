@@ -15,13 +15,18 @@ pub async fn try_auto_compress(
     messages: &mut Vec<ChatMessage>,
     native_context: u64,
     configured_context: u64,
+    last_context_tokens: u32,
     cancel: CancellationToken,
 ) {
     let config = match crate::services::config::read_config() {
         Ok(c) => c.advanced,
         Err(_) => return,
     };
-    let used = crate::services::compress::token_estimate::estimate_tokens(messages);
+    let used = if last_context_tokens > 0 {
+        last_context_tokens as usize
+    } else {
+        crate::services::compress::token_estimate::estimate_tokens(messages)
+    };
     if !crate::services::compress::engine::should_auto_compress(
         config.compression_enabled,
         native_context,
