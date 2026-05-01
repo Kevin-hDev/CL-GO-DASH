@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { open as openFileDialog } from "@tauri-apps/plugin-dialog";
-import { invoke } from "@tauri-apps/api/core";
 import { MessageList } from "./message-list";
 import { ChatInput } from "./chat-input";
 import { ProjectSelector } from "./project-selector";
@@ -111,13 +110,9 @@ export function ChatView({
 
   const handleBuiltInCommand = useCallback((name: string) => {
     if (name === "compress") {
-      invoke("compress_conversation", {
-        sessionId,
-        provider,
-        model,
-      }).catch((e: unknown) => console.warn("[compress] Erreur déclenchement:", e));
+      chat.sendMessage("/compress");
     }
-  }, [sessionId, provider, model]);
+  }, [chat]);
 
   return (
     <FileDropZone

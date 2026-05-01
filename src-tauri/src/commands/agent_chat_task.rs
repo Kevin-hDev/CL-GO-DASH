@@ -22,6 +22,66 @@ pub(crate) fn merge_personality(
     }
 }
 
+fn is_compress_command(messages: &[ChatMessage]) -> bool {
+    messages
+        .last()
+        .map(|m| m.role == "user" && m.content.trim() == "/compress")
+        .unwrap_or(false)
+}
+
+async fn handle_compress_command(
+    on_event: &AgentEventEmitter,
+    messages: &[ChatMessage],
+    model: &str,
+    provider: &str,
+    cancel: CancellationToken,
+) -> Result<(), String> {
+    use crate::services::agent_local::types_ollama::StreamEvent;
+    use crate::services::compress::{engine, prompt};
+
+    let _ = on_event.send(StreamEvent::Compressing { status: "start".to_string() });
+
+    let msgs_without_command: Vec<ChatMessage> = messages
+        .iter()
+        .filter(|m| !(m.role == "user" && m.content.trim() == "/compress"))
+        .cloned()
+        .collect();
+
+    let compress_msgs = engine::build_compression_request_content(&msgs_without_command, None);
+
+    let summary_raw = if provider == "ollama" {
+        crate::services::agent_local::ollama_stream::collect_chat(model, compress_msgs)
+            .await
+            .map(|(content, _)| content)
+            .map_err(|e| format!("Compression Ollama : {e}"))?
+    } else {
+        crate::services::llm::stream::collect_chat_silent(provider, model, &compress_msgs, cancel)
+            .await
+            .map(|r| r.content)
+            .map_err(|e| format!("Compression LLM : {e}"))?
+    };
+
+    let summary = prompt::extract_summary(&summary_raw);
+
+    let _ = on_event.send(StreamEvent::Compressing { status: "done".to_string() });
+
+    let summary_content = prompt::format_summary_message(&summary, false);
+    let _ = on_event.send(StreamEvent::Token {
+        content: summary_content,
+        token_count: 0,
+        tps: 0.0,
+    });
+
+    let _ = on_event.send(StreamEvent::Done {
+        eval_count: 0,
+        eval_duration_ns: 0,
+        final_tps: 0.0,
+        prompt_tokens: 0,
+    });
+
+    Ok(())
+}
+
 pub(crate) async fn run_stream_task(
     on_event: AgentEventEmitter,
     session_id: String,
@@ -44,6 +104,11 @@ pub(crate) async fn run_stream_task(
                 dirs::home_dir().unwrap_or_else(|| std::env::current_dir().unwrap())
             })
     };
+
+    // Interception : /compress déclenche la compression manuelle
+    if is_compress_command(&messages) {
+        return handle_compress_command(&on_event, &messages, &model, &provider, cancel).await;
+    }
 
     let mode = match permission_mode_override {
         Some(m) if matches!(m.as_str(), "auto" | "manual" | "chat") => m,
