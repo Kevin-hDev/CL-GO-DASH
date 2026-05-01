@@ -76,7 +76,6 @@ export function MessageList({
         </div>
       ))}
 
-      {isCompressing && <CompressionIndicator />}
       {isStreaming && !isCompressing && !currentContent && currentTools.length < 1 && completedSegments.length < 1 && (
         <LoadingIndicator />
       )}
@@ -87,6 +86,8 @@ export function MessageList({
         />
       )}
       {isStreaming && currentTools.length > 0 && <ToolBubble tools={currentTools} onFilePreview={onFilePreview} />}
+
+      {isCompressing && <CompressionIndicator />}
 
       {error && !isStreaming && (
         <ErrorBubble
