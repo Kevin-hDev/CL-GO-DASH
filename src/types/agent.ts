@@ -184,4 +184,6 @@ export type StreamEvent =
   | { event: "turnEnd"; data: Record<string, never> }
   | { event: "permissionRequest"; data: { id: string; toolName: string; arguments: Record<string, unknown> } }
   | { event: "done"; data: { evalCount: number; evalDurationNs: number; finalTps: number; promptTokens: number; contextTokens: number } }
-  | { event: "error"; data: { message: string } };
+  | { event: "error"; data: { message: string } }
+  | { event: "compressing"; data: { status: string } }
+  | { event: "compressionComplete"; data: Record<string, never> };

@@ -1,7 +1,6 @@
 import { useState, useCallback, useRef } from "react";
 import type { SkillInfo } from "@/types/agent";
 import type { useSlashCommands } from "@/hooks/use-slash-commands";
-import { isBuiltIn } from "@/hooks/use-slash-commands";
 import type { SlashItem } from "@/hooks/use-slash-commands";
 
 export interface ActiveSkillsState {
