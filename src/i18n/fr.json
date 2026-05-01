@@ -319,7 +319,12 @@
       "fileAccessDesc": "Dossiers accessibles par le LLM pour la lecture et l'écriture de fichiers",
       "addPath": "Ajouter un dossier",
       "resetPaths": "Réinitialiser",
-      "fullDisk": "Tout le disque"
+      "fullDisk": "Tout le disque",
+      "compressionTitle": "Compression",
+      "compressionEnabledTitle": "Compression automatique",
+      "compressionEnabledDesc": "Résume automatiquement la conversation quand le contexte approche de sa limite",
+      "compressionThresholdTitle": "Seuil de compression",
+      "compressionThresholdDesc": "Pourcentage de la fenêtre de contexte à partir duquel la compression se déclenche"
     },
     "llm": {
       "searchPlaceholder": "Rechercher un modèle…",

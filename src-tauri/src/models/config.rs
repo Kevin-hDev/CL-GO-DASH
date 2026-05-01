@@ -20,6 +20,8 @@ pub struct AdvancedSettings {
     pub hardware_accel: String,
     pub multi_model: bool,
     pub show_gpu_status: bool,
+    pub compression_enabled: bool,
+    pub compression_threshold: u8,
 }
 
 impl Default for AdvancedSettings {
@@ -34,7 +36,30 @@ impl Default for AdvancedSettings {
             hardware_accel: "gpu".to_string(),
             multi_model: false,
             show_gpu_status: false,
+            compression_enabled: true,
+            compression_threshold: 85,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn default_compression_settings() {
+        let settings = AdvancedSettings::default();
+        assert!(settings.compression_enabled);
+        assert_eq!(settings.compression_threshold, 85);
+    }
+
+    #[test]
+    fn compression_threshold_bounds() {
+        let mut settings = AdvancedSettings::default();
+        settings.compression_threshold = 0;
+        assert_eq!(settings.compression_threshold, 0);
+        settings.compression_threshold = 100;
+        assert_eq!(settings.compression_threshold, 100);
     }
 }
 

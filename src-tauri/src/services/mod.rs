@@ -1,5 +1,6 @@
 pub mod agent_local;
 pub mod api_keys;
+pub mod compress;
 pub mod gpu_detect;
 pub mod gpu_vram;
 pub mod config;

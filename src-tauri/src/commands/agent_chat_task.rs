@@ -22,6 +22,98 @@ pub(crate) fn merge_personality(
     }
 }
 
+fn is_compress_command(messages: &[ChatMessage]) -> bool {
+    messages
+        .last()
+        .map(|m| m.role == "user" && m.content.trim() == "/compress")
+        .unwrap_or(false)
+}
+
+async fn handle_compress_command(
+    on_event: &AgentEventEmitter,
+    session_id: &str,
+    messages: &[ChatMessage],
+    model: &str,
+    provider: &str,
+    cancel: CancellationToken,
+) -> Result<(), String> {
+    use crate::services::agent_local::session_store;
+    use crate::services::agent_local::types_ollama::StreamEvent;
+    use crate::services::agent_local::types_session::AgentMessage;
+    use crate::services::compress::{engine, prompt};
+
+    let _ = on_event.send(StreamEvent::Compressing { status: "start".to_string() });
+
+    let msgs_without_command: Vec<ChatMessage> = messages
+        .iter()
+        .filter(|m| !(m.role == "user" && m.content.trim() == "/compress"))
+        .cloned()
+        .collect();
+
+    let compress_msgs = engine::build_compression_request_content(&msgs_without_command, None);
+
+    let summary_raw = if provider == "ollama" {
+        crate::services::agent_local::ollama_stream::collect_chat(model, compress_msgs)
+            .await
+            .map(|(content, _)| content)
+            .map_err(|e| format!("Compression Ollama : {e}"))?
+    } else {
+        crate::services::llm::stream::collect_chat_silent(provider, model, &compress_msgs, cancel)
+            .await
+            .map(|r| r.content)
+            .map_err(|e| format!("Compression LLM : {e}"))?
+    };
+
+    let summary = prompt::extract_summary(&summary_raw);
+    let summary_content = prompt::format_summary_message(&summary, false);
+
+    // Estimer les tokens du résumé
+    let summary_chat_msg = ChatMessage {
+        role: "assistant".to_string(),
+        content: summary_content.clone(),
+        images: None,
+        tool_calls: None,
+        tool_name: None,
+        tool_call_id: None,
+    };
+    let summary_tokens = crate::services::compress::token_estimate::estimate_tokens(
+        &[summary_chat_msg],
+    );
+
+    let compressed_msg = AgentMessage {
+        id: uuid::Uuid::new_v4().to_string(),
+        role: "assistant".to_string(),
+        content: summary_content,
+        thinking: None,
+        tool_calls: None,
+        tool_name: None,
+        tool_activities: None,
+        segments: None,
+        files: vec![],
+        timestamp: chrono::Utc::now(),
+        tokens: summary_tokens as u32,
+        skill_names: None,
+    };
+
+    if let Ok(mut session) = session_store::get(session_id).await {
+        session.messages = vec![compressed_msg];
+        session.accumulated_tokens = summary_tokens as u32;
+        let _ = session_store::save(&session).await;
+    }
+
+    let _ = on_event.send(StreamEvent::Compressing { status: "done".to_string() });
+    let _ = on_event.send(StreamEvent::CompressionComplete {});
+    let _ = on_event.send(StreamEvent::Done {
+        eval_count: 0,
+        eval_duration_ns: 0,
+        final_tps: 0.0,
+        prompt_tokens: 0,
+        context_tokens: summary_tokens as u32,
+    });
+
+    Ok(())
+}
+
 pub(crate) async fn run_stream_task(
     on_event: AgentEventEmitter,
     session_id: String,
@@ -45,6 +137,11 @@ pub(crate) async fn run_stream_task(
             })
     };
 
+    // Interception : /compress déclenche la compression manuelle
+    if is_compress_command(&messages) {
+        return handle_compress_command(&on_event, &session_id, &messages, &model, &provider, cancel).await;
+    }
+
     let mode = match permission_mode_override {
         Some(m) if matches!(m.as_str(), "auto" | "manual" | "chat") => m,
         _ => agent_settings::get_permission_mode().await,
@@ -52,6 +149,8 @@ pub(crate) async fn run_stream_task(
     let is_chat = mode == "chat";
 
     if provider == "ollama" {
+        let ctx = crate::services::compress::context_resolve::resolve_ollama(&model).await;
+
         let final_tools = if tools.is_empty() {
             if is_chat {
                 tool_dispatcher::get_chat_tool_definitions()
@@ -100,11 +199,14 @@ pub(crate) async fn run_stream_task(
             working_dir,
             session_id.clone(),
             cancel,
+            ctx.native,
+            ctx.configured,
         )
         .await
         .map(|_| ())
     } else {
         use crate::services::llm::{model_registry, tool_capable};
+        let ctx = crate::services::compress::context_resolve::resolve_api(&provider, &model).await;
         let registry_caps = model_registry::lookup(&provider, &model).await;
         let model_supports_tools = supports_tools_hint.unwrap_or_else(|| {
             registry_caps.as_ref().map(|c| c.supports_tools).unwrap_or(false)
@@ -176,6 +278,8 @@ pub(crate) async fn run_stream_task(
             working_dir,
             session_id.clone(),
             cancel,
+            ctx.native,
+            ctx.configured,
         )
         .await
         .map(|_| ())

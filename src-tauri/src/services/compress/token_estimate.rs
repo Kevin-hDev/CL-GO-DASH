@@ -1,0 +1,81 @@
+use crate::services::agent_local::types_ollama::ChatMessage;
+
+const BYTES_PER_TOKEN: usize = 4;
+
+pub fn estimate_tokens(messages: &[ChatMessage]) -> usize {
+    messages.iter().map(|m| estimate_message_tokens(m)).sum()
+}
+
+fn estimate_message_tokens(msg: &ChatMessage) -> usize {
+    let mut chars = msg.content.len();
+    if let Some(ref calls) = msg.tool_calls {
+        for call in calls {
+            chars += call.function.name.len();
+            chars += call.function.arguments.to_string().len();
+        }
+    }
+    chars / BYTES_PER_TOKEN
+}
+
+pub fn should_compress(used_tokens: usize, context_window: u64, threshold_pct: u8) -> bool {
+    if threshold_pct == 0 {
+        return false;
+    }
+    let limit = (context_window as f64 * threshold_pct as f64 / 100.0) as usize;
+    used_tokens >= limit
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::services::agent_local::types_ollama::ChatMessage;
+
+    fn msg(role: &str, content: &str) -> ChatMessage {
+        ChatMessage {
+            role: role.to_string(),
+            content: content.to_string(),
+            images: None,
+            tool_calls: None,
+            tool_name: None,
+            tool_call_id: None,
+        }
+    }
+
+    #[test]
+    fn estimate_empty() {
+        assert_eq!(estimate_tokens(&[]), 0);
+    }
+
+    #[test]
+    fn estimate_simple_message() {
+        let msgs = vec![msg("user", &"a".repeat(400))];
+        assert_eq!(estimate_tokens(&msgs), 100);
+    }
+
+    #[test]
+    fn estimate_multiple_messages() {
+        let msgs = vec![
+            msg("user", &"a".repeat(400)),
+            msg("assistant", &"b".repeat(800)),
+            msg("tool", &"c".repeat(1200)),
+        ];
+        assert_eq!(estimate_tokens(&msgs), 600);
+    }
+
+    #[test]
+    fn threshold_check() {
+        assert!(!should_compress(80_000, 100_000, 85));
+        assert!(should_compress(86_000, 100_000, 85));
+    }
+
+    #[test]
+    fn threshold_zero_means_never() {
+        assert!(!should_compress(99_000, 100_000, 0));
+    }
+
+    #[test]
+    fn threshold_100_means_at_max() {
+        assert!(!should_compress(99_999, 100_000, 100));
+        assert!(should_compress(100_000, 100_000, 100));
+    }
+}

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { open as openFileDialog } from "@tauri-apps/plugin-dialog";
 import { MessageList } from "./message-list";
 import { ChatInput } from "./chat-input";
@@ -108,6 +108,12 @@ export function ChatView({
     onNewSession,
   });
 
+  const handleBuiltInCommand = useCallback((name: string) => {
+    if (name === "compress") {
+      chat.sendMessage("/compress");
+    }
+  }, [chat]);
+
   return (
     <FileDropZone
       dragging={fileDrop.dragging}
@@ -117,6 +123,7 @@ export function ChatView({
       <div className="chat-zone">
         <div className="chat-messages" ref={scrollRef} onScroll={handleScroll}>
           <MessageList
+            sessionId={sessionId}
             messages={chat.messages}
             completedSegments={chat.completedSegments}
             currentContent={chat.currentContent}
@@ -195,6 +202,7 @@ export function ChatView({
               }}
               onModelChange={handleModelSelect}
               onToggleThinking={onToggleThinking}
+              onBuiltInCommand={handleBuiltInCommand}
             />
             <ProjectSelector
               projects={projects}

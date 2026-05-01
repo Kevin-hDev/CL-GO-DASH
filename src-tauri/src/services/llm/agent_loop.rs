@@ -4,7 +4,8 @@
 //! jusqu'à ce que le modèle n'appelle plus d'outil. Réutilise `tool_executor::run_tools`
 //! pour dispatcher et gérer les permissions.
 
-use super::stream;
+use super::compress_hook;
+use super::retry;
 use crate::services::agent_local::agent_settings;
 use crate::services::agent_local::circuit_breaker;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
@@ -18,60 +19,6 @@ use std::path::PathBuf;
 use tokio_util::sync::CancellationToken;
 
 const MAX_TURNS: usize = 30;
-const MAX_RETRIES: usize = 2;
-const RETRY_DELAY_MS: u64 = 2000;
-
-fn is_retryable_error(error: &str) -> bool {
-    error.contains("429")
-        || error.contains("rate limit")
-        || error.contains("Rate limit")
-        || error.contains("503")
-        || error.contains("502")
-        || error.contains("timeout")
-        || error.contains("Timeout")
-        || error.contains("ETIMEDOUT")
-        || error.contains("ECONNRESET")
-}
-
-async fn retry_stream(
-    on_event: &AgentEventEmitter,
-    provider_id: &str,
-    model: &str,
-    messages: &[ChatMessage],
-    tools: &[serde_json::Value],
-    think: bool,
-    cancel: CancellationToken,
-) -> Result<StreamResult, String> {
-    let mut last_error = String::new();
-    for attempt in 0..=MAX_RETRIES {
-        if cancel.is_cancelled() {
-            return Err("Annulé".to_string());
-        }
-        if attempt > 0 {
-            let _ = on_event.send(StreamEvent::Error {
-                message: format!("Retry {attempt}/{MAX_RETRIES} après erreur : {last_error}"),
-                is_connection: false,
-            });
-            tokio::time::sleep(tokio::time::Duration::from_millis(
-                RETRY_DELAY_MS * attempt as u64,
-            ))
-            .await;
-        }
-        match stream::stream_chat_no_done(
-            on_event, provider_id, model, messages, tools, think, cancel.clone(),
-        )
-        .await
-        {
-            Ok(result) => return Ok(result),
-            Err(e) if is_retryable_error(&e) && attempt < MAX_RETRIES => {
-                last_error = e;
-                continue;
-            }
-            Err(e) => return Err(e),
-        }
-    }
-    Err(last_error)
-}
 
 /// Les tool defs d'Ollama sont déjà au format OpenAI `{type: "function", function: {...}}`.
 /// Cette fonction est l'identité — gardée pour lisibilité et future divergence.
@@ -89,9 +36,13 @@ pub async fn run_agent_loop(
     working_dir: PathBuf,
     session_id: String,
     cancel: CancellationToken,
+    native_context: u64,
+    configured_context: u64,
 ) -> Result<u32, String> {
     let mut total_eval: u32 = 0;
     let mut total_prompt: u32 = 0;
+    let mut last_prompt: u32 = 0;
+    let mut last_eval: u32 = 0;
     let start = std::time::Instant::now();
     let mut breaker = circuit_breaker::CircuitBreaker::new();
     let mut write_guard = WriteGuard::new();
@@ -102,13 +53,19 @@ pub async fn run_agent_loop(
         }
 
         tool_result_budget::apply_budget(messages);
+        compress_hook::try_auto_compress(on_event, provider_id, model, messages, &session_id, native_context, configured_context, last_prompt + last_eval, cancel.clone()).await;
         let result =
-            retry_stream(on_event, provider_id, model, messages, tools, think, cancel.clone())
+            retry::retry_stream(on_event, provider_id, model, messages, tools, think, cancel.clone())
                 .await?;
 
         total_eval += result.eval_count;
         total_prompt += result.prompt_tokens;
+        last_prompt = result.prompt_tokens;
+        last_eval = result.eval_count;
         messages.push(build_assistant_message(&result));
+
+        // Check post-réponse : compresser si le seuil a été dépassé pendant la génération
+        compress_hook::try_auto_compress(on_event, provider_id, model, messages, &session_id, native_context, configured_context, last_prompt + last_eval, cancel.clone()).await;
 
         if result.tool_calls.is_empty() {
             break;
@@ -165,6 +122,7 @@ pub async fn run_agent_loop(
         eval_duration_ns: elapsed_ns,
         final_tps,
         prompt_tokens: total_prompt,
+        context_tokens: last_prompt + last_eval,
     });
 
     Ok(total_eval + total_prompt)

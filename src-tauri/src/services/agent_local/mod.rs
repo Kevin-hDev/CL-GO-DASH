@@ -4,6 +4,7 @@ pub fn ollama_base_url() -> String {
 
 pub mod agent_loop;
 pub mod agent_md;
+pub mod compress_hook;
 pub mod agent_settings;
 pub mod chat_prompts;
 pub mod model_size;

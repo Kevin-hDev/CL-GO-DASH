@@ -654,13 +654,14 @@ dependencies = [
 
 [[package]]
 name = "cl-go-dash"
-version = "0.7.8"
+version = "0.7.9"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
  "calamine",
  "chacha20poly1305",
  "chrono",
+ "core-foundation 0.10.1",
  "dirs 6.0.0",
  "dom_smoothie",
  "eventsource-stream",

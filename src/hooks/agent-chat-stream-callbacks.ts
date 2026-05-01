@@ -163,24 +163,28 @@ export function finishPartialStream(state: ManagedStreamState): StreamApplyResul
 }
 
 function finishStream(state: ManagedStreamState, event: Extract<StreamEvent, { event: "done" }>) {
+  const contextTokens = event.data.contextTokens || 0;
   return finalizeStream(
     state,
     event.data.evalCount || 0,
-    event.data.promptTokens || 0,
     event.data.finalTps,
+    contextTokens,
   );
 }
 
 function finalizeStream(
-  state: ManagedStreamState, outputTokens: number, promptTokens: number, tps: number,
+  state: ManagedStreamState, outputTokens: number, tps: number, contextTokens: number,
 ): StreamApplyResult {
   const all = state.currentContent || state.currentThinking || state.currentTools.length > 0
     ? appendCurrentSegment(state) : state.completedSegments;
   const totalMs = state.streamStartedAt ? Date.now() - state.streamStartedAt : 0;
+  const resolvedTokenCount = contextTokens > 0
+    ? contextTokens
+    : state.tokenCount + outputTokens;
   const next: ManagedStreamState = {
     ...state, completedSegments: [], currentContent: "", currentThinking: "",
     currentTools: [], isStreaming: false, tps,
-    tokenCount: state.tokenCount + outputTokens + promptTokens,
+    tokenCount: resolvedTokenCount,
     lastRequestTokens: outputTokens, liveTokenCount: 0,
     streamStartedAt: null, segmentStartedAt: null, totalElapsedMs: totalMs,
     pendingPermissions: [], completed: true, updatedAt: Date.now(),
