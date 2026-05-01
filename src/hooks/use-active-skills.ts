@@ -27,9 +27,7 @@ export function useActiveSkills(
     if (!result) return;
 
     if ("builtIn" in result) {
-      const lastSlash = text.lastIndexOf("/");
-      setText(lastSlash > 0 ? text.slice(0, lastSlash).trimEnd() : "");
-      onBuiltInCommand?.(result.builtIn.name);
+      setText("/" + result.builtIn.name);
       return;
     }
 
