@@ -1,5 +1,4 @@
-import { TerminalWindow, Spinner } from "@phosphor-icons/react";
-import { useTranslation } from "react-i18next";
+import { Spinner } from "@phosphor-icons/react";
 import type { ToolActivity } from "@/hooks/agent-chat-utils";
 import type { ToolActivityRecord } from "@/types/agent";
 import { isFileTool } from "@/lib/tool-file-path";
@@ -17,13 +16,6 @@ const BUBBLE_STYLE = {
   border: "1px solid var(--edge)",
   borderRadius: "var(--radius-md, 8px)",
   padding: "10px 14px", alignSelf: "center" as const, margin: "6px auto",
-};
-
-const HEADER_STYLE = {
-  display: "flex", alignItems: "center", gap: 6,
-  marginBottom: 8, opacity: 0.5,
-  fontSize: "11px", color: "var(--ink-muted)",
-  textTransform: "uppercase" as const, letterSpacing: "0.5px",
 };
 
 const ROW_STYLE = {
@@ -54,11 +46,9 @@ export function ToolBubble({
   tools,
   onFilePreview,
 }: { tools: ToolActivity[]; onFilePreview?: (path: string) => void }) {
-  const { t: tl } = useTranslation();
   if (tools.length === 0) return null;
   return (
     <div style={BUBBLE_STYLE}>
-      <div style={HEADER_STYLE}><TerminalWindow size={12} weight="bold" /> {tl("agentLocal.tools")}</div>
       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
         {tools.map((t, i) => {
           const skipWrite = t.name === "write_file" && i > 0
@@ -81,11 +71,9 @@ export function SavedToolBubble({
   tools,
   onFilePreview,
 }: { tools: ToolActivityRecord[]; onFilePreview?: (path: string) => void }) {
-  const { t: tl } = useTranslation();
   if (tools.length === 0) return null;
   return (
     <div style={BUBBLE_STYLE}>
-      <div style={HEADER_STYLE}><TerminalWindow size={12} weight="bold" /> {tl("agentLocal.tools")}</div>
       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
         {tools.map((t, i) => {
           const skipWrite = t.name === "write_file" && i > 0
