@@ -1,10 +1,8 @@
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::types_ollama::{StreamEvent, StreamResult};
-use crate::services::stream_utils::{clean_think_tags, compute_tps};
+use crate::services::stream_utils::{compute_tps, FilteredChunk, ThinkTagFilter};
 use tokio::sync::mpsc;
 
-/// Traite un chunk JSON du stream Ollama.
-/// Si `tool_tx` est fourni, les tool calls sont aussi envoyés via le canal pour eager dispatch.
 pub fn process_chunk(
     text: &str,
     on_event: &AgentEventEmitter,
@@ -13,6 +11,7 @@ pub fn process_chunk(
     result: &mut StreamResult,
     should_emit_done: bool,
     tool_tx: Option<&mpsc::UnboundedSender<(usize, String, serde_json::Value)>>,
+    think_filter: &mut ThinkTagFilter,
 ) -> Result<(), String> {
     let chunk: serde_json::Value =
         serde_json::from_str(text).map_err(|e| format!("JSON invalide: {e}"))?;
@@ -25,6 +24,7 @@ pub fn process_chunk(
     if chunk["done"].as_bool() == Some(true) {
         result.eval_count = chunk["eval_count"].as_u64().unwrap_or(0) as u32;
         result.prompt_tokens = chunk["prompt_eval_count"].as_u64().unwrap_or(0) as u32;
+        flush_filter(think_filter, on_event, token_count, first_token, result);
         if should_emit_done {
             return emit_done(on_event, &chunk);
         }
@@ -43,19 +43,8 @@ pub fn process_chunk(
     }
 
     if let Some(content) = msg["content"].as_str() {
-        let cleaned = clean_think_tags(content);
-        if !cleaned.is_empty() {
-            result.content.push_str(&cleaned);
-            *token_count += 1;
-            if first_token.is_none() {
-                *first_token = Some(std::time::Instant::now());
-            }
-            let tps = compute_tps(*token_count, *first_token);
-            let _ = on_event.send(StreamEvent::Token {
-                content: cleaned,
-                token_count: *token_count,
-                tps,
-            });
+        if !content.is_empty() {
+            emit_filtered(think_filter, content, on_event, token_count, first_token, result);
         }
     }
 
@@ -70,7 +59,6 @@ pub fn process_chunk(
                 name: name.clone(),
                 arguments: args.clone(),
             });
-            // Eager dispatch : notifier le canal si disponible
             if let Some(tx) = tool_tx {
                 let _ = tx.send((idx, name, args));
             }
@@ -78,6 +66,67 @@ pub fn process_chunk(
     }
 
     Ok(())
+}
+
+fn emit_filtered(
+    filter: &mut ThinkTagFilter,
+    content: &str,
+    on_event: &AgentEventEmitter,
+    token_count: &mut u32,
+    first_token: &mut Option<std::time::Instant>,
+    result: &mut StreamResult,
+) {
+    for chunk in filter.feed(content) {
+        match chunk {
+            FilteredChunk::Thinking(t) => {
+                result.thinking.push_str(&t);
+                let _ = on_event.send(StreamEvent::Thinking { content: t });
+            }
+            FilteredChunk::Content(c) => {
+                result.content.push_str(&c);
+                *token_count += 1;
+                if first_token.is_none() {
+                    *first_token = Some(std::time::Instant::now());
+                }
+                let tps = compute_tps(*token_count, *first_token);
+                let _ = on_event.send(StreamEvent::Token {
+                    content: c,
+                    token_count: *token_count,
+                    tps,
+                });
+            }
+        }
+    }
+}
+
+fn flush_filter(
+    filter: &mut ThinkTagFilter,
+    on_event: &AgentEventEmitter,
+    token_count: &mut u32,
+    first_token: &mut Option<std::time::Instant>,
+    result: &mut StreamResult,
+) {
+    for chunk in filter.flush() {
+        match chunk {
+            FilteredChunk::Thinking(t) => {
+                result.thinking.push_str(&t);
+                let _ = on_event.send(StreamEvent::Thinking { content: t });
+            }
+            FilteredChunk::Content(c) => {
+                result.content.push_str(&c);
+                *token_count += 1;
+                if first_token.is_none() {
+                    *first_token = Some(std::time::Instant::now());
+                }
+                let tps = compute_tps(*token_count, *first_token);
+                let _ = on_event.send(StreamEvent::Token {
+                    content: c,
+                    token_count: *token_count,
+                    tps,
+                });
+            }
+        }
+    }
 }
 
 pub fn emit_done(on_event: &AgentEventEmitter, chunk: &serde_json::Value) -> Result<(), String> {

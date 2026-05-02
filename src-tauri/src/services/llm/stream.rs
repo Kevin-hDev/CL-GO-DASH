@@ -3,6 +3,7 @@ use super::stream_tools::ToolCallAccumulator;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::types_ollama::{ChatMessage, StreamEvent, StreamResult};
 use crate::services::llm::stream_convert;
+use crate::services::stream_utils::{compute_tps, FilteredChunk, ThinkTagFilter};
 use eventsource_stream::Eventsource;
 use futures_util::StreamExt;
 use tokio_util::sync::CancellationToken;
@@ -54,6 +55,7 @@ async fn consume_stream(
     let mut token_count: u32 = 0;
     let mut first_token: Option<std::time::Instant> = None;
     let mut acc = ToolCallAccumulator::new();
+    let mut think_filter = ThinkTagFilter::new();
 
     loop {
         tokio::select! {
@@ -65,7 +67,22 @@ async fn consume_stream(
                 let Some(event) = event else { break; };
                 let event = event.map_err(|e| format!("SSE: {e}"))?;
                 if event.data.trim() == "[DONE]" { continue; }
-                process_chunk(&event.data, on_event, &mut token_count, &mut first_token, &mut result, &mut acc);
+                process_chunk(&event.data, on_event, &mut token_count, &mut first_token, &mut result, &mut acc, &mut think_filter);
+            }
+        }
+    }
+
+    for chunk in think_filter.flush() {
+        match chunk {
+            FilteredChunk::Thinking(t) => {
+                result.thinking.push_str(&t);
+                let _ = on_event.send(StreamEvent::Thinking { content: t });
+            }
+            FilteredChunk::Content(c) => {
+                result.content.push_str(&c);
+                token_count += 1;
+                let tps = compute_tps(token_count, first_token);
+                let _ = on_event.send(StreamEvent::Token { content: c, token_count, tps });
             }
         }
     }
@@ -93,6 +110,7 @@ fn process_chunk(
     first_token: &mut Option<std::time::Instant>,
     result: &mut StreamResult,
     acc: &mut ToolCallAccumulator,
+    think_filter: &mut ThinkTagFilter,
 ) {
     let chunk: serde_json::Value = match serde_json::from_str(data) {
         Ok(v) => v,
@@ -113,19 +131,26 @@ fn process_chunk(
         }
         if let Some(content) = delta["content"].as_str() {
             if !content.is_empty() {
-                let cleaned = clean_think_tags(content);
-                if !cleaned.is_empty() {
-                    result.content.push_str(&cleaned);
-                    *token_count += 1;
-                    if first_token.is_none() {
-                        *first_token = Some(std::time::Instant::now());
+                for filtered in think_filter.feed(content) {
+                    match filtered {
+                        FilteredChunk::Thinking(t) => {
+                            result.thinking.push_str(&t);
+                            let _ = on_event.send(StreamEvent::Thinking { content: t });
+                        }
+                        FilteredChunk::Content(c) => {
+                            result.content.push_str(&c);
+                            *token_count += 1;
+                            if first_token.is_none() {
+                                *first_token = Some(std::time::Instant::now());
+                            }
+                            let tps = compute_tps(*token_count, *first_token);
+                            let _ = on_event.send(StreamEvent::Token {
+                                content: c,
+                                token_count: *token_count,
+                                tps,
+                            });
+                        }
                     }
-                    let tps = compute_tps(*token_count, *first_token);
-                    let _ = on_event.send(StreamEvent::Token {
-                        content: cleaned,
-                        token_count: *token_count,
-                        tps,
-                    });
                 }
             }
         }
@@ -138,7 +163,5 @@ fn process_chunk(
         result.prompt_tokens = usage.get("prompt_tokens").and_then(|v| v.as_u64()).unwrap_or(0) as u32;
     }
 }
-
-use crate::services::stream_utils::{compute_tps, clean_think_tags};
 
 pub use super::stream_silent::collect_chat_silent;

@@ -2,6 +2,7 @@ use crate::services::agent_local::types_ollama::{ChatMessage, ChatRequest, Strea
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::ollama_stream_process::process_chunk;
 use crate::services::agent_local::ollama_base_url;
+use crate::services::stream_utils::ThinkTagFilter;
 use futures_util::StreamExt;
 use std::time::Duration;
 use tokio::io::{AsyncBufReadExt, BufReader};
@@ -114,6 +115,7 @@ async fn stream_chat_inner(
     let mut token_count: u32 = 0;
     let mut first_token: Option<std::time::Instant> = None;
     let mut result = StreamResult::default();
+    let mut think_filter = ThinkTagFilter::new();
 
     loop {
         tokio::select! {
@@ -130,7 +132,7 @@ async fn stream_chat_inner(
                     Ok(Some(text)) => {
                         if let Err(e) = process_chunk(
                             &text, on_event, &mut token_count, &mut first_token,
-                            &mut result, emit_done, tool_tx.as_ref(),
+                            &mut result, emit_done, tool_tx.as_ref(), &mut think_filter,
                         ) {
                             let _ = on_event.send(StreamEvent::Error { message: e.clone(), is_connection: false });
                             return Err(e);

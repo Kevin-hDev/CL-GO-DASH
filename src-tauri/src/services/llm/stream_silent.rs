@@ -1,18 +1,12 @@
-//! Collecte silencieuse de réponse LLM API.
-//!
-//! Consomme le stream SSE sans émettre de tokens au frontend.
-//! Utilisé exclusivement pour la compression de contexte.
-
 use super::stream_http::{post_chat_request, RequestConfig};
 use super::stream_tools::ToolCallAccumulator;
 use crate::services::agent_local::types_ollama::StreamResult;
 use crate::services::agent_local::types_ollama::ChatMessage;
-use crate::services::stream_utils::clean_think_tags;
+use crate::services::stream_utils::{FilteredChunk, ThinkTagFilter};
 use eventsource_stream::Eventsource;
 use futures_util::StreamExt;
 use tokio_util::sync::CancellationToken;
 
-/// Collecte la réponse du LLM API sans émettre de tokens au frontend.
 pub async fn collect_chat_silent(
     provider_id: &str,
     model: &str,
@@ -31,6 +25,7 @@ async fn consume_silent(
     let mut stream = resp.bytes_stream().eventsource();
     let mut result = StreamResult::default();
     let mut acc = ToolCallAccumulator::new();
+    let mut think_filter = ThinkTagFilter::new();
 
     loop {
         tokio::select! {
@@ -42,8 +37,14 @@ async fn consume_silent(
                 let Some(event) = event else { break; };
                 let event = event.map_err(|e| format!("SSE: {e}"))?;
                 if event.data.trim() == "[DONE]" { continue; }
-                process_chunk_silent(&event.data, &mut result, &mut acc);
+                process_chunk_silent(&event.data, &mut result, &mut acc, &mut think_filter);
             }
+        }
+    }
+
+    for chunk in think_filter.flush() {
+        if let FilteredChunk::Content(c) = chunk {
+            result.content.push_str(&c);
         }
     }
 
@@ -62,6 +63,7 @@ fn process_chunk_silent(
     data: &str,
     result: &mut StreamResult,
     acc: &mut ToolCallAccumulator,
+    think_filter: &mut ThinkTagFilter,
 ) {
     let chunk: serde_json::Value = match serde_json::from_str(data) {
         Ok(v) => v,
@@ -71,9 +73,10 @@ fn process_chunk_silent(
         let delta = &choice["delta"];
         if let Some(content) = delta["content"].as_str() {
             if !content.is_empty() {
-                let cleaned = clean_think_tags(content);
-                if !cleaned.is_empty() {
-                    result.content.push_str(&cleaned);
+                for filtered in think_filter.feed(content) {
+                    if let FilteredChunk::Content(c) = filtered {
+                        result.content.push_str(&c);
+                    }
                 }
             }
         }
