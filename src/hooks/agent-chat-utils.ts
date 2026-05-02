@@ -25,6 +25,9 @@ export function toolsToRecords(tools: ToolActivity[]): ToolActivityRecord[] {
     else if (t.name === "glob") summary = String(a.pattern ?? "");
     else if (t.name === "web_search") summary = String(a.query ?? "");
     else if (t.name === "web_fetch") summary = String(a.url ?? "");
+    else if (t.name === "read_spreadsheet") summary = String(a.path ?? "");
+    else if (t.name === "read_document") summary = String(a.path ?? "");
+    else if (t.name === "read_image") summary = String(a.path ?? "");
     else summary = JSON.stringify(a).slice(0, 80);
 
     return {
@@ -90,6 +93,7 @@ function rebuildArgs(name: string, summary: string): Record<string, string> {
   if (name === "bash") return { command: summary };
   if (name === "grep" || name === "glob") return { pattern: summary };
   if (["read_file", "write_file", "edit_file", "list_dir"].includes(name)) return { path: summary };
+  if (["read_spreadsheet", "read_document", "read_image"].includes(name)) return { path: summary };
   return { input: summary };
 }
 

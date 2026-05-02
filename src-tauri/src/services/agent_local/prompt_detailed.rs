@@ -35,7 +35,18 @@ Prefer this over write_file for modifications — it sends only the diff.
 - **glob**: Find files by name patterns across the project.
 - **web_search**: Search the web for current information, documentation, or solutions.
 - **web_fetch**: Fetch and extract content from a URL.
-- **load_skill**: Load a skill by name for specialized workflows.";
+- **load_skill**: Load a skill by name for specialized workflows.
+- **read_spreadsheet**: Read Excel (.xlsx/.xls/.ods) or CSV/TSV files. Returns structured JSON with headers and rows. \
+Supports sheet selection, cell range filtering, and row limits.
+- **write_spreadsheet**: Create or modify Excel (.xlsx) files using operations: \
+set_cell, set_row, set_formula, add_sheet, set_column_width. \
+If the file exists it is modified in place, otherwise a new file is created.
+- **read_document**: Extract text from PDF or Word (.docx) files. Returns the full text content.
+- **write_document**: Create Word (.docx) documents from structured content blocks: \
+heading (text + level), paragraph (text + bold/italic), table (headers + rows), list (items + ordered).
+- **read_image**: Read image metadata (dimensions, format, file size). Supports JPEG, PNG, WebP, GIF, BMP.
+- **process_image**: Resize, crop, or convert images. Operations: resize (fit/fill/exact), crop, quality. \
+Output format is determined by the output file extension.";
 
 fn env_section(working_dir: &Path) -> String {
     let os = std::env::consts::OS;
@@ -77,6 +88,10 @@ Prefer dedicated tools over bash when one fits:
 - To create new files: use write_file (not echo/cat via bash)
 - To search contents: use grep (not grep/rg via bash)
 - To find files: use glob (not find/ls via bash)
+- To read/write spreadsheets: use read_spreadsheet/write_spreadsheet (not edit_file, not Python/pandas via bash)
+- To read PDF/Word files: use read_document/write_document (not edit_file, not Python via bash). For .txt/.md use read_file/write_file.
+- To read/process images: use read_image/process_image (not Python/ImageMagick via bash)
+- When adding totals or computed values to spreadsheets, use set_formula with Excel formulas (=SUM, =AVERAGE) instead of computing values yourself.
 - Reserve bash for: system commands, git operations, package management, \
 running tests, compiling, process management, and any task that requires shell execution.";
 

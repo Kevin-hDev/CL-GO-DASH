@@ -28,7 +28,7 @@ fn is_protected_app_file(path_str: &str) -> bool {
 }
 
 pub fn run_pre_hooks(tool_name: &str, args: &Value) -> PreHookDecision {
-    if matches!(tool_name, "write_file" | "edit_file" | "read_file") {
+    if matches!(tool_name, "write_file" | "edit_file" | "read_file" | "write_spreadsheet" | "write_document") {
         if let Some(path) = args["path"].as_str() {
             if path.contains("..") {
                 return PreHookDecision::Deny("Chemin avec '..' interdit".into());
@@ -36,7 +36,17 @@ pub fn run_pre_hooks(tool_name: &str, args: &Value) -> PreHookDecision {
         }
     }
 
-    if matches!(tool_name, "write_file" | "edit_file") {
+    if tool_name == "process_image" {
+        for key in &["input_path", "output_path"] {
+            if let Some(path) = args[*key].as_str() {
+                if path.contains("..") {
+                    return PreHookDecision::Deny("Chemin avec '..' interdit".into());
+                }
+            }
+        }
+    }
+
+    if matches!(tool_name, "write_file" | "edit_file" | "write_spreadsheet" | "write_document") {
         if let Some(path) = args["path"].as_str() {
             if is_protected_app_file(path) {
                 return PreHookDecision::Deny(

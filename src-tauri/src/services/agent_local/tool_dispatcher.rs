@@ -81,7 +81,7 @@ fn persist_result(content: &str, session_id: &str) -> Option<String> {
     Some(path.to_string_lossy().into_owned())
 }
 
-async fn dispatch_inner(tool_name: &str, args: &Value, working_dir: &Path) -> ToolResult {
+async fn dispatch_inner(tool_name: &str, args: &Value, working_dir: &Path, session_id: &str) -> ToolResult {
     match tool_name {
         "bash" => {
             let cmd = args["command"].as_str().unwrap_or("");
@@ -160,7 +160,12 @@ async fn dispatch_inner(tool_name: &str, args: &Value, working_dir: &Path) -> To
                 Err(e) => ToolResult::err(e),
             }
         }
-        _ => ToolResult::err(format!("Outil inconnu: {tool_name}")),
+        _ => {
+            match super::tool_dispatcher_office::dispatch_office(tool_name, args, working_dir, session_id).await {
+                Some(result) => result,
+                None => ToolResult::err(format!("Outil inconnu: {tool_name}")),
+            }
+        }
     }
 }
 
@@ -189,7 +194,7 @@ pub(crate) fn enrich_error(mut result: ToolResult, tool_name: &str) -> ToolResul
 }
 
 pub async fn dispatch(tool_name: &str, args: &Value, working_dir: &Path, session_id: &str) -> ToolResult {
-    let result = dispatch_inner(tool_name, args, working_dir).await;
+    let result = dispatch_inner(tool_name, args, working_dir, session_id).await;
     let result = truncate_result(result, tool_name, session_id);
     enrich_error(result, tool_name)
 }

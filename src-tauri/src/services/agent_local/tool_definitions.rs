@@ -1,7 +1,7 @@
 use serde_json::Value;
 
 pub fn get_tool_definitions() -> Vec<Value> {
-    vec![
+    let mut defs = vec![
         tool_def(
             "bash",
             "Execute any shell command on the user's system. Use for system commands, git, \
@@ -130,7 +130,9 @@ pub fn get_tool_definitions() -> Vec<Value> {
                 "required": ["skill_name"]
             }),
         ),
-    ]
+    ];
+    defs.extend(super::tool_definitions_office::office_tool_definitions());
+    defs
 }
 
 pub fn get_chat_tool_definitions() -> Vec<Value> {

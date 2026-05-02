@@ -28,7 +28,13 @@ Default timeout is 120s. For long-running commands, set a higher timeout (up to 
 - **glob**: Find files by name patterns.
 - **web_search**: Search the web for information.
 - **web_fetch**: Fetch content from a URL.
-- **load_skill**: Load a skill by name for specialized tasks.";
+- **load_skill**: Load a skill by name for specialized tasks.
+- **read_spreadsheet**: Read Excel (.xlsx/.xls/.ods) or CSV files. Returns JSON with headers and rows.
+- **write_spreadsheet**: Create or modify Excel (.xlsx) files with operations (set_cell, set_row, set_formula).
+- **read_document**: Extract text from PDF or Word (.docx) files.
+- **write_document**: Create Word (.docx) documents from structured blocks (heading, paragraph, table, list).
+- **read_image**: Read image metadata (dimensions, format, size). Supports JPEG, PNG, WebP.
+- **process_image**: Resize, crop, or convert images between formats.";
 
 fn env_section(working_dir: &Path) -> String {
     let os = std::env::consts::OS;
@@ -57,6 +63,10 @@ Prefer dedicated tools over bash when one fits:
 - To edit files: use edit_file, not sed/awk via bash
 - To search contents: use grep, not grep/rg via bash
 - To find files: use glob, not find/ls via bash
+- To read/write spreadsheets: use read_spreadsheet/write_spreadsheet (not edit_file, not Python/pandas via bash)
+- To read PDF/Word files: use read_document/write_document (not edit_file, not Python via bash). For .txt/.md use read_file/write_file.
+- To read/process images: use read_image/process_image (not Python/ImageMagick via bash)
+- When adding totals or computed values to spreadsheets, use set_formula with Excel formulas (=SUM, =AVERAGE) instead of computing values yourself.
 - Reserve bash for system commands and shell operations that dedicated tools cannot handle.
 Call multiple independent tools in parallel when possible.
 Keep going until the task is fully resolved. Do not stop halfway.

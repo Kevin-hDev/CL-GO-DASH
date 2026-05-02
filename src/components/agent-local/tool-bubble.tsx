@@ -9,6 +9,12 @@ const TOOL_COLORS: Record<string, string> = {
   write_file: "var(--tool-file-write)", edit_file: "var(--tool-file-write)",
   list_dir: "var(--tool-search)", grep: "var(--tool-search)", glob: "var(--tool-search)",
   web_search: "var(--tool-web)", web_fetch: "var(--tool-web)",
+  read_spreadsheet: "var(--tool-office-read)",
+  read_document: "var(--tool-office-read)",
+  read_image: "var(--tool-office-read)",
+  write_spreadsheet: "var(--tool-office-write)",
+  write_document: "var(--tool-office-write)",
+  process_image: "var(--tool-office-write)",
 };
 
 const BUBBLE_STYLE = {
@@ -39,6 +45,12 @@ function toolSummary(t: ToolActivity): string {
   if (t.name === "list_dir") return String(a.path ?? ".");
   if (t.name === "web_search") return String(a.query ?? "");
   if (t.name === "web_fetch") return String(a.url ?? "");
+  if (t.name === "read_spreadsheet") return String(a.path ?? "");
+  if (t.name === "read_document") return String(a.path ?? "");
+  if (t.name === "read_image") return String(a.path ?? "");
+  if (t.name === "write_spreadsheet") return String(a.path ?? "");
+  if (t.name === "write_document") return String(a.path ?? "");
+  if (t.name === "process_image") return String(a.input_path ?? "");
   return JSON.stringify(a).slice(0, 80);
 }
 

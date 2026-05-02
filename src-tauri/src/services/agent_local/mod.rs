@@ -30,7 +30,32 @@ pub mod session_store;
 pub mod stream_events;
 pub mod tab_store;
 pub mod tool_definitions;
+pub mod tool_office_utils;
+pub mod tool_definitions_office;
 pub mod tool_dispatcher;
+pub mod tool_dispatcher_office;
+pub mod tool_spreadsheet_calamine;
+pub mod tool_spreadsheet_read;
+#[cfg(test)]
+pub mod tool_spreadsheet_read_tests;
+pub mod tool_spreadsheet_write;
+pub mod tool_spreadsheet_write_new;
+pub mod tool_spreadsheet_write_edit;
+#[cfg(test)]
+pub mod tool_spreadsheet_write_tests;
+pub mod tool_document_read;
+#[cfg(test)]
+pub mod tool_document_read_tests;
+pub mod tool_image_read;
+#[cfg(test)]
+pub mod tool_image_read_tests;
+pub mod tool_document_write;
+pub mod tool_document_write_xml;
+#[cfg(test)]
+pub mod tool_document_write_tests;
+pub mod tool_image_process;
+#[cfg(test)]
+pub mod tool_image_process_tests;
 pub mod tool_executor;
 pub mod tool_executor_helpers;
 pub mod tool_executor_parallel;
