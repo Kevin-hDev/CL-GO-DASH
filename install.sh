@@ -64,28 +64,49 @@ TMP_DIR=$(mktemp -d)
 TMP_FILE="${TMP_DIR}/${APP_NAME}-update${EXT}"
 curl -fSL --progress-bar -o "${TMP_FILE}" "${ASSET_URL}" || fail "Échec du téléchargement."
 
+# --- Choix du répertoire d'installation ---
+if [ "${PLATFORM}" = "macos" ]; then
+  DEFAULT_DIR="/Applications"
+else
+  DEFAULT_DIR="${HOME}/.local/bin"
+fi
+
+printf "\n\033[1;33m📁 Répertoire d'installation : %s\033[0m\n" "${DEFAULT_DIR}"
+printf "   Appuie sur Entrée pour accepter, ou tape un autre chemin : "
+read -r CUSTOM_DIR < /dev/tty 2>/dev/null || CUSTOM_DIR=""
+if [ -n "${CUSTOM_DIR}" ]; then
+  INSTALL_DIR="${CUSTOM_DIR}"
+else
+  INSTALL_DIR="${DEFAULT_DIR}"
+fi
+
+case "${INSTALL_DIR}" in
+  ~/*) INSTALL_DIR="${HOME}/${INSTALL_DIR#\~/}" ;;
+  ~)   INSTALL_DIR="${HOME}" ;;
+esac
+
+mkdir -p "${INSTALL_DIR}" 2>/dev/null || fail "Impossible de créer ${INSTALL_DIR}. Vérifie les permissions."
+
 # --- Installation ---
 if [ "${PLATFORM}" = "macos" ]; then
-  info "Installation dans /Applications..."
+  info "Installation dans ${INSTALL_DIR}..."
   VOL=$(hdiutil attach "${TMP_FILE}" -nobrowse -noverify 2>/dev/null | grep "/Volumes/" | sed 's/.*\(\/Volumes\/[^ ]*\).*/\1/' | head -1)
   [ -z "${VOL}" ] && fail "Impossible de monter le DMG."
 
   if [ -d "${VOL}/${APP_NAME}.app" ]; then
-    rm -rf "/Applications/${APP_NAME}.app"
-    cp -Rf "${VOL}/${APP_NAME}.app" "/Applications/${APP_NAME}.app"
+    rm -rf "${INSTALL_DIR}/${APP_NAME}.app"
+    cp -Rf "${VOL}/${APP_NAME}.app" "${INSTALL_DIR}/${APP_NAME}.app"
   else
     hdiutil detach "${VOL}" -quiet 2>/dev/null
     fail "${APP_NAME}.app introuvable dans le DMG."
   fi
   hdiutil detach "${VOL}" -quiet 2>/dev/null
   rm -rf "${TMP_DIR}"
-  ok "${APP_NAME} v${VERSION} installé dans /Applications/"
+  ok "${APP_NAME} v${VERSION} installé dans ${INSTALL_DIR}/"
   info "Lancement..."
-  open "/Applications/${APP_NAME}.app"
+  open "${INSTALL_DIR}/${APP_NAME}.app"
 
 elif [ "${PLATFORM}" = "linux" ]; then
-  INSTALL_DIR="${HOME}/.local/bin"
-  mkdir -p "${INSTALL_DIR}"
   DEST="${INSTALL_DIR}/${APP_NAME}.AppImage"
   mv "${TMP_FILE}" "${DEST}"
   chmod +x "${DEST}"

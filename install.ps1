@@ -34,11 +34,25 @@ $tmpFile = Join-Path $tmpDir $asset.name
 Info "Téléchargement de $AppName v$version..."
 Invoke-WebRequest -Uri $url -OutFile $tmpFile -UseBasicParsing
 
-Info "Installation..."
-if ($tmpFile -like "*.msi") {
-    Start-Process msiexec.exe -ArgumentList "/i", "`"$tmpFile`"", "/passive" -Wait
+$defaultDir = Join-Path $env:LOCALAPPDATA $AppName
+Write-Host ""
+Write-Host "📁 Répertoire d'installation : $defaultDir" -ForegroundColor Yellow
+$customDir = Read-Host "   Appuie sur Entrée pour accepter, ou tape un autre chemin"
+if ($customDir) {
+    $installDir = $customDir
 } else {
-    Start-Process $tmpFile -ArgumentList "/S" -Wait
+    $installDir = $defaultDir
+}
+
+if (-not (Test-Path $installDir)) {
+    New-Item -ItemType Directory -Force -Path $installDir | Out-Null
+}
+
+Info "Installation dans $installDir..."
+if ($tmpFile -like "*.msi") {
+    Start-Process msiexec.exe -ArgumentList "/i", "`"$tmpFile`"", "/passive", "INSTALLDIR=`"$installDir`"" -Wait
+} else {
+    Start-Process $tmpFile -ArgumentList "/S", "/D=$installDir" -Wait
 }
 
 Remove-Item -Recurse -Force $tmpDir -ErrorAction SilentlyContinue
