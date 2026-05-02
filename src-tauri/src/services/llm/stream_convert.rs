@@ -69,16 +69,22 @@ pub fn message_to_openai(msg: &ChatMessage, provider_id: &str) -> Value {
     }
 }
 
+fn detect_mime(b64: &str) -> &'static str {
+    let prefix = &b64[..b64.len().min(16)];
+    if prefix.starts_with("/9j/") { "image/jpeg" }
+    else if prefix.starts_with("iVBOR") { "image/png" }
+    else if prefix.starts_with("R0lGO") { "image/gif" }
+    else if prefix.starts_with("UklGR") { "image/webp" }
+    else { "image/png" }
+}
+
 fn build_image_part(base64_data: &str, provider_id: &str) -> Value {
-    let data_url = format!("data:image/png;base64,{base64_data}");
+    let mime = detect_mime(base64_data);
+    let data_url = format!("data:{mime};base64,{base64_data}");
     match provider_id {
         "mistral" => json!({
             "type": "image_url",
             "image_url": data_url,
-        }),
-        "google" => json!({
-            "type": "image_url",
-            "image_url": { "url": data_url },
         }),
         _ => json!({
             "type": "image_url",

@@ -32,6 +32,9 @@ impl std::fmt::Display for RequestError {
 }
 
 pub async fn post_chat_request(cfg: &RequestConfig<'_>) -> Result<reqwest::Response, RequestError> {
+    if cfg.model.len() > 128 {
+        return Err(RequestError::Fatal("nom de modèle trop long".into()));
+    }
     let spec = catalog::find(cfg.provider_id)
         .ok_or_else(|| RequestError::Fatal(format!("provider inconnu : {}", cfg.provider_id)))?;
     let key = api_keys::get_key(cfg.provider_id)
@@ -86,8 +89,8 @@ pub async fn post_chat_request(cfg: &RequestConfig<'_>) -> Result<reqwest::Respo
         .await
         .map_err(|e| RequestError::Fatal(format!("Connexion {} échouée: {e}", spec.display_name)))?;
 
-    if cfg.provider_id == "groq" || cfg.provider_id == "xai" {
-        super::quota::update_groq_limits(resp.headers());
+    if matches!(cfg.provider_id, "groq" | "xai") {
+        super::quota::update_ratelimit_headers(cfg.provider_id, resp.headers());
     }
 
     let status = resp.status();

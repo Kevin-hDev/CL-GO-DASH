@@ -18,16 +18,20 @@ pub struct ProviderQuota {
 
 const TIMEOUT: Duration = Duration::from_secs(10);
 
-// Cache des headers rate-limit Groq (mis à jour après chaque appel chat).
-static GROQ_LIMITS: std::sync::LazyLock<Mutex<HashMap<String, String>>> =
+static RATELIMIT_CACHE: std::sync::LazyLock<Mutex<HashMap<String, HashMap<String, String>>>> =
     std::sync::LazyLock::new(|| Mutex::new(HashMap::new()));
 
-/// Appelé par stream_http après chaque réponse Groq pour capturer les headers.
-pub fn update_groq_limits(headers: &reqwest::header::HeaderMap) {
-    let mut cache = match GROQ_LIMITS.lock() {
+fn quota_client() -> Option<Client> {
+    Client::builder().timeout(TIMEOUT).build().ok()
+}
+
+/// Appelé par stream_http après chaque réponse pour capturer les headers rate-limit.
+pub fn update_ratelimit_headers(provider_id: &str, headers: &reqwest::header::HeaderMap) {
+    let mut cache = match RATELIMIT_CACHE.lock() {
         Ok(c) => c,
         Err(_) => return,
     };
+    let entry = cache.entry(provider_id.to_string()).or_default();
     for key in &[
         "x-ratelimit-limit-requests",
         "x-ratelimit-remaining-requests",
@@ -35,7 +39,7 @@ pub fn update_groq_limits(headers: &reqwest::header::HeaderMap) {
         "x-ratelimit-remaining-tokens",
     ] {
         if let Some(v) = headers.get(*key).and_then(|v| v.to_str().ok()) {
-            cache.insert(key.to_string(), v.to_string());
+            entry.insert(key.to_string(), v.to_string());
         }
     }
 }
@@ -44,18 +48,19 @@ pub async fn fetch_quota(provider_id: &str) -> Option<ProviderQuota> {
     match provider_id {
         "deepseek" => fetch_deepseek().await,
         "openrouter" => fetch_openrouter().await,
-        "groq" | "xai" => fetch_groq(),
+        "groq" | "xai" => fetch_ratelimit(provider_id),
         "moonshot" => fetch_moonshot().await,
         _ => None,
     }
 }
 
-fn fetch_groq() -> Option<ProviderQuota> {
-    let cache = GROQ_LIMITS.lock().ok()?;
-    let remaining_req = cache.get("x-ratelimit-remaining-requests")?;
-    let limit_req = cache.get("x-ratelimit-limit-requests")?;
-    let remaining_tok = cache.get("x-ratelimit-remaining-tokens").cloned().unwrap_or_default();
-    let limit_tok = cache.get("x-ratelimit-limit-tokens").cloned().unwrap_or_default();
+fn fetch_ratelimit(provider_id: &str) -> Option<ProviderQuota> {
+    let cache = RATELIMIT_CACHE.lock().ok()?;
+    let entry = cache.get(provider_id)?;
+    let remaining_req = entry.get("x-ratelimit-remaining-requests")?;
+    let limit_req = entry.get("x-ratelimit-limit-requests")?;
+    let remaining_tok = entry.get("x-ratelimit-remaining-tokens").cloned().unwrap_or_default();
+    let limit_tok = entry.get("x-ratelimit-limit-tokens").cloned().unwrap_or_default();
     let label = if !remaining_tok.is_empty() {
         format!("{}/{} req · {}/{} tokens", remaining_req, limit_req, remaining_tok, limit_tok)
     } else {
@@ -66,7 +71,7 @@ fn fetch_groq() -> Option<ProviderQuota> {
 
 async fn fetch_deepseek() -> Option<ProviderQuota> {
     let key = api_keys::get_key("deepseek").ok()?;
-    let client = Client::builder().timeout(TIMEOUT).build().ok()?;
+    let client = quota_client()?;
     let resp = client
         .get("https://api.deepseek.com/user/balance")
         .bearer_auth(&*key)
@@ -93,7 +98,7 @@ async fn fetch_deepseek() -> Option<ProviderQuota> {
 
 async fn fetch_moonshot() -> Option<ProviderQuota> {
     let key = api_keys::get_key("moonshot").ok()?;
-    let client = Client::builder().timeout(TIMEOUT).build().ok()?;
+    let client = quota_client()?;
     let resp = client
         .get("https://api.moonshot.ai/v1/users/me/balance")
         .bearer_auth(&*key)
@@ -115,7 +120,7 @@ async fn fetch_moonshot() -> Option<ProviderQuota> {
 
 async fn fetch_openrouter() -> Option<ProviderQuota> {
     let key = api_keys::get_key("openrouter").ok()?;
-    let client = Client::builder().timeout(TIMEOUT).build().ok()?;
+    let client = quota_client()?;
     let resp = client
         .get("https://openrouter.ai/api/v1/credits")
         .bearer_auth(&*key)

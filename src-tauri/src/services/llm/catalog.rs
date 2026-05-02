@@ -65,7 +65,7 @@ pub const LLM_PROVIDERS: &[ProviderSpec] = &[
         free_tier_label: "1B tokens/month",
         short_description: "Modèles open-weight français — Experiment plan gratuit.",
         short_description_en: "French open-weight models — free Experiment plan.",
-        default_max_tokens: None,
+        default_max_tokens: Some(64_000),
     },
     ProviderSpec {
         id: "cerebras",
@@ -89,7 +89,7 @@ pub const LLM_PROVIDERS: &[ProviderSpec] = &[
         free_tier_label: "30+ free models",
         short_description: "Accès à 300+ modèles via une seule clé API.",
         short_description_en: "Access 300+ models with a single API key.",
-        default_max_tokens: None,
+        default_max_tokens: Some(64_000),
     },
     ProviderSpec {
         id: "openai",
@@ -101,7 +101,7 @@ pub const LLM_PROVIDERS: &[ProviderSpec] = &[
         free_tier_label: "$5 signup credits",
         short_description: "GPT-5.5, o-series reasoning models.",
         short_description_en: "GPT-5.5, o-series reasoning models.",
-        default_max_tokens: None,
+        default_max_tokens: Some(64_000),
     },
     ProviderSpec {
         id: "deepseek",
@@ -113,7 +113,7 @@ pub const LLM_PROVIDERS: &[ProviderSpec] = &[
         free_tier_label: "Low-cost ($0.14/Mtok)",
         short_description: "DeepSeek V4-Flash / V4-Pro — rapport qualité/prix imbattable.",
         short_description_en: "DeepSeek V4-Flash / V4-Pro — unbeatable value for money.",
-        default_max_tokens: None,
+        default_max_tokens: Some(64_000),
     },
     ProviderSpec {
         id: "xai",
@@ -125,7 +125,7 @@ pub const LLM_PROVIDERS: &[ProviderSpec] = &[
         free_tier_label: "Budget ($0.20/Mtok)",
         short_description: "Grok 4.x — contexte 2M, raisonnement avancé.",
         short_description_en: "Grok 4.x — 2M context, advanced reasoning.",
-        default_max_tokens: None,
+        default_max_tokens: Some(64_000),
     },
     ProviderSpec {
         id: "moonshot",
@@ -137,7 +137,7 @@ pub const LLM_PROVIDERS: &[ProviderSpec] = &[
         free_tier_label: "Low-cost ($0.60/Mtok)",
         short_description: "Kimi K2.6 — multimodal, MoE 1T paramètres.",
         short_description_en: "Kimi K2.6 — multimodal, 1T parameter MoE.",
-        default_max_tokens: None,
+        default_max_tokens: Some(64_000),
     },
     ProviderSpec {
         id: "zai",
@@ -149,6 +149,6 @@ pub const LLM_PROVIDERS: &[ProviderSpec] = &[
         free_tier_label: "GLM-4.5-Flash gratuit",
         short_description: "GLM-5.1 — open-source ZhipuAI, vision et raisonnement.",
         short_description_en: "GLM-5.1 — ZhipuAI open-source, vision and reasoning.",
-        default_max_tokens: None,
+        default_max_tokens: Some(64_000),
     },
 ];

@@ -15,6 +15,7 @@ pub fn list_llm_providers_catalog() -> Vec<ProviderSpec> {
 pub async fn list_llm_models(provider_id: String) -> Result<Vec<ModelInfo>, String> {
     let provider = OpenAiCompatProvider::new(&provider_id).map_err(String::from)?;
     let mut models = provider.list_models().await.map_err(String::from)?;
+    models.truncate(500);
     let mut seen = std::collections::HashSet::new();
     models.retain(|m| seen.insert(m.id.clone()));
     let mut chat_filtered = Vec::with_capacity(models.len());

@@ -31,12 +31,12 @@ fn read_registry() -> Vec<String> {
 fn write_registry(ids: &[String]) -> Result<(), String> {
     let path = registry_path();
     if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent).map_err(|e| format!("mkdir: {e}"))?;
+        std::fs::create_dir_all(parent).map_err(|_| "erreur de stockage".to_string())?;
     }
     let json = serde_json::to_string_pretty(ids).map_err(|e| format!("json: {e}"))?;
     let tmp = path.with_extension("tmp");
-    std::fs::write(&tmp, &json).map_err(|e| format!("write: {e}"))?;
-    std::fs::rename(&tmp, &path).map_err(|e| format!("rename: {e}"))?;
+    std::fs::write(&tmp, &json).map_err(|_| "erreur écriture registre".to_string())?;
+    std::fs::rename(&tmp, &path).map_err(|_| "erreur mise à jour registre".to_string())?;
     Ok(())
 }
 
@@ -59,17 +59,21 @@ fn remove_from_registry(provider_id: &str) -> Result<(), String> {
     Ok(())
 }
 
-fn flush_vault(s: &VaultState) -> Result<(), String> {
-    let mut raw: HashMap<String, String> = s
-        .keys
-        .iter()
-        .map(|(k, v)| (k.clone(), v.as_str().to_string()))
-        .collect();
-    let result = vault::write_vault(&s.master_key, &raw);
-    for val in raw.values_mut() {
-        val.zeroize();
+struct ZeroizingMap(HashMap<String, String>);
+
+impl Drop for ZeroizingMap {
+    fn drop(&mut self) {
+        for val in self.0.values_mut() {
+            val.zeroize();
+        }
     }
-    result
+}
+
+fn flush_vault(s: &VaultState) -> Result<(), String> {
+    let raw = ZeroizingMap(
+        s.keys.iter().map(|(k, v)| (k.clone(), v.as_str().to_string())).collect(),
+    );
+    vault::write_vault(&s.master_key, &raw.0)
 }
 
 pub fn init() -> Result<(), String> {
@@ -141,15 +145,12 @@ pub fn list_configured() -> Vec<String> {
     read_registry()
 }
 
-fn ping_payload(model: &str) -> serde_json::Value {
-    serde_json::json!({
-        "model": model,
-        "messages": [{"role": "user", "content": "hi"}],
-        "max_tokens": 1,
-    })
-}
-
 pub async fn test_key(provider_id: &str) -> Result<(), String> {
+    if crate::services::llm::catalog::find(provider_id).is_some() {
+        let provider = crate::services::llm::openai_compat::OpenAiCompatProvider::new(provider_id)
+            .map_err(|e| e.to_string())?;
+        return provider.test_connection().await.map_err(|e| e.to_string());
+    }
     let key = get_key(provider_id)?;
     let client = Client::builder()
         .timeout(Duration::from_secs(10))
@@ -157,17 +158,6 @@ pub async fn test_key(provider_id: &str) -> Result<(), String> {
         .map_err(|e| format!("http client: {e}"))?;
 
     let resp = match provider_id {
-        "groq" => client.get("https://api.groq.com/openai/v1/models").bearer_auth(&*key),
-        "openai" => client.get("https://api.openai.com/v1/models").bearer_auth(&*key),
-        "openrouter" => client.get("https://openrouter.ai/api/v1/models").bearer_auth(&*key),
-        "cerebras" => client.get("https://api.cerebras.ai/v1/models").bearer_auth(&*key),
-        "mistral" => client.get("https://api.mistral.ai/v1/models").bearer_auth(&*key),
-        "deepseek" => client.get("https://api.deepseek.com/v1/models").bearer_auth(&*key),
-        "xai" => client.post("https://api.x.ai/v1/chat/completions")
-            .bearer_auth(&*key).json(&ping_payload("grok-3-mini")),
-        "moonshot" => client.get("https://api.moonshot.ai/v1/models").bearer_auth(&*key),
-        "zai" => client.post("https://api.z.ai/api/paas/v4/chat/completions")
-            .bearer_auth(&*key).json(&ping_payload("glm-4.5-flash")),
         "google" => client
             .get("https://generativelanguage.googleapis.com/v1beta/models")
             .header("x-goog-api-key", key.as_str()),
@@ -185,7 +175,7 @@ pub async fn test_key(provider_id: &str) -> Result<(), String> {
             .get("https://serpapi.com/account")
             .header("Authorization", format!("Bearer {}", key.as_str())),
         "google_cse" => return Ok(()),
-        other => return Err(format!("Provider inconnu : {}", other)),
+        other => return Err(format!("Provider inconnu : {other}")),
     }
     .send()
     .await
@@ -195,6 +185,6 @@ pub async fn test_key(provider_id: &str) -> Result<(), String> {
         200..=299 => Ok(()),
         401 | 403 => Err("Clé API invalide ou non autorisée".to_string()),
         429 => Err("Rate limit atteint — clé valide mais quota dépassé".to_string()),
-        status => Err(format!("Erreur serveur : HTTP {}", status)),
+        status => Err(format!("Erreur serveur : HTTP {status}")),
     }
 }
