@@ -24,17 +24,17 @@ export function GpuStatusBadge() {
 
   const hideTip = useCallback(() => setTipPos(null), []);
 
-  if (!showGpuStatus || !gpu.hasModel) return null;
+  if (!showGpuStatus || !gpu.accelerator) return null;
 
   const pct = gpu.vramPercent;
   const label = pct > 0 ? `${gpu.accelerator} ${pct}%` : gpu.accelerator;
   const isHigh = pct >= 85;
 
-  const usedStr = gpu.vramUsedMb > 0 ? formatMb(gpu.vramUsedMb) : "?";
-  const totalStr = gpu.vramTotalMb > 0 ? formatMb(gpu.vramTotalMb) : "?";
+  const usedStr = gpu.vramUsedMb > 0 ? formatMb(gpu.vramUsedMb) : "—";
+  const totalStr = gpu.vramTotalMb > 0 ? formatMb(gpu.vramTotalMb) : "—";
   const tooltip = gpu.modelLoaded
     ? `${gpu.accelerator} — ${usedStr} / ${totalStr} (${gpu.modelLoaded})`
-    : gpu.accelerator;
+    : `${gpu.accelerator} — ${usedStr} / ${totalStr}`;
 
   return (
     <span

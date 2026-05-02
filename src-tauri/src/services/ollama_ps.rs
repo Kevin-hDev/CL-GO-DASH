@@ -38,12 +38,15 @@ pub fn build_gpu_status(
                 model_loaded: Some(model.name.clone()),
             }
         }
-        None => GpuStatusPayload {
-            accelerator: String::new(),
-            vram_used_mb: 0,
-            vram_total_mb,
-            model_loaded: None,
-        },
+        None => {
+            let idle_accel = if vram_total_mb > 0 { "GPU" } else { "CPU" };
+            GpuStatusPayload {
+                accelerator: idle_accel.into(),
+                vram_used_mb,
+                vram_total_mb,
+                model_loaded: None,
+            }
+        }
     }
 }
 
@@ -70,10 +73,17 @@ mod tests {
     }
 
     #[test]
-    fn empty_returns_idle() {
+    fn idle_with_vram_shows_gpu() {
         let ps = PsResponse { models: vec![] };
         let status = build_gpu_status(&ps, 16000, 0);
-        assert!(status.accelerator.is_empty());
+        assert_eq!(status.accelerator, "GPU");
         assert!(status.model_loaded.is_none());
+    }
+
+    #[test]
+    fn idle_without_vram_shows_cpu() {
+        let ps = PsResponse { models: vec![] };
+        let status = build_gpu_status(&ps, 0, 0);
+        assert_eq!(status.accelerator, "CPU");
     }
 }

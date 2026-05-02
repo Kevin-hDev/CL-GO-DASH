@@ -8,6 +8,7 @@ import { SettingsRow } from "./settings-row";
 import { SettingsSelect, type SelectGroup } from "./settings-select";
 import { PathListEditor } from "./path-list-editor";
 import { OllamaSettingsSection } from "./ollama-settings-section";
+import { notifySettingsChanged } from "@/hooks/use-setting-value";
 import "./compression-slider.css";
 
 interface AdvancedState {
@@ -53,6 +54,7 @@ export function AdvancedSettings() {
     setState((prev) => {
       const next = { ...prev, ...patch };
       invoke("set_advanced_settings", { settings: next }).catch(() => {});
+      notifySettingsChanged();
       return next;
     });
   }, []);
