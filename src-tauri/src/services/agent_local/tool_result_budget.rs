@@ -92,7 +92,7 @@ mod unit_tests {
             images: None,
             tool_calls: None,
             tool_name: None,
-            tool_call_id: None,
+            tool_call_id: None, reasoning_content: None,
         }
     }
 
@@ -103,7 +103,7 @@ mod unit_tests {
             images: None,
             tool_calls: None,
             tool_name: None,
-            tool_call_id: None,
+            tool_call_id: None, reasoning_content: None,
         }
     }
 
@@ -197,7 +197,7 @@ mod unit_tests {
                 images: None,
                 tool_calls: None,
                 tool_name: None,
-                tool_call_id: None,
+                tool_call_id: None, reasoning_content: None,
             },
             tool_msg(&big),
             tool_msg(&big),

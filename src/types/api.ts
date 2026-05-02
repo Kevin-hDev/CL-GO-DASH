@@ -8,7 +8,10 @@ export type LlmProviderId =
   | "cerebras"
   | "openrouter"
   | "openai"
-  | "deepseek";
+  | "deepseek"
+  | "xai"
+  | "moonshot"
+  | "zai";
 
 export type SearchProviderId =
   | "brave"

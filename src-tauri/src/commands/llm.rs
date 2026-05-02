@@ -47,6 +47,8 @@ pub async fn list_llm_models(provider_id: String) -> Result<Vec<ModelInfo>, Stri
             m.is_free = true;
         } else if provider_id == "mistral" {
             m.is_free = is_mistral_free(&m.id);
+        } else if provider_id == "zai" {
+            m.is_free = is_zai_free(&m.id);
         }
     }
     Ok(models)
@@ -82,4 +84,8 @@ fn is_mistral_free(model_id: &str) -> bool {
     id.contains("devstral") || id.contains("magistral") || id.contains("ministral")
         || id.contains("pixtral") || id.contains("codestral-mamba")
         || id.contains("open-mistral") || id.contains("mistral-small")
+}
+
+fn is_zai_free(model_id: &str) -> bool {
+    model_id.to_lowercase().contains("flash")
 }

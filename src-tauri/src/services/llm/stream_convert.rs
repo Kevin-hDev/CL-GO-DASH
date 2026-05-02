@@ -23,6 +23,9 @@ pub fn message_to_openai(msg: &ChatMessage, provider_id: &str) -> Value {
                 "role": "assistant",
                 "content": content,
             });
+            if let Some(rc) = &msg.reasoning_content {
+                obj["reasoning_content"] = json!(rc);
+            }
             if let Some(tcs) = &msg.tool_calls {
                 let tc_arr: Vec<Value> = tcs
                     .iter()

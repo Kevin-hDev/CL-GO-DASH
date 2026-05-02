@@ -8,7 +8,7 @@ fn make_user_msg(text: &str) -> ChatMessage {
         images: None,
         tool_calls: None,
         tool_name: None,
-        tool_call_id: None,
+        tool_call_id: None, reasoning_content: None,
     }
 }
 
@@ -36,7 +36,7 @@ fn agent_md_appended_to_existing_system() {
             images: None,
             tool_calls: None,
             tool_name: None,
-            tool_call_id: None,
+            tool_call_id: None, reasoning_content: None,
         },
         make_user_msg("hello"),
     ];
@@ -104,7 +104,7 @@ fn prepare_existing_system_prompt_preserved() {
         ChatMessage {
             role: "system".to_string(),
             content: "Custom system prompt from frontend".to_string(),
-            images: None, tool_calls: None, tool_name: None, tool_call_id: None,
+            images: None, tool_calls: None, tool_name: None, tool_call_id: None, reasoning_content: None,
         },
         make_user_msg("hello"),
     ];

@@ -50,7 +50,7 @@ pub async fn post_chat_request(cfg: &RequestConfig<'_>) -> Result<reqwest::Respo
     }
     if cfg.think {
         match cfg.provider_id {
-            "deepseek" | "google" | "openrouter" => {
+            "deepseek" | "google" | "openrouter" | "zai" => {
                 payload["reasoning_effort"] = "high".into();
             }
             "openai" => {
@@ -62,6 +62,9 @@ pub async fn post_chat_request(cfg: &RequestConfig<'_>) -> Result<reqwest::Respo
     if !cfg.tools.is_empty() {
         payload["tools"] = serde_json::Value::Array(cfg.tools.to_vec());
         payload["tool_choice"] = "auto".into();
+        if cfg.provider_id == "zai" {
+            payload["tool_stream"] = true.into();
+        }
     }
     if cfg.provider_id == "openrouter" {
         payload["provider"] = serde_json::json!({
@@ -83,7 +86,7 @@ pub async fn post_chat_request(cfg: &RequestConfig<'_>) -> Result<reqwest::Respo
         .await
         .map_err(|e| RequestError::Fatal(format!("Connexion {} échouée: {e}", spec.display_name)))?;
 
-    if cfg.provider_id == "groq" {
+    if cfg.provider_id == "groq" || cfg.provider_id == "xai" {
         super::quota::update_groq_limits(resp.headers());
     }
 

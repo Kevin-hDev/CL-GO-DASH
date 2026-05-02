@@ -142,6 +142,8 @@ fn extract_family(model_key: &str) -> String {
         (&["nova"], "Nova"),
         (&["jamba"], "Jamba"),
         (&["grok"], "Grok"),
+        (&["kimi", "moonshot"], "Kimi"),
+        (&["glm"], "GLM"),
         (&["flux"], "Flux"),
     ];
 

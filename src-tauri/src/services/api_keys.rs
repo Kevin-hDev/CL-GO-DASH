@@ -141,6 +141,14 @@ pub fn list_configured() -> Vec<String> {
     read_registry()
 }
 
+fn ping_payload(model: &str) -> serde_json::Value {
+    serde_json::json!({
+        "model": model,
+        "messages": [{"role": "user", "content": "hi"}],
+        "max_tokens": 1,
+    })
+}
+
 pub async fn test_key(provider_id: &str) -> Result<(), String> {
     let key = get_key(provider_id)?;
     let client = Client::builder()
@@ -155,6 +163,11 @@ pub async fn test_key(provider_id: &str) -> Result<(), String> {
         "cerebras" => client.get("https://api.cerebras.ai/v1/models").bearer_auth(&*key),
         "mistral" => client.get("https://api.mistral.ai/v1/models").bearer_auth(&*key),
         "deepseek" => client.get("https://api.deepseek.com/v1/models").bearer_auth(&*key),
+        "xai" => client.post("https://api.x.ai/v1/chat/completions")
+            .bearer_auth(&*key).json(&ping_payload("grok-3-mini")),
+        "moonshot" => client.get("https://api.moonshot.ai/v1/models").bearer_auth(&*key),
+        "zai" => client.post("https://api.z.ai/api/paas/v4/chat/completions")
+            .bearer_auth(&*key).json(&ping_payload("glm-4.5-flash")),
         "google" => client
             .get("https://generativelanguage.googleapis.com/v1beta/models")
             .header("x-goog-api-key", key.as_str()),

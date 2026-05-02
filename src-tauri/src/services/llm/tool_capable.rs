@@ -1,13 +1,8 @@
-//! Détection de la capacité tool-use (function calling) d'un modèle.
+//! Détection des capacités (tools, thinking, vision) d'un modèle par provider.
 //!
-//! Approche par patterns hardcodés, plus évolutive que les noms exacts.
-//! À mettre à jour quand de nouveaux modèles sortent (env. tous les 2-3 mois).
-//!
-//! Pour Ollama : ne pas utiliser cette fonction — l'API `/api/show` expose
-//! dynamiquement le flag `capabilities.tools`.
-//!
-//! Pour OpenRouter : l'API `/models` expose un champ `supports_tools` par modèle.
-//! Cette fonction retourne `true` en permissif, on se fiera au flag API côté UI.
+//! Patterns hardcodés pour les providers dont l'API n'expose pas les capabilities.
+//! Ollama : détection dynamique via `/api/show` (ne pas utiliser ici).
+//! OpenRouter : permissif (`true`), l'UI filtre via le flag API `/models`.
 
 fn strip_org_prefix(model_id: &str) -> &str {
     model_id.rsplit_once('/').map(|(_, name)| name).unwrap_or(model_id)
@@ -58,7 +53,9 @@ pub fn supports_tools(provider_id: &str, model_id: &str) -> bool {
                 || model.starts_with("o4-mini")
         }
         "deepseek" => model.starts_with("deepseek-chat") || model.starts_with("deepseek-v"),
-        // Ollama : utilise la détection dynamique via /api/show ailleurs
+        "xai" => super::providers::xai::supports_tools(&model),
+        "moonshot" => super::providers::moonshot::supports_tools(&model),
+        "zai" => super::providers::zai::supports_tools(&model),
         _ => false,
     }
 }
@@ -77,11 +74,14 @@ pub fn supports_thinking(provider_id: &str, model_id: &str) -> bool {
                 || model.starts_with("o3") || model.starts_with("o4")
         }
         "mistral" => model.contains("thinking"),
+        "xai" => super::providers::xai::supports_thinking(&model),
+        "moonshot" => super::providers::moonshot::supports_thinking(&model),
+        "zai" => super::providers::zai::supports_thinking(&model),
         _ => false,
     }
 }
 
-/// Détection vision par patterns. Modèles connus pour supporter les images.
+/// Détection vision par patterns.
 pub fn supports_vision(provider_id: &str, model_id: &str) -> bool {
     let model = strip_org_prefix(model_id).to_lowercase();
     match provider_id {
@@ -102,6 +102,9 @@ pub fn supports_vision(provider_id: &str, model_id: &str) -> bool {
                 || model.starts_with("o3")
         }
         "deepseek" => model.contains("vl"),
+        "xai" => super::providers::xai::supports_vision(&model),
+        "moonshot" => super::providers::moonshot::supports_vision(&model),
+        "zai" => super::providers::zai::supports_vision(&model),
         _ => false,
     }
 }

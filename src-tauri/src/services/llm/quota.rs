@@ -1,7 +1,7 @@
 //! Récupération des infos de quota/usage par provider.
 //!
-//! Supporté : DeepSeek (/user/balance), OpenRouter (/credits), Groq (headers).
-//! Les autres providers n'exposent pas d'endpoint → retourne None.
+//! Supporté : DeepSeek, OpenRouter, Groq/xAI (headers), Moonshot.
+//! Z.ai et les autres n'exposent pas d'endpoint → retourne None.
 
 use crate::services::api_keys;
 use reqwest::Client;
@@ -44,7 +44,8 @@ pub async fn fetch_quota(provider_id: &str) -> Option<ProviderQuota> {
     match provider_id {
         "deepseek" => fetch_deepseek().await,
         "openrouter" => fetch_openrouter().await,
-        "groq" => fetch_groq(),
+        "groq" | "xai" => fetch_groq(),
+        "moonshot" => fetch_moonshot().await,
         _ => None,
     }
 }
@@ -88,6 +89,28 @@ async fn fetch_deepseek() -> Option<ProviderQuota> {
         available: body["is_available"].as_bool().unwrap_or(true),
         label,
     })
+}
+
+async fn fetch_moonshot() -> Option<ProviderQuota> {
+    let key = api_keys::get_key("moonshot").ok()?;
+    let client = Client::builder().timeout(TIMEOUT).build().ok()?;
+    let resp = client
+        .get("https://api.moonshot.ai/v1/users/me/balance")
+        .bearer_auth(&*key)
+        .send()
+        .await
+        .ok()?;
+    if !resp.status().is_success() { return None; }
+    let body: serde_json::Value = resp.json().await.ok()?;
+    let data = &body["data"];
+    let available: f64 = data["available_balance"].as_f64().unwrap_or(0.0);
+    let voucher: f64 = data["voucher_balance"].as_f64().unwrap_or(0.0);
+    let cash: f64 = data["cash_balance"].as_f64().unwrap_or(0.0);
+    let label = format!(
+        "¥{:.2} disponible (bon: ¥{:.2}, cash: ¥{:.2})",
+        available, voucher, cash
+    );
+    Some(ProviderQuota { available: available > 0.0, label })
 }
 
 async fn fetch_openrouter() -> Option<ProviderQuota> {

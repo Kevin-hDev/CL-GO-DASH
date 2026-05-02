@@ -8,7 +8,7 @@ fn msg(role: &str, content: &str) -> ChatMessage {
         images: None,
         tool_calls: None,
         tool_name: None,
-        tool_call_id: None,
+        tool_call_id: None, reasoning_content: None,
     }
 }
 
