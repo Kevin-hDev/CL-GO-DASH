@@ -3,6 +3,7 @@ import type { ToolActivity } from "@/hooks/agent-chat-utils";
 import type { ToolActivityRecord } from "@/types/agent";
 import { isFileTool } from "@/lib/tool-file-path";
 import { ContentPreview, DiffPreview, WebResultsPreview } from "./tool-previews";
+import { WriteSpreadsheetPreview, WriteDocumentPreview } from "./tool-office-previews";
 
 const TOOL_COLORS: Record<string, string> = {
   bash: "var(--tool-bash)", read_file: "var(--tool-file-read)",
@@ -71,6 +72,8 @@ export function ToolBubble({
               {t.name === "write_file" && !skipWrite && typeof t.args.content === "string" && <ContentPreview content={t.args.content} path={toolSummary(t)} />}
               {t.name === "edit_file" && typeof t.args.old_string === "string" && <DiffPreview oldText={t.args.old_string} newText={String(t.args.new_string ?? "")} path={toolSummary(t)} startLine={parseLineFromResult(t.result)} />}
               {(t.name === "web_search" || t.name === "web_fetch") && t.result && <WebResultsPreview content={t.result} isSearch={t.name === "web_search"} />}
+              {t.name === "write_spreadsheet" && t.result && !t.isError && <WriteSpreadsheetPreview operations={t.args.operations} />}
+              {t.name === "write_document" && t.result && !t.isError && <WriteDocumentPreview content={t.args.content} />}
             </div>
           );
         })}
@@ -93,9 +96,11 @@ export function SavedToolBubble({
           return (
             <div key={i}>
               <ToolRow name={t.name} summary={t.summary} done={t.is_error != null} isError={t.is_error} errorMessage={t.is_error ? t.result : undefined} onFilePreview={onFilePreview} />
-              {t.content && !skipWrite && <ContentPreview content={t.content} path={t.summary} />}
+              {t.name === "write_file" && t.content && !skipWrite && <ContentPreview content={t.content} path={t.summary} />}
               {t.old_text != null && t.new_text != null && <DiffPreview oldText={t.old_text} newText={t.new_text} path={t.summary} startLine={t.start_line} />}
               {(t.name === "web_search" || t.name === "web_fetch") && t.result && <WebResultsPreview content={t.result} isSearch={t.name === "web_search"} />}
+              {t.name === "write_spreadsheet" && t.result && !t.is_error && t.content && <WriteSpreadsheetPreview operations={t.content} />}
+              {t.name === "write_document" && t.result && !t.is_error && t.content && <WriteDocumentPreview content={t.content} />}
             </div>
           );
         })}

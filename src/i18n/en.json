@@ -423,7 +423,11 @@
     "noEditor": "No external editor detected.",
     "open": "Open",
     "openWith": "Open with...",
-    "noEditorDetected": "No editor detected"
+    "noEditorDetected": "No editor detected",
+    "moreRows": "+{{count}} rows",
+    "totalRows": "{{count}} rows total — limited preview",
+    "charCount": "{{format}} — {{count}} characters",
+    "blockCount": "DOCX — {{count}} blocks"
   },
   "errors": {
     "crashMessage": "An error occurred. Please restart the application.",

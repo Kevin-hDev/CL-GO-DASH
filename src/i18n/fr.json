@@ -423,7 +423,11 @@
     "noEditor": "Aucun éditeur externe détecté.",
     "open": "Ouvrir",
     "openWith": "Ouvrir avec...",
-    "noEditorDetected": "Aucun éditeur détecté"
+    "noEditorDetected": "Aucun éditeur détecté",
+    "moreRows": "+{{count}} lignes",
+    "totalRows": "{{count}} lignes au total — aperçu limité",
+    "charCount": "{{format}} — {{count}} caractères",
+    "blockCount": "DOCX — {{count}} blocs"
   },
   "errors": {
     "crashMessage": "Une erreur est survenue. Relance l'application.",

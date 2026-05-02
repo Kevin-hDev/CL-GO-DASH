@@ -7,6 +7,7 @@ use std::sync::LazyLock;
 
 const DEFAULT_MAX_ROWS: usize = 500;
 const HARD_MAX_ROWS: usize = 5000;
+const HARD_MAX_COLS: usize = 1000;
 
 static RANGE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"^([A-Z]+)(\d+):([A-Z]+)(\d+)$").unwrap());
@@ -43,6 +44,7 @@ pub fn build_result(
 
     let headers: Vec<String> = all_rows[0]
         .iter()
+        .take(HARD_MAX_COLS)
         .map(|v| match v {
             Value::String(s) => s.clone(),
             Value::Null => String::new(),
@@ -50,7 +52,11 @@ pub fn build_result(
         })
         .collect();
 
-    let data_rows: Vec<Vec<Value>> = all_rows.into_iter().skip(1).collect();
+    let data_rows: Vec<Vec<Value>> = all_rows
+        .into_iter()
+        .skip(1)
+        .map(|row| row.into_iter().take(HARD_MAX_COLS).collect())
+        .collect();
     let total = data_rows.len();
     let truncated = total > max_rows;
     let rows: Vec<Vec<Value>> = data_rows.into_iter().take(max_rows).collect();
@@ -78,7 +84,7 @@ fn detect_csv_delimiter(first_line: &str) -> u8 {
     }
 }
 
-fn read_csv(resolved: &Path, max_rows: usize) -> Result<Value, String> {
+pub fn read_csv(resolved: &Path, max_rows: usize) -> Result<Value, String> {
     let content = std::fs::read_to_string(resolved)
         .map_err(|_| "Impossible de lire le fichier".to_string())?;
     let first_line = content.lines().next().unwrap_or("");
@@ -93,6 +99,7 @@ fn read_csv(resolved: &Path, max_rows: usize) -> Result<Value, String> {
         .headers()
         .map_err(|_| "Impossible de lire les en-têtes".to_string())?
         .iter()
+        .take(HARD_MAX_COLS)
         .map(|s| s.to_string())
         .collect();
 
