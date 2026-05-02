@@ -56,6 +56,16 @@
   padding-left: 11px;
 }
 
+.sb-locked:hover .sb-nav-item {
+  gap: 0;
+  justify-content: center;
+  padding-left: 0;
+}
+
+.sb-locked span {
+  display: none;
+}
+
 .sidebar-resize-handle {
   width: 4px;
   cursor: ew-resize;

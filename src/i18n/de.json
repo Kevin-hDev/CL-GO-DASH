@@ -289,7 +289,9 @@
       "languageTitle": "Sprache",
       "languageDesc": "Oberflächensprache",
       "responseLangTitle": "LLM-Antwortsprache",
-      "responseLangDesc": "Sprache, in der das KI-Modell antworten wird"
+      "responseLangDesc": "Sprache, in der das KI-Modell antworten wird",
+      "sidebarExpandTitle": "Seitenleiste beim Überfahren ausklappen",
+      "sidebarExpandDesc": "Die Seitenleiste klappt beim Überfahren aus"
     },
     "advanced": {
       "autostartTitle": "Beim Start öffnen",

@@ -1,5 +1,3 @@
-import sendIcon from "@/assets/bouton-send.png";
-import stopIcon from "@/assets/bouton-arret.png";
 import "./chat.css";
 
 type ButtonState = "hidden" | "send" | "stop";
@@ -10,6 +8,23 @@ interface SendStopButtonProps {
   onStop: () => void;
 }
 
+function SendIcon() {
+  return (
+    <svg className="send-stop-icon" viewBox="0 0 30.2 30.1" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeMiterlimit="10">
+      <path strokeWidth="1.25" d="M2.1,14.6C8.9,12,28.5,4,28.5,4l-3.9,22.6c-0.2,1.1-1.5,1.5-2.3,0.8l-6.1-5.1l-4.3,4l0.7-6.7l13-12.3l-16,10l1,5.7l-3.3-5.3l-5-1.6C1.5,15.8,1.4,14.8,2.1,14.6z" />
+    </svg>
+  );
+}
+
+function StopIcon() {
+  return (
+    <svg className="send-stop-icon" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="256" cy="256" r="240" stroke="currentColor" strokeWidth="32" />
+      <rect x="154" y="154" width="204.8" height="204.8" rx="40" fill="currentColor" />
+    </svg>
+  );
+}
+
 export function SendStopButton({ state, onSend, onStop }: SendStopButtonProps) {
   const isStop = state === "stop";
   const disabled = state === "hidden";
@@ -18,9 +33,8 @@ export function SendStopButton({ state, onSend, onStop }: SendStopButtonProps) {
       className={`send-btn ${isStop ? "stop" : "send"}`}
       onClick={isStop ? onStop : onSend}
       disabled={disabled}
-      style={{ opacity: disabled ? 0.35 : undefined }}
     >
-      <img src={isStop ? stopIcon : sendIcon} alt="" style={{ width: 33, height: 33 }} />
+      {isStop ? <StopIcon /> : <SendIcon />}
     </button>
   );
 }

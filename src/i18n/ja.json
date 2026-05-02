@@ -289,7 +289,9 @@
       "languageTitle": "言語",
       "languageDesc": "インターフェース言語",
       "responseLangTitle": "LLM 応答言語",
-      "responseLangDesc": "AIモデルが応答する言語"
+      "responseLangDesc": "AIモデルが応答する言語",
+      "sidebarExpandTitle": "ホバーでサイドバーを展開",
+      "sidebarExpandDesc": "マウスを重ねるとサイドバーが展開されます"
     },
     "advanced": {
       "autostartTitle": "起動時に開く",

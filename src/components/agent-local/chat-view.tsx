@@ -20,7 +20,7 @@ import { TerminalPanel } from "@/components/terminal/terminal-panel";
 import type { useTerminal } from "@/hooks/use-terminal";
 import type { Project } from "@/types/agent";
 import type { FileOperation } from "@/types/file-preview";
-import scrollDownIcon from "@/assets/fleche.png";
+import { ScrollBottomButton } from "./scroll-bottom-button";
 import "./chat.css";
 
 interface ChatViewProps {
@@ -154,11 +154,7 @@ export function ChatView({
           <div ref={bottomRef} />
         </div>
 
-        {!isAtBottom && (
-          <button className="scroll-bottom-btn" onClick={scrollToBottom}>
-            <img src={scrollDownIcon} alt="" style={{ width: 20, height: 20 }} />
-          </button>
-        )}
+        {!isAtBottom && <ScrollBottomButton onClick={scrollToBottom} />}
 
         <div className="chat-input-area">
           <div className="chat-input-column">

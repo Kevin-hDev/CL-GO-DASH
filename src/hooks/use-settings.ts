@@ -26,9 +26,15 @@ function loadFontFamily(): FontFamilyId {
   return "system";
 }
 
+function loadSidebarExpand(): boolean {
+  const saved = localStorage.getItem("clgo-sidebar-expand");
+  return saved === null ? true : saved === "true";
+}
+
 export function useSettings() {
   const [fontSize, setFontSizeState] = useState<FontSize>(loadFontSize);
   const [fontFamilyId, setFontFamilyIdState] = useState<FontFamilyId>(loadFontFamily);
+  const [sidebarExpand, setSidebarExpandState] = useState(loadSidebarExpand);
 
   const fontFamily = FONT_FAMILIES.find((f) => f.id === fontFamilyId)!;
 
@@ -44,6 +50,11 @@ export function useSettings() {
 
   const setFontSize = useCallback((size: FontSize) => setFontSizeState(size), []);
   const setFontFamily = useCallback((id: FontFamilyId) => setFontFamilyIdState(id), []);
+  const setSidebarExpand = useCallback((v: boolean) => {
+    setSidebarExpandState(v);
+    localStorage.setItem("clgo-sidebar-expand", String(v));
+    window.dispatchEvent(new CustomEvent("clgo-sidebar-expand", { detail: v }));
+  }, []);
 
   const decreaseFont = useCallback(() => {
     setFontSizeState((cur) => {
@@ -62,5 +73,6 @@ export function useSettings() {
   return {
     fontSize, setFontSize, decreaseFont, increaseFont,
     fontFamilyId, fontFamily, setFontFamily,
+    sidebarExpand, setSidebarExpand,
   } as const;
 }

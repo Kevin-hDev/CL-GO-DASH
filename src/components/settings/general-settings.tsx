@@ -147,6 +147,16 @@ export function GeneralSettings({ themeChoice, onThemeChange, settings }: Genera
               onChange={(v) => saveAdvanced({ response_language: v })}
             />
           </SettingsRow>
+
+          <SettingsRow
+            title={t("settings.general.sidebarExpandTitle")}
+            description={t("settings.general.sidebarExpandDesc")}
+          >
+            <RoundToggle
+              checked={settings.sidebarExpand}
+              onChange={settings.setSidebarExpand}
+            />
+          </SettingsRow>
         </SettingsCard>
 
         <SettingsCard>

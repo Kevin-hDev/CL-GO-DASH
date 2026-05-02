@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import { UserCircle, ChatsCircle, Gear } from "@/components/ui/icons";
@@ -6,6 +7,19 @@ import { ThemedIcon } from "@/components/ui/themed-icon";
 import heartbeatDark from "@/assets/heartbeat.png";
 import heartbeatLight from "@/assets/heartbeat-light.png";
 import { DragRegion } from "./drag-region";
+
+function useSidebarExpand() {
+  const [expand, setExpand] = useState(() => {
+    const saved = localStorage.getItem("clgo-sidebar-expand");
+    return saved === null ? true : saved === "true";
+  });
+  useEffect(() => {
+    const handler = (e: Event) => setExpand((e as CustomEvent<boolean>).detail);
+    window.addEventListener("clgo-sidebar-expand", handler);
+    return () => window.removeEventListener("clgo-sidebar-expand", handler);
+  }, []);
+  return expand;
+}
 
 export type TabId = "heartbeat" | "personality" | "agent-local" | "settings";
 
@@ -33,25 +47,27 @@ interface SidebarProps {
 
 export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
   const { t } = useTranslation();
+  const expandOnHover = useSidebarExpand();
   return (
     <nav
       className={cn(
         "group/sb flex flex-col overflow-hidden relative",
         "z-10",
+        !expandOnHover && "sb-locked",
       )}
       style={{
         width: "var(--sidebar-collapsed)",
         minWidth: "var(--sidebar-collapsed)",
-        transition: "width 200ms ease-out, min-width 200ms ease-out",
+        transition: expandOnHover ? "width 200ms ease-out, min-width 200ms ease-out" : "none",
       }}
-      onMouseEnter={(e) => {
+      onMouseEnter={expandOnHover ? (e) => {
         e.currentTarget.style.width = "var(--sidebar-expanded)";
         e.currentTarget.style.minWidth = "var(--sidebar-expanded)";
-      }}
-      onMouseLeave={(e) => {
+      } : undefined}
+      onMouseLeave={expandOnHover ? (e) => {
         e.currentTarget.style.width = "var(--sidebar-collapsed)";
         e.currentTarget.style.minWidth = "var(--sidebar-collapsed)";
-      }}
+      } : undefined}
     >
       <DragRegion />
 
