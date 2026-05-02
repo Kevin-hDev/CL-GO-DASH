@@ -365,7 +365,8 @@
       "goBack": "Ir atrás",
       "goForward": "Ir adelante",
       "newSession": "Nueva sesión",
-      "searchDialog": "Buscar conversaciones"
+      "searchDialog": "Buscar conversaciones",
+      "togglePreview": "Mostrar/ocultar panel de vista previa"
     },
     "confirm": {
       "deleteModel": "¿Confirmar?"

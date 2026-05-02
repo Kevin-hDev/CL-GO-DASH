@@ -365,7 +365,8 @@
       "goBack": "返回",
       "goForward": "前进",
       "newSession": "新建会话",
-      "searchDialog": "搜索对话"
+      "searchDialog": "搜索对话",
+      "togglePreview": "打开/关闭文件预览面板"
     },
     "confirm": {
       "deleteModel": "确认删除？"

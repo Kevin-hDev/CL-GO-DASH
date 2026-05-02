@@ -9,7 +9,7 @@
   gap: 8px;
   padding: 7px 12px;
   width: 180px;
-  background: var(--surface);
+  background: var(--void);
   border: 1px solid var(--edge);
   border-radius: var(--radius-sm);
   cursor: pointer;
@@ -19,7 +19,7 @@
 }
 
 [data-theme="dark"] .ss-trigger {
-  background: var(--surface-glass);
+  background: var(--void);
   border-color: transparent;
 }
 
@@ -53,7 +53,7 @@
   min-width: 100%;
   max-height: 280px;
   overflow-y: auto;
-  background: var(--surface);
+  background: var(--void);
   border: 1px solid var(--edge);
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow-card);
@@ -61,9 +61,7 @@
 }
 
 [data-theme="dark"] .ss-panel {
-  background: var(--surface-glass);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: var(--void);
   border-color: transparent;
 }
 

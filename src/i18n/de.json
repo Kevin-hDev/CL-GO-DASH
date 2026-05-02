@@ -365,7 +365,8 @@
       "goBack": "Zurück",
       "goForward": "Vorwärts",
       "newSession": "Neue Sitzung",
-      "searchDialog": "Gespräche suchen"
+      "searchDialog": "Gespräche suchen",
+      "togglePreview": "Dateivorschau ein-/ausblenden"
     },
     "confirm": {
       "deleteModel": "Bestätigen?"

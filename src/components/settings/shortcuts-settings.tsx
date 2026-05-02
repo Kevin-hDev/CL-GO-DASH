@@ -15,6 +15,7 @@ const SHORTCUTS: Shortcut[] = [
   { i18n: "settings.shortcuts.goForward", keys: [MOD_LABEL, "▶"] },
   { i18n: "settings.shortcuts.newSession", keys: [ALT_LABEL, MOD_LABEL, "N"] },
   { i18n: "settings.shortcuts.searchDialog", keys: [MOD_LABEL, "G"] },
+  { i18n: "settings.shortcuts.togglePreview", keys: [ALT_LABEL, MOD_LABEL, "J"] },
 ];
 
 export function ShortcutsSettings() {

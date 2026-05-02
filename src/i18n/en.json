@@ -365,7 +365,8 @@
       "goBack": "Go back",
       "goForward": "Go forward",
       "newSession": "New session",
-      "searchDialog": "Search conversations"
+      "searchDialog": "Search conversations",
+      "togglePreview": "Toggle file preview panel"
     },
     "confirm": {
       "deleteModel": "Confirm?"

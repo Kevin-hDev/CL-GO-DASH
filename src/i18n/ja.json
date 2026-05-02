@@ -365,7 +365,8 @@
       "goBack": "戻る",
       "goForward": "進む",
       "newSession": "新しいセッション",
-      "searchDialog": "会話を検索"
+      "searchDialog": "会話を検索",
+      "togglePreview": "ファイルプレビューパネルの表示/非表示"
     },
     "confirm": {
       "deleteModel": "確認しますか？"
