@@ -10,19 +10,40 @@ use crate::services::api_keys;
 use reqwest::Client;
 use std::time::Duration;
 
-fn static_models(provider_id: &str) -> Option<&'static [&'static str]> {
+struct StaticModel {
+    id: &'static str,
+    ctx: u32,
+}
+
+const ZAI_MODELS: &[StaticModel] = &[
+    StaticModel { id: "glm-5.1", ctx: 200_000 },
+    StaticModel { id: "glm-5", ctx: 200_000 },
+    StaticModel { id: "glm-5-code", ctx: 200_000 },
+    StaticModel { id: "glm-4.7", ctx: 200_000 },
+    StaticModel { id: "glm-4.6", ctx: 200_000 },
+    StaticModel { id: "glm-4.5", ctx: 128_000 },
+    StaticModel { id: "glm-4.5v", ctx: 128_000 },
+    StaticModel { id: "glm-4.5-air", ctx: 128_000 },
+    StaticModel { id: "glm-4.5-flash", ctx: 128_000 },
+];
+
+const XAI_MODELS: &[StaticModel] = &[
+    StaticModel { id: "grok-4", ctx: 256_000 },
+    StaticModel { id: "grok-4-fast-reasoning", ctx: 2_000_000 },
+    StaticModel { id: "grok-4-fast-non-reasoning", ctx: 2_000_000 },
+    StaticModel { id: "grok-4.20-reasoning", ctx: 256_000 },
+    StaticModel { id: "grok-4.20-non-reasoning", ctx: 256_000 },
+    StaticModel { id: "grok-3", ctx: 131_072 },
+    StaticModel { id: "grok-3-mini", ctx: 131_072 },
+    StaticModel { id: "grok-3-fast", ctx: 131_072 },
+    StaticModel { id: "grok-2-vision", ctx: 32_768 },
+    StaticModel { id: "grok-code-fast", ctx: 131_072 },
+];
+
+fn static_models(provider_id: &str) -> Option<&'static [StaticModel]> {
     match provider_id {
-        "zai" => Some(&[
-            "glm-5", "glm-5-code", "glm-4.7", "glm-4.6", "glm-4.5",
-            "glm-4.5v", "glm-4.5-x", "glm-4.5-air", "glm-4.5-airx",
-            "glm-4-32b-0414-128k", "glm-4.5-flash",
-        ]),
-        "xai" => Some(&[
-            "grok-4", "grok-4-fast-reasoning", "grok-4-fast-non-reasoning",
-            "grok-4.20-reasoning", "grok-4.20-non-reasoning",
-            "grok-3", "grok-3-mini", "grok-3-fast",
-            "grok-2-vision", "grok-code-fast",
-        ]),
+        "zai" => Some(ZAI_MODELS),
+        "xai" => Some(XAI_MODELS),
         _ => None,
     }
 }
@@ -56,10 +77,10 @@ impl OpenAiCompatProvider {
         if let Some(models) = static_models(self.spec.id) {
             return Ok(models
                 .iter()
-                .map(|id| ModelInfo {
-                    id: id.to_string(),
+                .map(|m| ModelInfo {
+                    id: m.id.to_string(),
                     owned_by: None,
-                    context_length: None,
+                    context_length: Some(m.ctx),
                     supports_tools: false,
                     supports_vision: false,
                     supports_thinking: false,
