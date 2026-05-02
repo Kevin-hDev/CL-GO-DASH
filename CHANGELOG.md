@@ -1,5 +1,36 @@
 # Changelog
 
+## v0.8.2
+
+### Features
+
+- **6 tools office natives** — Le LLM peut manipuler des fichiers Excel, Word, PDF et images sans dépendance externe (calamine, rust_xlsxwriter, umya-spreadsheet, pdf-extract, image). Cross-platform macOS/Linux/Windows.
+  - `read_spreadsheet` / `write_spreadsheet` — xlsx, xls, ods, xlsm, csv, tsv
+  - `read_document` / `write_document` — pdf, docx
+  - `read_image` / `process_image` — jpeg, png, webp (resize, crop, conversion)
+- **Previews office dans les bulles du chat** — chaque appel write_spreadsheet affiche un tableau avec les numéros de lignes et lettres de colonnes Excel correspondant aux cellules écrites. Les write_document affichent les blocs de contenu (titres, paragraphes, listes, tableaux).
+- **Previews office dans le panel** — rendu fidèle des fichiers dans le panel latéral :
+  - Spreadsheet : table custom avec en-têtes de colonnes, numéros de lignes, sélecteur de feuilles, scroll
+  - DOCX : rendu Word via docx-preview (styles, polices, tableaux)
+  - PDF : rendu PDFium via EmbedPDF (fidélité Chrome)
+- **Historique des modifications** — chaque écriture office sauvegarde ses opérations pour afficher le contenu tel qu'il était au moment de l'écriture, pas l'état actuel du fichier
+- **Icônes fichiers office** — xlsx, xls, xlsm, csv, ods, tsv, docx, pdf dans le panel
+- **Détection d'éditeurs externe** — fonctionne nativement pour tous les formats office (macOS Launch Services, Linux xdg-mime, Windows assoc)
+- **Tolérance JSON des LLMs** — coercion tolérante, réparation JSON malformé, normalisation des formules françaises (SOMME→SUM, etc.), détection auto du type de valeur (nombres en string, formules, booléens)
+
+### Security
+
+- Collections bornées : MAX_OPS, MAX_CELLS, MAX_ROW, MAX_COL (frontend), HARD_MAX_COLS (Rust)
+- Limites de taille fichier : 50 MB pour les previews binaires et spreadsheet
+- Validation is_file() + whitelist d'extensions pour read_binary_preview
+- Path traversal bloqué par les pré-hooks sur les 3 tools write
+
+### Fixes
+
+- Fix toolsToRecords pour write_spreadsheet, write_document, process_image (summary était JSON.stringify au lieu du path)
+- Fix historique panel : les previews write_file montrent le snapshot sauvegardé au lieu de relire le fichier sur disque
+- Suppression des previews read_ dans les bulles et le panel (pas utiles pour la lecture seule)
+
 ## v0.8.1
 
 ### Features
