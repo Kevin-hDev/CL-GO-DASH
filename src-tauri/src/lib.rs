@@ -191,6 +191,8 @@ pub fn run() {
             commands::detect_editors_for_file,
             commands::open_preview_file,
             commands::open_preview_with_editor,
+            commands::read_spreadsheet_preview,
+            commands::read_binary_preview,
             // Projects
             commands::list_projects,
             commands::add_project,

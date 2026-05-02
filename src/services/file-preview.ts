@@ -16,3 +16,16 @@ export function openPreviewFile(path: string, baseDir?: string) {
 export function openPreviewWithEditor(path: string, editorPath: string, baseDir?: string) {
   return invoke("open_preview_with_editor", { path, editorPath, baseDir });
 }
+
+export function readSpreadsheetPreview(
+  path: string,
+  baseDir?: string,
+  sheet?: string,
+  maxRows?: number,
+) {
+  return invoke<string>("read_spreadsheet_preview", { path, baseDir, sheet, maxRows });
+}
+
+export function readBinaryPreview(path: string, baseDir?: string) {
+  return invoke<string>("read_binary_preview", { path, baseDir });
+}

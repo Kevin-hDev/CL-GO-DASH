@@ -108,7 +108,7 @@ fn validate_editor_path(editor_path: &str) -> Result<(), String> {
     Ok(())
 }
 
-fn resolve_preview_path(path: &str, base_dir: Option<&str>) -> Result<PathBuf, String> {
+pub(crate) fn resolve_preview_path(path: &str, base_dir: Option<&str>) -> Result<PathBuf, String> {
     validate_path_text(path)?;
     let raw_path = Path::new(path);
     let joined = if raw_path.is_absolute() {

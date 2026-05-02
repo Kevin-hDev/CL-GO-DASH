@@ -423,7 +423,11 @@
     "noEditor": "外部エディターが検出されませんでした。",
     "open": "開く",
     "openWith": "アプリで開く...",
-    "noEditorDetected": "エディターが検出されませんでした"
+    "noEditorDetected": "エディターが検出されませんでした",
+    "moreRows": "+{{count}} 行",
+    "totalRows": "{{count}} 行（プレビュー制限あり）",
+    "charCount": "{{format}} — {{count}} 文字",
+    "blockCount": "DOCX — {{count}} ブロック"
   },
   "errors": {
     "crashMessage": "エラーが発生しました。アプリケーションを再起動してください。",

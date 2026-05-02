@@ -423,7 +423,11 @@
     "noEditor": "未检测到外部编辑器。",
     "open": "打开",
     "openWith": "打开方式...",
-    "noEditorDetected": "未检测到编辑器"
+    "noEditorDetected": "未检测到编辑器",
+    "moreRows": "+{{count}} 行",
+    "totalRows": "共 {{count}} 行 — 预览受限",
+    "charCount": "{{format}} — {{count}} 个字符",
+    "blockCount": "DOCX — {{count}} 个块"
   },
   "errors": {
     "crashMessage": "发生错误，请重启应用。",

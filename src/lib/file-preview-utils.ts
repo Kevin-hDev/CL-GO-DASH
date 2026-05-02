@@ -72,5 +72,18 @@ function toolToOperation(
       deletions: countLines(tool.old_text),
     };
   }
+  const OFFICE_WRITE = ["write_spreadsheet", "write_document"];
+  if (OFFICE_WRITE.includes(tool.name)) {
+    return {
+      id: `${messageId}-${index}`,
+      path: tool.summary,
+      name: fileNameFromPath(tool.summary),
+      type: "write",
+      timestamp,
+      content: tool.content,
+      additions: 0,
+      deletions: 0,
+    };
+  }
   return null;
 }

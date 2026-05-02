@@ -423,7 +423,11 @@
     "noEditor": "Nessun editor esterno rilevato.",
     "open": "Apri",
     "openWith": "Apri con...",
-    "noEditorDetected": "Nessun editor rilevato"
+    "noEditorDetected": "Nessun editor rilevato",
+    "moreRows": "+{{count}} righe",
+    "totalRows": "{{count}} righe in totale — anteprima limitata",
+    "charCount": "{{format}} — {{count}} caratteri",
+    "blockCount": "DOCX — {{count}} blocchi"
   },
   "errors": {
     "crashMessage": "Si è verificato un errore. Riavvia l'applicazione.",

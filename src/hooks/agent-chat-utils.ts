@@ -28,6 +28,9 @@ export function toolsToRecords(tools: ToolActivity[]): ToolActivityRecord[] {
     else if (t.name === "read_spreadsheet") summary = String(a.path ?? "");
     else if (t.name === "read_document") summary = String(a.path ?? "");
     else if (t.name === "read_image") summary = String(a.path ?? "");
+    else if (t.name === "write_spreadsheet") summary = String(a.path ?? "");
+    else if (t.name === "write_document") summary = String(a.path ?? "");
+    else if (t.name === "process_image") summary = String(a.input_path ?? "");
     else summary = JSON.stringify(a).slice(0, 80);
 
     return {
@@ -35,7 +38,10 @@ export function toolsToRecords(tools: ToolActivity[]): ToolActivityRecord[] {
       summary,
       result: t.result,
       is_error: t.isError,
-      content: t.name === "write_file" ? String(a.content ?? "") : undefined,
+      content: t.name === "write_file" ? String(a.content ?? "")
+        : t.name === "write_document" ? JSON.stringify(a.content ?? [])
+        : t.name === "write_spreadsheet" ? JSON.stringify(a.operations ?? [])
+        : undefined,
       old_text: t.name === "edit_file" ? String(a.old_string ?? "") : undefined,
       new_text: t.name === "edit_file" ? String(a.new_string ?? "") : undefined,
       start_line: parseStartLine(t.result),
@@ -93,7 +99,8 @@ function rebuildArgs(name: string, summary: string): Record<string, string> {
   if (name === "bash") return { command: summary };
   if (name === "grep" || name === "glob") return { pattern: summary };
   if (["read_file", "write_file", "edit_file", "list_dir"].includes(name)) return { path: summary };
-  if (["read_spreadsheet", "read_document", "read_image"].includes(name)) return { path: summary };
+  if (["read_spreadsheet", "read_document", "read_image", "write_spreadsheet", "write_document"].includes(name)) return { path: summary };
+  if (name === "process_image") return { input_path: summary };
   return { input: summary };
 }
 

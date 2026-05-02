@@ -17,6 +17,9 @@ import sqlIcon from "@iconify/icons-vscode-icons/file-type-sql.js";
 import tomlIcon from "@iconify/icons-vscode-icons/file-type-toml.js";
 import tsIcon from "@iconify/icons-vscode-icons/file-type-typescript.js";
 import yamlIcon from "@iconify/icons-vscode-icons/file-type-yaml.js";
+import excelIcon from "@iconify/icons-vscode-icons/file-type-excel.js";
+import wordIcon from "@iconify/icons-vscode-icons/file-type-word.js";
+import pdfIcon from "@iconify/icons-vscode-icons/file-type-pdf2.js";
 import type { IconifyIcon } from "@iconify/react";
 
 type IconModule = IconifyIcon | { default: IconifyIcon };
@@ -42,6 +45,14 @@ const EXT_ICONS: Record<string, IconModule> = {
   tsx: reactIcon as IconModule,
   yaml: yamlIcon as IconModule,
   yml: yamlIcon as IconModule,
+  xlsx: excelIcon as IconModule,
+  xls: excelIcon as IconModule,
+  xlsm: excelIcon as IconModule,
+  csv: excelIcon as IconModule,
+  ods: excelIcon as IconModule,
+  tsv: excelIcon as IconModule,
+  docx: wordIcon as IconModule,
+  pdf: pdfIcon as IconModule,
 };
 
 export function FileIcon({ name, size = 18 }: { name: string; size?: number }) {

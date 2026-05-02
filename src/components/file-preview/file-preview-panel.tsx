@@ -81,7 +81,7 @@ export function FilePreviewPanel(props: FilePreviewPanelProps) {
               baseDir={props.baseDir}
             />
             <div className={`fp-code-scroll ${shouldWrapFile(activeOperation.path) ? "" : "fp-nowrap"}`}>
-              <FilePreviewContent operation={activeOperation} baseDir={props.baseDir} />
+              <FilePreviewContent key={activeOperation.id} operation={activeOperation} baseDir={props.baseDir} />
             </div>
           </>
         )}
