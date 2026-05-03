@@ -1,0 +1,13 @@
+.mcc-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 0 var(--space-lg);
+  margin-bottom: var(--space-md);
+}
+
+.mcc-desc {
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
+  line-height: 1.4;
+}
