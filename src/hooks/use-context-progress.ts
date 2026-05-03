@@ -46,6 +46,14 @@ export function useContextProgress(
       } catch {
         setMax(0);
       }
+    } else if (provider === "codex-oauth") {
+      try {
+        const models = await invoke<LlmModelInfo[]>("codex_models");
+        const found = models.find((m) => m.id === model);
+        setMax(found?.context_length ?? 128_000);
+      } catch {
+        setMax(128_000);
+      }
     } else {
       try {
         const models = await invoke<LlmModelInfo[]>("list_llm_models", { providerId: provider });
