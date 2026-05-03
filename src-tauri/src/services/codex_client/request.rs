@@ -34,16 +34,39 @@ pub fn convert_messages(messages: &[ChatMessage]) -> (String, Vec<serde_json::Va
     (instructions, input)
 }
 
+fn fix_array_schemas(v: &mut serde_json::Value) {
+    match v {
+        serde_json::Value::Object(map) => {
+            if map.get("type").and_then(|t| t.as_str()) == Some("array")
+                && !map.contains_key("items")
+            {
+                map.insert("items".to_string(), serde_json::json!({"type": "string"}));
+            }
+            for val in map.values_mut() {
+                fix_array_schemas(val);
+            }
+        }
+        serde_json::Value::Array(arr) => {
+            for val in arr {
+                fix_array_schemas(val);
+            }
+        }
+        _ => {}
+    }
+}
+
 fn convert_tools_to_responses_api(tools: &[serde_json::Value]) -> Vec<serde_json::Value> {
     tools
         .iter()
         .filter_map(|t| {
             let func = t.get("function")?;
+            let mut params = func.get("parameters").cloned().unwrap_or(serde_json::Value::Null);
+            fix_array_schemas(&mut params);
             Some(serde_json::json!({
                 "type": "function",
                 "name": func.get("name")?,
                 "description": func.get("description").unwrap_or(&serde_json::Value::Null),
-                "parameters": func.get("parameters").unwrap_or(&serde_json::Value::Null),
+                "parameters": params,
             }))
         })
         .collect()
