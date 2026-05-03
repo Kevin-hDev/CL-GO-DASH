@@ -1,5 +1,27 @@
 # Changelog
 
+## v0.8.3
+
+### Features
+
+- **3 new LLM providers** — xAI (Grok 4.x), Moonshot (Kimi K2.6) and Z.ai (GLM-5.1) added to the unified OpenAI-compatible backend. Static model catalogs with context length for providers without `/models` endpoint.
+- **Grok 4.3** — latest xAI model added (1M context, native reasoning, vision)
+- **Updated provider descriptions** — OpenAI updated to GPT-5.5, DeepSeek updated to V4-Flash/V4-Pro
+- **Multi-turn reasoning** — thinking/reasoning content now persists across tool calls in chat sessions
+- **Moonshot balance API** — quota display for Moonshot Kimi via `/v1/users/me/balance`
+- **Provider capability detection** — per-provider modules for tools, thinking and vision detection (xAI, Moonshot, Z.ai)
+
+### Security
+
+- **Test-before-save for API keys** — keys are now tested before being saved to the vault. Invalid keys are never persisted. New `test_api_key_with_value` command tests without storing.
+- **Vault base64 zeroization** — master key base64 strings from keyring read/write are now properly zeroized after use
+- **IPC key zeroization** — API key strings from Tauri IPC are zeroized after being copied to the vault
+- **Input validation** — provider ID and key format validation before any vault operation, unknown providers rejected
+- **Bounded parsing** — model list parsing capped at 500 entries, model name length validated (max 128 bytes)
+- **Generic error messages** — no filesystem paths or stack traces exposed to the frontend
+- **Log redaction** — sensitive JSON fields redacted from HTTP body logs
+- **Removed unused search providers** — SerpAPI and Google CSE removed from catalog (were listed but never implemented)
+
 ## v0.8.2
 
 ### Features
