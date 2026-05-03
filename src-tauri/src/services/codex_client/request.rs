@@ -1,9 +1,27 @@
+use std::sync::Mutex;
 use std::time::Duration;
 
-use super::types::{CodexRequest, CODEX_API_BASE};
+use super::types::{self, CodexRequest, CODEX_API_BASE};
 use crate::services::agent_local::types_ollama::ChatMessage;
 use crate::services::codex_oauth::store::CodexTokens;
 use crate::services::codex_oauth::token;
+
+static EFFORT: Mutex<String> = Mutex::new(String::new());
+
+pub fn set_effort(level: &str) {
+    if types::CODEX_EFFORT_LEVELS.contains(&level) {
+        *EFFORT.lock().unwrap() = level.to_string();
+    }
+}
+
+pub fn get_effort() -> String {
+    let val = EFFORT.lock().unwrap();
+    if val.is_empty() { "medium".to_string() } else { val.clone() }
+}
+
+fn codex_effort() -> String {
+    get_effort()
+}
 
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(180);
 
@@ -99,9 +117,10 @@ pub async fn post_codex_stream(
     model: &str,
     messages: &[ChatMessage],
     tools: &[serde_json::Value],
+    think: bool,
 ) -> Result<reqwest::Response, String> {
     let creds = token::ensure_valid().await?;
-    send_request(&creds, model, messages, tools).await
+    send_request(&creds, model, messages, tools, think).await
 }
 
 async fn send_request(
@@ -109,9 +128,30 @@ async fn send_request(
     model: &str,
     messages: &[ChatMessage],
     tools: &[serde_json::Value],
+    think: bool,
 ) -> Result<reqwest::Response, String> {
     let (instructions, input) = convert_messages(messages);
     let converted_tools = convert_tools_to_responses_api(tools);
+
+    let effort = codex_effort();
+    let (reasoning, include) = if think || effort != "medium" {
+        (
+            Some(types::ReasoningConfig {
+                effort: effort.to_string(),
+                summary: "auto".to_string(),
+            }),
+            Some(vec!["reasoning.encrypted_content".to_string()]),
+        )
+    } else {
+        (
+            Some(types::ReasoningConfig {
+                effort: "medium".to_string(),
+                summary: "auto".to_string(),
+            }),
+            None,
+        )
+    };
+
     let body = CodexRequest {
         model: model.to_string(),
         instructions,
@@ -121,6 +161,8 @@ async fn send_request(
         tools: converted_tools.clone(),
         tool_choice: if converted_tools.is_empty() { None } else { Some("auto".to_string()) },
         temperature: None,
+        reasoning,
+        include,
     };
     let url = format!("{CODEX_API_BASE}/responses");
 

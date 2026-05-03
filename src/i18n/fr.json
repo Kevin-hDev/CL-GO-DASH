@@ -469,7 +469,12 @@
     "logout": "Se déconnecter",
     "loggedIn": "Connecté",
     "loggedOut": "Non connecté",
-    "loggingIn": "Connexion en cours…"
+    "loggingIn": "Connexion en cours…",
+    "effortLabel": "Niveau d'effort",
+    "effortLow": "Limité",
+    "effortMedium": "Intermédiaire",
+    "effortHigh": "Approfondi",
+    "effortXhigh": "Très élevé"
   },
   "ollamaSetup": {
     "title": "Configuration d'Ollama",

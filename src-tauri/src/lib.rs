@@ -224,6 +224,8 @@ pub fn run() {
             commands::codex_logout,
             commands::codex_status,
             commands::codex_models,
+            commands::codex_set_effort,
+            commands::codex_get_effort,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application");

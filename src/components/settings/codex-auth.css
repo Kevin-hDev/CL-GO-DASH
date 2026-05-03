@@ -29,3 +29,40 @@
     color: var(--color-text-secondary);
     font-size: var(--font-size-sm);
 }
+
+.cdx-auth-effort {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.cdx-auth-effort-label {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+}
+
+.cdx-auth-effort-btns {
+    display: flex;
+    gap: 4px;
+}
+
+.cdx-effort-btn {
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
+    background: transparent;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-xs);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.cdx-effort-btn:hover {
+    background: var(--color-bg-hover);
+}
+
+.cdx-effort-btn--active {
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+    border-color: var(--color-accent);
+}

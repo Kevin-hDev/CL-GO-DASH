@@ -12,10 +12,10 @@ pub async fn stream_chat(
     model: &str,
     messages: &[ChatMessage],
     tools: &[serde_json::Value],
-    _think: bool,
+    think: bool,
     cancel: CancellationToken,
 ) -> Result<StreamResult, String> {
-    let resp = request::post_codex_stream(model, messages, tools).await?;
+    let resp = request::post_codex_stream(model, messages, tools, think).await?;
     consume_sse(on_event, resp, cancel).await
 }
 
@@ -57,6 +57,15 @@ async fn consume_sse(
         let etype = parsed["type"].as_str().unwrap_or("");
 
         match etype {
+            "response.reasoning_summary_text.delta" => {
+                let delta = parsed["delta"].as_str().unwrap_or("");
+                if !delta.is_empty() {
+                    result.thinking.push_str(delta);
+                    let _ = on_event.send(StreamEvent::Thinking {
+                        content: delta.to_string(),
+                    });
+                }
+            }
             "response.output_text.delta" => {
                 let delta = parsed["delta"].as_str().unwrap_or("");
                 if delta.is_empty() {

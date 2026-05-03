@@ -9,6 +9,8 @@ pub const CODEX_MODELS: &[(&str, u32)] = &[
     ("gpt-5.4-pro", 128_000),
 ];
 
+pub const CODEX_EFFORT_LEVELS: &[&str] = &["low", "medium", "high", "xhigh"];
+
 #[derive(Serialize)]
 pub struct CodexRequest {
     pub model: String,
@@ -22,4 +24,14 @@ pub struct CodexRequest {
     pub tool_choice: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub temperature: Option<f32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reasoning: Option<ReasoningConfig>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub include: Option<Vec<String>>,
+}
+
+#[derive(Serialize, Clone)]
+pub struct ReasoningConfig {
+    pub effort: String,
+    pub summary: String,
 }
