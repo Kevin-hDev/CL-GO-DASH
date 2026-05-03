@@ -34,6 +34,21 @@ pub fn convert_messages(messages: &[ChatMessage]) -> (String, Vec<serde_json::Va
     (instructions, input)
 }
 
+fn convert_tools_to_responses_api(tools: &[serde_json::Value]) -> Vec<serde_json::Value> {
+    tools
+        .iter()
+        .filter_map(|t| {
+            let func = t.get("function")?;
+            Some(serde_json::json!({
+                "type": "function",
+                "name": func.get("name")?,
+                "description": func.get("description").unwrap_or(&serde_json::Value::Null),
+                "parameters": func.get("parameters").unwrap_or(&serde_json::Value::Null),
+            }))
+        })
+        .collect()
+}
+
 pub async fn post_codex_stream(
     model: &str,
     messages: &[ChatMessage],
@@ -50,14 +65,15 @@ async fn send_request(
     tools: &[serde_json::Value],
 ) -> Result<reqwest::Response, String> {
     let (instructions, input) = convert_messages(messages);
+    let converted_tools = convert_tools_to_responses_api(tools);
     let body = CodexRequest {
         model: model.to_string(),
         instructions,
         input,
         stream: true,
         store: false,
-        tools: tools.to_vec(),
-        tool_choice: if tools.is_empty() { None } else { Some("auto".to_string()) },
+        tools: converted_tools.clone(),
+        tool_choice: if converted_tools.is_empty() { None } else { Some("auto".to_string()) },
         temperature: None,
     };
     let url = format!("{CODEX_API_BASE}/responses");
