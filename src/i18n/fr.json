@@ -527,10 +527,13 @@
     },
     "oauth": {
       "title": "Authentification en cours",
+      "discovering": "Connexion au serveur en cours…",
       "message": "Complétez les étapes de connexion dans le nouvel onglet du navigateur.",
-      "retry": "Cela n'a pas fonctionné ? Relancez l'onglet.",
+      "retry": "Cela n'a pas fonctionné ? Relancez.",
       "cancel": "Annuler",
-      "confirm": "Confirmer la connexion"
+      "successTitle": "Connexion réussie",
+      "successMessage": "Le connecteur a été ajouté avec succès.",
+      "errorGeneric": "Échec de la connexion. Réessayez."
     }
   },
   "chatMenu": {

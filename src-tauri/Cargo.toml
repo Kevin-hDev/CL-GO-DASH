@@ -29,7 +29,7 @@ uuid = { version = "1", features = ["v4", "serde"] }
 dirs = "6"
 chrono = { version = "0.4", features = ["serde"] }
 tokio = { version = "1", features = ["full"] }
-reqwest = { version = "0.13", features = ["json", "stream", "rustls", "query"] }
+reqwest = { version = "0.13", features = ["json", "stream", "rustls", "query", "form"] }
 
 # Streaming NDJSON
 tokio-util = { version = "0.7", features = ["io"] }
@@ -73,6 +73,9 @@ rand = "0.8"
 
 # Zeroize mémoire pour les secrets (clés API)
 zeroize = { version = "1.8", features = ["derive"] }
+
+# SHA-256 pour PKCE OAuth (code_challenge)
+sha2 = "0.10"
 
 # Trait async (pour abstraction providers LLM)
 async-trait = "0.1"

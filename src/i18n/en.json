@@ -527,10 +527,13 @@
     },
     "oauth": {
       "title": "Authentication in progress",
+      "discovering": "Connecting to server…",
       "message": "Complete the connection steps in your browser.",
       "retry": "Didn't work? Retry.",
       "cancel": "Cancel",
-      "confirm": "Confirm connection"
+      "successTitle": "Connection successful",
+      "successMessage": "The connector has been added successfully.",
+      "errorGeneric": "Connection failed. Please try again."
     }
   },
   "chatMenu": {

@@ -169,6 +169,11 @@ pub fn run() {
             commands::list_configured_providers,
             commands::test_api_key,
             commands::test_api_key_with_value,
+            // MCP OAuth
+            commands::start_mcp_oauth,
+            commands::cancel_mcp_oauth,
+            commands::has_mcp_oauth_token,
+            commands::delete_mcp_oauth_token,
             // LLM providers
             commands::list_llm_providers_catalog,
             commands::list_llm_models,

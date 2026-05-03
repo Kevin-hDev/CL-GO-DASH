@@ -164,3 +164,4 @@ pub async fn test_key(provider_id: &str) -> Result<(), String> {
 }
 
 include!("api_keys_test_raw.rs");
+include!("api_keys_mcp.rs");

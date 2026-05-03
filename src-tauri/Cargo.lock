@@ -722,6 +722,7 @@ dependencies = [
  "rust_xlsxwriter",
  "serde",
  "serde_json",
+ "sha2",
  "sys-locale",
  "sysinfo",
  "tar",

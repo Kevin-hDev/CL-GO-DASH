@@ -19,3 +19,5 @@ pub mod search;
 pub mod stream_utils;
 pub mod terminal;
 pub mod vault;
+pub mod mcp_oauth;
+pub mod mcp_bridge;

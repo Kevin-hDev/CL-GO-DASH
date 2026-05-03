@@ -1,25 +1,55 @@
 import { useCallback, useEffect, useState } from "react";
-import { invoke } from "@tauri-apps/api/core";
+import { homeDir, join } from "@tauri-apps/api/path";
+import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import { IS_MAC } from "@/lib/platform";
 import { MCP_CATALOG } from "@/lib/mcp-catalog";
 import type { ConfiguredMcp, ConfiguredMcpFull, McpConnectorSpec } from "@/types/mcp";
 
-const STORAGE_KEY = "mcp-connectors.json";
+const FILENAME = "mcp-connectors.json";
+
+async function storagePath(): Promise<string> {
+  const home = await homeDir();
+  return join(home, ".local", "share", "cl-go-dash", FILENAME);
+}
+
+const MAX_CONNECTORS = 32;
+
+function validateConnectors(data: unknown): ConfiguredMcp[] {
+  if (!Array.isArray(data)) return [];
+  const result: ConfiguredMcp[] = [];
+  for (const item of data) {
+    if (result.length >= MAX_CONNECTORS) break;
+    if (typeof item !== "object" || item === null) continue;
+    const r = item as Record<string, unknown>;
+    if (typeof r.id !== "string" || typeof r.status !== "string") continue;
+    if (r.status !== "connected" && r.status !== "disconnected") continue;
+    result.push({
+      id: r.id,
+      status: r.status as ConfiguredMcp["status"],
+      enabled_in_chat: r.enabled_in_chat === true,
+      endpoint: typeof r.endpoint === "string" ? r.endpoint : undefined,
+    });
+  }
+  return result;
+}
 
 async function loadConfigured(): Promise<ConfiguredMcp[]> {
   try {
-    const raw = await invoke<string>("read_text_file", { filename: STORAGE_KEY });
-    return JSON.parse(raw) as ConfiguredMcp[];
+    const path = await storagePath();
+    const raw = await readTextFile(path);
+    return validateConnectors(JSON.parse(raw));
   } catch {
     return [];
   }
 }
 
 async function saveConfigured(list: ConfiguredMcp[]): Promise<void> {
-  await invoke("write_text_file", {
-    filename: STORAGE_KEY,
-    content: JSON.stringify(list),
-  });
+  try {
+    const path = await storagePath();
+    await writeTextFile(path, JSON.stringify(list));
+  } catch (err) {
+    console.warn("[mcp-connectors] save failed:", err);
+  }
 }
 
 export function useConnectors() {
@@ -51,8 +81,11 @@ export function useConnectors() {
 
   const addConnector = useCallback(async (id: string) => {
     if (items.some((c) => c.id === id)) return;
-    await persist([...items, { id, status: "connected", enabled_in_chat: true }]);
-  }, [items, persist]);
+    const spec = catalog.find((s) => s.id === id);
+    await persist([...items, {
+      id, status: "connected", enabled_in_chat: true, endpoint: spec?.endpoint,
+    }]);
+  }, [items, persist, catalog]);
 
   const removeConnector = useCallback(async (id: string) => {
     await persist(items.filter((c) => c.id !== id));

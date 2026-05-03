@@ -57,4 +57,6 @@
 
 .mco-retry-link:hover { color: var(--ink); }
 
+.mco-error { color: var(--red, #ef4444); }
+
 .mco-footer { justify-content: center; }

@@ -30,6 +30,7 @@ export interface ConfiguredMcp {
   id: string;
   status: McpConnectorStatus;
   enabled_in_chat: boolean;
+  endpoint?: string;
 }
 
 export type ConfiguredMcpFull = McpConnectorSpec & ConfiguredMcp;
