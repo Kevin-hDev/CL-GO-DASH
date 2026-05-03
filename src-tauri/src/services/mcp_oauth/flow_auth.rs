@@ -1,0 +1,166 @@
+use std::time::Duration;
+
+use zeroize::Zeroizing;
+
+use super::types::{DcrResponse, OAuthTokens, TokenResponse};
+
+pub fn build_auth_url(
+    auth_endpoint: &str,
+    client_id: &str,
+    redirect_uri: &str,
+    challenge: &str,
+    state: &str,
+    resource: &str,
+) -> Result<String, String> {
+    let mut url = reqwest::Url::parse(auth_endpoint)
+        .map_err(|_| "URL d'autorisation invalide".to_string())?;
+    if url.scheme() != "https" {
+        return Err("URL d'autorisation non HTTPS".to_string());
+    }
+    url.query_pairs_mut()
+        .append_pair("response_type", "code")
+        .append_pair("client_id", client_id)
+        .append_pair("redirect_uri", redirect_uri)
+        .append_pair("code_challenge", challenge)
+        .append_pair("code_challenge_method", "S256")
+        .append_pair("state", state)
+        .append_pair("resource", resource);
+    Ok(url.to_string())
+}
+
+pub fn open_browser(_app: &tauri::AppHandle, url: &str) -> Result<(), String> {
+    if !url.starts_with("https://") {
+        return Err("URL d'autorisation non HTTPS".to_string());
+    }
+    open_url_native(url)
+}
+
+#[cfg(target_os = "macos")]
+fn open_url_native(url: &str) -> Result<(), String> {
+    std::process::Command::new("open")
+        .arg(url)
+        .spawn()
+        .map_err(|_| "impossible d'ouvrir le navigateur".to_string())?;
+    Ok(())
+}
+
+#[cfg(target_os = "windows")]
+fn open_url_native(url: &str) -> Result<(), String> {
+    std::process::Command::new("rundll32")
+        .args(["url.dll,FileProtocolHandler", url])
+        .spawn()
+        .map_err(|_| "impossible d'ouvrir le navigateur".to_string())?;
+    Ok(())
+}
+
+#[cfg(target_os = "linux")]
+fn open_url_native(url: &str) -> Result<(), String> {
+    std::process::Command::new("xdg-open")
+        .arg(url)
+        .spawn()
+        .map_err(|_| "impossible d'ouvrir le navigateur".to_string())?;
+    Ok(())
+}
+
+pub fn verify_state_constant_time(expected: &str, received: &str) -> Result<(), String> {
+    let a = expected.as_bytes();
+    let b = received.as_bytes();
+    if a.len() != b.len() {
+        return Err("état OAuth invalide".to_string());
+    }
+    let mut diff: u8 = 0;
+    for (x, y) in a.iter().zip(b.iter()) {
+        diff |= x ^ y;
+    }
+    if diff != 0 {
+        return Err("état OAuth invalide".to_string());
+    }
+    Ok(())
+}
+
+pub async fn register_client(
+    registration_url: &str,
+    connector_id: &str,
+    redirect_uri: &str,
+) -> Result<String, String> {
+    let client = reqwest::Client::builder()
+        .timeout(Duration::from_secs(15))
+        .build()
+        .map_err(|_| "erreur interne".to_string())?;
+
+    let body = serde_json::json!({
+        "client_name": format!("CL-GO-DASH ({})", connector_id),
+        "application_type": "native",
+        "redirect_uris": [redirect_uri],
+        "grant_types": ["authorization_code", "refresh_token"],
+        "response_types": ["code"],
+        "token_endpoint_auth_method": "none",
+    });
+
+    let resp = client
+        .post(registration_url)
+        .json(&body)
+        .send()
+        .await
+        .map_err(|_| "échec de l'enregistrement du client".to_string())?;
+
+    if !resp.status().is_success() {
+        return Err("enregistrement du client refusé".to_string());
+    }
+
+    let dcr: DcrResponse = resp
+        .json()
+        .await
+        .map_err(|_| "réponse d'enregistrement invalide".to_string())?;
+
+    Ok(dcr.client_id.clone())
+}
+
+pub async fn exchange_code(
+    token_endpoint: &str,
+    code: &str,
+    client_id: &str,
+    verifier: &Zeroizing<String>,
+    redirect_uri: &str,
+    resource: &str,
+) -> Result<OAuthTokens, String> {
+    if !token_endpoint.starts_with("https://") {
+        return Err("token endpoint non HTTPS".to_string());
+    }
+
+    let client = reqwest::Client::builder()
+        .timeout(Duration::from_secs(15))
+        .build()
+        .map_err(|_| "erreur interne".to_string())?;
+
+    let params: [(&str, &str); 6] = [
+        ("grant_type", "authorization_code"),
+        ("code", code),
+        ("client_id", client_id),
+        ("code_verifier", verifier.as_str()),
+        ("redirect_uri", redirect_uri),
+        ("resource", resource),
+    ];
+
+    let resp = client
+        .post(token_endpoint)
+        .form(&params)
+        .send()
+        .await
+        .map_err(|_| "échec de l'échange du code".to_string())?;
+
+    if !resp.status().is_success() {
+        return Err("le serveur a refusé le code d'autorisation".to_string());
+    }
+
+    let mut raw: TokenResponse = resp
+        .json()
+        .await
+        .map_err(|_| "réponse invalide".to_string())?;
+
+    if raw.access_token.is_empty() {
+        return Err("échec de l'authentification".to_string());
+    }
+
+    Ok(OAuthTokens::from_response(&mut raw, token_endpoint, client_id))
+}

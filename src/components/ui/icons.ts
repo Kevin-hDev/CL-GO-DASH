@@ -39,4 +39,9 @@ export {
   Info,
   Keyboard,
   BookOpenText,
+  Plugs,
+  PuzzlePiece,
+  Image,
+  ToggleLeft,
+  ToggleRight,
 } from "@phosphor-icons/react";

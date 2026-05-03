@@ -161,6 +161,9 @@ async fn dispatch_inner(tool_name: &str, args: &Value, working_dir: &Path, sessi
             }
         }
         _ => {
+            if let Some(result) = super::tool_dispatcher_mcp::dispatch_mcp(tool_name, args).await {
+                return result;
+            }
             match super::tool_dispatcher_office::dispatch_office(tool_name, args, working_dir, session_id).await {
                 Some(result) => result,
                 None => ToolResult::err(format!("Outil inconnu: {tool_name}")),

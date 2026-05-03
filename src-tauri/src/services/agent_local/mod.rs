@@ -30,10 +30,13 @@ pub mod session_store;
 pub mod stream_events;
 pub mod tab_store;
 pub mod tool_definitions;
+pub mod tool_definitions_mcp;
 pub mod tool_office_utils;
 pub mod tool_definitions_office;
 pub mod tool_dispatcher;
 pub mod tool_dispatcher_office;
+pub mod tool_dispatcher_mcp;
+pub mod tool_mcp;
 pub mod tool_spreadsheet_calamine;
 pub mod tool_spreadsheet_read;
 #[cfg(test)]

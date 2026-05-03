@@ -132,11 +132,12 @@ pub fn get_tool_definitions() -> Vec<Value> {
         ),
     ];
     defs.extend(super::tool_definitions_office::office_tool_definitions());
+    defs.extend(super::tool_definitions_mcp::mcp_tool_definitions());
     defs
 }
 
 pub fn get_chat_tool_definitions() -> Vec<Value> {
-    vec![
+    let mut defs = vec![
         tool_def(
             "web_search",
             "Search the web for current information, documentation, or solutions.",
@@ -159,7 +160,9 @@ pub fn get_chat_tool_definitions() -> Vec<Value> {
                 "required": ["url"]
             }),
         ),
-    ]
+    ];
+    defs.extend(super::tool_definitions_mcp::mcp_tool_definitions());
+    defs
 }
 
 fn tool_def(name: &str, description: &str, parameters: Value) -> Value {

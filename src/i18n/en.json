@@ -273,6 +273,7 @@
     "tabs": {
       "general": "General",
       "ollama": "Ollama",
+      "connectors": "Connectors",
       "apiKeys": "API Keys",
       "llm": "LLM",
       "advanced": "Advanced",
@@ -483,5 +484,77 @@
     "extracting": "Installing…",
     "downloadingGpu": "Downloading GPU support…",
     "error": "Installation failed. Details below."
+  },
+  "connectors": {
+    "main": {
+      "subtitle": "Allow LLMs to connect to other apps and services",
+      "browseBtn": "Browse connectors"
+    },
+    "sidebar": {
+      "configured": "Configured",
+      "empty": "No connector configured"
+    },
+    "detail": {
+      "connected": "Connected",
+      "disconnected": "Disconnected",
+      "description": "Description",
+      "tools": "Available tools",
+      "author": "Author",
+      "website": "Website",
+      "openSite": "Open site",
+      "confirmDeleteTitle": "Delete connector?",
+      "confirmDeleteBtn": "Delete",
+      "confirmDisconnectTitle": "Disconnect {{name}}?",
+      "confirmDisconnectDesc": "The LLM will no longer have access to {{name}} services.",
+      "confirmDisconnectBtn": "Disconnect",
+      "cancel": "Cancel"
+    },
+    "browse": {
+      "title": "Browse connectors",
+      "subtitle": "Add connectors to your instance.",
+      "search": "Search connectors…",
+      "empty": "No connector matches.",
+      "tabMcp": "MCP",
+      "tabPlugins": "Plugins",
+      "pluginsEmpty": "Coming soon",
+      "categories": {
+        "all": "All",
+        "productivity": "Productivity",
+        "design": "Design",
+        "devtools": "Dev Tools",
+        "communication": "Communication",
+        "ai-ml": "AI / ML",
+        "scraping": "Scraping",
+        "community": "Community"
+      }
+    },
+    "config": {
+      "addTitle": "Add {{name}}",
+      "token": "Token",
+      "tokenPlaceholder": "Paste your token here",
+      "testing": "Testing…",
+      "testOk": "Connector validated.",
+      "addAndTest": "Add and test",
+      "cancel": "Cancel",
+      "confirmAddDesc": "Add {{name}} to your connectors?",
+      "confirmAddBtn": "Add"
+    },
+    "oauth": {
+      "title": "Authentication in progress",
+      "discovering": "Connecting to server…",
+      "message": "Complete the connection steps in your browser.",
+      "retry": "Didn't work? Retry.",
+      "cancel": "Cancel",
+      "successTitle": "Connection successful",
+      "successMessage": "The connector has been added successfully.",
+      "errorGeneric": "Connection failed. Please try again."
+    }
+  },
+  "chatMenu": {
+    "addFile": "Add an image or file",
+    "connectors": "Connectors",
+    "plugins": "Plugins",
+    "noConnectors": "No connectors",
+    "pluginsEmpty": "Coming soon"
   }
 }

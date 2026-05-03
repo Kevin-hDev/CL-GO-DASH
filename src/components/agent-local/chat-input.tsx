@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Plus } from "@/components/ui/icons";
+import { ChatPlusMenu } from "./chat-plus-menu";
 import { useAutoResize } from "@/hooks/use-auto-resize";
 import { useSlashCommands } from "@/hooks/use-slash-commands";
 import { useActiveSkills } from "@/hooks/use-active-skills";
@@ -153,9 +153,7 @@ export function ChatInput({
         </div>
       )}
       <div className="chat-input-row3">
-        <button className="chat-plus-btn" onClick={onFileImport}>
-          <Plus size={16} />
-        </button>
+        <ChatPlusMenu onFileImport={onFileImport} />
         <ContextProgress used={contextUsed} max={contextMax} />
         <PermissionModeSelector mode={permissionMode} onChange={onPermissionModeChange} />
         <ModelSelector

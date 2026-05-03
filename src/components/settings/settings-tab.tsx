@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSettings } from "@/hooks/use-settings";
 import type { Theme, ThemeChoice } from "@/hooks/use-theme";
-import { GearSix, Key, Sliders, Info, BookOpenText, Keyboard } from "@/components/ui/icons";
+import { GearSix, Key, Sliders, Info, BookOpenText, Keyboard, Plugs } from "@/components/ui/icons";
 import { ThemedIcon } from "@/components/ui/themed-icon";
 import { GeneralSettings } from "./general-settings";
 import { AdvancedSettings } from "./advanced-settings";
@@ -11,12 +11,13 @@ import { AboutSettings } from "./about-settings";
 import { LlmExplorer } from "./llm-explorer";
 import { OllamaTab } from "@/components/ollama/ollama-tab";
 import { ApiKeysTab } from "@/components/api-keys/api-keys-tab";
+import { ConnectorsTab } from "@/components/connectors/connectors-tab";
 import ollamaDark from "@/assets/ollama.png";
 import ollamaLight from "@/assets/ollama-light.png";
 import type { Icon } from "@phosphor-icons/react";
 import "./settings-tab.css";
 
-type SettingsSubTab = "general" | "ollama" | "api-keys" | "llm" | "advanced" | "shortcuts" | "about";
+type SettingsSubTab = "general" | "ollama" | "connectors" | "api-keys" | "llm" | "advanced" | "shortcuts" | "about";
 
 interface SubTabDef {
   id: SettingsSubTab;
@@ -29,6 +30,7 @@ interface SubTabDef {
 const SUB_TABS: SubTabDef[] = [
   { id: "general", i18n: "settings.tabs.general", icon: GearSix },
   { id: "ollama", i18n: "settings.tabs.ollama", imgDark: ollamaDark, imgLight: ollamaLight },
+  { id: "connectors", i18n: "settings.tabs.connectors", icon: Plugs },
   { id: "api-keys", i18n: "settings.tabs.apiKeys", icon: Key },
   { id: "llm", i18n: "settings.tabs.llm", icon: BookOpenText },
   { id: "advanced", i18n: "settings.tabs.advanced", icon: Sliders },
@@ -64,6 +66,7 @@ export function SettingsTab({ themeChoice, onThemeChange, activeSubTab, onSubTab
   const { t } = useTranslation();
 
   const ollamaTab = OllamaTab();
+  const connectorsTab = ConnectorsTab();
   const apiKeysTab = ApiKeysTab();
 
   const list = (
@@ -98,6 +101,7 @@ export function SettingsTab({ themeChoice, onThemeChange, activeSubTab, onSubTab
       </div>
       <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, overflow: "hidden" }}>
         {subTab === "ollama" && ollamaTab.list}
+        {subTab === "connectors" && connectorsTab.list}
         {subTab === "api-keys" && apiKeysTab.list}
       </div>
     </div>
@@ -114,6 +118,7 @@ export function SettingsTab({ themeChoice, onThemeChange, activeSubTab, onSubTab
       );
     }
     if (subTab === "ollama") return ollamaTab.detail;
+    if (subTab === "connectors") return connectorsTab.detail;
     if (subTab === "api-keys") return apiKeysTab.detail;
     if (subTab === "llm") return <LlmExplorer />;
     if (subTab === "advanced") return <AdvancedSettings />;

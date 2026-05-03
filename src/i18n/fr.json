@@ -273,6 +273,7 @@
     "tabs": {
       "general": "Général",
       "ollama": "Ollama",
+      "connectors": "Connecteurs",
       "apiKeys": "Clés API",
       "llm": "LLM",
       "advanced": "Avancé",
@@ -483,5 +484,77 @@
     "extracting": "Installation en cours…",
     "downloadingGpu": "Téléchargement GPU…",
     "error": "L'installation a échoué. Détails ci-dessous."
+  },
+  "connectors": {
+    "main": {
+      "subtitle": "Permettez aux LLM de se connecter à d'autres applications et services",
+      "browseBtn": "Parcourir les connecteurs"
+    },
+    "sidebar": {
+      "configured": "Configurés",
+      "empty": "Aucun connecteur configuré"
+    },
+    "detail": {
+      "connected": "Connecté",
+      "disconnected": "Déconnecté",
+      "description": "Description",
+      "tools": "Outils disponibles",
+      "author": "Auteur",
+      "website": "Site web",
+      "openSite": "Ouvrir le site",
+      "confirmDeleteTitle": "Supprimer le connecteur ?",
+      "confirmDeleteBtn": "Supprimer",
+      "confirmDisconnectTitle": "Déconnecter {{name}} ?",
+      "confirmDisconnectDesc": "Le LLM n'aura plus accès aux services {{name}}.",
+      "confirmDisconnectBtn": "Déconnecter",
+      "cancel": "Annuler"
+    },
+    "browse": {
+      "title": "Parcourir les connecteurs",
+      "subtitle": "Ajoutez des connecteurs à votre instance.",
+      "search": "Rechercher des connecteurs…",
+      "empty": "Aucun connecteur ne correspond.",
+      "tabMcp": "MCP",
+      "tabPlugins": "Plugins",
+      "pluginsEmpty": "Bientôt disponible",
+      "categories": {
+        "all": "Tous",
+        "productivity": "Productivité",
+        "design": "Design",
+        "devtools": "Dev Tools",
+        "communication": "Communication",
+        "ai-ml": "IA / ML",
+        "scraping": "Scraping",
+        "community": "Communauté"
+      }
+    },
+    "config": {
+      "addTitle": "Ajouter {{name}}",
+      "token": "Token",
+      "tokenPlaceholder": "Colle ton token ici",
+      "testing": "Test en cours…",
+      "testOk": "Connecteur validé.",
+      "addAndTest": "Ajouter et tester",
+      "cancel": "Annuler",
+      "confirmAddDesc": "Ajouter {{name}} à vos connecteurs ?",
+      "confirmAddBtn": "Ajouter"
+    },
+    "oauth": {
+      "title": "Authentification en cours",
+      "discovering": "Connexion au serveur en cours…",
+      "message": "Complétez les étapes de connexion dans le nouvel onglet du navigateur.",
+      "retry": "Cela n'a pas fonctionné ? Relancez.",
+      "cancel": "Annuler",
+      "successTitle": "Connexion réussie",
+      "successMessage": "Le connecteur a été ajouté avec succès.",
+      "errorGeneric": "Échec de la connexion. Réessayez."
+    }
+  },
+  "chatMenu": {
+    "addFile": "Ajouter une image ou un fichier",
+    "connectors": "Connecteurs",
+    "plugins": "Plugins",
+    "noConnectors": "Aucun connecteur",
+    "pluginsEmpty": "Bientôt disponible"
   }
 }
