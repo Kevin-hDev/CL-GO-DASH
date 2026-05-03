@@ -219,6 +219,11 @@ pub fn run() {
             commands::start_ollama_sidecar,
             commands::restart_ollama_sidecar,
             commands::check_model_fits_vram,
+            // Codex OAuth (dev-only)
+            commands::codex_login,
+            commands::codex_logout,
+            commands::codex_status,
+            commands::codex_models,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application");
