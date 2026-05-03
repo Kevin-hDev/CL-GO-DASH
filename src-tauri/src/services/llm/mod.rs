@@ -28,7 +28,17 @@ pub(crate) fn sanitize_log_body(body: &str) -> String {
     } else {
         body
     };
-    truncated.replace(|c: char| c.is_control(), " ")
+    let mut cleaned = truncated.replace(|c: char| c.is_control(), " ");
+    for sensitive in &["key", "token", "secret", "password", "authorization", "api_key", "apikey"] {
+        if let Some(pos) = cleaned.to_lowercase().find(sensitive) {
+            let start = cleaned[pos..].find(':').or_else(|| cleaned[pos..].find('=')).map(|i| pos + i + 1);
+            if let Some(s) = start {
+                let end = cleaned[s..].find(&['"', ',', '}', '&', ' '][..]).map(|i| s + i).unwrap_or(cleaned.len());
+                cleaned.replace_range(s..end, "[REDACTED]");
+            }
+        }
+    }
+    cleaned
 }
 
 /// Helper non-streaming pour appels simples (utilisé par le scheduler heartbeat).

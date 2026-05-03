@@ -100,7 +100,7 @@ impl std::fmt::Display for LlmError {
                 None => write!(f, "rate limit atteint, réessaie plus tard"),
             },
             LlmError::Http { status, message } => write!(f, "HTTP {}: {}", status, message),
-            LlmError::Network(m) => write!(f, "erreur réseau : {}", m),
+            LlmError::Network(_) => write!(f, "erreur réseau — vérifiez votre connexion"),
             LlmError::Parse(m) => write!(f, "erreur de parsing : {}", m),
             LlmError::Provider(m) => write!(f, "erreur provider : {}", m),
         }
