@@ -6,8 +6,8 @@ use super::jwt;
 use super::store::CodexTokens;
 
 const TOKEN_URL: &str = "https://auth.openai.com/oauth/token";
-const CLIENT_ID: &str = "app_EMoamEEZ73f0CkXaXp7hrann";
-const REDIRECT_URI: &str = "http://localhost:1455/auth/callback";
+
+use super::{CLIENT_ID, REDIRECT_URI};
 
 pub async fn exchange_code(
     code: &str,

@@ -23,8 +23,6 @@ pub struct CodexRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tool_choice: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub temperature: Option<f32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub reasoning: Option<ReasoningConfig>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub include: Option<Vec<String>>,

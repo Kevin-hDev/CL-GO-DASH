@@ -2,9 +2,9 @@ use rand::RngCore;
 
 use super::{callback, jwt, pkce, store, token};
 
+use super::{CLIENT_ID, REDIRECT_URI};
+
 const AUTH_URL: &str = "https://auth.openai.com/oauth/authorize";
-const CLIENT_ID: &str = "app_EMoamEEZ73f0CkXaXp7hrann";
-const REDIRECT_URI: &str = "http://localhost:1455/auth/callback";
 const SCOPES: &str = "openid profile email offline_access";
 
 fn generate_state() -> String {
@@ -45,7 +45,7 @@ pub async fn login() -> Result<String, String> {
         .unwrap_or_else(|| "inconnu".to_string());
 
     store::save(&creds)?;
-    eprintln!("[codex] connecté ({email})");
+    eprintln!("[codex] connecté");
 
     Ok(email)
 }

@@ -13,6 +13,14 @@ struct Stored {
     account_id: String,
 }
 
+impl Drop for Stored {
+    fn drop(&mut self) {
+        self.access.zeroize();
+        self.refresh.zeroize();
+        self.account_id.zeroize();
+    }
+}
+
 pub struct CodexTokens {
     pub access: Zeroizing<String>,
     pub refresh: Zeroizing<String>,
@@ -48,14 +56,15 @@ pub fn save(tokens: &CodexTokens) -> Result<(), String> {
 pub fn load() -> Result<Option<CodexTokens>, String> {
     match api_keys::get_raw(VAULT_KEY) {
         Ok(json) => {
-            let raw: Stored = serde_json::from_str(&json)
+            let mut raw: Stored = serde_json::from_str(&json)
                 .map_err(|e| format!("parse codex tokens: {e}"))?;
-            Ok(Some(CodexTokens {
-                access: Zeroizing::new(raw.access),
-                refresh: Zeroizing::new(raw.refresh),
+            let tokens = CodexTokens {
+                access: Zeroizing::new(std::mem::take(&mut raw.access)),
+                refresh: Zeroizing::new(std::mem::take(&mut raw.refresh)),
                 expires_at: raw.expires_at,
-                account_id: raw.account_id,
-            }))
+                account_id: std::mem::take(&mut raw.account_id),
+            };
+            Ok(Some(tokens))
         }
         Err(_) => Ok(None),
     }

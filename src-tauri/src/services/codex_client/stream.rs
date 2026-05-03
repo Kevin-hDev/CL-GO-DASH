@@ -56,12 +56,6 @@ async fn consume_sse(
         };
         let etype = parsed["type"].as_str().unwrap_or("");
 
-        // --- DIAGNOSTIC TEMPORAIRE : log les events reasoning ---
-        if etype.contains("reasoning") {
-            eprintln!("[codex-diag] SSE event: {etype}");
-        }
-        // --- FIN DIAGNOSTIC ---
-
         match etype {
             "response.reasoning_summary_text.delta" => {
                 let delta = parsed["delta"].as_str().unwrap_or("");
