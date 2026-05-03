@@ -74,6 +74,12 @@ rand = "0.8"
 # Zeroize mémoire pour les secrets (clés API)
 zeroize = { version = "1.8", features = ["derive"] }
 
+# Codex OAuth (PKCE SHA-256, URL encoding, hex state, open browser)
+sha2 = "0.10"
+hex = "0.4"
+urlencoding = "2"
+open = "5"
+
 # Trait async (pour abstraction providers LLM)
 async-trait = "0.1"
 
