@@ -140,6 +140,34 @@ pub fn list_configured() -> Vec<String> {
     read_registry()
 }
 
+const MAX_RAW_VALUE_LEN: usize = 8192;
+
+pub fn set_raw(key: &str, value: &str) -> Result<(), String> {
+    if key.is_empty() || key.len() > 64 {
+        return Err("clé vault invalide".to_string());
+    }
+    if value.len() > MAX_RAW_VALUE_LEN {
+        return Err("valeur vault trop longue".to_string());
+    }
+    let mut state = STATE.lock().map_err(|e| format!("lock: {e}"))?;
+    let s = state.as_mut().ok_or("vault not initialized")?;
+    s.keys.insert(key.to_string(), Zeroizing::new(value.to_string()));
+    flush_vault(s)
+}
+
+pub fn get_raw(key: &str) -> Result<Zeroizing<String>, String> {
+    let state = STATE.lock().map_err(|e| format!("lock: {e}"))?;
+    let s = state.as_ref().ok_or("vault not initialized")?;
+    s.keys.get(key).cloned().ok_or_else(|| format!("no value for {key}"))
+}
+
+pub fn delete_raw(key: &str) -> Result<(), String> {
+    let mut state = STATE.lock().map_err(|e| format!("lock: {e}"))?;
+    let s = state.as_mut().ok_or("vault not initialized")?;
+    s.keys.remove(key);
+    flush_vault(s)
+}
+
 pub async fn test_key(provider_id: &str) -> Result<(), String> {
     if crate::services::llm::catalog::find(provider_id).is_some() {
         let p = crate::services::llm::openai_compat::OpenAiCompatProvider::new(provider_id)
