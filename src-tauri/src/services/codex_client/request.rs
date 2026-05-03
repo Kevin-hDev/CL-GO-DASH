@@ -19,17 +19,40 @@ pub fn convert_messages(messages: &[ChatMessage]) -> (String, Vec<serde_json::Va
             instructions.push_str(&msg.content);
             continue;
         }
-        let mut obj = serde_json::json!({
-            "role": msg.role,
-            "content": msg.content,
-        });
-        if let Some(ref tc) = msg.tool_calls {
-            obj["tool_calls"] = serde_json::to_value(tc).unwrap_or_default();
+
+        if msg.role == "assistant" {
+            if !msg.content.is_empty() {
+                input.push(serde_json::json!({"role": "assistant", "content": msg.content}));
+            }
+            if let Some(ref calls) = msg.tool_calls {
+                for tc in calls {
+                    let args = match &tc.function.arguments {
+                        serde_json::Value::String(s) => s.clone(),
+                        other => serde_json::to_string(other).unwrap_or_default(),
+                    };
+                    input.push(serde_json::json!({
+                        "type": "function_call",
+                        "call_id": tc.id.as_deref().unwrap_or("call_0"),
+                        "name": tc.function.name,
+                        "arguments": args,
+                    }));
+                }
+            }
+            continue;
         }
-        if let Some(ref id) = msg.tool_call_id {
-            obj["tool_call_id"] = serde_json::Value::String(id.clone());
+
+        if msg.role == "tool" {
+            if let Some(ref id) = msg.tool_call_id {
+                input.push(serde_json::json!({
+                    "type": "function_call_output",
+                    "call_id": id,
+                    "output": msg.content,
+                }));
+                continue;
+            }
         }
-        input.push(obj);
+
+        input.push(serde_json::json!({"role": msg.role, "content": msg.content}));
     }
     (instructions, input)
 }
@@ -174,5 +197,39 @@ mod tests {
         let (instructions, input) = convert_messages(&msgs);
         assert!(instructions.is_empty());
         assert_eq!(input.len(), 1);
+    }
+
+    #[test]
+    fn convert_splits_tool_calls_into_separate_items() {
+        use crate::services::agent_local::types_ollama::{ToolCallOllama, ToolCallFunction};
+        let msgs = vec![
+            ChatMessage {
+                role: "assistant".into(),
+                content: "Je vais lire le fichier.".into(),
+                tool_calls: Some(vec![ToolCallOllama {
+                    id: Some("call_1".into()),
+                    function: ToolCallFunction {
+                        name: "read_file".into(),
+                        arguments: serde_json::json!({"path": "/tmp/test.txt"}),
+                    },
+                }]),
+                ..Default::default()
+            },
+            ChatMessage {
+                role: "tool".into(),
+                content: "contenu du fichier".into(),
+                tool_call_id: Some("call_1".into()),
+                ..Default::default()
+            },
+        ];
+        let (_, input) = convert_messages(&msgs);
+        assert_eq!(input.len(), 3);
+        assert_eq!(input[0]["role"], "assistant");
+        assert_eq!(input[1]["type"], "function_call");
+        assert_eq!(input[1]["name"], "read_file");
+        assert_eq!(input[1]["call_id"], "call_1");
+        assert_eq!(input[2]["type"], "function_call_output");
+        assert_eq!(input[2]["call_id"], "call_1");
+        assert_eq!(input[2]["output"], "contenu du fichier");
     }
 }
