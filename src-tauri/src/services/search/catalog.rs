@@ -41,22 +41,4 @@ pub const SEARCH_PROVIDERS: &[SearchProviderSpec] = &[
         short_description: "Extraction Markdown LLM-ready d'un URL.",
         short_description_en: "LLM-ready Markdown extraction from any URL.",
     },
-    SearchProviderSpec {
-        id: "serpapi",
-        display_name: "SerpAPI",
-        category: "search",
-        signup_url: "https://serpapi.com/manage-api-key",
-        free_tier_label: "100 req/month",
-        short_description: "Google / Bing / DuckDuckGo SERP structuré.",
-        short_description_en: "Google / Bing / DuckDuckGo structured SERP.",
-    },
-    SearchProviderSpec {
-        id: "google_cse",
-        display_name: "Google Custom Search",
-        category: "search",
-        signup_url: "https://developers.google.com/custom-search/v1/introduction",
-        free_tier_label: "100 req/day",
-        short_description: "Search Google sur domaines choisis.",
-        short_description_en: "Google search on custom domains.",
-    },
 ];

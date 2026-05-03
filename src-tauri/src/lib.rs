@@ -168,6 +168,7 @@ pub fn run() {
             commands::has_api_key,
             commands::list_configured_providers,
             commands::test_api_key,
+            commands::test_api_key_with_value,
             // LLM providers
             commands::list_llm_providers_catalog,
             commands::list_llm_models,

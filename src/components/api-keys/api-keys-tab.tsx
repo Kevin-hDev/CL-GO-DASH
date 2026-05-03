@@ -27,7 +27,7 @@ type DialogState =
 
 export function ApiKeysTab(): { list: React.ReactNode; detail: React.ReactNode } {
   const { t } = useTranslation();
-  const { catalog, configuredIds, configured, setKey, deleteKey, testKey } =
+  const { catalog, configuredIds, configured, setKey, deleteKey, testKeyRaw } =
     useApiKeys();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [dialog, setDialog] = useState<DialogState>({ kind: "none" });
@@ -127,8 +127,8 @@ export function ApiKeysTab(): { list: React.ReactNode; detail: React.ReactNode }
           onSave={async (key) => {
             await setKey(dialog.provider.id, key);
           }}
-          onTest={async () => {
-            await testKey(dialog.provider.id);
+          onTest={async (key) => {
+            await testKeyRaw(dialog.provider.id, key);
           }}
           onClearKey={
             dialog.alreadyConfigured

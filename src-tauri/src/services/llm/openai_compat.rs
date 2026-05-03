@@ -48,7 +48,7 @@ fn static_models(provider_id: &str) -> Option<&'static [StaticModel]> {
     }
 }
 
-fn ping_model(provider_id: &str) -> &'static str {
+pub fn ping_model(provider_id: &str) -> &'static str {
     match provider_id {
         "zai" => "glm-4.5-flash",
         "xai" => "grok-3-mini",

@@ -12,7 +12,7 @@ const VAULT_VERSION: u8 = 1;
 
 const KNOWN_PROVIDERS: &[&str] = &[
     "groq", "google", "mistral", "cerebras", "openrouter",
-    "openai", "deepseek", "brave", "exa", "firecrawl", "serpapi", "google_cse",
+    "openai", "deepseek", "brave", "exa", "firecrawl",
 ];
 
 #[derive(Serialize, Deserialize)]
@@ -30,8 +30,10 @@ pub fn load_or_create_master_key() -> Result<Zeroizing<Vec<u8>>, String> {
     let entry =
         Entry::new(KEYRING_SERVICE, MASTER_KEY_USER).map_err(|e| format!("keyring entry: {e}"))?;
 
-    if let Ok(b64) = entry.get_password() {
-        let bytes = B64.decode(&b64).map_err(|e| format!("master key decode: {e}"))?;
+    if let Ok(b64_raw) = entry.get_password() {
+        let mut b64 = Zeroizing::new(b64_raw);
+        let bytes = B64.decode(b64.as_str()).map_err(|e| format!("master key decode: {e}"))?;
+        b64.zeroize();
         if bytes.len() == 32 {
             return Ok(Zeroizing::new(bytes));
         }
@@ -39,10 +41,11 @@ pub fn load_or_create_master_key() -> Result<Zeroizing<Vec<u8>>, String> {
 
     let mut key = vec![0u8; 32];
     rand::rngs::OsRng.fill_bytes(&mut key);
-    let b64 = B64.encode(&key);
+    let mut b64 = B64.encode(&key);
     entry
         .set_password(&b64)
         .map_err(|e| format!("keyring set master: {e}"))?;
+    b64.zeroize();
     Ok(Zeroizing::new(key))
 }
 

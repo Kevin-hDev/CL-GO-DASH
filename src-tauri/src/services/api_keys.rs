@@ -157,16 +157,10 @@ pub async fn test_key(provider_id: &str) -> Result<(), String> {
         "exa" => client.post("https://api.exa.ai/search").header("x-api-key", &*key)
             .json(&serde_json::json!({ "query": "test", "numResults": 1 })),
         "firecrawl" => client.get("https://api.firecrawl.dev/v2/team/credit-usage").bearer_auth(&*key),
-        "serpapi" => client.get("https://serpapi.com/account")
-            .header("Authorization", format!("Bearer {}", key.as_str())),
-        "google_cse" => return Ok(()),
         other => return Err(format!("Provider inconnu : {other}")),
     }
     .send().await.map_err(|e| format!("network: {e}"))?;
-    match resp.status().as_u16() {
-        200..=299 => Ok(()),
-        401 | 403 => Err("Clé API invalide ou non autorisée".to_string()),
-        429 => Err("Rate limit atteint — clé valide mais quota dépassé".to_string()),
-        status => Err(format!("Erreur serveur : HTTP {status}")),
-    }
+    check_status(resp)
 }
+
+include!("api_keys_test_raw.rs");

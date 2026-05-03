@@ -16,9 +16,7 @@ export type LlmProviderId =
 export type SearchProviderId =
   | "brave"
   | "exa"
-  | "firecrawl"
-  | "serpapi"
-  | "google_cse";
+  | "firecrawl";
 
 export type ProviderId = LlmProviderId | SearchProviderId | string;
 

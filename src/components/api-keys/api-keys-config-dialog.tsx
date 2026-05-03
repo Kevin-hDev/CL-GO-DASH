@@ -10,7 +10,7 @@ interface ApiKeysConfigDialogProps {
   alreadyConfigured: boolean;
   onClose: () => void;
   onSave: (key: string) => Promise<void>;
-  onTest: () => Promise<void>;
+  onTest: (key: string) => Promise<void>;
   onClearKey?: () => Promise<void>;
 }
 
@@ -50,9 +50,9 @@ export function ApiKeysConfigDialog({
     setSubmitting(true);
     setTestState({ kind: "testing" });
     try {
-      await onSave(apiKey.trim());
-      await onTest();
+      await onTest(apiKey.trim());
       setTestState({ kind: "ok" });
+      await onSave(apiKey.trim());
       setTimeout(() => onClose(), 500);
     } catch (err) {
       console.warn("[api-key test]", err);

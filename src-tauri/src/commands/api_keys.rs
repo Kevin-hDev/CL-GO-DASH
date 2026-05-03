@@ -4,11 +4,13 @@
 //! set/delete/has/list/test seulement.
 
 use crate::services::api_keys;
+use zeroize::Zeroize;
 
 #[tauri::command]
-pub async fn set_api_key(provider: String, key: String) -> Result<(), String> {
-    api_keys::set_key(&provider, &key)?;
-    Ok(())
+pub async fn set_api_key(provider: String, mut key: String) -> Result<(), String> {
+    let result = api_keys::set_key(&provider, &key);
+    key.zeroize();
+    result
 }
 
 #[tauri::command]
@@ -30,4 +32,11 @@ pub async fn list_configured_providers() -> Result<Vec<String>, String> {
 #[tauri::command]
 pub async fn test_api_key(provider: String) -> Result<(), String> {
     api_keys::test_key(&provider).await
+}
+
+#[tauri::command]
+pub async fn test_api_key_with_value(provider: String, mut key: String) -> Result<(), String> {
+    let result = api_keys::test_key_raw(&provider, &key).await;
+    key.zeroize();
+    result
 }

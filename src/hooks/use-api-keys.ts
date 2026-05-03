@@ -54,7 +54,6 @@ export function useApiKeys() {
   );
 
   const testKey = useCallback(async (provider: string): Promise<void> => {
-    // Préfère le test riche (catalog-aware) s'il existe, sinon fallback sur test_api_key
     const spec = catalog.find((p) => p.id === provider);
     if (spec?.category === "llm") {
       await invoke("test_llm_connection", { providerId: provider });
@@ -65,6 +64,13 @@ export function useApiKeys() {
     }
   }, [catalog]);
 
+  const testKeyRaw = useCallback(
+    async (provider: string, key: string): Promise<void> => {
+      await invoke("test_api_key_with_value", { provider, key });
+    },
+    [],
+  );
+
   return {
     catalog,
     configuredIds,
@@ -74,5 +80,6 @@ export function useApiKeys() {
     setKey,
     deleteKey,
     testKey,
+    testKeyRaw,
   };
 }
