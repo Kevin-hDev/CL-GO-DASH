@@ -58,9 +58,17 @@ async fn send_request(
         store: false,
         tools: tools.to_vec(),
         tool_choice: if tools.is_empty() { None } else { Some("auto".to_string()) },
-        temperature: Some(0.7),
+        temperature: None,
     };
     let url = format!("{CODEX_API_BASE}/responses");
+
+    // --- DIAGNOSTIC TEMPORAIRE ---
+    let body_json = serde_json::to_string(&body).unwrap_or_default();
+    eprintln!("[codex-diag] POST {url}");
+    eprintln!("[codex-diag] model={} instructions_len={} input_len={} tools_len={}",
+        model, body.instructions.len(), body.input.len(), body.tools.len());
+    // --- FIN DIAGNOSTIC ---
+
     let client = reqwest::Client::builder()
         .timeout(REQUEST_TIMEOUT)
         .build()
@@ -73,15 +81,20 @@ async fn send_request(
         .header("OpenAI-Beta", "responses=experimental")
         .header("Content-Type", "application/json")
         .header("Accept", "text/event-stream")
-        .json(&body)
+        .body(body_json)
         .send()
         .await
         .map_err(|e| format!("codex request: {e}"))?;
 
+    // --- DIAGNOSTIC TEMPORAIRE ---
+    eprintln!("[codex-diag] response status={}", resp.status());
+    // --- FIN DIAGNOSTIC ---
+
     if !resp.status().is_success() {
         let status = resp.status();
         let text = resp.text().await.unwrap_or_default();
-        let safe = &text[..text.len().min(200)];
+        let safe = &text[..text.len().min(500)];
+        eprintln!("[codex-diag] ERROR body: {safe}");
         return Err(format!("Codex API {status}: {safe}"));
     }
     Ok(resp)
