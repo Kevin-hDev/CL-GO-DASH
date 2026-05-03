@@ -462,6 +462,15 @@
     "daily": "Daily",
     "weekly": "Weekly"
   },
+  "codex": {
+    "title": "GPT via Codex (dev)",
+    "description": "OAuth connection to ChatGPT for internal testing.",
+    "login": "Log in",
+    "logout": "Log out",
+    "loggedIn": "Connected",
+    "loggedOut": "Not connected",
+    "loggingIn": "Connecting…"
+  },
   "ollamaSetup": {
     "title": "Ollama Setup",
     "description": "Ollama lets you run AI models locally on your machine. The download includes GPU support for better performance.",
