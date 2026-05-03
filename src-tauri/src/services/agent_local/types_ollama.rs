@@ -79,8 +79,9 @@ pub struct ChatOptions {
     pub num_ctx: Option<u32>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ChatMessage {
+    #[serde(default)]
     pub role: String,
     pub content: String,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -92,6 +93,9 @@ pub struct ChatMessage {
     /// Requis par OpenAI-compat pour les messages `role: "tool"` — ignoré par Ollama.
     #[serde(skip_serializing_if = "Option::is_none", default)]
     pub tool_call_id: Option<String>,
+    /// Contenu thinking/reasoning renvoyé au provider pour continuité multi-tour.
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub reasoning_content: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

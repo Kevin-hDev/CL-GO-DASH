@@ -10,6 +10,9 @@ import exaIcon from "@/assets/exa-color.svg";
 import firecrawlIcon from "@/assets/FIRECRAWL.png";
 import serpapiIcon from "@/assets/SERPAPI.png";
 import googleSearchIcon from "@/assets/google-search.svg";
+import xaiIcon from "@/assets/xai.svg";
+import moonshotIcon from "@/assets/moonshot.svg";
+import zaiIcon from "@/assets/zai.svg";
 
 interface IconEntry {
   src: string;
@@ -29,6 +32,9 @@ const ICONS: Record<string, IconEntry> = {
   firecrawl: { src: firecrawlIcon },
   serpapi: { src: serpapiIcon },
   google_cse: { src: googleSearchIcon },
+  xai: { src: xaiIcon, mono: true },
+  moonshot: { src: moonshotIcon },
+  zai: { src: zaiIcon },
 };
 
 interface ProviderIconProps {

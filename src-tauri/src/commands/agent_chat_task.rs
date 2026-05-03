@@ -74,7 +74,7 @@ async fn handle_compress_command(
         images: None,
         tool_calls: None,
         tool_name: None,
-        tool_call_id: None,
+        tool_call_id: None, reasoning_content: None,
     };
     let summary_tokens = crate::services::compress::token_estimate::estimate_tokens(
         &[summary_chat_msg],

@@ -47,7 +47,8 @@ export function AgentLocalTab(props?: AgentLocalTabProps): { list: React.ReactNo
   useEffect(() => {
     if (!model || availableModels.size === 0) return;
     const providerModels = availableModels.get(provider);
-    const stillExists = providerModels?.some((m) => m.id === model);
+    if (!providerModels) return;
+    const stillExists = providerModels.some((m) => m.id === model);
     if (stillExists) return;
     const allModels = Array.from(availableModels.values()).flat();
     if (allModels.length === 0) return;

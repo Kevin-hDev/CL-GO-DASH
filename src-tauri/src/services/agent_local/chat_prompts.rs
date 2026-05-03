@@ -11,7 +11,7 @@ fn build_system_message(content: String) -> ChatMessage {
         images: None,
         tool_calls: None,
         tool_name: None,
-        tool_call_id: None,
+        tool_call_id: None, reasoning_content: None,
     }
 }
 

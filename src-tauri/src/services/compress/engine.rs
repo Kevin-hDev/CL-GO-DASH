@@ -45,7 +45,7 @@ pub fn build_compression_request_content(
         images: None,
         tool_calls: None,
         tool_name: None,
-        tool_call_id: None,
+        tool_call_id: None, reasoning_content: None,
     });
     prepared
 }
@@ -61,7 +61,7 @@ pub fn build_post_compression_messages(
         images: None,
         tool_calls: None,
         tool_name: None,
-        tool_call_id: None,
+        tool_call_id: None, reasoning_content: None,
     };
     let summary_msg = ChatMessage {
         role: "user".to_string(),
@@ -69,7 +69,7 @@ pub fn build_post_compression_messages(
         images: None,
         tool_calls: None,
         tool_name: None,
-        tool_call_id: None,
+        tool_call_id: None, reasoning_content: None,
     };
     vec![boundary, summary_msg]
 }

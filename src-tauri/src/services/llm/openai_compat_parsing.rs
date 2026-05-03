@@ -34,6 +34,7 @@ pub fn parse_models_list(
 
     let models = data
         .iter()
+        .take(500)
         .filter_map(|m| {
             let id = m["id"].as_str()?.to_string();
             let owned_by = m["owned_by"].as_str().map(|s| s.to_string());

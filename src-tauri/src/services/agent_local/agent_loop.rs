@@ -172,13 +172,17 @@ fn build_assistant_message(
                 .collect(),
         )
     };
+    let reasoning = if result.thinking.is_empty() {
+        None
+    } else {
+        Some(result.thinking.clone())
+    };
     ChatMessage {
         role: "assistant".to_string(),
         content: result.content.clone(),
-        images: None,
         tool_calls,
-        tool_name: None,
-        tool_call_id: None,
+        reasoning_content: reasoning,
+        ..Default::default()
     }
 }
 
