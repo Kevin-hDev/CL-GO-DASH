@@ -462,6 +462,20 @@
     "daily": "Diario",
     "weekly": "Semanal"
   },
+  "codex": {
+    "title": "GPT vía Codex (dev)",
+    "description": "Conexión OAuth a ChatGPT para pruebas internas.",
+    "login": "Iniciar sesión",
+    "logout": "Cerrar sesión",
+    "loggedIn": "Conectado",
+    "loggedOut": "No conectado",
+    "loggingIn": "Conectando…",
+    "effortLabel": "Nivel de esfuerzo",
+    "effortLow": "Limitado",
+    "effortMedium": "Intermedio",
+    "effortHigh": "Profundo",
+    "effortXhigh": "Muy alto"
+  },
   "ollamaSetup": {
     "title": "Configuración de Ollama",
     "description": "Ollama te permite ejecutar modelos de IA localmente en tu equipo. La descarga incluye soporte GPU para un mejor rendimiento.",

@@ -462,6 +462,20 @@
     "daily": "每天",
     "weekly": "每周"
   },
+  "codex": {
+    "title": "GPT via Codex（开发）",
+    "description": "用于内部测试的 ChatGPT OAuth 连接。",
+    "login": "登录",
+    "logout": "退出登录",
+    "loggedIn": "已连接",
+    "loggedOut": "未连接",
+    "loggingIn": "连接中…",
+    "effortLabel": "推理级别",
+    "effortLow": "轻量",
+    "effortMedium": "标准",
+    "effortHigh": "深入",
+    "effortXhigh": "最高"
+  },
   "ollamaSetup": {
     "title": "Ollama 安装",
     "description": "Ollama 让您在本地机器上运行 AI 模型。下载包含 GPU 支持以获得更佳性能。",

@@ -462,6 +462,20 @@
     "daily": "毎日",
     "weekly": "毎週"
   },
+  "codex": {
+    "title": "GPT via Codex（開発用）",
+    "description": "内部テスト用のChatGPT OAuth接続。",
+    "login": "ログイン",
+    "logout": "ログアウト",
+    "loggedIn": "接続済み",
+    "loggedOut": "未接続",
+    "loggingIn": "接続中…",
+    "effortLabel": "推論レベル",
+    "effortLow": "軽量",
+    "effortMedium": "標準",
+    "effortHigh": "詳細",
+    "effortXhigh": "最大"
+  },
   "ollamaSetup": {
     "title": "Ollama セットアップ",
     "description": "Ollama を使うとローカルマシン上で AI モデルを実行できます。ダウンロードにはパフォーマンス向上のための GPU サポートが含まれています。",
