@@ -17,6 +17,11 @@ pub async fn stream_chat_no_done(
     think: bool,
     cancel: CancellationToken,
 ) -> Result<StreamResult, String> {
+    if provider_id == "codex-oauth" {
+        return crate::services::codex_client::stream::stream_chat(
+            on_event, model, messages, tools, think, cancel,
+        ).await;
+    }
     let cfg = RequestConfig { provider_id, model, messages, tools, think };
     match post_chat_request(&cfg).await {
         Ok(resp) => {
