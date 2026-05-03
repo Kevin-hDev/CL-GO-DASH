@@ -63,6 +63,13 @@ async fn fetch_ollama_model_info(model: &str) -> OllamaModelContext {
 }
 
 async fn lookup_api_context(provider: &str, model: &str) -> u64 {
+    if provider == "codex-oauth" {
+        return crate::services::codex_client::types::CODEX_MODELS
+            .iter()
+            .find(|(id, _)| *id == model)
+            .map(|(_, ctx)| *ctx as u64)
+            .unwrap_or(128_000);
+    }
     use crate::services::llm::model_registry;
 
     let reg = model_registry::get_lock().read().await;

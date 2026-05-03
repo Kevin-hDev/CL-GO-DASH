@@ -78,6 +78,29 @@ async function fetchCloudModels(): Promise<Map<string, AvailableModel[]>> {
   return result;
 }
 
+async function fetchCodexModels(): Promise<AvailableModel[]> {
+  try {
+    const status = await invoke<{ logged_in: boolean }>("codex_status");
+    if (!status.logged_in) return [];
+    const models = await invoke<LlmModelInfo[]>("codex_models");
+    return models.map(
+      (m): AvailableModel => ({
+        id: m.id,
+        provider_id: "codex-oauth",
+        provider_name: "GPT (Codex)",
+        is_local: false,
+        supports_tools: m.supports_tools,
+        supports_vision: m.supports_vision ?? false,
+        supports_thinking: m.supports_thinking ?? false,
+        is_free: true,
+        hint: m.context_length ? `${Math.round(m.context_length / 1000)}K ctx` : undefined,
+      }),
+    );
+  } catch {
+    return [];
+  }
+}
+
 async function fetchAllModels(): Promise<Map<string, AvailableModel[]>> {
   const result = new Map<string, AvailableModel[]>();
 
@@ -93,6 +116,13 @@ async function fetchAllModels(): Promise<Map<string, AvailableModel[]>> {
     for (const [k, v] of cloud) result.set(k, v);
   } catch (e) {
     console.warn("[models] catalog fetch failed");
+  }
+
+  try {
+    const codex = await fetchCodexModels();
+    if (codex.length > 0) result.set("codex-oauth", codex);
+  } catch {
+    // Codex non connecté
   }
 
   cachedGroups = result;
