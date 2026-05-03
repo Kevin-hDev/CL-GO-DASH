@@ -3,10 +3,10 @@ use serde::Serialize;
 pub const CODEX_API_BASE: &str = "https://chatgpt.com/backend-api/codex";
 
 pub const CODEX_MODELS: &[(&str, u32)] = &[
-    ("gpt-5.5", 200_000),
-    ("gpt-5.4", 128_000),
-    ("gpt-5.4-mini", 128_000),
-    ("gpt-5.4-pro", 128_000),
+    ("gpt-5.5", 258_000),
+    ("gpt-5.4", 258_000),
+    ("gpt-5.4-mini", 258_000),
+    ("gpt-5.4-pro", 258_000),
 ];
 
 pub const CODEX_EFFORT_LEVELS: &[&str] = &["low", "medium", "high", "xhigh"];
