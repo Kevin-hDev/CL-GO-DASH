@@ -47,12 +47,14 @@ pub fn push_tool_result(
     messages: &mut Vec<ChatMessage>,
     name: &str,
     tr: ToolResult,
+    tool_call_index: usize,
 ) {
     let _ = on_event.send(StreamEvent::ToolResult {
         name: name.to_string(),
         content: tr.content.clone(),
         is_error: tr.is_error,
         truncated: tr.truncated,
+        tool_call_index,
     });
     messages.push(ChatMessage {
         role: "tool".to_string(),

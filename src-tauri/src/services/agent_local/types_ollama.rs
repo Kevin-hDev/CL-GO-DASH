@@ -135,6 +135,7 @@ pub enum StreamEvent {
         is_error: bool,
         #[serde(default)]
         truncated: bool,
+        tool_call_index: usize,
     },
     TurnEnd {},
     #[serde(rename_all = "camelCase")]

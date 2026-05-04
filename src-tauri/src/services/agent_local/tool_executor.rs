@@ -68,12 +68,11 @@ async fn run_sequential(
     cancel: CancellationToken,
     write_guard: &mut WriteGuard,
 ) {
-    for (name, args) in tool_calls {
-        // Pre-hook : path traversal, fichiers sensibles, etc.
+    for (idx, (name, args)) in tool_calls.iter().enumerate() {
         match run_pre_hooks(name, args) {
             PreHookDecision::Deny(msg) => {
                 let tr = tool_dispatcher::enrich_error(ToolResult::err(msg), name);
-                push_tool_result(on_event, messages, name, tr);
+                push_tool_result(on_event, messages, name, tr, idx);
                 continue;
             }
             PreHookDecision::Allow => {}
@@ -82,7 +81,7 @@ async fn run_sequential(
 
         if let Err(msg) = check_write_guard(name, effective_args, working_dir, write_guard) {
             let tr = tool_dispatcher::enrich_error(ToolResult::err(msg), name);
-            push_tool_result(on_event, messages, name, tr);
+            push_tool_result(on_event, messages, name, tr, idx);
             continue;
         }
 
@@ -95,7 +94,7 @@ async fn run_sequential(
 
         let tr = run_post_hooks(name, effective_args, tr);
         post_record_read(name, effective_args, working_dir, &tr, write_guard);
-        push_tool_result(on_event, messages, name, tr);
+        push_tool_result(on_event, messages, name, tr, idx);
     }
 }
 

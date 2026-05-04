@@ -62,6 +62,8 @@ pub mod tool_image_process_tests;
 pub mod tool_executor;
 pub mod tool_executor_helpers;
 pub mod tool_executor_parallel;
+#[cfg(test)]
+pub mod tool_executor_parallel_tests;
 pub mod tool_hooks;
 #[cfg(test)]
 pub mod tool_hooks_tests;
