@@ -176,5 +176,4 @@ impl McpTransport for StdioTransport {
         super::transport::extract_tool_result(&resp)
     }
 
-    fn transport_type(&self) -> &'static str { "stdio" }
 }

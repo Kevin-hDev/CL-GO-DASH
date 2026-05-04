@@ -98,5 +98,4 @@ pub fn extract_tool_result(resp: &Value) -> Result<String, String> {
 pub trait McpTransport: Send + Sync {
     async fn list_tools(&self) -> Result<Vec<McpToolDef>, String>;
     async fn call_tool(&self, name: &str, args: Value) -> Result<String, String>;
-    fn transport_type(&self) -> &'static str;
 }

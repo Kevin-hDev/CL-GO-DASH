@@ -29,6 +29,7 @@ pub fn handle_run_event(app_handle: &tauri::AppHandle, event: RunEvent) {
 }
 
 fn cleanup(app_handle: &tauri::AppHandle) {
+    services::mcp_bridge::process_manager::shutdown_all();
     if let Some(pty) = app_handle.try_state::<services::terminal::PtyManager>() {
         pty.kill_all();
     }

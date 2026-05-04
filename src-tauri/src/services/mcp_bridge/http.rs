@@ -73,7 +73,6 @@ impl McpTransport for HttpTransport {
         Ok(serde_json::to_string_pretty(&result).unwrap_or_default())
     }
 
-    fn transport_type(&self) -> &'static str { "http" }
 }
 
 async fn initialize(endpoint: &str, token: &str) -> Result<Option<String>, String> {
