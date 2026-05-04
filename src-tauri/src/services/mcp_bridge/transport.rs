@@ -69,6 +69,27 @@ pub fn sanitize_tools(tools: Vec<McpToolDef>) -> Vec<McpToolDef> {
         .collect()
 }
 
+pub fn extract_tool_result(resp: &Value) -> Result<String, String> {
+    if let Some(err) = resp.get("error") {
+        let msg = err["message"].as_str().unwrap_or("erreur inconnue");
+        return Err(format!("erreur MCP : {msg}"));
+    }
+
+    let result = resp.get("result").ok_or("réponse vide du serveur MCP")?;
+
+    if let Some(content) = result.get("content").and_then(|c| c.as_array()) {
+        let texts: Vec<&str> = content
+            .iter()
+            .filter_map(|item| item.get("text").and_then(|t| t.as_str()))
+            .collect();
+        if !texts.is_empty() {
+            return Ok(texts.join("\n"));
+        }
+    }
+
+    Ok(serde_json::to_string_pretty(result).unwrap_or_default())
+}
+
 #[async_trait]
 pub trait McpTransport: Send + Sync {
     async fn list_tools(&self) -> Result<Vec<McpToolDef>, String>;

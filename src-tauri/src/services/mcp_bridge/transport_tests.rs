@@ -134,4 +134,51 @@ mod tests {
         let result = sanitize_tools(tools);
         assert_eq!(result.len(), 3);
     }
+
+    // ── extract_tool_result ────────────────────────────────────────────────
+
+    #[test]
+    fn extract_error_message() {
+        let resp = json!({"error": {"message": "not found"}});
+        let err = extract_tool_result(&resp).unwrap_err();
+        assert_eq!(err, "erreur MCP : not found");
+    }
+
+    #[test]
+    fn extract_error_no_message() {
+        let resp = json!({"error": {}});
+        let err = extract_tool_result(&resp).unwrap_err();
+        assert_eq!(err, "erreur MCP : erreur inconnue");
+    }
+
+    #[test]
+    fn extract_text_content() {
+        let resp = json!({"result": {"content": [{"text": "hello"}]}});
+        let ok = extract_tool_result(&resp).unwrap();
+        assert_eq!(ok, "hello");
+    }
+
+    #[test]
+    fn extract_multi_text() {
+        let resp = json!({"result": {"content": [{"text": "a"}, {"text": "b"}]}});
+        let ok = extract_tool_result(&resp).unwrap();
+        assert_eq!(ok, "a\nb");
+    }
+
+    #[test]
+    fn extract_no_content() {
+        let resp = json!({"result": {"data": 42}});
+        let ok = extract_tool_result(&resp).unwrap();
+        assert!(ok.contains("42"), "doit contenir la valeur JSON : {ok}");
+    }
+
+    #[test]
+    fn extract_empty_result() {
+        let resp = json!({});
+        let err = extract_tool_result(&resp).unwrap_err();
+        assert!(
+            err.contains("réponse vide"),
+            "message inattendu : {err}"
+        );
+    }
 }
