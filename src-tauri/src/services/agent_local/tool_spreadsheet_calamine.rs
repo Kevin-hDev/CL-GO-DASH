@@ -2,6 +2,22 @@ use calamine::{Data, Reader};
 use serde_json::Value;
 use std::path::Path;
 
+fn cell_or_formula(
+    cell: &Data,
+    row: usize,
+    col: usize,
+    formulas: Option<&calamine::Range<String>>,
+) -> Value {
+    if let Some(f_range) = formulas {
+        if let Some(formula) = f_range.get((row, col)) {
+            if !formula.is_empty() {
+                return Value::String(format!("={formula}"));
+            }
+        }
+    }
+    cell_to_json(cell)
+}
+
 pub fn cell_to_json(cell: &Data) -> Value {
     match cell {
         Data::Empty => Value::Null,
@@ -50,6 +66,8 @@ pub fn read_excel(
         .worksheet_range(&sheet_name)
         .map_err(|_| "Impossible de lire la feuille".to_string())?;
 
+    let formulas = workbook.worksheet_formula(&sheet_name).ok();
+
     let bounds = super::tool_spreadsheet_read::parse_range(range_str.unwrap_or(""));
     let all_rows: Vec<Vec<Value>> = range
         .rows()
@@ -63,11 +81,15 @@ pub fn read_excel(
                     .iter()
                     .enumerate()
                     .filter(|(col_idx, _)| *col_idx >= cs && *col_idx <= ce)
-                    .map(|(_, cell)| cell_to_json(cell))
+                    .map(|(col_idx, cell)| {
+                        cell_or_formula(cell, row_idx, col_idx, formulas.as_ref())
+                    })
                     .collect();
                 Some(filtered)
             } else {
-                Some(row.iter().map(cell_to_json).collect())
+                Some(row.iter().enumerate().map(|(col_idx, cell)| {
+                    cell_or_formula(cell, row_idx, col_idx, formulas.as_ref())
+                }).collect())
             }
         })
         .collect();
