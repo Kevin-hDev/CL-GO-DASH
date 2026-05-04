@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useSettings } from "@/hooks/use-settings";
+import { useArrowNavigation } from "@/hooks/use-arrow-navigation";
 import type { Theme, ThemeChoice } from "@/hooks/use-theme";
 import { GearSix, Key, Sliders, Info, BookOpenText, Keyboard, Plugs } from "@/components/ui/icons";
 import { ThemedIcon } from "@/components/ui/themed-icon";
@@ -44,9 +45,10 @@ interface SettingsTabProps {
   onThemeChange: (theme: ThemeChoice) => void;
   activeSubTab?: string;
   onSubTabChange?: (subTab: string) => void;
+  listFocused?: boolean;
 }
 
-export function SettingsTab({ themeChoice, onThemeChange, activeSubTab, onSubTabChange }: SettingsTabProps): {
+export function SettingsTab({ themeChoice, onThemeChange, activeSubTab, onSubTabChange, listFocused }: SettingsTabProps): {
   list: React.ReactNode;
   detail: React.ReactNode;
 } {
@@ -62,6 +64,14 @@ export function SettingsTab({ themeChoice, onThemeChange, activeSubTab, onSubTab
     setSubTabState(id);
     onSubTabChange?.(id);
   };
+  const subTabIds = useMemo(() => SUB_TABS.map((t) => t.id), []);
+  useArrowNavigation({
+    items: subTabIds,
+    selectedId: subTab,
+    onSelect: setSubTab,
+    enabled: listFocused ?? true,
+  });
+
   const settings = useSettings();
   const { t } = useTranslation();
 

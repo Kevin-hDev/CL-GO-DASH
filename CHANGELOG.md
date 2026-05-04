@@ -13,6 +13,8 @@
 - **Menu chat connecteurs** — dropdown "+" avec sous-menu toggles par connecteur
 - **Link previews in chat** — URLs in messages display rich preview cards (title, description, OG image, favicon, site name). Powered by a Rust backend that fetches and parses Open Graph metadata. YouTube videos get dedicated previews via the public oEmbed API (thumbnail + channel name). Previews are deduplicated, capped at 5 per message, and grouped at the bottom of the message bubble. Toggleable in Settings > General (7 languages supported).
 
+- **Keyboard arrow navigation** — navigate between sidebar tabs (ArrowUp/Down) and list panel items (sub-tabs, sessions, wakeups, personality files) using arrow keys. ArrowLeft/Right switches focus between sidebar and list panel. Does not interfere with existing shortcuts (Cmd+arrows for history) or text inputs.
+
 ### Security
 
 - **Permission gate MCP** — `search_mcp_tools` mode "call" nécessite approbation utilisateur

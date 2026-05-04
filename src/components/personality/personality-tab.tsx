@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import type { PersonalityFile } from "@/types/personality";
 import * as api from "@/services/personality";
 import { useFsEvent } from "@/hooks/use-fs-event";
+import { useArrowNavigation } from "@/hooks/use-arrow-navigation";
 import { showToast } from "@/lib/toast-emitter";
 import { PersonalityList } from "./personality-list";
 import { MarkdownViewer } from "./markdown-viewer";
@@ -10,6 +11,7 @@ import { MarkdownViewer } from "./markdown-viewer";
 interface PersonalityTabProps {
   activePath?: string | null;
   onPathChange?: (path: string | null) => void;
+  listFocused?: boolean;
 }
 
 export function PersonalityTab(props?: PersonalityTabProps): { list: React.ReactNode; detail: React.ReactNode } {
@@ -84,6 +86,14 @@ export function PersonalityTab(props?: PersonalityTabProps): { list: React.React
       showToast(t("personality.failedToLoad"));
     }
   }, [fileName]);
+
+  const filePaths = useMemo(() => files.map((f) => f.path), [files]);
+  useArrowNavigation({
+    items: filePaths,
+    selectedId: selectedPath,
+    onSelect: handleSelect,
+    enabled: props?.listFocused ?? true,
+  });
 
   const list = (
     <PersonalityList

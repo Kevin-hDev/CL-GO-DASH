@@ -6,6 +6,8 @@ import { AppLayout } from "@/components/layout/app-layout";
 import { OllamaSetupScreen } from "@/components/ollama/ollama-setup-screen";
 import { useTheme } from "@/hooks/use-theme";
 import { useTabHistory } from "@/hooks/use-tab-history";
+import { useArrowNavigation } from "@/hooks/use-arrow-navigation";
+import { usePanelFocus } from "@/hooks/use-panel-focus";
 import { HeartbeatTab } from "@/components/heartbeat/heartbeat-tab";
 import { PersonalityTab } from "@/components/personality/personality-tab";
 import { AgentLocalTab } from "@/components/agent-local/agent-local-tab";
@@ -26,6 +28,7 @@ export default function App() {
   const { t } = useTranslation();
   const [vaultError, setVaultError] = useState<string | null>(null);
   const [ollamaReady, setOllamaReady] = useState<boolean | null>(null);
+  const { focusedPanel } = usePanelFocus();
 
   useEffect(() => {
     invoke<boolean>("is_ollama_installed").then(setOllamaReady).catch(() => setOllamaReady(true));
@@ -36,19 +39,25 @@ export default function App() {
   }, []);
 
 
+  const activeTab = nav.tab as TabId;
+  const listActive = (tab: TabId) => focusedPanel === "list" && activeTab === tab;
+
   const hbTab = HeartbeatTab({
     activeWakeupId: nav.wakeupId,
     onWakeupChange: (id) => push({ wakeupId: id }),
+    listFocused: listActive("heartbeat"),
   });
 
   const persTab = PersonalityTab({
     activePath: nav.personalityPath,
     onPathChange: (path) => push({ personalityPath: path }),
+    listFocused: listActive("personality"),
   });
 
   const agentTab = AgentLocalTab({
     requestedSessionId: nav.sessionId,
     onSessionChange: (id) => push({ sessionId: id }),
+    listFocused: listActive("agent-local"),
   });
 
   const settTab = SettingsTab({
@@ -57,6 +66,7 @@ export default function App() {
     onThemeChange: setTheme,
     activeSubTab: nav.settingsSubTab,
     onSubTabChange: (sub) => push({ settingsSubTab: sub }),
+    listFocused: listActive("settings"),
   });
 
   const tabs: Record<TabId, { list: React.ReactNode; detail: React.ReactNode }> = {
@@ -66,8 +76,15 @@ export default function App() {
     settings: settTab,
   };
 
-  const activeTab = nav.tab as TabId;
   const tab = tabs[activeTab];
+
+  const ALL_TABS: TabId[] = ["agent-local", "heartbeat", "personality", "settings"];
+  useArrowNavigation({
+    items: ALL_TABS,
+    selectedId: activeTab,
+    onSelect: (t) => push({ tab: t }),
+    enabled: focusedPanel === "sidebar",
+  });
 
   const handleShowWelcome = useCallback(() => {
     push({ tab: "agent-local", sessionId: null });

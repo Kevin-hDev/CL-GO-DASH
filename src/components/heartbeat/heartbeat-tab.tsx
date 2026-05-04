@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useWakeups } from "@/hooks/use-wakeups";
+import { useArrowNavigation } from "@/hooks/use-arrow-navigation";
 import { formatSchedule } from "@/lib/wakeup-format";
 import { WakeupGrid } from "./wakeup-grid";
 import { WakeupDetails } from "./wakeup-details";
@@ -17,6 +18,7 @@ type DialogState =
 interface HeartbeatTabProps {
   activeWakeupId?: string | null;
   onWakeupChange?: (id: string | null) => void;
+  listFocused?: boolean;
 }
 
 export function HeartbeatTab(props?: HeartbeatTabProps): { list: React.ReactNode; detail: React.ReactNode } {
@@ -37,6 +39,14 @@ export function HeartbeatTab(props?: HeartbeatTabProps): { list: React.ReactNode
   const selected = selectedId ? wakeups.find((w) => w.id === selectedId) ?? null : null;
 
   const activeWakeups = wakeups.filter((w) => w.active);
+  const wakeupIds = useMemo(() => activeWakeups.map((w) => w.id), [activeWakeups]);
+
+  useArrowNavigation({
+    items: wakeupIds,
+    selectedId: selectedId,
+    onSelect: setSelectedId,
+    enabled: props?.listFocused ?? true,
+  });
 
   const handleDelete = async () => {
     if (!selected) return;

@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { ConversationList } from "./conversation-list";
 import { TabBar } from "./tab-bar";
@@ -13,6 +13,7 @@ import { useAvailableModels } from "@/hooks/use-available-models";
 import { useSessionActions } from "@/hooks/use-session-actions";
 import { useFilePreview } from "@/hooks/use-file-preview";
 import { useAgentLocalShortcuts } from "@/hooks/use-agent-local-shortcuts";
+import { useArrowNavigation } from "@/hooks/use-arrow-navigation";
 import type { FileOperation } from "@/types/file-preview";
 import type { AgentLocalTabProps } from "./agent-local-tab-types";
 import "./agent-local-tab.css";
@@ -104,6 +105,24 @@ export function AgentLocalTab(props?: AgentLocalTabProps): { list: React.ReactNo
       await tabState.addTab(id, label);
     }
   }, [tabState, sessions]);
+
+  const visibleSessionIds = useMemo(() => {
+    const projectIdSet = new Set(projectsHook.projects.map((p) => p.id));
+    const byProject = projectsHook.projects.flatMap((p) =>
+      sessions.filter((s) => s.project_id === p.id).map((s) => s.id),
+    );
+    const orphans = sessions
+      .filter((s) => !s.project_id || !projectIdSet.has(s.project_id))
+      .map((s) => s.id);
+    return [...byProject, ...orphans];
+  }, [sessions, projectsHook.projects]);
+
+  useArrowNavigation({
+    items: visibleSessionIds,
+    selectedId: tabState.activeSessionId,
+    onSelect: handleSelectById,
+    enabled: props?.listFocused ?? true,
+  });
 
   const list = (
     <ConversationList
