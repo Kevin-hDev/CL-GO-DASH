@@ -1,0 +1,112 @@
+const ALLOWED_PROGRAMS: &[&str] = &["npx", "uvx", "deno"];
+const ARG_PATTERN: &str = r"^[a-zA-Z0-9@/_.:=\-]+$";
+
+pub struct ParsedCommand {
+    pub program: String,
+    pub args: Vec<String>,
+}
+
+pub fn parse_install_command(raw: &str) -> Result<ParsedCommand, String> {
+    let parts: Vec<&str> = raw.split_whitespace().collect();
+    if parts.is_empty() {
+        return Err("commande vide".to_string());
+    }
+
+    let program = parts[0];
+    if !ALLOWED_PROGRAMS.contains(&program) {
+        return Err("programme non autorisé".to_string());
+    }
+
+    let regex = regex::Regex::new(ARG_PATTERN).unwrap();
+    let mut args = Vec::new();
+
+    for part in &parts[1..] {
+        if !regex.is_match(part) {
+            return Err("argument invalide".to_string());
+        }
+        args.push(part.to_string());
+    }
+
+    if args.is_empty() {
+        return Err("aucun package spécifié".to_string());
+    }
+
+    Ok(ParsedCommand {
+        program: program.to_string(),
+        args,
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_npx_valid() {
+        let cmd = parse_install_command("npx @upstash/context7-mcp@2.2.3").unwrap();
+        assert_eq!(cmd.program, "npx");
+        assert_eq!(cmd.args, vec!["@upstash/context7-mcp@2.2.3"]);
+    }
+
+    #[test]
+    fn test_parse_uvx_valid() {
+        let cmd = parse_install_command("uvx product-hunt-mcp").unwrap();
+        assert_eq!(cmd.program, "uvx");
+        assert_eq!(cmd.args, vec!["product-hunt-mcp"]);
+    }
+
+    #[test]
+    fn test_parse_deno_valid() {
+        let cmd = parse_install_command(
+            "deno run --allow-read --allow-env --allow-sys --allow-ffi jsr:@wyattjoh/imessage-mcp",
+        )
+        .unwrap();
+        assert_eq!(cmd.program, "deno");
+        assert_eq!(
+            cmd.args,
+            vec![
+                "run",
+                "--allow-read",
+                "--allow-env",
+                "--allow-sys",
+                "--allow-ffi",
+                "jsr:@wyattjoh/imessage-mcp"
+            ]
+        );
+    }
+
+    #[test]
+    fn test_reject_shell() {
+        assert!(parse_install_command("bash -c 'rm -rf /'").is_err());
+    }
+
+    #[test]
+    fn test_reject_pipe() {
+        assert!(parse_install_command("npx foo | cat /etc/passwd").is_err());
+    }
+
+    #[test]
+    fn test_reject_semicolon() {
+        assert!(parse_install_command("npx foo; rm -rf /").is_err());
+    }
+
+    #[test]
+    fn test_reject_empty() {
+        assert!(parse_install_command("").is_err());
+    }
+
+    #[test]
+    fn test_reject_no_args() {
+        assert!(parse_install_command("npx").is_err());
+    }
+
+    #[test]
+    fn test_reject_backtick() {
+        assert!(parse_install_command("npx `whoami`").is_err());
+    }
+
+    #[test]
+    fn test_reject_dollar() {
+        assert!(parse_install_command("npx $(cat /etc/passwd)").is_err());
+    }
+}
