@@ -1,11 +1,12 @@
 use std::collections::HashMap;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
 use serde::Deserialize;
 
-use super::client::{self, McpToolDef};
-use crate::services::mcp_oauth::storage;
+use super::http::HttpTransport;
+use super::stdio::StdioTransport;
+use super::transport::{McpToolDef, McpTransport};
 
 const MAX_CACHE: usize = 32;
 const CACHE_TTL_SECS: u64 = 300;
@@ -24,57 +25,70 @@ struct StoredConnector {
     status: String,
     enabled_in_chat: bool,
     endpoint: Option<String>,
+    install_command: Option<String>,
+    #[serde(default)]
+    env_keys: Option<Vec<String>>,
 }
 
 pub struct EnabledConnector {
     pub id: String,
-    pub endpoint: String,
+    pub transport: Arc<dyn McpTransport>,
 }
 
 pub fn get_enabled_connectors() -> Vec<EnabledConnector> {
     let path = crate::services::paths::data_dir().join("mcp-connectors.json");
-    #[cfg(debug_assertions)]
-    eprintln!("[mcp-registry] path: {}", path.display());
     let content = match std::fs::read_to_string(&path) {
         Ok(c) => c,
-        Err(e) => {
-            #[cfg(debug_assertions)]
-    eprintln!("[mcp-registry] read error: {e}");
-            return Vec::new();
-        }
+        Err(_) => return Vec::new(),
     };
-    #[cfg(debug_assertions)]
-    eprintln!("[mcp-registry] raw json len={}", content.len());
     let connectors: Vec<StoredConnector> = match serde_json::from_str(&content) {
         Ok(c) => c,
-        Err(e) => {
-            #[cfg(debug_assertions)]
-    eprintln!("[mcp-registry] parse error: {e}");
-            return Vec::new();
-        }
+        Err(_) => return Vec::new(),
     };
-    #[cfg(debug_assertions)]
-    eprintln!("[mcp-registry] parsed {} connectors", connectors.len());
-    let result: Vec<EnabledConnector> = connectors
+
+    connectors
         .into_iter()
-        .filter(|c| {
-            let ok = c.status == "connected" && c.enabled_in_chat;
-            #[cfg(debug_assertions)]
-    eprintln!("[mcp-registry]   {} status={} chat={} endpoint={:?} → filter={ok}",
-                c.id, c.status, c.enabled_in_chat, c.endpoint.as_deref().unwrap_or("NONE"));
-            ok
-        })
-        .filter_map(|c| {
-            let endpoint = c.endpoint?;
-            if !endpoint.starts_with("https://") {
-                return None;
-            }
-            Some(EnabledConnector { id: c.id, endpoint })
-        })
+        .filter(|c| c.status == "connected" && c.enabled_in_chat)
+        .filter_map(build_connector)
         .take(MAX_CACHE)
-        .collect();
-    #[cfg(debug_assertions)]
-    eprintln!("[mcp-registry] result: {} enabled connectors", result.len());
+        .collect()
+}
+
+fn build_connector(c: StoredConnector) -> Option<EnabledConnector> {
+    if let Some(ref endpoint) = c.endpoint {
+        if endpoint.starts_with("https://") {
+            let transport = HttpTransport::new(c.id.clone(), endpoint.clone());
+            return Some(EnabledConnector {
+                id: c.id,
+                transport: Arc::new(transport),
+            });
+        }
+    }
+
+    if let Some(ref cmd) = c.install_command {
+        let env_tokens = resolve_env_tokens(c.env_keys.as_deref(), &c.id);
+        let transport = StdioTransport::new(c.id.clone(), cmd.clone(), env_tokens);
+        return Some(EnabledConnector {
+            id: c.id,
+            transport: Arc::new(transport),
+        });
+    }
+
+    None
+}
+
+fn resolve_env_tokens(keys: Option<&[String]>, connector_id: &str) -> Vec<(String, String)> {
+    let keys = match keys {
+        Some(k) if !k.is_empty() => k,
+        _ => return Vec::new(),
+    };
+    let mut result = Vec::new();
+    for key in keys {
+        let vault_key = format!("mcp_{connector_id}_{}", key.to_lowercase());
+        if let Ok(val) = crate::services::api_keys::get_key(&vault_key) {
+            result.push((key.clone(), val.to_string()));
+        }
+    }
     result
 }
 
@@ -83,9 +97,7 @@ pub async fn get_tools(connector: &EnabledConnector) -> Result<Vec<McpToolDef>, 
         return Ok(cached);
     }
 
-    let token = storage::get_valid_token(&connector.id).await?;
-    let tools = client::list_tools(&connector.endpoint, token.as_str()).await?;
-
+    let tools = connector.transport.list_tools().await?;
     set_cached(&connector.id, &tools);
     Ok(tools)
 }
