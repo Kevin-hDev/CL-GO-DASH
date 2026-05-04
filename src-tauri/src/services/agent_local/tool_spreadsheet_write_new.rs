@@ -15,24 +15,34 @@ pub fn create_xlsx(path: &Path, ops: &[Value]) -> Result<(), String> {
         .filter_map(|op| op["name"].as_str())
         .collect();
 
-    let worksheet = workbook.add_worksheet();
+    let default_ws = workbook.add_worksheet();
+    let default_name = default_ws.name().to_string();
+
+    for name in &extra_sheets {
+        let ws = workbook.add_worksheet();
+        ws.set_name(*name)
+            .map_err(|_| "Erreur création feuille".to_string())?;
+    }
 
     for op in ops {
         let op_type = op["type"].as_str().unwrap_or("");
+        let target = op["sheet"]
+            .as_str()
+            .filter(|s| !s.trim().is_empty())
+            .unwrap_or(&default_name);
+
+        let ws = workbook
+            .worksheet_from_name(target)
+            .map_err(|_| format!("Feuille '{}' introuvable", target))?;
+
         match op_type {
-            "set_cell" => apply_set_cell(worksheet, op)?,
-            "set_formula" => apply_set_formula(worksheet, op)?,
-            "set_row" => apply_set_row(worksheet, op)?,
-            "set_column_width" => apply_set_column_width(worksheet, op)?,
+            "set_cell" => apply_set_cell(ws, op)?,
+            "set_formula" => apply_set_formula(ws, op)?,
+            "set_row" => apply_set_row(ws, op)?,
+            "set_column_width" => apply_set_column_width(ws, op)?,
             "add_sheet" => {}
             _ => {}
         }
-    }
-
-    for name in extra_sheets {
-        let ws = workbook.add_worksheet();
-        ws.set_name(name)
-            .map_err(|_| "Erreur création feuille".to_string())?;
     }
 
     workbook

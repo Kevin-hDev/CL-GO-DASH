@@ -29,15 +29,21 @@ pub fn edit_xlsx(path: &Path, ops: &[Value]) -> Result<(), String> {
         .map_err(|_| "Impossible de sauvegarder le fichier xlsx".to_string())
 }
 
-fn first_sheet_name(book: &umya_spreadsheet::Spreadsheet) -> String {
-    book.get_sheet(&0)
-        .map(|s| s.get_name().to_string())
-        .unwrap_or_else(|| "Sheet1".to_string())
+fn resolve_sheet_name(book: &umya_spreadsheet::Spreadsheet, op: &Value) -> String {
+    op["sheet"]
+        .as_str()
+        .filter(|s| !s.trim().is_empty())
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| {
+            book.get_sheet(&0)
+                .map(|s| s.get_name().to_string())
+                .unwrap_or_else(|| "Sheet1".to_string())
+        })
 }
 
 fn apply_set_cell(book: &mut umya_spreadsheet::Spreadsheet, op: &Value) -> Result<(), String> {
     let (col_1b, row_1b) = resolve_col_row_1based(op)?;
-    let sheet_name = first_sheet_name(book);
+    let sheet_name = resolve_sheet_name(book, op);
     let sheet = book.get_sheet_by_name_mut(&sheet_name).ok_or("Feuille introuvable")?;
     let cell = sheet.get_cell_mut((col_1b, row_1b));
     set_cell_value(cell, &op["value"]);
@@ -48,7 +54,7 @@ fn apply_set_formula(book: &mut umya_spreadsheet::Spreadsheet, op: &Value) -> Re
     let (col_1b, row_1b) = resolve_col_row_1based(op)?;
     let raw = op["formula"].as_str().unwrap_or("").to_string();
     let formula = normalize_formula(&raw);
-    let sheet_name = first_sheet_name(book);
+    let sheet_name = resolve_sheet_name(book, op);
     let sheet = book.get_sheet_by_name_mut(&sheet_name).ok_or("Feuille introuvable")?;
     sheet.get_cell_mut((col_1b, row_1b)).set_formula(&formula);
     Ok(())
@@ -61,7 +67,7 @@ fn apply_set_row(book: &mut umya_spreadsheet::Spreadsheet, op: &Value) -> Result
         Some(v) => v,
         None => return Ok(()),
     };
-    let sheet_name = first_sheet_name(book);
+    let sheet_name = resolve_sheet_name(book, op);
     let sheet = book.get_sheet_by_name_mut(&sheet_name).ok_or("Feuille introuvable")?;
 
     for (col_idx, val) in values.iter().enumerate() {
@@ -76,7 +82,7 @@ fn apply_set_column_width(book: &mut umya_spreadsheet::Spreadsheet, op: &Value) 
     let col_idx = value_as_u32(&op["col"]).unwrap_or(0);
     let col_1based = col_idx + 1;
     let width = value_as_f64(&op["width"]).unwrap_or(8.43);
-    let sheet_name = first_sheet_name(book);
+    let sheet_name = resolve_sheet_name(book, op);
     let sheet = book.get_sheet_by_name_mut(&sheet_name).ok_or("Feuille introuvable")?;
     sheet.get_column_dimension_by_number_mut(&col_1based).set_width(width);
     Ok(())
