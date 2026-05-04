@@ -26,6 +26,7 @@ pub mod ollama_setup;
 pub mod ollama_extract;
 pub mod codex;
 pub mod mcp_oauth;
+pub mod link_preview;
 
 pub use agent_chat::*;
 pub use agent_md::*;
@@ -51,3 +52,4 @@ pub use ollama_updates::*;
 pub use ollama_setup::*;
 pub use codex::*;
 pub use mcp_oauth::*;
+pub use link_preview::*;

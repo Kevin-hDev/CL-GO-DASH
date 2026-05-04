@@ -291,7 +291,9 @@
       "responseLangTitle": "LLM-Antwortsprache",
       "responseLangDesc": "Sprache, in der das KI-Modell antworten wird",
       "sidebarExpandTitle": "Seitenleiste beim Überfahren ausklappen",
-      "sidebarExpandDesc": "Die Seitenleiste klappt beim Überfahren aus"
+      "sidebarExpandDesc": "Die Seitenleiste klappt beim Überfahren aus",
+      "linkPreviewTitle": "Link-Vorschau",
+      "linkPreviewDesc": "Vorschaukarte für URLs im Chat anzeigen"
     },
     "advanced": {
       "autostartTitle": "Beim Start öffnen",
@@ -483,5 +485,10 @@
     "extracting": "Wird installiert…",
     "downloadingGpu": "GPU-Unterstützung wird heruntergeladen…",
     "error": "Installation fehlgeschlagen. Details unten."
+  },
+  "linkPreview": {
+    "loading": "Vorschau wird geladen…",
+    "noTitle": "Kein Titel",
+    "openSite": "Website öffnen"
   }
 }

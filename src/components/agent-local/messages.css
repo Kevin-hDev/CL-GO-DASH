@@ -144,3 +144,23 @@
   border-color: transparent;
   background: rgba(30, 30, 34, 0.55);
 }
+
+/* Clickable URLs */
+.chat-link {
+  color: var(--pulse);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  word-break: break-all;
+}
+
+.chat-link:hover {
+  color: var(--pulse-hover);
+}
+
+.chat-previews-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}

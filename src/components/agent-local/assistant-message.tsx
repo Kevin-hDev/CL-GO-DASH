@@ -5,6 +5,7 @@ import { MessageActions } from "./message-actions";
 import { SavedToolBubble } from "./tool-bubble";
 import { StreamingStats, formatTotalElapsed } from "./streaming-stats";
 import { useHoverClass } from "@/hooks/use-hover-class";
+import { linkify } from "@/lib/linkify";
 import type { ToolActivityRecord } from "@/types/agent";
 import "./messages.css";
 
@@ -77,14 +78,14 @@ function renderMarkdown(text: string) {
 
   while ((match = codeBlockRegex.exec(text)) !== null) {
     if (match.index > lastIndex) {
-      parts.push(<span key={lastIndex}>{text.slice(lastIndex, match.index)}</span>);
+      parts.push(<span key={lastIndex}>{linkify(text.slice(lastIndex, match.index))}</span>);
     }
     parts.push(<CodeBlock key={match.index} language={match[1]} code={match[2]} />);
     lastIndex = match.index + match[0].length;
   }
 
   if (lastIndex < text.length) {
-    parts.push(<span key={lastIndex}>{text.slice(lastIndex)}</span>);
+    parts.push(<span key={lastIndex}>{linkify(text.slice(lastIndex))}</span>);
   }
 
   return parts.length > 0 ? parts : text;

@@ -226,6 +226,8 @@ pub fn run() {
             commands::start_ollama_sidecar,
             commands::restart_ollama_sidecar,
             commands::check_model_fits_vram,
+            // Link preview
+            commands::fetch_link_preview,
             // Codex OAuth (dev-only)
             commands::codex_login,
             commands::codex_logout,

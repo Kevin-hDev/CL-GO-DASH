@@ -27,8 +27,7 @@
   font-size: var(--text-sm);
   color: var(--ink-muted);
   margin: 0;
-  max-width: 360px;
-  line-height: 1.5;
+  white-space: nowrap;
 }
 
 .ct-empty-center {

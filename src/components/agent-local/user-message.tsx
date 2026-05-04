@@ -2,6 +2,7 @@ import { useState } from "react";
 import { MessageActions } from "./message-actions";
 import { EditMessage } from "./edit-message";
 import { useHoverClass } from "@/hooks/use-hover-class";
+import { linkifyWithPreviews } from "@/lib/linkify";
 import "./messages.css";
 
 interface FileInfo {
@@ -38,13 +39,16 @@ export function UserMessage({
 
   const hasFiles = files && files.length > 0;
   const hasText = content.trim().length > 0;
+  const { text: textNodes, previews } = hasText
+    ? linkifyWithPreviews(content)
+    : { text: [], previews: null };
 
   return (
     <div className="msg-user" ref={hoverRef}>
       <div className="msg-user-wrap">
         {(hasText || (skillNames && skillNames.length > 0)) && (
           <div className="msg-user-bubble">
-            {hasText && content}
+            {hasText && textNodes}
             {skillNames && skillNames.map((name) => (
               <span key={name} style={{
                 display: "inline-flex", alignItems: "center", gap: 4,
@@ -63,6 +67,7 @@ export function UserMessage({
                 {name}
               </span>
             ))}
+            {previews}
           </div>
         )}
         {hasFiles && (

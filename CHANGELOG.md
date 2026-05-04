@@ -11,6 +11,7 @@
 - **ProcessManager** — pool borné max 8 process, TTL 10 min, lazy spawn, crash recovery, stderr drain
 - **UI Settings → Connectors** — browse catalog 18 MCP, config tokens, OAuth auto, toggles chat
 - **Menu chat connecteurs** — dropdown "+" avec sous-menu toggles par connecteur
+- **Link previews in chat** — URLs in messages display rich preview cards (title, description, OG image, favicon, site name). Powered by a Rust backend that fetches and parses Open Graph metadata. YouTube videos get dedicated previews via the public oEmbed API (thumbnail + channel name). Previews are deduplicated, capped at 5 per message, and grouped at the bottom of the message bubble. Toggleable in Settings > General (7 languages supported).
 
 ### Security
 

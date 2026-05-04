@@ -20,6 +20,7 @@ interface StartupState {
   autostart: boolean;
   start_hidden: boolean;
   response_language: string;
+  link_preview_enabled: boolean;
 }
 
 const FONT_SIZE_OPTIONS: SelectOption[] = FONT_SIZES.map((s) => ({
@@ -59,22 +60,31 @@ export function GeneralSettings({ themeChoice, onThemeChange, settings }: Genera
     autostart: false,
     start_hidden: false,
     response_language: "",
+    link_preview_enabled: true,
   });
 
   useEffect(() => {
     invoke<Record<string, unknown>>("get_advanced_settings")
-      .then((s) => setStartup({
-        autostart: s.autostart as boolean ?? false,
-        start_hidden: s.start_hidden as boolean ?? false,
-        response_language: s.response_language as string ?? "",
-      }))
-      .catch(() => {});
+      .then((s) => {
+        const linkPreview = (s.link_preview_enabled as boolean) ?? true;
+        localStorage.setItem("clgo-link-preview", String(linkPreview));
+        setStartup({
+          autostart: s.autostart as boolean ?? false,
+          start_hidden: s.start_hidden as boolean ?? false,
+          response_language: s.response_language as string ?? "",
+          link_preview_enabled: linkPreview,
+        });
+      })
+      .catch(() => console.warn("Failed to load advanced settings"));
   }, []);
 
   const saveAdvanced = useCallback((patch: Partial<StartupState>) => {
     setStartup((prev) => {
       const next = { ...prev, ...patch };
       invoke("patch_advanced_settings", { patch }).catch(() => {});
+      if ("link_preview_enabled" in patch) {
+        localStorage.setItem("clgo-link-preview", String(patch.link_preview_enabled));
+      }
       return next;
     });
   }, []);
@@ -155,6 +165,16 @@ export function GeneralSettings({ themeChoice, onThemeChange, settings }: Genera
             <RoundToggle
               checked={settings.sidebarExpand}
               onChange={settings.setSidebarExpand}
+            />
+          </SettingsRow>
+
+          <SettingsRow
+            title={t("settings.general.linkPreviewTitle")}
+            description={t("settings.general.linkPreviewDesc")}
+          >
+            <RoundToggle
+              checked={startup.link_preview_enabled}
+              onChange={(v) => saveAdvanced({ link_preview_enabled: v })}
             />
           </SettingsRow>
         </SettingsCard>

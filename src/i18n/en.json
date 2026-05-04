@@ -292,7 +292,9 @@
       "responseLangTitle": "LLM response language",
       "responseLangDesc": "Language the AI model will respond in",
       "sidebarExpandTitle": "Expand sidebar on hover",
-      "sidebarExpandDesc": "Sidebar expands when you hover over it"
+      "sidebarExpandDesc": "Sidebar expands when you hover over it",
+      "linkPreviewTitle": "Link previews",
+      "linkPreviewDesc": "Show a preview card for URLs in chat"
     },
     "advanced": {
       "autostartTitle": "Launch at startup",
@@ -550,6 +552,11 @@
       "successMessage": "The connector has been added successfully.",
       "errorGeneric": "Connection failed. Please try again."
     }
+  },
+  "linkPreview": {
+    "loading": "Loading preview…",
+    "noTitle": "No title",
+    "openSite": "Open website"
   },
   "chatMenu": {
     "addFile": "Add an image or file",

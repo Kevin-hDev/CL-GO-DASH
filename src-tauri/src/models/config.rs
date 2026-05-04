@@ -23,6 +23,7 @@ pub struct AdvancedSettings {
     pub compression_enabled: bool,
     pub compression_threshold: u8,
     pub response_language: String,
+    pub link_preview_enabled: bool,
 }
 
 impl Default for AdvancedSettings {
@@ -40,6 +41,7 @@ impl Default for AdvancedSettings {
             compression_enabled: true,
             compression_threshold: 85,
             response_language: String::new(),
+            link_preview_enabled: true,
         }
     }
 }
