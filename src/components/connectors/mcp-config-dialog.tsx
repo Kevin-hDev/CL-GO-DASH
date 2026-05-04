@@ -21,17 +21,25 @@ export function McpConfigDialog({ connector, onClose, onValidated }: McpConfigDi
   const [testState, setTestState] = useState<TestState>({ kind: "idle" });
   const [submitting, setSubmitting] = useState(false);
 
+  const envKey = connector.env_keys?.[0];
+
   const handleSubmit = async () => {
-    if (!token.trim() || submitting) return;
+    if (!token.trim() || submitting || !envKey) return;
     setSubmitting(true);
     setTestState({ kind: "testing" });
     try {
-      await invoke("set_api_key", { provider: connector.id, key: token });
-      await invoke("test_api_key_with_value", { provider: connector.id, key: token });
+      await invoke("set_mcp_env_token", {
+        connectorId: connector.id,
+        envKey,
+        value: token,
+      });
       setTestState({ kind: "ok" });
       setTimeout(() => onValidated(), 500);
     } catch (err) {
-      await invoke("delete_api_key", { provider: connector.id }).catch(() => {});
+      await invoke("delete_mcp_env_token", {
+        connectorId: connector.id,
+        envKey,
+      }).catch(() => {});
       setTestState({ kind: "error", message: String(err) });
       setSubmitting(false);
     }
