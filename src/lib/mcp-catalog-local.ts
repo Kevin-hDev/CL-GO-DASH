@@ -14,7 +14,7 @@ export const MCP_CATALOG_LOCAL: McpConnectorSpec[] = [
     short_description: "Explorer les modèles, datasets, Spaces et papers du Hub.",
     short_description_en: "Explore Hub models, datasets, Spaces and papers.",
     author: "Hugging Face", url: "https://huggingface.co/mcp",
-    install_command: "npx @llmindset/hf-mcp-server@0.3.5",
+    install_command: "npx @llmindset/hf-mcp-server@0.3.11",
     env_keys: ["HF_TOKEN"],
     tools: ["model_search", "dataset_search", "spaces_search", "papers_search", "docs_search"],
   },

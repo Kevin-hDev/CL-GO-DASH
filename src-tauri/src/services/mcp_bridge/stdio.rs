@@ -107,7 +107,7 @@ impl StdioTransport {
                             return Err("réponse MCP trop volumineuse".to_string());
                         }
                         let trimmed = line.trim();
-                        if trimmed.starts_with('{') {
+                        if trimmed.starts_with('{') && trimmed.contains("\"jsonrpc\"") {
                             return serde_json::from_str(trimmed)
                                 .map_err(|_| "réponse JSON-RPC invalide".to_string());
                         }
