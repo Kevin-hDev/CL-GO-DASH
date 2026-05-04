@@ -35,24 +35,18 @@ fn safe_env() -> Vec<(String, String)> {
         .collect()
 }
 
-pub fn is_alive(connector_id: &str) -> bool {
-    let pool = match POOL.lock() {
-        Ok(p) => p,
-        Err(_) => return false,
-    };
-    if let Some(entry) = pool.get(connector_id) {
-        entry.child.id().is_some()
-    } else {
-        false
+pub fn get_alive_handle(connector_id: &str) -> Option<ProcessHandle> {
+    let mut pool = POOL.lock().ok()?;
+    let entry = pool.get_mut(connector_id)?;
+    if entry.child.id().is_none() {
+        return None;
     }
-}
-
-pub fn touch(connector_id: &str) {
-    if let Ok(mut pool) = POOL.lock() {
-        if let Some(entry) = pool.get_mut(connector_id) {
-            entry.last_used = Instant::now();
-        }
-    }
+    entry.last_used = Instant::now();
+    let handles = HANDLES.lock().ok()?;
+    handles.get(connector_id).map(|h| ProcessHandle {
+        stdin: Arc::clone(&h.stdin),
+        reader: Arc::clone(&h.reader),
+    })
 }
 
 pub fn spawn(
@@ -63,7 +57,7 @@ pub fn spawn(
     let parsed = stdio_cmd::parse_install_command(install_command)?;
 
     let program_path = which::which(&parsed.program)
-        .map_err(|_| format!("'{}' non trouvé dans le PATH", parsed.program))?;
+        .map_err(|_| "runtime requis non trouvé dans le PATH".to_string())?;
 
     let mut env = safe_env();
     for (k, v) in env_tokens {
@@ -89,9 +83,10 @@ pub fn spawn(
         reader: Arc::new(tokio::sync::Mutex::new(BufReader::new(stdout))),
     };
 
-    {
+    let evicted = {
         let mut pool = POOL.lock().map_err(|_| "erreur interne")?;
-        evict_expired_inner(&mut pool);
+        let evicted = evict_expired_inner(&mut pool);
+        let mut lru_evicted: Option<String> = None;
         if pool.len() >= MAX_PROCESSES && !pool.contains_key(connector_id) {
             if let Some(oldest_key) = pool
                 .iter()
@@ -101,9 +96,7 @@ pub fn spawn(
                 if let Some(mut old) = pool.remove(&oldest_key) {
                     let _ = old.child.start_kill();
                 }
-                if let Ok(mut h) = HANDLES.lock() {
-                    h.remove(&oldest_key);
-                }
+                lru_evicted = Some(oldest_key);
             }
         }
         pool.insert(
@@ -113,6 +106,19 @@ pub fn spawn(
                 last_used: Instant::now(),
             },
         );
+        let mut all_evicted = evicted;
+        if let Some(key) = lru_evicted {
+            all_evicted.push(key);
+        }
+        all_evicted
+    };
+
+    if !evicted.is_empty() {
+        if let Ok(mut handles) = HANDLES.lock() {
+            for key in &evicted {
+                handles.remove(key);
+            }
+        }
     }
 
     {
@@ -127,14 +133,6 @@ pub fn spawn(
     }
 
     Ok(handle)
-}
-
-pub fn get_handle(connector_id: &str) -> Option<ProcessHandle> {
-    let handles = HANDLES.lock().ok()?;
-    handles.get(connector_id).map(|h| ProcessHandle {
-        stdin: Arc::clone(&h.stdin),
-        reader: Arc::clone(&h.reader),
-    })
 }
 
 pub fn shutdown_one(connector_id: &str) {
@@ -159,7 +157,7 @@ pub fn shutdown_all() {
     }
 }
 
-fn evict_expired_inner(pool: &mut HashMap<String, PoolEntry>) {
+fn evict_expired_inner(pool: &mut HashMap<String, PoolEntry>) -> Vec<String> {
     let expired: Vec<String> = pool
         .iter()
         .filter(|(_, e)| e.last_used.elapsed().as_secs() > TTL_SECS)
@@ -170,11 +168,5 @@ fn evict_expired_inner(pool: &mut HashMap<String, PoolEntry>) {
             let _ = entry.child.start_kill();
         }
     }
-    if !expired.is_empty() {
-        if let Ok(mut handles) = HANDLES.lock() {
-            for key in &expired {
-                handles.remove(key);
-            }
-        }
-    }
+    expired
 }

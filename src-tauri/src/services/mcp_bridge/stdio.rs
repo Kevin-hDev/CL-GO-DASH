@@ -30,11 +30,8 @@ impl StdioTransport {
     }
 
     async fn ensure_running(&self) -> Result<ProcessHandle, String> {
-        if process_manager::is_alive(&self.connector_id) {
-            if let Some(handle) = process_manager::get_handle(&self.connector_id) {
-                process_manager::touch(&self.connector_id);
-                return Ok(handle);
-            }
+        if let Some(handle) = process_manager::get_alive_handle(&self.connector_id) {
+            return Ok(handle);
         }
 
         process_manager::shutdown_one(&self.connector_id);
@@ -105,10 +102,10 @@ impl StdioTransport {
             Err(_) => Err("timeout : le serveur MCP n'a pas répondu".to_string()),
             Ok(Err(_)) => Err("erreur de lecture stdout du process MCP".to_string()),
             Ok(Ok(0)) => Err("le process MCP s'est arrêté".to_string()),
-            Ok(Ok(n)) if n > MAX_LINE_BYTES => {
-                Err("réponse MCP trop volumineuse".to_string())
-            }
             Ok(Ok(_)) => {
+                if line.len() > MAX_LINE_BYTES {
+                    return Err("réponse MCP trop volumineuse".to_string());
+                }
                 let trimmed = line.trim();
                 serde_json::from_str(trimmed)
                     .map_err(|_| "réponse JSON-RPC invalide".to_string())

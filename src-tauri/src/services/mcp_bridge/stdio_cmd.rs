@@ -1,5 +1,7 @@
 const ALLOWED_PROGRAMS: &[&str] = &["npx", "uvx", "deno"];
-const ARG_PATTERN: &str = r"^[a-zA-Z0-9@/_.:=\-]+$";
+
+static ARG_REGEX: std::sync::LazyLock<regex::Regex> =
+    std::sync::LazyLock::new(|| regex::Regex::new(r"^[a-zA-Z0-9@/_.:=\-]+$").unwrap());
 
 pub struct ParsedCommand {
     pub program: String,
@@ -17,7 +19,7 @@ pub fn parse_install_command(raw: &str) -> Result<ParsedCommand, String> {
         return Err("programme non autorisé".to_string());
     }
 
-    let regex = regex::Regex::new(ARG_PATTERN).unwrap();
+    let regex = &*ARG_REGEX;
     let mut args = Vec::new();
 
     for part in &parts[1..] {
