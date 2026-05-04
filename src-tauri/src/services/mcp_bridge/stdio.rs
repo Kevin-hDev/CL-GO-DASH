@@ -14,16 +14,27 @@ const WARMUP_MS: u64 = 500;
 pub struct StdioTransport {
     pub connector_id: String,
     pub install_command: String,
-    pub env_keys: Vec<(String, String)>,
+    pub env_key_names: Vec<String>,
 }
 
 impl StdioTransport {
     pub fn new(
         connector_id: String,
         install_command: String,
-        env_keys: Vec<(String, String)>,
+        env_key_names: Vec<String>,
     ) -> Self {
-        Self { connector_id, install_command, env_keys }
+        Self { connector_id, install_command, env_key_names }
+    }
+
+    fn resolve_env_tokens(&self) -> Vec<(String, String)> {
+        let mut result = Vec::new();
+        for key in &self.env_key_names {
+            let vault_key = format!("mcp_{}_{}", self.connector_id, key.to_lowercase());
+            if let Ok(val) = crate::services::api_keys::get_key(&vault_key) {
+                result.push((key.clone(), val.to_string()));
+            }
+        }
+        result
     }
 
     async fn ensure_running(&self) -> Result<ProcessHandle, String> {
@@ -32,10 +43,11 @@ impl StdioTransport {
         }
 
         process_manager::shutdown_one(&self.connector_id);
+        let env_tokens = self.resolve_env_tokens();
         let handle = process_manager::spawn(
             &self.connector_id,
             &self.install_command,
-            &self.env_keys,
+            &env_tokens,
         )?;
         tokio::time::sleep(Duration::from_millis(WARMUP_MS)).await;
         self.handshake(&handle).await?;

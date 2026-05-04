@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::sync::Mutex;
 use std::time::Instant;
 
-use tokio::io::BufReader;
+use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::{Child, ChildStdin, ChildStdout, Command};
 use std::process::Stdio;
 use std::sync::Arc;
@@ -85,6 +85,20 @@ pub fn spawn(
 
     let stdin = child.stdin.take().ok_or("stdin indisponible")?;
     let stdout = child.stdout.take().ok_or("stdout indisponible")?;
+
+    if let Some(stderr) = child.stderr.take() {
+        tokio::spawn(async move {
+            let mut reader = BufReader::new(stderr);
+            let mut buf = String::new();
+            loop {
+                buf.clear();
+                match reader.read_line(&mut buf).await {
+                    Ok(0) | Err(_) => break,
+                    _ => {}
+                }
+            }
+        });
+    }
 
     let handle = ProcessHandle {
         stdin: Arc::new(tokio::sync::Mutex::new(stdin)),

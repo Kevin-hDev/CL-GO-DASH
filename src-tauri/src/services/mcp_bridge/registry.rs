@@ -92,8 +92,8 @@ fn build_connector(c: StoredConnector) -> Option<EnabledConnector> {
     }
 
     if let Some(ref cmd) = c.install_command {
-        let env_tokens = resolve_env_tokens(c.env_keys.as_deref(), &c.id);
-        let transport = StdioTransport::new(c.id.clone(), cmd.clone(), env_tokens);
+        let env_key_names = validated_env_keys(c.env_keys.as_deref());
+        let transport = StdioTransport::new(c.id.clone(), cmd.clone(), env_key_names);
         return Some(EnabledConnector {
             id: c.id,
             transport: Arc::new(transport),
@@ -103,19 +103,31 @@ fn build_connector(c: StoredConnector) -> Option<EnabledConnector> {
     None
 }
 
-fn resolve_env_tokens(keys: Option<&[String]>, connector_id: &str) -> Vec<(String, String)> {
+const FORBIDDEN_ENV_KEYS: &[&str] = &[
+    "PATH", "HOME", "TMPDIR", "LANG", "LC_ALL", "USER", "SHELL",
+    "LD_PRELOAD", "LD_LIBRARY_PATH", "DYLD_INSERT_LIBRARIES",
+    "NODE_OPTIONS", "NODE_PATH", "DENO_DIR",
+    "NPM_CONFIG_CACHE", "NPM_CONFIG_PREFIX",
+    "XDG_DATA_HOME", "XDG_CACHE_HOME", "XDG_CONFIG_HOME",
+];
+
+fn is_valid_env_key(key: &str) -> bool {
+    !key.is_empty()
+        && key.len() <= 64
+        && key.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_')
+        && !FORBIDDEN_ENV_KEYS.contains(&key)
+}
+
+fn validated_env_keys(keys: Option<&[String]>) -> Vec<String> {
     let keys = match keys {
         Some(k) if !k.is_empty() => k,
         _ => return Vec::new(),
     };
-    let mut result = Vec::new();
-    for key in keys {
-        let vault_key = format!("mcp_{connector_id}_{}", key.to_lowercase());
-        if let Ok(val) = crate::services::api_keys::get_key(&vault_key) {
-            result.push((key.clone(), val.to_string()));
-        }
-    }
-    result
+    keys.iter()
+        .take(10)
+        .filter(|k| is_valid_env_key(k))
+        .cloned()
+        .collect()
 }
 
 pub async fn get_tools(connector: &EnabledConnector) -> Result<Vec<McpToolDef>, String> {
