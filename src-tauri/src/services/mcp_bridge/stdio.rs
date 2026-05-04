@@ -93,23 +93,32 @@ impl StdioTransport {
 
     async fn read_response(&self, handle: &ProcessHandle) -> Result<Value, String> {
         let mut reader = handle.reader.lock().await;
-        let mut line = String::new();
+        let mut total_bytes: usize = 0;
 
-        let read_result =
-            tokio::time::timeout(REQUEST_TIMEOUT, reader.read_line(&mut line)).await;
-
-        match read_result {
-            Err(_) => Err("timeout : le serveur MCP n'a pas répondu".to_string()),
-            Ok(Err(_)) => Err("erreur de lecture stdout du process MCP".to_string()),
-            Ok(Ok(0)) => Err("le process MCP s'est arrêté".to_string()),
-            Ok(Ok(_)) => {
-                if line.len() > MAX_LINE_BYTES {
-                    return Err("réponse MCP trop volumineuse".to_string());
+        let result = tokio::time::timeout(REQUEST_TIMEOUT, async {
+            loop {
+                let mut line = String::new();
+                match reader.read_line(&mut line).await {
+                    Err(_) => return Err("erreur de lecture stdout du process MCP".to_string()),
+                    Ok(0) => return Err("le process MCP s'est arrêté".to_string()),
+                    Ok(n) => {
+                        total_bytes += n;
+                        if total_bytes > MAX_LINE_BYTES {
+                            return Err("réponse MCP trop volumineuse".to_string());
+                        }
+                        let trimmed = line.trim();
+                        if trimmed.starts_with('{') {
+                            return serde_json::from_str(trimmed)
+                                .map_err(|_| "réponse JSON-RPC invalide".to_string());
+                        }
+                    }
                 }
-                let trimmed = line.trim();
-                serde_json::from_str(trimmed)
-                    .map_err(|_| "réponse JSON-RPC invalide".to_string())
             }
+        }).await;
+
+        match result {
+            Err(_) => Err("timeout : le serveur MCP n'a pas répondu".to_string()),
+            Ok(inner) => inner,
         }
     }
 
