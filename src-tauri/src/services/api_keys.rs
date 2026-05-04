@@ -131,6 +131,29 @@ pub fn delete_key(provider_id: &str) -> Result<(), String> {
     remove_from_registry(provider_id)
 }
 
+pub fn set_key_raw(key_id: &str, value: &str) -> Result<(), String> {
+    if key_id.is_empty() || key_id.len() > 128 {
+        return Err("identifiant invalide".to_string());
+    }
+    if value.is_empty() || value.len() > 256 {
+        return Err("valeur invalide".to_string());
+    }
+    let mut state = STATE.lock().map_err(|e| format!("lock: {e}"))?;
+    let s = state.as_mut().ok_or("vault not initialized")?;
+    s.keys.insert(key_id.to_string(), Zeroizing::new(value.to_string()));
+    flush_vault(s)
+}
+
+pub fn delete_key_raw(key_id: &str) -> Result<(), String> {
+    if key_id.is_empty() || key_id.len() > 128 {
+        return Err("identifiant invalide".to_string());
+    }
+    let mut state = STATE.lock().map_err(|e| format!("lock: {e}"))?;
+    let s = state.as_mut().ok_or("vault not initialized")?;
+    s.keys.remove(key_id);
+    flush_vault(s)
+}
+
 pub fn has_key(provider_id: &str) -> bool {
     let state = STATE.lock().ok();
     state.as_ref().and_then(|s| s.as_ref()).map(|s| s.keys.contains_key(provider_id)).unwrap_or(false)

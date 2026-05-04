@@ -1,8 +1,8 @@
 use serde_json::Value;
 
 use crate::services::agent_local::types_tools::ToolResult;
-use crate::services::mcp_bridge::{client, registry};
-use crate::services::mcp_oauth::storage;
+use crate::services::mcp_bridge::registry;
+use crate::services::mcp_bridge::transport::McpToolDef;
 
 const MAX_TOOLS_PER_SERVICE: usize = 15;
 
@@ -71,7 +71,7 @@ async fn search(args: &Value) -> ToolResult {
     ToolResult::ok(output)
 }
 
-fn matches_keywords(tool: &client::McpToolDef, keywords: &[&str], connector_id: &str) -> bool {
+fn matches_keywords(tool: &McpToolDef, keywords: &[&str], connector_id: &str) -> bool {
     if keywords.is_empty() {
         return true;
     }
@@ -102,14 +102,9 @@ async fn call(args: &Value) -> ToolResult {
         None => return ToolResult::err(format!("connecteur '{connector_id}' non disponible")),
     };
 
-    let token = match storage::get_valid_token(connector_id).await {
-        Ok(t) => t,
-        Err(_) => return ToolResult::err("authentification expirée, reconnectez le service".to_string()),
-    };
-
     let arguments = args.get("arguments").cloned().unwrap_or(Value::Object(Default::default()));
 
-    match client::call_tool(&connector.endpoint, token.as_str(), tool_name, arguments).await {
+    match connector.transport.call_tool(tool_name, arguments).await {
         Ok(result) => ToolResult::ok(sanitize_mcp_output(&result)),
         Err(e) => ToolResult::err(sanitize_mcp_output(&e)),
     }

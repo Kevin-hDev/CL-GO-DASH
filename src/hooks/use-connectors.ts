@@ -14,6 +14,17 @@ async function storagePath(): Promise<string> {
 
 const MAX_CONNECTORS = 32;
 
+const VALID_ID = /^[a-zA-Z0-9_-]+$/;
+const ALLOWED_PROGRAMS = ["npx", "uvx", "deno"];
+const VALID_ARG = /^[a-zA-Z0-9@/_.:=-]+$/;
+
+function isValidInstallCommand(cmd: string): boolean {
+  const parts = cmd.split(/\s+/);
+  if (parts.length < 2) return false;
+  if (!ALLOWED_PROGRAMS.includes(parts[0])) return false;
+  return parts.slice(1).every((p) => VALID_ARG.test(p));
+}
+
 function validateConnectors(data: unknown): ConfiguredMcp[] {
   if (!Array.isArray(data)) return [];
   const result: ConfiguredMcp[] = [];
@@ -22,12 +33,17 @@ function validateConnectors(data: unknown): ConfiguredMcp[] {
     if (typeof item !== "object" || item === null) continue;
     const r = item as Record<string, unknown>;
     if (typeof r.id !== "string" || typeof r.status !== "string") continue;
+    if (!VALID_ID.test(r.id) || r.id.length > 64) continue;
     if (r.status !== "connected" && r.status !== "disconnected") continue;
+    const cmd = typeof r.install_command === "string" ? r.install_command : undefined;
+    if (cmd && !isValidInstallCommand(cmd)) continue;
     result.push({
       id: r.id,
       status: r.status as ConfiguredMcp["status"],
       enabled_in_chat: r.enabled_in_chat === true,
       endpoint: typeof r.endpoint === "string" ? r.endpoint : undefined,
+      install_command: cmd,
+      env_keys: Array.isArray(r.env_keys) ? r.env_keys.filter((k: unknown) => typeof k === "string").slice(0, 10) : undefined,
     });
   }
   return result;
@@ -47,8 +63,8 @@ async function saveConfigured(list: ConfiguredMcp[]): Promise<void> {
   try {
     const path = await storagePath();
     await writeTextFile(path, JSON.stringify(list));
-  } catch (err) {
-    console.warn("[mcp-connectors] save failed:", err);
+  } catch {
+    console.warn("[mcp-connectors] save failed");
   }
 }
 
@@ -83,7 +99,10 @@ export function useConnectors() {
     if (items.some((c) => c.id === id)) return;
     const spec = catalog.find((s) => s.id === id);
     await persist([...items, {
-      id, status: "connected", enabled_in_chat: true, endpoint: spec?.endpoint,
+      id, status: "connected", enabled_in_chat: true,
+      endpoint: spec?.endpoint,
+      install_command: spec?.install_command,
+      env_keys: spec?.env_keys,
     }]);
   }, [items, persist, catalog]);
 

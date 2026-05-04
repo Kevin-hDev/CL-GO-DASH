@@ -1,4 +1,6 @@
+use crate::services::api_keys;
 use crate::services::mcp_oauth::{flow, storage};
+use zeroize::Zeroize;
 
 fn validate_connector_id(id: &str) -> Result<(), String> {
     if id.is_empty() || id.len() > 64 {
@@ -40,5 +42,42 @@ pub async fn has_mcp_oauth_token(connector_id: String) -> Result<bool, String> {
 #[tauri::command]
 pub async fn delete_mcp_oauth_token(connector_id: String) -> Result<(), String> {
     validate_connector_id(&connector_id)?;
+    crate::services::mcp_bridge::registry::invalidate_cache(&connector_id);
     storage::delete_tokens(&connector_id)
+}
+
+fn validate_env_key(key: &str) -> Result<(), String> {
+    if key.is_empty() || key.len() > 64 {
+        return Err("identifiant invalide".to_string());
+    }
+    if !key.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_') {
+        return Err("identifiant invalide".to_string());
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn set_mcp_env_token(
+    connector_id: String,
+    env_key: String,
+    mut value: String,
+) -> Result<(), String> {
+    validate_connector_id(&connector_id)?;
+    validate_env_key(&env_key)?;
+    let vault_key = format!("mcp_{connector_id}_{}", env_key.to_lowercase());
+    let result = api_keys::set_key_raw(&vault_key, &value);
+    value.zeroize();
+    result
+}
+
+#[tauri::command]
+pub async fn delete_mcp_env_token(
+    connector_id: String,
+    env_key: String,
+) -> Result<(), String> {
+    validate_connector_id(&connector_id)?;
+    validate_env_key(&env_key)?;
+    crate::services::mcp_bridge::registry::invalidate_cache(&connector_id);
+    let vault_key = format!("mcp_{connector_id}_{}", env_key.to_lowercase());
+    api_keys::delete_key_raw(&vault_key)
 }

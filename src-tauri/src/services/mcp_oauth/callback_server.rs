@@ -15,7 +15,7 @@ const SUCCESS_HTML: &str = r#"<!DOCTYPE html>
 <style>body{font-family:system-ui;display:flex;justify-content:center;
 align-items:center;height:100vh;margin:0;background:#1a1a2e;color:#e0e0e0}
 .c{text-align:center}h1{color:#f97316}p{margin-top:8px;opacity:.7}</style>
-</head><body><div class="c"><h1>Connexion réussie</h1>
+</head><body><div class="c"><h1>Authentification en cours</h1>
 <p>Vous pouvez fermer cet onglet et retourner dans l'application.</p>
 </div></body></html>"#;
 

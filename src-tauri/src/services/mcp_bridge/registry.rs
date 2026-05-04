@@ -1,11 +1,12 @@
 use std::collections::HashMap;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
 use serde::Deserialize;
 
-use super::client::{self, McpToolDef};
-use crate::services::mcp_oauth::storage;
+use super::http::HttpTransport;
+use super::stdio::StdioTransport;
+use super::transport::{McpToolDef, McpTransport};
 
 const MAX_CACHE: usize = 32;
 const CACHE_TTL_SECS: u64 = 300;
@@ -24,58 +25,109 @@ struct StoredConnector {
     status: String,
     enabled_in_chat: bool,
     endpoint: Option<String>,
+    install_command: Option<String>,
+    #[serde(default)]
+    env_keys: Option<Vec<String>>,
 }
 
 pub struct EnabledConnector {
     pub id: String,
-    pub endpoint: String,
+    pub transport: Arc<dyn McpTransport>,
 }
 
 pub fn get_enabled_connectors() -> Vec<EnabledConnector> {
     let path = crate::services::paths::data_dir().join("mcp-connectors.json");
-    #[cfg(debug_assertions)]
-    eprintln!("[mcp-registry] path: {}", path.display());
     let content = match std::fs::read_to_string(&path) {
         Ok(c) => c,
-        Err(e) => {
-            #[cfg(debug_assertions)]
-    eprintln!("[mcp-registry] read error: {e}");
-            return Vec::new();
-        }
+        Err(_) => return Vec::new(),
     };
-    #[cfg(debug_assertions)]
-    eprintln!("[mcp-registry] raw json len={}", content.len());
     let connectors: Vec<StoredConnector> = match serde_json::from_str(&content) {
         Ok(c) => c,
-        Err(e) => {
-            #[cfg(debug_assertions)]
-    eprintln!("[mcp-registry] parse error: {e}");
-            return Vec::new();
-        }
+        Err(_) => return Vec::new(),
     };
-    #[cfg(debug_assertions)]
-    eprintln!("[mcp-registry] parsed {} connectors", connectors.len());
-    let result: Vec<EnabledConnector> = connectors
+
+    connectors
         .into_iter()
-        .filter(|c| {
-            let ok = c.status == "connected" && c.enabled_in_chat;
-            #[cfg(debug_assertions)]
-    eprintln!("[mcp-registry]   {} status={} chat={} endpoint={:?} → filter={ok}",
-                c.id, c.status, c.enabled_in_chat, c.endpoint.as_deref().unwrap_or("NONE"));
-            ok
-        })
-        .filter_map(|c| {
-            let endpoint = c.endpoint?;
-            if !endpoint.starts_with("https://") {
-                return None;
-            }
-            Some(EnabledConnector { id: c.id, endpoint })
-        })
+        .filter(|c| c.status == "connected" && c.enabled_in_chat)
+        .filter_map(build_connector)
         .take(MAX_CACHE)
-        .collect();
-    #[cfg(debug_assertions)]
-    eprintln!("[mcp-registry] result: {} enabled connectors", result.len());
-    result
+        .collect()
+}
+
+fn is_valid_connector_id(id: &str) -> bool {
+    !id.is_empty()
+        && id.len() <= 64
+        && id.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
+}
+
+fn is_trusted_endpoint(url: &str) -> bool {
+    let parsed = match reqwest::Url::parse(url) {
+        Ok(u) => u,
+        Err(_) => return false,
+    };
+    let host = match parsed.host_str() {
+        Some(h) => h,
+        None => return false,
+    };
+    const TRUSTED_SUFFIXES: &[&str] = &[
+        ".linear.app", ".notion.so", ".canva.com", ".sentry.io",
+        ".vercel.com", ".slack.com", ".apify.com", ".lucid.co",
+        ".googleapis.com", ".githubcopilot.com", ".figma.com",
+    ];
+    TRUSTED_SUFFIXES.iter().any(|s| host.ends_with(s) || host == &s[1..])
+}
+
+fn build_connector(c: StoredConnector) -> Option<EnabledConnector> {
+    if !is_valid_connector_id(&c.id) {
+        return None;
+    }
+    if let Some(ref endpoint) = c.endpoint {
+        if endpoint.starts_with("https://") && is_trusted_endpoint(endpoint) {
+            let transport = HttpTransport::new(c.id.clone(), endpoint.clone());
+            return Some(EnabledConnector {
+                id: c.id,
+                transport: Arc::new(transport),
+            });
+        }
+    }
+
+    if let Some(ref cmd) = c.install_command {
+        let env_key_names = validated_env_keys(c.env_keys.as_deref());
+        let transport = StdioTransport::new(c.id.clone(), cmd.clone(), env_key_names);
+        return Some(EnabledConnector {
+            id: c.id,
+            transport: Arc::new(transport),
+        });
+    }
+
+    None
+}
+
+const FORBIDDEN_ENV_KEYS: &[&str] = &[
+    "PATH", "HOME", "TMPDIR", "LANG", "LC_ALL", "USER", "SHELL",
+    "LD_PRELOAD", "LD_LIBRARY_PATH", "DYLD_INSERT_LIBRARIES",
+    "NODE_OPTIONS", "NODE_PATH", "DENO_DIR",
+    "NPM_CONFIG_CACHE", "NPM_CONFIG_PREFIX",
+    "XDG_DATA_HOME", "XDG_CACHE_HOME", "XDG_CONFIG_HOME",
+];
+
+fn is_valid_env_key(key: &str) -> bool {
+    !key.is_empty()
+        && key.len() <= 64
+        && key.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_')
+        && !FORBIDDEN_ENV_KEYS.contains(&key)
+}
+
+fn validated_env_keys(keys: Option<&[String]>) -> Vec<String> {
+    let keys = match keys {
+        Some(k) if !k.is_empty() => k,
+        _ => return Vec::new(),
+    };
+    keys.iter()
+        .take(10)
+        .filter(|k| is_valid_env_key(k))
+        .cloned()
+        .collect()
 }
 
 pub async fn get_tools(connector: &EnabledConnector) -> Result<Vec<McpToolDef>, String> {
@@ -83,9 +135,7 @@ pub async fn get_tools(connector: &EnabledConnector) -> Result<Vec<McpToolDef>, 
         return Ok(cached);
     }
 
-    let token = storage::get_valid_token(&connector.id).await?;
-    let tools = client::list_tools(&connector.endpoint, token.as_str()).await?;
-
+    let tools = connector.transport.list_tools().await?;
     set_cached(&connector.id, &tools);
     Ok(tools)
 }
