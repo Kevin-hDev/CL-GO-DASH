@@ -1,6 +1,6 @@
 [package]
 name = "cl-go-dash"
-version = "0.8.2"
+version = "0.8.3"
 edition = "2021"
 license = "Apache-2.0"
 
@@ -74,8 +74,10 @@ rand = "0.8"
 # Zeroize mémoire pour les secrets (clés API)
 zeroize = { version = "1.8", features = ["derive"] }
 
-# SHA-256 pour PKCE OAuth (code_challenge)
 sha2 = "0.10"
+hex = "0.4"
+urlencoding = "2"
+open = "5"
 
 # Trait async (pour abstraction providers LLM)
 async-trait = "0.1"

@@ -23,7 +23,7 @@ export const MCP_CATALOG_LOCAL: McpConnectorSpec[] = [
     short_description: "Accès lecture-seule aux conversations iMessage.",
     short_description_en: "Read-only access to iMessage conversations.",
     author: "Wyatt Johnson", url: "https://github.com/wyattjoh/imessage-mcp",
-    install_command: "deno run --allow-read --allow-env --allow-sys --allow-ffi jsr:@wyattjoh/imessage-mcp",
+    install_command: "deno run --allow-read --allow-write --allow-env --allow-sys --allow-ffi --allow-net jsr:@wyattjoh/imessage-mcp",
     os_restrict: "macos",
     tools: ["search_messages", "get_recent_messages", "get_chats", "get_messages_from_chat"],
   },

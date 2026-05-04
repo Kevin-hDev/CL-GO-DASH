@@ -30,7 +30,9 @@ async fn search(args: &Value) -> ToolResult {
     for connector in &connectors {
         let tools = match registry::get_tools(connector).await {
             Ok(t) => t,
-            Err(_) => {
+            Err(e) => {
+                #[cfg(debug_assertions)]
+                eprintln!("[mcp-search] {}: {e}", connector.id);
                 errors.push(format!("{}: service indisponible", connector.id));
                 continue;
             }

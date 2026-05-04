@@ -1,0 +1,68 @@
+.cdx-auth {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.cdx-auth-status {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.cdx-auth-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.cdx-auth-dot--on {
+    background: var(--signal-ok);
+}
+
+.cdx-auth-dot--off {
+    background: var(--ink-faint);
+}
+
+.cdx-auth-email {
+    color: var(--ink-muted);
+    font-size: var(--text-xs);
+}
+
+.cdx-auth-effort {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.cdx-auth-effort-label {
+    font-size: var(--text-xs);
+    color: var(--ink-muted);
+}
+
+.cdx-auth-effort-btns {
+    display: flex;
+    gap: 4px;
+}
+
+.cdx-effort-btn {
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--edge);
+    background: transparent;
+    color: var(--ink-muted);
+    font-size: var(--text-xs);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.cdx-effort-btn:hover {
+    background: var(--surface-hover);
+}
+
+.cdx-effort-btn--active {
+    background: var(--pulse);
+    color: #fff;
+    border-color: var(--pulse);
+}

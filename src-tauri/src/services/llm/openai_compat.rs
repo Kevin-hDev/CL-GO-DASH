@@ -28,6 +28,7 @@ const ZAI_MODELS: &[StaticModel] = &[
 ];
 
 const XAI_MODELS: &[StaticModel] = &[
+    StaticModel { id: "grok-4.3", ctx: 1_000_000 },
     StaticModel { id: "grok-4", ctx: 256_000 },
     StaticModel { id: "grok-4-fast-reasoning", ctx: 2_000_000 },
     StaticModel { id: "grok-4-fast-non-reasoning", ctx: 2_000_000 },
