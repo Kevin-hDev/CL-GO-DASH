@@ -55,6 +55,7 @@ pub fn requires_permission(tool_name: &str, args: &serde_json::Value) -> bool {
             let cmd = args["command"].as_str().unwrap_or("");
             !is_safe_bash(cmd)
         }
+        "search_mcp_tools" => args["mode"].as_str() == Some("call"),
         _ => GATED_TOOLS.contains(&tool_name),
     }
 }

@@ -71,6 +71,7 @@ impl StdioTransport {
     async fn send_with_id(
         &self, handle: &ProcessHandle, request: &Value, expected_id: u64,
     ) -> Result<Value, String> {
+        let _guard = handle.request_lock.lock().await;
         self.write_line(handle, request).await?;
         self.read_response(handle, Some(expected_id)).await
     }

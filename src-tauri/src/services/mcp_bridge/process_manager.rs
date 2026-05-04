@@ -15,6 +15,7 @@ const TTL_SECS: u64 = 600;
 pub struct ProcessHandle {
     pub stdin: Arc<tokio::sync::Mutex<ChildStdin>>,
     pub reader: Arc<tokio::sync::Mutex<BufReader<ChildStdout>>>,
+    pub request_lock: Arc<tokio::sync::Mutex<()>>,
 }
 
 struct PoolEntry {
@@ -52,6 +53,7 @@ pub fn get_alive_handle(connector_id: &str) -> Option<ProcessHandle> {
     handles.get(connector_id).map(|h| ProcessHandle {
         stdin: Arc::clone(&h.stdin),
         reader: Arc::clone(&h.reader),
+        request_lock: Arc::clone(&h.request_lock),
     })
 }
 
@@ -87,6 +89,7 @@ pub fn spawn(
     let handle = ProcessHandle {
         stdin: Arc::new(tokio::sync::Mutex::new(stdin)),
         reader: Arc::new(tokio::sync::Mutex::new(BufReader::new(stdout))),
+        request_lock: Arc::new(tokio::sync::Mutex::new(())),
     };
 
     let evicted = {
@@ -134,6 +137,7 @@ pub fn spawn(
             ProcessHandle {
                 stdin: Arc::clone(&handle.stdin),
                 reader: Arc::clone(&handle.reader),
+                request_lock: Arc::clone(&handle.request_lock),
             },
         );
     }

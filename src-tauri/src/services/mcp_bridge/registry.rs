@@ -60,12 +60,29 @@ fn is_valid_connector_id(id: &str) -> bool {
         && id.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
 }
 
+fn is_trusted_endpoint(url: &str) -> bool {
+    let parsed = match reqwest::Url::parse(url) {
+        Ok(u) => u,
+        Err(_) => return false,
+    };
+    let host = match parsed.host_str() {
+        Some(h) => h,
+        None => return false,
+    };
+    const TRUSTED_SUFFIXES: &[&str] = &[
+        ".linear.app", ".notion.so", ".canva.com", ".sentry.io",
+        ".vercel.com", ".slack.com", ".apify.com", ".lucid.co",
+        ".googleapis.com", ".githubcopilot.com", ".figma.com",
+    ];
+    TRUSTED_SUFFIXES.iter().any(|s| host.ends_with(s) || host == &s[1..])
+}
+
 fn build_connector(c: StoredConnector) -> Option<EnabledConnector> {
     if !is_valid_connector_id(&c.id) {
         return None;
     }
     if let Some(ref endpoint) = c.endpoint {
-        if endpoint.starts_with("https://") {
+        if endpoint.starts_with("https://") && is_trusted_endpoint(endpoint) {
             let transport = HttpTransport::new(c.id.clone(), endpoint.clone());
             return Some(EnabledConnector {
                 id: c.id,
