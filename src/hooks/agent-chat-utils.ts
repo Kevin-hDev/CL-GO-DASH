@@ -36,6 +36,7 @@ export function toolsToRecords(tools: ToolActivity[]): ToolActivityRecord[] {
     return {
       name: t.name,
       summary,
+      args: a,
       result: t.result,
       is_error: t.isError,
       content: t.name === "write_file" ? String(a.content ?? "")
@@ -110,7 +111,7 @@ export function expandToolActivities(
   const msgs: ChatMsg[] = [];
   const toolCalls = activities.map((t, i) => ({
     id: `restored-${i}`,
-    function: { name: t.name, arguments: rebuildArgs(t.name, t.summary) },
+    function: { name: t.name, arguments: t.args ?? rebuildArgs(t.name, t.summary) },
   }));
   msgs.push({ role: "assistant", content: "", tool_calls: toolCalls });
   for (let i = 0; i < activities.length; i++) {

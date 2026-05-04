@@ -121,6 +121,7 @@ export interface SavedSegment {
 export interface ToolActivityRecord {
   name: string;
   summary: string;
+  args?: Record<string, unknown>;
   result?: string;
   is_error?: boolean;
   content?: string;
