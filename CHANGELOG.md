@@ -1,5 +1,31 @@
 # Changelog
 
+## v0.8.4 (en cours)
+
+### Features
+
+- **Système de connecteurs MCP** — 18 connecteurs pour services externes (Notion, Slack, Linear, Reddit, HuggingFace, etc.) accessibles au LLM via un meta-tool unique `search_mcp_tools` (~80 tokens en contexte)
+- **OAuth 2.1 complet** — PKCE S256, Dynamic Client Registration, discovery automatique, callback server local, refresh automatique avec mutex anti-race
+- **Transport stdio pour MCP locaux** — Context7, HuggingFace, iMessage, ProductHunt, Reddit via process spawn (npx/uvx/deno) + stdin/stdout NDJSON
+- **Trait McpTransport unifié** — interface commune HTTP/stdio, extensible pour futurs transports
+- **ProcessManager** — pool borné max 8 process, TTL 10 min, lazy spawn, crash recovery, stderr drain
+- **UI Settings → Connectors** — browse catalog 18 MCP, config tokens, OAuth auto, toggles chat
+- **Menu chat connecteurs** — dropdown "+" avec sous-menu toggles par connecteur
+
+### Security
+
+- **Permission gate MCP** — `search_mcp_tools` mode "call" nécessite approbation utilisateur
+- **Sérialisation request/response stdio** — `request_lock` empêche le mélange de réponses entre appels concurrents
+- **Endpoint HTTP validé** — liste de domaines de confiance, pas d'URL arbitraire
+- **Spawn sécurisé** — whitelist programmes (npx/uvx/deno), regex args, env_clear + env minimal, blocklist env_keys
+- **Sanitisation tools MCP** — noms 64 chars, descriptions 250 chars, schemas profondeur 4 / 20 props
+- **bounded_json OAuth** — réponses OAuth/discovery limitées à 512 KB
+- **Mutex refresh token** — pas de race condition sur le refresh simultané
+- **Tokens résolus au spawn** — pas stockés en mémoire dans la struct transport
+- **Cache invalidé** — à la suppression de token OAuth ou env
+- **Erreurs MCP sanitisées** — 200 chars max, control chars filtrés
+- **notifications/initialized fail closed** — erreur bloque au lieu de laisser passer
+
 ## v0.8.3
 
 ### Features
