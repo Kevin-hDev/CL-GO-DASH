@@ -12,7 +12,7 @@ pub fn office_tool_definitions() -> Vec<Value> {
         tool_def(
             "read_spreadsheet",
             "Read data from a spreadsheet (Excel .xlsx/.xls/.ods or CSV/TSV). Returns JSON with headers and rows. \
-             Formulas are returned as text (e.g. '=SUM(A1:A5)'), not computed values. \
+             The first row is always used as column headers. Formulas are returned as text (e.g. '=SUM(A1:A5)'), not computed values. \
              Example: {\"path\": \"data.xlsx\", \"sheet\": \"Sheet1\", \"max_rows\": 100}",
             serde_json::json!({
                 "type": "object",

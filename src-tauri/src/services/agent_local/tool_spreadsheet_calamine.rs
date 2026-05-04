@@ -4,12 +4,12 @@ use std::path::Path;
 
 fn cell_or_formula(
     cell: &Data,
-    row: usize,
-    col: usize,
+    abs_row: u32,
+    abs_col: u32,
     formulas: Option<&calamine::Range<String>>,
 ) -> Value {
     if let Some(f_range) = formulas {
-        if let Some(formula) = f_range.get((row, col)) {
+        if let Some(formula) = f_range.get_value((abs_row, abs_col)) {
             if !formula.is_empty() {
                 return Value::String(format!("={formula}"));
             }
@@ -67,6 +67,7 @@ pub fn read_excel(
         .map_err(|_| "Impossible de lire la feuille".to_string())?;
 
     let formulas = workbook.worksheet_formula(&sheet_name).ok();
+    let (start_row, start_col) = range.start().unwrap_or((0, 0));
 
     let bounds = super::tool_spreadsheet_read::parse_range(range_str.unwrap_or(""));
     let all_rows: Vec<Vec<Value>> = range
@@ -82,13 +83,17 @@ pub fn read_excel(
                     .enumerate()
                     .filter(|(col_idx, _)| *col_idx >= cs && *col_idx <= ce)
                     .map(|(col_idx, cell)| {
-                        cell_or_formula(cell, row_idx, col_idx, formulas.as_ref())
+                        let abs_row = start_row + row_idx as u32;
+                        let abs_col = start_col + col_idx as u32;
+                        cell_or_formula(cell, abs_row, abs_col, formulas.as_ref())
                     })
                     .collect();
                 Some(filtered)
             } else {
                 Some(row.iter().enumerate().map(|(col_idx, cell)| {
-                    cell_or_formula(cell, row_idx, col_idx, formulas.as_ref())
+                    let abs_row = start_row + row_idx as u32;
+                    let abs_col = start_col + col_idx as u32;
+                    cell_or_formula(cell, abs_row, abs_col, formulas.as_ref())
                 }).collect())
             }
         })
