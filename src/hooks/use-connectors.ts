@@ -28,6 +28,8 @@ function validateConnectors(data: unknown): ConfiguredMcp[] {
       status: r.status as ConfiguredMcp["status"],
       enabled_in_chat: r.enabled_in_chat === true,
       endpoint: typeof r.endpoint === "string" ? r.endpoint : undefined,
+      install_command: typeof r.install_command === "string" ? r.install_command : undefined,
+      env_keys: Array.isArray(r.env_keys) ? r.env_keys.filter((k: unknown) => typeof k === "string") : undefined,
     });
   }
   return result;
@@ -83,7 +85,10 @@ export function useConnectors() {
     if (items.some((c) => c.id === id)) return;
     const spec = catalog.find((s) => s.id === id);
     await persist([...items, {
-      id, status: "connected", enabled_in_chat: true, endpoint: spec?.endpoint,
+      id, status: "connected", enabled_in_chat: true,
+      endpoint: spec?.endpoint,
+      install_command: spec?.install_command,
+      env_keys: spec?.env_keys,
     }]);
   }, [items, persist, catalog]);
 

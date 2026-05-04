@@ -6,7 +6,7 @@ export const MCP_CATALOG_LOCAL: McpConnectorSpec[] = [
     short_description: "Documentation et exemples de code à jour pour 1000+ librairies.",
     short_description_en: "Up-to-date docs and code examples for 1000+ libraries.",
     author: "Upstash", url: "https://context7.com",
-    install_command: "npx @upstash/context7-mcp@latest",
+    install_command: "npx @upstash/context7-mcp@2.2.3",
     tools: ["resolve_library_id", "query_docs"],
   },
   {
@@ -14,7 +14,8 @@ export const MCP_CATALOG_LOCAL: McpConnectorSpec[] = [
     short_description: "Explorer les modèles, datasets, Spaces et papers du Hub.",
     short_description_en: "Explore Hub models, datasets, Spaces and papers.",
     author: "Hugging Face", url: "https://huggingface.co/mcp",
-    install_command: "npx @llmindset/hf-mcp-server",
+    install_command: "npx @llmindset/hf-mcp-server@0.3.5",
+    env_keys: ["HF_TOKEN"],
     tools: ["model_search", "dataset_search", "spaces_search", "papers_search", "docs_search"],
   },
   {
@@ -32,6 +33,7 @@ export const MCP_CATALOG_LOCAL: McpConnectorSpec[] = [
     short_description_en: "Access Product Hunt posts, collections and topics.",
     author: "Jai Pandya", url: "https://www.producthunt.com",
     install_command: "uvx product-hunt-mcp",
+    env_keys: ["PRODUCT_HUNT_TOKEN"],
     tools: ["get_posts", "get_post_details", "get_collections", "search_topics", "get_user"],
   },
   {
@@ -39,7 +41,7 @@ export const MCP_CATALOG_LOCAL: McpConnectorSpec[] = [
     short_description: "Lecture et écriture Reddit : posts, commentaires, trending.",
     short_description_en: "Read and write Reddit: posts, comments, trending.",
     author: "Jordan Burke", url: "https://www.reddit.com",
-    install_command: "npx reddit-mcp-server",
+    install_command: "npx reddit-mcp-server@1.2.1",
     tools: ["read_posts", "search", "trending", "create_post", "reply", "edit"],
   },
 ];

@@ -21,6 +21,7 @@ export interface McpConnectorSpec {
   tools: string[];
   endpoint?: string;
   install_command?: string;
+  env_keys?: string[];
   os_restrict?: "macos";
 }
 
@@ -31,6 +32,8 @@ export interface ConfiguredMcp {
   status: McpConnectorStatus;
   enabled_in_chat: boolean;
   endpoint?: string;
+  install_command?: string;
+  env_keys?: string[];
 }
 
 export type ConfiguredMcpFull = McpConnectorSpec & ConfiguredMcp;
