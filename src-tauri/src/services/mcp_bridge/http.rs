@@ -121,7 +121,8 @@ async fn initialize(endpoint: &str, token: &str) -> Result<Option<String>, Strin
         req = req.header("Mcp-Session-Id", sid);
     }
 
-    let _ = req.json(&notif).send().await;
+    req.json(&notif).send().await
+        .map_err(|_| "notification initialized échouée".to_string())?;
     Ok(session_id)
 }
 

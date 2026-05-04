@@ -71,7 +71,11 @@ pub fn sanitize_tools(tools: Vec<McpToolDef>) -> Vec<McpToolDef> {
 
 pub fn extract_tool_result(resp: &Value) -> Result<String, String> {
     if let Some(err) = resp.get("error") {
-        let msg = err["message"].as_str().unwrap_or("erreur inconnue");
+        let raw_msg = err["message"].as_str().unwrap_or("erreur inconnue");
+        let msg: String = raw_msg.chars()
+            .filter(|c| !c.is_control())
+            .take(200)
+            .collect();
         return Err(format!("erreur MCP : {msg}"));
     }
 
