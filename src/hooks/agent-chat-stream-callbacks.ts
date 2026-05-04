@@ -104,7 +104,7 @@ export function applyStreamEvent(
     case "toolResult":
       next.currentTools = applyToolResult(
         next.currentTools,
-        event.data.name,
+        event.data.toolCallIndex ?? -1,
         event.data.content,
         event.data.isError,
       );
@@ -134,13 +134,17 @@ export function applyStreamEvent(
 }
 
 function applyToolResult(
-  tools: ToolActivity[], name: string, content: string, isError: boolean,
+  tools: ToolActivity[], index: number, content: string, isError: boolean,
 ): ToolActivity[] {
   const next = [...tools];
-  for (let i = next.length - 1; i >= 0; i--) {
-    if (next[i].name === name && !next[i].result) {
-      next[i] = { ...next[i], result: content, isError };
-      break;
+  if (index >= 0 && index < next.length && !next[index].result) {
+    next[index] = { ...next[index], result: content, isError };
+  } else {
+    for (let i = 0; i < next.length; i++) {
+      if (!next[i].result) {
+        next[i] = { ...next[i], result: content, isError };
+        break;
+      }
     }
   }
   return next;
