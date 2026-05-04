@@ -1,36 +1,50 @@
-import groqIcon from "@/assets/groq.svg";
-import geminiIcon from "@/assets/GEMINI.png";
-import mistralIcon from "@/assets/mistral-color.svg";
-import cerebrasIcon from "@/assets/cerebras-color.svg";
-import openrouterIcon from "@/assets/openrouter.svg";
-import openaiIcon from "@/assets/openai.svg";
-import deepseekIcon from "@/assets/deepseek-color.svg";
-import braveIcon from "@/assets/BRAVE.jpeg";
-import exaIcon from "@/assets/exa-color.svg";
-import firecrawlIcon from "@/assets/FIRECRAWL.png";
-import xaiIcon from "@/assets/xai.svg";
-import moonshotIcon from "@/assets/moonshot.svg";
-import zaiIcon from "@/assets/zai.svg";
+import groqSvg from "@/assets/groq.svg";
+import geminiPng from "@/assets/GEMINI.png";
+import mistralSvg from "@/assets/mistral-color.svg";
+import cerebrasSvg from "@/assets/cerebras-color.svg";
+import openrouterSvg from "@/assets/openrouter.svg";
+import openaiSvg from "@/assets/openai.svg";
+import deepseekSvg from "@/assets/deepseek-color.svg";
+import braveIconSvg from "@/assets/brave/Brave-icon.svg";
+import exaSvg from "@/assets/exa-color.svg";
+import firecrawlIconSvg from "@/assets/Firecrawl/Firecrawl-icon.svg";
+import xaiRaw from "@/assets/Grok/grok-icon.svg?raw";
+import moonshotRaw from "@/assets/moonshot-ai/moonshot-icon.svg?raw";
+import zaiSvg from "@/assets/Z/Z.ai.svg";
 
-interface IconEntry {
-  src: string;
-  mono?: boolean;
+function scopeSvg(raw: string, prefix: string): string {
+  let s = raw;
+  s = s.replace(/\bid="([^"]+)"/g, `id="${prefix}$1"`);
+  s = s.replace(/url\(#([^)]+)\)/g, `url(#${prefix}$1)`);
+  s = s.replace(/xlink:href="#([^"]+)"/g, `xlink:href="#${prefix}$1"`);
+  s = s.replace(/href="#([^"]+)"/g, `href="#${prefix}$1"`);
+  s = s.replace(/class="([^"]+)"/g, (_match, classes: string) => {
+    const scoped = classes.split(/\s+/).map((c) => `${prefix}${c}`).join(" ");
+    return `class="${scoped}"`;
+  });
+  s = s.replace(/\.st(\d+)\s*\{/g, `.${prefix}st$1{`);
+  return s;
 }
 
-const ICONS: Record<string, IconEntry> = {
-  groq: { src: groqIcon, mono: true },
-  google: { src: geminiIcon },
-  mistral: { src: mistralIcon },
-  cerebras: { src: cerebrasIcon },
-  openrouter: { src: openrouterIcon, mono: true },
-  openai: { src: openaiIcon, mono: true },
-  deepseek: { src: deepseekIcon },
-  brave: { src: braveIcon },
-  exa: { src: exaIcon },
-  firecrawl: { src: firecrawlIcon },
-  xai: { src: xaiIcon, mono: true },
-  moonshot: { src: moonshotIcon },
-  zai: { src: zaiIcon },
+interface ImgEntry { kind: "img"; src: string; mono?: boolean }
+interface SvgEntry { kind: "svg"; raw: string }
+
+type ProviderIconEntry = ImgEntry | SvgEntry;
+
+const ICONS: Record<string, ProviderIconEntry> = {
+  groq:       { kind: "img", src: groqSvg, mono: true },
+  google:     { kind: "img", src: geminiPng },
+  mistral:    { kind: "img", src: mistralSvg },
+  cerebras:   { kind: "img", src: cerebrasSvg },
+  openrouter: { kind: "img", src: openrouterSvg, mono: true },
+  openai:     { kind: "img", src: openaiSvg, mono: true },
+  deepseek:   { kind: "img", src: deepseekSvg },
+  brave:      { kind: "img", src: braveIconSvg },
+  exa:        { kind: "img", src: exaSvg },
+  firecrawl:  { kind: "img", src: firecrawlIconSvg },
+  xai:        { kind: "svg", raw: scopeSvg(xaiRaw, "xai-") },
+  moonshot:   { kind: "svg", raw: scopeSvg(moonshotRaw, "moon-") },
+  zai:        { kind: "img", src: zaiSvg },
 };
 
 interface ProviderIconProps {
@@ -53,6 +67,16 @@ export function ProviderIcon({ providerId, displayName, size = 40 }: ProviderIco
       }}>
         {displayName.charAt(0).toUpperCase()}
       </div>
+    );
+  }
+
+  if (entry.kind === "svg") {
+    return (
+      <span
+        className="mcp-icon-inline"
+        style={{ width: size, height: size, display: "inline-flex", flexShrink: 0 }}
+        dangerouslySetInnerHTML={{ __html: entry.raw }}
+      />
     );
   }
 

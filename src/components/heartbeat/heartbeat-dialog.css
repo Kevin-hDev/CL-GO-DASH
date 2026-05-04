@@ -40,6 +40,14 @@
   color: var(--ink);
 }
 
+.wk-dialog > h3 {
+  padding: var(--space-lg) var(--space-lg) 0;
+  margin: 0;
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--ink);
+}
+
 .wk-dialog-close {
   border: none;
   background: transparent;
@@ -156,10 +164,9 @@
   display: flex;
   justify-content: flex-end;
   gap: var(--space-sm);
-  padding-top: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
   border-top: 1px solid var(--edge);
   margin-top: var(--space-sm);
-  padding-top: var(--space-md);
 }
 
 .wk-btn-secondary,
@@ -173,13 +180,12 @@
 }
 
 .wk-btn-secondary {
-  background: transparent;
+  background: var(--surface);
   border: 1px solid var(--edge);
   color: var(--ink-muted);
 }
 
 [data-theme="dark"] .wk-btn-secondary {
-  background: var(--surface-overlay);
   border-color: transparent;
 }
 

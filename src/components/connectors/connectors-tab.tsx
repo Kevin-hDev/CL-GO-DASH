@@ -18,7 +18,7 @@ type DialogState =
   | { kind: "oauth-pending"; connector: McpConnectorSpec; returnTo: "browse" | "none" }
   | { kind: "confirm-add"; connector: McpConnectorSpec; returnTo: "browse" | "none" }
   | { kind: "confirm-disconnect"; connectorId: string }
-  | { kind: "confirm-delete"; connectorId: string };
+;
 
 export function ConnectorsTab(): { list: React.ReactNode; detail: React.ReactNode } {
   const { t } = useTranslation();
@@ -43,11 +43,9 @@ export function ConnectorsTab(): { list: React.ReactNode; detail: React.ReactNod
     }
   };
 
-  const handleDelete = async () => {
-    if (dialog.kind !== "confirm-delete") return;
+  const handleDelete = async (connectorId: string) => {
     setSelectedId(null);
-    await removeConnector(dialog.connectorId);
-    setDialog({ kind: "none" });
+    await removeConnector(connectorId);
   };
 
   const handleDisconnect = async () => {
@@ -82,7 +80,7 @@ export function ConnectorsTab(): { list: React.ReactNode; detail: React.ReactNod
                 toggleStatus(selected.id);
               }
             }}
-            onDelete={() => setDialog({ kind: "confirm-delete", connectorId: selected.id })}
+            onDelete={() => handleDelete(selected.id)}
           />
         </div>
       ) : (
@@ -148,17 +146,6 @@ export function ConnectorsTab(): { list: React.ReactNode; detail: React.ReactNod
             <div className="wk-dialog-footer">
               <button type="button" className="wk-btn-secondary" onClick={() => setDialog({ kind: "none" })}>{t("connectors.detail.cancel")}</button>
               <button type="button" className="wk-btn-primary ct-btn-danger" onClick={handleDisconnect}>{t("connectors.detail.confirmDisconnectBtn")}</button>
-            </div>
-          </div>
-        </div>
-      )}
-      {dialog.kind === "confirm-delete" && (
-        <div className="wk-dialog-overlay" onClick={() => setDialog({ kind: "none" })}>
-          <div className="wk-dialog" onClick={(e) => e.stopPropagation()}>
-            <h3>{t("connectors.detail.confirmDeleteTitle")}</h3>
-            <div className="wk-dialog-footer">
-              <button type="button" className="wk-btn-secondary" onClick={() => setDialog({ kind: "none" })}>{t("connectors.detail.cancel")}</button>
-              <button type="button" className="wk-btn-primary ct-btn-danger" onClick={handleDelete}>{t("connectors.detail.confirmDeleteBtn")}</button>
             </div>
           </div>
         </div>

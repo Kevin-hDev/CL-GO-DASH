@@ -4,6 +4,10 @@
   border-radius: var(--radius-md);
 }
 
+.settings-card + .settings-card {
+  margin-top: var(--space-md);
+}
+
 [data-theme="dark"] .settings-card {
   background: var(--surface-glass);
   backdrop-filter: blur(20px);

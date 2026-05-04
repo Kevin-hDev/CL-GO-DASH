@@ -41,7 +41,8 @@
 .ct-confirm-desc {
   font-size: var(--text-sm);
   color: var(--ink-muted);
-  margin: var(--space-sm) 0 var(--space-md);
+  margin: var(--space-sm) 0 0;
+  padding: 0 var(--space-lg);
 }
 
 .ct-btn-danger {

@@ -1,7 +1,8 @@
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { open } from "@tauri-apps/plugin-shell";
 import { Trash, ArrowSquareOut } from "@/components/ui/icons";
-import { McpIcon } from "@/lib/mcp-icons";
+import { McpIcon, mcpHasTextIcon } from "@/lib/mcp-icons";
 import { SettingsCard } from "@/components/settings/settings-card";
 import { getMcpDescription } from "@/types/mcp";
 import type { ConfiguredMcpFull } from "@/types/mcp";
@@ -10,23 +11,44 @@ import "./connectors-detail.css";
 interface ConnectorsDetailProps {
   connector: ConfiguredMcpFull;
   onToggleStatus: () => void;
-  onDelete: () => void;
+  onDelete: () => Promise<void>;
 }
 
 export function ConnectorsDetail({ connector, onToggleStatus, onDelete }: ConnectorsDetailProps) {
   const { t, i18n } = useTranslation();
   const isConnected = connector.status === "connected";
+  const hasText = mcpHasTextIcon(connector.id);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  useEffect(() => {
+    if (!confirmDelete) return;
+    const timer = setTimeout(() => setConfirmDelete(false), 5000);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key.startsWith("Esc")) {
+        e.preventDefault();
+        setConfirmDelete(false);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [confirmDelete]);
 
   return (
     <div className="ctd-scroll">
       <div className="ctd-inner">
         <div className="ctd-header">
           <div className="ctd-info">
-            <McpIcon connectorId={connector.id} displayName={connector.display_name} size={36} />
-            <div>
-              <h2 className="ctd-name">{connector.display_name}</h2>
-              <span className="ctd-author-small">{connector.author}</span>
-            </div>
+            {hasText ? (
+              <McpIcon connectorId={connector.id} displayName={connector.display_name} size={40} variant="text" textWidth />
+            ) : (
+              <>
+                <McpIcon connectorId={connector.id} displayName={connector.display_name} size={36} variant="text" />
+                <h2 className="ctd-name">{connector.display_name}</h2>
+              </>
+            )}
           </div>
           <div className="ctd-actions">
             <button
@@ -37,7 +59,7 @@ export function ConnectorsDetail({ connector, onToggleStatus, onDelete }: Connec
               <span className="ctd-status-dot" />
               {t(isConnected ? "connectors.detail.connected" : "connectors.detail.disconnected")}
             </button>
-            <button type="button" className="ak-icon-btn" onClick={onDelete} title={t("connectors.detail.confirmDeleteBtn")}>
+            <button type="button" className="ak-icon-btn danger" onClick={() => setConfirmDelete(true)} title={t("connectors.detail.confirmDeleteBtn")}>
               <Trash size={16} />
             </button>
           </div>
@@ -77,6 +99,12 @@ export function ConnectorsDetail({ connector, onToggleStatus, onDelete }: Connec
             </button>
           </div>
         </SettingsCard>
+
+        {confirmDelete && (
+          <button type="button" className="ak-confirm-delete" onClick={async () => { await onDelete(); setConfirmDelete(false); }}>
+            {t("connectors.detail.confirmDeleteBtn")}
+          </button>
+        )}
       </div>
     </div>
   );

@@ -14,6 +14,7 @@ export function ChatPlusMenu({ onFileImport }: ChatPlusMenuProps) {
   const [open, setOpen] = useState(false);
   const [submenu, setSubmenu] = useState<"connectors" | "plugins" | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const { configured, toggleChatEnabled } = useConnectors();
 
   const close = useCallback(() => { setOpen(false); setSubmenu(null); }, []);
@@ -33,6 +34,10 @@ export function ChatPlusMenu({ onFileImport }: ChatPlusMenuProps) {
 
   const connectedItems = configured.filter((c) => c.status === "connected");
 
+  const submenuLeft = dropdownRef.current
+    ? dropdownRef.current.offsetWidth + 4
+    : 244;
+
   return (
     <div className="cpm-wrapper" ref={menuRef}>
       <button className="chat-plus-btn" onClick={() => setOpen(!open)} type="button">
@@ -40,7 +45,7 @@ export function ChatPlusMenu({ onFileImport }: ChatPlusMenuProps) {
       </button>
 
       {open && (
-        <div className="cpm-dropdown">
+        <div className="cpm-dropdown" ref={dropdownRef}>
           <button type="button" className="cpm-item" onClick={handleFileImport}>
             <Image size={16} weight="regular" />
             <span>{t("chatMenu.addFile")}</span>
@@ -67,30 +72,30 @@ export function ChatPlusMenu({ onFileImport }: ChatPlusMenuProps) {
             <span>{t("chatMenu.plugins")}</span>
             <CaretRight size={12} className="cpm-caret" />
           </button>
+        </div>
+      )}
 
-          {submenu === "connectors" && (
-            <div className="cpm-submenu" onMouseLeave={() => setSubmenu(null)}>
-              {connectedItems.length === 0 ? (
-                <div className="cpm-sub-empty">{t("chatMenu.noConnectors")}</div>
-              ) : (
-                connectedItems.map((c) => (
-                  <button key={c.id} type="button" className="cpm-sub-item" onClick={() => toggleChatEnabled(c.id)}>
-                    <McpIcon connectorId={c.id} displayName={c.display_name} size={18} />
-                    <span className={c.enabled_in_chat ? "" : "cpm-disabled"}>{c.display_name}</span>
-                    <div className={`cpm-toggle ${c.enabled_in_chat ? "on" : ""}`}>
-                      <div className="cpm-toggle-dot" />
-                    </div>
-                  </button>
-                ))
-              )}
-            </div>
+      {open && submenu === "connectors" && (
+        <div className="cpm-submenu" style={{ left: submenuLeft }} onMouseLeave={() => setSubmenu(null)}>
+          {connectedItems.length === 0 ? (
+            <div className="cpm-sub-empty">{t("chatMenu.noConnectors")}</div>
+          ) : (
+            connectedItems.map((c) => (
+              <button key={c.id} type="button" className="cpm-sub-item" onClick={() => toggleChatEnabled(c.id)}>
+                <McpIcon connectorId={c.id} displayName={c.display_name} size={18} />
+                <span className={c.enabled_in_chat ? "" : "cpm-disabled"}>{c.display_name}</span>
+                <div className={`cpm-toggle ${c.enabled_in_chat ? "on" : ""}`}>
+                  <div className="cpm-toggle-dot" />
+                </div>
+              </button>
+            ))
           )}
+        </div>
+      )}
 
-          {submenu === "plugins" && (
-            <div className="cpm-submenu" onMouseLeave={() => setSubmenu(null)}>
-              <div className="cpm-sub-empty">{t("chatMenu.pluginsEmpty")}</div>
-            </div>
-          )}
+      {open && submenu === "plugins" && (
+        <div className="cpm-submenu" style={{ left: submenuLeft }} onMouseLeave={() => setSubmenu(null)}>
+          <div className="cpm-sub-empty">{t("chatMenu.pluginsEmpty")}</div>
         </div>
       )}
     </div>

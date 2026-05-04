@@ -61,6 +61,20 @@ body {
   filter: invert(0.7);
 }
 
+.mcp-icon-inline {
+  overflow: visible;
+}
+
+.mcp-icon-inline svg {
+  width: 100%;
+  height: 100%;
+}
+
+.mcp-icon-text svg {
+  width: auto;
+  height: 100%;
+}
+
 @keyframes pulse-live {
   0%,
   100% {
