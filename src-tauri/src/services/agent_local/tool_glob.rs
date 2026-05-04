@@ -61,7 +61,7 @@ fn glob_blocking(pattern: &str, root: &Path) -> ToolResult {
         let path = entry.path();
         let rel = path.strip_prefix(root).unwrap_or(path);
         if matcher.is_match(rel) {
-            results.push(rel.display().to_string());
+            results.push(path.display().to_string());
         }
     }
 
