@@ -535,6 +535,7 @@
       "testing": "Test en cours…",
       "testOk": "Connecteur validé.",
       "addAndTest": "Ajouter et tester",
+      "saveError": "Impossible de sauvegarder le token. Réessayez.",
       "cancel": "Annuler",
       "confirmAddDesc": "Ajouter {{name}} à vos connecteurs ?",
       "confirmAddBtn": "Ajouter"

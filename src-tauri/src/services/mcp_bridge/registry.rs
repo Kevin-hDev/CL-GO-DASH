@@ -54,7 +54,16 @@ pub fn get_enabled_connectors() -> Vec<EnabledConnector> {
         .collect()
 }
 
+fn is_valid_connector_id(id: &str) -> bool {
+    !id.is_empty()
+        && id.len() <= 64
+        && id.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
+}
+
 fn build_connector(c: StoredConnector) -> Option<EnabledConnector> {
+    if !is_valid_connector_id(&c.id) {
+        return None;
+    }
     if let Some(ref endpoint) = c.endpoint {
         if endpoint.starts_with("https://") {
             let transport = HttpTransport::new(c.id.clone(), endpoint.clone());

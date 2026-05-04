@@ -79,7 +79,7 @@ pub fn spawn(
         .envs(env)
         .kill_on_drop(true)
         .spawn()
-        .map_err(|e| format!("impossible de lancer le process MCP : {e}"))?;
+        .map_err(|_| "impossible de démarrer le connecteur MCP".to_string())?;
 
     let stdin = child.stdin.take().ok_or("stdin indisponible")?;
     let stdout = child.stdout.take().ok_or("stdout indisponible")?;

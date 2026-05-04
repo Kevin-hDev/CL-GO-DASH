@@ -9,6 +9,7 @@ use super::transport::{next_id, sanitize_tools, McpToolDef, McpTransport};
 
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(360);
 const MAX_LINE_BYTES: usize = 1_048_576;
+const WARMUP_MS: u64 = 500;
 
 pub struct StdioTransport {
     pub connector_id: String,
@@ -22,11 +23,7 @@ impl StdioTransport {
         install_command: String,
         env_keys: Vec<(String, String)>,
     ) -> Self {
-        Self {
-            connector_id,
-            install_command,
-            env_keys,
-        }
+        Self { connector_id, install_command, env_keys }
     }
 
     async fn ensure_running(&self) -> Result<ProcessHandle, String> {
@@ -40,16 +37,17 @@ impl StdioTransport {
             &self.install_command,
             &self.env_keys,
         )?;
+        tokio::time::sleep(Duration::from_millis(WARMUP_MS)).await;
         self.handshake(&handle).await?;
         Ok(handle)
     }
 
     async fn handshake(&self, handle: &ProcessHandle) -> Result<(), String> {
-        tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+        let id = next_id();
         let init = serde_json::json!({
             "jsonrpc": "2.0",
             "method": "initialize",
-            "id": next_id(),
+            "id": id,
             "params": {
                 "protocolVersion": "2025-03-26",
                 "capabilities": {},
@@ -60,7 +58,7 @@ impl StdioTransport {
             }
         });
 
-        let _ = self.send(handle, &init).await?;
+        let _ = self.send_with_id(handle, &init, id).await?;
 
         let notif = serde_json::json!({
             "jsonrpc": "2.0",
@@ -70,29 +68,28 @@ impl StdioTransport {
         Ok(())
     }
 
-    async fn send(&self, handle: &ProcessHandle, request: &Value) -> Result<Value, String> {
+    async fn send_with_id(
+        &self, handle: &ProcessHandle, request: &Value, expected_id: u64,
+    ) -> Result<Value, String> {
         self.write_line(handle, request).await?;
-        self.read_response(handle).await
+        self.read_response(handle, Some(expected_id)).await
     }
 
     async fn write_line(&self, handle: &ProcessHandle, msg: &Value) -> Result<(), String> {
-        let mut line =
-            serde_json::to_string(msg).map_err(|_| "sérialisation échouée")?;
+        let mut line = serde_json::to_string(msg).map_err(|_| "sérialisation échouée")?;
         line.push('\n');
 
         let mut stdin = handle.stdin.lock().await;
-        stdin
-            .write_all(line.as_bytes())
-            .await
+        stdin.write_all(line.as_bytes()).await
             .map_err(|_| "impossible d'écrire sur stdin du process MCP".to_string())?;
-        stdin
-            .flush()
-            .await
+        stdin.flush().await
             .map_err(|_| "flush stdin échoué")?;
         Ok(())
     }
 
-    async fn read_response(&self, handle: &ProcessHandle) -> Result<Value, String> {
+    async fn read_response(
+        &self, handle: &ProcessHandle, expected_id: Option<u64>,
+    ) -> Result<Value, String> {
         let mut reader = handle.reader.lock().await;
         let mut total_bytes: usize = 0;
 
@@ -108,10 +105,17 @@ impl StdioTransport {
                             return Err("réponse MCP trop volumineuse".to_string());
                         }
                         let trimmed = line.trim();
-                        if trimmed.starts_with('{') && trimmed.contains("\"jsonrpc\"") {
-                            return serde_json::from_str(trimmed)
-                                .map_err(|_| "réponse JSON-RPC invalide".to_string());
+                        if !trimmed.starts_with('{') || !trimmed.contains("\"jsonrpc\"") {
+                            continue;
                         }
+                        let parsed: Value = serde_json::from_str(trimmed)
+                            .map_err(|_| "réponse JSON-RPC invalide".to_string())?;
+                        if let Some(eid) = expected_id {
+                            if parsed.get("id").and_then(|v| v.as_u64()) != Some(eid) {
+                                continue;
+                            }
+                        }
+                        return Ok(parsed);
                     }
                 }
             }
@@ -122,24 +126,21 @@ impl StdioTransport {
             Ok(inner) => inner,
         }
     }
-
 }
 
 #[async_trait]
 impl McpTransport for StdioTransport {
     async fn list_tools(&self) -> Result<Vec<McpToolDef>, String> {
         let handle = self.ensure_running().await?;
+        let id = next_id();
 
         let body = serde_json::json!({
-            "jsonrpc": "2.0",
-            "method": "tools/list",
-            "id": next_id()
+            "jsonrpc": "2.0", "method": "tools/list", "id": id
         });
 
-        let resp = self.send(&handle, &body).await?;
+        let resp = self.send_with_id(&handle, &body, id).await?;
 
-        let tools_val = resp
-            .get("result")
+        let tools_val = resp.get("result")
             .and_then(|r| r.get("tools").cloned())
             .ok_or("réponse tools/list invalide")?;
 
@@ -151,19 +152,16 @@ impl McpTransport for StdioTransport {
 
     async fn call_tool(&self, name: &str, args: Value) -> Result<String, String> {
         let handle = self.ensure_running().await?;
+        let id = next_id();
 
         let body = serde_json::json!({
-            "jsonrpc": "2.0",
-            "method": "tools/call",
-            "id": next_id(),
+            "jsonrpc": "2.0", "method": "tools/call", "id": id,
             "params": { "name": name, "arguments": args }
         });
 
-        let resp = self.send(&handle, &body).await?;
+        let resp = self.send_with_id(&handle, &body, id).await?;
         super::transport::extract_tool_result(&resp)
     }
 
-    fn transport_type(&self) -> &'static str {
-        "stdio"
-    }
+    fn transport_type(&self) -> &'static str { "stdio" }
 }

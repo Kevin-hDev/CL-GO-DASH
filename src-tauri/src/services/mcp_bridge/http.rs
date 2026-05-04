@@ -103,6 +103,7 @@ async fn initialize(endpoint: &str, token: &str) -> Result<Option<String>, Strin
     let session_id = resp.headers()
         .get("mcp-session-id")
         .and_then(|v| v.to_str().ok())
+        .filter(|s| s.len() <= 256 && s.bytes().all(|b| b >= 0x20 && b < 0x7f))
         .map(|s| s.to_string());
 
     let _ = response::parse(resp).await?;
