@@ -56,6 +56,28 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn read_csv_sheet_empty_string_falls_back() {
+        let tmp = working_dir();
+        let csv_path = tmp.path().join("test.csv");
+        std::fs::write(&csv_path, "a,b\n1,2\n").unwrap();
+        let result = read_spreadsheet(
+            csv_path.to_str().unwrap(), Some(""), None, None, tmp.path(),
+        ).await;
+        assert!(!result.is_error, "sheet='' devrait fallback: {}", result.content);
+    }
+
+    #[tokio::test]
+    async fn read_csv_sheet_whitespace_falls_back() {
+        let tmp = working_dir();
+        let csv_path = tmp.path().join("test.csv");
+        std::fs::write(&csv_path, "x,y\n3,4\n").unwrap();
+        let result = read_spreadsheet(
+            csv_path.to_str().unwrap(), Some("  "), None, None, tmp.path(),
+        ).await;
+        assert!(!result.is_error, "sheet='  ' devrait fallback: {}", result.content);
+    }
+
+    #[tokio::test]
     async fn read_unsupported_format() {
         let tmp = working_dir();
         let path = tmp.path().join("test.txt");

@@ -30,7 +30,12 @@ pub fn read_excel(
         return Err("Le fichier ne contient aucune feuille".into());
     }
 
-    let sheet_name = match sheet {
+    let effective_sheet = match sheet {
+        Some(name) if !name.trim().is_empty() => Some(name),
+        _ => None,
+    };
+
+    let sheet_name = match effective_sheet {
         Some(name) => {
             if sheet_names.contains(&name.to_string()) {
                 name.to_string()
