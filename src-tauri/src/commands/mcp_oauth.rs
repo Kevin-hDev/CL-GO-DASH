@@ -42,6 +42,7 @@ pub async fn has_mcp_oauth_token(connector_id: String) -> Result<bool, String> {
 #[tauri::command]
 pub async fn delete_mcp_oauth_token(connector_id: String) -> Result<(), String> {
     validate_connector_id(&connector_id)?;
+    crate::services::mcp_bridge::registry::invalidate_cache(&connector_id);
     storage::delete_tokens(&connector_id)
 }
 
@@ -76,6 +77,7 @@ pub async fn delete_mcp_env_token(
 ) -> Result<(), String> {
     validate_connector_id(&connector_id)?;
     validate_env_key(&env_key)?;
+    crate::services::mcp_bridge::registry::invalidate_cache(&connector_id);
     let vault_key = format!("mcp_{connector_id}_{}", env_key.to_lowercase());
     api_keys::delete_key_raw(&vault_key)
 }

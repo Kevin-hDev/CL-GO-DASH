@@ -94,7 +94,7 @@ async fn fetch_issuer_from_resource_meta(
     if !resp.status().is_success() {
         return Err("not found".to_string());
     }
-    let meta: ProtectedResourceMetadata = resp.json().await.map_err(|_| "réponse invalide".to_string())?;
+    let meta: ProtectedResourceMetadata = super::bounded_json(resp).await?;
     meta.authorization_servers
         .and_then(|s| s.into_iter().next())
         .ok_or("no auth server".to_string())
@@ -141,7 +141,7 @@ async fn try_fetch_metadata(
     if !resp.status().is_success() {
         return Err("not found".to_string());
     }
-    resp.json().await.map_err(|e| format!("{e}"))
+    super::bounded_json(resp).await
 }
 
 fn endpoint_base_url(endpoint: &str) -> Result<String, String> {

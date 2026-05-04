@@ -108,10 +108,7 @@ pub async fn register_client(
         return Err("enregistrement du client refusé".to_string());
     }
 
-    let dcr: DcrResponse = resp
-        .json()
-        .await
-        .map_err(|_| "réponse d'enregistrement invalide".to_string())?;
+    let dcr: DcrResponse = super::bounded_json(resp).await?;
 
     Ok(dcr.client_id.clone())
 }
@@ -153,10 +150,7 @@ pub async fn exchange_code(
         return Err("le serveur a refusé le code d'autorisation".to_string());
     }
 
-    let mut raw: TokenResponse = resp
-        .json()
-        .await
-        .map_err(|_| "réponse invalide".to_string())?;
+    let mut raw: TokenResponse = super::bounded_json(resp).await?;
 
     if raw.access_token.is_empty() {
         return Err("échec de l'authentification".to_string());

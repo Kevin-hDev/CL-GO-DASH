@@ -1,7 +1,21 @@
+use std::collections::HashMap;
+use std::sync::Arc;
+
 use zeroize::Zeroizing;
 
 use super::types::{OAuthTokens, TokenResponse};
 use crate::services::api_keys;
+
+static REFRESH_LOCKS: std::sync::LazyLock<std::sync::Mutex<HashMap<String, Arc<tokio::sync::Mutex<()>>>>> =
+    std::sync::LazyLock::new(|| std::sync::Mutex::new(HashMap::new()));
+
+fn get_refresh_lock(connector_id: &str) -> Arc<tokio::sync::Mutex<()>> {
+    let mut map = REFRESH_LOCKS.lock().unwrap_or_else(|e| e.into_inner());
+    if map.len() > 64 {
+        map.clear();
+    }
+    Arc::clone(map.entry(connector_id.to_string()).or_insert_with(|| Arc::new(tokio::sync::Mutex::new(()))))
+}
 
 pub fn store_tokens(connector_id: &str, tokens: &OAuthTokens) -> Result<(), String> {
     let json = tokens.to_json()?;
@@ -29,11 +43,19 @@ pub async fn get_valid_token(connector_id: &str) -> Result<Zeroizing<String>, St
         if now < exp - 30 {
             return Ok(result);
         }
-        let refresh = tokens
+        let lock = get_refresh_lock(connector_id);
+        let _guard = lock.lock().await;
+        let fresh = get_tokens(connector_id)?;
+        if let Some(fexp) = fresh.expires_at {
+            if chrono::Utc::now().timestamp() < fexp - 30 {
+                return Ok(fresh.access_token.clone());
+            }
+        }
+        let refresh = fresh
             .refresh_token
             .as_ref()
             .ok_or("token expiré et pas de refresh_token")?;
-        return refresh_access_token(connector_id, &tokens, refresh.as_str()).await;
+        return refresh_access_token(connector_id, &fresh, refresh.as_str()).await;
     }
     Ok(result)
 }
@@ -74,10 +96,7 @@ async fn refresh_access_token(
         return Err("échec du rafraîchissement du token".to_string());
     }
 
-    let mut raw: TokenResponse = resp
-        .json()
-        .await
-        .map_err(|_| "réponse invalide".to_string())?;
+    let mut raw: TokenResponse = super::bounded_json(resp).await?;
 
     if raw.access_token.is_empty() {
         return Err("token manquant dans la réponse".to_string());
