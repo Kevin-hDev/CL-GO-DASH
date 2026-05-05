@@ -69,6 +69,7 @@ function TextPreviewContent({ operation, baseDir }: FilePreviewContentProps) {
   useEffect(() => {
     if (hasSavedContent) return;
     let alive = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch→setState is intentional
     setState({ loading: true, content: "", error: false });
     readFilePreview(operation.path, baseDir)
       .then((content) => {

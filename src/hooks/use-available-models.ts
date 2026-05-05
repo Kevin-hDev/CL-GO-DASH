@@ -45,35 +45,40 @@ async function fetchOllamaModels(): Promise<AvailableModel[]> {
 }
 
 async function fetchCloudModels(): Promise<Map<string, AvailableModel[]>> {
-  const result = new Map<string, AvailableModel[]>();
   const [catalog, configuredIds] = await Promise.all([
     invoke<ProviderSpec[]>("list_llm_providers_catalog"),
     invoke<string[]>("list_configured_providers"),
   ]);
 
-  for (const spec of catalog) {
-    if (!configuredIds.includes(spec.id)) continue;
-    try {
+  const configured = catalog.filter((spec) => configuredIds.includes(spec.id));
+
+  const results = await Promise.allSettled(
+    configured.map(async (spec) => {
       const models = await invoke<LlmModelInfo[]>("list_llm_models", {
         providerId: spec.id,
       });
-      const mapped = models.map(
-        (m): AvailableModel => ({
-          id: m.id,
-          provider_id: spec.id,
-          provider_name: spec.display_name,
-          is_local: false,
-          supports_tools: m.supports_tools,
-          supports_vision: m.supports_vision ?? false,
-          supports_thinking: m.supports_thinking ?? false,
-          is_free: m.is_free ?? false,
-          hint: m.context_length ? `${Math.round(m.context_length / 1000)}K ctx` : undefined,
-        }),
-      );
-      if (mapped.length > 0) result.set(spec.id, mapped);
-    } catch (e) {
-      console.warn(`[models] ${spec.id}: fetch failed`);
-    }
+      return { spec, models };
+    }),
+  );
+
+  const result = new Map<string, AvailableModel[]>();
+  for (const entry of results) {
+    if (entry.status !== "fulfilled") continue;
+    const { spec, models } = entry.value;
+    const mapped = models.map(
+      (m): AvailableModel => ({
+        id: m.id,
+        provider_id: spec.id,
+        provider_name: spec.display_name,
+        is_local: false,
+        supports_tools: m.supports_tools,
+        supports_vision: m.supports_vision ?? false,
+        supports_thinking: m.supports_thinking ?? false,
+        is_free: m.is_free ?? false,
+        hint: m.context_length ? `${Math.round(m.context_length / 1000)}K ctx` : undefined,
+      }),
+    );
+    if (mapped.length > 0) result.set(spec.id, mapped);
   }
   return result;
 }
@@ -104,25 +109,20 @@ async function fetchCodexModels(): Promise<AvailableModel[]> {
 async function fetchAllModels(): Promise<Map<string, AvailableModel[]>> {
   const result = new Map<string, AvailableModel[]>();
 
-  try {
-    const ollama = await fetchOllamaModels();
-    if (ollama.length > 0) result.set("ollama", ollama);
-  } catch {
-    // Ollama non démarré
-  }
+  const [ollamaResult, cloudResult, codexResult] = await Promise.allSettled([
+    fetchOllamaModels(),
+    fetchCloudModels(),
+    fetchCodexModels(),
+  ]);
 
-  try {
-    const cloud = await fetchCloudModels();
-    for (const [k, v] of cloud) result.set(k, v);
-  } catch (e) {
-    console.warn("[models] catalog fetch failed");
+  if (ollamaResult.status === "fulfilled" && ollamaResult.value.length > 0) {
+    result.set("ollama", ollamaResult.value);
   }
-
-  try {
-    const codex = await fetchCodexModels();
-    if (codex.length > 0) result.set("codex-oauth", codex);
-  } catch {
-    // Codex non connecté
+  if (cloudResult.status === "fulfilled") {
+    for (const [k, v] of cloudResult.value) result.set(k, v);
+  }
+  if (codexResult.status === "fulfilled" && codexResult.value.length > 0) {
+    result.set("codex-oauth", codexResult.value);
   }
 
   cachedGroups = result;
@@ -160,16 +160,17 @@ export function useAvailableModels() {
   }, []);
 
   useEffect(() => {
-    refresh();
-    const unsubOllama = listen("ollama-models-changed", refreshOllama);
-    const unsubFs = listen("fs:config-changed", refresh);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch→setState is intentional
+    void refresh();
+    const unsubOllama = listen("ollama-models-changed", () => void refreshOllama());
+    const unsubFs = listen("fs:config-changed", () => void refresh());
     const unsubStatus = listen<boolean>("ollama-status", (e) => {
-      if (e.payload) setTimeout(refreshOllama, 2000);
+      if (e.payload) setTimeout(() => void refreshOllama(), 2000);
     });
     return () => {
-      unsubOllama.then((f) => f()).catch(() => {});
-      unsubFs.then((f) => f()).catch(() => {});
-      unsubStatus.then((f) => f()).catch(() => {});
+      void unsubOllama.then((f) => f());
+      void unsubFs.then((f) => f());
+      void unsubStatus.then((f) => f());
     };
   }, [refresh, refreshOllama]);
 

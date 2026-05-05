@@ -82,7 +82,10 @@ export function ProjectSection({
       <div
         className="conv-project-header"
         style={{ cursor: isDragging ? "grabbing" : "grab" }}
+        role="button"
+        tabIndex={0}
         onClick={onToggleCollapse}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onToggleCollapse(); }}
         onPointerDown={(e) => {
           if (e.button !== 0) return;
           e.preventDefault();
@@ -125,7 +128,10 @@ export function ProjectSection({
           <div
             key={s.id}
             className={`conv-item conv-session-indented ${active ? "active" : ""}`}
+            role="button"
+            tabIndex={0}
             onClick={() => onSelect(s.id)}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onSelect(s.id); }}
           >
             {isRenaming ? (
               <input

@@ -13,24 +13,28 @@ export interface StreamSegment {
   content: string;
 }
 
+function str(v: unknown, fallback = ""): string {
+  return typeof v === "string" ? v : fallback;
+}
+
 export function toolsToRecords(tools: ToolActivity[]): ToolActivityRecord[] {
   return tools.map((t) => {
     const a = t.args;
     let summary = "";
-    if (t.name === "bash") summary = String(a.command ?? "");
-    else if (t.name === "read_file" || t.name === "write_file") summary = String(a.path ?? "");
-    else if (t.name === "edit_file") summary = String(a.path ?? "");
-    else if (t.name === "list_dir") summary = String(a.path ?? ".");
-    else if (t.name === "grep") summary = String(a.pattern ?? "");
-    else if (t.name === "glob") summary = String(a.pattern ?? "");
-    else if (t.name === "web_search") summary = String(a.query ?? "");
-    else if (t.name === "web_fetch") summary = String(a.url ?? "");
-    else if (t.name === "read_spreadsheet") summary = String(a.path ?? "");
-    else if (t.name === "read_document") summary = String(a.path ?? "");
-    else if (t.name === "read_image") summary = String(a.path ?? "");
-    else if (t.name === "write_spreadsheet") summary = String(a.path ?? "");
-    else if (t.name === "write_document") summary = String(a.path ?? "");
-    else if (t.name === "process_image") summary = String(a.input_path ?? "");
+    if (t.name === "bash") summary = str(a.command);
+    else if (t.name === "read_file" || t.name === "write_file") summary = str(a.path);
+    else if (t.name === "edit_file") summary = str(a.path);
+    else if (t.name === "list_dir") summary = str(a.path, ".");
+    else if (t.name === "grep") summary = str(a.pattern);
+    else if (t.name === "glob") summary = str(a.pattern);
+    else if (t.name === "web_search") summary = str(a.query);
+    else if (t.name === "web_fetch") summary = str(a.url);
+    else if (t.name === "read_spreadsheet") summary = str(a.path);
+    else if (t.name === "read_document") summary = str(a.path);
+    else if (t.name === "read_image") summary = str(a.path);
+    else if (t.name === "write_spreadsheet") summary = str(a.path);
+    else if (t.name === "write_document") summary = str(a.path);
+    else if (t.name === "process_image") summary = str(a.input_path);
     else summary = JSON.stringify(a).slice(0, 80);
 
     return {
@@ -39,12 +43,12 @@ export function toolsToRecords(tools: ToolActivity[]): ToolActivityRecord[] {
       args: a,
       result: t.result,
       is_error: t.isError,
-      content: t.name === "write_file" ? String(a.content ?? "")
-        : t.name === "write_document" ? JSON.stringify(a.content ?? [])
-        : t.name === "write_spreadsheet" ? JSON.stringify(a.operations ?? [])
+      content: t.name === "write_file" ? str(a.content)
+        : t.name === "write_document" ? JSON.stringify(Array.isArray(a.content) ? a.content : [])
+        : t.name === "write_spreadsheet" ? JSON.stringify(Array.isArray(a.operations) ? a.operations : [])
         : undefined,
-      old_text: t.name === "edit_file" ? String(a.old_string ?? "") : undefined,
-      new_text: t.name === "edit_file" ? String(a.new_string ?? "") : undefined,
+      old_text: t.name === "edit_file" ? str(a.old_string) : undefined,
+      new_text: t.name === "edit_file" ? str(a.new_string) : undefined,
       start_line: parseStartLine(t.result),
     };
   });

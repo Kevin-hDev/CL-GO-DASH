@@ -76,7 +76,10 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
         {NAV_ITEMS.map((item) => (
           <div
             key={item.id}
+            role="button"
+            tabIndex={0}
             onClick={() => onTabChange(item.id)}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onTabChange(item.id); }}
             className={cn(
               "relative flex items-center cursor-pointer",
               "whitespace-nowrap",
@@ -130,7 +133,10 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
 
       {/* Settings */}
       <div
+        role="button"
+        tabIndex={0}
         onClick={() => onTabChange("settings")}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onTabChange("settings"); }}
         className={cn(
           "flex items-center cursor-pointer",
           "whitespace-nowrap",

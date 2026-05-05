@@ -51,7 +51,10 @@ export function SlashAutocomplete({ skills, activeIndex, onSelect }: SlashAutoco
         <div
           key={item.path}
           className={`slash-item ${i === activeIndex ? "active" : ""}`}
+          role="button"
+          tabIndex={0}
           onClick={() => onSelect(item)}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onSelect(item); }}
         >
           {isBuiltIn(item) ? <BuiltInIcon /> : <SkillIcon />}
           <div className="slash-item-body">

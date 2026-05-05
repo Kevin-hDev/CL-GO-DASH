@@ -14,5 +14,5 @@ export function displaySessionName(name: string, t: (key: string) => string): st
 /** Compare deux IDs non-secrets (UUIDs de session/tab) */
 export function idMatch(a: string | null | undefined, b: string): boolean {
   if (!a) return false;
-  return a.localeCompare(b) === 0; // eslint-disable-line security/detect-possible-timing-attacks
+  return a.localeCompare(b) === 0;
 }

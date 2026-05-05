@@ -56,7 +56,8 @@ export function ConnectorsModal({
   }, [catalog, category, query]);
 
   return (
-    <div className="wk-dialog-overlay" onClick={onClose}>
+    <div className="wk-dialog-overlay" role="button" tabIndex={-1} aria-label="Close dialog" onClick={onClose} onKeyDown={(e) => { if (e.key === "Escape") onClose(); }}>
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions -- dialog stop-propagation pattern */}
       <div
         className="ak-connectors-modal"
         onClick={(e) => e.stopPropagation()}

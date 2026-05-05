@@ -81,7 +81,7 @@ export function UserMessage({
           </div>
         )}
         <MessageActions
-          role="user"
+          messageRole="user"
           content={content}
           isStreaming={isStreaming}
           onReload={onReload}
@@ -99,7 +99,10 @@ function FileCard({ file, onClick }: { file: FileInfo; onClick: () => void }) {
   if (isImg && file.thumbnail) {
     return (
       <div
+        role="button"
+        tabIndex={0}
         onClick={onClick}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClick(); }}
         style={{
           width: 100, height: 100, borderRadius: 8,
           overflow: "hidden", cursor: "pointer",
@@ -115,7 +118,10 @@ function FileCard({ file, onClick }: { file: FileInfo; onClick: () => void }) {
 
   return (
     <div
+      role="button"
+      tabIndex={0}
       onClick={onClick}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClick(); }}
       style={{
         width: 100, height: 100, borderRadius: 8,
         border: "1px solid var(--edge)", background: "var(--shell)",

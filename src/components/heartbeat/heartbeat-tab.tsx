@@ -61,7 +61,7 @@ export function HeartbeatTab(props?: HeartbeatTabProps): { list: React.ReactNode
         <span className="wk-sidebar-title">{t("heartbeat.sidebar.title")}</span>
         <RoundToggle
           checked={!globalPaused}
-          onChange={(on) => setPaused(!on)}
+          onChange={(on) => void setPaused(!on)}
           title={globalPaused ? t("heartbeat.sidebar.resume") : t("heartbeat.sidebar.pause")}
         />
       </div>
@@ -96,9 +96,9 @@ export function HeartbeatTab(props?: HeartbeatTabProps): { list: React.ReactNode
           wakeup={selected}
           disableToggle={globalPaused}
           onBack={() => setSelectedId(null)}
-          onToggle={(active) => toggle(selected.id, active)}
+          onToggle={(active) => void toggle(selected.id, active)}
           onEdit={() => setDialog({ kind: "edit", wakeup: selected })}
-          onDelete={handleDelete}
+          onDelete={() => void handleDelete()}
         />
       ) : (
         <WakeupGrid

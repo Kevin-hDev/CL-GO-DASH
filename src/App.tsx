@@ -129,7 +129,7 @@ export default function App() {
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 9999,
         padding: "8px 16px", background: "var(--signal-error)", color: "white",
         fontSize: "var(--text-xs)", textAlign: "center", cursor: "pointer",
-      }} onClick={() => setVaultError(null)}>
+      }} role="button" tabIndex={0} onClick={() => setVaultError(null)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setVaultError(null); }}>
         {t("errors.keyringFailed")}
       </div>
     )}

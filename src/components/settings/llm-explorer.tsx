@@ -86,7 +86,7 @@ export function LlmExplorer() {
             className="llm-search-input"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => { if (e.key.startsWith("Ent")) handleSearch(); }}
+            onKeyDown={(e) => { if (e.key.startsWith("Ent")) void handleSearch(); }}
             placeholder={t("settings.llm.searchPlaceholder")}
           />
           <button
@@ -98,7 +98,7 @@ export function LlmExplorer() {
         </div>
 
         {showFamilies && viewIs(view, "idle") && (
-          <LlmFamilyGrid families={families} onSelect={handleFamilyClick} />
+          <LlmFamilyGrid families={families} onSelect={(f) => void handleFamilyClick(f)} />
         )}
 
         {viewIs(view, "search") && (

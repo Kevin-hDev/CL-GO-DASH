@@ -28,7 +28,7 @@ export function PersonalityTab(props?: PersonalityTabProps): { list: React.React
 
   const loadFiles = useCallback(() => {
     api.listFiles().then(setFiles).catch(() => showToast(t("personality.failedToLoad")));
-  }, []);
+  }, [t]);
 
   const loadInjectionState = useCallback(() => {
     api.getInjectionState().then(setInjectionState).catch(() => {});
@@ -45,13 +45,14 @@ export function PersonalityTab(props?: PersonalityTabProps): { list: React.React
     if (selectedPath) {
       api.readFile(selectedPath).then(setContent).catch(() => showToast(t("personality.failedToLoad")));
     }
-  }, [selectedPath]);
+  }, [selectedPath, t]);
   useFsEvent("fs:personality-changed", reloadContent);
 
-  const setSelectedPath = (path: string | null) => {
+  const setSelectedPath = useCallback((path: string | null) => {
     setSelectedPathState(path);
     props?.onPathChange?.(path);
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- props.onPathChange identity is stable per caller
+  }, []);
 
   const handleSelect = useCallback(async (path: string) => {
     setSelectedPath(path);
@@ -63,11 +64,11 @@ export function PersonalityTab(props?: PersonalityTabProps): { list: React.React
       showToast(t("personality.failedToRead"));
       setContent("Failed to read file");
     }
-  }, []);
+  }, [setSelectedPath, t]);
 
   useEffect(() => {
     if (!selectedPath && files.length > 0) {
-      handleSelect(files[0].path);
+      void handleSelect(files[0].path);
     }
   }, [files, selectedPath, handleSelect]);
 
@@ -75,7 +76,7 @@ export function PersonalityTab(props?: PersonalityTabProps): { list: React.React
     if (selectedPath) {
       api.openInEditor(selectedPath).catch(() => showToast(t("personality.failedToLoad")));
     }
-  }, [selectedPath]);
+  }, [selectedPath, t]);
 
   const handleToggleInjection = useCallback(async (enabled: boolean) => {
     if (fileName === "AGENT.md") return;
@@ -85,13 +86,13 @@ export function PersonalityTab(props?: PersonalityTabProps): { list: React.React
     } catch {
       showToast(t("personality.failedToLoad"));
     }
-  }, [fileName]);
+  }, [fileName, t]);
 
   const filePaths = useMemo(() => files.map((f) => f.path), [files]);
   useArrowNavigation({
     items: filePaths,
     selectedId: selectedPath,
-    onSelect: handleSelect,
+    onSelect: (path) => void handleSelect(path),
     enabled: props?.listFocused ?? true,
   });
 
@@ -101,8 +102,8 @@ export function PersonalityTab(props?: PersonalityTabProps): { list: React.React
       selectedPath={selectedPath}
       injectionState={injectionState}
       selectedFileName={fileName}
-      onSelect={handleSelect}
-      onToggleInjection={handleToggleInjection}
+      onSelect={(path) => void handleSelect(path)}
+      onToggleInjection={(enabled) => void handleToggleInjection(enabled)}
     />
   );
 

@@ -50,13 +50,13 @@ export function ChatInput({
   contextUsed, contextMax,
   permissionMode, onPermissionModeChange,
   onSend, onStop, onFileImport, onModelChange, onToggleThinking,
-  onRemoveFile, onPreviewFile, onClearFiles, onBuiltInCommand,
+  onRemoveFile, onPreviewFile, onClearFiles,
 }: ChatInputProps) {
   const { t } = useTranslation();
   const [text, setText] = useState("");
   const { ref, resize } = useAutoResize(200);
   const slash = useSlashCommands();
-  const skills = useActiveSkills(slash, text, setText, onBuiltInCommand);
+  const skills = useActiveSkills(slash, text, setText);
   const bubbleRef = useRef<HTMLDivElement>(null);
 
   const hasText = text.trim().length > 0;
@@ -86,7 +86,7 @@ export function ChatInput({
       if (pressed === K_ENTER) {
         e.preventDefault();
         const selected = slash.skills[slash.activeIndex];
-        if (selected) skills.handleSelectSkill(selected);
+        if (selected) void skills.handleSelectSkill(selected);
         return;
       }
       if (pressed === K_ESC) { e.preventDefault(); slash.close(); return; }
@@ -121,7 +121,7 @@ export function ChatInput({
         <SlashAutocomplete
           skills={slash.skills}
           activeIndex={slash.activeIndex}
-          onSelect={skills.handleSelectSkill}
+          onSelect={(s) => void skills.handleSelectSkill(s)}
         />
       )}
       {skills.activeSkills.length > 0 && (

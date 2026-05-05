@@ -15,12 +15,12 @@ export async function loadSavedGroups(): Promise<SavedGroups> {
   try {
     const path = await getTabsPath();
     const text = await readTextFile(path);
-    const parsed = JSON.parse(text);
+    const parsed = JSON.parse(text) as unknown;
     if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
       return parsed as SavedGroups;
     }
     if (Array.isArray(parsed) && parsed.length > 0) {
-      return { [DEFAULT_GROUP_KEY]: parsed };
+      return { [DEFAULT_GROUP_KEY]: parsed as SavedGroups[string] };
     }
     return {};
   } catch {

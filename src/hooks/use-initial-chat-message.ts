@@ -34,7 +34,7 @@ export function useInitialChatMessage(params: InitialChatParams) {
       preview: file.preview,
     }));
     const workingDir = params.initialWorkingDir ?? params.selectedProjectPath;
-    params.sendMessage(
+    void params.sendMessage(
       params.initialMessage || "",
       files,
       workingDir,

@@ -46,7 +46,10 @@ export function PersonalityList({
             <div
               key={f.name}
               className={`pers-item ${selectedPath === f.path ? "active" : ""}`}
+              role="button"
+              tabIndex={0}
               onClick={() => onSelect(f.path)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onSelect(f.path); }}
             >
               <div className="pers-icon"><FileText size={16} weight="duotone" /></div>
               <div className="pers-item-body">

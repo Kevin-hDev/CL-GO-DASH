@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useAgentSessions } from "@/hooks/use-agent-sessions";
 import { useProjects } from "@/hooks/use-projects";
@@ -43,6 +43,7 @@ export function SearchDialog({ open, onClose, onSelect }: SearchDialogProps) {
 
   useEffect(() => {
     if (open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset on open is intentional
       setQuery("");
       setSelectedIndex(0);
       requestAnimationFrame(() => inputRef.current?.focus());
@@ -50,8 +51,14 @@ export function SearchDialog({ open, onClose, onSelect }: SearchDialogProps) {
   }, [open]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset selection when query changes is intentional
     setSelectedIndex(0);
   }, [query]);
+
+  const handleSelect = useCallback((id: string) => {
+    onSelect(id);
+    onClose();
+  }, [onSelect, onClose]);
 
   useEffect(() => {
     if (!open) return;
@@ -79,18 +86,13 @@ export function SearchDialog({ open, onClose, onSelect }: SearchDialogProps) {
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [open, filtered, selectedIndex, onClose]);
-
-  const handleSelect = (id: string) => {
-    onSelect(id);
-    onClose();
-  };
+  }, [open, filtered, selectedIndex, onClose, handleSelect]);
 
   if (!open) return null;
 
   return (
-    <div className="search-overlay" onMouseDown={onClose}>
-      <div className="search-dialog" onMouseDown={(e) => e.stopPropagation()}>
+    <div className="search-overlay" role="presentation" onMouseDown={onClose}>
+      <div className="search-dialog" role="presentation" onMouseDown={(e) => e.stopPropagation()}>
         <input
           ref={inputRef}
           className="search-input"

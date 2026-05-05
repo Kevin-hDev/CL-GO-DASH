@@ -53,8 +53,9 @@ export function useUpdateChecker() {
   }, []);
 
   useEffect(() => {
-    checkAll();
-    timerRef.current = setInterval(checkAll, CHECK_INTERVAL_MS);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- checkAll is async, setState in callbacks only
+    void checkAll();
+    timerRef.current = setInterval(() => void checkAll(), CHECK_INTERVAL_MS);
     const unlisten = listen("ollama-models-changed", () => {
       if (pullingRef.current) return;
       invoke<OllamaModelUpdate[]>("check_ollama_updates")

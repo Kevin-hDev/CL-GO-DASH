@@ -140,7 +140,7 @@ export function TabBar({
   }, [dropIdx, onReorder, findDropTarget, cleanup]);
 
   return (
-    <div className="tab-bar" ref={barRef} onMouseDown={handleBarMouseDown}>
+    <div className="tab-bar" ref={barRef} role="presentation" onMouseDown={handleBarMouseDown}>
       {tabs.map((tab, i) => {
         return (
           <TabBarItem

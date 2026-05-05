@@ -60,6 +60,7 @@ export function useTabHistory(initial: NavState) {
   }, []);
 
   const canGoBack = navIndex > 0;
+  // eslint-disable-next-line react-hooks/refs -- derived from navIndex state change
   const canGoForward = navIndex < history.current.length - 1;
 
   return { current, push, goBack, goForward, canGoBack, canGoForward };

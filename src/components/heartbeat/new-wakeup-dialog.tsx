@@ -49,6 +49,7 @@ export function NewWakeupDialog({
 
   useEffect(() => {
     if (!toolCapableModels.find((m) => m.id === model)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- derived state reset when provider changes is intentional
       setModel(toolCapableModels[0]?.id ?? "");
     }
   }, [provider, toolCapableModels, model]);
@@ -87,7 +88,8 @@ export function NewWakeupDialog({
   const title = initial ? t("heartbeat.form.editTitle") : t("heartbeat.form.createTitle");
 
   return (
-    <div className="wk-dialog-overlay" onClick={onClose}>
+    <div className="wk-dialog-overlay" role="button" tabIndex={-1} aria-label="Close dialog" onClick={onClose} onKeyDown={(e) => { if (e.key === "Escape") onClose(); }}>
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions -- dialog stop-propagation pattern */}
       <div className="wk-dialog" onClick={(e) => e.stopPropagation()} role="dialog">
         <header className="wk-dialog-header">
           <span>{title}</span>
@@ -96,7 +98,7 @@ export function NewWakeupDialog({
           </button>
         </header>
 
-        <form className="wk-form" onSubmit={handleSubmit}>
+        <form className="wk-form" onSubmit={(e) => void handleSubmit(e)}>
           <div className="wk-form-field">
             <label className="wk-form-label">{t("heartbeat.form.name")}</label>
             <input

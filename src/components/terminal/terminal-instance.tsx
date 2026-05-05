@@ -146,7 +146,7 @@ export function TerminalInstance({
         }
       }, 100);
     });
-    resizeObserver.observe(containerRef.current!);
+    resizeObserver.observe(containerRef.current);
 
     const container = containerRef.current;
     return () => {
@@ -154,13 +154,14 @@ export function TerminalInstance({
       clearTimeout(resizeTimer);
       container?.removeEventListener("paste", pasteHandler);
       resizeObserver.disconnect();
-      unlisten1.then((fn) => fn());
-      unlisten2.then((fn) => fn());
+      void unlisten1.then((fn) => fn());
+      void unlisten2.then((fn) => fn());
       if (ptyIdRef.current !== null) {
         invoke("pty_kill", { id: ptyIdRef.current }).catch(() => {});
       }
       term.dispose();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- PTY mount-only setup
   }, []);
 
   useEffect(() => {

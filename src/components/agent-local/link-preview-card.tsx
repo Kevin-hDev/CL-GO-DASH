@@ -33,6 +33,7 @@ export function LinkPreviewCard({ url }: { url: string }) {
 
   useEffect(() => {
     if (cache.has(url)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- cache hit, synchronous setState is intentional
       setData(cache.get(url));
       return;
     }
@@ -72,7 +73,7 @@ export function LinkPreviewCard({ url }: { url: string }) {
   return (
     <button
       className="lpc-card"
-      onClick={() => open(url)}
+      onClick={() => void open(url)}
       title={t("linkPreview.openSite")}
       type="button"
     >

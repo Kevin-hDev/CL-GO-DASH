@@ -82,7 +82,7 @@ export function PathListEditor({ paths, onChange }: PathListEditorProps) {
       ))}
 
       <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
-        <button onClick={handleAdd} style={{
+        <button onClick={() => void handleAdd()} style={{
           padding: "6px 14px",
           fontSize: "var(--text-sm)",
           fontWeight: 500,

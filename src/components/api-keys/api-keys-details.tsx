@@ -28,6 +28,7 @@ export function ApiKeysDetails({ provider, onEdit, onDelete, onAddConnector }: A
 
   useEffect(() => {
     let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch→setState is intentional
     setQuota(null);
     setQuotaLoading(true);
     invoke<ProviderQuota | null>("get_provider_quota", { providerId: provider.id })
@@ -97,7 +98,7 @@ export function ApiKeysDetails({ provider, onEdit, onDelete, onAddConnector }: A
             value={quotaLoading ? "..." : quota ? quota.label : t("apiKeys.details.quotaUnavailable")}
           />
           <DetailRow label={t("apiKeys.details.signupLink")}>
-            <button type="button" className="ak-signup-link" onClick={() => open(provider.signup_url)}>
+            <button type="button" className="ak-signup-link" onClick={() => void open(provider.signup_url)}>
               {t("apiKeys.details.openSite")} <ArrowSquareOut size={12} />
             </button>
           </DetailRow>
@@ -105,7 +106,7 @@ export function ApiKeysDetails({ provider, onEdit, onDelete, onAddConnector }: A
         </SettingsCard>
 
         {confirmDelete && (
-          <button type="button" className="ak-confirm-delete" onClick={handleDeleteClick}>
+          <button type="button" className="ak-confirm-delete" onClick={() => void handleDeleteClick()}>
             {t("apiKeys.details.confirmDelete")}
           </button>
         )}

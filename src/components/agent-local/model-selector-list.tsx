@@ -29,7 +29,7 @@ export function ModelSelectorList({
   const toggle = (key: string) =>
     setExpanded((s) => {
       const n = new Set(s);
-      n.has(key) ? n.delete(key) : n.add(key);
+      if (n.has(key)) { n.delete(key); } else { n.add(key); }
       return n;
     });
 
@@ -69,7 +69,7 @@ export function ModelSelectorList({
         const freeCount = models.filter((m) => m.is_free || m.is_local).length;
         return (
           <div key={providerId}>
-            <div className="ms-provider" onClick={() => toggle(providerId)}>
+            <div className="ms-provider" role="button" tabIndex={0} onClick={() => toggle(providerId)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') toggle(providerId); }}>
               <span className="ms-provider-caret">
                 {isOpen ? <CaretDown size={12} /> : <CaretRight size={12} />}
               </span>
@@ -123,14 +123,20 @@ function ModelItem({
   return (
     <div
       className={`ms-item ${isSelected ? "active" : ""} ${isPaid ? "ms-item-paid" : ""}`}
+      role="button"
+      tabIndex={0}
       onClick={() => onSelect(m.id, m.provider_id)}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onSelect(m.id, m.provider_id); }}
     >
       <span
         className={`ms-star ${isFav ? "ms-star-on" : ""}`}
+        role="button"
+        tabIndex={0}
         onClick={(e) => {
           e.stopPropagation();
           onToggleFav(m.provider_id, m.id);
         }}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); onToggleFav(m.provider_id, m.id); } }}
       >
         <Star size={12} weight={isFav ? "fill" : "regular"} />
       </span>

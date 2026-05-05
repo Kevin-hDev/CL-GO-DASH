@@ -86,6 +86,7 @@ export function ConversationList({
       window.removeEventListener("pointerup", onUp);
       if (ghostRef.current) { ghostRef.current.remove(); ghostRef.current = null; }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- drag object is stable (from useProjectDrag)
   }, [drag.draggingId, drag.onHover, drag.onRelease]);
 
   const handleSessionMenu = useCallback((e: React.MouseEvent, id: string) => {
@@ -124,7 +125,10 @@ export function ConversationList({
           <>
             <div
               className="conv-section-label conv-section-toggle"
+              role="button"
+              tabIndex={0}
               onClick={() => setProjectsCollapsed((c) => !c)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setProjectsCollapsed((c) => !c); }}
             >
               {t("projects.title", "Projets")}
             </div>
@@ -160,7 +164,10 @@ export function ConversationList({
             {projects.length > 0 && (
               <div
                 className="conv-section-label conv-section-toggle"
+                role="button"
+                tabIndex={0}
                 onClick={() => setDiscussionsCollapsed((c) => !c)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setDiscussionsCollapsed((c) => !c); }}
               >
                 {t("projects.discussions", "Discussions")}
               </div>
@@ -172,7 +179,10 @@ export function ConversationList({
                 <div
                   key={s.id}
                   className={`conv-item conv-session-indented ${active ? "active" : ""}`}
+                  role="button"
+                  tabIndex={0}
                   onClick={() => onSelect(s.id)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onSelect(s.id); }}
                 >
                   {renaming ? (
                     <input

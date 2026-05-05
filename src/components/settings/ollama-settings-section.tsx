@@ -80,7 +80,7 @@ export function OllamaSettingsSection({
             changed={accelChanged}
             restarting={restarting}
             onSelect={(v) => { onSave({ hardware_accel: v }); setAccelChanged(true); }}
-            onRestart={handleRestart}
+            onRestart={() => void handleRestart()}
             restartLabel={t("settings.advanced.hardwareAccelRestart")}
           />
         </SettingsRow>
@@ -113,7 +113,7 @@ export function OllamaSettingsSection({
         >
           <button
             className="ollama-btn ollama-btn-primary"
-            onClick={handleRestart}
+            onClick={() => void handleRestart()}
             disabled={restarting}
             style={{ whiteSpace: "nowrap" }}
           >

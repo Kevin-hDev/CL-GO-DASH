@@ -62,7 +62,7 @@ export function ModelInstallButton({
     } finally {
       setBusy(false);
     }
-  }, [fullName, isInstalled, hasUpdate, t]);
+  }, [fullName, isInstalled, hasUpdate, sizeGb, t]);
 
   const handleCancel = useCallback(async () => {
     cancelledRef.current = true;
@@ -72,7 +72,7 @@ export function ModelInstallButton({
   useEffect(() => {
     if (!busy) return;
     const onEsc = (e: KeyboardEvent) => {
-      if (isEscapeKey(e)) handleCancel();
+      if (isEscapeKey(e)) void handleCancel();
     };
     window.addEventListener("keydown", onEsc);
     return () => window.removeEventListener("keydown", onEsc);
@@ -92,7 +92,7 @@ export function ModelInstallButton({
         <button
           className="ollama-btn ollama-btn-cancel"
           style={{ width: BTN_WIDTH }}
-          onClick={handleCancel}
+          onClick={() => void handleCancel()}
         >
           {t("ollama.cancel")}
         </button>
@@ -119,7 +119,7 @@ export function ModelInstallButton({
       <button
         className="ollama-btn ollama-btn-primary"
         style={{ width: BTN_WIDTH }}
-        onClick={handleInstall}
+        onClick={() => void handleInstall()}
         title={t("ollama.updateAvailable")}
       >
         {t("ollama.update")}
@@ -131,7 +131,7 @@ export function ModelInstallButton({
     <button
       className="ollama-btn ollama-btn-primary"
       style={{ width: BTN_WIDTH }}
-      onClick={handleInstall}
+      onClick={() => void handleInstall()}
     >
       {t("ollama.install")}
     </button>

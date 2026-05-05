@@ -65,11 +65,12 @@ export function useContextProgress(
     }
   }, [model, provider]);
 
-  useEffect(() => { refresh(); }, [refresh]);
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch→setState is intentional
+  useEffect(() => { void refresh(); }, [refresh]);
 
   useEffect(() => {
-    const unlisten = listen("modelfile-updated", () => { refresh(); });
-    return () => { unlisten.then((fn) => fn()).catch(() => {}); };
+    const unlisten = listen("modelfile-updated", () => { void refresh(); });
+    return () => { void unlisten.then((fn) => fn()); };
   }, [refresh]);
 
   return { used: usedTokens, max };

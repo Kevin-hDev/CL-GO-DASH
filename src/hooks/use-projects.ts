@@ -11,7 +11,8 @@ export function useProjects() {
   }, []);
 
   useEffect(() => {
-    refresh();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch→setState is intentional
+    void refresh();
   }, [refresh]);
 
   const add = useCallback(

@@ -31,6 +31,7 @@ function useFindStartLine(path?: string, newText?: string, oldText?: string, fal
   const [line, setLine] = useState(fallback ?? 1);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- synchronous reset when fallback changes is intentional
     if (fallback) { setLine(fallback); return; }
     if (!path) return;
     const needle = newText ?? oldText ?? "";

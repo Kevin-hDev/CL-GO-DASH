@@ -36,22 +36,26 @@ function parseLineFromResult(result?: string): number | undefined {
   return match ? Number(match[1]) : undefined;
 }
 
+function str(v: unknown, fallback = ""): string {
+  return typeof v === "string" ? v : fallback;
+}
+
 function toolSummary(t: ToolActivity): string {
   const a = t.args;
-  if (t.name === "bash") return String(a.command ?? "");
-  if (t.name === "grep") return String(a.pattern ?? "");
-  if (t.name === "glob") return String(a.pattern ?? "");
-  if (t.name === "read_file" || t.name === "write_file") return String(a.path ?? "");
-  if (t.name === "edit_file") return String(a.path ?? "");
-  if (t.name === "list_dir") return String(a.path ?? ".");
-  if (t.name === "web_search") return String(a.query ?? "");
-  if (t.name === "web_fetch") return String(a.url ?? "");
-  if (t.name === "read_spreadsheet") return String(a.path ?? "");
-  if (t.name === "read_document") return String(a.path ?? "");
-  if (t.name === "read_image") return String(a.path ?? "");
-  if (t.name === "write_spreadsheet") return String(a.path ?? "");
-  if (t.name === "write_document") return String(a.path ?? "");
-  if (t.name === "process_image") return String(a.input_path ?? "");
+  if (t.name === "bash") return str(a.command);
+  if (t.name === "grep") return str(a.pattern);
+  if (t.name === "glob") return str(a.pattern);
+  if (t.name === "read_file" || t.name === "write_file") return str(a.path);
+  if (t.name === "edit_file") return str(a.path);
+  if (t.name === "list_dir") return str(a.path, ".");
+  if (t.name === "web_search") return str(a.query);
+  if (t.name === "web_fetch") return str(a.url);
+  if (t.name === "read_spreadsheet") return str(a.path);
+  if (t.name === "read_document") return str(a.path);
+  if (t.name === "read_image") return str(a.path);
+  if (t.name === "write_spreadsheet") return str(a.path);
+  if (t.name === "write_document") return str(a.path);
+  if (t.name === "process_image") return str(a.input_path);
   return JSON.stringify(a).slice(0, 80);
 }
 
@@ -70,7 +74,7 @@ export function ToolBubble({
             <div key={i}>
               <ToolRow name={t.name} summary={toolSummary(t)} done={!!t.result} isError={t.isError} errorMessage={t.isError ? t.result : undefined} onFilePreview={onFilePreview} />
               {t.name === "write_file" && !skipWrite && typeof t.args.content === "string" && <ContentPreview content={t.args.content} path={toolSummary(t)} />}
-              {t.name === "edit_file" && typeof t.args.old_string === "string" && <DiffPreview oldText={t.args.old_string} newText={String(t.args.new_string ?? "")} path={toolSummary(t)} startLine={parseLineFromResult(t.result)} />}
+              {t.name === "edit_file" && typeof t.args.old_string === "string" && <DiffPreview oldText={t.args.old_string} newText={str(t.args.new_string)} path={toolSummary(t)} startLine={parseLineFromResult(t.result)} />}
               {(t.name === "web_search" || t.name === "web_fetch") && t.result && <WebResultsPreview content={t.result} isSearch={t.name === "web_search"} />}
               {t.name === "write_spreadsheet" && t.result && !t.isError && <WriteSpreadsheetPreview operations={t.args.operations} />}
               {t.name === "write_document" && t.result && !t.isError && <WriteDocumentPreview content={t.args.content} />}
@@ -139,12 +143,12 @@ function ToolRow({ name, summary, done, isError, errorMessage, onFilePreview }: 
             textDecoration: clickable ? "underline" : "none",
             textDecorationColor: "var(--edge)",
           }}
-          onClick={() => { if (clickable) onFilePreview!(summary); }}
+          onClick={() => { if (clickable) onFilePreview(summary); }}
           onKeyDown={(e) => {
             if (!clickable) return;
             if (e.key.startsWith("Ent") || e.key.startsWith(" ")) {
               e.preventDefault();
-              onFilePreview!(summary);
+              onFilePreview(summary);
             }
           }}
         >{summary}</span>

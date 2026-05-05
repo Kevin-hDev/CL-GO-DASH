@@ -46,8 +46,8 @@ export function McpConfigDialog({ connector, onClose, onValidated }: McpConfigDi
   };
 
   return (
-    <div className="wk-dialog-overlay" onClick={onClose}>
-      <div className="wk-dialog" onClick={(e) => e.stopPropagation()}>
+    <div className="wk-dialog-overlay" role="presentation" onClick={onClose} onKeyDown={() => {}}>
+      <div className="wk-dialog" role="presentation" onClick={(e) => e.stopPropagation()} onKeyDown={() => {}}>
         <div className="wk-dialog-header">
           <h3>{t("connectors.config.addTitle", { name: connector.display_name })}</h3>
           <button type="button" className="wk-dialog-close" onClick={onClose}><X size={16} /></button>
@@ -76,7 +76,7 @@ export function McpConfigDialog({ connector, onClose, onValidated }: McpConfigDi
 
         <div className="wk-dialog-footer">
           <button type="button" className="wk-btn-secondary" onClick={onClose}>{t("connectors.config.cancel")}</button>
-          <button type="button" className="wk-btn-primary" onClick={handleSubmit} disabled={!token.trim() || submitting}>
+          <button type="button" className="wk-btn-primary" onClick={() => void handleSubmit()} disabled={!token.trim() || submitting}>
             {t("connectors.config.addAndTest")}
           </button>
         </div>

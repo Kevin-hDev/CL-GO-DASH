@@ -23,11 +23,15 @@ export function useAgentChat(
   const permissionRequestRef = useRef(onPermissionRequest);
   const { startStream, stopStream, subscribeToStream, getStreamSnapshot } = useAgentStream();
 
+  // eslint-disable-next-line react-hooks/refs -- callback capture pattern for stable closures
   sessionRef.current = sessionId;
   const thinkingRef = useRef(supportsThinking);
+  // eslint-disable-next-line react-hooks/refs -- callback capture pattern for stable closures
   thinkingRef.current = supportsThinking;
+  // eslint-disable-next-line react-hooks/refs -- callback capture pattern for stable closures
   permissionRequestRef.current = onPermissionRequest;
   const permModeRef = useRef(permissionMode);
+  // eslint-disable-next-line react-hooks/refs -- callback capture pattern for stable closures
   permModeRef.current = permissionMode;
 
   const deliverPermission = useCallback((id: string, toolName: string, args: Record<string, unknown>) => {
@@ -43,6 +47,7 @@ export function useAgentChat(
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset on session change + fetch→setState are intentional
     setState(EMPTY_CHAT_STATE);
     deliveredPermissionsRef.current.clear();
     if (!sessionId) return;

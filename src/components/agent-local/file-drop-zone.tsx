@@ -12,7 +12,9 @@ interface FileDropZoneProps {
 export function FileDropZone({ dragging, onDragChange, onDropPaths, children }: FileDropZoneProps) {
   const dragRef = useRef(onDragChange);
   const dropRef = useRef(onDropPaths);
+  // eslint-disable-next-line react-hooks/refs -- callback capture pattern for stable event handler
   dragRef.current = onDragChange;
+  // eslint-disable-next-line react-hooks/refs -- callback capture pattern for stable event handler
   dropRef.current = onDropPaths;
 
   useEffect(() => {

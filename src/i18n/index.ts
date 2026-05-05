@@ -10,7 +10,7 @@ import ja from "./ja.json";
 
 const savedLang = localStorage.getItem("clgo-language") || "en";
 
-i18n.use(initReactI18next).init({
+void i18n.use(initReactI18next).init({
   resources: {
     en: { translation: en },
     fr: { translation: fr },

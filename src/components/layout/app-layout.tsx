@@ -46,14 +46,14 @@ export function AppLayout({
   useEffect(() => {
     const win = getCurrentWindow();
     let timer: ReturnType<typeof setTimeout>;
-    win.isFullscreen().then(setFullscreen).catch(() => {});
+    void win.isFullscreen().then(setFullscreen).catch(() => {});
     const unlisten = win.onResized(() => {
       clearTimeout(timer);
       timer = setTimeout(() => {
-        win.isFullscreen().then(setFullscreen).catch(() => {});
+        void win.isFullscreen().then(setFullscreen).catch(() => {});
       }, 80);
     });
-    return () => { clearTimeout(timer); unlisten.then((fn) => fn()).catch(() => {}); };
+    return () => { clearTimeout(timer); void unlisten.then((fn) => fn()).catch(() => {}); };
   }, []);
 
   const [listWidth, setListWidth] = useState<number | null>(null);
@@ -184,8 +184,8 @@ export function AppLayout({
         pulling={updates.pulling}
         appDownloading={updates.appDownloading}
         appPercent={updates.appPercent}
-        onPullModel={updates.pullModel}
-        onDownloadApp={updates.downloadAppUpdate}
+        onPullModel={(name) => void updates.pullModel(name)}
+        onDownloadApp={(url) => void updates.downloadAppUpdate(url)}
         anchorLeft={IS_MAC ? UPDATES_ANCHOR_MAC : UPDATES_ANCHOR_OTHER}
       />
     </div>

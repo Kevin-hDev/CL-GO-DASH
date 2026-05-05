@@ -84,7 +84,7 @@ function isStreaming(sessionId: string): boolean {
 }
 
 function subscribe(sessionId: string, subscriber: Subscriber): () => void {
-  ensureListener();
+  void ensureListener();
   const record = getOrCreateRecord(sessionId);
   clearCleanup(record);
   const id = record.nextSubscriberId++;

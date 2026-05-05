@@ -37,7 +37,7 @@ export function ModelfileEditor({
         </span>
         <div style={{ display: "flex", gap: 8 }}>
           <button className="ollama-btn" onClick={onCancel}>{t("ollama.cancel")}</button>
-          <button className="ollama-btn ollama-btn-primary" onClick={handleSave} disabled={saving}>
+          <button className="ollama-btn ollama-btn-primary" onClick={() => void handleSave()} disabled={saving}>
             {saving ? "..." : t("ollama.save")}
           </button>
         </div>

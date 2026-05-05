@@ -35,6 +35,7 @@ export function ContextMenu({ x, y, items, onClose }: ContextMenuProps) {
   return createPortal(
     <div
       ref={ref}
+      role="menu"
       className="context-menu"
       style={{ left: x, top: y }}
     >
@@ -42,7 +43,10 @@ export function ContextMenu({ x, y, items, onClose }: ContextMenuProps) {
         <div
           key={item.label}
           className={`context-item ${item.danger ? "danger" : ""}`}
+          role="menuitem"
+          tabIndex={0}
           onClick={() => handleClick(item)}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleClick(item); }}
         >
           {item.icon && <span style={{ display: "flex", alignItems: "center" }}>{item.icon}</span>}
           {item.label}

@@ -57,6 +57,7 @@ export function TerminalPanel({
 
   useEffect(() => {
     if (isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- animation state management is intentional
       setMounted(true);
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
@@ -68,6 +69,7 @@ export function TerminalPanel({
       const timer = setTimeout(() => setMounted(false), 400);
       return () => clearTimeout(timer);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- animate only on isOpen toggle
   }, [isOpen]);
 
   const prevHeightRef = useRef(panelHeight);

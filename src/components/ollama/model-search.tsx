@@ -52,7 +52,7 @@ export function ModelSearch({
           className="ollama-search-input"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={(e) => { if (e.code === "Enter") handleSearch(); }}
+          onKeyDown={(e) => { if (e.code === "Enter") void handleSearch(); }}
           placeholder={t("ollama.searchPlaceholder")}
         />
       </div>
@@ -74,7 +74,10 @@ export function ModelSearch({
             <div
               key={m.name}
               className={`ollama-model-item msearch-item-row ${isActive ? "active" : ""}`}
+              role="button"
+              tabIndex={0}
               onClick={() => onSelectFamily(m.name)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onSelectFamily(m.name); }}
             >
               <div className="msearch-item-content">
                 <div className="msearch-item-name">

@@ -20,4 +20,4 @@ export interface PreviewEditor {
   is_default: boolean;
 }
 
-export type FilePreviewActiveTab = "summary" | string;
+export type FilePreviewActiveTab = string;

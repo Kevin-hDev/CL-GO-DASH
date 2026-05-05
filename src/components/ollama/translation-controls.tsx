@@ -81,7 +81,7 @@ export function TranslationControls({
       <div style={{ width: 120 }}>
         <CustomSelect
           value={currentLang ?? ""}
-          onChange={(lang) => { if (lang) translate(lang); }}
+          onChange={(lang) => { if (lang) void translate(lang); }}
           disabled={loading}
           placeholder={t("ollama.translate")}
           options={LANGUAGES.map((l) => ({ value: l.code, label: l.label }))}

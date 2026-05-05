@@ -10,7 +10,10 @@ interface FileThumbnailProps {
 export function FileThumbnail({ file, onRemove, onClick }: FileThumbnailProps) {
   return (
     <div
+      role="button"
+      tabIndex={0}
       onClick={onClick}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClick(); }}
       style={{
         position: "relative", display: "flex", alignItems: "center", gap: 6,
         padding: "4px 8px", borderRadius: "var(--radius-sm)",

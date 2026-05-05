@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Plus, Image, Plugs, PuzzlePiece, CaretRight } from "@/components/ui/icons";
 import { useConnectors } from "@/hooks/use-connectors";
@@ -34,9 +34,12 @@ export function ChatPlusMenu({ onFileImport }: ChatPlusMenuProps) {
 
   const connectedItems = configured.filter((c) => c.status === "connected");
 
-  const submenuLeft = dropdownRef.current
-    ? dropdownRef.current.offsetWidth + 4
-    : 244;
+  const [submenuLeft, setSubmenuLeft] = useState(244);
+  useLayoutEffect(() => {
+    if (open && dropdownRef.current) {
+      setSubmenuLeft(dropdownRef.current.offsetWidth + 4);
+    }
+  }, [open]);
 
   return (
     <div className="cpm-wrapper" ref={menuRef}>
@@ -81,7 +84,7 @@ export function ChatPlusMenu({ onFileImport }: ChatPlusMenuProps) {
             <div className="cpm-sub-empty">{t("chatMenu.noConnectors")}</div>
           ) : (
             connectedItems.map((c) => (
-              <button key={c.id} type="button" className="cpm-sub-item" onClick={() => toggleChatEnabled(c.id)}>
+              <button key={c.id} type="button" className="cpm-sub-item" onClick={() => void toggleChatEnabled(c.id)}>
                 <McpIcon connectorId={c.id} displayName={c.display_name} size={18} />
                 <span className={c.enabled_in_chat ? "" : "cpm-disabled"}>{c.display_name}</span>
                 <div className={`cpm-toggle ${c.enabled_in_chat ? "on" : ""}`}>

@@ -89,8 +89,9 @@ export function ChatView({
       initialSent.current = true;
       const workingDir = initialWorkingDir ?? proj.selectedProject?.path;
       const files = initialFiles?.map((f) => ({ name: f.name, path: f.path, preview: f.preview }));
-      chat.sendMessage(initialMessage || "", files, workingDir, proj.selectedProjectId ?? undefined, initialSkills).then(() => onInitialMessageSent?.());
+      void chat.sendMessage(initialMessage || "", files, workingDir, proj.selectedProjectId ?? undefined, initialSkills).then(() => onInitialMessageSent?.());
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- one-time send on mount, guarded by initialSent ref
   }, [initialMessage]);
 
   const { scrollRef, bottomRef, isAtBottom, scrollToBottom, handleScroll } = useChatScroll({
@@ -110,7 +111,7 @@ export function ChatView({
 
   const handleBuiltInCommand = useCallback((name: string) => {
     if (name === "compress") {
-      chat.sendMessage("/compress");
+      void chat.sendMessage("/compress");
     }
   }, [chat]);
 
@@ -118,7 +119,7 @@ export function ChatView({
     <FileDropZone
       dragging={fileDrop.dragging}
       onDragChange={fileDrop.setDragging}
-      onDropPaths={(paths) => fileDrop.addByPaths(paths)}
+      onDropPaths={(paths) => void fileDrop.addByPaths(paths)}
     >
       <div className="chat-zone">
         <div className="chat-messages" ref={scrollRef} onScroll={handleScroll}>
@@ -138,10 +139,10 @@ export function ChatView({
             isConnectionError={chat.isConnectionError}
             onRetry={() => {
               const lastUser = [...chat.messages].reverse().find((m) => m.role === "user");
-              if (lastUser) chat.reload(lastUser.id);
+              if (lastUser) void chat.reload(lastUser.id);
             }}
-            onReload={chat.reload}
-            onEdit={chat.edit}
+            onReload={(id) => void chat.reload(id)}
+            onEdit={(id, c) => void chat.edit(id, c)}
             onFileClick={(f) => setPreview({
               name: f.name,
               path: f.path,
@@ -161,7 +162,7 @@ export function ChatView({
             {permissions.current && (
               <PermissionDialog
                 request={permissions.current}
-                onDecide={permissions.respond}
+                onDecide={(id, decision) => void permissions.respond(id, decision)}
               />
             )}
             <ChatInput
@@ -173,12 +174,12 @@ export function ChatView({
               contextUsed={context.used}
               contextMax={context.max}
               permissionMode={permMode.mode}
-              onPermissionModeChange={permMode.change}
+              onPermissionModeChange={(m) => void permMode.change(m)}
               onRemoveFile={fileDrop.removeFile}
               onPreviewFile={setPreview}
               onSend={(text, sentFiles, skills) => {
                 const isFirst = chat.messages.length < 1;
-                chat.sendMessage(text, sentFiles, proj.selectedProject?.path, proj.selectedProjectId ?? undefined, skills)
+                void chat.sendMessage(text, sentFiles, proj.selectedProject?.path, proj.selectedProjectId ?? undefined, skills)
                   .then(() => {
                     if (proj.selectedProjectId) onSessionsRefresh?.();
                     if (isFirst && text.trim()) {
@@ -187,15 +188,15 @@ export function ChatView({
                     }
                   });
               }}
-              onStop={chat.stop}
+              onStop={() => void chat.stop()}
               onClearFiles={fileDrop.clearFiles}
-              onFileImport={async () => {
+              onFileImport={() => void (async () => {
                 const result = await openFileDialog({ multiple: true });
                 if (!result) return;
                 const raw = Array.isArray(result) ? result : [result];
                 const paths = raw.map((p) => String(p));
-                fileDrop.addByPaths(paths);
-              }}
+                await fileDrop.addByPaths(paths);
+              })()}
               onModelChange={handleModelSelect}
               onToggleThinking={onToggleThinking}
               onBuiltInCommand={handleBuiltInCommand}
@@ -206,7 +207,7 @@ export function ChatView({
               locked={proj.locked}
               hidden={proj.hidden}
               onSelect={proj.setSelectedProjectId}
-              onAddProject={proj.handleAddProject}
+              onAddProject={() => void proj.handleAddProject()}
             />
           </div>
         </div>

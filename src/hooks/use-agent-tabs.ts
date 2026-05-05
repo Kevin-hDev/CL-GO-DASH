@@ -73,7 +73,7 @@ export function useAgentTabs() {
     await persist(next, newIdx);
   }, [tabs, activeIndex, persist]);
 
-  const deselectTab = useCallback(async () => {
+  const deselectTab = useCallback(() => {
     setActiveIndex(-1);
   }, []);
 

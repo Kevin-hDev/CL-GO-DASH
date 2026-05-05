@@ -85,7 +85,10 @@ export function SettingsTab({ themeChoice, onThemeChange, activeSubTab, onSubTab
         {SUB_TABS.map((tab) => (
           <div
             key={tab.id}
+            role="button"
+            tabIndex={0}
             onClick={() => setSubTab(tab.id)}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSubTab(tab.id); }}
             className={`settings-subtab${subTab === tab.id ? " active" : ""}`}
           >
             {tab.icon ? (

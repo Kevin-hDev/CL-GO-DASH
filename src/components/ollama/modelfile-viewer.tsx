@@ -43,6 +43,7 @@ export function ModelfileViewer({ modelName, onDeleted }: ModelfileViewerProps) 
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch→setState is intentional
     setLoading(true);
     setMode("view");
     invoke<string>("get_modelfile", { name: modelName })
@@ -99,7 +100,7 @@ export function ModelfileViewer({ modelName, onDeleted }: ModelfileViewerProps) 
       parameters={parameters}
       modelfile={modelfile}
       deleting={deleting}
-      onDelete={handleDelete}
+      onDelete={() => void handleDelete()}
       onEditSystem={() => setMode("edit-system")}
       onEditParameters={() => setMode("edit-parameters")}
       onEditModelfile={() => setMode("edit-modelfile")}

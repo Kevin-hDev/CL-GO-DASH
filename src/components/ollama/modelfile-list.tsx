@@ -15,7 +15,10 @@ export function ModelfileList({ models, selectedModel, onSelect }: ModelfileList
         <div
           key={m.name}
           className={`ollama-model-item ${selectedModel != null && idMatch(selectedModel, m.name) ? "active" : ""}`}
+          role="button"
+          tabIndex={0}
           onClick={() => onSelect(m.name)}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onSelect(m.name); }}
         >
           {m.name}
         </div>

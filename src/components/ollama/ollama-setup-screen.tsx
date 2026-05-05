@@ -68,7 +68,7 @@ export function OllamaSetupScreen({ onComplete }: OllamaSetupScreenProps) {
       ) : (
         <button
           className="ollama-btn ollama-btn-primary oss-download-btn"
-          onClick={handleDownload}
+          onClick={() => void handleDownload()}
         >
           {t("ollamaSetup.download")}
         </button>

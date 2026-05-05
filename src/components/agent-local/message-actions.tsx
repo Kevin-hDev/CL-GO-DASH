@@ -3,7 +3,7 @@ import { ArrowsClockwise, Pencil, Copy, Check } from "@/components/ui/icons";
 import "./messages.css";
 
 interface MessageActionsProps {
-  role: "user" | "assistant";
+  messageRole: "user" | "assistant";
   content: string;
   isStreaming?: boolean;
   onReload?: () => void;
@@ -11,7 +11,7 @@ interface MessageActionsProps {
   children?: React.ReactNode;
 }
 
-export function MessageActions({ role, content, isStreaming, onReload, onEdit, children }: MessageActionsProps) {
+export function MessageActions({ messageRole, content, isStreaming, onReload, onEdit, children }: MessageActionsProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = useCallback(async () => {
@@ -27,12 +27,12 @@ export function MessageActions({ role, content, isStreaming, onReload, onEdit, c
           <ArrowsClockwise size={14} />
         </button>
       )}
-      {role === "user" && onEdit && (
+      {messageRole === "user" && onEdit && (
         <button className="msg-action-btn" onClick={onEdit}>
           <Pencil size={14} />
         </button>
       )}
-      <button className="msg-action-btn" onClick={handleCopy}>
+      <button className="msg-action-btn" onClick={() => void handleCopy()}>
         {copied ? <Check size={14} /> : <Copy size={14} />}
       </button>
       {children}

@@ -18,6 +18,7 @@ export function usePermissionMode(sessionId?: string) {
   const [mode, setMode] = useState<PermissionMode>(resolvedMode);
   const [loaded, setLoaded] = useState(false);
   const sessionRef = useRef(sessionId);
+  // eslint-disable-next-line react-hooks/refs -- callback capture pattern
   sessionRef.current = sessionId;
 
   useEffect(() => {
@@ -30,12 +31,14 @@ export function usePermissionMode(sessionId?: string) {
         setLoaded(true);
       })
       .catch(() => setLoaded(true));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- load once on mount
   }, []);
 
   useEffect(() => {
     if (!sessionId) return;
     const stored = sessionModes.get(sessionId);
     if (stored) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- sync state reset on sessionId change is intentional
       setMode(stored);
     } else {
       setMode(defaultMode);
@@ -59,7 +62,7 @@ export function usePermissionMode(sessionId?: string) {
   const toggle = useCallback(() => {
     const cycle: PermissionMode[] = ["chat", "manual", "auto"];
     const idx = cycle.indexOf(mode);
-    change(cycle[(idx + 1) % cycle.length]);
+    void change(cycle[(idx + 1) % cycle.length]);
   }, [mode, change]);
 
   useEffect(() => {

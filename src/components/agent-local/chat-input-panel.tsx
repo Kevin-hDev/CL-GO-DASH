@@ -60,7 +60,7 @@ export function ChatInputPanel(props: ChatInputPanelProps) {
           onSend={props.onSend}
           onStop={props.onStop}
           onClearFiles={props.onClearFiles}
-          onFileImport={() => importFiles(props.onAddFiles)}
+          onFileImport={() => void importFiles(props.onAddFiles)}
           onModelChange={props.onModelChange}
           onToggleThinking={props.onToggleThinking}
         />

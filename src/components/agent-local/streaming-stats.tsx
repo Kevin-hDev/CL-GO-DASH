@@ -14,6 +14,7 @@ function formatElapsed(ms: number): string {
 }
 
 export function StreamingStats({ segmentStartedAt, liveTokenCount }: StreamingStatsProps) {
+  // eslint-disable-next-line react-hooks/purity -- Date.now() as initial state is standard React pattern
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {

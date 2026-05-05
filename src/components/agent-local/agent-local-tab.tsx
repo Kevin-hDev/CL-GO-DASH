@@ -24,7 +24,7 @@ export function AgentLocalTab(props?: AgentLocalTabProps): { list: React.ReactNo
   const projectsHook = useProjects();
 
   const activeSession = tabState.activeSessionId
-    ? sessions.find((s) => s.id.localeCompare(tabState.activeSessionId!) === 0)
+    ? sessions.find((s) => s.id.localeCompare(tabState.activeSessionId) === 0)
     : null;
   const activeProject = activeSession?.project_id
     ? projectsHook.projects.find((p) => p.id === activeSession.project_id)
@@ -55,7 +55,7 @@ export function AgentLocalTab(props?: AgentLocalTabProps): { list: React.ReactNo
     if (allModels.length === 0) return;
     const fallback = allModels[0];
     if (tabState.activeSessionId) {
-      updateModel(tabState.activeSessionId, fallback.id, fallback.provider_id);
+      void updateModel(tabState.activeSessionId, fallback.id, fallback.provider_id);
     } else {
       setWelcomeModel({ model: fallback.id, provider: fallback.provider_id });
     }
@@ -74,22 +74,24 @@ export function AgentLocalTab(props?: AgentLocalTabProps): { list: React.ReactNo
   });
 
   const prevSessionRef = useRef(tabState.activeSessionId);
+  const onSessionChange = props?.onSessionChange;
   useEffect(() => {
     if (tabState.activeSessionId !== prevSessionRef.current) {
       prevSessionRef.current = tabState.activeSessionId;
-      props?.onSessionChange?.(tabState.activeSessionId ?? null);
+      onSessionChange?.(tabState.activeSessionId ?? null);
     }
-  }, [tabState.activeSessionId, props?.onSessionChange]);
+  }, [tabState.activeSessionId, onSessionChange]);
 
   useEffect(() => {
     if (props?.requestedSessionId === undefined) return;
     const requested = props.requestedSessionId;
     if (requested === tabState.activeSessionId) return;
     if (requested === null) {
-      tabState.deselectTab();
+      void tabState.deselectTab();
     } else {
-      handleSelectById(requested);
+      void handleSelectById(requested);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only react to requestedSessionId changes
   }, [props?.requestedSessionId]);
 
   const handleSelectById = useCallback(async (id: string) => {
@@ -120,7 +122,7 @@ export function AgentLocalTab(props?: AgentLocalTabProps): { list: React.ReactNo
   useArrowNavigation({
     items: visibleSessionIds,
     selectedId: tabState.activeSessionId,
-    onSelect: handleSelectById,
+    onSelect: (id) => void handleSelectById(id),
     enabled: props?.listFocused ?? true,
   });
 
@@ -129,22 +131,22 @@ export function AgentLocalTab(props?: AgentLocalTabProps): { list: React.ReactNo
       sessions={sessions}
       projects={projectsHook.projects}
       selectedId={tabState.activeSessionId}
-      onSelect={handleSelectById}
+      onSelect={(id) => void handleSelectById(id)}
       onCreate={handleCreate}
-      onRename={rename}
-      onDelete={async (id: string) => { await tabState.closeBySessionId(id); await remove(id); }}
-      onNewSessionInProject={handleCreateInProject}
-      onRenameProject={projectsHook.rename}
-      onDeleteProject={async (projectId: string) => {
+      onRename={(id, name) => void rename(id, name)}
+      onDelete={(id) => void tabState.closeBySessionId(id).then(() => remove(id))}
+      onNewSessionInProject={(pid) => void handleCreateInProject(pid)}
+      onRenameProject={(id, name) => void projectsHook.rename(id, name)}
+      onDeleteProject={(projectId) => {
         const ptyIds = terminal.getGroupPtyIds(projectId);
         for (const id of ptyIds) {
           invoke("pty_kill", { id }).catch(() => {});
         }
         terminal.removeGroup(projectId);
-        await projectsHook.remove(projectId);
+        void projectsHook.remove(projectId);
       }}
-      onOpenFolder={projectsHook.openFolder}
-      onReorderProjects={projectsHook.reorder}
+      onOpenFolder={(path) => void projectsHook.openFolder(path)}
+      onReorderProjects={(ids) => void projectsHook.reorder(ids)}
     />
   );
 
@@ -160,11 +162,11 @@ export function AgentLocalTab(props?: AgentLocalTabProps): { list: React.ReactNo
             terminalOpen={terminal.isOpen}
             previewOpen={filePreview.open}
 
-            onSelect={tabState.selectTab}
-            onClose={tabState.closeTab}
+            onSelect={(i) => void tabState.selectTab(i)}
+            onClose={(i) => void tabState.closeTab(i)}
             onAdd={handleCreate}
-            onRename={tabState.renameTab}
-            onReorder={tabState.reorderTabs}
+            onRename={(i, name) => void tabState.renameTab(i, name)}
+            onReorder={(from, to) => void tabState.reorderTabs(from, to)}
             onTogglePreview={filePreview.toggleOpen}
             onToggleTerminal={() => {
               if (!terminal.isOpen && terminal.tabs.length === 0) {
@@ -192,10 +194,10 @@ export function AgentLocalTab(props?: AgentLocalTabProps): { list: React.ReactNo
           filePreview={filePreview}
           fileOperations={fileOperations}
           onAddProject={projectsHook.add}
-          onSessionsRefresh={refresh}
-          onUpdateModel={updateModel}
-          onNewSession={handleCreateWithModel}
-          onAutoRename={handleAutoRename}
+          onSessionsRefresh={() => void refresh()}
+          onUpdateModel={(id, m, p) => void updateModel(id, m, p)}
+          onNewSession={(m, p) => void handleCreateWithModel(m, p)}
+          onAutoRename={(id, msg) => void handleAutoRename(id, msg)}
           onToggleThinking={() => setThinking((v) => !v)}
           onInitialMessageSent={() => {
             setPendingMessage(null);
@@ -212,7 +214,7 @@ export function AgentLocalTab(props?: AgentLocalTabProps): { list: React.ReactNo
             provider={currentDefault.provider}
             projects={projectsHook.projects}
             onAddProject={projectsHook.add}
-            onSend={handleWelcomeSend}
+            onSend={(...args) => void handleWelcomeSend(...args)}
             onModelChange={(m, p) => setWelcomeModel({ model: m, provider: p })}
             thinking={thinking}
             onToggleThinking={() => setThinking((v) => !v)}
@@ -226,7 +228,7 @@ export function AgentLocalTab(props?: AgentLocalTabProps): { list: React.ReactNo
     list,
     detail,
     onCreate: handleCreate,
-    onShowWelcome: tabState.deselectTab,
+    onShowWelcome: () => void tabState.deselectTab(),
     previewOpen: filePreview.open,
     onTogglePreview: filePreview.toggleOpen,
   };
