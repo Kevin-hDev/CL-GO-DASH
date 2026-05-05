@@ -39,7 +39,7 @@ export function AssistantMessage({
 
   return (
     <div className="msg-assistant" ref={hoverRef}>
-      {thinking && <ThinkingSection content={thinking} />}
+      {thinking && <ThinkingSection content={thinking} isActive={isStreaming && !content} />}
       {toolActivities && toolActivities.length > 0 && (
         <SavedToolBubble tools={toolActivities} />
       )}

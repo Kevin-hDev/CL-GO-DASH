@@ -6,9 +6,10 @@ import "./messages.css";
 interface ThinkingSectionProps {
   content: string;
   durationMs?: number;
+  isActive?: boolean;
 }
 
-export function ThinkingSection({ content, durationMs }: ThinkingSectionProps) {
+export function ThinkingSection({ content, durationMs, isActive }: ThinkingSectionProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
 
@@ -19,7 +20,7 @@ export function ThinkingSection({ content, durationMs }: ThinkingSectionProps) {
 
   return (
     <div>
-      <button className="thinking-toggle" onClick={() => setOpen(!open)}>
+      <button className={`thinking-toggle${isActive ? " thinking-active" : ""}`} onClick={() => setOpen(!open)}>
         {open ? <CaretDown size={12} /> : <CaretRight size={12} />}
         <span>{label}</span>
       </button>

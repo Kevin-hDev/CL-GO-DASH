@@ -84,6 +84,34 @@
   margin-bottom: var(--space-sm);
 }
 
+.thinking-active span {
+  background: linear-gradient(
+    90deg,
+    var(--ink-faint) 0%,
+    var(--ink-faint) 40%,
+    rgba(255, 255, 255, 0.9) 50%,
+    var(--ink-faint) 60%,
+    var(--ink-faint) 100%
+  );
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: thinking-shimmer 2s ease-in-out infinite;
+}
+
+@keyframes thinking-shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+.thinking-active:hover span {
+  -webkit-text-fill-color: unset;
+  background: none;
+  color: var(--ink-muted);
+  animation: none;
+}
+
 .thinking-toggle:hover { color: var(--ink-muted); }
 
 .thinking-content {
