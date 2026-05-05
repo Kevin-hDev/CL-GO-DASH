@@ -10,7 +10,6 @@ use services::agent_local::ollama_client::OllamaClient;
 use services::ollama_lifecycle::{self, OllamaSidecar};
 use services::scheduler::Scheduler;
 use std::collections::HashMap;
-#[cfg(target_os = "linux")]
 use tauri::Emitter;
 use tauri::Manager;
 use tokio::sync::Mutex;
@@ -47,15 +46,12 @@ pub fn run() {
             }
             if let Err(e) = services::api_keys::init() {
                 eprintln!("[vault] init failed: {}", e);
-                #[cfg(target_os = "linux")]
-                {
-                    let handle = app.handle().clone();
-                    let msg = e.to_string();
-                    tauri::async_runtime::spawn(async move {
-                        tokio::time::sleep(std::time::Duration::from_secs(2)).await;
-                        let _ = handle.emit("vault-init-failed", msg);
-                    });
-                }
+                let handle = app.handle().clone();
+                let msg = e.to_string();
+                tauri::async_runtime::spawn(async move {
+                    tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+                    let _ = handle.emit("vault-init-failed", msg);
+                });
             }
             if ollama_lifecycle::ollama_binary_path().is_ok() {
                 if let Err(e) = ollama_lifecycle::start_sidecar(app.handle()) {

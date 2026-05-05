@@ -30,23 +30,33 @@ pub fn load_or_create_master_key() -> Result<Zeroizing<Vec<u8>>, String> {
     let entry =
         Entry::new(KEYRING_SERVICE, MASTER_KEY_USER).map_err(|e| format!("keyring entry: {e}"))?;
 
-    if let Ok(b64_raw) = entry.get_password() {
-        let mut b64 = Zeroizing::new(b64_raw);
-        let bytes = B64.decode(b64.as_str()).map_err(|e| format!("master key decode: {e}"))?;
-        b64.zeroize();
-        if bytes.len() == 32 {
-            return Ok(Zeroizing::new(bytes));
+    match entry.get_password() {
+        Ok(b64_raw) => {
+            let mut b64 = Zeroizing::new(b64_raw);
+            let bytes = B64.decode(b64.as_str()).map_err(|e| format!("master key decode: {e}"))?;
+            b64.zeroize();
+            if bytes.len() == 32 {
+                return Ok(Zeroizing::new(bytes));
+            }
+            Err("master key in keychain has invalid length".to_string())
         }
+        Err(keyring::Error::NoEntry) => {
+            if vault_path().exists() {
+                return Err(
+                    "master key missing from keychain but vault exists — cannot decrypt".to_string(),
+                );
+            }
+            let mut key = vec![0u8; 32];
+            rand::rngs::OsRng.fill_bytes(&mut key);
+            let mut b64 = B64.encode(&key);
+            entry
+                .set_password(&b64)
+                .map_err(|e| format!("keyring set master: {e}"))?;
+            b64.zeroize();
+            Ok(Zeroizing::new(key))
+        }
+        Err(e) => Err(format!("keychain access failed: {e}")),
     }
-
-    let mut key = vec![0u8; 32];
-    rand::rngs::OsRng.fill_bytes(&mut key);
-    let mut b64 = B64.encode(&key);
-    entry
-        .set_password(&b64)
-        .map_err(|e| format!("keyring set master: {e}"))?;
-    b64.zeroize();
-    Ok(Zeroizing::new(key))
 }
 
 fn encrypt(master_key: &[u8], plaintext: &[u8]) -> Result<Vec<u8>, String> {
