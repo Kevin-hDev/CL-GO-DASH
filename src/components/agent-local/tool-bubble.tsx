@@ -95,7 +95,7 @@ export function SavedToolBubble({
             && tools.slice(0, i).some((p) => p.name === "edit_file" && p.summary === t.summary);
           return (
             <div key={i}>
-              <ToolRow name={t.name} summary={t.summary} done={t.is_error != null} isError={t.is_error} errorMessage={t.is_error ? t.result : undefined} onFilePreview={onFilePreview} />
+              <ToolRow name={t.name} summary={t.summary} done={t.result != null || t.is_error != null} isError={t.is_error} errorMessage={t.is_error ? t.result : undefined} onFilePreview={onFilePreview} />
               {t.name === "write_file" && t.content && !skipWrite && <ContentPreview content={t.content} path={t.summary} />}
               {t.old_text != null && t.new_text != null && <DiffPreview oldText={t.old_text} newText={t.new_text} path={t.summary} startLine={t.start_line} />}
               {(t.name === "web_search" || t.name === "web_fetch") && t.result && <WebResultsPreview content={t.result} isSearch={t.name === "web_search"} />}

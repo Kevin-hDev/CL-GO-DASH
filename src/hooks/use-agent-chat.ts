@@ -65,7 +65,7 @@ export function useAgentChat(
       .then((session) => {
         if (!alive || sessionRef.current !== sessionId) return;
         const snapshot = getStreamSnapshot(sessionId);
-        if (snapshot) {
+        if (snapshot && snapshot.messages.length >= session.messages.length) {
           applySnapshot(snapshot);
           return;
         }

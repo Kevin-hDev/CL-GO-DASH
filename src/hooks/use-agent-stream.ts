@@ -2,7 +2,7 @@ import { useRef, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { readFile } from "@tauri-apps/plugin-fs";
 import { agentStreamManager, type StreamSnapshot } from "./agent-stream-manager";
-import { expandToolActivities } from "./agent-chat-utils";
+import { expandToolActivities, expandSegmentsToChat } from "./agent-chat-utils";
 import type { AgentMessage } from "@/types/agent";
 
 const IMAGE_EXTS = ["png", "jpg", "jpeg", "gif", "webp"];
@@ -93,6 +93,9 @@ export function useAgentStream() {
     }));
 
     const chatMessages = resolved.flatMap(({ message: m, content, images }) => {
+      if (m.role === "assistant" && m.segments && m.segments.length > 0 && !m.tool_calls) {
+        return expandSegmentsToChat(m.segments, content);
+      }
       if (m.role === "assistant" && m.tool_activities && m.tool_activities.length > 0 && !m.tool_calls) {
         return expandToolActivities(m.tool_activities, content);
       }

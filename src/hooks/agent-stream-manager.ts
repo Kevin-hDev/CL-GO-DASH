@@ -144,8 +144,10 @@ function persistAssistant(
     id: sessionId,
     messages: [message],
     tokens,
-  }).catch(() => {
+  }).catch((e) => {
+    console.error("[persist] save failed for session", sessionId, e);
     record.state = { ...record.state, persisted: false };
+    notify(record);
   });
 }
 

@@ -123,12 +123,14 @@ export function applyStreamEvent(
       break;
     case "done":
       return finishStream(next, event);
-    case "error":
-      next.isStreaming = false;
-      next.completed = true;
+    case "error": {
       next.error = event.data.message || i18n.t("errors.streamInterrupted");
       next.isConnectionError = (event.data as Record<string, unknown>).isConnection === true;
-      break;
+      const partial = finalizeStream(next, 0, 0, next.tokenCount);
+      partial.state.error = next.error;
+      partial.state.isConnectionError = next.isConnectionError;
+      return partial;
+    }
   }
   return { state: next };
 }

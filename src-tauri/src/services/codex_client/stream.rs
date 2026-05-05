@@ -28,7 +28,6 @@ async fn consume_sse(
     let mut result = StreamResult::default();
     let mut token_count: u32 = 0;
     let mut first_token: Option<std::time::Instant> = None;
-    let start = std::time::Instant::now();
 
     let mut cur_tool_id: Option<String> = None;
     let mut cur_tool_name: Option<String> = None;
@@ -130,21 +129,6 @@ async fn consume_sse(
             _ => {}
         }
     }
-
-    let elapsed = start.elapsed();
-    let final_tps = if elapsed.as_secs_f64() > 0.1 {
-        token_count as f64 / elapsed.as_secs_f64()
-    } else {
-        0.0
-    };
-
-    let _ = on_event.send(StreamEvent::Done {
-        eval_count: result.eval_count,
-        eval_duration_ns: elapsed.as_nanos() as u64,
-        final_tps,
-        prompt_tokens: result.prompt_tokens,
-        context_tokens: result.prompt_tokens + result.eval_count,
-    });
 
     Ok(result)
 }
