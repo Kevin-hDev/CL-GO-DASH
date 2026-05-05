@@ -112,6 +112,7 @@
     "favorites": "收藏",
     "freeCount": "{{free}} free / {{total}}",
     "thinkingDuration": "思考了 {{seconds}}s",
+    "working": "已工作 {{seconds}}s",
     "tools": "Tools",
     "tokens": "tokens",
     "tps": "t/s",

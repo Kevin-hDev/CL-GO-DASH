@@ -1,3 +1,5 @@
+import { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { useLottie } from "lottie-react";
 import { UserMessage } from "./user-message";
 import { AssistantMessage } from "./assistant-message";
@@ -10,6 +12,7 @@ import type { AgentMessage } from "@/types/agent";
 import type { ToolActivity, StreamSegment } from "@/hooks/agent-chat-utils";
 import thinkingAnimation from "@/assets/thinking-loader.json";
 import "./chat.css";
+import "./messages.css";
 
 interface MessageListProps {
   sessionId: string;
@@ -34,11 +37,14 @@ interface MessageListProps {
 
 export function MessageList({
   sessionId, messages, completedSegments, currentContent, currentThinking,
-  currentTools, isStreaming, tps, totalElapsedMs, segmentStartedAt,
+  currentTools, isStreaming, tps, totalElapsedMs, segmentStartedAt: _segmentStartedAt,
   liveTokenCount, error, isConnectionError, onRetry, onReload, onEdit, onFileClick, onFilePreview,
 }: MessageListProps) {
   const lastAssistantIdx = findLastIndex(messages, (m) => m.role === "assistant");
   const { isCompressing } = useCompression(sessionId);
+  const streamStartRef = useRef<number | null>(null);
+  if (isStreaming && !streamStartRef.current) streamStartRef.current = Date.now();
+  if (!isStreaming) streamStartRef.current = null;
 
   return (
     <>
@@ -76,16 +82,16 @@ export function MessageList({
         </div>
       ))}
 
-      {isStreaming && !isCompressing && !currentContent && currentTools.length < 1 && completedSegments.length < 1 && (
-        <LoadingIndicator />
-      )}
       {isStreaming && (currentContent || currentThinking) && (
         <AssistantMessage
           content={currentContent} thinking={currentThinking} isStreaming
-          segmentStartedAt={segmentStartedAt} liveTokenCount={liveTokenCount}
+          streamStartedAt={streamStartRef.current} liveTokenCount={liveTokenCount}
         />
       )}
       {isStreaming && currentTools.length > 0 && <ToolBubble tools={currentTools} onFilePreview={onFilePreview} />}
+      {isStreaming && !isCompressing && !currentContent && !currentThinking && !hasActiveTools(currentTools) && (
+        <LoadingIndicator startedAt={streamStartRef.current!} liveTokenCount={liveTokenCount} />
+      )}
 
       {isCompressing && <CompressionIndicator />}
 
@@ -135,6 +141,10 @@ function SegmentedAssistantMessage({
   );
 }
 
+function hasActiveTools(tools: ToolActivity[]): boolean {
+  return tools.length > 0 && tools.some((t) => !t.result);
+}
+
 function findLastIndex<T>(arr: T[], pred: (item: T) => boolean): number {
   for (let i = arr.length - 1; i >= 0; i--) {
     if (pred(arr[i])) return i;
@@ -142,9 +152,40 @@ function findLastIndex<T>(arr: T[], pred: (item: T) => boolean): number {
   return -1;
 }
 
-function LoadingIndicator() {
+function WorkingStats({ startedAt, liveTokenCount }: {
+  startedAt: number; liveTokenCount: number;
+}) {
+  const { t } = useTranslation();
+  const [now, setNow] = useState(Date.now());
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 500);
+    return () => clearInterval(id);
+  }, []);
+
+  const elapsed = Math.floor((now - startedAt) / 1000);
+  const hasTokens = liveTokenCount > 0;
+
+  return (
+    <span className="working-stats thinking-active">
+      <span>
+        {t("agentLocal.working", { seconds: elapsed })}
+        {hasTokens ? ` · ↑ ${liveTokenCount} tokens` : ""}
+      </span>
+    </span>
+  );
+}
+
+function LoadingIndicator({ startedAt, liveTokenCount }: {
+  startedAt: number; liveTokenCount: number;
+}) {
   const { View } = useLottie({
     animationData: thinkingAnimation, loop: true, className: "chat-loading-lottie",
   });
-  return <div className="chat-loading">{View}</div>;
+  return (
+    <div className="chat-loading">
+      {View}
+      <WorkingStats startedAt={startedAt} liveTokenCount={liveTokenCount} />
+    </div>
+  );
 }

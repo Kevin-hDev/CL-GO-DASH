@@ -112,6 +112,7 @@
     "favorites": "Favoritos",
     "freeCount": "{{free}} free / {{total}}",
     "thinkingDuration": "Pensado durante {{seconds}}s",
+    "working": "Trabajando desde hace {{seconds}}s",
     "tools": "Tools",
     "tokens": "tokens",
     "tps": "t/s",

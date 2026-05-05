@@ -163,8 +163,14 @@
   border-color: transparent;
 }
 
-.chat-loading { display: flex; align-items: center; margin-bottom: var(--space-md); }
-.chat-loading-lottie { width: 48px; height: 48px; }
+.chat-loading { display: flex; align-items: center; gap: 8px; margin-bottom: var(--space-md); }
+.chat-loading-lottie { width: 48px; height: 48px; filter: var(--lottie-orange-filter); }
+
+.working-stats {
+  font-size: 11px;
+  font-family: var(--font-mono, monospace);
+  color: var(--ink-faint);
+}
 
 [data-theme="light"] .chat-input-bubble {
   background: rgba(215, 215, 220, 0.40);

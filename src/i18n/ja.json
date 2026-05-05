@@ -112,6 +112,7 @@
     "favorites": "お気に入り",
     "freeCount": "{{free}} free / {{total}}",
     "thinkingDuration": "{{seconds}}秒間考えました",
+    "working": "作業中 {{seconds}}秒",
     "tools": "Tools",
     "tokens": "tokens",
     "tps": "t/s",

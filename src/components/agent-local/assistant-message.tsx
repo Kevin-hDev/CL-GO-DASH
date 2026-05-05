@@ -18,7 +18,7 @@ interface AssistantMessageProps {
   tokens?: number;
   tps?: number;
   totalElapsedMs?: number;
-  segmentStartedAt?: number | null;
+  streamStartedAt?: number | null;
   liveTokenCount?: number;
 }
 
@@ -29,7 +29,7 @@ function formatTokens(n: number): string {
 
 export function AssistantMessage({
   content, thinking, toolActivities, isStreaming, onReload,
-  tokens, tps, totalElapsedMs, segmentStartedAt, liveTokenCount,
+  tokens, tps, totalElapsedMs, streamStartedAt, liveTokenCount,
 }: AssistantMessageProps) {
   const { t } = useTranslation();
   const hoverRef = useHoverClass();
@@ -49,7 +49,7 @@ export function AssistantMessage({
           <>
             <span style={{ animation: "pulse-dot 1s infinite" }}>▊</span>
             {!content && (
-              <StreamingStats segmentStartedAt={segmentStartedAt ?? null} liveTokenCount={liveTokenCount ?? 0} />
+              <StreamingStats segmentStartedAt={streamStartedAt ?? null} liveTokenCount={liveTokenCount ?? 0} />
             )}
           </>
         )}

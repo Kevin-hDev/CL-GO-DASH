@@ -43,6 +43,9 @@
   --diff-add-line-bg: rgba(22, 163, 74, 0.08);
   --diff-del-line-bg: rgba(220, 38, 38, 0.08);
 
+  /* Lottie recolor → #f97316 */
+  --lottie-orange-filter: brightness(0) saturate(100%) invert(45%) sepia(98%) saturate(1800%) hue-rotate(360deg) brightness(100%);
+
   /* Tool colors */
   --tool-bash: #ea580c;
   --tool-file-read: #16a34a;
