@@ -1,6 +1,21 @@
 # Changelog
 
-## v0.8.4 (en cours)
+## v0.8.5
+
+### Features
+
+- **Working indicator** — persistent Lottie loader + "Working for Xs" with live token count shown during all streaming gaps (between segments, after tool results, waiting for first token). Timer never resets between gaps.
+- **Thinking shimmer** — "Thinking" label shimmers while the model is actively thinking, stops when done
+- **Tool spinner fix** — `@keyframes spin` was missing from CSS, tool bubble spinners now rotate correctly
+
+### Improvements
+
+- Lottie loader recolored to theme orange via CSS filter (dark/light aware)
+- Streaming timer unified — both working indicator and thinking stats share the same continuous timer from stream start
+
+---
+
+## v0.8.4
 
 ### Features
 
