@@ -17,21 +17,21 @@
 
 ### Fixes
 
-- **Codex OAuth stream persistence** — removed premature `Done` event emitted inside `consume_sse`, which violated the `stream_chat_no_done` contract. This caused the frontend to finalize the assistant message before tool results arrived, losing all tool data on restart and showing frozen spinners. Only affected the Codex OAuth path (GPT via subscription).
-- **Error event now persists tool data** — stream errors during multi-turn tool calls no longer discard accumulated segments. The `error` handler now calls `finalizeStream` to build and persist the assistant message with whatever segments completed before the error.
-- **Snapshot vs DB race condition** — when loading a session, a stale in-memory stream snapshot could override complete data from the database. The snapshot is now only preferred when it contains at least as many messages as the DB.
-- **Tool arguments preserved through Rust round-trip** — added `args: Option<serde_json::Value>` to the Rust `ToolActivityRecord` struct. Previously, the frontend sent `args` but Rust silently dropped the unknown field, causing degraded LLM context on session reload.
-- **SavedToolBubble done indicator** — fixed the completion check for saved tools: now uses `result != null || is_error != null` instead of just `is_error != null`, which caused successful tools to show a frozen spinner instead of a checkmark after reload.
-- **Persist failure logging** — `persistAssistant` now logs errors and notifies subscribers on save failure instead of silently swallowing the error.
-- **Multi-turn LLM context reconstruction** — new `expandSegmentsToChat` preserves the per-turn structure (one assistant+tools block per segment) when rebuilding chat history from saved segments, instead of flattening all tools into a single turn.
-- **Retry exponential back-off** — increased from 2 retries (2s/4s) to 5 retries with exponential back-off (2s/4s/8s/16s/32s ≈ 62s total). Added SSE transport errors, connection closed, and response decoding errors to the retryable error list.
-- **Tool orchestration order** — parallel tool executor now uses indexed slots to preserve result order. Fixes mismatched `tool_call_id` mapping for OpenAI-compatible providers.
-- **`web_fetch` permission gate** — `web_fetch` removed from read-only classification and eager dispatch now checks pre-hooks before execution.
-- **`glob` returns absolute paths** — consistent with `grep` behavior.
-- **`read_spreadsheet` formula display** — formulas are now returned as text (e.g. `=SUM(A1:A5)`) instead of uncalculated `0.0`, using calamine's `worksheet_formula()` with correct absolute coordinates.
-- **`write_spreadsheet` multi-sheet targeting** — operations now correctly target their specified sheet instead of always writing to the first sheet. Default sheet name (`Sheet1`) documented in tool schema.
-- **`write_document` schema clarity** — each property now indicates which block type it applies to (e.g. "For heading only", "For table only"). Empty tables are silently skipped instead of producing empty `<w:tbl>` elements.
-- **`process_image` operations optional** — `operations` is no longer required, allowing simple format conversion by just changing the file extension (e.g. PNG → WebP).
+- **Codex OAuth persistence** — fixed premature `Done` event that caused tool data loss and frozen spinners on GPT sessions
+- **Stream error recovery** — errors during multi-turn tool calls now persist completed segments instead of discarding them
+- **Session reload race** — stale stream snapshot no longer overrides complete DB data on session load
+- **Tool arguments round-trip** — `args` field now preserved through Rust serialization (was silently dropped)
+- **Tool completion indicator** — saved tools show ✓/✗ correctly instead of frozen spinner after reload
+- **Persist failure logging** — save errors are now logged and reported instead of silently swallowed
+- **Multi-turn context** — chat history reconstruction preserves per-turn structure instead of flattening all tools
+- **Retry back-off** — 5 retries with exponential back-off (2s→32s, ~62s total), SSE transport errors now retryable
+- **Parallel tool order** — indexed slots preserve result order, fixes `tool_call_id` mapping for OpenAI-compat
+- **`web_fetch` permission gate** — no longer classified as read-only, eager dispatch checks pre-hooks
+- **`glob`** — returns absolute paths (consistent with `grep`)
+- **`read_spreadsheet`** — formulas returned as text instead of `0.0`
+- **`write_spreadsheet`** — operations target correct sheet, default `Sheet1` documented
+- **`write_document`** — schema clarified per block type, empty tables skipped
+- **`process_image`** — `operations` now optional for simple format conversion
 
 ### Security
 
