@@ -25,39 +25,39 @@ import type { IconifyIcon } from "@iconify/react";
 type IconModule = IconifyIcon | { default: IconifyIcon };
 
 const EXT_ICONS: Record<string, IconModule> = {
-  c: cIcon as IconModule,
-  cpp: cppIcon as IconModule,
-  css: cssIcon as IconModule,
-  go: goIcon as IconModule,
-  h: cIcon as IconModule,
-  html: htmlIcon as IconModule,
-  java: javaIcon as IconModule,
-  js: jsIcon as IconModule,
-  jsx: reactIcon as IconModule,
-  json: jsonIcon as IconModule,
-  md: markdownIcon as IconModule,
-  py: pythonIcon as IconModule,
-  rs: rustIcon as IconModule,
-  sh: shellIcon as IconModule,
-  sql: sqlIcon as IconModule,
-  toml: tomlIcon as IconModule,
-  ts: tsIcon as IconModule,
-  tsx: reactIcon as IconModule,
-  yaml: yamlIcon as IconModule,
-  yml: yamlIcon as IconModule,
-  xlsx: excelIcon as IconModule,
-  xls: excelIcon as IconModule,
-  xlsm: excelIcon as IconModule,
-  csv: excelIcon as IconModule,
-  ods: excelIcon as IconModule,
-  tsv: excelIcon as IconModule,
-  docx: wordIcon as IconModule,
-  pdf: pdfIcon as IconModule,
+  c: cIcon,
+  cpp: cppIcon,
+  css: cssIcon,
+  go: goIcon,
+  h: cIcon,
+  html: htmlIcon,
+  java: javaIcon,
+  js: jsIcon,
+  jsx: reactIcon,
+  json: jsonIcon,
+  md: markdownIcon,
+  py: pythonIcon,
+  rs: rustIcon,
+  sh: shellIcon,
+  sql: sqlIcon,
+  toml: tomlIcon,
+  ts: tsIcon,
+  tsx: reactIcon,
+  yaml: yamlIcon,
+  yml: yamlIcon,
+  xlsx: excelIcon,
+  xls: excelIcon,
+  xlsm: excelIcon,
+  csv: excelIcon,
+  ods: excelIcon,
+  tsv: excelIcon,
+  docx: wordIcon,
+  pdf: pdfIcon,
 };
 
 export function FileIcon({ name, size = 18 }: { name: string; size?: number }) {
   const ext = name.split(".").pop()?.toLowerCase() ?? "";
-  const icon = unwrapIcon(EXT_ICONS[ext] ?? (defaultFile as IconModule));
+  const icon = unwrapIcon(EXT_ICONS[ext] ?? defaultFile);
   return (
     <span className="fp-icon" style={{ width: size, height: size }}>
       <Icon icon={icon} width={size} height={size} />

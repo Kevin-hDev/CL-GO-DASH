@@ -23,9 +23,8 @@ function handleMaximize() {
 
 export function WindowControls() {
   const { t } = useTranslation();
-  if (IS_MAC) return null;
-
   const lastClickRef = useRef(0);
+  if (IS_MAC) return null;
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 0) return;
@@ -42,7 +41,7 @@ export function WindowControls() {
   };
 
   return (
-    <div className="window-controls" onMouseDown={handleMouseDown}>
+    <div className="window-controls" role="presentation" onMouseDown={handleMouseDown}>
       <button className="wc-btn wc-btn--close" onClick={handleClose} tabIndex={-1} aria-label={t("a11y.close")}>
         <span className="wc-icon" aria-hidden="true">
           <svg width="6" height="6" viewBox="0 0 6 6" fill="none">

@@ -17,7 +17,7 @@ export function McpBrowseCard({ connector, configured, onAdd }: McpBrowseCardPro
 
   const handleLinkClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    open(connector.url);
+    void open(connector.url);
   };
 
   return (

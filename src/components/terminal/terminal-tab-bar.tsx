@@ -58,7 +58,7 @@ export function TerminalTabBar({
       for (const el of items) {
         const rect = el.getBoundingClientRect();
         const idx = Number(el.dataset.termTabIdx);
-        if (idx === startRef.current!.idx) continue;
+        if (idx === startRef.current.idx) continue;
         if (e.clientX >= rect.left && e.clientX <= rect.right) {
           found = idx;
           break;
@@ -98,6 +98,7 @@ export function TerminalTabBar({
 
   return (
     <div className="terminal-tab-bar" ref={barRef}>
+      {/* eslint-disable-next-line react-hooks/refs -- false positive, tabs is a prop not a ref */}
       {tabs.map((tab, i) => {
         const isSelected = tab.id === activeTabId;
         const isDragged = dragIdx === i;
@@ -113,16 +114,22 @@ export function TerminalTabBar({
               isDragged ? "dragging" : "",
             ].join(" ")}
             style={{ transform: getTransform(i) }}
+            role="button"
+            tabIndex={0}
             onClick={() => { if (!draggingRef.current) onSelect(tab.id); }}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { if (!draggingRef.current) onSelect(tab.id); } }}
             onPointerDown={(e) => handlePointerDown(e, i)}
             onDoubleClick={() => setEditingTabId(tab.id)}
           >
             <div
               className="terminal-tab-icon-wrap"
+              role="button"
+              tabIndex={0}
               onClick={(e) => {
                 e.stopPropagation();
                 onClose(tab.id);
               }}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); onClose(tab.id); } }}
             >
               <span className="tab-icon-terminal">
                 <TerminalSquare size={12} />

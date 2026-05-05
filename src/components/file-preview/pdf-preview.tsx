@@ -31,6 +31,7 @@ export function PdfPreview({ path, baseDir }: PdfPreviewProps) {
   useEffect(() => {
     let alive = true;
     let url: string | null = null;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch→setState is intentional
     setLoading(true);
     setError(false);
 

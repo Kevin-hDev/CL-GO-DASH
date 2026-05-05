@@ -37,7 +37,7 @@ interface ContentBlock {
 
 function SavedDocumentPreview({ blocksJson }: { blocksJson: string }) {
   const blocks = useMemo<ContentBlock[]>(() => {
-    try { const p = JSON.parse(blocksJson); return Array.isArray(p) ? p : []; }
+    try { const p = JSON.parse(blocksJson) as unknown; return Array.isArray(p) ? (p as ContentBlock[]) : []; }
     catch { return []; }
   }, [blocksJson]);
 
@@ -104,6 +104,7 @@ function LiveDocumentPreview({ path, baseDir }: { path: string; baseDir?: string
 
   useEffect(() => {
     let alive = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch→setState is intentional
     setLoading(true);
     setError(false);
     readBinaryPreview(path, baseDir)

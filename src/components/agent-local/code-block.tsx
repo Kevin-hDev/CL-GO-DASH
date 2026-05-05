@@ -20,7 +20,7 @@ export function CodeBlock({ code, language }: CodeBlockProps) {
     <div className="code-block">
       <div className="code-block-header">
         <span>{language || ""}</span>
-        <button className="msg-action-btn" onClick={handleCopy}>
+        <button className="msg-action-btn" onClick={() => void handleCopy()}>
           {copied ? <Check size={14} /> : <Copy size={14} />}
         </button>
       </div>

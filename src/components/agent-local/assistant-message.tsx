@@ -55,13 +55,13 @@ export function AssistantMessage({
         )}
       </div>
       {!isStreaming && (
-        <MessageActions role="assistant" content={content} onReload={onReload}>
+        <MessageActions messageRole="assistant" content={content} onReload={onReload}>
           {(hasTokens || hasTps || totalTime) && (
             <span className="msg-stats-inline">
               {totalTime && <><span>{totalTime}</span><span>·</span></>}
-              {hasTokens && <span>{formatTokens(tokens!)} {t("agentLocal.tokens")}</span>}
+              {hasTokens && <span>{formatTokens(tokens)} {t("agentLocal.tokens")}</span>}
               {hasTokens && hasTps && <span>·</span>}
-              {hasTps && <span>{tps!.toFixed(1)} {t("agentLocal.tps")}</span>}
+              {hasTps && <span>{tps.toFixed(1)} {t("agentLocal.tps")}</span>}
             </span>
           )}
         </MessageActions>

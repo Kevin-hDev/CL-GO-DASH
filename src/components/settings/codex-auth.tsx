@@ -33,7 +33,8 @@ export function CodexAuth() {
     };
 
     useEffect(() => {
-        refresh();
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch→setState is intentional
+        void refresh();
     }, []);
 
     const handleLogin = async () => {
@@ -88,21 +89,21 @@ export function CodexAuth() {
                                 <button
                                     key={l.value}
                                     className={`cdx-effort-btn${effort === l.value ? " cdx-effort-btn--active" : ""}`}
-                                    onClick={() => handleEffort(l.value)}
+                                    onClick={() => void handleEffort(l.value)}
                                 >
                                     {t(l.label)}
                                 </button>
                             ))}
                         </div>
                     </div>
-                    <button className="ollama-btn" onClick={handleLogout}>
+                    <button className="ollama-btn" onClick={() => void handleLogout()}>
                         {t("codex.logout")}
                     </button>
                 </>
             ) : (
                 <button
                     className="ollama-btn"
-                    onClick={handleLogin}
+                    onClick={() => void handleLogin()}
                     disabled={loading}
                 >
                     {loading ? t("codex.loggingIn") : t("codex.login")}

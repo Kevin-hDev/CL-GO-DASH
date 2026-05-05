@@ -43,15 +43,19 @@ export function CustomSelect({
         <span className="cs-trigger-caret">▾</span>
       </button>
       {open && (
-        <div className="cs-dropdown">
+        <div className="cs-dropdown" role="listbox">
           {options.map((opt) => (
             <div
               key={opt.value}
               className={`cs-option ${opt.value === value ? "active" : ""}`}
+              role="option"
+              tabIndex={0}
+              aria-selected={opt.value === value}
               onClick={() => {
                 onChange(opt.value);
                 setOpen(false);
               }}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { onChange(opt.value); setOpen(false); } }}
             >
               {opt.label}
             </div>

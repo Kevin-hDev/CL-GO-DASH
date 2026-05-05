@@ -79,7 +79,10 @@ export function SettingsSelect({
     <div
       key={opt.value}
       className={`ss-option ${opt.value === value ? "active" : ""} ${opt.dimmed ? "ss-option-dimmed" : ""}`}
+      role="button"
+      tabIndex={0}
       onClick={() => handleSelect(opt.value)}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleSelect(opt.value); }}
     >
       <div className="ss-option-check">
         {opt.value === value && <Check size={14} weight="bold" />}
@@ -100,7 +103,7 @@ export function SettingsSelect({
         const isCollapsed = collapsed[g.label] ?? true;
         return (
           <div key={g.label} className="ss-group">
-            <div className="ss-group-header" onClick={() => toggleGroup(g.label)}>
+            <div className="ss-group-header" role="button" tabIndex={0} onClick={() => toggleGroup(g.label)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') toggleGroup(g.label); }}>
               <CaretRight
                 size={12}
                 weight="bold"
@@ -128,7 +131,7 @@ export function SettingsSelect({
 
   return (
     <div className={`ss-wrap ${open ? "open" : ""}`} ref={ref}>
-      <div className="ss-trigger" onClick={() => setOpen(!open)} title={isOverflowing ? displayLabel : undefined}>
+      <div className="ss-trigger" role="button" tabIndex={0} onClick={() => setOpen(!open)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setOpen(!open); }} title={isOverflowing ? displayLabel : undefined}>
         <span className="ss-trigger-label">
           {displayLabel}
         </span>

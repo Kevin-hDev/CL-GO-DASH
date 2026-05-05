@@ -38,9 +38,12 @@ export function TabBarItem({
         opacity: dragged ? 0.4 : 1,
         borderLeft: dropTarget ? "2px solid var(--pulse)" : "2px solid transparent",
       }}
+      role="button"
+      tabIndex={0}
       onClick={() => {
         if (!isDragging()) onSelect(index);
       }}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { if (!isDragging()) onSelect(index); } }}
       onPointerDown={(event) => onPointerDown(event, index)}
       onContextMenu={(event) => {
         event.preventDefault();

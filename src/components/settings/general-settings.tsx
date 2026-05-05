@@ -90,7 +90,7 @@ export function GeneralSettings({ themeChoice, onThemeChange, settings }: Genera
   }, []);
 
   const changeLang = (lang: string) => {
-    i18n.changeLanguage(lang);
+    void i18n.changeLanguage(lang);
     localStorage.setItem("clgo-language", lang);
   };
 

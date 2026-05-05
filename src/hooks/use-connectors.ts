@@ -39,7 +39,7 @@ function validateConnectors(data: unknown): ConfiguredMcp[] {
     if (cmd && !isValidInstallCommand(cmd)) continue;
     result.push({
       id: r.id,
-      status: r.status as ConfiguredMcp["status"],
+      status: r.status,
       enabled_in_chat: r.enabled_in_chat === true,
       endpoint: typeof r.endpoint === "string" ? r.endpoint : undefined,
       install_command: cmd,
@@ -77,7 +77,7 @@ export function useConnectors() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadConfigured().then((data) => { setItems(data); setLoading(false); });
+    void loadConfigured().then((data) => { setItems(data); setLoading(false); });
   }, []);
 
   const persist = useCallback(async (next: ConfiguredMcp[]) => {

@@ -19,6 +19,7 @@ export function useTerminal(groupKey: string, defaultCwd: string, validGroupKeys
 
   useEffect(() => {
     if (defaultCwd) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- sync state reset on defaultCwd change is intentional
       setResolvedCwd(defaultCwd);
     } else {
       homeDir().then(setResolvedCwd).catch(() => {});
@@ -26,7 +27,7 @@ export function useTerminal(groupKey: string, defaultCwd: string, validGroupKeys
   }, [defaultCwd]);
 
   useEffect(() => {
-    loadSavedGroups().then((saved) => {
+    void loadSavedGroups().then((saved) => {
       const map = new Map<string, TerminalGroup>();
       for (const [key, tabs] of Object.entries(saved)) {
         map.set(key, {
@@ -48,11 +49,12 @@ export function useTerminal(groupKey: string, defaultCwd: string, validGroupKeys
       setGroups(map);
       setLoaded(true);
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- load once on mount
   }, []);
 
   useEffect(() => {
     if (!loaded) return;
-    saveGroups(groups);
+    void saveGroups(groups);
   }, [groups, loaded]);
 
   const currentGroup = groups.get(groupKey) ?? { tabs: [], activeTabId: null };

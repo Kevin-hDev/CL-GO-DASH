@@ -105,7 +105,10 @@ export function ProjectSelector({
             <div
               key={p.id}
               className={`project-dropdown-item ${p.id === selectedProjectId ? "selected" : ""}`}
+              role="button"
+              tabIndex={0}
               onClick={() => handleSelect(p.id)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleSelect(p.id); }}
             >
               <FolderSimple size={14} />
               <span style={{ flex: 1 }}>{p.name}</span>
@@ -115,7 +118,7 @@ export function ProjectSelector({
 
           <div className="project-dropdown-sep" />
 
-          <div className="project-dropdown-item" onClick={handleAdd}>
+          <div className="project-dropdown-item" role="button" tabIndex={0} onClick={handleAdd} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleAdd(); }}>
             <FolderSimplePlus size={14} />
             <span>{t("projects.addNew", "Ajouter un nouveau projet")}</span>
           </div>

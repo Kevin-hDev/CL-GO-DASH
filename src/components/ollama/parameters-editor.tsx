@@ -66,7 +66,7 @@ export function ParametersEditor({
           </button>
           <button
             className="ollama-btn ollama-btn-primary"
-            onClick={handleSave}
+            onClick={() => void handleSave()}
             disabled={saving}
           >
             {saving ? "..." : t("ollama.save")}

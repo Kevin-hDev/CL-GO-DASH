@@ -37,6 +37,7 @@ export function McpOauthDialog({ connector, onClose, onConnected }: McpOauthDial
 
   useEffect(() => {
     mountedRef.current = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- startFlow sets initial loading state synchronously
     startFlow();
     const unlisten = listen<unknown>("mcp-oauth-result", (e) => {
       if (!mountedRef.current) return;
@@ -55,6 +56,7 @@ export function McpOauthDialog({ connector, onClose, onConnected }: McpOauthDial
       mountedRef.current = false;
       unlisten.then((fn) => fn()).catch(() => {});
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only effect, startFlow/onConnected are stable
   }, []);
 
   const handleClose = () => {
@@ -63,8 +65,8 @@ export function McpOauthDialog({ connector, onClose, onConnected }: McpOauthDial
   };
 
   return (
-    <div className="wk-dialog-overlay" onClick={handleClose}>
-      <div className="wk-dialog mco-dialog" onClick={(e) => e.stopPropagation()}>
+    <div className="wk-dialog-overlay" role="presentation" onClick={handleClose} onKeyDown={() => {}}>
+      <div className="wk-dialog mco-dialog" role="presentation" onClick={(e) => e.stopPropagation()} onKeyDown={() => {}}>
         <div className="mco-icons">
           <div className="mco-icon-box">
             <McpIcon connectorId={connector.id} displayName={connector.display_name} size={40} />

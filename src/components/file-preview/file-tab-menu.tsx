@@ -42,6 +42,7 @@ export function FileTabMenu({ x, y, editors, onOpen, onOpenWith, onClose }: File
       onPointerDown={(event) => event.stopPropagation()}
       onContextMenu={(event) => event.preventDefault()}
       role="menu"
+      tabIndex={0}
     >
       <button className="fp-menu-item" onClick={onOpen}>{t("filePreview.open")}</button>
       <div className="fp-menu-sep" />

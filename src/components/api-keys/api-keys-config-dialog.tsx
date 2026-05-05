@@ -74,7 +74,8 @@ export function ApiKeysConfigDialog({
   };
 
   return (
-    <div className="wk-dialog-overlay" onClick={onClose}>
+    <div className="wk-dialog-overlay" role="button" tabIndex={-1} aria-label="Close dialog" onClick={onClose} onKeyDown={(e) => { if (e.key === "Escape") onClose(); }}>
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions -- dialog stop-propagation pattern */}
       <div className="wk-dialog" onClick={(e) => e.stopPropagation()} role="dialog">
         <header className="wk-dialog-header">
           <span>
@@ -87,7 +88,7 @@ export function ApiKeysConfigDialog({
           </button>
         </header>
 
-        <form className="wk-form" onSubmit={handleSubmit}>
+        <form className="wk-form" onSubmit={(e) => void handleSubmit(e)}>
           <div className="wk-form-field">
             <label className="wk-form-label">{t("apiKeys.dialog.apiKey")}</label>
             <input
@@ -106,7 +107,7 @@ export function ApiKeysConfigDialog({
             <button
               type="button"
               className="ak-signup-inline"
-              onClick={() => open(provider.signup_url)}
+              onClick={() => void open(provider.signup_url)}
             >
               {t("apiKeys.dialog.getKeyAt", { name: provider.display_name })}
               <ArrowSquareOut size={12} />
@@ -135,7 +136,7 @@ export function ApiKeysConfigDialog({
               <button
                 type="button"
                 className="ak-btn-danger-outline"
-                onClick={handleClearKey}
+                onClick={() => void handleClearKey()}
                 disabled={submitting}
               >
                 {t("apiKeys.dialog.clearKey")}

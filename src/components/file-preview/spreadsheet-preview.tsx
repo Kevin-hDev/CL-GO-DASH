@@ -35,6 +35,7 @@ function LiveSpreadsheetPreview({ path, baseDir }: { path: string; baseDir?: str
 
   useEffect(() => {
     let alive = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch→setState is intentional
     setLoading(true);
     setError(false);
     readSpreadsheetPreview(path, baseDir, activeSheet ?? undefined, 500)

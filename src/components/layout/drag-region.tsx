@@ -29,6 +29,7 @@ export function DragRegion({ height = 32, style }: DragRegionProps) {
 
   return (
     <div
+      role="presentation"
       onMouseDown={handleMouseDown}
       style={{
         height,

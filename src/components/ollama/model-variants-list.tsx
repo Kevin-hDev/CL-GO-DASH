@@ -24,6 +24,7 @@ export function ModelVariantsList({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch→setState is intentional
     setLoading(true);
     setError(null);
     invoke<RegistryTag[]>("list_registry_tags", { name: familyName })
@@ -70,7 +71,10 @@ export function ModelVariantsList({
             <div
               key={tag.name}
               className={`ollama-model-item mvl-item-row ${isActive ? "active" : ""}`}
+              role="button"
+              tabIndex={0}
               onClick={() => onSelectVariant(fullName)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onSelectVariant(fullName); }}
             >
               <div className="mvl-item-content">
                 <div className="mvl-item-name">

@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/refs -- refs passed as props to JSX ref attribute is valid */
 import { MessageList } from "./message-list";
 import { ScrollBottomButton } from "./scroll-bottom-button";
 import type { ToolActivity, StreamSegment } from "@/hooks/agent-chat-utils";

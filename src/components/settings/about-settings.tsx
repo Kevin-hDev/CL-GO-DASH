@@ -56,7 +56,7 @@ export function AboutSettings() {
         <div style={{ marginTop: 16 }}>
           <button
             type="button"
-            onClick={() => open(GITHUB_URL)}
+            onClick={() => void open(GITHUB_URL)}
             style={{
               width: "100%",
               display: "flex", alignItems: "center", justifyContent: "center",

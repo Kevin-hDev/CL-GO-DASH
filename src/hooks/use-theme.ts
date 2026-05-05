@@ -23,6 +23,7 @@ export function useTheme() {
 
   useEffect(() => {
     const r = resolveTheme(choice);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- derived theme resolution on choice change is intentional
     setResolved(r);
     document.documentElement.setAttribute("data-theme", r);
     localStorage.setItem("clgo-theme", choice);

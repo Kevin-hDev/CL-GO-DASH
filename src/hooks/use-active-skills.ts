@@ -16,7 +16,6 @@ export function useActiveSkills(
   slash: ReturnType<typeof useSlashCommands>,
   text: string,
   setText: (v: string) => void,
-  onBuiltInCommand?: (name: string) => void,
 ): ActiveSkillsState {
   const [activeSkills, setActiveSkills] = useState<SkillInfo[]>([]);
   const skillContentsRef = useRef<Map<string, string>>(new Map());
@@ -36,7 +35,7 @@ export function useActiveSkills(
     skillContentsRef.current.set(skill.name, content);
     const lastSlash = text.lastIndexOf("/");
     setText(lastSlash > 0 ? text.slice(0, lastSlash).trimEnd() : "");
-  }, [slash, text, setText, activeSkills, onBuiltInCommand]);
+  }, [slash, text, setText, activeSkills]);
 
   const handleRemoveSkill = useCallback((name: string) => {
     setActiveSkills((prev) => prev.filter((s) => s.name !== name));

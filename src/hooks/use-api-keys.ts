@@ -34,6 +34,7 @@ export function useApiKeys() {
   }, [loadCatalog, loadConfigured]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch→setState is intentional
     refresh().catch(() => setLoading(false));
   }, [refresh]);
 

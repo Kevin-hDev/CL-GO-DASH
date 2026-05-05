@@ -18,7 +18,7 @@ export type SearchProviderId =
   | "exa"
   | "firecrawl";
 
-export type ProviderId = LlmProviderId | SearchProviderId | string;
+export type ProviderId = string;
 
 export type ProviderCategory = "llm" | "search" | "scraping";
 

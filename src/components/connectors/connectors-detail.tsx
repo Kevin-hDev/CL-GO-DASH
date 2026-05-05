@@ -93,7 +93,7 @@ export function ConnectorsDetail({ connector, onToggleStatus, onDelete }: Connec
             <button
               type="button"
               className="ctd-link"
-              onClick={() => open(connector.url)}
+              onClick={() => void open(connector.url)}
             >
               {t("connectors.detail.openSite")} <ArrowSquareOut size={12} />
             </button>
@@ -101,7 +101,7 @@ export function ConnectorsDetail({ connector, onToggleStatus, onDelete }: Connec
         </SettingsCard>
 
         {confirmDelete && (
-          <button type="button" className="ak-confirm-delete" onClick={async () => { await onDelete(); setConfirmDelete(false); }}>
+          <button type="button" className="ak-confirm-delete" onClick={() => void onDelete().then(() => setConfirmDelete(false))}>
             {t("connectors.detail.confirmDeleteBtn")}
           </button>
         )}

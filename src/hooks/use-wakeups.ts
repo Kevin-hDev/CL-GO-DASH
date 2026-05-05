@@ -30,17 +30,18 @@ export function useWakeups() {
   }, []);
 
   useEffect(() => {
-    refresh();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch→setState is intentional
+    void refresh();
   }, [refresh]);
 
-  useFsEvent("fs:config-changed", refresh);
+  useFsEvent("fs:config-changed", () => void refresh());
 
   useEffect(() => {
     const unlisten = listen("wakeup-completed", () => {
-      refresh();
+      void refresh();
     });
     return () => {
-      unlisten.then((fn) => fn()).catch(() => {});
+      void unlisten.then((fn) => fn());
     };
   }, [refresh]);
 

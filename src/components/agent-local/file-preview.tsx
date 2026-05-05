@@ -24,6 +24,7 @@ export function FilePreview({ name, path, thumbnail, isImage, onClose }: FilePre
 
   useEffect(() => {
     if (isImage || !path) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch→setState is intentional
     setLoading(true);
     readTextFile(path)
       .then(setTextContent)
@@ -32,7 +33,7 @@ export function FilePreview({ name, path, thumbnail, isImage, onClose }: FilePre
         setTextContent(t("agentLocal.fileReadError"));
       })
       .finally(() => setLoading(false));
-  }, [path, isImage, name]);
+  }, [path, isImage, name, t]);
 
   return (
     <div style={{

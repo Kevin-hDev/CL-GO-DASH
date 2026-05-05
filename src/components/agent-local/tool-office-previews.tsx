@@ -77,8 +77,10 @@ interface DocumentData {
 
 function parseDocumentResult(result: string): DocumentData | null {
   try {
-    const data = JSON.parse(result);
-    if (typeof data.text === "string") return data;
+    const data = JSON.parse(result) as unknown;
+    if (data !== null && typeof data === "object" && "text" in data && typeof (data as Record<string, unknown>).text === "string") {
+      return data as DocumentData;
+    }
   } catch { /* ignore */ }
   return null;
 }
@@ -114,9 +116,9 @@ interface ContentBlock {
 }
 
 function parseContentBlocks(content: unknown): ContentBlock[] {
-  if (Array.isArray(content)) return content;
+  if (Array.isArray(content)) return content as ContentBlock[];
   if (typeof content === "string") {
-    try { return JSON.parse(content); } catch { /* ignore */ }
+    try { return JSON.parse(content) as ContentBlock[]; } catch { /* ignore */ }
   }
   return [];
 }

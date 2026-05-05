@@ -50,7 +50,7 @@ export function WelcomeView({
     <FileDropZone
       dragging={fileDrop.dragging}
       onDragChange={fileDrop.setDragging}
-      onDropPaths={(paths) => fileDrop.addByPaths(paths)}
+      onDropPaths={(paths) => void fileDrop.addByPaths(paths)}
     >
       <div className={`welcome-zone ${leaving ? "welcome-leaving" : ""}`}>
         <div className="welcome-content">
@@ -67,17 +67,17 @@ export function WelcomeView({
               contextUsed={0}
               contextMax={0}
               permissionMode={permMode.mode}
-              onPermissionModeChange={permMode.change}
+              onPermissionModeChange={(m) => void permMode.change(m)}
               onSend={handleSend}
               onStop={() => {}}
               onRemoveFile={fileDrop.removeFile}
               onClearFiles={fileDrop.clearFiles}
-              onFileImport={async () => {
+              onFileImport={() => void (async () => {
                 const result = await openFileDialog({ multiple: true });
                 if (!result) return;
                 const raw = Array.isArray(result) ? result : [result];
-                fileDrop.addByPaths(raw.map((p) => String(p)));
-              }}
+                await fileDrop.addByPaths(raw.map((p) => String(p)));
+              })()}
               onModelChange={onModelChange}
               onToggleThinking={onToggleThinking}
             />
@@ -87,7 +87,7 @@ export function WelcomeView({
               locked={false}
               hidden={false}
               onSelect={setSelectedProjectId}
-              onAddProject={handleAddProject}
+              onAddProject={() => void handleAddProject()}
             />
           </div>
         </div>

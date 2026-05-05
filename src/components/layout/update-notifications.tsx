@@ -56,7 +56,7 @@ export function UpdateNotifications({
 
   return (
     <>
-      <div className="update-overlay" onClick={handleClose} />
+      <div className="update-overlay" role="presentation" onClick={handleClose} onKeyDown={() => {}} />
       <div ref={listRef} className="update-list" style={{ left: anchorLeft }}>
         {items.map((item, i) => (
           <BubbleItem

@@ -19,9 +19,10 @@ export function useOllamaModels() {
   }, []);
 
   useEffect(() => {
-    refresh();
-    const unlisten = listen("ollama-models-changed", () => { refresh(); });
-    return () => { unlisten.then((fn) => fn()).catch(() => {}); };
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch→setState is intentional
+    void refresh();
+    const unlisten = listen("ollama-models-changed", () => { void refresh(); });
+    return () => { void unlisten.then((fn) => fn()); };
   }, [refresh]);
 
   const groupedByFamily = models.reduce<Record<string, OllamaModel[]>>((acc, m) => {

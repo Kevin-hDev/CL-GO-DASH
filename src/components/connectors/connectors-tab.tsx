@@ -77,7 +77,7 @@ export function ConnectorsTab(): { list: React.ReactNode; detail: React.ReactNod
               if (selected.status === "connected") {
                 setDialog({ kind: "confirm-disconnect", connectorId: selected.id });
               } else {
-                toggleStatus(selected.id);
+                void toggleStatus(selected.id);
               }
             }}
             onDelete={() => handleDelete(selected.id)}
@@ -115,7 +115,7 @@ export function ConnectorsTab(): { list: React.ReactNode; detail: React.ReactNod
             setDialog(dialog.returnTo === "browse" ? { kind: "browse" } : { kind: "none" });
           }}
           onConnected={() => {
-            addConnector(dialog.connector.id).then(() => {
+            void addConnector(dialog.connector.id).then(() => {
               setSelectedId(dialog.connector.id);
               setDialog({ kind: "none" });
             });
@@ -123,29 +123,29 @@ export function ConnectorsTab(): { list: React.ReactNode; detail: React.ReactNod
         />
       )}
       {dialog.kind === "confirm-add" && (
-        <div className="wk-dialog-overlay" onClick={() => setDialog(dialog.returnTo === "browse" ? { kind: "browse" } : { kind: "none" })}>
-          <div className="wk-dialog" onClick={(e) => e.stopPropagation()}>
+        <div className="wk-dialog-overlay" role="presentation" onClick={() => setDialog(dialog.returnTo === "browse" ? { kind: "browse" } : { kind: "none" })} onKeyDown={() => {}}>
+          <div className="wk-dialog" role="presentation" onClick={(e) => e.stopPropagation()} onKeyDown={() => {}}>
             <h3>{t("connectors.config.addTitle", { name: dialog.connector.display_name })}</h3>
             <p className="ct-confirm-desc">{t("connectors.config.confirmAddDesc", { name: dialog.connector.display_name })}</p>
             <div className="wk-dialog-footer">
               <button type="button" className="wk-btn-secondary" onClick={() => setDialog(dialog.returnTo === "browse" ? { kind: "browse" } : { kind: "none" })}>{t("connectors.detail.cancel")}</button>
-              <button type="button" className="wk-btn-primary" onClick={async () => {
+              <button type="button" className="wk-btn-primary" onClick={() => void (async () => {
                 await addConnector(dialog.connector.id);
                 setSelectedId(dialog.connector.id);
                 setDialog({ kind: "none" });
-              }}>{t("connectors.config.confirmAddBtn")}</button>
+              })()}>{t("connectors.config.confirmAddBtn")}</button>
             </div>
           </div>
         </div>
       )}
       {dialog.kind === "confirm-disconnect" && (
-        <div className="wk-dialog-overlay" onClick={() => setDialog({ kind: "none" })}>
-          <div className="wk-dialog" onClick={(e) => e.stopPropagation()}>
+        <div className="wk-dialog-overlay" role="presentation" onClick={() => setDialog({ kind: "none" })} onKeyDown={() => {}}>
+          <div className="wk-dialog" role="presentation" onClick={(e) => e.stopPropagation()} onKeyDown={() => {}}>
             <h3>{t("connectors.detail.confirmDisconnectTitle", { name: configured.find((c) => c.id === dialog.connectorId)?.display_name })}</h3>
             <p className="ct-confirm-desc">{t("connectors.detail.confirmDisconnectDesc", { name: configured.find((c) => c.id === dialog.connectorId)?.display_name })}</p>
             <div className="wk-dialog-footer">
               <button type="button" className="wk-btn-secondary" onClick={() => setDialog({ kind: "none" })}>{t("connectors.detail.cancel")}</button>
-              <button type="button" className="wk-btn-primary ct-btn-danger" onClick={handleDisconnect}>{t("connectors.detail.confirmDisconnectBtn")}</button>
+              <button type="button" className="wk-btn-primary ct-btn-danger" onClick={() => void handleDisconnect()}>{t("connectors.detail.confirmDisconnectBtn")}</button>
             </div>
           </div>
         </div>

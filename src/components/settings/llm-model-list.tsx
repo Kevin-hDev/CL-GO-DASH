@@ -39,7 +39,10 @@ export function LlmModelList({ models, title, onSelect, onBack }: LlmModelListPr
           <div
             key={m.key}
             className="llm-model-row"
+            role="button"
+            tabIndex={0}
             onClick={() => onSelect(m)}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onSelect(m); }}
             style={{ borderBottom: i < models.length - 1 ? "1px solid var(--edge)" : "none" }}
           >
             <div className="llm-model-row-name">{m.key}</div>

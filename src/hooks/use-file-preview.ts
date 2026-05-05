@@ -15,7 +15,7 @@ function storageKey(sessionId: string | null): string {
 function readStoredTabs(sessionId: string | null): string[] {
   try {
     const raw = localStorage.getItem(storageKey(sessionId));
-    const parsed = JSON.parse(raw ?? "[]");
+    const parsed = JSON.parse(raw ?? "[]") as unknown;
     if (!Array.isArray(parsed)) return [];
     return parsed.filter((id) => typeof id === "string").slice(0, MAX_STORED_TABS);
   } catch {
@@ -38,11 +38,12 @@ export function useFilePreview(sessionId: string | null, operations: FileOperati
   const tabs = tabIds.flatMap((id) => operationById.get(id) ?? []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset on session change is intentional
     setFallbackOps([]);
     const valid = new Set(operations.map((op) => op.id));
     setTabIds(readStoredTabs(sessionId).filter((id) => valid.has(id)));
     setActiveTab("summary");
-  }, [sessionId]);
+  }, [sessionId, operations]);
 
   useEffect(() => {
     localStorage.setItem(storageKey(sessionId), JSON.stringify(tabIds.slice(0, MAX_STORED_TABS)));

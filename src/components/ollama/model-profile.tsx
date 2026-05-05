@@ -30,6 +30,7 @@ export function ModelProfile({ familyName, variantFullName }: ModelProfileProps)
   const [translatedLang, setTranslatedLang] = useState<string | null>(null);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch→setState is intentional
     setLoading(true);
     setDetails(null);
     setLocalInfo(null);
@@ -45,6 +46,7 @@ export function ModelProfile({ familyName, variantFullName }: ModelProfileProps)
   }, [familyName]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch→setState is intentional
     if (!variantFullName) { setLocalInfo(null); return; }
     const installed = localModels.find((m) => m.name === variantFullName);
     if (!installed) { setLocalInfo(null); return; }

@@ -67,9 +67,11 @@ function linkifyText(text: string): React.ReactNode[] {
       <a
         key={match.index}
         className="chat-link"
-        href="#"
+        href={url}
         title={url}
-        onClick={(e) => { e.preventDefault(); open(url); }}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={(e) => { e.preventDefault(); void open(url); }}
       >
         {url}
       </a>

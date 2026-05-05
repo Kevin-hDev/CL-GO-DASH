@@ -81,7 +81,7 @@ export function ModelSelector({
           </div>
 
           {showThinkingToggle && (
-            <div className="ms-thinking" onClick={onToggleThinking}>
+            <div className="ms-thinking" role="button" tabIndex={0} onClick={onToggleThinking} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onToggleThinking(); }}>
               <span>{t("agentLocal.thinkingToggle")}</span>
               <span
                 style={{
@@ -98,7 +98,7 @@ export function ModelSelector({
               groups={filteredGroups}
               favorites={favorites}
               isFavorite={isFavorite}
-              onToggleFavorite={toggleFav}
+              onToggleFavorite={(p, m) => void toggleFav(p, m)}
               selectedModel={selectedModel}
               selectedProvider={selectedProvider}
               onSelect={(model, provider) => {

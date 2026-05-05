@@ -23,7 +23,9 @@ function parseCellRef(cell: string): [number, number] | null {
 
 export function cellText(val: unknown): string {
   if (val == null) return "";
-  return String(val);
+  if (typeof val === "string") return val;
+  if (typeof val === "number" || typeof val === "boolean") return String(val);
+  return JSON.stringify(val);
 }
 
 const MAX_OPS = 10_000;
@@ -33,7 +35,7 @@ const MAX_COL = 1_000;
 
 export function reconstructFromOps(opsJson: string): SpreadsheetData | null {
   let ops: WriteOp[];
-  try { ops = JSON.parse(opsJson); } catch { return null; }
+  try { ops = JSON.parse(opsJson) as WriteOp[]; } catch { return null; }
   if (!Array.isArray(ops) || ops.length === 0) return null;
   if (ops.length > MAX_OPS) ops = ops.slice(0, MAX_OPS);
 

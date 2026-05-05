@@ -23,7 +23,10 @@ export function ThemeSelector({ value, onChange }: ThemeSelectorProps) {
         return (
           <div
             key={theme.id}
+            role="button"
+            tabIndex={0}
             onClick={() => onChange(theme.id)}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onChange(theme.id); }}
             style={{
               width: 100,
               padding: 10,
