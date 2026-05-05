@@ -77,15 +77,23 @@ fn spawn_update_script(path: &std::path::Path) -> Result<(), String> {
     }
 }
 
+fn update_log_path() -> String {
+    std::env::temp_dir().join("cl-go-update.log").display().to_string()
+}
+
 #[cfg(target_os = "macos")]
 fn spawn_macos_update(dmg: &std::path::Path) -> Result<(), String> {
     let dmg_str = dmg.display().to_string();
+    let log = update_log_path();
     let script = format!(
         r#"#!/bin/bash
+exec >> "{log}" 2>&1
+echo "=== update $(date) ==="
 sleep 1
-while pgrep -x "CL-GO" > /dev/null 2>&1; do sleep 0.5; done
-VOL=$(hdiutil attach "{dmg_str}" -nobrowse -noverify 2>/dev/null | grep "/Volumes/" | sed 's/.*\/Volumes/\/Volumes/')
-if [ -z "$VOL" ]; then exit 1; fi
+while pgrep -x "cl-go-dash" > /dev/null 2>&1; do sleep 0.5; done
+VOL=$(hdiutil attach "{dmg_str}" -nobrowse -noverify 2>&1 | grep -o '/Volumes/.*' | head -1 | sed 's/[[:space:]]*$//')
+echo "vol=[$VOL]"
+if [ -z "$VOL" ] || [ ! -d "$VOL" ]; then echo "mount failed"; exit 1; fi
 if [ -d "$VOL/CL-GO.app" ]; then
   rm -rf /Applications/CL-GO.app
   cp -Rf "$VOL/CL-GO.app" /Applications/CL-GO.app
@@ -93,6 +101,7 @@ fi
 hdiutil detach "$VOL" -quiet 2>/dev/null
 rm -f "{dmg_str}"
 open /Applications/CL-GO.app
+echo "done"
 "#
     );
     run_shell_script(&script)
@@ -110,14 +119,18 @@ fn spawn_linux_update(appimage: &std::path::Path) -> Result<(), String> {
         .unwrap_or_default()
         .join(".local/bin/CL-GO.AppImage");
     let dest_str = dest.display().to_string();
+    let log = update_log_path();
     let script = format!(
         r#"#!/bin/bash
+exec >> "{log}" 2>&1
+echo "=== update $(date) ==="
 sleep 1
-while pgrep -f "CL-GO" > /dev/null 2>&1; do sleep 0.5; done
+while pgrep -x "cl-go-dash" > /dev/null 2>&1; do sleep 0.5; done
 cp -f "{src}" "{dest_str}"
 chmod +x "{dest_str}"
 rm -f "{src}"
 "{dest_str}" &
+echo "done"
 "#
     );
     run_shell_script(&script)
@@ -131,15 +144,35 @@ fn spawn_linux_update(_: &std::path::Path) -> Result<(), String> {
 #[cfg(target_os = "windows")]
 fn spawn_windows_update(installer: &std::path::Path) -> Result<(), String> {
     use std::os::windows::process::CommandExt;
-    let path_str = installer.display().to_string();
-    std::process::Command::new(&path_str)
-        .arg("/S")
+    let inst = installer.display().to_string();
+    let exe = std::env::current_exe().map_err(|e| format!("exe: {e}"))?;
+    let exe_name = exe.file_name().unwrap_or_default().to_string_lossy().to_string();
+    let app = exe.display().to_string();
+    let log = update_log_path();
+    let script = format!(
+        r#"@echo off
+echo === update %date% %time% === >> "{log}" 2>&1
+timeout /t 2 /nobreak >nul
+:w
+tasklist /fi "imagename eq {exe_name}" 2>nul | find /i "{exe_name}" >nul 2>&1
+if not errorlevel 1 (timeout /t 1 /nobreak >nul & goto w)
+echo installing >> "{log}"
+start /wait "" "{inst}" /S
+del "{inst}" >nul 2>&1
+echo launching >> "{log}"
+start "" "{app}"
+"#
+    );
+    let path = std::env::temp_dir().join("cl-go-update.bat");
+    std::fs::write(&path, &script).map_err(|e| format!("script: {e}"))?;
+    std::process::Command::new("cmd")
+        .args(["/C", &path.display().to_string()])
         .creation_flags(0x08000000)
         .stdin(std::process::Stdio::null())
         .stdout(std::process::Stdio::null())
         .stderr(std::process::Stdio::null())
         .spawn()
-        .map_err(|e| format!("spawn: {}", e))?;
+        .map_err(|e| format!("spawn: {e}"))?;
     Ok(())
 }
 
