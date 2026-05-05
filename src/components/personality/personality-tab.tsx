@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useLayoutEffect, memo } from "react";
 import { useTranslation } from "react-i18next";
 import type { PersonalityFile } from "@/types/personality";
 import * as api from "@/services/personality";
@@ -7,21 +7,28 @@ import { useArrowNavigation } from "@/hooks/use-arrow-navigation";
 import { showToast } from "@/lib/toast-emitter";
 import { PersonalityList } from "./personality-list";
 import { MarkdownViewer } from "./markdown-viewer";
+import type { TabSlots } from "@/components/agent-local/agent-local-tab-types";
 
 interface PersonalityTabProps {
   activePath?: string | null;
   onPathChange?: (path: string | null) => void;
   listFocused?: boolean;
+  reportContent: (slots: TabSlots) => void;
 }
 
-export function PersonalityTab(props?: PersonalityTabProps): { list: React.ReactNode; detail: React.ReactNode } {
+export const PersonalityTab = memo(function PersonalityTab({
+  activePath,
+  onPathChange,
+  listFocused = true,
+  reportContent,
+}: PersonalityTabProps) {
   const { t } = useTranslation();
   const [files, setFiles] = useState<PersonalityFile[]>([]);
   const [selectedPath, setSelectedPathState] = useState<string | null>(null);
 
   useEffect(() => {
-    if (props?.activePath !== undefined) setSelectedPathState(props.activePath);
-  }, [props?.activePath]);
+    if (activePath !== undefined) setSelectedPathState(activePath);
+  }, [activePath]);
   const [content, setContent] = useState<string>("");
   const [fileName, setFileName] = useState<string>("");
   const [injectionState, setInjectionState] = useState<Record<string, boolean>>({});
@@ -50,8 +57,8 @@ export function PersonalityTab(props?: PersonalityTabProps): { list: React.React
 
   const setSelectedPath = useCallback((path: string | null) => {
     setSelectedPathState(path);
-    props?.onPathChange?.(path);
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- props.onPathChange identity is stable per caller
+    onPathChange?.(path);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- onPathChange identity is stable per caller
   }, []);
 
   const handleSelect = useCallback(async (path: string) => {
@@ -93,7 +100,7 @@ export function PersonalityTab(props?: PersonalityTabProps): { list: React.React
     items: filePaths,
     selectedId: selectedPath,
     onSelect: (path) => void handleSelect(path),
-    enabled: props?.listFocused ?? true,
+    enabled: listFocused,
   });
 
   const list = (
@@ -124,5 +131,7 @@ export function PersonalityTab(props?: PersonalityTabProps): { list: React.React
     );
   }
 
-  return { list, detail };
-}
+  useLayoutEffect(() => { reportContent({ list, detail }); });
+
+  return null;
+});

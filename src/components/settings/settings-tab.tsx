@@ -1,8 +1,8 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useLayoutEffect, memo } from "react";
 import { useTranslation } from "react-i18next";
 import { useSettings } from "@/hooks/use-settings";
 import { useArrowNavigation } from "@/hooks/use-arrow-navigation";
-import type { Theme, ThemeChoice } from "@/hooks/use-theme";
+import type { ThemeChoice } from "@/hooks/use-theme";
 import { GearSix, Key, Sliders, Info, BookOpenText, Keyboard, Plugs } from "@/components/ui/icons";
 import { ThemedIcon } from "@/components/ui/themed-icon";
 import { GeneralSettings } from "./general-settings";
@@ -16,6 +16,7 @@ import { ConnectorsTab } from "@/components/connectors/connectors-tab";
 import ollamaDark from "@/assets/ollama.png";
 import ollamaLight from "@/assets/ollama-light.png";
 import type { Icon } from "@phosphor-icons/react";
+import type { TabSlots } from "@/components/agent-local/agent-local-tab-types";
 import "./settings-tab.css";
 
 type SettingsSubTab = "general" | "ollama" | "connectors" | "api-keys" | "llm" | "advanced" | "shortcuts" | "about";
@@ -40,18 +41,22 @@ const SUB_TABS: SubTabDef[] = [
 ];
 
 interface SettingsTabProps {
-  theme: Theme;
   themeChoice: ThemeChoice;
   onThemeChange: (theme: ThemeChoice) => void;
   activeSubTab?: string;
   onSubTabChange?: (subTab: string) => void;
   listFocused?: boolean;
+  reportContent: (slots: TabSlots) => void;
 }
 
-export function SettingsTab({ themeChoice, onThemeChange, activeSubTab, onSubTabChange, listFocused }: SettingsTabProps): {
-  list: React.ReactNode;
-  detail: React.ReactNode;
-} {
+export const SettingsTab = memo(function SettingsTab({
+  themeChoice,
+  onThemeChange,
+  activeSubTab,
+  onSubTabChange,
+  listFocused = true,
+  reportContent,
+}: SettingsTabProps) {
   const [subTab, setSubTabState] = useState<SettingsSubTab>("general");
 
   useEffect(() => {
@@ -69,7 +74,7 @@ export function SettingsTab({ themeChoice, onThemeChange, activeSubTab, onSubTab
     items: subTabIds,
     selectedId: subTab,
     onSelect: setSubTab,
-    enabled: listFocused ?? true,
+    enabled: listFocused,
   });
 
   const settings = useSettings();
@@ -140,5 +145,7 @@ export function SettingsTab({ themeChoice, onThemeChange, activeSubTab, onSubTab
     return null;
   })();
 
-  return { list, detail };
-}
+  useLayoutEffect(() => { reportContent({ list, detail }); });
+
+  return null;
+});

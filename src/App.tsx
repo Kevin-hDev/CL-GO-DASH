@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useTranslation } from "react-i18next";
@@ -12,6 +12,7 @@ import { HeartbeatTab } from "@/components/heartbeat/heartbeat-tab";
 import { PersonalityTab } from "@/components/personality/personality-tab";
 import { AgentLocalTab } from "@/components/agent-local/agent-local-tab";
 import { SettingsTab } from "@/components/settings/settings-tab";
+import type { TabSlots } from "@/components/agent-local/agent-local-tab-types";
 import type { TabId } from "@/components/layout/sidebar";
 
 export default function App() {
@@ -24,11 +25,12 @@ export default function App() {
       personalityPath: null,
     });
 
-  const { theme, choice, setTheme } = useTheme();
+  const { choice, setTheme } = useTheme();
   const { t } = useTranslation();
   const [vaultError, setVaultError] = useState<string | null>(null);
   const [ollamaReady, setOllamaReady] = useState<boolean | null>(null);
   const { focusedPanel } = usePanelFocus();
+  const [tabContent, setTabContent] = useState<{ list: ReactNode; detail: ReactNode }>({ list: null, detail: null });
 
   useEffect(() => {
     invoke<boolean>("is_ollama_installed").then(setOllamaReady).catch(() => setOllamaReady(true));
@@ -38,45 +40,17 @@ export default function App() {
     return () => { unlisten.then((fn) => fn()).catch(() => {}); };
   }, []);
 
-
   const activeTab = nav.tab as TabId;
   const listActive = (tab: TabId) => focusedPanel === "list" && activeTab === tab;
 
-  const hbTab = HeartbeatTab({
-    activeWakeupId: nav.wakeupId,
-    onWakeupChange: (id) => push({ wakeupId: id }),
-    listFocused: listActive("heartbeat"),
-  });
+  const reportContent = useCallback((slots: TabSlots) => {
+    setTabContent(slots);
+  }, []);
 
-  const persTab = PersonalityTab({
-    activePath: nav.personalityPath,
-    onPathChange: (path) => push({ personalityPath: path }),
-    listFocused: listActive("personality"),
-  });
-
-  const agentTab = AgentLocalTab({
-    requestedSessionId: nav.sessionId,
-    onSessionChange: (id) => push({ sessionId: id }),
-    listFocused: listActive("agent-local"),
-  });
-
-  const settTab = SettingsTab({
-    theme,
-    themeChoice: choice,
-    onThemeChange: setTheme,
-    activeSubTab: nav.settingsSubTab,
-    onSubTabChange: (sub) => push({ settingsSubTab: sub }),
-    listFocused: listActive("settings"),
-  });
-
-  const tabs: Record<TabId, { list: React.ReactNode; detail: React.ReactNode }> = {
-    heartbeat: hbTab,
-    personality: persTab,
-    "agent-local": agentTab,
-    settings: settTab,
-  };
-
-  const tab = tabs[activeTab];
+  const handleWakeupChange = useCallback((id: string | null) => push({ wakeupId: id }), [push]);
+  const handlePathChange = useCallback((path: string | null) => push({ personalityPath: path }), [push]);
+  const handleSessionChange = useCallback((id: string | null) => push({ sessionId: id }), [push]);
+  const handleSubTabChange = useCallback((sub: string) => push({ settingsSubTab: sub }), [push]);
 
   const ALL_TABS: TabId[] = ["agent-local", "heartbeat", "personality", "settings"];
   useArrowNavigation({
@@ -88,8 +62,7 @@ export default function App() {
 
   const handleShowWelcome = useCallback(() => {
     push({ tab: "agent-local", sessionId: null });
-    agentTab.onShowWelcome?.();
-  }, [agentTab, push]);
+  }, [push]);
 
   const handleSearchSelect = useCallback((sessionId: string) => {
     push({ tab: "agent-local", sessionId });
@@ -124,6 +97,40 @@ export default function App() {
 
   return (
     <>
+    {activeTab === "heartbeat" && (
+      <HeartbeatTab
+        activeWakeupId={nav.wakeupId}
+        onWakeupChange={handleWakeupChange}
+        listFocused={listActive("heartbeat")}
+        reportContent={reportContent}
+      />
+    )}
+    {activeTab === "personality" && (
+      <PersonalityTab
+        activePath={nav.personalityPath}
+        onPathChange={handlePathChange}
+        listFocused={listActive("personality")}
+        reportContent={reportContent}
+      />
+    )}
+    {activeTab === "agent-local" && (
+      <AgentLocalTab
+        requestedSessionId={nav.sessionId}
+        onSessionChange={handleSessionChange}
+        listFocused={listActive("agent-local")}
+        reportContent={reportContent}
+      />
+    )}
+    {activeTab === "settings" && (
+      <SettingsTab
+        themeChoice={choice}
+        onThemeChange={setTheme}
+        activeSubTab={nav.settingsSubTab}
+        onSubTabChange={handleSubTabChange}
+        listFocused={listActive("settings")}
+        reportContent={reportContent}
+      />
+    )}
     {vaultError && (
       <div style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 9999,
@@ -136,8 +143,8 @@ export default function App() {
     <AppLayout
       activeTab={activeTab}
       onTabChange={(t) => push({ tab: t })}
-      listContent={tab.list}
-      detailContent={tab.detail}
+      listContent={tabContent.list}
+      detailContent={tabContent.detail}
       onShowWelcome={handleShowWelcome}
       onBack={goBack}
       onForward={goForward}

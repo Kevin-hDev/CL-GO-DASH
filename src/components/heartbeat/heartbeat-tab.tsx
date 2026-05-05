@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useLayoutEffect, memo } from "react";
 import { useTranslation } from "react-i18next";
 import { useWakeups } from "@/hooks/use-wakeups";
 import { useArrowNavigation } from "@/hooks/use-arrow-navigation";
@@ -8,6 +8,7 @@ import { WakeupDetails } from "./wakeup-details";
 import { NewWakeupDialog } from "./new-wakeup-dialog";
 import type { ScheduledWakeup } from "@/types/wakeup";
 import { RoundToggle } from "./round-toggle";
+import type { TabSlots } from "@/components/agent-local/agent-local-tab-types";
 import "./heartbeat.css";
 
 type DialogState =
@@ -19,20 +20,26 @@ interface HeartbeatTabProps {
   activeWakeupId?: string | null;
   onWakeupChange?: (id: string | null) => void;
   listFocused?: boolean;
+  reportContent: (slots: TabSlots) => void;
 }
 
-export function HeartbeatTab(props?: HeartbeatTabProps): { list: React.ReactNode; detail: React.ReactNode } {
+export const HeartbeatTab = memo(function HeartbeatTab({
+  activeWakeupId,
+  onWakeupChange,
+  listFocused = true,
+  reportContent,
+}: HeartbeatTabProps) {
   const { t } = useTranslation();
   const { wakeups, globalPaused, setPaused, toggle, remove, create, update } = useWakeups();
   const [selectedId, setSelectedIdState] = useState<string | null>(null);
 
   useEffect(() => {
-    if (props?.activeWakeupId !== undefined) setSelectedIdState(props.activeWakeupId);
-  }, [props?.activeWakeupId]);
+    if (activeWakeupId !== undefined) setSelectedIdState(activeWakeupId);
+  }, [activeWakeupId]);
 
   const setSelectedId = (id: string | null) => {
     setSelectedIdState(id);
-    props?.onWakeupChange?.(id);
+    onWakeupChange?.(id);
   };
   const [dialog, setDialog] = useState<DialogState>({ kind: "none" });
 
@@ -45,7 +52,7 @@ export function HeartbeatTab(props?: HeartbeatTabProps): { list: React.ReactNode
     items: wakeupIds,
     selectedId: selectedId,
     onSelect: setSelectedId,
-    enabled: props?.listFocused ?? true,
+    enabled: listFocused,
   });
 
   const handleDelete = async () => {
@@ -119,5 +126,7 @@ export function HeartbeatTab(props?: HeartbeatTabProps): { list: React.ReactNode
     </>
   );
 
-  return { list, detail };
-}
+  useLayoutEffect(() => { reportContent({ list, detail }); });
+
+  return null;
+});
