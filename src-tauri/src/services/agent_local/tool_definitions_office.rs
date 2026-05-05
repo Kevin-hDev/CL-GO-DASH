@@ -53,10 +53,10 @@ pub fn office_tool_definitions() -> Vec<Value> {
         tool_def(
             "write_spreadsheet",
             "Create or modify an Excel file (.xlsx). Use operations array to set cells, formulas, rows. \
-             Each operation can target a specific sheet via 'sheet' (default: first sheet). \
+             New files get a default sheet named 'Sheet1'. Each operation can target a specific sheet via 'sheet' (default: first sheet). \
+             Do not use add_sheet for single-sheet files — Sheet1 is created automatically. \
              Example: {\"path\": \"output.xlsx\", \"operations\": [\
-             {\"type\": \"add_sheet\", \"name\": \"Data\"}, \
-             {\"type\": \"set_row\", \"sheet\": \"Data\", \"row\": 0, \"values\": [\"Name\", \"Age\"]}, \
+             {\"type\": \"set_row\", \"row\": 0, \"values\": [\"Name\", \"Age\"]}, \
              {\"type\": \"set_cell\", \"cell\": \"A2\", \"value\": \"Alice\"}]}",
             serde_json::json!({
                 "type": "object",
@@ -88,10 +88,12 @@ pub fn office_tool_definitions() -> Vec<Value> {
         ),
         tool_def(
             "write_document",
-            "Create a Word document (.docx) from content blocks. \
+            "Create a Word document (.docx) from content blocks. Only include fields relevant to each block type. \
+             heading: {type, text, level}. paragraph: {type, text, bold?, italic?}. \
+             table: {type, headers, rows}. list: {type, items, ordered}. \
              Example: {\"path\": \"doc.docx\", \"content\": [\
              {\"type\": \"heading\", \"text\": \"Title\", \"level\": 1}, \
-             {\"type\": \"paragraph\", \"text\": \"Hello world\", \"bold\": true}, \
+             {\"type\": \"paragraph\", \"text\": \"Hello world\"}, \
              {\"type\": \"table\", \"headers\": [\"A\",\"B\"], \"rows\": [[\"1\",\"2\"]]}, \
              {\"type\": \"list\", \"items\": [\"a\",\"b\"], \"ordered\": true}]}",
             serde_json::json!({
@@ -100,19 +102,19 @@ pub fn office_tool_definitions() -> Vec<Value> {
                     "path": {"type": "string", "description": "Output path for .docx file"},
                     "content": {
                         "type": "array",
-                        "description": "Content blocks",
+                        "description": "Content blocks. Each block uses only the fields for its type.",
                         "items": {
                             "type": "object",
                             "properties": {
                                 "type": {"type": "string", "enum": ["heading", "paragraph", "table", "list"]},
-                                "text": {"type": "string", "description": "Text content (heading, paragraph)"},
-                                "level": {"type": "integer", "description": "Heading level 1-6"},
-                                "bold": {"type": "boolean"},
-                                "italic": {"type": "boolean"},
-                                "headers": {"type": "array", "items": {"type": "string"}, "description": "Table headers"},
-                                "rows": {"type": "array", "description": "Table rows (array of arrays)"},
-                                "items": {"type": "array", "items": {"type": "string"}, "description": "List items"},
-                                "ordered": {"type": "boolean", "description": "Ordered list (true) or bullet list (false)"}
+                                "text": {"type": "string", "description": "For heading/paragraph only"},
+                                "level": {"type": "integer", "description": "For heading only (1-6)"},
+                                "bold": {"type": "boolean", "description": "For paragraph only"},
+                                "italic": {"type": "boolean", "description": "For paragraph only"},
+                                "headers": {"type": "array", "items": {"type": "string"}, "description": "For table only — column headers"},
+                                "rows": {"type": "array", "description": "For table only — array of arrays"},
+                                "items": {"type": "array", "items": {"type": "string"}, "description": "For list only"},
+                                "ordered": {"type": "boolean", "description": "For list only (true=numbered, false=bullets)"}
                             },
                             "required": ["type"]
                         }
@@ -123,22 +125,23 @@ pub fn office_tool_definitions() -> Vec<Value> {
         ),
         tool_def(
             "process_image",
-            "Resize, crop, or convert an image. \
-             Example: {\"input_path\": \"photo.png\", \"output_path\": \"thumb.jpg\", \"operations\": [\
+            "Resize, crop, or convert an image. To convert format, just change the extension. \
+             Example convert: {\"input_path\": \"photo.png\", \"output_path\": \"photo.webp\"} \
+             Example resize: {\"input_path\": \"photo.png\", \"output_path\": \"thumb.jpg\", \"operations\": [\
              {\"type\": \"resize\", \"width\": 200, \"height\": 200, \"mode\": \"fit\"}, \
              {\"type\": \"quality\", \"value\": 85}]}",
             serde_json::json!({
                 "type": "object",
                 "properties": {
                     "input_path": {"type": "string", "description": "Source image path"},
-                    "output_path": {"type": "string", "description": "Output path (extension = format)"},
+                    "output_path": {"type": "string", "description": "Output path (extension determines format: jpg, png, webp, gif, bmp)"},
                     "operations": {
                         "type": "array",
-                        "description": "Operations: resize ({width,height,mode:'fit'|'fill'|'exact'}), crop ({x,y,width,height}), quality ({value:1-100})",
+                        "description": "Optional. Operations: resize ({type,width,height,mode:'fit'|'fill'|'exact'}), crop ({type,x,y,width,height}), quality ({type,value:1-100}). Omit for simple format conversion.",
                         "items": {"type": "object"}
                     }
                 },
-                "required": ["input_path", "output_path", "operations"]
+                "required": ["input_path", "output_path"]
             }),
         ),
     ]

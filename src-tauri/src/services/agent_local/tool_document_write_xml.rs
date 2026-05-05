@@ -106,6 +106,10 @@ fn write_table(writer: &mut Writer<Cursor<Vec<u8>>>, block: &serde_json::Value) 
     let headers = block["headers"].as_array().map(|a| a.as_slice()).unwrap_or(&[]);
     let rows = block["rows"].as_array().map(|a| a.as_slice()).unwrap_or(&[]);
 
+    if headers.is_empty() && rows.is_empty() {
+        return Ok(());
+    }
+
     writer.write_event(Event::Start(BytesStart::new("w:tbl"))).map_err(|e| format!("XML error: {e}"))?;
 
     if !headers.is_empty() {

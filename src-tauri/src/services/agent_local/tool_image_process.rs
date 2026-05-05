@@ -37,9 +37,13 @@ pub async fn process_image(
         Err(_) => return ToolResult::err("Impossible d'ouvrir l'image"),
     };
 
-    let ops = match super::tool_spreadsheet_write::coerce_to_array(operations) {
-        Some(arr) => arr,
-        None => return ToolResult::err("Le paramètre 'operations' doit être un tableau"),
+    let ops = if operations.is_null() {
+        vec![]
+    } else {
+        match super::tool_spreadsheet_write::coerce_to_array(operations) {
+            Some(arr) => arr,
+            None => return ToolResult::err("Le paramètre 'operations' doit être un tableau"),
+        }
     };
 
     let mut quality: Option<u8> = None;
