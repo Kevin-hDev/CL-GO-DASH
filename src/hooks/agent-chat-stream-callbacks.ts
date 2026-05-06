@@ -5,6 +5,14 @@ import i18n from "@/i18n";
 
 const MAX_PENDING_PERMISSIONS = 32;
 
+const KNOWN_ERROR_KEYS: Record<string, string> = {
+  ollama_connection_lost: "errors.ollamaConnectionLost",
+  model_not_found: "errors.modelNotFound",
+  context_length_exceeded: "errors.contextLengthExceeded",
+  rate_limit: "errors.rateLimited",
+  auth_failed: "errors.authFailed",
+};
+
 export interface ChatState {
   messages: AgentMessage[];
   completedSegments: StreamSegment[];
@@ -124,7 +132,9 @@ export function applyStreamEvent(
     case "done":
       return finishStream(next, event);
     case "error": {
-      next.error = event.data.message || i18n.t("errors.streamInterrupted");
+      const rawMsg = event.data.message || "";
+      const errorKey = KNOWN_ERROR_KEYS[rawMsg];
+      next.error = errorKey ? i18n.t(errorKey) : (rawMsg || i18n.t("errors.streamInterrupted"));
       next.isConnectionError = (event.data as Record<string, unknown>).isConnection === true;
       const partial = finalizeStream(next, 0, 0, next.tokenCount);
       partial.state.error = next.error;

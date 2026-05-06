@@ -46,6 +46,8 @@
   /* Lottie recolor → #ea580c */
   --lottie-orange-filter: brightness(0) saturate(100%) invert(30%) sepia(95%) saturate(2500%) hue-rotate(11deg) brightness(97%);
 
+  --thinking-accent: #4A9EE8;
+
   /* Tool colors — par type d'action */
   --tool-bash: #f97316;
   --tool-search: #4a8fe2;

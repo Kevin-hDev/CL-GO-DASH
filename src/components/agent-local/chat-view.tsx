@@ -110,10 +110,29 @@ export function ChatView({
   });
 
   const handleBuiltInCommand = useCallback((name: string) => {
-    if (name === "compress") {
-      void chat.sendMessage("/compress");
-    }
+    if (name === "compress") void chat.sendMessage("/compress");
   }, [chat]);
+
+  const handleSend = useCallback((text: string, sentFiles?: { name: string; path?: string; preview?: string }[], skills?: { name: string; content: string }[]) => {
+    const isFirst = chat.messages.length < 1;
+    void chat.sendMessage(text, sentFiles, proj.selectedProject?.path, proj.selectedProjectId ?? undefined, skills)
+      .then(() => {
+        if (proj.selectedProjectId) onSessionsRefresh?.();
+        if (isFirst && text.trim()) {
+          const autoName = text.slice(0, 40).trim();
+          if (autoName) onAutoRename?.(sessionId, autoName);
+        }
+      });
+  }, [chat, proj.selectedProject?.path, proj.selectedProjectId, onSessionsRefresh, onAutoRename, sessionId]);
+
+  const handleFileImport = useCallback(() => {
+    void (async () => {
+      const result = await openFileDialog({ multiple: true });
+      if (!result) return;
+      const paths = (Array.isArray(result) ? result : [result]).map((p) => String(p));
+      await fileDrop.addByPaths(paths);
+    })();
+  }, [fileDrop]);
 
   return (
     <FileDropZone
@@ -137,19 +156,10 @@ export function ChatView({
             liveTokenCount={chat.liveTokenCount}
             error={chat.error}
             isConnectionError={chat.isConnectionError}
-            onRetry={() => {
-              const lastUser = [...chat.messages].reverse().find((m) => m.role === "user");
-              if (lastUser) void chat.reload(lastUser.id);
-            }}
+            onRetry={() => { const u = [...chat.messages].reverse().find((m) => m.role === "user"); if (u) void chat.reload(u.id); }}
             onReload={(id) => void chat.reload(id)}
             onEdit={(id, c) => void chat.edit(id, c)}
-            onFileClick={(f) => setPreview({
-              name: f.name,
-              path: f.path,
-              type: "",
-              size: 0,
-              preview: f.thumbnail,
-            })}
+            onFileClick={(f) => setPreview({ name: f.name, path: f.path, type: "", size: 0, preview: f.thumbnail })}
             onFilePreview={onFilePreviewPath}
           />
           <div ref={bottomRef} />
@@ -177,26 +187,10 @@ export function ChatView({
               onPermissionModeChange={(m) => void permMode.change(m)}
               onRemoveFile={fileDrop.removeFile}
               onPreviewFile={setPreview}
-              onSend={(text, sentFiles, skills) => {
-                const isFirst = chat.messages.length < 1;
-                void chat.sendMessage(text, sentFiles, proj.selectedProject?.path, proj.selectedProjectId ?? undefined, skills)
-                  .then(() => {
-                    if (proj.selectedProjectId) onSessionsRefresh?.();
-                    if (isFirst && text.trim()) {
-                      const autoName = text.slice(0, 40).trim();
-                      if (autoName) onAutoRename?.(sessionId, autoName);
-                    }
-                  });
-              }}
+              onSend={handleSend}
               onStop={() => void chat.stop()}
               onClearFiles={fileDrop.clearFiles}
-              onFileImport={() => void (async () => {
-                const result = await openFileDialog({ multiple: true });
-                if (!result) return;
-                const raw = Array.isArray(result) ? result : [result];
-                const paths = raw.map((p) => String(p));
-                await fileDrop.addByPaths(paths);
-              })()}
+              onFileImport={handleFileImport}
               onModelChange={handleModelSelect}
               onToggleThinking={onToggleThinking}
               onBuiltInCommand={handleBuiltInCommand}
@@ -229,15 +223,7 @@ export function ChatView({
           onSetMaxHeight={terminalState.setMaxHeight}
         />
       </div>
-      {preview && (
-        <FilePreview
-          name={preview.name}
-          path={preview.path}
-          thumbnail={preview.preview}
-          isImage={!!preview.preview}
-          onClose={() => setPreview(null)}
-        />
-      )}
+      {preview && <FilePreview name={preview.name} path={preview.path} thumbnail={preview.preview} isImage={!!preview.preview} onClose={() => setPreview(null)} />}
       {pendingSwitch && (
         <SwitchModelDialog
           fromModel={model}

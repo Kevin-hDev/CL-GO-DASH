@@ -43,7 +43,8 @@ export function useContextProgress(
         } else {
           setMax(effectiveCtx || modelCtx);
         }
-      } catch {
+      } catch (e) {
+        console.warn("Context progress (ollama):", e);
         setMax(0);
       }
     } else if (provider === "codex-oauth") {
@@ -51,7 +52,8 @@ export function useContextProgress(
         const models = await invoke<LlmModelInfo[]>("codex_models");
         const found = models.find((m) => m.id === model);
         setMax(found?.context_length ?? 258_000);
-      } catch {
+      } catch (e) {
+        console.warn("Context progress (codex):", e);
         setMax(258_000);
       }
     } else {
@@ -59,7 +61,8 @@ export function useContextProgress(
         const models = await invoke<LlmModelInfo[]>("list_llm_models", { providerId: provider });
         const found = models.find((m) => m.id === model);
         setMax(found?.context_length ?? 0);
-      } catch {
+      } catch (e) {
+        console.warn("Context progress (llm):", e);
         setMax(0);
       }
     }

@@ -17,8 +17,8 @@
   white-space: nowrap;
   font-size: 11px;
   font-family: var(--font-mono);
-  color: #1a1a1a;
-  background: #fff;
+  color: var(--ink);
+  background: var(--surface);
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 6px;
   padding: 4px 8px;

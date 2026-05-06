@@ -117,9 +117,9 @@
 .thinking-content {
   margin-top: var(--space-xs);
   padding-left: var(--space-sm);
-  border-left: 2px solid #4A9EE8;
+  border-left: 2px solid var(--thinking-accent);
   font-size: var(--text-xs);
-  color: #4A9EE8;
+  color: var(--thinking-accent);
   white-space: pre-wrap;
   max-height: 240px;
   overflow-y: auto;
@@ -173,7 +173,7 @@
   align-items: center;
   font-size: 11px;
   font-family: var(--font-mono, monospace);
-  color: #f97316;
+  color: var(--tool-bash);
   margin-left: 4px;
 }
 

@@ -81,7 +81,7 @@ function parseDocumentResult(result: string): DocumentData | null {
     if (data !== null && typeof data === "object" && "text" in data && typeof (data as Record<string, unknown>).text === "string") {
       return data as DocumentData;
     }
-  } catch { /* ignore */ }
+  } catch (e) { console.warn("parseDocumentResult:", e); }
   return null;
 }
 
@@ -118,7 +118,7 @@ interface ContentBlock {
 function parseContentBlocks(content: unknown): ContentBlock[] {
   if (Array.isArray(content)) return content as ContentBlock[];
   if (typeof content === "string") {
-    try { return JSON.parse(content) as ContentBlock[]; } catch { /* ignore */ }
+    try { return JSON.parse(content) as ContentBlock[]; } catch (e) { console.warn("parseContentBlocks:", e); }
   }
   return [];
 }
