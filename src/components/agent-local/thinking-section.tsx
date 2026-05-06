@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { CaretRight, CaretDown } from "@/components/ui/icons";
 import "./messages.css";
+import "./tool-bubble.css";
 
 interface ThinkingSectionProps {
   content: string;
@@ -21,10 +21,14 @@ export function ThinkingSection({ content, durationMs, isActive }: ThinkingSecti
   return (
     <div>
       <button className={`thinking-toggle${isActive ? " thinking-active" : ""}`} onClick={() => setOpen(!open)}>
-        {open ? <CaretDown size={12} /> : <CaretRight size={12} />}
+        <span className="tb-arrow">{open ? "▾" : "▸"}</span>
         <span>{label}</span>
       </button>
-      {open && <div className="thinking-content">{content}</div>}
+      <div className={`tb-accordion${open ? " tb-open" : ""}`}>
+        <div className="tb-accordion-inner">
+          <div className="thinking-content">{content}</div>
+        </div>
+      </div>
     </div>
   );
 }

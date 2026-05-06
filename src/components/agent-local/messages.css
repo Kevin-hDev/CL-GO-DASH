@@ -151,6 +151,20 @@
   font-family: var(--font-mono);
   background: var(--void);
   margin: 0;
+  scrollbar-width: thin;
+}
+
+.code-block pre::-webkit-scrollbar {
+  height: 4px;
+}
+
+.code-block pre::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.code-block pre::-webkit-scrollbar-thumb {
+  background: var(--ink-faint);
+  border-radius: 2px;
 }
 
 .msg-stats-inline {

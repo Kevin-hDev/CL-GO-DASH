@@ -85,7 +85,15 @@ function renderMarkdown(text: string) {
   }
 
   if (lastIndex < text.length) {
-    parts.push(<span key={lastIndex}>{linkify(text.slice(lastIndex))}</span>);
+    const remaining = text.slice(lastIndex);
+    const openBlock = /```(\w*)\n([\s\S]*)$/.exec(remaining);
+    if (openBlock) {
+      const before = remaining.slice(0, openBlock.index);
+      if (before) parts.push(<span key={lastIndex}>{linkify(before)}</span>);
+      parts.push(<CodeBlock key={lastIndex + openBlock.index} language={openBlock[1]} code={openBlock[2]} />);
+    } else {
+      parts.push(<span key={lastIndex}>{linkify(remaining)}</span>);
+    }
   }
 
   return parts.length > 0 ? parts : text;

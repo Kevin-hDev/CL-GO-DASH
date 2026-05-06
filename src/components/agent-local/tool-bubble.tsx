@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { Spinner } from "@phosphor-icons/react";
 import type { ToolActivity } from "@/hooks/agent-chat-utils";
 import type { ToolActivityRecord } from "@/types/agent";
 import { isFileTool } from "@/lib/tool-file-path";
 import { ContentPreview, DiffPreview, WebResultsPreview } from "./tool-previews";
 import { WriteSpreadsheetPreview, WriteDocumentPreview } from "./tool-office-previews";
+import "./tool-bubble.css";
 
 const TOOL_COLORS: Record<string, string> = {
   bash: "var(--tool-bash)", read_file: "var(--tool-file-read)",
@@ -17,6 +19,11 @@ const TOOL_COLORS: Record<string, string> = {
   write_document: "var(--tool-office-write)",
   process_image: "var(--tool-office-write)",
 };
+
+const CLOSED_BY_DEFAULT = new Set([
+  "bash", "grep", "glob", "read_file", "list_dir",
+  "read_spreadsheet", "read_document", "read_image",
+]);
 
 const BUBBLE_STYLE = {
   width: "100%", maxWidth: "720px", background: "var(--void)",
@@ -60,8 +67,7 @@ function toolSummary(t: ToolActivity): string {
 }
 
 export function ToolBubble({
-  tools,
-  onFilePreview,
+  tools, onFilePreview,
 }: { tools: ToolActivity[]; onFilePreview?: (path: string) => void }) {
   if (tools.length === 0) return null;
   return (
@@ -71,14 +77,13 @@ export function ToolBubble({
           const skipWrite = t.name === "write_file" && i > 0
             && tools.slice(0, i).some((p) => p.name === "edit_file" && String(p.args.path) === String(t.args.path));
           return (
-            <div key={i}>
-              <ToolRow name={t.name} summary={toolSummary(t)} done={!!t.result} isError={t.isError} errorMessage={t.isError ? t.result : undefined} onFilePreview={onFilePreview} />
+            <ToolItem key={i} name={t.name} summary={toolSummary(t)} done={!!t.result} isError={t.isError} errorMessage={t.isError ? t.result : undefined} result={t.result} onFilePreview={onFilePreview}>
               {t.name === "write_file" && !skipWrite && typeof t.args.content === "string" && <ContentPreview content={t.args.content} path={toolSummary(t)} />}
               {t.name === "edit_file" && typeof t.args.old_string === "string" && <DiffPreview oldText={t.args.old_string} newText={str(t.args.new_string)} path={toolSummary(t)} startLine={parseLineFromResult(t.result)} />}
               {(t.name === "web_search" || t.name === "web_fetch") && t.result && <WebResultsPreview content={t.result} isSearch={t.name === "web_search"} />}
               {t.name === "write_spreadsheet" && t.result && !t.isError && <WriteSpreadsheetPreview operations={t.args.operations} />}
               {t.name === "write_document" && t.result && !t.isError && <WriteDocumentPreview content={t.args.content} />}
-            </div>
+            </ToolItem>
           );
         })}
       </div>
@@ -87,8 +92,7 @@ export function ToolBubble({
 }
 
 export function SavedToolBubble({
-  tools,
-  onFilePreview,
+  tools, onFilePreview,
 }: { tools: ToolActivityRecord[]; onFilePreview?: (path: string) => void }) {
   if (tools.length === 0) return null;
   return (
@@ -98,14 +102,13 @@ export function SavedToolBubble({
           const skipWrite = t.name === "write_file" && i > 0
             && tools.slice(0, i).some((p) => p.name === "edit_file" && p.summary === t.summary);
           return (
-            <div key={i}>
-              <ToolRow name={t.name} summary={t.summary} done={t.result != null || t.is_error != null} isError={t.is_error} errorMessage={t.is_error ? t.result : undefined} onFilePreview={onFilePreview} />
+            <ToolItem key={i} name={t.name} summary={t.summary} done={t.result != null || t.is_error != null} isError={t.is_error} errorMessage={t.is_error ? t.result : undefined} result={t.result} onFilePreview={onFilePreview}>
               {t.name === "write_file" && t.content && !skipWrite && <ContentPreview content={t.content} path={t.summary} />}
               {t.old_text != null && t.new_text != null && <DiffPreview oldText={t.old_text} newText={t.new_text} path={t.summary} startLine={t.start_line} />}
               {(t.name === "web_search" || t.name === "web_fetch") && t.result && <WebResultsPreview content={t.result} isSearch={t.name === "web_search"} />}
               {t.name === "write_spreadsheet" && t.result && !t.is_error && t.content && <WriteSpreadsheetPreview operations={t.content} />}
               {t.name === "write_document" && t.result && !t.is_error && t.content && <WriteDocumentPreview content={t.content} />}
-            </div>
+            </ToolItem>
           );
         })}
       </div>
@@ -119,43 +122,66 @@ const ERROR_STYLE = {
   fontFamily: "var(--font-mono, monospace)",
   lineHeight: 1.4,
   marginTop: 2,
-  marginLeft: 78,
+  marginLeft: 24,
   opacity: 0.85,
   wordBreak: "break-word" as const,
 };
 
-function ToolRow({ name, summary, done, isError, errorMessage, onFilePreview }: {
-  name: string; summary: string; done: boolean; isError?: boolean; errorMessage?: string; onFilePreview?: (path: string) => void;
+function hasPreviewContent(children: React.ReactNode): boolean {
+  if (!children) return false;
+  if (Array.isArray(children)) return children.some((c) => !!c);
+  return true;
+}
+
+function ToolItem({ name, summary, done, isError, errorMessage, result, onFilePreview, children }: {
+  name: string; summary: string; done: boolean; isError?: boolean; errorMessage?: string;
+  result?: string; onFilePreview?: (path: string) => void; children?: React.ReactNode;
 }) {
-  const clickable = isFileTool(name) && summary.trim().length > 0 && !!onFilePreview;
+  const hasPreview = hasPreviewContent(children);
+  const hasResult = !!result && !isError && !hasPreview && CLOSED_BY_DEFAULT.has(name);
+  const canToggle = hasPreview || hasResult;
+  const [isOpen, setIsOpen] = useState(!CLOSED_BY_DEFAULT.has(name));
+  const clickablePath = isFileTool(name) && summary.trim().length > 0 && !!onFilePreview;
+
   return (
     <div>
       <div style={ROW_STYLE}>
-        <span style={{ color: TOOL_COLORS[name] ?? "var(--ink-muted)", fontWeight: 600, flexShrink: 0, minWidth: 70 }}>{name}</span>
+        {canToggle ? (
+          <button className="tb-toggle" onClick={() => setIsOpen(!isOpen)}>
+            <span className="tb-arrow">{isOpen ? "▾" : "▸"}</span>
+            <span style={{ color: TOOL_COLORS[name] ?? "var(--ink-muted)", fontWeight: 600 }}>{name}</span>
+          </button>
+        ) : (
+          <span style={{ color: TOOL_COLORS[name] ?? "var(--ink-muted)", fontWeight: 600, flexShrink: 0, minWidth: 70 }}>{name}</span>
+        )}
         <span
-          role={clickable ? "button" : undefined}
-          tabIndex={clickable ? 0 : undefined}
+          role={clickablePath ? "button" : undefined}
+          tabIndex={clickablePath ? 0 : undefined}
           style={{
-            color: clickable ? "var(--ink)" : "var(--ink-muted)",
-            wordBreak: "break-all",
-            flex: 1,
-            cursor: clickable ? "pointer" : "default",
-            textDecoration: clickable ? "underline" : "none",
+            color: clickablePath ? "var(--ink)" : "var(--ink-muted)",
+            wordBreak: "break-all", flex: 1,
+            cursor: clickablePath ? "pointer" : "default",
+            textDecoration: clickablePath ? "underline" : "none",
             textDecorationColor: "var(--edge)",
           }}
-          onClick={() => { if (clickable) onFilePreview(summary); }}
+          onClick={(e) => { if (clickablePath) { e.stopPropagation(); onFilePreview(summary); } }}
           onKeyDown={(e) => {
-            if (!clickable) return;
-            if (e.key.startsWith("Ent") || e.key.startsWith(" ")) {
-              e.preventDefault();
-              onFilePreview(summary);
-            }
+            if (!clickablePath) return;
+            if (e.key.startsWith("Ent") || e.key.startsWith(" ")) { e.preventDefault(); onFilePreview(summary); }
           }}
         >{summary}</span>
         {!done && <Spinner size={12} style={{ color: "var(--ink-faint)", animation: "spin 1s linear infinite", flexShrink: 0 }} />}
         {done && <span style={{ color: isError ? "var(--signal-error)" : "var(--signal-ok)", flexShrink: 0, fontSize: "10px" }}>{isError ? "✗" : "✓"}</span>}
       </div>
       {isError && errorMessage && <div style={ERROR_STYLE}>{errorMessage}</div>}
+      {canToggle && (
+        <div className={`tb-accordion${isOpen ? " tb-open" : ""}`}>
+          <div className="tb-accordion-inner">
+            {hasPreview && children}
+            {hasResult && <div className="tb-result-preview">{result}</div>}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

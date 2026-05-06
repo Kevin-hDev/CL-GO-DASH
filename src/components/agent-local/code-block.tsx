@@ -1,5 +1,7 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Copy, Check } from "@/components/ui/icons";
+import { highlightCode } from "@/lib/highlight";
+import "@/components/file-preview/file-preview-highlight.css";
 import "./messages.css";
 
 interface CodeBlockProps {
@@ -16,6 +18,11 @@ export function CodeBlock({ code, language }: CodeBlockProps) {
     setTimeout(() => setCopied(false), 2000);
   }, [code]);
 
+  const html = useMemo(
+    () => language ? highlightCode(code, language) : null,
+    [code, language],
+  );
+
   return (
     <div className="code-block">
       <div className="code-block-header">
@@ -24,7 +31,12 @@ export function CodeBlock({ code, language }: CodeBlockProps) {
           {copied ? <Check size={14} /> : <Copy size={14} />}
         </button>
       </div>
-      <pre><code>{code}</code></pre>
+      <pre>
+        {html
+          ? <code dangerouslySetInnerHTML={{ __html: html }} />
+          : <code>{code}</code>
+        }
+      </pre>
     </div>
   );
 }
