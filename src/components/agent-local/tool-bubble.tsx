@@ -4,7 +4,7 @@ import type { ToolActivity } from "@/hooks/agent-chat-utils";
 import type { ToolActivityRecord } from "@/types/agent";
 import { isFileTool } from "@/lib/tool-file-path";
 import { ContentPreview, DiffPreview, WebResultsPreview } from "./tool-previews";
-import { WriteSpreadsheetPreview, WriteDocumentPreview } from "./tool-office-previews";
+import { ReadSpreadsheetPreview, WriteSpreadsheetPreview, DocumentResultPreview, WriteDocumentPreview } from "./tool-office-previews";
 import "./tool-bubble.css";
 
 const TOOL_COLORS: Record<string, string> = {
@@ -78,6 +78,8 @@ export function ToolBubble({
               {t.name === "write_file" && !skipWrite && typeof t.args.content === "string" && <ContentPreview content={t.args.content} path={toolSummary(t)} />}
               {t.name === "edit_file" && typeof t.args.old_string === "string" && <DiffPreview oldText={t.args.old_string} newText={str(t.args.new_string)} path={toolSummary(t)} startLine={parseLineFromResult(t.result)} />}
               {(t.name === "web_search" || t.name === "web_fetch") && t.result && <WebResultsPreview content={t.result} isSearch={t.name === "web_search"} />}
+              {t.name === "read_spreadsheet" && t.result && !t.isError && <ReadSpreadsheetPreview result={t.result} />}
+              {t.name === "read_document" && t.result && !t.isError && <DocumentResultPreview result={t.result} />}
               {t.name === "write_spreadsheet" && t.result && !t.isError && <WriteSpreadsheetPreview operations={t.args.operations} />}
               {t.name === "write_document" && t.result && !t.isError && <WriteDocumentPreview content={t.args.content} />}
             </ToolItem>
@@ -103,6 +105,8 @@ export function SavedToolBubble({
               {t.name === "write_file" && t.content && !skipWrite && <ContentPreview content={t.content} path={t.summary} />}
               {t.old_text != null && t.new_text != null && <DiffPreview oldText={t.old_text} newText={t.new_text} path={t.summary} startLine={t.start_line} />}
               {(t.name === "web_search" || t.name === "web_fetch") && t.result && <WebResultsPreview content={t.result} isSearch={t.name === "web_search"} />}
+              {t.name === "read_spreadsheet" && t.result && !t.is_error && <ReadSpreadsheetPreview result={t.result} />}
+              {t.name === "read_document" && t.result && !t.is_error && <DocumentResultPreview result={t.result} />}
               {t.name === "write_spreadsheet" && t.result && !t.is_error && t.content && <WriteSpreadsheetPreview operations={t.content} />}
               {t.name === "write_document" && t.result && !t.is_error && t.content && <WriteDocumentPreview content={t.content} />}
             </ToolItem>

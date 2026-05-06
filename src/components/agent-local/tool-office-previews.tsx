@@ -59,6 +59,18 @@ function SpreadsheetTable({ data }: { data: SpreadsheetData }) {
   );
 }
 
+export function ReadSpreadsheetPreview({ result }: { result: string }) {
+  const data = useMemo(() => {
+    try {
+      const parsed = JSON.parse(result) as Record<string, unknown>;
+      if (!Array.isArray(parsed.headers)) return null;
+      return { headers: parsed.headers, rows: Array.isArray(parsed.rows) ? parsed.rows : [], total_rows: typeof parsed.total_rows === "number" ? parsed.total_rows : 0 } as SpreadsheetData;
+    } catch (e) { console.warn("parseReadSpreadsheet:", e); return null; }
+  }, [result]);
+  if (!data || data.headers.length === 0) return null;
+  return <SpreadsheetTable data={data} />;
+}
+
 export function WriteSpreadsheetPreview({ operations }: { operations: unknown }) {
   const data = useMemo(() => {
     const json = typeof operations === "string" ? operations : JSON.stringify(operations ?? []);
