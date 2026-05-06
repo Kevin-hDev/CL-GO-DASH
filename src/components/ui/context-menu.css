@@ -1,6 +1,6 @@
 .context-menu {
   position: fixed;
-  background: var(--surface);
+  background: var(--void);
   border: 1px solid var(--edge);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-card);

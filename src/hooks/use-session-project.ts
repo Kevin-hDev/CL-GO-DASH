@@ -10,16 +10,19 @@ export function useSessionProject(
   hasMessages: boolean,
 ) {
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setLoading(true);
     invoke<AgentSession>("get_agent_session", { id: sessionId })
       .then((s) => setSelectedProjectId(s.project_id ?? null))
-      .catch((e) => console.warn("Session project load:", e));
+      .catch((e) => console.warn("Session project load:", e))
+      .finally(() => setLoading(false));
   }, [sessionId]);
 
   const selectedProject = projects.find((p) => p.id === selectedProjectId);
   const locked = hasMessages && !!selectedProjectId;
-  const hidden = hasMessages && !selectedProjectId;
+  const hidden = loading || (hasMessages && !selectedProjectId);
 
   const handleAddProject = useCallback(async () => {
     const result = await openFileDialog({ directory: true });

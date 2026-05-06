@@ -121,7 +121,7 @@ export function ChatView({
       onDragChange={fileDrop.setDragging}
       onDropPaths={(paths) => void fileDrop.addByPaths(paths)}
     >
-      <div className="chat-zone">
+      <div className="chat-zone" style={{ opacity: chat.sessionLoading ? 0 : 1 }}>
         <div className="chat-messages" ref={scrollRef} onScroll={handleScroll}>
           <MessageList
             sessionId={sessionId}

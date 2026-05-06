@@ -17,6 +17,7 @@ export function useAgentChat(
   permissionMode?: string,
 ) {
   const [state, setState] = useState<ChatState>(EMPTY_CHAT_STATE);
+  const [sessionLoading, setSessionLoading] = useState(true);
   const savingRef = useRef(false);
   const sessionRef = useRef(sessionId);
   const deliveredPermissionsRef = useRef<Set<string>>(new Set());
@@ -48,6 +49,7 @@ export function useAgentChat(
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- reset on session change + fetch→setState are intentional
+    setSessionLoading(true);
     setState(EMPTY_CHAT_STATE);
     deliveredPermissionsRef.current.clear();
     if (!sessionId) return;
@@ -58,6 +60,7 @@ export function useAgentChat(
       const { pendingPermissions, completed, ...chatState } = snapshot;
       void completed;
       setState(chatState);
+      setSessionLoading(false);
       for (const request of pendingPermissions) {
         deliverPermission(request.id, request.toolName, request.arguments);
       }
@@ -79,8 +82,9 @@ export function useAgentChat(
           messages: session.messages,
           tokenCount: session.accumulated_tokens,
         }));
+        setSessionLoading(false);
       })
-      .catch((e: unknown) => console.warn("Session load:", e));
+      .catch((e: unknown) => { console.warn("Session load:", e); setSessionLoading(false); });
 
     const unlisten = listen<{ session_id: string }>("wakeup-completed", (e) => {
       if (e.payload?.session_id === sessionId && sessionRef.current === sessionId) {
@@ -191,5 +195,5 @@ export function useAgentChat(
 
   const ready = state.messages.length > 0 || !sessionId;
 
-  return { ...state, ready, sendMessage, reload, edit, stop };
+  return { ...state, ready, sessionLoading, sendMessage, reload, edit, stop };
 }

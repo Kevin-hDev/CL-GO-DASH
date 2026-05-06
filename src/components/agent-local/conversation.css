@@ -3,7 +3,7 @@
 .conv-header {
   display: flex;
   align-items: center;
-  padding: var(--space-sm);
+  padding: var(--space-sm) var(--space-sm) var(--space-sm) calc(var(--space-sm) - 4px);
 }
 
 .conv-new-btn {
@@ -31,14 +31,14 @@
 .conv-list {
   flex: 1;
   overflow-y: auto;
-  padding: 0 var(--space-sm) var(--space-sm);
+  padding: 0 var(--space-sm) var(--space-sm) calc(var(--space-sm) - 4px);
 }
 
 .conv-item {
   display: flex;
   align-items: center;
   gap: var(--space-xs);
-  padding: 5px var(--space-sm);
+  padding: 5px 2px 5px calc(var(--space-sm) - 8px);
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all var(--ease-smooth);
@@ -73,8 +73,8 @@
   flex: 1;
   min-width: 0;
   overflow: hidden;
-  mask-image: linear-gradient(to right, black calc(100% - 20px), transparent);
-  -webkit-mask-image: linear-gradient(to right, black calc(100% - 20px), transparent);
+  mask-image: linear-gradient(to right, black calc(100% - 16px), transparent);
+  -webkit-mask-image: linear-gradient(to right, black calc(100% - 16px), transparent);
 }
 
 /* Tab Bar */
@@ -322,7 +322,7 @@
 
 /* Indented sessions under a project */
 .conv-session-indented {
-  padding-left: calc(var(--space-sm) + 14px + var(--space-xs));
+  padding-left: calc(var(--space-sm) + 14px + var(--space-xs) - 8px);
 }
 
 /* Drag-and-drop */

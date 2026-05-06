@@ -4,7 +4,7 @@
     "heartbeat": "Heartbeat",
     "personality": "/cl-go",
     "settings": "设置",
-    "agentLocal": "本地助手",
+    "agentLocal": "会话",
     "ollama": "Ollama",
     "apiKeys": "API 密钥"
   },

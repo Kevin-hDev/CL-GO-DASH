@@ -8,16 +8,14 @@ import { WriteSpreadsheetPreview, WriteDocumentPreview } from "./tool-office-pre
 import "./tool-bubble.css";
 
 const TOOL_COLORS: Record<string, string> = {
-  bash: "var(--tool-bash)", read_file: "var(--tool-file-read)",
-  write_file: "var(--tool-file-write)", edit_file: "var(--tool-file-write)",
-  list_dir: "var(--tool-search)", grep: "var(--tool-search)", glob: "var(--tool-search)",
+  bash: "var(--tool-bash)",
+  glob: "var(--tool-search)", grep: "var(--tool-search)", list_dir: "var(--tool-search)",
+  read_file: "var(--tool-read)", read_spreadsheet: "var(--tool-read)",
+  read_document: "var(--tool-read)", read_image: "var(--tool-read)",
+  write_file: "var(--tool-write)", write_spreadsheet: "var(--tool-write)",
+  write_document: "var(--tool-write)",
+  edit_file: "var(--tool-edit)", process_image: "var(--tool-edit)",
   web_search: "var(--tool-web)", web_fetch: "var(--tool-web)",
-  read_spreadsheet: "var(--tool-office-read)",
-  read_document: "var(--tool-office-read)",
-  read_image: "var(--tool-office-read)",
-  write_spreadsheet: "var(--tool-office-write)",
-  write_document: "var(--tool-office-write)",
-  process_image: "var(--tool-office-write)",
 };
 
 const CLOSED_BY_DEFAULT = new Set([
@@ -26,8 +24,7 @@ const CLOSED_BY_DEFAULT = new Set([
 ]);
 
 const BUBBLE_STYLE = {
-  width: "100%", maxWidth: "720px", background: "var(--void)",
-  border: "1px solid var(--edge)",
+  width: "100%", maxWidth: "720px",
   borderRadius: "var(--radius-md, 8px)",
   padding: "10px 14px", alignSelf: "center" as const, margin: "6px auto",
 };
@@ -71,7 +68,7 @@ export function ToolBubble({
 }: { tools: ToolActivity[]; onFilePreview?: (path: string) => void }) {
   if (tools.length === 0) return null;
   return (
-    <div style={BUBBLE_STYLE}>
+    <div className="chat-bubble" style={BUBBLE_STYLE}>
       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
         {tools.map((t, i) => {
           const skipWrite = t.name === "write_file" && i > 0
@@ -96,7 +93,7 @@ export function SavedToolBubble({
 }: { tools: ToolActivityRecord[]; onFilePreview?: (path: string) => void }) {
   if (tools.length === 0) return null;
   return (
-    <div style={BUBBLE_STYLE}>
+    <div className="chat-bubble" style={BUBBLE_STYLE}>
       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
         {tools.map((t, i) => {
           const skipWrite = t.name === "write_file" && i > 0

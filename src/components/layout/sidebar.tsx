@@ -89,8 +89,8 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
             style={{
               paddingTop: 5,
               paddingBottom: 5,
-              marginLeft: 6,
-              marginRight: 6,
+              marginLeft: 9,
+              marginRight: 9,
               borderRadius: "var(--radius-md)",
               background: activeTab === item.id ? "var(--surface-hover)" : undefined,
             }}
@@ -146,8 +146,8 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
         style={{
           paddingTop: 5,
           paddingBottom: 5,
-          marginLeft: 6,
-          marginRight: 6,
+          marginLeft: 9,
+          marginRight: 9,
           marginBottom: 12,
           borderRadius: "var(--radius-md)",
           background: activeTab === "settings" ? "var(--surface-hover)" : undefined,

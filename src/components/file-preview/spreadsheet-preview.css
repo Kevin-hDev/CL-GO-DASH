@@ -31,8 +31,8 @@
 }
 
 .sp-sheet-tab.active {
-  color: var(--tool-office-read);
-  border-bottom-color: var(--tool-office-read);
+  color: var(--tool-read);
+  border-bottom-color: var(--tool-read);
 }
 
 .sp-table-wrapper {
@@ -93,8 +93,8 @@
   padding: 4px 12px;
   font-weight: 600;
   color: var(--ink);
-  background: color-mix(in srgb, var(--tool-office-read) 6%, transparent);
-  border-bottom: 2px solid color-mix(in srgb, var(--tool-office-read) 25%, transparent);
+  background: color-mix(in srgb, var(--tool-read) 6%, transparent);
+  border-bottom: 2px solid color-mix(in srgb, var(--tool-read) 25%, transparent);
   border-right: 1px solid color-mix(in srgb, var(--edge) 40%, transparent);
 }
 

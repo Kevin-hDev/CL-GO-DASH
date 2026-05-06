@@ -4,7 +4,7 @@
     "heartbeat": "Heartbeat",
     "personality": "/cl-go",
     "settings": "Paramètres",
-    "agentLocal": "Agent Local",
+    "agentLocal": "Session",
     "ollama": "Ollama",
     "apiKeys": "Clé API"
   },

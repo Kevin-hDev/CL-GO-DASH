@@ -82,8 +82,16 @@ export function useFilePreview(sessionId: string | null, operations: FileOperati
     setActiveTab((current) => current === id ? "summary" : current);
   }, []);
 
+  const closePanel = useCallback(() => {
+    setOpen(false);
+    setFullscreen(false);
+  }, []);
+
   const toggleOpen = useCallback(() => {
-    setOpen((value) => !value);
+    setOpen((value) => {
+      if (value) setFullscreen(false);
+      return !value;
+    });
     setActiveTab((current) => current || "summary");
   }, []);
 
@@ -134,6 +142,7 @@ export function useFilePreview(sessionId: string | null, operations: FileOperati
     setFullscreen,
     setActiveTab,
     toggleOpen,
+    closePanel,
     openOperation,
     openPath,
     closeTab,

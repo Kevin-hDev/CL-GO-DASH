@@ -46,12 +46,11 @@
   /* Lottie recolor → #f97316 */
   --lottie-orange-filter: brightness(0) saturate(100%) invert(45%) sepia(98%) saturate(1800%) hue-rotate(360deg) brightness(100%);
 
-  /* Tool colors */
+  /* Tool colors — par type d'action */
   --tool-bash: #ea580c;
-  --tool-file-read: #16a34a;
-  --tool-file-write: #ca8a04;
   --tool-search: #2563eb;
+  --tool-read: #0891b2;
+  --tool-write: #16a34a;
+  --tool-edit: #ca8a04;
   --tool-web: #7c3aed;
-  --tool-office-read: #0891b2;
-  --tool-office-write: #db2777;
 }
