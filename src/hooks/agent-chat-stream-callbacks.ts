@@ -4,6 +4,7 @@ import type { AgentMessage, StreamEvent } from "@/types/agent";
 import i18n from "@/i18n";
 
 const MAX_PENDING_PERMISSIONS = 32;
+const MAX_MESSAGES_PER_SESSION = 2000;
 
 const KNOWN_ERROR_KEYS: Record<string, string> = {
   ollama_connection_lost: "errors.ollamaConnectionLost",
@@ -218,8 +219,12 @@ function finalizeStream(
     segments: built.segments, files: [], timestamp: new Date().toISOString(),
     tokens: outputTokens,
   };
+  const allMessages = [...next.messages, assistantMessage];
+  if (allMessages.length > MAX_MESSAGES_PER_SESSION) {
+    allMessages.splice(0, allMessages.length - MAX_MESSAGES_PER_SESSION);
+  }
   return {
-    state: { ...next, messages: [...next.messages, assistantMessage] },
+    state: { ...next, messages: allMessages },
     assistantMessage, assistantTokens: outputTokens,
   };
 }
