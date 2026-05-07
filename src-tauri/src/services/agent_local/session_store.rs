@@ -82,32 +82,13 @@ pub async fn find_heartbeat_session(
     provider: &str,
     model: &str,
 ) -> Result<Option<String>, String> {
-    let dir = sessions_dir();
-    if !dir.exists() {
-        return Ok(None);
-    }
-    let mut read_dir = tokio::fs::read_dir(&dir)
-        .await
-        .map_err(|e| e.to_string())?;
-    let mut best: Option<(chrono::DateTime<Utc>, String)> = None;
-    while let Ok(Some(entry)) = read_dir.next_entry().await {
-        let path = entry.path();
-        if path.extension().and_then(|e| e.to_str()) != Some("json") {
-            continue;
-        }
-        if let Ok(data) = tokio::fs::read_to_string(&path).await {
-            if let Ok(session) = serde_json::from_str::<AgentSession>(&data) {
-                let matches_provider = session.provider == provider;
-                if session.is_heartbeat && matches_provider && session.model == model {
-                    let candidate = (session.created_at, session.id);
-                    if best.as_ref().map(|b| candidate.0 > b.0).unwrap_or(true) {
-                        best = Some(candidate);
-                    }
-                }
-            }
-        }
-    }
-    Ok(best.map(|(_, id)| id))
+    let metas = crate::services::agent_local::session_index::read_index().await?;
+    let best = metas
+        .iter()
+        .filter(|m| m.is_heartbeat && m.provider == provider && m.model == model)
+        .max_by_key(|m| m.created_at)
+        .map(|m| m.id.clone());
+    Ok(best)
 }
 
 pub async fn get(id: &str) -> Result<AgentSession, String> {
@@ -120,38 +101,7 @@ pub async fn get(id: &str) -> Result<AgentSession, String> {
 }
 
 pub async fn list() -> Result<Vec<AgentSessionMeta>, String> {
-    let dir = sessions_dir();
-    if !dir.exists() {
-        return Ok(Vec::new());
-    }
-    let mut read_dir = tokio::fs::read_dir(&dir)
-        .await
-        .map_err(|e| e.to_string())?;
-    let mut metas = Vec::new();
-    while let Ok(Some(entry)) = read_dir.next_entry().await {
-        let path = entry.path();
-        if path.extension().and_then(|e| e.to_str()) != Some("json") {
-            continue;
-        }
-        if let Ok(data) = tokio::fs::read_to_string(&path).await {
-            if let Ok(session) = serde_json::from_str::<AgentSession>(&data) {
-                metas.push(AgentSessionMeta {
-                    id: session.id,
-                    name: session.name,
-                    created_at: session.created_at,
-                    model: session.model,
-                    provider: session.provider,
-                    message_count: session.messages.len(),
-                    is_heartbeat: session.is_heartbeat,
-                    project_id: session.project_id,
-                    parent_session_id: session.parent_session_id,
-                    subagent_type: session.subagent_type,
-                    subagent_status: session.subagent_status,
-                    subagent_run_id: session.subagent_run_id,
-                });
-            }
-        }
-    }
+    let mut metas = crate::services::agent_local::session_index::read_index().await?;
     metas.sort_by(|a, b| b.created_at.cmp(&a.created_at));
     Ok(metas)
 }
@@ -165,6 +115,8 @@ pub async fn save(session: &AgentSession) -> Result<(), String> {
     let data = serde_json::to_string_pretty(session).map_err(|e| e.to_string())?;
     tokio::fs::write(&tmp, &data).await.map_err(|e| e.to_string())?;
     tokio::fs::rename(&tmp, &path).await.map_err(|e| e.to_string())?;
+    let meta = crate::services::agent_local::session_index::meta_from_session(session);
+    let _ = crate::services::agent_local::session_index::upsert_entry(meta).await;
     Ok(())
 }
 
@@ -211,7 +163,9 @@ pub async fn update_model(id: &str, model: &str, provider: &str) -> Result<(), S
 pub async fn delete(id: &str) -> Result<(), String> {
     validate_session_id(id)?;
     let path = sessions_dir().join(format!("{id}.json"));
-    tokio::fs::remove_file(&path).await.map_err(|e| format!("Erreur suppression: {e}"))
+    tokio::fs::remove_file(&path).await.map_err(|e| format!("Erreur suppression: {e}"))?;
+    let _ = crate::services::agent_local::session_index::remove_entry(id).await;
+    Ok(())
 }
 
 pub use super::session_ops::{
