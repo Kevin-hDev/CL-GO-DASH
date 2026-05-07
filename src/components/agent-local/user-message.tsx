@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import { MessageActions } from "./message-actions";
 import { EditMessage } from "./edit-message";
 import { useHoverClass } from "@/hooks/use-hover-class";
@@ -21,7 +21,7 @@ interface UserMessageProps {
   onFileClick?: (file: FileInfo) => void;
 }
 
-export function UserMessage({
+export const UserMessage = memo(function UserMessage({
   content, files, skillNames, isStreaming, onReload, onEdit, onFileClick,
 }: UserMessageProps) {
   const hoverRef = useHoverClass();
@@ -90,7 +90,7 @@ export function UserMessage({
       </div>
     </div>
   );
-}
+});
 
 function FileCard({ file, onClick }: { file: FileInfo; onClick: () => void }) {
   const ext = file.name.split(".").pop()?.toLowerCase() ?? "";

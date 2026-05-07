@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { useTranslation } from "react-i18next";
 import { CodeBlock } from "./code-block";
 import { ThinkingSection } from "./thinking-section";
@@ -27,7 +28,7 @@ function formatTokens(n: number): string {
   return String(n);
 }
 
-export function AssistantMessage({
+export const AssistantMessage = memo(function AssistantMessage({
   content, thinking, toolActivities, isStreaming, onReload,
   tokens, tps, totalElapsedMs, streamStartedAt, liveTokenCount,
 }: AssistantMessageProps) {
@@ -68,7 +69,7 @@ export function AssistantMessage({
       )}
     </div>
   );
-}
+});
 
 function renderMarkdown(text: string) {
   const parts: React.ReactNode[] = [];
