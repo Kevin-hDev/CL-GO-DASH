@@ -1,11 +1,9 @@
-import { useState, useRef, useEffect, useCallback } from "react";
-import { open as openFileDialog } from "@tauri-apps/plugin-dialog";
+import { useState, useEffect } from "react";
 import { MessageList } from "./message-list";
 import { ChatInput } from "./chat-input";
 import { ProjectSelector } from "./project-selector";
 import { FileDropZone } from "./file-drop-zone";
-import { FilePreview } from "./file-preview";
-import { SwitchModelDialog } from "./switch-model-dialog";
+import { ChatOverlays } from "./chat-overlays";
 import { SubagentAccordion } from "./subagent-accordion";
 import { useAgentChat } from "@/hooks/use-agent-chat";
 import { useContextProgress } from "@/hooks/use-context-progress";
@@ -18,6 +16,7 @@ import { useModelSwitch } from "@/hooks/use-model-switch";
 import { useSessionFiles } from "@/hooks/use-session-files";
 import { useSubagents } from "@/hooks/use-subagents";
 import { useSubagentSynthesis } from "@/hooks/use-subagent-synthesis";
+import { useChatActions } from "@/hooks/use-chat-actions";
 import { PermissionDialog } from "./permission-dialog";
 import { TerminalPanel } from "@/components/terminal/terminal-panel";
 import type { useTerminal } from "@/hooks/use-terminal";
@@ -51,27 +50,12 @@ interface ChatViewProps {
 }
 
 export function ChatView({
-  sessionId,
-  model,
-  provider,
-  projects,
-  onAddProject,
-  onSessionsRefresh,
-  onApplySwitch,
-  onNewSession,
-  onAutoRename,
-  initialMessage,
-  initialWorkingDir,
-  initialSkills,
-  initialFiles,
-  thinking,
-  onToggleThinking,
-  onInitialMessageSent,
-  terminalState,
-  onFileOperationsChange,
-  onFilePreviewPath,
-  onOpenSubagent,
-  isSubagent = false,
+  sessionId, model, provider, projects, onAddProject,
+  onSessionsRefresh, onApplySwitch, onNewSession, onAutoRename,
+  initialMessage, initialWorkingDir, initialSkills, initialFiles,
+  thinking, onToggleThinking, onInitialMessageSent,
+  terminalState, onFileOperationsChange, onFilePreviewPath,
+  onOpenSubagent, isSubagent = false,
 }: ChatViewProps) {
   const permissions = usePermissionRequests();
   const permMode = usePermissionMode(sessionId);
@@ -85,96 +69,47 @@ export function ChatView({
   const [preview, setPreview] = useState<DroppedFile | null>(null);
   const proj = useSessionProject(sessionId, projects, onAddProject, chat.messages.length > 0);
   const fileOperations = useSessionFiles(chat.messages);
-  const initialSent = useRef(false);
 
   useEffect(() => {
     onFileOperationsChange?.(fileOperations);
   }, [fileOperations, onFileOperationsChange]);
 
   useSubagentSynthesis({
-    parentSessionId: sessionId,
-    allDone: subagents.allDone,
-    runId: subagents.doneRunId,
-    isStreaming: chat.isStreaming,
+    parentSessionId: sessionId, allDone: subagents.allDone,
+    runId: subagents.doneRunId, isStreaming: chat.isStreaming,
     onStarted: subagents.clearSynthesisSignal,
   });
 
-  useEffect(() => {
-    const hasInitialContent = initialMessage || (initialFiles && initialFiles.length > 0) || (initialSkills && initialSkills.length > 0);
-    if (hasInitialContent && !initialSent.current) {
-      initialSent.current = true;
-      const workingDir = initialWorkingDir ?? proj.selectedProject?.path;
-      const files = initialFiles?.map((f) => ({ name: f.name, path: f.path, preview: f.preview }));
-      void chat.sendMessage(initialMessage || "", files, workingDir, proj.selectedProjectId ?? undefined, initialSkills).then(() => onInitialMessageSent?.());
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- one-time send on mount, guarded by initialSent ref
-  }, [initialMessage]);
+  const { handleSend, handleBuiltInCommand, handleFileImport } = useChatActions({
+    chat, selectedProjectPath: proj.selectedProject?.path,
+    selectedProjectId: proj.selectedProjectId ?? undefined,
+    onSessionsRefresh, onAutoRename, sessionId,
+    initialMessage, initialWorkingDir, initialSkills, initialFiles,
+    onInitialMessageSent, fileDrop,
+  });
 
   const { scrollRef, bottomRef, isAtBottom, scrollToBottom, handleScroll } = useChatScroll({
-    messagesLength: chat.messages.length,
-    currentContent: chat.currentContent,
-    currentThinking: chat.currentThinking,
-    currentToolsLength: chat.currentTools.length,
+    messagesLength: chat.messages.length, currentContent: chat.currentContent,
+    currentThinking: chat.currentThinking, currentToolsLength: chat.currentTools.length,
   });
 
   const { pendingSwitch, setPendingSwitch, handleModelSelect, rememberedRef } = useModelSwitch({
-    currentModel: model,
-    currentProvider: provider,
-    messagesLength: chat.messages.length,
-    onApplySwitch,
-    onNewSession,
+    currentModel: model, currentProvider: provider,
+    messagesLength: chat.messages.length, onApplySwitch, onNewSession,
   });
 
-  const handleBuiltInCommand = useCallback((name: string) => {
-    if (name === "compress") void chat.sendMessage("/compress");
-  }, [chat]);
-
-  const handleSend = useCallback((text: string, sentFiles?: { name: string; path?: string; preview?: string }[], skills?: { name: string; content: string }[]) => {
-    const isFirst = chat.messages.length < 1;
-    void chat.sendMessage(text, sentFiles, proj.selectedProject?.path, proj.selectedProjectId ?? undefined, skills)
-      .then(() => {
-        if (proj.selectedProjectId) onSessionsRefresh?.();
-        if (isFirst && text.trim()) {
-          const autoName = text.slice(0, 40).trim();
-          if (autoName) onAutoRename?.(sessionId, autoName);
-        }
-      });
-  }, [chat, proj.selectedProject?.path, proj.selectedProjectId, onSessionsRefresh, onAutoRename, sessionId]);
-
-  const handleFileImport = useCallback(() => {
-    void (async () => {
-      const result = await openFileDialog({ multiple: true });
-      if (!result) return;
-      const paths = (Array.isArray(result) ? result : [result]).map((p) => String(p));
-      await fileDrop.addByPaths(paths);
-    })();
-  }, [fileDrop]);
-
   return (
-    <FileDropZone
-      dragging={fileDrop.dragging}
-      onDragChange={fileDrop.setDragging}
-      onDropPaths={(paths) => void fileDrop.addByPaths(paths)}
-    >
+    <FileDropZone dragging={fileDrop.dragging} onDragChange={fileDrop.setDragging} onDropPaths={(paths) => void fileDrop.addByPaths(paths)}>
       <div className="chat-zone" style={{ opacity: chat.sessionLoading ? 0 : 1 }}>
         <div className="chat-messages" ref={scrollRef} onScroll={handleScroll}>
           <MessageList
-            sessionId={sessionId}
-            messages={chat.messages}
-            completedSegments={chat.completedSegments}
-            currentContent={chat.currentContent}
-            currentThinking={chat.currentThinking}
-            currentTools={chat.currentTools}
-            isStreaming={chat.isStreaming}
-            tps={chat.tps}
-            totalElapsedMs={chat.totalElapsedMs}
-            segmentStartedAt={chat.segmentStartedAt}
-            liveTokenCount={chat.liveTokenCount}
-            error={chat.error}
-            isConnectionError={chat.isConnectionError}
+            sessionId={sessionId} messages={chat.messages} completedSegments={chat.completedSegments}
+            currentContent={chat.currentContent} currentThinking={chat.currentThinking} currentTools={chat.currentTools}
+            isStreaming={chat.isStreaming} tps={chat.tps} totalElapsedMs={chat.totalElapsedMs}
+            segmentStartedAt={chat.segmentStartedAt} liveTokenCount={chat.liveTokenCount}
+            error={chat.error} isConnectionError={chat.isConnectionError}
             onRetry={() => { const u = [...chat.messages].reverse().find((m) => m.role === "user"); if (u) void chat.reload(u.id); }}
-            onReload={(id) => void chat.reload(id)}
-            onEdit={(id, c) => void chat.edit(id, c)}
+            onReload={(id) => void chat.reload(id)} onEdit={(id, c) => void chat.edit(id, c)}
             onFileClick={(f) => setPreview({ name: f.name, path: f.path, type: "", size: 0, preview: f.thumbnail })}
             onFilePreview={onFilePreviewPath}
             completedSubagents={subagents.completed.length > 0 ? subagents.completed : undefined}
@@ -182,90 +117,43 @@ export function ChatView({
           />
           <div ref={bottomRef} />
         </div>
-
         {!isAtBottom && <ScrollBottomButton onClick={scrollToBottom} />}
-
         <div className="chat-input-area">
           <div className="chat-input-column">
             {subagents.active.length > 0 && (
-              <SubagentAccordion
-                subagents={subagents.active}
-                onCancel={subagents.cancelSubagent}
-                onOpen={(id) => onOpenSubagent?.(id)}
-              />
+              <SubagentAccordion subagents={subagents.active} onCancel={subagents.cancelSubagent} onOpen={(id) => onOpenSubagent?.(id)} />
             )}
             {permissions.current && (
-              <PermissionDialog
-                request={permissions.current}
-                onDecide={(id, decision) => void permissions.respond(id, decision)}
-              />
+              <PermissionDialog request={permissions.current} onDecide={(id, decision) => void permissions.respond(id, decision)} />
             )}
             <ChatInput
-              modelName={model}
-              providerName={provider}
-              isStreaming={chat.isStreaming}
-              thinkingEnabled={thinking}
-              files={fileDrop.files}
-              contextUsed={context.used}
-              contextMax={context.max}
-              permissionMode={permMode.mode}
-              onPermissionModeChange={(m) => void permMode.change(m)}
-              onRemoveFile={fileDrop.removeFile}
-              onPreviewFile={setPreview}
-              onSend={handleSend}
-              onStop={() => void chat.stop()}
-              onClearFiles={fileDrop.clearFiles}
-              onFileImport={handleFileImport}
-              onModelChange={handleModelSelect}
-              onToggleThinking={onToggleThinking}
-              onBuiltInCommand={handleBuiltInCommand}
+              modelName={model} providerName={provider} isStreaming={chat.isStreaming} thinkingEnabled={thinking}
+              files={fileDrop.files} contextUsed={context.used} contextMax={context.max}
+              permissionMode={permMode.mode} onPermissionModeChange={(m) => void permMode.change(m)}
+              onRemoveFile={fileDrop.removeFile} onPreviewFile={setPreview} onSend={handleSend}
+              onStop={() => void chat.stop()} onClearFiles={fileDrop.clearFiles} onFileImport={handleFileImport}
+              onModelChange={handleModelSelect} onToggleThinking={onToggleThinking} onBuiltInCommand={handleBuiltInCommand}
             />
             <ProjectSelector
-              projects={projects}
-              selectedProjectId={proj.selectedProjectId}
-              locked={proj.locked}
-              hidden={proj.hidden}
-              onSelect={proj.setSelectedProjectId}
-              onAddProject={() => void proj.handleAddProject()}
+              projects={projects} selectedProjectId={proj.selectedProjectId} locked={proj.locked} hidden={proj.hidden}
+              onSelect={proj.setSelectedProjectId} onAddProject={() => void proj.handleAddProject()}
             />
           </div>
         </div>
         <TerminalPanel
-          tabs={terminalState.tabs}
-          activeTabId={terminalState.activeTabId}
-          allTabs={terminalState.allTabs()}
-          activeGroupKey={terminalState.groupKey}
-          isOpen={terminalState.isOpen}
-          panelHeight={terminalState.panelHeight}
-          onAddTab={terminalState.addTab}
-          onCloseTab={terminalState.closeTab}
-          onSelectTab={terminalState.setActiveTab}
-          onRenameTab={terminalState.renameTab}
-          onReorderTabs={terminalState.reorderTabs}
-          onTogglePanel={terminalState.togglePanel}
-          onPtyReady={terminalState.setPtyId}
-          onResize={terminalState.resizePanel}
-          onSetMaxHeight={terminalState.setMaxHeight}
+          tabs={terminalState.tabs} activeTabId={terminalState.activeTabId} allTabs={terminalState.allTabs()}
+          activeGroupKey={terminalState.groupKey} isOpen={terminalState.isOpen} panelHeight={terminalState.panelHeight}
+          onAddTab={terminalState.addTab} onCloseTab={terminalState.closeTab} onSelectTab={terminalState.setActiveTab}
+          onRenameTab={terminalState.renameTab} onReorderTabs={terminalState.reorderTabs} onTogglePanel={terminalState.togglePanel}
+          onPtyReady={terminalState.setPtyId} onResize={terminalState.resizePanel} onSetMaxHeight={terminalState.setMaxHeight}
         />
       </div>
-      {preview && <FilePreview name={preview.name} path={preview.path} thumbnail={preview.preview} isImage={!!preview.preview} onClose={() => setPreview(null)} />}
-      {pendingSwitch && (
-        <SwitchModelDialog
-          fromModel={model}
-          toModel={pendingSwitch.model}
-          onNewSession={(remember) => {
-            if (remember) rememberedRef.current = "new";
-            onNewSession?.(pendingSwitch.model, pendingSwitch.provider);
-            setPendingSwitch(null);
-          }}
-          onContinue={(remember) => {
-            if (remember) rememberedRef.current = "continue";
-            onApplySwitch?.(pendingSwitch.model, pendingSwitch.provider);
-            setPendingSwitch(null);
-          }}
-          onCancel={() => setPendingSwitch(null)}
-        />
-      )}
+      <ChatOverlays
+        preview={preview} currentModel={model} pendingSwitch={pendingSwitch}
+        onClosePreview={() => setPreview(null)} onCancelSwitch={() => setPendingSwitch(null)}
+        onNewSession={(remember) => { if (remember) rememberedRef.current = "new"; onNewSession?.(pendingSwitch!.model, pendingSwitch!.provider); setPendingSwitch(null); }}
+        onContinue={(remember) => { if (remember) rememberedRef.current = "continue"; onApplySwitch?.(pendingSwitch!.model, pendingSwitch!.provider); setPendingSwitch(null); }}
+      />
     </FileDropZone>
   );
 }
