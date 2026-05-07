@@ -491,5 +491,15 @@
     "loading": "プレビューを読み込み中…",
     "noTitle": "タイトルなし",
     "openSite": "ウェブサイトを開く"
+  },
+  "subagents": {
+    "backgroundCount_one": "{{count}} エージェントがバックグラウンドで実行中",
+    "backgroundCount_other": "{{count}} エージェントがバックグラウンドで実行中",
+    "stopAll": "すべて停止",
+    "running": "実行中...",
+    "stop": "停止",
+    "open": "開く",
+    "bubbleLabel_one": "サブエージェント：{{count}} エージェント作成済み",
+    "bubbleLabel_other": "サブエージェント：{{count}} エージェント作成済み"
   }
 }

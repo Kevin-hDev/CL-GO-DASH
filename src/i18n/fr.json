@@ -565,5 +565,15 @@
     "plugins": "Plugins",
     "noConnectors": "Aucun connecteur",
     "pluginsEmpty": "Bientôt disponible"
+  },
+  "subagents": {
+    "backgroundCount_one": "{{count}} agent en arrière-plan",
+    "backgroundCount_other": "{{count}} agents en arrière-plan",
+    "stopAll": "Tout arrêter",
+    "running": "en cours...",
+    "stop": "Arrêter",
+    "open": "Ouvrir",
+    "bubbleLabel_one": "Sous-agent : {{count}} agent créé",
+    "bubbleLabel_other": "Sous-agents : {{count}} agents créés"
   }
 }

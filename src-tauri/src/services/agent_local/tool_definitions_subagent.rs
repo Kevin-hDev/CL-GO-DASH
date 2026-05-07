@@ -3,27 +3,28 @@ use serde_json::Value;
 pub fn delegate_task_definition() -> Value {
     super::tool_definitions::tool_def(
         "delegate_task",
-        "Lance un sous-agent autonome pour exécuter une sous-tâche en arrière-plan. \
-         Le sous-agent travaille de façon indépendante pendant que tu continues. \
-         Type 'explorer' : recherche de fichiers, lecture de code, recherche web (read-only). \
-         Type 'coder' : création et modification de fichiers dans un worktree git isolé. \
-         Tu peux lancer plusieurs sous-agents en parallèle. \
-         Le résultat du sous-agent n'est PAS visible par l'utilisateur — tu dois le relayer.",
+        "Spawn an autonomous subagent to execute a subtask in the background. \
+         Types: 'explorer' (read-only: file search, code reading, web research) \
+         or 'coder' (file creation/modification in an isolated git worktree). \
+         You can spawn multiple subagents in parallel for independent subtasks. \
+         IMPORTANT: Once you delegate a task, do NOT perform the same work yourself. \
+         Wait for the subagent reports, then synthesize their results for the user. \
+         The subagent results are NOT visible to the user — you MUST relay them.",
         serde_json::json!({
             "type": "object",
             "properties": {
                 "prompt": {
                     "type": "string",
-                    "description": "Instruction détaillée pour le sous-agent"
+                    "description": "Detailed instruction for the subagent. Be specific about what to search, read, or implement."
                 },
                 "subagent_type": {
                     "type": "string",
                     "enum": ["explorer", "coder"],
-                    "description": "explorer = lecture seule, coder = modification fichiers dans worktree isolé"
+                    "description": "explorer = read-only research, coder = file modifications in isolated worktree"
                 },
                 "name": {
                     "type": "string",
-                    "description": "Nom court pour identifier le sous-agent dans l'UI (optionnel)"
+                    "description": "Short name to identify this subagent in the UI (optional)"
                 }
             },
             "required": ["prompt", "subagent_type"]

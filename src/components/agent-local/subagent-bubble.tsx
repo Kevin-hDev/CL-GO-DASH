@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { SubagentInfo } from "@/types/agent";
 import "./subagent-bubble.css";
 
@@ -14,6 +15,7 @@ interface SubagentBubbleProps {
 }
 
 export function SubagentBubble({ subagents, onOpen }: SubagentBubbleProps) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
 
   if (subagents.length === 0) return null;
@@ -26,7 +28,7 @@ export function SubagentBubble({ subagents, onOpen }: SubagentBubbleProps) {
         type="button"
       >
         <span className="sb-label">
-          Sous-agent : {subagents.length} agent{subagents.length > 1 ? "s" : ""} créé{subagents.length > 1 ? "s" : ""}
+          {t("subagents.bubbleLabel", { count: subagents.length })}
         </span>
         <span className={`sb-chevron ${expanded ? "sb-chevron-up" : ""}`}>›</span>
       </button>

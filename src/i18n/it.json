@@ -491,5 +491,15 @@
     "loading": "Caricamento anteprima…",
     "noTitle": "Nessun titolo",
     "openSite": "Apri sito web"
+  },
+  "subagents": {
+    "backgroundCount_one": "{{count}} agente in background",
+    "backgroundCount_other": "{{count}} agenti in background",
+    "stopAll": "Ferma tutto",
+    "running": "in corso...",
+    "stop": "Ferma",
+    "open": "Apri",
+    "bubbleLabel_one": "Sotto-agente: {{count}} agente creato",
+    "bubbleLabel_other": "Sotto-agenti: {{count}} agenti creati"
   }
 }

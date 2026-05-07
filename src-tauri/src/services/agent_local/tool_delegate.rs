@@ -103,6 +103,10 @@ pub async fn prepare_delegate(
         prompt, subagent_type: subagent_type.to_string(),
         parent_emitter, cancel,
         project_id: parent.project_id.clone(),
-        result_message: format!("Sous-agent '{name}' ({subagent_type}) démarré. Prompt : {prompt_preview}"),
+        result_message: format!(
+            "Subagent '{name}' ({subagent_type}) spawned. Task: {prompt_preview}\n\
+             The subagent is working autonomously. Do NOT perform this same work yourself. \
+             Wait for the subagent report, then synthesize results for the user."
+        ),
     })
 }

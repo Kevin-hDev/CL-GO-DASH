@@ -491,5 +491,15 @@
     "loading": "Vorschau wird geladen…",
     "noTitle": "Kein Titel",
     "openSite": "Website öffnen"
+  },
+  "subagents": {
+    "backgroundCount_one": "{{count}} Agent im Hintergrund",
+    "backgroundCount_other": "{{count}} Agenten im Hintergrund",
+    "stopAll": "Alle stoppen",
+    "running": "läuft...",
+    "stop": "Stoppen",
+    "open": "Öffnen",
+    "bubbleLabel_one": "Subagent: {{count}} Agent erstellt",
+    "bubbleLabel_other": "Subagenten: {{count}} Agenten erstellt"
   }
 }

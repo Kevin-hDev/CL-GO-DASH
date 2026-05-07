@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import type { SubagentInfo } from "@/types/agent";
 import "./subagent-accordion.css";
 
@@ -18,6 +19,7 @@ function formatElapsed(ms: number): string {
 }
 
 export function SubagentAccordion({ subagents, onCancel, onOpen }: SubagentAccordionProps) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(true);
   const [now, setNow] = useState(Date.now());
 
@@ -41,14 +43,14 @@ export function SubagentAccordion({ subagents, onCancel, onOpen }: SubagentAccor
         >
           <span className="sa-accordion-icon">⚙</span>
           <span className="sa-accordion-title">
-            {subagents.length} agent{subagents.length > 1 ? "s" : ""} en arrière-plan
+            {t("subagents.backgroundCount", { count: subagents.length })}
           </span>
           <span className={`sa-chevron ${expanded ? "sa-chevron-up" : ""}`}>›</span>
         </button>
         <button
           className="sa-stop-all"
           onClick={() => subagents.forEach((s) => onCancel(s.sessionId))}
-          title="Tout arrêter"
+          title={t("subagents.stopAll")}
           type="button"
         >
           ■
@@ -60,7 +62,7 @@ export function SubagentAccordion({ subagents, onCancel, onOpen }: SubagentAccor
             <span className={`sa-agent-dot sa-dot-${agent.type}`} />
             <span className="sa-agent-name">{agent.name}</span>
             <span className="sa-agent-status">
-              {agent.status === "running" ? "en cours..." : agent.status}
+              {agent.status === "running" ? t("subagents.running") : agent.status}
             </span>
             <div className="sa-agent-actions">
               {agent.status === "running" && (
@@ -71,7 +73,7 @@ export function SubagentAccordion({ subagents, onCancel, onOpen }: SubagentAccor
                   <button
                     className="sa-btn-stop"
                     onClick={() => onCancel(agent.sessionId)}
-                    title="Arrêter"
+                    title={t("subagents.stop")}
                     type="button"
                   >
                     ■
@@ -83,7 +85,7 @@ export function SubagentAccordion({ subagents, onCancel, onOpen }: SubagentAccor
                 onClick={() => onOpen(agent.sessionId)}
                 type="button"
               >
-                Ouvrir
+                {t("subagents.open")}
               </button>
             </div>
           </div>
