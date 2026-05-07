@@ -119,7 +119,7 @@ export function useSubagents(parentSessionId: string | undefined) {
       }));
       setCompleted(mapped.filter((item) => item.status !== "running"));
       setActive(mapped.filter((item) => item.status === "running"));
-    }).catch(() => {});
+    }).catch((e) => console.warn("list_subagents failed:", e));
 
     const sync = () => {
       const store = globalStore.get(parentSessionId);

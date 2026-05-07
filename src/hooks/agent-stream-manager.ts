@@ -148,7 +148,7 @@ function handleStreamEvent(sessionId: string, event: StreamEvent) {
         persisted: true,
       };
       notify(record);
-    }).catch(() => {});
+    }).catch((e) => console.warn("session reload after compression failed:", e));
     return;
   }
 

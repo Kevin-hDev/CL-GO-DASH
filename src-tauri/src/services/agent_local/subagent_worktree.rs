@@ -10,6 +10,9 @@ pub async fn create_for_child(project_path: &Path, child_id: &str) -> Result<Pat
     tokio::fs::create_dir_all(&root)
         .await
         .map_err(|_| "Création du worktree impossible".to_string())?;
+    if child_id.contains("..") || child_id.contains('/') || child_id.contains('\\') {
+        return Err("ID de sous-agent invalide".to_string());
+    }
     let target = root.join(child_id);
     if target.exists() {
         let _ = tokio::fs::remove_dir_all(&target).await;

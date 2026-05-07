@@ -15,10 +15,12 @@ pub struct SpawnRequest {
     pub project_id: Option<String>,
 }
 
-static TX: OnceLock<mpsc::UnboundedSender<SpawnRequest>> = OnceLock::new();
+const MAX_QUEUED: usize = 8;
+
+static TX: OnceLock<mpsc::Sender<SpawnRequest>> = OnceLock::new();
 
 pub fn init() {
-    let (tx, rx) = mpsc::unbounded_channel();
+    let (tx, rx) = mpsc::channel(MAX_QUEUED);
     let _ = TX.set(tx);
     tauri::async_runtime::spawn(receiver_loop(rx));
 }
@@ -26,11 +28,11 @@ pub fn init() {
 pub fn send(req: SpawnRequest) -> Result<(), String> {
     TX.get()
         .ok_or_else(|| "Canal de spawn non initialisé".to_string())?
-        .send(req)
-        .map_err(|_| "Canal de spawn fermé".to_string())
+        .try_send(req)
+        .map_err(|_| "Trop de sous-agents en attente".to_string())
 }
 
-async fn receiver_loop(mut rx: mpsc::UnboundedReceiver<SpawnRequest>) {
+async fn receiver_loop(mut rx: mpsc::Receiver<SpawnRequest>) {
     while let Some(req) = rx.recv().await {
         tauri::async_runtime::spawn(async move {
             super::subagent_task::run(

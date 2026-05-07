@@ -18,11 +18,19 @@ pub struct SubagentInfo {
     pub run_id: Option<String>,
 }
 
+fn validate_session_id(id: &str) -> Result<(), String> {
+    if id.is_empty() || id.len() > 64 || id.contains("..") || id.contains('/') {
+        return Err("Identifiant de session invalide".to_string());
+    }
+    Ok(())
+}
+
 #[tauri::command]
 pub async fn list_subagents(
     parent_session_id: String,
     run_id: Option<String>,
 ) -> Result<Vec<AgentSessionMeta>, String> {
+    validate_session_id(&parent_session_id)?;
     let all = session_store::list().await?;
     Ok(all
         .into_iter()
@@ -35,6 +43,7 @@ pub async fn list_subagents(
 
 #[tauri::command]
 pub async fn get_active_subagents(parent_session_id: String) -> Result<Vec<SubagentInfo>, String> {
+    validate_session_id(&parent_session_id)?;
     let entries = subagent_registry::list_for_parent(&parent_session_id).await;
     Ok(entries
         .into_iter()
@@ -51,6 +60,7 @@ pub async fn get_active_subagents(parent_session_id: String) -> Result<Vec<Subag
 
 #[tauri::command]
 pub async fn cancel_subagent(subagent_session_id: String) -> Result<(), String> {
+    validate_session_id(&subagent_session_id)?;
     if subagent_registry::cancel_one(&subagent_session_id).await {
         let _ = session_subagents::mark_status(&subagent_session_id, "cancelled").await;
         Ok(())
@@ -66,7 +76,7 @@ pub async fn synthesize_subagent_results(
     run_id: Option<String>,
     streams: tauri::State<'_, ActiveStreams>,
 ) -> Result<u64, String> {
-    eprintln!("[DIAG:synth] synthesize_subagent_results called for parent={}", &parent_session_id[..8.min(parent_session_id.len())]);
+    validate_session_id(&parent_session_id)?;
     let parent = session_store::get(&parent_session_id).await?;
     let run = run_id.or_else(|| parent.messages.last().map(|m| m.id.clone()));
     eprintln!("[DIAG:synth] parent msgs={} run={:?}", parent.messages.len(), run.as_ref().map(|r| &r[..8.min(r.len())]));

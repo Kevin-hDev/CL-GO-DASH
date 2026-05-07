@@ -8,6 +8,8 @@ use tauri::AppHandle;
 use tokio_util::sync::CancellationToken;
 
 const MAX_PROMPT_PREVIEW: usize = 120;
+const MAX_PROMPT_SIZE: usize = 50_000;
+const MAX_NAME_SIZE: usize = 100;
 
 pub struct SpawnedSubagent {
     pub app: AppHandle,
@@ -29,7 +31,15 @@ pub async fn prepare_delegate(
     parent_emitter: AgentEventEmitter,
 ) -> Result<SpawnedSubagent, ToolResult> {
     let prompt = match args["prompt"].as_str() {
-        Some(p) if !p.trim().is_empty() => p.trim().to_string(),
+        Some(p) if !p.trim().is_empty() => {
+            let trimmed = p.trim();
+            if trimmed.len() > MAX_PROMPT_SIZE {
+                return Err(ToolResult::err(format!(
+                    "Prompt trop long ({} chars, max {MAX_PROMPT_SIZE})", trimmed.len()
+                )));
+            }
+            trimmed.to_string()
+        }
         _ => return Err(ToolResult::err("Paramètre 'prompt' manquant ou vide")),
     };
     let subagent_type = match args["subagent_type"].as_str() {
@@ -42,7 +52,8 @@ pub async fn prepare_delegate(
         }
         None => return Err(ToolResult::err("Paramètre 'subagent_type' manquant")),
     };
-    let name = args["name"].as_str().unwrap_or(subagent_type).to_string();
+    let raw_name = args["name"].as_str().unwrap_or(subagent_type);
+    let name: String = raw_name.chars().take(MAX_NAME_SIZE).collect();
 
     let parent = match session_store::get(&parent_session_id).await {
         Ok(s) => s,
