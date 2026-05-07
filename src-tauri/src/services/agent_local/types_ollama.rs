@@ -182,6 +182,7 @@ pub enum StreamEvent {
         status: String,
         summary: String,
         all_done: bool,
+        run_id: Option<String>,
     },
 }
 

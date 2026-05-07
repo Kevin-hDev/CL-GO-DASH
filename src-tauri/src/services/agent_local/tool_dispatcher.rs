@@ -179,6 +179,7 @@ async fn dispatch_inner(tool_name: &str, args: &Value, working_dir: &Path, sessi
                 Err(tr) => tr,
                 Ok(spawned) => {
                     let msg = spawned.result_message.clone();
+                    let child_id = spawned.child_id.clone();
                     if let Err(e) = super::subagent_spawn_channel::send(
                         super::subagent_spawn_channel::SpawnRequest {
                             app: spawned.app,
@@ -192,6 +193,8 @@ async fn dispatch_inner(tool_name: &str, args: &Value, working_dir: &Path, sessi
                             project_id: spawned.project_id,
                         },
                     ) {
+                        super::subagent_registry::unregister(&child_id).await;
+                        let _ = super::session_subagents::mark_status(&child_id, "failed").await;
                         return ToolResult::err(e);
                     }
                     ToolResult::ok(msg)

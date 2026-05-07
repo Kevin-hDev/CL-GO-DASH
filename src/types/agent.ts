@@ -210,4 +210,4 @@ export type StreamEvent =
   | { event: "compressionComplete"; data: Record<string, never> }
   | { event: "sessionSnapshot"; data: { messages: AgentMessage[]; tokenCount: number } }
   | { event: "subagentSpawned"; data: { subagentSessionId: string; subagentName: string; subagentType: string; promptPreview: string; runId?: string } }
-  | { event: "subagentCompleted"; data: { subagentSessionId: string; success: boolean; status: "completed" | "failed" | "cancelled"; summary: string; allDone: boolean } };
+  | { event: "subagentCompleted"; data: { subagentSessionId: string; success: boolean; status: "completed" | "failed" | "cancelled"; summary: string; allDone: boolean; runId?: string } };

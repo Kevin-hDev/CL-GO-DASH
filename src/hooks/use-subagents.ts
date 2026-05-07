@@ -74,7 +74,7 @@ function ensureGlobalListener() {
           type: found?.type ?? "explorer",
           status: e.data.status,
           promptPreview: found?.promptPreview ?? "",
-          runId: found?.runId ?? store.runId,
+          runId: e.data.runId ?? found?.runId ?? store.runId,
         },
       ];
       store.allDone = e.data.allDone;

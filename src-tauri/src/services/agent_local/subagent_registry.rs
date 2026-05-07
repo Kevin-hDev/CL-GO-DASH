@@ -88,6 +88,10 @@ pub async fn list_for_parent(parent_id: &str) -> Vec<SubagentEntry> {
         .collect()
 }
 
+pub async fn get_run_id_for_child(child_id: &str) -> Option<String> {
+    REGISTRY.lock().await.entries.get(child_id).map(|e| e.run_id.clone())
+}
+
 pub async fn cancel_one(child_id: &str) -> bool {
     let state = REGISTRY.lock().await;
     if let Some(entry) = state.entries.get(child_id) {

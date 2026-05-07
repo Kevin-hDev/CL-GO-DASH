@@ -2,6 +2,24 @@ use crate::services::paths::data_dir;
 use std::path::{Path, PathBuf};
 use tokio::process::Command;
 
+pub async fn remove(worktree_path: &str) -> Result<(), String> {
+    let path = PathBuf::from(worktree_path);
+    let root = data_dir().join("subagent-worktrees");
+    if !path.starts_with(&root) {
+        return Err("Chemin worktree hors du répertoire géré".to_string());
+    }
+    let _ = Command::new("git")
+        .args(["worktree", "remove", "--force"])
+        .arg(&path)
+        .kill_on_drop(true)
+        .output()
+        .await;
+    if path.exists() {
+        let _ = tokio::fs::remove_dir_all(&path).await;
+    }
+    Ok(())
+}
+
 pub async fn create_for_child(project_path: &Path, child_id: &str) -> Result<PathBuf, String> {
     if !project_path.is_dir() {
         return Err("Projet introuvable".to_string());
