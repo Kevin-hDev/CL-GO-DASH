@@ -98,9 +98,15 @@ You MUST end with a text response (never end on a tool call). Use this structure
 - Remaining risks or items that need attention\n\
 </output_format>";
 
-pub fn explorer_system() -> String {
+fn env_section() -> String {
     let date = chrono::Local::now().format("%Y-%m-%d");
-    format!("{EXPLORER_SYSTEM}\n\n<environment>\n- Current date: {date}\n</environment>")
+    let os = std::env::consts::OS;
+    let arch = std::env::consts::ARCH;
+    format!("<environment>\n- Platform: {os} ({arch})\n- Current date: {date}\n</environment>")
+}
+
+pub fn explorer_system() -> String {
+    format!("{EXPLORER_SYSTEM}\n\n{}", env_section())
 }
 
 pub async fn coder_system(project_id: Option<&str>) -> String {
@@ -111,10 +117,7 @@ pub async fn coder_system(project_id: Option<&str>) -> String {
     .await;
     let personality = crate::services::personality_injection::load_injected_contents();
     let merged = crate::commands::agent_chat_task::merge_personality(agent_md, personality);
-    let date = chrono::Local::now().format("%Y-%m-%d");
-    let base = format!(
-        "{CODER_SYSTEM}\n\n<environment>\n- Current date: {date}\n</environment>"
-    );
+    let base = format!("{CODER_SYSTEM}\n\n{}", env_section());
     match merged {
         Some(ctx) => format!("{base}\n\n<project_instructions>\n{ctx}\n</project_instructions>"),
         None => base,
