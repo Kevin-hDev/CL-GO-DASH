@@ -27,6 +27,7 @@ pub mod eager_dispatch;
 pub mod ollama_stream;
 pub mod ollama_stream_process;
 pub mod session_ops;
+pub mod session_index;
 pub mod session_store;
 pub mod stream_events;
 pub mod tab_store;
