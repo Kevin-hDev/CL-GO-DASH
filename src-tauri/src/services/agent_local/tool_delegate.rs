@@ -121,3 +121,18 @@ pub async fn prepare_delegate(
         ),
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{MAX_NAME_SIZE, MAX_PROMPT_SIZE};
+
+    #[test]
+    fn test_max_prompt_size_reasonable() {
+        assert!(MAX_PROMPT_SIZE > 0 && MAX_PROMPT_SIZE <= 100_000);
+    }
+
+    #[test]
+    fn test_max_name_size_reasonable() {
+        assert!(MAX_NAME_SIZE > 0 && MAX_NAME_SIZE <= 200);
+    }
+}

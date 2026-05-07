@@ -110,6 +110,12 @@ async fn run_inner(
     }
 }
 
+#[cfg(test)]
+#[allow(dead_code)]
+pub fn extract_summary_for_test(msgs: &[ChatMessage]) -> String {
+    extract_summary_from_messages(msgs)
+}
+
 fn extract_summary_from_messages(msgs: &[ChatMessage]) -> String {
     if let Some(m) = msgs.iter().rev().find(|m| m.role == "assistant" && !m.content.trim().is_empty()) {
         return m.content.clone();

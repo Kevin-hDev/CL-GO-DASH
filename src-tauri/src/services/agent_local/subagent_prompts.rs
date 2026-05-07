@@ -98,6 +98,10 @@ You MUST end with a text response (never end on a tool call). Use this structure
 - Remaining risks or items that need attention\n\
 </output_format>";
 
+#[cfg(test)]
+#[allow(dead_code)]
+pub const CODER_SYSTEM_FOR_TEST: &str = CODER_SYSTEM;
+
 fn env_section() -> String {
     let date = chrono::Local::now().format("%Y-%m-%d");
     let os = std::env::consts::OS;

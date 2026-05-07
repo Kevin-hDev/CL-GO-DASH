@@ -25,6 +25,12 @@ fn validate_session_id(id: &str) -> Result<(), String> {
     Ok(())
 }
 
+#[cfg(test)]
+#[allow(dead_code)]
+pub fn validate_session_id_for_test(id: &str) -> Result<(), String> {
+    validate_session_id(id)
+}
+
 #[tauri::command]
 pub async fn list_subagents(
     parent_session_id: String,

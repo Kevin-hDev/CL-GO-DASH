@@ -109,3 +109,9 @@ pub mod tool_result_budget_tests;
 pub mod circuit_breaker_tests;
 #[cfg(test)]
 pub mod write_guard_tests;
+#[cfg(test)]
+pub mod subagent_registry_tests;
+#[cfg(test)]
+pub mod subagent_prompts_tests;
+#[cfg(test)]
+pub mod subagent_task_tests;

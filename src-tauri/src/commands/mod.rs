@@ -28,6 +28,8 @@ pub mod codex;
 pub mod mcp_oauth;
 pub mod link_preview;
 pub mod subagents;
+#[cfg(test)]
+pub mod subagents_tests;
 
 pub use agent_chat::*;
 pub use agent_md::*;

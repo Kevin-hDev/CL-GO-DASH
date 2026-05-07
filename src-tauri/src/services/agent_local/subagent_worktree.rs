@@ -54,3 +54,29 @@ pub async fn create_for_child(project_path: &Path, child_id: &str) -> Result<Pat
         Err("Création du worktree isolé impossible".to_string())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::create_for_child;
+
+    #[tokio::test]
+    async fn test_reject_path_traversal_dotdot() {
+        let tmp = std::env::temp_dir();
+        let result = create_for_child(&tmp, "../../etc").await;
+        assert!(result.is_err(), "child_id avec '..' doit être rejeté");
+    }
+
+    #[tokio::test]
+    async fn test_reject_path_traversal_slash() {
+        let tmp = std::env::temp_dir();
+        let result = create_for_child(&tmp, "foo/bar").await;
+        assert!(result.is_err(), "child_id avec '/' doit être rejeté");
+    }
+
+    #[tokio::test]
+    async fn test_reject_path_traversal_backslash() {
+        let tmp = std::env::temp_dir();
+        let result = create_for_child(&tmp, "foo\\bar").await;
+        assert!(result.is_err(), "child_id avec '\\\\' doit être rejeté");
+    }
+}
