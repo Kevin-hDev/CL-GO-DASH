@@ -36,9 +36,7 @@ function ensureGlobalListener() {
     if (e.event === "subagentSpawned") {
       const runId = e.data.runId;
       const store = globalStore.get(parentId) ?? { active: [], completed: [], allDone: false, runId };
-      console.log(`[DIAG:subagents] SPAWNED on parent=${parentId.slice(0,8)} runId=${runId?.slice(0,8) ?? "null"} storeRunId=${store.runId?.slice(0,8) ?? "null"} active=${store.active.length} completed=${store.completed.length}`);
       if (runId && store.runId && store.runId !== runId) {
-        console.log(`[DIAG:subagents] NEW RUN detected → clearing old completed/active`);
         store.completed = [];
         store.active = [];
       }
@@ -62,7 +60,6 @@ function ensureGlobalListener() {
 
     if (e.event === "subagentCompleted") {
       const store = globalStore.get(parentId) ?? { active: [], completed: [], allDone: false };
-      console.log(`[DIAG:subagents] COMPLETED on parent=${parentId.slice(0,8)} child=${e.data.subagentSessionId.slice(0,8)} allDone=${e.data.allDone} active=${store.active.length} completed=${store.completed.length}`);
       const found = store.active.find(
         (s) => s.sessionId === e.data.subagentSessionId,
       );

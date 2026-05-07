@@ -79,16 +79,12 @@ pub async fn synthesize_subagent_results(
     validate_session_id(&parent_session_id)?;
     let parent = session_store::get(&parent_session_id).await?;
     let run = run_id.or_else(|| parent.messages.last().map(|m| m.id.clone()));
-    eprintln!("[DIAG:synth] parent msgs={} run={:?}", parent.messages.len(), run.as_ref().map(|r| &r[..8.min(r.len())]));
     let active = subagent_registry::list_for_parent(&parent_session_id).await;
     if !active.is_empty() {
-        eprintln!("[DIAG:synth] BLOCKED: {} active subagents", active.len());
         return Err("Des sous-agents sont encore actifs".to_string());
     }
     let children = list_subagents(parent_session_id.clone(), run.clone()).await?;
-    eprintln!("[DIAG:synth] found {} children for this run", children.len());
     if children.is_empty() {
-        eprintln!("[DIAG:synth] BLOCKED: no children found");
         return Err("Aucun résultat de sous-agent à synthétiser".to_string());
     }
 

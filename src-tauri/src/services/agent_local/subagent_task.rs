@@ -45,8 +45,6 @@ pub async fn run(
     let working_dir = resolve_working_dir(project_id.as_deref(), &child_session_id, is_explorer).await;
     let emitter = AgentEventEmitter::new(app, child_session_id.clone());
 
-    eprintln!("[DIAG:task] START child={} type={} parent={}", &child_session_id[..8], subagent_type, parent_emitter.session_id().get(..8).unwrap_or("?"));
-
     if let Ok(child_session) = session_store::get(&child_session_id).await {
         let _ = emitter.send(StreamEvent::SessionSnapshot {
             messages: child_session.messages,
@@ -88,7 +86,6 @@ pub async fn run(
         "failed"
     };
     update_session_status(&child_session_id, status).await;
-    eprintln!("[DIAG:task] DONE child={} status={} summary_len={}", &child_session_id[..8], status, summary.len());
 
     let parent_session_id = parent_emitter.session_id().to_string();
     let child_name = super::subagent_orchestrator::get_child_name(&child_session_id).await;
@@ -99,7 +96,6 @@ pub async fn run(
     subagent_registry::unregister(&child_session_id).await;
 
     let remaining = subagent_registry::list_for_parent(&parent_session_id).await;
-    eprintln!("[DIAG:task] remaining={} for parent={} → allDone={}", remaining.len(), &parent_session_id[..8], remaining.is_empty());
 
     let _ = parent_emitter.send(StreamEvent::SubagentCompleted {
         subagent_session_id: child_session_id.clone(),
