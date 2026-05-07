@@ -27,7 +27,7 @@ export function ModelfileViewer({ modelName, onDeleted }: ModelfileViewerProps) 
       await invoke("delete_ollama_model", { name: modelName });
       onDeleted?.();
     } catch (e: unknown) {
-      console.warn("Erreur suppression modèle:", e);
+      console.warn("[ollama] delete model:", e);
     } finally {
       setDeleting(false);
     }
@@ -36,20 +36,16 @@ export function ModelfileViewer({ modelName, onDeleted }: ModelfileViewerProps) 
   const systemPrompt = useMemo(() => extractSystemPrompt(modelfile), [modelfile]);
   const parameters = useMemo(() => extractParameters(modelfile), [modelfile]);
 
-  const loadModelfile = () => {
+  const loadModelfile = () =>
     invoke<string>("get_modelfile", { name: modelName })
       .then(setModelfile)
-      .catch((e: unknown) => console.warn("Erreur chargement modelfile:", e));
-  };
+      .catch(() => {});
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch→setState is intentional
     setLoading(true);
     setMode("view");
-    invoke<string>("get_modelfile", { name: modelName })
-      .then(setModelfile)
-      .catch((e: unknown) => console.warn("Erreur chargement modelfile:", e))
-      .finally(() => setLoading(false));
+    void loadModelfile().finally(() => setLoading(false));
   }, [modelName]);
 
   if (loading) {

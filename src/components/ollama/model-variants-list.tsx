@@ -29,7 +29,7 @@ export function ModelVariantsList({
     setError(null);
     invoke<RegistryTag[]>("list_registry_tags", { name: familyName })
       .then((list) => setTags(list))
-      .catch((e: unknown) => setError(String(e)))
+      .catch(() => setError(t("errors.operationFailed")))
       .finally(() => setLoading(false));
   }, [familyName]);
 
@@ -82,7 +82,7 @@ export function ModelVariantsList({
                 </div>
                 <div className="mvl-item-meta">
                   {tag.size_gb ? `${tag.size_gb} GB` : "—"}
-                  {tag.context_length ? ` · ${(tag.context_length / 1024).toFixed(0)}K ctx` : ""}
+                  {tag.context_length ? ` · ${(tag.context_length / 1024).toFixed(0)}K ${t("ollama.ctx")}` : ""}
                 </div>
               </div>
               {hasUpdate && (

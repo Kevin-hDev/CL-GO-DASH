@@ -41,7 +41,7 @@ export function ModelProfile({ familyName, variantFullName }: ModelProfileProps)
       invoke<RegistryTag[]>("list_registry_tags", { name: familyName }),
     ])
       .then(([d, ts]) => { setDetails(d); setTags(ts); })
-      .catch((e) => console.warn("Fiche modèle:", e))
+      .catch((e) => console.warn("[ollama] model profile:", e))
       .finally(() => setLoading(false));
   }, [familyName]);
 

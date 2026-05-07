@@ -34,7 +34,7 @@ export function ModelSearch({
       const list = await invoke<RegistryModel[]>("search_ollama_models", { query: query.trim() });
       setResults(list);
     } catch (e: unknown) {
-      console.warn("Erreur recherche:", e);
+      console.warn("[ollama] search:", e);
       setResults([]);
     } finally {
       setSearching(false);

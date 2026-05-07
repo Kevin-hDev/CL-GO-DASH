@@ -24,3 +24,5 @@ pub mod codex_client;
 pub mod mcp_oauth;
 pub mod mcp_bridge;
 pub mod link_preview;
+#[cfg(test)]
+mod ollama_kill_tests;

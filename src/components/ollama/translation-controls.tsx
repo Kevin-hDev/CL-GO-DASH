@@ -5,10 +5,13 @@ import { CustomSelect } from "@/components/ui/custom-select";
 import "./ollama.css";
 
 const LANGUAGES: { code: string; label: string }[] = [
+  { code: "en", label: "English" },
   { code: "fr", label: "Français" },
   { code: "es", label: "Español" },
   { code: "de", label: "Deutsch" },
+  { code: "it", label: "Italiano" },
   { code: "zh", label: "中文" },
+  { code: "ja", label: "日本語" },
 ];
 
 interface TranslationControlsProps {
@@ -36,7 +39,7 @@ export function TranslationControls({
       });
       onChange(lang, translated);
     } catch (e: unknown) {
-      setError(String(e));
+      setError(t("errors.operationFailed"));
       onChange(null, null);
     } finally {
       setLoading(false);
@@ -65,7 +68,7 @@ export function TranslationControls({
 
       {!loading && error && (
         <span
-          style={{ color: "#e66", maxWidth: 280, overflow: "hidden", textOverflow: "ellipsis" }}
+          style={{ color: "var(--signal-error)", maxWidth: 280, overflow: "hidden", textOverflow: "ellipsis" }}
           title={error}
         >
           {error}

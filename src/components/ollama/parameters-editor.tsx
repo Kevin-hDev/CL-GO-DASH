@@ -48,7 +48,7 @@ export function ParametersEditor({
       await invoke("update_parameters", { name: modelName, parameters: payload });
       onSave();
     } catch (e: unknown) {
-      setError(String(e));
+      setError(t("errors.operationFailed"));
     } finally {
       setSaving(false);
     }

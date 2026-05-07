@@ -17,6 +17,7 @@ pub mod permission_gate;
 #[cfg(test)]
 pub mod permission_gate_tests;
 pub mod security;
+pub mod ollama_model_helpers;
 pub mod ollama_client;
 pub mod ollama_registry;
 pub mod ollama_registry_details;
@@ -115,3 +116,5 @@ pub mod subagent_registry_tests;
 pub mod subagent_prompts_tests;
 #[cfg(test)]
 pub mod subagent_task_tests;
+#[cfg(test)]
+mod ollama_registry_tests;

@@ -38,7 +38,7 @@ export function OllamaSetupScreen({ onComplete }: OllamaSetupScreenProps) {
       await invoke("download_ollama", { onProgress: channel });
       onComplete();
     } catch (e) {
-      setError(String(e));
+      setError(t("errors.operationFailed"));
       setDownloading(false);
     }
   }, [onComplete]);

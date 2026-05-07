@@ -38,6 +38,9 @@ pub fn is_ollama_ready() -> bool {
 }
 
 pub fn start_sidecar(app: &AppHandle) -> Result<bool, String> {
+    let state = app.state::<OllamaSidecar>();
+    let mut guard = state.0.lock().map_err(|e| e.to_string())?;
+
     ollama_kill::kill_orphan_sidecar();
 
     let port = ollama_port::find_free_port();
@@ -63,7 +66,7 @@ pub fn start_sidecar(app: &AppHandle) -> Result<bool, String> {
     let log_dir = crate::services::paths::data_dir().join("logs");
     let _ = std::fs::create_dir_all(&log_dir);
     let stderr_file = std::fs::File::create(log_dir.join("ollama-sidecar.log"))
-        .map_err(|e| format!("log file: {e}"))?;
+        .map_err(|e| { eprintln!("[ollama] log file: {e}"); "ollama-log-error".to_string() })?;
 
     let mut cmd = Command::new(&binary);
     cmd.arg("serve")
@@ -109,13 +112,11 @@ pub fn start_sidecar(app: &AppHandle) -> Result<bool, String> {
         cmd.creation_flags(0x08000000);
     }
 
-    let child = cmd.spawn().map_err(|e| format!("spawn ollama: {e}"))?;
+    let child = cmd.spawn().map_err(|e| { eprintln!("[ollama] spawn: {e}"); "ollama-start-error".to_string() })?;
     let pid = child.id();
     ollama_kill::save_pid(pid);
     eprintln!("[ollama] sidecar démarré pid={pid} port={port}");
 
-    let state = app.state::<OllamaSidecar>();
-    let mut guard = state.0.lock().map_err(|e| e.to_string())?;
     *guard = Some(child);
 
     Ok(true)

@@ -22,14 +22,23 @@ pub mod app_update;
 pub mod app_update_install;
 pub mod ollama_updates;
 pub mod ollama_download;
+pub mod ollama_bundle_utils;
+pub mod ollama_checksum;
 pub mod ollama_setup;
 pub mod ollama_extract;
+pub mod ollama_version;
 pub mod codex;
 pub mod mcp_oauth;
 pub mod link_preview;
 pub mod subagents;
 #[cfg(test)]
 pub mod subagents_tests;
+#[cfg(test)]
+mod ollama_extract_tests;
+#[cfg(test)]
+mod ollama_setup_tests;
+#[cfg(test)]
+mod ollama_audit_tests;
 
 pub use agent_chat::*;
 pub use agent_md::*;
@@ -53,6 +62,7 @@ pub use app_update::*;
 pub use app_update_install::*;
 pub use ollama_updates::*;
 pub use ollama_setup::*;
+pub use ollama_version::*;
 pub use codex::*;
 pub use mcp_oauth::*;
 pub use link_preview::*;

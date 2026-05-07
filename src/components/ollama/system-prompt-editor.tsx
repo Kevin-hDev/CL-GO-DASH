@@ -54,8 +54,8 @@ export function SystemPromptEditor({
       {error && (
         <div style={{
           padding: "var(--space-sm) var(--space-md)",
-          color: "#e66", fontSize: "var(--text-xs)",
-          background: "rgba(230,102,102,0.08)",
+          color: "var(--signal-error)", fontSize: "var(--text-xs)",
+          background: "var(--signal-error-bg)",
           borderBottom: "1px solid var(--edge)",
         }}>
           {error}

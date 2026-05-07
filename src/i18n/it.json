@@ -84,7 +84,8 @@
   },
   "history": {
     "rename": "Rinomina",
-    "delete": "Elimina"
+    "delete": "Elimina",
+    "loading": "Caricamento…"
   },
   "agentLocal": {
     "title": "Conversazioni",
@@ -157,6 +158,7 @@
     "update": "Aggiorna",
     "updateAvailable": "È disponibile una nuova versione",
     "installedUpToDate": "Installato e aggiornato",
+    "ctx": "ctx",
     "starting": "Avvio in corso…",
     "pullError": "Errore di download",
     "vramWarning": "Questo modello potrebbe superare la VRAM disponibile",
@@ -454,7 +456,11 @@
     "appUpdate": "Aggiorna",
     "modelUpdate": "Aggiorna",
     "version": "Versione {{version}}",
+    "ollamaBinaryUpdate": "Aggiorna",
     "updating": "Aggiornamento in corso…"
+  },
+  "units": {
+    "gb": "GB"
   },
   "a11y": {
     "close": "Chiudi",

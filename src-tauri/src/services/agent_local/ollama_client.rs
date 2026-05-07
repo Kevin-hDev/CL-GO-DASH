@@ -1,6 +1,9 @@
 use crate::services::agent_local::modelfile_parser::{
     merge_parameter, parse_modelfile, parse_param_value,
 };
+use crate::services::agent_local::ollama_model_helpers::{
+    build_model_from_tags, dedupe_by_digest, needs_from_override, parse_show_response,
+};
 use crate::services::agent_local::types_ollama::{ModelInfo, OllamaModel};
 use crate::services::agent_local::ollama_base_url;
 use reqwest::Client;
@@ -35,14 +38,18 @@ impl OllamaClient {
             .get(format!("{}/api/tags", ollama_base_url()))
             .send()
             .await
-            .map_err(|e| format!("Connexion Ollama impossible: {e}"))?;
-        let json: serde_json::Value = resp.json().await.map_err(|e| e.to_string())?;
+            .map_err(|e| { eprintln!("[ollama] /api/tags: {e}"); "ollama-connection-error".to_string() })?;
+        let body = resp.bytes().await.map_err(|e| e.to_string())?;
+        if body.len() > 10 * 1024 * 1024 {
+            return Err("ollama-response-too-large".into());
+        }
+        let json: serde_json::Value = serde_json::from_slice(&body).map_err(|e| e.to_string())?;
         let models = json["models"]
             .as_array()
-            .ok_or("Réponse invalide")?;
+            .ok_or("ollama-invalid-response")?;
 
         let mut raw = Vec::new();
-        for m in models {
+        for m in models.iter().take(500) {
             let name = m["name"].as_str().unwrap_or_default().to_string();
             let info = self.show_model(&name).await.ok();
             raw.push(build_model_from_tags(m, info));
@@ -57,8 +64,6 @@ impl OllamaClient {
 
     pub async fn update_modelfile(&self, name: &str, content: &str) -> Result<(), String> {
         let mut parsed = parse_modelfile(content);
-        // /api/show renvoie FROM <blob sha256> ; Ollama rejette ce chemin comme nom de base.
-        // Pour écraser un modèle existant, il faut forcer from = name du modèle.
         if needs_from_override(parsed.from.as_deref()) {
             parsed.from = Some(name.to_string());
         }
@@ -94,7 +99,6 @@ impl OllamaClient {
             merge_parameter(&mut parsed.parameters, key, value);
         }
         parsed.from = Some(name.to_string());
-        // License inutile à renvoyer — Ollama la récupère depuis le modèle source via `from`.
         parsed.license = None;
         let payload = parsed.to_api_payload(name);
         self.post_create(&payload).await
@@ -111,11 +115,12 @@ impl OllamaClient {
             .json(&enriched)
             .send()
             .await
-            .map_err(|e| format!("Erreur /api/create: {e}"))?;
+            .map_err(|e| { eprintln!("[ollama] /api/create send: {e}"); "ollama-create-error".to_string() })?;
         if !resp.status().is_success() {
             let status = resp.status();
             let body = resp.text().await.unwrap_or_default();
-            return Err(format!("Échec /api/create ({status}): {body}"));
+            eprintln!("[ollama] /api/create failed ({status}): {}", crate::services::llm::sanitize_log_body(&body));
+            return Err("ollama-create-error".to_string());
         }
         Ok(())
     }
@@ -127,135 +132,8 @@ impl OllamaClient {
             .json(&serde_json::json!({ "model": name }))
             .send()
             .await
-            .map_err(|e| format!("Erreur show_model: {e}"))?;
+            .map_err(|e| { eprintln!("[ollama] /api/show: {e}"); "ollama-show-error".to_string() })?;
         let json: serde_json::Value = resp.json().await.map_err(|e| e.to_string())?;
         Ok(parse_show_response(name, &json))
     }
-}
-
-fn dedupe_by_digest(models: Vec<OllamaModel>) -> Vec<OllamaModel> {
-    use std::collections::HashMap;
-    let mut groups: HashMap<String, Vec<OllamaModel>> = HashMap::new();
-    let mut no_digest: Vec<OllamaModel> = Vec::new();
-    for m in models {
-        if m.digest_short.is_empty() {
-            no_digest.push(m);
-        } else {
-            groups.entry(m.digest_short.clone()).or_default().push(m);
-        }
-    }
-    let mut result: Vec<OllamaModel> = Vec::new();
-    for (_digest, mut group) in groups {
-        group.sort_by(|a, b| {
-            let al = a.name.ends_with(":latest");
-            let bl = b.name.ends_with(":latest");
-            al.cmp(&bl).then_with(|| a.name.len().cmp(&b.name.len()))
-        });
-        let mut primary = group.remove(0);
-        primary.aliases = group.into_iter().map(|m| m.name).collect();
-        result.push(primary);
-    }
-    result.extend(no_digest);
-    result.sort_by(|a, b| a.name.cmp(&b.name));
-    result
-}
-
-fn needs_from_override(from: Option<&str>) -> bool {
-    match from {
-        None => true,
-        Some(f) => f.starts_with('/') || f.contains("/blobs/sha256-"),
-    }
-}
-
-fn build_model_from_tags(
-    m: &serde_json::Value,
-    info: Option<ModelInfo>,
-) -> OllamaModel {
-    let name = m["name"].as_str().unwrap_or_default().to_string();
-    let details = &m["details"];
-    let digest_short: String = m["digest"]
-        .as_str()
-        .unwrap_or_default()
-        .trim_start_matches("sha256:")
-        .chars()
-        .take(12)
-        .collect();
-    let is_customized = info.as_ref().is_some_and(|i| has_customizations(&i.modelfile));
-    OllamaModel {
-        name,
-        size: m["size"].as_u64().unwrap_or(0),
-        family: info.as_ref().map_or_else(
-            || s(details, "family"),
-            |i| i.family.clone(),
-        ),
-        parameter_size: info.as_ref().map_or_else(
-            || s(details, "parameter_size"),
-            |i| i.parameter_size.clone(),
-        ),
-        quantization: info.as_ref().map_or_else(
-            || s(details, "quantization_level"),
-            |i| i.quantization.clone(),
-        ),
-        architecture: info.as_ref().map_or_else(String::new, |i| i.architecture.clone()),
-        is_moe: info.as_ref().is_some_and(|i| i.is_moe),
-        context_length: info.as_ref().map_or(0, |i| i.context_length),
-        capabilities: info.map_or_else(
-            || vec!["completion".to_string()],
-            |i| i.capabilities,
-        ),
-        digest_short,
-        aliases: Vec::new(),
-        is_customized,
-    }
-}
-
-fn has_customizations(modelfile: &str) -> bool {
-    for line in modelfile.lines() {
-        let trimmed = line.trim().to_uppercase();
-        if trimmed.starts_with("SYSTEM ") || trimmed.starts_with("PARAMETER ") {
-            return true;
-        }
-    }
-    false
-}
-
-fn parse_show_response(name: &str, json: &serde_json::Value) -> ModelInfo {
-    let details = &json["details"];
-    let mi = &json["model_info"];
-    let arch = mi["general.architecture"].as_str().unwrap_or("");
-
-    ModelInfo {
-        name: name.to_string(),
-        modelfile: s(json, "modelfile"),
-        parameters: s(json, "parameters"),
-        template: s(json, "template"),
-        family: s(details, "family"),
-        parameter_size: s(details, "parameter_size"),
-        quantization: s(details, "quantization_level"),
-        architecture: arch.to_string(),
-        is_moe: mi
-            .get(format!("{arch}.expert_count"))
-            .and_then(|v| v.as_u64())
-            .unwrap_or(0)
-            > 0,
-        context_length: mi[format!("{arch}.context_length")]
-            .as_u64()
-            .unwrap_or(4096),
-        capabilities: parse_capabilities(json),
-        has_audio: json["capabilities"]
-            .as_array()
-            .is_some_and(|a| a.iter().any(|v| v.as_str() == Some("audio"))),
-        license: s(json, "license"),
-    }
-}
-
-fn parse_capabilities(json: &serde_json::Value) -> Vec<String> {
-    json["capabilities"]
-        .as_array()
-        .map(|a| a.iter().filter_map(|v| v.as_str().map(String::from)).collect())
-        .unwrap_or_else(|| vec!["completion".to_string()])
-}
-
-fn s(v: &serde_json::Value, key: &str) -> String {
-    v[key].as_str().unwrap_or("").to_string()
 }

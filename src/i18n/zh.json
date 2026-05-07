@@ -84,7 +84,8 @@
   },
   "history": {
     "rename": "重命名",
-    "delete": "删除"
+    "delete": "删除",
+    "loading": "加载中…"
   },
   "agentLocal": {
     "title": "对话",
@@ -157,6 +158,7 @@
     "update": "更新",
     "updateAvailable": "有新版本可用",
     "installedUpToDate": "已安装且为最新版本",
+    "ctx": "ctx",
     "starting": "启动中…",
     "pullError": "下载错误",
     "vramWarning": "该模型可能超出您的可用 VRAM",
@@ -454,7 +456,11 @@
     "appUpdate": "更新",
     "modelUpdate": "更新",
     "version": "版本 {{version}}",
+    "ollamaBinaryUpdate": "更新",
     "updating": "更新中…"
+  },
+  "units": {
+    "gb": "GB"
   },
   "a11y": {
     "close": "关闭",

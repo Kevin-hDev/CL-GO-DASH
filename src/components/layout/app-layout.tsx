@@ -180,12 +180,16 @@ export function AppLayout({
         isOpen={updatesOpen}
         onClose={closeUpdates}
         appUpdate={updates.appUpdate}
+        ollamaBinaryUpdate={updates.ollamaBinaryUpdate}
         ollamaUpdates={updates.ollamaUpdates}
         pulling={updates.pulling}
+        ollamaBinaryUpdating={updates.ollamaBinaryUpdating}
+        ollamaBinaryPercent={updates.ollamaBinaryPercent}
         appDownloading={updates.appDownloading}
         appPercent={updates.appPercent}
         onPullModel={(name) => void updates.pullModel(name)}
         onDownloadApp={(url) => void updates.downloadAppUpdate(url)}
+        onUpdateOllamaBinary={() => void updates.updateOllamaBinary()}
         anchorLeft={IS_MAC ? UPDATES_ANCHOR_MAC : UPDATES_ANCHOR_OTHER}
       />
     </div>

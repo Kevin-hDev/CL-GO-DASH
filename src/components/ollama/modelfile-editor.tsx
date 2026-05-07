@@ -23,7 +23,7 @@ export function ModelfileEditor({
       await invoke("update_modelfile", { name: modelName, content });
       onSave(content);
     } catch (e: unknown) {
-      console.error("Erreur sauvegarde modelfile:", e);
+      console.error("[ollama] save modelfile:", e);
     } finally {
       setSaving(false);
     }

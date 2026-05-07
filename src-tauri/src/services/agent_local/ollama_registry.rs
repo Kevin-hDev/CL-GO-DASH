@@ -9,12 +9,14 @@ use tokio_util::sync::CancellationToken;
 const REGISTRY_URL: &str = "https://ollama.com";
 
 pub async fn search_models(query: &str) -> Result<Vec<RegistryModel>, String> {
+    if query.len() > 200 {
+        return Err("ollama-query-too-long".into());
+    }
     let client = Client::builder()
         .timeout(std::time::Duration::from_secs(15))
         .build()
         .map_err(|e| e.to_string())?;
 
-    // Scrape la page de recherche Ollama (pas d'API JSON publique)
     let url = format!("{REGISTRY_URL}/search?q={}", urlencoded(query));
     let resp = client
         .get(&url)
@@ -24,10 +26,14 @@ pub async fn search_models(query: &str) -> Result<Vec<RegistryModel>, String> {
         .map_err(|e| format!("Recherche impossible: {e}"))?;
 
     if !resp.status().is_success() {
-        return Err(format!("Erreur registre: {}", resp.status()));
+        return Err("ollama-registry-error".into());
     }
 
-    let html = resp.text().await.map_err(|e| e.to_string())?;
+    let body = resp.bytes().await.map_err(|e| e.to_string())?;
+    if body.len() > 2 * 1024 * 1024 {
+        return Err("ollama-registry-too-large".into());
+    }
+    let html = String::from_utf8_lossy(&body);
     Ok(parse_search_html(&html))
 }
 
@@ -41,7 +47,10 @@ fn parse_search_html(html: &str) -> Vec<RegistryModel> {
             let after = &trimmed[start + 15..];
             if let Some(end) = after.find('"') {
                 let name = after[..end].to_string();
-                if !name.is_empty() && !name.contains('/') && !models.iter().any(|m: &RegistryModel| m.name == name) {
+                if !name.is_empty()
+                    && name.chars().all(|c| c.is_ascii_alphanumeric() || "._-".contains(c))
+                    && !models.iter().any(|m: &RegistryModel| m.name == name)
+                {
                     models.push(RegistryModel {
                         name,
                         description: String::new(),
@@ -78,6 +87,9 @@ pub async fn pull_model(
         .map(|r| r.map_err(|e| std::io::Error::other(e)));
     let mut lines = BufReader::new(StreamReader::new(byte_stream)).lines();
     let digests = pulled_digests;
+    let mut line_count: u64 = 0;
+    const MAX_PULL_LINES: u64 = 500_000;
+    const MAX_STATUS_LEN: usize = 256;
 
     loop {
         tokio::select! {
@@ -87,10 +99,17 @@ pub async fn pull_model(
             line = lines.next_line() => {
                 let line = line.map_err(|e| e.to_string())?;
                 let Some(line) = line else { break };
+                line_count += 1;
+                if line_count > MAX_PULL_LINES {
+                    return Err("ollama-pull-stream-limit".into());
+                }
                 if let Ok(chunk) = serde_json::from_str::<serde_json::Value>(&line) {
-                    let status = chunk["status"].as_str().unwrap_or("").to_string();
+                    let mut status = chunk["status"].as_str().unwrap_or("").to_string();
+                    status.truncate(MAX_STATUS_LEN);
                     if let Some(digest) = extract_digest(&status) {
-                        if !digests.contains(&digest) { digests.push(digest); }
+                        if digests.len() < 64 && !digests.contains(&digest) {
+                            digests.push(digest);
+                        }
                     }
                     let completed = chunk["completed"].as_u64();
                     let total = chunk["total"].as_u64();
@@ -98,8 +117,8 @@ pub async fn pull_model(
                         status: status.clone(), completed, total,
                     });
                     if status == "success" { return Ok(()); }
-                    if let Some(err) = chunk["error"].as_str() {
-                        return Err(err.to_string());
+                    if chunk["error"].as_str().is_some() {
+                        return Err("ollama-pull-error".into());
                     }
                 }
             }
@@ -115,6 +134,8 @@ fn extract_digest(status: &str) -> Option<String> {
 }
 
 pub fn cleanup_partial_blobs(digests: &[String]) -> usize {
+    if digests.is_empty() { return 0; }
+
     let blobs_dir = dirs::home_dir()
         .map(|h| h.join(".ollama/models/blobs"))
         .unwrap_or_default();
@@ -126,9 +147,9 @@ pub fn cleanup_partial_blobs(digests: &[String]) -> usize {
             let name = entry.file_name();
             let name_str = name.to_string_lossy();
             if !name_str.contains("-partial") { continue; }
-            let matches = digests.is_empty()
-                || digests.iter().any(|d| name_str.contains(d));
-            if matches && std::fs::remove_file(entry.path()).is_ok() {
+            if digests.iter().any(|d| name_str.contains(d))
+                && std::fs::remove_file(entry.path()).is_ok()
+            {
                 count += 1;
             }
         }
@@ -143,21 +164,16 @@ pub async fn delete_model(name: &str) -> Result<(), String> {
         .json(&serde_json::json!({ "model": name }))
         .send()
         .await
-        .map_err(|e| format!("Erreur suppression: {e}"))?;
+        .map_err(|e| { eprintln!("[ollama] /api/delete: {e}"); "ollama-delete-error".to_string() })?;
 
     if !resp.status().is_success() {
         let body = resp.text().await.unwrap_or_default();
-        return Err(format!("Échec suppression: {body}"));
+        eprintln!("[ollama] /api/delete failed: {}", &body[..body.len().min(200)]);
+        return Err("ollama-delete-error".into());
     }
     Ok(())
 }
 
 fn urlencoded(s: &str) -> String {
-    s.chars()
-        .map(|c| match c {
-            ' ' => "+".to_string(),
-            c if c.is_ascii_alphanumeric() || "-_.~".contains(c) => c.to_string(),
-            c => format!("%{:02X}", c as u32),
-        })
-        .collect()
+    urlencoding::encode(s).into_owned()
 }

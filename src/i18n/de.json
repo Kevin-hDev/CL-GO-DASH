@@ -84,7 +84,8 @@
   },
   "history": {
     "rename": "Umbenennen",
-    "delete": "Löschen"
+    "delete": "Löschen",
+    "loading": "Wird geladen…"
   },
   "agentLocal": {
     "title": "Gespräche",
@@ -157,6 +158,7 @@
     "update": "Aktualisieren",
     "updateAvailable": "Eine neue Version ist verfügbar",
     "installedUpToDate": "Installiert und aktuell",
+    "ctx": "ctx",
     "starting": "Wird gestartet…",
     "pullError": "Download-Fehler",
     "vramWarning": "Dieses Modell könnte das verfügbare VRAM überschreiten",
@@ -454,7 +456,11 @@
     "appUpdate": "Aktualisieren",
     "modelUpdate": "Aktualisieren",
     "version": "Version {{version}}",
+    "ollamaBinaryUpdate": "Aktualisieren",
     "updating": "Wird aktualisiert…"
+  },
+  "units": {
+    "gb": "GB"
   },
   "a11y": {
     "close": "Schließen",

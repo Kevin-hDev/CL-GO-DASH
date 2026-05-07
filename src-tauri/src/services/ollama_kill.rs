@@ -8,11 +8,21 @@ fn pid_file_path() -> PathBuf {
 }
 
 pub fn save_pid(pid: u32) {
-    let _ = std::fs::write(pid_file_path(), pid.to_string());
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs();
+    let content = format!("{pid}:{now}");
+    let tmp = pid_file_path().with_extension("tmp");
+    if std::fs::write(&tmp, &content).is_ok() {
+        let _ = std::fs::rename(&tmp, pid_file_path());
+    }
 }
 
 pub fn read_saved_pid() -> Option<u32> {
-    let pid: u32 = std::fs::read_to_string(pid_file_path()).ok()?.trim().parse().ok()?;
+    let content = std::fs::read_to_string(pid_file_path()).ok()?;
+    let pid_str = content.trim().split(':').next()?;
+    let pid: u32 = pid_str.parse().ok()?;
     if pid < 2 { return None; }
     Some(pid)
 }
@@ -30,6 +40,10 @@ pub fn kill_orphan_sidecar() {
         return;
     }
 
+    if !is_ollama_process(pid) {
+        eprintln!("[ollama] pid={pid} changé entre check et kill, abandon");
+        return;
+    }
     eprintln!("[ollama] orphelin détecté pid={pid}, kill");
     tree_kill(pid);
 }

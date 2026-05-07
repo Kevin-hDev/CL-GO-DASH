@@ -223,9 +223,11 @@ pub fn run() {
             commands::check_app_update,
             commands::download_app_update,
             commands::check_ollama_updates,
+            commands::check_ollama_binary_update,
             // Ollama setup
             commands::is_ollama_installed,
             commands::download_ollama,
+            commands::update_ollama_binary,
             commands::start_ollama_sidecar,
             commands::restart_ollama_sidecar,
             commands::check_model_fits_vram,
