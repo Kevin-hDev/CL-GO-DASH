@@ -1,3 +1,4 @@
+"use no memo";
 import { useEffect, useState, useMemo, useLayoutEffect, memo } from "react";
 import { useTranslation } from "react-i18next";
 import { useSettings } from "@/hooks/use-settings";

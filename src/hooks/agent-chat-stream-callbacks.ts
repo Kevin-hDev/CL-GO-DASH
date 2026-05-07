@@ -53,10 +53,12 @@ export function createManagedStreamState(
   messages: AgentMessage[],
   tokenCount: number,
 ): ManagedStreamState {
+  const now = Date.now();
   return {
     ...EMPTY_CHAT_STATE, messages, tokenCount, isStreaming: true,
+    streamStartedAt: now, segmentStartedAt: now,
     pendingPermissions: [], completed: false, persisted: false,
-    updatedAt: Date.now(),
+    updatedAt: now,
   };
 }
 

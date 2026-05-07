@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { VirtualizedMessageList } from "./virtualized-message-list";
 import { ChatInput } from "./chat-input";
 import { ProjectSelector } from "./project-selector";
@@ -88,7 +88,18 @@ export function ChatView({
     onInitialMessageSent, fileDrop,
   });
 
-  const { isAtBottom, scrollToBottom, setIsAtBottom } = useChatScroll();
+  const { isAtBottom, scrollToBottom, setIsAtBottom, scrollActionRef } = useChatScroll();
+
+  const handleRetry = useCallback(() => {
+    const u = [...chat.messages].reverse().find((m) => m.role === "user");
+    if (u) void chat.reload(u.id);
+  }, [chat.messages, chat.reload]);
+
+  const handleReload = useCallback((id: string) => void chat.reload(id), [chat.reload]);
+  const handleEdit = useCallback((id: string, c: string) => void chat.edit(id, c), [chat.edit]);
+  const handleFileClick = useCallback((f: { name: string; path?: string; thumbnail?: string }) => {
+    setPreview({ name: f.name, path: f.path, type: "", size: 0, preview: f.thumbnail });
+  }, []);
 
   const { pendingSwitch, setPendingSwitch, handleModelSelect, rememberedRef } = useModelSwitch({
     currentModel: model, currentProvider: provider,
@@ -103,16 +114,17 @@ export function ChatView({
             sessionId={sessionId} messages={chat.messages} completedSegments={chat.completedSegments}
             currentContent={chat.currentContent} currentThinking={chat.currentThinking} currentTools={chat.currentTools}
             isStreaming={chat.isStreaming} tps={chat.tps} totalElapsedMs={chat.totalElapsedMs}
-            segmentStartedAt={chat.segmentStartedAt} liveTokenCount={chat.liveTokenCount}
+            streamStartedAt={chat.streamStartedAt} liveTokenCount={chat.liveTokenCount}
             error={chat.error} isConnectionError={chat.isConnectionError}
-            onRetry={() => { const u = [...chat.messages].reverse().find((m) => m.role === "user"); if (u) void chat.reload(u.id); }}
-            onReload={(id) => void chat.reload(id)} onEdit={(id, c) => void chat.edit(id, c)}
-            onFileClick={(f) => setPreview({ name: f.name, path: f.path, type: "", size: 0, preview: f.thumbnail })}
+            onRetry={handleRetry}
+            onReload={handleReload} onEdit={handleEdit}
+            onFileClick={handleFileClick}
             onFilePreview={onFilePreviewPath}
             completedSubagents={subagents.completed.length > 0 ? subagents.completed : undefined}
             onOpenSubagent={onOpenSubagent}
             isAtBottom={isAtBottom}
             onAtBottomChange={setIsAtBottom}
+            scrollActionRef={scrollActionRef}
           />
         </div>
         {!isAtBottom && <ScrollBottomButton onClick={scrollToBottom} />}

@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, memo } from "react";
 import { UserMessage } from "./user-message";
 import { AssistantMessage } from "./assistant-message";
 import { ToolBubble, SavedToolBubble } from "./tool-bubble";
@@ -129,7 +129,7 @@ export function MessageList({
   );
 }
 
-export function SegmentedAssistantMessage({
+export const SegmentedAssistantMessage = memo(function SegmentedAssistantMessage({
   msg, onReload, onFilePreview, tps, totalElapsedMs,
 }: { msg: AgentMessage; onReload?: (id: string) => void; onFilePreview?: (path: string) => void; tps: number; totalElapsedMs: number }) {
   if (msg.segments && msg.segments.length > 0) {
@@ -162,7 +162,7 @@ export function SegmentedAssistantMessage({
       tps={tps}
     />
   );
-}
+});
 
 export function hasActiveTools(tools: ToolActivity[]): boolean {
   return tools.length > 0 && tools.some((t) => !t.result);

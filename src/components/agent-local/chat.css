@@ -8,12 +8,16 @@
 
 .chat-messages {
   flex: 1;
-  overflow-y: auto;
-  padding: var(--space-lg) 0;
+  overflow: hidden;
   min-height: 0;
 }
 
-.chat-messages > * {
+.chat-messages div[data-testid="virtuoso-scroller"],
+.chat-messages div[data-virtuoso-scroller] {
+  overflow-x: hidden !important;
+}
+
+.chat-msg-item {
   max-width: 810px;
   margin-left: auto;
   margin-right: auto;

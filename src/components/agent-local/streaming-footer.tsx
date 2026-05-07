@@ -1,4 +1,3 @@
-import { useRef } from "react";
 import { AssistantMessage } from "./assistant-message";
 import { ToolBubble } from "./tool-bubble";
 import { ThinkingSection } from "./thinking-section";
@@ -16,7 +15,7 @@ interface StreamingFooterProps {
   currentThinking: string;
   currentTools: ToolActivity[];
   isStreaming: boolean;
-  segmentStartedAt: number | null;
+  streamStartedAt: number | null;
   liveTokenCount: number;
   error?: string;
   isConnectionError?: boolean;
@@ -26,18 +25,14 @@ interface StreamingFooterProps {
 
 export function StreamingFooter({
   sessionId, completedSegments, currentContent, currentThinking,
-  currentTools, isStreaming, segmentStartedAt, liveTokenCount,
+  currentTools, isStreaming, streamStartedAt, liveTokenCount,
   error, isConnectionError, onRetry, onFilePreview,
 }: StreamingFooterProps) {
   const { isCompressing } = useCompression(sessionId);
-  const fallbackRef = useRef<number | null>(null);
-  if (isStreaming && !segmentStartedAt && fallbackRef.current === null) fallbackRef.current = Date.now();
-  if (!isStreaming) fallbackRef.current = null;
-  const streamStartedAt = segmentStartedAt ?? fallbackRef.current;
   const loadingStartedAt = streamStartedAt ?? Date.now();
 
   return (
-    <div>
+    <div className="chat-msg-item">
       {isStreaming && completedSegments.map((seg, i) => (
         <div key={`seg-${i}`}>
           {seg.thinking && <ThinkingSection content={seg.thinking} />}
