@@ -1,5 +1,26 @@
 # Changelog
 
+## v0.8.6
+
+### Features
+
+- **Subagent system** — the main agent can spawn autonomous explorer (read-only) and coder (isolated git worktree) subagents that run in the background. Results are auto-synthesized when all subagents complete.
+- **Subagent accordion** — live panel above chat input showing active subagents with per-agent timers and stop buttons
+- **Subagent bubble** — collapsible completion bubble in chat history with links to open subagent sessions in new tabs
+
+### Improvements
+
+- Structured English system prompts for subagents with XML tags and web research guidelines
+- `delegate_task` tool with prompt structuring guidance and anti-duplication instructions
+- Bounded spawn channel, prompt size limits, session ID validation, path traversal protection
+- Worktree auto-cleanup after subagent execution via `git worktree remove`
+- Guard cleanup pattern: registry + session + worktree guaranteed even on error
+- `run_id` tracking across spawn/completion events for reliable multi-run isolation
+- Web search/fetch tool bubbles collapsed by default
+- i18n for all subagent UI in 7 languages
+
+---
+
 ## v0.8.5
 
 ### Features
