@@ -1,4 +1,10 @@
 .chat-bubble {
+  width: 100%;
+  max-width: 720px;
+  border-radius: var(--radius-md, 8px);
+  padding: 10px 14px;
+  align-self: center;
+  margin: 6px auto;
   background: var(--void);
   border: 1px solid var(--edge);
 }

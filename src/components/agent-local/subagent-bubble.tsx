@@ -3,12 +3,6 @@ import { useTranslation } from "react-i18next";
 import type { SubagentInfo } from "@/types/agent";
 import "./subagent-bubble.css";
 
-const BUBBLE_STYLE = {
-  width: "100%", maxWidth: "720px",
-  borderRadius: "var(--radius-md, 8px)",
-  padding: "10px 14px", alignSelf: "center" as const, margin: "6px auto",
-};
-
 interface SubagentBubbleProps {
   subagents: SubagentInfo[];
   onOpen: (sessionId: string) => void;
@@ -21,7 +15,7 @@ export function SubagentBubble({ subagents, onOpen }: SubagentBubbleProps) {
   if (subagents.length === 0) return null;
 
   return (
-    <div className="chat-bubble" style={BUBBLE_STYLE}>
+    <div className="chat-bubble">
       <button
         className="sb-header"
         onClick={() => setExpanded((v) => !v)}

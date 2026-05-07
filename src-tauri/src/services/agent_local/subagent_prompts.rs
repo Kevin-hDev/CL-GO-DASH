@@ -110,7 +110,7 @@ pub fn explorer_system() -> String {
 }
 
 pub async fn coder_system(project_id: Option<&str>) -> String {
-    let working_dir = resolve_prompt_dir(project_id).await;
+    let working_dir = resolve_project_dir(project_id).await;
     let agent_md = crate::services::agent_local::agent_md::load_agent_md(
         Some(working_dir.as_path()),
     )
@@ -124,7 +124,7 @@ pub async fn coder_system(project_id: Option<&str>) -> String {
     }
 }
 
-async fn resolve_prompt_dir(project_id: Option<&str>) -> std::path::PathBuf {
+pub async fn resolve_project_dir(project_id: Option<&str>) -> std::path::PathBuf {
     if let Some(pid) = project_id {
         if let Ok(projects) = crate::services::agent_local::project_store::list().await {
             if let Some(p) = projects.iter().find(|p| p.id == pid) {

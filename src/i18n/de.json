@@ -500,6 +500,9 @@
     "stop": "Stoppen",
     "open": "Öffnen",
     "bubbleLabel_one": "Subagent: {{count}} Agent erstellt",
-    "bubbleLabel_other": "Subagenten: {{count}} Agenten erstellt"
+    "bubbleLabel_other": "Subagenten: {{count}} Agenten erstellt",
+    "completed": "abgeschlossen",
+    "failed": "fehlgeschlagen",
+    "cancelled": "abgebrochen"
   }
 }

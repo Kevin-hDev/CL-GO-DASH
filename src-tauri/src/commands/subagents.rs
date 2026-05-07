@@ -53,7 +53,7 @@ pub async fn get_active_subagents(parent_session_id: String) -> Result<Vec<Subag
             subagent_type: e.subagent_type,
             status: "running".to_string(),
             prompt_preview: String::new(),
-            run_id: None,
+            run_id: Some(e.run_id),
         })
         .collect())
 }

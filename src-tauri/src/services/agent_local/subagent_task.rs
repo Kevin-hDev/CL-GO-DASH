@@ -134,26 +134,17 @@ async fn resolve_working_dir(
     child_session_id: &str,
     is_explorer: bool,
 ) -> std::path::PathBuf {
-    if let Some(pid) = project_id {
-        if let Ok(projects) = crate::services::agent_local::project_store::list().await {
-            if let Some(p) = projects.iter().find(|p| p.id == pid) {
-                let path = std::path::PathBuf::from(&p.path);
-                if path.is_dir() {
-                    if !is_explorer {
-                        if let Ok(worktree) = super::subagent_worktree::create_for_child(&path, child_session_id).await {
-                            if let Ok(mut session) = session_store::get(child_session_id).await {
-                                session.subagent_worktree = Some(worktree.to_string_lossy().to_string());
-                                let _ = session_store::save(&session).await;
-                            }
-                            return worktree;
-                        }
-                    }
-                    return path;
-                }
+    let base = super::subagent_prompts::resolve_project_dir(project_id).await;
+    if !is_explorer && project_id.is_some() && base != dirs::home_dir().unwrap_or_default() {
+        if let Ok(worktree) = super::subagent_worktree::create_for_child(&base, child_session_id).await {
+            if let Ok(mut session) = session_store::get(child_session_id).await {
+                session.subagent_worktree = Some(worktree.to_string_lossy().to_string());
+                let _ = session_store::save(&session).await;
             }
+            return worktree;
         }
     }
-    dirs::home_dir().unwrap_or_else(|| std::env::current_dir().unwrap())
+    base
 }
 
 async fn update_session_status(session_id: &str, status: &str) {

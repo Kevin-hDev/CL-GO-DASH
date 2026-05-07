@@ -21,7 +21,7 @@ export function WorkingStats({ startedAt, liveTokenCount }: {
     <span className="working-stats thinking-active">
       <span>
         {t("agentLocal.working", { seconds: elapsed })}
-        {hasTokens ? ` · ↑ ${liveTokenCount} tokens` : ""}
+        {hasTokens ? ` · ↑ ${liveTokenCount} ${t("agentLocal.tokens")}` : ""}
       </span>
     </span>
   );

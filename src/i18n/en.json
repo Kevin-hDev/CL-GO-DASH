@@ -574,6 +574,9 @@
     "stop": "Stop",
     "open": "Open",
     "bubbleLabel_one": "Subagent: {{count}} agent created",
-    "bubbleLabel_other": "Subagents: {{count}} agents created"
+    "bubbleLabel_other": "Subagents: {{count}} agents created",
+    "completed": "completed",
+    "failed": "failed",
+    "cancelled": "cancelled"
   }
 }

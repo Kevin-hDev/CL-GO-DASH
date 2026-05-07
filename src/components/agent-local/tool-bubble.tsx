@@ -24,12 +24,6 @@ const CLOSED_BY_DEFAULT = new Set([
   "web_search", "web_fetch",
 ]);
 
-const BUBBLE_STYLE = {
-  width: "100%", maxWidth: "720px",
-  borderRadius: "var(--radius-md, 8px)",
-  padding: "10px 14px", alignSelf: "center" as const, margin: "6px auto",
-};
-
 const ROW_STYLE = {
   display: "flex", alignItems: "baseline", gap: 8,
   fontSize: "11px", fontFamily: "var(--font-mono, monospace)", lineHeight: 1.6,
@@ -69,7 +63,7 @@ export function ToolBubble({
 }: { tools: ToolActivity[]; onFilePreview?: (path: string) => void }) {
   if (tools.length === 0) return null;
   return (
-    <div className="chat-bubble" style={BUBBLE_STYLE}>
+    <div className="chat-bubble">
       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
         {tools.map((t, i) => {
           const skipWrite = t.name === "write_file" && i > 0
@@ -96,7 +90,7 @@ export function SavedToolBubble({
 }: { tools: ToolActivityRecord[]; onFilePreview?: (path: string) => void }) {
   if (tools.length === 0) return null;
   return (
-    <div className="chat-bubble" style={BUBBLE_STYLE}>
+    <div className="chat-bubble">
       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
         {tools.map((t, i) => {
           const skipWrite = t.name === "write_file" && i > 0

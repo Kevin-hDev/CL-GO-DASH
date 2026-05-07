@@ -500,6 +500,9 @@
     "stop": "停止",
     "open": "打开",
     "bubbleLabel_one": "子代理：已创建 {{count}} 个代理",
-    "bubbleLabel_other": "子代理：已创建 {{count}} 个代理"
+    "bubbleLabel_other": "子代理：已创建 {{count}} 个代理",
+    "completed": "已完成",
+    "failed": "失败",
+    "cancelled": "已取消"
   }
 }

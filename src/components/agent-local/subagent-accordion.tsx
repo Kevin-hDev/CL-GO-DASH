@@ -68,7 +68,7 @@ export function SubagentAccordion({ subagents, onCancel, onOpen }: SubagentAccor
             <span className={`sa-agent-dot sa-dot-${agent.type}`} />
             <span className="sa-agent-name">{agent.name}</span>
             <span className="sa-agent-status">
-              {agent.status === "running" ? t("subagents.running") : agent.status}
+              {t(`subagents.${agent.status}`, { defaultValue: agent.status })}
             </span>
             <div className="sa-agent-actions">
               {agent.status === "running" && (

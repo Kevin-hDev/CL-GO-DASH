@@ -500,6 +500,9 @@
     "stop": "停止",
     "open": "開く",
     "bubbleLabel_one": "サブエージェント：{{count}} エージェント作成済み",
-    "bubbleLabel_other": "サブエージェント：{{count}} エージェント作成済み"
+    "bubbleLabel_other": "サブエージェント：{{count}} エージェント作成済み",
+    "completed": "完了",
+    "failed": "失敗",
+    "cancelled": "キャンセル済み"
   }
 }

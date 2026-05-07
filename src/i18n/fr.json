@@ -574,6 +574,9 @@
     "stop": "Arrêter",
     "open": "Ouvrir",
     "bubbleLabel_one": "Sous-agent : {{count}} agent créé",
-    "bubbleLabel_other": "Sous-agents : {{count}} agents créés"
+    "bubbleLabel_other": "Sous-agents : {{count}} agents créés",
+    "completed": "terminé",
+    "failed": "échoué",
+    "cancelled": "annulé"
   }
 }
