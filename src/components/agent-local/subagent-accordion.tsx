@@ -45,7 +45,6 @@ export function SubagentAccordion({ subagents, onCancel, onOpen }: SubagentAccor
           <span className="sa-accordion-title">
             {t("subagents.backgroundCount", { count: subagents.length })}
           </span>
-          <span className={`sa-chevron ${expanded ? "sa-chevron-up" : ""}`}>›</span>
         </button>
         <button
           className="sa-stop-all"
@@ -54,6 +53,13 @@ export function SubagentAccordion({ subagents, onCancel, onOpen }: SubagentAccor
           type="button"
         >
           ■
+        </button>
+        <button
+          className="sa-chevron-btn"
+          onClick={() => setExpanded((v) => !v)}
+          type="button"
+        >
+          <span className={`sa-chevron ${expanded ? "sa-chevron-up" : ""}`}>›</span>
         </button>
       </div>
       <div className={`sa-accordion-body ${expanded ? "sa-expanded" : ""}`}>

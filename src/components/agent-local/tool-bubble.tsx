@@ -21,6 +21,7 @@ const TOOL_COLORS: Record<string, string> = {
 const CLOSED_BY_DEFAULT = new Set([
   "bash", "grep", "glob", "read_file", "list_dir",
   "read_spreadsheet", "read_document", "read_image",
+  "web_search", "web_fetch",
 ]);
 
 const BUBBLE_STYLE = {

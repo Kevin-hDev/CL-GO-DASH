@@ -29,6 +29,7 @@
 }
 
 .sa-accordion-icon {
+  font-size: 17px;
   animation: sa-spin 2s linear infinite;
 }
 
@@ -56,7 +57,21 @@
   background: var(--surface-hover);
 }
 
+.sa-chevron-btn {
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.sa-chevron-btn:hover {
+  background: var(--surface-hover);
+}
+
 .sa-chevron {
+  display: inline-block;
   transition: transform 300ms ease;
   transform: rotate(90deg);
   font-size: 14px;
@@ -69,11 +84,11 @@
 .sa-accordion-body {
   max-height: 0;
   overflow: hidden;
-  transition: max-height 400ms ease;
+  transition: max-height 200ms ease-out;
 }
 
 .sa-accordion-body.sa-expanded {
-  max-height: 300px;
+  max-height: 200px;
 }
 
 .sa-agent-row {

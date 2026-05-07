@@ -15,7 +15,12 @@ pub fn delegate_task_definition() -> Value {
             "properties": {
                 "prompt": {
                     "type": "string",
-                    "description": "Detailed instruction for the subagent. Be specific about what to search, read, or implement."
+                    "description": "Structured instruction for the subagent. Use XML tags: \
+                     <context> (background info the subagent needs), \
+                     <task> (what to do — be specific), \
+                     <constraints> (boundaries, what NOT to do), \
+                     <output_format> (expected response structure). \
+                     A well-structured prompt produces significantly better results."
                 },
                 "subagent_type": {
                     "type": "string",
