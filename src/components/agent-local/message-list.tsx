@@ -129,7 +129,7 @@ export function MessageList({
   );
 }
 
-function SegmentedAssistantMessage({
+export function SegmentedAssistantMessage({
   msg, onReload, onFilePreview, tps, totalElapsedMs,
 }: { msg: AgentMessage; onReload?: (id: string) => void; onFilePreview?: (path: string) => void; tps: number; totalElapsedMs: number }) {
   if (msg.segments && msg.segments.length > 0) {
@@ -164,7 +164,7 @@ function SegmentedAssistantMessage({
   );
 }
 
-function hasActiveTools(tools: ToolActivity[]): boolean {
+export function hasActiveTools(tools: ToolActivity[]): boolean {
   return tools.length > 0 && tools.some((t) => !t.result);
 }
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { MessageList } from "./message-list";
+import { VirtualizedMessageList } from "./virtualized-message-list";
 import { ChatInput } from "./chat-input";
 import { ProjectSelector } from "./project-selector";
 import { FileDropZone } from "./file-drop-zone";
@@ -88,10 +88,7 @@ export function ChatView({
     onInitialMessageSent, fileDrop,
   });
 
-  const { scrollRef, bottomRef, isAtBottom, scrollToBottom, handleScroll } = useChatScroll({
-    messagesLength: chat.messages.length, currentContent: chat.currentContent,
-    currentThinking: chat.currentThinking, currentToolsLength: chat.currentTools.length,
-  });
+  const { isAtBottom, scrollToBottom, setIsAtBottom } = useChatScroll();
 
   const { pendingSwitch, setPendingSwitch, handleModelSelect, rememberedRef } = useModelSwitch({
     currentModel: model, currentProvider: provider,
@@ -101,8 +98,8 @@ export function ChatView({
   return (
     <FileDropZone dragging={fileDrop.dragging} onDragChange={fileDrop.setDragging} onDropPaths={(paths) => void fileDrop.addByPaths(paths)}>
       <div className="chat-zone" style={{ opacity: chat.sessionLoading ? 0 : 1 }}>
-        <div className="chat-messages" ref={scrollRef} onScroll={handleScroll}>
-          <MessageList
+        <div className="chat-messages">
+          <VirtualizedMessageList
             sessionId={sessionId} messages={chat.messages} completedSegments={chat.completedSegments}
             currentContent={chat.currentContent} currentThinking={chat.currentThinking} currentTools={chat.currentTools}
             isStreaming={chat.isStreaming} tps={chat.tps} totalElapsedMs={chat.totalElapsedMs}
@@ -114,8 +111,9 @@ export function ChatView({
             onFilePreview={onFilePreviewPath}
             completedSubagents={subagents.completed.length > 0 ? subagents.completed : undefined}
             onOpenSubagent={onOpenSubagent}
+            isAtBottom={isAtBottom}
+            onAtBottomChange={setIsAtBottom}
           />
-          <div ref={bottomRef} />
         </div>
         {!isAtBottom && <ScrollBottomButton onClick={scrollToBottom} />}
         <div className="chat-input-area">
