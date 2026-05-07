@@ -16,6 +16,18 @@ pub struct AgentSession {
     pub is_heartbeat: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub project_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub parent_session_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub subagent_type: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub subagent_worktree: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub subagent_prompt: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub subagent_status: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub subagent_run_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -31,6 +43,14 @@ pub struct AgentSessionMeta {
     pub is_heartbeat: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub project_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub parent_session_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub subagent_type: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub subagent_status: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub subagent_run_id: Option<String>,
 }
 
 fn default_provider() -> String {

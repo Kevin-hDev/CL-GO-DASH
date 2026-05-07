@@ -108,7 +108,8 @@ export function ConversationList({
   const displayOrder = drag.liveOrder ?? projectIds;
   const projectMap = new Map(projects.map((p) => [p.id, p]));
   const projectIdSet = new Set(projectIds);
-  const orphanSessions = sessions.filter(
+  const mainSessions = sessions.filter((s) => !s.parent_session_id);
+  const orphanSessions = mainSessions.filter(
     (s) => !s.project_id || !projectIdSet.has(s.project_id),
   );
 
@@ -139,7 +140,7 @@ export function ConversationList({
                 <ProjectSection
                   key={p.id}
                   project={p}
-                  sessions={sessions.filter((s) => s.project_id === p.id)}
+                  sessions={mainSessions.filter((s) => s.project_id === p.id)}
                   selectedId={selectedId}
                   isDragOver={false}
                   isDragging={drag.draggingId === p.id}

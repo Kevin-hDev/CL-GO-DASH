@@ -22,6 +22,10 @@ impl AgentEventEmitter {
         Self { app, session_id }
     }
 
+    pub fn session_id(&self) -> &str {
+        &self.session_id
+    }
+
     pub fn send(&self, event: StreamEvent) -> Result<(), String> {
         self.app
             .emit(

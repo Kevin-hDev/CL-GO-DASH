@@ -129,6 +129,11 @@ export function applyStreamEvent(
       next.pendingPermissions = addPermission(next.pendingPermissions, { id: event.data.id,
         toolName: event.data.toolName, arguments: event.data.arguments });
       break;
+    case "sessionSnapshot":
+      break;
+    case "subagentSpawned":
+    case "subagentCompleted":
+      break;
     case "done":
       return finishStream(next, event);
     case "error": {

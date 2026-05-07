@@ -93,6 +93,16 @@ pub mod project_store;
 pub mod types_tools;
 pub mod circuit_breaker;
 pub mod write_guard;
+pub mod app_handle_global;
+pub mod subagent_orchestrator;
+pub mod subagent_prompts;
+pub mod subagent_registry;
+pub mod subagent_spawn_channel;
+pub mod subagent_task;
+pub mod subagent_worktree;
+pub mod tool_definitions_subagent;
+pub mod tool_delegate;
+pub mod session_subagents;
 #[cfg(test)]
 pub mod tool_result_budget_tests;
 #[cfg(test)]

@@ -127,7 +127,7 @@ pub(crate) async fn run_stream_task(
     supports_thinking_hint: Option<bool>,
     permission_mode_override: Option<String>,
     cancel: CancellationToken,
-) -> Result<(), String> {
+) -> Result<Vec<ChatMessage>, String> {
     let resolve_dir = |wd: &Option<String>| -> std::path::PathBuf {
         wd.as_ref()
             .map(std::path::PathBuf::from)
@@ -139,14 +139,16 @@ pub(crate) async fn run_stream_task(
 
     // Interception : /compress déclenche la compression manuelle
     if is_compress_command(&messages) {
-        return handle_compress_command(&on_event, &session_id, &messages, &model, &provider, cancel).await;
+        handle_compress_command(&on_event, &session_id, &messages, &model, &provider, cancel).await?;
+        return Ok(messages);
     }
 
     let mode = match permission_mode_override {
-        Some(m) if matches!(m.as_str(), "auto" | "manual" | "chat") => m,
+        Some(m) if matches!(m.as_str(), "auto" | "manual" | "chat" | "subagent") => m,
         _ => agent_settings::get_permission_mode().await,
     };
     let is_chat = mode == "chat";
+    let is_subagent = mode == "subagent";
     let response_language = crate::services::config::read_config()
         .map(|c| c.advanced.response_language)
         .unwrap_or_default();
@@ -166,14 +168,14 @@ pub(crate) async fn run_stream_task(
 
         let working_dir = resolve_dir(&working_dir);
         let mut msgs = messages;
-        let agent_md_content = if is_chat {
+        let agent_md_content = if is_chat || is_subagent {
             None
         } else {
             let raw = agent_md::load_agent_md(Some(working_dir.as_path())).await;
             let personality = personality_injection::load_injected_contents();
             merge_personality(raw, personality)
         };
-        let skills_tuples: Vec<(String, String)> = if is_chat {
+        let skills_tuples: Vec<(String, String)> = if is_chat || is_subagent {
             vec![]
         } else {
             tool_skill_loader::list_skills()
@@ -206,8 +208,8 @@ pub(crate) async fn run_stream_task(
             ctx.native,
             ctx.configured,
         )
-        .await
-        .map(|_| ())
+        .await?;
+        Ok(msgs)
     } else {
         use crate::services::llm::{model_registry, tool_capable};
         let ctx = crate::services::compress::context_resolve::resolve_api(&provider, &model).await;
@@ -244,14 +246,14 @@ pub(crate) async fn run_stream_task(
         if !model_supports_vision {
             llm::stream_convert::strip_images(&mut msgs);
         }
-        let agent_md_content = if is_chat {
+        let agent_md_content = if is_chat || is_subagent {
             None
         } else {
             let raw = agent_md::load_agent_md(Some(working_dir.as_path())).await;
             let personality = personality_injection::load_injected_contents();
             merge_personality(raw, personality)
         };
-        let skills_tuples: Vec<(String, String)> = if is_chat || !model_supports_tools {
+        let skills_tuples: Vec<(String, String)> = if is_chat || is_subagent || !model_supports_tools {
             vec![]
         } else {
             tool_skill_loader::list_skills()
@@ -286,7 +288,7 @@ pub(crate) async fn run_stream_task(
             ctx.native,
             ctx.configured,
         )
-        .await
-        .map(|_| ())
+        .await?;
+        Ok(msgs)
     }
 }

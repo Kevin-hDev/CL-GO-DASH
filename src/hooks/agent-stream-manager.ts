@@ -103,6 +103,34 @@ function handleStreamEvent(sessionId: string, event: StreamEvent) {
   const record = getOrCreateRecord(sessionId);
   clearCleanup(record);
   record.started = true;
+
+  console.log(`[DIAG:stream] session=${sessionId.slice(0,8)} event=${event.event} isStreaming=${record.state.isStreaming} persisted=${record.state.persisted} completed=${record.state.completed} msgs=${record.state.messages.length}`);
+
+  if (event.event === "subagentSpawned" || event.event === "subagentCompleted") {
+    console.log(`[DIAG:stream] SKIP subagent event on parent ${sessionId.slice(0,8)}`);
+    notify(record);
+    return;
+  }
+
+  if (event.event === "sessionSnapshot") {
+    const snapMsgs = (event.data as { messages: unknown[] }).messages?.length ?? 0;
+    console.log(`[DIAG:stream] sessionSnapshot: ${snapMsgs} msgs → reset state for ${sessionId.slice(0,8)}`);
+    record.state = {
+      ...record.state,
+      messages: event.data.messages,
+      tokenCount: event.data.tokenCount,
+      isStreaming: true,
+      persisted: false,
+      completed: false,
+    };
+    notify(record);
+    return;
+  }
+
+  if (!record.state.isStreaming && event.event !== "done" && event.event !== "error") {
+    console.log(`[DIAG:stream] auto-start streaming for ${sessionId.slice(0,8)} on event=${event.event}`);
+    record.state = { ...record.state, isStreaming: true, persisted: false, completed: false };
+  }
   record.history.push(event);
   if (record.history.length > MAX_EVENTS_PER_SESSION) {
     record.history.splice(0, record.history.length - MAX_EVENTS_PER_SESSION);
@@ -129,7 +157,10 @@ function handleStreamEvent(sessionId: string, event: StreamEvent) {
   touchSession(sessionId, record);
   notify(record);
   if (result.assistantMessage && !record.state.persisted) {
+    console.log(`[DIAG:stream] persistAssistant for ${sessionId.slice(0,8)}`);
     persistAssistant(sessionId, record, result.assistantMessage, result.assistantTokens ?? 0);
+  } else if (result.assistantMessage && record.state.persisted) {
+    console.log(`[DIAG:stream] SKIP persistAssistant (already persisted) for ${sessionId.slice(0,8)}`);
   }
   if (record.state.completed && record.subscribers.size === 0) {
     scheduleCleanup(sessionId, record, records);

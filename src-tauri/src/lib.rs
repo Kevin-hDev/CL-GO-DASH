@@ -41,6 +41,8 @@ pub fn run() {
         .manage(OllamaSidecar::new())
         .manage(services::terminal::PtyManager::new())
         .setup(|app| {
+            services::agent_local::app_handle_global::init(app.handle().clone());
+            services::agent_local::subagent_spawn_channel::init();
             if let Err(e) = storage_migration::run() {
                 eprintln!("[storage migration] {}", e);
             }
@@ -154,6 +156,11 @@ pub fn run() {
             commands::get_agent_settings,
             commands::set_permission_mode,
             commands::respond_to_permission,
+            // Agent Local — Subagents
+            commands::list_subagents,
+            commands::get_active_subagents,
+            commands::cancel_subagent,
+            commands::synthesize_subagent_results,
             // Agent Local — Tools
             commands::list_skills,
             commands::load_skill,
@@ -237,4 +244,3 @@ pub fn run() {
 
     app.run(|app_handle, event| app_events::handle_run_event(app_handle, event));
 }
-

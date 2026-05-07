@@ -162,6 +162,27 @@ pub enum StreamEvent {
         status: String,
     },
     CompressionComplete {},
+    #[serde(rename_all = "camelCase")]
+    SessionSnapshot {
+        messages: Vec<crate::services::agent_local::types_session::AgentMessage>,
+        token_count: u32,
+    },
+    #[serde(rename_all = "camelCase")]
+    SubagentSpawned {
+        subagent_session_id: String,
+        subagent_name: String,
+        subagent_type: String,
+        prompt_preview: String,
+        run_id: Option<String>,
+    },
+    #[serde(rename_all = "camelCase")]
+    SubagentCompleted {
+        subagent_session_id: String,
+        success: bool,
+        status: String,
+        summary: String,
+        all_done: bool,
+    },
 }
 
 #[derive(Debug, Default)]

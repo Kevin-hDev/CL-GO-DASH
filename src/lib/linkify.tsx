@@ -46,7 +46,7 @@ export function linkifyWithPreviews(text: string): LinkifyResult {
     <LinkPreviewCard key={`preview-${url}`} url={url} />
   ));
   const previews = previewCards.length > 0 ? (
-    <div className="chat-previews-block">{previewCards}</div>
+    <div key={`previews-${urls[0]}`} className="chat-previews-block">{previewCards}</div>
   ) : null;
 
   return { text: textNodes, previews };

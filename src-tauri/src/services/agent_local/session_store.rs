@@ -65,6 +65,12 @@ pub async fn create_full(
         messages: Vec::new(),
         is_heartbeat,
         project_id,
+        parent_session_id: None,
+        subagent_type: None,
+        subagent_worktree: None,
+        subagent_prompt: None,
+        subagent_status: None,
+        subagent_run_id: None,
     };
     save(&session).await?;
     Ok(session)
@@ -138,6 +144,10 @@ pub async fn list() -> Result<Vec<AgentSessionMeta>, String> {
                     message_count: session.messages.len(),
                     is_heartbeat: session.is_heartbeat,
                     project_id: session.project_id,
+                    parent_session_id: session.parent_session_id,
+                    subagent_type: session.subagent_type,
+                    subagent_status: session.subagent_status,
+                    subagent_run_id: session.subagent_run_id,
                 });
             }
         }

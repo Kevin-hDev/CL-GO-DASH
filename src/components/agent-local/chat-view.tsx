@@ -6,6 +6,7 @@ import { ProjectSelector } from "./project-selector";
 import { FileDropZone } from "./file-drop-zone";
 import { FilePreview } from "./file-preview";
 import { SwitchModelDialog } from "./switch-model-dialog";
+import { SubagentAccordion } from "./subagent-accordion";
 import { useAgentChat } from "@/hooks/use-agent-chat";
 import { useContextProgress } from "@/hooks/use-context-progress";
 import { useFileDrop, type DroppedFile } from "@/hooks/use-file-drop";
@@ -15,6 +16,8 @@ import { useSessionProject } from "@/hooks/use-session-project";
 import { useChatScroll } from "@/hooks/use-chat-scroll";
 import { useModelSwitch } from "@/hooks/use-model-switch";
 import { useSessionFiles } from "@/hooks/use-session-files";
+import { useSubagents } from "@/hooks/use-subagents";
+import { useSubagentSynthesis } from "@/hooks/use-subagent-synthesis";
 import { PermissionDialog } from "./permission-dialog";
 import { TerminalPanel } from "@/components/terminal/terminal-panel";
 import type { useTerminal } from "@/hooks/use-terminal";
@@ -43,6 +46,8 @@ interface ChatViewProps {
   terminalState: ReturnType<typeof useTerminal>;
   onFileOperationsChange?: (operations: FileOperation[]) => void;
   onFilePreviewPath?: (path: string) => void;
+  onOpenSubagent?: (sessionId: string) => void;
+  isSubagent?: boolean;
 }
 
 export function ChatView({
@@ -65,6 +70,8 @@ export function ChatView({
   terminalState,
   onFileOperationsChange,
   onFilePreviewPath,
+  onOpenSubagent,
+  isSubagent = false,
 }: ChatViewProps) {
   const permissions = usePermissionRequests();
   const permMode = usePermissionMode(sessionId);
@@ -72,6 +79,7 @@ export function ChatView({
     permissions.enqueue({ id, toolName, arguments: args }),
     undefined, thinking, permMode.mode,
   );
+  const subagents = useSubagents(isSubagent ? undefined : sessionId);
   const fileDrop = useFileDrop();
   const context = useContextProgress(model, chat.tokenCount, provider);
   const [preview, setPreview] = useState<DroppedFile | null>(null);
@@ -82,6 +90,14 @@ export function ChatView({
   useEffect(() => {
     onFileOperationsChange?.(fileOperations);
   }, [fileOperations, onFileOperationsChange]);
+
+  useSubagentSynthesis({
+    parentSessionId: sessionId,
+    allDone: subagents.allDone,
+    runId: subagents.doneRunId,
+    isStreaming: chat.isStreaming,
+    onStarted: subagents.clearSynthesisSignal,
+  });
 
   useEffect(() => {
     const hasInitialContent = initialMessage || (initialFiles && initialFiles.length > 0) || (initialSkills && initialSkills.length > 0);
@@ -161,6 +177,8 @@ export function ChatView({
             onEdit={(id, c) => void chat.edit(id, c)}
             onFileClick={(f) => setPreview({ name: f.name, path: f.path, type: "", size: 0, preview: f.thumbnail })}
             onFilePreview={onFilePreviewPath}
+            completedSubagents={subagents.completed.length > 0 ? subagents.completed : undefined}
+            onOpenSubagent={onOpenSubagent}
           />
           <div ref={bottomRef} />
         </div>
@@ -169,6 +187,13 @@ export function ChatView({
 
         <div className="chat-input-area">
           <div className="chat-input-column">
+            {subagents.active.length > 0 && (
+              <SubagentAccordion
+                subagents={subagents.active}
+                onCancel={subagents.cancelSubagent}
+                onOpen={(id) => onOpenSubagent?.(id)}
+              />
+            )}
             {permissions.current && (
               <PermissionDialog
                 request={permissions.current}

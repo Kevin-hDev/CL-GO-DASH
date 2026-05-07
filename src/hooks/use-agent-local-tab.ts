@@ -135,7 +135,7 @@ export function useAgentLocalTab({ requestedSessionId, onSessionChange, listFocu
 
   return {
     sessions, refresh, rename, remove, updateModel,
-    tabState, projectsHook, terminal,
+    tabState, projectsHook, terminal, activeSession,
     model, provider, currentDefault, activeProject,
     filePreview, fileOperations, setFileOperations,
     thinking, setThinking, welcomeModel, setWelcomeModel,

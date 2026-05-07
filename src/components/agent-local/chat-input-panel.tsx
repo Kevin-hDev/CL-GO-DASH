@@ -2,10 +2,11 @@ import { open as openFileDialog } from "@tauri-apps/plugin-dialog";
 import { ChatInput } from "./chat-input";
 import { PermissionDialog } from "./permission-dialog";
 import { ProjectSelector } from "./project-selector";
+import { SubagentAccordion } from "./subagent-accordion";
 import type { DroppedFile } from "@/hooks/use-file-drop";
 import type { PermissionMode } from "@/hooks/use-permission-mode";
 import type { PermissionDecision, PermissionRequest } from "@/hooks/use-permission-requests";
-import type { Project } from "@/types/agent";
+import type { Project, SubagentInfo } from "@/types/agent";
 
 interface ChatInputPanelProps {
   model: string;
@@ -33,12 +34,22 @@ interface ChatInputPanelProps {
   onToggleThinking: () => void;
   onProjectSelect: (id: string | null) => void;
   onAddProject: () => void;
+  activeSubagents?: SubagentInfo[];
+  onCancelSubagent?: (sessionId: string) => void;
+  onOpenSubagent?: (sessionId: string) => void;
 }
 
 export function ChatInputPanel(props: ChatInputPanelProps) {
   return (
     <div className="chat-input-area">
       <div className="chat-input-column">
+        {props.activeSubagents && props.activeSubagents.length > 0 && (
+          <SubagentAccordion
+            subagents={props.activeSubagents}
+            onCancel={props.onCancelSubagent ?? (() => {})}
+            onOpen={props.onOpenSubagent ?? (() => {})}
+          />
+        )}
         {props.permissionRequest && (
           <PermissionDialog
             request={props.permissionRequest}

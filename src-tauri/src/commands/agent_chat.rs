@@ -96,6 +96,7 @@ pub async fn cancel_agent_request(
     generation: Option<u64>,
     streams: tauri::State<'_, ActiveStreams>,
 ) -> Result<(), String> {
+    let mut cancelled = false;
     let mut map = streams.0.lock().await;
     if let Some((token, gen)) = map.get(&session_id) {
         if generation.is_none() || generation == Some(*gen) {
@@ -104,8 +105,16 @@ pub async fn cancel_agent_request(
             map.remove(&session_id);
             drop(map);
             token.cancel();
+            cancelled = true;
             eprintln!("[cancel] session={session_id} gen={gen}");
         }
+    }
+    if crate::services::agent_local::subagent_registry::cancel_one(&session_id).await {
+        let _ = crate::services::agent_local::session_subagents::mark_status(&session_id, "cancelled").await;
+        cancelled = true;
+    }
+    if cancelled {
+        crate::services::agent_local::subagent_registry::cancel_all_for_parent(&session_id).await;
     }
     Ok(())
 }

@@ -28,11 +28,23 @@ interface AgentChatDetailProps {
   onToggleThinking: () => void;
   onInitialMessageSent: () => void;
   onFileOperationsChange: (operations: FileOperation[]) => void;
+  parentSessionId?: string;
+  onOpenSubagent?: (sessionId: string) => void;
+  onGoToParent?: () => void;
 }
 
 export function AgentChatDetail(props: AgentChatDetailProps) {
   return (
     <div className="agent-detail-with-preview">
+      {props.parentSessionId && (
+        <button
+          className="sa-parent-btn"
+          onClick={props.onGoToParent}
+          type="button"
+        >
+          ← Chat parent
+        </button>
+      )}
       <div style={{ flex: 1, minWidth: 0, minHeight: 0, overflow: "hidden" }}>
         <ChatView
           sessionId={props.sessionId}
@@ -54,6 +66,8 @@ export function AgentChatDetail(props: AgentChatDetailProps) {
           terminalState={props.terminal}
           onFileOperationsChange={props.onFileOperationsChange}
           onFilePreviewPath={props.filePreview.openPath}
+          onOpenSubagent={props.onOpenSubagent}
+          isSubagent={!!props.parentSessionId}
         />
       </div>
       <FilePreviewPanel

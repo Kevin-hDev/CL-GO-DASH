@@ -1,16 +1,16 @@
-import { useState, useEffect, useRef } from "react";
-import { useTranslation } from "react-i18next";
-import { useLottie } from "lottie-react";
+import { useRef } from "react";
 import { UserMessage } from "./user-message";
 import { AssistantMessage } from "./assistant-message";
 import { ToolBubble, SavedToolBubble } from "./tool-bubble";
 import { ThinkingSection } from "./thinking-section";
 import { ErrorBubble } from "./error-bubble";
 import { CompressionIndicator } from "./compression-indicator";
+import { SubagentBubble } from "./subagent-bubble";
+import { LoadingIndicator } from "./working-stats";
 import { useCompression } from "@/hooks/use-compression";
-import type { AgentMessage } from "@/types/agent";
+import { isSubagentInjectedMessage, extractSubagentsFromMessages } from "@/lib/subagent-message-utils";
+import type { AgentMessage, SubagentInfo } from "@/types/agent";
 import type { ToolActivity, StreamSegment } from "@/hooks/agent-chat-utils";
-import thinkingAnimation from "@/assets/thinking-loader.json";
 import "./chat.css";
 import "./messages.css";
 
@@ -33,22 +33,45 @@ interface MessageListProps {
   onEdit?: (messageId: string, newContent: string) => void;
   onFileClick?: (file: { name: string; path?: string; thumbnail?: string }) => void;
   onFilePreview?: (path: string) => void;
+  completedSubagents?: SubagentInfo[];
+  onOpenSubagent?: (sessionId: string) => void;
 }
 
 export function MessageList({
   sessionId, messages, completedSegments, currentContent, currentThinking,
-  currentTools, isStreaming, tps, totalElapsedMs, segmentStartedAt: _segmentStartedAt,
+  currentTools, isStreaming, tps, totalElapsedMs, segmentStartedAt,
   liveTokenCount, error, isConnectionError, onRetry, onReload, onEdit, onFileClick, onFilePreview,
+  completedSubagents, onOpenSubagent,
 }: MessageListProps) {
   const lastAssistantIdx = findLastIndex(messages, (m) => m.role === "assistant");
   const { isCompressing } = useCompression(sessionId);
-  const streamStartRef = useRef<number | null>(null);
-  if (isStreaming && !streamStartRef.current) streamStartRef.current = Date.now();
-  if (!isStreaming) streamStartRef.current = null;
+  const fallbackRef = useRef<number | null>(null);
+  if (isStreaming && !segmentStartedAt && fallbackRef.current === null) fallbackRef.current = Date.now();
+  if (!isStreaming) fallbackRef.current = null;
+  const streamStartedAt = segmentStartedAt ?? fallbackRef.current;
+  const loadingStartedAt = streamStartedAt ?? Date.now();
+
+  const extractedAgents = completedSubagents && completedSubagents.length > 0
+    ? completedSubagents
+    : extractSubagentsFromMessages(messages);
+  let bubbleRendered = false;
 
   return (
     <>
       {messages.map((msg, idx) => {
+        if (isSubagentInjectedMessage(msg)) {
+          if (!bubbleRendered && extractedAgents.length > 0) {
+            bubbleRendered = true;
+            return (
+              <SubagentBubble
+                key={`sa-bubble-${msg.id}`}
+                subagents={extractedAgents}
+                onOpen={(id) => onOpenSubagent?.(id)}
+              />
+            );
+          }
+          return null;
+        }
         if (msg.role === "user") {
           return (
             <UserMessage
@@ -85,12 +108,12 @@ export function MessageList({
       {isStreaming && (currentContent || currentThinking) && (
         <AssistantMessage
           content={currentContent} thinking={currentThinking} isStreaming
-          streamStartedAt={streamStartRef.current} liveTokenCount={liveTokenCount}
+          streamStartedAt={streamStartedAt} liveTokenCount={liveTokenCount}
         />
       )}
       {isStreaming && currentTools.length > 0 && <ToolBubble tools={currentTools} onFilePreview={onFilePreview} />}
       {isStreaming && !isCompressing && !currentContent && !currentThinking && !hasActiveTools(currentTools) && (
-        <LoadingIndicator startedAt={streamStartRef.current!} liveTokenCount={liveTokenCount} />
+        <LoadingIndicator startedAt={loadingStartedAt} liveTokenCount={liveTokenCount} />
       )}
 
       {isCompressing && <CompressionIndicator />}
@@ -150,42 +173,4 @@ function findLastIndex<T>(arr: T[], pred: (item: T) => boolean): number {
     if (pred(arr[i])) return i;
   }
   return -1;
-}
-
-function WorkingStats({ startedAt, liveTokenCount }: {
-  startedAt: number; liveTokenCount: number;
-}) {
-  const { t } = useTranslation();
-  const [now, setNow] = useState(Date.now());
-
-  useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 500);
-    return () => clearInterval(id);
-  }, []);
-
-  const elapsed = Math.floor((now - startedAt) / 1000);
-  const hasTokens = liveTokenCount > 0;
-
-  return (
-    <span className="working-stats thinking-active">
-      <span>
-        {t("agentLocal.working", { seconds: elapsed })}
-        {hasTokens ? ` · ↑ ${liveTokenCount} tokens` : ""}
-      </span>
-    </span>
-  );
-}
-
-function LoadingIndicator({ startedAt, liveTokenCount }: {
-  startedAt: number; liveTokenCount: number;
-}) {
-  const { View } = useLottie({
-    animationData: thinkingAnimation, loop: true, className: "chat-loading-lottie",
-  });
-  return (
-    <div className="chat-loading">
-      {View}
-      <WorkingStats startedAt={startedAt} liveTokenCount={liveTokenCount} />
-    </div>
-  );
 }

@@ -15,7 +15,7 @@ export const AgentLocalTab = memo(function AgentLocalTab({
 }: AgentLocalTabProps) {
   const s = useAgentLocalTab({ requestedSessionId, onSessionChange, listFocused });
   const { sessions, refresh, rename, remove, updateModel } = s;
-  const { tabState, projectsHook, terminal } = s;
+  const { tabState, projectsHook, terminal, activeSession } = s;
   const { model, provider, currentDefault, activeProject } = s;
   const { filePreview, fileOperations, setFileOperations } = s;
   const { thinking, setThinking, setWelcomeModel } = s;
@@ -95,6 +95,13 @@ export const AgentLocalTab = memo(function AgentLocalTab({
             setPendingFiles(undefined);
           }}
           onFileOperationsChange={setFileOperations}
+          parentSessionId={activeSession?.parent_session_id}
+          onOpenSubagent={(id) => void handleSelectById(id)}
+          onGoToParent={() => {
+            if (activeSession?.parent_session_id) {
+              void handleSelectById(activeSession.parent_session_id);
+            }
+          }}
         />
       ) : (
         <div style={{ flex: 1, minHeight: 0, overflow: "hidden" }}>

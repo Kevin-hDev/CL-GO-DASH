@@ -1,0 +1,35 @@
+use crate::services::paths::data_dir;
+use std::path::{Path, PathBuf};
+use tokio::process::Command;
+
+pub async fn create_for_child(project_path: &Path, child_id: &str) -> Result<PathBuf, String> {
+    if !project_path.is_dir() {
+        return Err("Projet introuvable".to_string());
+    }
+    let root = data_dir().join("subagent-worktrees");
+    tokio::fs::create_dir_all(&root)
+        .await
+        .map_err(|_| "Création du worktree impossible".to_string())?;
+    let target = root.join(child_id);
+    if target.exists() {
+        let _ = tokio::fs::remove_dir_all(&target).await;
+    }
+
+    let output = Command::new("git")
+        .args(["-C"])
+        .arg(project_path)
+        .args(["worktree", "add", "--detach"])
+        .arg(&target)
+        .arg("HEAD")
+        .kill_on_drop(true)
+        .output()
+        .await
+        .map_err(|_| "Git indisponible pour créer le worktree".to_string())?;
+
+    if output.status.success() && target.is_dir() {
+        Ok(target)
+    } else {
+        let _ = tokio::fs::remove_dir_all(&target).await;
+        Err("Création du worktree isolé impossible".to_string())
+    }
+}

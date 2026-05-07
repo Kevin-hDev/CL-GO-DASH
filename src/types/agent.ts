@@ -85,6 +85,12 @@ export interface AgentSession {
   accumulated_tokens: number;
   messages: AgentMessage[];
   project_id?: string;
+  parent_session_id?: string;
+  subagent_type?: "explorer" | "coder";
+  subagent_worktree?: string;
+  subagent_prompt?: string;
+  subagent_status?: "running" | "completed" | "failed" | "cancelled";
+  subagent_run_id?: string;
 }
 
 export interface AgentSessionMeta {
@@ -95,6 +101,19 @@ export interface AgentSessionMeta {
   provider: string;
   message_count: number;
   project_id?: string;
+  parent_session_id?: string;
+  subagent_type?: "explorer" | "coder";
+  subagent_status?: "running" | "completed" | "failed" | "cancelled";
+  subagent_run_id?: string;
+}
+
+export interface SubagentInfo {
+  sessionId: string;
+  name: string;
+  type: "explorer" | "coder";
+  status: "running" | "completed" | "failed" | "cancelled";
+  promptPreview: string;
+  runId?: string;
 }
 
 export interface AgentMessage {
@@ -187,4 +206,7 @@ export type StreamEvent =
   | { event: "done"; data: { evalCount: number; evalDurationNs: number; finalTps: number; promptTokens: number; contextTokens: number } }
   | { event: "error"; data: { message: string } }
   | { event: "compressing"; data: { status: string } }
-  | { event: "compressionComplete"; data: Record<string, never> };
+  | { event: "compressionComplete"; data: Record<string, never> }
+  | { event: "sessionSnapshot"; data: { messages: AgentMessage[]; tokenCount: number } }
+  | { event: "subagentSpawned"; data: { subagentSessionId: string; subagentName: string; subagentType: string; promptPreview: string; runId?: string } }
+  | { event: "subagentCompleted"; data: { subagentSessionId: string; success: boolean; status: "completed" | "failed" | "cancelled"; summary: string; allDone: boolean } };
