@@ -114,6 +114,7 @@ export interface SubagentInfo {
   status: "running" | "completed" | "failed" | "cancelled";
   promptPreview: string;
   runId?: string;
+  spawnedAt?: number;
 }
 
 export interface AgentMessage {

@@ -52,6 +52,7 @@ function ensureGlobalListener() {
           status: "running",
           promptPreview: e.data.promptPreview,
           runId,
+          spawnedAt: Date.now(),
         },
       ];
       store.allDone = false;

@@ -104,6 +104,13 @@
   font-weight: 500;
 }
 
+.sa-agent-timer {
+  color: var(--text-tertiary);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  min-width: 36px;
+}
+
 .sa-agent-status {
   flex: 1;
   color: var(--text-tertiary);

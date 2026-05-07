@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { SubagentInfo } from "@/types/agent";
 import "./subagent-accordion.css";
 
@@ -8,8 +8,26 @@ interface SubagentAccordionProps {
   onOpen: (sessionId: string) => void;
 }
 
+function formatElapsed(ms: number): string {
+  const totalSec = Math.max(0, Math.floor(ms / 1000));
+  const min = Math.floor(totalSec / 60);
+  const sec = totalSec % 60;
+  return min > 0
+    ? `${min}m${String(sec).padStart(2, "0")}s`
+    : `${sec}s`;
+}
+
 export function SubagentAccordion({ subagents, onCancel, onOpen }: SubagentAccordionProps) {
   const [expanded, setExpanded] = useState(true);
+  const [now, setNow] = useState(Date.now());
+
+  const hasRunning = subagents.some((s) => s.status === "running");
+
+  useEffect(() => {
+    if (!hasRunning) return;
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [hasRunning]);
 
   if (subagents.length === 0) return null;
 
@@ -46,14 +64,19 @@ export function SubagentAccordion({ subagents, onCancel, onOpen }: SubagentAccor
             </span>
             <div className="sa-agent-actions">
               {agent.status === "running" && (
-                <button
-                  className="sa-btn-stop"
-                  onClick={() => onCancel(agent.sessionId)}
-                  title="Arrêter"
-                  type="button"
-                >
-                  ■
-                </button>
+                <>
+                  {agent.spawnedAt && (
+                    <span className="sa-agent-timer">{formatElapsed(now - agent.spawnedAt)}</span>
+                  )}
+                  <button
+                    className="sa-btn-stop"
+                    onClick={() => onCancel(agent.sessionId)}
+                    title="Arrêter"
+                    type="button"
+                  >
+                    ■
+                  </button>
+                </>
               )}
               <button
                 className="sa-btn-open"
