@@ -19,7 +19,7 @@
 }
 
 .tp-line-error {
-  background: var(--signal-error-bg);
+  background: var(--diff-old-bg);
 }
 
 .tp-line-context {
@@ -47,7 +47,7 @@
 }
 
 .tp-prefix-error {
-  color: var(--signal-error);
+  color: var(--diff-old);
 }
 
 .tp-prefix-context {
@@ -66,7 +66,7 @@
 }
 
 .tp-code-error {
-  color: var(--signal-error);
+  color: var(--diff-old);
 }
 
 .tp-code-context {
