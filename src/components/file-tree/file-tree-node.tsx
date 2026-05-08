@@ -1,14 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { FileIcon } from "@/components/file-preview/file-icon";
-import { Icon } from "@iconify/react";
-import type { IconifyIcon } from "@iconify/react";
 import type { FileEntry } from "@/lib/file-tree-filter";
-import defaultFolderRaw from "@iconify/icons-vscode-icons/default-folder.js";
-import defaultFolderOpenedRaw from "@iconify/icons-vscode-icons/default-folder-opened.js";
-
-const defaultFolder = (defaultFolderRaw as unknown as { default: IconifyIcon }).default ?? (defaultFolderRaw as unknown as IconifyIcon);
-const defaultFolderOpened = (defaultFolderOpenedRaw as unknown as { default: IconifyIcon }).default ?? (defaultFolderOpenedRaw as unknown as IconifyIcon);
 
 interface FileTreeNodeProps {
   entry: FileEntry;
@@ -70,8 +63,6 @@ export function FileTreeNode({
     }
   };
 
-  const folderIcon = expanded ? defaultFolderOpened : defaultFolder;
-
   if (depth >= maxDepth) return null;
 
   return (
@@ -86,18 +77,10 @@ export function FileTreeNode({
         title={entry.name}
         aria-expanded={entry.is_dir ? expanded : undefined}
       >
-        {entry.is_dir ? (
-          <span className={`ft-chevron ${expanded ? "expanded" : ""}`}>
-            <ChevronRight size={14} />
-          </span>
-        ) : (
-          <span className="ft-chevron-placeholder" />
-        )}
-        {entry.is_dir ? (
-          <Icon icon={folderIcon} width={16} height={16} />
-        ) : (
-          <FileIcon name={entry.name} size={16} />
-        )}
+        <span className={`ft-chevron ${entry.is_dir ? "" : "ft-chevron-placeholder"} ${expanded ? "expanded" : ""}`}>
+          {entry.is_dir && <ChevronRight size={14} />}
+        </span>
+        {!entry.is_dir && <FileIcon name={entry.name} size={16} />}
         <span className="ft-node-name">{entry.name}</span>
       </div>
       {entry.is_dir && children && (
