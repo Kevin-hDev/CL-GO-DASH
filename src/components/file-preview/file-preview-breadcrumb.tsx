@@ -1,6 +1,7 @@
 import { shortPath } from "@/lib/file-preview-utils";
 import type { FileOperation } from "@/types/file-preview";
 import { FilePreviewStats } from "./file-preview-stats";
+import "./file-preview-breadcrumb.css";
 
 interface FilePreviewBreadcrumbProps {
   operation: FileOperation;

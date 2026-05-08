@@ -31,8 +31,12 @@ pub mod codex;
 pub mod mcp_oauth;
 pub mod link_preview;
 pub mod subagents;
+pub mod file_tree;
+pub mod file_tree_watcher;
 #[cfg(test)]
 pub mod subagents_tests;
+#[cfg(test)]
+mod file_tree_tests;
 #[cfg(test)]
 mod ollama_extract_tests;
 #[cfg(test)]
@@ -67,3 +71,5 @@ pub use codex::*;
 pub use mcp_oauth::*;
 pub use link_preview::*;
 pub use subagents::*;
+pub use file_tree::*;
+pub use file_tree_watcher::*;

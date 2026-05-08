@@ -437,6 +437,14 @@
     "charCount": "{{format}} — {{count}} caracteres",
     "blockCount": "DOCX — {{count}} bloques"
   },
+  "fileTree": {
+    "filterPlaceholder": "Filtrar archivos...",
+    "emptyDirectory": "Esta carpeta está vacía",
+    "tooManyEntries": "Demasiados elementos ({{count}} máx)",
+    "toggleTree": "Árbol de archivos del proyecto",
+    "loadError": "No se pudo leer esta carpeta",
+    "noResults": "Sin resultados"
+  },
   "errors": {
     "crashMessage": "Se produjo un error. Por favor, reinicia la aplicación.",
     "operationFailed": "La operación falló. Por favor, inténtalo de nuevo.",

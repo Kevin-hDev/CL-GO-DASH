@@ -437,6 +437,14 @@
     "charCount": "{{format}} — {{count}} 个字符",
     "blockCount": "DOCX — {{count}} 个块"
   },
+  "fileTree": {
+    "filterPlaceholder": "筛选文件...",
+    "emptyDirectory": "此文件夹为空",
+    "tooManyEntries": "条目过多（最多{{count}}）",
+    "toggleTree": "项目文件树",
+    "loadError": "无法读取此文件夹",
+    "noResults": "无结果"
+  },
   "errors": {
     "crashMessage": "发生错误，请重启应用。",
     "operationFailed": "操作失败，请重试。",

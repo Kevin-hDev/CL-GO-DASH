@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Maximize2, Minimize2 } from "lucide-react";
+import { Maximize2, Minimize2, FolderTree } from "lucide-react";
 import { openPreviewFile, openPreviewWithEditor } from "@/services/file-preview";
 import type { FileOperation, FilePreviewActiveTab } from "@/types/file-preview";
 import { shouldWrapFile } from "@/lib/code-language";
@@ -26,6 +26,9 @@ interface FilePreviewPanelProps {
   onOpenOperation: (operation: FileOperation) => void;
   onCloseTab: (id: string) => void;
   onResizeStart: (event: React.PointerEvent) => void;
+  hasProject?: boolean;
+  treeOpen?: boolean;
+  onToggleTree?: () => void;
 }
 
 export function FilePreviewPanel(props: FilePreviewPanelProps) {
@@ -57,6 +60,15 @@ export function FilePreviewPanel(props: FilePreviewPanelProps) {
           onOpenDefault={openDefault}
           onOpenWith={openWith}
         />
+        {props.hasProject && (
+          <button
+            className={`fp-icon-btn ${props.treeOpen ? "fp-icon-btn-active" : ""}`}
+            onClick={props.onToggleTree}
+            title={t("fileTree.toggleTree")}
+          >
+            <FolderTree size={16} />
+          </button>
+        )}
         <button
           className="fp-icon-btn"
           onClick={() => props.onFullscreenChange(!props.fullscreen)}

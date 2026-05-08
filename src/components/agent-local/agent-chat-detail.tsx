@@ -1,6 +1,8 @@
 import { ChatView } from "./chat-view";
 import { FilePreviewPanel } from "@/components/file-preview/file-preview-panel";
+import { FileTreePanel } from "@/components/file-tree/file-tree-panel";
 import type { useFilePreview } from "@/hooks/use-file-preview";
+import type { useFileTree } from "@/hooks/use-file-tree";
 import type { DroppedFile } from "@/hooks/use-file-drop";
 import type { useTerminal } from "@/hooks/use-terminal";
 import type { Project } from "@/types/agent";
@@ -28,6 +30,7 @@ interface AgentChatDetailProps {
   onToggleThinking: () => void;
   onInitialMessageSent: () => void;
   onFileOperationsChange: (operations: FileOperation[]) => void;
+  fileTree: ReturnType<typeof useFileTree>;
   parentSessionId?: string;
   onOpenSubagent?: (sessionId: string) => void;
   onGoToParent?: () => void;
@@ -45,7 +48,7 @@ export function AgentChatDetail(props: AgentChatDetailProps) {
           ← Chat parent
         </button>
       )}
-      <div style={{ flex: 1, minWidth: 0, minHeight: 0, overflow: "hidden" }}>
+      <div className={`agent-detail-chat ${props.filePreview.fullscreen ? "agent-detail-chat-fs" : ""}`}>
         <ChatView
           sessionId={props.sessionId}
           model={props.model}
@@ -85,6 +88,14 @@ export function AgentChatDetail(props: AgentChatDetailProps) {
         onOpenOperation={props.filePreview.openOperation}
         onCloseTab={props.filePreview.closeTab}
         onResizeStart={props.filePreview.startResize}
+        hasProject={props.fileTree.hasProject}
+        treeOpen={props.fileTree.open}
+        onToggleTree={props.fileTree.toggleOpen}
+      />
+      <FileTreePanel
+        tree={props.fileTree}
+        onFileSelect={props.filePreview.openPath}
+        activePath={props.filePreview.tabs.find((tab) => tab.id === props.filePreview.activeTab)?.path ?? null}
       />
     </div>
   );

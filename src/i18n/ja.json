@@ -437,6 +437,14 @@
     "charCount": "{{format}} — {{count}} 文字",
     "blockCount": "DOCX — {{count}} ブロック"
   },
+  "fileTree": {
+    "filterPlaceholder": "ファイルを検索...",
+    "emptyDirectory": "このフォルダは空です",
+    "tooManyEntries": "エントリが多すぎます（最大{{count}}）",
+    "toggleTree": "プロジェクトファイルツリー",
+    "loadError": "このフォルダを読み取れません",
+    "noResults": "結果なし"
+  },
   "errors": {
     "crashMessage": "エラーが発生しました。アプリケーションを再起動してください。",
     "operationFailed": "操作に失敗しました。もう一度お試しください。",
