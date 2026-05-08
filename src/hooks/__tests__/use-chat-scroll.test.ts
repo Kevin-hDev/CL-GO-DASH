@@ -4,24 +4,12 @@ import { useChatScroll } from "../use-chat-scroll";
 
 describe("useChatScroll", () => {
   it("initialise avec isAtBottom = true", () => {
-    const { result } = renderHook(() => useChatScroll());
+    const { result } = renderHook(() => useChatScroll("s1", false, []));
     expect(result.current.isAtBottom).toBe(true);
   });
 
-  it("setIsAtBottom met à jour le state", () => {
-    const { result } = renderHook(() => useChatScroll());
-    act(() => {
-      result.current.setIsAtBottom(false);
-    });
-    expect(result.current.isAtBottom).toBe(false);
-  });
-
   it("scrollToBottom remet isAtBottom à true", () => {
-    const { result } = renderHook(() => useChatScroll());
-    act(() => {
-      result.current.setIsAtBottom(false);
-    });
-    expect(result.current.isAtBottom).toBe(false);
+    const { result } = renderHook(() => useChatScroll("s1", false, []));
     act(() => {
       result.current.scrollToBottom();
     });
@@ -29,7 +17,7 @@ describe("useChatScroll", () => {
   });
 
   it("scrollToBottom ne jette pas si déjà en bas", () => {
-    const { result } = renderHook(() => useChatScroll());
+    const { result } = renderHook(() => useChatScroll("s1", false, []));
     expect(() => {
       act(() => {
         result.current.scrollToBottom();

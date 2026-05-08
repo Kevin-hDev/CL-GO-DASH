@@ -1,20 +1,53 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect, useLayoutEffect } from "react";
 
 interface UseChatScrollReturn {
+  containerRef: React.RefObject<HTMLDivElement | null>;
   isAtBottom: boolean;
   scrollToBottom: () => void;
-  setIsAtBottom: (value: boolean) => void;
-  scrollActionRef: React.MutableRefObject<(() => void) | null>;
 }
 
-export function useChatScroll(): UseChatScrollReturn {
+export function useChatScroll(sessionId: string, isStreaming: boolean, deps: unknown[]): UseChatScrollReturn {
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
-  const scrollActionRef = useRef<(() => void) | null>(null);
+  const autoScrollRef = useRef(true);
+
+  useLayoutEffect(() => {
+    autoScrollRef.current = true;
+    setIsAtBottom(true);
+  }, [sessionId]);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      if (e.deltaY < 0) {
+        autoScrollRef.current = false;
+        setIsAtBottom(false);
+      } else if (e.deltaY > 0) {
+        const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight <= 50;
+        if (nearBottom) {
+          autoScrollRef.current = true;
+          setIsAtBottom(true);
+        }
+      }
+    };
+    el.addEventListener("wheel", onWheel, { passive: true });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!autoScrollRef.current) return;
+    const el = containerRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [sessionId, isStreaming, ...deps]);
 
   const scrollToBottom = useCallback(() => {
-    scrollActionRef.current?.();
+    const el = containerRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+    autoScrollRef.current = true;
     setIsAtBottom(true);
   }, []);
 
-  return { isAtBottom, scrollToBottom, setIsAtBottom, scrollActionRef };
+  return { containerRef, isAtBottom, scrollToBottom };
 }
