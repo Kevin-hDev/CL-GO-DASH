@@ -1,5 +1,6 @@
 use crate::services::agent_local::security;
 use crate::services::agent_local::types_tools::ShellOutput;
+use rand::RngCore;
 use std::path::Path;
 use tokio::process::Command;
 use tokio::time::{timeout, Duration};
@@ -20,14 +21,17 @@ pub async fn execute_shell(
             stderr: reason,
             exit_code: -1,
             timed_out: false,
+            new_cwd: None,
         });
     }
 
     let secs = timeout_secs.unwrap_or(DEFAULT_TIMEOUT).min(MAX_TIMEOUT);
     let (shell, flag) = detect_shell();
+    let marker = generate_cwd_marker();
+    let wrapped = wrap_command_with_cwd(command, &marker);
 
     let child = Command::new(&shell)
-        .args([&flag, command])
+        .args([&flag, &wrapped])
         .current_dir(working_dir)
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::piped())
@@ -39,25 +43,61 @@ pub async fn execute_shell(
 
     match output {
         Ok(Ok(out)) => {
-            let stdout = truncate_output(&String::from_utf8_lossy(&out.stdout));
+            let raw_stdout = String::from_utf8_lossy(&out.stdout);
+            let (user_output, new_cwd) = extract_cwd(&raw_stdout, &marker);
+            let stdout = truncate_output(&user_output);
             let stderr = truncate_output(&String::from_utf8_lossy(&out.stderr));
             Ok(ShellOutput {
                 stdout,
                 stderr,
                 exit_code: out.status.code().unwrap_or(-1),
                 timed_out: false,
+                new_cwd,
             })
         }
         Ok(Err(e)) => Err(format!("Erreur exécution: {e}")),
-        Err(_) => {
-            // kill_on_drop(true) s'en charge — child est dropped ici
-            Ok(ShellOutput {
-                stdout: String::new(),
-                stderr: format!("Timeout après {secs}s"),
-                exit_code: -1,
-                timed_out: true,
-            })
-        }
+        Err(_) => Ok(ShellOutput {
+            stdout: String::new(),
+            stderr: format!("Timeout après {secs}s"),
+            exit_code: -1,
+            timed_out: true,
+            new_cwd: None,
+        }),
+    }
+}
+
+fn generate_cwd_marker() -> String {
+    let mut bytes = [0u8; 8];
+    rand::rngs::OsRng.fill_bytes(&mut bytes);
+    let hex: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
+    format!("<<CWD_MARKER_{hex}>>")
+}
+
+fn wrap_command_with_cwd(command: &str, marker: &str) -> String {
+    if cfg!(target_os = "windows") {
+        format!("{command} ; Write-Host '{marker}' ; (Get-Location).Path")
+    } else {
+        format!("{command} ; echo '{marker}' ; pwd -P")
+    }
+}
+
+fn extract_cwd(raw_stdout: &str, marker: &str) -> (String, Option<String>) {
+    if let Some(idx) = raw_stdout.find(marker) {
+        let user_output = raw_stdout[..idx].trim_end_matches('\n').to_string();
+        let after = raw_stdout[idx + marker.len()..].trim();
+        let new_cwd = if !after.is_empty() {
+            let p = Path::new(after);
+            if p.is_absolute() && p.is_dir() {
+                Some(after.to_string())
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+        (user_output, new_cwd)
+    } else {
+        (raw_stdout.to_string(), None)
     }
 }
 
@@ -73,7 +113,6 @@ fn detect_shell() -> (String, String) {
 fn truncate_output(output: &str) -> String {
     let mut result = String::new();
     let mut line_count = 0;
-
     for line in output.lines() {
         if line_count >= MAX_LINES || result.len() + line.len() > MAX_BYTES {
             result.push_str("\n... [tronqué]");
@@ -87,3 +126,7 @@ fn truncate_output(output: &str) -> String {
     }
     result
 }
+
+#[cfg(test)]
+#[path = "tool_bash_tests.rs"]
+mod tests;

@@ -42,7 +42,7 @@ pub fn get_explorer_tool_definitions() -> Vec<Value> {
     vec![
         tool_def(
             "read_file",
-            "Read any file on the system. Output is formatted with line numbers.",
+            "Read any file. Relative paths resolve from the working directory. Output is formatted with line numbers.",
             serde_json::json!({
                 "type": "object",
                 "properties": {
@@ -55,7 +55,7 @@ pub fn get_explorer_tool_definitions() -> Vec<Value> {
         ),
         tool_def(
             "list_dir",
-            "List the contents of a directory.",
+            "List the contents of a directory. Use '.' to list the working directory.",
             serde_json::json!({
                 "type": "object",
                 "properties": {
@@ -66,7 +66,7 @@ pub fn get_explorer_tool_definitions() -> Vec<Value> {
         ),
         tool_def(
             "grep",
-            "Search file contents with regex patterns.",
+            "Search file contents with regex patterns. Searches the working directory by default.",
             serde_json::json!({
                 "type": "object",
                 "properties": {
@@ -79,7 +79,7 @@ pub fn get_explorer_tool_definitions() -> Vec<Value> {
         ),
         tool_def(
             "glob",
-            "Find files by name patterns.",
+            "Find files by name patterns. Searches the working directory by default.",
             serde_json::json!({
                 "type": "object",
                 "properties": {

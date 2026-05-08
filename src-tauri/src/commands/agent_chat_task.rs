@@ -7,7 +7,7 @@ use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::tool_dispatcher;
 use crate::services::agent_local::tool_skill_loader;
 use crate::services::agent_local::types_ollama::ChatMessage;
-use crate::services::git::branch as git_branch;
+use crate::services::git_context::{self, GitSnapshot};
 use crate::services::llm;
 use tokio_util::sync::CancellationToken;
 
@@ -23,32 +23,23 @@ pub(crate) fn merge_personality(
     }
 }
 
-async fn append_git_context(messages: &mut Vec<ChatMessage>, working_dir: &std::path::Path) {
+async fn collect_git_snapshot(working_dir: &std::path::Path) -> GitSnapshot {
     let wd = working_dir.to_path_buf();
-    let ctx = tokio::task::spawn_blocking(move || git_branch::get_context(&wd))
-        .await
-        .unwrap_or_else(|_| git_branch::GitContext {
-            branch: String::new(),
-            is_detached: false,
-            dirty_count: 0,
-            is_git_repo: false,
-        });
-    if !ctx.is_git_repo {
-        return;
-    }
-    let branch_display = if ctx.is_detached {
-        format!("HEAD détaché ({})", ctx.branch)
-    } else {
-        ctx.branch
-    };
-    let dirty = if ctx.dirty_count > 0 {
-        format!(", {} fichier(s) non validé(s)", ctx.dirty_count)
-    } else {
-        String::new()
-    };
-    let git_info = format!("\n\nGit: branche `{branch_display}`{dirty}");
-    if let Some(first) = messages.first_mut().filter(|m| m.role == "system") {
-        first.content.push_str(&git_info);
+    tokio::time::timeout(
+        std::time::Duration::from_secs(3),
+        tokio::task::spawn_blocking(move || git_context::detect_git(&wd)),
+    )
+    .await
+    .ok()
+    .and_then(|r| r.ok())
+    .unwrap_or_default()
+}
+
+fn append_git_section(messages: &mut Vec<ChatMessage>, snap: &GitSnapshot) {
+    if let Some(section) = git_context::format_git_section(snap) {
+        if let Some(first) = messages.first_mut().filter(|m| m.role == "system") {
+            first.content.push_str(&format!("\n\n{section}"));
+        }
     }
 }
 
@@ -158,13 +149,17 @@ pub(crate) async fn run_stream_task(
     permission_mode_override: Option<String>,
     cancel: CancellationToken,
 ) -> Result<Vec<ChatMessage>, String> {
-    let resolve_dir = |wd: &Option<String>| -> std::path::PathBuf {
-        wd.as_ref()
-            .map(std::path::PathBuf::from)
-            .filter(|p| p.is_dir())
-            .unwrap_or_else(|| {
-                dirs::home_dir().unwrap_or_else(|| std::env::current_dir().unwrap())
-            })
+    use crate::services::agent_local::session_store;
+
+    let resolve_dir = |wd: &Option<String>, _session_id: &str| -> Result<std::path::PathBuf, String> {
+        if let Some(d) = wd.as_ref().filter(|s| !s.is_empty()) {
+            let p = std::path::PathBuf::from(d);
+            if p.is_dir() {
+                return p.canonicalize().map_err(|e| format!("Répertoire inaccessible : {e}"));
+            }
+            return Err(format!("Répertoire introuvable : {d}"));
+        }
+        Ok(dirs::home_dir().unwrap_or_else(|| std::env::current_dir().unwrap()))
     };
 
     // Interception : /compress déclenche la compression manuelle
@@ -196,7 +191,9 @@ pub(crate) async fn run_stream_task(
             tools
         };
 
-        let working_dir = resolve_dir(&working_dir);
+        let working_dir = resolve_dir(&working_dir, &session_id)?;
+        let _ = session_store::update_working_dir(&session_id, &working_dir.to_string_lossy()).await;
+        let snap = collect_git_snapshot(&working_dir).await;
         let mut msgs = messages;
         let agent_md_content = if is_chat || is_subagent {
             None
@@ -218,6 +215,8 @@ pub(crate) async fn run_stream_task(
         prepare_messages(
             &mut msgs,
             &working_dir,
+            snap.is_git,
+            snap.git_root.as_deref(),
             true,
             agent_md_content,
             &skills_tuples,
@@ -225,7 +224,7 @@ pub(crate) async fn run_stream_task(
             &mode,
             &response_language,
         );
-        append_git_context(&mut msgs, &working_dir).await;
+        append_git_section(&mut msgs, &snap);
 
         agent_loop::run_agent_loop(
             &on_event,
@@ -272,7 +271,9 @@ pub(crate) async fn run_stream_task(
             vec![]
         };
         let openai_tools = llm::agent_loop::convert_tools_to_openai(&final_tools);
-        let working_dir = resolve_dir(&working_dir);
+        let working_dir = resolve_dir(&working_dir, &session_id)?;
+        let _ = session_store::update_working_dir(&session_id, &working_dir.to_string_lossy()).await;
+        let snap = collect_git_snapshot(&working_dir).await;
         let mut msgs = messages;
         if !model_supports_vision {
             llm::stream_convert::strip_images(&mut msgs);
@@ -298,6 +299,8 @@ pub(crate) async fn run_stream_task(
         prepare_messages(
             &mut msgs,
             &working_dir,
+            snap.is_git,
+            snap.git_root.as_deref(),
             has_tools,
             agent_md_content,
             &skills_tuples,
@@ -305,7 +308,7 @@ pub(crate) async fn run_stream_task(
             &mode,
             &response_language,
         );
-        append_git_context(&mut msgs, &working_dir).await;
+        append_git_section(&mut msgs, &snap);
         let think_active = think && model_supports_thinking;
         llm::agent_loop::run_agent_loop(
             &on_event,

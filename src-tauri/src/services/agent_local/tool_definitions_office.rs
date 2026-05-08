@@ -11,7 +11,8 @@ pub fn office_tool_definitions() -> Vec<Value> {
     vec![
         tool_def(
             "read_spreadsheet",
-            "Read data from a spreadsheet (Excel .xlsx/.xls/.ods or CSV/TSV). Returns JSON with headers and rows. \
+            "Read data from a spreadsheet (Excel .xlsx/.xls/.ods or CSV/TSV). Relative paths resolve from the working directory. \
+             Returns JSON with headers and rows. \
              The first row is always used as column headers. Formulas are returned as text (e.g. '=SUM(A1:A5)'), not computed values. \
              Example: {\"path\": \"data.xlsx\", \"sheet\": \"Sheet1\", \"max_rows\": 100}",
             serde_json::json!({
@@ -27,7 +28,8 @@ pub fn office_tool_definitions() -> Vec<Value> {
         ),
         tool_def(
             "read_document",
-            "Extract text from PDF or Word (.docx). Returns JSON with text content. \
+            "Extract text from PDF or Word (.docx). Relative paths resolve from the working directory. \
+             Returns JSON with text content. \
              Example: {\"path\": \"report.pdf\"}",
             serde_json::json!({
                 "type": "object",
@@ -40,7 +42,8 @@ pub fn office_tool_definitions() -> Vec<Value> {
         ),
         tool_def(
             "read_image",
-            "Read image metadata (dimensions, format, size). Supports JPEG, PNG, WebP, GIF, BMP. \
+            "Read image metadata (dimensions, format, size). Relative paths resolve from the working directory. \
+             Supports JPEG, PNG, WebP, GIF, BMP. \
              Example: {\"path\": \"photo.jpg\"}",
             serde_json::json!({
                 "type": "object",
@@ -52,7 +55,8 @@ pub fn office_tool_definitions() -> Vec<Value> {
         ),
         tool_def(
             "write_spreadsheet",
-            "Create or modify an Excel file (.xlsx). Use operations array to set cells, formulas, rows. \
+            "Create or modify an Excel file (.xlsx). Relative paths resolve from the working directory. \
+             Use operations array to set cells, formulas, rows. \
              New files get a default sheet named 'Sheet1'. Each operation can target a specific sheet via 'sheet' (default: first sheet). \
              Do not use add_sheet for single-sheet files — Sheet1 is created automatically. \
              Example: {\"path\": \"output.xlsx\", \"operations\": [\
@@ -88,7 +92,8 @@ pub fn office_tool_definitions() -> Vec<Value> {
         ),
         tool_def(
             "write_document",
-            "Create a Word document (.docx) from content blocks. Only include fields relevant to each block type. \
+            "Create a Word document (.docx) from content blocks. Relative paths resolve from the working directory. \
+             Only include fields relevant to each block type. \
              heading: {type, text, level}. paragraph: {type, text, bold?, italic?}. \
              table: {type, headers, rows}. list: {type, items, ordered}. \
              Example: {\"path\": \"doc.docx\", \"content\": [\
@@ -125,7 +130,8 @@ pub fn office_tool_definitions() -> Vec<Value> {
         ),
         tool_def(
             "process_image",
-            "Resize, crop, or convert an image. To convert format, just change the extension. \
+            "Resize, crop, or convert an image. Relative paths resolve from the working directory. \
+             To convert format, just change the extension. \
              Example convert: {\"input_path\": \"photo.png\", \"output_path\": \"photo.webp\"} \
              Example resize: {\"input_path\": \"photo.png\", \"output_path\": \"thumb.jpg\", \"operations\": [\
              {\"type\": \"resize\", \"width\": 200, \"height\": 200, \"mode\": \"fit\"}, \

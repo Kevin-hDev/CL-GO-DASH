@@ -1,9 +1,9 @@
 use std::path::Path;
 
-pub fn build(working_dir: &Path) -> String {
+pub fn build(working_dir: &Path, is_git: bool, git_root: Option<&Path>) -> String {
     format!(
         "{IDENTITY}\n\n{CAPABILITIES}\n\n{}\n\n{TOOLS}\n\n{WEB_SEARCH}\n\n{SAFETY}\n\n{STYLE}",
-        env_section(working_dir),
+        env_section(working_dir, is_git, git_root),
     )
 }
 
@@ -36,19 +36,25 @@ Default timeout is 120s. For long-running commands, set a higher timeout (up to 
 - **read_image**: Read image metadata (dimensions, format, size). Supports JPEG, PNG, WebP.
 - **process_image**: Resize, crop, or convert images between formats.";
 
-fn env_section(working_dir: &Path) -> String {
+fn env_section(working_dir: &Path, is_git: bool, git_root: Option<&Path>) -> String {
     let os = std::env::consts::OS;
     let arch = std::env::consts::ARCH;
-    let shell = std::env::var("SHELL").unwrap_or_else(|_| "unknown".into());
+    let shell = crate::services::env_detect::detect_shell();
+    let os_version = crate::services::env_detect::detect_os_version();
     let date = chrono::Local::now().format("%Y-%m-%d");
+    let git_flag = if is_git { "true" } else { "false" };
+    let git_root_line = match git_root {
+        Some(root) if root != working_dir => format!("\n - Git root: {}", root.display()),
+        _ => String::new(),
+    };
     format!(
         "# Environment\n\
-         - Current date: {date}\n\
+         - Primary working directory: {}\n\
+         - Is a git repository: {git_flag}{git_root_line}\n\
          - Platform: {os} ({arch})\n\
          - Shell: {shell}\n\
-         - Primary working directory: {}\n\
-         This is your default starting point for relative paths — not a boundary. \
-         You can access any path on the system using absolute paths.",
+         - OS Version: {os_version}\n\
+         - Current date: {date}",
         working_dir.display()
     )
 }

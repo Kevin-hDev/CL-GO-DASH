@@ -3,6 +3,7 @@ use crate::services::agent_local::types_ollama::ChatMessage;
 use crate::services::agent_local::{
     prompt_chat_compact, prompt_chat_detailed, prompt_compact, prompt_detailed,
 };
+use std::path::Path;
 
 fn build_system_message(content: String) -> ChatMessage {
     ChatMessage {
@@ -17,7 +18,9 @@ fn build_system_message(content: String) -> ChatMessage {
 
 fn prepend_tool_system_prompt(
     messages: &mut Vec<ChatMessage>,
-    working_dir: &std::path::Path,
+    working_dir: &Path,
+    is_git: bool,
+    git_root: Option<&Path>,
     model: &str,
 ) {
     if messages.first().is_some_and(|m| m.role == "system") {
@@ -25,25 +28,10 @@ fn prepend_tool_system_prompt(
     }
     let tier = model_size::detect_tier(model);
     let prompt = match tier {
-        PromptTier::Compact => prompt_compact::build(working_dir),
-        PromptTier::Detailed => prompt_detailed::build(working_dir),
+        PromptTier::Compact => prompt_compact::build(working_dir, is_git, git_root),
+        PromptTier::Detailed => prompt_detailed::build(working_dir, is_git, git_root),
     };
     messages.insert(0, build_system_message(prompt));
-}
-
-fn prepend_working_dir_context(
-    messages: &mut Vec<ChatMessage>,
-    working_dir: &std::path::Path,
-) {
-    let dir_info = format!(
-        "You are working in the directory: {}. You can access any path on the system using absolute paths.",
-        working_dir.display()
-    );
-    if let Some(first) = messages.first_mut().filter(|m| m.role == "system") {
-        first.content = format!("{}\n\n{}", first.content, dir_info);
-    } else {
-        messages.insert(0, build_system_message(dir_info));
-    }
 }
 
 pub fn prepend_agent_md_context(messages: &mut Vec<ChatMessage>, agent_md: Option<String>) {
@@ -60,7 +48,9 @@ pub fn prepend_agent_md_context(messages: &mut Vec<ChatMessage>, agent_md: Optio
 
 pub fn prepare_messages(
     messages: &mut Vec<ChatMessage>,
-    working_dir: &std::path::Path,
+    working_dir: &Path,
+    is_git: bool,
+    git_root: Option<&Path>,
     has_tools: bool,
     agent_md: Option<String>,
     skills: &[(String, String)],
@@ -70,21 +60,19 @@ pub fn prepare_messages(
 ) {
     if mode == "chat" {
         prepend_chat_system_prompt(messages, working_dir, model);
-    } else if has_tools {
-        prepend_tool_system_prompt(messages, working_dir, model);
-        if !skills.is_empty() {
+    } else {
+        prepend_tool_system_prompt(messages, working_dir, is_git, git_root, model);
+        if has_tools && !skills.is_empty() {
             prepend_skills_listing(messages, skills);
         }
         prepend_agent_md_context(messages, agent_md);
-    } else {
-        prepend_working_dir_context(messages, working_dir);
     }
     append_response_language(messages, response_language);
 }
 
 fn prepend_chat_system_prompt(
     messages: &mut Vec<ChatMessage>,
-    working_dir: &std::path::Path,
+    working_dir: &Path,
     model: &str,
 ) {
     if messages.first().is_some_and(|m| m.role == "system") {
@@ -102,7 +90,9 @@ fn append_response_language(messages: &mut Vec<ChatMessage>, lang: &str) {
     if lang.is_empty() {
         return;
     }
-    let instruction = format!("\n\nYou MUST respond in {lang}. All your answers, explanations and communications must be in {lang}.");
+    let instruction = format!(
+        "\n\nYou MUST respond in {lang}. All your answers, explanations and communications must be in {lang}."
+    );
     if let Some(first) = messages.first_mut().filter(|m| m.role == "system") {
         first.content.push_str(&instruction);
     }

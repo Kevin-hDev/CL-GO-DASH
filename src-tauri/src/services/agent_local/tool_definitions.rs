@@ -4,10 +4,9 @@ pub fn get_tool_definitions() -> Vec<Value> {
     let mut defs = vec![
         tool_def(
             "bash",
-            "Execute any shell command on the user's system. Use for system commands, git, \
-             package managers, compilers, process management, and any task requiring shell execution. \
-             Default timeout is 120s (2 min). For long-running commands (du on large dirs, builds, \
-             installs), set a higher timeout up to 600s (10 min).",
+            "Execute a shell command. Commands run in the working directory. \
+             Use for system commands, git, package managers, compilers, process management. \
+             Default timeout 120s. For long-running commands, set timeout up to 600s.",
             serde_json::json!({
                 "type": "object",
                 "properties": {
@@ -19,28 +18,26 @@ pub fn get_tool_definitions() -> Vec<Value> {
         ),
         tool_def(
             "read_file",
-            "Read any file on the system. Accepts absolute or relative paths. \
-             Output is formatted with line numbers (cat -n format: `{line_number}\\t{content}`). \
-             Use offset and limit to read only a portion of large files. \
-             Default limit is 2000 lines. If more lines remain, a continuation message indicates \
-             the next offset to use.",
+            "Read a file. Relative paths resolve from the working directory. \
+             Output is formatted with line numbers. \
+             Use offset and limit for large files. Default limit is 2000 lines.",
             serde_json::json!({
                 "type": "object",
                 "properties": {
-                    "path": {"type": "string", "description": "File path (absolute or relative to working dir)"},
+                    "path": {"type": "string", "description": "File path (relative to working directory, or absolute)"},
                     "offset": {"type": "integer", "description": "Starting line (0-based, default: 0)"},
-                    "limit": {"type": "integer", "description": "Max number of lines to return (default: 2000)"}
+                    "limit": {"type": "integer", "description": "Max lines to return (default: 2000)"}
                 },
                 "required": ["path"]
             }),
         ),
         tool_def(
             "write_file",
-            "Create a new file or overwrite an existing file.",
+            "Create or overwrite a file. Relative paths resolve from the working directory.",
             serde_json::json!({
                 "type": "object",
                 "properties": {
-                    "path": {"type": "string", "description": "File path to write to"},
+                    "path": {"type": "string", "description": "File path (relative to working directory, or absolute)"},
                     "content": {"type": "string", "description": "Content to write"}
                 },
                 "required": ["path", "content"]
@@ -48,12 +45,12 @@ pub fn get_tool_definitions() -> Vec<Value> {
         ),
         tool_def(
             "edit_file",
-            "Modify an existing file by replacing an exact string match. \
+            "Modify a file by replacing an exact string match. Relative paths resolve from the working directory. \
              Prefer this over write_file for modifications.",
             serde_json::json!({
                 "type": "object",
                 "properties": {
-                    "path": {"type": "string", "description": "File path to edit"},
+                    "path": {"type": "string", "description": "File path (relative to working directory, or absolute)"},
                     "old_string": {"type": "string", "description": "Exact text to find (must be unique in file)"},
                     "new_string": {"type": "string", "description": "Replacement text"}
                 },
@@ -62,23 +59,24 @@ pub fn get_tool_definitions() -> Vec<Value> {
         ),
         tool_def(
             "list_dir",
-            "List the contents of a directory.",
+            "List the contents of a directory. Use '.' to list the working directory.",
             serde_json::json!({
                 "type": "object",
                 "properties": {
-                    "path": {"type": "string", "description": "Directory path to list"}
+                    "path": {"type": "string", "description": "Directory path (use '.' for working directory)"}
                 },
                 "required": ["path"]
             }),
         ),
         tool_def(
             "grep",
-            "Search file contents with regex patterns. Max 250 results, respects .gitignore.",
+            "Search file contents with regex. Max 250 results, respects .gitignore. \
+             Searches the working directory by default.",
             serde_json::json!({
                 "type": "object",
                 "properties": {
                     "pattern": {"type": "string", "description": "Regex pattern to search for"},
-                    "path": {"type": "string", "description": "Directory to search in (default: working dir)"},
+                    "path": {"type": "string", "description": "Directory to search (default: working directory)"},
                     "glob": {"type": "string", "description": "File filter glob (e.g. '*.rs', '*.ts')"}
                 },
                 "required": ["pattern"]
@@ -86,12 +84,13 @@ pub fn get_tool_definitions() -> Vec<Value> {
         ),
         tool_def(
             "glob",
-            "Find files by name patterns. Max 100 results, respects .gitignore.",
+            "Find files by name patterns. Max 100 results, respects .gitignore. \
+             Searches the working directory by default.",
             serde_json::json!({
                 "type": "object",
                 "properties": {
                     "pattern": {"type": "string", "description": "Glob pattern (e.g. '**/*.ts', 'src/**/*.rs')"},
-                    "path": {"type": "string", "description": "Root directory (default: working dir)"}
+                    "path": {"type": "string", "description": "Root directory (default: working directory)"}
                 },
                 "required": ["pattern"]
             }),
@@ -120,8 +119,7 @@ pub fn get_tool_definitions() -> Vec<Value> {
         ),
         tool_def(
             "load_skill",
-            "Load a skill by name for specialized workflows. \
-             Use when the user mentions a skill or the task matches an available skill.",
+            "Load a skill by name for specialized workflows.",
             serde_json::json!({
                 "type": "object",
                 "properties": {
@@ -132,8 +130,8 @@ pub fn get_tool_definitions() -> Vec<Value> {
         ),
         tool_def(
             "create_branch",
-            "Create a new git branch from the current HEAD and switch to it. \
-             Use when the user asks to start a new feature or work on a separate branch.",
+            "Create a new git branch from HEAD and switch to it. \
+             Operates on the git repo in the working directory.",
             serde_json::json!({
                 "type": "object",
                 "properties": {
@@ -144,7 +142,8 @@ pub fn get_tool_definitions() -> Vec<Value> {
         ),
         tool_def(
             "checkout_branch",
-            "Switch to an existing git branch. Fails if there are uncommitted changes.",
+            "Switch to an existing git branch. Fails if uncommitted changes. \
+             Operates on the git repo in the working directory.",
             serde_json::json!({
                 "type": "object",
                 "properties": {

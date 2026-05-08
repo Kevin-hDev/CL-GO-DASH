@@ -65,6 +65,7 @@ pub async fn create_full(
         messages: Vec::new(),
         is_heartbeat,
         project_id,
+        working_dir: String::new(),
         parent_session_id: None,
         subagent_type: None,
         subagent_worktree: None,
@@ -157,6 +158,18 @@ pub async fn update_model(id: &str, model: &str, provider: &str) -> Result<(), S
     let mut session = get(id).await?;
     session.model = model.to_string();
     session.provider = provider.to_string();
+    save(&session).await
+}
+
+pub async fn update_working_dir(id: &str, dir: &str) -> Result<(), String> {
+    validate_session_id(id)?;
+    let path = std::path::Path::new(dir);
+    if !path.is_absolute() || !path.is_dir() {
+        return Err(format!("Répertoire invalide : {dir}"));
+    }
+    let canonical = path.canonicalize().map_err(|e| format!("Canonicalize : {e}"))?;
+    let mut session = get(id).await?;
+    session.working_dir = canonical.to_string_lossy().to_string();
     save(&session).await
 }
 

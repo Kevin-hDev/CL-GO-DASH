@@ -85,6 +85,7 @@ export interface AgentSession {
   accumulated_tokens: number;
   messages: AgentMessage[];
   project_id?: string;
+  working_dir?: string;
   parent_session_id?: string;
   subagent_type?: "explorer" | "coder";
   subagent_worktree?: string;

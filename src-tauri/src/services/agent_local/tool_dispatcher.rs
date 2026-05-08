@@ -88,6 +88,13 @@ async fn dispatch_inner(tool_name: &str, args: &Value, working_dir: &Path, sessi
             let timeout = args["timeout"].as_u64();
             match tool_bash::execute_shell(cmd, working_dir, timeout).await {
                 Ok(out) => {
+                    if let Some(ref cwd) = out.new_cwd {
+                        let sid = session_id.to_string();
+                        let dir = cwd.clone();
+                        tokio::spawn(async move {
+                            let _ = crate::services::agent_local::session_store::update_working_dir(&sid, &dir).await;
+                        });
+                    }
                     let content = format!("{}\n{}", out.stdout, out.stderr).trim().to_string();
                     if out.exit_code != 0 {
                         ToolResult::err(content)

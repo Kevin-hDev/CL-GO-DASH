@@ -8,7 +8,8 @@ fn test_session(id: &str, name: &str, heartbeat: bool) -> AgentSession {
         id: id.into(), name: name.into(), created_at: Utc::now(),
         model: "llama3".into(), provider: "ollama".into(),
         thinking_enabled: false, accumulated_tokens: 0, messages: vec![],
-        is_heartbeat: heartbeat, project_id: None, parent_session_id: None,
+        is_heartbeat: heartbeat, project_id: None, working_dir: String::new(),
+        parent_session_id: None,
         subagent_type: None, subagent_worktree: None, subagent_prompt: None,
         subagent_status: None, subagent_run_id: None,
     }

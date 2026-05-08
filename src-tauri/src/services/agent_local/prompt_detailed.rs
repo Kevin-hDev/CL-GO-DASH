@@ -1,9 +1,9 @@
 use std::path::Path;
 
-pub fn build(working_dir: &Path) -> String {
+pub fn build(working_dir: &Path, is_git: bool, git_root: Option<&Path>) -> String {
     format!(
         "{IDENTITY}\n\n{CAPABILITIES}\n\n{}\n\n{TOOLS}\n\n{WEB_SEARCH}\n\n{CODE}\n\n{GIT}\n\n{SAFETY}\n\n{ERRORS}\n\n{STYLE}",
-        env_section(working_dir),
+        env_section(working_dir, is_git, git_root),
     )
 }
 
@@ -48,20 +48,26 @@ heading (text + level), paragraph (text + bold/italic), table (headers + rows), 
 - **process_image**: Resize, crop, or convert images. Operations: resize (fit/fill/exact), crop, quality. \
 Output format is determined by the output file extension.";
 
-fn env_section(working_dir: &Path) -> String {
+fn env_section(working_dir: &Path, is_git: bool, git_root: Option<&Path>) -> String {
     let os = std::env::consts::OS;
     let arch = std::env::consts::ARCH;
-    let shell = std::env::var("SHELL").unwrap_or_else(|_| "unknown".into());
+    let shell = crate::services::env_detect::detect_shell();
+    let os_version = crate::services::env_detect::detect_os_version();
     let date = chrono::Local::now().format("%Y-%m-%d");
+    let git_flag = if is_git { "true" } else { "false" };
+    let git_root_line = match git_root {
+        Some(root) if root != working_dir => format!("\n - Git root: {}", root.display()),
+        _ => String::new(),
+    };
     format!(
-        "# Environment\n\n\
-         - Current date: {date}\n\
+        "# Environment\n\
+         You have been invoked in the following environment:\n\
+         - Primary working directory: {}\n\
+         - Is a git repository: {git_flag}{git_root_line}\n\
          - Platform: {os} ({arch})\n\
          - Shell: {shell}\n\
-         - Primary working directory: {}\n\n\
-         This is your default starting point for relative paths — not a boundary.\n\
-         You can read, write, and execute commands anywhere on the system using absolute paths.\n\
-         When operating outside the working directory, always use absolute paths.",
+         - OS Version: {os_version}\n\
+         - Current date: {date}",
         working_dir.display()
     )
 }

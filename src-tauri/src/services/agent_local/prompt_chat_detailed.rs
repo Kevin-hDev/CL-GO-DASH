@@ -45,7 +45,7 @@ fn env_section(working_dir: &Path) -> String {
     let arch = std::env::consts::ARCH;
     let date = chrono::Local::now().format("%Y-%m-%d");
     format!(
-        "# Environment\n\n\
+        "# Environment\n\
          - Current date: {date}\n\
          - Platform: {os} ({arch})\n\
          - Working directory: {}",
