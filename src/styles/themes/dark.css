@@ -10,9 +10,9 @@
   --surface: #111119;
   --surface-hover: rgba(200, 200, 210, 0.08);
   --edge: rgba(255, 255, 255, 0.06);
-  --ink: #a3a3a3;
-  --ink-muted: #9a9a9a;
-  --ink-faint: #5a5a64;
+  --ink: #c8c8ce;
+  --ink-muted: #b0b0b8;
+  --ink-faint: #78788a;
   --scrollbar-thumb: rgba(90, 90, 100, 0.35);
   --pulse: #ea580c;
   --pulse-muted: rgba(234, 88, 12, 0.15);
