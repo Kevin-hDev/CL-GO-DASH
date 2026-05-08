@@ -197,6 +197,8 @@ pub fn run() {
             commands::list_favorite_models,
             commands::add_favorite_model,
             commands::remove_favorite_model,
+            // File tree
+            commands::list_directory,
             // File preview
             commands::read_file_preview,
             commands::detect_editors_for_file,
