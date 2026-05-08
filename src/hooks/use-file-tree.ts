@@ -7,6 +7,7 @@ const DEFAULT_WIDTH = 240;
 const MIN_WIDTH = 240;
 const MAX_WIDTH = 500;
 const MAX_EXPANDED = 500;
+const MAX_CACHED_DIRS = 600;
 
 function treeStorageKey(sessionId: string | null): string {
   return `clgo-file-tree-width:${sessionId ?? "none"}`;
@@ -100,10 +101,16 @@ export function useFileTree(sessionId: string | null, projectPath: string | unde
       setChildrenMap((prev) => {
         const next = new Map(prev);
         next.set(dirPath, entries);
+        if (next.size > MAX_CACHED_DIRS) {
+          for (const key of next.keys()) {
+            if (next.size <= MAX_CACHED_DIRS) break;
+            if (!expandedPaths.has(key)) next.delete(key);
+          }
+        }
         return next;
       });
     }
-  }, [childrenMap, loadDirectory]);
+  }, [childrenMap, expandedPaths, loadDirectory]);
 
   const toggleOpen = useCallback(() => {
     setOpen((v) => !v);

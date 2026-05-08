@@ -2,6 +2,7 @@ use std::path::{Component, Path};
 
 use crate::models::file_tree::FileEntry;
 
+// Sync with src/lib/file-tree-hidden.ts
 pub const HIDDEN_ENTRIES: &[&str] = &[
     ".git",
     ".DS_Store",

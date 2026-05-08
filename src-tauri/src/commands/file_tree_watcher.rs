@@ -1,6 +1,8 @@
 use std::sync::Mutex;
+use std::time::Duration;
 
-use notify::{RecursiveMode, Watcher};
+use notify::RecursiveMode;
+use notify_debouncer_mini::{new_debouncer, DebouncedEventKind, Debouncer};
 use tauri::{AppHandle, Emitter, State};
 
 use super::file_tree::validate_path;
@@ -10,7 +12,7 @@ pub struct FileTreeWatcher {
 }
 
 struct WatcherState {
-    _watcher: notify::RecommendedWatcher,
+    _debouncer: Debouncer<notify::RecommendedWatcher>,
     _path: String,
 }
 
@@ -27,6 +29,8 @@ struct FileTreeChangedPayload {
     path: String,
     kind: String,
 }
+
+const DEBOUNCE_MS: u64 = 200;
 
 #[tauri::command]
 pub fn watch_project_directory(
@@ -55,37 +59,48 @@ pub fn watch_project_directory(
     let app_handle = app.clone();
     let watched_path = canonical_str.clone();
 
-    let mut watcher = notify::recommended_watcher(move |res: notify::Result<notify::Event>| {
-        let event = match res {
-            Ok(e) => e,
-            Err(_) => return,
-        };
+    let mut debouncer = new_debouncer(
+        Duration::from_millis(DEBOUNCE_MS),
+        move |res: Result<Vec<notify_debouncer_mini::DebouncedEvent>, notify::Error>| {
+            let events = match res {
+                Ok(e) => e,
+                Err(_) => return,
+            };
 
-        let kind = format!("{:?}", event.kind);
+            let mut emitted = std::collections::HashSet::new();
 
-        for changed in &event.paths {
-            let parent = changed
-                .parent()
-                .map(|p| p.to_string_lossy().to_string())
-                .unwrap_or_else(|| watched_path.clone());
+            for event in &events {
+                if matches!(event.kind, DebouncedEventKind::AnyContinuous) {
+                    continue;
+                }
 
-            let _ = app_handle.emit(
-                "file-tree-changed",
-                FileTreeChangedPayload {
-                    path: parent,
-                    kind: kind.clone(),
-                },
-            );
-        }
-    })
+                let parent = event
+                    .path
+                    .parent()
+                    .map(|p| p.to_string_lossy().to_string())
+                    .unwrap_or_else(|| watched_path.clone());
+
+                if emitted.insert(parent.clone()) {
+                    let _ = app_handle.emit(
+                        "file-tree-changed",
+                        FileTreeChangedPayload {
+                            path: parent,
+                            kind: "changed".to_string(),
+                        },
+                    );
+                }
+            }
+        },
+    )
     .map_err(|_| "Impossible de surveiller ce dossier".to_string())?;
 
-    watcher
+    debouncer
+        .watcher()
         .watch(&canonical, RecursiveMode::Recursive)
         .map_err(|_| "Impossible de surveiller ce dossier".to_string())?;
 
     *guard = Some(WatcherState {
-        _watcher: watcher,
+        _debouncer: debouncer,
         _path: canonical_str,
     });
 

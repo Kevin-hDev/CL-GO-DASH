@@ -1,3 +1,4 @@
+// Sync with src-tauri/src/commands/file_tree.rs HIDDEN_ENTRIES
 const HIDDEN_ENTRIES = new Set([
   ".git",
   ".DS_Store",

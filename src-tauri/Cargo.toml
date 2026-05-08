@@ -102,6 +102,7 @@ flate2 = "1"
 # Existants
 regex = "1"
 notify = "7"
+notify-debouncer-mini = "0.5"
 
 # Tools grep/glob (crates de ripgrep)
 grep = "0.3"
