@@ -7,6 +7,7 @@ use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::tool_dispatcher;
 use crate::services::agent_local::tool_skill_loader;
 use crate::services::agent_local::types_ollama::ChatMessage;
+use crate::services::git::branch as git_branch;
 use crate::services::llm;
 use tokio_util::sync::CancellationToken;
 
@@ -19,6 +20,35 @@ pub(crate) fn merge_personality(
         (Some(a), None) => Some(a),
         (None, Some(p)) => Some(p),
         (None, None) => None,
+    }
+}
+
+async fn append_git_context(messages: &mut Vec<ChatMessage>, working_dir: &std::path::Path) {
+    let wd = working_dir.to_path_buf();
+    let ctx = tokio::task::spawn_blocking(move || git_branch::get_context(&wd))
+        .await
+        .unwrap_or_else(|_| git_branch::GitContext {
+            branch: String::new(),
+            is_detached: false,
+            dirty_count: 0,
+            is_git_repo: false,
+        });
+    if !ctx.is_git_repo {
+        return;
+    }
+    let branch_display = if ctx.is_detached {
+        format!("HEAD détaché ({})", ctx.branch)
+    } else {
+        ctx.branch
+    };
+    let dirty = if ctx.dirty_count > 0 {
+        format!(", {} fichier(s) non validé(s)", ctx.dirty_count)
+    } else {
+        String::new()
+    };
+    let git_info = format!("\n\nGit: branche `{branch_display}`{dirty}");
+    if let Some(first) = messages.first_mut().filter(|m| m.role == "system") {
+        first.content.push_str(&git_info);
     }
 }
 
@@ -195,6 +225,7 @@ pub(crate) async fn run_stream_task(
             &mode,
             &response_language,
         );
+        append_git_context(&mut msgs, &working_dir).await;
 
         agent_loop::run_agent_loop(
             &on_event,
@@ -274,6 +305,7 @@ pub(crate) async fn run_stream_task(
             &mode,
             &response_language,
         );
+        append_git_context(&mut msgs, &working_dir).await;
         let think_active = think && model_supports_thinking;
         llm::agent_loop::run_agent_loop(
             &on_event,
