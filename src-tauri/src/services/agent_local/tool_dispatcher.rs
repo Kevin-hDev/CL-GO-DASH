@@ -160,6 +160,30 @@ async fn dispatch_inner(tool_name: &str, args: &Value, working_dir: &Path, sessi
                 Err(e) => ToolResult::err(e),
             }
         }
+        "create_branch" => {
+            let branch_name = args["branch_name"].as_str().unwrap_or("");
+            if branch_name.is_empty() {
+                return ToolResult::err("Paramètre branch_name requis");
+            }
+            match crate::services::git::branch::create_branch(working_dir, branch_name) {
+                Ok(()) => ToolResult::ok(format!(
+                    "Branche '{}' créée et activée dans {}",
+                    branch_name,
+                    working_dir.display()
+                )),
+                Err(e) => ToolResult::err(e),
+            }
+        }
+        "checkout_branch" => {
+            let branch_name = args["branch_name"].as_str().unwrap_or("");
+            if branch_name.is_empty() {
+                return ToolResult::err("Paramètre branch_name requis");
+            }
+            match crate::services::git::branch::checkout_branch(working_dir, branch_name) {
+                Ok(()) => ToolResult::ok(format!("Basculé sur la branche '{}'", branch_name)),
+                Err(e) => ToolResult::err(e),
+            }
+        }
         "delegate_task" => {
             let Some(app) = super::app_handle_global::get() else {
                 return ToolResult::err("AppHandle non initialisé");

@@ -130,6 +130,29 @@ pub fn get_tool_definitions() -> Vec<Value> {
                 "required": ["skill_name"]
             }),
         ),
+        tool_def(
+            "create_branch",
+            "Create a new git branch from the current HEAD and switch to it. \
+             Use when the user asks to start a new feature or work on a separate branch.",
+            serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "branch_name": {"type": "string", "description": "Name for the new branch (e.g. feat/my-feature)"}
+                },
+                "required": ["branch_name"]
+            }),
+        ),
+        tool_def(
+            "checkout_branch",
+            "Switch to an existing git branch. Fails if there are uncommitted changes.",
+            serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "branch_name": {"type": "string", "description": "Name of the branch to switch to"}
+                },
+                "required": ["branch_name"]
+            }),
+        ),
     ];
     defs.push(super::tool_definitions_subagent::delegate_task_definition());
     defs.extend(super::tool_definitions_office::office_tool_definitions());
