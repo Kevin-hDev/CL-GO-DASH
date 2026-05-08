@@ -149,6 +149,16 @@ body {
   box-shadow: 0 0 0 2px var(--pulse-muted);
 }
 
+* {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+*:hover,
+*:active {
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+
 ::-webkit-scrollbar {
   width: 4px;
 }
@@ -156,6 +166,11 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--ink-faint);
+  background: transparent;
   border-radius: 2px;
+}
+
+*:hover::-webkit-scrollbar-thumb,
+*:active::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
 }

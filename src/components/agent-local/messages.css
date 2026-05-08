@@ -163,7 +163,7 @@
 }
 
 .code-block pre::-webkit-scrollbar-thumb {
-  background: var(--ink-faint);
+  background: var(--scrollbar-thumb);
   border-radius: 2px;
 }
 

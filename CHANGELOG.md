@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.8.7
+
+### Features
+
+- **File tree panel** — browsable project directory tree alongside the file preview panel
+
+---
+
 ## v0.8.6
 
 ### Features

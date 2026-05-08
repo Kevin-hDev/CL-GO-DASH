@@ -77,7 +77,7 @@
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: thin;
-  scrollbar-color: var(--ink-faint) transparent;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
 }
 
 .tp-nowrap .tp-inner {
