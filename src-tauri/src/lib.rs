@@ -40,6 +40,7 @@ pub fn run() {
         .manage(PullCancel(Mutex::new(None)))
         .manage(OllamaSidecar::new())
         .manage(services::terminal::PtyManager::new())
+        .manage(commands::file_tree::FileTreeWatcher::new())
         .setup(|app| {
             services::agent_local::app_handle_global::init(app.handle().clone());
             services::agent_local::subagent_spawn_channel::init();
@@ -199,6 +200,8 @@ pub fn run() {
             commands::remove_favorite_model,
             // File tree
             commands::list_directory,
+            commands::watch_project_directory,
+            commands::unwatch_project_directory,
             // File preview
             commands::read_file_preview,
             commands::detect_editors_for_file,
