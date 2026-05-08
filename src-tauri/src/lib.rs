@@ -238,6 +238,13 @@ pub fn run() {
             commands::check_model_fits_vram,
             // Link preview
             commands::fetch_link_preview,
+            // Git operations
+            commands::list_git_branches,
+            commands::get_git_context,
+            commands::checkout_git_branch,
+            commands::create_git_branch,
+            commands::list_git_dirty_files,
+            commands::list_git_worktrees,
             // Codex OAuth (dev-only)
             commands::codex_login,
             commands::codex_logout,
