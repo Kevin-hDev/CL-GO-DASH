@@ -38,6 +38,8 @@ export function FileTreeNode({
   const childrenRef = useRef<HTMLDivElement>(null);
   const [maxHeight, setMaxHeight] = useState<string>(expanded ? "none" : "0");
 
+  const childCount = children?.length ?? 0;
+
   useEffect(() => {
     if (!childrenRef.current) return;
     if (expanded) {
@@ -49,7 +51,7 @@ export function FileTreeNode({
     const h = childrenRef.current.scrollHeight;
     setMaxHeight(`${h}px`);
     requestAnimationFrame(() => setMaxHeight("0"));
-  }, [expanded]);
+  }, [expanded, childCount]);
 
   const handleClick = () => {
     if (entry.is_dir) {

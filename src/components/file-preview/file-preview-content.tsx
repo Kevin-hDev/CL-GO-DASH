@@ -99,10 +99,10 @@ function TextPreviewContent({ operation, baseDir }: FilePreviewContentProps) {
   return (
     <div className="tp-wrapper" style={{ margin: 0, border: "none", borderRadius: 0 }}>
       {highlighted.map((html, i) => (
-        <div key={i} className="tp-line tp-line-ok">
+        <div key={i} className="tp-line tp-line-context">
           <span className="tp-num">{i + 1}</span>
-          <span className="tp-prefix tp-prefix-ok">+</span>
-          <span className="tp-code tp-code-ok" dangerouslySetInnerHTML={{ __html: html || " " }} />
+          <span className="tp-prefix tp-prefix-context"> </span>
+          <span className="tp-code tp-code-context" dangerouslySetInnerHTML={{ __html: html || " " }} />
         </div>
       ))}
     </div>
