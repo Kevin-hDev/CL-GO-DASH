@@ -48,7 +48,7 @@ export function AgentChatDetail(props: AgentChatDetailProps) {
           ← Chat parent
         </button>
       )}
-      <div className={`agent-detail-chat ${props.filePreview.fullscreen ? "agent-detail-chat-hidden" : ""}`}>
+      <div style={{ flex: 1, minWidth: 0, minHeight: 0, overflow: "hidden", display: props.filePreview.fullscreen ? "none" : undefined }}>
         <ChatView
           sessionId={props.sessionId}
           model={props.model}
