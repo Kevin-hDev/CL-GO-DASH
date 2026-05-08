@@ -82,6 +82,24 @@
     "delete": "Elimina",
     "noDiscussion": "Nessuna sessione"
   },
+  "branches": {
+    "search": "Cerca rami",
+    "title": "Rami",
+    "worktrees": "Worktrees",
+    "uncommitted": "Non confermati: {{count}} file",
+    "createNew": "Crea ed estrai un nuovo ramo…",
+    "detachedHead": "HEAD distaccato",
+    "noBranch": "Non è un repository git",
+    "noMatch": "Nessun ramo trovato",
+    "conflictTitle": "Effettua un commit per cambiare ramo",
+    "conflictDescription": "Le modifiche ai seguenti file verrebbero sovrascritte dall'estrazione:",
+    "conflictCommitAndSwitch": "Effettua il commit e cambia ramo…",
+    "conflictCancel": "Annulla",
+    "bubbleCreated": "Ramo creato",
+    "bubbleSwitched": "Ramo cambiato",
+    "createPlaceholder": "Nome del nuovo ramo",
+    "commitRequired": "Effettua un commit delle modifiche per continuare"
+  },
   "history": {
     "rename": "Rinomina",
     "delete": "Elimina",

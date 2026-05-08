@@ -82,6 +82,24 @@
     "delete": "Löschen",
     "noDiscussion": "Keine Sitzungen"
   },
+  "branches": {
+    "search": "Branches durchsuchen",
+    "title": "Branches",
+    "worktrees": "Worktrees",
+    "uncommitted": "Nicht committet: {{count}} Datei(en)",
+    "createNew": "Neuen Branch erstellen und auschecken…",
+    "detachedHead": "Losgelöster HEAD",
+    "noBranch": "Kein Git-Repository",
+    "noMatch": "Kein passender Branch",
+    "conflictTitle": "Änderungen committen, um Branch zu wechseln",
+    "conflictDescription": "Änderungen an den folgenden Dateien würden beim Auschecken überschrieben:",
+    "conflictCommitAndSwitch": "Committen und Branch wechseln…",
+    "conflictCancel": "Abbrechen",
+    "bubbleCreated": "Branch erstellt",
+    "bubbleSwitched": "Branch gewechselt",
+    "createPlaceholder": "Name des neuen Branch",
+    "commitRequired": "Committen Sie Ihre Änderungen, um fortzufahren"
+  },
   "history": {
     "rename": "Umbenennen",
     "delete": "Löschen",

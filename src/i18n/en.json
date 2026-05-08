@@ -82,6 +82,24 @@
     "delete": "Delete",
     "noDiscussion": "No sessions"
   },
+  "branches": {
+    "search": "Search branches",
+    "title": "Branches",
+    "worktrees": "Worktrees",
+    "uncommitted": "Uncommitted: {{count}} file(s)",
+    "createNew": "Create and checkout a new branch…",
+    "detachedHead": "Detached HEAD",
+    "noBranch": "Not a git repo",
+    "noMatch": "No matching branch",
+    "conflictTitle": "Commit changes to switch branch",
+    "conflictDescription": "Changes to the following files would be overwritten by checkout:",
+    "conflictCommitAndSwitch": "Commit and switch branch…",
+    "conflictCancel": "Cancel",
+    "bubbleCreated": "Branch created",
+    "bubbleSwitched": "Branch switched",
+    "createPlaceholder": "New branch name",
+    "commitRequired": "Commit your changes to continue"
+  },
   "history": {
     "rename": "Rename",
     "delete": "Delete",
