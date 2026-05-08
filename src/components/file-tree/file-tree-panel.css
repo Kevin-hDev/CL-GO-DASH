@@ -121,6 +121,18 @@
   font-family: var(--font-mono);
   color: var(--ink);
   padding-right: 12px;
+  outline: none;
+}
+
+.ft-node:focus-visible {
+  outline: 1px solid var(--pulse);
+  outline-offset: -1px;
+}
+
+.ft-node-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .ft-node:hover {

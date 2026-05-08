@@ -45,6 +45,7 @@ fn extract_extension(path: &Path) -> Option<String> {
 pub async fn list_directory(
     path: String,
     show_hidden: bool,
+    project_root: Option<String>,
 ) -> Result<Vec<FileEntry>, String> {
     validate_path(&path)?;
 
@@ -52,6 +53,14 @@ pub async fn list_directory(
 
     if !canonical.is_dir() {
         return Err("Dossier introuvable".into());
+    }
+
+    if let Some(ref root) = project_root {
+        let canonical_root =
+            std::fs::canonicalize(root).map_err(|_| "Dossier introuvable".to_string())?;
+        if !canonical.starts_with(&canonical_root) {
+            return Err("Chemin invalide".into());
+        }
     }
 
     let read_dir =

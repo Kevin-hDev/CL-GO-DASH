@@ -13,6 +13,7 @@ const defaultFolderOpened = (defaultFolderOpenedRaw as unknown as { default: Ico
 interface FileTreeNodeProps {
   entry: FileEntry;
   depth: number;
+  maxDepth: number;
   expanded: boolean;
   active: boolean;
   children?: FileEntry[];
@@ -26,6 +27,7 @@ interface FileTreeNodeProps {
 export function FileTreeNode({
   entry,
   depth,
+  maxDepth,
   expanded,
   active,
   children,
@@ -61,7 +63,16 @@ export function FileTreeNode({
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      handleClick();
+    }
+  };
+
   const folderIcon = expanded ? defaultFolderOpened : defaultFolder;
+
+  if (depth >= maxDepth) return null;
 
   return (
     <div>
@@ -69,6 +80,11 @@ export function FileTreeNode({
         className={`ft-node ${active ? "ft-node-active" : ""}`}
         style={{ paddingLeft: depth * 16 + 8 }}
         onClick={handleClick}
+        onKeyDown={handleKeyDown}
+        role="treeitem"
+        tabIndex={0}
+        title={entry.name}
+        aria-expanded={entry.is_dir ? expanded : undefined}
       >
         {entry.is_dir ? (
           <span className={`ft-chevron ${expanded ? "expanded" : ""}`}>
@@ -82,19 +98,21 @@ export function FileTreeNode({
         ) : (
           <FileIcon name={entry.name} size={16} />
         )}
-        <span>{entry.name}</span>
+        <span className="ft-node-name">{entry.name}</span>
       </div>
       {entry.is_dir && children && (
         <div
           ref={childrenRef}
           className={`ft-children ${expanded ? "" : "collapsed"}`}
           style={{ maxHeight: expanded ? maxHeight : "0" }}
+          role="group"
         >
           {children.map((child) => (
             <FileTreeNode
               key={child.path}
               entry={child}
               depth={depth + 1}
+              maxDepth={maxDepth}
               expanded={expandedPaths.has(child.path)}
               active={child.path === activePath}
               children={childrenMap.get(child.path)}

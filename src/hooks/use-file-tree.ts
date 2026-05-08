@@ -34,27 +34,30 @@ export function useFileTree(sessionId: string | null, projectPath: string | unde
   const [filter, setFilter] = useState("");
   const [loadError, setLoadError] = useState<string | null>(null);
 
+  const expandedRef = useRef(expandedPaths);
+  expandedRef.current = expandedPaths;
+
   const hasProject = !!projectPath;
 
-  // Load a directory's entries via Tauri command
   const loadDirectory = useCallback(async (dirPath: string): Promise<FileEntry[]> => {
     const entries = await invoke<FileEntry[]>("list_directory", {
       path: dirPath,
       showHidden: false,
+      projectRoot: projectPath ?? null,
     });
     return entries;
-  }, []);
+  }, [projectPath]);
 
-  // Load root entries when tree opens or project changes
   useEffect(() => {
     if (!projectPath || !open) return;
+    let alive = true;
     setLoadError(null);
     loadDirectory(projectPath)
-      .then(setRootEntries)
-      .catch(() => setLoadError("error"));
+      .then((entries) => { if (alive) setRootEntries(entries); })
+      .catch(() => { if (alive) setLoadError("error"); });
+    return () => { alive = false; };
   }, [projectPath, open, loadDirectory]);
 
-  // Watch/unwatch project directory for file changes
   useEffect(() => {
     if (!projectPath || !open) return;
     invoke("watch_project_directory", { path: projectPath }).catch(() => {});
@@ -63,15 +66,19 @@ export function useFileTree(sessionId: string | null, projectPath: string | unde
     };
   }, [projectPath, open]);
 
-  // Listen for file-tree-changed events and refresh affected directories
   useEffect(() => {
-    if (!open) return;
+    if (!open || !projectPath) return;
+    let alive = true;
     const unlisten = listen<{ path: string }>("file-tree-changed", (event) => {
+      if (!alive) return;
       const changedDir = event.payload.path;
       if (changedDir === projectPath) {
-        loadDirectory(changedDir).then(setRootEntries).catch(() => {});
-      } else if (expandedPaths.has(changedDir)) {
+        loadDirectory(changedDir)
+          .then((entries) => { if (alive) setRootEntries(entries); })
+          .catch(() => {});
+      } else if (expandedRef.current.has(changedDir)) {
         loadDirectory(changedDir).then((entries) => {
+          if (!alive) return;
           setChildrenMap((prev) => {
             const next = new Map(prev);
             next.set(changedDir, entries);
@@ -80,10 +87,9 @@ export function useFileTree(sessionId: string | null, projectPath: string | unde
         }).catch(() => {});
       }
     });
-    return () => { unlisten.then((fn) => fn()); };
-  }, [open, projectPath, expandedPaths, loadDirectory]);
+    return () => { alive = false; unlisten.then((fn) => fn()); };
+  }, [open, projectPath, loadDirectory]);
 
-  // Toggle expand/collapse a directory and lazily load its children
   const toggleExpand = useCallback(async (dirPath: string) => {
     setExpandedPaths((prev) => {
       const next = new Set(prev);
@@ -102,15 +108,16 @@ export function useFileTree(sessionId: string | null, projectPath: string | unde
         const next = new Map(prev);
         next.set(dirPath, entries);
         if (next.size > MAX_CACHED_DIRS) {
+          const current = expandedRef.current;
           for (const key of next.keys()) {
             if (next.size <= MAX_CACHED_DIRS) break;
-            if (!expandedPaths.has(key)) next.delete(key);
+            if (!current.has(key)) next.delete(key);
           }
         }
         return next;
       });
     }
-  }, [childrenMap, expandedPaths, loadDirectory]);
+  }, [childrenMap, loadDirectory]);
 
   const toggleOpen = useCallback(() => {
     setOpen((v) => !v);
@@ -120,19 +127,16 @@ export function useFileTree(sessionId: string | null, projectPath: string | unde
     setOpen(false);
   }, []);
 
-  // Persist panel width to localStorage
   useEffect(() => {
     localStorage.setItem(treeStorageKey(sessionId), String(width));
   }, [sessionId, width]);
 
-  // Start resize drag
   const startResize = useCallback((event: React.PointerEvent) => {
     event.preventDefault();
     resizeRef.current = { startX: event.clientX, startWidth: width };
     setResizing(true);
   }, [width]);
 
-  // Handle resize pointer events
   useEffect(() => {
     const onMove = (event: PointerEvent) => {
       if (!resizeRef.current) return;
@@ -151,7 +155,6 @@ export function useFileTree(sessionId: string | null, projectPath: string | unde
     };
   }, []);
 
-  // Reset all state when session changes
   useEffect(() => {
     setOpen(false);
     setRootEntries([]);

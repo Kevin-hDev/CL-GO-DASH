@@ -1,3 +1,4 @@
+use std::path::Component;
 use std::sync::Mutex;
 use std::time::Duration;
 
@@ -5,7 +6,7 @@ use notify::RecursiveMode;
 use notify_debouncer_mini::{new_debouncer, DebouncedEventKind, Debouncer};
 use tauri::{AppHandle, Emitter, State};
 
-use super::file_tree::validate_path;
+use super::file_tree::{validate_path, HIDDEN_ENTRIES};
 
 pub struct FileTreeWatcher {
     inner: Mutex<Option<WatcherState>>,
@@ -31,6 +32,17 @@ struct FileTreeChangedPayload {
 }
 
 const DEBOUNCE_MS: u64 = 200;
+const MAX_EVENTS_PER_BATCH: usize = 50;
+
+fn has_hidden_segment(path: &std::path::Path) -> bool {
+    path.components().any(|c| {
+        if let Component::Normal(s) = c {
+            HIDDEN_ENTRIES.contains(&s.to_string_lossy().as_ref())
+        } else {
+            false
+        }
+    })
+}
 
 #[tauri::command]
 pub fn watch_project_directory(
@@ -58,6 +70,7 @@ pub fn watch_project_directory(
 
     let app_handle = app.clone();
     let watched_path = canonical_str.clone();
+    let watched_root = canonical.clone();
 
     let mut debouncer = new_debouncer(
         Duration::from_millis(DEBOUNCE_MS),
@@ -69,8 +82,16 @@ pub fn watch_project_directory(
 
             let mut emitted = std::collections::HashSet::new();
 
-            for event in &events {
+            for event in events.iter().take(MAX_EVENTS_PER_BATCH) {
                 if matches!(event.kind, DebouncedEventKind::AnyContinuous) {
+                    continue;
+                }
+
+                if !event.path.starts_with(&watched_root) {
+                    continue;
+                }
+
+                if has_hidden_segment(&event.path) {
                     continue;
                 }
 

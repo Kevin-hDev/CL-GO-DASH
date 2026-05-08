@@ -10,6 +10,8 @@ export interface FilterResult {
   expandedPaths: Set<string>;
 }
 
+const MAX_FILTER_DEPTH = 50;
+
 export function filterTree(
   rootEntries: FileEntry[],
   childrenMap: Map<string, FileEntry[]>,
@@ -23,7 +25,8 @@ export function filterTree(
   const expandedPaths = new Set<string>();
   const matchingPaths = new Set<string>();
 
-  function searchRecursive(entries: FileEntry[], ancestors: string[]): boolean {
+  function searchRecursive(entries: FileEntry[], ancestors: string[], depth: number): boolean {
+    if (depth >= MAX_FILTER_DEPTH) return false;
     let anyMatch = false;
     for (const entry of entries) {
       const nameMatches = entry.name.toLowerCase().includes(lower);
@@ -31,7 +34,7 @@ export function filterTree(
 
       if (entry.is_dir) {
         const children = childrenMap.get(entry.path) ?? [];
-        childMatch = searchRecursive(children, [...ancestors, entry.path]);
+        childMatch = searchRecursive(children, [...ancestors, entry.path], depth + 1);
       }
 
       if (nameMatches || childMatch) {
@@ -49,7 +52,7 @@ export function filterTree(
     return anyMatch;
   }
 
-  searchRecursive(rootEntries, []);
+  searchRecursive(rootEntries, [], 0);
 
   const filtered = rootEntries.filter((e) => matchingPaths.has(e.path));
   return { entries: filtered, expandedPaths };

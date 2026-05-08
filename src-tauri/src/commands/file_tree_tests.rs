@@ -29,16 +29,14 @@ mod tests {
         fs::write(root.join("build.rs"), "").unwrap();
 
         let entries =
-            list_directory(root.to_str().unwrap().to_string(), false)
+            list_directory(root.to_str().unwrap().to_string(), false, None)
                 .await
                 .unwrap();
 
-        // Dossiers en premier, triés alpha
         assert_eq!(entries[0].name, "alpha");
         assert!(entries[0].is_dir);
         assert_eq!(entries[1].name, "zeta");
         assert!(entries[1].is_dir);
-        // Fichiers après, triés alpha
         assert_eq!(entries[2].name, "build.rs");
         assert!(!entries[2].is_dir);
         assert_eq!(entries[3].name, "main.rs");
@@ -50,7 +48,7 @@ mod tests {
         let root = tmp.path();
 
         let entries =
-            list_directory(root.to_str().unwrap().to_string(), false)
+            list_directory(root.to_str().unwrap().to_string(), false, None)
                 .await
                 .unwrap();
 
@@ -69,7 +67,7 @@ mod tests {
         let root = tmp.path();
 
         let entries =
-            list_directory(root.to_str().unwrap().to_string(), true)
+            list_directory(root.to_str().unwrap().to_string(), true, None)
                 .await
                 .unwrap();
 
@@ -80,31 +78,33 @@ mod tests {
 
     #[tokio::test]
     async fn test_dossier_inexistant_retourne_erreur() {
-        let result = list_directory("/tmp/dossier_qui_nexiste_vraiment_pas_xyz123".to_string(), false)
-            .await;
+        let result = list_directory(
+            "/tmp/dossier_qui_nexiste_vraiment_pas_xyz123".to_string(),
+            false,
+            None,
+        )
+        .await;
         assert!(result.is_err());
-        let err = result.unwrap_err();
-        assert_eq!(err, "Dossier introuvable");
+        assert_eq!(result.unwrap_err(), "Dossier introuvable");
     }
 
     #[tokio::test]
     async fn test_path_traversal_retourne_erreur() {
-        let result = list_directory("../../../etc".to_string(), false).await;
+        let result = list_directory("../../../etc".to_string(), false, None).await;
         assert!(result.is_err());
-        let err = result.unwrap_err();
-        assert_eq!(err, "Chemin invalide");
+        assert_eq!(result.unwrap_err(), "Chemin invalide");
     }
 
     #[tokio::test]
     async fn test_path_vide_retourne_erreur() {
-        let result = list_directory("".to_string(), false).await;
+        let result = list_directory("".to_string(), false, None).await;
         assert!(result.is_err());
         assert_eq!(result.unwrap_err(), "Chemin invalide");
     }
 
     #[tokio::test]
     async fn test_path_avec_null_byte_retourne_erreur() {
-        let result = list_directory("/tmp/foo\0bar".to_string(), false).await;
+        let result = list_directory("/tmp/foo\0bar".to_string(), false, None).await;
         assert!(result.is_err());
         assert_eq!(result.unwrap_err(), "Chemin invalide");
     }
@@ -133,7 +133,7 @@ mod tests {
         fs::write(root.join("Makefile"), "").unwrap();
 
         let entries =
-            list_directory(root.to_str().unwrap().to_string(), true)
+            list_directory(root.to_str().unwrap().to_string(), true, None)
                 .await
                 .unwrap();
 
@@ -144,5 +144,44 @@ mod tests {
         assert_eq!(find("main.rs").unwrap().extension, Some("rs".to_string()));
         assert_eq!(find("archive.tar.gz").unwrap().extension, Some("gz".to_string()));
         assert_eq!(find(".env").unwrap().extension, None);
+    }
+
+    #[tokio::test]
+    async fn test_confinement_projet_bloque_chemin_hors_racine() {
+        let project = TempDir::new().unwrap();
+        let outside = TempDir::new().unwrap();
+        let root = project.path();
+
+        fs::create_dir(root.join("src")).unwrap();
+
+        let result = list_directory(
+            outside.path().to_str().unwrap().to_string(),
+            false,
+            Some(root.to_str().unwrap().to_string()),
+        )
+        .await;
+
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "Chemin invalide");
+    }
+
+    #[tokio::test]
+    async fn test_confinement_projet_autorise_sous_dossier() {
+        let project = TempDir::new().unwrap();
+        let root = project.path();
+
+        fs::create_dir(root.join("src")).unwrap();
+        fs::write(root.join("src").join("main.rs"), "").unwrap();
+
+        let entries = list_directory(
+            root.join("src").to_str().unwrap().to_string(),
+            false,
+            Some(root.to_str().unwrap().to_string()),
+        )
+        .await
+        .unwrap();
+
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].name, "main.rs");
     }
 }
