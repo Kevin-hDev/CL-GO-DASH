@@ -244,6 +244,7 @@ pub fn run() {
             commands::get_git_context,
             commands::checkout_git_branch,
             commands::create_git_branch,
+            commands::commit_and_checkout_git_branch,
             commands::list_git_dirty_files,
             commands::list_git_worktrees,
             // Codex OAuth (dev-only)

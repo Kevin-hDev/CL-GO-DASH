@@ -133,6 +133,39 @@ pub fn checkout_branch(repo_path: &Path, branch_name: &str) -> Result<(), String
     Ok(())
 }
 
+pub fn commit_all_and_checkout(repo_path: &Path, target_branch: &str) -> Result<(), String> {
+    validate_branch_name(target_branch)?;
+
+    let repo = Repository::open(repo_path)
+        .map_err(|e| format!("Impossible d'ouvrir le dépôt : {e}"))?;
+
+    let mut index = repo.index()
+        .map_err(|e| format!("Index : {e}"))?;
+    index.add_all(["*"], git2::IndexAddOption::DEFAULT, None)
+        .map_err(|e| format!("Staging : {e}"))?;
+    index.write()
+        .map_err(|e| format!("Écriture index : {e}"))?;
+
+    let tree_oid = index.write_tree()
+        .map_err(|e| format!("Arbre : {e}"))?;
+    let tree = repo.find_tree(tree_oid)
+        .map_err(|e| format!("Arbre : {e}"))?;
+
+    let head = repo.head()
+        .map_err(|e| format!("HEAD : {e}"))?;
+    let parent = head.peel_to_commit()
+        .map_err(|e| format!("Commit parent : {e}"))?;
+
+    let sig = repo.signature()
+        .map_err(|e| format!("Signature git : {e}"))?;
+    let msg = format!("WIP: save changes before switching to {target_branch}");
+
+    repo.commit(Some("HEAD"), &sig, &sig, &msg, &tree, &[&parent])
+        .map_err(|e| format!("Commit : {e}"))?;
+
+    checkout_branch(repo_path, target_branch)
+}
+
 pub fn create_branch(repo_path: &Path, branch_name: &str) -> Result<(), String> {
     validate_branch_name(branch_name)?;
 

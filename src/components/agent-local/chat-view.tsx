@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import { MessageList } from "./message-list";
 import { ChatInput } from "./chat-input";
 import { ProjectSelector } from "./project-selector";
@@ -177,7 +178,18 @@ export function ChatView({
           dirtyCount={branchConflict.dirtyCount}
           projectPath={proj.selectedProject.path}
           onCancel={() => setBranchConflict(null)}
-          onCommitAndSwitch={() => setBranchConflict(null)}
+          onCommitAndSwitch={async (branch) => {
+            try {
+              await invoke("commit_and_checkout_git_branch", {
+                path: proj.selectedProject!.path,
+                branchName: branch,
+              });
+              await git.refresh();
+            } catch (e) {
+              console.error("commit_and_checkout:", e);
+            }
+            setBranchConflict(null);
+          }}
         />
       )}
       <ChatOverlays

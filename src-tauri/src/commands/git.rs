@@ -53,6 +53,17 @@ pub async fn create_git_branch(path: String, branch_name: String) -> Result<(), 
 }
 
 #[tauri::command]
+pub async fn commit_and_checkout_git_branch(path: String, branch_name: String) -> Result<(), String> {
+    let repo_path = std::path::PathBuf::from(&path);
+    if !repo_path.is_dir() {
+        return Err("Répertoire introuvable".to_string());
+    }
+    tokio::task::spawn_blocking(move || branch::commit_all_and_checkout(&repo_path, &branch_name))
+        .await
+        .map_err(|e| format!("Erreur interne : {e}"))?
+}
+
+#[tauri::command]
 pub async fn list_git_dirty_files(path: String) -> Result<Vec<status::DirtyFile>, String> {
     let repo_path = std::path::PathBuf::from(&path);
     if !repo_path.is_dir() {
