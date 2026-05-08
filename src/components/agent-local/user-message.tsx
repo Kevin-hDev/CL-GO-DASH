@@ -50,16 +50,7 @@ export const UserMessage = memo(function UserMessage({
           <div className="msg-user-bubble">
             {hasText && textNodes}
             {skillNames && skillNames.map((name) => (
-              <span key={name} style={{
-                display: "inline-flex", alignItems: "center", gap: 4,
-                padding: "1px 7px 1px 5px", marginLeft: 6,
-                borderRadius: "var(--radius-sm)",
-                background: "var(--pulse-muted)",
-                color: "var(--pulse)",
-                fontSize: "var(--text-xs)",
-                fontWeight: 500,
-                verticalAlign: "middle",
-              }}>
+              <span key={name} className="msg-skill-badge">
                 <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <rect x="3" y="3" width="14" height="14" rx="3" />
                   <path d="M8 7l4 3-4 3" />
@@ -71,10 +62,7 @@ export const UserMessage = memo(function UserMessage({
           </div>
         )}
         {hasFiles && (
-          <div style={{
-            display: "flex", gap: 8, justifyContent: "flex-end",
-            flexWrap: "wrap", marginTop: hasText ? 8 : 0,
-          }}>
+          <div className={`msg-files${hasText ? " msg-files-spaced" : ""}`}>
             {files.map((f, i) => (
               <FileCard key={`${f.name}-${i}`} file={f} onClick={() => onFileClick?.(f)} />
             ))}
@@ -103,15 +91,9 @@ function FileCard({ file, onClick }: { file: FileInfo; onClick: () => void }) {
         tabIndex={0}
         onClick={onClick}
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClick(); }}
-        style={{
-          width: 100, height: 100, borderRadius: 8,
-          overflow: "hidden", cursor: "pointer",
-          border: "1px solid var(--edge)",
-        }}
+        className="msg-file-card msg-file-card-img"
       >
-        <img src={file.thumbnail} alt="" style={{
-          width: "100%", height: "100%", objectFit: "cover",
-        }} />
+        <img src={file.thumbnail} alt="" />
       </div>
     );
   }
@@ -122,27 +104,10 @@ function FileCard({ file, onClick }: { file: FileInfo; onClick: () => void }) {
       tabIndex={0}
       onClick={onClick}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClick(); }}
-      style={{
-        width: 100, height: 100, borderRadius: 8,
-        border: "1px solid var(--edge)", background: "var(--shell)",
-        cursor: "pointer", display: "flex", flexDirection: "column",
-        justifyContent: "space-between", padding: 10,
-      }}
+      className="msg-file-card msg-file-card-text"
     >
-      <div style={{
-        fontSize: "var(--text-xs)", color: "var(--ink)",
-        overflow: "hidden", textOverflow: "ellipsis",
-        display: "-webkit-box", WebkitLineClamp: 2,
-        WebkitBoxOrient: "vertical",
-      }}>
-        {file.name}
-      </div>
-      <div style={{
-        fontSize: "var(--text-xs)", color: "var(--ink-faint)",
-        textTransform: "uppercase", fontWeight: 600,
-      }}>
-        {ext}
-      </div>
+      <div className="msg-file-name">{file.name}</div>
+      <div className="msg-file-ext">{ext}</div>
     </div>
   );
 }

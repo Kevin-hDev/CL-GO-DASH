@@ -70,17 +70,6 @@ pub async fn remove_entry(id: &str) -> Result<(), String> {
     write_index(&entries).await
 }
 
-pub async fn update_message_count(id: &str, count: usize) -> Result<(), String> {
-    let _guard = INDEX_LOCK.lock().await;
-    let mut entries = read_index_raw().await;
-    if let Some(entry) = entries.iter_mut().find(|e| e.id == id) {
-        entry.message_count = count;
-        write_index(&entries).await
-    } else {
-        Ok(())
-    }
-}
-
 pub fn meta_from_session(session: &AgentSession) -> AgentSessionMeta {
     AgentSessionMeta {
         id: session.id.clone(),
