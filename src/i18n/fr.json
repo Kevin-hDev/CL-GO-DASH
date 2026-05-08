@@ -438,6 +438,14 @@
     "charCount": "{{format}} — {{count}} caractères",
     "blockCount": "DOCX — {{count}} blocs"
   },
+  "fileTree": {
+    "filterPlaceholder": "Filtrer les fichiers...",
+    "emptyDirectory": "Ce dossier est vide",
+    "tooManyEntries": "Trop d'éléments ({{count}} max)",
+    "toggleTree": "Arborescence du projet",
+    "loadError": "Impossible de lire ce dossier",
+    "noResults": "Aucun résultat"
+  },
   "errors": {
     "crashMessage": "Une erreur est survenue. Relance l'application.",
     "operationFailed": "L'opération a échoué. Réessaye.",

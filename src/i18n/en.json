@@ -438,6 +438,14 @@
     "charCount": "{{format}} — {{count}} characters",
     "blockCount": "DOCX — {{count}} blocks"
   },
+  "fileTree": {
+    "filterPlaceholder": "Filter files...",
+    "emptyDirectory": "This folder is empty",
+    "tooManyEntries": "Too many entries ({{count}} max)",
+    "toggleTree": "Project file tree",
+    "loadError": "Could not read this folder",
+    "noResults": "No results"
+  },
   "errors": {
     "crashMessage": "An error occurred. Please restart the application.",
     "operationFailed": "Operation failed. Please try again.",
