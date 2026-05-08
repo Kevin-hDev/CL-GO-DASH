@@ -6,10 +6,11 @@ import { ThinkingSection } from "./thinking-section";
 import { ErrorBubble } from "./error-bubble";
 import { CompressionIndicator } from "./compression-indicator";
 import { SubagentBubble } from "./subagent-bubble";
+import { BranchBubble } from "./branch-bubble";
 import { LoadingIndicator } from "./working-stats";
 import { useCompression } from "@/hooks/use-compression";
 import { isSubagentInjectedMessage, extractSubagentsFromMessages } from "@/lib/subagent-message-utils";
-import type { AgentMessage, SubagentInfo } from "@/types/agent";
+import type { AgentMessage, SubagentInfo, ToolActivityRecord } from "@/types/agent";
 import type { ToolActivity, StreamSegment } from "@/hooks/agent-chat-utils";
 import "./chat.css";
 import "./messages.css";
@@ -148,6 +149,7 @@ export const SegmentedAssistantMessage = memo(function SegmentedAssistantMessage
               />
             )}
             {seg.tools.length > 0 && <SavedToolBubble tools={seg.tools} onFilePreview={onFilePreview} />}
+            {(() => { const b = extractBranchActivity(seg.tools); return b ? <BranchBubble action={b.action} branchName={b.branchName} path={b.path} /> : null; })()}
           </div>
         ))}
       </>
@@ -166,6 +168,18 @@ export const SegmentedAssistantMessage = memo(function SegmentedAssistantMessage
 
 export function hasActiveTools(tools: ToolActivity[]): boolean {
   return tools.length > 0 && tools.some((t) => !t.result);
+}
+
+function extractBranchActivity(tools: ToolActivityRecord[]): { action: "created" | "switched"; branchName: string; path?: string } | null {
+  for (const t of tools) {
+    if (t.name === "create_branch" && t.result && !t.is_error) {
+      return { action: "created", branchName: t.summary, path: t.result };
+    }
+    if (t.name === "checkout_branch" && t.result && !t.is_error) {
+      return { action: "switched", branchName: t.summary };
+    }
+  }
+  return null;
 }
 
 function findLastIndex<T>(arr: T[], pred: (item: T) => boolean): number {
