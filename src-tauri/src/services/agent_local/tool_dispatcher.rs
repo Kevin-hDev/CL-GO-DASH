@@ -92,7 +92,9 @@ async fn dispatch_inner(tool_name: &str, args: &Value, working_dir: &Path, sessi
                         let sid = session_id.to_string();
                         let dir = cwd.clone();
                         tokio::spawn(async move {
-                            let _ = crate::services::agent_local::session_store::update_working_dir(&sid, &dir).await;
+                            if let Err(e) = crate::services::agent_local::session_store::update_working_dir(&sid, &dir).await {
+                                eprintln!("[cwd-track] échec update_working_dir: {e}");
+                            }
                         });
                     }
                     let content = format!("{}\n{}", out.stdout, out.stderr).trim().to_string();

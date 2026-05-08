@@ -46,7 +46,8 @@ pub async fn execute_shell(
             let raw_stdout = String::from_utf8_lossy(&out.stdout);
             let (user_output, new_cwd) = extract_cwd(&raw_stdout, &marker);
             let stdout = truncate_output(&user_output);
-            let stderr = truncate_output(&String::from_utf8_lossy(&out.stderr));
+            let raw_stderr = String::from_utf8_lossy(&out.stderr);
+            let stderr = truncate_output(&strip_marker(&raw_stderr, &marker));
             Ok(ShellOutput {
                 stdout,
                 stderr,
@@ -75,10 +76,14 @@ fn generate_cwd_marker() -> String {
 
 fn wrap_command_with_cwd(command: &str, marker: &str) -> String {
     if cfg!(target_os = "windows") {
-        format!("{command} ; Write-Host '{marker}' ; (Get-Location).Path")
+        format!("{command} ; Write-Output '{marker}' ; (Get-Location).Path")
     } else {
         format!("{command} ; echo '{marker}' ; pwd -P")
     }
+}
+
+fn strip_marker(text: &str, marker: &str) -> String {
+    text.replace(marker, "")
 }
 
 fn extract_cwd(raw_stdout: &str, marker: &str) -> (String, Option<String>) {
