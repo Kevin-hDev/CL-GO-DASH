@@ -71,7 +71,7 @@ export function ChatView({
   const context = useContextProgress(model, chat.tokenCount, provider);
   const [preview, setPreview] = useState<DroppedFile | null>(null);
   const proj = useSessionProject(sessionId, projects, onAddProject, chat.messages.length > 0);
-  const git = useGitBranch(proj.selectedProject?.path);
+  const git = useGitBranch(proj.selectedProject?.path, sessionId);
   const [branchConflict, setBranchConflict] = useState<{ branch: string; dirtyCount: number } | null>(null);
   const fileOperations = useSessionFiles(chat.messages);
 

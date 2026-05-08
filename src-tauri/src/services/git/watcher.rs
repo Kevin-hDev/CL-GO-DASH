@@ -29,6 +29,7 @@ pub fn setup_git_watcher(app: AppHandle, repo_path: PathBuf) -> Result<(), Strin
 
     let head_path = git_dir.join("HEAD");
     let refs_path = git_dir.join("refs").join("heads");
+    let packed_refs_path = git_dir.join("packed-refs");
 
     thread::spawn(move || {
         let (tx, rx) = mpsc::channel::<Event>();
@@ -58,6 +59,9 @@ pub fn setup_git_watcher(app: AppHandle, repo_path: PathBuf) -> Result<(), Strin
         }
         if refs_path.is_dir() {
             let _ = watcher.watch(&refs_path, RecursiveMode::Recursive);
+        }
+        if packed_refs_path.exists() {
+            let _ = watcher.watch(&packed_refs_path, RecursiveMode::NonRecursive);
         }
 
         loop {

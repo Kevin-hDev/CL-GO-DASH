@@ -33,7 +33,7 @@ const INITIAL_STATE: GitBranchState = {
   isLoading: false,
 };
 
-export function useGitBranch(projectPath: string | undefined) {
+export function useGitBranch(projectPath: string | undefined, sessionId?: string) {
   const [state, setState] = useState<GitBranchState>(INITIAL_STATE);
   const pathRef = useRef(projectPath);
   const mountedRef = useRef(true);
@@ -83,7 +83,7 @@ export function useGitBranch(projectPath: string | undefined) {
     if (projectPath) {
       void invoke("start_git_watcher", { path: projectPath }).catch(() => {});
     }
-  }, [projectPath, refresh]);
+  }, [projectPath, sessionId, refresh]);
 
   useEffect(() => {
     let cancelled = false;
