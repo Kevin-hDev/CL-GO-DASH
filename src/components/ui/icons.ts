@@ -44,4 +44,7 @@ export {
   Image,
   ToggleLeft,
   ToggleRight,
+  GitBranch,
+  GitFork,
+  GitMerge,
 } from "@phosphor-icons/react";
