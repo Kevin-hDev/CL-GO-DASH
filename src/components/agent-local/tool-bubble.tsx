@@ -16,6 +16,7 @@ const TOOL_COLORS: Record<string, string> = {
   write_document: "var(--tool-write)",
   edit_file: "var(--tool-edit)", process_image: "var(--tool-edit)",
   web_search: "var(--tool-web)", web_fetch: "var(--tool-web)",
+  create_branch: "var(--tool-git)", checkout_branch: "var(--tool-git)",
 };
 
 const CLOSED_BY_DEFAULT = new Set([
@@ -49,6 +50,8 @@ function toolSummary(t: ToolActivity): string {
   if (t.name === "list_dir") return str(a.path, ".");
   if (t.name === "web_search") return str(a.query);
   if (t.name === "web_fetch") return str(a.url);
+  if (t.name === "create_branch") return str(a.branch_name);
+  if (t.name === "checkout_branch") return str(a.branch_name);
   if (t.name === "read_spreadsheet") return str(a.path);
   if (t.name === "read_document") return str(a.path);
   if (t.name === "read_image") return str(a.path);
