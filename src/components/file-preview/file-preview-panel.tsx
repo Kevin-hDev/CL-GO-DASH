@@ -1,4 +1,3 @@
-import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Maximize2, Minimize2, FolderTree } from "lucide-react";
 import { openPreviewFile, openPreviewWithEditor } from "@/services/file-preview";
@@ -36,16 +35,6 @@ export function FilePreviewPanel(props: FilePreviewPanelProps) {
   const { t } = useTranslation();
   const activeOperation = props.tabs.find((tab) => tab.id === props.activeTab);
 
-  const prevFs = useRef(props.fullscreen);
-  const [snapping, setSnapping] = useState(false);
-  useEffect(() => {
-    if (prevFs.current !== props.fullscreen) {
-      setSnapping(true);
-      prevFs.current = props.fullscreen;
-      requestAnimationFrame(() => requestAnimationFrame(() => setSnapping(false)));
-    }
-  }, [props.fullscreen]);
-
   const openDefault = (operation: FileOperation) => {
     openPreviewFile(operation.path, props.baseDir).catch(() => {});
   };
@@ -56,7 +45,7 @@ export function FilePreviewPanel(props: FilePreviewPanelProps) {
 
   return (
     <aside
-      className={`fp-panel ${props.open ? "open" : ""} ${props.fullscreen ? "fullscreen" : ""} ${props.resizing || snapping ? "resizing" : ""}`}
+      className={`fp-panel ${props.open ? "open" : ""} ${props.fullscreen ? "fullscreen" : ""} ${props.resizing ? "resizing" : ""}`}
       style={{ "--fp-width": `${props.width}px` } as React.CSSProperties}
       aria-hidden={!props.open}
     >

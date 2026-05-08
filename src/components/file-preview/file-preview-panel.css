@@ -33,6 +33,7 @@
 .fp-panel.fullscreen {
   flex: 1;
   width: auto !important;
+  min-width: 0;
   border-left: none;
 }
 

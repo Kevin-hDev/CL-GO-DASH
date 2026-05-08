@@ -48,7 +48,7 @@ export function AgentChatDetail(props: AgentChatDetailProps) {
           ← Chat parent
         </button>
       )}
-      <div style={{ flex: 1, minWidth: 0, minHeight: 0, overflow: "hidden", display: props.filePreview.fullscreen ? "none" : undefined }}>
+      <div style={{ flex: 1, minWidth: 0, minHeight: 0, overflow: "hidden" }}>
         <ChatView
           sessionId={props.sessionId}
           model={props.model}
@@ -73,30 +73,32 @@ export function AgentChatDetail(props: AgentChatDetailProps) {
           isSubagent={!!props.parentSessionId}
         />
       </div>
-      <FilePreviewPanel
-        open={props.filePreview.open}
-        fullscreen={props.filePreview.fullscreen}
-        width={props.filePreview.width}
-        resizing={props.filePreview.resizing}
-        operations={props.fileOperations}
-        tabs={props.filePreview.tabs}
-        activeTab={props.filePreview.activeTab}
-        baseDir={props.activeProjectPath}
-        onClose={props.filePreview.closePanel}
-        onFullscreenChange={props.filePreview.setFullscreen}
-        onActiveTabChange={props.filePreview.setActiveTab}
-        onOpenOperation={props.filePreview.openOperation}
-        onCloseTab={props.filePreview.closeTab}
-        onResizeStart={props.filePreview.startResize}
-        hasProject={props.fileTree.hasProject}
-        treeOpen={props.fileTree.open}
-        onToggleTree={props.fileTree.toggleOpen}
-      />
-      <FileTreePanel
-        tree={props.fileTree}
-        onFileSelect={props.filePreview.openPath}
-        activePath={props.filePreview.tabs.find((tab) => tab.id === props.filePreview.activeTab)?.path ?? null}
-      />
+      <div className={`panels-wrapper ${props.filePreview.fullscreen ? "panels-fullscreen" : ""}`}>
+        <FilePreviewPanel
+          open={props.filePreview.open}
+          fullscreen={props.filePreview.fullscreen}
+          width={props.filePreview.width}
+          resizing={props.filePreview.resizing}
+          operations={props.fileOperations}
+          tabs={props.filePreview.tabs}
+          activeTab={props.filePreview.activeTab}
+          baseDir={props.activeProjectPath}
+          onClose={props.filePreview.closePanel}
+          onFullscreenChange={props.filePreview.setFullscreen}
+          onActiveTabChange={props.filePreview.setActiveTab}
+          onOpenOperation={props.filePreview.openOperation}
+          onCloseTab={props.filePreview.closeTab}
+          onResizeStart={props.filePreview.startResize}
+          hasProject={props.fileTree.hasProject}
+          treeOpen={props.fileTree.open}
+          onToggleTree={props.fileTree.toggleOpen}
+        />
+        <FileTreePanel
+          tree={props.fileTree}
+          onFileSelect={props.filePreview.openPath}
+          activePath={props.filePreview.tabs.find((tab) => tab.id === props.filePreview.activeTab)?.path ?? null}
+        />
+      </div>
     </div>
   );
 }
