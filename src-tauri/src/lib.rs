@@ -40,7 +40,7 @@ pub fn run() {
         .manage(PullCancel(Mutex::new(None)))
         .manage(OllamaSidecar::new())
         .manage(services::terminal::PtyManager::new())
-        .manage(commands::file_tree::FileTreeWatcher::new())
+        .manage(commands::file_tree_watcher::FileTreeWatcher::new())
         .setup(|app| {
             services::agent_local::app_handle_global::init(app.handle().clone());
             services::agent_local::subagent_spawn_channel::init();
