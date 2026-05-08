@@ -1,22 +1,26 @@
 import { useEffect, useMemo, useState } from "react";
 import { highlightLines } from "@/lib/highlight";
 import { shouldWrapFile } from "@/lib/code-language";
+import { extractDiffContext } from "@/lib/diff-context";
 import { readFilePreview } from "@/services/file-preview";
 import "./tool-previews.css";
 import "@/components/file-preview/file-preview-highlight.css";
 
+type LineMode = "ok" | "error" | "context";
+
 function CodeLines({ lines, mode, path, startLine = 1 }: {
   lines: string[];
-  mode: "ok" | "error";
+  mode: LineMode;
   path?: string;
   startLine?: number;
 }) {
+  const prefix = mode === "ok" ? "+" : mode === "error" ? "-" : " ";
   return (
     <>
       {lines.map((line, i) => (
         <div key={`${mode}-${i}`} className={`tp-line tp-line-${mode}`}>
           <span className="tp-num">{startLine + i}</span>
-          <span className={`tp-prefix tp-prefix-${mode}`}>{mode === "ok" ? "+" : "-"}</span>
+          <span className={`tp-prefix tp-prefix-${mode}`}>{prefix}</span>
           {path
             ? <span className={`tp-code tp-code-${mode}`} dangerouslySetInnerHTML={{ __html: line || " " }} />
             : <span className={`tp-code tp-code-${mode}`}>{line}</span>
@@ -27,26 +31,30 @@ function CodeLines({ lines, mode, path, startLine = 1 }: {
   );
 }
 
-function useFindStartLine(path?: string, newText?: string, oldText?: string, fallback?: number): number {
-  const [line, setLine] = useState(fallback ?? 1);
+function useDiffInfo(path?: string, newText?: string, oldText?: string, fallback?: number) {
+  const [startLine, setStartLine] = useState(fallback ?? 1);
+  const [content, setContent] = useState<string | null>(null);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- synchronous reset when fallback changes is intentional
-    if (fallback) { setLine(fallback); return; }
+    if (fallback) { setStartLine(fallback); }
     if (!path) return;
-    const needle = newText ?? oldText ?? "";
-    if (!needle) return;
 
     readFilePreview(path)
-      .then((content) => {
-        const idx = content.indexOf(needle);
-        if (idx < 0) return;
-        setLine(content.slice(0, idx).split("\n").length);
+      .then((fileContent) => {
+        setContent(fileContent);
+        if (!fallback) {
+          const needle = newText ?? oldText ?? "";
+          if (!needle) return;
+          const idx = fileContent.indexOf(needle);
+          if (idx >= 0) {
+            setStartLine(fileContent.slice(0, idx).split("\n").length);
+          }
+        }
       })
       .catch(() => {});
   }, [path, newText, oldText, fallback]);
 
-  return line;
+  return { startLine, content };
 }
 
 export function ContentPreview({ content, path }: { content: string; path?: string }) {
@@ -76,26 +84,44 @@ export function DiffPreview({ oldText, newText, path, startLine }: {
   path?: string;
   startLine?: number;
 }) {
-  const resolvedLine = useFindStartLine(path, newText, oldText, startLine);
+  const { startLine: resolvedLine, content } = useDiffInfo(path, newText, oldText, startLine);
   const oldLines = useMemo(() => path ? highlightLines(oldText, path) : oldText.split("\n"), [oldText, path]);
   const newLines = useMemo(() => path ? highlightLines(newText, path) : newText.split("\n"), [newText, path]);
+
+  const ctx = useMemo(() => {
+    if (!content || !path) return null;
+    return extractDiffContext(content, resolvedLine, newText.split("\n").length);
+  }, [content, path, resolvedLine, newText]);
+
+  const beforeLines = useMemo(
+    () => ctx?.before.length ? highlightLines(ctx.before.join("\n"), path!) : [],
+    [ctx, path],
+  );
+  const afterLines = useMemo(
+    () => ctx?.after.length ? highlightLines(ctx.after.join("\n"), path!) : [],
+    [ctx, path],
+  );
+
   const wrap = !path || shouldWrapFile(path);
+  const inner = (
+    <>
+      {beforeLines.length > 0 && ctx && (
+        <CodeLines lines={beforeLines} mode="context" path={path} startLine={ctx.beforeStartLine} />
+      )}
+      <CodeLines lines={oldLines} mode="error" path={path} startLine={resolvedLine} />
+      <CodeLines lines={newLines} mode="ok" path={path} startLine={resolvedLine} />
+      {afterLines.length > 0 && ctx && (
+        <CodeLines lines={afterLines} mode="context" path={path} startLine={ctx.afterStartLine} />
+      )}
+    </>
+  );
 
   if (wrap) {
-    return (
-      <div className="tp-wrapper">
-        <CodeLines lines={oldLines} mode="error" path={path} startLine={resolvedLine} />
-        <CodeLines lines={newLines} mode="ok" path={path} startLine={resolvedLine} />
-      </div>
-    );
+    return <div className="tp-wrapper">{inner}</div>;
   }
-
   return (
     <div className="tp-wrapper tp-nowrap">
-      <div className="tp-inner">
-        <CodeLines lines={oldLines} mode="error" path={path} startLine={resolvedLine} />
-        <CodeLines lines={newLines} mode="ok" path={path} startLine={resolvedLine} />
-      </div>
+      <div className="tp-inner">{inner}</div>
     </div>
   );
 }

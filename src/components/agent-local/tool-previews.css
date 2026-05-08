@@ -19,7 +19,11 @@
 }
 
 .tp-line-error {
-  background: var(--signal-error-bg);
+  background: var(--diff-old-bg);
+}
+
+.tp-line-context {
+  background: transparent;
 }
 
 .tp-num {
@@ -43,7 +47,11 @@
 }
 
 .tp-prefix-error {
-  color: var(--signal-error);
+  color: var(--diff-old);
+}
+
+.tp-prefix-context {
+  color: transparent;
 }
 
 .tp-code {
@@ -58,7 +66,11 @@
 }
 
 .tp-code-error {
-  color: var(--signal-error);
+  color: var(--diff-old);
+}
+
+.tp-code-context {
+  color: var(--ink-muted);
 }
 
 .tp-wrapper.tp-nowrap {

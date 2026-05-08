@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { highlightLines } from "@/lib/highlight";
 import { shouldWrapFile } from "@/lib/code-language";
+import { extractDiffContext } from "@/lib/diff-context";
 import type { FileOperation } from "@/types/file-preview";
 import "@/components/agent-local/tool-previews.css";
 
@@ -9,6 +10,17 @@ function findStartLine(content: string, needle: string): number {
   const idx = content.indexOf(needle);
   if (idx < 0) return 1;
   return content.slice(0, idx).split("\n").length;
+}
+
+function DiffLine({ html, lineNum, mode }: { html: string; lineNum: number; mode: "ok" | "error" | "context" }) {
+  const prefix = mode === "ok" ? "+" : mode === "error" ? "-" : " ";
+  return (
+    <div className={`tp-line tp-line-${mode}`}>
+      <span className="tp-num">{lineNum}</span>
+      <span className={`tp-prefix tp-prefix-${mode}`}>{prefix}</span>
+      <span className={`tp-code tp-code-${mode}`} dangerouslySetInnerHTML={{ __html: html || " " }} />
+    </div>
+  );
 }
 
 export function FilePreviewDiff({
@@ -32,22 +44,34 @@ export function FilePreviewDiff({
     [currentContent, operation.startLine, operation.newText, operation.oldText],
   );
 
+  const ctx = useMemo(
+    () => extractDiffContext(currentContent, startLine, (operation.newText ?? "").split("\n").length),
+    [currentContent, startLine, operation.newText],
+  );
+
+  const beforeLines = useMemo(
+    () => ctx.before.length > 0 ? highlightLines(ctx.before.join("\n"), operation.path) : [],
+    [ctx.before, operation.path],
+  );
+  const afterLines = useMemo(
+    () => ctx.after.length > 0 ? highlightLines(ctx.after.join("\n"), operation.path) : [],
+    [ctx.after, operation.path],
+  );
+
   const wrap = shouldWrapFile(operation.path);
   const inner = (
     <>
+      {beforeLines.length > 0 && beforeLines.map((html, i) => (
+        <DiffLine key={`ctx-b-${i}`} html={html} lineNum={ctx.beforeStartLine + i} mode="context" />
+      ))}
       {oldLines.map((html, i) => (
-        <div key={`old-${i}`} className="tp-line tp-line-error">
-          <span className="tp-num">{startLine + i}</span>
-          <span className="tp-prefix tp-prefix-error">-</span>
-          <span className="tp-code tp-code-error" dangerouslySetInnerHTML={{ __html: html || " " }} />
-        </div>
+        <DiffLine key={`old-${i}`} html={html} lineNum={startLine + i} mode="error" />
       ))}
       {newLines.map((html, i) => (
-        <div key={`new-${i}`} className="tp-line tp-line-ok">
-          <span className="tp-num">{startLine + i}</span>
-          <span className="tp-prefix tp-prefix-ok">+</span>
-          <span className="tp-code tp-code-ok" dangerouslySetInnerHTML={{ __html: html || " " }} />
-        </div>
+        <DiffLine key={`new-${i}`} html={html} lineNum={startLine + i} mode="ok" />
+      ))}
+      {afterLines.length > 0 && afterLines.map((html, i) => (
+        <DiffLine key={`ctx-a-${i}`} html={html} lineNum={ctx.afterStartLine + i} mode="context" />
       ))}
     </>
   );
