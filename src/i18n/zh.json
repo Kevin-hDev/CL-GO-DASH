@@ -82,6 +82,24 @@
     "delete": "删除",
     "noDiscussion": "暂无会话"
   },
+  "branches": {
+    "search": "搜索分支",
+    "title": "分支",
+    "worktrees": "工作树",
+    "uncommitted": "未提交: {{count}} 个文件",
+    "createNew": "创建并检出新分支…",
+    "detachedHead": "分离的 HEAD",
+    "noBranch": "不是 git 仓库",
+    "noMatch": "未找到匹配的分支",
+    "conflictTitle": "提交更改以切换分支",
+    "conflictDescription": "以下文件的更改将在检出时被覆盖：",
+    "conflictCommitAndSwitch": "提交并切换分支…",
+    "conflictCancel": "取消",
+    "bubbleCreated": "分支已创建",
+    "bubbleSwitched": "分支已切换",
+    "createPlaceholder": "新分支名称",
+    "commitRequired": "请提交更改以继续"
+  },
   "history": {
     "rename": "重命名",
     "delete": "删除",

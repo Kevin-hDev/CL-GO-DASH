@@ -82,6 +82,24 @@
     "delete": "Eliminar",
     "noDiscussion": "Sin sesiones"
   },
+  "branches": {
+    "search": "Buscar ramas",
+    "title": "Ramas",
+    "worktrees": "Worktrees",
+    "uncommitted": "Sin confirmar: {{count}} archivo(s)",
+    "createNew": "Crear y extraer una nueva rama…",
+    "detachedHead": "HEAD desconectado",
+    "noBranch": "No es un repositorio git",
+    "noMatch": "Ninguna rama encontrada",
+    "conflictTitle": "Confirme los cambios para cambiar de rama",
+    "conflictDescription": "Los cambios en los siguientes archivos se perderían al extraer:",
+    "conflictCommitAndSwitch": "Confirmar y cambiar de rama…",
+    "conflictCancel": "Cancelar",
+    "bubbleCreated": "Rama creada",
+    "bubbleSwitched": "Rama cambiada",
+    "createPlaceholder": "Nombre de la nueva rama",
+    "commitRequired": "Confirme sus cambios para continuar"
+  },
   "history": {
     "rename": "Renombrar",
     "delete": "Eliminar",

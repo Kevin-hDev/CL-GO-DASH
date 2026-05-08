@@ -82,6 +82,24 @@
     "delete": "Supprimer",
     "noDiscussion": "Aucune session"
   },
+  "branches": {
+    "search": "Rechercher dans les branches",
+    "title": "Branches",
+    "worktrees": "Worktrees",
+    "uncommitted": "Non validés : {{count}} fichier(s)",
+    "createNew": "Créer et extraire une nouvelle branche…",
+    "detachedHead": "HEAD détaché",
+    "noBranch": "Pas de dépôt git",
+    "noMatch": "Aucune branche trouvée",
+    "conflictTitle": "Effectuez un commit pour changer de branche",
+    "conflictDescription": "Les modifications apportées aux fichiers suivants seraient remplacées par l'extraction :",
+    "conflictCommitAndSwitch": "Effectuer le commit et changer de branche…",
+    "conflictCancel": "Annuler",
+    "bubbleCreated": "Branche créée",
+    "bubbleSwitched": "Branche changée",
+    "createPlaceholder": "Nom de la nouvelle branche",
+    "commitRequired": "Effectuez un commit de vos modifications pour continuer"
+  },
   "history": {
     "rename": "Renommer",
     "delete": "Supprimer",

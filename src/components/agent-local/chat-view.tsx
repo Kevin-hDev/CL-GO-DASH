@@ -18,10 +18,13 @@ import { useSubagents } from "@/hooks/use-subagents";
 import { useSubagentSynthesis } from "@/hooks/use-subagent-synthesis";
 import { useChatActions } from "@/hooks/use-chat-actions";
 import { PermissionDialog } from "./permission-dialog";
+import { BranchSelector } from "./branch-selector";
+import { BranchConflictDialog } from "./branch-conflict-dialog";
 import { TerminalPanel } from "@/components/terminal/terminal-panel";
 import type { useTerminal } from "@/hooks/use-terminal";
 import type { Project } from "@/types/agent";
 import type { FileOperation } from "@/types/file-preview";
+import { useGitBranch } from "@/hooks/use-git-branch";
 import { ScrollBottomButton } from "./scroll-bottom-button";
 import "./chat.css";
 
@@ -68,6 +71,8 @@ export function ChatView({
   const context = useContextProgress(model, chat.tokenCount, provider);
   const [preview, setPreview] = useState<DroppedFile | null>(null);
   const proj = useSessionProject(sessionId, projects, onAddProject, chat.messages.length > 0);
+  const git = useGitBranch(proj.selectedProject?.path);
+  const [branchConflict, setBranchConflict] = useState<{ branch: string; dirtyCount: number } | null>(null);
   const fileOperations = useSessionFiles(chat.messages);
 
   useEffect(() => {
@@ -144,10 +149,18 @@ export function ChatView({
               onStop={() => void chat.stop()} onClearFiles={fileDrop.clearFiles} onFileImport={handleFileImport}
               onModelChange={handleModelSelect} onToggleThinking={onToggleThinking} onBuiltInCommand={handleBuiltInCommand}
             />
-            <ProjectSelector
-              projects={projects} selectedProjectId={proj.selectedProjectId} locked={proj.locked} hidden={proj.hidden}
-              onSelect={proj.setSelectedProjectId} onAddProject={() => void proj.handleAddProject()}
-            />
+            <div style={{ display: "flex", alignItems: "center", gap: "var(--space-xs)", flexWrap: "wrap" }}>
+              <ProjectSelector
+                projects={projects} selectedProjectId={proj.selectedProjectId} locked={proj.locked} hidden={proj.hidden}
+                onSelect={proj.setSelectedProjectId} onAddProject={() => void proj.handleAddProject()}
+              />
+              <BranchSelector
+                git={git}
+                locked={false}
+                onConflict={(branch, dirtyCount) => setBranchConflict({ branch, dirtyCount })}
+                onCreateRequest={() => {}}
+              />
+            </div>
           </div>
         </div>
         <TerminalPanel
@@ -158,6 +171,15 @@ export function ChatView({
           onPtyReady={terminalState.setPtyId} onResize={terminalState.resizePanel} onSetMaxHeight={terminalState.setMaxHeight}
         />
       </div>
+      {branchConflict && proj.selectedProject && (
+        <BranchConflictDialog
+          targetBranch={branchConflict.branch}
+          dirtyCount={branchConflict.dirtyCount}
+          projectPath={proj.selectedProject.path}
+          onCancel={() => setBranchConflict(null)}
+          onCommitAndSwitch={() => setBranchConflict(null)}
+        />
+      )}
       <ChatOverlays
         preview={preview} currentModel={model} pendingSwitch={pendingSwitch}
         onClosePreview={() => setPreview(null)} onCancelSwitch={() => setPendingSwitch(null)}

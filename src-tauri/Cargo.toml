@@ -104,6 +104,9 @@ regex = "1"
 notify = "7"
 notify-debouncer-mini = "0.5"
 
+# Git operations (branch, status, worktree)
+git2 = "0.19"
+
 # Tools grep/glob (crates de ripgrep)
 grep = "0.3"
 grep-regex = "0.1"
