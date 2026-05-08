@@ -156,7 +156,7 @@ export function ChatView({
               />
               <BranchSelector
                 git={git}
-                locked={proj.locked && chat.messages.length > 0}
+                locked={false}
                 onConflict={(branch, dirtyCount) => setBranchConflict({ branch, dirtyCount })}
                 onCreateRequest={() => {}}
               />

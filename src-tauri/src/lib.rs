@@ -239,6 +239,7 @@ pub fn run() {
             // Link preview
             commands::fetch_link_preview,
             // Git operations
+            commands::start_git_watcher,
             commands::list_git_branches,
             commands::get_git_context,
             commands::checkout_git_branch,

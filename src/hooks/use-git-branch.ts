@@ -80,13 +80,29 @@ export function useGitBranch(projectPath: string | undefined) {
 
   useEffect(() => {
     void refresh();
+    if (projectPath) {
+      void invoke("start_git_watcher", { path: projectPath }).catch(() => {});
+    }
   }, [projectPath, refresh]);
 
   useEffect(() => {
-    const unlisten = listen("git-branch-changed", () => {
+    let cancelled = false;
+    let unlistenFn: (() => void) | null = null;
+
+    listen("git-branch-changed", () => {
       void refresh();
-    });
-    return () => { void unlisten.then((fn) => fn()); };
+    }).then((fn) => {
+      if (cancelled) {
+        fn();
+      } else {
+        unlistenFn = fn;
+      }
+    }).catch(() => {});
+
+    return () => {
+      cancelled = true;
+      unlistenFn?.();
+    };
   }, [refresh]);
 
   const checkout = useCallback(async (branchName: string): Promise<{ ok: boolean; dirtyCount?: number }> => {

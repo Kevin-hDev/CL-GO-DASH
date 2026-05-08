@@ -1,4 +1,13 @@
-use crate::services::git::{branch, status, worktree_list};
+use crate::services::git::{branch, status, watcher, worktree_list};
+
+#[tauri::command]
+pub fn start_git_watcher(app: tauri::AppHandle, path: String) -> Result<(), String> {
+    let repo_path = std::path::PathBuf::from(&path);
+    if !repo_path.is_dir() {
+        return Ok(());
+    }
+    watcher::setup_git_watcher(app, repo_path)
+}
 
 #[tauri::command]
 pub async fn list_git_branches(path: String) -> Result<Vec<branch::BranchInfo>, String> {
