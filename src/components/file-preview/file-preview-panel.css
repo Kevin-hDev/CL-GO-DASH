@@ -112,6 +112,11 @@
   background: var(--surface-hover);
 }
 
+.fp-icon-btn-active {
+  color: var(--pulse);
+  background: var(--surface-hover);
+}
+
 .fp-empty {
   height: 100%;
   display: flex;

@@ -4,6 +4,7 @@ import { TabBar } from "./tab-bar";
 import { AgentChatDetail } from "./agent-chat-detail";
 import { WelcomeView } from "./welcome-view";
 import { useAgentLocalTab } from "@/hooks/use-agent-local-tab";
+import { useFileTree } from "@/hooks/use-file-tree";
 import type { AgentLocalTabProps } from "./agent-local-tab-types";
 import "./agent-local-tab.css";
 
@@ -22,6 +23,7 @@ export const AgentLocalTab = memo(function AgentLocalTab({
   const { sessionActions, handleSelectById, handleDeleteProject } = s;
   const { pendingMessage, setPendingMessage, pendingWorkingDir, setPendingWorkingDir, pendingSkills, setPendingSkills, pendingFiles, setPendingFiles, handleCreate, handleCreateWithModel, handleWelcomeSend, handleAutoRename, handleCreateInProject } = sessionActions;
   const terminalCwd = activeProject?.path || "";
+  const fileTree = useFileTree(tabState.activeSessionId, activeProject?.path);
 
   const list = (
     <ConversationList
@@ -82,6 +84,7 @@ export const AgentLocalTab = memo(function AgentLocalTab({
           terminal={terminal}
           filePreview={filePreview}
           fileOperations={fileOperations}
+          fileTree={fileTree}
           onAddProject={projectsHook.add}
           onSessionsRefresh={() => void refresh()}
           onUpdateModel={(id, m, p) => void updateModel(id, m, p)}
