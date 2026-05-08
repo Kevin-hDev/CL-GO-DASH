@@ -16,7 +16,7 @@ const TOOL_COLORS: Record<string, string> = {
   write_document: "var(--tool-write)",
   edit_file: "var(--tool-edit)", process_image: "var(--tool-edit)",
   web_search: "var(--tool-web)", web_fetch: "var(--tool-web)",
-  create_branch: "var(--tool-git)", checkout_branch: "var(--tool-git)",
+  create_branch: "var(--tool-bash)", checkout_branch: "var(--tool-bash)",
 };
 
 const CLOSED_BY_DEFAULT = new Set([

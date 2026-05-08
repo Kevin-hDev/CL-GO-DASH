@@ -9,12 +9,12 @@
 }
 
 .bb-icon {
-  color: var(--tool-git);
+  color: var(--tool-bash);
   flex-shrink: 0;
 }
 
 .bb-label {
-  color: var(--tool-git);
+  color: var(--tool-bash);
   font-weight: 600;
 }
 
