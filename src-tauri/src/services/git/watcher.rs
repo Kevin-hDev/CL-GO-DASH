@@ -1,17 +1,31 @@
 use notify::{Event, EventKind, RecursiveMode, Watcher};
 use std::path::PathBuf;
 use std::sync::mpsc;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 use tauri::{AppHandle, Emitter};
 
 const DEBOUNCE_MS: u64 = 150;
 
+static WATCHER_ACTIVE: std::sync::Mutex<Option<Arc<AtomicBool>>> = std::sync::Mutex::new(None);
+
 pub fn setup_git_watcher(app: AppHandle, repo_path: PathBuf) -> Result<(), String> {
     let git_dir = repo_path.join(".git");
     if !git_dir.is_dir() {
         return Ok(());
     }
+
+    let mut guard = WATCHER_ACTIVE.lock().map_err(|_| "Lock error".to_string())?;
+
+    if let Some(prev) = guard.take() {
+        prev.store(true, Ordering::Relaxed);
+    }
+
+    let stop = Arc::new(AtomicBool::new(false));
+    *guard = Some(Arc::clone(&stop));
+    drop(guard);
 
     let head_path = git_dir.join("HEAD");
     let refs_path = git_dir.join("refs").join("heads");
@@ -21,13 +35,12 @@ pub fn setup_git_watcher(app: AppHandle, repo_path: PathBuf) -> Result<(), Strin
 
         let mut watcher = match notify::recommended_watcher(move |res: Result<Event, _>| {
             if let Ok(event) = res {
-                let dominated_by_lock = event.paths.iter().all(|p| {
+                let all_lock = event.paths.iter().all(|p| {
                     p.extension().map(|e| e == "lock").unwrap_or(false)
                 });
-                if dominated_by_lock {
+                if all_lock {
                     return;
                 }
-
                 match event.kind {
                     EventKind::Modify(_) | EventKind::Create(_) | EventKind::Remove(_) => {
                         let _ = tx.send(event);
@@ -41,22 +54,26 @@ pub fn setup_git_watcher(app: AppHandle, repo_path: PathBuf) -> Result<(), Strin
         };
 
         if head_path.exists() {
-            if let Err(e) = watcher.watch(&head_path, RecursiveMode::NonRecursive) {
-                eprintln!("Watch HEAD: {e}");
-            }
+            let _ = watcher.watch(&head_path, RecursiveMode::NonRecursive);
         }
-
         if refs_path.is_dir() {
-            if let Err(e) = watcher.watch(&refs_path, RecursiveMode::Recursive) {
-                eprintln!("Watch refs/heads: {e}");
-            }
+            let _ = watcher.watch(&refs_path, RecursiveMode::Recursive);
         }
 
         loop {
-            if rx.recv().is_ok() {
-                thread::sleep(Duration::from_millis(DEBOUNCE_MS));
-                while rx.try_recv().is_ok() {}
-                let _ = app.emit("git-branch-changed", ());
+            if stop.load(Ordering::Relaxed) {
+                return;
+            }
+            match rx.recv_timeout(Duration::from_secs(1)) {
+                Ok(_) => {
+                    thread::sleep(Duration::from_millis(DEBOUNCE_MS));
+                    while rx.try_recv().is_ok() {}
+                    if !stop.load(Ordering::Relaxed) {
+                        let _ = app.emit("git-branch-changed", ());
+                    }
+                }
+                Err(mpsc::RecvTimeoutError::Timeout) => continue,
+                Err(mpsc::RecvTimeoutError::Disconnected) => return,
             }
         }
     });

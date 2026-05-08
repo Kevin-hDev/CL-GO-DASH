@@ -19,14 +19,6 @@ fn test_detect_git_outside_repo() {
 }
 
 #[test]
-fn test_find_git_root() {
-    let manifest = Path::new(env!("CARGO_MANIFEST_DIR"));
-    let root = find_git_root(manifest);
-    assert!(root.is_some(), "find_git_root doit trouver le root");
-    assert!(manifest.starts_with(root.unwrap()));
-}
-
-#[test]
 fn test_format_git_section_none_if_not_git() {
     assert!(format_git_section(&GitSnapshot::default()).is_none());
 }

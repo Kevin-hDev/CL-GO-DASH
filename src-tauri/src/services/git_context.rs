@@ -31,12 +31,6 @@ pub fn detect_git(path: &Path) -> GitSnapshot {
     }
 }
 
-pub fn find_git_root(path: &Path) -> Option<PathBuf> {
-    Repository::discover(path)
-        .ok()
-        .and_then(|r| r.workdir().map(Path::to_path_buf))
-}
-
 pub fn format_git_section(snap: &GitSnapshot) -> Option<String> {
     if !snap.is_git {
         return None;
