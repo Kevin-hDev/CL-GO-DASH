@@ -13,6 +13,12 @@
   z-index: 50;
 }
 
+[data-theme="dark"] .slash-dropdown {
+  background: var(--surface-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
 .slash-item {
   display: flex;
   align-items: center;
@@ -24,7 +30,7 @@
 
 .slash-item:hover,
 .slash-item.active {
-  background: hsla(0, 0%, 100%, 0.08);
+  background: var(--surface-hover);
 }
 
 .slash-item-icon {
