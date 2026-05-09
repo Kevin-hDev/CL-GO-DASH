@@ -4,18 +4,23 @@
 //! set/delete/has/list/test seulement.
 
 use crate::services::api_keys;
+use tauri::Emitter;
 use zeroize::Zeroize;
 
 #[tauri::command]
-pub async fn set_api_key(provider: String, mut key: String) -> Result<(), String> {
+pub async fn set_api_key(app: tauri::AppHandle, provider: String, mut key: String) -> Result<(), String> {
     let result = api_keys::set_key(&provider, &key);
     key.zeroize();
+    if result.is_ok() {
+        let _ = app.emit("providers-changed", ());
+    }
     result
 }
 
 #[tauri::command]
-pub async fn delete_api_key(provider: String) -> Result<(), String> {
+pub async fn delete_api_key(app: tauri::AppHandle, provider: String) -> Result<(), String> {
     api_keys::delete_key(&provider)?;
+    let _ = app.emit("providers-changed", ());
     Ok(())
 }
 
