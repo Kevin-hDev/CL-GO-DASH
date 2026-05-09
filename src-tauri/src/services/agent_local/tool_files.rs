@@ -64,6 +64,15 @@ pub async fn write_file(path: &str, content: &str, working_dir: &Path) -> ToolRe
         if let Err(e) = tokio::fs::create_dir_all(parent).await {
             return ToolResult::err(security::sanitize_error(e));
         }
+        if let Ok(real_parent) = parent.canonicalize() {
+            let roots = security::allowed_write_roots();
+            if !roots.iter().any(|r| real_parent.starts_with(r)) {
+                return ToolResult::err("Écriture interdite hors des zones autorisées");
+            }
+        }
+    }
+    if resolved.is_symlink() {
+        return ToolResult::err("Écriture sur symlink interdite");
     }
     match tokio::fs::write(&resolved, content).await {
         Ok(()) => ToolResult::ok(format!("Écrit: {}", resolved.display())),

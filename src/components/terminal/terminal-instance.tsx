@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
-import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
+import { invoke, Channel } from "@tauri-apps/api/core";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import { IS_MAC } from "@/lib/platform";
@@ -11,7 +10,7 @@ interface TerminalInstanceProps {
   tabId: string;
   cwd: string;
   isVisible: boolean;
-  onPtyReady: (tabId: string, ptyId: number) => void;
+  onPtyReady: (tabId: string, ptyId: number, ptyToken: string) => void;
   onExit: (tabId: string) => void;
   onTogglePanel?: () => void;
 }
@@ -39,6 +38,7 @@ export function TerminalInstance({
   const termRef = useRef<Terminal | null>(null);
   const fitRef = useRef<FitAddon | null>(null);
   const ptyIdRef = useRef<number | null>(null);
+  const ptyTokenRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -89,8 +89,8 @@ export function TerminalInstance({
 
     const pasteHandler = (e: ClipboardEvent) => {
       const text = e.clipboardData?.getData("text");
-      if (text && ptyIdRef.current !== null) {
-        invoke("pty_write", { id: ptyIdRef.current, data: text }).catch(() => {});
+      if (text && ptyIdRef.current !== null && ptyTokenRef.current) {
+        invoke("pty_write", { id: ptyIdRef.current, token: ptyTokenRef.current, data: text }).catch(() => {});
         e.preventDefault();
       }
     };
@@ -98,42 +98,42 @@ export function TerminalInstance({
 
     let disposed = false;
 
-    invoke<number>("pty_spawn", {
+    const channel = new Channel<{ data: string; isExit: boolean; exitCode: number }>();
+    channel.onmessage = (event) => {
+      if (disposed) return;
+      if (event.isExit) {
+        term.writeln(`\r\n[${i18n.t("terminal.processExited", { code: event.exitCode })}]`);
+        ptyIdRef.current = null;
+        onExit(tabId);
+      } else {
+        term.write(event.data);
+      }
+    };
+
+    invoke<{ id: number; token: string }>("pty_spawn", {
       cwd: cwd || null,
       cols: term.cols || 80,
       rows: term.rows || 24,
-    }).then((id) => {
+      onOutput: channel,
+    }).then(({ id, token }) => {
       if (disposed) {
-        invoke("pty_kill", { id }).catch(() => {});
+        invoke("pty_kill", { id, token }).catch(() => {});
         return;
       }
       ptyIdRef.current = id;
-      onPtyReady(tabId, id);
+      ptyTokenRef.current = token;
+      onPtyReady(tabId, id, token);
 
       term.onData((data) => {
-        invoke("pty_write", { id, data }).catch(() => {});
+        invoke("pty_write", { id, token, data }).catch(() => {});
       });
 
       term.onResize(({ cols, rows }) => {
-        invoke("pty_resize", { id, cols, rows }).catch(() => {});
+        invoke("pty_resize", { id, token, cols, rows }).catch(() => {});
       });
     }).catch(() => {
       if (!disposed) {
         term.writeln(`\r\n${i18n.t("terminal.failedToStart")}\r\n`);
-      }
-    });
-
-    const unlisten1 = listen<{ id: number; data: string }>("pty-output", (event) => {
-      if (event.payload.id === ptyIdRef.current) {
-        term.write(event.payload.data);
-      }
-    });
-
-    const unlisten2 = listen<{ id: number; code: number }>("pty-exit", (event) => {
-      if (event.payload.id === ptyIdRef.current) {
-        term.writeln(`\r\n[${i18n.t("terminal.processExited", { code: event.payload.code })}]`);
-        ptyIdRef.current = null;
-        onExit(tabId);
       }
     });
 
@@ -154,10 +154,8 @@ export function TerminalInstance({
       clearTimeout(resizeTimer);
       container?.removeEventListener("paste", pasteHandler);
       resizeObserver.disconnect();
-      void unlisten1.then((fn) => fn());
-      void unlisten2.then((fn) => fn());
-      if (ptyIdRef.current !== null) {
-        invoke("pty_kill", { id: ptyIdRef.current }).catch(() => {});
+      if (ptyIdRef.current !== null && ptyTokenRef.current) {
+        invoke("pty_kill", { id: ptyIdRef.current, token: ptyTokenRef.current }).catch(() => {});
       }
       term.dispose();
     };

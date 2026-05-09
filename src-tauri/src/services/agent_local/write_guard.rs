@@ -26,11 +26,11 @@ impl WriteGuard {
         self.read_paths.push(canonical);
     }
 
-    /// Vérifie si on peut écrire dans ce fichier.
-    /// Le system prompt instruit le LLM de toujours lire avant d'écrire.
-    /// Le guard enregistre les lectures mais ne bloque plus les écritures
-    /// car le blocage causait des boucles mortes entre les agent loops.
-    pub fn check_write(&self, _path: &Path) -> Result<(), String> {
-        Ok(())
+    pub fn check_write(&self, path: &Path) -> Result<(), String> {
+        let canonical = path.canonicalize().unwrap_or_else(|_| path.to_path_buf());
+        if !path.exists() || self.read_paths.contains(&canonical) {
+            return Ok(());
+        }
+        Err("[WARN] fichier non lu avant écriture — utilise read_file d'abord".to_string())
     }
 }

@@ -22,6 +22,8 @@ pub async fn discover_auth_server(endpoint: &str) -> Result<AuthServerMetadata, 
 }
 
 async fn discover_issuer(client: &Client, endpoint: &str) -> Result<String, String> {
+    let endpoint_host = extract_host(endpoint).unwrap_or_default();
+
     let resp = client
         .post(endpoint)
         .header("Content-Type", "application/json")
@@ -34,7 +36,7 @@ async fn discover_issuer(client: &Client, endpoint: &str) -> Result<String, Stri
 
     if status == 401 || status == 403 {
         if let Some(header) = resp.headers().get("www-authenticate").and_then(|v| v.to_str().ok()) {
-            if let Some(url) = extract_resource_metadata_url(header) {
+            if let Some(url) = extract_resource_metadata_url(header, &endpoint_host) {
                 if let Ok(issuer) = fetch_issuer_from_resource_meta(client, &url).await {
                     return Ok(issuer);
                 }
@@ -72,18 +74,27 @@ async fn discover_issuer(client: &Client, endpoint: &str) -> Result<String, Stri
     Err("serveur d'autorisation non trouvé pour ce service".to_string())
 }
 
-fn extract_resource_metadata_url(header: &str) -> Option<String> {
+fn extract_resource_metadata_url(header: &str, endpoint_host: &str) -> Option<String> {
     let mut found = None;
     for segment in header.split([',', ' ']) {
         let trimmed = segment.trim();
         if let Some(rest) = trimmed.strip_prefix("resource_metadata=") {
             let url = rest.trim_matches('"').trim();
-            if url.starts_with("https://") {
+            if url.starts_with("https://") && is_same_domain(url, endpoint_host) {
                 found = Some(url.to_string());
             }
         }
     }
     found
+}
+
+fn extract_host(url: &str) -> Option<String> {
+    reqwest::Url::parse(url).ok().and_then(|u| u.host_str().map(|h| h.to_string()))
+}
+
+fn is_same_domain(url: &str, reference_host: &str) -> bool {
+    let Some(url_host) = extract_host(url) else { return false };
+    url_host == reference_host || url_host.ends_with(&format!(".{reference_host}"))
 }
 
 async fn fetch_issuer_from_resource_meta(

@@ -87,7 +87,7 @@ pub fn init() -> Result<(), String> {
         let legacy = vault::read_legacy_keychain_keys();
         if !legacy.is_empty() {
             for (id, key) in &legacy {
-                raw_map.entry(id.clone()).or_insert_with(|| key.clone());
+                raw_map.entry(id.clone()).or_insert_with(|| key.to_string());
             }
             eprintln!("[vault] migrated {} keys from keychain", legacy.len());
         }
@@ -110,7 +110,7 @@ pub fn init() -> Result<(), String> {
 pub fn get_key(provider_id: &str) -> Result<Zeroizing<String>, String> {
     let state = STATE.lock().map_err(|e| format!("lock: {e}"))?;
     let s = state.as_ref().ok_or("vault not initialized")?;
-    s.keys.get(provider_id).cloned().ok_or_else(|| format!("no key for {provider_id}"))
+    s.keys.get(provider_id).cloned().ok_or_else(|| "clé non trouvée".to_string())
 }
 
 pub fn set_key(provider_id: &str, key: &str) -> Result<(), String> {
@@ -140,6 +140,9 @@ pub fn set_key_raw(key_id: &str, value: &str) -> Result<(), String> {
     }
     let mut state = STATE.lock().map_err(|e| format!("lock: {e}"))?;
     let s = state.as_mut().ok_or("vault not initialized")?;
+    if !s.keys.contains_key(key_id) && s.keys.len() >= MAX_VAULT_ENTRIES {
+        return Err("limite d'entrées vault atteinte".to_string());
+    }
     s.keys.insert(key_id.to_string(), Zeroizing::new(value.to_string()));
     flush_vault(s)
 }
@@ -164,6 +167,7 @@ pub fn list_configured() -> Vec<String> {
 }
 
 const MAX_RAW_VALUE_LEN: usize = 8192;
+const MAX_VAULT_ENTRIES: usize = 500;
 
 pub fn set_raw(key: &str, value: &str) -> Result<(), String> {
     if key.is_empty() || key.len() > 64 {
@@ -174,6 +178,9 @@ pub fn set_raw(key: &str, value: &str) -> Result<(), String> {
     }
     let mut state = STATE.lock().map_err(|e| format!("lock: {e}"))?;
     let s = state.as_mut().ok_or("vault not initialized")?;
+    if !s.keys.contains_key(key) && s.keys.len() >= MAX_VAULT_ENTRIES {
+        return Err("limite d'entrées vault atteinte".to_string());
+    }
     s.keys.insert(key.to_string(), Zeroizing::new(value.to_string()));
     flush_vault(s)
 }
@@ -181,10 +188,13 @@ pub fn set_raw(key: &str, value: &str) -> Result<(), String> {
 pub fn get_raw(key: &str) -> Result<Zeroizing<String>, String> {
     let state = STATE.lock().map_err(|e| format!("lock: {e}"))?;
     let s = state.as_ref().ok_or("vault not initialized")?;
-    s.keys.get(key).cloned().ok_or_else(|| format!("no value for {key}"))
+    s.keys.get(key).cloned().ok_or_else(|| "clé non trouvée".to_string())
 }
 
 pub fn delete_raw(key: &str) -> Result<(), String> {
+    if key.is_empty() || key.len() > 64 {
+        return Err("clé vault invalide".to_string());
+    }
     let mut state = STATE.lock().map_err(|e| format!("lock: {e}"))?;
     let s = state.as_mut().ok_or("vault not initialized")?;
     s.keys.remove(key);

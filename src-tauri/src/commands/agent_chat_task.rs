@@ -11,6 +11,20 @@ use crate::services::git_context::{self, GitSnapshot};
 use crate::services::llm;
 use tokio_util::sync::CancellationToken;
 
+fn permission_level(mode: &str) -> u8 {
+    match mode {
+        "manual" => 0,
+        "chat" => 1,
+        "subagent" => 2,
+        "auto" => 3,
+        _ => 0,
+    }
+}
+
+fn is_more_permissive(requested: &str, stored: &str) -> bool {
+    permission_level(requested) > permission_level(stored)
+}
+
 pub(crate) fn merge_personality(
     agent_md: Option<String>,
     personality: Option<String>,
@@ -168,9 +182,18 @@ pub(crate) async fn run_stream_task(
         return Ok(messages);
     }
 
-    let mode = match permission_mode_override {
-        Some(m) if matches!(m.as_str(), "auto" | "manual" | "chat" | "subagent") => m,
-        _ => agent_settings::get_permission_mode().await,
+    let mode = {
+        let stored = agent_settings::get_permission_mode().await;
+        match permission_mode_override {
+            Some(m) if matches!(m.as_str(), "auto" | "manual" | "chat" | "subagent") => {
+                if is_more_permissive(&m, &stored) {
+                    stored
+                } else {
+                    m
+                }
+            }
+            _ => stored,
+        }
     };
     let is_chat = mode == "chat";
     let is_subagent = mode == "subagent";
@@ -237,6 +260,7 @@ pub(crate) async fn run_stream_task(
             cancel,
             ctx.native,
             ctx.configured,
+            &mode,
         )
         .await?;
         Ok(msgs)
@@ -322,6 +346,7 @@ pub(crate) async fn run_stream_task(
             cancel,
             ctx.native,
             ctx.configured,
+            &mode,
         )
         .await?;
         Ok(msgs)

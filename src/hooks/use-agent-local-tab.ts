@@ -125,9 +125,9 @@ export function useAgentLocalTab({ requestedSessionId, onSessionChange, listFocu
   });
 
   const handleDeleteProject = useCallback((projectId: string) => {
-    const ptyIds = terminal.getGroupPtyIds(projectId);
-    for (const id of ptyIds) {
-      invoke("pty_kill", { id }).catch(() => {});
+    const entries = terminal.getGroupPtyEntries(projectId);
+    for (const { id, token } of entries) {
+      invoke("pty_kill", { id, token }).catch(() => {});
     }
     terminal.removeGroup(projectId);
     void projectsHook.remove(projectId);

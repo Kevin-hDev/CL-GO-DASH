@@ -14,13 +14,15 @@ fn allows_write_to_new_file() {
 }
 
 #[test]
-fn allows_write_to_existing_unread_file() {
+fn warns_write_to_existing_unread_file() {
     let guard = WriteGuard::new();
     let mut tmp = NamedTempFile::new().unwrap();
     writeln!(tmp, "contenu existant").unwrap();
     let path = tmp.path();
     assert!(path.exists());
-    assert!(guard.check_write(path).is_ok());
+    let result = guard.check_write(path);
+    assert!(result.is_err());
+    assert!(result.unwrap_err().contains("non lu avant écriture"));
 }
 
 #[test]

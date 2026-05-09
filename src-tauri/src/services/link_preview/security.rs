@@ -4,6 +4,10 @@ use std::net::IpAddr;
 const MAX_URL_LEN: usize = 2048;
 
 pub async fn validate_url(url: &str) -> Result<(), String> {
+    validate_url_with_ip(url).await.map(|_| ())
+}
+
+pub async fn validate_url_with_ip(url: &str) -> Result<(String, std::net::IpAddr), String> {
     if url.len() > MAX_URL_LEN {
         return Err("Preview unavailable".into());
     }
@@ -17,7 +21,8 @@ pub async fn validate_url(url: &str) -> Result<(), String> {
     if is_blocked_host(&host) {
         return Err("Preview unavailable".into());
     }
-    verify_dns(&host).await
+    let ip = verify_dns_with_ip(&host).await?;
+    Ok((host, ip))
 }
 
 pub fn is_safe_resource_url(url: &str) -> bool {
@@ -61,18 +66,18 @@ fn is_blocked_host(host: &str) -> bool {
         || host.starts_with("::ffff:127.")
 }
 
-async fn verify_dns(host: &str) -> Result<(), String> {
+async fn verify_dns_with_ip(host: &str) -> Result<IpAddr, String> {
     let lookup = format!("{host}:80");
-    let addrs = tokio::net::lookup_host(&lookup)
+    let addrs: Vec<_> = tokio::net::lookup_host(&lookup)
         .await
-        .map_err(|_| "Preview unavailable".to_string())?;
-    for addr in addrs {
-        let ip: IpAddr = addr.ip();
-        if is_ip_private(&ip) {
+        .map_err(|_| "Preview unavailable".to_string())?
+        .collect();
+    for addr in &addrs {
+        if is_ip_private(&addr.ip()) {
             return Err("Preview unavailable".into());
         }
     }
-    Ok(())
+    addrs.first().map(|a| a.ip()).ok_or_else(|| "Preview unavailable".to_string())
 }
 
 #[cfg(test)]

@@ -9,7 +9,7 @@ const SCOPES: &str = "openid profile email offline_access";
 
 fn generate_state() -> String {
     let mut bytes = [0u8; 16];
-    rand::thread_rng().fill_bytes(&mut bytes);
+    rand::rngs::OsRng.fill_bytes(&mut bytes);
     hex::encode(bytes)
 }
 

@@ -169,7 +169,19 @@ async fn execute_write(
         PreHookDecision::Allow => {}
     }
 
-    if !permission_gate::check_data_dir_write(
+    if permission_gate::requires_permission(name, args) {
+        if !permission_gate::is_allowed(session_id, name).await {
+            match permission_gate::request(on_event, name, args, cancel.clone()).await {
+                permission_gate::PermissionDecision::Allow => {}
+                permission_gate::PermissionDecision::AllowSession => {
+                    permission_gate::mark_allowed(session_id, name).await;
+                }
+                permission_gate::PermissionDecision::Deny => {
+                    return ToolResult::err("L'utilisateur a refusé cette action.");
+                }
+            }
+        }
+    } else if !permission_gate::check_data_dir_write(
         on_event, name, args, session_id, cancel.clone(),
     ).await {
         return ToolResult::err("L'utilisateur a refusé cette action.");

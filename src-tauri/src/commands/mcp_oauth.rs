@@ -22,6 +22,9 @@ pub async fn start_mcp_oauth(
     if endpoint.is_empty() || !endpoint.starts_with("https://") {
         return Err("endpoint MCP non HTTPS".to_string());
     }
+    if !crate::services::mcp_bridge::registry::is_trusted_endpoint_pub(&endpoint) {
+        return Err("endpoint non autorisé pour OAuth".to_string());
+    }
     tauri::async_runtime::spawn(flow::run(app, connector_id, endpoint));
     Ok(())
 }

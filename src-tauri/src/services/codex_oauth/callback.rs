@@ -76,7 +76,9 @@ fn parse_callback(request: &str, expected_state: &str) -> Result<CallbackResult,
     let code = code.ok_or("paramètre 'code' manquant dans le callback")?;
     let state = state.ok_or("paramètre 'state' manquant dans le callback")?;
 
-    if state != expected_state {
+    if state.len() != expected_state.len()
+        || state.as_bytes().iter().zip(expected_state.as_bytes()).fold(0u8, |acc, (a, b)| acc | (a ^ b)) != 0
+    {
         return Err("state OAuth invalide (possible CSRF)".to_string());
     }
 

@@ -31,7 +31,7 @@ export function useTerminal(groupKey: string, defaultCwd: string, validGroupKeys
       const map = new Map<string, TerminalGroup>();
       for (const [key, tabs] of Object.entries(saved)) {
         map.set(key, {
-          tabs: tabs.map((t) => ({ id: generateId(), ptyId: null, label: t.label, cwd: t.cwd })),
+          tabs: tabs.map((t) => ({ id: generateId(), ptyId: null, ptyToken: null, label: t.label, cwd: t.cwd })),
           activeTabId: null,
         });
       }
@@ -69,7 +69,7 @@ export function useTerminal(groupKey: string, defaultCwd: string, validGroupKeys
 
   const addTab = useCallback((cwd?: string) => {
     const dir = cwd || resolvedCwd;
-    const tab: TerminalTab = { id: generateId(), ptyId: null, label: folderName(dir), cwd: dir };
+    const tab: TerminalTab = { id: generateId(), ptyId: null, ptyToken: null, label: folderName(dir), cwd: dir };
     setGroups((prev) => {
       const next = new Map(prev);
       const group = next.get(groupKey) ?? { tabs: [], activeTabId: null };
@@ -144,12 +144,12 @@ export function useTerminal(groupKey: string, defaultCwd: string, validGroupKeys
     });
   }, [currentGroup.tabs.length]);
 
-  const setPtyId = useCallback((tabId: string, ptyId: number) => {
+  const setPtyId = useCallback((tabId: string, ptyId: number, ptyToken?: string) => {
     setGroups((prev) => {
       const next = new Map(prev);
       for (const [key, group] of next) {
         if (group.tabs.some((t) => t.id === tabId)) {
-          next.set(key, { ...group, tabs: group.tabs.map((t) => (t.id === tabId ? { ...t, ptyId } : t)) });
+          next.set(key, { ...group, tabs: group.tabs.map((t) => (t.id === tabId ? { ...t, ptyId, ptyToken: ptyToken ?? null } : t)) });
           break;
         }
       }
@@ -174,6 +174,14 @@ export function useTerminal(groupKey: string, defaultCwd: string, validGroupKeys
     return group.tabs.filter((t) => t.ptyId !== null).map((t) => t.ptyId!);
   }, [groups]);
 
+  const getGroupPtyEntries = useCallback((key: string): { id: number; token: string }[] => {
+    const group = groups.get(key);
+    if (!group) return [];
+    return group.tabs
+      .filter((t) => t.ptyId !== null && t.ptyToken !== null)
+      .map((t) => ({ id: t.ptyId!, token: t.ptyToken! }));
+  }, [groups]);
+
   return {
     tabs: currentGroup.tabs,
     activeTabId: currentGroup.activeTabId,
@@ -191,6 +199,7 @@ export function useTerminal(groupKey: string, defaultCwd: string, validGroupKeys
     setMaxHeight,
     removeGroup,
     getGroupPtyIds,
+    getGroupPtyEntries,
     groupKey,
   };
 }

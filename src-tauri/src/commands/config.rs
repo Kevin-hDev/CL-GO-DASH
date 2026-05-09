@@ -33,9 +33,13 @@ pub fn set_advanced_settings(
     }
 
     let mut config = config_service::read_config()?;
-    config.advanced = settings;
+    let mut safe_settings = settings;
+    safe_settings.allowed_paths = config.advanced.allowed_paths.clone();
+    config.advanced = safe_settings;
     config_service::write_config(&config)
 }
+
+const PATCH_BLOCKED_KEYS: &[&str] = &["allowed_paths"];
 
 #[tauri::command]
 pub fn patch_advanced_settings(
@@ -50,6 +54,9 @@ pub fn patch_advanced_settings(
 
     if let (Some(base), Some(updates)) = (current.as_object_mut(), patch.as_object()) {
         for (k, v) in updates {
+            if PATCH_BLOCKED_KEYS.contains(&k.as_str()) {
+                continue;
+            }
             base.insert(k.clone(), v.clone());
         }
     }

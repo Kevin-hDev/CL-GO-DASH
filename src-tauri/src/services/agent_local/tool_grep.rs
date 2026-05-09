@@ -40,7 +40,12 @@ fn resolve_root(path: Option<&str>, working_dir: &Path) -> PathBuf {
     }
 }
 
+const MAX_PATTERN_LEN: usize = 500;
+
 fn grep_blocking(pattern: &str, root: &Path, glob_filter: Option<&str>) -> ToolResult {
+    if pattern.len() > MAX_PATTERN_LEN {
+        return ToolResult::err(format!("Pattern trop long (max {MAX_PATTERN_LEN} chars)"));
+    }
     let matcher = match RegexMatcher::new(pattern) {
         Ok(m) => m,
         Err(e) => return ToolResult::err(format!("Pattern regex invalide : {e}")),

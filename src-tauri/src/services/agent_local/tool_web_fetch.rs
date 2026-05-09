@@ -9,8 +9,8 @@ const JINA_PREFIX: &str = "https://r.jina.ai/";
 const MIN_CONTENT_LEN: usize = 100;
 
 pub async fn fetch_url(url: &str) -> Result<String, String> {
-    validate_url(url).await?;
-    let html = fetch_html(url).await?;
+    let (host, resolved_ip) = validate_url_with_ip(url).await?;
+    let html = fetch_html_pinned(url, &host, resolved_ip).await?;
     let content = extract_and_convert(&html, url);
 
     if content.len() < MIN_CONTENT_LEN {
@@ -19,9 +19,10 @@ pub async fn fetch_url(url: &str) -> Result<String, String> {
     Ok(truncate(&content, MAX_CHARS))
 }
 
-async fn fetch_html(url: &str) -> Result<String, String> {
+async fn fetch_html_pinned(url: &str, host: &str, ip: IpAddr) -> Result<String, String> {
     let client = Client::builder()
         .redirect(reqwest::redirect::Policy::none())
+        .resolve(host, std::net::SocketAddr::new(ip, 0))
         .build()
         .map_err(|e| format!("Erreur client: {e}"))?;
     let resp = client
@@ -87,7 +88,7 @@ async fn fetch_via_jina(url: &str) -> Result<String, String> {
     Ok(truncate(&text, MAX_CHARS))
 }
 
-pub(crate) async fn validate_url(url: &str) -> Result<(), String> {
+async fn validate_url_with_ip(url: &str) -> Result<(String, IpAddr), String> {
     if !url.starts_with("http://") && !url.starts_with("https://") {
         return Err("URL doit commencer par http:// ou https://".into());
     }
@@ -97,7 +98,6 @@ pub(crate) async fn validate_url(url: &str) -> Result<(), String> {
         .split('/')
         .next()
         .unwrap_or("");
-    // Sépare host et port optionnel, en gérant [::1]:port (IPv6)
     let host = if authority.starts_with('[') {
         authority.split(']').next().unwrap_or("").trim_start_matches('[')
     } else {
@@ -108,22 +108,17 @@ pub(crate) async fn validate_url(url: &str) -> Result<(), String> {
         return Err("URL invalide".into());
     }
 
-    // Blocklist statique : patterns obfusqués et plages manquantes
     let blocked = host == "localhost"
         || host == "0.0.0.0"
         || host == "::1"
         || host == "[::1]"
-        // Formats octaux/hex de loopback (0177.*, 0x7f.*)
         || host.starts_with("0177.")
         || host.starts_with("0x7f")
-        // Plages RFC1918
         || host.starts_with("10.")
         || host.starts_with("192.168.")
         || host.starts_with("127.")
         || is_172_private(host)
-        // Link-local
         || host.starts_with("169.254.")
-        // IPv6 ULA / link-local / loopback mappé IPv4
         || host.starts_with("fc00:")
         || host.starts_with("fd")
         || host.starts_with("fe80:")
@@ -133,20 +128,25 @@ pub(crate) async fn validate_url(url: &str) -> Result<(), String> {
         return Err("URL privée/locale interdite".into());
     }
 
-    // Résolution DNS + vérification de l'IP résolue
-    let lookup_target = format!("{}:80", host);
-    let addrs = tokio::net::lookup_host(&lookup_target)
+    let lookup_target = format!("{host}:80");
+    let addrs: Vec<_> = tokio::net::lookup_host(&lookup_target)
         .await
-        .map_err(|_| "Résolution DNS échouée".to_string())?;
+        .map_err(|_| "Résolution DNS échouée".to_string())?
+        .collect();
 
-    for addr in addrs {
-        let ip: IpAddr = addr.ip();
-        if is_ip_private(&ip) {
+    for addr in &addrs {
+        if is_ip_private(&addr.ip()) {
             return Err("URL privée/locale interdite".into());
         }
     }
 
-    Ok(())
+    let first_ip = addrs.first().ok_or("Résolution DNS vide")?.ip();
+    Ok((host.to_string(), first_ip))
+}
+
+#[cfg_attr(not(test), allow(dead_code))]
+pub(crate) async fn validate_url(url: &str) -> Result<(), String> {
+    validate_url_with_ip(url).await.map(|_| ())
 }
 
 fn truncate(s: &str, max: usize) -> String {

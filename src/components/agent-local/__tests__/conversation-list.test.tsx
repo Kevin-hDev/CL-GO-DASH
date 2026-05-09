@@ -7,7 +7,7 @@ function makeSession(overrides: Partial<AgentSessionMeta> = {}): AgentSessionMet
   return { id: "s1", name: "Test", model: "llama3", provider: "ollama", message_count: 5, created_at: "2026-01-01", ...overrides };
 }
 function makeProject(overrides: Partial<Project> = {}): Project {
-  return { id: "p1", name: "Mon Projet", path: "/tmp/proj", created_at: "2026-01-01", ...overrides };
+  return { id: "p1", name: "Mon Projet", path: "/tmp/proj", order: 0, created_at: "2026-01-01", ...overrides };
 }
 const defaultProps = {
   sessions: [] as AgentSessionMeta[], projects: [] as Project[], selectedId: null as string | null,

@@ -60,6 +60,10 @@ fn is_valid_connector_id(id: &str) -> bool {
         && id.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
 }
 
+pub fn is_trusted_endpoint_pub(url: &str) -> bool {
+    is_trusted_endpoint(url)
+}
+
 fn is_trusted_endpoint(url: &str) -> bool {
     let parsed = match reqwest::Url::parse(url) {
         Ok(u) => u,

@@ -61,6 +61,11 @@ pub async fn list_directory(
         if !canonical.starts_with(&canonical_root) {
             return Err("Chemin invalide".into());
         }
+    } else {
+        let roots = crate::services::agent_local::security::allowed_read_roots();
+        if !roots.iter().any(|r| canonical.starts_with(r)) {
+            return Err("Chemin invalide".into());
+        }
     }
 
     let read_dir =

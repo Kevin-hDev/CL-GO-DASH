@@ -125,11 +125,11 @@ pub fn write_vault(master_key: &[u8], map: &HashMap<String, String>) -> Result<(
     Ok(())
 }
 
-pub fn read_legacy_keychain_keys() -> HashMap<String, String> {
+pub fn read_legacy_keychain_keys() -> HashMap<String, Zeroizing<String>> {
     let mut found = HashMap::new();
     if let Ok(entry) = Entry::new(KEYRING_SERVICE, "brave_api_key") {
         if let Ok(key) = entry.get_password() {
-            found.insert("brave".to_string(), key);
+            found.insert("brave".to_string(), Zeroizing::new(key));
         }
     }
     for id in KNOWN_PROVIDERS {
@@ -138,7 +138,7 @@ pub fn read_legacy_keychain_keys() -> HashMap<String, String> {
         }
         let Ok(entry) = Entry::new(KEYRING_SERVICE, id) else { continue };
         if let Ok(key) = entry.get_password() {
-            found.insert(id.to_string(), key);
+            found.insert(id.to_string(), Zeroizing::new(key));
         }
     }
     found

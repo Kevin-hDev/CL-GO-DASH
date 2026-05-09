@@ -23,7 +23,7 @@ pub struct LinkPreview {
 }
 
 pub async fn fetch_preview(url: &str) -> Result<LinkPreview, String> {
-    security::validate_url(url).await?;
+    let (host, ip) = security::validate_url_with_ip(url).await?;
     let domain = parse::extract_domain(url);
 
     if providers::is_youtube(&domain) {
@@ -32,7 +32,7 @@ pub async fn fetch_preview(url: &str) -> Result<LinkPreview, String> {
         }
     }
 
-    let html = fetch_html(url).await?;
+    let html = fetch_html_pinned(url, &host, ip).await?;
     let base = format!(
         "{}://{}",
         if url.starts_with("https") { "https" } else { "http" },
@@ -55,9 +55,10 @@ pub async fn fetch_preview(url: &str) -> Result<LinkPreview, String> {
     Ok(LinkPreview { url: url.to_string(), domain, site_name, title, description, image, favicon })
 }
 
-async fn fetch_html(url: &str) -> Result<String, String> {
+async fn fetch_html_pinned(url: &str, host: &str, ip: std::net::IpAddr) -> Result<String, String> {
     let client = Client::builder()
         .redirect(reqwest::redirect::Policy::none())
+        .resolve(host, std::net::SocketAddr::new(ip, 0))
         .build()
         .map_err(|_| "Preview unavailable".to_string())?;
 

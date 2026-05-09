@@ -19,6 +19,9 @@ pub fn set_mcp_token(connector_id: &str, token_json: &str) -> Result<(), String>
     let key_id = format!("{MCP_PREFIX}{connector_id}");
     let mut state = STATE.lock().map_err(|e| format!("lock: {e}"))?;
     let s = state.as_mut().ok_or("vault not initialized")?;
+    if !s.keys.contains_key(&key_id) && s.keys.len() >= MAX_VAULT_ENTRIES {
+        return Err("limite d'entrées vault atteinte".to_string());
+    }
     s.keys.insert(key_id, Zeroizing::new(token_json.to_string()));
     flush_vault(s)
 }

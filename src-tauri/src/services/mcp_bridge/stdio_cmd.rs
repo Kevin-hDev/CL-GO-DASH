@@ -1,4 +1,5 @@
 const ALLOWED_PROGRAMS: &[&str] = &["npx", "uvx", "deno"];
+const BLOCKED_DENO_FLAGS: &[&str] = &["--allow-ffi", "--allow-run", "--allow-all", "-A"];
 
 static ARG_REGEX: std::sync::LazyLock<regex::Regex> =
     std::sync::LazyLock::new(|| regex::Regex::new(r"^[a-zA-Z0-9@/_.:=\-]+$").unwrap());
@@ -25,6 +26,9 @@ pub fn parse_install_command(raw: &str) -> Result<ParsedCommand, String> {
     for part in &parts[1..] {
         if !regex.is_match(part) {
             return Err("argument invalide".to_string());
+        }
+        if program == "deno" && BLOCKED_DENO_FLAGS.contains(part) {
+            return Err("flag deno non autorisé".to_string());
         }
         args.push(part.to_string());
     }
@@ -60,7 +64,7 @@ mod tests {
     #[test]
     fn test_parse_deno_valid() {
         let cmd = parse_install_command(
-            "deno run --allow-read --allow-env --allow-sys --allow-ffi jsr:@wyattjoh/imessage-mcp",
+            "deno run --allow-read --allow-env --allow-sys --allow-net jsr:@wyattjoh/imessage-mcp",
         )
         .unwrap();
         assert_eq!(cmd.program, "deno");
@@ -71,10 +75,20 @@ mod tests {
                 "--allow-read",
                 "--allow-env",
                 "--allow-sys",
-                "--allow-ffi",
+                "--allow-net",
                 "jsr:@wyattjoh/imessage-mcp"
             ]
         );
+    }
+
+    #[test]
+    fn test_reject_deno_ffi() {
+        assert!(parse_install_command("deno run --allow-ffi jsr:@pkg/mcp").is_err());
+    }
+
+    #[test]
+    fn test_reject_deno_allow_all() {
+        assert!(parse_install_command("deno run -A jsr:@pkg/mcp").is_err());
     }
 
     #[test]

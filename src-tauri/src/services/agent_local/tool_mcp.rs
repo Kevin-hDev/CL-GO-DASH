@@ -30,8 +30,8 @@ async fn search(args: &Value) -> ToolResult {
     for connector in &connectors {
         let tools = match registry::get_tools(connector).await {
             Ok(t) => t,
-            Err(_) => {
-                errors.push(format!("{}: service indisponible", connector.id));
+            Err(e) => {
+                errors.push(format!("{}: {e}", connector.id));
                 continue;
             }
         };
@@ -104,6 +104,11 @@ async fn call(args: &Value) -> ToolResult {
 
     let arguments = args.get("arguments").cloned().unwrap_or(Value::Object(Default::default()));
 
+    let args_size = serde_json::to_string(&arguments).map(|s| s.len()).unwrap_or(0);
+    if args_size > 65_536 {
+        return ToolResult::err("arguments MCP trop volumineux (max 64 Ko)".to_string());
+    }
+
     match connector.transport.call_tool(tool_name, arguments).await {
         Ok(result) => ToolResult::ok(sanitize_mcp_output(&result)),
         Err(e) => ToolResult::err(sanitize_mcp_output(&e)),
@@ -118,9 +123,13 @@ fn is_valid_tool_name(s: &str) -> bool {
     !s.is_empty() && s.len() <= 128 && s.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
 }
 
+fn is_bidi_override(c: char) -> bool {
+    matches!(c, '\u{202A}'..='\u{202E}' | '\u{2066}'..='\u{2069}' | '\u{200F}' | '\u{200E}')
+}
+
 fn sanitize_mcp_output(s: &str) -> String {
     s.chars()
         .take(4096)
-        .filter(|c| !c.is_control() || *c == '\n' || *c == '\t')
+        .filter(|c| (!c.is_control() || *c == '\n' || *c == '\t') && !is_bidi_override(*c))
         .collect()
 }

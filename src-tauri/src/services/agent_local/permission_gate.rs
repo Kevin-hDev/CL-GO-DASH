@@ -47,6 +47,9 @@ static SAFE_BASH_PATTERNS: LazyLock<Vec<Regex>> = LazyLock::new(|| {
 
 fn is_safe_bash(command: &str) -> bool {
     let trimmed = command.trim();
+    if trimmed.contains(';') || trimmed.contains("&&") || trimmed.contains("||") || trimmed.contains('|') || trimmed.contains('`') || trimmed.contains("$(") {
+        return false;
+    }
     SAFE_BASH_PATTERNS.iter().any(|re| re.is_match(trimmed))
 }
 
@@ -61,6 +64,8 @@ pub fn requires_permission(tool_name: &str, args: &serde_json::Value) -> bool {
     }
 }
 
+const MAX_PENDING: usize = 64;
+
 static PENDING: LazyLock<Mutex<HashMap<String, oneshot::Sender<PermissionDecision>>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 
@@ -72,7 +77,13 @@ pub async fn request(
 ) -> PermissionDecision {
     let id = uuid::Uuid::new_v4().to_string();
     let (tx, rx) = oneshot::channel();
-    PENDING.lock().await.insert(id.clone(), tx);
+    {
+        let mut pending = PENDING.lock().await;
+        if pending.len() >= MAX_PENDING {
+            return PermissionDecision::Deny;
+        }
+        pending.insert(id.clone(), tx);
+    }
 
     let _ = on_event.send(StreamEvent::PermissionRequest {
         id: id.clone(),
@@ -100,7 +111,12 @@ const SESSION_ALLOW_TTL: Duration = Duration::from_secs(3600);
 static ALLOWED: LazyLock<Mutex<HashMap<String, HashMap<String, Instant>>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 
+const NO_SESSION_ALLOW: &[&str] = &["bash", "search_mcp_tools"];
+
 pub async fn is_allowed(session_id: &str, tool: &str) -> bool {
+    if NO_SESSION_ALLOW.contains(&tool) {
+        return false;
+    }
     let mut guard = ALLOWED.lock().await;
     let session_map = match guard.get_mut(session_id) {
         Some(m) => m,

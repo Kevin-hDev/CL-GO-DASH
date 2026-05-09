@@ -1,6 +1,7 @@
 export interface TerminalTab {
   id: string;
   ptyId: number | null;
+  ptyToken: string | null;
   label: string;
   cwd: string;
 }

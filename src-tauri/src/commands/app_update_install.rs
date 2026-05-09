@@ -8,12 +8,27 @@ pub struct DownloadProgress {
     pub total: u64,
 }
 
+const TRUSTED_UPDATE_PREFIX: &str =
+    "https://github.com/Kevin-hDev/CL-GO-DASH/releases/download/";
+
+fn validate_update_url(url: &str) -> Result<(), String> {
+    if !url.starts_with(TRUSTED_UPDATE_PREFIX) {
+        return Err("update-url-untrusted".to_string());
+    }
+    if url.contains("..") || url.contains('\0') {
+        return Err("update-url-invalid".to_string());
+    }
+    Ok(())
+}
+
 #[tauri::command]
 pub async fn download_app_update(
     app: tauri::AppHandle,
     asset_url: String,
     on_progress: Channel<DownloadProgress>,
 ) -> Result<(), String> {
+    validate_update_url(&asset_url)?;
+
     let client = reqwest::Client::new();
     let resp = client
         .get(&asset_url)

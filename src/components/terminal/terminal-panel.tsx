@@ -18,7 +18,7 @@ interface TerminalPanelProps {
   onRenameTab: (id: string, label: string) => void;
   onReorderTabs: (from: number, to: number) => void;
   onTogglePanel: () => void;
-  onPtyReady: (tabId: string, ptyId: number) => void;
+  onPtyReady: (tabId: string, ptyId: number, ptyToken: string) => void;
   onResize: (height: number) => void;
   onSetMaxHeight: (maxH: number) => void;
 }
@@ -111,8 +111,8 @@ export function TerminalPanel({
   const handleTabClose = useCallback(
     (id: string) => {
       const tab = tabs.find((t) => t.id === id);
-      if (tab?.ptyId != null) {
-        invoke("pty_kill", { id: tab.ptyId }).catch(() => {});
+      if (tab?.ptyId != null && tab.ptyToken) {
+        invoke("pty_kill", { id: tab.ptyId, token: tab.ptyToken }).catch(() => {});
       }
       onCloseTab(id);
     },

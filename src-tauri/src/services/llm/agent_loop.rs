@@ -6,7 +6,6 @@
 
 use super::compress_hook;
 use super::retry;
-use crate::services::agent_local::agent_settings;
 use crate::services::agent_local::circuit_breaker;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::tool_executor;
@@ -38,6 +37,7 @@ pub async fn run_agent_loop(
     cancel: CancellationToken,
     native_context: u64,
     configured_context: u64,
+    permission_mode: &str,
 ) -> Result<u32, String> {
     let mut total_eval: u32 = 0;
     let mut total_prompt: u32 = 0;
@@ -86,7 +86,7 @@ pub async fn run_agent_loop(
 
         // Snapshot longueur avant push des tool results → patch post-run.
         let before = messages.len();
-        let mode = agent_settings::get_permission_mode().await;
+        let mode = permission_mode.to_string();
         tool_executor::run_tools(
             on_event,
             messages,
