@@ -44,7 +44,7 @@ pub fn run() {
         .setup(|app| {
             services::agent_local::app_handle_global::init(app.handle().clone());
             services::agent_local::subagent_spawn_channel::init();
-            if let Err(e) = storage_migration::run() {
+            if let Err(e) = storage_migration::run(app.handle()) {
                 eprintln!("[storage migration] {}", e);
             }
             if let Err(e) = services::api_keys::init() {

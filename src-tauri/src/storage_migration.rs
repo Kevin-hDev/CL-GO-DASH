@@ -1,6 +1,6 @@
 use crate::services::paths::data_dir;
 
-pub fn run() -> Result<(), String> {
+pub fn run(app_handle: &tauri::AppHandle) -> Result<(), String> {
     use std::fs;
 
     let new = data_dir();
@@ -48,6 +48,7 @@ pub fn run() -> Result<(), String> {
     }
 
     init_base_structure(&new)?;
+    install_default_skills(app_handle, &new);
 
     Ok(())
 }
@@ -123,6 +124,38 @@ fn init_base_structure(base: &std::path::Path) -> Result<(), String> {
     }
 
     Ok(())
+}
+
+fn install_default_skills(app_handle: &tauri::AppHandle, base: &std::path::Path) {
+    use std::fs;
+    use tauri::Manager;
+
+    let skills_dir = base.join("skills");
+    let resource_base = match app_handle.path().resource_dir() {
+        Ok(p) => p.join("default-skills"),
+        Err(_) => return,
+    };
+    if !resource_base.exists() {
+        return;
+    }
+
+    let entries = match fs::read_dir(&resource_base) {
+        Ok(e) => e,
+        Err(_) => return,
+    };
+    for entry in entries.flatten() {
+        if !entry.path().is_dir() {
+            continue;
+        }
+        let name = entry.file_name();
+        let target = skills_dir.join(&name);
+        if target.exists() {
+            continue;
+        }
+        if let Err(e) = copy_recursive(&entry.path(), &target) {
+            eprintln!("[skills] install {:?}: {}", name, e);
+        }
+    }
 }
 
 fn copy_items(src: &std::path::Path, dst: &std::path::Path) {

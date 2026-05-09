@@ -11,6 +11,7 @@
 - **Worktree navigation** — click a worktree in the branch list to switch the active project to that directory
 - **Git context for the agent** — branch name and dirty count injected into the LLM system prompt, plus `create_branch` and `checkout_branch` tools (gated, require user approval)
 - **Branch bubble** — centered chat bubble when the agent creates or switches branches
+- **Bundled skills** — 6 default skills (skill-create, cli-create, playwright-cli, video-analyzer, voxtral-cli, hk-telegram) ship with the app and auto-install on first launch or update
 
 ---
 
