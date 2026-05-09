@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { useFsEvent } from "@/hooks/use-fs-event";
 
 export type PermissionMode = "auto" | "manual" | "chat";
 
@@ -21,18 +22,23 @@ export function usePermissionMode(sessionId?: string) {
   // eslint-disable-next-line react-hooks/refs -- callback capture pattern
   sessionRef.current = sessionId;
 
-  useEffect(() => {
+  const reloadDefault = useCallback(() => {
     invoke<AgentSettings>("get_agent_settings")
       .then((s) => {
         defaultMode = s.permission_mode;
-        if (!sessionId || !sessionModes.has(sessionId)) {
+        if (!sessionRef.current || !sessionModes.has(sessionRef.current)) {
           setMode(defaultMode);
         }
-        setLoaded(true);
       })
-      .catch(() => setLoaded(true));
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- load once on mount
+      .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    reloadDefault();
+    setLoaded(true);
+  }, [reloadDefault]);
+
+  useFsEvent("fs:config-changed", reloadDefault);
 
   useEffect(() => {
     if (!sessionId) return;

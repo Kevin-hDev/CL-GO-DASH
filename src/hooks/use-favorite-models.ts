@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { useFsEvent } from "@/hooks/use-fs-event";
 
 export interface FavoriteModel {
   provider: string;
@@ -22,6 +23,8 @@ export function useFavoriteModels() {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch→setState is intentional
     void refresh();
   }, [refresh]);
+
+  useFsEvent("fs:config-changed", refresh);
 
   const isFavorite = useCallback(
     (provider: string, model: string) =>

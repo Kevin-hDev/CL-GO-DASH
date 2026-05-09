@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import type { SkillInfo } from "@/types/agent";
+import { useFsEvent } from "@/hooks/use-fs-event";
 
 export interface BuiltInCommand {
   name: string;
@@ -30,11 +31,15 @@ export function useSlashCommands() {
   const [filter, setFilter] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
 
-  useEffect(() => {
+  const loadSkills = useCallback(() => {
     invoke<SkillInfo[]>("list_skills")
       .then(setSkills)
       .catch((e: unknown) => console.warn("Erreur chargement skills:", e));
   }, []);
+
+  useEffect(() => { loadSkills(); }, [loadSkills]);
+
+  useFsEvent("fs:skills-changed", loadSkills);
 
   const allItems: SlashItem[] = filter
     ? [

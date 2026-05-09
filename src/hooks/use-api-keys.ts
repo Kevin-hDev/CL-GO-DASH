@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import { showToast } from "@/lib/toast-emitter";
 import i18n from "@/i18n";
 import type { ProviderSpec } from "@/types/api";
@@ -39,6 +40,11 @@ export function useApiKeys() {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch→setState is intentional
     refresh().catch(() => setLoading(false));
   }, [refresh]);
+
+  useEffect(() => {
+    const unlisten = listen("providers-changed", () => { void loadConfigured(); });
+    return () => { void unlisten.then((fn) => fn()); };
+  }, [loadConfigured]);
 
   const setKey = useCallback(
     async (provider: string, key: string) => {

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { listen } from "@tauri-apps/api/event";
 import { homeDir, join } from "@tauri-apps/api/path";
 import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import { IS_MAC } from "@/lib/platform";
@@ -78,6 +79,13 @@ export function useConnectors() {
 
   useEffect(() => {
     void loadConfigured().then((data) => { setItems(data); setLoading(false); });
+  }, []);
+
+  useEffect(() => {
+    const unlisten = listen("fs:connectors-changed", () => {
+      void loadConfigured().then((data) => { setItems(data); });
+    });
+    return () => { void unlisten.then((fn) => fn()); };
   }, []);
 
   const persist = useCallback(async (next: ConfiguredMcp[]) => {
