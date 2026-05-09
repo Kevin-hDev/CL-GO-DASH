@@ -5,6 +5,12 @@
 ### Features
 
 - **File tree panel** — browsable project directory tree alongside the file preview panel
+- **Git branch selector** — dropdown in chat toolbar to view, search, and switch branches with real-time updates via file watcher
+- **Branch conflict dialog** — when switching with uncommitted files, shows dirty file list with real diff stats (+/-) and a "commit & switch" option that auto-commits a WIP save
+- **Inline branch creation** — create and checkout a new branch directly from the selector dropdown
+- **Worktree navigation** — click a worktree in the branch list to switch the active project to that directory
+- **Git context for the agent** — branch name and dirty count injected into the LLM system prompt, plus `create_branch` and `checkout_branch` tools (gated, require user approval)
+- **Branch bubble** — centered chat bubble when the agent creates or switches branches
 
 ---
 

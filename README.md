@@ -8,6 +8,7 @@ Application desktop agentique (Tauri 2 + React 19) pour LLM locaux via Ollama et
 - **Réveils** : scheduler interne qui prompt un LLM à heure fixe (ponctuel / journalier / hebdomadaire), réponses stockées dans une conversation dédiée par modèle
 - **Clés API** : gestion centralisée des providers LLM et search. Clés stockées dans un **vault chiffré XChaCha20-Poly1305** (master key dans le keyring OS) — jamais en clair sur disque, jamais exposées au frontend
 - **Ollama embarqué** : téléchargé au premier lancement, plus besoin d'installer Ollama séparément
+- **Git branch management** : sélecteur de branche dans le chat avec switch, création inline, worktree navigation, file watcher temps réel, dialog de conflit avec commit WIP auto
 - **Terminal intégré** : PTY cross-platform avec onglets, raccourci Cmd/Ctrl+J
 - **Personnalité** : édition des fichiers Markdown de contexte
 - **Ollama browser** : recherche de modèles, pull, édition de modelfiles
@@ -105,6 +106,7 @@ src-tauri/                # Backend Rust + Tauri
 │   │   ├── llm/          # Client unifié OpenAI-compat, catalog, streaming SSE
 │   │   ├── search/       # Brave, Exa, Firecrawl + routing
 │   │   ├── scheduler/    # Scheduler Tokio interne (réveils)
+│   │   ├── git/          # Branch ops, status, watcher, worktree listing (git2)
 │   │   ├── terminal/     # PTY cross-platform (portable-pty)
 │   │   ├── paths.rs      # Chemin data centralisé cross-platform
 │   │   ├── vault.rs      # Vault chiffré XChaCha20-Poly1305
@@ -132,7 +134,7 @@ src/                      # Frontend React
 ├── hooks/                # Logique extraite par domaine
 ├── lib/                  # platform.ts (détection OS)
 ├── types/                # Types TS alignés sur Rust
-└── i18n/                 # FR + EN
+└── i18n/                 # 7 langues (FR, EN, DE, ES, IT, JA, ZH)
 ```
 
 ## Stockage local
