@@ -38,6 +38,9 @@ pub mod tool_definitions_office;
 pub mod tool_dispatcher;
 pub mod tool_dispatcher_office;
 pub mod tool_dispatcher_mcp;
+pub mod tool_validate;
+#[cfg(test)]
+pub mod tool_validate_tests;
 pub mod tool_mcp;
 pub mod tool_spreadsheet_calamine;
 pub mod tool_spreadsheet_read;

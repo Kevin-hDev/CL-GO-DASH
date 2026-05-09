@@ -1,5 +1,5 @@
 use crate::services::agent_local::{
-    tool_bash, tool_files, tool_glob, tool_grep, tool_web_fetch, tool_web_search,
+    tool_bash, tool_files, tool_glob, tool_grep, tool_validate, tool_web_fetch, tool_web_search,
 };
 use crate::services::agent_local::tool_skill_loader;
 use crate::services::agent_local::types_tools::ToolResult;
@@ -271,7 +271,11 @@ pub(crate) fn enrich_error(mut result: ToolResult, tool_name: &str) -> ToolResul
 }
 
 pub async fn dispatch(tool_name: &str, args: &Value, working_dir: &Path, session_id: &str) -> ToolResult {
-    let result = dispatch_inner(tool_name, args, working_dir, session_id).await;
+    let args = match tool_validate::validate(tool_name, args) {
+        Ok(cleaned) => cleaned,
+        Err(msg) => return ToolResult::err(format!("[{tool_name}] {msg}")),
+    };
+    let result = dispatch_inner(tool_name, &args, working_dir, session_id).await;
     let result = truncate_result(result, tool_name, session_id);
     enrich_error(result, tool_name)
 }

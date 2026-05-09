@@ -9,6 +9,8 @@ static REGISTRY: OnceLock<RwLock<HashMap<String, ModelEntry>>> = OnceLock::new()
 const EMBEDDED_JSON: &str = include_str!("../../../resources/litellm-models.json");
 const GITHUB_RAW_URL: &str =
     "https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json";
+const MAX_REGISTRY_ENTRIES: usize = 3_500;
+const MAX_BODY_BYTES: usize = 20 * 1024 * 1024; // 20 Mo max
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct ModelEntry {
@@ -50,13 +52,18 @@ fn cache_path() -> PathBuf {
     crate::services::paths::data_dir().join("litellm-models.json")
 }
 
-fn parse_registry(json: &str) -> HashMap<String, ModelEntry> {
+pub(crate) fn parse_registry(json: &str) -> HashMap<String, ModelEntry> {
     let raw: HashMap<String, serde_json::Value> = match serde_json::from_str(json) {
         Ok(m) => m,
         Err(_) => return HashMap::new(),
     };
-    let mut result = HashMap::with_capacity(raw.len());
+    let cap = raw.len().min(MAX_REGISTRY_ENTRIES);
+    let mut result = HashMap::with_capacity(cap);
     for (key, val) in raw {
+        if result.len() >= MAX_REGISTRY_ENTRIES {
+            eprintln!("[registry] borne atteinte ({MAX_REGISTRY_ENTRIES}), entrées excédentaires ignorées");
+            break;
+        }
         if let Ok(entry) = serde_json::from_value::<ModelEntry>(val) {
             result.insert(key, entry);
         }
@@ -112,8 +119,25 @@ async fn refresh_from_github() {
         return;
     }
 
+    if let Some(host) = resp.url().host_str() {
+        if !is_trusted_host(host) {
+            eprintln!("[registry] source rejetée : hôte inattendu '{host}'");
+            return;
+        }
+    }
+
+    let content_len = resp.content_length().unwrap_or(0) as usize;
+    if !is_body_size_ok(content_len) {
+        eprintln!("[registry] rejeté : body trop volumineux ({content_len} octets)");
+        return;
+    }
+
     let body = match resp.text().await {
-        Ok(b) => b,
+        Ok(b) if is_body_size_ok(b.len()) => b,
+        Ok(_) => {
+            eprintln!("[registry] rejeté : body dépasse {MAX_BODY_BYTES} octets");
+            return;
+        }
         Err(_) => return,
     };
 
@@ -183,6 +207,14 @@ pub async fn is_chat_model(provider_id: &str, model_id: &str) -> bool {
     }
 }
 
+pub(crate) fn is_trusted_host(host: &str) -> bool {
+    host == "raw.githubusercontent.com"
+}
+
+pub(crate) fn is_body_size_ok(size: usize) -> bool {
+    size <= MAX_BODY_BYTES
+}
+
 fn is_non_chat_name(model_id: &str) -> bool {
     let id = model_id.to_lowercase();
     let non_chat = [
@@ -192,4 +224,8 @@ fn is_non_chat_name(model_id: &str) -> bool {
     ];
     non_chat.iter().any(|kw| id.contains(kw))
 }
+
+#[cfg(test)]
+#[path = "model_registry_tests.rs"]
+mod tests;
 
