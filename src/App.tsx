@@ -69,15 +69,20 @@ export default function App() {
   }, [push]);
 
   useEffect(() => {
+    const splash = document.getElementById("splash");
+    if (!splash) return;
+
     if (ollamaReady !== null) {
-      const splash = document.getElementById("splash");
-      if (splash) {
-        const timer = setTimeout(() => {
-          requestAnimationFrame(() => splash.remove());
-        }, 150);
-        return () => clearTimeout(timer);
-      }
+      const timer = setTimeout(() => {
+        requestAnimationFrame(() => splash.remove());
+      }, 150);
+      return () => clearTimeout(timer);
     }
+
+    const fallback = setTimeout(() => {
+      requestAnimationFrame(() => splash.remove());
+    }, 10_000);
+    return () => clearTimeout(fallback);
   }, [ollamaReady]);
 
   if (ollamaReady === false) {
