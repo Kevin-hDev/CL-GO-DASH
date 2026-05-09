@@ -4,7 +4,10 @@ import { listen } from "@tauri-apps/api/event";
 type FsEvent =
   | "fs:config-changed"
   | "fs:personality-changed"
-  | "fs:logs-changed";
+  | "fs:logs-changed"
+  | "fs:connectors-changed"
+  | "fs:skills-changed"
+  | "fs:providers-changed";
 
 export function useFsEvent(event: FsEvent, callback: () => void) {
   useEffect(() => {
