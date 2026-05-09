@@ -9,6 +9,9 @@ use tauri::{AppHandle, Emitter};
 const EVENT_CONFIG: &str = "fs:config-changed";
 const EVENT_PERSONALITY: &str = "fs:personality-changed";
 const EVENT_LOGS: &str = "fs:logs-changed";
+const EVENT_CONNECTORS: &str = "fs:connectors-changed";
+const EVENT_SKILLS: &str = "fs:skills-changed";
+const EVENT_PROVIDERS: &str = "fs:providers-changed";
 const DEBOUNCE_MS: u64 = 200;
 
 fn normalize_path(path: &Path) -> String {
@@ -18,28 +21,30 @@ fn normalize_path(path: &Path) -> String {
         .join("/")
 }
 
-fn classify_path(normalized: &str) -> Option<&'static str> {
-    if normalized.contains("memory/core") || normalized.contains("memory\\core") {
-        Some(EVENT_PERSONALITY)
-    } else if normalized.ends_with("config.json") {
-        Some(EVENT_CONFIG)
-    } else if normalized.contains("logs/heartbeat") || normalized.contains("logs\\heartbeat") {
-        Some(EVENT_LOGS)
-    } else if normalized.contains("/inbox/") || normalized.contains("\\inbox\\") {
-        Some(EVENT_PERSONALITY)
-    } else {
-        None
+fn classify_path(n: &str) -> Option<&'static str> {
+    if n.contains("memory/core") || n.contains("memory\\core") { return Some(EVENT_PERSONALITY); }
+    if n.ends_with("mcp-connectors.json") { return Some(EVENT_CONNECTORS); }
+    if n.ends_with("configured-providers.json") { return Some(EVENT_PROVIDERS); }
+    if n.contains("/skills/") || n.contains("\\skills\\") || n.ends_with("/skills") || n.ends_with("\\skills") {
+        return Some(EVENT_SKILLS);
     }
+    if n.ends_with("config.json") || n.ends_with("favorite-models.json") || n.ends_with("agent-settings.json") {
+        return Some(EVENT_CONFIG);
+    }
+    if n.contains("logs/heartbeat") || n.contains("logs\\heartbeat") { return Some(EVENT_LOGS); }
+    if n.contains("/inbox/") || n.contains("\\inbox\\") { return Some(EVENT_PERSONALITY); }
+    None
 }
 
 pub fn start(app: &AppHandle) {
     let base = crate::services::paths::data_dir();
 
-    let watch_paths: Vec<PathBuf> = vec![
-        base.clone(),
-        base.join("memory/core"),
-        base.join("inbox"),
-        base.join("logs/heartbeat"),
+    let watch_paths: Vec<(PathBuf, RecursiveMode)> = vec![
+        (base.clone(), RecursiveMode::NonRecursive),
+        (base.join("memory/core"), RecursiveMode::NonRecursive),
+        (base.join("inbox"), RecursiveMode::NonRecursive),
+        (base.join("logs/heartbeat"), RecursiveMode::NonRecursive),
+        (base.join("skills"), RecursiveMode::Recursive),
     ];
 
     let handle = app.clone();
@@ -59,9 +64,9 @@ pub fn start(app: &AppHandle) {
             }
         };
 
-        for path in &watch_paths {
+        for (path, mode) in &watch_paths {
             if path.exists() {
-                if let Err(e) = watcher.watch(path, RecursiveMode::NonRecursive) {
+                if let Err(e) = watcher.watch(path, *mode) {
                     eprintln!("[file_watcher] watch error for {}: {e}", path.display());
                 }
             }
@@ -96,73 +101,56 @@ mod tests {
 
     #[test]
     fn classify_memory_core_file() {
-        let p = "/Users/kevin/.local/share/cl-go-dash/memory/core/identity.md";
-        assert_eq!(classify_path(p), Some(EVENT_PERSONALITY));
+        assert_eq!(classify_path("/Users/kevin/.local/share/cl-go-dash/memory/core/identity.md"), Some(EVENT_PERSONALITY));
     }
 
     #[test]
     fn classify_memory_core_dir() {
-        let p = "/Users/kevin/.local/share/cl-go-dash/memory/core";
-        assert_eq!(classify_path(p), Some(EVENT_PERSONALITY));
+        assert_eq!(classify_path("/Users/kevin/.local/share/cl-go-dash/memory/core"), Some(EVENT_PERSONALITY));
     }
 
     #[test]
     fn classify_config_json() {
-        let p = "/Users/kevin/.local/share/cl-go-dash/config.json";
-        assert_eq!(classify_path(p), Some(EVENT_CONFIG));
+        assert_eq!(classify_path("/Users/kevin/.local/share/cl-go-dash/config.json"), Some(EVENT_CONFIG));
     }
 
     #[test]
     fn classify_heartbeat_log() {
-        let p = "/Users/kevin/.local/share/cl-go-dash/logs/heartbeat/2026-05-09.jsonl";
-        assert_eq!(classify_path(p), Some(EVENT_LOGS));
+        assert_eq!(classify_path("/Users/kevin/.local/share/cl-go-dash/logs/heartbeat/2026-05-09.jsonl"), Some(EVENT_LOGS));
     }
 
     #[test]
     fn classify_inbox_file() {
-        let p = "/Users/kevin/.local/share/cl-go-dash/inbox/idea-discovery.md";
-        assert_eq!(classify_path(p), Some(EVENT_PERSONALITY));
+        assert_eq!(classify_path("/Users/kevin/.local/share/cl-go-dash/inbox/idea-discovery.md"), Some(EVENT_PERSONALITY));
     }
 
     #[test]
     fn classify_unknown_returns_none() {
-        let p = "/Users/kevin/.local/share/cl-go-dash/agent-sessions/abc.json";
-        assert_eq!(classify_path(p), None);
+        assert_eq!(classify_path("/Users/kevin/.local/share/cl-go-dash/agent-sessions/abc.json"), None);
     }
 
     #[test]
     fn classify_ds_store_returns_none() {
-        let p = "/Users/kevin/.local/share/cl-go-dash/.DS_Store";
-        assert_eq!(classify_path(p), None);
+        assert_eq!(classify_path("/Users/kevin/.local/share/cl-go-dash/.DS_Store"), None);
     }
 
     #[test]
     fn classify_temp_file_in_core() {
-        let p = "/Users/kevin/.local/share/cl-go-dash/memory/core/.identity.md.tmp";
-        assert_eq!(classify_path(p), Some(EVENT_PERSONALITY));
+        assert_eq!(classify_path("/Users/kevin/.local/share/cl-go-dash/memory/core/.identity.md.tmp"), Some(EVENT_PERSONALITY));
     }
 
     #[test]
     fn classify_windows_backslash_paths() {
-        let core = "C:\\Users\\kevin\\AppData\\Local\\cl-go-dash\\memory\\core\\identity.md";
-        assert_eq!(classify_path(core), Some(EVENT_PERSONALITY));
-
-        let inbox = "C:\\Users\\kevin\\AppData\\Local\\cl-go-dash\\inbox\\idea.md";
-        assert_eq!(classify_path(inbox), Some(EVENT_PERSONALITY));
+        assert_eq!(classify_path("C:\\Users\\kevin\\AppData\\Local\\cl-go-dash\\memory\\core\\identity.md"), Some(EVENT_PERSONALITY));
+        assert_eq!(classify_path("C:\\Users\\kevin\\AppData\\Local\\cl-go-dash\\inbox\\idea.md"), Some(EVENT_PERSONALITY));
     }
 
     #[test]
     fn dedup_emits_unique_events() {
-        let paths = vec![
-            "a/memory/core/identity.md",
-            "a/memory/core/principles.md",
-            "a/config.json",
-        ];
+        let paths = ["a/memory/core/identity.md", "a/memory/core/principles.md", "a/config.json"];
         let mut emitted: HashSet<&str> = HashSet::new();
         for p in &paths {
-            if let Some(event_name) = classify_path(p) {
-                emitted.insert(event_name);
-            }
+            if let Some(ev) = classify_path(p) { emitted.insert(ev); }
         }
         assert!(emitted.contains(EVENT_PERSONALITY));
         assert!(emitted.contains(EVENT_CONFIG));
@@ -171,10 +159,37 @@ mod tests {
 
     #[test]
     fn normalize_path_joins_with_slash() {
-        let p = PathBuf::from("/Users/kevin/test/file.md");
-        let normalized = normalize_path(&p);
-        assert!(normalized.contains("kevin"));
-        assert!(normalized.contains("test"));
-        assert!(normalized.contains("file.md"));
+        let normalized = normalize_path(&PathBuf::from("/Users/kevin/test/file.md"));
+        assert!(normalized.contains("kevin") && normalized.contains("test") && normalized.contains("file.md"));
+    }
+
+    #[test]
+    fn classify_connectors_json() {
+        assert_eq!(classify_path("/Users/kevin/.local/share/cl-go-dash/mcp-connectors.json"), Some(EVENT_CONNECTORS));
+    }
+
+    #[test]
+    fn classify_favorite_models() {
+        assert_eq!(classify_path("/Users/kevin/.local/share/cl-go-dash/favorite-models.json"), Some(EVENT_CONFIG));
+    }
+
+    #[test]
+    fn classify_agent_settings() {
+        assert_eq!(classify_path("/Users/kevin/.local/share/cl-go-dash/agent-settings.json"), Some(EVENT_CONFIG));
+    }
+
+    #[test]
+    fn classify_skills_dir() {
+        assert_eq!(classify_path("/Users/kevin/.local/share/cl-go-dash/skills"), Some(EVENT_SKILLS));
+    }
+
+    #[test]
+    fn classify_skills_subdir() {
+        assert_eq!(classify_path("/Users/kevin/.local/share/cl-go-dash/skills/web-search/skill.md"), Some(EVENT_SKILLS));
+    }
+
+    #[test]
+    fn classify_configured_providers() {
+        assert_eq!(classify_path("/Users/kevin/.local/share/cl-go-dash/configured-providers.json"), Some(EVENT_PROVIDERS));
     }
 }
