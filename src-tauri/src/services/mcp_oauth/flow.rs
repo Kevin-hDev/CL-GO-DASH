@@ -7,7 +7,7 @@ use tauri::Emitter;
 use tokio_util::sync::CancellationToken;
 use zeroize::Zeroizing;
 
-use super::{callback_server, discovery, flow_auth, pkce, storage};
+use super::{callback_server, discovery, flow_auth, pkce, static_credentials, storage};
 
 const MAX_PENDING: usize = 5;
 const CANCELLED_MSG: &str = "annulé";
@@ -50,13 +50,22 @@ async fn run_inner(
     let (port, rx) = callback_server::start(cancel).await?;
     let redirect_uri = format!("http://127.0.0.1:{port}/callback");
 
-    let client_id = if let Some(ref reg_url) = meta.registration_endpoint {
+    let static_creds = static_credentials::for_endpoint(endpoint);
+
+    let (client_id, client_secret, scopes) = if let Some(ref creds) = static_creds {
+        (
+            creds.client_id.to_string(),
+            Some(creds.client_secret.to_string()),
+            Some(creds.scopes),
+        )
+    } else if let Some(ref reg_url) = meta.registration_endpoint {
         if !reg_url.starts_with("https://") {
             return Err("endpoint d'enregistrement non HTTPS".to_string());
         }
-        flow_auth::register_client(reg_url, connector_id, &redirect_uri).await?
+        let id = flow_auth::register_client(reg_url, connector_id, &redirect_uri).await?;
+        (id, None, None)
     } else {
-        endpoint.to_string()
+        return Err("pas de credentials disponibles pour ce service".to_string());
     };
 
     let (verifier, challenge) = pkce::generate();
@@ -69,6 +78,7 @@ async fn run_inner(
         &challenge,
         &state,
         endpoint,
+        scopes,
     )?;
 
     flow_auth::open_browser(app, &auth_url)?;
@@ -79,10 +89,12 @@ async fn run_inner(
 
     flow_auth::verify_state_constant_time(&state, &callback.state)?;
 
+    let secret_ref = client_secret.as_deref();
     let tokens = flow_auth::exchange_code(
         &meta.token_endpoint,
         &callback.code,
         &client_id,
+        secret_ref,
         &verifier,
         &redirect_uri,
         endpoint,

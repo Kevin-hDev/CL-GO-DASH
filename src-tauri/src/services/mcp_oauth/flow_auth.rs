@@ -11,6 +11,7 @@ pub fn build_auth_url(
     challenge: &str,
     state: &str,
     resource: &str,
+    scopes: Option<&str>,
 ) -> Result<String, String> {
     let mut url = reqwest::Url::parse(auth_endpoint)
         .map_err(|_| "URL d'autorisation invalide".to_string())?;
@@ -25,6 +26,9 @@ pub fn build_auth_url(
         .append_pair("code_challenge_method", "S256")
         .append_pair("state", state)
         .append_pair("resource", resource);
+    if let Some(s) = scopes {
+        url.query_pairs_mut().append_pair("scope", s);
+    }
     Ok(url.to_string())
 }
 
@@ -117,6 +121,7 @@ pub async fn exchange_code(
     token_endpoint: &str,
     code: &str,
     client_id: &str,
+    client_secret: Option<&str>,
     verifier: &Zeroizing<String>,
     redirect_uri: &str,
     resource: &str,
@@ -130,7 +135,7 @@ pub async fn exchange_code(
         .build()
         .map_err(|_| "erreur interne".to_string())?;
 
-    let params: [(&str, &str); 6] = [
+    let mut params: Vec<(&str, &str)> = vec![
         ("grant_type", "authorization_code"),
         ("code", code),
         ("client_id", client_id),
@@ -138,9 +143,13 @@ pub async fn exchange_code(
         ("redirect_uri", redirect_uri),
         ("resource", resource),
     ];
+    if let Some(secret) = client_secret {
+        params.push(("client_secret", secret));
+    }
 
     let resp = client
         .post(token_endpoint)
+        .header("Accept", "application/json")
         .form(&params)
         .send()
         .await
@@ -156,5 +165,5 @@ pub async fn exchange_code(
         return Err("échec de l'authentification".to_string());
     }
 
-    Ok(OAuthTokens::from_response(&mut raw, token_endpoint, client_id))
+    Ok(OAuthTokens::from_response(&mut raw, token_endpoint, client_id, client_secret))
 }

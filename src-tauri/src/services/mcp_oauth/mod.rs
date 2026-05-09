@@ -5,6 +5,7 @@ pub mod discovery;
 pub mod callback_server;
 pub mod flow;
 pub mod flow_auth;
+pub mod static_credentials;
 
 const MAX_OAUTH_BODY: usize = 512 * 1024;
 

@@ -30,6 +30,8 @@ pub struct OAuthTokensSerde {
     pub token_type: String,
     pub token_endpoint: String,
     pub client_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub client_secret: Option<String>,
 }
 
 impl Drop for OAuthTokensSerde {
@@ -41,6 +43,9 @@ impl Drop for OAuthTokensSerde {
         self.token_type.zeroize();
         self.token_endpoint.zeroize();
         self.client_id.zeroize();
+        if let Some(ref mut cs) = self.client_secret {
+            cs.zeroize();
+        }
     }
 }
 
@@ -51,6 +56,7 @@ pub struct OAuthTokens {
     pub token_type: String,
     pub token_endpoint: String,
     pub client_id: String,
+    pub client_secret: Option<Zeroizing<String>>,
 }
 
 impl OAuthTokens {
@@ -62,6 +68,7 @@ impl OAuthTokens {
             token_type: self.token_type.clone(),
             token_endpoint: self.token_endpoint.clone(),
             client_id: self.client_id.clone(),
+            client_secret: self.client_secret.as_ref().map(|s| s.as_str().to_string()),
         };
         let json = serde_json::to_string(&raw).map_err(|_| "erreur interne".to_string())?;
         Ok(Zeroizing::new(json))
@@ -77,11 +84,17 @@ impl OAuthTokens {
             token_type: std::mem::take(&mut raw.token_type),
             token_endpoint: std::mem::take(&mut raw.token_endpoint),
             client_id: std::mem::take(&mut raw.client_id),
+            client_secret: raw.client_secret.take().map(Zeroizing::new),
         };
         Ok(tokens)
     }
 
-    pub fn from_response(resp: &mut TokenResponse, token_endpoint: &str, client_id: &str) -> Self {
+    pub fn from_response(
+        resp: &mut TokenResponse,
+        token_endpoint: &str,
+        client_id: &str,
+        client_secret: Option<&str>,
+    ) -> Self {
         Self {
             access_token: Zeroizing::new(std::mem::take(&mut resp.access_token)),
             refresh_token: resp.refresh_token.take().map(Zeroizing::new),
@@ -89,6 +102,7 @@ impl OAuthTokens {
             token_type: std::mem::take(&mut resp.token_type),
             token_endpoint: token_endpoint.to_string(),
             client_id: client_id.to_string(),
+            client_secret: client_secret.map(|s| Zeroizing::new(s.to_string())),
         }
     }
 }

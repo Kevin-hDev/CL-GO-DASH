@@ -79,14 +79,19 @@ async fn refresh_access_token(
         .build()
         .map_err(|_| "erreur interne".to_string())?;
 
-    let params = [
+    let mut params: Vec<(&str, &str)> = vec![
         ("grant_type", "refresh_token"),
         ("refresh_token", refresh_token),
         ("client_id", old.client_id.as_str()),
     ];
+    let secret_ref = old.client_secret.as_ref().map(|s| s.as_str().to_string());
+    if let Some(ref secret) = secret_ref {
+        params.push(("client_secret", secret.as_str()));
+    }
 
     let resp = client
         .post(&old.token_endpoint)
+        .header("Accept", "application/json")
         .form(&params)
         .send()
         .await
@@ -106,7 +111,8 @@ async fn refresh_access_token(
         raw.refresh_token = Some(refresh_token.to_string());
     }
 
-    let new_tokens = OAuthTokens::from_response(&mut raw, &old.token_endpoint, &old.client_id);
+    let cs = old.client_secret.as_ref().map(|s| s.as_str());
+    let new_tokens = OAuthTokens::from_response(&mut raw, &old.token_endpoint, &old.client_id, cs);
     let result = new_tokens.access_token.clone();
     store_tokens(connector_id, &new_tokens)?;
     Ok(result)
