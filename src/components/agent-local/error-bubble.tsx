@@ -4,11 +4,11 @@ import { useTranslation } from "react-i18next";
 import { showToast } from "@/lib/toast-emitter";
 
 const BUBBLE_STYLE = {
-  width: "100%", maxWidth: "var(--bubble-max-width, 660px)",
+  width: "100%", maxWidth: 720,
   borderRadius: "var(--radius-md, 8px)",
-  padding: "var(--space-sm, 10px) var(--space-md, 14px)",
-  alignSelf: "center" as const, margin: "var(--space-xs, 6px) auto",
-  fontSize: "var(--font-size-sm, 12px)",
+  padding: "10px 14px",
+  alignSelf: "center" as const, margin: "6px auto",
+  fontSize: "12px",
   fontFamily: "var(--font-mono, monospace)", lineHeight: 1.5,
   wordBreak: "break-word" as const,
 };
@@ -29,10 +29,8 @@ export function ErrorBubble({ message, isConnection, onRetry }: ErrorBubbleProps
   return (
     <div style={{
       ...BUBBLE_STYLE,
-      background: "var(--signal-error-bg)",
-      border: "1px solid color-mix(in srgb, var(--signal-error) 20%, transparent)",
-      color: "var(--signal-error)",
-    }}>
+      color: "var(--toast-error-text)",
+    }} className="chat-bubble">
       {message === "ollama_connection_lost" ? t("errors.ollamaConnectionLost") : message}
     </div>
   );
@@ -82,10 +80,8 @@ function ConnectionErrorBubble({ onRetry }: { onRetry: () => void }) {
     return (
       <div style={{
         ...BUBBLE_STYLE,
-        background: "var(--signal-ok-bg)",
-        border: "1px solid color-mix(in srgb, var(--signal-ok) 20%, transparent)",
-        color: "var(--signal-ok)",
-      }}>
+        color: "var(--toast-ok-text)",
+      }} className="chat-bubble">
         {t("errors.ollamaReconnecting", { seconds: countdown })}
       </div>
     );
@@ -94,10 +90,8 @@ function ConnectionErrorBubble({ onRetry }: { onRetry: () => void }) {
   return (
     <div style={{
       ...BUBBLE_STYLE,
-      background: "var(--signal-error-bg)",
-      border: "1px solid color-mix(in srgb, var(--signal-error) 20%, transparent)",
-      color: "var(--signal-error)",
-    }}>
+      color: "var(--toast-error-text)",
+    }} className="chat-bubble">
       {t("errors.ollamaWaiting", { seconds: elapsed })}
     </div>
   );

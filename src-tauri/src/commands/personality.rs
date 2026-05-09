@@ -99,7 +99,7 @@ pub fn open_in_editor(path: String) -> Result<(), String> {
     #[cfg(target_os = "windows")]
     let result = Command::new("cmd").args(["/c", "start", "", &path]).spawn();
 
-    result.map_err(|e| format!("Cannot open: {}", e))?;
+    result.map_err(|e| { eprintln!("[personality] open_in_editor: {e}"); "Impossible d'ouvrir l'éditeur".to_string() })?;
     Ok(())
 }
 

@@ -10,6 +10,8 @@ import { PathListEditor } from "./path-list-editor";
 import { OllamaSettingsSection } from "./ollama-settings-section";
 import { CodexAuth } from "./codex-auth";
 import { notifySettingsChanged } from "@/hooks/use-setting-value";
+import { showToast } from "@/lib/toast-emitter";
+import i18n from "@/i18n";
 import "./compression-slider.css";
 
 interface AdvancedState {
@@ -54,7 +56,7 @@ export function AdvancedSettings() {
   const save = useCallback((patch: Partial<AdvancedState>) => {
     setState((prev) => {
       const next = { ...prev, ...patch };
-      invoke("set_advanced_settings", { settings: next }).catch(() => {});
+      invoke("set_advanced_settings", { settings: next }).catch(() => showToast(i18n.t("errors.saveFailed"), "error"));
       notifySettingsChanged();
       return next;
     });

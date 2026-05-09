@@ -476,7 +476,21 @@
     "keyringFailed": "キーリングにアクセスできません。API キーを保存するには gnome-keyring または kwallet をインストールしてください。",
     "ollamaRestartFailed": "Ollama の再起動に失敗しました",
     "maxFiles": "最大 {{max}} ファイル",
-    "fileTooLarge": "{{name}} は 20MB を超えています"
+    "fileTooLarge": "{{name}} は 20MB を超えています",
+    "saveFailed": "保存に失敗しました",
+    "projectRenameFailed": "プロジェクトの名前を変更できませんでした",
+    "projectDeleteFailed": "プロジェクトを削除できませんでした",
+    "projectOpenFailed": "フォルダーを開けませんでした",
+    "sessionSaveFailed": "セッションを保存できませんでした",
+    "downloadFailed": "ダウンロードに失敗しました",
+    "updateFailed": "更新に失敗しました",
+    "apiKeyFailed": "キーを保存できませんでした",
+    "apiKeyDeleteFailed": "キーを削除できませんでした",
+    "readError": "ファイルを読み取れませんでした",
+    "modelNotFound": "モデルが見つかりません",
+    "rateLimited": "リクエストが多すぎます。しばらくしてから再試行してください",
+    "authFailed": "認証に失敗しました。APIキーを確認してください",
+    "toolFailed": "ツールが失敗しました"
   },
   "updates": {
     "tooltip": "アップデートが利用可能です",

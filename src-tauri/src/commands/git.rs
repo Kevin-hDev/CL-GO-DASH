@@ -17,7 +17,7 @@ pub async fn list_git_branches(path: String) -> Result<Vec<branch::BranchInfo>, 
     }
     tokio::task::spawn_blocking(move || branch::list_branches(&repo_path))
         .await
-        .map_err(|e| format!("Erreur interne : {e}"))?
+        .map_err(|e| { eprintln!("[git] list_branches: {e}"); "Erreur interne".to_string() })?
 }
 
 #[tauri::command]
@@ -26,7 +26,7 @@ pub async fn get_git_context(path: String) -> Result<branch::GitContext, String>
     Ok(
         tokio::task::spawn_blocking(move || branch::get_context(&repo_path))
             .await
-            .map_err(|e| format!("Erreur interne : {e}"))?,
+            .map_err(|e| { eprintln!("[git] get_context: {e}"); "Erreur interne".to_string() })?,
     )
 }
 
@@ -38,7 +38,7 @@ pub async fn checkout_git_branch(path: String, branch_name: String) -> Result<()
     }
     tokio::task::spawn_blocking(move || branch::checkout_branch(&repo_path, &branch_name))
         .await
-        .map_err(|e| format!("Erreur interne : {e}"))?
+        .map_err(|e| { eprintln!("[git] checkout: {e}"); "Erreur interne".to_string() })?
 }
 
 #[tauri::command]
@@ -49,7 +49,7 @@ pub async fn create_git_branch(path: String, branch_name: String) -> Result<(), 
     }
     tokio::task::spawn_blocking(move || branch::create_branch(&repo_path, &branch_name))
         .await
-        .map_err(|e| format!("Erreur interne : {e}"))?
+        .map_err(|e| { eprintln!("[git] create_branch: {e}"); "Erreur interne".to_string() })?
 }
 
 #[tauri::command]
@@ -60,7 +60,7 @@ pub async fn commit_and_checkout_git_branch(path: String, branch_name: String) -
     }
     tokio::task::spawn_blocking(move || branch::commit_all_and_checkout(&repo_path, &branch_name))
         .await
-        .map_err(|e| format!("Erreur interne : {e}"))?
+        .map_err(|e| { eprintln!("[git] commit_and_checkout: {e}"); "Erreur interne".to_string() })?
 }
 
 #[tauri::command]
@@ -71,7 +71,7 @@ pub async fn list_git_dirty_files(path: String) -> Result<Vec<status::DirtyFile>
     }
     tokio::task::spawn_blocking(move || status::list_dirty_files(&repo_path))
         .await
-        .map_err(|e| format!("Erreur interne : {e}"))?
+        .map_err(|e| { eprintln!("[git] dirty_files: {e}"); "Erreur interne".to_string() })?
 }
 
 #[tauri::command]

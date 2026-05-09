@@ -24,6 +24,7 @@ export function useToast() {
 }
 
 const MAX_TOASTS = 10;
+const EXIT_DURATION = 300;
 
 const DEFAULT_DURATIONS: Record<ToastType, number> = {
   success: 3000,
@@ -62,22 +63,26 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 }
 
 function ToastItem({ toast, onDone }: { toast: Toast; onDone: () => void }) {
+  const [exiting, setExiting] = useState(false);
+
   useEffect(() => {
-    const timer = setTimeout(onDone, toast.duration);
-    return () => clearTimeout(timer);
+    const fadeTimer = setTimeout(() => setExiting(true), toast.duration - EXIT_DURATION);
+    const removeTimer = setTimeout(onDone, toast.duration);
+    return () => {
+      clearTimeout(fadeTimer);
+      clearTimeout(removeTimer);
+    };
   }, [onDone, toast.duration]);
+
+  const cls = `toast toast-${toast.type}${exiting ? " toast-exiting" : ""}`;
 
   if (toast.type === "check") {
     return (
-      <div className="toast toast-check">
+      <div className={cls}>
         <Check size={18} weight="bold" />
       </div>
     );
   }
 
-  return (
-    <div className={`toast toast-${toast.type}`}>
-      {toast.message}
-    </div>
-  );
+  return <div className={cls}>{toast.message}</div>;
 }

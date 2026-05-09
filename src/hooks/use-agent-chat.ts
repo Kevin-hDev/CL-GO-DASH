@@ -3,6 +3,8 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useAgentStream } from "./use-agent-stream";
 import { EMPTY_CHAT_STATE, type ChatState } from "./agent-chat-stream-callbacks";
+import { showToast } from "@/lib/toast-emitter";
+import i18n from "@/i18n";
 import type { AgentMessage, AgentSession } from "@/types/agent";
 
 const MAX_DELIVERED_PERMISSIONS = 64;
@@ -138,7 +140,7 @@ export function useAgentChat(
     while (savingRef.current) await new Promise((r) => setTimeout(r, 50));
     if (projectId && state.messages.length === 0) {
       const session = await invoke<Record<string, unknown>>("get_agent_session", { id: sessionId });
-      if (!session.project_id) { session.project_id = projectId; await invoke("save_agent_session", { session }).catch((e: unknown) => console.error("Save session:", e)); }
+      if (!session.project_id) { session.project_id = projectId; await invoke("save_agent_session", { session }).catch(() => showToast(i18n.t("errors.sessionSaveFailed"), "error")); }
     }
     const files = (sentFiles ?? []).map((f) => ({ name: f.name, path: f.path ?? "", mime_type: "", size: 0, thumbnail: f.preview }));
     const skillNames = hasSkill ? skills.map((s) => s.name) : undefined;
@@ -155,7 +157,7 @@ export function useAgentChat(
       }
     }
     llmMsgs.push(userMsg);
-    await invoke("add_messages_to_session", { id: sessionId, messages: [userMsg], tokens: 0 }).catch((e: unknown) => console.error("Save user msg:", e));
+    await invoke("add_messages_to_session", { id: sessionId, messages: [userMsg], tokens: 0 }).catch(() => showToast(i18n.t("errors.sessionSaveFailed"), "error"));
     await doStream(llmMsgs, displayMsgs, sessionId, workingDir, undefined, permModeRef.current);
   }, [sessionId, state.messages, doStream]);
 
@@ -173,7 +175,7 @@ export function useAgentChat(
     if (!sessionId) return;
     const idx = state.messages.findIndex((m) => m.id === messageId);
     if (idx < 0) return;
-    await invoke("truncate_and_replace_at", { sessionId, messageId, replacement: null }).catch((e: unknown) => console.error("Truncate:", e));
+    await invoke("truncate_and_replace_at", { sessionId, messageId, replacement: null }).catch(() => showToast(i18n.t("errors.sessionSaveFailed"), "error"));
     const freshTokenCount = await syncTokenCount();
     const msgs = state.messages.slice(0, idx + 1);
     await doStream(msgs, msgs, sessionId, sessionWorkingDirRef.current, freshTokenCount, permModeRef.current);
@@ -184,7 +186,7 @@ export function useAgentChat(
     const idx = state.messages.findIndex((m) => m.id === messageId);
     if (idx < 0) return;
     const newMsg: AgentMessage = { id: crypto.randomUUID(), role: "user", content: newContent, files: [], timestamp: new Date().toISOString() };
-    await invoke("truncate_and_replace_at", { sessionId, messageId, replacement: newMsg }).catch((e: unknown) => console.error("Truncate+replace:", e));
+    await invoke("truncate_and_replace_at", { sessionId, messageId, replacement: newMsg }).catch(() => showToast(i18n.t("errors.sessionSaveFailed"), "error"));
     const freshTokenCount = await syncTokenCount();
     const msgs = [...state.messages.slice(0, idx), newMsg];
     await doStream(msgs, msgs, sessionId, sessionWorkingDirRef.current, freshTokenCount, permModeRef.current);

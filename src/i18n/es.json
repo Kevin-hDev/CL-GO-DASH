@@ -476,7 +476,21 @@
     "keyringFailed": "No se puede acceder al llavero. Instala gnome-keyring o kwallet para almacenar las claves API.",
     "ollamaRestartFailed": "El reinicio de Ollama falló",
     "maxFiles": "Máximo {{max}} archivos",
-    "fileTooLarge": "{{name}} supera los 20 MB"
+    "fileTooLarge": "{{name}} supera los 20 MB",
+    "saveFailed": "No se pudo guardar",
+    "projectRenameFailed": "No se pudo renombrar el proyecto",
+    "projectDeleteFailed": "No se pudo eliminar el proyecto",
+    "projectOpenFailed": "No se pudo abrir la carpeta",
+    "sessionSaveFailed": "No se pudo guardar la sesión",
+    "downloadFailed": "La descarga falló",
+    "updateFailed": "La actualización falló",
+    "apiKeyFailed": "No se pudo guardar la clave",
+    "apiKeyDeleteFailed": "No se pudo eliminar la clave",
+    "readError": "No se pudo leer el archivo",
+    "modelNotFound": "Modelo no encontrado",
+    "rateLimited": "Demasiadas solicitudes, inténtalo de nuevo en un momento",
+    "authFailed": "Autenticación fallida, verifica tu clave API",
+    "toolFailed": "La herramienta falló"
   },
   "updates": {
     "tooltip": "Actualizaciones disponibles",

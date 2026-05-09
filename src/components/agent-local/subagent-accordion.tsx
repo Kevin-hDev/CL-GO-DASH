@@ -62,7 +62,9 @@ export function SubagentAccordion({ subagents, onCancel, onOpen }: SubagentAccor
           <span className={`sa-chevron ${expanded ? "sa-chevron-up" : ""}`}>›</span>
         </button>
       </div>
-      <div className={`sa-accordion-body ${expanded ? "sa-expanded" : ""}`}>
+      <div className={`tb-accordion${expanded ? " tb-open" : ""}`}>
+       <div className="tb-accordion-inner">
+        <div className="sa-accordion-body-inner">
         {subagents.map((agent) => (
           <div key={agent.sessionId} className="sa-agent-row">
             <span className={`sa-agent-dot sa-dot-${agent.type}`} />
@@ -96,6 +98,8 @@ export function SubagentAccordion({ subagents, onCancel, onOpen }: SubagentAccor
             </div>
           </div>
         ))}
+        </div>
+       </div>
       </div>
     </div>
   );

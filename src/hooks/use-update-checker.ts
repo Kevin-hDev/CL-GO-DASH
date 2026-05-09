@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { invoke, Channel } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import { showToast } from "@/lib/toast-emitter";
+import i18n from "@/i18n";
 import type { PullProgress } from "@/types/agent";
 
 const CHECK_INTERVAL_MS = 60 * 60 * 1000;
@@ -99,7 +101,7 @@ export function useUpdateChecker() {
       await invoke("download_app_update", { assetUrl, onProgress: channel });
       setAppUpdate(null);
     } catch {
-      /* download failed */
+      showToast(i18n.t("errors.downloadFailed"), "error");
     } finally {
       setAppDownloading(false);
     }
@@ -121,7 +123,7 @@ export function useUpdateChecker() {
       await invoke("pull_ollama_model", { name: fullName, isUpdate: true, onProgress: channel });
       setOllamaUpdates((prev) => prev.filter((u) => u.fullName !== fullName));
     } catch {
-      /* pull failed */
+      showToast(i18n.t("errors.updateFailed"), "error");
     } finally {
       pullingRef.current = false;
       setPulling(null);
@@ -153,7 +155,7 @@ export function useUpdateChecker() {
       });
       setOllamaBinaryUpdate(null);
     } catch {
-      /* update failed */
+      showToast(i18n.t("errors.updateFailed"), "error");
     } finally {
       setOllamaBinaryUpdating(false);
     }

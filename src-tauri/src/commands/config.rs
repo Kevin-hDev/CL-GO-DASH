@@ -46,7 +46,7 @@ pub fn patch_advanced_settings(
 
     let mut config = config_service::read_config()?;
     let mut current = serde_json::to_value(&config.advanced)
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| { eprintln!("[config] serialize: {e}"); "Erreur de configuration".to_string() })?;
 
     if let (Some(base), Some(updates)) = (current.as_object_mut(), patch.as_object()) {
         for (k, v) in updates {
@@ -55,7 +55,7 @@ pub fn patch_advanced_settings(
     }
 
     let merged: AdvancedSettings = serde_json::from_value(current)
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| { eprintln!("[config] deserialize: {e}"); "Erreur de configuration".to_string() })?;
 
     let manager = app.autolaunch();
     let enabled = manager.is_enabled().unwrap_or(false);

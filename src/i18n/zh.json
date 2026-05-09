@@ -476,7 +476,21 @@
     "keyringFailed": "无法访问密钥环。请安装 gnome-keyring 或 kwallet 以存储 API 密钥。",
     "ollamaRestartFailed": "Ollama 重启失败",
     "maxFiles": "最多 {{max}} 个文件",
-    "fileTooLarge": "{{name}} 超过 20MB"
+    "fileTooLarge": "{{name}} 超过 20MB",
+    "saveFailed": "保存失败",
+    "projectRenameFailed": "无法重命名项目",
+    "projectDeleteFailed": "无法删除项目",
+    "projectOpenFailed": "无法打开文件夹",
+    "sessionSaveFailed": "会话无法保存",
+    "downloadFailed": "下载失败",
+    "updateFailed": "更新失败",
+    "apiKeyFailed": "无法保存密钥",
+    "apiKeyDeleteFailed": "无法删除密钥",
+    "readError": "无法读取文件",
+    "modelNotFound": "未找到模型",
+    "rateLimited": "请求过多，请稍后重试",
+    "authFailed": "认证失败，请检查 API 密钥",
+    "toolFailed": "工具执行失败"
   },
   "updates": {
     "tooltip": "有可用更新",

@@ -45,7 +45,7 @@ export const AssistantMessage = memo(function AssistantMessage({
         <SavedToolBubble tools={toolActivities} />
       )}
       <div className="msg-assistant-content">
-        {renderMarkdown(content)}
+        {content && renderMarkdown(content)}
         {isStreaming && (
           <>
             <span style={{ animation: "pulse-dot 1s infinite" }}>▊</span>
@@ -55,7 +55,7 @@ export const AssistantMessage = memo(function AssistantMessage({
           </>
         )}
       </div>
-      {!isStreaming && (
+      {!isStreaming && content.trim() && (
         <MessageActions messageRole="assistant" content={content} onReload={onReload}>
           {(hasTokens || hasTps || totalTime) && (
             <span className="msg-stats-inline">

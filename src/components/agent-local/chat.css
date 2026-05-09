@@ -22,6 +22,10 @@
   padding-right: var(--space-md);
 }
 
+.chat-messages > .chat-bubble {
+  max-width: 720px;
+}
+
 /* Input area — flotte en bas du chat, pas de section séparée */
 .chat-input-area {
   padding: 0 var(--space-xl) var(--space-md);

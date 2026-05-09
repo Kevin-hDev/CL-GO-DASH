@@ -39,6 +39,11 @@
   --signal-info: #3b82f6;
   --signal-info-bg: rgba(59, 130, 246, 0.12);
 
+  /* Toast — discret, style tool-bubble */
+  --toast-bg: #eaeaed;
+  --toast-error-text: #991b1b;
+  --toast-ok-text: #166534;
+
   /* Diff line backgrounds */
   --diff-add-bg: rgba(22, 163, 74, 0.14);
   --diff-add-gutter: rgba(22, 163, 74, 0.12);

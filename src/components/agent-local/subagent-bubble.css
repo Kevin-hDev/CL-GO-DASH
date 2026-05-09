@@ -32,6 +32,9 @@
 .sb-body {
   margin-top: 8px;
   border-top: 1px solid var(--border-subtle);
+  max-height: 175px;
+  overflow-y: auto;
+  scrollbar-width: thin;
 }
 
 .sb-agent-row {

@@ -81,14 +81,10 @@
   transform: rotate(270deg);
 }
 
-.sa-accordion-body {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 200ms ease-out;
-}
-
-.sa-accordion-body.sa-expanded {
-  max-height: 200px;
+.sa-accordion-body-inner {
+  max-height: 175px;
+  overflow-y: auto;
+  scrollbar-width: thin;
 }
 
 .sa-agent-row {

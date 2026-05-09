@@ -476,7 +476,21 @@
     "keyringFailed": "Zugriff auf den Schlüsselbund nicht möglich. Installiere gnome-keyring oder kwallet, um API-Schlüssel zu speichern.",
     "ollamaRestartFailed": "Neustart von Ollama fehlgeschlagen",
     "maxFiles": "Maximal {{max}} Dateien",
-    "fileTooLarge": "{{name}} überschreitet 20 MB"
+    "fileTooLarge": "{{name}} überschreitet 20 MB",
+    "saveFailed": "Speichern fehlgeschlagen",
+    "projectRenameFailed": "Projekt konnte nicht umbenannt werden",
+    "projectDeleteFailed": "Projekt konnte nicht gelöscht werden",
+    "projectOpenFailed": "Ordner konnte nicht geöffnet werden",
+    "sessionSaveFailed": "Sitzung konnte nicht gespeichert werden",
+    "downloadFailed": "Download fehlgeschlagen",
+    "updateFailed": "Aktualisierung fehlgeschlagen",
+    "apiKeyFailed": "Schlüssel konnte nicht gespeichert werden",
+    "apiKeyDeleteFailed": "Schlüssel konnte nicht gelöscht werden",
+    "readError": "Datei konnte nicht gelesen werden",
+    "modelNotFound": "Modell nicht gefunden",
+    "rateLimited": "Zu viele Anfragen, versuche es gleich erneut",
+    "authFailed": "Authentifizierung fehlgeschlagen, überprüfe deinen API-Schlüssel",
+    "toolFailed": "Werkzeug fehlgeschlagen"
   },
   "updates": {
     "tooltip": "Updates verfügbar",

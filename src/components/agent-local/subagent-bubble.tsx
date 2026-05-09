@@ -26,24 +26,26 @@ export function SubagentBubble({ subagents, onOpen }: SubagentBubbleProps) {
         </span>
         <span className={`sb-chevron ${expanded ? "sb-chevron-up" : ""}`}>›</span>
       </button>
-      {expanded && (
-        <div className="sb-body">
-          {subagents.map((agent) => (
-            <button
-              key={agent.sessionId}
-              className="sb-agent-row"
-              onClick={() => onOpen(agent.sessionId)}
-              type="button"
-            >
-              <span className={`sb-dot sb-dot-${agent.type}`} />
-              <span className="sb-agent-name">{agent.name}</span>
-              <span className="sb-prompt-preview">
-                {agent.promptPreview || "..."}
-              </span>
-            </button>
-          ))}
+      <div className={`tb-accordion${expanded ? " tb-open" : ""}`}>
+        <div className="tb-accordion-inner">
+          <div className="sb-body">
+            {subagents.map((agent) => (
+              <button
+                key={agent.sessionId}
+                className="sb-agent-row"
+                onClick={() => onOpen(agent.sessionId)}
+                type="button"
+              >
+                <span className={`sb-dot sb-dot-${agent.type}`} />
+                <span className="sb-agent-name">{agent.name}</span>
+                <span className="sb-prompt-preview">
+                  {agent.promptPreview || "..."}
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

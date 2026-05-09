@@ -49,7 +49,7 @@ export function McpOauthDialog({ connector, onClose, onConnected }: McpOauthDial
         setTimeout(() => onConnected(), 600);
       } else {
         setState("error");
-        setError(typeof p.error === "string" ? p.error : t("connectors.oauth.errorGeneric"));
+        setError(t("connectors.oauth.errorGeneric"));
       }
     });
     return () => {

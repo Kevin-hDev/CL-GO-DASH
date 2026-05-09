@@ -5,6 +5,7 @@ import type { ThemeChoice } from "@/hooks/use-theme";
 import type { useSettings } from "@/hooks/use-settings";
 import { FONT_SIZES, FONT_FAMILIES } from "@/hooks/use-settings";
 import { RoundToggle } from "@/components/heartbeat/round-toggle";
+import { showToast } from "@/lib/toast-emitter";
 import { SettingsCard } from "./settings-card";
 import { SettingsRow } from "./settings-row";
 import { SettingsSelect, type SelectOption } from "./settings-select";
@@ -81,7 +82,7 @@ export function GeneralSettings({ themeChoice, onThemeChange, settings }: Genera
   const saveAdvanced = useCallback((patch: Partial<StartupState>) => {
     setStartup((prev) => {
       const next = { ...prev, ...patch };
-      invoke("patch_advanced_settings", { patch }).catch(() => {});
+      invoke("patch_advanced_settings", { patch }).catch(() => showToast(t("errors.saveFailed"), "error"));
       if ("link_preview_enabled" in patch) {
         localStorage.setItem("clgo-link-preview", String(patch.link_preview_enabled));
       }

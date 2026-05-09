@@ -69,7 +69,7 @@ export const PersonalityTab = memo(function PersonalityTab({
       setFileName(path.split(/[\\/]/).pop() ?? "");
     } catch {
       showToast(t("personality.failedToRead"));
-      setContent("Failed to read file");
+      setContent(t("errors.readError"));
     }
   }, [setSelectedPath, t]);
 

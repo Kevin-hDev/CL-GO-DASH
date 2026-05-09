@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { showToast } from "@/lib/toast-emitter";
+import i18n from "@/i18n";
 import type { Project } from "@/types/agent";
 
 export function useProjects() {
@@ -26,30 +28,46 @@ export function useProjects() {
 
   const rename = useCallback(
     async (id: string, name: string) => {
-      await invoke("rename_project", { id, name });
-      await refresh();
+      try {
+        await invoke("rename_project", { id, name });
+        await refresh();
+      } catch {
+        showToast(i18n.t("errors.projectRenameFailed"), "error");
+      }
     },
     [refresh],
   );
 
   const remove = useCallback(
     async (id: string) => {
-      await invoke("delete_project", { id });
-      await refresh();
+      try {
+        await invoke("delete_project", { id });
+        await refresh();
+      } catch {
+        showToast(i18n.t("errors.projectDeleteFailed"), "error");
+      }
     },
     [refresh],
   );
 
   const reorder = useCallback(
     async (ids: string[]) => {
-      await invoke("reorder_projects", { ids });
-      await refresh();
+      try {
+        await invoke("reorder_projects", { ids });
+        await refresh();
+      } catch {
+        showToast(i18n.t("errors.saveFailed"), "error");
+      }
     },
     [refresh],
   );
 
   const openFolder = useCallback(async (path: string) => {
-    await invoke("open_project_folder", { path });
+    try {
+      await invoke("open_project_folder", { path });
+    } catch {
+      showToast(i18n.t("errors.projectOpenFailed"), "error");
+    }
   }, []);
 
   return { projects, refresh, add, rename, remove, reorder, openFolder };

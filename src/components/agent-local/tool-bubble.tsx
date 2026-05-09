@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Spinner } from "@phosphor-icons/react";
+import { Copy, Check } from "@/components/ui/icons";
 import type { ToolActivity } from "@/hooks/agent-chat-utils";
 import type { ToolActivityRecord } from "@/types/agent";
 import { isFileTool } from "@/lib/tool-file-path";
@@ -115,21 +116,53 @@ export function SavedToolBubble({
   );
 }
 
-const ERROR_STYLE = {
-  color: "var(--signal-error)",
-  fontSize: "10px",
-  fontFamily: "var(--font-mono, monospace)",
-  lineHeight: 1.4,
-  marginTop: 2,
-  marginLeft: 24,
-  opacity: 0.85,
-  wordBreak: "break-word" as const,
-};
-
 function hasPreviewContent(children: React.ReactNode): boolean {
   if (!children) return false;
   if (Array.isArray(children)) return children.some((c) => !!c);
   return true;
+}
+
+const HOVER_DELAY = 700;
+
+function ErrorCross({ message }: { message?: string }) {
+  const [visible, setVisible] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  const enter = useCallback(() => {
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => setVisible(true), HOVER_DELAY);
+  }, []);
+
+  const leave = useCallback(() => {
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => { setVisible(false); setCopied(false); }, 100);
+  }, []);
+
+  const tooltipEnter = useCallback(() => {
+    clearTimeout(timerRef.current);
+  }, []);
+
+  const copy = useCallback(() => {
+    if (message) navigator.clipboard.writeText(message).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  }, [message]);
+
+  return (
+    <span className="tb-error-anchor" onMouseEnter={enter} onMouseLeave={leave}>
+      <span style={{ color: "var(--signal-error)", fontSize: "10px" }}>✗</span>
+      {visible && message && (
+        <div className="tb-error-tooltip" onMouseEnter={tooltipEnter} onMouseLeave={leave}>
+          <span className="tb-error-tooltip-text">{message}</span>
+          <button type="button" className="tb-error-tooltip-copy" onClick={copy}>
+            {copied ? <Check size={12} weight="bold" /> : <Copy size={12} />}
+          </button>
+        </div>
+      )}
+    </span>
+  );
 }
 
 function ToolItem({ name, summary, done, isError, errorMessage, result, onFilePreview, children }: {
@@ -170,9 +203,9 @@ function ToolItem({ name, summary, done, isError, errorMessage, result, onFilePr
           }}
         >{summary}</span>
         {!done && <Spinner size={12} style={{ color: "var(--ink-faint)", animation: "spin 1s linear infinite", flexShrink: 0 }} />}
-        {done && <span style={{ color: isError ? "var(--signal-error)" : "var(--signal-ok)", flexShrink: 0, fontSize: "10px" }}>{isError ? "✗" : "✓"}</span>}
+        {done && !isError && <span style={{ color: "var(--signal-ok)", flexShrink: 0, fontSize: "10px" }}>✓</span>}
+        {done && isError && <ErrorCross message={errorMessage} />}
       </div>
-      {isError && errorMessage && <div style={ERROR_STYLE}>{errorMessage}</div>}
       {canToggle && (
         <div className={`tb-accordion${isOpen ? " tb-open" : ""}`}>
           <div className="tb-accordion-inner">

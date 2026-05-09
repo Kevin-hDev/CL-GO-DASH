@@ -476,7 +476,21 @@
     "keyringFailed": "Impossibile accedere al keyring. Installa gnome-keyring o kwallet per memorizzare le chiavi API.",
     "ollamaRestartFailed": "Riavvio di Ollama fallito",
     "maxFiles": "Massimo {{max}} file",
-    "fileTooLarge": "{{name}} supera i 20 MB"
+    "fileTooLarge": "{{name}} supera i 20 MB",
+    "saveFailed": "Salvataggio non riuscito",
+    "projectRenameFailed": "Impossibile rinominare il progetto",
+    "projectDeleteFailed": "Impossibile eliminare il progetto",
+    "projectOpenFailed": "Impossibile aprire la cartella",
+    "sessionSaveFailed": "Impossibile salvare la sessione",
+    "downloadFailed": "Download non riuscito",
+    "updateFailed": "Aggiornamento non riuscito",
+    "apiKeyFailed": "Impossibile salvare la chiave",
+    "apiKeyDeleteFailed": "Impossibile eliminare la chiave",
+    "readError": "Impossibile leggere il file",
+    "modelNotFound": "Modello non trovato",
+    "rateLimited": "Troppe richieste, riprova tra poco",
+    "authFailed": "Autenticazione fallita, controlla la tua chiave API",
+    "toolFailed": "Strumento fallito"
   },
   "updates": {
     "tooltip": "Aggiornamenti disponibili",

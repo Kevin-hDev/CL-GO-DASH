@@ -477,7 +477,21 @@
     "keyringFailed": "Cannot access keyring. Install gnome-keyring or kwallet to store API keys.",
     "ollamaRestartFailed": "Ollama restart failed",
     "maxFiles": "Maximum {{max}} files",
-    "fileTooLarge": "{{name}} exceeds 20MB"
+    "fileTooLarge": "{{name}} exceeds 20MB",
+    "saveFailed": "Save failed",
+    "projectRenameFailed": "Could not rename project",
+    "projectDeleteFailed": "Could not delete project",
+    "projectOpenFailed": "Could not open folder",
+    "sessionSaveFailed": "Session could not be saved",
+    "downloadFailed": "Download failed",
+    "updateFailed": "Update failed",
+    "apiKeyFailed": "Could not save key",
+    "apiKeyDeleteFailed": "Could not delete key",
+    "readError": "Could not read file",
+    "modelNotFound": "Model not found",
+    "rateLimited": "Too many requests, try again shortly",
+    "authFailed": "Authentication failed, check your API key",
+    "toolFailed": "Tool failed"
   },
   "updates": {
     "tooltip": "Updates available",

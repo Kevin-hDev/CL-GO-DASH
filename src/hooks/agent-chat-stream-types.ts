@@ -7,7 +7,6 @@ export const MAX_MESSAGES_PER_SESSION = 2000;
 export const KNOWN_ERROR_KEYS: Record<string, string> = {
   ollama_connection_lost: "errors.ollamaConnectionLost",
   model_not_found: "errors.modelNotFound",
-  context_length_exceeded: "errors.contextLengthExceeded",
   rate_limit: "errors.rateLimited",
   auth_failed: "errors.authFailed",
 };

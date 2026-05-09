@@ -155,7 +155,7 @@ pub(crate) async fn run_stream_task(
         if let Some(d) = wd.as_ref().filter(|s| !s.is_empty()) {
             let p = std::path::PathBuf::from(d);
             if p.is_dir() {
-                return p.canonicalize().map_err(|e| format!("Répertoire inaccessible : {e}"));
+                return p.canonicalize().map_err(|e| { eprintln!("[agent] canonicalize dir: {e}"); "Répertoire inaccessible".to_string() });
             }
             return Err(format!("Répertoire introuvable : {d}"));
         }

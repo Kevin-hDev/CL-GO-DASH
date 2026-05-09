@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { showToast } from "@/lib/toast-emitter";
+import i18n from "@/i18n";
 import type { ProviderSpec } from "@/types/api";
 
 /**
@@ -40,16 +42,24 @@ export function useApiKeys() {
 
   const setKey = useCallback(
     async (provider: string, key: string) => {
-      await invoke("set_api_key", { provider, key });
-      await loadConfigured();
+      try {
+        await invoke("set_api_key", { provider, key });
+        await loadConfigured();
+      } catch {
+        showToast(i18n.t("errors.apiKeyFailed"), "error");
+      }
     },
     [loadConfigured],
   );
 
   const deleteKey = useCallback(
     async (provider: string) => {
-      await invoke("delete_api_key", { provider });
-      await loadConfigured();
+      try {
+        await invoke("delete_api_key", { provider });
+        await loadConfigured();
+      } catch {
+        showToast(i18n.t("errors.apiKeyDeleteFailed"), "error");
+      }
     },
     [loadConfigured],
   );

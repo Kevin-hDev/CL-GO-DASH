@@ -167,8 +167,8 @@ fn validate_non_empty(value: &str, field: &str) -> Result<(), String> {
 }
 
 fn validate_schedule(schedule: &WakeupSchedule) -> Result<(), String> {
-    let time_re = regex::Regex::new(r"^\d{2}:\d{2}$").map_err(|e| e.to_string())?;
-    let dt_re = regex::Regex::new(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$").map_err(|e| e.to_string())?;
+    let time_re = regex::Regex::new(r"^\d{2}:\d{2}$").map_err(|e| { eprintln!("[heartbeat] regex: {e}"); "Erreur interne".to_string() })?;
+    let dt_re = regex::Regex::new(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$").map_err(|e| { eprintln!("[heartbeat] regex: {e}"); "Erreur interne".to_string() })?;
 
     match schedule {
         WakeupSchedule::Once { datetime } => {

@@ -23,7 +23,7 @@ pub fn extract_overlay(
 
 fn extract_tar_gz(archive: &Path, dest: &Path) -> Result<(), String> {
     let file = std::fs::File::open(archive)
-        .map_err(|e| format!("ouverture archive: {e}"))?;
+        .map_err(|e| { eprintln!("[ollama-extract] open tar.gz: {e}"); "ollama-extract-error".to_string() })?;
     let gz = flate2::read::GzDecoder::new(file);
     let tar = tar::Archive::new(gz);
     safe_unpack_tar(tar, dest)
@@ -31,9 +31,9 @@ fn extract_tar_gz(archive: &Path, dest: &Path) -> Result<(), String> {
 
 fn extract_tar_zst(archive: &Path, dest: &Path) -> Result<(), String> {
     let file = std::fs::File::open(archive)
-        .map_err(|e| format!("ouverture archive: {e}"))?;
+        .map_err(|e| { eprintln!("[ollama-extract] open tar.zst: {e}"); "ollama-extract-error".to_string() })?;
     let zst = zstd::Decoder::new(file)
-        .map_err(|e| format!("décompression zstd: {e}"))?;
+        .map_err(|e| { eprintln!("[ollama-extract] zstd decode: {e}"); "ollama-extract-error".to_string() })?;
     let tar = tar::Archive::new(zst);
     safe_unpack_tar(tar, dest)
 }
@@ -48,13 +48,13 @@ pub(crate) fn safe_unpack_tar<R: Read>(
     let mut entry_count: usize = 0;
     let mut total_bytes: u64 = 0;
 
-    for entry_result in archive.entries().map_err(|e| format!("tar entries: {e}"))? {
+    for entry_result in archive.entries().map_err(|e| { eprintln!("[ollama-extract] tar entries: {e}"); "ollama-extract-error".to_string() })? {
         entry_count += 1;
         if entry_count > MAX_TAR_ENTRIES {
             return Err("archive contient trop d'entrées — extraction refusée".into());
         }
-        let mut entry = entry_result.map_err(|e| format!("tar entry: {e}"))?;
-        let raw_path = entry.path().map_err(|e| format!("tar path: {e}"))?;
+        let mut entry = entry_result.map_err(|e| { eprintln!("[ollama-extract] tar entry: {e}"); "ollama-extract-error".to_string() })?;
+        let raw_path = entry.path().map_err(|e| { eprintln!("[ollama-extract] tar path: {e}"); "ollama-extract-error".to_string() })?;
 
         if raw_path.components().any(|c| c == std::path::Component::ParentDir) {
             return Err("archive contient un chemin avec '..' — extraction refusée".into());
@@ -82,7 +82,7 @@ pub(crate) fn safe_unpack_tar<R: Read>(
         } else {
             if let Some(parent) = target.parent() {
                 std::fs::create_dir_all(parent)
-                    .map_err(|e| format!("mkdir: {e}"))?;
+                    .map_err(|e| { eprintln!("[ollama-extract] mkdir: {e}"); "ollama-extract-error".to_string() })?;
             }
             let parent_canonical = std::fs::canonicalize(
                 target.parent().unwrap_or(dest),
@@ -105,7 +105,7 @@ pub(crate) fn safe_unpack_tar<R: Read>(
         }
 
         entry.unpack(&target_canonical)
-            .map_err(|e| format!("unpack entry: {e}"))?;
+            .map_err(|e| { eprintln!("[ollama-extract] unpack: {e}"); "ollama-extract-error".to_string() })?;
     }
     Ok(())
 }
@@ -127,7 +127,7 @@ fn extract_zip(archive: &Path, dest: &Path) -> Result<(), String> {
             ])
             .creation_flags(0x08000000)
             .status()
-            .map_err(|e| format!("powershell: {e}"))?;
+            .map_err(|e| { eprintln!("[ollama-extract] powershell: {e}"); "ollama-extract-error".to_string() })?;
         if !status.success() {
             return Err("Expand-Archive failed".into());
         }
@@ -135,9 +135,9 @@ fn extract_zip(archive: &Path, dest: &Path) -> Result<(), String> {
     #[cfg(not(target_os = "windows"))]
     {
         let file = std::fs::File::open(archive)
-            .map_err(|e| format!("ouverture zip: {e}"))?;
+            .map_err(|e| { eprintln!("[ollama-extract] open zip: {e}"); "ollama-extract-error".to_string() })?;
         let mut zip_archive = zip::ZipArchive::new(file)
-            .map_err(|e| format!("lecture zip: {e}"))?;
+            .map_err(|e| { eprintln!("[ollama-extract] read zip: {e}"); "ollama-extract-error".to_string() })?;
         safe_unpack_zip(&mut zip_archive, dest)?;
     }
     Ok(())
@@ -153,7 +153,7 @@ fn safe_unpack_zip(
 
     for i in 0..archive.len() {
         let mut entry = archive.by_index(i)
-            .map_err(|e| format!("zip entry: {e}"))?;
+            .map_err(|e| { eprintln!("[ollama-extract] zip entry: {e}"); "ollama-extract-error".to_string() })?;
 
         let raw_path = match entry.enclosed_name() {
             Some(p) => p.to_path_buf(),
@@ -164,19 +164,19 @@ fn safe_unpack_zip(
 
         if entry.is_dir() {
             std::fs::create_dir_all(&target)
-                .map_err(|e| format!("mkdir zip: {e}"))?;
+                .map_err(|e| { eprintln!("[ollama-extract] mkdir zip: {e}"); "ollama-extract-error".to_string() })?;
             continue;
         }
 
         if let Some(parent) = target.parent() {
             std::fs::create_dir_all(parent)
-                .map_err(|e| format!("mkdir zip parent: {e}"))?;
+                .map_err(|e| { eprintln!("[ollama-extract] mkdir zip parent: {e}"); "ollama-extract-error".to_string() })?;
         }
 
         let mut outfile = std::fs::File::create(&target)
-            .map_err(|e| format!("create zip file: {e}"))?;
+            .map_err(|e| { eprintln!("[ollama-extract] create zip file: {e}"); "ollama-extract-error".to_string() })?;
         std::io::copy(&mut entry, &mut outfile)
-            .map_err(|e| format!("copy zip entry: {e}"))?;
+            .map_err(|e| { eprintln!("[ollama-extract] copy zip entry: {e}"); "ollama-extract-error".to_string() })?;
     }
     Ok(())
 }
