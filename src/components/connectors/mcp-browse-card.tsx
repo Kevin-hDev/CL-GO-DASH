@@ -13,7 +13,8 @@ interface McpBrowseCardProps {
 }
 
 export function McpBrowseCard({ connector, configured, onAdd }: McpBrowseCardProps) {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const locked = connector.coming_soon === true;
 
   const handleLinkClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -21,10 +22,13 @@ export function McpBrowseCard({ connector, configured, onAdd }: McpBrowseCardPro
   };
 
   return (
-    <div className={`mcbc-card ${configured ? "configured" : ""}`}>
+    <div className={`mcbc-card ${configured ? "configured" : ""} ${locked ? "locked" : ""}`}>
       <McpIcon connectorId={connector.id} displayName={connector.display_name} size={40} />
       <div className="mcbc-body">
-        <div className="mcbc-name">{connector.display_name}</div>
+        <div className="mcbc-name">
+          {connector.display_name}
+          {locked && <span className="mcbc-soon">{t("connectors.comingSoon")}</span>}
+        </div>
         <div className="mcbc-desc">{getMcpDescription(connector, i18n.language)}</div>
         <div className="mcbc-meta">
           <span className="mcbc-cat">{connector.category.toUpperCase()}</span>
@@ -37,8 +41,8 @@ export function McpBrowseCard({ connector, configured, onAdd }: McpBrowseCardPro
       <button
         type="button"
         className={`mcbc-action ${configured ? "done" : ""}`}
-        onClick={configured ? undefined : onAdd}
-        disabled={configured}
+        onClick={configured || locked ? undefined : onAdd}
+        disabled={configured || locked}
       >
         {configured ? <Check size={16} weight="bold" /> : <Plus size={16} weight="bold" />}
       </button>

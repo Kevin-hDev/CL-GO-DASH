@@ -54,6 +54,7 @@
       "allConfigured": "所有目录中的提供商均已配置。"
     },
     "connectors": {
+      "comingSoon": "即将推出",
       "title": "API 连接器",
       "subtitle": "为您的实例添加数据源。",
       "search": "搜索连接器…",

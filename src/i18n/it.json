@@ -54,6 +54,7 @@
       "allConfigured": "Tutti i provider del catalogo sono già configurati."
     },
     "connectors": {
+      "comingSoon": "In arrivo",
       "title": "Connettori API",
       "subtitle": "Aggiungi sorgenti dati alla tua istanza.",
       "search": "Cerca connettori…",

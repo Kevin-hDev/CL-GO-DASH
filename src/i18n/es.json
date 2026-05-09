@@ -54,6 +54,7 @@
       "allConfigured": "Todos los proveedores del catálogo ya están configurados."
     },
     "connectors": {
+      "comingSoon": "Próximamente",
       "title": "Conectores API",
       "subtitle": "Añade fuentes de datos a tu instancia.",
       "search": "Buscar conectores…",

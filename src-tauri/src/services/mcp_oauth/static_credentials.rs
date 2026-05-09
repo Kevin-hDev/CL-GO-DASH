@@ -29,13 +29,13 @@ pub fn for_endpoint(endpoint: &str) -> Option<StaticCredentials> {
 
 fn google_scopes_for_host(host: &str) -> &'static str {
     if host.starts_with("gmail") {
-        return "https://www.googleapis.com/auth/gmail.modify";
+        return "https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.compose";
     }
     if host.starts_with("drive") {
-        return "https://www.googleapis.com/auth/drive";
+        return "https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/drive.file";
     }
     if host.starts_with("calendar") {
-        return "https://www.googleapis.com/auth/calendar";
+        return "https://www.googleapis.com/auth/calendar.calendarlist.readonly https://www.googleapis.com/auth/calendar.events.freebusy https://www.googleapis.com/auth/calendar.events.readonly";
     }
     "https://www.googleapis.com/auth/userinfo.email"
 }

@@ -578,6 +578,7 @@
         "community": "Community"
       }
     },
+    "comingSoon": "Soon",
     "config": {
       "addTitle": "Add {{name}}",
       "token": "Token",

@@ -54,6 +54,7 @@
       "allConfigured": "Alle Kataloganbieter sind bereits konfiguriert."
     },
     "connectors": {
+      "comingSoon": "Bald",
       "title": "API Connectors",
       "subtitle": "Datenquellen zu deiner Instanz hinzufügen.",
       "search": "Connectors suchen…",

@@ -23,6 +23,7 @@ export interface McpConnectorSpec {
   install_command?: string;
   env_keys?: string[];
   os_restrict?: "macos";
+  coming_soon?: boolean;
 }
 
 export type McpConnectorStatus = "connected" | "disconnected";

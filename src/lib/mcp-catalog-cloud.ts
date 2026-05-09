@@ -8,6 +8,7 @@ export const MCP_CATALOG_CLOUD: McpConnectorSpec[] = [
     author: "Google Cloud", url: "https://mail.google.com",
     endpoint: "https://gmailmcp.googleapis.com/mcp/v1",
     tools: ["draft_create", "read_mail", "search_mail", "label_manage"],
+    coming_soon: true,
   },
   {
     id: "google-drive", display_name: "Google Drive", category: "productivity", auth_type: "oauth",
@@ -16,6 +17,7 @@ export const MCP_CATALOG_CLOUD: McpConnectorSpec[] = [
     author: "Google Cloud", url: "https://drive.google.com",
     endpoint: "https://drivemcp.googleapis.com/mcp/v1",
     tools: ["list_files", "search_files", "read_doc", "write_doc", "file_ops"],
+    coming_soon: true,
   },
   {
     id: "google-calendar", display_name: "Google Calendar", category: "productivity", auth_type: "oauth",
@@ -24,6 +26,7 @@ export const MCP_CATALOG_CLOUD: McpConnectorSpec[] = [
     author: "Google Cloud", url: "https://calendar.google.com",
     endpoint: "https://calendarmcp.googleapis.com/mcp/v1",
     tools: ["list_calendars", "create_event", "update_event", "delete_event", "check_freebusy"],
+    coming_soon: true,
   },
   {
     id: "canva", display_name: "Canva", category: "design", auth_type: "oauth",

@@ -54,6 +54,7 @@
       "allConfigured": "カタログのすべてのプロバイダーはすでに設定されています。"
     },
     "connectors": {
+      "comingSoon": "近日公開",
       "title": "API コネクター",
       "subtitle": "インスタンスにデータソースを追加します。",
       "search": "コネクターを検索…",
