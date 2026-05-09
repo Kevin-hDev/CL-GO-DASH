@@ -1,6 +1,7 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import { ModelfileEditor } from "./modelfile-editor";
 import { SystemPromptEditor } from "./system-prompt-editor";
 import { ParametersEditor } from "./parameters-editor";
@@ -36,10 +37,11 @@ export function ModelfileViewer({ modelName, onDeleted }: ModelfileViewerProps) 
   const systemPrompt = useMemo(() => extractSystemPrompt(modelfile), [modelfile]);
   const parameters = useMemo(() => extractParameters(modelfile), [modelfile]);
 
-  const loadModelfile = () =>
-    invoke<string>("get_modelfile", { name: modelName })
+  const loadModelfile = useCallback(() => {
+    return invoke<string>("get_modelfile", { name: modelName })
       .then(setModelfile)
       .catch(() => {});
+  }, [modelName]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch→setState is intentional
@@ -47,6 +49,11 @@ export function ModelfileViewer({ modelName, onDeleted }: ModelfileViewerProps) 
     setMode("view");
     void loadModelfile().finally(() => setLoading(false));
   }, [modelName]);
+
+  useEffect(() => {
+    const unlisten = listen("modelfile-updated", () => { void loadModelfile(); });
+    return () => { void unlisten.then((fn) => fn()); };
+  }, [loadModelfile]);
 
   if (loading) {
     return (

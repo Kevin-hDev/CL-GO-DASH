@@ -76,5 +76,11 @@ export function useContextProgress(
     return () => { void unlisten.then((fn) => fn()); };
   }, [refresh]);
 
+  useEffect(() => {
+    if (provider !== "ollama") return;
+    const unlisten = listen("ollama-models-changed", () => { void refresh(); });
+    return () => { void unlisten.then((fn) => fn()); };
+  }, [refresh, provider]);
+
   return { used: usedTokens, max };
 }

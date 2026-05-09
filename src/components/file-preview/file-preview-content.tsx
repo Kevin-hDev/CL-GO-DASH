@@ -1,5 +1,6 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { listen } from "@tauri-apps/api/event";
 import { readFilePreview } from "@/services/file-preview";
 import { highlightLines } from "@/lib/highlight";
 import type { FileOperation } from "@/types/file-preview";
@@ -80,6 +81,24 @@ function TextPreviewContent({ operation, baseDir }: FilePreviewContentProps) {
       });
     return () => { alive = false; };
   }, [operation.path, baseDir, hasSavedContent]);
+
+  const reload = useCallback(() => {
+    if (hasSavedContent) return;
+    readFilePreview(operation.path, baseDir)
+      .then((content) => setState({ loading: false, content, error: false }))
+      .catch(() => {});
+  }, [operation.path, baseDir, hasSavedContent]);
+
+  useEffect(() => {
+    const unlisten = listen<{ path: string }>("file-tree-changed", (event) => {
+      const changedDir = event.payload.path;
+      const parentDir = operation.path.substring(0, operation.path.lastIndexOf("/"));
+      if (changedDir === parentDir || operation.path.startsWith(changedDir)) {
+        reload();
+      }
+    });
+    return () => { void unlisten.then((fn) => fn()); };
+  }, [operation.path, reload]);
 
   const highlighted = useMemo(
     () => state.content ? highlightLines(state.content, operation.path) : [],

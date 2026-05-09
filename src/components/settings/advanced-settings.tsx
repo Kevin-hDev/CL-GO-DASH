@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
 import { useAvailableModels } from "@/hooks/use-available-models";
+import { useFsEvent } from "@/hooks/use-fs-event";
 import { RoundToggle } from "@/components/heartbeat/round-toggle";
 import { SettingsCard } from "./settings-card";
 import { SettingsRow } from "./settings-row";
@@ -47,11 +48,17 @@ export function AdvancedSettings() {
   const { groups } = useAvailableModels();
   const [state, setState] = useState<AdvancedState>(DEFAULTS);
 
-  useEffect(() => {
+  const loadSettings = useCallback(() => {
     invoke<AdvancedState>("get_advanced_settings")
       .then(setState)
       .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
+
+  useFsEvent("fs:config-changed", loadSettings);
 
   const save = useCallback((patch: Partial<AdvancedState>) => {
     setState((prev) => {

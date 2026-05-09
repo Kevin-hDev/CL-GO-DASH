@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import { useTranslation } from "react-i18next";
 import "./codex-auth.css";
 
@@ -21,7 +22,7 @@ export function CodexAuth() {
     const [loading, setLoading] = useState(false);
     const [effort, setEffort] = useState("medium");
 
-    const refresh = async () => {
+    const refresh = useCallback(async () => {
         try {
             const s = await invoke<CodexStatus>("codex_status");
             setStatus(s);
@@ -30,12 +31,17 @@ export function CodexAuth() {
         } catch {
             setStatus({ logged_in: false, email: null });
         }
-    };
+    }, []);
 
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch→setState is intentional
         void refresh();
-    }, []);
+    }, [refresh]);
+
+    useEffect(() => {
+        const unlisten = listen("codex-auth-changed", () => { void refresh(); });
+        return () => { void unlisten.then((fn) => fn()); };
+    }, [refresh]);
 
     const handleLogin = async () => {
         setLoading(true);
