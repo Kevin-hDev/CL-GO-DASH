@@ -11,11 +11,31 @@ const DEBOUNCE_MS: u64 = 150;
 
 static WATCHER_ACTIVE: std::sync::Mutex<Option<Arc<AtomicBool>>> = std::sync::Mutex::new(None);
 
-pub fn setup_git_watcher(app: AppHandle, repo_path: PathBuf) -> Result<(), String> {
-    let git_dir = repo_path.join(".git");
-    if !git_dir.is_dir() {
-        return Ok(());
+fn resolve_git_dir(repo_path: &PathBuf) -> Option<PathBuf> {
+    let dot_git = repo_path.join(".git");
+    if dot_git.is_dir() {
+        return Some(dot_git);
     }
+    if dot_git.is_file() {
+        let content = std::fs::read_to_string(&dot_git).ok()?;
+        let gitdir = content.trim().strip_prefix("gitdir: ")?;
+        let resolved = if std::path::Path::new(gitdir).is_absolute() {
+            PathBuf::from(gitdir)
+        } else {
+            repo_path.join(gitdir)
+        };
+        if resolved.is_dir() {
+            return Some(resolved);
+        }
+    }
+    None
+}
+
+pub fn setup_git_watcher(app: AppHandle, repo_path: PathBuf) -> Result<(), String> {
+    let git_dir = match resolve_git_dir(&repo_path) {
+        Some(d) => d,
+        None => return Ok(()),
+    };
 
     let mut guard = WATCHER_ACTIVE.lock().map_err(|_| "Lock error".to_string())?;
 

@@ -1,5 +1,6 @@
 use git2::{Repository, StatusOptions};
 use serde::Serialize;
+use std::collections::HashMap;
 use std::path::Path;
 
 const MAX_DIRTY_FILES: usize = 200;
@@ -8,6 +9,8 @@ const MAX_DIRTY_FILES: usize = 200;
 pub struct DirtyFile {
     pub path: String,
     pub status: String,
+    pub additions: u32,
+    pub deletions: u32,
 }
 
 pub fn list_dirty_files(repo_path: &Path) -> Result<Vec<DirtyFile>, String> {
@@ -20,6 +23,8 @@ pub fn list_dirty_files(repo_path: &Path) -> Result<Vec<DirtyFile>, String> {
     let statuses = repo
         .statuses(Some(&mut opts))
         .map_err(|e| format!("Lecture du statut : {e}"))?;
+
+    let diff_stats = get_diff_stats(repo_path);
 
     let mut files = Vec::new();
     for entry in statuses.iter() {
@@ -37,10 +42,66 @@ pub fn list_dirty_files(repo_path: &Path) -> Result<Vec<DirtyFile>, String> {
         } else {
             "changed"
         };
+
+        let (additions, deletions) = diff_stats
+            .get(&path)
+            .copied()
+            .unwrap_or_else(|| {
+                if label == "new" {
+                    (count_file_lines(&repo_path.join(&path)), 0)
+                } else {
+                    (0, 0)
+                }
+            });
+
         files.push(DirtyFile {
             path,
             status: label.to_string(),
+            additions,
+            deletions,
         });
     }
     Ok(files)
+}
+
+fn get_diff_stats(repo_path: &Path) -> HashMap<String, (u32, u32)> {
+    let output = std::process::Command::new("git")
+        .args(["-C"])
+        .arg(repo_path)
+        .args(["diff", "HEAD", "--numstat"])
+        .output();
+
+    let mut map = HashMap::new();
+    let Ok(output) = output else { return map };
+    if !output.status.success() {
+        return map;
+    }
+
+    for line in String::from_utf8_lossy(&output.stdout).lines() {
+        if map.len() >= MAX_DIRTY_FILES {
+            break;
+        }
+        let parts: Vec<&str> = line.split('\t').collect();
+        if parts.len() >= 3 {
+            let add = parts[0].parse::<u32>().unwrap_or(0);
+            let del = parts[1].parse::<u32>().unwrap_or(0);
+            map.insert(parts[2].to_string(), (add, del));
+        }
+    }
+    map
+}
+
+const MAX_FILE_READ: u64 = 1_048_576;
+
+fn count_file_lines(path: &Path) -> u32 {
+    let meta = match path.symlink_metadata() {
+        Ok(m) => m,
+        Err(_) => return 0,
+    };
+    if !meta.is_file() || meta.len() > MAX_FILE_READ {
+        return 0;
+    }
+    std::fs::read_to_string(path)
+        .map(|c| c.lines().count() as u32)
+        .unwrap_or(0)
 }

@@ -98,7 +98,8 @@
     "bubbleCreated": "ブランチ作成済み",
     "bubbleSwitched": "ブランチ切り替え済み",
     "createPlaceholder": "新しいブランチ名",
-    "commitRequired": "続行するには変更をコミットしてください"
+    "commitRequired": "続行するには変更をコミットしてください",
+    "createError": "無効な名前またはブランチが既に存在します"
   },
   "history": {
     "rename": "名前を変更",

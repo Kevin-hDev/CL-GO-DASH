@@ -98,7 +98,8 @@
     "bubbleCreated": "Branch erstellt",
     "bubbleSwitched": "Branch gewechselt",
     "createPlaceholder": "Name des neuen Branch",
-    "commitRequired": "Committen Sie Ihre Änderungen, um fortzufahren"
+    "commitRequired": "Committen Sie Ihre Änderungen, um fortzufahren",
+    "createError": "Ungültiger Name oder Branch existiert bereits"
   },
   "history": {
     "rename": "Umbenennen",

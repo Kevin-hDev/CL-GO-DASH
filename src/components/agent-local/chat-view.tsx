@@ -159,7 +159,19 @@ export function ChatView({
                 git={git}
                 locked={false}
                 onConflict={(branch, dirtyCount) => setBranchConflict({ branch, dirtyCount })}
-                onCreateRequest={() => {}}
+                onWorktreeSelect={async (path) => {
+                  const existing = projects.find((p) => p.path === path);
+                  if (existing) {
+                    proj.setSelectedProjectId(existing.id);
+                  } else {
+                    try {
+                      const added = await onAddProject(path);
+                      proj.setSelectedProjectId(added.id);
+                    } catch (e) {
+                      console.error("worktree select:", e);
+                    }
+                  }
+                }}
               />
             </div>
           </div>

@@ -93,6 +93,42 @@ fn safe_bash_cargo_check() {
 }
 
 #[test]
+fn safe_bash_git_branch_list() {
+    let args = json!({ "command": "git branch" });
+    assert!(!requires_permission("bash", &args));
+}
+
+#[test]
+fn unsafe_bash_git_branch_delete() {
+    let args = json!({ "command": "git branch -D main" });
+    assert!(requires_permission("bash", &args));
+}
+
+#[test]
+fn unsafe_bash_git_branch_move() {
+    let args = json!({ "command": "git branch -m old new" });
+    assert!(requires_permission("bash", &args));
+}
+
+#[test]
+fn unsafe_bash_git_branch_create() {
+    let args = json!({ "command": "git branch new-feat" });
+    assert!(requires_permission("bash", &args));
+}
+
+#[test]
+fn gated_tool_create_branch() {
+    let args = json!({});
+    assert!(requires_permission("create_branch", &args));
+}
+
+#[test]
+fn gated_tool_checkout_branch() {
+    let args = json!({});
+    assert!(requires_permission("checkout_branch", &args));
+}
+
+#[test]
 fn unknown_tool_no_permission() {
     // Un outil inconnu qui n'est pas dans GATED_TOOLS ne requiert pas de permission
     let args = json!({});

@@ -63,7 +63,7 @@ describe("BranchSelector", () => {
 
   it("renders current branch name in the button", () => {
     const { container } = render(
-      <BranchSelector git={makeMockGit()} locked={false} onConflict={vi.fn()} onCreateRequest={vi.fn()} />,
+      <BranchSelector git={makeMockGit()} locked={false} onConflict={vi.fn()} onWorktreeSelect={vi.fn()} />,
     );
     const btn = container.querySelector(".bs-btn");
     expect(btn?.textContent).toContain("main");
@@ -71,7 +71,7 @@ describe("BranchSelector", () => {
 
   it("opens dropdown on click showing all branches", () => {
     const { container } = render(
-      <BranchSelector git={makeMockGit()} locked={false} onConflict={vi.fn()} onCreateRequest={vi.fn()} />,
+      <BranchSelector git={makeMockGit()} locked={false} onConflict={vi.fn()} onWorktreeSelect={vi.fn()} />,
     );
     openDropdown(container);
     const dropdown = container.querySelector(".bs-dropdown");
@@ -82,7 +82,7 @@ describe("BranchSelector", () => {
 
   it("filters branches by search input", () => {
     const { container } = render(
-      <BranchSelector git={makeMockGit()} locked={false} onConflict={vi.fn()} onCreateRequest={vi.fn()} />,
+      <BranchSelector git={makeMockGit()} locked={false} onConflict={vi.fn()} onWorktreeSelect={vi.fn()} />,
     );
     openDropdown(container);
     const searchInput = container.querySelector(".bs-dropdown-search") as HTMLInputElement;
@@ -94,7 +94,7 @@ describe("BranchSelector", () => {
 
   it("shows dirty count for current branch", () => {
     const { container } = render(
-      <BranchSelector git={makeMockGit()} locked={false} onConflict={vi.fn()} onCreateRequest={vi.fn()} />,
+      <BranchSelector git={makeMockGit()} locked={false} onConflict={vi.fn()} onWorktreeSelect={vi.fn()} />,
     );
     openDropdown(container);
     const detail = container.querySelector(".bs-item-detail");
@@ -103,14 +103,14 @@ describe("BranchSelector", () => {
 
   it("returns null when not a git repo", () => {
     const { container } = render(
-      <BranchSelector git={makeMockGit({ isGitRepo: false })} locked={false} onConflict={vi.fn()} onCreateRequest={vi.fn()} />,
+      <BranchSelector git={makeMockGit({ isGitRepo: false })} locked={false} onConflict={vi.fn()} onWorktreeSelect={vi.fn()} />,
     );
     expect(container.innerHTML).toBe("");
   });
 
   it("shows locked indicator without dropdown", () => {
     const { container } = render(
-      <BranchSelector git={makeMockGit()} locked={true} onConflict={vi.fn()} onCreateRequest={vi.fn()} />,
+      <BranchSelector git={makeMockGit()} locked={true} onConflict={vi.fn()} onWorktreeSelect={vi.fn()} />,
     );
     const indicator = container.querySelector(".bs-indicator");
     expect(indicator).not.toBeNull();
@@ -121,7 +121,7 @@ describe("BranchSelector", () => {
 
   it("shows worktrees section in dropdown", () => {
     const { container } = render(
-      <BranchSelector git={makeMockGit()} locked={false} onConflict={vi.fn()} onCreateRequest={vi.fn()} />,
+      <BranchSelector git={makeMockGit()} locked={false} onConflict={vi.fn()} onWorktreeSelect={vi.fn()} />,
     );
     openDropdown(container);
     const labels = container.querySelectorAll(".bs-section-label");

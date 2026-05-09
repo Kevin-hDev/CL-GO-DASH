@@ -100,8 +100,29 @@ pub fn get_context(repo_path: &Path) -> GitContext {
 }
 
 fn validate_branch_name(name: &str) -> Result<(), String> {
-    if name.contains("..") || name.contains('\0') || name.contains('\\') {
+    if name.is_empty()
+        || name.contains("..")
+        || name.contains('\0')
+        || name.contains('\\')
+        || name.contains(':')
+        || name.contains('~')
+        || name.contains('^')
+        || name.contains('?')
+        || name.contains('*')
+        || name.contains('[')
+        || name.contains("@{")
+        || name.contains("//")
+        || name.starts_with('/')
+        || name.ends_with('/')
+        || name.ends_with(".lock")
+        || name.as_bytes().iter().any(|&b| b <= 0x20 || b == 0x7f)
+    {
         return Err("Nom de branche invalide".to_string());
+    }
+    for segment in name.split('/') {
+        if segment.is_empty() || segment.starts_with('.') || segment.ends_with('.') {
+            return Err("Nom de branche invalide".to_string());
+        }
     }
     Ok(())
 }
@@ -179,6 +200,11 @@ pub fn create_branch(repo_path: &Path, branch_name: &str) -> Result<(), String> 
     let repo = Repository::open(repo_path)
         .map_err(|e| format!("Impossible d'ouvrir le dépôt : {e}"))?;
 
+    let dirty = count_dirty_files(&repo).unwrap_or(0);
+    if dirty > 0 {
+        return Err(format!("DIRTY:{dirty}"));
+    }
+
     let head_commit = repo
         .head()
         .map_err(|e| format!("HEAD invalide : {e}"))?
@@ -188,5 +214,15 @@ pub fn create_branch(repo_path: &Path, branch_name: &str) -> Result<(), String> 
     repo.branch(branch_name, &head_commit, false)
         .map_err(|e| format!("Création branche : {e}"))?;
 
-    checkout_branch(repo_path, branch_name)
+    let (object, _) = repo
+        .revparse_ext(&format!("refs/heads/{branch_name}"))
+        .map_err(|e| format!("Branche introuvable : {e}"))?;
+
+    repo.checkout_tree(&object, None)
+        .map_err(|e| format!("Checkout impossible : {e}"))?;
+
+    repo.set_head(&format!("refs/heads/{branch_name}"))
+        .map_err(|e| format!("Mise à jour HEAD : {e}"))?;
+
+    Ok(())
 }

@@ -125,6 +125,31 @@
   color: var(--ink-faint);
 }
 
+.bs-create-form {
+  padding: var(--space-xs) var(--space-sm);
+}
+
+.bs-create-input {
+  width: 100%;
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--ink);
+  font-size: var(--text-xs);
+  outline: none;
+}
+
+.bs-create-input::placeholder {
+  color: var(--ink-faint);
+}
+
+.bs-create-error {
+  padding-top: var(--space-xxs, 2px);
+  font-size: 10px;
+  color: var(--signal-warning);
+}
+
 [data-theme="dark"] .bs-dropdown {
   background: var(--surface-glass);
   backdrop-filter: blur(20px);

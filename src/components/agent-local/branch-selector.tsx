@@ -12,24 +12,40 @@ interface BranchSelectorProps {
   git: GitBranchHook;
   locked: boolean;
   onConflict: (branchName: string, dirtyCount: number) => void;
-  onCreateRequest: () => void;
+  onWorktreeSelect: (path: string) => void;
 }
 
 export function BranchSelector({
-  git, locked, onConflict, onCreateRequest,
+  git, locked, onConflict, onWorktreeSelect,
 }: BranchSelectorProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [createName, setCreateName] = useState("");
+  const [createError, setCreateError] = useState("");
   const dropRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
+  const createRef = useRef<HTMLInputElement>(null);
 
-  useKeyboard({ onEscape: () => setOpen(false) });
-  useClickOutside(dropRef, () => setOpen(false));
+  useKeyboard({ onEscape: () => {
+    if (creating) {
+      setCreating(false);
+      setCreateName("");
+      setCreateError("");
+    } else {
+      setOpen(false);
+    }
+  }});
+  useClickOutside(dropRef, () => { setOpen(false); setCreating(false); });
 
   useEffect(() => {
-    if (open && searchRef.current) searchRef.current.focus();
-  }, [open]);
+    if (open && !creating && searchRef.current) searchRef.current.focus();
+  }, [open, creating]);
+
+  useEffect(() => {
+    if (creating && createRef.current) createRef.current.focus();
+  }, [creating]);
 
   const handleSelect = useCallback(async (name: string) => {
     if (name === git.currentBranch) {
@@ -45,6 +61,21 @@ export function BranchSelector({
       onConflict(name, result.dirtyCount);
     }
   }, [git, onConflict]);
+
+  const handleCreate = useCallback(async () => {
+    const name = createName.trim();
+    if (!name) return;
+    const ok = await git.create(name);
+    if (ok) {
+      setOpen(false);
+      setCreating(false);
+      setCreateName("");
+      setCreateError("");
+      setSearch("");
+    } else {
+      setCreateError(t("branches.createError"));
+    }
+  }, [createName, git, t]);
 
   if (!git.isGitRepo) return null;
 
@@ -122,7 +153,16 @@ export function BranchSelector({
               <div className="bs-sep" />
               <div className="bs-section-label">{t("branches.worktrees")}</div>
               {filteredWorktrees.map((w) => (
-                <div key={w.path} className="bs-item" role="button" tabIndex={0}>
+                <div
+                  key={w.path}
+                  className="bs-item"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => { setOpen(false); onWorktreeSelect(w.path); }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") { setOpen(false); onWorktreeSelect(w.path); }
+                  }}
+                >
                   <GitBranch size={14} />
                   <div className="bs-item-info">
                     <span className="bs-item-name">{w.branch || w.path}</span>
@@ -135,18 +175,40 @@ export function BranchSelector({
 
           <div className="bs-sep" />
 
-          <div
-            className="bs-item"
-            role="button"
-            tabIndex={0}
-            onClick={() => { setOpen(false); onCreateRequest(); }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") { setOpen(false); onCreateRequest(); }
-            }}
-          >
-            <Plus size={14} />
-            <span>{t("branches.createNew")}</span>
-          </div>
+          {creating ? (
+            <div className="bs-create-form">
+              <input
+                ref={createRef}
+                className="bs-create-input"
+                placeholder={t("branches.createPlaceholder")}
+                value={createName}
+                onChange={(e) => { setCreateName(e.target.value); setCreateError(""); }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") void handleCreate();
+                  if (e.key === "Escape") {
+                    e.stopPropagation();
+                    setCreating(false);
+                    setCreateName("");
+                    setCreateError("");
+                  }
+                }}
+              />
+              {createError && <div className="bs-create-error">{createError}</div>}
+            </div>
+          ) : (
+            <div
+              className="bs-item"
+              role="button"
+              tabIndex={0}
+              onClick={() => setCreating(true)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") setCreating(true);
+              }}
+            >
+              <Plus size={14} />
+              <span>{t("branches.createNew")}</span>
+            </div>
+          )}
         </div>
       )}
     </div>

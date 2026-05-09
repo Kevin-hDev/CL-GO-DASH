@@ -98,7 +98,8 @@
     "bubbleCreated": "Ramo creato",
     "bubbleSwitched": "Ramo cambiato",
     "createPlaceholder": "Nome del nuovo ramo",
-    "commitRequired": "Effettua un commit delle modifiche per continuare"
+    "commitRequired": "Effettua un commit delle modifiche per continuare",
+    "createError": "Nome non valido o ramo già esistente"
   },
   "history": {
     "rename": "Rinomina",

@@ -77,7 +77,7 @@
 }
 
 .bcd-file-stat-del {
-  color: var(--ink-faint);
+  color: var(--diff-old);
 }
 
 .bcd-hint {

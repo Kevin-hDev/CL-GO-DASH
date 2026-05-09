@@ -8,6 +8,8 @@ import "./branch-conflict-dialog.css";
 interface DirtyFile {
   path: string;
   status: string;
+  additions: number;
+  deletions: number;
 }
 
 interface BranchConflictDialogProps {
@@ -31,7 +33,7 @@ export function BranchConflictDialog({
   useEffect(() => {
     void invoke<DirtyFile[]>("list_git_dirty_files", { path: projectPath })
       .then(setFiles)
-      .catch(() => {});
+      .catch((e) => console.error("list_git_dirty_files:", e));
   }, [projectPath]);
 
   useEffect(() => {
@@ -42,14 +44,13 @@ export function BranchConflictDialog({
     if (e.target === overlayRef.current) onCancel();
   }, [onCancel]);
 
-  const statLabel = (status: string) => {
-    if (status === "new") return { add: "+1", del: "-0" };
-    if (status === "deleted") return { add: "+0", del: "-1" };
-    return { add: "+1", del: "-0" };
-  };
+  const statLabel = (f: DirtyFile) => ({
+    add: `+${f.additions}`,
+    del: `-${f.deletions}`,
+  });
 
   return (
-    <div className="bcd-overlay" ref={overlayRef} onClick={handleOverlayClick}>
+    <div className="bcd-overlay" ref={overlayRef} role="presentation" onClick={handleOverlayClick} onKeyDown={() => {}}>
       <div className="bcd-dialog" ref={dialogRef} tabIndex={-1}>
         <button className="bcd-close" onClick={onCancel} type="button">
           <X size={16} />
@@ -61,7 +62,7 @@ export function BranchConflictDialog({
 
         <div className="bcd-file-list">
           {files.map((f) => {
-            const stat = statLabel(f.status);
+            const stat = statLabel(f);
             return (
               <div key={f.path} className="bcd-file">
                 <span>{f.path}</span>

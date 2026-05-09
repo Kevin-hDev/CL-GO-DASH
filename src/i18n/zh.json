@@ -98,7 +98,8 @@
     "bubbleCreated": "分支已创建",
     "bubbleSwitched": "分支已切换",
     "createPlaceholder": "新分支名称",
-    "commitRequired": "请提交更改以继续"
+    "commitRequired": "请提交更改以继续",
+    "createError": "名称无效或分支已存在"
   },
   "history": {
     "rename": "重命名",

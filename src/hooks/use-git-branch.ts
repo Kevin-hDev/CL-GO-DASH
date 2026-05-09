@@ -62,7 +62,7 @@ export function useGitBranch(projectPath: string | undefined, sessionId?: string
         invoke<WorktreeInfo[]>("list_git_worktrees", { path }),
       ]);
 
-      if (!mountedRef.current) return;
+      if (!mountedRef.current || path !== pathRef.current) return;
 
       setState({
         branches,
@@ -73,7 +73,7 @@ export function useGitBranch(projectPath: string | undefined, sessionId?: string
         isLoading: false,
       });
     } catch {
-      if (!mountedRef.current) return;
+      if (!mountedRef.current || path !== pathRef.current) return;
       setState((s) => ({ ...s, isGitRepo: false, isLoading: false }));
     }
   }, []);
