@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import type { PanelMode } from "@/hooks/use-forecast-panel";
 import "./mode-selector.css";
 
@@ -9,22 +10,36 @@ interface ModeSelectorProps {
 
 export function ModeSelector({ mode, onChange }: ModeSelectorProps) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState({ top: 0, right: 0 });
+
+  const openMenu = useCallback(() => {
+    if (btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect();
+      setPos({ top: r.bottom + 6, right: window.innerWidth - r.right });
+    }
+    setOpen(true);
+  }, []);
 
   useEffect(() => {
     if (!open) return;
     const close = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      const target = e.target as Node;
+      if (btnRef.current?.contains(target)) return;
+      if (menuRef.current?.contains(target)) return;
+      setOpen(false);
     };
     document.addEventListener("mousedown", close);
     return () => document.removeEventListener("mousedown", close);
   }, [open]);
 
   return (
-    <div className="ms-wrapper" ref={ref}>
+    <>
       <button
+        ref={btnRef}
         className={`ms-btn ${mode === "forecast" ? "ms-active" : ""}`}
-        onClick={() => setOpen(!open)}
+        onClick={() => open ? setOpen(false) : openMenu()}
         title="Panel mode"
       >
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor"
@@ -34,8 +49,12 @@ export function ModeSelector({ mode, onChange }: ModeSelectorProps) {
           <path d="M5.5 8h5" strokeDasharray="2 2" />
         </svg>
       </button>
-      {open && (
-        <div className="ms-dropdown">
+      {open && createPortal(
+        <div
+          ref={menuRef}
+          className="ms-dropdown"
+          style={{ position: "fixed", top: pos.top, right: pos.right }}
+        >
           <button
             className={`ms-option ${mode === "preview" ? "ms-selected" : ""}`}
             onClick={() => { onChange("preview"); setOpen(false); }}
@@ -50,8 +69,9 @@ export function ModeSelector({ mode, onChange }: ModeSelectorProps) {
             {mode === "forecast" ? <span className="ms-dot" /> : <span className="ms-dot-empty" />}
             Forecast
           </button>
-        </div>
+        </div>,
+        document.body,
       )}
-    </div>
+    </>
   );
 }

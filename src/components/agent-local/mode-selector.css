@@ -1,5 +1,4 @@
 .ms-wrapper {
-  position: relative;
   display: inline-flex;
 }
 
@@ -28,9 +27,6 @@
 }
 
 .ms-dropdown {
-  position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
   min-width: 160px;
   padding: 4px;
   background: var(--shell-opaque);
