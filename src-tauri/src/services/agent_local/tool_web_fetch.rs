@@ -5,17 +5,12 @@ use std::time::Duration;
 
 const MAX_CHARS: usize = 50_000;
 const TIMEOUT: Duration = Duration::from_secs(15);
-const JINA_PREFIX: &str = "https://r.jina.ai/";
-const MIN_CONTENT_LEN: usize = 100;
+const MIN_READABLE_LEN: usize = 100;
 
 pub async fn fetch_url(url: &str) -> Result<String, String> {
     let (host, resolved_ip) = validate_url_with_ip(url).await?;
     let html = fetch_html_pinned(url, &host, resolved_ip).await?;
     let content = extract_and_convert(&html, url);
-
-    if content.len() < MIN_CONTENT_LEN {
-        return fetch_via_jina(url).await;
-    }
     Ok(truncate(&content, MAX_CHARS))
 }
 
@@ -44,7 +39,7 @@ async fn fetch_html_pinned(url: &str, host: &str, ip: IpAddr) -> Result<String, 
 
 fn extract_and_convert(html: &str, url: &str) -> String {
     let readability_result = extract_readability(html, url);
-    let source = if readability_result.len() > MIN_CONTENT_LEN {
+    let source = if readability_result.len() > MIN_READABLE_LEN {
         &readability_result
     } else {
         html
@@ -68,24 +63,6 @@ fn convert_to_markdown(html: &str) -> String {
         .skip_tags(vec!["script", "style"])
         .build();
     converter.convert(html).unwrap_or_default()
-}
-
-async fn fetch_via_jina(url: &str) -> Result<String, String> {
-    let client = Client::builder()
-        .redirect(reqwest::redirect::Policy::none())
-        .build()
-        .map_err(|e| format!("Erreur client: {e}"))?;
-    let jina_url = format!("{JINA_PREFIX}{url}");
-    let resp = client
-        .get(&jina_url)
-        .header("Accept", "text/markdown")
-        .timeout(TIMEOUT)
-        .send()
-        .await
-        .map_err(|e| format!("Jina fallback: {e}"))?;
-
-    let text = resp.text().await.map_err(|e| e.to_string())?;
-    Ok(truncate(&text, MAX_CHARS))
 }
 
 async fn validate_url_with_ip(url: &str) -> Result<(String, IpAddr), String> {

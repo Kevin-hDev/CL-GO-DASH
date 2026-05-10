@@ -16,6 +16,7 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
     }
 
     let config = services::config::read_config().unwrap_or_default();
+    check_config_corruption(app);
     crate::app_events::sync_autostart(app.handle(), config.advanced.autostart);
 
     if config.advanced.start_hidden {
@@ -42,6 +43,21 @@ pub fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
     ollama_polling::start(app.handle().clone());
     tauri::async_runtime::spawn(services::llm::model_registry::init());
     Ok(())
+}
+
+fn check_config_corruption(app: &mut tauri::App) {
+    let sentinel = services::paths::data_dir().join(".config-corrupted");
+    if sentinel.exists() {
+        let msg = std::fs::read_to_string(&sentinel).unwrap_or_default();
+        let _ = std::fs::remove_file(&sentinel);
+        eprintln!("[config] corruption détectée au dernier lancement: {msg}");
+        use tauri::Emitter;
+        let handle = app.handle().clone();
+        tauri::async_runtime::spawn(async move {
+            tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+            let _ = handle.emit("config-corrupted", msg);
+        });
+    }
 }
 
 fn emit_vault_error(_app: &mut tauri::App, msg: String) {

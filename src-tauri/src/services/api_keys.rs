@@ -45,7 +45,7 @@ fn write_registry(ids: &[String]) -> Result<(), String> {
 
 fn add_to_registry(provider_id: &str) -> Result<(), String> {
     let mut ids = read_registry();
-    if !ids.iter().any(|id| id.as_str().len() == provider_id.len() && id.starts_with(provider_id)) {
+    if !ids.iter().any(|id| id == provider_id) {
         ids.push(provider_id.to_string());
         write_registry(&ids)?;
     }
@@ -55,7 +55,7 @@ fn add_to_registry(provider_id: &str) -> Result<(), String> {
 fn remove_from_registry(provider_id: &str) -> Result<(), String> {
     let mut ids = read_registry();
     let before = ids.len();
-    ids.retain(|id| !(id.as_str().len() == provider_id.len() && id.starts_with(provider_id)));
+    ids.retain(|id| id != provider_id);
     if ids.len() != before {
         write_registry(&ids)?;
     }
@@ -77,6 +77,29 @@ fn flush_vault(s: &VaultState) -> Result<(), String> {
         s.keys.iter().map(|(k, v)| (k.clone(), v.as_str().to_string())).collect(),
     );
     vault::write_vault(&s.master_key, &raw.0)
+}
+
+fn migrate_raw_prefix(
+    master_key: &Zeroizing<Vec<u8>>,
+    map: &mut HashMap<String, String>,
+) -> Result<(), String> {
+    let to_migrate: Vec<String> = map
+        .keys()
+        .filter(|k| k.starts_with('_') && !k.starts_with(RAW_PREFIX))
+        .cloned()
+        .collect();
+    if to_migrate.is_empty() {
+        return Ok(());
+    }
+    for old_key in &to_migrate {
+        let new_key = format!("{RAW_PREFIX}{old_key}");
+        if let Some(val) = map.remove(old_key) {
+            map.insert(new_key, val);
+        }
+    }
+    vault::write_vault(master_key, map)?;
+    eprintln!("[vault] migrated {} raw keys to namespaced prefix", to_migrate.len());
+    Ok(())
 }
 
 pub fn init() -> Result<(), String> {
@@ -101,6 +124,7 @@ pub fn init() -> Result<(), String> {
         let _ = write_registry(&registry);
         let _ = std::fs::write(&marker, b"ok");
     }
+    migrate_raw_prefix(&master_key, &mut raw_map.0)?;
     let keys = raw_map.0.drain().map(|(k, v)| (k, Zeroizing::new(v))).collect();
     let mut state = STATE.lock().map_err(|e| format!("lock: {e}"))?;
     *state = Some(VaultState { master_key, keys });
@@ -169,6 +193,8 @@ pub fn list_configured() -> Vec<String> {
 const MAX_RAW_VALUE_LEN: usize = 8192;
 const MAX_VAULT_ENTRIES: usize = 500;
 
+const RAW_PREFIX: &str = "raw:";
+
 pub fn set_raw(key: &str, value: &str) -> Result<(), String> {
     if key.is_empty() || key.len() > 64 {
         return Err("clé vault invalide".to_string());
@@ -176,28 +202,31 @@ pub fn set_raw(key: &str, value: &str) -> Result<(), String> {
     if value.len() > MAX_RAW_VALUE_LEN {
         return Err("valeur vault trop longue".to_string());
     }
+    let prefixed = format!("{RAW_PREFIX}{key}");
     let mut state = STATE.lock().map_err(|e| format!("lock: {e}"))?;
     let s = state.as_mut().ok_or("vault not initialized")?;
-    if !s.keys.contains_key(key) && s.keys.len() >= MAX_VAULT_ENTRIES {
+    if !s.keys.contains_key(&prefixed) && s.keys.len() >= MAX_VAULT_ENTRIES {
         return Err("limite d'entrées vault atteinte".to_string());
     }
-    s.keys.insert(key.to_string(), Zeroizing::new(value.to_string()));
+    s.keys.insert(prefixed, Zeroizing::new(value.to_string()));
     flush_vault(s)
 }
 
 pub fn get_raw(key: &str) -> Result<Zeroizing<String>, String> {
+    let prefixed = format!("{RAW_PREFIX}{key}");
     let state = STATE.lock().map_err(|e| format!("lock: {e}"))?;
     let s = state.as_ref().ok_or("vault not initialized")?;
-    s.keys.get(key).cloned().ok_or_else(|| "clé non trouvée".to_string())
+    s.keys.get(&prefixed).cloned().ok_or_else(|| "clé non trouvée".to_string())
 }
 
 pub fn delete_raw(key: &str) -> Result<(), String> {
     if key.is_empty() || key.len() > 64 {
         return Err("clé vault invalide".to_string());
     }
+    let prefixed = format!("{RAW_PREFIX}{key}");
     let mut state = STATE.lock().map_err(|e| format!("lock: {e}"))?;
     let s = state.as_mut().ok_or("vault not initialized")?;
-    s.keys.remove(key);
+    s.keys.remove(&prefixed);
     flush_vault(s)
 }
 

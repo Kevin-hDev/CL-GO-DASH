@@ -21,6 +21,8 @@ pub fn read_config() -> Result<ClgoConfig, String> {
         Ok(v) => v,
         Err(e) => {
             eprintln!("[config] JSON invalide ({}), reset à zéro", e);
+            let sentinel = crate::services::paths::data_dir().join(".config-corrupted");
+            let _ = fs::write(&sentinel, format!("{}", e));
             return Ok(ClgoConfig::default());
         }
     };

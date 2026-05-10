@@ -4,7 +4,7 @@ fn is_known_provider(id: &str) -> bool {
     crate::services::llm::catalog::find(id).is_some()
         || crate::services::search::catalog::SEARCH_PROVIDERS
             .iter()
-            .any(|p| p.id.len() == id.len() && p.id.starts_with(id))
+            .any(|p| p.id == id)
 }
 
 pub fn validate_provider(provider_id: &str) -> Result<(), String> {
