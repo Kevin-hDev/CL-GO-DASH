@@ -1,0 +1,137 @@
+/* Markdown rendering in chat bubbles — tables, lists, inline code, bold/italic */
+
+.chat-md {
+  word-break: break-word;
+}
+
+.chat-md p {
+  white-space: pre-wrap;
+  margin: 0 0 0.5em;
+}
+
+.chat-md p:last-child {
+  margin-bottom: 0;
+}
+
+/* Tables — style Claude.ai */
+.chat-md table {
+  border-spacing: 0;
+  border-collapse: separate;
+  border-radius: var(--radius-md, 8px);
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  overflow: hidden;
+  margin: var(--space-sm) 0;
+  font-size: var(--text-xs);
+  white-space: normal;
+}
+
+.chat-md th,
+.chat-md td {
+  padding: 10px 16px;
+  text-align: left;
+}
+
+.chat-md th {
+  font-weight: 600;
+  color: var(--ink-muted);
+  font-size: 0.85em;
+  letter-spacing: 0.02em;
+}
+
+/* Dark: même bg que les tool bubbles, pas de bordure */
+[data-theme="dark"] .chat-md table {
+  border: none;
+}
+
+[data-theme="dark"] .chat-md th {
+  background: rgba(40, 40, 46, 0.7);
+}
+
+[data-theme="dark"] .chat-md td {
+  background: rgba(30, 30, 34, 0.55);
+}
+
+[data-theme="dark"] .chat-md th,
+[data-theme="dark"] .chat-md td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+[data-theme="dark"] .chat-md tr:last-child td {
+  border-bottom: none;
+}
+
+/* Light: bordures épaisses visibles, couleurs actuelles */
+[data-theme="light"] .chat-md table {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="light"] .chat-md th {
+  background: var(--surface-hover);
+}
+
+[data-theme="light"] .chat-md th,
+[data-theme="light"] .chat-md td {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="light"] .chat-md tr:last-child td {
+  border-bottom: none;
+}
+
+.chat-md tbody tr:hover {
+  filter: brightness(1.05);
+}
+
+/* Lists */
+.chat-md ul,
+.chat-md ol {
+  padding-left: 1.5em;
+  margin: var(--space-xs) 0;
+  white-space: normal;
+}
+
+.chat-md li {
+  margin: 2px 0;
+}
+
+.chat-md li p {
+  margin: 0;
+}
+
+/* Inline code */
+.chat-md :not(pre) > code {
+  background: var(--shell);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+/* Headings */
+.chat-md h1, .chat-md h2, .chat-md h3,
+.chat-md h4, .chat-md h5, .chat-md h6 {
+  margin: 0.8em 0 0.4em;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.chat-md h1 { font-size: 1.3em; }
+.chat-md h2 { font-size: 1.15em; }
+.chat-md h3 { font-size: 1.05em; }
+
+/* Blockquote */
+.chat-md blockquote {
+  margin: var(--space-xs) 0;
+  padding-left: var(--space-sm);
+  border-left: 3px solid var(--edge);
+  color: var(--ink-muted);
+}
+
+/* Horizontal rule */
+.chat-md hr {
+  border: none;
+  border-top: 1px solid var(--edge);
+  margin: var(--space-sm) 0;
+}

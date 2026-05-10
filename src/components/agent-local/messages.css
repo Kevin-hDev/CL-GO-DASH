@@ -36,8 +36,6 @@
   font-size: var(--text-sm);
   color: var(--ink);
   max-width: 660px;
-  white-space: pre-wrap;
-  word-break: break-word;
 }
 
 /* Actions au survol — pas de transition CSS (bug compositor WKWebView) */
