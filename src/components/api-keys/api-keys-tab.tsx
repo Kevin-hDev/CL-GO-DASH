@@ -8,7 +8,6 @@ import { ApiKeysDetails } from "./api-keys-details";
 import { ApiKeysConfigDialog } from "./api-keys-config-dialog";
 import { ConnectorsModal } from "./connectors-modal";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ForecastModels } from "@/components/forecast/model-browser/forecast-models";
 import "./api-keys.css";
 import "./api-keys-main.css";
 import "./api-keys-detail.css";
@@ -43,14 +42,11 @@ export function ApiKeysTab(): { list: React.ReactNode; detail: React.ReactNode }
     ? configured.find((p) => p.id === selectedId) ?? null
     : null;
 
-  const [showForecastModels, setShowForecastModels] = useState(false);
-
   const list = (
     <ApiKeysSidebar
       configured={configured}
       selectedId={selectedId}
-      onSelect={(id) => { setSelectedId(id); setShowForecastModels(false); }}
-      onForecastModels={() => { setSelectedId(null); setShowForecastModels(true); }}
+      onSelect={setSelectedId}
     />
   );
 
@@ -71,9 +67,7 @@ export function ApiKeysTab(): { list: React.ReactNode; detail: React.ReactNode }
 
   const detail = (
     <>
-      {showForecastModels ? (
-        <ForecastModels />
-      ) : selected ? (
+      {selected ? (
         <ApiKeysDetails
           provider={selected}
           onEdit={() =>

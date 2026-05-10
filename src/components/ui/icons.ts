@@ -50,4 +50,5 @@ export {
   Broadcast,
   ChatTeardropDots,
   Hash,
+  ChartLineUp,
 } from "@phosphor-icons/react";
