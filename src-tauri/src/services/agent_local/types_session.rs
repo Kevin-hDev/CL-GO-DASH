@@ -14,6 +14,10 @@ pub struct AgentSession {
     pub messages: Vec<AgentMessage>,
     #[serde(default)]
     pub is_heartbeat: bool,
+    #[serde(default)]
+    pub is_gateway: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub gateway_channel_key: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub project_id: Option<String>,
     #[serde(default)]
@@ -43,6 +47,10 @@ pub struct AgentSessionMeta {
     pub message_count: usize,
     #[serde(default)]
     pub is_heartbeat: bool,
+    #[serde(default)]
+    pub is_gateway: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub gateway_channel_key: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub project_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]

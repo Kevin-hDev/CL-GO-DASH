@@ -67,6 +67,75 @@
       }
     }
   },
+  "channels": {
+    "sidebar": {
+      "title": "チャンネル",
+      "messaging": "メッセージング",
+      "pro": "プロフェッショナル",
+      "empty": "チャンネルが設定されていません",
+      "accounts": "{{count}} アカウント",
+      "configured": "設定済み"
+    },
+    "detail": {
+      "title": "設定",
+      "enabled": "有効",
+      "disabled": "無効",
+      "token": "ボットトークン",
+      "tokenPlaceholder": "トークンを貼り付け…",
+      "tokenSet": "トークン設定済み",
+      "tokenMissing": "トークン未設定",
+      "allowlist": "許可ユーザー",
+      "allowlistPlaceholder": "ユーザー ID…",
+      "allowlistAdd": "追加",
+      "requireMention": "グループではメンション必須",
+      "provider": "LLM プロバイダー",
+      "model": "モデル",
+      "testConnection": "接続テスト",
+      "testSuccess": "接続成功",
+      "testFailed": "接続失敗",
+      "save": "保存",
+      "delete": "削除",
+      "cancel": "キャンセル",
+      "addAccount": "アカウント追加",
+      "accountId": "アカウント ID",
+      "confirmDelete": "このアカウントを削除しますか？",
+      "confirmDeleteDesc": "トークンはボールトから削除され、チャンネルは停止されます。",
+      "connected": "接続済み",
+      "disconnected": "未接続"
+    },
+    "status": {
+      "off": "停止",
+      "starting": "起動中…",
+      "running": "稼働中",
+      "error": "エラー",
+      "stopping": "停止中…"
+    },
+    "gateway": {
+      "start": "ゲートウェイを開始",
+      "stop": "ゲートウェイを停止",
+      "running": "ゲートウェイ稼働中",
+      "stopped": "ゲートウェイ停止中"
+    },
+    "browse": {
+      "title": "メッセージングチャネル",
+      "subtitle": "メッセージングボットを接続してLLMと通信します。",
+      "telegramDesc": "Telegramボット — ロングポーリング、グループとプライベートメッセージ。",
+      "slackDesc": "Slackボット — Socket Mode、チャネルとダイレクトメッセージ。",
+      "discordDesc": "Discordボット — Gateway WebSocket、サーバーとプライベートメッセージ。",
+      "messaging": "メッセージング",
+      "pro": "プロフェッショナル"
+    },
+    "config": {
+      "addTitle": "{{name}}を追加",
+      "description": "説明",
+      "testing": "テスト中…",
+      "addAndTest": "追加してテスト"
+    },
+    "main": {
+      "subtitle": "メッセージングボットを接続してLLMと通信します。",
+      "browseBtn": "チャネルを閲覧"
+    }
+  },
   "welcome": {
     "title": "今日は何をしましょうか？"
   },
@@ -300,7 +369,8 @@
       "llm": "LLM",
       "advanced": "詳細設定",
       "shortcuts": "キーボードショートカット",
-      "about": "このアプリについて"
+      "about": "このアプリについて",
+      "channels": "チャンネル"
     },
     "general": {
       "themeTitle": "テーマ",

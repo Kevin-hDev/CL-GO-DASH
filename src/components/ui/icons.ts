@@ -47,4 +47,7 @@ export {
   GitBranch,
   GitFork,
   GitMerge,
+  Broadcast,
+  ChatTeardropDots,
+  Hash,
 } from "@phosphor-icons/react";

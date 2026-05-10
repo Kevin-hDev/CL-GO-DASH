@@ -7,6 +7,7 @@ mod storage_migration;
 mod tray;
 
 use services::agent_local::ollama_client::OllamaClient;
+use services::gateway::GatewayService;
 use services::ollama_lifecycle::{self, OllamaSidecar};
 use services::scheduler::Scheduler;
 use std::collections::HashMap;
@@ -40,6 +41,7 @@ pub fn run() {
         .manage(PullCancel(Mutex::new(None)))
         .manage(OllamaSidecar::new())
         .manage(services::terminal::PtyManager::new())
+        .manage(GatewayService::new())
         .manage(commands::file_tree_watcher::FileTreeWatcher::new())
         .setup(|app| {
             services::agent_local::app_handle_global::init(app.handle().clone());
@@ -87,6 +89,16 @@ pub fn run() {
             // Tray icon
             if config.advanced.show_tray {
                 let _ = tray::create_tray(app);
+            }
+
+            // Gateway : démarrage si configuré
+            if config.gateway.enabled && config.gateway.start_with_app {
+                let gw_config = config.gateway.clone();
+                let gw_handle = app.handle().clone();
+                tauri::async_runtime::spawn(async move {
+                    let gw = gw_handle.state::<GatewayService>();
+                    gw.start(gw_config, gw_handle.clone()).await;
+                });
             }
 
             services::file_watcher::start(app.handle());
@@ -248,6 +260,15 @@ pub fn run() {
             commands::commit_and_checkout_git_branch,
             commands::list_git_dirty_files,
             commands::list_git_worktrees,
+            // Gateway
+            commands::gateway_status,
+            commands::gateway_start,
+            commands::gateway_stop,
+            commands::gateway_get_config,
+            commands::gateway_set_config,
+            commands::gateway_set_token,
+            commands::gateway_delete_token,
+            commands::gateway_has_token,
             // Codex OAuth (dev-only)
             commands::codex_login,
             commands::codex_logout,

@@ -79,6 +79,8 @@ pub fn meta_from_session(session: &AgentSession) -> AgentSessionMeta {
         provider: session.provider.clone(),
         message_count: session.messages.len(),
         is_heartbeat: session.is_heartbeat,
+        is_gateway: session.is_gateway,
+        gateway_channel_key: session.gateway_channel_key.clone(),
         project_id: session.project_id.clone(),
         parent_session_id: session.parent_session_id.clone(),
         subagent_type: session.subagent_type.clone(),

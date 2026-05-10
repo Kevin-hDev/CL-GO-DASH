@@ -1,11 +1,14 @@
 use serde::{Deserialize, Serialize};
 
+use super::gateway_config::GatewayConfig;
+
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(default)]
 pub struct ClgoConfig {
     pub scheduled_wakeups: Vec<ScheduledWakeup>,
     pub heartbeat: HeartbeatConfig,
     pub advanced: AdvancedSettings,
+    pub gateway: GatewayConfig,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

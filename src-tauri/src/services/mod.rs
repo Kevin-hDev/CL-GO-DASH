@@ -26,6 +26,7 @@ pub mod mcp_bridge;
 pub mod link_preview;
 pub mod git;
 pub mod env_detect;
+pub mod gateway;
 pub mod git_context;
 #[cfg(test)]
 mod ollama_kill_tests;

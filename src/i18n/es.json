@@ -67,6 +67,75 @@
       }
     }
   },
+  "channels": {
+    "sidebar": {
+      "title": "Canales",
+      "messaging": "Mensajería",
+      "pro": "Profesional",
+      "empty": "Ningún canal configurado",
+      "accounts": "{{count}} cuenta(s)",
+      "configured": "Configurados"
+    },
+    "detail": {
+      "title": "Configuración",
+      "enabled": "Activado",
+      "disabled": "Desactivado",
+      "token": "Token del bot",
+      "tokenPlaceholder": "Pegue el token aquí…",
+      "tokenSet": "Token configurado",
+      "tokenMissing": "Token faltante",
+      "allowlist": "Usuarios autorizados",
+      "allowlistPlaceholder": "ID de usuario…",
+      "allowlistAdd": "Añadir",
+      "requireMention": "Mención requerida en grupos",
+      "provider": "Proveedor LLM",
+      "model": "Modelo",
+      "testConnection": "Probar conexión",
+      "testSuccess": "Conexión exitosa",
+      "testFailed": "Conexión fallida",
+      "save": "Guardar",
+      "delete": "Eliminar",
+      "cancel": "Cancelar",
+      "addAccount": "Añadir cuenta",
+      "accountId": "ID de cuenta",
+      "confirmDelete": "¿Eliminar esta cuenta?",
+      "confirmDeleteDesc": "El token será eliminado del cofre y el canal será detenido.",
+      "connected": "Conectado",
+      "disconnected": "Desconectado"
+    },
+    "status": {
+      "off": "Detenido",
+      "starting": "Iniciando…",
+      "running": "Activo",
+      "error": "Error",
+      "stopping": "Deteniendo…"
+    },
+    "gateway": {
+      "start": "Iniciar gateway",
+      "stop": "Detener gateway",
+      "running": "Gateway activo",
+      "stopped": "Gateway detenido"
+    },
+    "browse": {
+      "title": "Canales de mensajería",
+      "subtitle": "Conecta tus bots de mensajería para comunicarse con los LLM.",
+      "telegramDesc": "Bot de Telegram — long polling, grupos y mensajes privados.",
+      "slackDesc": "Bot de Slack — Socket Mode, canales y mensajes directos.",
+      "discordDesc": "Bot de Discord — Gateway WebSocket, servidores y mensajes privados.",
+      "messaging": "Mensajería",
+      "pro": "Profesional"
+    },
+    "config": {
+      "addTitle": "Añadir {{name}}",
+      "description": "Descripción",
+      "testing": "Probando…",
+      "addAndTest": "Añadir y probar"
+    },
+    "main": {
+      "subtitle": "Conecta bots de mensajería para comunicarse con los LLM.",
+      "browseBtn": "Explorar canales"
+    }
+  },
   "welcome": {
     "title": "¿Qué hacemos hoy?"
   },
@@ -300,7 +369,8 @@
       "llm": "LLM",
       "advanced": "Avanzado",
       "shortcuts": "Atajos de teclado",
-      "about": "Acerca de"
+      "about": "Acerca de",
+      "channels": "Canales"
     },
     "general": {
       "themeTitle": "Tema",

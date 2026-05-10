@@ -33,6 +33,7 @@ pub mod link_preview;
 pub mod subagents;
 pub mod file_tree;
 pub mod file_tree_watcher;
+pub mod gateway;
 pub mod git;
 #[cfg(test)]
 pub mod subagents_tests;
@@ -74,4 +75,5 @@ pub use link_preview::*;
 pub use subagents::*;
 pub use file_tree::*;
 pub use file_tree_watcher::*;
+pub use gateway::*;
 pub use git::*;

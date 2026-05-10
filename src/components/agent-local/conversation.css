@@ -77,6 +77,18 @@
   -webkit-mask-image: linear-gradient(to right, black calc(100% - 16px), transparent);
 }
 
+.conv-gw-badge {
+  font-size: 9px;
+  font-weight: 600;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: rgba(59, 130, 246, 0.15);
+  color: rgb(96, 165, 250);
+  flex-shrink: 0;
+  margin-left: 4px;
+  letter-spacing: 0.5px;
+}
+
 /* Tab Bar */
 .tab-bar {
   display: flex;

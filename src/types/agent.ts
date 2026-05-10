@@ -106,6 +106,8 @@ export interface AgentSessionMeta {
   subagent_type?: "explorer" | "coder";
   subagent_status?: "running" | "completed" | "failed" | "cancelled";
   subagent_run_id?: string;
+  is_gateway?: boolean;
+  gateway_channel_key?: string;
 }
 
 export interface SubagentInfo {

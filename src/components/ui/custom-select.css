@@ -45,9 +45,9 @@
   overflow-y: auto;
   border-radius: var(--radius-sm);
   border: 1px solid var(--edge);
-  background: var(--shell);
+  background: var(--shell-opaque);
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
-  z-index: 60;
+  z-index: 1000;
 }
 
 .cs-option {

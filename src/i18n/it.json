@@ -67,6 +67,75 @@
       }
     }
   },
+  "channels": {
+    "sidebar": {
+      "title": "Canali",
+      "messaging": "Messaggistica",
+      "pro": "Professionale",
+      "empty": "Nessun canale configurato",
+      "accounts": "{{count}} account",
+      "configured": "Configurati"
+    },
+    "detail": {
+      "title": "Configurazione",
+      "enabled": "Attivato",
+      "disabled": "Disattivato",
+      "token": "Token del bot",
+      "tokenPlaceholder": "Incolla il token qui…",
+      "tokenSet": "Token configurato",
+      "tokenMissing": "Token mancante",
+      "allowlist": "Utenti autorizzati",
+      "allowlistPlaceholder": "ID utente…",
+      "allowlistAdd": "Aggiungi",
+      "requireMention": "Menzione richiesta nei gruppi",
+      "provider": "Provider LLM",
+      "model": "Modello",
+      "testConnection": "Testa connessione",
+      "testSuccess": "Connessione riuscita",
+      "testFailed": "Connessione fallita",
+      "save": "Salva",
+      "delete": "Elimina",
+      "cancel": "Annulla",
+      "addAccount": "Aggiungi account",
+      "accountId": "ID account",
+      "confirmDelete": "Eliminare questo account?",
+      "confirmDeleteDesc": "Il token sarà rimosso dal vault e il canale sarà fermato.",
+      "connected": "Connesso",
+      "disconnected": "Disconnesso"
+    },
+    "status": {
+      "off": "Fermato",
+      "starting": "Avvio…",
+      "running": "Attivo",
+      "error": "Errore",
+      "stopping": "Arresto…"
+    },
+    "gateway": {
+      "start": "Avvia gateway",
+      "stop": "Ferma gateway",
+      "running": "Gateway attivo",
+      "stopped": "Gateway fermato"
+    },
+    "browse": {
+      "title": "Canali di messaggistica",
+      "subtitle": "Collega i tuoi bot di messaggistica per comunicare con gli LLM.",
+      "telegramDesc": "Bot Telegram — long polling, gruppi e messaggi privati.",
+      "slackDesc": "Bot Slack — Socket Mode, canali e messaggi diretti.",
+      "discordDesc": "Bot Discord — Gateway WebSocket, server e messaggi privati.",
+      "messaging": "Messaggistica",
+      "pro": "Professionale"
+    },
+    "config": {
+      "addTitle": "Aggiungi {{name}}",
+      "description": "Descrizione",
+      "testing": "Test in corso…",
+      "addAndTest": "Aggiungi e testa"
+    },
+    "main": {
+      "subtitle": "Collega bot di messaggistica per comunicare con gli LLM.",
+      "browseBtn": "Sfoglia canali"
+    }
+  },
   "welcome": {
     "title": "Cosa facciamo oggi?"
   },
@@ -300,7 +369,8 @@
       "llm": "LLM",
       "advanced": "Avanzate",
       "shortcuts": "Scorciatoie da tastiera",
-      "about": "Informazioni"
+      "about": "Informazioni",
+      "channels": "Canali"
     },
     "general": {
       "themeTitle": "Tema",

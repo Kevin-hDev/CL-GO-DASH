@@ -1,4 +1,5 @@
 use crate::services;
+use crate::services::gateway::GatewayService;
 use crate::services::{ollama_kill, ollama_lifecycle};
 use tauri::{Manager, RunEvent, WindowEvent};
 
@@ -8,10 +9,15 @@ pub fn handle_run_event(app_handle: &tauri::AppHandle, event: RunEvent) {
             event: WindowEvent::CloseRequested { .. },
             ..
         } => {
-            // macOS : on hide la fenêtre dans on_window_event, pas de cleanup ici
             #[cfg(not(target_os = "macos"))]
             {
-                cleanup(app_handle);
+                if should_hide_instead_of_quit(app_handle) {
+                    if let Some(win) = app_handle.get_webview_window("main") {
+                        let _ = win.hide();
+                    }
+                } else {
+                    cleanup(app_handle);
+                }
             }
         }
         RunEvent::ExitRequested { .. } | RunEvent::Exit => {
@@ -28,7 +34,19 @@ pub fn handle_run_event(app_handle: &tauri::AppHandle, event: RunEvent) {
     }
 }
 
+#[cfg(not(target_os = "macos"))]
+fn should_hide_instead_of_quit(app_handle: &tauri::AppHandle) -> bool {
+    let config = services::config::read_config().unwrap_or_default();
+    let gateway_active = config.gateway.enabled && config.gateway.run_when_window_closed;
+    let tray_visible = config.advanced.show_tray;
+    gateway_active && tray_visible
+}
+
 fn cleanup(app_handle: &tauri::AppHandle) {
+    if let Some(gw) = app_handle.try_state::<GatewayService>() {
+        let gw = gw.inner().clone();
+        tauri::async_runtime::block_on(async { gw.stop().await });
+    }
     services::mcp_bridge::process_manager::shutdown_all();
     if let Some(pty) = app_handle.try_state::<services::terminal::PtyManager>() {
         pty.kill_all();

@@ -201,6 +201,7 @@ export function ConversationList({
                     <>
                       <ChatsCircle size={14} weight={active ? "fill" : "regular"} className="conv-icon" />
                       <span className="conv-name">{displaySessionName(s.name, t)}</span>
+                      {s.is_gateway && <span className="conv-gw-badge">{s.gateway_channel_key?.split("/")[0]?.toUpperCase().slice(0, 2) ?? "GW"}</span>}
                       <button
                         className="conv-session-menu-btn"
                         onClick={(e) => handleSessionMenu(e, s.id)}

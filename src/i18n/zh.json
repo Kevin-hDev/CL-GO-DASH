@@ -67,6 +67,75 @@
       }
     }
   },
+  "channels": {
+    "sidebar": {
+      "title": "频道",
+      "messaging": "即时通讯",
+      "pro": "专业",
+      "empty": "未配置任何频道",
+      "accounts": "{{count}} 个账户",
+      "configured": "已配置"
+    },
+    "detail": {
+      "title": "配置",
+      "enabled": "已启用",
+      "disabled": "已禁用",
+      "token": "机器人令牌",
+      "tokenPlaceholder": "在此粘贴令牌…",
+      "tokenSet": "令牌已配置",
+      "tokenMissing": "令牌缺失",
+      "allowlist": "授权用户",
+      "allowlistPlaceholder": "用户 ID…",
+      "allowlistAdd": "添加",
+      "requireMention": "群组中需要@提及",
+      "provider": "LLM 提供商",
+      "model": "模型",
+      "testConnection": "测试连接",
+      "testSuccess": "连接成功",
+      "testFailed": "连接失败",
+      "save": "保存",
+      "delete": "删除",
+      "cancel": "取消",
+      "addAccount": "添加账户",
+      "accountId": "账户 ID",
+      "confirmDelete": "删除此账户？",
+      "confirmDeleteDesc": "令牌将从保险库中移除，频道将被停止。",
+      "connected": "已连接",
+      "disconnected": "已断开"
+    },
+    "status": {
+      "off": "已停止",
+      "starting": "启动中…",
+      "running": "运行中",
+      "error": "错误",
+      "stopping": "停止中…"
+    },
+    "gateway": {
+      "start": "启动网关",
+      "stop": "停止网关",
+      "running": "网关运行中",
+      "stopped": "网关已停止"
+    },
+    "browse": {
+      "title": "消息渠道",
+      "subtitle": "连接您的消息机器人以与LLM通信。",
+      "telegramDesc": "Telegram机器人 — 长轮询，群组和私信。",
+      "slackDesc": "Slack机器人 — Socket Mode，频道和私信。",
+      "discordDesc": "Discord机器人 — Gateway WebSocket，服务器和私信。",
+      "messaging": "消息",
+      "pro": "专业"
+    },
+    "config": {
+      "addTitle": "添加 {{name}}",
+      "description": "描述",
+      "testing": "测试中…",
+      "addAndTest": "添加并测试"
+    },
+    "main": {
+      "subtitle": "连接消息机器人以与LLM通信。",
+      "browseBtn": "浏览渠道"
+    }
+  },
   "welcome": {
     "title": "今天我们做什么？"
   },
@@ -300,7 +369,8 @@
       "llm": "LLM",
       "advanced": "高级",
       "shortcuts": "键盘快捷键",
-      "about": "关于"
+      "about": "关于",
+      "channels": "频道"
     },
     "general": {
       "themeTitle": "主题",

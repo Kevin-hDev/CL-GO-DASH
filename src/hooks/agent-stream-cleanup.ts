@@ -13,6 +13,9 @@ export interface StreamRecord {
   nextSubscriberId: number;
   cleanupTimer: ReturnType<typeof setTimeout> | null;
   started: boolean;
+  /** true si la session a été initiée par le gateway (pas de startSession() appelé depuis l'UI).
+   *  Dans ce cas le backend persiste déjà les messages — le frontend ne doit pas appeler persistAssistant. */
+  isGateway: boolean;
 }
 
 export function enforceSessionLimit(records: Map<string, StreamRecord>) {

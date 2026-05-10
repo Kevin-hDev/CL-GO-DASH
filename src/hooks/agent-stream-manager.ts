@@ -49,6 +49,7 @@ async function startSession(sessionId: string, messages: AgentMessage[], tokenCo
   record.state = createManagedStreamState(messages, tokenCount);
   record.history = [];
   record.started = true;
+  record.isGateway = false; // session UI explicite — le frontend gère la persistance
   touchSession(sessionId, record);
   notify(record);
 }
@@ -59,7 +60,7 @@ function stopSession(sessionId: string) {
   const result = finishPartialStream(record.state);
   record.state = result.state;
   notify(record);
-  if (result.assistantMessage && !record.state.persisted) {
+  if (result.assistantMessage && !record.state.persisted && !record.isGateway) {
     persistAssistant(sessionId, record, result.assistantMessage, 0);
   }
 }
@@ -102,8 +103,14 @@ function subscribe(sessionId: string, subscriber: Subscriber): () => void {
 function handleStreamEvent(sessionId: string, event: StreamEvent) {
   const record = getOrCreateRecord(sessionId);
   clearCleanup(record);
-  record.started = true;
 
+  // Si le premier event arrive sans que startSession() ait été appelé,
+  // c'est une session gateway : le backend a déjà persisté les messages.
+  // On marque isGateway=true pour bloquer persistAssistant côté frontend.
+  if (!record.started) {
+    record.isGateway = true;
+    record.started = true;
+  }
 
   if (event.event === "subagentSpawned" || event.event === "subagentCompleted") {
     notify(record);
@@ -151,10 +158,13 @@ function handleStreamEvent(sessionId: string, event: StreamEvent) {
   record.state = result.state;
   touchSession(sessionId, record);
   notify(record);
-  if (result.assistantMessage && !record.state.persisted) {
+
+  // Pour les sessions gateway, le backend persiste déjà — skip persistAssistant.
+  // Pour les sessions UI normales, persistAssistant comme avant.
+  if (result.assistantMessage && !record.state.persisted && !record.isGateway) {
     persistAssistant(sessionId, record, result.assistantMessage, result.assistantTokens ?? 0);
-  } else if (result.assistantMessage && record.state.persisted) {
   }
+
   if (record.state.completed && record.subscribers.size === 0) {
     scheduleCleanup(sessionId, record, records);
   }
@@ -185,6 +195,7 @@ function getOrCreateRecord(sessionId: string): StreamRecord {
     nextSubscriberId: 1,
     cleanupTimer: null,
     started: false,
+    isGateway: false,
   };
   records.set(sessionId, record);
   enforceSessionLimit(records);

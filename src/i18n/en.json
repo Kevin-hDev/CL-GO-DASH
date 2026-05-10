@@ -66,6 +66,75 @@
       }
     }
   },
+  "channels": {
+    "sidebar": {
+      "title": "Channels",
+      "messaging": "Messaging",
+      "pro": "Professional",
+      "empty": "No channels configured",
+      "accounts": "{{count}} account(s)",
+      "configured": "Configured"
+    },
+    "detail": {
+      "title": "Configuration",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "token": "Bot token",
+      "tokenPlaceholder": "Paste token here…",
+      "tokenSet": "Token configured",
+      "tokenMissing": "Token missing",
+      "allowlist": "Allowed users",
+      "allowlistPlaceholder": "User ID…",
+      "allowlistAdd": "Add",
+      "requireMention": "Mention required in groups",
+      "provider": "LLM Provider",
+      "model": "Model",
+      "testConnection": "Test connection",
+      "testSuccess": "Connection successful",
+      "testFailed": "Connection failed",
+      "save": "Save",
+      "delete": "Delete",
+      "cancel": "Cancel",
+      "addAccount": "Add account",
+      "accountId": "Account ID",
+      "confirmDelete": "Delete this account?",
+      "confirmDeleteDesc": "The token will be removed from the vault and the channel will be stopped.",
+      "connected": "Connected",
+      "disconnected": "Disconnected"
+    },
+    "status": {
+      "off": "Stopped",
+      "starting": "Starting…",
+      "running": "Active",
+      "error": "Error",
+      "stopping": "Stopping…"
+    },
+    "gateway": {
+      "start": "Start gateway",
+      "stop": "Stop gateway",
+      "running": "Gateway active",
+      "stopped": "Gateway stopped"
+    },
+    "browse": {
+      "title": "Messaging channels",
+      "subtitle": "Connect your messaging bots to communicate with LLMs.",
+      "telegramDesc": "Telegram bot — long polling, groups and private messages.",
+      "slackDesc": "Slack bot — Socket Mode, channels and direct messages.",
+      "discordDesc": "Discord bot — Gateway WebSocket, servers and private messages.",
+      "messaging": "Messaging",
+      "pro": "Professional"
+    },
+    "config": {
+      "addTitle": "Add {{name}}",
+      "description": "Description",
+      "testing": "Testing…",
+      "addAndTest": "Add and test"
+    },
+    "main": {
+      "subtitle": "Connect messaging bots to communicate with LLMs.",
+      "browseBtn": "Browse channels"
+    }
+  },
   "welcome": {
     "title": "What are we doing today?"
   },
@@ -300,7 +369,8 @@
       "llm": "LLM",
       "advanced": "Advanced",
       "shortcuts": "Keyboard Shortcuts",
-      "about": "About"
+      "about": "About",
+      "channels": "Channels"
     },
     "general": {
       "themeTitle": "Theme",

@@ -67,6 +67,75 @@
       }
     }
   },
+  "channels": {
+    "sidebar": {
+      "title": "Kanäle",
+      "messaging": "Messaging",
+      "pro": "Professionell",
+      "empty": "Keine Kanäle konfiguriert",
+      "accounts": "{{count}} Konto(en)",
+      "configured": "Konfiguriert"
+    },
+    "detail": {
+      "title": "Konfiguration",
+      "enabled": "Aktiviert",
+      "disabled": "Deaktiviert",
+      "token": "Bot-Token",
+      "tokenPlaceholder": "Token hier einfügen…",
+      "tokenSet": "Token konfiguriert",
+      "tokenMissing": "Token fehlt",
+      "allowlist": "Erlaubte Benutzer",
+      "allowlistPlaceholder": "Benutzer-ID…",
+      "allowlistAdd": "Hinzufügen",
+      "requireMention": "Erwähnung in Gruppen erforderlich",
+      "provider": "LLM-Anbieter",
+      "model": "Modell",
+      "testConnection": "Verbindung testen",
+      "testSuccess": "Verbindung erfolgreich",
+      "testFailed": "Verbindung fehlgeschlagen",
+      "save": "Speichern",
+      "delete": "Löschen",
+      "cancel": "Abbrechen",
+      "addAccount": "Konto hinzufügen",
+      "accountId": "Konto-ID",
+      "confirmDelete": "Dieses Konto löschen?",
+      "confirmDeleteDesc": "Das Token wird aus dem Tresor entfernt und der Kanal wird gestoppt.",
+      "connected": "Verbunden",
+      "disconnected": "Getrennt"
+    },
+    "status": {
+      "off": "Gestoppt",
+      "starting": "Startet…",
+      "running": "Aktiv",
+      "error": "Fehler",
+      "stopping": "Stoppt…"
+    },
+    "gateway": {
+      "start": "Gateway starten",
+      "stop": "Gateway stoppen",
+      "running": "Gateway aktiv",
+      "stopped": "Gateway gestoppt"
+    },
+    "browse": {
+      "title": "Messaging-Kanäle",
+      "subtitle": "Verbinden Sie Ihre Messaging-Bots, um mit LLMs zu kommunizieren.",
+      "telegramDesc": "Telegram-Bot — Long Polling, Gruppen und Privatnachrichten.",
+      "slackDesc": "Slack-Bot — Socket Mode, Kanäle und Direktnachrichten.",
+      "discordDesc": "Discord-Bot — Gateway WebSocket, Server und Privatnachrichten.",
+      "messaging": "Messaging",
+      "pro": "Professionell"
+    },
+    "config": {
+      "addTitle": "{{name}} hinzufügen",
+      "description": "Beschreibung",
+      "testing": "Wird getestet…",
+      "addAndTest": "Hinzufügen und testen"
+    },
+    "main": {
+      "subtitle": "Verbinden Sie Messaging-Bots, um mit LLMs zu kommunizieren.",
+      "browseBtn": "Kanäle durchsuchen"
+    }
+  },
   "welcome": {
     "title": "Was machen wir heute?"
   },
@@ -300,7 +369,8 @@
       "llm": "LLM",
       "advanced": "Erweitert",
       "shortcuts": "Tastenkürzel",
-      "about": "Über"
+      "about": "Über",
+      "channels": "Kanäle"
     },
     "general": {
       "themeTitle": "Design",

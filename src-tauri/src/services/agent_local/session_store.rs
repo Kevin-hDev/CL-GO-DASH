@@ -47,6 +47,19 @@ pub async fn create_with_flags(
     create_full(name, model, provider, is_heartbeat, None).await
 }
 
+pub async fn create_gateway(
+    name: &str,
+    model: &str,
+    provider: &str,
+    gateway_channel_key: String,
+) -> Result<AgentSession, String> {
+    let mut session = create_full(name, model, provider, false, None).await?;
+    session.is_gateway = true;
+    session.gateway_channel_key = Some(gateway_channel_key);
+    save(&session).await?;
+    Ok(session)
+}
+
 pub async fn create_full(
     name: &str,
     model: &str,
@@ -64,6 +77,8 @@ pub async fn create_full(
         accumulated_tokens: 0,
         messages: Vec::new(),
         is_heartbeat,
+        is_gateway: false,
+        gateway_channel_key: None,
         project_id,
         working_dir: String::new(),
         parent_session_id: None,
