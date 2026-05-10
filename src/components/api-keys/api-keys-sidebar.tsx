@@ -6,12 +6,14 @@ interface ApiKeysSidebarProps {
   configured: ProviderSpec[];
   selectedId: string | null;
   onSelect: (id: string | null) => void;
+  onForecastModels?: () => void;
 }
 
 export function ApiKeysSidebar({
   configured,
   selectedId,
   onSelect,
+  onForecastModels,
 }: ApiKeysSidebarProps) {
   const { t } = useTranslation();
 
@@ -35,6 +37,23 @@ export function ApiKeysSidebar({
           ))
         )}
       </div>
+      {onForecastModels && (
+        <>
+          <div className="ak-sidebar-header" style={{ marginTop: 12 }}>
+            {t("forecast.title")}
+          </div>
+          <div className="ak-sidebar-list">
+            <button
+              type="button"
+              className="ak-sidebar-item"
+              onClick={onForecastModels}
+            >
+              <span style={{ fontSize: 14 }}>📊</span>
+              <span>{t("forecast.models.manage")}</span>
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }
