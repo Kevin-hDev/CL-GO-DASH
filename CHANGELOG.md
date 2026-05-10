@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.8.8
+
+### Security
+
+- **Full security audit** — 21 vulnerabilities fixed: URL whitelist for app updates, AllowSession disabled for bash/MCP, TOCTOU write protection with symlink rejection, SSRF DNS pinning, PTY token ownership, vault bounded to 500 entries, anti-ReDoS grep, CSPRNG for OAuth, WriteGuard re-enabled
+- **Zeroize audit** — 16 fixes: all secrets (`Zeroizing<String>`), vault error paths guaranteed, OAuth PKCE/state/body zeroed after use, `Bearer` header via `.bearer_auth()`, env credentials migrated to vault/keyring
+- **Sharp edges audit** — 7 fixes: Jina SSRF fallback removed, bash gate hardened (newline/redirect/background), circuit breaker without `DefaultHasher`, vault namespace isolation, config corruption sentinel
+- **Semgrep static analysis** — full scan (Rust + TypeScript + JavaScript + Docker) with Trail of Bits, Decurity, and elttam rulesets: 0 true positives, 4 false positives (safe `dangerouslySetInnerHTML` on SVG/highlight)
+
+---
+
 ## v0.8.7
 
 ### Features
