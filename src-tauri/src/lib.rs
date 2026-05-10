@@ -276,6 +276,14 @@ pub fn run() {
             commands::codex_models,
             commands::codex_set_effort,
             commands::codex_get_effort,
+            // Forecast
+            commands::list_forecast_analyses,
+            commands::get_forecast_analysis,
+            commands::delete_forecast_analysis,
+            commands::list_forecast_models,
+            commands::install_forecast_model,
+            commands::uninstall_forecast_model,
+            commands::list_forecast_providers_catalog,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application");

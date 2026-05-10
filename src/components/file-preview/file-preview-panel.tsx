@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Maximize2, Minimize2, FolderTree } from "lucide-react";
 import { openPreviewFile, openPreviewWithEditor } from "@/services/file-preview";
 import type { FileOperation, FilePreviewActiveTab } from "@/types/file-preview";
+import type { PanelMode } from "@/hooks/use-forecast-panel";
 import { shouldWrapFile } from "@/lib/code-language";
 import { FilePreviewBreadcrumb } from "./file-preview-breadcrumb";
 import { FilePreviewContent } from "./file-preview-content";
@@ -29,6 +30,8 @@ interface FilePreviewPanelProps {
   hasProject?: boolean;
   treeOpen?: boolean;
   onToggleTree?: () => void;
+  panelMode?: PanelMode;
+  forecastContent?: React.ReactNode;
 }
 
 export function FilePreviewPanel(props: FilePreviewPanelProps) {
@@ -50,53 +53,60 @@ export function FilePreviewPanel(props: FilePreviewPanelProps) {
       aria-hidden={!props.open}
     >
       <div className="fp-resize" onPointerDown={props.onResizeStart} />
-      <div className="fp-head">
-        <FilePreviewTabs
-          tabs={props.tabs}
-          activeTab={props.activeTab}
-          baseDir={props.baseDir}
-          onSelect={props.onActiveTabChange}
-          onClose={props.onCloseTab}
-          onOpenDefault={openDefault}
-          onOpenWith={openWith}
-        />
-        {props.hasProject && (
-          <button
-            className={`fp-icon-btn ${props.treeOpen ? "fp-icon-btn-active" : ""}`}
-            onClick={props.onToggleTree}
-            title={t("fileTree.toggleTree")}
-          >
-            <FolderTree size={16} />
-          </button>
-        )}
-        <button
-          className="fp-icon-btn"
-          onClick={() => props.onFullscreenChange(!props.fullscreen)}
-          title={props.fullscreen ? t("filePreview.reduce") : t("filePreview.fullscreen")}
-        >
-          {props.fullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
-        </button>
-      </div>
-      <div className="fp-body">
-        {props.activeTab === "summary" || !activeOperation ? (
-          <div className="fp-summary-scroll">
-            <FilePreviewSummary
-              operations={props.operations}
+      <div className={`fp-slide-wrapper ${props.panelMode === "forecast" ? "fp-slide-forecast" : "fp-slide-preview"}`}>
+        <div className="fp-slide-child">
+          <div className="fp-head">
+            <FilePreviewTabs
+              tabs={props.tabs}
+              activeTab={props.activeTab}
               baseDir={props.baseDir}
-              onOpen={props.onOpenOperation}
+              onSelect={props.onActiveTabChange}
+              onClose={props.onCloseTab}
+              onOpenDefault={openDefault}
+              onOpenWith={openWith}
             />
+            {props.hasProject && (
+              <button
+                className={`fp-icon-btn ${props.treeOpen ? "fp-icon-btn-active" : ""}`}
+                onClick={props.onToggleTree}
+                title={t("fileTree.toggleTree")}
+              >
+                <FolderTree size={16} />
+              </button>
+            )}
+            <button
+              className="fp-icon-btn"
+              onClick={() => props.onFullscreenChange(!props.fullscreen)}
+              title={props.fullscreen ? t("filePreview.reduce") : t("filePreview.fullscreen")}
+            >
+              {props.fullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+            </button>
           </div>
-        ) : (
-          <>
-            <FilePreviewBreadcrumb
-              operation={activeOperation}
-              baseDir={props.baseDir}
-            />
-            <div className={`fp-code-scroll ${shouldWrapFile(activeOperation.path) ? "" : "fp-nowrap"}`}>
-              <FilePreviewContent key={activeOperation.id} operation={activeOperation} baseDir={props.baseDir} />
-            </div>
-          </>
-        )}
+          <div className="fp-body">
+            {props.activeTab === "summary" || !activeOperation ? (
+              <div className="fp-summary-scroll">
+                <FilePreviewSummary
+                  operations={props.operations}
+                  baseDir={props.baseDir}
+                  onOpen={props.onOpenOperation}
+                />
+              </div>
+            ) : (
+              <>
+                <FilePreviewBreadcrumb
+                  operation={activeOperation}
+                  baseDir={props.baseDir}
+                />
+                <div className={`fp-code-scroll ${shouldWrapFile(activeOperation.path) ? "" : "fp-nowrap"}`}>
+                  <FilePreviewContent key={activeOperation.id} operation={activeOperation} baseDir={props.baseDir} />
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+        <div className="fp-slide-child">
+          {props.forecastContent}
+        </div>
       </div>
     </aside>
   );

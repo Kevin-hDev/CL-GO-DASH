@@ -5,6 +5,8 @@ import { AgentChatDetail } from "./agent-chat-detail";
 import { WelcomeView } from "./welcome-view";
 import { useAgentLocalTab } from "@/hooks/use-agent-local-tab";
 import { useFileTree } from "@/hooks/use-file-tree";
+import { useForecastPanel } from "@/hooks/use-forecast-panel";
+import { ForecastPanel } from "@/components/forecast/forecast-panel";
 import type { AgentLocalTabProps } from "./agent-local-tab-types";
 import "./agent-local-tab.css";
 
@@ -24,6 +26,19 @@ export const AgentLocalTab = memo(function AgentLocalTab({
   const { pendingMessage, setPendingMessage, pendingWorkingDir, setPendingWorkingDir, pendingSkills, setPendingSkills, pendingFiles, setPendingFiles, handleCreate, handleCreateWithModel, handleWelcomeSend, handleAutoRename, handleCreateInProject } = sessionActions;
   const terminalCwd = activeProject?.path || "";
   const fileTree = useFileTree(tabState.activeSessionId, activeProject?.path);
+  const forecast = useForecastPanel(tabState.activeSessionId ?? null);
+
+  const forecastContent = (
+    <ForecastPanel
+      activeSection={forecast.activeSection}
+      navOpen={forecast.navOpen}
+      currentAnalysisId={forecast.currentAnalysisId}
+      onSectionChange={forecast.setSection}
+      onToggleNav={forecast.toggleNav}
+      onLoadAnalysis={forecast.loadAnalysis}
+      onCloseAnalysis={forecast.closeAnalysis}
+    />
+  );
 
   const list = (
     <ConversationList
@@ -53,12 +68,14 @@ export const AgentLocalTab = memo(function AgentLocalTab({
             sessionId={tabState.activeSessionId ?? null}
             terminalOpen={terminal.isOpen}
             previewOpen={filePreview.open}
+            panelMode={forecast.panelMode}
             onSelect={(i) => void tabState.selectTab(i)}
             onClose={(i) => void tabState.closeTab(i)}
             onAdd={handleCreate}
             onRename={(i, name) => void tabState.renameTab(i, name)}
             onReorder={(from, to) => void tabState.reorderTabs(from, to)}
             onTogglePreview={filePreview.toggleOpen}
+            onPanelModeChange={forecast.setPanelMode}
             onToggleTerminal={() => {
               if (!terminal.isOpen && terminal.tabs.length === 0) {
                 terminal.addTab(terminalCwd);
@@ -98,6 +115,8 @@ export const AgentLocalTab = memo(function AgentLocalTab({
             setPendingFiles(undefined);
           }}
           onFileOperationsChange={setFileOperations}
+          panelMode={forecast.panelMode}
+          forecastContent={forecastContent}
           parentSessionId={activeSession?.parent_session_id}
           onOpenSubagent={(id) => void handleSelectById(id)}
           onGoToParent={() => {

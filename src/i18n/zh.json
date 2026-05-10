@@ -622,5 +622,57 @@
     "completed": "已完成",
     "failed": "失败",
     "cancelled": "已取消"
+  },
+  "forecast": {
+    "title": "预测",
+    "noAnalysis": "没有正在进行的分析",
+    "askAgent": "询问代理",
+    "importFile": "导入文件 (CSV, Excel)",
+    "pasteData": "粘贴数据",
+    "fromUrl": "从URL",
+    "recentAnalyses": "最近的分析",
+    "nav": {
+      "mainView": "主视图",
+      "scenarios": "场景",
+      "analysis": "分析",
+      "notes": "笔记",
+      "history": "历史"
+    },
+    "config": {
+      "target": "目标",
+      "covariates": "协变量",
+      "frequency": "频率",
+      "horizon": "预测范围",
+      "confidence": "置信度",
+      "model": "模型",
+      "launch": "开始预测"
+    },
+    "models": {
+      "manage": "管理模型",
+      "install": "安装",
+      "uninstall": "卸载",
+      "installed": "已安装",
+      "downloading": "下载中...",
+      "parameters": "参数",
+      "specs": "规格",
+      "local": "本地",
+      "cloud": "云端 (需要密钥)",
+      "noKeyConfigured": "API密钥未配置"
+    },
+    "export": {
+      "csv": "CSV",
+      "excel": "Excel (.xlsx)",
+      "png": "PNG",
+      "svg": "SVG",
+      "json": "JSON",
+      "pdf": "PDF (报告)",
+      "clipboard": "复制"
+    },
+    "kpi": {
+      "mape": "MAPE",
+      "mae": "MAE",
+      "crps": "CRPS",
+      "bias": "偏差"
+    }
   }
 }

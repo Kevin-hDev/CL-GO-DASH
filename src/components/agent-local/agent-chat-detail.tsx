@@ -7,6 +7,7 @@ import type { DroppedFile } from "@/hooks/use-file-drop";
 import type { useTerminal } from "@/hooks/use-terminal";
 import type { Project } from "@/types/agent";
 import type { FileOperation } from "@/types/file-preview";
+import type { PanelMode } from "@/hooks/use-forecast-panel";
 
 interface AgentChatDetailProps {
   sessionId: string;
@@ -34,6 +35,8 @@ interface AgentChatDetailProps {
   parentSessionId?: string;
   onOpenSubagent?: (sessionId: string) => void;
   onGoToParent?: () => void;
+  panelMode?: PanelMode;
+  forecastContent?: React.ReactNode;
 }
 
 export function AgentChatDetail(props: AgentChatDetailProps) {
@@ -91,6 +94,8 @@ export function AgentChatDetail(props: AgentChatDetailProps) {
         hasProject={props.fileTree.hasProject}
         treeOpen={props.fileTree.open}
         onToggleTree={props.fileTree.toggleOpen}
+        panelMode={props.panelMode}
+        forecastContent={props.forecastContent}
       />
       <FileTreePanel
         tree={props.fileTree}

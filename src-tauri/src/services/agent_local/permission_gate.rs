@@ -15,7 +15,7 @@ pub enum PermissionDecision {
     Deny,
 }
 
-const GATED_TOOLS: &[&str] = &["write_file", "edit_file", "web_fetch", "write_spreadsheet", "write_document", "process_image", "create_branch", "checkout_branch"];
+const GATED_TOOLS: &[&str] = &["write_file", "edit_file", "web_fetch", "write_spreadsheet", "write_document", "process_image", "create_branch", "checkout_branch", "forecast"];
 
 static SAFE_BASH_PATTERNS: LazyLock<Vec<Regex>> = LazyLock::new(|| {
     [

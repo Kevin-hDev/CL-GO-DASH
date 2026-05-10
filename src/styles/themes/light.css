@@ -68,4 +68,23 @@
   --tool-edit: #ca8a04;
   --tool-web: #7c3aed;
   --tool-git: #db2777;
+  --tool-forecast: #2563eb;
+
+  /* Forecast panel */
+  --fc-line-history: var(--ink);
+  --fc-line-predict: #3b82f6;
+  --fc-band-90: rgba(59, 130, 246, 0.08);
+  --fc-band-80: rgba(59, 130, 246, 0.12);
+  --fc-band-50: rgba(59, 130, 246, 0.18);
+  --fc-separator: var(--ink-faint);
+  --fc-annotation: var(--signal-info);
+  --fc-anomaly: var(--signal-error);
+  --fc-scenario-a: #3b82f6;
+  --fc-scenario-b: #7c3aed;
+  --fc-scenario-c: #059669;
+  --fc-kpi-bg: rgba(0, 0, 0, 0.02);
+  --fc-kpi-border: rgba(0, 0, 0, 0.06);
+  --fc-nav-active: var(--pulse);
+  --fc-progress: var(--pulse);
+  --fc-progress-bg: rgba(0, 0, 0, 0.06);
 }

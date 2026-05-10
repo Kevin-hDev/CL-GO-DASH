@@ -18,12 +18,14 @@ const TOOL_COLORS: Record<string, string> = {
   edit_file: "var(--tool-edit)", process_image: "var(--tool-edit)",
   web_search: "var(--tool-web)", web_fetch: "var(--tool-web)",
   create_branch: "var(--tool-bash)", checkout_branch: "var(--tool-bash)",
+  forecast: "var(--tool-forecast)", forecast_analyze: "var(--tool-forecast)",
+  forecast_read: "var(--tool-forecast)",
 };
 
 const CLOSED_BY_DEFAULT = new Set([
   "bash", "grep", "glob", "read_file", "list_dir",
   "read_spreadsheet", "read_document", "read_image",
-  "web_search", "web_fetch",
+  "web_search", "web_fetch", "forecast", "forecast_read",
 ]);
 
 const ROW_STYLE = {
@@ -144,7 +146,7 @@ function ErrorCross({ message }: { message?: string }) {
   }, []);
 
   const copy = useCallback(() => {
-    if (message) navigator.clipboard.writeText(message).then(() => {
+    if (message) void navigator.clipboard.writeText(message).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     });

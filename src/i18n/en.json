@@ -696,5 +696,57 @@
     "completed": "completed",
     "failed": "failed",
     "cancelled": "cancelled"
+  },
+  "forecast": {
+    "title": "Forecast",
+    "noAnalysis": "No analysis in progress",
+    "askAgent": "Ask the agent",
+    "importFile": "Import file (CSV, Excel)",
+    "pasteData": "Paste data",
+    "fromUrl": "From URL",
+    "recentAnalyses": "Recent analyses",
+    "nav": {
+      "mainView": "Main view",
+      "scenarios": "Scenarios",
+      "analysis": "Analysis",
+      "notes": "Notes",
+      "history": "History"
+    },
+    "config": {
+      "target": "Target",
+      "covariates": "Covariates",
+      "frequency": "Frequency",
+      "horizon": "Horizon",
+      "confidence": "Confidence",
+      "model": "Model",
+      "launch": "Launch forecast"
+    },
+    "models": {
+      "manage": "Manage models",
+      "install": "Install",
+      "uninstall": "Uninstall",
+      "installed": "Installed",
+      "downloading": "Downloading...",
+      "parameters": "Parameters",
+      "specs": "Specifications",
+      "local": "Local",
+      "cloud": "Cloud (key required)",
+      "noKeyConfigured": "API key not configured"
+    },
+    "export": {
+      "csv": "CSV",
+      "excel": "Excel (.xlsx)",
+      "png": "PNG",
+      "svg": "SVG",
+      "json": "JSON",
+      "pdf": "PDF (report)",
+      "clipboard": "Copy (clipboard)"
+    },
+    "kpi": {
+      "mape": "MAPE",
+      "mae": "MAE",
+      "crps": "CRPS",
+      "bias": "Bias"
+    }
   }
 }

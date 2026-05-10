@@ -25,6 +25,9 @@ static WRITE_SPREADSHEET: Schema = &[("path", Ty::Str, true), ("operations", Ty:
 static WRITE_DOCUMENT: Schema = &[("path", Ty::Str, true), ("content", Ty::Arr, true)];
 static PROCESS_IMAGE: Schema = &[("input_path", Ty::Str, true), ("output_path", Ty::Str, true), ("operations", Ty::Arr, false)];
 static SEARCH_MCP: Schema = &[("mode", Ty::Str, true), ("query", Ty::Str, false), ("tool_id", Ty::Str, false), ("arguments", Ty::Obj, false)];
+static FORECAST: Schema = &[("data", Ty::Str, false), ("file_path", Ty::Str, false), ("target_column", Ty::Str, true), ("date_column", Ty::Str, true), ("covariate_columns", Ty::Arr, false), ("horizon", Ty::Int, true), ("frequency", Ty::Str, true), ("model", Ty::Str, false)];
+static FORECAST_ANALYZE: Schema = &[("analysis_id", Ty::Str, true), ("action", Ty::Str, true), ("params", Ty::Obj, false)];
+static FORECAST_READ: Schema = &[("analysis_id", Ty::Str, false)];
 
 fn schema(tool: &str) -> Option<Schema> {
     Some(match tool {
@@ -48,6 +51,9 @@ fn schema(tool: &str) -> Option<Schema> {
         "write_document" => WRITE_DOCUMENT,
         "process_image" => PROCESS_IMAGE,
         "search_mcp_tools" => SEARCH_MCP,
+        "forecast" => FORECAST,
+        "forecast_analyze" => FORECAST_ANALYZE,
+        "forecast_read" => FORECAST_READ,
         _ => return None,
     })
 }

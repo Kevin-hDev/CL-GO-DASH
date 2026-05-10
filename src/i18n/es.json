@@ -622,5 +622,57 @@
     "completed": "completado",
     "failed": "fallido",
     "cancelled": "cancelado"
+  },
+  "forecast": {
+    "title": "Pronóstico",
+    "noAnalysis": "Sin análisis en curso",
+    "askAgent": "Preguntar al agente",
+    "importFile": "Importar archivo (CSV, Excel)",
+    "pasteData": "Pegar datos",
+    "fromUrl": "Desde URL",
+    "recentAnalyses": "Análisis recientes",
+    "nav": {
+      "mainView": "Vista principal",
+      "scenarios": "Escenarios",
+      "analysis": "Análisis",
+      "notes": "Notas",
+      "history": "Historial"
+    },
+    "config": {
+      "target": "Objetivo",
+      "covariates": "Covariables",
+      "frequency": "Frecuencia",
+      "horizon": "Horizonte",
+      "confidence": "Confianza",
+      "model": "Modelo",
+      "launch": "Lanzar pronóstico"
+    },
+    "models": {
+      "manage": "Gestionar modelos",
+      "install": "Instalar",
+      "uninstall": "Desinstalar",
+      "installed": "Instalado",
+      "downloading": "Descargando...",
+      "parameters": "Parámetros",
+      "specs": "Especificaciones",
+      "local": "Local",
+      "cloud": "Nube (clave requerida)",
+      "noKeyConfigured": "Clave API no configurada"
+    },
+    "export": {
+      "csv": "CSV",
+      "excel": "Excel (.xlsx)",
+      "png": "PNG",
+      "svg": "SVG",
+      "json": "JSON",
+      "pdf": "PDF (informe)",
+      "clipboard": "Copiar"
+    },
+    "kpi": {
+      "mape": "MAPE",
+      "mae": "MAE",
+      "crps": "CRPS",
+      "bias": "Sesgo"
+    }
   }
 }

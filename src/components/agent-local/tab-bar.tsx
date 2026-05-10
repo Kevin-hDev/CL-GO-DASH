@@ -20,13 +20,15 @@ interface TabBarProps {
   onReorder: (from: number, to: number) => void;
   onToggleTerminal: () => void;
   onTogglePreview: () => void;
+  panelMode?: "preview" | "forecast";
+  onPanelModeChange?: (mode: "preview" | "forecast") => void;
 }
 
 const DRAG_THRESHOLD = 5;
 
 export function TabBar({
   tabs, activeIndex, canAddTab, sessionId, terminalOpen,
-  previewOpen,
+  previewOpen, panelMode, onPanelModeChange,
   onSelect, onClose, onAdd, onRename, onReorder, onToggleTerminal, onTogglePreview,
 }: TabBarProps) {
   const [renamingIdx, setRenamingIdx] = useState<number | null>(null);
@@ -165,9 +167,11 @@ export function TabBar({
         sessionId={sessionId}
         terminalOpen={terminalOpen}
         previewOpen={previewOpen}
+        panelMode={panelMode}
         onAdd={onAdd}
         onToggleTerminal={onToggleTerminal}
         onTogglePreview={onTogglePreview}
+        onPanelModeChange={onPanelModeChange}
       />
     </div>
   );

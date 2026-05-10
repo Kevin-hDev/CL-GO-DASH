@@ -622,5 +622,57 @@
     "completed": "abgeschlossen",
     "failed": "fehlgeschlagen",
     "cancelled": "abgebrochen"
+  },
+  "forecast": {
+    "title": "Prognose",
+    "noAnalysis": "Keine laufende Analyse",
+    "askAgent": "Agent fragen",
+    "importFile": "Datei importieren (CSV, Excel)",
+    "pasteData": "Daten einfügen",
+    "fromUrl": "Von URL",
+    "recentAnalyses": "Letzte Analysen",
+    "nav": {
+      "mainView": "Hauptansicht",
+      "scenarios": "Szenarien",
+      "analysis": "Analyse",
+      "notes": "Notizen",
+      "history": "Verlauf"
+    },
+    "config": {
+      "target": "Ziel",
+      "covariates": "Kovariablen",
+      "frequency": "Frequenz",
+      "horizon": "Horizont",
+      "confidence": "Vertrauen",
+      "model": "Modell",
+      "launch": "Prognose starten"
+    },
+    "models": {
+      "manage": "Modelle verwalten",
+      "install": "Installieren",
+      "uninstall": "Deinstallieren",
+      "installed": "Installiert",
+      "downloading": "Herunterladen...",
+      "parameters": "Parameter",
+      "specs": "Spezifikationen",
+      "local": "Lokal",
+      "cloud": "Cloud (Schlüssel erforderlich)",
+      "noKeyConfigured": "API-Schlüssel nicht konfiguriert"
+    },
+    "export": {
+      "csv": "CSV",
+      "excel": "Excel (.xlsx)",
+      "png": "PNG",
+      "svg": "SVG",
+      "json": "JSON",
+      "pdf": "PDF (Bericht)",
+      "clipboard": "Kopieren"
+    },
+    "kpi": {
+      "mape": "MAPE",
+      "mae": "MAE",
+      "crps": "CRPS",
+      "bias": "Bias"
+    }
   }
 }

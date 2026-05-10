@@ -6,6 +6,7 @@ pub mod gpu_vram;
 pub mod config;
 pub mod favorite_models;
 pub mod file_watcher;
+pub mod forecast;
 pub mod llm;
 pub mod ollama_env;
 pub mod ollama_kill;

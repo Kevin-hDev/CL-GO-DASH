@@ -1,0 +1,91 @@
+use crate::services::forecast::catalog;
+use crate::services::forecast::types::ModelDownloadProgress;
+use crate::services::paths::data_dir;
+use std::path::PathBuf;
+use tauri::ipc::Channel;
+
+pub mod download;
+
+fn models_dir() -> PathBuf {
+    data_dir().join("forecast-models")
+}
+
+pub fn model_path(model_id: &str) -> PathBuf {
+    models_dir().join(model_id)
+}
+
+pub fn is_installed(model_id: &str) -> bool {
+    model_path(model_id).exists()
+}
+
+pub fn installed_models() -> Vec<String> {
+    let dir = models_dir();
+    if !dir.exists() {
+        return Vec::new();
+    }
+    std::fs::read_dir(&dir)
+        .ok()
+        .map(|entries| {
+            entries
+                .filter_map(|e| e.ok())
+                .filter(|e| e.path().is_dir())
+                .filter_map(|e| e.file_name().into_string().ok())
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+pub async fn install(
+    model_id: &str,
+    on_progress: &Channel<ModelDownloadProgress>,
+) -> Result<(), String> {
+    let spec = catalog::find_model(model_id)
+        .ok_or_else(|| format!("Modèle inconnu: {model_id}"))?;
+
+    let hf_repo = spec
+        .hf_repo
+        .ok_or("Ce modèle n'a pas de repo HuggingFace")?;
+
+    let target_dir = model_path(model_id);
+    tokio::fs::create_dir_all(&target_dir)
+        .await
+        .map_err(|e| format!("Impossible de créer le dossier: {e}"))?;
+
+    download::download_model(hf_repo, &target_dir, model_id, on_progress).await
+}
+
+pub async fn uninstall(model_id: &str) -> Result<(), String> {
+    let path = model_path(model_id);
+    if path.exists() {
+        tokio::fs::remove_dir_all(&path)
+            .await
+            .map_err(|e| format!("Suppression échouée: {e}"))?;
+    }
+    Ok(())
+}
+
+pub fn get_model_size(model_id: &str) -> u64 {
+    let path = model_path(model_id);
+    if !path.exists() {
+        return 0;
+    }
+    walkdir_size(&path)
+}
+
+fn walkdir_size(path: &PathBuf) -> u64 {
+    std::fs::read_dir(path)
+        .ok()
+        .map(|entries| {
+            entries
+                .filter_map(|e| e.ok())
+                .map(|e| {
+                    if e.path().is_dir() {
+                        walkdir_size(&e.path())
+                    } else {
+                        e.metadata().map(|m| m.len()).unwrap_or(0)
+                    }
+                })
+                .sum()
+        })
+        .unwrap_or(0)
+}

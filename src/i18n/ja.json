@@ -622,5 +622,57 @@
     "completed": "完了",
     "failed": "失敗",
     "cancelled": "キャンセル済み"
+  },
+  "forecast": {
+    "title": "予測",
+    "noAnalysis": "分析が進行中ではありません",
+    "askAgent": "エージェントに聞く",
+    "importFile": "ファイルをインポート (CSV, Excel)",
+    "pasteData": "データを貼り付け",
+    "fromUrl": "URLから",
+    "recentAnalyses": "最近の分析",
+    "nav": {
+      "mainView": "メインビュー",
+      "scenarios": "シナリオ",
+      "analysis": "分析",
+      "notes": "ノート",
+      "history": "履歴"
+    },
+    "config": {
+      "target": "ターゲット",
+      "covariates": "共変量",
+      "frequency": "頻度",
+      "horizon": "予測期間",
+      "confidence": "信頼度",
+      "model": "モデル",
+      "launch": "予測を開始"
+    },
+    "models": {
+      "manage": "モデル管理",
+      "install": "インストール",
+      "uninstall": "アンインストール",
+      "installed": "インストール済み",
+      "downloading": "ダウンロード中...",
+      "parameters": "パラメータ",
+      "specs": "仕様",
+      "local": "ローカル",
+      "cloud": "クラウド (キー必要)",
+      "noKeyConfigured": "APIキー未設定"
+    },
+    "export": {
+      "csv": "CSV",
+      "excel": "Excel (.xlsx)",
+      "png": "PNG",
+      "svg": "SVG",
+      "json": "JSON",
+      "pdf": "PDF (レポート)",
+      "clipboard": "コピー"
+    },
+    "kpi": {
+      "mape": "MAPE",
+      "mae": "MAE",
+      "crps": "CRPS",
+      "bias": "バイアス"
+    }
   }
 }

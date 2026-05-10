@@ -154,6 +154,7 @@ pub fn get_tool_definitions() -> Vec<Value> {
         ),
     ];
     defs.push(super::tool_definitions_subagent::delegate_task_definition());
+    defs.extend(super::tool_definitions_forecast::forecast_tool_definitions());
     defs.extend(super::tool_definitions_office::office_tool_definitions());
     defs.extend(super::tool_definitions_mcp::mcp_tool_definitions());
     defs
