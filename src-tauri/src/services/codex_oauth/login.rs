@@ -1,4 +1,5 @@
 use rand::RngCore;
+use zeroize::Zeroizing;
 
 use super::{callback, jwt, pkce, store, token};
 
@@ -7,10 +8,12 @@ use super::{CLIENT_ID, REDIRECT_URI};
 const AUTH_URL: &str = "https://auth.openai.com/oauth/authorize";
 const SCOPES: &str = "openid profile email offline_access";
 
-fn generate_state() -> String {
+fn generate_state() -> Zeroizing<String> {
     let mut bytes = [0u8; 16];
     rand::rngs::OsRng.fill_bytes(&mut bytes);
-    hex::encode(bytes)
+    let s = hex::encode(bytes);
+    bytes.fill(0);
+    Zeroizing::new(s)
 }
 
 fn build_auth_url(challenge: &str, state: &str) -> String {
@@ -38,7 +41,7 @@ pub async fn login() -> Result<String, String> {
     let cb = callback::wait_for_callback(&state).await?;
     eprintln!("[codex] code reçu, échange en cours...");
 
-    let creds = token::exchange_code(&cb.code, &pair.verifier).await?;
+    let creds = token::exchange_code(&cb.code, pair.verifier.as_str()).await?;
     let email = jwt::extract_claims(&creds.access)
         .ok()
         .and_then(|c| c.email)

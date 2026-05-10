@@ -18,7 +18,7 @@ pub struct PtyManager {
 
 struct OwnedSession {
     session: PtySession,
-    token: String,
+    token: zeroize::Zeroizing<String>,
 }
 
 #[derive(Clone, serde::Serialize)]
@@ -55,14 +55,15 @@ impl PtyManager {
         let token = generate_token();
         let (session, reader) = PtySession::spawn(cwd, cols, rows)?;
 
+        let token_copy = token.to_string();
         self.sessions
             .lock()
             .map_err(|e| format!("lock: {}", e))?
-            .insert(id, OwnedSession { session, token: token.clone() });
+            .insert(id, OwnedSession { session, token });
 
         self.start_reader_thread(id, reader, on_output);
 
-        Ok((id, token))
+        Ok((id, token_copy))
     }
 
     pub fn write(&self, id: u32, token: &str, data: &[u8]) -> Result<(), String> {
@@ -142,11 +143,13 @@ impl PtyManager {
     }
 }
 
-fn generate_token() -> String {
+fn generate_token() -> zeroize::Zeroizing<String> {
     use rand::RngCore;
     let mut bytes = [0u8; 16];
     rand::rngs::OsRng.fill_bytes(&mut bytes);
-    bytes.iter().map(|b| format!("{b:02x}")).collect()
+    let s = bytes.iter().map(|b| format!("{b:02x}")).collect();
+    bytes.fill(0);
+    zeroize::Zeroizing::new(s)
 }
 
 fn verify_token(expected: &str, provided: &str) -> Result<(), String> {

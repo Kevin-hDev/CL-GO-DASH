@@ -81,19 +81,19 @@ fn flush_vault(s: &VaultState) -> Result<(), String> {
 
 pub fn init() -> Result<(), String> {
     let master_key = vault::load_or_create_master_key()?;
-    let mut raw_map = vault::read_vault(&master_key)?;
+    let mut raw_map = ZeroizingMap(vault::read_vault(&master_key)?);
     let marker = vault::vault_path().with_file_name(".vault-migrated");
     if !marker.exists() {
         let legacy = vault::read_legacy_keychain_keys();
         if !legacy.is_empty() {
             for (id, key) in &legacy {
-                raw_map.entry(id.clone()).or_insert_with(|| key.to_string());
+                raw_map.0.entry(id.clone()).or_insert_with(|| key.to_string());
             }
             eprintln!("[vault] migrated {} keys from keychain", legacy.len());
         }
-        vault::write_vault(&master_key, &raw_map)?;
+        vault::write_vault(&master_key, &raw_map.0)?;
         let mut registry = read_registry();
-        for id in raw_map.keys() {
+        for id in raw_map.0.keys() {
             if !registry.contains(id) {
                 registry.push(id.clone());
             }
@@ -101,7 +101,7 @@ pub fn init() -> Result<(), String> {
         let _ = write_registry(&registry);
         let _ = std::fs::write(&marker, b"ok");
     }
-    let keys = raw_map.into_iter().map(|(k, v)| (k, Zeroizing::new(v))).collect();
+    let keys = raw_map.0.drain().map(|(k, v)| (k, Zeroizing::new(v))).collect();
     let mut state = STATE.lock().map_err(|e| format!("lock: {e}"))?;
     *state = Some(VaultState { master_key, keys });
     Ok(())

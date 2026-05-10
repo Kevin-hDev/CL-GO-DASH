@@ -73,8 +73,8 @@ async fn send_request(
 
     let resp = client
         .post(&url)
-        .header("Authorization", format!("Bearer {}", creds.access.as_str()))
-        .header("chatgpt-account-id", &creds.account_id)
+        .bearer_auth(creds.access.as_str())
+        .header("chatgpt-account-id", creds.account_id.as_str())
         .header("OpenAI-Beta", "responses=experimental")
         .header("Content-Type", "application/json")
         .header("Accept", "text/event-stream")

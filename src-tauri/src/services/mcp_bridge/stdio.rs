@@ -43,12 +43,15 @@ impl StdioTransport {
         }
 
         process_manager::shutdown_one(&self.connector_id);
-        let env_tokens = self.resolve_env_tokens();
+        let mut env_tokens = self.resolve_env_tokens();
         let handle = process_manager::spawn(
             &self.connector_id,
             &self.install_command,
             &env_tokens,
         )?;
+        for (_, val) in &mut env_tokens {
+            zeroize::Zeroize::zeroize(val);
+        }
         tokio::time::sleep(Duration::from_millis(WARMUP_MS)).await;
         self.handshake(&handle).await?;
         Ok(handle)

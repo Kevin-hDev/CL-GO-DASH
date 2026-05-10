@@ -1,6 +1,7 @@
 use crate::services::agent_local::tool_skill_loader;
 use crate::services::agent_local::tool_web_search;
 use crate::services::agent_local::types_tools::SkillInfo;
+use zeroize::Zeroize;
 
 #[tauri::command]
 pub async fn list_skills() -> Result<Vec<SkillInfo>, String> {
@@ -13,6 +14,8 @@ pub async fn load_skill(name: String) -> Result<String, String> {
 }
 
 #[tauri::command]
-pub async fn set_brave_api_key(key: String) -> Result<(), String> {
-    tool_web_search::set_brave_key(&key)
+pub async fn set_brave_api_key(mut key: String) -> Result<(), String> {
+    let result = tool_web_search::set_brave_key(&key);
+    key.zeroize();
+    result
 }

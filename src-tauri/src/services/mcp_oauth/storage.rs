@@ -84,7 +84,7 @@ async fn refresh_access_token(
         ("refresh_token", refresh_token),
         ("client_id", old.client_id.as_str()),
     ];
-    let secret_ref = old.client_secret.as_ref().map(|s| s.as_str().to_string());
+    let secret_ref = old.client_secret.as_ref().map(|s| Zeroizing::new(s.as_str().to_string()));
     if let Some(ref secret) = secret_ref {
         params.push(("client_secret", secret.as_str()));
     }

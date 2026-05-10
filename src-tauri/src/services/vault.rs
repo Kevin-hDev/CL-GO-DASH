@@ -32,12 +32,12 @@ pub fn load_or_create_master_key() -> Result<Zeroizing<Vec<u8>>, String> {
 
     match entry.get_password() {
         Ok(b64_raw) => {
-            let mut b64 = Zeroizing::new(b64_raw);
-            let bytes = B64.decode(b64.as_str()).map_err(|e| format!("master key decode: {e}"))?;
-            b64.zeroize();
+            let b64 = Zeroizing::new(b64_raw);
+            let mut bytes = B64.decode(b64.as_str()).map_err(|e| format!("master key decode: {e}"))?;
             if bytes.len() == 32 {
                 return Ok(Zeroizing::new(bytes));
             }
+            bytes.zeroize();
             Err("master key in keychain has invalid length".to_string())
         }
         Err(keyring::Error::NoEntry) => {
@@ -49,10 +49,12 @@ pub fn load_or_create_master_key() -> Result<Zeroizing<Vec<u8>>, String> {
             let mut key = vec![0u8; 32];
             rand::rngs::OsRng.fill_bytes(&mut key);
             let mut b64 = B64.encode(&key);
-            entry
-                .set_password(&b64)
-                .map_err(|e| format!("keyring set master: {e}"))?;
+            let set_result = entry.set_password(&b64);
             b64.zeroize();
+            if let Err(e) = set_result {
+                key.zeroize();
+                return Err(format!("keyring set master: {e}"));
+            }
             Ok(Zeroizing::new(key))
         }
         Err(e) => Err(format!("keychain access failed: {e}")),
@@ -116,8 +118,9 @@ pub fn write_vault(master_key: &[u8], map: &HashMap<String, String>) -> Result<(
         std::fs::create_dir_all(parent).map_err(|e| format!("mkdir: {e}"))?;
     }
     let mut plaintext = serde_json::to_vec(map).map_err(|e| format!("json: {e}"))?;
-    let encrypted = encrypt(master_key, &plaintext)?;
+    let encrypt_result = encrypt(master_key, &plaintext);
     plaintext.zeroize();
+    let encrypted = encrypt_result?;
 
     let tmp = path.with_extension("tmp");
     std::fs::write(&tmp, &encrypted).map_err(|e| format!("write: {e}"))?;

@@ -5,7 +5,7 @@
 
 use crate::services::api_keys;
 use tauri::Emitter;
-use zeroize::Zeroize;
+use zeroize::{Zeroize, Zeroizing};
 
 #[tauri::command]
 pub async fn set_api_key(app: tauri::AppHandle, provider: String, mut key: String) -> Result<(), String> {
@@ -40,8 +40,7 @@ pub async fn test_api_key(provider: String) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub async fn test_api_key_with_value(provider: String, mut key: String) -> Result<(), String> {
-    let result = api_keys::test_key_raw(&provider, &key).await;
-    key.zeroize();
-    result
+pub async fn test_api_key_with_value(provider: String, key: String) -> Result<(), String> {
+    let key = Zeroizing::new(key);
+    api_keys::test_key_raw(&provider, &key).await
 }

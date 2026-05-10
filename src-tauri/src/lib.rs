@@ -47,6 +47,7 @@ pub fn run() {
             if let Err(e) = storage_migration::run(app.handle()) {
                 eprintln!("[storage migration] {}", e);
             }
+            let _ = dotenvy::dotenv();
             if let Err(e) = services::api_keys::init() {
                 eprintln!("[vault] init failed: {}", e);
                 let handle = app.handle().clone();

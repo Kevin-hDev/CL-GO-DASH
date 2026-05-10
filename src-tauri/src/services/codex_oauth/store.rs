@@ -25,7 +25,7 @@ pub struct CodexTokens {
     pub access: Zeroizing<String>,
     pub refresh: Zeroizing<String>,
     pub expires_at: i64,
-    pub account_id: String,
+    pub account_id: Zeroizing<String>,
 }
 
 impl CodexTokens {
@@ -34,18 +34,13 @@ impl CodexTokens {
     }
 }
 
-impl Drop for CodexTokens {
-    fn drop(&mut self) {
-        self.account_id.zeroize();
-    }
-}
 
 pub fn save(tokens: &CodexTokens) -> Result<(), String> {
     let raw = Stored {
         access: tokens.access.to_string(),
         refresh: tokens.refresh.to_string(),
         expires_at: tokens.expires_at,
-        account_id: tokens.account_id.clone(),
+        account_id: tokens.account_id.as_str().to_string(),
     };
     let mut json = serde_json::to_string(&raw).map_err(|e| format!("json: {e}"))?;
     let result = api_keys::set_raw(VAULT_KEY, &json);
@@ -62,7 +57,7 @@ pub fn load() -> Result<Option<CodexTokens>, String> {
                 access: Zeroizing::new(std::mem::take(&mut raw.access)),
                 refresh: Zeroizing::new(std::mem::take(&mut raw.refresh)),
                 expires_at: raw.expires_at,
-                account_id: std::mem::take(&mut raw.account_id),
+                account_id: Zeroizing::new(std::mem::take(&mut raw.account_id)),
             };
             Ok(Some(tokens))
         }

@@ -1,6 +1,6 @@
 use reqwest::Client;
 use std::time::Duration;
-use zeroize::Zeroizing;
+use zeroize::{Zeroize, Zeroizing};
 
 use super::jwt;
 use super::store::CodexTokens;
@@ -13,23 +13,25 @@ pub async fn exchange_code(
     code: &str,
     code_verifier: &str,
 ) -> Result<CodexTokens, String> {
-    let body = format!(
+    let mut body = format!(
         "grant_type=authorization_code&client_id={CLIENT_ID}&code={}&code_verifier={}&redirect_uri={}",
         urlencoding::encode(code),
         urlencoding::encode(code_verifier),
         urlencoding::encode(REDIRECT_URI),
     );
-    let resp = post_form(&body).await?;
-    parse_response(resp).await
+    let result = post_form(&body).await;
+    body.zeroize();
+    parse_response(result?).await
 }
 
 pub async fn refresh(refresh_val: &str) -> Result<CodexTokens, String> {
-    let body = format!(
+    let mut body = format!(
         "grant_type=refresh_token&refresh_token={}&client_id={CLIENT_ID}",
         urlencoding::encode(refresh_val),
     );
-    let resp = post_form(&body).await?;
-    parse_response(resp).await
+    let result = post_form(&body).await;
+    body.zeroize();
+    parse_response(result?).await
 }
 
 async fn post_form(body: &str) -> Result<reqwest::Response, String> {
@@ -76,23 +78,27 @@ async fn parse_response(resp: reqwest::Response) -> Result<CodexTokens, String> 
         .await
         .map_err(|e| format!("parse response: {e}"))?;
 
-    let access = json["access_token"]
-        .as_str()
-        .ok_or("access_token manquant")?
-        .to_string();
-    let refresh_val = json["refresh_token"]
-        .as_str()
-        .ok_or("refresh_token manquant")?
-        .to_string();
+    let access = Zeroizing::new(
+        json["access_token"]
+            .as_str()
+            .ok_or("access_token manquant")?
+            .to_string(),
+    );
+    let refresh_val = Zeroizing::new(
+        json["refresh_token"]
+            .as_str()
+            .ok_or("refresh_token manquant")?
+            .to_string(),
+    );
     let expires_in = json["expires_in"].as_i64().unwrap_or(3600);
     let expires_at = chrono::Utc::now().timestamp() + expires_in;
 
     let claims = jwt::extract_claims(&access)?;
 
     Ok(CodexTokens {
-        access: Zeroizing::new(access),
-        refresh: Zeroizing::new(refresh_val),
+        access,
+        refresh: refresh_val,
         expires_at,
-        account_id: claims.account_id,
+        account_id: Zeroizing::new(claims.account_id),
     })
 }

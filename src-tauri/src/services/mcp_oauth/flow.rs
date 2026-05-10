@@ -55,7 +55,7 @@ async fn run_inner(
     let (client_id, client_secret, scopes) = if let Some(ref creds) = static_creds {
         (
             creds.client_id.to_string(),
-            Some(creds.client_secret.to_string()),
+            Some(Zeroizing::new(creds.client_secret.to_string())),
             Some(creds.scopes),
         )
     } else if let Some(ref reg_url) = meta.registration_endpoint {
@@ -89,7 +89,7 @@ async fn run_inner(
 
     flow_auth::verify_state_constant_time(&state, &callback.state)?;
 
-    let secret_ref = client_secret.as_deref();
+    let secret_ref = client_secret.as_ref().map(|s| s.as_str());
     let tokens = flow_auth::exchange_code(
         &meta.token_endpoint,
         &callback.code,
