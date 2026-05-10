@@ -13,24 +13,25 @@
   margin-bottom: 0;
 }
 
-/* Tables — style Claude.ai */
+/* Tables — style Claude.ai : cellules séparées par gaps, coins arrondis */
 .chat-md table {
-  border-spacing: 0;
   border-collapse: separate;
-  border-radius: var(--radius-md, 8px);
+  border-spacing: 3px;
   display: block;
   width: max-content;
   max-width: 100%;
-  overflow: hidden;
+  overflow-x: auto;
   margin: var(--space-sm) 0;
   font-size: var(--text-xs);
   white-space: normal;
+  border: none;
 }
 
 .chat-md th,
 .chat-md td {
   padding: 10px 16px;
   text-align: left;
+  border-radius: 4px;
 }
 
 .chat-md th {
@@ -40,11 +41,7 @@
   letter-spacing: 0.02em;
 }
 
-/* Dark: même bg que les tool bubbles, pas de bordure */
-[data-theme="dark"] .chat-md table {
-  border: none;
-}
-
+/* Dark */
 [data-theme="dark"] .chat-md th {
   background: rgba(40, 40, 46, 0.7);
 }
@@ -53,35 +50,17 @@
   background: rgba(30, 30, 34, 0.55);
 }
 
-[data-theme="dark"] .chat-md th,
-[data-theme="dark"] .chat-md td {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-}
-
-[data-theme="dark"] .chat-md tr:last-child td {
-  border-bottom: none;
-}
-
-/* Light: bordures épaisses visibles, couleurs actuelles */
-[data-theme="light"] .chat-md table {
-  border: 1px solid rgba(0, 0, 0, 0.12);
-}
-
+/* Light */
 [data-theme="light"] .chat-md th {
-  background: var(--surface-hover);
+  background: rgba(0, 0, 0, 0.06);
 }
 
-[data-theme="light"] .chat-md th,
 [data-theme="light"] .chat-md td {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(0, 0, 0, 0.03);
 }
 
-[data-theme="light"] .chat-md tr:last-child td {
-  border-bottom: none;
-}
-
-.chat-md tbody tr:hover {
-  filter: brightness(1.05);
+.chat-md tbody tr:hover td {
+  filter: brightness(1.08);
 }
 
 /* Lists */
