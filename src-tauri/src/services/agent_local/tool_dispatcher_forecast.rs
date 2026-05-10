@@ -11,15 +11,35 @@ pub async fn dispatch_forecast(
     session_id: &str,
 ) -> Option<ToolResult> {
     match tool_name {
-        "forecast" => Some(handle_forecast(args, session_id).await),
+        "forecast" => Some(handle_forecast(args, _working_dir, session_id).await),
         "forecast_analyze" => Some(handle_analyze(args, session_id).await),
         "forecast_read" => Some(handle_read(args).await),
         _ => None,
     }
 }
 
-async fn handle_forecast(args: &Value, session_id: &str) -> ToolResult {
-    let request: ForecastRequest = match serde_json::from_value(args.clone()) {
+fn load_file_data(raw_path: &str, working_dir: &Path) -> Result<String, String> {
+    let candidate = std::path::PathBuf::from(raw_path);
+    let resolved = if candidate.is_absolute() {
+        candidate
+    } else {
+        working_dir.join(&candidate)
+    };
+    let canonical = resolved
+        .canonicalize()
+        .map_err(|_| "Fichier introuvable".to_string())?;
+    let working_canonical = working_dir
+        .canonicalize()
+        .map_err(|_| "Répertoire de travail invalide".to_string())?;
+    if !canonical.starts_with(&working_canonical) {
+        return Err("Accès refusé : chemin hors du répertoire de travail".into());
+    }
+    std::fs::read_to_string(&canonical)
+        .map_err(|_| "Impossible de lire le fichier".to_string())
+}
+
+async fn handle_forecast(args: &Value, working_dir: &Path, session_id: &str) -> ToolResult {
+    let mut request: ForecastRequest = match serde_json::from_value(args.clone()) {
         Ok(r) => r,
         Err(e) => return ToolResult::err(format!("Paramètres invalides: {e}")),
     };
@@ -28,6 +48,16 @@ async fn handle_forecast(args: &Value, session_id: &str) -> ToolResult {
         return ToolResult::err(
             "Il faut fournir soit 'data' (JSON) soit 'file_path' (chemin CSV/Excel)"
         );
+    }
+
+    // Si file_path fourni sans data, lire le fichier avec validation path traversal
+    if request.data.is_none() {
+        if let Some(ref raw_path) = request.file_path.clone() {
+            match load_file_data(raw_path, working_dir) {
+                Ok(json_data) => request.data = Some(json_data),
+                Err(e) => return ToolResult::err(e),
+            }
+        }
     }
 
     let model_id = request.model.as_deref().unwrap_or("chronos-bolt-small");

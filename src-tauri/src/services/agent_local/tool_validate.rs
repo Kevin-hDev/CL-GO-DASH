@@ -1,7 +1,7 @@
 use serde_json::Value;
 
 #[derive(Clone, Copy)]
-enum Ty { Str, Int, Arr, Obj }
+enum Ty { Str, Int, Float, Arr, Obj }
 
 type Schema = &'static [(&'static str, Ty, bool)];
 
@@ -25,7 +25,7 @@ static WRITE_SPREADSHEET: Schema = &[("path", Ty::Str, true), ("operations", Ty:
 static WRITE_DOCUMENT: Schema = &[("path", Ty::Str, true), ("content", Ty::Arr, true)];
 static PROCESS_IMAGE: Schema = &[("input_path", Ty::Str, true), ("output_path", Ty::Str, true), ("operations", Ty::Arr, false)];
 static SEARCH_MCP: Schema = &[("mode", Ty::Str, true), ("query", Ty::Str, false), ("tool_id", Ty::Str, false), ("arguments", Ty::Obj, false)];
-static FORECAST: Schema = &[("data", Ty::Str, false), ("file_path", Ty::Str, false), ("target_column", Ty::Str, true), ("date_column", Ty::Str, true), ("covariate_columns", Ty::Arr, false), ("horizon", Ty::Int, true), ("frequency", Ty::Str, true), ("model", Ty::Str, false)];
+static FORECAST: Schema = &[("data", Ty::Str, false), ("file_path", Ty::Str, false), ("target_column", Ty::Str, true), ("date_column", Ty::Str, true), ("covariate_columns", Ty::Arr, false), ("horizon", Ty::Int, true), ("frequency", Ty::Str, true), ("model", Ty::Str, false), ("confidence_level", Ty::Float, false)];
 static FORECAST_ANALYZE: Schema = &[("analysis_id", Ty::Str, true), ("action", Ty::Str, true), ("params", Ty::Obj, false)];
 static FORECAST_READ: Schema = &[("analysis_id", Ty::Str, false)];
 
@@ -62,6 +62,7 @@ fn type_ok(val: &Value, ty: Ty) -> bool {
     match ty {
         Ty::Str => val.is_string(),
         Ty::Int => val.is_u64() || val.is_i64(),
+        Ty::Float => val.is_f64() || val.is_u64() || val.is_i64(),
         Ty::Arr => val.is_array(),
         Ty::Obj => val.is_object(),
     }
@@ -71,6 +72,7 @@ fn ty_label(ty: Ty) -> &'static str {
     match ty {
         Ty::Str => "string",
         Ty::Int => "integer",
+        Ty::Float => "number",
         Ty::Arr => "array",
         Ty::Obj => "object",
     }

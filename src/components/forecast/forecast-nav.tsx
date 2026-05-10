@@ -1,11 +1,12 @@
+import { useTranslation } from "react-i18next";
 import type { ForecastSection } from "@/hooks/use-forecast-panel";
 
-const NAV_ITEMS: { id: ForecastSection; label: string }[] = [
-  { id: "view", label: "Vue principale" },
-  { id: "scenarios", label: "Scénarios" },
-  { id: "analysis", label: "Analyse" },
-  { id: "notes", label: "Notes" },
-  { id: "history", label: "Historique" },
+const NAV_ITEMS: { id: ForecastSection; i18nKey: string }[] = [
+  { id: "view", i18nKey: "forecast.nav.mainView" },
+  { id: "scenarios", i18nKey: "forecast.nav.scenarios" },
+  { id: "analysis", i18nKey: "forecast.nav.analysis" },
+  { id: "notes", i18nKey: "forecast.nav.notes" },
+  { id: "history", i18nKey: "forecast.nav.history" },
 ];
 
 interface ForecastNavProps {
@@ -15,6 +16,8 @@ interface ForecastNavProps {
 }
 
 export function ForecastNav({ open, activeSection, onSelect }: ForecastNavProps) {
+  const { t } = useTranslation();
+
   return (
     <div
       className="fc-nav"
@@ -40,7 +43,7 @@ export function ForecastNav({ open, activeSection, onSelect }: ForecastNavProps)
                 background: activeSection === item.id ? "var(--fc-nav-active)" : "transparent",
               }}
             />
-            {item.label}
+            {t(item.i18nKey)}
           </button>
         ))}
       </div>

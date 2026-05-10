@@ -26,8 +26,10 @@ pub async fn predict(
 
     if !resp.status().is_success() {
         let status = resp.status();
+        // Ne pas exposer le body brut — log interne uniquement
         let body = resp.text().await.unwrap_or_default();
-        return Err(format!("Nixtla API erreur {status}: {body}"));
+        eprintln!("[nixtla] erreur {status}: {body}");
+        return Err("Erreur du service de prédiction".to_string());
     }
 
     let body: Value = resp

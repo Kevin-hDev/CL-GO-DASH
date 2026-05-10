@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
 import "../forecast-view.css";
 
@@ -18,14 +19,15 @@ interface ForecastViewProps {
 }
 
 export function ForecastView({ analysisId }: ForecastViewProps) {
+  const { t } = useTranslation();
   const [data, setData] = useState<ForecastResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     invoke<ForecastResult>("get_forecast_analysis", { id: analysisId })
       .then(setData)
-      .catch((e: unknown) => setError(String(e)));
-  }, [analysisId]);
+      .catch(() => setError(t("forecast.noAnalysis")));
+  }, [analysisId, t]);
 
   if (error) return <div className="fc-error">{error}</div>;
   if (!data) return <div className="fc-loading"><div className="fc-skeleton" /></div>;
@@ -43,7 +45,7 @@ export function ForecastView({ analysisId }: ForecastViewProps) {
       <div className="fc-predictions-table">
         <div className="fc-table-head">
           <span>Date</span>
-          <span>Prédiction</span>
+          <span>{t("forecast.title")}</span>
         </div>
         <div className="fc-table-body">
           {data.predictions.slice(0, 20).map((p, i) => (
@@ -63,7 +65,7 @@ function KpiRow({ metrics }: { metrics: NonNullable<ForecastResult["metrics"]> }
     { label: "MAPE", value: metrics.mape, suffix: "%" },
     { label: "MAE", value: metrics.mae, suffix: "" },
     { label: "CRPS", value: metrics.crps, suffix: "" },
-    { label: "Biais", value: metrics.bias, suffix: "" },
+    { label: "Bias", value: metrics.bias, suffix: "" },
   ];
   return (
     <div className="fc-kpi-row">
@@ -80,7 +82,7 @@ function KpiRow({ metrics }: { metrics: NonNullable<ForecastResult["metrics"]> }
 }
 
 function ChartPreview({ predictions }: { predictions: ForecastResult["predictions"] }) {
-  if (predictions.length === 0) return null;
+  if (predictions.length < 2) return null;
   const values = predictions.map((p) => p.value);
   const min = Math.min(...values);
   const max = Math.max(...values);

@@ -1,9 +1,40 @@
-use crate::services::forecast::{catalog, model_manager, storage};
+use crate::services::forecast::{catalog, client_chronos, client_nixtla, model_manager, sidecar, storage};
 use crate::services::forecast::types::{
-    ForecastAnalysisMeta, ForecastResult, ModelDownloadProgress,
+    ForecastAnalysisMeta, ForecastRequest, ForecastResult, ModelDownloadProgress,
 };
 use serde_json::Value;
 use tauri::ipc::Channel;
+use tauri::State;
+
+#[tauri::command]
+pub async fn run_forecast(
+    request: ForecastRequest,
+    chronos: State<'_, sidecar::ChronosSidecar>,
+) -> Result<ForecastResult, String> {
+    let model_id = request.model.as_deref().unwrap_or("chronos-bolt-small");
+    let is_nixtla = model_id.starts_with("timegpt");
+
+    let result = if is_nixtla {
+        let key = crate::services::api_keys::get_key("nixtla")
+            .map_err(|_| "Clé API Nixtla non configurée".to_string())?;
+        client_nixtla::predict(&key, &request, None).await
+            .map_err(|_| "Erreur du service de prédiction".to_string())?
+    } else {
+        if !model_manager::is_installed(model_id) {
+            return Err(format!(
+                "Modèle '{model_id}' non installé. Installez-le depuis les paramètres."
+            ));
+        }
+        sidecar::start(&chronos, model_id).await
+            .map_err(|_| "Impossible de démarrer le service de prédiction".to_string())?;
+        let base_url = sidecar::base_url();
+        client_chronos::predict(&base_url, &request, None).await
+            .map_err(|_| "Erreur du service de prédiction".to_string())?
+    };
+
+    storage::save(&result).await?;
+    Ok(result)
+}
 
 #[tauri::command]
 pub async fn list_forecast_analyses() -> Result<Vec<ForecastAnalysisMeta>, String> {

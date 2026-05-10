@@ -1,5 +1,9 @@
 use serde::{Deserialize, Serialize};
 
+pub const MAX_PREDICTIONS: usize = 10_000;
+pub const MAX_ANNOTATIONS: usize = 200;
+pub const MAX_SCENARIOS: usize = 50;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ForecastRequest {
     pub data: Option<String>,

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
 import "../forecast-sections.css";
 
@@ -18,6 +19,7 @@ interface ForecastNotesProps {
 }
 
 export function ForecastNotes({ analysisId }: ForecastNotesProps) {
+  const { t } = useTranslation();
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
 
   useEffect(() => {
@@ -29,7 +31,7 @@ export function ForecastNotes({ analysisId }: ForecastNotesProps) {
   return (
     <div className="fcs-root">
       <div className="fcs-toolbar">
-        <span className="fcs-section-title">Notes & Annotations</span>
+        <span className="fcs-section-title">{t("forecast.nav.notes")}</span>
       </div>
       <div className="fcs-content">
         {annotations.length === 0 ? (

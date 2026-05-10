@@ -33,10 +33,12 @@ export const AgentLocalTab = memo(function AgentLocalTab({
       activeSection={forecast.activeSection}
       navOpen={forecast.navOpen}
       currentAnalysisId={forecast.currentAnalysisId}
+      fullscreen={filePreview.fullscreen}
       onSectionChange={forecast.setSection}
       onToggleNav={forecast.toggleNav}
       onLoadAnalysis={forecast.loadAnalysis}
       onCloseAnalysis={forecast.closeAnalysis}
+      onFullscreenChange={filePreview.setFullscreen}
     />
   );
 

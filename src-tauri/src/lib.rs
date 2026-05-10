@@ -43,6 +43,7 @@ pub fn run() {
         .manage(services::terminal::PtyManager::new())
         .manage(GatewayService::new())
         .manage(commands::file_tree_watcher::FileTreeWatcher::new())
+        .manage(services::forecast::sidecar::ChronosSidecar::new())
         .setup(|app| {
             services::agent_local::app_handle_global::init(app.handle().clone());
             services::agent_local::subagent_spawn_channel::init();
@@ -277,6 +278,7 @@ pub fn run() {
             commands::codex_set_effort,
             commands::codex_get_effort,
             // Forecast
+            commands::run_forecast,
             commands::list_forecast_analyses,
             commands::get_forecast_analysis,
             commands::delete_forecast_analysis,

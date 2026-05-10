@@ -30,6 +30,7 @@ pub fn installed_models() -> Vec<String> {
                 .filter_map(|e| e.ok())
                 .filter(|e| e.path().is_dir())
                 .filter_map(|e| e.file_name().into_string().ok())
+                .filter(|name| !name.starts_with('.'))
                 .collect()
         })
         .unwrap_or_default()

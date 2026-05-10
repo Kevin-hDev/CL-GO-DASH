@@ -1,6 +1,5 @@
 use crate::services::forecast::types::ModelDownloadProgress;
 use futures_util::StreamExt;
-use sha2::{Digest, Sha256};
 use std::path::Path;
 use tauri::ipc::Channel;
 use tokio::io::AsyncWriteExt;
@@ -103,11 +102,9 @@ async fn download_single(
         .map_err(|e| format!("Création tmp: {e}"))?;
 
     let mut stream = resp.bytes_stream();
-    let mut hasher = Sha256::new();
 
     while let Some(chunk) = stream.next().await {
         let chunk = chunk.map_err(|e| format!("Stream: {e}"))?;
-        hasher.update(&chunk);
         file.write_all(&chunk)
             .await
             .map_err(|e| format!("Écriture: {e}"))?;
@@ -128,8 +125,6 @@ async fn download_single(
 
     file.flush().await.map_err(|e| format!("Flush: {e}"))?;
     drop(file);
-
-    let _hash = format!("{:x}", hasher.finalize());
 
     tokio::fs::rename(&tmp, dest)
         .await

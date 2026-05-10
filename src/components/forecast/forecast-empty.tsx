@@ -1,5 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
+import { open } from "@tauri-apps/plugin-dialog";
 import "./forecast-empty.css";
 
 interface ForecastAnalysisMeta {
@@ -13,9 +15,11 @@ interface ForecastAnalysisMeta {
 
 interface ForecastEmptyProps {
   onLoadAnalysis: (id: string) => void;
+  onImportFile?: (path: string) => void;
 }
 
-export function ForecastEmpty({ onLoadAnalysis }: ForecastEmptyProps) {
+export function ForecastEmpty({ onLoadAnalysis, onImportFile }: ForecastEmptyProps) {
+  const { t } = useTranslation();
   const [recent, setRecent] = useState<ForecastAnalysisMeta[]>([]);
 
   useEffect(() => {
@@ -23,6 +27,14 @@ export function ForecastEmpty({ onLoadAnalysis }: ForecastEmptyProps) {
       .then(setRecent)
       .catch(() => setRecent([]));
   }, []);
+
+  const handleImport = useCallback(async () => {
+    const path = await open({
+      filters: [{ name: "Data", extensions: ["csv", "xlsx", "xls", "json"] }],
+      multiple: false,
+    });
+    if (path && onImportFile) onImportFile(path);
+  }, [onImportFile]);
 
   return (
     <div className="fc-empty">
@@ -34,25 +46,27 @@ export function ForecastEmpty({ onLoadAnalysis }: ForecastEmptyProps) {
           <line x1="6" y1="42" x2="42" y2="42" opacity="0.3" />
         </svg>
       </div>
-      <p className="fc-empty-title">Aucune analyse en cours</p>
-      <p className="fc-empty-sub">
-        Demandez à l&apos;agent de lancer un forecast, ou importez des données.
-      </p>
+      <p className="fc-empty-title">{t("forecast.noAnalysis")}</p>
+      <p className="fc-empty-sub">{t("forecast.askAgent")}</p>
       <div className="fc-empty-actions">
-        <button className="fc-empty-btn fc-empty-btn-primary">
+        <button className="fc-empty-btn fc-empty-btn-primary" onClick={() => void handleImport()}>
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor"
             strokeWidth="1.5" strokeLinecap="round">
             <circle cx="7" cy="7" r="5.5" />
             <path d="M7 4.5v5M4.5 7h5" />
           </svg>
-          Importer (CSV, Excel)
+          {t("forecast.importFile")}
         </button>
-        <button className="fc-empty-btn">Coller des données</button>
-        <button className="fc-empty-btn">Depuis une URL</button>
+        <button className="fc-empty-btn" onClick={() => { /* TODO: paste modal */ }}>
+          {t("forecast.pasteData")}
+        </button>
+        <button className="fc-empty-btn" onClick={() => { /* TODO: URL modal */ }}>
+          {t("forecast.fromUrl")}
+        </button>
       </div>
       {recent.length > 0 && (
         <div className="fc-recent">
-          <p className="fc-recent-title">Analyses récentes</p>
+          <p className="fc-recent-title">{t("forecast.recentAnalyses")}</p>
           {recent.slice(0, 5).map((a) => (
             <button key={a.id} className="fc-recent-item" onClick={() => onLoadAnalysis(a.id)}>
               <span className="fc-recent-name">{a.name}</span>

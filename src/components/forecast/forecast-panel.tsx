@@ -7,26 +7,24 @@ import { ForecastScenarios } from "./sections/forecast-scenarios";
 import { ForecastAnalysis } from "./sections/forecast-analysis";
 import { ForecastNotes } from "./sections/forecast-notes";
 import { ForecastHistory } from "./sections/forecast-history";
+import { ExportDropdown } from "./widgets/export-dropdown";
 import "./forecast-panel.css";
 
 interface ForecastPanelProps {
   activeSection: ForecastSection;
   navOpen: boolean;
   currentAnalysisId: string | null;
+  fullscreen: boolean;
   onSectionChange: (section: ForecastSection) => void;
   onToggleNav: () => void;
   onLoadAnalysis: (id: string) => void;
   onCloseAnalysis: () => void;
+  onFullscreenChange: (fs: boolean) => void;
 }
 
 export function ForecastPanel({
-  activeSection,
-  navOpen,
-  currentAnalysisId,
-  onSectionChange,
-  onToggleNav,
-  onLoadAnalysis,
-  onCloseAnalysis,
+  activeSection, navOpen, currentAnalysisId, fullscreen,
+  onSectionChange, onToggleNav, onLoadAnalysis, onCloseAnalysis, onFullscreenChange,
 }: ForecastPanelProps) {
   const hasAnalysis = currentAnalysisId !== null;
 
@@ -36,14 +34,12 @@ export function ForecastPanel({
         activeSection={activeSection}
         navOpen={navOpen}
         hasAnalysis={hasAnalysis}
+        fullscreen={fullscreen}
         onToggleNav={onToggleNav}
         onCloseAnalysis={onCloseAnalysis}
+        onFullscreenChange={onFullscreenChange}
       />
-      <ForecastNav
-        open={navOpen}
-        activeSection={activeSection}
-        onSelect={onSectionChange}
-      />
+      <ForecastNav open={navOpen} activeSection={activeSection} onSelect={onSectionChange} />
       <div className="fc-body">
         {!hasAnalysis ? (
           <ForecastEmpty onLoadAnalysis={onLoadAnalysis} />
@@ -55,6 +51,14 @@ export function ForecastPanel({
           />
         )}
       </div>
+      {hasAnalysis && (
+        <div className="fc-footer">
+          <ExportDropdown
+            analysisId={currentAnalysisId}
+            onExport={(format, id) => { console.log("export", format, id); }}
+          />
+        </div>
+      )}
     </div>
   );
 }

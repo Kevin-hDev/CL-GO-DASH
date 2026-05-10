@@ -97,13 +97,23 @@ fn save_pid(pid: u32) {
 }
 
 pub async fn start(sidecar: &ChronosSidecar, model_name: &str) -> Result<u16, String> {
-    kill_orphan_sidecar();
-
-    let port = find_free_port();
-    if detect_existing_instance(port) {
-        ACTIVE_PORT.store(port, Ordering::Relaxed);
-        return Ok(port);
+    // Vérifier d'abord si une instance existante tourne via le PID file
+    let pid_file = pid_path();
+    if pid_file.exists() {
+        if let Ok(content) = std::fs::read_to_string(&pid_file) {
+            if let Ok(_pid) = content.trim().parse::<u32>() {
+                // Instance potentielle — tester le port actif
+                let existing_port = get_port();
+                if existing_port != 0 && detect_existing_instance(existing_port) {
+                    return Ok(existing_port);
+                }
+            }
+        }
     }
+
+    // Aucune instance valide — tuer les orphelins et chercher un port libre
+    kill_orphan_sidecar();
+    let port = find_free_port();
 
     let script = sidecar_dir().join("server.py");
     if !script.exists() {
@@ -120,7 +130,7 @@ pub async fn start(sidecar: &ChronosSidecar, model_name: &str) -> Result<u16, St
             "--models-dir", models_dir.to_str().unwrap_or(""),
         ])
         .stdout(std::process::Stdio::null())
-        .stderr(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::null())
         .spawn()
         .map_err(|e| format!("Impossible de lancer le sidecar Chronos: {e}"))?;
 

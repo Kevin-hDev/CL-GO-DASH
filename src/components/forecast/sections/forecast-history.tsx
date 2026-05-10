@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
 import "../forecast-sections.css";
 import "../forecast-history.css";
@@ -18,6 +19,7 @@ interface ForecastHistoryProps {
 }
 
 export function ForecastHistory({ onLoadAnalysis }: ForecastHistoryProps) {
+  const { t } = useTranslation();
   const [analyses, setAnalyses] = useState<AnalysisMeta[]>([]);
   const [search, setSearch] = useState("");
 
@@ -34,7 +36,7 @@ export function ForecastHistory({ onLoadAnalysis }: ForecastHistoryProps) {
   return (
     <div className="fcs-root">
       <div className="fcs-toolbar">
-        <span className="fcs-section-title">Historique</span>
+        <span className="fcs-section-title">{t("forecast.nav.history")}</span>
       </div>
       <div className="fcs-content">
         <div className="fch-search">
