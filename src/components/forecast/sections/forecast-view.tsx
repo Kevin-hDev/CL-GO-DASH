@@ -1,8 +1,11 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
+import type { ForecastLayerState } from "../forecast-layer-matrix";
 import { formatForecastValue, inferMetricMeta } from "../forecast-view-format";
-import { ChartPreview, KpiRow, PeriodCell, ValueCell } from "../forecast-view-widgets";
+import { ForecastChart } from "../charts/forecast-chart";
+import { useForecastChartResize } from "../use-forecast-chart-resize";
+import { KpiRow, PeriodCell, ValueCell } from "../forecast-view-widgets";
 import "../forecast-view.css";
 
 interface ForecastResult {
@@ -25,12 +28,14 @@ interface ForecastResult {
 
 interface ForecastViewProps {
   analysisId: string;
+  layers: ForecastLayerState;
 }
 
-export function ForecastView({ analysisId }: ForecastViewProps) {
+export function ForecastView({ analysisId, layers }: ForecastViewProps) {
   const { t, i18n } = useTranslation();
   const [data, setData] = useState<ForecastResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const chart = useForecastChartResize();
 
   useEffect(() => {
     invoke<ForecastResult>("get_forecast_analysis", { id: analysisId })
@@ -46,20 +51,41 @@ export function ForecastView({ analysisId }: ForecastViewProps) {
   return (
     <div className="fc-view">
       {data.metrics && <KpiRow metrics={data.metrics} />}
-      <div className="fc-chart-area">
+      <div
+        className={`fc-chart-area ${chart.isResizing ? "is-resizing" : ""}`}
+        style={{ height: chart.chartHeight, minHeight: chart.chartHeight, maxHeight: chart.chartHeight }}
+      >
         <div className="fc-chart-placeholder">
-          <svg width="100%" height="120" viewBox="0 0 400 120" preserveAspectRatio="none">
-            <ChartPreview history={data.input_data.history} predictions={data.predictions} />
-          </svg>
+          <ForecastChart
+            history={data.input_data.history}
+            predictions={data.predictions}
+            quantiles={{ q10: data.quantiles.q10, q90: data.quantiles.q90 }}
+            frequency={data.frequency}
+            endDate={data.input_summary.end}
+            locale={i18n.language}
+            targetColumn={data.target_column}
+            fallbackName={data.name}
+            labels={{
+              history: t("forecast.view.historySeries"),
+              forecast: t("forecast.view.forecastSeries"),
+              confidence: t("forecast.view.confidenceRange"),
+            }}
+            layers={layers}
+          />
         </div>
       </div>
+      <div
+        className="fc-chart-resize"
+        onPointerDown={chart.startResize}
+        onDoubleClick={chart.resetHeight}
+      />
       <div className="fc-predictions-table">
         <div className="fc-table-head">
           <span>{t("forecast.view.period")}</span>
           <span>{metric.columnTitle}</span>
         </div>
         <div className="fc-table-body">
-          {data.predictions.slice(0, 20).map((p, i) => (
+          {data.predictions.map((p, i) => (
             <div key={i} className="fc-table-row">
               <PeriodCell
                 index={i}

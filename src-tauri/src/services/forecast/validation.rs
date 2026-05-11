@@ -1,4 +1,4 @@
-use super::{catalog, types::ForecastRequest};
+use super::{catalog, registry, types::ForecastRequest};
 
 const MAX_DATA_BYTES: usize = 5 * 1024 * 1024;
 const MAX_COLUMN_LEN: usize = 80;
@@ -21,12 +21,16 @@ pub fn validate_model_id(id: &str) -> Result<(), String> {
     if catalog::find_model(id).is_none() {
         return Err("Modèle inconnu".into());
     }
+    if registry::find_runtime(id).is_none() {
+        return Err("Moteur indisponible".into());
+    }
     Ok(())
 }
 
 pub fn validate_request(request: &ForecastRequest) -> Result<(), String> {
     let model_id = model_id(request)?;
     let spec = catalog::find_model(model_id).ok_or("Modèle inconnu")?;
+    let runtime = registry::find_runtime(model_id).ok_or("Moteur indisponible")?;
 
     validate_column(&request.target_column)?;
     validate_column(&request.date_column)?;
@@ -35,6 +39,9 @@ pub fn validate_request(request: &ForecastRequest) -> Result<(), String> {
     }
     if request.covariate_columns.len() > MAX_COVARIATES {
         return Err("Trop de covariables".into());
+    }
+    if !request.covariate_columns.is_empty() && !runtime.capabilities.past_covariates {
+        return Err("Variables de contexte non supportées par ce moteur".into());
     }
     let mut unique_covariates = std::collections::BTreeSet::new();
     for column in &request.covariate_columns {

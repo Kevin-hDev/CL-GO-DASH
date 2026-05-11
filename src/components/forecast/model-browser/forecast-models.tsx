@@ -1,40 +1,26 @@
 import { useState, useEffect, useCallback } from "react";
+import { ChevronDown } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 import { useTranslation } from "react-i18next";
+import {
+  groupForecastModels,
+  type ForecastModelEntry,
+  type ForecastModelsResponse,
+  type ForecastProviderEntry,
+} from "../forecast-model-meta";
 import { ModelCard } from "./model-card";
 import { ModelSpecs } from "./model-specs";
 import "./forecast-models.css";
 
-interface ForecastModel {
-  id: string;
-  provider_id: string;
-  display_name: string;
-  params: string;
-  size_mb: number;
-  ram_mb: number;
-  vram_mb: number | null;
-  cpu_supported: boolean;
-  gpu_supported: boolean;
-  horizon_max: number;
-  frequencies: string;
-  is_cloud: boolean;
-  installed: boolean;
-  size_on_disk: number;
-}
-
-interface Provider {
-  id: string;
-  display_name: string;
-}
-
 export function ForecastModels() {
   const { t } = useTranslation();
-  const [models, setModels] = useState<ForecastModel[]>([]);
-  const [providers, setProviders] = useState<Provider[]>([]);
-  const [selected, setSelected] = useState<ForecastModel | null>(null);
+  const [models, setModels] = useState<ForecastModelEntry[]>([]);
+  const [providers, setProviders] = useState<ForecastProviderEntry[]>([]);
+  const [selected, setSelected] = useState<ForecastModelEntry | null>(null);
+  const [openFamilies, setOpenFamilies] = useState<string[]>(["chronos", "timegpt"]);
 
   const refresh = useCallback(() => {
-    void invoke<{ models: ForecastModel[]; providers: Provider[] }>("list_forecast_models")
+    void invoke<ForecastModelsResponse>("list_forecast_models")
       .then((result) => {
         setModels(result.models);
         setProviders(result.providers);
@@ -49,7 +35,14 @@ export function ForecastModels() {
   useEffect(() => { refresh(); }, [refresh]);
 
   if (selected) {
-    return <ModelSpecs model={selected} onBack={() => setSelected(null)} onRefresh={refresh} />;
+    return (
+      <ModelSpecs
+        model={selected}
+        provider={providers.find((item) => item.id === selected.provider_id) ?? null}
+        onBack={() => setSelected(null)}
+        onRefresh={refresh}
+      />
+    );
   }
 
   return (
@@ -58,13 +51,30 @@ export function ForecastModels() {
         <span className="fmb-title">{t("forecast.models.title")}</span>
       </div>
       <div className="fmb-list">
-        {providers.map((prov) => {
-          const provModels = models.filter((m) => m.provider_id === prov.id);
-          if (provModels.length === 0) return null;
+        {groupForecastModels(models).map((group) => {
+          const isOpen = openFamilies.includes(group.id);
           return (
-            <div key={prov.id} className="fmb-group">
-              <span className="fmb-group-label">{prov.display_name}</span>
-              {provModels.map((m) => (
+            <div key={group.id} className="fmb-group">
+              <button
+                className="fmb-group-btn"
+                type="button"
+                onClick={() =>
+                  setOpenFamilies((current) =>
+                    current.includes(group.id)
+                      ? current.filter((item) => item !== group.id)
+                      : [...current, group.id]
+                  )
+                }
+              >
+                <span className="fmb-group-label">{t(group.titleKey)}</span>
+                <span className="fmb-group-count">{group.models.length}</span>
+                <ChevronDown
+                  size={14}
+                  className={`fmb-group-chevron ${isOpen ? "is-open" : ""}`}
+                />
+              </button>
+              <div className={`fmb-group-body ${isOpen ? "is-open" : ""}`}>
+                {group.models.map((m) => (
                 <ModelCard
                   key={m.id}
                   model={m}
@@ -72,6 +82,7 @@ export function ForecastModels() {
                   onRefresh={refresh}
                 />
               ))}
+              </div>
             </div>
           );
         })}

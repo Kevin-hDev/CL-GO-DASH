@@ -1,4 +1,5 @@
 use crate::services::forecast::input_data::{parse_request_input, ParsedInput};
+use crate::services::forecast::registry::{find_runtime, ForecastEngineKind};
 use crate::services::forecast::types::{ForecastRequest, ForecastResult, Prediction, Quantiles};
 use chrono::Utc;
 use serde_json::Value;
@@ -10,7 +11,7 @@ pub async fn predict(
     session_id: Option<&str>,
 ) -> Result<ForecastResult, String> {
     let input = parse_request_input(request)?;
-    let payload = build_payload(&input.values, request);
+    let payload = build_payload(&input, request)?;
 
     let client = reqwest::Client::new();
     let resp = client
@@ -54,14 +55,30 @@ pub async fn health_check(base_url: &str) -> Result<(), String> {
     }
 }
 
-fn build_payload(values: &[f64], request: &ForecastRequest) -> Value {
+fn build_payload(input: &ParsedInput, request: &ForecastRequest) -> Result<Value, String> {
     let model = request.model.as_deref().unwrap_or("chronos-bolt-small");
+    let runtime = find_runtime(model).ok_or("Moteur indisponible")?;
 
-    serde_json::json!({
-        "values": values.to_vec(),
-        "horizon": request.horizon,
-        "model": model,
-        "quantiles": [0.1, 0.5, 0.9],
+    Ok(match runtime.engine_kind {
+        ForecastEngineKind::LocalChronosBolt => serde_json::json!({
+            "values": input.values.to_vec(),
+            "horizon": request.horizon,
+            "model": model,
+            "quantiles": [0.1, 0.5, 0.9],
+        }),
+        ForecastEngineKind::LocalChronos2 => serde_json::json!({
+            "history_rows": input.history_rows,
+            "future_rows": input.future_rows,
+            "date_column": request.date_column,
+            "target_column": request.target_column,
+            "covariate_columns": request.covariate_columns,
+            "horizon": request.horizon,
+            "model": model,
+            "quantiles": [0.1, 0.5, 0.9],
+        }),
+        ForecastEngineKind::CloudApi => {
+            return Err("Moteur local invalide".into());
+        }
     })
 }
 

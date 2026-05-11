@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronDown, Maximize2, Minimize2 } from "lucide-react";
 import type { ForecastSection } from "@/hooks/use-forecast-panel";
@@ -15,6 +16,7 @@ interface ForecastHeaderProps {
   navOpen: boolean;
   hasAnalysis: boolean;
   fullscreen: boolean;
+  filterSlot?: ReactNode;
   onToggleNav: () => void;
   onCloseAnalysis: () => void;
   onFullscreenChange: (fs: boolean) => void;
@@ -25,6 +27,7 @@ export function ForecastHeader({
   navOpen,
   hasAnalysis,
   fullscreen,
+  filterSlot,
   onToggleNav,
   onCloseAnalysis,
   onFullscreenChange,
@@ -35,6 +38,7 @@ export function ForecastHeader({
     <div className="fc-head">
       <div className="fc-head-left">
         <span className="fc-title">{t("forecast.title")}</span>
+        {activeSection === "view" && filterSlot}
         {hasAnalysis && (
           <button className="fc-nav-trigger" onClick={onToggleNav}>
             <span className="fc-nav-label">{t(SECTION_KEYS[activeSection])}</span>

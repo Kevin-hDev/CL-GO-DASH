@@ -654,7 +654,27 @@
       "mapeShort": "MAPE {{value}}%"
     },
     "view": {
-      "period": "Período"
+      "period": "Período",
+      "historySeries": "Histórico",
+      "forecastSeries": "Previsión",
+      "confidenceRange": "Rango de confianza",
+      "filters": {
+        "button": "Filtros",
+        "series": "Serie",
+        "uncertainty": "Incertidumbre",
+        "scenarios": "Escenarios",
+        "variables": "Variables",
+        "events": "Eventos",
+        "comparisons": "Comparaciones",
+        "anomalies": "Anomalías",
+        "quality": "Calidad",
+        "history": "Histórico",
+        "forecast": "Previsión",
+        "confidence": "Rango de confianza",
+        "noScenarioLayers": "No hay ninguna capa de escenario para este análisis.",
+        "noVariableLayers": "No hay variables visibles para este análisis.",
+        "noLayersYet": "Todavía no hay ninguna capa disponible."
+      }
     },
     "config": {
       "title": "Configuración",
@@ -688,6 +708,7 @@
       "manage": "Gestionar modelos",
       "title": "Modelos Forecast",
       "back": "Volver",
+      "summary": "Resumen",
       "install": "Instalar",
       "remove": "Eliminar",
       "confirmRemove": "¿Confirmar?",
@@ -711,7 +732,35 @@
       "usedSpace": "Espacio usado",
       "local": "Local",
       "cloud": "Nube (clave requerida)",
-      "noKeyConfigured": "Clave API no configurada"
+      "noKeyConfigured": "Clave API no configurada",
+      "noneAvailable": "No hay ningún modelo disponible para este lanzamiento.",
+      "families": {
+        "chronos": "Amazon Chronos",
+        "timegpt": "Nixtla TimeGPT"
+      },
+      "hardware": {
+        "light": "Equipo ligero",
+        "balanced": "Equipo equilibrado",
+        "heavy": "Equipo potente",
+        "remote": "Procesamiento remoto"
+      },
+      "capabilities": {
+        "context": "Variables de contexto",
+        "futureContext": "Contexto futuro",
+        "multivariate": "Multiserie",
+        "probabilistic": "Pronóstico probabilístico",
+        "backtesting": "Backtesting"
+      },
+      "descriptions": {
+        "chronos-bolt-tiny": "Modelo muy ligero para primeras pruebas y equipos modestos.",
+        "chronos-bolt-mini": "Opción local equilibrada entre velocidad y coste de hardware.",
+        "chronos-bolt-small": "Elección local recomendada para previsiones más serias.",
+        "chronos-bolt-base": "Versión local más pesada para usos más exigentes.",
+        "chronos-2": "Nuevo motor local Chronos, listo para evolucionar hacia un contexto más rico.",
+        "timegpt-2-mini": "Opción cloud simple para pruebas rápidas con contexto externo.",
+        "timegpt-2-standard": "Opción cloud equilibrada para series más ricas y contexto de negocio.",
+        "timegpt-2-pro": "Opción cloud avanzada para usos multiserie más ambiciosos."
+      }
     },
     "export": {
       "csv": "CSV",

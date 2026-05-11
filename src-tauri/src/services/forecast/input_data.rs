@@ -1,5 +1,5 @@
+use super::input_dates::build_future_dates;
 use super::types::{ForecastRequest, InputSummary, Prediction};
-use chrono::{Duration, Months, NaiveDate, NaiveDateTime};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -22,6 +22,8 @@ pub struct ParsedInput {
     pub future_dates: Vec<String>,
     pub summary: InputSummary,
     pub snapshot: InputSnapshot,
+    pub history_rows: Vec<Value>,
+    pub future_rows: Vec<Value>,
 }
 
 pub fn parse_request_input(request: &ForecastRequest) -> Result<ParsedInput, String> {
@@ -36,33 +38,79 @@ pub fn parse_request_input(request: &ForecastRequest) -> Result<ParsedInput, Str
     }
 
     let mut columns = Vec::new();
-    let mut history = Vec::with_capacity(rows.len());
-    let mut values = Vec::with_capacity(rows.len());
+    let mut history = Vec::new();
+    let mut values = Vec::new();
+    let mut history_rows = Vec::new();
+    let mut future_rows = Vec::new();
+    let mut future_phase = false;
 
     for row in &rows {
         let object = row.as_object().ok_or("Format de ligne invalide")?;
-        for key in object.keys() {
-            if !columns.iter().any(|existing| existing == key) {
-                columns.push(key.clone());
-            }
-        }
-        if columns.len() > MAX_INPUT_COLUMNS {
-            return Err("Trop de colonnes".into());
-        }
-
+        collect_columns(&mut columns, object.keys())?;
         let date = object
             .get(&request.date_column)
             .and_then(Value::as_str)
             .ok_or("Colonne date manquante")?;
-        let value = read_numeric_value(object.get(&request.target_column))
-            .ok_or("Colonne cible non numérique")?;
-
-        history.push(Prediction {
-            date: date.to_string(),
-            value,
-        });
-        values.push(value);
+        match read_target_value(object.get(&request.target_column))? {
+            Some(value) => {
+                if future_phase {
+                    return Err("Lignes futures invalides".into());
+                }
+                history.push(Prediction {
+                    date: date.to_string(),
+                    value,
+                });
+                values.push(value);
+                history_rows.push(row.clone());
+            }
+            None => {
+                future_phase = true;
+                future_rows.push(row.clone());
+            }
+        }
     }
+
+    validate_columns(&columns, request)?;
+    if history.is_empty() {
+        return Err("Aucun point de données historiques".into());
+    }
+
+    let future_dates = build_known_or_relative_dates(&history, &future_rows, request)?;
+
+    Ok(ParsedInput {
+        values,
+        future_dates,
+        summary: InputSummary {
+            points: history.len(),
+            start: history.first().map(|point| point.date.clone()).unwrap_or_default(),
+            end: history.last().map(|point| point.date.clone()).unwrap_or_default(),
+        },
+        snapshot: InputSnapshot {
+            columns,
+            rows,
+            history,
+        },
+        history_rows,
+        future_rows,
+    })
+}
+
+fn collect_columns<'a, I>(columns: &mut Vec<String>, keys: I) -> Result<(), String>
+where
+    I: Iterator<Item = &'a String>,
+{
+    for key in keys {
+        if !columns.iter().any(|existing| existing == key) {
+            columns.push(key.clone());
+        }
+    }
+    if columns.len() > MAX_INPUT_COLUMNS {
+        return Err("Trop de colonnes".into());
+    }
+    Ok(())
+}
+
+fn validate_columns(columns: &[String], request: &ForecastRequest) -> Result<(), String> {
     if !columns.iter().any(|column| column == &request.target_column) {
         return Err("Colonne cible introuvable".into());
     }
@@ -74,123 +122,48 @@ pub fn parse_request_input(request: &ForecastRequest) -> Result<ParsedInput, Str
             return Err("Covariable introuvable".into());
         }
     }
-
-    let future_dates = build_future_dates(
-        history.last().map(|point| point.date.as_str()).unwrap_or_default(),
-        &request.frequency,
-        request.horizon,
-    );
-
-    Ok(ParsedInput {
-        values,
-        future_dates,
-        summary: InputSummary {
-            points: history.len(),
-            start: history
-                .first()
-                .map(|point| point.date.clone())
-                .unwrap_or_default(),
-            end: history
-                .last()
-                .map(|point| point.date.clone())
-                .unwrap_or_default(),
-        },
-        snapshot: InputSnapshot {
-            columns,
-            rows,
-            history,
-        },
-    })
+    Ok(())
 }
 
-fn read_numeric_value(value: Option<&Value>) -> Option<f64> {
+fn read_target_value(value: Option<&Value>) -> Result<Option<f64>, String> {
     match value {
-        Some(Value::Number(number)) => number.as_f64().filter(|numeric| numeric.is_finite()),
-        Some(Value::String(raw)) => raw.trim().replace(',', ".").parse::<f64>().ok(),
-        _ => None,
+        Some(Value::Number(number)) => Ok(number.as_f64().filter(|numeric| numeric.is_finite())),
+        Some(Value::String(raw)) => {
+            let trimmed = raw.trim();
+            if trimmed.is_empty() {
+                return Ok(None);
+            }
+            trimmed
+                .replace(',', ".")
+                .parse::<f64>()
+                .map(Some)
+                .map_err(|_| "Colonne cible non numérique".to_string())
+        }
+        Some(Value::Null) | None => Ok(None),
+        _ => Err("Colonne cible non numérique".into()),
     }
 }
 
-fn build_future_dates(last_date: &str, frequency: &str, horizon: u32) -> Vec<String> {
-    let Some(last_datetime) = parse_datetime(last_date) else {
-        return (1..=horizon).map(|index| format!("T+{index}")).collect();
-    };
-    let normalized = frequency.trim().to_uppercase();
+fn build_known_or_relative_dates(
+    history: &[Prediction],
+    future_rows: &[Value],
+    request: &ForecastRequest,
+) -> Result<Vec<String>, String> {
+    if future_rows.is_empty() {
+        let last_date = history.last().map(|point| point.date.as_str()).unwrap_or_default();
+        return Ok(build_future_dates(last_date, &request.frequency, request.horizon));
+    }
+    if future_rows.len() != request.horizon as usize {
+        return Err("Nombre de lignes futures invalide".into());
+    }
 
-    (1..=horizon)
-        .map(|step| {
-            shift_datetime(last_datetime, &normalized, step)
-                .map(|value| format_output(value, last_date))
-                .unwrap_or_else(|| format!("T+{step}"))
+    future_rows
+        .iter()
+        .map(|row| {
+            row[&request.date_column]
+                .as_str()
+                .map(|value| value.to_string())
+                .ok_or("Colonne date manquante".to_string())
         })
         .collect()
-}
-
-fn parse_datetime(value: &str) -> Option<NaiveDateTime> {
-    let formats = [
-        "%Y-%m-%d %H:%M:%S",
-        "%Y-%m-%d %H:%M",
-        "%Y-%m-%dT%H:%M:%S",
-        "%Y-%m-%dT%H:%M",
-        "%Y/%m/%d %H:%M:%S",
-        "%Y/%m/%d %H:%M",
-    ];
-    for format in formats {
-        if let Ok(parsed) = NaiveDateTime::parse_from_str(value, format) {
-            return Some(parsed);
-        }
-    }
-    NaiveDate::parse_from_str(value, "%Y-%m-%d")
-        .or_else(|_| NaiveDate::parse_from_str(value, "%Y/%m/%d"))
-        .ok()
-        .and_then(|date| date.and_hms_opt(0, 0, 0))
-}
-
-fn shift_datetime(base: NaiveDateTime, frequency: &str, step: u32) -> Option<NaiveDateTime> {
-    match frequency {
-        "S" => Some(base + Duration::seconds(i64::from(step))),
-        "T" | "MIN" => Some(base + Duration::minutes(i64::from(step))),
-        "H" => Some(base + Duration::hours(i64::from(step))),
-        "D" | "B" => Some(base + Duration::days(i64::from(step))),
-        "W" => Some(base + Duration::weeks(i64::from(step))),
-        "M" => base.checked_add_months(Months::new(step)),
-        "Q" => base.checked_add_months(Months::new(step.saturating_mul(3))),
-        "Y" | "A" => base.checked_add_months(Months::new(step.saturating_mul(12))),
-        _ => parse_compound_frequency(base, frequency, step),
-    }
-}
-
-fn parse_compound_frequency(
-    base: NaiveDateTime,
-    frequency: &str,
-    step: u32,
-) -> Option<NaiveDateTime> {
-    let digits_len = frequency
-        .chars()
-        .take_while(|char| char.is_ascii_digit())
-        .count();
-    if digits_len == 0 || digits_len >= frequency.len() {
-        return None;
-    }
-    let factor = frequency[..digits_len].parse::<u32>().ok()?;
-    let unit = &frequency[digits_len..];
-    let total = factor.saturating_mul(step);
-    match unit {
-        "S" => Some(base + Duration::seconds(i64::from(total))),
-        "MIN" | "T" => Some(base + Duration::minutes(i64::from(total))),
-        "H" => Some(base + Duration::hours(i64::from(total))),
-        "D" => Some(base + Duration::days(i64::from(total))),
-        "W" => Some(base + Duration::weeks(i64::from(total))),
-        _ => None,
-    }
-}
-
-fn format_output(value: NaiveDateTime, source: &str) -> String {
-    if source.contains('T') {
-        return value.format("%Y-%m-%dT%H:%M:%S").to_string();
-    }
-    if source.contains(':') {
-        return value.format("%Y-%m-%d %H:%M:%S").to_string();
-    }
-    value.date().format("%Y-%m-%d").to_string()
 }

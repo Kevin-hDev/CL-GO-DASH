@@ -1,2 +1,2 @@
-# Le sidecar actuel utilise uniquement la bibliothèque standard Python.
-# Ce fichier réserve l'emplacement pour Chronos-Bolt réel sans casser le packaging.
+chronos-forecasting==2.2.2
+pandas==3.0.3

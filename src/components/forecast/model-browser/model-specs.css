@@ -52,6 +52,30 @@
   margin-bottom: 8px;
 }
 
+.fms-summary {
+  margin: 0 0 10px;
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+  line-height: 1.45;
+}
+
+.fms-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.fms-tag {
+  display: inline-flex;
+  padding: 4px 8px;
+  border: 1px solid var(--edge);
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+  color: var(--ink-faint);
+}
+
 .fms-grid {
   display: flex;
   flex-direction: column;

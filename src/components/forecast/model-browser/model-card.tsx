@@ -1,20 +1,13 @@
 import { ModelInstallBtn } from "./model-install-btn";
 import { useTranslation } from "react-i18next";
-
-interface ForecastModel {
-  id: string;
-  display_name: string;
-  params: string;
-  size_mb: number;
-  ram_mb: number;
-  cpu_supported: boolean;
-  gpu_supported: boolean;
-  is_cloud: boolean;
-  installed: boolean;
-}
+import {
+  getForecastHardwareKey,
+  getForecastModelSummaryKey,
+  type ForecastModelEntry,
+} from "../forecast-model-meta";
 
 interface ModelCardProps {
-  model: ForecastModel;
+  model: ForecastModelEntry;
   onSelect: () => void;
   onRefresh: () => void;
 }
@@ -26,9 +19,12 @@ export function ModelCard({ model, onSelect, onRefresh }: ModelCardProps) {
     <div className="fmc-card">
       <button className="fmc-info" onClick={onSelect}>
         <span className="fmc-name">{model.display_name}</span>
+        <span className="fmc-summary">{t(getForecastModelSummaryKey(model.id))}</span>
         <span className="fmc-meta">
           {model.is_cloud ? (
-            <span className="fmc-cloud">☁ {t("forecast.models.cloud")}</span>
+            <span className="fmc-cloud">
+              ☁ {model.provider_configured ? t("forecast.models.cloud") : t("forecast.models.noKeyConfigured")}
+            </span>
           ) : (
             <>
               {model.params} · {model.size_mb} MB
@@ -37,9 +33,10 @@ export function ModelCard({ model, onSelect, onRefresh }: ModelCardProps) {
             </>
           )}
         </span>
-        {!model.is_cloud && (
-          <span className="fmc-ram">{t("forecast.models.ram")}: ~{model.ram_mb} MB</span>
-        )}
+        <span className="fmc-ram">
+          {t(getForecastHardwareKey(model))}
+          {!model.is_cloud ? ` · ${t("forecast.models.ram")}: ~${model.ram_mb} MB` : ""}
+        </span>
       </button>
       <div className="fmc-actions">
         {model.is_cloud ? (

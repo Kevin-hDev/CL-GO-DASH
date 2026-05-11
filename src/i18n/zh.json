@@ -654,7 +654,27 @@
       "mapeShort": "MAPE {{value}}%"
     },
     "view": {
-      "period": "周期"
+      "period": "周期",
+      "historySeries": "历史",
+      "forecastSeries": "预测",
+      "confidenceRange": "置信区间",
+      "filters": {
+        "button": "筛选",
+        "series": "序列",
+        "uncertainty": "不确定性",
+        "scenarios": "场景",
+        "variables": "变量",
+        "events": "事件",
+        "comparisons": "对比",
+        "anomalies": "异常",
+        "quality": "质量",
+        "history": "历史",
+        "forecast": "预测",
+        "confidence": "置信区间",
+        "noScenarioLayers": "此分析没有可用的场景层。",
+        "noVariableLayers": "此分析没有可显示的变量。",
+        "noLayersYet": "当前还没有可用图层。"
+      }
     },
     "config": {
       "title": "配置",
@@ -688,6 +708,7 @@
       "manage": "管理模型",
       "title": "Forecast 模型",
       "back": "返回",
+      "summary": "摘要",
       "install": "安装",
       "remove": "删除",
       "confirmRemove": "确认？",
@@ -711,7 +732,35 @@
       "usedSpace": "已用空间",
       "local": "本地",
       "cloud": "云端 (需要密钥)",
-      "noKeyConfigured": "API密钥未配置"
+      "noKeyConfigured": "API密钥未配置",
+      "noneAvailable": "当前启动没有可用模型。",
+      "families": {
+        "chronos": "Amazon Chronos",
+        "timegpt": "Nixtla TimeGPT"
+      },
+      "hardware": {
+        "light": "轻量硬件",
+        "balanced": "均衡硬件",
+        "heavy": "高性能硬件",
+        "remote": "远程处理"
+      },
+      "capabilities": {
+        "context": "上下文变量",
+        "futureContext": "未来上下文",
+        "multivariate": "多序列",
+        "probabilistic": "概率预测",
+        "backtesting": "回测"
+      },
+      "descriptions": {
+        "chronos-bolt-tiny": "非常轻量，适合初次测试和配置较低的机器。",
+        "chronos-bolt-mini": "本地速度与硬件成本之间较均衡的选择。",
+        "chronos-bolt-small": "更适合严肃预测任务的本地推荐选择。",
+        "chronos-bolt-base": "更重的本地版本，适合更高要求的工作负载。",
+        "chronos-2": "更新的本地 Chronos 引擎，为未来更丰富的上下文支持做好准备。",
+        "timegpt-2-mini": "适合结合外部上下文进行快速测试的简易云端选项。",
+        "timegpt-2-standard": "适合更丰富时间序列和业务上下文的均衡云端选项。",
+        "timegpt-2-pro": "适合更复杂多序列场景的高级云端选项。"
+      }
     },
     "export": {
       "csv": "CSV",

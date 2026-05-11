@@ -2,15 +2,13 @@ import { useId, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
 import type { ForecastDraftData } from "./forecast-data";
+import {
+  isForecastModelSelectable,
+  type ForecastModelEntry,
+  type ForecastModelsResponse,
+} from "./forecast-model-meta";
+import { ForecastConfigModelPicker } from "./forecast-config-model-picker";
 import "./forecast-config.css";
-
-interface ModelEntry {
-  id: string;
-  display_name: string;
-  provider_id: string;
-  is_cloud: boolean;
-  installed: boolean;
-}
 
 interface ForecastConfigProps {
   draft: ForecastDraftData;
@@ -36,7 +34,7 @@ const FREQUENCIES = [
 
 export function ForecastConfig({ draft, launching, error, onLaunch, onBack }: ForecastConfigProps) {
   const { t } = useTranslation();
-  const [models, setModels] = useState<ModelEntry[]>([]);
+  const [models, setModels] = useState<ForecastModelEntry[]>([]);
   const [target, setTarget] = useState(draft.columns[1] ?? "");
   const [dateCol, setDateCol] = useState(draft.columns[0] ?? "");
   const [covariates, setCovariates] = useState<string[]>([]);
@@ -46,17 +44,16 @@ export function ForecastConfig({ draft, launching, error, onLaunch, onBack }: Fo
   const [confidence, setConfidence] = useState(0.9);
 
   useEffect(() => {
-    invoke<{ models: ModelEntry[] }>("list_forecast_models")
+    invoke<ForecastModelsResponse>("list_forecast_models")
       .then((r) => {
-        setModels(r.models);
-        const first = r.models.find((m) => m.installed || m.is_cloud);
+        const visibleModels = r.models.filter(isForecastModelSelectable);
+        setModels(visibleModels);
+        const first = visibleModels[0];
         if (first) setModel(first.id);
       })
       .catch(() => {});
   }, []);
 
-  const localModels = models.filter((m) => !m.is_cloud);
-  const cloudModels = models.filter((m) => m.is_cloud);
   const covariateOptions = draft.columns.filter((column) => column !== target && column !== dateCol);
   const selectedCovariates = covariates.filter(
     (column) => column !== target && column !== dateCol
@@ -117,21 +114,12 @@ export function ForecastConfig({ draft, launching, error, onLaunch, onBack }: Fo
           </div>
         </div>
         <div className="fcc-field">
-          <label className="fcc-label" htmlFor="fcc-model">{t("forecast.config.model")}</label>
-          <select className="fcc-select" id="fcc-model" value={model} onChange={(e) => setModel(e.target.value)}>
-            <optgroup label={t("forecast.models.local")}>
-              {localModels.map((m) => (
-                <option key={m.id} value={m.id} disabled={!m.installed}>
-                  {m.display_name} {m.installed ? "" : t("forecast.models.notInstalledSuffix")}
-                </option>
-              ))}
-            </optgroup>
-            <optgroup label={t("forecast.models.cloud")}>
-              {cloudModels.map((m) => (
-                <option key={m.id} value={m.id}>{m.display_name}</option>
-              ))}
-            </optgroup>
-          </select>
+          <span className="fcc-label">{t("forecast.config.model")}</span>
+          <ForecastConfigModelPicker
+            models={models}
+            selectedId={model}
+            onSelect={setModel}
+          />
         </div>
         <div className="fcc-field">
           <label className="fcc-label" htmlFor="fcc-confidence">{t("forecast.config.confidence")}: {Math.round(confidence * 100)}%</label>

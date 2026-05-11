@@ -1,0 +1,149 @@
+.fcf-root {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.fcf-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-sm);
+  background: var(--void);
+  color: var(--ink-muted);
+  font-size: var(--text-xs);
+  font-family: var(--font-sans);
+  cursor: pointer;
+}
+
+.fcf-trigger:hover,
+.fcf-trigger.is-open {
+  border-color: var(--ink-faint);
+  color: var(--ink);
+}
+
+.fcf-chevron {
+  transition: transform 200ms ease;
+}
+
+.fcf-chevron.is-open {
+  transform: rotate(180deg);
+}
+
+.fcf-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 220px;
+  max-height: 0;
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: var(--void);
+  opacity: 0;
+  z-index: 5;
+  transition: max-height 200ms ease, opacity 180ms ease, border-color 180ms ease;
+}
+
+.fcf-panel.is-open {
+  max-height: 320px;
+  opacity: 1;
+  border-color: var(--edge);
+}
+
+.fcf-group {
+  padding: 10px;
+  border-top: 1px solid var(--edge);
+}
+
+.fcf-group:first-child {
+  border-top: none;
+}
+
+.fcf-group-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.fcf-group-title {
+  display: block;
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.fcf-group-items {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 200ms ease;
+}
+
+.fcf-group-items.is-open {
+  grid-template-rows: 1fr;
+}
+
+.fcf-group-content {
+  overflow: hidden;
+}
+
+.fcf-group-chevron {
+  color: var(--ink-faint);
+  transition: transform 200ms ease;
+}
+
+.fcf-group-chevron.is-open {
+  transform: rotate(180deg);
+}
+
+.fcf-group-items.is-open .fcf-group-content {
+  margin-top: 8px;
+}
+
+.fcf-group-content > .fcf-item + .fcf-item {
+  margin-top: 8px;
+}
+
+.fcf-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.fcf-item.is-disabled {
+  color: var(--ink-faint);
+  cursor: default;
+}
+
+.fcf-checkbox {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  border-radius: 4px;
+  accent-color: var(--pulse);
+}
+
+.fcf-item-label {
+  line-height: 1.2;
+}
+
+.fcf-empty {
+  color: var(--ink-faint);
+  font-size: var(--text-xs);
+  font-family: var(--font-sans);
+  line-height: 1.35;
+}

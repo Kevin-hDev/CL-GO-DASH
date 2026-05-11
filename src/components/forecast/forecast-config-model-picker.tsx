@@ -1,0 +1,92 @@
+import { useMemo, useState } from "react";
+import { ChevronDown } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import {
+  getForecastHardwareKey,
+  getForecastModelSummaryKey,
+  groupForecastModels,
+  type ForecastModelEntry,
+} from "./forecast-model-meta";
+import "./forecast-config-model-picker.css";
+
+interface ForecastConfigModelPickerProps {
+  models: ForecastModelEntry[];
+  selectedId: string;
+  onSelect: (id: string) => void;
+}
+
+export function ForecastConfigModelPicker({
+  models,
+  selectedId,
+  onSelect,
+}: ForecastConfigModelPickerProps) {
+  const { t } = useTranslation();
+  const groups = useMemo(() => groupForecastModels(models), [models]);
+  const [openFamilies, setOpenFamilies] = useState<string[]>(["chronos", "timegpt"]);
+
+  const toggleFamily = (familyId: string) => {
+    setOpenFamilies((current) =>
+      current.includes(familyId)
+        ? current.filter((id) => id !== familyId)
+        : [...current, familyId]
+    );
+  };
+
+  return (
+    <div className="fcmp-root">
+      {groups.length === 0 && (
+        <div className="fcmp-empty">{t("forecast.models.noneAvailable")}</div>
+      )}
+      {groups.map((group) => {
+        const isOpen = openFamilies.includes(group.id);
+        return (
+          <div key={group.id} className="fcmp-group">
+            <button
+              className="fcmp-group-btn"
+              type="button"
+              onClick={() => toggleFamily(group.id)}
+            >
+              <span className="fcmp-group-label">{t(group.titleKey)}</span>
+              <span className="fcmp-group-count">{group.models.length}</span>
+              <ChevronDown
+                size={14}
+                className={`fcmp-group-chevron ${isOpen ? "is-open" : ""}`}
+              />
+            </button>
+            <div className={`fcmp-group-body ${isOpen ? "is-open" : ""}`}>
+              {group.models.map((model) => {
+                const active = selectedId === model.id;
+                return (
+                  <button
+                    key={model.id}
+                    className={`fcmp-model ${active ? "is-active" : ""}`}
+                    type="button"
+                    onClick={() => onSelect(model.id)}
+                  >
+                    <span className="fcmp-radio" aria-hidden="true" />
+                    <span className="fcmp-model-main">
+                      <span className="fcmp-model-name">{model.display_name}</span>
+                      <span className="fcmp-model-summary">
+                        {t(getForecastModelSummaryKey(model.id))}
+                      </span>
+                    </span>
+                    <span className="fcmp-model-side">
+                      <span className="fcmp-model-hardware">
+                        {t(getForecastHardwareKey(model))}
+                      </span>
+                      <span className="fcmp-model-flags">
+                        {model.covariates ? t("forecast.models.capabilities.context") : ""}
+                        {model.covariates && model.multivariate ? " · " : ""}
+                        {model.multivariate ? t("forecast.models.capabilities.multivariate") : ""}
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}

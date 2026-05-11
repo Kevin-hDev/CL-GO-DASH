@@ -31,13 +31,49 @@
 }
 
 .fmb-group-label {
-  display: block;
   font-size: var(--text-xs);
   font-family: var(--font-mono);
   color: var(--ink-faint);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  margin-bottom: 6px;
+}
+
+.fmb-group-btn {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 0 0 6px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.fmb-group-count {
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+  color: var(--ink-faint);
+}
+
+.fmb-group-chevron {
+  color: var(--ink-faint);
+  transition: transform 200ms ease;
+}
+
+.fmb-group-chevron.is-open {
+  transform: rotate(180deg);
+}
+
+.fmb-group-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 200ms ease;
+}
+
+.fmb-group-body.is-open {
+  max-height: 1200px;
 }
 
 .fmc-card {
@@ -73,10 +109,11 @@
   color: var(--ink);
 }
 
+.fmc-summary,
 .fmc-meta,
 .fmc-ram {
   font-size: var(--text-xs);
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   color: var(--ink-faint);
 }
 

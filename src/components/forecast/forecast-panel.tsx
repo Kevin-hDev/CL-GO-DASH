@@ -5,11 +5,19 @@ import type { ForecastSection } from "@/hooks/use-forecast-panel";
 import { ForecastHeader } from "./forecast-header";
 import { ForecastNav } from "./forecast-nav";
 import { ForecastEmpty } from "./forecast-empty";
+import {
+  buildForecastLayerGroups,
+  createInitialLayerState,
+  type ForecastLayerState,
+} from "./forecast-layer-matrix";
 import { ForecastView } from "./sections/forecast-view";
 import { ForecastScenarios } from "./sections/forecast-scenarios";
 import { ForecastAnalysis } from "./sections/forecast-analysis";
 import { ForecastNotes } from "./sections/forecast-notes";
 import { ForecastHistory } from "./sections/forecast-history";
+import {
+  ForecastViewFilters,
+} from "./forecast-view-filters";
 import { ExportDropdown } from "./widgets/export-dropdown";
 import { ForecastConfig, type LaunchConfig } from "./forecast-config";
 import { loadForecastDraftFromFile, type ForecastDraftData } from "./forecast-data";
@@ -36,6 +44,11 @@ export function ForecastPanel({
   const [draft, setDraft] = useState<ForecastDraftData | null>(null);
   const [launching, setLaunching] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [layers, setLayers] = useState<ForecastLayerState>(createInitialLayerState);
+  const filterGroups = buildForecastLayerGroups(
+    { scenarioNames: [], covariateNames: [] },
+    t
+  );
 
   const handleImportFile = async (path: string) => {
     setError(null);
@@ -80,6 +93,15 @@ export function ForecastPanel({
         navOpen={navOpen}
         hasAnalysis={hasAnalysis}
         fullscreen={fullscreen}
+        filterSlot={
+          hasAnalysis ? (
+            <ForecastViewFilters
+              groups={filterGroups}
+              layers={layers}
+              onChange={setLayers}
+            />
+          ) : null
+        }
         onToggleNav={onToggleNav}
         onCloseAnalysis={onCloseAnalysis}
         onFullscreenChange={onFullscreenChange}
@@ -104,6 +126,7 @@ export function ForecastPanel({
           <ForecastSectionRouter
             section={activeSection}
             analysisId={currentAnalysisId}
+            layers={layers}
             onLoadAnalysis={onLoadAnalysis}
           />
         )}
@@ -120,14 +143,15 @@ export function ForecastPanel({
   );
 }
 
-function ForecastSectionRouter({ section, analysisId, onLoadAnalysis }: {
+function ForecastSectionRouter({ section, analysisId, layers, onLoadAnalysis }: {
   section: ForecastSection;
   analysisId: string;
+  layers: ForecastLayerState;
   onLoadAnalysis: (id: string) => void;
 }) {
   switch (section) {
     case "view":
-      return <ForecastView analysisId={analysisId} />;
+      return <ForecastView analysisId={analysisId} layers={layers} />;
     case "scenarios":
       return <ForecastScenarios analysisId={analysisId} />;
     case "analysis":

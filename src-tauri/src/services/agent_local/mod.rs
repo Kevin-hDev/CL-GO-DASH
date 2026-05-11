@@ -63,7 +63,6 @@ pub mod tool_definitions_subagent;
 pub mod tool_delegate;
 pub mod tool_dispatcher;
 pub mod tool_dispatcher_forecast;
-pub mod tool_dispatcher_forecast_data;
 pub mod tool_dispatcher_mcp;
 pub mod tool_dispatcher_office;
 #[cfg(test)]

@@ -654,7 +654,27 @@
       "mapeShort": "MAPE {{value}}%"
     },
     "view": {
-      "period": "期間"
+      "period": "期間",
+      "historySeries": "履歴",
+      "forecastSeries": "予測",
+      "confidenceRange": "信頼区間",
+      "filters": {
+        "button": "フィルター",
+        "series": "系列",
+        "uncertainty": "不確実性",
+        "scenarios": "シナリオ",
+        "variables": "変数",
+        "events": "イベント",
+        "comparisons": "比較",
+        "anomalies": "異常",
+        "quality": "品質",
+        "history": "履歴",
+        "forecast": "予測",
+        "confidence": "信頼区間",
+        "noScenarioLayers": "この分析には利用できるシナリオ層がありません。",
+        "noVariableLayers": "この分析には表示できる変数がありません。",
+        "noLayersYet": "現在利用できるレイヤーはありません。"
+      }
     },
     "config": {
       "title": "設定",
@@ -688,6 +708,7 @@
       "manage": "モデル管理",
       "title": "Forecast モデル",
       "back": "戻る",
+      "summary": "概要",
       "install": "インストール",
       "remove": "削除",
       "confirmRemove": "確認しますか？",
@@ -711,7 +732,35 @@
       "usedSpace": "使用容量",
       "local": "ローカル",
       "cloud": "クラウド (キー必要)",
-      "noKeyConfigured": "APIキー未設定"
+      "noKeyConfigured": "APIキー未設定",
+      "noneAvailable": "この起動で利用できるモデルはありません。",
+      "families": {
+        "chronos": "Amazon Chronos",
+        "timegpt": "Nixtla TimeGPT"
+      },
+      "hardware": {
+        "light": "軽量ハードウェア",
+        "balanced": "標準ハードウェア",
+        "heavy": "高性能ハードウェア",
+        "remote": "リモート処理"
+      },
+      "capabilities": {
+        "context": "コンテキスト変数",
+        "futureContext": "将来コンテキスト",
+        "multivariate": "複数系列",
+        "probabilistic": "確率予測",
+        "backtesting": "バックテスト"
+      },
+      "descriptions": {
+        "chronos-bolt-tiny": "初期テストや軽いマシン向けの非常に軽量なモデルです。",
+        "chronos-bolt-mini": "速度とハードウェア負荷のバランスが良いローカルモデルです。",
+        "chronos-bolt-small": "より本格的な予測に向いた推奨ローカルモデルです。",
+        "chronos-bolt-base": "より重い負荷向けの大型ローカルモデルです。",
+        "chronos-2": "より新しいローカル Chronos エンジンで、将来の豊かなコンテキスト対応に備えています。",
+        "timegpt-2-mini": "外部コンテキスト付きの素早い試験向けのシンプルなクラウドモデルです。",
+        "timegpt-2-standard": "より豊かな系列と業務コンテキスト向けのバランス型クラウドモデルです。",
+        "timegpt-2-pro": "より高度な複数系列用途向けの上位クラウドモデルです。"
+      }
     },
     "export": {
       "csv": "CSV",

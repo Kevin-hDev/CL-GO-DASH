@@ -33,15 +33,11 @@ async fn handle_forecast(args: &Value, working_dir: &Path, session_id: &str) -> 
         );
     }
 
-    // Si file_path fourni sans data, lire le fichier avec validation path traversal
-    if request.data.is_none() {
-        if let Some(ref raw_path) = request.file_path.clone() {
-            match super::tool_dispatcher_forecast_data::load_file_data(raw_path, working_dir).await
-            {
-                Ok(json_data) => request.data = Some(json_data),
-                Err(e) => return ToolResult::err(e),
-            }
-        }
+    if let Err(e) =
+        crate::services::forecast::file_input::ensure_request_data(&mut request, Some(working_dir))
+            .await
+    {
+        return ToolResult::err(e);
     }
 
     if let Err(e) = validation::validate_request(&request) {
