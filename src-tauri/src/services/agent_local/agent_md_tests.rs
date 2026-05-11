@@ -4,7 +4,9 @@ use tempfile::TempDir;
 #[tokio::test]
 async fn load_global_only() {
     let tmp = TempDir::new().unwrap();
-    tokio::fs::write(tmp.path().join("AGENT.md"), "# Global rules\nBe concise.").await.unwrap();
+    tokio::fs::write(tmp.path().join("AGENT.md"), "# Global rules\nBe concise.")
+        .await
+        .unwrap();
     let result = load_agent_md_from(tmp.path(), None).await;
     let content = result.unwrap();
     assert!(content.contains("Global rules"));
@@ -14,10 +16,14 @@ async fn load_global_only() {
 #[tokio::test]
 async fn load_global_and_project() {
     let data = TempDir::new().unwrap();
-    tokio::fs::write(data.path().join("AGENT.md"), "Global stuff").await.unwrap();
+    tokio::fs::write(data.path().join("AGENT.md"), "Global stuff")
+        .await
+        .unwrap();
 
     let proj = TempDir::new().unwrap();
-    tokio::fs::write(proj.path().join("AGENT.md"), "Project stuff").await.unwrap();
+    tokio::fs::write(proj.path().join("AGENT.md"), "Project stuff")
+        .await
+        .unwrap();
 
     let result = load_agent_md_from(data.path(), Some(proj.path())).await;
     let content = result.unwrap();
@@ -39,7 +45,9 @@ async fn no_files_returns_none() {
 async fn project_only_no_global() {
     let data = TempDir::new().unwrap();
     let proj = TempDir::new().unwrap();
-    tokio::fs::write(proj.path().join("AGENT.md"), "Project only").await.unwrap();
+    tokio::fs::write(proj.path().join("AGENT.md"), "Project only")
+        .await
+        .unwrap();
     let result = load_agent_md_from(data.path(), Some(proj.path())).await;
     let content = result.unwrap();
     assert!(content.contains("Project only"));
@@ -53,13 +61,20 @@ async fn no_parent_agent_md_loaded() {
     let child = root.path().join("child");
     tokio::fs::create_dir_all(&child).await.unwrap();
 
-    tokio::fs::write(root.path().join("AGENT.md"), "Parent rules").await.unwrap();
-    tokio::fs::write(child.join("AGENT.md"), "Child rules").await.unwrap();
+    tokio::fs::write(root.path().join("AGENT.md"), "Parent rules")
+        .await
+        .unwrap();
+    tokio::fs::write(child.join("AGENT.md"), "Child rules")
+        .await
+        .unwrap();
 
     let result = load_agent_md_from(data.path(), Some(&child)).await;
     let content = result.unwrap();
     assert!(content.contains("Child rules"));
-    assert!(!content.contains("Parent rules"), "Les AGENT.md parents ne doivent PAS être chargés");
+    assert!(
+        !content.contains("Parent rules"),
+        "Les AGENT.md parents ne doivent PAS être chargés"
+    );
 }
 
 #[tokio::test]
@@ -68,7 +83,9 @@ async fn cl_go_dir_loaded() {
     let data = TempDir::new().unwrap();
     let cl_go = proj.path().join(".cl-go");
     tokio::fs::create_dir_all(&cl_go).await.unwrap();
-    tokio::fs::write(cl_go.join("AGENT.md"), "ClGo specific rules").await.unwrap();
+    tokio::fs::write(cl_go.join("AGENT.md"), "ClGo specific rules")
+        .await
+        .unwrap();
 
     let result = load_agent_md_from(data.path(), Some(proj.path())).await;
     let content = result.unwrap();
@@ -82,9 +99,15 @@ async fn rules_dir_sorted_alphabetically() {
     let rules = proj.path().join(".cl-go").join("rules");
     tokio::fs::create_dir_all(&rules).await.unwrap();
 
-    tokio::fs::write(rules.join("c-rule.md"), "Rule C").await.unwrap();
-    tokio::fs::write(rules.join("a-rule.md"), "Rule A").await.unwrap();
-    tokio::fs::write(rules.join("b-rule.md"), "Rule B").await.unwrap();
+    tokio::fs::write(rules.join("c-rule.md"), "Rule C")
+        .await
+        .unwrap();
+    tokio::fs::write(rules.join("a-rule.md"), "Rule A")
+        .await
+        .unwrap();
+    tokio::fs::write(rules.join("b-rule.md"), "Rule B")
+        .await
+        .unwrap();
 
     let result = load_agent_md_from(data.path(), Some(proj.path())).await;
     let content = result.unwrap();

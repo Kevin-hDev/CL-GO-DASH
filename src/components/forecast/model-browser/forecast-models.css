@@ -99,14 +99,28 @@
 
 .fmi-btn:hover { opacity: 0.9; }
 
+.fmi-btn-secondary {
+  border-color: var(--edge);
+  background: transparent;
+  color: var(--ink-muted);
+}
+
+.fmi-btn-secondary:hover {
+  background: var(--select-bg);
+  opacity: 1;
+}
+
 .fmi-progress {
   display: flex;
   align-items: center;
   gap: 6px;
+  width: 180px;
+  max-width: 100%;
 }
 
 .fmi-bar {
-  width: 60px;
+  flex: 1;
+  min-width: 120px;
   height: 4px;
   border-radius: 2px;
   background: var(--fc-progress-bg);
@@ -114,6 +128,7 @@
 }
 
 .fmi-fill {
+  display: block;
   height: 100%;
   background: var(--fc-progress);
   border-radius: 2px;

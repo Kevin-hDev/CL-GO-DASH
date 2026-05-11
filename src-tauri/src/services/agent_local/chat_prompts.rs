@@ -12,7 +12,8 @@ fn build_system_message(content: String) -> ChatMessage {
         images: None,
         tool_calls: None,
         tool_name: None,
-        tool_call_id: None, reasoning_content: None,
+        tool_call_id: None,
+        reasoning_content: None,
     }
 }
 
@@ -70,11 +71,7 @@ pub fn prepare_messages(
     append_response_language(messages, response_language);
 }
 
-fn prepend_chat_system_prompt(
-    messages: &mut Vec<ChatMessage>,
-    working_dir: &Path,
-    model: &str,
-) {
+fn prepend_chat_system_prompt(messages: &mut Vec<ChatMessage>, working_dir: &Path, model: &str) {
     if messages.first().is_some_and(|m| m.role == "system") {
         return;
     }

@@ -38,8 +38,8 @@ pub fn read_excel(
     range_str: Option<&str>,
     max_rows: usize,
 ) -> Result<Value, String> {
-    let mut workbook: calamine::Sheets<_> =
-        calamine::open_workbook_auto(resolved).map_err(|_| "Impossible d'ouvrir le fichier".to_string())?;
+    let mut workbook: calamine::Sheets<_> = calamine::open_workbook_auto(resolved)
+        .map_err(|_| "Impossible d'ouvrir le fichier".to_string())?;
 
     let sheet_names = workbook.sheet_names().to_owned();
     if sheet_names.is_empty() {
@@ -90,11 +90,16 @@ pub fn read_excel(
                     .collect();
                 Some(filtered)
             } else {
-                Some(row.iter().enumerate().map(|(col_idx, cell)| {
-                    let abs_row = start_row + row_idx as u32;
-                    let abs_col = start_col + col_idx as u32;
-                    cell_or_formula(cell, abs_row, abs_col, formulas.as_ref())
-                }).collect())
+                Some(
+                    row.iter()
+                        .enumerate()
+                        .map(|(col_idx, cell)| {
+                            let abs_row = start_row + row_idx as u32;
+                            let abs_col = start_col + col_idx as u32;
+                            cell_or_formula(cell, abs_row, abs_col, formulas.as_ref())
+                        })
+                        .collect(),
+                )
             }
         })
         .collect();

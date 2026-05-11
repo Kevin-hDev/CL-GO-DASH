@@ -1,5 +1,5 @@
-use crate::services::agent_local::types_tools::ToolResult;
 use crate::services::agent_local::tool_dispatcher::enrich_error;
+use crate::services::agent_local::types_tools::ToolResult;
 
 // On réexporte les fonctions privées via un module test helper
 // en les dupliquant ici pour éviter de les rendre pub dans prod.
@@ -83,7 +83,10 @@ fn truncate_under_limit() {
     let content = "a".repeat(100);
     let result = ToolResult::ok(content.clone());
     let out = truncate_result_test(result, "bash");
-    assert_eq!(out.content, content, "Le contenu ne doit pas être modifié sous le seuil");
+    assert_eq!(
+        out.content, content,
+        "Le contenu ne doit pas être modifié sous le seuil"
+    );
     assert!(!out.truncated, "truncated doit rester false");
     assert!(!out.is_error);
 }
@@ -116,9 +119,15 @@ fn truncate_error_not_touched() {
     let content = "e".repeat(31_000);
     let result = ToolResult::err(content.clone());
     let out = truncate_result_test(result, "bash");
-    assert!(!out.truncated, "truncated doit rester false pour les erreurs");
+    assert!(
+        !out.truncated,
+        "truncated doit rester false pour les erreurs"
+    );
     assert!(out.is_error);
-    assert_eq!(out.content, content, "Le contenu d'une erreur ne doit pas être modifié");
+    assert_eq!(
+        out.content, content,
+        "Le contenu d'une erreur ne doit pas être modifié"
+    );
 }
 
 #[test]
@@ -136,7 +145,7 @@ fn truncate_utf8_safe() {
     // Vérification que le preview ne coupe pas en milieu de caractère multi-octet
     // On crée un contenu avec des caractères multi-octets au-delà du seuil glob (5_000)
     let emoji = "🎉"; // 4 octets
-    // 5_001 caractères Unicode pour dépasser le seuil glob
+                      // 5_001 caractères Unicode pour dépasser le seuil glob
     let content: String = emoji.repeat(5_001);
     let total_chars = content.chars().count(); // = 5_001
     let result = ToolResult::ok(content);
@@ -156,7 +165,10 @@ fn error_no_hint_edit_not_found() {
     let result = ToolResult::err("Chaîne non trouvée dans le fichier".to_string());
     let out = enrich_error(result, "edit_file");
     assert!(out.is_error);
-    assert!(!out.content.contains("[HINT:"), "Pas de hint pour 'non trouvée' — le LLM gère seul");
+    assert!(
+        !out.content.contains("[HINT:"),
+        "Pas de hint pour 'non trouvée' — le LLM gère seul"
+    );
 }
 
 #[test]
@@ -164,7 +176,10 @@ fn error_hint_edit_multiple() {
     let result = ToolResult::err("La chaîne apparaît 3 fois dans le fichier".to_string());
     let out = enrich_error(result, "edit_file");
     assert!(out.is_error);
-    assert!(out.content.contains("[HINT:"), "Un hint doit être injecté pour les occurrences multiples");
+    assert!(
+        out.content.contains("[HINT:"),
+        "Un hint doit être injecté pour les occurrences multiples"
+    );
     assert!(out.content.contains("old_string"));
 }
 
@@ -173,7 +188,10 @@ fn error_hint_bash_timeout() {
     let result = ToolResult::err("Timeout: commande dépassée".to_string());
     let out = enrich_error(result, "bash");
     assert!(out.is_error);
-    assert!(out.content.contains("[HINT:"), "Un hint doit être injecté pour Timeout");
+    assert!(
+        out.content.contains("[HINT:"),
+        "Un hint doit être injecté pour Timeout"
+    );
     assert!(out.content.contains("timeout"));
 }
 
@@ -182,7 +200,10 @@ fn no_hint_on_success() {
     let result = ToolResult::ok("Tout s'est bien passé".to_string());
     let out = enrich_error(result, "bash");
     assert!(!out.is_error);
-    assert!(!out.content.contains("[HINT:"), "Aucun hint ne doit être ajouté sur un succès");
+    assert!(
+        !out.content.contains("[HINT:"),
+        "Aucun hint ne doit être ajouté sur un succès"
+    );
     assert_eq!(out.content, "Tout s'est bien passé");
 }
 
@@ -197,7 +218,10 @@ fn truncate_persists_to_disk() {
 
     assert!(out.truncated, "truncated doit être true");
     assert!(!out.is_error);
-    assert!(out.content.contains("[Résultat tronqué"), "Message de troncature attendu");
+    assert!(
+        out.content.contains("[Résultat tronqué"),
+        "Message de troncature attendu"
+    );
     assert!(
         out.content.contains("[Résultat complet disponible :"),
         "Le chemin du fichier doit être dans le message"
@@ -209,8 +233,7 @@ fn truncate_persists_to_disk() {
         .flatten()
         .collect();
     assert_eq!(files.len(), 1, "Exactement un fichier doit être créé");
-    let saved = std::fs::read_to_string(files[0].path())
-        .expect("Le fichier doit être lisible");
+    let saved = std::fs::read_to_string(files[0].path()).expect("Le fichier doit être lisible");
     assert_eq!(saved, content, "Le contenu complet doit être sauvé");
 
     // Nettoyage

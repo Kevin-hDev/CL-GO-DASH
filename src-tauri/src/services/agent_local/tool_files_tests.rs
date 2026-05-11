@@ -17,13 +17,7 @@ async fn read_file_full() {
     let lines: Vec<&str> = (1..=10).map(|_| "hello world").collect();
     let f = make_temp_file(&lines);
     let working_dir = f.path().parent().unwrap();
-    let result = read_file(
-        f.path().to_str().unwrap(),
-        working_dir,
-        0,
-        DEFAULT_LIMIT,
-    )
-    .await;
+    let result = read_file(f.path().to_str().unwrap(), working_dir, 0, DEFAULT_LIMIT).await;
     assert!(!result.is_error, "ne doit pas être une erreur");
     // 10 lignes numérotées de 1 à 10
     for i in 1..=10usize {
@@ -45,13 +39,7 @@ async fn read_file_offset_limit() {
     let f = make_temp_file(&lines_ref);
     let working_dir = f.path().parent().unwrap();
     // Lire lignes 6 à 10 (offset=5, limit=5)
-    let result = read_file(
-        f.path().to_str().unwrap(),
-        working_dir,
-        5,
-        5,
-    )
-    .await;
+    let result = read_file(f.path().to_str().unwrap(), working_dir, 5, 5).await;
     assert!(!result.is_error, "ne doit pas être une erreur");
     // Doit contenir lignes 6-10 (numérotées 6..10)
     for i in 6..=10usize {
@@ -61,8 +49,14 @@ async fn read_file_offset_limit() {
         );
     }
     // Ne doit pas contenir line1..5 ni line11..20
-    assert!(!result.content.contains("1\tline1"), "ne doit pas contenir line1");
-    assert!(!result.content.contains("11\tline11"), "ne doit pas contenir line11");
+    assert!(
+        !result.content.contains("1\tline1"),
+        "ne doit pas contenir line1"
+    );
+    assert!(
+        !result.content.contains("11\tline11"),
+        "ne doit pas contenir line11"
+    );
     // Message de continuation : 10 lignes restantes, offset=10
     assert!(
         result.content.contains("offset=10"),
@@ -80,13 +74,7 @@ async fn read_file_offset_beyond_end() {
     let f = make_temp_file(&lines);
     let working_dir = f.path().parent().unwrap();
     // offset=100 dépasse la fin (3 lignes)
-    let result = read_file(
-        f.path().to_str().unwrap(),
-        working_dir,
-        100,
-        DEFAULT_LIMIT,
-    )
-    .await;
+    let result = read_file(f.path().to_str().unwrap(), working_dir, 100, DEFAULT_LIMIT).await;
     assert!(!result.is_error, "ne doit pas être une erreur");
     // Contenu vide (aucune ligne)
     assert!(
@@ -102,13 +90,7 @@ async fn read_file_default_limit() {
     let lines_ref: Vec<&str> = lines.iter().map(|s| s.as_str()).collect();
     let f = make_temp_file(&lines_ref);
     let working_dir = f.path().parent().unwrap();
-    let result = read_file(
-        f.path().to_str().unwrap(),
-        working_dir,
-        0,
-        DEFAULT_LIMIT,
-    )
-    .await;
+    let result = read_file(f.path().to_str().unwrap(), working_dir, 0, DEFAULT_LIMIT).await;
     assert!(!result.is_error, "ne doit pas être une erreur");
     // DEFAULT_LIMIT = 2000, doit s'arrêter à la ligne 2000
     assert!(

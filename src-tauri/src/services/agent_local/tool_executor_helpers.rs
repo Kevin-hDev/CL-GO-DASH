@@ -62,6 +62,7 @@ pub fn push_tool_result(
         images: None,
         tool_calls: None,
         tool_name: Some(name.to_string()),
-        tool_call_id: None, reasoning_content: None,
+        tool_call_id: None,
+        reasoning_content: None,
     });
 }

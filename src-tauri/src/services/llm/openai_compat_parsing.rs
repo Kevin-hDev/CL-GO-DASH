@@ -49,8 +49,12 @@ pub fn parse_models_list(
                 .as_array()
                 .map(|arr| arr.iter().any(|v| v.as_str() == Some("tools")))
                 .unwrap_or(false)
-                || m["capabilities"]["function_calling"].as_bool().unwrap_or(false);
-            let is_chat = m["capabilities"]["completion_chat"].as_bool().unwrap_or(true);
+                || m["capabilities"]["function_calling"]
+                    .as_bool()
+                    .unwrap_or(false);
+            let is_chat = m["capabilities"]["completion_chat"]
+                .as_bool()
+                .unwrap_or(true);
             if !is_chat && m["capabilities"].is_object() {
                 return None;
             }
@@ -120,7 +124,11 @@ pub async fn map_error_status(resp: Response) -> LlmError {
         }
         _ => {
             let body = resp.text().await.unwrap_or_default();
-            eprintln!("[llm] HTTP {} — {}", status, super::sanitize_log_body(&body));
+            eprintln!(
+                "[llm] HTTP {} — {}",
+                status,
+                super::sanitize_log_body(&body)
+            );
             LlmError::Http {
                 status,
                 message: "erreur serveur provider".into(),

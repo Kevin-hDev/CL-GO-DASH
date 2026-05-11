@@ -52,8 +52,7 @@ pub fn watch_project_directory(
 ) -> Result<(), String> {
     validate_path(&path)?;
 
-    let canonical =
-        std::fs::canonicalize(&path).map_err(|_| "Dossier introuvable".to_string())?;
+    let canonical = std::fs::canonicalize(&path).map_err(|_| "Dossier introuvable".to_string())?;
 
     if !canonical.is_dir() {
         return Err("Dossier introuvable".into());

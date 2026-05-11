@@ -35,7 +35,9 @@ pub async fn try_auto_compress(
         return;
     }
 
-    let _ = on_event.send(StreamEvent::Compressing { status: "start".to_string() });
+    let _ = on_event.send(StreamEvent::Compressing {
+        status: "start".to_string(),
+    });
 
     // Garder la dernière réponse assistant pour ne pas la perdre
     let last_assistant = messages
@@ -62,7 +64,9 @@ pub async fn try_auto_compress(
         }
     }
 
-    let _ = on_event.send(StreamEvent::Compressing { status: "done".to_string() });
+    let _ = on_event.send(StreamEvent::Compressing {
+        status: "done".to_string(),
+    });
     let _ = on_event.send(StreamEvent::CompressionComplete {});
 }
 
@@ -78,7 +82,8 @@ async fn save_compressed_session(
         images: None,
         tool_calls: None,
         tool_name: None,
-        tool_call_id: None, reasoning_content: None,
+        tool_call_id: None,
+        reasoning_content: None,
     };
     let summary_tokens = token_estimate::estimate_tokens(&[summary_chat]) as u32;
 

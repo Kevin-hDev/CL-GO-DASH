@@ -7,8 +7,7 @@ use std::sync::LazyLock;
 use tokio::sync::Mutex;
 use uuid::Uuid;
 
-static SESSION_ID_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"^[a-f0-9\-]+$").unwrap());
+static SESSION_ID_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^[a-f0-9\-]+$").unwrap());
 
 pub fn validate_session_id(id: &str) -> Result<(), String> {
     if id.is_empty() || id.len() > 64 {
@@ -94,10 +93,7 @@ pub async fn create_full(
 
 /// Cherche la conversation heartbeat existante pour un couple (provider, model).
 /// Retourne la plus récente si plusieurs existent, `None` sinon.
-pub async fn find_heartbeat_session(
-    provider: &str,
-    model: &str,
-) -> Result<Option<String>, String> {
+pub async fn find_heartbeat_session(provider: &str, model: &str) -> Result<Option<String>, String> {
     let metas = crate::services::agent_local::session_index::read_index().await?;
     let best = metas
         .iter()
@@ -125,12 +121,18 @@ pub async fn list() -> Result<Vec<AgentSessionMeta>, String> {
 pub async fn save(session: &AgentSession) -> Result<(), String> {
     validate_session_id(&session.id)?;
     let dir = sessions_dir();
-    tokio::fs::create_dir_all(&dir).await.map_err(|e| e.to_string())?;
+    tokio::fs::create_dir_all(&dir)
+        .await
+        .map_err(|e| e.to_string())?;
     let path = dir.join(format!("{}.json", session.id));
     let tmp = dir.join(format!(".{}.{}.tmp", session.id, Uuid::new_v4()));
     let data = serde_json::to_string_pretty(session).map_err(|e| e.to_string())?;
-    tokio::fs::write(&tmp, &data).await.map_err(|e| e.to_string())?;
-    tokio::fs::rename(&tmp, &path).await.map_err(|e| e.to_string())?;
+    tokio::fs::write(&tmp, &data)
+        .await
+        .map_err(|e| e.to_string())?;
+    tokio::fs::rename(&tmp, &path)
+        .await
+        .map_err(|e| e.to_string())?;
     let meta = crate::services::agent_local::session_index::meta_from_session(session);
     let _ = crate::services::agent_local::session_index::upsert_entry(meta).await;
     Ok(())
@@ -182,7 +184,9 @@ pub async fn update_working_dir(id: &str, dir: &str) -> Result<(), String> {
     if !path.is_absolute() || !path.is_dir() {
         return Err(format!("Répertoire invalide : {dir}"));
     }
-    let canonical = path.canonicalize().map_err(|e| format!("Canonicalize : {e}"))?;
+    let canonical = path
+        .canonicalize()
+        .map_err(|e| format!("Canonicalize : {e}"))?;
     let mut session = get(id).await?;
     session.working_dir = canonical.to_string_lossy().to_string();
     save(&session).await
@@ -191,7 +195,9 @@ pub async fn update_working_dir(id: &str, dir: &str) -> Result<(), String> {
 pub async fn delete(id: &str) -> Result<(), String> {
     validate_session_id(id)?;
     let path = sessions_dir().join(format!("{id}.json"));
-    tokio::fs::remove_file(&path).await.map_err(|e| format!("Erreur suppression: {e}"))?;
+    tokio::fs::remove_file(&path)
+        .await
+        .map_err(|e| format!("Erreur suppression: {e}"))?;
     let _ = crate::services::agent_local::session_index::remove_entry(id).await;
     Ok(())
 }

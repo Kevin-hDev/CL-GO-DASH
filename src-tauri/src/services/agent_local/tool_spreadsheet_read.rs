@@ -13,7 +13,9 @@ static RANGE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"^([A-Z]+)(\d+):([A-Z]+)(\d+)$").unwrap());
 
 pub fn col_letters_to_index(s: &str) -> usize {
-    s.chars().fold(0usize, |acc, c| acc * 26 + (c as usize - 'A' as usize + 1)) - 1
+    s.chars()
+        .fold(0usize, |acc, c| acc * 26 + (c as usize - 'A' as usize + 1))
+        - 1
 }
 
 pub fn parse_range(range_str: &str) -> Option<(usize, usize, usize, usize)> {
@@ -158,9 +160,11 @@ pub async fn read_spreadsheet(
         "xlsx" | "xls" | "ods" | "xlsm" => {
             super::tool_spreadsheet_calamine::read_excel(&validated, sheet, range_str, max)
         }
-        _ => return ToolResult::err(
-            "Format non supporté. Formats acceptés : xlsx, xls, ods, xlsm, csv, tsv",
-        ),
+        _ => {
+            return ToolResult::err(
+                "Format non supporté. Formats acceptés : xlsx, xls, ods, xlsm, csv, tsv",
+            )
+        }
     };
 
     match result {

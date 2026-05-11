@@ -24,11 +24,16 @@ fn is_protected_app_file(path_str: &str) -> bool {
             .unwrap_or_else(|| path.to_path_buf())
     });
     let data_canonical = data_dir.canonicalize().unwrap_or(data_dir);
-    PROTECTED_FILES.iter().any(|f| canonical == data_canonical.join(f))
+    PROTECTED_FILES
+        .iter()
+        .any(|f| canonical == data_canonical.join(f))
 }
 
 pub fn run_pre_hooks(tool_name: &str, args: &Value) -> PreHookDecision {
-    if matches!(tool_name, "write_file" | "edit_file" | "read_file" | "write_spreadsheet" | "write_document") {
+    if matches!(
+        tool_name,
+        "write_file" | "edit_file" | "read_file" | "write_spreadsheet" | "write_document"
+    ) {
         if let Some(path) = args["path"].as_str() {
             if path.contains("..") {
                 return PreHookDecision::Deny("Chemin avec '..' interdit".into());
@@ -46,7 +51,10 @@ pub fn run_pre_hooks(tool_name: &str, args: &Value) -> PreHookDecision {
         }
     }
 
-    if matches!(tool_name, "write_file" | "edit_file" | "write_spreadsheet" | "write_document") {
+    if matches!(
+        tool_name,
+        "write_file" | "edit_file" | "write_spreadsheet" | "write_document"
+    ) {
         if let Some(path) = args["path"].as_str() {
             if is_protected_app_file(path) {
                 return PreHookDecision::Deny(
@@ -63,7 +71,9 @@ pub fn run_pre_hooks(tool_name: &str, args: &Value) -> PreHookDecision {
                     "Commande accédant à des fichiers sensibles bloquée".into(),
                 );
             }
-            let data_dir = crate::services::paths::data_dir().to_string_lossy().to_string();
+            let data_dir = crate::services::paths::data_dir()
+                .to_string_lossy()
+                .to_string();
             for f in PROTECTED_FILES {
                 if cmd.contains(&format!("{data_dir}/{f}")) {
                     return PreHookDecision::Deny(
@@ -79,10 +89,6 @@ pub fn run_pre_hooks(tool_name: &str, args: &Value) -> PreHookDecision {
 
 /// Hooks exécutés APRÈS chaque tool call.
 /// Peut modifier le résultat (ex: filtrer des données sensibles).
-pub fn run_post_hooks(
-    _tool_name: &str,
-    _args: &Value,
-    result: ToolResult,
-) -> ToolResult {
+pub fn run_post_hooks(_tool_name: &str, _args: &Value, result: ToolResult) -> ToolResult {
     result
 }

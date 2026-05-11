@@ -38,7 +38,10 @@ pub fn build_identify(token: &Zeroizing<String>) -> Identify {
         op: 2,
         d: IdentifyData {
             token: token.as_str().to_string(),
-            intents: INTENT_GUILDS | INTENT_GUILD_MESSAGES | INTENT_DM_MESSAGES | INTENT_MESSAGE_CONTENT,
+            intents: INTENT_GUILDS
+                | INTENT_GUILD_MESSAGES
+                | INTENT_DM_MESSAGES
+                | INTENT_MESSAGE_CONTENT,
             properties: IdentifyProperties {
                 os: "linux".into(),
                 browser: "cl-go-dash".into(),

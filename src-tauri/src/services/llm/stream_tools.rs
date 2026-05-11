@@ -35,24 +35,21 @@ impl ToolCallAccumulator {
     /// Ingère un `delta.tool_calls[]` JSON array.
     pub fn ingest(&mut self, tool_calls: &[Value]) {
         for tc in tool_calls {
-            let index = tc["index"]
-                .as_u64()
-                .map(|v| v as usize)
-                .unwrap_or_else(|| {
-                    // Quirk Gemini : pas d'index → on synthétise un nouveau à chaque `id` non vu.
-                    let id = tc["id"].as_str().unwrap_or("");
-                    if !id.is_empty() {
-                        // Nouvel id jamais vu → incrémenter
-                        let existing = self.by_index.values().find(|a| a.id == id);
-                        if existing.is_none() {
-                            let i = self.synthetic_counter;
-                            self.synthetic_counter += 1;
-                            return i;
-                        }
+            let index = tc["index"].as_u64().map(|v| v as usize).unwrap_or_else(|| {
+                // Quirk Gemini : pas d'index → on synthétise un nouveau à chaque `id` non vu.
+                let id = tc["id"].as_str().unwrap_or("");
+                if !id.is_empty() {
+                    // Nouvel id jamais vu → incrémenter
+                    let existing = self.by_index.values().find(|a| a.id == id);
+                    if existing.is_none() {
+                        let i = self.synthetic_counter;
+                        self.synthetic_counter += 1;
+                        return i;
                     }
-                    // Par défaut 0 (cas simple non-parallèle)
-                    0
-                });
+                }
+                // Par défaut 0 (cas simple non-parallèle)
+                0
+            });
 
             let entry = self.by_index.entry(index).or_insert_with(|| {
                 self.order.push(index);

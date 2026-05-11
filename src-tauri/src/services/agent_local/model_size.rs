@@ -31,7 +31,9 @@ fn extract_param_billions(model: &str) -> Option<u64> {
 
 fn infer_from_keywords(model: &str) -> PromptTier {
     let lower = model.to_lowercase();
-    let compact_keywords = ["small", "mini", "tiny", "nano", "micro", "e2b", "e4b", "lite"];
+    let compact_keywords = [
+        "small", "mini", "tiny", "nano", "micro", "e2b", "e4b", "lite",
+    ];
     for kw in &compact_keywords {
         if lower.contains(kw) {
             return PromptTier::Compact;

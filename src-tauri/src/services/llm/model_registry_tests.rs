@@ -1,8 +1,7 @@
 #[cfg(test)]
 mod tests {
     use crate::services::llm::model_registry::{
-        parse_registry, is_trusted_host, is_body_size_ok,
-        MAX_REGISTRY_ENTRIES, MAX_BODY_BYTES,
+        is_body_size_ok, is_trusted_host, parse_registry, MAX_BODY_BYTES, MAX_REGISTRY_ENTRIES,
     };
 
     fn fake_entry() -> String {

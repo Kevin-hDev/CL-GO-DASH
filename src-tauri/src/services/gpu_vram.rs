@@ -8,11 +8,17 @@ const CTX_LOW: u32 = 8192;
 
 pub fn detect_vram_mb() -> Option<u64> {
     #[cfg(target_os = "macos")]
-    { return detect_macos(); }
+    {
+        return detect_macos();
+    }
     #[cfg(target_os = "linux")]
-    { return detect_linux(); }
+    {
+        return detect_linux();
+    }
     #[cfg(target_os = "windows")]
-    { return detect_windows(); }
+    {
+        return detect_windows();
+    }
     #[cfg(not(any(target_os = "macos", target_os = "linux", target_os = "windows")))]
     None
 }
@@ -68,8 +74,12 @@ fn parse_vm_stat_field(text: &str, field: &str) -> Option<u64> {
 
 #[cfg(target_os = "linux")]
 fn detect_linux() -> Option<u64> {
-    if let Some(v) = nvidia_smi_vram() { return Some(v); }
-    if let Some(v) = drm_vram_total() { return Some(v); }
+    if let Some(v) = nvidia_smi_vram() {
+        return Some(v);
+    }
+    if let Some(v) = drm_vram_total() {
+        return Some(v);
+    }
     None
 }
 
@@ -91,8 +101,12 @@ fn drm_vram_total() -> Option<u64> {
 
 #[cfg(target_os = "windows")]
 fn detect_windows() -> Option<u64> {
-    if let Some(v) = nvidia_smi_vram() { return Some(v); }
-    if let Some(v) = registry_vram() { return Some(v); }
+    if let Some(v) = nvidia_smi_vram() {
+        return Some(v);
+    }
+    if let Some(v) = registry_vram() {
+        return Some(v);
+    }
     None
 }
 
@@ -109,27 +123,43 @@ fn registry_vram() -> Option<u64> {
         cmd.creation_flags(0x08000000);
     }
     let output = cmd.output().ok()?;
-    if !output.status.success() { return None; }
+    if !output.status.success() {
+        return None;
+    }
     let raw = String::from_utf8_lossy(&output.stdout);
     let bytes: u64 = raw.trim().parse().ok()?;
-    if bytes > 0 { Some(bytes / 1_048_576) } else { None }
+    if bytes > 0 {
+        Some(bytes / 1_048_576)
+    } else {
+        None
+    }
 }
 
 pub fn detect_vram_used_mb() -> Option<u64> {
     #[cfg(target_os = "macos")]
-    { return detect_macos_used(); }
+    {
+        return detect_macos_used();
+    }
     #[cfg(target_os = "linux")]
-    { return detect_linux_used(); }
+    {
+        return detect_linux_used();
+    }
     #[cfg(target_os = "windows")]
-    { return nvidia_smi_field("memory.used"); }
+    {
+        return nvidia_smi_field("memory.used");
+    }
     #[cfg(not(any(target_os = "macos", target_os = "linux", target_os = "windows")))]
     None
 }
 
 #[cfg(target_os = "linux")]
 fn detect_linux_used() -> Option<u64> {
-    if let Some(v) = nvidia_smi_field("memory.used") { return Some(v); }
-    if let Some(v) = drm_vram_used() { return Some(v); }
+    if let Some(v) = nvidia_smi_field("memory.used") {
+        return Some(v);
+    }
+    if let Some(v) = drm_vram_used() {
+        return Some(v);
+    }
     None
 }
 
@@ -152,10 +182,15 @@ fn drm_vram_used() -> Option<u64> {
 #[cfg(not(target_os = "macos"))]
 fn nvidia_smi_field(field: &str) -> Option<u64> {
     let output = Command::new("nvidia-smi")
-        .args([&format!("--query-gpu={field}"), "--format=csv,noheader,nounits"])
+        .args([
+            &format!("--query-gpu={field}"),
+            "--format=csv,noheader,nounits",
+        ])
         .output()
         .ok()?;
-    if !output.status.success() { return None; }
+    if !output.status.success() {
+        return None;
+    }
     let raw = String::from_utf8_lossy(&output.stdout);
     raw.lines().next()?.trim().parse::<u64>().ok()
 }

@@ -28,10 +28,9 @@ mod tests {
         fs::write(root.join("main.rs"), "").unwrap();
         fs::write(root.join("build.rs"), "").unwrap();
 
-        let entries =
-            list_directory(root.to_str().unwrap().to_string(), false, None)
-                .await
-                .unwrap();
+        let entries = list_directory(root.to_str().unwrap().to_string(), false, None)
+            .await
+            .unwrap();
 
         assert_eq!(entries[0].name, "alpha");
         assert!(entries[0].is_dir);
@@ -47,16 +46,18 @@ mod tests {
         let tmp = create_test_tree();
         let root = tmp.path();
 
-        let entries =
-            list_directory(root.to_str().unwrap().to_string(), false, None)
-                .await
-                .unwrap();
+        let entries = list_directory(root.to_str().unwrap().to_string(), false, None)
+            .await
+            .unwrap();
 
         let names: Vec<&str> = entries.iter().map(|e| e.name.as_str()).collect();
 
         assert!(!names.contains(&".git"), ".git doit être masqué");
         assert!(!names.contains(&".DS_Store"), ".DS_Store doit être masqué");
-        assert!(names.contains(&"node_modules"), "node_modules doit être visible");
+        assert!(
+            names.contains(&"node_modules"),
+            "node_modules doit être visible"
+        );
         assert!(names.contains(&".env"), ".env doit être visible");
         assert!(names.contains(&"README.md"), "README.md doit être visible");
     }
@@ -66,14 +67,19 @@ mod tests {
         let tmp = create_test_tree();
         let root = tmp.path();
 
-        let entries =
-            list_directory(root.to_str().unwrap().to_string(), true, None)
-                .await
-                .unwrap();
+        let entries = list_directory(root.to_str().unwrap().to_string(), true, None)
+            .await
+            .unwrap();
 
         let names: Vec<&str> = entries.iter().map(|e| e.name.as_str()).collect();
-        assert!(names.contains(&".git"), ".git doit apparaître en mode show_hidden");
-        assert!(names.contains(&".DS_Store"), ".DS_Store doit apparaître en mode show_hidden");
+        assert!(
+            names.contains(&".git"),
+            ".git doit apparaître en mode show_hidden"
+        );
+        assert!(
+            names.contains(&".DS_Store"),
+            ".DS_Store doit apparaître en mode show_hidden"
+        );
     }
 
     #[tokio::test]
@@ -132,17 +138,19 @@ mod tests {
         fs::write(root.join(".env"), "").unwrap();
         fs::write(root.join("Makefile"), "").unwrap();
 
-        let entries =
-            list_directory(root.to_str().unwrap().to_string(), true, None)
-                .await
-                .unwrap();
+        let entries = list_directory(root.to_str().unwrap().to_string(), true, None)
+            .await
+            .unwrap();
 
         let find = |name: &str| -> Option<&crate::models::file_tree::FileEntry> {
             entries.iter().find(|e| e.name == name)
         };
 
         assert_eq!(find("main.rs").unwrap().extension, Some("rs".to_string()));
-        assert_eq!(find("archive.tar.gz").unwrap().extension, Some("gz".to_string()));
+        assert_eq!(
+            find("archive.tar.gz").unwrap().extension,
+            Some("gz".to_string())
+        );
         assert_eq!(find(".env").unwrap().extension, None);
     }
 

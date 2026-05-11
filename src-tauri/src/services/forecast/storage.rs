@@ -1,16 +1,15 @@
 use crate::services::forecast::types::{ForecastAnalysisMeta, ForecastResult};
 use crate::services::paths::data_dir;
+use regex::Regex;
 use std::path::PathBuf;
 use std::sync::LazyLock;
-use regex::Regex;
 use tokio::sync::Mutex;
 
 const MAX_ANALYSES: usize = 500;
 
 static INDEX_LOCK: Mutex<()> = Mutex::const_new(());
 
-static ANALYSIS_ID_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"^[a-f0-9\-]+$").unwrap());
+static ANALYSIS_ID_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^[a-f0-9\-]+$").unwrap());
 
 fn validate_analysis_id(id: &str) -> Result<(), String> {
     if id.is_empty() || id.len() > 64 {
@@ -43,8 +42,8 @@ pub async fn ensure_dir() -> Result<(), String> {
 pub async fn save(result: &ForecastResult) -> Result<(), String> {
     validate_analysis_id(&result.id)?;
     ensure_dir().await?;
-    let json = serde_json::to_string_pretty(result)
-        .map_err(|_| "Erreur de sérialisation".to_string())?;
+    let json =
+        serde_json::to_string_pretty(result).map_err(|_| "Erreur de sérialisation".to_string())?;
 
     let dir = analyses_dir();
     let tmp = dir.join(format!(".{}.tmp", result.id));
@@ -66,8 +65,7 @@ pub async fn load(id: &str) -> Result<ForecastResult, String> {
     let data = tokio::fs::read_to_string(&path)
         .await
         .map_err(|_| "Analyse introuvable".to_string())?;
-    serde_json::from_str(&data)
-        .map_err(|_| "Données d'analyse corrompues".to_string())
+    serde_json::from_str(&data).map_err(|_| "Données d'analyse corrompues".to_string())
 }
 
 pub async fn delete(id: &str) -> Result<(), String> {
@@ -88,16 +86,15 @@ pub async fn list() -> Result<Vec<ForecastAnalysisMeta>, String> {
 async fn read_index() -> Result<Vec<ForecastAnalysisMeta>, String> {
     let path = index_path();
     match tokio::fs::read_to_string(&path).await {
-        Ok(data) => serde_json::from_str(&data)
-            .map_err(|_| "Index forecast corrompu".into()),
+        Ok(data) => serde_json::from_str(&data).map_err(|_| "Index forecast corrompu".into()),
         Err(_) => Ok(Vec::new()),
     }
 }
 
 async fn write_index(entries: &[ForecastAnalysisMeta]) -> Result<(), String> {
     ensure_dir().await?;
-    let json = serde_json::to_string_pretty(entries)
-        .map_err(|e| format!("Sérialisation index: {e}"))?;
+    let json =
+        serde_json::to_string_pretty(entries).map_err(|e| format!("Sérialisation index: {e}"))?;
 
     let dir = analyses_dir();
     let tmp = dir.join(".index.tmp");

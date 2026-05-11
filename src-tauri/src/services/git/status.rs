@@ -14,8 +14,8 @@ pub struct DirtyFile {
 }
 
 pub fn list_dirty_files(repo_path: &Path) -> Result<Vec<DirtyFile>, String> {
-    let repo = Repository::open(repo_path)
-        .map_err(|e| format!("Impossible d'ouvrir le dépôt : {e}"))?;
+    let repo =
+        Repository::open(repo_path).map_err(|e| format!("Impossible d'ouvrir le dépôt : {e}"))?;
 
     let mut opts = StatusOptions::new();
     opts.include_untracked(true).recurse_untracked_dirs(true);
@@ -43,16 +43,13 @@ pub fn list_dirty_files(repo_path: &Path) -> Result<Vec<DirtyFile>, String> {
             "changed"
         };
 
-        let (additions, deletions) = diff_stats
-            .get(&path)
-            .copied()
-            .unwrap_or_else(|| {
-                if label == "new" {
-                    (count_file_lines(&repo_path.join(&path)), 0)
-                } else {
-                    (0, 0)
-                }
-            });
+        let (additions, deletions) = diff_stats.get(&path).copied().unwrap_or_else(|| {
+            if label == "new" {
+                (count_file_lines(&repo_path.join(&path)), 0)
+            } else {
+                (0, 0)
+            }
+        });
 
         files.push(DirtyFile {
             path,

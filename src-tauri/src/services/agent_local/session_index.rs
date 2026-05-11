@@ -31,9 +31,7 @@ pub async fn rebuild_index_from(dir: &Path) -> Result<Vec<AgentSessionMeta>, Str
     if !dir.exists() {
         return Ok(entries);
     }
-    let mut read_dir = tokio::fs::read_dir(dir)
-        .await
-        .map_err(|e| e.to_string())?;
+    let mut read_dir = tokio::fs::read_dir(dir).await.map_err(|e| e.to_string())?;
     while let Ok(Some(entry)) = read_dir.next_entry().await {
         let path = entry.path();
         if path.extension().and_then(|e| e.to_str()) != Some("json") {
@@ -103,10 +101,7 @@ async fn write_index(entries: &[AgentSessionMeta]) -> Result<(), String> {
     write_index_to(&dir, entries).await
 }
 
-pub(crate) async fn write_index_to(
-    dir: &Path,
-    entries: &[AgentSessionMeta],
-) -> Result<(), String> {
+pub(crate) async fn write_index_to(dir: &Path, entries: &[AgentSessionMeta]) -> Result<(), String> {
     tokio::fs::create_dir_all(dir)
         .await
         .map_err(|e| e.to_string())?;

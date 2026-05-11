@@ -1,5 +1,5 @@
-use crate::services::gpu_detect::GpuVendor;
 use crate::models::config::AdvancedSettings;
+use crate::services::gpu_detect::GpuVendor;
 
 const GPU_OVERHEAD_BYTES: &str = "1073741824";
 

@@ -22,7 +22,9 @@ pub async fn check_ollama_updates(
 
     let mut families = HashSet::new();
     for m in &models {
-        if families.len() >= 100 { break; }
+        if families.len() >= 100 {
+            break;
+        }
         if let Some(fam) = m.name.split(':').next() {
             families.insert(fam.to_string());
         }

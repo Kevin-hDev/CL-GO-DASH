@@ -12,7 +12,13 @@ pub async fn load_agent_md_from(data_dir: &Path, project_dir: Option<&Path>) -> 
 
     let global_path = data_dir.join("AGENT.md");
     if let Ok(content) = tokio::fs::read_to_string(&global_path).await {
-        push_content(&global_path, "global instructions", &content, &mut sections, &mut total_bytes);
+        push_content(
+            &global_path,
+            "global instructions",
+            &content,
+            &mut sections,
+            &mut total_bytes,
+        );
     }
 
     if let Some(dir) = project_dir {
@@ -30,13 +36,21 @@ pub async fn load_agent_md_from(data_dir: &Path, project_dir: Option<&Path>) -> 
     Some(format!("{}\n\n{}", header, sections.join("\n\n")))
 }
 
-async fn collect_project_entries(
-    dir: &Path,
-    sections: &mut Vec<String>,
-    total_bytes: &mut usize,
-) {
-    push_file(&dir.join("AGENT.md"), "project instructions", sections, total_bytes).await;
-    push_file(&dir.join(".cl-go").join("AGENT.md"), "project instructions", sections, total_bytes).await;
+async fn collect_project_entries(dir: &Path, sections: &mut Vec<String>, total_bytes: &mut usize) {
+    push_file(
+        &dir.join("AGENT.md"),
+        "project instructions",
+        sections,
+        total_bytes,
+    )
+    .await;
+    push_file(
+        &dir.join(".cl-go").join("AGENT.md"),
+        "project instructions",
+        sections,
+        total_bytes,
+    )
+    .await;
 
     let rules_dir = dir.join(".cl-go").join("rules");
     if let Ok(mut entries) = tokio::fs::read_dir(&rules_dir).await {
@@ -63,7 +77,13 @@ async fn push_file(path: &Path, label: &str, sections: &mut Vec<String>, total_b
     }
 }
 
-fn push_content(path: &Path, label: &str, content: &str, sections: &mut Vec<String>, total_bytes: &mut usize) {
+fn push_content(
+    path: &Path,
+    label: &str,
+    content: &str,
+    sections: &mut Vec<String>,
+    total_bytes: &mut usize,
+) {
     let trimmed = content.trim();
     if trimmed.is_empty() || *total_bytes >= MAX_TOTAL_BYTES {
         return;

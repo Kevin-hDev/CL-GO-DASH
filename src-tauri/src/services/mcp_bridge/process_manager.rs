@@ -2,10 +2,10 @@ use std::collections::HashMap;
 use std::sync::Mutex;
 use std::time::Instant;
 
-use tokio::io::{AsyncBufReadExt, BufReader};
-use tokio::process::{Child, ChildStdin, ChildStdout, Command};
 use std::process::Stdio;
 use std::sync::Arc;
+use tokio::io::{AsyncBufReadExt, BufReader};
+use tokio::process::{Child, ChildStdin, ChildStdout, Command};
 
 use super::stdio_cmd;
 
@@ -31,10 +31,19 @@ static HANDLES: std::sync::LazyLock<Mutex<HashMap<String, ProcessHandle>>> =
 
 fn safe_env() -> Vec<(String, String)> {
     [
-        "PATH", "HOME", "TMPDIR", "LANG", "LC_ALL",
-        "USER", "SHELL",
-        "XDG_DATA_HOME", "XDG_CACHE_HOME", "XDG_CONFIG_HOME",
-        "NODE_PATH", "NPM_CONFIG_CACHE", "NPM_CONFIG_PREFIX",
+        "PATH",
+        "HOME",
+        "TMPDIR",
+        "LANG",
+        "LC_ALL",
+        "USER",
+        "SHELL",
+        "XDG_DATA_HOME",
+        "XDG_CACHE_HOME",
+        "XDG_CONFIG_HOME",
+        "NODE_PATH",
+        "NPM_CONFIG_CACHE",
+        "NPM_CONFIG_PREFIX",
         "DENO_DIR",
     ]
     .iter()

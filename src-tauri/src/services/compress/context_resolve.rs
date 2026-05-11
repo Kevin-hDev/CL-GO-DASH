@@ -22,7 +22,10 @@ pub async fn resolve_ollama(model: &str) -> ContextWindows {
 
 pub async fn resolve_api(provider: &str, model: &str) -> ContextWindows {
     let native = lookup_api_context(provider, model).await;
-    ContextWindows { native, configured: native }
+    ContextWindows {
+        native,
+        configured: native,
+    }
 }
 
 struct OllamaModelContext {
@@ -40,26 +43,30 @@ async fn fetch_ollama_model_info(model: &str) -> OllamaModelContext {
 
     let json = match resp {
         Ok(r) => r.json::<serde_json::Value>().await.unwrap_or_default(),
-        Err(_) => return OllamaModelContext { context_length: 0, num_ctx_from_modelfile: None },
+        Err(_) => {
+            return OllamaModelContext {
+                context_length: 0,
+                num_ctx_from_modelfile: None,
+            }
+        }
     };
 
     let mi = &json["model_info"];
     let arch = mi["general.architecture"].as_str().unwrap_or("");
-    let context_length = mi[format!("{arch}.context_length")]
-        .as_u64()
-        .unwrap_or(0);
+    let context_length = mi[format!("{arch}.context_length")].as_u64().unwrap_or(0);
 
     let num_ctx = json
         .get("modelfile")
         .and_then(|v| v.as_str())
         .and_then(|mf| {
             let parsed = parse_modelfile(mf);
-            parsed.parameters
-                .get("num_ctx")
-                .and_then(|v| v.as_u64())
+            parsed.parameters.get("num_ctx").and_then(|v| v.as_u64())
         });
 
-    OllamaModelContext { context_length, num_ctx_from_modelfile: num_ctx }
+    OllamaModelContext {
+        context_length,
+        num_ctx_from_modelfile: num_ctx,
+    }
 }
 
 async fn lookup_api_context(provider: &str, model: &str) -> u64 {
@@ -79,13 +86,11 @@ async fn lookup_api_context(provider: &str, model: &str) -> u64 {
     };
 
     let key = format!("{prefix}/{model}");
-    let entry = reg.get(&key)
-        .or_else(|| reg.get(model))
-        .or_else(|| {
-            let stripped = model.rsplit_once('/').map(|(_, n)| n).unwrap_or(model);
-            let key2 = format!("{prefix}/{stripped}");
-            reg.get(&key2).or_else(|| reg.get(stripped))
-        });
+    let entry = reg.get(&key).or_else(|| reg.get(model)).or_else(|| {
+        let stripped = model.rsplit_once('/').map(|(_, n)| n).unwrap_or(model);
+        let key2 = format!("{prefix}/{stripped}");
+        reg.get(&key2).or_else(|| reg.get(stripped))
+    });
 
     entry
         .and_then(|e| e.max_input_tokens.or(e.max_tokens))
@@ -98,7 +103,10 @@ mod tests {
 
     #[test]
     fn default_context_windows() {
-        let ctx = ContextWindows { native: 131_072, configured: 32_768 };
+        let ctx = ContextWindows {
+            native: 131_072,
+            configured: 32_768,
+        };
         assert_eq!(ctx.native, 131_072);
         assert_eq!(ctx.configured, 32_768);
     }

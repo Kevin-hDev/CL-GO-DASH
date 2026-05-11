@@ -16,9 +16,10 @@ interface ForecastAnalysisMeta {
 interface ForecastEmptyProps {
   onLoadAnalysis: (id: string) => void;
   onImportFile?: (path: string) => void;
+  error?: string | null;
 }
 
-export function ForecastEmpty({ onLoadAnalysis, onImportFile }: ForecastEmptyProps) {
+export function ForecastEmpty({ onLoadAnalysis, onImportFile, error }: ForecastEmptyProps) {
   const { t } = useTranslation();
   const [recent, setRecent] = useState<ForecastAnalysisMeta[]>([]);
 
@@ -30,7 +31,7 @@ export function ForecastEmpty({ onLoadAnalysis, onImportFile }: ForecastEmptyPro
 
   const handleImport = useCallback(async () => {
     const path = await open({
-      filters: [{ name: "Data", extensions: ["csv", "xlsx", "xls", "json"] }],
+      filters: [{ name: "Data", extensions: ["csv", "tsv", "xlsx", "xls", "ods", "xlsm"] }],
       multiple: false,
     });
     if (path && onImportFile) onImportFile(path);
@@ -48,6 +49,7 @@ export function ForecastEmpty({ onLoadAnalysis, onImportFile }: ForecastEmptyPro
       </div>
       <p className="fc-empty-title">{t("forecast.noAnalysis")}</p>
       <p className="fc-empty-sub">{t("forecast.askAgent")}</p>
+      {error && <p className="fc-empty-error">{error}</p>}
       <div className="fc-empty-actions">
         <button className="fc-empty-btn fc-empty-btn-primary" onClick={() => void handleImport()}>
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor"
@@ -57,10 +59,10 @@ export function ForecastEmpty({ onLoadAnalysis, onImportFile }: ForecastEmptyPro
           </svg>
           {t("forecast.importFile")}
         </button>
-        <button className="fc-empty-btn" onClick={() => { /* TODO: paste modal */ }}>
+        <button className="fc-empty-btn" disabled title={t("forecast.comingSoon")}>
           {t("forecast.pasteData")}
         </button>
-        <button className="fc-empty-btn" onClick={() => { /* TODO: URL modal */ }}>
+        <button className="fc-empty-btn" disabled title={t("forecast.comingSoon")}>
           {t("forecast.fromUrl")}
         </button>
       </div>

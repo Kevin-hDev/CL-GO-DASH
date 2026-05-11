@@ -1,8 +1,11 @@
 use crate::services::forecast::types::ModelDownloadProgress;
 use futures_util::StreamExt;
+use std::path::Component;
 use std::path::Path;
 use tauri::ipc::Channel;
 use tokio::io::AsyncWriteExt;
+
+const MAX_MODEL_FILES: usize = 128;
 
 pub async fn download_model(
     hf_repo: &str,
@@ -23,8 +26,15 @@ pub async fn download_model(
         if let Some(parent) = dest.parent() {
             tokio::fs::create_dir_all(parent).await.ok();
         }
-        download_single(&url, &dest, &mut downloaded, total_size, model_id, on_progress)
-            .await?;
+        download_single(
+            &url,
+            &dest,
+            &mut downloaded,
+            total_size,
+            model_id,
+            on_progress,
+        )
+        .await?;
     }
 
     let _ = on_progress.send(ModelDownloadProgress {
@@ -37,7 +47,7 @@ pub async fn download_model(
 }
 
 async fn list_hf_files(repo: &str) -> Result<Vec<(String, u64)>, String> {
-    let url = format!("https://huggingface.co/api/models/{repo}");
+    let url = format!("https://huggingface.co/api/models/{repo}/tree/main?recursive=true");
     let client = reqwest::Client::new();
     let resp = client
         .get(&url)
@@ -50,31 +60,47 @@ async fn list_hf_files(repo: &str) -> Result<Vec<(String, u64)>, String> {
         return Err(format!("HuggingFace API erreur: {}", resp.status()));
     }
 
-    let body: serde_json::Value = resp
-        .json()
-        .await
-        .map_err(|e| format!("Parsing HF: {e}"))?;
+    let body: serde_json::Value = resp.json().await.map_err(|e| format!("Parsing HF: {e}"))?;
 
-    let siblings = body["siblings"]
-        .as_array()
-        .ok_or("Champ siblings manquant")?;
+    let tree = body.as_array().ok_or("Réponse HuggingFace invalide")?;
 
-    let files: Vec<(String, u64)> = siblings
+    let files: Vec<(String, u64)> = tree
         .iter()
         .filter_map(|s| {
-            let name = s["rfilename"].as_str()?;
-            if name.starts_with('.') || name == "README.md" {
+            if s["type"].as_str()? != "file" {
                 return None;
             }
-            let size = s["size"].as_u64().unwrap_or(0);
-            Some((name.to_string(), size))
+            let name = s["path"].as_str()?;
+            if !is_downloadable_model_file(name) {
+                return None;
+            }
+            Some((name.to_string(), s["size"].as_u64().unwrap_or(0)))
         })
+        .take(MAX_MODEL_FILES + 1)
         .collect();
 
     if files.is_empty() {
         return Err("Aucun fichier trouvé dans le repo".into());
     }
+    if files.len() > MAX_MODEL_FILES {
+        return Err("Repo modèle trop volumineux".into());
+    }
+    if files.iter().any(|(_, size)| *size == 0) {
+        return Err("Taille modèle inconnue".into());
+    }
     Ok(files)
+}
+
+fn is_downloadable_model_file(name: &str) -> bool {
+    if name.is_empty() || name.len() > 240 || name == "README.md" || name.starts_with('.') {
+        return false;
+    }
+    let path = Path::new(name);
+    if path.is_absolute() {
+        return false;
+    }
+    path.components()
+        .all(|part| matches!(part, Component::Normal(_)))
 }
 
 async fn download_single(

@@ -81,9 +81,8 @@ impl RateLimiter {
             return;
         }
         self.last_eviction = now;
-        self.buckets.retain(|_, b| {
-            now.duration_since(b.window_start).as_secs() < BUCKET_TTL_SECS
-        });
+        self.buckets
+            .retain(|_, b| now.duration_since(b.window_start).as_secs() < BUCKET_TTL_SECS);
         while self.buckets.len() > MAX_BUCKETS {
             if let Some(oldest_key) = self.find_oldest() {
                 self.buckets.remove(&oldest_key);

@@ -32,7 +32,11 @@ fn detect_macos_version() -> String {
         .and_then(|o| {
             if o.status.success() {
                 let v = String::from_utf8_lossy(&o.stdout).trim().to_string();
-                if v.is_empty() { None } else { Some(format!("macOS {v}")) }
+                if v.is_empty() {
+                    None
+                } else {
+                    Some(format!("macOS {v}"))
+                }
             } else {
                 None
             }
@@ -70,13 +74,19 @@ mod tests {
     #[test]
     fn test_detect_shell_returns_nonempty() {
         let shell = detect_shell();
-        assert!(!shell.is_empty(), "detect_shell() doit retourner une string non-vide");
+        assert!(
+            !shell.is_empty(),
+            "detect_shell() doit retourner une string non-vide"
+        );
     }
 
     #[test]
     fn test_detect_os_version_returns_nonempty() {
         let version = detect_os_version();
-        assert!(!version.is_empty(), "detect_os_version() doit retourner une string non-vide");
+        assert!(
+            !version.is_empty(),
+            "detect_os_version() doit retourner une string non-vide"
+        );
     }
 
     #[cfg(unix)]

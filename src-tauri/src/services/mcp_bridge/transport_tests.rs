@@ -176,9 +176,6 @@ mod tests {
     fn extract_empty_result() {
         let resp = json!({});
         let err = extract_tool_result(&resp).unwrap_err();
-        assert!(
-            err.contains("réponse vide"),
-            "message inattendu : {err}"
-        );
+        assert!(err.contains("réponse vide"), "message inattendu : {err}");
     }
 }

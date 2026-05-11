@@ -39,7 +39,10 @@ async fn accept_one(
     let result = parse_callback(&request, expected_state);
 
     let (status, body) = match &result {
-        Ok(_) => ("200 OK", "Connexion réussie — vous pouvez fermer cet onglet."),
+        Ok(_) => (
+            "200 OK",
+            "Connexion réussie — vous pouvez fermer cet onglet.",
+        ),
         Err(e) => ("400 Bad Request", e.as_str()),
     };
     let response = format!(
@@ -77,7 +80,12 @@ fn parse_callback(request: &str, expected_state: &str) -> Result<CallbackResult,
     let state = state.ok_or("paramètre 'state' manquant dans le callback")?;
 
     if state.len() != expected_state.len()
-        || state.as_bytes().iter().zip(expected_state.as_bytes()).fold(0u8, |acc, (a, b)| acc | (a ^ b)) != 0
+        || state
+            .as_bytes()
+            .iter()
+            .zip(expected_state.as_bytes())
+            .fold(0u8, |acc, (a, b)| acc | (a ^ b))
+            != 0
     {
         return Err("state OAuth invalide (possible CSRF)".to_string());
     }
@@ -91,7 +99,8 @@ mod tests {
 
     #[test]
     fn parses_valid_callback() {
-        let req = "GET /auth/callback?code=abc123&state=mystate HTTP/1.1\r\nHost: localhost\r\n\r\n";
+        let req =
+            "GET /auth/callback?code=abc123&state=mystate HTTP/1.1\r\nHost: localhost\r\n\r\n";
         let result = parse_callback(req, "mystate").unwrap();
         assert_eq!(result.code, "abc123");
     }

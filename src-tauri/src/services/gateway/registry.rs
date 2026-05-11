@@ -10,7 +10,9 @@ pub struct GatewayRegistry {
 
 impl GatewayRegistry {
     pub fn new() -> Self {
-        Self { adapters: HashMap::new() }
+        Self {
+            adapters: HashMap::new(),
+        }
     }
 
     pub fn register(&mut self, key: ChannelKey, adapter: Arc<dyn ChannelAdapter>) {
@@ -29,7 +31,10 @@ impl GatewayRegistry {
         self.adapters.keys().collect()
     }
 
-    pub fn list_by_channel(&self, channel_id: &str) -> Vec<(&ChannelKey, &Arc<dyn ChannelAdapter>)> {
+    pub fn list_by_channel(
+        &self,
+        channel_id: &str,
+    ) -> Vec<(&ChannelKey, &Arc<dyn ChannelAdapter>)> {
         self.adapters
             .iter()
             .filter(|(k, _)| k.channel_id == channel_id)
@@ -48,29 +53,41 @@ impl GatewayRegistry {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::models::ChannelAccountConfig;
     use crate::services::gateway::channels::{
-        capabilities::ChannelCapabilities, ChannelAdapter, ChannelContext,
-        DeliveryReceipt, GatewayResult, InboundMessage, OutboundMessage,
+        capabilities::ChannelCapabilities, ChannelAdapter, ChannelContext, DeliveryReceipt,
+        GatewayResult, InboundMessage, OutboundMessage,
     };
     use async_trait::async_trait;
-    use crate::models::ChannelAccountConfig;
 
     struct MockAdapter;
 
     #[async_trait]
     impl ChannelAdapter for MockAdapter {
-        fn id(&self) -> &'static str { "mock" }
+        fn id(&self) -> &'static str {
+            "mock"
+        }
         fn capabilities(&self) -> ChannelCapabilities {
             ChannelCapabilities::telegram()
         }
-        async fn validate_config(&self, _: &ChannelAccountConfig) -> GatewayResult<()> { Ok(()) }
-        async fn start(&self, _: ChannelContext, _: tokio::sync::mpsc::Sender<InboundMessage>) -> GatewayResult<tokio::task::JoinHandle<()>> {
+        async fn validate_config(&self, _: &ChannelAccountConfig) -> GatewayResult<()> {
+            Ok(())
+        }
+        async fn start(
+            &self,
+            _: ChannelContext,
+            _: tokio::sync::mpsc::Sender<InboundMessage>,
+        ) -> GatewayResult<tokio::task::JoinHandle<()>> {
             Ok(tokio::spawn(async {}))
         }
         async fn send(&self, _: OutboundMessage) -> GatewayResult<DeliveryReceipt> {
-            Ok(DeliveryReceipt { message_id: "1".into() })
+            Ok(DeliveryReceipt {
+                message_id: "1".into(),
+            })
         }
-        async fn health(&self) -> bool { true }
+        async fn health(&self) -> bool {
+            true
+        }
     }
 
     #[test]

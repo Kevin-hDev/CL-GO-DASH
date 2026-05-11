@@ -8,7 +8,11 @@ use tauri::Emitter;
 use zeroize::{Zeroize, Zeroizing};
 
 #[tauri::command]
-pub async fn set_api_key(app: tauri::AppHandle, provider: String, mut key: String) -> Result<(), String> {
+pub async fn set_api_key(
+    app: tauri::AppHandle,
+    provider: String,
+    mut key: String,
+) -> Result<(), String> {
     let result = api_keys::set_key(&provider, &key);
     key.zeroize();
     if result.is_ok() {

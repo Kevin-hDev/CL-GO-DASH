@@ -22,16 +22,13 @@ pub fn read_state() -> HashMap<String, bool> {
 pub fn write_state(state: &HashMap<String, bool>) -> Result<(), String> {
     let path = state_path();
     if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent)
-            .map_err(|e| format!("Cannot create dir: {}", e))?;
+        fs::create_dir_all(parent).map_err(|e| format!("Cannot create dir: {}", e))?;
     }
     let tmp = path.with_extension("json.tmp");
-    let content = serde_json::to_string_pretty(state)
-        .map_err(|e| format!("Cannot serialize: {}", e))?;
-    fs::write(&tmp, &content)
-        .map_err(|e| format!("Cannot write: {}", e))?;
-    fs::rename(&tmp, &path)
-        .map_err(|e| format!("Cannot rename: {}", e))?;
+    let content =
+        serde_json::to_string_pretty(state).map_err(|e| format!("Cannot serialize: {}", e))?;
+    fs::write(&tmp, &content).map_err(|e| format!("Cannot write: {}", e))?;
+    fs::rename(&tmp, &path).map_err(|e| format!("Cannot rename: {}", e))?;
     Ok(())
 }
 
@@ -55,7 +52,11 @@ pub fn load_injected_contents() -> Option<String> {
             path
         } else {
             let alt = inbox.join(name);
-            if alt.exists() { alt } else { continue }
+            if alt.exists() {
+                alt
+            } else {
+                continue;
+            }
         };
         if let Ok(content) = fs::read_to_string(&path) {
             let content = content.trim();

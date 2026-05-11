@@ -74,7 +74,10 @@ impl Drop for ZeroizingMap {
 
 fn flush_vault(s: &VaultState) -> Result<(), String> {
     let raw = ZeroizingMap(
-        s.keys.iter().map(|(k, v)| (k.clone(), v.as_str().to_string())).collect(),
+        s.keys
+            .iter()
+            .map(|(k, v)| (k.clone(), v.as_str().to_string()))
+            .collect(),
     );
     vault::write_vault(&s.master_key, &raw.0)
 }
@@ -98,7 +101,10 @@ fn migrate_raw_prefix(
         }
     }
     vault::write_vault(master_key, map)?;
-    eprintln!("[vault] migrated {} raw keys to namespaced prefix", to_migrate.len());
+    eprintln!(
+        "[vault] migrated {} raw keys to namespaced prefix",
+        to_migrate.len()
+    );
     Ok(())
 }
 
@@ -110,7 +116,10 @@ pub fn init() -> Result<(), String> {
         let legacy = vault::read_legacy_keychain_keys();
         if !legacy.is_empty() {
             for (id, key) in &legacy {
-                raw_map.0.entry(id.clone()).or_insert_with(|| key.to_string());
+                raw_map
+                    .0
+                    .entry(id.clone())
+                    .or_insert_with(|| key.to_string());
             }
             eprintln!("[vault] migrated {} keys from keychain", legacy.len());
         }
@@ -125,7 +134,11 @@ pub fn init() -> Result<(), String> {
         let _ = std::fs::write(&marker, b"ok");
     }
     migrate_raw_prefix(&master_key, &mut raw_map.0)?;
-    let keys = raw_map.0.drain().map(|(k, v)| (k, Zeroizing::new(v))).collect();
+    let keys = raw_map
+        .0
+        .drain()
+        .map(|(k, v)| (k, Zeroizing::new(v)))
+        .collect();
     let mut state = STATE.lock().map_err(|e| format!("lock: {e}"))?;
     *state = Some(VaultState { master_key, keys });
     Ok(())
@@ -134,14 +147,18 @@ pub fn init() -> Result<(), String> {
 pub fn get_key(provider_id: &str) -> Result<Zeroizing<String>, String> {
     let state = STATE.lock().map_err(|e| format!("lock: {e}"))?;
     let s = state.as_ref().ok_or("vault not initialized")?;
-    s.keys.get(provider_id).cloned().ok_or_else(|| "clé non trouvée".to_string())
+    s.keys
+        .get(provider_id)
+        .cloned()
+        .ok_or_else(|| "clé non trouvée".to_string())
 }
 
 pub fn set_key(provider_id: &str, key: &str) -> Result<(), String> {
     validate::validate_key_input(provider_id, key)?;
     let mut state = STATE.lock().map_err(|e| format!("lock: {e}"))?;
     let s = state.as_mut().ok_or("vault not initialized")?;
-    s.keys.insert(provider_id.to_string(), Zeroizing::new(key.to_string()));
+    s.keys
+        .insert(provider_id.to_string(), Zeroizing::new(key.to_string()));
     flush_vault(s)?;
     add_to_registry(provider_id)
 }
@@ -167,7 +184,8 @@ pub fn set_key_raw(key_id: &str, value: &str) -> Result<(), String> {
     if !s.keys.contains_key(key_id) && s.keys.len() >= MAX_VAULT_ENTRIES {
         return Err("limite d'entrées vault atteinte".to_string());
     }
-    s.keys.insert(key_id.to_string(), Zeroizing::new(value.to_string()));
+    s.keys
+        .insert(key_id.to_string(), Zeroizing::new(value.to_string()));
     flush_vault(s)
 }
 
@@ -183,7 +201,11 @@ pub fn delete_key_raw(key_id: &str) -> Result<(), String> {
 
 pub fn has_key(provider_id: &str) -> bool {
     let state = STATE.lock().ok();
-    state.as_ref().and_then(|s| s.as_ref()).map(|s| s.keys.contains_key(provider_id)).unwrap_or(false)
+    state
+        .as_ref()
+        .and_then(|s| s.as_ref())
+        .map(|s| s.keys.contains_key(provider_id))
+        .unwrap_or(false)
 }
 
 pub fn list_configured() -> Vec<String> {
@@ -216,7 +238,10 @@ pub fn get_raw(key: &str) -> Result<Zeroizing<String>, String> {
     let prefixed = format!("{RAW_PREFIX}{key}");
     let state = STATE.lock().map_err(|e| format!("lock: {e}"))?;
     let s = state.as_ref().ok_or("vault not initialized")?;
-    s.keys.get(&prefixed).cloned().ok_or_else(|| "clé non trouvée".to_string())
+    s.keys
+        .get(&prefixed)
+        .cloned()
+        .ok_or_else(|| "clé non trouvée".to_string())
 }
 
 pub fn delete_raw(key: &str) -> Result<(), String> {
@@ -237,20 +262,32 @@ pub async fn test_key(provider_id: &str) -> Result<(), String> {
         return p.test_connection().await.map_err(|e| e.to_string());
     }
     let key = get_key(provider_id)?;
-    let client = Client::builder().timeout(Duration::from_secs(10)).build()
+    let client = Client::builder()
+        .timeout(Duration::from_secs(10))
+        .build()
         .map_err(|e| format!("http client: {e}"))?;
     let resp = match provider_id {
-        "google" => client.get("https://generativelanguage.googleapis.com/v1beta/models")
+        "google" => client
+            .get("https://generativelanguage.googleapis.com/v1beta/models")
             .header("x-goog-api-key", key.as_str()),
-        "brave" => client.get("https://api.search.brave.com/res/v1/web/search?q=test&count=1")
+        "brave" => client
+            .get("https://api.search.brave.com/res/v1/web/search?q=test&count=1")
             .header("X-Subscription-Token", &*key),
-        "exa" => client.post("https://api.exa.ai/search").header("x-api-key", &*key)
+        "exa" => client
+            .post("https://api.exa.ai/search")
+            .header("x-api-key", &*key)
             .json(&serde_json::json!({ "query": "test", "numResults": 1 })),
-        "firecrawl" => client.get("https://api.firecrawl.dev/v2/team/credit-usage").bearer_auth(&*key),
-        "nixtla" => client.get("https://api.nixtla.io/models").bearer_auth(&*key),
+        "firecrawl" => client
+            .get("https://api.firecrawl.dev/v2/team/credit-usage")
+            .bearer_auth(&*key),
+        "nixtla" => client
+            .get("https://api.nixtla.io/models")
+            .bearer_auth(&*key),
         other => return Err(format!("Provider inconnu : {other}")),
     }
-    .send().await.map_err(|e| format!("network: {e}"))?;
+    .send()
+    .await
+    .map_err(|e| format!("network: {e}"))?;
     check_status(resp)
 }
 

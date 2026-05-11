@@ -77,7 +77,11 @@ pub(crate) fn get_lock() -> &'static RwLock<HashMap<String, ModelEntry>> {
             .ok()
             .and_then(|s| {
                 let map = parse_registry(&s);
-                if map.len() > 100 { Some(map) } else { None }
+                if map.len() > 100 {
+                    Some(map)
+                } else {
+                    None
+                }
             })
             .unwrap_or_else(|| parse_registry(EMBEDDED_JSON));
         RwLock::new(data)
@@ -167,10 +171,14 @@ pub async fn lookup(provider_id: &str, model_id: &str) -> Option<ModelCapabiliti
     let prefix = map_provider_prefix(provider_id);
 
     let key_prefixed = format!("{prefix}/{model_id}");
-    let entry = reg.get(&key_prefixed)
+    let entry = reg
+        .get(&key_prefixed)
         .or_else(|| reg.get(model_id))
         .or_else(|| {
-            let stripped = model_id.rsplit_once('/').map(|(_, n)| n).unwrap_or(model_id);
+            let stripped = model_id
+                .rsplit_once('/')
+                .map(|(_, n)| n)
+                .unwrap_or(model_id);
             let key2 = format!("{prefix}/{stripped}");
             reg.get(&key2).or_else(|| reg.get(stripped))
         })?;
@@ -194,13 +202,14 @@ pub async fn is_chat_model(provider_id: &str, model_id: &str) -> bool {
     let reg = get_lock().read().await;
     let prefix = map_provider_prefix(provider_id);
     let key = format!("{prefix}/{model_id}");
-    let entry = reg.get(&key)
-        .or_else(|| reg.get(model_id))
-        .or_else(|| {
-            let stripped = model_id.rsplit_once('/').map(|(_, n)| n).unwrap_or(model_id);
-            let key2 = format!("{prefix}/{stripped}");
-            reg.get(&key2).or_else(|| reg.get(stripped))
-        });
+    let entry = reg.get(&key).or_else(|| reg.get(model_id)).or_else(|| {
+        let stripped = model_id
+            .rsplit_once('/')
+            .map(|(_, n)| n)
+            .unwrap_or(model_id);
+        let key2 = format!("{prefix}/{stripped}");
+        reg.get(&key2).or_else(|| reg.get(stripped))
+    });
     match entry {
         Some(e) => is_chat_mode(e.mode.as_deref()),
         None => !is_non_chat_name(model_id),
@@ -218,9 +227,20 @@ pub(crate) fn is_body_size_ok(size: usize) -> bool {
 fn is_non_chat_name(model_id: &str) -> bool {
     let id = model_id.to_lowercase();
     let non_chat = [
-        "whisper", "dall-e", "tts", "embedding", "embed",
-        "moderation", "rerank", "lyria", "imagen", "veo",
-        "music", "sora", "gpt-image", "stable-diffusion",
+        "whisper",
+        "dall-e",
+        "tts",
+        "embedding",
+        "embed",
+        "moderation",
+        "rerank",
+        "lyria",
+        "imagen",
+        "veo",
+        "music",
+        "sora",
+        "gpt-image",
+        "stable-diffusion",
     ];
     non_chat.iter().any(|kw| id.contains(kw))
 }
@@ -228,4 +248,3 @@ fn is_non_chat_name(model_id: &str) -> bool {
 #[cfg(test)]
 #[path = "model_registry_tests.rs"]
 mod tests;
-

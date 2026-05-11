@@ -14,10 +14,18 @@ impl ParsedModelfile {
     pub fn to_api_payload(&self, model_name: &str) -> Value {
         let mut payload = json!({ "model": model_name });
         let obj = payload.as_object_mut().unwrap();
-        if let Some(v) = &self.from { obj.insert("from".into(), json!(v)); }
-        if let Some(v) = &self.system { obj.insert("system".into(), json!(v)); }
-        if let Some(v) = &self.template { obj.insert("template".into(), json!(v)); }
-        if let Some(v) = &self.license { obj.insert("license".into(), json!(v)); }
+        if let Some(v) = &self.from {
+            obj.insert("from".into(), json!(v));
+        }
+        if let Some(v) = &self.system {
+            obj.insert("system".into(), json!(v));
+        }
+        if let Some(v) = &self.template {
+            obj.insert("template".into(), json!(v));
+        }
+        if let Some(v) = &self.license {
+            obj.insert("license".into(), json!(v));
+        }
         if !self.parameters.is_empty() {
             obj.insert("parameters".into(), json!(self.parameters));
         }
@@ -90,10 +98,18 @@ pub fn parse_param_value(raw: &str) -> Value {
             return json!(stripped[..end].to_string());
         }
     }
-    if let Ok(i) = raw.parse::<i64>() { return json!(i); }
-    if let Ok(f) = raw.parse::<f64>() { return json!(f); }
-    if raw == "true" { return json!(true); }
-    if raw == "false" { return json!(false); }
+    if let Ok(i) = raw.parse::<i64>() {
+        return json!(i);
+    }
+    if let Ok(f) = raw.parse::<f64>() {
+        return json!(f);
+    }
+    if raw == "true" {
+        return json!(true);
+    }
+    if raw == "false" {
+        return json!(false);
+    }
     json!(raw)
 }
 

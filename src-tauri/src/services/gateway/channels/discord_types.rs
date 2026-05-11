@@ -97,7 +97,8 @@ impl DiscordMessage {
     }
 
     pub fn mentions_user(&self, user_id: &str) -> bool {
-        self.mentions.as_ref()
+        self.mentions
+            .as_ref()
             .map(|m| m.iter().any(|u| u.id == user_id))
             .unwrap_or(false)
     }
@@ -113,10 +114,18 @@ mod tests {
 
     #[test]
     fn bot_detection() {
-        let u = DiscordUser { id: "1".into(), username: "bot".into(), bot: Some(true) };
+        let u = DiscordUser {
+            id: "1".into(),
+            username: "bot".into(),
+            bot: Some(true),
+        };
         let msg = DiscordMessage {
-            id: "1".into(), channel_id: "c".into(), guild_id: None,
-            content: "hi".into(), author: u, mentions: None,
+            id: "1".into(),
+            channel_id: "c".into(),
+            guild_id: None,
+            content: "hi".into(),
+            author: u,
+            mentions: None,
         };
         assert!(msg.is_from_bot());
         assert!(msg.is_dm());
@@ -124,11 +133,23 @@ mod tests {
 
     #[test]
     fn mentions_detection() {
-        let author = DiscordUser { id: "1".into(), username: "alice".into(), bot: None };
-        let mentioned = DiscordUser { id: "99".into(), username: "mybot".into(), bot: Some(true) };
+        let author = DiscordUser {
+            id: "1".into(),
+            username: "alice".into(),
+            bot: None,
+        };
+        let mentioned = DiscordUser {
+            id: "99".into(),
+            username: "mybot".into(),
+            bot: Some(true),
+        };
         let msg = DiscordMessage {
-            id: "1".into(), channel_id: "c".into(), guild_id: Some("g".into()),
-            content: "hi <@99>".into(), author, mentions: Some(vec![mentioned]),
+            id: "1".into(),
+            channel_id: "c".into(),
+            guild_id: Some("g".into()),
+            content: "hi <@99>".into(),
+            author,
+            mentions: Some(vec![mentioned]),
         };
         assert!(msg.mentions_user("99"));
         assert!(!msg.mentions_user("100"));

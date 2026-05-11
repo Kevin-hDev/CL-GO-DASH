@@ -8,7 +8,8 @@ fn msg(role: &str, content: &str) -> ChatMessage {
         images: None,
         tool_calls: None,
         tool_name: None,
-        tool_call_id: None, reasoning_content: None,
+        tool_call_id: None,
+        reasoning_content: None,
     }
 }
 
@@ -91,10 +92,7 @@ fn apply_compression_preserves_system() {
 
 #[test]
 fn apply_compression_without_system() {
-    let mut messages = vec![
-        msg("user", "Hello"),
-        msg("assistant", "Hi"),
-    ];
+    let mut messages = vec![msg("user", "Hello"), msg("assistant", "Hi")];
     let pre = apply_compression(&mut messages, "Summary", true);
     assert_eq!(pre, 2);
     assert_eq!(messages.len(), 2); // boundary + summary (no system)
@@ -103,10 +101,7 @@ fn apply_compression_without_system() {
 
 #[test]
 fn build_request_excludes_system() {
-    let messages = vec![
-        msg("system", "Secret system prompt"),
-        msg("user", "Hello"),
-    ];
+    let messages = vec![msg("system", "Secret system prompt"), msg("user", "Hello")];
     let request = build_compression_request_content(&messages, None);
     assert!(request.iter().all(|m| m.content != "Secret system prompt"));
 }

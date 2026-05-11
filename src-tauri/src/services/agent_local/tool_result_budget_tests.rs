@@ -13,7 +13,8 @@ mod tests {
             images: None,
             tool_calls: None,
             tool_name: None,
-            tool_call_id: None, reasoning_content: None,
+            tool_call_id: None,
+            reasoning_content: None,
         }
     }
 
@@ -24,17 +25,15 @@ mod tests {
             images: None,
             tool_calls: None,
             tool_name: None,
-            tool_call_id: None, reasoning_content: None,
+            tool_call_id: None,
+            reasoning_content: None,
         }
     }
 
     /// Messages dont le total est sous le budget ne doivent pas être modifiés.
     #[test]
     fn under_budget_no_change() {
-        let mut msgs = vec![
-            tool_msg("résultat court"),
-            tool_msg("autre résultat court"),
-        ];
+        let mut msgs = vec![tool_msg("résultat court"), tool_msg("autre résultat court")];
         let original_0 = msgs[0].content.clone();
         let original_1 = msgs[1].content.clone();
 

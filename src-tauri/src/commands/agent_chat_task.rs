@@ -2,13 +2,13 @@ use crate::services::agent_local::agent_loop;
 use crate::services::agent_local::agent_md;
 use crate::services::agent_local::agent_settings;
 use crate::services::agent_local::chat_prompts::prepare_messages;
-use crate::services::personality_injection;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::tool_dispatcher;
 use crate::services::agent_local::tool_skill_loader;
 use crate::services::agent_local::types_ollama::ChatMessage;
 use crate::services::git_context::{self, GitSnapshot};
 use crate::services::llm;
+use crate::services::personality_injection;
 use tokio_util::sync::CancellationToken;
 
 fn permission_level(mode: &str) -> u8 {
@@ -77,7 +77,9 @@ async fn handle_compress_command(
     use crate::services::agent_local::types_session::AgentMessage;
     use crate::services::compress::{engine, prompt};
 
-    let _ = on_event.send(StreamEvent::Compressing { status: "start".to_string() });
+    let _ = on_event.send(StreamEvent::Compressing {
+        status: "start".to_string(),
+    });
 
     let msgs_without_command: Vec<ChatMessage> = messages
         .iter()
@@ -109,11 +111,11 @@ async fn handle_compress_command(
         images: None,
         tool_calls: None,
         tool_name: None,
-        tool_call_id: None, reasoning_content: None,
+        tool_call_id: None,
+        reasoning_content: None,
     };
-    let summary_tokens = crate::services::compress::token_estimate::estimate_tokens(
-        &[summary_chat_msg],
-    );
+    let summary_tokens =
+        crate::services::compress::token_estimate::estimate_tokens(&[summary_chat_msg]);
 
     let compressed_msg = AgentMessage {
         id: uuid::Uuid::new_v4().to_string(),
@@ -136,7 +138,9 @@ async fn handle_compress_command(
         let _ = session_store::save(&session).await;
     }
 
-    let _ = on_event.send(StreamEvent::Compressing { status: "done".to_string() });
+    let _ = on_event.send(StreamEvent::Compressing {
+        status: "done".to_string(),
+    });
     let _ = on_event.send(StreamEvent::CompressionComplete {});
     let _ = on_event.send(StreamEvent::Done {
         eval_count: 0,
@@ -165,20 +169,25 @@ pub(crate) async fn run_stream_task(
 ) -> Result<Vec<ChatMessage>, String> {
     use crate::services::agent_local::session_store;
 
-    let resolve_dir = |wd: &Option<String>, _session_id: &str| -> Result<std::path::PathBuf, String> {
-        if let Some(d) = wd.as_ref().filter(|s| !s.is_empty()) {
-            let p = std::path::PathBuf::from(d);
-            if p.is_dir() {
-                return p.canonicalize().map_err(|e| { eprintln!("[agent] canonicalize dir: {e}"); "Répertoire inaccessible".to_string() });
+    let resolve_dir =
+        |wd: &Option<String>, _session_id: &str| -> Result<std::path::PathBuf, String> {
+            if let Some(d) = wd.as_ref().filter(|s| !s.is_empty()) {
+                let p = std::path::PathBuf::from(d);
+                if p.is_dir() {
+                    return p.canonicalize().map_err(|e| {
+                        eprintln!("[agent] canonicalize dir: {e}");
+                        "Répertoire inaccessible".to_string()
+                    });
+                }
+                return Err(format!("Répertoire introuvable : {d}"));
             }
-            return Err(format!("Répertoire introuvable : {d}"));
-        }
-        Ok(dirs::home_dir().unwrap_or_else(|| std::env::current_dir().unwrap()))
-    };
+            Ok(dirs::home_dir().unwrap_or_else(|| std::env::current_dir().unwrap()))
+        };
 
     // Interception : /compress déclenche la compression manuelle
     if is_compress_command(&messages) {
-        handle_compress_command(&on_event, &session_id, &messages, &model, &provider, cancel).await?;
+        handle_compress_command(&on_event, &session_id, &messages, &model, &provider, cancel)
+            .await?;
         return Ok(messages);
     }
 
@@ -215,7 +224,8 @@ pub(crate) async fn run_stream_task(
         };
 
         let working_dir = resolve_dir(&working_dir, &session_id)?;
-        let _ = session_store::update_working_dir(&session_id, &working_dir.to_string_lossy()).await;
+        let _ =
+            session_store::update_working_dir(&session_id, &working_dir.to_string_lossy()).await;
         let snap = collect_git_snapshot(&working_dir).await;
         let mut msgs = messages;
         let agent_md_content = if is_chat || is_subagent {
@@ -269,11 +279,17 @@ pub(crate) async fn run_stream_task(
         let ctx = crate::services::compress::context_resolve::resolve_api(&provider, &model).await;
         let registry_caps = model_registry::lookup(&provider, &model).await;
         let model_supports_tools = supports_tools_hint.unwrap_or_else(|| {
-            registry_caps.as_ref().map(|c| c.supports_tools).unwrap_or(false)
+            registry_caps
+                .as_ref()
+                .map(|c| c.supports_tools)
+                .unwrap_or(false)
                 || tool_capable::supports_tools(&provider, &model)
         });
         let model_supports_thinking = supports_thinking_hint.unwrap_or_else(|| {
-            registry_caps.as_ref().map(|c| c.supports_thinking).unwrap_or(false)
+            registry_caps
+                .as_ref()
+                .map(|c| c.supports_thinking)
+                .unwrap_or(false)
                 || tool_capable::supports_thinking(&provider, &model)
         });
 
@@ -296,7 +312,8 @@ pub(crate) async fn run_stream_task(
         };
         let openai_tools = llm::agent_loop::convert_tools_to_openai(&final_tools);
         let working_dir = resolve_dir(&working_dir, &session_id)?;
-        let _ = session_store::update_working_dir(&session_id, &working_dir.to_string_lossy()).await;
+        let _ =
+            session_store::update_working_dir(&session_id, &working_dir.to_string_lossy()).await;
         let snap = collect_git_snapshot(&working_dir).await;
         let mut msgs = messages;
         if !model_supports_vision {
@@ -309,16 +326,17 @@ pub(crate) async fn run_stream_task(
             let personality = personality_injection::load_injected_contents();
             merge_personality(raw, personality)
         };
-        let skills_tuples: Vec<(String, String)> = if is_chat || is_subagent || !model_supports_tools {
-            vec![]
-        } else {
-            tool_skill_loader::list_skills()
-                .await
-                .unwrap_or_default()
-                .iter()
-                .map(|s| (s.name.clone(), s.description.clone()))
-                .collect()
-        };
+        let skills_tuples: Vec<(String, String)> =
+            if is_chat || is_subagent || !model_supports_tools {
+                vec![]
+            } else {
+                tool_skill_loader::list_skills()
+                    .await
+                    .unwrap_or_default()
+                    .iter()
+                    .map(|s| (s.name.clone(), s.description.clone()))
+                    .collect()
+            };
         let has_tools = is_chat || model_supports_tools;
         prepare_messages(
             &mut msgs,

@@ -6,11 +6,11 @@ use reqwest::Client;
 use tokio::sync::{mpsc, RwLock};
 use zeroize::Zeroizing;
 
+use super::telegram_types::*;
 use super::{
     capabilities::ChannelCapabilities, ChannelAdapter, ChannelContext, DeliveryReceipt,
     GatewayError, GatewayResult, InboundMessage, OutboundMessage,
 };
-use super::telegram_types::*;
 use crate::services::api_keys;
 
 pub struct TelegramAdapter {
@@ -48,11 +48,19 @@ impl TelegramAdapter {
             .map_err(|_| GatewayError::auth("token Telegram manquant dans le vault"))?;
 
         let url = Self::api_url(&token, "getMe");
-        let resp: TgResponse<TgUser> = self.client.get(&url)
-            .send().await.map_err(|e| GatewayError::network(format!("getMe: {e}")))?
-            .json().await.map_err(|e| GatewayError::network(format!("getMe parse: {e}")))?;
+        let resp: TgResponse<TgUser> = self
+            .client
+            .get(&url)
+            .send()
+            .await
+            .map_err(|e| GatewayError::network(format!("getMe: {e}")))?
+            .json()
+            .await
+            .map_err(|e| GatewayError::network(format!("getMe parse: {e}")))?;
 
-        let bot_user = resp.result.ok_or_else(|| GatewayError::auth("getMe échoué"))?;
+        let bot_user = resp
+            .result
+            .ok_or_else(|| GatewayError::auth("getMe échoué"))?;
         let username = bot_user.username.unwrap_or_default();
 
         let mut state = self.state.write().await;
@@ -67,7 +75,9 @@ impl TelegramAdapter {
     ) -> GatewayResult<Vec<TgUpdate>> {
         let (url, offset) = {
             let s = state.read().await;
-            let token = s.bot_token.as_ref()
+            let token = s
+                .bot_token
+                .as_ref()
                 .ok_or_else(|| GatewayError::auth("pas de token"))?;
             (Self::api_url(token, "getUpdates"), s.last_offset)
         };
@@ -87,7 +97,9 @@ impl TelegramAdapter {
             return Err(GatewayError::network("conflit 409 — un autre poller actif"));
         }
 
-        let body: TgResponse<Vec<TgUpdate>> = resp.json().await
+        let body: TgResponse<Vec<TgUpdate>> = resp
+            .json()
+            .await
             .map_err(|e| GatewayError::network(format!("parse: {e}")))?;
 
         let updates = body.result.unwrap_or_default();
@@ -125,13 +137,18 @@ impl TelegramAdapter {
 
 #[async_trait]
 impl ChannelAdapter for TelegramAdapter {
-    fn id(&self) -> &'static str { "telegram" }
+    fn id(&self) -> &'static str {
+        "telegram"
+    }
 
     fn capabilities(&self) -> ChannelCapabilities {
         ChannelCapabilities::telegram()
     }
 
-    async fn validate_config(&self, cfg: &crate::models::ChannelAccountConfig) -> GatewayResult<()> {
+    async fn validate_config(
+        &self,
+        cfg: &crate::models::ChannelAccountConfig,
+    ) -> GatewayResult<()> {
         let vault_key = format!("gateway.telegram.{}", cfg.account_id);
         if !api_keys::has_key(&format!("raw:{vault_key}")) {
             return Err(GatewayError::auth("token Telegram non configuré"));
@@ -176,7 +193,9 @@ impl ChannelAdapter for TelegramAdapter {
 
     async fn send(&self, msg: OutboundMessage) -> GatewayResult<DeliveryReceipt> {
         let state = self.state.read().await;
-        let token = state.bot_token.as_ref()
+        let token = state
+            .bot_token
+            .as_ref()
             .ok_or_else(|| GatewayError::auth("pas de token"))?;
         let url = Self::api_url(token, "sendMessage");
 
@@ -185,12 +204,21 @@ impl ChannelAdapter for TelegramAdapter {
             body["reply_to_message_id"] = serde_json::Value::String(r.clone());
         }
 
-        let resp: TgResponse<TgSentMessage> = self.client.post(&url).json(&body)
-            .send().await.map_err(|e| GatewayError::network(format!("send: {e}")))?
-            .json().await.map_err(|e| GatewayError::network(format!("parse: {e}")))?;
+        let resp: TgResponse<TgSentMessage> = self
+            .client
+            .post(&url)
+            .json(&body)
+            .send()
+            .await
+            .map_err(|e| GatewayError::network(format!("send: {e}")))?
+            .json()
+            .await
+            .map_err(|e| GatewayError::network(format!("parse: {e}")))?;
 
         match resp.result {
-            Some(s) => Ok(DeliveryReceipt { message_id: s.message_id.to_string() }),
+            Some(s) => Ok(DeliveryReceipt {
+                message_id: s.message_id.to_string(),
+            }),
             None => Err(GatewayError::network(resp.description.unwrap_or_default())),
         }
     }

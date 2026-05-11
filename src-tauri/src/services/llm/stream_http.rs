@@ -37,8 +37,9 @@ pub async fn post_chat_request(cfg: &RequestConfig<'_>) -> Result<reqwest::Respo
     }
     let spec = catalog::find(cfg.provider_id)
         .ok_or_else(|| RequestError::Fatal(format!("provider inconnu : {}", cfg.provider_id)))?;
-    let key = api_keys::get_key(cfg.provider_id)
-        .map_err(|_| RequestError::Fatal(format!("clé API non configurée pour {}", spec.display_name)))?;
+    let key = api_keys::get_key(cfg.provider_id).map_err(|_| {
+        RequestError::Fatal(format!("clé API non configurée pour {}", spec.display_name))
+    })?;
     let url = format!("{}/chat/completions", spec.base_url);
     let openai_messages = messages_to_openai(cfg.messages, cfg.provider_id);
 
@@ -87,7 +88,9 @@ pub async fn post_chat_request(cfg: &RequestConfig<'_>) -> Result<reqwest::Respo
         .json(&payload)
         .send()
         .await
-        .map_err(|e| RequestError::Fatal(format!("Connexion {} échouée: {e}", spec.display_name)))?;
+        .map_err(|e| {
+            RequestError::Fatal(format!("Connexion {} échouée: {e}", spec.display_name))
+        })?;
 
     if matches!(cfg.provider_id, "groq" | "xai") {
         super::quota::update_ratelimit_headers(cfg.provider_id, resp.headers());
@@ -96,7 +99,11 @@ pub async fn post_chat_request(cfg: &RequestConfig<'_>) -> Result<reqwest::Respo
     let status = resp.status();
     if !status.is_success() {
         let body = resp.text().await.unwrap_or_default();
-        eprintln!("[llm stream] HTTP {} — {}", status, super::sanitize_log_body(&body));
+        eprintln!(
+            "[llm stream] HTTP {} — {}",
+            status,
+            super::sanitize_log_body(&body)
+        );
         return Err(classify_error(status.as_u16(), &body, spec.display_name));
     }
     Ok(resp)

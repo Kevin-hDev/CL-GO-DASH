@@ -7,7 +7,10 @@ pub struct CircuitBreaker {
 
 impl CircuitBreaker {
     pub fn new() -> Self {
-        Self { last_signature: None, consecutive_count: 0 }
+        Self {
+            last_signature: None,
+            consecutive_count: 0,
+        }
     }
 
     pub fn check(&mut self, tool_calls: &[(String, serde_json::Value)]) -> Result<(), String> {

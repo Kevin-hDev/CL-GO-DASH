@@ -21,15 +21,17 @@ struct RegistryState {
     run_ids: HashMap<String, String>,
 }
 
-static REGISTRY: LazyLock<Mutex<RegistryState>> =
-    LazyLock::new(|| Mutex::new(RegistryState {
+static REGISTRY: LazyLock<Mutex<RegistryState>> = LazyLock::new(|| {
+    Mutex::new(RegistryState {
         entries: HashMap::new(),
         run_ids: HashMap::new(),
-    }));
+    })
+});
 
 pub async fn get_or_create_run_id(parent_id: &str) -> String {
     let mut state = REGISTRY.lock().await;
-    state.run_ids
+    state
+        .run_ids
         .entry(parent_id.to_string())
         .or_insert_with(|| uuid::Uuid::new_v4().to_string())
         .clone()
@@ -46,12 +48,18 @@ pub async fn register(
     if state.entries.len() >= MAX_TOTAL {
         return Err(format!("Limite de {MAX_TOTAL} sous-agents actifs atteinte"));
     }
-    let parent_count = state.entries.values()
-        .filter(|e| e.parent_session_id == parent_id).count();
+    let parent_count = state
+        .entries
+        .values()
+        .filter(|e| e.parent_session_id == parent_id)
+        .count();
     if parent_count >= MAX_PER_PARENT {
-        return Err(format!("Limite de {MAX_PER_PARENT} sous-agents par session atteinte"));
+        return Err(format!(
+            "Limite de {MAX_PER_PARENT} sous-agents par session atteinte"
+        ));
     }
-    let run_id = state.run_ids
+    let run_id = state
+        .run_ids
         .entry(parent_id.to_string())
         .or_insert_with(|| uuid::Uuid::new_v4().to_string())
         .clone();
@@ -73,7 +81,9 @@ pub async fn unregister(child_id: &str) {
     let mut state = REGISTRY.lock().await;
     if let Some(entry) = state.entries.remove(child_id) {
         let parent = &entry.parent_session_id;
-        let remaining = state.entries.values()
+        let remaining = state
+            .entries
+            .values()
             .any(|e| e.parent_session_id == *parent);
         if !remaining {
             state.run_ids.remove(parent);
@@ -82,14 +92,23 @@ pub async fn unregister(child_id: &str) {
 }
 
 pub async fn list_for_parent(parent_id: &str) -> Vec<SubagentEntry> {
-    REGISTRY.lock().await.entries.values()
+    REGISTRY
+        .lock()
+        .await
+        .entries
+        .values()
         .filter(|e| e.parent_session_id == parent_id)
         .cloned()
         .collect()
 }
 
 pub async fn get_run_id_for_child(child_id: &str) -> Option<String> {
-    REGISTRY.lock().await.entries.get(child_id).map(|e| e.run_id.clone())
+    REGISTRY
+        .lock()
+        .await
+        .entries
+        .get(child_id)
+        .map(|e| e.run_id.clone())
 }
 
 pub async fn cancel_one(child_id: &str) -> bool {

@@ -10,7 +10,11 @@ static ACTIVE_PORT: AtomicU16 = AtomicU16::new(0);
 
 pub fn get_port() -> u16 {
     let port = ACTIVE_PORT.load(Ordering::Relaxed);
-    if port == 0 { DEFAULT_PORT } else { port }
+    if port == 0 {
+        DEFAULT_PORT
+    } else {
+        port
+    }
 }
 
 pub fn set_port(port: u16) {
@@ -60,7 +64,9 @@ fn verify_ollama_api(port: u16) -> bool {
                     .build()
                     .ok()?;
                 let resp = client.get(&url).send().await.ok()?;
-                if !resp.status().is_success() { return None; }
+                if !resp.status().is_success() {
+                    return None;
+                }
                 let json: serde_json::Value = resp.json().await.ok()?;
                 json["version"].as_str().map(|_| true)
             })

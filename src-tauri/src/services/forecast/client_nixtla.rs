@@ -1,4 +1,6 @@
-use crate::services::forecast::types::{ForecastRequest, ForecastResult, InputSummary, Prediction, Quantiles};
+use crate::services::forecast::types::{
+    ForecastRequest, ForecastResult, InputSummary, Prediction, Quantiles,
+};
 use chrono::Utc;
 use serde_json::Value;
 use uuid::Uuid;
@@ -63,8 +65,8 @@ fn parse_input_data(request: &ForecastRequest) -> Result<Vec<(String, f64)>, Str
         .as_ref()
         .ok_or("Données requises pour Nixtla (pas de fichier local supporté)")?;
 
-    let arr: Vec<Value> = serde_json::from_str(json_str)
-        .map_err(|e| format!("Données JSON invalides: {e}"))?;
+    let arr: Vec<Value> =
+        serde_json::from_str(json_str).map_err(|e| format!("Données JSON invalides: {e}"))?;
 
     let mut points = Vec::with_capacity(arr.len());
     for item in &arr {
@@ -83,10 +85,7 @@ fn parse_input_data(request: &ForecastRequest) -> Result<Vec<(String, f64)>, Str
     Ok(points)
 }
 
-fn build_payload(
-    data: &[(String, f64)],
-    request: &ForecastRequest,
-) -> Result<Value, String> {
+fn build_payload(data: &[(String, f64)], request: &ForecastRequest) -> Result<Value, String> {
     let timestamps: Vec<&str> = data.iter().map(|(d, _)| d.as_str()).collect();
     let values: Vec<f64> = data.iter().map(|(_, v)| *v).collect();
 
@@ -124,10 +123,7 @@ fn parse_response(
 
     let q50: Vec<f64> = predictions.iter().map(|p| p.value).collect();
 
-    let model_name = request
-        .model
-        .as_deref()
-        .unwrap_or("timegpt-2-standard");
+    let model_name = request.model.as_deref().unwrap_or("timegpt-2-standard");
 
     Ok(ForecastResult {
         id: Uuid::new_v4().to_string(),

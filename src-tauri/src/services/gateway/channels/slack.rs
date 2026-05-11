@@ -8,11 +8,11 @@ use tokio::sync::{mpsc, RwLock};
 use tokio_tungstenite::tungstenite::Message as WsMessage;
 use zeroize::Zeroizing;
 
+use super::slack_types::*;
 use super::{
     capabilities::ChannelCapabilities, ChannelAdapter, ChannelContext, DeliveryReceipt,
     GatewayError, GatewayResult, InboundMessage, OutboundMessage,
 };
-use super::slack_types::*;
 use crate::services::api_keys;
 use crate::services::gateway::types::ChannelKey;
 
@@ -29,7 +29,10 @@ struct SlackState {
 impl SlackAdapter {
     pub fn new() -> Self {
         Self {
-            client: Client::builder().timeout(Duration::from_secs(30)).build().expect("http client"),
+            client: Client::builder()
+                .timeout(Duration::from_secs(30))
+                .build()
+                .expect("http client"),
             state: Arc::new(RwLock::new(SlackState {
                 app_token: None,
                 bot_token: None,
@@ -52,13 +55,20 @@ impl SlackAdapter {
         let resp: SlackSocketUrl = client
             .post("https://slack.com/api/apps.connections.open")
             .bearer_auth(app_token)
-            .send().await.map_err(|e| GatewayError::network(format!("ws url: {e}")))?
-            .json().await.map_err(|e| GatewayError::network(format!("parse: {e}")))?;
-        resp.url.ok_or_else(|| GatewayError::auth(resp.error.unwrap_or_default()))
+            .send()
+            .await
+            .map_err(|e| GatewayError::network(format!("ws url: {e}")))?
+            .json()
+            .await
+            .map_err(|e| GatewayError::network(format!("parse: {e}")))?;
+        resp.url
+            .ok_or_else(|| GatewayError::auth(resp.error.unwrap_or_default()))
     }
 
     fn to_inbound(evt: &SlackEvent, key: &ChannelKey) -> Option<InboundMessage> {
-        if !evt.is_user_message() { return None; }
+        if !evt.is_user_message() {
+            return None;
+        }
         Some(InboundMessage {
             channel_key: key.clone(),
             user_id: evt.user.clone()?,
@@ -73,11 +83,18 @@ impl SlackAdapter {
 
 #[async_trait]
 impl ChannelAdapter for SlackAdapter {
-    fn id(&self) -> &'static str { "slack" }
+    fn id(&self) -> &'static str {
+        "slack"
+    }
 
-    fn capabilities(&self) -> ChannelCapabilities { ChannelCapabilities::slack() }
+    fn capabilities(&self) -> ChannelCapabilities {
+        ChannelCapabilities::slack()
+    }
 
-    async fn validate_config(&self, cfg: &crate::models::ChannelAccountConfig) -> GatewayResult<()> {
+    async fn validate_config(
+        &self,
+        cfg: &crate::models::ChannelAccountConfig,
+    ) -> GatewayResult<()> {
         let prefix = format!("gateway.slack.{}", cfg.account_id);
         if !api_keys::has_key(&format!("raw:{prefix}.bot")) {
             return Err(GatewayError::auth("token bot Slack non configuré"));
@@ -89,9 +106,12 @@ impl ChannelAdapter for SlackAdapter {
     }
 
     async fn start(
-        &self, ctx: ChannelContext, sender: mpsc::Sender<InboundMessage>,
+        &self,
+        ctx: ChannelContext,
+        sender: mpsc::Sender<InboundMessage>,
     ) -> GatewayResult<tokio::task::JoinHandle<()>> {
-        self.load_tokens(&format!("gateway.slack.{}", ctx.key.account_id)).await?;
+        self.load_tokens(&format!("gateway.slack.{}", ctx.key.account_id))
+            .await?;
         let state = self.state.clone();
         let client = self.client.clone();
         let cancel = ctx.cancel;
@@ -99,16 +119,29 @@ impl ChannelAdapter for SlackAdapter {
 
         Ok(tokio::spawn(async move {
             loop {
-                if cancel.is_cancelled() { break; }
+                if cancel.is_cancelled() {
+                    break;
+                }
                 let app_token = {
                     let s = state.read().await;
-                    match &s.app_token { Some(t) => t.clone(), None => break }
+                    match &s.app_token {
+                        Some(t) => t.clone(),
+                        None => break,
+                    }
                 };
                 let ws_url = match Self::get_ws_url(&client, &app_token).await {
-                    Ok(u) => u, Err(_) => { tokio::time::sleep(Duration::from_secs(10)).await; continue; }
+                    Ok(u) => u,
+                    Err(_) => {
+                        tokio::time::sleep(Duration::from_secs(10)).await;
+                        continue;
+                    }
                 };
                 let ws = match tokio_tungstenite::connect_async(&ws_url).await {
-                    Ok((s, _)) => s, Err(_) => { tokio::time::sleep(Duration::from_secs(5)).await; continue; }
+                    Ok((s, _)) => s,
+                    Err(_) => {
+                        tokio::time::sleep(Duration::from_secs(5)).await;
+                        continue;
+                    }
                 };
                 let (mut sink, mut stream) = ws.split();
                 loop {
@@ -138,18 +171,25 @@ impl ChannelAdapter for SlackAdapter {
     async fn send(&self, msg: OutboundMessage) -> GatewayResult<DeliveryReceipt> {
         let token = {
             let s = self.state.read().await;
-            s.bot_token.clone().ok_or_else(|| GatewayError::auth("pas de token bot"))?
+            s.bot_token
+                .clone()
+                .ok_or_else(|| GatewayError::auth("pas de token bot"))?
         };
         let body = serde_json::json!({
             "channel": msg.chat_id,
             "text": msg.content,
         });
-        let resp: SlackPostResponse = self.client
+        let resp: SlackPostResponse = self
+            .client
             .post("https://slack.com/api/chat.postMessage")
             .bearer_auth(token.as_str())
             .json(&body)
-            .send().await.map_err(|e| GatewayError::network(format!("send: {e}")))?
-            .json().await.map_err(|e| GatewayError::network(format!("parse: {e}")))?;
+            .send()
+            .await
+            .map_err(|e| GatewayError::network(format!("send: {e}")))?
+            .json()
+            .await
+            .map_err(|e| GatewayError::network(format!("parse: {e}")))?;
 
         match resp.ts {
             Some(ts) => Ok(DeliveryReceipt { message_id: ts }),

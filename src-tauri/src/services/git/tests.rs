@@ -11,14 +11,20 @@ fn test_create_branch_rejects_dotdot() {
 fn test_create_branch_rejects_null_byte() {
     let tmp = std::env::temp_dir();
     let result = branch::create_branch(&tmp, "branch\0evil");
-    assert!(result.is_err(), "branch name with null byte must be rejected");
+    assert!(
+        result.is_err(),
+        "branch name with null byte must be rejected"
+    );
 }
 
 #[test]
 fn test_create_branch_rejects_leading_dash() {
     let tmp = std::env::temp_dir();
     let result = branch::create_branch(&tmp, "-evil");
-    assert!(result.is_err(), "branch name starting with '-' must be rejected");
+    assert!(
+        result.is_err(),
+        "branch name starting with '-' must be rejected"
+    );
 }
 
 #[test]
@@ -33,14 +39,20 @@ fn test_create_branch_rejects_too_long() {
     let tmp = std::env::temp_dir();
     let name = "a".repeat(101);
     let result = branch::create_branch(&tmp, &name);
-    assert!(result.is_err(), "branch name over 100 chars must be rejected");
+    assert!(
+        result.is_err(),
+        "branch name over 100 chars must be rejected"
+    );
 }
 
 #[test]
 fn test_create_branch_rejects_backslash() {
     let tmp = std::env::temp_dir();
     let result = branch::create_branch(&tmp, "foo\\bar");
-    assert!(result.is_err(), "branch name with backslash must be rejected");
+    assert!(
+        result.is_err(),
+        "branch name with backslash must be rejected"
+    );
 }
 
 #[test]
@@ -54,14 +66,20 @@ fn test_checkout_rejects_dotdot() {
 fn test_checkout_rejects_null_byte() {
     let tmp = std::env::temp_dir();
     let result = branch::checkout_branch(&tmp, "branch\0evil");
-    assert!(result.is_err(), "branch name with null byte must be rejected");
+    assert!(
+        result.is_err(),
+        "branch name with null byte must be rejected"
+    );
 }
 
 #[test]
 fn test_checkout_rejects_backslash() {
     let tmp = std::env::temp_dir();
     let result = branch::checkout_branch(&tmp, "foo\\bar");
-    assert!(result.is_err(), "branch name with backslash must be rejected");
+    assert!(
+        result.is_err(),
+        "branch name with backslash must be rejected"
+    );
 }
 
 #[test]
@@ -75,7 +93,10 @@ fn test_get_context_non_git_dir() {
 fn test_list_branches_non_git_dir() {
     let tmp = std::env::temp_dir();
     let result = branch::list_branches(&tmp);
-    assert!(result.is_err(), "listing branches on non-git dir should fail");
+    assert!(
+        result.is_err(),
+        "listing branches on non-git dir should fail"
+    );
 }
 
 #[test]
@@ -131,21 +152,30 @@ fn test_create_branch_rejects_at_brace() {
 fn test_create_branch_rejects_dot_lock_suffix() {
     let tmp = std::env::temp_dir();
     let result = branch::create_branch(&tmp, "feat.lock");
-    assert!(result.is_err(), "branch name ending with '.lock' must be rejected");
+    assert!(
+        result.is_err(),
+        "branch name ending with '.lock' must be rejected"
+    );
 }
 
 #[test]
 fn test_create_branch_rejects_leading_dot() {
     let tmp = std::env::temp_dir();
     let result = branch::create_branch(&tmp, ".hidden");
-    assert!(result.is_err(), "branch name starting with '.' must be rejected");
+    assert!(
+        result.is_err(),
+        "branch name starting with '.' must be rejected"
+    );
 }
 
 #[test]
 fn test_create_branch_rejects_trailing_slash() {
     let tmp = std::env::temp_dir();
     let result = branch::create_branch(&tmp, "feat/");
-    assert!(result.is_err(), "branch name ending with '/' must be rejected");
+    assert!(
+        result.is_err(),
+        "branch name ending with '/' must be rejected"
+    );
 }
 
 #[test]
@@ -159,14 +189,20 @@ fn test_create_branch_rejects_double_slash() {
 fn test_create_branch_rejects_control_chars() {
     let tmp = std::env::temp_dir();
     let result = branch::create_branch(&tmp, "feat\x01bad");
-    assert!(result.is_err(), "branch name with control chars must be rejected");
+    assert!(
+        result.is_err(),
+        "branch name with control chars must be rejected"
+    );
 }
 
 #[test]
 fn test_create_branch_rejects_del_char() {
     let tmp = std::env::temp_dir();
     let result = branch::create_branch(&tmp, "feat\x7fbad");
-    assert!(result.is_err(), "branch name with DEL char must be rejected");
+    assert!(
+        result.is_err(),
+        "branch name with DEL char must be rejected"
+    );
 }
 
 #[test]
@@ -180,12 +216,18 @@ fn test_create_branch_rejects_empty() {
 fn test_create_branch_rejects_dot_segment() {
     let tmp = std::env::temp_dir();
     let result = branch::create_branch(&tmp, "feat/.hidden");
-    assert!(result.is_err(), "branch with segment starting with '.' must be rejected");
+    assert!(
+        result.is_err(),
+        "branch with segment starting with '.' must be rejected"
+    );
 }
 
 #[test]
 fn test_create_branch_rejects_trailing_dot_segment() {
     let tmp = std::env::temp_dir();
     let result = branch::create_branch(&tmp, "feat/bad./next");
-    assert!(result.is_err(), "branch with segment ending with '.' must be rejected");
+    assert!(
+        result.is_err(),
+        "branch with segment ending with '.' must be rejected"
+    );
 }

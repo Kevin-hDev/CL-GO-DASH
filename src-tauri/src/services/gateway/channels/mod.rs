@@ -13,8 +13,8 @@ use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
 
 use super::types::ChannelKey;
-use capabilities::ChannelCapabilities;
 use crate::models::ChannelAccountConfig;
+use capabilities::ChannelCapabilities;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InboundMessage {
@@ -62,11 +62,17 @@ impl std::fmt::Display for GatewayError {
 
 impl GatewayError {
     pub fn network(msg: impl Into<String>) -> Self {
-        Self { message: msg.into(), is_auth: false }
+        Self {
+            message: msg.into(),
+            is_auth: false,
+        }
     }
 
     pub fn auth(msg: impl Into<String>) -> Self {
-        Self { message: msg.into(), is_auth: true }
+        Self {
+            message: msg.into(),
+            is_auth: true,
+        }
     }
 }
 

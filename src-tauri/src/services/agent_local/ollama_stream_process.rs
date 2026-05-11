@@ -44,7 +44,14 @@ pub fn process_chunk(
 
     if let Some(content) = msg["content"].as_str() {
         if !content.is_empty() {
-            emit_filtered(think_filter, content, on_event, token_count, first_token, result);
+            emit_filtered(
+                think_filter,
+                content,
+                on_event,
+                token_count,
+                first_token,
+                result,
+            );
         }
     }
 
@@ -133,7 +140,11 @@ pub fn emit_done(on_event: &AgentEventEmitter, chunk: &serde_json::Value) -> Res
     let ec = chunk["eval_count"].as_u64().unwrap_or(0) as u32;
     let ed = chunk["eval_duration"].as_u64().unwrap_or(1);
     let pt = chunk["prompt_eval_count"].as_u64().unwrap_or(0) as u32;
-    let final_tps = if ed > 0 { ec as f64 / (ed as f64 / 1e9) } else { 0.0 };
+    let final_tps = if ed > 0 {
+        ec as f64 / (ed as f64 / 1e9)
+    } else {
+        0.0
+    };
 
     let _ = on_event.send(StreamEvent::Done {
         eval_count: ec,

@@ -60,7 +60,10 @@ pub fn codex_models() -> Vec<ModelInfo> {
 #[tauri::command]
 pub fn codex_set_effort(level: String) -> Result<(), String> {
     if !CODEX_EFFORT_LEVELS.contains(&level.as_str()) {
-        return Err(format!("niveau invalide, valeurs possibles : {:?}", CODEX_EFFORT_LEVELS));
+        return Err(format!(
+            "niveau invalide, valeurs possibles : {:?}",
+            CODEX_EFFORT_LEVELS
+        ));
     }
     request::set_effort(&level);
     Ok(())

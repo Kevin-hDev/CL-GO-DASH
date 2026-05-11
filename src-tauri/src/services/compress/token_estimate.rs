@@ -37,7 +37,8 @@ mod tests {
             images: None,
             tool_calls: None,
             tool_name: None,
-            tool_call_id: None, reasoning_content: None,
+            tool_call_id: None,
+            reasoning_content: None,
         }
     }
 

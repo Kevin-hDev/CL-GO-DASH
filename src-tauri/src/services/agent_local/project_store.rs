@@ -33,8 +33,7 @@ async fn write_atomic(projects: &[Project]) -> Result<(), String> {
             .map_err(|e| e.to_string())?;
     }
     let tmp = path.with_extension("json.tmp");
-    let data =
-        serde_json::to_string_pretty(projects).map_err(|e| format!("Serialize: {e}"))?;
+    let data = serde_json::to_string_pretty(projects).map_err(|e| format!("Serialize: {e}"))?;
     tokio::fs::write(&tmp, &data)
         .await
         .map_err(|e| format!("Write tmp: {e}"))?;

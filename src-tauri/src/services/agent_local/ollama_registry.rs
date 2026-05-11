@@ -1,5 +1,5 @@
-use crate::services::agent_local::types_ollama::{PullProgress, RegistryModel};
 use crate::services::agent_local::ollama_base_url;
+use crate::services::agent_local::types_ollama::{PullProgress, RegistryModel};
 use futures_util::StreamExt;
 use reqwest::Client;
 use tauri::ipc::Channel;
@@ -48,7 +48,9 @@ fn parse_search_html(html: &str) -> Vec<RegistryModel> {
             if let Some(end) = after.find('"') {
                 let name = after[..end].to_string();
                 if !name.is_empty()
-                    && name.chars().all(|c| c.is_ascii_alphanumeric() || "._-".contains(c))
+                    && name
+                        .chars()
+                        .all(|c| c.is_ascii_alphanumeric() || "._-".contains(c))
                     && !models.iter().any(|m: &RegistryModel| m.name == name)
                 {
                     models.push(RegistryModel {
@@ -130,23 +132,33 @@ pub async fn pull_model(
 fn extract_digest(status: &str) -> Option<String> {
     let trimmed = status.strip_prefix("pulling ")?;
     let digest = trimmed.trim();
-    if digest.len() >= 12 { Some(digest.to_string()) } else { None }
+    if digest.len() >= 12 {
+        Some(digest.to_string())
+    } else {
+        None
+    }
 }
 
 pub fn cleanup_partial_blobs(digests: &[String]) -> usize {
-    if digests.is_empty() { return 0; }
+    if digests.is_empty() {
+        return 0;
+    }
 
     let blobs_dir = dirs::home_dir()
         .map(|h| h.join(".ollama/models/blobs"))
         .unwrap_or_default();
-    if !blobs_dir.is_dir() { return 0; }
+    if !blobs_dir.is_dir() {
+        return 0;
+    }
 
     let mut count = 0;
     if let Ok(entries) = std::fs::read_dir(&blobs_dir) {
         for entry in entries.flatten() {
             let name = entry.file_name();
             let name_str = name.to_string_lossy();
-            if !name_str.contains("-partial") { continue; }
+            if !name_str.contains("-partial") {
+                continue;
+            }
             if digests.iter().any(|d| name_str.contains(d))
                 && std::fs::remove_file(entry.path()).is_ok()
             {
@@ -164,11 +176,17 @@ pub async fn delete_model(name: &str) -> Result<(), String> {
         .json(&serde_json::json!({ "model": name }))
         .send()
         .await
-        .map_err(|e| { eprintln!("[ollama] /api/delete: {e}"); "ollama-delete-error".to_string() })?;
+        .map_err(|e| {
+            eprintln!("[ollama] /api/delete: {e}");
+            "ollama-delete-error".to_string()
+        })?;
 
     if !resp.status().is_success() {
         let body = resp.text().await.unwrap_or_default();
-        eprintln!("[ollama] /api/delete failed: {}", &body[..body.len().min(200)]);
+        eprintln!(
+            "[ollama] /api/delete failed: {}",
+            &body[..body.len().min(200)]
+        );
         return Err("ollama-delete-error".into());
     }
     Ok(())

@@ -4,6 +4,7 @@ mod models;
 mod ollama_polling;
 mod services;
 mod storage_migration;
+mod storage_migration_files;
 mod tray;
 
 use services::agent_local::ollama_client::OllamaClient;

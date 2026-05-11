@@ -34,10 +34,7 @@ pub(crate) fn needs_from_override(from: Option<&str>) -> bool {
     }
 }
 
-pub(crate) fn build_model_from_tags(
-    m: &serde_json::Value,
-    info: Option<ModelInfo>,
-) -> OllamaModel {
+pub(crate) fn build_model_from_tags(m: &serde_json::Value, info: Option<ModelInfo>) -> OllamaModel {
     let name = m["name"].as_str().unwrap_or_default().to_string();
     let details = &m["details"];
     let digest_short: String = m["digest"]
@@ -47,14 +44,15 @@ pub(crate) fn build_model_from_tags(
         .chars()
         .take(12)
         .collect();
-    let is_customized = info.as_ref().is_some_and(|i| has_customizations(&i.modelfile));
+    let is_customized = info
+        .as_ref()
+        .is_some_and(|i| has_customizations(&i.modelfile));
     OllamaModel {
         name,
         size: m["size"].as_u64().unwrap_or(0),
-        family: info.as_ref().map_or_else(
-            || s(details, "family"),
-            |i| i.family.clone(),
-        ),
+        family: info
+            .as_ref()
+            .map_or_else(|| s(details, "family"), |i| i.family.clone()),
         parameter_size: info.as_ref().map_or_else(
             || s(details, "parameter_size"),
             |i| i.parameter_size.clone(),
@@ -63,13 +61,12 @@ pub(crate) fn build_model_from_tags(
             || s(details, "quantization_level"),
             |i| i.quantization.clone(),
         ),
-        architecture: info.as_ref().map_or_else(String::new, |i| i.architecture.clone()),
+        architecture: info
+            .as_ref()
+            .map_or_else(String::new, |i| i.architecture.clone()),
         is_moe: info.as_ref().is_some_and(|i| i.is_moe),
         context_length: info.as_ref().map_or(0, |i| i.context_length),
-        capabilities: info.map_or_else(
-            || vec!["completion".to_string()],
-            |i| i.capabilities,
-        ),
+        capabilities: info.map_or_else(|| vec!["completion".to_string()], |i| i.capabilities),
         digest_short,
         aliases: Vec::new(),
         is_customized,
@@ -119,7 +116,11 @@ pub(crate) fn parse_show_response(name: &str, json: &serde_json::Value) -> Model
 fn parse_capabilities(json: &serde_json::Value) -> Vec<String> {
     json["capabilities"]
         .as_array()
-        .map(|a| a.iter().filter_map(|v| v.as_str().map(String::from)).collect())
+        .map(|a| {
+            a.iter()
+                .filter_map(|v| v.as_str().map(String::from))
+                .collect()
+        })
         .unwrap_or_else(|| vec!["completion".to_string()])
 }
 

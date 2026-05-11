@@ -59,14 +59,26 @@ fn fetch_ratelimit(provider_id: &str) -> Option<ProviderQuota> {
     let entry = cache.get(provider_id)?;
     let remaining_req = entry.get("x-ratelimit-remaining-requests")?;
     let limit_req = entry.get("x-ratelimit-limit-requests")?;
-    let remaining_tok = entry.get("x-ratelimit-remaining-tokens").cloned().unwrap_or_default();
-    let limit_tok = entry.get("x-ratelimit-limit-tokens").cloned().unwrap_or_default();
+    let remaining_tok = entry
+        .get("x-ratelimit-remaining-tokens")
+        .cloned()
+        .unwrap_or_default();
+    let limit_tok = entry
+        .get("x-ratelimit-limit-tokens")
+        .cloned()
+        .unwrap_or_default();
     let label = if !remaining_tok.is_empty() {
-        format!("{}/{} req · {}/{} tokens", remaining_req, limit_req, remaining_tok, limit_tok)
+        format!(
+            "{}/{} req · {}/{} tokens",
+            remaining_req, limit_req, remaining_tok, limit_tok
+        )
     } else {
         format!("{}/{} requêtes restantes", remaining_req, limit_req)
     };
-    Some(ProviderQuota { available: remaining_req != "0", label })
+    Some(ProviderQuota {
+        available: remaining_req != "0",
+        label,
+    })
 }
 
 async fn fetch_deepseek() -> Option<ProviderQuota> {
@@ -78,13 +90,23 @@ async fn fetch_deepseek() -> Option<ProviderQuota> {
         .send()
         .await
         .ok()?;
-    if !resp.status().is_success() { return None; }
+    if !resp.status().is_success() {
+        return None;
+    }
     let body: serde_json::Value = resp.json().await.ok()?;
     let infos = body["balance_infos"].as_array()?;
     let first = infos.first()?;
     let total: f64 = first["total_balance"].as_str()?.parse().ok()?;
-    let granted: f64 = first["granted_balance"].as_str().unwrap_or("0").parse().unwrap_or(0.0);
-    let topped: f64 = first["topped_up_balance"].as_str().unwrap_or("0").parse().unwrap_or(0.0);
+    let granted: f64 = first["granted_balance"]
+        .as_str()
+        .unwrap_or("0")
+        .parse()
+        .unwrap_or(0.0);
+    let topped: f64 = first["topped_up_balance"]
+        .as_str()
+        .unwrap_or("0")
+        .parse()
+        .unwrap_or(0.0);
     let currency = first["currency"].as_str().unwrap_or("USD");
     let label = format!(
         "{:.2} {} (crédits: {:.2}, rechargé: {:.2})",
@@ -105,7 +127,9 @@ async fn fetch_moonshot() -> Option<ProviderQuota> {
         .send()
         .await
         .ok()?;
-    if !resp.status().is_success() { return None; }
+    if !resp.status().is_success() {
+        return None;
+    }
     let body: serde_json::Value = resp.json().await.ok()?;
     let data = &body["data"];
     let available: f64 = data["available_balance"].as_f64().unwrap_or(0.0);
@@ -115,7 +139,10 @@ async fn fetch_moonshot() -> Option<ProviderQuota> {
         "¥{:.2} disponible (bon: ¥{:.2}, cash: ¥{:.2})",
         available, voucher, cash
     );
-    Some(ProviderQuota { available: available > 0.0, label })
+    Some(ProviderQuota {
+        available: available > 0.0,
+        label,
+    })
 }
 
 async fn fetch_openrouter() -> Option<ProviderQuota> {
@@ -127,7 +154,9 @@ async fn fetch_openrouter() -> Option<ProviderQuota> {
         .send()
         .await
         .ok()?;
-    if !resp.status().is_success() { return None; }
+    if !resp.status().is_success() {
+        return None;
+    }
     let body: serde_json::Value = resp.json().await.ok()?;
     let total: f64 = body["data"]["total_credits"].as_f64()?;
     let used: f64 = body["data"]["total_usage"].as_f64().unwrap_or(0.0);

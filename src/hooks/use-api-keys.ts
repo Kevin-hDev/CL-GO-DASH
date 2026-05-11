@@ -19,11 +19,12 @@ export function useApiKeys() {
   const [loading, setLoading] = useState(true);
 
   const loadCatalog = useCallback(async () => {
-    const [llm, search] = await Promise.all([
+    const [llm, search, forecast] = await Promise.all([
       invoke<ProviderSpec[]>("list_llm_providers_catalog"),
       invoke<ProviderSpec[]>("list_search_providers_catalog"),
+      invoke<ProviderSpec[]>("list_forecast_providers_catalog"),
     ]);
-    setCatalog([...llm, ...search]);
+    setCatalog([...llm, ...search, ...forecast.filter((p) => p.id === "nixtla")]);
   }, []);
 
   const loadConfigured = useCallback(async () => {

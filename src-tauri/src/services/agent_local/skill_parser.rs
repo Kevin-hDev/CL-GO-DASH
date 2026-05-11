@@ -22,7 +22,13 @@ pub fn parse_skill_content(content: &str, fallback_name: &str) -> (String, Strin
             let rest = &after_open[pos + 4..];
             (yaml.trim(), rest.trim())
         }
-        None => return (fallback_name.to_string(), String::new(), trimmed.to_string()),
+        None => {
+            return (
+                fallback_name.to_string(),
+                String::new(),
+                trimmed.to_string(),
+            )
+        }
     };
 
     let mut name = String::new();
@@ -103,8 +109,7 @@ mod tests {
 
     #[test]
     fn parse_frontmatter_strips_quotes() {
-        let content =
-            "---\nname: \"Quoted Name\"\ndescription: 'Single quoted'\n---\nBody";
+        let content = "---\nname: \"Quoted Name\"\ndescription: 'Single quoted'\n---\nBody";
         let (name, desc, body) = parse_skill_content(content, "fallback");
         assert_eq!(name, "Quoted Name");
         assert_eq!(desc, "Single quoted");

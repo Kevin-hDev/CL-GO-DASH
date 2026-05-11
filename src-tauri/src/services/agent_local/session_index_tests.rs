@@ -5,33 +5,54 @@ use tempfile::TempDir;
 
 fn test_session(id: &str, name: &str, heartbeat: bool) -> AgentSession {
     AgentSession {
-        id: id.into(), name: name.into(), created_at: Utc::now(),
-        model: "llama3".into(), provider: "ollama".into(),
-        thinking_enabled: false, accumulated_tokens: 0, messages: vec![],
-        is_heartbeat: heartbeat, project_id: None, working_dir: String::new(),
+        id: id.into(),
+        name: name.into(),
+        created_at: Utc::now(),
+        model: "llama3".into(),
+        provider: "ollama".into(),
+        thinking_enabled: false,
+        accumulated_tokens: 0,
+        messages: vec![],
+        is_heartbeat: heartbeat,
+        project_id: None,
+        working_dir: String::new(),
         parent_session_id: None,
-        subagent_type: None, subagent_worktree: None, subagent_prompt: None,
-        subagent_status: None, subagent_run_id: None,
+        subagent_type: None,
+        subagent_worktree: None,
+        subagent_prompt: None,
+        subagent_status: None,
+        subagent_run_id: None,
     }
 }
 
 fn test_meta(id: &str, count: usize) -> AgentSessionMeta {
     AgentSessionMeta {
-        id: id.into(), name: id.into(), created_at: Utc::now(),
-        model: "llama3".into(), provider: "ollama".into(),
-        message_count: count, is_heartbeat: false, project_id: None,
-        parent_session_id: None, subagent_type: None,
-        subagent_status: None, subagent_run_id: None,
+        id: id.into(),
+        name: id.into(),
+        created_at: Utc::now(),
+        model: "llama3".into(),
+        provider: "ollama".into(),
+        message_count: count,
+        is_heartbeat: false,
+        project_id: None,
+        parent_session_id: None,
+        subagent_type: None,
+        subagent_status: None,
+        subagent_run_id: None,
     }
 }
 
 async fn persist(dir: &Path, s: &AgentSession) {
     let data = serde_json::to_string_pretty(s).unwrap();
-    tokio::fs::write(dir.join(format!("{}.json", s.id)), &data).await.unwrap();
+    tokio::fs::write(dir.join(format!("{}.json", s.id)), &data)
+        .await
+        .unwrap();
 }
 
 async fn load_index(dir: &Path) -> Vec<AgentSessionMeta> {
-    let data = tokio::fs::read_to_string(dir.join("index.json")).await.unwrap();
+    let data = tokio::fs::read_to_string(dir.join("index.json"))
+        .await
+        .unwrap();
     serde_json::from_str(&data).unwrap()
 }
 
@@ -54,7 +75,9 @@ async fn rebuild_produces_correct_index() {
 async fn rebuild_skips_index_json() {
     let tmp = TempDir::new().unwrap();
     persist(tmp.path(), &test_session("real", "Real", false)).await;
-    tokio::fs::write(tmp.path().join("index.json"), "[]").await.unwrap();
+    tokio::fs::write(tmp.path().join("index.json"), "[]")
+        .await
+        .unwrap();
 
     let entries = rebuild_index_from(tmp.path()).await.unwrap();
     assert_eq!(entries.len(), 1);
@@ -65,8 +88,12 @@ async fn rebuild_skips_index_json() {
 async fn rebuild_skips_non_json_and_corrupt() {
     let tmp = TempDir::new().unwrap();
     persist(tmp.path(), &test_session("good", "Good", false)).await;
-    tokio::fs::write(tmp.path().join("notes.txt"), "text").await.unwrap();
-    tokio::fs::write(tmp.path().join("corrupt.json"), "{broken").await.unwrap();
+    tokio::fs::write(tmp.path().join("notes.txt"), "text")
+        .await
+        .unwrap();
+    tokio::fs::write(tmp.path().join("corrupt.json"), "{broken")
+        .await
+        .unwrap();
 
     let entries = rebuild_index_from(tmp.path()).await.unwrap();
     assert_eq!(entries.len(), 1);
@@ -76,10 +103,15 @@ async fn rebuild_skips_non_json_and_corrupt() {
 #[tokio::test]
 async fn upsert_and_remove_via_write() {
     let tmp = TempDir::new().unwrap();
-    write_index_to(tmp.path(), &[test_meta("t1", 5)]).await.unwrap();
+    write_index_to(tmp.path(), &[test_meta("t1", 5)])
+        .await
+        .unwrap();
     assert_eq!(load_index(tmp.path()).await[0].message_count, 5);
 
-    let updated = AgentSessionMeta { message_count: 10, ..test_meta("t1", 0) };
+    let updated = AgentSessionMeta {
+        message_count: 10,
+        ..test_meta("t1", 0)
+    };
     write_index_to(tmp.path(), &[updated]).await.unwrap();
     assert_eq!(load_index(tmp.path()).await[0].message_count, 10);
 
@@ -90,7 +122,9 @@ async fn upsert_and_remove_via_write() {
 #[tokio::test]
 async fn update_count_via_write() {
     let tmp = TempDir::new().unwrap();
-    write_index_to(tmp.path(), &[test_meta("ct", 0)]).await.unwrap();
+    write_index_to(tmp.path(), &[test_meta("ct", 0)])
+        .await
+        .unwrap();
 
     let mut entries = load_index(tmp.path()).await;
     entries[0].message_count = 42;
@@ -103,7 +137,10 @@ async fn update_count_via_write() {
 async fn rebuild_empty_and_nonexistent() {
     let tmp = TempDir::new().unwrap();
     assert!(rebuild_index_from(tmp.path()).await.unwrap().is_empty());
-    assert!(rebuild_index_from(Path::new("/tmp/nonexistent-cl-go")).await.unwrap().is_empty());
+    assert!(rebuild_index_from(Path::new("/tmp/nonexistent-cl-go"))
+        .await
+        .unwrap()
+        .is_empty());
 }
 
 #[tokio::test]
@@ -127,7 +164,11 @@ async fn meta_from_session_extracts_all_fields() {
 async fn rebuild_multiple_sessions() {
     let tmp = TempDir::new().unwrap();
     for i in 0..5u8 {
-        persist(tmp.path(), &test_session(&format!("s{i}"), &format!("S{i}"), i % 2 == 0)).await;
+        persist(
+            tmp.path(),
+            &test_session(&format!("s{i}"), &format!("S{i}"), i % 2 == 0),
+        )
+        .await;
     }
     let entries = rebuild_index_from(tmp.path()).await.unwrap();
     assert_eq!(entries.len(), 5);
@@ -139,10 +180,14 @@ async fn corrupt_index_triggers_rebuild() {
     let tmp = TempDir::new().unwrap();
     persist(tmp.path(), &test_session("s1", "S1", false)).await;
     rebuild_index_from(tmp.path()).await.unwrap();
-    tokio::fs::write(tmp.path().join("index.json"), "NOT_JSON").await.unwrap();
+    tokio::fs::write(tmp.path().join("index.json"), "NOT_JSON")
+        .await
+        .unwrap();
 
     // read_index uses the global path, so we test rebuild_index_from + read pattern
-    let data = tokio::fs::read_to_string(tmp.path().join("index.json")).await.unwrap();
+    let data = tokio::fs::read_to_string(tmp.path().join("index.json"))
+        .await
+        .unwrap();
     let result = serde_json::from_str::<Vec<AgentSessionMeta>>(&data);
     assert!(result.is_err());
 

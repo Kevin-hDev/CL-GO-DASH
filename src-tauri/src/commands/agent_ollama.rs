@@ -28,9 +28,7 @@ pub async fn show_ollama_model(
 }
 
 #[tauri::command]
-pub async fn is_ollama_running(
-    ollama: tauri::State<'_, OllamaClient>,
-) -> Result<bool, String> {
+pub async fn is_ollama_running(ollama: tauri::State<'_, OllamaClient>) -> Result<bool, String> {
     Ok(ollama.is_running().await)
 }
 
@@ -59,12 +57,8 @@ pub async fn translate_description(
     if let Some(cached) = translation_cache::get_cached(&model_name, &target_lang).await {
         return Ok(cached);
     }
-    let translated = translator::translate_text(
-        &text,
-        &target_lang,
-        translator_model.as_deref(),
-    )
-    .await?;
+    let translated =
+        translator::translate_text(&text, &target_lang, translator_model.as_deref()).await?;
     translation_cache::set_cached(&model_name, &target_lang, &translated).await?;
     Ok(translated)
 }
@@ -78,15 +72,23 @@ pub async fn pull_ollama_model(
     pull_cancel: tauri::State<'_, PullCancel>,
     ollama: tauri::State<'_, OllamaClient>,
 ) -> Result<(), String> {
-    let saved = if is_update { save_customizations(&ollama, &name).await } else { None };
+    let saved = if is_update {
+        save_customizations(&ollama, &name).await
+    } else {
+        None
+    };
 
     let cancel = CancellationToken::new();
-    { *pull_cancel.0.lock().await = Some(cancel.clone()); }
+    {
+        *pull_cancel.0.lock().await = Some(cancel.clone());
+    }
 
     let mut digests = Vec::new();
     let result = ollama_registry::pull_model(&name, &on_progress, &cancel, &mut digests).await;
 
-    { *pull_cancel.0.lock().await = None; }
+    {
+        *pull_cancel.0.lock().await = None;
+    }
 
     match result {
         Ok(()) => {
@@ -109,10 +111,7 @@ pub async fn pull_ollama_model(
     }
 }
 
-async fn save_customizations(
-    ollama: &OllamaClient,
-    name: &str,
-) -> Option<ParsedModelfile> {
+async fn save_customizations(ollama: &OllamaClient, name: &str) -> Option<ParsedModelfile> {
     let modelfile = match ollama.get_modelfile(name).await {
         Ok(mf) => mf,
         Err(_) => return None,
@@ -120,14 +119,14 @@ async fn save_customizations(
     let parsed = parse_modelfile(&modelfile);
     let has_system = parsed.system.as_ref().is_some_and(|s| !s.trim().is_empty());
     let has_params = !parsed.parameters.is_empty();
-    if has_system || has_params { Some(parsed) } else { None }
+    if has_system || has_params {
+        Some(parsed)
+    } else {
+        None
+    }
 }
 
-async fn restore_customizations(
-    ollama: &OllamaClient,
-    name: &str,
-    saved: &ParsedModelfile,
-) {
+async fn restore_customizations(ollama: &OllamaClient, name: &str, saved: &ParsedModelfile) {
     let mut restored = ParsedModelfile::default();
     restored.from = Some(name.to_string());
     restored.system = saved.system.clone();
@@ -149,10 +148,7 @@ pub async fn cancel_pull_ollama_model(
 }
 
 #[tauri::command]
-pub async fn delete_ollama_model(
-    app: tauri::AppHandle,
-    name: String,
-) -> Result<(), String> {
+pub async fn delete_ollama_model(app: tauri::AppHandle, name: String) -> Result<(), String> {
     ollama_registry::delete_model(&name).await?;
     let _ = app.emit("ollama-models-changed", ());
     Ok(())

@@ -21,8 +21,8 @@ pub struct GitContext {
 }
 
 pub fn list_branches(repo_path: &Path) -> Result<Vec<BranchInfo>, String> {
-    let repo = Repository::open(repo_path)
-        .map_err(|e| format!("Impossible d'ouvrir le dépôt : {e}"))?;
+    let repo =
+        Repository::open(repo_path).map_err(|e| format!("Impossible d'ouvrir le dépôt : {e}"))?;
 
     let current_name = repo
         .head()
@@ -39,8 +39,7 @@ pub fn list_branches(repo_path: &Path) -> Result<Vec<BranchInfo>, String> {
         if branches.len() >= MAX_BRANCHES {
             break;
         }
-        let (branch, _) = branch_result
-            .map_err(|e| format!("Lecture branche : {e}"))?;
+        let (branch, _) = branch_result.map_err(|e| format!("Lecture branche : {e}"))?;
         let name = branch
             .name()
             .map_err(|e| format!("Nom de branche : {e}"))?
@@ -56,9 +55,7 @@ pub fn list_branches(repo_path: &Path) -> Result<Vec<BranchInfo>, String> {
         });
     }
 
-    branches.sort_by(|a, b| {
-        b.is_current.cmp(&a.is_current).then(a.name.cmp(&b.name))
-    });
+    branches.sort_by(|a, b| b.is_current.cmp(&a.is_current).then(a.name.cmp(&b.name)));
 
     Ok(branches)
 }
@@ -130,11 +127,10 @@ fn validate_branch_name(name: &str) -> Result<(), String> {
 pub fn checkout_branch(repo_path: &Path, branch_name: &str) -> Result<(), String> {
     validate_branch_name(branch_name)?;
 
-    let repo = Repository::open(repo_path)
-        .map_err(|e| format!("Impossible d'ouvrir le dépôt : {e}"))?;
+    let repo =
+        Repository::open(repo_path).map_err(|e| format!("Impossible d'ouvrir le dépôt : {e}"))?;
 
-    let dirty = count_dirty_files(&repo)
-        .map_err(|_| "Vérification impossible".to_string())?;
+    let dirty = count_dirty_files(&repo).map_err(|_| "Vérification impossible".to_string())?;
     if dirty > 0 {
         return Err(format!("DIRTY:{dirty}"));
     }
@@ -157,27 +153,27 @@ pub fn checkout_branch(repo_path: &Path, branch_name: &str) -> Result<(), String
 pub fn commit_all_and_checkout(repo_path: &Path, target_branch: &str) -> Result<(), String> {
     validate_branch_name(target_branch)?;
 
-    let repo = Repository::open(repo_path)
-        .map_err(|e| format!("Impossible d'ouvrir le dépôt : {e}"))?;
+    let repo =
+        Repository::open(repo_path).map_err(|e| format!("Impossible d'ouvrir le dépôt : {e}"))?;
 
-    let mut index = repo.index()
-        .map_err(|e| format!("Index : {e}"))?;
-    index.add_all(["*"], git2::IndexAddOption::DEFAULT, None)
+    let mut index = repo.index().map_err(|e| format!("Index : {e}"))?;
+    index
+        .add_all(["*"], git2::IndexAddOption::DEFAULT, None)
         .map_err(|e| format!("Staging : {e}"))?;
-    index.write()
-        .map_err(|e| format!("Écriture index : {e}"))?;
+    index.write().map_err(|e| format!("Écriture index : {e}"))?;
 
-    let tree_oid = index.write_tree()
-        .map_err(|e| format!("Arbre : {e}"))?;
-    let tree = repo.find_tree(tree_oid)
+    let tree_oid = index.write_tree().map_err(|e| format!("Arbre : {e}"))?;
+    let tree = repo
+        .find_tree(tree_oid)
         .map_err(|e| format!("Arbre : {e}"))?;
 
-    let head = repo.head()
-        .map_err(|e| format!("HEAD : {e}"))?;
-    let parent = head.peel_to_commit()
+    let head = repo.head().map_err(|e| format!("HEAD : {e}"))?;
+    let parent = head
+        .peel_to_commit()
         .map_err(|e| format!("Commit parent : {e}"))?;
 
-    let sig = repo.signature()
+    let sig = repo
+        .signature()
         .map_err(|e| format!("Signature git : {e}"))?;
     let msg = format!("WIP: save changes before switching to {target_branch}");
 
@@ -197,8 +193,8 @@ pub fn create_branch(repo_path: &Path, branch_name: &str) -> Result<(), String> 
         return Err("Nom de branche trop long".to_string());
     }
 
-    let repo = Repository::open(repo_path)
-        .map_err(|e| format!("Impossible d'ouvrir le dépôt : {e}"))?;
+    let repo =
+        Repository::open(repo_path).map_err(|e| format!("Impossible d'ouvrir le dépôt : {e}"))?;
 
     let dirty = count_dirty_files(&repo).unwrap_or(0);
     if dirty > 0 {

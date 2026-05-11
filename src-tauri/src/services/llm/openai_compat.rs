@@ -4,7 +4,9 @@
 //! Un seul client change juste `base_url` et charge la clé via `api_keys`.
 
 use super::catalog::{self, ProviderSpec};
-use super::openai_compat_parsing::{build_payload, map_error_status, parse_chat_response, parse_models_list};
+use super::openai_compat_parsing::{
+    build_payload, map_error_status, parse_chat_response, parse_models_list,
+};
 use super::types::{ChatRequest, ChatResponse, LlmError, ModelInfo};
 use crate::services::api_keys;
 use reqwest::Client;
@@ -16,29 +18,89 @@ struct StaticModel {
 }
 
 const ZAI_MODELS: &[StaticModel] = &[
-    StaticModel { id: "glm-5.1", ctx: 200_000 },
-    StaticModel { id: "glm-5", ctx: 200_000 },
-    StaticModel { id: "glm-5-code", ctx: 200_000 },
-    StaticModel { id: "glm-4.7", ctx: 200_000 },
-    StaticModel { id: "glm-4.6", ctx: 200_000 },
-    StaticModel { id: "glm-4.5", ctx: 128_000 },
-    StaticModel { id: "glm-4.5v", ctx: 128_000 },
-    StaticModel { id: "glm-4.5-air", ctx: 128_000 },
-    StaticModel { id: "glm-4.5-flash", ctx: 128_000 },
+    StaticModel {
+        id: "glm-5.1",
+        ctx: 200_000,
+    },
+    StaticModel {
+        id: "glm-5",
+        ctx: 200_000,
+    },
+    StaticModel {
+        id: "glm-5-code",
+        ctx: 200_000,
+    },
+    StaticModel {
+        id: "glm-4.7",
+        ctx: 200_000,
+    },
+    StaticModel {
+        id: "glm-4.6",
+        ctx: 200_000,
+    },
+    StaticModel {
+        id: "glm-4.5",
+        ctx: 128_000,
+    },
+    StaticModel {
+        id: "glm-4.5v",
+        ctx: 128_000,
+    },
+    StaticModel {
+        id: "glm-4.5-air",
+        ctx: 128_000,
+    },
+    StaticModel {
+        id: "glm-4.5-flash",
+        ctx: 128_000,
+    },
 ];
 
 const XAI_MODELS: &[StaticModel] = &[
-    StaticModel { id: "grok-4.3", ctx: 1_000_000 },
-    StaticModel { id: "grok-4", ctx: 256_000 },
-    StaticModel { id: "grok-4-fast-reasoning", ctx: 2_000_000 },
-    StaticModel { id: "grok-4-fast-non-reasoning", ctx: 2_000_000 },
-    StaticModel { id: "grok-4.20-reasoning", ctx: 256_000 },
-    StaticModel { id: "grok-4.20-non-reasoning", ctx: 256_000 },
-    StaticModel { id: "grok-3", ctx: 131_072 },
-    StaticModel { id: "grok-3-mini", ctx: 131_072 },
-    StaticModel { id: "grok-3-fast", ctx: 131_072 },
-    StaticModel { id: "grok-2-vision", ctx: 32_768 },
-    StaticModel { id: "grok-code-fast", ctx: 131_072 },
+    StaticModel {
+        id: "grok-4.3",
+        ctx: 1_000_000,
+    },
+    StaticModel {
+        id: "grok-4",
+        ctx: 256_000,
+    },
+    StaticModel {
+        id: "grok-4-fast-reasoning",
+        ctx: 2_000_000,
+    },
+    StaticModel {
+        id: "grok-4-fast-non-reasoning",
+        ctx: 2_000_000,
+    },
+    StaticModel {
+        id: "grok-4.20-reasoning",
+        ctx: 256_000,
+    },
+    StaticModel {
+        id: "grok-4.20-non-reasoning",
+        ctx: 256_000,
+    },
+    StaticModel {
+        id: "grok-3",
+        ctx: 131_072,
+    },
+    StaticModel {
+        id: "grok-3-mini",
+        ctx: 131_072,
+    },
+    StaticModel {
+        id: "grok-3-fast",
+        ctx: 131_072,
+    },
+    StaticModel {
+        id: "grok-2-vision",
+        ctx: 32_768,
+    },
+    StaticModel {
+        id: "grok-code-fast",
+        ctx: 131_072,
+    },
 ];
 
 fn static_models(provider_id: &str) -> Option<&'static [StaticModel]> {
@@ -153,8 +215,14 @@ impl OpenAiCompatProvider {
             "messages": [{"role": "user", "content": "hi"}],
             "max_tokens": 1,
         });
-        let resp = self.client.post(&url).bearer_auth(&*key).json(&payload)
-            .send().await.map_err(|e| LlmError::Network(e.to_string()))?;
+        let resp = self
+            .client
+            .post(&url)
+            .bearer_auth(&*key)
+            .json(&payload)
+            .send()
+            .await
+            .map_err(|e| LlmError::Network(e.to_string()))?;
         if resp.status().is_success() {
             return Ok(());
         }

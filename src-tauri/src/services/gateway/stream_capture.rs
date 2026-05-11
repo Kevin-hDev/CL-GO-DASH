@@ -10,7 +10,8 @@ static PATH_RE: LazyLock<Regex> = LazyLock::new(|| {
 });
 
 static TOKEN_RE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"(?i)(sk-|Bearer |ghp_|xox[baprs]-|gho_|glpat-)[A-Za-z0-9_-]{8,}").expect("token regex")
+    Regex::new(r"(?i)(sk-|Bearer |ghp_|xox[baprs]-|gho_|glpat-)[A-Za-z0-9_-]{8,}")
+        .expect("token regex")
 });
 
 static IP_RE: LazyLock<Regex> = LazyLock::new(|| {
@@ -18,7 +19,9 @@ static IP_RE: LazyLock<Regex> = LazyLock::new(|| {
 });
 
 pub fn extract_final_reply(messages: &[ChatMessage]) -> Option<String> {
-    messages.iter().rev()
+    messages
+        .iter()
+        .rev()
         .find(|m| m.role == "assistant" && !m.content.is_empty())
         .map(|m| m.content.clone())
 }
@@ -52,7 +55,11 @@ mod tests {
 
     #[test]
     fn extract_last_assistant() {
-        let msgs = vec![msg("user", "hello"), msg("assistant", "hi"), msg("tool", "result")];
+        let msgs = vec![
+            msg("user", "hello"),
+            msg("assistant", "hi"),
+            msg("tool", "result"),
+        ];
         assert_eq!(extract_final_reply(&msgs), Some("hi".to_string()));
     }
 

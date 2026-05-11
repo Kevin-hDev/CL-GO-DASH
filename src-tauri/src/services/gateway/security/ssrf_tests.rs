@@ -4,18 +4,26 @@ use super::ssrf::*;
 
 #[test]
 fn metadata_ips_blocked() {
-    assert!(is_metadata_ip(&IpAddr::V4(Ipv4Addr::new(169, 254, 169, 254))));
+    assert!(is_metadata_ip(&IpAddr::V4(Ipv4Addr::new(
+        169, 254, 169, 254
+    ))));
     assert!(is_metadata_ip(&IpAddr::V4(Ipv4Addr::new(169, 254, 170, 2))));
-    assert!(is_metadata_ip(&IpAddr::V4(Ipv4Addr::new(100, 100, 100, 200))));
+    assert!(is_metadata_ip(&IpAddr::V4(Ipv4Addr::new(
+        100, 100, 100, 200
+    ))));
     assert!(!is_metadata_ip(&IpAddr::V4(Ipv4Addr::new(8, 8, 8, 8))));
 }
 
 #[test]
 fn cgnat_blocked() {
     assert!(is_blocked_ip(&IpAddr::V4(Ipv4Addr::new(100, 64, 0, 1))));
-    assert!(is_blocked_ip(&IpAddr::V4(Ipv4Addr::new(100, 127, 255, 254))));
+    assert!(is_blocked_ip(&IpAddr::V4(Ipv4Addr::new(
+        100, 127, 255, 254
+    ))));
     assert!(!is_blocked_ip(&IpAddr::V4(Ipv4Addr::new(100, 128, 0, 1))));
-    assert!(!is_blocked_ip(&IpAddr::V4(Ipv4Addr::new(100, 63, 255, 254))));
+    assert!(!is_blocked_ip(&IpAddr::V4(Ipv4Addr::new(
+        100, 63, 255, 254
+    ))));
 }
 
 #[test]
@@ -38,7 +46,9 @@ fn public_ips_allowed() {
 fn reserved_v4_blocked() {
     assert!(is_blocked_ip(&IpAddr::V4(Ipv4Addr::new(0, 0, 0, 1))));
     assert!(is_blocked_ip(&IpAddr::V4(Ipv4Addr::new(240, 0, 0, 1))));
-    assert!(is_blocked_ip(&IpAddr::V4(Ipv4Addr::new(255, 255, 255, 255))));
+    assert!(is_blocked_ip(&IpAddr::V4(Ipv4Addr::new(
+        255, 255, 255, 255
+    ))));
     assert!(!is_blocked_ip(&IpAddr::V4(Ipv4Addr::new(1, 0, 0, 1))));
 }
 

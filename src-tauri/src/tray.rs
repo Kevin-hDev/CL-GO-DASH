@@ -7,7 +7,11 @@ use tauri::{
 
 fn tray_lang() -> &'static str {
     let locale = sys_locale::get_locale().unwrap_or_default();
-    if locale.to_lowercase().starts_with("fr") { "fr" } else { "en" }
+    if locale.to_lowercase().starts_with("fr") {
+        "fr"
+    } else {
+        "en"
+    }
 }
 
 struct TrayLabels {
@@ -18,9 +22,17 @@ struct TrayLabels {
 
 fn labels() -> TrayLabels {
     if tray_lang() == "fr" {
-        TrayLabels { show: "Afficher", gateway: "Gateway", quit: "Quitter" }
+        TrayLabels {
+            show: "Afficher",
+            gateway: "Gateway",
+            quit: "Quitter",
+        }
     } else {
-        TrayLabels { show: "Show", gateway: "Gateway", quit: "Quit" }
+        TrayLabels {
+            show: "Show",
+            gateway: "Gateway",
+            quit: "Quit",
+        }
     }
 }
 
@@ -33,7 +45,9 @@ pub fn create_tray(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error
     let menu = Menu::with_items(app, &[&show, &sep, &gw, &quit])?;
 
     TrayIconBuilder::new()
-        .icon(tauri::image::Image::from_bytes(include_bytes!("../icons/tray.png"))?)
+        .icon(tauri::image::Image::from_bytes(include_bytes!(
+            "../icons/tray.png"
+        ))?)
         .menu(&menu)
         .tooltip("CL-GO")
         .show_menu_on_left_click(false)

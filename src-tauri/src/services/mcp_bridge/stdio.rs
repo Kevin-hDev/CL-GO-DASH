@@ -18,12 +18,12 @@ pub struct StdioTransport {
 }
 
 impl StdioTransport {
-    pub fn new(
-        connector_id: String,
-        install_command: String,
-        env_key_names: Vec<String>,
-    ) -> Self {
-        Self { connector_id, install_command, env_key_names }
+    pub fn new(connector_id: String, install_command: String, env_key_names: Vec<String>) -> Self {
+        Self {
+            connector_id,
+            install_command,
+            env_key_names,
+        }
     }
 
     fn resolve_env_tokens(&self) -> Vec<(String, String)> {
@@ -44,11 +44,8 @@ impl StdioTransport {
 
         process_manager::shutdown_one(&self.connector_id);
         let mut env_tokens = self.resolve_env_tokens();
-        let handle = process_manager::spawn(
-            &self.connector_id,
-            &self.install_command,
-            &env_tokens,
-        )?;
+        let handle =
+            process_manager::spawn(&self.connector_id, &self.install_command, &env_tokens)?;
         for (_, val) in &mut env_tokens {
             zeroize::Zeroize::zeroize(val);
         }
@@ -84,7 +81,10 @@ impl StdioTransport {
     }
 
     async fn send_with_id(
-        &self, handle: &ProcessHandle, request: &Value, expected_id: u64,
+        &self,
+        handle: &ProcessHandle,
+        request: &Value,
+        expected_id: u64,
     ) -> Result<Value, String> {
         let _guard = handle.request_lock.lock().await;
         self.write_line(handle, request).await?;
@@ -96,15 +96,18 @@ impl StdioTransport {
         line.push('\n');
 
         let mut stdin = handle.stdin.lock().await;
-        stdin.write_all(line.as_bytes()).await
+        stdin
+            .write_all(line.as_bytes())
+            .await
             .map_err(|_| "impossible d'écrire sur stdin du process MCP".to_string())?;
-        stdin.flush().await
-            .map_err(|_| "flush stdin échoué")?;
+        stdin.flush().await.map_err(|_| "flush stdin échoué")?;
         Ok(())
     }
 
     async fn read_response(
-        &self, handle: &ProcessHandle, expected_id: Option<u64>,
+        &self,
+        handle: &ProcessHandle,
+        expected_id: Option<u64>,
     ) -> Result<Value, String> {
         let mut reader = handle.reader.lock().await;
         let mut total_bytes: usize = 0;
@@ -135,7 +138,8 @@ impl StdioTransport {
                     }
                 }
             }
-        }).await;
+        })
+        .await;
 
         match result {
             Err(_) => Err("timeout : le serveur MCP n'a pas répondu".to_string()),
@@ -156,7 +160,8 @@ impl McpTransport for StdioTransport {
 
         let resp = self.send_with_id(&handle, &body, id).await?;
 
-        let tools_val = resp.get("result")
+        let tools_val = resp
+            .get("result")
             .and_then(|r| r.get("tools").cloned())
             .ok_or("réponse tools/list invalide")?;
 
@@ -178,5 +183,4 @@ impl McpTransport for StdioTransport {
         let resp = self.send_with_id(&handle, &body, id).await?;
         super::transport::extract_tool_result(&resp)
     }
-
 }

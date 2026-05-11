@@ -9,13 +9,21 @@ const MAX_LIMIT: usize = 50_000;
 
 fn resolve_read_path(path: &str, working_dir: &Path) -> Result<PathBuf, String> {
     let p = Path::new(path);
-    let raw = if p.is_absolute() { p.to_path_buf() } else { working_dir.join(p) };
+    let raw = if p.is_absolute() {
+        p.to_path_buf()
+    } else {
+        working_dir.join(p)
+    };
     security::validate_read_path(&raw, working_dir)
 }
 
 fn resolve_write_path(path: &str, working_dir: &Path) -> Result<PathBuf, String> {
     let p = Path::new(path);
-    let raw = if p.is_absolute() { p.to_path_buf() } else { working_dir.join(p) };
+    let raw = if p.is_absolute() {
+        p.to_path_buf()
+    } else {
+        working_dir.join(p)
+    };
     security::validate_write_path(&raw)
 }
 
@@ -104,10 +112,15 @@ pub async fn edit_file(
     let start_line = content[..content.find(old_string).unwrap_or(0)]
         .chars()
         .filter(|c| *c == '\n')
-        .count() + 1;
+        .count()
+        + 1;
     let updated = content.replacen(old_string, new_string, 1);
     match tokio::fs::write(&resolved, &updated).await {
-        Ok(()) => ToolResult::ok(format!("Modifié: {} (ligne {})", resolved.display(), start_line)),
+        Ok(()) => ToolResult::ok(format!(
+            "Modifié: {} (ligne {})",
+            resolved.display(),
+            start_line
+        )),
         Err(e) => ToolResult::err(security::sanitize_error(e)),
     }
 }

@@ -35,10 +35,7 @@ mod tests {
             "le 3ème appel identique consécutif devrait déclencher le circuit breaker"
         );
         let msg = result.unwrap_err();
-        assert!(
-            msg.contains("Circuit breaker"),
-            "message inattendu : {msg}"
-        );
+        assert!(msg.contains("Circuit breaker"), "message inattendu : {msg}");
     }
 
     #[test]
@@ -47,8 +44,14 @@ mod tests {
         // doivent produire la même signature → détecter la boucle
         let mut breaker = CircuitBreaker::new();
 
-        let call_ab = vec![("write_file".to_string(), json!({ "path": "x", "content": "y" }))];
-        let call_ba = vec![("write_file".to_string(), json!({ "content": "y", "path": "x" }))];
+        let call_ab = vec![(
+            "write_file".to_string(),
+            json!({ "path": "x", "content": "y" }),
+        )];
+        let call_ba = vec![(
+            "write_file".to_string(),
+            json!({ "content": "y", "path": "x" }),
+        )];
 
         // 1er appel (ab) : OK
         assert!(breaker.check(&call_ab).is_ok());

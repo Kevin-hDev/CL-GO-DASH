@@ -24,6 +24,7 @@ pub async fn test_key_raw(provider_id: &str, key: &str) -> Result<(), String> {
             .json(&serde_json::json!({"query":"test","numResults":1})),
         "firecrawl" => client.get("https://api.firecrawl.dev/v2/team/credit-usage")
             .bearer_auth(key),
+        "nixtla" => client.get("https://api.nixtla.io/models").bearer_auth(key),
         other => return Err(format!("Provider inconnu : {other}")),
     }.send().await.map_err(|e| format!("network: {e}"))?;
     check_status(resp)

@@ -76,7 +76,10 @@ pub fn convert_tools_to_responses_api(tools: &[serde_json::Value]) -> Vec<serde_
         .iter()
         .filter_map(|t| {
             let func = t.get("function")?;
-            let mut params = func.get("parameters").cloned().unwrap_or(serde_json::Value::Null);
+            let mut params = func
+                .get("parameters")
+                .cloned()
+                .unwrap_or(serde_json::Value::Null);
             fix_array_schemas(&mut params);
             Some(serde_json::json!({
                 "type": "function",
@@ -96,8 +99,16 @@ mod tests {
     #[test]
     fn convert_extracts_system_as_instructions() {
         let msgs = vec![
-            ChatMessage { role: "system".into(), content: "Tu es un assistant.".into(), ..Default::default() },
-            ChatMessage { role: "user".into(), content: "Bonjour".into(), ..Default::default() },
+            ChatMessage {
+                role: "system".into(),
+                content: "Tu es un assistant.".into(),
+                ..Default::default()
+            },
+            ChatMessage {
+                role: "user".into(),
+                content: "Bonjour".into(),
+                ..Default::default()
+            },
         ];
         let (instructions, input) = convert_messages(&msgs);
         assert_eq!(instructions, "Tu es un assistant.");
@@ -107,7 +118,11 @@ mod tests {
 
     #[test]
     fn convert_handles_no_system() {
-        let msgs = vec![ChatMessage { role: "user".into(), content: "Hello".into(), ..Default::default() }];
+        let msgs = vec![ChatMessage {
+            role: "user".into(),
+            content: "Hello".into(),
+            ..Default::default()
+        }];
         let (instructions, input) = convert_messages(&msgs);
         assert!(instructions.is_empty());
         assert_eq!(input.len(), 1);

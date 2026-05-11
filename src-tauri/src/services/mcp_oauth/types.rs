@@ -10,7 +10,9 @@ pub struct TokenResponse {
     pub token_type: String,
 }
 
-fn default_bearer() -> String { "Bearer".to_string() }
+fn default_bearer() -> String {
+    "Bearer".to_string()
+}
 
 impl Drop for TokenResponse {
     fn drop(&mut self) {
@@ -75,8 +77,8 @@ impl OAuthTokens {
     }
 
     pub fn from_json(json: &str) -> Result<Self, String> {
-        let mut raw: OAuthTokensSerde =
-            serde_json::from_str(json).map_err(|_| "données d'authentification invalides".to_string())?;
+        let mut raw: OAuthTokensSerde = serde_json::from_str(json)
+            .map_err(|_| "données d'authentification invalides".to_string())?;
         let tokens = Self {
             access_token: Zeroizing::new(std::mem::take(&mut raw.access_token)),
             refresh_token: raw.refresh_token.take().map(Zeroizing::new),

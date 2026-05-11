@@ -30,7 +30,10 @@ pub async fn load() -> AgentSettings {
 }
 
 pub async fn save(settings: &AgentSettings) -> Result<(), String> {
-    if !matches!(settings.permission_mode.as_str(), "auto" | "manual" | "chat") {
+    if !matches!(
+        settings.permission_mode.as_str(),
+        "auto" | "manual" | "chat"
+    ) {
         return Err("permission_mode invalide".into());
     }
     let path = settings_path();

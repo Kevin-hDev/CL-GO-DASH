@@ -17,7 +17,10 @@ pub async fn execute(args: &Value) -> ToolResult {
 
 async fn search(args: &Value) -> ToolResult {
     let raw_query = args["query"].as_str().unwrap_or("").to_lowercase();
-    let keywords: Vec<&str> = raw_query.split_whitespace().filter(|w| !w.is_empty()).collect();
+    let keywords: Vec<&str> = raw_query
+        .split_whitespace()
+        .filter(|w| !w.is_empty())
+        .collect();
     let connectors = registry::get_enabled_connectors();
 
     if connectors.is_empty() {
@@ -48,7 +51,12 @@ async fn search(args: &Value) -> ToolResult {
             .collect();
 
         if !matched.is_empty() {
-            sections.push(format!("**{}** ({} outils) :\n{}", connector.id, matched.len(), matched.join("\n")));
+            sections.push(format!(
+                "**{}** ({} outils) :\n{}",
+                connector.id,
+                matched.len(),
+                matched.join("\n")
+            ));
         }
     }
 
@@ -56,11 +64,16 @@ async fn search(args: &Value) -> ToolResult {
 
     if !sections.is_empty() {
         let total: usize = sections.iter().map(|s| s.matches("\n  - ").count()).sum();
-        output.push_str(&format!("{total} outils MCP trouvés :\n\n{}", sections.join("\n\n")));
+        output.push_str(&format!(
+            "{total} outils MCP trouvés :\n\n{}",
+            sections.join("\n\n")
+        ));
     }
 
     if !errors.is_empty() {
-        if !output.is_empty() { output.push_str("\n\n"); }
+        if !output.is_empty() {
+            output.push_str("\n\n");
+        }
         output.push_str(&format!("Erreurs :\n{}", errors.join("\n")));
     }
 
@@ -78,7 +91,9 @@ fn matches_keywords(tool: &McpToolDef, keywords: &[&str], connector_id: &str) ->
     let name = tool.name.to_lowercase();
     let desc = tool.description.as_deref().unwrap_or("").to_lowercase();
     let cid = connector_id.to_lowercase();
-    keywords.iter().any(|kw| name.contains(kw) || desc.contains(kw) || cid.contains(kw))
+    keywords
+        .iter()
+        .any(|kw| name.contains(kw) || desc.contains(kw) || cid.contains(kw))
 }
 
 async fn call(args: &Value) -> ToolResult {
@@ -102,9 +117,14 @@ async fn call(args: &Value) -> ToolResult {
         None => return ToolResult::err(format!("connecteur '{connector_id}' non disponible")),
     };
 
-    let arguments = args.get("arguments").cloned().unwrap_or(Value::Object(Default::default()));
+    let arguments = args
+        .get("arguments")
+        .cloned()
+        .unwrap_or(Value::Object(Default::default()));
 
-    let args_size = serde_json::to_string(&arguments).map(|s| s.len()).unwrap_or(0);
+    let args_size = serde_json::to_string(&arguments)
+        .map(|s| s.len())
+        .unwrap_or(0);
     if args_size > 65_536 {
         return ToolResult::err("arguments MCP trop volumineux (max 64 Ko)".to_string());
     }
@@ -116,11 +136,17 @@ async fn call(args: &Value) -> ToolResult {
 }
 
 fn is_valid_id(s: &str) -> bool {
-    !s.is_empty() && s.len() <= 64 && s.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
+    !s.is_empty()
+        && s.len() <= 64
+        && s.bytes()
+            .all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
 }
 
 fn is_valid_tool_name(s: &str) -> bool {
-    !s.is_empty() && s.len() <= 128 && s.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
+    !s.is_empty()
+        && s.len() <= 128
+        && s.bytes()
+            .all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
 }
 
 fn is_bidi_override(c: char) -> bool {

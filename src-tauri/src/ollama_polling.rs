@@ -1,7 +1,7 @@
-use std::time::Duration;
-use tauri::Emitter;
 use crate::services::agent_local::ollama_base_url;
 use crate::services::ollama_ps;
+use std::time::Duration;
+use tauri::Emitter;
 
 const POLL_INTERVAL: Duration = Duration::from_secs(2);
 const HEALTH_TIMEOUT: Duration = Duration::from_secs(2);
@@ -54,7 +54,8 @@ pub fn start(handle: tauri::AppHandle) {
                     let delay = backoff_secs(restart_attempts);
                     eprintln!(
                         "[ollama] {} échecs, tentative {} dans {delay}s",
-                        consecutive_failures, restart_attempts + 1
+                        consecutive_failures,
+                        restart_attempts + 1
                     );
                     tokio::time::sleep(Duration::from_secs(delay)).await;
 
@@ -79,11 +80,7 @@ pub fn start(handle: tauri::AppHandle) {
     });
 }
 
-async fn emit_gpu_status(
-    handle: &tauri::AppHandle,
-    client: &reqwest::Client,
-    base: &str,
-) {
+async fn emit_gpu_status(handle: &tauri::AppHandle, client: &reqwest::Client, base: &str) {
     let (vram_total, vram_used) = tokio::task::spawn_blocking(|| {
         use crate::services::gpu_vram;
         (

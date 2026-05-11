@@ -53,10 +53,28 @@ pub async fn run_agent_loop(
         }
 
         tool_result_budget::apply_budget(messages);
-        compress_hook::try_auto_compress(on_event, provider_id, model, messages, &session_id, native_context, configured_context, last_prompt + last_eval, cancel.clone()).await;
-        let result =
-            retry::retry_stream(on_event, provider_id, model, messages, tools, think, cancel.clone())
-                .await?;
+        compress_hook::try_auto_compress(
+            on_event,
+            provider_id,
+            model,
+            messages,
+            &session_id,
+            native_context,
+            configured_context,
+            last_prompt + last_eval,
+            cancel.clone(),
+        )
+        .await;
+        let result = retry::retry_stream(
+            on_event,
+            provider_id,
+            model,
+            messages,
+            tools,
+            think,
+            cancel.clone(),
+        )
+        .await?;
 
         total_eval += result.eval_count;
         total_prompt += result.prompt_tokens;
@@ -65,7 +83,18 @@ pub async fn run_agent_loop(
         messages.push(build_assistant_message(&result));
 
         // Check post-réponse : compresser si le seuil a été dépassé pendant la génération
-        compress_hook::try_auto_compress(on_event, provider_id, model, messages, &session_id, native_context, configured_context, last_prompt + last_eval, cancel.clone()).await;
+        compress_hook::try_auto_compress(
+            on_event,
+            provider_id,
+            model,
+            messages,
+            &session_id,
+            native_context,
+            configured_context,
+            last_prompt + last_eval,
+            cancel.clone(),
+        )
+        .await;
 
         if result.tool_calls.is_empty() {
             break;
@@ -80,7 +109,10 @@ pub async fn run_agent_loop(
         }
 
         if let Err(msg) = breaker.check(&result.tool_calls) {
-            let _ = on_event.send(StreamEvent::Error { message: msg, is_connection: false });
+            let _ = on_event.send(StreamEvent::Error {
+                message: msg,
+                is_connection: false,
+            });
             break;
         }
 

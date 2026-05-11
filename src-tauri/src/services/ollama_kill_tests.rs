@@ -1,4 +1,4 @@
-use crate::services::ollama_kill::{save_pid, read_saved_pid, clear_pid_file};
+use crate::services::ollama_kill::{clear_pid_file, read_saved_pid, save_pid};
 use std::sync::Mutex;
 
 static PID_TEST_LOCK: Mutex<()> = Mutex::new(());
@@ -21,7 +21,10 @@ fn pid_file_roundtrip_and_format() {
     let ts: u64 = parts[1].parse().expect("timestamp should be valid u64");
     assert!(ts > 1_700_000_000, "timestamp should be recent");
 
-    assert!(!path.with_extension("tmp").exists(), "tmp should be cleaned up");
+    assert!(
+        !path.with_extension("tmp").exists(),
+        "tmp should be cleaned up"
+    );
 
     clear_pid_file();
 }

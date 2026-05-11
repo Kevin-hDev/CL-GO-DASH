@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use serde_json::Value;
 
 use super::response;
-use super::transport::{McpToolDef, McpTransport, next_id, sanitize_tools};
+use super::transport::{next_id, sanitize_tools, McpToolDef, McpTransport};
 use crate::services::mcp_oauth::storage;
 
 const TIMEOUT: Duration = Duration::from_secs(30);
@@ -17,7 +17,10 @@ pub struct HttpTransport {
 
 impl HttpTransport {
     pub fn new(connector_id: String, endpoint: String) -> Self {
-        Self { connector_id, endpoint }
+        Self {
+            connector_id,
+            endpoint,
+        }
     }
 }
 
@@ -33,7 +36,8 @@ impl McpTransport for HttpTransport {
 
         let resp = mcp_post(&self.endpoint, token.as_str(), session_id.as_deref(), &body).await?;
 
-        let tools_val = resp.result
+        let tools_val = resp
+            .result
             .and_then(|r| r.get("tools").cloned())
             .ok_or("réponse tools/list invalide")?;
 
@@ -62,7 +66,8 @@ impl McpTransport for HttpTransport {
         let result = resp.result.ok_or("réponse vide du serveur MCP")?;
 
         if let Some(content) = result.get("content").and_then(|c| c.as_array()) {
-            let texts: Vec<&str> = content.iter()
+            let texts: Vec<&str> = content
+                .iter()
                 .filter_map(|item| item.get("text").and_then(|t| t.as_str()))
                 .collect();
             if !texts.is_empty() {
@@ -72,7 +77,6 @@ impl McpTransport for HttpTransport {
 
         Ok(serde_json::to_string_pretty(&result).unwrap_or_default())
     }
-
 }
 
 async fn initialize(endpoint: &str, token: &str) -> Result<Option<String>, String> {
@@ -87,22 +91,27 @@ async fn initialize(endpoint: &str, token: &str) -> Result<Option<String>, Strin
 
     let client = build_client()?;
 
-    let resp = client.post(endpoint)
+    let resp = client
+        .post(endpoint)
         .bearer_auth(token)
         .header("Accept", ACCEPT)
         .header("Content-Type", "application/json")
         .json(&init_body)
-        .send().await
+        .send()
+        .await
         .map_err(|_| "impossible de contacter le serveur MCP")?;
 
     if !resp.status().is_success() {
         let status = resp.status().as_u16();
         let body = resp.text().await.unwrap_or_default();
         let snippet = truncate_safe(&body, 500);
-        return Err(format!("initialisation MCP refusée (HTTP {status}): {snippet}"));
+        return Err(format!(
+            "initialisation MCP refusée (HTTP {status}): {snippet}"
+        ));
     }
 
-    let session_id = resp.headers()
+    let session_id = resp
+        .headers()
         .get("mcp-session-id")
         .and_then(|v| v.to_str().ok())
         .filter(|s| s.len() <= 256 && s.bytes().all(|b| b >= 0x20 && b < 0x7f))
@@ -114,7 +123,8 @@ async fn initialize(endpoint: &str, token: &str) -> Result<Option<String>, Strin
         "jsonrpc": "2.0", "method": "notifications/initialized"
     });
 
-    let mut req = client.post(endpoint)
+    let mut req = client
+        .post(endpoint)
         .bearer_auth(token)
         .header("Accept", ACCEPT)
         .header("Content-Type", "application/json");
@@ -123,17 +133,23 @@ async fn initialize(endpoint: &str, token: &str) -> Result<Option<String>, Strin
         req = req.header("Mcp-Session-Id", sid);
     }
 
-    req.json(&notif).send().await
+    req.json(&notif)
+        .send()
+        .await
         .map_err(|_| "notification initialized échouée".to_string())?;
     Ok(session_id)
 }
 
 async fn mcp_post(
-    endpoint: &str, token: &str, session_id: Option<&str>, body: &Value,
+    endpoint: &str,
+    token: &str,
+    session_id: Option<&str>,
+    body: &Value,
 ) -> Result<response::JsonRpcResponse, String> {
     let client = build_client()?;
 
-    let mut req = client.post(endpoint)
+    let mut req = client
+        .post(endpoint)
         .bearer_auth(token)
         .header("Accept", ACCEPT)
         .header("Content-Type", "application/json");
@@ -142,7 +158,10 @@ async fn mcp_post(
         req = req.header("Mcp-Session-Id", sid);
     }
 
-    let resp = req.json(body).send().await
+    let resp = req
+        .json(body)
+        .send()
+        .await
         .map_err(|_| "impossible de contacter le serveur MCP")?;
 
     if !resp.status().is_success() {
@@ -166,6 +185,11 @@ fn truncate_safe(s: &str, max: usize) -> String {
     if s.len() <= max {
         return s.to_string();
     }
-    let end = s.char_indices().take_while(|(i, _)| *i < max).last().map(|(i, c)| i + c.len_utf8()).unwrap_or(0);
+    let end = s
+        .char_indices()
+        .take_while(|(i, _)| *i < max)
+        .last()
+        .map(|(i, c)| i + c.len_utf8())
+        .unwrap_or(0);
     format!("{}…", &s[..end])
 }

@@ -1,7 +1,7 @@
 use crate::models::GatewayConfig;
+use crate::services::api_keys;
 use crate::services::gateway::service::GatewayService;
 use crate::services::gateway::types::GatewayHealth;
-use crate::services::api_keys;
 use tauri::Emitter;
 use zeroize::Zeroize;
 
@@ -36,7 +36,9 @@ pub async fn gateway_stop(
 pub async fn gateway_get_config(
     state: tauri::State<'_, GatewayService>,
 ) -> Result<GatewayConfig, String> {
-    let disk = crate::services::config::read_config().unwrap_or_default().gateway;
+    let disk = crate::services::config::read_config()
+        .unwrap_or_default()
+        .gateway;
     state.update_config(disk.clone()).await;
     Ok(disk)
 }
@@ -70,19 +72,13 @@ pub async fn gateway_set_token(
 }
 
 #[tauri::command]
-pub async fn gateway_delete_token(
-    channel_id: String,
-    account_id: String,
-) -> Result<(), String> {
+pub async fn gateway_delete_token(channel_id: String, account_id: String) -> Result<(), String> {
     let vault_key = format!("gateway.{channel_id}.{account_id}");
     api_keys::delete_raw(&vault_key)
 }
 
 #[tauri::command]
-pub async fn gateway_has_token(
-    channel_id: String,
-    account_id: String,
-) -> Result<bool, String> {
+pub async fn gateway_has_token(channel_id: String, account_id: String) -> Result<bool, String> {
     let vault_key = format!("raw:gateway.{channel_id}.{account_id}");
     Ok(api_keys::has_key(&vault_key))
 }

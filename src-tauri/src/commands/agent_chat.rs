@@ -82,7 +82,10 @@ pub async fn chat_stream(
             // via stopSession(). Envoyer ce message tuerait un nouveau stream.
             if is_current && message != "Annulé" {
                 let is_conn = message == "ollama_connection_lost";
-                let _ = emitter.send(StreamEvent::Error { message, is_connection: is_conn });
+                let _ = emitter.send(StreamEvent::Error {
+                    message,
+                    is_connection: is_conn,
+                });
             }
         }
     });
@@ -110,7 +113,9 @@ pub async fn cancel_agent_request(
         }
     }
     if crate::services::agent_local::subagent_registry::cancel_one(&session_id).await {
-        let _ = crate::services::agent_local::session_subagents::mark_status(&session_id, "cancelled").await;
+        let _ =
+            crate::services::agent_local::session_subagents::mark_status(&session_id, "cancelled")
+                .await;
         cancelled = true;
     }
     if cancelled {

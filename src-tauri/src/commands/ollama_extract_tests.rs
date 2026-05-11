@@ -41,7 +41,10 @@ fn safe_unpack_rejects_parent_dir() {
     let result = safe_unpack_tar(archive, &dest);
 
     assert!(result.is_err(), "should reject archive with ..");
-    assert!(!dir.join("escape.txt").exists(), "file should not escape dest");
+    assert!(
+        !dir.join("escape.txt").exists(),
+        "file should not escape dest"
+    );
 
     let _ = std::fs::remove_dir_all(&dir);
 }

@@ -61,6 +61,24 @@
   background: var(--surface-hover);
 }
 
+.fc-empty-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.fc-empty-btn:disabled:hover {
+  border-color: var(--edge);
+  color: var(--ink-muted);
+  background: transparent;
+}
+
+.fc-empty-error {
+  max-width: 260px;
+  margin: 0;
+  color: var(--signal-error);
+  font-size: var(--text-xs);
+}
+
 .fc-empty-btn-primary {
   background: var(--pulse);
   border-color: var(--pulse);

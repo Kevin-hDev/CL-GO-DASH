@@ -92,7 +92,8 @@ mod unit_tests {
             images: None,
             tool_calls: None,
             tool_name: None,
-            tool_call_id: None, reasoning_content: None,
+            tool_call_id: None,
+            reasoning_content: None,
         }
     }
 
@@ -103,7 +104,8 @@ mod unit_tests {
             images: None,
             tool_calls: None,
             tool_name: None,
-            tool_call_id: None, reasoning_content: None,
+            tool_call_id: None,
+            reasoning_content: None,
         }
     }
 
@@ -119,11 +121,7 @@ mod unit_tests {
     fn over_budget_truncates_oldest() {
         // 3 tool results : 60k + 60k + 60k = 180k > 100k
         let big = "x".repeat(60_000);
-        let mut msgs = vec![
-            tool_msg(&big),
-            tool_msg(&big),
-            tool_msg(&big),
-        ];
+        let mut msgs = vec![tool_msg(&big), tool_msg(&big), tool_msg(&big)];
         apply_budget(&mut msgs);
         // Le 1er (oldest) doit être tronqué
         assert_eq!(msgs[0].content, CLEARED_PLACEHOLDER);
@@ -151,11 +149,7 @@ mod unit_tests {
     #[test]
     fn non_tool_messages_ignored() {
         let big = "z".repeat(60_000);
-        let mut msgs = vec![
-            user_msg(&big),
-            tool_msg(&big),
-            tool_msg(&big),
-        ];
+        let mut msgs = vec![user_msg(&big), tool_msg(&big), tool_msg(&big)];
         apply_budget(&mut msgs);
         // user message non touché
         assert_eq!(msgs[0].content, big);
@@ -173,15 +167,14 @@ mod unit_tests {
             "x".repeat(60_000)
         );
         let big = "x".repeat(60_000);
-        let mut msgs = vec![
-            tool_msg(&big_with_link),
-            tool_msg(&big),
-            tool_msg(&big),
-        ];
+        let mut msgs = vec![tool_msg(&big_with_link), tool_msg(&big), tool_msg(&big)];
         apply_budget(&mut msgs);
         // Le 1er doit être tronqué mais conserver le lien
         let expected = format!("{CLEARED_PLACEHOLDER} Fichier complet : {path}");
-        assert_eq!(msgs[0].content, expected, "le lien persistant doit être conservé");
+        assert_eq!(
+            msgs[0].content, expected,
+            "le lien persistant doit être conservé"
+        );
         // Les 2 derniers préservés
         assert_eq!(msgs[1].content, big);
         assert_eq!(msgs[2].content, big);
@@ -197,7 +190,8 @@ mod unit_tests {
                 images: None,
                 tool_calls: None,
                 tool_name: None,
-                tool_call_id: None, reasoning_content: None,
+                tool_call_id: None,
+                reasoning_content: None,
             },
             tool_msg(&big),
             tool_msg(&big),

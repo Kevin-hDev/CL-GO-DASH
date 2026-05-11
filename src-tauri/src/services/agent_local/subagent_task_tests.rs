@@ -15,20 +15,14 @@ mod tests {
 
     #[test]
     fn test_extract_summary_assistant() {
-        let msgs = vec![
-            msg("user", "bonjour"),
-            msg("assistant", "réponse finale"),
-        ];
+        let msgs = vec![msg("user", "bonjour"), msg("assistant", "réponse finale")];
         let summary = extract_summary_for_test(&msgs);
         assert_eq!(summary, "réponse finale");
     }
 
     #[test]
     fn test_extract_summary_tool_results() {
-        let msgs = vec![
-            msg("user", "bonjour"),
-            msg("tool", "résultat outil"),
-        ];
+        let msgs = vec![msg("user", "bonjour"), msg("tool", "résultat outil")];
         let summary = extract_summary_for_test(&msgs);
         assert!(
             summary.contains("résultat outil"),

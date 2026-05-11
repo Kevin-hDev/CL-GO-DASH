@@ -1,4 +1,6 @@
-use crate::models::{AdvancedSettings, ClgoConfig, GatewayConfig, HeartbeatConfig, ScheduledWakeup};
+use crate::models::{
+    AdvancedSettings, ClgoConfig, GatewayConfig, HeartbeatConfig, ScheduledWakeup,
+};
 use std::fs;
 use std::path::PathBuf;
 
@@ -28,21 +30,22 @@ pub fn read_config() -> Result<ClgoConfig, String> {
     };
 
     let mut config = ClgoConfig::default();
-    let Some(obj) = value.as_object() else { return Ok(config); };
+    let Some(obj) = value.as_object() else {
+        return Ok(config);
+    };
 
     if let Some(hb) = obj.get("heartbeat") {
-        config.heartbeat = serde_json::from_value::<HeartbeatConfig>(hb.clone())
-            .unwrap_or_default();
+        config.heartbeat =
+            serde_json::from_value::<HeartbeatConfig>(hb.clone()).unwrap_or_default();
     }
 
     if let Some(adv) = obj.get("advanced") {
-        config.advanced = serde_json::from_value::<AdvancedSettings>(adv.clone())
-            .unwrap_or_default();
+        config.advanced =
+            serde_json::from_value::<AdvancedSettings>(adv.clone()).unwrap_or_default();
     }
 
     if let Some(gw) = obj.get("gateway") {
-        config.gateway = serde_json::from_value::<GatewayConfig>(gw.clone())
-            .unwrap_or_default();
+        config.gateway = serde_json::from_value::<GatewayConfig>(gw.clone()).unwrap_or_default();
     }
 
     if let Some(arr) = obj.get("scheduled_wakeups").and_then(|v| v.as_array()) {
@@ -54,7 +57,10 @@ pub fn read_config() -> Result<ClgoConfig, String> {
             }
         }
         if dropped > 0 {
-            eprintln!("[config] {} wakeup(s) au format obsolète ignoré(s)", dropped);
+            eprintln!(
+                "[config] {} wakeup(s) au format obsolète ignoré(s)",
+                dropped
+            );
         }
     }
 
@@ -64,8 +70,7 @@ pub fn read_config() -> Result<ClgoConfig, String> {
 pub fn write_config(config: &ClgoConfig) -> Result<(), String> {
     let path = config_path();
     if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent)
-            .map_err(|e| format!("Cannot create config dir: {}", e))?;
+        fs::create_dir_all(parent).map_err(|e| format!("Cannot create config dir: {}", e))?;
     }
     let tmp_path = path.with_extension("json.tmp");
 
@@ -73,10 +78,8 @@ pub fn write_config(config: &ClgoConfig) -> Result<(), String> {
         .map_err(|e| format!("Cannot serialize config: {}", e))?;
 
     // Atomic write: tmp + rename
-    fs::write(&tmp_path, &content)
-        .map_err(|e| format!("Cannot write tmp config: {}", e))?;
-    fs::rename(&tmp_path, &path)
-        .map_err(|e| format!("Cannot rename config: {}", e))?;
+    fs::write(&tmp_path, &content).map_err(|e| format!("Cannot write tmp config: {}", e))?;
+    fs::rename(&tmp_path, &path).map_err(|e| format!("Cannot rename config: {}", e))?;
 
     Ok(())
 }

@@ -10,7 +10,8 @@ mod integration {
             images: None,
             tool_calls: None,
             tool_name: None,
-            tool_call_id: None, reasoning_content: None,
+            tool_call_id: None,
+            reasoning_content: None,
         }
     }
 
@@ -68,10 +69,7 @@ mod integration {
     // 5. La requête de compression exclut le system prompt
     #[test]
     fn compression_request_excludes_system() {
-        let messages = vec![
-            msg("system", "Secret system prompt"),
-            msg("user", "Hello"),
-        ];
+        let messages = vec![msg("system", "Secret system prompt"), msg("user", "Hello")];
         let request = engine::build_compression_request_content(&messages, None);
         assert!(request.iter().all(|m| m.content != "Secret system prompt"));
     }
@@ -80,13 +78,17 @@ mod integration {
     #[test]
     fn auto_compress_full_check() {
         // Tout activé, modèle éligible, au-dessus du seuil
-        assert!(engine::should_auto_compress(true, 131_072, 100_000, 86_000, 85));
+        assert!(engine::should_auto_compress(
+            true, 131_072, 100_000, 86_000, 85
+        ));
         // Compression désactivée
         assert!(!engine::should_auto_compress(
             false, 131_072, 100_000, 86_000, 85
         ));
         // Modèle non éligible
-        assert!(!engine::should_auto_compress(true, 32_768, 32_768, 30_000, 85));
+        assert!(!engine::should_auto_compress(
+            true, 32_768, 32_768, 30_000, 85
+        ));
         // Sous le seuil
         assert!(!engine::should_auto_compress(
             true, 131_072, 100_000, 80_000, 85

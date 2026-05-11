@@ -1,7 +1,7 @@
-use crate::services::agent_local::{session_store, session_subagents, subagent_registry};
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::types_ollama::{ChatMessage, StreamEvent};
 use crate::services::agent_local::types_session::AgentSessionMeta;
+use crate::services::agent_local::{session_store, session_subagents, subagent_registry};
 use crate::ActiveStreams;
 use serde::Serialize;
 use tauri::Manager;
@@ -42,7 +42,9 @@ pub async fn list_subagents(
         .into_iter()
         .filter(|s| {
             s.parent_session_id.as_deref() == Some(&parent_session_id)
-                && run_id.as_ref().map_or(true, |rid| s.subagent_run_id.as_deref() == Some(rid))
+                && run_id
+                    .as_ref()
+                    .map_or(true, |rid| s.subagent_run_id.as_deref() == Some(rid))
         })
         .collect())
 }
@@ -111,7 +113,11 @@ pub async fn synthesize_subagent_results(
     };
     session_store::add_messages(&parent_session_id, vec![user_msg], 0).await?;
     let fresh = session_store::get(&parent_session_id).await?;
-    let messages = fresh.messages.iter().map(to_chat_message).collect::<Vec<_>>();
+    let messages = fresh
+        .messages
+        .iter()
+        .map(to_chat_message)
+        .collect::<Vec<_>>();
 
     let cancel = CancellationToken::new();
     let generation = crate::STREAM_GENERATION.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
@@ -159,7 +165,10 @@ pub async fn synthesize_subagent_results(
         };
         if let Err(message) = result {
             if is_current && message != "Annulé" {
-                let _ = emitter.send(StreamEvent::Error { message, is_connection: false });
+                let _ = emitter.send(StreamEvent::Error {
+                    message,
+                    is_connection: false,
+                });
             }
         }
     });
@@ -167,18 +176,25 @@ pub async fn synthesize_subagent_results(
     Ok(generation)
 }
 
-fn to_chat_message(message: &crate::services::agent_local::types_session::AgentMessage) -> ChatMessage {
+fn to_chat_message(
+    message: &crate::services::agent_local::types_session::AgentMessage,
+) -> ChatMessage {
     ChatMessage {
         role: message.role.clone(),
         content: message.content.clone(),
         tool_calls: message.tool_calls.as_ref().map(|calls| {
-            calls.iter().map(|call| crate::services::agent_local::types_ollama::ToolCallOllama {
-                id: None,
-                function: crate::services::agent_local::types_ollama::ToolCallFunction {
-                    name: call.function.name.clone(),
-                    arguments: call.function.arguments.clone(),
-                },
-            }).collect()
+            calls
+                .iter()
+                .map(
+                    |call| crate::services::agent_local::types_ollama::ToolCallOllama {
+                        id: None,
+                        function: crate::services::agent_local::types_ollama::ToolCallFunction {
+                            name: call.function.name.clone(),
+                            arguments: call.function.arguments.clone(),
+                        },
+                    },
+                )
+                .collect()
         }),
         tool_name: message.tool_name.clone(),
         reasoning_content: message.thinking.clone(),

@@ -2,11 +2,7 @@ use crate::services::agent_local::security::validate_read_path;
 use crate::services::agent_local::types_tools::ToolResult;
 use std::path::Path;
 
-pub async fn read_document(
-    path: &str,
-    _pages: Option<&str>,
-    working_dir: &Path,
-) -> ToolResult {
+pub async fn read_document(path: &str, _pages: Option<&str>, working_dir: &Path) -> ToolResult {
     if path.is_empty() {
         return ToolResult::err("Le paramètre 'path' est requis");
     }
@@ -27,9 +23,7 @@ pub async fn read_document(
     match ext.as_str() {
         "pdf" => read_pdf(&validated),
         "docx" => read_docx(&validated),
-        _ => ToolResult::err(
-            "Format non supporté. Formats acceptés : pdf, docx",
-        ),
+        _ => ToolResult::err("Format non supporté. Formats acceptés : pdf, docx"),
     }
 }
 

@@ -57,7 +57,9 @@ impl TgChat {
 
 impl TgMessage {
     pub fn has_bot_mention(&self, bot_username: &str) -> bool {
-        let Some(entities) = &self.entities else { return false };
+        let Some(entities) = &self.entities else {
+            return false;
+        };
         let Some(text) = &self.text else { return false };
         let lower_bot = bot_username.to_lowercase();
         for e in entities {
@@ -82,11 +84,20 @@ mod tests {
 
     #[test]
     fn group_detection() {
-        let chat = TgChat { id: 1, chat_type: "group".into() };
+        let chat = TgChat {
+            id: 1,
+            chat_type: "group".into(),
+        };
         assert!(chat.is_group());
-        let dm = TgChat { id: 2, chat_type: "private".into() };
+        let dm = TgChat {
+            id: 2,
+            chat_type: "private".into(),
+        };
         assert!(!dm.is_group());
-        let super_g = TgChat { id: 3, chat_type: "supergroup".into() };
+        let super_g = TgChat {
+            id: 3,
+            chat_type: "supergroup".into(),
+        };
         assert!(super_g.is_group());
     }
 
@@ -95,7 +106,10 @@ mod tests {
         let msg = TgMessage {
             message_id: 1,
             from: None,
-            chat: TgChat { id: 1, chat_type: "group".into() },
+            chat: TgChat {
+                id: 1,
+                chat_type: "group".into(),
+            },
             text: Some("@MyBot hello".into()),
             entities: Some(vec![TgEntity {
                 entity_type: "mention".into(),

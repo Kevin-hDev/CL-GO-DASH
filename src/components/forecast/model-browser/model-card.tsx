@@ -1,4 +1,5 @@
 import { ModelInstallBtn } from "./model-install-btn";
+import { useTranslation } from "react-i18next";
 
 interface ForecastModel {
   id: string;
@@ -19,13 +20,15 @@ interface ModelCardProps {
 }
 
 export function ModelCard({ model, onSelect, onRefresh }: ModelCardProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="fmc-card">
       <button className="fmc-info" onClick={onSelect}>
         <span className="fmc-name">{model.display_name}</span>
         <span className="fmc-meta">
           {model.is_cloud ? (
-            <span className="fmc-cloud">☁ Cloud</span>
+            <span className="fmc-cloud">☁ {t("forecast.models.cloud")}</span>
           ) : (
             <>
               {model.params} · {model.size_mb} MB
@@ -35,16 +38,14 @@ export function ModelCard({ model, onSelect, onRefresh }: ModelCardProps) {
           )}
         </span>
         {!model.is_cloud && (
-          <span className="fmc-ram">RAM: ~{model.ram_mb} MB</span>
+          <span className="fmc-ram">{t("forecast.models.ram")}: ~{model.ram_mb} MB</span>
         )}
       </button>
       <div className="fmc-actions">
         {model.is_cloud ? (
           <span className="fmc-cloud-badge">☁</span>
-        ) : model.installed ? (
-          <span className="fmc-installed">Installé</span>
         ) : (
-          <ModelInstallBtn modelId={model.id} onDone={onRefresh} />
+          <ModelInstallBtn modelId={model.id} installed={model.installed} onDone={onRefresh} />
         )}
       </div>
     </div>

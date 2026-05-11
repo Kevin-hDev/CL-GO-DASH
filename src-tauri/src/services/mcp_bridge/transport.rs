@@ -23,12 +23,15 @@ pub struct McpToolDef {
 }
 
 pub fn sanitize_tool_def(tool: &mut McpToolDef) {
-    tool.name = tool.name.chars()
+    tool.name = tool
+        .name
+        .chars()
         .filter(|c| c.is_ascii_alphanumeric() || *c == '_' || *c == '-')
         .take(MAX_NAME_CHARS)
         .collect();
     if let Some(ref desc) = tool.description {
-        let sanitized: String = desc.chars()
+        let sanitized: String = desc
+            .chars()
             .filter(|c| !c.is_control() || *c == '\n')
             .take(MAX_DESC_CHARS)
             .collect();
@@ -62,9 +65,13 @@ fn json_property_count(val: &Value) -> usize {
 }
 
 pub fn sanitize_tools(tools: Vec<McpToolDef>) -> Vec<McpToolDef> {
-    tools.into_iter()
+    tools
+        .into_iter()
         .take(MAX_TOOLS)
-        .map(|mut t| { sanitize_tool_def(&mut t); t })
+        .map(|mut t| {
+            sanitize_tool_def(&mut t);
+            t
+        })
         .filter(|t| !t.name.is_empty())
         .collect()
 }
@@ -72,7 +79,8 @@ pub fn sanitize_tools(tools: Vec<McpToolDef>) -> Vec<McpToolDef> {
 pub fn extract_tool_result(resp: &Value) -> Result<String, String> {
     if let Some(err) = resp.get("error") {
         let raw_msg = err["message"].as_str().unwrap_or("erreur inconnue");
-        let msg: String = raw_msg.chars()
+        let msg: String = raw_msg
+            .chars()
             .filter(|c| !c.is_control())
             .take(200)
             .collect();

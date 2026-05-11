@@ -1,11 +1,11 @@
 use crate::services::agent_local::modelfile_parser::{
     merge_parameter, parse_modelfile, parse_param_value,
 };
+use crate::services::agent_local::ollama_base_url;
 use crate::services::agent_local::ollama_model_helpers::{
     build_model_from_tags, dedupe_by_digest, needs_from_override, parse_show_response,
 };
 use crate::services::agent_local::types_ollama::{ModelInfo, OllamaModel};
-use crate::services::agent_local::ollama_base_url;
 use reqwest::Client;
 use std::time::Duration;
 const TIMEOUT: Duration = Duration::from_secs(5);
@@ -38,15 +38,16 @@ impl OllamaClient {
             .get(format!("{}/api/tags", ollama_base_url()))
             .send()
             .await
-            .map_err(|e| { eprintln!("[ollama] /api/tags: {e}"); "ollama-connection-error".to_string() })?;
+            .map_err(|e| {
+                eprintln!("[ollama] /api/tags: {e}");
+                "ollama-connection-error".to_string()
+            })?;
         let body = resp.bytes().await.map_err(|e| e.to_string())?;
         if body.len() > 10 * 1024 * 1024 {
             return Err("ollama-response-too-large".into());
         }
         let json: serde_json::Value = serde_json::from_slice(&body).map_err(|e| e.to_string())?;
-        let models = json["models"]
-            .as_array()
-            .ok_or("ollama-invalid-response")?;
+        let models = json["models"].as_array().ok_or("ollama-invalid-response")?;
 
         let mut raw = Vec::new();
         for m in models.iter().take(500) {
@@ -115,11 +116,17 @@ impl OllamaClient {
             .json(&enriched)
             .send()
             .await
-            .map_err(|e| { eprintln!("[ollama] /api/create send: {e}"); "ollama-create-error".to_string() })?;
+            .map_err(|e| {
+                eprintln!("[ollama] /api/create send: {e}");
+                "ollama-create-error".to_string()
+            })?;
         if !resp.status().is_success() {
             let status = resp.status();
             let body = resp.text().await.unwrap_or_default();
-            eprintln!("[ollama] /api/create failed ({status}): {}", crate::services::llm::sanitize_log_body(&body));
+            eprintln!(
+                "[ollama] /api/create failed ({status}): {}",
+                crate::services::llm::sanitize_log_body(&body)
+            );
             return Err("ollama-create-error".to_string());
         }
         Ok(())
@@ -132,7 +139,10 @@ impl OllamaClient {
             .json(&serde_json::json!({ "model": name }))
             .send()
             .await
-            .map_err(|e| { eprintln!("[ollama] /api/show: {e}"); "ollama-show-error".to_string() })?;
+            .map_err(|e| {
+                eprintln!("[ollama] /api/show: {e}");
+                "ollama-show-error".to_string()
+            })?;
         let json: serde_json::Value = resp.json().await.map_err(|e| e.to_string())?;
         Ok(parse_show_response(name, &json))
     }

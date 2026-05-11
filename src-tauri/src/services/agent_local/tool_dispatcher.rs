@@ -1,14 +1,14 @@
+use crate::services::agent_local::tool_skill_loader;
+use crate::services::agent_local::types_tools::ToolResult;
 use crate::services::agent_local::{
     tool_bash, tool_files, tool_glob, tool_grep, tool_validate, tool_web_fetch, tool_web_search,
 };
-use crate::services::agent_local::tool_skill_loader;
-use crate::services::agent_local::types_tools::ToolResult;
 use crate::services::paths::data_dir;
 use serde_json::Value;
 use std::path::Path;
 
 pub use crate::services::agent_local::tool_definitions::{
-    get_tool_definitions, get_chat_tool_definitions,
+    get_chat_tool_definitions, get_tool_definitions,
 };
 
 // Seuils de taille max par outil (en caractères)
@@ -71,9 +71,7 @@ fn truncate_result(mut result: ToolResult, tool_name: &str, session_id: &str) ->
 /// Persiste le contenu complet dans data_dir()/tool-results/{session_id}/{uuid}.txt.
 /// Retourne le chemin du fichier si la sauvegarde a réussi.
 fn persist_result(content: &str, session_id: &str) -> Option<String> {
-    let dir = data_dir()
-        .join("tool-results")
-        .join(session_id);
+    let dir = data_dir().join("tool-results").join(session_id);
     std::fs::create_dir_all(&dir).ok()?;
     let file_name = format!("{}.txt", uuid::Uuid::new_v4());
     let path = dir.join(&file_name);
@@ -81,7 +79,12 @@ fn persist_result(content: &str, session_id: &str) -> Option<String> {
     Some(path.to_string_lossy().into_owned())
 }
 
-async fn dispatch_inner(tool_name: &str, args: &Value, working_dir: &Path, session_id: &str) -> ToolResult {
+async fn dispatch_inner(
+    tool_name: &str,
+    args: &Value,
+    working_dir: &Path,
+    session_id: &str,
+) -> ToolResult {
     match tool_name {
         "bash" => {
             let cmd = args["command"].as_str().unwrap_or("");
@@ -92,7 +95,12 @@ async fn dispatch_inner(tool_name: &str, args: &Value, working_dir: &Path, sessi
                         let sid = session_id.to_string();
                         let dir = cwd.clone();
                         tokio::spawn(async move {
-                            if let Err(e) = crate::services::agent_local::session_store::update_working_dir(&sid, &dir).await {
+                            if let Err(e) =
+                                crate::services::agent_local::session_store::update_working_dir(
+                                    &sid, &dir,
+                                )
+                                .await
+                            {
                                 eprintln!("[cwd-track] échec update_working_dir: {e}");
                             }
                         });
@@ -110,7 +118,9 @@ async fn dispatch_inner(tool_name: &str, args: &Value, working_dir: &Path, sessi
         "read_file" => {
             let path = args["path"].as_str().unwrap_or("");
             let offset = args["offset"].as_u64().unwrap_or(0) as usize;
-            let limit = args["limit"].as_u64().unwrap_or(tool_files::DEFAULT_LIMIT as u64) as usize;
+            let limit = args["limit"]
+                .as_u64()
+                .unwrap_or(tool_files::DEFAULT_LIMIT as u64) as usize;
             tool_files::read_file(path, working_dir, offset, limit).await
         }
         "write_file" => {
@@ -163,9 +173,9 @@ async fn dispatch_inner(tool_name: &str, args: &Value, working_dir: &Path, sessi
         "load_skill" => {
             let name = args["skill_name"].as_str().unwrap_or("");
             match tool_skill_loader::load_skill(name).await {
-                Ok(content) => ToolResult::ok(
-                    format!("Skill '{name}' loaded. Follow its instructions:\n\n{content}")
-                ),
+                Ok(content) => ToolResult::ok(format!(
+                    "Skill '{name}' loaded. Follow its instructions:\n\n{content}"
+                )),
                 Err(e) => ToolResult::err(e),
             }
         }
@@ -235,13 +245,27 @@ async fn dispatch_inner(tool_name: &str, args: &Value, working_dir: &Path, sessi
             }
         }
         _ => {
-            if let Some(result) = super::tool_dispatcher_forecast::dispatch_forecast(tool_name, args, working_dir, session_id).await {
+            if let Some(result) = super::tool_dispatcher_forecast::dispatch_forecast(
+                tool_name,
+                args,
+                working_dir,
+                session_id,
+            )
+            .await
+            {
                 return result;
             }
             if let Some(result) = super::tool_dispatcher_mcp::dispatch_mcp(tool_name, args).await {
                 return result;
             }
-            match super::tool_dispatcher_office::dispatch_office(tool_name, args, working_dir, session_id).await {
+            match super::tool_dispatcher_office::dispatch_office(
+                tool_name,
+                args,
+                working_dir,
+                session_id,
+            )
+            .await
+            {
                 Some(result) => result,
                 None => ToolResult::err(format!("Outil inconnu: {tool_name}")),
             }
@@ -273,7 +297,12 @@ pub(crate) fn enrich_error(mut result: ToolResult, tool_name: &str) -> ToolResul
     result
 }
 
-pub async fn dispatch(tool_name: &str, args: &Value, working_dir: &Path, session_id: &str) -> ToolResult {
+pub async fn dispatch(
+    tool_name: &str,
+    args: &Value,
+    working_dir: &Path,
+    session_id: &str,
+) -> ToolResult {
     let args = match tool_validate::validate(tool_name, args) {
         Ok(cleaned) => cleaned,
         Err(msg) => return ToolResult::err(format!("[{tool_name}] {msg}")),

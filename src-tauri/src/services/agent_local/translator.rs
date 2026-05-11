@@ -86,11 +86,7 @@ fn chunk_by_headings(text: &str, max_chars: usize) -> Vec<String> {
     chunks
 }
 
-async fn translate_chunk(
-    text: &str,
-    lang_name: &str,
-    model: &str,
-) -> Result<String, String> {
+async fn translate_chunk(text: &str, lang_name: &str, model: &str) -> Result<String, String> {
     let system = format!(
         "You are a translator. Your ONLY task is to translate the Markdown fragment below into {lang_name}.\n\
          \n\
@@ -131,7 +127,10 @@ async fn translate_chunk(
     if !resp.status().is_success() {
         let status = resp.status();
         let body = resp.text().await.unwrap_or_default();
-        eprintln!("[translator] HTTP error status={status} body={}", crate::services::llm::sanitize_log_body(&body));
+        eprintln!(
+            "[translator] HTTP error status={status} body={}",
+            crate::services::llm::sanitize_log_body(&body)
+        );
         if status.as_u16() == 404 {
             return Err(format!(
                 "Modèle '{model}' non installé. Installe-le via l'onglet Models."

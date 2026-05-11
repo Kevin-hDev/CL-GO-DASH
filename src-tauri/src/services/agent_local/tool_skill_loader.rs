@@ -50,8 +50,8 @@ pub async fn load_skill(name: &str) -> Result<String, String> {
     let skill_dir = find_skill_dir_by_name(&dir, name)
         .await
         .ok_or_else(|| format!("Skill '{name}' non trouvé"))?;
-    let skill_file = find_skill_file(&skill_dir)
-        .ok_or_else(|| format!("Skill '{name}' non trouvé"))?;
+    let skill_file =
+        find_skill_file(&skill_dir).ok_or_else(|| format!("Skill '{name}' non trouvé"))?;
     let content = tokio::fs::read_to_string(&skill_file)
         .await
         .map_err(|e| format!("Erreur lecture skill: {e}"))?;
@@ -59,10 +59,7 @@ pub async fn load_skill(name: &str) -> Result<String, String> {
     Ok(body)
 }
 
-async fn find_skill_dir_by_name(
-    skills_root: &std::path::Path,
-    name: &str,
-) -> Option<PathBuf> {
+async fn find_skill_dir_by_name(skills_root: &std::path::Path, name: &str) -> Option<PathBuf> {
     let mut read_dir = tokio::fs::read_dir(skills_root).await.ok()?;
     while let Ok(Some(entry)) = read_dir.next_entry().await {
         let path = entry.path();

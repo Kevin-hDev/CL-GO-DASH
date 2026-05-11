@@ -20,7 +20,11 @@ pub fn ollama_bundle_dir() -> PathBuf {
 }
 
 pub fn ollama_binary_path() -> Result<PathBuf, String> {
-    let binary_name = if cfg!(windows) { "ollama.exe" } else { "ollama" };
+    let binary_name = if cfg!(windows) {
+        "ollama.exe"
+    } else {
+        "ollama"
+    };
     let bundle = ollama_bundle_dir();
     let in_bin = bundle.join("bin").join(binary_name);
     if in_bin.exists() {
@@ -65,8 +69,10 @@ pub fn start_sidecar(app: &AppHandle) -> Result<bool, String> {
 
     let log_dir = crate::services::paths::data_dir().join("logs");
     let _ = std::fs::create_dir_all(&log_dir);
-    let stderr_file = std::fs::File::create(log_dir.join("ollama-sidecar.log"))
-        .map_err(|e| { eprintln!("[ollama] log file: {e}"); "ollama-log-error".to_string() })?;
+    let stderr_file = std::fs::File::create(log_dir.join("ollama-sidecar.log")).map_err(|e| {
+        eprintln!("[ollama] log file: {e}");
+        "ollama-log-error".to_string()
+    })?;
 
     let mut cmd = Command::new(&binary);
     cmd.arg("serve")
@@ -76,20 +82,29 @@ pub fn start_sidecar(app: &AppHandle) -> Result<bool, String> {
 
     let config = crate::services::config::read_config().unwrap_or_default();
     let gpu = gpu_detect::detect();
-    let env_vars = crate::services::ollama_env::build_env_vars(
-        &config.advanced, &gpu, port,
-    );
+    let env_vars = crate::services::ollama_env::build_env_vars(&config.advanced, &gpu, port);
     for (key, val) in &env_vars {
         cmd.env(key, val);
     }
-    eprintln!("[ollama] GPU : {:?}, accel : {}", gpu, config.advanced.hardware_accel);
+    eprintln!(
+        "[ollama] GPU : {:?}, accel : {}",
+        gpu, config.advanced.hardware_accel
+    );
     const SAFE_TO_LOG: &[&str] = &[
-        "OLLAMA_HOST", "OLLAMA_FLASH_ATTENTION", "OLLAMA_KV_CACHE_TYPE",
-        "OLLAMA_NUM_PARALLEL", "OLLAMA_NO_CLOUD", "OLLAMA_CONTEXT_LENGTH",
-        "OLLAMA_MAX_LOADED_MODELS", "OLLAMA_KEEP_ALIVE", "OLLAMA_LLM_LIBRARY",
-        "OLLAMA_GPU_OVERHEAD", "OLLAMA_VULKAN",
+        "OLLAMA_HOST",
+        "OLLAMA_FLASH_ATTENTION",
+        "OLLAMA_KV_CACHE_TYPE",
+        "OLLAMA_NUM_PARALLEL",
+        "OLLAMA_NO_CLOUD",
+        "OLLAMA_CONTEXT_LENGTH",
+        "OLLAMA_MAX_LOADED_MODELS",
+        "OLLAMA_KEEP_ALIVE",
+        "OLLAMA_LLM_LIBRARY",
+        "OLLAMA_GPU_OVERHEAD",
+        "OLLAMA_VULKAN",
     ];
-    let safe_vars: Vec<_> = env_vars.iter()
+    let safe_vars: Vec<_> = env_vars
+        .iter()
         .filter(|(k, _)| SAFE_TO_LOG.contains(&k.as_str()))
         .map(|(k, v)| format!("{k}={v}"))
         .collect();
@@ -112,7 +127,10 @@ pub fn start_sidecar(app: &AppHandle) -> Result<bool, String> {
         cmd.creation_flags(0x08000000);
     }
 
-    let child = cmd.spawn().map_err(|e| { eprintln!("[ollama] spawn: {e}"); "ollama-start-error".to_string() })?;
+    let child = cmd.spawn().map_err(|e| {
+        eprintln!("[ollama] spawn: {e}");
+        "ollama-start-error".to_string()
+    })?;
     let pid = child.id();
     ollama_kill::save_pid(pid);
     eprintln!("[ollama] sidecar démarré pid={pid} port={port}");

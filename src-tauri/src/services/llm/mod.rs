@@ -7,33 +7,51 @@
 pub mod agent_loop;
 pub mod catalog;
 pub mod compress_hook;
-mod retry;
-mod stream_silent;
 pub mod model_registry;
-pub mod registry_search;
 pub mod openai_compat;
 mod openai_compat_parsing;
+mod providers;
+pub mod quota;
+pub mod registry_search;
+mod retry;
 pub mod stream;
 pub mod stream_convert;
 mod stream_http;
+mod stream_silent;
 mod stream_tools;
-pub mod quota;
-mod providers;
 pub mod tool_capable;
 pub mod types;
 
 pub(crate) fn sanitize_log_body(body: &str) -> String {
     let truncated = if body.len() > 200 {
-        &body[..body.char_indices().nth(200).map(|(i, _)| i).unwrap_or(body.len())]
+        &body[..body
+            .char_indices()
+            .nth(200)
+            .map(|(i, _)| i)
+            .unwrap_or(body.len())]
     } else {
         body
     };
     let mut cleaned = truncated.replace(|c: char| c.is_control(), " ");
-    for sensitive in &["key", "token", "secret", "password", "authorization", "api_key", "apikey"] {
+    for sensitive in &[
+        "key",
+        "token",
+        "secret",
+        "password",
+        "authorization",
+        "api_key",
+        "apikey",
+    ] {
         if let Some(pos) = cleaned.to_lowercase().find(sensitive) {
-            let start = cleaned[pos..].find(':').or_else(|| cleaned[pos..].find('=')).map(|i| pos + i + 1);
+            let start = cleaned[pos..]
+                .find(':')
+                .or_else(|| cleaned[pos..].find('='))
+                .map(|i| pos + i + 1);
             if let Some(s) = start {
-                let end = cleaned[s..].find(&['"', ',', '}', '&', ' '][..]).map(|i| s + i).unwrap_or(cleaned.len());
+                let end = cleaned[s..]
+                    .find(&['"', ',', '}', '&', ' '][..])
+                    .map(|i| s + i)
+                    .unwrap_or(cleaned.len());
                 cleaned.replace_range(s..end, "[REDACTED]");
             }
         }

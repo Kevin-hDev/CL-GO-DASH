@@ -20,8 +20,15 @@ mod tests {
         // --- register and list ---
         let parent = uid();
         let child = uid();
-        register(&parent, &child, CancellationToken::new(), "test", "explorer")
-            .await.unwrap();
+        register(
+            &parent,
+            &child,
+            CancellationToken::new(),
+            "test",
+            "explorer",
+        )
+        .await
+        .unwrap();
         let list = list_for_parent(&parent).await;
         assert!(list.iter().any(|e| e.session_id == child));
         unregister(&child).await;
@@ -30,7 +37,8 @@ mod tests {
         let parent = uid();
         let child = uid();
         register(&parent, &child, CancellationToken::new(), "t", "explorer")
-            .await.unwrap();
+            .await
+            .unwrap();
         unregister(&child).await;
         assert!(list_for_parent(&parent).await.is_empty());
 
@@ -47,7 +55,8 @@ mod tests {
         let parent = uid();
         let child = uid();
         let run_id = register(&parent, &child, CancellationToken::new(), "t", "explorer")
-            .await.unwrap();
+            .await
+            .unwrap();
         let fetched = get_run_id_for_child(&child).await;
         assert_eq!(fetched, Some(run_id));
         unregister(&child).await;
@@ -57,7 +66,8 @@ mod tests {
         let child = uid();
         let token = CancellationToken::new();
         register(&parent, &child, token.clone(), "t", "explorer")
-            .await.unwrap();
+            .await
+            .unwrap();
         assert!(cancel_one(&child).await);
         assert!(token.is_cancelled());
         unregister(&child).await;
@@ -68,25 +78,49 @@ mod tests {
         for _ in 0..MAX_PER_PARENT {
             let c = uid();
             register(&parent, &c, CancellationToken::new(), "t", "explorer")
-                .await.unwrap();
+                .await
+                .unwrap();
             children.push(c);
         }
         let extra = uid();
-        assert!(register(&parent, &extra, CancellationToken::new(), "t", "explorer").await.is_err());
-        for c in &children { unregister(c).await; }
+        assert!(
+            register(&parent, &extra, CancellationToken::new(), "t", "explorer")
+                .await
+                .is_err()
+        );
+        for c in &children {
+            unregister(c).await;
+        }
 
         // --- max_total limit ---
         let mut all_children = vec![];
         for i in 0..MAX_TOTAL {
             let p = uid();
             let c = uid();
-            register(&p, &c, CancellationToken::new(), &format!("t{i}"), "explorer")
-                .await.unwrap();
+            register(
+                &p,
+                &c,
+                CancellationToken::new(),
+                &format!("t{i}"),
+                "explorer",
+            )
+            .await
+            .unwrap();
             all_children.push(c);
         }
         let extra_p = uid();
         let extra_c = uid();
-        assert!(register(&extra_p, &extra_c, CancellationToken::new(), "t", "explorer").await.is_err());
-        for c in &all_children { unregister(c).await; }
+        assert!(register(
+            &extra_p,
+            &extra_c,
+            CancellationToken::new(),
+            "t",
+            "explorer"
+        )
+        .await
+        .is_err());
+        for c in &all_children {
+            unregister(c).await;
+        }
     }
 }

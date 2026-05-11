@@ -18,10 +18,7 @@ pub fn detect(file_path: &Path) -> Vec<DetectedEditor> {
 
     let mut editors = Vec::new();
 
-    let assoc_out = Command::new("cmd")
-        .args(["/C", "assoc"])
-        .arg(&ext)
-        .output();
+    let assoc_out = Command::new("cmd").args(["/C", "assoc"]).arg(&ext).output();
 
     if let Ok(out) = assoc_out {
         let text = String::from_utf8_lossy(&out.stdout);
@@ -41,7 +38,10 @@ pub fn detect(file_path: &Path) -> Vec<DetectedEditor> {
 
     let known = [
         ("Notepad", "C:\\Windows\\notepad.exe"),
-        ("Visual Studio Code", "C:\\Program Files\\Microsoft VS Code\\Code.exe"),
+        (
+            "Visual Studio Code",
+            "C:\\Program Files\\Microsoft VS Code\\Code.exe",
+        ),
     ];
     for (label, app_path) in known {
         if Path::new(app_path).is_file() {

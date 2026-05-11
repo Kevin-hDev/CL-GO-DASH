@@ -20,7 +20,11 @@ pub fn for_endpoint(endpoint: &str) -> Option<StaticCredentials> {
         let scopes = google_scopes_for_host(&host);
         let client_id = load_credential(VAULT_GOOGLE_ID, "CLGO_GOOGLE_CLIENT_ID")?;
         let client_secret = load_credential(VAULT_GOOGLE_SECRET, "CLGO_GOOGLE_CLIENT_SECRET")?;
-        return Some(StaticCredentials { client_id, client_secret, scopes });
+        return Some(StaticCredentials {
+            client_id,
+            client_secret,
+            scopes,
+        });
     }
 
     if host == "api.githubcopilot.com" || host.ends_with(".githubcopilot.com") {

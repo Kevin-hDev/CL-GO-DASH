@@ -19,8 +19,15 @@ mod tests {
         let tmp = working_dir();
         let input = create_test_image(tmp.path(), "input.png", 100, 200);
         let output = tmp.path().join("output.png");
-        let ops = serde_json::json!([{ "type": "resize", "width": 50, "height": 50, "mode": "fit" }]);
-        let result = process_image(input.to_str().unwrap(), output.to_str().unwrap(), &ops, tmp.path()).await;
+        let ops =
+            serde_json::json!([{ "type": "resize", "width": 50, "height": 50, "mode": "fit" }]);
+        let result = process_image(
+            input.to_str().unwrap(),
+            output.to_str().unwrap(),
+            &ops,
+            tmp.path(),
+        )
+        .await;
         assert!(!result.is_error, "Erreur: {}", result.content);
         let json: serde_json::Value = serde_json::from_str(&result.content).unwrap();
         // fit 100x200 into 50x50 → 25x50 (ratio preserved)
@@ -33,8 +40,15 @@ mod tests {
         let tmp = working_dir();
         let input = create_test_image(tmp.path(), "input.png", 100, 200);
         let output = tmp.path().join("output.png");
-        let ops = serde_json::json!([{ "type": "resize", "width": 50, "height": 50, "mode": "exact" }]);
-        let result = process_image(input.to_str().unwrap(), output.to_str().unwrap(), &ops, tmp.path()).await;
+        let ops =
+            serde_json::json!([{ "type": "resize", "width": 50, "height": 50, "mode": "exact" }]);
+        let result = process_image(
+            input.to_str().unwrap(),
+            output.to_str().unwrap(),
+            &ops,
+            tmp.path(),
+        )
+        .await;
         assert!(!result.is_error);
         let json: serde_json::Value = serde_json::from_str(&result.content).unwrap();
         assert_eq!(json["width"], 50);
@@ -46,8 +60,15 @@ mod tests {
         let tmp = working_dir();
         let input = create_test_image(tmp.path(), "input.png", 100, 200);
         let output = tmp.path().join("output.png");
-        let ops = serde_json::json!([{ "type": "resize", "width": 50, "height": 50, "mode": "fill" }]);
-        let result = process_image(input.to_str().unwrap(), output.to_str().unwrap(), &ops, tmp.path()).await;
+        let ops =
+            serde_json::json!([{ "type": "resize", "width": 50, "height": 50, "mode": "fill" }]);
+        let result = process_image(
+            input.to_str().unwrap(),
+            output.to_str().unwrap(),
+            &ops,
+            tmp.path(),
+        )
+        .await;
         assert!(!result.is_error);
         let json: serde_json::Value = serde_json::from_str(&result.content).unwrap();
         assert_eq!(json["width"], 50);
@@ -59,8 +80,15 @@ mod tests {
         let tmp = working_dir();
         let input = create_test_image(tmp.path(), "input.png", 100, 100);
         let output = tmp.path().join("output.png");
-        let ops = serde_json::json!([{ "type": "crop", "x": 10, "y": 10, "width": 50, "height": 30 }]);
-        let result = process_image(input.to_str().unwrap(), output.to_str().unwrap(), &ops, tmp.path()).await;
+        let ops =
+            serde_json::json!([{ "type": "crop", "x": 10, "y": 10, "width": 50, "height": 30 }]);
+        let result = process_image(
+            input.to_str().unwrap(),
+            output.to_str().unwrap(),
+            &ops,
+            tmp.path(),
+        )
+        .await;
         assert!(!result.is_error);
         let json: serde_json::Value = serde_json::from_str(&result.content).unwrap();
         assert_eq!(json["width"], 50);
@@ -73,7 +101,13 @@ mod tests {
         let input = create_test_image(tmp.path(), "input.png", 50, 50);
         let output = tmp.path().join("output.jpg");
         let ops = serde_json::json!([]);
-        let result = process_image(input.to_str().unwrap(), output.to_str().unwrap(), &ops, tmp.path()).await;
+        let result = process_image(
+            input.to_str().unwrap(),
+            output.to_str().unwrap(),
+            &ops,
+            tmp.path(),
+        )
+        .await;
         assert!(!result.is_error);
         assert!(output.exists());
     }
@@ -83,7 +117,13 @@ mod tests {
         let tmp = working_dir();
         let output = tmp.path().join("output.png");
         let ops = serde_json::json!([]);
-        let result = process_image("/nonexistent/image.png", output.to_str().unwrap(), &ops, tmp.path()).await;
+        let result = process_image(
+            "/nonexistent/image.png",
+            output.to_str().unwrap(),
+            &ops,
+            tmp.path(),
+        )
+        .await;
         assert!(result.is_error);
     }
 
@@ -93,7 +133,13 @@ mod tests {
         let input = create_test_image(tmp.path(), "input.png", 80, 60);
         let output = tmp.path().join("output.png");
         let ops = serde_json::json!([]);
-        let result = process_image(input.to_str().unwrap(), output.to_str().unwrap(), &ops, tmp.path()).await;
+        let result = process_image(
+            input.to_str().unwrap(),
+            output.to_str().unwrap(),
+            &ops,
+            tmp.path(),
+        )
+        .await;
         assert!(!result.is_error);
         let json: serde_json::Value = serde_json::from_str(&result.content).unwrap();
         assert_eq!(json["width"], 80);
@@ -106,7 +152,13 @@ mod tests {
         let input = create_test_image(tmp.path(), "input.png", 50, 50);
         let output = tmp.path().join("output.png");
         let ops = serde_json::json!([]);
-        let result = process_image(input.to_str().unwrap(), output.to_str().unwrap(), &ops, tmp.path()).await;
+        let result = process_image(
+            input.to_str().unwrap(),
+            output.to_str().unwrap(),
+            &ops,
+            tmp.path(),
+        )
+        .await;
         assert!(!result.is_error);
         let json: serde_json::Value = serde_json::from_str(&result.content).unwrap();
         assert!(json["file_size_bytes"].as_u64().unwrap_or(0) > 0);
@@ -118,7 +170,13 @@ mod tests {
         let input = create_test_image(tmp.path(), "input.png", 50, 50);
         let output = tmp.path().join("output.png");
         let ops = serde_json::json!([{ "type": "unknown_op" }]);
-        let result = process_image(input.to_str().unwrap(), output.to_str().unwrap(), &ops, tmp.path()).await;
+        let result = process_image(
+            input.to_str().unwrap(),
+            output.to_str().unwrap(),
+            &ops,
+            tmp.path(),
+        )
+        .await;
         assert!(result.is_error);
     }
 }

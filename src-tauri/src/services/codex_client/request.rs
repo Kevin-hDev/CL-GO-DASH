@@ -18,7 +18,9 @@ pub fn set_effort(level: &str) {
 }
 
 pub fn get_effort() -> String {
-    EFFORT.lock().ok()
+    EFFORT
+        .lock()
+        .ok()
         .and_then(|v| if v.is_empty() { None } else { Some(v.clone()) })
         .unwrap_or_else(|| "medium".to_string())
 }
@@ -59,7 +61,11 @@ async fn send_request(
         stream: true,
         store: false,
         tools: converted_tools,
-        tool_choice: if tools.is_empty() { None } else { Some("auto".to_string()) },
+        tool_choice: if tools.is_empty() {
+            None
+        } else {
+            Some("auto".to_string())
+        },
         reasoning,
         include,
     };

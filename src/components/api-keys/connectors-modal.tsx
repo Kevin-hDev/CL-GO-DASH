@@ -11,6 +11,7 @@ const TABS: { id: CategoryTab; i18nKey: string }[] = [
   { id: "llm", i18nKey: "apiKeys.connectors.tabs.llm" },
   { id: "search", i18nKey: "apiKeys.connectors.tabs.search" },
   { id: "scraping", i18nKey: "apiKeys.connectors.tabs.scraping" },
+  { id: "forecast", i18nKey: "apiKeys.connectors.tabs.forecast" },
 ];
 
 interface ConnectorsModalProps {

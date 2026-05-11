@@ -62,7 +62,8 @@
         "all": "All",
         "llm": "AI / LLM",
         "search": "Search",
-        "scraping": "Scraping"
+        "scraping": "Scraping",
+        "forecast": "Forecast"
       }
     }
   },
@@ -705,6 +706,12 @@
     "pasteData": "Paste data",
     "fromUrl": "From URL",
     "recentAnalyses": "Recent analyses",
+    "comingSoon": "Coming soon",
+    "panelMode": {
+      "title": "Panel mode",
+      "preview": "File preview",
+      "forecast": "Forecast"
+    },
     "nav": {
       "mainView": "Main view",
       "scenarios": "Scenarios",
@@ -713,22 +720,58 @@
       "history": "History"
     },
     "config": {
+      "title": "Configuration",
+      "back": "Back",
       "target": "Target",
+      "dateColumn": "Date column",
       "covariates": "Covariates",
       "frequency": "Frequency",
       "horizon": "Horizon",
       "confidence": "Confidence",
       "model": "Model",
-      "launch": "Launch forecast"
+      "launch": "Launch forecast",
+      "launching": "Calculating…",
+      "rows_one": "{{count}} row",
+      "rows_other": "{{count}} rows"
+    },
+    "frequency": {
+      "D": "Day",
+      "W": "Week",
+      "M": "Month",
+      "Q": "Quarter",
+      "Y": "Year",
+      "H": "Hour",
+      "T": "Minute"
+    },
+    "errors": {
+      "importFailed": "Import failed. Check the file format.",
+      "launchFailed": "The calculation failed. Check the columns, model, and API key."
     },
     "models": {
       "manage": "Manage models",
+      "title": "Forecast models",
+      "back": "Back",
       "install": "Install",
+      "remove": "Remove",
+      "confirmRemove": "Confirm?",
       "uninstall": "Uninstall",
       "installed": "Installed",
+      "installError": "Error",
       "downloading": "Downloading...",
+      "notInstalledSuffix": "(not installed)",
       "parameters": "Parameters",
       "specs": "Specifications",
+      "diskSize": "Disk size",
+      "ram": "RAM",
+      "ramCpu": "RAM (CPU)",
+      "vramGpu": "VRAM (GPU)",
+      "supported": "Supported",
+      "unsupported": "Unsupported",
+      "horizonMax": "Max horizon",
+      "frequencies": "Frequencies",
+      "state": "State",
+      "status": "Status",
+      "usedSpace": "Used space",
       "local": "Local",
       "cloud": "Cloud (key required)",
       "noKeyConfigured": "API key not configured"

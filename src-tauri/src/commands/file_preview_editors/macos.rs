@@ -58,9 +58,8 @@ pub fn detect(file_path: &Path) -> Vec<DetectedEditor> {
         }
     };
 
-    let raw_array = unsafe {
-        LSCopyApplicationURLsForURL(file_url.as_concrete_TypeRef(), K_LS_ROLES_ALL)
-    };
+    let raw_array =
+        unsafe { LSCopyApplicationURLsForURL(file_url.as_concrete_TypeRef(), K_LS_ROLES_ALL) };
     if raw_array.is_null() {
         return vec![];
     }

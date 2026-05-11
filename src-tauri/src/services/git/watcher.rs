@@ -1,7 +1,7 @@
 use notify::{Event, EventKind, RecursiveMode, Watcher};
 use std::path::PathBuf;
-use std::sync::mpsc;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
@@ -37,7 +37,9 @@ pub fn setup_git_watcher(app: AppHandle, repo_path: PathBuf) -> Result<(), Strin
         None => return Ok(()),
     };
 
-    let mut guard = WATCHER_ACTIVE.lock().map_err(|_| "Lock error".to_string())?;
+    let mut guard = WATCHER_ACTIVE
+        .lock()
+        .map_err(|_| "Lock error".to_string())?;
 
     if let Some(prev) = guard.take() {
         prev.store(true, Ordering::Relaxed);
@@ -56,9 +58,10 @@ pub fn setup_git_watcher(app: AppHandle, repo_path: PathBuf) -> Result<(), Strin
 
         let mut watcher = match notify::recommended_watcher(move |res: Result<Event, _>| {
             if let Ok(event) = res {
-                let all_lock = event.paths.iter().all(|p| {
-                    p.extension().map(|e| e == "lock").unwrap_or(false)
-                });
+                let all_lock = event
+                    .paths
+                    .iter()
+                    .all(|p| p.extension().map(|e| e == "lock").unwrap_or(false));
                 if all_lock {
                     return;
                 }

@@ -20,7 +20,7 @@ export type SearchProviderId =
 
 export type ProviderId = string;
 
-export type ProviderCategory = "llm" | "search" | "scraping";
+export type ProviderCategory = "llm" | "search" | "scraping" | "forecast";
 
 /**
  * Spec d'un provider (miroir du catalog Rust).

@@ -76,7 +76,11 @@ async fn validate_url_with_ip(url: &str) -> Result<(String, IpAddr), String> {
         .next()
         .unwrap_or("");
     let host = if authority.starts_with('[') {
-        authority.split(']').next().unwrap_or("").trim_start_matches('[')
+        authority
+            .split(']')
+            .next()
+            .unwrap_or("")
+            .trim_start_matches('[')
     } else {
         authority.split(':').next().unwrap_or("")
     };
@@ -137,4 +141,3 @@ fn truncate(s: &str, max: usize) -> String {
         format!("{}... [tronqué]", &s[..end])
     }
 }
-

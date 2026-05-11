@@ -1,7 +1,9 @@
-use crate::services::agent_local::types_ollama::{ChatMessage, ChatRequest, StreamEvent, StreamResult};
-use crate::services::agent_local::stream_events::AgentEventEmitter;
-use crate::services::agent_local::ollama_stream_process::process_chunk;
 use crate::services::agent_local::ollama_base_url;
+use crate::services::agent_local::ollama_stream_process::process_chunk;
+use crate::services::agent_local::stream_events::AgentEventEmitter;
+use crate::services::agent_local::types_ollama::{
+    ChatMessage, ChatRequest, StreamEvent, StreamResult,
+};
 use crate::services::stream_utils::ThinkTagFilter;
 use futures_util::StreamExt;
 use std::time::Duration;
@@ -13,7 +15,10 @@ use tokio_util::sync::CancellationToken;
 const COLLECT_TIMEOUT_SECS: u64 = 60;
 
 /// Appel Ollama non-interactif (sans streaming UI).
-pub async fn collect_chat(model: &str, messages: Vec<ChatMessage>) -> Result<(String, u32), String> {
+pub async fn collect_chat(
+    model: &str,
+    messages: Vec<ChatMessage>,
+) -> Result<(String, u32), String> {
     let body = serde_json::json!({
         "model": model,
         "messages": messages,
@@ -47,7 +52,10 @@ pub async fn collect_chat(model: &str, messages: Vec<ChatMessage>) -> Result<(St
         .await
         .map_err(|e| format!("Réponse Ollama invalide : {e}"))?;
 
-    let content = value["message"]["content"].as_str().unwrap_or("").to_string();
+    let content = value["message"]["content"]
+        .as_str()
+        .unwrap_or("")
+        .to_string();
     let tokens = value["eval_count"].as_u64().unwrap_or(0) as u32;
     Ok((content, tokens))
 }
@@ -95,15 +103,25 @@ async fn stream_chat_inner(
         let status = resp.status();
         let body = resp.text().await.unwrap_or_default();
         if let Some(retry_req) = build_retry_request(request, &body) {
-            let feature = if retry_req.think != request.think { "thinking" }
-                else if retry_req.tools != request.tools { "tools" }
-                else { "images" };
+            let feature = if retry_req.think != request.think {
+                "thinking"
+            } else if retry_req.tools != request.tools {
+                "tools"
+            } else {
+                "images"
+            };
             eprintln!("[ollama-stream] modèle sans {feature}, retry");
-            return Box::pin(stream_chat_inner(on_event, &retry_req, cancel, emit_done, tool_tx)).await;
+            return Box::pin(stream_chat_inner(
+                on_event, &retry_req, cancel, emit_done, tool_tx,
+            ))
+            .await;
         }
         eprintln!("[ollama-stream] HTTP {status}: {body}");
         let msg = format!("Ollama HTTP {status}");
-        let _ = on_event.send(StreamEvent::Error { message: "Erreur serveur Ollama".into(), is_connection: false });
+        let _ = on_event.send(StreamEvent::Error {
+            message: "Erreur serveur Ollama".into(),
+            is_connection: false,
+        });
         return Err(msg);
     }
 
@@ -172,5 +190,9 @@ fn build_retry_request(request: &ChatRequest, error_body: &str) -> Option<ChatRe
         }
         changed = true;
     }
-    if changed { Some(retry) } else { None }
+    if changed {
+        Some(retry)
+    } else {
+        None
+    }
 }

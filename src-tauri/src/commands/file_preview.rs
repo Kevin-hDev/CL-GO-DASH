@@ -58,20 +58,23 @@ pub fn open_preview_with_editor(
     validate_editor_path(&editor_path)?;
 
     #[cfg(target_os = "macos")]
-    return spawn_cmd("open", &[
-        std::ffi::OsStr::new("-a"),
-        std::ffi::OsStr::new(&editor_path),
-        resolved.as_os_str(),
-    ]);
+    return spawn_cmd(
+        "open",
+        &[
+            std::ffi::OsStr::new("-a"),
+            std::ffi::OsStr::new(&editor_path),
+            resolved.as_os_str(),
+        ],
+    );
 
     #[cfg(target_os = "windows")]
     return spawn_cmd(&editor_path, &[resolved.as_os_str()]);
 
     #[cfg(target_os = "linux")]
-    return spawn_cmd("gtk-launch", &[
-        std::ffi::OsStr::new(&editor_path),
-        resolved.as_os_str(),
-    ]);
+    return spawn_cmd(
+        "gtk-launch",
+        &[std::ffi::OsStr::new(&editor_path), resolved.as_os_str()],
+    );
 }
 
 fn validate_editor_path(editor_path: &str) -> Result<(), String> {
@@ -118,9 +121,9 @@ pub(crate) fn resolve_preview_path(path: &str, base_dir: Option<&str>) -> Result
         validate_path_text(base)?;
         PathBuf::from(base).join(raw_path)
     };
-    let working_dir = base_dir.map(PathBuf::from).unwrap_or_else(|| {
-        std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."))
-    });
+    let working_dir = base_dir
+        .map(PathBuf::from)
+        .unwrap_or_else(|| std::env::current_dir().unwrap_or_else(|_| PathBuf::from(".")));
     security::validate_read_path(&joined, &working_dir)
 }
 
@@ -128,7 +131,10 @@ fn validate_path_text(path: &str) -> Result<(), String> {
     if path.is_empty() || path.len() > MAX_PATH_LEN || path.contains('\0') {
         return Err("Chemin invalide".into());
     }
-    if Path::new(path).components().any(|part| matches!(part, Component::ParentDir)) {
+    if Path::new(path)
+        .components()
+        .any(|part| matches!(part, Component::ParentDir))
+    {
         return Err("Chemin invalide".into());
     }
     Ok(())

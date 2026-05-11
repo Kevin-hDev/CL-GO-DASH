@@ -13,8 +13,7 @@ pub fn extract_domain(url: &str) -> String {
 pub fn extract_og(html: &str, property: &str) -> Option<String> {
     let pattern = format!(r#"property="{property}""#);
     let alt_pattern = format!(r#"property='{property}'"#);
-    find_meta_content(html, &pattern)
-        .or_else(|| find_meta_content(html, &alt_pattern))
+    find_meta_content(html, &pattern).or_else(|| find_meta_content(html, &alt_pattern))
 }
 
 pub fn extract_meta_name(html: &str, name: &str) -> Option<String> {
@@ -45,7 +44,11 @@ pub fn extract_tag(html: &str, tag_name: &str) -> Option<String> {
         return None;
     }
     let text = html[content_start..end].trim();
-    if text.is_empty() { None } else { Some(decode_entities(text)) }
+    if text.is_empty() {
+        None
+    } else {
+        Some(decode_entities(text))
+    }
 }
 
 pub fn extract_favicon(html: &str) -> Option<String> {
@@ -83,7 +86,11 @@ fn extract_attr(tag: &str, attr: &str) -> Option<String> {
     };
     let end = rest[start..].find(quote)? + start;
     let val = rest[start..end].trim();
-    if val.is_empty() { None } else { Some(decode_entities(val)) }
+    if val.is_empty() {
+        None
+    } else {
+        Some(decode_entities(val))
+    }
 }
 
 pub fn resolve_url(href: &str, base: &str) -> String {
@@ -136,22 +143,34 @@ mod tests {
 
     #[test]
     fn resolve_absolute() {
-        assert_eq!(resolve_url("https://x.com/img.png", "https://x.com"), "https://x.com/img.png");
+        assert_eq!(
+            resolve_url("https://x.com/img.png", "https://x.com"),
+            "https://x.com/img.png"
+        );
     }
 
     #[test]
     fn resolve_relative() {
-        assert_eq!(resolve_url("/img.png", "https://x.com"), "https://x.com/img.png");
+        assert_eq!(
+            resolve_url("/img.png", "https://x.com"),
+            "https://x.com/img.png"
+        );
     }
 
     #[test]
     fn resolve_protocol_relative() {
-        assert_eq!(resolve_url("//cdn.x.com/img.png", "https://x.com"), "https://cdn.x.com/img.png");
+        assert_eq!(
+            resolve_url("//cdn.x.com/img.png", "https://x.com"),
+            "https://cdn.x.com/img.png"
+        );
     }
 
     #[test]
     fn domain_extraction() {
-        assert_eq!(extract_domain("https://www.example.com/path"), "www.example.com");
+        assert_eq!(
+            extract_domain("https://www.example.com/path"),
+            "www.example.com"
+        );
         assert_eq!(extract_domain("http://localhost:3000/"), "localhost");
     }
 
@@ -163,6 +182,9 @@ mod tests {
     #[test]
     fn meta_name() {
         let html = r#"<meta name="description" content="A cool site">"#;
-        assert_eq!(extract_meta_name(html, "description"), Some("A cool site".into()));
+        assert_eq!(
+            extract_meta_name(html, "description"),
+            Some("A cool site".into())
+        );
     }
 }

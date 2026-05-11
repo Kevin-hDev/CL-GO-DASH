@@ -34,7 +34,6 @@ impl CodexTokens {
     }
 }
 
-
 pub fn save(tokens: &CodexTokens) -> Result<(), String> {
     let raw = Stored {
         access: tokens.access.to_string(),
@@ -51,8 +50,8 @@ pub fn save(tokens: &CodexTokens) -> Result<(), String> {
 pub fn load() -> Result<Option<CodexTokens>, String> {
     match api_keys::get_raw(VAULT_KEY) {
         Ok(json) => {
-            let mut raw: Stored = serde_json::from_str(&json)
-                .map_err(|e| format!("parse codex tokens: {e}"))?;
+            let mut raw: Stored =
+                serde_json::from_str(&json).map_err(|e| format!("parse codex tokens: {e}"))?;
             let tokens = CodexTokens {
                 access: Zeroizing::new(std::mem::take(&mut raw.access)),
                 refresh: Zeroizing::new(std::mem::take(&mut raw.refresh)),

@@ -59,7 +59,8 @@ async fn dispatch(_app: &AppHandle, wakeup: &ScheduledWakeup) -> Result<(String,
                 images: None,
                 tool_calls: None,
                 tool_name: None,
-                tool_call_id: None, reasoning_content: None,
+                tool_call_id: None,
+                reasoning_content: None,
             }],
         )
         .await?
@@ -104,10 +105,7 @@ async fn dispatch(_app: &AppHandle, wakeup: &ScheduledWakeup) -> Result<(String,
     Ok((session_id, tokens))
 }
 
-async fn find_or_create_heartbeat_session(
-    provider: &str,
-    model: &str,
-) -> Result<String, String> {
+async fn find_or_create_heartbeat_session(provider: &str, model: &str) -> Result<String, String> {
     if let Some(id) = session_store::find_heartbeat_session(provider, model).await? {
         return Ok(id);
     }

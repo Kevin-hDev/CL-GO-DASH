@@ -32,10 +32,7 @@ fn get_default_app(mime: &str) -> Option<String> {
 }
 
 fn desktop_name(desktop_id: &str) -> String {
-    let search_dirs = [
-        "/usr/share/applications",
-        "/usr/local/share/applications",
-    ];
+    let search_dirs = ["/usr/share/applications", "/usr/local/share/applications"];
     let home = std::env::var("HOME").unwrap_or_default();
     let user_dir = format!("{home}/.local/share/applications");
 
@@ -56,10 +53,7 @@ fn desktop_name(desktop_id: &str) -> String {
 }
 
 fn apps_for_mime(mime: &str) -> Vec<String> {
-    let search_dirs = [
-        "/usr/share/applications",
-        "/usr/local/share/applications",
-    ];
+    let search_dirs = ["/usr/share/applications", "/usr/local/share/applications"];
     let home = std::env::var("HOME").unwrap_or_default();
     let user_dir = format!("{home}/.local/share/applications");
     let mut result = Vec::new();

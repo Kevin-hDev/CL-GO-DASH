@@ -35,7 +35,11 @@ async fn discover_issuer(client: &Client, endpoint: &str) -> Result<String, Stri
     let status = resp.status().as_u16();
 
     if status == 401 || status == 403 {
-        if let Some(header) = resp.headers().get("www-authenticate").and_then(|v| v.to_str().ok()) {
+        if let Some(header) = resp
+            .headers()
+            .get("www-authenticate")
+            .and_then(|v| v.to_str().ok())
+        {
             if let Some(url) = extract_resource_metadata_url(header, &endpoint_host) {
                 if let Ok(issuer) = fetch_issuer_from_resource_meta(client, &url).await {
                     return Ok(issuer);
@@ -89,19 +93,24 @@ fn extract_resource_metadata_url(header: &str, endpoint_host: &str) -> Option<St
 }
 
 fn extract_host(url: &str) -> Option<String> {
-    reqwest::Url::parse(url).ok().and_then(|u| u.host_str().map(|h| h.to_string()))
+    reqwest::Url::parse(url)
+        .ok()
+        .and_then(|u| u.host_str().map(|h| h.to_string()))
 }
 
 fn is_same_domain(url: &str, reference_host: &str) -> bool {
-    let Some(url_host) = extract_host(url) else { return false };
+    let Some(url_host) = extract_host(url) else {
+        return false;
+    };
     url_host == reference_host || url_host.ends_with(&format!(".{reference_host}"))
 }
 
-async fn fetch_issuer_from_resource_meta(
-    client: &Client,
-    url: &str,
-) -> Result<String, String> {
-    let resp = client.get(url).send().await.map_err(|_| "serveur non disponible".to_string())?;
+async fn fetch_issuer_from_resource_meta(client: &Client, url: &str) -> Result<String, String> {
+    let resp = client
+        .get(url)
+        .send()
+        .await
+        .map_err(|_| "serveur non disponible".to_string())?;
     if !resp.status().is_success() {
         return Err("not found".to_string());
     }
@@ -144,10 +153,7 @@ async fn fetch_auth_server_metadata(
     Err("métadonnées du serveur d'autorisation non trouvées".to_string())
 }
 
-async fn try_fetch_metadata(
-    client: &Client,
-    url: &str,
-) -> Result<AuthServerMetadata, String> {
+async fn try_fetch_metadata(client: &Client, url: &str) -> Result<AuthServerMetadata, String> {
     let resp = client.get(url).send().await.map_err(|e| format!("{e}"))?;
     if !resp.status().is_success() {
         return Err("not found".to_string());

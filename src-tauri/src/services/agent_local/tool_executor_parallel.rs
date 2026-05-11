@@ -12,15 +12,20 @@ use tokio_util::sync::CancellationToken;
 
 const MAX_PARALLEL: usize = 10;
 
-use super::tool_executor_helpers::{
-    check_write_guard, post_record_read, push_tool_result,
-};
+use super::tool_executor_helpers::{check_write_guard, post_record_read, push_tool_result};
 
 pub fn is_read_only(name: &str) -> bool {
     matches!(
         name,
-        "read_file" | "grep" | "glob" | "list_dir" | "web_search" | "load_skill"
-            | "read_spreadsheet" | "read_document" | "read_image"
+        "read_file"
+            | "grep"
+            | "glob"
+            | "list_dir"
+            | "web_search"
+            | "load_skill"
+            | "read_spreadsheet"
+            | "read_document"
+            | "read_image"
     )
 }
 
@@ -55,9 +60,15 @@ pub async fn run_with_parallel_reads(
             if !read_batch.is_empty() {
                 let batch: Vec<_> = std::mem::take(&mut read_batch);
                 flush_read_batch(
-                    &batch, &mut indexed_results, working_dir, &cancel,
-                    write_guard, &mut eager_results, session_id,
-                ).await;
+                    &batch,
+                    &mut indexed_results,
+                    working_dir,
+                    &cancel,
+                    write_guard,
+                    &mut eager_results,
+                    session_id,
+                )
+                .await;
             }
 
             if is_last {
@@ -66,9 +77,15 @@ pub async fn run_with_parallel_reads(
 
             let (name, args) = &tool_calls[i];
             let tr = execute_write(
-                on_event, name, args, working_dir, write_guard,
-                session_id, cancel.clone(),
-            ).await;
+                on_event,
+                name,
+                args,
+                working_dir,
+                write_guard,
+                session_id,
+                cancel.clone(),
+            )
+            .await;
             indexed_results[i] = Some((name.as_str(), tr));
             i += 1;
         } else {
@@ -120,7 +137,13 @@ async fn flush_read_batch<'a>(
         for (pos, entry) in chunk.iter().enumerate() {
             if let Some(ref mut eager) = eager_results.as_deref_mut() {
                 if let Some(tr) = eager.remove(&entry.global_idx) {
-                    post_record_read(entry.name, entry.effective_args, working_dir, &tr, write_guard);
+                    post_record_read(
+                        entry.name,
+                        entry.effective_args,
+                        working_dir,
+                        &tr,
+                        write_guard,
+                    );
                     let tr = run_post_hooks(entry.name, entry.effective_args, tr);
                     chunk_results[pos] = Some(tr);
                     continue;
@@ -134,20 +157,33 @@ async fn flush_read_batch<'a>(
                 .iter()
                 .map(|&pos| {
                     let entry = &chunk[pos];
-                    tool_dispatcher::dispatch(entry.name, entry.effective_args, working_dir, session_id)
+                    tool_dispatcher::dispatch(
+                        entry.name,
+                        entry.effective_args,
+                        working_dir,
+                        session_id,
+                    )
                 })
                 .collect();
             let dispatched = join_all(futs).await;
             for (pos, tr) in pending_indices.iter().zip(dispatched.into_iter()) {
                 let entry = &chunk[*pos];
-                post_record_read(entry.name, entry.effective_args, working_dir, &tr, write_guard);
+                post_record_read(
+                    entry.name,
+                    entry.effective_args,
+                    working_dir,
+                    &tr,
+                    write_guard,
+                );
                 let tr = run_post_hooks(entry.name, entry.effective_args, tr);
                 chunk_results[*pos] = Some(tr);
             }
         }
 
         for (pos, entry) in chunk.iter().enumerate() {
-            let tr = chunk_results[pos].take().unwrap_or_else(|| ToolResult::err("Annulé."));
+            let tr = chunk_results[pos]
+                .take()
+                .unwrap_or_else(|| ToolResult::err("Annulé."));
             indexed_results[entry.global_idx] = Some((entry.name, tr));
         }
     }
@@ -182,8 +218,14 @@ async fn execute_write(
             }
         }
     } else if !permission_gate::check_data_dir_write(
-        on_event, name, args, session_id, cancel.clone(),
-    ).await {
+        on_event,
+        name,
+        args,
+        session_id,
+        cancel.clone(),
+    )
+    .await
+    {
         return ToolResult::err("L'utilisateur a refusé cette action.");
     }
 

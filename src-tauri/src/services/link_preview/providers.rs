@@ -35,12 +35,15 @@ pub async fn youtube_preview(url: &str, domain: &str) -> Result<LinkPreview, Str
         return Err("Preview unavailable".into());
     }
 
-    let bytes = resp.bytes().await.map_err(|_| "Preview unavailable".to_string())?;
+    let bytes = resp
+        .bytes()
+        .await
+        .map_err(|_| "Preview unavailable".to_string())?;
     if bytes.len() > MAX_OEMBED {
         return Err("Preview unavailable".into());
     }
-    let data: YouTubeOembed = serde_json::from_slice(&bytes)
-        .map_err(|_| "Preview unavailable".to_string())?;
+    let data: YouTubeOembed =
+        serde_json::from_slice(&bytes).map_err(|_| "Preview unavailable".to_string())?;
 
     let image = format!("https://img.youtube.com/vi/{video_id}/hqdefault.jpg");
 
@@ -58,25 +61,43 @@ pub async fn youtube_preview(url: &str, domain: &str) -> Result<LinkPreview, Str
 fn is_valid_video_id(id: &str) -> bool {
     !id.is_empty()
         && id.len() <= 16
-        && id.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+        && id
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
 }
 
 fn extract_youtube_id(url: &str) -> Option<String> {
     if url.contains("youtu.be/") {
         let after = url.split("youtu.be/").nth(1)?;
         let id = after.split(['?', '&', '/']).next()?;
-        return if id.is_empty() { None } else { Some(id.to_string()) };
+        return if id.is_empty() {
+            None
+        } else {
+            Some(id.to_string())
+        };
     }
     if url.contains("v=") {
         let after = url.split("v=").nth(1)?;
         let id = after.split(['&', '#']).next()?;
-        return if id.is_empty() { None } else { Some(id.to_string()) };
+        return if id.is_empty() {
+            None
+        } else {
+            Some(id.to_string())
+        };
     }
     if url.contains("/embed/") || url.contains("/v/") {
-        let sep = if url.contains("/embed/") { "/embed/" } else { "/v/" };
+        let sep = if url.contains("/embed/") {
+            "/embed/"
+        } else {
+            "/v/"
+        };
         let after = url.split(sep).nth(1)?;
         let id = after.split(['?', '&', '/']).next()?;
-        return if id.is_empty() { None } else { Some(id.to_string()) };
+        return if id.is_empty() {
+            None
+        } else {
+            Some(id.to_string())
+        };
     }
     None
 }

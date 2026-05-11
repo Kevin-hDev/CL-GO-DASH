@@ -57,7 +57,9 @@ pub fn get_enabled_connectors() -> Vec<EnabledConnector> {
 fn is_valid_connector_id(id: &str) -> bool {
     !id.is_empty()
         && id.len() <= 64
-        && id.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
+        && id
+            .bytes()
+            .all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
 }
 
 pub fn is_trusted_endpoint_pub(url: &str) -> bool {
@@ -74,11 +76,21 @@ fn is_trusted_endpoint(url: &str) -> bool {
         None => return false,
     };
     const TRUSTED_SUFFIXES: &[&str] = &[
-        ".linear.app", ".notion.so", ".canva.com", ".sentry.io",
-        ".vercel.com", ".slack.com", ".apify.com", ".lucid.co",
-        ".googleapis.com", ".githubcopilot.com", ".figma.com",
+        ".linear.app",
+        ".notion.so",
+        ".canva.com",
+        ".sentry.io",
+        ".vercel.com",
+        ".slack.com",
+        ".apify.com",
+        ".lucid.co",
+        ".googleapis.com",
+        ".githubcopilot.com",
+        ".figma.com",
     ];
-    TRUSTED_SUFFIXES.iter().any(|s| host.ends_with(s) || host == &s[1..])
+    TRUSTED_SUFFIXES
+        .iter()
+        .any(|s| host.ends_with(s) || host == &s[1..])
 }
 
 fn build_connector(c: StoredConnector) -> Option<EnabledConnector> {
@@ -108,11 +120,24 @@ fn build_connector(c: StoredConnector) -> Option<EnabledConnector> {
 }
 
 const FORBIDDEN_ENV_KEYS: &[&str] = &[
-    "PATH", "HOME", "TMPDIR", "LANG", "LC_ALL", "USER", "SHELL",
-    "LD_PRELOAD", "LD_LIBRARY_PATH", "DYLD_INSERT_LIBRARIES",
-    "NODE_OPTIONS", "NODE_PATH", "DENO_DIR",
-    "NPM_CONFIG_CACHE", "NPM_CONFIG_PREFIX",
-    "XDG_DATA_HOME", "XDG_CACHE_HOME", "XDG_CONFIG_HOME",
+    "PATH",
+    "HOME",
+    "TMPDIR",
+    "LANG",
+    "LC_ALL",
+    "USER",
+    "SHELL",
+    "LD_PRELOAD",
+    "LD_LIBRARY_PATH",
+    "DYLD_INSERT_LIBRARIES",
+    "NODE_OPTIONS",
+    "NODE_PATH",
+    "DENO_DIR",
+    "NPM_CONFIG_CACHE",
+    "NPM_CONFIG_PREFIX",
+    "XDG_DATA_HOME",
+    "XDG_CACHE_HOME",
+    "XDG_CONFIG_HOME",
 ];
 
 fn is_valid_env_key(key: &str) -> bool {

@@ -44,7 +44,9 @@ fn resolve_sheet_name(book: &umya_spreadsheet::Spreadsheet, op: &Value) -> Strin
 fn apply_set_cell(book: &mut umya_spreadsheet::Spreadsheet, op: &Value) -> Result<(), String> {
     let (col_1b, row_1b) = resolve_col_row_1based(op)?;
     let sheet_name = resolve_sheet_name(book, op);
-    let sheet = book.get_sheet_by_name_mut(&sheet_name).ok_or("Feuille introuvable")?;
+    let sheet = book
+        .get_sheet_by_name_mut(&sheet_name)
+        .ok_or("Feuille introuvable")?;
     let cell = sheet.get_cell_mut((col_1b, row_1b));
     set_cell_value(cell, &op["value"]);
     Ok(())
@@ -55,7 +57,9 @@ fn apply_set_formula(book: &mut umya_spreadsheet::Spreadsheet, op: &Value) -> Re
     let raw = op["formula"].as_str().unwrap_or("").to_string();
     let formula = normalize_formula(&raw);
     let sheet_name = resolve_sheet_name(book, op);
-    let sheet = book.get_sheet_by_name_mut(&sheet_name).ok_or("Feuille introuvable")?;
+    let sheet = book
+        .get_sheet_by_name_mut(&sheet_name)
+        .ok_or("Feuille introuvable")?;
     sheet.get_cell_mut((col_1b, row_1b)).set_formula(&formula);
     Ok(())
 }
@@ -68,7 +72,9 @@ fn apply_set_row(book: &mut umya_spreadsheet::Spreadsheet, op: &Value) -> Result
         None => return Ok(()),
     };
     let sheet_name = resolve_sheet_name(book, op);
-    let sheet = book.get_sheet_by_name_mut(&sheet_name).ok_or("Feuille introuvable")?;
+    let sheet = book
+        .get_sheet_by_name_mut(&sheet_name)
+        .ok_or("Feuille introuvable")?;
 
     for (col_idx, val) in values.iter().enumerate() {
         let col_1based = (col_idx as u32) + 1;
@@ -78,13 +84,20 @@ fn apply_set_row(book: &mut umya_spreadsheet::Spreadsheet, op: &Value) -> Result
     Ok(())
 }
 
-fn apply_set_column_width(book: &mut umya_spreadsheet::Spreadsheet, op: &Value) -> Result<(), String> {
+fn apply_set_column_width(
+    book: &mut umya_spreadsheet::Spreadsheet,
+    op: &Value,
+) -> Result<(), String> {
     let col_idx = value_as_u32(&op["col"]).unwrap_or(0);
     let col_1based = col_idx + 1;
     let width = value_as_f64(&op["width"]).unwrap_or(8.43);
     let sheet_name = resolve_sheet_name(book, op);
-    let sheet = book.get_sheet_by_name_mut(&sheet_name).ok_or("Feuille introuvable")?;
-    sheet.get_column_dimension_by_number_mut(&col_1based).set_width(width);
+    let sheet = book
+        .get_sheet_by_name_mut(&sheet_name)
+        .ok_or("Feuille introuvable")?;
+    sheet
+        .get_column_dimension_by_number_mut(&col_1based)
+        .set_width(width);
     Ok(())
 }
 
@@ -112,9 +125,15 @@ fn set_cell_value(cell: &mut umya_spreadsheet::Cell, val: &Value) {
                 cell.set_value(s);
             }
         }
-        Value::Number(n) => { cell.set_value_number(n.as_f64().unwrap_or(0.0)); }
-        Value::Bool(b) => { cell.set_value_bool(*b); }
+        Value::Number(n) => {
+            cell.set_value_number(n.as_f64().unwrap_or(0.0));
+        }
+        Value::Bool(b) => {
+            cell.set_value_bool(*b);
+        }
         Value::Null => {}
-        _ => { cell.set_value(&val.to_string()); }
+        _ => {
+            cell.set_value(&val.to_string());
+        }
     }
 }

@@ -42,29 +42,55 @@ pub fn value_as_f64(val: &Value) -> Option<f64> {
 
 /// Traduit les noms de fonctions Excel français → anglais.
 const FR_FORMULAS: &[(&str, &str)] = &[
-    ("SOMME", "SUM"), ("MOYENNE", "AVERAGE"), ("NB", "COUNT"),
-    ("NBVAL", "COUNTA"), ("NB.SI", "COUNTIF"), ("NB.VIDE", "COUNTBLANK"),
-    ("SOMME.SI", "SUMIF"), ("SOMME.SI.ENS", "SUMIFS"),
-    ("MAX", "MAX"), ("MIN", "MIN"), ("SI", "IF"),
-    ("ET", "AND"), ("OU", "OR"), ("NON", "NOT"),
-    ("RECHERCHEV", "VLOOKUP"), ("RECHERCHEH", "HLOOKUP"),
-    ("INDEX", "INDEX"), ("EQUIV", "MATCH"),
-    ("CONCATENER", "CONCATENATE"), ("GAUCHE", "LEFT"),
-    ("DROITE", "RIGHT"), ("MAJUSCULE", "UPPER"), ("MINUSCULE", "LOWER"),
-    ("NBCAR", "LEN"), ("ARRONDI", "ROUND"),
-    ("ABS", "ABS"), ("RACINE", "SQRT"), ("PUISSANCE", "POWER"),
-    ("AUJOURDHUI", "TODAY"), ("MAINTENANT", "NOW"),
-    ("ANNEE", "YEAR"), ("MOIS", "MONTH"), ("JOUR", "DAY"),
-    ("VRAI", "TRUE"), ("FAUX", "FALSE"),
-    ("STXT", "MID"), ("CHERCHE", "SEARCH"), ("TROUVE", "FIND"),
-    ("ENT", "INT"), ("MOD", "MOD"),
+    ("SOMME", "SUM"),
+    ("MOYENNE", "AVERAGE"),
+    ("NB", "COUNT"),
+    ("NBVAL", "COUNTA"),
+    ("NB.SI", "COUNTIF"),
+    ("NB.VIDE", "COUNTBLANK"),
+    ("SOMME.SI", "SUMIF"),
+    ("SOMME.SI.ENS", "SUMIFS"),
+    ("MAX", "MAX"),
+    ("MIN", "MIN"),
+    ("SI", "IF"),
+    ("ET", "AND"),
+    ("OU", "OR"),
+    ("NON", "NOT"),
+    ("RECHERCHEV", "VLOOKUP"),
+    ("RECHERCHEH", "HLOOKUP"),
+    ("INDEX", "INDEX"),
+    ("EQUIV", "MATCH"),
+    ("CONCATENER", "CONCATENATE"),
+    ("GAUCHE", "LEFT"),
+    ("DROITE", "RIGHT"),
+    ("MAJUSCULE", "UPPER"),
+    ("MINUSCULE", "LOWER"),
+    ("NBCAR", "LEN"),
+    ("ARRONDI", "ROUND"),
+    ("ABS", "ABS"),
+    ("RACINE", "SQRT"),
+    ("PUISSANCE", "POWER"),
+    ("AUJOURDHUI", "TODAY"),
+    ("MAINTENANT", "NOW"),
+    ("ANNEE", "YEAR"),
+    ("MOIS", "MONTH"),
+    ("JOUR", "DAY"),
+    ("VRAI", "TRUE"),
+    ("FAUX", "FALSE"),
+    ("STXT", "MID"),
+    ("CHERCHE", "SEARCH"),
+    ("TROUVE", "FIND"),
+    ("ENT", "INT"),
+    ("MOD", "MOD"),
 ];
 
 /// Normalise une formule : traduit le français, remplace `;` par `,`.
 pub fn normalize_formula(formula: &str) -> String {
     let mut result = formula.to_string();
     for &(fr, en) in FR_FORMULAS {
-        if fr == en { continue; }
+        if fr == en {
+            continue;
+        }
         let pattern = format!("{}(", fr);
         let replacement = format!("{}(", en);
         result = result.replace(&pattern, &replacement);

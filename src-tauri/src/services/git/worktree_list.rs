@@ -54,7 +54,11 @@ pub async fn list_worktrees(repo_path: &Path) -> Result<Vec<WorktreeInfo>, Strin
         }
     }
 
-    if !current_path.is_empty() && !is_bare && current_path != *repo_str && worktrees.len() < MAX_WORKTREES {
+    if !current_path.is_empty()
+        && !is_bare
+        && current_path != *repo_str
+        && worktrees.len() < MAX_WORKTREES
+    {
         worktrees.push(WorktreeInfo {
             path: current_path,
             branch: current_branch,

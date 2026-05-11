@@ -33,10 +33,7 @@ pub fn message_to_openai(msg: &ChatMessage, provider_id: &str) -> Value {
                     .map(|(i, tc)| {
                         let args_str = serde_json::to_string(&tc.function.arguments)
                             .unwrap_or_else(|_| "{}".to_string());
-                        let id = tc
-                            .id
-                            .clone()
-                            .unwrap_or_else(|| format!("call_{}", i));
+                        let id = tc.id.clone().unwrap_or_else(|| format!("call_{}", i));
                         json!({
                             "id": id,
                             "type": "function",
@@ -71,11 +68,17 @@ pub fn message_to_openai(msg: &ChatMessage, provider_id: &str) -> Value {
 
 fn detect_mime(b64: &str) -> &'static str {
     let prefix = &b64[..b64.len().min(16)];
-    if prefix.starts_with("/9j/") { "image/jpeg" }
-    else if prefix.starts_with("iVBOR") { "image/png" }
-    else if prefix.starts_with("R0lGO") { "image/gif" }
-    else if prefix.starts_with("UklGR") { "image/webp" }
-    else { "image/png" }
+    if prefix.starts_with("/9j/") {
+        "image/jpeg"
+    } else if prefix.starts_with("iVBOR") {
+        "image/png"
+    } else if prefix.starts_with("R0lGO") {
+        "image/gif"
+    } else if prefix.starts_with("UklGR") {
+        "image/webp"
+    } else {
+        "image/png"
+    }
 }
 
 fn build_image_part(base64_data: &str, provider_id: &str) -> Value {
@@ -94,7 +97,10 @@ fn build_image_part(base64_data: &str, provider_id: &str) -> Value {
 }
 
 pub fn messages_to_openai(messages: &[ChatMessage], provider_id: &str) -> Vec<Value> {
-    messages.iter().map(|m| message_to_openai(m, provider_id)).collect()
+    messages
+        .iter()
+        .map(|m| message_to_openai(m, provider_id))
+        .collect()
 }
 
 pub fn strip_images(messages: &mut [ChatMessage]) {

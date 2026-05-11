@@ -5,6 +5,9 @@ fn is_known_provider(id: &str) -> bool {
         || crate::services::search::catalog::SEARCH_PROVIDERS
             .iter()
             .any(|p| p.id == id)
+        || crate::services::forecast::catalog::FORECAST_PROVIDERS
+            .iter()
+            .any(|p| p.id == id && p.requires_api_key)
 }
 
 pub fn validate_provider(provider_id: &str) -> Result<(), String> {

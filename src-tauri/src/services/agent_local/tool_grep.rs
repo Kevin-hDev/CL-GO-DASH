@@ -21,8 +21,9 @@ pub async fn grep(
         return ToolResult::err(e);
     }
 
-    let result = tokio::task::spawn_blocking(move || grep_blocking(&pattern, &root, glob_filter.as_deref()))
-        .await;
+    let result =
+        tokio::task::spawn_blocking(move || grep_blocking(&pattern, &root, glob_filter.as_deref()))
+            .await;
 
     match result {
         Ok(r) => r,
@@ -34,7 +35,11 @@ fn resolve_root(path: Option<&str>, working_dir: &Path) -> PathBuf {
     match path {
         Some(p) => {
             let pb = Path::new(p);
-            if pb.is_absolute() { pb.to_path_buf() } else { working_dir.join(pb) }
+            if pb.is_absolute() {
+                pb.to_path_buf()
+            } else {
+                working_dir.join(pb)
+            }
         }
         None => working_dir.to_path_buf(),
     }
@@ -60,7 +65,9 @@ fn grep_blocking(pattern: &str, root: &Path, glob_filter: Option<&str>) -> ToolR
             return ToolResult::err(format!("Glob invalide : {e}"));
         }
         match ov.build() {
-            Ok(overrides) => { walk_builder.overrides(overrides); }
+            Ok(overrides) => {
+                walk_builder.overrides(overrides);
+            }
             Err(e) => return ToolResult::err(format!("Glob invalide : {e}")),
         }
     }
@@ -82,7 +89,11 @@ fn grep_blocking(pattern: &str, root: &Path, glob_filter: Option<&str>) -> ToolR
             continue;
         }
         let path = entry.path();
-        let mut sink = MatchSink { path, results: &mut results, max: MAX_RESULTS };
+        let mut sink = MatchSink {
+            path,
+            results: &mut results,
+            max: MAX_RESULTS,
+        };
         let _ = searcher.search_path(&matcher, path, &mut sink);
         if results.len() >= MAX_RESULTS {
             truncated = true;
@@ -120,7 +131,8 @@ impl<'a> Sink for MatchSink<'a> {
         let line = mat.line_number().unwrap_or(0);
         let text = String::from_utf8_lossy(mat.bytes());
         let trimmed = text.trim_end_matches(['\n', '\r']);
-        self.results.push(format!("{}:{}:{}", self.path.display(), line, trimmed));
+        self.results
+            .push(format!("{}:{}:{}", self.path.display(), line, trimmed));
         Ok(self.results.len() < self.max)
     }
 }

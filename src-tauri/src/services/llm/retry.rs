@@ -46,11 +46,16 @@ pub async fn retry_stream(
                 is_connection: false,
             });
             let delay = RETRY_BASE_MS * (1 << (attempt - 1));
-            tokio::time::sleep(tokio::time::Duration::from_millis(delay))
-            .await;
+            tokio::time::sleep(tokio::time::Duration::from_millis(delay)).await;
         }
         match stream::stream_chat_no_done(
-            on_event, provider_id, model, messages, tools, think, cancel.clone(),
+            on_event,
+            provider_id,
+            model,
+            messages,
+            tools,
+            think,
+            cancel.clone(),
         )
         .await
         {

@@ -96,9 +96,7 @@ async fn consume_sse(
                 cur_tool_args.push_str(delta);
             }
             "response.output_item.done" => {
-                if let (Some(id), Some(name)) =
-                    (cur_tool_id.take(), cur_tool_name.take())
-                {
+                if let (Some(id), Some(name)) = (cur_tool_id.take(), cur_tool_name.take()) {
                     let args_json: serde_json::Value =
                         serde_json::from_str(&cur_tool_args).unwrap_or_default();
                     let _ = on_event.send(StreamEvent::ToolCall {
@@ -112,10 +110,8 @@ async fn consume_sse(
             }
             "response.done" | "response.completed" => {
                 if let Some(usage) = parsed.pointer("/response/usage") {
-                    result.prompt_tokens =
-                        usage["input_tokens"].as_u64().unwrap_or(0) as u32;
-                    result.eval_count =
-                        usage["output_tokens"].as_u64().unwrap_or(0) as u32;
+                    result.prompt_tokens = usage["input_tokens"].as_u64().unwrap_or(0) as u32;
+                    result.eval_count = usage["output_tokens"].as_u64().unwrap_or(0) as u32;
                 }
                 break;
             }

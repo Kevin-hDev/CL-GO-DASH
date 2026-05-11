@@ -6,15 +6,19 @@ use zeroize::Zeroizing;
 use super::types::{OAuthTokens, TokenResponse};
 use crate::services::api_keys;
 
-static REFRESH_LOCKS: std::sync::LazyLock<std::sync::Mutex<HashMap<String, Arc<tokio::sync::Mutex<()>>>>> =
-    std::sync::LazyLock::new(|| std::sync::Mutex::new(HashMap::new()));
+static REFRESH_LOCKS: std::sync::LazyLock<
+    std::sync::Mutex<HashMap<String, Arc<tokio::sync::Mutex<()>>>>,
+> = std::sync::LazyLock::new(|| std::sync::Mutex::new(HashMap::new()));
 
 fn get_refresh_lock(connector_id: &str) -> Arc<tokio::sync::Mutex<()>> {
     let mut map = REFRESH_LOCKS.lock().unwrap_or_else(|e| e.into_inner());
     if map.len() > 64 {
         map.clear();
     }
-    Arc::clone(map.entry(connector_id.to_string()).or_insert_with(|| Arc::new(tokio::sync::Mutex::new(()))))
+    Arc::clone(
+        map.entry(connector_id.to_string())
+            .or_insert_with(|| Arc::new(tokio::sync::Mutex::new(()))),
+    )
 }
 
 pub fn store_tokens(connector_id: &str, tokens: &OAuthTokens) -> Result<(), String> {
@@ -84,7 +88,10 @@ async fn refresh_access_token(
         ("refresh_token", refresh_token),
         ("client_id", old.client_id.as_str()),
     ];
-    let secret_ref = old.client_secret.as_ref().map(|s| Zeroizing::new(s.as_str().to_string()));
+    let secret_ref = old
+        .client_secret
+        .as_ref()
+        .map(|s| Zeroizing::new(s.as_str().to_string()));
     if let Some(ref secret) = secret_ref {
         params.push(("client_secret", secret.as_str()));
     }

@@ -90,7 +90,9 @@ pub fn extract_summary(response: &str) -> String {
     if let Some(start) = response.find("<summary>") {
         let content_start = start + "<summary>".len();
         if let Some(end) = response[content_start..].find("</summary>") {
-            return response[content_start..content_start + end].trim().to_string();
+            return response[content_start..content_start + end]
+                .trim()
+                .to_string();
         }
     }
     response.to_string()
@@ -154,7 +156,8 @@ mod tests {
 
     #[test]
     fn extract_summary_with_tags() {
-        let response = "<analysis>Internal thinking</analysis>\n<summary>The real summary</summary>";
+        let response =
+            "<analysis>Internal thinking</analysis>\n<summary>The real summary</summary>";
         assert_eq!(extract_summary(response), "The real summary");
     }
 

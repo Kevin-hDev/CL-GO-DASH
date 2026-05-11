@@ -56,13 +56,10 @@ pub async fn health_check(base_url: &str) -> Result<(), String> {
 }
 
 fn parse_input_data(request: &ForecastRequest) -> Result<Vec<(String, f64)>, String> {
-    let json_str = request
-        .data
-        .as_ref()
-        .ok_or("Données JSON requises")?;
+    let json_str = request.data.as_ref().ok_or("Données JSON requises")?;
 
-    let arr: Vec<Value> = serde_json::from_str(json_str)
-        .map_err(|e| format!("Données JSON invalides: {e}"))?;
+    let arr: Vec<Value> =
+        serde_json::from_str(json_str).map_err(|e| format!("Données JSON invalides: {e}"))?;
 
     let mut points = Vec::with_capacity(arr.len());
     for item in &arr {
@@ -81,15 +78,9 @@ fn parse_input_data(request: &ForecastRequest) -> Result<Vec<(String, f64)>, Str
     Ok(points)
 }
 
-fn build_payload(
-    data: &[(String, f64)],
-    request: &ForecastRequest,
-) -> Result<Value, String> {
+fn build_payload(data: &[(String, f64)], request: &ForecastRequest) -> Result<Value, String> {
     let values: Vec<f64> = data.iter().map(|(_, v)| *v).collect();
-    let model = request
-        .model
-        .as_deref()
-        .unwrap_or("chronos-bolt-small");
+    let model = request.model.as_deref().unwrap_or("chronos-bolt-small");
 
     Ok(serde_json::json!({
         "values": values,
@@ -122,10 +113,7 @@ fn parse_response(
     let q50: Vec<f64> = predictions.iter().map(|p| p.value).collect();
     let q90 = extract_quantile_array(body, "q90");
 
-    let model_name = request
-        .model
-        .as_deref()
-        .unwrap_or("chronos-bolt-small");
+    let model_name = request.model.as_deref().unwrap_or("chronos-bolt-small");
 
     Ok(ForecastResult {
         id: Uuid::new_v4().to_string(),

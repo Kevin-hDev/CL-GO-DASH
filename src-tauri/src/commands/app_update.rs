@@ -23,14 +23,19 @@ pub async fn check_app_update() -> Result<Option<AppUpdateInfo>, String> {
         .header("Accept", "application/vnd.github+json")
         .send()
         .await
-        .map_err(|e| { eprintln!("[update] check network: {e}"); "update-check-error".to_string() })?;
+        .map_err(|e| {
+            eprintln!("[update] check network: {e}");
+            "update-check-error".to_string()
+        })?;
 
     if !resp.status().is_success() {
         return Ok(None);
     }
 
-    let json: serde_json::Value = resp.json().await
-        .map_err(|e| { eprintln!("[update] parse json: {e}"); "update-check-error".to_string() })?;
+    let json: serde_json::Value = resp.json().await.map_err(|e| {
+        eprintln!("[update] parse json: {e}");
+        "update-check-error".to_string()
+    })?;
 
     let tag = json["tag_name"]
         .as_str()

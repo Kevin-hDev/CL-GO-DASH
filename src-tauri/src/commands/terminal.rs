@@ -22,7 +22,12 @@ pub fn pty_spawn(
 }
 
 #[tauri::command]
-pub fn pty_write(id: u32, token: String, data: String, state: State<'_, PtyManager>) -> Result<(), String> {
+pub fn pty_write(
+    id: u32,
+    token: String,
+    data: String,
+    state: State<'_, PtyManager>,
+) -> Result<(), String> {
     state.write(id, &token, data.as_bytes())
 }
 

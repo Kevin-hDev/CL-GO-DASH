@@ -52,10 +52,7 @@ pub async fn read_spreadsheet_preview(
 const BINARY_EXTENSIONS: &[&str] = &["docx", "pdf"];
 
 #[tauri::command]
-pub async fn read_binary_preview(
-    path: String,
-    base_dir: Option<String>,
-) -> Result<String, String> {
+pub async fn read_binary_preview(path: String, base_dir: Option<String>) -> Result<String, String> {
     let resolved = super::file_preview::resolve_preview_path(&path, base_dir.as_deref())?;
 
     let ext = resolved

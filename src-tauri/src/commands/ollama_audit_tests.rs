@@ -56,7 +56,10 @@ fn version_file_atomic_no_partial() {
     std::fs::create_dir_all(&dir).unwrap();
 
     write_version_file(&dir, "1.0.0");
-    assert!(!dir.join("VERSION.tmp").exists(), "tmp file should be cleaned up");
+    assert!(
+        !dir.join("VERSION.tmp").exists(),
+        "tmp file should be cleaned up"
+    );
     assert!(dir.join("VERSION").exists());
 
     let _ = std::fs::remove_dir_all(&dir);

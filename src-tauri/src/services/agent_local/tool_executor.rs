@@ -22,7 +22,15 @@ pub async fn run_tools(
     write_guard: &mut WriteGuard,
 ) {
     run_tools_with_eager(
-        on_event, messages, tool_calls, working_dir, mode, session_id, cancel, write_guard, None,
+        on_event,
+        messages,
+        tool_calls,
+        working_dir,
+        mode,
+        session_id,
+        cancel,
+        write_guard,
+        None,
     )
     .await;
 }
@@ -40,7 +48,13 @@ pub async fn run_tools_with_eager(
 ) {
     if mode == "manual" {
         run_sequential(
-            on_event, messages, tool_calls, working_dir, session_id, cancel, write_guard,
+            on_event,
+            messages,
+            tool_calls,
+            working_dir,
+            session_id,
+            cancel,
+            write_guard,
         )
         .await;
     } else {
@@ -85,7 +99,8 @@ async fn run_sequential(
             continue;
         }
 
-        let allowed = check_allowed(on_event, name, effective_args, session_id, cancel.clone()).await;
+        let allowed =
+            check_allowed(on_event, name, effective_args, session_id, cancel.clone()).await;
         let tr = if allowed {
             tool_dispatcher::dispatch(name, effective_args, working_dir, session_id).await
         } else {

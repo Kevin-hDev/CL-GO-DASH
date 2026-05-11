@@ -1,5 +1,8 @@
 use base64::{engine::general_purpose::STANDARD as B64, Engine};
-use chacha20poly1305::{aead::{Aead, KeyInit}, XChaCha20Poly1305, XNonce};
+use chacha20poly1305::{
+    aead::{Aead, KeyInit},
+    XChaCha20Poly1305, XNonce,
+};
 use keyring::Entry;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
@@ -11,8 +14,16 @@ const MASTER_KEY_USER: &str = "master-key";
 const VAULT_VERSION: u8 = 1;
 
 const KNOWN_PROVIDERS: &[&str] = &[
-    "groq", "google", "mistral", "cerebras", "openrouter",
-    "openai", "deepseek", "brave", "exa", "firecrawl",
+    "groq",
+    "google",
+    "mistral",
+    "cerebras",
+    "openrouter",
+    "openai",
+    "deepseek",
+    "brave",
+    "exa",
+    "firecrawl",
 ];
 
 #[derive(Serialize, Deserialize)]
@@ -33,7 +44,9 @@ pub fn load_or_create_master_key() -> Result<Zeroizing<Vec<u8>>, String> {
     match entry.get_password() {
         Ok(b64_raw) => {
             let b64 = Zeroizing::new(b64_raw);
-            let mut bytes = B64.decode(b64.as_str()).map_err(|e| format!("master key decode: {e}"))?;
+            let mut bytes = B64
+                .decode(b64.as_str())
+                .map_err(|e| format!("master key decode: {e}"))?;
             if bytes.len() == 32 {
                 return Ok(Zeroizing::new(bytes));
             }
@@ -43,7 +56,8 @@ pub fn load_or_create_master_key() -> Result<Zeroizing<Vec<u8>>, String> {
         Err(keyring::Error::NoEntry) => {
             if vault_path().exists() {
                 return Err(
-                    "master key missing from keychain but vault exists — cannot decrypt".to_string(),
+                    "master key missing from keychain but vault exists — cannot decrypt"
+                        .to_string(),
                 );
             }
             let mut key = vec![0u8; 32];
@@ -88,8 +102,12 @@ fn decrypt(master_key: &[u8], vault_bytes: &[u8]) -> Result<Vec<u8>, String> {
         return Err(format!("unsupported vault version: {}", vf.version));
     }
 
-    let nonce_bytes = B64.decode(&vf.nonce).map_err(|e| format!("nonce decode: {e}"))?;
-    let ciphertext = B64.decode(&vf.data).map_err(|e| format!("data decode: {e}"))?;
+    let nonce_bytes = B64
+        .decode(&vf.nonce)
+        .map_err(|e| format!("nonce decode: {e}"))?;
+    let ciphertext = B64
+        .decode(&vf.data)
+        .map_err(|e| format!("data decode: {e}"))?;
 
     let nonce = XNonce::from_slice(&nonce_bytes);
     let cipher =
@@ -139,7 +157,9 @@ pub fn read_legacy_keychain_keys() -> HashMap<String, Zeroizing<String>> {
         if found.contains_key(*id) {
             continue;
         }
-        let Ok(entry) = Entry::new(KEYRING_SERVICE, id) else { continue };
+        let Ok(entry) = Entry::new(KEYRING_SERVICE, id) else {
+            continue;
+        };
         if let Ok(key) = entry.get_password() {
             found.insert(id.to_string(), Zeroizing::new(key));
         }

@@ -165,5 +165,10 @@ pub async fn exchange_code(
         return Err("échec de l'authentification".to_string());
     }
 
-    Ok(OAuthTokens::from_response(&mut raw, token_endpoint, client_id, client_secret))
+    Ok(OAuthTokens::from_response(
+        &mut raw,
+        token_endpoint,
+        client_id,
+        client_secret,
+    ))
 }

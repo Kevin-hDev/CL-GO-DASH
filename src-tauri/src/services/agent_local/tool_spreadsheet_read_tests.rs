@@ -12,7 +12,8 @@ mod tests {
         let tmp = working_dir();
         let csv_path = tmp.path().join("test.csv");
         std::fs::write(&csv_path, "name,age,city\nAlice,30,Paris\nBob,25,Lyon\n").unwrap();
-        let result = read_spreadsheet(csv_path.to_str().unwrap(), None, None, None, tmp.path()).await;
+        let result =
+            read_spreadsheet(csv_path.to_str().unwrap(), None, None, None, tmp.path()).await;
         assert!(!result.is_error, "Erreur: {}", result.content);
         let json: serde_json::Value = serde_json::from_str(&result.content).unwrap();
         assert_eq!(json["headers"], serde_json::json!(["name", "age", "city"]));
@@ -25,7 +26,8 @@ mod tests {
         let tmp = working_dir();
         let csv_path = tmp.path().join("test.csv");
         std::fs::write(&csv_path, "nom;age;ville\nAlice;30;Paris\n").unwrap();
-        let result = read_spreadsheet(csv_path.to_str().unwrap(), None, None, None, tmp.path()).await;
+        let result =
+            read_spreadsheet(csv_path.to_str().unwrap(), None, None, None, tmp.path()).await;
         assert!(!result.is_error, "Erreur: {}", result.content);
         let json: serde_json::Value = serde_json::from_str(&result.content).unwrap();
         assert_eq!(json["headers"], serde_json::json!(["nom", "age", "ville"]));
@@ -40,7 +42,8 @@ mod tests {
             data.push_str(&format!("{},{}\n", i, i * 10));
         }
         std::fs::write(&csv_path, &data).unwrap();
-        let result = read_spreadsheet(csv_path.to_str().unwrap(), None, None, Some(10), tmp.path()).await;
+        let result =
+            read_spreadsheet(csv_path.to_str().unwrap(), None, None, Some(10), tmp.path()).await;
         assert!(!result.is_error);
         let json: serde_json::Value = serde_json::from_str(&result.content).unwrap();
         let rows = json["rows"].as_array().unwrap();
@@ -60,10 +63,13 @@ mod tests {
         let tmp = working_dir();
         let csv_path = tmp.path().join("test.csv");
         std::fs::write(&csv_path, "a,b\n1,2\n").unwrap();
-        let result = read_spreadsheet(
-            csv_path.to_str().unwrap(), Some(""), None, None, tmp.path(),
-        ).await;
-        assert!(!result.is_error, "sheet='' devrait fallback: {}", result.content);
+        let result =
+            read_spreadsheet(csv_path.to_str().unwrap(), Some(""), None, None, tmp.path()).await;
+        assert!(
+            !result.is_error,
+            "sheet='' devrait fallback: {}",
+            result.content
+        );
     }
 
     #[tokio::test]
@@ -72,9 +78,18 @@ mod tests {
         let csv_path = tmp.path().join("test.csv");
         std::fs::write(&csv_path, "x,y\n3,4\n").unwrap();
         let result = read_spreadsheet(
-            csv_path.to_str().unwrap(), Some("  "), None, None, tmp.path(),
-        ).await;
-        assert!(!result.is_error, "sheet='  ' devrait fallback: {}", result.content);
+            csv_path.to_str().unwrap(),
+            Some("  "),
+            None,
+            None,
+            tmp.path(),
+        )
+        .await;
+        assert!(
+            !result.is_error,
+            "sheet='  ' devrait fallback: {}",
+            result.content
+        );
     }
 
     #[tokio::test]

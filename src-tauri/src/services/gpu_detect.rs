@@ -12,11 +12,17 @@ pub use crate::services::gpu_vram::{compute_default_num_ctx, detect_vram_mb};
 
 pub fn detect() -> GpuVendor {
     #[cfg(target_os = "macos")]
-    { return detect_macos(); }
+    {
+        return detect_macos();
+    }
     #[cfg(target_os = "linux")]
-    { return detect_linux(); }
+    {
+        return detect_linux();
+    }
     #[cfg(target_os = "windows")]
-    { return detect_windows(); }
+    {
+        return detect_windows();
+    }
     #[cfg(not(any(target_os = "macos", target_os = "linux", target_os = "windows")))]
     GpuVendor::Unknown
 }
@@ -29,7 +35,11 @@ fn detect_macos() -> GpuVendor {
     match output {
         Ok(o) => {
             let brand = String::from_utf8_lossy(&o.stdout).to_lowercase();
-            if brand.contains("apple") { GpuVendor::Apple } else { GpuVendor::Unknown }
+            if brand.contains("apple") {
+                GpuVendor::Apple
+            } else {
+                GpuVendor::Unknown
+            }
         }
         Err(_) => GpuVendor::Unknown,
     }

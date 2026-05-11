@@ -10,10 +10,7 @@ const BLOCKED_METADATA_IPS: &[IpAddr] = &[
     IpAddr::V6(Ipv6Addr::new(0xfd00, 0x0ec2, 0, 0, 0, 0, 0, 0x0254)),
 ];
 
-const BLOCKED_METADATA_HOSTS: &[&str] = &[
-    "metadata.google.internal",
-    "metadata.goog",
-];
+const BLOCKED_METADATA_HOSTS: &[&str] = &["metadata.google.internal", "metadata.goog"];
 
 pub enum SsrfVerdict {
     Safe,
@@ -113,4 +110,3 @@ fn is_link_local_v6(ip: &Ipv6Addr) -> bool {
 fn is_mapped_private(ip: &Ipv6Addr) -> bool {
     matches!(ip.to_ipv4_mapped(), Some(v4) if is_blocked_ip(&IpAddr::V4(v4)))
 }
-

@@ -41,7 +41,11 @@ fn extract_host(url: &str) -> String {
         .next()
         .unwrap_or("");
     let host = if authority.starts_with('[') {
-        authority.split(']').next().unwrap_or("").trim_start_matches('[')
+        authority
+            .split(']')
+            .next()
+            .unwrap_or("")
+            .trim_start_matches('[')
     } else {
         authority.split(':').next().unwrap_or("")
     };
@@ -77,7 +81,10 @@ async fn verify_dns_with_ip(host: &str) -> Result<IpAddr, String> {
             return Err("Preview unavailable".into());
         }
     }
-    addrs.first().map(|a| a.ip()).ok_or_else(|| "Preview unavailable".to_string())
+    addrs
+        .first()
+        .map(|a| a.ip())
+        .ok_or_else(|| "Preview unavailable".to_string())
 }
 
 #[cfg(test)]

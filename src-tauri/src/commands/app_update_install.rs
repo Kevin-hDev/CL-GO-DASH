@@ -8,8 +8,7 @@ pub struct DownloadProgress {
     pub total: u64,
 }
 
-const TRUSTED_UPDATE_PREFIX: &str =
-    "https://github.com/Kevin-hDev/CL-GO-DASH/releases/download/";
+const TRUSTED_UPDATE_PREFIX: &str = "https://github.com/Kevin-hDev/CL-GO-DASH/releases/download/";
 
 fn validate_update_url(url: &str) -> Result<(), String> {
     if !url.starts_with(TRUSTED_UPDATE_PREFIX) {
@@ -35,7 +34,10 @@ pub async fn download_app_update(
         .header("User-Agent", "CL-GO-DASH")
         .send()
         .await
-        .map_err(|e| { eprintln!("[update] network: {e}"); "update-download-error".to_string() })?;
+        .map_err(|e| {
+            eprintln!("[update] network: {e}");
+            "update-download-error".to_string()
+        })?;
 
     if !resp.status().is_success() {
         return Err("download failed".into());
@@ -51,9 +53,10 @@ pub async fn download_app_update(
     };
     let tmp = std::env::temp_dir().join(format!("CL-GO-update.{}", ext));
 
-    let mut file = tokio::fs::File::create(&tmp)
-        .await
-        .map_err(|e| { eprintln!("[update] create file: {e}"); "update-write-error".to_string() })?;
+    let mut file = tokio::fs::File::create(&tmp).await.map_err(|e| {
+        eprintln!("[update] create file: {e}");
+        "update-write-error".to_string()
+    })?;
 
     use futures_util::StreamExt;
     use tokio::io::AsyncWriteExt;
@@ -62,10 +65,14 @@ pub async fn download_app_update(
     let mut downloaded: u64 = 0;
 
     while let Some(chunk) = stream.next().await {
-        let chunk = chunk.map_err(|e| { eprintln!("[update] stream: {e}"); "update-download-error".to_string() })?;
-        file.write_all(&chunk)
-            .await
-            .map_err(|e| { eprintln!("[update] write: {e}"); "update-write-error".to_string() })?;
+        let chunk = chunk.map_err(|e| {
+            eprintln!("[update] stream: {e}");
+            "update-download-error".to_string()
+        })?;
+        file.write_all(&chunk).await.map_err(|e| {
+            eprintln!("[update] write: {e}");
+            "update-write-error".to_string()
+        })?;
         downloaded += chunk.len() as u64;
         let _ = on_progress.send(DownloadProgress {
             completed: downloaded,
@@ -73,7 +80,10 @@ pub async fn download_app_update(
         });
     }
 
-    file.flush().await.map_err(|e| { eprintln!("[update] flush: {e}"); "update-write-error".to_string() })?;
+    file.flush().await.map_err(|e| {
+        eprintln!("[update] flush: {e}");
+        "update-write-error".to_string()
+    })?;
     drop(file);
 
     spawn_update_script(&tmp)?;
@@ -93,7 +103,10 @@ fn spawn_update_script(path: &std::path::Path) -> Result<(), String> {
 }
 
 fn update_log_path() -> String {
-    std::env::temp_dir().join("cl-go-update.log").display().to_string()
+    std::env::temp_dir()
+        .join("cl-go-update.log")
+        .display()
+        .to_string()
 }
 
 #[cfg(target_os = "macos")]
@@ -160,8 +173,15 @@ fn spawn_linux_update(_: &std::path::Path) -> Result<(), String> {
 fn spawn_windows_update(installer: &std::path::Path) -> Result<(), String> {
     use std::os::windows::process::CommandExt;
     let inst = installer.display().to_string();
-    let exe = std::env::current_exe().map_err(|e| { eprintln!("[update] exe path: {e}"); "update-install-error".to_string() })?;
-    let exe_name = exe.file_name().unwrap_or_default().to_string_lossy().to_string();
+    let exe = std::env::current_exe().map_err(|e| {
+        eprintln!("[update] exe path: {e}");
+        "update-install-error".to_string()
+    })?;
+    let exe_name = exe
+        .file_name()
+        .unwrap_or_default()
+        .to_string_lossy()
+        .to_string();
     let app = exe.display().to_string();
     let log = update_log_path();
     let script = format!(
@@ -179,7 +199,10 @@ start "" "{app}"
 "#
     );
     let path = std::env::temp_dir().join("cl-go-update.bat");
-    std::fs::write(&path, &script).map_err(|e| { eprintln!("[update] write script: {e}"); "update-install-error".to_string() })?;
+    std::fs::write(&path, &script).map_err(|e| {
+        eprintln!("[update] write script: {e}");
+        "update-install-error".to_string()
+    })?;
     std::process::Command::new("cmd")
         .args(["/C", &path.display().to_string()])
         .creation_flags(0x08000000)
@@ -187,7 +210,10 @@ start "" "{app}"
         .stdout(std::process::Stdio::null())
         .stderr(std::process::Stdio::null())
         .spawn()
-        .map_err(|e| { eprintln!("[update] spawn: {e}"); "update-install-error".to_string() })?;
+        .map_err(|e| {
+            eprintln!("[update] spawn: {e}");
+            "update-install-error".to_string()
+        })?;
     Ok(())
 }
 
@@ -199,7 +225,10 @@ fn spawn_windows_update(_: &std::path::Path) -> Result<(), String> {
 #[cfg(unix)]
 fn run_shell_script(content: &str) -> Result<(), String> {
     let path = std::env::temp_dir().join("cl-go-update.sh");
-    std::fs::write(&path, content).map_err(|e| { eprintln!("[update] write script: {e}"); "update-install-error".to_string() })?;
+    std::fs::write(&path, content).map_err(|e| {
+        eprintln!("[update] write script: {e}");
+        "update-install-error".to_string()
+    })?;
 
     std::process::Command::new("bash")
         .arg(&path)
@@ -207,7 +236,10 @@ fn run_shell_script(content: &str) -> Result<(), String> {
         .stdout(std::process::Stdio::null())
         .stderr(std::process::Stdio::null())
         .spawn()
-        .map_err(|e| { eprintln!("[update] spawn: {e}"); "update-install-error".to_string() })?;
+        .map_err(|e| {
+            eprintln!("[update] spawn: {e}");
+            "update-install-error".to_string()
+        })?;
 
     Ok(())
 }

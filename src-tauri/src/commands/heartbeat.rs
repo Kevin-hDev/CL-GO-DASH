@@ -146,8 +146,17 @@ pub fn get_heartbeat_config() -> Result<HeartbeatConfig, String> {
 }
 
 const ALLOWED_PROVIDERS: &[&str] = &[
-    "ollama", "groq", "google", "mistral", "cerebras",
-    "openrouter", "openai", "deepseek", "xai", "moonshot", "zai",
+    "ollama",
+    "groq",
+    "google",
+    "mistral",
+    "cerebras",
+    "openrouter",
+    "openai",
+    "deepseek",
+    "xai",
+    "moonshot",
+    "zai",
 ];
 
 fn validate_provider(provider: &str) -> Result<(), String> {
@@ -167,13 +176,22 @@ fn validate_non_empty(value: &str, field: &str) -> Result<(), String> {
 }
 
 fn validate_schedule(schedule: &WakeupSchedule) -> Result<(), String> {
-    let time_re = regex::Regex::new(r"^\d{2}:\d{2}$").map_err(|e| { eprintln!("[heartbeat] regex: {e}"); "Erreur interne".to_string() })?;
-    let dt_re = regex::Regex::new(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$").map_err(|e| { eprintln!("[heartbeat] regex: {e}"); "Erreur interne".to_string() })?;
+    let time_re = regex::Regex::new(r"^\d{2}:\d{2}$").map_err(|e| {
+        eprintln!("[heartbeat] regex: {e}");
+        "Erreur interne".to_string()
+    })?;
+    let dt_re = regex::Regex::new(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$").map_err(|e| {
+        eprintln!("[heartbeat] regex: {e}");
+        "Erreur interne".to_string()
+    })?;
 
     match schedule {
         WakeupSchedule::Once { datetime } => {
             if !dt_re.is_match(datetime) {
-                return Err(format!("Datetime invalide : {} (attendu YYYY-MM-DDTHH:MM)", datetime));
+                return Err(format!(
+                    "Datetime invalide : {} (attendu YYYY-MM-DDTHH:MM)",
+                    datetime
+                ));
             }
         }
         WakeupSchedule::Daily { time } => {

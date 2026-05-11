@@ -1,32 +1,82 @@
 use serde_json::Value;
 
 #[derive(Clone, Copy)]
-enum Ty { Str, Int, Float, Arr, Obj }
+enum Ty {
+    Str,
+    Int,
+    Float,
+    Arr,
+    Obj,
+}
 
 type Schema = &'static [(&'static str, Ty, bool)];
 
 static BASH: Schema = &[("command", Ty::Str, true), ("timeout", Ty::Int, false)];
-static READ_FILE: Schema = &[("path", Ty::Str, true), ("offset", Ty::Int, false), ("limit", Ty::Int, false)];
+static READ_FILE: Schema = &[
+    ("path", Ty::Str, true),
+    ("offset", Ty::Int, false),
+    ("limit", Ty::Int, false),
+];
 static WRITE_FILE: Schema = &[("path", Ty::Str, true), ("content", Ty::Str, true)];
-static EDIT_FILE: Schema = &[("path", Ty::Str, true), ("old_string", Ty::Str, true), ("new_string", Ty::Str, true)];
+static EDIT_FILE: Schema = &[
+    ("path", Ty::Str, true),
+    ("old_string", Ty::Str, true),
+    ("new_string", Ty::Str, true),
+];
 static LIST_DIR: Schema = &[("path", Ty::Str, false)];
-static GREP: Schema = &[("pattern", Ty::Str, true), ("path", Ty::Str, false), ("glob", Ty::Str, false)];
+static GREP: Schema = &[
+    ("pattern", Ty::Str, true),
+    ("path", Ty::Str, false),
+    ("glob", Ty::Str, false),
+];
 static GLOB: Schema = &[("pattern", Ty::Str, true), ("path", Ty::Str, false)];
 static WEB_SEARCH: Schema = &[("query", Ty::Str, true)];
 static WEB_FETCH: Schema = &[("url", Ty::Str, true)];
 static LOAD_SKILL: Schema = &[("skill_name", Ty::Str, true)];
 static CREATE_BRANCH: Schema = &[("branch_name", Ty::Str, true)];
 static CHECKOUT_BRANCH: Schema = &[("branch_name", Ty::Str, true)];
-static DELEGATE_TASK: Schema = &[("prompt", Ty::Str, true), ("subagent_type", Ty::Str, true), ("name", Ty::Str, false)];
-static READ_SPREADSHEET: Schema = &[("path", Ty::Str, true), ("sheet", Ty::Str, false), ("range", Ty::Str, false), ("max_rows", Ty::Int, false)];
+static DELEGATE_TASK: Schema = &[
+    ("prompt", Ty::Str, true),
+    ("subagent_type", Ty::Str, true),
+    ("name", Ty::Str, false),
+];
+static READ_SPREADSHEET: Schema = &[
+    ("path", Ty::Str, true),
+    ("sheet", Ty::Str, false),
+    ("range", Ty::Str, false),
+    ("max_rows", Ty::Int, false),
+];
 static READ_DOCUMENT: Schema = &[("path", Ty::Str, true), ("pages", Ty::Str, false)];
 static READ_IMAGE: Schema = &[("path", Ty::Str, true)];
 static WRITE_SPREADSHEET: Schema = &[("path", Ty::Str, true), ("operations", Ty::Arr, true)];
 static WRITE_DOCUMENT: Schema = &[("path", Ty::Str, true), ("content", Ty::Arr, true)];
-static PROCESS_IMAGE: Schema = &[("input_path", Ty::Str, true), ("output_path", Ty::Str, true), ("operations", Ty::Arr, false)];
-static SEARCH_MCP: Schema = &[("mode", Ty::Str, true), ("query", Ty::Str, false), ("tool_id", Ty::Str, false), ("arguments", Ty::Obj, false)];
-static FORECAST: Schema = &[("data", Ty::Str, false), ("file_path", Ty::Str, false), ("target_column", Ty::Str, true), ("date_column", Ty::Str, true), ("covariate_columns", Ty::Arr, false), ("horizon", Ty::Int, true), ("frequency", Ty::Str, true), ("model", Ty::Str, false), ("confidence_level", Ty::Float, false)];
-static FORECAST_ANALYZE: Schema = &[("analysis_id", Ty::Str, true), ("action", Ty::Str, true), ("params", Ty::Obj, false)];
+static PROCESS_IMAGE: Schema = &[
+    ("input_path", Ty::Str, true),
+    ("output_path", Ty::Str, true),
+    ("operations", Ty::Arr, false),
+];
+static SEARCH_MCP: Schema = &[
+    ("mode", Ty::Str, true),
+    ("query", Ty::Str, false),
+    ("tool_id", Ty::Str, false),
+    ("arguments", Ty::Obj, false),
+];
+static FORECAST: Schema = &[
+    ("data", Ty::Str, false),
+    ("file_path", Ty::Str, false),
+    ("target_column", Ty::Str, true),
+    ("date_column", Ty::Str, true),
+    ("covariate_columns", Ty::Arr, false),
+    ("horizon", Ty::Int, true),
+    ("frequency", Ty::Str, true),
+    ("model", Ty::Str, false),
+    ("confidence_level", Ty::Float, false),
+];
+static FORECAST_ANALYZE: Schema = &[
+    ("analysis_id", Ty::Str, true),
+    ("action", Ty::Str, true),
+    ("params", Ty::Obj, false),
+];
 static FORECAST_READ: Schema = &[("analysis_id", Ty::Str, false)];
 
 fn schema(tool: &str) -> Option<Schema> {

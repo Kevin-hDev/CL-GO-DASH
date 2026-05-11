@@ -15,7 +15,17 @@ pub enum PermissionDecision {
     Deny,
 }
 
-const GATED_TOOLS: &[&str] = &["write_file", "edit_file", "web_fetch", "write_spreadsheet", "write_document", "process_image", "create_branch", "checkout_branch", "forecast"];
+const GATED_TOOLS: &[&str] = &[
+    "write_file",
+    "edit_file",
+    "web_fetch",
+    "write_spreadsheet",
+    "write_document",
+    "process_image",
+    "create_branch",
+    "checkout_branch",
+    "forecast",
+];
 
 static SAFE_BASH_PATTERNS: LazyLock<Vec<Regex>> = LazyLock::new(|| {
     [
@@ -161,11 +171,20 @@ pub async fn clear_session(session_id: &str) {
 }
 
 pub fn is_data_dir_write(tool_name: &str, args: &serde_json::Value) -> bool {
-    if !matches!(tool_name, "write_file" | "edit_file" | "write_spreadsheet" | "write_document" | "process_image") {
+    if !matches!(
+        tool_name,
+        "write_file" | "edit_file" | "write_spreadsheet" | "write_document" | "process_image"
+    ) {
         return false;
     }
-    let path_key = if tool_name == "process_image" { "output_path" } else { "path" };
-    let Some(path_str) = args[path_key].as_str() else { return false };
+    let path_key = if tool_name == "process_image" {
+        "output_path"
+    } else {
+        "path"
+    };
+    let Some(path_str) = args[path_key].as_str() else {
+        return false;
+    };
     let path = std::path::Path::new(path_str);
     let data_dir = crate::services::paths::data_dir();
     let canonical = path.canonicalize().unwrap_or_else(|_| {

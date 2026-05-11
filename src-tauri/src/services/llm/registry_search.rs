@@ -57,8 +57,7 @@ pub async fn get_model(key: &str) -> Option<RegistryModelInfo> {
 
 pub async fn list_families() -> Vec<FamilyGroup> {
     let reg = get_lock().read().await;
-    let mut counts: std::collections::HashMap<String, usize> =
-        std::collections::HashMap::new();
+    let mut counts: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
 
     for (key, entry) in reg.iter() {
         if is_spec_key(key) {
@@ -119,7 +118,11 @@ fn to_info(key: &str, e: &super::model_registry::ModelEntry) -> RegistryModelInf
 }
 
 fn extract_family(model_key: &str) -> String {
-    let name = model_key.rsplit('/').next().unwrap_or(model_key).to_lowercase();
+    let name = model_key
+        .rsplit('/')
+        .next()
+        .unwrap_or(model_key)
+        .to_lowercase();
 
     let families: &[(&[&str], &str)] = &[
         (&["gpt-4", "gpt-3", "chatgpt", "gpt-image"], "GPT"),
@@ -153,7 +156,10 @@ fn extract_family(model_key: &str) -> String {
         }
     }
 
-    let first = name.split(|c: char| c.is_ascii_punctuation()).next().unwrap_or(&name);
+    let first = name
+        .split(|c: char| c.is_ascii_punctuation())
+        .next()
+        .unwrap_or(&name);
     let mut chars = first.chars();
     match chars.next() {
         Some(c) => format!("{}{}", c.to_uppercase(), chars.as_str()),

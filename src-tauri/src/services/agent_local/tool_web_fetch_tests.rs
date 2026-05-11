@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
-    use crate::services::agent_local::tool_web_fetch_ip::{is_172_private, is_ip_private};
     use crate::services::agent_local::tool_web_fetch::validate_url;
+    use crate::services::agent_local::tool_web_fetch_ip::{is_172_private, is_ip_private};
 
     // --- is_172_private ---
 

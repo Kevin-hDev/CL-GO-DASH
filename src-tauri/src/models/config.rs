@@ -72,9 +72,13 @@ mod tests {
 
 fn default_allowed_paths() -> Vec<String> {
     #[cfg(target_os = "windows")]
-    { vec!["C:\\".to_string()] }
+    {
+        vec!["C:\\".to_string()]
+    }
     #[cfg(not(target_os = "windows"))]
-    { vec!["/".to_string()] }
+    {
+        vec!["/".to_string()]
+    }
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]

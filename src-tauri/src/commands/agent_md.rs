@@ -6,7 +6,9 @@ fn global_agent_md_path() -> PathBuf {
 
 fn validate_project_dir(dir: &str) -> Result<PathBuf, String> {
     let p = PathBuf::from(dir);
-    let canonical = p.canonicalize().map_err(|_| "Dossier introuvable".to_string())?;
+    let canonical = p
+        .canonicalize()
+        .map_err(|_| "Dossier introuvable".to_string())?;
     let home = dirs::home_dir().ok_or("Erreur système")?;
     if !canonical.starts_with(&home) {
         return Err("Chemin non autorisé".to_string());
@@ -90,7 +92,11 @@ mod tests {
     #[test]
     fn global_agent_md_path_ends_correctly() {
         let p = global_agent_md_path();
-        assert!(p.ends_with("AGENT.md"), "expected path to end with AGENT.md, got: {:?}", p);
+        assert!(
+            p.ends_with("AGENT.md"),
+            "expected path to end with AGENT.md, got: {:?}",
+            p
+        );
     }
 
     #[test]

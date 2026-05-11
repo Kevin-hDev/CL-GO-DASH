@@ -63,7 +63,8 @@
         "all": "Tutti",
         "llm": "AI / LLM",
         "search": "Ricerca",
-        "scraping": "Scraping"
+        "scraping": "Scraping",
+        "forecast": "Previsione"
       }
     }
   },
@@ -631,6 +632,12 @@
     "pasteData": "Incolla dati",
     "fromUrl": "Da URL",
     "recentAnalyses": "Analisi recenti",
+    "comingSoon": "Prossimamente",
+    "panelMode": {
+      "title": "Modalità pannello",
+      "preview": "Anteprima file",
+      "forecast": "Previsione"
+    },
     "nav": {
       "mainView": "Vista principale",
       "scenarios": "Scenari",
@@ -639,22 +646,58 @@
       "history": "Cronologia"
     },
     "config": {
+      "title": "Configurazione",
+      "back": "Indietro",
       "target": "Obiettivo",
+      "dateColumn": "Colonna data",
       "covariates": "Covariabili",
       "frequency": "Frequenza",
       "horizon": "Orizzonte",
       "confidence": "Fiducia",
       "model": "Modello",
-      "launch": "Avvia previsione"
+      "launch": "Avvia previsione",
+      "launching": "Calcolo in corso…",
+      "rows_one": "{{count}} riga",
+      "rows_other": "{{count}} righe"
+    },
+    "frequency": {
+      "D": "Giorno",
+      "W": "Settimana",
+      "M": "Mese",
+      "Q": "Trimestre",
+      "Y": "Anno",
+      "H": "Ora",
+      "T": "Minuto"
+    },
+    "errors": {
+      "importFailed": "Importazione non riuscita. Controlla il formato del file.",
+      "launchFailed": "Il calcolo non è riuscito. Controlla colonne, modello e chiave API."
     },
     "models": {
       "manage": "Gestisci modelli",
+      "title": "Modelli Forecast",
+      "back": "Indietro",
       "install": "Installa",
+      "remove": "Rimuovi",
+      "confirmRemove": "Confermare?",
       "uninstall": "Disinstalla",
       "installed": "Installato",
+      "installError": "Errore",
       "downloading": "Download...",
+      "notInstalledSuffix": "(non installato)",
       "parameters": "Parametri",
       "specs": "Specifiche",
+      "diskSize": "Dimensione disco",
+      "ram": "RAM",
+      "ramCpu": "RAM (CPU)",
+      "vramGpu": "VRAM (GPU)",
+      "supported": "Supportato",
+      "unsupported": "Non supportato",
+      "horizonMax": "Orizzonte max",
+      "frequencies": "Frequenze",
+      "state": "Stato",
+      "status": "Stato",
+      "usedSpace": "Spazio usato",
       "local": "Locale",
       "cloud": "Cloud (chiave richiesta)",
       "noKeyConfigured": "Chiave API non configurata"

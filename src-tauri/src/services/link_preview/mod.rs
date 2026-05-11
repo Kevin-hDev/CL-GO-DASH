@@ -35,13 +35,16 @@ pub async fn fetch_preview(url: &str) -> Result<LinkPreview, String> {
     let html = fetch_html_pinned(url, &host, ip).await?;
     let base = format!(
         "{}://{}",
-        if url.starts_with("https") { "https" } else { "http" },
+        if url.starts_with("https") {
+            "https"
+        } else {
+            "http"
+        },
         &domain
     );
 
     let site_name = parse::extract_og(&html, "og:site_name");
-    let title = parse::extract_og(&html, "og:title")
-        .or_else(|| parse::extract_tag(&html, "title"));
+    let title = parse::extract_og(&html, "og:title").or_else(|| parse::extract_tag(&html, "title"));
     let description = parse::extract_og(&html, "og:description")
         .or_else(|| parse::extract_meta_name(&html, "description"));
     let image = parse::extract_og(&html, "og:image")
@@ -52,7 +55,15 @@ pub async fn fetch_preview(url: &str) -> Result<LinkPreview, String> {
         .filter(|u| security::is_safe_resource_url(u))
         .or_else(|| Some(format!("{}/favicon.ico", base)));
 
-    Ok(LinkPreview { url: url.to_string(), domain, site_name, title, description, image, favicon })
+    Ok(LinkPreview {
+        url: url.to_string(),
+        domain,
+        site_name,
+        title,
+        description,
+        image,
+        favicon,
+    })
 }
 
 async fn fetch_html_pinned(url: &str, host: &str, ip: std::net::IpAddr) -> Result<String, String> {
@@ -73,7 +84,8 @@ async fn fetch_html_pinned(url: &str, host: &str, ip: std::net::IpAddr) -> Resul
             .map_err(|_| "Preview unavailable".to_string())?;
 
         if resp.status().is_redirection() {
-            let location = resp.headers()
+            let location = resp
+                .headers()
                 .get("location")
                 .and_then(|v| v.to_str().ok())
                 .ok_or("Preview unavailable")?;

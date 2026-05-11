@@ -6,7 +6,10 @@ fn validate_connector_id(id: &str) -> Result<(), String> {
     if id.is_empty() || id.len() > 64 {
         return Err("identifiant invalide".to_string());
     }
-    if !id.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_') {
+    if !id
+        .bytes()
+        .all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
+    {
         return Err("identifiant invalide".to_string());
     }
     Ok(())
@@ -74,10 +77,7 @@ pub async fn set_mcp_env_token(
 }
 
 #[tauri::command]
-pub async fn delete_mcp_env_token(
-    connector_id: String,
-    env_key: String,
-) -> Result<(), String> {
+pub async fn delete_mcp_env_token(connector_id: String, env_key: String) -> Result<(), String> {
     validate_connector_id(&connector_id)?;
     validate_env_key(&env_key)?;
     crate::services::mcp_bridge::registry::invalidate_cache(&connector_id);

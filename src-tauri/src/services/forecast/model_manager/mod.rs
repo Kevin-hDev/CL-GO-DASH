@@ -1,5 +1,5 @@
-use crate::services::forecast::catalog;
 use crate::services::forecast::types::ModelDownloadProgress;
+use crate::services::forecast::{catalog, validation};
 use crate::services::paths::data_dir;
 use std::path::PathBuf;
 use tauri::ipc::Channel;
@@ -15,7 +15,10 @@ pub fn model_path(model_id: &str) -> PathBuf {
 }
 
 pub fn is_installed(model_id: &str) -> bool {
-    model_path(model_id).exists()
+    if validation::validate_model_id(model_id).is_err() {
+        return false;
+    }
+    model_path(model_id).join(".complete").exists()
 }
 
 pub fn installed_models() -> Vec<String> {
@@ -29,6 +32,7 @@ pub fn installed_models() -> Vec<String> {
             entries
                 .filter_map(|e| e.ok())
                 .filter(|e| e.path().is_dir())
+                .filter(|e| e.path().join(".complete").exists())
                 .filter_map(|e| e.file_name().into_string().ok())
                 .filter(|name| !name.starts_with('.'))
                 .collect()
@@ -40,22 +44,35 @@ pub async fn install(
     model_id: &str,
     on_progress: &Channel<ModelDownloadProgress>,
 ) -> Result<(), String> {
-    let spec = catalog::find_model(model_id)
-        .ok_or_else(|| format!("Modèle inconnu: {model_id}"))?;
+    let spec =
+        catalog::find_model(model_id).ok_or_else(|| format!("Modèle inconnu: {model_id}"))?;
 
     let hf_repo = spec
         .hf_repo
         .ok_or("Ce modèle n'a pas de repo HuggingFace")?;
 
     let target_dir = model_path(model_id);
-    tokio::fs::create_dir_all(&target_dir)
+    let staging_dir = models_dir().join(format!(".{model_id}.staging"));
+    let _ = tokio::fs::remove_dir_all(&staging_dir).await;
+    tokio::fs::create_dir_all(&staging_dir)
         .await
         .map_err(|e| format!("Impossible de créer le dossier: {e}"))?;
 
-    download::download_model(hf_repo, &target_dir, model_id, on_progress).await
+    if let Err(e) = download::download_model(hf_repo, &staging_dir, model_id, on_progress).await {
+        let _ = tokio::fs::remove_dir_all(&staging_dir).await;
+        return Err(e);
+    }
+    tokio::fs::write(staging_dir.join(".complete"), b"ok")
+        .await
+        .map_err(|_| "Validation installation échouée".to_string())?;
+    let _ = tokio::fs::remove_dir_all(&target_dir).await;
+    tokio::fs::rename(&staging_dir, &target_dir)
+        .await
+        .map_err(|_| "Finalisation installation échouée".to_string())
 }
 
 pub async fn uninstall(model_id: &str) -> Result<(), String> {
+    validation::validate_model_id(model_id)?;
     let path = model_path(model_id);
     if path.exists() {
         tokio::fs::remove_dir_all(&path)
@@ -66,6 +83,9 @@ pub async fn uninstall(model_id: &str) -> Result<(), String> {
 }
 
 pub fn get_model_size(model_id: &str) -> u64 {
+    if validation::validate_model_id(model_id).is_err() {
+        return 0;
+    }
     let path = model_path(model_id);
     if !path.exists() {
         return 0;

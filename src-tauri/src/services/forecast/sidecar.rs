@@ -1,3 +1,4 @@
+use crate::services::forecast::sidecar_process;
 use crate::services::paths::data_dir;
 use std::net::TcpListener;
 use std::path::PathBuf;
@@ -21,15 +22,15 @@ impl ChronosSidecar {
 
 pub fn get_port() -> u16 {
     let port = ACTIVE_PORT.load(Ordering::Relaxed);
-    if port == 0 { DEFAULT_PORT } else { port }
+    if port == 0 {
+        DEFAULT_PORT
+    } else {
+        port
+    }
 }
 
 pub fn base_url() -> String {
     format!("http://127.0.0.1:{}", get_port())
-}
-
-fn pid_path() -> PathBuf {
-    data_dir().join("chronos-sidecar.pid")
 }
 
 fn sidecar_dir() -> PathBuf {
@@ -51,10 +52,8 @@ pub fn detect_existing_instance(port: u16) -> bool {
     use std::time::Duration;
 
     let addr = format!("127.0.0.1:{port}");
-    let Ok(mut stream) = TcpStream::connect_timeout(
-        &addr.parse().unwrap(),
-        Duration::from_secs(2),
-    ) else {
+    let Ok(mut stream) = TcpStream::connect_timeout(&addr.parse().unwrap(), Duration::from_secs(2))
+    else {
         return false;
     };
     stream.set_read_timeout(Some(Duration::from_secs(2))).ok();
@@ -68,51 +67,13 @@ pub fn detect_existing_instance(port: u16) -> bool {
     response.contains("200")
 }
 
-pub fn kill_orphan_sidecar() {
-    let pid_file = pid_path();
-    if !pid_file.exists() {
-        return;
-    }
-    if let Ok(content) = std::fs::read_to_string(&pid_file) {
-        if let Ok(pid) = content.trim().parse::<u32>() {
-            #[cfg(unix)]
-            {
-                unsafe { libc::kill(pid as i32, libc::SIGTERM); }
-            }
-            #[cfg(windows)]
-            {
-                let _ = std::process::Command::new("taskkill")
-                    .args(["/PID", &pid.to_string(), "/F", "/T"])
-                    .output();
-            }
-        }
-    }
-    let _ = std::fs::remove_file(&pid_file);
-}
-
-fn save_pid(pid: u32) {
-    let tmp = pid_path().with_extension("tmp");
-    let _ = std::fs::write(&tmp, pid.to_string());
-    let _ = std::fs::rename(&tmp, pid_path());
-}
-
 pub async fn start(sidecar: &ChronosSidecar, model_name: &str) -> Result<u16, String> {
-    // Vérifier d'abord si une instance existante tourne via le PID file
-    let pid_file = pid_path();
-    if pid_file.exists() {
-        if let Ok(content) = std::fs::read_to_string(&pid_file) {
-            if let Ok(_pid) = content.trim().parse::<u32>() {
-                // Instance potentielle — tester le port actif
-                let existing_port = get_port();
-                if existing_port != 0 && detect_existing_instance(existing_port) {
-                    return Ok(existing_port);
-                }
-            }
-        }
+    let existing_port = get_port();
+    if detect_existing_instance(existing_port) {
+        return Ok(existing_port);
     }
 
-    // Aucune instance valide — tuer les orphelins et chercher un port libre
-    kill_orphan_sidecar();
+    sidecar_process::kill_orphan_sidecar();
     let port = find_free_port();
 
     let script = sidecar_dir().join("server.py");
@@ -121,20 +82,23 @@ pub async fn start(sidecar: &ChronosSidecar, model_name: &str) -> Result<u16, St
     }
 
     let models_dir = data_dir().join("forecast-models");
-    let child = std::process::Command::new("uv")
+    let python = find_python()?;
+    let child = std::process::Command::new(python)
         .args([
-            "run", "python3",
             script.to_str().unwrap_or("server.py"),
-            "--port", &port.to_string(),
-            "--model", model_name,
-            "--models-dir", models_dir.to_str().unwrap_or(""),
+            "--port",
+            &port.to_string(),
+            "--model",
+            model_name,
+            "--models-dir",
+            models_dir.to_str().unwrap_or(""),
         ])
         .stdout(std::process::Stdio::null())
         .stderr(std::process::Stdio::null())
         .spawn()
         .map_err(|e| format!("Impossible de lancer le sidecar Chronos: {e}"))?;
 
-    save_pid(child.id());
+    sidecar_process::save_pid(child.id());
     ACTIVE_PORT.store(port, Ordering::Relaxed);
 
     *sidecar.0.lock().await = Some(child);
@@ -147,26 +111,23 @@ pub async fn start(sidecar: &ChronosSidecar, model_name: &str) -> Result<u16, St
         }
     }
 
+    stop(sidecar).await;
     Err("Sidecar Chronos: timeout au démarrage".into())
 }
 
+fn find_python() -> Result<PathBuf, String> {
+    which::which("python3")
+        .or_else(|_| which::which("python"))
+        .map_err(|_| "Runtime Python introuvable".to_string())
+}
+
 pub async fn stop(sidecar: &ChronosSidecar) {
-    if let Some(mut child) = sidecar.0.lock().await.take() {
-        #[cfg(unix)]
-        {
-            unsafe { libc::kill(child.id() as i32, libc::SIGTERM); }
-            let _ = tokio::time::timeout(
-                std::time::Duration::from_secs(3),
-                tokio::task::spawn_blocking(move || { let _ = child.wait(); }),
-            )
-            .await;
-        }
-        #[cfg(windows)]
-        {
-            let _ = child.kill();
-            let _ = child.wait();
-        }
+    if let Some(child) = sidecar.0.lock().await.take() {
+        let _ = tokio::task::spawn_blocking(move || {
+            sidecar_process::kill_child_process(child);
+        })
+        .await;
     }
-    let _ = std::fs::remove_file(pid_path());
+    sidecar_process::clear_pid_file();
     ACTIVE_PORT.store(0, Ordering::Relaxed);
 }

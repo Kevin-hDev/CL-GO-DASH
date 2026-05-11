@@ -20,9 +20,16 @@ pub async fn stream_chat_no_done(
     if provider_id == "codex-oauth" {
         return crate::services::codex_client::stream::stream_chat(
             on_event, model, messages, tools, think, cancel,
-        ).await;
+        )
+        .await;
     }
-    let cfg = RequestConfig { provider_id, model, messages, tools, think };
+    let cfg = RequestConfig {
+        provider_id,
+        model,
+        messages,
+        tools,
+        think,
+    };
     match post_chat_request(&cfg).await {
         Ok(resp) => {
             let (result, _, _) = consume_stream(on_event, resp, cancel).await?;
@@ -30,7 +37,13 @@ pub async fn stream_chat_no_done(
         }
         Err(RequestError::RetryWithoutTools(msg)) => {
             eprintln!("[llm stream] retry sans tools: {msg}");
-            let cfg2 = RequestConfig { provider_id, model, messages, tools: &[], think };
+            let cfg2 = RequestConfig {
+                provider_id,
+                model,
+                messages,
+                tools: &[],
+                think,
+            };
             let resp = post_chat_request(&cfg2).await.map_err(|e| e.to_string())?;
             let (result, _, _) = consume_stream(on_event, resp, cancel).await?;
             Ok(result)
@@ -40,7 +53,11 @@ pub async fn stream_chat_no_done(
             let mut msgs_clean = messages.to_vec();
             stream_convert::strip_images(&mut msgs_clean);
             let cfg2 = RequestConfig {
-                provider_id, model, messages: &msgs_clean, tools, think,
+                provider_id,
+                model,
+                messages: &msgs_clean,
+                tools,
+                think,
             };
             let resp = post_chat_request(&cfg2).await.map_err(|e| e.to_string())?;
             let (result, _, _) = consume_stream(on_event, resp, cancel).await?;
@@ -87,7 +104,11 @@ async fn consume_stream(
                 result.content.push_str(&c);
                 token_count += 1;
                 let tps = compute_tps(token_count, first_token);
-                let _ = on_event.send(StreamEvent::Token { content: c, token_count, tps });
+                let _ = on_event.send(StreamEvent::Token {
+                    content: c,
+                    token_count,
+                    tps,
+                });
             }
         }
     }
@@ -123,7 +144,8 @@ fn process_chunk(
     };
     if let Some(choice) = chunk["choices"].as_array().and_then(|a| a.first()) {
         let delta = &choice["delta"];
-        if let Some(thinking) = delta["reasoning_content"].as_str()
+        if let Some(thinking) = delta["reasoning_content"]
+            .as_str()
             .or_else(|| delta["reasoning"].as_str())
         {
             if !thinking.is_empty() {
@@ -164,8 +186,14 @@ fn process_chunk(
         }
     }
     if let Some(usage) = chunk["usage"].as_object() {
-        result.eval_count = usage.get("completion_tokens").and_then(|v| v.as_u64()).unwrap_or(0) as u32;
-        result.prompt_tokens = usage.get("prompt_tokens").and_then(|v| v.as_u64()).unwrap_or(0) as u32;
+        result.eval_count = usage
+            .get("completion_tokens")
+            .and_then(|v| v.as_u64())
+            .unwrap_or(0) as u32;
+        result.prompt_tokens = usage
+            .get("prompt_tokens")
+            .and_then(|v| v.as_u64())
+            .unwrap_or(0) as u32;
     }
 }
 

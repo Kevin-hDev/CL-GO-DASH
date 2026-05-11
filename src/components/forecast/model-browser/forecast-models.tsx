@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { useTranslation } from "react-i18next";
 import { ModelCard } from "./model-card";
 import { ModelSpecs } from "./model-specs";
 import "./forecast-models.css";
@@ -27,20 +28,25 @@ interface Provider {
 }
 
 export function ForecastModels() {
+  const { t } = useTranslation();
   const [models, setModels] = useState<ForecastModel[]>([]);
   const [providers, setProviders] = useState<Provider[]>([]);
   const [selected, setSelected] = useState<ForecastModel | null>(null);
 
-  const refresh = () => {
-    invoke<{ models: ForecastModel[]; providers: Provider[] }>("list_forecast_models")
-      .then((r) => {
-        setModels(r.models);
-        setProviders(r.providers);
+  const refresh = useCallback(() => {
+    void invoke<{ models: ForecastModel[]; providers: Provider[] }>("list_forecast_models")
+      .then((result) => {
+        setModels(result.models);
+        setProviders(result.providers);
+        setSelected((current) => {
+          if (!current) return null;
+          return result.models.find((model) => model.id === current.id) ?? null;
+        });
       })
       .catch(() => {});
-  };
+  }, []);
 
-  useEffect(() => { refresh(); }, []);
+  useEffect(() => { refresh(); }, [refresh]);
 
   if (selected) {
     return <ModelSpecs model={selected} onBack={() => setSelected(null)} onRefresh={refresh} />;
@@ -49,7 +55,7 @@ export function ForecastModels() {
   return (
     <div className="fmb-root">
       <div className="fmb-header">
-        <span className="fmb-title">Modèles Forecast</span>
+        <span className="fmb-title">{t("forecast.models.title")}</span>
       </div>
       <div className="fmb-list">
         {providers.map((prov) => {

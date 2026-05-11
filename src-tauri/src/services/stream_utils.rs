@@ -24,7 +24,10 @@ pub struct ThinkTagFilter {
 
 impl ThinkTagFilter {
     pub fn new() -> Self {
-        Self { in_think: false, pending: String::new() }
+        Self {
+            in_think: false,
+            pending: String::new(),
+        }
     }
 
     pub fn feed(&mut self, chunk: &str) -> Vec<FilteredChunk> {
@@ -124,14 +127,20 @@ mod tests {
         all.extend(f.feed("the answer"));
         all.extend(f.flush());
 
-        let thinking: String = all.iter().filter_map(|c| match c {
-            FilteredChunk::Thinking(t) => Some(t.as_str()),
-            _ => None,
-        }).collect();
-        let content: String = all.iter().filter_map(|c| match c {
-            FilteredChunk::Content(t) => Some(t.as_str()),
-            _ => None,
-        }).collect();
+        let thinking: String = all
+            .iter()
+            .filter_map(|c| match c {
+                FilteredChunk::Thinking(t) => Some(t.as_str()),
+                _ => None,
+            })
+            .collect();
+        let content: String = all
+            .iter()
+            .filter_map(|c| match c {
+                FilteredChunk::Content(t) => Some(t.as_str()),
+                _ => None,
+            })
+            .collect();
 
         assert_eq!(thinking, "reasoning here");
         assert_eq!(content, "the answer");
@@ -154,31 +163,42 @@ mod tests {
         let mut f = ThinkTagFilter::new();
         let out = f.feed("<think>first</think>middle<think>second</think>end");
         let out: Vec<_> = out.into_iter().chain(f.flush()).collect();
-        let types: Vec<&str> = out.iter().map(|c| match c {
-            FilteredChunk::Content(_) => "C",
-            FilteredChunk::Thinking(_) => "T",
-        }).collect();
+        let types: Vec<&str> = out
+            .iter()
+            .map(|c| match c {
+                FilteredChunk::Content(_) => "C",
+                FilteredChunk::Thinking(_) => "T",
+            })
+            .collect();
         assert_eq!(types, vec!["T", "C", "T", "C"]);
     }
 
     #[test]
     fn filter_token_by_token() {
         let mut f = ThinkTagFilter::new();
-        let tokens = ["<", "think", ">", "I ", "need ", "to ", "think", "</", "think", ">", "Hello"];
+        let tokens = [
+            "<", "think", ">", "I ", "need ", "to ", "think", "</", "think", ">", "Hello",
+        ];
         let mut all = vec![];
         for t in tokens {
             all.extend(f.feed(t));
         }
         all.extend(f.flush());
 
-        let thinking: String = all.iter().filter_map(|c| match c {
-            FilteredChunk::Thinking(t) => Some(t.as_str()),
-            _ => None,
-        }).collect();
-        let content: String = all.iter().filter_map(|c| match c {
-            FilteredChunk::Content(t) => Some(t.as_str()),
-            _ => None,
-        }).collect();
+        let thinking: String = all
+            .iter()
+            .filter_map(|c| match c {
+                FilteredChunk::Thinking(t) => Some(t.as_str()),
+                _ => None,
+            })
+            .collect();
+        let content: String = all
+            .iter()
+            .filter_map(|c| match c {
+                FilteredChunk::Content(t) => Some(t.as_str()),
+                _ => None,
+            })
+            .collect();
 
         assert_eq!(thinking, "I need to think");
         assert_eq!(content, "Hello");

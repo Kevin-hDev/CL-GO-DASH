@@ -37,8 +37,7 @@ fn extract_extension(path: &Path) -> Option<String> {
     if name.starts_with('.') && !name[1..].contains('.') {
         return None;
     }
-    path.extension()
-        .map(|e| e.to_string_lossy().to_lowercase())
+    path.extension().map(|e| e.to_string_lossy().to_lowercase())
 }
 
 #[tauri::command]

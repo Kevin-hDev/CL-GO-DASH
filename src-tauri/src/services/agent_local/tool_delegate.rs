@@ -35,7 +35,8 @@ pub async fn prepare_delegate(
             let trimmed = p.trim();
             if trimmed.len() > MAX_PROMPT_SIZE {
                 return Err(ToolResult::err(format!(
-                    "Prompt trop long ({} chars, max {MAX_PROMPT_SIZE})", trimmed.len()
+                    "Prompt trop long ({} chars, max {MAX_PROMPT_SIZE})",
+                    trimmed.len()
                 )));
             }
             trimmed.to_string()
@@ -57,14 +58,24 @@ pub async fn prepare_delegate(
 
     let parent = match session_store::get(&parent_session_id).await {
         Ok(s) => s,
-        Err(_) => return Err(ToolResult::err("Erreur interne lors de la création du sous-agent")),
+        Err(_) => {
+            return Err(ToolResult::err(
+                "Erreur interne lors de la création du sous-agent",
+            ))
+        }
     };
 
     let run_id = subagent_registry::get_or_create_run_id(&parent_session_id).await;
 
     let child = match session_store::create_full(
-        &name, &parent.model, &parent.provider, false, parent.project_id.clone(),
-    ).await {
+        &name,
+        &parent.model,
+        &parent.provider,
+        false,
+        parent.project_id.clone(),
+    )
+    .await
+    {
         Ok(mut s) => {
             s.parent_session_id = Some(parent_session_id.clone());
             s.subagent_type = Some(subagent_type.to_string());
@@ -72,11 +83,17 @@ pub async fn prepare_delegate(
             s.subagent_status = Some("running".to_string());
             s.subagent_run_id = Some(run_id.clone());
             if session_store::save(&s).await.is_err() {
-                return Err(ToolResult::err("Erreur interne lors de la création du sous-agent"));
+                return Err(ToolResult::err(
+                    "Erreur interne lors de la création du sous-agent",
+                ));
             }
             s
         }
-        Err(_) => return Err(ToolResult::err("Erreur interne lors de la création du sous-agent")),
+        Err(_) => {
+            return Err(ToolResult::err(
+                "Erreur interne lors de la création du sous-agent",
+            ))
+        }
     };
 
     let child_id = child.id.clone();
@@ -85,16 +102,28 @@ pub async fn prepare_delegate(
         id: uuid::Uuid::new_v4().to_string(),
         role: "user".to_string(),
         content: prompt.clone(),
-        thinking: None, tool_calls: None, tool_name: None,
-        tool_activities: None, segments: None,
-        files: vec![], timestamp: chrono::Utc::now(), tokens: 0, skill_names: None,
+        thinking: None,
+        tool_calls: None,
+        tool_name: None,
+        tool_activities: None,
+        segments: None,
+        files: vec![],
+        timestamp: chrono::Utc::now(),
+        tokens: 0,
+        skill_names: None,
     };
     let _ = session_store::add_messages(&child_id, vec![user_msg], 0).await;
 
     let cancel = CancellationToken::new();
     if let Err(e) = subagent_registry::register(
-        &parent_session_id, &child_id, cancel.clone(), &name, subagent_type,
-    ).await {
+        &parent_session_id,
+        &child_id,
+        cancel.clone(),
+        &name,
+        subagent_type,
+    )
+    .await
+    {
         return Err(ToolResult::err(e));
     }
 
@@ -108,11 +137,14 @@ pub async fn prepare_delegate(
     });
 
     Ok(SpawnedSubagent {
-        app, child_id,
+        app,
+        child_id,
         model: parent.model.clone(),
         provider: parent.provider.clone(),
-        prompt, subagent_type: subagent_type.to_string(),
-        parent_emitter, cancel,
+        prompt,
+        subagent_type: subagent_type.to_string(),
+        parent_emitter,
+        cancel,
         project_id: parent.project_id.clone(),
         result_message: format!(
             "Subagent '{name}' ({subagent_type}) spawned. Task: {prompt_preview}\n\

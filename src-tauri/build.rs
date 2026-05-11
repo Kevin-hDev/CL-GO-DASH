@@ -9,7 +9,9 @@ fn main() {
 
 fn load_env(path: &str) {
     println!("cargo:rerun-if-changed={path}");
-    let Ok(content) = std::fs::read_to_string(path) else { return };
+    let Ok(content) = std::fs::read_to_string(path) else {
+        return;
+    };
     for line in content.lines() {
         let line = line.trim();
         if line.is_empty() || line.starts_with('#') {

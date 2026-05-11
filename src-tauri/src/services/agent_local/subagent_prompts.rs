@@ -115,10 +115,8 @@ pub fn explorer_system() -> String {
 
 pub async fn coder_system(project_id: Option<&str>) -> String {
     let working_dir = resolve_project_dir(project_id).await;
-    let agent_md = crate::services::agent_local::agent_md::load_agent_md(
-        Some(working_dir.as_path()),
-    )
-    .await;
+    let agent_md =
+        crate::services::agent_local::agent_md::load_agent_md(Some(working_dir.as_path())).await;
     let personality = crate::services::personality_injection::load_injected_contents();
     let merged = crate::commands::agent_chat_task::merge_personality(agent_md, personality);
     let base = format!("{CODER_SYSTEM}\n\n{}", env_section());

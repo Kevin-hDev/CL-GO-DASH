@@ -5,11 +5,11 @@ use tauri::Emitter;
 use tokio::sync::{mpsc, RwLock};
 use tokio_util::sync::CancellationToken;
 
-use crate::models::{ChannelAccountConfig, GatewayConfig};
 use super::agent_bridge::GatewayAgentBridge;
 use super::channels::telegram::TelegramAdapter;
 use super::channels::{ChannelAdapter, ChannelContext, InboundMessage};
 use super::types::{ChannelHealthEntry, ChannelKey, ChannelStatus, GatewayHealth};
+use crate::models::{ChannelAccountConfig, GatewayConfig};
 
 struct ChannelEntry {
     status: ChannelStatus,
@@ -25,7 +25,9 @@ pub struct GatewayState {
 }
 
 fn build_health(state: &GatewayState) -> GatewayHealth {
-    let channels = state.channels.iter()
+    let channels = state
+        .channels
+        .iter()
         .map(|(key, entry)| ChannelHealthEntry {
             channel_id: key.channel_id.clone(),
             account_id: key.account_id.clone(),
@@ -33,7 +35,10 @@ fn build_health(state: &GatewayState) -> GatewayHealth {
             error: entry.error.clone(),
         })
         .collect();
-    GatewayHealth { running: !state.cancel.is_cancelled(), channels }
+    GatewayHealth {
+        running: !state.cancel.is_cancelled(),
+        channels,
+    }
 }
 
 pub struct GatewayService {
@@ -92,12 +97,17 @@ impl GatewayService {
     }
 
     fn start_channel_accounts(
-        &self, state: &mut GatewayState, channel_id: &str,
-        accounts: &[ChannelAccountConfig], tx: &mpsc::Sender<InboundMessage>,
+        &self,
+        state: &mut GatewayState,
+        channel_id: &str,
+        accounts: &[ChannelAccountConfig],
+        tx: &mpsc::Sender<InboundMessage>,
         app: &tauri::AppHandle,
     ) {
         for acc in accounts {
-            if !acc.enabled { continue; }
+            if !acc.enabled {
+                continue;
+            }
             let key = ChannelKey::new(channel_id, &acc.account_id);
             let child_cancel = state.cancel.child_token();
             let adapter: Arc<dyn ChannelAdapter> = match channel_id {
@@ -108,12 +118,19 @@ impl GatewayService {
             };
             state.adapters.insert(key.clone(), Arc::clone(&adapter));
             let ctx = ChannelContext {
-                key: key.clone(), config: acc.clone(),
-                cancel: child_cancel.clone(), app: app.clone(),
+                key: key.clone(),
+                config: acc.clone(),
+                cancel: child_cancel.clone(),
+                app: app.clone(),
             };
-            state.channels.insert(key.clone(), ChannelEntry {
-                status: ChannelStatus::Starting, cancel: child_cancel, error: None,
-            });
+            state.channels.insert(
+                key.clone(),
+                ChannelEntry {
+                    status: ChannelStatus::Starting,
+                    cancel: child_cancel,
+                    error: None,
+                },
+            );
             let sender = tx.clone();
             let state_arc = self.state.clone();
             let key_clone = key;
@@ -122,7 +139,9 @@ impl GatewayService {
                 match adapter.start(ctx, sender).await {
                     Ok(_handle) => {
                         let mut s = state_arc.write().await;
-                        if let Some(e) = s.channels.get_mut(&key_clone) { e.status = ChannelStatus::Running; }
+                        if let Some(e) = s.channels.get_mut(&key_clone) {
+                            e.status = ChannelStatus::Running;
+                        }
                         let _ = app_clone.emit("gateway-status-changed", build_health(&s));
                     }
                     Err(e) => {
@@ -147,13 +166,20 @@ impl GatewayService {
         }
     }
 
-    pub async fn health(&self) -> GatewayHealth { let s = self.state.read().await; build_health(&s) }
+    pub async fn health(&self) -> GatewayHealth {
+        let s = self.state.read().await;
+        build_health(&s)
+    }
     pub async fn is_enabled(&self) -> bool {
         let s = self.state.read().await;
         s.config.enabled && !s.cancel.is_cancelled()
     }
-    pub async fn config(&self) -> GatewayConfig { self.state.read().await.config.clone() }
-    pub async fn update_config(&self, config: GatewayConfig) { self.state.write().await.config = config; }
+    pub async fn config(&self) -> GatewayConfig {
+        self.state.read().await.config.clone()
+    }
+    pub async fn update_config(&self, config: GatewayConfig) {
+        self.state.write().await.config = config;
+    }
 }
 
 #[cfg(test)]

@@ -1,5 +1,5 @@
-use tauri::ipc::Channel;
 use super::ollama_setup::OllamaSetupProgress;
+use tauri::ipc::Channel;
 
 const MIN_ARCHIVE_BYTES: u64 = 10 * 1024 * 1024;
 const MAX_BINARY_BYTES: u64 = 3 * 1024 * 1024 * 1024;
@@ -13,14 +13,20 @@ pub async fn download_file(
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(DOWNLOAD_TIMEOUT_SECS))
         .build()
-        .map_err(|e| { eprintln!("[ollama-dl] client: {e}"); "ollama-download-error".to_string() })?;
+        .map_err(|e| {
+            eprintln!("[ollama-dl] client: {e}");
+            "ollama-download-error".to_string()
+        })?;
 
     let resp = client
         .get(url)
         .header("User-Agent", "CL-GO-DASH")
         .send()
         .await
-        .map_err(|e| { eprintln!("[ollama-dl] network: {e}"); "ollama-download-error".to_string() })?;
+        .map_err(|e| {
+            eprintln!("[ollama-dl] network: {e}");
+            "ollama-download-error".to_string()
+        })?;
 
     if !resp.status().is_success() {
         return Err("ollama-download-refused".into());
@@ -44,9 +50,10 @@ pub async fn download_file(
         return Err("ollama-download-too-large".into());
     }
 
-    let mut file = tokio::fs::File::create(dest)
-        .await
-        .map_err(|e| { eprintln!("[ollama-dl] fs create: {e}"); "ollama-write-error".to_string() })?;
+    let mut file = tokio::fs::File::create(dest).await.map_err(|e| {
+        eprintln!("[ollama-dl] fs create: {e}");
+        "ollama-write-error".to_string()
+    })?;
 
     use futures_util::StreamExt;
     use tokio::io::AsyncWriteExt;
@@ -55,15 +62,19 @@ pub async fn download_file(
     let mut downloaded: u64 = 0;
 
     while let Some(chunk) = stream.next().await {
-        let chunk = chunk.map_err(|e| { eprintln!("[ollama-dl] stream: {e}"); "ollama-download-error".to_string() })?;
+        let chunk = chunk.map_err(|e| {
+            eprintln!("[ollama-dl] stream: {e}");
+            "ollama-download-error".to_string()
+        })?;
         downloaded += chunk.len() as u64;
         if downloaded > MAX_BINARY_BYTES {
             let _ = tokio::fs::remove_file(dest).await;
             return Err("ollama-download-too-large".into());
         }
-        file.write_all(&chunk)
-            .await
-            .map_err(|e| { eprintln!("[ollama-dl] write: {e}"); "ollama-write-error".to_string() })?;
+        file.write_all(&chunk).await.map_err(|e| {
+            eprintln!("[ollama-dl] write: {e}");
+            "ollama-write-error".to_string()
+        })?;
         let _ = on_progress.send(OllamaSetupProgress {
             completed: downloaded,
             total,
@@ -71,11 +82,17 @@ pub async fn download_file(
         });
     }
 
-    file.flush().await.map_err(|e| { eprintln!("[ollama-dl] flush: {e}"); "ollama-write-error".to_string() })?;
+    file.flush().await.map_err(|e| {
+        eprintln!("[ollama-dl] flush: {e}");
+        "ollama-write-error".to_string()
+    })?;
 
     let size = tokio::fs::metadata(dest)
         .await
-        .map_err(|e| { eprintln!("[ollama-dl] metadata: {e}"); "ollama-write-error".to_string() })?
+        .map_err(|e| {
+            eprintln!("[ollama-dl] metadata: {e}");
+            "ollama-write-error".to_string()
+        })?
         .len();
     if size < MIN_ARCHIVE_BYTES {
         let _ = tokio::fs::remove_file(dest).await;

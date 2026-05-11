@@ -44,7 +44,9 @@ pub async fn update_ollama_binary(
     if let Err(e) = install_ollama_to(&staging, version, &on_progress).await {
         let _ = std::fs::remove_dir_all(&staging);
         let _ = on_progress.send(OllamaSetupProgress {
-            completed: 0, total: 0, status: "error".into(),
+            completed: 0,
+            total: 0,
+            status: "error".into(),
         });
         return Err(e);
     }
@@ -55,8 +57,10 @@ pub async fn update_ollama_binary(
     let backup = dest.with_file_name("ollama-bundle-old");
     let _ = std::fs::remove_dir_all(&backup);
     if dest.exists() {
-        std::fs::rename(&dest, &backup)
-            .map_err(|e| { eprintln!("[ollama-update] backup: {e}"); "ollama-update-error".to_string() })?;
+        std::fs::rename(&dest, &backup).map_err(|e| {
+            eprintln!("[ollama-update] backup: {e}");
+            "ollama-update-error".to_string()
+        })?;
     }
     if let Err(e) = std::fs::rename(&staging, &dest) {
         let _ = std::fs::rename(&backup, &dest);
@@ -66,10 +70,15 @@ pub async fn update_ollama_binary(
     let _ = std::fs::remove_dir_all(&backup);
 
     let _ = on_progress.send(OllamaSetupProgress {
-        completed: 0, total: 0, status: "restarting".into(),
+        completed: 0,
+        total: 0,
+        status: "restarting".into(),
     });
 
-    ollama_lifecycle::start_sidecar(&app).map_err(|e| { eprintln!("[ollama-update] restart: {e}"); "ollama-restart-error".to_string() })?;
+    ollama_lifecycle::start_sidecar(&app).map_err(|e| {
+        eprintln!("[ollama-update] restart: {e}");
+        "ollama-restart-error".to_string()
+    })?;
 
     eprintln!("[ollama-update] mis à jour vers v{version}");
     Ok(())
@@ -90,7 +99,9 @@ pub async fn restart_ollama_sidecar(app: tauri::AppHandle) -> Result<bool, Strin
 #[tauri::command]
 pub async fn check_model_fits_vram(size_bytes: u64) -> bool {
     let vram_mb = crate::services::gpu_detect::detect_vram_mb().unwrap_or(0);
-    if vram_mb == 0 { return true; }
+    if vram_mb == 0 {
+        return true;
+    }
     let model_mb = size_bytes / 1_048_576;
     model_mb < vram_mb
 }
@@ -115,9 +126,15 @@ async fn install_ollama_to(
             version, archive_name
         );
 
-        let status = if i == 0 { "downloading" } else { "downloading-rocm" };
+        let status = if i == 0 {
+            "downloading"
+        } else {
+            "downloading-rocm"
+        };
         let _ = on_progress.send(OllamaSetupProgress {
-            completed: 0, total: 0, status: status.into(),
+            completed: 0,
+            total: 0,
+            status: status.into(),
         });
 
         let tmp = std::env::temp_dir().join(format!(
@@ -132,7 +149,9 @@ async fn install_ollama_to(
 
         if let Some(Some(expected)) = checksums.get(i) {
             let _ = on_progress.send(OllamaSetupProgress {
-                completed: 0, total: 0, status: "verifying".into(),
+                completed: 0,
+                total: 0,
+                status: "verifying".into(),
             });
             if let Err(err) = super::ollama_checksum::verify_file_sha256(&tmp, expected) {
                 let _ = std::fs::remove_file(&tmp);
@@ -142,7 +161,9 @@ async fn install_ollama_to(
         }
 
         let _ = on_progress.send(OllamaSetupProgress {
-            completed: 0, total: 0, status: "extracting".into(),
+            completed: 0,
+            total: 0,
+            status: "extracting".into(),
         });
 
         if let Err(err) = super::ollama_extract::extract_overlay(&tmp, dest, archive_name) {
@@ -196,4 +217,3 @@ async fn fetch_checksums(version: &str, archives: &[&str]) -> Vec<Option<String>
     }
     result
 }
-

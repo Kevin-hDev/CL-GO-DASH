@@ -83,18 +83,3 @@
   display: flex;
   gap: 8px;
 }
-
-.fms-uninstall {
-  padding: 6px 14px;
-  border: 1px solid var(--signal-error);
-  border-radius: var(--radius-sm);
-  background: none;
-  color: var(--signal-error);
-  font-size: var(--text-sm);
-  cursor: pointer;
-  transition: background 150ms ease;
-}
-
-.fms-uninstall:hover {
-  background: var(--signal-error-bg);
-}

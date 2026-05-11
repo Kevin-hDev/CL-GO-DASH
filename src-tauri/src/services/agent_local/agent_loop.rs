@@ -5,9 +5,7 @@ use crate::services::agent_local::ollama_stream;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::tool_executor;
 use crate::services::agent_local::tool_result_budget;
-use crate::services::agent_local::types_ollama::{
-    ChatMessage, ChatRequest, StreamEvent,
-};
+use crate::services::agent_local::types_ollama::{ChatMessage, ChatRequest, StreamEvent};
 use crate::services::agent_local::write_guard::WriteGuard;
 use std::path::PathBuf;
 use tokio_util::sync::CancellationToken;
@@ -46,19 +44,35 @@ pub async fn run_agent_loop(
         }
 
         tool_result_budget::apply_budget(messages);
-        compress_hook::try_auto_compress(on_event, messages, model, &session_id, native_context, configured_context, last_prompt + last_eval, cancel.clone()).await;
+        compress_hook::try_auto_compress(
+            on_event,
+            messages,
+            model,
+            &session_id,
+            native_context,
+            configured_context,
+            last_prompt + last_eval,
+            cancel.clone(),
+        )
+        .await;
         let request = build_request(model, messages, &tools, think);
 
         // Eager dispatch : lancer les read-only tools dès qu'ils arrivent dans le stream
         let (tool_tx, tool_rx) = tokio::sync::mpsc::unbounded_channel();
         let eager_working_dir = working_dir.clone();
-        let eager_handle = tokio::spawn(
-            eager_dispatch::collect_eager_results(tool_rx, eager_working_dir, session_id.clone())
-        );
+        let eager_handle = tokio::spawn(eager_dispatch::collect_eager_results(
+            tool_rx,
+            eager_working_dir,
+            session_id.clone(),
+        ));
 
         let result = ollama_stream::stream_chat_with_tool_notify(
-            on_event, &request, cancel.clone(), tool_tx,
-        ).await?;
+            on_event,
+            &request,
+            cancel.clone(),
+            tool_tx,
+        )
+        .await?;
 
         // Le sender est droppé quand le stream se termine → le receiver se ferme
         // et collect_eager_results peut retourner ses résultats.
@@ -70,7 +84,17 @@ pub async fn run_agent_loop(
         messages.push(build_assistant_message(&result));
 
         // Check post-réponse : compresser si le seuil a été dépassé pendant la génération
-        compress_hook::try_auto_compress(on_event, messages, model, &session_id, native_context, configured_context, last_prompt + last_eval, cancel.clone()).await;
+        compress_hook::try_auto_compress(
+            on_event,
+            messages,
+            model,
+            &session_id,
+            native_context,
+            configured_context,
+            last_prompt + last_eval,
+            cancel.clone(),
+        )
+        .await;
 
         if result.tool_calls.is_empty() {
             eager_handle.abort();
@@ -88,7 +112,10 @@ pub async fn run_agent_loop(
 
         if let Err(msg) = breaker.check(&result.tool_calls) {
             eager_handle.abort();
-            let _ = on_event.send(StreamEvent::Error { message: msg, is_connection: false });
+            let _ = on_event.send(StreamEvent::Error {
+                message: msg,
+                is_connection: false,
+            });
             break;
         }
 
@@ -138,13 +165,21 @@ fn build_request(
     let keep_alive = crate::services::config::read_config()
         .map(|c| c.advanced.keep_alive)
         .unwrap_or_else(|_| "5m".to_string());
-    let keep_alive = if keep_alive == "forever" { "-1m".to_string() } else { keep_alive };
+    let keep_alive = if keep_alive == "forever" {
+        "-1m".to_string()
+    } else {
+        keep_alive
+    };
 
     ChatRequest {
         model: model.to_string(),
         messages: messages.to_vec(),
         stream: true,
-        tools: if tools.is_empty() { None } else { Some(tools.to_vec()) },
+        tools: if tools.is_empty() {
+            None
+        } else {
+            Some(tools.to_vec())
+        },
         options: None,
         keep_alive: Some(keep_alive),
         think: Some(think),
@@ -162,12 +197,14 @@ fn build_assistant_message(
                 .tool_calls
                 .iter()
                 .enumerate()
-                .map(|(i, (name, args))| crate::services::agent_local::types_ollama::ToolCallOllama {
-                    id: result.tool_call_ids.get(i).cloned(),
-                    function: crate::services::agent_local::types_ollama::ToolCallFunction {
-                        name: name.clone(),
-                        arguments: args.clone(),
-                    },
+                .map(|(i, (name, args))| {
+                    crate::services::agent_local::types_ollama::ToolCallOllama {
+                        id: result.tool_call_ids.get(i).cloned(),
+                        function: crate::services::agent_local::types_ollama::ToolCallFunction {
+                            name: name.clone(),
+                            arguments: args.clone(),
+                        },
+                    }
                 })
                 .collect(),
         )

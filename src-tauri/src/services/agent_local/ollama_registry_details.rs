@@ -7,18 +7,13 @@ use std::time::Duration;
 const REGISTRY_URL: &str = "https://ollama.com";
 const UA: &str = "CL-GO-DASH/1.0";
 
-static META_DESC: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r#"<meta name="description" content="([^"]+)""#).unwrap()
-});
-static CAPA: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r#"text-indigo-600[^>]*>([a-z]+)</span>"#).unwrap()
-});
-static SIZE_PILL: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r#"x-test-size[^>]*>([^<]+)</span>"#).unwrap()
-});
-static CONTEXT_RE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r#"(\d+)K context"#).unwrap()
-});
+static META_DESC: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r#"<meta name="description" content="([^"]+)""#).unwrap());
+static CAPA: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r#"text-indigo-600[^>]*>([a-z]+)</span>"#).unwrap());
+static SIZE_PILL: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r#"x-test-size[^>]*>([^<]+)</span>"#).unwrap());
+static CONTEXT_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r#"(\d+)K context"#).unwrap());
 static README_RE: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r#"(?s)<textarea[^>]*\bid="editor"[^>]*\bname="markdown"[^>]*>(.*?)</textarea\s*>"#)
         .unwrap()
@@ -101,11 +96,20 @@ fn parse_details_html(name: &str, html: &str) -> RegistryModelDetails {
 fn parse_tags_html(html: &str) -> Vec<RegistryTag> {
     let mut tags = Vec::new();
     for cap in TAG_ROW.captures_iter(html) {
-        let tag_name = cap.get(1).map(|m| m.as_str().to_string()).unwrap_or_default();
-        let digest = cap.get(2).map(|m| m.as_str().to_string()).unwrap_or_default();
+        let tag_name = cap
+            .get(1)
+            .map(|m| m.as_str().to_string())
+            .unwrap_or_default();
+        let digest = cap
+            .get(2)
+            .map(|m| m.as_str().to_string())
+            .unwrap_or_default();
         let size_val: Option<f64> = cap.get(3).and_then(|m| m.as_str().parse().ok());
         let unit = cap.get(4).map(|m| m.as_str()).unwrap_or("GB");
-        let ctx: Option<u64> = cap.get(5).and_then(|m| m.as_str().parse().ok()).map(|k: u64| k * 1024);
+        let ctx: Option<u64> = cap
+            .get(5)
+            .and_then(|m| m.as_str().parse().ok())
+            .map(|k: u64| k * 1024);
 
         let size_gb = size_val.map(|v| if unit == "MB" { v / 1024.0 } else { v });
         tags.push(RegistryTag {
@@ -127,8 +131,7 @@ fn absolutize_urls(md: String) -> String {
         .replace("href=\"/library/", "href=\"https://ollama.com/library/")
 }
 
-static NUMERIC_ENTITY: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"&#(\d+);").unwrap());
+static NUMERIC_ENTITY: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"&#(\d+);").unwrap());
 
 fn html_decode(s: &str) -> String {
     let named = s

@@ -22,8 +22,7 @@ const DESTRUCTIVE_PATTERNS: &[&str] = &[
     "format d:",
 ];
 
-static S7_EVAL_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r#"eval\s+"?\$"#).unwrap());
+static S7_EVAL_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r#"eval\s+"?\$"#).unwrap());
 
 fn config_allowed_paths() -> Vec<PathBuf> {
     crate::services::config::read_config()
@@ -78,7 +77,9 @@ pub fn validate_read_path(path: &Path, working_dir: &Path) -> Result<PathBuf, St
         canonical_parent.join(filename)
     };
 
-    let working_canonical = working_dir.canonicalize().unwrap_or_else(|_| working_dir.to_path_buf());
+    let working_canonical = working_dir
+        .canonicalize()
+        .unwrap_or_else(|_| working_dir.to_path_buf());
     if canonical.starts_with(&working_canonical) {
         return Ok(canonical);
     }
@@ -109,10 +110,7 @@ pub fn validate_write_path(path: &Path) -> Result<PathBuf, String> {
     if roots.iter().any(|r| canonical.starts_with(r)) {
         Ok(canonical)
     } else {
-        Err(
-            "Écriture interdite hors des zones autorisées (data, .ollama, temp, Projects)"
-                .into(),
-        )
+        Err("Écriture interdite hors des zones autorisées (data, .ollama, temp, Projects)".into())
     }
 }
 

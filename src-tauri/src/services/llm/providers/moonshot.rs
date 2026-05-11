@@ -7,9 +7,7 @@ pub fn supports_thinking(model: &str) -> bool {
 }
 
 pub fn supports_vision(model: &str) -> bool {
-    model.contains("k2.5")
-        || model.contains("k2.6")
-        || model.contains("vision")
+    model.contains("k2.5") || model.contains("k2.6") || model.contains("vision")
 }
 
 #[cfg(test)]

@@ -44,12 +44,17 @@ fn should_hide_instead_of_quit(app_handle: &tauri::AppHandle) -> bool {
 
 fn cleanup(app_handle: &tauri::AppHandle) {
     if let Some(gw) = app_handle.try_state::<GatewayService>() {
-        let gw = gw.inner().clone();
+        let gw = gw.inner();
         tauri::async_runtime::block_on(async { gw.stop().await });
     }
     services::mcp_bridge::process_manager::shutdown_all();
     if let Some(pty) = app_handle.try_state::<services::terminal::PtyManager>() {
         pty.kill_all();
+    }
+    if let Some(chronos) = app_handle.try_state::<services::forecast::sidecar::ChronosSidecar>() {
+        tauri::async_runtime::block_on(async {
+            services::forecast::sidecar::stop(chronos.inner()).await;
+        });
     }
     ollama_kill::release_vram_blocking();
     ollama_lifecycle::stop_sidecar(app_handle);

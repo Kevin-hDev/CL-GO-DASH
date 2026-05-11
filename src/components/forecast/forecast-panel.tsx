@@ -1,3 +1,6 @@
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { invoke } from "@tauri-apps/api/core";
 import type { ForecastSection } from "@/hooks/use-forecast-panel";
 import { ForecastHeader } from "./forecast-header";
 import { ForecastNav } from "./forecast-nav";
@@ -8,6 +11,8 @@ import { ForecastAnalysis } from "./sections/forecast-analysis";
 import { ForecastNotes } from "./sections/forecast-notes";
 import { ForecastHistory } from "./sections/forecast-history";
 import { ExportDropdown } from "./widgets/export-dropdown";
+import { ForecastConfig, type LaunchConfig } from "./forecast-config";
+import { loadForecastDraftFromFile, type ForecastDraftData } from "./forecast-data";
 import "./forecast-panel.css";
 
 interface ForecastPanelProps {
@@ -26,7 +31,47 @@ export function ForecastPanel({
   activeSection, navOpen, currentAnalysisId, fullscreen,
   onSectionChange, onToggleNav, onLoadAnalysis, onCloseAnalysis, onFullscreenChange,
 }: ForecastPanelProps) {
+  const { t } = useTranslation();
   const hasAnalysis = currentAnalysisId !== null;
+  const [draft, setDraft] = useState<ForecastDraftData | null>(null);
+  const [launching, setLaunching] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleImportFile = async (path: string) => {
+    setError(null);
+    try {
+      setDraft(await loadForecastDraftFromFile(path));
+    } catch {
+      setError(t("forecast.errors.importFailed"));
+    }
+  };
+
+  const handleLaunch = async (config: LaunchConfig) => {
+    if (!draft) return;
+    setLaunching(true);
+    setError(null);
+    try {
+      const result = await invoke<{ id: string }>("run_forecast", {
+        request: {
+          data: draft.dataJson,
+          file_path: null,
+          target_column: config.targetColumn,
+          date_column: config.dateColumn,
+          covariate_columns: [],
+          horizon: config.horizon,
+          frequency: config.frequency,
+          model: config.model,
+          confidence_level: config.confidence,
+        },
+      });
+      setDraft(null);
+      onLoadAnalysis(result.id);
+    } catch {
+      setError(t("forecast.errors.launchFailed"));
+    } finally {
+      setLaunching(false);
+    }
+  };
 
   return (
     <div className="fc-panel">
@@ -41,8 +86,20 @@ export function ForecastPanel({
       />
       <ForecastNav open={navOpen} activeSection={activeSection} onSelect={onSectionChange} />
       <div className="fc-body">
-        {!hasAnalysis ? (
-          <ForecastEmpty onLoadAnalysis={onLoadAnalysis} />
+        {draft ? (
+          <ForecastConfig
+            draft={draft}
+            launching={launching}
+            error={error}
+            onLaunch={(config) => void handleLaunch(config)}
+            onBack={() => setDraft(null)}
+          />
+        ) : !hasAnalysis ? (
+          <ForecastEmpty
+            error={error}
+            onLoadAnalysis={onLoadAnalysis}
+            onImportFile={(path) => void handleImportFile(path)}
+          />
         ) : (
           <ForecastSectionRouter
             section={activeSection}

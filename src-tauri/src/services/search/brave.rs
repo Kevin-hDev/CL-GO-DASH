@@ -51,10 +51,7 @@ pub async fn search(query: &str) -> Result<Vec<SearchResult>, String> {
         return Err(format!("Brave: HTTP {}", resp.status()));
     }
 
-    let json: serde_json::Value = resp
-        .json()
-        .await
-        .map_err(|e| format!("Brave parse: {e}"))?;
+    let json: serde_json::Value = resp.json().await.map_err(|e| format!("Brave parse: {e}"))?;
 
     let results = json["web"]["results"]
         .as_array()

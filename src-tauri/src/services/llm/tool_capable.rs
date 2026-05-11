@@ -5,7 +5,10 @@
 //! OpenRouter : permissif (`true`), l'UI filtre via le flag API `/models`.
 
 fn strip_org_prefix(model_id: &str) -> &str {
-    model_id.rsplit_once('/').map(|(_, name)| name).unwrap_or(model_id)
+    model_id
+        .rsplit_once('/')
+        .map(|(_, name)| name)
+        .unwrap_or(model_id)
 }
 
 pub fn supports_tools(provider_id: &str, model_id: &str) -> bool {
@@ -69,9 +72,12 @@ pub fn supports_thinking(provider_id: &str, model_id: &str) -> bool {
         "openai" => model.starts_with("o3") || model.starts_with("o4"),
         "google" => model.contains("thinking"),
         "openrouter" => {
-            model.contains("r1") || model.contains("qwq")
-                || model.contains("thinking") || model.contains("reasoner")
-                || model.starts_with("o3") || model.starts_with("o4")
+            model.contains("r1")
+                || model.contains("qwq")
+                || model.contains("thinking")
+                || model.contains("reasoner")
+                || model.starts_with("o3")
+                || model.starts_with("o4")
         }
         "mistral" => model.contains("thinking"),
         "xai" => super::providers::xai::supports_thinking(&model),
@@ -147,9 +153,15 @@ mod tests {
 
     #[test]
     fn org_prefixed_model_ids() {
-        assert!(supports_tools("groq", "meta-llama/llama-4-scout-17b-16e-instruct"));
+        assert!(supports_tools(
+            "groq",
+            "meta-llama/llama-4-scout-17b-16e-instruct"
+        ));
         assert!(supports_tools("groq", "qwen/qwen3-32b"));
-        assert!(supports_tools("groq", "deepseek/deepseek-r1-distill-llama-70b"));
+        assert!(supports_tools(
+            "groq",
+            "deepseek/deepseek-r1-distill-llama-70b"
+        ));
         assert!(!supports_tools("groq", "unknown-org/whisper-large-v3"));
     }
 

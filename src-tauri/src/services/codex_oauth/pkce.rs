@@ -15,7 +15,10 @@ pub fn generate() -> PkceChallenge {
     bytes.fill(0);
     let hash = Sha256::digest(verifier.as_bytes());
     let challenge = URL_SAFE_NO_PAD.encode(hash);
-    PkceChallenge { verifier: Zeroizing::new(verifier), challenge }
+    PkceChallenge {
+        verifier: Zeroizing::new(verifier),
+        challenge,
+    }
 }
 
 #[cfg(test)]
@@ -28,7 +31,10 @@ mod tests {
         assert_eq!(p.verifier.len(), 43);
         assert_eq!(p.challenge.len(), 43);
         assert_ne!(p.verifier.as_str(), p.challenge.as_str());
-        assert!(p.verifier.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_'));
+        assert!(p
+            .verifier
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_'));
     }
 
     #[test]

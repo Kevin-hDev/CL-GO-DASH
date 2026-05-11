@@ -76,11 +76,7 @@ pub fn describe_value_type(value: &Value) -> String {
     }
 }
 
-pub async fn write_spreadsheet(
-    path: &str,
-    operations: &Value,
-    working_dir: &Path,
-) -> ToolResult {
+pub async fn write_spreadsheet(path: &str, operations: &Value, working_dir: &Path) -> ToolResult {
     if path.is_empty() {
         return ToolResult::err("Le paramètre 'path' est requis");
     }
@@ -94,10 +90,12 @@ pub async fn write_spreadsheet(
 
     let ops = match coerce_to_array(operations) {
         Some(arr) => arr,
-        None => return ToolResult::err(format!(
-            "Le paramètre 'operations' doit être un tableau d'opérations. Reçu: {}",
-            describe_value_type(operations)
-        )),
+        None => {
+            return ToolResult::err(format!(
+                "Le paramètre 'operations' doit être un tableau d'opérations. Reçu: {}",
+                describe_value_type(operations)
+            ))
+        }
     };
 
     let count = ops.len();

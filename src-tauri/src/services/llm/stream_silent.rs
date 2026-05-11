@@ -1,7 +1,7 @@
 use super::stream_http::{post_chat_request, RequestConfig};
 use super::stream_tools::ToolCallAccumulator;
-use crate::services::agent_local::types_ollama::StreamResult;
 use crate::services::agent_local::types_ollama::ChatMessage;
+use crate::services::agent_local::types_ollama::StreamResult;
 use crate::services::stream_utils::{FilteredChunk, ThinkTagFilter};
 use eventsource_stream::Eventsource;
 use futures_util::StreamExt;
@@ -13,7 +13,13 @@ pub async fn collect_chat_silent(
     messages: &[ChatMessage],
     cancel: CancellationToken,
 ) -> Result<StreamResult, String> {
-    let cfg = RequestConfig { provider_id, model, messages, tools: &[], think: false };
+    let cfg = RequestConfig {
+        provider_id,
+        model,
+        messages,
+        tools: &[],
+        think: false,
+    };
     let resp = post_chat_request(&cfg).await.map_err(|e| e.to_string())?;
     consume_silent(resp, cancel).await
 }
@@ -85,9 +91,13 @@ fn process_chunk_silent(
         }
     }
     if let Some(usage) = chunk["usage"].as_object() {
-        result.eval_count = usage.get("completion_tokens")
-            .and_then(|v| v.as_u64()).unwrap_or(0) as u32;
-        result.prompt_tokens = usage.get("prompt_tokens")
-            .and_then(|v| v.as_u64()).unwrap_or(0) as u32;
+        result.eval_count = usage
+            .get("completion_tokens")
+            .and_then(|v| v.as_u64())
+            .unwrap_or(0) as u32;
+        result.prompt_tokens = usage
+            .get("prompt_tokens")
+            .and_then(|v| v.as_u64())
+            .unwrap_or(0) as u32;
     }
 }

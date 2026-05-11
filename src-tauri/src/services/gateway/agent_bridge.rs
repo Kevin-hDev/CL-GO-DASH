@@ -35,14 +35,21 @@ impl std::fmt::Display for BridgeError {
 pub struct GatewayAgentBridge;
 
 impl GatewayAgentBridge {
-    pub fn new() -> Self { Self }
+    pub fn new() -> Self {
+        Self
+    }
 
     fn read_config() -> GatewayConfig {
-        crate::services::config::read_config().map(|c| c.gateway).unwrap_or_default()
+        crate::services::config::read_config()
+            .map(|c| c.gateway)
+            .unwrap_or_default()
     }
 
     pub async fn process(
-        &self, msg: InboundMessage, adapter: Arc<dyn ChannelAdapter>, app: tauri::AppHandle,
+        &self,
+        msg: InboundMessage,
+        adapter: Arc<dyn ChannelAdapter>,
+        app: tauri::AppHandle,
     ) -> Result<(), BridgeError> {
         let vr = validation::validate_message(&msg.content);
         if !vr.valid {
@@ -61,54 +68,85 @@ impl GatewayAgentBridge {
 
         let channel_key = build_external_key(&msg);
         let (provider, model) = resolve_provider_model(&account_cfg, &config);
-        let session_id = find_or_create_session(&msg, &channel_key, &provider, &model, &app).await?;
+        let session_id =
+            find_or_create_session(&msg, &channel_key, &provider, &model, &app).await?;
 
         sync_session_model(&session_id, &provider, &model).await;
 
-        let session = session_store::get(&session_id).await.map_err(BridgeError::SessionError)?;
+        let session = session_store::get(&session_id)
+            .await
+            .map_err(BridgeError::SessionError)?;
         let mut messages = message_convert::build_chat_messages(&session);
         let history_len = messages.len();
         messages.push(message_convert::new_user_message(&msg.content));
 
         let emitter = AgentEventEmitter::new(app.clone(), session_id.clone());
         let final_messages = run_stream_task(
-            emitter, session_id.clone(), model, messages,
-            vec![], false, provider, None, None, None,
-            Some("auto".to_string()), CancellationToken::new(),
-        ).await.map_err(BridgeError::AgentError)?;
+            emitter,
+            session_id.clone(),
+            model,
+            messages,
+            vec![],
+            false,
+            provider,
+            None,
+            None,
+            None,
+            Some("auto".to_string()),
+            CancellationToken::new(),
+        )
+        .await
+        .map_err(BridgeError::AgentError)?;
 
         let new_assistant_messages: Vec<_> = {
             let mut non_system = final_messages.iter().filter(|m| m.role != "system");
-            for _ in 0..history_len { non_system.next(); }
+            for _ in 0..history_len {
+                non_system.next();
+            }
             non_system.next();
-            non_system.filter_map(message_convert::chat_to_agent_message).collect()
+            non_system
+                .filter_map(message_convert::chat_to_agent_message)
+                .collect()
         };
 
         let mut to_persist = vec![message_convert::new_user_agent_message(&msg.content)];
         to_persist.extend(new_assistant_messages);
         let _ = session_store::add_messages(&session_id, to_persist, 0).await;
-        let _ = app.emit("wakeup-completed", serde_json::json!({ "session_id": &session_id }));
+        let _ = app.emit(
+            "wakeup-completed",
+            serde_json::json!({ "session_id": &session_id }),
+        );
 
         if let Some(reply) = stream_capture::extract_final_reply(&final_messages) {
             let max_utf16 = adapter.capabilities().max_message_chars;
             for chunk in stream_capture::prepare_for_channel(&reply, max_utf16) {
-                adapter.send(OutboundMessage {
-                    chat_id: msg.chat_id.clone(), content: chunk,
-                    reply_to: Some(msg.message_id.clone()),
-                }).await.map_err(|e| BridgeError::SendError(e.message))?;
+                adapter
+                    .send(OutboundMessage {
+                        chat_id: msg.chat_id.clone(),
+                        content: chunk,
+                        reply_to: Some(msg.message_id.clone()),
+                    })
+                    .await
+                    .map_err(|e| BridgeError::SendError(e.message))?;
             }
         }
         Ok(())
     }
 }
 
-fn resolve_provider_model(account: &Option<ChannelAccountConfig>, config: &GatewayConfig) -> (String, String) {
+fn resolve_provider_model(
+    account: &Option<ChannelAccountConfig>,
+    config: &GatewayConfig,
+) -> (String, String) {
     if let Some(acc) = account {
         if !acc.provider.is_empty() && !acc.model.is_empty() {
             return (acc.provider.clone(), acc.model.clone());
         }
     }
-    (config.default_provider.clone(), config.default_model.clone())
+    (
+        config.default_provider.clone(),
+        config.default_model.clone(),
+    )
 }
 
 async fn sync_session_model(session_id: &str, provider: &str, model: &str) {
@@ -119,22 +157,34 @@ async fn sync_session_model(session_id: &str, provider: &str, model: &str) {
     }
 }
 
-fn find_account_config(config: &GatewayConfig, msg: &InboundMessage) -> Option<ChannelAccountConfig> {
+fn find_account_config(
+    config: &GatewayConfig,
+    msg: &InboundMessage,
+) -> Option<ChannelAccountConfig> {
     let accounts = match msg.channel_key.channel_id.as_str() {
         "telegram" => &config.channels.telegram,
         "slack" => &config.channels.slack,
         "discord" => &config.channels.discord,
         _ => return None,
     };
-    accounts.iter().find(|a| a.account_id == msg.channel_key.account_id).cloned()
+    accounts
+        .iter()
+        .find(|a| a.account_id == msg.channel_key.account_id)
+        .cloned()
 }
 
 fn build_external_key(msg: &InboundMessage) -> String {
-    format!("{}/{}/{}", msg.channel_key.channel_id, msg.channel_key.account_id, msg.user_id)
+    format!(
+        "{}/{}/{}",
+        msg.channel_key.channel_id, msg.channel_key.account_id, msg.user_id
+    )
 }
 
 async fn find_or_create_session(
-    msg: &InboundMessage, channel_key: &str, provider: &str, model: &str,
+    msg: &InboundMessage,
+    channel_key: &str,
+    provider: &str,
+    model: &str,
     app: &tauri::AppHandle,
 ) -> Result<String, BridgeError> {
     if let Some(id) = session_map::find(channel_key).await {
@@ -143,12 +193,18 @@ async fn find_or_create_session(
         }
     }
     let label = match msg.channel_key.channel_id.as_str() {
-        "telegram" => "TG", "slack" => "SL", "discord" => "DC", _ => "GW",
+        "telegram" => "TG",
+        "slack" => "SL",
+        "discord" => "DC",
+        _ => "GW",
     };
     let name = format!("[{label}] {}", msg.user_id);
     let session = session_store::create_gateway(&name, model, provider, channel_key.to_string())
-        .await.map_err(BridgeError::SessionError)?;
-    session_map::insert(channel_key, &session.id).await.map_err(BridgeError::SessionError)?;
+        .await
+        .map_err(BridgeError::SessionError)?;
+    session_map::insert(channel_key, &session.id)
+        .await
+        .map_err(BridgeError::SessionError)?;
     let _ = app.emit("wakeup-completed", &session.id);
     Ok(session.id)
 }

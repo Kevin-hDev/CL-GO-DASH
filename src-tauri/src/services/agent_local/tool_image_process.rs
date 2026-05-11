@@ -90,8 +90,12 @@ pub async fn process_image(
 }
 
 fn apply_resize(img: DynamicImage, op: &Value) -> Result<DynamicImage, ToolResult> {
-    let w = op["width"].as_u64().ok_or_else(|| ToolResult::err("resize: 'width' requis"))? as u32;
-    let h = op["height"].as_u64().ok_or_else(|| ToolResult::err("resize: 'height' requis"))? as u32;
+    let w = op["width"]
+        .as_u64()
+        .ok_or_else(|| ToolResult::err("resize: 'width' requis"))? as u32;
+    let h = op["height"]
+        .as_u64()
+        .ok_or_else(|| ToolResult::err("resize: 'height' requis"))? as u32;
     let mode = op["mode"].as_str().unwrap_or("fit");
 
     let resized = match mode {
@@ -103,10 +107,18 @@ fn apply_resize(img: DynamicImage, op: &Value) -> Result<DynamicImage, ToolResul
 }
 
 fn apply_crop(img: DynamicImage, op: &Value) -> Result<DynamicImage, ToolResult> {
-    let x = op["x"].as_u64().ok_or_else(|| ToolResult::err("crop: 'x' requis"))? as u32;
-    let y = op["y"].as_u64().ok_or_else(|| ToolResult::err("crop: 'y' requis"))? as u32;
-    let w = op["width"].as_u64().ok_or_else(|| ToolResult::err("crop: 'width' requis"))? as u32;
-    let h = op["height"].as_u64().ok_or_else(|| ToolResult::err("crop: 'height' requis"))? as u32;
+    let x = op["x"]
+        .as_u64()
+        .ok_or_else(|| ToolResult::err("crop: 'x' requis"))? as u32;
+    let y = op["y"]
+        .as_u64()
+        .ok_or_else(|| ToolResult::err("crop: 'y' requis"))? as u32;
+    let w = op["width"]
+        .as_u64()
+        .ok_or_else(|| ToolResult::err("crop: 'width' requis"))? as u32;
+    let h = op["height"]
+        .as_u64()
+        .ok_or_else(|| ToolResult::err("crop: 'height' requis"))? as u32;
 
     Ok(img.crop_imm(x, y, w, h))
 }
@@ -141,5 +153,6 @@ fn save_image(img: &DynamicImage, path: &Path, quality: Option<u8>) -> Result<()
         }
     }
 
-    img.save(path).map_err(|_| "Erreur lors de la sauvegarde de l'image".to_string())
+    img.save(path)
+        .map_err(|_| "Erreur lors de la sauvegarde de l'image".to_string())
 }

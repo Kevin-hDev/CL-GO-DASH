@@ -9,7 +9,9 @@ pub struct WriteGuard {
 
 impl WriteGuard {
     pub fn new() -> Self {
-        Self { read_paths: Vec::new() }
+        Self {
+            read_paths: Vec::new(),
+        }
     }
 
     /// Enregistre qu'un fichier a été lu dans cette session.

@@ -63,7 +63,8 @@
         "all": "すべて",
         "llm": "AI / LLM",
         "search": "検索",
-        "scraping": "スクレイピング"
+        "scraping": "スクレイピング",
+        "forecast": "予測"
       }
     }
   },
@@ -631,6 +632,12 @@
     "pasteData": "データを貼り付け",
     "fromUrl": "URLから",
     "recentAnalyses": "最近の分析",
+    "comingSoon": "近日対応",
+    "panelMode": {
+      "title": "パネルモード",
+      "preview": "ファイルプレビュー",
+      "forecast": "予測"
+    },
     "nav": {
       "mainView": "メインビュー",
       "scenarios": "シナリオ",
@@ -639,22 +646,58 @@
       "history": "履歴"
     },
     "config": {
+      "title": "設定",
+      "back": "戻る",
       "target": "ターゲット",
+      "dateColumn": "日付列",
       "covariates": "共変量",
       "frequency": "頻度",
       "horizon": "予測期間",
       "confidence": "信頼度",
       "model": "モデル",
-      "launch": "予測を開始"
+      "launch": "予測を開始",
+      "launching": "計算中…",
+      "rows_one": "{{count}} 行",
+      "rows_other": "{{count}} 行"
+    },
+    "frequency": {
+      "D": "日",
+      "W": "週",
+      "M": "月",
+      "Q": "四半期",
+      "Y": "年",
+      "H": "時間",
+      "T": "分"
+    },
+    "errors": {
+      "importFailed": "インポートできません。ファイル形式を確認してください。",
+      "launchFailed": "計算に失敗しました。列、モデル、APIキーを確認してください。"
     },
     "models": {
       "manage": "モデル管理",
+      "title": "Forecast モデル",
+      "back": "戻る",
       "install": "インストール",
+      "remove": "削除",
+      "confirmRemove": "確認しますか？",
       "uninstall": "アンインストール",
       "installed": "インストール済み",
+      "installError": "エラー",
       "downloading": "ダウンロード中...",
+      "notInstalledSuffix": "(未インストール)",
       "parameters": "パラメータ",
       "specs": "仕様",
+      "diskSize": "ディスクサイズ",
+      "ram": "RAM",
+      "ramCpu": "RAM (CPU)",
+      "vramGpu": "VRAM (GPU)",
+      "supported": "対応",
+      "unsupported": "非対応",
+      "horizonMax": "最大予測期間",
+      "frequencies": "頻度",
+      "state": "状態",
+      "status": "ステータス",
+      "usedSpace": "使用容量",
       "local": "ローカル",
       "cloud": "クラウド (キー必要)",
       "noKeyConfigured": "APIキー未設定"

@@ -1,4 +1,5 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { listen } from "@tauri-apps/api/event";
 
 export type ForecastSection = "view" | "scenarios" | "analysis" | "notes" | "history";
 export type PanelMode = "preview" | "forecast";
@@ -8,7 +9,11 @@ interface ForecastPanelState {
   navOpen: boolean;
   currentAnalysisId: string | null;
   panelMode: PanelMode;
-  _sessionId: string | null;
+}
+
+interface ForecastAnalysisCreatedEvent {
+  analysis_id: string;
+  session_id: string;
 }
 
 const DEFAULT_PANEL_STATE = {
@@ -18,13 +23,13 @@ const DEFAULT_PANEL_STATE = {
   panelMode: "preview" as PanelMode,
 };
 
-function loadFromStorage(storageKey: string): Omit<ForecastPanelState, "_sessionId"> {
+function loadFromStorage(storageKey: string): ForecastPanelState {
   try {
     const saved = localStorage.getItem(storageKey);
     if (saved) {
       const parsed: unknown = JSON.parse(saved);
       if (parsed && typeof parsed === "object") {
-        return parsed as Omit<ForecastPanelState, "_sessionId">;
+        return parsed as ForecastPanelState;
       }
     }
   } catch { /* ignore */ }
@@ -32,27 +37,21 @@ function loadFromStorage(storageKey: string): Omit<ForecastPanelState, "_session
 }
 
 export function useForecastPanel(sessionId: string | null) {
+  const stateKey = sessionId ?? "__no_session__";
   const storageKey = sessionId ? `fc-panel-${sessionId}` : null;
 
-  const [state, setState] = useState<ForecastPanelState>(() => {
+  const [states, setStates] = useState<Record<string, ForecastPanelState>>(() => {
     const saved = storageKey ? loadFromStorage(storageKey) : DEFAULT_PANEL_STATE;
-    return { ...saved, _sessionId: sessionId };
+    return { [stateKey]: saved };
   });
-
-  // Si sessionId a changé depuis le dernier render, recharger depuis localStorage
-  // sans useEffect — on dérive dans le render lui-même (pattern "derived state reset")
-  const activeStorageKey = state._sessionId ? `fc-panel-${state._sessionId}` : null;
-  if (activeStorageKey !== storageKey) {
-    const next = storageKey ? loadFromStorage(storageKey) : DEFAULT_PANEL_STATE;
-    setState({ ...next, _sessionId: sessionId });
-  }
+  const state = states[stateKey] ?? (storageKey ? loadFromStorage(storageKey) : DEFAULT_PANEL_STATE);
 
   const persist = useCallback((next: ForecastPanelState) => {
-    setState(next);
+    setStates((prev) => ({ ...prev, [stateKey]: next }));
     if (storageKey) {
       try { localStorage.setItem(storageKey, JSON.stringify(next)); } catch { /* ignore */ }
     }
-  }, [storageKey]);
+  }, [stateKey, storageKey]);
 
   const setSection = useCallback((section: ForecastSection) => {
     persist({ ...state, activeSection: section, navOpen: false });
@@ -63,7 +62,7 @@ export function useForecastPanel(sessionId: string | null) {
   }, [state, persist]);
 
   const loadAnalysis = useCallback((id: string) => {
-    persist({ ...state, currentAnalysisId: id, activeSection: "view" });
+    persist({ ...state, currentAnalysisId: id, activeSection: "view", panelMode: "forecast" });
   }, [state, persist]);
 
   const closeAnalysis = useCallback(() => {
@@ -73,6 +72,22 @@ export function useForecastPanel(sessionId: string | null) {
   const setPanelMode = useCallback((mode: PanelMode) => {
     persist({ ...state, panelMode: mode });
   }, [state, persist]);
+
+  useEffect(() => {
+    if (!sessionId) return;
+    let cancelled = false;
+    const unlisten = listen<ForecastAnalysisCreatedEvent>(
+      "forecast-analysis-created",
+      (event) => {
+        if (cancelled || event.payload.session_id !== sessionId) return;
+        loadAnalysis(event.payload.analysis_id);
+      },
+    );
+    return () => {
+      cancelled = true;
+      void unlisten.then((cleanup) => cleanup());
+    };
+  }, [sessionId, loadAnalysis]);
 
   return {
     ...state,

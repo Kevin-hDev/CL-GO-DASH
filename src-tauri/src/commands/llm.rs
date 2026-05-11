@@ -31,8 +31,8 @@ pub async fn list_llm_models(provider_id: String) -> Result<Vec<ModelInfo>, Stri
             Some(caps) => {
                 m.supports_tools = m.supports_tools || caps.supports_tools;
                 m.supports_vision = caps.supports_vision;
-                m.supports_thinking = caps.supports_thinking
-                    || tool_capable::supports_thinking(&provider_id, &m.id);
+                m.supports_thinking =
+                    caps.supports_thinking || tool_capable::supports_thinking(&provider_id, &m.id);
             }
             None => {
                 if !m.supports_tools {
@@ -82,9 +82,13 @@ fn is_provider_all_free(provider_id: &str) -> bool {
 
 fn is_mistral_free(model_id: &str) -> bool {
     let id = model_id.to_lowercase();
-    id.contains("devstral") || id.contains("magistral") || id.contains("ministral")
-        || id.contains("pixtral") || id.contains("codestral-mamba")
-        || id.contains("open-mistral") || id.contains("mistral-small")
+    id.contains("devstral")
+        || id.contains("magistral")
+        || id.contains("ministral")
+        || id.contains("pixtral")
+        || id.contains("codestral-mamba")
+        || id.contains("open-mistral")
+        || id.contains("mistral-small")
 }
 
 fn is_zai_free(model_id: &str) -> bool {

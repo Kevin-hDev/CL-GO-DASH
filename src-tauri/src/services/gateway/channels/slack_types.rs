@@ -90,7 +90,9 @@ mod tests {
 
     #[test]
     fn ack_serializes() {
-        let ack = SlackAck { envelope_id: "abc123".into() };
+        let ack = SlackAck {
+            envelope_id: "abc123".into(),
+        };
         let json = serde_json::to_string(&ack).unwrap();
         assert!(json.contains("abc123"));
     }

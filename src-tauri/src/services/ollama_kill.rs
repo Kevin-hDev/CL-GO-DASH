@@ -23,7 +23,9 @@ pub fn read_saved_pid() -> Option<u32> {
     let content = std::fs::read_to_string(pid_file_path()).ok()?;
     let pid_str = content.trim().split(':').next()?;
     let pid: u32 = pid_str.parse().ok()?;
-    if pid < 2 { return None; }
+    if pid < 2 {
+        return None;
+    }
     Some(pid)
 }
 
@@ -65,7 +67,9 @@ fn is_ollama_process(pid: u32) -> bool {
             .args(["/FI", &format!("PID eq {pid}"), "/NH", "/FO", "CSV"])
             .output();
         match output {
-            Ok(o) => String::from_utf8_lossy(&o.stdout).to_lowercase().contains("ollama"),
+            Ok(o) => String::from_utf8_lossy(&o.stdout)
+                .to_lowercase()
+                .contains("ollama"),
             Err(_) => false,
         }
     }
@@ -90,10 +94,14 @@ pub fn tree_kill(pid: u32) {
         for &child_pid in children.iter().rev() {
             let raw = child_pid.as_u32() as i32;
             eprintln!("[ollama] kill child pid={raw}");
-            unsafe { libc::kill(raw, libc::SIGTERM); }
+            unsafe {
+                libc::kill(raw, libc::SIGTERM);
+            }
         }
 
-        unsafe { libc::kill(pid as i32, libc::SIGTERM); }
+        unsafe {
+            libc::kill(pid as i32, libc::SIGTERM);
+        }
 
         let start = std::time::Instant::now();
         while start.elapsed() < Duration::from_secs(3) {
@@ -105,9 +113,13 @@ pub fn tree_kill(pid: u32) {
         }
 
         for &child_pid in children.iter().rev() {
-            unsafe { libc::kill(child_pid.as_u32() as i32, libc::SIGKILL); }
+            unsafe {
+                libc::kill(child_pid.as_u32() as i32, libc::SIGKILL);
+            }
         }
-        unsafe { libc::kill(pid as i32, libc::SIGKILL); }
+        unsafe {
+            libc::kill(pid as i32, libc::SIGKILL);
+        }
         eprintln!("[ollama] SIGKILL arbre pid={pid}");
     }
 }
@@ -124,9 +136,13 @@ fn collect_children(sys: &System, parent: Pid) -> Vec<Pid> {
 
 #[cfg(unix)]
 fn collect_children_inner(sys: &System, parent: Pid, result: &mut Vec<Pid>, depth: u32) {
-    if depth >= MAX_DEPTH || result.len() >= MAX_CHILDREN { return; }
+    if depth >= MAX_DEPTH || result.len() >= MAX_CHILDREN {
+        return;
+    }
     for (pid, proc) in sys.processes() {
-        if result.len() >= MAX_CHILDREN { return; }
+        if result.len() >= MAX_CHILDREN {
+            return;
+        }
         if proc.parent() == Some(parent) {
             result.push(*pid);
             collect_children_inner(sys, *pid, result, depth + 1);

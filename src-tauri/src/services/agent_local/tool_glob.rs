@@ -6,11 +6,7 @@ use std::path::{Path, PathBuf};
 
 const MAX_RESULTS: usize = 100;
 
-pub async fn glob_files(
-    pattern: &str,
-    path: Option<&str>,
-    working_dir: &Path,
-) -> ToolResult {
+pub async fn glob_files(pattern: &str, path: Option<&str>, working_dir: &Path) -> ToolResult {
     let pattern = pattern.to_string();
     let root = resolve_root(path, working_dir);
 
@@ -29,7 +25,11 @@ fn resolve_root(path: Option<&str>, working_dir: &Path) -> PathBuf {
     match path {
         Some(p) => {
             let pb = Path::new(p);
-            if pb.is_absolute() { pb.to_path_buf() } else { working_dir.join(pb) }
+            if pb.is_absolute() {
+                pb.to_path_buf()
+            } else {
+                working_dir.join(pb)
+            }
         }
         None => working_dir.to_path_buf(),
     }
@@ -41,7 +41,10 @@ fn glob_blocking(pattern: &str, root: &Path) -> ToolResult {
         Err(e) => return ToolResult::err(format!("Pattern glob invalide : {e}")),
     };
 
-    let walk = WalkBuilder::new(root).hidden(false).git_ignore(true).build();
+    let walk = WalkBuilder::new(root)
+        .hidden(false)
+        .git_ignore(true)
+        .build();
 
     let mut results: Vec<String> = Vec::new();
     let mut truncated = false;

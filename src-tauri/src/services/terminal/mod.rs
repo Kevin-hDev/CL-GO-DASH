@@ -156,7 +156,9 @@ fn verify_token(expected: &str, provided: &str) -> Result<(), String> {
     if expected.len() != provided.len() {
         return Err("accès terminal refusé".to_string());
     }
-    let mismatch = expected.as_bytes().iter()
+    let mismatch = expected
+        .as_bytes()
+        .iter()
         .zip(provided.as_bytes().iter())
         .fold(0u8, |acc, (a, b)| acc | (a ^ b));
     if mismatch != 0 {

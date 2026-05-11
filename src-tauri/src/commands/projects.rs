@@ -46,6 +46,9 @@ pub async fn open_project_folder(path: String) -> Result<(), String> {
     std::process::Command::new(cmd)
         .arg(&path)
         .spawn()
-        .map_err(|e| { eprintln!("[projects] open_folder: {e}"); "Impossible d'ouvrir le dossier".to_string() })?;
+        .map_err(|e| {
+            eprintln!("[projects] open_folder: {e}");
+            "Impossible d'ouvrir le dossier".to_string()
+        })?;
     Ok(())
 }

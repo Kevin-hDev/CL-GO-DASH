@@ -9,10 +9,7 @@ const TOKEN_URL: &str = "https://auth.openai.com/oauth/token";
 
 use super::{CLIENT_ID, REDIRECT_URI};
 
-pub async fn exchange_code(
-    code: &str,
-    code_verifier: &str,
-) -> Result<CodexTokens, String> {
+pub async fn exchange_code(code: &str, code_verifier: &str) -> Result<CodexTokens, String> {
     let mut body = format!(
         "grant_type=authorization_code&client_id={CLIENT_ID}&code={}&code_verifier={}&redirect_uri={}",
         urlencoding::encode(code),

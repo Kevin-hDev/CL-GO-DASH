@@ -46,7 +46,9 @@ pub fn format_git_section(snap: &GitSnapshot) -> Option<String> {
         s.push_str(&format!("\n\nCurrent branch: {b}"));
     }
     if let Some(d) = &snap.default_branch {
-        s.push_str(&format!("\n\nMain branch (you will usually use this for PRs): {d}"));
+        s.push_str(&format!(
+            "\n\nMain branch (you will usually use this for PRs): {d}"
+        ));
     }
     if let Some(st) = &snap.status_short {
         if !st.is_empty() {
@@ -71,13 +73,17 @@ fn detect_current_branch(repo: &Repository) -> Option<String> {
         let id = repo.head().ok()?.peel_to_commit().ok()?.id().to_string();
         return Some(format!("HEAD detached at {}", &id[..7.min(id.len())]));
     }
-    repo.head().ok().and_then(|h| h.shorthand().map(String::from))
+    repo.head()
+        .ok()
+        .and_then(|h| h.shorthand().map(String::from))
 }
 
 fn detect_default_branch(repo: &Repository) -> Option<String> {
     if let Ok(r) = repo.find_reference("refs/remotes/origin/HEAD") {
         if let Some(target) = r.symbolic_target() {
-            let short = target.strip_prefix("refs/remotes/origin/").unwrap_or(target);
+            let short = target
+                .strip_prefix("refs/remotes/origin/")
+                .unwrap_or(target);
             return Some(short.to_string());
         }
     }
@@ -142,7 +148,11 @@ fn build_recent_commits(repo: &Repository) -> Option<String> {
         lines.push(format!("{short} {summary}"));
     }
 
-    if lines.is_empty() { None } else { Some(lines.join("\n")) }
+    if lines.is_empty() {
+        None
+    } else {
+        Some(lines.join("\n"))
+    }
 }
 
 #[cfg(test)]

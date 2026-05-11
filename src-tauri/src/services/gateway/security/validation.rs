@@ -9,10 +9,16 @@ pub struct ValidationResult {
 
 impl ValidationResult {
     fn ok() -> Self {
-        Self { valid: true, reason: None }
+        Self {
+            valid: true,
+            reason: None,
+        }
     }
     fn reject(reason: &str) -> Self {
-        Self { valid: false, reason: Some(reason.into()) }
+        Self {
+            valid: false,
+            reason: Some(reason.into()),
+        }
     }
 }
 
@@ -42,14 +48,18 @@ pub fn validate_id(id: &str) -> ValidationResult {
     if id.is_empty() || id.len() > MAX_ID_LEN {
         return ValidationResult::reject("identifiant invalide");
     }
-    if !id.chars().all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-') {
+    if !id
+        .chars()
+        .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
+    {
         return ValidationResult::reject("identifiant invalide");
     }
     ValidationResult::ok()
 }
 
 fn has_forbidden_control_chars(s: &str) -> bool {
-    s.chars().any(|c| c.is_control() && c != '\n' && c != '\t' && c != '\r')
+    s.chars()
+        .any(|c| c.is_control() && c != '\n' && c != '\t' && c != '\r')
 }
 
 pub fn utf16_len(s: &str) -> usize {

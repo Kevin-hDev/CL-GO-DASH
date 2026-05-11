@@ -11,10 +11,7 @@ pub struct StallWatchdog {
 }
 
 impl StallWatchdog {
-    pub fn spawn(
-        timeout: Duration,
-        on_stall: impl Fn(Duration) + Send + 'static,
-    ) -> Self {
+    pub fn spawn(timeout: Duration, on_stall: impl Fn(Duration) + Send + 'static) -> Self {
         let last_activity_ms = Arc::new(AtomicI64::new(now_ms()));
         let armed = Arc::new(AtomicBool::new(false));
         let cancel = CancellationToken::new();
@@ -41,7 +38,11 @@ impl StallWatchdog {
             }
         });
 
-        Self { last_activity_ms, armed, cancel }
+        Self {
+            last_activity_ms,
+            armed,
+            cancel,
+        }
     }
 
     pub fn arm(&self) {

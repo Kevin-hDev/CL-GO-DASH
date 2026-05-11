@@ -1,6 +1,8 @@
-use crate::services::forecast::{catalog, client_chronos, client_nixtla, model_manager, sidecar, storage};
 use crate::services::forecast::types::{
     ForecastAnalysisMeta, ForecastRequest, ForecastResult, ModelDownloadProgress,
+};
+use crate::services::forecast::{
+    catalog, client_chronos, client_nixtla, model_manager, sidecar, storage, validation,
 };
 use serde_json::Value;
 use tauri::ipc::Channel;
@@ -11,24 +13,26 @@ pub async fn run_forecast(
     request: ForecastRequest,
     chronos: State<'_, sidecar::ChronosSidecar>,
 ) -> Result<ForecastResult, String> {
-    let model_id = request.model.as_deref().unwrap_or("chronos-bolt-small");
+    validation::validate_request(&request)?;
+    let model_id = validation::model_id(&request)?;
     let is_nixtla = model_id.starts_with("timegpt");
 
     let result = if is_nixtla {
         let key = crate::services::api_keys::get_key("nixtla")
             .map_err(|_| "Clé API Nixtla non configurée".to_string())?;
-        client_nixtla::predict(&key, &request, None).await
+        client_nixtla::predict(&key, &request, None)
+            .await
             .map_err(|_| "Erreur du service de prédiction".to_string())?
     } else {
         if !model_manager::is_installed(model_id) {
-            return Err(format!(
-                "Modèle '{model_id}' non installé. Installez-le depuis les paramètres."
-            ));
+            return Err("Modèle non installé".into());
         }
-        sidecar::start(&chronos, model_id).await
+        sidecar::start(&chronos, model_id)
+            .await
             .map_err(|_| "Impossible de démarrer le service de prédiction".to_string())?;
         let base_url = sidecar::base_url();
-        client_chronos::predict(&base_url, &request, None).await
+        client_chronos::predict(&base_url, &request, None)
+            .await
             .map_err(|_| "Erreur du service de prédiction".to_string())?
     };
 
@@ -83,11 +87,13 @@ pub async fn install_forecast_model(
     name: String,
     on_progress: Channel<ModelDownloadProgress>,
 ) -> Result<(), String> {
+    validation::validate_model_id(&name)?;
     model_manager::install(&name, &on_progress).await
 }
 
 #[tauri::command]
 pub async fn uninstall_forecast_model(name: String) -> Result<(), String> {
+    validation::validate_model_id(&name)?;
     model_manager::uninstall(&name).await
 }
 

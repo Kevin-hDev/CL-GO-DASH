@@ -24,9 +24,7 @@ fn inbox_dir() -> PathBuf {
     data_root().join("inbox")
 }
 
-const ROOT_FILES: &[(&str, &str)] = &[
-    ("AGENT.md", "Instructions agent"),
-];
+const ROOT_FILES: &[(&str, &str)] = &[("AGENT.md", "Instructions agent")];
 
 const CORE_FILES: &[(&str, &str)] = &[
     ("identity.md", "Qui est Jackson"),
@@ -34,9 +32,7 @@ const CORE_FILES: &[(&str, &str)] = &[
     ("user.md", "Profil de Kevin"),
 ];
 
-const INBOX_FILES: &[(&str, &str)] = &[
-    ("idea-discovery.md", "Idées en attente"),
-];
+const INBOX_FILES: &[(&str, &str)] = &[("idea-discovery.md", "Idées en attente")];
 
 #[tauri::command]
 pub fn list_personality_files() -> Result<Vec<PersonalityFile>, String> {
@@ -79,8 +75,7 @@ pub fn read_personality_file(path: String) -> Result<String, String> {
     if !canonical.starts_with(&root) {
         return Err("Chemin non autorisé".to_string());
     }
-    fs::read_to_string(&canonical)
-        .map_err(|_| "Erreur de lecture".to_string())
+    fs::read_to_string(&canonical).map_err(|_| "Erreur de lecture".to_string())
 }
 
 #[tauri::command]
@@ -99,7 +94,10 @@ pub fn open_in_editor(path: String) -> Result<(), String> {
     #[cfg(target_os = "windows")]
     let result = Command::new("cmd").args(["/c", "start", "", &path]).spawn();
 
-    result.map_err(|e| { eprintln!("[personality] open_in_editor: {e}"); "Impossible d'ouvrir l'éditeur".to_string() })?;
+    result.map_err(|e| {
+        eprintln!("[personality] open_in_editor: {e}");
+        "Impossible d'ouvrir l'éditeur".to_string()
+    })?;
     Ok(())
 }
 
