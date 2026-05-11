@@ -1,6 +1,5 @@
-use crate::services::forecast::types::{
-    ForecastRequest, ForecastResult, InputSummary, Prediction, Quantiles,
-};
+use crate::services::forecast::input_data::{parse_request_input, ParsedInput};
+use crate::services::forecast::types::{ForecastRequest, ForecastResult, Prediction, Quantiles};
 use chrono::Utc;
 use serde_json::Value;
 use uuid::Uuid;
@@ -10,8 +9,8 @@ pub async fn predict(
     request: &ForecastRequest,
     session_id: Option<&str>,
 ) -> Result<ForecastResult, String> {
-    let data = parse_input_data(request)?;
-    let payload = build_payload(&data, request)?;
+    let input = parse_request_input(request)?;
+    let payload = build_payload(&input.values, request);
 
     let client = reqwest::Client::new();
     let resp = client
@@ -36,7 +35,7 @@ pub async fn predict(
         .await
         .map_err(|e| format!("Parsing réponse Chronos: {e}"))?;
 
-    parse_response(&body, request, &data, session_id)
+    parse_response(&body, request, &input, session_id)
 }
 
 pub async fn health_check(base_url: &str) -> Result<(), String> {
@@ -55,45 +54,21 @@ pub async fn health_check(base_url: &str) -> Result<(), String> {
     }
 }
 
-fn parse_input_data(request: &ForecastRequest) -> Result<Vec<(String, f64)>, String> {
-    let json_str = request.data.as_ref().ok_or("Données JSON requises")?;
-
-    let arr: Vec<Value> =
-        serde_json::from_str(json_str).map_err(|e| format!("Données JSON invalides: {e}"))?;
-
-    let mut points = Vec::with_capacity(arr.len());
-    for item in &arr {
-        let date = item[&request.date_column]
-            .as_str()
-            .ok_or("Colonne date manquante")?;
-        let value = item[&request.target_column]
-            .as_f64()
-            .ok_or("Colonne cible non numérique")?;
-        points.push((date.to_string(), value));
-    }
-
-    if points.is_empty() {
-        return Err("Aucun point de données".into());
-    }
-    Ok(points)
-}
-
-fn build_payload(data: &[(String, f64)], request: &ForecastRequest) -> Result<Value, String> {
-    let values: Vec<f64> = data.iter().map(|(_, v)| *v).collect();
+fn build_payload(values: &[f64], request: &ForecastRequest) -> Value {
     let model = request.model.as_deref().unwrap_or("chronos-bolt-small");
 
-    Ok(serde_json::json!({
-        "values": values,
+    serde_json::json!({
+        "values": values.to_vec(),
         "horizon": request.horizon,
         "model": model,
         "quantiles": [0.1, 0.5, 0.9],
-    }))
+    })
 }
 
 fn parse_response(
     body: &Value,
     request: &ForecastRequest,
-    data: &[(String, f64)],
+    input: &ParsedInput,
     session_id: Option<&str>,
 ) -> Result<ForecastResult, String> {
     let median = body["median"]
@@ -104,7 +79,11 @@ fn parse_response(
         .iter()
         .enumerate()
         .map(|(i, v)| Prediction {
-            date: format!("T+{}", i + 1),
+            date: input
+                .future_dates
+                .get(i)
+                .cloned()
+                .unwrap_or_else(|| format!("T+{}", i + 1)),
             value: v.as_f64().unwrap_or(0.0),
         })
         .collect();
@@ -118,17 +97,15 @@ fn parse_response(
     Ok(ForecastResult {
         id: Uuid::new_v4().to_string(),
         name: format!("Forecast {}", &request.target_column),
+        target_column: request.target_column.clone(),
         created_at: Utc::now().to_rfc3339(),
         session_id: session_id.map(|s| s.to_string()),
         model: model_name.to_string(),
         provider: "chronos".to_string(),
         horizon: request.horizon,
         frequency: request.frequency.clone(),
-        input_summary: InputSummary {
-            points: data.len(),
-            start: data.first().map(|(d, _)| d.clone()).unwrap_or_default(),
-            end: data.last().map(|(d, _)| d.clone()).unwrap_or_default(),
-        },
+        input_summary: input.summary.clone(),
+        input_data: input.snapshot.clone(),
         predictions,
         quantiles: Quantiles { q10, q50, q90 },
         covariates_used: request.covariate_columns.clone(),

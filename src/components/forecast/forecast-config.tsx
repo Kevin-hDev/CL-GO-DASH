@@ -23,6 +23,7 @@ interface ForecastConfigProps {
 export interface LaunchConfig {
   targetColumn: string;
   dateColumn: string;
+  covariates: string[];
   horizon: number;
   frequency: string;
   model: string;
@@ -38,6 +39,7 @@ export function ForecastConfig({ draft, launching, error, onLaunch, onBack }: Fo
   const [models, setModels] = useState<ModelEntry[]>([]);
   const [target, setTarget] = useState(draft.columns[1] ?? "");
   const [dateCol, setDateCol] = useState(draft.columns[0] ?? "");
+  const [covariates, setCovariates] = useState<string[]>([]);
   const [horizon, setHorizon] = useState(12);
   const [frequency, setFrequency] = useState("M");
   const [model, setModel] = useState("");
@@ -55,6 +57,10 @@ export function ForecastConfig({ draft, launching, error, onLaunch, onBack }: Fo
 
   const localModels = models.filter((m) => !m.is_cloud);
   const cloudModels = models.filter((m) => m.is_cloud);
+  const covariateOptions = draft.columns.filter((column) => column !== target && column !== dateCol);
+  const selectedCovariates = covariates.filter(
+    (column) => column !== target && column !== dateCol
+  );
 
   const canLaunch = target.trim() !== "" && dateCol.trim() !== "" && model !== "" && horizon > 0;
 
@@ -71,6 +77,32 @@ export function ForecastConfig({ draft, launching, error, onLaunch, onBack }: Fo
         </div>
         <FieldSelect label={t("forecast.config.target")} value={target} onChange={setTarget} options={draft.columns} />
         <FieldSelect label={t("forecast.config.dateColumn")} value={dateCol} onChange={setDateCol} options={draft.columns} />
+        {covariateOptions.length > 0 && (
+          <div className="fcc-field">
+            <span className="fcc-label">{t("forecast.config.covariates")}</span>
+            <div className="fcc-chips">
+              {covariateOptions.map((column) => {
+                const active = selectedCovariates.includes(column);
+                return (
+                  <button
+                    key={column}
+                    className={`fcc-chip ${active ? "fcc-chip-active" : ""}`}
+                    type="button"
+                    onClick={() => {
+                      setCovariates((current) =>
+                        current.includes(column)
+                          ? current.filter((item) => item !== column)
+                          : [...current, column]
+                      );
+                    }}
+                  >
+                    {column}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
         <div className="fcc-row">
           <div className="fcc-field fcc-half">
             <label className="fcc-label" htmlFor="fcc-horizon">{t("forecast.config.horizon")}</label>
@@ -110,7 +142,15 @@ export function ForecastConfig({ draft, launching, error, onLaunch, onBack }: Fo
       </div>
       <div className="fcc-footer">
         <button className="fcc-launch" disabled={!canLaunch || launching}
-          onClick={() => onLaunch({ targetColumn: target, dateColumn: dateCol, horizon, frequency, model, confidence })}>
+          onClick={() => onLaunch({
+            targetColumn: target,
+            dateColumn: dateCol,
+            covariates: selectedCovariates,
+            horizon,
+            frequency,
+            model,
+            confidence,
+          })}>
           {launching ? t("forecast.config.launching") : t("forecast.config.launch")}
         </button>
       </div>

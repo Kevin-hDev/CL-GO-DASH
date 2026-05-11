@@ -645,6 +645,17 @@
       "notes": "笔记",
       "history": "历史"
     },
+    "history": {
+      "searchPlaceholder": "搜索…",
+      "empty": "没有已保存的分析。",
+      "points_one": "{{count}} 个点",
+      "points_other": "{{count}} 个点",
+      "horizonShort": "预测 {{count}} 步",
+      "mapeShort": "MAPE {{value}}%"
+    },
+    "view": {
+      "period": "周期"
+    },
     "config": {
       "title": "配置",
       "back": "返回",

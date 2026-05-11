@@ -57,7 +57,7 @@ export function ForecastPanel({
           file_path: null,
           target_column: config.targetColumn,
           date_column: config.dateColumn,
-          covariate_columns: [],
+          covariate_columns: config.covariates,
           horizon: config.horizon,
           frequency: config.frequency,
           model: config.model,

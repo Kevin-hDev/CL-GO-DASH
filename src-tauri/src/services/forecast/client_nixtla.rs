@@ -1,6 +1,5 @@
-use crate::services::forecast::types::{
-    ForecastRequest, ForecastResult, InputSummary, Prediction, Quantiles,
-};
+use crate::services::forecast::input_data::{parse_request_input, ParsedInput};
+use crate::services::forecast::types::{ForecastRequest, ForecastResult, Prediction, Quantiles};
 use chrono::Utc;
 use serde_json::Value;
 use uuid::Uuid;
@@ -13,8 +12,8 @@ pub async fn predict(
     request: &ForecastRequest,
     session_id: Option<&str>,
 ) -> Result<ForecastResult, String> {
-    let data = parse_input_data(request)?;
-    let payload = build_payload(&data, request)?;
+    let input = parse_request_input(request)?;
+    let payload = build_payload(&input, request);
 
     let client = reqwest::Client::new();
     let resp = client
@@ -39,7 +38,7 @@ pub async fn predict(
         .await
         .map_err(|e| format!("Parsing réponse Nixtla: {e}"))?;
 
-    parse_response(&body, request, &data, session_id)
+    parse_response(&body, request, &input, session_id)
 }
 
 pub async fn test_connection(api_key: &Zeroizing<String>) -> Result<(), String> {
@@ -59,52 +58,29 @@ pub async fn test_connection(api_key: &Zeroizing<String>) -> Result<(), String> 
     }
 }
 
-fn parse_input_data(request: &ForecastRequest) -> Result<Vec<(String, f64)>, String> {
-    let json_str = request
-        .data
-        .as_ref()
-        .ok_or("Données requises pour Nixtla (pas de fichier local supporté)")?;
-
-    let arr: Vec<Value> =
-        serde_json::from_str(json_str).map_err(|e| format!("Données JSON invalides: {e}"))?;
-
-    let mut points = Vec::with_capacity(arr.len());
-    for item in &arr {
-        let date = item[&request.date_column]
-            .as_str()
-            .ok_or("Colonne date manquante dans les données")?;
-        let value = item[&request.target_column]
-            .as_f64()
-            .ok_or("Colonne cible non numérique")?;
-        points.push((date.to_string(), value));
-    }
-
-    if points.is_empty() {
-        return Err("Aucun point de données fourni".into());
-    }
-    Ok(points)
-}
-
-fn build_payload(data: &[(String, f64)], request: &ForecastRequest) -> Result<Value, String> {
-    let timestamps: Vec<&str> = data.iter().map(|(d, _)| d.as_str()).collect();
-    let values: Vec<f64> = data.iter().map(|(_, v)| *v).collect();
-
+fn build_payload(input: &ParsedInput, request: &ForecastRequest) -> Value {
+    let timestamps: Vec<&str> = input
+        .snapshot
+        .history
+        .iter()
+        .map(|point| point.date.as_str())
+        .collect();
     let model = request.model.as_deref().unwrap_or("timegpt-2-standard");
 
-    Ok(serde_json::json!({
+    serde_json::json!({
         "timestamp": timestamps,
-        "value": values,
+        "value": input.values,
         "freq": &request.frequency,
         "fh": request.horizon,
         "model": model,
         "level": [(request.confidence_level * 100.0) as u32],
-    }))
+    })
 }
 
 fn parse_response(
     body: &Value,
     request: &ForecastRequest,
-    data: &[(String, f64)],
+    input: &ParsedInput,
     session_id: Option<&str>,
 ) -> Result<ForecastResult, String> {
     let forecasts = body["forecast"]
@@ -116,7 +92,11 @@ fn parse_response(
         .iter()
         .enumerate()
         .map(|(i, v)| Prediction {
-            date: format!("T+{}", i + 1),
+            date: input
+                .future_dates
+                .get(i)
+                .cloned()
+                .unwrap_or_else(|| format!("T+{}", i + 1)),
             value: v.as_f64().unwrap_or(0.0),
         })
         .collect();
@@ -128,17 +108,15 @@ fn parse_response(
     Ok(ForecastResult {
         id: Uuid::new_v4().to_string(),
         name: format!("Forecast {}", &request.target_column),
+        target_column: request.target_column.clone(),
         created_at: Utc::now().to_rfc3339(),
         session_id: session_id.map(|s| s.to_string()),
         model: model_name.to_string(),
         provider: "nixtla".to_string(),
         horizon: request.horizon,
         frequency: request.frequency.clone(),
-        input_summary: InputSummary {
-            points: data.len(),
-            start: data.first().map(|(d, _)| d.clone()).unwrap_or_default(),
-            end: data.last().map(|(d, _)| d.clone()).unwrap_or_default(),
-        },
+        input_summary: input.summary.clone(),
+        input_data: input.snapshot.clone(),
         predictions,
         quantiles: Quantiles {
             q10: Vec::new(),

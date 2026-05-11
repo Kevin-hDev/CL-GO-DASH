@@ -63,6 +63,35 @@
   gap: 4px;
 }
 
+.fcc-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.fcc-chip {
+  padding: 6px 10px;
+  border: 1px solid var(--edge);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink-muted);
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+  cursor: pointer;
+  transition: border-color 150ms ease, color 150ms ease, background 150ms ease;
+}
+
+.fcc-chip:hover {
+  border-color: var(--pulse);
+  color: var(--ink);
+}
+
+.fcc-chip-active {
+  border-color: var(--pulse);
+  background: var(--pulse-muted);
+  color: var(--ink);
+}
+
 .fcc-row {
   display: flex;
   gap: 10px;

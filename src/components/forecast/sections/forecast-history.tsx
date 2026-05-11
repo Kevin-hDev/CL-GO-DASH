@@ -19,7 +19,7 @@ interface ForecastHistoryProps {
 }
 
 export function ForecastHistory({ onLoadAnalysis }: ForecastHistoryProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [analyses, setAnalyses] = useState<AnalysisMeta[]>([]);
   const [search, setSearch] = useState("");
 
@@ -42,14 +42,14 @@ export function ForecastHistory({ onLoadAnalysis }: ForecastHistoryProps) {
         <div className="fch-search">
           <input
             className="fch-search-input"
-            placeholder="Rechercher..."
+            placeholder={t("forecast.history.searchPlaceholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
         {filtered.length === 0 ? (
           <div className="fcs-empty">
-            <p className="fcs-empty-text">Aucune analyse sauvegardée.</p>
+            <p className="fcs-empty-text">{t("forecast.history.empty")}</p>
           </div>
         ) : (
           <div className="fch-list">
@@ -57,10 +57,10 @@ export function ForecastHistory({ onLoadAnalysis }: ForecastHistoryProps) {
               <button key={a.id} className="fch-card" onClick={() => onLoadAnalysis(a.id)}>
                 <span className="fch-name">{a.name}</span>
                 <span className="fch-meta">
-                  {a.model} · {a.points} pts · H{a.horizon}
-                  {a.mape != null && ` · MAPE ${a.mape.toFixed(1)}%`}
+                  {a.model} · {t("forecast.history.points", { count: a.points })} · {t("forecast.history.horizonShort", { count: a.horizon })}
+                  {a.mape != null && ` · ${t("forecast.history.mapeShort", { value: a.mape.toFixed(1) })}`}
                 </span>
-                <span className="fch-date">{new Date(a.created_at).toLocaleDateString()}</span>
+                <span className="fch-date">{formatTimestamp(a.created_at, i18n.language)}</span>
               </button>
             ))}
           </div>
@@ -68,4 +68,17 @@ export function ForecastHistory({ onLoadAnalysis }: ForecastHistoryProps) {
       </div>
     </div>
   );
+}
+
+function formatTimestamp(value: string, language: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat(language, {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(date);
 }

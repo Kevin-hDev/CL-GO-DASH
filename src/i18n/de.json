@@ -645,6 +645,17 @@
       "notes": "Notizen",
       "history": "Verlauf"
     },
+    "history": {
+      "searchPlaceholder": "Suchen…",
+      "empty": "Keine gespeicherte Analyse.",
+      "points_one": "{{count}} Punkt",
+      "points_other": "{{count}} Punkte",
+      "horizonShort": "Horizont {{count}}",
+      "mapeShort": "MAPE {{value}}%"
+    },
+    "view": {
+      "period": "Zeitraum"
+    },
     "config": {
       "title": "Konfiguration",
       "back": "Zurück",

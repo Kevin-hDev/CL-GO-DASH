@@ -719,6 +719,17 @@
       "notes": "Notes",
       "history": "Historique"
     },
+    "history": {
+      "searchPlaceholder": "Rechercher…",
+      "empty": "Aucune analyse sauvegardée.",
+      "points_one": "{{count}} point",
+      "points_other": "{{count}} points",
+      "horizonShort": "Horiz. {{count}}",
+      "mapeShort": "MAPE {{value}}%"
+    },
+    "view": {
+      "period": "Période"
+    },
     "config": {
       "title": "Configuration",
       "back": "Retour",

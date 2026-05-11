@@ -101,19 +101,49 @@
 .fc-table-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  padding: 4px 14px;
+  padding: 8px 14px;
   font-size: var(--text-sm);
   transition: background 80ms ease;
+  align-items: center;
 }
 
 .fc-table-row:hover {
   background: var(--surface-hover);
 }
 
-.fc-table-date {
+.fc-table-period {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.fc-table-step {
+  display: inline-flex;
+  width: fit-content;
+  padding: 2px 7px;
+  border: 1px solid var(--edge);
+  border-radius: 999px;
   font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink);
+  background: var(--surface);
+}
+
+.fc-table-date {
+  font-family: var(--font-sans);
   color: var(--ink-muted);
   font-size: var(--text-xs);
+  line-height: 1.25;
+}
+
+.fc-table-value-block {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .fc-table-value {
@@ -121,4 +151,12 @@
   color: var(--ink);
   font-weight: 500;
   text-align: right;
+}
+
+.fc-table-unit {
+  font-family: var(--font-mono);
+  color: var(--ink-faint);
+  font-size: 11px;
+  text-align: right;
+  line-height: 1;
 }

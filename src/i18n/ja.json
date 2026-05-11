@@ -645,6 +645,17 @@
       "notes": "ノート",
       "history": "履歴"
     },
+    "history": {
+      "searchPlaceholder": "検索…",
+      "empty": "保存された分析はありません。",
+      "points_one": "{{count}} 点",
+      "points_other": "{{count}} 点",
+      "horizonShort": "予測 {{count}}",
+      "mapeShort": "MAPE {{value}}%"
+    },
+    "view": {
+      "period": "期間"
+    },
     "config": {
       "title": "設定",
       "back": "戻る",

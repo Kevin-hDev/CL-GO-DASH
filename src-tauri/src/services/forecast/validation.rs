@@ -36,8 +36,15 @@ pub fn validate_request(request: &ForecastRequest) -> Result<(), String> {
     if request.covariate_columns.len() > MAX_COVARIATES {
         return Err("Trop de covariables".into());
     }
+    let mut unique_covariates = std::collections::BTreeSet::new();
     for column in &request.covariate_columns {
         validate_column(column)?;
+        if column == &request.target_column || column == &request.date_column {
+            return Err("Covariables invalides".into());
+        }
+        if !unique_covariates.insert(column) {
+            return Err("Covariables invalides".into());
+        }
     }
     if request.horizon == 0 || request.horizon > spec.horizon_max {
         return Err("Horizon invalide".into());

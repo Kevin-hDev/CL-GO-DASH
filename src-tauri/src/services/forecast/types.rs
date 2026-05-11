@@ -1,3 +1,4 @@
+use super::input_data::InputSnapshot;
 use serde::{Deserialize, Serialize};
 
 pub const MAX_PREDICTIONS: usize = 10_000;
@@ -27,6 +28,8 @@ fn default_confidence() -> f64 {
 pub struct ForecastResult {
     pub id: String,
     pub name: String,
+    #[serde(default)]
+    pub target_column: String,
     pub created_at: String,
     pub session_id: Option<String>,
     pub model: String,
@@ -34,6 +37,8 @@ pub struct ForecastResult {
     pub horizon: u32,
     pub frequency: String,
     pub input_summary: InputSummary,
+    #[serde(default)]
+    pub input_data: InputSnapshot,
     pub predictions: Vec<Prediction>,
     pub quantiles: Quantiles,
     #[serde(default)]
