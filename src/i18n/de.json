@@ -677,6 +677,19 @@
         "noLayersYet": "Derzeit ist keine Ebene verfügbar."
       }
     },
+    "scenarios": {
+      "name": "Szenarioname",
+      "description": "Optionale Beschreibung",
+      "adjustment": "Prozentuale Anpassung",
+      "add": "Szenario hinzufügen",
+      "saving": "Speichern…",
+      "empty": "Kein Szenario für diese Analyse.",
+      "emptySub": "Füge eine Annahme hinzu, um sie mit der Hauptprognose zu vergleichen.",
+      "points_one": "{{count}} Punkt",
+      "points_other": "{{count}} Punkte",
+      "loadFailed": "Szenarien konnten nicht geladen werden.",
+      "saveFailed": "Szenario konnte nicht gespeichert werden."
+    },
     "config": {
       "title": "Konfiguration",
       "back": "Zurück",

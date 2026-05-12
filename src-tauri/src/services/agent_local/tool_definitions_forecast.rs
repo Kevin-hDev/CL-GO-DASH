@@ -60,8 +60,9 @@ pub fn forecast_tool_definitions() -> Vec<Value> {
         super::tool_definitions::tool_def(
             "forecast_analyze",
             "Operate on an existing saved forecast analysis. \
-             The only supported action right now is 'annotate', which requires params.text and params.date. \
-             Do not use this tool for scenarios, decomposition, anomalies, or feature importance yet.",
+             Use action 'annotate' with params.text and params.date to add a note. \
+             Use action 'scenario' with params.name and params.adjustment_percent to add a derived what-if scenario. \
+             Do not use this tool for decomposition, anomalies, or feature importance yet.",
             serde_json::json!({
                 "type": "object",
                 "properties": {
@@ -71,11 +72,11 @@ pub fn forecast_tool_definitions() -> Vec<Value> {
                     },
                     "action": {
                         "type": "string",
-                        "description": "Action name. Use 'annotate'. Other action names are not implemented yet."
+                        "description": "Action name. Use 'annotate' or 'scenario'. Other action names are not implemented yet."
                     },
                     "params": {
                         "type": "object",
-                        "description": "Required for action 'annotate'.",
+                        "description": "Action parameters. annotate requires text and date. scenario requires name and adjustment_percent.",
                         "properties": {
                             "text": {
                                 "type": "string",
@@ -84,9 +85,20 @@ pub fn forecast_tool_definitions() -> Vec<Value> {
                             "date": {
                                 "type": "string",
                                 "description": "Date or timestamp associated with the annotation, ideally ISO format."
+                            },
+                            "name": {
+                                "type": "string",
+                                "description": "Scenario name when action is 'scenario'."
+                            },
+                            "description": {
+                                "type": "string",
+                                "description": "Optional scenario description."
+                            },
+                            "adjustment_percent": {
+                                "type": "number",
+                                "description": "Percent adjustment applied to the saved forecast, for example 15 for +15% or -10 for -10%."
                             }
-                        },
-                        "required": ["text", "date"]
+                        }
                     }
                 },
                 "required": ["analysis_id", "action", "params"]

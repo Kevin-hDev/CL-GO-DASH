@@ -25,6 +25,11 @@ interface ForecastResult {
   };
   predictions: { date: string; value: number; series_id?: string | null }[];
   quantiles: { q10: number[]; q50: number[]; q90: number[] };
+  scenarios: {
+    id: string;
+    name: string;
+    predictions: { date: string; value: number; series_id?: string | null }[];
+  }[];
   metrics: { mape: number | null; mae: number | null; crps: number | null; bias: number | null } | null;
 }
 
@@ -86,6 +91,7 @@ export function ForecastView({ analysisId, layers }: ForecastViewProps) {
           <ForecastChart
             history={filtered.history}
             predictions={filtered.predictions}
+            scenarios={filtered.scenarios}
             quantiles={{ q10: filtered.q10, q90: filtered.q90 }}
             frequency={data.frequency}
             endDate={data.input_summary.end}
@@ -138,6 +144,7 @@ function filterSeriesData(data: ForecastResult, selectedSeries: string) {
     return {
       history: data.input_data.history,
       predictions: data.predictions,
+      scenarios: data.scenarios ?? [],
       q10: data.quantiles.q10,
       q90: data.quantiles.q90,
     };
@@ -154,6 +161,10 @@ function filterSeriesData(data: ForecastResult, selectedSeries: string) {
   return {
     history: data.input_data.history.filter((point) => point.series_id === seriesId),
     predictions,
+    scenarios: (data.scenarios ?? []).map((scenario) => ({
+      ...scenario,
+      predictions: scenario.predictions.filter((point) => point.series_id === seriesId),
+    })),
     q10: indices.map((index) => data.quantiles.q10[index]).filter((value) => value !== undefined),
     q90: indices.map((index) => data.quantiles.q90[index]).filter((value) => value !== undefined),
   };

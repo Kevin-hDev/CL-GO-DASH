@@ -9,6 +9,7 @@ pub mod input_series;
 pub mod model_manager;
 pub mod nixtla_multiseries;
 pub mod registry;
+pub mod scenarios;
 pub mod sidecar;
 pub mod sidecar_process;
 pub mod sidecar_runtime;

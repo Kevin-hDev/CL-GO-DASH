@@ -21,6 +21,7 @@ import {
 import { ExportDropdown } from "./widgets/export-dropdown";
 import { ForecastConfig, type LaunchConfig } from "./forecast-config";
 import { loadForecastDraftFromFile, type ForecastDraftData } from "./forecast-data";
+import { useForecastLayerSources } from "./use-forecast-layer-sources";
 import "./forecast-panel.css";
 
 interface ForecastPanelProps {
@@ -45,8 +46,9 @@ export function ForecastPanel({
   const [launching, setLaunching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [layers, setLayers] = useState<ForecastLayerState>(createInitialLayerState);
+  const layerSources = useForecastLayerSources(currentAnalysisId, setLayers);
   const filterGroups = buildForecastLayerGroups(
-    { scenarioNames: [], covariateNames: [] },
+    layerSources.sources,
     t
   );
 
@@ -70,6 +72,7 @@ export function ForecastPanel({
           file_path: null,
           target_column: config.targetColumn,
           date_column: config.dateColumn,
+          series_column: config.seriesColumn,
           covariate_columns: config.covariates,
           horizon: config.horizon,
           frequency: config.frequency,
@@ -128,6 +131,7 @@ export function ForecastPanel({
             analysisId={currentAnalysisId}
             layers={layers}
             onLoadAnalysis={onLoadAnalysis}
+            onAnalysisChanged={() => void layerSources.refresh()}
           />
         )}
       </div>
@@ -143,17 +147,29 @@ export function ForecastPanel({
   );
 }
 
-function ForecastSectionRouter({ section, analysisId, layers, onLoadAnalysis }: {
+function ForecastSectionRouter({
+  section,
+  analysisId,
+  layers,
+  onLoadAnalysis,
+  onAnalysisChanged,
+}: {
   section: ForecastSection;
   analysisId: string;
   layers: ForecastLayerState;
   onLoadAnalysis: (id: string) => void;
+  onAnalysisChanged: () => void;
 }) {
   switch (section) {
     case "view":
       return <ForecastView analysisId={analysisId} layers={layers} />;
     case "scenarios":
-      return <ForecastScenarios analysisId={analysisId} />;
+      return (
+        <ForecastScenarios
+          analysisId={analysisId}
+          onAnalysisChanged={() => void onAnalysisChanged()}
+        />
+      );
     case "analysis":
       return <ForecastAnalysis analysisId={analysisId} />;
     case "notes":

@@ -6,18 +6,15 @@ import { GridComponent, TooltipComponent } from "echarts/components";
 import { CanvasRenderer } from "echarts/renderers";
 import { buildForecastChartOption } from "./forecast-chart-option";
 import type { ForecastLayerState } from "../forecast-layer-matrix";
+import type { Point, ScenarioLine } from "./forecast-chart-types";
 import "./forecast-chart.css";
 
 echarts.use([CanvasRenderer, LineChart, GridComponent, TooltipComponent]);
 
-interface Point {
-  date: string;
-  value: number;
-}
-
 interface ForecastChartProps {
   history: Point[];
   predictions: Point[];
+  scenarios: ScenarioLine[];
   quantiles: { q10: number[]; q90: number[] };
   frequency: string;
   endDate: string;
@@ -64,6 +61,7 @@ export function ForecastChart(props: ForecastChartProps) {
           separator: root.getPropertyValue("--fc-separator").trim(),
           edge: root.getPropertyValue("--edge").trim(),
           inkMuted: root.getPropertyValue("--ink-faint").trim(),
+          scenarios: scenarioPalette(root),
         },
       }), true);
     };
@@ -104,10 +102,19 @@ export function ForecastChart(props: ForecastChartProps) {
         separator: root.getPropertyValue("--fc-separator").trim(),
         edge: root.getPropertyValue("--edge").trim(),
         inkMuted: root.getPropertyValue("--ink-faint").trim(),
+        scenarios: scenarioPalette(root),
       },
     }), true);
     chartRef.current.resize();
   }, [props]);
 
   return <div ref={containerRef} className="fcc-chart-root" />;
+}
+
+function scenarioPalette(root: CSSStyleDeclaration): string[] {
+  return [
+    root.getPropertyValue("--fc-scenario-a").trim(),
+    root.getPropertyValue("--fc-scenario-b").trim(),
+    root.getPropertyValue("--fc-scenario-c").trim(),
+  ].filter(Boolean);
 }

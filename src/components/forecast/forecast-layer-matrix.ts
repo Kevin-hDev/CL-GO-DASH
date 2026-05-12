@@ -16,7 +16,7 @@ export interface ForecastLayerGroup {
 }
 
 interface LayerMatrixInput {
-  scenarioNames: string[];
+  scenarioLayers: ForecastLayerItem[];
   covariateNames: string[];
 }
 
@@ -51,9 +51,7 @@ export function buildForecastLayerGroups(
     {
       id: "scenarios",
       titleKey: "forecast.view.filters.scenarios",
-      items: input.scenarioNames.map((name, index) =>
-        readonlyItem(`scenario-${index}`, name)
-      ),
+      items: input.scenarioLayers,
       emptyKey: "forecast.view.filters.noScenarioLayers",
     },
     {

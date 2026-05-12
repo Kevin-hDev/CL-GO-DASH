@@ -751,6 +751,19 @@
         "noLayersYet": "Aucune couche disponible pour le moment."
       }
     },
+    "scenarios": {
+      "name": "Nom du scénario",
+      "description": "Description optionnelle",
+      "adjustment": "Ajustement en pourcentage",
+      "add": "Ajouter le scénario",
+      "saving": "Enregistrement…",
+      "empty": "Aucun scénario pour cette analyse.",
+      "emptySub": "Ajoutez une hypothèse pour comparer la prévision principale.",
+      "points_one": "{{count}} point",
+      "points_other": "{{count}} points",
+      "loadFailed": "Impossible de charger les scénarios.",
+      "saveFailed": "Impossible d'enregistrer le scénario."
+    },
     "config": {
       "title": "Configuration",
       "back": "Retour",

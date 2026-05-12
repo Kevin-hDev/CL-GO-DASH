@@ -1,5 +1,5 @@
 use crate::services::agent_local::types_tools::ToolResult;
-use crate::services::forecast::types::ForecastRequest;
+use crate::services::forecast::{scenarios::ScenarioRequest, types::ForecastRequest};
 use crate::services::forecast::{
     client_chronos, client_nixtla, model_manager, sidecar, storage, validation,
 };
@@ -131,8 +131,31 @@ async fn handle_analyze(args: &Value, _session_id: &str) -> ToolResult {
             }
             ToolResult::ok("Annotation ajoutée")
         }
+        "scenario" => {
+            let params = &args["params"];
+            let name = params["name"].as_str().unwrap_or("");
+            let adjustment_percent = params["adjustment_percent"].as_f64();
+            let Some(adjustment_percent) = adjustment_percent else {
+                return ToolResult::err(
+                    "Paramètres de scénario manquants. Utiliser params.name et params.adjustment_percent.",
+                );
+            };
+            let request = ScenarioRequest {
+                analysis_id: analysis_id.to_string(),
+                name: name.to_string(),
+                description: params["description"].as_str().map(str::to_string),
+                adjustment_percent,
+            };
+            match crate::services::forecast::scenarios::create(request).await {
+                Ok(updated) => match super::tool_dispatcher_forecast_output::analysis_payload(&updated) {
+                    Ok(json) => ToolResult::ok(json),
+                    Err(e) => ToolResult::err(e),
+                },
+                Err(e) => ToolResult::err(e),
+            }
+        }
         _ => ToolResult::err(format!(
-            "Action '{action}' pas encore implémentée. Actions disponibles: annotate"
+            "Action '{action}' pas encore implémentée. Actions disponibles: annotate, scenario"
         )),
     }
 }

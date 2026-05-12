@@ -677,6 +677,19 @@
         "noLayersYet": "当前还没有可用图层。"
       }
     },
+    "scenarios": {
+      "name": "场景名称",
+      "description": "可选描述",
+      "adjustment": "百分比调整",
+      "add": "添加场景",
+      "saving": "正在保存…",
+      "empty": "此分析还没有场景。",
+      "emptySub": "添加一个假设，用来和主预测对比。",
+      "points_one": "{{count}} 个点",
+      "points_other": "{{count}} 个点",
+      "loadFailed": "无法加载场景。",
+      "saveFailed": "无法保存场景。"
+    },
     "config": {
       "title": "配置",
       "back": "返回",

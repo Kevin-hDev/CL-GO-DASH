@@ -677,6 +677,19 @@
         "noLayersYet": "Todavía no hay ninguna capa disponible."
       }
     },
+    "scenarios": {
+      "name": "Nombre del escenario",
+      "description": "Descripción opcional",
+      "adjustment": "Ajuste porcentual",
+      "add": "Añadir escenario",
+      "saving": "Guardando…",
+      "empty": "No hay escenarios para este análisis.",
+      "emptySub": "Añade una hipótesis para compararla con la previsión principal.",
+      "points_one": "{{count}} punto",
+      "points_other": "{{count}} puntos",
+      "loadFailed": "No se pudieron cargar los escenarios.",
+      "saveFailed": "No se pudo guardar el escenario."
+    },
     "config": {
       "title": "Configuración",
       "back": "Volver",

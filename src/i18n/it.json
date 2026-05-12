@@ -677,6 +677,19 @@
         "noLayersYet": "Nessun livello disponibile al momento."
       }
     },
+    "scenarios": {
+      "name": "Nome scenario",
+      "description": "Descrizione opzionale",
+      "adjustment": "Aggiustamento percentuale",
+      "add": "Aggiungi scenario",
+      "saving": "Salvataggio…",
+      "empty": "Nessuno scenario per questa analisi.",
+      "emptySub": "Aggiungi un'ipotesi da confrontare con la previsione principale.",
+      "points_one": "{{count}} punto",
+      "points_other": "{{count}} punti",
+      "loadFailed": "Impossibile caricare gli scenari.",
+      "saveFailed": "Impossibile salvare lo scenario."
+    },
     "config": {
       "title": "Configurazione",
       "back": "Indietro",

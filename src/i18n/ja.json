@@ -677,6 +677,19 @@
         "noLayersYet": "現在利用できるレイヤーはありません。"
       }
     },
+    "scenarios": {
+      "name": "シナリオ名",
+      "description": "任意の説明",
+      "adjustment": "割合調整",
+      "add": "シナリオを追加",
+      "saving": "保存中…",
+      "empty": "この分析にはまだシナリオがありません。",
+      "emptySub": "仮説を追加してメイン予測と比較します。",
+      "points_one": "{{count}} 点",
+      "points_other": "{{count}} 点",
+      "loadFailed": "シナリオを読み込めません。",
+      "saveFailed": "シナリオを保存できません。"
+    },
     "config": {
       "title": "設定",
       "back": "戻る",

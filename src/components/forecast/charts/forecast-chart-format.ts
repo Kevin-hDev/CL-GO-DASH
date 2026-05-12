@@ -4,6 +4,7 @@ interface TimelineEntry {
   fullLabel: string;
   historyValue: number | null;
   forecastValue: number | null;
+  scenarioValues: { id: string; name: string; value: number }[];
   lowerValue: number | null;
   upperValue: number | null;
 }
@@ -45,6 +46,9 @@ export function formatTooltip(
   }
   if (point.forecastValue != null) {
     lines.push(`<div>${labels.forecast}: ${formatForecastValue(point.forecastValue, locale, metric)}</div>`);
+  }
+  for (const scenario of point.scenarioValues) {
+    lines.push(`<div>${scenario.name}: ${formatForecastValue(scenario.value, locale, metric)}</div>`);
   }
   if (point.lowerValue != null && point.upperValue != null) {
     const lower = formatForecastValue(point.lowerValue, locale, metric);

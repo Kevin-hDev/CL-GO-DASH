@@ -751,6 +751,19 @@
         "noLayersYet": "No layer is available yet."
       }
     },
+    "scenarios": {
+      "name": "Scenario name",
+      "description": "Optional description",
+      "adjustment": "Percent adjustment",
+      "add": "Add scenario",
+      "saving": "Saving…",
+      "empty": "No scenario for this analysis.",
+      "emptySub": "Add an assumption to compare against the main forecast.",
+      "points_one": "{{count}} point",
+      "points_other": "{{count}} points",
+      "loadFailed": "Unable to load scenarios.",
+      "saveFailed": "Unable to save scenario."
+    },
     "config": {
       "title": "Configuration",
       "back": "Back",

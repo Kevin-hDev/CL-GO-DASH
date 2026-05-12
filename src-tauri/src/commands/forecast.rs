@@ -2,7 +2,8 @@ use crate::services::forecast::types::{
     ForecastAnalysisMeta, ForecastRequest, ForecastResult, ModelDownloadProgress,
 };
 use crate::services::forecast::{
-    catalog, client_chronos, client_nixtla, model_manager, registry, sidecar, storage, validation,
+    catalog, client_chronos, client_nixtla, model_manager, registry, scenarios, sidecar, storage,
+    validation,
 };
 use serde_json::Value;
 use tauri::ipc::Channel;
@@ -51,6 +52,13 @@ pub async fn list_forecast_analyses() -> Result<Vec<ForecastAnalysisMeta>, Strin
 #[tauri::command]
 pub async fn get_forecast_analysis(id: String) -> Result<ForecastResult, String> {
     storage::load(&id).await
+}
+
+#[tauri::command]
+pub async fn create_forecast_scenario(
+    request: scenarios::ScenarioRequest,
+) -> Result<ForecastResult, String> {
+    scenarios::create(request).await
 }
 
 #[tauri::command]
