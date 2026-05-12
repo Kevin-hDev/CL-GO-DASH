@@ -1,11 +1,17 @@
 import type { ForecastLayerState } from "../forecast-layer-matrix";
-import type { ForecastChartPalette, ScenarioLine, TimelineEntry } from "./forecast-chart-types";
+import type {
+  ForecastChartPalette,
+  ScenarioLine,
+  TimelineEntry,
+  VariableLine,
+} from "./forecast-chart-types";
 
 export function buildSeries(
   timeline: TimelineEntry[],
   separatorIndex: number | null,
   palette: ForecastChartPalette,
   scenarios: ScenarioLine[],
+  variables: VariableLine[],
   confidenceLabel: string,
   layers: ForecastLayerState
 ) {
@@ -61,6 +67,20 @@ export function buildSeries(
         false
       )
     ),
+    ...variables.map((variable, index) =>
+      seriesLine(
+        variable.name,
+        timeline.map((entry) =>
+          layers[variable.id]
+            ? entry.variableValues.find((value) => value.id === variable.id)?.value ?? null
+            : null,
+        ),
+        { color: variableColor(palette, index), width: 1.2, type: "dotted" },
+        undefined,
+        undefined,
+        false
+      )
+    ),
   ];
 }
 
@@ -89,4 +109,8 @@ function seriesLine(
 
 function scenarioColor(palette: ForecastChartPalette, index: number): string {
   return palette.scenarios[index % Math.max(palette.scenarios.length, 1)] || palette.lineHistory;
+}
+
+function variableColor(palette: ForecastChartPalette, index: number): string {
+  return palette.variables[index % Math.max(palette.variables.length, 1)] || palette.inkMuted;
 }

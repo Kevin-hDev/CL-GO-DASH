@@ -49,9 +49,10 @@
 }
 
 .fcf-panel.is-open {
-  max-height: 320px;
+  max-height: min(420px, 70vh);
   opacity: 1;
   border-color: var(--edge);
+  overflow-y: auto;
 }
 
 .fcf-group {

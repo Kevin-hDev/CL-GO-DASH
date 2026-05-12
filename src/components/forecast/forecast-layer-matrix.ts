@@ -57,9 +57,7 @@ export function buildForecastLayerGroups(
     {
       id: "variables",
       titleKey: "forecast.view.filters.variables",
-      items: input.covariateNames.map((name, index) =>
-        readonlyItem(`variable-${index}`, name)
-      ),
+      items: input.covariateNames.map((name) => interactiveItem(`variable-${name}`, name)),
       emptyKey: "forecast.view.filters.noVariableLayers",
     },
     emptyGroup("events"),
@@ -71,10 +69,6 @@ export function buildForecastLayerGroups(
 
 function interactiveItem(id: string, label: string): ForecastLayerItem {
   return { id, label, interactive: true };
-}
-
-function readonlyItem(id: string, label: string): ForecastLayerItem {
-  return { id, label, interactive: false };
 }
 
 function emptyGroup(id: string): ForecastLayerGroup {

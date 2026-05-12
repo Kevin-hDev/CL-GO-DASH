@@ -5,6 +5,7 @@ interface TimelineEntry {
   historyValue: number | null;
   forecastValue: number | null;
   scenarioValues: { id: string; name: string; value: number }[];
+  variableValues: { id: string; name: string; value: number; rawValue: number }[];
   lowerValue: number | null;
   upperValue: number | null;
 }
@@ -49,6 +50,14 @@ export function formatTooltip(
   }
   for (const scenario of point.scenarioValues) {
     lines.push(`<div>${scenario.name}: ${formatForecastValue(scenario.value, locale, metric)}</div>`);
+  }
+  for (const variable of point.variableValues) {
+    lines.push(
+      `<div>${variable.name}: ${new Intl.NumberFormat(locale, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
+      }).format(variable.rawValue)}</div>`,
+    );
   }
   if (point.lowerValue != null && point.upperValue != null) {
     const lower = formatForecastValue(point.lowerValue, locale, metric);

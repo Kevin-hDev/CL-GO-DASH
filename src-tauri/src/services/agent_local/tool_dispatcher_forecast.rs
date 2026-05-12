@@ -1,8 +1,5 @@
 use crate::services::agent_local::types_tools::ToolResult;
-use crate::services::forecast::{
-    scenarios::{ScenarioRequest, ScenarioUpdateRequest},
-    types::ForecastRequest,
-};
+use crate::services::forecast::types::ForecastRequest;
 use crate::services::forecast::{
     client_chronos, client_nixtla, model_manager, sidecar, storage, validation,
 };
@@ -18,7 +15,7 @@ pub async fn dispatch_forecast(
 ) -> Option<ToolResult> {
     match tool_name {
         "forecast" => Some(handle_forecast(args, _working_dir, session_id).await),
-        "forecast_analyze" => Some(handle_analyze(args, session_id).await),
+        "forecast_analyze" => Some(super::tool_dispatcher_forecast_analyze::handle(args).await),
         "forecast_read" => Some(handle_read(args).await),
         _ => None,
     }
@@ -93,113 +90,6 @@ async fn handle_forecast(args: &Value, working_dir: &Path, session_id: &str) -> 
             }
         }
         Err(e) => ToolResult::err(e),
-    }
-}
-
-async fn handle_analyze(args: &Value, _session_id: &str) -> ToolResult {
-    let analysis_id = match args["analysis_id"].as_str() {
-        Some(id) => id,
-        None => return ToolResult::err("Paramètre analysis_id requis"),
-    };
-    let action = match args["action"].as_str() {
-        Some(a) => a,
-        None => return ToolResult::err("Paramètre action requis"),
-    };
-
-    let analysis = match storage::load(analysis_id).await {
-        Ok(a) => a,
-        Err(e) => return ToolResult::err(format!("Analyse introuvable: {e}")),
-    };
-
-    match action {
-        "annotate" => {
-            let text = args["params"]["text"].as_str().unwrap_or("");
-            let date = args["params"]["date"].as_str().unwrap_or("");
-            if text.is_empty() || date.is_empty() {
-                return ToolResult::err(
-                    "Paramètres d'annotation manquants. Utiliser params.text et params.date.",
-                );
-            }
-            let mut updated = analysis;
-            updated
-                .annotations
-                .push(crate::services::forecast::types::Annotation {
-                    id: uuid::Uuid::new_v4().to_string(),
-                    date: date.to_string(),
-                    text: text.to_string(),
-                    source: crate::services::forecast::types::AnnotationSource::Llm,
-                });
-            if let Err(e) = storage::save(&updated).await {
-                return ToolResult::err(format!("Sauvegarde annotation: {e}"));
-            }
-            ToolResult::ok("Annotation ajoutée")
-        }
-        "scenario" => {
-            let params = &args["params"];
-            let name = params["name"].as_str().unwrap_or("");
-            let adjustment_percent = params["adjustment_percent"].as_f64();
-            let Some(adjustment_percent) = adjustment_percent else {
-                return ToolResult::err(
-                    "Paramètres de scénario manquants. Utiliser params.name et params.adjustment_percent.",
-                );
-            };
-            let request = ScenarioRequest {
-                analysis_id: analysis_id.to_string(),
-                name: name.to_string(),
-                description: params["description"].as_str().map(str::to_string),
-                adjustment_percent,
-            };
-            match crate::services::forecast::scenarios::create(request).await {
-                Ok(updated) => match super::tool_dispatcher_forecast_output::analysis_payload(&updated) {
-                    Ok(json) => ToolResult::ok(json),
-                    Err(e) => ToolResult::err(e),
-                },
-                Err(e) => ToolResult::err(e),
-            }
-        }
-        "scenario_update" => {
-            let params = &args["params"];
-            let scenario_id = params["scenario_id"].as_str().unwrap_or("");
-            let name = params["name"].as_str().unwrap_or("");
-            let adjustment_percent = params["adjustment_percent"].as_f64();
-            let Some(adjustment_percent) = adjustment_percent else {
-                return ToolResult::err(
-                    "Paramètres de scénario manquants. Utiliser params.scenario_id, params.name et params.adjustment_percent.",
-                );
-            };
-            let request = ScenarioUpdateRequest {
-                analysis_id: analysis_id.to_string(),
-                scenario_id: scenario_id.to_string(),
-                name: name.to_string(),
-                description: params["description"].as_str().map(str::to_string),
-                adjustment_percent,
-            };
-            match crate::services::forecast::scenarios::update(request).await {
-                Ok(updated) => match super::tool_dispatcher_forecast_output::analysis_payload(&updated) {
-                    Ok(json) => ToolResult::ok(json),
-                    Err(e) => ToolResult::err(e),
-                },
-                Err(e) => ToolResult::err(e),
-            }
-        }
-        "scenario_delete" => {
-            let scenario_id = args["params"]["scenario_id"].as_str().unwrap_or("");
-            if scenario_id.is_empty() {
-                return ToolResult::err(
-                    "Paramètres de scénario manquants. Utiliser params.scenario_id.",
-                );
-            }
-            match crate::services::forecast::scenarios::delete(analysis_id, scenario_id).await {
-                Ok(updated) => match super::tool_dispatcher_forecast_output::analysis_payload(&updated) {
-                    Ok(json) => ToolResult::ok(json),
-                    Err(e) => ToolResult::err(e),
-                },
-                Err(e) => ToolResult::err(e),
-            }
-        }
-        _ => ToolResult::err(format!(
-            "Action '{action}' pas encore implémentée. Actions disponibles: annotate, scenario, scenario_update, scenario_delete"
-        )),
     }
 }
 

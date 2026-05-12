@@ -5,12 +5,16 @@ import type { ForecastScenario } from "./forecast-scenario-types";
 
 interface ForecastScenarioRowProps {
   scenario: ForecastScenario;
+  active: boolean;
+  onSelect: (scenario: ForecastScenario) => void;
   onEdit: (scenario: ForecastScenario) => void;
   onDelete: (scenarioId: string) => void;
 }
 
 export function ForecastScenarioRow({
   scenario,
+  active,
+  onSelect,
   onEdit,
   onDelete,
 }: ForecastScenarioRowProps) {
@@ -19,6 +23,7 @@ export function ForecastScenarioRow({
   const rootRef = useRef<HTMLDivElement | null>(null);
   const adjustment = scenario.params_modified?.adjustment_percent;
   const kind = scenario.params_modified?.kind;
+  const contextCount = scenario.params_modified?.covariate_adjustments?.length ?? 0;
 
   useEffect(() => {
     if (!confirmDelete) return;
@@ -49,17 +54,32 @@ export function ForecastScenarioRow({
   }, [confirmDelete, onDelete, scenario.id]);
 
   return (
-    <div className="fcs-row">
+    <div
+      className={`fcs-row ${active ? "is-active" : ""}`}
+      role="button"
+      tabIndex={0}
+      onClick={() => onSelect(scenario)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onSelect(scenario);
+        }
+      }}
+    >
       <div className="fcs-row-main">
         <span className="fcs-row-name">{scenario.name}</span>
         {scenario.description && <span className="fcs-row-description">{scenario.description}</span>}
       </div>
       <div className="fcs-row-meta">
         <span className="fcs-row-summary">
-          {kind === "percent_adjustment" ? t("forecast.scenarios.percentType") : ""}
-          {kind === "percent_adjustment" ? " " : ""}
+          {kind === "context_adjustment"
+            ? t("forecast.scenarios.contextSummary", { count: contextCount })
+            : t("forecast.scenarios.percentType")}
+          {" "}
           {t("forecast.scenarios.points", { count: scenario.predictions.length })}
-          {typeof adjustment === "number" ? ` ${formatPercent(adjustment, i18n.language)}` : ""}
+          {kind === "percent_adjustment" && typeof adjustment === "number"
+            ? ` ${formatPercent(adjustment, i18n.language)}`
+            : ""}
         </span>
         <div ref={rootRef} className="fcs-row-actions">
           {confirmDelete && (
@@ -77,7 +97,10 @@ export function ForecastScenarioRow({
           <button
             className="fcs-icon-btn"
             type="button"
-            onClick={() => onEdit(scenario)}
+            onClick={(event) => {
+              event.stopPropagation();
+              onEdit(scenario);
+            }}
             title={t("forecast.scenarios.edit")}
           >
             <Pencil size={13} />
@@ -85,7 +108,10 @@ export function ForecastScenarioRow({
           <button
             className="fcs-icon-btn fcs-icon-btn-danger"
             type="button"
-            onClick={() => setConfirmDelete(true)}
+            onClick={(event) => {
+              event.stopPropagation();
+              setConfirmDelete(true);
+            }}
             title={t("forecast.scenarios.delete")}
           >
             <Trash size={13} />

@@ -70,6 +70,10 @@ function applySources(
     for (const layer of sources.scenarioLayers) {
       if (next[layer.id] === undefined) next[layer.id] = true;
     }
+    for (const name of sources.covariateNames) {
+      const id = `variable-${name}`;
+      if (next[id] === undefined) next[id] = false;
+    }
     return next;
   });
 }

@@ -15,6 +15,10 @@ pub struct InputSnapshot {
     #[serde(default)]
     pub columns: Vec<String>,
     #[serde(default)]
+    pub date_column: Option<String>,
+    #[serde(default)]
+    pub covariate_columns: Vec<String>,
+    #[serde(default)]
     pub rows: Vec<Value>,
     #[serde(default)]
     pub series_column: Option<String>,
@@ -114,6 +118,8 @@ pub fn parse_request_input(request: &ForecastRequest) -> Result<ParsedInput, Str
         },
         snapshot: InputSnapshot {
             columns,
+            date_column: Some(request.date_column.clone()),
+            covariate_columns: request.covariate_columns.clone(),
             rows,
             series_column: request.series_column.clone(),
             series_ids: series_ids.into_iter().collect(),

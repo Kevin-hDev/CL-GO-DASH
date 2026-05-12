@@ -1,4 +1,6 @@
 use super::{
+    scenario_context::{self, ScenarioCovariateAdjustment},
+    sidecar,
     storage,
     types::{ForecastResult, Quantiles, Scenario, MAX_SCENARIOS},
 };
@@ -14,7 +16,14 @@ pub struct ScenarioRequest {
     pub analysis_id: String,
     pub name: String,
     pub description: Option<String>,
+    #[serde(default = "default_scenario_kind")]
+    pub scenario_kind: String,
+    #[serde(default)]
     pub adjustment_percent: f64,
+    #[serde(default)]
+    pub covariate_adjustments: Vec<ScenarioCovariateAdjustment>,
+    #[serde(default)]
+    pub target_series_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -23,29 +32,49 @@ pub struct ScenarioUpdateRequest {
     pub scenario_id: String,
     pub name: String,
     pub description: Option<String>,
+    #[serde(default = "default_scenario_kind")]
+    pub scenario_kind: String,
+    #[serde(default)]
     pub adjustment_percent: f64,
+    #[serde(default)]
+    pub covariate_adjustments: Vec<ScenarioCovariateAdjustment>,
+    #[serde(default)]
+    pub target_series_id: Option<String>,
 }
 
-pub async fn create(request: ScenarioRequest) -> Result<ForecastResult, String> {
+fn default_scenario_kind() -> String {
+    "percent_adjustment".into()
+}
+
+pub async fn create(
+    request: ScenarioRequest,
+    chronos: Option<&sidecar::ChronosSidecar>,
+) -> Result<ForecastResult, String> {
     validate_request(&request)?;
     let mut analysis = storage::load(&request.analysis_id).await?;
     if analysis.scenarios.len() >= MAX_SCENARIOS {
         return Err("Trop de scénarios".into());
     }
 
-    analysis
-        .scenarios
-        .push(build_scenario(&analysis, uuid::Uuid::new_v4().to_string(), &request));
+    let scenario = build_scenario(&analysis, uuid::Uuid::new_v4().to_string(), &request, chronos)
+        .await?;
+    analysis.scenarios.push(scenario);
     storage::save(&analysis).await?;
     Ok(analysis)
 }
 
-pub async fn update(request: ScenarioUpdateRequest) -> Result<ForecastResult, String> {
+pub async fn update(
+    request: ScenarioUpdateRequest,
+    chronos: Option<&sidecar::ChronosSidecar>,
+) -> Result<ForecastResult, String> {
     validate_request(&ScenarioRequest {
         analysis_id: request.analysis_id.clone(),
         name: request.name.clone(),
         description: request.description.clone(),
+        scenario_kind: request.scenario_kind.clone(),
         adjustment_percent: request.adjustment_percent,
+        covariate_adjustments: request.covariate_adjustments.clone(),
+        target_series_id: request.target_series_id.clone(),
     })?;
     let mut analysis = storage::load(&request.analysis_id).await?;
     let Some(index) = analysis
@@ -63,9 +92,14 @@ pub async fn update(request: ScenarioUpdateRequest) -> Result<ForecastResult, St
             analysis_id: request.analysis_id,
             name: request.name,
             description: request.description,
+            scenario_kind: request.scenario_kind,
             adjustment_percent: request.adjustment_percent,
+            covariate_adjustments: request.covariate_adjustments,
+            target_series_id: request.target_series_id,
         },
-    );
+        chronos,
+    )
+    .await?;
     storage::save(&analysis).await?;
     Ok(analysis)
 }
@@ -91,13 +125,17 @@ fn validate_request(request: &ScenarioRequest) -> Result<(), String> {
             return Err("Description de scénario invalide".into());
         }
     }
-    if !request.adjustment_percent.is_finite()
-        || !(MIN_ADJUSTMENT_PERCENT..=MAX_ADJUSTMENT_PERCENT)
-            .contains(&request.adjustment_percent)
-    {
+    if request.scenario_kind != "percent_adjustment" && request.scenario_kind != "context_adjustment" {
+        return Err("Type de scénario invalide".into());
+    }
+    if request.scenario_kind == "percent_adjustment" && !valid_adjustment(request.adjustment_percent) {
         return Err("Ajustement de scénario invalide".into());
     }
     Ok(())
+}
+
+fn valid_adjustment(value: f64) -> bool {
+    value.is_finite() && (MIN_ADJUSTMENT_PERCENT..=MAX_ADJUSTMENT_PERCENT).contains(&value)
 }
 
 fn clean_description(description: Option<String>) -> Option<String> {
@@ -118,9 +156,27 @@ fn scale_values(values: &[f64], factor: f64) -> Vec<f64> {
     values.iter().map(|value| value * factor).collect()
 }
 
-fn build_scenario(analysis: &ForecastResult, id: String, request: &ScenarioRequest) -> Scenario {
+async fn build_scenario(
+    analysis: &ForecastResult,
+    id: String,
+    request: &ScenarioRequest,
+    chronos: Option<&sidecar::ChronosSidecar>,
+) -> Result<Scenario, String> {
+    if request.scenario_kind == "context_adjustment" {
+        return scenario_context::build(
+            analysis,
+            id,
+            request.name.trim().to_string(),
+            clean_description(request.description.clone()),
+            request.covariate_adjustments.clone(),
+            request.target_series_id.clone(),
+            chronos,
+        )
+        .await;
+    }
+
     let factor = 1.0 + request.adjustment_percent / 100.0;
-    Scenario {
+    Ok(Scenario {
         id,
         name: request.name.trim().to_string(),
         description: clean_description(request.description.clone()),
@@ -138,5 +194,5 @@ fn build_scenario(analysis: &ForecastResult, id: String, request: &ScenarioReque
             "kind": "percent_adjustment",
             "adjustment_percent": request.adjustment_percent,
         }),
-    }
+    })
 }

@@ -6,6 +6,7 @@ import { formatForecastValue, inferMetricMeta } from "../forecast-view-format";
 import { ForecastChart } from "../charts/forecast-chart";
 import { useForecastChartResize } from "../use-forecast-chart-resize";
 import { KpiRow, PeriodCell, ValueCell } from "../forecast-view-widgets";
+import { buildForecastVariableLines } from "../forecast-variable-lines";
 import "../forecast-view.css";
 
 interface ForecastResult {
@@ -20,9 +21,11 @@ interface ForecastResult {
     end: string;
   };
   input_data: {
+    rows?: Record<string, unknown>[];
     series_ids?: string[];
     history: { date: string; value: number; series_id?: string | null }[];
   };
+  covariates_used?: string[];
   predictions: { date: string; value: number; series_id?: string | null }[];
   quantiles: { q10: number[]; q50: number[]; q90: number[] };
   scenarios: {
@@ -60,6 +63,15 @@ export function ForecastView({ analysisId, layers }: ForecastViewProps) {
       ? selectedSeries
       : data.input_data.series_ids?.[0] ?? "";
   const filtered = filterSeriesData(data, activeSeries);
+  const variables = buildForecastVariableLines({
+    rows: data.input_data.rows ?? [],
+    covariates: data.covariates_used ?? [],
+    targetColumn: data.target_column ?? "",
+    seriesColumn: data.series_column,
+    historyValues: filtered.history.map((point) => point.value),
+    forecastValues: filtered.predictions.map((point) => point.value),
+    selectedSeries: activeSeries,
+  });
 
   return (
     <div className="fc-view">
@@ -92,6 +104,7 @@ export function ForecastView({ analysisId, layers }: ForecastViewProps) {
             history={filtered.history}
             predictions={filtered.predictions}
             scenarios={filtered.scenarios}
+            variables={variables}
             quantiles={{ q10: filtered.q10, q90: filtered.q90 }}
             frequency={data.frequency}
             endDate={data.input_summary.end}

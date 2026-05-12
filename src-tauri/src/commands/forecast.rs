@@ -57,15 +57,17 @@ pub async fn get_forecast_analysis(id: String) -> Result<ForecastResult, String>
 #[tauri::command]
 pub async fn create_forecast_scenario(
     request: scenarios::ScenarioRequest,
+    chronos: State<'_, sidecar::ChronosSidecar>,
 ) -> Result<ForecastResult, String> {
-    scenarios::create(request).await
+    scenarios::create(request, Some(chronos.inner())).await
 }
 
 #[tauri::command]
 pub async fn update_forecast_scenario(
     request: scenarios::ScenarioUpdateRequest,
+    chronos: State<'_, sidecar::ChronosSidecar>,
 ) -> Result<ForecastResult, String> {
-    scenarios::update(request).await
+    scenarios::update(request, Some(chronos.inner())).await
 }
 
 #[tauri::command]

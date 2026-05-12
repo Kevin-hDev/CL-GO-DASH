@@ -61,8 +61,10 @@ pub fn forecast_tool_definitions() -> Vec<Value> {
             "forecast_analyze",
             "Operate on an existing saved forecast analysis. \
              Use action 'annotate' with params.text and params.date to add a note. \
-             Use action 'scenario' with params.name and params.adjustment_percent to add a derived what-if scenario. \
-             Use action 'scenario_update' with params.scenario_id, params.name, and params.adjustment_percent to edit one scenario. \
+             Use action 'scenario' to add a what-if scenario. \
+             For simple scenarios, use params.scenario_kind='percent_adjustment' and params.adjustment_percent. \
+             For contextual scenarios, use params.scenario_kind='context_adjustment' and params.covariate_adjustments. \
+             Use action 'scenario_update' with params.scenario_id to edit one scenario. \
              Use action 'scenario_delete' with params.scenario_id to delete one scenario. \
              Do not use this tool for decomposition, anomalies, or feature importance yet.",
             serde_json::json!({
@@ -78,7 +80,7 @@ pub fn forecast_tool_definitions() -> Vec<Value> {
                     },
                     "params": {
                         "type": "object",
-                        "description": "Action parameters. annotate requires text and date. scenario requires name and adjustment_percent. scenario_update requires scenario_id, name, and adjustment_percent. scenario_delete requires scenario_id.",
+                        "description": "Action parameters. annotate requires text and date. scenario requires name plus either adjustment_percent or covariate_adjustments. scenario_update also requires scenario_id. scenario_delete requires scenario_id.",
                         "properties": {
                             "text": {
                                 "type": "string",
@@ -99,6 +101,29 @@ pub fn forecast_tool_definitions() -> Vec<Value> {
                             "adjustment_percent": {
                                 "type": "number",
                                 "description": "Percent adjustment applied to the saved forecast, for example 15 for +15% or -10 for -10%."
+                            },
+                            "scenario_kind": {
+                                "type": "string",
+                                "description": "Use percent_adjustment for a derived curve or context_adjustment to modify future-known covariates and rerun the model."
+                            },
+                            "covariate_adjustments": {
+                                "type": "array",
+                                "description": "For context_adjustment. Each item modifies one future-known covariate before rerunning the model.",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "column": {"type": "string"},
+                                        "mode": {
+                                            "type": "string",
+                                            "description": "percent or absolute."
+                                        },
+                                        "value": {"type": "number"}
+                                    }
+                                }
+                            },
+                            "target_series_id": {
+                                "type": "string",
+                                "description": "Optional series id. If omitted, the contextual scenario applies to all series."
                             },
                             "scenario_id": {
                                 "type": "string",

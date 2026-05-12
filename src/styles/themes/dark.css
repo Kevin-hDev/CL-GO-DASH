@@ -84,6 +84,10 @@
   --fc-scenario-a: #60a5fa;
   --fc-scenario-b: #a78bfa;
   --fc-scenario-c: #34d399;
+  --fc-variable-a: #f59e0b;
+  --fc-variable-b: #f472b6;
+  --fc-variable-c: #22d3ee;
+  --fc-variable-d: #a3e635;
   --fc-kpi-bg: rgba(200, 200, 210, 0.06);
   --fc-kpi-border: rgba(255, 255, 255, 0.06);
   --fc-nav-active: var(--pulse);
