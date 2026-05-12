@@ -7,6 +7,7 @@ pub mod input_dates;
 pub mod input_parse_utils;
 pub mod input_series;
 pub mod model_manager;
+pub mod nixtla_multiseries;
 pub mod registry;
 pub mod sidecar;
 pub mod sidecar_process;

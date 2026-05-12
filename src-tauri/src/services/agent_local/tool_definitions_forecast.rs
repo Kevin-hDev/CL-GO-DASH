@@ -8,7 +8,7 @@ pub fn forecast_tool_definitions() -> Vec<Value> {
              Provide either a JSON array in 'data' or a CSV/Excel path in 'file_path'. \
              The tool returns a compact saved-analysis summary with analysis_id first. \
              Call forecast_read with that analysis_id for predictions and quantiles. \
-             For Chronos-2, covariates can be included as past columns and optional future-known rows.",
+             Use series_column for multi-series models. Chronos-2 and TimeGPT can use covariates as past columns and optional future-known rows.",
             serde_json::json!({
                 "type": "object",
                 "properties": {

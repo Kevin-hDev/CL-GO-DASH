@@ -743,6 +743,9 @@
       "title": "Modelos Forecast",
       "back": "Volver",
       "summary": "Resumen",
+      "modelCapabilities": "Capacidades del modelo",
+      "appSupport": "Soporte actual en la app",
+      "engine": "Motor usado",
       "install": "Instalar",
       "remove": "Eliminar",
       "confirmRemove": "¿Confirmar?",
@@ -777,6 +780,11 @@
         "balanced": "Equipo equilibrado",
         "heavy": "Equipo potente",
         "remote": "Procesamiento remoto"
+      },
+      "engines": {
+        "localChronosBolt": "Chronos-Bolt local",
+        "localChronos2": "Chronos-2 local",
+        "cloudApi": "API cloud"
       },
       "capabilities": {
         "context": "Variables de contexto",

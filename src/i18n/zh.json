@@ -743,6 +743,9 @@
       "title": "Forecast 模型",
       "back": "返回",
       "summary": "摘要",
+      "modelCapabilities": "模型能力",
+      "appSupport": "应用当前支持",
+      "engine": "使用的引擎",
       "install": "安装",
       "remove": "删除",
       "confirmRemove": "确认？",
@@ -777,6 +780,11 @@
         "balanced": "均衡硬件",
         "heavy": "高性能硬件",
         "remote": "远程处理"
+      },
+      "engines": {
+        "localChronosBolt": "本地 Chronos-Bolt",
+        "localChronos2": "本地 Chronos-2",
+        "cloudApi": "云 API"
       },
       "capabilities": {
         "context": "上下文变量",

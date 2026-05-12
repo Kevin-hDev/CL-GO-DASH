@@ -743,6 +743,9 @@
       "title": "Forecast モデル",
       "back": "戻る",
       "summary": "概要",
+      "modelCapabilities": "モデルの能力",
+      "appSupport": "アプリでの現在の対応",
+      "engine": "使用エンジン",
       "install": "インストール",
       "remove": "削除",
       "confirmRemove": "確認しますか？",
@@ -777,6 +780,11 @@
         "balanced": "標準ハードウェア",
         "heavy": "高性能ハードウェア",
         "remote": "リモート処理"
+      },
+      "engines": {
+        "localChronosBolt": "ローカル Chronos-Bolt",
+        "localChronos2": "ローカル Chronos-2",
+        "cloudApi": "クラウド API"
       },
       "capabilities": {
         "context": "コンテキスト変数",

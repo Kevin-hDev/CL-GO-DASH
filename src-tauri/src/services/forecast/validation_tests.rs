@@ -26,6 +26,5 @@ fn rejects_multiseries_for_timegpt_in_current_app() {
     let mut request = make_request("timegpt-2-mini");
     request.series_column = Some("asset_id".into());
 
-    let error = validate_request(&request).unwrap_err();
-    assert_eq!(error, "Multi-séries non supporté par ce moteur");
+    assert!(validate_request(&request).is_ok());
 }

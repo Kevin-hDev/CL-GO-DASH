@@ -35,6 +35,14 @@ export interface ForecastModelEntry {
   };
 }
 
+export interface ForecastCapabilitySet {
+  context: boolean;
+  futureContext: boolean;
+  multivariate: boolean;
+  probabilistic: boolean;
+  backtesting: boolean;
+}
+
 export interface ForecastModelsResponse {
   providers: ForecastProviderEntry[];
   models: ForecastModelEntry[];
@@ -88,6 +96,22 @@ export function getForecastHardwareKey(model: ForecastModelEntry): string {
   if (model.size_mb <= 64) return "forecast.models.hardware.light";
   if (model.size_mb <= 512) return "forecast.models.hardware.balanced";
   return "forecast.models.hardware.heavy";
+}
+
+export function getModelCapabilities(model: ForecastModelEntry): ForecastCapabilitySet {
+  return {
+    context: model.covariates,
+    futureContext: model.covariates,
+    multivariate: model.multivariate,
+    probabilistic: true,
+    backtesting: model.is_cloud,
+  };
+}
+
+export function getForecastEngineKey(model: ForecastModelEntry): string {
+  if (model.engine_kind === "local_chronos2") return "forecast.models.engines.localChronos2";
+  if (model.engine_kind === "local_chronos_bolt") return "forecast.models.engines.localChronosBolt";
+  return "forecast.models.engines.cloudApi";
 }
 
 function sortFamily(familyId: string): number {
