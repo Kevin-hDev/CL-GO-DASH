@@ -9,12 +9,17 @@ pub async fn ensure_request_data(
     request: &mut ForecastRequest,
     base_dir: Option<&Path>,
 ) -> Result<(), String> {
-    if request.data.is_some() {
-        return Ok(());
-    }
     let Some(raw_path) = request.file_path.as_deref() else {
         return Ok(());
     };
+
+    if request
+        .data
+        .as_deref()
+        .is_some_and(is_usable_json_payload)
+    {
+        return Ok(());
+    }
 
     request.data = Some(load_file_data(raw_path, base_dir).await?);
     Ok(())
@@ -105,4 +110,12 @@ fn normalize_cell(value: Value) -> Value {
         }
     }
     Value::String(trimmed.to_string())
+}
+
+fn is_usable_json_payload(data: &str) -> bool {
+    let trimmed = data.trim();
+    if trimmed.is_empty() {
+        return false;
+    }
+    serde_json::from_str::<Value>(trimmed).is_ok_and(|value| value.is_array())
 }

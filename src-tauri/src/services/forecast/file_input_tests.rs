@@ -30,3 +30,33 @@ async fn loads_csv_file_into_json_records() {
     assert_eq!(rows[0]["date"], "2026-05-01");
     assert_eq!(rows[1]["sales"], 120.0);
 }
+
+#[tokio::test]
+async fn replaces_blank_data_with_file_content() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("forecast.csv");
+    std::fs::write(&path, "date,sales\n2026-05-01,100\n").unwrap();
+
+    let mut request = make_request(path.to_str().unwrap());
+    request.data = Some("   ".to_string());
+    ensure_request_data(&mut request, None).await.unwrap();
+
+    let rows: Vec<Value> = serde_json::from_str(request.data.as_deref().unwrap()).unwrap();
+    assert_eq!(rows.len(), 1);
+    assert_eq!(rows[0]["sales"], 100.0);
+}
+
+#[tokio::test]
+async fn replaces_invalid_json_with_file_content() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("forecast.csv");
+    std::fs::write(&path, "date,sales\n2026-05-01,100\n").unwrap();
+
+    let mut request = make_request(path.to_str().unwrap());
+    request.data = Some("{invalid".to_string());
+    ensure_request_data(&mut request, None).await.unwrap();
+
+    let rows: Vec<Value> = serde_json::from_str(request.data.as_deref().unwrap()).unwrap();
+    assert_eq!(rows.len(), 1);
+    assert_eq!(rows[0]["sales"], 100.0);
+}
