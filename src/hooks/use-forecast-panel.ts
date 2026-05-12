@@ -65,6 +65,10 @@ export function useForecastPanel(sessionId: string | null) {
     persist({ ...state, currentAnalysisId: id, activeSection: "view", panelMode: "forecast" });
   }, [state, persist]);
 
+  const focusAnalysis = useCallback((id: string) => {
+    persist({ ...state, currentAnalysisId: id, panelMode: "forecast" });
+  }, [state, persist]);
+
   const closeAnalysis = useCallback(() => {
     persist({ ...state, currentAnalysisId: null });
   }, [state, persist]);
@@ -94,6 +98,7 @@ export function useForecastPanel(sessionId: string | null) {
     setSection,
     toggleNav,
     loadAnalysis,
+    focusAnalysis,
     closeAnalysis,
     setPanelMode,
   };

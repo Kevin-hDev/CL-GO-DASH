@@ -1,3 +1,20 @@
+.fcs-shell {
+  --fsp-width: 320px;
+  position: relative;
+  min-height: 100%;
+  overflow: hidden;
+}
+
+.fcs-main {
+  width: 100%;
+  box-sizing: border-box;
+  transition: padding-right 320ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fcs-shell.is-picker-open .fcs-main {
+  padding-right: var(--fsp-width);
+}
+
 .fcs-form {
   display: grid;
   gap: 8px;
@@ -34,6 +51,18 @@
 .fcs-add-btn:disabled {
   cursor: default;
   opacity: 0.45;
+}
+
+.fcs-add-btn.is-primary {
+  background: var(--pulse);
+  border-color: var(--pulse);
+  color: var(--ink-on-pulse);
+}
+
+.fcs-add-btn.is-primary:hover {
+  background: var(--pulse);
+  border-color: var(--pulse);
+  color: var(--ink-on-pulse);
 }
 
 .fcs-error {
@@ -83,4 +112,69 @@
   color: var(--ink-faint);
   font-family: var(--font-mono);
   font-size: var(--text-xs);
+}
+
+.fcs-row-summary {
+  white-space: nowrap;
+}
+
+.fcs-row-actions {
+  position: relative;
+  display: flex;
+  gap: 4px;
+}
+
+.fcs-icon-btn {
+  min-width: 33px;
+  height: 33px;
+  padding: 8px;
+  background: transparent;
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-sm);
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: all var(--ease-smooth);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fcs-icon-btn:hover {
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.fcs-icon-btn-danger:hover {
+  background: var(--signal-error-bg);
+  color: var(--signal-error);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.fcs-confirm-delete {
+  position: absolute;
+  right: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+  height: 33px;
+  border: 1px solid var(--signal-error);
+  border-radius: var(--radius-sm);
+  background: var(--signal-error);
+  color: var(--ink-on-pulse);
+  font-size: var(--text-xs);
+  font-family: var(--font-sans);
+  padding: 0 10px;
+  white-space: nowrap;
+  cursor: pointer;
+  animation: fcs-confirm-pulse 1.2s ease-in-out infinite;
+  display: flex;
+  align-items: center;
+}
+
+@keyframes fcs-confirm-pulse {
+  0%, 100% {
+    opacity: 0.82;
+  }
+  50% {
+    opacity: 1;
+  }
 }

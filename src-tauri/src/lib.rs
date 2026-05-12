@@ -283,6 +283,8 @@ pub fn run() {
             commands::list_forecast_analyses,
             commands::get_forecast_analysis,
             commands::create_forecast_scenario,
+            commands::update_forecast_scenario,
+            commands::delete_forecast_scenario,
             commands::delete_forecast_analysis,
             commands::list_forecast_models,
             commands::install_forecast_model,

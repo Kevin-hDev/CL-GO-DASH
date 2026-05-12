@@ -12,6 +12,7 @@ interface AnalysisMeta {
   horizon: number;
   points: number;
   mape: number | null;
+  scenarios_count: number;
 }
 
 interface ForecastHistoryProps {
@@ -55,7 +56,10 @@ export function ForecastHistory({ onLoadAnalysis }: ForecastHistoryProps) {
           <div className="fch-list">
             {filtered.map((a) => (
               <button key={a.id} className="fch-card" onClick={() => onLoadAnalysis(a.id)}>
-                <span className="fch-name">{a.name}</span>
+                <span className="fch-name-row">
+                  <span className="fch-name">{a.name}</span>
+                  {a.scenarios_count > 0 && <span className="fch-scenario-dot" />}
+                </span>
                 <span className="fch-meta">
                   {a.model} · {t("forecast.history.points", { count: a.points })} · {t("forecast.history.horizonShort", { count: a.horizon })}
                   {a.mape != null && ` · ${t("forecast.history.mapeShort", { value: a.mape.toFixed(1) })}`}

@@ -1,35 +1,38 @@
 import { useEffect, useState } from "react";
-import type { FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
 import "../forecast-sections.css";
 import "./forecast-scenarios.css";
-
-interface ForecastScenario {
-  id: string;
-  name: string;
-  description?: string | null;
-  predictions: { value: number }[];
-  params_modified?: { adjustment_percent?: number };
-}
-
-interface ForecastResult {
-  scenarios: ForecastScenario[];
-}
+import { ForecastScenarioRow } from "./forecast-scenario-row";
+import type { ForecastScenario, ForecastScenarioAnalysis } from "./forecast-scenario-types";
+import { ForecastScenarioPreview } from "./forecast-scenario-preview";
+import { ForecastScenarioForm } from "./forecast-scenario-form";
+import { ForecastScenarioPicker } from "./forecast-scenario-picker";
+import { useForecastChartResize } from "../use-forecast-chart-resize";
 
 interface ForecastScenariosProps {
   analysisId: string;
+  pickerOpen: boolean;
+  onFocusAnalysis: (id: string) => void;
   onAnalysisChanged: () => void;
 }
 
-export function ForecastScenarios({ analysisId, onAnalysisChanged }: ForecastScenariosProps) {
+export function ForecastScenarios({
+  analysisId,
+  pickerOpen,
+  onFocusAnalysis,
+  onAnalysisChanged,
+}: ForecastScenariosProps) {
   const { t } = useTranslation();
-  const [data, setData] = useState<ForecastResult | null>(null);
+  const [data, setData] = useState<ForecastScenarioAnalysis | null>(null);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [adjustment, setAdjustment] = useState("10");
+  const [editingScenarioId, setEditingScenarioId] = useState<string | null>(null);
+  const [selectedSeries, setSelectedSeries] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const chart = useForecastChartResize();
 
   useEffect(() => {
     let active = true;
@@ -45,73 +48,124 @@ export function ForecastScenarios({ analysisId, onAnalysisChanged }: ForecastSce
     };
   }, [analysisId, t]);
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSaving(true);
     setError(null);
     try {
-      const updated = await invoke<ForecastResult>("create_forecast_scenario", {
-        request: {
-          analysis_id: analysisId,
-          name,
-          description,
-          adjustment_percent: Number(adjustment),
-        },
-      });
+      const request = {
+        analysis_id: analysisId,
+        name,
+        description,
+        adjustment_percent: Number(adjustment),
+      };
+      const updated = editingScenarioId
+        ? await invoke<ForecastScenarioAnalysis>("update_forecast_scenario", {
+            request: { ...request, scenario_id: editingScenarioId },
+          })
+        : await invoke<ForecastScenarioAnalysis>("create_forecast_scenario", { request });
       setData(updated);
-      setName("");
-      setDescription("");
-      setAdjustment("10");
+      resetForm();
       onAnalysisChanged();
     } catch {
-      setError(t("forecast.scenarios.saveFailed"));
+      setError(
+        editingScenarioId
+          ? t("forecast.scenarios.updateFailed")
+          : t("forecast.scenarios.saveFailed")
+      );
     } finally {
       setSaving(false);
     }
   };
 
+  const handleDelete = async (scenarioId: string) => {
+    setSaving(true);
+    setError(null);
+    try {
+      const updated = await invoke<ForecastScenarioAnalysis>("delete_forecast_scenario", {
+        analysisId,
+        scenarioId,
+      });
+      setData(updated);
+      if (editingScenarioId === scenarioId) resetForm();
+      onAnalysisChanged();
+    } catch {
+      setError(t("forecast.scenarios.deleteFailed"));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleEdit = (scenario: ForecastScenario) => {
+    setEditingScenarioId(scenario.id);
+    setName(scenario.name);
+    setDescription(scenario.description ?? "");
+    setAdjustment(String(scenario.params_modified?.adjustment_percent ?? 0));
+    setError(null);
+  };
+
   return (
     <div className="fcs-root">
-      <div className="fcs-toolbar">
-        <span className="fcs-section-title">{t("forecast.nav.scenarios")}</span>
-      </div>
-      <div className="fcs-content">
-        <form className="fcs-form" onSubmit={(event) => void handleSubmit(event)}>
-          <input
-            className="fcs-input"
-            value={name}
-            maxLength={80}
-            onChange={(event) => setName(event.target.value)}
-            placeholder={t("forecast.scenarios.name")}
-          />
-          <input
-            className="fcs-input"
-            value={description}
-            maxLength={500}
-            onChange={(event) => setDescription(event.target.value)}
-            placeholder={t("forecast.scenarios.description")}
-          />
-          <div className="fcs-form-row">
-            <input
-              className="fcs-input fcs-input-number"
-              type="number"
-              min="-95"
-              max="500"
-              step="0.1"
-              value={adjustment}
-              onChange={(event) => setAdjustment(event.target.value)}
-              aria-label={t("forecast.scenarios.adjustment")}
+      <div className={`fcs-shell ${pickerOpen ? "is-picker-open" : ""}`}>
+      <div className="fcs-content fcs-main">
+        {data && (
+          <div className="fcs-preview-shell">
+            {data.input_data.series_ids && data.input_data.series_ids.length > 1 && (
+              <div className="fcs-series-bar">
+                <label className="fcs-series-label" htmlFor="fcs-series-select">
+                  {t("forecast.view.series")}
+                </label>
+                <select
+                  id="fcs-series-select"
+                  className="fcs-series-select"
+                  value={selectedSeries || data.input_data.series_ids[0]}
+                  onChange={(event) => setSelectedSeries(event.target.value)}
+                >
+                  {data.input_data.series_ids.map((seriesId) => (
+                    <option key={seriesId} value={seriesId}>
+                      {seriesId}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <ForecastScenarioPreview
+              analysis={data}
+              scenarioName={name}
+              adjustmentPercent={Number(adjustment) || 0}
+              selectedSeries={selectedSeries}
+              chartHeight={chart.chartHeight}
+              isResizing={chart.isResizing}
             />
-            <button className="fcs-add-btn" type="submit" disabled={saving || !name.trim()}>
-              {saving ? t("forecast.scenarios.saving") : t("forecast.scenarios.add")}
-            </button>
+            <div
+              className="fcs-chart-resize"
+              onPointerDown={chart.startResize}
+              onDoubleClick={chart.resetHeight}
+            />
           </div>
-          {error && <p className="fcs-error">{error}</p>}
-        </form>
+        )}
+        <ForecastScenarioForm
+          name={name}
+          description={description}
+          adjustment={adjustment}
+          editing={Boolean(editingScenarioId)}
+          saving={saving}
+          error={error}
+          onNameChange={setName}
+          onDescriptionChange={setDescription}
+          onAdjustmentChange={setAdjustment}
+          onSubmit={(event) => void handleSubmit(event)}
+          onCancel={resetForm}
+        />
         {data?.scenarios.length ? (
           <div className="fcs-list">
             {data.scenarios.map((scenario) => (
-              <ScenarioRow key={scenario.id} scenario={scenario} />
+              <ForecastScenarioRow
+                key={scenario.id}
+                scenario={scenario}
+                onEdit={handleEdit}
+                onDelete={(scenarioId) => void handleDelete(scenarioId)}
+              />
             ))}
           </div>
         ) : (
@@ -121,37 +175,23 @@ export function ForecastScenarios({ analysisId, onAnalysisChanged }: ForecastSce
           </div>
         )}
       </div>
-    </div>
-  );
-}
-
-function ScenarioRow({ scenario }: { scenario: ForecastScenario }) {
-  const { t, i18n } = useTranslation();
-  const adjustment = scenario.params_modified?.adjustment_percent;
-
-  return (
-    <div className="fcs-row">
-      <div className="fcs-row-main">
-        <span className="fcs-row-name">{scenario.name}</span>
-        {scenario.description && <span className="fcs-row-description">{scenario.description}</span>}
-      </div>
-      <div className="fcs-row-meta">
-        <span>{t("forecast.scenarios.points", { count: scenario.predictions.length })}</span>
-        {typeof adjustment === "number" && (
-          <span>{formatPercent(adjustment, i18n.language)}</span>
-        )}
+      <ForecastScenarioPicker
+        open={pickerOpen}
+        currentAnalysisId={analysisId}
+        onSelectAnalysis={onFocusAnalysis}
+      />
       </div>
     </div>
   );
+
+  function resetForm() {
+    setEditingScenarioId(null);
+    setName("");
+    setDescription("");
+    setAdjustment("10");
+  }
 }
 
-function formatPercent(value: number, locale: string): string {
-  return new Intl.NumberFormat(locale, {
-    signDisplay: "always",
-    maximumFractionDigits: 1,
-  }).format(value) + "%";
-}
-
-async function loadScenarioAnalysis(analysisId: string): Promise<ForecastResult> {
-  return invoke<ForecastResult>("get_forecast_analysis", { id: analysisId });
+async function loadScenarioAnalysis(analysisId: string): Promise<ForecastScenarioAnalysis> {
+  return invoke<ForecastScenarioAnalysis>("get_forecast_analysis", { id: analysisId });
 }

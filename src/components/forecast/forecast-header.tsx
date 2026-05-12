@@ -16,7 +16,9 @@ interface ForecastHeaderProps {
   navOpen: boolean;
   hasAnalysis: boolean;
   fullscreen: boolean;
+  contextLabel?: string | null;
   filterSlot?: ReactNode;
+  rightSlot?: ReactNode;
   onToggleNav: () => void;
   onCloseAnalysis: () => void;
   onFullscreenChange: (fs: boolean) => void;
@@ -27,7 +29,9 @@ export function ForecastHeader({
   navOpen,
   hasAnalysis,
   fullscreen,
+  contextLabel,
   filterSlot,
+  rightSlot,
   onToggleNav,
   onCloseAnalysis,
   onFullscreenChange,
@@ -51,8 +55,10 @@ export function ForecastHeader({
             />
           </button>
         )}
+        {contextLabel && <span className="fc-context-label">{contextLabel}</span>}
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+        {rightSlot}
         <button
           className="fp-icon-btn"
           onClick={() => onFullscreenChange(!fullscreen)}

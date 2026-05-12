@@ -62,6 +62,8 @@ pub fn forecast_tool_definitions() -> Vec<Value> {
             "Operate on an existing saved forecast analysis. \
              Use action 'annotate' with params.text and params.date to add a note. \
              Use action 'scenario' with params.name and params.adjustment_percent to add a derived what-if scenario. \
+             Use action 'scenario_update' with params.scenario_id, params.name, and params.adjustment_percent to edit one scenario. \
+             Use action 'scenario_delete' with params.scenario_id to delete one scenario. \
              Do not use this tool for decomposition, anomalies, or feature importance yet.",
             serde_json::json!({
                 "type": "object",
@@ -72,11 +74,11 @@ pub fn forecast_tool_definitions() -> Vec<Value> {
                     },
                     "action": {
                         "type": "string",
-                        "description": "Action name. Use 'annotate' or 'scenario'. Other action names are not implemented yet."
+                        "description": "Action name. Use 'annotate', 'scenario', 'scenario_update', or 'scenario_delete'."
                     },
                     "params": {
                         "type": "object",
-                        "description": "Action parameters. annotate requires text and date. scenario requires name and adjustment_percent.",
+                        "description": "Action parameters. annotate requires text and date. scenario requires name and adjustment_percent. scenario_update requires scenario_id, name, and adjustment_percent. scenario_delete requires scenario_id.",
                         "properties": {
                             "text": {
                                 "type": "string",
@@ -88,15 +90,19 @@ pub fn forecast_tool_definitions() -> Vec<Value> {
                             },
                             "name": {
                                 "type": "string",
-                                "description": "Scenario name when action is 'scenario'."
+                                "description": "Scenario name when action is 'scenario' or 'scenario_update'."
                             },
                             "description": {
                                 "type": "string",
-                                "description": "Optional scenario description."
+                                "description": "Optional scenario description for scenario creation or update."
                             },
                             "adjustment_percent": {
                                 "type": "number",
                                 "description": "Percent adjustment applied to the saved forecast, for example 15 for +15% or -10 for -10%."
+                            },
+                            "scenario_id": {
+                                "type": "string",
+                                "description": "Existing scenario id for scenario_update or scenario_delete."
                             }
                         }
                     }

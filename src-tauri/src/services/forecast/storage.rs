@@ -80,7 +80,8 @@ pub async fn delete(id: &str) -> Result<(), String> {
 }
 
 pub async fn list() -> Result<Vec<ForecastAnalysisMeta>, String> {
-    read_index().await
+    let entries = read_index().await?;
+    hydrate_index(entries).await
 }
 
 async fn read_index() -> Result<Vec<ForecastAnalysisMeta>, String> {
@@ -106,6 +107,36 @@ async fn write_index(entries: &[ForecastAnalysisMeta]) -> Result<(), String> {
     tokio::fs::rename(&tmp, &target)
         .await
         .map_err(|e| format!("Rename index: {e}"))
+}
+
+async fn hydrate_index(entries: Vec<ForecastAnalysisMeta>) -> Result<Vec<ForecastAnalysisMeta>, String> {
+    let mut changed = false;
+    let mut hydrated = Vec::with_capacity(entries.len());
+
+    for mut meta in entries {
+        let scenarios_count = read_scenarios_count(&meta.id).await.unwrap_or(0);
+        if meta.scenarios_count != scenarios_count {
+            meta.scenarios_count = scenarios_count;
+            changed = true;
+        }
+        hydrated.push(meta);
+    }
+
+    if changed {
+        write_index(&hydrated).await?;
+    }
+
+    Ok(hydrated)
+}
+
+async fn read_scenarios_count(id: &str) -> Result<usize, String> {
+    let path = analysis_path(id);
+    let data = tokio::fs::read_to_string(&path)
+        .await
+        .map_err(|_| "Analyse introuvable".to_string())?;
+    let analysis: ForecastResult =
+        serde_json::from_str(&data).map_err(|_| "Données d'analyse corrompues".to_string())?;
+    Ok(analysis.scenarios.len())
 }
 
 async fn upsert_index(meta: ForecastAnalysisMeta) -> Result<(), String> {

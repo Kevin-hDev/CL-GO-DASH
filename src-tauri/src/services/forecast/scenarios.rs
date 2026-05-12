@@ -17,6 +17,15 @@ pub struct ScenarioRequest {
     pub adjustment_percent: f64,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ScenarioUpdateRequest {
+    pub analysis_id: String,
+    pub scenario_id: String,
+    pub name: String,
+    pub description: Option<String>,
+    pub adjustment_percent: f64,
+}
+
 pub async fn create(request: ScenarioRequest) -> Result<ForecastResult, String> {
     validate_request(&request)?;
     let mut analysis = storage::load(&request.analysis_id).await?;
@@ -24,28 +33,50 @@ pub async fn create(request: ScenarioRequest) -> Result<ForecastResult, String> 
         return Err("Trop de scénarios".into());
     }
 
-    let factor = 1.0 + request.adjustment_percent / 100.0;
-    let scenario = Scenario {
-        id: uuid::Uuid::new_v4().to_string(),
-        name: request.name.trim().to_string(),
-        description: clean_description(request.description),
-        predictions: analysis
-            .predictions
-            .iter()
-            .map(|point| {
-                let mut adjusted = point.clone();
-                adjusted.value *= factor;
-                adjusted
-            })
-            .collect(),
-        quantiles: scale_quantiles(&analysis.quantiles, factor),
-        params_modified: serde_json::json!({
-            "kind": "percent_adjustment",
-            "adjustment_percent": request.adjustment_percent,
-        }),
+    analysis
+        .scenarios
+        .push(build_scenario(&analysis, uuid::Uuid::new_v4().to_string(), &request));
+    storage::save(&analysis).await?;
+    Ok(analysis)
+}
+
+pub async fn update(request: ScenarioUpdateRequest) -> Result<ForecastResult, String> {
+    validate_request(&ScenarioRequest {
+        analysis_id: request.analysis_id.clone(),
+        name: request.name.clone(),
+        description: request.description.clone(),
+        adjustment_percent: request.adjustment_percent,
+    })?;
+    let mut analysis = storage::load(&request.analysis_id).await?;
+    let Some(index) = analysis
+        .scenarios
+        .iter()
+        .position(|scenario| scenario.id == request.scenario_id)
+    else {
+        return Err("Scénario introuvable".into());
     };
 
-    analysis.scenarios.push(scenario);
+    analysis.scenarios[index] = build_scenario(
+        &analysis,
+        request.scenario_id,
+        &ScenarioRequest {
+            analysis_id: request.analysis_id,
+            name: request.name,
+            description: request.description,
+            adjustment_percent: request.adjustment_percent,
+        },
+    );
+    storage::save(&analysis).await?;
+    Ok(analysis)
+}
+
+pub async fn delete(analysis_id: &str, scenario_id: &str) -> Result<ForecastResult, String> {
+    let mut analysis = storage::load(analysis_id).await?;
+    let before = analysis.scenarios.len();
+    analysis.scenarios.retain(|scenario| scenario.id != scenario_id);
+    if analysis.scenarios.len() == before {
+        return Err("Scénario introuvable".into());
+    }
     storage::save(&analysis).await?;
     Ok(analysis)
 }
@@ -85,4 +116,27 @@ fn scale_quantiles(quantiles: &Quantiles, factor: f64) -> Quantiles {
 
 fn scale_values(values: &[f64], factor: f64) -> Vec<f64> {
     values.iter().map(|value| value * factor).collect()
+}
+
+fn build_scenario(analysis: &ForecastResult, id: String, request: &ScenarioRequest) -> Scenario {
+    let factor = 1.0 + request.adjustment_percent / 100.0;
+    Scenario {
+        id,
+        name: request.name.trim().to_string(),
+        description: clean_description(request.description.clone()),
+        predictions: analysis
+            .predictions
+            .iter()
+            .map(|point| {
+                let mut adjusted = point.clone();
+                adjusted.value *= factor;
+                adjusted
+            })
+            .collect(),
+        quantiles: scale_quantiles(&analysis.quantiles, factor),
+        params_modified: serde_json::json!({
+            "kind": "percent_adjustment",
+            "adjustment_percent": request.adjustment_percent,
+        }),
+    }
 }

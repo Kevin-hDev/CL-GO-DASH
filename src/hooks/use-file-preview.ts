@@ -7,6 +7,7 @@ const MAX_TABS = 6;
 const MIN_WIDTH = 360;
 const DEFAULT_WIDTH = MIN_WIDTH;
 const MAX_STORED_TABS = 6;
+const DEFAULT_EXTRA_WIDTH = 0;
 
 function storageKey(sessionId: string | null): string {
   return `clgo-file-preview-tabs:${sessionId ?? "none"}`;
@@ -30,6 +31,7 @@ export function useFilePreview(sessionId: string | null, operations: FileOperati
   const [tabIds, setTabIds] = useState<string[]>(() => readStoredTabs(sessionId));
   const [fallbackOps, setFallbackOps] = useState<FileOperation[]>([]);
   const [width, setWidth] = useState(DEFAULT_WIDTH);
+  const [extraWidth, setExtraWidth] = useState(DEFAULT_EXTRA_WIDTH);
   const [resizing, setResizing] = useState(false);
   const resizeRef = useRef<{ startX: number; startWidth: number } | null>(null);
 
@@ -85,6 +87,7 @@ export function useFilePreview(sessionId: string | null, operations: FileOperati
   const closePanel = useCallback(() => {
     setOpen(false);
     setFullscreen(false);
+    setExtraWidth(DEFAULT_EXTRA_WIDTH);
   }, []);
 
   const toggleOpen = useCallback(() => {
@@ -137,9 +140,11 @@ export function useFilePreview(sessionId: string | null, operations: FileOperati
     activeTab,
     tabs,
     width,
+    extraWidth,
     resizing,
     setOpen,
     setFullscreen,
+    setExtraWidth,
     setActiveTab,
     toggleOpen,
     closePanel,

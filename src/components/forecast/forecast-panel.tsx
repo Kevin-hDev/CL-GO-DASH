@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
+import { PanelRightOpen, PanelRightClose } from "lucide-react";
 import type { ForecastSection } from "@/hooks/use-forecast-panel";
 import { ForecastHeader } from "./forecast-header";
 import { ForecastNav } from "./forecast-nav";
@@ -10,11 +11,6 @@ import {
   createInitialLayerState,
   type ForecastLayerState,
 } from "./forecast-layer-matrix";
-import { ForecastView } from "./sections/forecast-view";
-import { ForecastScenarios } from "./sections/forecast-scenarios";
-import { ForecastAnalysis } from "./sections/forecast-analysis";
-import { ForecastNotes } from "./sections/forecast-notes";
-import { ForecastHistory } from "./sections/forecast-history";
 import {
   ForecastViewFilters,
 } from "./forecast-view-filters";
@@ -22,7 +18,10 @@ import { ExportDropdown } from "./widgets/export-dropdown";
 import { ForecastConfig, type LaunchConfig } from "./forecast-config";
 import { loadForecastDraftFromFile, type ForecastDraftData } from "./forecast-data";
 import { useForecastLayerSources } from "./use-forecast-layer-sources";
+import { ForecastSectionRouter } from "./forecast-section-router";
+import { useCurrentForecastAnalysisName } from "./use-current-forecast-analysis-name";
 import "./forecast-panel.css";
+import { useEffect } from "react";
 
 interface ForecastPanelProps {
   activeSection: ForecastSection;
@@ -32,13 +31,15 @@ interface ForecastPanelProps {
   onSectionChange: (section: ForecastSection) => void;
   onToggleNav: () => void;
   onLoadAnalysis: (id: string) => void;
+  onFocusAnalysis: (id: string) => void;
+  onPanelExtraWidthChange: (width: number) => void;
   onCloseAnalysis: () => void;
   onFullscreenChange: (fs: boolean) => void;
 }
 
 export function ForecastPanel({
   activeSection, navOpen, currentAnalysisId, fullscreen,
-  onSectionChange, onToggleNav, onLoadAnalysis, onCloseAnalysis, onFullscreenChange,
+  onSectionChange, onToggleNav, onLoadAnalysis, onFocusAnalysis, onPanelExtraWidthChange, onCloseAnalysis, onFullscreenChange,
 }: ForecastPanelProps) {
   const { t } = useTranslation();
   const hasAnalysis = currentAnalysisId !== null;
@@ -46,6 +47,8 @@ export function ForecastPanel({
   const [launching, setLaunching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [layers, setLayers] = useState<ForecastLayerState>(createInitialLayerState);
+  const [scenarioPickerOpen, setScenarioPickerOpen] = useState(false);
+  const currentAnalysisName = useCurrentForecastAnalysisName(currentAnalysisId);
   const layerSources = useForecastLayerSources(currentAnalysisId, setLayers);
   const filterGroups = buildForecastLayerGroups(
     layerSources.sources,
@@ -89,6 +92,11 @@ export function ForecastPanel({
     }
   };
 
+  useEffect(() => {
+    const nextWidth = activeSection === "scenarios" && scenarioPickerOpen ? 320 : 0;
+    onPanelExtraWidthChange(nextWidth);
+  }, [activeSection, scenarioPickerOpen, onPanelExtraWidthChange]);
+
   return (
     <div className="fc-panel">
       <ForecastHeader
@@ -96,6 +104,7 @@ export function ForecastPanel({
         navOpen={navOpen}
         hasAnalysis={hasAnalysis}
         fullscreen={fullscreen}
+        contextLabel={activeSection === "scenarios" ? currentAnalysisName : null}
         filterSlot={
           hasAnalysis ? (
             <ForecastViewFilters
@@ -103,6 +112,17 @@ export function ForecastPanel({
               layers={layers}
               onChange={setLayers}
             />
+          ) : null
+        }
+        rightSlot={
+          activeSection === "scenarios" && hasAnalysis ? (
+            <button
+              className={`fp-icon-btn ${scenarioPickerOpen ? "fp-icon-btn-active" : ""}`}
+              onClick={() => setScenarioPickerOpen((open) => !open)}
+              title={t("forecast.scenarios.togglePredictions")}
+            >
+              {scenarioPickerOpen ? <PanelRightClose size={16} /> : <PanelRightOpen size={16} />}
+            </button>
           ) : null
         }
         onToggleNav={onToggleNav}
@@ -131,7 +151,9 @@ export function ForecastPanel({
             analysisId={currentAnalysisId}
             layers={layers}
             onLoadAnalysis={onLoadAnalysis}
+            onFocusAnalysis={onFocusAnalysis}
             onAnalysisChanged={() => void layerSources.refresh()}
+            scenarioPickerOpen={scenarioPickerOpen}
           />
         )}
       </div>
@@ -145,38 +167,4 @@ export function ForecastPanel({
       )}
     </div>
   );
-}
-
-function ForecastSectionRouter({
-  section,
-  analysisId,
-  layers,
-  onLoadAnalysis,
-  onAnalysisChanged,
-}: {
-  section: ForecastSection;
-  analysisId: string;
-  layers: ForecastLayerState;
-  onLoadAnalysis: (id: string) => void;
-  onAnalysisChanged: () => void;
-}) {
-  switch (section) {
-    case "view":
-      return <ForecastView analysisId={analysisId} layers={layers} />;
-    case "scenarios":
-      return (
-        <ForecastScenarios
-          analysisId={analysisId}
-          onAnalysisChanged={() => void onAnalysisChanged()}
-        />
-      );
-    case "analysis":
-      return <ForecastAnalysis analysisId={analysisId} />;
-    case "notes":
-      return <ForecastNotes analysisId={analysisId} />;
-    case "history":
-      return <ForecastHistory onLoadAnalysis={onLoadAnalysis} />;
-    default:
-      return null;
-  }
 }

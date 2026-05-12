@@ -1,5 +1,8 @@
 use crate::services::agent_local::types_tools::ToolResult;
-use crate::services::forecast::{scenarios::ScenarioRequest, types::ForecastRequest};
+use crate::services::forecast::{
+    scenarios::{ScenarioRequest, ScenarioUpdateRequest},
+    types::ForecastRequest,
+};
 use crate::services::forecast::{
     client_chronos, client_nixtla, model_manager, sidecar, storage, validation,
 };
@@ -154,8 +157,48 @@ async fn handle_analyze(args: &Value, _session_id: &str) -> ToolResult {
                 Err(e) => ToolResult::err(e),
             }
         }
+        "scenario_update" => {
+            let params = &args["params"];
+            let scenario_id = params["scenario_id"].as_str().unwrap_or("");
+            let name = params["name"].as_str().unwrap_or("");
+            let adjustment_percent = params["adjustment_percent"].as_f64();
+            let Some(adjustment_percent) = adjustment_percent else {
+                return ToolResult::err(
+                    "Paramètres de scénario manquants. Utiliser params.scenario_id, params.name et params.adjustment_percent.",
+                );
+            };
+            let request = ScenarioUpdateRequest {
+                analysis_id: analysis_id.to_string(),
+                scenario_id: scenario_id.to_string(),
+                name: name.to_string(),
+                description: params["description"].as_str().map(str::to_string),
+                adjustment_percent,
+            };
+            match crate::services::forecast::scenarios::update(request).await {
+                Ok(updated) => match super::tool_dispatcher_forecast_output::analysis_payload(&updated) {
+                    Ok(json) => ToolResult::ok(json),
+                    Err(e) => ToolResult::err(e),
+                },
+                Err(e) => ToolResult::err(e),
+            }
+        }
+        "scenario_delete" => {
+            let scenario_id = args["params"]["scenario_id"].as_str().unwrap_or("");
+            if scenario_id.is_empty() {
+                return ToolResult::err(
+                    "Paramètres de scénario manquants. Utiliser params.scenario_id.",
+                );
+            }
+            match crate::services::forecast::scenarios::delete(analysis_id, scenario_id).await {
+                Ok(updated) => match super::tool_dispatcher_forecast_output::analysis_payload(&updated) {
+                    Ok(json) => ToolResult::ok(json),
+                    Err(e) => ToolResult::err(e),
+                },
+                Err(e) => ToolResult::err(e),
+            }
+        }
         _ => ToolResult::err(format!(
-            "Action '{action}' pas encore implémentée. Actions disponibles: annotate, scenario"
+            "Action '{action}' pas encore implémentée. Actions disponibles: annotate, scenario, scenario_update, scenario_delete"
         )),
     }
 }

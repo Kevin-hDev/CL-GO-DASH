@@ -121,6 +121,8 @@ pub struct ForecastAnalysisMeta {
     pub points: usize,
     pub mape: Option<f64>,
     pub session_id: Option<String>,
+    #[serde(default)]
+    pub scenarios_count: usize,
 }
 
 impl ForecastResult {
@@ -136,6 +138,7 @@ impl ForecastResult {
             points: self.input_summary.points,
             mape: self.metrics.as_ref().and_then(|m| m.mape),
             session_id: self.session_id.clone(),
+            scenarios_count: self.scenarios.len(),
         }
     }
 }

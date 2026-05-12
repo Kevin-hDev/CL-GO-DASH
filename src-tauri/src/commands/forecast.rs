@@ -62,6 +62,21 @@ pub async fn create_forecast_scenario(
 }
 
 #[tauri::command]
+pub async fn update_forecast_scenario(
+    request: scenarios::ScenarioUpdateRequest,
+) -> Result<ForecastResult, String> {
+    scenarios::update(request).await
+}
+
+#[tauri::command]
+pub async fn delete_forecast_scenario(
+    analysis_id: String,
+    scenario_id: String,
+) -> Result<ForecastResult, String> {
+    scenarios::delete(&analysis_id, &scenario_id).await
+}
+
+#[tauri::command]
 pub async fn delete_forecast_analysis(id: String) -> Result<(), String> {
     storage::delete(&id).await
 }
