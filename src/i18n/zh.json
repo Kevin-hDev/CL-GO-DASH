@@ -655,6 +655,7 @@
     },
     "view": {
       "period": "周期",
+      "series": "序列",
       "historySeries": "历史",
       "forecastSeries": "预测",
       "confidenceRange": "置信区间",
@@ -679,8 +680,17 @@
     "config": {
       "title": "配置",
       "back": "返回",
+      "dataPhases": "数据阶段",
+      "historyRows": "历史",
+      "futureRows": "已知未来",
+      "seriesCount": "序列数",
+      "selectedContext": "已选上下文",
+      "detectedFutureContext": "检测到的未来上下文",
+      "futureContextColumns": "检测到的未来上下文列",
       "target": "目标",
       "dateColumn": "日期列",
+      "seriesColumn": "序列列",
+      "noSeriesColumn": "无序列列",
       "covariates": "协变量",
       "frequency": "频率",
       "horizon": "预测范围",
@@ -689,7 +699,31 @@
       "launch": "开始预测",
       "launching": "计算中…",
       "rows_one": "{{count}} 行",
-      "rows_other": "{{count}} 行"
+      "rows_other": "{{count}} 行",
+      "validation": {
+        "futureRowsMismatch": "已知未来行数必须与所选预测期一致。",
+        "futureRowsPerSeriesMismatch": "每个序列都必须有相同数量的已知未来行。",
+        "contextUnsupported": "所选模型不支持上下文变量。",
+        "futureContextUnsupported": "所选模型不支持已知未来上下文。"
+      },
+      "messages": {
+        "futureRowsMismatchTitle": "预测期不一致",
+        "futureRowsMismatchBody": "检测到 {{future}} 行已知未来数据，但当前预测期是 {{horizon}}。",
+        "futureRowsPerSeriesMismatchTitle": "序列不完整",
+        "futureRowsPerSeriesMismatchBody": "各序列的已知未来行数量并不一致。",
+        "contextUnsupportedTitle": "上下文不可用",
+        "contextUnsupportedBody": "所选协变量不会被这个模型使用。",
+        "futureContextUnsupportedTitle": "未来上下文不可用",
+        "futureContextUnsupportedBody": "这个模型会读取主历史序列，但不会利用协变量的已知未来值。",
+        "futureContextReadyTitle": "未来上下文已就绪",
+        "futureContextReadyBody": "已有 {{count}} 个已选列在已知未来行中包含值。",
+        "futureContextMissingTitle": "未来上下文不完整",
+        "futureContextMissingBody": "存在已知未来行，但所选协变量中还没有可用的未来值。",
+        "addFutureRowsTitle": "可以使用未来上下文",
+        "addFutureRowsBody": "在文件末尾添加没有目标值的行，可为该模型提供已知未来值。",
+        "futureDatesOnlyTitle": "仅使用未来日期",
+        "futureDatesOnlyBody": "在未选择协变量之前，已知未来行主要只会用于确定输出日期。"
+      }
     },
     "frequency": {
       "D": "天",

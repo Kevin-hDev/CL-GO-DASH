@@ -4,6 +4,8 @@ pub mod client_nixtla;
 pub mod file_input;
 pub mod input_data;
 pub mod input_dates;
+pub mod input_parse_utils;
+pub mod input_series;
 pub mod model_manager;
 pub mod registry;
 pub mod sidecar;

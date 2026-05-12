@@ -2,11 +2,14 @@ import { invoke } from "@tauri-apps/api/core";
 
 const MAX_ROWS = 5000;
 
+export type ForecastDraftRow = Record<string, unknown>;
+
 export interface ForecastDraftData {
   sourceName: string;
   columns: string[];
   rowCount: number;
   dataJson: string;
+  rows: ForecastDraftRow[];
 }
 
 interface SpreadsheetPreview {
@@ -23,7 +26,7 @@ export async function loadForecastDraftFromFile(path: string): Promise<ForecastD
   const preview = JSON.parse(raw) as SpreadsheetPreview;
   const columns = preview.headers.filter((h) => h.trim().length > 0);
   const records = preview.rows.slice(0, MAX_ROWS).map((row) => {
-    const item: Record<string, unknown> = {};
+    const item: ForecastDraftRow = {};
     columns.forEach((column, index) => {
       item[column] = normalizeCell(row[index]);
     });
@@ -35,6 +38,7 @@ export async function loadForecastDraftFromFile(path: string): Promise<ForecastD
     columns,
     rowCount: records.length || preview.total_rows,
     dataJson: JSON.stringify(records),
+    rows: records,
   };
 }
 

@@ -655,6 +655,7 @@
     },
     "view": {
       "period": "期間",
+      "series": "系列",
       "historySeries": "履歴",
       "forecastSeries": "予測",
       "confidenceRange": "信頼区間",
@@ -679,8 +680,17 @@
     "config": {
       "title": "設定",
       "back": "戻る",
+      "dataPhases": "データの段階",
+      "historyRows": "履歴",
+      "futureRows": "既知の未来",
+      "seriesCount": "系列数",
+      "selectedContext": "選択したコンテキスト",
+      "detectedFutureContext": "検出された未来コンテキスト",
+      "futureContextColumns": "検出された未来コンテキスト列",
       "target": "ターゲット",
       "dateColumn": "日付列",
+      "seriesColumn": "系列列",
+      "noSeriesColumn": "系列列なし",
       "covariates": "共変量",
       "frequency": "頻度",
       "horizon": "予測期間",
@@ -689,7 +699,31 @@
       "launch": "予測を開始",
       "launching": "計算中…",
       "rows_one": "{{count}} 行",
-      "rows_other": "{{count}} 行"
+      "rows_other": "{{count}} 行",
+      "validation": {
+        "futureRowsMismatch": "既知の未来行の数は、選択した予測期間と一致している必要があります。",
+        "futureRowsPerSeriesMismatch": "各系列は同じ数の既知の未来行を持つ必要があります。",
+        "contextUnsupported": "選択したモデルはコンテキスト変数に対応していません。",
+        "futureContextUnsupported": "選択したモデルは既知の未来コンテキストに対応していません。"
+      },
+      "messages": {
+        "futureRowsMismatchTitle": "予測期間が不一致です",
+        "futureRowsMismatchBody": "{{future}} 行の既知の未来データが見つかりましたが、現在の予測期間は {{horizon}} です。",
+        "futureRowsPerSeriesMismatchTitle": "系列が不完全です",
+        "futureRowsPerSeriesMismatchBody": "すべての系列が同じ数の既知の未来行を持っているわけではありません。",
+        "contextUnsupportedTitle": "コンテキストは利用できません",
+        "contextUnsupportedBody": "選択した共変量はこのモデルでは使われません。",
+        "futureContextUnsupportedTitle": "未来コンテキストは利用できません",
+        "futureContextUnsupportedBody": "このモデルは主系列の履歴は読みますが、共変量の既知の未来値は利用しません。",
+        "futureContextReadyTitle": "未来コンテキストの準備完了",
+        "futureContextReadyBody": "選択した {{count}} 列は、既知の未来行にすでに値があります。",
+        "futureContextMissingTitle": "未来コンテキストが不完全です",
+        "futureContextMissingBody": "既知の未来行はありますが、選択した共変量にはまだ利用可能な未来値がありません。",
+        "addFutureRowsTitle": "未来コンテキストを使えます",
+        "addFutureRowsBody": "ファイル末尾にターゲットなしの行を追加すると、このモデルに既知の未来値を渡せます。",
+        "futureDatesOnlyTitle": "未来の日付のみ",
+        "futureDatesOnlyBody": "共変量が未選択の間、既知の未来行は主に出力日付の確定に使われます。"
+      }
     },
     "frequency": {
       "D": "日",

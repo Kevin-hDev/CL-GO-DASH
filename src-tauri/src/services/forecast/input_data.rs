@@ -1,10 +1,14 @@
-use super::input_dates::build_future_dates;
+use super::input_parse_utils::{
+    build_known_or_relative_dates, build_summary_bounds, collect_columns, read_target_value,
+    validate_columns, validate_multiseries_future_rows,
+};
+use super::input_series::read_series_id;
 use super::types::{ForecastRequest, InputSummary, Prediction};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::collections::{BTreeSet, HashSet};
 
 const MAX_INPUT_ROWS: usize = 5_000;
-const MAX_INPUT_COLUMNS: usize = 256;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct InputSnapshot {
@@ -12,6 +16,10 @@ pub struct InputSnapshot {
     pub columns: Vec<String>,
     #[serde(default)]
     pub rows: Vec<Value>,
+    #[serde(default)]
+    pub series_column: Option<String>,
+    #[serde(default)]
+    pub series_ids: Vec<String>,
     #[serde(default)]
     pub history: Vec<Prediction>,
 }
@@ -43,28 +51,45 @@ pub fn parse_request_input(request: &ForecastRequest) -> Result<ParsedInput, Str
     let mut history_rows = Vec::new();
     let mut future_rows = Vec::new();
     let mut future_phase = false;
+    let mut future_phase_by_series = HashSet::new();
+    let mut history_series_ids = BTreeSet::new();
+    let mut series_ids = BTreeSet::new();
 
     for row in &rows {
         let object = row.as_object().ok_or("Format de ligne invalide")?;
         collect_columns(&mut columns, object.keys())?;
+        let series_id = read_series_id(object, request)?;
+        let phase_key = series_id.clone().unwrap_or_default();
+        if let Some(id) = &series_id {
+            series_ids.insert(id.clone());
+        }
         let date = object
             .get(&request.date_column)
             .and_then(Value::as_str)
             .ok_or("Colonne date manquante")?;
         match read_target_value(object.get(&request.target_column))? {
             Some(value) => {
-                if future_phase {
+                if request.series_column.is_some() {
+                    if future_phase_by_series.contains(&phase_key) {
+                        return Err("Lignes futures invalides".into());
+                    }
+                    history_series_ids.insert(phase_key);
+                } else if future_phase {
                     return Err("Lignes futures invalides".into());
                 }
                 history.push(Prediction {
                     date: date.to_string(),
                     value,
+                    series_id: series_id.clone(),
                 });
                 values.push(value);
                 history_rows.push(row.clone());
             }
             None => {
                 future_phase = true;
+                if request.series_column.is_some() {
+                    future_phase_by_series.insert(phase_key);
+                }
                 future_rows.push(row.clone());
             }
         }
@@ -76,110 +101,25 @@ pub fn parse_request_input(request: &ForecastRequest) -> Result<ParsedInput, Str
     }
 
     let future_dates = build_known_or_relative_dates(&history, &future_rows, request)?;
+    validate_multiseries_future_rows(&future_rows, &history_series_ids, request)?;
+    let (start, end) = build_summary_bounds(&history);
 
     Ok(ParsedInput {
         values,
         future_dates,
         summary: InputSummary {
             points: history.len(),
-            start: history
-                .first()
-                .map(|point| point.date.clone())
-                .unwrap_or_default(),
-            end: history
-                .last()
-                .map(|point| point.date.clone())
-                .unwrap_or_default(),
+            start,
+            end,
         },
         snapshot: InputSnapshot {
             columns,
             rows,
+            series_column: request.series_column.clone(),
+            series_ids: series_ids.into_iter().collect(),
             history,
         },
         history_rows,
         future_rows,
     })
-}
-
-fn collect_columns<'a, I>(columns: &mut Vec<String>, keys: I) -> Result<(), String>
-where
-    I: Iterator<Item = &'a String>,
-{
-    for key in keys {
-        if !columns.iter().any(|existing| existing == key) {
-            columns.push(key.clone());
-        }
-    }
-    if columns.len() > MAX_INPUT_COLUMNS {
-        return Err("Trop de colonnes".into());
-    }
-    Ok(())
-}
-
-fn validate_columns(columns: &[String], request: &ForecastRequest) -> Result<(), String> {
-    if !columns
-        .iter()
-        .any(|column| column == &request.target_column)
-    {
-        return Err("Colonne cible introuvable".into());
-    }
-    if !columns.iter().any(|column| column == &request.date_column) {
-        return Err("Colonne date introuvable".into());
-    }
-    for covariate in &request.covariate_columns {
-        if !columns.iter().any(|column| column == covariate) {
-            return Err("Covariable introuvable".into());
-        }
-    }
-    Ok(())
-}
-
-fn read_target_value(value: Option<&Value>) -> Result<Option<f64>, String> {
-    match value {
-        Some(Value::Number(number)) => Ok(number.as_f64().filter(|numeric| numeric.is_finite())),
-        Some(Value::String(raw)) => {
-            let trimmed = raw.trim();
-            if trimmed.is_empty() {
-                return Ok(None);
-            }
-            trimmed
-                .replace(',', ".")
-                .parse::<f64>()
-                .map(Some)
-                .map_err(|_| "Colonne cible non numérique".to_string())
-        }
-        Some(Value::Null) | None => Ok(None),
-        _ => Err("Colonne cible non numérique".into()),
-    }
-}
-
-fn build_known_or_relative_dates(
-    history: &[Prediction],
-    future_rows: &[Value],
-    request: &ForecastRequest,
-) -> Result<Vec<String>, String> {
-    if future_rows.is_empty() {
-        let last_date = history
-            .last()
-            .map(|point| point.date.as_str())
-            .unwrap_or_default();
-        return Ok(build_future_dates(
-            last_date,
-            &request.frequency,
-            request.horizon,
-        ));
-    }
-    if future_rows.len() != request.horizon as usize {
-        return Err("Nombre de lignes futures invalide".into());
-    }
-
-    future_rows
-        .iter()
-        .map(|row| {
-            row[&request.date_column]
-                .as_str()
-                .map(|value| value.to_string())
-                .ok_or("Colonne date manquante".to_string())
-        })
-        .collect()
 }

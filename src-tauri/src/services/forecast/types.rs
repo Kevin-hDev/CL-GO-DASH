@@ -11,6 +11,7 @@ pub struct ForecastRequest {
     pub file_path: Option<String>,
     pub target_column: String,
     pub date_column: String,
+    pub series_column: Option<String>,
     #[serde(default)]
     pub covariate_columns: Vec<String>,
     pub horizon: u32,
@@ -61,6 +62,8 @@ pub struct InputSummary {
 pub struct Prediction {
     pub date: String,
     pub value: f64,
+    #[serde(default)]
+    pub series_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

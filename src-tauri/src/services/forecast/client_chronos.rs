@@ -71,6 +71,7 @@ fn build_payload(input: &ParsedInput, request: &ForecastRequest) -> Result<Value
             "future_rows": input.future_rows,
             "date_column": request.date_column,
             "target_column": request.target_column,
+            "series_column": request.series_column,
             "covariate_columns": request.covariate_columns,
             "horizon": request.horizon,
             "model": model,
@@ -88,28 +89,12 @@ fn parse_response(
     input: &ParsedInput,
     session_id: Option<&str>,
 ) -> Result<ForecastResult, String> {
-    let median = body["median"]
-        .as_array()
-        .ok_or("Réponse Chronos: champ median manquant")?;
-
-    let predictions: Vec<Prediction> = median
-        .iter()
-        .enumerate()
-        .map(|(i, v)| Prediction {
-            date: input
-                .future_dates
-                .get(i)
-                .cloned()
-                .unwrap_or_else(|| format!("T+{}", i + 1)),
-            value: v.as_f64().unwrap_or(0.0),
-        })
-        .collect();
-
-    let q10 = extract_quantile_array(body, "q10");
-    let q50: Vec<f64> = predictions.iter().map(|p| p.value).collect();
-    let q90 = extract_quantile_array(body, "q90");
-
     let model_name = request.model.as_deref().unwrap_or("chronos-bolt-small");
+    let runtime = find_runtime(model_name).ok_or("Moteur indisponible")?;
+    let (predictions, q10, q50, q90) = match runtime.engine_kind {
+        ForecastEngineKind::LocalChronos2 => parse_chronos2_response(body, request, input)?,
+        _ => parse_simple_response(body, input)?,
+    };
 
     Ok(ForecastResult {
         id: Uuid::new_v4().to_string(),
@@ -130,6 +115,80 @@ fn parse_response(
         annotations: Vec::new(),
         scenarios: Vec::new(),
     })
+}
+
+fn parse_simple_response(
+    body: &Value,
+    input: &ParsedInput,
+) -> Result<(Vec<Prediction>, Vec<f64>, Vec<f64>, Vec<f64>), String> {
+    let median = body["median"]
+        .as_array()
+        .ok_or("Réponse Chronos: champ median manquant")?;
+
+    let predictions: Vec<Prediction> = median
+        .iter()
+        .enumerate()
+        .map(|(i, v)| Prediction {
+            date: input
+                .future_dates
+                .get(i)
+                .cloned()
+                .unwrap_or_else(|| format!("T+{}", i + 1)),
+            value: v.as_f64().unwrap_or(0.0),
+            series_id: None,
+        })
+        .collect();
+
+    let q10 = extract_quantile_array(body, "q10");
+    let q50: Vec<f64> = predictions.iter().map(|p| p.value).collect();
+    let q90 = extract_quantile_array(body, "q90");
+    Ok((predictions, q10, q50, q90))
+}
+
+fn parse_chronos2_response(
+    body: &Value,
+    request: &ForecastRequest,
+    input: &ParsedInput,
+) -> Result<(Vec<Prediction>, Vec<f64>, Vec<f64>, Vec<f64>), String> {
+    if body["predictions"].is_array() {
+        return parse_chronos2_structured_predictions(body);
+    }
+    if request.series_column.is_some() {
+        return Err("Réponse Chronos multi-séries invalide".into());
+    }
+    parse_simple_response(body, input)
+}
+
+fn parse_chronos2_structured_predictions(
+    body: &Value,
+) -> Result<(Vec<Prediction>, Vec<f64>, Vec<f64>, Vec<f64>), String> {
+    let items = body["predictions"]
+        .as_array()
+        .ok_or("Réponse Chronos: champ predictions manquant")?;
+
+    let mut predictions = Vec::with_capacity(items.len());
+    let mut q10 = Vec::with_capacity(items.len());
+    let mut q50 = Vec::with_capacity(items.len());
+    let mut q90 = Vec::with_capacity(items.len());
+
+    for item in items {
+        let date = item["date"]
+            .as_str()
+            .ok_or("Réponse Chronos: date manquante")?;
+        let value = item["value"]
+            .as_f64()
+            .ok_or("Réponse Chronos: valeur manquante")?;
+        predictions.push(Prediction {
+            date: date.to_string(),
+            value,
+            series_id: item["series_id"].as_str().map(|value| value.to_string()),
+        });
+        q10.push(item["q10"].as_f64().unwrap_or(value));
+        q50.push(item["q50"].as_f64().unwrap_or(value));
+        q90.push(item["q90"].as_f64().unwrap_or(value));
+    }
+
+    Ok((predictions, q10, q50, q90))
 }
 
 fn extract_quantile_array(body: &Value, key: &str) -> Vec<f64> {

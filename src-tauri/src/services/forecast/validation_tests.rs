@@ -7,6 +7,7 @@ fn make_request(model: &str) -> ForecastRequest {
         file_path: None,
         target_column: "sales".into(),
         date_column: "date".into(),
+        series_column: None,
         covariate_columns: vec!["temp".into()],
         horizon: 3,
         frequency: "D".into(),
@@ -16,12 +17,15 @@ fn make_request(model: &str) -> ForecastRequest {
 }
 
 #[test]
-fn rejects_covariates_for_current_local_chronos_runtimes() {
-    let error = validate_request(&make_request("chronos-2")).unwrap_err();
-    assert_eq!(error, "Variables de contexte non supportées par ce moteur");
+fn accepts_covariates_for_chronos2() {
+    assert!(validate_request(&make_request("chronos-2")).is_ok());
 }
 
 #[test]
-fn accepts_covariates_for_timegpt() {
-    assert!(validate_request(&make_request("timegpt-2-mini")).is_ok());
+fn rejects_multiseries_for_timegpt_in_current_app() {
+    let mut request = make_request("timegpt-2-mini");
+    request.series_column = Some("asset_id".into());
+
+    let error = validate_request(&request).unwrap_err();
+    assert_eq!(error, "Multi-séries non supporté par ce moteur");
 }

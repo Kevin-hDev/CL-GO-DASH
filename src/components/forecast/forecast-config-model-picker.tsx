@@ -75,9 +75,9 @@ export function ForecastConfigModelPicker({
                         {t(getForecastHardwareKey(model))}
                       </span>
                       <span className="fcmp-model-flags">
-                        {model.covariates ? t("forecast.models.capabilities.context") : ""}
-                        {model.covariates && model.multivariate ? " · " : ""}
-                        {model.multivariate ? t("forecast.models.capabilities.multivariate") : ""}
+                        {model.capabilities?.past_covariates ? t("forecast.models.capabilities.context") : ""}
+                        {model.capabilities?.past_covariates && model.capabilities?.future_covariates ? " · " : ""}
+                        {model.capabilities?.future_covariates ? t("forecast.models.capabilities.futureContext") : ""}
                       </span>
                     </span>
                   </button>

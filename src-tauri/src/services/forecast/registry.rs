@@ -100,7 +100,7 @@ const fn chronos2_current_capabilities() -> ForecastCapabilities {
     ForecastCapabilities {
         past_covariates: true,
         future_covariates: true,
-        multivariate: false,
+        multivariate: true,
         probabilistic: true,
         backtesting_ready: false,
         anomalies_ready: false,
@@ -112,7 +112,7 @@ const fn advanced_cloud_capabilities() -> ForecastCapabilities {
     ForecastCapabilities {
         past_covariates: true,
         future_covariates: true,
-        multivariate: true,
+        multivariate: false,
         probabilistic: true,
         backtesting_ready: true,
         anomalies_ready: true,

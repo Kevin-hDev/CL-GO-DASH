@@ -8,6 +8,7 @@ fn make_request(path: &str) -> ForecastRequest {
         file_path: Some(path.to_string()),
         target_column: "sales".into(),
         date_column: "date".into(),
+        series_column: None,
         covariate_columns: Vec::new(),
         horizon: 3,
         frequency: "D".into(),

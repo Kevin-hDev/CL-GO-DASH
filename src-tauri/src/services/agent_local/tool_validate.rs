@@ -66,6 +66,7 @@ static FORECAST: Schema = &[
     ("file_path", Ty::Str, false),
     ("target_column", Ty::Str, true),
     ("date_column", Ty::Str, true),
+    ("series_column", Ty::Str, false),
     ("covariate_columns", Ty::Arr, false),
     ("horizon", Ty::Int, true),
     ("frequency", Ty::Str, true),

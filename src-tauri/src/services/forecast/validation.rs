@@ -37,6 +37,15 @@ pub fn validate_request(request: &ForecastRequest) -> Result<(), String> {
     if request.target_column == request.date_column {
         return Err("Colonnes invalides".into());
     }
+    if let Some(series_column) = request.series_column.as_ref() {
+        validate_column(series_column)?;
+        if !runtime.capabilities.multivariate {
+            return Err("Multi-séries non supporté par ce moteur".into());
+        }
+        if series_column == &request.target_column || series_column == &request.date_column {
+            return Err("Colonne série invalide".into());
+        }
+    }
     if request.covariate_columns.len() > MAX_COVARIATES {
         return Err("Trop de covariables".into());
     }
@@ -46,7 +55,10 @@ pub fn validate_request(request: &ForecastRequest) -> Result<(), String> {
     let mut unique_covariates = std::collections::BTreeSet::new();
     for column in &request.covariate_columns {
         validate_column(column)?;
-        if column == &request.target_column || column == &request.date_column {
+        if column == &request.target_column
+            || column == &request.date_column
+            || request.series_column.as_ref() == Some(column)
+        {
             return Err("Covariables invalides".into());
         }
         if !unique_covariates.insert(column) {

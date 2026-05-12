@@ -28,6 +28,10 @@ pub fn forecast_tool_definitions() -> Vec<Value> {
                         "type": "string",
                         "description": "Name of the date or timestamp column."
                     },
+                    "series_column": {
+                        "type": "string",
+                        "description": "Optional series identifier column for multi-series forecasts."
+                    },
                     "covariate_columns": {
                         "type": "array",
                         "items": {"type": "string"},

@@ -655,6 +655,7 @@
     },
     "view": {
       "period": "Zeitraum",
+      "series": "Serie",
       "historySeries": "Verlauf",
       "forecastSeries": "Prognose",
       "confidenceRange": "Konfidenzbereich",
@@ -679,8 +680,17 @@
     "config": {
       "title": "Konfiguration",
       "back": "Zurück",
+      "dataPhases": "Datenphasen",
+      "historyRows": "Verlauf",
+      "futureRows": "Bekannte Zukunft",
+      "seriesCount": "Serien",
+      "selectedContext": "Gewählter Kontext",
+      "detectedFutureContext": "Erkannter Zukunftskontext",
+      "futureContextColumns": "Erkannte Spalten für Zukunftskontext",
       "target": "Ziel",
       "dateColumn": "Datumsspalte",
+      "seriesColumn": "Serienspalte",
+      "noSeriesColumn": "Keine Serienspalte",
       "covariates": "Kovariablen",
       "frequency": "Frequenz",
       "horizon": "Horizont",
@@ -689,7 +699,31 @@
       "launch": "Prognose starten",
       "launching": "Berechnung läuft…",
       "rows_one": "{{count}} Zeile",
-      "rows_other": "{{count}} Zeilen"
+      "rows_other": "{{count}} Zeilen",
+      "validation": {
+        "futureRowsMismatch": "Die Anzahl bekannter Zukunftszeilen muss dem gewählten Horizont entsprechen.",
+        "futureRowsPerSeriesMismatch": "Jede Serie muss die gleiche Anzahl bekannter Zukunftszeilen haben.",
+        "contextUnsupported": "Das gewählte Modell unterstützt keine Kontextvariablen.",
+        "futureContextUnsupported": "Das gewählte Modell unterstützt keinen bekannten Zukunftskontext."
+      },
+      "messages": {
+        "futureRowsMismatchTitle": "Horizont stimmt nicht",
+        "futureRowsMismatchBody": "{{future}} bekannte Zukunftszeilen wurden erkannt, aber der aktuelle Horizont ist {{horizon}}.",
+        "futureRowsPerSeriesMismatchTitle": "Serien unvollständig",
+        "futureRowsPerSeriesMismatchBody": "Die Serien haben nicht alle die gleiche Anzahl bekannter Zukunftszeilen.",
+        "contextUnsupportedTitle": "Kontext nicht verfügbar",
+        "contextUnsupportedBody": "Die gewählten Kovariablen werden mit diesem Modell nicht verwendet.",
+        "futureContextUnsupportedTitle": "Zukunftskontext nicht verfügbar",
+        "futureContextUnsupportedBody": "Dieses Modell liest die Haupthistorie, nutzt aber keine bekannten zukünftigen Kovariablenwerte.",
+        "futureContextReadyTitle": "Zukunftskontext bereit",
+        "futureContextReadyBody": "{{count}} gewählte Spalte(n) enthalten bereits Werte in bekannten Zukunftszeilen.",
+        "futureContextMissingTitle": "Zukunftskontext unvollständig",
+        "futureContextMissingBody": "Es gibt bekannte Zukunftszeilen, aber keine gewählte Kovariable hat dort schon nutzbare Werte.",
+        "addFutureRowsTitle": "Zukunftskontext möglich",
+        "addFutureRowsBody": "Füge am Ende der Datei Zeilen ohne Zielwert hinzu, um diesem Modell bekannte Zukunftswerte zu geben.",
+        "futureDatesOnlyTitle": "Nur zukünftige Daten",
+        "futureDatesOnlyBody": "Bekannte Zukunftszeilen dienen vor allem dazu, Ausgabedaten festzulegen, solange keine Kovariable gewählt ist."
+      }
     },
     "frequency": {
       "D": "Tag",

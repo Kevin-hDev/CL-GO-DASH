@@ -729,6 +729,7 @@
     },
     "view": {
       "period": "Period",
+      "series": "Series",
       "historySeries": "History",
       "forecastSeries": "Forecast",
       "confidenceRange": "Confidence range",
@@ -753,8 +754,17 @@
     "config": {
       "title": "Configuration",
       "back": "Back",
+      "dataPhases": "Data phases",
+      "historyRows": "History",
+      "futureRows": "Known future",
+      "seriesCount": "Series",
+      "selectedContext": "Selected context",
+      "detectedFutureContext": "Detected future context",
+      "futureContextColumns": "Detected future context columns",
       "target": "Target",
       "dateColumn": "Date column",
+      "seriesColumn": "Series column",
+      "noSeriesColumn": "No series column",
       "covariates": "Covariates",
       "frequency": "Frequency",
       "horizon": "Horizon",
@@ -763,7 +773,31 @@
       "launch": "Launch forecast",
       "launching": "Calculating…",
       "rows_one": "{{count}} row",
-      "rows_other": "{{count}} rows"
+      "rows_other": "{{count}} rows",
+      "validation": {
+        "futureRowsMismatch": "The number of known future rows must match the selected horizon.",
+        "futureRowsPerSeriesMismatch": "Each series must have the same number of known future rows.",
+        "contextUnsupported": "The selected model does not support context variables.",
+        "futureContextUnsupported": "The selected model does not support known future context."
+      },
+      "messages": {
+        "futureRowsMismatchTitle": "Horizon mismatch",
+        "futureRowsMismatchBody": "{{future}} known future rows were detected, but the current horizon is {{horizon}}.",
+        "futureRowsPerSeriesMismatchTitle": "Incomplete series",
+        "futureRowsPerSeriesMismatchBody": "The series do not all have the same number of known future rows.",
+        "contextUnsupportedTitle": "Context unavailable",
+        "contextUnsupportedBody": "The selected covariates will not be used with this model.",
+        "futureContextUnsupportedTitle": "Future context unavailable",
+        "futureContextUnsupportedBody": "This model reads the main history, but does not use future-known covariate values.",
+        "futureContextReadyTitle": "Future context ready",
+        "futureContextReadyBody": "{{count}} selected column(s) already contain values on known future rows.",
+        "futureContextMissingTitle": "Future context incomplete",
+        "futureContextMissingBody": "Known future rows exist, but none of the selected covariates has usable values there yet.",
+        "addFutureRowsTitle": "Future context available",
+        "addFutureRowsBody": "Append rows without the target at the end of the file to provide known future values to this model.",
+        "futureDatesOnlyTitle": "Future dates only",
+        "futureDatesOnlyBody": "Known future rows will mostly be used to set output dates while no covariate is selected."
+      }
     },
     "frequency": {
       "D": "Day",

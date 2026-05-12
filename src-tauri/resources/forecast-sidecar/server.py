@@ -144,17 +144,18 @@ def predict_chronos2_df(payload, horizon, quantile_levels):
     target_column = validate_column_name(
         payload.get("target_column"), "invalid_target_column"
     )
+    series_column = validate_optional_column_name(payload.get("series_column"))
     covariate_columns = validate_column_names(payload.get("covariate_columns"))
 
     if not history_rows:
         raise ValueError("invalid_history_rows")
-    if future_rows and len(future_rows) != horizon:
+    if future_rows and series_column is None and len(future_rows) != horizon:
         raise ValueError("invalid_future_rows")
 
     history_df = pd.DataFrame(
         [
             build_history_record(
-                row, date_column, target_column, covariate_columns
+                row, date_column, target_column, series_column, covariate_columns
             )
             for row in history_rows
         ]
@@ -163,7 +164,7 @@ def predict_chronos2_df(payload, horizon, quantile_levels):
     if future_rows:
         future_df = pd.DataFrame(
             [
-                build_future_record(row, date_column, covariate_columns)
+                build_future_record(row, date_column, covariate_columns, series_column)
                 for row in future_rows
             ]
         )
@@ -176,12 +177,21 @@ def predict_chronos2_df(payload, horizon, quantile_levels):
         target="target",
         prediction_length=horizon,
         quantile_levels=quantile_levels,
-    ).sort_values("timestamp")
+    ).sort_values(["item_id", "timestamp"])
 
-    result = {"median": predictions["predictions"].tolist()}
-    for level in quantile_levels:
-        result[quantile_key(level)] = predictions[str(level)].tolist()
-    return result
+    return {
+        "predictions": [
+            {
+                "series_id": record["item_id"],
+                "date": str(record["timestamp"]),
+                "value": float(record["predictions"]),
+                "q10": float(record.get("0.1", record["predictions"])),
+                "q50": float(record.get("0.5", record["predictions"])),
+                "q90": float(record.get("0.9", record["predictions"])),
+            }
+            for record in predictions.to_dict("records")
+        ]
+    }
 
 
 def quantile_key(level):
@@ -217,10 +227,18 @@ def validate_column_names(values):
     return result
 
 
-def build_history_record(row, date_column, target_column, covariate_columns):
+def validate_optional_column_name(value):
+    if value is None:
+        return None
+    return validate_column_name(value, "invalid_series_column")
+
+
+def build_history_record(
+    row, date_column, target_column, series_column, covariate_columns
+):
     target = read_numeric_value(row.get(target_column), "invalid_target")
     record = {
-        "item_id": "series-1",
+        "item_id": read_series_value(row, series_column),
         "timestamp": read_string_value(row.get(date_column), "invalid_date"),
         "target": target,
     }
@@ -229,9 +247,9 @@ def build_history_record(row, date_column, target_column, covariate_columns):
     return record
 
 
-def build_future_record(row, date_column, covariate_columns):
+def build_future_record(row, date_column, covariate_columns, series_column=None):
     record = {
-        "item_id": "series-1",
+        "item_id": read_series_value(row, series_column),
         "timestamp": read_string_value(row.get(date_column), "invalid_date"),
     }
     for name in covariate_columns:
@@ -243,6 +261,19 @@ def read_string_value(value, error_code):
     if not isinstance(value, str) or not value.strip():
         raise ValueError(error_code)
     return value
+
+
+def read_series_value(row, series_column):
+    if not series_column:
+        return "series-1"
+    value = row.get(series_column)
+    if isinstance(value, str):
+        trimmed = value.strip()
+        if trimmed:
+            return trimmed
+    elif isinstance(value, (int, float, bool)):
+        return str(value)
+    raise ValueError("invalid_series_value")
 
 
 def read_numeric_value(value, error_code):

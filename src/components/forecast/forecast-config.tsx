@@ -1,7 +1,11 @@
-import { useId, useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
 import type { ForecastDraftData } from "./forecast-data";
+import { ForecastConfigContext } from "./forecast-config-context";
+import { buildForecastContextProfile } from "./forecast-context-profile";
+import { buildLaunchErrorKey } from "./forecast-config-validation";
+import { FieldSelect, OptionalFieldSelect } from "./forecast-config-fields";
 import {
   isForecastModelSelectable,
   type ForecastModelEntry,
@@ -21,6 +25,7 @@ interface ForecastConfigProps {
 export interface LaunchConfig {
   targetColumn: string;
   dateColumn: string;
+  seriesColumn: string | null;
   covariates: string[];
   horizon: number;
   frequency: string;
@@ -37,6 +42,7 @@ export function ForecastConfig({ draft, launching, error, onLaunch, onBack }: Fo
   const [models, setModels] = useState<ForecastModelEntry[]>([]);
   const [target, setTarget] = useState(draft.columns[1] ?? "");
   const [dateCol, setDateCol] = useState(draft.columns[0] ?? "");
+  const [seriesCol, setSeriesCol] = useState("");
   const [covariates, setCovariates] = useState<string[]>([]);
   const [horizon, setHorizon] = useState(12);
   const [frequency, setFrequency] = useState("M");
@@ -54,12 +60,33 @@ export function ForecastConfig({ draft, launching, error, onLaunch, onBack }: Fo
       .catch(() => {});
   }, []);
 
-  const covariateOptions = draft.columns.filter((column) => column !== target && column !== dateCol);
-  const selectedCovariates = covariates.filter(
+  const covariateOptions = draft.columns.filter(
+    (column) => column !== target && column !== dateCol && column !== seriesCol
+  );
+  const seriesOptions = draft.columns.filter(
     (column) => column !== target && column !== dateCol
   );
+  const selectedCovariates = covariates.filter(
+    (column) => column !== target && column !== dateCol && column !== seriesCol
+  );
+  const selectedModel = useMemo(
+    () => models.find((entry) => entry.id === model) ?? null,
+    [models, model]
+  );
+  const contextProfile = useMemo(
+    () =>
+      buildForecastContextProfile(
+        draft.rows,
+        target,
+        selectedCovariates,
+        seriesCol || null
+      ),
+    [draft.rows, target, selectedCovariates, seriesCol]
+  );
 
-  const canLaunch = target.trim() !== "" && dateCol.trim() !== "" && model !== "" && horizon > 0;
+  const configError = buildLaunchErrorKey(selectedModel, contextProfile, horizon);
+
+  const canLaunch = target.trim() !== "" && dateCol.trim() !== "" && model !== "" && horizon > 0 && configError === null;
 
   return (
     <div className="fcc-root">
@@ -72,8 +99,20 @@ export function ForecastConfig({ draft, launching, error, onLaunch, onBack }: Fo
           <span>{draft.sourceName}</span>
           <span>{t("forecast.config.rows", { count: draft.rowCount })}</span>
         </div>
+        <ForecastConfigContext
+          profile={contextProfile}
+          horizon={horizon}
+          model={selectedModel}
+        />
         <FieldSelect label={t("forecast.config.target")} value={target} onChange={setTarget} options={draft.columns} />
         <FieldSelect label={t("forecast.config.dateColumn")} value={dateCol} onChange={setDateCol} options={draft.columns} />
+        <OptionalFieldSelect
+          label={t("forecast.config.seriesColumn")}
+          value={seriesCol}
+          onChange={setSeriesCol}
+          emptyLabel={t("forecast.config.noSeriesColumn")}
+          options={seriesOptions}
+        />
         {covariateOptions.length > 0 && (
           <div className="fcc-field">
             <span className="fcc-label">{t("forecast.config.covariates")}</span>
@@ -126,13 +165,18 @@ export function ForecastConfig({ draft, launching, error, onLaunch, onBack }: Fo
           <input className="fcc-range" id="fcc-confidence" type="range" min={0.5} max={0.99} step={0.01}
             value={confidence} onChange={(e) => setConfidence(Number(e.target.value))} />
         </div>
-        {error && <p className="fcc-error">{error}</p>}
+        {(configError || error) && (
+          <p className="fcc-error">
+            {configError ? t(configError, { future: contextProfile.futureRows, horizon }) : error}
+          </p>
+        )}
       </div>
       <div className="fcc-footer">
         <button className="fcc-launch" disabled={!canLaunch || launching}
           onClick={() => onLaunch({
             targetColumn: target,
             dateColumn: dateCol,
+            seriesColumn: seriesCol.trim() || null,
             covariates: selectedCovariates,
             horizon,
             frequency,
@@ -142,20 +186,6 @@ export function ForecastConfig({ draft, launching, error, onLaunch, onBack }: Fo
           {launching ? t("forecast.config.launching") : t("forecast.config.launch")}
         </button>
       </div>
-    </div>
-  );
-}
-
-function FieldSelect({ label, value, onChange, options }: {
-  label: string; value: string; onChange: (v: string) => void; options: string[];
-}) {
-  const id = useId();
-  return (
-    <div className="fcc-field">
-      <label className="fcc-label" htmlFor={id}>{label}</label>
-      <select className="fcc-select" id={id} value={value} onChange={(e) => onChange(e.target.value)}>
-        {options.map((option) => <option key={option} value={option}>{option}</option>)}
-      </select>
     </div>
   );
 }

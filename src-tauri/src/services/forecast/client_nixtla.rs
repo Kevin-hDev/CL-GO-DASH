@@ -12,6 +12,9 @@ pub async fn predict(
     request: &ForecastRequest,
     session_id: Option<&str>,
 ) -> Result<ForecastResult, String> {
+    if request.series_column.is_some() {
+        return Err("Multi-séries non supporté par ce moteur".into());
+    }
     let input = parse_request_input(request)?;
     let payload = build_payload(&input, request);
 
@@ -98,6 +101,7 @@ fn parse_response(
                 .cloned()
                 .unwrap_or_else(|| format!("T+{}", i + 1)),
             value: v.as_f64().unwrap_or(0.0),
+            series_id: None,
         })
         .collect();
 

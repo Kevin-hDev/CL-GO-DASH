@@ -655,6 +655,7 @@
     },
     "view": {
       "period": "Período",
+      "series": "Serie",
       "historySeries": "Histórico",
       "forecastSeries": "Previsión",
       "confidenceRange": "Rango de confianza",
@@ -679,8 +680,17 @@
     "config": {
       "title": "Configuración",
       "back": "Volver",
+      "dataPhases": "Fases de los datos",
+      "historyRows": "Histórico",
+      "futureRows": "Futuro conocido",
+      "seriesCount": "Series",
+      "selectedContext": "Contexto seleccionado",
+      "detectedFutureContext": "Contexto futuro detectado",
+      "futureContextColumns": "Columnas de contexto futuro detectadas",
       "target": "Objetivo",
       "dateColumn": "Columna de fecha",
+      "seriesColumn": "Columna de serie",
+      "noSeriesColumn": "Sin columna de serie",
       "covariates": "Covariables",
       "frequency": "Frecuencia",
       "horizon": "Horizonte",
@@ -689,7 +699,31 @@
       "launch": "Lanzar pronóstico",
       "launching": "Calculando…",
       "rows_one": "{{count}} fila",
-      "rows_other": "{{count}} filas"
+      "rows_other": "{{count}} filas",
+      "validation": {
+        "futureRowsMismatch": "El número de filas de futuro conocido debe coincidir con el horizonte elegido.",
+        "futureRowsPerSeriesMismatch": "Cada serie debe tener el mismo número de filas de futuro conocido.",
+        "contextUnsupported": "El modelo seleccionado no admite variables de contexto.",
+        "futureContextUnsupported": "El modelo seleccionado no admite contexto futuro conocido."
+      },
+      "messages": {
+        "futureRowsMismatchTitle": "Horizonte incoherente",
+        "futureRowsMismatchBody": "Se detectaron {{future}} filas de futuro conocido, pero el horizonte actual es {{horizon}}.",
+        "futureRowsPerSeriesMismatchTitle": "Series incompletas",
+        "futureRowsPerSeriesMismatchBody": "No todas las series tienen el mismo número de filas de futuro conocido.",
+        "contextUnsupportedTitle": "Contexto no disponible",
+        "contextUnsupportedBody": "Las covariables seleccionadas no se usarán con este modelo.",
+        "futureContextUnsupportedTitle": "Contexto futuro no disponible",
+        "futureContextUnsupportedBody": "Este modelo lee el historial principal, pero no aprovecha los valores futuros conocidos de las covariables.",
+        "futureContextReadyTitle": "Contexto futuro listo",
+        "futureContextReadyBody": "{{count}} columna(s) seleccionada(s) ya tienen valores en las filas de futuro conocido.",
+        "futureContextMissingTitle": "Contexto futuro incompleto",
+        "futureContextMissingBody": "Existen filas de futuro conocido, pero ninguna covariable seleccionada tiene aún valores utilizables allí.",
+        "addFutureRowsTitle": "Contexto futuro posible",
+        "addFutureRowsBody": "Añade filas sin objetivo al final del archivo para proporcionar valores futuros conocidos a este modelo.",
+        "futureDatesOnlyTitle": "Solo fechas futuras",
+        "futureDatesOnlyBody": "Las filas de futuro conocido servirán sobre todo para fijar las fechas de salida mientras no se seleccione ninguna covariable."
+      }
     },
     "frequency": {
       "D": "Día",

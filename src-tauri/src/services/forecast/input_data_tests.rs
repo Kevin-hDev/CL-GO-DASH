@@ -7,6 +7,7 @@ fn make_request(data: &str) -> ForecastRequest {
         file_path: None,
         target_column: "sales".into(),
         date_column: "date".into(),
+        series_column: None,
         covariate_columns: vec!["weather".into()],
         horizon: 3,
         frequency: "D".into(),
@@ -77,4 +78,35 @@ fn falls_back_to_relative_dates_for_unknown_formats() {
     let parsed = parse_request_input(&request).expect("input should parse");
 
     assert_eq!(parsed.future_dates, vec!["T+1", "T+2", "T+3"]);
+}
+
+#[test]
+fn parses_multiseries_history_and_future_rows() {
+    let mut request = make_request(
+        r#"
+        [
+          {"date":"2026-05-01","asset_id":"A","sales":100,"weather":"sunny"},
+          {"date":"2026-05-01","asset_id":"B","sales":200,"weather":"rain"},
+          {"date":"2026-05-02","asset_id":"A","sales":110,"weather":"sunny"},
+          {"date":"2026-05-02","asset_id":"B","sales":210,"weather":"rain"},
+          {"date":"2026-05-03","asset_id":"A","sales":"","weather":"wind"},
+          {"date":"2026-05-04","asset_id":"A","sales":null,"weather":"wind"},
+          {"date":"2026-05-03","asset_id":"B","sales":"","weather":"storm"},
+          {"date":"2026-05-04","asset_id":"B","sales":null,"weather":"storm"}
+        ]
+        "#,
+    );
+    request.series_column = Some("asset_id".into());
+    request.horizon = 2;
+
+    let parsed = parse_request_input(&request).expect("multi-series input should parse");
+
+    assert_eq!(parsed.summary.points, 4);
+    assert_eq!(parsed.snapshot.series_column.as_deref(), Some("asset_id"));
+    assert_eq!(parsed.snapshot.series_ids, vec!["A", "B"]);
+    assert!(parsed.future_dates.is_empty());
+    assert_eq!(parsed.history_rows.len(), 4);
+    assert_eq!(parsed.future_rows.len(), 4);
+    assert_eq!(parsed.snapshot.history[0].series_id.as_deref(), Some("A"));
+    assert_eq!(parsed.snapshot.history[1].series_id.as_deref(), Some("B"));
 }
