@@ -84,9 +84,9 @@ async fn handle_forecast(args: &Value, working_dir: &Path, session_id: &str) -> 
                     }),
                 );
             }
-            match serde_json::to_string_pretty(&forecast) {
+            match super::tool_dispatcher_forecast_output::created_payload(&forecast) {
                 Ok(json) => ToolResult::ok(json),
-                Err(e) => ToolResult::err(format!("Sérialisation résultat: {e}")),
+                Err(e) => ToolResult::err(e),
             }
         }
         Err(e) => ToolResult::err(e),
@@ -113,7 +113,9 @@ async fn handle_analyze(args: &Value, _session_id: &str) -> ToolResult {
             let text = args["params"]["text"].as_str().unwrap_or("");
             let date = args["params"]["date"].as_str().unwrap_or("");
             if text.is_empty() || date.is_empty() {
-                return ToolResult::err("params.text et params.date requis");
+                return ToolResult::err(
+                    "Paramètres d'annotation manquants. Utiliser params.text et params.date.",
+                );
             }
             let mut updated = analysis;
             updated
@@ -137,17 +139,17 @@ async fn handle_analyze(args: &Value, _session_id: &str) -> ToolResult {
 
 async fn handle_read(args: &Value) -> ToolResult {
     match args["analysis_id"].as_str() {
-        Some(id) => match storage::load(id).await {
-            Ok(a) => match serde_json::to_string_pretty(&a) {
+        Some(id) if !id.trim().is_empty() => match storage::load(id.trim()).await {
+            Ok(a) => match super::tool_dispatcher_forecast_output::analysis_payload(&a) {
                 Ok(json) => ToolResult::ok(json),
-                Err(e) => ToolResult::err(format!("Sérialisation: {e}")),
+                Err(e) => ToolResult::err(e),
             },
             Err(e) => ToolResult::err(e),
         },
-        None => match storage::list().await {
-            Ok(list) => match serde_json::to_string_pretty(&list) {
+        _ => match storage::list().await {
+            Ok(list) => match super::tool_dispatcher_forecast_output::list_payload(&list) {
                 Ok(json) => ToolResult::ok(json),
-                Err(e) => ToolResult::err(format!("Sérialisation: {e}")),
+                Err(e) => ToolResult::err(e),
             },
             Err(e) => ToolResult::err(e),
         },

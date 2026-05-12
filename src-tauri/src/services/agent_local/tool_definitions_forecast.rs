@@ -6,7 +6,8 @@ pub fn forecast_tool_definitions() -> Vec<Value> {
             "forecast",
             "Run a time series forecast from structured data. Use this when the user wants to predict future values of a series such as demand, sales, traffic, price, load, or trend. \
              Provide either a JSON array in 'data' or a CSV/Excel path in 'file_path'. \
-             The tool returns a saved forecast analysis with predictions and quantiles. \
+             The tool returns a compact saved-analysis summary with analysis_id first. \
+             Call forecast_read with that analysis_id for predictions and quantiles. \
              For Chronos-2, covariates can be included as past columns and optional future-known rows.",
             serde_json::json!({
                 "type": "object",
@@ -55,7 +56,7 @@ pub fn forecast_tool_definitions() -> Vec<Value> {
         super::tool_definitions::tool_def(
             "forecast_analyze",
             "Operate on an existing saved forecast analysis. \
-             The only supported action right now is 'annotate', which adds a note to a forecast analysis. \
+             The only supported action right now is 'annotate', which requires params.text and params.date. \
              Do not use this tool for scenarios, decomposition, anomalies, or feature importance yet.",
             serde_json::json!({
                 "type": "object",
@@ -70,21 +71,32 @@ pub fn forecast_tool_definitions() -> Vec<Value> {
                     },
                     "params": {
                         "type": "object",
-                        "description": "Action parameters. For 'annotate', provide 'text' and 'date'."
+                        "description": "Required for action 'annotate'.",
+                        "properties": {
+                            "text": {
+                                "type": "string",
+                                "description": "Annotation text to add to the analysis."
+                            },
+                            "date": {
+                                "type": "string",
+                                "description": "Date or timestamp associated with the annotation, ideally ISO format."
+                            }
+                        },
+                        "required": ["text", "date"]
                     }
                 },
-                "required": ["analysis_id", "action"]
+                "required": ["analysis_id", "action", "params"]
             }),
         ),
         super::tool_definitions::tool_def(
             "forecast_read",
-            "Read saved forecast analyses. Use this to list available forecast analyses or fetch the full content of a specific analysis before explaining, comparing, or annotating it.",
+            "Read saved forecast analyses. Omit analysis_id, or pass an empty string, to list available analyses. Provide a non-empty analysis_id to read predictions, quantiles, metadata, annotations, and scenarios for one analysis.",
             serde_json::json!({
                 "type": "object",
                 "properties": {
                     "analysis_id": {
                         "type": "string",
-                        "description": "Optional analysis id. Omit it to list saved analyses, or provide it to read one analysis in full."
+                        "description": "Optional. Omit or pass an empty string to list analyses. Provide a non-empty saved analysis id to read one analysis."
                     }
                 },
                 "required": []

@@ -34,8 +34,15 @@ fn parses_history_and_builds_future_dates() {
     assert_eq!(parsed.summary.end, "2026-05-03");
     assert_eq!(parsed.values, vec![100.0, 120.0, 135.5]);
     assert_eq!(parsed.snapshot.history.len(), 3);
-    assert_eq!(parsed.future_dates, vec!["2026-05-04", "2026-05-05", "2026-05-06"]);
-    assert!(parsed.snapshot.columns.iter().any(|column| column == "weather"));
+    assert_eq!(
+        parsed.future_dates,
+        vec!["2026-05-04", "2026-05-05", "2026-05-06"]
+    );
+    assert!(parsed
+        .snapshot
+        .columns
+        .iter()
+        .any(|column| column == "weather"));
 }
 
 #[test]

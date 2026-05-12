@@ -13,11 +13,7 @@ pub async fn ensure_request_data(
         return Ok(());
     };
 
-    if request
-        .data
-        .as_deref()
-        .is_some_and(is_usable_json_payload)
-    {
+    if request.data.as_deref().is_some_and(is_usable_json_payload) {
         return Ok(());
     }
 
@@ -46,10 +42,9 @@ async fn load_file_data(raw_path: &str, base_dir: Option<&Path>) -> Result<Strin
         .unwrap_or_default();
 
     let preview = match ext.as_str() {
-        "csv" | "tsv" => crate::services::agent_local::tool_spreadsheet_read::read_csv(
-            &resolved,
-            HARD_MAX_ROWS,
-        ),
+        "csv" | "tsv" => {
+            crate::services::agent_local::tool_spreadsheet_read::read_csv(&resolved, HARD_MAX_ROWS)
+        }
         "xlsx" | "xls" | "ods" | "xlsm" => {
             crate::services::agent_local::tool_spreadsheet_calamine::read_excel(
                 &resolved,

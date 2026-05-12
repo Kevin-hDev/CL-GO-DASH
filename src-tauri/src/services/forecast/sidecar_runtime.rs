@@ -6,8 +6,8 @@ const MAX_REQUIREMENTS_SIZE: usize = 16 * 1024;
 
 pub fn ensure_runtime(sidecar_dir: &Path) -> Result<PathBuf, String> {
     let requirements = sidecar_dir.join("requirements.txt");
-    let requirements_body =
-        std::fs::read_to_string(&requirements).map_err(|_| "Runtime Forecast incomplet".to_string())?;
+    let requirements_body = std::fs::read_to_string(&requirements)
+        .map_err(|_| "Runtime Forecast incomplet".to_string())?;
     if requirements_body.is_empty() || requirements_body.len() > MAX_REQUIREMENTS_SIZE {
         return Err("Configuration runtime Forecast invalide".to_string());
     }
@@ -44,7 +44,13 @@ pub fn ensure_runtime(sidecar_dir: &Path) -> Result<PathBuf, String> {
 }
 
 fn find_python() -> Result<PathBuf, String> {
-    for candidate in ["python3.12", "python3.13", "python3.14", "python3", "python"] {
+    for candidate in [
+        "python3.12",
+        "python3.13",
+        "python3.14",
+        "python3",
+        "python",
+    ] {
         if let Ok(path) = which::which(candidate) {
             return Ok(path);
         }
@@ -63,9 +69,7 @@ fn venv_python_path(venv_dir: &Path) -> PathBuf {
 fn run(command: &mut Command, message: &str) -> Result<(), String> {
     command.env("PIP_DISABLE_PIP_VERSION_CHECK", "1");
     command.env("PYTHONUNBUFFERED", "1");
-    let output = command
-        .output()
-        .map_err(|_| message.to_string())?;
+    let output = command.output().map_err(|_| message.to_string())?;
     if output.status.success() {
         return Ok(());
     }

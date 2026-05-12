@@ -2,8 +2,7 @@ use crate::services::forecast::types::{
     ForecastAnalysisMeta, ForecastRequest, ForecastResult, ModelDownloadProgress,
 };
 use crate::services::forecast::{
-    catalog, client_chronos, client_nixtla, model_manager, registry, sidecar, storage,
-    validation,
+    catalog, client_chronos, client_nixtla, model_manager, registry, sidecar, storage, validation,
 };
 use serde_json::Value;
 use tauri::ipc::Channel;

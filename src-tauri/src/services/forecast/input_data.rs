@@ -82,8 +82,14 @@ pub fn parse_request_input(request: &ForecastRequest) -> Result<ParsedInput, Str
         future_dates,
         summary: InputSummary {
             points: history.len(),
-            start: history.first().map(|point| point.date.clone()).unwrap_or_default(),
-            end: history.last().map(|point| point.date.clone()).unwrap_or_default(),
+            start: history
+                .first()
+                .map(|point| point.date.clone())
+                .unwrap_or_default(),
+            end: history
+                .last()
+                .map(|point| point.date.clone())
+                .unwrap_or_default(),
         },
         snapshot: InputSnapshot {
             columns,
@@ -111,7 +117,10 @@ where
 }
 
 fn validate_columns(columns: &[String], request: &ForecastRequest) -> Result<(), String> {
-    if !columns.iter().any(|column| column == &request.target_column) {
+    if !columns
+        .iter()
+        .any(|column| column == &request.target_column)
+    {
         return Err("Colonne cible introuvable".into());
     }
     if !columns.iter().any(|column| column == &request.date_column) {
@@ -150,8 +159,15 @@ fn build_known_or_relative_dates(
     request: &ForecastRequest,
 ) -> Result<Vec<String>, String> {
     if future_rows.is_empty() {
-        let last_date = history.last().map(|point| point.date.as_str()).unwrap_or_default();
-        return Ok(build_future_dates(last_date, &request.frequency, request.horizon));
+        let last_date = history
+            .last()
+            .map(|point| point.date.as_str())
+            .unwrap_or_default();
+        return Ok(build_future_dates(
+            last_date,
+            &request.frequency,
+            request.horizon,
+        ));
     }
     if future_rows.len() != request.horizon as usize {
         return Err("Nombre de lignes futures invalide".into());

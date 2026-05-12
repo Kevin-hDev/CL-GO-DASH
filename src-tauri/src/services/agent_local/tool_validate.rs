@@ -75,7 +75,7 @@ static FORECAST: Schema = &[
 static FORECAST_ANALYZE: Schema = &[
     ("analysis_id", Ty::Str, true),
     ("action", Ty::Str, true),
-    ("params", Ty::Obj, false),
+    ("params", Ty::Obj, true),
 ];
 static FORECAST_READ: Schema = &[("analysis_id", Ty::Str, false)];
 

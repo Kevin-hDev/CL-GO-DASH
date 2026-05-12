@@ -28,7 +28,9 @@ pub struct ForecastRuntimeSpec {
 }
 
 pub fn find_runtime(model_id: &str) -> Option<&'static ForecastRuntimeSpec> {
-    FORECAST_RUNTIMES.iter().find(|runtime| runtime.model_id == model_id)
+    FORECAST_RUNTIMES
+        .iter()
+        .find(|runtime| runtime.model_id == model_id)
 }
 
 pub const FORECAST_RUNTIMES: &[ForecastRuntimeSpec] = &[
