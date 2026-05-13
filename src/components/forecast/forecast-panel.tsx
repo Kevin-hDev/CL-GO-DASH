@@ -4,7 +4,6 @@ import { invoke } from "@tauri-apps/api/core";
 import { PanelRightOpen, PanelRightClose } from "lucide-react";
 import type { ForecastSection } from "@/hooks/use-forecast-panel";
 import { ForecastHeader } from "./forecast-header";
-import { ForecastNav } from "./forecast-nav";
 import { ForecastEmpty } from "./forecast-empty";
 import {
   buildForecastLayerGroups,
@@ -20,7 +19,6 @@ import { loadForecastDraftFromFile, type ForecastDraftData } from "./forecast-da
 import { useForecastLayerSources } from "./use-forecast-layer-sources";
 import { ForecastSectionRouter } from "./forecast-section-router";
 import { useCurrentForecastAnalysisName } from "./use-current-forecast-analysis-name";
-import { openForecastDocsWindow } from "./open-forecast-docs";
 import "./forecast-panel.css";
 import { useEffect } from "react";
 
@@ -93,12 +91,6 @@ export function ForecastPanel({
     }
   };
 
-  const handleOpenDocs = () => {
-    void openForecastDocsWindow(t("forecast.docs.windowTitle")).catch(() => {
-      setError(t("forecast.docs.openFailed"));
-    });
-  };
-
   useEffect(() => {
     const nextWidth = activeSection === "scenarios" && scenarioPickerOpen ? 320 : 0;
     onPanelExtraWidthChange(nextWidth);
@@ -133,11 +125,10 @@ export function ForecastPanel({
           ) : null
         }
         onToggleNav={onToggleNav}
-        onOpenDocs={handleOpenDocs}
+        onSectionChange={onSectionChange}
         onCloseAnalysis={onCloseAnalysis}
         onFullscreenChange={onFullscreenChange}
       />
-      <ForecastNav open={navOpen} activeSection={activeSection} onSelect={onSectionChange} />
       <div className="fc-body">
         {draft ? (
           <ForecastConfig

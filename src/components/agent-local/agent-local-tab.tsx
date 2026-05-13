@@ -1,4 +1,5 @@
 import { useLayoutEffect, memo } from "react";
+import { useTranslation } from "react-i18next";
 import { ConversationList } from "./conversation-list";
 import { TabBar } from "./tab-bar";
 import { AgentChatDetail } from "./agent-chat-detail";
@@ -7,6 +8,7 @@ import { useAgentLocalTab } from "@/hooks/use-agent-local-tab";
 import { useFileTree } from "@/hooks/use-file-tree";
 import { useForecastPanel } from "@/hooks/use-forecast-panel";
 import { ForecastPanel } from "@/components/forecast/forecast-panel";
+import { openForecastDocsWindow } from "@/components/forecast/open-forecast-docs";
 import type { AgentLocalTabProps } from "./agent-local-tab-types";
 import "./agent-local-tab.css";
 
@@ -16,6 +18,7 @@ export const AgentLocalTab = memo(function AgentLocalTab({
   listFocused = true,
   reportContent,
 }: AgentLocalTabProps) {
+  const { t } = useTranslation();
   const s = useAgentLocalTab({ requestedSessionId, onSessionChange, listFocused });
   const { sessions, refresh, rename, remove, updateModel } = s;
   const { tabState, projectsHook, terminal, activeSession } = s;
@@ -27,6 +30,9 @@ export const AgentLocalTab = memo(function AgentLocalTab({
   const terminalCwd = activeProject?.path || "";
   const fileTree = useFileTree(tabState.activeSessionId, activeProject?.path);
   const forecast = useForecastPanel(tabState.activeSessionId ?? null);
+  const handleOpenForecastDocs = () => {
+    void openForecastDocsWindow(t("forecast.docs.windowTitle")).catch(() => {});
+  };
 
   const forecastContent = (
     <ForecastPanel
@@ -73,12 +79,14 @@ export const AgentLocalTab = memo(function AgentLocalTab({
             terminalOpen={terminal.isOpen}
             previewOpen={filePreview.open}
             panelMode={forecast.panelMode}
+            showForecastDocs={filePreview.open && forecast.panelMode === "forecast"}
             onSelect={(i) => void tabState.selectTab(i)}
             onClose={(i) => void tabState.closeTab(i)}
             onAdd={handleCreate}
             onRename={(i, name) => void tabState.renameTab(i, name)}
             onReorder={(from, to) => void tabState.reorderTabs(from, to)}
             onTogglePreview={filePreview.toggleOpen}
+            onOpenForecastDocs={handleOpenForecastDocs}
             onPanelModeChange={forecast.setPanelMode}
             onToggleTerminal={() => {
               if (!terminal.isOpen && terminal.tabs.length === 0) {

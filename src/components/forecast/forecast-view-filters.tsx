@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { ChevronDown, SlidersHorizontal } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type {
   ForecastLayerGroup,
@@ -66,7 +66,6 @@ export function ForecastViewFilters({
           });
         }}
       >
-        <SlidersHorizontal size={14} />
         <span>{t("forecast.view.filters.button")}</span>
         <ChevronDown size={14} className={`fcf-chevron ${open ? "is-open" : ""}`} />
       </button>

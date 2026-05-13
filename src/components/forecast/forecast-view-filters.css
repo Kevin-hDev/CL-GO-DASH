@@ -9,24 +9,26 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 10px;
+  padding: 3px 8px;
   border: 1px solid var(--edge);
   border-radius: var(--radius-sm);
-  background: var(--void);
+  background: var(--shell);
   color: var(--ink-muted);
   font-size: var(--text-xs);
   font-family: var(--font-sans);
   cursor: pointer;
+  transition: background var(--ease-smooth), border-color var(--ease-smooth), color var(--ease-smooth);
 }
 
 .fcf-trigger:hover,
 .fcf-trigger.is-open {
   border-color: var(--ink-faint);
   color: var(--ink);
+  background: var(--surface-hover);
 }
 
 .fcf-chevron {
-  transition: transform 200ms ease;
+  transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .fcf-chevron.is-open {
@@ -42,10 +44,13 @@
   overflow: hidden;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
-  background: var(--void);
+  background: var(--shell);
   opacity: 0;
   z-index: 5;
-  transition: max-height 200ms ease, opacity 180ms ease, border-color 180ms ease;
+  transition:
+    max-height 700ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 240ms ease,
+    border-color 240ms ease;
 }
 
 .fcf-panel.is-open {
@@ -53,6 +58,13 @@
   opacity: 1;
   border-color: var(--edge);
   overflow-y: auto;
+}
+
+[data-theme="dark"] .fcf-trigger,
+[data-theme="dark"] .fcf-panel {
+  background: var(--surface-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 .fcf-group {
@@ -88,7 +100,7 @@
 .fcf-group-items {
   display: grid;
   grid-template-rows: 0fr;
-  transition: grid-template-rows 200ms ease;
+  transition: grid-template-rows 700ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .fcf-group-items.is-open {
@@ -101,7 +113,7 @@
 
 .fcf-group-chevron {
   color: var(--ink-faint);
-  transition: transform 200ms ease;
+  transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .fcf-group-chevron.is-open {

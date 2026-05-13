@@ -8,6 +8,7 @@ import { useForecastChartResize } from "../use-forecast-chart-resize";
 import { KpiRow, PeriodCell, ValueCell } from "../forecast-view-widgets";
 import { buildForecastVariableLines } from "../forecast-variable-lines";
 import "../forecast-view.css";
+import "../forecast-view-table.css";
 
 interface ForecastResult {
   id: string;

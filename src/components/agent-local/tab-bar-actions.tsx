@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { TerminalSquare } from "lucide-react";
+import { BookOpen, TerminalSquare } from "lucide-react";
 import { Plus } from "@/components/ui/icons";
 import { Tooltip } from "@/components/ui/tooltip";
 import { MOD, ALT } from "@/lib/platform";
@@ -12,10 +12,12 @@ interface TabBarActionsProps {
   sessionId: string | null;
   terminalOpen: boolean;
   previewOpen: boolean;
+  showForecastDocs?: boolean;
   panelMode?: PanelMode;
   onAdd: () => void;
   onToggleTerminal: () => void;
   onTogglePreview: () => void;
+  onOpenForecastDocs?: () => void;
   onPanelModeChange?: (mode: PanelMode) => void;
 }
 
@@ -24,10 +26,12 @@ export function TabBarActions({
   sessionId,
   terminalOpen,
   previewOpen,
+  showForecastDocs,
   panelMode,
   onAdd,
   onToggleTerminal,
   onTogglePreview,
+  onOpenForecastDocs,
   onPanelModeChange,
 }: TabBarActionsProps) {
   const { t } = useTranslation();
@@ -41,6 +45,19 @@ export function TabBarActions({
       )}
       {sessionId && (
         <span className="tab-actions">
+          {showForecastDocs && onOpenForecastDocs && (
+            <Tooltip label={t("forecast.docs.openTooltip")} align="right">
+              <button
+                className="tab-action-btn"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onOpenForecastDocs();
+                }}
+              >
+                <BookOpen size={17} />
+              </button>
+            </Tooltip>
+          )}
           {previewOpen && panelMode && onPanelModeChange && (
             <ModeSelector mode={panelMode} onChange={onPanelModeChange} />
           )}

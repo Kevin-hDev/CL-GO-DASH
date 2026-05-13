@@ -3,6 +3,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { setInternalDrag } from "@/lib/internal-drag";
 import { TabBarActions } from "./tab-bar-actions";
 import { TabBarItem } from "./tab-bar-item";
+import type { PanelMode } from "@/hooks/use-forecast-panel";
 import type { TabInfo } from "@/types/agent";
 import "./conversation.css";
 
@@ -13,6 +14,7 @@ interface TabBarProps {
   sessionId: string | null;
   terminalOpen: boolean;
   previewOpen: boolean;
+  showForecastDocs?: boolean;
   onSelect: (index: number) => void;
   onClose: (index: number) => void;
   onAdd: () => void;
@@ -20,16 +22,18 @@ interface TabBarProps {
   onReorder: (from: number, to: number) => void;
   onToggleTerminal: () => void;
   onTogglePreview: () => void;
-  panelMode?: "preview" | "forecast";
-  onPanelModeChange?: (mode: "preview" | "forecast") => void;
+  onOpenForecastDocs?: () => void;
+  panelMode?: PanelMode;
+  onPanelModeChange?: (mode: PanelMode) => void;
 }
 
 const DRAG_THRESHOLD = 5;
 
 export function TabBar({
   tabs, activeIndex, canAddTab, sessionId, terminalOpen,
-  previewOpen, panelMode, onPanelModeChange,
+  previewOpen, showForecastDocs, panelMode, onPanelModeChange,
   onSelect, onClose, onAdd, onRename, onReorder, onToggleTerminal, onTogglePreview,
+  onOpenForecastDocs,
 }: TabBarProps) {
   const [renamingIdx, setRenamingIdx] = useState<number | null>(null);
   const [dragIdx, setDragIdx] = useState<number | null>(null);
@@ -167,10 +171,12 @@ export function TabBar({
         sessionId={sessionId}
         terminalOpen={terminalOpen}
         previewOpen={previewOpen}
+        showForecastDocs={showForecastDocs}
         panelMode={panelMode}
         onAdd={onAdd}
         onToggleTerminal={onToggleTerminal}
         onTogglePreview={onTogglePreview}
+        onOpenForecastDocs={onOpenForecastDocs}
         onPanelModeChange={onPanelModeChange}
       />
     </div>

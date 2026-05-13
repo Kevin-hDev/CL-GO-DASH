@@ -1,15 +1,8 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { BookOpen, ChevronDown, Maximize2, Minimize2 } from "lucide-react";
+import { Maximize2, Minimize2 } from "lucide-react";
 import type { ForecastSection } from "@/hooks/use-forecast-panel";
-
-const SECTION_KEYS: Record<ForecastSection, string> = {
-  view: "forecast.nav.mainView",
-  scenarios: "forecast.nav.scenarios",
-  analysis: "forecast.nav.analysis",
-  notes: "forecast.nav.notes",
-  history: "forecast.nav.history",
-};
+import { ForecastNav } from "./forecast-nav";
 
 interface ForecastHeaderProps {
   activeSection: ForecastSection;
@@ -20,7 +13,7 @@ interface ForecastHeaderProps {
   filterSlot?: ReactNode;
   rightSlot?: ReactNode;
   onToggleNav: () => void;
-  onOpenDocs: () => void;
+  onSectionChange: (section: ForecastSection) => void;
   onCloseAnalysis: () => void;
   onFullscreenChange: (fs: boolean) => void;
 }
@@ -34,7 +27,7 @@ export function ForecastHeader({
   filterSlot,
   rightSlot,
   onToggleNav,
-  onOpenDocs,
+  onSectionChange,
   onCloseAnalysis,
   onFullscreenChange,
 }: ForecastHeaderProps) {
@@ -46,28 +39,16 @@ export function ForecastHeader({
         <span className="fc-title">{t("forecast.title")}</span>
         {activeSection === "view" && filterSlot}
         {hasAnalysis && (
-          <button className="fc-nav-trigger" onClick={onToggleNav}>
-            <span className="fc-nav-label">{t(SECTION_KEYS[activeSection])}</span>
-            <ChevronDown
-              size={14}
-              style={{
-                transform: navOpen ? "rotate(180deg)" : "rotate(0deg)",
-                transition: "transform 200ms ease",
-              }}
-            />
-          </button>
+          <ForecastNav
+            open={navOpen}
+            activeSection={activeSection}
+            onToggle={onToggleNav}
+            onSelect={onSectionChange}
+          />
         )}
         {contextLabel && <span className="fc-context-label">{contextLabel}</span>}
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-        <button
-          className="fc-docs-btn"
-          onClick={onOpenDocs}
-          title={t("forecast.docs.openTooltip")}
-        >
-          <BookOpen size={14} />
-          <span>{t("forecast.docs.button")}</span>
-        </button>
         {rightSlot}
         <button
           className="fp-icon-btn"
