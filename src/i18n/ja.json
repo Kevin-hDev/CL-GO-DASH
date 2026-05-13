@@ -649,6 +649,7 @@
     "nav": {
       "mainView": "メインビュー",
       "scenarios": "シナリオ",
+      "comparisons": "比較",
       "analysis": "分析",
       "notes": "ノート",
       "history": "履歴"
@@ -729,6 +730,24 @@
       "saveFailed": "シナリオを保存できません。",
       "updateFailed": "シナリオを更新できません。",
       "deleteFailed": "シナリオを削除できません。"
+    },
+    "comparisons": {
+      "series": "系列",
+      "scenarioMeta": "シナリオ",
+      "forecastMeta": "{{model}} · H{{horizon}}",
+      "base": "基準",
+      "diff": "差分",
+      "delta": "差分",
+      "averageDelta": "平均差分",
+      "maxDelta": "最大差分",
+      "averageDeltaPct": "平均差分 %",
+      "direction": "方向",
+      "higher": "高い",
+      "lower": "低い",
+      "mixed": "混在",
+      "empty": "利用できる比較がありません。",
+      "emptySub": "曲線を比較するには、シナリオまたは互換性のある予測を作成してください。",
+      "loadFailed": "比較を読み込めません。"
     },
     "config": {
       "title": "設定",

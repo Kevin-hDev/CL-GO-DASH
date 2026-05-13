@@ -723,6 +723,7 @@
     "nav": {
       "mainView": "Main view",
       "scenarios": "Scenarios",
+      "comparisons": "Comparisons",
       "analysis": "Analysis",
       "notes": "Notes",
       "history": "History"
@@ -803,6 +804,24 @@
       "saveFailed": "Unable to save scenario.",
       "updateFailed": "Unable to update scenario.",
       "deleteFailed": "Unable to delete scenario."
+    },
+    "comparisons": {
+      "series": "Series",
+      "scenarioMeta": "Scenario",
+      "forecastMeta": "{{model}} · H{{horizon}}",
+      "base": "Reference",
+      "diff": "Diff",
+      "delta": "Delta",
+      "averageDelta": "Average delta",
+      "maxDelta": "Max delta",
+      "averageDeltaPct": "Average delta %",
+      "direction": "Direction",
+      "higher": "Higher",
+      "lower": "Lower",
+      "mixed": "Mixed",
+      "empty": "No comparison available.",
+      "emptySub": "Create a scenario or a compatible forecast to compare curves.",
+      "loadFailed": "Unable to load comparisons."
     },
     "config": {
       "title": "Configuration",

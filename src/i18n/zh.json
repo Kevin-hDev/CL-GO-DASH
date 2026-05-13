@@ -649,6 +649,7 @@
     "nav": {
       "mainView": "主视图",
       "scenarios": "场景",
+      "comparisons": "对比",
       "analysis": "分析",
       "notes": "笔记",
       "history": "历史"
@@ -729,6 +730,24 @@
       "saveFailed": "无法保存场景。",
       "updateFailed": "无法更新场景。",
       "deleteFailed": "无法删除场景。"
+    },
+    "comparisons": {
+      "series": "序列",
+      "scenarioMeta": "场景",
+      "forecastMeta": "{{model}} · H{{horizon}}",
+      "base": "基准",
+      "diff": "差异",
+      "delta": "差值",
+      "averageDelta": "平均差值",
+      "maxDelta": "最大差值",
+      "averageDeltaPct": "平均差值 %",
+      "direction": "方向",
+      "higher": "更高",
+      "lower": "更低",
+      "mixed": "混合",
+      "empty": "没有可用对比。",
+      "emptySub": "创建一个场景或兼容预测来对比曲线。",
+      "loadFailed": "无法加载对比。"
     },
     "config": {
       "title": "配置",

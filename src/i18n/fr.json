@@ -723,6 +723,7 @@
     "nav": {
       "mainView": "Vue principale",
       "scenarios": "Scénarios",
+      "comparisons": "Comparaisons",
       "analysis": "Analyse",
       "notes": "Notes",
       "history": "Historique"
@@ -803,6 +804,24 @@
       "saveFailed": "Impossible d'enregistrer le scénario.",
       "updateFailed": "Impossible de mettre à jour le scénario.",
       "deleteFailed": "Impossible de supprimer le scénario."
+    },
+    "comparisons": {
+      "series": "Série",
+      "scenarioMeta": "Scénario",
+      "forecastMeta": "{{model}} · H{{horizon}}",
+      "base": "Référence",
+      "diff": "Diff",
+      "delta": "Écart",
+      "averageDelta": "Écart moyen",
+      "maxDelta": "Écart max",
+      "averageDeltaPct": "Écart moyen %",
+      "direction": "Direction",
+      "higher": "Plus haut",
+      "lower": "Plus bas",
+      "mixed": "Mixte",
+      "empty": "Aucune comparaison disponible.",
+      "emptySub": "Créez un scénario ou une prévision compatible pour comparer les courbes.",
+      "loadFailed": "Impossible de charger les comparaisons."
     },
     "config": {
       "title": "Configuration",

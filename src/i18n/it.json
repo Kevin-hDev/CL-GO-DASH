@@ -649,6 +649,7 @@
     "nav": {
       "mainView": "Vista principale",
       "scenarios": "Scenari",
+      "comparisons": "Confronti",
       "analysis": "Analisi",
       "notes": "Note",
       "history": "Cronologia"
@@ -729,6 +730,24 @@
       "saveFailed": "Impossibile salvare lo scenario.",
       "updateFailed": "Impossibile aggiornare lo scenario.",
       "deleteFailed": "Impossibile eliminare lo scenario."
+    },
+    "comparisons": {
+      "series": "Serie",
+      "scenarioMeta": "Scenario",
+      "forecastMeta": "{{model}} · H{{horizon}}",
+      "base": "Riferimento",
+      "diff": "Diff",
+      "delta": "Scarto",
+      "averageDelta": "Scarto medio",
+      "maxDelta": "Scarto max",
+      "averageDeltaPct": "Scarto medio %",
+      "direction": "Direzione",
+      "higher": "Più alto",
+      "lower": "Più basso",
+      "mixed": "Misto",
+      "empty": "Nessun confronto disponibile.",
+      "emptySub": "Crea uno scenario o una previsione compatibile per confrontare le curve.",
+      "loadFailed": "Impossibile caricare i confronti."
     },
     "config": {
       "title": "Configurazione",

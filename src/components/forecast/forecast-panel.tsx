@@ -103,7 +103,7 @@ export function ForecastPanel({
         navOpen={navOpen}
         hasAnalysis={hasAnalysis}
         fullscreen={fullscreen}
-        contextLabel={activeSection === "scenarios" ? currentAnalysisName : null}
+        contextLabel={activeSection === "scenarios" || activeSection === "comparisons" ? currentAnalysisName : null}
         filterSlot={
           hasAnalysis ? (
             <ForecastViewFilters

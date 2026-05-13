@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { listen } from "@tauri-apps/api/event";
 
-export type ForecastSection = "view" | "scenarios" | "analysis" | "notes" | "history";
+export type ForecastSection = "view" | "scenarios" | "comparisons" | "analysis" | "notes" | "history";
 export type PanelMode = "preview" | "forecast";
 
 interface ForecastPanelState {
