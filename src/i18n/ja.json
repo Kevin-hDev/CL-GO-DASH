@@ -751,15 +751,40 @@
     },
     "notes": {
       "timeline": "注釈付きタイムライン",
+      "timelineEmpty": "この予測にはまだノートがありません。",
       "count_one": "{{count}} 件のノート",
       "count_other": "{{count}} 件のノート",
+      "new": "新規ノート",
       "userSource": "ユーザー",
       "llmSource": "LLM",
+      "sources": {
+        "user": "ユーザー",
+        "llm": "LLM"
+      },
+      "types": {
+        "context": "コンテキスト",
+        "risk": "リスク",
+        "decision": "決定",
+        "anomaly": "異常",
+        "hypothesis": "仮説"
+      },
       "empty": "まだノートはありません。",
       "emptySub": "エージェントが追加したノートは、予測上の位置とともにここに表示されます。",
       "designPending": "完全実装の前に、このセクションのデザインを決める必要があります。",
       "designPendingWithCount": "{{count}} 件のノートは既にありますが、最終的な画面はまだ定義されていません。",
-      "loadFailed": "ノートを読み込めません。"
+      "selectNote": "ノートを選択するか、新規作成してください。",
+      "titlePlaceholder": "ノートのタイトル",
+      "datePlaceholder": "日付",
+      "contentPlaceholder": "ノートの Markdown 内容",
+      "fileLabel": "ローカルファイル",
+      "save": "保存",
+      "saving": "保存中",
+      "cancel": "キャンセル",
+      "confirmDelete": "削除を確認",
+      "loadFailed": "ノートを読み込めません。",
+      "saveFailed": "ノートを保存できません。",
+      "deleteFailed": "ノートを削除できません。",
+      "openFailed": "ノートを開けません。"
     },
     "analysis": {
       "loadFailed": "分析を読み込めません。",

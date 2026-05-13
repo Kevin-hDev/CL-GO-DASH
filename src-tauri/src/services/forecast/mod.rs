@@ -8,6 +8,8 @@ pub mod input_parse_utils;
 pub mod input_series;
 pub mod model_manager;
 pub mod nixtla_multiseries;
+pub mod notes;
+mod notes_files;
 pub mod registry;
 pub mod scenario_context;
 pub mod scenario_context_run;

@@ -22,7 +22,10 @@ where
 }
 
 pub fn validate_columns(columns: &[String], request: &ForecastRequest) -> Result<(), String> {
-    if !columns.iter().any(|column| column == &request.target_column) {
+    if !columns
+        .iter()
+        .any(|column| column == &request.target_column)
+    {
         return Err("Colonne cible introuvable".into());
     }
     if !columns.iter().any(|column| column == &request.date_column) {

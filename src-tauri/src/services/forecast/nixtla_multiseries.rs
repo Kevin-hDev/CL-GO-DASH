@@ -1,11 +1,14 @@
-use super::input_dates::build_future_dates;
 use super::input_data::ParsedInput;
+use super::input_dates::build_future_dates;
 use super::types::{ForecastRequest, Prediction};
 use serde_json::{json, Map, Value};
 use std::collections::BTreeMap;
 
 pub fn build_payload(input: &ParsedInput, request: &ForecastRequest) -> Result<Value, String> {
-    let series_column = request.series_column.as_deref().ok_or("Colonne série manquante")?;
+    let series_column = request
+        .series_column
+        .as_deref()
+        .ok_or("Colonne série manquante")?;
     let grouped_history = group_rows(&input.history_rows, series_column)?;
     let grouped_future = group_rows(&input.future_rows, series_column)?;
     let mut y = Vec::<f64>::new();
@@ -32,7 +35,8 @@ pub fn build_payload(input: &ParsedInput, request: &ForecastRequest) -> Result<V
 
     let mut series = json!({ "y": y, "sizes": sizes });
     if !request.covariate_columns.is_empty() {
-        series["X"] = serde_json::to_value(x).map_err(|_| "Données de contexte invalides".to_string())?;
+        series["X"] =
+            serde_json::to_value(x).map_err(|_| "Données de contexte invalides".to_string())?;
         if !input.future_rows.is_empty() {
             series["X_future"] = serde_json::to_value(x_future)
                 .map_err(|_| "Données de contexte futur invalides".to_string())?;
@@ -54,7 +58,9 @@ pub fn parse_response(
     request: &ForecastRequest,
     input: &ParsedInput,
 ) -> Result<(Vec<Prediction>, Vec<f64>, Vec<f64>, Vec<f64>), String> {
-    let mean = body["mean"].as_array().ok_or("Réponse Nixtla: champ mean manquant")?;
+    let mean = body["mean"]
+        .as_array()
+        .ok_or("Réponse Nixtla: champ mean manquant")?;
     let level = (request.confidence_level * 100.0) as u32;
     let lower = read_interval(body, &format!("lo-{level}"), mean.len());
     let upper = read_interval(body, &format!("hi-{level}"), mean.len());
@@ -68,9 +74,15 @@ pub fn parse_response(
 
     for (series_id, series_dates) in dates {
         for index in 0..horizon {
-            let value = mean.get(offset).and_then(Value::as_f64).ok_or("Réponse Nixtla: valeur mean invalide")?;
+            let value = mean
+                .get(offset)
+                .and_then(Value::as_f64)
+                .ok_or("Réponse Nixtla: valeur mean invalide")?;
             predictions.push(Prediction {
-                date: series_dates.get(index).cloned().unwrap_or_else(|| format!("T+{}", index + 1)),
+                date: series_dates
+                    .get(index)
+                    .cloned()
+                    .unwrap_or_else(|| format!("T+{}", index + 1)),
                 value,
                 series_id: Some(series_id.clone()),
             });
@@ -84,7 +96,10 @@ pub fn parse_response(
     Ok((predictions, q10, q50, q90))
 }
 
-fn group_rows(rows: &[Value], series_column: &str) -> Result<BTreeMap<String, Vec<Map<String, Value>>>, String> {
+fn group_rows(
+    rows: &[Value],
+    series_column: &str,
+) -> Result<BTreeMap<String, Vec<Map<String, Value>>>, String> {
     let mut grouped = BTreeMap::<String, Vec<Map<String, Value>>>::new();
     for row in rows {
         let object = row.as_object().ok_or("Format de ligne invalide")?;
@@ -106,7 +121,10 @@ fn build_prediction_dates(
     input: &ParsedInput,
     request: &ForecastRequest,
 ) -> Result<BTreeMap<String, Vec<String>>, String> {
-    let series_column = request.series_column.as_deref().ok_or("Colonne série manquante")?;
+    let series_column = request
+        .series_column
+        .as_deref()
+        .ok_or("Colonne série manquante")?;
     if !input.future_rows.is_empty() {
         return group_rows(&input.future_rows, series_column)?
             .into_iter()
@@ -132,7 +150,10 @@ fn build_prediction_dates(
                 .and_then(|row| row.get(&request.date_column))
                 .and_then(Value::as_str)
                 .unwrap_or_default();
-            (series_id, build_future_dates(last_date, &request.frequency, request.horizon))
+            (
+                series_id,
+                build_future_dates(last_date, &request.frequency, request.horizon),
+            )
         })
         .collect())
 }
@@ -141,7 +162,9 @@ fn read_exogenous_row(row: &Map<String, Value>, columns: &[String]) -> Result<Ve
     columns
         .iter()
         .map(|column| match row.get(column) {
-            Some(Value::Number(number)) => Ok(Value::from(number.as_f64().ok_or("Covariables invalides")?)),
+            Some(Value::Number(number)) => {
+                Ok(Value::from(number.as_f64().ok_or("Covariables invalides")?))
+            }
             Some(Value::Bool(flag)) => Ok(Value::from(if *flag { 1.0 } else { 0.0 })),
             Some(Value::Null) | None => Ok(Value::Null),
             Some(_) => Err("Covariables invalides".into()),
@@ -150,7 +173,9 @@ fn read_exogenous_row(row: &Map<String, Value>, columns: &[String]) -> Result<Ve
 }
 
 fn read_numeric_field(row: &Map<String, Value>, column: &str) -> Result<f64, String> {
-    row.get(column).and_then(Value::as_f64).ok_or("Colonne cible non numérique".into())
+    row.get(column)
+        .and_then(Value::as_f64)
+        .ok_or("Colonne cible non numérique".into())
 }
 
 fn read_interval(body: &Value, key: &str, fallback_len: usize) -> Vec<f64> {

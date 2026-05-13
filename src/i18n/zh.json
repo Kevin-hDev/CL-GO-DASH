@@ -751,15 +751,40 @@
     },
     "notes": {
       "timeline": "注释时间线",
+      "timelineEmpty": "此预测上还没有笔记。",
       "count_one": "{{count}} 条笔记",
       "count_other": "{{count}} 条笔记",
+      "new": "新建笔记",
       "userSource": "用户",
       "llmSource": "LLM",
+      "sources": {
+        "user": "用户",
+        "llm": "LLM"
+      },
+      "types": {
+        "context": "上下文",
+        "risk": "风险",
+        "decision": "决策",
+        "anomaly": "异常",
+        "hypothesis": "假设"
+      },
       "empty": "还没有笔记。",
       "emptySub": "代理添加的笔记会显示在这里，并标出它们在预测中的位置。",
       "designPending": "完整实现前仍需确定此部分的设计。",
       "designPendingWithCount": "已有 {{count}} 条笔记，但最终界面仍需定义。",
-      "loadFailed": "无法加载笔记。"
+      "selectNote": "选择一条笔记或新建笔记。",
+      "titlePlaceholder": "笔记标题",
+      "datePlaceholder": "日期",
+      "contentPlaceholder": "笔记 Markdown 内容",
+      "fileLabel": "本地文件",
+      "save": "保存",
+      "saving": "正在保存",
+      "cancel": "取消",
+      "confirmDelete": "确认删除",
+      "loadFailed": "无法加载笔记。",
+      "saveFailed": "无法保存笔记。",
+      "deleteFailed": "无法删除笔记。",
+      "openFailed": "无法打开笔记。"
     },
     "analysis": {
       "loadFailed": "无法加载分析。",

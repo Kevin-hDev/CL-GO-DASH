@@ -3,8 +3,17 @@ import { useCallback, useRef, useState } from "react";
 const DEFAULT_CHART_HEIGHT = 270;
 const MIN_CHART_HEIGHT = 200;
 
-export function useForecastChartResize() {
-  const [chartHeight, setChartHeight] = useState(DEFAULT_CHART_HEIGHT);
+interface ResizeOptions {
+  defaultHeight?: number;
+  minHeight?: number;
+  maxWindowRatio?: number;
+}
+
+export function useForecastChartResize(options: ResizeOptions = {}) {
+  const defaultHeight = options.defaultHeight ?? DEFAULT_CHART_HEIGHT;
+  const minHeight = options.minHeight ?? MIN_CHART_HEIGHT;
+  const maxWindowRatio = options.maxWindowRatio ?? 0.6;
+  const [chartHeight, setChartHeight] = useState(defaultHeight);
   const [isResizing, setIsResizing] = useState(false);
   const resizeRef = useRef<{ startY: number; startHeight: number } | null>(null);
 
@@ -20,10 +29,10 @@ export function useForecastChartResize() {
       const onMove = (moveEvent: PointerEvent) => {
         if (!resizeRef.current) return;
         const delta = moveEvent.clientY - resizeRef.current.startY;
-        const maxHeight = Math.floor(window.innerHeight * 0.6);
+        const maxHeight = Math.floor(window.innerHeight * maxWindowRatio);
         setChartHeight(
           Math.max(
-            MIN_CHART_HEIGHT,
+            minHeight,
             Math.min(maxHeight, resizeRef.current.startHeight + delta)
           )
         );
@@ -39,12 +48,12 @@ export function useForecastChartResize() {
       window.addEventListener("pointermove", onMove);
       window.addEventListener("pointerup", onUp);
     },
-    [chartHeight]
+    [chartHeight, maxWindowRatio, minHeight]
   );
 
   const resetHeight = useCallback(() => {
-    setChartHeight(DEFAULT_CHART_HEIGHT);
-  }, []);
+    setChartHeight(defaultHeight);
+  }, [defaultHeight]);
 
   return { chartHeight, isResizing, startResize, resetHeight };
 }

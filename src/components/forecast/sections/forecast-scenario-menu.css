@@ -55,10 +55,16 @@
   overflow: hidden;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
-  background: var(--void);
+  background: var(--shell);
   opacity: 0;
   z-index: 6;
   transition: max-height 180ms ease, opacity 160ms ease, border-color 160ms ease;
+}
+
+[data-theme="dark"] .fcs-menu-panel {
+  background: var(--surface-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 .fcs-menu-panel.is-open {
@@ -90,7 +96,15 @@
 }
 
 .fcs-menu-option-mark {
-  width: 14px;
-  color: var(--pulse);
+  width: 8px;
+  display: flex;
+  justify-content: center;
   flex-shrink: 0;
+}
+
+.fcs-menu-option-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--pulse);
 }

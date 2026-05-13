@@ -751,15 +751,40 @@
     },
     "notes": {
       "timeline": "Línea de tiempo anotada",
+      "timelineEmpty": "No hay notas en esta previsión.",
       "count_one": "{{count}} nota",
       "count_other": "{{count}} notas",
+      "new": "Nueva nota",
       "userSource": "Usuario",
       "llmSource": "LLM",
+      "sources": {
+        "user": "Usuario",
+        "llm": "LLM"
+      },
+      "types": {
+        "context": "Contexto",
+        "risk": "Riesgo",
+        "decision": "Decisión",
+        "anomaly": "Anomalía",
+        "hypothesis": "Hipótesis"
+      },
       "empty": "Aún no hay notas.",
       "emptySub": "Las notas añadidas por el agente aparecerán aquí con su posición en la previsión.",
       "designPending": "El diseño de esta sección aún debe elegirse antes de la implementación completa.",
       "designPendingWithCount": "Ya existen {{count}} nota(s), pero la interfaz final aún debe definirse.",
-      "loadFailed": "No se pudieron cargar las notas."
+      "selectNote": "Selecciona una nota o crea una nueva.",
+      "titlePlaceholder": "Título de la nota",
+      "datePlaceholder": "Fecha",
+      "contentPlaceholder": "Contenido Markdown de la nota",
+      "fileLabel": "Archivo local",
+      "save": "Guardar",
+      "saving": "Guardando",
+      "cancel": "Cancelar",
+      "confirmDelete": "Confirmar eliminación",
+      "loadFailed": "No se pudieron cargar las notas.",
+      "saveFailed": "No se pudo guardar la nota.",
+      "deleteFailed": "No se pudo eliminar la nota.",
+      "openFailed": "No se pudo abrir la nota."
     },
     "analysis": {
       "loadFailed": "No se pudo cargar el análisis.",

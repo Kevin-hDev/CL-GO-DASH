@@ -2,8 +2,8 @@ use crate::services::forecast::types::{
     ForecastAnalysisMeta, ForecastRequest, ForecastResult, ModelDownloadProgress,
 };
 use crate::services::forecast::{
-    catalog, client_chronos, client_nixtla, model_manager, registry, scenarios, sidecar, storage,
-    validation,
+    catalog, client_chronos, client_nixtla, model_manager, notes, registry, scenarios, sidecar,
+    storage, validation,
 };
 use serde_json::Value;
 use tauri::ipc::Channel;
@@ -89,6 +89,35 @@ pub async fn rename_forecast_analysis(
     name: String,
 ) -> Result<ForecastAnalysisMeta, String> {
     storage::rename(&id, &name).await
+}
+
+#[tauri::command]
+pub async fn list_forecast_notes(analysis_id: String) -> Result<Vec<notes::ForecastNote>, String> {
+    notes::list(&analysis_id).await
+}
+
+#[tauri::command]
+pub async fn create_forecast_note(
+    request: notes::ForecastNoteCreateRequest,
+) -> Result<notes::ForecastNote, String> {
+    notes::create(request).await
+}
+
+#[tauri::command]
+pub async fn update_forecast_note(
+    request: notes::ForecastNoteUpdateRequest,
+) -> Result<notes::ForecastNote, String> {
+    notes::update(request).await
+}
+
+#[tauri::command]
+pub async fn delete_forecast_note(analysis_id: String, note_id: String) -> Result<(), String> {
+    notes::delete(&analysis_id, &note_id).await
+}
+
+#[tauri::command]
+pub fn open_forecast_note(analysis_id: String, note_id: String) -> Result<(), String> {
+    notes::open(&analysis_id, &note_id)
 }
 
 #[tauri::command]

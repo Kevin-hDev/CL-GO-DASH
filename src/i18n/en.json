@@ -825,15 +825,40 @@
     },
     "notes": {
       "timeline": "Annotated timeline",
+      "timelineEmpty": "No note placed on this forecast.",
       "count_one": "{{count}} note",
       "count_other": "{{count}} notes",
+      "new": "New note",
       "userSource": "User",
       "llmSource": "LLM",
+      "sources": {
+        "user": "User",
+        "llm": "LLM"
+      },
+      "types": {
+        "context": "Context",
+        "risk": "Risk",
+        "decision": "Decision",
+        "anomaly": "Anomaly",
+        "hypothesis": "Hypothesis"
+      },
       "empty": "No note yet.",
       "emptySub": "Notes added by the agent will appear here with their position on the forecast.",
       "designPending": "This section design still needs to be chosen before the full implementation.",
       "designPendingWithCount": "{{count}} note(s) already exist, but the final interface still needs to be defined.",
-      "loadFailed": "Unable to load notes."
+      "selectNote": "Select a note or create a new one.",
+      "titlePlaceholder": "Note title",
+      "datePlaceholder": "Date",
+      "contentPlaceholder": "Markdown note content",
+      "fileLabel": "Local file",
+      "save": "Save",
+      "saving": "Saving",
+      "cancel": "Cancel",
+      "confirmDelete": "Confirm deletion",
+      "loadFailed": "Unable to load notes.",
+      "saveFailed": "Unable to save note.",
+      "deleteFailed": "Unable to delete note.",
+      "openFailed": "Unable to open note."
     },
     "analysis": {
       "loadFailed": "Unable to load analysis.",

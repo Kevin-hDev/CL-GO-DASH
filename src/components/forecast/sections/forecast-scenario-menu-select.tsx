@@ -1,4 +1,4 @@
-import { CaretDown, Check } from "@/components/ui/icons";
+import { CaretDown } from "@/components/ui/icons";
 import { useEffect, useRef, useState } from "react";
 
 interface ForecastScenarioMenuSelectProps {
@@ -60,7 +60,7 @@ export function ForecastScenarioMenuSelect({
             }}
           >
             <span className="fcs-menu-option-mark">
-              {option.value === value ? <Check size={13} /> : null}
+              {option.value === value ? <span className="fcs-menu-option-dot" /> : null}
             </span>
             <span>{option.label}</span>
           </button>

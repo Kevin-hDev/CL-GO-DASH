@@ -133,11 +133,7 @@ fn parse_response(
         input_summary: input.summary.clone(),
         input_data: input.snapshot.clone(),
         predictions,
-        quantiles: Quantiles {
-            q10,
-            q50,
-            q90,
-        },
+        quantiles: Quantiles { q10, q50, q90 },
         covariates_used: request.covariate_columns.clone(),
         metrics: None,
         annotations: Vec::new(),

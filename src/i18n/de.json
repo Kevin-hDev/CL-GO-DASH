@@ -751,15 +751,40 @@
     },
     "notes": {
       "timeline": "Annotierte Zeitachse",
+      "timelineEmpty": "Keine Notiz auf dieser Prognose.",
       "count_one": "{{count}} Notiz",
       "count_other": "{{count}} Notizen",
+      "new": "Neue Notiz",
       "userSource": "Benutzer",
       "llmSource": "LLM",
+      "sources": {
+        "user": "Benutzer",
+        "llm": "LLM"
+      },
+      "types": {
+        "context": "Kontext",
+        "risk": "Risiko",
+        "decision": "Entscheidung",
+        "anomaly": "Anomalie",
+        "hypothesis": "Hypothese"
+      },
       "empty": "Noch keine Notiz.",
       "emptySub": "Vom Agenten hinzugefügte Notizen erscheinen hier mit ihrer Position in der Prognose.",
       "designPending": "Das Design dieses Bereichs muss vor der vollständigen Umsetzung noch festgelegt werden.",
       "designPendingWithCount": "{{count}} Notiz(en) existieren bereits, aber die endgültige Oberfläche muss noch definiert werden.",
-      "loadFailed": "Notizen konnten nicht geladen werden."
+      "selectNote": "Notiz auswählen oder neue Notiz erstellen.",
+      "titlePlaceholder": "Notiztitel",
+      "datePlaceholder": "Datum",
+      "contentPlaceholder": "Markdown-Inhalt der Notiz",
+      "fileLabel": "Lokale Datei",
+      "save": "Speichern",
+      "saving": "Speichern",
+      "cancel": "Abbrechen",
+      "confirmDelete": "Löschen bestätigen",
+      "loadFailed": "Notizen konnten nicht geladen werden.",
+      "saveFailed": "Notiz konnte nicht gespeichert werden.",
+      "deleteFailed": "Notiz konnte nicht gelöscht werden.",
+      "openFailed": "Notiz konnte nicht geöffnet werden."
     },
     "analysis": {
       "loadFailed": "Analyse konnte nicht geladen werden.",

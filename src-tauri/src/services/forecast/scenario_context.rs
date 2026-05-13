@@ -67,7 +67,12 @@ fn validate_context_request(
         return Err("Aucune covariable disponible".into());
     }
     if let Some(series_id) = target_series_id {
-        if !analysis.input_data.series_ids.iter().any(|item| item == series_id) {
+        if !analysis
+            .input_data
+            .series_ids
+            .iter()
+            .any(|item| item == series_id)
+        {
             return Err("Série de scénario invalide".into());
         }
     }

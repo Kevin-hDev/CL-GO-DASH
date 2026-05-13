@@ -1,7 +1,6 @@
 use super::{
     scenario_context::{self, ScenarioCovariateAdjustment},
-    sidecar,
-    storage,
+    sidecar, storage,
     types::{ForecastResult, Quantiles, Scenario, MAX_SCENARIOS},
 };
 use serde::{Deserialize, Serialize};
@@ -56,8 +55,13 @@ pub async fn create(
         return Err("Trop de scénarios".into());
     }
 
-    let scenario = build_scenario(&analysis, uuid::Uuid::new_v4().to_string(), &request, chronos)
-        .await?;
+    let scenario = build_scenario(
+        &analysis,
+        uuid::Uuid::new_v4().to_string(),
+        &request,
+        chronos,
+    )
+    .await?;
     analysis.scenarios.push(scenario);
     storage::save(&analysis).await?;
     Ok(analysis)
@@ -107,7 +111,9 @@ pub async fn update(
 pub async fn delete(analysis_id: &str, scenario_id: &str) -> Result<ForecastResult, String> {
     let mut analysis = storage::load(analysis_id).await?;
     let before = analysis.scenarios.len();
-    analysis.scenarios.retain(|scenario| scenario.id != scenario_id);
+    analysis
+        .scenarios
+        .retain(|scenario| scenario.id != scenario_id);
     if analysis.scenarios.len() == before {
         return Err("Scénario introuvable".into());
     }
@@ -125,10 +131,14 @@ fn validate_request(request: &ScenarioRequest) -> Result<(), String> {
             return Err("Description de scénario invalide".into());
         }
     }
-    if request.scenario_kind != "percent_adjustment" && request.scenario_kind != "context_adjustment" {
+    if request.scenario_kind != "percent_adjustment"
+        && request.scenario_kind != "context_adjustment"
+    {
         return Err("Type de scénario invalide".into());
     }
-    if request.scenario_kind == "percent_adjustment" && !valid_adjustment(request.adjustment_percent) {
+    if request.scenario_kind == "percent_adjustment"
+        && !valid_adjustment(request.adjustment_percent)
+    {
         return Err("Ajustement de scénario invalide".into());
     }
     Ok(())

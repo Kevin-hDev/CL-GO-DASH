@@ -1,6 +1,7 @@
 use super::{
-    client_chronos, client_nixtla, model_manager, sidecar, validation,
+    client_chronos, client_nixtla, model_manager, sidecar,
     types::{ForecastRequest, ForecastResult},
+    validation,
 };
 use serde_json::Value;
 
@@ -58,6 +59,12 @@ fn build_forecast_request(
 fn infer_date_column(analysis: &ForecastResult) -> Option<String> {
     ["date", "timestamp", "time"]
         .iter()
-        .find(|column| analysis.input_data.columns.iter().any(|item| item == **column))
+        .find(|column| {
+            analysis
+                .input_data
+                .columns
+                .iter()
+                .any(|item| item == **column)
+        })
         .map(|column| (*column).to_string())
 }
