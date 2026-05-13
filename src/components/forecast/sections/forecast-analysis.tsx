@@ -1,20 +1,142 @@
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { invoke } from "@tauri-apps/api/core";
+import { inferMetricMeta } from "../forecast-view-format";
+import { ForecastScenarioMenuSelect } from "./forecast-scenario-menu-select";
+import { ForecastAnalysisAccordion } from "./forecast-analysis-accordion";
+import { ForecastAnalysisCardGrid } from "./forecast-analysis-card-grid";
+import { ForecastAnalysisEventList } from "./forecast-analysis-event-list";
+import { ForecastAnalysisVariableList } from "./forecast-analysis-variable-list";
+import {
+  buildAnomalyEvents,
+  buildHighlightEvents,
+  buildTrendCards,
+  buildUncertaintyCards,
+  filterAnalysisQuantiles,
+  buildVariableInsights,
+  filterAnalysisPoints,
+} from "./forecast-analysis-utils";
+import type { ForecastAnalysisData } from "./forecast-analysis-types";
 import "../forecast-sections.css";
+import "./forecast-scenario-menu.css";
+import "./forecast-analysis.css";
+import "./forecast-analysis-lists.css";
 
 interface ForecastAnalysisProps {
   analysisId: string;
 }
 
-export function ForecastAnalysis({ analysisId: _analysisId }: ForecastAnalysisProps) {
-  const { t } = useTranslation();
+const DEFAULT_OPEN = {
+  trend: true,
+  uncertainty: true,
+  highlights: true,
+  anomalies: false,
+  variables: false,
+};
 
+export function ForecastAnalysis({ analysisId }: ForecastAnalysisProps) {
+  const { t, i18n } = useTranslation();
+  const [data, setData] = useState<ForecastAnalysisData | null>(null);
+  const [selectedSeries, setSelectedSeries] = useState("");
+  const [open, setOpen] = useState(DEFAULT_OPEN);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    void invoke<ForecastAnalysisData>("get_forecast_analysis", { id: analysisId })
+      .then((analysis) => {
+        if (!active) return;
+        setData(analysis);
+        setSelectedSeries(analysis.input_data.series_ids?.[0] ?? "");
+        setError(null);
+      })
+      .catch(() => {
+        if (active) setError(t("forecast.analysis.loadFailed"));
+      });
+    return () => {
+      active = false;
+    };
+  }, [analysisId, t]);
+
+  const computed = useMemo(() => {
+    if (!data) return null;
+    const seriesId = selectedSeries && data.input_data.series_ids?.includes(selectedSeries) ? selectedSeries : "";
+    const metric = inferMetricMeta(i18n.language, data.target_column, data.name);
+    const predictions = filterAnalysisPoints(data.predictions, seriesId);
+    const history = filterAnalysisPoints(data.input_data.history, seriesId);
+    const quantiles = filterAnalysisQuantiles(data.predictions, seriesId, data.quantiles);
+    return {
+      seriesId,
+      metric,
+      predictions,
+      history,
+      trendCards: buildTrendCards(predictions, i18n.language, metric, t),
+      uncertaintyCards: buildUncertaintyCards(quantiles, predictions, i18n.language, metric),
+      highlights: buildHighlightEvents(predictions, data.input_summary.end, data.frequency, i18n.language, metric, t),
+      anomalies: buildAnomalyEvents([...history, ...predictions], i18n.language, metric, t),
+      variables: buildVariableInsights(data, seriesId, t),
+    };
+  }, [data, i18n.language, selectedSeries, t]);
+
+  if (error) return <div className="fc-error">{error}</div>;
+  if (!data || !computed) return <div className="fc-loading"><div className="fc-skeleton" /></div>;
+
+  const seriesIds = data.input_data.series_ids ?? [];
   return (
-    <div className="fcs-root">
-      <div className="fcs-toolbar">
-        <span className="fcs-section-title">{t("forecast.nav.analysis")}</span>
-      </div>
-      <div className="fcs-empty">
-        <p className="fcs-empty-text">{t("forecast.nav.analysis")} — coming soon</p>
+    <div className="fca-root">
+      {seriesIds.length > 1 && (
+        <div className="fca-toolbar">
+          <div className="fca-series">
+            <ForecastScenarioMenuSelect
+              value={computed.seriesId}
+              options={seriesIds.map((seriesId) => ({ value: seriesId, label: seriesId }))}
+              onChange={setSelectedSeries}
+              placeholder={t("forecast.analysis.series")}
+            />
+          </div>
+        </div>
+      )}
+      <div className="fca-scroll">
+        <ForecastAnalysisAccordion
+          title={t("forecast.analysis.trend")}
+          subtitle={t("forecast.analysis.trendSub")}
+          open={open.trend}
+          onToggle={() => setOpen((current) => ({ ...current, trend: !current.trend }))}
+        >
+          <ForecastAnalysisCardGrid cards={computed.trendCards} t={t} />
+        </ForecastAnalysisAccordion>
+        <ForecastAnalysisAccordion
+          title={t("forecast.analysis.uncertainty")}
+          subtitle={t("forecast.analysis.uncertaintySub")}
+          open={open.uncertainty}
+          onToggle={() => setOpen((current) => ({ ...current, uncertainty: !current.uncertainty }))}
+        >
+          <ForecastAnalysisCardGrid cards={computed.uncertaintyCards} t={t} />
+        </ForecastAnalysisAccordion>
+        <ForecastAnalysisAccordion
+          title={t("forecast.analysis.highlights")}
+          subtitle={t("forecast.analysis.highlightsSub")}
+          open={open.highlights}
+          onToggle={() => setOpen((current) => ({ ...current, highlights: !current.highlights }))}
+        >
+          <ForecastAnalysisEventList events={computed.highlights} emptyKey="forecast.analysis.noHighlights" t={t} />
+        </ForecastAnalysisAccordion>
+        <ForecastAnalysisAccordion
+          title={t("forecast.analysis.anomalies")}
+          subtitle={t("forecast.analysis.anomaliesSub")}
+          open={open.anomalies}
+          onToggle={() => setOpen((current) => ({ ...current, anomalies: !current.anomalies }))}
+        >
+          <ForecastAnalysisEventList events={computed.anomalies} emptyKey="forecast.analysis.noAnomalies" t={t} />
+        </ForecastAnalysisAccordion>
+        <ForecastAnalysisAccordion
+          title={t("forecast.analysis.variables")}
+          subtitle={t("forecast.analysis.variablesSub")}
+          open={open.variables}
+          onToggle={() => setOpen((current) => ({ ...current, variables: !current.variables }))}
+        >
+          <ForecastAnalysisVariableList variables={computed.variables} t={t} />
+        </ForecastAnalysisAccordion>
       </div>
     </div>
   );
