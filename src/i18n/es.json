@@ -659,7 +659,13 @@
       "points_one": "{{count}} punto",
       "points_other": "{{count}} puntos",
       "horizonShort": "Horiz. {{count}}",
-      "mapeShort": "MAPE {{value}}%"
+      "mapeShort": "MAPE {{value}}%",
+      "edit": "Renombrar",
+      "delete": "Eliminar",
+      "validate": "Validar",
+      "cancel": "Cancelar",
+      "renameFailed": "No se pudo renombrar el análisis.",
+      "deleteFailed": "No se pudo eliminar el análisis."
     },
     "view": {
       "period": "Período",

@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { ClipboardText, DownloadSimple } from "@/components/ui/icons";
+import { FileIcon } from "@/components/file-preview/file-icon";
 import "./export-dropdown.css";
 
 interface ExportDropdownProps {
@@ -8,13 +10,13 @@ interface ExportDropdownProps {
 }
 
 const FORMATS = [
-  { key: "csv", icon: "📄" },
-  { key: "excel", icon: "📊" },
-  { key: "png", icon: "🖼️" },
-  { key: "svg", icon: "🎨" },
-  { key: "json", icon: "{ }" },
-  { key: "pdf", icon: "📑" },
-  { key: "clipboard", icon: "📋" },
+  { key: "csv", fileName: "export.csv" },
+  { key: "excel", fileName: "export.xlsx" },
+  { key: "png", fileName: "export.png" },
+  { key: "svg", fileName: "export.svg" },
+  { key: "json", fileName: "export.json" },
+  { key: "pdf", fileName: "export.pdf" },
+  { key: "clipboard", fileName: null },
 ] as const;
 
 export function ExportDropdown({ analysisId, onExport }: ExportDropdownProps) {
@@ -34,11 +36,7 @@ export function ExportDropdown({ analysisId, onExport }: ExportDropdownProps) {
   return (
     <div className="exd-wrapper" ref={ref}>
       <button className="exd-trigger" onClick={() => setOpen(!open)}>
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor"
-          strokeWidth="1.5" strokeLinecap="round">
-          <path d="M7 2v8M4 7l3 3 3-3" />
-          <path d="M2 11h10" />
-        </svg>
+        <DownloadSimple size={16} />
         Export
       </button>
       {open && (
@@ -52,7 +50,9 @@ export function ExportDropdown({ analysisId, onExport }: ExportDropdownProps) {
                 setOpen(false);
               }}
             >
-              <span className="exd-icon">{f.icon}</span>
+              <span className="exd-icon">
+                {f.fileName ? <FileIcon name={f.fileName} size={18} /> : <ClipboardText size={18} />}
+              </span>
               {t(`forecast.export.${f.key}`)}
             </button>
           ))}

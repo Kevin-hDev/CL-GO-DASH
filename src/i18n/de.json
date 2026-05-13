@@ -659,7 +659,13 @@
       "points_one": "{{count}} Punkt",
       "points_other": "{{count}} Punkte",
       "horizonShort": "Horizont {{count}}",
-      "mapeShort": "MAPE {{value}}%"
+      "mapeShort": "MAPE {{value}}%",
+      "edit": "Umbenennen",
+      "delete": "Löschen",
+      "validate": "Bestätigen",
+      "cancel": "Abbrechen",
+      "renameFailed": "Analyse konnte nicht umbenannt werden.",
+      "deleteFailed": "Analyse konnte nicht gelöscht werden."
     },
     "view": {
       "period": "Zeitraum",

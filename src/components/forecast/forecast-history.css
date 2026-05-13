@@ -7,7 +7,9 @@
   padding: 6px 10px;
   border: 1px solid var(--edge);
   border-radius: var(--radius-sm);
-  background: var(--surface);
+  background: var(--surface-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   color: var(--ink);
   font-size: var(--text-sm);
   font-family: var(--font-sans);
@@ -28,8 +30,9 @@
 
 .fch-card {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
   padding: 8px 10px;
   border: 1px solid var(--edge);
   border-radius: var(--radius-sm);
@@ -38,6 +41,13 @@
   text-align: left;
   font-family: var(--font-sans);
   transition: border-color 150ms ease, background 100ms ease;
+}
+
+.fch-card-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 
 .fch-card:hover {
@@ -61,6 +71,18 @@
   min-width: 0;
 }
 
+.fch-rename-input {
+  width: min(360px, 100%);
+  padding: 3px 8px;
+  border: 1px solid var(--pulse);
+  border-radius: var(--radius-sm);
+  background: var(--surface-glass);
+  color: var(--ink);
+  font-size: var(--text-sm);
+  font-family: var(--font-sans);
+  outline: none;
+}
+
 .fch-scenario-dot {
   width: 7px;
   height: 7px;
@@ -78,4 +100,92 @@
 .fch-date {
   font-size: var(--text-xs);
   color: var(--ink-faint);
+}
+
+.fch-actions {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.fch-icon-btn {
+  min-width: 33px;
+  height: 33px;
+  padding: 8px;
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: all var(--ease-smooth);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fch-icon-btn:hover {
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.fch-icon-btn-danger:hover {
+  background: var(--signal-error-bg);
+  color: var(--signal-error);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.fch-confirm-popover {
+  position: absolute;
+  right: calc(100% + 8px);
+  top: 50%;
+  display: flex;
+  gap: 4px;
+  padding: 5px;
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-sm);
+  background: var(--surface-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transform: translateY(-50%);
+  box-shadow: var(--shadow-lg);
+}
+
+.fch-confirm-popover button {
+  height: 28px;
+  padding: 0 9px;
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--ink-muted);
+  font-size: var(--text-xs);
+  font-family: var(--font-sans);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.fch-confirm-popover button:hover {
+  background: var(--surface-hover);
+  color: var(--ink);
+}
+
+.fch-confirm-popover button:first-child {
+  border-color: var(--pulse);
+  background: var(--pulse);
+  color: var(--ink-on-pulse);
+}
+
+.fch-confirm-popover button:first-child:hover {
+  border-color: var(--pulse);
+  background: var(--pulse);
+  color: var(--ink-on-pulse);
+}
+
+.fch-error {
+  margin: 0 16px 10px;
+  color: var(--signal-error);
+  font-size: var(--text-xs);
 }

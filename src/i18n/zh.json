@@ -659,7 +659,13 @@
       "points_one": "{{count}} 个点",
       "points_other": "{{count}} 个点",
       "horizonShort": "预测 {{count}} 步",
-      "mapeShort": "MAPE {{value}}%"
+      "mapeShort": "MAPE {{value}}%",
+      "edit": "重命名",
+      "delete": "删除",
+      "validate": "确认",
+      "cancel": "取消",
+      "renameFailed": "无法重命名分析。",
+      "deleteFailed": "无法删除分析。"
     },
     "view": {
       "period": "周期",

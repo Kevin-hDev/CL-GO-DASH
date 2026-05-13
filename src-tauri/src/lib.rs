@@ -286,6 +286,7 @@ pub fn run() {
             commands::update_forecast_scenario,
             commands::delete_forecast_scenario,
             commands::delete_forecast_analysis,
+            commands::rename_forecast_analysis,
             commands::list_forecast_models,
             commands::install_forecast_model,
             commands::uninstall_forecast_model,

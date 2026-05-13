@@ -21,6 +21,15 @@ fn validate_analysis_id(id: &str) -> Result<(), String> {
     Ok(())
 }
 
+fn validate_analysis_name(name: &str) -> Result<String, String> {
+    let trimmed = name.trim();
+    let len = trimmed.chars().count();
+    if len == 0 || len > 120 || trimmed.chars().any(|c| c.is_control()) {
+        return Err("Nom d'analyse invalide".into());
+    }
+    Ok(trimmed.to_string())
+}
+
 fn analyses_dir() -> PathBuf {
     data_dir().join("forecast-analyses")
 }
@@ -79,6 +88,15 @@ pub async fn delete(id: &str) -> Result<(), String> {
     remove_from_index(id).await
 }
 
+pub async fn rename(id: &str, name: &str) -> Result<ForecastAnalysisMeta, String> {
+    validate_analysis_id(id)?;
+    let next_name = validate_analysis_name(name)?;
+    let mut analysis = load(id).await?;
+    analysis.name = next_name;
+    save(&analysis).await?;
+    Ok(analysis.to_meta())
+}
+
 pub async fn list() -> Result<Vec<ForecastAnalysisMeta>, String> {
     let entries = read_index().await?;
     hydrate_index(entries).await
@@ -109,7 +127,9 @@ async fn write_index(entries: &[ForecastAnalysisMeta]) -> Result<(), String> {
         .map_err(|e| format!("Rename index: {e}"))
 }
 
-async fn hydrate_index(entries: Vec<ForecastAnalysisMeta>) -> Result<Vec<ForecastAnalysisMeta>, String> {
+async fn hydrate_index(
+    entries: Vec<ForecastAnalysisMeta>,
+) -> Result<Vec<ForecastAnalysisMeta>, String> {
     let mut changed = false;
     let mut hydrated = Vec::with_capacity(entries.len());
 

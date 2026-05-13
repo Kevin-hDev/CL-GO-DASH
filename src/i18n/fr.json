@@ -733,7 +733,13 @@
       "points_one": "{{count}} point",
       "points_other": "{{count}} points",
       "horizonShort": "Horiz. {{count}}",
-      "mapeShort": "MAPE {{value}}%"
+      "mapeShort": "MAPE {{value}}%",
+      "edit": "Renommer",
+      "delete": "Supprimer",
+      "validate": "Valider",
+      "cancel": "Annuler",
+      "renameFailed": "Impossible de renommer l'analyse.",
+      "deleteFailed": "Impossible de supprimer l'analyse."
     },
     "view": {
       "period": "Période",

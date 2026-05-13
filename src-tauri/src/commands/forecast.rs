@@ -84,6 +84,14 @@ pub async fn delete_forecast_analysis(id: String) -> Result<(), String> {
 }
 
 #[tauri::command]
+pub async fn rename_forecast_analysis(
+    id: String,
+    name: String,
+) -> Result<ForecastAnalysisMeta, String> {
+    storage::rename(&id, &name).await
+}
+
+#[tauri::command]
 pub fn list_forecast_models() -> Value {
     let installed = model_manager::installed_models();
     let configured = crate::services::api_keys::list_configured();

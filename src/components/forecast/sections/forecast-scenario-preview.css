@@ -33,6 +33,12 @@
   outline: none;
 }
 
+.fcs-series-select:hover,
+.fcs-series-select:focus {
+  border-color: var(--edge);
+  background: var(--fcs-hover-bg);
+}
+
 .fcs-preview {
   display: flex;
   flex-direction: column;

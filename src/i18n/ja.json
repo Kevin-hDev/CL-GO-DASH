@@ -659,7 +659,13 @@
       "points_one": "{{count}} 点",
       "points_other": "{{count}} 点",
       "horizonShort": "予測 {{count}}",
-      "mapeShort": "MAPE {{value}}%"
+      "mapeShort": "MAPE {{value}}%",
+      "edit": "名前を変更",
+      "delete": "削除",
+      "validate": "確定",
+      "cancel": "キャンセル",
+      "renameFailed": "分析の名前を変更できませんでした。",
+      "deleteFailed": "分析を削除できませんでした。"
     },
     "view": {
       "period": "期間",

@@ -32,11 +32,12 @@
   min-height: 33px;
   padding: 0 10px;
   cursor: pointer;
-  transition: border-color 150ms ease, color 150ms ease;
+  transition: background var(--ease-smooth), color var(--ease-smooth);
 }
 
 .fcs-add-btn:hover {
-  border-color: var(--ink-faint);
+  border-color: var(--edge);
+  background: var(--fcs-hover-bg, var(--surface-hover));
   color: var(--ink);
 }
 
