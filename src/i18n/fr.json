@@ -823,6 +823,18 @@
       "emptySub": "Créez un scénario ou une prévision compatible pour comparer les courbes.",
       "loadFailed": "Impossible de charger les comparaisons."
     },
+    "notes": {
+      "timeline": "Timeline annotée",
+      "count_one": "{{count}} note",
+      "count_other": "{{count}} notes",
+      "userSource": "Utilisateur",
+      "llmSource": "LLM",
+      "empty": "Aucune note pour le moment.",
+      "emptySub": "Les notes ajoutées par l'agent apparaîtront ici avec leur position sur la prévision.",
+      "designPending": "Le design de cette section reste à choisir avant l'implémentation complète.",
+      "designPendingWithCount": "{{count}} note(s) existent déjà, mais l'interface finale reste à définir.",
+      "loadFailed": "Impossible de charger les notes."
+    },
     "analysis": {
       "loadFailed": "Impossible de charger l'analyse.",
       "series": "Série",

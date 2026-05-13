@@ -749,6 +749,18 @@
       "emptySub": "曲線を比較するには、シナリオまたは互換性のある予測を作成してください。",
       "loadFailed": "比較を読み込めません。"
     },
+    "notes": {
+      "timeline": "注釈付きタイムライン",
+      "count_one": "{{count}} 件のノート",
+      "count_other": "{{count}} 件のノート",
+      "userSource": "ユーザー",
+      "llmSource": "LLM",
+      "empty": "まだノートはありません。",
+      "emptySub": "エージェントが追加したノートは、予測上の位置とともにここに表示されます。",
+      "designPending": "完全実装の前に、このセクションのデザインを決める必要があります。",
+      "designPendingWithCount": "{{count}} 件のノートは既にありますが、最終的な画面はまだ定義されていません。",
+      "loadFailed": "ノートを読み込めません。"
+    },
     "analysis": {
       "loadFailed": "分析を読み込めません。",
       "series": "系列",

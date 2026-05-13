@@ -823,6 +823,18 @@
       "emptySub": "Create a scenario or a compatible forecast to compare curves.",
       "loadFailed": "Unable to load comparisons."
     },
+    "notes": {
+      "timeline": "Annotated timeline",
+      "count_one": "{{count}} note",
+      "count_other": "{{count}} notes",
+      "userSource": "User",
+      "llmSource": "LLM",
+      "empty": "No note yet.",
+      "emptySub": "Notes added by the agent will appear here with their position on the forecast.",
+      "designPending": "This section design still needs to be chosen before the full implementation.",
+      "designPendingWithCount": "{{count}} note(s) already exist, but the final interface still needs to be defined.",
+      "loadFailed": "Unable to load notes."
+    },
     "analysis": {
       "loadFailed": "Unable to load analysis.",
       "series": "Series",

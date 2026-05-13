@@ -94,3 +94,8 @@
   background: var(--ink-muted);
   border: none;
 }
+
+.fcc-chart-shell.is-compact,
+.fcc-chart-shell.is-compact .fcc-chart-root {
+  min-height: 120px;
+}

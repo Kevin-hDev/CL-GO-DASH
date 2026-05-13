@@ -98,8 +98,11 @@ export function ForecastComparisons({ analysisId }: ForecastComparisonsProps) {
               history: t("forecast.view.historySeries"),
               forecast: current.name,
               confidence: t("forecast.view.confidenceRange"),
+              annotationUser: t("forecast.notes.userSource"),
+              annotationLlm: t("forecast.notes.llmSource"),
             }}
             layers={{ history: true, forecast: true, confidence: true, "scenario-compare": true }}
+            mode="comparison"
           />
         </div>
       </div>

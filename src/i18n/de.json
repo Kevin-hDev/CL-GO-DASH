@@ -749,6 +749,18 @@
       "emptySub": "Erstellen Sie ein Szenario oder eine kompatible Prognose, um Kurven zu vergleichen.",
       "loadFailed": "Vergleiche konnten nicht geladen werden."
     },
+    "notes": {
+      "timeline": "Annotierte Zeitachse",
+      "count_one": "{{count}} Notiz",
+      "count_other": "{{count}} Notizen",
+      "userSource": "Benutzer",
+      "llmSource": "LLM",
+      "empty": "Noch keine Notiz.",
+      "emptySub": "Vom Agenten hinzugefügte Notizen erscheinen hier mit ihrer Position in der Prognose.",
+      "designPending": "Das Design dieses Bereichs muss vor der vollständigen Umsetzung noch festgelegt werden.",
+      "designPendingWithCount": "{{count}} Notiz(en) existieren bereits, aber die endgültige Oberfläche muss noch definiert werden.",
+      "loadFailed": "Notizen konnten nicht geladen werden."
+    },
     "analysis": {
       "loadFailed": "Analyse konnte nicht geladen werden.",
       "series": "Serie",

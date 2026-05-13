@@ -749,6 +749,18 @@
       "emptySub": "Crea uno scenario o una previsione compatibile per confrontare le curve.",
       "loadFailed": "Impossibile caricare i confronti."
     },
+    "notes": {
+      "timeline": "Timeline annotata",
+      "count_one": "{{count}} nota",
+      "count_other": "{{count}} note",
+      "userSource": "Utente",
+      "llmSource": "LLM",
+      "empty": "Ancora nessuna nota.",
+      "emptySub": "Le note aggiunte dall'agente appariranno qui con la loro posizione nella previsione.",
+      "designPending": "Il design di questa sezione deve ancora essere scelto prima dell'implementazione completa.",
+      "designPendingWithCount": "Esistono già {{count}} nota/e, ma l'interfaccia finale deve ancora essere definita.",
+      "loadFailed": "Impossibile caricare le note."
+    },
     "analysis": {
       "loadFailed": "Impossibile caricare l'analisi.",
       "series": "Serie",

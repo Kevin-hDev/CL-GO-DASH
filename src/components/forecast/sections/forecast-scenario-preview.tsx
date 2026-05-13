@@ -99,8 +99,11 @@ export function ForecastScenarioPreview({
             history: t("forecast.view.historySeries"),
             forecast: t("forecast.view.forecastSeries"),
             confidence: t("forecast.view.confidenceRange"),
+            annotationUser: t("forecast.notes.userSource"),
+            annotationLlm: t("forecast.notes.llmSource"),
           }}
           layers={previewLayers}
+          mode="scenario"
         />
       </div>
     </div>

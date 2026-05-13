@@ -18,13 +18,25 @@ export interface VariableLine {
   rawValues: Array<number | null>;
 }
 
+export type ForecastChartMode = "main" | "scenario" | "comparison" | "notes";
+
+export interface ForecastChartAnnotation {
+  id: string;
+  date: string;
+  text: string;
+  source: "user" | "llm";
+}
+
 export interface TimelineEntry {
   axisLabel: string;
+  dateKey: string;
+  timestamp: number;
   fullLabel: string;
   historyValue: number | null;
   forecastValue: number | null;
   scenarioValues: { id: string; name: string; value: number }[];
   variableValues: { id: string; name: string; value: number; rawValue: number }[];
+  annotationValues: ForecastChartAnnotation[];
   lowerValue: number | null;
   upperValue: number | null;
 }
@@ -35,6 +47,8 @@ export interface ForecastChartPalette {
   pointPredict: string;
   band90: string;
   separator: string;
+  annotationUser: string;
+  annotationLlm: string;
   edge: string;
   inkMuted: string;
   scenarios: string[];
@@ -46,7 +60,10 @@ export interface ForecastChartOptionArgs {
   predictions: Point[];
   scenarios: ScenarioLine[];
   variables: VariableLine[];
+  annotations: ForecastChartAnnotation[];
+  activeAnnotationId?: string | null;
   zoomWindow: { start: number; end: number };
+  compact: boolean;
   quantiles: { q10: number[]; q90: number[] };
   frequency: string;
   endDate: string;
@@ -55,5 +72,31 @@ export interface ForecastChartOptionArgs {
   fallbackName?: string;
   layers: ForecastLayerState;
   palette: ForecastChartPalette;
-  labels: { history: string; forecast: string; confidence: string };
+  labels: {
+    history: string;
+    forecast: string;
+    confidence: string;
+    annotationUser: string;
+    annotationLlm: string;
+  };
+}
+
+export interface ForecastChartProps {
+  history: Point[];
+  predictions: Point[];
+  scenarios: ScenarioLine[];
+  variables: VariableLine[];
+  annotations?: ForecastChartAnnotation[];
+  activeAnnotationId?: string | null;
+  onAnnotationClick?: (annotation: ForecastChartAnnotation) => void;
+  mode?: ForecastChartMode;
+  compact?: boolean;
+  quantiles: { q10: number[]; q90: number[] };
+  frequency: string;
+  endDate: string;
+  locale: string;
+  targetColumn?: string;
+  fallbackName?: string;
+  labels: ForecastChartOptionArgs["labels"];
+  layers: ForecastLayerState;
 }
