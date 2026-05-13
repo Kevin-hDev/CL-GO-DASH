@@ -627,6 +627,14 @@
   "forecast": {
     "title": "预测",
     "noAnalysis": "没有正在进行的分析",
+    "docs": {
+      "button": "文档",
+      "windowTitle": "Forecast 文档",
+      "kicker": "技术文档",
+      "status": "Forecast 指南",
+      "openTooltip": "打开 Forecast 文档",
+      "openFailed": "无法打开 Forecast 文档。"
+    },
     "askAgent": "询问代理",
     "importFile": "导入文件 (CSV, Excel)",
     "pasteData": "粘贴数据",

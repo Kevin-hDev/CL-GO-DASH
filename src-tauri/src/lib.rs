@@ -110,13 +110,13 @@ pub fn run() {
             tauri::async_runtime::spawn(services::llm::model_registry::init());
             Ok(())
         })
-        .on_window_event(|_app, event| {
+        .on_window_event(|window, event| {
             #[cfg(target_os = "macos")]
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
-                if let Some(win) = _app.get_webview_window("main") {
-                    let _ = win.hide();
+                if window.label() == "main" {
+                    let _ = window.hide();
+                    api.prevent_close();
                 }
-                api.prevent_close();
             }
         })
         .invoke_handler(tauri::generate_handler![

@@ -6,9 +6,14 @@ use tauri::{Manager, RunEvent, WindowEvent};
 pub fn handle_run_event(app_handle: &tauri::AppHandle, event: RunEvent) {
     match event {
         RunEvent::WindowEvent {
+            label,
             event: WindowEvent::CloseRequested { .. },
             ..
         } => {
+            if label != "main" {
+                return;
+            }
+
             #[cfg(not(target_os = "macos"))]
             {
                 if should_hide_instead_of_quit(app_handle) {

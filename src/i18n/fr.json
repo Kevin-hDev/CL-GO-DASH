@@ -701,6 +701,14 @@
   "forecast": {
     "title": "Forecast",
     "noAnalysis": "Aucune analyse en cours",
+    "docs": {
+      "button": "Docs",
+      "windowTitle": "Documentation Forecast",
+      "kicker": "Documentation technique",
+      "status": "Guide Forecast",
+      "openTooltip": "Ouvrir la documentation Forecast",
+      "openFailed": "Impossible d'ouvrir la documentation Forecast."
+    },
     "askAgent": "Demander à l'agent",
     "importFile": "Importer un fichier (CSV, Excel)",
     "pasteData": "Coller des données",

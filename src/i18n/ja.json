@@ -627,6 +627,14 @@
   "forecast": {
     "title": "予測",
     "noAnalysis": "分析が進行中ではありません",
+    "docs": {
+      "button": "Docs",
+      "windowTitle": "Forecast ドキュメント",
+      "kicker": "技術ドキュメント",
+      "status": "Forecast ガイド",
+      "openTooltip": "Forecast ドキュメントを開く",
+      "openFailed": "Forecast ドキュメントを開けませんでした。"
+    },
     "askAgent": "エージェントに聞く",
     "importFile": "ファイルをインポート (CSV, Excel)",
     "pasteData": "データを貼り付け",

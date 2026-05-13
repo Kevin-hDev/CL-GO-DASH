@@ -701,6 +701,14 @@
   "forecast": {
     "title": "Forecast",
     "noAnalysis": "No analysis in progress",
+    "docs": {
+      "button": "Docs",
+      "windowTitle": "Forecast documentation",
+      "kicker": "Technical documentation",
+      "status": "Forecast guide",
+      "openTooltip": "Open Forecast documentation",
+      "openFailed": "Could not open Forecast documentation."
+    },
     "askAgent": "Ask the agent",
     "importFile": "Import file (CSV, Excel)",
     "pasteData": "Paste data",

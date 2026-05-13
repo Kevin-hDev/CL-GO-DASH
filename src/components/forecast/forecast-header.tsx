@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { ChevronDown, Maximize2, Minimize2 } from "lucide-react";
+import { BookOpen, ChevronDown, Maximize2, Minimize2 } from "lucide-react";
 import type { ForecastSection } from "@/hooks/use-forecast-panel";
 
 const SECTION_KEYS: Record<ForecastSection, string> = {
@@ -20,6 +20,7 @@ interface ForecastHeaderProps {
   filterSlot?: ReactNode;
   rightSlot?: ReactNode;
   onToggleNav: () => void;
+  onOpenDocs: () => void;
   onCloseAnalysis: () => void;
   onFullscreenChange: (fs: boolean) => void;
 }
@@ -33,6 +34,7 @@ export function ForecastHeader({
   filterSlot,
   rightSlot,
   onToggleNav,
+  onOpenDocs,
   onCloseAnalysis,
   onFullscreenChange,
 }: ForecastHeaderProps) {
@@ -58,6 +60,14 @@ export function ForecastHeader({
         {contextLabel && <span className="fc-context-label">{contextLabel}</span>}
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+        <button
+          className="fc-docs-btn"
+          onClick={onOpenDocs}
+          title={t("forecast.docs.openTooltip")}
+        >
+          <BookOpen size={14} />
+          <span>{t("forecast.docs.button")}</span>
+        </button>
         {rightSlot}
         <button
           className="fp-icon-btn"

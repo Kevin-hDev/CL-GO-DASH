@@ -12,10 +12,27 @@ import { HeartbeatTab } from "@/components/heartbeat/heartbeat-tab";
 import { PersonalityTab } from "@/components/personality/personality-tab";
 import { AgentLocalTab } from "@/components/agent-local/agent-local-tab";
 import { SettingsTab } from "@/components/settings/settings-tab";
+import { ForecastDocsWindow } from "@/components/forecast-docs/forecast-docs-window";
 import type { TabSlots } from "@/components/agent-local/agent-local-tab-types";
 import type { TabId } from "@/components/layout/sidebar";
 
 export default function App() {
+  return window.location.hash === "#/forecast-docs" ? <ForecastDocsApp /> : <MainApp />;
+}
+
+function ForecastDocsApp() {
+  useTheme();
+
+  useEffect(() => {
+    const splash = document.getElementById("splash");
+    if (!splash) return;
+    requestAnimationFrame(() => splash.remove());
+  }, []);
+
+  return <ForecastDocsWindow />;
+}
+
+function MainApp() {
   const { current: nav, push, goBack, goForward, canGoBack, canGoForward } =
     useTabHistory({
       tab: "agent-local",
@@ -27,6 +44,7 @@ export default function App() {
 
   const { choice, setTheme } = useTheme();
   const { t } = useTranslation();
+
   const [vaultError, setVaultError] = useState<string | null>(null);
   const [ollamaReady, setOllamaReady] = useState<boolean | null>(null);
   const { focusedPanel } = usePanelFocus();

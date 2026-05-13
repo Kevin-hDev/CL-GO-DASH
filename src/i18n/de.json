@@ -627,6 +627,14 @@
   "forecast": {
     "title": "Prognose",
     "noAnalysis": "Keine laufende Analyse",
+    "docs": {
+      "button": "Docs",
+      "windowTitle": "Forecast-Dokumentation",
+      "kicker": "Technische Dokumentation",
+      "status": "Forecast-Leitfaden",
+      "openTooltip": "Forecast-Dokumentation öffnen",
+      "openFailed": "Forecast-Dokumentation konnte nicht geöffnet werden."
+    },
     "askAgent": "Agent fragen",
     "importFile": "Datei importieren (CSV, Excel)",
     "pasteData": "Daten einfügen",
