@@ -883,6 +883,7 @@
     "models": {
       "manage": "モデル管理",
       "title": "Forecast モデル",
+      "sidebarTitle": "Models",
       "back": "戻る",
       "summary": "概要",
       "modelCapabilities": "モデルの能力",
@@ -902,8 +903,18 @@
       "ram": "RAM",
       "ramCpu": "RAM (CPU)",
       "vramGpu": "VRAM (GPU)",
+      "cpuLabel": "CPU",
+      "gpuLabel": "GPU",
+      "hardwareLabel": "ハードウェア特性",
+      "licenseLabel": "ライセンス",
+      "libraryLabel": "ライブラリ",
+      "pipelineLabel": "パイプライン",
+      "downloadsLabel": "ダウンロード数",
+      "likesLabel": "Likes",
+      "sourceLabel": "ソース",
       "supported": "対応",
       "unsupported": "非対応",
+      "uninstalled": "未インストール",
       "horizonMax": "最大予測期間",
       "frequencies": "頻度",
       "state": "状態",
@@ -914,8 +925,17 @@
       "noKeyConfigured": "APIキー未設定",
       "noneAvailable": "この起動で利用できるモデルはありません。",
       "families": {
-        "chronos": "Amazon Chronos",
-        "timegpt": "Nixtla TimeGPT"
+        "chronos-bolt": "Chronos-Bolt",
+        "chronos-2": "Chronos-2",
+        "timesfm-2-5": "TimesFM 2.5",
+        "timegpt-2": "TimeGPT-2",
+        "toto-2": "Datadog Toto 2.0",
+        "moirai-2": "MOIRAI 2.0",
+        "flowstate": "FlowState",
+        "tabpfn-ts": "TabPFN-TS",
+        "tirex": "TiRex",
+        "kairos": "Kairos",
+        "sundial": "Sundial"
       },
       "hardware": {
         "light": "軽量ハードウェア",
@@ -926,6 +946,7 @@
       "engines": {
         "localChronosBolt": "ローカル Chronos-Bolt",
         "localChronos2": "ローカル Chronos-2",
+        "localPackage": "ローカルパッケージ",
         "cloudApi": "クラウド API"
       },
       "capabilities": {

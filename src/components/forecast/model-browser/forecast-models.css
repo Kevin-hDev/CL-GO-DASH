@@ -30,6 +30,13 @@
   scrollbar-color: var(--scrollbar-thumb) transparent;
 }
 
+.fmb-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+}
+
 .fmb-group-label {
   font-size: var(--text-xs);
   font-family: var(--font-mono);

@@ -5,6 +5,7 @@ use std::path::PathBuf;
 use tauri::ipc::Channel;
 
 pub mod download;
+pub mod download_github;
 
 fn models_dir() -> PathBuf {
     data_dir().join("forecast-models")
@@ -48,8 +49,8 @@ pub async fn install(
         catalog::find_model(model_id).ok_or_else(|| format!("Modèle inconnu: {model_id}"))?;
 
     let hf_repo = spec
-        .hf_repo
-        .ok_or("Ce modèle n'a pas de repo HuggingFace")?;
+        .hf_repo;
+    let github_repo = spec.github_repo;
 
     let target_dir = model_path(model_id);
     let staging_dir = models_dir().join(format!(".{model_id}.staging"));
@@ -58,7 +59,22 @@ pub async fn install(
         .await
         .map_err(|e| format!("Impossible de créer le dossier: {e}"))?;
 
-    if let Err(e) = download::download_model(hf_repo, &staging_dir, model_id, on_progress).await {
+    let download_result = if let Some(repo) = hf_repo {
+        download::download_model(repo, spec.hf_revision, &staging_dir, model_id, on_progress).await
+    } else if let Some(repo) = github_repo {
+        download_github::download_repo_snapshot(
+            repo,
+            spec.github_revision,
+            &staging_dir,
+            model_id,
+            on_progress,
+        )
+        .await
+    } else {
+        Err("Ce modèle n'a pas de source téléchargeable".to_string())
+    };
+
+    if let Err(e) = download_result {
         let _ = tokio::fs::remove_dir_all(&staging_dir).await;
         return Err(e);
     }

@@ -142,7 +142,8 @@ pub fn list_forecast_models() -> Value {
         .map(|m| {
             let mut v = serde_json::to_value(m).unwrap_or_default();
             if let Some(obj) = v.as_object_mut() {
-                if let Some(runtime) = registry::find_runtime(m.id) {
+                let runtime = registry::find_runtime(m.id);
+                if let Some(runtime) = runtime {
                     obj.insert(
                         "family_id".into(),
                         Value::String(runtime.family_id.to_string()),
@@ -155,10 +156,35 @@ pub fn list_forecast_models() -> Value {
                         "capabilities".into(),
                         serde_json::to_value(runtime.capabilities).unwrap_or_default(),
                     );
+                } else {
+                    obj.insert(
+                        "capabilities".into(),
+                        serde_json::json!({
+                            "past_covariates": m.covariates,
+                            "future_covariates": m.covariates,
+                            "multivariate": m.multivariate,
+                            "probabilistic": true,
+                            "backtesting_ready": false,
+                            "anomalies_ready": false,
+                            "fine_tuning_ready": false,
+                        }),
+                    );
                 }
+                obj.insert(
+                    "family_id".into(),
+                    Value::String(m.family_id.to_string()),
+                );
                 obj.insert(
                     "installed".into(),
                     Value::Bool(installed.contains(&m.id.to_string())),
+                );
+                obj.insert(
+                    "installable".into(),
+                    Value::Bool(!m.is_cloud && (m.hf_repo.is_some() || m.github_repo.is_some())),
+                );
+                obj.insert(
+                    "runnable".into(),
+                    Value::Bool(runtime.is_some()),
                 );
                 obj.insert(
                     "size_on_disk".into(),

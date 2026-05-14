@@ -7,6 +7,8 @@ pub mod input_dates;
 pub mod input_parse_utils;
 pub mod input_series;
 pub mod model_manager;
+pub mod model_details;
+pub mod model_details_github;
 pub mod nixtla_multiseries;
 pub mod notes;
 mod notes_files;

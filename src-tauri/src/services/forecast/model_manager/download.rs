@@ -9,19 +9,18 @@ const MAX_MODEL_FILES: usize = 128;
 
 pub async fn download_model(
     hf_repo: &str,
+    hf_revision: Option<&str>,
     target_dir: &Path,
     model_id: &str,
     on_progress: &Channel<ModelDownloadProgress>,
 ) -> Result<(), String> {
-    let files = list_hf_files(hf_repo).await?;
+    let files = list_hf_files(hf_repo, hf_revision).await?;
     let total_size: u64 = files.iter().map(|(_, size)| size).sum();
     let mut downloaded: u64 = 0;
 
     for (filename, _file_size) in &files {
-        let url = format!(
-            "https://huggingface.co/{}/resolve/main/{}",
-            hf_repo, filename
-        );
+        let revision = hf_revision.unwrap_or("main");
+        let url = format!("https://huggingface.co/{}/resolve/{}/{}", hf_repo, revision, filename);
         let dest = target_dir.join(filename);
         if let Some(parent) = dest.parent() {
             tokio::fs::create_dir_all(parent).await.ok();
@@ -46,8 +45,9 @@ pub async fn download_model(
     Ok(())
 }
 
-async fn list_hf_files(repo: &str) -> Result<Vec<(String, u64)>, String> {
-    let url = format!("https://huggingface.co/api/models/{repo}/tree/main?recursive=true");
+async fn list_hf_files(repo: &str, revision: Option<&str>) -> Result<Vec<(String, u64)>, String> {
+    let rev = revision.unwrap_or("main");
+    let url = format!("https://huggingface.co/api/models/{repo}/tree/{rev}?recursive=true");
     let client = reqwest::Client::new();
     let resp = client
         .get(&url)

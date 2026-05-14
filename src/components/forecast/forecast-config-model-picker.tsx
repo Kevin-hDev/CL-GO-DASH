@@ -56,6 +56,8 @@ export function ForecastConfigModelPicker({
             <div className={`fcmp-group-body ${isOpen ? "is-open" : ""}`}>
               {group.models.map((model) => {
                 const active = selectedId === model.id;
+                const summaryKey = getForecastModelSummaryKey(model.id);
+                const summary = t(summaryKey);
                 return (
                   <button
                     key={model.id}
@@ -67,7 +69,7 @@ export function ForecastConfigModelPicker({
                     <span className="fcmp-model-main">
                       <span className="fcmp-model-name">{model.display_name}</span>
                       <span className="fcmp-model-summary">
-                        {t(getForecastModelSummaryKey(model.id))}
+                        {summary === summaryKey ? model.display_name : summary}
                       </span>
                     </span>
                     <span className="fcmp-model-side">

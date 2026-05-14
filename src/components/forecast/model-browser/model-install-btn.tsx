@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { invoke, Channel } from "@tauri-apps/api/core";
 import { useTranslation } from "react-i18next";
-import { ConfirmButton } from "@/components/settings/confirm-button";
+import { Check } from "@/components/ui/icons";
 
 interface DownloadProgress {
   model_name: string;
@@ -19,7 +19,6 @@ interface ModelInstallBtnProps {
 export function ModelInstallBtn({ modelId, installed, onDone }: ModelInstallBtnProps) {
   const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
-  const [removing, setRemoving] = useState(false);
   const [percent, setPercent] = useState(0);
   const cancelledRef = useRef(false);
 
@@ -40,16 +39,6 @@ export function ModelInstallBtn({ modelId, installed, onDone }: ModelInstallBtnP
       if (!cancelledRef.current) setPercent(-1);
     } finally {
       setBusy(false);
-    }
-  }, [modelId, onDone]);
-
-  const handleRemove = useCallback(async () => {
-    setRemoving(true);
-    try {
-      await invoke("uninstall_forecast_model", { name: modelId });
-      onDone();
-    } finally {
-      setRemoving(false);
     }
   }, [modelId, onDone]);
 
@@ -79,13 +68,12 @@ export function ModelInstallBtn({ modelId, installed, onDone }: ModelInstallBtnP
 
   if (installed) {
     return (
-      <ConfirmButton
-        className="fmi-btn fmi-btn-secondary"
-        label={t("forecast.models.remove")}
-        confirmLabel={t("forecast.models.confirmRemove")}
-        onConfirm={() => void handleRemove()}
-        disabled={removing}
-      />
+      <div
+        title={t("forecast.models.installed")}
+        style={{ display: "flex", alignItems: "center", color: "var(--select-text)" }}
+      >
+        <Check size={18} />
+      </div>
     );
   }
 

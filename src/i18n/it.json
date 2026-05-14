@@ -883,6 +883,7 @@
     "models": {
       "manage": "Gestisci modelli",
       "title": "Modelli Forecast",
+      "sidebarTitle": "Models",
       "back": "Indietro",
       "summary": "Riassunto",
       "modelCapabilities": "Capacità del modello",
@@ -902,8 +903,18 @@
       "ram": "RAM",
       "ramCpu": "RAM (CPU)",
       "vramGpu": "VRAM (GPU)",
+      "cpuLabel": "CPU",
+      "gpuLabel": "GPU",
+      "hardwareLabel": "Profilo hardware",
+      "licenseLabel": "Licenza",
+      "libraryLabel": "Libreria",
+      "pipelineLabel": "Pipeline",
+      "downloadsLabel": "Download",
+      "likesLabel": "Like",
+      "sourceLabel": "Fonte",
       "supported": "Supportato",
       "unsupported": "Non supportato",
+      "uninstalled": "Non installato",
       "horizonMax": "Orizzonte max",
       "frequencies": "Frequenze",
       "state": "Stato",
@@ -914,8 +925,17 @@
       "noKeyConfigured": "Chiave API non configurata",
       "noneAvailable": "Nessun modello disponibile per questo avvio.",
       "families": {
-        "chronos": "Amazon Chronos",
-        "timegpt": "Nixtla TimeGPT"
+        "chronos-bolt": "Chronos-Bolt",
+        "chronos-2": "Chronos-2",
+        "timesfm-2-5": "TimesFM 2.5",
+        "timegpt-2": "TimeGPT-2",
+        "toto-2": "Datadog Toto 2.0",
+        "moirai-2": "MOIRAI 2.0",
+        "flowstate": "FlowState",
+        "tabpfn-ts": "TabPFN-TS",
+        "tirex": "TiRex",
+        "kairos": "Kairos",
+        "sundial": "Sundial"
       },
       "hardware": {
         "light": "Hardware leggero",
@@ -926,6 +946,7 @@
       "engines": {
         "localChronosBolt": "Chronos-Bolt locale",
         "localChronos2": "Chronos-2 locale",
+        "localPackage": "Pacchetto locale",
         "cloudApi": "API cloud"
       },
       "capabilities": {

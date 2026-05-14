@@ -15,7 +15,7 @@ import { OllamaTab } from "@/components/ollama/ollama-tab";
 import { ApiKeysTab } from "@/components/api-keys/api-keys-tab";
 import { ConnectorsTab } from "@/components/connectors/connectors-tab";
 import { ChannelsTab } from "@/components/channels/channels-tab";
-import { ForecastModels } from "@/components/forecast/model-browser/forecast-models";
+import { ForecastTab } from "@/components/forecast/model-browser/forecast-tab";
 import ollamaDark from "@/assets/ollama.png";
 import ollamaLight from "@/assets/ollama-light.png";
 import type { Icon } from "@phosphor-icons/react";
@@ -86,6 +86,7 @@ export const SettingsTab = memo(function SettingsTab({
   const { t } = useTranslation();
 
   const ollamaTab = OllamaTab();
+  const forecastTab = ForecastTab();
   const connectorsTab = ConnectorsTab();
   const channelsTab = ChannelsTab();
   const apiKeysTab = ApiKeysTab();
@@ -128,6 +129,7 @@ export const SettingsTab = memo(function SettingsTab({
         {subTab === "connectors" && connectorsTab.list}
         {subTab === "channels" && channelsTab.list}
         {subTab === "api-keys" && apiKeysTab.list}
+        {subTab === "forecast" && forecastTab.list}
       </div>
     </div>
   );
@@ -146,7 +148,7 @@ export const SettingsTab = memo(function SettingsTab({
     if (subTab === "connectors") return connectorsTab.detail;
     if (subTab === "channels") return channelsTab.detail;
     if (subTab === "api-keys") return apiKeysTab.detail;
-    if (subTab === "forecast") return <ForecastModels />;
+    if (subTab === "forecast") return forecastTab.detail;
     if (subTab === "llm") return <LlmExplorer />;
     if (subTab === "advanced") return <AdvancedSettings />;
     if (subTab === "shortcuts") return <ShortcutsSettings />;
