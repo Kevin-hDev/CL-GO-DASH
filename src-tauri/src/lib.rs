@@ -293,6 +293,7 @@ pub fn run() {
             commands::delete_forecast_note,
             commands::open_forecast_note,
             commands::list_forecast_models,
+            commands::get_forecast_model_details,
             commands::install_forecast_model,
             commands::uninstall_forecast_model,
             commands::list_forecast_providers_catalog,

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import type { ForecastDocPage } from "./forecast-docs-types";
 
 interface ForecastDocsSidebarProps {
@@ -11,10 +12,12 @@ export function ForecastDocsSidebar({
   activeId,
   onSelect,
 }: ForecastDocsSidebarProps) {
+  const { t } = useTranslation();
+
   return (
     <aside className="fd-sidebar">
       <div className="fd-sidebar-kicker">Forecast</div>
-      <nav className="fd-nav" aria-label="Documentation Forecast">
+      <nav className="fd-nav" aria-label={t("forecast.docs.navLabel")}>
         {pages.map((page) => (
           <button
             key={page.id}
@@ -22,7 +25,7 @@ export function ForecastDocsSidebar({
             type="button"
             onClick={() => onSelect(page.id)}
           >
-            {page.navLabel}
+            {t(page.navLabel)}
           </button>
         ))}
       </nav>

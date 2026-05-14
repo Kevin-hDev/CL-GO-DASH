@@ -13,6 +13,7 @@ import {
 } from "./forecast-model-meta";
 import { ForecastConfigModelPicker } from "./forecast-config-model-picker";
 import "./forecast-config.css";
+import "./forecast-config-actions.css";
 
 interface ForecastConfigProps {
   draft: ForecastDraftData;

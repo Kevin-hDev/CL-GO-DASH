@@ -9,18 +9,20 @@ const MAX_MODEL_FILES: usize = 128;
 
 pub async fn download_model(
     hf_repo: &str,
+    hf_revision: Option<&str>,
     target_dir: &Path,
     model_id: &str,
     on_progress: &Channel<ModelDownloadProgress>,
 ) -> Result<(), String> {
-    let files = list_hf_files(hf_repo).await?;
+    let files = list_hf_files(hf_repo, hf_revision).await?;
     let total_size: u64 = files.iter().map(|(_, size)| size).sum();
     let mut downloaded: u64 = 0;
 
     for (filename, _file_size) in &files {
+        let revision = hf_revision.unwrap_or("main");
         let url = format!(
-            "https://huggingface.co/{}/resolve/main/{}",
-            hf_repo, filename
+            "https://huggingface.co/{}/resolve/{}/{}",
+            hf_repo, revision, filename
         );
         let dest = target_dir.join(filename);
         if let Some(parent) = dest.parent() {
@@ -46,21 +48,22 @@ pub async fn download_model(
     Ok(())
 }
 
-async fn list_hf_files(repo: &str) -> Result<Vec<(String, u64)>, String> {
-    let url = format!("https://huggingface.co/api/models/{repo}/tree/main?recursive=true");
+async fn list_hf_files(repo: &str, revision: Option<&str>) -> Result<Vec<(String, u64)>, String> {
+    let rev = revision.unwrap_or("main");
+    let url = format!("https://huggingface.co/api/models/{repo}/tree/{rev}?recursive=true");
     let client = reqwest::Client::new();
     let resp = client
         .get(&url)
         .timeout(std::time::Duration::from_secs(15))
         .send()
         .await
-        .map_err(|e| format!("Erreur HuggingFace API: {e}"))?;
+        .map_err(|_| "Erreur HuggingFace API".to_string())?;
 
     if !resp.status().is_success() {
-        return Err(format!("HuggingFace API erreur: {}", resp.status()));
+        return Err("HuggingFace API erreur".into());
     }
 
-    let body: serde_json::Value = resp.json().await.map_err(|e| format!("Parsing HF: {e}"))?;
+    let body: serde_json::Value = resp.json().await.map_err(|_| "Parsing HF".to_string())?;
 
     let tree = body.as_array().ok_or("Réponse HuggingFace invalide")?;
 
@@ -116,24 +119,24 @@ async fn download_single(
         .get(url)
         .send()
         .await
-        .map_err(|e| format!("Download échoué: {e}"))?;
+        .map_err(|_| "Download échoué".to_string())?;
 
     if !resp.status().is_success() {
-        return Err(format!("Download erreur: {}", resp.status()));
+        return Err("Download erreur".into());
     }
 
     let tmp = dest.with_extension("tmp");
     let mut file = tokio::fs::File::create(&tmp)
         .await
-        .map_err(|e| format!("Création tmp: {e}"))?;
+        .map_err(|_| "Création tmp échouée".to_string())?;
 
     let mut stream = resp.bytes_stream();
 
     while let Some(chunk) = stream.next().await {
-        let chunk = chunk.map_err(|e| format!("Stream: {e}"))?;
+        let chunk = chunk.map_err(|_| "Stream échoué".to_string())?;
         file.write_all(&chunk)
             .await
-            .map_err(|e| format!("Écriture: {e}"))?;
+            .map_err(|_| "Écriture échouée".to_string())?;
 
         *downloaded += chunk.len() as u64;
         let percent = if total_size > 0 {
@@ -149,10 +152,10 @@ async fn download_single(
         });
     }
 
-    file.flush().await.map_err(|e| format!("Flush: {e}"))?;
+    file.flush().await.map_err(|_| "Flush échoué".to_string())?;
     drop(file);
 
     tokio::fs::rename(&tmp, dest)
         .await
-        .map_err(|e| format!("Rename: {e}"))
+        .map_err(|_| "Rename échoué".to_string())
 }

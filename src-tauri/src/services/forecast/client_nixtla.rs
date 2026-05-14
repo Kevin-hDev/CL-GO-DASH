@@ -1,3 +1,4 @@
+use crate::services::forecast::client_nixtla_retry;
 use crate::services::forecast::input_data::{parse_request_input, ParsedInput};
 use crate::services::forecast::nixtla_multiseries;
 use crate::services::forecast::types::{ForecastRequest, ForecastResult, Prediction, Quantiles};
@@ -22,46 +23,21 @@ pub async fn predict(
     };
 
     let client = reqwest::Client::new();
-    let resp = client
-        .post(endpoint)
-        .header("Authorization", format!("Bearer {}", api_key.as_str()))
-        .header("Content-Type", "application/json")
-        .json(&payload)
-        .send()
-        .await
-        .map_err(|e| format!("Erreur réseau Nixtla: {e}"))?;
+    let resp =
+        client_nixtla_retry::post_json_with_retry(&client, &endpoint, api_key, &payload).await?;
 
     if !resp.status().is_success() {
         let status = resp.status();
-        // Ne pas exposer le body brut — log interne uniquement
-        let body = resp.text().await.unwrap_or_default();
-        eprintln!("[nixtla] erreur {status}: {body}");
+        eprintln!("[nixtla] erreur {status}");
         return Err("Erreur du service de prédiction".to_string());
     }
 
     let body: Value = resp
         .json()
         .await
-        .map_err(|e| format!("Parsing réponse Nixtla: {e}"))?;
+        .map_err(|_| "Réponse du service de prédiction invalide".to_string())?;
 
     parse_response(&body, request, &input, session_id)
-}
-
-pub async fn test_connection(api_key: &Zeroizing<String>) -> Result<(), String> {
-    let client = reqwest::Client::new();
-    let resp = client
-        .get(format!("{API_BASE}/models"))
-        .header("Authorization", format!("Bearer {}", api_key.as_str()))
-        .timeout(std::time::Duration::from_secs(10))
-        .send()
-        .await
-        .map_err(|e| format!("Connexion Nixtla échouée: {e}"))?;
-
-    if resp.status().is_success() {
-        Ok(())
-    } else {
-        Err(format!("Clé Nixtla invalide ({})", resp.status()))
-    }
 }
 
 fn build_payload(input: &ParsedInput, request: &ForecastRequest) -> Result<Value, String> {

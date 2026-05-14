@@ -1,7 +1,6 @@
 use super::input_data::InputSnapshot;
 use serde::{Deserialize, Serialize};
 
-pub const MAX_PREDICTIONS: usize = 10_000;
 pub const MAX_ANNOTATIONS: usize = 200;
 pub const MAX_SCENARIOS: usize = 50;
 
@@ -141,49 +140,6 @@ impl ForecastResult {
             scenarios_count: self.scenarios.len(),
         }
     }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ModelConfig {
-    pub device: String,
-    #[serde(default = "default_quantiles")]
-    pub quantiles: Vec<f64>,
-    #[serde(default = "default_horizon_max")]
-    pub horizon_max: u32,
-    #[serde(default = "default_batch_size")]
-    pub batch_size: u32,
-    pub precision: String,
-}
-
-fn default_quantiles() -> Vec<f64> {
-    vec![0.1, 0.5, 0.9]
-}
-
-fn default_horizon_max() -> u32 {
-    1000
-}
-
-fn default_batch_size() -> u32 {
-    32
-}
-
-impl Default for ModelConfig {
-    fn default() -> Self {
-        Self {
-            device: "auto".into(),
-            quantiles: default_quantiles(),
-            horizon_max: default_horizon_max(),
-            batch_size: default_batch_size(),
-            precision: "fp32".into(),
-        }
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ForecastProgress {
-    pub stage: String,
-    pub percent: f64,
-    pub message: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

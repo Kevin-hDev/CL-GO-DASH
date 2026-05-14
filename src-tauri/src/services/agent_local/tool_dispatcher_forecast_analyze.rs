@@ -1,8 +1,12 @@
 use crate::services::agent_local::types_tools::ToolResult;
-use crate::services::forecast::scenarios::{ScenarioRequest, ScenarioUpdateRequest};
+use crate::services::forecast::types::MAX_ANNOTATIONS;
 use crate::services::forecast::{scenarios, sidecar, storage};
+use chrono::{DateTime, NaiveDate, NaiveDateTime};
 use serde_json::Value;
 use tauri::Manager;
+
+const MAX_ANNOTATION_TEXT_CHARS: usize = 500;
+const MAX_ANNOTATION_DATE_CHARS: usize = 80;
 
 pub async fn handle(args: &Value) -> ToolResult {
     let analysis_id = match args["analysis_id"].as_str() {
@@ -36,17 +40,25 @@ async fn annotate(
 ) -> ToolResult {
     let text = args["params"]["text"].as_str().unwrap_or("");
     let date = args["params"]["date"].as_str().unwrap_or("");
-    if text.is_empty() || date.is_empty() {
+    let Ok(text) = clean_annotation_text(text) else {
         return ToolResult::err(
             "Paramètres d'annotation manquants. Utiliser params.text et params.date.",
         );
+    };
+    let Ok(date) = clean_annotation_date(date) else {
+        return ToolResult::err(
+            "Paramètres d'annotation manquants. Utiliser params.text et params.date.",
+        );
+    };
+    if analysis.annotations.len() >= MAX_ANNOTATIONS {
+        return ToolResult::err("Limite d'annotations atteinte");
     }
     analysis
         .annotations
         .push(crate::services::forecast::types::Annotation {
             id: uuid::Uuid::new_v4().to_string(),
-            date: date.to_string(),
-            text: text.to_string(),
+            date,
+            text,
             source: crate::services::forecast::types::AnnotationSource::Llm,
         });
     match storage::save(&analysis).await {
@@ -55,35 +67,58 @@ async fn annotate(
     }
 }
 
+fn clean_annotation_text(value: &str) -> Result<String, String> {
+    let trimmed = value.trim();
+    if trimmed.is_empty()
+        || trimmed.chars().count() > MAX_ANNOTATION_TEXT_CHARS
+        || trimmed.contains('\0')
+    {
+        return Err("Annotation invalide".into());
+    }
+    Ok(trimmed.to_string())
+}
+
+fn clean_annotation_date(value: &str) -> Result<String, String> {
+    let trimmed = value.trim();
+    if trimmed.is_empty()
+        || trimmed.chars().count() > MAX_ANNOTATION_DATE_CHARS
+        || trimmed.contains('\0')
+        || trimmed.contains(['\n', '\r'])
+        || !is_supported_annotation_date(trimmed)
+    {
+        return Err("Date d'annotation invalide".into());
+    }
+    Ok(trimmed.to_string())
+}
+
+fn is_supported_annotation_date(value: &str) -> bool {
+    DateTime::parse_from_rfc3339(value).is_ok()
+        || NaiveDate::parse_from_str(value, "%Y-%m-%d").is_ok()
+        || NaiveDateTime::parse_from_str(value, "%Y-%m-%dT%H:%M:%S").is_ok()
+        || NaiveDateTime::parse_from_str(value, "%Y-%m-%dT%H:%M").is_ok()
+        || NaiveDateTime::parse_from_str(value, "%Y-%m-%d %H:%M:%S").is_ok()
+        || NaiveDateTime::parse_from_str(value, "%Y-%m-%d %H:%M").is_ok()
+}
+
 async fn scenario_create(analysis_id: &str, params: &Value) -> ToolResult {
-    let name = params["name"].as_str().unwrap_or("");
-    let request = ScenarioRequest {
-        analysis_id: analysis_id.to_string(),
-        name: name.to_string(),
-        description: params["description"].as_str().map(str::to_string),
-        scenario_kind: scenario_kind(params),
-        adjustment_percent: params["adjustment_percent"].as_f64().unwrap_or(0.0),
-        covariate_adjustments: serde_json::from_value(params["covariate_adjustments"].clone())
-            .unwrap_or_default(),
-        target_series_id: params["target_series_id"].as_str().map(str::to_string),
+    let request = match super::tool_dispatcher_forecast_scenario_params::create_request(
+        analysis_id,
+        params,
+    ) {
+        Ok(request) => request,
+        Err(e) => return ToolResult::err(e),
     };
     let chronos = forecast_chronos();
     save_scenario_result(scenarios::create(request, chronos.as_deref()).await)
 }
 
 async fn scenario_update(analysis_id: &str, params: &Value) -> ToolResult {
-    let scenario_id = params["scenario_id"].as_str().unwrap_or("");
-    let name = params["name"].as_str().unwrap_or("");
-    let request = ScenarioUpdateRequest {
-        analysis_id: analysis_id.to_string(),
-        scenario_id: scenario_id.to_string(),
-        name: name.to_string(),
-        description: params["description"].as_str().map(str::to_string),
-        scenario_kind: scenario_kind(params),
-        adjustment_percent: params["adjustment_percent"].as_f64().unwrap_or(0.0),
-        covariate_adjustments: serde_json::from_value(params["covariate_adjustments"].clone())
-            .unwrap_or_default(),
-        target_series_id: params["target_series_id"].as_str().map(str::to_string),
+    let request = match super::tool_dispatcher_forecast_scenario_params::update_request(
+        analysis_id,
+        params,
+    ) {
+        Ok(request) => request,
+        Err(e) => return ToolResult::err(e),
     };
     let chronos = forecast_chronos();
     save_scenario_result(scenarios::update(request, chronos.as_deref()).await)
@@ -95,13 +130,6 @@ async fn scenario_delete(analysis_id: &str, params: &Value) -> ToolResult {
         return ToolResult::err("Paramètres de scénario manquants. Utiliser params.scenario_id.");
     }
     save_scenario_result(scenarios::delete(analysis_id, scenario_id).await)
-}
-
-fn scenario_kind(params: &Value) -> String {
-    params["scenario_kind"]
-        .as_str()
-        .unwrap_or("percent_adjustment")
-        .to_string()
 }
 
 fn save_scenario_result(

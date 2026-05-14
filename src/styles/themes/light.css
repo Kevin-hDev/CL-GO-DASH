@@ -22,6 +22,9 @@
   --signal-idle: #b0b0b8;
   --signal-live: #d4a017;
   --signal-error: #dc2626;
+  --signal-error-border: rgba(220, 38, 38, 0.24);
+  --signal-error-pulse: rgba(220, 38, 38, 0.35);
+  --signal-error-pulse-fade: rgba(220, 38, 38, 0);
   --signal-ok: #16a34a;
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.04);
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -72,6 +75,8 @@
 
   /* Forecast panel */
   --fc-chart-bg: var(--void);
+  --fc-tooltip-bg: rgba(255, 255, 255, 0.96);
+  --fc-tooltip-text: var(--ink);
   --fc-line-history: var(--ink);
   --fc-line-predict: var(--tool-bash);
   --fc-point-predict: #1a1a1a;

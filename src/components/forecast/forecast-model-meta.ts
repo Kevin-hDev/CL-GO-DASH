@@ -21,6 +21,8 @@ export interface ForecastModelEntry {
   frequencies: string;
   is_cloud: boolean;
   installed: boolean;
+  installable?: boolean;
+  runnable?: boolean;
   size_on_disk?: number;
   provider_configured?: boolean;
   engine_kind?: "local_chronos_bolt" | "local_chronos2" | "cloud_api";
@@ -55,12 +57,25 @@ export interface ForecastModelGroup {
   models: ForecastModelEntry[];
 }
 
-const FAMILY_ORDER = ["chronos", "timegpt"];
+const FAMILY_ORDER = [
+  "chronos-bolt",
+  "chronos-2",
+  "timesfm-2-5",
+  "timegpt-2",
+  "toto-2",
+  "moirai-2",
+  "flowstate",
+  "tabpfn-ts",
+  "tirex",
+  "kairos",
+  "sundial",
+];
 
 export function getForecastFamilyId(model: ForecastModelEntry): string {
   if (model.family_id) return model.family_id;
-  if (model.id.startsWith("chronos")) return "chronos";
-  if (model.id.startsWith("timegpt")) return "timegpt";
+  if (model.id.startsWith("chronos-bolt")) return "chronos-bolt";
+  if (model.id.startsWith("chronos-2")) return "chronos-2";
+  if (model.id.startsWith("timegpt")) return "timegpt-2";
   return model.provider_id;
 }
 
@@ -83,7 +98,26 @@ export function groupForecastModels(models: ForecastModelEntry[]): ForecastModel
     }));
 }
 
+export function listForecastFamilies(models: ForecastModelEntry[]): ForecastModelGroup[] {
+  const grouped = new Map(groupForecastModels(models).map((group) => [group.id, group.models]));
+  const ordered = FAMILY_ORDER.map((id) => ({
+    id,
+    titleKey: getForecastFamilyKey(id),
+    models: grouped.get(id) ?? [],
+  }));
+  const extras = [...grouped.entries()]
+    .filter(([id]) => !FAMILY_ORDER.includes(id))
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([id, familyModels]) => ({
+      id,
+      titleKey: getForecastFamilyKey(id),
+      models: familyModels,
+    }));
+  return [...ordered, ...extras];
+}
+
 export function isForecastModelSelectable(model: ForecastModelEntry): boolean {
+  if (!model.runnable) return false;
   return model.is_cloud ? Boolean(model.provider_configured) : model.installed;
 }
 
@@ -111,6 +145,7 @@ export function getModelCapabilities(model: ForecastModelEntry): ForecastCapabil
 export function getForecastEngineKey(model: ForecastModelEntry): string {
   if (model.engine_kind === "local_chronos2") return "forecast.models.engines.localChronos2";
   if (model.engine_kind === "local_chronos_bolt") return "forecast.models.engines.localChronosBolt";
+  if (!model.is_cloud) return "forecast.models.engines.localPackage";
   return "forecast.models.engines.cloudApi";
 }
 

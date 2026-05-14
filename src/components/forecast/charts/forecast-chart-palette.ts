@@ -11,6 +11,8 @@ export function buildForecastChartPalette(root: CSSStyleDeclaration): ForecastCh
     annotationLlm: root.getPropertyValue("--fc-annotation").trim(),
     edge: root.getPropertyValue("--edge").trim(),
     inkMuted: root.getPropertyValue("--ink-faint").trim(),
+    tooltipBg: root.getPropertyValue("--fc-tooltip-bg").trim(),
+    tooltipText: root.getPropertyValue("--fc-tooltip-text").trim(),
     scenarios: readPalette(root, ["--fc-scenario-a", "--fc-scenario-b", "--fc-scenario-c"]),
     variables: readPalette(root, [
       "--fc-variable-a",

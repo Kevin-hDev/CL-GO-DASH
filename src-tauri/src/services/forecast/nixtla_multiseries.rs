@@ -126,20 +126,7 @@ fn build_prediction_dates(
         .as_deref()
         .ok_or("Colonne série manquante")?;
     if !input.future_rows.is_empty() {
-        return group_rows(&input.future_rows, series_column)?
-            .into_iter()
-            .map(|(series_id, rows)| {
-                rows.iter()
-                    .map(|row| {
-                        row.get(&request.date_column)
-                            .and_then(Value::as_str)
-                            .map(|value| value.to_string())
-                            .ok_or("Colonne date manquante".to_string())
-                    })
-                    .collect::<Result<Vec<_>, _>>()
-                    .map(|dates| (series_id, dates))
-            })
-            .collect();
+        return build_future_row_dates(input, request, series_column);
     }
 
     Ok(group_rows(&input.history_rows, series_column)?
@@ -156,6 +143,31 @@ fn build_prediction_dates(
             )
         })
         .collect())
+}
+
+fn build_future_row_dates(
+    input: &ParsedInput,
+    request: &ForecastRequest,
+    series_column: &str,
+) -> Result<BTreeMap<String, Vec<String>>, String> {
+    let mut dates_by_series = BTreeMap::new();
+    for (series_id, rows) in group_rows(&input.future_rows, series_column)? {
+        let dates = read_row_dates(&rows, &request.date_column)?;
+        dates_by_series.insert(series_id, dates);
+    }
+    Ok(dates_by_series)
+}
+
+fn read_row_dates(rows: &[Map<String, Value>], date_column: &str) -> Result<Vec<String>, String> {
+    let mut dates = Vec::with_capacity(rows.len());
+    for row in rows {
+        let date = row
+            .get(date_column)
+            .and_then(Value::as_str)
+            .ok_or("Colonne date manquante")?;
+        dates.push(date.to_string());
+    }
+    Ok(dates)
 }
 
 fn read_exogenous_row(row: &Map<String, Value>, columns: &[String]) -> Result<Vec<Value>, String> {

@@ -86,9 +86,15 @@ fn run(command: &mut Command, message: &str) -> Result<(), String> {
 
 fn truncate(text: &str) -> String {
     let trimmed = text.trim().replace('\n', " ");
-    if trimmed.len() <= 400 {
+    let mut indices = trimmed.char_indices();
+    if indices.nth(400).is_none() {
         trimmed
     } else {
-        format!("{}…", &trimmed[..400])
+        let cutoff = trimmed
+            .char_indices()
+            .nth(400)
+            .map(|(idx, _)| idx)
+            .unwrap_or(trimmed.len());
+        format!("{}...", &trimmed[..cutoff])
     }
 }

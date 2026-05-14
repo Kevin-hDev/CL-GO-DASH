@@ -65,6 +65,7 @@ pub mod tool_dispatcher;
 pub mod tool_dispatcher_forecast;
 pub mod tool_dispatcher_forecast_analyze;
 pub mod tool_dispatcher_forecast_output;
+pub mod tool_dispatcher_forecast_scenario_params;
 pub mod tool_dispatcher_mcp;
 pub mod tool_dispatcher_office;
 #[cfg(test)]

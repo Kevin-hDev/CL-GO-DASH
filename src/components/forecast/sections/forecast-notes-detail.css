@@ -47,7 +47,7 @@
   border: 1px solid var(--signal-error);
   border-radius: var(--radius-sm);
   background: var(--signal-error);
-  color: white;
+  color: var(--ink-on-pulse);
   padding: 0 18px;
   font-size: var(--text-sm);
   font-weight: 600;
@@ -57,12 +57,12 @@
 
 .fcn-confirm-delete:hover {
   background: var(--signal-error);
-  color: white;
+  color: var(--ink-on-pulse);
 }
 
 @keyframes fcn-confirm-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
-  50% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 var(--signal-error-pulse); }
+  50% { box-shadow: 0 0 0 6px var(--signal-error-pulse-fade); }
 }
 
 .fcn-form-grid {

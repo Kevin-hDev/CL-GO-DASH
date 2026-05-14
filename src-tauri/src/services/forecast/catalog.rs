@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-#[path = "catalog_specs.rs"]
+#[path = "catalog_specs/mod.rs"]
 mod catalog_specs;
 
 #[derive(Debug, Clone, Serialize)]
@@ -21,6 +21,7 @@ pub struct ForecastModelSpec {
     pub id: &'static str,
     pub provider_id: &'static str,
     pub display_name: &'static str,
+    pub family_id: &'static str,
     pub params: &'static str,
     pub size_mb: u32,
     pub ram_mb: u32,
@@ -32,6 +33,9 @@ pub struct ForecastModelSpec {
     pub horizon_max: u32,
     pub frequencies: &'static str,
     pub hf_repo: Option<&'static str>,
+    pub hf_revision: Option<&'static str>,
+    pub github_repo: Option<&'static str>,
+    pub github_revision: Option<&'static str>,
     pub is_cloud: bool,
 }
 
@@ -41,13 +45,6 @@ pub fn find_provider(id: &str) -> Option<&'static ForecastProviderSpec> {
 
 pub fn find_model(id: &str) -> Option<&'static ForecastModelSpec> {
     FORECAST_MODELS.iter().find(|m| m.id == id)
-}
-
-pub fn models_for_provider(provider_id: &str) -> Vec<&'static ForecastModelSpec> {
-    FORECAST_MODELS
-        .iter()
-        .filter(|m| m.provider_id == provider_id)
-        .collect()
 }
 
 pub const FORECAST_PROVIDERS: &[ForecastProviderSpec] = catalog_specs::FORECAST_PROVIDERS;

@@ -632,8 +632,23 @@
       "windowTitle": "Forecast-Dokumentation",
       "kicker": "Technische Dokumentation",
       "status": "Forecast-Leitfaden",
+      "navLabel": "Forecast-Dokumentation",
       "openTooltip": "Forecast-Dokumentation öffnen",
-      "openFailed": "Forecast-Dokumentation konnte nicht geöffnet werden."
+      "openFailed": "Forecast-Dokumentation konnte nicht geöffnet werden.",
+      "nav": {
+        "overview": "Überblick",
+        "datasets": "Datasets",
+        "models": "Modelle",
+        "predictions": "Prognosen",
+        "uncertainty": "Unsicherheit",
+        "covariates": "Kovariaten",
+        "multiseries": "Mehrere Serien",
+        "scenarios": "Szenarien",
+        "agentWorkflows": "LLM-Agenten",
+        "toolContracts": "Forecast-Tools",
+        "troubleshooting": "Diagnose",
+        "limits": "Grenzen"
+      }
     },
     "askAgent": "Agent fragen",
     "importFile": "Datei importieren (CSV, Excel)",
@@ -883,6 +898,7 @@
     "models": {
       "manage": "Modelle verwalten",
       "title": "Forecast-Modelle",
+      "sidebarTitle": "Models",
       "back": "Zurück",
       "summary": "Zusammenfassung",
       "modelCapabilities": "Modellfähigkeiten",
@@ -902,8 +918,18 @@
       "ram": "RAM",
       "ramCpu": "RAM (CPU)",
       "vramGpu": "VRAM (GPU)",
+      "cpuLabel": "CPU",
+      "gpuLabel": "GPU",
+      "hardwareLabel": "Hardwareprofil",
+      "licenseLabel": "Lizenz",
+      "libraryLabel": "Bibliothek",
+      "pipelineLabel": "Pipeline",
+      "downloadsLabel": "Downloads",
+      "likesLabel": "Likes",
+      "sourceLabel": "Quelle",
       "supported": "Unterstützt",
       "unsupported": "Nicht unterstützt",
+      "uninstalled": "Nicht installiert",
       "horizonMax": "Max. Horizont",
       "frequencies": "Frequenzen",
       "state": "Zustand",
@@ -914,8 +940,17 @@
       "noKeyConfigured": "API-Schlüssel nicht konfiguriert",
       "noneAvailable": "Für diesen Start ist kein Modell verfügbar.",
       "families": {
-        "chronos": "Amazon Chronos",
-        "timegpt": "Nixtla TimeGPT"
+        "chronos-bolt": "Chronos-Bolt",
+        "chronos-2": "Chronos-2",
+        "timesfm-2-5": "TimesFM 2.5",
+        "timegpt-2": "TimeGPT-2",
+        "toto-2": "Datadog Toto 2.0",
+        "moirai-2": "MOIRAI 2.0",
+        "flowstate": "FlowState",
+        "tabpfn-ts": "TabPFN-TS",
+        "tirex": "TiRex",
+        "kairos": "Kairos",
+        "sundial": "Sundial"
       },
       "hardware": {
         "light": "Leichte Hardware",
@@ -926,6 +961,7 @@
       "engines": {
         "localChronosBolt": "Lokales Chronos-Bolt",
         "localChronos2": "Lokales Chronos-2",
+        "localPackage": "Lokales Paket",
         "cloudApi": "Cloud-API"
       },
       "capabilities": {
@@ -947,6 +983,7 @@
       }
     },
     "export": {
+      "title": "Export",
       "csv": "CSV",
       "excel": "Excel (.xlsx)",
       "png": "PNG",

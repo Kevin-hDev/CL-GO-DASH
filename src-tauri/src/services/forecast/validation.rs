@@ -18,9 +18,20 @@ pub fn validate_model_id(id: &str) -> Result<(), String> {
     if id.is_empty() || id.len() > MAX_MODEL_ID_LEN {
         return Err("Modèle invalide".into());
     }
+    if !id
+        .chars()
+        .all(|c| c.is_ascii_alphanumeric() || matches!(c, '-' | '_' | '.'))
+    {
+        return Err("Modèle invalide".into());
+    }
     if catalog::find_model(id).is_none() {
         return Err("Modèle inconnu".into());
     }
+    Ok(())
+}
+
+pub fn validate_runnable_model_id(id: &str) -> Result<(), String> {
+    validate_model_id(id)?;
     if registry::find_runtime(id).is_none() {
         return Err("Moteur indisponible".into());
     }
@@ -29,6 +40,7 @@ pub fn validate_model_id(id: &str) -> Result<(), String> {
 
 pub fn validate_request(request: &ForecastRequest) -> Result<(), String> {
     let model_id = model_id(request)?;
+    validate_runnable_model_id(model_id)?;
     let spec = catalog::find_model(model_id).ok_or("Modèle inconnu")?;
     let runtime = registry::find_runtime(model_id).ok_or("Moteur indisponible")?;
 

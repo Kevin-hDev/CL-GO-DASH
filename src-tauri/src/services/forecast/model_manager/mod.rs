@@ -5,6 +5,7 @@ use std::path::PathBuf;
 use tauri::ipc::Channel;
 
 pub mod download;
+pub mod download_github;
 
 fn models_dir() -> PathBuf {
     data_dir().join("forecast-models")
@@ -35,6 +36,7 @@ pub fn installed_models() -> Vec<String> {
                 .filter(|e| e.path().join(".complete").exists())
                 .filter_map(|e| e.file_name().into_string().ok())
                 .filter(|name| !name.starts_with('.'))
+                .filter(|name| validation::validate_model_id(name).is_ok())
                 .collect()
         })
         .unwrap_or_default()
@@ -44,21 +46,36 @@ pub async fn install(
     model_id: &str,
     on_progress: &Channel<ModelDownloadProgress>,
 ) -> Result<(), String> {
+    validation::validate_model_id(model_id)?;
     let spec =
         catalog::find_model(model_id).ok_or_else(|| format!("Modèle inconnu: {model_id}"))?;
 
-    let hf_repo = spec
-        .hf_repo
-        .ok_or("Ce modèle n'a pas de repo HuggingFace")?;
+    let hf_repo = spec.hf_repo;
+    let github_repo = spec.github_repo;
 
     let target_dir = model_path(model_id);
     let staging_dir = models_dir().join(format!(".{model_id}.staging"));
     let _ = tokio::fs::remove_dir_all(&staging_dir).await;
     tokio::fs::create_dir_all(&staging_dir)
         .await
-        .map_err(|e| format!("Impossible de créer le dossier: {e}"))?;
+        .map_err(|_| "Impossible de préparer l'installation".to_string())?;
 
-    if let Err(e) = download::download_model(hf_repo, &staging_dir, model_id, on_progress).await {
+    let download_result = if let Some(repo) = hf_repo {
+        download::download_model(repo, spec.hf_revision, &staging_dir, model_id, on_progress).await
+    } else if let Some(repo) = github_repo {
+        download_github::download_repo_snapshot(
+            repo,
+            spec.github_revision,
+            &staging_dir,
+            model_id,
+            on_progress,
+        )
+        .await
+    } else {
+        Err("Ce modèle n'a pas de source téléchargeable".to_string())
+    };
+
+    if let Err(e) = download_result {
         let _ = tokio::fs::remove_dir_all(&staging_dir).await;
         return Err(e);
     }
@@ -77,7 +94,7 @@ pub async fn uninstall(model_id: &str) -> Result<(), String> {
     if path.exists() {
         tokio::fs::remove_dir_all(&path)
             .await
-            .map_err(|e| format!("Suppression échouée: {e}"))?;
+            .map_err(|_| "Suppression échouée".to_string())?;
     }
     Ok(())
 }

@@ -1,7 +1,7 @@
 use super::{
     scenario_context::{self, ScenarioCovariateAdjustment},
-    sidecar, storage,
-    types::{ForecastResult, Quantiles, Scenario, MAX_SCENARIOS},
+    scenario_percent, sidecar, storage,
+    types::{ForecastResult, Scenario, MAX_SCENARIOS},
 };
 use serde::{Deserialize, Serialize};
 
@@ -154,18 +154,6 @@ fn clean_description(description: Option<String>) -> Option<String> {
         .filter(|value| !value.is_empty())
 }
 
-fn scale_quantiles(quantiles: &Quantiles, factor: f64) -> Quantiles {
-    Quantiles {
-        q10: scale_values(&quantiles.q10, factor),
-        q50: scale_values(&quantiles.q50, factor),
-        q90: scale_values(&quantiles.q90, factor),
-    }
-}
-
-fn scale_values(values: &[f64], factor: f64) -> Vec<f64> {
-    values.iter().map(|value| value * factor).collect()
-}
-
 async fn build_scenario(
     analysis: &ForecastResult,
     id: String,
@@ -185,24 +173,11 @@ async fn build_scenario(
         .await;
     }
 
-    let factor = 1.0 + request.adjustment_percent / 100.0;
-    Ok(Scenario {
+    Ok(scenario_percent::build_percent_scenario(
+        analysis,
         id,
-        name: request.name.trim().to_string(),
-        description: clean_description(request.description.clone()),
-        predictions: analysis
-            .predictions
-            .iter()
-            .map(|point| {
-                let mut adjusted = point.clone();
-                adjusted.value *= factor;
-                adjusted
-            })
-            .collect(),
-        quantiles: scale_quantiles(&analysis.quantiles, factor),
-        params_modified: serde_json::json!({
-            "kind": "percent_adjustment",
-            "adjustment_percent": request.adjustment_percent,
-        }),
-    })
+        request.name.trim().to_string(),
+        clean_description(request.description.clone()),
+        request.adjustment_percent,
+    ))
 }

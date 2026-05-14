@@ -62,8 +62,8 @@ pub fn forecast_tool_definitions() -> Vec<Value> {
             "Operate on an existing saved forecast analysis. \
              Use action 'annotate' with params.text and params.date to add a note. \
              Use action 'scenario' to add a what-if scenario. \
-             For simple scenarios, use params.scenario_kind='percent_adjustment' and params.adjustment_percent. \
-             For contextual scenarios, use params.scenario_kind='context_adjustment' and params.covariate_adjustments. \
+             For simple scenarios, params.scenario_kind='percent_adjustment' and params.adjustment_percent are required. \
+             For contextual scenarios, params.scenario_kind='context_adjustment' and params.covariate_adjustments are required. \
              Use action 'scenario_update' with params.scenario_id to edit one scenario. \
              Use action 'scenario_delete' with params.scenario_id to delete one scenario. \
              Do not use this tool for decomposition, anomalies, or feature importance yet.",
@@ -80,7 +80,7 @@ pub fn forecast_tool_definitions() -> Vec<Value> {
                     },
                     "params": {
                         "type": "object",
-                        "description": "Action parameters. annotate requires text and date. scenario requires name plus either adjustment_percent or covariate_adjustments. scenario_update also requires scenario_id. scenario_delete requires scenario_id.",
+                        "description": "Action parameters. annotate requires text and date. scenario requires name, scenario_kind, and the matching scenario parameters. scenario_update also requires scenario_id. scenario_delete requires scenario_id.",
                         "properties": {
                             "text": {
                                 "type": "string",

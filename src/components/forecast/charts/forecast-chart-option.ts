@@ -24,10 +24,10 @@ export function buildForecastChartOption(args: ForecastChartOptionArgs): ECharts
     },
     tooltip: {
       trigger: "axis",
-      backgroundColor: "rgba(18, 18, 18, 0.94)",
+      backgroundColor: args.palette.tooltipBg,
       borderColor: args.palette.edge,
       borderWidth: 1,
-      textStyle: { color: "#f5f5f5", fontFamily: "var(--font-sans)" },
+      textStyle: { color: args.palette.tooltipText, fontFamily: "var(--font-sans)" },
       formatter: (raw) => formatTooltip(raw, timeline, metric, args.labels, args.locale),
       confine: true,
       position: tooltipPosition,

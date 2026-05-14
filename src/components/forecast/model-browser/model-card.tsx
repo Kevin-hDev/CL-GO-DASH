@@ -14,12 +14,14 @@ interface ModelCardProps {
 
 export function ModelCard({ model, onSelect, onRefresh }: ModelCardProps) {
   const { t } = useTranslation();
+  const summaryKey = getForecastModelSummaryKey(model.id);
+  const summary = t(summaryKey);
 
   return (
     <div className="fmc-card">
       <button className="fmc-info" onClick={onSelect}>
         <span className="fmc-name">{model.display_name}</span>
-        <span className="fmc-summary">{t(getForecastModelSummaryKey(model.id))}</span>
+        <span className="fmc-summary">{summary === summaryKey ? model.display_name : summary}</span>
         <span className="fmc-meta">
           {model.is_cloud ? (
             <span className="fmc-cloud">
@@ -39,11 +41,11 @@ export function ModelCard({ model, onSelect, onRefresh }: ModelCardProps) {
         </span>
       </button>
       <div className="fmc-actions">
-        {model.is_cloud ? (
-          <span className="fmc-cloud-badge">☁</span>
-        ) : (
-          <ModelInstallBtn modelId={model.id} installed={model.installed} onDone={onRefresh} />
-        )}
+        {model.is_cloud
+          ? <span className="fmc-cloud-badge">☁</span>
+          : model.installable
+            ? <ModelInstallBtn modelId={model.id} installed={model.installed} onDone={onRefresh} />
+            : null}
       </div>
     </div>
   );

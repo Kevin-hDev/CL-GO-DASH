@@ -1,14 +1,22 @@
+import { useEffect, useMemo, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
+import rehypeSanitize from "rehype-sanitize";
 import { useTranslation } from "react-i18next";
+import { SettingsCard } from "@/components/settings/settings-card";
+import { TranslationControls } from "@/components/ollama/translation-controls";
 import { ModelInstallBtn } from "./model-install-btn";
+import type { ForecastModelDetails } from "./model-details-types";
 import {
   getForecastEngineKey,
-  getForecastHardwareKey,
-  getModelCapabilities,
-  getForecastModelSummaryKey,
   type ForecastModelEntry,
   type ForecastProviderEntry,
 } from "../forecast-model-meta";
-import "./model-specs.css";
+import "../../ollama/ollama.css";
+import "../../ollama/ollama-details.css";
+import "../../ollama/model-profile.css";
 
 interface ModelSpecsProps {
   model: ForecastModelEntry;
@@ -17,124 +25,116 @@ interface ModelSpecsProps {
   onRefresh: () => void;
 }
 
-export function ModelSpecs({ model, provider, onBack, onRefresh }: ModelSpecsProps) {
+interface SpecRow {
+  label: string;
+  value: string;
+  mono?: boolean;
+}
+
+export function ModelSpecs({ model, provider, onRefresh }: ModelSpecsProps) {
   const { t } = useTranslation();
-  const modelCapabilities = getModelCapabilities(model);
+  const [details, setDetails] = useState<ForecastModelDetails | null>(null);
+  const [translation, setTranslation] = useState<{
+    modelId: string;
+    text: string | null;
+    lang: string | null;
+  } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void invoke<ForecastModelDetails>("get_forecast_model_details", { modelId: model.id })
+      .then((value) => {
+        if (!cancelled) setDetails(value);
+      })
+      .catch(() => {
+        if (!cancelled) setDetails(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [model.id]);
+
+  const translated = translation?.modelId === model.id ? translation.text : null;
+  const translatedLang = translation?.modelId === model.id ? translation.lang : null;
+  const rows = useMemo(() => buildRows(t, model, provider, details), [t, model, provider, details]);
 
   return (
-    <div className="fms-root">
-      <div className="fms-header">
-        <button className="fms-back" onClick={onBack}>← {t("forecast.models.back")}</button>
-        <span className="fms-name">{model.display_name}</span>
-      </div>
-      <div className="fms-body">
-        <div className="fms-section">
-          <span className="fms-section-title">{t("forecast.models.summary")}</span>
-          <p className="fms-summary">{t(getForecastModelSummaryKey(model.id))}</p>
-          <div className="fms-tags">
-            <span className="fms-tag">{t(getForecastHardwareKey(model))}</span>
-            {modelCapabilities.context && (
-              <span className="fms-tag">{t("forecast.models.capabilities.context")}</span>
-            )}
-            {modelCapabilities.multivariate && (
-              <span className="fms-tag">{t("forecast.models.capabilities.multivariate")}</span>
-            )}
-            {modelCapabilities.probabilistic && (
-              <span className="fms-tag">{t("forecast.models.capabilities.probabilistic")}</span>
-            )}
-          </div>
+    <div className="mp-root">
+      <div className="mp-inner">
+        <div className="mp-header">
+          <h2 className="mp-title">{model.display_name}</h2>
+          {!model.is_cloud && model.installable && !model.installed && (
+            <ModelInstallBtn modelId={model.id} installed={model.installed} onDone={onRefresh} />
+          )}
         </div>
-        <div className="fms-section">
-          <span className="fms-section-title">{t("forecast.models.specs")}</span>
-          <div className="fms-grid">
-            <Row label={t("forecast.models.parameters")} value={model.params} />
-            {!model.is_cloud && <Row label={t("forecast.models.diskSize")} value={`${model.size_mb} MB`} />}
-            {!model.is_cloud && <Row label={t("forecast.models.ramCpu")} value={`~${model.ram_mb} MB`} />}
-            {!model.is_cloud && model.vram_mb && <Row label={t("forecast.models.vramGpu")} value={`~${model.vram_mb} MB`} />}
-            {!model.is_cloud && <Row label="CPU" value={model.cpu_supported ? t("forecast.models.supported") : t("forecast.models.unsupported")} />}
-            {!model.is_cloud && <Row label="GPU" value={model.gpu_supported ? t("forecast.models.supported") : t("forecast.models.unsupported")} />}
-            <Row label={t("forecast.models.horizonMax")} value={model.horizon_max.toString()} />
-            <Row label={t("forecast.models.frequencies")} value={model.frequencies} />
-          </div>
-        </div>
-        <CapabilitySection
-          title={t("forecast.models.modelCapabilities")}
-          capabilities={modelCapabilities}
-          extraRows={[
-            {
-              label: t("forecast.models.engine"),
-              value: t(getForecastEngineKey(model)),
-            },
-            ...(model.is_cloud && provider
-              ? [
-                  {
-                    label: t("forecast.models.status"),
-                    value: provider.configured
-                      ? t("forecast.models.cloud")
-                      : t("forecast.models.noKeyConfigured"),
-                  },
-                ]
-              : []),
-          ]}
-        />
-        {model.installed && (
-          <div className="fms-section">
-            <span className="fms-section-title">{t("forecast.models.state")}</span>
-            <div className="fms-grid">
-              <Row label={t("forecast.models.status")} value={`● ${t("forecast.models.installed")}`} />
-              <Row label={t("forecast.models.usedSpace")} value={formatSize(model.size_on_disk ?? 0)} />
+
+        {details?.description_short && (
+          <div className="mp-description">{details.description_short}</div>
+        )}
+
+        <SettingsCard>
+          {rows.map((row, index) => (
+            <div
+              key={row.label}
+              className={`mp-spec-row${index < rows.length - 1 ? " mp-spec-row-border" : ""}`}
+            >
+              <span className="mp-spec-label">{row.label}</span>
+              <span className={row.mono ? "mp-spec-value-mono" : "mp-spec-value"}>
+                {row.value}
+              </span>
             </div>
+          ))}
+        </SettingsCard>
+
+        {details?.description_long_markdown && (
+          <div className="mp-translation-wrapper">
+            <TranslationControls
+              modelName={model.id}
+              originalText={details.description_long_markdown}
+              currentLang={translatedLang}
+              onChange={(lang, text) => {
+                setTranslation({ modelId: model.id, lang, text });
+              }}
+            />
           </div>
         )}
       </div>
-      <div className="fms-footer">
-        {!model.is_cloud && (
-          <ModelInstallBtn modelId={model.id} installed={model.installed} onDone={onRefresh} />
-        )}
-      </div>
+
+      {details?.description_long_markdown && (
+        <div className="ollama-readme mp-readme">
+          <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw, rehypeSanitize]}>
+            {translated ?? details.description_long_markdown}
+          </ReactMarkdown>
+        </div>
+      )}
     </div>
   );
 }
 
-function CapabilitySection({
-  title,
-  capabilities,
-  extraRows = [],
-}: {
-  title: string;
-  capabilities: ReturnType<typeof getModelCapabilities>;
-  extraRows?: Array<{ label: string; value: string }>;
-}) {
-  const { t } = useTranslation();
+function buildRows(
+  t: (key: string) => string,
+  model: ForecastModelEntry,
+  provider: ForecastProviderEntry | null,
+  details: ForecastModelDetails | null,
+): SpecRow[] {
+  const capabilities = [
+    model.covariates ? t("forecast.models.capabilities.context") : null,
+    model.multivariate ? t("forecast.models.capabilities.multivariate") : null,
+    t("forecast.models.capabilities.probabilistic"),
+  ].filter(Boolean).join(", ");
 
-  return (
-    <div className="fms-section">
-      <span className="fms-section-title">{title}</span>
-      <div className="fms-grid">
-        <Row label={t("forecast.models.capabilities.context")} value={capabilities.context ? t("forecast.models.supported") : t("forecast.models.unsupported")} />
-        <Row label={t("forecast.models.capabilities.futureContext")} value={capabilities.futureContext ? t("forecast.models.supported") : t("forecast.models.unsupported")} />
-        <Row label={t("forecast.models.capabilities.multivariate")} value={capabilities.multivariate ? t("forecast.models.supported") : t("forecast.models.unsupported")} />
-        <Row label={t("forecast.models.capabilities.probabilistic")} value={capabilities.probabilistic ? t("forecast.models.supported") : t("forecast.models.unsupported")} />
-        <Row label={t("forecast.models.capabilities.backtesting")} value={capabilities.backtesting ? t("forecast.models.supported") : t("forecast.models.unsupported")} />
-        {extraRows.map((row) => <Row key={row.label} label={row.label} value={row.value} />)}
-      </div>
-    </div>
-  );
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="fms-row">
-      <span className="fms-label">{label}</span>
-      <span className="fms-value">{value}</span>
-    </div>
-  );
-}
-
-function formatSize(bytes: number): string {
-  if (bytes === 0) return "0 B";
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
-  if (bytes < 1073741824) return `${(bytes / 1048576).toFixed(1)} MB`;
-  return `${(bytes / 1073741824).toFixed(2)} GB`;
+  return [
+    { label: t("forecast.models.capabilitiesTitle"), value: capabilities },
+    { label: t("forecast.models.diskSize"), value: model.is_cloud ? "—" : `${model.size_mb} MB`, mono: true },
+    { label: t("forecast.models.parameters"), value: model.params, mono: true },
+    { label: t("forecast.models.engine"), value: t(getForecastEngineKey(model)), mono: true },
+    { label: t("forecast.models.cpuLabel"), value: model.is_cloud ? "—" : (model.cpu_supported ? t("forecast.models.supported") : t("forecast.models.unsupported")) },
+    { label: t("forecast.models.gpuLabel"), value: model.is_cloud ? "—" : (model.gpu_supported ? t("forecast.models.supported") : t("forecast.models.unsupported")) },
+    { label: t("forecast.models.horizonMax"), value: String(model.horizon_max), mono: true },
+    { label: t("forecast.models.frequencies"), value: model.frequencies, mono: true },
+    { label: t("forecast.models.status"), value: model.is_cloud ? (provider?.configured ? t("forecast.models.cloud") : t("forecast.models.noKeyConfigured")) : (model.installed ? t("forecast.models.installed") : t("forecast.models.uninstalled")) },
+    { label: t("forecast.models.licenseLabel"), value: details?.license || "—", mono: true },
+    { label: t("forecast.models.libraryLabel"), value: details?.library_name || "—", mono: true },
+    { label: t("forecast.models.pipelineLabel"), value: details?.pipeline_tag || "—", mono: true },
+  ];
 }
