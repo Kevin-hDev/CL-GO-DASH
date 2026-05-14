@@ -1,6 +1,7 @@
 use crate::services::forecast::types::{ForecastAnalysisMeta, ForecastRequest, ForecastResult};
 use crate::services::forecast::{
-    client_chronos, client_nixtla, model_manager, notes, scenarios, sidecar, storage, validation,
+    client_chronos, client_nixtla, model_manager, notes, notes_cleanup, scenarios, sidecar,
+    storage, validation,
 };
 use tauri::State;
 
@@ -79,6 +80,7 @@ pub async fn delete_forecast_scenario(
 
 #[tauri::command]
 pub async fn delete_forecast_analysis(id: String) -> Result<(), String> {
+    notes_cleanup::delete_analysis_notes(&id).await?;
     storage::delete(&id).await
 }
 

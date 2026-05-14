@@ -1,6 +1,7 @@
 pub mod catalog;
 pub mod client_chronos;
 pub mod client_nixtla;
+mod client_nixtla_retry;
 pub mod file_input;
 pub mod input_data;
 pub mod input_dates;
@@ -11,6 +12,7 @@ pub mod model_details_github;
 pub mod model_manager;
 pub mod nixtla_multiseries;
 pub mod notes;
+pub mod notes_cleanup;
 mod notes_files;
 pub mod registry;
 pub mod scenario_context;

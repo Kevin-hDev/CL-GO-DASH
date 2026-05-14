@@ -78,8 +78,8 @@ async fn handle_forecast(args: &Value, working_dir: &Path, session_id: &str) -> 
 
     match result {
         Ok(forecast) => {
-            if let Err(e) = storage::save(&forecast).await {
-                eprintln!("[forecast] Sauvegarde échouée: {e}");
+            if storage::save(&forecast).await.is_err() {
+                return ToolResult::err("Sauvegarde de la prévision échouée");
             }
             if let Some(app) = super::app_handle_global::get() {
                 let _ = app.emit(

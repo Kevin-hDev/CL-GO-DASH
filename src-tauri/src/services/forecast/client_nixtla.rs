@@ -1,3 +1,4 @@
+use crate::services::forecast::client_nixtla_retry;
 use crate::services::forecast::input_data::{parse_request_input, ParsedInput};
 use crate::services::forecast::nixtla_multiseries;
 use crate::services::forecast::types::{ForecastRequest, ForecastResult, Prediction, Quantiles};
@@ -22,14 +23,8 @@ pub async fn predict(
     };
 
     let client = reqwest::Client::new();
-    let resp = client
-        .post(endpoint)
-        .header("Authorization", format!("Bearer {}", api_key.as_str()))
-        .header("Content-Type", "application/json")
-        .json(&payload)
-        .send()
-        .await
-        .map_err(|_| "Erreur du service de prédiction".to_string())?;
+    let resp =
+        client_nixtla_retry::post_json_with_retry(&client, &endpoint, api_key, &payload).await?;
 
     if !resp.status().is_success() {
         let status = resp.status();

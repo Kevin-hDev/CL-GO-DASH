@@ -36,6 +36,7 @@ pub fn installed_models() -> Vec<String> {
                 .filter(|e| e.path().join(".complete").exists())
                 .filter_map(|e| e.file_name().into_string().ok())
                 .filter(|name| !name.starts_with('.'))
+                .filter(|name| validation::validate_model_id(name).is_ok())
                 .collect()
         })
         .unwrap_or_default()
@@ -45,6 +46,7 @@ pub async fn install(
     model_id: &str,
     on_progress: &Channel<ModelDownloadProgress>,
 ) -> Result<(), String> {
+    validation::validate_model_id(model_id)?;
     let spec =
         catalog::find_model(model_id).ok_or_else(|| format!("Modèle inconnu: {model_id}"))?;
 
