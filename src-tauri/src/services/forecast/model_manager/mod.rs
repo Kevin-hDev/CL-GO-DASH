@@ -48,8 +48,7 @@ pub async fn install(
     let spec =
         catalog::find_model(model_id).ok_or_else(|| format!("Modèle inconnu: {model_id}"))?;
 
-    let hf_repo = spec
-        .hf_repo;
+    let hf_repo = spec.hf_repo;
     let github_repo = spec.github_repo;
 
     let target_dir = model_path(model_id);
@@ -57,7 +56,7 @@ pub async fn install(
     let _ = tokio::fs::remove_dir_all(&staging_dir).await;
     tokio::fs::create_dir_all(&staging_dir)
         .await
-        .map_err(|e| format!("Impossible de créer le dossier: {e}"))?;
+        .map_err(|_| "Impossible de préparer l'installation".to_string())?;
 
     let download_result = if let Some(repo) = hf_repo {
         download::download_model(repo, spec.hf_revision, &staging_dir, model_id, on_progress).await
@@ -93,7 +92,7 @@ pub async fn uninstall(model_id: &str) -> Result<(), String> {
     if path.exists() {
         tokio::fs::remove_dir_all(&path)
             .await
-            .map_err(|e| format!("Suppression échouée: {e}"))?;
+            .map_err(|_| "Suppression échouée".to_string())?;
     }
     Ok(())
 }

@@ -120,7 +120,7 @@ pub async fn start(sidecar: &ChronosSidecar, model_name: &str) -> Result<u16, St
         .stdout(std::process::Stdio::null())
         .stderr(std::process::Stdio::null())
         .spawn()
-        .map_err(|e| format!("Impossible de lancer le sidecar Chronos: {e}"))?;
+        .map_err(|_| "Impossible de lancer le sidecar Chronos".to_string())?;
 
     sidecar_process::save_pid(child.id());
     ACTIVE_PORT.store(port, Ordering::Relaxed);

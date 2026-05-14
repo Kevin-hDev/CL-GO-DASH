@@ -51,6 +51,8 @@ export interface ForecastChartPalette {
   annotationLlm: string;
   edge: string;
   inkMuted: string;
+  tooltipBg: string;
+  tooltipText: string;
   scenarios: string[];
   variables: string[];
 }

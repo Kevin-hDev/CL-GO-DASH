@@ -113,7 +113,7 @@ async fn read_index() -> Result<Vec<ForecastAnalysisMeta>, String> {
 async fn write_index(entries: &[ForecastAnalysisMeta]) -> Result<(), String> {
     ensure_dir().await?;
     let json =
-        serde_json::to_string_pretty(entries).map_err(|e| format!("Sérialisation index: {e}"))?;
+        serde_json::to_string_pretty(entries).map_err(|_| "Index forecast invalide".to_string())?;
 
     let dir = analyses_dir();
     let tmp = dir.join(".index.tmp");
@@ -121,10 +121,10 @@ async fn write_index(entries: &[ForecastAnalysisMeta]) -> Result<(), String> {
 
     tokio::fs::write(&tmp, &json)
         .await
-        .map_err(|e| format!("Écriture index tmp: {e}"))?;
+        .map_err(|_| "Écriture index forecast échouée".to_string())?;
     tokio::fs::rename(&tmp, &target)
         .await
-        .map_err(|e| format!("Rename index: {e}"))
+        .map_err(|_| "Finalisation index forecast échouée".to_string())
 }
 
 async fn hydrate_index(

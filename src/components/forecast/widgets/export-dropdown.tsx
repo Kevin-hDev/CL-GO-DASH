@@ -37,7 +37,7 @@ export function ExportDropdown({ analysisId, onExport }: ExportDropdownProps) {
     <div className="exd-wrapper" ref={ref}>
       <button className="exd-trigger" onClick={() => setOpen(!open)}>
         <DownloadSimple size={16} />
-        Export
+        {t("forecast.export.title")}
       </button>
       {open && (
         <div className="exd-menu">

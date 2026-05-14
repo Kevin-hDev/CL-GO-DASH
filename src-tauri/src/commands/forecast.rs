@@ -1,12 +1,7 @@
-use crate::services::forecast::types::{
-    ForecastAnalysisMeta, ForecastRequest, ForecastResult, ModelDownloadProgress,
-};
+use crate::services::forecast::types::{ForecastAnalysisMeta, ForecastRequest, ForecastResult};
 use crate::services::forecast::{
-    catalog, client_chronos, client_nixtla, model_manager, notes, registry, scenarios, sidecar,
-    storage, validation,
+    client_chronos, client_nixtla, model_manager, notes, scenarios, sidecar, storage, validation,
 };
-use serde_json::Value;
-use tauri::ipc::Channel;
 use tauri::State;
 
 #[tauri::command]
@@ -118,112 +113,4 @@ pub async fn delete_forecast_note(analysis_id: String, note_id: String) -> Resul
 #[tauri::command]
 pub fn open_forecast_note(analysis_id: String, note_id: String) -> Result<(), String> {
     notes::open(&analysis_id, &note_id)
-}
-
-#[tauri::command]
-pub fn list_forecast_models() -> Value {
-    let installed = model_manager::installed_models();
-    let configured = crate::services::api_keys::list_configured();
-    let providers: Vec<Value> = catalog::FORECAST_PROVIDERS
-        .iter()
-        .map(|p| {
-            let mut v = serde_json::to_value(p).unwrap_or_default();
-            if let Some(obj) = v.as_object_mut() {
-                obj.insert(
-                    "configured".into(),
-                    Value::Bool(configured.iter().any(|id| id == p.id)),
-                );
-            }
-            v
-        })
-        .collect();
-    let models: Vec<Value> = catalog::FORECAST_MODELS
-        .iter()
-        .map(|m| {
-            let mut v = serde_json::to_value(m).unwrap_or_default();
-            if let Some(obj) = v.as_object_mut() {
-                let runtime = registry::find_runtime(m.id);
-                if let Some(runtime) = runtime {
-                    obj.insert(
-                        "family_id".into(),
-                        Value::String(runtime.family_id.to_string()),
-                    );
-                    obj.insert(
-                        "engine_kind".into(),
-                        serde_json::to_value(runtime.engine_kind).unwrap_or_default(),
-                    );
-                    obj.insert(
-                        "capabilities".into(),
-                        serde_json::to_value(runtime.capabilities).unwrap_or_default(),
-                    );
-                } else {
-                    obj.insert(
-                        "capabilities".into(),
-                        serde_json::json!({
-                            "past_covariates": m.covariates,
-                            "future_covariates": m.covariates,
-                            "multivariate": m.multivariate,
-                            "probabilistic": true,
-                            "backtesting_ready": false,
-                            "anomalies_ready": false,
-                            "fine_tuning_ready": false,
-                        }),
-                    );
-                }
-                obj.insert(
-                    "family_id".into(),
-                    Value::String(m.family_id.to_string()),
-                );
-                obj.insert(
-                    "installed".into(),
-                    Value::Bool(installed.contains(&m.id.to_string())),
-                );
-                obj.insert(
-                    "installable".into(),
-                    Value::Bool(!m.is_cloud && (m.hf_repo.is_some() || m.github_repo.is_some())),
-                );
-                obj.insert(
-                    "runnable".into(),
-                    Value::Bool(runtime.is_some()),
-                );
-                obj.insert(
-                    "size_on_disk".into(),
-                    Value::Number(model_manager::get_model_size(m.id).into()),
-                );
-                obj.insert(
-                    "provider_configured".into(),
-                    Value::Bool(configured.iter().any(|id| id == m.provider_id)),
-                );
-            }
-            v
-        })
-        .collect();
-    serde_json::json!({
-        "providers": providers,
-        "models": models,
-        "configured_provider_ids": configured
-    })
-}
-
-#[tauri::command]
-pub async fn install_forecast_model(
-    name: String,
-    on_progress: Channel<ModelDownloadProgress>,
-) -> Result<(), String> {
-    validation::validate_model_id(&name)?;
-    model_manager::install(&name, &on_progress).await
-}
-
-#[tauri::command]
-pub async fn uninstall_forecast_model(name: String) -> Result<(), String> {
-    validation::validate_model_id(&name)?;
-    model_manager::uninstall(&name).await
-}
-
-#[tauri::command]
-pub fn list_forecast_providers_catalog() -> Vec<Value> {
-    catalog::FORECAST_PROVIDERS
-        .iter()
-        .map(|p| serde_json::to_value(p).unwrap_or_default())
-        .collect()
 }

@@ -632,8 +632,23 @@
       "windowTitle": "Forecast-Dokumentation",
       "kicker": "Technische Dokumentation",
       "status": "Forecast-Leitfaden",
+      "navLabel": "Forecast-Dokumentation",
       "openTooltip": "Forecast-Dokumentation öffnen",
-      "openFailed": "Forecast-Dokumentation konnte nicht geöffnet werden."
+      "openFailed": "Forecast-Dokumentation konnte nicht geöffnet werden.",
+      "nav": {
+        "overview": "Überblick",
+        "datasets": "Datasets",
+        "models": "Modelle",
+        "predictions": "Prognosen",
+        "uncertainty": "Unsicherheit",
+        "covariates": "Kovariaten",
+        "multiseries": "Mehrere Serien",
+        "scenarios": "Szenarien",
+        "agentWorkflows": "LLM-Agenten",
+        "toolContracts": "Forecast-Tools",
+        "troubleshooting": "Diagnose",
+        "limits": "Grenzen"
+      }
     },
     "askAgent": "Agent fragen",
     "importFile": "Datei importieren (CSV, Excel)",
@@ -968,6 +983,7 @@
       }
     },
     "export": {
+      "title": "Export",
       "csv": "CSV",
       "excel": "Excel (.xlsx)",
       "png": "PNG",

@@ -6,14 +6,15 @@ use std::time::Duration;
 
 const UA: &str = "CL-GO-DASH/1.0";
 
-static GH_LINK: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r#"\]\(([^)]+)\)"#).unwrap());
+static GH_LINK: LazyLock<Regex> = LazyLock::new(|| Regex::new(r#"\]\(([^)]+)\)"#).unwrap());
 static GH_RELATIVE_IMAGE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r#"!\[([^\]]*)\]\(([^)]+)\)"#).unwrap());
-static GH_HTML_SRC: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r#"src="([^"]+)""#).unwrap());
+static GH_HTML_SRC: LazyLock<Regex> = LazyLock::new(|| Regex::new(r#"src="([^"]+)""#).unwrap());
 
-pub async fn fetch_github(repo: &str, revision: Option<&str>) -> Result<ForecastModelDetails, String> {
+pub async fn fetch_github(
+    repo: &str,
+    revision: Option<&str>,
+) -> Result<ForecastModelDetails, String> {
     let client = Client::builder()
         .timeout(Duration::from_secs(15))
         .build()
@@ -70,7 +71,12 @@ fn absolutize_github_markdown(repo: &str, revision: &str, markdown: String) -> S
     let step1 = GH_RELATIVE_IMAGE.replace_all(&markdown, |caps: &regex::Captures| {
         let target = &caps[2];
         if is_relative_target(target) {
-            format!("![{}]({}{})", &caps[1], base_raw, normalize_relative_target(target))
+            format!(
+                "![{}]({}{})",
+                &caps[1],
+                base_raw,
+                normalize_relative_target(target)
+            )
         } else {
             caps[0].to_string()
         }

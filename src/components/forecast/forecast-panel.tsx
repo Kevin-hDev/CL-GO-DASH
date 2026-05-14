@@ -160,7 +160,7 @@ export function ForecastPanel({
         <div className="fc-footer">
           <ExportDropdown
             analysisId={currentAnalysisId}
-            onExport={(format, id) => { console.log("export", format, id); }}
+            onExport={() => undefined}
           />
         </div>
       )}

@@ -47,12 +47,5 @@ pub fn find_model(id: &str) -> Option<&'static ForecastModelSpec> {
     FORECAST_MODELS.iter().find(|m| m.id == id)
 }
 
-pub fn models_for_provider(provider_id: &str) -> Vec<&'static ForecastModelSpec> {
-    FORECAST_MODELS
-        .iter()
-        .filter(|m| m.provider_id == provider_id)
-        .collect()
-}
-
 pub const FORECAST_PROVIDERS: &[ForecastProviderSpec] = catalog_specs::FORECAST_PROVIDERS;
 pub const FORECAST_MODELS: &[ForecastModelSpec] = catalog_specs::FORECAST_MODELS;

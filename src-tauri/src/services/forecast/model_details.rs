@@ -8,10 +8,9 @@ use std::time::Duration;
 
 const UA: &str = "CL-GO-DASH/1.0";
 
-static HF_RELATIVE_LINK: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r#"\]\((\./|/)?([^)]+)\)"#).unwrap());
+static HF_LINK: LazyLock<Regex> = LazyLock::new(|| Regex::new(r#"\]\(([^)]+)\)"#).unwrap());
 static HF_RELATIVE_IMAGE: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r#"!\[([^\]]*)\]\((\./|/)?([^)]+)\)"#).unwrap());
+    LazyLock::new(|| Regex::new(r#"!\[([^\]]*)\]\(([^)]+)\)"#).unwrap());
 
 #[derive(Debug, Clone, Serialize)]
 pub struct ForecastModelDetails {
@@ -76,7 +75,10 @@ async fn fetch_hugging_face(
     let description_short = card
         .and_then(|c| c.get("model_summary"))
         .and_then(|v| v.as_str())
-        .or_else(|| card.and_then(|c| c.get("description")).and_then(|v| v.as_str()))
+        .or_else(|| {
+            card.and_then(|c| c.get("description"))
+                .and_then(|v| v.as_str())
+        })
         .unwrap_or_default()
         .trim()
         .to_string();
@@ -146,13 +148,44 @@ fn absolutize_hf_markdown(repo: &str, revision: &str, markdown: String) -> Strin
     let base_blob = format!("https://huggingface.co/{repo}/blob/{revision}/");
     let base_resolve = format!("https://huggingface.co/{repo}/resolve/{revision}/");
     let step1 = HF_RELATIVE_IMAGE.replace_all(&markdown, |caps: &regex::Captures| {
-        format!("![{}]({}{})", &caps[1], base_resolve, &caps[3])
+        let target = &caps[2];
+        if is_relative_target(target) {
+            format!(
+                "![{}]({}{})",
+                &caps[1],
+                base_resolve,
+                normalize_relative_target(target)
+            )
+        } else {
+            caps[0].to_string()
+        }
     });
-    HF_RELATIVE_LINK
+    HF_LINK
         .replace_all(&step1, |caps: &regex::Captures| {
-            format!("]({}{})", base_blob, &caps[2])
+            let target = &caps[1];
+            if is_relative_target(target) {
+                format!("]({}{})", base_blob, normalize_relative_target(target))
+            } else {
+                caps[0].to_string()
+            }
         })
         .into_owned()
+}
+
+fn is_relative_target(target: &str) -> bool {
+    !target.is_empty()
+        && !target.starts_with("http://")
+        && !target.starts_with("https://")
+        && !target.starts_with("data:")
+        && !target.starts_with('#')
+        && !target.starts_with("mailto:")
+}
+
+fn normalize_relative_target(target: &str) -> &str {
+    target
+        .strip_prefix("./")
+        .or_else(|| target.strip_prefix('/'))
+        .unwrap_or(target)
 }
 
 fn strip_frontmatter(markdown: String) -> String {

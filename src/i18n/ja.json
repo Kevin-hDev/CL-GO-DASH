@@ -632,8 +632,23 @@
       "windowTitle": "Forecast ドキュメント",
       "kicker": "技術ドキュメント",
       "status": "Forecast ガイド",
+      "navLabel": "Forecast ドキュメント",
       "openTooltip": "Forecast ドキュメントを開く",
-      "openFailed": "Forecast ドキュメントを開けませんでした。"
+      "openFailed": "Forecast ドキュメントを開けませんでした。",
+      "nav": {
+        "overview": "概要",
+        "datasets": "データセット",
+        "models": "モデル",
+        "predictions": "予測",
+        "uncertainty": "不確実性",
+        "covariates": "共変量",
+        "multiseries": "複数系列",
+        "scenarios": "シナリオ",
+        "agentWorkflows": "LLM エージェント",
+        "toolContracts": "Forecast ツール",
+        "troubleshooting": "診断",
+        "limits": "制限"
+      }
     },
     "askAgent": "エージェントに聞く",
     "importFile": "ファイルをインポート (CSV, Excel)",
@@ -968,6 +983,7 @@
       }
     },
     "export": {
+      "title": "エクスポート",
       "csv": "CSV",
       "excel": "Excel (.xlsx)",
       "png": "PNG",

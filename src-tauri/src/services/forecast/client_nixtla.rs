@@ -29,7 +29,7 @@ pub async fn predict(
         .json(&payload)
         .send()
         .await
-        .map_err(|e| format!("Erreur réseau Nixtla: {e}"))?;
+        .map_err(|_| "Erreur du service de prédiction".to_string())?;
 
     if !resp.status().is_success() {
         let status = resp.status();
@@ -42,26 +42,9 @@ pub async fn predict(
     let body: Value = resp
         .json()
         .await
-        .map_err(|e| format!("Parsing réponse Nixtla: {e}"))?;
+        .map_err(|_| "Réponse du service de prédiction invalide".to_string())?;
 
     parse_response(&body, request, &input, session_id)
-}
-
-pub async fn test_connection(api_key: &Zeroizing<String>) -> Result<(), String> {
-    let client = reqwest::Client::new();
-    let resp = client
-        .get(format!("{API_BASE}/models"))
-        .header("Authorization", format!("Bearer {}", api_key.as_str()))
-        .timeout(std::time::Duration::from_secs(10))
-        .send()
-        .await
-        .map_err(|e| format!("Connexion Nixtla échouée: {e}"))?;
-
-    if resp.status().is_success() {
-        Ok(())
-    } else {
-        Err(format!("Clé Nixtla invalide ({})", resp.status()))
-    }
 }
 
 fn build_payload(input: &ParsedInput, request: &ForecastRequest) -> Result<Value, String> {

@@ -632,8 +632,23 @@
       "windowTitle": "Forecast 文档",
       "kicker": "技术文档",
       "status": "Forecast 指南",
+      "navLabel": "Forecast 文档",
       "openTooltip": "打开 Forecast 文档",
-      "openFailed": "无法打开 Forecast 文档。"
+      "openFailed": "无法打开 Forecast 文档。",
+      "nav": {
+        "overview": "概览",
+        "datasets": "数据集",
+        "models": "模型",
+        "predictions": "预测",
+        "uncertainty": "不确定性",
+        "covariates": "协变量",
+        "multiseries": "多序列",
+        "scenarios": "场景",
+        "agentWorkflows": "LLM 代理",
+        "toolContracts": "Forecast 工具",
+        "troubleshooting": "诊断",
+        "limits": "限制"
+      }
     },
     "askAgent": "询问代理",
     "importFile": "导入文件 (CSV, Excel)",
@@ -968,6 +983,7 @@
       }
     },
     "export": {
+      "title": "导出",
       "csv": "CSV",
       "excel": "Excel (.xlsx)",
       "png": "PNG",

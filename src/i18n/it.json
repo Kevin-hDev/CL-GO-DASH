@@ -632,8 +632,23 @@
       "windowTitle": "Documentazione Forecast",
       "kicker": "Documentazione tecnica",
       "status": "Guida Forecast",
+      "navLabel": "Documentazione Forecast",
       "openTooltip": "Apri la documentazione Forecast",
-      "openFailed": "Impossibile aprire la documentazione Forecast."
+      "openFailed": "Impossibile aprire la documentazione Forecast.",
+      "nav": {
+        "overview": "Panoramica",
+        "datasets": "Dataset",
+        "models": "Modelli",
+        "predictions": "Previsioni",
+        "uncertainty": "Incertezza",
+        "covariates": "Covariate",
+        "multiseries": "Multi-serie",
+        "scenarios": "Scenari",
+        "agentWorkflows": "Agenti LLM",
+        "toolContracts": "Tool Forecast",
+        "troubleshooting": "Diagnostica",
+        "limits": "Limiti"
+      }
     },
     "askAgent": "Chiedi all'agente",
     "importFile": "Importa file (CSV, Excel)",
@@ -968,6 +983,7 @@
       }
     },
     "export": {
+      "title": "Esporta",
       "csv": "CSV",
       "excel": "Excel (.xlsx)",
       "png": "PNG",

@@ -1,9 +1,31 @@
 use super::ForecastModelSpec;
 
-pub const TABPFN_TS: ForecastModelSpec =
-    build("tabpfn-ts", "tabpfn-ts", "TabPFN-TS", "priorlabs", "Toutes", "—", 3, 120, Some(60), None, "PriorLabs/tabpfn-time-series");
-pub const TABPFN_TS_3: ForecastModelSpec =
-    build("tabpfn-ts-3", "tabpfn-ts", "TabPFN-TS-3", "priorlabs", "Toutes", "—", 3, 120, Some(60), None, "PriorLabs/tabpfn-time-series");
+pub const TABPFN_TS: ForecastModelSpec = build(
+    "tabpfn-ts",
+    "tabpfn-ts",
+    "TabPFN-TS",
+    "priorlabs",
+    "Toutes",
+    "—",
+    3,
+    120,
+    Some(60),
+    None,
+    "PriorLabs/tabpfn-time-series",
+);
+pub const TABPFN_TS_3: ForecastModelSpec = build(
+    "tabpfn-ts-3",
+    "tabpfn-ts",
+    "TabPFN-TS-3",
+    "priorlabs",
+    "Toutes",
+    "—",
+    3,
+    120,
+    Some(60),
+    None,
+    "PriorLabs/tabpfn-time-series",
+);
 pub const TIREX: ForecastModelSpec = ForecastModelSpec {
     id: "tirex-35m",
     provider_id: "nxai",
@@ -25,14 +47,58 @@ pub const TIREX: ForecastModelSpec = ForecastModelSpec {
     github_revision: None,
     is_cloud: false,
 };
-pub const KAIROS_10M: ForecastModelSpec =
-    build("kairos-10m", "kairos", "Kairos 10M", "foundation-model-research", "Toutes", "10M", 38, 320, Some(140), Some("mldi-lab/Kairos_10m"), "foundation-model-research/Kairos");
-pub const KAIROS_23M: ForecastModelSpec =
-    build("kairos-23m", "kairos", "Kairos 23M", "foundation-model-research", "Toutes", "23M", 88, 520, Some(220), Some("mldi-lab/Kairos_23m"), "foundation-model-research/Kairos");
-pub const KAIROS_50M: ForecastModelSpec =
-    build("kairos-50m", "kairos", "Kairos 50M", "foundation-model-research", "Toutes", "50M", 191, 980, Some(420), Some("mldi-lab/Kairos_50m"), "foundation-model-research/Kairos");
-pub const SUNDIAL_128M: ForecastModelSpec =
-    build("sundial-128m", "sundial", "Sundial 128M", "thuml", "Toutes", "128M", 490, 2400, Some(1000), Some("thuml/sundial-base-128m"), "thuml/Sundial");
+pub const KAIROS_10M: ForecastModelSpec = build(
+    "kairos-10m",
+    "kairos",
+    "Kairos 10M",
+    "foundation-model-research",
+    "Toutes",
+    "10M",
+    38,
+    320,
+    Some(140),
+    Some("mldi-lab/Kairos_10m"),
+    "foundation-model-research/Kairos",
+);
+pub const KAIROS_23M: ForecastModelSpec = build(
+    "kairos-23m",
+    "kairos",
+    "Kairos 23M",
+    "foundation-model-research",
+    "Toutes",
+    "23M",
+    88,
+    520,
+    Some(220),
+    Some("mldi-lab/Kairos_23m"),
+    "foundation-model-research/Kairos",
+);
+pub const KAIROS_50M: ForecastModelSpec = build(
+    "kairos-50m",
+    "kairos",
+    "Kairos 50M",
+    "foundation-model-research",
+    "Toutes",
+    "50M",
+    191,
+    980,
+    Some(420),
+    Some("mldi-lab/Kairos_50m"),
+    "foundation-model-research/Kairos",
+);
+pub const SUNDIAL_128M: ForecastModelSpec = build(
+    "sundial-128m",
+    "sundial",
+    "Sundial 128M",
+    "thuml",
+    "Toutes",
+    "128M",
+    490,
+    2400,
+    Some(1000),
+    Some("thuml/sundial-base-128m"),
+    "thuml/Sundial",
+);
 
 const fn build(
     id: &'static str,
