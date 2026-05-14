@@ -24,10 +24,16 @@ pub async fn rerun(
         return Err("Modèle non installé".into());
     }
     let chronos = chronos.ok_or("Service de prédiction indisponible")?;
-    sidecar::start(chronos, model_id)
+    let endpoint = sidecar::start(chronos, model_id)
         .await
         .map_err(|_| "Impossible de démarrer le service de prédiction".to_string())?;
-    client_chronos::predict(&sidecar::base_url(), &request, None).await
+    client_chronos::predict(
+        &endpoint.base_url,
+        endpoint.auth_token.as_str(),
+        &request,
+        None,
+    )
+    .await
 }
 
 fn build_forecast_request(

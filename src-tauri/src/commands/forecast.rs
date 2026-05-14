@@ -26,13 +26,17 @@ pub async fn run_forecast(
         if !model_manager::is_installed(model_id) {
             return Err("Modèle non installé".into());
         }
-        sidecar::start(&chronos, model_id)
+        let endpoint = sidecar::start(&chronos, model_id)
             .await
             .map_err(|_| "Impossible de démarrer le service de prédiction".to_string())?;
-        let base_url = sidecar::base_url();
-        client_chronos::predict(&base_url, &request, None)
-            .await
-            .map_err(|_| "Erreur du service de prédiction".to_string())?
+        client_chronos::predict(
+            &endpoint.base_url,
+            endpoint.auth_token.as_str(),
+            &request,
+            None,
+        )
+        .await
+        .map_err(|_| "Erreur du service de prédiction".to_string())?
     };
 
     storage::save(&result).await?;

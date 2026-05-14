@@ -1,10 +1,12 @@
 use crate::services::forecast::{sidecar_process, sidecar_runtime};
 use crate::services::paths::data_dir;
+use rand::RngCore;
 use std::net::TcpListener;
 use std::path::PathBuf;
 use std::process::Child;
 use std::sync::atomic::{AtomicU16, Ordering};
 use tokio::sync::Mutex;
+use zeroize::Zeroizing;
 
 const PORT_RANGE_START: u16 = 12000;
 const PORT_RANGE_END: u16 = 12099;
@@ -15,9 +17,15 @@ static ACTIVE_PORT: AtomicU16 = AtomicU16::new(0);
 struct SidecarHandle {
     child: Child,
     model_id: String,
+    auth_token: Zeroizing<String>,
 }
 
 pub struct ChronosSidecar(Mutex<Option<SidecarHandle>>);
+
+pub struct SidecarEndpoint {
+    pub base_url: String,
+    pub auth_token: Zeroizing<String>,
+}
 
 impl ChronosSidecar {
     pub fn new() -> Self {
@@ -42,6 +50,14 @@ fn sidecar_dir() -> PathBuf {
     data_dir().join("forecast-sidecar")
 }
 
+fn generate_auth_token() -> Zeroizing<String> {
+    let mut bytes = [0u8; 32];
+    rand::rngs::OsRng.fill_bytes(&mut bytes);
+    let token = bytes.iter().map(|byte| format!("{byte:02x}")).collect();
+    bytes.fill(0);
+    Zeroizing::new(token)
+}
+
 pub fn find_free_port() -> u16 {
     for port in PORT_RANGE_START..=PORT_RANGE_END {
         if TcpListener::bind(("127.0.0.1", port)).is_ok() {
@@ -51,7 +67,7 @@ pub fn find_free_port() -> u16 {
     DEFAULT_PORT
 }
 
-fn health_info(port: u16) -> Option<(u16, String)> {
+fn health_info(port: u16, auth_token: &str) -> Option<(u16, String)> {
     use std::io::{Read, Write};
     use std::net::TcpStream;
     use std::time::Duration;
@@ -62,7 +78,9 @@ fn health_info(port: u16) -> Option<(u16, String)> {
         return None;
     };
     stream.set_read_timeout(Some(Duration::from_secs(2))).ok();
-    let req = format!("GET /health HTTP/1.0\r\nHost: 127.0.0.1:{port}\r\n\r\n");
+    let req = format!(
+        "GET /health HTTP/1.0\r\nHost: 127.0.0.1:{port}\r\nX-CLGO-Forecast-Token: {auth_token}\r\n\r\n"
+    );
     if stream.write_all(req.as_bytes()).is_err() {
         return None;
     }
@@ -75,14 +93,17 @@ fn health_info(port: u16) -> Option<(u16, String)> {
     Some((port, model))
 }
 
-pub async fn start(sidecar: &ChronosSidecar, model_name: &str) -> Result<u16, String> {
+pub async fn start(sidecar: &ChronosSidecar, model_name: &str) -> Result<SidecarEndpoint, String> {
     {
         let guard = sidecar.0.lock().await;
         if let Some(handle) = guard.as_ref() {
             if handle.model_id == model_name {
-                if let Some((port, model)) = health_info(get_port()) {
+                if let Some((_port, model)) = health_info(get_port(), handle.auth_token.as_str()) {
                     if model == model_name {
-                        return Ok(port);
+                        return Ok(SidecarEndpoint {
+                            base_url: base_url(),
+                            auth_token: handle.auth_token.clone(),
+                        });
                     }
                 }
             }
@@ -107,6 +128,7 @@ pub async fn start(sidecar: &ChronosSidecar, model_name: &str) -> Result<u16, St
     .map_err(|_| "Initialisation du moteur Forecast impossible".to_string())?;
 
     let models_dir = data_dir().join("forecast-models");
+    let auth_token = generate_auth_token();
     let child = std::process::Command::new(runtime_python)
         .args([
             script.to_str().unwrap_or("server.py"),
@@ -117,6 +139,7 @@ pub async fn start(sidecar: &ChronosSidecar, model_name: &str) -> Result<u16, St
             "--models-dir",
             models_dir.to_str().unwrap_or(""),
         ])
+        .env("CLGO_FORECAST_TOKEN", auth_token.as_str())
         .stdout(std::process::Stdio::null())
         .stderr(std::process::Stdio::null())
         .spawn()
@@ -128,14 +151,18 @@ pub async fn start(sidecar: &ChronosSidecar, model_name: &str) -> Result<u16, St
     *sidecar.0.lock().await = Some(SidecarHandle {
         child,
         model_id: model_name.to_string(),
+        auth_token: auth_token.clone(),
     });
 
     // Attendre que le sidecar soit prêt (max 30s)
     for _ in 0..60 {
         tokio::time::sleep(std::time::Duration::from_millis(500)).await;
-        if let Some((ready_port, ready_model)) = health_info(port) {
+        if let Some((ready_port, ready_model)) = health_info(port, auth_token.as_str()) {
             if ready_model == model_name {
-                return Ok(ready_port);
+                return Ok(SidecarEndpoint {
+                    base_url: format!("http://127.0.0.1:{ready_port}"),
+                    auth_token,
+                });
             }
         }
     }

@@ -63,11 +63,17 @@ async fn handle_forecast(args: &Value, working_dir: &Path, session_id: &str) -> 
             return ToolResult::err("Service de prédiction indisponible");
         };
         let chronos = app.state::<sidecar::ChronosSidecar>();
-        if sidecar::start(chronos.inner(), model_id).await.is_err() {
-            return ToolResult::err("Impossible de démarrer le service de prédiction");
-        }
-        let base_url = sidecar::base_url();
-        client_chronos::predict(&base_url, &request, Some(session_id)).await
+        let endpoint = match sidecar::start(chronos.inner(), model_id).await {
+            Ok(endpoint) => endpoint,
+            Err(_) => return ToolResult::err("Impossible de démarrer le service de prédiction"),
+        };
+        client_chronos::predict(
+            &endpoint.base_url,
+            endpoint.auth_token.as_str(),
+            &request,
+            Some(session_id),
+        )
+        .await
     };
 
     match result {

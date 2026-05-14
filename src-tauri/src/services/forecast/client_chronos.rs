@@ -7,6 +7,7 @@ use uuid::Uuid;
 
 pub async fn predict(
     base_url: &str,
+    auth_token: &str,
     request: &ForecastRequest,
     session_id: Option<&str>,
 ) -> Result<ForecastResult, String> {
@@ -17,6 +18,7 @@ pub async fn predict(
     let resp = client
         .post(format!("{base_url}/predict"))
         .header("Content-Type", "application/json")
+        .header("X-CLGO-Forecast-Token", auth_token)
         .json(&payload)
         .timeout(std::time::Duration::from_secs(120))
         .send()
@@ -25,9 +27,7 @@ pub async fn predict(
 
     if !resp.status().is_success() {
         let status = resp.status();
-        // Ne pas exposer le body brut — log interne uniquement
-        let body = resp.text().await.unwrap_or_default();
-        eprintln!("[chronos] erreur {status}: {body}");
+        eprintln!("[chronos] erreur {status}");
         return Err("Erreur du service de prédiction".to_string());
     }
 
