@@ -30,7 +30,7 @@ pub const FORECAST_RUNTIMES: &[ForecastRuntimeSpec] = &[
         "timesfm-2.5-200m",
         "timesfm-2-5",
         K::LocalTimesFm,
-        covariate(),
+        multiseries(),
     ),
     rt("timegpt-2-mini", "timegpt-2", K::CloudApi, cloud()),
     rt("timegpt-2-standard", "timegpt-2", K::CloudApi, cloud()),
@@ -45,7 +45,7 @@ pub const FORECAST_RUNTIMES: &[ForecastRuntimeSpec] = &[
         "moirai-2.0-r-small",
         "moirai-2",
         K::LocalMoirai,
-        rich_local(),
+        multiseries(),
     ),
     rt(
         "flowstate-r1",
@@ -59,13 +59,13 @@ pub const FORECAST_RUNTIMES: &[ForecastRuntimeSpec] = &[
         K::LocalFlowState,
         multiseries(),
     ),
-    rt("tabpfn-ts", "tabpfn-ts", K::LocalTabPfnTs, rich_local()),
-    rt("tabpfn-ts-3", "tabpfn-ts", K::LocalTabPfnTs, rich_local()),
-    rt("tirex-35m", "tirex", K::LocalTiRex, rich_local()),
-    rt("kairos-10m", "kairos", K::LocalKairos, rich_local()),
-    rt("kairos-23m", "kairos", K::LocalKairos, rich_local()),
-    rt("kairos-50m", "kairos", K::LocalKairos, rich_local()),
-    rt("sundial-128m", "sundial", K::LocalSundial, rich_local()),
+    rt("tabpfn-ts", "tabpfn-ts", K::LocalTabPfnTs, multiseries()),
+    rt("tabpfn-ts-3", "tabpfn-ts", K::LocalTabPfnTs, multiseries()),
+    rt("tirex-35m", "tirex", K::LocalTiRex, multiseries()),
+    rt("kairos-10m", "kairos", K::LocalKairos, multiseries()),
+    rt("kairos-23m", "kairos", K::LocalKairos, multiseries()),
+    rt("kairos-50m", "kairos", K::LocalKairos, multiseries()),
+    rt("sundial-128m", "sundial", K::LocalSundial, multiseries()),
 ];
 
 const fn rt(
@@ -88,10 +88,6 @@ const fn simple() -> ForecastCapabilities {
 
 const fn rich_local() -> ForecastCapabilities {
     caps(true, true, true, true, false, false, false)
-}
-
-const fn covariate() -> ForecastCapabilities {
-    caps(true, true, false, true, false, false, false)
 }
 
 const fn multiseries() -> ForecastCapabilities {

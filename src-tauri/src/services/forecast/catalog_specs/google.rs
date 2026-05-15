@@ -12,7 +12,7 @@ pub const TIMESFM_2_5: ForecastModelSpec = ForecastModelSpec {
     cpu_supported: true,
     gpu_supported: true,
     multivariate: false,
-    covariates: true,
+    covariates: false,
     horizon_max: 1000,
     frequencies: "Toutes",
     hf_repo: Some("google/timesfm-2.5-200m-pytorch"),

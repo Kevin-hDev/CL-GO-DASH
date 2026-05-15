@@ -12,7 +12,7 @@ pub const MOIRAI_2_0_R_SMALL: ForecastModelSpec = ForecastModelSpec {
     cpu_supported: true,
     gpu_supported: true,
     multivariate: true,
-    covariates: true,
+    covariates: false,
     horizon_max: 1024,
     frequencies: "Toutes",
     hf_repo: Some("Salesforce/moirai-2.0-R-small"),

@@ -1,5 +1,6 @@
 use crate::services::forecast::input_data::ParsedInput;
 use crate::services::forecast::registry::{find_runtime, ForecastEngineKind};
+use crate::services::forecast::target_domain;
 use crate::services::forecast::types::{ForecastRequest, ForecastResult, Prediction, Quantiles};
 use chrono::Utc;
 use serde_json::Value;
@@ -18,7 +19,7 @@ pub fn parse_response(
         .as_deref()
         .ok_or("Aucun modèle Forecast sélectionné")?;
     let runtime = find_runtime(model_name).ok_or("Moteur indisponible")?;
-    let (predictions, q10, q50, q90) = match runtime.engine_kind {
+    let (mut predictions, mut q10, mut q50, mut q90) = match runtime.engine_kind {
         ForecastEngineKind::LocalChronos2
         | ForecastEngineKind::LocalTimesFm
         | ForecastEngineKind::LocalToto
@@ -32,6 +33,14 @@ pub fn parse_response(
         }
         _ => parse_simple_response(body, input)?,
     };
+    target_domain::apply_non_negative_floor(
+        request,
+        input,
+        &mut predictions,
+        &mut q10,
+        &mut q50,
+        &mut q90,
+    );
 
     Ok(ForecastResult {
         id: Uuid::new_v4().to_string(),

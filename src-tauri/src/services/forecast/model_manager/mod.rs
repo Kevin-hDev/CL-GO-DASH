@@ -22,26 +22,6 @@ pub fn is_installed(model_id: &str) -> bool {
     model_path(model_id).join(".complete").exists()
 }
 
-pub fn installed_models() -> Vec<String> {
-    let dir = models_dir();
-    if !dir.exists() {
-        return Vec::new();
-    }
-    std::fs::read_dir(&dir)
-        .ok()
-        .map(|entries| {
-            entries
-                .filter_map(|e| e.ok())
-                .filter(|e| e.path().is_dir())
-                .filter(|e| e.path().join(".complete").exists())
-                .filter_map(|e| e.file_name().into_string().ok())
-                .filter(|name| !name.starts_with('.'))
-                .filter(|name| validation::validate_model_id(name).is_ok())
-                .collect()
-        })
-        .unwrap_or_default()
-}
-
 pub async fn install(
     model_id: &str,
     on_progress: &Channel<ModelDownloadProgress>,

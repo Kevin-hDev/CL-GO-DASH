@@ -3,7 +3,6 @@ use crate::services::paths::data_dir;
 use serde_json::Value;
 
 pub fn list_models() -> Value {
-    let installed = model_manager::installed_models();
     let configured = crate::services::api_keys::list_configured();
     let providers: Vec<Value> = catalog::FORECAST_PROVIDERS
         .iter()
@@ -23,7 +22,7 @@ pub fn list_models() -> Value {
         .map(|m| {
             let mut value = serde_json::to_value(m).unwrap_or_default();
             if let Some(object) = value.as_object_mut() {
-                enrich_model_object(object, m, &installed, &configured);
+                enrich_model_object(object, m, &configured);
             }
             value
         })
@@ -38,11 +37,10 @@ pub fn list_models() -> Value {
 fn enrich_model_object(
     object: &mut serde_json::Map<String, Value>,
     model: &catalog::ForecastModelSpec,
-    installed: &[String],
     configured: &[String],
 ) {
     let runtime = registry::find_runtime(model.id);
-    let installed_model = installed.contains(&model.id.to_string());
+    let installed_model = model_manager::is_installed(model.id);
     let provider_configured = configured.iter().any(|id| id == model.provider_id);
     if let Some(runtime) = runtime {
         object.insert(

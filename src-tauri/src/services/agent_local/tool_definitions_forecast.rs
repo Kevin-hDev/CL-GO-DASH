@@ -66,7 +66,7 @@ pub fn forecast_tool_definitions() -> Vec<Value> {
         ),
         super::tool_definitions::tool_def(
             "forecast_models",
-            "List Forecast model ids available to the app, including provider, family, installed state, runnable state, runtime readiness, capabilities, and the current selector policy. Do not use this to override the Forecast UI selector.",
+            "List Forecast model ids available to the app. Read selection_policy.forced_model_state first: it is the authoritative state of the model forced by the Forecast UI selector. Do not infer the selected model state from other variants in the same family, and do not use this tool to override the selector.",
             serde_json::json!({
                 "type": "object",
                 "properties": {},

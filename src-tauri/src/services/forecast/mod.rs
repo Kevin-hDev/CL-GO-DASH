@@ -27,6 +27,7 @@ pub mod sidecar;
 pub mod sidecar_process;
 pub mod sidecar_runtime;
 pub mod storage;
+pub mod target_domain;
 pub mod types;
 pub mod validation;
 
