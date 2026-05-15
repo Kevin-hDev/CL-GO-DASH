@@ -3,28 +3,30 @@ import { fileNameFromPath } from "@/lib/file-preview-utils";
 import { IS_MAC } from "@/lib/platform";
 import type { FileOperation, FilePreviewActiveTab } from "@/types/file-preview";
 import {
-  FILE_PREVIEW_DEFAULT_EXTRA_WIDTH,
   FILE_PREVIEW_MIN_WIDTH,
-  readStoredFilePreviewPanel,
   readStoredFilePreviewTabs,
-  writeStoredFilePreviewPanel,
   writeStoredFilePreviewTabs,
-  type StoredFilePreviewPanel,
 } from "./file-preview-storage";
+import { useFilePreviewPanelState } from "./use-file-preview-panel-state";
 
 const MAX_TABS = 6;
 
 export function useFilePreview(sessionId: string | null, operations: FileOperation[]) {
-  const [open, setOpen] = useState(() => readStoredFilePreviewPanel(sessionId).open);
-  const [fullscreen, setFullscreen] = useState(() => readStoredFilePreviewPanel(sessionId).fullscreen);
+  const {
+    open,
+    fullscreen,
+    width,
+    extraWidth,
+    setOpen,
+    setFullscreen,
+    setWidth,
+    setExtraWidth,
+  } = useFilePreviewPanelState(sessionId);
   const [activeTab, setActiveTab] = useState<FilePreviewActiveTab>("summary");
   const [tabIds, setTabIds] = useState<string[]>(() => readStoredFilePreviewTabs(sessionId));
   const [fallbackOps, setFallbackOps] = useState<FileOperation[]>([]);
-  const [width, setWidth] = useState(() => readStoredFilePreviewPanel(sessionId).width);
-  const [extraWidth, setExtraWidth] = useState(FILE_PREVIEW_DEFAULT_EXTRA_WIDTH);
   const [resizing, setResizing] = useState(false);
   const resizeRef = useRef<{ startX: number; startWidth: number } | null>(null);
-  const skipPanelPersistRef = useRef(false);
 
   const allOperations = useMemo(() => [...operations, ...fallbackOps], [operations, fallbackOps]);
   const operationById = useMemo(() => new Map(allOperations.map((op) => [op.id, op])), [allOperations]);
@@ -39,27 +41,8 @@ export function useFilePreview(sessionId: string | null, operations: FileOperati
   }, [sessionId, operations]);
 
   useEffect(() => {
-    const stored = readStoredFilePreviewPanel(sessionId);
-    skipPanelPersistRef.current = true;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- restore persisted panel state when switching sessions
-    setOpen(stored.open);
-    setFullscreen(stored.fullscreen);
-    setWidth(stored.width);
-    setExtraWidth(FILE_PREVIEW_DEFAULT_EXTRA_WIDTH);
-  }, [sessionId]);
-
-  useEffect(() => {
     writeStoredFilePreviewTabs(sessionId, tabIds);
   }, [sessionId, tabIds]);
-
-  useEffect(() => {
-    if (skipPanelPersistRef.current) {
-      skipPanelPersistRef.current = false;
-      return;
-    }
-    const state: StoredFilePreviewPanel = { open, fullscreen, width };
-    writeStoredFilePreviewPanel(sessionId, state);
-  }, [sessionId, open, fullscreen, width]);
 
   const openOperation = useCallback((operation: FileOperation) => {
     setOpen(true);
@@ -68,7 +51,7 @@ export function useFilePreview(sessionId: string | null, operations: FileOperati
       const next = [operation.id, ...ids.filter((id) => id !== operation.id)];
       return next.slice(0, MAX_TABS);
     });
-  }, []);
+  }, [setOpen]);
 
   const openPath = useCallback((path: string) => {
     const operation = [...operations].reverse().find((op) => op.path === path);
@@ -97,16 +80,14 @@ export function useFilePreview(sessionId: string | null, operations: FileOperati
   const closePanel = useCallback(() => {
     setOpen(false);
     setFullscreen(false);
-    setExtraWidth(FILE_PREVIEW_DEFAULT_EXTRA_WIDTH);
-  }, []);
+    setExtraWidth(0);
+  }, [setOpen, setFullscreen, setExtraWidth]);
 
   const toggleOpen = useCallback(() => {
-    setOpen((value) => {
-      if (value) setFullscreen(false);
-      return !value;
-    });
+    if (open) setFullscreen(false);
+    setOpen(!open);
     setActiveTab((current) => current || "summary");
-  }, []);
+  }, [open, setOpen, setFullscreen]);
 
   const startResize = useCallback((event: React.PointerEvent) => {
     event.preventDefault();
@@ -131,7 +112,7 @@ export function useFilePreview(sessionId: string | null, operations: FileOperati
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
     };
-  }, []);
+  }, [setWidth]);
 
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
