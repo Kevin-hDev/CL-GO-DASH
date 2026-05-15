@@ -4,6 +4,7 @@ import { listen } from "@tauri-apps/api/event";
 
 export function useSelectedForecastModel() {
   const [selectedModelId, setSelectedModelId] = useState("");
+  const [ready, setReady] = useState(false);
 
   const selectModel = useCallback((modelId: string) => {
     setSelectedModelId(modelId);
@@ -16,7 +17,10 @@ export function useSelectedForecastModel() {
       .then((modelId) => {
         if (mounted && modelId) setSelectedModelId(modelId);
       })
-      .catch(() => undefined);
+      .catch(() => undefined)
+      .finally(() => {
+        if (mounted) setReady(true);
+      });
     const unlisten = listen<string>("forecast-selected-model-changed", (event) => {
       setSelectedModelId(event.payload);
     });
@@ -26,5 +30,5 @@ export function useSelectedForecastModel() {
     };
   }, []);
 
-  return { selectedModelId, selectModel };
+  return { selectedModelId, selectModel, ready };
 }

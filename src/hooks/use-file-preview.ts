@@ -2,38 +2,29 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { fileNameFromPath } from "@/lib/file-preview-utils";
 import { IS_MAC } from "@/lib/platform";
 import type { FileOperation, FilePreviewActiveTab } from "@/types/file-preview";
+import {
+  FILE_PREVIEW_DEFAULT_EXTRA_WIDTH,
+  FILE_PREVIEW_MIN_WIDTH,
+  readStoredFilePreviewPanel,
+  readStoredFilePreviewTabs,
+  writeStoredFilePreviewPanel,
+  writeStoredFilePreviewTabs,
+  type StoredFilePreviewPanel,
+} from "./file-preview-storage";
 
 const MAX_TABS = 6;
-const MIN_WIDTH = 360;
-const DEFAULT_WIDTH = MIN_WIDTH;
-const MAX_STORED_TABS = 6;
-const DEFAULT_EXTRA_WIDTH = 0;
-
-function storageKey(sessionId: string | null): string {
-  return `clgo-file-preview-tabs:${sessionId ?? "none"}`;
-}
-
-function readStoredTabs(sessionId: string | null): string[] {
-  try {
-    const raw = localStorage.getItem(storageKey(sessionId));
-    const parsed = JSON.parse(raw ?? "[]") as unknown;
-    if (!Array.isArray(parsed)) return [];
-    return parsed.filter((id) => typeof id === "string").slice(0, MAX_STORED_TABS);
-  } catch {
-    return [];
-  }
-}
 
 export function useFilePreview(sessionId: string | null, operations: FileOperation[]) {
-  const [open, setOpen] = useState(false);
-  const [fullscreen, setFullscreen] = useState(false);
+  const [open, setOpen] = useState(() => readStoredFilePreviewPanel(sessionId).open);
+  const [fullscreen, setFullscreen] = useState(() => readStoredFilePreviewPanel(sessionId).fullscreen);
   const [activeTab, setActiveTab] = useState<FilePreviewActiveTab>("summary");
-  const [tabIds, setTabIds] = useState<string[]>(() => readStoredTabs(sessionId));
+  const [tabIds, setTabIds] = useState<string[]>(() => readStoredFilePreviewTabs(sessionId));
   const [fallbackOps, setFallbackOps] = useState<FileOperation[]>([]);
-  const [width, setWidth] = useState(DEFAULT_WIDTH);
-  const [extraWidth, setExtraWidth] = useState(DEFAULT_EXTRA_WIDTH);
+  const [width, setWidth] = useState(() => readStoredFilePreviewPanel(sessionId).width);
+  const [extraWidth, setExtraWidth] = useState(FILE_PREVIEW_DEFAULT_EXTRA_WIDTH);
   const [resizing, setResizing] = useState(false);
   const resizeRef = useRef<{ startX: number; startWidth: number } | null>(null);
+  const skipPanelPersistRef = useRef(false);
 
   const allOperations = useMemo(() => [...operations, ...fallbackOps], [operations, fallbackOps]);
   const operationById = useMemo(() => new Map(allOperations.map((op) => [op.id, op])), [allOperations]);
@@ -43,13 +34,32 @@ export function useFilePreview(sessionId: string | null, operations: FileOperati
     // eslint-disable-next-line react-hooks/set-state-in-effect -- reset on session change is intentional
     setFallbackOps([]);
     const valid = new Set(operations.map((op) => op.id));
-    setTabIds(readStoredTabs(sessionId).filter((id) => valid.has(id)));
+    setTabIds(readStoredFilePreviewTabs(sessionId).filter((id) => valid.has(id)));
     setActiveTab("summary");
   }, [sessionId, operations]);
 
   useEffect(() => {
-    localStorage.setItem(storageKey(sessionId), JSON.stringify(tabIds.slice(0, MAX_STORED_TABS)));
+    const stored = readStoredFilePreviewPanel(sessionId);
+    skipPanelPersistRef.current = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- restore persisted panel state when switching sessions
+    setOpen(stored.open);
+    setFullscreen(stored.fullscreen);
+    setWidth(stored.width);
+    setExtraWidth(FILE_PREVIEW_DEFAULT_EXTRA_WIDTH);
+  }, [sessionId]);
+
+  useEffect(() => {
+    writeStoredFilePreviewTabs(sessionId, tabIds);
   }, [sessionId, tabIds]);
+
+  useEffect(() => {
+    if (skipPanelPersistRef.current) {
+      skipPanelPersistRef.current = false;
+      return;
+    }
+    const state: StoredFilePreviewPanel = { open, fullscreen, width };
+    writeStoredFilePreviewPanel(sessionId, state);
+  }, [sessionId, open, fullscreen, width]);
 
   const openOperation = useCallback((operation: FileOperation) => {
     setOpen(true);
@@ -87,7 +97,7 @@ export function useFilePreview(sessionId: string | null, operations: FileOperati
   const closePanel = useCallback(() => {
     setOpen(false);
     setFullscreen(false);
-    setExtraWidth(DEFAULT_EXTRA_WIDTH);
+    setExtraWidth(FILE_PREVIEW_DEFAULT_EXTRA_WIDTH);
   }, []);
 
   const toggleOpen = useCallback(() => {
@@ -108,8 +118,8 @@ export function useFilePreview(sessionId: string | null, operations: FileOperati
     const onMove = (event: PointerEvent) => {
       if (!resizeRef.current) return;
       const delta = resizeRef.current.startX - event.clientX;
-      const maxWidth = Math.max(MIN_WIDTH, window.innerWidth - 120);
-      setWidth(Math.min(maxWidth, Math.max(MIN_WIDTH, resizeRef.current.startWidth + delta)));
+      const maxWidth = Math.max(FILE_PREVIEW_MIN_WIDTH, window.innerWidth - 120);
+      setWidth(Math.min(maxWidth, Math.max(FILE_PREVIEW_MIN_WIDTH, resizeRef.current.startWidth + delta)));
     };
     const onUp = () => {
       resizeRef.current = null;

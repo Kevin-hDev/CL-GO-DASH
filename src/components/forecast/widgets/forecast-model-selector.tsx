@@ -18,11 +18,13 @@ import "./forecast-model-selector.css";
 
 interface ForecastModelSelectorProps {
   selectedModelId: string;
+  selectionReady: boolean;
   onSelectModel: (modelId: string) => void;
 }
 
 export function ForecastModelSelector({
   selectedModelId,
+  selectionReady,
   onSelectModel,
 }: ForecastModelSelectorProps) {
   const { t } = useTranslation();
@@ -41,11 +43,12 @@ export function ForecastModelSelector({
   );
 
   useEffect(() => {
+    if (!selectionReady) return;
     if (models.length === 0) return;
     if (!selectedModelId || !models.some((model) => model.id === selectedModelId)) {
       onSelectModel(models[0].id);
     }
-  }, [models, selectedModelId, onSelectModel]);
+  }, [models, selectedModelId, selectionReady, onSelectModel]);
 
   const groups = useMemo(() => {
     const lowered = query.trim().toLowerCase();

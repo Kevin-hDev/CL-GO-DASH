@@ -48,7 +48,7 @@ export function ForecastPanel({
   const [error, setError] = useState<string | null>(null);
   const [layers, setLayers] = useState<ForecastLayerState>(createInitialLayerState);
   const [scenarioPickerOpen, setScenarioPickerOpen] = useState(false);
-  const { selectedModelId, selectModel } = useSelectedForecastModel();
+  const { selectedModelId, selectModel, ready: selectedModelReady } = useSelectedForecastModel();
   const currentAnalysisName = useCurrentForecastAnalysisName(currentAnalysisId);
   const layerSources = useForecastLayerSources(currentAnalysisId, setLayers);
   const filterGroups = buildForecastLayerGroups(
@@ -169,6 +169,7 @@ export function ForecastPanel({
           {activeSection === "view" && (
             <ForecastModelSelector
               selectedModelId={selectedModelId}
+              selectionReady={selectedModelReady}
               onSelectModel={handleSelectModel}
             />
           )}
