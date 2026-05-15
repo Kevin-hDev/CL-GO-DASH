@@ -22,6 +22,11 @@ fn accepts_covariates_for_chronos2() {
 }
 
 #[test]
+fn accepts_covariates_for_toto2() {
+    assert!(validate_request(&make_request("toto-2.0-2.5b")).is_ok());
+}
+
+#[test]
 fn rejects_multiseries_for_timegpt_in_current_app() {
     let mut request = make_request("timegpt-2-mini");
     request.series_column = Some("asset_id".into());
