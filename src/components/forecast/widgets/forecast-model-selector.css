@@ -1,0 +1,35 @@
+.fmsel-wrapper {
+  position: relative;
+  display: inline-flex;
+  min-width: 0;
+}
+
+.fmsel-trigger {
+  max-width: 220px;
+}
+
+.fmsel-trigger-empty {
+  color: var(--ink-faint);
+}
+
+.fmsel-trigger-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fmsel-caret {
+  flex-shrink: 0;
+  transition: transform 200ms ease;
+}
+
+.fmsel-caret.open {
+  transform: rotate(180deg);
+}
+
+.fmsel-dropdown {
+  bottom: calc(100% + 6px);
+  width: 280px;
+  margin-bottom: 0;
+}

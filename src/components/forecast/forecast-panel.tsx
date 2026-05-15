@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
 import { PanelRightOpen, PanelRightClose } from "lucide-react";
@@ -14,13 +14,15 @@ import {
   ForecastViewFilters,
 } from "./forecast-view-filters";
 import { ExportDropdown } from "./widgets/export-dropdown";
+import { ForecastModelSelector } from "./widgets/forecast-model-selector";
 import { ForecastConfig, type LaunchConfig } from "./forecast-config";
 import { loadForecastDraftFromFile, type ForecastDraftData } from "./forecast-data";
 import { useForecastLayerSources } from "./use-forecast-layer-sources";
 import { ForecastSectionRouter } from "./forecast-section-router";
 import { useCurrentForecastAnalysisName } from "./use-current-forecast-analysis-name";
 import "./forecast-panel.css";
-import { useEffect } from "react";
+
+const FORECAST_MODEL_STORAGE_KEY = "cl-go-dash.forecast.selected-model";
 
 interface ForecastPanelProps {
   activeSection: ForecastSection;
@@ -47,6 +49,13 @@ export function ForecastPanel({
   const [error, setError] = useState<string | null>(null);
   const [layers, setLayers] = useState<ForecastLayerState>(createInitialLayerState);
   const [scenarioPickerOpen, setScenarioPickerOpen] = useState(false);
+  const [selectedModelId, setSelectedModelId] = useState(() => {
+    try {
+      return localStorage.getItem(FORECAST_MODEL_STORAGE_KEY) ?? "";
+    } catch {
+      return "";
+    }
+  });
   const currentAnalysisName = useCurrentForecastAnalysisName(currentAnalysisId);
   const layerSources = useForecastLayerSources(currentAnalysisId, setLayers);
   const filterGroups = buildForecastLayerGroups(
@@ -62,6 +71,15 @@ export function ForecastPanel({
       setError(t("forecast.errors.importFailed"));
     }
   };
+
+  const handleSelectModel = useCallback((modelId: string) => {
+    setSelectedModelId(modelId);
+    try {
+      localStorage.setItem(FORECAST_MODEL_STORAGE_KEY, modelId);
+    } catch {
+      // Selection persistence is optional; the in-memory state remains valid.
+    }
+  }, []);
 
   const handleLaunch = async (config: LaunchConfig) => {
     if (!draft) return;
@@ -135,6 +153,8 @@ export function ForecastPanel({
             draft={draft}
             launching={launching}
             error={error}
+            defaultModelId={selectedModelId}
+            onModelChange={handleSelectModel}
             onLaunch={(config) => void handleLaunch(config)}
             onBack={() => setDraft(null)}
           />
@@ -157,7 +177,13 @@ export function ForecastPanel({
         )}
       </div>
       {hasAnalysis && (
-        <div className="fc-footer">
+        <div className={`fc-footer ${activeSection === "view" ? "" : "fc-footer-end"}`}>
+          {activeSection === "view" && (
+            <ForecastModelSelector
+              selectedModelId={selectedModelId}
+              onSelectModel={handleSelectModel}
+            />
+          )}
           <ExportDropdown
             analysisId={currentAnalysisId}
             onExport={() => undefined}

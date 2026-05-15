@@ -90,7 +90,12 @@
 .fc-footer {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
+  gap: 12px;
   padding: 8px 14px;
   flex-shrink: 0;
+}
+
+.fc-footer-end {
+  justify-content: flex-end;
 }

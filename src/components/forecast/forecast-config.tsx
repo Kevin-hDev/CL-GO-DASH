@@ -1,17 +1,12 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { invoke } from "@tauri-apps/api/core";
 import type { ForecastDraftData } from "./forecast-data";
 import { ForecastConfigContext } from "./forecast-config-context";
 import { buildForecastContextProfile } from "./forecast-context-profile";
 import { buildLaunchErrorKey } from "./forecast-config-validation";
 import { FieldSelect, OptionalFieldSelect } from "./forecast-config-fields";
-import {
-  isForecastModelSelectable,
-  type ForecastModelEntry,
-  type ForecastModelsResponse,
-} from "./forecast-model-meta";
 import { ForecastConfigModelPicker } from "./forecast-config-model-picker";
+import { useForecastConfigModels } from "./use-forecast-config-models";
 import "./forecast-config.css";
 import "./forecast-config-actions.css";
 
@@ -19,6 +14,8 @@ interface ForecastConfigProps {
   draft: ForecastDraftData;
   launching: boolean;
   error: string | null;
+  defaultModelId: string;
+  onModelChange: (modelId: string) => void;
   onLaunch: (config: LaunchConfig) => void;
   onBack: () => void;
 }
@@ -38,28 +35,24 @@ const FREQUENCIES = [
   "D", "W", "M", "Q", "Y", "H", "T",
 ];
 
-export function ForecastConfig({ draft, launching, error, onLaunch, onBack }: ForecastConfigProps) {
+export function ForecastConfig({
+  draft,
+  launching,
+  error,
+  defaultModelId,
+  onModelChange,
+  onLaunch,
+  onBack,
+}: ForecastConfigProps) {
   const { t } = useTranslation();
-  const [models, setModels] = useState<ForecastModelEntry[]>([]);
   const [target, setTarget] = useState(draft.columns[1] ?? "");
   const [dateCol, setDateCol] = useState(draft.columns[0] ?? "");
   const [seriesCol, setSeriesCol] = useState("");
   const [covariates, setCovariates] = useState<string[]>([]);
   const [horizon, setHorizon] = useState(12);
   const [frequency, setFrequency] = useState("M");
-  const [model, setModel] = useState("");
   const [confidence, setConfidence] = useState(0.9);
-
-  useEffect(() => {
-    invoke<ForecastModelsResponse>("list_forecast_models")
-      .then((r) => {
-        const visibleModels = r.models.filter(isForecastModelSelectable);
-        setModels(visibleModels);
-        const first = visibleModels[0];
-        if (first) setModel(first.id);
-      })
-      .catch(() => {});
-  }, []);
+  const { models, model, setModel } = useForecastConfigModels(defaultModelId);
 
   const covariateOptions = draft.columns.filter(
     (column) => column !== target && column !== dateCol && column !== seriesCol
@@ -158,7 +151,10 @@ export function ForecastConfig({ draft, launching, error, onLaunch, onBack }: Fo
           <ForecastConfigModelPicker
             models={models}
             selectedId={model}
-            onSelect={setModel}
+            onSelect={(modelId) => {
+              setModel(modelId);
+              onModelChange(modelId);
+            }}
           />
         </div>
         <div className="fcc-field">

@@ -80,16 +80,20 @@ export function ModelSelectorList({
                   : `${models.length}`}
               </span>
             </div>
-            {isOpen && sortedModels(models).map((m) => (
-              <ModelItem
-                key={`${m.provider_id}:${m.id}`}
-                model={m}
-                isSelected={m.id === selectedModel && m.provider_id === selectedProvider}
-                isFav={isFavorite(m.provider_id, m.id)}
-                onSelect={onSelect}
-                onToggleFav={onToggleFavorite}
-              />
-            ))}
+            <div className={`ms-provider-body ${isOpen ? "open" : ""}`}>
+              <div className="ms-provider-body-inner">
+                {sortedModels(models).map((m) => (
+                  <ModelItem
+                    key={`${m.provider_id}:${m.id}`}
+                    model={m}
+                    isSelected={m.id === selectedModel && m.provider_id === selectedProvider}
+                    isFav={isFavorite(m.provider_id, m.id)}
+                    onSelect={onSelect}
+                    onToggleFav={onToggleFavorite}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
         );
       })}
