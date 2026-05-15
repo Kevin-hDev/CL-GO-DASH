@@ -85,14 +85,14 @@ fn ensure_family_runtime(
 fn family_requirements(family_id: &str) -> Option<&'static str> {
     match family_id {
         "chronos-bolt" | "chronos-2" => Some("chronos-forecasting==2.2.2\n"),
-        "timesfm-2-5" => Some("timesfm\n"),
-        "toto-2" => Some("git+https://github.com/DataDog/toto.git\n"),
-        "moirai-2" => Some("git+https://github.com/SalesforceAIResearch/uni2ts.git\n"),
+        "timesfm-2-5" => Some("timesfm\ntransformers\naccelerate\n"),
+        "toto-2" => Some("toto-2 @ git+https://github.com/DataDog/toto.git#subdirectory=toto2\n"),
+        "moirai-2" => Some("git+https://github.com/SalesforceAIResearch/uni2ts.git\ngluonts\n"),
         "flowstate" => Some("granite-tsfm\n"),
-        "tabpfn-ts" => Some("tabpfn-time-series\n"),
-        "tirex" => Some("git+https://github.com/NX-AI/TiRex.git\n"),
+        "tabpfn-ts" => Some("tabpfn-time-series\ntabpfn\n"),
+        "tirex" => Some("tirex-ts\n"),
         "kairos" => Some("git+https://github.com/foundation-model-research/Kairos.git\n"),
-        "sundial" => Some("git+https://github.com/thuml/Sundial.git\n"),
+        "sundial" => Some("transformers>=4.40.1\naccelerate\n"),
         _ => None,
     }
 }

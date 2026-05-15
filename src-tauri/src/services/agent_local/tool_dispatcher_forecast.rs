@@ -1,7 +1,8 @@
 use crate::services::agent_local::types_tools::ToolResult;
 use crate::services::forecast::types::ForecastRequest;
 use crate::services::forecast::{
-    client_chronos, client_nixtla, model_manager, registry, sidecar, storage, validation,
+    client_chronos, client_nixtla, model_listing, model_manager, registry, sidecar, storage,
+    validation,
 };
 use serde_json::Value;
 use std::path::Path;
@@ -15,6 +16,7 @@ pub async fn dispatch_forecast(
 ) -> Option<ToolResult> {
     match tool_name {
         "forecast" => Some(handle_forecast(args, _working_dir, session_id).await),
+        "forecast_models" => Some(handle_models()),
         "forecast_analyze" => Some(super::tool_dispatcher_forecast_analyze::handle(args).await),
         "forecast_read" => Some(handle_read(args).await),
         _ => None,
@@ -26,6 +28,7 @@ async fn handle_forecast(args: &Value, working_dir: &Path, session_id: &str) -> 
         Ok(r) => r,
         Err(e) => return ToolResult::err(format!("Paramètres invalides: {e}")),
     };
+    crate::services::forecast::request_normalize::normalize_request(&mut request);
 
     if request.data.is_none() && request.file_path.is_none() {
         return ToolResult::err(
@@ -103,6 +106,36 @@ async fn handle_forecast(args: &Value, working_dir: &Path, session_id: &str) -> 
         }
         Err(e) => ToolResult::err(e),
     }
+}
+
+fn handle_models() -> ToolResult {
+    let listing = model_listing::list_models();
+    let Some(models) = listing["models"].as_array() else {
+        return ToolResult::err("Catalogue Forecast indisponible");
+    };
+    let compact: Vec<Value> = models.iter().filter_map(compact_model).collect();
+    let payload = serde_json::json!({
+        "models": compact,
+        "usage": "Use a model id in forecast.model. Local models require installed=true. Cloud models require provider_configured=true."
+    });
+    match serde_json::to_string_pretty(&payload) {
+        Ok(json) => ToolResult::ok(json),
+        Err(_) => ToolResult::err("Catalogue Forecast indisponible"),
+    }
+}
+
+fn compact_model(model: &Value) -> Option<Value> {
+    Some(serde_json::json!({
+        "id": model["id"].as_str()?,
+        "name": model["display_name"].as_str().unwrap_or(""),
+        "provider": model["provider_id"].as_str().unwrap_or(""),
+        "family": model["family_id"].as_str().unwrap_or(""),
+        "installed": model["installed"].as_bool().unwrap_or(false),
+        "runnable": model["runnable"].as_bool().unwrap_or(false),
+        "runtime_ready": model["runtime_ready"].as_bool().unwrap_or(false),
+        "provider_configured": model["provider_configured"].as_bool().unwrap_or(false),
+        "capabilities": model["capabilities"].clone()
+    }))
 }
 
 async fn handle_read(args: &Value) -> ToolResult {

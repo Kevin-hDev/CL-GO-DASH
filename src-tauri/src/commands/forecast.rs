@@ -10,6 +10,7 @@ pub async fn run_forecast(
     mut request: ForecastRequest,
     chronos: State<'_, sidecar::ChronosSidecar>,
 ) -> Result<ForecastResult, String> {
+    crate::services::forecast::request_normalize::normalize_request(&mut request);
     crate::services::forecast::file_input::ensure_request_data(&mut request, None)
         .await
         .map_err(|_| "Impossible de lire les données source".to_string())?;

@@ -82,7 +82,7 @@ fn parse_structured_or_simple_response(
     input: &ParsedInput,
 ) -> Result<ParsedPrediction, String> {
     if body["predictions"].is_array() {
-        return parse_structured_predictions(body);
+        return parse_structured_predictions(body, input);
     }
     if request.series_column.is_some() {
         return Err("Réponse Forecast multi-séries invalide".into());
@@ -90,34 +90,63 @@ fn parse_structured_or_simple_response(
     parse_simple_response(body, input)
 }
 
-fn parse_structured_predictions(body: &Value) -> Result<ParsedPrediction, String> {
+fn parse_structured_predictions(
+    body: &Value,
+    input: &ParsedInput,
+) -> Result<ParsedPrediction, String> {
     let items = body["predictions"]
         .as_array()
         .ok_or("Réponse Forecast: champ predictions manquant")?;
 
     let mut predictions = Vec::with_capacity(items.len());
-    let mut q10 = Vec::with_capacity(items.len());
+    let mut q10 = Vec::new();
     let mut q50 = Vec::with_capacity(items.len());
-    let mut q90 = Vec::with_capacity(items.len());
+    let mut q90 = Vec::new();
+    let mut has_all_q10 = true;
+    let mut has_all_q90 = true;
 
     for item in items {
-        let date = item["date"]
+        let raw_date = item["date"]
             .as_str()
             .ok_or("Réponse Forecast: date manquante")?;
         let value = item["value"]
             .as_f64()
             .ok_or("Réponse Forecast: valeur manquante")?;
         predictions.push(Prediction {
-            date: date.to_string(),
+            date: output_date(raw_date, predictions.len(), input),
             value,
             series_id: item["series_id"].as_str().map(|value| value.to_string()),
         });
-        q10.push(item["q10"].as_f64().unwrap_or(value));
+        match item["q10"].as_f64() {
+            Some(value) if has_all_q10 => q10.push(value),
+            _ => has_all_q10 = false,
+        }
         q50.push(item["q50"].as_f64().unwrap_or(value));
-        q90.push(item["q90"].as_f64().unwrap_or(value));
+        match item["q90"].as_f64() {
+            Some(value) if has_all_q90 => q90.push(value),
+            _ => has_all_q90 = false,
+        }
+    }
+
+    if !has_all_q10 || q10.len() != predictions.len() {
+        q10.clear();
+    }
+    if !has_all_q90 || q90.len() != predictions.len() {
+        q90.clear();
     }
 
     Ok((predictions, q10, q50, q90))
+}
+
+fn output_date(raw_date: &str, index: usize, input: &ParsedInput) -> String {
+    if raw_date.trim().to_ascii_uppercase().starts_with("T+") {
+        return input
+            .future_dates
+            .get(index)
+            .cloned()
+            .unwrap_or_else(|| raw_date.to_string());
+    }
+    raw_date.to_string()
 }
 
 fn extract_quantile_array(body: &Value, key: &str) -> Vec<f64> {

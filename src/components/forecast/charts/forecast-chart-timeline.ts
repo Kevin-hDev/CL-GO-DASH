@@ -1,4 +1,4 @@
-import { buildPeriodMeta } from "../forecast-view-format";
+import { buildPeriodMeta, resolvePredictionDate } from "../forecast-view-format";
 import type { ForecastChartAnnotation, ForecastChartOptionArgs, TimelineEntry } from "./forecast-chart-types";
 
 export function buildTimeline(args: ForecastChartOptionArgs): TimelineEntry[] {
@@ -26,10 +26,11 @@ export function buildTimeline(args: ForecastChartOptionArgs): TimelineEntry[] {
     })),
     ...args.predictions.map((point, index) => {
       const period = buildPeriodMeta(index, point.date, args.endDate, args.frequency, args.locale);
+      const resolvedDate = resolvePredictionDate(point.date, args.endDate, args.frequency, index);
       return {
-        axisLabel: shortDate(point.date, args.locale),
-        dateKey: dateKey(point.date),
-        timestamp: timestamp(point.date),
+        axisLabel: resolvedDate ? shortDateFromDate(resolvedDate, args.locale) : shortDate(point.date, args.locale),
+        dateKey: resolvedDate ? dateKeyFromDate(resolvedDate) : dateKey(point.date),
+        timestamp: resolvedDate ? resolvedDate.getTime() : timestamp(point.date),
         fullLabel: `${period.stepLabel} - ${period.secondaryLabel}`,
         historyValue: null,
         forecastValue: point.value,
@@ -80,13 +81,21 @@ function hasVariableValue(
 function shortDate(value: string, locale: string): string {
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return value;
-  return new Intl.DateTimeFormat(locale, { month: "2-digit", day: "2-digit" }).format(parsed);
+  return shortDateFromDate(parsed, locale);
+}
+
+function shortDateFromDate(value: Date, locale: string): string {
+  return new Intl.DateTimeFormat(locale, { month: "2-digit", day: "2-digit" }).format(value);
 }
 
 function dateKey(value: string): string {
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return value.slice(0, 10);
-  return parsed.toISOString().slice(0, 10);
+  return dateKeyFromDate(parsed);
+}
+
+function dateKeyFromDate(value: Date): string {
+  return value.toISOString().slice(0, 10);
 }
 
 function timestamp(value: string): number {

@@ -1,0 +1,45 @@
+from .adapter_utils import (
+    forecast_payload_result,
+    forecast_quantile_index,
+    values_tensor,
+)
+
+
+class KairosAdapter:
+    def __init__(self, _family_id, _model_name, model_dir):
+        self.model_dir = str(model_dir)
+        self.model = None
+
+    def predict(self, payload, horizon, quantile_levels):
+        return forecast_payload_result(
+            payload, horizon, quantile_levels, self._forecast_one
+        )
+
+    def _forecast_one(self, values, horizon, quantile_levels):
+        import torch
+
+        context = values_tensor(values).view(1, -1)
+        with torch.no_grad():
+            output = self._load_model().to("cpu").eval()(
+                past_target=context,
+                prediction_length=horizon,
+                generation=True,
+                preserve_positivity=True,
+                average_with_flipped_input=True,
+        )
+        quantile_forecast = output["prediction_outputs"][0]
+        median = quantile_forecast[forecast_quantile_index(0.5), :horizon]
+        selected = [
+            quantile_forecast[forecast_quantile_index(level), :horizon]
+            for level in quantile_levels
+        ]
+        return median, selected
+
+    def _load_model(self):
+        if self.model is None:
+            from tsfm.model.kairos import AutoModel
+
+            self.model = AutoModel.from_pretrained(
+                self.model_dir, trust_remote_code=True
+            )
+        return self.model

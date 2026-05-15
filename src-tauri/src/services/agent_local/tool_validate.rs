@@ -79,6 +79,7 @@ static FORECAST_ANALYZE: Schema = &[
     ("params", Ty::Obj, true),
 ];
 static FORECAST_READ: Schema = &[("analysis_id", Ty::Str, false)];
+static FORECAST_MODELS: Schema = &[];
 
 fn schema(tool: &str) -> Option<Schema> {
     Some(match tool {
@@ -105,6 +106,7 @@ fn schema(tool: &str) -> Option<Schema> {
         "forecast" => FORECAST,
         "forecast_analyze" => FORECAST_ANALYZE,
         "forecast_read" => FORECAST_READ,
+        "forecast_models" => FORECAST_MODELS,
         _ => return None,
     })
 }

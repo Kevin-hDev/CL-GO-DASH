@@ -8,7 +8,9 @@ pub fn forecast_tool_definitions() -> Vec<Value> {
              Provide either a JSON array in 'data' or a CSV/Excel path in 'file_path'. \
              The tool returns a compact saved-analysis summary with analysis_id first. \
              Call forecast_read with that analysis_id for predictions and quantiles. \
-             Use series_column for multi-series models. Chronos-2 and TimeGPT can use covariates as past columns and optional future-known rows.",
+             Use forecast_models first when the user asks which Forecast models are available. \
+             Model ids include Chronos-Bolt, Chronos-2, TimesFM 2.5, TimeGPT-2.x/2.1, Toto 2.0, MOIRAI 2.0, FlowState, TabPFN-TS, TiRex, Kairos, and Sundial. \
+             Use series_column for multi-series models. Models with covariate support can use past columns and optional future-known rows.",
             serde_json::json!({
                 "type": "object",
                 "properties": {
@@ -47,7 +49,7 @@ pub fn forecast_tool_definitions() -> Vec<Value> {
                     },
                     "model": {
                         "type": "string",
-                        "description": "Forecast model id, for example chronos-bolt-small, chronos-2, or timegpt-2-standard."
+                        "description": "Forecast model id. Call forecast_models to list installed, runnable, and cloud-configured model ids before choosing."
                     },
                     "confidence_level": {
                         "type": "number",
@@ -55,6 +57,15 @@ pub fn forecast_tool_definitions() -> Vec<Value> {
                     }
                 },
                 "required": ["target_column", "date_column", "horizon", "frequency"]
+            }),
+        ),
+        super::tool_definitions::tool_def(
+            "forecast_models",
+            "List Forecast model ids available to the app, including provider, family, installed state, runnable state, runtime readiness, and capabilities. Use this before answering which Forecast models can be used.",
+            serde_json::json!({
+                "type": "object",
+                "properties": {},
+                "required": []
             }),
         ),
         super::tool_definitions::tool_def(

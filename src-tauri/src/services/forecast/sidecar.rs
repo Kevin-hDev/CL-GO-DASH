@@ -151,6 +151,7 @@ pub async fn start(
             models_dir.to_str().unwrap_or(""),
         ])
         .env("CLGO_FORECAST_TOKEN", auth_token.as_str())
+        .env("TABPFN_DISABLE_TELEMETRY", "1")
         .stdout(std::process::Stdio::null())
         .stderr(std::process::Stdio::null())
         .spawn()

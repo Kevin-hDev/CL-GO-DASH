@@ -1,19 +1,26 @@
 from pathlib import Path
 
 from .chronos_adapter import ChronosAdapter
-from .external_adapter import ExternalAdapter
+from .flowstate_adapter import FlowStateAdapter
+from .kairos_adapter import KairosAdapter
+from .moirai_adapter import MoiraiAdapter
+from .sundial_adapter import SundialAdapter
+from .tabpfn_adapter import TabPfnTsAdapter
+from .timesfm_adapter import TimesFmAdapter
+from .tirex_adapter import TiRexAdapter
+from .toto_adapter import TotoAdapter
 
 ADAPTERS = {
     "chronos-bolt": ChronosAdapter,
     "chronos-2": ChronosAdapter,
-    "timesfm-2-5": ExternalAdapter,
-    "toto-2": ExternalAdapter,
-    "moirai-2": ExternalAdapter,
-    "flowstate": ExternalAdapter,
-    "tabpfn-ts": ExternalAdapter,
-    "tirex": ExternalAdapter,
-    "kairos": ExternalAdapter,
-    "sundial": ExternalAdapter,
+    "timesfm-2-5": TimesFmAdapter,
+    "toto-2": TotoAdapter,
+    "moirai-2": MoiraiAdapter,
+    "flowstate": FlowStateAdapter,
+    "tabpfn-ts": TabPfnTsAdapter,
+    "tirex": TiRexAdapter,
+    "kairos": KairosAdapter,
+    "sundial": SundialAdapter,
 }
 
 

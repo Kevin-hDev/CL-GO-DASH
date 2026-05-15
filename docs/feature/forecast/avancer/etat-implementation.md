@@ -1,6 +1,6 @@
 # État réel de l'implémentation Forecast — Mai 2026
 
-Date : 2026-05-14
+Date : 2026-05-15
 
 ## Résumé
 
@@ -36,9 +36,9 @@ Forecast n'est **pas terminé**, mais il est **réellement utilisable**.
 | Analyse | Tendance, incertitude, points marquants, anomalies, variables | Validé V1 |
 | Notes | Notes Markdown locales, timeline, preview, édition, suppression, ouverture éditeur OS | Validé V1 |
 | Documentation Forecast | Fenêtre externe Tauri, contenu pédagogique, définitions des variables | Validé fonctionnel |
-| Familles de modèles | 11 familles / 25 variantes cataloguées | Registry runtime branché |
+| Familles de modèles | 11 familles / 25 variantes cataloguées | Dispatch runtime complet côté app |
 | Réglages fins modèles | Non terminé | Prioritaire |
-| Registry moteurs | Toutes familles déclarées | Adapters locaux à valider famille par famille |
+| Registry moteurs | Toutes familles déclarées | Adapters locaux branchés, validation live par famille restante |
 | Réglage matériel global | Non branché Forecast | À faire |
 | Backtesting / baselines | Non terminé | À faire |
 | Exports | UI présente | Implémentation complète à faire |
@@ -76,15 +76,15 @@ Présent dans le catalogue et visible dans les paramètres Forecast :
 | --- | --- | --- |
 | Chronos-Bolt | Tiny, Mini, Small, Base | Installable et exécutable via sidecar Chronos |
 | Chronos-2 | 120M | Installable et exécutable via sidecar Chronos-2 |
-| TimesFM 2.5 | 200M | Installable, registry runtime branché, adapter TimesFM initial |
+| TimesFM 2.5 | 200M | Installable et dispatché vers adapter TimesFM |
 | TimeGPT-2.x / 2.1 | Mini, Standard, Pro, 2.1 | API Nixtla branchée, 2.1 inclus côté runtime |
-| Datadog Toto 2.0 | 4M, 22M, 313M, 1B, 2.5B | Installable, registry runtime branché, adapter isolé |
-| Salesforce MOIRAI 2.0 | R Small | Installable, registry runtime branché, adapter isolé |
-| IBM FlowState | R1, R1.1 | Installable, registry runtime branché, adapter isolé |
-| TabPFN-TS | TabPFN-TS, TabPFN-TS-3 | Installable, registry runtime branché, adapter isolé |
-| TiRex | 35M | Installable, registry runtime branché, adapter isolé |
-| Kairos | 10M, 23M, 50M | Installable, registry runtime branché, adapter isolé |
-| Sundial | 128M | Installable, registry runtime branché, adapter isolé |
+| Datadog Toto 2.0 | 4M, 22M, 313M, 1B, 2.5B | Installable et dispatché vers adapter Toto |
+| Salesforce MOIRAI 2.0 | R Small | Installable et dispatché vers adapter MOIRAI |
+| IBM FlowState | R1, R1.1 | Installable et dispatché vers adapter FlowState |
+| TabPFN-TS | TabPFN-TS, TabPFN-TS-3 | Installable et dispatché vers adapter TabPFN-TS |
+| TiRex | 35M | Installable et dispatché vers adapter TiRex |
+| Kairos | 10M, 23M, 50M | Installable et dispatché vers adapter Kairos |
+| Sundial | 128M | Installable et dispatché vers adapter Sundial |
 
 État réel :
 
@@ -95,9 +95,10 @@ Présent dans le catalogue et visible dans les paramètres Forecast :
 - le sidecar local démarre avec `model_id` + `family_id` ;
 - les dépendances Python sont installées à la demande par famille ;
 - `list_forecast_models` expose `installed`, `installable`, `runnable`, `provider_configured`, `runtime_ready` ;
-- Chronos-Bolt / Chronos-2 restent les adapters locaux validés fonctionnellement ;
-- TimesFM dispose d'un adapter initial à valider avec le package réel installé ;
-- Toto, MOIRAI, FlowState, TabPFN-TS, TiRex, Kairos et Sundial ont des adapters isolés et des dépendances familiales, mais doivent encore être validés famille par famille avec un modèle installé ;
+- Chronos-Bolt / Chronos-2 restent les adapters locaux validés fonctionnellement dans l'app ;
+- TimesFM, Toto, MOIRAI, FlowState, TabPFN-TS, TiRex, Kairos et Sundial ont maintenant un adapter Forecast réel côté sidecar ;
+- les adapters locaux renvoient un format commun mono-série ou multi-séries (`series_id`) pour éviter les réponses inutilisables côté app ;
+- la validation live reste à faire famille par famille après installation des dépendances Python à la demande ;
 - TimeGPT est câblé côté API, 2.1 inclus, mais doit encore être validé avec une vraie clé Nixtla.
 
 ### Sidecar local

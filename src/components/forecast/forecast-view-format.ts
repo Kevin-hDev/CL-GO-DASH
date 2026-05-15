@@ -76,7 +76,7 @@ export function buildPeriodMeta(
   };
 }
 
-function resolvePredictionDate(
+export function resolvePredictionDate(
   rawDate: string,
   endDate: string,
   frequency: string,

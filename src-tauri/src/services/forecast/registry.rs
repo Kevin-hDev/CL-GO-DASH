@@ -53,6 +53,14 @@ pub fn has_predict_adapter(runtime: &ForecastRuntimeSpec) -> bool {
         runtime.engine_kind,
         ForecastEngineKind::LocalChronosBolt
             | ForecastEngineKind::LocalChronos2
+            | ForecastEngineKind::LocalTimesFm
+            | ForecastEngineKind::LocalToto
+            | ForecastEngineKind::LocalMoirai
+            | ForecastEngineKind::LocalFlowState
+            | ForecastEngineKind::LocalTabPfnTs
+            | ForecastEngineKind::LocalTiRex
+            | ForecastEngineKind::LocalKairos
+            | ForecastEngineKind::LocalSundial
             | ForecastEngineKind::CloudApi
     )
 }

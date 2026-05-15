@@ -49,6 +49,7 @@ fn build_payload(input: &ParsedInput, request: &ForecastRequest) -> Result<Value
         ForecastEngineKind::LocalChronosBolt => serde_json::json!({
             "values": input.values.to_vec(),
             "horizon": request.horizon,
+            "frequency": request.frequency,
             "model": model,
             "quantiles": [0.1, 0.5, 0.9],
         }),
@@ -60,6 +61,7 @@ fn build_payload(input: &ParsedInput, request: &ForecastRequest) -> Result<Value
             "series_column": request.series_column,
             "covariate_columns": request.covariate_columns,
             "horizon": request.horizon,
+            "frequency": request.frequency,
             "model": model,
             "quantiles": [0.1, 0.5, 0.9],
         }),
@@ -79,6 +81,7 @@ fn build_payload(input: &ParsedInput, request: &ForecastRequest) -> Result<Value
             "series_column": request.series_column,
             "covariate_columns": request.covariate_columns,
             "horizon": request.horizon,
+            "frequency": request.frequency,
             "model": model,
             "family": runtime.family_id,
             "quantiles": [0.1, 0.5, 0.9],
