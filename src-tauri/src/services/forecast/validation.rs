@@ -9,7 +9,10 @@ const ALLOWED_FREQUENCIES: &[&str] = &[
 ];
 
 pub fn model_id(request: &ForecastRequest) -> Result<&str, String> {
-    let id = request.model.as_deref().unwrap_or("chronos-bolt-small");
+    let id = request
+        .model
+        .as_deref()
+        .ok_or("Aucun modèle Forecast sélectionné")?;
     validate_model_id(id)?;
     Ok(id)
 }

@@ -1,5 +1,7 @@
 use crate::services::forecast::types::ModelDownloadProgress;
-use crate::services::forecast::{catalog, model_listing, model_manager, validation};
+use crate::services::forecast::{
+    catalog, model_listing, model_manager, selected_model, validation,
+};
 use serde_json::Value;
 use tauri::ipc::Channel;
 use tauri::{AppHandle, Emitter};
@@ -7,6 +9,18 @@ use tauri::{AppHandle, Emitter};
 #[tauri::command]
 pub fn list_forecast_models() -> Value {
     model_listing::list_models()
+}
+
+#[tauri::command]
+pub fn get_selected_forecast_model() -> Option<String> {
+    selected_model::get()
+}
+
+#[tauri::command]
+pub fn set_selected_forecast_model(app: AppHandle, name: String) -> Result<(), String> {
+    selected_model::set(&name)?;
+    let _ = app.emit("forecast-selected-model-changed", name);
+    Ok(())
 }
 
 #[tauri::command]

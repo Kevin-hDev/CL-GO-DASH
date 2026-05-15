@@ -39,7 +39,10 @@ pub async fn predict(
 }
 
 fn build_payload(input: &ParsedInput, request: &ForecastRequest) -> Result<Value, String> {
-    let model = request.model.as_deref().unwrap_or("chronos-bolt-small");
+    let model = request
+        .model
+        .as_deref()
+        .ok_or("Aucun modèle Forecast sélectionné")?;
     let runtime = find_runtime(model).ok_or("Moteur indisponible")?;
     if !crate::services::forecast::registry::has_predict_adapter(runtime) {
         return Err("Moteur indisponible".into());

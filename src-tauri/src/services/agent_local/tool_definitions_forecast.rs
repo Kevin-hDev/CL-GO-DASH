@@ -1,16 +1,25 @@
 use serde_json::Value;
 
 pub fn forecast_tool_definitions() -> Vec<Value> {
+    let selector_policy = match crate::services::forecast::selected_model::get() {
+        Some(model) => format!(
+            "The Forecast UI selector currently forces '{model}'. The model is selected by the app, not by you. Do not pass a model id. If the run fails, report the selected model error and keep the active model unchanged."
+        ),
+        None => "No Forecast model is currently selected in the UI. Ask the user to select one before running forecast.".to_string(),
+    };
+    let forecast_description = format!(
+        "Run a time series forecast from structured data. Use this when the user wants to predict future values of a series such as demand, sales, traffic, price, load, or trend. \
+         Provide either a JSON array in 'data' or a CSV/Excel path in 'file_path'. \
+         The tool returns a compact saved-analysis summary with analysis_id first. \
+         Call forecast_read with that analysis_id for predictions and quantiles. \
+         {selector_policy} \
+         Use forecast_models only when the user asks which Forecast models are available or when you need to inspect the current selector policy. \
+         Use series_column for multi-series models. Models with covariate support can use past columns and optional future-known rows."
+    );
     vec![
         super::tool_definitions::tool_def(
             "forecast",
-            "Run a time series forecast from structured data. Use this when the user wants to predict future values of a series such as demand, sales, traffic, price, load, or trend. \
-             Provide either a JSON array in 'data' or a CSV/Excel path in 'file_path'. \
-             The tool returns a compact saved-analysis summary with analysis_id first. \
-             Call forecast_read with that analysis_id for predictions and quantiles. \
-             Use forecast_models first when the user asks which Forecast models are available. \
-             Model ids include Chronos-Bolt, Chronos-2, TimesFM 2.5, TimeGPT-2.x/2.1, Toto 2.0, MOIRAI 2.0, FlowState, TabPFN-TS, TiRex, Kairos, and Sundial. \
-             Use series_column for multi-series models. Models with covariate support can use past columns and optional future-known rows.",
+            &forecast_description,
             serde_json::json!({
                 "type": "object",
                 "properties": {
@@ -47,10 +56,6 @@ pub fn forecast_tool_definitions() -> Vec<Value> {
                         "type": "string",
                         "description": "Time frequency such as D, W, M, Q, Y, H, or T."
                     },
-                    "model": {
-                        "type": "string",
-                        "description": "Forecast model id. Call forecast_models to list installed, runnable, and cloud-configured model ids before choosing."
-                    },
                     "confidence_level": {
                         "type": "number",
                         "description": "Confidence level for prediction intervals, usually 0.9."
@@ -61,7 +66,7 @@ pub fn forecast_tool_definitions() -> Vec<Value> {
         ),
         super::tool_definitions::tool_def(
             "forecast_models",
-            "List Forecast model ids available to the app, including provider, family, installed state, runnable state, runtime readiness, and capabilities. Use this before answering which Forecast models can be used.",
+            "List Forecast model ids available to the app, including provider, family, installed state, runnable state, runtime readiness, capabilities, and the current selector policy. Do not use this to override the Forecast UI selector.",
             serde_json::json!({
                 "type": "object",
                 "properties": {},

@@ -1,1 +1,1 @@
-pandas==3.0.3
+# Base runtime only. Model dependencies are installed per family.

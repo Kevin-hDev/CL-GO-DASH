@@ -2,7 +2,6 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 const REQUIREMENTS_STAMP: &str = ".requirements.stamp";
-const FAMILY_STAMP_PREFIX: &str = ".requirements.family.";
 const MAX_REQUIREMENTS_SIZE: usize = 16 * 1024;
 const MAX_FAMILY_REQUIREMENTS_SIZE: usize = 32 * 1024;
 
@@ -11,13 +10,20 @@ pub fn ensure_runtime(sidecar_dir: &Path, family_id: &str) -> Result<PathBuf, St
     let requirements = sidecar_dir.join("requirements.txt");
     let requirements_body = std::fs::read_to_string(&requirements)
         .map_err(|_| "Runtime Forecast incomplet".to_string())?;
-    if requirements_body.is_empty() || requirements_body.len() > MAX_REQUIREMENTS_SIZE {
+    if requirements_body.len() > MAX_REQUIREMENTS_SIZE {
         return Err("Configuration runtime Forecast invalide".to_string());
     }
 
-    let venv_dir = sidecar_dir.join(".venv");
+    let family_requirements =
+        family_requirements(family_id).ok_or("Adapter Forecast indisponible".to_string())?;
+    if family_requirements.is_empty() || family_requirements.len() > MAX_FAMILY_REQUIREMENTS_SIZE {
+        return Err("Configuration runtime Forecast invalide".to_string());
+    }
+
+    let venv_dir = family_venv_dir(sidecar_dir, family_id);
     let venv_python = venv_python_path(&venv_dir);
-    let stamp = sidecar_dir.join(REQUIREMENTS_STAMP);
+    let stamp = venv_dir.join(REQUIREMENTS_STAMP);
+    let combined_requirements = format!("{requirements_body}\n{family_requirements}");
 
     if !venv_python.exists() {
         let python = find_python()?;
@@ -28,68 +34,45 @@ pub fn ensure_runtime(sidecar_dir: &Path, family_id: &str) -> Result<PathBuf, St
     }
 
     let installed_stamp = std::fs::read_to_string(&stamp).unwrap_or_default();
-    if installed_stamp != requirements_body {
+    if installed_stamp != combined_requirements {
         run(
             Command::new(&venv_python).args(["-m", "pip", "install", "--upgrade", "pip"]),
             "Initialisation du runtime Forecast impossible",
         )?;
+        let manifest = venv_dir.join("requirements.txt");
+        std::fs::write(&manifest, &combined_requirements)
+            .map_err(|_| "Préparation du runtime Forecast impossible".to_string())?;
         run(
             Command::new(&venv_python)
                 .args(["-m", "pip", "install", "-r"])
-                .arg(&requirements),
+                .arg(&manifest),
             "Installation du moteur Forecast impossible",
         )?;
-        std::fs::write(&stamp, requirements_body)
+        std::fs::write(&stamp, combined_requirements)
             .map_err(|_| "Validation du runtime Forecast impossible".to_string())?;
     }
 
-    ensure_family_runtime(sidecar_dir, &venv_python, family_id)?;
     Ok(venv_python)
 }
 
 pub fn family_runtime_ready(sidecar_dir: &Path, family_id: &str) -> bool {
-    validate_family_id(family_id).is_ok() && sidecar_dir.join(family_stamp(family_id)).exists()
-}
-
-fn ensure_family_runtime(
-    sidecar_dir: &Path,
-    venv_python: &Path,
-    family_id: &str,
-) -> Result<(), String> {
-    let Some(requirements_body) = family_requirements(family_id) else {
-        return Err("Adapter Forecast indisponible".to_string());
-    };
-    if requirements_body.is_empty() || requirements_body.len() > MAX_FAMILY_REQUIREMENTS_SIZE {
-        return Err("Configuration runtime Forecast invalide".to_string());
+    if validate_family_id(family_id).is_err() {
+        return false;
     }
-
-    let stamp = sidecar_dir.join(family_stamp(family_id));
-    let installed_stamp = std::fs::read_to_string(&stamp).unwrap_or_default();
-    if installed_stamp == requirements_body {
-        return Ok(());
-    }
-
-    let manifest = sidecar_dir.join(format!(".requirements.{family_id}.txt"));
-    std::fs::write(&manifest, requirements_body)
-        .map_err(|_| "Préparation du runtime Forecast impossible".to_string())?;
-    run(
-        Command::new(venv_python)
-            .args(["-m", "pip", "install", "-r"])
-            .arg(&manifest),
-        "Installation du moteur Forecast impossible",
-    )?;
-    std::fs::write(&stamp, requirements_body)
-        .map_err(|_| "Validation du runtime Forecast impossible".to_string())
+    let venv_dir = family_venv_dir(sidecar_dir, family_id);
+    venv_python_path(&venv_dir).exists() && venv_dir.join(REQUIREMENTS_STAMP).exists()
 }
 
 fn family_requirements(family_id: &str) -> Option<&'static str> {
     match family_id {
-        "chronos-bolt" | "chronos-2" => Some("chronos-forecasting==2.2.2\n"),
+        "chronos-bolt" | "chronos-2" => Some("pandas<3\nchronos-forecasting==2.2.2\n"),
         "timesfm-2-5" => Some("timesfm\ntransformers\naccelerate\n"),
-        "toto-2" => Some("toto-2 @ git+https://github.com/DataDog/toto.git#subdirectory=toto2\n"),
+        "toto-2" => Some(
+            "torch>=2.6,<3\ntoto-2 @ git+https://github.com/DataDog/toto.git#subdirectory=toto2\n",
+        ),
         "moirai-2" => Some("git+https://github.com/SalesforceAIResearch/uni2ts.git\ngluonts\n"),
         "flowstate" => Some("granite-tsfm\n"),
-        "tabpfn-ts" => Some("tabpfn-time-series\ntabpfn\n"),
+        "tabpfn-ts" => Some("pandas\ntabpfn-time-series\ntabpfn\n"),
         "tirex" => Some("tirex-ts\n"),
         "kairos" => Some("git+https://github.com/foundation-model-research/Kairos.git\n"),
         "sundial" => Some("transformers>=4.40.1\naccelerate\n"),
@@ -97,8 +80,8 @@ fn family_requirements(family_id: &str) -> Option<&'static str> {
     }
 }
 
-fn family_stamp(family_id: &str) -> String {
-    format!("{FAMILY_STAMP_PREFIX}{family_id}.stamp")
+fn family_venv_dir(sidecar_dir: &Path, family_id: &str) -> PathBuf {
+    sidecar_dir.join(".venvs").join(family_id)
 }
 
 fn validate_family_id(family_id: &str) -> Result<(), String> {

@@ -13,7 +13,10 @@ pub fn parse_response(
     input: &ParsedInput,
     session_id: Option<&str>,
 ) -> Result<ForecastResult, String> {
-    let model_name = request.model.as_deref().unwrap_or("chronos-bolt-small");
+    let model_name = request
+        .model
+        .as_deref()
+        .ok_or("Aucun modèle Forecast sélectionné")?;
     let runtime = find_runtime(model_name).ok_or("Moteur indisponible")?;
     let (predictions, q10, q50, q90) = match runtime.engine_kind {
         ForecastEngineKind::LocalChronos2

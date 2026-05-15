@@ -1,7 +1,7 @@
 use crate::services::agent_local::types_tools::ToolResult;
 use crate::services::forecast::types::ForecastRequest;
 use crate::services::forecast::{
-    client_chronos, client_nixtla, model_listing, model_manager, registry, sidecar, storage,
+    client_chronos, client_nixtla, model_manager, registry, selected_model, sidecar, storage,
     validation,
 };
 use serde_json::Value;
@@ -16,7 +16,7 @@ pub async fn dispatch_forecast(
 ) -> Option<ToolResult> {
     match tool_name {
         "forecast" => Some(handle_forecast(args, _working_dir, session_id).await),
-        "forecast_models" => Some(handle_models()),
+        "forecast_models" => Some(super::tool_dispatcher_forecast_models::handle()),
         "forecast_analyze" => Some(super::tool_dispatcher_forecast_analyze::handle(args).await),
         "forecast_read" => Some(handle_read(args).await),
         _ => None,
@@ -28,10 +28,17 @@ async fn handle_forecast(args: &Value, working_dir: &Path, session_id: &str) -> 
         Ok(r) => r,
         Err(e) => return ToolResult::err(format!("Paramètres invalides: {e}")),
     };
+    let requested_model = request.model.clone();
     crate::services::forecast::request_normalize::normalize_request(&mut request);
+    let selected_model = match selected_model::apply_required(&mut request) {
+        Ok(model) => model,
+        Err(e) => return ToolResult::err(e),
+    };
 
     if request.data.is_none() && request.file_path.is_none() {
-        return ToolResult::err(
+        return forced_model_error(
+            &selected_model,
+            requested_model.as_deref(),
             "Il faut fournir soit 'data' (JSON) soit 'file_path' (chemin CSV/Excel)",
         );
     }
@@ -40,41 +47,71 @@ async fn handle_forecast(args: &Value, working_dir: &Path, session_id: &str) -> 
         crate::services::forecast::file_input::ensure_request_data(&mut request, Some(working_dir))
             .await
     {
-        return ToolResult::err(e);
+        return forced_model_error(&selected_model, requested_model.as_deref(), &e);
     }
 
     if let Err(e) = validation::validate_request(&request) {
-        return ToolResult::err(e);
+        return forced_model_error(&selected_model, requested_model.as_deref(), &e);
     }
     let model_id = match validation::model_id(&request) {
         Ok(id) => id,
-        Err(e) => return ToolResult::err(e),
+        Err(e) => return forced_model_error(&selected_model, requested_model.as_deref(), &e),
     };
     let runtime = match registry::find_runtime(model_id) {
         Some(runtime) => runtime,
-        None => return ToolResult::err("Moteur indisponible"),
+        None => {
+            return forced_model_error(
+                &selected_model,
+                requested_model.as_deref(),
+                "Moteur indisponible",
+            )
+        }
     };
     if !registry::has_predict_adapter(runtime) {
-        return ToolResult::err("Moteur indisponible");
+        return forced_model_error(
+            &selected_model,
+            requested_model.as_deref(),
+            "Moteur indisponible",
+        );
     }
 
     let result = if registry::is_cloud(runtime) {
         let key = match crate::services::api_keys::get_key("nixtla") {
             Ok(k) => k,
-            Err(_) => return ToolResult::err("Clé API Nixtla non configurée"),
+            Err(_) => {
+                return forced_model_error(
+                    &selected_model,
+                    requested_model.as_deref(),
+                    "Clé API Nixtla non configurée",
+                )
+            }
         };
         client_nixtla::predict(&key, &request, Some(session_id)).await
     } else {
         if !model_manager::is_installed(model_id) {
-            return ToolResult::err("Modèle non installé");
+            return forced_model_error(
+                &selected_model,
+                requested_model.as_deref(),
+                "Modèle non installé",
+            );
         }
         let Some(app) = super::app_handle_global::get() else {
-            return ToolResult::err("Service de prédiction indisponible");
+            return forced_model_error(
+                &selected_model,
+                requested_model.as_deref(),
+                "Service de prédiction indisponible",
+            );
         };
         let chronos = app.state::<sidecar::ChronosSidecar>();
         let endpoint = match sidecar::start(chronos.inner(), model_id, runtime.family_id).await {
             Ok(endpoint) => endpoint,
-            Err(_) => return ToolResult::err("Impossible de démarrer le service de prédiction"),
+            Err(_) => {
+                return forced_model_error(
+                    &selected_model,
+                    requested_model.as_deref(),
+                    "Impossible de démarrer le service de prédiction",
+                )
+            }
         };
         client_chronos::predict(
             &endpoint.base_url,
@@ -88,7 +125,11 @@ async fn handle_forecast(args: &Value, working_dir: &Path, session_id: &str) -> 
     match result {
         Ok(forecast) => {
             if storage::save(&forecast).await.is_err() {
-                return ToolResult::err("Sauvegarde de la prévision échouée");
+                return forced_model_error(
+                    &selected_model,
+                    requested_model.as_deref(),
+                    "Sauvegarde de la prévision échouée",
+                );
             }
             if let Some(app) = super::app_handle_global::get() {
                 let _ = app.emit(
@@ -104,38 +145,30 @@ async fn handle_forecast(args: &Value, working_dir: &Path, session_id: &str) -> 
                 Err(e) => ToolResult::err(e),
             }
         }
-        Err(e) => ToolResult::err(e),
+        Err(e) => forced_model_error(&selected_model, requested_model.as_deref(), &e),
     }
 }
 
-fn handle_models() -> ToolResult {
-    let listing = model_listing::list_models();
-    let Some(models) = listing["models"].as_array() else {
-        return ToolResult::err("Catalogue Forecast indisponible");
-    };
-    let compact: Vec<Value> = models.iter().filter_map(compact_model).collect();
+fn forced_model_error(
+    selected_model: &str,
+    requested_model: Option<&str>,
+    error: &str,
+) -> ToolResult {
+    let ignored = requested_model.filter(|model| *model != selected_model);
     let payload = serde_json::json!({
-        "models": compact,
-        "usage": "Use a model id in forecast.model. Local models require installed=true. Cloud models require provider_configured=true."
+        "error": error,
+        "model_selection": {
+            "mode": "selector_forced",
+            "effective_model": selected_model,
+            "requested_model_ignored": ignored,
+            "selector_locked": true,
+            "next_step": "Corriger la requête ou demander à l'utilisateur de changer le modèle dans le sélecteur Forecast."
+        }
     });
     match serde_json::to_string_pretty(&payload) {
-        Ok(json) => ToolResult::ok(json),
-        Err(_) => ToolResult::err("Catalogue Forecast indisponible"),
+        Ok(json) => ToolResult::err(json),
+        Err(_) => ToolResult::err(error),
     }
-}
-
-fn compact_model(model: &Value) -> Option<Value> {
-    Some(serde_json::json!({
-        "id": model["id"].as_str()?,
-        "name": model["display_name"].as_str().unwrap_or(""),
-        "provider": model["provider_id"].as_str().unwrap_or(""),
-        "family": model["family_id"].as_str().unwrap_or(""),
-        "installed": model["installed"].as_bool().unwrap_or(false),
-        "runnable": model["runnable"].as_bool().unwrap_or(false),
-        "runtime_ready": model["runtime_ready"].as_bool().unwrap_or(false),
-        "provider_configured": model["provider_configured"].as_bool().unwrap_or(false),
-        "capabilities": model["capabilities"].clone()
-    }))
 }
 
 async fn handle_read(args: &Value) -> ToolResult {

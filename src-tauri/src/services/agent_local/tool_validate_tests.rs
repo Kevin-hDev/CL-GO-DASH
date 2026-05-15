@@ -75,6 +75,20 @@ mod tests {
     }
 
     #[test]
+    fn forecast_model_arg_is_ignored() {
+        let args = json!({
+            "target_column": "sales",
+            "date_column": "date",
+            "horizon": 7,
+            "frequency": "D",
+            "model": "chronos-bolt-small"
+        });
+        let cleaned = validate("forecast", &args).unwrap();
+
+        assert!(cleaned.get("model").is_none());
+    }
+
+    #[test]
     fn null_required_arg_rejected() {
         let args = json!({"command": null});
         assert!(validate("bash", &args).is_err());

@@ -22,6 +22,7 @@ pub mod scenario_context;
 pub mod scenario_context_run;
 pub mod scenario_percent;
 pub mod scenarios;
+pub mod selected_model;
 pub mod sidecar;
 pub mod sidecar_process;
 pub mod sidecar_runtime;

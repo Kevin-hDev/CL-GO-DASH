@@ -7,6 +7,10 @@ pub fn created_payload(forecast: &ForecastResult) -> Result<String, String> {
         "analysis_id": forecast.id,
         "name": forecast.name,
         "model": forecast.model,
+        "model_selection": {
+            "mode": "selector_forced",
+            "effective_model": forecast.model
+        },
         "provider": forecast.provider,
         "target_column": forecast.target_column,
         "series_column": forecast.input_data.series_column,

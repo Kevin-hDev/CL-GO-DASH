@@ -70,7 +70,6 @@ static FORECAST: Schema = &[
     ("covariate_columns", Ty::Arr, false),
     ("horizon", Ty::Int, true),
     ("frequency", Ty::Str, true),
-    ("model", Ty::Str, false),
     ("confidence_level", Ty::Float, false),
 ];
 static FORECAST_ANALYZE: Schema = &[

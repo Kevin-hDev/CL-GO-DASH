@@ -20,9 +20,8 @@ import { loadForecastDraftFromFile, type ForecastDraftData } from "./forecast-da
 import { useForecastLayerSources } from "./use-forecast-layer-sources";
 import { ForecastSectionRouter } from "./forecast-section-router";
 import { useCurrentForecastAnalysisName } from "./use-current-forecast-analysis-name";
+import { useSelectedForecastModel } from "./use-selected-forecast-model";
 import "./forecast-panel.css";
-
-const FORECAST_MODEL_STORAGE_KEY = "cl-go-dash.forecast.selected-model";
 
 interface ForecastPanelProps {
   activeSection: ForecastSection;
@@ -49,13 +48,7 @@ export function ForecastPanel({
   const [error, setError] = useState<string | null>(null);
   const [layers, setLayers] = useState<ForecastLayerState>(createInitialLayerState);
   const [scenarioPickerOpen, setScenarioPickerOpen] = useState(false);
-  const [selectedModelId, setSelectedModelId] = useState(() => {
-    try {
-      return localStorage.getItem(FORECAST_MODEL_STORAGE_KEY) ?? "";
-    } catch {
-      return "";
-    }
-  });
+  const { selectedModelId, selectModel } = useSelectedForecastModel();
   const currentAnalysisName = useCurrentForecastAnalysisName(currentAnalysisId);
   const layerSources = useForecastLayerSources(currentAnalysisId, setLayers);
   const filterGroups = buildForecastLayerGroups(
@@ -73,13 +66,8 @@ export function ForecastPanel({
   };
 
   const handleSelectModel = useCallback((modelId: string) => {
-    setSelectedModelId(modelId);
-    try {
-      localStorage.setItem(FORECAST_MODEL_STORAGE_KEY, modelId);
-    } catch {
-      // Selection persistence is optional; the in-memory state remains valid.
-    }
-  }, []);
+    selectModel(modelId);
+  }, [selectModel]);
 
   const handleLaunch = async (config: LaunchConfig) => {
     if (!draft) return;

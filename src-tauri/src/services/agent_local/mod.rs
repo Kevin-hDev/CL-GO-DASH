@@ -64,6 +64,7 @@ pub mod tool_delegate;
 pub mod tool_dispatcher;
 pub mod tool_dispatcher_forecast;
 pub mod tool_dispatcher_forecast_analyze;
+pub mod tool_dispatcher_forecast_models;
 pub mod tool_dispatcher_forecast_output;
 pub mod tool_dispatcher_forecast_scenario_params;
 pub mod tool_dispatcher_mcp;
