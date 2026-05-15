@@ -1,5 +1,6 @@
 pub mod catalog;
 pub mod client_chronos;
+mod client_local_response;
 pub mod client_nixtla;
 mod client_nixtla_retry;
 pub mod file_input;

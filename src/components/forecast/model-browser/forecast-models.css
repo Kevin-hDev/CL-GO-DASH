@@ -173,10 +173,13 @@
 
 .fmi-fill {
   display: block;
+  width: 100%;
   height: 100%;
   background: var(--fc-progress);
   border-radius: 2px;
-  transition: width 200ms ease;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 80ms linear;
 }
 
 .fmi-pct {

@@ -6,6 +6,7 @@ use tauri::ipc::Channel;
 use tokio::io::AsyncWriteExt;
 
 const MAX_MODEL_FILES: usize = 128;
+const MIN_PROGRESS_STEP: f64 = 1.0;
 
 pub async fn download_model(
     hf_repo: &str,
@@ -17,6 +18,7 @@ pub async fn download_model(
     let files = list_hf_files(hf_repo, hf_revision).await?;
     let total_size: u64 = files.iter().map(|(_, size)| size).sum();
     let mut downloaded: u64 = 0;
+    let mut last_percent_sent = 0.0;
 
     for (filename, _file_size) in &files {
         let revision = hf_revision.unwrap_or("main");
@@ -35,6 +37,7 @@ pub async fn download_model(
             total_size,
             model_id,
             on_progress,
+            &mut last_percent_sent,
         )
         .await?;
     }
@@ -113,6 +116,7 @@ async fn download_single(
     total_size: u64,
     model_id: &str,
     on_progress: &Channel<ModelDownloadProgress>,
+    last_percent_sent: &mut f64,
 ) -> Result<(), String> {
     let client = reqwest::Client::new();
     let resp = client
@@ -144,12 +148,15 @@ async fn download_single(
         } else {
             0.0
         };
-        let _ = on_progress.send(ModelDownloadProgress {
-            model_name: model_id.to_string(),
-            downloaded: *downloaded,
-            total: total_size,
-            percent,
-        });
+        if percent >= *last_percent_sent + MIN_PROGRESS_STEP || percent >= 99.9 {
+            *last_percent_sent = percent;
+            let _ = on_progress.send(ModelDownloadProgress {
+                model_name: model_id.to_string(),
+                downloaded: *downloaded,
+                total: total_size,
+                percent,
+            });
+        }
     }
 
     file.flush().await.map_err(|_| "Flush échoué".to_string())?;

@@ -1,5 +1,5 @@
 use super::{
-    client_chronos, client_nixtla, model_manager, sidecar,
+    client_chronos, client_nixtla, model_manager, registry, sidecar,
     types::{ForecastRequest, ForecastResult},
     validation,
 };
@@ -13,8 +13,12 @@ pub async fn rerun(
     let request = build_forecast_request(analysis, rows)?;
     validation::validate_request(&request)?;
     let model_id = validation::model_id(&request)?;
+    let runtime = registry::find_runtime(model_id).ok_or("Moteur indisponible")?;
+    if !registry::has_predict_adapter(runtime) {
+        return Err("Moteur indisponible".into());
+    }
 
-    if model_id.starts_with("timegpt") {
+    if registry::is_cloud(runtime) {
         let key = crate::services::api_keys::get_key("nixtla")
             .map_err(|_| "Clé API Nixtla non configurée".to_string())?;
         return client_nixtla::predict(&key, &request, None).await;
@@ -24,7 +28,7 @@ pub async fn rerun(
         return Err("Modèle non installé".into());
     }
     let chronos = chronos.ok_or("Service de prédiction indisponible")?;
-    let endpoint = sidecar::start(chronos, model_id)
+    let endpoint = sidecar::start(chronos, model_id, runtime.family_id)
         .await
         .map_err(|_| "Impossible de démarrer le service de prédiction".to_string())?;
     client_chronos::predict(

@@ -17,6 +17,7 @@ static ACTIVE_PORT: AtomicU16 = AtomicU16::new(0);
 struct SidecarHandle {
     child: Child,
     model_id: String,
+    family_id: String,
     auth_token: Zeroizing<String>,
 }
 
@@ -67,7 +68,7 @@ pub fn find_free_port() -> u16 {
     DEFAULT_PORT
 }
 
-fn health_info(port: u16, auth_token: &str) -> Option<(u16, String)> {
+fn health_info(port: u16, auth_token: &str) -> Option<(u16, String, String)> {
     use std::io::{Read, Write};
     use std::net::TcpStream;
     use std::time::Duration;
@@ -90,16 +91,23 @@ fn health_info(port: u16, auth_token: &str) -> Option<(u16, String)> {
     let body = response.split("\r\n\r\n").nth(1)?;
     let json: serde_json::Value = serde_json::from_str(body).ok()?;
     let model = json["model"].as_str()?.to_string();
-    Some((port, model))
+    let family = json["family"].as_str().unwrap_or("").to_string();
+    Some((port, model, family))
 }
 
-pub async fn start(sidecar: &ChronosSidecar, model_name: &str) -> Result<SidecarEndpoint, String> {
+pub async fn start(
+    sidecar: &ChronosSidecar,
+    model_name: &str,
+    family_id: &str,
+) -> Result<SidecarEndpoint, String> {
     {
         let guard = sidecar.0.lock().await;
         if let Some(handle) = guard.as_ref() {
-            if handle.model_id == model_name {
-                if let Some((_port, model)) = health_info(get_port(), handle.auth_token.as_str()) {
-                    if model == model_name {
+            if handle.model_id == model_name && handle.family_id == family_id {
+                if let Some((_port, model, family)) =
+                    health_info(get_port(), handle.auth_token.as_str())
+                {
+                    if model == model_name && family == family_id {
                         return Ok(SidecarEndpoint {
                             base_url: base_url(),
                             auth_token: handle.auth_token.clone(),
@@ -121,7 +129,8 @@ pub async fn start(sidecar: &ChronosSidecar, model_name: &str) -> Result<Sidecar
 
     let runtime_python = tokio::task::spawn_blocking({
         let dir = sidecar_dir();
-        move || sidecar_runtime::ensure_runtime(&dir)
+        let family = family_id.to_string();
+        move || sidecar_runtime::ensure_runtime(&dir, &family)
     })
     .await
     .map_err(|_| "Initialisation du moteur Forecast impossible".to_string())?
@@ -136,6 +145,8 @@ pub async fn start(sidecar: &ChronosSidecar, model_name: &str) -> Result<Sidecar
             &port.to_string(),
             "--model",
             model_name,
+            "--family",
+            family_id,
             "--models-dir",
             models_dir.to_str().unwrap_or(""),
         ])
@@ -143,7 +154,7 @@ pub async fn start(sidecar: &ChronosSidecar, model_name: &str) -> Result<Sidecar
         .stdout(std::process::Stdio::null())
         .stderr(std::process::Stdio::null())
         .spawn()
-        .map_err(|_| "Impossible de lancer le sidecar Chronos".to_string())?;
+        .map_err(|_| "Impossible de lancer le sidecar Forecast".to_string())?;
 
     sidecar_process::save_pid(child.id());
     ACTIVE_PORT.store(port, Ordering::Relaxed);
@@ -151,14 +162,17 @@ pub async fn start(sidecar: &ChronosSidecar, model_name: &str) -> Result<Sidecar
     *sidecar.0.lock().await = Some(SidecarHandle {
         child,
         model_id: model_name.to_string(),
+        family_id: family_id.to_string(),
         auth_token: auth_token.clone(),
     });
 
     // Attendre que le sidecar soit prêt (max 30s)
     for _ in 0..60 {
         tokio::time::sleep(std::time::Duration::from_millis(500)).await;
-        if let Some((ready_port, ready_model)) = health_info(port, auth_token.as_str()) {
-            if ready_model == model_name {
+        if let Some((ready_port, ready_model, ready_family)) =
+            health_info(port, auth_token.as_str())
+        {
+            if ready_model == model_name && ready_family == family_id {
                 return Ok(SidecarEndpoint {
                     base_url: format!("http://127.0.0.1:{ready_port}"),
                     auth_token,
@@ -168,7 +182,7 @@ pub async fn start(sidecar: &ChronosSidecar, model_name: &str) -> Result<Sidecar
     }
 
     stop(sidecar).await;
-    Err("Sidecar Chronos: timeout au démarrage".into())
+    Err("Sidecar Forecast: timeout au démarrage".into())
 }
 
 pub async fn stop(sidecar: &ChronosSidecar) {

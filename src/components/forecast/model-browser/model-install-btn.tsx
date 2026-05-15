@@ -29,11 +29,13 @@ export function ModelInstallBtn({ modelId, installed, onDone }: ModelInstallBtnP
 
     const channel = new Channel<DownloadProgress>();
     channel.onmessage = (event: DownloadProgress) => {
-      setPercent(Math.max(0, Math.min(100, Math.round(event.percent))));
+      const next = Math.max(0, Math.min(100, Math.round(event.percent)));
+      setPercent((current) => Math.max(current, next));
     };
 
     try {
       await invoke("install_forecast_model", { name: modelId, onProgress: channel });
+      setPercent(100);
       onDone();
     } catch {
       if (!cancelledRef.current) setPercent(-1);
@@ -55,7 +57,7 @@ export function ModelInstallBtn({ modelId, installed, onDone }: ModelInstallBtnP
     return (
       <div className="fmi-progress">
         <div className="fmi-bar">
-          <div className="fmi-fill" style={{ width: `${percent}%` }} />
+          <div className="fmi-fill" style={{ transform: `scaleX(${percent / 100})` }} />
         </div>
         <span className="fmi-pct">{percent}%</span>
       </div>

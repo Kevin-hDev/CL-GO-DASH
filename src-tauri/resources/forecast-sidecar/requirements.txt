@@ -1,2 +1,1 @@
-chronos-forecasting==2.2.2
 pandas==3.0.3

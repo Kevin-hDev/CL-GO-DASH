@@ -1,7 +1,7 @@
 use crate::services::agent_local::types_tools::ToolResult;
 use crate::services::forecast::types::ForecastRequest;
 use crate::services::forecast::{
-    client_chronos, client_nixtla, model_manager, sidecar, storage, validation,
+    client_chronos, client_nixtla, model_manager, registry, sidecar, storage, validation,
 };
 use serde_json::Value;
 use std::path::Path;
@@ -47,9 +47,15 @@ async fn handle_forecast(args: &Value, working_dir: &Path, session_id: &str) -> 
         Ok(id) => id,
         Err(e) => return ToolResult::err(e),
     };
-    let is_nixtla = model_id.starts_with("timegpt");
+    let runtime = match registry::find_runtime(model_id) {
+        Some(runtime) => runtime,
+        None => return ToolResult::err("Moteur indisponible"),
+    };
+    if !registry::has_predict_adapter(runtime) {
+        return ToolResult::err("Moteur indisponible");
+    }
 
-    let result = if is_nixtla {
+    let result = if registry::is_cloud(runtime) {
         let key = match crate::services::api_keys::get_key("nixtla") {
             Ok(k) => k,
             Err(_) => return ToolResult::err("Clé API Nixtla non configurée"),
@@ -63,7 +69,7 @@ async fn handle_forecast(args: &Value, working_dir: &Path, session_id: &str) -> 
             return ToolResult::err("Service de prédiction indisponible");
         };
         let chronos = app.state::<sidecar::ChronosSidecar>();
-        let endpoint = match sidecar::start(chronos.inner(), model_id).await {
+        let endpoint = match sidecar::start(chronos.inner(), model_id, runtime.family_id).await {
             Ok(endpoint) => endpoint,
             Err(_) => return ToolResult::err("Impossible de démarrer le service de prédiction"),
         };

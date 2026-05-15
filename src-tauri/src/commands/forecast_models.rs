@@ -1,5 +1,6 @@
 use crate::services::forecast::types::ModelDownloadProgress;
-use crate::services::forecast::{catalog, model_manager, registry, validation};
+use crate::services::forecast::{catalog, model_manager, registry, sidecar_runtime, validation};
+use crate::services::paths::data_dir;
 use serde_json::Value;
 use tauri::ipc::Channel;
 
@@ -44,6 +45,8 @@ fn enrich_model_object(
     configured: &[String],
 ) {
     let runtime = registry::find_runtime(model.id);
+    let installed_model = installed.contains(&model.id.to_string());
+    let provider_configured = configured.iter().any(|id| id == model.provider_id);
     if let Some(runtime) = runtime {
         object.insert(
             "family_id".into(),
@@ -75,23 +78,70 @@ fn enrich_model_object(
         "family_id".into(),
         Value::String(model.family_id.to_string()),
     );
-    object.insert(
-        "installed".into(),
-        Value::Bool(installed.contains(&model.id.to_string())),
-    );
+    object.insert("installed".into(), Value::Bool(installed_model));
     object.insert(
         "installable".into(),
         Value::Bool(!model.is_cloud && (model.hf_repo.is_some() || model.github_repo.is_some())),
     );
-    object.insert("runnable".into(), Value::Bool(runtime.is_some()));
+    object.insert(
+        "runnable".into(),
+        Value::Bool(
+            runtime.is_some()
+                && runnable_state(model, runtime, installed_model, provider_configured),
+        ),
+    );
+    object.insert(
+        "runtime_ready".into(),
+        Value::Bool(runtime_ready_state(
+            runtime,
+            installed_model,
+            provider_configured,
+        )),
+    );
     object.insert(
         "size_on_disk".into(),
         Value::Number(model_manager::get_model_size(model.id).into()),
     );
     object.insert(
         "provider_configured".into(),
-        Value::Bool(configured.iter().any(|id| id == model.provider_id)),
+        Value::Bool(provider_configured),
     );
+}
+
+fn runnable_state(
+    model: &catalog::ForecastModelSpec,
+    runtime: Option<&registry::ForecastRuntimeSpec>,
+    installed: bool,
+    provider_configured: bool,
+) -> bool {
+    match runtime {
+        Some(spec) if registry::is_cloud(spec) => {
+            registry::has_predict_adapter(spec) && provider_configured
+        }
+        Some(spec) => registry::has_predict_adapter(spec) && !model.is_cloud && installed,
+        None => false,
+    }
+}
+
+fn runtime_ready_state(
+    runtime: Option<&registry::ForecastRuntimeSpec>,
+    installed: bool,
+    provider_configured: bool,
+) -> bool {
+    let Some(spec) = runtime else {
+        return false;
+    };
+    if registry::is_cloud(spec) {
+        return registry::has_predict_adapter(spec) && provider_configured;
+    }
+    if !registry::has_predict_adapter(spec) {
+        return false;
+    }
+    installed
+        && sidecar_runtime::family_runtime_ready(
+            &data_dir().join("forecast-sidecar"),
+            spec.family_id,
+        )
 }
 
 #[tauri::command]

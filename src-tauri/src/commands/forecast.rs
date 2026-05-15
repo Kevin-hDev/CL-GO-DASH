@@ -1,7 +1,7 @@
 use crate::services::forecast::types::{ForecastAnalysisMeta, ForecastRequest, ForecastResult};
 use crate::services::forecast::{
-    client_chronos, client_nixtla, model_manager, notes, notes_cleanup, scenarios, sidecar,
-    storage, validation,
+    client_chronos, client_nixtla, model_manager, notes, notes_cleanup, registry, scenarios,
+    sidecar, storage, validation,
 };
 use tauri::State;
 
@@ -15,9 +15,12 @@ pub async fn run_forecast(
         .map_err(|_| "Impossible de lire les données source".to_string())?;
     validation::validate_request(&request)?;
     let model_id = validation::model_id(&request)?;
-    let is_nixtla = model_id.starts_with("timegpt");
+    let runtime = registry::find_runtime(model_id).ok_or("Moteur indisponible")?;
+    if !registry::has_predict_adapter(runtime) {
+        return Err("Moteur indisponible".into());
+    }
 
-    let result = if is_nixtla {
+    let result = if registry::is_cloud(runtime) {
         let key = crate::services::api_keys::get_key("nixtla")
             .map_err(|_| "Clé API Nixtla non configurée".to_string())?;
         client_nixtla::predict(&key, &request, None)
@@ -27,7 +30,7 @@ pub async fn run_forecast(
         if !model_manager::is_installed(model_id) {
             return Err("Modèle non installé".into());
         }
-        let endpoint = sidecar::start(&chronos, model_id)
+        let endpoint = sidecar::start(&chronos, model_id, runtime.family_id)
             .await
             .map_err(|_| "Impossible de démarrer le service de prédiction".to_string())?;
         client_chronos::predict(
