@@ -2,17 +2,14 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
-use serde::Deserialize;
-
 use super::http::HttpTransport;
 use super::stdio::StdioTransport;
 use super::transport::{McpToolDef, McpTransport};
+use super::{config, trusted};
 
 const MAX_CACHE: usize = 32;
 const CACHE_TTL_SECS: u64 = 300;
-const IMESSAGE_CONNECTOR_ID: &str = "imessage";
-const IMESSAGE_INSTALL_COMMAND: &str =
-    "deno run --allow-read --allow-env --allow-sys --allow-ffi jsr:@wyattjoh/imessage-mcp";
+const TEST_TIMEOUT_SECS: u64 = 20;
 
 struct CachedTools {
     tools: Vec<McpToolDef>,
@@ -22,89 +19,33 @@ struct CachedTools {
 static TOOL_CACHE: std::sync::LazyLock<Mutex<HashMap<String, CachedTools>>> =
     std::sync::LazyLock::new(|| Mutex::new(HashMap::new()));
 
-#[derive(Deserialize)]
-struct StoredConnector {
-    id: String,
-    status: String,
-    enabled_in_chat: bool,
-    endpoint: Option<String>,
-    install_command: Option<String>,
-    #[serde(default)]
-    env_keys: Option<Vec<String>>,
-}
-
 pub struct EnabledConnector {
     pub id: String,
     pub transport: Arc<dyn McpTransport>,
 }
 
 pub fn get_enabled_connectors() -> Vec<EnabledConnector> {
-    let path = crate::services::paths::data_dir().join("mcp-connectors.json");
-    let content = match std::fs::read_to_string(&path) {
-        Ok(c) => c,
-        Err(_) => return Vec::new(),
-    };
-    let connectors: Vec<StoredConnector> = match serde_json::from_str(&content) {
-        Ok(c) => c,
-        Err(_) => return Vec::new(),
-    };
-
-    connectors
+    config::load()
         .into_iter()
         .filter(|c| c.status == "connected" && c.enabled_in_chat)
         .filter_map(build_connector)
-        .take(MAX_CACHE)
+        .take(config::MAX_CONNECTORS)
         .collect()
 }
 
-fn is_valid_connector_id(id: &str) -> bool {
-    !id.is_empty()
-        && id.len() <= 64
-        && id
-            .bytes()
-            .all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
+pub fn is_trusted_endpoint_pub(connector_id: &str, url: &str) -> bool {
+    trusted::is_trusted_endpoint_for_connector(connector_id, url)
 }
 
-pub fn is_trusted_endpoint_pub(url: &str) -> bool {
-    is_trusted_endpoint(url)
-}
-
-fn is_trusted_endpoint(url: &str) -> bool {
-    let parsed = match reqwest::Url::parse(url) {
-        Ok(u) => u,
-        Err(_) => return false,
-    };
-    let host = match parsed.host_str() {
-        Some(h) => h,
-        None => return false,
-    };
-    const TRUSTED_SUFFIXES: &[&str] = &[
-        ".linear.app",
-        ".notion.so",
-        ".canva.com",
-        ".sentry.io",
-        ".vercel.com",
-        ".slack.com",
-        ".apify.com",
-        ".lucid.co",
-        ".googleapis.com",
-        ".githubcopilot.com",
-        ".figma.com",
-    ];
-    TRUSTED_SUFFIXES
-        .iter()
-        .any(|s| host.ends_with(s) || host == &s[1..])
-}
-
-fn build_connector(c: StoredConnector) -> Option<EnabledConnector> {
-    if !is_valid_connector_id(&c.id) {
+fn build_connector(c: config::StoredConnector) -> Option<EnabledConnector> {
+    if !config::is_valid_connector_id(&c.id) {
         return None;
     }
-    if c.id == IMESSAGE_CONNECTOR_ID && !cfg!(target_os = "macos") {
+    if c.id == "imessage" && !cfg!(target_os = "macos") {
         return None;
     }
     if let Some(ref endpoint) = c.endpoint {
-        if endpoint.starts_with("https://") && is_trusted_endpoint(endpoint) {
+        if trusted::is_trusted_endpoint_for_connector(&c.id, endpoint) {
             let transport = HttpTransport::new(c.id.clone(), endpoint.clone());
             return Some(EnabledConnector {
                 id: c.id,
@@ -113,14 +54,9 @@ fn build_connector(c: StoredConnector) -> Option<EnabledConnector> {
         }
     }
 
-    if let Some(ref cmd) = c.install_command {
-        let cmd = if c.id == IMESSAGE_CONNECTOR_ID {
-            IMESSAGE_INSTALL_COMMAND
-        } else {
-            cmd
-        };
-        let env_key_names = validated_env_keys(c.env_keys.as_deref());
-        let transport = StdioTransport::new(c.id.clone(), cmd.to_string(), env_key_names);
+    if let Some(cmd) = config::install_command_for(&c) {
+        let env_key_names = config::validated_env_keys(c.env_keys.as_deref());
+        let transport = StdioTransport::new(c.id.clone(), cmd, env_key_names);
         return Some(EnabledConnector {
             id: c.id,
             transport: Arc::new(transport),
@@ -128,46 +64,6 @@ fn build_connector(c: StoredConnector) -> Option<EnabledConnector> {
     }
 
     None
-}
-
-const FORBIDDEN_ENV_KEYS: &[&str] = &[
-    "PATH",
-    "HOME",
-    "TMPDIR",
-    "LANG",
-    "LC_ALL",
-    "USER",
-    "SHELL",
-    "LD_PRELOAD",
-    "LD_LIBRARY_PATH",
-    "DYLD_INSERT_LIBRARIES",
-    "NODE_OPTIONS",
-    "NODE_PATH",
-    "DENO_DIR",
-    "NPM_CONFIG_CACHE",
-    "NPM_CONFIG_PREFIX",
-    "XDG_DATA_HOME",
-    "XDG_CACHE_HOME",
-    "XDG_CONFIG_HOME",
-];
-
-fn is_valid_env_key(key: &str) -> bool {
-    !key.is_empty()
-        && key.len() <= 64
-        && key.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_')
-        && !FORBIDDEN_ENV_KEYS.contains(&key)
-}
-
-fn validated_env_keys(keys: Option<&[String]>) -> Vec<String> {
-    let keys = match keys {
-        Some(k) if !k.is_empty() => k,
-        _ => return Vec::new(),
-    };
-    keys.iter()
-        .take(10)
-        .filter(|k| is_valid_env_key(k))
-        .cloned()
-        .collect()
 }
 
 pub async fn get_tools(connector: &EnabledConnector) -> Result<Vec<McpToolDef>, String> {
@@ -178,6 +74,22 @@ pub async fn get_tools(connector: &EnabledConnector) -> Result<Vec<McpToolDef>, 
     let tools = connector.transport.list_tools().await?;
     set_cached(&connector.id, &tools);
     Ok(tools)
+}
+
+pub async fn test_connector(connector: config::StoredConnector) -> Result<(), String> {
+    config::validate_connector(&connector)?;
+    let id = connector.id.clone();
+    let enabled = build_connector(connector).ok_or("connecteur MCP invalide")?;
+    invalidate_cache(&id);
+    let tools = tokio::time::timeout(
+        std::time::Duration::from_secs(TEST_TIMEOUT_SECS),
+        enabled.transport.list_tools(),
+    )
+    .await
+    .map_err(|_| "test MCP expiré".to_string())?
+    .map_err(|_| "test MCP échoué".to_string())?;
+    set_cached(&id, &tools);
+    Ok(())
 }
 
 pub fn invalidate_cache(connector_id: &str) {

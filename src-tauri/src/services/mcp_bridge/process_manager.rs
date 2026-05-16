@@ -7,7 +7,7 @@ use std::sync::Arc;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::{Child, ChildStdin, ChildStdout, Command};
 
-use super::stdio_cmd;
+use super::{process_env, stdio_cmd};
 
 const MAX_PROCESSES: usize = 8;
 const TTL_SECS: u64 = 600;
@@ -28,28 +28,6 @@ static POOL: std::sync::LazyLock<Mutex<HashMap<String, PoolEntry>>> =
 
 static HANDLES: std::sync::LazyLock<Mutex<HashMap<String, ProcessHandle>>> =
     std::sync::LazyLock::new(|| Mutex::new(HashMap::new()));
-
-fn safe_env() -> Vec<(String, String)> {
-    [
-        "PATH",
-        "HOME",
-        "TMPDIR",
-        "LANG",
-        "LC_ALL",
-        "USER",
-        "SHELL",
-        "XDG_DATA_HOME",
-        "XDG_CACHE_HOME",
-        "XDG_CONFIG_HOME",
-        "NODE_PATH",
-        "NPM_CONFIG_CACHE",
-        "NPM_CONFIG_PREFIX",
-        "DENO_DIR",
-    ]
-    .iter()
-    .filter_map(|k| std::env::var(k).ok().map(|v| (k.to_string(), v)))
-    .collect()
-}
 
 pub fn get_alive_handle(connector_id: &str) -> Option<ProcessHandle> {
     let mut pool = POOL.lock().ok()?;
@@ -76,7 +54,7 @@ pub fn spawn(
     let program_path = which::which(&parsed.program)
         .map_err(|_| "runtime requis non trouvé dans le PATH".to_string())?;
 
-    let mut env = safe_env();
+    let mut env = process_env::safe_env();
     for (k, v) in env_tokens {
         env.push((k.clone(), v.clone()));
     }

@@ -70,6 +70,18 @@ body {
   height: 100%;
 }
 
+.mcp-icon-brand {
+  color: inherit;
+}
+
+.mcp-icon-mono {
+  color: var(--ink-muted);
+}
+
+[data-theme="dark"] .mcp-icon-mono {
+  color: var(--ink);
+}
+
 .mcp-icon-text svg {
   width: auto;
   height: 100%;

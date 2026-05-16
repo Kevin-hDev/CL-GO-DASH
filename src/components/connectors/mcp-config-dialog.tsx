@@ -33,6 +33,16 @@ export function McpConfigDialog({ connector, onClose, onValidated }: McpConfigDi
         envKey,
         value: token,
       });
+      await invoke("test_mcp_connector", {
+        connector: {
+          id: connector.id,
+          status: "connected",
+          enabled_in_chat: true,
+          endpoint: connector.endpoint,
+          install_command: connector.install_command,
+          env_keys: connector.env_keys,
+        },
+      });
       setTestState({ kind: "ok" });
       setTimeout(() => onValidated(), 500);
     } catch {
@@ -40,7 +50,7 @@ export function McpConfigDialog({ connector, onClose, onValidated }: McpConfigDi
         connectorId: connector.id,
         envKey,
       }).catch(() => {});
-      setTestState({ kind: "error", message: t("connectors.config.saveError") });
+      setTestState({ kind: "error", message: t("connectors.config.testError") });
       setSubmitting(false);
     }
   };

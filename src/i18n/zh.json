@@ -624,6 +624,75 @@
     "failed": "失败",
     "cancelled": "已取消"
   },
+  "connectors": {
+    "main": {
+      "subtitle": "允许 LLM 连接其他应用和服务",
+      "browseBtn": "浏览连接器"
+    },
+    "sidebar": {
+      "configured": "已配置",
+      "empty": "没有已配置的连接器"
+    },
+    "detail": {
+      "connected": "已连接",
+      "disconnected": "已断开",
+      "description": "描述",
+      "tools": "可用工具",
+      "author": "作者",
+      "website": "网站",
+      "openSite": "打开网站",
+      "confirmDeleteTitle": "删除连接器？",
+      "confirmDeleteBtn": "删除",
+      "confirmDisconnectTitle": "断开 {{name}}？",
+      "confirmDisconnectDesc": "LLM 将无法再访问 {{name}} 服务。",
+      "confirmDisconnectBtn": "断开",
+      "cancel": "取消"
+    },
+    "browse": {
+      "title": "浏览连接器",
+      "subtitle": "向你的实例添加连接器。",
+      "search": "搜索连接器…",
+      "empty": "没有匹配的连接器。",
+      "tabMcp": "MCP",
+      "tabPlugins": "插件",
+      "pluginsEmpty": "即将推出",
+      "categories": {
+        "all": "全部",
+        "productivity": "生产力",
+        "design": "设计",
+        "devtools": "开发工具",
+        "communication": "通信",
+        "ai-ml": "AI / ML",
+        "scraping": "抓取",
+        "community": "社区"
+      }
+    },
+    "comingSoon": "即将推出",
+    "config": {
+      "addTitle": "添加 {{name}}",
+      "token": "令牌",
+      "tokenPlaceholder": "在此粘贴令牌",
+      "testing": "正在测试…",
+      "testOk": "连接器已验证。",
+      "addAndTest": "添加并测试",
+      "saveError": "无法保存令牌。请重试。",
+      "testError": "无法验证连接器。请检查令牌后重试。",
+      "cancel": "取消",
+      "confirmAddDesc": "将 {{name}} 添加到你的连接器？",
+      "confirmAddBtn": "添加"
+    },
+    "oauth": {
+      "title": "正在认证",
+      "discovering": "正在连接服务器…",
+      "message": "请在浏览器中完成连接步骤。",
+      "testing": "正在验证连接器…",
+      "retry": "没有成功？重试。",
+      "cancel": "取消",
+      "successTitle": "连接成功",
+      "successMessage": "连接器已成功添加。",
+      "errorGeneric": "连接失败。请重试。"
+    }
+  },
   "forecast": {
     "title": "预测",
     "noAnalysis": "没有正在进行的分析",

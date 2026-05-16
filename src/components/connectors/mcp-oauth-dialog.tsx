@@ -6,7 +6,7 @@ import { McpIcon } from "@/lib/mcp-icons";
 import type { McpConnectorSpec } from "@/types/mcp";
 import "./mcp-oauth-dialog.css";
 
-type OAuthState = "loading" | "waiting" | "success" | "error";
+type OAuthState = "loading" | "waiting" | "testing" | "success" | "error";
 
 interface McpOauthDialogProps {
   connector: McpConnectorSpec;
@@ -45,8 +45,28 @@ export function McpOauthDialog({ connector, onClose, onConnected }: McpOauthDial
       if (typeof p?.connector_id !== "string" || typeof p?.success !== "boolean") return;
       if (p.connector_id !== connector.id) return;
       if (p.success) {
-        setState("success");
-        setTimeout(() => onConnected(), 600);
+        setState("testing");
+        invoke("test_mcp_connector", {
+          connector: {
+            id: connector.id,
+            status: "connected",
+            enabled_in_chat: true,
+            endpoint: connector.endpoint,
+            install_command: connector.install_command,
+            env_keys: connector.env_keys,
+          },
+        })
+          .then(() => {
+            if (!mountedRef.current) return;
+            setState("success");
+            setTimeout(() => onConnected(), 600);
+          })
+          .catch(() => {
+            if (!mountedRef.current) return;
+            invoke("delete_mcp_oauth_token", { connectorId: connector.id }).catch(() => {});
+            setState("error");
+            setError(t("connectors.oauth.errorGeneric"));
+          });
       } else {
         setState("error");
         setError(t("connectors.oauth.errorGeneric"));
@@ -83,6 +103,7 @@ export function McpOauthDialog({ connector, onClose, onConnected }: McpOauthDial
 
         {state === "loading" && <p className="mco-message">{t("connectors.oauth.discovering")}</p>}
         {state === "waiting" && <p className="mco-message">{t("connectors.oauth.message")}</p>}
+        {state === "testing" && <p className="mco-message">{t("connectors.oauth.testing")}</p>}
         {state === "success" && <p className="mco-message">{t("connectors.oauth.successMessage")}</p>}
         {state === "error" && <p className="mco-message mco-error">{error}</p>}
 

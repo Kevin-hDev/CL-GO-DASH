@@ -624,6 +624,75 @@
     "failed": "失敗",
     "cancelled": "キャンセル済み"
   },
+  "connectors": {
+    "main": {
+      "subtitle": "LLM が他のアプリやサービスに接続できるようにします",
+      "browseBtn": "コネクターを探す"
+    },
+    "sidebar": {
+      "configured": "設定済み",
+      "empty": "設定済みのコネクターはありません"
+    },
+    "detail": {
+      "connected": "接続済み",
+      "disconnected": "切断済み",
+      "description": "説明",
+      "tools": "利用可能なツール",
+      "author": "作者",
+      "website": "Web サイト",
+      "openSite": "サイトを開く",
+      "confirmDeleteTitle": "コネクターを削除しますか？",
+      "confirmDeleteBtn": "削除",
+      "confirmDisconnectTitle": "{{name}} を切断しますか？",
+      "confirmDisconnectDesc": "LLM は {{name}} のサービスにアクセスできなくなります。",
+      "confirmDisconnectBtn": "切断",
+      "cancel": "キャンセル"
+    },
+    "browse": {
+      "title": "コネクターを探す",
+      "subtitle": "インスタンスにコネクターを追加します。",
+      "search": "コネクターを検索…",
+      "empty": "一致するコネクターはありません。",
+      "tabMcp": "MCP",
+      "tabPlugins": "プラグイン",
+      "pluginsEmpty": "近日公開",
+      "categories": {
+        "all": "すべて",
+        "productivity": "生産性",
+        "design": "デザイン",
+        "devtools": "開発ツール",
+        "communication": "コミュニケーション",
+        "ai-ml": "AI / ML",
+        "scraping": "スクレイピング",
+        "community": "コミュニティ"
+      }
+    },
+    "comingSoon": "近日公開",
+    "config": {
+      "addTitle": "{{name}} を追加",
+      "token": "トークン",
+      "tokenPlaceholder": "ここにトークンを貼り付け",
+      "testing": "テスト中…",
+      "testOk": "コネクターを検証しました。",
+      "addAndTest": "追加してテスト",
+      "saveError": "トークンを保存できませんでした。もう一度お試しください。",
+      "testError": "コネクターを検証できませんでした。トークンを確認して再試行してください。",
+      "cancel": "キャンセル",
+      "confirmAddDesc": "{{name}} をコネクターに追加しますか？",
+      "confirmAddBtn": "追加"
+    },
+    "oauth": {
+      "title": "認証中",
+      "discovering": "サーバーに接続中…",
+      "message": "ブラウザで接続手順を完了してください。",
+      "testing": "コネクターを検証中…",
+      "retry": "うまくいきませんか？再試行してください。",
+      "cancel": "キャンセル",
+      "successTitle": "接続に成功しました",
+      "successMessage": "コネクターが正常に追加されました。",
+      "errorGeneric": "接続に失敗しました。もう一度お試しください。"
+    }
+  },
   "forecast": {
     "title": "予測",
     "noAnalysis": "分析が進行中ではありません",

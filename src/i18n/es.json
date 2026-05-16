@@ -624,6 +624,75 @@
     "failed": "fallido",
     "cancelled": "cancelado"
   },
+  "connectors": {
+    "main": {
+      "subtitle": "Permite que los LLM se conecten a otras aplicaciones y servicios",
+      "browseBtn": "Explorar conectores"
+    },
+    "sidebar": {
+      "configured": "Configurados",
+      "empty": "Ningún conector configurado"
+    },
+    "detail": {
+      "connected": "Conectado",
+      "disconnected": "Desconectado",
+      "description": "Descripción",
+      "tools": "Herramientas disponibles",
+      "author": "Autor",
+      "website": "Sitio web",
+      "openSite": "Abrir sitio",
+      "confirmDeleteTitle": "¿Eliminar el conector?",
+      "confirmDeleteBtn": "Eliminar",
+      "confirmDisconnectTitle": "¿Desconectar {{name}}?",
+      "confirmDisconnectDesc": "El LLM ya no tendrá acceso a los servicios de {{name}}.",
+      "confirmDisconnectBtn": "Desconectar",
+      "cancel": "Cancelar"
+    },
+    "browse": {
+      "title": "Explorar conectores",
+      "subtitle": "Añade conectores a tu instancia.",
+      "search": "Buscar conectores…",
+      "empty": "Ningún conector coincide.",
+      "tabMcp": "MCP",
+      "tabPlugins": "Plugins",
+      "pluginsEmpty": "Próximamente",
+      "categories": {
+        "all": "Todos",
+        "productivity": "Productividad",
+        "design": "Diseño",
+        "devtools": "Herramientas dev",
+        "communication": "Comunicación",
+        "ai-ml": "IA / ML",
+        "scraping": "Scraping",
+        "community": "Comunidad"
+      }
+    },
+    "comingSoon": "Pronto",
+    "config": {
+      "addTitle": "Añadir {{name}}",
+      "token": "Token",
+      "tokenPlaceholder": "Pega tu token aquí",
+      "testing": "Probando…",
+      "testOk": "Conector validado.",
+      "addAndTest": "Añadir y probar",
+      "saveError": "No se pudo guardar el token. Inténtalo de nuevo.",
+      "testError": "No se pudo validar el conector. Revisa el token e inténtalo de nuevo.",
+      "cancel": "Cancelar",
+      "confirmAddDesc": "¿Añadir {{name}} a tus conectores?",
+      "confirmAddBtn": "Añadir"
+    },
+    "oauth": {
+      "title": "Autenticación en curso",
+      "discovering": "Conectando al servidor…",
+      "message": "Completa los pasos de conexión en tu navegador.",
+      "testing": "Validando el conector…",
+      "retry": "¿No funcionó? Reintentar.",
+      "cancel": "Cancelar",
+      "successTitle": "Conexión correcta",
+      "successMessage": "El conector se añadió correctamente.",
+      "errorGeneric": "La conexión falló. Inténtalo de nuevo."
+    }
+  },
   "forecast": {
     "title": "Pronóstico",
     "noAnalysis": "Sin análisis en curso",

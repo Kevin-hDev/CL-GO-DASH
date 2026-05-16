@@ -1,72 +1,27 @@
 import { useCallback, useEffect, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { homeDir, join } from "@tauri-apps/api/path";
-import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import { IS_MAC } from "@/lib/platform";
 import { MCP_CATALOG } from "@/lib/mcp-catalog";
 import type { ConfiguredMcp, ConfiguredMcpFull, McpConnectorSpec } from "@/types/mcp";
 
-const FILENAME = "mcp-connectors.json";
-
-async function storagePath(): Promise<string> {
-  const home = await homeDir();
-  return join(home, ".local", "share", "cl-go-dash", FILENAME);
-}
-
-const MAX_CONNECTORS = 32;
-
-const VALID_ID = /^[a-zA-Z0-9_-]+$/;
-const ALLOWED_PROGRAMS = ["npx", "uvx", "deno"];
-const VALID_ARG = /^[a-zA-Z0-9@/_.:=-]+$/;
-
-function isValidInstallCommand(cmd: string): boolean {
-  const parts = cmd.split(/\s+/);
-  if (parts.length < 2) return false;
-  if (!ALLOWED_PROGRAMS.includes(parts[0])) return false;
-  return parts.slice(1).every((p) => VALID_ARG.test(p));
-}
-
-function validateConnectors(data: unknown): ConfiguredMcp[] {
-  if (!Array.isArray(data)) return [];
-  const result: ConfiguredMcp[] = [];
-  for (const item of data) {
-    if (result.length >= MAX_CONNECTORS) break;
-    if (typeof item !== "object" || item === null) continue;
-    const r = item as Record<string, unknown>;
-    if (typeof r.id !== "string" || typeof r.status !== "string") continue;
-    if (!VALID_ID.test(r.id) || r.id.length > 64) continue;
-    if (r.status !== "connected" && r.status !== "disconnected") continue;
-    const cmd = typeof r.install_command === "string" ? r.install_command : undefined;
-    if (cmd && !isValidInstallCommand(cmd)) continue;
-    result.push({
-      id: r.id,
-      status: r.status,
-      enabled_in_chat: r.enabled_in_chat === true,
-      endpoint: typeof r.endpoint === "string" ? r.endpoint : undefined,
-      install_command: cmd,
-      env_keys: Array.isArray(r.env_keys) ? r.env_keys.filter((k: unknown) => typeof k === "string").slice(0, 10) : undefined,
-    });
-  }
-  return result;
-}
-
 async function loadConfigured(): Promise<ConfiguredMcp[]> {
   try {
-    const path = await storagePath();
-    const raw = await readTextFile(path);
-    return validateConnectors(JSON.parse(raw));
+    return await invoke<ConfiguredMcp[]>("list_mcp_connectors");
   } catch {
     return [];
   }
 }
 
-async function saveConfigured(list: ConfiguredMcp[]): Promise<void> {
-  try {
-    const path = await storagePath();
-    await writeTextFile(path, JSON.stringify(list));
-  } catch {
-    console.warn("[mcp-connectors] save failed");
-  }
+function connectorPayload(spec: McpConnectorSpec): ConfiguredMcp {
+  return {
+    id: spec.id,
+    status: "connected",
+    enabled_in_chat: true,
+    endpoint: spec.endpoint,
+    install_command: spec.install_command,
+    env_keys: spec.env_keys,
+  };
 }
 
 export function useConnectors() {
@@ -77,21 +32,23 @@ export function useConnectors() {
   const [items, setItems] = useState<ConfiguredMcp[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    void loadConfigured().then((data) => { setItems(data); setLoading(false); });
+  const refresh = useCallback(async () => {
+    const data = await loadConfigured();
+    setItems(data);
+    setLoading(false);
   }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- refresh is async and syncs backend-owned config
+    void refresh();
+  }, [refresh]);
 
   useEffect(() => {
     const unlisten = listen("fs:connectors-changed", () => {
-      void loadConfigured().then((data) => { setItems(data); });
+      void refresh();
     });
     return () => { void unlisten.then((fn) => fn()); };
-  }, []);
-
-  const persist = useCallback(async (next: ConfiguredMcp[]) => {
-    setItems(next);
-    await saveConfigured(next);
-  }, []);
+  }, [refresh]);
 
   const configuredIds = items.map((c) => c.id);
 
@@ -106,31 +63,33 @@ export function useConnectors() {
   const addConnector = useCallback(async (id: string) => {
     if (items.some((c) => c.id === id)) return;
     const spec = catalog.find((s) => s.id === id);
-    await persist([...items, {
-      id, status: "connected", enabled_in_chat: true,
-      endpoint: spec?.endpoint,
-      install_command: spec?.install_command,
-      env_keys: spec?.env_keys,
-    }]);
-  }, [items, persist, catalog]);
+    if (!spec) return;
+    await invoke("add_mcp_connector", { connector: connectorPayload(spec) });
+    await refresh();
+  }, [items, catalog, refresh]);
 
   const removeConnector = useCallback(async (id: string) => {
-    await persist(items.filter((c) => c.id !== id));
-  }, [items, persist]);
+    await invoke("remove_mcp_connector", { connectorId: id });
+    await refresh();
+  }, [refresh]);
 
   const toggleStatus = useCallback(async (id: string) => {
-    await persist(items.map((c) =>
-      c.id === id
-        ? { ...c, status: c.status === "connected" ? "disconnected" as const : "connected" as const }
-        : c,
-    ));
-  }, [items, persist]);
+    const current = items.find((c) => c.id === id);
+    if (!current) return;
+    const status = current.status === "connected" ? "disconnected" : "connected";
+    await invoke("set_mcp_connector_status", { connectorId: id, status });
+    await refresh();
+  }, [items, refresh]);
 
   const toggleChatEnabled = useCallback(async (id: string) => {
-    await persist(items.map((c) =>
-      c.id === id ? { ...c, enabled_in_chat: !c.enabled_in_chat } : c,
-    ));
-  }, [items, persist]);
+    const current = items.find((c) => c.id === id);
+    if (!current) return;
+    await invoke("set_mcp_connector_chat_enabled", {
+      connectorId: id,
+      enabled: !current.enabled_in_chat,
+    });
+    await refresh();
+  }, [items, refresh]);
 
   const isConnected = useCallback(
     (id: string) => items.some((c) => c.id === id && c.status === "connected"),

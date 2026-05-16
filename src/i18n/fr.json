@@ -658,6 +658,7 @@
       "testOk": "Connecteur validé.",
       "addAndTest": "Ajouter et tester",
       "saveError": "Impossible de sauvegarder le token. Réessayez.",
+      "testError": "Impossible de valider le connecteur. Vérifiez le token puis réessayez.",
       "cancel": "Annuler",
       "confirmAddDesc": "Ajouter {{name}} à vos connecteurs ?",
       "confirmAddBtn": "Ajouter"
@@ -666,6 +667,7 @@
       "title": "Authentification en cours",
       "discovering": "Connexion au serveur en cours…",
       "message": "Complétez les étapes de connexion dans le nouvel onglet du navigateur.",
+      "testing": "Validation du connecteur en cours…",
       "retry": "Cela n'a pas fonctionné ? Relancez.",
       "cancel": "Annuler",
       "successTitle": "Connexion réussie",

@@ -26,6 +26,7 @@ pub mod git;
 pub mod heartbeat;
 pub mod link_preview;
 pub mod llm;
+pub mod mcp_connectors;
 pub mod mcp_oauth;
 #[cfg(test)]
 mod ollama_audit_tests;
@@ -75,6 +76,7 @@ pub use git::*;
 pub use heartbeat::*;
 pub use link_preview::*;
 pub use llm::*;
+pub use mcp_connectors::*;
 pub use mcp_oauth::*;
 pub use ollama_setup::*;
 pub use ollama_updates::*;

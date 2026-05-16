@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { X, MagnifyingGlass } from "@/components/ui/icons";
+import { getMcpDescription } from "@/types/mcp";
 import type { McpCategory, McpConnectorSpec } from "@/types/mcp";
 import { McpBrowseCard } from "./mcp-browse-card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -44,7 +45,7 @@ export function McpBrowseModal({ catalog, configuredIds, onPick, onClose }: McpB
     return catalog.filter((c) => {
       if (category !== "all" && c.category !== category) return false;
       if (!q) return true;
-      const desc = i18n.language === "fr" ? c.short_description : c.short_description_en;
+      const desc = getMcpDescription(c, i18n.language);
       return c.display_name.toLowerCase().includes(q) || desc.toLowerCase().includes(q) || c.author.toLowerCase().includes(q);
     });
   }, [catalog, category, query, i18n.language]);

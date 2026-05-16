@@ -624,6 +624,75 @@
     "failed": "fehlgeschlagen",
     "cancelled": "abgebrochen"
   },
+  "connectors": {
+    "main": {
+      "subtitle": "Erlaubt LLMs, sich mit anderen Apps und Diensten zu verbinden",
+      "browseBtn": "Connectors durchsuchen"
+    },
+    "sidebar": {
+      "configured": "Konfiguriert",
+      "empty": "Kein Connector konfiguriert"
+    },
+    "detail": {
+      "connected": "Verbunden",
+      "disconnected": "Getrennt",
+      "description": "Beschreibung",
+      "tools": "Verfügbare Tools",
+      "author": "Autor",
+      "website": "Website",
+      "openSite": "Website öffnen",
+      "confirmDeleteTitle": "Connector löschen?",
+      "confirmDeleteBtn": "Löschen",
+      "confirmDisconnectTitle": "{{name}} trennen?",
+      "confirmDisconnectDesc": "Das LLM hat keinen Zugriff mehr auf die Dienste von {{name}}.",
+      "confirmDisconnectBtn": "Trennen",
+      "cancel": "Abbrechen"
+    },
+    "browse": {
+      "title": "Connectors durchsuchen",
+      "subtitle": "Füge deiner Instanz Connectors hinzu.",
+      "search": "Connectors suchen…",
+      "empty": "Kein Connector passt.",
+      "tabMcp": "MCP",
+      "tabPlugins": "Plugins",
+      "pluginsEmpty": "Demnächst verfügbar",
+      "categories": {
+        "all": "Alle",
+        "productivity": "Produktivität",
+        "design": "Design",
+        "devtools": "Dev Tools",
+        "communication": "Kommunikation",
+        "ai-ml": "KI / ML",
+        "scraping": "Scraping",
+        "community": "Community"
+      }
+    },
+    "comingSoon": "Demnächst",
+    "config": {
+      "addTitle": "{{name}} hinzufügen",
+      "token": "Token",
+      "tokenPlaceholder": "Token hier einfügen",
+      "testing": "Test läuft…",
+      "testOk": "Connector validiert.",
+      "addAndTest": "Hinzufügen und testen",
+      "saveError": "Token konnte nicht gespeichert werden. Bitte erneut versuchen.",
+      "testError": "Connector konnte nicht validiert werden. Token prüfen und erneut versuchen.",
+      "cancel": "Abbrechen",
+      "confirmAddDesc": "{{name}} zu deinen Connectors hinzufügen?",
+      "confirmAddBtn": "Hinzufügen"
+    },
+    "oauth": {
+      "title": "Authentifizierung läuft",
+      "discovering": "Verbindung zum Server wird hergestellt…",
+      "message": "Schließe die Verbindungsschritte im Browser ab.",
+      "testing": "Connector wird validiert…",
+      "retry": "Hat nicht funktioniert? Erneut versuchen.",
+      "cancel": "Abbrechen",
+      "successTitle": "Verbindung erfolgreich",
+      "successMessage": "Der Connector wurde erfolgreich hinzugefügt.",
+      "errorGeneric": "Verbindung fehlgeschlagen. Bitte erneut versuchen."
+    }
+  },
   "forecast": {
     "title": "Prognose",
     "noAnalysis": "Keine laufende Analyse",

@@ -103,11 +103,7 @@ async fn initialize(endpoint: &str, token: &str) -> Result<Option<String>, Strin
 
     if !resp.status().is_success() {
         let status = resp.status().as_u16();
-        let body = resp.text().await.unwrap_or_default();
-        let snippet = truncate_safe(&body, 500);
-        return Err(format!(
-            "initialisation MCP refusée (HTTP {status}): {snippet}"
-        ));
+        return Err(format!("initialisation MCP refusée (HTTP {status})"));
     }
 
     let session_id = resp
@@ -166,9 +162,7 @@ async fn mcp_post(
 
     if !resp.status().is_success() {
         let status = resp.status().as_u16();
-        let body = resp.text().await.unwrap_or_default();
-        let snippet = truncate_safe(&body, 500);
-        return Err(format!("requête MCP refusée (HTTP {status}): {snippet}"));
+        return Err(format!("requête MCP refusée (HTTP {status})"));
     }
 
     response::parse(resp).await
@@ -179,17 +173,4 @@ fn build_client() -> Result<reqwest::Client, String> {
         .timeout(TIMEOUT)
         .build()
         .map_err(|_| "erreur interne".to_string())
-}
-
-fn truncate_safe(s: &str, max: usize) -> String {
-    if s.len() <= max {
-        return s.to_string();
-    }
-    let end = s
-        .char_indices()
-        .take_while(|(i, _)| *i < max)
-        .last()
-        .map(|(i, c)| i + c.len_utf8())
-        .unwrap_or(0);
-    format!("{}…", &s[..end])
 }

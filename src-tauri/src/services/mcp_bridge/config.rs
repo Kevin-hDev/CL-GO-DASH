@@ -1,0 +1,174 @@
+use std::fs;
+use std::io::Write;
+use std::path::{Path, PathBuf};
+
+use serde::{Deserialize, Serialize};
+
+pub use super::env_keys::validated_env_keys;
+use super::{stdio_cmd, trusted};
+
+pub const MAX_CONNECTORS: usize = 32;
+const FILENAME: &str = "mcp-connectors.json";
+const IMESSAGE_CONNECTOR_ID: &str = "imessage";
+const IMESSAGE_INSTALL_COMMAND: &str =
+    "deno run --allow-read --allow-env --allow-sys --allow-ffi jsr:@wyattjoh/imessage-mcp";
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct StoredConnector {
+    pub id: String,
+    pub status: String,
+    pub enabled_in_chat: bool,
+    pub endpoint: Option<String>,
+    pub install_command: Option<String>,
+    #[serde(default)]
+    pub env_keys: Option<Vec<String>>,
+}
+
+pub fn load() -> Vec<StoredConnector> {
+    load_from_path(&storage_path()).unwrap_or_default()
+}
+
+pub fn upsert(connector: StoredConnector) -> Result<(), String> {
+    validate_connector(&connector)?;
+    let path = storage_path();
+    let mut list = load_from_path(&path)?;
+    if let Some(existing) = list.iter_mut().find(|c| c.id == connector.id) {
+        *existing = connector;
+    } else {
+        if list.len() >= MAX_CONNECTORS {
+            return Err("limite de connecteurs atteinte".to_string());
+        }
+        list.push(connector);
+    }
+    save_to_path(&path, &list)
+}
+
+pub fn remove(connector_id: &str) -> Result<bool, String> {
+    validate_connector_id(connector_id)?;
+    let path = storage_path();
+    let before = load_from_path(&path)?;
+    let after: Vec<StoredConnector> = before
+        .iter()
+        .filter(|c| c.id != connector_id)
+        .cloned()
+        .collect();
+    let removed = before.len() != after.len();
+    if removed {
+        save_to_path(&path, &after)?;
+    }
+    Ok(removed)
+}
+
+pub fn set_status(connector_id: &str, status: &str) -> Result<(), String> {
+    if !is_valid_status(status) {
+        return Err("statut invalide".to_string());
+    }
+    update(connector_id, |c| c.status = status.to_string())
+}
+
+pub fn set_chat_enabled(connector_id: &str, enabled: bool) -> Result<(), String> {
+    update(connector_id, |c| c.enabled_in_chat = enabled)
+}
+
+pub fn validate_connector(c: &StoredConnector) -> Result<(), String> {
+    validate_connector_id(&c.id)?;
+    if !is_valid_status(&c.status) {
+        return Err("statut invalide".to_string());
+    }
+    if let Some(endpoint) = &c.endpoint {
+        if !trusted::is_trusted_endpoint_for_connector(&c.id, endpoint) {
+            return Err("endpoint MCP non autorisé".to_string());
+        }
+    }
+    if let Some(cmd) = install_command_for(c) {
+        stdio_cmd::parse_install_command(&c.id, &cmd)?;
+    }
+    let _ = validated_env_keys(c.env_keys.as_deref());
+    if c.endpoint.is_none() && c.install_command.is_none() {
+        return Err("connecteur MCP incomplet".to_string());
+    }
+    Ok(())
+}
+
+pub fn validate_connector_id(id: &str) -> Result<(), String> {
+    if is_valid_connector_id(id) {
+        Ok(())
+    } else {
+        Err("identifiant invalide".to_string())
+    }
+}
+
+pub fn is_valid_connector_id(id: &str) -> bool {
+    !id.is_empty()
+        && id.len() <= 64
+        && id
+            .bytes()
+            .all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
+}
+
+pub fn install_command_for(c: &StoredConnector) -> Option<String> {
+    if c.id == IMESSAGE_CONNECTOR_ID {
+        Some(IMESSAGE_INSTALL_COMMAND.to_string())
+    } else {
+        c.install_command.clone()
+    }
+}
+
+fn update(connector_id: &str, apply: impl FnOnce(&mut StoredConnector)) -> Result<(), String> {
+    validate_connector_id(connector_id)?;
+    let path = storage_path();
+    let mut list = load_from_path(&path)?;
+    let connector = list
+        .iter_mut()
+        .find(|c| c.id == connector_id)
+        .ok_or("connecteur introuvable")?;
+    apply(connector);
+    validate_connector(connector)?;
+    save_to_path(&path, &list)
+}
+
+fn load_from_path(path: &Path) -> Result<Vec<StoredConnector>, String> {
+    let content = match fs::read_to_string(path) {
+        Ok(c) => c,
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(Vec::new()),
+        Err(_) => return Err("lecture connecteurs impossible".to_string()),
+    };
+    let parsed: Vec<StoredConnector> =
+        serde_json::from_str(&content).map_err(|_| "configuration MCP invalide".to_string())?;
+    Ok(parsed
+        .into_iter()
+        .filter(|c| validate_connector(c).is_ok())
+        .take(MAX_CONNECTORS)
+        .collect())
+}
+
+fn save_to_path(path: &Path, list: &[StoredConnector]) -> Result<(), String> {
+    if list.len() > MAX_CONNECTORS {
+        return Err("limite de connecteurs atteinte".to_string());
+    }
+    for connector in list {
+        validate_connector(connector)?;
+    }
+    let parent = path.parent().ok_or("chemin invalide")?;
+    fs::create_dir_all(parent).map_err(|_| "écriture connecteurs impossible".to_string())?;
+    let tmp = tmp_path(path);
+    let data = serde_json::to_vec_pretty(list).map_err(|_| "sérialisation échouée")?;
+    let mut file = fs::File::create(&tmp).map_err(|_| "écriture connecteurs impossible")?;
+    file.write_all(&data)
+        .map_err(|_| "écriture connecteurs impossible".to_string())?;
+    file.sync_all()
+        .map_err(|_| "écriture connecteurs impossible".to_string())?;
+    fs::rename(&tmp, path).map_err(|_| "écriture connecteurs impossible".to_string())
+}
+
+fn storage_path() -> PathBuf {
+    crate::services::paths::data_dir().join(FILENAME)
+}
+
+fn tmp_path(path: &Path) -> PathBuf {
+    path.with_file_name(format!("{FILENAME}.tmp"))
+}
+
+fn is_valid_status(status: &str) -> bool {
+    status == "connected" || status == "disconnected"
+}

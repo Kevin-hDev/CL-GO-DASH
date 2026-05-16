@@ -624,6 +624,75 @@
     "failed": "fallito",
     "cancelled": "annullato"
   },
+  "connectors": {
+    "main": {
+      "subtitle": "Permetti agli LLM di connettersi ad altre app e servizi",
+      "browseBtn": "Sfoglia connettori"
+    },
+    "sidebar": {
+      "configured": "Configurati",
+      "empty": "Nessun connettore configurato"
+    },
+    "detail": {
+      "connected": "Connesso",
+      "disconnected": "Disconnesso",
+      "description": "Descrizione",
+      "tools": "Strumenti disponibili",
+      "author": "Autore",
+      "website": "Sito web",
+      "openSite": "Apri sito",
+      "confirmDeleteTitle": "Eliminare il connettore?",
+      "confirmDeleteBtn": "Elimina",
+      "confirmDisconnectTitle": "Disconnettere {{name}}?",
+      "confirmDisconnectDesc": "L'LLM non avrà più accesso ai servizi {{name}}.",
+      "confirmDisconnectBtn": "Disconnetti",
+      "cancel": "Annulla"
+    },
+    "browse": {
+      "title": "Sfoglia connettori",
+      "subtitle": "Aggiungi connettori alla tua istanza.",
+      "search": "Cerca connettori…",
+      "empty": "Nessun connettore corrisponde.",
+      "tabMcp": "MCP",
+      "tabPlugins": "Plugin",
+      "pluginsEmpty": "Prossimamente",
+      "categories": {
+        "all": "Tutti",
+        "productivity": "Produttività",
+        "design": "Design",
+        "devtools": "Dev Tools",
+        "communication": "Comunicazione",
+        "ai-ml": "IA / ML",
+        "scraping": "Scraping",
+        "community": "Community"
+      }
+    },
+    "comingSoon": "Presto",
+    "config": {
+      "addTitle": "Aggiungi {{name}}",
+      "token": "Token",
+      "tokenPlaceholder": "Incolla qui il token",
+      "testing": "Test in corso…",
+      "testOk": "Connettore validato.",
+      "addAndTest": "Aggiungi e testa",
+      "saveError": "Impossibile salvare il token. Riprova.",
+      "testError": "Impossibile validare il connettore. Controlla il token e riprova.",
+      "cancel": "Annulla",
+      "confirmAddDesc": "Aggiungere {{name}} ai tuoi connettori?",
+      "confirmAddBtn": "Aggiungi"
+    },
+    "oauth": {
+      "title": "Autenticazione in corso",
+      "discovering": "Connessione al server…",
+      "message": "Completa i passaggi di connessione nel browser.",
+      "testing": "Validazione del connettore…",
+      "retry": "Non ha funzionato? Riprova.",
+      "cancel": "Annulla",
+      "successTitle": "Connessione riuscita",
+      "successMessage": "Il connettore è stato aggiunto correttamente.",
+      "errorGeneric": "Connessione non riuscita. Riprova."
+    }
+  },
   "forecast": {
     "title": "Previsione",
     "noAnalysis": "Nessuna analisi in corso",

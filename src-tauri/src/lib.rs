@@ -195,6 +195,12 @@ pub fn run() {
             commands::delete_mcp_oauth_token,
             commands::set_mcp_env_token,
             commands::delete_mcp_env_token,
+            commands::list_mcp_connectors,
+            commands::add_mcp_connector,
+            commands::remove_mcp_connector,
+            commands::set_mcp_connector_status,
+            commands::set_mcp_connector_chat_enabled,
+            commands::test_mcp_connector,
             // LLM providers
             commands::list_llm_providers_catalog,
             commands::list_llm_models,

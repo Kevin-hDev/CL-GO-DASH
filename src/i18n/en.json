@@ -658,6 +658,7 @@
       "testOk": "Connector validated.",
       "addAndTest": "Add and test",
       "saveError": "Failed to save token. Please try again.",
+      "testError": "Unable to validate the connector. Check the token and try again.",
       "cancel": "Cancel",
       "confirmAddDesc": "Add {{name}} to your connectors?",
       "confirmAddBtn": "Add"
@@ -666,6 +667,7 @@
       "title": "Authentication in progress",
       "discovering": "Connecting to server…",
       "message": "Complete the connection steps in your browser.",
+      "testing": "Validating connector…",
       "retry": "Didn't work? Retry.",
       "cancel": "Cancel",
       "successTitle": "Connection successful",

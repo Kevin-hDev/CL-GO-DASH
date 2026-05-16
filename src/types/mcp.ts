@@ -8,14 +8,14 @@ export type McpCategory =
   | "community";
 
 export type McpAuthType = "oauth" | "token" | "none";
+export type McpLocale = "fr" | "en" | "es" | "de" | "it" | "zh" | "ja";
 
 export interface McpConnectorSpec {
   id: string;
   display_name: string;
   category: McpCategory;
   auth_type: McpAuthType;
-  short_description: string;
-  short_description_en: string;
+  short_descriptions: Record<McpLocale, string>;
   author: string;
   url: string;
   tools: string[];
@@ -40,5 +40,6 @@ export interface ConfiguredMcp {
 export type ConfiguredMcpFull = McpConnectorSpec & ConfiguredMcp;
 
 export function getMcpDescription(spec: McpConnectorSpec, lang: string): string {
-  return lang === "fr" ? spec.short_description : spec.short_description_en;
+  const base = lang.split("-")[0] as McpLocale;
+  return spec.short_descriptions[base] ?? spec.short_descriptions.en;
 }

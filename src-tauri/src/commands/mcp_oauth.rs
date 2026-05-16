@@ -3,16 +3,7 @@ use crate::services::mcp_oauth::{flow, storage};
 use zeroize::Zeroize;
 
 fn validate_connector_id(id: &str) -> Result<(), String> {
-    if id.is_empty() || id.len() > 64 {
-        return Err("identifiant invalide".to_string());
-    }
-    if !id
-        .bytes()
-        .all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
-    {
-        return Err("identifiant invalide".to_string());
-    }
-    Ok(())
+    crate::services::mcp_bridge::config::validate_connector_id(id)
 }
 
 #[tauri::command]
@@ -25,7 +16,7 @@ pub async fn start_mcp_oauth(
     if endpoint.is_empty() || !endpoint.starts_with("https://") {
         return Err("endpoint MCP non HTTPS".to_string());
     }
-    if !crate::services::mcp_bridge::registry::is_trusted_endpoint_pub(&endpoint) {
+    if !crate::services::mcp_bridge::registry::is_trusted_endpoint_pub(&connector_id, &endpoint) {
         return Err("endpoint non autorisé pour OAuth".to_string());
     }
     tauri::async_runtime::spawn(flow::run(app, connector_id, endpoint));
@@ -73,6 +64,9 @@ pub async fn set_mcp_env_token(
     let vault_key = format!("mcp_{connector_id}_{}", env_key.to_lowercase());
     let result = api_keys::set_key_raw(&vault_key, &value);
     value.zeroize();
+    if result.is_ok() {
+        crate::services::mcp_bridge::registry::invalidate_cache(&connector_id);
+    }
     result
 }
 

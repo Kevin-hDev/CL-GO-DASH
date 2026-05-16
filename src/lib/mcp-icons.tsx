@@ -38,28 +38,29 @@ function scopeSvg(raw: string, prefix: string): string {
 }
 
 type McpIconVariant = "icon" | "text";
+type McpIconTone = "brand" | "mono";
 
-interface SvgEntry { kind: "svg"; icon: string; text: string; hasText?: boolean }
+interface SvgEntry { kind: "svg"; icon: string; text: string; tone: McpIconTone; hasText?: boolean }
 interface ImgEntry { kind: "img"; src: string }
 
 type McpIconEntry = SvgEntry | ImgEntry;
 
 const MCP_ICONS: Record<string, McpIconEntry> = {
-  apify:       { kind: "svg", icon: scopeSvg(apifyIconSvg, "apify-i-"), text: scopeSvg(apifyTextSvg, "apify-t-"), hasText: true },
-  canva:       { kind: "svg", icon: scopeSvg(canvaIconSvg, "canva-i-"), text: scopeSvg(canvaTextSvg, "canva-t-"), hasText: true },
+  apify:       { kind: "svg", tone: "brand", icon: scopeSvg(apifyIconSvg, "apify-i-"), text: scopeSvg(apifyTextSvg, "apify-t-"), hasText: true },
+  canva:       { kind: "svg", tone: "brand", icon: scopeSvg(canvaIconSvg, "canva-i-"), text: scopeSvg(canvaTextSvg, "canva-t-"), hasText: true },
   context7:    { kind: "img", src: context7Png },
-  figma:       { kind: "svg", icon: scopeSvg(figmaSvg, "figma-"), text: scopeSvg(figmaSvg, "figma-t-") },
-  github:      { kind: "svg", icon: scopeSvg(githubIconSvg, "gh-i-"), text: scopeSvg(githubTextSvg, "gh-t-"), hasText: true },
-  huggingface: { kind: "svg", icon: scopeSvg(huggingfaceSvg, "hf-"), text: scopeSvg(huggingfaceSvg, "hf-t-") },
-  imessage:    { kind: "svg", icon: scopeSvg(imessageSvg, "im-"), text: scopeSvg(imessageSvg, "im-t-") },
-  linear:      { kind: "svg", icon: scopeSvg(linearIconSvg, "lin-i-"), text: scopeSvg(linearTextSvg, "lin-t-"), hasText: true },
+  figma:       { kind: "svg", tone: "brand", icon: scopeSvg(figmaSvg, "figma-"), text: scopeSvg(figmaSvg, "figma-t-") },
+  github:      { kind: "svg", tone: "mono", icon: scopeSvg(githubIconSvg, "gh-i-"), text: scopeSvg(githubTextSvg, "gh-t-"), hasText: true },
+  huggingface: { kind: "svg", tone: "brand", icon: scopeSvg(huggingfaceSvg, "hf-"), text: scopeSvg(huggingfaceSvg, "hf-t-") },
+  imessage:    { kind: "svg", tone: "brand", icon: scopeSvg(imessageSvg, "im-"), text: scopeSvg(imessageSvg, "im-t-") },
+  linear:      { kind: "svg", tone: "mono", icon: scopeSvg(linearIconSvg, "lin-i-"), text: scopeSvg(linearTextSvg, "lin-t-"), hasText: true },
   lucid:       { kind: "img", src: lucidPng },
-  notion:      { kind: "svg", icon: scopeSvg(notionIconSvg, "not-i-"), text: scopeSvg(notionTextSvg, "not-t-"), hasText: true },
-  producthunt: { kind: "svg", icon: scopeSvg(producthuntSvg, "ph-"), text: scopeSvg(producthuntSvg, "ph-t-") },
-  reddit:      { kind: "svg", icon: scopeSvg(redditIconSvg, "red-i-"), text: scopeSvg(redditTextSvg, "red-t-"), hasText: true },
-  sentry:      { kind: "svg", icon: scopeSvg(sentryIconSvg, "sen-i-"), text: scopeSvg(sentryTextSvg, "sen-t-"), hasText: true },
-  slack:       { kind: "svg", icon: scopeSvg(slackIconSvg, "slk-i-"), text: scopeSvg(slackTextSvg, "slk-t-"), hasText: true },
-  vercel:      { kind: "svg", icon: scopeSvg(vercelIconSvg, "ver-i-"), text: scopeSvg(vercelTextSvg, "ver-t-"), hasText: true },
+  notion:      { kind: "svg", tone: "mono", icon: scopeSvg(notionIconSvg, "not-i-"), text: scopeSvg(notionTextSvg, "not-t-"), hasText: true },
+  producthunt: { kind: "svg", tone: "brand", icon: scopeSvg(producthuntSvg, "ph-"), text: scopeSvg(producthuntSvg, "ph-t-") },
+  reddit:      { kind: "svg", tone: "brand", icon: scopeSvg(redditIconSvg, "red-i-"), text: scopeSvg(redditTextSvg, "red-t-"), hasText: true },
+  sentry:      { kind: "svg", tone: "mono", icon: scopeSvg(sentryIconSvg, "sen-i-"), text: scopeSvg(sentryTextSvg, "sen-t-"), hasText: true },
+  slack:       { kind: "svg", tone: "brand", icon: scopeSvg(slackIconSvg, "slk-i-"), text: scopeSvg(slackTextSvg, "slk-t-"), hasText: true },
+  vercel:      { kind: "svg", tone: "mono", icon: scopeSvg(vercelIconSvg, "ver-i-"), text: scopeSvg(vercelTextSvg, "ver-t-"), hasText: true },
 };
 
 export function mcpHasTextIcon(connectorId: string): boolean {
@@ -93,11 +94,12 @@ export function McpIcon({ connectorId, displayName, size = 40, variant = "icon",
   }
 
   const raw = variant === "text" ? entry.text : entry.icon;
+  const className = `mcp-icon-inline mcp-icon-${entry.tone}${textWidth ? " mcp-icon-text" : ""}`;
 
   if (textWidth) {
     return (
       <span
-        className="mcp-icon-inline mcp-icon-text"
+        className={className}
         style={{ height: size, display: "inline-flex", flexShrink: 0 }}
         dangerouslySetInnerHTML={{ __html: raw }}
       />
@@ -106,7 +108,7 @@ export function McpIcon({ connectorId, displayName, size = 40, variant = "icon",
 
   return (
     <span
-      className="mcp-icon-inline"
+      className={className}
       style={{ width: size, height: size, display: "inline-flex", flexShrink: 0 }}
       dangerouslySetInnerHTML={{ __html: raw }}
     />
