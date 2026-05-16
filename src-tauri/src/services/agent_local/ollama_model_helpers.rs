@@ -34,7 +34,11 @@ pub(crate) fn needs_from_override(from: Option<&str>) -> bool {
     }
 }
 
-pub(crate) fn build_model_from_tags(m: &serde_json::Value, info: Option<ModelInfo>) -> OllamaModel {
+pub(crate) fn build_model_from_tags(
+    m: &serde_json::Value,
+    info: Option<ModelInfo>,
+    is_customized: bool,
+) -> OllamaModel {
     let name = m["name"].as_str().unwrap_or_default().to_string();
     let details = &m["details"];
     let digest_short: String = m["digest"]
@@ -44,9 +48,6 @@ pub(crate) fn build_model_from_tags(m: &serde_json::Value, info: Option<ModelInf
         .chars()
         .take(12)
         .collect();
-    let is_customized = info
-        .as_ref()
-        .is_some_and(|i| has_customizations(&i.modelfile));
     OllamaModel {
         name,
         size: m["size"].as_u64().unwrap_or(0),
@@ -71,16 +72,6 @@ pub(crate) fn build_model_from_tags(m: &serde_json::Value, info: Option<ModelInf
         aliases: Vec::new(),
         is_customized,
     }
-}
-
-fn has_customizations(modelfile: &str) -> bool {
-    for line in modelfile.lines() {
-        let trimmed = line.trim().to_uppercase();
-        if trimmed.starts_with("SYSTEM ") || trimmed.starts_with("PARAMETER ") {
-            return true;
-        }
-    }
-    false
 }
 
 pub(crate) fn parse_show_response(name: &str, json: &serde_json::Value) -> ModelInfo {

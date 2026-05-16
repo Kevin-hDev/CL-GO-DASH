@@ -1,4 +1,4 @@
-use crate::services::agent_local::modelfile_parser::{parse_modelfile, ParsedModelfile};
+use crate::services::agent_local::model_customizations;
 use crate::services::agent_local::ollama_client::OllamaClient;
 use crate::services::agent_local::ollama_registry;
 use crate::services::agent_local::ollama_registry_details;
@@ -73,7 +73,7 @@ pub async fn pull_ollama_model(
     ollama: tauri::State<'_, OllamaClient>,
 ) -> Result<(), String> {
     let saved = if is_update {
-        save_customizations(&ollama, &name).await
+        model_customizations::save_for_update(&ollama, &name).await
     } else {
         None
     };
@@ -93,7 +93,7 @@ pub async fn pull_ollama_model(
     match result {
         Ok(()) => {
             if let Some(perso) = saved {
-                restore_customizations(&ollama, &name, &perso).await;
+                model_customizations::restore_after_update(&ollama, &name, &perso).await;
             }
             let _ = app.emit("ollama-models-changed", ());
             Ok(())
@@ -111,32 +111,6 @@ pub async fn pull_ollama_model(
     }
 }
 
-async fn save_customizations(ollama: &OllamaClient, name: &str) -> Option<ParsedModelfile> {
-    let modelfile = match ollama.get_modelfile(name).await {
-        Ok(mf) => mf,
-        Err(_) => return None,
-    };
-    let parsed = parse_modelfile(&modelfile);
-    let has_system = parsed.system.as_ref().is_some_and(|s| !s.trim().is_empty());
-    let has_params = !parsed.parameters.is_empty();
-    if has_system || has_params {
-        Some(parsed)
-    } else {
-        None
-    }
-}
-
-async fn restore_customizations(ollama: &OllamaClient, name: &str, saved: &ParsedModelfile) {
-    let mut restored = ParsedModelfile::default();
-    restored.from = Some(name.to_string());
-    restored.system = saved.system.clone();
-    restored.parameters = saved.parameters.clone();
-    let payload = restored.to_api_payload(name);
-    if let Err(e) = ollama.post_create(&payload).await {
-        eprintln!("[pull] restore perso {name} échoué: {e}");
-    }
-}
-
 #[tauri::command]
 pub async fn cancel_pull_ollama_model(
     pull_cancel: tauri::State<'_, PullCancel>,
@@ -150,6 +124,7 @@ pub async fn cancel_pull_ollama_model(
 #[tauri::command]
 pub async fn delete_ollama_model(app: tauri::AppHandle, name: String) -> Result<(), String> {
     ollama_registry::delete_model(&name).await?;
+    model_customizations::clear_model_customized(&name)?;
     let _ = app.emit("ollama-models-changed", ());
     Ok(())
 }
@@ -169,7 +144,14 @@ pub async fn update_modelfile(
     content: String,
     ollama: tauri::State<'_, OllamaClient>,
 ) -> Result<(), String> {
-    ollama.update_modelfile(&name, &content).await?;
+    let was_customized = model_customizations::is_model_customized(&name);
+    model_customizations::mark_model_customized(&name)?;
+    if let Err(e) = ollama.update_modelfile(&name, &content).await {
+        if !was_customized {
+            let _ = model_customizations::clear_model_customized(&name);
+        }
+        return Err(e);
+    }
     let _ = app.emit("modelfile-updated", &name);
     Ok(())
 }
@@ -181,7 +163,14 @@ pub async fn update_system_prompt(
     system: String,
     ollama: tauri::State<'_, OllamaClient>,
 ) -> Result<(), String> {
-    ollama.update_system_prompt(&name, &system).await?;
+    let was_customized = model_customizations::is_model_customized(&name);
+    model_customizations::mark_model_customized(&name)?;
+    if let Err(e) = ollama.update_system_prompt(&name, &system).await {
+        if !was_customized {
+            let _ = model_customizations::clear_model_customized(&name);
+        }
+        return Err(e);
+    }
     let _ = app.emit("modelfile-updated", &name);
     Ok(())
 }
@@ -193,7 +182,14 @@ pub async fn update_parameters(
     parameters: Vec<(String, String)>,
     ollama: tauri::State<'_, OllamaClient>,
 ) -> Result<(), String> {
-    ollama.update_parameters(&name, parameters).await?;
+    let was_customized = model_customizations::is_model_customized(&name);
+    model_customizations::mark_model_customized(&name)?;
+    if let Err(e) = ollama.update_parameters(&name, parameters).await {
+        if !was_customized {
+            let _ = model_customizations::clear_model_customized(&name);
+        }
+        return Err(e);
+    }
     let _ = app.emit("modelfile-updated", &name);
     Ok(())
 }

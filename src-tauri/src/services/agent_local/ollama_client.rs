@@ -1,3 +1,4 @@
+use crate::services::agent_local::model_customizations;
 use crate::services::agent_local::modelfile_parser::{
     merge_parameter, parse_modelfile, parse_param_value,
 };
@@ -52,8 +53,9 @@ impl OllamaClient {
         let mut raw = Vec::new();
         for m in models.iter().take(500) {
             let name = m["name"].as_str().unwrap_or_default().to_string();
+            let is_customized = model_customizations::is_model_customized(&name);
             let info = self.show_model(&name).await.ok();
-            raw.push(build_model_from_tags(m, info));
+            raw.push(build_model_from_tags(m, info, is_customized));
         }
         Ok(dedupe_by_digest(raw))
     }

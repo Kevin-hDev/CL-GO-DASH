@@ -7,9 +7,14 @@ import rehypeRaw from "rehype-raw";
 import rehypeSanitize from "rehype-sanitize";
 import { ModelInstallButton } from "./model-install-button";
 import { TranslationControls } from "./translation-controls";
+import { buildSpecRows } from "./model-profile-specs";
 import { SettingsCard } from "@/components/settings/settings-card";
 import { useOllamaModels } from "@/hooks/use-ollama-models";
-import type { RegistryModelDetails, RegistryTag, ModelInfo } from "@/types/agent";
+import type {
+  RegistryModelDetails,
+  RegistryTag,
+  ModelInfo,
+} from "@/types/agent";
 import "./ollama.css";
 import "./ollama-details.css";
 import "./model-profile.css";
@@ -19,7 +24,10 @@ interface ModelProfileProps {
   variantFullName: string | null;
 }
 
-export function ModelProfile({ familyName, variantFullName }: ModelProfileProps) {
+export function ModelProfile({
+  familyName,
+  variantFullName,
+}: ModelProfileProps) {
   const { t } = useTranslation();
   const { models: localModels } = useOllamaModels();
   const [details, setDetails] = useState<RegistryModelDetails | null>(null);
@@ -37,22 +45,47 @@ export function ModelProfile({ familyName, variantFullName }: ModelProfileProps)
     setTranslated(null);
     setTranslatedLang(null);
     Promise.all([
-      invoke<RegistryModelDetails>("get_registry_model_details", { name: familyName }),
+      invoke<RegistryModelDetails>("get_registry_model_details", {
+        name: familyName,
+      }),
       invoke<RegistryTag[]>("list_registry_tags", { name: familyName }),
     ])
-      .then(([d, ts]) => { setDetails(d); setTags(ts); })
+      .then(([d, ts]) => {
+        setDetails(d);
+        setTags(ts);
+      })
       .catch((e) => console.warn("[ollama] model profile:", e))
       .finally(() => setLoading(false));
   }, [familyName]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch→setState is intentional
-    if (!variantFullName) { setLocalInfo(null); return; }
+    let cancelled = false;
+    const resetLocalInfo = () => {
+      queueMicrotask(() => {
+        if (!cancelled) setLocalInfo(null);
+      });
+    };
+    if (!variantFullName) {
+      resetLocalInfo();
+      return () => {
+        cancelled = true;
+      };
+    }
     const installed = localModels.find((m) => m.name === variantFullName);
-    if (!installed) { setLocalInfo(null); return; }
+    if (!installed) {
+      resetLocalInfo();
+      return () => {
+        cancelled = true;
+      };
+    }
     invoke<ModelInfo>("show_ollama_model", { name: variantFullName })
-      .then(setLocalInfo)
-      .catch(() => setLocalInfo(null));
+      .then((info) => {
+        if (!cancelled) setLocalInfo(info);
+      })
+      .catch(() => resetLocalInfo());
+    return () => {
+      cancelled = true;
+    };
   }, [variantFullName, localModels]);
 
   const currentTag = useMemo(() => {
@@ -66,15 +99,14 @@ export function ModelProfile({ familyName, variantFullName }: ModelProfileProps)
     ? localModels.find((m) => m.name === variantFullName)
     : null;
   const hasUpdate = Boolean(
-    installedLocal && currentTag && installedLocal.digest_short !== currentTag.digest_short,
+    installedLocal &&
+    !installedLocal.is_customized &&
+    currentTag &&
+    installedLocal.digest_short !== currentTag.digest_short,
   );
 
   if (loading) {
-    return (
-      <div className="mp-loading">
-        {t("ollama.loadingProfile")}
-      </div>
-    );
+    return <div className="mp-loading">{t("ollama.loadingProfile")}</div>;
   }
 
   const rows = buildSpecRows(t, details, currentTag, localInfo);
@@ -83,9 +115,7 @@ export function ModelProfile({ familyName, variantFullName }: ModelProfileProps)
     <div className="mp-root">
       <div className="mp-inner">
         <div className="mp-header">
-          <h2 className="mp-title">
-            {displayName}
-          </h2>
+          <h2 className="mp-title">{displayName}</h2>
           {variantFullName && (
             <ModelInstallButton
               fullName={variantFullName}
@@ -97,9 +127,7 @@ export function ModelProfile({ familyName, variantFullName }: ModelProfileProps)
         </div>
 
         {details?.description_short && (
-          <div className="mp-description">
-            {details.description_short}
-          </div>
+          <div className="mp-description">{details.description_short}</div>
         )}
 
         <SettingsCard>
@@ -122,7 +150,10 @@ export function ModelProfile({ familyName, variantFullName }: ModelProfileProps)
               modelName={familyName}
               originalText={details.description_long_markdown}
               currentLang={translatedLang}
-              onChange={(lang, text) => { setTranslatedLang(lang); setTranslated(text); }}
+              onChange={(lang, text) => {
+                setTranslatedLang(lang);
+                setTranslated(text);
+              }}
             />
           </div>
         )}
@@ -130,32 +161,14 @@ export function ModelProfile({ familyName, variantFullName }: ModelProfileProps)
 
       {details?.description_long_markdown && (
         <div className="ollama-readme mp-readme">
-          <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw, rehypeSanitize]}>
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            rehypePlugins={[rehypeRaw, rehypeSanitize]}
+          >
             {translated ?? details.description_long_markdown}
           </ReactMarkdown>
         </div>
       )}
     </div>
   );
-}
-
-interface SpecRow { label: string; value: string; mono?: boolean }
-
-function buildSpecRows(
-  t: (k: string) => string,
-  details: RegistryModelDetails | null,
-  tag: RegistryTag | null,
-  info: ModelInfo | null,
-): SpecRow[] {
-  const rows: SpecRow[] = [];
-  if (details?.capabilities?.length) rows.push({ label: t("ollama.capabilities"), value: details.capabilities.join(", ") });
-  if (tag?.size_gb) rows.push({ label: t("ollama.fileSize"), value: `${tag.size_gb} GB` });
-  if (info?.parameter_size) rows.push({ label: t("ollama.paramsLabel"), value: info.parameter_size });
-  const ctx = tag?.context_length ?? details?.context_length;
-  if (ctx) rows.push({ label: t("ollama.context"), value: `${(ctx / 1024).toFixed(0)}${t("ollama.contextTokens")}` });
-  if (info?.quantization) rows.push({ label: t("ollama.quantization"), value: info.quantization });
-  if (info?.architecture) rows.push({ label: t("ollama.architecture"), value: info.architecture });
-  if (info) rows.push({ label: t("ollama.moe"), value: info.is_moe ? t("ollama.yes") : t("ollama.no") });
-  if (tag?.digest_short) rows.push({ label: t("ollama.digest"), value: tag.digest_short, mono: true });
-  return rows;
 }

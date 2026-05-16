@@ -16,6 +16,7 @@ pub mod circuit_breaker;
 pub mod circuit_breaker_tests;
 pub mod compress_hook;
 pub mod eager_dispatch;
+pub mod model_customizations;
 pub mod model_size;
 pub mod modelfile_parser;
 pub mod ollama_client;

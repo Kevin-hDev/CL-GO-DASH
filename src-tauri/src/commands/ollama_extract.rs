@@ -10,7 +10,7 @@ pub fn extract_overlay(archive: &Path, dest: &Path, name: &str) -> Result<(), St
     } else if name.ends_with(".tar.zst") {
         extract_tar_zst(archive, dest)?;
     } else if name.ends_with(".zip") {
-        extract_zip(archive, dest)?;
+        super::ollama_extract_zip::extract_zip(archive, dest)?;
     } else {
         return Err(format!("format inconnu: {name}"));
     }
@@ -64,23 +64,28 @@ pub(crate) fn safe_unpack_tar<R: Read>(
             eprintln!("[ollama-extract] tar entry: {e}");
             "ollama-extract-error".to_string()
         })?;
-        let raw_path = entry.path().map_err(|e| {
-            eprintln!("[ollama-extract] tar path: {e}");
-            "ollama-extract-error".to_string()
-        })?;
+        let raw_path = entry
+            .path()
+            .map_err(|e| {
+                eprintln!("[ollama-extract] tar path: {e}");
+                "ollama-extract-error".to_string()
+            })?
+            .into_owned();
 
-        if raw_path
-            .components()
-            .any(|c| c == std::path::Component::ParentDir)
-        {
+        if super::ollama_extract_tar_safe::has_parent_dir(&raw_path) {
             return Err("archive contient un chemin avec '..' — extraction refusée".into());
         }
 
         let entry_type = entry.header().entry_type();
+        if matches!(entry_type, tar::EntryType::Symlink) {
+            let target =
+                super::ollama_extract_tar_safe::safe_target_path(&canonical_dest, dest, &raw_path)?;
+            super::ollama_extract_tar_safe::unpack_safe_symlink(&entry, &canonical_dest, &target)?;
+            continue;
+        }
         if matches!(
             entry_type,
-            tar::EntryType::Symlink
-                | tar::EntryType::Link
+            tar::EntryType::Link
                 | tar::EntryType::Block
                 | tar::EntryType::Char
                 | tar::EntryType::Fifo
@@ -91,35 +96,8 @@ pub(crate) fn safe_unpack_tar<R: Read>(
             ));
         }
 
-        let target = canonical_dest.join(&raw_path);
-        let target_canonical = if target.exists() {
-            std::fs::canonicalize(&target).map_err(|e| {
-                eprintln!("[ollama-extract] canonicalize entry: {e}");
-                "ollama-extract-error".to_string()
-            })?
-        } else {
-            if let Some(parent) = target.parent() {
-                std::fs::create_dir_all(parent).map_err(|e| {
-                    eprintln!("[ollama-extract] mkdir: {e}");
-                    "ollama-extract-error".to_string()
-                })?;
-            }
-            let parent_canonical =
-                std::fs::canonicalize(target.parent().unwrap_or(dest)).map_err(|e| {
-                    eprintln!("[ollama-extract] canonicalize parent: {e}");
-                    "ollama-extract-error".to_string()
-                })?;
-            parent_canonical.join(target.file_name().unwrap_or_default())
-        };
-
-        if !target_canonical.starts_with(&canonical_dest) {
-            eprintln!(
-                "[ollama-extract] path traversal: {} vs {}",
-                raw_path.display(),
-                canonical_dest.display()
-            );
-            return Err("ollama-extract-path-traversal".into());
-        }
+        let target_canonical =
+            super::ollama_extract_tar_safe::safe_target_path(&canonical_dest, dest, &raw_path)?;
 
         total_bytes += entry.header().size().unwrap_or(0);
         if total_bytes > MAX_UNPACKED_BYTES {
@@ -132,99 +110,4 @@ pub(crate) fn safe_unpack_tar<R: Read>(
         })?;
     }
     Ok(())
-}
-
-fn extract_zip(archive: &Path, dest: &Path) -> Result<(), String> {
-    #[cfg(target_os = "windows")]
-    {
-        use std::os::windows::process::CommandExt;
-
-        let status = std::process::Command::new("powershell")
-            .args([
-                "-NoProfile",
-                "-Command",
-                &format!(
-                    "Expand-Archive -Path '{}' -DestinationPath '{}' -Force",
-                    ps_single_quote(archive),
-                    ps_single_quote(dest)
-                ),
-            ])
-            .creation_flags(0x08000000)
-            .status()
-            .map_err(|e| {
-                eprintln!("[ollama-extract] powershell: {e}");
-                "ollama-extract-error".to_string()
-            })?;
-        if !status.success() {
-            return Err("Expand-Archive failed".into());
-        }
-    }
-    #[cfg(not(target_os = "windows"))]
-    {
-        let file = std::fs::File::open(archive).map_err(|e| {
-            eprintln!("[ollama-extract] open zip: {e}");
-            "ollama-extract-error".to_string()
-        })?;
-        let mut zip_archive = zip::ZipArchive::new(file).map_err(|e| {
-            eprintln!("[ollama-extract] read zip: {e}");
-            "ollama-extract-error".to_string()
-        })?;
-        safe_unpack_zip(&mut zip_archive, dest)?;
-    }
-    Ok(())
-}
-
-#[cfg(not(target_os = "windows"))]
-fn safe_unpack_zip(
-    archive: &mut zip::ZipArchive<std::fs::File>,
-    dest: &Path,
-) -> Result<(), String> {
-    let canonical_dest = std::fs::canonicalize(dest).map_err(|e| {
-        eprintln!("[ollama-extract] canonicalize dest: {e}");
-        "ollama-extract-error".to_string()
-    })?;
-
-    for i in 0..archive.len() {
-        let mut entry = archive.by_index(i).map_err(|e| {
-            eprintln!("[ollama-extract] zip entry: {e}");
-            "ollama-extract-error".to_string()
-        })?;
-
-        let raw_path = match entry.enclosed_name() {
-            Some(p) => p.to_path_buf(),
-            None => return Err("zip contient un chemin non sûr — extraction refusée".into()),
-        };
-
-        let target = canonical_dest.join(&raw_path);
-
-        if entry.is_dir() {
-            std::fs::create_dir_all(&target).map_err(|e| {
-                eprintln!("[ollama-extract] mkdir zip: {e}");
-                "ollama-extract-error".to_string()
-            })?;
-            continue;
-        }
-
-        if let Some(parent) = target.parent() {
-            std::fs::create_dir_all(parent).map_err(|e| {
-                eprintln!("[ollama-extract] mkdir zip parent: {e}");
-                "ollama-extract-error".to_string()
-            })?;
-        }
-
-        let mut outfile = std::fs::File::create(&target).map_err(|e| {
-            eprintln!("[ollama-extract] create zip file: {e}");
-            "ollama-extract-error".to_string()
-        })?;
-        std::io::copy(&mut entry, &mut outfile).map_err(|e| {
-            eprintln!("[ollama-extract] copy zip entry: {e}");
-            "ollama-extract-error".to_string()
-        })?;
-    }
-    Ok(())
-}
-
-#[cfg(target_os = "windows")]
-fn ps_single_quote(path: &Path) -> String {
-    path.display().to_string().replace('\'', "''")
 }

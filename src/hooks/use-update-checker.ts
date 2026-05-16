@@ -39,7 +39,8 @@ export function useUpdateChecker() {
   const [ollamaUpdates, setOllamaUpdates] = useState<OllamaModelUpdate[]>([]);
   const [pulling, setPulling] = useState<PullingState | null>(null);
   const pullingRef = useRef(false);
-  const [ollamaBinaryUpdate, setOllamaBinaryUpdate] = useState<OllamaBinaryUpdate | null>(null);
+  const [ollamaBinaryUpdate, setOllamaBinaryUpdate] =
+    useState<OllamaBinaryUpdate | null>(null);
   const [ollamaBinaryUpdating, setOllamaBinaryUpdating] = useState(false);
   const [ollamaBinaryPercent, setOllamaBinaryPercent] = useState(0);
   const [appDownloading, setAppDownloading] = useState(false);
@@ -62,7 +63,9 @@ export function useUpdateChecker() {
     }
 
     try {
-      const binary = await invoke<OllamaBinaryUpdate | null>("check_ollama_binary_update");
+      const binary = await invoke<OllamaBinaryUpdate | null>(
+        "check_ollama_binary_update",
+      );
       setOllamaBinaryUpdate(binary ?? null);
     } catch {
       /* ollama not running or network error, ignore */
@@ -91,9 +94,8 @@ export function useUpdateChecker() {
 
     const channel = new Channel<DownloadProgress>();
     channel.onmessage = (event: DownloadProgress) => {
-      const pct = event.total > 0
-        ? Math.round((event.completed / event.total) * 100)
-        : 0;
+      const pct =
+        event.total > 0 ? Math.round((event.completed / event.total) * 100) : 0;
       setAppPercent(pct);
     };
 
@@ -113,14 +115,19 @@ export function useUpdateChecker() {
 
     const channel = new Channel<PullProgress>();
     channel.onmessage = (event: PullProgress) => {
-      const pct = event.total && event.completed
-        ? Math.round((event.completed / event.total) * 100)
-        : 0;
+      const pct =
+        event.total && event.completed
+          ? Math.round((event.completed / event.total) * 100)
+          : 0;
       setPulling({ fullName, percent: pct, status: event.status });
     };
 
     try {
-      await invoke("pull_ollama_model", { name: fullName, isUpdate: true, onProgress: channel });
+      await invoke("pull_ollama_model", {
+        name: fullName,
+        isUpdate: true,
+        onProgress: channel,
+      });
       setOllamaUpdates((prev) => prev.filter((u) => u.fullName !== fullName));
     } catch {
       showToast(i18n.t("errors.updateFailed"), "error");
@@ -135,17 +142,22 @@ export function useUpdateChecker() {
     setOllamaBinaryUpdating(true);
     setOllamaBinaryPercent(0);
 
-    interface SetupProgress { completed: number; total: number; status: string }
+    interface SetupProgress {
+      completed: number;
+      total: number;
+      status: string;
+    }
     const channel = new Channel<SetupProgress>();
     channel.onmessage = (event: SetupProgress) => {
       if (event.status === "restarting") {
         setOllamaBinaryPercent(100);
         return;
       }
-      const pct = event.total > 0
-        ? Math.round((event.completed / event.total) * 100)
-        : 0;
-      setOllamaBinaryPercent(pct);
+      if (event.total > 0) {
+        setOllamaBinaryPercent(
+          Math.round((event.completed / event.total) * 100),
+        );
+      }
     };
 
     try {
@@ -162,14 +174,21 @@ export function useUpdateChecker() {
   }, [ollamaBinaryUpdate]);
 
   const totalCount =
-    (appUpdate ? 1 : 0) +
-    (ollamaBinaryUpdate ? 1 : 0) +
-    ollamaUpdates.length;
+    (appUpdate ? 1 : 0) + (ollamaBinaryUpdate ? 1 : 0) + ollamaUpdates.length;
 
   return {
-    appUpdate, ollamaUpdates, pulling,
-    ollamaBinaryUpdate, ollamaBinaryUpdating, ollamaBinaryPercent,
-    appDownloading, appPercent,
-    totalCount, pullModel, downloadAppUpdate, updateOllamaBinary, checkAll,
+    appUpdate,
+    ollamaUpdates,
+    pulling,
+    ollamaBinaryUpdate,
+    ollamaBinaryUpdating,
+    ollamaBinaryPercent,
+    appDownloading,
+    appPercent,
+    totalCount,
+    pullModel,
+    downloadAppUpdate,
+    updateOllamaBinary,
+    checkAll,
   };
 }

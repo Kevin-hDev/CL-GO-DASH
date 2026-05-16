@@ -33,8 +33,10 @@ pub mod ollama_bundle_utils;
 pub mod ollama_checksum;
 pub mod ollama_download;
 pub mod ollama_extract;
+pub(crate) mod ollama_extract_tar_safe;
 #[cfg(test)]
 mod ollama_extract_tests;
+pub(crate) mod ollama_extract_zip;
 pub mod ollama_setup;
 #[cfg(test)]
 mod ollama_setup_tests;
