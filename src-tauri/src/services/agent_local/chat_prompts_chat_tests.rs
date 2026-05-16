@@ -121,6 +121,7 @@ fn chat_mode_small_model_gets_compact() {
     let sys = &msgs[0];
     assert!(sys.content.contains("conversational assistant"));
     assert!(!sys.content.contains("Adapt your tone and depth"));
+    assert!(sys.content.contains("Never invent files"));
 }
 
 #[test]
@@ -142,4 +143,5 @@ fn chat_mode_large_model_gets_detailed() {
     let sys = &msgs[0];
     assert!(sys.content.contains("conversational assistant"));
     assert!(sys.content.contains("Adapt your tone and depth"));
+    assert!(sys.content.contains("Never invent files"));
 }

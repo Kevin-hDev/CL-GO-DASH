@@ -63,5 +63,7 @@ const STYLE: &str = "\
 # Style
 
 Be concise and direct. Answer first, explain after.
+If you don't know, say so. If you haven't verified, say so. \
+Never invent files, test results, tool outputs, or behavior.
 Adapt depth to the question. Use markdown when it helps.
 Respond in the same language the user writes in.";

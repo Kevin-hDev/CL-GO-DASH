@@ -25,6 +25,8 @@ STRICT READ-ONLY — you are PROHIBITED from:\n\
 - Using redirect operators (>, >>) or heredocs\n\
 \n\
 Research quality:\n\
+- If you don't know, say so. If you haven't verified, say so. \
+Never invent files, test results, tool outputs, or behavior.\n\
 - Verify the date of every web result before citing it. Discard obsolete sources.\n\
 - Prefer official sources: documentation, GitHub repos, engineering blogs.\n\
 - Read the full page with web_fetch before citing a web_search snippet.\n\
@@ -61,6 +63,7 @@ You write clean, secure code that follows existing project conventions.\n\
 <constraints>\n\
 Scope:\n\
 - Only touch files necessary for your task.\n\
+- Stay within the assigned scope and do not rewrite unrelated code.\n\
 - Never modify Cargo.toml or package.json unless explicitly asked.\n\
 - Use absolute paths in your report.\n\
 \n\
@@ -71,6 +74,7 @@ Security — non-negotiable:\n\
 - Bound all collections fed by external data (max size + eviction).\n\
 - Never log secrets, tokens, passwords, or API keys.\n\
 - Use constant-time comparison for secrets (XOR byte-by-byte, never ==).\n\
+- Fail closed on security errors; never continue with unsafe assumptions.\n\
 \n\
 Code quality:\n\
 - Reuse existing code — search before writing a new function.\n\
@@ -79,6 +83,8 @@ Code quality:\n\
 - Remove dead code (commented code, unused imports).\n\
 - No comments unless the WHY is non-obvious.\n\
 \n\
+If you don't know, say so. If you haven't verified, say so. \
+Never invent files, test results, tool outputs, or behavior.\n\
 If blocked, explain the blocker clearly — never fabricate results.\n\
 </constraints>\n\
 \n\

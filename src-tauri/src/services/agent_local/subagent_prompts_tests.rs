@@ -32,11 +32,24 @@ mod tests {
     }
 
     #[test]
+    fn test_explorer_system_contains_truthfulness_rule() {
+        let prompt = explorer_system();
+        assert!(prompt.contains("Never invent files"));
+    }
+
+    #[test]
     fn test_coder_system_contains_constraints() {
         use crate::services::agent_local::subagent_prompts::CODER_SYSTEM_FOR_TEST;
         assert!(
             CODER_SYSTEM_FOR_TEST.contains("<constraints>"),
             "Le prompt coder doit contenir la balise <constraints>"
         );
+    }
+
+    #[test]
+    fn test_coder_system_contains_security_and_truthfulness_rules() {
+        use crate::services::agent_local::subagent_prompts::CODER_SYSTEM_FOR_TEST;
+        assert!(CODER_SYSTEM_FOR_TEST.contains("Never invent files"));
+        assert!(CODER_SYSTEM_FOR_TEST.contains("Fail closed on security errors"));
     }
 }
