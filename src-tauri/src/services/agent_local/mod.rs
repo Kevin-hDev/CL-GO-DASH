@@ -30,6 +30,7 @@ pub mod ollama_stream_process;
 pub mod permission_gate;
 #[cfg(test)]
 pub mod permission_gate_tests;
+pub mod permission_policy;
 pub mod project_store;
 pub mod prompt_chat_compact;
 pub mod prompt_chat_detailed;
@@ -84,6 +85,7 @@ pub mod tool_executor_helpers;
 pub mod tool_executor_parallel;
 #[cfg(test)]
 pub mod tool_executor_parallel_tests;
+pub mod tool_executor_write;
 pub mod tool_files;
 #[cfg(test)]
 pub mod tool_files_tests;

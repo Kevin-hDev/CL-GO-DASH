@@ -63,6 +63,7 @@ pub async fn run_tools_with_eager(
             messages,
             tool_calls,
             working_dir,
+            mode,
             cancel,
             write_guard,
             eager_results.as_mut(),
