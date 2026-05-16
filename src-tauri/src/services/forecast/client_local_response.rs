@@ -1,3 +1,4 @@
+use crate::services::forecast::client_quantiles;
 use crate::services::forecast::input_data::ParsedInput;
 use crate::services::forecast::registry::{find_runtime, ForecastEngineKind};
 use crate::services::forecast::target_domain;
@@ -82,9 +83,9 @@ fn parse_simple_response(body: &Value, input: &ParsedInput) -> Result<ParsedPred
         })
         .collect();
 
-    let q10 = extract_quantile_array(body, "q10");
+    let q10 = client_quantiles::lower_array(body);
     let q50: Vec<f64> = predictions.iter().map(|p| p.value).collect();
-    let q90 = extract_quantile_array(body, "q90");
+    let q90 = client_quantiles::upper_array(body);
     Ok((predictions, q10, q50, q90))
 }
 
@@ -129,12 +130,12 @@ fn parse_structured_predictions(
             value,
             series_id: item["series_id"].as_str().map(|value| value.to_string()),
         });
-        match item["q10"].as_f64() {
+        match client_quantiles::lower_value(item) {
             Some(value) if has_all_q10 => q10.push(value),
             _ => has_all_q10 = false,
         }
         q50.push(item["q50"].as_f64().unwrap_or(value));
-        match item["q90"].as_f64() {
+        match client_quantiles::upper_value(item) {
             Some(value) if has_all_q90 => q90.push(value),
             _ => has_all_q90 = false,
         }
@@ -159,11 +160,4 @@ fn output_date(raw_date: &str, index: usize, input: &ParsedInput) -> String {
             .unwrap_or_else(|| raw_date.to_string());
     }
     raw_date.to_string()
-}
-
-fn extract_quantile_array(body: &Value, key: &str) -> Vec<f64> {
-    body[key]
-        .as_array()
-        .map(|arr| arr.iter().filter_map(|v| v.as_f64()).collect())
-        .unwrap_or_default()
 }

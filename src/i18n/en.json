@@ -980,44 +980,158 @@
       "enabled": "Enabled",
       "disabled": "Disabled",
       "params": {
-        "horizon_max_override": { "label": "Horizon limit", "description": "Optionally lowers the maximum horizon allowed for this model. Empty or 0 keeps the model limit." },
-        "context_length": { "label": "History length", "description": "Maximum number of historical points sent to the model." },
-        "quantiles": { "label": "Quantiles", "description": "Uncertainty levels calculated around the central forecast." },
-        "precision": { "label": "Precision", "description": "Numeric format used by the local model when supported." },
-        "dtype": { "label": "Numeric type", "description": "Numeric format used for inference when the engine supports it." },
-        "batch_size": { "label": "Batch size", "description": "Number of series processed together." },
-        "horizon_len": { "label": "Internal horizon", "description": "Output length used internally when it can be configured." },
-        "prediction_length": { "label": "Prediction length", "description": "Internal prediction length exposed by the engine." },
-        "confidence_level": { "label": "Confidence", "description": "Default confidence level for forecast intervals." },
-        "level": { "label": "Level", "description": "Interval level sent to TimeGPT models." },
-        "normalization": { "label": "Normalization", "description": "Stabilizes the data scale before prediction when supported." },
-        "quantile_head": { "label": "Quantile head", "description": "Enables native probabilistic output when available." },
-        "xreg_mode": { "label": "XReg", "description": "External variable mode when the engine supports it." },
-        "clean_ex_first": { "label": "Clean exogenous", "description": "Asks the cloud service to clean external variables before calculation." },
-        "finetune_steps": { "label": "Finetune steps", "description": "Number of light fine-tuning steps for TimeGPT." },
-        "finetune_loss": { "label": "Finetune loss", "description": "Optimization objective used during light fine-tuning." },
-        "finetune_depth": { "label": "Finetune depth", "description": "Intensity of TimeGPT light fine-tuning." },
-        "feature_contributions": { "label": "Contributions", "description": "Returns estimated variable impact when supported." },
-        "decode_block_size": { "label": "Decode block", "description": "Toto generation block size." },
-        "has_missing_values": { "label": "Missing values", "description": "Tells the engine that the history contains missing values." },
-        "non_negative_output": { "label": "Positive output", "description": "Constrains low bounds to zero for positive business metrics." },
-        "target_dim": { "label": "Target dimension", "description": "Number of target dimensions used by MOIRAI." },
-        "feat_dynamic_real_dim": { "label": "Future variables", "description": "Number of future dynamic variables used by MOIRAI." },
-        "past_feat_dynamic_real_dim": { "label": "Past variables", "description": "Number of past dynamic variables used by MOIRAI." },
-        "scale_factor": { "label": "Scale factor", "description": "Adjusts the internal scale used by FlowState." },
-        "batch_first": { "label": "Batch first", "description": "Dimension order expected by some PyTorch engines." },
-        "known_future_covariates": { "label": "Future covariates", "description": "Allows known future variables when supported." },
-        "local_mode": { "label": "Local mode", "description": "Forces local execution for engines with multiple modes." },
-        "probabilistic_output": { "label": "Probabilistic output", "description": "Requests uncertainty bounds when available." },
-        "backend": { "label": "Backend", "description": "Internal execution backend used by the selected family." },
-        "output_type": { "label": "Output type", "description": "Chooses central forecast or quantile output when available." },
-        "frequency_resampling": { "label": "Resampling", "description": "Frequency handling before prediction when exposed." },
-        "preserve_positivity": { "label": "Preserve positivity", "description": "Asks Kairos to keep values positive when relevant." },
-        "average_with_flipped_input": { "label": "Flipped input", "description": "Averages prediction with a reversed-input pass for Kairos stability." },
-        "generation": { "label": "Generation", "description": "Enables engine generation mode when available." },
-        "num_samples": { "label": "Samples", "description": "Number of samples used to estimate quantiles." },
-        "device": { "label": "Device", "description": "Hardware setting inherited from Settings > Advanced." },
-        "model_unload_timeout": { "label": "Unload timeout", "description": "Unload timeout inherited from Settings > Advanced." }
+        "horizon_max_override": {
+          "label": "Horizon limit",
+          "description": "Maximum number of future points this model may forecast in one call. Example: daily data with 31 means 31 days; hourly data with 24 means 24 hours. Empty or 0 keeps the native model limit."
+        },
+        "context_length": {
+          "label": "History length",
+          "description": "Number of past points given to the model to learn trend, seasonality and breaks. Higher uses more history, but can slow down and dilute recent changes."
+        },
+        "quantiles": {
+          "label": "Quantiles",
+          "description": "Probabilistic levels returned by the model. 0.5 is the central forecast; 0.1 and 0.9 form the lower/upper uncertainty range. A wider range means higher uncertainty."
+        },
+        "precision": {
+          "label": "Precision",
+          "description": "Numeric format used locally. auto lets the engine choose; float32 favors stability; float16/bfloat16 save RAM/VRAM when supported."
+        },
+        "dtype": {
+          "label": "Numeric type",
+          "description": "Numeric type used during inference. auto is recommended; float32 is safer; float16/bfloat16 can be faster and lighter but are not supported everywhere."
+        },
+        "batch_size": {
+          "label": "Batch size",
+          "description": "Number of series processed together. Increasing can speed up large datasets but uses more RAM/VRAM; lower it if the model runs out of memory."
+        },
+        "horizon_len": {
+          "label": "Internal horizon",
+          "description": "Internal output length for engines that separate requested horizon from computed horizon. Keep default unless long horizons are refused or under-produced."
+        },
+        "prediction_length": {
+          "label": "Prediction length",
+          "description": "Number of future steps generated by engines exposing this setting. It must match the requested horizon: too low cuts the forecast, too high wastes compute."
+        },
+        "confidence_level": {
+          "label": "Confidence",
+          "description": "Requested uncertainty interval width. 0.9 means 90%: wider and more conservative; 0.8 is tighter but less cautious."
+        },
+        "level": {
+          "label": "Level",
+          "description": "Interval level sent to TimeGPT. Example: 90 requests a 90% confidence range. Higher levels display wider ranges."
+        },
+        "normalization": {
+          "label": "Normalization",
+          "description": "Stabilizes the scale of series before forecasting. Useful when values vary by large orders of magnitude; disable only when raw scale is meaningful signal."
+        },
+        "quantile_head": {
+          "label": "Quantile head",
+          "description": "Enables the native probabilistic head when the model has one. Use it when you need a real uncertainty range, not only a central line."
+        },
+        "xreg_mode": {
+          "label": "XReg",
+          "description": "Controls how external variables such as weather, traffic or holidays are used. auto lets the engine decide; disabling returns closer to target-only forecasting."
+        },
+        "clean_ex_first": {
+          "label": "Clean exogenous",
+          "description": "Asks TimeGPT to clean external variables before inference. Useful when covariates have gaps or outliers, but adds latency."
+        },
+        "finetune_steps": {
+          "label": "Finetune steps",
+          "description": "Small adaptation steps on the current dataset. More steps can fit history better, but take longer and may overfit short histories."
+        },
+        "finetune_loss": {
+          "label": "Finetune loss",
+          "description": "Optimization objective used during TimeGPT adaptation. Keep default unless you know how you want errors penalized."
+        },
+        "finetune_depth": {
+          "label": "Finetune depth",
+          "description": "Strength of TimeGPT adaptation. Low is light tuning; high adapts more strongly but is riskier on small histories."
+        },
+        "feature_contributions": {
+          "label": "Contributions",
+          "description": "Requests estimated impact of external variables. Useful to explain a forecast, but can slow calls or be unavailable depending on the service."
+        },
+        "decode_block_size": {
+          "label": "Decode block",
+          "description": "Number of future points generated per Toto block. Larger can speed long horizons but uses more memory; smaller is safer on limited machines."
+        },
+        "has_missing_values": {
+          "label": "Missing values",
+          "description": "Tells the engine that history contains missing values. Enable only when the dataset has gaps; otherwise leave it off to avoid unnecessary handling."
+        },
+        "non_negative_output": {
+          "label": "Positive output",
+          "description": "Prevents negative forecasts or lower bounds. Enable for sales, revenue, volume, stock or any metric that cannot go below zero."
+        },
+        "target_dim": {
+          "label": "Target dimension",
+          "description": "Number of target dimensions predicted together by MOIRAI. 1 means one target; increase only for real multi-dimensional datasets."
+        },
+        "feat_dynamic_real_dim": {
+          "label": "Future variables",
+          "description": "Number of known future numeric variables given to MOIRAI, such as planned weather, calendar or promotions. Must match the actual future columns."
+        },
+        "past_feat_dynamic_real_dim": {
+          "label": "Past variables",
+          "description": "Number of historical numeric variables given to MOIRAI. Explains the past; it does not replace known future variables."
+        },
+        "scale_factor": {
+          "label": "Scale factor",
+          "description": "Adjusts FlowState internal amplitude. Keep default unless outputs are systematically too low or too high."
+        },
+        "batch_first": {
+          "label": "Batch first",
+          "description": "Dimension order expected by some PyTorch engines. Change only if the model reports a shape/order error."
+        },
+        "known_future_covariates": {
+          "label": "Future covariates",
+          "description": "Allows using variables already known in the future: holidays, planned prices, weather forecasts or campaigns. Enable when these columns are filled in the future zone."
+        },
+        "local_mode": {
+          "label": "Local mode",
+          "description": "Forces local execution when the engine supports several modes. Keep enabled to avoid external calls and keep data on the machine."
+        },
+        "probabilistic_output": {
+          "label": "Probabilistic output",
+          "description": "Requests uncertainty bounds or multiple paths instead of one central value. Useful for risk, but can take longer."
+        },
+        "backend": {
+          "label": "Backend",
+          "description": "Internal backend used by the adapter. auto picks the best available; change mainly for diagnostics or to force CPU/GPU support."
+        },
+        "output_type": {
+          "label": "Output type",
+          "description": "Chooses central forecast or forecast with quantiles/uncertainty. Use quantiles when you want a confidence range."
+        },
+        "frequency_resampling": {
+          "label": "Resampling",
+          "description": "Controls whether dates are regularized before forecasting. Useful when dates are missing; risky when gaps are meaningful."
+        },
+        "preserve_positivity": {
+          "label": "Preserve positivity",
+          "description": "Asks Kairos to keep outputs positive. Enable for metrics that cannot be negative, such as revenue, orders, traffic or volume."
+        },
+        "average_with_flipped_input": {
+          "label": "Flipped input",
+          "description": "Runs Kairos on a reversed input too and averages results. Can stabilize the curve, but adds compute time."
+        },
+        "generation": {
+          "label": "Generation",
+          "description": "Enables the engine generative mode when available. Useful for richer trajectories; keep default for classic forecasting."
+        },
+        "num_samples": {
+          "label": "Samples",
+          "description": "Number of simulated paths used to estimate quantiles. Higher is more stable but slower."
+        },
+        "device": {
+          "label": "Device",
+          "description": "Default hardware inherited from Settings > Advanced. auto lets the app choose; GPU accelerates if available; CPU is slower but more compatible."
+        },
+        "model_unload_timeout": {
+          "label": "Unload timeout",
+          "description": "How long the model stays loaded after use, inherited from Settings > Advanced. Longer avoids reloads; shorter frees memory sooner."
+        }
       }
     },
     "models": {

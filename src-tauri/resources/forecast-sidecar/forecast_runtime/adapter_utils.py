@@ -67,6 +67,10 @@ def forecast_payload_result(payload, horizon, quantile_levels, forecast_one):
             quantile_key(level): values
             for level, values in zip(quantile_levels, quantile_values, strict=False)
         }
+        lower_key = next((key for key in quantile_by_key if key < "q50"), None)
+        upper_key = next(
+            (key for key in reversed(quantile_by_key) if key > "q50"), None
+        )
         for index, value in enumerate(median_values):
             date = (
                 job["dates"][index]
@@ -78,10 +82,14 @@ def forecast_payload_result(payload, horizon, quantile_levels, forecast_one):
                 "value": value,
                 "series_id": job["series_id"],
             }
-            for key in ("q10", "q50", "q90"):
+            for key in quantile_by_key:
                 quantile_value = quantile_at(quantile_by_key, key, index)
                 if quantile_value is not None:
                     item[key] = quantile_value
+            if "q10" not in item and lower_key in item:
+                item["q10"] = item[lower_key]
+            if "q90" not in item and upper_key in item:
+                item["q90"] = item[upper_key]
             predictions.append(item)
     return {"predictions": predictions}
 

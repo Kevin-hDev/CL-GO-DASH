@@ -906,44 +906,158 @@
       "enabled": "有効",
       "disabled": "無効",
       "params": {
-        "horizon_max_override": { "label": "予測期間の上限", "description": "このモデルの最大予測期間を下げます。空または 0 ならモデル上限を使います。" },
-        "context_length": { "label": "最大履歴長", "description": "モデルへ渡す履歴ポイントの最大数です。" },
-        "quantiles": { "label": "分位点", "description": "中央予測の周囲に計算する不確実性レベルです。" },
-        "precision": { "label": "精度", "description": "対応時にローカルモデルが使う数値形式です。" },
-        "dtype": { "label": "数値型", "description": "推論で使う数値形式です。" },
-        "batch_size": { "label": "バッチサイズ", "description": "同時に処理する系列数です。" },
-        "horizon_len": { "label": "内部予測期間", "description": "設定可能な場合に使う内部出力長です。" },
-        "prediction_length": { "label": "予測長", "description": "エンジンが公開する内部予測長です。" },
-        "confidence_level": { "label": "信頼度", "description": "予測区間の既定の信頼水準です。" },
-        "level": { "label": "レベル", "description": "TimeGPT に送る区間レベルです。" },
-        "normalization": { "label": "正規化", "description": "予測前にデータの尺度を安定させます。" },
-        "quantile_head": { "label": "分位点ヘッド", "description": "利用可能な場合にネイティブ確率出力を有効にします。" },
-        "xreg_mode": { "label": "XReg", "description": "対応時の外部変数モードです。" },
-        "clean_ex_first": { "label": "外生変数の清掃", "description": "計算前にクラウド側で外部変数を清掃します。" },
-        "finetune_steps": { "label": "微調整ステップ", "description": "TimeGPT の軽量微調整ステップ数です。" },
-        "finetune_loss": { "label": "微調整損失", "description": "軽量微調整で使う最適化目標です。" },
-        "finetune_depth": { "label": "微調整深度", "description": "TimeGPT 軽量微調整の強さです。" },
-        "feature_contributions": { "label": "寄与度", "description": "対応時に変数の推定影響を返します。" },
-        "decode_block_size": { "label": "デコードブロック", "description": "Toto の生成ブロックサイズです。" },
-        "has_missing_values": { "label": "欠損値", "description": "履歴に欠損値が含まれることを示します。" },
-        "non_negative_output": { "label": "非負出力", "description": "正の業務指標で下限をゼロに制限します。" },
-        "target_dim": { "label": "ターゲット次元", "description": "MOIRAI が使うターゲット次元数です。" },
-        "feat_dynamic_real_dim": { "label": "未来変数", "description": "MOIRAI が使う未来動的変数の数です。" },
-        "past_feat_dynamic_real_dim": { "label": "過去変数", "description": "MOIRAI が使う過去動的変数の数です。" },
-        "scale_factor": { "label": "スケール係数", "description": "FlowState の内部スケールを調整します。" },
-        "batch_first": { "label": "Batch first", "description": "一部の PyTorch エンジンが期待する次元順です。" },
-        "known_future_covariates": { "label": "既知の未来共変量", "description": "対応時に既知の未来変数を使えます。" },
-        "local_mode": { "label": "ローカルモード", "description": "複数モードのエンジンでローカル実行を強制します。" },
-        "probabilistic_output": { "label": "確率出力", "description": "利用可能な場合に不確実性区間を要求します。" },
-        "backend": { "label": "バックエンド", "description": "選択したファミリーの内部実行バックエンドです。" },
-        "output_type": { "label": "出力タイプ", "description": "中央予測または分位点出力を選択します。" },
-        "frequency_resampling": { "label": "再サンプリング", "description": "予測前の頻度処理です。" },
-        "preserve_positivity": { "label": "正値を保持", "description": "必要な場合に Kairos が正の値を保つようにします。" },
-        "average_with_flipped_input": { "label": "反転入力", "description": "Kairos を安定させるため反転入力の結果と平均します。" },
-        "generation": { "label": "生成", "description": "利用可能な場合に生成モードを有効にします。" },
-        "num_samples": { "label": "サンプル数", "description": "分位点推定に使うサンプル数です。" },
-        "device": { "label": "デバイス", "description": "設定 > 詳細から継承されるハードウェア設定です。" },
-        "model_unload_timeout": { "label": "アンロード", "description": "設定 > 詳細から継承されるモデルアンロード時間です。" }
+        "horizon_max_override": {
+          "label": "予測期間の上限",
+          "description": "1回の予測で生成できる未来ポイント数の上限です。例: 日次で31なら31日、時間単位で24なら24時間。空または0ならモデル本来の上限を使います。"
+        },
+        "context_length": {
+          "label": "最大履歴長",
+          "description": "モデルが参照する過去データ点数です。傾向、季節性、変化点を読むために使います。大きいほど履歴は増えますが、メモリ消費も増えます。"
+        },
+        "quantiles": {
+          "label": "分位点",
+          "description": "モデルが返す確率分位です。0.5は中心予測、0.1と0.9は低め/高めの不確実性範囲です。範囲が広いほど不確実性が高いです。"
+        },
+        "precision": {
+          "label": "精度",
+          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+        },
+        "dtype": {
+          "label": "数値型",
+          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+        },
+        "batch_size": {
+          "label": "バッチサイズ",
+          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+        },
+        "horizon_len": {
+          "label": "内部予測期間",
+          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+        },
+        "prediction_length": {
+          "label": "予測長",
+          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+        },
+        "confidence_level": {
+          "label": "信頼度",
+          "description": "不確実性区間の幅です。0.9は90%で、より広く保守的です。0.8は狭いですが慎重さは下がります。"
+        },
+        "level": {
+          "label": "レベル",
+          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+        },
+        "normalization": {
+          "label": "正規化",
+          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+        },
+        "quantile_head": {
+          "label": "分位点ヘッド",
+          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+        },
+        "xreg_mode": {
+          "label": "XReg",
+          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+        },
+        "clean_ex_first": {
+          "label": "外生変数の清掃",
+          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+        },
+        "finetune_steps": {
+          "label": "微調整ステップ",
+          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+        },
+        "finetune_loss": {
+          "label": "微調整損失",
+          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+        },
+        "finetune_depth": {
+          "label": "微調整深度",
+          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+        },
+        "feature_contributions": {
+          "label": "寄与度",
+          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+        },
+        "decode_block_size": {
+          "label": "デコードブロック",
+          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+        },
+        "has_missing_values": {
+          "label": "欠損値",
+          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+        },
+        "non_negative_output": {
+          "label": "非負出力",
+          "description": "予測値や下限が負にならないようにします。売上、収益、数量、在庫など0未満にならない指標で有効です。"
+        },
+        "target_dim": {
+          "label": "ターゲット次元",
+          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+        },
+        "feat_dynamic_real_dim": {
+          "label": "未来変数",
+          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+        },
+        "past_feat_dynamic_real_dim": {
+          "label": "過去変数",
+          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+        },
+        "scale_factor": {
+          "label": "スケール係数",
+          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+        },
+        "batch_first": {
+          "label": "Batch first",
+          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+        },
+        "known_future_covariates": {
+          "label": "既知の未来共変量",
+          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+        },
+        "local_mode": {
+          "label": "ローカルモード",
+          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+        },
+        "probabilistic_output": {
+          "label": "確率出力",
+          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+        },
+        "backend": {
+          "label": "バックエンド",
+          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+        },
+        "output_type": {
+          "label": "出力タイプ",
+          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+        },
+        "frequency_resampling": {
+          "label": "再サンプリング",
+          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+        },
+        "preserve_positivity": {
+          "label": "正値を保持",
+          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+        },
+        "average_with_flipped_input": {
+          "label": "反転入力",
+          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+        },
+        "generation": {
+          "label": "生成",
+          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+        },
+        "num_samples": {
+          "label": "サンプル数",
+          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+        },
+        "device": {
+          "label": "デバイス",
+          "description": "Settings > 詳細から継承される実行ハードウェアです。autoはアプリが選択、GPUは高速、CPUは遅いが互換性が高いです。"
+        },
+        "model_unload_timeout": {
+          "label": "アンロード",
+          "description": "使用後にモデルをメモリへ保持する時間です。長いほど再読み込みを避け、短いほどメモリを早く解放します。"
+        }
       }
     },
     "models": {

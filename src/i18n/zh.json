@@ -906,44 +906,158 @@
       "enabled": "启用",
       "disabled": "停用",
       "params": {
-        "horizon_max_override": { "label": "预测期限制", "description": "可降低此模型允许的最大预测期。留空或 0 使用模型限制。" },
-        "context_length": { "label": "最大历史长度", "description": "发送给模型的最大历史点数量。" },
-        "quantiles": { "label": "分位数", "description": "围绕中心预测计算的不确定性层级。" },
-        "precision": { "label": "精度", "description": "本地模型支持时使用的数值格式。" },
-        "dtype": { "label": "数值类型", "description": "推理时使用的数值格式。" },
-        "batch_size": { "label": "批大小", "description": "一起处理的序列数量。" },
-        "horizon_len": { "label": "内部预测期", "description": "可配置时使用的内部输出长度。" },
-        "prediction_length": { "label": "预测长度", "description": "引擎暴露的内部预测长度。" },
-        "confidence_level": { "label": "置信度", "description": "预测区间的默认置信水平。" },
-        "level": { "label": "层级", "description": "发送给 TimeGPT 的区间层级。" },
-        "normalization": { "label": "归一化", "description": "预测前稳定数据尺度。" },
-        "quantile_head": { "label": "分位数头", "description": "可用时启用原生概率输出。" },
-        "xreg_mode": { "label": "XReg", "description": "引擎支持时使用的外部变量模式。" },
-        "clean_ex_first": { "label": "清理外生变量", "description": "让云服务先清理外部变量。" },
-        "finetune_steps": { "label": "微调步数", "description": "TimeGPT 轻量微调的步数。" },
-        "finetune_loss": { "label": "微调损失", "description": "轻量微调使用的优化目标。" },
-        "finetune_depth": { "label": "微调深度", "description": "TimeGPT 轻量微调的强度。" },
-        "feature_contributions": { "label": "变量贡献", "description": "支持时返回变量的估计影响。" },
-        "decode_block_size": { "label": "解码块", "description": "Toto 生成块大小。" },
-        "has_missing_values": { "label": "缺失值", "description": "表示历史数据包含缺失值。" },
-        "non_negative_output": { "label": "非负输出", "description": "对正向业务指标把下界限制为零。" },
-        "target_dim": { "label": "目标维度", "description": "MOIRAI 使用的目标维度数量。" },
-        "feat_dynamic_real_dim": { "label": "未来变量", "description": "MOIRAI 使用的未来动态变量数量。" },
-        "past_feat_dynamic_real_dim": { "label": "过去变量", "description": "MOIRAI 使用的过去动态变量数量。" },
-        "scale_factor": { "label": "缩放因子", "description": "调整 FlowState 使用的内部尺度。" },
-        "batch_first": { "label": "Batch first", "description": "某些 PyTorch 引擎需要的维度顺序。" },
-        "known_future_covariates": { "label": "已知未来协变量", "description": "支持时允许使用已知未来变量。" },
-        "local_mode": { "label": "本地模式", "description": "对多模式引擎强制本地执行。" },
-        "probabilistic_output": { "label": "概率输出", "description": "可用时请求不确定性区间。" },
-        "backend": { "label": "后端", "description": "所选模型族使用的内部执行后端。" },
-        "output_type": { "label": "输出类型", "description": "选择中心预测或分位数输出。" },
-        "frequency_resampling": { "label": "重采样", "description": "预测前的频率处理方式。" },
-        "preserve_positivity": { "label": "保持正值", "description": "需要时让 Kairos 保持正值。" },
-        "average_with_flipped_input": { "label": "反向输入", "description": "用反向输入再预测一次并取平均以稳定 Kairos。" },
-        "generation": { "label": "生成", "description": "可用时启用引擎生成模式。" },
-        "num_samples": { "label": "样本数", "description": "估计分位数使用的样本数量。" },
-        "device": { "label": "设备", "description": "继承自设置 > 高级的硬件设置。" },
-        "model_unload_timeout": { "label": "卸载超时", "description": "继承自设置 > 高级的模型卸载超时。" }
+        "horizon_max_override": {
+          "label": "预测期限制",
+          "description": "单次预测允许生成的未来点数上限。例如：日频 31 表示 31 天，小时频 24 表示 24 小时。留空或 0 使用模型原始上限。"
+        },
+        "context_length": {
+          "label": "最大历史长度",
+          "description": "模型读取的历史点数，用来理解趋势、季节性和突变。更高会使用更多历史，但会增加内存并可能削弱近期变化。"
+        },
+        "quantiles": {
+          "label": "分位数",
+          "description": "模型返回的概率分位。0.5 是中心预测；0.1 和 0.9 组成低/高不确定区间。区间越宽，不确定性越高。"
+        },
+        "precision": {
+          "label": "精度",
+          "description": "控制模型在预测时的行为。没有明确需求时建议保留默认值；修改可能影响内存、速度或稳定性。"
+        },
+        "dtype": {
+          "label": "数值类型",
+          "description": "控制模型在预测时的行为。没有明确需求时建议保留默认值；修改可能影响内存、速度或稳定性。"
+        },
+        "batch_size": {
+          "label": "批大小",
+          "description": "控制模型在预测时的行为。没有明确需求时建议保留默认值；修改可能影响内存、速度或稳定性。"
+        },
+        "horizon_len": {
+          "label": "内部预测期",
+          "description": "控制模型在预测时的行为。没有明确需求时建议保留默认值；修改可能影响内存、速度或稳定性。"
+        },
+        "prediction_length": {
+          "label": "预测长度",
+          "description": "控制模型在预测时的行为。没有明确需求时建议保留默认值；修改可能影响内存、速度或稳定性。"
+        },
+        "confidence_level": {
+          "label": "置信度",
+          "description": "置信区间宽度。0.9 表示 90%，更宽也更保守；0.8 更窄，但风险更高。"
+        },
+        "level": {
+          "label": "层级",
+          "description": "控制模型在预测时的行为。没有明确需求时建议保留默认值；修改可能影响内存、速度或稳定性。"
+        },
+        "normalization": {
+          "label": "归一化",
+          "description": "控制模型在预测时的行为。没有明确需求时建议保留默认值；修改可能影响内存、速度或稳定性。"
+        },
+        "quantile_head": {
+          "label": "分位数头",
+          "description": "控制模型在预测时的行为。没有明确需求时建议保留默认值；修改可能影响内存、速度或稳定性。"
+        },
+        "xreg_mode": {
+          "label": "XReg",
+          "description": "控制模型在预测时的行为。没有明确需求时建议保留默认值；修改可能影响内存、速度或稳定性。"
+        },
+        "clean_ex_first": {
+          "label": "清理外生变量",
+          "description": "控制模型在预测时的行为。没有明确需求时建议保留默认值；修改可能影响内存、速度或稳定性。"
+        },
+        "finetune_steps": {
+          "label": "微调步数",
+          "description": "控制模型在预测时的行为。没有明确需求时建议保留默认值；修改可能影响内存、速度或稳定性。"
+        },
+        "finetune_loss": {
+          "label": "微调损失",
+          "description": "控制模型在预测时的行为。没有明确需求时建议保留默认值；修改可能影响内存、速度或稳定性。"
+        },
+        "finetune_depth": {
+          "label": "微调深度",
+          "description": "控制模型在预测时的行为。没有明确需求时建议保留默认值；修改可能影响内存、速度或稳定性。"
+        },
+        "feature_contributions": {
+          "label": "变量贡献",
+          "description": "控制模型在预测时的行为。没有明确需求时建议保留默认值；修改可能影响内存、速度或稳定性。"
+        },
+        "decode_block_size": {
+          "label": "解码块",
+          "description": "控制模型在预测时的行为。没有明确需求时建议保留默认值；修改可能影响内存、速度或稳定性。"
+        },
+        "has_missing_values": {
+          "label": "缺失值",
+          "description": "控制模型在预测时的行为。没有明确需求时建议保留默认值；修改可能影响内存、速度或稳定性。"
+        },
+        "non_negative_output": {
+          "label": "非负输出",
+          "description": "防止预测值或下界为负。适合销售额、收入、销量、库存等不能小于 0 的指标。"
+        },
+        "target_dim": {
+          "label": "目标维度",
+          "description": "控制模型在预测时的行为。没有明确需求时建议保留默认值；修改可能影响内存、速度或稳定性。"
+        },
+        "feat_dynamic_real_dim": {
+          "label": "未来变量",
+          "description": "控制模型在预测时的行为。没有明确需求时建议保留默认值；修改可能影响内存、速度或稳定性。"
+        },
+        "past_feat_dynamic_real_dim": {
+          "label": "过去变量",
+          "description": "控制模型在预测时的行为。没有明确需求时建议保留默认值；修改可能影响内存、速度或稳定性。"
+        },
+        "scale_factor": {
+          "label": "缩放因子",
+          "description": "控制模型在预测时的行为。没有明确需求时建议保留默认值；修改可能影响内存、速度或稳定性。"
+        },
+        "batch_first": {
+          "label": "Batch first",
+          "description": "控制模型在预测时的行为。没有明确需求时建议保留默认值；修改可能影响内存、速度或稳定性。"
+        },
+        "known_future_covariates": {
+          "label": "已知未来协变量",
+          "description": "控制模型在预测时的行为。没有明确需求时建议保留默认值；修改可能影响内存、速度或稳定性。"
+        },
+        "local_mode": {
+          "label": "本地模式",
+          "description": "控制模型在预测时的行为。没有明确需求时建议保留默认值；修改可能影响内存、速度或稳定性。"
+        },
+        "probabilistic_output": {
+          "label": "概率输出",
+          "description": "控制模型在预测时的行为。没有明确需求时建议保留默认值；修改可能影响内存、速度或稳定性。"
+        },
+        "backend": {
+          "label": "后端",
+          "description": "控制模型在预测时的行为。没有明确需求时建议保留默认值；修改可能影响内存、速度或稳定性。"
+        },
+        "output_type": {
+          "label": "输出类型",
+          "description": "控制模型在预测时的行为。没有明确需求时建议保留默认值；修改可能影响内存、速度或稳定性。"
+        },
+        "frequency_resampling": {
+          "label": "重采样",
+          "description": "控制模型在预测时的行为。没有明确需求时建议保留默认值；修改可能影响内存、速度或稳定性。"
+        },
+        "preserve_positivity": {
+          "label": "保持正值",
+          "description": "控制模型在预测时的行为。没有明确需求时建议保留默认值；修改可能影响内存、速度或稳定性。"
+        },
+        "average_with_flipped_input": {
+          "label": "反向输入",
+          "description": "控制模型在预测时的行为。没有明确需求时建议保留默认值；修改可能影响内存、速度或稳定性。"
+        },
+        "generation": {
+          "label": "生成",
+          "description": "控制模型在预测时的行为。没有明确需求时建议保留默认值；修改可能影响内存、速度或稳定性。"
+        },
+        "num_samples": {
+          "label": "样本数",
+          "description": "控制模型在预测时的行为。没有明确需求时建议保留默认值；修改可能影响内存、速度或稳定性。"
+        },
+        "device": {
+          "label": "设备",
+          "description": "继承自 Settings > 高级的硬件设置。auto 由应用选择；GPU 更快；CPU 更兼容但较慢。"
+        },
+        "model_unload_timeout": {
+          "label": "卸载超时",
+          "description": "模型使用后保持加载的时间。更长可避免重复加载；更短可更快释放内存。"
+        }
       }
     },
     "models": {

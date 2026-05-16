@@ -103,14 +103,7 @@ class ChronosAdapter:
 
         return {
             "predictions": [
-                {
-                    "series_id": record["item_id"],
-                    "date": str(record["timestamp"]),
-                    "value": float(record["predictions"]),
-                    "q10": float(record.get("0.1", record["predictions"])),
-                    "q50": float(record.get("0.5", record["predictions"])),
-                    "q90": float(record.get("0.9", record["predictions"])),
-                }
+                build_prediction_record(record, quantile_levels)
                 for record in predictions.to_dict("records")
             ]
         }
@@ -155,3 +148,27 @@ def build_future_record(row, date_column, covariate_columns, series_column=None)
     for name in covariate_columns:
         record[name] = row.get(name)
     return record
+
+
+def build_prediction_record(record, quantile_levels):
+    value = float(record["predictions"])
+    item = {
+        "series_id": record["item_id"],
+        "date": str(record["timestamp"]),
+        "value": value,
+        "q50": float(record.get("0.5", value)),
+    }
+    keys = []
+    for level in quantile_levels:
+        raw_key = str(level)
+        key = quantile_key(level)
+        if raw_key in record:
+            item[key] = float(record[raw_key])
+            keys.append(key)
+    lower_key = next((key for key in keys if key < "q50"), None)
+    upper_key = next((key for key in reversed(keys) if key > "q50"), None)
+    if "q10" not in item and lower_key:
+        item["q10"] = item[lower_key]
+    if "q90" not in item and upper_key:
+        item["q90"] = item[upper_key]
+    return item

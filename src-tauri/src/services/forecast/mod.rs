@@ -3,6 +3,7 @@ pub mod client_chronos;
 mod client_local_response;
 pub mod client_nixtla;
 mod client_nixtla_retry;
+mod client_quantiles;
 pub mod file_input;
 pub mod input_data;
 pub mod input_dates;

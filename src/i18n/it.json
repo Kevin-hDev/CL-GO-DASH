@@ -906,44 +906,158 @@
       "enabled": "Attivo",
       "disabled": "Disattivo",
       "params": {
-        "horizon_max_override": { "label": "Limite orizzonte", "description": "Riduce l'orizzonte massimo consentito per questo modello. Vuoto o 0 mantiene il limite del modello." },
-        "context_length": { "label": "Storico max", "description": "Numero massimo di punti storici inviati al modello." },
-        "quantiles": { "label": "Quantili", "description": "Livelli di incertezza intorno alla previsione centrale." },
-        "precision": { "label": "Precisione", "description": "Formato numerico usato dal modello locale se supportato." },
-        "dtype": { "label": "Tipo numerico", "description": "Formato numerico usato per l'inferenza quando supportato." },
-        "batch_size": { "label": "Batch size", "description": "Numero di serie elaborate insieme." },
-        "horizon_len": { "label": "Orizzonte interno", "description": "Lunghezza di uscita interna quando configurabile." },
-        "prediction_length": { "label": "Lunghezza previsione", "description": "Lunghezza interna di previsione esposta dal motore." },
-        "confidence_level": { "label": "Confidenza", "description": "Livello di confidenza predefinito per gli intervalli." },
-        "level": { "label": "Livello", "description": "Livello di intervallo inviato a TimeGPT." },
-        "normalization": { "label": "Normalizzazione", "description": "Stabilizza la scala dei dati prima della previsione." },
-        "quantile_head": { "label": "Testa quantile", "description": "Attiva l'uscita probabilistica nativa se disponibile." },
-        "xreg_mode": { "label": "XReg", "description": "Modalità per variabili esterne quando supportata." },
-        "clean_ex_first": { "label": "Pulizia esogena", "description": "Chiede al servizio cloud di pulire le variabili esterne prima del calcolo." },
-        "finetune_steps": { "label": "Passi finetune", "description": "Numero di passi di regolazione leggera per TimeGPT." },
-        "finetune_loss": { "label": "Loss finetune", "description": "Obiettivo usato durante la regolazione leggera." },
-        "finetune_depth": { "label": "Profondità finetune", "description": "Intensità della regolazione leggera di TimeGPT." },
-        "feature_contributions": { "label": "Contributi", "description": "Restituisce l'impatto stimato delle variabili se supportato." },
-        "decode_block_size": { "label": "Blocco decoding", "description": "Dimensione dei blocchi di generazione Toto." },
-        "has_missing_values": { "label": "Valori mancanti", "description": "Indica che lo storico contiene valori mancanti." },
-        "non_negative_output": { "label": "Uscita positiva", "description": "Limita a zero le soglie basse per metriche positive." },
-        "target_dim": { "label": "Dimensione target", "description": "Numero di dimensioni target usate da MOIRAI." },
-        "feat_dynamic_real_dim": { "label": "Variabili future", "description": "Numero di variabili dinamiche future usate da MOIRAI." },
-        "past_feat_dynamic_real_dim": { "label": "Variabili passate", "description": "Numero di variabili dinamiche passate usate da MOIRAI." },
-        "scale_factor": { "label": "Fattore scala", "description": "Regola la scala interna usata da FlowState." },
-        "batch_first": { "label": "Batch first", "description": "Ordine dimensionale richiesto da alcuni motori PyTorch." },
-        "known_future_covariates": { "label": "Covariate future", "description": "Permette variabili future note se supportate." },
-        "local_mode": { "label": "Modalità locale", "description": "Forza l'esecuzione locale per motori con più modalità." },
-        "probabilistic_output": { "label": "Uscita probabilistica", "description": "Richiede intervalli di incertezza se disponibili." },
-        "backend": { "label": "Backend", "description": "Motore interno usato dalla famiglia selezionata." },
-        "output_type": { "label": "Tipo uscita", "description": "Sceglie previsione centrale o uscita con quantili." },
-        "frequency_resampling": { "label": "Ricampionamento", "description": "Gestione della frequenza prima della previsione." },
-        "preserve_positivity": { "label": "Preserva positivo", "description": "Chiede a Kairos di mantenere valori positivi quando serve." },
-        "average_with_flipped_input": { "label": "Input invertito", "description": "Media Kairos con una passata su input invertito per stabilità." },
-        "generation": { "label": "Generazione", "description": "Attiva la modalità generazione se disponibile." },
-        "num_samples": { "label": "Campioni", "description": "Numero di campioni usati per stimare i quantili." },
-        "device": { "label": "Device", "description": "Impostazione hardware ereditata da Impostazioni > Avanzate." },
-        "model_unload_timeout": { "label": "Scaricamento", "description": "Timeout di scaricamento ereditato da Impostazioni > Avanzate." }
+        "horizon_max_override": {
+          "label": "Limite orizzonte",
+          "description": "Numero massimo di punti futuri previsti per chiamata. Esempio: dati giornalieri 31 = 31 giorni; orari 24 = 24 ore. Vuoto o 0 mantiene il limite del modello."
+        },
+        "context_length": {
+          "label": "Storico max",
+          "description": "Numero di punti storici usati per trend, stagionalità e rotture. Più alto usa più storia, ma consuma memoria e può attenuare cambiamenti recenti."
+        },
+        "quantiles": {
+          "label": "Quantili",
+          "description": "Livelli probabilistici restituiti. 0.5 è la previsione centrale; 0.1 e 0.9 formano il range basso/alto di incertezza."
+        },
+        "precision": {
+          "label": "Precisione",
+          "description": "Controlla il comportamento del modello durante la previsione. Mantieni il valore predefinito se non hai un caso preciso; modificarlo può influire su memoria, velocità o stabilità."
+        },
+        "dtype": {
+          "label": "Tipo numerico",
+          "description": "Controlla il comportamento del modello durante la previsione. Mantieni il valore predefinito se non hai un caso preciso; modificarlo può influire su memoria, velocità o stabilità."
+        },
+        "batch_size": {
+          "label": "Batch size",
+          "description": "Controlla il comportamento del modello durante la previsione. Mantieni il valore predefinito se non hai un caso preciso; modificarlo può influire su memoria, velocità o stabilità."
+        },
+        "horizon_len": {
+          "label": "Orizzonte interno",
+          "description": "Controlla il comportamento del modello durante la previsione. Mantieni il valore predefinito se non hai un caso preciso; modificarlo può influire su memoria, velocità o stabilità."
+        },
+        "prediction_length": {
+          "label": "Lunghezza previsione",
+          "description": "Controlla il comportamento del modello durante la previsione. Mantieni il valore predefinito se non hai un caso preciso; modificarlo può influire su memoria, velocità o stabilità."
+        },
+        "confidence_level": {
+          "label": "Confidenza",
+          "description": "Ampiezza dell’intervallo di incertezza. 0.9 significa 90%: più ampio e prudente; 0.8 è più stretto ma meno conservativo."
+        },
+        "level": {
+          "label": "Livello",
+          "description": "Controlla il comportamento del modello durante la previsione. Mantieni il valore predefinito se non hai un caso preciso; modificarlo può influire su memoria, velocità o stabilità."
+        },
+        "normalization": {
+          "label": "Normalizzazione",
+          "description": "Controlla il comportamento del modello durante la previsione. Mantieni il valore predefinito se non hai un caso preciso; modificarlo può influire su memoria, velocità o stabilità."
+        },
+        "quantile_head": {
+          "label": "Testa quantile",
+          "description": "Controlla il comportamento del modello durante la previsione. Mantieni il valore predefinito se non hai un caso preciso; modificarlo può influire su memoria, velocità o stabilità."
+        },
+        "xreg_mode": {
+          "label": "XReg",
+          "description": "Controlla il comportamento del modello durante la previsione. Mantieni il valore predefinito se non hai un caso preciso; modificarlo può influire su memoria, velocità o stabilità."
+        },
+        "clean_ex_first": {
+          "label": "Pulizia esogena",
+          "description": "Controlla il comportamento del modello durante la previsione. Mantieni il valore predefinito se non hai un caso preciso; modificarlo può influire su memoria, velocità o stabilità."
+        },
+        "finetune_steps": {
+          "label": "Passi finetune",
+          "description": "Controlla il comportamento del modello durante la previsione. Mantieni il valore predefinito se non hai un caso preciso; modificarlo può influire su memoria, velocità o stabilità."
+        },
+        "finetune_loss": {
+          "label": "Loss finetune",
+          "description": "Controlla il comportamento del modello durante la previsione. Mantieni il valore predefinito se non hai un caso preciso; modificarlo può influire su memoria, velocità o stabilità."
+        },
+        "finetune_depth": {
+          "label": "Profondità finetune",
+          "description": "Controlla il comportamento del modello durante la previsione. Mantieni il valore predefinito se non hai un caso preciso; modificarlo può influire su memoria, velocità o stabilità."
+        },
+        "feature_contributions": {
+          "label": "Contributi",
+          "description": "Controlla il comportamento del modello durante la previsione. Mantieni il valore predefinito se non hai un caso preciso; modificarlo può influire su memoria, velocità o stabilità."
+        },
+        "decode_block_size": {
+          "label": "Blocco decoding",
+          "description": "Controlla il comportamento del modello durante la previsione. Mantieni il valore predefinito se non hai un caso preciso; modificarlo può influire su memoria, velocità o stabilità."
+        },
+        "has_missing_values": {
+          "label": "Valori mancanti",
+          "description": "Controlla il comportamento del modello durante la previsione. Mantieni il valore predefinito se non hai un caso preciso; modificarlo può influire su memoria, velocità o stabilità."
+        },
+        "non_negative_output": {
+          "label": "Uscita positiva",
+          "description": "Evita risultati negativi. Attivalo per vendite, ricavi, volumi, scorte o metriche che non possono scendere sotto zero."
+        },
+        "target_dim": {
+          "label": "Dimensione target",
+          "description": "Controlla il comportamento del modello durante la previsione. Mantieni il valore predefinito se non hai un caso preciso; modificarlo può influire su memoria, velocità o stabilità."
+        },
+        "feat_dynamic_real_dim": {
+          "label": "Variabili future",
+          "description": "Controlla il comportamento del modello durante la previsione. Mantieni il valore predefinito se non hai un caso preciso; modificarlo può influire su memoria, velocità o stabilità."
+        },
+        "past_feat_dynamic_real_dim": {
+          "label": "Variabili passate",
+          "description": "Controlla il comportamento del modello durante la previsione. Mantieni il valore predefinito se non hai un caso preciso; modificarlo può influire su memoria, velocità o stabilità."
+        },
+        "scale_factor": {
+          "label": "Fattore scala",
+          "description": "Controlla il comportamento del modello durante la previsione. Mantieni il valore predefinito se non hai un caso preciso; modificarlo può influire su memoria, velocità o stabilità."
+        },
+        "batch_first": {
+          "label": "Batch first",
+          "description": "Controlla il comportamento del modello durante la previsione. Mantieni il valore predefinito se non hai un caso preciso; modificarlo può influire su memoria, velocità o stabilità."
+        },
+        "known_future_covariates": {
+          "label": "Covariate future",
+          "description": "Controlla il comportamento del modello durante la previsione. Mantieni il valore predefinito se non hai un caso preciso; modificarlo può influire su memoria, velocità o stabilità."
+        },
+        "local_mode": {
+          "label": "Modalità locale",
+          "description": "Controlla il comportamento del modello durante la previsione. Mantieni il valore predefinito se non hai un caso preciso; modificarlo può influire su memoria, velocità o stabilità."
+        },
+        "probabilistic_output": {
+          "label": "Uscita probabilistica",
+          "description": "Controlla il comportamento del modello durante la previsione. Mantieni il valore predefinito se non hai un caso preciso; modificarlo può influire su memoria, velocità o stabilità."
+        },
+        "backend": {
+          "label": "Backend",
+          "description": "Controlla il comportamento del modello durante la previsione. Mantieni il valore predefinito se non hai un caso preciso; modificarlo può influire su memoria, velocità o stabilità."
+        },
+        "output_type": {
+          "label": "Tipo uscita",
+          "description": "Controlla il comportamento del modello durante la previsione. Mantieni il valore predefinito se non hai un caso preciso; modificarlo può influire su memoria, velocità o stabilità."
+        },
+        "frequency_resampling": {
+          "label": "Ricampionamento",
+          "description": "Controlla il comportamento del modello durante la previsione. Mantieni il valore predefinito se non hai un caso preciso; modificarlo può influire su memoria, velocità o stabilità."
+        },
+        "preserve_positivity": {
+          "label": "Preserva positivo",
+          "description": "Controlla il comportamento del modello durante la previsione. Mantieni il valore predefinito se non hai un caso preciso; modificarlo può influire su memoria, velocità o stabilità."
+        },
+        "average_with_flipped_input": {
+          "label": "Input invertito",
+          "description": "Controlla il comportamento del modello durante la previsione. Mantieni il valore predefinito se non hai un caso preciso; modificarlo può influire su memoria, velocità o stabilità."
+        },
+        "generation": {
+          "label": "Generazione",
+          "description": "Controlla il comportamento del modello durante la previsione. Mantieni il valore predefinito se non hai un caso preciso; modificarlo può influire su memoria, velocità o stabilità."
+        },
+        "num_samples": {
+          "label": "Campioni",
+          "description": "Controlla il comportamento del modello durante la previsione. Mantieni il valore predefinito se non hai un caso preciso; modificarlo può influire su memoria, velocità o stabilità."
+        },
+        "device": {
+          "label": "Device",
+          "description": "Hardware ereditato da Settings > Avanzato. auto lascia scegliere all’app; GPU accelera se disponibile; CPU è più compatibile ma lenta."
+        },
+        "model_unload_timeout": {
+          "label": "Scaricamento",
+          "description": "Tempo in cui il modello resta caricato dopo l’uso. Più lungo evita ricariche; più corto libera memoria prima."
+        }
       }
     },
     "models": {

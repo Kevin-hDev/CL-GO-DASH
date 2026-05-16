@@ -906,44 +906,158 @@
       "enabled": "Aktiviert",
       "disabled": "Deaktiviert",
       "params": {
-        "horizon_max_override": { "label": "Horizontlimit", "description": "Senkt optional den maximalen Horizont für dieses Modell. Leer oder 0 behält das Modelllimit." },
-        "context_length": { "label": "Historie max.", "description": "Maximale Anzahl historischer Punkte für das Modell." },
-        "quantiles": { "label": "Quantile", "description": "Unsicherheitsstufen um die zentrale Prognose." },
-        "precision": { "label": "Präzision", "description": "Numerisches Format für lokale Modelle, wenn unterstützt." },
-        "dtype": { "label": "Zahlentyp", "description": "Numerisches Format für die Inferenz, wenn unterstützt." },
-        "batch_size": { "label": "Batch size", "description": "Anzahl gemeinsam verarbeiteter Serien." },
-        "horizon_len": { "label": "Interner Horizont", "description": "Interne Ausgabelänge, wenn konfigurierbar." },
-        "prediction_length": { "label": "Prognoselänge", "description": "Vom Motor bereitgestellte interne Prognoselänge." },
-        "confidence_level": { "label": "Konfidenz", "description": "Standard-Konfidenzniveau für Prognoseintervalle." },
-        "level": { "label": "Level", "description": "Intervall-Level für TimeGPT." },
-        "normalization": { "label": "Normalisierung", "description": "Stabilisiert die Datenskala vor der Prognose." },
-        "quantile_head": { "label": "Quantil-Head", "description": "Aktiviert native probabilistische Ausgabe." },
-        "xreg_mode": { "label": "XReg", "description": "Modus für externe Variablen, wenn unterstützt." },
-        "clean_ex_first": { "label": "Exogene bereinigen", "description": "Lässt den Cloud-Dienst externe Variablen vorab bereinigen." },
-        "finetune_steps": { "label": "Finetune-Schritte", "description": "Anzahl leichter TimeGPT-Anpassungsschritte." },
-        "finetune_loss": { "label": "Finetune-Loss", "description": "Optimierungsziel der leichten Anpassung." },
-        "finetune_depth": { "label": "Finetune-Tiefe", "description": "Intensität der leichten TimeGPT-Anpassung." },
-        "feature_contributions": { "label": "Beiträge", "description": "Gibt geschätzte Variablenbeiträge zurück, wenn möglich." },
-        "decode_block_size": { "label": "Decode-Block", "description": "Blockgröße der Toto-Generierung." },
-        "has_missing_values": { "label": "Fehlende Werte", "description": "Gibt an, dass die Historie fehlende Werte enthält." },
-        "non_negative_output": { "label": "Positive Ausgabe", "description": "Begrenzt untere Grenzen bei positiven Kennzahlen auf null." },
-        "target_dim": { "label": "Zieldimension", "description": "Anzahl der von MOIRAI genutzten Zieldimensionen." },
-        "feat_dynamic_real_dim": { "label": "Zukunftsvariablen", "description": "Anzahl dynamischer Zukunftsvariablen für MOIRAI." },
-        "past_feat_dynamic_real_dim": { "label": "Vergangenheitsvariablen", "description": "Anzahl dynamischer Vergangenheitsvariablen für MOIRAI." },
-        "scale_factor": { "label": "Skalenfaktor", "description": "Passt die interne FlowState-Skala an." },
-        "batch_first": { "label": "Batch first", "description": "Dimensionsreihenfolge einiger PyTorch-Motoren." },
-        "known_future_covariates": { "label": "Zukunfts-Kovariablen", "description": "Erlaubt bekannte Zukunftsvariablen, wenn unterstützt." },
-        "local_mode": { "label": "Lokaler Modus", "description": "Erzwingt lokale Ausführung bei Motoren mit mehreren Modi." },
-        "probabilistic_output": { "label": "Probabilistische Ausgabe", "description": "Fordert Unsicherheitsgrenzen an, wenn verfügbar." },
-        "backend": { "label": "Backend", "description": "Interner Ausführungsmotor der gewählten Familie." },
-        "output_type": { "label": "Ausgabetyp", "description": "Wählt zentrale Prognose oder Quantil-Ausgabe." },
-        "frequency_resampling": { "label": "Resampling", "description": "Frequenzbehandlung vor der Prognose." },
-        "preserve_positivity": { "label": "Positivität erhalten", "description": "Lässt Kairos Werte positiv halten, wenn sinnvoll." },
-        "average_with_flipped_input": { "label": "Umgedrehte Eingabe", "description": "Mittelt Kairos mit einer umgedrehten Eingabe zur Stabilisierung." },
-        "generation": { "label": "Generierung", "description": "Aktiviert den Generierungsmodus, wenn vorhanden." },
-        "num_samples": { "label": "Samples", "description": "Anzahl der Samples zur Quantilschätzung." },
-        "device": { "label": "Device", "description": "Geerbte Hardware-Einstellung aus Einstellungen > Erweitert." },
-        "model_unload_timeout": { "label": "Entlade-Timeout", "description": "Geerbtes Entlade-Timeout aus Einstellungen > Erweitert." }
+        "horizon_max_override": {
+          "label": "Horizontlimit",
+          "description": "Maximale Anzahl zukünftiger Punkte pro Vorhersage. Beispiel: täglich 31 = 31 Tage; stündlich 24 = 24 Stunden. Leer oder 0 behält das Modelllimit."
+        },
+        "context_length": {
+          "label": "Historie max.",
+          "description": "Anzahl historischer Punkte für Trend, Saisonalität und Brüche. Höher nutzt mehr Verlauf, braucht aber mehr Speicher und kann neue Änderungen verwässern."
+        },
+        "quantiles": {
+          "label": "Quantile",
+          "description": "Wahrscheinlichkeitsstufen des Modells. 0.5 ist die zentrale Prognose; 0.1 und 0.9 bilden untere/obere Unsicherheitsgrenzen."
+        },
+        "precision": {
+          "label": "Präzision",
+          "description": "Steuert das Verhalten des Modells während der Prognose. Behalte den Standardwert, wenn du keinen genauen Bedarf hast; Änderungen können Speicher, Geschwindigkeit oder Stabilität beeinflussen."
+        },
+        "dtype": {
+          "label": "Zahlentyp",
+          "description": "Steuert das Verhalten des Modells während der Prognose. Behalte den Standardwert, wenn du keinen genauen Bedarf hast; Änderungen können Speicher, Geschwindigkeit oder Stabilität beeinflussen."
+        },
+        "batch_size": {
+          "label": "Batch size",
+          "description": "Steuert das Verhalten des Modells während der Prognose. Behalte den Standardwert, wenn du keinen genauen Bedarf hast; Änderungen können Speicher, Geschwindigkeit oder Stabilität beeinflussen."
+        },
+        "horizon_len": {
+          "label": "Interner Horizont",
+          "description": "Steuert das Verhalten des Modells während der Prognose. Behalte den Standardwert, wenn du keinen genauen Bedarf hast; Änderungen können Speicher, Geschwindigkeit oder Stabilität beeinflussen."
+        },
+        "prediction_length": {
+          "label": "Prognoselänge",
+          "description": "Steuert das Verhalten des Modells während der Prognose. Behalte den Standardwert, wenn du keinen genauen Bedarf hast; Änderungen können Speicher, Geschwindigkeit oder Stabilität beeinflussen."
+        },
+        "confidence_level": {
+          "label": "Konfidenz",
+          "description": "Breite des Unsicherheitsintervalls. 0.9 bedeutet 90%: breiter und vorsichtiger; 0.8 ist enger, aber weniger konservativ."
+        },
+        "level": {
+          "label": "Level",
+          "description": "Steuert das Verhalten des Modells während der Prognose. Behalte den Standardwert, wenn du keinen genauen Bedarf hast; Änderungen können Speicher, Geschwindigkeit oder Stabilität beeinflussen."
+        },
+        "normalization": {
+          "label": "Normalisierung",
+          "description": "Steuert das Verhalten des Modells während der Prognose. Behalte den Standardwert, wenn du keinen genauen Bedarf hast; Änderungen können Speicher, Geschwindigkeit oder Stabilität beeinflussen."
+        },
+        "quantile_head": {
+          "label": "Quantil-Head",
+          "description": "Steuert das Verhalten des Modells während der Prognose. Behalte den Standardwert, wenn du keinen genauen Bedarf hast; Änderungen können Speicher, Geschwindigkeit oder Stabilität beeinflussen."
+        },
+        "xreg_mode": {
+          "label": "XReg",
+          "description": "Steuert das Verhalten des Modells während der Prognose. Behalte den Standardwert, wenn du keinen genauen Bedarf hast; Änderungen können Speicher, Geschwindigkeit oder Stabilität beeinflussen."
+        },
+        "clean_ex_first": {
+          "label": "Exogene bereinigen",
+          "description": "Steuert das Verhalten des Modells während der Prognose. Behalte den Standardwert, wenn du keinen genauen Bedarf hast; Änderungen können Speicher, Geschwindigkeit oder Stabilität beeinflussen."
+        },
+        "finetune_steps": {
+          "label": "Finetune-Schritte",
+          "description": "Steuert das Verhalten des Modells während der Prognose. Behalte den Standardwert, wenn du keinen genauen Bedarf hast; Änderungen können Speicher, Geschwindigkeit oder Stabilität beeinflussen."
+        },
+        "finetune_loss": {
+          "label": "Finetune-Loss",
+          "description": "Steuert das Verhalten des Modells während der Prognose. Behalte den Standardwert, wenn du keinen genauen Bedarf hast; Änderungen können Speicher, Geschwindigkeit oder Stabilität beeinflussen."
+        },
+        "finetune_depth": {
+          "label": "Finetune-Tiefe",
+          "description": "Steuert das Verhalten des Modells während der Prognose. Behalte den Standardwert, wenn du keinen genauen Bedarf hast; Änderungen können Speicher, Geschwindigkeit oder Stabilität beeinflussen."
+        },
+        "feature_contributions": {
+          "label": "Beiträge",
+          "description": "Steuert das Verhalten des Modells während der Prognose. Behalte den Standardwert, wenn du keinen genauen Bedarf hast; Änderungen können Speicher, Geschwindigkeit oder Stabilität beeinflussen."
+        },
+        "decode_block_size": {
+          "label": "Decode-Block",
+          "description": "Steuert das Verhalten des Modells während der Prognose. Behalte den Standardwert, wenn du keinen genauen Bedarf hast; Änderungen können Speicher, Geschwindigkeit oder Stabilität beeinflussen."
+        },
+        "has_missing_values": {
+          "label": "Fehlende Werte",
+          "description": "Steuert das Verhalten des Modells während der Prognose. Behalte den Standardwert, wenn du keinen genauen Bedarf hast; Änderungen können Speicher, Geschwindigkeit oder Stabilität beeinflussen."
+        },
+        "non_negative_output": {
+          "label": "Positive Ausgabe",
+          "description": "Verhindert negative Ergebnisse. Für Umsatz, Verkäufe, Mengen, Bestand oder andere Werte aktivieren, die nicht negativ sein können."
+        },
+        "target_dim": {
+          "label": "Zieldimension",
+          "description": "Steuert das Verhalten des Modells während der Prognose. Behalte den Standardwert, wenn du keinen genauen Bedarf hast; Änderungen können Speicher, Geschwindigkeit oder Stabilität beeinflussen."
+        },
+        "feat_dynamic_real_dim": {
+          "label": "Zukunftsvariablen",
+          "description": "Steuert das Verhalten des Modells während der Prognose. Behalte den Standardwert, wenn du keinen genauen Bedarf hast; Änderungen können Speicher, Geschwindigkeit oder Stabilität beeinflussen."
+        },
+        "past_feat_dynamic_real_dim": {
+          "label": "Vergangenheitsvariablen",
+          "description": "Steuert das Verhalten des Modells während der Prognose. Behalte den Standardwert, wenn du keinen genauen Bedarf hast; Änderungen können Speicher, Geschwindigkeit oder Stabilität beeinflussen."
+        },
+        "scale_factor": {
+          "label": "Skalenfaktor",
+          "description": "Steuert das Verhalten des Modells während der Prognose. Behalte den Standardwert, wenn du keinen genauen Bedarf hast; Änderungen können Speicher, Geschwindigkeit oder Stabilität beeinflussen."
+        },
+        "batch_first": {
+          "label": "Batch first",
+          "description": "Steuert das Verhalten des Modells während der Prognose. Behalte den Standardwert, wenn du keinen genauen Bedarf hast; Änderungen können Speicher, Geschwindigkeit oder Stabilität beeinflussen."
+        },
+        "known_future_covariates": {
+          "label": "Zukunfts-Kovariablen",
+          "description": "Steuert das Verhalten des Modells während der Prognose. Behalte den Standardwert, wenn du keinen genauen Bedarf hast; Änderungen können Speicher, Geschwindigkeit oder Stabilität beeinflussen."
+        },
+        "local_mode": {
+          "label": "Lokaler Modus",
+          "description": "Steuert das Verhalten des Modells während der Prognose. Behalte den Standardwert, wenn du keinen genauen Bedarf hast; Änderungen können Speicher, Geschwindigkeit oder Stabilität beeinflussen."
+        },
+        "probabilistic_output": {
+          "label": "Probabilistische Ausgabe",
+          "description": "Steuert das Verhalten des Modells während der Prognose. Behalte den Standardwert, wenn du keinen genauen Bedarf hast; Änderungen können Speicher, Geschwindigkeit oder Stabilität beeinflussen."
+        },
+        "backend": {
+          "label": "Backend",
+          "description": "Steuert das Verhalten des Modells während der Prognose. Behalte den Standardwert, wenn du keinen genauen Bedarf hast; Änderungen können Speicher, Geschwindigkeit oder Stabilität beeinflussen."
+        },
+        "output_type": {
+          "label": "Ausgabetyp",
+          "description": "Steuert das Verhalten des Modells während der Prognose. Behalte den Standardwert, wenn du keinen genauen Bedarf hast; Änderungen können Speicher, Geschwindigkeit oder Stabilität beeinflussen."
+        },
+        "frequency_resampling": {
+          "label": "Resampling",
+          "description": "Steuert das Verhalten des Modells während der Prognose. Behalte den Standardwert, wenn du keinen genauen Bedarf hast; Änderungen können Speicher, Geschwindigkeit oder Stabilität beeinflussen."
+        },
+        "preserve_positivity": {
+          "label": "Positivität erhalten",
+          "description": "Steuert das Verhalten des Modells während der Prognose. Behalte den Standardwert, wenn du keinen genauen Bedarf hast; Änderungen können Speicher, Geschwindigkeit oder Stabilität beeinflussen."
+        },
+        "average_with_flipped_input": {
+          "label": "Umgedrehte Eingabe",
+          "description": "Steuert das Verhalten des Modells während der Prognose. Behalte den Standardwert, wenn du keinen genauen Bedarf hast; Änderungen können Speicher, Geschwindigkeit oder Stabilität beeinflussen."
+        },
+        "generation": {
+          "label": "Generierung",
+          "description": "Steuert das Verhalten des Modells während der Prognose. Behalte den Standardwert, wenn du keinen genauen Bedarf hast; Änderungen können Speicher, Geschwindigkeit oder Stabilität beeinflussen."
+        },
+        "num_samples": {
+          "label": "Samples",
+          "description": "Steuert das Verhalten des Modells während der Prognose. Behalte den Standardwert, wenn du keinen genauen Bedarf hast; Änderungen können Speicher, Geschwindigkeit oder Stabilität beeinflussen."
+        },
+        "device": {
+          "label": "Device",
+          "description": "Geerbte Hardware aus Settings > Erweitert. auto lässt die App wählen; GPU beschleunigt; CPU ist langsamer, aber kompatibler."
+        },
+        "model_unload_timeout": {
+          "label": "Entlade-Timeout",
+          "description": "Zeit, die ein Modell nach Nutzung geladen bleibt. Länger vermeidet Neuladen; kürzer gibt Speicher schneller frei."
+        }
       }
     },
     "models": {
