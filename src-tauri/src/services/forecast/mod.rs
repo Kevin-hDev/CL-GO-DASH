@@ -40,4 +40,6 @@ mod file_input_tests;
 #[cfg(test)]
 mod input_data_tests;
 #[cfg(test)]
+mod registry_tests;
+#[cfg(test)]
 mod validation_tests;

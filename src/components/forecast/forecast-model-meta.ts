@@ -26,6 +26,7 @@ export interface ForecastModelEntry {
   size_on_disk?: number;
   provider_configured?: boolean;
   engine_kind?: string;
+  config_params?: string[];
   capabilities?: {
     past_covariates: boolean;
     future_covariates: boolean;
@@ -133,12 +134,13 @@ export function getForecastHardwareKey(model: ForecastModelEntry): string {
 }
 
 export function getModelCapabilities(model: ForecastModelEntry): ForecastCapabilitySet {
+  const caps = model.capabilities;
   return {
-    context: model.covariates,
-    futureContext: model.covariates,
-    multivariate: model.multivariate,
-    probabilistic: true,
-    backtesting: model.is_cloud,
+    context: Boolean(caps?.past_covariates),
+    futureContext: Boolean(caps?.future_covariates),
+    multivariate: Boolean(caps?.multivariate),
+    probabilistic: Boolean(caps?.probabilistic),
+    backtesting: Boolean(caps?.backtesting_ready),
   };
 }
 

@@ -34,13 +34,13 @@ pub fn get(model_id: &str) -> Result<ForecastModelConfig, String> {
     super::validation::validate_runnable_model_id(model_id)?;
     let runtime = registry::find_runtime(model_id).ok_or("Moteur indisponible")?;
     let saved = storage::read_model(model_id);
-    Ok(build_response(model_id, runtime.family_id, saved))
+    Ok(build_response(model_id, runtime, saved))
 }
 
 pub fn set(model_id: &str, values: Map<String, Value>) -> Result<ForecastModelConfig, String> {
     require_configurable(model_id)?;
     let runtime = registry::find_runtime(model_id).ok_or("Moteur indisponible")?;
-    let specs = schema::specs_for_family(runtime.family_id);
+    let specs = schema::specs_for_runtime(runtime);
     let clean = validate::sanitize(&specs, values)?;
     storage::write_model(model_id, clean)?;
     get(model_id)
@@ -50,7 +50,7 @@ pub fn effective_values(model_id: &str) -> Result<Map<String, Value>, String> {
     let runtime = registry::find_runtime(model_id).ok_or("Moteur indisponible")?;
     let saved = storage::read_model(model_id);
     let mut effective = Map::new();
-    for spec in schema::specs_for_family(runtime.family_id) {
+    for spec in schema::specs_for_runtime(runtime) {
         effective.insert(
             spec.id.to_string(),
             saved.get(spec.id).cloned().unwrap_or(spec.default_value),
@@ -77,10 +77,10 @@ fn require_configurable(model_id: &str) -> Result<(), String> {
 
 fn build_response(
     model_id: &str,
-    family_id: &str,
+    runtime: &registry::ForecastRuntimeSpec,
     saved: Map<String, Value>,
 ) -> ForecastModelConfig {
-    let params = schema::specs_for_family(family_id)
+    let params = schema::specs_for_runtime(runtime)
         .into_iter()
         .map(|spec| {
             let value = saved.get(spec.id).cloned();
@@ -105,7 +105,7 @@ fn build_response(
         .collect();
     ForecastModelConfig {
         model_id: model_id.to_string(),
-        family_id: family_id.to_string(),
+        family_id: runtime.family_id.to_string(),
         params,
         inherited: inherited_params(),
     }

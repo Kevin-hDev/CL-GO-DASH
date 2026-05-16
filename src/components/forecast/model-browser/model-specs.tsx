@@ -11,6 +11,7 @@ import { ModelInstallBtn } from "./model-install-btn";
 import type { ForecastModelDetails } from "./model-details-types";
 import {
   getForecastEngineKey,
+  getModelCapabilities,
   type ForecastModelEntry,
   type ForecastProviderEntry,
 } from "../forecast-model-meta";
@@ -117,11 +118,14 @@ function buildRows(
   provider: ForecastProviderEntry | null,
   details: ForecastModelDetails | null,
 ): SpecRow[] {
+  const modelCaps = getModelCapabilities(model);
   const capabilities = [
-    model.covariates ? t("forecast.models.capabilities.context") : null,
-    model.multivariate ? t("forecast.models.capabilities.multivariate") : null,
-    t("forecast.models.capabilities.probabilistic"),
-  ].filter(Boolean).join(", ");
+    modelCaps.context ? t("forecast.models.capabilities.context") : null,
+    modelCaps.futureContext ? t("forecast.models.capabilities.futureContext") : null,
+    modelCaps.multivariate ? t("forecast.models.capabilities.multivariate") : null,
+    modelCaps.probabilistic ? t("forecast.models.capabilities.probabilistic") : null,
+    modelCaps.backtesting ? t("forecast.models.capabilities.backtesting") : null,
+  ].filter(Boolean).join(", ") || "—";
 
   return [
     { label: t("forecast.models.capabilitiesTitle"), value: capabilities },

@@ -38,10 +38,10 @@ Forecast n'est **pas terminé**, mais il est **réellement utilisable**.
 | Documentation Forecast | Fenêtre externe Tauri, contenu pédagogique, définitions des variables | Validé fonctionnel |
 | Familles de modèles | 11 familles / 25 variantes cataloguées | Dispatch runtime complet côté app |
 | Réglages fins modèles | Page `Config` ajoutée | Schémas, édition, sauvegarde, validation et transmission runtime branchés |
-| Registry moteurs | Toutes familles déclarées | Adapters locaux branchés, statuts installés/runnable corrigés |
+| Registry moteurs | Toutes familles déclarées | Adapters locaux branchés, statuts installés/runnable corrigés, capacités fines centralisées |
 | Réglage matériel global | Hérité dans `Config` | Affiché en lecture seule, application runtime fine à finaliser |
 | Backtesting / baselines | Non terminé | À faire |
-| Exports | V1 centralisée backend | CSV, XLSX, JSON, PNG, SVG, PDF et clipboard branchés |
+| Exports | V1 centralisée backend | CSV, XLSX, JSON, PNG, SVG, PDF et clipboard branchés, sortie dans Téléchargements |
 | Qualité des données | Non traité | Utile mais non prioritaire |
 | Slash commands Forecast | Documenté comme besoin | À implémenter |
 
@@ -92,6 +92,9 @@ Présent dans le catalogue et visible dans les paramètres Forecast :
 - 25 variantes sont déclarées dans le catalogue backend ;
 - le catalogue et les fiches modèles existent ;
 - le registry runtime déclare maintenant les 11 familles et 25 variantes ;
+- le registry runtime expose les capacités fines par modèle : contexte, futur connu, covariables, multi-séries, quantiles et backtesting ;
+- la page modèles, la page `Config`, les tools agent et le backend utilisent cette source unique au lieu de recalculer les capacités depuis le catalogue ;
+- les paramètres de configuration sont filtrés par modèle selon les capacités et réglages réellement exposés par son adapter ;
 - le sidecar local démarre avec `model_id` + `family_id` ;
 - les dépendances Python sont installées à la demande par famille ;
 - `list_forecast_models` expose `installed`, `installable`, `runnable`, `provider_configured`, `runtime_ready` ;
@@ -395,27 +398,6 @@ Paramètres à ne pas exposer pour l'instant :
 - appliquer plus finement le réglage matériel global au sidecar Forecast ;
 - documenter les paramètres dans la documentation utilisateur Forecast.
 
-### Registry moteurs
-
-- centraliser les moteurs Forecast disponibles ;
-- déclarer leurs capacités :
-  - contexte ;
-  - futur connu ;
-  - multi-séries ;
-  - quantiles ;
-  - backtesting ;
-  - fine-tuning ;
-  - anomalies ;
-  - imputation ;
-- utiliser ce registry dans l'UI, les tools agent et le backend.
-
-État actuel :
-
-- catalogue et runtime sont branchés ;
-- le sélecteur Forecast force le modèle choisi ;
-- les statuts `installed`, `runnable` et `runtime_ready` ont été corrigés pour les modèles locaux testés ;
-- il reste à enrichir les capacités fines par modèle et à les utiliser partout.
-
 ### Réglage matériel Forecast
 
 - analyser le flux actuel Ollama ;
@@ -491,11 +473,14 @@ Comportement :
 - fichiers générés dans le dossier Téléchargements de l'OS ;
 - nommage automatique à partir du nom de l'analyse et de son identifiant ;
 - export clipboard sans fichier intermédiaire ;
-- PNG / SVG générés depuis les données sauvegardées de l'analyse.
+- PNG / SVG générés depuis les données sauvegardées de l'analyse ;
+- PNG rendu à partir du SVG complet via `resvg` pour conserver axes, labels, légende et plage de confiance ;
+- XLSX avec feuilles séparées, colonnes adaptées, header, filtre et gel de la première ligne ;
+- PDF structuré en rapport texte lisible.
 
 Améliorations possibles plus tard :
 
-- mise en page PDF plus avancée ;
+- mise en page PDF plus avancée avec moteur de rapport dédié si nécessaire ;
 - rendu image calé exactement sur le graphe ECharts affiché à l'écran ;
 - presets d'exports selon usage agent, rapport ou partage.
 
@@ -540,11 +525,9 @@ On a maintenant :
 
 La suite logique est maintenant :
 
-1. valider les exports Forecast en usage réel sur plusieurs analyses
-2. compléter la validation live des modèles non encore testés
-3. compléter le registry moteurs et les capacités réelles fines
-4. brancher plus finement Forecast sur le réglage matériel global
-5. ajouter les slash commands Forecast
-6. ajouter ensuite la qualité des données comme lecture informative
-7. refaire une passe finale documentation + UI + i18n
-8. lancer une validation end-to-end complète avec un agent LLM
+1. compléter la validation live des modèles non encore testés
+2. brancher plus finement Forecast sur le réglage matériel global
+3. ajouter les slash commands Forecast
+4. ajouter ensuite la qualité des données comme lecture informative
+5. faire une passe finale documentation + UI + i18n
+6. lancer une validation end-to-end complète avec un agent LLM

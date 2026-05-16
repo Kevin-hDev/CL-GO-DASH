@@ -1,5 +1,9 @@
 use serde::Serialize;
 
+#[path = "registry_caps.rs"]
+mod registry_caps;
+#[path = "registry_params.rs"]
+mod registry_params;
 #[path = "registry_specs.rs"]
 mod registry_specs;
 
@@ -36,6 +40,7 @@ pub struct ForecastRuntimeSpec {
     pub family_id: &'static str,
     pub engine_kind: ForecastEngineKind,
     pub capabilities: ForecastCapabilities,
+    pub config_params: &'static [&'static str],
 }
 
 pub fn find_runtime(model_id: &str) -> Option<&'static ForecastRuntimeSpec> {

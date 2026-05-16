@@ -51,8 +51,13 @@ fn enrich_model_object(
             "capabilities".into(),
             serde_json::to_value(runtime.capabilities).unwrap_or_default(),
         );
+        object.insert(
+            "config_params".into(),
+            serde_json::to_value(runtime.config_params).unwrap_or_default(),
+        );
     } else {
-        object.insert("capabilities".into(), fallback_capabilities(model));
+        object.insert("capabilities".into(), empty_capabilities());
+        object.insert("config_params".into(), Value::Array(Vec::new()));
     }
     object.insert(
         "family_id".into(),
@@ -87,12 +92,12 @@ fn enrich_model_object(
     );
 }
 
-fn fallback_capabilities(model: &catalog::ForecastModelSpec) -> Value {
+fn empty_capabilities() -> Value {
     serde_json::json!({
-        "past_covariates": model.covariates,
-        "future_covariates": model.covariates,
-        "multivariate": model.multivariate,
-        "probabilistic": true,
+        "past_covariates": false,
+        "future_covariates": false,
+        "multivariate": false,
+        "probabilistic": false,
         "backtesting_ready": false,
         "anomalies_ready": false,
         "fine_tuning_ready": false,

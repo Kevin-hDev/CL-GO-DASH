@@ -21,9 +21,9 @@ Les fondations critiques sont en place :
 
 Il reste encore des blocs fonctionnels importants à finir :
 - validation live de toutes les familles de modèles
-- registry de capacités plus fin
 - slash commands Forecast
 - qualité des données
+- validation end-to-end complète avec agent LLM
 
 ## Fait
 
@@ -55,6 +55,9 @@ Il reste encore des blocs fonctionnels importants à finir :
 - 11 familles / 25 variantes présentes dans le catalogue Forecast
 - Runtime par famille branché côté backend / sidecar
 - Dépendances Python installées à la demande par famille
+- Registry de capacités fines centralisé par modèle runtime
+- UI, Config et tools agent alignés sur les capacités réellement exposées par le runtime
+- Suppression du fallback catalogue qui pouvait afficher des capacités non supportées
 - Toto, MOIRAI et Kairos validés sur prédictions locales
 - TimesFM, FlowState, TabPFN-TS, TiRex et Sundial à valider en conditions réelles après installation
 
@@ -102,6 +105,7 @@ Il reste encore des blocs fonctionnels importants à finir :
 ### Config modèles
 - Sous-page `Config / Modèles` dans Paramètres > Forecast
 - Paramètres visibles uniquement pour les modèles utilisables
+- Paramètres filtrés par modèle selon le registry runtime
 - Édition verrouillée par défaut
 - Sauvegarde sparse : valeur vide = retour au défaut
 - Validation Rust des types, bornes et options
@@ -113,19 +117,19 @@ Il reste encore des blocs fonctionnels importants à finir :
 - CSV réel
 - JSON réel
 - XLSX réel multi-feuilles
-- PNG réel
-- SVG réel
-- PDF rapport
+- PNG réel depuis rendu SVG complet
+- SVG réel avec axes, légende, courbes et plage de confiance
+- PDF rapport structuré
 - Copier clipboard
 - Export de l'analyse complète : métadonnées, historique, prévisions, quantiles, scénarios, annotations, notes et données d'entrée sauvegardées
 - Fichiers générés dans le dossier Téléchargements de l'OS
+- Mise en forme XLSX améliorée : colonnes adaptées, header, filtres et gel de ligne
 
 ## En cours
 
 ### Modèles
 - Compléter la validation live sur toutes les familles installables
-- Vérifier les capacités réelles par famille : contexte, quantiles, covariables, multi-séries
-- Enrichir le registry de capacités fines
+- Vérifier en conditions réelles que chaque adapter respecte les capacités déclarées : contexte, quantiles, covariables, multi-séries
 
 ## À faire
 
@@ -142,15 +146,23 @@ Il reste encore des blocs fonctionnels importants à finir :
 - Signaler les lignes ignorées
 - Signaler les valeurs corrigées ou fragiles
 - Afficher clairement les limites du jeu de données
+- Ne pas bloquer l'utilisateur quand une prédiction reste techniquement possible
+
+### Validation end-to-end
+- Tester un workflow complet depuis le chat LLM
+- Tester plusieurs modèles locaux installés
+- Tester scénarios, comparaisons, notes, config et exports sur une même analyse
+- Vérifier dark/light, i18n et absence de flickering UI
 
 ## Points de vigilance
 
 - `TimeGPT` multi-séries est câblé mais doit encore être validé contre une vraie clé / API live
 - Toutes les familles sont branchées côté runtime, mais toutes ne sont pas encore validées visuellement dans l'app
 - `cargo check` passe
+- `npx tsc --noEmit` passe
 - Le lint global du repo n'est pas entièrement propre hors scope Forecast
 - `graphify-out/` ne doit pas être commit
 
 ## Prochain step recommandé
 
-Valider les exports Forecast en usage réel, puis passer aux slash commands Forecast ou à la qualité des données.
+Compléter la validation live des familles de modèles non encore testées, puis passer aux slash commands Forecast et à la qualité des données.

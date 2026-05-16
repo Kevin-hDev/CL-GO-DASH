@@ -2,6 +2,7 @@ use serde::Serialize;
 use serde_json::Value;
 
 use super::params::*;
+use crate::services::forecast::registry::ForecastRuntimeSpec;
 
 #[derive(Clone, Copy, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -64,9 +65,16 @@ pub fn specs_for_family(family_id: &str) -> Vec<ParamSpec> {
             quantiles(),
             bool_param("non_negative_output", false),
         ],
-        "moirai-2" => vec![horizon_override(), context(), batch_size(), quantiles()],
+        "moirai-2" => vec![
+            horizon_override(),
+            context(),
+            batch_size(),
+            quantiles(),
+            bool_param("non_negative_output", false),
+        ],
         "flowstate" => vec![
             horizon_override(),
+            context(),
             number_param("scale_factor", 1.0, 0.0001, 1000.0),
             bool_param("batch_first", true),
             quantiles(),
@@ -81,12 +89,14 @@ pub fn specs_for_family(family_id: &str) -> Vec<ParamSpec> {
         ],
         "tirex" => vec![
             horizon_override(),
+            context(),
             select("output_type", "quantiles", &["quantiles", "mean"]),
             quantiles(),
             bool_param("non_negative_output", false),
         ],
         "kairos" => vec![
             horizon_override(),
+            context(),
             bool_param("preserve_positivity", true),
             bool_param("average_with_flipped_input", true),
             bool_param("generation", true),
@@ -103,4 +113,11 @@ pub fn specs_for_family(family_id: &str) -> Vec<ParamSpec> {
         ],
         _ => Vec::new(),
     }
+}
+
+pub fn specs_for_runtime(runtime: &ForecastRuntimeSpec) -> Vec<ParamSpec> {
+    specs_for_family(runtime.family_id)
+        .into_iter()
+        .filter(|spec| runtime.config_params.contains(&spec.id))
+        .collect()
 }
