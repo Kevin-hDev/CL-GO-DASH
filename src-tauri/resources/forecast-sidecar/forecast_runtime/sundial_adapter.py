@@ -1,4 +1,5 @@
 from .adapter_utils import forecast_payload_result, values_tensor
+from .config_utils import config_int
 
 
 class SundialAdapter:
@@ -8,13 +9,18 @@ class SundialAdapter:
 
     def predict(self, payload, horizon, quantile_levels):
         return forecast_payload_result(
-            payload, horizon, quantile_levels, self._forecast_one
+            payload,
+            horizon,
+            quantile_levels,
+            lambda values, length, levels: self._forecast_one(
+                values, length, levels, payload
+            ),
         )
 
-    def _forecast_one(self, values, horizon, quantile_levels):
+    def _forecast_one(self, values, horizon, quantile_levels, payload):
         import torch
 
-        sample_count = 64
+        sample_count = config_int(payload, "num_samples", 64, 1, 512)
         context = values_tensor(values).view(1, -1)
         with torch.no_grad():
             samples = self._load_model().to("cpu").eval().generate(

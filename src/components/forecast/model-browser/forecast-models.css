@@ -11,7 +11,7 @@
 }
 
 .fmb-title {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: var(--text-sm);
   font-weight: 600;
   color: var(--ink);
@@ -39,7 +39,7 @@
 
 .fmb-group-label {
   font-size: var(--text-xs);
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   color: var(--ink-faint);
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -126,7 +126,7 @@
 
 .fmc-cloud { color: var(--signal-info); }
 .fmc-cloud-badge { color: var(--signal-info); font-size: var(--text-base); }
-.fmc-installed { font-size: var(--text-xs); font-family: var(--font-mono); color: var(--signal-ok); }
+.fmc-installed { font-size: var(--text-xs); font-family: var(--font-sans); color: var(--signal-ok); }
 .fmc-actions { flex-shrink: 0; }
 
 .fmi-btn {

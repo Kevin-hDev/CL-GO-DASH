@@ -24,6 +24,7 @@ interface SettingsSelectProps {
   placeholder?: string;
   searchable?: boolean;
   searchPlaceholder?: string;
+  disabled?: boolean;
 }
 
 export function SettingsSelect({
@@ -34,6 +35,7 @@ export function SettingsSelect({
   placeholder,
   searchable,
   searchPlaceholder,
+  disabled,
 }: SettingsSelectProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -67,6 +69,7 @@ export function SettingsSelect({
   const isOverflowing = displayLabel.length > 20;
 
   const handleSelect = (val: string) => {
+    if (disabled) return;
     onChange(val);
     close();
   };
@@ -130,15 +133,15 @@ export function SettingsSelect({
     [...opts].sort((a, b) => (a.dimmed ? 1 : 0) - (b.dimmed ? 1 : 0));
 
   return (
-    <div className={`ss-wrap ${open ? "open" : ""}`} ref={ref}>
-      <div className="ss-trigger" role="button" tabIndex={0} onClick={() => setOpen(!open)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setOpen(!open); }} title={isOverflowing ? displayLabel : undefined}>
-        <span className="ss-trigger-label">
+    <div className={`ss-wrap ${open ? "open" : ""} ${disabled ? "disabled" : ""}`} ref={ref}>
+      <div className="ss-trigger" role="button" tabIndex={disabled ? -1 : 0} onClick={() => !disabled && setOpen(!open)} onKeyDown={(e) => { if (!disabled && (e.key === 'Enter' || e.key === ' ')) setOpen(!open); }} title={isOverflowing ? displayLabel : undefined}>
+        <span className={`ss-trigger-label ${isOverflowing ? "is-overflowing" : ""}`}>
           {displayLabel}
         </span>
         <CaretDown size={14} weight="bold" className="ss-trigger-icon" />
       </div>
 
-      {open && (
+      {open && !disabled && (
         <div className={`ss-panel ${groups ? "ss-panel-fixed" : ""}`}>
           {searchable && (
             <div className="ss-search">

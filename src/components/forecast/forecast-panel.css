@@ -23,7 +23,7 @@
 }
 
 .fc-title {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: var(--text-sm);
   font-weight: 600;
   color: var(--ink);
@@ -56,7 +56,7 @@
   height: 100%;
   color: var(--ink-faint);
   font-size: var(--text-sm);
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
 }
 
 .fc-loading {

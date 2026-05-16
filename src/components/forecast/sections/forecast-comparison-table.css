@@ -19,7 +19,7 @@
   border-bottom: 1px solid var(--edge);
   background: var(--void);
   color: var(--ink-faint);
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -32,7 +32,7 @@
 .fccmp-table-row {
   padding: 8px 14px;
   color: var(--ink);
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: var(--text-sm);
   transition: background 80ms ease;
 }
@@ -52,6 +52,7 @@
   text-align: right;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-family: var(--font-mono);
 }
 
 .fccmp-table-sep {

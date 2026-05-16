@@ -15,7 +15,7 @@
 
 .fcs-series-label {
   font-size: var(--text-xs);
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   color: var(--ink-faint);
   text-transform: uppercase;
   letter-spacing: 0.04em;

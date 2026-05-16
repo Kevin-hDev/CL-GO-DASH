@@ -1,8 +1,8 @@
 use crate::services::forecast::types::ModelDownloadProgress;
 use crate::services::forecast::{
-    catalog, model_listing, model_manager, selected_model, validation,
+    catalog, model_config, model_listing, model_manager, selected_model, validation,
 };
-use serde_json::Value;
+use serde_json::{Map, Value};
 use tauri::ipc::Channel;
 use tauri::{AppHandle, Emitter};
 
@@ -49,4 +49,22 @@ pub fn list_forecast_providers_catalog() -> Vec<Value> {
         .iter()
         .map(|p| serde_json::to_value(p).unwrap_or_default())
         .collect()
+}
+
+#[tauri::command]
+pub fn get_forecast_model_config(
+    model_id: String,
+) -> Result<model_config::ForecastModelConfig, String> {
+    model_config::get(&model_id)
+}
+
+#[tauri::command]
+pub fn set_forecast_model_config(
+    app: AppHandle,
+    model_id: String,
+    values: Map<String, Value>,
+) -> Result<model_config::ForecastModelConfig, String> {
+    let config = model_config::set(&model_id, values)?;
+    let _ = app.emit("forecast-model-config-changed", &model_id);
+    Ok(config)
 }

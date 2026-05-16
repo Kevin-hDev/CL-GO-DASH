@@ -48,13 +48,17 @@ fn build_payload(input: &ParsedInput, request: &ForecastRequest) -> Result<Value
         return Err("Moteur indisponible".into());
     }
 
+    let model_config = crate::services::forecast::model_config::effective_values(model)?;
+    let quantiles = config_quantiles(&model_config);
+
     Ok(match runtime.engine_kind {
         ForecastEngineKind::LocalChronosBolt => serde_json::json!({
             "values": input.values.to_vec(),
             "horizon": request.horizon,
             "frequency": request.frequency,
             "model": model,
-            "quantiles": [0.1, 0.5, 0.9],
+            "quantiles": quantiles,
+            "model_config": model_config,
         }),
         ForecastEngineKind::LocalChronos2 => serde_json::json!({
             "history_rows": input.history_rows,
@@ -66,7 +70,8 @@ fn build_payload(input: &ParsedInput, request: &ForecastRequest) -> Result<Value
             "horizon": request.horizon,
             "frequency": request.frequency,
             "model": model,
-            "quantiles": [0.1, 0.5, 0.9],
+            "quantiles": quantiles,
+            "model_config": model_config,
         }),
         ForecastEngineKind::LocalTimesFm
         | ForecastEngineKind::LocalToto
@@ -87,10 +92,20 @@ fn build_payload(input: &ParsedInput, request: &ForecastRequest) -> Result<Value
             "frequency": request.frequency,
             "model": model,
             "family": runtime.family_id,
-            "quantiles": [0.1, 0.5, 0.9],
+            "quantiles": quantiles,
+            "model_config": model_config,
         }),
         ForecastEngineKind::CloudApi => {
             return Err("Moteur local invalide".into());
         }
     })
+}
+
+fn config_quantiles(config: &serde_json::Map<String, Value>) -> Vec<f64> {
+    config
+        .get("quantiles")
+        .and_then(Value::as_array)
+        .map(|items| items.iter().filter_map(Value::as_f64).collect())
+        .filter(|items: &Vec<f64>| !items.is_empty())
+        .unwrap_or_else(|| vec![0.1, 0.5, 0.9])
 }

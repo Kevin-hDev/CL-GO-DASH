@@ -4,6 +4,7 @@ from .adapter_utils import (
     simple_result,
     values_tensor,
 )
+from .config_utils import config_bool, config_int
 from .toto_covariates import build_covariate_jobs, format_covariate_predictions
 from .validation import validate_column_names
 
@@ -20,7 +21,12 @@ class TotoAdapter:
                 payload, horizon, quantile_levels, covariates
             )
         return forecast_payload_result(
-            payload, horizon, quantile_levels, self._forecast_one
+            payload,
+            horizon,
+            quantile_levels,
+            lambda values, length, levels: self._forecast_one(
+                values, length, levels, payload
+            ),
         )
 
     def _predict_with_covariates(self, payload, horizon, quantile_levels, covariates):
@@ -31,6 +37,7 @@ class TotoAdapter:
                 jobs[0]["covariates"],
                 horizon,
                 quantile_levels,
+                payload,
             )
             return simple_result(median, quantile_levels, quantiles, horizon)
 
@@ -41,11 +48,12 @@ class TotoAdapter:
                 job["covariates"],
                 horizon,
                 quantile_levels,
+                payload,
             )
             forecasts.append((job, median, quantiles))
         return format_covariate_predictions(forecasts, quantile_levels, horizon)
 
-    def _forecast_one(self, values, horizon, quantile_levels):
+    def _forecast_one(self, values, horizon, quantile_levels, payload):
         import torch
 
         model = self._load_model().to("cpu").eval()
@@ -58,12 +66,14 @@ class TotoAdapter:
         if pad_count:
             mask[..., :pad_count] = False
         series_ids = torch.zeros(1, 1, dtype=torch.long)
+        decode_block_size = config_int(payload, "decode_block_size", 768, 1, 4096)
+        has_missing_values = config_bool(payload, "has_missing_values", bool(pad_count))
         with torch.no_grad():
             quantiles = model.forecast(
                 {"target": target, "target_mask": mask, "series_ids": series_ids},
                 horizon=horizon,
-                decode_block_size=768,
-                has_missing_values=bool(pad_count),
+                decode_block_size=decode_block_size,
+                has_missing_values=has_missing_values or bool(pad_count),
             )
         q50 = quantiles[forecast_quantile_index(0.5), 0, 0, :horizon]
         selected = [
@@ -72,7 +82,9 @@ class TotoAdapter:
         ]
         return q50, selected
 
-    def _forecast_with_covariates(self, values, covariates, horizon, quantile_levels):
+    def _forecast_with_covariates(
+        self, values, covariates, horizon, quantile_levels, payload
+    ):
         import torch
 
         model = self._load_model().to("cpu").eval()
@@ -106,6 +118,8 @@ class TotoAdapter:
         )
         known_dynamic_ids = torch.zeros(1, len(dynamic_values), dtype=torch.long)
 
+        decode_block_size = config_int(payload, "decode_block_size", 768, 1, 4096)
+        has_missing_values = config_bool(payload, "has_missing_values", False)
         with torch.no_grad():
             quantiles = model.forecast(
                 {
@@ -117,8 +131,9 @@ class TotoAdapter:
                     "known_dynamic_series_ids": known_dynamic_ids,
                 },
                 horizon=horizon,
-                decode_block_size=768,
-                has_missing_values=bool(pad_count)
+                decode_block_size=decode_block_size,
+                has_missing_values=has_missing_values
+                or bool(pad_count)
                 or not bool(known_dynamic_mask.all()),
             )
         q50 = quantiles[forecast_quantile_index(0.5), 0, 0, :horizon]

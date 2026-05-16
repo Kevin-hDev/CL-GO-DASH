@@ -295,6 +295,8 @@ pub fn run() {
             commands::list_forecast_models,
             commands::get_selected_forecast_model,
             commands::set_selected_forecast_model,
+            commands::get_forecast_model_config,
+            commands::set_forecast_model_config,
             commands::get_forecast_model_details,
             commands::install_forecast_model,
             commands::uninstall_forecast_model,

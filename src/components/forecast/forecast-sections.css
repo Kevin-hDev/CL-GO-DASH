@@ -14,7 +14,7 @@
 }
 
 .fcs-section-title {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: var(--text-xs);
   font-weight: 600;
   color: var(--ink);

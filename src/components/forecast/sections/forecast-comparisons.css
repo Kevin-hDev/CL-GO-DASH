@@ -31,7 +31,7 @@
   flex-direction: column;
   gap: 6px;
   color: var(--ink-faint);
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -107,7 +107,7 @@
 
 .fccmp-card-label {
   color: var(--ink-faint);
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.05em;

@@ -8,6 +8,7 @@ pub mod input_data;
 pub mod input_dates;
 pub mod input_parse_utils;
 pub mod input_series;
+pub mod model_config;
 pub mod model_details;
 pub mod model_details_github;
 pub mod model_listing;

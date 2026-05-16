@@ -80,7 +80,8 @@ pub fn validate_request(request: &ForecastRequest) -> Result<(), String> {
             return Err("Covariables invalides".into());
         }
     }
-    if request.horizon == 0 || request.horizon > spec.horizon_max {
+    let horizon_max = configured_horizon_max(model_id, spec.horizon_max)?;
+    if request.horizon == 0 || request.horizon > horizon_max {
         return Err("Horizon invalide".into());
     }
     if !(0.5..=0.99).contains(&request.confidence_level) {
@@ -93,6 +94,27 @@ pub fn validate_request(request: &ForecastRequest) -> Result<(), String> {
         (None, None) => Err("Données manquantes".into()),
         (Some(data), _) if data.len() > MAX_DATA_BYTES => Err("Données trop volumineuses".into()),
         _ => Ok(()),
+    }
+}
+
+fn configured_horizon_max(model_id: &str, catalog_max: u32) -> Result<u32, String> {
+    let override_max = super::model_config::effective_values(model_id)?
+        .get("horizon_max_override")
+        .and_then(ValueExt::as_u32)
+        .unwrap_or(0);
+    if override_max == 0 {
+        return Ok(catalog_max);
+    }
+    Ok(override_max.min(catalog_max))
+}
+
+trait ValueExt {
+    fn as_u32(&self) -> Option<u32>;
+}
+
+impl ValueExt for serde_json::Value {
+    fn as_u32(&self) -> Option<u32> {
+        self.as_u64().and_then(|value| u32::try_from(value).ok())
     }
 }
 

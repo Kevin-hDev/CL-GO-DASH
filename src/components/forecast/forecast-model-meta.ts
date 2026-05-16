@@ -25,7 +25,7 @@ export interface ForecastModelEntry {
   runnable?: boolean;
   size_on_disk?: number;
   provider_configured?: boolean;
-  engine_kind?: "local_chronos_bolt" | "local_chronos2" | "cloud_api";
+  engine_kind?: string;
   capabilities?: {
     past_covariates: boolean;
     future_covariates: boolean;

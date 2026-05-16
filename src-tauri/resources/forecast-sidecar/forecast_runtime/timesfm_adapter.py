@@ -1,4 +1,5 @@
 from .adapter_utils import forecast_payload_result, values_tensor
+from .config_utils import config_int
 from .quantile_utils import select_standard_quantiles
 
 
@@ -9,14 +10,21 @@ class TimesFmAdapter:
 
     def predict(self, payload, horizon, quantile_levels):
         return forecast_payload_result(
-            payload, horizon, quantile_levels, self._forecast_one
+            payload,
+            horizon,
+            quantile_levels,
+            lambda values, length, levels: self._forecast_one(
+                values, length, levels, payload
+            ),
         )
 
-    def _forecast_one(self, values, horizon, quantile_levels):
+    def _forecast_one(self, values, horizon, quantile_levels, payload):
         try:
             return self._predict_transformers(values, horizon, quantile_levels)
         except Exception:
-            return self._predict_timesfm_package(values, horizon, quantile_levels)
+            return self._predict_timesfm_package(
+                values, horizon, quantile_levels, payload
+            )
 
     def _predict_transformers(self, values, horizon, quantile_levels):
         import torch
@@ -41,15 +49,16 @@ class TimesFmAdapter:
             ).eval()
         return self.model
 
-    def _predict_timesfm_package(self, values, horizon, quantile_levels):
+    def _predict_timesfm_package(self, values, horizon, quantile_levels, payload):
         import timesfm
 
         checkpoint = self._timesfm_checkpoint(timesfm)
+        context_len = config_int(payload, "context_length", 0, 0, 100000)
         hparams = timesfm.TimesFmHparams(
             backend="torch",
             per_core_batch_size=1,
             horizon_len=horizon,
-            context_len=min(len(values), 2048),
+            context_len=context_len or min(len(values), 2048),
         )
         model = timesfm.TimesFm(hparams=hparams, checkpoint=checkpoint)
         forecast, quantile_forecast = model.forecast([values], freq=[0])

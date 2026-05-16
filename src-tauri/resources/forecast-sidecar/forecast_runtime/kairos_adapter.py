@@ -3,6 +3,7 @@ from .adapter_utils import (
     forecast_quantile_index,
     values_tensor,
 )
+from .config_utils import config_bool
 
 
 class KairosAdapter:
@@ -12,20 +13,28 @@ class KairosAdapter:
 
     def predict(self, payload, horizon, quantile_levels):
         return forecast_payload_result(
-            payload, horizon, quantile_levels, self._forecast_one
+            payload,
+            horizon,
+            quantile_levels,
+            lambda values, length, levels: self._forecast_one(
+                values, length, levels, payload
+            ),
         )
 
-    def _forecast_one(self, values, horizon, quantile_levels):
+    def _forecast_one(self, values, horizon, quantile_levels, payload):
         import torch
 
         context = values_tensor(values).view(1, -1)
+        preserve_positivity = config_bool(payload, "preserve_positivity", True)
+        flipped = config_bool(payload, "average_with_flipped_input", True)
+        generation = config_bool(payload, "generation", True)
         with torch.no_grad():
             output = self._load_model().to("cpu").eval()(
                 past_target=context,
                 prediction_length=horizon,
-                generation=True,
-                preserve_positivity=True,
-                average_with_flipped_input=True,
+                generation=generation,
+                preserve_positivity=preserve_positivity,
+                average_with_flipped_input=flipped,
         )
         quantile_forecast = output["prediction_outputs"][0]
         median = quantile_forecast[forecast_quantile_index(0.5), :horizon]

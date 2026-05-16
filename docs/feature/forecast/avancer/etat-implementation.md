@@ -37,9 +37,9 @@ Forecast n'est **pas terminé**, mais il est **réellement utilisable**.
 | Notes | Notes Markdown locales, timeline, preview, édition, suppression, ouverture éditeur OS | Validé V1 |
 | Documentation Forecast | Fenêtre externe Tauri, contenu pédagogique, définitions des variables | Validé fonctionnel |
 | Familles de modèles | 11 familles / 25 variantes cataloguées | Dispatch runtime complet côté app |
-| Réglages fins modèles | Non terminé | Prioritaire |
+| Réglages fins modèles | Page `Config` ajoutée | Schémas, édition, sauvegarde et transmission runtime branchés |
 | Registry moteurs | Toutes familles déclarées | Adapters locaux branchés, validation live par famille restante |
-| Réglage matériel global | Non branché Forecast | À faire |
+| Réglage matériel global | Hérité dans `Config` | Affiché en lecture seule, application runtime à finaliser |
 | Backtesting / baselines | Non terminé | À faire |
 | Exports | UI présente | Implémentation complète à faire |
 | Qualité des données | Non traité | Utile mais non prioritaire |
@@ -211,6 +211,32 @@ Présent dans le catalogue et visible dans les paramètres Forecast :
 - Descriptions et images tirées des sources Hugging Face / GitHub quand disponibles
 - Design aligné sur le pattern Ollama pour les fiches modèles
 
+### Config modèles
+
+- Sous-page `Config / Modèles` dans Paramètres > Forecast
+- Pattern UI repris d'Ollama :
+  - sous-liste latérale ;
+  - icône Modelfile pour `Config` ;
+  - icône Modèles pour le catalogue ;
+  - fiche verrouillée par défaut ;
+  - bouton `Éditer`, puis `Annuler / Sauvegarder`
+- Liste `Config` limitée aux modèles réellement utilisables :
+  - modèles locaux installés ;
+  - modèles cloud dont le provider est configuré
+- Sauvegarde sparse des paramètres :
+  - seule une valeur différente du défaut est persistée ;
+  - valeur vide = retour au défaut
+- Validation Rust des types, bornes et options
+- Transmission des paramètres effectifs au runtime local via `model_config`
+- Transmission des paramètres TimeGPT applicables au payload Nixtla
+- `horizon_max_override` appliqué côté validation backend
+- `quantiles` appliqué aux adapters locaux compatibles
+- Réglages matériels globaux affichés en héritage :
+  - `device`
+  - timeout de déchargement modèle
+- Sidecar Python adapté pour lire uniquement les paramètres connus par chaque adapter
+- Clés i18n ajoutées dans les 7 langues
+
 ### i18n / thèmes
 
 - Texte branché sur les 7 langues
@@ -265,9 +291,12 @@ Présent dans le catalogue et visible dans les paramètres Forecast :
 
 ### Réglages fins des modèles
 
-- les fiches modèles existent ;
-- mais les paramètres avancés ne sont pas encore au niveau prévu ;
-- ils doivent suivre le pattern Ollama : édition, sauvegarde, validation, usage réel au moment de la prédiction.
+- la page `Config` existe maintenant ;
+- les paramètres pertinents par famille sont visibles sans ajout/suppression de lignes ;
+- les valeurs sont éditables uniquement en mode édition ;
+- les valeurs sauvegardées sont relues au lancement d'une prédiction ;
+- les paramètres non applicables à une famille ne sont pas affichés ;
+- certains réglages restent en lecture héritée tant que leur application runtime globale n'est pas terminée.
 
 Paramètres à couvrir :
 
@@ -349,18 +378,11 @@ Paramètres à ne pas exposer pour l'instant :
 
 ### Réglages fins modèles
 
-- ajouter un vrai mode édition des paramètres par modèle ;
-- sauvegarder les réglages ;
-- relire les réglages au lancement d'une prédiction ;
-- valider les valeurs sans bloquer inutilement l'utilisateur ;
-- expliquer les paramètres simplement dans l'UI et la documentation.
-- suivre le pattern Ollama :
-  - UI dans les paramètres Forecast ;
-  - stockage dans `config.json` ;
-  - valeurs par défaut sûres ;
-  - validation backend ;
-  - application réelle au moment du lancement du sidecar ou de l'appel API ;
-  - redémarrage propre du sidecar si nécessaire.
+- valider visuellement la page `Config` en dark/light ;
+- tester la persistance après relance app ;
+- tester les valeurs effectives avec Chronos, Toto, MOIRAI/Kairos, puis les autres familles ;
+- appliquer réellement le réglage matériel global au sidecar Forecast ;
+- documenter les paramètres dans la documentation utilisateur Forecast.
 
 ### Registry moteurs
 
@@ -469,12 +491,11 @@ On a maintenant :
 
 La suite logique est maintenant :
 
-1. terminer le branchement runtime des familles non encore exécutables
-2. ajouter les réglages fins des modèles Forecast
-3. compléter le registry moteurs et les capacités réelles
-4. brancher Forecast sur le réglage matériel global
-5. finaliser `Exports`
-6. ajouter les slash commands Forecast
-7. ajouter ensuite la qualité des données comme lecture informative
-8. refaire une passe finale documentation + UI + i18n
-9. lancer une validation end-to-end complète avec un agent LLM
+1. valider `Config` en UI et en prédiction réelle sur plusieurs familles
+2. compléter le registry moteurs et les capacités réelles
+3. brancher réellement Forecast sur le réglage matériel global
+4. finaliser `Exports`
+5. ajouter les slash commands Forecast
+6. ajouter ensuite la qualité des données comme lecture informative
+7. refaire une passe finale documentation + UI + i18n
+8. lancer une validation end-to-end complète avec un agent LLM

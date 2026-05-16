@@ -3,6 +3,11 @@
   display: inline-block;
 }
 
+.ss-wrap.disabled {
+  opacity: 0.65;
+  pointer-events: none;
+}
+
 .ss-trigger {
   display: flex;
   align-items: center;
@@ -32,6 +37,11 @@
   text-align: left;
   white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ss-trigger-label.is-overflowing {
+  text-overflow: clip;
   mask-image: linear-gradient(to right, black 75%, transparent 100%);
   -webkit-mask-image: linear-gradient(to right, black 75%, transparent 100%);
 }
