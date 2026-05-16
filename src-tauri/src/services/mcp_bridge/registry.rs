@@ -10,6 +10,9 @@ use super::transport::{McpToolDef, McpTransport};
 
 const MAX_CACHE: usize = 32;
 const CACHE_TTL_SECS: u64 = 300;
+const IMESSAGE_CONNECTOR_ID: &str = "imessage";
+const IMESSAGE_INSTALL_COMMAND: &str =
+    "deno run --allow-read --allow-env --allow-sys --allow-ffi jsr:@wyattjoh/imessage-mcp";
 
 struct CachedTools {
     tools: Vec<McpToolDef>,
@@ -97,6 +100,9 @@ fn build_connector(c: StoredConnector) -> Option<EnabledConnector> {
     if !is_valid_connector_id(&c.id) {
         return None;
     }
+    if c.id == IMESSAGE_CONNECTOR_ID && !cfg!(target_os = "macos") {
+        return None;
+    }
     if let Some(ref endpoint) = c.endpoint {
         if endpoint.starts_with("https://") && is_trusted_endpoint(endpoint) {
             let transport = HttpTransport::new(c.id.clone(), endpoint.clone());
@@ -108,8 +114,13 @@ fn build_connector(c: StoredConnector) -> Option<EnabledConnector> {
     }
 
     if let Some(ref cmd) = c.install_command {
+        let cmd = if c.id == IMESSAGE_CONNECTOR_ID {
+            IMESSAGE_INSTALL_COMMAND
+        } else {
+            cmd
+        };
         let env_key_names = validated_env_keys(c.env_keys.as_deref());
-        let transport = StdioTransport::new(c.id.clone(), cmd.clone(), env_key_names);
+        let transport = StdioTransport::new(c.id.clone(), cmd.to_string(), env_key_names);
         return Some(EnabledConnector {
             id: c.id,
             transport: Arc::new(transport),

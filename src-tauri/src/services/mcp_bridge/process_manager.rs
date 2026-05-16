@@ -71,7 +71,7 @@ pub fn spawn(
     install_command: &str,
     env_tokens: &[(String, String)],
 ) -> Result<ProcessHandle, String> {
-    let parsed = stdio_cmd::parse_install_command(install_command)?;
+    let parsed = stdio_cmd::parse_install_command(connector_id, install_command)?;
 
     let program_path = which::which(&parsed.program)
         .map_err(|_| "runtime requis non trouvé dans le PATH".to_string())?;

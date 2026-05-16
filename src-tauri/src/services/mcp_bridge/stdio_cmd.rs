@@ -1,5 +1,15 @@
 const ALLOWED_PROGRAMS: &[&str] = &["npx", "uvx", "deno"];
 const BLOCKED_DENO_FLAGS: &[&str] = &["--allow-ffi", "--allow-run", "--allow-all", "-A"];
+const IMESSAGE_CONNECTOR_ID: &str = "imessage";
+const IMESSAGE_PACKAGE: &str = "jsr:@wyattjoh/imessage-mcp";
+const IMESSAGE_ARGS: &[&str] = &[
+    "run",
+    "--allow-read",
+    "--allow-env",
+    "--allow-sys",
+    "--allow-ffi",
+    IMESSAGE_PACKAGE,
+];
 
 static ARG_REGEX: std::sync::LazyLock<regex::Regex> =
     std::sync::LazyLock::new(|| regex::Regex::new(r"^[a-zA-Z0-9@/_.:=\-]+$").unwrap());
@@ -9,7 +19,7 @@ pub struct ParsedCommand {
     pub args: Vec<String>,
 }
 
-pub fn parse_install_command(raw: &str) -> Result<ParsedCommand, String> {
+pub fn parse_install_command(connector_id: &str, raw: &str) -> Result<ParsedCommand, String> {
     let parts: Vec<&str> = raw.split_whitespace().collect();
     if parts.is_empty() {
         return Err("commande vide".to_string());
@@ -27,10 +37,19 @@ pub fn parse_install_command(raw: &str) -> Result<ParsedCommand, String> {
         if !regex.is_match(part) {
             return Err("argument invalide".to_string());
         }
-        if program == "deno" && BLOCKED_DENO_FLAGS.contains(part) {
+        if program == "deno"
+            && BLOCKED_DENO_FLAGS.contains(part)
+            && !(connector_id == IMESSAGE_CONNECTOR_ID && *part == "--allow-ffi")
+        {
             return Err("flag deno non autorisé".to_string());
         }
         args.push(part.to_string());
+    }
+
+    if connector_id == IMESSAGE_CONNECTOR_ID {
+        if program != "deno" || args != IMESSAGE_ARGS {
+            return Err("commande iMessage non autorisée".to_string());
+        }
     }
 
     if args.is_empty() {
@@ -49,22 +68,23 @@ mod tests {
 
     #[test]
     fn test_parse_npx_valid() {
-        let cmd = parse_install_command("npx @upstash/context7-mcp@2.2.3").unwrap();
+        let cmd = parse_install_command("context7", "npx @upstash/context7-mcp@2.2.3").unwrap();
         assert_eq!(cmd.program, "npx");
         assert_eq!(cmd.args, vec!["@upstash/context7-mcp@2.2.3"]);
     }
 
     #[test]
     fn test_parse_uvx_valid() {
-        let cmd = parse_install_command("uvx product-hunt-mcp").unwrap();
+        let cmd = parse_install_command("producthunt", "uvx product-hunt-mcp").unwrap();
         assert_eq!(cmd.program, "uvx");
         assert_eq!(cmd.args, vec!["product-hunt-mcp"]);
     }
 
     #[test]
-    fn test_parse_deno_valid() {
+    fn test_parse_imessage_deno_valid() {
         let cmd = parse_install_command(
-            "deno run --allow-read --allow-env --allow-sys --allow-net jsr:@wyattjoh/imessage-mcp",
+            "imessage",
+            "deno run --allow-read --allow-env --allow-sys --allow-ffi jsr:@wyattjoh/imessage-mcp",
         )
         .unwrap();
         assert_eq!(cmd.program, "deno");
@@ -75,7 +95,7 @@ mod tests {
                 "--allow-read",
                 "--allow-env",
                 "--allow-sys",
-                "--allow-net",
+                "--allow-ffi",
                 "jsr:@wyattjoh/imessage-mcp"
             ]
         );
@@ -83,46 +103,55 @@ mod tests {
 
     #[test]
     fn test_reject_deno_ffi() {
-        assert!(parse_install_command("deno run --allow-ffi jsr:@pkg/mcp").is_err());
+        assert!(parse_install_command("other", "deno run --allow-ffi jsr:@pkg/mcp").is_err());
+    }
+
+    #[test]
+    fn test_reject_imessage_extra_write() {
+        assert!(parse_install_command(
+            "imessage",
+            "deno run --allow-read --allow-write --allow-env --allow-sys --allow-ffi jsr:@wyattjoh/imessage-mcp"
+        )
+        .is_err());
     }
 
     #[test]
     fn test_reject_deno_allow_all() {
-        assert!(parse_install_command("deno run -A jsr:@pkg/mcp").is_err());
+        assert!(parse_install_command("other", "deno run -A jsr:@pkg/mcp").is_err());
     }
 
     #[test]
     fn test_reject_shell() {
-        assert!(parse_install_command("bash -c 'rm -rf /'").is_err());
+        assert!(parse_install_command("other", "bash -c 'rm -rf /'").is_err());
     }
 
     #[test]
     fn test_reject_pipe() {
-        assert!(parse_install_command("npx foo | cat /etc/passwd").is_err());
+        assert!(parse_install_command("other", "npx foo | cat /etc/passwd").is_err());
     }
 
     #[test]
     fn test_reject_semicolon() {
-        assert!(parse_install_command("npx foo; rm -rf /").is_err());
+        assert!(parse_install_command("other", "npx foo; rm -rf /").is_err());
     }
 
     #[test]
     fn test_reject_empty() {
-        assert!(parse_install_command("").is_err());
+        assert!(parse_install_command("other", "").is_err());
     }
 
     #[test]
     fn test_reject_no_args() {
-        assert!(parse_install_command("npx").is_err());
+        assert!(parse_install_command("other", "npx").is_err());
     }
 
     #[test]
     fn test_reject_backtick() {
-        assert!(parse_install_command("npx `whoami`").is_err());
+        assert!(parse_install_command("other", "npx `whoami`").is_err());
     }
 
     #[test]
     fn test_reject_dollar() {
-        assert!(parse_install_command("npx $(cat /etc/passwd)").is_err());
+        assert!(parse_install_command("other", "npx $(cat /etc/passwd)").is_err());
     }
 }
