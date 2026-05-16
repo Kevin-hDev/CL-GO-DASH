@@ -13,17 +13,16 @@ use super::{
     capabilities::ChannelCapabilities, ChannelAdapter, ChannelContext, DeliveryReceipt,
     GatewayError, GatewayResult, InboundMessage, OutboundMessage,
 };
-use crate::services::api_keys;
-use crate::services::gateway::types::ChannelKey;
+use crate::services::gateway::tokens;
 
 pub struct SlackAdapter {
-    client: Client,
-    state: Arc<RwLock<SlackState>>,
+    pub(super) client: Client,
+    pub(super) state: Arc<RwLock<SlackState>>,
 }
 
-struct SlackState {
-    app_token: Option<Zeroizing<String>>,
-    bot_token: Option<Zeroizing<String>>,
+pub(super) struct SlackState {
+    pub(super) app_token: Option<Zeroizing<String>>,
+    pub(super) bot_token: Option<Zeroizing<String>>,
 }
 
 impl SlackAdapter {
@@ -40,45 +39,6 @@ impl SlackAdapter {
         }
     }
 
-    async fn load_tokens(&self, vault_prefix: &str) -> GatewayResult<()> {
-        let bot = api_keys::get_raw(&format!("{vault_prefix}.bot"))
-            .map_err(|_| GatewayError::auth("token bot Slack manquant"))?;
-        let app = api_keys::get_raw(&format!("{vault_prefix}.app"))
-            .map_err(|_| GatewayError::auth("token app Slack manquant"))?;
-        let mut s = self.state.write().await;
-        s.bot_token = Some(bot);
-        s.app_token = Some(app);
-        Ok(())
-    }
-
-    async fn get_ws_url(client: &Client, app_token: &str) -> GatewayResult<String> {
-        let resp: SlackSocketUrl = client
-            .post("https://slack.com/api/apps.connections.open")
-            .bearer_auth(app_token)
-            .send()
-            .await
-            .map_err(|e| GatewayError::network(format!("ws url: {e}")))?
-            .json()
-            .await
-            .map_err(|e| GatewayError::network(format!("parse: {e}")))?;
-        resp.url
-            .ok_or_else(|| GatewayError::auth(resp.error.unwrap_or_default()))
-    }
-
-    fn to_inbound(evt: &SlackEvent, key: &ChannelKey) -> Option<InboundMessage> {
-        if !evt.is_user_message() {
-            return None;
-        }
-        Some(InboundMessage {
-            channel_key: key.clone(),
-            user_id: evt.user.clone()?,
-            content: evt.text.clone()?,
-            message_id: evt.ts.clone()?,
-            chat_id: evt.channel.clone()?,
-            is_group: true,
-            mentions_bot: false,
-        })
-    }
 }
 
 #[async_trait]
@@ -95,11 +55,10 @@ impl ChannelAdapter for SlackAdapter {
         &self,
         cfg: &crate::models::ChannelAccountConfig,
     ) -> GatewayResult<()> {
-        let prefix = format!("gateway.slack.{}", cfg.account_id);
-        if !api_keys::has_key(&format!("raw:{prefix}.bot")) {
+        if !tokens::has("slack", &cfg.account_id, "bot").unwrap_or(false) {
             return Err(GatewayError::auth("token bot Slack non configuré"));
         }
-        if !api_keys::has_key(&format!("raw:{prefix}.app")) {
+        if !tokens::has("slack", &cfg.account_id, "app").unwrap_or(false) {
             return Err(GatewayError::auth("token app Slack non configuré"));
         }
         Ok(())

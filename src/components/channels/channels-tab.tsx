@@ -44,9 +44,10 @@ export function ChannelsTab(): { list: React.ReactNode; detail: React.ReactNode 
     if (!config) return;
     const list = [...(config.channels[channelId] ?? [])];
     if (!list.some((a) => a.account_id === accountId)) {
+      const hasDefaultModel = Boolean(config.default_provider && config.default_model);
       list.push({
         account_id: accountId,
-        enabled: true,
+        enabled: hasDefaultModel,
         allowlist: [],
         require_mention: true,
         provider: config.default_provider,

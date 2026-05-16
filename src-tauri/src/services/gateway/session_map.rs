@@ -36,8 +36,21 @@ pub async fn find(channel_key: &str) -> Option<String> {
     map.get(channel_key).cloned()
 }
 
-pub async fn insert(channel_key: &str, session_id: &str) -> Result<(), String> {
+pub async fn insert_bounded(
+    channel_key: &str,
+    session_id: &str,
+    max_mappings: usize,
+) -> Result<(), String> {
     let mut map = MAP.lock().await;
+    let limit = max_mappings.max(1);
+    if !map.contains_key(channel_key) {
+        while map.len() >= limit {
+            let Some(oldest) = map.keys().next().cloned() else {
+                break;
+            };
+            map.remove(&oldest);
+        }
+    }
     map.insert(channel_key.to_string(), session_id.to_string());
     flush(&map)
 }
@@ -64,5 +77,40 @@ mod tests {
     async fn find_missing_returns_none() {
         let map = MAP.lock().await;
         assert!(map.get("nonexistent/key").is_none());
+    }
+
+    #[tokio::test]
+    async fn bounded_insert_evicts() {
+        let mut map = MAP.lock().await;
+        map.clear();
+        let _ = flush(&map);
+        drop(map);
+
+        insert_bounded("a", "1", 2).await.unwrap();
+        insert_bounded("b", "2", 2).await.unwrap();
+        insert_bounded("c", "3", 2).await.unwrap();
+
+        let map = MAP.lock().await;
+        assert_eq!(map.len(), 2);
+        assert_eq!(map.get("c"), Some(&"3".to_string()));
+        let mut map = map;
+        map.clear();
+        let _ = flush(&map);
+    }
+
+    #[tokio::test]
+    async fn load_from_disk_reads_flushed_map() {
+        let mut map = MAP.lock().await;
+        map.clear();
+        map.insert("reload/key".to_string(), "session-1".to_string());
+        flush(&map).unwrap();
+        drop(map);
+
+        let loaded = load_from_disk().unwrap();
+        assert_eq!(loaded.get("reload/key"), Some(&"session-1".to_string()));
+
+        let mut map = MAP.lock().await;
+        map.clear();
+        let _ = flush(&map);
     }
 }

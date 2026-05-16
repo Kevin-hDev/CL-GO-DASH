@@ -1,16 +1,23 @@
 use std::sync::Arc;
 
-use tauri::Emitter;
+use tokio::sync::Mutex;
 use tokio_util::sync::CancellationToken;
 
 use crate::commands::agent_chat_task::run_stream_task;
-use crate::models::{ChannelAccountConfig, GatewayConfig};
+use crate::models::GatewayConfig;
 use crate::services::agent_local::session_store;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::gateway::channels::{ChannelAdapter, InboundMessage, OutboundMessage};
+use crate::services::gateway::agent_bridge_support::{
+    audit_msg, block, build_external_key, emit_session_updated, find_account_config,
+    find_or_create_session, resolve_provider_model, sync_session_model, validate_inbound,
+};
 use crate::services::gateway::message_convert;
-use crate::services::gateway::security::{allowlist::Allowlist, validation};
-use crate::services::gateway::session_map;
+use crate::services::gateway::security::{
+    allowlist::Allowlist,
+    audit::{self, AuditAction},
+    rate_state::GatewayRateLimiters,
+};
 use crate::services::gateway::stream_capture;
 
 #[derive(Debug)]
@@ -32,11 +39,13 @@ impl std::fmt::Display for BridgeError {
     }
 }
 
-pub struct GatewayAgentBridge;
+pub struct GatewayAgentBridge {
+    limits: Arc<Mutex<GatewayRateLimiters>>,
+}
 
 impl GatewayAgentBridge {
-    pub fn new() -> Self {
-        Self
+    pub fn new(limits: Arc<Mutex<GatewayRateLimiters>>) -> Self {
+        Self { limits }
     }
 
     fn read_config() -> GatewayConfig {
@@ -51,25 +60,33 @@ impl GatewayAgentBridge {
         adapter: Arc<dyn ChannelAdapter>,
         app: tauri::AppHandle,
     ) -> Result<(), BridgeError> {
-        let vr = validation::validate_message(&msg.content);
-        if !vr.valid {
-            return Err(BridgeError::Blocked(vr.reason.unwrap_or_default()));
-        }
-
         let config = Self::read_config();
-        let account_cfg = find_account_config(&config, &msg);
+        validate_inbound(&msg)?;
+        audit_msg(&msg, AuditAction::MessageReceived, None, None);
 
-        if let Some(cfg) = &account_cfg {
-            let al = Allowlist::from_list(&cfg.allowlist, false);
-            if !al.contains(&msg.user_id) {
-                return Err(BridgeError::Blocked("user not in allowlist".into()));
-            }
+        let account_cfg = find_account_config(&config, &msg)
+            .ok_or_else(|| block(&msg, "account not configured"))?;
+        let al = Allowlist::from_list(&account_cfg.allowlist, false);
+        if !al.contains(&msg.user_id) {
+            return Err(block(&msg, "user not in allowlist"));
+        }
+        let decision = self.limits.lock().await.consume(&msg);
+        if !decision.allowed {
+            audit_msg(&msg, AuditAction::RateLimited, Some("rate_limited"), None);
+            return Err(BridgeError::Blocked("rate limited".into()));
         }
 
         let channel_key = build_external_key(&msg);
         let (provider, model) = resolve_provider_model(&account_cfg, &config);
-        let session_id =
-            find_or_create_session(&msg, &channel_key, &provider, &model, &app).await?;
+        let session_id = find_or_create_session(
+            &msg,
+            &channel_key,
+            &provider,
+            &model,
+            config.max_sessions as usize,
+            &app,
+        )
+        .await?;
 
         sync_session_model(&session_id, &provider, &model).await;
 
@@ -79,9 +96,17 @@ impl GatewayAgentBridge {
         let mut messages = message_convert::build_chat_messages(&session);
         let history_len = messages.len();
         messages.push(message_convert::new_user_message(&msg.content));
+        session_store::add_messages(
+            &session_id,
+            vec![message_convert::new_user_agent_message(&msg.content)],
+            0,
+        )
+        .await
+        .map_err(BridgeError::SessionError)?;
+        emit_session_updated(&app, &session_id);
 
         let emitter = AgentEventEmitter::new(app.clone(), session_id.clone());
-        let final_messages = run_stream_task(
+        let final_messages = match run_stream_task(
             emitter,
             session_id.clone(),
             model,
@@ -96,7 +121,14 @@ impl GatewayAgentBridge {
             CancellationToken::new(),
         )
         .await
-        .map_err(BridgeError::AgentError)?;
+        {
+            Ok(messages) => messages,
+            Err(e) => {
+                let safe = audit::sanitize_error(&e);
+                audit_msg(&msg, AuditAction::AgentError, None, Some(&safe));
+                return Err(BridgeError::AgentError(safe));
+            }
+        };
 
         let new_assistant_messages: Vec<_> = {
             let mut non_system = final_messages.iter().filter(|m| m.role != "system");
@@ -109,13 +141,10 @@ impl GatewayAgentBridge {
                 .collect()
         };
 
-        let mut to_persist = vec![message_convert::new_user_agent_message(&msg.content)];
-        to_persist.extend(new_assistant_messages);
-        let _ = session_store::add_messages(&session_id, to_persist, 0).await;
-        let _ = app.emit(
-            "wakeup-completed",
-            serde_json::json!({ "session_id": &session_id }),
-        );
+        session_store::add_messages(&session_id, new_assistant_messages, 0)
+            .await
+            .map_err(BridgeError::SessionError)?;
+        emit_session_updated(&app, &session_id);
 
         if let Some(reply) = stream_capture::extract_final_reply(&final_messages) {
             let max_utf16 = adapter.capabilities().max_message_chars;
@@ -127,84 +156,13 @@ impl GatewayAgentBridge {
                         reply_to: Some(msg.message_id.clone()),
                     })
                     .await
-                    .map_err(|e| BridgeError::SendError(e.message))?;
+                    .map_err(|e| {
+                        audit_msg(&msg, AuditAction::MessageSent, None, Some(&e.message));
+                        BridgeError::SendError(e.message)
+                    })?;
             }
+            audit_msg(&msg, AuditAction::MessageSent, None, None);
         }
         Ok(())
     }
-}
-
-fn resolve_provider_model(
-    account: &Option<ChannelAccountConfig>,
-    config: &GatewayConfig,
-) -> (String, String) {
-    if let Some(acc) = account {
-        if !acc.provider.is_empty() && !acc.model.is_empty() {
-            return (acc.provider.clone(), acc.model.clone());
-        }
-    }
-    (
-        config.default_provider.clone(),
-        config.default_model.clone(),
-    )
-}
-
-async fn sync_session_model(session_id: &str, provider: &str, model: &str) {
-    if let Ok(session) = session_store::get(session_id).await {
-        if session.provider != provider || session.model != model {
-            let _ = session_store::update_model(session_id, model, provider).await;
-        }
-    }
-}
-
-fn find_account_config(
-    config: &GatewayConfig,
-    msg: &InboundMessage,
-) -> Option<ChannelAccountConfig> {
-    let accounts = match msg.channel_key.channel_id.as_str() {
-        "telegram" => &config.channels.telegram,
-        "slack" => &config.channels.slack,
-        "discord" => &config.channels.discord,
-        _ => return None,
-    };
-    accounts
-        .iter()
-        .find(|a| a.account_id == msg.channel_key.account_id)
-        .cloned()
-}
-
-fn build_external_key(msg: &InboundMessage) -> String {
-    format!(
-        "{}/{}/{}",
-        msg.channel_key.channel_id, msg.channel_key.account_id, msg.user_id
-    )
-}
-
-async fn find_or_create_session(
-    msg: &InboundMessage,
-    channel_key: &str,
-    provider: &str,
-    model: &str,
-    app: &tauri::AppHandle,
-) -> Result<String, BridgeError> {
-    if let Some(id) = session_map::find(channel_key).await {
-        if session_store::get(&id).await.is_ok() {
-            return Ok(id);
-        }
-    }
-    let label = match msg.channel_key.channel_id.as_str() {
-        "telegram" => "TG",
-        "slack" => "SL",
-        "discord" => "DC",
-        _ => "GW",
-    };
-    let name = format!("[{label}] {}", msg.user_id);
-    let session = session_store::create_gateway(&name, model, provider, channel_key.to_string())
-        .await
-        .map_err(BridgeError::SessionError)?;
-    session_map::insert(channel_key, &session.id)
-        .await
-        .map_err(BridgeError::SessionError)?;
-    let _ = app.emit("wakeup-completed", &session.id);
-    Ok(session.id)
 }

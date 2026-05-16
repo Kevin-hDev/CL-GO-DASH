@@ -1,20 +1,24 @@
 use std::collections::HashMap;
 use std::sync::Arc;
-
 use tauri::Emitter;
-use tokio::sync::{mpsc, RwLock};
+use tokio::sync::{mpsc, Mutex, RwLock};
 use tokio_util::sync::CancellationToken;
 
 use super::agent_bridge::GatewayAgentBridge;
 use super::channels::telegram::TelegramAdapter;
 use super::channels::{ChannelAdapter, ChannelContext, InboundMessage};
+use super::security::audit::{self, AuditAction};
+use super::security::rate_state::GatewayRateLimiters;
+use super::service_runtime::{
+    audit_invalid_account_config, emit_channel_status, run_supervised_channel, validate_account,
+};
 use super::types::{ChannelHealthEntry, ChannelKey, ChannelStatus, GatewayHealth};
 use crate::models::{ChannelAccountConfig, GatewayConfig};
 
-struct ChannelEntry {
-    status: ChannelStatus,
+pub(crate) struct ChannelEntry {
+    pub(crate) status: ChannelStatus,
     cancel: CancellationToken,
-    error: Option<String>,
+    pub(crate) error: Option<String>,
 }
 
 pub struct GatewayState {
@@ -22,9 +26,10 @@ pub struct GatewayState {
     adapters: HashMap<ChannelKey, Arc<dyn ChannelAdapter>>,
     config: GatewayConfig,
     pub(crate) cancel: CancellationToken,
+    limits: Arc<Mutex<GatewayRateLimiters>>,
 }
 
-fn build_health(state: &GatewayState) -> GatewayHealth {
+pub(crate) fn build_health(state: &GatewayState) -> GatewayHealth {
     let channels = state
         .channels
         .iter()
@@ -53,16 +58,19 @@ impl GatewayService {
                 adapters: HashMap::new(),
                 config: GatewayConfig::default(),
                 cancel: CancellationToken::new(),
+                limits: Arc::new(Mutex::new(GatewayRateLimiters::new(&GatewayConfig::default().rate_limits))),
             })),
         }
     }
 
     pub async fn start(&self, config: GatewayConfig, app: tauri::AppHandle) {
         let mut state = self.state.write().await;
+        state.cancel.cancel();
         state.cancel = CancellationToken::new();
         state.channels.clear();
         state.adapters.clear();
         state.config = config.clone();
+        state.limits = Arc::new(Mutex::new(GatewayRateLimiters::new(&config.rate_limits)));
 
         let (tx, mut rx) = mpsc::channel::<InboundMessage>(256);
 
@@ -70,7 +78,7 @@ impl GatewayService {
         self.start_channel_accounts(&mut state, "slack", &config.channels.slack, &tx, &app);
         self.start_channel_accounts(&mut state, "discord", &config.channels.discord, &tx, &app);
 
-        let bridge = Arc::new(GatewayAgentBridge::new());
+        let bridge = Arc::new(GatewayAgentBridge::new(state.limits.clone()));
         let state_ref = self.state.clone();
         let app_ref = app.clone();
 
@@ -85,9 +93,7 @@ impl GatewayService {
                     let b = Arc::clone(&bridge);
                     let a = app_ref.clone();
                     tokio::spawn(async move {
-                        if let Err(e) = b.process(msg, adapter, a).await {
-                            eprintln!("[gateway-bridge] {e}");
-                        }
+                        let _ = b.process(msg, adapter, a).await;
                     });
                 }
             }
@@ -116,12 +122,24 @@ impl GatewayService {
                 "discord" => Arc::new(super::channels::discord::DiscordAdapter::new()),
                 _ => continue,
             };
+            if let Err(message) = validate_account(channel_id, acc) {
+                audit_invalid_account_config(channel_id, &acc.account_id, &message);
+                state.channels.insert(
+                    key.clone(),
+                    ChannelEntry {
+                        status: ChannelStatus::Error,
+                        cancel: child_cancel,
+                        error: Some("Configuration invalide".to_string()),
+                    },
+                );
+                emit_channel_status(app, &key, ChannelStatus::Error, Some("Configuration invalide"));
+                continue;
+            }
             state.adapters.insert(key.clone(), Arc::clone(&adapter));
             let ctx = ChannelContext {
                 key: key.clone(),
                 config: acc.clone(),
                 cancel: child_cancel.clone(),
-                app: app.clone(),
             };
             state.channels.insert(
                 key.clone(),
@@ -136,23 +154,7 @@ impl GatewayService {
             let key_clone = key;
             let app_clone = app.clone();
             tokio::spawn(async move {
-                match adapter.start(ctx, sender).await {
-                    Ok(_handle) => {
-                        let mut s = state_arc.write().await;
-                        if let Some(e) = s.channels.get_mut(&key_clone) {
-                            e.status = ChannelStatus::Running;
-                        }
-                        let _ = app_clone.emit("gateway-status-changed", build_health(&s));
-                    }
-                    Err(e) => {
-                        let mut s = state_arc.write().await;
-                        if let Some(entry) = s.channels.get_mut(&key_clone) {
-                            entry.status = ChannelStatus::Error;
-                            entry.error = Some(e.message);
-                        }
-                        let _ = app_clone.emit("gateway-status-changed", build_health(&s));
-                    }
-                }
+                run_supervised_channel(adapter, ctx, sender, state_arc, key_clone, app_clone).await;
             });
         }
     }
@@ -160,10 +162,19 @@ impl GatewayService {
     pub async fn stop(&self) {
         let mut state = self.state.write().await;
         state.cancel.cancel();
-        for entry in state.channels.values_mut() {
+        for (key, entry) in state.channels.iter_mut() {
             entry.cancel.cancel();
             entry.status = ChannelStatus::Stopping;
+            audit::log_gateway_action(
+                &key.channel_id,
+                &key.account_id,
+                "",
+                AuditAction::ChannelStopped,
+                None,
+                None,
+            );
         }
+        state.adapters.clear();
     }
 
     pub async fn health(&self) -> GatewayHealth {

@@ -1,4 +1,5 @@
 use crate::services::agent_local::tool_web_fetch_ip::{is_172_private, is_ip_private};
+use crate::services::gateway::security::ssrf::{self, SsrfVerdict};
 use reqwest::Client;
 use std::net::IpAddr;
 use std::time::Duration;
@@ -66,6 +67,10 @@ fn convert_to_markdown(html: &str) -> String {
 }
 
 async fn validate_url_with_ip(url: &str) -> Result<(String, IpAddr), String> {
+    match ssrf::is_safe_url(url, false).await {
+        SsrfVerdict::Safe => {}
+        SsrfVerdict::Blocked(reason) => return Err(reason),
+    }
     if !url.starts_with("http://") && !url.starts_with("https://") {
         return Err("URL doit commencer par http:// ou https://".into());
     }

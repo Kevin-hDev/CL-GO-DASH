@@ -6,22 +6,22 @@ use reqwest::Client;
 use tokio::sync::{mpsc, RwLock};
 use zeroize::Zeroizing;
 
-use super::telegram_types::*;
 use super::{
     capabilities::ChannelCapabilities, ChannelAdapter, ChannelContext, DeliveryReceipt,
     GatewayError, GatewayResult, InboundMessage, OutboundMessage,
 };
-use crate::services::api_keys;
+use super::telegram_types::*;
+use crate::services::gateway::tokens;
 
 pub struct TelegramAdapter {
-    client: Client,
-    state: Arc<RwLock<TelegramState>>,
+    pub(super) client: Client,
+    pub(super) state: Arc<RwLock<TelegramState>>,
 }
 
-struct TelegramState {
-    bot_token: Option<Zeroizing<String>>,
-    bot_username: String,
-    last_offset: i64,
+pub(super) struct TelegramState {
+    pub(super) bot_token: Option<Zeroizing<String>>,
+    pub(super) bot_username: String,
+    pub(super) last_offset: i64,
 }
 
 impl TelegramAdapter {
@@ -43,96 +43,6 @@ impl TelegramAdapter {
         format!("https://api.telegram.org/bot{token}/{method}")
     }
 
-    async fn load_token_and_identity(&self, vault_key: &str) -> GatewayResult<()> {
-        let token = api_keys::get_raw(vault_key)
-            .map_err(|_| GatewayError::auth("token Telegram manquant dans le vault"))?;
-
-        let url = Self::api_url(&token, "getMe");
-        let resp: TgResponse<TgUser> = self
-            .client
-            .get(&url)
-            .send()
-            .await
-            .map_err(|e| GatewayError::network(format!("getMe: {e}")))?
-            .json()
-            .await
-            .map_err(|e| GatewayError::network(format!("getMe parse: {e}")))?;
-
-        let bot_user = resp
-            .result
-            .ok_or_else(|| GatewayError::auth("getMe échoué"))?;
-        let username = bot_user.username.unwrap_or_default();
-
-        let mut state = self.state.write().await;
-        state.bot_token = Some(token);
-        state.bot_username = username;
-        Ok(())
-    }
-
-    pub async fn poll_updates(
-        client: &Client,
-        state: &Arc<RwLock<TelegramState>>,
-    ) -> GatewayResult<Vec<TgUpdate>> {
-        let (url, offset) = {
-            let s = state.read().await;
-            let token = s
-                .bot_token
-                .as_ref()
-                .ok_or_else(|| GatewayError::auth("pas de token"))?;
-            (Self::api_url(token, "getUpdates"), s.last_offset)
-        };
-
-        let resp = client
-            .get(&url)
-            .query(&[("offset", offset + 1), ("timeout", 30)])
-            .send()
-            .await
-            .map_err(|e| GatewayError::network(format!("polling: {e}")))?;
-
-        let status = resp.status().as_u16();
-        if status == 401 || status == 403 {
-            return Err(GatewayError::auth("token Telegram invalide"));
-        }
-        if status == 409 {
-            return Err(GatewayError::network("conflit 409 — un autre poller actif"));
-        }
-
-        let body: TgResponse<Vec<TgUpdate>> = resp
-            .json()
-            .await
-            .map_err(|e| GatewayError::network(format!("parse: {e}")))?;
-
-        let updates = body.result.unwrap_or_default();
-        if let Some(last) = updates.last() {
-            state.write().await.last_offset = last.update_id;
-        }
-        Ok(updates)
-    }
-
-    pub fn to_inbound(
-        update: &TgUpdate,
-        channel_key: &crate::services::gateway::types::ChannelKey,
-        require_mention: bool,
-        bot_username: &str,
-    ) -> Option<InboundMessage> {
-        let msg = update.message.as_ref()?;
-        let text = msg.text.as_ref()?;
-        let from = msg.from.as_ref()?;
-
-        if msg.chat.is_group() && require_mention && !msg.has_bot_mention(bot_username) {
-            return None;
-        }
-
-        Some(InboundMessage {
-            channel_key: channel_key.clone(),
-            user_id: from.id.to_string(),
-            content: text.clone(),
-            message_id: msg.message_id.to_string(),
-            chat_id: msg.chat.id.to_string(),
-            is_group: msg.chat.is_group(),
-            mentions_bot: msg.has_bot_mention(bot_username),
-        })
-    }
 }
 
 #[async_trait]
@@ -149,8 +59,7 @@ impl ChannelAdapter for TelegramAdapter {
         &self,
         cfg: &crate::models::ChannelAccountConfig,
     ) -> GatewayResult<()> {
-        let vault_key = format!("gateway.telegram.{}", cfg.account_id);
-        if !api_keys::has_key(&format!("raw:{vault_key}")) {
+        if !tokens::has("telegram", &cfg.account_id, "default").unwrap_or(false) {
             return Err(GatewayError::auth("token Telegram non configuré"));
         }
         Ok(())

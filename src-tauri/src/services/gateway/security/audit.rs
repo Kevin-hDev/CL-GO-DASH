@@ -25,6 +25,7 @@ pub enum AuditAction {
     MessageSent,
     Blocked,
     RateLimited,
+    AgentError,
     ChannelStarted,
     ChannelStopped,
     AuthFailed,
@@ -50,6 +51,34 @@ pub fn log_audit(entry: &AuditEntry) {
         let _ = writeln!(f, "{}", line);
     }
     let _ = maybe_trim(&path);
+}
+
+pub fn log_gateway_action(
+    channel: &str,
+    account_id: &str,
+    user_id: &str,
+    action: AuditAction,
+    security_decision: Option<&str>,
+    error: Option<&str>,
+) {
+    log_audit(&AuditEntry {
+        timestamp: chrono::Utc::now().to_rfc3339(),
+        channel: channel.to_string(),
+        account_id: account_id.to_string(),
+        user_hash: hash_user_id(user_id),
+        action,
+        security_decision: security_decision.map(str::to_string),
+        error: error.map(sanitize_error),
+    });
+}
+
+pub fn sanitize_error(error: &str) -> String {
+    let redacted = crate::services::gateway::stream_capture::redact_sensitive(error);
+    if redacted.len() > 200 {
+        redacted.chars().take(200).collect()
+    } else {
+        redacted
+    }
 }
 
 fn audit_path() -> PathBuf {
@@ -100,5 +129,12 @@ mod tests {
         let json = serde_json::to_string(&entry).unwrap();
         assert!(json.contains("message_received"));
         assert!(!json.contains("user42"));
+    }
+
+    #[test]
+    fn sanitize_error_redacts_secret_like_values() {
+        let sanitized = sanitize_error("failed with Bearer abcdefghijklmnop");
+        assert!(!sanitized.contains("Bearer abc"));
+        assert!(sanitized.contains("[REDACTED]"));
     }
 }

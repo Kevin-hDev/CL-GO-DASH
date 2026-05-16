@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { X } from "@/components/ui/icons";
 
+const MAX_ALLOWLIST_USERS = 100;
+
 interface ChannelsAllowlistProps {
   allowlist: string[];
   onChange: (list: string[]) => void;
@@ -13,7 +15,7 @@ export function ChannelsAllowlist({ allowlist, onChange }: ChannelsAllowlistProp
 
   const handleAdd = () => {
     const id = input.trim();
-    if (!id || allowlist.includes(id)) return;
+    if (!id || allowlist.includes(id) || allowlist.length >= MAX_ALLOWLIST_USERS) return;
     onChange([...allowlist, id]);
     setInput("");
   };
@@ -34,14 +36,18 @@ export function ChannelsAllowlist({ allowlist, onChange }: ChannelsAllowlistProp
       <div className="ch-allowlist-input-row">
         <input
           type="text"
-          className="wk-input"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={t("channels.detail.allowlistPlaceholder")}
-          style={{ flex: 1 }}
+          className="wk-input ch-allowlist-input"
         />
-        <button type="button" className="wk-btn-secondary" onClick={handleAdd} disabled={!input.trim()}>
+        <button
+          type="button"
+          className="wk-btn-secondary"
+          onClick={handleAdd}
+          disabled={!input.trim() || allowlist.length >= MAX_ALLOWLIST_USERS}
+        >
           {t("channels.detail.allowlistAdd")}
         </button>
       </div>

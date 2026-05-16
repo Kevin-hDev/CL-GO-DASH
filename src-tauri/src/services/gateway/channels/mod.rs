@@ -1,10 +1,13 @@
 pub mod capabilities;
 pub mod discord;
 pub mod discord_gateway;
+mod discord_support;
 pub mod discord_types;
 pub mod slack;
+mod slack_support;
 pub mod slack_types;
 pub mod telegram;
+mod telegram_support;
 pub mod telegram_types;
 
 use async_trait::async_trait;
@@ -39,11 +42,11 @@ pub struct DeliveryReceipt {
     pub message_id: String,
 }
 
+#[derive(Clone)]
 pub struct ChannelContext {
     pub key: ChannelKey,
     pub config: ChannelAccountConfig,
     pub cancel: CancellationToken,
-    pub app: tauri::AppHandle,
 }
 
 pub type GatewayResult<T> = Result<T, GatewayError>;

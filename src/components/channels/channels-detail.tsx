@@ -60,7 +60,7 @@ export function ChannelsDetail({ channelId, account, status, config, onSaveConfi
   };
 
   const handleDelete = async () => {
-    await invoke("gateway_delete_token", { channelId, accountId: account.account_id });
+    await invoke("gateway_delete_token", { channelId, accountId: account.account_id, tokenKind: null });
     const list = (config.channels[channelId] ?? []).filter((a) => a.account_id !== account.account_id);
     const updated = { ...config, channels: { ...config.channels, [channelId]: list } };
     await onSaveConfig(updated);
@@ -68,7 +68,6 @@ export function ChannelsDetail({ channelId, account, status, config, onSaveConfi
   };
 
   const providerOptions = Array.from(groups.keys())
-    .filter((p) => p !== "ollama")
     .map((p) => ({ value: p, label: p.charAt(0).toUpperCase() + p.slice(1) }));
 
   const modelOptions = (groups.get(account.provider) ?? [])
@@ -114,9 +113,17 @@ export function ChannelsDetail({ channelId, account, status, config, onSaveConfi
 
         <SettingsCard>
           <div className="ctd-row ctd-row-border">
-            <span className="ctd-row-label">{t("channels.detail.token")}</span>
+            <span className="ctd-row-label">
+              {t(channelId === "slack" ? "channels.detail.botToken" : "channels.detail.token")}
+            </span>
             <span className="ctd-row-value">••••••••</span>
           </div>
+          {channelId === "slack" && (
+            <div className="ctd-row ctd-row-border">
+              <span className="ctd-row-label">{t("channels.detail.appToken")}</span>
+              <span className="ctd-row-value">••••••••</span>
+            </div>
+          )}
           <div className="ctd-row ctd-row-border">
             <span className="ctd-row-label">{t("channels.status.off")}</span>
             <span className="ctd-row-value">{t(`channels.status.${statusKey}`)}</span>

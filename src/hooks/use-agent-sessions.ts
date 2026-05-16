@@ -24,11 +24,14 @@ export function useAgentSessions() {
   }, [refresh]);
 
   useEffect(() => {
-    const unlisten = listen("wakeup-completed", () => {
+    const refreshFromEvent = () => {
       void refresh();
-    });
+    };
+    const unlistenWakeup = listen("wakeup-completed", refreshFromEvent);
+    const unlistenGateway = listen("agent-session-updated", refreshFromEvent);
     return () => {
-      void unlisten.then((fn) => fn());
+      void unlistenWakeup.then((fn) => fn());
+      void unlistenGateway.then((fn) => fn());
     };
   }, [refresh]);
 

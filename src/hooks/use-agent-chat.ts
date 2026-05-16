@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
 import { useAgentStream } from "./use-agent-stream";
+import { listenGatewaySessionUpdates } from "./use-gateway-session-updates";
 import { EMPTY_CHAT_STATE, type ChatState } from "./agent-chat-stream-callbacks";
 import { showToast } from "@/lib/toast-emitter";
 import i18n from "@/i18n";
@@ -90,17 +90,13 @@ export function useAgentChat(
       })
       .catch((e: unknown) => { console.warn("Session load:", e); setSessionLoading(false); });
 
-    const unlisten = listen<{ session_id: string }>("wakeup-completed", (e) => {
-      if (e.payload?.session_id === sessionId && sessionRef.current === sessionId) {
-        invoke<AgentSession>("get_agent_session", { id: sessionId })
-          .then((session) => setState((s) => ({ ...s, messages: session.messages, tokenCount: session.accumulated_tokens })))
-          .catch((e: unknown) => console.warn("Session reload:", e));
-      }
+    const stopGatewayListener = listenGatewaySessionUpdates(sessionId, sessionRef, (session) => {
+      setState((s) => ({ ...s, messages: session.messages, tokenCount: session.accumulated_tokens }));
     });
     return () => {
       alive = false;
       unsubscribe();
-      unlisten.then((fn) => fn()).catch(() => {});
+      stopGatewayListener();
     };
   }, [sessionId, subscribeToStream, getStreamSnapshot, deliverPermission]);
 

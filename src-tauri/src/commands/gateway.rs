@@ -1,9 +1,8 @@
 use crate::models::GatewayConfig;
-use crate::services::api_keys;
 use crate::services::gateway::service::GatewayService;
+use crate::services::gateway::tokens;
 use crate::services::gateway::types::GatewayHealth;
 use tauri::Emitter;
-use zeroize::Zeroize;
 
 #[tauri::command]
 pub async fn gateway_status(
@@ -28,7 +27,11 @@ pub async fn gateway_stop(
     state: tauri::State<'_, GatewayService>,
 ) -> Result<(), String> {
     state.stop().await;
-    let _ = app.emit("gateway-status-changed", state.health().await);
+    let health = state.health().await;
+    for channel in &health.channels {
+        let _ = app.emit("gateway-channel-status", channel);
+    }
+    let _ = app.emit("gateway-status-changed", health);
     Ok(())
 }
 
@@ -63,22 +66,26 @@ pub async fn gateway_set_config(
 pub async fn gateway_set_token(
     channel_id: String,
     account_id: String,
-    mut token: String,
+    token_kind: String,
+    token: String,
 ) -> Result<(), String> {
-    let vault_key = format!("gateway.{channel_id}.{account_id}");
-    let result = api_keys::set_raw(&vault_key, &token);
-    token.zeroize();
-    result
+    tokens::set(&channel_id, &account_id, &token_kind, token)
 }
 
 #[tauri::command]
-pub async fn gateway_delete_token(channel_id: String, account_id: String) -> Result<(), String> {
-    let vault_key = format!("gateway.{channel_id}.{account_id}");
-    api_keys::delete_raw(&vault_key)
+pub async fn gateway_delete_token(
+    channel_id: String,
+    account_id: String,
+    token_kind: Option<String>,
+) -> Result<(), String> {
+    tokens::delete(&channel_id, &account_id, token_kind.as_deref())
 }
 
 #[tauri::command]
-pub async fn gateway_has_token(channel_id: String, account_id: String) -> Result<bool, String> {
-    let vault_key = format!("raw:gateway.{channel_id}.{account_id}");
-    Ok(api_keys::has_key(&vault_key))
+pub async fn gateway_has_token(
+    channel_id: String,
+    account_id: String,
+    token_kind: String,
+) -> Result<bool, String> {
+    tokens::has(&channel_id, &account_id, &token_kind)
 }

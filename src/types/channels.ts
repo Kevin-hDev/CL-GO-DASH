@@ -62,6 +62,7 @@ export interface ChannelsConfig {
 }
 
 export type ChannelType = "telegram" | "slack" | "discord";
+export type GatewayTokenKind = "default" | "bot" | "app";
 
 export const CHANNEL_TYPES: ChannelType[] = ["telegram", "slack", "discord"];
 

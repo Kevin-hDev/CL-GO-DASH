@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
 import { X } from "@/components/ui/icons";
-import type { ChannelType } from "@/types/channels";
+import type { ChannelType, GatewayTokenKind } from "@/types/channels";
 
 interface ChannelsConfigDialogProps {
   channelId: ChannelType;
@@ -20,8 +20,11 @@ export function ChannelsConfigDialog({ channelId, onClose, onSaved }: ChannelsCo
   const { t } = useTranslation();
   const [accountId, setAccountId] = useState("");
   const [token, setToken] = useState("");
+  const [botToken, setBotToken] = useState("");
+  const [appToken, setAppToken] = useState("");
   const [testState, setTestState] = useState<TestState>({ kind: "idle" });
   const [submitting, setSubmitting] = useState(false);
+  const isSlack = channelId === "slack";
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -36,19 +39,19 @@ export function ChannelsConfigDialog({ channelId, onClose, onSaved }: ChannelsCo
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!accountId.trim() || !token.trim()) return;
+    if (!accountId.trim() || !tokensReady(isSlack, token, botToken, appToken)) return;
     setSubmitting(true);
     setTestState({ kind: "testing" });
     try {
-      await invoke("gateway_set_token", {
-        channelId,
-        accountId: accountId.trim(),
-        token: token.trim(),
-      });
-      const verified = await invoke<boolean>("gateway_has_token", {
-        channelId,
-        accountId: accountId.trim(),
-      });
+      if (isSlack) {
+        await setGatewayToken(channelId, accountId, "bot", botToken);
+        await setGatewayToken(channelId, accountId, "app", appToken);
+      } else {
+        await setGatewayToken(channelId, accountId, "default", token);
+      }
+      const verified = isSlack
+        ? await hasGatewayToken(channelId, accountId, "bot") && await hasGatewayToken(channelId, accountId, "app")
+        : await hasGatewayToken(channelId, accountId, "default");
       if (!verified) {
         setTestState({ kind: "error", message: t("channels.detail.testFailed") });
         return;
@@ -63,6 +66,7 @@ export function ChannelsConfigDialog({ channelId, onClose, onSaved }: ChannelsCo
   };
 
   const channelName = channelId.charAt(0).toUpperCase() + channelId.slice(1);
+  const canSubmit = Boolean(accountId.trim() && tokensReady(isSlack, token, botToken, appToken));
 
   return (
     <div className="wk-dialog-overlay" role="presentation" onClick={onClose} onKeyDown={() => {}}>
@@ -87,20 +91,45 @@ export function ChannelsConfigDialog({ channelId, onClose, onSaved }: ChannelsCo
             />
           </div>
 
-          <div className="wk-form-field">
-            <label className="wk-form-label">{t("channels.detail.token")}</label>
-            <input
-              type="password"
-              className="wk-input"
-              value={token}
-              onChange={(e) => setToken(e.target.value)}
-              placeholder={t("channels.detail.tokenPlaceholder")}
-            />
-          </div>
+          {isSlack ? (
+            <>
+              <div className="wk-form-field">
+                <label className="wk-form-label">{t("channels.detail.botToken")}</label>
+                <input
+                  type="password"
+                  className="wk-input"
+                  value={botToken}
+                  onChange={(e) => setBotToken(e.target.value)}
+                  placeholder={t("channels.detail.tokenPlaceholder")}
+                />
+              </div>
+              <div className="wk-form-field">
+                <label className="wk-form-label">{t("channels.detail.appToken")}</label>
+                <input
+                  type="password"
+                  className="wk-input"
+                  value={appToken}
+                  onChange={(e) => setAppToken(e.target.value)}
+                  placeholder={t("channels.detail.appTokenPlaceholder")}
+                />
+              </div>
+            </>
+          ) : (
+            <div className="wk-form-field">
+              <label className="wk-form-label">{t("channels.detail.token")}</label>
+              <input
+                type="password"
+                className="wk-input"
+                value={token}
+                onChange={(e) => setToken(e.target.value)}
+                placeholder={t("channels.detail.tokenPlaceholder")}
+              />
+            </div>
+          )}
 
           <div className="wk-form-field">
             <label className="wk-form-label">{t("channels.config.description")}</label>
-            <div className="wk-input" style={{ cursor: "default", opacity: 0.7 }}>
+            <div className="wk-input ch-config-description">
               {t(`channels.browse.${channelId}Desc`)}
             </div>
           </div>
@@ -122,7 +151,7 @@ export function ChannelsConfigDialog({ channelId, onClose, onSaved }: ChannelsCo
             <button
               type="submit"
               className="wk-btn-primary"
-              disabled={submitting || !accountId.trim() || !token.trim()}
+              disabled={submitting || !canSubmit}
             >
               {t("channels.config.addAndTest")}
             </button>
@@ -131,4 +160,34 @@ export function ChannelsConfigDialog({ channelId, onClose, onSaved }: ChannelsCo
       </div>
     </div>
   );
+}
+
+function tokensReady(isSlack: boolean, token: string, botToken: string, appToken: string): boolean {
+  return isSlack ? Boolean(botToken.trim() && appToken.trim()) : Boolean(token.trim());
+}
+
+async function setGatewayToken(
+  channelId: ChannelType,
+  accountId: string,
+  tokenKind: GatewayTokenKind,
+  token: string,
+) {
+  await invoke("gateway_set_token", {
+    channelId,
+    accountId: accountId.trim(),
+    tokenKind,
+    token: token.trim(),
+  });
+}
+
+async function hasGatewayToken(
+  channelId: ChannelType,
+  accountId: string,
+  tokenKind: GatewayTokenKind,
+): Promise<boolean> {
+  return invoke<boolean>("gateway_has_token", {
+    channelId,
+    accountId: accountId.trim(),
+    tokenKind,
+  });
 }

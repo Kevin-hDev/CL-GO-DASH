@@ -14,17 +14,16 @@ use super::{
     capabilities::ChannelCapabilities, ChannelAdapter, ChannelContext, DeliveryReceipt,
     GatewayError, GatewayResult, InboundMessage, OutboundMessage,
 };
-use crate::services::api_keys;
-use crate::services::gateway::types::ChannelKey;
+use crate::services::gateway::tokens;
 
 pub struct DiscordAdapter {
-    client: Client,
-    state: Arc<RwLock<DiscordState>>,
+    pub(super) client: Client,
+    pub(super) state: Arc<RwLock<DiscordState>>,
 }
 
-struct DiscordState {
-    bot_token: Option<Zeroizing<String>>,
-    bot_user_id: String,
+pub(super) struct DiscordState {
+    pub(super) bot_token: Option<Zeroizing<String>>,
+    pub(super) bot_user_id: String,
 }
 
 impl DiscordAdapter {
@@ -41,36 +40,6 @@ impl DiscordAdapter {
         }
     }
 
-    async fn load_token(&self, vault_key: &str) -> GatewayResult<()> {
-        let token = api_keys::get_raw(vault_key)
-            .map_err(|_| GatewayError::auth("token Discord manquant dans le vault"))?;
-        self.state.write().await.bot_token = Some(token);
-        Ok(())
-    }
-
-    fn to_inbound(
-        msg: &DiscordMessage,
-        key: &ChannelKey,
-        require_mention: bool,
-        bot_user_id: &str,
-    ) -> Option<InboundMessage> {
-        if msg.is_from_bot() || msg.content.is_empty() {
-            return None;
-        }
-        let is_group = !msg.is_dm();
-        if is_group && require_mention && !msg.mentions_user(bot_user_id) {
-            return None;
-        }
-        Some(InboundMessage {
-            channel_key: key.clone(),
-            user_id: msg.author.id.clone(),
-            content: msg.content.clone(),
-            message_id: msg.id.clone(),
-            chat_id: msg.channel_id.clone(),
-            is_group,
-            mentions_bot: msg.mentions_user(bot_user_id),
-        })
-    }
 }
 
 #[async_trait]
@@ -86,7 +55,7 @@ impl ChannelAdapter for DiscordAdapter {
         &self,
         cfg: &crate::models::ChannelAccountConfig,
     ) -> GatewayResult<()> {
-        if !api_keys::has_key(&format!("raw:gateway.discord.{}", cfg.account_id)) {
+        if !tokens::has("discord", &cfg.account_id, "default").unwrap_or(false) {
             return Err(GatewayError::auth("token Discord non configuré"));
         }
         Ok(())
