@@ -5,6 +5,7 @@ import torch
 from chronos import BaseChronosPipeline, Chronos2Pipeline
 
 from .config_utils import config_int, trim_history
+from .device_utils import move_tensor, transformers_device_map
 from .validation import (
     quantile_key,
     read_numeric_value,
@@ -19,7 +20,8 @@ from .validation import (
 
 
 class ChronosAdapter:
-    def __init__(self, _family_id, _model_name, model_dir):
+    def __init__(self, _family_id, _model_name, model_dir, device="gpu"):
+        self.device = device
         self.kind, self.pipeline = self._load_pipeline(model_dir)
 
     def predict(self, payload, horizon, quantile_levels):
@@ -31,7 +33,7 @@ class ChronosAdapter:
         return self._predict_bolt(values, horizon, quantile_levels)
 
     def _predict_bolt(self, values, horizon, quantile_levels):
-        context = torch.tensor(values, dtype=torch.float32)
+        context = move_tensor(torch.tensor(values, dtype=torch.float32), self.device)
         quantiles, median = self.pipeline.predict_quantiles(
             context, prediction_length=horizon, quantile_levels=quantile_levels
         )
@@ -40,7 +42,9 @@ class ChronosAdapter:
         )
 
     def _predict_chronos2(self, values, horizon, quantile_levels):
-        context = torch.tensor(values, dtype=torch.float32).view(1, 1, -1)
+        context = move_tensor(
+            torch.tensor(values, dtype=torch.float32).view(1, 1, -1), self.device
+        )
         quantile_list, mean_list = self.pipeline.predict_quantiles(
             context, prediction_length=horizon, quantile_levels=quantile_levels
         )
@@ -126,10 +130,10 @@ class ChronosAdapter:
         architectures = config.get("architectures") or []
         if "Chronos2Model" in architectures:
             return "chronos2", Chronos2Pipeline.from_pretrained(
-                str(model_dir), device_map="cpu"
+                str(model_dir), device_map=transformers_device_map(self.device)
             )
         return "chronos_bolt", BaseChronosPipeline.from_pretrained(
-            str(model_dir), device_map="cpu"
+            str(model_dir), device_map=transformers_device_map(self.device)
         )
 
 

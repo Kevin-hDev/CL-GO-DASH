@@ -3,7 +3,8 @@ from .config_utils import config_bool
 
 
 class TabPfnTsAdapter:
-    def __init__(self, _family_id, _model_name, _model_dir):
+    def __init__(self, _family_id, _model_name, _model_dir, device="gpu"):
+        self.device = device
         self.pipeline = None
 
     def predict(self, payload, horizon, quantile_levels):

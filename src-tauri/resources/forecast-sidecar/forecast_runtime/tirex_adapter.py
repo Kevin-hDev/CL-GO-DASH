@@ -1,11 +1,13 @@
 from .adapter_utils import forecast_payload_result, values_tensor
 from .config_utils import config, standard_quantile_levels
+from .device_utils import move_model, move_tensor
 from .quantile_utils import select_standard_quantiles
 
 
 class TiRexAdapter:
-    def __init__(self, _family_id, _model_name, model_dir):
+    def __init__(self, _family_id, _model_name, model_dir, device="gpu"):
         self.model_dir = str(model_dir)
+        self.device = device
         self.model = None
 
     def predict(self, payload, horizon, quantile_levels):
@@ -24,7 +26,7 @@ class TiRexAdapter:
 
         with torch.no_grad():
             quantiles, mean = self._load_model().forecast(
-                context=values_tensor(values).view(1, -1),
+                context=move_tensor(values_tensor(values), self.device).view(1, -1),
                 prediction_length=horizon,
             )
         if config(payload).get("output_type") == "mean":
@@ -38,5 +40,5 @@ class TiRexAdapter:
         if self.model is None:
             from tirex import load_model
 
-            self.model = load_model(self.model_dir)
+            self.model = move_model(load_model(self.model_dir), self.device)
         return self.model

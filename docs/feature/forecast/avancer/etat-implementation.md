@@ -39,7 +39,7 @@ Forecast n'est **pas terminé**, mais il est **réellement utilisable**.
 | Familles de modèles | 11 familles / 25 variantes cataloguées | Dispatch runtime complet côté app |
 | Réglages fins modèles | Page `Config` ajoutée | Schémas, édition, sauvegarde, validation et transmission runtime branchés |
 | Registry moteurs | Toutes familles déclarées | Adapters locaux branchés, statuts installés/runnable corrigés, capacités fines centralisées |
-| Réglage matériel global | Hérité dans `Config` | Affiché en lecture seule, application runtime fine à finaliser |
+| Réglage matériel global | Appliqué au sidecar Forecast | CPU/GPU et timeout de déchargement hérités des paramètres avancés |
 | Backtesting / baselines | Non terminé | À faire |
 | Exports | V1 centralisée backend | CSV, XLSX, JSON, PNG, SVG, PDF et clipboard branchés, sortie dans Téléchargements |
 | Qualité des données | Non traité | Utile mais non prioritaire |
@@ -115,6 +115,14 @@ Présent dans le catalogue et visible dans les paramètres Forecast :
 - Installation des dépendances Python par famille
 - Stamps par famille pour éviter les réinstallations inutiles
 - Erreurs utilisateur génériques si une dépendance ou un adapter échoue
+- Respect du réglage matériel global :
+  - `cpu` force les adapters locaux compatibles sur CPU ;
+  - `gpu` utilise CUDA ou Metal/MPS quand PyTorch le permet, sinon fallback CPU ;
+  - le sidecar redémarre si le réglage matériel change.
+- Respect du timeout global de déchargement modèle :
+  - `0` décharge après usage ;
+  - `2m`, `5m`, `10m`, `15m`, `30m` planifient l'arrêt idle ;
+  - `forever` garde le moteur chargé.
 
 ### Vue principale
 
@@ -244,6 +252,7 @@ Présent dans le catalogue et visible dans les paramètres Forecast :
 - Réglages matériels globaux affichés en héritage :
   - `device`
   - timeout de déchargement modèle
+- Réglages matériels globaux appliqués au lancement du sidecar Forecast
 - Sidecar Python adapté pour lire uniquement les paramètres connus par chaque adapter
 - Les paramètres non réellement câblés ont été retirés des fiches pour éviter les faux réglages
 - Clés i18n ajoutées dans les 7 langues
@@ -364,9 +373,11 @@ Paramètres à ne pas exposer pour l'instant :
 
 ### Réglage matériel
 
-- Forecast doit réutiliser le réglage CPU/GPU global déjà présent dans `/paramètres/avancé` ;
-- il ne faut pas créer un deuxième réglage matériel isolé dans Forecast ;
-- le sidecar Forecast devra respecter ce réglage comme Ollama.
+- Forecast réutilise le réglage CPU/GPU global déjà présent dans `/paramètres/avancé` ;
+- aucun deuxième réglage matériel isolé n'a été ajouté dans Forecast ;
+- le sidecar Forecast reçoit le réglage au démarrage ;
+- les adapters Torch compatibles basculent sur CPU, CUDA ou Metal/MPS selon le réglage et la machine ;
+- le timeout de déchargement global est appliqué après chaque prédiction locale.
 
 ### Socle graphique
 
@@ -395,15 +406,12 @@ Paramètres à ne pas exposer pour l'instant :
 
 - continuer les tests réels par famille ;
 - vérifier les paramètres qui peuvent modifier fortement le résultat ;
-- appliquer plus finement le réglage matériel global au sidecar Forecast ;
 - documenter les paramètres dans la documentation utilisateur Forecast.
 
 ### Réglage matériel Forecast
 
-- analyser le flux actuel Ollama ;
-- réutiliser le réglage global CPU/GPU ;
-- appliquer ce réglage au sidecar Forecast ;
-- relancer proprement le moteur si nécessaire.
+- validé côté câblage backend/sidecar ;
+- à tester visuellement en conditions réelles avec `cpu`, `gpu`, `0`, `2m` et `forever`.
 
 ### Backtesting / baselines
 
@@ -526,8 +534,7 @@ On a maintenant :
 La suite logique est maintenant :
 
 1. compléter la validation live des modèles non encore testés
-2. brancher plus finement Forecast sur le réglage matériel global
-3. ajouter les slash commands Forecast
-4. ajouter ensuite la qualité des données comme lecture informative
-5. faire une passe finale documentation + UI + i18n
-6. lancer une validation end-to-end complète avec un agent LLM
+2. ajouter les slash commands Forecast
+3. ajouter ensuite la qualité des données comme lecture informative
+4. faire une passe finale documentation + UI + i18n
+5. lancer une validation end-to-end complète avec un agent LLM

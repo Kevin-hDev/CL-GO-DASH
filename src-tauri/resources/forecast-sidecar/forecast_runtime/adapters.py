@@ -14,7 +14,7 @@ ADAPTERS = {
 }
 
 
-def load_adapter(family_id, model_name, models_dir):
+def load_adapter(family_id, model_name, models_dir, device="gpu"):
     adapter_target = ADAPTERS.get(family_id)
     if adapter_target is None:
         raise SystemExit("missing_adapter")
@@ -26,4 +26,4 @@ def load_adapter(family_id, model_name, models_dir):
     model_dir = Path(models_dir).joinpath(model_name)
     if not model_dir.exists():
         raise SystemExit("missing_model")
-    return adapter_cls(family_id, model_name, model_dir)
+    return adapter_cls(family_id, model_name, model_dir, device)

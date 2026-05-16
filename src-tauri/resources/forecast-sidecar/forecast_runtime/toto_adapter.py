@@ -6,13 +6,15 @@ from .adapter_utils import (
 )
 from .config_utils import config_bool, config_int
 from .config_utils import standard_quantile_levels
+from .device_utils import move_model, move_tensor
 from .toto_covariates import build_covariate_jobs, format_covariate_predictions
 from .validation import validate_column_names
 
 
 class TotoAdapter:
-    def __init__(self, _family_id, _model_name, model_dir):
+    def __init__(self, _family_id, _model_name, model_dir, device="gpu"):
         self.model_dir = str(model_dir)
+        self.device = device
         self.model = None
 
     def predict(self, payload, horizon, quantile_levels):
@@ -58,16 +60,16 @@ class TotoAdapter:
     def _forecast_one(self, values, horizon, quantile_levels, payload):
         import torch
 
-        model = self._load_model().to("cpu").eval()
+        model = move_model(self._load_model(), self.device).eval()
         patch_size = max(1, int(getattr(model.config, "patch_size", 32)))
         pad_count = (-len(values)) % patch_size
         padded = ([values[0]] * pad_count) + values if pad_count else values
 
-        target = values_tensor(padded).view(1, 1, -1)
+        target = move_tensor(values_tensor(padded), self.device).view(1, 1, -1)
         mask = torch.ones_like(target, dtype=torch.bool)
         if pad_count:
             mask[..., :pad_count] = False
-        series_ids = torch.zeros(1, 1, dtype=torch.long)
+        series_ids = move_tensor(torch.zeros(1, 1, dtype=torch.long), self.device)
         decode_block_size = config_int(payload, "decode_block_size", 768, 1, 4096)
         has_missing_values = config_bool(payload, "has_missing_values", bool(pad_count))
         with torch.no_grad():
@@ -89,16 +91,16 @@ class TotoAdapter:
     ):
         import torch
 
-        model = self._load_model().to("cpu").eval()
+        model = move_model(self._load_model(), self.device).eval()
         patch_size = max(1, int(getattr(model.config, "patch_size", 32)))
         pad_count = (-len(values)) % patch_size
         padded = ([values[0]] * pad_count) + values if pad_count else values
 
-        target = values_tensor(padded).view(1, 1, -1)
+        target = move_tensor(values_tensor(padded), self.device).view(1, 1, -1)
         mask = torch.ones_like(target, dtype=torch.bool)
         if pad_count:
             mask[..., :pad_count] = False
-        series_ids = torch.zeros(1, 1, dtype=torch.long)
+        series_ids = move_tensor(torch.zeros(1, 1, dtype=torch.long), self.device)
 
         dynamic_values = []
         dynamic_masks = []
@@ -114,11 +116,16 @@ class TotoAdapter:
             dynamic_values.append(padded_values)
             dynamic_masks.append(padded_mask)
 
-        known_dynamic = values_tensor(dynamic_values).view(1, len(dynamic_values), -1)
+        known_dynamic = move_tensor(values_tensor(dynamic_values), self.device).view(
+            1, len(dynamic_values), -1
+        )
         known_dynamic_mask = torch.tensor(dynamic_masks, dtype=torch.bool).view(
             1, len(dynamic_masks), -1
         )
-        known_dynamic_ids = torch.zeros(1, len(dynamic_values), dtype=torch.long)
+        known_dynamic_mask = move_tensor(known_dynamic_mask, self.device)
+        known_dynamic_ids = move_tensor(
+            torch.zeros(1, len(dynamic_values), dtype=torch.long), self.device
+        )
 
         decode_block_size = config_int(payload, "decode_block_size", 768, 1, 4096)
         has_missing_values = config_bool(payload, "has_missing_values", False)

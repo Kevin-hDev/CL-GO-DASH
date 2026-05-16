@@ -87,7 +87,8 @@ def main():
 
     MODEL_NAME = args.model
     FAMILY_ID = args.family
-    ADAPTER = load_adapter(args.family, args.model, args.models_dir)
+    device = os.environ.get("CLGO_FORECAST_DEVICE", "gpu")
+    ADAPTER = load_adapter(args.family, args.model, args.models_dir, device)
 
     server = ThreadingHTTPServer(("127.0.0.1", args.port), ForecastHandler)
     try:

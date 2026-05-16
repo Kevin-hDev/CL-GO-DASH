@@ -4,11 +4,13 @@ from .adapter_utils import (
     values_tensor,
 )
 from .config_utils import config_bool, standard_quantile_levels
+from .device_utils import move_model, move_tensor
 
 
 class KairosAdapter:
-    def __init__(self, _family_id, _model_name, model_dir):
+    def __init__(self, _family_id, _model_name, model_dir, device="gpu"):
         self.model_dir = str(model_dir)
+        self.device = device
         self.model = None
 
     def predict(self, payload, horizon, quantile_levels):
@@ -25,12 +27,12 @@ class KairosAdapter:
     def _forecast_one(self, values, horizon, quantile_levels, payload):
         import torch
 
-        context = values_tensor(values).view(1, -1)
+        context = move_tensor(values_tensor(values), self.device).view(1, -1)
         preserve_positivity = config_bool(payload, "preserve_positivity", True)
         flipped = config_bool(payload, "average_with_flipped_input", True)
         generation = config_bool(payload, "generation", True)
         with torch.no_grad():
-            output = self._load_model().to("cpu").eval()(
+            output = move_model(self._load_model(), self.device).eval()(
                 past_target=context,
                 prediction_length=horizon,
                 generation=generation,

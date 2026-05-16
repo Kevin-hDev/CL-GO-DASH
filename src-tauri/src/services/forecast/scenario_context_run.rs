@@ -31,13 +31,15 @@ pub async fn rerun(
     let endpoint = sidecar::start(chronos, model_id, runtime.family_id)
         .await
         .map_err(|_| "Impossible de démarrer le service de prédiction".to_string())?;
-    client_chronos::predict(
+    let prediction = client_chronos::predict(
         &endpoint.base_url,
         endpoint.auth_token.as_str(),
         &request,
         None,
     )
-    .await
+    .await;
+    sidecar::schedule_idle_stop(chronos);
+    prediction
 }
 
 fn build_forecast_request(

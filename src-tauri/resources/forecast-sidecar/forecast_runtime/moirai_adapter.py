@@ -3,8 +3,9 @@ from .config_utils import config_int
 
 
 class MoiraiAdapter:
-    def __init__(self, _family_id, _model_name, model_dir):
+    def __init__(self, _family_id, _model_name, model_dir, device="gpu"):
         self.model_dir = str(model_dir)
+        self.device = device
         self.predictor = None
         self.predictor_key = None
 

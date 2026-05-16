@@ -1,11 +1,13 @@
 from .adapter_utils import forecast_payload_result, values_tensor
 from .config_utils import config_int, standard_quantile_levels
+from .device_utils import move_tensor, transformers_device_map
 from .quantile_utils import select_standard_quantiles
 
 
 class TimesFmAdapter:
-    def __init__(self, _family_id, _model_name, model_dir):
+    def __init__(self, _family_id, _model_name, model_dir, device="gpu"):
         self.model_dir = str(model_dir)
+        self.device = device
         self.model = None
 
     def predict(self, payload, horizon, quantile_levels):
@@ -33,7 +35,8 @@ class TimesFmAdapter:
 
         model = self._load_transformers_model(TimesFm2_5ModelForPrediction)
         with torch.no_grad():
-            outputs = model(past_values=[values_tensor(values)], return_dict=True)
+            context = move_tensor(values_tensor(values), self.device)
+            outputs = model(past_values=[context], return_dict=True)
         median = outputs.mean_predictions[0][:horizon]
         quantiles = self._select_quantiles(
             getattr(outputs, "full_predictions", None),
@@ -46,7 +49,7 @@ class TimesFmAdapter:
     def _load_transformers_model(self, model_class):
         if self.model is None:
             self.model = model_class.from_pretrained(
-                self.model_dir, device_map="cpu"
+                self.model_dir, device_map=transformers_device_map(self.device)
             ).eval()
         return self.model
 
