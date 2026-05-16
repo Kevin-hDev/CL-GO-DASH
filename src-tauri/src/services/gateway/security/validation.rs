@@ -1,6 +1,5 @@
 const MAX_BYTES: usize = 32_768;
 const MAX_CHARS: usize = 8_000;
-const MAX_ID_LEN: usize = 128;
 
 pub struct ValidationResult {
     pub valid: bool,
@@ -36,33 +35,13 @@ pub fn validate_message(content: &str) -> ValidationResult {
     ValidationResult::ok()
 }
 
-pub fn validate_telegram_reply(content: &str) -> ValidationResult {
-    let utf16_len: usize = content.chars().map(|c| c.len_utf16()).sum();
-    if utf16_len > 4096 {
-        return ValidationResult::reject("dépasse la limite Telegram 4096");
-    }
-    ValidationResult::ok()
-}
-
-pub fn validate_id(id: &str) -> ValidationResult {
-    if id.is_empty() || id.len() > MAX_ID_LEN {
-        return ValidationResult::reject("identifiant invalide");
-    }
-    if !id
-        .chars()
-        .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
-    {
-        return ValidationResult::reject("identifiant invalide");
-    }
-    ValidationResult::ok()
-}
-
 fn has_forbidden_control_chars(s: &str) -> bool {
     s.chars()
         .any(|c| c.is_control() && c != '\n' && c != '\t' && c != '\r')
 }
 
-pub fn utf16_len(s: &str) -> usize {
+#[cfg(test)]
+fn utf16_len(s: &str) -> usize {
     s.chars().map(|c| c.len_utf16()).sum()
 }
 
@@ -119,20 +98,6 @@ mod tests {
     }
 
     #[test]
-    fn valid_ids() {
-        assert!(validate_id("user_123").valid);
-        assert!(validate_id("a-b-c").valid);
-    }
-
-    #[test]
-    fn rejects_invalid_ids() {
-        assert!(!validate_id("").valid);
-        assert!(!validate_id(&"x".repeat(MAX_ID_LEN + 1)).valid);
-        assert!(!validate_id("user name").valid);
-        assert!(!validate_id("user@name").valid);
-    }
-
-    #[test]
     fn utf16_len_ascii() {
         assert_eq!(utf16_len("hello"), 5);
     }
@@ -152,16 +117,5 @@ mod tests {
         }
         let rejoined: String = chunks.into_iter().collect();
         assert_eq!(rejoined, text);
-    }
-
-    #[test]
-    fn telegram_reply_under_limit() {
-        assert!(validate_telegram_reply("short").valid);
-    }
-
-    #[test]
-    fn telegram_reply_over_limit() {
-        let long = "a".repeat(4097);
-        assert!(!validate_telegram_reply(&long).valid);
     }
 }

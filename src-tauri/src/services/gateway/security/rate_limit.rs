@@ -71,6 +71,7 @@ impl RateLimiter {
         }
     }
 
+    #[cfg(test)]
     pub fn reset(&mut self, key: &RateLimitKey) {
         self.buckets.remove(key);
     }

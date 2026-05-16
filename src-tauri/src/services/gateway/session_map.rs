@@ -55,12 +55,6 @@ pub async fn insert_bounded(
     flush(&map)
 }
 
-pub async fn remove(channel_key: &str) -> Result<(), String> {
-    let mut map = MAP.lock().await;
-    map.remove(channel_key);
-    flush(&map)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

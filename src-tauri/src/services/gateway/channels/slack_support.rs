@@ -28,8 +28,11 @@ impl SlackAdapter {
             .json()
             .await
             .map_err(|e| GatewayError::network(format!("parse: {e}")))?;
+        if !resp.ok {
+            return Err(GatewayError::auth(resp.error.unwrap_or_default()));
+        }
         resp.url
-            .ok_or_else(|| GatewayError::auth(resp.error.unwrap_or_default()))
+            .ok_or_else(|| GatewayError::auth("url websocket Slack manquante"))
     }
 
     pub(super) fn to_inbound(evt: &SlackEvent, key: &ChannelKey) -> Option<InboundMessage> {
@@ -40,7 +43,7 @@ impl SlackAdapter {
             channel_key: key.clone(),
             user_id: evt.user.clone()?,
             content: evt.text.clone()?,
-            message_id: evt.ts.clone()?,
+            message_id: evt.thread_ts.clone().or_else(|| evt.ts.clone())?,
             chat_id: evt.channel.clone()?,
             is_group: true,
             mentions_bot: false,

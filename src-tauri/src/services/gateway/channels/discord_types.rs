@@ -47,7 +47,6 @@ pub struct DiscordMessage {
 #[derive(Debug, Deserialize)]
 pub struct DiscordUser {
     pub id: String,
-    pub username: String,
     pub bot: Option<bool>,
 }
 
@@ -70,9 +69,7 @@ pub struct MessageReference {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct SentMessage {
-    pub id: String,
-}
+pub struct SentMessage {}
 
 #[derive(Debug, Deserialize)]
 pub struct GatewayHello {
@@ -82,7 +79,6 @@ pub struct GatewayHello {
 #[derive(Debug, Deserialize)]
 pub struct ReadyEvent {
     pub user: DiscordUser,
-    pub session_id: String,
 }
 
 pub const GATEWAY_URL: &str = "wss://gateway.discord.gg/?v=10&encoding=json";
@@ -116,7 +112,6 @@ mod tests {
     fn bot_detection() {
         let u = DiscordUser {
             id: "1".into(),
-            username: "bot".into(),
             bot: Some(true),
         };
         let msg = DiscordMessage {
@@ -135,12 +130,10 @@ mod tests {
     fn mentions_detection() {
         let author = DiscordUser {
             id: "1".into(),
-            username: "alice".into(),
             bot: None,
         };
         let mentioned = DiscordUser {
             id: "99".into(),
-            username: "mybot".into(),
             bot: Some(true),
         };
         let msg = DiscordMessage {

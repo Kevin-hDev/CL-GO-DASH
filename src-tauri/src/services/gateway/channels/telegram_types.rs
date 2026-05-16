@@ -45,8 +45,18 @@ pub struct TgEntity {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct TgSentMessage {
-    pub message_id: i64,
+pub struct TgSentMessage {}
+
+impl<T> TgResponse<T> {
+    pub fn error_message(self) -> String {
+        let description = self
+            .description
+            .unwrap_or_else(|| "réponse Telegram invalide".into());
+        match self.error_code {
+            Some(code) => format!("{description} ({code})"),
+            None => description,
+        }
+    }
 }
 
 impl TgChat {

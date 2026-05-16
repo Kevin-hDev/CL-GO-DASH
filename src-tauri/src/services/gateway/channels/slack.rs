@@ -10,8 +10,8 @@ use zeroize::Zeroizing;
 
 use super::slack_types::*;
 use super::{
-    capabilities::ChannelCapabilities, ChannelAdapter, ChannelContext, DeliveryReceipt,
-    GatewayError, GatewayResult, InboundMessage, OutboundMessage,
+    capabilities::ChannelCapabilities, ChannelAdapter, ChannelContext, GatewayError, GatewayResult,
+    InboundMessage, OutboundMessage,
 };
 use crate::services::gateway::tokens;
 
@@ -38,15 +38,10 @@ impl SlackAdapter {
             })),
         }
     }
-
 }
 
 #[async_trait]
 impl ChannelAdapter for SlackAdapter {
-    fn id(&self) -> &'static str {
-        "slack"
-    }
-
     fn capabilities(&self) -> ChannelCapabilities {
         ChannelCapabilities::slack()
     }
@@ -113,6 +108,9 @@ impl ChannelAdapter for SlackAdapter {
                                 let ack = serde_json::to_string(&SlackAck { envelope_id: eid.clone() }).unwrap_or_default();
                                 let _ = sink.send(WsMessage::Text(ack.into())).await;
                             }
+                            if sm.msg_type != "events_api" {
+                                continue;
+                            }
                             if let Some(payload) = &sm.payload {
                                 if let Some(evt) = &payload.event {
                                     if let Some(inbound) = Self::to_inbound(evt, &key) {
@@ -127,7 +125,7 @@ impl ChannelAdapter for SlackAdapter {
         }))
     }
 
-    async fn send(&self, msg: OutboundMessage) -> GatewayResult<DeliveryReceipt> {
+    async fn send(&self, msg: OutboundMessage) -> GatewayResult<()> {
         let token = {
             let s = self.state.read().await;
             s.bot_token
@@ -150,13 +148,10 @@ impl ChannelAdapter for SlackAdapter {
             .await
             .map_err(|e| GatewayError::network(format!("parse: {e}")))?;
 
-        match resp.ts {
-            Some(ts) => Ok(DeliveryReceipt { message_id: ts }),
-            None => Err(GatewayError::network(resp.error.unwrap_or_default())),
+        if resp.ok && resp.ts.is_some() {
+            Ok(())
+        } else {
+            Err(GatewayError::network(resp.error.unwrap_or_default()))
         }
-    }
-
-    async fn health(&self) -> bool {
-        self.state.read().await.bot_token.is_some()
     }
 }

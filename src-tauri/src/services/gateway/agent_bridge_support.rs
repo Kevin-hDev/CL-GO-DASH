@@ -17,7 +17,10 @@ pub(crate) fn resolve_provider_model(
     if !account.provider.is_empty() && !account.model.is_empty() {
         return (account.provider.clone(), account.model.clone());
     }
-    (config.default_provider.clone(), config.default_model.clone())
+    (
+        config.default_provider.clone(),
+        config.default_model.clone(),
+    )
 }
 
 pub(crate) fn validate_inbound(msg: &InboundMessage) -> Result<(), BridgeError> {

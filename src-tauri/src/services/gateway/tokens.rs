@@ -29,13 +29,25 @@ impl GatewayTokenKind {
     }
 }
 
-pub fn vault_key(channel_id: &str, account_id: &str, kind: GatewayTokenKind) -> Result<String, String> {
+pub fn vault_key(
+    channel_id: &str,
+    account_id: &str,
+    kind: GatewayTokenKind,
+) -> Result<String, String> {
     ids::validate_channel_id(channel_id)?;
     ids::validate_account_id(account_id)?;
-    Ok(format!("gateway.{channel_id}.{account_id}{}", kind.suffix()))
+    Ok(format!(
+        "gateway.{channel_id}.{account_id}{}",
+        kind.suffix()
+    ))
 }
 
-pub fn set(channel_id: &str, account_id: &str, token_kind: &str, mut token: String) -> Result<(), String> {
+pub fn set(
+    channel_id: &str,
+    account_id: &str,
+    token_kind: &str,
+    mut token: String,
+) -> Result<(), String> {
     let kind = GatewayTokenKind::parse(channel_id, token_kind)?;
     if token.is_empty() || token.len() > 8192 {
         token.zeroize();
@@ -66,7 +78,11 @@ pub fn delete(channel_id: &str, account_id: &str, token_kind: Option<&str>) -> R
             api_keys::delete_raw(&vault_key(channel_id, account_id, GatewayTokenKind::Bot)?)?;
             api_keys::delete_raw(&vault_key(channel_id, account_id, GatewayTokenKind::App)?)
         }
-        None => api_keys::delete_raw(&vault_key(channel_id, account_id, GatewayTokenKind::Default)?),
+        None => api_keys::delete_raw(&vault_key(
+            channel_id,
+            account_id,
+            GatewayTokenKind::Default,
+        )?),
     }
 }
 

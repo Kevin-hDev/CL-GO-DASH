@@ -7,7 +7,7 @@ use tokio::sync::{mpsc, RwLock};
 use super::channels::{ChannelAdapter, ChannelContext, GatewayError, InboundMessage};
 use super::security::audit::{self, AuditAction};
 use super::security::ids;
-use super::service::{build_health, GatewayState};
+use super::service_state::{build_health, GatewayState};
 use super::supervisor::{ChannelSupervisor, RestartDecision};
 use super::types::{ChannelHealthEntry, ChannelKey, ChannelStatus};
 use super::{tokens, watchdog::StallWatchdog};
@@ -50,7 +50,7 @@ pub(crate) async fn run_supervised_channel(
     key: ChannelKey,
     app: tauri::AppHandle,
 ) {
-    let mut supervisor = ChannelSupervisor::new(&key.channel_id, &key.account_id, &ctx.cancel);
+    let mut supervisor = ChannelSupervisor::new(&key.channel_id, &key.account_id);
     let watchdog = StallWatchdog::spawn(Duration::from_secs(180), |_| {});
     watchdog.arm();
     loop {
@@ -91,7 +91,14 @@ async fn handle_channel_run(
 ) -> bool {
     supervisor.mark_started();
     set_status(state, app, key, ChannelStatus::Running, None).await;
-    audit::log_gateway_action(&key.channel_id, &key.account_id, "", AuditAction::ChannelStarted, None, None);
+    audit::log_gateway_action(
+        &key.channel_id,
+        &key.account_id,
+        "",
+        AuditAction::ChannelStarted,
+        None,
+        None,
+    );
     let _ = handle.await;
     if ctx.cancel.is_cancelled() {
         return false;
@@ -112,8 +119,24 @@ async fn handle_restart(
             tokio::time::sleep(delay).await;
             true
         }
-        RestartDecision::GiveUp(_) => {
-            set_status(state, app, key, ChannelStatus::Error, Some("Canal indisponible")).await;
+        RestartDecision::GiveUp(reason) => {
+            let safe = audit::sanitize_error(&reason);
+            audit::log_gateway_action(
+                &key.channel_id,
+                &key.account_id,
+                "",
+                AuditAction::ChannelStopped,
+                Some("restart_give_up"),
+                Some(&safe),
+            );
+            set_status(
+                state,
+                app,
+                key,
+                ChannelStatus::Error,
+                Some("Canal indisponible"),
+            )
+            .await;
             false
         }
     }

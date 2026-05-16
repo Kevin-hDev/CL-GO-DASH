@@ -6,11 +6,11 @@ use reqwest::Client;
 use tokio::sync::{mpsc, RwLock};
 use zeroize::Zeroizing;
 
-use super::{
-    capabilities::ChannelCapabilities, ChannelAdapter, ChannelContext, DeliveryReceipt,
-    GatewayError, GatewayResult, InboundMessage, OutboundMessage,
-};
 use super::telegram_types::*;
+use super::{
+    capabilities::ChannelCapabilities, ChannelAdapter, ChannelContext, GatewayError, GatewayResult,
+    InboundMessage, OutboundMessage,
+};
 use crate::services::gateway::tokens;
 
 pub struct TelegramAdapter {
@@ -42,15 +42,10 @@ impl TelegramAdapter {
     pub fn api_url(token: &str, method: &str) -> String {
         format!("https://api.telegram.org/bot{token}/{method}")
     }
-
 }
 
 #[async_trait]
 impl ChannelAdapter for TelegramAdapter {
-    fn id(&self) -> &'static str {
-        "telegram"
-    }
-
     fn capabilities(&self) -> ChannelCapabilities {
         ChannelCapabilities::telegram()
     }
@@ -100,7 +95,7 @@ impl ChannelAdapter for TelegramAdapter {
         }))
     }
 
-    async fn send(&self, msg: OutboundMessage) -> GatewayResult<DeliveryReceipt> {
+    async fn send(&self, msg: OutboundMessage) -> GatewayResult<()> {
         let state = self.state.read().await;
         let token = state
             .bot_token
@@ -124,15 +119,10 @@ impl ChannelAdapter for TelegramAdapter {
             .await
             .map_err(|e| GatewayError::network(format!("parse: {e}")))?;
 
-        match resp.result {
-            Some(s) => Ok(DeliveryReceipt {
-                message_id: s.message_id.to_string(),
-            }),
-            None => Err(GatewayError::network(resp.description.unwrap_or_default())),
+        if resp.ok && resp.result.is_some() {
+            Ok(())
+        } else {
+            Err(GatewayError::network(resp.error_message()))
         }
-    }
-
-    async fn health(&self) -> bool {
-        self.state.read().await.bot_token.is_some()
     }
 }

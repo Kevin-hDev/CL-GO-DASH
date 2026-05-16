@@ -11,8 +11,8 @@ use zeroize::Zeroizing;
 use super::discord_gateway::{build_identify, heartbeat_loop};
 use super::discord_types::*;
 use super::{
-    capabilities::ChannelCapabilities, ChannelAdapter, ChannelContext, DeliveryReceipt,
-    GatewayError, GatewayResult, InboundMessage, OutboundMessage,
+    capabilities::ChannelCapabilities, ChannelAdapter, ChannelContext, GatewayError, GatewayResult,
+    InboundMessage, OutboundMessage,
 };
 use crate::services::gateway::tokens;
 
@@ -39,14 +39,10 @@ impl DiscordAdapter {
             })),
         }
     }
-
 }
 
 #[async_trait]
 impl ChannelAdapter for DiscordAdapter {
-    fn id(&self) -> &'static str {
-        "discord"
-    }
     fn capabilities(&self) -> ChannelCapabilities {
         ChannelCapabilities::discord()
     }
@@ -157,7 +153,7 @@ impl ChannelAdapter for DiscordAdapter {
         }))
     }
 
-    async fn send(&self, msg: OutboundMessage) -> GatewayResult<DeliveryReceipt> {
+    async fn send(&self, msg: OutboundMessage) -> GatewayResult<()> {
         let token = {
             let s = self.state.read().await;
             s.bot_token
@@ -173,7 +169,7 @@ impl ChannelAdapter for DiscordAdapter {
             allowed_mentions: AllowedMentions { parse: vec![] },
             message_reference: msg.reply_to.map(|id| MessageReference { message_id: id }),
         };
-        let resp: SentMessage = self
+        let _resp: SentMessage = self
             .client
             .post(&url)
             .header("Authorization", format!("Bot {}", token.as_str()))
@@ -184,12 +180,6 @@ impl ChannelAdapter for DiscordAdapter {
             .json()
             .await
             .map_err(|e| GatewayError::network(format!("parse: {e}")))?;
-        Ok(DeliveryReceipt {
-            message_id: resp.id,
-        })
-    }
-
-    async fn health(&self) -> bool {
-        self.state.read().await.bot_token.is_some()
+        Ok(())
     }
 }

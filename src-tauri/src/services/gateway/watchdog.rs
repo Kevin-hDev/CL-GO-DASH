@@ -50,6 +50,7 @@ impl StallWatchdog {
         self.armed.store(true, Ordering::Relaxed);
     }
 
+    #[cfg(test)]
     pub fn disarm(&self) {
         self.armed.store(false, Ordering::Relaxed);
     }
@@ -62,6 +63,7 @@ impl StallWatchdog {
         self.cancel.cancel();
     }
 
+    #[cfg(test)]
     pub fn is_armed(&self) -> bool {
         self.armed.load(Ordering::Relaxed)
     }

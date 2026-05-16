@@ -37,11 +37,6 @@ pub struct OutboundMessage {
     pub reply_to: Option<String>,
 }
 
-#[derive(Debug)]
-pub struct DeliveryReceipt {
-    pub message_id: String,
-}
-
 #[derive(Clone)]
 pub struct ChannelContext {
     pub key: ChannelKey,
@@ -81,8 +76,6 @@ impl GatewayError {
 
 #[async_trait]
 pub trait ChannelAdapter: Send + Sync {
-    fn id(&self) -> &'static str;
-
     fn capabilities(&self) -> ChannelCapabilities;
 
     async fn validate_config(&self, cfg: &ChannelAccountConfig) -> GatewayResult<()>;
@@ -93,7 +86,5 @@ pub trait ChannelAdapter: Send + Sync {
         sender: tokio::sync::mpsc::Sender<InboundMessage>,
     ) -> GatewayResult<JoinHandle<()>>;
 
-    async fn send(&self, msg: OutboundMessage) -> GatewayResult<DeliveryReceipt>;
-
-    async fn health(&self) -> bool;
+    async fn send(&self, msg: OutboundMessage) -> GatewayResult<()>;
 }

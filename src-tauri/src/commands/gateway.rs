@@ -1,7 +1,7 @@
 use crate::models::GatewayConfig;
 use crate::services::gateway::service::GatewayService;
 use crate::services::gateway::tokens;
-use crate::services::gateway::types::GatewayHealth;
+use crate::services::gateway::types::{ChannelStatus, GatewayHealth};
 use tauri::Emitter;
 
 #[tauri::command]
@@ -52,12 +52,25 @@ pub async fn gateway_set_config(
     state: tauri::State<'_, GatewayService>,
     config: GatewayConfig,
 ) -> Result<(), String> {
+    let current_health = state.health().await;
+    let should_restart = current_health.running
+        && current_health
+            .channels
+            .iter()
+            .any(|c| matches!(c.status, ChannelStatus::Starting | ChannelStatus::Running));
     state.update_config(config.clone()).await;
 
     let mut full = crate::services::config::read_config().unwrap_or_default();
-    full.gateway = config;
+    full.gateway = config.clone();
     crate::services::config::write_config(&full)?;
 
+    if should_restart && config.enabled {
+        state.start(config, app).await;
+        return Ok(());
+    }
+    if should_restart {
+        state.stop().await;
+    }
     let _ = app.emit("gateway-status-changed", state.health().await);
     Ok(())
 }

@@ -7,11 +7,11 @@ use crate::commands::agent_chat_task::run_stream_task;
 use crate::models::GatewayConfig;
 use crate::services::agent_local::session_store;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
-use crate::services::gateway::channels::{ChannelAdapter, InboundMessage, OutboundMessage};
 use crate::services::gateway::agent_bridge_support::{
     audit_msg, block, build_external_key, emit_session_updated, find_account_config,
     find_or_create_session, resolve_provider_model, sync_session_model, validate_inbound,
 };
+use crate::services::gateway::channels::{ChannelAdapter, InboundMessage, OutboundMessage};
 use crate::services::gateway::message_convert;
 use crate::services::gateway::security::{
     allowlist::Allowlist,
@@ -72,7 +72,16 @@ impl GatewayAgentBridge {
         }
         let decision = self.limits.lock().await.consume(&msg);
         if !decision.allowed {
-            audit_msg(&msg, AuditAction::RateLimited, Some("rate_limited"), None);
+            let retry = format!(
+                "retry_after_ms={};remaining={}",
+                decision.retry_after_ms, decision.remaining
+            );
+            audit_msg(
+                &msg,
+                AuditAction::RateLimited,
+                Some("rate_limited"),
+                Some(&retry),
+            );
             return Err(BridgeError::Blocked("rate limited".into()));
         }
 

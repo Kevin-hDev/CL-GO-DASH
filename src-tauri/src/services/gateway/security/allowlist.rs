@@ -47,6 +47,7 @@ impl Allowlist {
         true
     }
 
+    #[cfg(test)]
     pub fn remove(&mut self, entry: &str) -> bool {
         let normalized = Self::normalize(entry);
         if self.set.remove(&normalized) {
@@ -64,16 +65,14 @@ impl Allowlist {
         self.set.contains(&Self::normalize(entry))
     }
 
+    #[cfg(test)]
     pub fn len(&self) -> usize {
         self.set.len()
     }
 
+    #[cfg(test)]
     pub fn is_empty(&self) -> bool {
         self.set.is_empty()
-    }
-
-    pub fn entries(&self) -> Vec<String> {
-        self.order.iter().cloned().collect()
     }
 
     fn normalize(entry: &str) -> String {

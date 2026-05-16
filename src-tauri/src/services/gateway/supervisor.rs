@@ -1,9 +1,5 @@
 use std::time::{Duration, Instant};
 
-use tokio_util::sync::CancellationToken;
-
-use super::types::ChannelStatus;
-
 const INITIAL_BACKOFF: Duration = Duration::from_secs(1);
 const MAX_BACKOFF: Duration = Duration::from_secs(60);
 const STABLE_THRESHOLD: Duration = Duration::from_secs(300);
@@ -12,7 +8,6 @@ const MAX_RETRIES: u32 = 10;
 pub struct ChannelSupervisor {
     channel_id: String,
     account_id: String,
-    cancel: CancellationToken,
     backoff: Duration,
     retries: u32,
     last_start: Option<Instant>,
@@ -24,19 +19,14 @@ pub enum RestartDecision {
 }
 
 impl ChannelSupervisor {
-    pub fn new(channel_id: &str, account_id: &str, parent_cancel: &CancellationToken) -> Self {
+    pub fn new(channel_id: &str, account_id: &str) -> Self {
         Self {
             channel_id: channel_id.to_string(),
             account_id: account_id.to_string(),
-            cancel: parent_cancel.child_token(),
             backoff: INITIAL_BACKOFF,
             retries: 0,
             last_start: None,
         }
-    }
-
-    pub fn cancel_token(&self) -> CancellationToken {
-        self.cancel.clone()
     }
 
     pub fn mark_started(&mut self) {
@@ -72,21 +62,7 @@ impl ChannelSupervisor {
         RestartDecision::Retry(delay)
     }
 
-    pub fn status_for_decision(decision: &RestartDecision) -> ChannelStatus {
-        match decision {
-            RestartDecision::Retry(_) => ChannelStatus::Starting,
-            RestartDecision::GiveUp(_) => ChannelStatus::Error,
-        }
-    }
-
-    pub fn channel_id(&self) -> &str {
-        &self.channel_id
-    }
-
-    pub fn account_id(&self) -> &str {
-        &self.account_id
-    }
-
+    #[cfg(test)]
     pub fn retries(&self) -> u32 {
         self.retries
     }
@@ -97,8 +73,7 @@ mod tests {
     use super::*;
 
     fn make_supervisor() -> ChannelSupervisor {
-        let root = CancellationToken::new();
-        ChannelSupervisor::new("telegram", "bot1", &root)
+        ChannelSupervisor::new("telegram", "bot1")
     }
 
     #[test]
@@ -150,15 +125,5 @@ mod tests {
         let mut sv = make_supervisor();
         assert!(matches!(sv.on_error(true), RestartDecision::GiveUp(_)));
         assert_eq!(sv.retries(), 0);
-    }
-
-    #[test]
-    fn child_token_is_linked() {
-        let root = CancellationToken::new();
-        let sv = ChannelSupervisor::new("tg", "b", &root);
-        let child = sv.cancel_token();
-        assert!(!child.is_cancelled());
-        root.cancel();
-        assert!(child.is_cancelled());
     }
 }

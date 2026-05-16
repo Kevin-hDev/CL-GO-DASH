@@ -23,6 +23,9 @@ impl TelegramAdapter {
             .json()
             .await
             .map_err(|e| GatewayError::network(format!("getMe parse: {e}")))?;
+        if !resp.ok {
+            return Err(GatewayError::auth(resp.error_message()));
+        }
         let bot_user = resp
             .result
             .ok_or_else(|| GatewayError::auth("getMe échoué"))?;
@@ -61,6 +64,9 @@ impl TelegramAdapter {
             .json()
             .await
             .map_err(|e| GatewayError::network(format!("parse: {e}")))?;
+        if !body.ok {
+            return Err(GatewayError::network(body.error_message()));
+        }
         let updates = body.result.unwrap_or_default();
         if let Some(last) = updates.last() {
             state.write().await.last_offset = last.update_id;

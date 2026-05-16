@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::sync::Arc;
 use tauri::Emitter;
 use tokio::sync::{mpsc, Mutex, RwLock};
@@ -12,39 +11,9 @@ use super::security::rate_state::GatewayRateLimiters;
 use super::service_runtime::{
     audit_invalid_account_config, emit_channel_status, run_supervised_channel, validate_account,
 };
-use super::types::{ChannelHealthEntry, ChannelKey, ChannelStatus, GatewayHealth};
+use super::service_state::{build_health, shared_state, ChannelEntry, GatewayState};
+use super::types::{ChannelKey, ChannelStatus, GatewayHealth};
 use crate::models::{ChannelAccountConfig, GatewayConfig};
-
-pub(crate) struct ChannelEntry {
-    pub(crate) status: ChannelStatus,
-    cancel: CancellationToken,
-    pub(crate) error: Option<String>,
-}
-
-pub struct GatewayState {
-    pub(crate) channels: HashMap<ChannelKey, ChannelEntry>,
-    adapters: HashMap<ChannelKey, Arc<dyn ChannelAdapter>>,
-    config: GatewayConfig,
-    pub(crate) cancel: CancellationToken,
-    limits: Arc<Mutex<GatewayRateLimiters>>,
-}
-
-pub(crate) fn build_health(state: &GatewayState) -> GatewayHealth {
-    let channels = state
-        .channels
-        .iter()
-        .map(|(key, entry)| ChannelHealthEntry {
-            channel_id: key.channel_id.clone(),
-            account_id: key.account_id.clone(),
-            status: entry.status,
-            error: entry.error.clone(),
-        })
-        .collect();
-    GatewayHealth {
-        running: !state.cancel.is_cancelled(),
-        channels,
-    }
-}
 
 pub struct GatewayService {
     pub(crate) state: Arc<RwLock<GatewayState>>,
@@ -53,13 +22,7 @@ pub struct GatewayService {
 impl GatewayService {
     pub fn new() -> Self {
         Self {
-            state: Arc::new(RwLock::new(GatewayState {
-                channels: HashMap::new(),
-                adapters: HashMap::new(),
-                config: GatewayConfig::default(),
-                cancel: CancellationToken::new(),
-                limits: Arc::new(Mutex::new(GatewayRateLimiters::new(&GatewayConfig::default().rate_limits))),
-            })),
+            state: shared_state(),
         }
     }
 
@@ -132,7 +95,12 @@ impl GatewayService {
                         error: Some("Configuration invalide".to_string()),
                     },
                 );
-                emit_channel_status(app, &key, ChannelStatus::Error, Some("Configuration invalide"));
+                emit_channel_status(
+                    app,
+                    &key,
+                    ChannelStatus::Error,
+                    Some("Configuration invalide"),
+                );
                 continue;
             }
             state.adapters.insert(key.clone(), Arc::clone(&adapter));
