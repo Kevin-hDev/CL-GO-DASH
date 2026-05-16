@@ -1,6 +1,6 @@
 # État réel de l'implémentation Forecast — Mai 2026
 
-Date : 2026-05-15
+Date : 2026-05-16
 
 ## Résumé
 
@@ -37,11 +37,11 @@ Forecast n'est **pas terminé**, mais il est **réellement utilisable**.
 | Notes | Notes Markdown locales, timeline, preview, édition, suppression, ouverture éditeur OS | Validé V1 |
 | Documentation Forecast | Fenêtre externe Tauri, contenu pédagogique, définitions des variables | Validé fonctionnel |
 | Familles de modèles | 11 familles / 25 variantes cataloguées | Dispatch runtime complet côté app |
-| Réglages fins modèles | Page `Config` ajoutée | Schémas, édition, sauvegarde et transmission runtime branchés |
-| Registry moteurs | Toutes familles déclarées | Adapters locaux branchés, validation live par famille restante |
-| Réglage matériel global | Hérité dans `Config` | Affiché en lecture seule, application runtime à finaliser |
+| Réglages fins modèles | Page `Config` ajoutée | Schémas, édition, sauvegarde, validation et transmission runtime branchés |
+| Registry moteurs | Toutes familles déclarées | Adapters locaux branchés, statuts installés/runnable corrigés |
+| Réglage matériel global | Hérité dans `Config` | Affiché en lecture seule, application runtime fine à finaliser |
 | Backtesting / baselines | Non terminé | À faire |
-| Exports | UI présente | Implémentation complète à faire |
+| Exports | V1 centralisée backend | CSV, XLSX, JSON, PNG, SVG, PDF et clipboard branchés |
 | Qualité des données | Non traité | Utile mais non prioritaire |
 | Slash commands Forecast | Documenté comme besoin | À implémenter |
 
@@ -95,10 +95,11 @@ Présent dans le catalogue et visible dans les paramètres Forecast :
 - le sidecar local démarre avec `model_id` + `family_id` ;
 - les dépendances Python sont installées à la demande par famille ;
 - `list_forecast_models` expose `installed`, `installable`, `runnable`, `provider_configured`, `runtime_ready` ;
-- Chronos-Bolt / Chronos-2 restent les adapters locaux validés fonctionnellement dans l'app ;
-- TimesFM, Toto, MOIRAI, FlowState, TabPFN-TS, TiRex, Kairos et Sundial ont maintenant un adapter Forecast réel côté sidecar ;
+- Chronos-Bolt / Chronos-2 sont validés fonctionnellement dans l'app ;
+- Toto, MOIRAI et Kairos ont été validés sur des prédictions réelles locales ;
+- TimesFM, FlowState, TabPFN-TS, TiRex et Sundial ont maintenant un adapter Forecast réel côté sidecar, à valider modèle par modèle après installation ;
 - les adapters locaux renvoient un format commun mono-série ou multi-séries (`series_id`) pour éviter les réponses inutilisables côté app ;
-- la validation live reste à faire famille par famille après installation des dépendances Python à la demande ;
+- la validation live complète reste à faire pour les familles non encore testées dans l'app ;
 - TimeGPT est câblé côté API, 2.1 inclus, mais doit encore être validé avec une vraie clé Nixtla.
 
 ### Sidecar local
@@ -228,13 +229,20 @@ Présent dans le catalogue et visible dans les paramètres Forecast :
   - valeur vide = retour au défaut
 - Validation Rust des types, bornes et options
 - Transmission des paramètres effectifs au runtime local via `model_config`
-- Transmission des paramètres TimeGPT applicables au payload Nixtla
+- Transmission des paramètres TimeGPT applicables au payload Nixtla, en mono-série et multi-séries
 - `horizon_max_override` appliqué côté validation backend
+- `context_length` appliqué aux adapters locaux compatibles
 - `quantiles` appliqué aux adapters locaux compatibles
+- `quantiles` custom remappés proprement vers les bornes affichées quand le moteur ne retourne pas exactement `q10/q90`
+- `non_negative_output` appliqué uniquement quand le réglage est activé et que la cible métier est positive
+- `output_type` TiRex branché
+- `probabilistic_output` TabPFN-TS branché
+- `dtype` Sundial branché
 - Réglages matériels globaux affichés en héritage :
   - `device`
   - timeout de déchargement modèle
 - Sidecar Python adapté pour lire uniquement les paramètres connus par chaque adapter
+- Les paramètres non réellement câblés ont été retirés des fiches pour éviter les faux réglages
 - Clés i18n ajoutées dans les 7 langues
 
 ### i18n / thèmes
@@ -281,13 +289,11 @@ Présent dans le catalogue et visible dans les paramètres Forecast :
 
 ### Familles de modèles
 
-- les familles prévues sont maintenant majoritairement présentes dans le catalogue ;
-- l'état réel n'est plus "Chronos + TimeGPT uniquement" ;
-- le point restant n'est pas le catalogue, mais le branchement runtime de chaque famille ;
-- il faut distinguer clairement :
-  - modèle visible dans les paramètres ;
-  - modèle installable ;
-  - modèle réellement lançable pour une prédiction.
+- les 11 familles prévues sont présentes dans le catalogue ;
+- le runtime sait maintenant dispatcher toutes les familles cataloguées ;
+- les modèles locaux installés sont détectés correctement dans `forecast_models` ;
+- le sélecteur Forecast force le modèle choisi dans l'UI quand une prédiction est lancée par l'agent ;
+- la validation live reste à compléter pour les familles installables mais pas encore testées dans l'app.
 
 ### Réglages fins des modèles
 
@@ -296,52 +302,54 @@ Présent dans le catalogue et visible dans les paramètres Forecast :
 - les valeurs sont éditables uniquement en mode édition ;
 - les valeurs sauvegardées sont relues au lancement d'une prédiction ;
 - les paramètres non applicables à une famille ne sont pas affichés ;
-- certains réglages restent en lecture héritée tant que leur application runtime globale n'est pas terminée.
+- chaque paramètre visible doit être réellement câblé côté runtime ;
+- les réglages `device` et timeout restent hérités des paramètres avancés globaux.
 
-Paramètres à couvrir :
+Paramètres maintenant câblés ou exposés selon support réel :
 
 - horizon maximal ;
 - quantiles ;
-- niveau de confiance ;
+- niveau de confiance TimeGPT ;
 - batch size ;
-- précision de calcul ;
+- `dtype` Sundial ;
 - longueur d'historique utilisée ;
 - gestion des valeurs manquantes ;
-- normalisation automatique ;
-- paramètres spécifiques Chronos ;
 - paramètres spécifiques TimeGPT ;
-- futures options propres aux autres familles.
+- paramètres spécifiques Toto ;
+- paramètres spécifiques MOIRAI ;
+- paramètres spécifiques FlowState ;
+- paramètres spécifiques TabPFN-TS ;
+- paramètres spécifiques TiRex ;
+- paramètres spécifiques Kairos ;
+- paramètres spécifiques Sundial.
 
 Paramètres communs à prévoir :
 
 | Paramètre | Usage |
 | --- | --- |
-| Modèle / variante | Choisir la version exacte utilisée |
-| Horizon / prediction length | Nombre de points futurs à prédire |
-| Fréquence | Rythme temporel des données |
 | Longueur d'historique | Quantité de passé envoyée au modèle |
 | Niveau de confiance / quantiles | Largeur et type d'incertitude affichée |
 | Batch size | Compromis vitesse / mémoire |
 | Device | CPU / GPU selon le réglage matériel global |
-| Précision | Float32 / bfloat16 / auto selon les moteurs |
-| Normalisation | Stabiliser les séries avant prédiction |
+| Dtype | Float32 / float16 / bfloat16 / auto selon les moteurs |
 | Gestion des valeurs manquantes | Nettoyer ou conserver les trous selon le modèle |
+| Sortie positive | Empêcher les bornes négatives sur les cibles métier positives |
 
-Paramètres spécifiques à prévoir par famille :
+Paramètres spécifiques exposés par famille :
 
 | Famille | Paramètres spécifiques utiles |
 | --- | --- |
-| Chronos-Bolt | Variante, horizon, quantiles, device, précision |
-| Chronos-2 | Variante, horizon, quantiles, multi-séries, covariables passées/futures, device, précision |
-| TimesFM 2.5 | Contexte max, horizon max, normalisation, quantile head, correction quantiles, positivité, invariance flip, XReg/covariables |
-| TimeGPT-2.x / 2.1 | Modèle, horizon, niveaux d'intervalle, covariables, `clean_ex_first`, `finetune_steps`, `finetune_loss`, `finetune_depth`, `feature_contributions`, base URL Nixtla |
-| Toto 2.0 | Variante, horizon, `decode_block_size`, `has_missing_values`, multi-séries |
-| MOIRAI 2.0 | Horizon, longueur de contexte, batch size, dimensions séries/covariables |
-| FlowState | Révision R1/R1.1, `prediction_length`, `scale_factor`, `batch_first` |
-| TabPFN-TS | Horizon, mode local, covariables futures connues, sortie probabiliste |
-| TiRex | Horizon, device, backend, batch size, type de sortie, resampling fréquence, quantiles affichés |
-| Kairos | Variante, horizon, `preserve_positivity`, `average_with_flipped_input` |
-| Sundial | Horizon, nombre d'échantillons, longueur de contexte, dtype |
+| Chronos-Bolt | horizon max, longueur d'historique, quantiles, sortie positive |
+| Chronos-2 | horizon max, longueur d'historique, quantiles, sortie positive |
+| TimesFM 2.5 | horizon max, longueur d'historique, quantiles, sortie positive |
+| TimeGPT-2.x / 2.1 | horizon max, `level`, `clean_ex_first`, `finetune_steps`, `finetune_loss`, `finetune_depth`, `feature_contributions` |
+| Toto 2.0 | horizon max, longueur d'historique, `decode_block_size`, `has_missing_values`, quantiles, sortie positive |
+| MOIRAI 2.0 | horizon max, longueur d'historique, batch size, quantiles |
+| FlowState | horizon max, `scale_factor`, `batch_first`, quantiles, sortie positive |
+| TabPFN-TS | horizon max, sortie probabiliste, longueur d'historique, quantiles, sortie positive |
+| TiRex | horizon max, type de sortie, quantiles, sortie positive |
+| Kairos | horizon max, `preserve_positivity`, `average_with_flipped_input`, `generation`, quantiles, sortie positive |
+| Sundial | horizon max, nombre d'échantillons, longueur d'historique, dtype, quantiles, sortie positive |
 
 Paramètres à ne pas exposer pour l'instant :
 
@@ -371,17 +379,20 @@ Paramètres à ne pas exposer pour l'instant :
 ### Familles de modèles Forecast
 
 - garder le catalogue actuel des 11 familles ;
-- vérifier que chaque variante affichée est bien installable ;
-- brancher progressivement le runtime des familles non encore exécutables ;
-- clarifier dans l'UI le statut réel : catalogué, installable, installé, lançable ;
-- afficher clairement les capacités réelles par modèle.
+- compléter la validation live sur toutes les familles installables ;
+- vérifier chaque adapter avec :
+  - mono-série ;
+  - multi-séries si supporté ;
+  - covariables si supportées ;
+  - quantiles custom ;
+  - sortie positive ;
+  - horizon limité par config.
 
 ### Réglages fins modèles
 
-- valider visuellement la page `Config` en dark/light ;
-- tester la persistance après relance app ;
-- tester les valeurs effectives avec Chronos, Toto, MOIRAI/Kairos, puis les autres familles ;
-- appliquer réellement le réglage matériel global au sidecar Forecast ;
+- continuer les tests réels par famille ;
+- vérifier les paramètres qui peuvent modifier fortement le résultat ;
+- appliquer plus finement le réglage matériel global au sidecar Forecast ;
 - documenter les paramètres dans la documentation utilisateur Forecast.
 
 ### Registry moteurs
@@ -397,6 +408,13 @@ Paramètres à ne pas exposer pour l'instant :
   - anomalies ;
   - imputation ;
 - utiliser ce registry dans l'UI, les tools agent et le backend.
+
+État actuel :
+
+- catalogue et runtime sont branchés ;
+- le sélecteur Forecast force le modèle choisi ;
+- les statuts `installed`, `runnable` et `runtime_ready` ont été corrigés pour les modèles locaux testés ;
+- il reste à enrichir les capacités fines par modèle et à les utiliser partout.
 
 ### Réglage matériel Forecast
 
@@ -444,11 +462,42 @@ Paramètres à ne pas exposer pour l'instant :
 
 ### Exports
 
+La V1 est branchée avec une logique centralisée côté backend.
+
+Formats disponibles :
+
 - CSV
 - JSON
 - XLSX
-- PNG / SVG
-- PDF
+- PNG
+- SVG
+- PDF rapport
+- Copier clipboard
+
+Contenu exporté :
+
+- métadonnées de l'analyse ;
+- historique ;
+- prévisions ;
+- quantiles et plage de confiance quand disponibles ;
+- scénarios ;
+- annotations ;
+- notes Markdown locales ;
+- données d'entrée sauvegardées dans l'analyse.
+
+Comportement :
+
+- commande backend unique `export_forecast_analysis` ;
+- fichiers générés dans le dossier Téléchargements de l'OS ;
+- nommage automatique à partir du nom de l'analyse et de son identifiant ;
+- export clipboard sans fichier intermédiaire ;
+- PNG / SVG générés depuis les données sauvegardées de l'analyse.
+
+Améliorations possibles plus tard :
+
+- mise en page PDF plus avancée ;
+- rendu image calé exactement sur le graphe ECharts affiché à l'écran ;
+- presets d'exports selon usage agent, rapport ou partage.
 
 ### Slash commands Forecast
 
@@ -462,7 +511,7 @@ Paramètres à ne pas exposer pour l'instant :
 ### Finition UI
 
 - une grosse passe de polish Forecast a été faite et validée ;
-- il restera une passe finale globale après `Qualité des données` et `Exports`.
+- il restera une passe finale globale après `Qualité des données` et la validation des exports en usage réel.
 
 ---
 
@@ -491,10 +540,10 @@ On a maintenant :
 
 La suite logique est maintenant :
 
-1. valider `Config` en UI et en prédiction réelle sur plusieurs familles
-2. compléter le registry moteurs et les capacités réelles
-3. brancher réellement Forecast sur le réglage matériel global
-4. finaliser `Exports`
+1. valider les exports Forecast en usage réel sur plusieurs analyses
+2. compléter la validation live des modèles non encore testés
+3. compléter le registry moteurs et les capacités réelles fines
+4. brancher plus finement Forecast sur le réglage matériel global
 5. ajouter les slash commands Forecast
 6. ajouter ensuite la qualité des données comme lecture informative
 7. refaire une passe finale documentation + UI + i18n

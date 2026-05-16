@@ -1,7 +1,7 @@
 use crate::services::forecast::types::{ForecastAnalysisMeta, ForecastRequest, ForecastResult};
 use crate::services::forecast::{
-    client_chronos, client_nixtla, model_manager, notes, notes_cleanup, registry, scenarios,
-    selected_model, sidecar, storage, validation,
+    client_chronos, client_nixtla, export, model_manager, notes, notes_cleanup, registry,
+    scenarios, selected_model, sidecar, storage, validation,
 };
 use tauri::State;
 
@@ -57,6 +57,14 @@ pub async fn list_forecast_analyses() -> Result<Vec<ForecastAnalysisMeta>, Strin
 #[tauri::command]
 pub async fn get_forecast_analysis(id: String) -> Result<ForecastResult, String> {
     storage::load(&id).await
+}
+
+#[tauri::command]
+pub async fn export_forecast_analysis(
+    analysis_id: String,
+    format: String,
+) -> Result<export::ForecastExportResult, String> {
+    export::export_analysis(&analysis_id, &format).await
 }
 
 #[tauri::command]

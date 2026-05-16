@@ -1155,7 +1155,10 @@
       "svg": "SVG",
       "json": "JSON",
       "pdf": "PDF (rapporto)",
-      "clipboard": "Copia"
+      "clipboard": "Copia",
+      "saved": "Esportazione salvata",
+      "copied": "Esportazione copiata",
+      "failed": "Esportazione non riuscita"
     },
     "kpi": {
       "mape": "MAPE",

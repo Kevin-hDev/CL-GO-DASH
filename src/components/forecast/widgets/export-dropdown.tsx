@@ -6,7 +6,7 @@ import "./export-dropdown.css";
 
 interface ExportDropdownProps {
   analysisId: string;
-  onExport: (format: string, analysisId: string) => void;
+  onExport: (format: string, analysisId: string) => void | Promise<void>;
 }
 
 const FORMATS = [
@@ -46,7 +46,7 @@ export function ExportDropdown({ analysisId, onExport }: ExportDropdownProps) {
               key={f.key}
               className="exd-item"
               onClick={() => {
-                onExport(f.key, analysisId);
+                void onExport(f.key, analysisId);
                 setOpen(false);
               }}
             >

@@ -20,6 +20,7 @@ import { loadForecastDraftFromFile, type ForecastDraftData } from "./forecast-da
 import { useForecastLayerSources } from "./use-forecast-layer-sources";
 import { ForecastSectionRouter } from "./forecast-section-router";
 import { useCurrentForecastAnalysisName } from "./use-current-forecast-analysis-name";
+import { useForecastExport } from "./use-forecast-export";
 import { useSelectedForecastModel } from "./use-selected-forecast-model";
 import "./forecast-panel.css";
 
@@ -48,6 +49,7 @@ export function ForecastPanel({
   const [error, setError] = useState<string | null>(null);
   const [layers, setLayers] = useState<ForecastLayerState>(createInitialLayerState);
   const [scenarioPickerOpen, setScenarioPickerOpen] = useState(false);
+  const handleExport = useForecastExport();
   const { selectedModelId, selectModel, ready: selectedModelReady } = useSelectedForecastModel();
   const currentAnalysisName = useCurrentForecastAnalysisName(currentAnalysisId);
   const layerSources = useForecastLayerSources(currentAnalysisId, setLayers);
@@ -175,7 +177,7 @@ export function ForecastPanel({
           )}
           <ExportDropdown
             analysisId={currentAnalysisId}
-            onExport={() => undefined}
+            onExport={handleExport}
           />
         </div>
       )}

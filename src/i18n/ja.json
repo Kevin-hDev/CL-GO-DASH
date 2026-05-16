@@ -1155,7 +1155,10 @@
       "svg": "SVG",
       "json": "JSON",
       "pdf": "PDF (レポート)",
-      "clipboard": "コピー"
+      "clipboard": "コピー",
+      "saved": "エクスポートを保存しました",
+      "copied": "エクスポートをコピーしました",
+      "failed": "エクスポートできませんでした"
     },
     "kpi": {
       "mape": "MAPE",

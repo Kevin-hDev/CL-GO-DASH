@@ -18,7 +18,11 @@ fn auto_modes_use_bypass_policy() {
 fn absolute_write_file_in_data_dir_needs_permission() {
     let path = data_dir().join("agent-settings.json");
     let args = json!({ "path": path.to_string_lossy() });
-    assert!(is_data_dir_write("write_file", &args, &PathBuf::from("/tmp")));
+    assert!(is_data_dir_write(
+        "write_file",
+        &args,
+        &PathBuf::from("/tmp")
+    ));
 }
 
 #[test]
@@ -40,7 +44,11 @@ fn write_file_outside_data_dir_does_not_need_permission() {
 #[test]
 fn edit_file_in_data_dir_needs_permission() {
     let args = json!({ "path": data_dir().join("config.json").to_string_lossy() });
-    assert!(is_data_dir_write("edit_file", &args, &PathBuf::from("/tmp")));
+    assert!(is_data_dir_write(
+        "edit_file",
+        &args,
+        &PathBuf::from("/tmp")
+    ));
 }
 
 #[test]

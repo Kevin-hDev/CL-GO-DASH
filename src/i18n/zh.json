@@ -1155,7 +1155,10 @@
       "svg": "SVG",
       "json": "JSON",
       "pdf": "PDF (报告)",
-      "clipboard": "复制"
+      "clipboard": "复制",
+      "saved": "导出已保存",
+      "copied": "导出已复制",
+      "failed": "导出失败"
     },
     "kpi": {
       "mape": "MAPE",
