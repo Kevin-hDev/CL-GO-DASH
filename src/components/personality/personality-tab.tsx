@@ -86,7 +86,7 @@ export const PersonalityTab = memo(function PersonalityTab({
   }, [selectedPath, t]);
 
   const handleToggleInjection = useCallback(async (enabled: boolean) => {
-    if (fileName === "AGENT.md") return;
+    if (fileName === "AGENTS.md") return;
     try {
       await api.setInjectionState(fileName, enabled);
       setInjectionState((prev) => ({ ...prev, [fileName]: enabled }));

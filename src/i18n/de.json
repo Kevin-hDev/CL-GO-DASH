@@ -470,7 +470,7 @@
   },
   "agentMd": {
     "title": "Agentenanweisungen",
-    "subtitle": "AGENT.md-Dateien stellen werkzeugfähigen LLMs dauerhafte Anweisungen bereit",
+    "subtitle": "AGENTS.md-Dateien stellen werkzeugfähigen LLMs dauerhafte Anweisungen bereit",
     "globalTab": "Global",
     "projectTab": "Projekt",
     "globalDescription": "Diese Anweisungen gelten für alle Gespräche mit werkzeugfähigen Modellen.",
@@ -478,8 +478,8 @@
     "placeholder": "Anweisungen hier eingeben...\n\nBeispiel:\n# Regeln\n- Immer erst erklären, dann handeln\n- Alle Antworten auf Deutsch",
     "saved": "Anweisungen gespeichert",
     "noProject": "Projekt auswählen, um Anweisungen auf Projektebene zu bearbeiten.",
-    "emptyGlobal": "Keine globale AGENT.md gefunden",
-    "emptyProject": "Keine AGENT.md im Projekt gefunden",
+    "emptyGlobal": "Keine globale AGENTS.md gefunden",
+    "emptyProject": "Keine AGENTS.md im Projekt gefunden",
     "toolCapableOnly": "Nur für werkzeugfähige Modelle eingefügt"
   },
   "terminal": {

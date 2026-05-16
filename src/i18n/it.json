@@ -470,7 +470,7 @@
   },
   "agentMd": {
     "title": "Istruzioni agente",
-    "subtitle": "I file AGENT.md forniscono istruzioni persistenti agli LLM con supporto strumenti",
+    "subtitle": "I file AGENTS.md forniscono istruzioni persistenti agli LLM con supporto strumenti",
     "globalTab": "Globale",
     "projectTab": "Progetto",
     "globalDescription": "Queste istruzioni si applicano a tutte le conversazioni con modelli dotati di strumenti.",
@@ -478,8 +478,8 @@
     "placeholder": "Scrivi le tue istruzioni qui...\n\nEsempio:\n# Regole\n- Spiega sempre prima di agire\n- Usa l'italiano per tutte le risposte",
     "saved": "Istruzioni salvate",
     "noProject": "Seleziona un progetto per modificare le istruzioni a livello di progetto.",
-    "emptyGlobal": "Nessun AGENT.md globale trovato",
-    "emptyProject": "Nessun AGENT.md di progetto trovato",
+    "emptyGlobal": "Nessun AGENTS.md globale trovato",
+    "emptyProject": "Nessun AGENTS.md di progetto trovato",
     "toolCapableOnly": "Iniettato solo per i modelli con supporto strumenti"
   },
   "terminal": {

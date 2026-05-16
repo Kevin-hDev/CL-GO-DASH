@@ -114,7 +114,7 @@ fn init_base_structure(base: &std::path::Path) -> Result<(), String> {
     }
 
     let empty_files = [
-        "AGENT.md",
+        "AGENTS.md",
         "memory/core/identity.md",
         "memory/core/principles.md",
         "memory/core/user.md",

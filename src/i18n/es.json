@@ -470,7 +470,7 @@
   },
   "agentMd": {
     "title": "Instrucciones del agente",
-    "subtitle": "Los archivos AGENT.md proporcionan instrucciones persistentes a los LLMs compatibles con herramientas",
+    "subtitle": "Los archivos AGENTS.md proporcionan instrucciones persistentes a los LLMs compatibles con herramientas",
     "globalTab": "Global",
     "projectTab": "Proyecto",
     "globalDescription": "Estas instrucciones se aplican a todas las conversaciones con modelos compatibles con herramientas.",
@@ -478,8 +478,8 @@
     "placeholder": "Escribe tus instrucciones aquí...\n\nEjemplo:\n# Reglas\n- Siempre explica antes de actuar\n- Usa español para todas las respuestas",
     "saved": "Instrucciones guardadas",
     "noProject": "Selecciona un proyecto para editar las instrucciones a nivel de proyecto.",
-    "emptyGlobal": "No se encontró ningún AGENT.md global",
-    "emptyProject": "No se encontró ningún AGENT.md de proyecto",
+    "emptyGlobal": "No se encontró ningún AGENTS.md global",
+    "emptyProject": "No se encontró ningún AGENTS.md de proyecto",
     "toolCapableOnly": "Solo se inyecta en modelos compatibles con herramientas"
   },
   "terminal": {

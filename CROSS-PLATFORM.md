@@ -254,7 +254,7 @@ Depuis v0.6.6, le chemin est unifié sur les 3 OS : `~/.local/share/cl-go-dash/`
 
 **Migration automatique** : si des données existent dans l'ancien emplacement (`%APPDATA%\cl-go-dash` sur Windows, `~/Library/Application Support/cl-go-dash` sur macOS), elles sont copiées automatiquement.
 
-**Initialisation** : au premier lancement, `init_base_structure()` crée tous les dossiers et fichiers par défaut (memory/core, skills, inbox, config.json, AGENT.md, etc.).
+**Initialisation** : au premier lancement, `init_base_structure()` crée tous les dossiers et fichiers par défaut (memory/core, skills, inbox, config.json, AGENTS.md, etc.).
 
 **Fichiers** : `services/paths.rs`, `storage_migration.rs`
 

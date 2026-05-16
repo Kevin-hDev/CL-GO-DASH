@@ -470,7 +470,7 @@
   },
   "agentMd": {
     "title": "助手指令",
-    "subtitle": "AGENT.md 文件为支持工具的 LLM 提供持久化指令",
+    "subtitle": "AGENTS.md 文件为支持工具的 LLM 提供持久化指令",
     "globalTab": "全局",
     "projectTab": "项目",
     "globalDescription": "这些指令适用于所有支持工具的模型对话。",
@@ -478,8 +478,8 @@
     "placeholder": "在此编写您的指令...\n\n示例：\n# 规则\n- 操作前先解释\n- 所有回复使用中文",
     "saved": "指令已保存",
     "noProject": "请选择一个项目以编辑项目级指令。",
-    "emptyGlobal": "未找到全局 AGENT.md",
-    "emptyProject": "未找到项目 AGENT.md",
+    "emptyGlobal": "未找到全局 AGENTS.md",
+    "emptyProject": "未找到项目 AGENTS.md",
     "toolCapableOnly": "仅注入到支持工具的模型"
   },
   "terminal": {

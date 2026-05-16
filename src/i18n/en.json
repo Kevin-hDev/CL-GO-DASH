@@ -470,7 +470,7 @@
   },
   "agentMd": {
     "title": "Agent Instructions",
-    "subtitle": "AGENT.md files provide persistent instructions to tool-capable LLMs",
+    "subtitle": "AGENTS.md files provide persistent instructions to tool-capable LLMs",
     "globalTab": "Global",
     "projectTab": "Project",
     "globalDescription": "These instructions apply to all conversations with tool-capable models.",
@@ -478,8 +478,8 @@
     "placeholder": "Write your instructions here...\n\nExample:\n# Rules\n- Always explain before acting\n- Use French for all responses",
     "saved": "Instructions saved",
     "noProject": "Select a project to edit project-level instructions.",
-    "emptyGlobal": "No global AGENT.md found",
-    "emptyProject": "No project AGENT.md found",
+    "emptyGlobal": "No global AGENTS.md found",
+    "emptyProject": "No project AGENTS.md found",
     "toolCapableOnly": "Only injected for tool-capable models"
   },
   "terminal": {

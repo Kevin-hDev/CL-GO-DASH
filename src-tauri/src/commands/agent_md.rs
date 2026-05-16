@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 fn global_agent_md_path() -> PathBuf {
-    crate::services::paths::data_dir().join("AGENT.md")
+    crate::services::paths::data_dir().join("AGENTS.md")
 }
 
 fn validate_project_dir(dir: &str) -> Result<PathBuf, String> {
@@ -13,7 +13,7 @@ fn validate_project_dir(dir: &str) -> Result<PathBuf, String> {
     if !canonical.starts_with(&home) {
         return Err("Chemin non autorisé".to_string());
     }
-    Ok(canonical.join("AGENT.md"))
+    Ok(canonical.join("AGENTS.md"))
 }
 
 #[derive(serde::Serialize)]
@@ -93,8 +93,8 @@ mod tests {
     fn global_agent_md_path_ends_correctly() {
         let p = global_agent_md_path();
         assert!(
-            p.ends_with("AGENT.md"),
-            "expected path to end with AGENT.md, got: {:?}",
+            p.ends_with("AGENTS.md"),
+            "expected path to end with AGENTS.md, got: {:?}",
             p
         );
     }
@@ -111,7 +111,7 @@ mod tests {
         let dir = tmp.path().to_str().unwrap().to_string();
 
         // On détourne en écrivant via la logique interne directement
-        let path = PathBuf::from(&dir).join("AGENT.md");
+        let path = PathBuf::from(&dir).join("AGENTS.md");
         let tmp_path = path.with_extension("md.tmp");
         let content = b"# Test global";
 
@@ -127,7 +127,7 @@ mod tests {
         let tmp = TempDir::new().unwrap();
         let dir = tmp.path().to_str().unwrap().to_string();
 
-        let path = PathBuf::from(&dir).join("AGENT.md");
+        let path = PathBuf::from(&dir).join("AGENTS.md");
         let tmp_path = path.with_extension("md.tmp");
         let content = b"# Test project";
 

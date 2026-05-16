@@ -470,7 +470,7 @@
   },
   "agentMd": {
     "title": "エージェント指示",
-    "subtitle": "AGENT.md ファイルはツール対応 LLM に永続的な指示を提供します",
+    "subtitle": "AGENTS.md ファイルはツール対応 LLM に永続的な指示を提供します",
     "globalTab": "グローバル",
     "projectTab": "プロジェクト",
     "globalDescription": "これらの指示はツール対応モデルとのすべての会話に適用されます。",
@@ -478,8 +478,8 @@
     "placeholder": "指示をここに書いてください...\n\n例：\n# ルール\n- 行動する前に必ず説明する\n- すべての返答に日本語を使用する",
     "saved": "指示を保存しました",
     "noProject": "プロジェクトレベルの指示を編集するにはプロジェクトを選択してください。",
-    "emptyGlobal": "グローバル AGENT.md が見つかりません",
-    "emptyProject": "プロジェクト AGENT.md が見つかりません",
+    "emptyGlobal": "グローバル AGENTS.md が見つかりません",
+    "emptyProject": "プロジェクト AGENTS.md が見つかりません",
     "toolCapableOnly": "ツール対応モデルにのみ注入されます"
   },
   "terminal": {

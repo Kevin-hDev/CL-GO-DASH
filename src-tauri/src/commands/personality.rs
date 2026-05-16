@@ -24,7 +24,7 @@ fn inbox_dir() -> PathBuf {
     data_root().join("inbox")
 }
 
-const ROOT_FILES: &[(&str, &str)] = &[("AGENT.md", "Instructions agent")];
+const ROOT_FILES: &[(&str, &str)] = &[("AGENTS.md", "Instructions agent")];
 
 const CORE_FILES: &[(&str, &str)] = &[
     ("identity.md", "Qui est Jackson"),

@@ -23,7 +23,7 @@ export function PersonalityList({
 }: PersonalityListProps) {
   const { t } = useTranslation();
 
-  const isAgentMd = selectedFileName === "AGENT.md";
+  const isAgentMd = selectedFileName === "AGENTS.md";
   const isInjected = isAgentMd || (injectionState[selectedFileName] ?? false);
 
   return (
@@ -41,7 +41,7 @@ export function PersonalityList({
       <div className="pers-content">
         {files.map((f) => {
           const name = f.name;
-          const injected = name === "AGENT.md" || (injectionState[name] ?? false);
+          const injected = name === "AGENTS.md" || (injectionState[name] ?? false);
           return (
             <div
               key={f.name}

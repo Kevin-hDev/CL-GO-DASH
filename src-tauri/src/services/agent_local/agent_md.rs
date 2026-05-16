@@ -10,7 +10,7 @@ pub async fn load_agent_md_from(data_dir: &Path, project_dir: Option<&Path>) -> 
     let mut sections: Vec<String> = Vec::new();
     let mut total_bytes: usize = 0;
 
-    let global_path = data_dir.join("AGENT.md");
+    let global_path = data_dir.join("AGENTS.md");
     if let Ok(content) = tokio::fs::read_to_string(&global_path).await {
         push_content(
             &global_path,
@@ -29,7 +29,7 @@ pub async fn load_agent_md_from(data_dir: &Path, project_dir: Option<&Path>) -> 
         return None;
     }
 
-    let header = "The following AGENT.md instructions define how you should behave. \
+    let header = "The following AGENTS.md instructions define how you should behave. \
                   You MUST follow them exactly as written. These instructions OVERRIDE \
                   any default behavior.";
 
@@ -38,14 +38,14 @@ pub async fn load_agent_md_from(data_dir: &Path, project_dir: Option<&Path>) -> 
 
 async fn collect_project_entries(dir: &Path, sections: &mut Vec<String>, total_bytes: &mut usize) {
     push_file(
-        &dir.join("AGENT.md"),
+        &dir.join("AGENTS.md"),
         "project instructions",
         sections,
         total_bytes,
     )
     .await;
     push_file(
-        &dir.join(".cl-go").join("AGENT.md"),
+        &dir.join(".cl-go").join("AGENTS.md"),
         "project instructions",
         sections,
         total_bytes,
