@@ -4,6 +4,7 @@ import pandas as pd
 import torch
 from chronos import BaseChronosPipeline, Chronos2Pipeline
 
+from .config_utils import config_int, trim_history
 from .validation import (
     quantile_key,
     read_numeric_value,
@@ -24,7 +25,7 @@ class ChronosAdapter:
     def predict(self, payload, horizon, quantile_levels):
         if self.kind == "chronos2" and "history_rows" in payload:
             return self._predict_df(payload, horizon, quantile_levels)
-        values = validate_values(payload.get("values"))
+        values = trim_history(validate_values(payload.get("values")), payload)
         if self.kind == "chronos2":
             return self._predict_chronos2(values, horizon, quantile_levels)
         return self._predict_bolt(values, horizon, quantile_levels)
@@ -80,6 +81,11 @@ class ChronosAdapter:
                 for row in history_rows
             ]
         )
+        context_length = config_int(payload, "context_length", 0, 0, 100000)
+        if context_length:
+            history_df = history_df.groupby("item_id", group_keys=False).tail(
+                context_length
+            )
         future_df = None
         if future_rows:
             future_df = pd.DataFrame(

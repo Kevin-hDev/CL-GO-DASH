@@ -1,3 +1,4 @@
+use crate::services::forecast::client_nixtla_options;
 use crate::services::forecast::client_nixtla_retry;
 use crate::services::forecast::input_data::{parse_request_input, ParsedInput};
 use crate::services::forecast::nixtla_multiseries;
@@ -51,12 +52,8 @@ fn build_payload(input: &ParsedInput, request: &ForecastRequest) -> Result<Value
         .map(|point| point.date.as_str())
         .collect();
     let model = request.model.as_deref().unwrap_or("timegpt-2-standard");
-    let model_config =
-        crate::services::forecast::model_config::effective_values(model).unwrap_or_default();
-    let level = model_config
-        .get("level")
-        .and_then(Value::as_u64)
-        .unwrap_or((request.confidence_level * 100.0) as u64);
+    let model_config = client_nixtla_options::effective_config(model);
+    let level = client_nixtla_options::effective_level(&model_config, request.confidence_level);
 
     let mut payload = serde_json::json!({
         "timestamp": timestamps,
@@ -66,25 +63,8 @@ fn build_payload(input: &ParsedInput, request: &ForecastRequest) -> Result<Value
         "model": model,
         "level": [level],
     });
-    apply_timegpt_options(&mut payload, &model_config);
+    client_nixtla_options::apply(&mut payload, &model_config);
     Ok(payload)
-}
-
-fn apply_timegpt_options(payload: &mut Value, config: &serde_json::Map<String, Value>) {
-    let Some(object) = payload.as_object_mut() else {
-        return;
-    };
-    for key in [
-        "clean_ex_first",
-        "finetune_steps",
-        "finetune_loss",
-        "finetune_depth",
-        "feature_contributions",
-    ] {
-        if let Some(value) = config.get(key) {
-            object.insert(key.to_string(), value.clone());
-        }
-    }
 }
 
 fn parse_response(

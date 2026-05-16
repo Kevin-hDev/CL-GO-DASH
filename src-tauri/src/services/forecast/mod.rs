@@ -2,6 +2,7 @@ pub mod catalog;
 pub mod client_chronos;
 mod client_local_response;
 pub mod client_nixtla;
+mod client_nixtla_options;
 mod client_nixtla_retry;
 mod client_quantiles;
 pub mod file_input;

@@ -3,7 +3,7 @@ from .adapter_utils import (
     forecast_quantile_index,
     values_tensor,
 )
-from .config_utils import config_bool
+from .config_utils import config_bool, standard_quantile_levels
 
 
 class KairosAdapter:
@@ -12,6 +12,7 @@ class KairosAdapter:
         self.model = None
 
     def predict(self, payload, horizon, quantile_levels):
+        quantile_levels = standard_quantile_levels(quantile_levels)
         return forecast_payload_result(
             payload,
             horizon,

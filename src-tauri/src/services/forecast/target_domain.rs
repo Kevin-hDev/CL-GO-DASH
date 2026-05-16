@@ -9,7 +9,7 @@ pub fn apply_non_negative_floor(
     q50: &mut [f64],
     q90: &mut [f64],
 ) {
-    if !is_non_negative_target(request, input) {
+    if !enabled_by_config(request) || !is_non_negative_target(request, input) {
         return;
     }
     for prediction in predictions {
@@ -18,6 +18,16 @@ pub fn apply_non_negative_floor(
     clamp_values(q10);
     clamp_values(q50);
     clamp_values(q90);
+}
+
+fn enabled_by_config(request: &ForecastRequest) -> bool {
+    let Some(model_id) = request.model.as_deref() else {
+        return false;
+    };
+    super::model_config::effective_values(model_id)
+        .ok()
+        .and_then(|values| values.get("non_negative_output").and_then(|v| v.as_bool()))
+        .unwrap_or(false)
 }
 
 fn is_non_negative_target(request: &ForecastRequest, input: &ParsedInput) -> bool {

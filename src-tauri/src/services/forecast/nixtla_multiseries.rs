@@ -1,9 +1,10 @@
+use super::client_nixtla_options;
 use super::input_data::ParsedInput;
 use super::input_dates::build_future_dates;
 use super::types::{ForecastRequest, Prediction};
 use serde_json::{json, Map, Value};
 use std::collections::BTreeMap;
-
+type ParsedNixtla = (Vec<Prediction>, Vec<f64>, Vec<f64>, Vec<f64>);
 pub fn build_payload(input: &ParsedInput, request: &ForecastRequest) -> Result<Value, String> {
     let series_column = request
         .series_column
@@ -15,7 +16,6 @@ pub fn build_payload(input: &ParsedInput, request: &ForecastRequest) -> Result<V
     let mut sizes = Vec::<usize>::new();
     let mut x = Vec::<Vec<Value>>::new();
     let mut x_future = Vec::<Vec<Value>>::new();
-
     for (series_id, history_rows) in &grouped_history {
         sizes.push(history_rows.len());
         for row in history_rows {
@@ -32,7 +32,6 @@ pub fn build_payload(input: &ParsedInput, request: &ForecastRequest) -> Result<V
             }
         }
     }
-
     let mut series = json!({ "y": y, "sizes": sizes });
     if !request.covariate_columns.is_empty() {
         series["X"] =
@@ -42,26 +41,31 @@ pub fn build_payload(input: &ParsedInput, request: &ForecastRequest) -> Result<V
                 .map_err(|_| "Données de contexte futur invalides".to_string())?;
         }
     }
-
-    Ok(json!({
+    let model = request.model.as_deref().unwrap_or("timegpt-2-standard");
+    let config = client_nixtla_options::effective_config(model);
+    let level = client_nixtla_options::effective_level(&config, request.confidence_level);
+    let mut payload = json!({
         "series": series,
         "freq": request.frequency,
         "h": request.horizon,
-        "model": request.model.as_deref().unwrap_or("timegpt-2-standard"),
-        "level": [(request.confidence_level * 100.0) as u32],
+        "model": model,
+        "level": [level],
         "clean_ex_first": true,
-    }))
+    });
+    client_nixtla_options::apply(&mut payload, &config);
+    Ok(payload)
 }
-
 pub fn parse_response(
     body: &Value,
     request: &ForecastRequest,
     input: &ParsedInput,
-) -> Result<(Vec<Prediction>, Vec<f64>, Vec<f64>, Vec<f64>), String> {
+) -> Result<ParsedNixtla, String> {
     let mean = body["mean"]
         .as_array()
         .ok_or("Réponse Nixtla: champ mean manquant")?;
-    let level = (request.confidence_level * 100.0) as u32;
+    let model = request.model.as_deref().unwrap_or("timegpt-2-standard");
+    let config = client_nixtla_options::effective_config(model);
+    let level = client_nixtla_options::effective_level(&config, request.confidence_level);
     let lower = read_interval(body, &format!("lo-{level}"), mean.len());
     let upper = read_interval(body, &format!("hi-{level}"), mean.len());
     let dates = build_prediction_dates(input, request)?;
@@ -71,7 +75,6 @@ pub fn parse_response(
     let mut q50 = Vec::with_capacity(mean.len());
     let mut q90 = Vec::with_capacity(mean.len());
     let mut offset = 0usize;
-
     for (series_id, series_dates) in dates {
         for index in 0..horizon {
             let value = mean
@@ -92,10 +95,8 @@ pub fn parse_response(
             offset += 1;
         }
     }
-
     Ok((predictions, q10, q50, q90))
 }
-
 fn group_rows(
     rows: &[Value],
     series_column: &str,

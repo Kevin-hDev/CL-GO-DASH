@@ -1,4 +1,5 @@
 from .adapter_utils import forecast_payload_result
+from .config_utils import config_bool
 
 
 class TabPfnTsAdapter:
@@ -7,10 +8,15 @@ class TabPfnTsAdapter:
 
     def predict(self, payload, horizon, quantile_levels):
         return forecast_payload_result(
-            payload, horizon, quantile_levels, self._forecast_one
+            payload,
+            horizon,
+            quantile_levels,
+            lambda values, length, levels: self._forecast_one(
+                values, length, levels, payload
+            ),
         )
 
-    def _forecast_one(self, values, horizon, quantile_levels):
+    def _forecast_one(self, values, horizon, quantile_levels, payload):
         context_df, future_df = self._frames(values, horizon)
         pipeline = self._load_pipeline()
         predictions = pipeline.predict_df(
@@ -18,6 +24,8 @@ class TabPfnTsAdapter:
             future_df=future_df,
         )
         median = self._prediction_values(predictions, horizon)
+        if not config_bool(payload, "probabilistic_output", True):
+            return median, None
         quantiles = self._prediction_quantiles(
             predictions, horizon, quantile_levels
         )

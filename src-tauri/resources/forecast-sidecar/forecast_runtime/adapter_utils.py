@@ -1,5 +1,6 @@
 from collections import OrderedDict
 
+from .config_utils import trim_history
 from .validation import (
     quantile_key,
     read_numeric_value,
@@ -101,7 +102,7 @@ def forecast_jobs(payload, horizon):
         return [
             {
                 "series_id": None,
-                "values": validate_values(payload.get("values")),
+                "values": trim_history(validate_values(payload.get("values")), payload),
                 "dates": default_future_dates(horizon),
             }
         ]
@@ -119,7 +120,7 @@ def forecast_jobs(payload, horizon):
     return [
         {
             "series_id": series_id,
-            "values": values,
+            "values": trim_history(values, payload),
             "dates": future_dates.get(series_id, default_future_dates(horizon)),
         }
         for series_id, values in grouped.items()

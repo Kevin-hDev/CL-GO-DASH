@@ -54,8 +54,8 @@ fn select_bound_key(value: &Value, bound: Bound) -> Option<(&str, u32)> {
             Bound::Upper => *level > 50,
         })
         .min_by_key(|(_, level)| match bound {
-            Bound::Lower => *level,
-            Bound::Upper => 100 - *level,
+            Bound::Lower => 50 - *level,
+            Bound::Upper => *level - 50,
         })
 }
 
@@ -87,9 +87,11 @@ mod tests {
     fn maps_custom_simple_quantiles_to_visible_bounds() {
         let body = json!({
             "median": [2.0, 3.0],
+            "q05": [0.0, 1.0],
             "q25": [1.0, 2.0],
             "q50": [2.0, 3.0],
-            "q75": [4.0, 5.0]
+            "q75": [4.0, 5.0],
+            "q95": [6.0, 7.0]
         });
 
         assert_eq!(lower_array(&body), vec![1.0, 2.0]);

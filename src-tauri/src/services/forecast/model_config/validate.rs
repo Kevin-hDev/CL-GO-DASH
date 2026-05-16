@@ -91,6 +91,9 @@ fn normalize_number_list(spec: &ParamSpec, value: Value) -> Result<Value, String
     if values.is_empty() || values.len() > MAX_NUMBER_LIST {
         return Err("Paramètre Forecast invalide".into());
     }
+    let mut values = values;
+    values.sort_by(|left, right| left.total_cmp(right));
+    values.dedup_by(|left, right| (*left - *right).abs() < f64::EPSILON);
     let mut normalized = Vec::with_capacity(values.len());
     for number in values {
         if !number.is_finite() {

@@ -1,5 +1,5 @@
 from .adapter_utils import forecast_payload_result, values_tensor
-from .config_utils import config_bool, config_float
+from .config_utils import config_bool, config_float, standard_quantile_levels
 from .quantile_utils import select_standard_quantiles
 
 
@@ -9,6 +9,7 @@ class FlowStateAdapter:
         self.model = None
 
     def predict(self, payload, horizon, quantile_levels):
+        quantile_levels = standard_quantile_levels(quantile_levels)
         return forecast_payload_result(
             payload,
             horizon,

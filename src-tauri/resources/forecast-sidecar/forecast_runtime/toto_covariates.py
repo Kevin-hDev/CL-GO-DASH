@@ -4,6 +4,7 @@ from .adapter_utils import (
     row_series_id,
     to_float_list,
 )
+from .config_utils import config_int
 from .validation import read_numeric_value
 
 
@@ -31,7 +32,10 @@ def build_covariate_jobs(payload, horizon, covariates):
             entry["covariates"][name]["history_mask"].append(True)
 
     add_future_covariates(grouped, payload, series_column, covariates)
-    return [finish_entry(entry, covariates, horizon) for entry in grouped.values()]
+    return [
+        finish_entry(entry, covariates, horizon, payload)
+        for entry in grouped.values()
+    ]
 
 
 def new_entry(series_id, covariates):
@@ -66,7 +70,8 @@ def add_future_covariates(grouped, payload, series_column, covariates):
             entry["covariates"][name]["future_mask"].append(value is not None)
 
 
-def finish_entry(entry, covariates, horizon):
+def finish_entry(entry, covariates, horizon, payload):
+    trim_context(entry, payload)
     for name in covariates:
         covariate = entry["covariates"][name]
         missing = horizon - len(covariate["future"])
@@ -84,6 +89,16 @@ def finish_entry(entry, covariates, horizon):
         "covariates": list(entry["covariates"].values()),
         "dates": entry["dates"][:horizon],
     }
+
+
+def trim_context(entry, payload):
+    limit = config_int(payload, "context_length", 0, 0, 100000)
+    if limit <= 0 or len(entry["values"]) <= limit:
+        return
+    entry["values"] = entry["values"][-limit:]
+    for covariate in entry["covariates"].values():
+        covariate["history"] = covariate["history"][-limit:]
+        covariate["history_mask"] = covariate["history_mask"][-limit:]
 
 
 def format_covariate_predictions(forecasts, quantile_levels, horizon):
@@ -107,6 +122,8 @@ def format_covariate_predictions(forecasts, quantile_levels, horizon):
 
 def format_job_predictions(job, median_values, quantile_by_key):
     items = []
+    lower_key = selected_bound_key(quantile_by_key, lower=True)
+    upper_key = selected_bound_key(quantile_by_key, lower=False)
     for index, value in enumerate(median_values):
         date = job["dates"][index] if index < len(job["dates"]) else f"T+{index + 1}"
         item = {
@@ -114,12 +131,26 @@ def format_job_predictions(job, median_values, quantile_by_key):
             "value": value,
             "series_id": job["series_id"],
         }
-        for key in ("q10", "q50", "q90"):
+        for key in quantile_by_key:
             quantile_value = quantile_at(quantile_by_key, key, index)
             if quantile_value is not None:
                 item[key] = quantile_value
+        if "q10" not in item and lower_key in item:
+            item["q10"] = item[lower_key]
+        if "q90" not in item and upper_key in item:
+            item["q90"] = item[upper_key]
         items.append(item)
     return items
+
+
+def selected_bound_key(quantile_by_key, lower):
+    keys = [key for key in quantile_by_key if key.startswith("q") and len(key) == 3]
+    levels = [(key, int(key[1:])) for key in keys if key[1:].isdigit()]
+    if lower:
+        candidates = [(key, 50 - level) for key, level in levels if level < 50]
+    else:
+        candidates = [(key, level - 50) for key, level in levels if level > 50]
+    return min(candidates, key=lambda item: item[1])[0] if candidates else None
 
 
 def read_optional_number(value):

@@ -5,6 +5,7 @@ from .adapter_utils import (
     values_tensor,
 )
 from .config_utils import config_bool, config_int
+from .config_utils import standard_quantile_levels
 from .toto_covariates import build_covariate_jobs, format_covariate_predictions
 from .validation import validate_column_names
 
@@ -15,6 +16,7 @@ class TotoAdapter:
         self.model = None
 
     def predict(self, payload, horizon, quantile_levels):
+        quantile_levels = standard_quantile_levels(quantile_levels)
         covariates = validate_column_names(payload.get("covariate_columns"))
         if covariates:
             return self._predict_with_covariates(

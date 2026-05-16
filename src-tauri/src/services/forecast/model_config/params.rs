@@ -13,14 +13,6 @@ pub(super) fn batch_size() -> ParamSpec {
     int_param("batch_size", 1, 1.0, 1024.0)
 }
 
-pub(super) fn horizon_len() -> ParamSpec {
-    int_param("horizon_len", 0, 0.0, 100_000.0)
-}
-
-pub(super) fn confidence() -> ParamSpec {
-    number_param("confidence_level", 0.9, 0.5, 0.99)
-}
-
 pub(super) fn level() -> ParamSpec {
     int_param("level", 90, 50.0, 99.0)
 }
@@ -34,14 +26,6 @@ pub(super) fn quantiles() -> ParamSpec {
         max: Some(0.99),
         options: &[],
     }
-}
-
-pub(super) fn precision() -> ParamSpec {
-    select(
-        "precision",
-        "auto",
-        &["auto", "float32", "float16", "bfloat16"],
-    )
 }
 
 pub(super) fn dtype() -> ParamSpec {

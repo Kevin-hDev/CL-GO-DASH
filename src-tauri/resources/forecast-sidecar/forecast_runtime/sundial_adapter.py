@@ -1,5 +1,5 @@
 from .adapter_utils import forecast_payload_result, values_tensor
-from .config_utils import config_int
+from .config_utils import config, config_int, torch_dtype
 
 
 class SundialAdapter:
@@ -23,7 +23,7 @@ class SundialAdapter:
         sample_count = config_int(payload, "num_samples", 64, 1, 512)
         context = values_tensor(values).view(1, -1)
         with torch.no_grad():
-            samples = self._load_model().to("cpu").eval().generate(
+            samples = self._load_model(payload).to("cpu").eval().generate(
                 context,
                 max_new_tokens=horizon,
                 num_samples=sample_count,
@@ -44,11 +44,17 @@ class SundialAdapter:
         ]
         return median, quantiles
 
-    def _load_model(self):
-        if self.model is None:
+    def _load_model(self, payload):
+        dtype_name = config(payload).get("dtype", "auto")
+        if self.model is None or getattr(self, "dtype_name", None) != dtype_name:
             from transformers import AutoModelForCausalLM
 
+            kwargs = {"trust_remote_code": True}
+            dtype = torch_dtype(payload, "dtype")
+            if dtype is not None:
+                kwargs["torch_dtype"] = dtype
             self.model = AutoModelForCausalLM.from_pretrained(
-                self.model_dir, trust_remote_code=True
+                self.model_dir, **kwargs
             )
+            self.dtype_name = dtype_name
         return self.model
