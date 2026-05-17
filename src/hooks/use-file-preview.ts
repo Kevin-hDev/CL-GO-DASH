@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { fileNameFromPath } from "@/lib/file-preview-utils";
 import { IS_MAC } from "@/lib/platform";
 import type { FileOperation, FilePreviewActiveTab } from "@/types/file-preview";
@@ -7,18 +7,14 @@ import {
   readStoredFilePreviewTabs,
   writeStoredFilePreviewTabs,
 } from "./file-preview-storage";
+import {
+  clampPreviewWidthForLayout,
+  findOpenPreviewPanel,
+  measurePreviewLayout,
+} from "./file-preview-layout";
 import { useFilePreviewPanelState } from "./use-file-preview-panel-state";
 
 const MAX_TABS = 6;
-
-function siblingPanelWidth(target: HTMLElement, container: Element | null): number {
-  const panel = target.closest(".fp-panel");
-  if (!container || !panel) return 0;
-  return [...container.children].reduce((total, child) => {
-    if (child === panel || child.classList.contains("agent-detail-chat")) return total;
-    return total + child.getBoundingClientRect().width;
-  }, 0);
-}
 
 export function useFilePreview(sessionId: string | null, operations: FileOperation[]) {
   const {
@@ -106,15 +102,24 @@ export function useFilePreview(sessionId: string | null, operations: FileOperati
   const startResize = useCallback((event: React.PointerEvent) => {
     event.preventDefault();
     const target = event.currentTarget as HTMLElement;
-    const container = target.closest(".agent-detail-with-preview");
+    const panel = target.closest(".fp-panel");
+    const layout = measurePreviewLayout(panel, extraWidth);
     resizeRef.current = {
       startX: event.clientX,
       startWidth: width,
-      container,
-      reservedWidth: extraWidth + siblingPanelWidth(target, container),
+      container: layout.container,
+      reservedWidth: layout.reservedWidth,
     };
     setResizing(true);
   }, [width, extraWidth]);
+
+  useLayoutEffect(() => {
+    if (!open || fullscreen || resizing) return;
+    const panel = findOpenPreviewPanel();
+    if (!panel) return;
+    const nextWidth = clampPreviewWidthForLayout(width, panel, extraWidth);
+    if (nextWidth !== width) setWidth(nextWidth);
+  }, [open, fullscreen, resizing, width, extraWidth, setWidth]);
 
   useEffect(() => {
     const onMove = (event: PointerEvent) => {

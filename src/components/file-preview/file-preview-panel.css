@@ -22,7 +22,7 @@
 }
 
 .fp-panel.open {
-  width: var(--fp-width) !important;
+  width: min(var(--fp-width), max(0px, calc(100% - var(--agent-chat-min-width, 360px)))) !important;
   transform: translateX(0);
   opacity: 1;
   pointer-events: auto;
@@ -33,6 +33,7 @@
 }
 
 .fp-panel.fullscreen {
+  width: 100% !important;
   flex-grow: 1;
   border-left: none;
 }
