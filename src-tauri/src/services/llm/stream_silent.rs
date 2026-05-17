@@ -1,5 +1,8 @@
-use super::stream_http::{post_chat_request, RequestConfig};
-use super::stream_tools::ToolCallAccumulator;
+use super::{
+    stream_http::{post_chat_request, RequestConfig},
+    stream_sse::is_done_marker,
+    stream_tools::ToolCallAccumulator,
+};
 use crate::services::agent_local::types_ollama::ChatMessage;
 use crate::services::agent_local::types_ollama::StreamResult;
 use crate::services::stream_utils::{FilteredChunk, ThinkTagFilter};
@@ -46,13 +49,13 @@ async fn consume_silent(
     loop {
         tokio::select! {
             _ = cancel.cancelled() => return Err("Annulé".to_string()),
-            _ = tokio::time::sleep(std::time::Duration::from_secs(120)) => {
-                return Err("Timeout compression : aucune réponse depuis 120s".to_string());
+            _ = tokio::time::sleep(super::timeouts::idle_timeout()) => {
+                return Err("Timeout compression : aucune réponse depuis 180s".to_string());
             }
             event = stream.next() => {
                 let Some(event) = event else { break; };
                 let event = event.map_err(|e| format!("SSE: {e}"))?;
-                if event.data.trim() == "[DONE]" { continue; }
+                if is_done_marker(&event.data) { break; }
                 process_chunk_silent(&event.data, &mut result, &mut acc, &mut think_filter);
             }
         }

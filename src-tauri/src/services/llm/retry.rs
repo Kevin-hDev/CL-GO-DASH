@@ -4,7 +4,7 @@
 
 use super::stream;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
-use crate::services::agent_local::types_ollama::{ChatMessage, StreamEvent, StreamResult};
+use crate::services::agent_local::types_ollama::{ChatMessage, StreamResult};
 use tokio_util::sync::CancellationToken;
 
 const MAX_RETRIES: usize = 5;
@@ -41,10 +41,7 @@ pub async fn retry_stream(
             return Err("Annulé".to_string());
         }
         if attempt > 0 {
-            let _ = on_event.send(StreamEvent::Error {
-                message: format!("Retry {attempt}/{MAX_RETRIES} après erreur : {last_error}"),
-                is_connection: false,
-            });
+            eprintln!("[llm retry] attempt={attempt}/{MAX_RETRIES} error={last_error}");
             let delay = RETRY_BASE_MS * (1 << (attempt - 1));
             tokio::time::sleep(tokio::time::Duration::from_millis(delay)).await;
         }

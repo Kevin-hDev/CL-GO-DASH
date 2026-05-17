@@ -7,6 +7,8 @@ use tokio_util::sync::CancellationToken;
 
 use super::request;
 
+const CODEX_IDLE_TIMEOUT_SECS: u64 = 180;
+
 pub async fn stream_chat(
     on_event: &AgentEventEmitter,
     model: &str,
@@ -47,8 +49,8 @@ async fn consume_sse(
     loop {
         let event = tokio::select! {
             _ = cancel.cancelled() => return Err("Annulé".to_string()),
-            _ = tokio::time::sleep(std::time::Duration::from_secs(60)) => {
-                return Err("Timeout Codex : 60s sans réponse".to_string());
+            _ = tokio::time::sleep(std::time::Duration::from_secs(CODEX_IDLE_TIMEOUT_SECS)) => {
+                return Err("Timeout Codex : 180s sans réponse".to_string());
             }
             ev = sse.next() => match ev {
                 Some(Ok(e)) => e,
@@ -150,8 +152,8 @@ async fn consume_sse_silent(
     loop {
         let event = tokio::select! {
             _ = cancel.cancelled() => return Err("Annulé".to_string()),
-            _ = tokio::time::sleep(std::time::Duration::from_secs(60)) => {
-                return Err("Timeout Codex : 60s sans réponse".to_string());
+            _ = tokio::time::sleep(std::time::Duration::from_secs(CODEX_IDLE_TIMEOUT_SECS)) => {
+                return Err("Timeout Codex : 180s sans réponse".to_string());
             }
             ev = sse.next() => match ev {
                 Some(Ok(e)) => e,

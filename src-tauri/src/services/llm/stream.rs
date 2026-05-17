@@ -1,5 +1,8 @@
-use super::stream_http::{post_chat_request, RequestConfig, RequestError};
-use super::stream_tools::ToolCallAccumulator;
+use super::{
+    stream_http::{post_chat_request, RequestConfig, RequestError},
+    stream_sse::is_done_marker,
+    stream_tools::ToolCallAccumulator,
+};
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::types_ollama::{ChatMessage, StreamEvent, StreamResult};
 use crate::services::llm::stream_convert;
@@ -7,7 +10,6 @@ use crate::services::stream_utils::{compute_tps, FilteredChunk, ThinkTagFilter};
 use eventsource_stream::Eventsource;
 use futures_util::StreamExt;
 use tokio_util::sync::CancellationToken;
-
 pub async fn stream_chat_no_done(
     on_event: &AgentEventEmitter,
     provider_id: &str,
@@ -66,7 +68,6 @@ pub async fn stream_chat_no_done(
         Err(RequestError::Fatal(msg)) => Err(msg),
     }
 }
-
 async fn consume_stream(
     on_event: &AgentEventEmitter,
     resp: reqwest::Response,
@@ -82,13 +83,13 @@ async fn consume_stream(
     loop {
         tokio::select! {
             _ = cancel.cancelled() => return Err("Annulé".to_string()),
-            _ = tokio::time::sleep(std::time::Duration::from_secs(60)) => {
-                return Err("Timeout : aucune réponse du modèle depuis 60s".to_string());
+            _ = tokio::time::sleep(super::timeouts::idle_timeout()) => {
+                return Err("Timeout : aucune réponse du modèle depuis 180s".to_string());
             }
             event = stream.next() => {
                 let Some(event) = event else { break; };
                 let event = event.map_err(|e| format!("SSE: {e}"))?;
-                if event.data.trim() == "[DONE]" { continue; }
+                if is_done_marker(&event.data) { break; }
                 process_chunk(&event.data, on_event, &mut token_count, &mut first_token, &mut result, &mut acc, &mut think_filter);
             }
         }
@@ -128,7 +129,6 @@ async fn consume_stream(
     let first = first_token.unwrap_or_else(std::time::Instant::now);
     Ok((result, token_count, first))
 }
-
 fn process_chunk(
     data: &str,
     on_event: &AgentEventEmitter,
@@ -196,5 +196,4 @@ fn process_chunk(
             .unwrap_or(0) as u32;
     }
 }
-
 pub use super::stream_silent::collect_chat_silent;

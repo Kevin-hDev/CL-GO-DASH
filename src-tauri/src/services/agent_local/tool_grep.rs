@@ -1,9 +1,11 @@
 use crate::services::agent_local::security;
+use crate::services::agent_local::tool_scan_timeout::{run_scan, scan_cancelled};
 use crate::services::agent_local::types_tools::ToolResult;
 use grep_regex::RegexMatcher;
 use grep_searcher::{Searcher, Sink, SinkMatch};
 use ignore::{overrides::OverrideBuilder, WalkBuilder};
 use std::path::{Path, PathBuf};
+use std::sync::atomic::AtomicBool;
 
 const MAX_RESULTS: usize = 250;
 
@@ -21,14 +23,8 @@ pub async fn grep(
         return ToolResult::err(e);
     }
 
-    let result =
-        tokio::task::spawn_blocking(move || grep_blocking(&pattern, &root, glob_filter.as_deref()))
-            .await;
-
-    match result {
-        Ok(r) => r,
-        Err(e) => ToolResult::err(format!("Erreur interne: {e}")),
-    }
+    run_scan(move |cancelled| grep_blocking(&pattern, &root, glob_filter.as_deref(), &cancelled))
+        .await
 }
 
 fn resolve_root(path: Option<&str>, working_dir: &Path) -> PathBuf {
@@ -47,7 +43,12 @@ fn resolve_root(path: Option<&str>, working_dir: &Path) -> PathBuf {
 
 const MAX_PATTERN_LEN: usize = 500;
 
-fn grep_blocking(pattern: &str, root: &Path, glob_filter: Option<&str>) -> ToolResult {
+fn grep_blocking(
+    pattern: &str,
+    root: &Path,
+    glob_filter: Option<&str>,
+    cancelled: &AtomicBool,
+) -> ToolResult {
     if pattern.len() > MAX_PATTERN_LEN {
         return ToolResult::err(format!("Pattern trop long (max {MAX_PATTERN_LEN} chars)"));
     }
@@ -57,7 +58,13 @@ fn grep_blocking(pattern: &str, root: &Path, glob_filter: Option<&str>) -> ToolR
     };
 
     let mut walk_builder = WalkBuilder::new(root);
-    walk_builder.hidden(false).git_ignore(true);
+    walk_builder
+        .hidden(false)
+        .parents(false)
+        .ignore(false)
+        .git_ignore(false)
+        .git_global(false)
+        .git_exclude(false);
 
     if let Some(g) = glob_filter {
         let mut ov = OverrideBuilder::new(root);
@@ -77,6 +84,9 @@ fn grep_blocking(pattern: &str, root: &Path, glob_filter: Option<&str>) -> ToolR
     let mut truncated = false;
 
     for dent in walk_builder.build() {
+        if scan_cancelled(cancelled) {
+            return ToolResult::err("Timeout après 600s");
+        }
         if results.len() >= MAX_RESULTS {
             truncated = true;
             break;

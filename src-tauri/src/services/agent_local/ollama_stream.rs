@@ -12,7 +12,7 @@ use tokio::sync::mpsc;
 use tokio_util::io::StreamReader;
 use tokio_util::sync::CancellationToken;
 
-const COLLECT_TIMEOUT_SECS: u64 = 60;
+const COLLECT_TIMEOUT_SECS: u64 = 180;
 
 /// Appel Ollama non-interactif (sans streaming UI).
 pub async fn collect_chat(

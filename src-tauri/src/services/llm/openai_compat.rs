@@ -4,124 +4,21 @@
 //! Un seul client change juste `base_url` et charge la clé via `api_keys`.
 
 use super::catalog::{self, ProviderSpec};
+use super::openai_compat_models;
 use super::openai_compat_parsing::{
     build_payload, map_error_status, parse_chat_response, parse_models_list,
 };
 use super::types::{ChatRequest, ChatResponse, LlmError, ModelInfo};
 use crate::services::api_keys;
 use reqwest::Client;
-use std::time::Duration;
-
-struct StaticModel {
-    id: &'static str,
-    ctx: u32,
-}
-
-const ZAI_MODELS: &[StaticModel] = &[
-    StaticModel {
-        id: "glm-5.1",
-        ctx: 200_000,
-    },
-    StaticModel {
-        id: "glm-5",
-        ctx: 200_000,
-    },
-    StaticModel {
-        id: "glm-5-code",
-        ctx: 200_000,
-    },
-    StaticModel {
-        id: "glm-4.7",
-        ctx: 200_000,
-    },
-    StaticModel {
-        id: "glm-4.6",
-        ctx: 200_000,
-    },
-    StaticModel {
-        id: "glm-4.5",
-        ctx: 128_000,
-    },
-    StaticModel {
-        id: "glm-4.5v",
-        ctx: 128_000,
-    },
-    StaticModel {
-        id: "glm-4.5-air",
-        ctx: 128_000,
-    },
-    StaticModel {
-        id: "glm-4.5-flash",
-        ctx: 128_000,
-    },
-];
-
-const XAI_MODELS: &[StaticModel] = &[
-    StaticModel {
-        id: "grok-4.3",
-        ctx: 1_000_000,
-    },
-    StaticModel {
-        id: "grok-4",
-        ctx: 256_000,
-    },
-    StaticModel {
-        id: "grok-4-fast-reasoning",
-        ctx: 2_000_000,
-    },
-    StaticModel {
-        id: "grok-4-fast-non-reasoning",
-        ctx: 2_000_000,
-    },
-    StaticModel {
-        id: "grok-4.20-reasoning",
-        ctx: 256_000,
-    },
-    StaticModel {
-        id: "grok-4.20-non-reasoning",
-        ctx: 256_000,
-    },
-    StaticModel {
-        id: "grok-3",
-        ctx: 131_072,
-    },
-    StaticModel {
-        id: "grok-3-mini",
-        ctx: 131_072,
-    },
-    StaticModel {
-        id: "grok-3-fast",
-        ctx: 131_072,
-    },
-    StaticModel {
-        id: "grok-2-vision",
-        ctx: 32_768,
-    },
-    StaticModel {
-        id: "grok-code-fast",
-        ctx: 131_072,
-    },
-];
-
-fn static_models(provider_id: &str) -> Option<&'static [StaticModel]> {
-    match provider_id {
-        "zai" => Some(ZAI_MODELS),
-        "xai" => Some(XAI_MODELS),
-        _ => None,
-    }
-}
-
-pub fn ping_model(provider_id: &str) -> &'static str {
-    match provider_id {
-        "zai" => "glm-4.5-flash",
-        "xai" => "grok-3-mini",
-        _ => "test",
-    }
-}
 
 pub struct OpenAiCompatProvider {
     spec: &'static ProviderSpec,
     client: Client,
+}
+
+pub fn ping_model(provider_id: &str) -> &'static str {
+    openai_compat_models::ping_model(provider_id)
 }
 
 impl OpenAiCompatProvider {
@@ -129,7 +26,7 @@ impl OpenAiCompatProvider {
         let spec = catalog::find(provider_id)
             .ok_or_else(|| LlmError::Provider(format!("provider inconnu : {}", provider_id)))?;
         let client = Client::builder()
-            .timeout(Duration::from_secs(60))
+            .timeout(super::timeouts::request_timeout())
             .build()
             .map_err(|e| LlmError::Network(e.to_string()))?;
         Ok(Self { spec, client })
@@ -137,19 +34,8 @@ impl OpenAiCompatProvider {
 
     /// Appelle `/models` pour récupérer la liste des modèles disponibles.
     pub async fn list_models(&self) -> Result<Vec<ModelInfo>, LlmError> {
-        if let Some(models) = static_models(self.spec.id) {
-            return Ok(models
-                .iter()
-                .map(|m| ModelInfo {
-                    id: m.id.to_string(),
-                    owned_by: None,
-                    context_length: Some(m.ctx),
-                    supports_tools: false,
-                    supports_vision: false,
-                    supports_thinking: false,
-                    is_free: false,
-                })
-                .collect());
+        if let Some(models) = openai_compat_models::static_model_infos(self.spec.id) {
+            return Ok(models);
         }
         let key = api_keys::get_key(self.spec.id).map_err(|_| LlmError::Unauthorized)?;
         let url = format!("{}{}", self.spec.base_url, self.spec.models_endpoint);
@@ -201,7 +87,7 @@ impl OpenAiCompatProvider {
 
     /// Test de connexion : appelle `/models` et vérifie HTTP 2xx.
     pub async fn test_connection(&self) -> Result<(), LlmError> {
-        if static_models(self.spec.id).is_some() {
+        if openai_compat_models::has_static_models(self.spec.id) {
             return self.ping_chat().await;
         }
         self.list_models().await.map(|_| ())
@@ -211,7 +97,7 @@ impl OpenAiCompatProvider {
         let key = api_keys::get_key(self.spec.id).map_err(|_| LlmError::Unauthorized)?;
         let url = format!("{}/chat/completions", self.spec.base_url);
         let payload = serde_json::json!({
-            "model": ping_model(self.spec.id),
+            "model": openai_compat_models::ping_model(self.spec.id),
             "messages": [{"role": "user", "content": "hi"}],
             "max_tokens": 1,
         });

@@ -106,6 +106,7 @@ pub mod tool_office_utils;
 pub mod tool_result_budget;
 #[cfg(test)]
 pub mod tool_result_budget_tests;
+pub mod tool_scan_timeout;
 pub mod tool_skill_loader;
 pub mod tool_spreadsheet_calamine;
 pub mod tool_spreadsheet_read;

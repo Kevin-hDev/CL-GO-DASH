@@ -2,10 +2,6 @@ use super::stream_convert::messages_to_openai;
 use crate::services::agent_local::types_ollama::ChatMessage;
 use crate::services::api_keys;
 use crate::services::llm::catalog;
-use std::time::Duration;
-
-const REQUEST_TIMEOUT_SECS: u64 = 120;
-
 pub struct RequestConfig<'a> {
     pub provider_id: &'a str,
     pub model: &'a str,
@@ -78,7 +74,7 @@ pub async fn post_chat_request(cfg: &RequestConfig<'_>) -> Result<reqwest::Respo
     }
 
     let client = reqwest::Client::builder()
-        .timeout(Duration::from_secs(REQUEST_TIMEOUT_SECS))
+        .timeout(super::timeouts::request_timeout())
         .build()
         .map_err(|e| RequestError::Fatal(format!("HTTP client: {e}")))?;
 
