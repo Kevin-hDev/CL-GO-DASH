@@ -33,6 +33,8 @@ export function ConnectorsTab(): { list: React.ReactNode; detail: React.ReactNod
   } = useConnectors();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [dialog, setDialog] = useState<DialogState>({ kind: "none" });
+  const [confirmAddBusy, setConfirmAddBusy] = useState(false);
+  const [confirmAddError, setConfirmAddError] = useState(false);
 
   useEffect(() => {
     if (selectedId === null && configured.length > 0) setSelectedId(configured[0].id);
@@ -41,6 +43,7 @@ export function ConnectorsTab(): { list: React.ReactNode; detail: React.ReactNod
   const selected = selectedId ? configured.find((c) => c.id === selectedId) ?? null : null;
 
   const handlePick = (spec: McpConnectorSpec) => {
+    setConfirmAddError(false);
     if (spec.auth_type === "none") {
       setDialog({ kind: "confirm-add", connector: spec, returnTo: "browse" });
     } else if (spec.auth_type === "oauth") {
@@ -59,6 +62,21 @@ export function ConnectorsTab(): { list: React.ReactNode; detail: React.ReactNod
     if (dialog.kind !== "confirm-disconnect") return;
     await toggleStatus(dialog.connectorId);
     setDialog({ kind: "none" });
+  };
+
+  const handleConfirmAdd = async (connector: McpConnectorSpec) => {
+    if (confirmAddBusy) return;
+    setConfirmAddBusy(true);
+    setConfirmAddError(false);
+    try {
+      await addConnector(connector.id);
+      setSelectedId(connector.id);
+      setDialog({ kind: "none" });
+    } catch {
+      setConfirmAddError(true);
+    } finally {
+      setConfirmAddBusy(false);
+    }
   };
 
   const list = (
@@ -143,13 +161,10 @@ export function ConnectorsTab(): { list: React.ReactNode; detail: React.ReactNod
           <div className="wk-dialog" role="presentation" onClick={(e) => e.stopPropagation()} onKeyDown={() => {}}>
             <h3>{t("connectors.config.addTitle", { name: dialog.connector.display_name })}</h3>
             <p className="ct-confirm-desc">{t("connectors.config.confirmAddDesc", { name: dialog.connector.display_name })}</p>
+            {confirmAddError && <div className="ak-test-result error">{t("connectors.config.testError")}</div>}
             <div className="wk-dialog-footer">
               <button type="button" className="wk-btn-secondary" onClick={() => setDialog(dialog.returnTo === "browse" ? { kind: "browse" } : { kind: "none" })}>{t("connectors.detail.cancel")}</button>
-              <button type="button" className="wk-btn-primary" onClick={() => void (async () => {
-                await addConnector(dialog.connector.id);
-                setSelectedId(dialog.connector.id);
-                setDialog({ kind: "none" });
-              })()}>{t("connectors.config.confirmAddBtn")}</button>
+              <button type="button" className="wk-btn-primary" disabled={confirmAddBusy} onClick={() => void handleConfirmAdd(dialog.connector)}>{t("connectors.config.confirmAddBtn")}</button>
             </div>
           </div>
         </div>

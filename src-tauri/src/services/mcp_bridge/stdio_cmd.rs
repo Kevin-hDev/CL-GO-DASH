@@ -1,14 +1,6 @@
+use super::stdio_catalog;
+
 const ALLOWED_PROGRAMS: &[&str] = &["npx", "uvx", "deno"];
-const IMESSAGE_CONNECTOR_ID: &str = "imessage";
-const IMESSAGE_PACKAGE: &str = "jsr:@wyattjoh/imessage-mcp@0.4.2";
-const IMESSAGE_ARGS: &[&str] = &[
-    "run",
-    "--allow-read",
-    "--allow-env",
-    "--allow-sys",
-    "--allow-ffi",
-    IMESSAGE_PACKAGE,
-];
 
 static ARG_REGEX: std::sync::LazyLock<regex::Regex> =
     std::sync::LazyLock::new(|| regex::Regex::new(r"^[a-zA-Z0-9@/_.:=\-]+$").unwrap());
@@ -39,8 +31,8 @@ pub fn parse_install_command(connector_id: &str, raw: &str) -> Result<ParsedComm
         args.push(part.to_string());
     }
 
-    if connector_id == IMESSAGE_CONNECTOR_ID {
-        if program != "deno" || args != IMESSAGE_ARGS {
+    if connector_id == stdio_catalog::IMESSAGE_CONNECTOR_ID {
+        if program != "deno" || args != stdio_catalog::IMESSAGE_ARGS {
             return Err("commande iMessage non autorisée".to_string());
         }
     }
@@ -62,10 +54,10 @@ fn validate_catalog_command(
     program: &str,
     args: &[String],
 ) -> Result<(), String> {
-    if connector_id == IMESSAGE_CONNECTOR_ID {
+    if connector_id == stdio_catalog::IMESSAGE_CONNECTOR_ID {
         return Ok(());
     }
-    let Some((expected_program, expected_args)) = catalog_command(connector_id) else {
+    let Some((expected_program, expected_args)) = stdio_catalog::command_parts(connector_id) else {
         return Err("connecteur stdio non autorisé".to_string());
     };
     if program != expected_program || args.len() != expected_args.len() {
@@ -79,16 +71,6 @@ fn validate_catalog_command(
         return Err("commande MCP non autorisée".to_string());
     }
     Ok(())
-}
-
-fn catalog_command(connector_id: &str) -> Option<(&'static str, &'static [&'static str])> {
-    match connector_id {
-        "context7" => Some(("npx", &["@upstash/context7-mcp@2.2.5"])),
-        "huggingface" => Some(("npx", &["@llmindset/hf-mcp-server@0.3.13"])),
-        "producthunt" => Some(("uvx", &["product-hunt-mcp==0.1.0"])),
-        "reddit" => Some(("npx", &["reddit-mcp-server@1.4.5"])),
-        _ => None,
-    }
 }
 
 #[cfg(test)]

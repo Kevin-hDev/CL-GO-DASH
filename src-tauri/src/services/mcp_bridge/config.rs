@@ -5,13 +5,10 @@ use std::path::{Path, PathBuf};
 use serde::{Deserialize, Serialize};
 
 pub use super::env_keys::{validate_env_key, validated_env_keys};
-use super::{stdio_cmd, trusted};
+use super::{config_migration, stdio_catalog, stdio_cmd, trusted};
 
 pub const MAX_CONNECTORS: usize = 32;
 const FILENAME: &str = "mcp-connectors.json";
-const IMESSAGE_CONNECTOR_ID: &str = "imessage";
-const IMESSAGE_INSTALL_COMMAND: &str =
-    "deno run --allow-read --allow-env --allow-sys --allow-ffi jsr:@wyattjoh/imessage-mcp@0.4.2";
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct StoredConnector {
@@ -114,11 +111,7 @@ pub fn is_valid_connector_id(id: &str) -> bool {
 }
 
 pub fn install_command_for(c: &StoredConnector) -> Option<String> {
-    if c.id == IMESSAGE_CONNECTOR_ID {
-        Some(IMESSAGE_INSTALL_COMMAND.to_string())
-    } else {
-        c.install_command.clone()
-    }
+    stdio_catalog::install_command(&c.id).or_else(|| c.install_command.clone())
 }
 
 fn update(connector_id: &str, apply: impl FnOnce(&mut StoredConnector)) -> Result<(), String> {
@@ -134,19 +127,23 @@ fn update(connector_id: &str, apply: impl FnOnce(&mut StoredConnector)) -> Resul
     save_to_path(&path, &list)
 }
 
-fn load_from_path(path: &Path) -> Result<Vec<StoredConnector>, String> {
+pub(crate) fn load_from_path(path: &Path) -> Result<Vec<StoredConnector>, String> {
     let content = match fs::read_to_string(path) {
         Ok(c) => c,
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(Vec::new()),
         Err(_) => return Err("lecture connecteurs impossible".to_string()),
     };
-    let parsed: Vec<StoredConnector> =
+    let mut parsed: Vec<StoredConnector> =
         serde_json::from_str(&content).map_err(|_| "configuration MCP invalide".to_string())?;
     if parsed.len() > MAX_CONNECTORS {
         return Err("limite de connecteurs atteinte".to_string());
     }
+    let migrated = config_migration::normalize_list(&mut parsed);
     for connector in &parsed {
         validate_connector(connector)?;
+    }
+    if migrated {
+        save_to_path(path, &parsed)?;
     }
     Ok(parsed)
 }

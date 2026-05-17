@@ -45,7 +45,16 @@ export function McpConfigDialog({ connector, onClose, onValidated }: McpConfigDi
         },
       });
       setTestState({ kind: "ok" });
-      setTimeout(() => onValidated(), 500);
+      setTimeout(() => {
+        void onValidated().catch(() => {
+          void invoke("delete_mcp_env_token", {
+            connectorId: connector.id,
+            envKey,
+          }).catch(() => {});
+          setTestState({ kind: "error", message: t("connectors.config.testError") });
+          setSubmitting(false);
+        });
+      }, 500);
     } catch {
       setToken("");
       await invoke("delete_mcp_env_token", {

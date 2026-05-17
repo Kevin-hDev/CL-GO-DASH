@@ -5,7 +5,7 @@ use std::time::Instant;
 use super::http::HttpTransport;
 use super::stdio::StdioTransport;
 use super::transport::{McpToolDef, McpTransport};
-use super::{config, trusted};
+use super::{config, token_validation, trusted};
 
 const MAX_CACHE: usize = 32;
 const CACHE_TTL_SECS: u64 = 300;
@@ -78,6 +78,7 @@ pub async fn get_tools(connector: &EnabledConnector) -> Result<Vec<McpToolDef>, 
 
 pub async fn test_connector(connector: config::StoredConnector) -> Result<(), String> {
     config::validate_connector(&connector)?;
+    token_validation::validate_connector_tokens(&connector).await?;
     let id = connector.id.clone();
     let enabled = build_connector(connector).ok_or("connecteur MCP invalide")?;
     invalidate_cache(&id);
