@@ -6,14 +6,6 @@ pub enum PreHookDecision {
     Deny(String),
 }
 
-const PROTECTED_FILES: &[&str] = &[
-    "config.json",
-    "secrets.enc",
-    "agent-settings.json",
-    "agent-tabs.json",
-    "configured-providers.json",
-];
-
 fn is_protected_app_file(path_str: &str) -> bool {
     let path = std::path::Path::new(path_str);
     let data_dir = crate::services::paths::data_dir();
@@ -24,7 +16,7 @@ fn is_protected_app_file(path_str: &str) -> bool {
             .unwrap_or_else(|| path.to_path_buf())
     });
     let data_canonical = data_dir.canonicalize().unwrap_or(data_dir);
-    PROTECTED_FILES
+    crate::services::agent_local::sensitive_data::PROTECTED_APP_FILES
         .iter()
         .any(|f| canonical == data_canonical.join(f))
 }
@@ -64,31 +56,17 @@ pub fn run_pre_hooks(tool_name: &str, args: &Value) -> PreHookDecision {
         }
     }
 
-    if tool_name == "bash" {
-        if let Some(cmd) = args["command"].as_str() {
-            if cmd.contains(".env") || cmd.contains("credentials") || cmd.contains("id_rsa") {
-                return PreHookDecision::Deny(
-                    "Commande accédant à des fichiers sensibles bloquée".into(),
-                );
-            }
-            let data_dir = crate::services::paths::data_dir()
-                .to_string_lossy()
-                .to_string();
-            for f in PROTECTED_FILES {
-                if cmd.contains(&format!("{data_dir}/{f}")) {
-                    return PreHookDecision::Deny(
-                        "Commande ciblant un fichier de configuration protégé bloquée".into(),
-                    );
-                }
-            }
-        }
-    }
-
     PreHookDecision::Allow
 }
 
 /// Hooks exécutés APRÈS chaque tool call.
 /// Peut modifier le résultat (ex: filtrer des données sensibles).
-pub fn run_post_hooks(_tool_name: &str, _args: &Value, result: ToolResult) -> ToolResult {
+pub fn run_post_hooks(tool_name: &str, _args: &Value, result: ToolResult) -> ToolResult {
+    if tool_name == "bash" {
+        return ToolResult {
+            content: crate::services::agent_local::sensitive_data::redact_text(&result.content),
+            ..result
+        };
+    }
     result
 }

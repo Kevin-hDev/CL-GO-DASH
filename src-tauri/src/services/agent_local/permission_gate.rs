@@ -57,6 +57,9 @@ static SAFE_BASH_PATTERNS: LazyLock<Vec<Regex>> = LazyLock::new(|| {
 
 fn is_safe_bash(command: &str) -> bool {
     let trimmed = command.trim();
+    if crate::services::agent_local::sensitive_data::bash_touches_sensitive_data(trimmed) {
+        return false;
+    }
     if trimmed.contains(';')
         || trimmed.contains("&&")
         || trimmed.contains("||")

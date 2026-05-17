@@ -7,7 +7,9 @@ pub fn get_config() -> Result<ClgoConfig, String> {
 }
 
 #[tauri::command]
-pub fn save_config(config: ClgoConfig) -> Result<(), String> {
+pub fn save_config(mut config: ClgoConfig) -> Result<(), String> {
+    let current = config_service::read_config()?;
+    config.advanced = protect_advanced_settings(config.advanced, &current);
     config_service::write_config(&config)
 }
 
@@ -33,10 +35,35 @@ pub fn set_advanced_settings(
     }
 
     let mut config = config_service::read_config()?;
-    let mut safe_settings = settings;
-    safe_settings.allowed_paths = config.advanced.allowed_paths.clone();
-    config.advanced = safe_settings;
+    config.advanced = protect_advanced_settings(settings, &config);
     config_service::write_config(&config)
+}
+
+fn protect_advanced_settings(
+    mut settings: AdvancedSettings,
+    current: &ClgoConfig,
+) -> AdvancedSettings {
+    settings.allowed_paths = current.advanced.allowed_paths.clone();
+    settings
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn protect_advanced_settings_keeps_existing_allowed_paths() {
+        let mut current = ClgoConfig::default();
+        current.advanced.allowed_paths = vec!["/trusted".to_string()];
+
+        let incoming = AdvancedSettings {
+            allowed_paths: vec!["/attacker".to_string()],
+            ..Default::default()
+        };
+
+        let protected = protect_advanced_settings(incoming, &current);
+        assert_eq!(protected.allowed_paths, vec!["/trusted"]);
+    }
 }
 
 const PATCH_BLOCKED_KEYS: &[&str] = &["allowed_paths"];

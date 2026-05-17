@@ -37,6 +37,7 @@ pub mod prompt_chat_detailed;
 pub mod prompt_compact;
 pub mod prompt_detailed;
 pub mod security;
+pub mod sensitive_data;
 pub mod session_index;
 pub mod session_ops;
 pub mod session_store;
