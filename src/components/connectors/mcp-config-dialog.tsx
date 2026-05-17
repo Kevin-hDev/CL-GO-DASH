@@ -33,6 +33,7 @@ export function McpConfigDialog({ connector, onClose, onValidated }: McpConfigDi
         envKey,
         value: token,
       });
+      setToken("");
       await invoke("test_mcp_connector", {
         connector: {
           id: connector.id,
@@ -46,6 +47,7 @@ export function McpConfigDialog({ connector, onClose, onValidated }: McpConfigDi
       setTestState({ kind: "ok" });
       setTimeout(() => onValidated(), 500);
     } catch {
+      setToken("");
       await invoke("delete_mcp_env_token", {
         connectorId: connector.id,
         envKey,

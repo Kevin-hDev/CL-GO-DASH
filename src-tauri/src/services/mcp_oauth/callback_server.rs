@@ -4,6 +4,7 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpListener;
 use tokio::sync::oneshot;
 use tokio_util::sync::CancellationToken;
+use zeroize::{Zeroize, Zeroizing};
 
 use super::types::CallbackResult;
 
@@ -58,16 +59,20 @@ async fn accept_callback(listener: &TcpListener) -> Result<CallbackResult, Strin
             .await
             .map_err(|e| format!("accept: {e}"))?;
 
-        let mut buf = vec![0u8; MAX_REQUEST_LEN];
+        let mut buf = Zeroizing::new(vec![0u8; MAX_REQUEST_LEN]);
         let n = stream
-            .read(&mut buf)
+            .read(buf.as_mut_slice())
             .await
             .map_err(|e| format!("read: {e}"))?;
 
-        let request = String::from_utf8_lossy(&buf[..n]);
-        let first_line = request.lines().next().unwrap_or("");
+        let parsed = {
+            let request = String::from_utf8_lossy(&buf[..n]);
+            let first_line = request.lines().next().unwrap_or("");
+            parse_callback(first_line)
+        };
+        buf.zeroize();
 
-        if let Some(result) = parse_callback(first_line) {
+        if let Some(result) = parsed {
             let response = format!(
                 "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\n\
                  Content-Length: {}\r\nConnection: close\r\n\r\n{}",
@@ -100,24 +105,22 @@ fn parse_callback(request_line: &str) -> Option<CallbackResult> {
     }
 
     let query = path_and_query.strip_prefix("/callback?")?;
-    let mut code = None;
-    let mut state = None;
+    let mut code: Option<Zeroizing<String>> = None;
+    let mut state: Option<Zeroizing<String>> = None;
 
     for pair in query.split('&') {
         if let Some((k, v)) = pair.split_once('=') {
             match k {
-                "code" => code = Some(urldecode(v)),
-                "state" => state = Some(urldecode(v)),
+                "code" => code = Some(Zeroizing::new(urldecode(v))),
+                "state" => state = Some(Zeroizing::new(urldecode(v))),
                 _ => {}
             }
         }
     }
 
-    let c = code?;
-    let s = state?;
     Some(CallbackResult {
-        code: zeroize::Zeroizing::new(c),
-        state: zeroize::Zeroizing::new(s),
+        code: code?,
+        state: state?,
     })
 }
 

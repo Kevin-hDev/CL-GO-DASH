@@ -6,6 +6,7 @@ use std::process::Stdio;
 use std::sync::Arc;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::{Child, ChildStdin, ChildStdout, Command};
+use zeroize::Zeroizing;
 
 use super::{process_env, stdio_cmd};
 
@@ -47,25 +48,29 @@ pub fn get_alive_handle(connector_id: &str) -> Option<ProcessHandle> {
 pub fn spawn(
     connector_id: &str,
     install_command: &str,
-    env_tokens: &[(String, String)],
+    env_tokens: &[(String, Zeroizing<String>)],
 ) -> Result<ProcessHandle, String> {
     let parsed = stdio_cmd::parse_install_command(connector_id, install_command)?;
 
     let program_path = which::which(&parsed.program)
         .map_err(|_| "runtime requis non trouvé dans le PATH".to_string())?;
 
-    let mut env = process_env::safe_env();
-    for (k, v) in env_tokens {
-        env.push((k.clone(), v.clone()));
-    }
-
-    let mut child = Command::new(&program_path)
+    let safe_env = process_env::safe_env();
+    let mut command = Command::new(&program_path);
+    command
         .args(&parsed.args)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
-        .env_clear()
-        .envs(env)
+        .env_clear();
+    for (key, value) in safe_env {
+        command.env(key, value);
+    }
+    for (key, value) in env_tokens {
+        command.env(key, value.as_str());
+    }
+
+    let mut child = command
         .kill_on_drop(true)
         .spawn()
         .map_err(|_| "impossible de démarrer le connecteur MCP".to_string())?;

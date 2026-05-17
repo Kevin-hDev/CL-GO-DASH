@@ -3,6 +3,7 @@ use std::time::Duration;
 use async_trait::async_trait;
 use serde_json::Value;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt};
+use zeroize::Zeroizing;
 
 use super::process_manager::{self, ProcessHandle};
 use super::transport::{next_id, sanitize_tools, McpToolDef, McpTransport};
@@ -26,12 +27,12 @@ impl StdioTransport {
         }
     }
 
-    fn resolve_env_tokens(&self) -> Vec<(String, String)> {
+    fn resolve_env_tokens(&self) -> Vec<(String, Zeroizing<String>)> {
         let mut result = Vec::new();
         for key in &self.env_key_names {
             let vault_key = format!("mcp_{}_{}", self.connector_id, key.to_lowercase());
             if let Ok(val) = crate::services::api_keys::get_key(&vault_key) {
-                result.push((key.clone(), val.to_string()));
+                result.push((key.clone(), val));
             }
         }
         result
@@ -43,12 +44,9 @@ impl StdioTransport {
         }
 
         process_manager::shutdown_one(&self.connector_id);
-        let mut env_tokens = self.resolve_env_tokens();
+        let env_tokens = self.resolve_env_tokens();
         let handle =
             process_manager::spawn(&self.connector_id, &self.install_command, &env_tokens)?;
-        for (_, val) in &mut env_tokens {
-            zeroize::Zeroize::zeroize(val);
-        }
         tokio::time::sleep(Duration::from_millis(WARMUP_MS)).await;
         self.handshake(&handle).await?;
         Ok(handle)
