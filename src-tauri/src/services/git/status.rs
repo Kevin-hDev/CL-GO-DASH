@@ -18,7 +18,7 @@ pub fn list_dirty_files(repo_path: &Path) -> Result<Vec<DirtyFile>, String> {
         Repository::open(repo_path).map_err(|e| format!("Impossible d'ouvrir le dépôt : {e}"))?;
 
     let mut opts = StatusOptions::new();
-    opts.include_untracked(true).recurse_untracked_dirs(true);
+    opts.include_untracked(true).recurse_untracked_dirs(false);
 
     let statuses = repo
         .statuses(Some(&mut opts))

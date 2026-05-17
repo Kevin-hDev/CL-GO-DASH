@@ -131,6 +131,26 @@ fn test_create_branch_with_dirty_worktree_preserves_changes() {
 }
 
 #[test]
+fn test_dirty_count_treats_untracked_directory_as_one_entry() {
+    let tmp = init_repo_with_commit();
+    let generated = tmp.path().join("generated");
+    std::fs::create_dir_all(&generated).expect("create generated dir");
+    std::fs::write(generated.join("one.txt"), "one").expect("write one");
+    std::fs::write(generated.join("two.txt"), "two").expect("write two");
+
+    let branches = branch::list_branches(tmp.path()).expect("list branches");
+    let main = branches
+        .iter()
+        .find(|b| b.name == "master" || b.name == "main")
+        .expect("current branch");
+
+    assert_eq!(
+        main.dirty_count, 1,
+        "un dossier non suivi doit compter comme une seule entrée"
+    );
+}
+
+#[test]
 fn test_create_branch_rejects_colon() {
     let tmp = std::env::temp_dir();
     let result = branch::create_branch(&tmp, "feat:bad");
