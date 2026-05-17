@@ -1,7 +1,13 @@
 import type { TFunction } from "i18next";
-import type { CSSProperties } from "react";
+import { useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import type { ForecastNote, NoteRange } from "./forecast-notes-types";
-import { formatNoteDate, midpointDate, notePosition } from "./forecast-notes-utils";
+import {
+  formatNoteAxisDate,
+  formatNoteDate,
+  formatNoteRangeYear,
+  midpointDate,
+  notePosition,
+} from "./forecast-notes-utils";
 import "./forecast-notes-timeline.css";
 
 interface ForecastNotesTimelineProps {
@@ -23,8 +29,23 @@ export function ForecastNotesTimeline({
   t,
   onSelect,
 }: ForecastNotesTimelineProps) {
+  const rootRef = useRef<HTMLElement | null>(null);
+  const [width, setWidth] = useState(0);
+  const markers = useMemo(() => buildMarkers(notes, range, width), [notes, range, width]);
+
+  useLayoutEffect(() => {
+    const element = rootRef.current;
+    if (!element) return;
+    const syncWidth = () => setWidth(element.getBoundingClientRect().width);
+    syncWidth();
+    const observer = new ResizeObserver(syncWidth);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <section className="fcn-timeline" aria-label={t("forecast.notes.timeline")}>
+    <section ref={rootRef} className="fcn-timeline" aria-label={t("forecast.notes.timeline")}>
+      <div className="fcn-timeline-year">{formatNoteRangeYear(range, locale)}</div>
       <div className="fcn-rail" style={{ height }}>
         <div className="fcn-rail-track">
           <span className="fcn-rail-line" />
@@ -45,13 +66,13 @@ export function ForecastNotesTimeline({
       </div>
       <div className="fcn-axis">
         <div className="fcn-axis-track">
-          {buildMarkers(notes, range).map((marker) => (
+          {markers.map((marker) => (
             <span
               key={marker.date}
               className={`fcn-axis-mark is-${marker.edge}`}
               style={{ left: `${marker.position}%` }}
             >
-              {formatNoteDate(marker.date, locale)}
+              {formatNoteAxisDate(marker.date, locale)}
             </span>
           ))}
         </div>
@@ -60,7 +81,7 @@ export function ForecastNotesTimeline({
   );
 }
 
-function buildMarkers(notes: ForecastNote[], range: NoteRange) {
+function buildMarkers(notes: ForecastNote[], range: NoteRange, width: number) {
   const values = [
     new Date(range.start).toISOString(),
     midpointDate(range),
@@ -74,7 +95,19 @@ function buildMarkers(notes: ForecastNote[], range: NoteRange) {
       position: notePosition(date, range),
       edge: notePosition(date, range) <= 2 ? "start" : notePosition(date, range) >= 98 ? "end" : "middle",
     }))
-    .sort((a, b) => a.position - b.position);
+    .sort((a, b) => a.position - b.position)
+    .filter((marker, index, markers) => {
+      if (index === 0 || index === markers.length - 1) return true;
+      const previous = markers[index - 1];
+      return marker.position - previous.position >= markerGap(width);
+    });
+}
+
+function markerGap(width: number): number {
+  if (!Number.isFinite(width) || width <= 0) return 16;
+  if (width < 380) return 24;
+  if (width < 560) return 17;
+  return 11;
 }
 
 function dotStyle(note: ForecastNote, range: NoteRange, index: number): CSSProperties {

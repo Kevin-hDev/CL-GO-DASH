@@ -65,6 +65,7 @@ export interface ForecastChartOptionArgs {
   annotations: ForecastChartAnnotation[];
   activeAnnotationId?: string | null;
   zoomWindow: { start: number; end: number };
+  chartWidth: number;
   compact: boolean;
   quantiles: { q10: number[]; q90: number[] };
   frequency: string;

@@ -85,6 +85,7 @@ export function ForecastChart(props: ForecastChartProps) {
     const observer = new ResizeObserver(() => {
       if (chartRef.current) {
         chartRef.current.resize();
+        applyOptions();
         return;
       }
       ensureChart();
@@ -98,6 +99,7 @@ export function ForecastChart(props: ForecastChartProps) {
         palette: buildForecastChartPalette(root),
         annotations: propsRef.current.annotations ?? [],
         compact: Boolean(propsRef.current.compact),
+        chartWidth: containerRef.current.clientWidth,
         zoomWindow: zoomWindowRef.current,
       }), true);
     };
@@ -137,6 +139,7 @@ export function ForecastChart(props: ForecastChartProps) {
       palette: buildForecastChartPalette(root),
       annotations: props.annotations ?? [],
       compact: Boolean(props.compact),
+      chartWidth: containerRef.current.clientWidth,
       zoomWindow: zoomWindowRef.current,
     }), true);
     chartRef.current.resize();

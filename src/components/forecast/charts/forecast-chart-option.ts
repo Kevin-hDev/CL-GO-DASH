@@ -34,7 +34,7 @@ export function buildForecastChartOption(args: ForecastChartOptionArgs): ECharts
       confine: true,
       position: tooltipPosition,
     },
-    xAxis: buildXAxis(args.locale, args.palette.edge, args.palette.inkMuted),
+    xAxis: buildXAxis(args.locale, args.palette.edge, args.palette.inkMuted, args.chartWidth),
     yAxis: buildYAxis(
       args.locale,
       metric,
@@ -70,19 +70,26 @@ export function buildForecastChartOption(args: ForecastChartOptionArgs): ECharts
   };
 }
 
-function buildXAxis(locale: string, edge: string, inkMuted: string) {
+function buildXAxis(locale: string, edge: string, inkMuted: string, chartWidth: number) {
   return {
     type: "time" as const,
     boundaryGap: ["0%", "0%"] as [string, string],
+    splitNumber: xAxisSplitNumber(chartWidth),
     axisLine: { lineStyle: { color: edge } },
     axisTick: { show: false },
     axisLabel: {
       color: inkMuted,
       fontSize: 11,
+      hideOverlap: true,
       margin: 10,
       formatter: (value: number) => formatAxisDate(value, locale),
     },
   };
+}
+
+function xAxisSplitNumber(chartWidth: number): number {
+  if (!Number.isFinite(chartWidth) || chartWidth <= 0) return 4;
+  return Math.max(3, Math.min(8, Math.floor(chartWidth / 135)));
 }
 
 function formatAxisDate(value: number, locale: string): string {

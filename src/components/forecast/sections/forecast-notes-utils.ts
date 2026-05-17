@@ -30,6 +30,22 @@ export function formatNoteDate(date: string, locale: string): string {
     .format(new Date(value));
 }
 
+export function formatNoteAxisDate(date: string, locale: string): string {
+  const value = dateMs(date);
+  if (value == null) return date;
+  return new Intl.DateTimeFormat(locale, { day: "2-digit", month: "2-digit" })
+    .format(new Date(value));
+}
+
+export function formatNoteRangeYear(range: NoteRange, locale: string): string {
+  const start = new Date(range.start);
+  const end = new Date(range.end);
+  const formatter = new Intl.DateTimeFormat(locale, { year: "numeric" });
+  const startYear = formatter.format(start);
+  const endYear = formatter.format(end);
+  return startYear === endYear ? startYear : `${startYear}-${endYear}`;
+}
+
 export function dateInputValue(date: string): string {
   return date.slice(0, 10);
 }
