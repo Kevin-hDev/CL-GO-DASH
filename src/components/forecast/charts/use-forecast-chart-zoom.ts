@@ -1,10 +1,16 @@
 import type { EChartsType } from "echarts/core";
 import { useCallback, useMemo, useRef, useState } from "react";
+import {
+  clampForecastZoomWindow,
+  FORECAST_CHART_MIN_ZOOM_SPAN,
+  sameForecastZoomWindow,
+  type ForecastZoomWindow,
+} from "./forecast-chart-zoom-utils";
 
 interface UseForecastChartZoomArgs {
   signature: string;
   chartRef: React.RefObject<EChartsType | null>;
-  onZoomChange: (window: { start: number; end: number }) => void;
+  onZoomChange: (window: ForecastZoomWindow) => void;
 }
 
 export function useForecastChartZoom({
@@ -39,7 +45,8 @@ export function useForecastChartZoom({
     return { start: zoom.start, end: zoom.end };
   }, [chartRef]);
 
-  const syncZoomState = useCallback((next: { start: number; end: number }) => {
+  const syncZoomState = useCallback((nextWindow: ForecastZoomWindow) => {
+    const next = clampForecastZoomWindow(nextWindow.start, nextWindow.end);
     setZoomState((current) =>
       current.signature === signature &&
       current.start === next.start &&
@@ -52,9 +59,14 @@ export function useForecastChartZoom({
 
   const handleDataZoom = useCallback(() => {
     if (dragRef.current.active) return;
-    const next = readChartZoom();
-    if (next) syncZoomState(next);
-  }, [readChartZoom, syncZoomState]);
+    const raw = readChartZoom();
+    if (!raw) return;
+    const next = clampForecastZoomWindow(raw.start, raw.end);
+    if (!sameForecastZoomWindow(raw, next)) {
+      chartRef.current?.dispatchAction({ type: "dataZoom", ...next });
+    }
+    syncZoomState(next);
+  }, [chartRef, readChartZoom, syncZoomState]);
 
   const handleResetZoom = useCallback(() => {
     chartRef.current?.dispatchAction({ type: "dataZoom", start: 0, end: 100 });
@@ -65,7 +77,8 @@ export function useForecastChartZoom({
     setZoomState((current) => {
       const center =
         current.signature === signature ? (current.start + current.end) / 2 : 50;
-      const next = clampWindow(center - nextSpan / 2, center + nextSpan / 2);
+      const span = Math.max(FORECAST_CHART_MIN_ZOOM_SPAN, Math.min(100, nextSpan));
+      const next = clampForecastZoomWindow(center - span / 2, center + span / 2);
       chartRef.current?.dispatchAction({ type: "dataZoom", ...next });
       onZoomChange(next);
       return { signature, ...next };
@@ -88,7 +101,7 @@ export function useForecastChartZoom({
     const width = shellRef.current.clientWidth || 1;
     const dx = event.clientX - dragRef.current.x;
     const span = dragRef.current.end - dragRef.current.start;
-    const next = clampWindow(
+    const next = clampForecastZoomWindow(
       dragRef.current.start + (-dx / width) * span,
       dragRef.current.end + (-dx / width) * span,
     );
@@ -99,8 +112,8 @@ export function useForecastChartZoom({
     if (event && event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
-    const next = readChartZoom();
-    if (next) syncZoomState(next);
+    const raw = readChartZoom();
+    if (raw) syncZoomState(raw);
     dragRef.current.active = false;
   }, [readChartZoom, syncZoomState]);
 
@@ -116,12 +129,4 @@ export function useForecastChartZoom({
     handlePointerMove,
     stopDrag,
   };
-}
-
-function clampWindow(start: number, end: number) {
-  const span = Math.max(1, end - start);
-  if (span >= 100) return { start: 0, end: 100 };
-  if (start < 0) return { start: 0, end: span };
-  if (end > 100) return { start: 100 - span, end: 100 };
-  return { start, end };
 }

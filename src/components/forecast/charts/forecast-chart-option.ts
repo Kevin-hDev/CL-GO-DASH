@@ -4,6 +4,7 @@ import { formatAxisValue, formatTooltip } from "./forecast-chart-format";
 import { buildSeries } from "./forecast-chart-series";
 import { buildTimeline } from "./forecast-chart-timeline";
 import type { ForecastChartOptionArgs, TimelineEntry } from "./forecast-chart-types";
+import { FORECAST_CHART_MIN_ZOOM_SPAN } from "./forecast-chart-zoom-utils";
 
 export function buildForecastChartOption(args: ForecastChartOptionArgs): EChartsOption {
   const metric = inferMetricMeta(args.locale, args.targetColumn, args.fallbackName);
@@ -46,6 +47,7 @@ export function buildForecastChartOption(args: ForecastChartOptionArgs): ECharts
         xAxisIndex: 0,
         start: args.zoomWindow.start,
         end: args.zoomWindow.end,
+        minSpan: FORECAST_CHART_MIN_ZOOM_SPAN,
         realtime: true,
         throttle: 16,
         filterMode: "none",

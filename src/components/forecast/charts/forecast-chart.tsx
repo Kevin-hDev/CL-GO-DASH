@@ -14,6 +14,10 @@ import {
 import { buildForecastChartOption } from "./forecast-chart-option";
 import { buildForecastChartPalette } from "./forecast-chart-palette";
 import type { ForecastChartProps } from "./forecast-chart-types";
+import {
+  forecastZoomSliderValue,
+  FORECAST_CHART_MIN_ZOOM_SPAN,
+} from "./forecast-chart-zoom-utils";
 import { useForecastChartZoom } from "./use-forecast-chart-zoom";
 import "./forecast-chart.css";
 
@@ -50,7 +54,7 @@ export function ForecastChart(props: ForecastChartProps) {
     chartRef,
     onZoomChange: handleZoomRefChange,
   });
-  const sliderValue = Math.round(100 - zoomSpan);
+  const sliderValue = forecastZoomSliderValue(zoomSpan);
 
   useEffect(() => {
     propsRef.current = props;
@@ -157,7 +161,7 @@ export function ForecastChart(props: ForecastChartProps) {
             className="fcc-chart-zoom"
             type="range"
             min={0}
-            max={85}
+            max={100 - FORECAST_CHART_MIN_ZOOM_SPAN}
             step={1}
             value={sliderValue}
             onChange={(event) => handleZoomSlider(100 - Number(event.target.value))}
