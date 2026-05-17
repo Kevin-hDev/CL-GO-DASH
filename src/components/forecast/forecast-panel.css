@@ -10,7 +10,7 @@
   align-items: center;
   justify-content: space-between;
   height: 58px;
-  padding: 10px 12px 8px 13px;
+  padding: 0 12px 0 13px;
   border-bottom: 1px solid var(--edge);
   flex-shrink: 0;
 }
@@ -22,13 +22,11 @@
   min-width: 0;
 }
 
-.fc-title {
-  font-family: var(--font-sans);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--ink);
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
+.fc-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
 }
 
 .fc-context-label {

@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import { useTranslation } from "react-i18next";
 import { Maximize2, Minimize2 } from "lucide-react";
 import type { ForecastSection } from "@/hooks/use-forecast-panel";
 import { ForecastNav } from "./forecast-nav";
@@ -31,12 +30,9 @@ export function ForecastHeader({
   onCloseAnalysis,
   onFullscreenChange,
 }: ForecastHeaderProps) {
-  const { t } = useTranslation();
-
   return (
     <div className="fc-head">
       <div className="fc-head-left">
-        <span className="fc-title">{t("forecast.title")}</span>
         {activeSection === "view" && filterSlot}
         {hasAnalysis && (
           <ForecastNav
@@ -48,7 +44,7 @@ export function ForecastHeader({
         )}
         {contextLabel && <span className="fc-context-label">{contextLabel}</span>}
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+      <div className="fc-head-actions">
         {rightSlot}
         <button
           className="fp-icon-btn"
