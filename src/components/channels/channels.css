@@ -60,7 +60,7 @@
 }
 
 [data-theme="dark"] .ch-error-bubble {
-  background: rgba(30, 30, 34, 0.55);
+  background: var(--surface-glass);
   border: none;
 }
 

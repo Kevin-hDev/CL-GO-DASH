@@ -186,11 +186,11 @@
 
 [data-theme="dark"] .msg-user-bubble {
   border-color: transparent;
-  background: rgba(30, 30, 34, 0.55);
+  background: var(--surface-glass);
 }
 
 [data-theme="dark"] .code-block {
-  background: rgba(30, 30, 34, 0.55);
+  background: var(--surface-glass);
   border-color: rgba(255, 255, 255, 0.08);
 }
 

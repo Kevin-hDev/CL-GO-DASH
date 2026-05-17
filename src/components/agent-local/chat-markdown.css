@@ -43,11 +43,11 @@
 
 /* Dark */
 [data-theme="dark"] .chat-md th {
-  background: rgba(40, 40, 46, 0.7);
+  background: var(--surface-overlay);
 }
 
 [data-theme="dark"] .chat-md td {
-  background: rgba(30, 30, 34, 0.55);
+  background: var(--surface-glass);
 }
 
 /* Light */
