@@ -26,7 +26,15 @@ export const AgentLocalTab = memo(function AgentLocalTab({
   const { filePreview, fileOperations, setFileOperations } = s;
   const { thinking, setThinking, setWelcomeModel } = s;
   const { sessionActions, handleSelectById, handleDeleteProject } = s;
-  const { pendingMessage, setPendingMessage, pendingWorkingDir, setPendingWorkingDir, pendingSkills, setPendingSkills, pendingFiles, setPendingFiles, handleCreate, handleCreateWithModel, handleWelcomeSend, handleAutoRename, handleCreateInProject } = sessionActions;
+  const {
+    pendingMessage, setPendingMessage,
+    pendingWorkingDir, setPendingWorkingDir,
+    pendingSkills, setPendingSkills,
+    pendingFiles, setPendingFiles,
+    handleCreate, handleCreateWithModel,
+    handleWelcomeSend, handleAutoRename,
+    handleCreateInProject, handleCreateInProjectWithModel,
+  } = sessionActions;
   const terminalCwd = activeProject?.path || "";
   const fileTree = useFileTree(tabState.activeSessionId, activeProject?.path);
   const forecast = useForecastPanel(tabState.activeSessionId ?? null);
@@ -133,6 +141,8 @@ export const AgentLocalTab = memo(function AgentLocalTab({
           onSessionsRefresh={() => void refresh()}
           onUpdateModel={(id, m, p) => void updateModel(id, m, p)}
           onNewSession={(m, p) => void handleCreateWithModel(m, p)}
+          onNewSessionInProject={(m, p, pid) =>
+            void handleCreateInProjectWithModel(m, p, pid)}
           onAutoRename={(id, msg) => void handleAutoRename(id, msg)}
           onToggleThinking={() => setThinking((v) => !v)}
           onInitialMessageSent={() => {

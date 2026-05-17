@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, fireEvent } from "@testing-library/react";
+import { render, fireEvent, waitFor } from "@testing-library/react";
 import { BranchSelector } from "../branch-selector";
 
 vi.mock("react-i18next", () => ({
@@ -14,7 +14,8 @@ vi.mock("react-i18next", () => ({
         "branches.detachedHead": "HEAD détaché",
       };
       if (key === "branches.uncommitted" && opts?.count != null) {
-        return `Non validés : ${opts.count} fichier(s)`;
+        const count = typeof opts.count === "number" || typeof opts.count === "string" ? opts.count : "";
+        return `Non validés : ${count} fichier(s)`;
       }
       return translations[key] ?? key;
     },
@@ -36,6 +37,7 @@ const baseMockGit = {
     { name: "fix/bug-42", is_current: false, is_remote: false, dirty_count: 0 },
   ],
   worktrees: [
+    { path: "/tmp/current", branch: "main", is_current: true },
     { path: "/tmp/wt-1", branch: "worktree-agent-abc", is_current: false },
   ],
   currentBranch: "main",
@@ -92,6 +94,29 @@ describe("BranchSelector", () => {
     expect(dropdown?.textContent).not.toContain("fix/bug-42");
   });
 
+  it("checks out a branch without selecting a worktree", async () => {
+    const checkout = vi.fn().mockResolvedValue({ ok: true });
+    const onWorktreeSelect = vi.fn();
+    const { container } = render(
+      <BranchSelector
+        git={makeMockGit({ checkout })}
+        locked={false}
+        onConflict={vi.fn()}
+        onWorktreeSelect={onWorktreeSelect}
+      />,
+    );
+    openDropdown(container);
+    const dropdown = container.querySelector(".bs-dropdown") as HTMLElement;
+    const item = Array.from(dropdown.querySelectorAll(".bs-item")).find((el) =>
+      el.textContent?.includes("feat/login"),
+    ) as HTMLElement;
+
+    fireEvent.click(item);
+
+    await waitFor(() => expect(checkout).toHaveBeenCalledWith("feat/login"));
+    expect(onWorktreeSelect).not.toHaveBeenCalled();
+  });
+
   it("shows dirty count for current branch", () => {
     const { container } = render(
       <BranchSelector git={makeMockGit()} locked={false} onConflict={vi.fn()} onWorktreeSelect={vi.fn()} />,
@@ -129,5 +154,22 @@ describe("BranchSelector", () => {
     expect(labelTexts).toContain("Worktrees");
     const dropdown = container.querySelector(".bs-dropdown");
     expect(dropdown?.textContent).toContain("worktree-agent-abc");
+    expect(dropdown?.textContent).not.toContain("/tmp/current");
+  });
+
+  it("notifies parent when selecting a worktree", () => {
+    const onWorktreeSelect = vi.fn();
+    const { container } = render(
+      <BranchSelector git={makeMockGit()} locked={false} onConflict={vi.fn()} onWorktreeSelect={onWorktreeSelect} />,
+    );
+    openDropdown(container);
+    const dropdown = container.querySelector(".bs-dropdown") as HTMLElement;
+    const item = Array.from(dropdown.querySelectorAll(".bs-item")).find((el) =>
+      el.textContent?.includes("worktree-agent-abc"),
+    ) as HTMLElement;
+
+    fireEvent.click(item);
+
+    expect(onWorktreeSelect).toHaveBeenCalledWith("/tmp/wt-1", "worktree-agent-abc");
   });
 });

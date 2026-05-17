@@ -1,9 +1,11 @@
 #[cfg(test)]
 mod tests {
     use crate::services::agent_local::types_ollama::ChatMessage;
+    use uuid::Uuid;
 
     // Accès à la fonction privée via cfg(test) re-export dans subagent_task.rs
     use crate::services::agent_local::subagent_task::extract_summary_for_test;
+    use crate::services::agent_local::subagent_working_dir::create_coder_worktree_for_test;
 
     fn msg(role: &str, content: &str) -> ChatMessage {
         ChatMessage {
@@ -11,6 +13,12 @@ mod tests {
             content: content.to_string(),
             ..Default::default()
         }
+    }
+
+    fn temp_dir() -> std::path::PathBuf {
+        let path = std::env::temp_dir().join(format!("cl-go-subagent-{}", Uuid::new_v4()));
+        std::fs::create_dir_all(&path).expect("create test dir");
+        path
     }
 
     #[test]
@@ -51,5 +59,18 @@ mod tests {
             "Le contenu tronqué doit faire au max 2000 chars, il en fait {}",
             content_part.len()
         );
+    }
+
+    #[tokio::test]
+    async fn test_coder_worktree_creation_failure_is_blocking() {
+        let project = temp_dir();
+        let result = create_coder_worktree_for_test(&project, "child-session").await;
+
+        assert!(
+            result.is_err(),
+            "un sous-agent coder ne doit pas retomber dans le dossier principal si le worktree échoue"
+        );
+
+        let _ = std::fs::remove_dir_all(project);
     }
 }

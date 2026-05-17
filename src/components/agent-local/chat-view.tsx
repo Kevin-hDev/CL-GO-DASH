@@ -1,11 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
-import { invoke } from "@tauri-apps/api/core";
 import { MessageList } from "./message-list";
 import { ChatInput } from "./chat-input";
-import { ProjectSelector } from "./project-selector";
 import { FileDropZone } from "./file-drop-zone";
 import { ChatOverlays } from "./chat-overlays";
 import { SubagentAccordion } from "./subagent-accordion";
+import { ChatProjectControls } from "./chat-project-controls";
 import { useAgentChat } from "@/hooks/use-agent-chat";
 import { useContextProgress } from "@/hooks/use-context-progress";
 import { useFileDrop, type DroppedFile } from "@/hooks/use-file-drop";
@@ -14,13 +13,12 @@ import { usePermissionRequests } from "@/hooks/use-permission-requests";
 import { useSessionProject } from "@/hooks/use-session-project";
 import { useChatScroll } from "@/hooks/use-chat-scroll";
 import { useModelSwitch } from "@/hooks/use-model-switch";
+import { useWorktreeSessionSwitch } from "@/hooks/use-worktree-session-switch";
 import { useSessionFiles } from "@/hooks/use-session-files";
 import { useSubagents } from "@/hooks/use-subagents";
 import { useSubagentSynthesis } from "@/hooks/use-subagent-synthesis";
 import { useChatActions } from "@/hooks/use-chat-actions";
 import { PermissionDialog } from "./permission-dialog";
-import { BranchSelector } from "./branch-selector";
-import { BranchConflictDialog } from "./branch-conflict-dialog";
 import { TerminalPanel } from "@/components/terminal/terminal-panel";
 import type { useTerminal } from "@/hooks/use-terminal";
 import type { Project } from "@/types/agent";
@@ -38,6 +36,7 @@ interface ChatViewProps {
   onSessionsRefresh?: () => void;
   onApplySwitch?: (model: string, provider: string) => void;
   onNewSession?: (model: string, provider: string) => void;
+  onNewSessionInProject?: (model: string, provider: string, projectId: string) => void;
   onAutoRename?: (id: string, name: string) => void;
   initialMessage?: string;
   initialWorkingDir?: string;
@@ -55,7 +54,7 @@ interface ChatViewProps {
 
 export function ChatView({
   sessionId, model, provider, projects, onAddProject,
-  onSessionsRefresh, onApplySwitch, onNewSession, onAutoRename,
+  onSessionsRefresh, onApplySwitch, onNewSession, onNewSessionInProject, onAutoRename,
   initialMessage, initialWorkingDir, initialSkills, initialFiles,
   thinking, onToggleThinking, onInitialMessageSent,
   terminalState, onFileOperationsChange, onFilePreviewPath,
@@ -73,7 +72,6 @@ export function ChatView({
   const [preview, setPreview] = useState<DroppedFile | null>(null);
   const proj = useSessionProject(sessionId, projects, onAddProject, chat.messages.length > 0);
   const git = useGitBranch(proj.selectedProject?.path, sessionId);
-  const [branchConflict, setBranchConflict] = useState<{ branch: string; dirtyCount: number } | null>(null);
   const fileOperations = useSessionFiles(chat.messages);
 
   useEffect(() => {
@@ -102,10 +100,10 @@ export function ChatView({
   const handleRetry = useCallback(() => {
     const u = [...chat.messages].reverse().find((m) => m.role === "user");
     if (u) void chat.reload(u.id);
-  }, [chat.messages, chat.reload]);
+  }, [chat]);
 
-  const handleReload = useCallback((id: string) => void chat.reload(id), [chat.reload]);
-  const handleEdit = useCallback((id: string, c: string) => void chat.edit(id, c), [chat.edit]);
+  const handleReload = useCallback((id: string) => void chat.reload(id), [chat]);
+  const handleEdit = useCallback((id: string, c: string) => void chat.edit(id, c), [chat]);
   const handleFileClick = useCallback((f: { name: string; path?: string; thumbnail?: string }) => {
     setPreview({ name: f.name, path: f.path, type: "", size: 0, preview: f.thumbnail });
   }, []);
@@ -113,6 +111,9 @@ export function ChatView({
   const { pendingSwitch, setPendingSwitch, handleModelSelect, rememberedRef } = useModelSwitch({
     currentModel: model, currentProvider: provider,
     messagesLength: chat.messages.length, onApplySwitch, onNewSession,
+  });
+  const worktreeSwitch = useWorktreeSessionSwitch({
+    projects, model, provider, onAddProject, onNewSessionInProject,
   });
 
   return (
@@ -137,7 +138,11 @@ export function ChatView({
         <div className="chat-input-area">
           <div className="chat-input-column">
             {subagents.active.length > 0 && (
-              <SubagentAccordion subagents={subagents.active} onCancel={subagents.cancelSubagent} onOpen={(id) => onOpenSubagent?.(id)} />
+              <SubagentAccordion
+                subagents={subagents.active}
+                onCancel={(id) => void subagents.cancelSubagent(id)}
+                onOpen={(id) => onOpenSubagent?.(id)}
+              />
             )}
             {permissions.current && (
               <PermissionDialog request={permissions.current} onDecide={(id, decision) => void permissions.respond(id, decision)} />
@@ -150,30 +155,12 @@ export function ChatView({
               onStop={() => void chat.stop()} onClearFiles={fileDrop.clearFiles} onFileImport={handleFileImport}
               onModelChange={handleModelSelect} onToggleThinking={onToggleThinking} onBuiltInCommand={handleBuiltInCommand}
             />
-            <div style={{ display: "flex", alignItems: "center", gap: "var(--space-xs)", flexWrap: "wrap" }}>
-              <ProjectSelector
-                projects={projects} selectedProjectId={proj.selectedProjectId} locked={proj.locked} hidden={proj.hidden}
-                onSelect={proj.setSelectedProjectId} onAddProject={() => void proj.handleAddProject()}
-              />
-              <BranchSelector
-                git={git}
-                locked={false}
-                onConflict={(branch, dirtyCount) => setBranchConflict({ branch, dirtyCount })}
-                onWorktreeSelect={async (path) => {
-                  const existing = projects.find((p) => p.path === path);
-                  if (existing) {
-                    proj.setSelectedProjectId(existing.id);
-                  } else {
-                    try {
-                      const added = await onAddProject(path);
-                      proj.setSelectedProjectId(added.id);
-                    } catch (e) {
-                      console.error("worktree select:", e);
-                    }
-                  }
-                }}
-              />
-            </div>
+            <ChatProjectControls
+              projects={projects}
+              projectState={proj}
+              git={git}
+              onWorktreeSelect={worktreeSwitch.request}
+            />
           </div>
         </div>
         <TerminalPanel
@@ -184,31 +171,14 @@ export function ChatView({
           onPtyReady={terminalState.setPtyId} onResize={terminalState.resizePanel} onSetMaxHeight={terminalState.setMaxHeight}
         />
       </div>
-      {branchConflict && proj.selectedProject && (
-        <BranchConflictDialog
-          targetBranch={branchConflict.branch}
-          dirtyCount={branchConflict.dirtyCount}
-          projectPath={proj.selectedProject.path}
-          onCancel={() => setBranchConflict(null)}
-          onCommitAndSwitch={async (branch) => {
-            try {
-              await invoke("commit_and_checkout_git_branch", {
-                path: proj.selectedProject!.path,
-                branchName: branch,
-              });
-              await git.refresh();
-            } catch (e) {
-              console.error("commit_and_checkout:", e);
-            }
-            setBranchConflict(null);
-          }}
-        />
-      )}
       <ChatOverlays
         preview={preview} currentModel={model} pendingSwitch={pendingSwitch}
+        pendingWorktreeSwitch={worktreeSwitch.pending}
         onClosePreview={() => setPreview(null)} onCancelSwitch={() => setPendingSwitch(null)}
+        onCancelWorktreeSwitch={worktreeSwitch.cancel}
         onNewSession={(remember) => { if (remember) rememberedRef.current = "new"; onNewSession?.(pendingSwitch!.model, pendingSwitch!.provider); setPendingSwitch(null); }}
         onContinue={(remember) => { if (remember) rememberedRef.current = "continue"; onApplySwitch?.(pendingSwitch!.model, pendingSwitch!.provider); setPendingSwitch(null); }}
+        onNewWorktreeSession={() => void worktreeSwitch.createSession()}
       />
     </FileDropZone>
   );

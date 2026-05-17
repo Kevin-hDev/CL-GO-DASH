@@ -5,19 +5,41 @@ use tokio::process::Command;
 pub async fn remove(worktree_path: &str) -> Result<(), String> {
     let path = PathBuf::from(worktree_path);
     let root = data_dir().join("subagent-worktrees");
-    if !path.starts_with(&root) {
+    let canonical_root = canonical_or_original(&root).await;
+    let canonical_path = canonical_or_original(&path).await;
+    if !canonical_path.starts_with(&canonical_root) {
         return Err("Chemin worktree hors du répertoire géré".to_string());
     }
-    let _ = Command::new("git")
+    if !canonical_path.exists() {
+        return Ok(());
+    }
+
+    let output = Command::new("git")
+        .args(["-C"])
+        .arg(&canonical_path)
         .args(["worktree", "remove", "--force"])
-        .arg(&path)
+        .arg(&canonical_path)
         .kill_on_drop(true)
         .output()
         .await;
-    if path.exists() {
-        let _ = tokio::fs::remove_dir_all(&path).await;
+
+    if output.map(|o| !o.status.success()).unwrap_or(true) && canonical_path.exists() {
+        tokio::fs::remove_dir_all(&canonical_path)
+            .await
+            .map_err(|_| "Suppression du worktree impossible".to_string())?;
     }
+
+    if canonical_path.exists() {
+        return Err("Suppression du worktree impossible".to_string());
+    }
+
     Ok(())
+}
+
+async fn canonical_or_original(path: &Path) -> PathBuf {
+    tokio::fs::canonicalize(path)
+        .await
+        .unwrap_or_else(|_| path.to_path_buf())
 }
 
 pub async fn create_for_child(project_path: &Path, child_id: &str) -> Result<PathBuf, String> {

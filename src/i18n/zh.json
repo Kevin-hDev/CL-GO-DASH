@@ -219,6 +219,13 @@
     "newSession": "新建会话",
     "continue": "在当前会话中继续"
   },
+  "switchWorktree": {
+    "title": "切换文件夹",
+    "description": "这个 worktree 使用另一个工作文件夹。请创建新会话，以保持当前对话不变。",
+    "cancel": "取消",
+    "newSession": "新建会话",
+    "close": "关闭"
+  },
   "permissionMode": {
     "title": "模式",
     "chatLabel": "聊天",

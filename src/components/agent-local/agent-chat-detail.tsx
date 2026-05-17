@@ -29,6 +29,7 @@ interface AgentChatDetailProps {
   onSessionsRefresh: () => void;
   onUpdateModel: (id: string, model: string, provider: string) => void;
   onNewSession: (model: string, provider: string) => void;
+  onNewSessionInProject: (model: string, provider: string, projectId: string) => void;
   onAutoRename: (id: string, name: string) => void;
   onToggleThinking: () => void;
   onInitialMessageSent: () => void;
@@ -67,6 +68,7 @@ export function AgentChatDetail(props: AgentChatDetailProps) {
           onSessionsRefresh={props.onSessionsRefresh}
           onApplySwitch={(model, provider) => props.onUpdateModel(props.sessionId, model, provider)}
           onNewSession={props.onNewSession}
+          onNewSessionInProject={props.onNewSessionInProject}
           onAutoRename={props.onAutoRename}
           initialMessage={props.pendingMessage ?? undefined}
           initialWorkingDir={props.pendingWorkingDir}

@@ -55,6 +55,7 @@ pub mod subagent_spawn_channel;
 pub mod subagent_task;
 #[cfg(test)]
 pub mod subagent_task_tests;
+pub mod subagent_working_dir;
 pub mod subagent_worktree;
 pub mod tab_store;
 pub mod tool_bash;

@@ -219,6 +219,13 @@
     "newSession": "Neue Sitzung",
     "continue": "In dieser Sitzung fortfahren"
   },
+  "switchWorktree": {
+    "title": "Ordnerwechsel",
+    "description": "Dieser Worktree nutzt einen anderen Arbeitsordner. Erstelle eine neue Sitzung, damit das aktuelle Gespräch unverändert bleibt.",
+    "cancel": "Abbrechen",
+    "newSession": "Neue Sitzung",
+    "close": "Schließen"
+  },
   "permissionMode": {
     "title": "Modus",
     "chatLabel": "Chat",

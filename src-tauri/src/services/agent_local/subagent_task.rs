@@ -49,7 +49,7 @@ pub async fn run(
     )
     .await;
 
-    cleanup_worktree(&child_session_id).await;
+    super::subagent_working_dir::cleanup(&child_session_id).await;
     subagent_registry::unregister(&child_session_id).await;
 
     let remaining = subagent_registry::list_for_parent(&parent_session_id).await;
@@ -100,8 +100,12 @@ async fn run_inner(
         },
     ];
 
-    let working_dir =
-        resolve_working_dir(project_id.as_deref(), &child_session_id, is_explorer).await;
+    let working_dir = super::subagent_working_dir::resolve(
+        project_id.as_deref(),
+        &child_session_id,
+        is_explorer,
+    )
+    .await?;
     let emitter = AgentEventEmitter::new(app, child_session_id.clone());
 
     if let Ok(child_session) = session_store::get(&child_session_id).await {
@@ -178,34 +182,6 @@ fn extract_summary_from_messages(msgs: &[ChatMessage]) -> String {
         return format!("[Résultats d'outils]\n{truncated}");
     }
     "Aucune réponse".to_string()
-}
-
-async fn resolve_working_dir(
-    project_id: Option<&str>,
-    child_session_id: &str,
-    is_explorer: bool,
-) -> std::path::PathBuf {
-    let base = super::subagent_prompts::resolve_project_dir(project_id).await;
-    if !is_explorer && project_id.is_some() && base != dirs::home_dir().unwrap_or_default() {
-        if let Ok(worktree) =
-            super::subagent_worktree::create_for_child(&base, child_session_id).await
-        {
-            if let Ok(mut session) = session_store::get(child_session_id).await {
-                session.subagent_worktree = Some(worktree.to_string_lossy().to_string());
-                let _ = session_store::save(&session).await;
-            }
-            return worktree;
-        }
-    }
-    base
-}
-
-async fn cleanup_worktree(child_session_id: &str) {
-    if let Ok(session) = session_store::get(child_session_id).await {
-        if let Some(wt_path) = &session.subagent_worktree {
-            let _ = super::subagent_worktree::remove(wt_path).await;
-        }
-    }
 }
 
 async fn update_session_status(session_id: &str, status: &str) {

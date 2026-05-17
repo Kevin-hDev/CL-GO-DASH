@@ -1,5 +1,22 @@
 use super::branch;
 
+fn init_repo_with_commit() -> tempfile::TempDir {
+    let tmp = tempfile::tempdir().expect("temp repo");
+    let repo = git2::Repository::init(tmp.path()).expect("init repo");
+    std::fs::write(tmp.path().join("file.txt"), "initial").expect("write file");
+    let mut index = repo.index().expect("index");
+    index.add_path(std::path::Path::new("file.txt")).expect("add");
+    index.write().expect("write index");
+    let tree_oid = index.write_tree().expect("tree");
+    let tree = repo.find_tree(tree_oid).expect("find tree");
+    let sig = git2::Signature::now("CL-GO Test", "test@example.com").expect("signature");
+    repo.commit(Some("HEAD"), &sig, &sig, "init", &tree, &[])
+        .expect("commit");
+    drop(tree);
+    drop(repo);
+    tmp
+}
+
 #[test]
 fn test_create_branch_rejects_dotdot() {
     let tmp = std::env::temp_dir();
@@ -97,6 +114,20 @@ fn test_list_branches_non_git_dir() {
         result.is_err(),
         "listing branches on non-git dir should fail"
     );
+}
+
+#[test]
+fn test_create_branch_with_dirty_worktree_preserves_changes() {
+    let tmp = init_repo_with_commit();
+    std::fs::write(tmp.path().join("file.txt"), "dirty").expect("dirty file");
+
+    let result = branch::create_branch(tmp.path(), "Agentic");
+
+    assert!(result.is_ok(), "dirty worktree should not block a new branch");
+    let ctx = branch::get_context(tmp.path());
+    assert_eq!(ctx.branch, "Agentic");
+    let content = std::fs::read_to_string(tmp.path().join("file.txt")).expect("read file");
+    assert_eq!(content, "dirty");
 }
 
 #[test]

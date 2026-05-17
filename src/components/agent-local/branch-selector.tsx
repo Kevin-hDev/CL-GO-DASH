@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { GitBranch, Check, CaretDown, Plus } from "@/components/ui/icons";
+import { GitBranch, CaretDown, Plus } from "@/components/ui/icons";
+import { BranchSelectorBranchItem, BranchSelectorWorktreeItem } from "./branch-selector-items";
 import { useKeyboard } from "@/hooks/use-keyboard";
 import { useClickOutside } from "@/hooks/use-click-outside";
 import type { useGitBranch } from "@/hooks/use-git-branch";
@@ -12,7 +13,7 @@ interface BranchSelectorProps {
   git: GitBranchHook;
   locked: boolean;
   onConflict: (branchName: string, dirtyCount: number) => void;
-  onWorktreeSelect: (path: string) => void;
+  onWorktreeSelect: (path: string, branch: string) => void;
 }
 
 export function BranchSelector({
@@ -77,6 +78,11 @@ export function BranchSelector({
     }
   }, [createName, git, t]);
 
+  const handleWorktreeSelect = useCallback((path: string, branch: string) => {
+    setOpen(false);
+    onWorktreeSelect(path, branch);
+  }, [onWorktreeSelect]);
+
   if (!git.isGitRepo) return null;
 
   if (locked) {
@@ -95,7 +101,7 @@ export function BranchSelector({
     b.name.toLowerCase().includes(lowerSearch),
   );
   const filteredWorktrees = git.worktrees.filter((w) =>
-    w.branch.toLowerCase().includes(lowerSearch),
+    !w.is_current && `${w.branch} ${w.path}`.toLowerCase().includes(lowerSearch),
   );
 
   const label = git.currentBranch || t("branches.detachedHead");
@@ -125,27 +131,14 @@ export function BranchSelector({
           )}
 
           {filteredBranches.map((b) => (
-            <div
+            <BranchSelectorBranchItem
               key={b.name}
-              className={`bs-item ${b.is_current ? "bs-selected" : ""}`}
-              role="button"
-              tabIndex={0}
-              onClick={() => void handleSelect(b.name)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") void handleSelect(b.name);
-              }}
-            >
-              <GitBranch size={14} />
-              <div className="bs-item-info">
-                <span className="bs-item-name">{b.name}</span>
-                {b.is_current && b.dirty_count > 0 && (
-                  <span className="bs-item-detail">
-                    {t("branches.uncommitted", { count: b.dirty_count })}
-                  </span>
-                )}
-              </div>
-              {b.is_current && <Check size={14} />}
-            </div>
+              branch={b}
+              dirtyLabel={b.is_current && b.dirty_count > 0
+                ? t("branches.uncommitted", { count: b.dirty_count })
+                : undefined}
+              onSelect={(name) => void handleSelect(name)}
+            />
           ))}
 
           {filteredWorktrees.length > 0 && (
@@ -153,22 +146,11 @@ export function BranchSelector({
               <div className="bs-sep" />
               <div className="bs-section-label">{t("branches.worktrees")}</div>
               {filteredWorktrees.map((w) => (
-                <div
+                <BranchSelectorWorktreeItem
                   key={w.path}
-                  className="bs-item"
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => { setOpen(false); onWorktreeSelect(w.path); }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") { setOpen(false); onWorktreeSelect(w.path); }
-                  }}
-                >
-                  <GitBranch size={14} />
-                  <div className="bs-item-info">
-                    <span className="bs-item-name">{w.branch || w.path}</span>
-                    <span className="bs-item-detail">{w.path}</span>
-                  </div>
-                </div>
+                  worktree={w}
+                  onSelect={handleWorktreeSelect}
+                />
               ))}
             </>
           )}

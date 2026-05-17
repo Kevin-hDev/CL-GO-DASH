@@ -99,6 +99,15 @@ export function useSessionActions(deps: SessionActionsDeps) {
     [create, tabState, defaultModel, defaultProvider, t],
   );
 
+  const handleCreateInProjectWithModel = useCallback(
+    async (newModel: string, newProvider: string, projectId: string) => {
+      const name = t("agentLocal.newSession");
+      const session = await create(name, newModel, newProvider, projectId);
+      await tabState.addTab(session.id, session.name);
+    },
+    [create, tabState, t],
+  );
+
   return {
     pendingMessage,
     setPendingMessage,
@@ -113,5 +122,6 @@ export function useSessionActions(deps: SessionActionsDeps) {
     handleWelcomeSend,
     handleAutoRename,
     handleCreateInProject,
+    handleCreateInProjectWithModel,
   };
 }

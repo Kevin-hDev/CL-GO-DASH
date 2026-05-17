@@ -219,6 +219,13 @@
     "newSession": "Nuova sessione",
     "continue": "Continua in questa sessione"
   },
+  "switchWorktree": {
+    "title": "Cambio cartella",
+    "description": "Questo worktree usa un'altra cartella di lavoro. Crea una nuova sessione per mantenere intatta la conversazione corrente.",
+    "cancel": "Annulla",
+    "newSession": "Nuova sessione",
+    "close": "Chiudi"
+  },
   "permissionMode": {
     "title": "Modalità",
     "chatLabel": "Chat",

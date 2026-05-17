@@ -218,6 +218,13 @@
     "newSession": "New session",
     "continue": "Continue in this session"
   },
+  "switchWorktree": {
+    "title": "Folder change",
+    "description": "This worktree uses a different working folder. Create a new session to keep the current conversation intact.",
+    "cancel": "Cancel",
+    "newSession": "New session",
+    "close": "Close"
+  },
   "permissionMode": {
     "title": "Mode",
     "chatLabel": "Chat",

@@ -219,6 +219,13 @@
     "newSession": "新しいセッション",
     "continue": "このセッションを続ける"
   },
+  "switchWorktree": {
+    "title": "フォルダの変更",
+    "description": "この worktree は別の作業フォルダを使います。現在の会話をそのまま残すため、新しいセッションを作成してください。",
+    "cancel": "キャンセル",
+    "newSession": "新しいセッション",
+    "close": "閉じる"
+  },
   "permissionMode": {
     "title": "モード",
     "chatLabel": "チャット",
