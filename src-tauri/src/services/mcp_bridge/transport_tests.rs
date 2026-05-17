@@ -141,14 +141,14 @@ mod tests {
     fn extract_error_message() {
         let resp = json!({"error": {"message": "not found"}});
         let err = extract_tool_result(&resp).unwrap_err();
-        assert_eq!(err, "erreur MCP : not found");
+        assert_eq!(err, "erreur MCP retournée par le connecteur");
     }
 
     #[test]
     fn extract_error_no_message() {
         let resp = json!({"error": {}});
         let err = extract_tool_result(&resp).unwrap_err();
-        assert_eq!(err, "erreur MCP : erreur inconnue");
+        assert_eq!(err, "erreur MCP retournée par le connecteur");
     }
 
     #[test]

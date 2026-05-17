@@ -50,7 +50,7 @@ fn imessage_install_command_is_forced() {
         env_keys: None,
     };
     let cmd = config::install_command_for(&c).unwrap();
-    assert!(cmd.contains("jsr:@wyattjoh/imessage-mcp"));
+    assert!(cmd.contains("jsr:@wyattjoh/imessage-mcp@0.4.2"));
     assert!(!cmd.contains("npx bad"));
 }
 
@@ -61,7 +61,7 @@ fn rejects_forbidden_env_key() {
         status: "connected".to_string(),
         enabled_in_chat: true,
         endpoint: None,
-        install_command: Some("npx @llmindset/hf-mcp-server@0.3.11".to_string()),
+        install_command: Some("npx @llmindset/hf-mcp-server@0.3.13".to_string()),
         env_keys: Some(vec!["NODE_OPTIONS".to_string()]),
     };
     assert!(config::validate_connector(&c).is_err());

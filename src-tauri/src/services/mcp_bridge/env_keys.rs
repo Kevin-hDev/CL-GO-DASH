@@ -14,6 +14,11 @@ const FORBIDDEN_ENV_KEYS: &[&str] = &[
     "DENO_DIR",
     "NPM_CONFIG_CACHE",
     "NPM_CONFIG_PREFIX",
+    "UV_CACHE_DIR",
+    "UV_TOOL_BIN_DIR",
+    "UV_TOOL_DIR",
+    "PYTHONHOME",
+    "PYTHONPATH",
     "XDG_DATA_HOME",
     "XDG_CACHE_HOME",
     "XDG_CONFIG_HOME",
@@ -45,4 +50,26 @@ pub fn validate_env_key(key: &str) -> Result<(), String> {
         return Err("variable d'environnement MCP non autorisée".to_string());
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn rejects_package_resolution_env_keys() {
+        for key in [
+            "NODE_PATH",
+            "NPM_CONFIG_PREFIX",
+            "UV_CACHE_DIR",
+            "PYTHONPATH",
+        ] {
+            assert!(validate_env_key(key).is_err(), "{key} doit être refusé");
+        }
+    }
+
+    #[test]
+    fn accepts_connector_token_key() {
+        assert!(validate_env_key("HF_TOKEN").is_ok());
+    }
 }

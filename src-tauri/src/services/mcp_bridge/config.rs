@@ -11,7 +11,7 @@ pub const MAX_CONNECTORS: usize = 32;
 const FILENAME: &str = "mcp-connectors.json";
 const IMESSAGE_CONNECTOR_ID: &str = "imessage";
 const IMESSAGE_INSTALL_COMMAND: &str =
-    "deno run --allow-read --allow-env --allow-sys --allow-ffi jsr:@wyattjoh/imessage-mcp";
+    "deno run --allow-read --allow-env --allow-sys --allow-ffi jsr:@wyattjoh/imessage-mcp@0.4.2";
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct StoredConnector {

@@ -55,7 +55,7 @@ pub fn spawn(
     let program_path = which::which(&parsed.program)
         .map_err(|_| "runtime requis non trouvé dans le PATH".to_string())?;
 
-    let safe_env = process_env::safe_env();
+    let safe_env = process_env::safe_env()?;
     let mut command = Command::new(&program_path);
     command
         .args(&parsed.args)

@@ -1,6 +1,6 @@
 const ALLOWED_PROGRAMS: &[&str] = &["npx", "uvx", "deno"];
 const IMESSAGE_CONNECTOR_ID: &str = "imessage";
-const IMESSAGE_PACKAGE: &str = "jsr:@wyattjoh/imessage-mcp";
+const IMESSAGE_PACKAGE: &str = "jsr:@wyattjoh/imessage-mcp@0.4.2";
 const IMESSAGE_ARGS: &[&str] = &[
     "run",
     "--allow-read",
@@ -83,10 +83,10 @@ fn validate_catalog_command(
 
 fn catalog_command(connector_id: &str) -> Option<(&'static str, &'static [&'static str])> {
     match connector_id {
-        "context7" => Some(("npx", &["@upstash/context7-mcp@2.2.3"])),
-        "huggingface" => Some(("npx", &["@llmindset/hf-mcp-server@0.3.11"])),
-        "producthunt" => Some(("uvx", &["product-hunt-mcp"])),
-        "reddit" => Some(("npx", &["reddit-mcp-server@1.2.1"])),
+        "context7" => Some(("npx", &["@upstash/context7-mcp@2.2.5"])),
+        "huggingface" => Some(("npx", &["@llmindset/hf-mcp-server@0.3.13"])),
+        "producthunt" => Some(("uvx", &["product-hunt-mcp==0.1.0"])),
+        "reddit" => Some(("npx", &["reddit-mcp-server@1.4.5"])),
         _ => None,
     }
 }
@@ -97,23 +97,23 @@ mod tests {
 
     #[test]
     fn test_parse_npx_valid() {
-        let cmd = parse_install_command("context7", "npx @upstash/context7-mcp@2.2.3").unwrap();
+        let cmd = parse_install_command("context7", "npx @upstash/context7-mcp@2.2.5").unwrap();
         assert_eq!(cmd.program, "npx");
-        assert_eq!(cmd.args, vec!["@upstash/context7-mcp@2.2.3"]);
+        assert_eq!(cmd.args, vec!["@upstash/context7-mcp@2.2.5"]);
     }
 
     #[test]
     fn test_parse_uvx_valid() {
-        let cmd = parse_install_command("producthunt", "uvx product-hunt-mcp").unwrap();
+        let cmd = parse_install_command("producthunt", "uvx product-hunt-mcp==0.1.0").unwrap();
         assert_eq!(cmd.program, "uvx");
-        assert_eq!(cmd.args, vec!["product-hunt-mcp"]);
+        assert_eq!(cmd.args, vec!["product-hunt-mcp==0.1.0"]);
     }
 
     #[test]
     fn test_parse_imessage_deno_valid() {
         let cmd = parse_install_command(
             "imessage",
-            "deno run --allow-read --allow-env --allow-sys --allow-ffi jsr:@wyattjoh/imessage-mcp",
+            "deno run --allow-read --allow-env --allow-sys --allow-ffi jsr:@wyattjoh/imessage-mcp@0.4.2",
         )
         .unwrap();
         assert_eq!(cmd.program, "deno");
@@ -125,7 +125,7 @@ mod tests {
                 "--allow-env",
                 "--allow-sys",
                 "--allow-ffi",
-                "jsr:@wyattjoh/imessage-mcp"
+                "jsr:@wyattjoh/imessage-mcp@0.4.2"
             ]
         );
     }
@@ -139,7 +139,7 @@ mod tests {
     fn test_reject_imessage_extra_write() {
         assert!(parse_install_command(
             "imessage",
-            "deno run --allow-read --allow-write --allow-env --allow-sys --allow-ffi jsr:@wyattjoh/imessage-mcp"
+            "deno run --allow-read --allow-write --allow-env --allow-sys --allow-ffi jsr:@wyattjoh/imessage-mcp@0.4.2"
         )
         .is_err());
     }
@@ -192,7 +192,7 @@ mod tests {
     #[test]
     fn test_reject_catalog_command_with_extra_flag() {
         assert!(
-            parse_install_command("context7", "npx --yes @upstash/context7-mcp@2.2.3").is_err()
+            parse_install_command("context7", "npx --yes @upstash/context7-mcp@2.2.5").is_err()
         );
     }
 }

@@ -58,9 +58,8 @@ impl McpTransport for HttpTransport {
 
         let resp = mcp_post(&self.endpoint, token.as_str(), session_id.as_deref(), &body).await?;
 
-        if let Some(err) = resp.error {
-            let msg = err["message"].as_str().unwrap_or("erreur inconnue");
-            return Err(format!("erreur MCP : {msg}"));
+        if resp.error.is_some() {
+            return Err("erreur MCP retournée par le connecteur".to_string());
         }
 
         let result = resp.result.ok_or("réponse vide du serveur MCP")?;

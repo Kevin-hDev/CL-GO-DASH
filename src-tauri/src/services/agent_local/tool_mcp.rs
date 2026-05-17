@@ -137,7 +137,7 @@ async fn call(args: &Value) -> ToolResult {
 
     match connector.transport.call_tool(tool_name, arguments).await {
         Ok(result) => ToolResult::ok(sanitize_mcp_output(&result)),
-        Err(e) => ToolResult::err(sanitize_mcp_output(&e)),
+        Err(_) => ToolResult::err("appel MCP échoué".to_string()),
     }
 }
 
