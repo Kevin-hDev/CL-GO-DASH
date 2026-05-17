@@ -614,10 +614,11 @@
       "subtitle": "Allow LLMs to connect to other apps and services",
       "browseBtn": "Browse connectors"
     },
-    "sidebar": {
-      "configured": "Configured",
-      "empty": "No connector configured"
-    },
+  "sidebar": {
+    "configured": "Configured",
+    "empty": "No connector configured",
+    "loadError": "Unable to load connectors"
+  },
     "detail": {
       "connected": "Connected",
       "disconnected": "Disconnected",

@@ -1,5 +1,4 @@
 const ALLOWED_PROGRAMS: &[&str] = &["npx", "uvx", "deno"];
-const BLOCKED_DENO_FLAGS: &[&str] = &["--allow-ffi", "--allow-run", "--allow-all", "-A"];
 const IMESSAGE_CONNECTOR_ID: &str = "imessage";
 const IMESSAGE_PACKAGE: &str = "jsr:@wyattjoh/imessage-mcp";
 const IMESSAGE_ARGS: &[&str] = &[
@@ -37,12 +36,6 @@ pub fn parse_install_command(connector_id: &str, raw: &str) -> Result<ParsedComm
         if !regex.is_match(part) {
             return Err("argument invalide".to_string());
         }
-        if program == "deno"
-            && BLOCKED_DENO_FLAGS.contains(part)
-            && !(connector_id == IMESSAGE_CONNECTOR_ID && *part == "--allow-ffi")
-        {
-            return Err("flag deno non autorisé".to_string());
-        }
         args.push(part.to_string());
     }
 
@@ -56,10 +49,46 @@ pub fn parse_install_command(connector_id: &str, raw: &str) -> Result<ParsedComm
         return Err("aucun package spécifié".to_string());
     }
 
+    validate_catalog_command(connector_id, program, &args)?;
+
     Ok(ParsedCommand {
         program: program.to_string(),
         args,
     })
+}
+
+fn validate_catalog_command(
+    connector_id: &str,
+    program: &str,
+    args: &[String],
+) -> Result<(), String> {
+    if connector_id == IMESSAGE_CONNECTOR_ID {
+        return Ok(());
+    }
+    let Some((expected_program, expected_args)) = catalog_command(connector_id) else {
+        return Err("connecteur stdio non autorisé".to_string());
+    };
+    if program != expected_program || args.len() != expected_args.len() {
+        return Err("commande MCP non autorisée".to_string());
+    }
+    if args
+        .iter()
+        .zip(expected_args)
+        .any(|(actual, expected)| actual != expected)
+    {
+        return Err("commande MCP non autorisée".to_string());
+    }
+    Ok(())
+}
+
+fn catalog_command(connector_id: &str) -> Option<(&'static str, &'static [&'static str])> {
+    match connector_id {
+        "context7" => Some(("npx", &["@upstash/context7-mcp@2.2.3"])),
+        "huggingface" => Some(("npx", &["@llmindset/hf-mcp-server@0.3.11"])),
+        "producthunt" => Some(("uvx", &["product-hunt-mcp"])),
+        "reddit" => Some(("npx", &["reddit-mcp-server@1.2.1"])),
+        _ => None,
+    }
 }
 
 #[cfg(test)]
@@ -153,5 +182,17 @@ mod tests {
     #[test]
     fn test_reject_dollar() {
         assert!(parse_install_command("other", "npx $(cat /etc/passwd)").is_err());
+    }
+
+    #[test]
+    fn test_reject_unknown_npx_package() {
+        assert!(parse_install_command("other", "npx safe-looking-package").is_err());
+    }
+
+    #[test]
+    fn test_reject_catalog_command_with_extra_flag() {
+        assert!(
+            parse_install_command("context7", "npx --yes @upstash/context7-mcp@2.2.3").is_err()
+        );
     }
 }

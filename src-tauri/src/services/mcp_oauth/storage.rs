@@ -64,19 +64,12 @@ pub async fn get_valid_token(connector_id: &str) -> Result<Zeroizing<String>, St
     Ok(result)
 }
 
-fn validate_https(url: &str) -> Result<(), String> {
-    if !url.starts_with("https://") {
-        return Err("endpoint non HTTPS refusé".to_string());
-    }
-    Ok(())
-}
-
 async fn refresh_access_token(
     connector_id: &str,
     old: &OAuthTokens,
     refresh_token: &str,
 ) -> Result<Zeroizing<String>, String> {
-    validate_https(&old.token_endpoint)?;
+    super::trusted_oauth::validate_endpoint(connector_id, &old.token_endpoint)?;
 
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(15))

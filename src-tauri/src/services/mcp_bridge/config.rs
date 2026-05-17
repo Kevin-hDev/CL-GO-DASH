@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 
-pub use super::env_keys::validated_env_keys;
+pub use super::env_keys::{validate_env_key, validated_env_keys};
 use super::{stdio_cmd, trusted};
 
 pub const MAX_CONNECTORS: usize = 32;
@@ -24,8 +24,15 @@ pub struct StoredConnector {
     pub env_keys: Option<Vec<String>>,
 }
 
-pub fn load() -> Vec<StoredConnector> {
-    load_from_path(&storage_path()).unwrap_or_default()
+pub fn load() -> Result<Vec<StoredConnector>, String> {
+    load_from_path(&storage_path())
+}
+
+pub fn find(connector_id: &str) -> Result<Option<StoredConnector>, String> {
+    validate_connector_id(connector_id)?;
+    Ok(load()?
+        .into_iter()
+        .find(|connector| connector.id == connector_id))
 }
 
 pub fn upsert(connector: StoredConnector) -> Result<(), String> {
@@ -83,7 +90,7 @@ pub fn validate_connector(c: &StoredConnector) -> Result<(), String> {
     if let Some(cmd) = install_command_for(c) {
         stdio_cmd::parse_install_command(&c.id, &cmd)?;
     }
-    let _ = validated_env_keys(c.env_keys.as_deref());
+    let _ = validated_env_keys(c.env_keys.as_deref())?;
     if c.endpoint.is_none() && c.install_command.is_none() {
         return Err("connecteur MCP incomplet".to_string());
     }
@@ -135,11 +142,13 @@ fn load_from_path(path: &Path) -> Result<Vec<StoredConnector>, String> {
     };
     let parsed: Vec<StoredConnector> =
         serde_json::from_str(&content).map_err(|_| "configuration MCP invalide".to_string())?;
-    Ok(parsed
-        .into_iter()
-        .filter(|c| validate_connector(c).is_ok())
-        .take(MAX_CONNECTORS)
-        .collect())
+    if parsed.len() > MAX_CONNECTORS {
+        return Err("limite de connecteurs atteinte".to_string());
+    }
+    for connector in &parsed {
+        validate_connector(connector)?;
+    }
+    Ok(parsed)
 }
 
 fn save_to_path(path: &Path, list: &[StoredConnector]) -> Result<(), String> {

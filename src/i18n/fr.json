@@ -614,10 +614,11 @@
       "subtitle": "Permettez aux LLM de se connecter à d'autres applications et services",
       "browseBtn": "Parcourir les connecteurs"
     },
-    "sidebar": {
-      "configured": "Configurés",
-      "empty": "Aucun connecteur configuré"
-    },
+  "sidebar": {
+    "configured": "Configurés",
+    "empty": "Aucun connecteur configuré",
+    "loadError": "Impossible de charger les connecteurs"
+  },
     "detail": {
       "connected": "Connecté",
       "disconnected": "Déconnecté",

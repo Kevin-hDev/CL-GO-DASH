@@ -632,10 +632,11 @@
       "subtitle": "Permite que los LLM se conecten a otras aplicaciones y servicios",
       "browseBtn": "Explorar conectores"
     },
-    "sidebar": {
-      "configured": "Configurados",
-      "empty": "Ningún conector configurado"
-    },
+  "sidebar": {
+    "configured": "Configurados",
+    "empty": "Ningún conector configurado",
+    "loadError": "No se pudieron cargar los conectores"
+  },
     "detail": {
       "connected": "Conectado",
       "disconnected": "Desconectado",

@@ -83,10 +83,11 @@ pub fn verify_state_constant_time(expected: &str, received: &str) -> Result<(), 
 }
 
 pub async fn register_client(
-    registration_url: &str,
     connector_id: &str,
+    registration_url: &str,
     redirect_uri: &str,
 ) -> Result<String, String> {
+    super::trusted_oauth::validate_endpoint(connector_id, registration_url)?;
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(15))
         .build()
@@ -118,6 +119,7 @@ pub async fn register_client(
 }
 
 pub async fn exchange_code(
+    connector_id: &str,
     token_endpoint: &str,
     code: &str,
     client_id: &str,
@@ -126,9 +128,7 @@ pub async fn exchange_code(
     redirect_uri: &str,
     resource: &str,
 ) -> Result<OAuthTokens, String> {
-    if !token_endpoint.starts_with("https://") {
-        return Err("token endpoint non HTTPS".to_string());
-    }
+    super::trusted_oauth::validate_endpoint(connector_id, token_endpoint)?;
 
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(15))

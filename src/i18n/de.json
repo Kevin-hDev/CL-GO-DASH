@@ -632,10 +632,11 @@
       "subtitle": "Erlaubt LLMs, sich mit anderen Apps und Diensten zu verbinden",
       "browseBtn": "Connectors durchsuchen"
     },
-    "sidebar": {
-      "configured": "Konfiguriert",
-      "empty": "Kein Connector konfiguriert"
-    },
+  "sidebar": {
+    "configured": "Konfiguriert",
+    "empty": "Kein Connector konfiguriert",
+    "loadError": "Connectors konnten nicht geladen werden"
+  },
     "detail": {
       "connected": "Verbunden",
       "disconnected": "Getrennt",

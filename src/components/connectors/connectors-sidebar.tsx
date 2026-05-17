@@ -6,10 +6,16 @@ import "./connectors-sidebar.css";
 interface ConnectorsSidebarProps {
   configured: ConfiguredMcpFull[];
   selectedId: string | null;
+  loadError: boolean;
   onSelect: (id: string | null) => void;
 }
 
-export function ConnectorsSidebar({ configured, selectedId, onSelect }: ConnectorsSidebarProps) {
+export function ConnectorsSidebar({
+  configured,
+  selectedId,
+  loadError,
+  onSelect,
+}: ConnectorsSidebarProps) {
   const { t } = useTranslation();
 
   return (
@@ -17,7 +23,9 @@ export function ConnectorsSidebar({ configured, selectedId, onSelect }: Connecto
       <div className="cts-header">{t("connectors.sidebar.configured")}</div>
       <div className="cts-list">
         {configured.length === 0 ? (
-          <div className="cts-empty">{t("connectors.sidebar.empty")}</div>
+          <div className="cts-empty">
+            {t(loadError ? "connectors.sidebar.loadError" : "connectors.sidebar.empty")}
+          </div>
         ) : (
           configured.map((c) => (
             <button

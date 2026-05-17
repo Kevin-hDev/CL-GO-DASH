@@ -7,7 +7,9 @@ use tauri::Emitter;
 use tokio_util::sync::CancellationToken;
 use zeroize::Zeroizing;
 
-use super::{callback_server, discovery, flow_auth, pkce, static_credentials, storage};
+use super::{
+    callback_server, discovery, flow_auth, pkce, static_credentials, storage, trusted_oauth,
+};
 
 const MAX_PENDING: usize = 5;
 const CANCELLED_MSG: &str = "annulé";
@@ -46,6 +48,7 @@ async fn run_inner(
     let cancel = register_pending(connector_id)?;
 
     let meta = discovery::discover_auth_server(endpoint).await?;
+    trusted_oauth::validate_metadata_endpoints(connector_id, &meta)?;
 
     let (port, rx) = callback_server::start(cancel).await?;
     let redirect_uri = format!("http://127.0.0.1:{port}/callback");
@@ -62,7 +65,7 @@ async fn run_inner(
         if !reg_url.starts_with("https://") {
             return Err("endpoint d'enregistrement non HTTPS".to_string());
         }
-        let id = flow_auth::register_client(reg_url, connector_id, &redirect_uri).await?;
+        let id = flow_auth::register_client(connector_id, reg_url, &redirect_uri).await?;
         (id, None, None)
     } else {
         return Err("pas de credentials disponibles pour ce service".to_string());
@@ -91,6 +94,7 @@ async fn run_inner(
 
     let secret_ref = client_secret.as_ref().map(|s| s.as_str());
     let tokens = flow_auth::exchange_code(
+        connector_id,
         &meta.token_endpoint,
         &callback.code,
         &client_id,

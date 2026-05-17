@@ -18,19 +18,31 @@ const FORBIDDEN_ENV_KEYS: &[&str] = &[
     "XDG_CACHE_HOME",
     "XDG_CONFIG_HOME",
 ];
+const MAX_ENV_KEYS: usize = 10;
 
-pub fn validated_env_keys(keys: Option<&[String]>) -> Vec<String> {
-    keys.unwrap_or_default()
-        .iter()
-        .take(10)
-        .filter(|k| is_valid_env_key(k))
-        .cloned()
-        .collect()
+pub fn validated_env_keys(keys: Option<&[String]>) -> Result<Vec<String>, String> {
+    let keys = keys.unwrap_or_default();
+    if keys.len() > MAX_ENV_KEYS {
+        return Err("trop de variables d'environnement MCP".to_string());
+    }
+    for key in keys {
+        validate_env_key(key)?;
+    }
+    Ok(keys.to_vec())
 }
 
-fn is_valid_env_key(key: &str) -> bool {
-    !key.is_empty()
-        && key.len() <= 64
-        && key.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_')
-        && !FORBIDDEN_ENV_KEYS.contains(&key)
+pub fn validate_env_key(key: &str) -> Result<(), String> {
+    if key.is_empty() || key.len() > 64 {
+        return Err("identifiant invalide".to_string());
+    }
+    if !key.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_') {
+        return Err("identifiant invalide".to_string());
+    }
+    if FORBIDDEN_ENV_KEYS
+        .iter()
+        .any(|forbidden| forbidden.eq_ignore_ascii_case(key))
+    {
+        return Err("variable d'environnement MCP non autorisée".to_string());
+    }
+    Ok(())
 }

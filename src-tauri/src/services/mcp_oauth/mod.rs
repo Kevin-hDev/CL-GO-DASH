@@ -5,6 +5,7 @@ pub mod flow_auth;
 pub mod pkce;
 pub mod static_credentials;
 pub mod storage;
+pub mod trusted_oauth;
 pub mod types;
 
 const MAX_OAUTH_BODY: usize = 512 * 1024;

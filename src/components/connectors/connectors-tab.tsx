@@ -22,8 +22,15 @@ type DialogState =
 
 export function ConnectorsTab(): { list: React.ReactNode; detail: React.ReactNode } {
   const { t } = useTranslation();
-  const { catalog, configured, configuredIds, addConnector, removeConnector, toggleStatus } =
-    useConnectors();
+  const {
+    catalog,
+    configured,
+    configuredIds,
+    loadError,
+    addConnector,
+    removeConnector,
+    toggleStatus,
+  } = useConnectors();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [dialog, setDialog] = useState<DialogState>({ kind: "none" });
 
@@ -54,7 +61,14 @@ export function ConnectorsTab(): { list: React.ReactNode; detail: React.ReactNod
     setDialog({ kind: "none" });
   };
 
-  const list = <ConnectorsSidebar configured={configured} selectedId={selectedId} onSelect={setSelectedId} />;
+  const list = (
+    <ConnectorsSidebar
+      configured={configured}
+      selectedId={selectedId}
+      loadError={loadError}
+      onSelect={setSelectedId}
+    />
+  );
 
   const browseHeader = (
     <div className="ct-browse-header">
@@ -87,7 +101,9 @@ export function ConnectorsTab(): { list: React.ReactNode; detail: React.ReactNod
         <div className="ct-empty-wrapper">
           {browseHeader}
           <div className="ct-empty-center">
-            <EmptyState message={t("connectors.sidebar.empty")} />
+            <EmptyState
+              message={t(loadError ? "connectors.sidebar.loadError" : "connectors.sidebar.empty")}
+            />
           </div>
         </div>
       )}

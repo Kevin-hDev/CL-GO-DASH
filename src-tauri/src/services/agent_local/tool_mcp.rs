@@ -21,7 +21,10 @@ async fn search(args: &Value) -> ToolResult {
         .split_whitespace()
         .filter(|w| !w.is_empty())
         .collect();
-    let connectors = registry::get_enabled_connectors();
+    let connectors = match registry::get_enabled_connectors() {
+        Ok(connectors) => connectors,
+        Err(_) => return ToolResult::err("configuration MCP indisponible".to_string()),
+    };
 
     if connectors.is_empty() {
         return ToolResult::ok("Aucun connecteur MCP activé.".to_string());
@@ -111,7 +114,10 @@ async fn call(args: &Value) -> ToolResult {
         return ToolResult::err("identifiant invalide".to_string());
     }
 
-    let connectors = registry::get_enabled_connectors();
+    let connectors = match registry::get_enabled_connectors() {
+        Ok(connectors) => connectors,
+        Err(_) => return ToolResult::err("configuration MCP indisponible".to_string()),
+    };
     let connector = match connectors.iter().find(|c| c.id == connector_id) {
         Some(c) => c,
         None => return ToolResult::err(format!("connecteur '{connector_id}' non disponible")),

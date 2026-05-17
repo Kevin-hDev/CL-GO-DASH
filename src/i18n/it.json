@@ -632,10 +632,11 @@
       "subtitle": "Permetti agli LLM di connettersi ad altre app e servizi",
       "browseBtn": "Sfoglia connettori"
     },
-    "sidebar": {
-      "configured": "Configurati",
-      "empty": "Nessun connettore configurato"
-    },
+  "sidebar": {
+    "configured": "Configurati",
+    "empty": "Nessun connettore configurato",
+    "loadError": "Impossibile caricare i connettori"
+  },
     "detail": {
       "connected": "Connesso",
       "disconnected": "Disconnesso",

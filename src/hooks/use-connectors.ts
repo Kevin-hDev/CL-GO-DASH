@@ -5,14 +5,6 @@ import { IS_MAC } from "@/lib/platform";
 import { MCP_CATALOG } from "@/lib/mcp-catalog";
 import type { ConfiguredMcp, ConfiguredMcpFull, McpConnectorSpec } from "@/types/mcp";
 
-async function loadConfigured(): Promise<ConfiguredMcp[]> {
-  try {
-    return await invoke<ConfiguredMcp[]>("list_mcp_connectors");
-  } catch {
-    return [];
-  }
-}
-
 function connectorPayload(spec: McpConnectorSpec): ConfiguredMcp {
   return {
     id: spec.id,
@@ -31,11 +23,19 @@ export function useConnectors() {
 
   const [items, setItems] = useState<ConfiguredMcp[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   const refresh = useCallback(async () => {
-    const data = await loadConfigured();
-    setItems(data);
-    setLoading(false);
+    try {
+      const data = await invoke<ConfiguredMcp[]>("list_mcp_connectors");
+      setItems(data);
+      setLoadError(false);
+    } catch {
+      setItems([]);
+      setLoadError(true);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -97,7 +97,7 @@ export function useConnectors() {
   );
 
   return {
-    catalog, configured, configuredIds, loading,
+    catalog, configured, configuredIds, loading, loadError,
     addConnector, removeConnector, toggleStatus, toggleChatEnabled, isConnected,
   };
 }

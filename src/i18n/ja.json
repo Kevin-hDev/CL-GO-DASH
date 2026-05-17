@@ -632,10 +632,11 @@
       "subtitle": "LLM が他のアプリやサービスに接続できるようにします",
       "browseBtn": "コネクターを探す"
     },
-    "sidebar": {
-      "configured": "設定済み",
-      "empty": "設定済みのコネクターはありません"
-    },
+  "sidebar": {
+    "configured": "設定済み",
+    "empty": "設定済みのコネクターはありません",
+    "loadError": "コネクターを読み込めませんでした"
+  },
     "detail": {
       "connected": "接続済み",
       "disconnected": "切断済み",

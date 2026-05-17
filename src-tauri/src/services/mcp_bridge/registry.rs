@@ -24,13 +24,13 @@ pub struct EnabledConnector {
     pub transport: Arc<dyn McpTransport>,
 }
 
-pub fn get_enabled_connectors() -> Vec<EnabledConnector> {
-    config::load()
+pub fn get_enabled_connectors() -> Result<Vec<EnabledConnector>, String> {
+    Ok(config::load()?
         .into_iter()
         .filter(|c| c.status == "connected" && c.enabled_in_chat)
         .filter_map(build_connector)
         .take(config::MAX_CONNECTORS)
-        .collect()
+        .collect())
 }
 
 pub fn is_trusted_endpoint_pub(connector_id: &str, url: &str) -> bool {
@@ -55,7 +55,7 @@ fn build_connector(c: config::StoredConnector) -> Option<EnabledConnector> {
     }
 
     if let Some(cmd) = config::install_command_for(&c) {
-        let env_key_names = config::validated_env_keys(c.env_keys.as_deref());
+        let env_key_names = config::validated_env_keys(c.env_keys.as_deref()).ok()?;
         let transport = StdioTransport::new(c.id.clone(), cmd, env_key_names);
         return Some(EnabledConnector {
             id: c.id,
