@@ -59,8 +59,11 @@ pub async fn insert_bounded(
 mod tests {
     use super::*;
 
+    static TEST_LOCK: LazyLock<Mutex<()>> = LazyLock::new(|| Mutex::new(()));
+
     #[tokio::test]
     async fn insert_and_find() {
+        let _guard = TEST_LOCK.lock().await;
         let mut map = MAP.lock().await;
         map.insert("test/key".to_string(), "uuid-123".to_string());
         assert_eq!(map.get("test/key"), Some(&"uuid-123".to_string()));
@@ -69,12 +72,14 @@ mod tests {
 
     #[tokio::test]
     async fn find_missing_returns_none() {
+        let _guard = TEST_LOCK.lock().await;
         let map = MAP.lock().await;
         assert!(map.get("nonexistent/key").is_none());
     }
 
     #[tokio::test]
     async fn bounded_insert_evicts() {
+        let _guard = TEST_LOCK.lock().await;
         let mut map = MAP.lock().await;
         map.clear();
         let _ = flush(&map);
@@ -94,6 +99,7 @@ mod tests {
 
     #[tokio::test]
     async fn load_from_disk_reads_flushed_map() {
+        let _guard = TEST_LOCK.lock().await;
         let mut map = MAP.lock().await;
         map.clear();
         map.insert("reload/key".to_string(), "session-1".to_string());
