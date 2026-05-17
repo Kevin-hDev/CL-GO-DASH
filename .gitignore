@@ -12,6 +12,17 @@ src-tauri/resources/ollama-bundle/
 .DS_Store
 docs/
 CLAUDE.md
+AGENTS.md
 .worktrees/
 CL-GO-DASH-output/
 repo/
+
+# Local agent/tooling artifacts
+.claude/
+.codex/
+.serena/
+graphify-out/
+
+# Generated security/static-analysis reports
+.supply-chain-risk-auditor/
+static_analysis_*/
