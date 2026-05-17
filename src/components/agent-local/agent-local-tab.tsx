@@ -1,4 +1,4 @@
-import { useLayoutEffect, memo } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, memo } from "react";
 import { useTranslation } from "react-i18next";
 import { ConversationList } from "./conversation-list";
 import { TabBar } from "./tab-bar";
@@ -30,6 +30,20 @@ export const AgentLocalTab = memo(function AgentLocalTab({
   const terminalCwd = activeProject?.path || "";
   const fileTree = useFileTree(tabState.activeSessionId, activeProject?.path);
   const forecast = useForecastPanel(tabState.activeSessionId ?? null);
+  const [fullscreenSwitching, setFullscreenSwitching] = useState(false);
+  const fullscreenTimerRef = useRef<number | null>(null);
+
+  const handlePreviewFullscreenChange = useCallback((value: boolean) => {
+    if (fullscreenTimerRef.current !== null) window.clearTimeout(fullscreenTimerRef.current);
+    setFullscreenSwitching(true);
+    filePreview.setFullscreen(value);
+    fullscreenTimerRef.current = window.setTimeout(() => setFullscreenSwitching(false), 80);
+  }, [filePreview]);
+
+  useEffect(() => () => {
+    if (fullscreenTimerRef.current !== null) window.clearTimeout(fullscreenTimerRef.current);
+  }, []);
+
   const handleOpenForecastDocs = () => {
     void openForecastDocsWindow(t("forecast.docs.windowTitle")).catch(() => {});
   };
@@ -46,7 +60,7 @@ export const AgentLocalTab = memo(function AgentLocalTab({
       onFocusAnalysis={forecast.focusAnalysis}
       onPanelExtraWidthChange={filePreview.setExtraWidth}
       onCloseAnalysis={forecast.closeAnalysis}
-      onFullscreenChange={filePreview.setFullscreen}
+      onFullscreenChange={handlePreviewFullscreenChange}
     />
   );
 
@@ -112,6 +126,7 @@ export const AgentLocalTab = memo(function AgentLocalTab({
           thinking={thinking}
           terminal={terminal}
           filePreview={filePreview}
+          fullscreenSwitching={fullscreenSwitching}
           fileOperations={fileOperations}
           fileTree={fileTree}
           onAddProject={projectsHook.add}
@@ -127,6 +142,7 @@ export const AgentLocalTab = memo(function AgentLocalTab({
             setPendingFiles(undefined);
           }}
           onFileOperationsChange={setFileOperations}
+          onPreviewFullscreenChange={handlePreviewFullscreenChange}
           panelMode={forecast.panelMode}
           forecastContent={forecastContent}
           parentSessionId={activeSession?.parent_session_id}

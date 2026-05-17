@@ -23,6 +23,7 @@ interface AgentChatDetailProps {
   thinking: boolean;
   terminal: ReturnType<typeof useTerminal>;
   filePreview: ReturnType<typeof useFilePreview>;
+  fullscreenSwitching: boolean;
   fileOperations: FileOperation[];
   onAddProject: (path: string) => Promise<Project>;
   onSessionsRefresh: () => void;
@@ -32,6 +33,7 @@ interface AgentChatDetailProps {
   onToggleThinking: () => void;
   onInitialMessageSent: () => void;
   onFileOperationsChange: (operations: FileOperation[]) => void;
+  onPreviewFullscreenChange: (fullscreen: boolean) => void;
   fileTree: ReturnType<typeof useFileTree>;
   parentSessionId?: string;
   onOpenSubagent?: (sessionId: string) => void;
@@ -55,7 +57,7 @@ export function AgentChatDetail(props: AgentChatDetailProps) {
           ← Chat parent
         </button>
       )}
-      <div className={`agent-detail-chat ${props.filePreview.fullscreen ? "agent-detail-chat-fs" : ""}`}>
+      <div className={`agent-detail-chat ${props.filePreview.fullscreen ? "agent-detail-chat-fs" : ""} ${props.fullscreenSwitching ? "agent-detail-chat-instant" : ""}`}>
         <ChatView
           sessionId={props.sessionId}
           model={props.model}
@@ -85,13 +87,15 @@ export function AgentChatDetail(props: AgentChatDetailProps) {
         fullscreen={props.filePreview.fullscreen}
         width={props.filePreview.width}
         extraWidth={props.filePreview.extraWidth}
+        fullscreenWidth={props.filePreview.fullscreenWidth}
+        fullscreenSwitching={props.fullscreenSwitching}
         resizing={props.filePreview.resizing}
         operations={props.fileOperations}
         tabs={props.filePreview.tabs}
         activeTab={props.filePreview.activeTab}
         baseDir={props.activeProjectPath}
         onClose={props.filePreview.closePanel}
-        onFullscreenChange={props.filePreview.setFullscreen}
+        onFullscreenChange={props.onPreviewFullscreenChange}
         onActiveTabChange={props.filePreview.setActiveTab}
         onOpenOperation={props.filePreview.openOperation}
         onCloseTab={props.filePreview.closeTab}

@@ -31,3 +31,8 @@ export function clampPreviewWidthForLayout(width: number, panel: Element | null,
   const layout = measurePreviewLayout(panel, extraWidth);
   return clampFilePreviewWidthForContainer(width, layout.containerWidth, layout.reservedWidth);
 }
+
+export function measurePreviewFullscreenWidth(panel: Element | null): number {
+  const layout = measurePreviewLayout(panel, 0);
+  return Math.max(0, layout.containerWidth - layout.reservedWidth);
+}

@@ -22,7 +22,8 @@
 }
 
 .fp-panel.open {
-  width: min(var(--fp-width), max(0px, calc(100% - var(--agent-chat-min-width, 360px)))) !important;
+  width: var(--fp-width) !important;
+  max-width: max(0px, calc(100% - var(--agent-chat-min-width, 360px)));
   transform: translateX(0);
   opacity: 1;
   pointer-events: auto;
@@ -32,9 +33,15 @@
   transition: none;
 }
 
+.fp-panel.fullscreen-switching {
+  transition:
+    transform 300ms cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 220ms ease;
+}
+
 .fp-panel.fullscreen {
-  width: 100% !important;
-  flex-grow: 1;
+  width: var(--fp-full-width) !important;
+  max-width: 100%;
   border-left: none;
 }
 
