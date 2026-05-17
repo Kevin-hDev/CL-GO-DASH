@@ -13,6 +13,16 @@ pub async fn collect_chat_silent(
     messages: &[ChatMessage],
     cancel: CancellationToken,
 ) -> Result<StreamResult, String> {
+    if provider_id == "codex-oauth" {
+        return crate::services::codex_client::stream::collect_chat_silent(
+            model,
+            messages,
+            &[],
+            false,
+            cancel,
+        )
+        .await;
+    }
     let cfg = RequestConfig {
         provider_id,
         model,

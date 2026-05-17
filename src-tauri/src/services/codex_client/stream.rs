@@ -19,6 +19,17 @@ pub async fn stream_chat(
     consume_sse(on_event, resp, cancel).await
 }
 
+pub async fn collect_chat_silent(
+    model: &str,
+    messages: &[ChatMessage],
+    tools: &[serde_json::Value],
+    think: bool,
+    cancel: CancellationToken,
+) -> Result<StreamResult, String> {
+    let resp = request::post_codex_stream(model, messages, tools, think).await?;
+    consume_sse_silent(resp, cancel).await
+}
+
 async fn consume_sse(
     on_event: &AgentEventEmitter,
     resp: reqwest::Response,
@@ -122,6 +133,59 @@ async fn consume_sse(
                     .unwrap_or("erreur inconnue Codex");
                 return Err(format!("Codex: {msg}"));
             }
+            _ => {}
+        }
+    }
+
+    Ok(result)
+}
+
+async fn consume_sse_silent(
+    resp: reqwest::Response,
+    cancel: CancellationToken,
+) -> Result<StreamResult, String> {
+    let mut sse = resp.bytes_stream().eventsource();
+    let mut result = StreamResult::default();
+
+    loop {
+        let event = tokio::select! {
+            _ = cancel.cancelled() => return Err("Annulé".to_string()),
+            _ = tokio::time::sleep(std::time::Duration::from_secs(60)) => {
+                return Err("Timeout Codex : 60s sans réponse".to_string());
+            }
+            ev = sse.next() => match ev {
+                Some(Ok(e)) => e,
+                Some(Err(e)) => return Err(format!("SSE: {e}")),
+                None => break,
+            },
+        };
+
+        if event.data.trim() == "[DONE]" {
+            break;
+        }
+        let parsed: serde_json::Value = match serde_json::from_str(&event.data) {
+            Ok(v) => v,
+            Err(_) => continue,
+        };
+        match parsed["type"].as_str().unwrap_or("") {
+            "response.reasoning_summary_text.delta" => {
+                result
+                    .thinking
+                    .push_str(parsed["delta"].as_str().unwrap_or(""));
+            }
+            "response.output_text.delta" => {
+                result
+                    .content
+                    .push_str(parsed["delta"].as_str().unwrap_or(""));
+            }
+            "response.done" | "response.completed" => {
+                if let Some(usage) = parsed.pointer("/response/usage") {
+                    result.prompt_tokens = usage["input_tokens"].as_u64().unwrap_or(0) as u32;
+                    result.eval_count = usage["output_tokens"].as_u64().unwrap_or(0) as u32;
+                }
+                break;
+            }
+            "response.failed" => return Err("Codex: erreur de génération".into()),
             _ => {}
         }
     }

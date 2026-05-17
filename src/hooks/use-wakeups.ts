@@ -4,25 +4,36 @@ import { listen } from "@tauri-apps/api/event";
 import type {
   CreateWakeupInput,
   HeartbeatConfig,
+  WakeupRun,
+  WakeupStatusSummary,
   ScheduledWakeup,
 } from "@/types/wakeup";
+import { cleanupTauriListener } from "@/lib/tauri-listen";
 import { useFsEvent } from "./use-fs-event";
 
 export function useWakeups() {
   const [wakeups, setWakeups] = useState<ScheduledWakeup[]>([]);
+  const [runs, setRuns] = useState<WakeupRun[]>([]);
+  const [summaries, setSummaries] = useState<Record<string, WakeupStatusSummary>>({});
   const [globalPaused, setGlobalPaused] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
     try {
-      const [list, hb] = await Promise.all([
+      const [list, hb, statusList, runList] = await Promise.all([
         invoke<ScheduledWakeup[]>("list_wakeups"),
         invoke<HeartbeatConfig>("get_heartbeat_config"),
+        invoke<WakeupStatusSummary[]>("get_wakeup_status_summaries"),
+        invoke<WakeupRun[]>("list_wakeup_runs", { wakeupId: null }),
       ]);
       setWakeups(list);
       setGlobalPaused(hb.global_paused);
+      setRuns(runList);
+      setSummaries(Object.fromEntries(statusList.map((item) => [item.wakeup_id, item])));
     } catch {
       setWakeups([]);
+      setRuns([]);
+      setSummaries({});
       setGlobalPaused(false);
     } finally {
       setLoading(false);
@@ -35,13 +46,17 @@ export function useWakeups() {
   }, [refresh]);
 
   useFsEvent("fs:config-changed", () => void refresh());
+  useFsEvent("fs:logs-changed", () => void refresh());
 
   useEffect(() => {
-    const unlisten = listen("wakeup-completed", () => {
+    const refreshFromEvent = () => {
       void refresh();
-    });
+    };
+    const unlistenCompleted = listen("wakeup-completed", refreshFromEvent);
+    const unlistenFailed = listen("wakeup-failed", refreshFromEvent);
     return () => {
-      void unlisten.then((fn) => fn());
+      cleanupTauriListener(unlistenCompleted);
+      cleanupTauriListener(unlistenFailed);
     };
   }, [refresh]);
 
@@ -88,6 +103,8 @@ export function useWakeups() {
 
   return {
     wakeups,
+    runs,
+    summaries,
     globalPaused,
     loading,
     refresh,

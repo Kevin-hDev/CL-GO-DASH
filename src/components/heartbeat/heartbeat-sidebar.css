@@ -106,3 +106,11 @@
   mask-image: linear-gradient(to right, black calc(100% - 20px), transparent);
   -webkit-mask-image: linear-gradient(to right, black calc(100% - 20px), transparent);
 }
+
+.wk-sidebar-next {
+  font-size: var(--text-xs);
+  color: var(--ink-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

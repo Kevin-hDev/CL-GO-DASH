@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useLayoutEffect, memo } from "react";
 import { useTranslation } from "react-i18next";
 import { useWakeups } from "@/hooks/use-wakeups";
 import { useArrowNavigation } from "@/hooks/use-arrow-navigation";
-import { formatSchedule } from "@/lib/wakeup-format";
+import { formatDateTime, formatSchedule } from "@/lib/wakeup-format";
 import { WakeupGrid } from "./wakeup-grid";
 import { WakeupDetails } from "./wakeup-details";
 import { NewWakeupDialog } from "./new-wakeup-dialog";
@@ -30,7 +30,7 @@ export const HeartbeatTab = memo(function HeartbeatTab({
   reportContent,
 }: HeartbeatTabProps) {
   const { t } = useTranslation();
-  const { wakeups, globalPaused, setPaused, toggle, remove, create, update } = useWakeups();
+  const { wakeups, runs, summaries, globalPaused, setPaused, toggle, remove, create, update } = useWakeups();
   const [selectedId, setSelectedIdState] = useState<string | null>(null);
 
   useEffect(() => {
@@ -89,6 +89,7 @@ export const HeartbeatTab = memo(function HeartbeatTab({
             >
               <div className="wk-sidebar-model">{w.model}</div>
               <div className="wk-sidebar-schedule">{formatSchedule(w.schedule)}</div>
+              <div className="wk-sidebar-next">{formatDateTime(summaries[w.id]?.next_fire_at)}</div>
             </button>
           ))
         )}
@@ -101,6 +102,8 @@ export const HeartbeatTab = memo(function HeartbeatTab({
       {selected ? (
         <WakeupDetails
           wakeup={selected}
+          summary={summaries[selected.id]}
+          runs={runs.filter((run) => run.wakeup_id === selected.id)}
           disableToggle={globalPaused}
           onBack={() => setSelectedId(null)}
           onToggle={(active) => void toggle(selected.id, active)}
@@ -108,9 +111,10 @@ export const HeartbeatTab = memo(function HeartbeatTab({
           onDelete={() => void handleDelete()}
         />
       ) : (
-        <WakeupGrid
-          wakeups={wakeups}
-          onSelect={setSelectedId}
+          <WakeupGrid
+            wakeups={wakeups}
+            summaries={summaries}
+            onSelect={setSelectedId}
           onCreate={() => setDialog({ kind: "create" })}
         />
       )}

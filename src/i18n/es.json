@@ -305,8 +305,22 @@
       "provider": "Proveedor",
       "model": "Modelo",
       "schedule": "Programación",
+      "nextFire": "Próxima ejecución",
+      "lastStatus": "Último estado",
+      "lastRun": "Última ejecución",
       "description": "Descripción",
       "prompt": "Prompt"
+    },
+    "status": {
+      "ok": "Correcto",
+      "error": "Error",
+      "missed": "Perdido",
+      "never": "Nunca ejecutado",
+      "none": "Ninguno"
+    },
+    "history": {
+      "title": "Historial",
+      "empty": "Sin ejecuciones"
     },
     "sidebar": {
       "title": "Wakeups",

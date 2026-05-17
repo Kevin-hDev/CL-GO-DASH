@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { formatSchedule } from "@/lib/wakeup-format";
+import { formatDateTime, formatRunStatus, formatSchedule } from "@/lib/wakeup-format";
 
 vi.mock("@/i18n", () => ({
   default: { t: (key: string) => key, language: "fr" },
@@ -40,6 +40,18 @@ describe("formatSchedule", () => {
     it("retourne uniquement le jour si le time est invalide", () => {
       const result = formatSchedule({ kind: "weekly", weekday: 0, time: "heure-invalide" });
       expect(result).toBe("lun.");
+    });
+  });
+
+  describe("status", () => {
+    it("formate un statut de run", () => {
+      expect(formatRunStatus("missed")).toBe("heartbeat.status.missed");
+      expect(formatRunStatus(null)).toBe("heartbeat.status.never");
+    });
+
+    it("formate none pour une date absente ou invalide", () => {
+      expect(formatDateTime(null)).toBe("heartbeat.status.none");
+      expect(formatDateTime("invalid")).toBe("heartbeat.status.none");
     });
   });
 });

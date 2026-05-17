@@ -91,9 +91,7 @@ async fn send_request(
 
     if !resp.status().is_success() {
         let status = resp.status();
-        let text = resp.text().await.unwrap_or_default();
-        let safe = &text[..text.len().min(500)];
-        return Err(format!("Codex API {status}: {safe}"));
+        return Err(format!("Codex API {status}"));
     }
     Ok(resp)
 }

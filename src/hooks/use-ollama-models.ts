@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import { cleanupTauriListener } from "@/lib/tauri-listen";
 import type { OllamaModel } from "@/types/agent";
 
 export function useOllamaModels() {
@@ -22,7 +23,7 @@ export function useOllamaModels() {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch→setState is intentional
     void refresh();
     const unlisten = listen("ollama-models-changed", () => { void refresh(); });
-    return () => { void unlisten.then((fn) => fn()); };
+    return () => { cleanupTauriListener(unlisten); };
   }, [refresh]);
 
   const groupedByFamily = models.reduce<Record<string, OllamaModel[]>>((acc, m) => {

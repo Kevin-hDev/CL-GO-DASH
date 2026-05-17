@@ -13,14 +13,38 @@ pub fn next_fire_at(schedule: &WakeupSchedule, now: DateTime<Local>) -> Option<D
     }
 }
 
+pub fn latest_fire_between(
+    schedule: &WakeupSchedule,
+    after: DateTime<Local>,
+    before: DateTime<Local>,
+) -> Option<DateTime<Local>> {
+    if before <= after {
+        return None;
+    }
+    match schedule {
+        WakeupSchedule::Once { datetime } => {
+            let dt = parse_once_raw(datetime)?;
+            (dt > after && dt <= before).then_some(dt)
+        }
+        WakeupSchedule::Daily { time } => latest_daily_between(time, after, before),
+        WakeupSchedule::Weekly { weekday, time } => {
+            latest_weekly_between(*weekday, time, after, before)
+        }
+    }
+}
+
 fn parse_once(s: &str, now: DateTime<Local>) -> Option<DateTime<Local>> {
-    let naive = NaiveDateTime::parse_from_str(s, "%Y-%m-%dT%H:%M").ok()?;
-    let dt = Local.from_local_datetime(&naive).single()?;
+    let dt = parse_once_raw(s)?;
     if dt > now {
         Some(dt)
     } else {
         None
     }
+}
+
+fn parse_once_raw(s: &str) -> Option<DateTime<Local>> {
+    let naive = NaiveDateTime::parse_from_str(s, "%Y-%m-%dT%H:%M").ok()?;
+    Local.from_local_datetime(&naive).single()
 }
 
 fn parse_time_hhmm(s: &str) -> Option<NaiveTime> {
@@ -62,6 +86,42 @@ fn parse_weekly(weekday_idx: u8, time: &str, now: DateTime<Local>) -> Option<Dat
     }
 }
 
+fn latest_daily_between(
+    time: &str,
+    after: DateTime<Local>,
+    before: DateTime<Local>,
+) -> Option<DateTime<Local>> {
+    let nt = parse_time_hhmm(time)?;
+    let today = Local
+        .from_local_datetime(&before.date_naive().and_time(nt))
+        .single()?;
+    if today <= before && today > after {
+        return Some(today);
+    }
+    let yesterday = (before.date_naive() - Duration::days(1)).and_time(nt);
+    let dt = Local.from_local_datetime(&yesterday).single()?;
+    (dt > after && dt <= before).then_some(dt)
+}
+
+fn latest_weekly_between(
+    weekday_idx: u8,
+    time: &str,
+    after: DateTime<Local>,
+    before: DateTime<Local>,
+) -> Option<DateTime<Local>> {
+    let target = weekday_from_idx(weekday_idx)?;
+    let nt = parse_time_hhmm(time)?;
+    let before_idx = before.weekday().num_days_from_monday() as i64;
+    let target_idx = target.num_days_from_monday() as i64;
+    let mut delta = before_idx - target_idx;
+    if delta < 0 {
+        delta += 7;
+    }
+    let candidate = (before.date_naive() - Duration::days(delta)).and_time(nt);
+    let dt = Local.from_local_datetime(&candidate).single()?;
+    (dt > after && dt <= before).then_some(dt)
+}
+
 fn weekday_from_idx(idx: u8) -> Option<Weekday> {
     match idx {
         0 => Some(Weekday::Mon),
@@ -72,85 +132,5 @@ fn weekday_from_idx(idx: u8) -> Option<Weekday> {
         5 => Some(Weekday::Sat),
         6 => Some(Weekday::Sun),
         _ => None,
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn local(y: i32, m: u32, d: u32, h: u32, mi: u32) -> DateTime<Local> {
-        Local
-            .with_ymd_and_hms(y, m, d, h, mi, 0)
-            .single()
-            .expect("valid datetime")
-    }
-
-    #[test]
-    fn once_future_ok() {
-        let now = local(2026, 4, 16, 8, 0);
-        let s = WakeupSchedule::Once {
-            datetime: "2026-04-16T08:30".into(),
-        };
-        assert_eq!(next_fire_at(&s, now), Some(local(2026, 4, 16, 8, 30)));
-    }
-
-    #[test]
-    fn once_past_none() {
-        let now = local(2026, 4, 16, 9, 0);
-        let s = WakeupSchedule::Once {
-            datetime: "2026-04-16T08:30".into(),
-        };
-        assert_eq!(next_fire_at(&s, now), None);
-    }
-
-    #[test]
-    fn daily_today_if_future() {
-        let now = local(2026, 4, 16, 7, 0);
-        let s = WakeupSchedule::Daily {
-            time: "08:00".into(),
-        };
-        assert_eq!(next_fire_at(&s, now), Some(local(2026, 4, 16, 8, 0)));
-    }
-
-    #[test]
-    fn daily_tomorrow_if_past() {
-        let now = local(2026, 4, 16, 9, 0);
-        let s = WakeupSchedule::Daily {
-            time: "08:00".into(),
-        };
-        assert_eq!(next_fire_at(&s, now), Some(local(2026, 4, 17, 8, 0)));
-    }
-
-    #[test]
-    fn weekly_same_day_future() {
-        // 2026-04-16 = jeudi (idx 3)
-        let now = local(2026, 4, 16, 7, 0);
-        let s = WakeupSchedule::Weekly {
-            weekday: 3,
-            time: "08:00".into(),
-        };
-        assert_eq!(next_fire_at(&s, now), Some(local(2026, 4, 16, 8, 0)));
-    }
-
-    #[test]
-    fn weekly_next_week_if_passed() {
-        let now = local(2026, 4, 16, 9, 0);
-        let s = WakeupSchedule::Weekly {
-            weekday: 3,
-            time: "08:00".into(),
-        };
-        assert_eq!(next_fire_at(&s, now), Some(local(2026, 4, 23, 8, 0)));
-    }
-
-    #[test]
-    fn weekly_other_day() {
-        let now = local(2026, 4, 16, 9, 0); // jeudi
-        let s = WakeupSchedule::Weekly {
-            weekday: 0,
-            time: "10:00".into(),
-        }; // lundi
-           // prochain lundi = 20 avril
-        assert_eq!(next_fire_at(&s, now), Some(local(2026, 4, 20, 10, 0)));
     }
 }

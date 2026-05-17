@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import { cleanupTauriListener } from "@/lib/tauri-listen";
 
 interface AdvancedState {
   default_model: string;
@@ -34,7 +35,7 @@ export function useDefaultModel(): { model: string; provider: string } {
   useEffect(() => {
     load();
     const unsub = listen("fs:config-changed", load);
-    return () => { unsub.then((f) => f()).catch(() => {}); };
+    return () => { cleanupTauriListener(unsub); };
   }, [load]);
 
   return state;

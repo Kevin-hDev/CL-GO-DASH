@@ -24,6 +24,7 @@ pub mod forecast_models;
 pub mod gateway;
 pub mod git;
 pub mod heartbeat;
+mod heartbeat_validation;
 pub mod link_preview;
 pub mod llm;
 pub mod mcp_connectors;

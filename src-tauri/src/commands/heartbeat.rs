@@ -1,6 +1,10 @@
-use crate::models::{HeartbeatConfig, ScheduledWakeup, WakeupSchedule};
+use crate::commands::heartbeat_validation as validation;
+use crate::models::{
+    HeartbeatConfig, ScheduledWakeup, WakeupRun, WakeupSchedule, WakeupStatusSummary,
+};
 use crate::services::config as cfg;
-use crate::services::scheduler::Scheduler;
+use crate::services::scheduler::{log, next_fire::next_fire_at, Scheduler};
+use chrono::Local;
 use serde::Deserialize;
 use tauri::State;
 use uuid::Uuid;
@@ -18,8 +22,7 @@ pub struct CreateWakeupInput {
 
 #[tauri::command]
 pub fn list_wakeups() -> Result<Vec<ScheduledWakeup>, String> {
-    let config = cfg::read_config()?;
-    Ok(config.scheduled_wakeups)
+    Ok(cfg::read_config()?.scheduled_wakeups)
 }
 
 #[tauri::command]
@@ -27,12 +30,19 @@ pub fn create_wakeup(
     input: CreateWakeupInput,
     scheduler: State<'_, Scheduler>,
 ) -> Result<ScheduledWakeup, String> {
-    validate_provider(&input.provider)?;
-    validate_non_empty(&input.name, "name")?;
-    validate_non_empty(&input.model, "model")?;
-    validate_non_empty(&input.prompt, "prompt")?;
-    validate_schedule(&input.schedule)?;
+    validation::validate_input(
+        &input.provider,
+        &input.name,
+        &input.model,
+        &input.prompt,
+        &input.description,
+        &input.schedule,
+        true,
+    )?;
 
+    let mut config = cfg::read_config()?;
+    validation::validate_capacity(config.scheduled_wakeups.len())?;
+    let globally_paused = config.heartbeat.global_paused;
     let wakeup = ScheduledWakeup {
         id: Uuid::new_v4().to_string(),
         name: input.name,
@@ -41,41 +51,38 @@ pub fn create_wakeup(
         prompt: input.prompt,
         schedule: input.schedule,
         description: input.description,
-        active: true,
-        paused_by_global: false,
+        active: !globally_paused,
+        paused_by_global: globally_paused,
         created_at: chrono::Utc::now().to_rfc3339(),
     };
 
-    let mut config = cfg::read_config()?;
     config.scheduled_wakeups.push(wakeup.clone());
     cfg::write_config(&config)?;
     scheduler.notify_config_changed();
-
     Ok(wakeup)
 }
 
 #[tauri::command]
 pub fn update_wakeup(
-    wakeup: ScheduledWakeup,
+    mut wakeup: ScheduledWakeup,
     scheduler: State<'_, Scheduler>,
 ) -> Result<(), String> {
-    validate_provider(&wakeup.provider)?;
-    validate_non_empty(&wakeup.name, "name")?;
-    validate_non_empty(&wakeup.model, "model")?;
-    validate_non_empty(&wakeup.prompt, "prompt")?;
-    validate_schedule(&wakeup.schedule)?;
-
     let mut config = cfg::read_config()?;
+    if config.heartbeat.global_paused && wakeup.active {
+        wakeup.active = false;
+        wakeup.paused_by_global = true;
+    }
+    validation::validate_wakeup(&wakeup)?;
+
     let idx = config
         .scheduled_wakeups
         .iter()
         .position(|w| w.id == wakeup.id)
-        .ok_or_else(|| format!("Wakeup {} not found", wakeup.id))?;
+        .ok_or_else(|| "Réveil introuvable".to_string())?;
 
     config.scheduled_wakeups[idx] = wakeup;
     cfg::write_config(&config)?;
     scheduler.notify_config_changed();
-
     Ok(())
 }
 
@@ -95,18 +102,18 @@ pub fn set_wakeup_active(
     scheduler: State<'_, Scheduler>,
 ) -> Result<(), String> {
     let mut config = cfg::read_config()?;
-
     if config.heartbeat.global_paused {
-        return Err("Réveils en veille — désactive d'abord le master switch.".into());
+        return Err("Réveils en veille".into());
     }
 
     let w = config
         .scheduled_wakeups
         .iter_mut()
         .find(|w| w.id == id)
-        .ok_or_else(|| format!("Wakeup {} not found", id))?;
+        .ok_or_else(|| "Réveil introuvable".to_string())?;
     w.active = active;
     w.paused_by_global = false;
+    validation::validate_wakeup(w)?;
 
     cfg::write_config(&config)?;
     scheduler.notify_config_changed();
@@ -116,20 +123,13 @@ pub fn set_wakeup_active(
 #[tauri::command]
 pub fn set_global_paused(paused: bool, scheduler: State<'_, Scheduler>) -> Result<(), String> {
     let mut config = cfg::read_config()?;
-
-    if paused {
-        for w in &mut config.scheduled_wakeups {
-            if w.active {
-                w.paused_by_global = true;
-                w.active = false;
-            }
-        }
-    } else {
-        for w in &mut config.scheduled_wakeups {
-            if w.paused_by_global {
-                w.active = true;
-                w.paused_by_global = false;
-            }
+    for w in &mut config.scheduled_wakeups {
+        if paused && w.active {
+            w.paused_by_global = true;
+            w.active = false;
+        } else if !paused && w.paused_by_global {
+            w.active = true;
+            w.paused_by_global = false;
         }
     }
 
@@ -141,72 +141,36 @@ pub fn set_global_paused(paused: bool, scheduler: State<'_, Scheduler>) -> Resul
 
 #[tauri::command]
 pub fn get_heartbeat_config() -> Result<HeartbeatConfig, String> {
+    Ok(cfg::read_config()?.heartbeat)
+}
+
+#[tauri::command]
+pub async fn list_wakeup_runs(wakeup_id: Option<String>) -> Result<Vec<WakeupRun>, String> {
+    log::list_runs(wakeup_id.as_deref()).await
+}
+
+#[tauri::command]
+pub async fn get_wakeup_status_summaries() -> Result<Vec<WakeupStatusSummary>, String> {
     let config = cfg::read_config()?;
-    Ok(config.heartbeat)
-}
-
-const ALLOWED_PROVIDERS: &[&str] = &[
-    "ollama",
-    "groq",
-    "google",
-    "mistral",
-    "cerebras",
-    "openrouter",
-    "openai",
-    "deepseek",
-    "xai",
-    "moonshot",
-    "zai",
-];
-
-fn validate_provider(provider: &str) -> Result<(), String> {
-    if ALLOWED_PROVIDERS.contains(&provider) {
-        Ok(())
-    } else {
-        Err(format!("Provider non supporté : {}", provider))
-    }
-}
-
-fn validate_non_empty(value: &str, field: &str) -> Result<(), String> {
-    if value.trim().is_empty() {
-        Err(format!("Champ {} requis", field))
-    } else {
-        Ok(())
-    }
-}
-
-fn validate_schedule(schedule: &WakeupSchedule) -> Result<(), String> {
-    let time_re = regex::Regex::new(r"^\d{2}:\d{2}$").map_err(|e| {
-        eprintln!("[heartbeat] regex: {e}");
-        "Erreur interne".to_string()
-    })?;
-    let dt_re = regex::Regex::new(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$").map_err(|e| {
-        eprintln!("[heartbeat] regex: {e}");
-        "Erreur interne".to_string()
-    })?;
-
-    match schedule {
-        WakeupSchedule::Once { datetime } => {
-            if !dt_re.is_match(datetime) {
-                return Err(format!(
-                    "Datetime invalide : {} (attendu YYYY-MM-DDTHH:MM)",
-                    datetime
-                ));
+    let runs = log::list_runs(None).await?;
+    let now = Local::now();
+    let summaries = config
+        .scheduled_wakeups
+        .iter()
+        .map(|w| {
+            let next_fire_at = if config.heartbeat.global_paused || !w.active || w.paused_by_global
+            {
+                None
+            } else {
+                next_fire_at(&w.schedule, now).map(|dt| dt.to_rfc3339())
+            };
+            let last_run = runs.iter().find(|r| r.wakeup_id == w.id).cloned();
+            WakeupStatusSummary {
+                wakeup_id: w.id.clone(),
+                next_fire_at,
+                last_run,
             }
-        }
-        WakeupSchedule::Daily { time } => {
-            if !time_re.is_match(time) {
-                return Err(format!("Heure invalide : {} (attendu HH:MM)", time));
-            }
-        }
-        WakeupSchedule::Weekly { weekday, time } => {
-            if *weekday > 6 {
-                return Err(format!("Jour invalide : {} (0..6 attendu)", weekday));
-            }
-            if !time_re.is_match(time) {
-                return Err(format!("Heure invalide : {} (attendu HH:MM)", time));
-            }
-        }
-    }
-    Ok(())
+        })
+        .collect();
+    Ok(summaries)
 }

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import { cleanupTauriListener } from "@/lib/tauri-listen";
 import type { OllamaModel } from "@/types/agent";
 import type { ProviderSpec } from "@/types/api";
 
@@ -27,6 +28,7 @@ interface LlmModelInfo {
 }
 
 let cachedGroups: Map<string, AvailableModel[]> = new Map();
+let pendingFetchAll: Promise<Map<string, AvailableModel[]>> | null = null;
 
 async function fetchOllamaModels(): Promise<AvailableModel[]> {
   const ollamaModels = await invoke<OllamaModel[]>("list_ollama_models");
@@ -129,12 +131,19 @@ async function fetchAllModels(): Promise<Map<string, AvailableModel[]>> {
   return result;
 }
 
+function getAllModels(): Promise<Map<string, AvailableModel[]>> {
+  pendingFetchAll ??= fetchAllModels().finally(() => {
+    pendingFetchAll = null;
+  });
+  return pendingFetchAll;
+}
+
 export function useAvailableModels() {
   const [groups, setGroups] = useState<Map<string, AvailableModel[]>>(cachedGroups);
   const [loading, setLoading] = useState(cachedGroups.size === 0);
 
   const refresh = useCallback(async () => {
-    const result = await fetchAllModels();
+    const result = await getAllModels();
     setGroups(result);
     setLoading(false);
   }, []);
@@ -168,9 +177,9 @@ export function useAvailableModels() {
       if (e.payload) setTimeout(() => void refreshOllama(), 2000);
     });
     return () => {
-      void unsubOllama.then((f) => f());
-      void unsubFs.then((f) => f());
-      void unsubStatus.then((f) => f());
+      cleanupTauriListener(unsubOllama);
+      cleanupTauriListener(unsubFs);
+      cleanupTauriListener(unsubStatus);
     };
   }, [refresh, refreshOllama]);
 

@@ -38,12 +38,24 @@ pub fn ollama_binary_path() -> Result<PathBuf, String> {
 }
 
 pub fn is_ollama_ready() -> bool {
-    ollama_port::is_port_open(ollama_port::get_port()) || ollama_binary_path().is_ok()
+    ollama_binary_path().is_ok() || ollama_port::is_port_open(ollama_port::get_port())
 }
 
 pub fn start_sidecar(app: &AppHandle) -> Result<bool, String> {
     let state = app.state::<OllamaSidecar>();
     let mut guard = state.0.lock().map_err(|e| e.to_string())?;
+    if let Some(child) = guard.as_mut() {
+        match child.try_wait() {
+            Ok(None) => return Ok(false),
+            Ok(Some(_)) => {
+                *guard = None;
+            }
+            Err(e) => {
+                eprintln!("[ollama] sidecar status: {e}");
+                return Err("ollama-status-error".to_string());
+            }
+        }
+    }
 
     ollama_kill::kill_orphan_sidecar();
 

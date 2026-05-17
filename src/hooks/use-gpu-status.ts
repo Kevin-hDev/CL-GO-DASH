@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { listen } from "@tauri-apps/api/event";
+import { cleanupTauriListener } from "@/lib/tauri-listen";
 
 interface GpuStatusEvent {
   accelerator: string;
@@ -45,7 +46,7 @@ export function useGpuStatus(): GpuStatus {
         vramPercent: Math.min(pct, 100),
       });
     });
-    return () => { unlisten.then((fn) => fn()).catch(() => {}); };
+    return () => { cleanupTauriListener(unlisten); };
   }, []);
 
   return status;

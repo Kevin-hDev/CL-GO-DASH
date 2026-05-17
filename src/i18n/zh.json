@@ -305,8 +305,22 @@
       "provider": "提供商",
       "model": "模型",
       "schedule": "计划",
+      "nextFire": "下次触发",
+      "lastStatus": "最近状态",
+      "lastRun": "最近执行",
       "description": "描述",
       "prompt": "提示词"
+    },
+    "status": {
+      "ok": "成功",
+      "error": "失败",
+      "missed": "已错过",
+      "never": "从未执行",
+      "none": "无"
+    },
+    "history": {
+      "title": "历史",
+      "empty": "暂无执行记录"
     },
     "sidebar": {
       "title": "定时唤醒",

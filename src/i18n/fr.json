@@ -304,8 +304,22 @@
       "provider": "Provider",
       "model": "Modèle",
       "schedule": "Planification",
+      "nextFire": "Prochain déclenchement",
+      "lastStatus": "Dernier statut",
+      "lastRun": "Dernière exécution",
       "description": "Description",
       "prompt": "Prompt"
+    },
+    "status": {
+      "ok": "Réussi",
+      "error": "Échoué",
+      "missed": "Raté",
+      "never": "Jamais exécuté",
+      "none": "Aucun"
+    },
+    "history": {
+      "title": "Historique",
+      "empty": "Aucune exécution"
     },
     "sidebar": {
       "title": "Réveils",

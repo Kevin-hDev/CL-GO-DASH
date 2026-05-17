@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import { cleanupTauriListener } from "@/lib/tauri-listen";
 import type { AgentSessionMeta } from "@/types/agent";
 
 export function useAgentSessions() {
@@ -30,8 +31,8 @@ export function useAgentSessions() {
     const unlistenWakeup = listen("wakeup-completed", refreshFromEvent);
     const unlistenGateway = listen("agent-session-updated", refreshFromEvent);
     return () => {
-      void unlistenWakeup.then((fn) => fn());
-      void unlistenGateway.then((fn) => fn());
+      cleanupTauriListener(unlistenWakeup);
+      cleanupTauriListener(unlistenGateway);
     };
   }, [refresh]);
 
@@ -46,7 +47,7 @@ export function useAgentSessions() {
       },
     );
     return () => {
-      void unlisten.then((fn) => fn());
+      cleanupTauriListener(unlisten);
     };
   }, [refresh]);
 

@@ -1,12 +1,14 @@
-import type { ScheduledWakeup } from "@/types/wakeup";
+import type { ScheduledWakeup, WakeupStatusSummary } from "@/types/wakeup";
+import { formatDateTime } from "@/lib/wakeup-format";
 import { ActiveBadge, ScheduleBadge } from "./badges";
 
 interface WakeupCardProps {
   wakeup: ScheduledWakeup;
+  summary?: WakeupStatusSummary;
   onClick: () => void;
 }
 
-export function WakeupCard({ wakeup, onClick }: WakeupCardProps) {
+export function WakeupCard({ wakeup, summary, onClick }: WakeupCardProps) {
   return (
     <button className="wk-card" onClick={onClick} type="button">
       <div className="wk-card-row wk-card-row-top">
@@ -33,6 +35,9 @@ export function WakeupCard({ wakeup, onClick }: WakeupCardProps) {
       </div>
       <div className="wk-card-row">
         <ScheduleBadge schedule={wakeup.schedule} />
+      </div>
+      <div className="wk-card-row wk-card-next">
+        {formatDateTime(summary?.next_fire_at)}
       </div>
       <div className="wk-card-row wk-card-desc">
         {wakeup.description || wakeup.name}

@@ -75,7 +75,7 @@ fn init_base_structure(base: &std::path::Path) -> Result<(), String> {
         "agent-sessions",
         "tool-results",
         "translations",
-        "logs/heartbeat",
+        "logs",
     ];
     for d in &dirs {
         fs::create_dir_all(base.join(d)).map_err(|e| {

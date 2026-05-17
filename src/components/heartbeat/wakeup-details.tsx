@@ -1,12 +1,15 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CaretLeft, Pencil, Trash } from "@/components/ui/icons";
-import type { ScheduledWakeup } from "@/types/wakeup";
-import { formatSchedule } from "@/lib/wakeup-format";
+import type { ScheduledWakeup, WakeupRun, WakeupStatusSummary } from "@/types/wakeup";
+import { formatDateTime, formatRunStatus, formatSchedule } from "@/lib/wakeup-format";
 import { ActiveBadge } from "./badges";
+import { WakeupHistory } from "./wakeup-history";
 
 interface WakeupDetailsProps {
   wakeup: ScheduledWakeup;
+  summary?: WakeupStatusSummary;
+  runs: WakeupRun[];
   disableToggle: boolean;
   onBack: () => void;
   onToggle: (active: boolean) => void;
@@ -16,6 +19,8 @@ interface WakeupDetailsProps {
 
 export function WakeupDetails({
   wakeup,
+  summary,
+  runs,
   disableToggle,
   onBack,
   onToggle,
@@ -24,6 +29,7 @@ export function WakeupDetails({
 }: WakeupDetailsProps) {
   const { t } = useTranslation();
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const lastRun = summary?.last_run ?? null;
 
   const handleDelete = () => {
     if (confirmDelete) {
@@ -105,12 +111,25 @@ export function WakeupDetails({
         <Field label={t("heartbeat.fields.provider")} value={wakeup.provider} />
         <Field label={t("heartbeat.fields.model")} value={wakeup.model} />
         <Field label={t("heartbeat.fields.schedule")} value={formatSchedule(wakeup.schedule)} />
+        <Field
+          label={t("heartbeat.fields.nextFire")}
+          value={formatDateTime(summary?.next_fire_at)}
+        />
+        <Field
+          label={t("heartbeat.fields.lastStatus")}
+          value={formatRunStatus(lastRun?.status)}
+        />
+        <Field
+          label={t("heartbeat.fields.lastRun")}
+          value={formatDateTime(lastRun?.fired_at)}
+        />
         <Field label={t("heartbeat.fields.description")} value={wakeup.description || "—"} />
         <Field
           label={t("heartbeat.fields.prompt")}
           value={wakeup.prompt}
           multiline
         />
+        <WakeupHistory runs={runs} />
       </div>
     </div>
   );

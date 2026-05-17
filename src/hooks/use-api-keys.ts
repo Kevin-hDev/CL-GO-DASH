@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { showToast } from "@/lib/toast-emitter";
+import { cleanupTauriListener } from "@/lib/tauri-listen";
 import i18n from "@/i18n";
 import type { ProviderSpec } from "@/types/api";
 
@@ -44,7 +45,7 @@ export function useApiKeys() {
 
   useEffect(() => {
     const unlisten = listen("providers-changed", () => { void loadConfigured(); });
-    return () => { void unlisten.then((fn) => fn()); };
+    return () => { cleanupTauriListener(unlisten); };
   }, [loadConfigured]);
 
   const setKey = useCallback(

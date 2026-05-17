@@ -110,3 +110,32 @@ pub enum WakeupSchedule {
     Daily { time: String },
     Weekly { weekday: u8, time: String },
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum WakeupRunStatus {
+    Ok,
+    Error,
+    Missed,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WakeupRun {
+    pub wakeup_id: String,
+    pub scheduled_for: String,
+    pub fired_at: String,
+    pub status: WakeupRunStatus,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub session_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tokens: Option<u32>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WakeupStatusSummary {
+    pub wakeup_id: String,
+    pub next_fire_at: Option<String>,
+    pub last_run: Option<WakeupRun>,
+}

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import type { FileEntry } from "@/lib/file-tree-filter";
+import { cleanupTauriListener } from "@/lib/tauri-listen";
 
 const DEFAULT_WIDTH = 240;
 const MIN_WIDTH = 240;
@@ -87,7 +88,7 @@ export function useFileTree(sessionId: string | null, projectPath: string | unde
         }).catch(() => {});
       }
     });
-    return () => { alive = false; unlisten.then((fn) => fn()); };
+    return () => { alive = false; cleanupTauriListener(unlisten); };
   }, [open, projectPath, loadDirectory]);
 
   const toggleExpand = useCallback(async (dirPath: string) => {

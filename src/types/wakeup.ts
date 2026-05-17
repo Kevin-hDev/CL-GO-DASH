@@ -28,3 +28,21 @@ export interface CreateWakeupInput {
 export interface HeartbeatConfig {
   global_paused: boolean;
 }
+
+export type WakeupRunStatus = "ok" | "error" | "missed";
+
+export interface WakeupRun {
+  wakeup_id: string;
+  scheduled_for: string;
+  fired_at: string;
+  status: WakeupRunStatus;
+  error?: string;
+  session_id?: string;
+  tokens?: number;
+}
+
+export interface WakeupStatusSummary {
+  wakeup_id: string;
+  next_fire_at: string | null;
+  last_run: WakeupRun | null;
+}

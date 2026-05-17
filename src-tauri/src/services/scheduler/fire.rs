@@ -6,17 +6,17 @@ use crate::services::agent_local::types_session::AgentMessage;
 use crate::services::config as cfg;
 use crate::services::llm;
 use crate::services::scheduler::log;
-use chrono::Utc;
+use chrono::{DateTime, Local, Utc};
 use tauri::{AppHandle, Emitter};
 use uuid::Uuid;
 
 /// Déclenche un wakeup : trouve/crée la conversation Heartbeat pour le modèle,
 /// envoie le prompt à Ollama, append les messages, log l'exécution et émet
 /// l'événement frontend. Si Once → marque active=false.
-pub async fn fire_wakeup(app: AppHandle, wakeup: ScheduledWakeup) {
+pub async fn fire_wakeup(app: AppHandle, wakeup: ScheduledWakeup, scheduled_for: DateTime<Local>) {
     match dispatch(&app, &wakeup).await {
         Ok((session_id, tokens)) => {
-            log::log_ok(&wakeup.id, &session_id, tokens).await;
+            log::log_ok(&wakeup.id, scheduled_for, &session_id, tokens).await;
             let _ = app.emit(
                 "wakeup-completed",
                 serde_json::json!({
@@ -27,13 +27,13 @@ pub async fn fire_wakeup(app: AppHandle, wakeup: ScheduledWakeup) {
             );
         }
         Err(e) => {
-            log::log_err(&wakeup.id, &e).await;
-            eprintln!("[scheduler] fire_wakeup {} error: {}", wakeup.id, e);
+            log::log_err(&wakeup.id, scheduled_for, &e).await;
+            eprintln!("[scheduler] fire_wakeup {} error", wakeup.id);
             let _ = app.emit(
                 "wakeup-failed",
                 serde_json::json!({
                     "wakeup_id": wakeup.id,
-                    "error": e,
+                    "error": "Le réveil a échoué",
                 }),
             );
         }
@@ -118,7 +118,7 @@ async fn find_or_create_heartbeat_session(provider: &str, model: &str) -> Result
     Ok(session.id)
 }
 
-fn deactivate_once(id: &str) -> Result<(), String> {
+pub(crate) fn deactivate_once(id: &str) -> Result<(), String> {
     let mut config = cfg::read_config()?;
     if let Some(w) = config.scheduled_wakeups.iter_mut().find(|w| w.id == id) {
         w.active = false;

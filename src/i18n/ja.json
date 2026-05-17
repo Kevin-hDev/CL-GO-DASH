@@ -305,8 +305,22 @@
       "provider": "プロバイダー",
       "model": "モデル",
       "schedule": "スケジュール",
+      "nextFire": "次回実行",
+      "lastStatus": "最新ステータス",
+      "lastRun": "最新実行",
       "description": "説明",
       "prompt": "プロンプト"
+    },
+    "status": {
+      "ok": "成功",
+      "error": "失敗",
+      "missed": "未実行",
+      "never": "未実行",
+      "none": "なし"
+    },
+    "history": {
+      "title": "履歴",
+      "empty": "実行履歴なし"
     },
     "sidebar": {
       "title": "ウェイクアップ",

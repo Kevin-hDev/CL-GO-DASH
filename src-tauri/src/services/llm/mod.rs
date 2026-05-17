@@ -66,6 +66,25 @@ pub async fn collect_chat(
     model: &str,
     prompt: &str,
 ) -> Result<(String, u32), String> {
+    if provider_id == "codex-oauth" {
+        let msg = crate::services::agent_local::types_ollama::ChatMessage {
+            role: "user".to_string(),
+            content: prompt.to_string(),
+            images: None,
+            tool_calls: None,
+            tool_name: None,
+            tool_call_id: None,
+            reasoning_content: None,
+        };
+        let result = stream::collect_chat_silent(
+            provider_id,
+            model,
+            &[msg],
+            tokio_util::sync::CancellationToken::new(),
+        )
+        .await?;
+        return Ok((result.content, result.prompt_tokens + result.eval_count));
+    }
     let provider = openai_compat::OpenAiCompatProvider::new(provider_id).map_err(String::from)?;
     let req = types::ChatRequest {
         model: model.to_string(),

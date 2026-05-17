@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import { cleanupTauriListener } from "@/lib/tauri-listen";
 import type { ModelInfo } from "@/types/agent";
 
 export interface ContextProgressState {
@@ -73,13 +74,13 @@ export function useContextProgress(
 
   useEffect(() => {
     const unlisten = listen("modelfile-updated", () => { void refresh(); });
-    return () => { void unlisten.then((fn) => fn()); };
+    return () => { cleanupTauriListener(unlisten); };
   }, [refresh]);
 
   useEffect(() => {
     if (provider !== "ollama") return;
     const unlisten = listen("ollama-models-changed", () => { void refresh(); });
-    return () => { void unlisten.then((fn) => fn()); };
+    return () => { cleanupTauriListener(unlisten); };
   }, [refresh, provider]);
 
   return { used: usedTokens, max };

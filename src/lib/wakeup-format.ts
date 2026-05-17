@@ -1,4 +1,4 @@
-import type { WakeupSchedule } from "@/types/wakeup";
+import type { WakeupRunStatus, WakeupSchedule } from "@/types/wakeup";
 import i18n from "@/i18n";
 
 function shortMonth(monthIndex: number): string {
@@ -41,4 +41,19 @@ export function formatSchedule(schedule: WakeupSchedule): string {
       return `${day} ${formatTime(parsed.h, parsed.m)} · ${i18n.t("wakeupFormat.weekly")}`;
     }
   }
+}
+
+export function formatDateTime(value: string | null | undefined): string {
+  if (!value) return i18n.t("heartbeat.status.none");
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return i18n.t("heartbeat.status.none");
+  return new Intl.DateTimeFormat(i18n.language, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
+}
+
+export function formatRunStatus(status: WakeupRunStatus | null | undefined): string {
+  if (!status) return i18n.t("heartbeat.status.never");
+  return i18n.t(`heartbeat.status.${status}`);
 }

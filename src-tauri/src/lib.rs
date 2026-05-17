@@ -62,9 +62,18 @@ pub fn run() {
                 });
             }
             if ollama_lifecycle::ollama_binary_path().is_ok() {
-                if let Err(e) = ollama_lifecycle::start_sidecar(app.handle()) {
-                    eprintln!("[ollama] sidecar start failed: {}", e);
-                }
+                let handle = app.handle().clone();
+                tauri::async_runtime::spawn(async move {
+                    match tokio::task::spawn_blocking(move || {
+                        ollama_lifecycle::start_sidecar(&handle)
+                    })
+                    .await
+                    {
+                        Ok(Err(e)) => eprintln!("[ollama] sidecar start failed: {}", e),
+                        Err(e) => eprintln!("[ollama] sidecar task failed: {}", e),
+                        _ => {}
+                    }
+                });
             }
 
             let config = services::config::read_config().unwrap_or_default();
@@ -133,6 +142,8 @@ pub fn run() {
             commands::set_wakeup_active,
             commands::set_global_paused,
             commands::get_heartbeat_config,
+            commands::list_wakeup_runs,
+            commands::get_wakeup_status_summaries,
             commands::list_personality_files,
             commands::read_personality_file,
             commands::open_in_editor,

@@ -305,8 +305,22 @@
       "provider": "Anbieter",
       "model": "Modell",
       "schedule": "Zeitplan",
+      "nextFire": "Nächste Ausführung",
+      "lastStatus": "Letzter Status",
+      "lastRun": "Letzte Ausführung",
       "description": "Beschreibung",
       "prompt": "Prompt"
+    },
+    "status": {
+      "ok": "Erfolgreich",
+      "error": "Fehlgeschlagen",
+      "missed": "Verpasst",
+      "never": "Nie ausgeführt",
+      "none": "Keine"
+    },
+    "history": {
+      "title": "Verlauf",
+      "empty": "Keine Ausführungen"
     },
     "sidebar": {
       "title": "Wakeups",

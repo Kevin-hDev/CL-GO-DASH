@@ -44,7 +44,7 @@ fn classify_path(n: &str) -> Option<&'static str> {
     {
         return Some(EVENT_CONFIG);
     }
-    if n.contains("logs/heartbeat") || n.contains("logs\\heartbeat") {
+    if n.ends_with("logs/wakeups.jsonl") || n.ends_with("logs\\wakeups.jsonl") {
         return Some(EVENT_LOGS);
     }
     if n.contains("/inbox/") || n.contains("\\inbox\\") {
@@ -60,7 +60,7 @@ pub fn start(app: &AppHandle) {
         (base.clone(), RecursiveMode::NonRecursive),
         (base.join("memory/core"), RecursiveMode::NonRecursive),
         (base.join("inbox"), RecursiveMode::NonRecursive),
-        (base.join("logs/heartbeat"), RecursiveMode::NonRecursive),
+        (base.join("logs"), RecursiveMode::NonRecursive),
         (base.join("skills"), RecursiveMode::Recursive),
     ];
 
@@ -141,9 +141,9 @@ mod tests {
     }
 
     #[test]
-    fn classify_heartbeat_log() {
+    fn classify_wakeup_log() {
         assert_eq!(
-            classify_path("/Users/kevin/.local/share/cl-go-dash/logs/heartbeat/2026-05-09.jsonl"),
+            classify_path("/Users/kevin/.local/share/cl-go-dash/logs/wakeups.jsonl"),
             Some(EVENT_LOGS)
         );
     }

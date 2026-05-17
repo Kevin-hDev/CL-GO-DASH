@@ -305,8 +305,22 @@
       "provider": "Provider",
       "model": "Modello",
       "schedule": "Pianificazione",
+      "nextFire": "Prossima esecuzione",
+      "lastStatus": "Ultimo stato",
+      "lastRun": "Ultima esecuzione",
       "description": "Descrizione",
       "prompt": "Prompt"
+    },
+    "status": {
+      "ok": "Riuscito",
+      "error": "Fallito",
+      "missed": "Perso",
+      "never": "Mai eseguito",
+      "none": "Nessuno"
+    },
+    "history": {
+      "title": "Cronologia",
+      "empty": "Nessuna esecuzione"
     },
     "sidebar": {
       "title": "Wakeups",

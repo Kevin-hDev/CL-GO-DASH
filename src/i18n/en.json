@@ -304,8 +304,22 @@
       "provider": "Provider",
       "model": "Model",
       "schedule": "Schedule",
+      "nextFire": "Next run",
+      "lastStatus": "Last status",
+      "lastRun": "Last run",
       "description": "Description",
       "prompt": "Prompt"
+    },
+    "status": {
+      "ok": "Succeeded",
+      "error": "Failed",
+      "missed": "Missed",
+      "never": "Never run",
+      "none": "None"
+    },
+    "history": {
+      "title": "History",
+      "empty": "No runs yet"
     },
     "sidebar": {
       "title": "Wakeups",

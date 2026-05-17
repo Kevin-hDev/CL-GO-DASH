@@ -53,6 +53,14 @@
   white-space: nowrap;
 }
 
+.wk-card-next {
+  color: var(--ink-faint);
+  font-size: var(--text-xs);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .wk-badge {
   display: inline-flex;
   align-items: center;
