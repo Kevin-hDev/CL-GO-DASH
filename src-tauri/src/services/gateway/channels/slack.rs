@@ -90,7 +90,7 @@ impl ChannelAdapter for SlackAdapter {
                         continue;
                     }
                 };
-                let ws = match tokio_tungstenite::connect_async(&ws_url).await {
+                let ws = match tokio_tungstenite::connect_async(ws_url.as_str()).await {
                     Ok((s, _)) => s,
                     Err(_) => {
                         tokio::time::sleep(Duration::from_secs(5)).await;

@@ -6,7 +6,7 @@ use futures_util::{SinkExt, StreamExt};
 use reqwest::Client;
 use tokio::sync::{mpsc, Mutex, RwLock};
 use tokio_tungstenite::tungstenite::Message as WsMessage;
-use zeroize::Zeroizing;
+use zeroize::{Zeroize, Zeroizing};
 
 use super::discord_gateway::{build_identify, heartbeat_loop};
 use super::discord_types::*;
@@ -115,13 +115,15 @@ impl ChannelAdapter for DiscordAdapter {
                                     ));
                                 }
                             }
-                            let json =
-                                serde_json::to_string(&build_identify(&token)).unwrap_or_default();
-                            let _ = shared_sink
+                            let mut json = serde_json::to_string(&build_identify(token.as_str()))
+                                .unwrap_or_default();
+                            let send_result = shared_sink
                                 .lock()
                                 .await
-                                .send(WsMessage::Text(json.into()))
+                                .send(WsMessage::Text(json.as_str().into()))
                                 .await;
+                            json.zeroize();
+                            let _ = send_result;
                         }
                         0 if payload.t.as_deref() == Some("READY") => {
                             if let Some(d) = &payload.d {
@@ -169,10 +171,11 @@ impl ChannelAdapter for DiscordAdapter {
             allowed_mentions: AllowedMentions { parse: vec![] },
             message_reference: msg.reply_to.map(|id| MessageReference { message_id: id }),
         };
+        let auth = Zeroizing::new(format!("Bot {}", token.as_str()));
         let _resp: SentMessage = self
             .client
             .post(&url)
-            .header("Authorization", format!("Bot {}", token.as_str()))
+            .header("Authorization", auth.as_str())
             .json(&body)
             .send()
             .await

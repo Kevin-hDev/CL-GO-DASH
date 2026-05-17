@@ -9,14 +9,14 @@ pub struct GatewayPayload {
 }
 
 #[derive(Debug, Serialize)]
-pub struct Identify {
+pub struct Identify<'a> {
     pub op: u8,
-    pub d: IdentifyData,
+    pub d: IdentifyData<'a>,
 }
 
 #[derive(Debug, Serialize)]
-pub struct IdentifyData {
-    pub token: String,
+pub struct IdentifyData<'a> {
+    pub token: &'a str,
     pub intents: u32,
     pub properties: IdentifyProperties,
 }

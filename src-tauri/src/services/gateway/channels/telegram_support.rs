@@ -16,7 +16,7 @@ impl TelegramAdapter {
         let url = Self::api_url(&token, "getMe");
         let resp: TgResponse<TgUser> = self
             .client
-            .get(&url)
+            .get(url.as_str())
             .send()
             .await
             .map_err(|e| GatewayError::network(format!("getMe: {e}")))?
@@ -48,7 +48,7 @@ impl TelegramAdapter {
             (Self::api_url(token, "getUpdates"), s.last_offset)
         };
         let resp = client
-            .get(&url)
+            .get(url.as_str())
             .query(&[("offset", offset + 1), ("timeout", 30)])
             .send()
             .await

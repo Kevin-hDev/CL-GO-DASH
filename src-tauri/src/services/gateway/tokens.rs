@@ -48,12 +48,24 @@ pub fn set(
     token_kind: &str,
     mut token: String,
 ) -> Result<(), String> {
-    let kind = GatewayTokenKind::parse(channel_id, token_kind)?;
+    let kind = match GatewayTokenKind::parse(channel_id, token_kind) {
+        Ok(kind) => kind,
+        Err(err) => {
+            token.zeroize();
+            return Err(err);
+        }
+    };
     if token.is_empty() || token.len() > 8192 {
         token.zeroize();
         return Err("token invalide".to_string());
     }
-    let key = vault_key(channel_id, account_id, kind)?;
+    let key = match vault_key(channel_id, account_id, kind) {
+        Ok(key) => key,
+        Err(err) => {
+            token.zeroize();
+            return Err(err);
+        }
+    };
     let result = match api_keys::get_raw(&key) {
         Ok(existing) if secrets::constant_time_eq(existing.as_bytes(), token.as_bytes()) => Ok(()),
         _ => api_keys::set_raw(&key, &token),

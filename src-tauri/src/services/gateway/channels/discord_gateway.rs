@@ -1,12 +1,10 @@
 use std::sync::Arc;
 use std::time::Duration;
 
+use super::discord_types::*;
 use futures_util::SinkExt;
 use tokio::sync::Mutex;
 use tokio_tungstenite::tungstenite::Message as WsMessage;
-use zeroize::Zeroizing;
-
-use super::discord_types::*;
 
 pub type WsSink = futures_util::stream::SplitSink<
     tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>,
@@ -33,11 +31,11 @@ pub async fn heartbeat_loop(
     }
 }
 
-pub fn build_identify(token: &Zeroizing<String>) -> Identify {
+pub fn build_identify(token: &str) -> Identify<'_> {
     Identify {
         op: 2,
         d: IdentifyData {
-            token: token.as_str().to_string(),
+            token,
             intents: INTENT_GUILDS
                 | INTENT_GUILD_MESSAGES
                 | INTENT_DM_MESSAGES

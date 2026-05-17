@@ -1,4 +1,5 @@
 use reqwest::Client;
+use zeroize::Zeroizing;
 
 use super::slack::SlackAdapter;
 use super::slack_types::*;
@@ -18,7 +19,10 @@ impl SlackAdapter {
         Ok(())
     }
 
-    pub(super) async fn get_ws_url(client: &Client, app_token: &str) -> GatewayResult<String> {
+    pub(super) async fn get_ws_url(
+        client: &Client,
+        app_token: &str,
+    ) -> GatewayResult<Zeroizing<String>> {
         let resp: SlackSocketUrl = client
             .post("https://slack.com/api/apps.connections.open")
             .bearer_auth(app_token)
@@ -32,6 +36,7 @@ impl SlackAdapter {
             return Err(GatewayError::auth(resp.error.unwrap_or_default()));
         }
         resp.url
+            .map(Zeroizing::new)
             .ok_or_else(|| GatewayError::auth("url websocket Slack manquante"))
     }
 

@@ -39,8 +39,8 @@ impl TelegramAdapter {
         }
     }
 
-    pub fn api_url(token: &str, method: &str) -> String {
-        format!("https://api.telegram.org/bot{token}/{method}")
+    pub fn api_url(token: &str, method: &str) -> Zeroizing<String> {
+        Zeroizing::new(format!("https://api.telegram.org/bot{token}/{method}"))
     }
 }
 
@@ -110,7 +110,7 @@ impl ChannelAdapter for TelegramAdapter {
 
         let resp: TgResponse<TgSentMessage> = self
             .client
-            .post(&url)
+            .post(url.as_str())
             .json(&body)
             .send()
             .await
