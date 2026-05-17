@@ -1,6 +1,7 @@
 export const FILE_PREVIEW_MIN_WIDTH = 360;
 export const FILE_PREVIEW_DEFAULT_WIDTH = FILE_PREVIEW_MIN_WIDTH;
 export const FILE_PREVIEW_DEFAULT_EXTRA_WIDTH = 0;
+export const CHAT_MIN_WIDTH = 360;
 
 const MAX_STORED_TABS = 6;
 
@@ -19,9 +20,20 @@ function panelStorageKey(sessionId: string | null): string {
 }
 
 export function clampFilePreviewWidth(value: unknown): number {
-  const maxWidth = typeof window === "undefined" ? 1600 : Math.max(FILE_PREVIEW_MIN_WIDTH, window.innerWidth - 120);
+  const maxWidth = typeof window === "undefined" ? 1600 : Math.max(FILE_PREVIEW_MIN_WIDTH, window.innerWidth - CHAT_MIN_WIDTH);
   const width = typeof value === "number" && Number.isFinite(value) ? value : FILE_PREVIEW_DEFAULT_WIDTH;
   return Math.min(maxWidth, Math.max(FILE_PREVIEW_MIN_WIDTH, width));
+}
+
+export function clampFilePreviewWidthForContainer(
+  value: unknown,
+  containerWidth: number,
+  reservedWidth = 0,
+): number {
+  const maxWidth = Math.max(0, containerWidth - CHAT_MIN_WIDTH - Math.max(0, reservedWidth));
+  const minWidth = Math.min(FILE_PREVIEW_MIN_WIDTH, maxWidth);
+  const width = typeof value === "number" && Number.isFinite(value) ? value : FILE_PREVIEW_DEFAULT_WIDTH;
+  return Math.min(maxWidth, Math.max(minWidth, width));
 }
 
 export function readStoredFilePreviewTabs(sessionId: string | null): string[] {

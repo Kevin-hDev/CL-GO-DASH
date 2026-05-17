@@ -8,6 +8,7 @@ import type { useTerminal } from "@/hooks/use-terminal";
 import type { Project } from "@/types/agent";
 import type { FileOperation } from "@/types/file-preview";
 import type { PanelMode } from "@/hooks/use-forecast-panel";
+import { CHAT_MIN_WIDTH } from "@/hooks/file-preview-storage";
 
 interface AgentChatDetailProps {
   sessionId: string;
@@ -41,7 +42,10 @@ interface AgentChatDetailProps {
 
 export function AgentChatDetail(props: AgentChatDetailProps) {
   return (
-    <div className="agent-detail-with-preview">
+    <div
+      className="agent-detail-with-preview"
+      style={{ "--agent-chat-min-width": `${CHAT_MIN_WIDTH}px` } as React.CSSProperties}
+    >
       {props.parentSessionId && (
         <button
           className="sa-parent-btn"

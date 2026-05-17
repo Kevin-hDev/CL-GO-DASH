@@ -3,7 +3,7 @@ import { MessageActions } from "./message-actions";
 import { EditMessage } from "./edit-message";
 import { useHoverClass } from "@/hooks/use-hover-class";
 import { linkifyWithPreviews } from "@/lib/linkify";
-import "./messages.css";
+import "./user-message.css";
 
 interface FileInfo {
   name: string;

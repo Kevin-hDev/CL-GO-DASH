@@ -3,13 +3,22 @@ import { fileNameFromPath } from "@/lib/file-preview-utils";
 import { IS_MAC } from "@/lib/platform";
 import type { FileOperation, FilePreviewActiveTab } from "@/types/file-preview";
 import {
-  FILE_PREVIEW_MIN_WIDTH,
+  clampFilePreviewWidthForContainer,
   readStoredFilePreviewTabs,
   writeStoredFilePreviewTabs,
 } from "./file-preview-storage";
 import { useFilePreviewPanelState } from "./use-file-preview-panel-state";
 
 const MAX_TABS = 6;
+
+function siblingPanelWidth(target: HTMLElement, container: Element | null): number {
+  const panel = target.closest(".fp-panel");
+  if (!container || !panel) return 0;
+  return [...container.children].reduce((total, child) => {
+    if (child === panel || child.classList.contains("agent-detail-chat")) return total;
+    return total + child.getBoundingClientRect().width;
+  }, 0);
+}
 
 export function useFilePreview(sessionId: string | null, operations: FileOperation[]) {
   const {
@@ -26,7 +35,12 @@ export function useFilePreview(sessionId: string | null, operations: FileOperati
   const [tabIds, setTabIds] = useState<string[]>(() => readStoredFilePreviewTabs(sessionId));
   const [fallbackOps, setFallbackOps] = useState<FileOperation[]>([]);
   const [resizing, setResizing] = useState(false);
-  const resizeRef = useRef<{ startX: number; startWidth: number } | null>(null);
+  const resizeRef = useRef<{
+    startX: number;
+    startWidth: number;
+    container: Element | null;
+    reservedWidth: number;
+  } | null>(null);
 
   const allOperations = useMemo(() => [...operations, ...fallbackOps], [operations, fallbackOps]);
   const operationById = useMemo(() => new Map(allOperations.map((op) => [op.id, op])), [allOperations]);
@@ -91,16 +105,27 @@ export function useFilePreview(sessionId: string | null, operations: FileOperati
 
   const startResize = useCallback((event: React.PointerEvent) => {
     event.preventDefault();
-    resizeRef.current = { startX: event.clientX, startWidth: width };
+    const target = event.currentTarget as HTMLElement;
+    const container = target.closest(".agent-detail-with-preview");
+    resizeRef.current = {
+      startX: event.clientX,
+      startWidth: width,
+      container,
+      reservedWidth: extraWidth + siblingPanelWidth(target, container),
+    };
     setResizing(true);
-  }, [width]);
+  }, [width, extraWidth]);
 
   useEffect(() => {
     const onMove = (event: PointerEvent) => {
       if (!resizeRef.current) return;
       const delta = resizeRef.current.startX - event.clientX;
-      const maxWidth = Math.max(FILE_PREVIEW_MIN_WIDTH, window.innerWidth - 120);
-      setWidth(Math.min(maxWidth, Math.max(FILE_PREVIEW_MIN_WIDTH, resizeRef.current.startWidth + delta)));
+      const containerWidth = resizeRef.current.container?.getBoundingClientRect().width ?? window.innerWidth;
+      setWidth(clampFilePreviewWidthForContainer(
+        resizeRef.current.startWidth + delta,
+        containerWidth,
+        resizeRef.current.reservedWidth,
+      ));
     };
     const onUp = () => {
       resizeRef.current = null;

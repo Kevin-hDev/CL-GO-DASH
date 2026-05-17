@@ -8,7 +8,7 @@
 
 .agent-detail-chat {
   flex: 1 1 0;
-  min-width: 0;
+  min-width: var(--agent-chat-min-width, 360px);
   min-height: 0;
   overflow: hidden;
   transition: flex-grow 300ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -16,6 +16,7 @@
 
 .agent-detail-chat-fs {
   flex-grow: 0;
+  min-width: 0;
 }
 
 .sa-parent-btn {
