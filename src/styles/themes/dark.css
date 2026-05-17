@@ -75,7 +75,7 @@
 
   /* Forecast panel */
   --fc-chart-bg: var(--surface-glass);
-  --fc-tooltip-bg: rgba(18, 18, 18, 0.94);
+  --fc-tooltip-bg: rgba(18, 18, 18, 0.78);
   --fc-tooltip-text: #f5f5f5;
   --fc-line-history: var(--ink);
   --fc-line-predict: var(--tool-bash);

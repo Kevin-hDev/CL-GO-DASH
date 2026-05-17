@@ -28,7 +28,8 @@ export function buildForecastChartOption(args: ForecastChartOptionArgs): ECharts
       backgroundColor: args.palette.tooltipBg,
       borderColor: args.palette.edge,
       borderWidth: 1,
-      textStyle: { color: args.palette.tooltipText, fontFamily: "var(--font-sans)" },
+      padding: [7, 10],
+      textStyle: { color: args.palette.tooltipText, fontFamily: "var(--font-sans)", fontSize: 12, lineHeight: 17 },
       formatter: (raw) => formatTooltip(raw, timeline, metric, args.labels, args.locale),
       confine: true,
       position: tooltipPosition,
@@ -102,7 +103,10 @@ function tooltipPosition(
   const [pointerX, pointerY] = point;
   const [tooltipWidth, tooltipHeight] = size.contentSize;
   const [viewWidth, viewHeight] = size.viewSize;
-  const left = clamp(pointerX + gap, margin, viewWidth - tooltipWidth - margin);
+  const preferredLeft = pointerX > viewWidth / 2
+    ? pointerX - tooltipWidth - gap
+    : pointerX + gap;
+  const left = clamp(preferredLeft, margin, viewWidth - tooltipWidth - margin);
   const preferredTop = pointerY - tooltipHeight - gap;
   const fallbackTop = pointerY + gap;
   const top = preferredTop >= margin ? preferredTop : fallbackTop;

@@ -44,7 +44,7 @@ export function formatTooltip(
   const point = probe ? timeline[probe.dataIndex] : null;
   if (!point) return "";
 
-  const lines = [`<div style="margin-bottom:6px;font-weight:600;">${escapeHtml(point.fullLabel)}</div>`];
+  const lines = [`<div style="margin-bottom:4px;font-weight:600;">${escapeHtml(point.fullLabel)}</div>`];
   if (point.historyValue != null) {
     lines.push(`<div>${escapeHtml(labels.history)}: ${formatForecastValue(point.historyValue, locale, metric)}</div>`);
   }
@@ -71,7 +71,7 @@ export function formatTooltip(
     const upper = formatForecastValue(point.upperValue, locale, metric);
     lines.push(`<div>${escapeHtml(labels.confidence)}: ${lower} - ${upper}</div>`);
   }
-  return lines.join("");
+  return `<div style="font-size:12px;line-height:1.35;">${lines.join("")}</div>`;
 }
 
 function hasDataIndex(value: unknown): value is { dataIndex: number } {
