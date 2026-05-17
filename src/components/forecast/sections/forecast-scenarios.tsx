@@ -87,7 +87,7 @@ export function ForecastScenarios(props: ForecastScenariosProps) {
               isResizing={chart.isResizing}
             />
             <div
-              className="fcs-chart-resize"
+              className="fc-chart-resize"
               onPointerDown={chart.startResize}
               onDoubleClick={chart.resetHeight}
             />
