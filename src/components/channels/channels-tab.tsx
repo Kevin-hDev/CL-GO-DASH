@@ -22,7 +22,7 @@ interface ChannelsTabProps {
   onNavReplace: (partial: DeepPartial<SettingsNavState>) => void;
 }
 
-export function ChannelsTab({ navState, onNavChange, onNavReplace }: ChannelsTabProps): { list: React.ReactNode; detail: React.ReactNode } {
+export function useChannelsTabSlots({ navState, onNavChange, onNavReplace }: ChannelsTabProps): { list: React.ReactNode; detail: React.ReactNode } {
   const { t } = useTranslation();
   const { health, config, saveConfig, refreshHealth } = useChannels();
   const selectedKey = navState.channelKey;

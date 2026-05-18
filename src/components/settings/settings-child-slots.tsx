@@ -1,10 +1,10 @@
 import { memo } from "react";
 import { createPortal } from "react-dom";
-import { OllamaTab } from "@/components/ollama/ollama-tab";
-import { ApiKeysTab } from "@/components/api-keys/api-keys-tab";
-import { ConnectorsTab } from "@/components/connectors/connectors-tab";
-import { ChannelsTab } from "@/components/channels/channels-tab";
-import { ForecastTab } from "@/components/forecast/model-browser/forecast-tab";
+import { useOllamaTabSlots } from "@/components/ollama/ollama-tab";
+import { useApiKeysTabSlots } from "@/components/api-keys/api-keys-tab";
+import { useConnectorsTabSlots } from "@/components/connectors/connectors-tab";
+import { useChannelsTabSlots } from "@/components/channels/channels-tab";
+import { useForecastTabSlots } from "@/components/forecast/model-browser/forecast-tab";
 import type { TabSlots } from "@/components/agent-local/agent-local-tab-types";
 import type { DeepPartial, SettingsNavState, SettingsSubTab } from "@/types/navigation";
 
@@ -22,13 +22,7 @@ interface SettingsChildSlotsProps extends Omit<SlotPortalProps, "listTarget" | "
   detailTarget: HTMLElement | null;
 }
 
-type SlotFactory = (props: Omit<SlotPortalProps, "listTarget" | "detailTarget">) => TabSlots;
-
-const OllamaSlotPortal = createSlotPortal(OllamaTab);
-const ForecastSlotPortal = createSlotPortal(ForecastTab);
-const ConnectorsSlotPortal = createSlotPortal(ConnectorsTab);
-const ChannelsSlotPortal = createSlotPortal(ChannelsTab);
-const ApiKeysSlotPortal = createSlotPortal(ApiKeysTab);
+type ChildSlotProps = Omit<SlotPortalProps, "listTarget" | "detailTarget">;
 
 export function usesSettingsChildSlots(subTab: SettingsSubTab): boolean {
   return subTab === "ollama"
@@ -54,21 +48,48 @@ export function SettingsChildSlots({
   return null;
 }
 
-function createSlotPortal(factory: SlotFactory) {
-  return memo(function SlotPortal({
-    navState,
-    onNavChange,
-    onNavReplace,
-    listTarget,
-    detailTarget,
-  }: SlotPortalProps) {
-    const slots = factory({ navState, onNavChange, onNavReplace });
+const OllamaSlotPortal = memo(function OllamaSlotPortal(props: SlotPortalProps) {
+  const slots = useOllamaTabSlots(childProps(props));
+  return <SlotPortals slots={slots} listTarget={props.listTarget} detailTarget={props.detailTarget} />;
+});
 
-    return (
-      <>
-        {createPortal(slots.list, listTarget)}
-        {createPortal(slots.detail, detailTarget)}
-      </>
-    );
-  });
+const ConnectorsSlotPortal = memo(function ConnectorsSlotPortal(props: SlotPortalProps) {
+  const slots = useConnectorsTabSlots(childProps(props));
+  return <SlotPortals slots={slots} listTarget={props.listTarget} detailTarget={props.detailTarget} />;
+});
+
+const ChannelsSlotPortal = memo(function ChannelsSlotPortal(props: SlotPortalProps) {
+  const slots = useChannelsTabSlots(childProps(props));
+  return <SlotPortals slots={slots} listTarget={props.listTarget} detailTarget={props.detailTarget} />;
+});
+
+const ApiKeysSlotPortal = memo(function ApiKeysSlotPortal(props: SlotPortalProps) {
+  const slots = useApiKeysTabSlots(childProps(props));
+  return <SlotPortals slots={slots} listTarget={props.listTarget} detailTarget={props.detailTarget} />;
+});
+
+const ForecastSlotPortal = memo(function ForecastSlotPortal(props: SlotPortalProps) {
+  const slots = useForecastTabSlots(childProps(props));
+  return <SlotPortals slots={slots} listTarget={props.listTarget} detailTarget={props.detailTarget} />;
+});
+
+function childProps({ navState, onNavChange, onNavReplace }: SlotPortalProps): ChildSlotProps {
+  return { navState, onNavChange, onNavReplace };
+}
+
+function SlotPortals({
+  slots,
+  listTarget,
+  detailTarget,
+}: {
+  slots: TabSlots;
+  listTarget: HTMLElement;
+  detailTarget: HTMLElement;
+}) {
+  return (
+    <>
+      {createPortal(slots.list, listTarget)}
+      {createPortal(slots.detail, detailTarget)}
+    </>
+  );
 }

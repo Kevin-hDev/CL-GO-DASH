@@ -22,7 +22,7 @@ interface OllamaTabProps {
   onNavReplace: (partial: DeepPartial<SettingsNavState>) => void;
 }
 
-export function OllamaTab({ navState, onNavChange, onNavReplace }: OllamaTabProps): { list: React.ReactNode; detail: React.ReactNode } {
+export function useOllamaTabSlots({ navState, onNavChange, onNavReplace }: OllamaTabProps): { list: React.ReactNode; detail: React.ReactNode } {
   const { t } = useTranslation();
   const ollamaModels = useOllamaModels();
   const subTab = navState.ollamaSubTab;

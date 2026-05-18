@@ -220,12 +220,12 @@ describe("SettingsTab reportContent", () => {
   });
 
   it.each([
-    ["ollama", "settings.tabs.ollama"],
-    ["connectors", "settings.tabs.connectors"],
-    ["channels", "settings.tabs.channels"],
-    ["api-keys", "settings.tabs.apiKeys"],
-    ["forecast", "forecast.title"],
-  ] as Array<[SettingsSubTab, string]>)("ouvre %s sans crash ni boucle", async (_subTab, label) => {
+    ["ollama", "settings.tabs.ollama", "llama3.2:latest"],
+    ["connectors", "settings.tabs.connectors", "Canva"],
+    ["channels", "settings.tabs.channels", "test-telegram"],
+    ["api-keys", "settings.tabs.apiKeys", "Groq"],
+    ["forecast", "forecast.title", "Chronos Bolt Small"],
+  ] as Array<[SettingsSubTab, string, string]>)("ouvre %s sans crash ni boucle", async (_subTab, label, expectedContent) => {
     const reportContent = vi.fn();
 
     render(<StrictMode><SettingsHarness reportContent={reportContent} /></StrictMode>);
@@ -240,5 +240,6 @@ describe("SettingsTab reportContent", () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(reportContent.mock.calls.length).toBeLessThan(20);
+    await waitFor(() => expect(screen.getAllByText(expectedContent).length).toBeGreaterThan(0));
   });
 });

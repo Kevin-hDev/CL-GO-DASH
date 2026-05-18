@@ -1,6 +1,6 @@
 import { cleanup, render, fireEvent, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ApiKeysTab } from "../api-keys-tab";
+import { useApiKeysTabSlots } from "../api-keys-tab";
 import { DEFAULT_APP_NAV, type SettingsNavState } from "@/types/navigation";
 import type { ProviderSpec } from "@/types/api";
 
@@ -56,7 +56,7 @@ function provider(id: string): ProviderSpec {
 }
 
 function ApiKeysHarness({ navState }: { navState: SettingsNavState }) {
-  const slots = ApiKeysTab({
+  const slots = useApiKeysTabSlots({
     navState,
     onNavChange: mocks.onNavChange,
     onNavReplace: mocks.onNavReplace,

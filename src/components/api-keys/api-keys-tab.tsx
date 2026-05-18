@@ -32,7 +32,7 @@ interface ApiKeysTabProps {
   onNavReplace: (partial: DeepPartial<SettingsNavState>) => void;
 }
 
-export function ApiKeysTab({ navState, onNavChange, onNavReplace }: ApiKeysTabProps): { list: React.ReactNode; detail: React.ReactNode } {
+export function useApiKeysTabSlots({ navState, onNavChange, onNavReplace }: ApiKeysTabProps): { list: React.ReactNode; detail: React.ReactNode } {
   const { t } = useTranslation();
   const { catalog, configuredIds, configured, setKey, deleteKey, testKeyRaw } =
     useApiKeys();

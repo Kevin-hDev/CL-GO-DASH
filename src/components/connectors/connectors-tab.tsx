@@ -13,7 +13,7 @@ import { McpOauthDialog } from "./mcp-oauth-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import "./connectors-tab.css";
 
-export function ConnectorsTab({ navState, onNavChange, onNavReplace }: ConnectorsTabProps): { list: React.ReactNode; detail: React.ReactNode } {
+export function useConnectorsTabSlots({ navState, onNavChange, onNavReplace }: ConnectorsTabProps): { list: React.ReactNode; detail: React.ReactNode } {
   const { t } = useTranslation();
   const {
     catalog,

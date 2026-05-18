@@ -30,7 +30,7 @@ interface ForecastTabProps {
   onNavReplace: (partial: DeepPartial<SettingsNavState>) => void;
 }
 
-export function ForecastTab({ navState, onNavChange, onNavReplace }: ForecastTabProps): { list: React.ReactNode; detail: React.ReactNode } {
+export function useForecastTabSlots({ navState, onNavChange, onNavReplace }: ForecastTabProps): { list: React.ReactNode; detail: React.ReactNode } {
   const { t } = useTranslation();
   const subTab = navState.forecastSubTab;
   const [models, setModels] = useState<ForecastModelEntry[]>([]);
