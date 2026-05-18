@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, memo } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, memo } from "react";
 import { useTranslation } from "react-i18next";
 import { ConversationList } from "./conversation-list";
 import { TabBar } from "./tab-bar";
@@ -12,6 +12,7 @@ import { useAgentLocalControlledPanels } from "@/hooks/use-agent-local-controlle
 import { useAgentLocalTabSessionNav } from "@/hooks/use-agent-local-tab-session-nav";
 import { ForecastPanel } from "@/components/forecast/forecast-panel";
 import { openForecastDocsWindow } from "@/components/forecast/open-forecast-docs";
+import { PanelSlot } from "@/components/layout/panel-slots";
 import type { AgentLocalTabProps } from "./agent-local-tab-types";
 import "./agent-local-tab.css";
 
@@ -20,7 +21,6 @@ export const AgentLocalTab = memo(function AgentLocalTab({
   onSessionChange,
   onNavChange,
   listFocused = true,
-  reportContent,
 }: AgentLocalTabProps) {
   const { t } = useTranslation();
   const s = useAgentLocalTab({ navState, onSessionChange, onNavChange, listFocused });
@@ -194,7 +194,5 @@ export const AgentLocalTab = memo(function AgentLocalTab({
     setWelcomeModel, tabState, terminal, terminalCwd, thinking, updateModel,
   ]);
 
-  useLayoutEffect(() => { reportContent({ list, detail }); }, [reportContent, list, detail]);
-
-  return null;
+  return <><PanelSlot name="list">{list}</PanelSlot><PanelSlot name="detail">{detail}</PanelSlot></>;
 });

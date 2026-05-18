@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useLayoutEffect, memo, useCallback } from "react";
+import { useState, useEffect, useMemo, memo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useWakeups } from "@/hooks/use-wakeups";
 import { useArrowNavigation } from "@/hooks/use-arrow-navigation";
@@ -8,7 +8,7 @@ import { WakeupDetails } from "./wakeup-details";
 import { NewWakeupDialog } from "./new-wakeup-dialog";
 import type { ScheduledWakeup } from "@/types/wakeup";
 import { RoundToggle } from "./round-toggle";
-import type { TabSlots } from "@/components/agent-local/agent-local-tab-types";
+import { PanelSlot } from "@/components/layout/panel-slots";
 import "./heartbeat.css";
 
 type DialogState =
@@ -20,14 +20,12 @@ interface HeartbeatTabProps {
   activeWakeupId?: string | null;
   onWakeupChange?: (id: string | null) => void;
   listFocused?: boolean;
-  reportContent: (slots: TabSlots) => void;
 }
 
 export const HeartbeatTab = memo(function HeartbeatTab({
   activeWakeupId,
   onWakeupChange,
   listFocused = true,
-  reportContent,
 }: HeartbeatTabProps) {
   const { t } = useTranslation();
   const { wakeups, runs, summaries, globalPaused, setPaused, toggle, remove, create, update } = useWakeups();
@@ -135,7 +133,5 @@ export const HeartbeatTab = memo(function HeartbeatTab({
     </>
   ), [create, dialog, globalPaused, handleDelete, runs, selected, setSelectedId, summaries, toggle, update, wakeups]);
 
-  useLayoutEffect(() => { reportContent({ list, detail }); }, [reportContent, list, detail]);
-
-  return null;
+  return <><PanelSlot name="list">{list}</PanelSlot><PanelSlot name="detail">{detail}</PanelSlot></>;
 });

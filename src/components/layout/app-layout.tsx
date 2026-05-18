@@ -1,5 +1,4 @@
-import { useState, useCallback, useEffect, useRef, type ReactNode } from "react";
-import { getCurrentWindow } from "@tauri-apps/api/window";
+import { useState, useCallback, useRef, type ReactNode } from "react";
 import { Sidebar, type TabId } from "./sidebar";
 import { DragRegion } from "./drag-region";
 import { WindowToolbar } from "./window-toolbar";
@@ -9,7 +8,8 @@ import { useUpdateChecker } from "@/hooks/use-update-checker";
 import { IS_MAC } from "@/lib/platform";
 import { GpuStatusBadge } from "@/components/agent-local/gpu-status-badge";
 import { WindowControls } from "./window-controls";
-import { cleanupTauriListener } from "@/lib/tauri-listen";
+import { PanelSlotProvider, PanelSlotTarget } from "./panel-slots";
+import { useAppLayoutShortcuts, useWindowFullscreen } from "./use-app-layout-effects";
 import "./app-layout.css";
 
 const GPU_BADGE_OFFSET = 12;
@@ -19,8 +19,6 @@ const UPDATES_ANCHOR_OTHER = 122;
 interface AppLayoutProps {
   activeTab: TabId;
   onTabChange: (tab: TabId) => void;
-  listContent: ReactNode;
-  detailContent: ReactNode;
   onShowWelcome?: () => void;
   onBack: () => void;
   onForward: () => void;
@@ -28,11 +26,12 @@ interface AppLayoutProps {
   canGoForward: boolean;
   onSearchSelect: (sessionId: string) => void;
   onNewSession?: () => void;
+  children: ReactNode;
 }
 
 export function AppLayout({
   activeTab, onTabChange,
-  listContent, detailContent,
+  children,
   onShowWelcome,
   onBack, onForward, canGoBack, canGoForward,
   onSearchSelect, onNewSession,
@@ -40,22 +39,8 @@ export function AppLayout({
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [searchOpen, setSearchOpen] = useState(false);
   const [updatesOpen, setUpdatesOpen] = useState(false);
-  const [fullscreen, setFullscreen] = useState(false);
+  const fullscreen = useWindowFullscreen();
   const updates = useUpdateChecker();
-
-  useEffect(() => {
-    let win: ReturnType<typeof getCurrentWindow>;
-    try { win = getCurrentWindow(); } catch { return; }
-    let timer: ReturnType<typeof setTimeout>;
-    void win.isFullscreen().then(setFullscreen).catch(() => {});
-    const unlisten = win.onResized(() => {
-      clearTimeout(timer);
-      timer = setTimeout(() => {
-        void win.isFullscreen().then(setFullscreen).catch(() => {});
-      }, 80);
-    });
-    return () => { clearTimeout(timer); cleanupTauriListener(unlisten); };
-  }, []);
 
   const [listWidth, setListWidth] = useState<number | null>(null);
   const dragging = useRef(false);
@@ -85,114 +70,86 @@ export function AppLayout({
 
   const openSearch = useCallback(() => setSearchOpen(true), []);
   const closeSearch = useCallback(() => setSearchOpen(false), []);
+  const toggleSearch = useCallback(() => setSearchOpen((o) => !o), []);
   const toggleSidebar = useCallback(() => setSidebarOpen((o) => !o), []);
   const toggleUpdates = useCallback(() => setUpdatesOpen((o) => !o), []);
   const closeUpdates = useCallback(() => setUpdatesOpen(false), []);
 
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      const mod = IS_MAC ? e.metaKey : e.ctrlKey;
-      if (!mod) return;
-
-      switch (e.code) {
-        case "KeyB":
-          e.preventDefault();
-          toggleSidebar();
-          break;
-        case "KeyG":
-          e.preventDefault();
-          setSearchOpen((o) => !o);
-          break;
-        case "ArrowLeft":
-          e.preventDefault();
-          onBack();
-          break;
-        case "ArrowRight":
-          e.preventDefault();
-          onForward();
-          break;
-        case "KeyN":
-          if (e.altKey) {
-            e.preventDefault();
-            onNewSession?.();
-          }
-          break;
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [toggleSidebar, onBack, onForward, onNewSession]);
+  useAppLayoutShortcuts({ onBack, onForward, onNewSession, toggleSearch, toggleSidebar });
 
   return (
-    <div className={`app-root ${IS_MAC ? "os-mac" : "os-other"} ${sidebarOpen ? "" : "sidebar-hidden"} ${fullscreen ? "is-fullscreen" : ""}`}>
-      <WindowControls />
-      <WindowToolbar
-        sidebarOpen={sidebarOpen}
-        onToggleSidebar={toggleSidebar}
-        onBack={onBack}
-        onForward={onForward}
-        onNewSession={() => onShowWelcome?.()}
-        onSearch={openSearch}
-        onToggleUpdates={toggleUpdates}
-        updatesCount={updates.totalCount}
-        canGoBack={canGoBack}
-        canGoForward={canGoForward}
-      />
-      <div className={`app-sidebar-block ${sidebarOpen ? "" : "app-sidebar-hidden"}`}>
-        <Sidebar activeTab={activeTab} onTabChange={onTabChange} />
-        <div
-          className="app-list-panel" data-nav-zone="list" tabIndex={-1}
-          style={{
-            ...(listWidth ? { width: listWidth, minWidth: listWidth } : {}),
-            position: "relative",
-          }}
-        >
-          <DragRegion />
-          {listContent}
-          <div style={{
-            position: "absolute",
-            bottom: GPU_BADGE_OFFSET,
-            right: GPU_BADGE_OFFSET,
-          }}>
-            <GpuStatusBadge />
-          </div>
-        </div>
-        <div className="sidebar-resize-handle" onPointerDown={handleResizeStart} />
-      </div>
-      <div className="app-detail-panel" data-nav-zone="detail" tabIndex={-1}>
-        <DragRegion
-          height={22}
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            zIndex: 1,
-          }}
+    <PanelSlotProvider>
+      <div className={`app-root ${IS_MAC ? "os-mac" : "os-other"} ${sidebarOpen ? "" : "sidebar-hidden"} ${fullscreen ? "is-fullscreen" : ""}`}>
+        <WindowControls />
+        <WindowToolbar
+          sidebarOpen={sidebarOpen}
+          onToggleSidebar={toggleSidebar}
+          onBack={onBack}
+          onForward={onForward}
+          onNewSession={() => onShowWelcome?.()}
+          onSearch={openSearch}
+          onToggleUpdates={toggleUpdates}
+          updatesCount={updates.totalCount}
+          canGoBack={canGoBack}
+          canGoForward={canGoForward}
         />
-        {detailContent}
+        <div className={`app-sidebar-block ${sidebarOpen ? "" : "app-sidebar-hidden"}`}>
+          <Sidebar activeTab={activeTab} onTabChange={onTabChange} />
+          <div
+            className="app-list-panel" data-nav-zone="list" tabIndex={-1}
+            style={{
+              ...(listWidth ? { width: listWidth, minWidth: listWidth } : {}),
+              position: "relative",
+            }}
+          >
+            <DragRegion />
+            <PanelSlotTarget name="list" />
+            <div style={{
+              position: "absolute",
+              bottom: GPU_BADGE_OFFSET,
+              right: GPU_BADGE_OFFSET,
+            }}>
+              <GpuStatusBadge />
+            </div>
+          </div>
+          <div className="sidebar-resize-handle" onPointerDown={handleResizeStart} />
+        </div>
+        <div className="app-detail-panel" data-nav-zone="detail" tabIndex={-1}>
+          <DragRegion
+            height={22}
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              zIndex: 1,
+            }}
+          />
+          <PanelSlotTarget name="detail" />
+        </div>
+        <SearchDialog
+          open={searchOpen}
+          onClose={closeSearch}
+          onSelect={onSearchSelect}
+        />
+        <UpdateNotifications
+          isOpen={updatesOpen}
+          onClose={closeUpdates}
+          appUpdate={updates.appUpdate}
+          ollamaBinaryUpdate={updates.ollamaBinaryUpdate}
+          ollamaUpdates={updates.ollamaUpdates}
+          pulling={updates.pulling}
+          ollamaBinaryUpdating={updates.ollamaBinaryUpdating}
+          ollamaBinaryPercent={updates.ollamaBinaryPercent}
+          appDownloading={updates.appDownloading}
+          appPercent={updates.appPercent}
+          onPullModel={(name) => void updates.pullModel(name)}
+          onDownloadApp={(url) => void updates.downloadAppUpdate(url)}
+          onUpdateOllamaBinary={() => void updates.updateOllamaBinary()}
+          anchorLeft={IS_MAC ? UPDATES_ANCHOR_MAC : UPDATES_ANCHOR_OTHER}
+        />
+        {children}
       </div>
-      <SearchDialog
-        open={searchOpen}
-        onClose={closeSearch}
-        onSelect={onSearchSelect}
-      />
-      <UpdateNotifications
-        isOpen={updatesOpen}
-        onClose={closeUpdates}
-        appUpdate={updates.appUpdate}
-        ollamaBinaryUpdate={updates.ollamaBinaryUpdate}
-        ollamaUpdates={updates.ollamaUpdates}
-        pulling={updates.pulling}
-        ollamaBinaryUpdating={updates.ollamaBinaryUpdating}
-        ollamaBinaryPercent={updates.ollamaBinaryPercent}
-        appDownloading={updates.appDownloading}
-        appPercent={updates.appPercent}
-        onPullModel={(name) => void updates.pullModel(name)}
-        onDownloadApp={(url) => void updates.downloadAppUpdate(url)}
-        onUpdateOllamaBinary={() => void updates.updateOllamaBinary()}
-        anchorLeft={IS_MAC ? UPDATES_ANCHOR_MAC : UPDATES_ANCHOR_OTHER}
-      />
-    </div>
+    </PanelSlotProvider>
   );
 }

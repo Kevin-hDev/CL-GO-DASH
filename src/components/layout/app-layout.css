@@ -40,6 +40,15 @@
   min-width: var(--list-width);
 }
 
+.app-panel-slot {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
 /* Sidebar nav items: centered when collapsed, left-aligned when expanded */
 .sb-nav-item {
   gap: 0;

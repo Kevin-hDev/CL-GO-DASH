@@ -1,5 +1,5 @@
 "use no memo";
-import { useCallback, useState, useMemo, useLayoutEffect, memo } from "react";
+import { useCallback, useState, useMemo, memo } from "react";
 import { useTranslation } from "react-i18next";
 import { useSettings } from "@/hooks/use-settings";
 import { useArrowNavigation } from "@/hooks/use-arrow-navigation";
@@ -14,7 +14,7 @@ import { LlmExplorer } from "./llm-explorer";
 import ollamaDark from "@/assets/ollama.png";
 import ollamaLight from "@/assets/ollama-light.png";
 import type { Icon } from "@phosphor-icons/react";
-import type { TabSlots } from "@/components/agent-local/agent-local-tab-types";
+import { PanelSlot } from "@/components/layout/panel-slots";
 import type { DeepPartial, SettingsNavState, SettingsSubTab } from "@/types/navigation";
 import {
   SettingsChildSlots,
@@ -50,7 +50,6 @@ interface SettingsTabProps {
   onNavChange: (partial: DeepPartial<SettingsNavState>) => void;
   onNavReplace: (partial: DeepPartial<SettingsNavState>) => void;
   listFocused?: boolean;
-  reportContent: (slots: TabSlots) => void;
 }
 
 export const SettingsTab = memo(function SettingsTab({
@@ -60,7 +59,6 @@ export const SettingsTab = memo(function SettingsTab({
   onNavChange,
   onNavReplace,
   listFocused = true,
-  reportContent,
 }: SettingsTabProps) {
   const [childListTarget, setChildListTarget] = useState<HTMLElement | null>(null);
   const [childDetailTarget, setChildDetailTarget] = useState<HTMLElement | null>(null);
@@ -150,18 +148,18 @@ export const SettingsTab = memo(function SettingsTab({
     return null;
   }, [navState.llmView, onNavChange, onThemeChange, settings, subTab, themeChoice]);
 
-  useLayoutEffect(() => {
-    reportContent({ list, detail });
-  }, [reportContent, list, detail]);
-
   return (
-    <SettingsChildSlots
-      subTab={subTab}
-      navState={navState}
-      onNavChange={onNavChange}
-      onNavReplace={onNavReplace}
-      listTarget={childListTarget}
-      detailTarget={childDetailTarget}
-    />
+    <>
+      <PanelSlot name="list">{list}</PanelSlot>
+      <PanelSlot name="detail">{detail}</PanelSlot>
+      <SettingsChildSlots
+        subTab={subTab}
+        navState={navState}
+        onNavChange={onNavChange}
+        onNavReplace={onNavReplace}
+        listTarget={childListTarget}
+        detailTarget={childDetailTarget}
+      />
+    </>
   );
 });

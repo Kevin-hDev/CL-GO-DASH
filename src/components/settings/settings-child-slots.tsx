@@ -5,7 +5,7 @@ import { useApiKeysTabSlots } from "@/components/api-keys/api-keys-tab";
 import { useConnectorsTabSlots } from "@/components/connectors/connectors-tab";
 import { useChannelsTabSlots } from "@/components/channels/channels-tab";
 import { useForecastTabSlots } from "@/components/forecast/model-browser/forecast-tab";
-import type { TabSlots } from "@/components/agent-local/agent-local-tab-types";
+import type { PanelContentSlots } from "@/components/layout/panel-slots";
 import type { DeepPartial, SettingsNavState, SettingsSubTab } from "@/types/navigation";
 
 interface SlotPortalProps {
@@ -82,7 +82,7 @@ function SlotPortals({
   listTarget,
   detailTarget,
 }: {
-  slots: TabSlots;
+  slots: PanelContentSlots;
   listTarget: HTMLElement;
   detailTarget: HTMLElement;
 }) {

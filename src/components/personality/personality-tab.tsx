@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, useLayoutEffect, memo } from "react";
+import { useState, useEffect, useCallback, useMemo, memo } from "react";
 import { useTranslation } from "react-i18next";
 import type { PersonalityFile } from "@/types/personality";
 import * as api from "@/services/personality";
@@ -7,20 +7,18 @@ import { useArrowNavigation } from "@/hooks/use-arrow-navigation";
 import { showToast } from "@/lib/toast-emitter";
 import { PersonalityList } from "./personality-list";
 import { MarkdownViewer } from "./markdown-viewer";
-import type { TabSlots } from "@/components/agent-local/agent-local-tab-types";
+import { PanelSlot } from "@/components/layout/panel-slots";
 
 interface PersonalityTabProps {
   activePath?: string | null;
   onPathChange?: (path: string | null) => void;
   listFocused?: boolean;
-  reportContent: (slots: TabSlots) => void;
 }
 
 export const PersonalityTab = memo(function PersonalityTab({
   activePath,
   onPathChange,
   listFocused = true,
-  reportContent,
 }: PersonalityTabProps) {
   const { t } = useTranslation();
   const [files, setFiles] = useState<PersonalityFile[]>([]);
@@ -130,7 +128,5 @@ export const PersonalityTab = memo(function PersonalityTab({
     );
   }, [content, fileName, handleOpen, selectedPath, t]);
 
-  useLayoutEffect(() => { reportContent({ list, detail }); }, [reportContent, list, detail]);
-
-  return null;
+  return <><PanelSlot name="list">{list}</PanelSlot><PanelSlot name="detail">{detail}</PanelSlot></>;
 });

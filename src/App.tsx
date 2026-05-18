@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useTranslation } from "react-i18next";
@@ -14,7 +14,6 @@ import { AgentLocalTab } from "@/components/agent-local/agent-local-tab";
 import { SettingsTab } from "@/components/settings/settings-tab";
 import { ForecastDocsWindow } from "@/components/forecast-docs/forecast-docs-window";
 import { cleanupTauriListener } from "@/lib/tauri-listen";
-import type { TabSlots } from "@/components/agent-local/agent-local-tab-types";
 import type { TabId } from "@/components/layout/sidebar";
 import {
   DEFAULT_APP_NAV,
@@ -49,8 +48,6 @@ function MainApp() {
   const [vaultError, setVaultError] = useState<string | null>(null);
   const [ollamaReady, setOllamaReady] = useState<boolean | null>(null);
   const { focusedPanel } = usePanelFocus();
-  const [tabContent, setTabContent] = useState<{ list: ReactNode; detail: ReactNode }>({ list: null, detail: null });
-  const tabContentRef = useRef(tabContent);
 
   useEffect(() => {
     invoke<boolean>("is_ollama_installed").then(setOllamaReady).catch(() => setOllamaReady(true));
@@ -62,12 +59,6 @@ function MainApp() {
 
   const activeTab: TabId = nav.tab;
   const listActive = (tab: TabId) => focusedPanel === "list" && activeTab === tab;
-
-  const reportContent = useCallback((slots: TabSlots) => {
-    if (tabContentRef.current.list === slots.list && tabContentRef.current.detail === slots.detail) return;
-    tabContentRef.current = slots;
-    setTabContent(slots);
-  }, []);
 
   const handleWakeupChange = useCallback((id: string | null) => pushNav({ heartbeat: { wakeupId: id } }), [pushNav]);
   const handlePathChange = useCallback((path: string | null) => pushNav({ personality: { path } }), [pushNav]);
@@ -125,42 +116,6 @@ function MainApp() {
 
   return (
     <>
-    {activeTab === "heartbeat" && (
-      <HeartbeatTab
-        activeWakeupId={nav.heartbeat.wakeupId}
-        onWakeupChange={handleWakeupChange}
-        listFocused={listActive("heartbeat")}
-        reportContent={reportContent}
-      />
-    )}
-    {activeTab === "personality" && (
-      <PersonalityTab
-        activePath={nav.personality.path}
-        onPathChange={handlePathChange}
-        listFocused={listActive("personality")}
-        reportContent={reportContent}
-      />
-    )}
-    {activeTab === "agent-local" && (
-      <AgentLocalTab
-        navState={nav.agentLocal}
-        onSessionChange={handleSessionChange}
-        onNavChange={handleAgentNavChange}
-        listFocused={listActive("agent-local")}
-        reportContent={reportContent}
-      />
-    )}
-    {activeTab === "settings" && (
-      <SettingsTab
-        themeChoice={choice}
-        onThemeChange={setTheme}
-        navState={nav.settings}
-        onNavChange={handleSettingsNavChange}
-        onNavReplace={handleSettingsNavReplace}
-        listFocused={listActive("settings")}
-        reportContent={reportContent}
-      />
-    )}
     {vaultError && (
       <div style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 9999,
@@ -173,8 +128,6 @@ function MainApp() {
     <AppLayout
       activeTab={activeTab}
       onTabChange={(t) => pushNav({ tab: t })}
-      listContent={tabContent.list}
-      detailContent={tabContent.detail}
       onShowWelcome={handleShowWelcome}
       onBack={goBack}
       onForward={goForward}
@@ -182,7 +135,40 @@ function MainApp() {
       canGoForward={canGoForward}
       onSearchSelect={handleSearchSelect}
       onNewSession={handleShowWelcome}
-    />
+    >
+      {activeTab === "heartbeat" && (
+        <HeartbeatTab
+          activeWakeupId={nav.heartbeat.wakeupId}
+          onWakeupChange={handleWakeupChange}
+          listFocused={listActive("heartbeat")}
+        />
+      )}
+      {activeTab === "personality" && (
+        <PersonalityTab
+          activePath={nav.personality.path}
+          onPathChange={handlePathChange}
+          listFocused={listActive("personality")}
+        />
+      )}
+      {activeTab === "agent-local" && (
+        <AgentLocalTab
+          navState={nav.agentLocal}
+          onSessionChange={handleSessionChange}
+          onNavChange={handleAgentNavChange}
+          listFocused={listActive("agent-local")}
+        />
+      )}
+      {activeTab === "settings" && (
+        <SettingsTab
+          themeChoice={choice}
+          onThemeChange={setTheme}
+          navState={nav.settings}
+          onNavChange={handleSettingsNavChange}
+          onNavReplace={handleSettingsNavReplace}
+          listFocused={listActive("settings")}
+        />
+      )}
+    </AppLayout>
     </>
   );
 }
