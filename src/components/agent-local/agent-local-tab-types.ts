@@ -10,7 +10,6 @@ export interface AgentLocalTabProps {
   navState: AgentLocalNavState;
   onSessionChange?: (id: string | null) => void;
   onNavChange?: (partial: DeepPartial<AgentLocalNavState>) => void;
-  restoreSeq?: number;
   listFocused?: boolean;
   reportContent: (slots: TabSlots) => void;
 }

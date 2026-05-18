@@ -49,7 +49,6 @@ interface SettingsTabProps {
   navState: SettingsNavState;
   onNavChange: (partial: DeepPartial<SettingsNavState>) => void;
   onNavReplace: (partial: DeepPartial<SettingsNavState>) => void;
-  restoreSeq?: number;
   listFocused?: boolean;
   reportContent: (slots: TabSlots) => void;
 }
