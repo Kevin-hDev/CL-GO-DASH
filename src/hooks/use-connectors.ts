@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { IS_MAC } from "@/lib/platform";
 import { MCP_CATALOG } from "@/lib/mcp-catalog";
+import { cleanupTauriListener } from "@/lib/tauri-listen";
 import type { ConfiguredMcp, ConfiguredMcpFull, McpConnectorSpec } from "@/types/mcp";
 
 function connectorPayload(spec: McpConnectorSpec): ConfiguredMcp {
@@ -48,7 +49,7 @@ export function useConnectors() {
     const unlisten = listen("fs:connectors-changed", () => {
       void refresh();
     });
-    return () => { void unlisten.then((fn) => fn()); };
+    return () => { cleanupTauriListener(unlisten); };
   }, [refresh]);
 
   const configuredIds = useMemo(() => items.map((c) => c.id), [items]);

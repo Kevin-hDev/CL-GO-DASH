@@ -1,6 +1,7 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { isInternalDrag } from "@/lib/internal-drag";
+import { cleanupTauriListener } from "@/lib/tauri-listen";
 
 interface FileDropZoneProps {
   dragging: boolean;
@@ -37,7 +38,7 @@ export function FileDropZone({ dragging, onDragChange, onDropPaths, children }: 
       return;
     }
 
-    return () => { unlisten.then((fn) => fn()).catch(() => {}); };
+    return () => { cleanupTauriListener(unlisten); };
   }, []);
 
   return (

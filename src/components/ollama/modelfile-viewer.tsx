@@ -7,6 +7,7 @@ import { SystemPromptEditor } from "./system-prompt-editor";
 import { ParametersEditor } from "./parameters-editor";
 import { ModelfileView } from "./modelfile-view";
 import { extractSystemPrompt, extractParameters } from "./modelfile-utils";
+import { cleanupTauriListener } from "@/lib/tauri-listen";
 
 type Mode = "view" | "edit-system" | "edit-parameters" | "edit-modelfile";
 
@@ -44,15 +45,15 @@ export function ModelfileViewer({ modelName, onDeleted }: ModelfileViewerProps) 
   }, [modelName]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch→setState is intentional
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- model switch resets local editor state before async reload
     setLoading(true);
     setMode("view");
     void loadModelfile().finally(() => setLoading(false));
-  }, [modelName]);
+  }, [loadModelfile]);
 
   useEffect(() => {
     const unlisten = listen("modelfile-updated", () => { void loadModelfile(); });
-    return () => { void unlisten.then((fn) => fn()); };
+    return () => { cleanupTauriListener(unlisten); };
   }, [loadModelfile]);
 
   if (loading) {
@@ -68,7 +69,7 @@ export function ModelfileViewer({ modelName, onDeleted }: ModelfileViewerProps) 
       <SystemPromptEditor
         modelName={modelName}
         initialSystem={systemPrompt}
-        onSave={() => { setMode("view"); loadModelfile(); }}
+        onSave={() => { setMode("view"); void loadModelfile(); }}
         onCancel={() => setMode("view")}
       />
     );
@@ -79,7 +80,7 @@ export function ModelfileViewer({ modelName, onDeleted }: ModelfileViewerProps) 
       <ParametersEditor
         modelName={modelName}
         initialParameters={parameters}
-        onSave={() => { setMode("view"); loadModelfile(); }}
+        onSave={() => { setMode("view"); void loadModelfile(); }}
         onCancel={() => setMode("view")}
       />
     );

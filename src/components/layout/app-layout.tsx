@@ -9,6 +9,7 @@ import { useUpdateChecker } from "@/hooks/use-update-checker";
 import { IS_MAC } from "@/lib/platform";
 import { GpuStatusBadge } from "@/components/agent-local/gpu-status-badge";
 import { WindowControls } from "./window-controls";
+import { cleanupTauriListener } from "@/lib/tauri-listen";
 import "./app-layout.css";
 
 const GPU_BADGE_OFFSET = 12;
@@ -53,7 +54,7 @@ export function AppLayout({
         void win.isFullscreen().then(setFullscreen).catch(() => {});
       }, 80);
     });
-    return () => { clearTimeout(timer); void unlisten.then((fn) => fn()).catch(() => {}); };
+    return () => { clearTimeout(timer); cleanupTauriListener(unlisten); };
   }, []);
 
   const [listWidth, setListWidth] = useState<number | null>(null);

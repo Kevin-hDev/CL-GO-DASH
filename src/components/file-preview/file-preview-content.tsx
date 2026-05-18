@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { listen } from "@tauri-apps/api/event";
 import { readFilePreview } from "@/services/file-preview";
 import { highlightLines } from "@/lib/highlight";
+import { cleanupTauriListener } from "@/lib/tauri-listen";
 import type { FileOperation } from "@/types/file-preview";
 import { FilePreviewDiff } from "./file-preview-diff";
 import "@/components/agent-local/tool-previews.css";
@@ -97,7 +98,7 @@ function TextPreviewContent({ operation, baseDir }: FilePreviewContentProps) {
         reload();
       }
     });
-    return () => { void unlisten.then((fn) => fn()); };
+    return () => { cleanupTauriListener(unlisten); };
   }, [operation.path, reload]);
 
   const highlighted = useMemo(

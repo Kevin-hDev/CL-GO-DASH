@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { invoke, Channel } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { showToast } from "@/lib/toast-emitter";
+import { cleanupTauriListener } from "@/lib/tauri-listen";
 import i18n from "@/i18n";
 import type { PullProgress } from "@/types/agent";
 
@@ -84,7 +85,7 @@ export function useUpdateChecker() {
     });
     return () => {
       clearInterval(timerRef.current);
-      unlisten.then((fn) => fn()).catch(() => {});
+      cleanupTauriListener(unlisten);
     };
   }, [checkAll]);
 

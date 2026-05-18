@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { listen } from "@tauri-apps/api/event";
+import { cleanupTauriListener } from "@/lib/tauri-listen";
 
 export type ForecastSection = "view" | "scenarios" | "comparisons" | "analysis" | "notes" | "history";
 export type PanelMode = "preview" | "forecast";
@@ -113,7 +114,7 @@ export function useForecastPanel(sessionId: string | null) {
     );
     return () => {
       cancelled = true;
-      void unlisten.then((cleanup) => cleanup());
+      cleanupTauriListener(unlisten);
     };
   }, [sessionId, loadAnalysis]);
 

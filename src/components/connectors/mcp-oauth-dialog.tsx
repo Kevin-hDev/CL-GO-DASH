@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { McpIcon } from "@/lib/mcp-icons";
+import { cleanupTauriListener } from "@/lib/tauri-listen";
 import type { McpConnectorSpec } from "@/types/mcp";
 import "./mcp-oauth-dialog.css";
 
@@ -74,7 +75,7 @@ export function McpOauthDialog({ connector, onClose, onConnected }: McpOauthDial
     });
     return () => {
       mountedRef.current = false;
-      unlisten.then((fn) => fn()).catch(() => {});
+      cleanupTauriListener(unlisten);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only effect, startFlow/onConnected are stable
   }, []);

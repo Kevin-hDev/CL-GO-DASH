@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import { cleanupTauriListener } from "@/lib/tauri-listen";
 import type { GatewayConfig, GatewayHealth, ChannelHealthEntry } from "@/types/channels";
 
 function normalizeHealth(value: GatewayHealth | null | undefined): GatewayHealth {
@@ -52,7 +53,7 @@ export function useChannels() {
     const unlisten = listen<GatewayHealth>("gateway-status-changed", (e) => {
       setHealth(normalizeHealth(e.payload));
     });
-    return () => { void unlisten.then((f) => f()); };
+    return () => { cleanupTauriListener(unlisten); };
   }, []);
 
   useEffect(() => {
@@ -70,7 +71,7 @@ export function useChannels() {
         return { ...prev, channels: next };
       });
     });
-    return () => { void unlisten.then((f) => f()); };
+    return () => { cleanupTauriListener(unlisten); };
   }, []);
 
   const saveConfig = useCallback(async (cfg: GatewayConfig) => {

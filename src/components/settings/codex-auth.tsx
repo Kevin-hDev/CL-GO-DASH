@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useTranslation } from "react-i18next";
+import { cleanupTauriListener } from "@/lib/tauri-listen";
 import "./codex-auth.css";
 
 interface CodexStatus {
@@ -40,7 +41,7 @@ export function CodexAuth() {
 
     useEffect(() => {
         const unlisten = listen("codex-auth-changed", () => { void refresh(); });
-        return () => { void unlisten.then((fn) => fn()); };
+        return () => { cleanupTauriListener(unlisten); };
     }, [refresh]);
 
     const handleLogin = async () => {

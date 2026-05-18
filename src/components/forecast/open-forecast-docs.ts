@@ -1,4 +1,5 @@
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { cleanupTauriListener } from "@/lib/tauri-listen";
 
 const DOCS_WINDOW_LABEL = "forecast-docs";
 
@@ -31,8 +32,8 @@ export async function openForecastDocsWindow(title: string) {
     });
 
     function cleanup() {
-      void removeCreated.then((fn) => fn()).catch(() => {});
-      void removeError.then((fn) => fn()).catch(() => {});
+      cleanupTauriListener(removeCreated);
+      cleanupTauriListener(removeError);
     }
   });
 }

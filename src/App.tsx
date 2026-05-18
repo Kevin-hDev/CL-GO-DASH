@@ -13,6 +13,7 @@ import { PersonalityTab } from "@/components/personality/personality-tab";
 import { AgentLocalTab } from "@/components/agent-local/agent-local-tab";
 import { SettingsTab } from "@/components/settings/settings-tab";
 import { ForecastDocsWindow } from "@/components/forecast-docs/forecast-docs-window";
+import { cleanupTauriListener } from "@/lib/tauri-listen";
 import type { TabSlots } from "@/components/agent-local/agent-local-tab-types";
 import type { TabId } from "@/components/layout/sidebar";
 import {
@@ -56,7 +57,7 @@ function MainApp() {
     const unlisten = listen<string>("vault-init-failed", (e) => {
       setVaultError(e.payload);
     });
-    return () => { unlisten.then((fn) => fn()).catch(() => {}); };
+    return () => { cleanupTauriListener(unlisten); };
   }, []);
 
   const activeTab: TabId = nav.tab;

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import { cleanupTauriListener } from "@/lib/tauri-listen";
 
 export function useSelectedForecastModel() {
   const [selectedModelId, setSelectedModelId] = useState("");
@@ -26,7 +27,7 @@ export function useSelectedForecastModel() {
     });
     return () => {
       mounted = false;
-      void unlisten.then((dispose) => dispose());
+      cleanupTauriListener(unlisten);
     };
   }, []);
 

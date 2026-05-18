@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import { cleanupTauriListener } from "@/lib/tauri-listen";
 import {
   isForecastModelSelectable,
   type ForecastModelEntry,
@@ -37,10 +38,10 @@ export function useAvailableForecastModels() {
     const unlistenFsProviders = listen("fs:providers-changed", () => void refresh());
     const unlistenFsConfig = listen("fs:config-changed", () => void refresh());
     return () => {
-      void unlistenForecast.then((fn) => fn());
-      void unlistenProviders.then((fn) => fn());
-      void unlistenFsProviders.then((fn) => fn());
-      void unlistenFsConfig.then((fn) => fn());
+      cleanupTauriListener(unlistenForecast);
+      cleanupTauriListener(unlistenProviders);
+      cleanupTauriListener(unlistenFsProviders);
+      cleanupTauriListener(unlistenFsConfig);
     };
   }, [refresh]);
 

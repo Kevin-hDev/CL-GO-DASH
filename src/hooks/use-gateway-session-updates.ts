@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import type { RefObject } from "react";
+import { cleanupTauriListener } from "@/lib/tauri-listen";
 import type { AgentSession } from "@/types/agent";
 
 type GatewaySessionEvent = { session_id: string };
@@ -21,7 +22,7 @@ export function listenGatewaySessionUpdates(
   );
   return () => {
     unlisteners.forEach((unlisten) => {
-      void unlisten.then((fn) => fn()).catch(() => {});
+      cleanupTauriListener(unlisten);
     });
   };
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { listen } from "@tauri-apps/api/event";
+import { cleanupTauriListener } from "@/lib/tauri-listen";
 
 interface StreamEventPayload {
   sessionId: string;
@@ -16,9 +17,7 @@ export function useCompression(sessionId: string) {
         setIsCompressing(ev.payload.event.data?.status === "start");
       }
     });
-    return () => {
-      unlisten.then((fn) => fn()).catch(() => {});
-    };
+    return () => { cleanupTauriListener(unlisten); };
   }, [sessionId]);
 
   return { isCompressing };

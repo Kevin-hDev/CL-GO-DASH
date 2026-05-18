@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
+import { cleanupTauriListener } from "@/lib/tauri-listen";
 
 export function useOllamaStatus() {
   const [running, setRunning] = useState(false);
@@ -12,7 +13,7 @@ export function useOllamaStatus() {
       setRunning(e.payload);
     });
 
-    return () => { unlisten.then((fn) => fn()).catch(() => {}); };
+    return () => { cleanupTauriListener(unlisten); };
   }, []);
 
   return running;

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useTranslation } from "react-i18next";
+import { cleanupTauriListener } from "@/lib/tauri-listen";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ThemedIcon } from "@/components/ui/themed-icon";
 import modelfileDark from "@/assets/modelfile.png";
@@ -54,10 +55,10 @@ export function ForecastTab({ navState, onNavChange, onNavReplace }: ForecastTab
     const unlistenFsProviders = listen("fs:providers-changed", refresh);
     const unlistenFsConfig = listen("fs:config-changed", refresh);
     return () => {
-      void unlistenModels.then((fn) => fn());
-      void unlistenProviders.then((fn) => fn());
-      void unlistenFsProviders.then((fn) => fn());
-      void unlistenFsConfig.then((fn) => fn());
+      cleanupTauriListener(unlistenModels);
+      cleanupTauriListener(unlistenProviders);
+      cleanupTauriListener(unlistenFsProviders);
+      cleanupTauriListener(unlistenFsConfig);
     };
   }, [refresh]);
 

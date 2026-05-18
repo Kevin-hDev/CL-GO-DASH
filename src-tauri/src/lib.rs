@@ -131,7 +131,6 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::get_config,
             commands::save_config,
-            commands::frontend_diagnostic_log,
             commands::get_advanced_settings,
             commands::set_advanced_settings,
             commands::patch_advanced_settings,

@@ -16,7 +16,6 @@ import ollamaLight from "@/assets/ollama-light.png";
 import type { Icon } from "@phosphor-icons/react";
 import type { TabSlots } from "@/components/agent-local/agent-local-tab-types";
 import type { DeepPartial, SettingsNavState, SettingsSubTab } from "@/types/navigation";
-import { recordFrontendDiagnostic } from "@/lib/frontend-diagnostics";
 import {
   SettingsChildSlots,
   usesSettingsChildSlots,
@@ -68,17 +67,13 @@ export const SettingsTab = memo(function SettingsTab({
   const [childDetailTarget, setChildDetailTarget] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
-    recordFrontendDiagnostic("settings.nav-state", {
-      navSubTab: navState.subTab,
-    });
     setSubTabState(navState.subTab);
   }, [navState.subTab]);
 
   const setSubTab = useCallback((id: SettingsSubTab) => {
-    recordFrontendDiagnostic("settings.select-subtab", { from: subTab, to: id });
     setSubTabState(id);
     onNavChange({ subTab: id });
-  }, [onNavChange, subTab]);
+  }, [onNavChange]);
   const subTabIds = useMemo(() => SUB_TABS.map((t) => t.id), []);
   useArrowNavigation({
     items: subTabIds,
@@ -90,13 +85,6 @@ export const SettingsTab = memo(function SettingsTab({
 
   const settings = useSettings();
   const { t } = useTranslation();
-
-  useEffect(() => {
-    recordFrontendDiagnostic("settings.active-subtab", {
-      subTab,
-      childSlot: usesSettingsChildSlots(subTab),
-    });
-  }, [subTab]);
 
   const list = useMemo(() => (
     <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, overflow: "hidden" }}>
@@ -168,13 +156,8 @@ export const SettingsTab = memo(function SettingsTab({
   }, [navState.llmView, onNavChange, onThemeChange, settings, subTab, themeChoice]);
 
   useLayoutEffect(() => {
-    recordFrontendDiagnostic("settings.report-content", {
-      subTab,
-      hasList: Boolean(list),
-      hasDetail: Boolean(detail),
-    });
     reportContent({ list, detail });
-  }, [reportContent, list, detail, subTab]);
+  }, [reportContent, list, detail]);
 
   return (
     <SettingsChildSlots

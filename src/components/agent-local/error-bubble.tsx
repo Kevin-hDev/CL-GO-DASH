@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { useTranslation } from "react-i18next";
 import { showToast } from "@/lib/toast-emitter";
+import { cleanupTauriListener } from "@/lib/tauri-listen";
 
 const BUBBLE_STYLE = {
   width: "100%", maxWidth: 720,
@@ -56,7 +57,7 @@ function ConnectionErrorBubble({ onRetry }: { onRetry: () => void }) {
         showToast(t("errors.ollamaReconnected"), "success");
       }
     });
-    return () => { unlisten.then((fn) => fn()).catch(() => {}); };
+    return () => { cleanupTauriListener(unlisten); };
   }, [t]);
 
   useEffect(() => {

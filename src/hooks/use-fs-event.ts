@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { listen } from "@tauri-apps/api/event";
+import { cleanupTauriListener } from "@/lib/tauri-listen";
 
 type FsEvent =
   | "fs:config-changed"
@@ -12,9 +13,7 @@ type FsEvent =
 export function useFsEvent(event: FsEvent, callback: () => void) {
   useEffect(() => {
     const unlisten = listen(event, callback);
-    return () => {
-      unlisten.then((fn) => fn()).catch(() => {});
-    };
+    return () => { cleanupTauriListener(unlisten); };
   }, [event, callback]);
 }
 
@@ -24,8 +23,6 @@ export function useFsEventWithPayload<T>(
 ) {
   useEffect(() => {
     const unlisten = listen<T>(event, (e) => callback(e.payload));
-    return () => {
-      unlisten.then((fn) => fn()).catch(() => {});
-    };
+    return () => { cleanupTauriListener(unlisten); };
   }, [event, callback]);
 }

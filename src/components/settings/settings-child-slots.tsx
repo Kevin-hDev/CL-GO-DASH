@@ -1,4 +1,4 @@
-import { memo, useEffect } from "react";
+import { memo } from "react";
 import { createPortal } from "react-dom";
 import { OllamaTab } from "@/components/ollama/ollama-tab";
 import { ApiKeysTab } from "@/components/api-keys/api-keys-tab";
@@ -7,7 +7,6 @@ import { ChannelsTab } from "@/components/channels/channels-tab";
 import { ForecastTab } from "@/components/forecast/model-browser/forecast-tab";
 import type { TabSlots } from "@/components/agent-local/agent-local-tab-types";
 import type { DeepPartial, SettingsNavState, SettingsSubTab } from "@/types/navigation";
-import { recordFrontendDiagnostic } from "@/lib/frontend-diagnostics";
 
 interface SlotPortalProps {
   navState: SettingsNavState;
@@ -25,11 +24,11 @@ interface SettingsChildSlotsProps extends Omit<SlotPortalProps, "listTarget" | "
 
 type SlotFactory = (props: Omit<SlotPortalProps, "listTarget" | "detailTarget">) => TabSlots;
 
-const OllamaSlotPortal = createSlotPortal("ollama", OllamaTab);
-const ForecastSlotPortal = createSlotPortal("forecast", ForecastTab);
-const ConnectorsSlotPortal = createSlotPortal("connectors", ConnectorsTab);
-const ChannelsSlotPortal = createSlotPortal("channels", ChannelsTab);
-const ApiKeysSlotPortal = createSlotPortal("api-keys", ApiKeysTab);
+const OllamaSlotPortal = createSlotPortal(OllamaTab);
+const ForecastSlotPortal = createSlotPortal(ForecastTab);
+const ConnectorsSlotPortal = createSlotPortal(ConnectorsTab);
+const ChannelsSlotPortal = createSlotPortal(ChannelsTab);
+const ApiKeysSlotPortal = createSlotPortal(ApiKeysTab);
 
 export function usesSettingsChildSlots(subTab: SettingsSubTab): boolean {
   return subTab === "ollama"
@@ -55,7 +54,7 @@ export function SettingsChildSlots({
   return null;
 }
 
-function createSlotPortal(name: SettingsSubTab, factory: SlotFactory) {
+function createSlotPortal(factory: SlotFactory) {
   return memo(function SlotPortal({
     navState,
     onNavChange,
@@ -64,13 +63,6 @@ function createSlotPortal(name: SettingsSubTab, factory: SlotFactory) {
     detailTarget,
   }: SlotPortalProps) {
     const slots = factory({ navState, onNavChange, onNavReplace });
-    useEffect(() => {
-      recordFrontendDiagnostic("settings.child-portal-render", {
-        subTab: name,
-        hasList: Boolean(slots.list),
-        hasDetail: Boolean(slots.detail),
-      });
-    }, [slots]);
 
     return (
       <>
