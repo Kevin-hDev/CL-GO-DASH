@@ -18,19 +18,24 @@ export function FileDropZone({ dragging, onDragChange, onDropPaths, children }: 
   dropRef.current = onDropPaths;
 
   useEffect(() => {
-    const unlisten = getCurrentWebview().onDragDropEvent((event) => {
-      if (isInternalDrag()) return;
-      if (event.payload.type === "over") {
-        dragRef.current(true);
-      } else if (event.payload.type === "drop") {
-        dragRef.current(false);
-        if (event.payload.paths.length > 0) {
-          dropRef.current(event.payload.paths);
+    let unlisten: ReturnType<ReturnType<typeof getCurrentWebview>["onDragDropEvent"]>;
+    try {
+      unlisten = getCurrentWebview().onDragDropEvent((event) => {
+        if (isInternalDrag()) return;
+        if (event.payload.type === "over") {
+          dragRef.current(true);
+        } else if (event.payload.type === "drop") {
+          dragRef.current(false);
+          if (event.payload.paths.length > 0) {
+            dropRef.current(event.payload.paths);
+          }
+        } else {
+          dragRef.current(false);
         }
-      } else {
-        dragRef.current(false);
-      }
-    });
+      });
+    } catch {
+      return;
+    }
 
     return () => { unlisten.then((fn) => fn()).catch(() => {}); };
   }, []);

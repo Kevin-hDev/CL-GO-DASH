@@ -130,7 +130,9 @@ export const HeartbeatTab = memo(function HeartbeatTab({
     </>
   );
 
-  useLayoutEffect(() => { reportContent({ list, detail }); });
+  useLayoutEffect(() => { reportContent({ list, detail }); }, [
+    reportContent, wakeups, runs, summaries, globalPaused, selectedId, dialog, listFocused,
+  ]);
 
   return null;
 });

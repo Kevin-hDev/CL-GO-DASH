@@ -8,6 +8,7 @@ import { ChannelsDetail } from "./channels-detail";
 import { ChannelsBrowseModal } from "./channels-browse-modal";
 import { ChannelsConfigDialog } from "./channels-config-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
+import type { DeepPartial, SettingsNavState } from "@/types/navigation";
 import "./channels.css";
 
 type DialogState =
@@ -15,10 +16,16 @@ type DialogState =
   | { kind: "browse" }
   | { kind: "config"; channelId: ChannelType; returnTo: "browse" | "none" };
 
-export function ChannelsTab(): { list: React.ReactNode; detail: React.ReactNode } {
+interface ChannelsTabProps {
+  navState: SettingsNavState;
+  onNavChange: (partial: DeepPartial<SettingsNavState>) => void;
+  onNavReplace: (partial: DeepPartial<SettingsNavState>) => void;
+}
+
+export function ChannelsTab({ navState, onNavChange, onNavReplace }: ChannelsTabProps): { list: React.ReactNode; detail: React.ReactNode } {
   const { t } = useTranslation();
   const { health, config, saveConfig, refreshHealth } = useChannels();
-  const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  const selectedKey = navState.channelKey;
   const [dialog, setDialog] = useState<DialogState>({ kind: "none" });
 
   const configuredAccounts = useMemo(() => {
@@ -30,9 +37,9 @@ export function ChannelsTab(): { list: React.ReactNode; detail: React.ReactNode 
 
   useEffect(() => {
     if (selectedKey === null && configuredAccounts.length > 0) {
-      setSelectedKey(`${configuredAccounts[0].channelId}:${configuredAccounts[0].accountId}`);
+      onNavReplace({ channelKey: `${configuredAccounts[0].channelId}:${configuredAccounts[0].accountId}` });
     }
-  }, [selectedKey, configuredAccounts]);
+  }, [selectedKey, configuredAccounts, onNavReplace]);
 
   const selected = selectedKey ? configuredAccounts.find((a) => `${a.channelId}:${a.accountId}` === selectedKey) ?? null : null;
 
@@ -55,7 +62,7 @@ export function ChannelsTab(): { list: React.ReactNode; detail: React.ReactNode 
       });
       await saveConfig({ ...config, channels: { ...config.channels, [channelId]: list } });
     }
-    setSelectedKey(`${channelId}:${accountId}`);
+    onNavChange({ channelKey: `${channelId}:${accountId}` });
     setDialog({ kind: "none" });
     await refreshHealth();
   };
@@ -65,7 +72,7 @@ export function ChannelsTab(): { list: React.ReactNode; detail: React.ReactNode 
       accounts={configuredAccounts}
       healthEntries={health.channels}
       selectedKey={selectedKey}
-      onSelect={setSelectedKey}
+      onSelect={(key) => onNavChange({ channelKey: key })}
     />
   );
 
@@ -91,7 +98,7 @@ export function ChannelsTab(): { list: React.ReactNode; detail: React.ReactNode 
             config={config}
             onSaveConfig={saveConfig}
             onDelete={() => {
-              setSelectedKey(null);
+              onNavReplace({ channelKey: null });
               void refreshHealth();
             }}
           />

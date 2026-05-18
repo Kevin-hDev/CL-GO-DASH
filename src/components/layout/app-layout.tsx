@@ -42,9 +42,9 @@ export function AppLayout({
   const [fullscreen, setFullscreen] = useState(false);
   const updates = useUpdateChecker();
 
-
   useEffect(() => {
-    const win = getCurrentWindow();
+    let win: ReturnType<typeof getCurrentWindow>;
+    try { win = getCurrentWindow(); } catch { return; }
     let timer: ReturnType<typeof setTimeout>;
     void win.isFullscreen().then(setFullscreen).catch(() => {});
     const unlisten = win.onResized(() => {

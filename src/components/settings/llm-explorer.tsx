@@ -1,10 +1,11 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
 import { LlmFamilyGrid } from "./llm-family-grid";
 import { LlmModelList } from "./llm-model-list";
 import { LlmModelDetail } from "./llm-model-detail";
 import type { RegistryModelInfo, FamilyGroup } from "./llm-types";
+import type { LlmNavState } from "@/types/navigation";
 import "./llm-explorer.css";
 
 type View =
@@ -17,19 +18,46 @@ function viewIs(v: View, k: string): boolean {
   return v.kind.startsWith(k);
 }
 
-export function LlmExplorer() {
+interface LlmExplorerProps {
+  navState: LlmNavState;
+  onNavChange: (state: LlmNavState) => void;
+}
+
+export function LlmExplorer({ navState, onNavChange }: LlmExplorerProps) {
   const { t } = useTranslation();
   const [query, setQuery] = useState("");
   const [view, setView] = useState<View>({ kind: "idle" });
   const [families, setFamilies] = useState<FamilyGroup[]>([]);
   const [showFamilies, setShowFamilies] = useState(false);
-  const prevShowFamilies = useRef(false);
 
   useEffect(() => {
     invoke<FamilyGroup[]>("list_registry_families")
       .then(setFamilies)
       .catch(() => {});
-  }, []);
+  }, [onNavChange]);
+
+  useEffect(() => {
+    let active = true;
+    async function load() {
+      if (navState.kind === "idle") {
+        setView({ kind: "idle" });
+        setShowFamilies(navState.showFamilies);
+      } else if (navState.kind === "search") {
+        const results = await invoke<RegistryModelInfo[]>("search_registry", { query: navState.query }).catch(() => []);
+        if (active) { setView({ kind: "search", query: navState.query, results }); setShowFamilies(false); }
+      } else if (navState.kind === "family") {
+        const models = await invoke<RegistryModelInfo[]>("list_family_models", { family: navState.family }).catch(() => []);
+        if (active) { setView({ kind: "family-models", family: navState.family, models }); setShowFamilies(false); }
+      } else {
+        const results = await invoke<RegistryModelInfo[]>("search_registry", { query: navState.modelKey }).catch(() => []);
+        const model = results.find((item) => item.key === navState.modelKey) ?? results[0];
+        if (active && model) setView({ kind: "detail", model, prev: { kind: "idle" } });
+        if (active) setShowFamilies(false);
+      }
+    }
+    void load();
+    return () => { active = false; };
+  }, [navState]);
 
   const handleSearch = useCallback(async () => {
     if (!query.trim()) return;
@@ -37,6 +65,7 @@ export function LlmExplorer() {
       const results = await invoke<RegistryModelInfo[]>("search_registry", { query: query.trim() });
       setView({ kind: "search", query: query.trim(), results });
       setShowFamilies(false);
+      onNavChange({ kind: "search", query: query.trim() });
     } catch (e) {
       console.warn("[llm] search error:", e);
     }
@@ -47,32 +76,29 @@ export function LlmExplorer() {
       const models = await invoke<RegistryModelInfo[]>("list_family_models", { family });
       setView({ kind: "family-models", family, models });
       setShowFamilies(false);
+      onNavChange({ kind: "family", family });
     } catch (e) {
       console.warn("[llm] family error:", e);
     }
   }, []);
 
   const handleModelClick = useCallback((model: RegistryModelInfo) => {
-    prevShowFamilies.current = showFamilies;
     setView((prev) => ({ kind: "detail", model, prev }));
-  }, [showFamilies]);
+    const parent = navState.kind === "detail" ? navState.parent : navState;
+    onNavChange({ kind: "detail", modelKey: model.key, parent });
+  }, [navState, onNavChange]);
 
   const handleBack = useCallback(() => {
     if (viewIs(view, "detail")) {
-      const prev = (view as View & { kind: "detail" }).prev;
-      setView(prev);
-      if (prev.kind.startsWith("family")) setShowFamilies(false);
-      else if (prev.kind.startsWith("idle")) setShowFamilies(prevShowFamilies.current);
+      if (navState.kind === "detail") onNavChange(navState.parent);
     } else {
-      setView({ kind: "idle" });
-      setShowFamilies(true);
+      onNavChange({ kind: "idle", showFamilies: true });
     }
-  }, [view]);
+  }, [view, navState, onNavChange]);
 
   const toggleFamilies = useCallback(() => {
-    setShowFamilies((prev) => !prev);
-    if (!viewIs(view, "idle")) setView({ kind: "idle" });
-  }, [view]);
+    onNavChange({ kind: "idle", showFamilies: !showFamilies });
+  }, [showFamilies, onNavChange]);
 
   return (
     <div style={{ padding: 24, overflowY: "auto", flex: 1 }}>
@@ -114,7 +140,7 @@ export function LlmExplorer() {
             models={(view as View & { kind: "family-models" }).models}
             title={(view as View & { kind: "family-models" }).family}
             onSelect={handleModelClick}
-            onBack={() => { setView({ kind: "idle" }); setShowFamilies(true); }}
+            onBack={() => onNavChange({ kind: "idle", showFamilies: true })}
           />
         )}
 

@@ -15,6 +15,12 @@ import { SettingsTab } from "@/components/settings/settings-tab";
 import { ForecastDocsWindow } from "@/components/forecast-docs/forecast-docs-window";
 import type { TabSlots } from "@/components/agent-local/agent-local-tab-types";
 import type { TabId } from "@/components/layout/sidebar";
+import {
+  DEFAULT_APP_NAV,
+  type AgentLocalNavState,
+  type DeepPartial,
+  type SettingsNavState,
+} from "@/types/navigation";
 
 export default function App() {
   return window.location.hash === "#/forecast-docs" ? <ForecastDocsApp /> : <MainApp />;
@@ -33,14 +39,8 @@ function ForecastDocsApp() {
 }
 
 function MainApp() {
-  const { current: nav, push, goBack, goForward, canGoBack, canGoForward } =
-    useTabHistory({
-      tab: "agent-local",
-      settingsSubTab: "general",
-      sessionId: null,
-      wakeupId: null,
-      personalityPath: null,
-    });
+  const { current: nav, pushNav, replaceNav, goBack, goForward, canGoBack, canGoForward } =
+    useTabHistory(DEFAULT_APP_NAV);
 
   const { choice, setTheme } = useTheme();
   const { t } = useTranslation();
@@ -58,33 +58,44 @@ function MainApp() {
     return () => { unlisten.then((fn) => fn()).catch(() => {}); };
   }, []);
 
-  const activeTab = nav.tab as TabId;
+  const activeTab: TabId = nav.tab;
   const listActive = (tab: TabId) => focusedPanel === "list" && activeTab === tab;
 
   const reportContent = useCallback((slots: TabSlots) => {
     setTabContent(slots);
   }, []);
 
-  const handleWakeupChange = useCallback((id: string | null) => push({ wakeupId: id }), [push]);
-  const handlePathChange = useCallback((path: string | null) => push({ personalityPath: path }), [push]);
-  const handleSessionChange = useCallback((id: string | null) => push({ sessionId: id }), [push]);
-  const handleSubTabChange = useCallback((sub: string) => push({ settingsSubTab: sub }), [push]);
+  const handleWakeupChange = useCallback((id: string | null) => pushNav({ heartbeat: { wakeupId: id } }), [pushNav]);
+  const handlePathChange = useCallback((path: string | null) => pushNav({ personality: { path } }), [pushNav]);
+  const handleSessionChange = useCallback((id: string | null) => pushNav({ agentLocal: { sessionId: id } }), [pushNav]);
+  const handleAgentNavChange = useCallback((partial: DeepPartial<AgentLocalNavState>) => {
+    pushNav({ agentLocal: partial });
+  }, [pushNav]);
+  const handleAgentNavReplace = useCallback((partial: DeepPartial<AgentLocalNavState>) => {
+    replaceNav({ agentLocal: partial });
+  }, [replaceNav]);
+  const handleSettingsNavChange = useCallback((partial: DeepPartial<SettingsNavState>) => {
+    pushNav({ settings: partial });
+  }, [pushNav]);
+  const handleSettingsNavReplace = useCallback((partial: DeepPartial<SettingsNavState>) => {
+    replaceNav({ settings: partial });
+  }, [replaceNav]);
 
   const ALL_TABS: TabId[] = ["agent-local", "heartbeat", "personality", "settings"];
   useArrowNavigation({
     items: ALL_TABS,
     selectedId: activeTab,
-    onSelect: (t) => push({ tab: t }),
+    onSelect: (t) => pushNav({ tab: t }),
     enabled: focusedPanel === "sidebar",
   });
 
   const handleShowWelcome = useCallback(() => {
-    push({ tab: "agent-local", sessionId: null });
-  }, [push]);
+    pushNav({ tab: "agent-local", agentLocal: { sessionId: null } });
+  }, [pushNav]);
 
   const handleSearchSelect = useCallback((sessionId: string) => {
-    push({ tab: "agent-local", sessionId });
-  }, [push]);
+    pushNav({ tab: "agent-local", agentLocal: { sessionId } });
+  }, [pushNav]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -114,7 +125,7 @@ function MainApp() {
     <>
     {activeTab === "heartbeat" && (
       <HeartbeatTab
-        activeWakeupId={nav.wakeupId}
+        activeWakeupId={nav.heartbeat.wakeupId}
         onWakeupChange={handleWakeupChange}
         listFocused={listActive("heartbeat")}
         reportContent={reportContent}
@@ -122,7 +133,7 @@ function MainApp() {
     )}
     {activeTab === "personality" && (
       <PersonalityTab
-        activePath={nav.personalityPath}
+        activePath={nav.personality.path}
         onPathChange={handlePathChange}
         listFocused={listActive("personality")}
         reportContent={reportContent}
@@ -130,8 +141,10 @@ function MainApp() {
     )}
     {activeTab === "agent-local" && (
       <AgentLocalTab
-        requestedSessionId={nav.sessionId}
+        navState={nav.agentLocal}
         onSessionChange={handleSessionChange}
+        onNavChange={handleAgentNavChange}
+        onNavReplace={handleAgentNavReplace}
         listFocused={listActive("agent-local")}
         reportContent={reportContent}
       />
@@ -140,8 +153,9 @@ function MainApp() {
       <SettingsTab
         themeChoice={choice}
         onThemeChange={setTheme}
-        activeSubTab={nav.settingsSubTab}
-        onSubTabChange={handleSubTabChange}
+        navState={nav.settings}
+        onNavChange={handleSettingsNavChange}
+        onNavReplace={handleSettingsNavReplace}
         listFocused={listActive("settings")}
         reportContent={reportContent}
       />
@@ -157,7 +171,7 @@ function MainApp() {
     )}
     <AppLayout
       activeTab={activeTab}
-      onTabChange={(t) => push({ tab: t })}
+      onTabChange={(t) => pushNav({ tab: t })}
       listContent={tabContent.list}
       detailContent={tabContent.detail}
       onShowWelcome={handleShowWelcome}

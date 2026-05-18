@@ -8,6 +8,7 @@ import { ApiKeysDetails } from "./api-keys-details";
 import { ApiKeysConfigDialog } from "./api-keys-config-dialog";
 import { ConnectorsModal } from "./connectors-modal";
 import { EmptyState } from "@/components/ui/empty-state";
+import type { DeepPartial, SettingsNavState } from "@/types/navigation";
 import "./api-keys.css";
 import "./api-keys-main.css";
 import "./api-keys-detail.css";
@@ -25,18 +26,24 @@ type DialogState =
       returnTo: "connectors" | "none";
     };
 
-export function ApiKeysTab(): { list: React.ReactNode; detail: React.ReactNode } {
+interface ApiKeysTabProps {
+  navState: SettingsNavState;
+  onNavChange: (partial: DeepPartial<SettingsNavState>) => void;
+  onNavReplace: (partial: DeepPartial<SettingsNavState>) => void;
+}
+
+export function ApiKeysTab({ navState, onNavChange, onNavReplace }: ApiKeysTabProps): { list: React.ReactNode; detail: React.ReactNode } {
   const { t } = useTranslation();
   const { catalog, configuredIds, configured, setKey, deleteKey, testKeyRaw } =
     useApiKeys();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selectedId = navState.apiKeyProviderId;
   const [dialog, setDialog] = useState<DialogState>({ kind: "none" });
 
   useEffect(() => {
     if (selectedId === null && configured.length > 0) {
-      setSelectedId(configured[0].id);
+      onNavReplace({ apiKeyProviderId: configured[0].id });
     }
-  }, [selectedId, configured]);
+  }, [selectedId, configured, onNavReplace]);
 
   const selected = selectedId
     ? configured.find((p) => p.id === selectedId) ?? null
@@ -46,14 +53,14 @@ export function ApiKeysTab(): { list: React.ReactNode; detail: React.ReactNode }
     <ApiKeysSidebar
       configured={configured}
       selectedId={selectedId}
-      onSelect={setSelectedId}
+      onSelect={(id) => onNavChange({ apiKeyProviderId: id })}
     />
   );
 
   const handleDelete = async () => {
     if (!selected) return;
     const id = selected.id;
-    setSelectedId(null);
+    onNavReplace({ apiKeyProviderId: null });
     await deleteKey(id);
   };
 
@@ -134,7 +141,7 @@ export function ApiKeysTab(): { list: React.ReactNode; detail: React.ReactNode }
             dialog.alreadyConfigured
               ? async () => {
                   await deleteKey(dialog.provider.id);
-                  setSelectedId(null);
+                  onNavReplace({ apiKeyProviderId: null });
                 }
               : undefined
           }

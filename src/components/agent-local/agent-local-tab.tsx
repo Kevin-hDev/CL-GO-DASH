@@ -7,19 +7,22 @@ import { WelcomeView } from "./welcome-view";
 import { useAgentLocalTab } from "@/hooks/use-agent-local-tab";
 import { useFileTree } from "@/hooks/use-file-tree";
 import { useForecastPanel } from "@/hooks/use-forecast-panel";
+import { useAgentLocalPanelNav } from "@/hooks/use-agent-local-panel-nav";
 import { ForecastPanel } from "@/components/forecast/forecast-panel";
 import { openForecastDocsWindow } from "@/components/forecast/open-forecast-docs";
 import type { AgentLocalTabProps } from "./agent-local-tab-types";
 import "./agent-local-tab.css";
 
 export const AgentLocalTab = memo(function AgentLocalTab({
-  requestedSessionId,
+  navState,
   onSessionChange,
+  onNavChange,
+  onNavReplace,
   listFocused = true,
   reportContent,
 }: AgentLocalTabProps) {
   const { t } = useTranslation();
-  const s = useAgentLocalTab({ requestedSessionId, onSessionChange, listFocused });
+  const s = useAgentLocalTab({ navState, onSessionChange, onNavChange, onNavReplace, listFocused });
   const { sessions, refresh, rename, remove, updateModel } = s;
   const { tabState, projectsHook, terminal, activeSession } = s;
   const { model, provider, currentDefault, activeProject } = s;
@@ -38,6 +41,7 @@ export const AgentLocalTab = memo(function AgentLocalTab({
   const terminalCwd = activeProject?.path || "";
   const fileTree = useFileTree(tabState.activeSessionId, activeProject?.path);
   const forecast = useForecastPanel(tabState.activeSessionId ?? null);
+  useAgentLocalPanelNav({ navState, fileTree, forecast, onNavChange, onNavReplace });
   const [fullscreenSwitching, setFullscreenSwitching] = useState(false);
   const fullscreenTimerRef = useRef<number | null>(null);
 
@@ -180,7 +184,13 @@ export const AgentLocalTab = memo(function AgentLocalTab({
     </div>
   );
 
-  useLayoutEffect(() => { reportContent({ list, detail }); });
+  useLayoutEffect(() => { reportContent({ list, detail }); }, [
+    reportContent, sessions, projectsHook.projects, tabState.tabs, tabState.activeIndex, tabState.canAddTab, tabState.activeSessionId,
+    terminal.isOpen, terminal.tabs.length, filePreview.open, filePreview.fullscreen, forecast.panelMode, forecast.activeSection,
+    forecast.navOpen, forecast.currentAnalysisId, thinking, pendingMessage, pendingWorkingDir, pendingSkills, pendingFiles,
+    currentDefault.model, currentDefault.provider, model, provider, activeProject?.path, activeSession?.parent_session_id,
+    fileOperations, fullscreenSwitching,
+  ]);
 
   return null;
 });

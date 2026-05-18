@@ -36,7 +36,9 @@ export function useFileTree(sessionId: string | null, projectPath: string | unde
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const expandedRef = useRef(expandedPaths);
-  expandedRef.current = expandedPaths;
+  useEffect(() => {
+    expandedRef.current = expandedPaths;
+  }, [expandedPaths]);
 
   const hasProject = !!projectPath;
 
@@ -52,6 +54,7 @@ export function useFileTree(sessionId: string | null, projectPath: string | unde
   useEffect(() => {
     if (!projectPath || !open) return;
     let alive = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- clears previous async load error before reloading the tree
     setLoadError(null);
     loadDirectory(projectPath)
       .then((entries) => { if (alive) setRootEntries(entries); })
@@ -157,6 +160,7 @@ export function useFileTree(sessionId: string | null, projectPath: string | unde
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- session switch must reset the project tree state
     setOpen(false);
     setRootEntries([]);
     setChildrenMap(new Map());
@@ -176,6 +180,7 @@ export function useFileTree(sessionId: string | null, projectPath: string | unde
     filter,
     loadError,
     setFilter,
+    setOpen,
     toggleOpen,
     closeTree,
     toggleExpand,

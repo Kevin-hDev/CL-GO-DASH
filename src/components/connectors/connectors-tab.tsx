@@ -9,6 +9,7 @@ import { McpBrowseModal } from "./mcp-browse-modal";
 import { McpConfigDialog } from "./mcp-config-dialog";
 import { McpOauthDialog } from "./mcp-oauth-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
+import type { DeepPartial, SettingsNavState } from "@/types/navigation";
 import "./connectors-tab.css";
 
 type DialogState =
@@ -20,7 +21,13 @@ type DialogState =
   | { kind: "confirm-disconnect"; connectorId: string }
 ;
 
-export function ConnectorsTab(): { list: React.ReactNode; detail: React.ReactNode } {
+interface ConnectorsTabProps {
+  navState: SettingsNavState;
+  onNavChange: (partial: DeepPartial<SettingsNavState>) => void;
+  onNavReplace: (partial: DeepPartial<SettingsNavState>) => void;
+}
+
+export function ConnectorsTab({ navState, onNavChange, onNavReplace }: ConnectorsTabProps): { list: React.ReactNode; detail: React.ReactNode } {
   const { t } = useTranslation();
   const {
     catalog,
@@ -31,14 +38,14 @@ export function ConnectorsTab(): { list: React.ReactNode; detail: React.ReactNod
     removeConnector,
     toggleStatus,
   } = useConnectors();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selectedId = navState.connectorId;
   const [dialog, setDialog] = useState<DialogState>({ kind: "none" });
   const [confirmAddBusy, setConfirmAddBusy] = useState(false);
   const [confirmAddError, setConfirmAddError] = useState(false);
 
   useEffect(() => {
-    if (selectedId === null && configured.length > 0) setSelectedId(configured[0].id);
-  }, [selectedId, configured]);
+    if (selectedId === null && configured.length > 0) onNavReplace({ connectorId: configured[0].id });
+  }, [selectedId, configured, onNavReplace]);
 
   const selected = selectedId ? configured.find((c) => c.id === selectedId) ?? null : null;
 
@@ -54,7 +61,7 @@ export function ConnectorsTab(): { list: React.ReactNode; detail: React.ReactNod
   };
 
   const handleDelete = async (connectorId: string) => {
-    setSelectedId(null);
+    onNavReplace({ connectorId: null });
     await removeConnector(connectorId);
   };
 
@@ -70,7 +77,7 @@ export function ConnectorsTab(): { list: React.ReactNode; detail: React.ReactNod
     setConfirmAddError(false);
     try {
       await addConnector(connector.id);
-      setSelectedId(connector.id);
+      onNavChange({ connectorId: connector.id });
       setDialog({ kind: "none" });
     } catch {
       setConfirmAddError(true);
@@ -84,7 +91,7 @@ export function ConnectorsTab(): { list: React.ReactNode; detail: React.ReactNod
       configured={configured}
       selectedId={selectedId}
       loadError={loadError}
-      onSelect={setSelectedId}
+      onSelect={(id) => onNavChange({ connectorId: id })}
     />
   );
 
@@ -137,7 +144,7 @@ export function ConnectorsTab(): { list: React.ReactNode; detail: React.ReactNod
           }}
           onValidated={async () => {
             await addConnector(dialog.connector.id);
-            setSelectedId(dialog.connector.id);
+            onNavChange({ connectorId: dialog.connector.id });
             setDialog({ kind: "none" });
           }}
         />
@@ -150,7 +157,7 @@ export function ConnectorsTab(): { list: React.ReactNode; detail: React.ReactNod
           }}
           onConnected={() => {
             void addConnector(dialog.connector.id).then(() => {
-              setSelectedId(dialog.connector.id);
+              onNavChange({ connectorId: dialog.connector.id });
               setDialog({ kind: "none" });
             });
           }}

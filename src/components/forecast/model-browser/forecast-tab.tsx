@@ -19,19 +19,24 @@ import { ForecastConfigEditor } from "./forecast-config-editor";
 import { ForecastConfigList } from "./forecast-config-list";
 import { ForecastModels } from "./forecast-models";
 import { ModelSpecs } from "./model-specs";
+import type { DeepPartial, SettingsNavState } from "@/types/navigation";
 import "@/components/ollama/ollama.css";
 import "./forecast-tab.css";
 
-type ForecastSettingsSubTab = "config" | "models";
+interface ForecastTabProps {
+  navState: SettingsNavState;
+  onNavChange: (partial: DeepPartial<SettingsNavState>) => void;
+  onNavReplace: (partial: DeepPartial<SettingsNavState>) => void;
+}
 
-export function ForecastTab(): { list: React.ReactNode; detail: React.ReactNode } {
+export function ForecastTab({ navState, onNavChange, onNavReplace }: ForecastTabProps): { list: React.ReactNode; detail: React.ReactNode } {
   const { t } = useTranslation();
-  const [subTab, setSubTab] = useState<ForecastSettingsSubTab>("config");
+  const subTab = navState.forecastSubTab;
   const [models, setModels] = useState<ForecastModelEntry[]>([]);
   const [providers, setProviders] = useState<ForecastProviderEntry[]>([]);
-  const [selectedConfigModelId, setSelectedConfigModelId] = useState<string | null>(null);
-  const [selectedFamilyId, setSelectedFamilyId] = useState<string | null>(null);
-  const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
+  const selectedConfigModelId = navState.forecastConfigModelId;
+  const selectedFamilyId = navState.forecastFamilyId;
+  const selectedModelId = navState.forecastModelId;
 
   const refresh = useCallback(() => {
     void invoke<ForecastModelsResponse>("list_forecast_models")
@@ -76,43 +81,42 @@ export function ForecastTab(): { list: React.ReactNode; detail: React.ReactNode 
     void invoke<string | null>("get_selected_forecast_model")
       .then((selected) => {
         const next = configModels.find((model) => model.id === selected)?.id ?? configModels[0]?.id ?? null;
-        setSelectedConfigModelId(next);
+        onNavReplace({ forecastConfigModelId: next });
       })
-      .catch(() => setSelectedConfigModelId(configModels[0]?.id ?? null));
-  }, [configModels, selectedConfigModelId]);
+      .catch(() => onNavReplace({ forecastConfigModelId: configModels[0]?.id ?? null }));
+  }, [configModels, selectedConfigModelId, onNavReplace]);
 
   useEffect(() => {
     if (!selectedFamilyId && families[0]) {
-      setSelectedFamilyId(families[0].id);
+      onNavReplace({ forecastFamilyId: families[0].id });
     }
-  }, [families, selectedFamilyId]);
+  }, [families, selectedFamilyId, onNavReplace]);
 
   useEffect(() => {
     if (selectedFamilyId && !families.some((group) => group.id === selectedFamilyId)) {
-      setSelectedFamilyId(families[0]?.id ?? null);
-      setSelectedModelId(null);
+      onNavReplace({ forecastFamilyId: families[0]?.id ?? null, forecastModelId: null });
     }
-  }, [families, selectedFamilyId]);
+  }, [families, selectedFamilyId, onNavReplace]);
 
   useEffect(() => {
     if (selectedModelId && !models.some((model) => model.id === selectedModelId)) {
-      setSelectedModelId(null);
+      onNavReplace({ forecastModelId: null });
     }
-  }, [models, selectedModelId]);
+  }, [models, selectedModelId, onNavReplace]);
 
   const list = (
     <div className="fmt-list-root">
       <div className="ollama-subtabs">
         <button
           className={`ollama-subtab ${subTab === "config" ? "active" : ""}`}
-          onClick={() => setSubTab("config")}
+          onClick={() => onNavChange({ forecastSubTab: "config" })}
         >
           <ThemedIcon darkSrc={modelfileDark} lightSrc={modelfileLight} size="1.2rem" />
           {t("forecast.modelConfig.sidebarTitle")}
         </button>
         <button
           className={`ollama-subtab ${subTab === "models" ? "active" : ""}`}
-          onClick={() => setSubTab("models")}
+          onClick={() => onNavChange({ forecastSubTab: "models" })}
         >
           <ThemedIcon darkSrc={modelsDark} lightSrc={modelsLight} size="1.2rem" />
           {t("forecast.models.sidebarTitle")}
@@ -122,7 +126,7 @@ export function ForecastTab(): { list: React.ReactNode; detail: React.ReactNode 
         <ForecastConfigList
           models={configModels}
           selectedModelId={selectedConfigModel?.id ?? null}
-          onSelect={setSelectedConfigModelId}
+          onSelect={(id) => onNavChange({ forecastConfigModelId: id })}
         />
       ) : (
         <div className="fmt-family-list">
@@ -132,8 +136,7 @@ export function ForecastTab(): { list: React.ReactNode; detail: React.ReactNode 
               className={`ollama-model-item fmt-family-item ${selectedFamily?.id === group.id ? "active" : ""}`}
               type="button"
               onClick={() => {
-                setSelectedFamilyId(group.id);
-                setSelectedModelId(null);
+                onNavChange({ forecastFamilyId: group.id, forecastModelId: null });
               }}
             >
               <span className="fmt-family-name">{t(group.titleKey)}</span>
@@ -150,13 +153,13 @@ export function ForecastTab(): { list: React.ReactNode; detail: React.ReactNode 
     <ModelSpecs
       model={selectedModel}
       provider={providers.find((item) => item.id === selectedModel.provider_id) ?? null}
-      onBack={() => setSelectedModelId(null)}
+      onBack={() => onNavChange({ forecastModelId: null })}
       onRefresh={refresh}
     />
   ) : selectedFamily ? (
     <ForecastModels
       group={selectedFamily}
-      onSelectModel={(model) => setSelectedModelId(model.id)}
+      onSelectModel={(model) => onNavChange({ forecastModelId: model.id })}
       onRefresh={refresh}
     />
   ) : (

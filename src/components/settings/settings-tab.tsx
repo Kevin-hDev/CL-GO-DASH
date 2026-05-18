@@ -20,9 +20,8 @@ import ollamaDark from "@/assets/ollama.png";
 import ollamaLight from "@/assets/ollama-light.png";
 import type { Icon } from "@phosphor-icons/react";
 import type { TabSlots } from "@/components/agent-local/agent-local-tab-types";
+import type { DeepPartial, SettingsNavState, SettingsSubTab } from "@/types/navigation";
 import "./settings-tab.css";
-
-type SettingsSubTab = "general" | "ollama" | "connectors" | "channels" | "api-keys" | "forecast" | "llm" | "advanced" | "shortcuts" | "about";
 
 interface SubTabDef {
   id: SettingsSubTab;
@@ -48,8 +47,9 @@ const SUB_TABS: SubTabDef[] = [
 interface SettingsTabProps {
   themeChoice: ThemeChoice;
   onThemeChange: (theme: ThemeChoice) => void;
-  activeSubTab?: string;
-  onSubTabChange?: (subTab: string) => void;
+  navState: SettingsNavState;
+  onNavChange: (partial: DeepPartial<SettingsNavState>) => void;
+  onNavReplace: (partial: DeepPartial<SettingsNavState>) => void;
   listFocused?: boolean;
   reportContent: (slots: TabSlots) => void;
 }
@@ -57,22 +57,21 @@ interface SettingsTabProps {
 export const SettingsTab = memo(function SettingsTab({
   themeChoice,
   onThemeChange,
-  activeSubTab,
-  onSubTabChange,
+  navState,
+  onNavChange,
+  onNavReplace,
   listFocused = true,
   reportContent,
 }: SettingsTabProps) {
   const [subTab, setSubTabState] = useState<SettingsSubTab>("general");
 
   useEffect(() => {
-    if (activeSubTab && SUB_TABS.some((t) => t.id.startsWith(activeSubTab))) {
-      setSubTabState(activeSubTab as SettingsSubTab);
-    }
-  }, [activeSubTab]);
+    setSubTabState(navState.subTab);
+  }, [navState.subTab]);
 
   const setSubTab = (id: SettingsSubTab) => {
     setSubTabState(id);
-    onSubTabChange?.(id);
+    onNavChange({ subTab: id });
   };
   const subTabIds = useMemo(() => SUB_TABS.map((t) => t.id), []);
   useArrowNavigation({
@@ -85,11 +84,11 @@ export const SettingsTab = memo(function SettingsTab({
   const settings = useSettings();
   const { t } = useTranslation();
 
-  const ollamaTab = OllamaTab();
-  const forecastTab = ForecastTab();
-  const connectorsTab = ConnectorsTab();
-  const channelsTab = ChannelsTab();
-  const apiKeysTab = ApiKeysTab();
+  const ollamaTab = OllamaTab({ navState, onNavChange, onNavReplace });
+  const forecastTab = ForecastTab({ navState, onNavChange, onNavReplace });
+  const connectorsTab = ConnectorsTab({ navState, onNavChange, onNavReplace });
+  const channelsTab = ChannelsTab({ navState, onNavChange, onNavReplace });
+  const apiKeysTab = ApiKeysTab({ navState, onNavChange, onNavReplace });
 
   const list = (
     <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, overflow: "hidden" }}>
@@ -149,14 +148,19 @@ export const SettingsTab = memo(function SettingsTab({
     if (subTab === "channels") return channelsTab.detail;
     if (subTab === "api-keys") return apiKeysTab.detail;
     if (subTab === "forecast") return forecastTab.detail;
-    if (subTab === "llm") return <LlmExplorer />;
+    if (subTab === "llm") {
+      return <LlmExplorer navState={navState.llmView} onNavChange={(llmView) => onNavChange({ llmView })} />;
+    }
     if (subTab === "advanced") return <AdvancedSettings />;
     if (subTab === "shortcuts") return <ShortcutsSettings />;
     if (subTab === "about") return <AboutSettings />;
     return null;
   })();
 
-  useLayoutEffect(() => { reportContent({ list, detail }); });
+  useLayoutEffect(() => { reportContent({ list, detail }); }, [
+    reportContent, subTab, themeChoice, settings, navState, listFocused,
+    ollamaTab, forecastTab, connectorsTab, channelsTab, apiKeysTab,
+  ]);
 
   return null;
 });

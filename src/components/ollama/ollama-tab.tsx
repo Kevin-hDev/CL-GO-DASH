@@ -13,26 +13,31 @@ import modelfileLight from "@/assets/modelfile-light.png";
 import modelsDark from "@/assets/models.png";
 import modelsLight from "@/assets/models-light.png";
 import type { RegistryModel } from "@/types/agent";
+import type { DeepPartial, SettingsNavState } from "@/types/navigation";
 import "./ollama.css";
 
-type SubTab = "modelfile" | "models";
+interface OllamaTabProps {
+  navState: SettingsNavState;
+  onNavChange: (partial: DeepPartial<SettingsNavState>) => void;
+  onNavReplace: (partial: DeepPartial<SettingsNavState>) => void;
+}
 
-export function OllamaTab(): { list: React.ReactNode; detail: React.ReactNode } {
+export function OllamaTab({ navState, onNavChange, onNavReplace }: OllamaTabProps): { list: React.ReactNode; detail: React.ReactNode } {
   const { t } = useTranslation();
   const ollamaModels = useOllamaModels();
-  const [subTab, setSubTab] = useState<SubTab>("modelfile");
-  const [selectedInstalled, setSelectedInstalled] = useState<string | null>(null);
-  const [selectedFamily, setSelectedFamily] = useState<string | null>(null);
-  const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
+  const subTab = navState.ollamaSubTab;
+  const selectedInstalled = navState.ollamaInstalledModel;
+  const selectedFamily = navState.ollamaFamily;
+  const selectedVariant = navState.ollamaVariant;
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<RegistryModel[]>([]);
   const [searching, setSearching] = useState(false);
 
   useEffect(() => {
     if (!selectedInstalled && ollamaModels.models.length > 0) {
-      setSelectedInstalled(ollamaModels.models[0].name);
+      onNavReplace({ ollamaInstalledModel: ollamaModels.models[0].name });
     }
-  }, [ollamaModels.models, selectedInstalled]);
+  }, [ollamaModels.models, selectedInstalled, onNavReplace]);
 
   const list = (
     <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
@@ -41,7 +46,7 @@ export function OllamaTab(): { list: React.ReactNode; detail: React.ReactNode } 
           <button
             key={tab}
             className={`ollama-subtab ${subTab === tab ? "active" : ""}`}
-            onClick={() => setSubTab(tab)}
+            onClick={() => onNavChange({ ollamaSubTab: tab })}
           >
             {tab === "modelfile" ? (
               <><ThemedIcon darkSrc={modelfileDark} lightSrc={modelfileLight} size="1.2rem" /> {t("ollama.modelfileTab")}</>
@@ -52,17 +57,17 @@ export function OllamaTab(): { list: React.ReactNode; detail: React.ReactNode } 
         ))}
       </div>
       {subTab === "modelfile" ? (
-        <ModelfileList
-          models={ollamaModels.models}
-          selectedModel={selectedInstalled}
-          onSelect={setSelectedInstalled}
-        />
+          <ModelfileList
+            models={ollamaModels.models}
+            selectedModel={selectedInstalled}
+            onSelect={(model) => onNavChange({ ollamaInstalledModel: model })}
+          />
       ) : selectedFamily ? (
         <ModelVariantsList
           familyName={selectedFamily}
           selectedVariant={selectedVariant}
-          onSelectVariant={setSelectedVariant}
-          onBack={() => { setSelectedFamily(null); setSelectedVariant(null); }}
+          onSelectVariant={(variant) => onNavChange({ ollamaVariant: variant })}
+          onBack={() => onNavChange({ ollamaFamily: null, ollamaVariant: null })}
         />
       ) : (
         <ModelSearch
@@ -72,7 +77,7 @@ export function OllamaTab(): { list: React.ReactNode; detail: React.ReactNode } 
           setResults={setSearchResults}
           searching={searching}
           setSearching={setSearching}
-          onSelectFamily={(f) => { setSelectedFamily(f); setSelectedVariant(null); }}
+          onSelectFamily={(f) => onNavChange({ ollamaFamily: f, ollamaVariant: null })}
           selectedFamily={selectedFamily}
         />
       )}
@@ -84,7 +89,7 @@ export function OllamaTab(): { list: React.ReactNode; detail: React.ReactNode } 
       return (
         <ModelfileViewer
           modelName={selectedInstalled}
-          onDeleted={() => setSelectedInstalled(null)}
+          onDeleted={() => onNavReplace({ ollamaInstalledModel: null })}
         />
       );
     }

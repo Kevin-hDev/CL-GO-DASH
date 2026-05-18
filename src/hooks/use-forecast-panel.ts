@@ -4,7 +4,7 @@ import { listen } from "@tauri-apps/api/event";
 export type ForecastSection = "view" | "scenarios" | "comparisons" | "analysis" | "notes" | "history";
 export type PanelMode = "preview" | "forecast";
 
-interface ForecastPanelState {
+export interface ForecastPanelState {
   activeSection: ForecastSection;
   navOpen: boolean;
   currentAnalysisId: string | null;
@@ -23,14 +23,33 @@ const DEFAULT_PANEL_STATE = {
   panelMode: "preview" as PanelMode,
 };
 
+const SECTIONS: ForecastSection[] = ["view", "scenarios", "comparisons", "analysis", "notes", "history"];
+
+function normalizePanelState(value: unknown): ForecastPanelState {
+  if (!value || typeof value !== "object") return DEFAULT_PANEL_STATE;
+  const raw = value as Partial<ForecastPanelState>;
+  return {
+    activeSection: SECTIONS.includes(raw.activeSection as ForecastSection)
+      ? raw.activeSection as ForecastSection
+      : DEFAULT_PANEL_STATE.activeSection,
+    navOpen: typeof raw.navOpen === "boolean" ? raw.navOpen : DEFAULT_PANEL_STATE.navOpen,
+    currentAnalysisId: typeof raw.currentAnalysisId === "string" ? raw.currentAnalysisId : null,
+    panelMode: raw.panelMode === "forecast" ? "forecast" : "preview",
+  };
+}
+
+function samePanelState(a: ForecastPanelState, b: ForecastPanelState): boolean {
+  return a.activeSection === b.activeSection &&
+    a.navOpen === b.navOpen &&
+    a.currentAnalysisId === b.currentAnalysisId &&
+    a.panelMode === b.panelMode;
+}
+
 function loadFromStorage(storageKey: string): ForecastPanelState {
   try {
     const saved = localStorage.getItem(storageKey);
     if (saved) {
-      const parsed: unknown = JSON.parse(saved);
-      if (parsed && typeof parsed === "object") {
-        return parsed as ForecastPanelState;
-      }
+      return normalizePanelState(JSON.parse(saved));
     }
   } catch { /* ignore */ }
   return DEFAULT_PANEL_STATE;
@@ -77,6 +96,11 @@ export function useForecastPanel(sessionId: string | null) {
     persist({ ...state, panelMode: mode });
   }, [state, persist]);
 
+  const restorePanelState = useCallback((next: ForecastPanelState) => {
+    if (samePanelState(state, next)) return;
+    persist(next);
+  }, [state, persist]);
+
   useEffect(() => {
     if (!sessionId) return;
     let cancelled = false;
@@ -101,5 +125,6 @@ export function useForecastPanel(sessionId: string | null) {
     focusAnalysis,
     closeAnalysis,
     setPanelMode,
+    restorePanelState,
   };
 }

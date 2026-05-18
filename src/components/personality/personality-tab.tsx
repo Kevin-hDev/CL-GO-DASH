@@ -131,7 +131,9 @@ export const PersonalityTab = memo(function PersonalityTab({
     );
   }
 
-  useLayoutEffect(() => { reportContent({ list, detail }); });
+  useLayoutEffect(() => { reportContent({ list, detail }); }, [
+    reportContent, files, selectedPath, content, fileName, injectionState, listFocused,
+  ]);
 
   return null;
 });

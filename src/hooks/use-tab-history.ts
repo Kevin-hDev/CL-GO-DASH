@@ -1,25 +1,36 @@
 import { useState, useCallback, useRef } from "react";
-
-export interface NavState {
-  tab: string;
-  settingsSubTab?: string;
-  sessionId?: string | null;
-  wakeupId?: string | null;
-  personalityPath?: string | null;
-}
+import type { AppNavPatch, AppNavState } from "@/types/navigation";
 
 const MAX_HISTORY = 50;
 
-export function useTabHistory(initial: NavState) {
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === "object" && !Array.isArray(value);
+}
+
+function mergePatch<T>(base: T, patch: AppNavPatch): T {
+  const result: Record<string, unknown> = { ...(base as Record<string, unknown>) };
+  for (const [key, value] of Object.entries(patch)) {
+    const current = result[key];
+    result[key] = isPlainObject(current) && isPlainObject(value) && !("kind" in value)
+      ? mergePatch(current, value as AppNavPatch)
+      : value;
+  }
+  return result as T;
+}
+
+function sameNav(a: AppNavState, b: AppNavState): boolean {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+export function useTabHistory(initial: AppNavState) {
   const [current, setCurrent] = useState(initial);
   const [navIndex, setNavIndex] = useState(0);
-  const history = useRef<NavState[]>([initial]);
+  const history = useRef<AppNavState[]>([initial]);
   const live = useRef(initial);
-  const navigating = useRef(false);
 
-  const push = useCallback((partial: Partial<NavState>) => {
-    if (navigating.current) return;
-    const next = { ...live.current, ...partial };
+  const pushNav = useCallback((partial: AppNavPatch) => {
+    const next = mergePatch(live.current, partial);
+    if (sameNav(live.current, next)) return;
     live.current = next;
     setNavIndex((i) => {
       history.current = history.current.slice(0, i + 1);
@@ -33,15 +44,24 @@ export function useTabHistory(initial: NavState) {
     setCurrent(next);
   }, []);
 
+  const replaceNav = useCallback((partial: AppNavPatch) => {
+    const next = mergePatch(live.current, partial);
+    if (sameNav(live.current, next)) return;
+    live.current = next;
+    setNavIndex((i) => {
+      history.current[i] = next;
+      return i;
+    });
+    setCurrent(next);
+  }, []);
+
   const goBack = useCallback(() => {
     setNavIndex((i) => {
       if (i <= 0) return i;
       const newIdx = i - 1;
       const state = history.current[newIdx];
       live.current = state;
-      navigating.current = true;
       setCurrent(state);
-      queueMicrotask(() => { navigating.current = false; });
       return newIdx;
     });
   }, []);
@@ -52,9 +72,7 @@ export function useTabHistory(initial: NavState) {
       const newIdx = i + 1;
       const state = history.current[newIdx];
       live.current = state;
-      navigating.current = true;
       setCurrent(state);
-      queueMicrotask(() => { navigating.current = false; });
       return newIdx;
     });
   }, []);
@@ -63,5 +81,5 @@ export function useTabHistory(initial: NavState) {
   // eslint-disable-next-line react-hooks/refs -- derived from navIndex state change
   const canGoForward = navIndex < history.current.length - 1;
 
-  return { current, push, goBack, goForward, canGoBack, canGoForward };
+  return { current, pushNav, replaceNav, goBack, goForward, canGoBack, canGoForward };
 }
