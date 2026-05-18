@@ -29,10 +29,11 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_autostart::init(
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
-            None,
+            Some(vec![app_events::AUTOSTART_ARG]),
         ))
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
             if let Some(w) = app.get_webview_window("main") {
+                let _ = w.show();
                 let _ = w.unminimize();
                 let _ = w.set_focus();
             }
@@ -81,8 +82,8 @@ pub fn run() {
             // Autostart : synchronise l'état OS avec le setting
             app_events::sync_autostart(app.handle(), config.advanced.autostart);
 
-            // Start hidden : masque la fenêtre si activé
-            if config.advanced.start_hidden {
+            // Start hidden applies only to launches initiated by the autostart entry.
+            if app_events::should_start_hidden(&config) {
                 if let Some(win) = app.get_webview_window("main") {
                     let _ = win.hide();
                 }

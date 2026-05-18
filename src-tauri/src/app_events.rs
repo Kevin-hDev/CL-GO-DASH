@@ -1,7 +1,10 @@
-use crate::services;
 use crate::services::gateway::GatewayService;
 use crate::services::{ollama_kill, ollama_lifecycle};
+use crate::{models::ClgoConfig, services};
+use std::ffi::OsStr;
 use tauri::{Manager, RunEvent, WindowEvent};
+
+pub const AUTOSTART_ARG: &str = "--clgo-autostart";
 
 pub fn handle_run_event(app_handle: &tauri::AppHandle, event: RunEvent) {
     match event {
@@ -68,10 +71,77 @@ fn cleanup(app_handle: &tauri::AppHandle) {
 pub fn sync_autostart(handle: &tauri::AppHandle, enabled: bool) {
     use tauri_plugin_autostart::ManagerExt;
     let manager = handle.autolaunch();
-    let current = manager.is_enabled().unwrap_or(false);
+    let current = match manager.is_enabled() {
+        Ok(current) => current,
+        Err(e) => {
+            eprintln!("[autostart] cannot read state: {e}");
+            return;
+        }
+    };
     if enabled && !current {
-        let _ = manager.enable();
+        if let Err(e) = manager.enable() {
+            eprintln!("[autostart] cannot enable: {e}");
+        }
     } else if !enabled && current {
-        let _ = manager.disable();
+        if let Err(e) = manager.disable() {
+            eprintln!("[autostart] cannot disable: {e}");
+        }
+    }
+}
+
+pub fn should_start_hidden(config: &ClgoConfig) -> bool {
+    should_start_hidden_for_args(config, std::env::args_os())
+}
+
+fn args_contain_autostart_marker<I, S>(args: I) -> bool
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<OsStr>,
+{
+    let marker = OsStr::new(AUTOSTART_ARG);
+    args.into_iter().any(|arg| arg.as_ref() == marker)
+}
+
+fn should_start_hidden_for_args<I, S>(config: &ClgoConfig, args: I) -> bool
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<OsStr>,
+{
+    config.advanced.autostart && config.advanced.start_hidden && args_contain_autostart_marker(args)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn detects_autostart_marker() {
+        assert!(args_contain_autostart_marker([
+            OsStr::new("cl-go"),
+            OsStr::new(AUTOSTART_ARG),
+        ]));
+        assert!(!args_contain_autostart_marker([OsStr::new("cl-go")]));
+    }
+
+    #[test]
+    fn start_hidden_requires_autostart_setting_and_launch_marker() {
+        let mut config = ClgoConfig::default();
+        config.advanced.autostart = true;
+        config.advanced.start_hidden = true;
+
+        assert!(should_start_hidden_for_args(
+            &config,
+            [OsStr::new("cl-go"), OsStr::new(AUTOSTART_ARG)]
+        ));
+        assert!(!should_start_hidden_for_args(
+            &config,
+            [OsStr::new("cl-go")]
+        ));
+
+        config.advanced.autostart = false;
+        assert!(!should_start_hidden_for_args(
+            &config,
+            [OsStr::new(AUTOSTART_ARG)]
+        ));
     }
 }

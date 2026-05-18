@@ -24,17 +24,12 @@ pub fn set_advanced_settings(
     app: tauri::AppHandle,
     settings: AdvancedSettings,
 ) -> Result<(), String> {
-    use tauri_plugin_autostart::ManagerExt;
-
-    let manager = app.autolaunch();
-    let current = manager.is_enabled().unwrap_or(false);
-    if settings.autostart && !current {
-        let _ = manager.enable();
-    } else if !settings.autostart && current {
-        let _ = manager.disable();
-    }
-
+    let settings = normalize_advanced_settings(settings);
     let mut config = config_service::read_config()?;
+    let autostart_changed = settings.autostart != config.advanced.autostart;
+    if autostart_changed {
+        sync_autostart_or_fail(&app, settings.autostart)?;
+    }
     config.advanced = protect_advanced_settings(settings, &config);
     config_service::write_config(&config)
 }
@@ -45,6 +40,46 @@ fn protect_advanced_settings(
 ) -> AdvancedSettings {
     settings.allowed_paths = current.advanced.allowed_paths.clone();
     settings
+}
+
+fn normalize_advanced_settings(mut settings: AdvancedSettings) -> AdvancedSettings {
+    if !settings.autostart {
+        settings.start_hidden = false;
+    }
+    settings
+}
+
+fn sync_autostart_or_fail(app: &tauri::AppHandle, requested: bool) -> Result<(), String> {
+    use tauri_plugin_autostart::ManagerExt;
+
+    let manager = app.autolaunch();
+    let current = manager.is_enabled().map_err(|e| {
+        eprintln!("[autostart] cannot read state: {e}");
+        "Erreur de configuration".to_string()
+    })?;
+
+    if requested != current {
+        let result = if requested {
+            manager.enable()
+        } else {
+            manager.disable()
+        };
+        result.map_err(|e| {
+            eprintln!("[autostart] cannot update state: {e}");
+            "Erreur de configuration".to_string()
+        })?;
+    }
+
+    let verified = manager.is_enabled().map_err(|e| {
+        eprintln!("[autostart] cannot verify state: {e}");
+        "Erreur de configuration".to_string()
+    })?;
+    if verified != requested {
+        eprintln!("[autostart] state verification failed");
+        return Err("Erreur de configuration".to_string());
+    }
+
+    Ok(())
 }
 
 #[cfg(test)]
@@ -64,6 +99,34 @@ mod tests {
         let protected = protect_advanced_settings(incoming, &current);
         assert_eq!(protected.allowed_paths, vec!["/trusted"]);
     }
+
+    #[test]
+    fn normalize_clears_start_hidden_when_autostart_is_disabled() {
+        let settings = AdvancedSettings {
+            autostart: false,
+            start_hidden: true,
+            ..Default::default()
+        };
+
+        let normalized = normalize_advanced_settings(settings);
+
+        assert!(!normalized.autostart);
+        assert!(!normalized.start_hidden);
+    }
+
+    #[test]
+    fn normalize_keeps_start_hidden_when_autostart_is_enabled() {
+        let settings = AdvancedSettings {
+            autostart: true,
+            start_hidden: true,
+            ..Default::default()
+        };
+
+        let normalized = normalize_advanced_settings(settings);
+
+        assert!(normalized.autostart);
+        assert!(normalized.start_hidden);
+    }
 }
 
 const PATCH_BLOCKED_KEYS: &[&str] = &["allowed_paths"];
@@ -73,8 +136,6 @@ pub fn patch_advanced_settings(
     app: tauri::AppHandle,
     patch: serde_json::Value,
 ) -> Result<(), String> {
-    use tauri_plugin_autostart::ManagerExt;
-
     let mut config = config_service::read_config()?;
     let mut current = serde_json::to_value(&config.advanced).map_err(|e| {
         eprintln!("[config] serialize: {e}");
@@ -94,13 +155,15 @@ pub fn patch_advanced_settings(
         eprintln!("[config] deserialize: {e}");
         "Erreur de configuration".to_string()
     })?;
+    let merged = normalize_advanced_settings(merged);
+    let autostart_requested = patch
+        .as_object()
+        .map(|updates| updates.contains_key("autostart"))
+        .unwrap_or(false);
+    let autostart_changed = merged.autostart != config.advanced.autostart;
 
-    let manager = app.autolaunch();
-    let enabled = manager.is_enabled().unwrap_or(false);
-    if merged.autostart && !enabled {
-        let _ = manager.enable();
-    } else if !merged.autostart && enabled {
-        let _ = manager.disable();
+    if autostart_requested || autostart_changed {
+        sync_autostart_or_fail(&app, merged.autostart)?;
     }
 
     config.advanced = merged;

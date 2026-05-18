@@ -3,13 +3,18 @@ import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
 import type { ThemeChoice } from "@/hooks/use-theme";
 import type { useSettings } from "@/hooks/use-settings";
-import { FONT_SIZES, FONT_FAMILIES } from "@/hooks/use-settings";
 import { RoundToggle } from "@/components/heartbeat/round-toggle";
 import { showToast } from "@/lib/toast-emitter";
 import { SettingsCard } from "./settings-card";
 import { SettingsRow } from "./settings-row";
-import { SettingsSelect, type SelectOption } from "./settings-select";
+import { SettingsSelect } from "./settings-select";
 import { ThemeSelector } from "./theme-selector";
+import {
+  FONT_FAMILY_OPTIONS,
+  FONT_SIZE_OPTIONS,
+  LANGUAGE_OPTIONS,
+  RESPONSE_LANGUAGE_OPTIONS,
+} from "./general-settings-options";
 
 interface GeneralSettingsProps {
   themeChoice: ThemeChoice;
@@ -24,36 +29,9 @@ interface StartupState {
   link_preview_enabled: boolean;
 }
 
-const FONT_SIZE_OPTIONS: SelectOption[] = FONT_SIZES.map((s) => ({
-  value: String(s),
-  label: `${s}%`,
-}));
-
-const FONT_FAMILY_OPTIONS: SelectOption[] = FONT_FAMILIES.map((f) => ({
-  value: f.id,
-  label: f.label,
-}));
-
-const LANGUAGE_OPTIONS: SelectOption[] = [
-  { value: "en", label: "English" },
-  { value: "fr", label: "Français" },
-  { value: "de", label: "Deutsch" },
-  { value: "es", label: "Español" },
-  { value: "it", label: "Italiano" },
-  { value: "zh", label: "中文" },
-  { value: "ja", label: "日本語" },
-];
-
-const RESPONSE_LANGUAGE_OPTIONS: SelectOption[] = [
-  { value: "", label: "—" },
-  { value: "English", label: "English" },
-  { value: "French", label: "Français" },
-  { value: "German", label: "Deutsch" },
-  { value: "Spanish", label: "Español" },
-  { value: "Italian", label: "Italiano" },
-  { value: "Chinese", label: "中文" },
-  { value: "Japanese", label: "日本語" },
-];
+function normalizeStartup(state: StartupState): StartupState {
+  return state.autostart ? state : { ...state, start_hidden: false };
+}
 
 export function GeneralSettings({ themeChoice, onThemeChange, settings }: GeneralSettingsProps) {
   const { t, i18n } = useTranslation();
@@ -69,26 +47,31 @@ export function GeneralSettings({ themeChoice, onThemeChange, settings }: Genera
       .then((s) => {
         const linkPreview = (s.link_preview_enabled as boolean) ?? true;
         localStorage.setItem("clgo-link-preview", String(linkPreview));
-        setStartup({
+        setStartup(normalizeStartup({
           autostart: s.autostart as boolean ?? false,
           start_hidden: s.start_hidden as boolean ?? false,
           response_language: s.response_language as string ?? "",
           link_preview_enabled: linkPreview,
-        });
+        }));
       })
       .catch(() => console.warn("Failed to load advanced settings"));
   }, []);
 
   const saveAdvanced = useCallback((patch: Partial<StartupState>) => {
     setStartup((prev) => {
-      const next = { ...prev, ...patch };
-      invoke("patch_advanced_settings", { patch }).catch(() => showToast(t("errors.saveFailed"), "error"));
-      if ("link_preview_enabled" in patch) {
-        localStorage.setItem("clgo-link-preview", String(patch.link_preview_enabled));
+      const next = normalizeStartup({ ...prev, ...patch });
+      const normalizedPatch = { ...patch };
+      if (!next.autostart) normalizedPatch.start_hidden = false;
+      invoke("patch_advanced_settings", { patch: normalizedPatch }).catch(() => {
+        setStartup(prev);
+        showToast(t("errors.saveFailed"), "error");
+      });
+      if ("link_preview_enabled" in normalizedPatch) {
+        localStorage.setItem("clgo-link-preview", String(normalizedPatch.link_preview_enabled));
       }
       return next;
     });
-  }, []);
+  }, [t]);
 
   const changeLang = (lang: string) => {
     void i18n.changeLanguage(lang);
@@ -196,7 +179,8 @@ export function GeneralSettings({ themeChoice, onThemeChange, settings }: Genera
             description={t("settings.advanced.startHiddenDesc")}
           >
             <RoundToggle
-              checked={startup.start_hidden}
+              checked={startup.autostart && startup.start_hidden}
+              disabled={!startup.autostart}
               onChange={(v) => saveAdvanced({ start_hidden: v })}
             />
           </SettingsRow>
