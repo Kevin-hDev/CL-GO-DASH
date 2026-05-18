@@ -24,14 +24,13 @@
   position: fixed;
   padding: 4px 8px;
   border-radius: var(--radius-sm);
-  background: var(--surface);
-  border: 1px solid var(--edge);
-  color: var(--ink-muted);
+  background: var(--tooltip-bg);
+  border: 1px solid var(--tooltip-border);
+  color: var(--tooltip-text);
   font-size: 10px;
   font-weight: 400;
   white-space: nowrap;
   pointer-events: none;
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--tooltip-shadow);
   z-index: 9999;
 }
-

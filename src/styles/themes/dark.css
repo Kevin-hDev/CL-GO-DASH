@@ -33,6 +33,10 @@
   /* Surface variants */
   --surface-glass: rgba(37, 37, 37, 0.55);
   --surface-overlay: rgba(37, 37, 37, 0.70);
+  --tooltip-bg: #252525;
+  --tooltip-border: rgba(255, 255, 255, 0.10);
+  --tooltip-text: var(--ink);
+  --tooltip-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
 
   /* Signal backgrounds (alpha) */
   --signal-ok-bg: rgba(34, 197, 94, 0.15);

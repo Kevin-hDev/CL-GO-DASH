@@ -10,11 +10,11 @@
   transform: translateX(-50%);
   padding: 4px 10px;
   border-radius: 6px;
-  background: var(--surface);
-  border: 1px solid var(--edge);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  background: var(--tooltip-bg);
+  border: 1px solid var(--tooltip-border);
+  box-shadow: var(--tooltip-shadow);
   font-size: 11px;
-  color: var(--ink-muted);
+  color: var(--tooltip-text);
   white-space: nowrap;
   pointer-events: none;
   z-index: 9999;
