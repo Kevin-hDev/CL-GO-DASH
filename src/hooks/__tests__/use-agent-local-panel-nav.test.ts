@@ -25,6 +25,8 @@ describe("useAgentLocalPanelNav", () => {
   it("restaure file tree et forecast panel depuis la navigation", () => {
     const tree = fileTree(false);
     const panel = forecast();
+    const onNavChange = vi.fn();
+    const onNavReplace = vi.fn();
 
     renderHook(() => useAgentLocalPanelNav({
       navState: {
@@ -36,8 +38,8 @@ describe("useAgentLocalPanelNav", () => {
       },
       fileTree: tree,
       forecast: panel,
-      onNavChange: vi.fn(),
-      onNavReplace: vi.fn(),
+      onNavChange,
+      onNavReplace,
     }));
 
     expect(tree.setOpen).toHaveBeenCalledWith(true);
@@ -47,6 +49,8 @@ describe("useAgentLocalPanelNav", () => {
       currentAnalysisId: "a1",
       panelMode: "forecast",
     });
+    expect(onNavChange).not.toHaveBeenCalled();
+    expect(onNavReplace).not.toHaveBeenCalled();
   });
 
   it("remplace le premier rapport au lieu de push", () => {

@@ -20,6 +20,7 @@ export function useAgentLocalPanelNav({
 }: AgentLocalPanelNavArgs) {
   const reportedPanelState = useRef(false);
   const restoredNavKey = useRef<string | null>(null);
+  const skipStaleReport = useRef(false);
   const { open: fileTreeOpen, setOpen: setFileTreeOpen } = fileTree;
   const { panelMode, currentAnalysisId, activeSection, restorePanelState } = forecast;
   const navKey = JSON.stringify([
@@ -32,12 +33,17 @@ export function useAgentLocalPanelNav({
   useEffect(() => {
     if (restoredNavKey.current === navKey) return;
     restoredNavKey.current = navKey;
-    if (fileTreeOpen !== navState.fileTreeOpen) setFileTreeOpen(navState.fileTreeOpen);
+    let restored = false;
+    if (fileTreeOpen !== navState.fileTreeOpen) {
+      restored = true;
+      setFileTreeOpen(navState.fileTreeOpen);
+    }
     const forecastChanged =
       panelMode !== navState.panelMode ||
       currentAnalysisId !== navState.forecastAnalysisId ||
       activeSection !== navState.forecastSection;
     if (forecastChanged) {
+      restored = true;
       restorePanelState({
         activeSection: navState.forecastSection,
         navOpen: false,
@@ -45,6 +51,7 @@ export function useAgentLocalPanelNav({
         panelMode: navState.panelMode,
       });
     }
+    skipStaleReport.current = restored;
   }, [
     navKey, fileTreeOpen, setFileTreeOpen, panelMode, currentAnalysisId, activeSection,
     restorePanelState, navState.fileTreeOpen, navState.panelMode,
@@ -52,6 +59,10 @@ export function useAgentLocalPanelNav({
   ]);
 
   useEffect(() => {
+    if (skipStaleReport.current) {
+      skipStaleReport.current = false;
+      return;
+    }
     const report = reportedPanelState.current ? onNavChange : onNavReplace ?? onNavChange;
     reportedPanelState.current = true;
     report?.({
