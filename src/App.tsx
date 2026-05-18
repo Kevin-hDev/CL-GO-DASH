@@ -75,9 +75,6 @@ function MainApp() {
   const handleAgentNavChange = useCallback((partial: DeepPartial<AgentLocalNavState>) => {
     pushNav({ agentLocal: partial });
   }, [pushNav]);
-  const handleAgentNavReplace = useCallback((partial: DeepPartial<AgentLocalNavState>) => {
-    replaceNav({ agentLocal: partial });
-  }, [replaceNav]);
   const handleSettingsNavChange = useCallback((partial: DeepPartial<SettingsNavState>) => {
     pushNav({ settings: partial });
   }, [pushNav]);
@@ -149,7 +146,6 @@ function MainApp() {
         navState={nav.agentLocal}
         onSessionChange={handleSessionChange}
         onNavChange={handleAgentNavChange}
-        onNavReplace={handleAgentNavReplace}
         listFocused={listActive("agent-local")}
         reportContent={reportContent}
       />

@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useAgentSessions } from "@/hooks/use-agent-sessions";
 import { useAgentTabs } from "@/hooks/use-agent-tabs";
@@ -10,6 +10,8 @@ import { useSessionActions } from "@/hooks/use-session-actions";
 import { useFilePreview } from "@/hooks/use-file-preview";
 import { useAgentLocalShortcuts } from "@/hooks/use-agent-local-shortcuts";
 import { useAgentLocalTabPanelSync } from "@/hooks/use-agent-local-tab-panel-sync";
+import { useAgentLocalControlledPreview } from "@/hooks/use-agent-local-controlled-preview";
+import { useAgentLocalControlledTerminal } from "@/hooks/use-agent-local-controlled-terminal";
 import { useArrowNavigation } from "@/hooks/use-arrow-navigation";
 import type { FileOperation } from "@/types/file-preview";
 import type { AgentLocalNavState, DeepPartial } from "@/types/navigation";
@@ -18,11 +20,10 @@ interface UseAgentLocalTabOpts {
   navState: AgentLocalNavState;
   onSessionChange?: (id: string | null) => void;
   onNavChange?: (partial: DeepPartial<AgentLocalNavState>) => void;
-  onNavReplace?: (partial: DeepPartial<AgentLocalNavState>) => void;
   listFocused: boolean;
 }
 
-export function useAgentLocalTab({ navState, onSessionChange, onNavChange, onNavReplace, listFocused }: UseAgentLocalTabOpts) {
+export function useAgentLocalTab({ navState, onSessionChange, onNavChange, listFocused }: UseAgentLocalTabOpts) {
   const { sessions, refresh, create, rename, remove, updateModel } = useAgentSessions();
   const tabState = useAgentTabs();
   const projectsHook = useProjects();
@@ -36,7 +37,7 @@ export function useAgentLocalTab({ navState, onSessionChange, onNavChange, onNav
   const terminalGroupKey = activeProject?.id || "__default__";
   const terminalCwd = activeProject?.path || "";
   const validGroupKeys = projectsHook.projects.map((p) => p.id);
-  const terminal = useTerminal(terminalGroupKey, terminalCwd, validGroupKeys);
+  const terminalState = useTerminal(terminalGroupKey, terminalCwd, validGroupKeys);
   const { model: defaultModel, provider: defaultProvider } = useDefaultModel();
   const [welcomeModel, setWelcomeModel] = useState<{ model: string; provider: string } | null>(null);
   const [thinking, setThinking] = useState(false);
@@ -47,7 +48,7 @@ export function useAgentLocalTab({ navState, onSessionChange, onNavChange, onNav
   const currentDefault = welcomeModel ?? { model: defaultModel, provider: defaultProvider };
   const model = activeSession?.model ?? currentDefault.model;
   const provider = activeSession?.provider ?? currentDefault.provider;
-  const filePreview = useFilePreview(tabState.activeSessionId ?? null, fileOperations);
+  const filePreviewState = useFilePreview(tabState.activeSessionId ?? null, fileOperations);
 
   useEffect(() => {
     if (!model || availableModels.size === 0) return;
@@ -66,26 +67,19 @@ export function useAgentLocalTab({ navState, onSessionChange, onNavChange, onNav
     }
   }, [availableModels, model, provider, tabState.activeSessionId, updateModel]);
 
-  const sessionActions = useSessionActions({ create, tabState, rename, defaultModel, defaultProvider, welcomeModel, setWelcomeModel, projectsHook });
-
-  useAgentLocalShortcuts({
-    activeSessionId: tabState.activeSessionId,
-    terminalOpen: terminal.isOpen,
-    terminalTabsCount: terminal.tabs.length,
-    terminalCwd,
-    onAddTerminalTab: terminal.addTab,
-    onToggleTerminal: terminal.togglePanel,
+  const sessionActions = useSessionActions({
+    create,
+    tabState,
+    rename,
+    defaultModel,
+    defaultProvider,
+    welcomeModel,
+    setWelcomeModel,
+    projectsHook,
+    onSessionChange,
   });
 
-  const prevSessionRef = useRef(tabState.activeSessionId);
-  useEffect(() => {
-    if (tabState.activeSessionId !== prevSessionRef.current) {
-      prevSessionRef.current = tabState.activeSessionId;
-      onSessionChange?.(tabState.activeSessionId ?? null);
-    }
-  }, [tabState.activeSessionId, onSessionChange]);
-
-  const handleSelectById = useCallback(async (id: string) => {
+  const applySessionSelection = useCallback(async (id: string) => {
     const existingIdx = tabState.tabs.findIndex((tab) => tab.session_id.localeCompare(id) === 0);
     if (existingIdx >= 0) {
       await tabState.selectTab(existingIdx);
@@ -99,17 +93,34 @@ export function useAgentLocalTab({ navState, onSessionChange, onNavChange, onNav
     }
   }, [tabState, sessions]);
 
+  const handleSelectById = useCallback(async (id: string) => {
+    await applySessionSelection(id);
+    onSessionChange?.(id);
+  }, [applySessionSelection, onSessionChange]);
+
   useEffect(() => {
     if (navState.sessionId === tabState.activeSessionId) return;
     if (navState.sessionId === null) {
       void tabState.deselectTab();
     } else {
-      void handleSelectById(navState.sessionId);
+      void applySessionSelection(navState.sessionId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only react to requested session changes
   }, [navState.sessionId]);
 
-  useAgentLocalTabPanelSync({ navState, filePreview, terminal, onNavChange, onNavReplace });
+  const filePreview = useAgentLocalControlledPreview({ navState, filePreviewState, onNavChange });
+  const terminal = useAgentLocalControlledTerminal({ navState, terminalState, terminalCwd, onNavChange });
+
+  useAgentLocalShortcuts({
+    activeSessionId: tabState.activeSessionId,
+    terminalOpen: terminal.isOpen,
+    terminalTabsCount: terminal.tabs.length,
+    terminalCwd,
+    onAddTerminalTab: terminal.addTab,
+    onToggleTerminal: terminal.togglePanel,
+  });
+
+  useAgentLocalTabPanelSync({ navState, filePreview: filePreviewState, terminal: terminalState });
 
   const visibleSessionIds = useMemo(() => {
     const projectIdSet = new Set(projectsHook.projects.map((p) => p.id));
@@ -131,13 +142,13 @@ export function useAgentLocalTab({ navState, onSessionChange, onNavChange, onNav
   });
 
   const handleDeleteProject = useCallback((projectId: string) => {
-    const entries = terminal.getGroupPtyEntries(projectId);
+    const entries = terminalState.getGroupPtyEntries(projectId);
     for (const { id, token } of entries) {
       invoke("pty_kill", { id, token }).catch(() => {});
     }
-    terminal.removeGroup(projectId);
+    terminalState.removeGroup(projectId);
     void projectsHook.remove(projectId);
-  }, [terminal, projectsHook]);
+  }, [terminalState, projectsHook]);
 
   return {
     sessions, refresh, rename, remove, updateModel,

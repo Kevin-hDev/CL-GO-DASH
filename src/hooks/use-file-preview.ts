@@ -64,13 +64,13 @@ export function useFilePreview(sessionId: string | null, operations: FileOperati
       const next = [operation.id, ...ids.filter((id) => id !== operation.id)];
       return next.slice(0, MAX_TABS);
     });
+    return operation.id;
   }, [setOpen]);
 
   const openPath = useCallback((path: string) => {
     const operation = [...operations].reverse().find((op) => op.path === path);
     if (operation) {
-      openOperation(operation);
-      return;
+      return openOperation(operation);
     }
     const fallback: FileOperation = {
       id: `read:${path}`,
@@ -82,7 +82,7 @@ export function useFilePreview(sessionId: string | null, operations: FileOperati
       deletions: 0,
     };
     setFallbackOps((items) => [fallback, ...items.filter((item) => item.id !== fallback.id)].slice(0, MAX_TABS));
-    openOperation(fallback);
+    return openOperation(fallback);
   }, [operations, openOperation]);
 
   const closeTab = useCallback((id: string) => {

@@ -1,5 +1,5 @@
 "use no memo";
-import { useCallback, useEffect, useState, useMemo, useLayoutEffect, memo } from "react";
+import { useCallback, useState, useMemo, useLayoutEffect, memo } from "react";
 import { useTranslation } from "react-i18next";
 import { useSettings } from "@/hooks/use-settings";
 import { useArrowNavigation } from "@/hooks/use-arrow-navigation";
@@ -62,18 +62,13 @@ export const SettingsTab = memo(function SettingsTab({
   listFocused = true,
   reportContent,
 }: SettingsTabProps) {
-  const [subTab, setSubTabState] = useState<SettingsSubTab>(navState.subTab);
   const [childListTarget, setChildListTarget] = useState<HTMLElement | null>(null);
   const [childDetailTarget, setChildDetailTarget] = useState<HTMLElement | null>(null);
 
-  useEffect(() => {
-    setSubTabState(navState.subTab);
-  }, [navState.subTab]);
-
   const setSubTab = useCallback((id: SettingsSubTab) => {
-    setSubTabState(id);
     onNavChange({ subTab: id });
   }, [onNavChange]);
+  const subTab = navState.subTab;
   const subTabIds = useMemo(() => SUB_TABS.map((t) => t.id), []);
   useArrowNavigation({
     items: subTabIds,
