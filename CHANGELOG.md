@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.8.9
+
+### Features
+
+- **Communication channels** — Discord, Telegram, and Slack channel support
+- **Forecast** — local and cloud LLM forecasting workflows
+- **Keyboard navigation** — arrow-key navigation across the app
+
+---
+
 ## v0.8.8
 
 ### Security
