@@ -133,7 +133,7 @@ export function SettingsSelect({
     [...opts].sort((a, b) => (a.dimmed ? 1 : 0) - (b.dimmed ? 1 : 0));
 
   return (
-    <div className={`ss-wrap ${open ? "open" : ""} ${disabled ? "disabled" : ""}`} ref={ref}>
+    <div className={`ss-wrap ${open ? "open" : ""} ${disabled ? "disabled" : ""}`} data-keyboard-scope={open ? "local" : undefined} ref={ref}>
       <div className="ss-trigger" role="button" tabIndex={disabled ? -1 : 0} onClick={() => !disabled && setOpen(!open)} onKeyDown={(e) => { if (!disabled && (e.key === 'Enter' || e.key === ' ')) setOpen(!open); }} title={isOverflowing ? displayLabel : undefined}>
         <span className={`ss-trigger-label ${isOverflowing ? "is-overflowing" : ""}`}>
           {displayLabel}

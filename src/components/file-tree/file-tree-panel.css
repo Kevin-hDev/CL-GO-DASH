@@ -124,9 +124,11 @@
   outline: none;
 }
 
+.ft-node:focus,
 .ft-node:focus-visible {
-  outline: 1px solid var(--pulse);
-  outline-offset: -1px;
+  outline: none;
+  box-shadow: none;
+  background: var(--surface-hover);
 }
 
 .ft-node-name {

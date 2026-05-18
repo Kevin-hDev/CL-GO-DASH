@@ -189,6 +189,7 @@ export function TerminalInstance({
   return (
     <div
       ref={containerRef}
+      data-keyboard-scope="local"
       style={{
         width: "100%",
         height: "100%",

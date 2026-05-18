@@ -132,6 +132,8 @@ export function TerminalPanel({
     <div
       ref={panelRef}
       className={`terminal-panel ${isResizing ? "resizing" : ""}`}
+      data-nav-zone="terminal"
+      data-keyboard-scope="local"
       style={{ height: animatedHeight }}
     >
       <div

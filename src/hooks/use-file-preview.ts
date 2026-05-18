@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { fileNameFromPath } from "@/lib/file-preview-utils";
 import { IS_MAC } from "@/lib/platform";
 import type { FileOperation, FilePreviewActiveTab } from "@/types/file-preview";
@@ -14,7 +14,6 @@ import {
   measurePreviewLayout,
 } from "./file-preview-layout";
 import { useFilePreviewPanelState } from "./use-file-preview-panel-state";
-
 const MAX_TABS = 6;
 
 export function useFilePreview(sessionId: string | null, operations: FileOperation[]) {
@@ -117,18 +116,21 @@ export function useFilePreview(sessionId: string | null, operations: FileOperati
     setResizing(true);
   }, [width, extraWidth]);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (!open || fullscreen || resizing) return;
     const panel = findOpenPreviewPanel();
     if (!panel) return;
     const nextWidth = clampPreviewWidthForLayout(width, panel, extraWidth);
-    if (nextWidth !== width) setWidth(nextWidth);
+    if (nextWidth !== width) setWidth((current) => clampPreviewWidthForLayout(current, panel, extraWidth));
   }, [open, fullscreen, resizing, width, extraWidth, setWidth]);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (!open) return;
     const panel = findOpenPreviewPanel();
-    const updateWidth = () => setFullscreenWidth(measurePreviewFullscreenWidth(panel));
+    const updateWidth = () => setFullscreenWidth((current) => {
+      const next = measurePreviewFullscreenWidth(panel);
+      return next === current ? current : next;
+    });
     updateWidth();
     const layout = measurePreviewLayout(panel, 0);
     if (!layout.container || typeof ResizeObserver === "undefined") return;

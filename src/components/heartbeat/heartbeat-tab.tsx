@@ -53,6 +53,7 @@ export const HeartbeatTab = memo(function HeartbeatTab({
     selectedId: selectedId,
     onSelect: setSelectedId,
     enabled: listFocused,
+    focusActiveSelector: "[data-nav-zone='list'] [data-nav-active='true']",
   });
 
   const handleDelete = async () => {
@@ -84,6 +85,7 @@ export const HeartbeatTab = memo(function HeartbeatTab({
             <button
               key={w.id}
               className={`wk-sidebar-item ${selectedId === w.id ? "active" : ""}`}
+              data-nav-active={selectedId === w.id ? "true" : undefined}
               onClick={() => setSelectedId(w.id)}
               type="button"
             >
@@ -130,6 +132,7 @@ export const HeartbeatTab = memo(function HeartbeatTab({
     </>
   );
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reports the fresh slots from this render
   useLayoutEffect(() => { reportContent({ list, detail }); }, [
     reportContent, wakeups, runs, summaries, globalPaused, selectedId, dialog, listFocused,
   ]);

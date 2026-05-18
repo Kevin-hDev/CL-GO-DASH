@@ -116,7 +116,7 @@ export function ChatInput({
     : "hidden" as const;
 
   return (
-    <div className="chat-input-bubble" ref={bubbleRef}>
+    <div className="chat-input-bubble" data-keyboard-scope="local" ref={bubbleRef}>
       {slash.showDropdown && (
         <SlashAutocomplete
           skills={slash.skills}

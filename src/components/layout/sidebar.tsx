@@ -55,6 +55,8 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
         "z-10",
         !expandOnHover && "sb-locked",
       )}
+      data-nav-zone="sidebar"
+      tabIndex={-1}
       style={{
         width: "var(--sidebar-collapsed)",
         minWidth: "var(--sidebar-collapsed)",
@@ -77,9 +79,11 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
           <div
             key={item.id}
             role="button"
-            tabIndex={0}
+            tabIndex={activeTab === item.id ? 0 : -1}
+            aria-current={activeTab === item.id ? "page" : undefined}
+            data-nav-active={activeTab === item.id ? "true" : undefined}
             onClick={() => onTabChange(item.id)}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onTabChange(item.id); }}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onTabChange(item.id); } }}
             className={cn(
               "relative flex items-center cursor-pointer",
               "whitespace-nowrap",
@@ -134,9 +138,11 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
       {/* Settings */}
       <div
         role="button"
-        tabIndex={0}
+        tabIndex={activeTab === "settings" ? 0 : -1}
+        aria-current={activeTab === "settings" ? "page" : undefined}
+        data-nav-active={activeTab === "settings" ? "true" : undefined}
         onClick={() => onTabChange("settings")}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onTabChange("settings"); }}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onTabChange("settings"); } }}
         className={cn(
           "flex items-center cursor-pointer",
           "whitespace-nowrap",

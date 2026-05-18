@@ -140,7 +140,7 @@ export function AppLayout({
       <div className={`app-sidebar-block ${sidebarOpen ? "" : "app-sidebar-hidden"}`}>
         <Sidebar activeTab={activeTab} onTabChange={onTabChange} />
         <div
-          className="app-list-panel"
+          className="app-list-panel" data-nav-zone="list" tabIndex={-1}
           style={{
             ...(listWidth ? { width: listWidth, minWidth: listWidth } : {}),
             position: "relative",
@@ -158,7 +158,7 @@ export function AppLayout({
         </div>
         <div className="sidebar-resize-handle" onPointerDown={handleResizeStart} />
       </div>
-      <div className="app-detail-panel">
+      <div className="app-detail-panel" data-nav-zone="detail" tabIndex={-1}>
         <DragRegion
           height={22}
           style={{

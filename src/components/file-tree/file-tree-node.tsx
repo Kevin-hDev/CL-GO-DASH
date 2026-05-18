@@ -9,7 +9,7 @@ interface FileTreeNodeProps {
   maxDepth: number;
   expanded: boolean;
   active: boolean;
-  children?: FileEntry[];
+  childEntries?: FileEntry[];
   expandedPaths: Set<string>;
   childrenMap: Map<string, FileEntry[]>;
   activePath: string | null;
@@ -23,7 +23,7 @@ export function FileTreeNode({
   maxDepth,
   expanded,
   active,
-  children,
+  childEntries,
   expandedPaths,
   childrenMap,
   activePath,
@@ -33,7 +33,7 @@ export function FileTreeNode({
   const childrenRef = useRef<HTMLDivElement>(null);
   const [maxHeight, setMaxHeight] = useState<string>(expanded ? "none" : "0");
 
-  const childCount = children?.length ?? 0;
+  const childCount = childEntries?.length ?? 0;
 
   useEffect(() => {
     if (!childrenRef.current) return;
@@ -73,8 +73,12 @@ export function FileTreeNode({
         onClick={handleClick}
         onKeyDown={handleKeyDown}
         role="treeitem"
-        tabIndex={0}
+        tabIndex={active ? 0 : -1}
+        data-ft-path={entry.path}
+        data-ft-dir={entry.is_dir ? "true" : undefined}
+        data-nav-active={active ? "true" : undefined}
         title={entry.name}
+        aria-selected={active}
         aria-expanded={entry.is_dir ? expanded : undefined}
       >
         <span className={`ft-chevron ${entry.is_dir ? "" : "ft-chevron-placeholder"} ${expanded ? "expanded" : ""}`}>
@@ -83,14 +87,14 @@ export function FileTreeNode({
         {!entry.is_dir && <FileIcon name={entry.name} size={16} />}
         <span className="ft-node-name">{entry.name}</span>
       </div>
-      {entry.is_dir && children && (
+      {entry.is_dir && childEntries && (
         <div
           ref={childrenRef}
           className={`ft-children ${expanded ? "" : "collapsed"}`}
           style={{ maxHeight: expanded ? maxHeight : "0" }}
           role="group"
         >
-          {children.map((child) => (
+          {childEntries.map((child) => (
             <FileTreeNode
               key={child.path}
               entry={child}
@@ -98,7 +102,7 @@ export function FileTreeNode({
               maxDepth={maxDepth}
               expanded={expandedPaths.has(child.path)}
               active={child.path === activePath}
-              children={childrenMap.get(child.path)}
+              childEntries={childrenMap.get(child.path)}
               expandedPaths={expandedPaths}
               childrenMap={childrenMap}
               activePath={activePath}
@@ -106,7 +110,7 @@ export function FileTreeNode({
               onSelect={onSelect}
             />
           ))}
-          {children.length === 0 && expanded && (
+          {childEntries.length === 0 && expanded && (
             <div className="ft-empty" style={{ paddingLeft: (depth + 1) * 16 + 8 }}>—</div>
           )}
         </div>

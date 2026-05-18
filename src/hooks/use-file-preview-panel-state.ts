@@ -36,6 +36,12 @@ export function useFilePreviewPanelState(sessionId: string | null) {
     setStates((currentStates) => {
       const current = currentStates[key] ?? loadPanelState(sessionId);
       const next = updater(current);
+      if (
+        next.open === current.open &&
+        next.fullscreen === current.fullscreen &&
+        next.width === current.width &&
+        next.extraWidth === current.extraWidth
+      ) return currentStates;
       writeStoredFilePreviewPanel(sessionId, {
         open: next.open,
         fullscreen: next.fullscreen,

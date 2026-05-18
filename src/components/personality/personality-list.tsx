@@ -47,9 +47,10 @@ export function PersonalityList({
               key={f.name}
               className={`pers-item ${selectedPath === f.path ? "active" : ""}`}
               role="button"
-              tabIndex={0}
+              tabIndex={selectedPath === f.path ? 0 : -1}
+              data-nav-active={selectedPath === f.path ? "true" : undefined}
               onClick={() => onSelect(f.path)}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onSelect(f.path); }}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(f.path); } }}
             >
               <div className="pers-icon"><FileText size={16} weight="duotone" /></div>
               <div className="pers-item-body">

@@ -29,10 +29,15 @@ export function ConversationSessionItem({
     <div
       className={`conv-item conv-session-indented ${active ? "active" : ""}`}
       role="button"
-      tabIndex={0}
+      tabIndex={active ? 0 : -1}
+      aria-current={active ? "page" : undefined}
+      data-nav-active={active ? "true" : undefined}
       onClick={() => onSelect(session.id)}
       onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") onSelect(session.id);
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onSelect(session.id);
+        }
       }}
     >
       {renaming ? (

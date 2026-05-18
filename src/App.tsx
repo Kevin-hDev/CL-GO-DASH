@@ -87,6 +87,7 @@ function MainApp() {
     selectedId: activeTab,
     onSelect: (t) => pushNav({ tab: t }),
     enabled: focusedPanel === "sidebar",
+    focusActiveSelector: "[data-nav-zone='sidebar'] [data-nav-active='true']",
   });
 
   const handleShowWelcome = useCallback(() => {

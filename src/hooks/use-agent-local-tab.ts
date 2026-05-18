@@ -9,6 +9,7 @@ import { useAvailableModels } from "@/hooks/use-available-models";
 import { useSessionActions } from "@/hooks/use-session-actions";
 import { useFilePreview } from "@/hooks/use-file-preview";
 import { useAgentLocalShortcuts } from "@/hooks/use-agent-local-shortcuts";
+import { useAgentLocalTabPanelSync } from "@/hooks/use-agent-local-tab-panel-sync";
 import { useArrowNavigation } from "@/hooks/use-arrow-navigation";
 import type { FileOperation } from "@/types/file-preview";
 import type { AgentLocalNavState, DeepPartial } from "@/types/navigation";
@@ -40,8 +41,6 @@ export function useAgentLocalTab({ navState, onSessionChange, onNavChange, onNav
   const [welcomeModel, setWelcomeModel] = useState<{ model: string; provider: string } | null>(null);
   const [thinking, setThinking] = useState(false);
   const [fileOperations, setFileOperations] = useState<FileOperation[]>([]);
-  const reportedPanelState = useRef(false);
-  const restoredPanelNavKey = useRef<string | null>(null);
 
   const { groups: availableModels } = useAvailableModels();
 
@@ -110,45 +109,7 @@ export function useAgentLocalTab({ navState, onSessionChange, onNavChange, onNav
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only react to requested session changes
   }, [navState.sessionId]);
 
-  const panelNavKey = JSON.stringify([
-    navState.previewOpen,
-    navState.previewActiveTab,
-    navState.previewFullscreen,
-    navState.terminalOpen,
-    navState.terminalActiveTabId,
-  ]);
-
-  useEffect(() => {
-    if (restoredPanelNavKey.current === panelNavKey) return;
-    restoredPanelNavKey.current = panelNavKey;
-    if (filePreview.open !== navState.previewOpen) filePreview.setOpen(navState.previewOpen);
-    if (filePreview.activeTab !== navState.previewActiveTab) filePreview.setActiveTab(navState.previewActiveTab);
-    if (filePreview.fullscreen !== navState.previewFullscreen) filePreview.setFullscreen(navState.previewFullscreen);
-    if (terminal.isOpen !== navState.terminalOpen) terminal.togglePanel();
-    if (navState.terminalActiveTabId && terminal.activeTabId !== navState.terminalActiveTabId) {
-      terminal.setActiveTab(navState.terminalActiveTabId);
-    }
-  }, [
-    panelNavKey,
-    navState.previewOpen, navState.previewActiveTab, navState.previewFullscreen,
-    navState.terminalOpen, navState.terminalActiveTabId,
-    filePreview, terminal,
-  ]);
-
-  useEffect(() => {
-    const report = reportedPanelState.current ? onNavChange : onNavReplace ?? onNavChange;
-    reportedPanelState.current = true;
-    report?.({
-      previewOpen: filePreview.open,
-      previewActiveTab: filePreview.activeTab,
-      previewFullscreen: filePreview.fullscreen,
-      terminalOpen: terminal.isOpen,
-      terminalActiveTabId: terminal.activeTabId ?? null,
-    });
-  }, [
-    filePreview.open, filePreview.activeTab, filePreview.fullscreen,
-    terminal.isOpen, terminal.activeTabId, onNavChange, onNavReplace,
-  ]);
+  useAgentLocalTabPanelSync({ navState, filePreview, terminal, onNavChange, onNavReplace });
 
   const visibleSessionIds = useMemo(() => {
     const projectIdSet = new Set(projectsHook.projects.map((p) => p.id));
@@ -166,6 +127,7 @@ export function useAgentLocalTab({ navState, onSessionChange, onNavChange, onNav
     selectedId: tabState.activeSessionId,
     onSelect: (id) => void handleSelectById(id),
     enabled: listFocused,
+    focusActiveSelector: "[data-nav-zone='list'] [data-nav-active='true']",
   });
 
   const handleDeleteProject = useCallback((projectId: string) => {

@@ -79,6 +79,7 @@ export const SettingsTab = memo(function SettingsTab({
     selectedId: subTab,
     onSelect: setSubTab,
     enabled: listFocused,
+    focusActiveSelector: "[data-nav-zone='list'] [data-nav-active='true']",
   });
 
   const settings = useSettings();
@@ -97,9 +98,10 @@ export const SettingsTab = memo(function SettingsTab({
           <div
             key={tab.id}
             role="button"
-            tabIndex={0}
+            tabIndex={subTab === tab.id ? 0 : -1}
+            data-nav-active={subTab === tab.id ? "true" : undefined}
             onClick={() => setSubTab(tab.id)}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSubTab(tab.id); }}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSubTab(tab.id); } }}
             className={`settings-subtab${subTab === tab.id ? " active" : ""}`}
           >
             {tab.icon ? (
@@ -157,6 +159,7 @@ export const SettingsTab = memo(function SettingsTab({
     return null;
   })();
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reports the fresh slots from this render
   useLayoutEffect(() => { reportContent({ list, detail }); }, [
     reportContent, subTab, themeChoice, settings, navState, listFocused,
     ollamaTab, forecastTab, connectorsTab, channelsTab, apiKeysTab,

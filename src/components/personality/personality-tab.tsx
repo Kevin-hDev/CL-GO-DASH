@@ -101,6 +101,7 @@ export const PersonalityTab = memo(function PersonalityTab({
     selectedId: selectedPath,
     onSelect: (path) => void handleSelect(path),
     enabled: listFocused,
+    focusActiveSelector: "[data-nav-zone='list'] [data-nav-active='true']",
   });
 
   const list = (
@@ -131,6 +132,7 @@ export const PersonalityTab = memo(function PersonalityTab({
     );
   }
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reports the fresh slots from this render
   useLayoutEffect(() => { reportContent({ list, detail }); }, [
     reportContent, files, selectedPath, content, fileName, injectionState, listFocused,
   ]);

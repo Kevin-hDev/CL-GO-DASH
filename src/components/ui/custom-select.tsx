@@ -30,7 +30,7 @@ export function CustomSelect({
   const selected = options.find((o) => o.value === value);
 
   return (
-    <div ref={ref} className="cs-wrapper">
+    <div ref={ref} className="cs-wrapper" data-keyboard-scope={open ? "local" : undefined}>
       <button
         type="button"
         className="cs-trigger"

@@ -52,6 +52,7 @@ export function FilePreviewPanel(props: FilePreviewPanelProps) {
   return (
     <aside
       className={`fp-panel ${props.open ? "open" : ""} ${props.fullscreen ? "fullscreen" : ""} ${props.fullscreenSwitching ? "fullscreen-switching" : ""} ${props.resizing ? "resizing" : ""}`}
+      data-nav-zone="filePreview"
       style={{
         "--fp-width": `${props.width + (props.extraWidth ?? 0)}px`,
         "--fp-full-width": `${props.fullscreenWidth}px`,

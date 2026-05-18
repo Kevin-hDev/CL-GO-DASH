@@ -92,7 +92,7 @@ export function SearchDialog({ open, onClose, onSelect }: SearchDialogProps) {
 
   return (
     <div className="search-overlay" role="presentation" onMouseDown={onClose}>
-      <div className="search-dialog" role="presentation" onMouseDown={(e) => e.stopPropagation()}>
+      <div className="search-dialog" data-keyboard-scope="local" role="presentation" onMouseDown={(e) => e.stopPropagation()}>
         <input
           ref={inputRef}
           className="search-input"
