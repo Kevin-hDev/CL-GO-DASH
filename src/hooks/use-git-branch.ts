@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import { cleanupTauriListener } from "@/lib/tauri-listen";
 
 interface BranchInfo {
   name: string;
@@ -37,12 +38,15 @@ export function useGitBranch(projectPath: string | undefined, sessionId?: string
   const [state, setState] = useState<GitBranchState>(INITIAL_STATE);
   const pathRef = useRef(projectPath);
   const mountedRef = useRef(true);
-  pathRef.current = projectPath;
 
   useEffect(() => {
     mountedRef.current = true;
     return () => { mountedRef.current = false; };
   }, []);
+
+  useEffect(() => {
+    pathRef.current = projectPath;
+  }, [projectPath]);
 
   const refresh = useCallback(async () => {
     const path = pathRef.current;
@@ -86,22 +90,12 @@ export function useGitBranch(projectPath: string | undefined, sessionId?: string
   }, [projectPath, sessionId, refresh]);
 
   useEffect(() => {
-    let cancelled = false;
-    let unlistenFn: (() => void) | null = null;
-
-    listen("git-branch-changed", () => {
+    const unlisten = listen("git-branch-changed", () => {
       void refresh();
-    }).then((fn) => {
-      if (cancelled) {
-        fn();
-      } else {
-        unlistenFn = fn;
-      }
-    }).catch(() => {});
+    });
 
     return () => {
-      cancelled = true;
-      unlistenFn?.();
+      cleanupTauriListener(unlisten);
     };
   }, [refresh]);
 

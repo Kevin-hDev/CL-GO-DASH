@@ -23,17 +23,12 @@ export async function openForecastDocsWindow(title: string) {
 
   await new Promise<void>((resolve, reject) => {
     const removeCreated = docsWindow.once("tauri://created", () => {
-      cleanup();
+      cleanupTauriListener(removeError);
       resolve();
     });
     const removeError = docsWindow.once<string>("tauri://error", (event) => {
-      cleanup();
+      cleanupTauriListener(removeCreated);
       reject(new Error(event.payload));
     });
-
-    function cleanup() {
-      cleanupTauriListener(removeCreated);
-      cleanupTauriListener(removeError);
-    }
   });
 }
