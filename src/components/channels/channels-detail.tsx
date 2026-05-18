@@ -1,18 +1,14 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
-import { Trash, ChatTeardropDots, Hash, Broadcast } from "@/components/ui/icons";
+import { Trash } from "@/components/ui/icons";
 import { SettingsCard } from "@/components/settings/settings-card";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { useAvailableModels } from "@/hooks/use-available-models";
 import { ChannelsAllowlist } from "./channels-allowlist";
+import { ChannelIcon } from "./channel-icon";
 import type { ChannelType, ChannelHealthEntry, GatewayConfig, ChannelAccountConfig } from "@/types/channels";
-import type { Icon } from "@phosphor-icons/react";
 import "./channels.css";
-
-const CHANNEL_ICONS: Record<ChannelType, Icon> = {
-  telegram: ChatTeardropDots, slack: Hash, discord: Broadcast,
-};
 
 interface ChannelsDetailProps {
   channelId: ChannelType;
@@ -29,7 +25,6 @@ export function ChannelsDetail({ channelId, account, status, config, onSaveConfi
   const isRunning = statusKey === "running";
   const [confirmDelete, setConfirmDelete] = useState(false);
   const { groups } = useAvailableModels();
-  const ChannelIcon = CHANNEL_ICONS[channelId];
 
   useEffect(() => {
     if (!confirmDelete) return;
@@ -80,7 +75,7 @@ export function ChannelsDetail({ channelId, account, status, config, onSaveConfi
       <div className="ctd-inner">
         <div className="ctd-header">
           <div className="ctd-info">
-            <ChannelIcon size={36} weight="regular" />
+            <ChannelIcon channelId={channelId} size={36} />
             <h2 className="ctd-name">{channelName} — {account.account_id}</h2>
           </div>
           <div className="ctd-actions">

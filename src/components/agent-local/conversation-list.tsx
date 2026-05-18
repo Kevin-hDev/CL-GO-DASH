@@ -1,16 +1,16 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Pencil, DotsThreeVertical, ChatsCircle } from "@/components/ui/icons";
+import { Pencil } from "@/components/ui/icons";
 import { WastebasketIcon } from "@/components/ui/wastebasket-icon";
 import { ComposeIcon } from "@/components/ui/compose-icon";
 import { ContextMenu, type ContextMenuItem } from "@/components/ui/context-menu";
 import { ProjectSection } from "./project-section";
+import { ConversationSessionItem } from "./conversation-session-item";
 import { useKeyboard } from "@/hooks/use-keyboard";
 import { useProjectDrag } from "@/hooks/use-project-drag";
 import type { AgentSessionMeta, Project } from "@/types/agent";
-import { idMatch, displaySessionName } from "@/lib/utils";
+import { idMatch } from "@/lib/utils";
 import "./conversation.css";
-
 interface ConversationListProps {
   sessions: AgentSessionMeta[];
   projects: Project[];
@@ -25,7 +25,6 @@ interface ConversationListProps {
   onOpenFolder: (path: string) => void;
   onReorderProjects: (ids: string[]) => void;
 }
-
 export function ConversationList({
   sessions, projects, selectedId,
   onSelect, onCreate, onRename, onDelete,
@@ -40,7 +39,6 @@ export function ConversationList({
   const [projectsCollapsed, setProjectsCollapsed] = useState(false);
   const [collapsedProjects, setCollapsedProjects] = useState<Set<string>>(new Set());
   const [discussionsCollapsed, setDiscussionsCollapsed] = useState(false);
-
   const toggleProject = useCallback((id: string) => {
     setCollapsedProjects((prev) => {
       const next = new Set(prev);
@@ -51,7 +49,6 @@ export function ConversationList({
 
   const projectIds = projects.map((p) => p.id);
   const drag = useProjectDrag(projectIds, onReorderProjects);
-
   useKeyboard({
     onEscape: () => { setRenamingId(null); setCtx(null); drag.onCancel(); },
   });
@@ -88,18 +85,15 @@ export function ConversationList({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- drag object is stable (from useProjectDrag)
   }, [drag.draggingId, drag.onHover, drag.onRelease]);
-
   const handleSessionMenu = useCallback((e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     const rect = e.currentTarget.getBoundingClientRect();
     setCtx({ x: rect.right, y: rect.bottom, id });
   }, []);
-
   const ctxItems: ContextMenuItem[] = ctx ? [
     { label: t("history.rename"), icon: <Pencil size={14} />, onClick: () => { setRenamingId(ctx.id); setTimeout(() => inputRef.current?.focus(), 0); } },
     { label: t("history.delete"), icon: <WastebasketIcon size={14} />, onClick: () => onDelete(ctx.id) },
   ] : [];
-
   const handleRenameSubmit = (id: string, value: string) => {
     if (value.trim()) onRename(id, value.trim());
     setRenamingId(null);
@@ -177,40 +171,17 @@ export function ConversationList({
               const active = idMatch(selectedId, s.id);
               const renaming = idMatch(renamingId, s.id);
               return (
-                <div
+                <ConversationSessionItem
                   key={s.id}
-                  className={`conv-item conv-session-indented ${active ? "active" : ""}`}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => onSelect(s.id)}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onSelect(s.id); }}
-                >
-                  {renaming ? (
-                    <input
-                      ref={inputRef}
-                      className="conv-rename"
-                      defaultValue={s.name}
-                      onFocus={(e) => e.target.select()}
-                      onBlur={(e) => handleRenameSubmit(s.id, e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key.startsWith("Ent")) handleRenameSubmit(s.id, e.currentTarget.value);
-                        if (e.key.startsWith("Esc")) setRenamingId(null);
-                      }}
-                    />
-                  ) : (
-                    <>
-                      <ChatsCircle size={14} weight={active ? "fill" : "regular"} className="conv-icon" />
-                      <span className="conv-name">{displaySessionName(s.name, t)}</span>
-                      {s.is_gateway && <span className="conv-gw-badge">{s.gateway_channel_key?.split("/")[0]?.toUpperCase().slice(0, 2) ?? "GW"}</span>}
-                      <button
-                        className="conv-session-menu-btn"
-                        onClick={(e) => handleSessionMenu(e, s.id)}
-                      >
-                        <DotsThreeVertical size={14} />
-                      </button>
-                    </>
-                  )}
-                </div>
+                  session={s}
+                  active={active}
+                  renaming={renaming}
+                  inputRef={inputRef}
+                  onSelect={onSelect}
+                  onRenameSubmit={handleRenameSubmit}
+                  onCancelRename={() => setRenamingId(null)}
+                  onMenu={handleSessionMenu}
+                />
               );
             })}
           </>

@@ -1,9 +1,10 @@
 import { useEffect } from "react";
+import type { MouseEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { open } from "@tauri-apps/plugin-shell";
-import { X, ChatTeardropDots, Hash, Broadcast, Plus, ArrowSquareOut } from "@/components/ui/icons";
+import { X, Plus, ArrowSquareOut } from "@/components/ui/icons";
+import { ChannelIcon } from "./channel-icon";
 import type { ChannelType } from "@/types/channels";
-import type { Icon } from "@phosphor-icons/react";
 
 interface ChannelsBrowseModalProps {
   onPick: (channelId: ChannelType) => void;
@@ -15,14 +16,13 @@ interface ChannelSpec {
   name: string;
   descKey: string;
   category: string;
-  icon: Icon;
   url: string;
 }
 
 const CHANNEL_SPECS: ChannelSpec[] = [
-  { id: "telegram", name: "Telegram", descKey: "channels.browse.telegramDesc", category: "messaging", icon: ChatTeardropDots, url: "https://t.me/BotFather" },
-  { id: "slack", name: "Slack", descKey: "channels.browse.slackDesc", category: "pro", icon: Hash, url: "https://api.slack.com/apps" },
-  { id: "discord", name: "Discord", descKey: "channels.browse.discordDesc", category: "pro", icon: Broadcast, url: "https://discord.com/developers/applications" },
+  { id: "telegram", name: "Telegram", descKey: "channels.browse.telegramDesc", category: "messaging", url: "https://t.me/BotFather" },
+  { id: "slack", name: "Slack", descKey: "channels.browse.slackDesc", category: "pro", url: "https://api.slack.com/apps" },
+  { id: "discord", name: "Discord", descKey: "channels.browse.discordDesc", category: "pro", url: "https://discord.com/developers/applications" },
 ];
 
 export function ChannelsBrowseModal({ onPick, onClose }: ChannelsBrowseModalProps) {
@@ -58,8 +58,7 @@ export function ChannelsBrowseModal({ onPick, onClose }: ChannelsBrowseModalProp
 
         <div className="ak-connectors-grid">
           {CHANNEL_SPECS.map((spec) => {
-            const ChannelIcon = spec.icon;
-            const handleLinkClick = (e: React.MouseEvent) => {
+            const handleLinkClick = (e: MouseEvent) => {
               e.stopPropagation();
               void open(spec.url);
             };
@@ -73,7 +72,7 @@ export function ChannelsBrowseModal({ onPick, onClose }: ChannelsBrowseModalProp
                 onKeyDown={(e) => { if (e.key === "Enter") onPick(spec.id); }}
               >
                 <div className="ch-browse-icon">
-                  <ChannelIcon size={32} weight="regular" />
+                  <ChannelIcon channelId={spec.id} size={32} />
                 </div>
                 <div className="ak-connector-card-body">
                   <div className="ak-connector-card-name">{spec.name}</div>

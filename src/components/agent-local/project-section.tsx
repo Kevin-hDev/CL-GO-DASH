@@ -2,14 +2,15 @@ import { useState, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import {
   FolderSimple, FolderOpen, DotsThreeVertical, PencilSimple,
-  X, ChatsCircle,
+  X,
 } from "@/components/ui/icons";
 import { WastebasketIcon } from "@/components/ui/wastebasket-icon";
 import { ComposeIcon } from "@/components/ui/compose-icon";
 import { ContextMenu, type ContextMenuItem } from "@/components/ui/context-menu";
+import { ConversationSessionItem } from "./conversation-session-item";
 import { useKeyboard } from "@/hooks/use-keyboard";
 import type { AgentSessionMeta, Project } from "@/types/agent";
-import { idMatch, displaySessionName } from "@/lib/utils";
+import { idMatch } from "@/lib/utils";
 
 interface ProjectSectionProps {
   project: Project;
@@ -125,39 +126,17 @@ export function ProjectSection({
         const active = idMatch(selectedId, s.id);
         const isRenaming = idMatch(renamingSessionId, s.id);
         return (
-          <div
+          <ConversationSessionItem
             key={s.id}
-            className={`conv-item conv-session-indented ${active ? "active" : ""}`}
-            role="button"
-            tabIndex={0}
-            onClick={() => onSelect(s.id)}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onSelect(s.id); }}
-          >
-            {isRenaming ? (
-              <input
-                ref={sessionInputRef}
-                className="conv-rename"
-                defaultValue={s.name}
-                onFocus={(e) => e.target.select()}
-                onBlur={(e) => handleSessionRename(s.id, e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key.startsWith("Ent")) handleSessionRename(s.id, e.currentTarget.value);
-                  if (e.key.startsWith("Esc")) setRenamingSessionId(null);
-                }}
-              />
-            ) : (
-              <>
-                <ChatsCircle size={14} weight={active ? "fill" : "regular"} className="conv-icon" />
-                <span className="conv-name">{displaySessionName(s.name, t)}</span>
-                <button
-                  className="conv-session-menu-btn"
-                  onClick={(e) => handleSessionMenu(e, s.id)}
-                >
-                  <DotsThreeVertical size={14} />
-                </button>
-              </>
-            )}
-          </div>
+            session={s}
+            active={active}
+            renaming={isRenaming}
+            inputRef={sessionInputRef}
+            onSelect={onSelect}
+            onRenameSubmit={handleSessionRename}
+            onCancelRename={() => setRenamingSessionId(null)}
+            onMenu={handleSessionMenu}
+          />
         );
       })}
 

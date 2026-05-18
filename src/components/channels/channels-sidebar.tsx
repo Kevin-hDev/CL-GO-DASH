@@ -1,13 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { ChatTeardropDots, Hash, Broadcast } from "@/components/ui/icons";
+import { ChannelIcon } from "./channel-icon";
 import type { ChannelType, ChannelHealthEntry, ChannelAccountConfig } from "@/types/channels";
-import type { Icon } from "@phosphor-icons/react";
-
-const CHANNEL_ICONS: Record<ChannelType, Icon> = {
-  telegram: ChatTeardropDots,
-  slack: Hash,
-  discord: Broadcast,
-};
 
 interface ConfiguredAccount {
   channelId: ChannelType;
@@ -37,7 +30,6 @@ export function ChannelsSidebar({ accounts, healthEntries, selectedKey, onSelect
         ) : (
           accounts.map((acc) => {
             const key = `${acc.channelId}:${acc.accountId}`;
-            const ChannelIcon = CHANNEL_ICONS[acc.channelId];
             const status = statusFor(acc.channelId, acc.accountId);
             return (
               <button
@@ -46,7 +38,7 @@ export function ChannelsSidebar({ accounts, healthEntries, selectedKey, onSelect
                 className={`cts-item ${selectedKey === key ? "active" : ""}`}
                 onClick={() => onSelect(key)}
               >
-                <ChannelIcon size={18} weight="regular" />
+                <ChannelIcon channelId={acc.channelId} size={18} />
                 <span>{acc.accountId}</span>
                 {status !== "running" && <span className="cts-dot-off" />}
               </button>
