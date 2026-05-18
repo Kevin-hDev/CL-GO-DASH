@@ -25,6 +25,7 @@ function sameNav(a: AppNavState, b: AppNavState): boolean {
 export function useTabHistory(initial: AppNavState) {
   const [current, setCurrent] = useState(initial);
   const [navIndex, setNavIndex] = useState(0);
+  const [restoreSeq, setRestoreSeq] = useState(0);
   const history = useRef<AppNavState[]>([initial]);
   const live = useRef(initial);
 
@@ -62,6 +63,7 @@ export function useTabHistory(initial: AppNavState) {
       const state = history.current[newIdx];
       live.current = state;
       setCurrent(state);
+      setRestoreSeq((seq) => seq + 1);
       return newIdx;
     });
   }, []);
@@ -73,6 +75,7 @@ export function useTabHistory(initial: AppNavState) {
       const state = history.current[newIdx];
       live.current = state;
       setCurrent(state);
+      setRestoreSeq((seq) => seq + 1);
       return newIdx;
     });
   }, []);
@@ -81,5 +84,5 @@ export function useTabHistory(initial: AppNavState) {
   // eslint-disable-next-line react-hooks/refs -- derived from navIndex state change
   const canGoForward = navIndex < history.current.length - 1;
 
-  return { current, pushNav, replaceNav, goBack, goForward, canGoBack, canGoForward };
+  return { current, pushNav, replaceNav, goBack, goForward, canGoBack, canGoForward, restoreSeq };
 }

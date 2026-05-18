@@ -40,7 +40,7 @@ function ForecastDocsApp() {
 }
 
 function MainApp() {
-  const { current: nav, pushNav, replaceNav, goBack, goForward, canGoBack, canGoForward } =
+  const { current: nav, pushNav, replaceNav, goBack, goForward, canGoBack, canGoForward, restoreSeq } =
     useTabHistory(DEFAULT_APP_NAV);
 
   const { choice, setTheme } = useTheme();
@@ -75,9 +75,6 @@ function MainApp() {
   const handleAgentNavChange = useCallback((partial: DeepPartial<AgentLocalNavState>) => {
     pushNav({ agentLocal: partial });
   }, [pushNav]);
-  const handleAgentNavReplace = useCallback((partial: DeepPartial<AgentLocalNavState>) => {
-    replaceNav({ agentLocal: partial });
-  }, [replaceNav]);
   const handleSettingsNavChange = useCallback((partial: DeepPartial<SettingsNavState>) => {
     pushNav({ settings: partial });
   }, [pushNav]);
@@ -149,7 +146,7 @@ function MainApp() {
         navState={nav.agentLocal}
         onSessionChange={handleSessionChange}
         onNavChange={handleAgentNavChange}
-        onNavReplace={handleAgentNavReplace}
+        restoreSeq={restoreSeq}
         listFocused={listActive("agent-local")}
         reportContent={reportContent}
       />
@@ -161,6 +158,7 @@ function MainApp() {
         navState={nav.settings}
         onNavChange={handleSettingsNavChange}
         onNavReplace={handleSettingsNavReplace}
+        restoreSeq={restoreSeq}
         listFocused={listActive("settings")}
         reportContent={reportContent}
       />

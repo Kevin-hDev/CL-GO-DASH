@@ -31,6 +31,7 @@ export interface SessionActionsDeps {
   welcomeModel: { model: string; provider: string } | null;
   setWelcomeModel: (v: { model: string; provider: string } | null) => void;
   projectsHook: ProjectsHookRef;
+  onSessionChange?: (id: string | null) => void;
 }
 
 export function useSessionActions(deps: SessionActionsDeps) {
@@ -44,6 +45,7 @@ export function useSessionActions(deps: SessionActionsDeps) {
     welcomeModel,
     setWelcomeModel,
     projectsHook,
+    onSessionChange,
   } = deps;
 
   const [pendingMessage, setPendingMessage] = useState<string | null>(null);
@@ -53,15 +55,17 @@ export function useSessionActions(deps: SessionActionsDeps) {
 
   const handleCreate = useCallback(() => {
     tabState.deselectTab();
-  }, [tabState]);
+    onSessionChange?.(null);
+  }, [tabState, onSessionChange]);
 
   const handleCreateWithModel = useCallback(
     async (newModel: string, newProvider: string) => {
       const name = t("agentLocal.newSession");
       const session = await create(name, newModel, newProvider);
       await tabState.addTab(session.id, session.name);
+      onSessionChange?.(session.id);
     },
-    [create, tabState, t],
+    [create, tabState, t, onSessionChange],
   );
 
   const handleWelcomeSend = useCallback(
@@ -76,8 +80,9 @@ export function useSessionActions(deps: SessionActionsDeps) {
       setPendingFiles(files && files.length > 0 ? files : undefined);
       setWelcomeModel(null);
       await tabState.addTab(session.id, session.name);
+      onSessionChange?.(session.id);
     },
-    [create, tabState, defaultModel, defaultProvider, welcomeModel, setWelcomeModel, t, projectsHook.projects],
+    [create, tabState, defaultModel, defaultProvider, welcomeModel, setWelcomeModel, t, projectsHook.projects, onSessionChange],
   );
 
   const handleAutoRename = useCallback(
@@ -95,8 +100,9 @@ export function useSessionActions(deps: SessionActionsDeps) {
       const name = t("agentLocal.newSession");
       const session = await create(name, defaultModel, defaultProvider, projectId);
       await tabState.addTab(session.id, session.name);
+      onSessionChange?.(session.id);
     },
-    [create, tabState, defaultModel, defaultProvider, t],
+    [create, tabState, defaultModel, defaultProvider, t, onSessionChange],
   );
 
   const handleCreateInProjectWithModel = useCallback(
@@ -104,8 +110,9 @@ export function useSessionActions(deps: SessionActionsDeps) {
       const name = t("agentLocal.newSession");
       const session = await create(name, newModel, newProvider, projectId);
       await tabState.addTab(session.id, session.name);
+      onSessionChange?.(session.id);
     },
-    [create, tabState, t],
+    [create, tabState, t, onSessionChange],
   );
 
   return {

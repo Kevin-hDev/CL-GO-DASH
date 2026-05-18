@@ -29,6 +29,25 @@ describe("useTabHistory", () => {
     expect(result.current.current.settings.subTab).toBe("api-keys");
   });
 
+  it("incremente restoreSeq uniquement pendant retour et suivant", () => {
+    const { result } = renderHook(() => useTabHistory(DEFAULT_APP_NAV));
+
+    expect(result.current.restoreSeq).toBe(0);
+    act(() => result.current.pushNav({ tab: "settings" }));
+    expect(result.current.restoreSeq).toBe(0);
+
+    act(() => result.current.goBack());
+    expect(result.current.current.tab).toBe("agent-local");
+    expect(result.current.restoreSeq).toBe(1);
+
+    act(() => result.current.replaceNav({ settings: { subTab: "api-keys" } }));
+    expect(result.current.restoreSeq).toBe(1);
+
+    act(() => result.current.goForward());
+    expect(result.current.current.tab).toBe("settings");
+    expect(result.current.restoreSeq).toBe(2);
+  });
+
   it("replaceNav ne cree pas d'entree historique", () => {
     const { result } = renderHook(() => useTabHistory(DEFAULT_APP_NAV));
 
