@@ -1,5 +1,6 @@
-import { Component, type ReactNode } from "react";
+import { Component, type ErrorInfo, type ReactNode } from "react";
 import i18n from "@/i18n";
+import { getRecentFrontendDiagnostics, recordFrontendDiagnostic } from "@/lib/frontend-diagnostics";
 
 interface Props {
   children: ReactNode;
@@ -16,8 +17,13 @@ export class ErrorBoundary extends Component<Props, State> {
     return { hasError: true };
   }
 
-  componentDidCatch(error: Error) {
-    console.error("UI Error:", error.message);
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    recordFrontendDiagnostic("error-boundary.catch", {
+      message: error.message,
+      stack: error.stack,
+      componentStack: info.componentStack,
+      recent: getRecentFrontendDiagnostics(),
+    });
   }
 
   render() {

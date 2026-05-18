@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Plus } from "@/components/ui/icons";
 import { useApiKeys } from "@/hooks/use-api-keys";
@@ -45,34 +45,35 @@ export function ApiKeysTab({ navState, onNavChange, onNavReplace }: ApiKeysTabPr
     }
   }, [selectedId, configured, onNavReplace]);
 
-  const selected = selectedId
-    ? configured.find((p) => p.id === selectedId) ?? null
-    : null;
+  const selected = useMemo(
+    () => selectedId ? configured.find((p) => p.id === selectedId) ?? null : null,
+    [configured, selectedId],
+  );
 
-  const list = (
+  const list = useMemo(() => (
     <ApiKeysSidebar
       configured={configured}
       selectedId={selectedId}
       onSelect={(id) => onNavChange({ apiKeyProviderId: id })}
     />
-  );
+  ), [configured, onNavChange, selectedId]);
 
-  const handleDelete = async () => {
+  const handleDelete = useCallback(async () => {
     if (!selected) return;
     const id = selected.id;
     onNavReplace({ apiKeyProviderId: null });
     await deleteKey(id);
-  };
+  }, [deleteKey, onNavReplace, selected]);
 
-  const handleConfigClose = () => {
+  const handleConfigClose = useCallback(() => {
     if (dialog.kind === "config" && dialog.returnTo === "connectors") {
       setDialog({ kind: "connectors" });
     } else {
       setDialog({ kind: "none" });
     }
-  };
+  }, [dialog]);
 
-  const detail = (
+  const detail = useMemo(() => (
     <>
       {selected ? (
         <ApiKeysDetails
@@ -148,7 +149,19 @@ export function ApiKeysTab({ navState, onNavChange, onNavReplace }: ApiKeysTabPr
         />
       )}
     </>
-  );
+  ), [
+    catalog,
+    configuredIds,
+    deleteKey,
+    dialog,
+    handleConfigClose,
+    handleDelete,
+    onNavReplace,
+    selected,
+    setKey,
+    t,
+    testKeyRaw,
+  ]);
 
-  return { list, detail };
+  return useMemo(() => ({ list, detail }), [list, detail]);
 }

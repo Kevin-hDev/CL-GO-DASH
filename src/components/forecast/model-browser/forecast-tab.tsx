@@ -104,7 +104,7 @@ export function ForecastTab({ navState, onNavChange, onNavReplace }: ForecastTab
     }
   }, [models, selectedModelId, onNavReplace]);
 
-  const list = (
+  const list = useMemo(() => (
     <div className="fmt-list-root">
       <div className="ollama-subtabs">
         <button
@@ -145,28 +145,43 @@ export function ForecastTab({ navState, onNavChange, onNavReplace }: ForecastTab
         </div>
       )}
     </div>
-  );
+  ), [
+    configModels,
+    families,
+    onNavChange,
+    selectedConfigModel?.id,
+    selectedFamily?.id,
+    subTab,
+    t,
+  ]);
 
-  const detail = subTab === "config" ? (
-    <ForecastConfigEditor model={selectedConfigModel} />
-  ) : selectedModel ? (
-    <ModelSpecs
-      model={selectedModel}
-      provider={providers.find((item) => item.id === selectedModel.provider_id) ?? null}
-      onBack={() => onNavChange({ forecastModelId: null })}
-      onRefresh={refresh}
-    />
-  ) : selectedFamily ? (
-    <ForecastModels
-      group={selectedFamily}
-      onSelectModel={(model) => onNavChange({ forecastModelId: model.id })}
-      onRefresh={refresh}
-    />
-  ) : (
-    <div className="fmt-empty">
-      <EmptyState message={t("forecast.models.noneAvailable")} />
-    </div>
-  );
+  const detail = useMemo(() => {
+    if (subTab === "config") return <ForecastConfigEditor model={selectedConfigModel} />;
+    if (selectedModel) {
+      return (
+        <ModelSpecs
+          model={selectedModel}
+          provider={providers.find((item) => item.id === selectedModel.provider_id) ?? null}
+          onBack={() => onNavChange({ forecastModelId: null })}
+          onRefresh={refresh}
+        />
+      );
+    }
+    if (selectedFamily) {
+      return (
+        <ForecastModels
+          group={selectedFamily}
+          onSelectModel={(model) => onNavChange({ forecastModelId: model.id })}
+          onRefresh={refresh}
+        />
+      );
+    }
+    return (
+      <div className="fmt-empty">
+        <EmptyState message={t("forecast.models.noneAvailable")} />
+      </div>
+    );
+  }, [onNavChange, providers, refresh, selectedConfigModel, selectedFamily, selectedModel, subTab, t]);
 
-  return { list, detail };
+  return useMemo(() => ({ list, detail }), [list, detail]);
 }

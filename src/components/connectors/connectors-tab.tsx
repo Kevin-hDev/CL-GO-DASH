@@ -1,31 +1,17 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Plus } from "@/components/ui/icons";
 import { useConnectors } from "@/hooks/use-connectors";
 import type { McpConnectorSpec } from "@/types/mcp";
+import type { ConnectorsTabProps, DialogState } from "./connectors-tab-types";
 import { ConnectorsSidebar } from "./connectors-sidebar";
 import { ConnectorsDetail } from "./connectors-detail";
+import { ConnectorsConfirmDialogs } from "./connectors-confirm-dialogs";
 import { McpBrowseModal } from "./mcp-browse-modal";
 import { McpConfigDialog } from "./mcp-config-dialog";
 import { McpOauthDialog } from "./mcp-oauth-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
-import type { DeepPartial, SettingsNavState } from "@/types/navigation";
 import "./connectors-tab.css";
-
-type DialogState =
-  | { kind: "none" }
-  | { kind: "browse" }
-  | { kind: "config"; connector: McpConnectorSpec; returnTo: "browse" | "none" }
-  | { kind: "oauth-pending"; connector: McpConnectorSpec; returnTo: "browse" | "none" }
-  | { kind: "confirm-add"; connector: McpConnectorSpec; returnTo: "browse" | "none" }
-  | { kind: "confirm-disconnect"; connectorId: string }
-;
-
-interface ConnectorsTabProps {
-  navState: SettingsNavState;
-  onNavChange: (partial: DeepPartial<SettingsNavState>) => void;
-  onNavReplace: (partial: DeepPartial<SettingsNavState>) => void;
-}
 
 export function ConnectorsTab({ navState, onNavChange, onNavReplace }: ConnectorsTabProps): { list: React.ReactNode; detail: React.ReactNode } {
   const { t } = useTranslation();
@@ -47,9 +33,12 @@ export function ConnectorsTab({ navState, onNavChange, onNavReplace }: Connector
     if (selectedId === null && configured.length > 0) onNavReplace({ connectorId: configured[0].id });
   }, [selectedId, configured, onNavReplace]);
 
-  const selected = selectedId ? configured.find((c) => c.id === selectedId) ?? null : null;
+  const selected = useMemo(
+    () => selectedId ? configured.find((c) => c.id === selectedId) ?? null : null,
+    [configured, selectedId],
+  );
 
-  const handlePick = (spec: McpConnectorSpec) => {
+  const handlePick = useCallback((spec: McpConnectorSpec) => {
     setConfirmAddError(false);
     if (spec.auth_type === "none") {
       setDialog({ kind: "confirm-add", connector: spec, returnTo: "browse" });
@@ -58,20 +47,24 @@ export function ConnectorsTab({ navState, onNavChange, onNavReplace }: Connector
     } else {
       setDialog({ kind: "config", connector: spec, returnTo: "browse" });
     }
-  };
+  }, []);
 
-  const handleDelete = async (connectorId: string) => {
+  const handleDelete = useCallback(async (connectorId: string) => {
     onNavReplace({ connectorId: null });
     await removeConnector(connectorId);
-  };
+  }, [onNavReplace, removeConnector]);
 
-  const handleDisconnect = async () => {
+  const handleDisconnect = useCallback(async () => {
     if (dialog.kind !== "confirm-disconnect") return;
     await toggleStatus(dialog.connectorId);
     setDialog({ kind: "none" });
-  };
+  }, [dialog, toggleStatus]);
 
-  const handleConfirmAdd = async (connector: McpConnectorSpec) => {
+  const closeToReturn = useCallback((returnTo: "browse" | "none") => {
+    setDialog(returnTo === "browse" ? { kind: "browse" } : { kind: "none" });
+  }, []);
+
+  const handleConfirmAdd = useCallback(async (connector: McpConnectorSpec) => {
     if (confirmAddBusy) return;
     setConfirmAddBusy(true);
     setConfirmAddError(false);
@@ -84,18 +77,18 @@ export function ConnectorsTab({ navState, onNavChange, onNavReplace }: Connector
     } finally {
       setConfirmAddBusy(false);
     }
-  };
+  }, [addConnector, confirmAddBusy, onNavChange]);
 
-  const list = (
+  const list = useMemo(() => (
     <ConnectorsSidebar
       configured={configured}
       selectedId={selectedId}
       loadError={loadError}
       onSelect={(id) => onNavChange({ connectorId: id })}
     />
-  );
+  ), [configured, loadError, onNavChange, selectedId]);
 
-  const browseHeader = (
+  const browseHeader = useMemo(() => (
     <div className="ct-browse-header">
       <p className="ct-subtitle">{t("connectors.main.subtitle")}</p>
       <button type="button" className="ak-connectors-btn" onClick={() => setDialog({ kind: "browse" })}>
@@ -103,9 +96,9 @@ export function ConnectorsTab({ navState, onNavChange, onNavReplace }: Connector
         {t("connectors.main.browseBtn")}
       </button>
     </div>
-  );
+  ), [t]);
 
-  const detail = (
+  const detail = useMemo(() => (
     <>
       {selected ? (
         <div className="ct-detail-wrapper">
@@ -163,33 +156,37 @@ export function ConnectorsTab({ navState, onNavChange, onNavReplace }: Connector
           }}
         />
       )}
-      {dialog.kind === "confirm-add" && (
-        <div className="wk-dialog-overlay" role="presentation" onClick={() => setDialog(dialog.returnTo === "browse" ? { kind: "browse" } : { kind: "none" })} onKeyDown={() => {}}>
-          <div className="wk-dialog" role="presentation" onClick={(e) => e.stopPropagation()} onKeyDown={() => {}}>
-            <h3>{t("connectors.config.addTitle", { name: dialog.connector.display_name })}</h3>
-            <p className="ct-confirm-desc">{t("connectors.config.confirmAddDesc", { name: dialog.connector.display_name })}</p>
-            {confirmAddError && <div className="ak-test-result error">{t("connectors.config.testError")}</div>}
-            <div className="wk-dialog-footer">
-              <button type="button" className="wk-btn-secondary" onClick={() => setDialog(dialog.returnTo === "browse" ? { kind: "browse" } : { kind: "none" })}>{t("connectors.detail.cancel")}</button>
-              <button type="button" className="wk-btn-primary" disabled={confirmAddBusy} onClick={() => void handleConfirmAdd(dialog.connector)}>{t("connectors.config.confirmAddBtn")}</button>
-            </div>
-          </div>
-        </div>
-      )}
-      {dialog.kind === "confirm-disconnect" && (
-        <div className="wk-dialog-overlay" role="presentation" onClick={() => setDialog({ kind: "none" })} onKeyDown={() => {}}>
-          <div className="wk-dialog" role="presentation" onClick={(e) => e.stopPropagation()} onKeyDown={() => {}}>
-            <h3>{t("connectors.detail.confirmDisconnectTitle", { name: configured.find((c) => c.id === dialog.connectorId)?.display_name })}</h3>
-            <p className="ct-confirm-desc">{t("connectors.detail.confirmDisconnectDesc", { name: configured.find((c) => c.id === dialog.connectorId)?.display_name })}</p>
-            <div className="wk-dialog-footer">
-              <button type="button" className="wk-btn-secondary" onClick={() => setDialog({ kind: "none" })}>{t("connectors.detail.cancel")}</button>
-              <button type="button" className="wk-btn-primary ct-btn-danger" onClick={() => void handleDisconnect()}>{t("connectors.detail.confirmDisconnectBtn")}</button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConnectorsConfirmDialogs
+        configured={configured}
+        dialog={dialog}
+        confirmAddBusy={confirmAddBusy}
+        confirmAddError={confirmAddError}
+        onConfirmAdd={(connector) => void handleConfirmAdd(connector)}
+        onDisconnect={() => void handleDisconnect()}
+        onCloseAdd={closeToReturn}
+        onCloseDisconnect={() => setDialog({ kind: "none" })}
+      />
     </>
-  );
+  ), [
+    browseHeader,
+    catalog,
+    addConnector,
+    configured,
+    configuredIds,
+    confirmAddBusy,
+    confirmAddError,
+    closeToReturn,
+    dialog,
+    handleConfirmAdd,
+    handleDelete,
+    handleDisconnect,
+    handlePick,
+    loadError,
+    onNavChange,
+    selected,
+    t,
+    toggleStatus,
+  ]);
 
-  return { list, detail };
+  return useMemo(() => ({ list, detail }), [list, detail]);
 }

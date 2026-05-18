@@ -1,5 +1,5 @@
 "use no memo";
-import { useEffect, useState, useMemo, useLayoutEffect, memo } from "react";
+import { useCallback, useEffect, useState, useMemo, useLayoutEffect, memo } from "react";
 import { useTranslation } from "react-i18next";
 import { useSettings } from "@/hooks/use-settings";
 import { useArrowNavigation } from "@/hooks/use-arrow-navigation";
@@ -11,16 +11,16 @@ import { AdvancedSettings } from "./advanced-settings";
 import { ShortcutsSettings } from "./shortcuts-settings";
 import { AboutSettings } from "./about-settings";
 import { LlmExplorer } from "./llm-explorer";
-import { OllamaTab } from "@/components/ollama/ollama-tab";
-import { ApiKeysTab } from "@/components/api-keys/api-keys-tab";
-import { ConnectorsTab } from "@/components/connectors/connectors-tab";
-import { ChannelsTab } from "@/components/channels/channels-tab";
-import { ForecastTab } from "@/components/forecast/model-browser/forecast-tab";
 import ollamaDark from "@/assets/ollama.png";
 import ollamaLight from "@/assets/ollama-light.png";
 import type { Icon } from "@phosphor-icons/react";
 import type { TabSlots } from "@/components/agent-local/agent-local-tab-types";
 import type { DeepPartial, SettingsNavState, SettingsSubTab } from "@/types/navigation";
+import { recordFrontendDiagnostic } from "@/lib/frontend-diagnostics";
+import {
+  SettingsChildSlots,
+  usesSettingsChildSlots,
+} from "./settings-child-slots";
 import "./settings-tab.css";
 
 interface SubTabDef {
@@ -63,16 +63,22 @@ export const SettingsTab = memo(function SettingsTab({
   listFocused = true,
   reportContent,
 }: SettingsTabProps) {
-  const [subTab, setSubTabState] = useState<SettingsSubTab>("general");
+  const [subTab, setSubTabState] = useState<SettingsSubTab>(navState.subTab);
+  const [childListTarget, setChildListTarget] = useState<HTMLElement | null>(null);
+  const [childDetailTarget, setChildDetailTarget] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
+    recordFrontendDiagnostic("settings.nav-state", {
+      navSubTab: navState.subTab,
+    });
     setSubTabState(navState.subTab);
   }, [navState.subTab]);
 
-  const setSubTab = (id: SettingsSubTab) => {
+  const setSubTab = useCallback((id: SettingsSubTab) => {
+    recordFrontendDiagnostic("settings.select-subtab", { from: subTab, to: id });
     setSubTabState(id);
     onNavChange({ subTab: id });
-  };
+  }, [onNavChange, subTab]);
   const subTabIds = useMemo(() => SUB_TABS.map((t) => t.id), []);
   useArrowNavigation({
     items: subTabIds,
@@ -85,13 +91,14 @@ export const SettingsTab = memo(function SettingsTab({
   const settings = useSettings();
   const { t } = useTranslation();
 
-  const ollamaTab = OllamaTab({ navState, onNavChange, onNavReplace });
-  const forecastTab = ForecastTab({ navState, onNavChange, onNavReplace });
-  const connectorsTab = ConnectorsTab({ navState, onNavChange, onNavReplace });
-  const channelsTab = ChannelsTab({ navState, onNavChange, onNavReplace });
-  const apiKeysTab = ApiKeysTab({ navState, onNavChange, onNavReplace });
+  useEffect(() => {
+    recordFrontendDiagnostic("settings.active-subtab", {
+      subTab,
+      childSlot: usesSettingsChildSlots(subTab),
+    });
+  }, [subTab]);
 
-  const list = (
+  const list = useMemo(() => (
     <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, overflow: "hidden" }}>
       <div style={{ padding: "var(--space-sm)", flexShrink: 0 }}>
         {SUB_TABS.map((tab) => (
@@ -125,17 +132,15 @@ export const SettingsTab = memo(function SettingsTab({
           </div>
         ))}
       </div>
-      <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, overflow: "hidden" }}>
-        {subTab === "ollama" && ollamaTab.list}
-        {subTab === "connectors" && connectorsTab.list}
-        {subTab === "channels" && channelsTab.list}
-        {subTab === "api-keys" && apiKeysTab.list}
-        {subTab === "forecast" && forecastTab.list}
+      <div
+        ref={setChildListTarget}
+        style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, overflow: "hidden" }}
+      >
       </div>
     </div>
-  );
+  ), [setSubTab, subTab, t]);
 
-  const detail = (() => {
+  const detail = useMemo(() => {
     if (subTab === "general") {
       return (
         <GeneralSettings
@@ -145,11 +150,14 @@ export const SettingsTab = memo(function SettingsTab({
         />
       );
     }
-    if (subTab === "ollama") return ollamaTab.detail;
-    if (subTab === "connectors") return connectorsTab.detail;
-    if (subTab === "channels") return channelsTab.detail;
-    if (subTab === "api-keys") return apiKeysTab.detail;
-    if (subTab === "forecast") return forecastTab.detail;
+    if (usesSettingsChildSlots(subTab)) {
+      return (
+        <div
+          ref={setChildDetailTarget}
+          style={{ display: "flex", flex: 1, minHeight: 0, minWidth: 0 }}
+        />
+      );
+    }
     if (subTab === "llm") {
       return <LlmExplorer navState={navState.llmView} onNavChange={(llmView) => onNavChange({ llmView })} />;
     }
@@ -157,13 +165,25 @@ export const SettingsTab = memo(function SettingsTab({
     if (subTab === "shortcuts") return <ShortcutsSettings />;
     if (subTab === "about") return <AboutSettings />;
     return null;
-  })();
+  }, [navState.llmView, onNavChange, onThemeChange, settings, subTab, themeChoice]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- reports the fresh slots from this render
-  useLayoutEffect(() => { reportContent({ list, detail }); }, [
-    reportContent, subTab, themeChoice, settings, navState, listFocused,
-    ollamaTab, forecastTab, connectorsTab, channelsTab, apiKeysTab,
-  ]);
+  useLayoutEffect(() => {
+    recordFrontendDiagnostic("settings.report-content", {
+      subTab,
+      hasList: Boolean(list),
+      hasDetail: Boolean(detail),
+    });
+    reportContent({ list, detail });
+  }, [reportContent, list, detail, subTab]);
 
-  return null;
+  return (
+    <SettingsChildSlots
+      subTab={subTab}
+      navState={navState}
+      onNavChange={onNavChange}
+      onNavReplace={onNavReplace}
+      listTarget={childListTarget}
+      detailTarget={childDetailTarget}
+    />
+  );
 });

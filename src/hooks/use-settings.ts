@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 
 export const FONT_SIZES = [100, 112, 125, 137, 150] as const;
 export type FontSize = (typeof FONT_SIZES)[number];
@@ -70,9 +70,19 @@ export function useSettings() {
     });
   }, []);
 
-  return {
+  return useMemo(() => ({
     fontSize, setFontSize, decreaseFont, increaseFont,
     fontFamilyId, fontFamily, setFontFamily,
     sidebarExpand, setSidebarExpand,
-  } as const;
+  }) as const, [
+    fontSize,
+    setFontSize,
+    decreaseFont,
+    increaseFont,
+    fontFamilyId,
+    fontFamily,
+    setFontFamily,
+    sidebarExpand,
+    setSidebarExpand,
+  ]);
 }

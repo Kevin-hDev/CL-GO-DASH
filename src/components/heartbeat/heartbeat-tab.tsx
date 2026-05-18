@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useLayoutEffect, memo } from "react";
+import { useState, useEffect, useMemo, useLayoutEffect, memo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useWakeups } from "@/hooks/use-wakeups";
 import { useArrowNavigation } from "@/hooks/use-arrow-navigation";
@@ -37,15 +37,18 @@ export const HeartbeatTab = memo(function HeartbeatTab({
     if (activeWakeupId !== undefined) setSelectedIdState(activeWakeupId);
   }, [activeWakeupId]);
 
-  const setSelectedId = (id: string | null) => {
+  const setSelectedId = useCallback((id: string | null) => {
     setSelectedIdState(id);
     onWakeupChange?.(id);
-  };
+  }, [onWakeupChange]);
   const [dialog, setDialog] = useState<DialogState>({ kind: "none" });
 
-  const selected = selectedId ? wakeups.find((w) => w.id === selectedId) ?? null : null;
+  const selected = useMemo(
+    () => selectedId ? wakeups.find((w) => w.id === selectedId) ?? null : null,
+    [selectedId, wakeups],
+  );
 
-  const activeWakeups = wakeups.filter((w) => w.active);
+  const activeWakeups = useMemo(() => wakeups.filter((w) => w.active), [wakeups]);
   const wakeupIds = useMemo(() => activeWakeups.map((w) => w.id), [activeWakeups]);
 
   useArrowNavigation({
@@ -56,14 +59,14 @@ export const HeartbeatTab = memo(function HeartbeatTab({
     focusActiveSelector: "[data-nav-zone='list'] [data-nav-active='true']",
   });
 
-  const handleDelete = async () => {
+  const handleDelete = useCallback(async () => {
     if (!selected) return;
     const id = selected.id;
     setSelectedId(null);
     await remove(id);
-  };
+  }, [remove, selected, setSelectedId]);
 
-  const list = (
+  const list = useMemo(() => (
     <div className="wk-sidebar">
       <div className="wk-sidebar-header">
         <span className="wk-sidebar-title">{t("heartbeat.sidebar.title")}</span>
@@ -97,9 +100,9 @@ export const HeartbeatTab = memo(function HeartbeatTab({
         )}
       </div>
     </div>
-  );
+  ), [activeWakeups, globalPaused, setPaused, selectedId, setSelectedId, summaries, t]);
 
-  const detail = (
+  const detail = useMemo(() => (
     <>
       {selected ? (
         <WakeupDetails
@@ -130,12 +133,9 @@ export const HeartbeatTab = memo(function HeartbeatTab({
         />
       )}
     </>
-  );
+  ), [create, dialog, globalPaused, handleDelete, runs, selected, setSelectedId, summaries, toggle, update, wakeups]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- reports the fresh slots from this render
-  useLayoutEffect(() => { reportContent({ list, detail }); }, [
-    reportContent, wakeups, runs, summaries, globalPaused, selectedId, dialog, listFocused,
-  ]);
+  useLayoutEffect(() => { reportContent({ list, detail }); }, [reportContent, list, detail]);
 
   return null;
 });

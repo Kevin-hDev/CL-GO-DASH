@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useTranslation } from "react-i18next";
@@ -49,6 +49,7 @@ function MainApp() {
   const [ollamaReady, setOllamaReady] = useState<boolean | null>(null);
   const { focusedPanel } = usePanelFocus();
   const [tabContent, setTabContent] = useState<{ list: ReactNode; detail: ReactNode }>({ list: null, detail: null });
+  const tabContentRef = useRef(tabContent);
 
   useEffect(() => {
     invoke<boolean>("is_ollama_installed").then(setOllamaReady).catch(() => setOllamaReady(true));
@@ -62,6 +63,8 @@ function MainApp() {
   const listActive = (tab: TabId) => focusedPanel === "list" && activeTab === tab;
 
   const reportContent = useCallback((slots: TabSlots) => {
+    if (tabContentRef.current.list === slots.list && tabContentRef.current.detail === slots.detail) return;
+    tabContentRef.current = slots;
     setTabContent(slots);
   }, []);
 

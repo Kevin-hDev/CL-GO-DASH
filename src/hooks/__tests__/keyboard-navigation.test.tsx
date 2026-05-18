@@ -44,6 +44,7 @@ function KeyboardHarness() {
         ))}
       </nav>
       <section data-nav-zone="list" tabIndex={-1}>
+        <input data-testid="list-checkbox" type="checkbox" readOnly />
         {SESSIONS.map((id) => (
           <button
             key={id}
@@ -65,6 +66,26 @@ function KeyboardHarness() {
       </div>
       <button className="xterm" data-testid="terminal" type="button" />
       <span data-testid="state">{tab}:{session}</span>
+    </>
+  );
+}
+
+function EmptyListHarness() {
+  const { focusedPanel } = usePanelFocus();
+
+  return (
+    <>
+      <nav data-nav-zone="sidebar" tabIndex={-1}>
+        <button data-testid="tab-heartbeat" data-nav-active="true">heartbeat</button>
+      </nav>
+      <section data-nav-zone="list" tabIndex={-1} data-testid="empty-list">
+        <input data-testid="empty-checkbox" type="checkbox" readOnly />
+        <span>No wakeups</span>
+      </section>
+      <section data-nav-zone="detail" tabIndex={-1}>
+        <button data-testid="detail-button">detail</button>
+      </section>
+      <span data-testid="focused-panel">{focusedPanel}</span>
     </>
   );
 }
@@ -91,6 +112,21 @@ describe("keyboard navigation", () => {
     fireEvent.keyDown(screen.getByTestId("session-s1"), { key: "ArrowLeft" });
 
     await waitFor(() => expect(document.activeElement).toBe(tab));
+  });
+
+  it("ne piège pas la navigation quand la liste commence par un input", async () => {
+    render(<EmptyListHarness />);
+    const tab = screen.getByTestId("tab-heartbeat");
+
+    tab.focus();
+    fireEvent.keyDown(tab, { key: "ArrowRight" });
+
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByTestId("empty-list")));
+
+    fireEvent.keyDown(screen.getByTestId("empty-list"), { key: "ArrowLeft" });
+
+    await waitFor(() => expect(document.activeElement).toBe(tab));
+    expect(screen.getByTestId("focused-panel").textContent).toBe("sidebar");
   });
 
   it("navigue haut/bas dans la zone active et garde le focus synchronisé", async () => {

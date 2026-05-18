@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { showToast } from "@/lib/toast-emitter";
@@ -90,10 +90,15 @@ export function useApiKeys() {
     [],
   );
 
+  const configured = useMemo(
+    () => catalog.filter((p) => configuredIds.includes(p.id)),
+    [catalog, configuredIds],
+  );
+
   return {
     catalog,
     configuredIds,
-    configured: catalog.filter((p) => configuredIds.includes(p.id)),
+    configured,
     loading,
     refresh,
     setKey,

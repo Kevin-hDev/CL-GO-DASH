@@ -2,6 +2,7 @@
 @import "./tokens.css";
 @import "./themes/light.css";
 @import "./themes/dark.css";
+@import "./focus.css";
 
 @theme {
   --font-sans: "Geist Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -159,15 +160,6 @@ body {
   outline: none;
   border-color: var(--pulse);
   box-shadow: 0 0 0 2px var(--pulse-muted);
-}
-
-:is([data-nav-zone="sidebar"], [data-nav-zone="list"], [data-nav-zone="fileTree"]) :focus {
-  outline: none;
-  box-shadow: none;
-}
-
-:is([data-nav-zone="sidebar"], [data-nav-zone="list"], [data-nav-zone="fileTree"]) :is([data-nav-active="true"], :focus-visible) {
-  background: var(--surface-hover);
 }
 
 * {

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, memo } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, memo } from "react";
 import { useTranslation } from "react-i18next";
 import { ConversationList } from "./conversation-list";
 import { TabBar } from "./tab-bar";
@@ -56,11 +56,11 @@ export const AgentLocalTab = memo(function AgentLocalTab({
     if (fullscreenTimerRef.current !== null) window.clearTimeout(fullscreenTimerRef.current);
   }, []);
 
-  const handleOpenForecastDocs = () => {
+  const handleOpenForecastDocs = useCallback(() => {
     void openForecastDocsWindow(t("forecast.docs.windowTitle")).catch(() => {});
-  };
+  }, [t]);
 
-  const forecastContent = (
+  const forecastContent = useMemo(() => (
     <ForecastPanel
       activeSection={forecast.activeSection}
       navOpen={forecast.navOpen}
@@ -74,9 +74,9 @@ export const AgentLocalTab = memo(function AgentLocalTab({
       onCloseAnalysis={forecast.closeAnalysis}
       onFullscreenChange={handlePreviewFullscreenChange}
     />
-  );
+  ), [filePreview.fullscreen, filePreview.setExtraWidth, forecast, handlePreviewFullscreenChange]);
 
-  const list = (
+  const list = useMemo(() => (
     <ConversationList
       sessions={sessions}
       projects={projectsHook.projects}
@@ -91,9 +91,9 @@ export const AgentLocalTab = memo(function AgentLocalTab({
       onOpenFolder={(path) => void projectsHook.openFolder(path)}
       onReorderProjects={(ids) => void projectsHook.reorder(ids)}
     />
-  );
+  ), [handleCreate, handleCreateInProject, handleDeleteProject, handleSelectById, projectsHook, remove, rename, sessions, tabState]);
 
-  const detail = (
+  const detail = useMemo(() => (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
       {tabState.tabs.length > 0 && (
         <div style={{ flexShrink: 0 }}>
@@ -182,15 +182,17 @@ export const AgentLocalTab = memo(function AgentLocalTab({
         </div>
       )}
     </div>
-  );
-
-  useLayoutEffect(() => { reportContent({ list, detail }); }, [
-    reportContent, sessions, projectsHook.projects, tabState.tabs, tabState.activeIndex, tabState.canAddTab, tabState.activeSessionId,
-    terminal.isOpen, terminal.tabs.length, filePreview.open, filePreview.fullscreen, forecast.panelMode, forecast.activeSection,
-    forecast.navOpen, forecast.currentAnalysisId, thinking, pendingMessage, pendingWorkingDir, pendingSkills, pendingFiles,
-    currentDefault.model, currentDefault.provider, model, provider, activeProject?.path, activeSession?.parent_session_id,
-    fileOperations, fullscreenSwitching,
+  ), [
+    activeProject?.path, activeSession?.parent_session_id, currentDefault.model, currentDefault.provider,
+    fileOperations, filePreview, fileTree, forecast.panelMode, forecast.setPanelMode, forecastContent,
+    fullscreenSwitching, handleAutoRename, handleCreate, handleCreateInProjectWithModel, handleCreateWithModel,
+    handleOpenForecastDocs, handlePreviewFullscreenChange, handleSelectById, handleWelcomeSend, model,
+    pendingFiles, pendingMessage, pendingSkills, pendingWorkingDir, projectsHook, provider, refresh,
+    setFileOperations, setPendingFiles, setPendingMessage, setPendingSkills, setPendingWorkingDir, setThinking,
+    setWelcomeModel, tabState, terminal, terminalCwd, thinking, updateModel,
   ]);
+
+  useLayoutEffect(() => { reportContent({ list, detail }); }, [reportContent, list, detail]);
 
   return null;
 });

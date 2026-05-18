@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useOllamaModels } from "@/hooks/use-ollama-models";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -39,7 +39,7 @@ export function OllamaTab({ navState, onNavChange, onNavReplace }: OllamaTabProp
     }
   }, [ollamaModels.models, selectedInstalled, onNavReplace]);
 
-  const list = (
+  const list = useMemo(() => (
     <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
       <div className="ollama-subtabs">
         {(["modelfile", "models"] as const).map((tab) => (
@@ -82,9 +82,20 @@ export function OllamaTab({ navState, onNavChange, onNavReplace }: OllamaTabProp
         />
       )}
     </div>
-  );
+  ), [
+    ollamaModels.models,
+    onNavChange,
+    searchQuery,
+    searchResults,
+    searching,
+    selectedFamily,
+    selectedInstalled,
+    selectedVariant,
+    subTab,
+    t,
+  ]);
 
-  const detail = (() => {
+  const detail = useMemo(() => {
     if (subTab === "modelfile" && selectedInstalled) {
       return (
         <ModelfileViewer
@@ -109,7 +120,7 @@ export function OllamaTab({ navState, onNavChange, onNavReplace }: OllamaTabProp
         <EmptyState message={t("ollama.selectModel")} />
       </div>
     );
-  })();
+  }, [onNavReplace, selectedFamily, selectedInstalled, selectedVariant, subTab, t]);
 
-  return { list, detail };
+  return useMemo(() => ({ list, detail }), [list, detail]);
 }

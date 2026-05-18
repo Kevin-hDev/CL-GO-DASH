@@ -104,7 +104,7 @@ export const PersonalityTab = memo(function PersonalityTab({
     focusActiveSelector: "[data-nav-zone='list'] [data-nav-active='true']",
   });
 
-  const list = (
+  const list = useMemo(() => (
     <PersonalityList
       files={files}
       selectedPath={selectedPath}
@@ -113,29 +113,24 @@ export const PersonalityTab = memo(function PersonalityTab({
       onSelect={(path) => void handleSelect(path)}
       onToggleInjection={(enabled) => void handleToggleInjection(enabled)}
     />
-  );
+  ), [fileName, files, handleSelect, handleToggleInjection, injectionState, selectedPath]);
 
-  let detail: React.ReactNode;
-  if (!selectedPath) {
-    detail = (
+  const detail = useMemo(() => {
+    if (!selectedPath) return (
       <div style={{ padding: "var(--space-lg)", color: "var(--ink-faint)" }}>
         {t("personality.selectFile")}
       </div>
     );
-  } else {
-    detail = (
+    return (
       <MarkdownViewer
         content={content}
         fileName={fileName}
         onOpenEditor={handleOpen}
       />
     );
-  }
+  }, [content, fileName, handleOpen, selectedPath, t]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- reports the fresh slots from this render
-  useLayoutEffect(() => { reportContent({ list, detail }); }, [
-    reportContent, files, selectedPath, content, fileName, injectionState, listFocused,
-  ]);
+  useLayoutEffect(() => { reportContent({ list, detail }); }, [reportContent, list, detail]);
 
   return null;
 });

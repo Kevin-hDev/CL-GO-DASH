@@ -4,15 +4,12 @@ import { shouldIgnoreKeyboardNavigation } from "./use-arrow-navigation";
 export type NavPanel = "sidebar" | "list" | "detail" | "filePreview" | "fileTree" | "terminal";
 
 const PANEL_ORDER: NavPanel[] = ["sidebar", "list", "detail", "filePreview", "fileTree", "terminal"];
-const FOCUSABLE = [
+const PANEL_FOCUS_TARGETS = [
   "[data-nav-active='true']",
   "button:not([disabled])",
   "[href]",
-  "input:not([disabled])",
-  "select:not([disabled])",
-  "textarea:not([disabled])",
   "[tabindex]:not([tabindex='-1'])",
-].join(",");
+];
 
 function panelElement(panel: NavPanel) {
   return document.querySelector<HTMLElement>(`[data-nav-zone='${panel}']:not([aria-hidden='true'])`);
@@ -28,7 +25,11 @@ function focusPanel(panel: NavPanel) {
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       const root = panelElement(panel);
-      const target = root?.matches(FOCUSABLE) ? root : root?.querySelector<HTMLElement>(FOCUSABLE);
+      const target = PANEL_FOCUS_TARGETS.find((selector) => root?.matches(selector))
+        ? root
+        : PANEL_FOCUS_TARGETS
+          .map((selector) => root?.querySelector<HTMLElement>(selector))
+          .find((element): element is HTMLElement => Boolean(element));
       (target ?? root)?.focus();
     });
   });

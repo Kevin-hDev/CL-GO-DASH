@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Plus } from "@/components/ui/icons";
 import { useChannels } from "@/hooks/use-channels";
@@ -41,13 +41,18 @@ export function ChannelsTab({ navState, onNavChange, onNavReplace }: ChannelsTab
     }
   }, [selectedKey, configuredAccounts, onNavReplace]);
 
-  const selected = selectedKey ? configuredAccounts.find((a) => `${a.channelId}:${a.accountId}` === selectedKey) ?? null : null;
+  const selected = useMemo(
+    () => selectedKey
+      ? configuredAccounts.find((a) => `${a.channelId}:${a.accountId}` === selectedKey) ?? null
+      : null,
+    [configuredAccounts, selectedKey],
+  );
 
-  const handlePick = (channelId: ChannelType) => {
+  const handlePick = useCallback((channelId: ChannelType) => {
     setDialog({ kind: "config", channelId, returnTo: "browse" });
-  };
+  }, []);
 
-  const handleConfigSaved = async (channelId: ChannelType, accountId: string) => {
+  const handleConfigSaved = useCallback(async (channelId: ChannelType, accountId: string) => {
     if (!config) return;
     const list = [...(config.channels[channelId] ?? [])];
     if (!list.some((a) => a.account_id === accountId)) {
@@ -65,18 +70,18 @@ export function ChannelsTab({ navState, onNavChange, onNavReplace }: ChannelsTab
     onNavChange({ channelKey: `${channelId}:${accountId}` });
     setDialog({ kind: "none" });
     await refreshHealth();
-  };
+  }, [config, onNavChange, refreshHealth, saveConfig]);
 
-  const list = (
+  const list = useMemo(() => (
     <ChannelsSidebar
       accounts={configuredAccounts}
       healthEntries={health.channels}
       selectedKey={selectedKey}
       onSelect={(key) => onNavChange({ channelKey: key })}
     />
-  );
+  ), [configuredAccounts, health.channels, onNavChange, selectedKey]);
 
-  const browseHeader = (
+  const browseHeader = useMemo(() => (
     <div className="ct-browse-header">
       <p className="ct-subtitle">{t("channels.main.subtitle")}</p>
       <button type="button" className="ak-connectors-btn" onClick={() => setDialog({ kind: "browse" })}>
@@ -84,9 +89,9 @@ export function ChannelsTab({ navState, onNavChange, onNavReplace }: ChannelsTab
         {t("channels.main.browseBtn")}
       </button>
     </div>
-  );
+  ), [t]);
 
-  const detail = (
+  const detail = useMemo(() => (
     <>
       {selected && config ? (
         <div className="ct-detail-wrapper">
@@ -126,7 +131,19 @@ export function ChannelsTab({ navState, onNavChange, onNavReplace }: ChannelsTab
         />
       )}
     </>
-  );
+  ), [
+    browseHeader,
+    config,
+    dialog,
+    handleConfigSaved,
+    handlePick,
+    health.channels,
+    onNavReplace,
+    refreshHealth,
+    saveConfig,
+    selected,
+    t,
+  ]);
 
-  return { list, detail };
+  return useMemo(() => ({ list, detail }), [list, detail]);
 }

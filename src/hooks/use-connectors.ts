@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { IS_MAC } from "@/lib/platform";
@@ -17,8 +17,9 @@ function connectorPayload(spec: McpConnectorSpec): ConfiguredMcp {
 }
 
 export function useConnectors() {
-  const catalog: McpConnectorSpec[] = MCP_CATALOG.filter(
-    (c) => !c.os_restrict || (c.os_restrict === "macos" && IS_MAC),
+  const catalog: McpConnectorSpec[] = useMemo(
+    () => MCP_CATALOG.filter((c) => !c.os_restrict || (c.os_restrict === "macos" && IS_MAC)),
+    [],
   );
 
   const [items, setItems] = useState<ConfiguredMcp[]>([]);
@@ -50,15 +51,18 @@ export function useConnectors() {
     return () => { void unlisten.then((fn) => fn()); };
   }, [refresh]);
 
-  const configuredIds = items.map((c) => c.id);
+  const configuredIds = useMemo(() => items.map((c) => c.id), [items]);
 
-  const configured: ConfiguredMcpFull[] = items
-    .map((c) => {
-      const spec = catalog.find((s) => s.id === c.id);
-      if (!spec) return null;
-      return { ...spec, ...c };
-    })
-    .filter((x): x is ConfiguredMcpFull => x !== null);
+  const configured: ConfiguredMcpFull[] = useMemo(
+    () => items
+      .map((c) => {
+        const spec = catalog.find((s) => s.id === c.id);
+        if (!spec) return null;
+        return { ...spec, ...c };
+      })
+      .filter((x): x is ConfiguredMcpFull => x !== null),
+    [catalog, items],
+  );
 
   const addConnector = useCallback(async (id: string) => {
     if (items.some((c) => c.id === id)) return;
