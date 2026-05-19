@@ -172,7 +172,15 @@
     "bubbleSwitched": "Branch switched",
     "createPlaceholder": "New branch name",
     "commitRequired": "Commit your changes to continue",
-    "createError": "Invalid name or branch already exists"
+    "createError": "Invalid name or branch already exists",
+    "commitSwitchError": "Commit or branch switch failed. Check your Git configuration and try again.",
+    "githubAuthTitle": "Connect GitHub to create a branch",
+    "githubAuthDescription": "This repository is linked to GitHub. Connect GitHub before creating a branch from the app.",
+    "githubAuthConnect": "Connect GitHub",
+    "githubAuthConnecting": "Opening GitHub connection…",
+    "githubAuthTesting": "Checking GitHub connection…",
+    "githubAuthError": "Could not connect GitHub. Try again or configure GitHub in connectors.",
+    "githubAuthCancel": "Cancel"
   },
   "history": {
     "rename": "Rename",

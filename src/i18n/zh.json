@@ -173,7 +173,15 @@
     "bubbleSwitched": "分支已切换",
     "createPlaceholder": "新分支名称",
     "commitRequired": "请提交更改以继续",
-    "createError": "名称无效或分支已存在"
+    "createError": "名称无效或分支已存在",
+    "commitSwitchError": "提交或切换分支失败。请检查 Git 配置后重试。",
+    "githubAuthTitle": "连接 GitHub 以创建分支",
+    "githubAuthDescription": "此仓库已关联 GitHub。请先连接 GitHub，再从应用创建分支。",
+    "githubAuthConnect": "连接 GitHub",
+    "githubAuthConnecting": "正在打开 GitHub 连接…",
+    "githubAuthTesting": "正在检查 GitHub 连接…",
+    "githubAuthError": "无法连接 GitHub。请重试，或在连接器中配置 GitHub。",
+    "githubAuthCancel": "取消"
   },
   "history": {
     "rename": "重命名",

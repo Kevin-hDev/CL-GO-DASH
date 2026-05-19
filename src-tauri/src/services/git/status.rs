@@ -1,4 +1,5 @@
-use git2::{Repository, StatusOptions};
+use super::repo as git_repo;
+use git2::StatusOptions;
 use serde::Serialize;
 use std::collections::HashMap;
 use std::path::Path;
@@ -14,8 +15,8 @@ pub struct DirtyFile {
 }
 
 pub fn list_dirty_files(repo_path: &Path) -> Result<Vec<DirtyFile>, String> {
-    let repo =
-        Repository::open(repo_path).map_err(|e| format!("Impossible d'ouvrir le dépôt : {e}"))?;
+    let repo = git_repo::open(repo_path)?;
+    let workdir = git_repo::workdir(&repo)?;
 
     let mut opts = StatusOptions::new();
     opts.include_untracked(true).recurse_untracked_dirs(false);
@@ -24,7 +25,7 @@ pub fn list_dirty_files(repo_path: &Path) -> Result<Vec<DirtyFile>, String> {
         .statuses(Some(&mut opts))
         .map_err(|e| format!("Lecture du statut : {e}"))?;
 
-    let diff_stats = get_diff_stats(repo_path);
+    let diff_stats = get_diff_stats(&workdir);
 
     let mut files = Vec::new();
     for entry in statuses.iter() {
@@ -45,7 +46,7 @@ pub fn list_dirty_files(repo_path: &Path) -> Result<Vec<DirtyFile>, String> {
 
         let (additions, deletions) = diff_stats.get(&path).copied().unwrap_or_else(|| {
             if label == "new" {
-                (count_file_lines(&repo_path.join(&path)), 0)
+                (count_file_lines(&workdir.join(&path)), 0)
             } else {
                 (0, 0)
             }

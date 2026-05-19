@@ -25,6 +25,11 @@ interface GitBranchState {
   isLoading: boolean;
 }
 
+export type GitCreateBranchResult = {
+  ok: boolean;
+  reason?: "github_auth_required";
+};
+
 const INITIAL_STATE: GitBranchState = {
   branches: [],
   worktrees: [],
@@ -118,16 +123,19 @@ export function useGitBranch(projectPath: string | undefined, sessionId?: string
     }
   }, [refresh]);
 
-  const create = useCallback(async (branchName: string): Promise<boolean> => {
+  const create = useCallback(async (branchName: string): Promise<GitCreateBranchResult> => {
     const path = pathRef.current;
-    if (!path) return false;
+    if (!path) return { ok: false };
 
     try {
       await invoke("create_git_branch", { path, branchName });
       await refresh();
-      return true;
-    } catch {
-      return false;
+      return { ok: true };
+    } catch (e) {
+      if (String(e).includes("GITHUB_AUTH_REQUIRED")) {
+        return { ok: false, reason: "github_auth_required" };
+      }
+      return { ok: false };
     }
   }, [refresh]);
 

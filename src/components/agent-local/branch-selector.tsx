@@ -1,12 +1,12 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { GitBranch, CaretDown, Plus } from "@/components/ui/icons";
+import { BranchSelectorCreateForm } from "./branch-selector-create-form";
 import { BranchSelectorBranchItem, BranchSelectorWorktreeItem } from "./branch-selector-items";
 import { useKeyboard } from "@/hooks/use-keyboard";
 import { useClickOutside } from "@/hooks/use-click-outside";
 import type { useGitBranch } from "@/hooks/use-git-branch";
 import "./branch-selector.css";
-
 type GitBranchHook = ReturnType<typeof useGitBranch>;
 
 interface BranchSelectorProps {
@@ -14,10 +14,11 @@ interface BranchSelectorProps {
   locked: boolean;
   onConflict: (branchName: string, dirtyCount: number) => void;
   onWorktreeSelect: (path: string, branch: string) => void;
+  onGithubAuthRequired: () => void;
 }
 
 export function BranchSelector({
-  git, locked, onConflict, onWorktreeSelect,
+  git, locked, onConflict, onWorktreeSelect, onGithubAuthRequired,
 }: BranchSelectorProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -28,7 +29,6 @@ export function BranchSelector({
   const dropRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const createRef = useRef<HTMLInputElement>(null);
-
   useKeyboard({ onEscape: () => {
     if (creating) {
       setCreating(false);
@@ -39,7 +39,6 @@ export function BranchSelector({
     }
   }});
   useClickOutside(dropRef, () => { setOpen(false); setCreating(false); });
-
   useEffect(() => {
     if (open && !creating && searchRef.current) searchRef.current.focus();
   }, [open, creating]);
@@ -66,22 +65,33 @@ export function BranchSelector({
   const handleCreate = useCallback(async () => {
     const name = createName.trim();
     if (!name) return;
-    const ok = await git.create(name);
-    if (ok) {
+    const result = await git.create(name);
+    if (result.ok) {
       setOpen(false);
       setCreating(false);
       setCreateName("");
       setCreateError("");
       setSearch("");
+    } else if (result.reason === "github_auth_required") {
+      setOpen(false);
+      setCreating(false);
+      setCreateName("");
+      setCreateError("");
+      onGithubAuthRequired();
     } else {
       setCreateError(t("branches.createError"));
     }
-  }, [createName, git, t]);
+  }, [createName, git, onGithubAuthRequired, t]);
 
   const handleWorktreeSelect = useCallback((path: string, branch: string) => {
     setOpen(false);
     onWorktreeSelect(path, branch);
   }, [onWorktreeSelect]);
+  const cancelCreate = useCallback(() => {
+    setCreating(false);
+    setCreateName("");
+    setCreateError("");
+  }, []);
 
   if (!git.isGitRepo) return null;
 
@@ -97,15 +107,18 @@ export function BranchSelector({
   }
 
   const lowerSearch = search.toLowerCase();
+  const otherWorktreeBranches = new Set(
+    git.worktrees.filter((w) => !w.is_current && w.branch).map((w) => w.branch),
+  );
   const filteredBranches = git.branches.filter((b) =>
-    b.name.toLowerCase().includes(lowerSearch),
+    b.name.toLowerCase().includes(lowerSearch)
+      && (b.is_current || !otherWorktreeBranches.has(b.name)),
   );
   const filteredWorktrees = git.worktrees.filter((w) =>
     !w.is_current && `${w.branch} ${w.path}`.toLowerCase().includes(lowerSearch),
   );
 
   const label = git.currentBranch || t("branches.detachedHead");
-
   return (
     <div className="bs-row" ref={dropRef}>
       <button className="bs-btn" onClick={() => setOpen(!open)}>
@@ -113,7 +126,6 @@ export function BranchSelector({
         <span>{label}</span>
         <CaretDown size={10} />
       </button>
-
       {open && (
         <div className="bs-dropdown">
           <input
@@ -158,25 +170,15 @@ export function BranchSelector({
           <div className="bs-sep" />
 
           {creating ? (
-            <div className="bs-create-form">
-              <input
-                ref={createRef}
-                className="bs-create-input"
-                placeholder={t("branches.createPlaceholder")}
-                value={createName}
-                onChange={(e) => { setCreateName(e.target.value); setCreateError(""); }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") void handleCreate();
-                  if (e.key === "Escape") {
-                    e.stopPropagation();
-                    setCreating(false);
-                    setCreateName("");
-                    setCreateError("");
-                  }
-                }}
-              />
-              {createError && <div className="bs-create-error">{createError}</div>}
-            </div>
+            <BranchSelectorCreateForm
+              inputRef={createRef}
+              value={createName}
+              error={createError}
+              placeholder={t("branches.createPlaceholder")}
+              onValueChange={(value) => { setCreateName(value); setCreateError(""); }}
+              onSubmit={() => void handleCreate()}
+              onCancel={cancelCreate}
+            />
           ) : (
             <div
               className="bs-item"

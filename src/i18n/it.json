@@ -173,7 +173,15 @@
     "bubbleSwitched": "Ramo cambiato",
     "createPlaceholder": "Nome del nuovo ramo",
     "commitRequired": "Effettua un commit delle modifiche per continuare",
-    "createError": "Nome non valido o ramo già esistente"
+    "createError": "Nome non valido o ramo già esistente",
+    "commitSwitchError": "Commit o cambio ramo non riuscito. Controlla la configurazione Git e riprova.",
+    "githubAuthTitle": "Connetti GitHub per creare un ramo",
+    "githubAuthDescription": "Questo repository è collegato a GitHub. Connetti GitHub prima di creare un ramo dall'app.",
+    "githubAuthConnect": "Connetti GitHub",
+    "githubAuthConnecting": "Apertura connessione GitHub…",
+    "githubAuthTesting": "Verifica connessione GitHub…",
+    "githubAuthError": "Impossibile connettere GitHub. Riprova o configura GitHub nei connettori.",
+    "githubAuthCancel": "Annulla"
   },
   "history": {
     "rename": "Rinomina",

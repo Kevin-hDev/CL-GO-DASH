@@ -172,7 +172,15 @@
     "bubbleSwitched": "Branche changée",
     "createPlaceholder": "Nom de la nouvelle branche",
     "commitRequired": "Effectuez un commit de vos modifications pour continuer",
-    "createError": "Nom invalide ou branche déjà existante"
+    "createError": "Nom invalide ou branche déjà existante",
+    "commitSwitchError": "Le commit ou le changement de branche a échoué. Vérifie ta configuration Git puis réessaie.",
+    "githubAuthTitle": "Connectez GitHub pour créer une branche",
+    "githubAuthDescription": "Ce dépôt est lié à GitHub. Connecte GitHub avant de créer une branche depuis l'application.",
+    "githubAuthConnect": "Connecter GitHub",
+    "githubAuthConnecting": "Ouverture de la connexion GitHub…",
+    "githubAuthTesting": "Vérification de la connexion GitHub…",
+    "githubAuthError": "Connexion GitHub impossible. Réessaie ou configure GitHub dans les connecteurs.",
+    "githubAuthCancel": "Annuler"
   },
   "history": {
     "rename": "Renommer",

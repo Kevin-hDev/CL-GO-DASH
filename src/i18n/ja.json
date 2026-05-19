@@ -173,7 +173,15 @@
     "bubbleSwitched": "ブランチ切り替え済み",
     "createPlaceholder": "新しいブランチ名",
     "commitRequired": "続行するには変更をコミットしてください",
-    "createError": "無効な名前またはブランチが既に存在します"
+    "createError": "無効な名前またはブランチが既に存在します",
+    "commitSwitchError": "コミットまたはブランチ切り替えに失敗しました。Git 設定を確認して再試行してください。",
+    "githubAuthTitle": "ブランチ作成には GitHub 接続が必要です",
+    "githubAuthDescription": "このリポジトリは GitHub に紐づいています。アプリからブランチを作成する前に GitHub を接続してください。",
+    "githubAuthConnect": "GitHub に接続",
+    "githubAuthConnecting": "GitHub 接続を開いています…",
+    "githubAuthTesting": "GitHub 接続を確認しています…",
+    "githubAuthError": "GitHub に接続できませんでした。再試行するか、コネクタで GitHub を設定してください。",
+    "githubAuthCancel": "キャンセル"
   },
   "history": {
     "rename": "名前を変更",

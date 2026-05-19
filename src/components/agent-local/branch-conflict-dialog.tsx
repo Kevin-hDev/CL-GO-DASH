@@ -16,12 +16,14 @@ interface BranchConflictDialogProps {
   targetBranch: string;
   dirtyCount: number;
   projectPath: string;
+  busy?: boolean;
+  error?: string;
   onCancel: () => void;
   onCommitAndSwitch: (branch: string) => void;
 }
 
 export function BranchConflictDialog({
-  targetBranch, dirtyCount, projectPath, onCancel, onCommitAndSwitch,
+  targetBranch, dirtyCount, projectPath, busy = false, error, onCancel, onCommitAndSwitch,
 }: BranchConflictDialogProps) {
   const { t } = useTranslation();
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -81,15 +83,17 @@ export function BranchConflictDialog({
         </div>
 
         <div className="bcd-hint">{t("branches.commitRequired")}</div>
+        {error && <div className="bs-create-error">{error}</div>}
 
         <div className="bcd-actions">
-          <button className="bcd-btn" onClick={onCancel} type="button">
+          <button className="bcd-btn" onClick={onCancel} type="button" disabled={busy}>
             {t("branches.conflictCancel")}
           </button>
           <button
             className="bcd-btn bcd-btn-primary"
             onClick={() => onCommitAndSwitch(targetBranch)}
             type="button"
+            disabled={busy}
           >
             {t("branches.conflictCommitAndSwitch")}
           </button>

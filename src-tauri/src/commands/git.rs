@@ -1,4 +1,4 @@
-use crate::services::git::{branch, status, watcher, worktree_list};
+use crate::services::git::{branch, branch_commit, status, watcher, worktree_list};
 
 #[tauri::command]
 pub fn start_git_watcher(app: tauri::AppHandle, path: String) -> Result<(), String> {
@@ -73,7 +73,7 @@ pub async fn commit_and_checkout_git_branch(
     if !repo_path.is_dir() {
         return Err("Répertoire introuvable".to_string());
     }
-    tokio::task::spawn_blocking(move || branch::commit_all_and_checkout(&repo_path, &branch_name))
+    tokio::task::spawn_blocking(move || branch_commit::commit_all_and_checkout(&repo_path, &branch_name))
         .await
         .map_err(|e| {
             eprintln!("[git] commit_and_checkout: {e}");

@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { useTranslation } from "react-i18next";
 import { ProjectSelector } from "./project-selector";
 import { BranchSelector } from "./branch-selector";
 import { BranchConflictDialog } from "./branch-conflict-dialog";
+import { BranchGithubAuthDialog } from "./branch-github-auth-dialog";
+import { useGithubBranchAuth } from "@/hooks/use-github-branch-auth";
 import type { useGitBranch } from "@/hooks/use-git-branch";
 import type { useSessionProject } from "@/hooks/use-session-project";
 import type { Project } from "@/types/agent";
@@ -20,7 +23,14 @@ export function ChatProjectControls({
   git,
   onWorktreeSelect,
 }: ChatProjectControlsProps) {
-  const [branchConflict, setBranchConflict] = useState<{ branch: string; dirtyCount: number } | null>(null);
+  const { t } = useTranslation();
+  const githubAuth = useGithubBranchAuth(() => void git.refresh());
+  const [branchConflict, setBranchConflict] = useState<{
+    branch: string;
+    dirtyCount: number;
+    busy?: boolean;
+    error?: string;
+  } | null>(null);
 
   return (
     <>
@@ -38,6 +48,7 @@ export function ChatProjectControls({
           locked={false}
           onConflict={(branch, dirtyCount) => setBranchConflict({ branch, dirtyCount })}
           onWorktreeSelect={onWorktreeSelect}
+          onGithubAuthRequired={githubAuth.request}
         />
       </div>
 
@@ -46,21 +57,37 @@ export function ChatProjectControls({
           targetBranch={branchConflict.branch}
           dirtyCount={branchConflict.dirtyCount}
           projectPath={projectState.selectedProject.path}
+          busy={branchConflict.busy}
+          error={branchConflict.error}
           onCancel={() => setBranchConflict(null)}
           onCommitAndSwitch={(branch) => {
             void (async () => {
+              setBranchConflict((current) => current ? { ...current, busy: true, error: undefined } : current);
               try {
                 await invoke("commit_and_checkout_git_branch", {
                   path: projectState.selectedProject!.path,
                   branchName: branch,
                 });
                 await git.refresh();
+                setBranchConflict(null);
               } catch (e) {
                 console.error("commit_and_checkout:", e);
+                setBranchConflict((current) => current ? {
+                  ...current,
+                  busy: false,
+                  error: t("branches.commitSwitchError"),
+                } : current);
+                return;
               }
-              setBranchConflict(null);
             })();
           }}
+        />
+      )}
+      {githubAuth.open && (
+        <BranchGithubAuthDialog
+          state={githubAuth.state}
+          onCancel={githubAuth.cancel}
+          onConnect={() => void githubAuth.connect()}
         />
       )}
     </>

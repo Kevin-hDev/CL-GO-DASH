@@ -173,7 +173,15 @@
     "bubbleSwitched": "Rama cambiada",
     "createPlaceholder": "Nombre de la nueva rama",
     "commitRequired": "Confirme sus cambios para continuar",
-    "createError": "Nombre inválido o rama ya existente"
+    "createError": "Nombre inválido o rama ya existente",
+    "commitSwitchError": "El commit o el cambio de rama falló. Revisa tu configuración Git e inténtalo de nuevo.",
+    "githubAuthTitle": "Conecta GitHub para crear una rama",
+    "githubAuthDescription": "Este repositorio está vinculado a GitHub. Conecta GitHub antes de crear una rama desde la app.",
+    "githubAuthConnect": "Conectar GitHub",
+    "githubAuthConnecting": "Abriendo conexión con GitHub…",
+    "githubAuthTesting": "Comprobando conexión con GitHub…",
+    "githubAuthError": "No se pudo conectar GitHub. Inténtalo de nuevo o configúralo en conectores.",
+    "githubAuthCancel": "Cancelar"
   },
   "history": {
     "rename": "Renombrar",

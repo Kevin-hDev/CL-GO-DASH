@@ -1,4 +1,5 @@
-use git2::{BranchType, Repository, StatusOptions};
+use super::{github_auth, repo as git_repo};
+use git2::{BranchType, StatusOptions};
 use serde::Serialize;
 use std::path::Path;
 
@@ -21,8 +22,7 @@ pub struct GitContext {
 }
 
 pub fn list_branches(repo_path: &Path) -> Result<Vec<BranchInfo>, String> {
-    let repo =
-        Repository::open(repo_path).map_err(|e| format!("Impossible d'ouvrir le dépôt : {e}"))?;
+    let repo = git_repo::open(repo_path)?;
 
     let current_name = repo
         .head()
@@ -60,7 +60,7 @@ pub fn list_branches(repo_path: &Path) -> Result<Vec<BranchInfo>, String> {
     Ok(branches)
 }
 
-fn count_dirty_files(repo: &Repository) -> Result<usize, git2::Error> {
+pub(super) fn count_dirty_files(repo: &git2::Repository) -> Result<usize, git2::Error> {
     let mut opts = StatusOptions::new();
     opts.include_untracked(true).recurse_untracked_dirs(false);
     let statuses = repo.statuses(Some(&mut opts))?;
@@ -68,7 +68,7 @@ fn count_dirty_files(repo: &Repository) -> Result<usize, git2::Error> {
 }
 
 pub fn get_context(repo_path: &Path) -> GitContext {
-    let repo = match Repository::open(repo_path) {
+    let repo = match git_repo::open(repo_path) {
         Ok(r) => r,
         Err(_) => {
             return GitContext {
@@ -96,7 +96,7 @@ pub fn get_context(repo_path: &Path) -> GitContext {
     }
 }
 
-fn validate_branch_name(name: &str) -> Result<(), String> {
+pub(super) fn validate_branch_name(name: &str) -> Result<(), String> {
     if name.is_empty()
         || name.contains("..")
         || name.contains('\0')
@@ -127,8 +127,7 @@ fn validate_branch_name(name: &str) -> Result<(), String> {
 pub fn checkout_branch(repo_path: &Path, branch_name: &str) -> Result<(), String> {
     validate_branch_name(branch_name)?;
 
-    let repo =
-        Repository::open(repo_path).map_err(|e| format!("Impossible d'ouvrir le dépôt : {e}"))?;
+    let repo = git_repo::open(repo_path)?;
 
     let dirty = count_dirty_files(&repo).map_err(|_| "Vérification impossible".to_string())?;
     if dirty > 0 {
@@ -150,39 +149,6 @@ pub fn checkout_branch(repo_path: &Path, branch_name: &str) -> Result<(), String
     Ok(())
 }
 
-pub fn commit_all_and_checkout(repo_path: &Path, target_branch: &str) -> Result<(), String> {
-    validate_branch_name(target_branch)?;
-
-    let repo =
-        Repository::open(repo_path).map_err(|e| format!("Impossible d'ouvrir le dépôt : {e}"))?;
-
-    let mut index = repo.index().map_err(|e| format!("Index : {e}"))?;
-    index
-        .add_all(["*"], git2::IndexAddOption::DEFAULT, None)
-        .map_err(|e| format!("Staging : {e}"))?;
-    index.write().map_err(|e| format!("Écriture index : {e}"))?;
-
-    let tree_oid = index.write_tree().map_err(|e| format!("Arbre : {e}"))?;
-    let tree = repo
-        .find_tree(tree_oid)
-        .map_err(|e| format!("Arbre : {e}"))?;
-
-    let head = repo.head().map_err(|e| format!("HEAD : {e}"))?;
-    let parent = head
-        .peel_to_commit()
-        .map_err(|e| format!("Commit parent : {e}"))?;
-
-    let sig = repo
-        .signature()
-        .map_err(|e| format!("Signature git : {e}"))?;
-    let msg = format!("WIP: save changes before switching to {target_branch}");
-
-    repo.commit(Some("HEAD"), &sig, &sig, &msg, &tree, &[&parent])
-        .map_err(|e| format!("Commit : {e}"))?;
-
-    checkout_branch(repo_path, target_branch)
-}
-
 pub fn create_branch(repo_path: &Path, branch_name: &str) -> Result<(), String> {
     validate_branch_name(branch_name)?;
 
@@ -193,8 +159,8 @@ pub fn create_branch(repo_path: &Path, branch_name: &str) -> Result<(), String> 
         return Err("Nom de branche trop long".to_string());
     }
 
-    let repo =
-        Repository::open(repo_path).map_err(|e| format!("Impossible d'ouvrir le dépôt : {e}"))?;
+    let repo = git_repo::open(repo_path)?;
+    github_auth::ensure_branch_creation_allowed(&repo)?;
 
     let head_commit = repo
         .head()

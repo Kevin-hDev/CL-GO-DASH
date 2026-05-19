@@ -3,19 +3,9 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { IS_MAC } from "@/lib/platform";
 import { MCP_CATALOG } from "@/lib/mcp-catalog";
+import { connectorPayload } from "@/lib/mcp-connector-payload";
 import { cleanupTauriListener } from "@/lib/tauri-listen";
 import type { ConfiguredMcp, ConfiguredMcpFull, McpConnectorSpec } from "@/types/mcp";
-
-function connectorPayload(spec: McpConnectorSpec): ConfiguredMcp {
-  return {
-    id: spec.id,
-    status: "connected",
-    enabled_in_chat: true,
-    endpoint: spec.endpoint,
-    install_command: spec.install_command,
-    env_keys: spec.env_keys,
-  };
-}
 
 export function useConnectors() {
   const catalog: McpConnectorSpec[] = useMemo(
