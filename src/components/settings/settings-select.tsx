@@ -1,7 +1,9 @@
 import { useState, useRef, useCallback, useMemo } from "react";
-import { CaretDown, CaretRight, Check, MagnifyingGlass } from "@/components/ui/icons";
+import { CaretDown, MagnifyingGlass } from "@/components/ui/icons";
 import { useClickOutside } from "@/hooks/use-click-outside";
 import { useKeyboard } from "@/hooks/use-keyboard";
+import { useLocalListNavigation, type LocalListNavItem } from "@/hooks/use-local-list-navigation";
+import { SettingsSelectList, groupNavId, optionNavId, sortedOptions } from "./settings-select-list";
 import "./settings-select.css";
 
 export interface SelectOption {
@@ -26,6 +28,8 @@ interface SettingsSelectProps {
   searchPlaceholder?: string;
   disabled?: boolean;
 }
+
+const EMPTY_OPTIONS: SelectOption[] = [];
 
 export function SettingsSelect({
   options,
@@ -68,73 +72,65 @@ export function SettingsSelect({
   const displayLabel = current?.label ?? (value ? fallbackLabel : placeholder) ?? "—";
   const isOverflowing = displayLabel.length > 20;
 
-  const handleSelect = (val: string) => {
+  const handleSelect = useCallback((val: string) => {
     if (disabled) return;
     onChange(val);
     close();
-  };
+  }, [close, disabled, onChange]);
 
-  const toggleGroup = (label: string) => {
+  const toggleGroup = useCallback((label: string) => {
     setCollapsed((prev) => ({ ...prev, [label]: !(prev[label] ?? true) }));
-  };
+  }, []);
 
-  const renderOption = (opt: SelectOption) => (
-    <div
-      key={opt.value}
-      className={`ss-option ${opt.value === value ? "active" : ""} ${opt.dimmed ? "ss-option-dimmed" : ""}`}
-      role="button"
-      tabIndex={0}
-      onClick={() => handleSelect(opt.value)}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleSelect(opt.value); }}
-    >
-      <div className="ss-option-check">
-        {opt.value === value && <Check size={14} weight="bold" />}
-      </div>
-      {opt.icon}
-      <span className="ss-option-label">{opt.label}</span>
-    </div>
-  );
-
-  const renderContent = () => {
-    if (filtered) {
-      if (filtered.length === 0) return <div className="ss-empty">--</div>;
-      return filtered.map(renderOption);
+  const visibleOptions = filtered ?? options ?? EMPTY_OPTIONS;
+  const navItems = useMemo<LocalListNavItem[]>(() => {
+    if (filtered || options) {
+      return visibleOptions.map((opt) => ({
+        id: optionNavId(opt.value),
+        onSelect: () => handleSelect(opt.value),
+      }));
     }
+    return (groups ?? []).flatMap((group) => {
+      const isCollapsed = collapsed[group.label] ?? true;
+      const groupItem: LocalListNavItem = {
+        id: groupNavId(group.label),
+        onSelect: () => toggleGroup(group.label),
+        onArrowRight: isCollapsed ? () => toggleGroup(group.label) : undefined,
+        onArrowLeft: isCollapsed ? undefined : () => toggleGroup(group.label),
+      };
+      const optionItems = isCollapsed ? [] : sortedOptions(group.options).map((opt) => ({
+        id: optionNavId(opt.value),
+        onSelect: () => handleSelect(opt.value),
+      }));
+      return [groupItem, ...optionItems];
+    });
+  }, [collapsed, filtered, groups, handleSelect, options, toggleGroup, visibleOptions]);
 
-    if (groups) {
-      return groups.map((g) => {
-        const isCollapsed = collapsed[g.label] ?? true;
-        return (
-          <div key={g.label} className="ss-group">
-            <div className="ss-group-header" role="button" tabIndex={0} onClick={() => toggleGroup(g.label)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') toggleGroup(g.label); }}>
-              <CaretRight
-                size={12}
-                weight="bold"
-                className={`ss-group-caret ${isCollapsed ? "" : "open"}`}
-              />
-              <span>{g.label}</span>
-              <span className="ss-group-count">{g.options.length}</span>
-            </div>
-            {!isCollapsed && sortedOptions(g.options).map(renderOption)}
-          </div>
-        );
-      });
-    }
-
-    if (options) {
-      if (options.length === 0) return <div className="ss-empty">--</div>;
-      return options.map(renderOption);
-    }
-
-    return <div className="ss-empty">--</div>;
-  };
-
-  const sortedOptions = (opts: SelectOption[]) =>
-    [...opts].sort((a, b) => (a.dimmed ? 1 : 0) - (b.dimmed ? 1 : 0));
+  const selectedNavId = navItems.some((item) => item.id === optionNavId(value)) ? optionNavId(value) : null;
+  const { activate, getItemRef, isActive, listProps } = useLocalListNavigation({
+    items: navItems,
+    enabled: open && !disabled,
+    selectedId: selectedNavId,
+    onEscape: close,
+  });
 
   return (
     <div className={`ss-wrap ${open ? "open" : ""} ${disabled ? "disabled" : ""}`} data-keyboard-scope={open ? "local" : undefined} ref={ref}>
-      <div className="ss-trigger" role="button" tabIndex={disabled ? -1 : 0} onClick={() => !disabled && setOpen(!open)} onKeyDown={(e) => { if (!disabled && (e.key === 'Enter' || e.key === ' ')) setOpen(!open); }} title={isOverflowing ? displayLabel : undefined}>
+      <div
+        className="ss-trigger"
+        role="button"
+        tabIndex={disabled ? -1 : 0}
+        onClick={() => !disabled && setOpen(!open)}
+        onKeyDown={(event) => {
+          if (disabled) return;
+          if (!open && (event.key === "Enter" || event.key === " " || event.key === "ArrowDown")) {
+            setOpen(true);
+            return;
+          }
+          if (open) listProps.onKeyDown(event);
+        }}
+        title={isOverflowing ? displayLabel : undefined}
+      >
         <span className={`ss-trigger-label ${isOverflowing ? "is-overflowing" : ""}`}>
           {displayLabel}
         </span>
@@ -150,11 +146,24 @@ export function SettingsSelect({
                 autoFocus
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={listProps.onKeyDown}
                 placeholder={searchPlaceholder ?? ""}
               />
             </div>
           )}
-          {renderContent()}
+          <SettingsSelectList
+            filtered={filtered}
+            groups={groups}
+            options={options}
+            collapsed={collapsed}
+            value={value}
+            activate={activate}
+            getItemRef={getItemRef}
+            isActive={isActive}
+            onItemKeyDown={listProps.onKeyDown}
+            onSelect={handleSelect}
+            onToggleGroup={toggleGroup}
+          />
         </div>
       )}
     </div>

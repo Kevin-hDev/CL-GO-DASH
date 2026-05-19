@@ -1,7 +1,8 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronDown } from "lucide-react";
 import type { ForecastSection } from "@/hooks/use-forecast-panel";
+import { focusLocalListItem, useLocalListNavigation, type LocalListNavItem } from "@/hooks/use-local-list-navigation";
 import "./forecast-nav.css";
 
 const NAV_ITEMS: { id: ForecastSection; i18nKey: string }[] = [
@@ -23,7 +24,23 @@ interface ForecastNavProps {
 export function ForecastNav({ open, activeSection, onToggle, onSelect }: ForecastNavProps) {
   const { t } = useTranslation();
   const rootRef = useRef<HTMLDivElement | null>(null);
+  const panelRef = useRef<HTMLDivElement | null>(null);
+  const pendingFocusDirection = useRef<1 | -1>(1);
   const activeItem = NAV_ITEMS.find((item) => item.id === activeSection) ?? NAV_ITEMS[0];
+  const navItems = useMemo<LocalListNavItem[]>(() => NAV_ITEMS.map((item) => ({
+    id: item.id,
+    onSelect: () => onSelect(item.id),
+  })), [onSelect]);
+  const nav = useLocalListNavigation({
+    items: navItems,
+    enabled: open,
+    selectedId: activeSection,
+    onEscape: onToggle,
+  });
+
+  useEffect(() => {
+    if (open) focusLocalListItem(panelRef.current, pendingFocusDirection.current);
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -44,16 +61,40 @@ export function ForecastNav({ open, activeSection, onToggle, onSelect }: Forecas
   }, [open, onToggle]);
 
   return (
-    <div ref={rootRef} className="fc-nav-root">
-      <button className={`fc-nav-trigger ${open ? "is-open" : ""}`} onClick={onToggle}>
+    <div ref={rootRef} className="fc-nav-root" data-keyboard-scope="local">
+      <button
+        className={`fc-nav-trigger ${open ? "is-open" : ""}`}
+        onClick={onToggle}
+        onKeyDown={(event) => {
+          if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+          event.preventDefault();
+          event.stopPropagation();
+          pendingFocusDirection.current = event.key === "ArrowDown" ? 1 : -1;
+          if (open) focusLocalListItem(panelRef.current, pendingFocusDirection.current);
+          else onToggle();
+        }}
+      >
         <span className="fc-nav-label">{t(activeItem.i18nKey)}</span>
         <ChevronDown size={14} className={`fc-nav-chevron ${open ? "is-open" : ""}`} />
       </button>
-      <div className={`fc-nav-panel ${open ? "is-open" : ""}`}>
+      <div
+        ref={panelRef}
+        className={`fc-nav-panel ${open ? "is-open" : ""}`}
+        role="menu"
+        tabIndex={-1}
+        onKeyDown={nav.listProps.onKeyDown}
+      >
         {NAV_ITEMS.map((item) => (
           <button
             key={item.id}
+            ref={nav.getItemRef(item.id)}
             className={`fc-nav-item ${activeSection === item.id ? "fc-nav-active" : ""}`}
+            data-local-nav-item="true"
+            data-local-nav-active={nav.isActive(item.id) ? "true" : undefined}
+            tabIndex={open && nav.isActive(item.id) ? 0 : -1}
+            onFocus={() => nav.activate(item.id)}
+            onMouseEnter={() => nav.activate(item.id)}
+            onKeyDown={nav.listProps.onKeyDown}
             onClick={() => onSelect(item.id)}
           >
             <span

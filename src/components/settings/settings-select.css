@@ -112,7 +112,8 @@
   transition: background 100ms ease-out;
 }
 
-.ss-option:hover {
+.ss-option:hover,
+.ss-option[data-local-nav-active="true"] {
   background: var(--surface-hover);
 }
 
@@ -155,6 +156,11 @@
   cursor: pointer;
   user-select: none;
   border-top: 1px solid var(--edge);
+}
+
+.ss-group-header:hover,
+.ss-group-header[data-local-nav-active="true"] {
+  background: var(--surface-hover);
 }
 
 .ss-group:first-child .ss-group-header {

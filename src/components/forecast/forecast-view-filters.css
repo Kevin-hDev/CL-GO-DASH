@@ -88,6 +88,11 @@
   cursor: pointer;
 }
 
+.fcf-group-btn:hover,
+.fcf-group-btn[data-local-nav-active="true"] {
+  color: var(--ink);
+}
+
 .fcf-group-title {
   display: block;
   font-size: var(--text-xs);
@@ -129,12 +134,23 @@
 }
 
 .fcf-item {
+  width: 100%;
   display: flex;
   align-items: center;
   gap: 8px;
+  padding: 2px 0;
+  border: 0;
+  background: transparent;
   color: var(--ink);
   font-size: var(--text-sm);
+  font-family: var(--font-sans);
   cursor: pointer;
+  text-align: left;
+}
+
+.fcf-item:hover,
+.fcf-item[data-local-nav-active="true"] {
+  color: var(--ink);
 }
 
 .fcf-item.is-disabled {
@@ -146,8 +162,19 @@
   width: 14px;
   height: 14px;
   margin: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--edge);
   border-radius: 4px;
-  accent-color: var(--pulse);
+  flex-shrink: 0;
+}
+
+.fcf-checkbox-mark {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--pulse);
 }
 
 .fcf-item-label {

@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useClickOutside } from "@/hooks/use-click-outside";
 import { useKeyboard } from "@/hooks/use-keyboard";
+import { focusLocalListItem } from "@/hooks/use-local-list-navigation";
 import { MagnifyingGlass } from "@/components/ui/icons";
 import {
   useAvailableModels,
@@ -53,12 +54,26 @@ export function ModelSelector({
     }
     return out;
   }, [groups, query]);
+  const focusDropdownList = (direction: 1 | -1) => {
+    focusLocalListItem(ref.current?.querySelector<HTMLElement>(".ms-dropdown") ?? null, direction);
+  };
 
   return (
-    <div ref={ref} style={{ position: "relative" }}>
+    <div ref={ref} style={{ position: "relative" }} data-keyboard-scope={open ? "local" : undefined}>
       <button
         type="button"
         onClick={() => setOpen(!open)}
+        onKeyDown={(event) => {
+          if (!open && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
+            setOpen(true);
+            requestAnimationFrame(() => focusDropdownList(event.key === "ArrowDown" ? 1 : -1));
+            return;
+          }
+          if (open && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
+            event.preventDefault();
+            focusDropdownList(event.key === "ArrowDown" ? 1 : -1);
+          }
+        }}
         className={`ms-trigger${selectedModel ? "" : " ms-trigger-empty"}`}
       >
         {selectedModel || t("agentLocal.selectModel")}
@@ -74,6 +89,11 @@ export function ModelSelector({
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(event) => {
+                if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+                event.preventDefault();
+                focusDropdownList(event.key === "ArrowDown" ? 1 : -1);
+              }}
               placeholder={t("agentLocal.modelSearch")}
               className="ms-search-input"
               autoFocus

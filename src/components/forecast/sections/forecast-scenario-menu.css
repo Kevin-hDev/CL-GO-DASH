@@ -91,6 +91,7 @@
 }
 
 .fcs-menu-option:hover,
+.fcs-menu-option[data-local-nav-active="true"],
 .fcs-menu-option.is-selected {
   background: var(--fcs-hover-bg);
 }

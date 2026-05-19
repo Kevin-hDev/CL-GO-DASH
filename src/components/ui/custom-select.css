@@ -60,7 +60,8 @@
   transition: background var(--ease-smooth);
 }
 
-.cs-option:hover {
+.cs-option:hover,
+.cs-option[data-local-nav-active="true"] {
   background: var(--surface-hover);
 }
 

@@ -1,10 +1,12 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { focusLocalListItem, useLocalListNavigation, type LocalListNavItem } from "@/hooks/use-local-list-navigation";
 import type {
   ForecastLayerGroup,
   ForecastLayerState,
 } from "./forecast-layer-matrix";
+import { FilterGroup, FilterItem } from "./forecast-view-filter-items";
 import "./forecast-view-filters.css";
 
 interface ForecastViewFiltersProps {
@@ -22,6 +24,8 @@ export function ForecastViewFilters({
   const [open, setOpen] = useState(false);
   const [openGroups, setOpenGroups] = useState<string[]>([]);
   const rootRef = useRef<HTMLDivElement | null>(null);
+  const panelRef = useRef<HTMLDivElement | null>(null);
+  const pendingFocusDirection = useRef<1 | -1>(1);
 
   useEffect(() => {
     if (!open) return;
@@ -45,16 +49,48 @@ export function ForecastViewFilters({
     };
   }, [open]);
 
-  const toggleGroup = (groupId: string) => {
+  const toggleGroup = useCallback((groupId: string) => {
     setOpenGroups((current) =>
       current.includes(groupId)
         ? current.filter((id) => id !== groupId)
         : [...current, groupId]
     );
-  };
+  }, []);
+
+  const navItems = useMemo<LocalListNavItem[]>(() => groups.flatMap((group) => {
+    const expanded = openGroups.includes(group.id);
+    const groupNavId = `group:${group.id}`;
+    const children = expanded ? group.items.map((item) => ({
+      id: `item:${item.id}`,
+      disabled: !item.interactive,
+      onSelect: () => onChange({ ...layers, [item.id]: !layers[item.id] }),
+    })) : [];
+    return [
+      {
+        id: groupNavId,
+        onSelect: () => toggleGroup(group.id),
+        onArrowRight: () => setOpenGroups((current) => current.includes(group.id) ? current : [...current, group.id]),
+        onArrowLeft: () => setOpenGroups((current) => current.filter((id) => id !== group.id)),
+      },
+      ...children,
+    ];
+  }), [groups, layers, onChange, openGroups, toggleGroup]);
+
+  const nav = useLocalListNavigation({
+    items: navItems,
+    enabled: open,
+    onEscape: () => {
+      setOpen(false);
+      setOpenGroups([]);
+    },
+  });
+
+  useEffect(() => {
+    if (open) focusLocalListItem(panelRef.current, pendingFocusDirection.current);
+  }, [open]);
 
   return (
-    <div ref={rootRef} className="fcf-root">
+    <div ref={rootRef} className="fcf-root" data-keyboard-scope="local">
       <button
         className={`fcf-trigger ${open ? "is-open" : ""}`}
         type="button"
@@ -65,11 +101,19 @@ export function ForecastViewFilters({
             return next;
           });
         }}
+        onKeyDown={(event) => {
+          if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+          event.preventDefault();
+          event.stopPropagation();
+          pendingFocusDirection.current = event.key === "ArrowDown" ? 1 : -1;
+          if (open) focusLocalListItem(panelRef.current, pendingFocusDirection.current);
+          else setOpen(true);
+        }}
       >
         <span>{t("forecast.view.filters.button")}</span>
         <ChevronDown size={14} className={`fcf-chevron ${open ? "is-open" : ""}`} />
       </button>
-      <div className={`fcf-panel ${open ? "is-open" : ""}`}>
+      <div ref={panelRef} className={`fcf-panel ${open ? "is-open" : ""}`} role="menu" tabIndex={-1} onKeyDown={nav.listProps.onKeyDown}>
         {groups.map((group) => (
           <FilterGroup
             key={group.id}
@@ -77,15 +121,18 @@ export function ForecastViewFilters({
             open={openGroups.includes(group.id)}
             title={t(group.titleKey)}
             onToggle={toggleGroup}
+            nav={nav}
           >
             {group.items.length > 0 ? (
               <>
                 {group.items.map((item) => (
                   <FilterItem
                     key={item.id}
+                    navId={`item:${item.id}`}
                     label={item.label}
                     checked={Boolean(layers[item.id])}
                     disabled={!item.interactive}
+                    nav={nav}
                     onToggle={() =>
                       item.interactive
                         ? onChange({ ...layers, [item.id]: !layers[item.id] })
@@ -101,60 +148,5 @@ export function ForecastViewFilters({
         ))}
       </div>
     </div>
-  );
-}
-
-function FilterGroup({
-  groupId,
-  open,
-  title,
-  onToggle,
-  children,
-}: {
-  groupId: string;
-  open: boolean;
-  title: string;
-  onToggle: (groupId: string) => void;
-  children: ReactNode;
-}) {
-  return (
-    <div className="fcf-group">
-      <button
-        className="fcf-group-btn"
-        type="button"
-        onClick={() => onToggle(groupId)}
-      >
-        <span className="fcf-group-title">{title}</span>
-        <ChevronDown size={14} className={`fcf-group-chevron ${open ? "is-open" : ""}`} />
-      </button>
-      <div className={`fcf-group-items ${open ? "is-open" : ""}`}>
-        <div className="fcf-group-content">{children}</div>
-      </div>
-    </div>
-  );
-}
-
-function FilterItem({
-  label,
-  checked,
-  disabled,
-  onToggle,
-}: {
-  label: string;
-  checked: boolean;
-  disabled?: boolean;
-  onToggle?: () => void;
-}) {
-  return (
-    <label className={`fcf-item ${disabled ? "is-disabled" : ""}`}>
-      <input
-        className="fcf-checkbox"
-        type="checkbox"
-        checked={checked}
-        disabled={disabled}
-        onChange={() => onToggle?.()}
-      />
-      <span className="fcf-item-label">{label}</span>
-    </label>
   );
 }

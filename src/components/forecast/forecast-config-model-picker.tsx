@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useLocalListNavigation, type LocalListNavItem } from "@/hooks/use-local-list-navigation";
 import {
   getForecastHardwareKey,
   getForecastModelSummaryKey,
@@ -31,19 +32,45 @@ export function ForecastConfigModelPicker({
         : [...current, familyId]
     );
   };
+  const navItems = useMemo<LocalListNavItem[]>(() => groups.flatMap((group) => {
+    const isOpen = openFamilies.includes(group.id);
+    const groupItem: LocalListNavItem = {
+      id: groupNavId(group.id),
+      onSelect: () => toggleFamily(group.id),
+      onArrowRight: isOpen ? undefined : () => toggleFamily(group.id),
+      onArrowLeft: isOpen ? () => toggleFamily(group.id) : undefined,
+    };
+    const modelItems = isOpen ? group.models.map((model) => ({
+      id: modelNavId(model.id),
+      onSelect: () => onSelect(model.id),
+    })) : [];
+    return [groupItem, ...modelItems];
+  }), [groups, onSelect, openFamilies]);
+  const { activate, getItemRef, isActive, listProps } = useLocalListNavigation({
+    items: navItems,
+    selectedId: modelNavId(selectedId),
+  });
 
   return (
-    <div className="fcmp-root">
+    <div className="fcmp-root" data-keyboard-scope="local">
       {groups.length === 0 && (
         <div className="fcmp-empty">{t("forecast.models.noneAvailable")}</div>
       )}
       {groups.map((group) => {
         const isOpen = openFamilies.includes(group.id);
+        const groupNav = groupNavId(group.id);
         return (
           <div key={group.id} className="fcmp-group">
             <button
               className="fcmp-group-btn"
               type="button"
+              ref={getItemRef(groupNav)}
+              tabIndex={isActive(groupNav) ? 0 : -1}
+              data-local-nav-item="true"
+              data-local-nav-active={isActive(groupNav) ? "true" : undefined}
+              onFocus={() => activate(groupNav)}
+              onMouseEnter={() => activate(groupNav)}
+              onKeyDown={listProps.onKeyDown}
               onClick={() => toggleFamily(group.id)}
             >
               <span className="fcmp-group-label">{t(group.titleKey)}</span>
@@ -56,6 +83,7 @@ export function ForecastConfigModelPicker({
             <div className={`fcmp-group-body ${isOpen ? "is-open" : ""}`}>
               {group.models.map((model) => {
                 const active = selectedId === model.id;
+                const modelNav = modelNavId(model.id);
                 const summaryKey = getForecastModelSummaryKey(model.id);
                 const summary = t(summaryKey);
                 return (
@@ -63,6 +91,13 @@ export function ForecastConfigModelPicker({
                     key={model.id}
                     className={`fcmp-model ${active ? "is-active" : ""}`}
                     type="button"
+                    ref={getItemRef(modelNav)}
+                    tabIndex={isActive(modelNav) ? 0 : -1}
+                    data-local-nav-item="true"
+                    data-local-nav-active={isActive(modelNav) ? "true" : undefined}
+                    onFocus={() => activate(modelNav)}
+                    onMouseEnter={() => activate(modelNav)}
+                    onKeyDown={listProps.onKeyDown}
                     onClick={() => onSelect(model.id)}
                   >
                     <span className="fcmp-radio" aria-hidden="true" />
@@ -91,4 +126,12 @@ export function ForecastConfigModelPicker({
       })}
     </div>
   );
+}
+
+function groupNavId(id: string) {
+  return `group:${id}`;
+}
+
+function modelNavId(id: string) {
+  return `model:${id}`;
 }

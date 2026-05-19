@@ -4,6 +4,7 @@ import { CaretDown, MagnifyingGlass } from "@/components/ui/icons";
 import { useClickOutside } from "@/hooks/use-click-outside";
 import { useFavoriteModels } from "@/hooks/use-favorite-models";
 import { useKeyboard } from "@/hooks/use-keyboard";
+import { focusLocalListItem } from "@/hooks/use-local-list-navigation";
 import type { AvailableModel } from "@/hooks/use-available-models";
 import { ModelSelectorList } from "@/components/agent-local/model-selector-list";
 import {
@@ -74,13 +75,27 @@ export function ForecastModelSelector({
     }
     return mapped;
   }, [models, query, t]);
+  const focusDropdownList = (direction: 1 | -1) => {
+    focusLocalListItem(ref.current?.querySelector<HTMLElement>(".ms-dropdown") ?? null, direction);
+  };
 
   return (
-    <div className="fmsel-wrapper" ref={ref}>
+    <div className="fmsel-wrapper" ref={ref} data-keyboard-scope={open ? "local" : undefined}>
       <button
         className={`exd-trigger fmsel-trigger${selectedModel ? "" : " fmsel-trigger-empty"}`}
         type="button"
         onClick={() => setOpen((current) => !current)}
+        onKeyDown={(event) => {
+          if (!open && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
+            setOpen(true);
+            requestAnimationFrame(() => focusDropdownList(event.key === "ArrowDown" ? 1 : -1));
+            return;
+          }
+          if (open && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
+            event.preventDefault();
+            focusDropdownList(event.key === "ArrowDown" ? 1 : -1);
+          }
+        }}
       >
         <span className="fmsel-trigger-label">
           {selectedModel?.display_name ?? t("forecast.config.model")}
@@ -95,6 +110,11 @@ export function ForecastModelSelector({
               type="text"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+                event.preventDefault();
+                focusDropdownList(event.key === "ArrowDown" ? 1 : -1);
+              }}
               placeholder={t("agentLocal.modelSearch")}
               className="ms-search-input"
               autoFocus

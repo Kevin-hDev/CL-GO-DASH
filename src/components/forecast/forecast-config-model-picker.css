@@ -34,6 +34,11 @@
   text-align: left;
 }
 
+.fcmp-group-btn:hover,
+.fcmp-group-btn[data-local-nav-active="true"] {
+  background: var(--surface-hover);
+}
+
 .fcmp-group-label,
 .fcmp-group-count {
   font-size: var(--text-xs);
@@ -82,6 +87,7 @@
 }
 
 .fcmp-model:hover,
+.fcmp-model[data-local-nav-active="true"],
 .fcmp-model.is-active {
   background: var(--surface-hover);
 }

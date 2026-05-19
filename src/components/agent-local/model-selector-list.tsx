@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, CaretDown, CaretRight, Star } from "@/components/ui/icons";
+import { CaretDown, CaretRight } from "@/components/ui/icons";
 import type { AvailableModel } from "@/hooks/use-available-models";
 import type { FavoriteModel } from "@/hooks/use-favorite-models";
+import { useLocalListNavigation, type LocalListNavItem } from "@/hooks/use-local-list-navigation";
+import { ModelSelectorItem } from "./model-selector-item";
 
 interface Props {
   groups: Map<string, AvailableModel[]>;
@@ -26,33 +28,61 @@ export function ModelSelectorList({
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
-  const toggle = (key: string) =>
+  const toggle = useCallback((key: string) =>
     setExpanded((s) => {
       const n = new Set(s);
       if (n.has(key)) { n.delete(key); } else { n.add(key); }
       return n;
-    });
+    }), []);
 
-  // Section favoris : on retrouve les AvailableModel correspondants.
-  const favModels: AvailableModel[] = [];
-  for (const fav of favorites) {
-    const list = groups.get(fav.provider);
-    const m = list?.find((x) => x.id === fav.model);
-    if (m) favModels.push(m);
-  }
+  const favModels = useMemo(() => favoriteModels(groups, favorites), [favorites, groups]);
+
+  const sortedGroups = useMemo(() => Array.from(groups.entries()), [groups]);
+  const navItems = useMemo<LocalListNavItem[]>(() => {
+    const items: LocalListNavItem[] = favModels.map((m) => ({
+      id: navModelId("fav", m.provider_id, m.id),
+      onSelect: () => onSelect(m.id, m.provider_id),
+    }));
+    for (const [providerId, models] of sortedGroups) {
+      const isOpen = expanded.has(providerId);
+      items.push({
+        id: navProviderId(providerId),
+        onSelect: () => toggle(providerId),
+        onArrowRight: isOpen ? undefined : () => toggle(providerId),
+        onArrowLeft: isOpen ? () => toggle(providerId) : undefined,
+      });
+      if (isOpen) {
+        for (const m of sortedModels(models)) {
+          items.push({
+            id: navModelId("model", m.provider_id, m.id),
+            onSelect: () => onSelect(m.id, m.provider_id),
+          });
+        }
+      }
+    }
+    return items;
+  }, [expanded, favModels, onSelect, sortedGroups, toggle]);
+
+  const selectedNavId = navItems.find((item) => item.id.endsWith(`:${selectedProvider}:${selectedModel}`))?.id ?? null;
+  const { activate, getItemRef, isActive, listProps } = useLocalListNavigation({ items: navItems, selectedId: selectedNavId });
 
   if (groups.size === 0 && favModels.length === 0) {
     return <div className="ms-empty">{t("agentLocal.modelEmpty")}</div>;
   }
 
   return (
-    <>
+    <div {...listProps}>
       {favModels.length > 0 && (
         <div>
           <div className="ms-section ms-section-fav">★ {t("agentLocal.favorites")}</div>
           {favModels.map((m) => (
-            <ModelItem
+            <ModelSelectorItem
               key={`fav:${m.provider_id}:${m.id}`}
+              navId={navModelId("fav", m.provider_id, m.id)}
+              activate={activate}
+              getItemRef={getItemRef}
+              isNavActive={isActive}
+              onItemKeyDown={listProps.onKeyDown}
               model={m}
               isSelected={m.id === selectedModel && m.provider_id === selectedProvider}
               isFav
@@ -63,13 +93,25 @@ export function ModelSelectorList({
         </div>
       )}
 
-      {Array.from(groups.entries()).map(([providerId, models]) => {
+      {sortedGroups.map(([providerId, models]) => {
         const isOpen = expanded.has(providerId);
         const name = models[0]?.provider_name ?? providerId;
         const freeCount = models.filter((m) => m.is_free || m.is_local).length;
+        const providerNavId = navProviderId(providerId);
         return (
           <div key={providerId}>
-            <div className="ms-provider" role="button" tabIndex={0} onClick={() => toggle(providerId)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') toggle(providerId); }}>
+            <div
+              className="ms-provider"
+              role="button"
+              ref={getItemRef(providerNavId)}
+              tabIndex={isActive(providerNavId) ? 0 : -1}
+              data-local-nav-item="true"
+              data-local-nav-active={isActive(providerNavId) ? "true" : undefined}
+              onFocus={() => activate(providerNavId)}
+              onMouseEnter={() => activate(providerNavId)}
+              onKeyDown={listProps.onKeyDown}
+              onClick={() => toggle(providerId)}
+            >
               <span className="ms-provider-caret">
                 {isOpen ? <CaretDown size={12} /> : <CaretRight size={12} />}
               </span>
@@ -83,8 +125,13 @@ export function ModelSelectorList({
             <div className={`ms-provider-body ${isOpen ? "open" : ""}`}>
               <div className="ms-provider-body-inner">
                 {sortedModels(models).map((m) => (
-                  <ModelItem
+                  <ModelSelectorItem
                     key={`${m.provider_id}:${m.id}`}
+                    navId={navModelId("model", m.provider_id, m.id)}
+                    activate={activate}
+                    getItemRef={getItemRef}
+                    isNavActive={isActive}
+                    onItemKeyDown={listProps.onKeyDown}
                     model={m}
                     isSelected={m.id === selectedModel && m.provider_id === selectedProvider}
                     isFav={isFavorite(m.provider_id, m.id)}
@@ -97,8 +144,25 @@ export function ModelSelectorList({
           </div>
         );
       })}
-    </>
+    </div>
   );
+}
+
+function navProviderId(providerId: string) {
+  return `provider:${providerId}`;
+}
+
+function navModelId(kind: "fav" | "model", providerId: string, modelId: string) {
+  return `${kind}:${providerId}:${modelId}`;
+}
+
+function favoriteModels(groups: Map<string, AvailableModel[]>, favorites: FavoriteModel[]) {
+  const models: AvailableModel[] = [];
+  for (const fav of favorites) {
+    const model = groups.get(fav.provider)?.find((item) => item.id === fav.model);
+    if (model) models.push(model);
+  }
+  return models;
 }
 
 function sortedModels(models: AvailableModel[]): AvailableModel[] {
@@ -108,49 +172,4 @@ function sortedModels(models: AvailableModel[]): AvailableModel[] {
     if (af !== bf) return af - bf;
     return a.id.localeCompare(b.id);
   });
-}
-
-function ModelItem({
-  model: m,
-  isSelected,
-  isFav,
-  onSelect,
-  onToggleFav,
-}: {
-  model: AvailableModel;
-  isSelected: boolean;
-  isFav: boolean;
-  onSelect: (model: string, provider: string) => void;
-  onToggleFav: (provider: string, model: string) => void;
-}) {
-  const isPaid = !m.is_free && !m.is_local;
-  return (
-    <div
-      className={`ms-item ${isSelected ? "active" : ""} ${isPaid ? "ms-item-paid" : ""}`}
-      role="button"
-      tabIndex={0}
-      onClick={() => onSelect(m.id, m.provider_id)}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onSelect(m.id, m.provider_id); }}
-    >
-      <span
-        className={`ms-star ${isFav ? "ms-star-on" : ""}`}
-        role="button"
-        tabIndex={0}
-        onClick={(e) => {
-          e.stopPropagation();
-          onToggleFav(m.provider_id, m.id);
-        }}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); onToggleFav(m.provider_id, m.id); } }}
-      >
-        <Star size={12} weight={isFav ? "fill" : "regular"} />
-      </span>
-      <span className="ms-item-name">{m.id}</span>
-      <span className="ms-item-right">
-        {m.supports_vision && <span className="ms-badge-vision" title="Vision">V</span>}
-        {m.supports_tools && <span className="ms-badge-tools" title="Tools">T</span>}
-        {m.hint && <span className="ms-hint">{m.hint}</span>}
-        {isSelected && <Check size={12} />}
-      </span>
-    </div>
-  );
 }
