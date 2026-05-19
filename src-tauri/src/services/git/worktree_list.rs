@@ -150,7 +150,9 @@ mod tests {
 
         assert_eq!(worktrees.len(), 2);
         assert!(worktrees.iter().any(|w| w.branch == "main" && w.is_current));
-        assert!(worktrees.iter().any(|w| w.branch == "feature" && !w.is_current));
+        assert!(worktrees
+            .iter()
+            .any(|w| w.branch == "feature" && !w.is_current));
 
         let _ = std::fs::remove_dir_all(current);
         let _ = std::fs::remove_dir_all(other);

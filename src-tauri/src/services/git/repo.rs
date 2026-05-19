@@ -12,9 +12,13 @@ pub fn workdir(repo: &Repository) -> Result<PathBuf, String> {
 }
 
 pub fn has_github_remote(repo: &Repository) -> bool {
-    let Ok(remotes) = repo.remotes() else { return false };
+    let Ok(remotes) = repo.remotes() else {
+        return false;
+    };
     for name in remotes.iter().flatten().take(32) {
-        let Ok(remote) = repo.find_remote(name) else { continue };
+        let Ok(remote) = repo.find_remote(name) else {
+            continue;
+        };
         if remote.url().map(is_github_url).unwrap_or(false)
             || remote.pushurl().map(is_github_url).unwrap_or(false)
         {

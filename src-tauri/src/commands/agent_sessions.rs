@@ -35,7 +35,22 @@ pub async fn create_agent_session(
     project_id: Option<String>,
 ) -> Result<AgentSession, String> {
     let provider = provider.unwrap_or_else(|| "ollama".to_string());
-    session_store::create_full(&name, &model, &provider, false, project_id).await
+    let requested_project_id = project_id.clone();
+    let mut session =
+        session_store::create_full(&name, &model, &provider, false, project_id).await?;
+    if let Some(pid) = requested_project_id.as_deref() {
+        if let Some(path) = super::agent_working_dir::project_path_for_id(pid).await {
+            if session_store::update_working_dir(&session.id, &path)
+                .await
+                .is_ok()
+            {
+                if let Ok(updated) = session_store::get(&session.id).await {
+                    session = updated;
+                }
+            }
+        }
+    }
+    Ok(session)
 }
 
 #[tauri::command]

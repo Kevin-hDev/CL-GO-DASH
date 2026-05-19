@@ -5,6 +5,7 @@ pub mod agent_ollama;
 pub mod agent_sessions;
 pub mod agent_settings;
 pub mod agent_tools;
+pub(crate) mod agent_working_dir;
 pub mod api_keys;
 pub mod app_update;
 pub mod app_update_install;

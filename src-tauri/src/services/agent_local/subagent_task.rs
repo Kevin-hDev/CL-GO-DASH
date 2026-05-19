@@ -100,12 +100,9 @@ async fn run_inner(
         },
     ];
 
-    let working_dir = super::subagent_working_dir::resolve(
-        project_id.as_deref(),
-        &child_session_id,
-        is_explorer,
-    )
-    .await?;
+    let working_dir =
+        super::subagent_working_dir::resolve(project_id.as_deref(), &child_session_id, is_explorer)
+            .await?;
     let emitter = AgentEventEmitter::new(app, child_session_id.clone());
 
     if let Ok(child_session) = session_store::get(&child_session_id).await {

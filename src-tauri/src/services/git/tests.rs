@@ -5,7 +5,9 @@ fn init_repo_with_commit() -> tempfile::TempDir {
     let repo = git2::Repository::init(tmp.path()).expect("init repo");
     std::fs::write(tmp.path().join("file.txt"), "initial").expect("write file");
     let mut index = repo.index().expect("index");
-    index.add_path(std::path::Path::new("file.txt")).expect("add");
+    index
+        .add_path(std::path::Path::new("file.txt"))
+        .expect("add");
     index.write().expect("write index");
     let tree_oid = index.write_tree().expect("tree");
     let tree = repo.find_tree(tree_oid).expect("find tree");
@@ -123,7 +125,10 @@ fn test_create_branch_with_dirty_worktree_preserves_changes() {
 
     let result = branch::create_branch(tmp.path(), "Agentic");
 
-    assert!(result.is_ok(), "dirty worktree should not block a new branch");
+    assert!(
+        result.is_ok(),
+        "dirty worktree should not block a new branch"
+    );
     let ctx = branch::get_context(tmp.path());
     assert_eq!(ctx.branch, "Agentic");
     let content = std::fs::read_to_string(tmp.path().join("file.txt")).expect("read file");

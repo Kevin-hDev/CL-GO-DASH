@@ -34,9 +34,19 @@ pub async fn chat_stream(
         }
         map.insert(session_id.clone(), (cancel.clone(), generation));
     }
-    eprintln!("[stream] start session={session_id} gen={generation}");
-
     let provider = provider.unwrap_or_else(|| "ollama".to_string());
+    let resolved_working_dir =
+        match super::agent_working_dir::resolve_for_session(&session_id, working_dir.as_deref())
+            .await
+        {
+            Ok(dir) => dir,
+            Err(err) => {
+                streams.0.lock().await.remove(&session_id);
+                return Err(err);
+            }
+        };
+    let working_dir = Some(resolved_working_dir.path.to_string_lossy().to_string());
+    eprintln!("[stream] start session={session_id} gen={generation}");
     let stream_session = session_id.clone();
     let task_app = app.clone();
 

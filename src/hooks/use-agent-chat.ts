@@ -26,7 +26,6 @@ export function useAgentChat(
   const deliveredPermissionsRef = useRef<Set<string>>(new Set());
   const permissionRequestRef = useRef(onPermissionRequest);
   const { startStream, stopStream, subscribeToStream, getStreamSnapshot } = useAgentStream();
-
   // eslint-disable-next-line react-hooks/refs -- callback capture pattern for stable closures
   sessionRef.current = sessionId;
   const thinkingRef = useRef(supportsThinking);
@@ -161,6 +160,7 @@ export function useAgentChat(
     if (!sessionId) return state.tokenCount;
     const session = await invoke<AgentSession>("get_agent_session", { id: sessionId }).catch(() => null);
     if (session) {
+      sessionWorkingDirRef.current = session.working_dir || sessionWorkingDirRef.current;
       setState((s) => ({ ...s, tokenCount: session.accumulated_tokens }));
       return session.accumulated_tokens;
     }
