@@ -60,13 +60,14 @@ export function ChatProjectControls({
           busy={branchConflict.busy}
           error={branchConflict.error}
           onCancel={() => setBranchConflict(null)}
-          onCommitAndSwitch={(branch) => {
+          onCommitAndSwitch={(branch, commitDescription) => {
             void (async () => {
               setBranchConflict((current) => current ? { ...current, busy: true, error: undefined } : current);
               try {
                 await invoke("commit_and_checkout_git_branch", {
                   path: projectState.selectedProject!.path,
                   branchName: branch,
+                  commitDescription,
                 });
                 await git.refresh();
                 setBranchConflict(null);

@@ -173,6 +173,7 @@
     "bubbleSwitched": "Rama cambiada",
     "createPlaceholder": "Nombre de la nueva rama",
     "commitRequired": "Confirme sus cambios para continuar",
+    "commitDescription": "Descripción",
     "createError": "Nombre inválido o rama ya existente",
     "commitSwitchError": "El commit o el cambio de rama falló. Revisa tu configuración Git e inténtalo de nuevo.",
     "githubAuthTitle": "Conecta GitHub para crear una rama",

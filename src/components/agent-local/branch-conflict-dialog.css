@@ -80,6 +80,69 @@
   color: var(--diff-old);
 }
 
+.bcd-description-section {
+  margin-bottom: var(--space-sm);
+}
+
+.bcd-description-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  background: transparent;
+  color: var(--ink-muted);
+  font-size: 11px;
+  padding: 0;
+  cursor: pointer;
+}
+
+.bcd-description-toggle:hover {
+  color: var(--ink);
+}
+
+.bcd-description-toggle svg {
+  transition: transform 300ms ease;
+}
+
+.bcd-chevron-open {
+  transform: rotate(90deg);
+}
+
+.bcd-description-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 300ms ease, opacity 300ms ease;
+  opacity: 0;
+}
+
+.bcd-description-panel.is-open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.bcd-description-panel-inner {
+  overflow: hidden;
+}
+
+.bcd-description-input {
+  width: 100%;
+  min-height: 76px;
+  margin-top: var(--space-xs);
+  resize: vertical;
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+  padding: var(--space-xs);
+  font-size: var(--text-xs);
+  line-height: 1.4;
+}
+
+.bcd-description-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
 .bcd-hint {
   font-size: 11px;
   color: var(--ink-faint);

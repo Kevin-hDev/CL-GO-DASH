@@ -173,6 +173,7 @@
     "bubbleSwitched": "Branch gewechselt",
     "createPlaceholder": "Name des neuen Branch",
     "commitRequired": "Committen Sie Ihre Änderungen, um fortzufahren",
+    "commitDescription": "Beschreibung",
     "createError": "Ungültiger Name oder Branch existiert bereits",
     "commitSwitchError": "Commit oder Branch-Wechsel fehlgeschlagen. Prüfe deine Git-Konfiguration und versuche es erneut.",
     "githubAuthTitle": "GitHub verbinden, um einen Branch zu erstellen",

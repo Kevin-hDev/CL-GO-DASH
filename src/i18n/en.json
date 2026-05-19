@@ -172,6 +172,7 @@
     "bubbleSwitched": "Branch switched",
     "createPlaceholder": "New branch name",
     "commitRequired": "Commit your changes to continue",
+    "commitDescription": "Description",
     "createError": "Invalid name or branch already exists",
     "commitSwitchError": "Commit or branch switch failed. Check your Git configuration and try again.",
     "githubAuthTitle": "Connect GitHub to create a branch",

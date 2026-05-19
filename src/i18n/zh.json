@@ -173,6 +173,7 @@
     "bubbleSwitched": "分支已切换",
     "createPlaceholder": "新分支名称",
     "commitRequired": "请提交更改以继续",
+    "commitDescription": "描述",
     "createError": "名称无效或分支已存在",
     "commitSwitchError": "提交或切换分支失败。请检查 Git 配置后重试。",
     "githubAuthTitle": "连接 GitHub 以创建分支",

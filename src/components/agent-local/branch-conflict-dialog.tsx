@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
-import { X } from "@/components/ui/icons";
+import { CaretDown, X } from "@/components/ui/icons";
 import { useKeyboard } from "@/hooks/use-keyboard";
 import "./branch-conflict-dialog.css";
 
@@ -19,7 +19,7 @@ interface BranchConflictDialogProps {
   busy?: boolean;
   error?: string;
   onCancel: () => void;
-  onCommitAndSwitch: (branch: string) => void;
+  onCommitAndSwitch: (branch: string, description: string) => void;
 }
 
 export function BranchConflictDialog({
@@ -29,6 +29,8 @@ export function BranchConflictDialog({
   const overlayRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const [files, setFiles] = useState<DirtyFile[]>([]);
+  const [descriptionOpen, setDescriptionOpen] = useState(false);
+  const [description, setDescription] = useState("");
 
   useKeyboard({ onEscape: onCancel });
 
@@ -82,6 +84,28 @@ export function BranchConflictDialog({
           )}
         </div>
 
+        <div className="bcd-description-section">
+          <button
+            className="bcd-description-toggle"
+            type="button"
+            onClick={() => setDescriptionOpen((open) => !open)}
+            aria-expanded={descriptionOpen}
+          >
+            <CaretDown size={12} className={descriptionOpen ? "bcd-chevron-open" : ""} />
+            <span>{t("branches.commitDescription")}</span>
+          </button>
+          <div className={`bcd-description-panel ${descriptionOpen ? "is-open" : ""}`}>
+            <div className="bcd-description-panel-inner">
+              <textarea
+                className="bcd-description-input"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={4}
+              />
+            </div>
+          </div>
+        </div>
+
         <div className="bcd-hint">{t("branches.commitRequired")}</div>
         {error && <div className="bs-create-error">{error}</div>}
 
@@ -91,7 +115,7 @@ export function BranchConflictDialog({
           </button>
           <button
             className="bcd-btn bcd-btn-primary"
-            onClick={() => onCommitAndSwitch(targetBranch)}
+            onClick={() => onCommitAndSwitch(targetBranch, description)}
             type="button"
             disabled={busy}
           >

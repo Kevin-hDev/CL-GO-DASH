@@ -173,6 +173,7 @@
     "bubbleSwitched": "Ramo cambiato",
     "createPlaceholder": "Nome del nuovo ramo",
     "commitRequired": "Effettua un commit delle modifiche per continuare",
+    "commitDescription": "Descrizione",
     "createError": "Nome non valido o ramo già esistente",
     "commitSwitchError": "Commit o cambio ramo non riuscito. Controlla la configurazione Git e riprova.",
     "githubAuthTitle": "Connetti GitHub per creare un ramo",
