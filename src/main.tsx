@@ -4,7 +4,10 @@ import "@/i18n";
 import "@/styles/global.css";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { ToastProvider } from "@/components/ui/toast";
+import { installTauriListenerCleanupGuard } from "@/lib/tauri-listen";
 import App from "./App";
+
+installTauriListenerCleanupGuard();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
