@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, cleanup } from "@testing-library/react";
+import { render, cleanup, fireEvent } from "@testing-library/react";
 
 afterEach(cleanup);
 import { ToolBubble } from "../tool-bubble";
@@ -9,7 +9,7 @@ vi.mock("@phosphor-icons/react", () => ({
 }));
 vi.mock("@/components/ui/icons", () => ({
   Copy: () => <span />,
-  Check: () => <span />,
+  Check: () => <span data-testid="check-icon" />,
 }));
 vi.mock("../tool-previews", () => ({
   ContentPreview: () => <div data-testid="content-preview" />,
@@ -59,35 +59,39 @@ describe("ToolBubble", () => {
     expect(getByTestId("spinner")).toBeTruthy();
   });
 
-  it("affiche ✓ quand result est présent et pas d'erreur", () => {
-    const { container } = render(
+  it("affiche l'état terminé quand result est présent et pas d'erreur", () => {
+    const { getByTestId } = render(
       <ToolBubble
         tools={[{ name: "bash", args: { command: "ls" }, result: "fichier.txt", isError: false }]}
       />,
     );
-    expect(container.textContent).toContain("✓");
+    expect(getByTestId("check-icon")).toBeTruthy();
   });
 
-  it("affiche ✗ quand isError vaut true", () => {
+  it("affiche x quand isError vaut true", () => {
     const { container } = render(
       <ToolBubble
         tools={[{ name: "bash", args: { command: "exit 1" }, result: "erreur", isError: true }]}
       />,
     );
-    expect(container.textContent).toContain("✗");
+    expect(container.textContent).toContain("x");
   });
 
   it("affiche ContentPreview pour write_file avec content string", () => {
-    const { getByTestId } = render(
+    const { container, getByTestId, queryByTestId } = render(
       <ToolBubble
         tools={[{ name: "write_file", args: { path: "/tmp/foo.ts", content: "const x = 1;" }, result: "ok" }]}
       />,
     );
+    expect(queryByTestId("content-preview")).toBeNull();
+    const toggle = container.querySelector(".tb-toggle");
+    if (!toggle) throw new Error("toggle absent");
+    fireEvent.click(toggle);
     expect(getByTestId("content-preview")).toBeTruthy();
   });
 
   it("affiche DiffPreview pour edit_file avec old_string et new_string", () => {
-    const { getByTestId } = render(
+    const { container, getByTestId, queryByTestId } = render(
       <ToolBubble
         tools={[{
           name: "edit_file",
@@ -96,6 +100,10 @@ describe("ToolBubble", () => {
         }]}
       />,
     );
+    expect(queryByTestId("diff-preview")).toBeNull();
+    const toggle = container.querySelector(".tb-toggle");
+    if (!toggle) throw new Error("toggle absent");
+    fireEvent.click(toggle);
     expect(getByTestId("diff-preview")).toBeTruthy();
   });
 
@@ -112,11 +120,30 @@ describe("ToolBubble", () => {
   });
 
   it("affiche WebResultsPreview pour web_search avec un résultat", () => {
-    const { getByTestId } = render(
+    const { container, getByTestId, queryByTestId } = render(
       <ToolBubble
         tools={[{ name: "web_search", args: { query: "vitest jsdom" }, result: '{"results":[]}' }]}
       />,
     );
+    expect(queryByTestId("web-preview")).toBeNull();
+    const toggle = container.querySelector(".tb-toggle");
+    if (!toggle) throw new Error("toggle absent");
+    fireEvent.click(toggle);
     expect(getByTestId("web-preview")).toBeTruthy();
+  });
+
+  it("garde les previews fermées par défaut", () => {
+    const { container } = render(
+      <ToolBubble
+        tools={[{ name: "write_file", args: { path: "/tmp/foo.ts", content: "const x = 1;" }, result: "ok" }]}
+      />,
+    );
+    expect(container.querySelector(".tb-accordion.tb-open")).toBeNull();
+
+    const toggle = container.querySelector(".tb-toggle");
+    expect(toggle).toBeTruthy();
+    if (!toggle) throw new Error("toggle absent");
+    fireEvent.click(toggle);
+    expect(container.querySelector(".tb-accordion.tb-open")).toBeTruthy();
   });
 });

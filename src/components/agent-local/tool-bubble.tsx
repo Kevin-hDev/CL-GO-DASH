@@ -1,37 +1,9 @@
-import { useState, useRef, useCallback } from "react";
-import { Spinner } from "@phosphor-icons/react";
-import { Copy, Check } from "@/components/ui/icons";
 import type { ToolActivity } from "@/hooks/agent-chat-utils";
 import type { ToolActivityRecord } from "@/types/agent";
-import { isFileTool } from "@/lib/tool-file-path";
 import { ContentPreview, DiffPreview, WebResultsPreview } from "./tool-previews";
 import { ReadSpreadsheetPreview, WriteSpreadsheetPreview, DocumentResultPreview, WriteDocumentPreview } from "./tool-office-previews";
+import { ToolItem } from "./tool-item";
 import "./tool-bubble.css";
-
-const TOOL_COLORS: Record<string, string> = {
-  bash: "var(--tool-bash)",
-  glob: "var(--tool-search)", grep: "var(--tool-search)", list_dir: "var(--tool-search)",
-  read_file: "var(--tool-read)", read_spreadsheet: "var(--tool-read)",
-  read_document: "var(--tool-read)", read_image: "var(--tool-read)",
-  write_file: "var(--tool-write)", write_spreadsheet: "var(--tool-write)",
-  write_document: "var(--tool-write)",
-  edit_file: "var(--tool-edit)", process_image: "var(--tool-edit)",
-  web_search: "var(--tool-web)", web_fetch: "var(--tool-web)",
-  create_branch: "var(--tool-bash)", checkout_branch: "var(--tool-bash)",
-  forecast: "var(--tool-forecast)", forecast_analyze: "var(--tool-forecast)",
-  forecast_read: "var(--tool-forecast)",
-};
-
-const CLOSED_BY_DEFAULT = new Set([
-  "bash", "grep", "glob", "read_file", "list_dir",
-  "read_spreadsheet", "read_document", "read_image",
-  "web_search", "web_fetch", "forecast", "forecast_read",
-]);
-
-const ROW_STYLE = {
-  display: "flex", alignItems: "baseline", gap: 8,
-  fontSize: "11px", fontFamily: "var(--font-mono, monospace)", lineHeight: 1.6,
-};
 
 function parseLineFromResult(result?: string): number | undefined {
   if (!result) return undefined;
@@ -114,108 +86,6 @@ export function SavedToolBubble({
           );
         })}
       </div>
-    </div>
-  );
-}
-
-function hasPreviewContent(children: React.ReactNode): boolean {
-  if (!children) return false;
-  if (Array.isArray(children)) return children.some((c) => !!c);
-  return true;
-}
-
-const HOVER_DELAY = 700;
-
-function ErrorCross({ message }: { message?: string }) {
-  const [visible, setVisible] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-
-  const enter = useCallback(() => {
-    clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => setVisible(true), HOVER_DELAY);
-  }, []);
-
-  const leave = useCallback(() => {
-    clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => { setVisible(false); setCopied(false); }, 100);
-  }, []);
-
-  const tooltipEnter = useCallback(() => {
-    clearTimeout(timerRef.current);
-  }, []);
-
-  const copy = useCallback(() => {
-    if (message) void navigator.clipboard.writeText(message).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    });
-  }, [message]);
-
-  return (
-    <span className="tb-error-anchor" onMouseEnter={enter} onMouseLeave={leave}>
-      <span style={{ color: "var(--signal-error)", fontSize: "10px" }}>✗</span>
-      {visible && message && (
-        <div className="tb-error-tooltip" onMouseEnter={tooltipEnter} onMouseLeave={leave}>
-          <span className="tb-error-tooltip-text">{message}</span>
-          <button type="button" className="tb-error-tooltip-copy" onClick={copy}>
-            {copied ? <Check size={12} weight="bold" /> : <Copy size={12} />}
-          </button>
-        </div>
-      )}
-    </span>
-  );
-}
-
-function ToolItem({ name, summary, done, isError, errorMessage, result, onFilePreview, children }: {
-  name: string; summary: string; done: boolean; isError?: boolean; errorMessage?: string;
-  result?: string; onFilePreview?: (path: string) => void; children?: React.ReactNode;
-}) {
-  const hasPreview = hasPreviewContent(children);
-  const hasResult = !!result && !isError && !hasPreview && CLOSED_BY_DEFAULT.has(name);
-  const canToggle = hasPreview || hasResult;
-  const [isOpen, setIsOpen] = useState(!CLOSED_BY_DEFAULT.has(name));
-  const clickablePath = isFileTool(name) && summary.trim().length > 0 && !!onFilePreview;
-
-  return (
-    <div>
-      <div style={ROW_STYLE}>
-        {canToggle ? (
-          <button className="tb-toggle" onClick={() => setIsOpen(!isOpen)}>
-            <span className="tb-arrow">{isOpen ? "▾" : "▸"}</span>
-            <span style={{ color: TOOL_COLORS[name] ?? "var(--ink-muted)", fontWeight: 600 }}>{name}</span>
-          </button>
-        ) : (
-          <span style={{ color: TOOL_COLORS[name] ?? "var(--ink-muted)", fontWeight: 600, flexShrink: 0, minWidth: 70 }}>{name}</span>
-        )}
-        <span
-          role={clickablePath ? "button" : undefined}
-          tabIndex={clickablePath ? 0 : undefined}
-          style={{
-            color: clickablePath ? "var(--ink)" : "var(--ink-muted)",
-            wordBreak: "break-all", flex: 1,
-            cursor: clickablePath ? "pointer" : "default",
-            textDecoration: clickablePath ? "underline" : "none",
-            textDecorationColor: "var(--edge)",
-          }}
-          onClick={(e) => { if (clickablePath) { e.stopPropagation(); onFilePreview(summary); } }}
-          onKeyDown={(e) => {
-            if (!clickablePath) return;
-            if (e.key.startsWith("Ent") || e.key.startsWith(" ")) { e.preventDefault(); onFilePreview(summary); }
-          }}
-        >{summary}</span>
-        {!done && <Spinner size={12} style={{ color: "var(--ink-faint)", animation: "spin 1s linear infinite", flexShrink: 0 }} />}
-        {done && !isError && <span style={{ color: "var(--signal-ok)", flexShrink: 0, fontSize: "10px" }}>✓</span>}
-        {done && isError && <ErrorCross message={errorMessage} />}
-      </div>
-      {canToggle && (
-        <div className={`tb-accordion${isOpen ? " tb-open" : ""}`}>
-          <div className="tb-accordion-inner">
-            {hasPreview && children}
-            {hasResult && <div className="tb-result-preview">{result}</div>}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

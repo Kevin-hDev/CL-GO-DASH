@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, cleanup } from "@testing-library/react";
+import { render, cleanup, fireEvent } from "@testing-library/react";
 
 afterEach(cleanup);
 import { SavedToolBubble } from "../tool-bubble";
@@ -9,7 +9,7 @@ vi.mock("@phosphor-icons/react", () => ({
 }));
 vi.mock("@/components/ui/icons", () => ({
   Copy: () => <span />,
-  Check: () => <span />,
+  Check: () => <span data-testid="check-icon" />,
 }));
 vi.mock("../tool-previews", () => ({
   ContentPreview: () => <div data-testid="content-preview" />,
@@ -48,16 +48,20 @@ describe("SavedToolBubble", () => {
   });
 
   it("affiche ContentPreview pour write_file avec content", () => {
-    const { getByTestId } = render(
+    const { container, getByTestId, queryByTestId } = render(
       <SavedToolBubble
         tools={[{ name: "write_file", summary: "/tmp/bar.ts", content: "export const x = 1;", result: "ok" }]}
       />,
     );
+    expect(queryByTestId("content-preview")).toBeNull();
+    const toggle = container.querySelector(".tb-toggle");
+    if (!toggle) throw new Error("toggle absent");
+    fireEvent.click(toggle);
     expect(getByTestId("content-preview")).toBeTruthy();
   });
 
   it("affiche DiffPreview quand old_text et new_text sont présents", () => {
-    const { getByTestId } = render(
+    const { container, getByTestId, queryByTestId } = render(
       <SavedToolBubble
         tools={[{
           name: "edit_file",
@@ -68,11 +72,15 @@ describe("SavedToolBubble", () => {
         }]}
       />,
     );
+    expect(queryByTestId("diff-preview")).toBeNull();
+    const toggle = container.querySelector(".tb-toggle");
+    if (!toggle) throw new Error("toggle absent");
+    fireEvent.click(toggle);
     expect(getByTestId("diff-preview")).toBeTruthy();
   });
 
   it("n'applique pas skipWrite si l'edit_file a un summary différent du write_file", () => {
-    const { getByTestId } = render(
+    const { container, getByTestId, queryByTestId } = render(
       <SavedToolBubble
         tools={[
           { name: "edit_file", summary: "/tmp/autre.ts", old_text: "a", new_text: "b", result: "ok" },
@@ -80,6 +88,31 @@ describe("SavedToolBubble", () => {
         ]}
       />,
     );
+    expect(queryByTestId("content-preview")).toBeNull();
+    const toggle = container.querySelectorAll(".tb-toggle")[1];
+    if (!toggle) throw new Error("toggle absent");
+    fireEvent.click(toggle);
     expect(getByTestId("content-preview")).toBeTruthy();
+  });
+
+  it("garde les previews sauvegardées fermées par défaut", () => {
+    const { container } = render(
+      <SavedToolBubble
+        tools={[{
+          name: "edit_file",
+          summary: "/tmp/bar.ts",
+          old_text: "const a = 1;",
+          new_text: "const a = 2;",
+          result: "ok",
+        }]}
+      />,
+    );
+    expect(container.querySelector(".tb-accordion.tb-open")).toBeNull();
+
+    const toggle = container.querySelector(".tb-toggle");
+    expect(toggle).toBeTruthy();
+    if (!toggle) throw new Error("toggle absent");
+    fireEvent.click(toggle);
+    expect(container.querySelector(".tb-accordion.tb-open")).toBeTruthy();
   });
 });
