@@ -1,8 +1,18 @@
+use crate::services::agent_local::project_store;
 use crate::services::git::{branch, branch_commit, status, watcher, worktree_list};
+use std::path::{Path, PathBuf};
+
+async fn registered_project_path(path: &str) -> Result<PathBuf, String> {
+    let repo_path = Path::new(path);
+    if !repo_path.is_dir() {
+        return Err("Répertoire introuvable".to_string());
+    }
+    project_store::authorize_path(repo_path).await
+}
 
 #[tauri::command]
 pub fn start_git_watcher(app: tauri::AppHandle, path: String) -> Result<(), String> {
-    let repo_path = std::path::PathBuf::from(&path);
+    let repo_path = PathBuf::from(&path);
     if !repo_path.is_dir() {
         return Ok(());
     }
@@ -11,10 +21,7 @@ pub fn start_git_watcher(app: tauri::AppHandle, path: String) -> Result<(), Stri
 
 #[tauri::command]
 pub async fn list_git_branches(path: String) -> Result<Vec<branch::BranchInfo>, String> {
-    let repo_path = std::path::PathBuf::from(&path);
-    if !repo_path.is_dir() {
-        return Err("Répertoire introuvable".to_string());
-    }
+    let repo_path = registered_project_path(&path).await?;
     tokio::task::spawn_blocking(move || branch::list_branches(&repo_path))
         .await
         .map_err(|e| {
@@ -25,7 +32,7 @@ pub async fn list_git_branches(path: String) -> Result<Vec<branch::BranchInfo>, 
 
 #[tauri::command]
 pub async fn get_git_context(path: String) -> Result<branch::GitContext, String> {
-    let repo_path = std::path::PathBuf::from(&path);
+    let repo_path = registered_project_path(&path).await?;
     Ok(
         tokio::task::spawn_blocking(move || branch::get_context(&repo_path))
             .await
@@ -38,10 +45,7 @@ pub async fn get_git_context(path: String) -> Result<branch::GitContext, String>
 
 #[tauri::command]
 pub async fn checkout_git_branch(path: String, branch_name: String) -> Result<(), String> {
-    let repo_path = std::path::PathBuf::from(&path);
-    if !repo_path.is_dir() {
-        return Err("Répertoire introuvable".to_string());
-    }
+    let repo_path = registered_project_path(&path).await?;
     tokio::task::spawn_blocking(move || branch::checkout_branch(&repo_path, &branch_name))
         .await
         .map_err(|e| {
@@ -52,10 +56,7 @@ pub async fn checkout_git_branch(path: String, branch_name: String) -> Result<()
 
 #[tauri::command]
 pub async fn create_git_branch(path: String, branch_name: String) -> Result<(), String> {
-    let repo_path = std::path::PathBuf::from(&path);
-    if !repo_path.is_dir() {
-        return Err("Répertoire introuvable".to_string());
-    }
+    let repo_path = registered_project_path(&path).await?;
     tokio::task::spawn_blocking(move || branch::create_branch(&repo_path, &branch_name))
         .await
         .map_err(|e| {
@@ -70,10 +71,7 @@ pub async fn commit_and_checkout_git_branch(
     branch_name: String,
     commit_description: Option<String>,
 ) -> Result<(), String> {
-    let repo_path = std::path::PathBuf::from(&path);
-    if !repo_path.is_dir() {
-        return Err("Répertoire introuvable".to_string());
-    }
+    let repo_path = registered_project_path(&path).await?;
     tokio::task::spawn_blocking(move || {
         branch_commit::commit_all_and_checkout(&repo_path, &branch_name, commit_description)
     })
@@ -86,10 +84,7 @@ pub async fn commit_and_checkout_git_branch(
 
 #[tauri::command]
 pub async fn list_git_dirty_files(path: String) -> Result<Vec<status::DirtyFile>, String> {
-    let repo_path = std::path::PathBuf::from(&path);
-    if !repo_path.is_dir() {
-        return Err("Répertoire introuvable".to_string());
-    }
+    let repo_path = registered_project_path(&path).await?;
     tokio::task::spawn_blocking(move || status::list_dirty_files(&repo_path))
         .await
         .map_err(|e| {
@@ -100,9 +95,6 @@ pub async fn list_git_dirty_files(path: String) -> Result<Vec<status::DirtyFile>
 
 #[tauri::command]
 pub async fn list_git_worktrees(path: String) -> Result<Vec<worktree_list::WorktreeInfo>, String> {
-    let repo_path = std::path::PathBuf::from(&path);
-    if !repo_path.is_dir() {
-        return Err("Répertoire introuvable".to_string());
-    }
+    let repo_path = registered_project_path(&path).await?;
     worktree_list::list_worktrees(&repo_path).await
 }
