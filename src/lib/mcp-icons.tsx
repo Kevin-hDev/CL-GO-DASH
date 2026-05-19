@@ -22,45 +22,33 @@ import slackIconSvg from "@/assets/Slack-2/Slack-icon.svg?raw";
 import slackTextSvg from "@/assets/Slack-2/Slack-text.svg?raw";
 import vercelIconSvg from "@/assets/Vercel/Vercel-icon.svg?raw";
 import vercelTextSvg from "@/assets/Vercel/Vercel-text.svg?raw";
-
-function scopeSvg(raw: string, prefix: string): string {
-  let s = raw;
-  s = s.replace(/\bid="([^"]+)"/g, `id="${prefix}$1"`);
-  s = s.replace(/url\(#([^)]+)\)/g, `url(#${prefix}$1)`);
-  s = s.replace(/xlink:href="#([^"]+)"/g, `xlink:href="#${prefix}$1"`);
-  s = s.replace(/href="#([^"]+)"/g, `href="#${prefix}$1"`);
-  s = s.replace(/class="([^"]+)"/g, (_match, classes: string) => {
-    const scoped = classes.split(/\s+/).map((c) => `${prefix}${c}`).join(" ");
-    return `class="${scoped}"`;
-  });
-  s = s.replace(/\.st(\d+)\s*\{/g, `.${prefix}st$1{`);
-  return s;
-}
+import { useId, useMemo } from "react";
+import { prepareMcpSvg } from "./mcp-svg-normalize";
 
 type McpIconVariant = "icon" | "text";
 type McpIconTone = "brand" | "mono";
 
-interface SvgEntry { kind: "svg"; icon: string; text: string; tone: McpIconTone; hasText?: boolean }
+interface SvgEntry { kind: "svg"; icon: string; text: string; prefix: string; tone: McpIconTone; hasText?: boolean }
 interface ImgEntry { kind: "img"; src: string }
 
 type McpIconEntry = SvgEntry | ImgEntry;
 
 const MCP_ICONS: Record<string, McpIconEntry> = {
-  apify:       { kind: "svg", tone: "brand", icon: scopeSvg(apifyIconSvg, "apify-i-"), text: scopeSvg(apifyTextSvg, "apify-t-"), hasText: true },
-  canva:       { kind: "svg", tone: "brand", icon: scopeSvg(canvaIconSvg, "canva-i-"), text: scopeSvg(canvaTextSvg, "canva-t-"), hasText: true },
+  apify:       { kind: "svg", tone: "brand", prefix: "apify-", icon: apifyIconSvg, text: apifyTextSvg, hasText: true },
+  canva:       { kind: "svg", tone: "brand", prefix: "canva-", icon: canvaIconSvg, text: canvaTextSvg, hasText: true },
   context7:    { kind: "img", src: context7Png },
-  figma:       { kind: "svg", tone: "brand", icon: scopeSvg(figmaSvg, "figma-"), text: scopeSvg(figmaSvg, "figma-t-") },
-  github:      { kind: "svg", tone: "mono", icon: scopeSvg(githubIconSvg, "gh-i-"), text: scopeSvg(githubTextSvg, "gh-t-"), hasText: true },
-  huggingface: { kind: "svg", tone: "brand", icon: scopeSvg(huggingfaceSvg, "hf-"), text: scopeSvg(huggingfaceSvg, "hf-t-") },
-  imessage:    { kind: "svg", tone: "brand", icon: scopeSvg(imessageSvg, "im-"), text: scopeSvg(imessageSvg, "im-t-") },
-  linear:      { kind: "svg", tone: "mono", icon: scopeSvg(linearIconSvg, "lin-i-"), text: scopeSvg(linearTextSvg, "lin-t-"), hasText: true },
+  figma:       { kind: "svg", tone: "brand", prefix: "figma-", icon: figmaSvg, text: figmaSvg },
+  github:      { kind: "svg", tone: "mono", prefix: "gh-", icon: githubIconSvg, text: githubTextSvg, hasText: true },
+  huggingface: { kind: "svg", tone: "brand", prefix: "hf-", icon: huggingfaceSvg, text: huggingfaceSvg },
+  imessage:    { kind: "svg", tone: "brand", prefix: "im-", icon: imessageSvg, text: imessageSvg },
+  linear:      { kind: "svg", tone: "mono", prefix: "lin-", icon: linearIconSvg, text: linearTextSvg, hasText: true },
   lucid:       { kind: "img", src: lucidPng },
-  notion:      { kind: "svg", tone: "mono", icon: scopeSvg(notionIconSvg, "not-i-"), text: scopeSvg(notionTextSvg, "not-t-"), hasText: true },
-  producthunt: { kind: "svg", tone: "brand", icon: scopeSvg(producthuntSvg, "ph-"), text: scopeSvg(producthuntSvg, "ph-t-") },
-  reddit:      { kind: "svg", tone: "brand", icon: scopeSvg(redditIconSvg, "red-i-"), text: scopeSvg(redditTextSvg, "red-t-"), hasText: true },
-  sentry:      { kind: "svg", tone: "mono", icon: scopeSvg(sentryIconSvg, "sen-i-"), text: scopeSvg(sentryTextSvg, "sen-t-"), hasText: true },
-  slack:       { kind: "svg", tone: "brand", icon: scopeSvg(slackIconSvg, "slk-i-"), text: scopeSvg(slackTextSvg, "slk-t-"), hasText: true },
-  vercel:      { kind: "svg", tone: "mono", icon: scopeSvg(vercelIconSvg, "ver-i-"), text: scopeSvg(vercelTextSvg, "ver-t-"), hasText: true },
+  notion:      { kind: "svg", tone: "mono", prefix: "not-", icon: notionIconSvg, text: notionTextSvg, hasText: true },
+  producthunt: { kind: "svg", tone: "brand", prefix: "ph-", icon: producthuntSvg, text: producthuntSvg },
+  reddit:      { kind: "svg", tone: "brand", prefix: "red-", icon: redditIconSvg, text: redditTextSvg, hasText: true },
+  sentry:      { kind: "svg", tone: "mono", prefix: "sen-", icon: sentryIconSvg, text: sentryTextSvg, hasText: true },
+  slack:       { kind: "svg", tone: "brand", prefix: "slk-", icon: slackIconSvg, text: slackTextSvg, hasText: true },
+  vercel:      { kind: "svg", tone: "mono", prefix: "ver-", icon: vercelIconSvg, text: vercelTextSvg, hasText: true },
 };
 
 export function mcpHasTextIcon(connectorId: string): boolean {
@@ -93,7 +81,18 @@ export function McpIcon({ connectorId, displayName, size = 40, variant = "icon",
     );
   }
 
+  return <McpSvgIcon entry={entry} size={size} variant={variant} textWidth={textWidth} />;
+}
+
+function McpSvgIcon({ entry, size, variant, textWidth }: {
+  entry: SvgEntry;
+  size: number;
+  variant: McpIconVariant;
+  textWidth?: boolean;
+}) {
+  const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const raw = variant === "text" ? entry.text : entry.icon;
+  const svg = useMemo(() => prepareMcpSvg(raw, `${entry.prefix}${id}-`), [entry.prefix, id, raw]);
   const className = `mcp-icon-inline mcp-icon-${entry.tone}${textWidth ? " mcp-icon-text" : ""}`;
 
   if (textWidth) {
@@ -101,7 +100,7 @@ export function McpIcon({ connectorId, displayName, size = 40, variant = "icon",
       <span
         className={className}
         style={{ height: size, display: "inline-flex", flexShrink: 0 }}
-        dangerouslySetInnerHTML={{ __html: raw }}
+        dangerouslySetInnerHTML={{ __html: svg }}
       />
     );
   }
@@ -110,7 +109,7 @@ export function McpIcon({ connectorId, displayName, size = 40, variant = "icon",
     <span
       className={className}
       style={{ width: size, height: size, display: "inline-flex", flexShrink: 0 }}
-      dangerouslySetInnerHTML={{ __html: raw }}
+      dangerouslySetInnerHTML={{ __html: svg }}
     />
   );
 }
