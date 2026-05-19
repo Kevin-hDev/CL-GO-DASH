@@ -3,6 +3,7 @@ pub fn ollama_base_url() -> String {
 }
 
 pub mod agent_loop;
+pub mod agent_loop_support;
 pub mod agent_md;
 pub mod agent_settings;
 pub mod app_handle_global;
@@ -15,6 +16,7 @@ pub mod circuit_breaker;
 #[cfg(test)]
 pub mod circuit_breaker_tests;
 pub mod compress_hook;
+pub mod context_budget;
 pub mod eager_dispatch;
 pub mod model_customizations;
 pub mod model_size;

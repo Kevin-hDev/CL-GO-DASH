@@ -19,8 +19,13 @@ fn should_auto_compress_disabled() {
 }
 
 #[test]
-fn should_auto_compress_ineligible_model() {
-    assert!(!should_auto_compress(true, 32_768, 32_768, 30_000, 85));
+fn should_auto_compress_small_context_when_threshold_reached() {
+    assert!(should_auto_compress(true, 32_768, 32_768, 30_000, 85));
+}
+
+#[test]
+fn should_auto_compress_unknown_context_disabled() {
+    assert!(!should_auto_compress(true, 0, 0, 30_000, 85));
 }
 
 #[test]

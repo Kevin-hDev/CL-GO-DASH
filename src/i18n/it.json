@@ -200,6 +200,7 @@
     "send": "Invia",
     "cancel": "Annulla",
     "compression": "Compression",
+    "contextCompressed": "Contesto compresso",
     "searchBarPlaceholder": "Cerca...",
     "resultCount_one": "{{count}} risultato",
     "resultCount_other": "{{count}} risultati",

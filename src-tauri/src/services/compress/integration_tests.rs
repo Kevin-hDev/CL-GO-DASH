@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod integration {
     use crate::services::agent_local::types_ollama::ChatMessage;
-    use crate::services::compress::{eligibility, engine, prompt, token_estimate};
+    use crate::services::compress::{engine, prompt, token_estimate};
 
     fn msg(role: &str, content: &str) -> ChatMessage {
         ChatMessage {
@@ -27,9 +27,6 @@ mod integration {
         ];
         let used = token_estimate::estimate_tokens(&messages);
         assert!(used > 0);
-        assert!(eligibility::is_model_eligible(131_072));
-        assert!(!eligibility::is_model_eligible(32_768));
-
         let summary = "The user asked long questions and the assistant answered.";
         let pre_count = engine::apply_compression(&mut messages, summary, true);
         assert!(pre_count > messages.len());
@@ -85,10 +82,12 @@ mod integration {
         assert!(!engine::should_auto_compress(
             false, 131_072, 100_000, 86_000, 85
         ));
-        // Modèle non éligible
-        assert!(!engine::should_auto_compress(
+        // Petit contexte : le réglage utilisateur prime, donc compression possible.
+        assert!(engine::should_auto_compress(
             true, 32_768, 32_768, 30_000, 85
         ));
+        // Contexte inconnu : on ne compresse pas à l'aveugle.
+        assert!(!engine::should_auto_compress(true, 0, 0, 30_000, 85));
         // Sous le seuil
         assert!(!engine::should_auto_compress(
             true, 131_072, 100_000, 80_000, 85

@@ -147,6 +147,20 @@
   margin-left: 4px;
 }
 
+.msg-context-compressed {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  margin: 0 auto var(--space-md);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  color: var(--ink-faint);
+  background: var(--shell);
+  border: 1px solid var(--edge);
+  font-size: var(--text-xs);
+}
+
 [data-theme="light"] .code-block {
   border-color: rgba(0, 0, 0, 0.12);
 }

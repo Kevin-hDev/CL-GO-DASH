@@ -7,6 +7,7 @@
 use super::compress_hook;
 use super::retry;
 use crate::services::agent_local::circuit_breaker;
+use crate::services::agent_local::context_budget;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::tool_executor;
 use crate::services::agent_local::tool_result_budget;
@@ -65,6 +66,7 @@ pub async fn run_agent_loop(
             cancel.clone(),
         )
         .await;
+        context_budget::prepare_for_request(messages, configured_context);
         let result = retry::retry_stream(
             on_event,
             provider_id,

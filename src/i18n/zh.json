@@ -200,6 +200,7 @@
     "send": "发送",
     "cancel": "取消",
     "compression": "Compression",
+    "contextCompressed": "上下文已压缩",
     "searchBarPlaceholder": "搜索...",
     "resultCount_one": "{{count}} 条结果",
     "resultCount_other": "{{count}} 条结果",

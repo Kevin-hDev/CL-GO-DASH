@@ -1,5 +1,4 @@
 use crate::services::agent_local::types_ollama::ChatMessage;
-use crate::services::compress::eligibility::is_model_eligible;
 use crate::services::compress::prompt;
 use crate::services::compress::token_estimate;
 
@@ -9,7 +8,7 @@ pub const BOUNDARY_CONTENT: &str =
 /// Décide si l'auto-compression doit se déclencher.
 pub fn should_auto_compress(
     enabled: bool,
-    native_context: u64,
+    _native_context: u64,
     configured_context: u64,
     used_tokens: usize,
     threshold_pct: u8,
@@ -17,7 +16,7 @@ pub fn should_auto_compress(
     if !enabled {
         return false;
     }
-    if !is_model_eligible(native_context) {
+    if configured_context == 0 {
         return false;
     }
     token_estimate::should_compress(used_tokens, configured_context, threshold_pct)

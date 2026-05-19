@@ -11,6 +11,8 @@ const TEXT_EXTS = [
   "toml", "rs", "py", "sh", "css", "html", "xml", "csv", "sql",
   "env", "cfg", "conf", "ini", "log", "svelte", "vue",
 ];
+const MAX_TEXT_CHARS_PER_FILE = 120_000;
+const MAX_TEXT_CHARS_PER_MESSAGE = 300_000;
 
 function isImageFile(name: string): boolean {
   const ext = name.split(".").pop()?.toLowerCase() ?? "";
@@ -28,6 +30,12 @@ function uint8ToBase64(bytes: Uint8Array): string {
     binary += String.fromCharCode(bytes[i]);
   }
   return btoa(binary);
+}
+
+function clipTextForContext(text: string, maxChars: number): string {
+  const chars = Array.from(text);
+  if (chars.length <= maxChars) return text;
+  return `${chars.slice(0, maxChars).join("")}\n[File truncated: use read_file if full content is needed]`;
 }
 
 interface StreamStartState {
@@ -61,6 +69,7 @@ export function useAgentStream() {
     const resolved = await Promise.all(messages.map(async (m) => {
       let images: string[] | null = null;
       let content = m.content;
+      let remainingTextChars = MAX_TEXT_CHARS_PER_MESSAGE;
 
       if (m.files && m.files.length > 0) {
         const imageFiles = m.files.filter((f) => f.path && isImageFile(f.name));
@@ -82,7 +91,14 @@ export function useAgentStream() {
           try {
             const bytes = await readFile(f.path);
             const text = new TextDecoder().decode(bytes);
-            content += `\n\n--- Fichier: ${f.name} ---\n${text}`;
+            const allowed = Math.min(MAX_TEXT_CHARS_PER_FILE, remainingTextChars);
+            if (allowed <= 0) {
+              content += `\n\n--- Fichier: ${f.name} ---\n[File omitted: text attachment budget reached]`;
+              continue;
+            }
+            const clipped = clipTextForContext(text, allowed);
+            remainingTextChars = Math.max(0, remainingTextChars - allowed);
+            content += `\n\n--- Fichier: ${f.name} ---\n${clipped}`;
           } catch {
             console.warn("Lecture fichier texte impossible.");
           }

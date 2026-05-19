@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { useAgentStream } from "./use-agent-stream";
 import { listenGatewaySessionUpdates } from "./use-gateway-session-updates";
 import { EMPTY_CHAT_STATE, type ChatState } from "./agent-chat-stream-callbacks";
+import { resolveSessionTokenCount } from "./agent-token-estimate";
 import { showToast } from "@/lib/toast-emitter";
 import i18n from "@/i18n";
 import type { AgentMessage, AgentSession } from "@/types/agent";
@@ -60,8 +61,7 @@ export function useAgentChat(
     let alive = true;
     const applySnapshot = (snapshot: ReturnType<typeof getStreamSnapshot>) => {
       if (!snapshot || !alive || sessionRef.current !== sessionId) return;
-      const { pendingPermissions, completed, ...chatState } = snapshot;
-      void completed;
+      const { pendingPermissions, completed: _completed, ...chatState } = snapshot;
       setState(chatState);
       setSessionLoading(false);
       for (const request of pendingPermissions) {
@@ -84,14 +84,14 @@ export function useAgentChat(
         setState((s) => ({
           ...s,
           messages: session.messages,
-          tokenCount: session.accumulated_tokens,
+          tokenCount: resolveSessionTokenCount(session),
         }));
         setSessionLoading(false);
       })
       .catch((e: unknown) => { console.warn("Session load:", e); setSessionLoading(false); });
 
     const stopGatewayListener = listenGatewaySessionUpdates(sessionId, sessionRef, (session) => {
-      setState((s) => ({ ...s, messages: session.messages, tokenCount: session.accumulated_tokens }));
+      setState((s) => ({ ...s, messages: session.messages, tokenCount: resolveSessionTokenCount(session) }));
     });
     return () => {
       alive = false;

@@ -2,7 +2,7 @@ use crate::services::agent_local::session_store;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::types_ollama::{ChatMessage, StreamEvent};
 use crate::services::agent_local::types_session::AgentMessage;
-use crate::services::compress::{engine, prompt, token_estimate};
+use crate::services::compress::{context_capsules, engine, prompt, summary_budget, token_estimate};
 use crate::services::llm::stream;
 use tokio_util::sync::CancellationToken;
 
@@ -46,15 +46,25 @@ pub async fn try_auto_compress(
         .find(|m| m.role == "assistant")
         .cloned();
 
-    let compress_msgs = engine::build_compression_request_content(messages, None);
+    let file_context = context_capsules::recent_file_context_message(messages, configured_context);
+    let summary_instruction = summary_budget::summary_instruction(configured_context);
+    let compress_msgs =
+        engine::build_compression_request_content(messages, summary_instruction.as_deref());
     match stream::collect_chat_silent(provider_id, model, &compress_msgs, cancel.clone()).await {
         Ok(result) => {
             let summary = prompt::extract_summary(&result.content);
             engine::apply_compression(messages, &summary, true);
+            context_capsules::insert_after_system(messages, file_context.clone());
             if let Some(last) = &last_assistant {
                 messages.push(last.clone());
             }
-            save_compressed_session(session_id, &summary, last_assistant.as_ref()).await;
+            save_compressed_session(
+                session_id,
+                &summary,
+                file_context.as_ref(),
+                last_assistant.as_ref(),
+            )
+            .await;
         }
         Err(e) => {
             if !cancel.is_cancelled() {
@@ -72,6 +82,7 @@ pub async fn try_auto_compress(
 async fn save_compressed_session(
     session_id: &str,
     summary: &str,
+    file_context: Option<&ChatMessage>,
     last_assistant: Option<&ChatMessage>,
 ) {
     let summary_content = prompt::format_summary_message(summary, true);
@@ -102,6 +113,24 @@ async fn save_compressed_session(
     };
 
     let mut session_messages = vec![summary_msg];
+
+    if let Some(file_context) = file_context {
+        let context_tokens = token_estimate::estimate_tokens(&[file_context.clone()]) as u32;
+        session_messages.push(AgentMessage {
+            id: uuid::Uuid::new_v4().to_string(),
+            role: "assistant".to_string(),
+            content: file_context.content.clone(),
+            thinking: None,
+            tool_calls: None,
+            tool_name: None,
+            tool_activities: None,
+            segments: None,
+            files: vec![],
+            timestamp: chrono::Utc::now(),
+            tokens: context_tokens,
+            skill_names: None,
+        });
+    }
 
     if let Some(last) = last_assistant {
         let last_tokens = token_estimate::estimate_tokens(&[last.clone()]) as u32;

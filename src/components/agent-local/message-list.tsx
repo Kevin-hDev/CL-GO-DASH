@@ -5,10 +5,12 @@ import { ToolBubble, SavedToolBubble } from "./tool-bubble";
 import { ThinkingSection } from "./thinking-section";
 import { ErrorBubble } from "./error-bubble";
 import { CompressionIndicator } from "./compression-indicator";
+import { ContextCompressionMarker } from "./context-compression-marker";
 import { SubagentBubble } from "./subagent-bubble";
 import { BranchBubble } from "./branch-bubble";
 import { LoadingIndicator } from "./working-stats";
 import { useCompression } from "@/hooks/use-compression";
+import { isCompressionContextOnlyMessage, isCompressionSummaryMessage } from "@/lib/context-messages";
 import { isSubagentInjectedMessage, extractSubagentsFromMessages } from "@/lib/subagent-message-utils";
 import type { AgentMessage, SubagentInfo, ToolActivityRecord } from "@/types/agent";
 import type { ToolActivity, StreamSegment } from "@/hooks/agent-chat-utils";
@@ -60,6 +62,8 @@ export function MessageList({
   return (
     <>
       {messages.map((msg, idx) => {
+        if (isCompressionSummaryMessage(msg)) return <ContextCompressionMarker key={msg.id} />;
+        if (isCompressionContextOnlyMessage(msg)) return null;
         if (isSubagentInjectedMessage(msg)) {
           if (!bubbleRendered && extractedAgents.length > 0) {
             bubbleRendered = true;

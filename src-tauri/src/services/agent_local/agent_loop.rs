@@ -1,16 +1,15 @@
 use crate::services::agent_local::circuit_breaker;
 use crate::services::agent_local::compress_hook;
+use crate::services::agent_local::context_budget;
 use crate::services::agent_local::eager_dispatch;
-use crate::services::agent_local::ollama_stream;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::tool_executor;
 use crate::services::agent_local::tool_result_budget;
-use crate::services::agent_local::types_ollama::{ChatMessage, ChatRequest, StreamEvent};
+use crate::services::agent_local::types_ollama::{ChatMessage, StreamEvent};
 use crate::services::agent_local::write_guard::WriteGuard;
+use crate::services::agent_local::{agent_loop_support, ollama_stream};
 use std::path::PathBuf;
 use tokio_util::sync::CancellationToken;
-
-use crate::services::agent_local::ollama_base_url;
 
 const MAX_TURNS: usize = 30;
 
@@ -55,7 +54,8 @@ pub async fn run_agent_loop(
             cancel.clone(),
         )
         .await;
-        let request = build_request(model, messages, &tools, think);
+        context_budget::prepare_for_request(messages, configured_context);
+        let request = agent_loop_support::build_request(model, messages, &tools, think);
 
         // Eager dispatch : lancer les read-only tools dès qu'ils arrivent dans le stream
         let (tool_tx, tool_rx) = tokio::sync::mpsc::unbounded_channel();
@@ -81,7 +81,7 @@ pub async fn run_agent_loop(
         total_prompt += result.prompt_tokens;
         last_prompt = result.prompt_tokens;
         last_eval = result.eval_count;
-        messages.push(build_assistant_message(&result));
+        messages.push(agent_loop_support::build_assistant_message(&result));
 
         // Check post-réponse : compresser si le seuil a été dépassé pendant la génération
         compress_hook::try_auto_compress(
@@ -152,92 +152,6 @@ pub async fn run_agent_loop(
         context_tokens: last_prompt + last_eval,
     });
 
-    decharge_gpu(model).await;
+    agent_loop_support::decharge_gpu(model).await;
     Ok(total_eval + total_prompt)
-}
-
-fn build_request(
-    model: &str,
-    messages: &[ChatMessage],
-    tools: &[serde_json::Value],
-    think: bool,
-) -> ChatRequest {
-    let keep_alive = crate::services::config::read_config()
-        .map(|c| c.advanced.keep_alive)
-        .unwrap_or_else(|_| "5m".to_string());
-    let keep_alive = if keep_alive == "forever" {
-        "-1m".to_string()
-    } else {
-        keep_alive
-    };
-
-    ChatRequest {
-        model: model.to_string(),
-        messages: messages.to_vec(),
-        stream: true,
-        tools: if tools.is_empty() {
-            None
-        } else {
-            Some(tools.to_vec())
-        },
-        options: None,
-        keep_alive: Some(keep_alive),
-        think: Some(think),
-    }
-}
-
-fn build_assistant_message(
-    result: &crate::services::agent_local::types_ollama::StreamResult,
-) -> ChatMessage {
-    let tool_calls = if result.tool_calls.is_empty() {
-        None
-    } else {
-        Some(
-            result
-                .tool_calls
-                .iter()
-                .enumerate()
-                .map(|(i, (name, args))| {
-                    crate::services::agent_local::types_ollama::ToolCallOllama {
-                        id: result.tool_call_ids.get(i).cloned(),
-                        function: crate::services::agent_local::types_ollama::ToolCallFunction {
-                            name: name.clone(),
-                            arguments: args.clone(),
-                        },
-                    }
-                })
-                .collect(),
-        )
-    };
-    let reasoning = if result.thinking.is_empty() {
-        None
-    } else {
-        Some(result.thinking.clone())
-    };
-    ChatMessage {
-        role: "assistant".to_string(),
-        content: result.content.clone(),
-        tool_calls,
-        reasoning_content: reasoning,
-        ..Default::default()
-    }
-}
-
-async fn decharge_gpu(model: &str) {
-    let keep_alive = crate::services::config::read_config()
-        .map(|c| c.advanced.keep_alive)
-        .unwrap_or_else(|_| "5m".to_string());
-    if keep_alive != "0" {
-        return;
-    }
-    let client = reqwest::Client::new();
-    let _ = client
-        .post(format!("{}/api/chat", ollama_base_url()))
-        .json(&serde_json::json!({
-            "model": model,
-            "messages": [],
-            "keep_alive": "0"
-        }))
-        .send()
-        .await;
 }

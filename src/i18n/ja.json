@@ -200,6 +200,7 @@
     "send": "送信",
     "cancel": "キャンセル",
     "compression": "Compression",
+    "contextCompressed": "コンテキストを圧縮済み",
     "searchBarPlaceholder": "検索...",
     "resultCount_one": "{{count}} 件",
     "resultCount_other": "{{count}} 件",
