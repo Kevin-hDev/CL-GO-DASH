@@ -24,6 +24,11 @@
   color: var(--ink-faint);
 }
 
+.ms-trigger-reasoning {
+  margin-left: 4px;
+  color: var(--select-text);
+}
+
 .ms-dropdown {
   position: absolute;
   bottom: 100%;
@@ -41,10 +46,24 @@
   overflow: hidden;
 }
 
+.ms-dropdown-with-reasoning {
+  width: 480px;
+  max-width: min(480px, calc(100vw - 24px));
+  flex-direction: row;
+  align-items: stretch;
+}
+
 [data-theme="dark"] .ms-dropdown {
   background: var(--surface-glass);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+}
+
+.ms-main {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
 }
 
 .ms-search {
@@ -74,24 +93,55 @@
   outline: none;
 }
 
-.ms-thinking {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--space-sm) var(--space-md);
-  font-size: var(--text-xs);
-  cursor: pointer;
-  border-bottom: 1px solid var(--edge);
-}
-
-.ms-thinking:hover,
-.ms-thinking[data-local-nav-active="true"] {
-  background: var(--surface);
-}
-
 .ms-list {
   overflow-y: auto;
   flex: 1;
+}
+
+.ms-reasoning-panel {
+  width: 138px;
+  flex: 0 0 138px;
+  border-left: 1px solid var(--edge);
+  padding: 8px;
+  background: var(--shell);
+}
+
+[data-theme="dark"] .ms-reasoning-panel {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.ms-reasoning-title {
+  padding: 4px 6px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.ms-reasoning-option {
+  width: 100%;
+  border: 0;
+  border-radius: var(--radius-sm);
+  padding: 7px 8px;
+  background: transparent;
+  color: var(--ink-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--text-xs);
+  text-align: left;
+}
+
+.ms-reasoning-option:hover,
+.ms-reasoning-option:focus-visible {
+  background: var(--surface);
+  color: var(--ink);
+  outline: none;
+}
+
+.ms-reasoning-option-active {
+  background: var(--select-bg);
+  color: var(--select-text);
 }
 
 .ms-empty {

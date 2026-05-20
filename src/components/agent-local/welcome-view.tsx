@@ -7,6 +7,7 @@ import { FileDropZone } from "./file-drop-zone";
 import { usePermissionMode } from "@/hooks/use-permission-mode";
 import { useFileDrop, type DroppedFile } from "@/hooks/use-file-drop";
 import type { Project } from "@/types/agent";
+import type { ReasoningMode } from "@/lib/reasoning-modes";
 import "./welcome-view.css";
 
 interface WelcomeViewProps {
@@ -16,12 +17,12 @@ interface WelcomeViewProps {
   onAddProject: (path: string) => Promise<Project>;
   onSend: (text: string, files?: DroppedFile[], projectId?: string, skills?: { name: string; content: string }[]) => void;
   onModelChange: (model: string, provider: string) => void;
-  thinking: boolean;
-  onToggleThinking: () => void;
+  reasoningMode?: string | null;
+  onReasoningModeChange: (mode: ReasoningMode) => void;
 }
 
 export function WelcomeView({
-  model, provider, projects, onAddProject, onSend, onModelChange, thinking, onToggleThinking,
+  model, provider, projects, onAddProject, onSend, onModelChange, reasoningMode, onReasoningModeChange,
 }: WelcomeViewProps) {
   const { t } = useTranslation();
   const permMode = usePermissionMode();
@@ -62,7 +63,7 @@ export function WelcomeView({
               modelName={model}
               providerName={provider}
               isStreaming={false}
-              thinkingEnabled={thinking}
+              reasoningMode={reasoningMode}
               files={fileDrop.files}
               contextUsed={0}
               contextMax={0}
@@ -79,7 +80,7 @@ export function WelcomeView({
                 await fileDrop.addByPaths(raw.map((p) => String(p)));
               })()}
               onModelChange={onModelChange}
-              onToggleThinking={onToggleThinking}
+              onReasoningModeChange={onReasoningModeChange}
             />
             <ProjectSelector
               projects={projects}

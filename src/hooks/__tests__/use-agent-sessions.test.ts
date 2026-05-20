@@ -80,6 +80,7 @@ describe("useAgentSessions", () => {
       model: "llama3",
       provider: "ollama",
       projectId: null,
+      reasoningMode: null,
     });
     expect(invoke).toHaveBeenCalledWith("list_agent_sessions");
     expect(result.current.sessions).toEqual([mockSession, newSession]);
@@ -146,6 +147,29 @@ describe("useAgentSessions", () => {
       provider: "ollama",
     });
     expect(result.current.sessions[0].model).toBe("mistral");
+  });
+
+  it("updateReasoning persiste le mode de réflexion puis refresh", async () => {
+    const updated: AgentSessionMeta = { ...mockSession, reasoning_mode: "high" };
+
+    vi.mocked(invoke)
+      .mockResolvedValueOnce([mockSession])
+      .mockResolvedValueOnce(undefined)
+      .mockResolvedValueOnce([updated]);
+
+    const { result } = renderHook(() => useAgentSessions());
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    await act(async () => {
+      await result.current.updateReasoning("session-1", "high");
+    });
+
+    expect(invoke).toHaveBeenCalledWith("update_session_reasoning", {
+      id: "session-1",
+      reasoningMode: "high",
+    });
+    expect(result.current.sessions[0].reasoning_mode).toBe("high");
   });
 
   it("refresh recharge les sessions depuis le backend", async () => {

@@ -22,6 +22,7 @@ pub async fn collect_chat_silent(
             messages,
             &[],
             false,
+            None,
             cancel,
         )
         .await;
@@ -32,6 +33,7 @@ pub async fn collect_chat_silent(
         messages,
         tools: &[],
         think: false,
+        reasoning_mode: None,
     };
     let resp = post_chat_request(&cfg).await.map_err(|e| e.to_string())?;
     consume_silent(resp, cancel).await

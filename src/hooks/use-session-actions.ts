@@ -15,7 +15,7 @@ interface ProjectsHookRef {
 }
 
 interface CreateFn {
-  (name: string, model: string, provider?: string, projectId?: string): Promise<AgentSessionMeta>;
+  (name: string, model: string, provider?: string, projectId?: string, reasoningMode?: string | null): Promise<AgentSessionMeta>;
 }
 
 interface RenameFn {
@@ -30,6 +30,7 @@ export interface SessionActionsDeps {
   defaultProvider: string;
   welcomeModel: { model: string; provider: string } | null;
   setWelcomeModel: (v: { model: string; provider: string } | null) => void;
+  welcomeReasoningMode?: string | null;
   projectsHook: ProjectsHookRef;
   onSessionChange?: (id: string | null) => void;
 }
@@ -44,6 +45,7 @@ export function useSessionActions(deps: SessionActionsDeps) {
     defaultProvider,
     welcomeModel,
     setWelcomeModel,
+    welcomeReasoningMode,
     projectsHook,
     onSessionChange,
   } = deps;
@@ -73,7 +75,7 @@ export function useSessionActions(deps: SessionActionsDeps) {
       const name = text.slice(0, 40).trim() || t("agentLocal.newSession");
       const m = welcomeModel ?? { model: defaultModel, provider: defaultProvider };
       const project = projectId ? projectsHook.projects.find((p) => p.id === projectId) : undefined;
-      const session = await create(name, m.model, m.provider, projectId);
+      const session = await create(name, m.model, m.provider, projectId, welcomeReasoningMode);
       setPendingMessage(text);
       setPendingWorkingDir(project?.path);
       setPendingSkills(skills);
@@ -82,7 +84,7 @@ export function useSessionActions(deps: SessionActionsDeps) {
       await tabState.addTab(session.id, session.name);
       onSessionChange?.(session.id);
     },
-    [create, tabState, defaultModel, defaultProvider, welcomeModel, setWelcomeModel, t, projectsHook.projects, onSessionChange],
+    [create, tabState, defaultModel, defaultProvider, welcomeModel, setWelcomeModel, welcomeReasoningMode, t, projectsHook.projects, onSessionChange],
   );
 
   const handleAutoRename = useCallback(

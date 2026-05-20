@@ -5,7 +5,7 @@ use crate::services::agent_local::eager_dispatch;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::tool_executor;
 use crate::services::agent_local::tool_result_budget;
-use crate::services::agent_local::types_ollama::{ChatMessage, StreamEvent};
+use crate::services::agent_local::types_ollama::{ChatMessage, OllamaThink, StreamEvent};
 use crate::services::agent_local::write_guard::WriteGuard;
 use crate::services::agent_local::{agent_loop_support, ollama_stream};
 use std::path::PathBuf;
@@ -18,7 +18,7 @@ pub async fn run_agent_loop(
     messages: &mut Vec<ChatMessage>,
     model: &str,
     tools: Vec<serde_json::Value>,
-    think: bool,
+    think: OllamaThink,
     working_dir: PathBuf,
     session_id: String,
     cancel: CancellationToken,
@@ -55,7 +55,7 @@ pub async fn run_agent_loop(
         )
         .await;
         context_budget::prepare_for_request(messages, configured_context);
-        let request = agent_loop_support::build_request(model, messages, &tools, think);
+        let request = agent_loop_support::build_request(model, messages, &tools, think.clone());
 
         // Eager dispatch : lancer les read-only tools dès qu'ils arrivent dans le stream
         let (tool_tx, tool_rx) = tokio::sync::mpsc::unbounded_channel();

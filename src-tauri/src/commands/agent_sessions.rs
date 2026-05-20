@@ -33,6 +33,7 @@ pub async fn create_agent_session(
     model: String,
     provider: Option<String>,
     project_id: Option<String>,
+    reasoning_mode: Option<String>,
 ) -> Result<AgentSession, String> {
     let provider = provider.unwrap_or_else(|| "ollama".to_string());
     let requested_project_id = project_id.clone();
@@ -50,6 +51,12 @@ pub async fn create_agent_session(
             }
         }
     }
+    if reasoning_mode.is_some() {
+        session_store::update_reasoning(&session.id, reasoning_mode).await?;
+        if let Ok(updated) = session_store::get(&session.id).await {
+            session = updated;
+        }
+    }
     Ok(session)
 }
 
@@ -65,6 +72,14 @@ pub async fn update_session_model(
     provider: String,
 ) -> Result<(), String> {
     session_store::update_model(&id, &model, &provider).await
+}
+
+#[tauri::command]
+pub async fn update_session_reasoning(
+    id: String,
+    reasoning_mode: Option<String>,
+) -> Result<(), String> {
+    session_store::update_reasoning(&id, reasoning_mode).await
 }
 
 #[tauri::command]

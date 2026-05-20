@@ -17,11 +17,12 @@ pub async fn stream_chat_no_done(
     messages: &[ChatMessage],
     tools: &[serde_json::Value],
     think: bool,
+    reasoning_mode: Option<&str>,
     cancel: CancellationToken,
 ) -> Result<StreamResult, String> {
     if provider_id == "codex-oauth" {
         return crate::services::codex_client::stream::stream_chat(
-            on_event, model, messages, tools, think, cancel,
+            on_event, model, messages, tools, think, reasoning_mode, cancel,
         )
         .await;
     }
@@ -31,6 +32,7 @@ pub async fn stream_chat_no_done(
         messages,
         tools,
         think,
+        reasoning_mode,
     };
     match post_chat_request(&cfg).await {
         Ok(resp) => {
@@ -45,6 +47,7 @@ pub async fn stream_chat_no_done(
                 messages,
                 tools: &[],
                 think,
+                reasoning_mode,
             };
             let resp = post_chat_request(&cfg2).await.map_err(|e| e.to_string())?;
             let (result, _, _) = consume_stream(on_event, resp, cancel).await?;
@@ -60,6 +63,7 @@ pub async fn stream_chat_no_done(
                 messages: &msgs_clean,
                 tools,
                 think,
+                reasoning_mode,
             };
             let resp = post_chat_request(&cfg2).await.map_err(|e| e.to_string())?;
             let (result, _, _) = consume_stream(on_event, resp, cancel).await?;

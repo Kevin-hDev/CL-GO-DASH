@@ -9,7 +9,10 @@ pub struct AgentSession {
     pub model: String,
     #[serde(default = "default_provider")]
     pub provider: String,
+    #[serde(default)]
     pub thinking_enabled: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reasoning_mode: Option<String>,
     pub accumulated_tokens: u32,
     pub messages: Vec<AgentMessage>,
     #[serde(default)]
@@ -44,6 +47,10 @@ pub struct AgentSessionMeta {
     pub model: String,
     #[serde(default = "default_provider")]
     pub provider: String,
+    #[serde(default)]
+    pub thinking_enabled: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reasoning_mode: Option<String>,
     pub message_count: usize,
     #[serde(default)]
     pub is_heartbeat: bool,

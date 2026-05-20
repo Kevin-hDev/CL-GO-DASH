@@ -175,6 +175,7 @@ pub fn run() {
             commands::create_agent_session,
             commands::rename_agent_session,
             commands::update_session_model,
+            commands::update_session_reasoning,
             commands::delete_agent_session,
             commands::export_agent_session_markdown,
             commands::truncate_session_at,

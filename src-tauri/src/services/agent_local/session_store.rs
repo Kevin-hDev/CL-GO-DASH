@@ -66,13 +66,15 @@ pub async fn create_full(
     is_heartbeat: bool,
     project_id: Option<String>,
 ) -> Result<AgentSession, String> {
+    let reasoning_mode = crate::services::reasoning::default_mode(provider, model);
     let session = AgentSession {
         id: Uuid::new_v4().to_string(),
         name: name.to_string(),
         created_at: Utc::now(),
         model: model.to_string(),
         provider: provider.to_string(),
-        thinking_enabled: false,
+        thinking_enabled: crate::services::reasoning::enabled(reasoning_mode.as_deref(), false),
+        reasoning_mode,
         accumulated_tokens: 0,
         messages: Vec::new(),
         is_heartbeat,
@@ -175,6 +177,15 @@ pub async fn update_model(id: &str, model: &str, provider: &str) -> Result<(), S
     let mut session = get(id).await?;
     session.model = model.to_string();
     session.provider = provider.to_string();
+    save(&session).await
+}
+
+pub async fn update_reasoning(id: &str, reasoning_mode: Option<String>) -> Result<(), String> {
+    validate_session_id(id)?;
+    let mut session = get(id).await?;
+    let mode = crate::services::reasoning::sanitize_mode(reasoning_mode);
+    session.thinking_enabled = !matches!(mode.as_deref(), None | Some("off"));
+    session.reasoning_mode = mode;
     save(&session).await
 }
 

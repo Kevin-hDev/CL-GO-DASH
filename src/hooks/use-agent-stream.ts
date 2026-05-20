@@ -56,7 +56,7 @@ export function useAgentStream() {
     startState: StreamStartState,
     workingDir?: string,
     supportsTools?: boolean,
-    supportsThinking?: boolean,
+    reasoningMode?: string | null,
     permissionMode?: string,
   ) => {
     streamingRef.current = true;
@@ -131,7 +131,7 @@ export function useAgentStream() {
         think,
         workingDir: workingDir ?? null,
         supportsTools: supportsTools ?? null,
-        supportsThinking: supportsThinking ?? null,
+        reasoningMode: reasoningMode ?? null,
         permissionMode: permissionMode ?? null,
       });
       generationRef.current = gen;

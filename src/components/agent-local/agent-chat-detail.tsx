@@ -9,6 +9,7 @@ import type { Project } from "@/types/agent";
 import type { FileOperation } from "@/types/file-preview";
 import type { PanelMode } from "@/hooks/use-forecast-panel";
 import { CHAT_MIN_WIDTH } from "@/hooks/file-preview-storage";
+import type { ReasoningMode } from "@/lib/reasoning-modes";
 
 interface AgentChatDetailProps {
   sessionId: string;
@@ -20,7 +21,7 @@ interface AgentChatDetailProps {
   pendingWorkingDir?: string;
   pendingSkills?: { name: string; content: string }[];
   pendingFiles?: DroppedFile[];
-  thinking: boolean;
+  reasoningMode?: string | null;
   terminal: ReturnType<typeof useTerminal>;
   filePreview: ReturnType<typeof useFilePreview>;
   fullscreenSwitching: boolean;
@@ -31,7 +32,7 @@ interface AgentChatDetailProps {
   onNewSession: (model: string, provider: string) => void;
   onNewSessionInProject: (model: string, provider: string, projectId: string) => void;
   onAutoRename: (id: string, name: string) => void;
-  onToggleThinking: () => void;
+  onReasoningModeChange: (mode: ReasoningMode) => void;
   onInitialMessageSent: () => void;
   onFileOperationsChange: (operations: FileOperation[]) => void;
   onPreviewFullscreenChange: (fullscreen: boolean) => void;
@@ -74,8 +75,8 @@ export function AgentChatDetail(props: AgentChatDetailProps) {
           initialWorkingDir={props.pendingWorkingDir}
           initialSkills={props.pendingSkills}
           initialFiles={props.pendingFiles}
-          thinking={props.thinking}
-          onToggleThinking={props.onToggleThinking}
+          reasoningMode={props.reasoningMode}
+          onReasoningModeChange={props.onReasoningModeChange}
           onInitialMessageSent={props.onInitialMessageSent}
           terminalState={props.terminal}
           onFileOperationsChange={props.onFileOperationsChange}

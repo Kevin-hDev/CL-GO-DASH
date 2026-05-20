@@ -147,6 +147,7 @@ pub async fn synthesize_subagent_results(
             None,
             None,
             None,
+            None,
             Some("auto".to_string()),
             cancel,
         )

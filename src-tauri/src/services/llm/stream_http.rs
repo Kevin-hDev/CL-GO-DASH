@@ -8,6 +8,7 @@ pub struct RequestConfig<'a> {
     pub messages: &'a [ChatMessage],
     pub tools: &'a [serde_json::Value],
     pub think: bool,
+    pub reasoning_mode: Option<&'a str>,
 }
 
 #[derive(Debug)]
@@ -50,11 +51,28 @@ pub async fn post_chat_request(cfg: &RequestConfig<'_>) -> Result<reqwest::Respo
     }
     if cfg.think {
         match cfg.provider_id {
-            "deepseek" | "google" | "openrouter" | "zai" => {
-                payload["reasoning_effort"] = "high".into();
+            "deepseek" | "google" | "openrouter" => {
+                if let Some(effort) = crate::services::reasoning::simple_effort(cfg.reasoning_mode)
+                {
+                    payload["reasoning_effort"] = effort.into();
+                }
             }
             "openai" => {
-                payload["reasoning"] = serde_json::json!({"effort": "high"});
+                if let Some(effort) = crate::services::reasoning::openai_effort(cfg.reasoning_mode)
+                {
+                    payload["reasoning"] = serde_json::json!({ "effort": effort });
+                }
+            }
+            "xai" | "mistral" => {
+                if let Some(effort) = crate::services::reasoning::simple_effort(cfg.reasoning_mode)
+                {
+                    payload["reasoning_effort"] = effort.into();
+                }
+            }
+            "zai" => {
+                payload["thinking"] = serde_json::json!({
+                    "type": if cfg.reasoning_mode == Some("off") { "disabled" } else { "enabled" }
+                });
             }
             _ => {}
         }

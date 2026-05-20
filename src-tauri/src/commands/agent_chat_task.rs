@@ -164,6 +164,7 @@ pub(crate) async fn run_stream_task(
     working_dir: Option<String>,
     supports_tools_hint: Option<bool>,
     supports_thinking_hint: Option<bool>,
+    reasoning_mode: Option<String>,
     permission_mode_override: Option<String>,
     cancel: CancellationToken,
 ) -> Result<Vec<ChatMessage>, String> {
@@ -259,12 +260,18 @@ pub(crate) async fn run_stream_task(
         );
         append_git_section(&mut msgs, &snap);
 
+        let ollama_think = crate::services::reasoning::ollama_think(
+            &model,
+            reasoning_mode.as_deref(),
+            think,
+        )
+        .unwrap_or(crate::services::agent_local::types_ollama::OllamaThink::Bool(false));
         agent_loop::run_agent_loop(
             &on_event,
             &mut msgs,
             &model,
             final_tools,
-            think,
+            ollama_think,
             working_dir,
             session_id.clone(),
             cancel,
@@ -351,7 +358,8 @@ pub(crate) async fn run_stream_task(
             &response_language,
         );
         append_git_section(&mut msgs, &snap);
-        let think_active = think && model_supports_thinking;
+        let think_active = crate::services::reasoning::enabled(reasoning_mode.as_deref(), think)
+            && model_supports_thinking;
         llm::agent_loop::run_agent_loop(
             &on_event,
             &provider,
@@ -359,6 +367,7 @@ pub(crate) async fn run_stream_task(
             &mut msgs,
             &openai_tools,
             think_active,
+            reasoning_mode.as_deref(),
             working_dir,
             session_id.clone(),
             cancel,

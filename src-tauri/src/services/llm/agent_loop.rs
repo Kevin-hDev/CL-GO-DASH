@@ -33,6 +33,7 @@ pub async fn run_agent_loop(
     messages: &mut Vec<ChatMessage>,
     tools: &[serde_json::Value],
     think: bool,
+    reasoning_mode: Option<&str>,
     working_dir: PathBuf,
     session_id: String,
     cancel: CancellationToken,
@@ -74,6 +75,7 @@ pub async fn run_agent_loop(
             messages,
             tools,
             think,
+            reasoning_mode,
             cancel.clone(),
         )
         .await?;

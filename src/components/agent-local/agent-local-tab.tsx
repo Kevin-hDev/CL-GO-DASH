@@ -28,7 +28,7 @@ export const AgentLocalTab = memo(function AgentLocalTab({
   const { tabState, projectsHook, terminal, activeSession } = s;
   const { model, provider, currentDefault, activeProject } = s;
   const { filePreview, fileOperations, setFileOperations } = s;
-  const { thinking, setThinking, setWelcomeModel } = s;
+  const { reasoningMode, setReasoningMode, setWelcomeModel } = s;
   const { sessionActions, handleSelectById, handleDeleteProject } = s;
   const {
     pendingMessage, setPendingMessage,
@@ -137,7 +137,7 @@ export const AgentLocalTab = memo(function AgentLocalTab({
           pendingWorkingDir={pendingWorkingDir}
           pendingSkills={pendingSkills}
           pendingFiles={pendingFiles}
-          thinking={thinking}
+          reasoningMode={reasoningMode}
           terminal={terminal}
           filePreview={filePreview}
           fullscreenSwitching={fullscreenSwitching}
@@ -150,7 +150,7 @@ export const AgentLocalTab = memo(function AgentLocalTab({
           onNewSessionInProject={(m, p, pid) =>
             void handleCreateInProjectWithModel(m, p, pid)}
           onAutoRename={(id, msg) => void handleAutoRename(id, msg)}
-          onToggleThinking={() => setThinking((v) => !v)}
+          onReasoningModeChange={setReasoningMode}
           onInitialMessageSent={() => {
             setPendingMessage(null);
             setPendingWorkingDir(undefined);
@@ -178,8 +178,8 @@ export const AgentLocalTab = memo(function AgentLocalTab({
             onAddProject={projectsHook.add}
             onSend={(...args) => void handleWelcomeSend(...args)}
             onModelChange={(m, p) => setWelcomeModel({ model: m, provider: p })}
-            thinking={thinking}
-            onToggleThinking={() => setThinking((v) => !v)}
+            reasoningMode={reasoningMode}
+            onReasoningModeChange={setReasoningMode}
           />
         </div>
       )}
@@ -190,8 +190,8 @@ export const AgentLocalTab = memo(function AgentLocalTab({
     fullscreenSwitching, handleAutoRename, handleCreate, handleCreateInProjectWithModel, handleCreateWithModel,
     handleOpenForecastDocs, handlePreviewFullscreenChange, handleSelectById, handleTabClose, handleTabSelect, handleWelcomeSend, model,
     pendingFiles, pendingMessage, pendingSkills, pendingWorkingDir, projectsHook, provider, refresh,
-    setFileOperations, setPendingFiles, setPendingMessage, setPendingSkills, setPendingWorkingDir, setThinking,
-    setWelcomeModel, tabState, terminal, terminalCwd, thinking, updateModel,
+    setFileOperations, setPendingFiles, setPendingMessage, setPendingSkills, setPendingWorkingDir, setReasoningMode,
+    setWelcomeModel, tabState, terminal, terminalCwd, reasoningMode, updateModel,
   ]);
 
   return <><PanelSlot name="list">{list}</PanelSlot><PanelSlot name="detail">{detail}</PanelSlot></>;

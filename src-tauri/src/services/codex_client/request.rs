@@ -32,9 +32,10 @@ pub async fn post_codex_stream(
     messages: &[ChatMessage],
     tools: &[serde_json::Value],
     think: bool,
+    reasoning_mode: Option<&str>,
 ) -> Result<reqwest::Response, String> {
     let creds = token::ensure_valid().await?;
-    send_request(&creds, model, messages, tools, think).await
+    send_request(&creds, model, messages, tools, think, reasoning_mode).await
 }
 
 async fn send_request(
@@ -43,11 +44,12 @@ async fn send_request(
     messages: &[ChatMessage],
     tools: &[serde_json::Value],
     _think: bool,
+    reasoning_mode: Option<&str>,
 ) -> Result<reqwest::Response, String> {
     let (instructions, input) = convert::convert_messages(messages);
     let converted_tools = convert::convert_tools_to_responses_api(tools);
 
-    let effort = get_effort();
+    let effort = crate::services::reasoning::codex_effort(reasoning_mode);
     let reasoning = Some(types::ReasoningConfig {
         effort,
         summary: "auto".to_string(),

@@ -33,6 +33,7 @@ pub async fn retry_stream(
     messages: &[ChatMessage],
     tools: &[serde_json::Value],
     think: bool,
+    reasoning_mode: Option<&str>,
     cancel: CancellationToken,
 ) -> Result<StreamResult, String> {
     let mut last_error = String::new();
@@ -52,6 +53,7 @@ pub async fn retry_stream(
             messages,
             tools,
             think,
+            reasoning_mode,
             cancel.clone(),
         )
         .await

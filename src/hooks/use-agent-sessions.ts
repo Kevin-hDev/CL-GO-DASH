@@ -52,12 +52,13 @@ export function useAgentSessions() {
   }, [refresh]);
 
   const create = useCallback(
-    async (name: string, model: string, provider: string = "ollama", projectId?: string) => {
+    async (name: string, model: string, provider: string = "ollama", projectId?: string, reasoningMode?: string | null) => {
       const session = await invoke<AgentSessionMeta>("create_agent_session", {
         name,
         model,
         provider,
         projectId: projectId ?? null,
+        reasoningMode: reasoningMode ?? null,
       });
       await refresh();
       return session;
@@ -83,5 +84,13 @@ export function useAgentSessions() {
     [refresh],
   );
 
-  return { sessions, loading, refresh, create, rename, remove, updateModel };
+  const updateReasoning = useCallback(
+    async (id: string, reasoningMode: string | null) => {
+      await invoke("update_session_reasoning", { id, reasoningMode });
+      await refresh();
+    },
+    [refresh],
+  );
+
+  return { sessions, loading, refresh, create, rename, remove, updateModel, updateReasoning };
 }
