@@ -632,12 +632,7 @@
     "logout": "Log out",
     "loggedIn": "Connected",
     "loggedOut": "Not connected",
-    "loggingIn": "Connecting…",
-    "effortLabel": "Effort level",
-    "effortLow": "Low",
-    "effortMedium": "Medium",
-    "effortHigh": "High",
-    "effortXhigh": "Very high"
+    "loggingIn": "Connecting…"
   },
   "ollamaSetup": {
     "title": "Ollama Setup",

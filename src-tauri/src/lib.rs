@@ -295,8 +295,6 @@ pub fn run() {
             commands::codex_logout,
             commands::codex_status,
             commands::codex_models,
-            commands::codex_set_effort,
-            commands::codex_get_effort,
             // Forecast
             commands::run_forecast,
             commands::list_forecast_analyses,

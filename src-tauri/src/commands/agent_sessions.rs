@@ -52,7 +52,7 @@ pub async fn create_agent_session(
         }
     }
     if reasoning_mode.is_some() {
-        session_store::update_reasoning(&session.id, reasoning_mode).await?;
+        session_store::update_reasoning(&session.id, reasoning_mode, None).await?;
         if let Ok(updated) = session_store::get(&session.id).await {
             session = updated;
         }
@@ -70,16 +70,19 @@ pub async fn update_session_model(
     id: String,
     model: String,
     provider: String,
+    reasoning_mode: Option<String>,
+    supports_thinking: Option<bool>,
 ) -> Result<(), String> {
-    session_store::update_model(&id, &model, &provider).await
+    session_store::update_model(&id, &model, &provider, reasoning_mode, supports_thinking).await
 }
 
 #[tauri::command]
 pub async fn update_session_reasoning(
     id: String,
     reasoning_mode: Option<String>,
+    supports_thinking: Option<bool>,
 ) -> Result<(), String> {
-    session_store::update_reasoning(&id, reasoning_mode).await
+    session_store::update_reasoning(&id, reasoning_mode, supports_thinking).await
 }
 
 #[tauri::command]

@@ -34,7 +34,7 @@ function isGptOss(model: AvailableModel | null): boolean {
 
 function isGrokMultiAgent(model: AvailableModel | null): boolean {
   const name = modelName(model);
-  return name.includes("multi-agent") || name.includes("4.20-reasoning");
+  return name.includes("reasoning") || name.includes("multi-agent") || name.includes("4.20-reasoning");
 }
 
 export function reasoningModeOptions(model: AvailableModel | null): ReasoningModeOption[] {

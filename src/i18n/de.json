@@ -632,12 +632,7 @@
     "logout": "Abmelden",
     "loggedIn": "Verbunden",
     "loggedOut": "Nicht verbunden",
-    "loggingIn": "Verbindung wird hergestellt…",
-    "effortLabel": "Aufwandsstufe",
-    "effortLow": "Gering",
-    "effortMedium": "Mittel",
-    "effortHigh": "Hoch",
-    "effortXhigh": "Sehr hoch"
+    "loggingIn": "Verbindung wird hergestellt…"
   },
   "ollamaSetup": {
     "title": "Ollama Setup",

@@ -49,7 +49,9 @@ pub async fn post_chat_request(cfg: &RequestConfig<'_>) -> Result<reqwest::Respo
     if let Some(max) = spec.default_max_tokens {
         payload["max_tokens"] = max.into();
     }
-    if cfg.think {
+    if cfg.provider_id == "zai" && cfg.reasoning_mode == Some("off") {
+        payload["thinking"] = serde_json::json!({ "type": "disabled" });
+    } else if cfg.think {
         match cfg.provider_id {
             "deepseek" | "google" | "openrouter" => {
                 if let Some(effort) = crate::services::reasoning::simple_effort(cfg.reasoning_mode)
@@ -70,9 +72,7 @@ pub async fn post_chat_request(cfg: &RequestConfig<'_>) -> Result<reqwest::Respo
                 }
             }
             "zai" => {
-                payload["thinking"] = serde_json::json!({
-                    "type": if cfg.reasoning_mode == Some("off") { "disabled" } else { "enabled" }
-                });
+                payload["thinking"] = serde_json::json!({ "type": "enabled" });
             }
             _ => {}
         }

@@ -145,6 +145,8 @@ describe("useAgentSessions", () => {
       id: "session-1",
       model: "mistral",
       provider: "ollama",
+      reasoningMode: null,
+      supportsThinking: null,
     });
     expect(result.current.sessions[0].model).toBe("mistral");
   });
@@ -168,6 +170,7 @@ describe("useAgentSessions", () => {
     expect(invoke).toHaveBeenCalledWith("update_session_reasoning", {
       id: "session-1",
       reasoningMode: "high",
+      supportsThinking: null,
     });
     expect(result.current.sessions[0].reasoning_mode).toBe("high");
   });

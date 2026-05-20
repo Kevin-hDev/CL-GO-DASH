@@ -632,12 +632,7 @@
     "logout": "Disconnetti",
     "loggedIn": "Connesso",
     "loggedOut": "Non connesso",
-    "loggingIn": "Connessione in corso…",
-    "effortLabel": "Livello di impegno",
-    "effortLow": "Limitato",
-    "effortMedium": "Intermedio",
-    "effortHigh": "Approfondito",
-    "effortXhigh": "Molto alto"
+    "loggingIn": "Connessione in corso…"
   },
   "ollamaSetup": {
     "title": "Configurazione Ollama",

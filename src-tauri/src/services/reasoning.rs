@@ -9,12 +9,80 @@ pub fn sanitize_mode(mode: Option<String>) -> Option<String> {
     })
 }
 
-pub fn default_mode(provider: &str, model: &str) -> Option<String> {
-    match provider {
-        "codex-oauth" => Some("medium".to_string()),
-        "ollama" if model.to_lowercase().contains("gpt-oss") => Some("medium".to_string()),
-        _ => None,
+fn is_gpt_oss(model: &str) -> bool {
+    model.to_lowercase().contains("gpt-oss")
+}
+
+fn is_xai_fixed_reasoning(model: &str) -> bool {
+    let model = model.to_lowercase();
+    model.contains("reasoning") || model.contains("multi-agent") || model.contains("4.20-reasoning")
+}
+
+pub fn supported_modes(
+    provider: &str,
+    model: &str,
+    supports_thinking: bool,
+) -> &'static [&'static str] {
+    if !supports_thinking {
+        return &[];
     }
+    match provider {
+        "codex-oauth" => &["low", "medium", "high", "xhigh"],
+        "ollama" if is_gpt_oss(model) => &["low", "medium", "high"],
+        "ollama" => &["off", "auto"],
+        "openai" => &["off", "low", "medium", "high", "xhigh"],
+        "xai" if is_xai_fixed_reasoning(model) => &["low", "medium", "high", "xhigh"],
+        "xai" => &["off", "low", "medium", "high"],
+        "mistral" => &["off", "high"],
+        "zai" => &["off", "auto"],
+        _ => &["off", "auto"],
+    }
+}
+
+pub fn provider_model_supports_thinking(provider: &str, model: &str) -> bool {
+    match provider {
+        "codex-oauth" => true,
+        "ollama" => is_gpt_oss(model),
+        "openai" => {
+            let model = model.to_lowercase();
+            model.starts_with("o3") || model.starts_with("o4") || model.starts_with("gpt-5")
+        }
+        "deepseek" | "groq" | "google" | "openrouter" | "mistral" | "xai" | "moonshot" | "zai" => {
+            crate::services::llm::tool_capable::supports_thinking(provider, model)
+        }
+        _ => false,
+    }
+}
+
+pub fn normalize_for_model(
+    provider: &str,
+    model: &str,
+    requested: Option<&str>,
+    supports_thinking: bool,
+) -> Option<String> {
+    let modes = supported_modes(provider, model, supports_thinking);
+    if modes.is_empty() {
+        return None;
+    }
+    if let Some(mode) = requested.filter(|mode| modes.contains(mode)) {
+        return Some(mode.to_string());
+    }
+    if modes.contains(&"medium") {
+        return Some("medium".to_string());
+    }
+    if modes.contains(&"off") {
+        return Some("off".to_string());
+    }
+    modes.first().map(|mode| mode.to_string())
+}
+
+pub fn default_mode(provider: &str, model: &str) -> Option<String> {
+    normalize_for_model(
+        provider,
+        model,
+        None,
+        provider_model_supports_thinking(provider, model),
+    )
 }
 
 pub fn enabled(mode: Option<&str>, fallback: bool) -> bool {
@@ -33,7 +101,7 @@ pub fn codex_effort(mode: Option<&str>) -> String {
 }
 
 pub fn ollama_think(model: &str, mode: Option<&str>, fallback: bool) -> Option<OllamaThink> {
-    if model.to_lowercase().contains("gpt-oss") {
+    if is_gpt_oss(model) {
         let effort = match mode {
             Some("low" | "medium" | "high") => mode.unwrap(),
             Some("xhigh") => "high",
@@ -88,5 +156,27 @@ mod tests {
     fn regular_ollama_uses_boolean_thinking() {
         let think = ollama_think("qwen3", Some("off"), true).unwrap();
         assert_eq!(think, OllamaThink::Bool(false));
+    }
+
+    #[test]
+    fn xai_fixed_reasoning_has_no_off() {
+        let modes = supported_modes("xai", "grok-4.20-multi-agent-beta-0309", true);
+        assert_eq!(modes, &["low", "medium", "high", "xhigh"]);
+    }
+
+    #[test]
+    fn xai_multi_agent_is_detected_as_thinking() {
+        assert!(provider_model_supports_thinking(
+            "xai",
+            "grok-4.20-multi-agent-beta-0309"
+        ));
+    }
+
+    #[test]
+    fn unsupported_model_clears_mode() {
+        assert_eq!(
+            normalize_for_model("ollama", "gemma4:latest", Some("auto"), false),
+            None
+        );
     }
 }

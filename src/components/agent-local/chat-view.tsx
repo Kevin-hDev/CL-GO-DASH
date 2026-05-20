@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { MessageList } from "./message-list";
 import { ChatInput } from "./chat-input";
 import { FileDropZone } from "./file-drop-zone";
@@ -18,6 +18,7 @@ import { useSessionFiles } from "@/hooks/use-session-files";
 import { useSubagents } from "@/hooks/use-subagents";
 import { useSubagentSynthesis } from "@/hooks/use-subagent-synthesis";
 import { useChatActions } from "@/hooks/use-chat-actions";
+import { useAvailableModels } from "@/hooks/use-available-models";
 import { PermissionDialog } from "./permission-dialog";
 import { TerminalPanel } from "@/components/terminal/terminal-panel";
 import type { useTerminal } from "@/hooks/use-terminal";
@@ -63,9 +64,17 @@ export function ChatView({
 }: ChatViewProps) {
   const permissions = usePermissionRequests();
   const permMode = usePermissionMode(sessionId);
+  const { groups: availableModels } = useAvailableModels();
+  const selectedModelCaps = useMemo(
+    () => availableModels.get(provider)?.find((entry) => entry.id === model) ?? null,
+    [availableModels, provider, model],
+  );
   const chat = useAgentChat(sessionId, model, provider, (id, toolName, args) =>
     permissions.enqueue({ id, toolName, arguments: args }),
-    undefined, reasoningMode, permMode.mode,
+    selectedModelCaps?.supports_tools,
+    selectedModelCaps?.supports_thinking,
+    reasoningMode,
+    permMode.mode,
   );
   const subagents = useSubagents(isSubagent ? undefined : sessionId);
   const fileDrop = useFileDrop();

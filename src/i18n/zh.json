@@ -632,12 +632,7 @@
     "logout": "退出登录",
     "loggedIn": "已连接",
     "loggedOut": "未连接",
-    "loggingIn": "连接中…",
-    "effortLabel": "推理级别",
-    "effortLow": "轻量",
-    "effortMedium": "标准",
-    "effortHigh": "深入",
-    "effortXhigh": "最高"
+    "loggingIn": "连接中…"
   },
   "ollamaSetup": {
     "title": "Ollama 安装",

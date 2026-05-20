@@ -632,12 +632,7 @@
     "logout": "ログアウト",
     "loggedIn": "接続済み",
     "loggedOut": "未接続",
-    "loggingIn": "接続中…",
-    "effortLabel": "推論レベル",
-    "effortLow": "軽量",
-    "effortMedium": "標準",
-    "effortHigh": "詳細",
-    "effortXhigh": "最大"
+    "loggingIn": "接続中…"
   },
   "ollamaSetup": {
     "title": "Ollama セットアップ",

@@ -1,5 +1,4 @@
-use crate::services::codex_client::request;
-use crate::services::codex_client::types::{CODEX_EFFORT_LEVELS, CODEX_MODELS};
+use crate::services::codex_client::types::CODEX_MODELS;
 use crate::services::codex_oauth::{jwt, login, store};
 use crate::services::llm::types::ModelInfo;
 use tauri::Emitter;
@@ -55,21 +54,4 @@ pub fn codex_models() -> Vec<ModelInfo> {
             is_free: true,
         })
         .collect()
-}
-
-#[tauri::command]
-pub fn codex_set_effort(level: String) -> Result<(), String> {
-    if !CODEX_EFFORT_LEVELS.contains(&level.as_str()) {
-        return Err(format!(
-            "niveau invalide, valeurs possibles : {:?}",
-            CODEX_EFFORT_LEVELS
-        ));
-    }
-    request::set_effort(&level);
-    Ok(())
-}
-
-#[tauri::command]
-pub fn codex_get_effort() -> String {
-    request::get_effort()
 }
