@@ -47,8 +47,8 @@
 }
 
 .ms-dropdown-with-reasoning {
-  width: 480px;
-  max-width: min(480px, calc(100vw - 24px));
+  width: 439px;
+  max-width: min(439px, calc(100vw - 24px));
   flex-direction: row;
   align-items: stretch;
 }
@@ -64,6 +64,7 @@
   min-width: 0;
   flex: 1;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .ms-search {
@@ -95,12 +96,14 @@
 
 .ms-list {
   overflow-y: auto;
+  overflow-x: hidden;
   flex: 1;
+  min-width: 0;
 }
 
 .ms-reasoning-panel {
-  width: 138px;
-  flex: 0 0 138px;
+  width: 97px;
+  flex: 0 0 97px;
   border-left: 1px solid var(--edge);
   padding: 8px;
   background: var(--shell);
@@ -156,6 +159,8 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  min-width: 0;
+  box-sizing: border-box;
   padding: 6px var(--space-md);
   font-size: 11px;
   font-weight: 600;
@@ -182,18 +187,25 @@
 
 .ms-provider-name {
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .ms-provider-count {
   font-size: 10px;
   font-weight: 400;
   color: var(--ink-faint);
+  flex-shrink: 0;
 }
 
 .ms-provider-body {
   display: grid;
   grid-template-rows: 0fr;
   overflow: hidden;
+  min-width: 0;
+  max-width: 100%;
   transition: grid-template-rows 200ms ease;
 }
 
@@ -203,6 +215,9 @@
 
 .ms-provider-body-inner {
   min-height: 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 /* Favoris header */
@@ -220,8 +235,13 @@
 
 /* Model item */
 .ms-item {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) max-content;
   align-items: center;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   padding: 5px var(--space-md);
   font-size: var(--text-xs);
   cursor: pointer;
@@ -245,6 +265,7 @@
 
 .ms-item-name {
   flex: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -254,12 +275,15 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  min-width: max-content;
   flex-shrink: 0;
 }
 
 .ms-hint {
   color: var(--ink-faint);
   font-size: 10px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 /* Star favorite toggle */
