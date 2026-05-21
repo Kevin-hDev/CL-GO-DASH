@@ -10,6 +10,8 @@ vi.mock("@phosphor-icons/react", () => ({
 }));
 vi.mock("@/components/ui/icons", () => ({
   Copy: () => <span />,
+  CaretDown: () => <span />,
+  CaretUp: () => <span />,
   Check: () => <span data-testid="check-icon" />,
 }));
 vi.mock("@tauri-apps/plugin-shell", () => ({ open: vi.fn() }));

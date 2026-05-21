@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState, type ReactNode } from "react";
 import { Spinner } from "@phosphor-icons/react";
-import { Copy, Check } from "@/components/ui/icons";
+import { CaretDown, CaretUp, Copy, Check } from "@/components/ui/icons";
 import { isFileTool } from "@/lib/tool-file-path";
 
 const TOOL_COLORS: Record<string, string> = {
@@ -24,7 +24,7 @@ const RESULT_PREVIEW_TOOLS = new Set([
 ]);
 
 const ROW_STYLE = {
-  display: "flex", alignItems: "baseline", gap: 8,
+  display: "flex", alignItems: "center", gap: 8,
   fontSize: "11px", fontFamily: "var(--font-mono, monospace)", lineHeight: 1.6,
 };
 
@@ -101,16 +101,19 @@ export function ToolItem({
 
   return (
     <div>
-      <div style={ROW_STYLE}>
+      <div className="tb-row" style={ROW_STYLE}>
         {canToggle ? (
           <button className="tb-toggle" onClick={() => setIsOpen(!isOpen)}>
-            <span className="tb-arrow">{isOpen ? "v" : ">"}</span>
+            <span className="tb-arrow tb-tool-arrow" aria-hidden="true">
+              {isOpen ? <CaretUp size={13} weight="bold" /> : <CaretDown size={13} weight="bold" />}
+            </span>
             <span style={{ color: TOOL_COLORS[name] ?? "var(--ink-muted)", fontWeight: 600 }}>{shownName}</span>
           </button>
         ) : (
           <span style={{ color: TOOL_COLORS[name] ?? "var(--ink-muted)", fontWeight: 600, flexShrink: 0, minWidth: 70 }}>{shownName}</span>
         )}
         <span
+          className="tb-item-summary"
           role={clickablePath ? "button" : undefined}
           tabIndex={clickablePath ? 0 : undefined}
           style={{

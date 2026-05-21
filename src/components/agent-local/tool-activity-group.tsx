@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Spinner } from "@phosphor-icons/react";
-import { Check } from "@/components/ui/icons";
+import { CaretDown, CaretUp, Check } from "@/components/ui/icons";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import type { ToolActivityGroup, ToolActivityCounts } from "@/lib/tool-activity-summary";
@@ -64,7 +64,9 @@ function ToolActivityGroupRow({
         aria-label={t("agentLocal.toolActivity.toggleDetails")}
         onClick={() => setIsOpen((open) => !open)}
       >
-        <span className="tb-arrow">{isOpen ? "v" : ">"}</span>
+        <span className="tb-arrow tb-group-arrow" aria-hidden="true">
+          {isOpen ? <CaretUp size={14} weight="bold" /> : <CaretDown size={14} weight="bold" />}
+        </span>
         <span className="tb-group-title">
           {title}
           {group.isPending && (
