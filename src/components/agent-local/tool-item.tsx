@@ -1,7 +1,8 @@
-import { useCallback, useRef, useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Spinner } from "@phosphor-icons/react";
-import { CaretDown, CaretUp, Copy, Check } from "@/components/ui/icons";
+import { CaretDown, CaretUp, Check } from "@/components/ui/icons";
 import { isFileTool } from "@/lib/tool-file-path";
+import { ErrorCross } from "./tool-error-tooltip";
 import { useCollapsiblePresence } from "./use-collapsible-presence";
 
 const TOOL_COLORS: Record<string, string> = {
@@ -29,53 +30,10 @@ const ROW_STYLE = {
   fontSize: "11px", fontFamily: "var(--font-mono, monospace)", lineHeight: 1.6,
 };
 
-const HOVER_DELAY = 700;
-
 function hasPreviewContent(children: ReactNode): boolean {
   if (!children) return false;
   if (Array.isArray(children)) return children.some((c) => !!c);
   return true;
-}
-
-function ErrorCross({ message }: { message?: string }) {
-  const [visible, setVisible] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-
-  const enter = useCallback(() => {
-    clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => setVisible(true), HOVER_DELAY);
-  }, []);
-
-  const leave = useCallback(() => {
-    clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => { setVisible(false); setCopied(false); }, 100);
-  }, []);
-
-  const tooltipEnter = useCallback(() => {
-    clearTimeout(timerRef.current);
-  }, []);
-
-  const copy = useCallback(() => {
-    if (message) void navigator.clipboard.writeText(message).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    });
-  }, [message]);
-
-  return (
-    <span className="tb-error-anchor" onMouseEnter={enter} onMouseLeave={leave}>
-      <span style={{ color: "var(--signal-error)", fontSize: "10px" }}>x</span>
-      {visible && message && (
-        <div className="tb-error-tooltip" onMouseEnter={tooltipEnter} onMouseLeave={leave}>
-          <span className="tb-error-tooltip-text">{message}</span>
-          <button type="button" className="tb-error-tooltip-copy" onClick={copy}>
-            {copied ? <Check size={12} weight="bold" /> : <Copy size={12} />}
-          </button>
-        </div>
-      )}
-    </span>
-  );
 }
 
 export function ToolItem({

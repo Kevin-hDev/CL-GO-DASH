@@ -21,9 +21,7 @@
 }
 
 .tb-error-tooltip {
-  position: absolute;
-  bottom: calc(100% + 2px);
-  right: -8px;
+  position: fixed;
   width: max-content;
   max-width: 360px;
   background: var(--toast-bg);
@@ -34,16 +32,7 @@
   align-items: center;
   gap: 6px;
   animation: tb-tooltip-in 150ms ease-out;
-  z-index: 10;
-}
-
-.tb-error-tooltip::after {
-  content: "";
-  position: absolute;
-  bottom: -6px;
-  left: 0;
-  right: 0;
-  height: 6px;
+  z-index: 10000;
 }
 
 .tb-error-tooltip-text {
@@ -72,8 +61,8 @@
 }
 
 @keyframes tb-tooltip-in {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .tb-command-preview,
