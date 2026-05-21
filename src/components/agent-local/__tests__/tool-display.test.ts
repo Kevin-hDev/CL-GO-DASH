@@ -57,4 +57,12 @@ describe("toolDisplayInfo", () => {
       summary: "npm test",
     });
   });
+
+  it("tronque les commandes bash longues sur une seule ligne", () => {
+    const command = `${"a".repeat(110)}\necho done`;
+    expect(toolDisplayInfo({ name: "bash", summary: command }, undefined, t)).toEqual({
+      label: "bash",
+      summary: `${"a".repeat(96)}...`,
+    });
+  });
 });

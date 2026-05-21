@@ -18,7 +18,10 @@ export function toolDisplayInfo(
   projectPath: string | undefined,
   t: TFunction,
 ): ToolDisplayInfo {
-  if (tool.name === "bash" || tool.name === "web_search" || tool.name === "web_fetch") {
+  if (tool.name === "bash") {
+    return { label: tool.name, summary: compactCommand(tool.summary) };
+  }
+  if (tool.name === "web_search" || tool.name === "web_fetch") {
     return { label: tool.name, summary: tool.summary };
   }
   const labelKey = actionKey(tool.name);
@@ -81,4 +84,12 @@ function changeStats(tool: RenderableTool): Pick<ToolDisplayInfo, "additions" | 
 function countLines(text: string): number {
   if (text.length === 0) return 0;
   return text.replace(/\n$/, "").split("\n").length;
+}
+
+function compactCommand(command: string): string {
+  const firstLine = command.split(/\r?\n/, 1)[0] ?? "";
+  const maxLength = 96;
+  if (command.includes("\n") || command.includes("\r")) return `${firstLine.slice(0, maxLength)}...`;
+  if (firstLine.length > maxLength) return `${firstLine.slice(0, maxLength)}...`;
+  return firstLine;
 }

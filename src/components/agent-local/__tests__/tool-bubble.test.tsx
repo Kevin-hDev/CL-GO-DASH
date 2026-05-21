@@ -94,6 +94,20 @@ describe("ToolBubble", () => {
     expect(container.textContent).toContain("echo hello");
   });
 
+  it("masque la commande bash complète jusqu'au dépliage du tool", () => {
+    const command = `${"a".repeat(110)} && echo done`;
+    const { container } = render(
+      <ToolBubble tools={[{ name: "bash", args: { command }, result: "ok", isError: false }]} />,
+    );
+
+    openGroup(container);
+    expect(container.textContent).toContain(`${"a".repeat(96)}...`);
+    expect(container.textContent).not.toContain(command);
+    openTool(container);
+    expect(container.textContent).toContain(command);
+    expect(container.textContent).toContain("ok");
+  });
+
   it("affiche le spinner du groupe quand un tool est en cours", () => {
     const { getByTestId } = render(
       <ToolBubble tools={[{ name: "bash", args: { command: "sleep 5" } }]} />,

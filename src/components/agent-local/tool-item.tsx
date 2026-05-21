@@ -88,6 +88,7 @@ export function ToolItem({
   const hasPreview = hasPreviewContent(children);
   const hasResult = !!result && !isError && !hasPreview && RESULT_PREVIEW_TOOLS.has(name);
   const canToggle = hasPreview || hasResult;
+  const showCommandPreview = name === "bash" && hasResult;
   const [isOpen, setIsOpen] = useState(false);
   const clickablePath = isFileTool(name) && summary.trim().length > 0 && !!onFilePreview;
   const shownName = displayName ?? name;
@@ -138,6 +139,7 @@ export function ToolItem({
         <div className={`tb-accordion${isOpen ? " tb-open" : ""}`}>
           {isOpen && (
             <div className="tb-accordion-inner">
+              {showCommandPreview && <div className="tb-command-preview">{summary}</div>}
               {hasPreview && children}
               {hasResult && <div className="tb-result-preview">{result}</div>}
             </div>

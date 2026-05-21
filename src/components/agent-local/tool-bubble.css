@@ -241,6 +241,7 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
+.tb-command-preview,
 .tb-result-preview {
   margin-top: 4px;
   padding: 6px 10px;
@@ -254,4 +255,8 @@
   max-height: 240px;
   overflow-y: auto;
   line-height: 1.5;
+}
+
+.tb-command-preview {
+  color: var(--ink);
 }
