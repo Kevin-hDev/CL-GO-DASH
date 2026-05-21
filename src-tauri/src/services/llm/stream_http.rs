@@ -49,45 +49,13 @@ pub async fn post_chat_request(cfg: &RequestConfig<'_>) -> Result<reqwest::Respo
     if let Some(max) = spec.default_max_tokens {
         payload["max_tokens"] = max.into();
     }
-    if cfg.provider_id == "zai" && cfg.reasoning_mode == Some("off") {
-        payload["thinking"] = serde_json::json!({ "type": "disabled" });
-    } else if cfg.provider_id == "openrouter" && cfg.reasoning_mode == Some("off") {
-        payload["reasoning"] = serde_json::json!({ "effort": "none" });
-    } else if cfg.think {
-        match cfg.provider_id {
-            "deepseek" | "google" => {
-                if let Some(effort) = crate::services::reasoning::simple_effort(cfg.reasoning_mode)
-                {
-                    payload["reasoning_effort"] = effort.into();
-                }
-            }
-            "openrouter" => {
-                if cfg.reasoning_mode == Some("auto") {
-                    payload["reasoning"] = serde_json::json!({ "enabled": true });
-                } else if let Some(effort) =
-                    crate::services::reasoning::openrouter_effort(cfg.reasoning_mode)
-                {
-                    payload["reasoning"] = serde_json::json!({ "effort": effort });
-                }
-            }
-            "openai" => {
-                if let Some(effort) = crate::services::reasoning::openai_effort(cfg.reasoning_mode)
-                {
-                    payload["reasoning"] = serde_json::json!({ "effort": effort });
-                }
-            }
-            "xai" | "mistral" => {
-                if let Some(effort) = crate::services::reasoning::simple_effort(cfg.reasoning_mode)
-                {
-                    payload["reasoning_effort"] = effort.into();
-                }
-            }
-            "zai" => {
-                payload["thinking"] = serde_json::json!({ "type": "enabled" });
-            }
-            _ => {}
-        }
-    }
+    super::stream_reasoning::apply(
+        &mut payload,
+        cfg.provider_id,
+        cfg.model,
+        cfg.think,
+        cfg.reasoning_mode,
+    );
     if !cfg.tools.is_empty() {
         payload["tools"] = serde_json::Value::Array(cfg.tools.to_vec());
         payload["tool_choice"] = "auto".into();

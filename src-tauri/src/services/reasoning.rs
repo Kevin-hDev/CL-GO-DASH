@@ -18,6 +18,10 @@ fn is_xai_fixed_reasoning(model: &str) -> bool {
     model.contains("reasoning") || model.contains("multi-agent") || model.contains("4.20-reasoning")
 }
 
+fn lower(model: &str) -> String {
+    model.to_lowercase()
+}
+
 pub fn supported_modes(
     provider: &str,
     model: &str,
@@ -32,9 +36,33 @@ pub fn supported_modes(
         "ollama" => &["off", "auto"],
         "openai" => &["off", "low", "medium", "high", "xhigh"],
         "openrouter" => &["off", "auto", "low", "medium", "high", "xhigh"],
+        "groq" if crate::services::llm::providers::groq::is_gpt_oss_effort(&lower(model)) => {
+            &["low", "medium", "high"]
+        }
+        "groq" if crate::services::llm::providers::groq::is_qwen_switchable(&lower(model)) => {
+            &["off", "auto"]
+        }
+        "groq" => &["auto"],
+        "deepseek" => &["off", "high", "xhigh"],
+        "mistral"
+            if crate::services::llm::providers::mistral::is_native_reasoning(&lower(model)) =>
+        {
+            &["auto"]
+        }
+        "mistral"
+            if crate::services::llm::providers::mistral::is_adjustable_reasoning(&lower(model)) =>
+        {
+            &["off", "high"]
+        }
+        "mistral" => &[],
+        "moonshot"
+            if crate::services::llm::providers::moonshot::is_forced_thinking(&lower(model)) =>
+        {
+            &["auto"]
+        }
+        "moonshot" => &["off", "auto"],
         "xai" if is_xai_fixed_reasoning(model) => &["low", "medium", "high", "xhigh"],
         "xai" => &["off", "low", "medium", "high"],
-        "mistral" => &["off", "high"],
         "zai" => &["off", "auto"],
         _ => &["off", "auto"],
     }
@@ -144,51 +172,5 @@ pub fn openrouter_effort(mode: Option<&str>) -> Option<&'static str> {
         Some("high") => Some("high"),
         Some("xhigh") => Some("xhigh"),
         _ => None,
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn codex_default_is_medium_and_no_off() {
-        assert_eq!(codex_effort(None), "medium");
-        assert_eq!(codex_effort(Some("off")), "medium");
-        assert_eq!(codex_effort(Some("xhigh")), "xhigh");
-    }
-
-    #[test]
-    fn gpt_oss_uses_string_effort() {
-        let think = ollama_think("gpt-oss:20b", Some("low"), false).unwrap();
-        assert_eq!(think, OllamaThink::Level("low".to_string()));
-    }
-
-    #[test]
-    fn regular_ollama_uses_boolean_thinking() {
-        let think = ollama_think("qwen3", Some("off"), true).unwrap();
-        assert_eq!(think, OllamaThink::Bool(false));
-    }
-
-    #[test]
-    fn xai_fixed_reasoning_has_no_off() {
-        let modes = supported_modes("xai", "grok-4.20-multi-agent-beta-0309", true);
-        assert_eq!(modes, &["low", "medium", "high", "xhigh"]);
-    }
-
-    #[test]
-    fn xai_multi_agent_is_detected_as_thinking() {
-        assert!(provider_model_supports_thinking(
-            "xai",
-            "grok-4.20-multi-agent-beta-0309"
-        ));
-    }
-
-    #[test]
-    fn unsupported_model_clears_mode() {
-        assert_eq!(
-            normalize_for_model("ollama", "gemma4:latest", Some("auto"), false),
-            None
-        );
     }
 }

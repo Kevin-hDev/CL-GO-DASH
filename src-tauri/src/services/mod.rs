@@ -27,6 +27,8 @@ pub mod ollama_ps;
 pub mod paths;
 pub mod personality_injection;
 pub mod reasoning;
+#[cfg(test)]
+mod reasoning_tests;
 pub mod scheduler;
 pub mod search;
 pub mod stream_utils;

@@ -32,6 +32,30 @@ function isGptOss(model: AvailableModel | null): boolean {
   return modelName(model).includes("gpt-oss");
 }
 
+function isGroqGptOssEffort(model: AvailableModel | null): boolean {
+  const name = modelName(model);
+  return name.includes("gpt-oss-20b") || name.includes("gpt-oss-120b");
+}
+
+function isGroqQwenSwitchable(model: AvailableModel | null): boolean {
+  return modelName(model).includes("qwen3-32b");
+}
+
+function isMistralNative(model: AvailableModel | null): boolean {
+  const name = modelName(model);
+  return name.startsWith("magistral-small") || name.startsWith("magistral-medium");
+}
+
+function isMistralAdjustable(model: AvailableModel | null): boolean {
+  const name = modelName(model);
+  return name === "mistral-small-latest" || name === "mistral-medium-3-5" || name === "mistral-medium-3.5";
+}
+
+function isMoonshotForced(model: AvailableModel | null): boolean {
+  const name = modelName(model);
+  return name.includes("k2-thinking") || name.includes("thinking-preview");
+}
+
 function isGrokMultiAgent(model: AvailableModel | null): boolean {
   const name = modelName(model);
   return name.includes("reasoning") || name.includes("multi-agent") || name.includes("4.20-reasoning");
@@ -49,12 +73,22 @@ export function reasoningModeOptions(model: AvailableModel | null): ReasoningMod
         : options(["off", "auto"]);
     case "openai":
       return options(["off", "low", "medium", "high", "xhigh"]);
+    case "groq":
+      if (isGroqGptOssEffort(model)) return options(["low", "medium", "high"]);
+      if (isGroqQwenSwitchable(model)) return options(["off", "auto"]);
+      return options(["auto"]);
+    case "deepseek":
+      return options(["off", "high", "xhigh"]);
     case "xai":
       return isGrokMultiAgent(model)
         ? options(["low", "medium", "high", "xhigh"])
         : options(["off", "low", "medium", "high"]);
     case "mistral":
-      return options(["off", "high"]);
+      if (isMistralNative(model)) return options(["auto"]);
+      if (isMistralAdjustable(model)) return options(["off", "high"]);
+      return [];
+    case "moonshot":
+      return isMoonshotForced(model) ? options(["auto"]) : options(["off", "auto"]);
     case "zai":
       return options(["off", "auto"]);
     default:

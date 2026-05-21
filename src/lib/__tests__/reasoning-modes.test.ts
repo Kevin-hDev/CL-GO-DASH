@@ -36,6 +36,21 @@ describe("reasoning modes", () => {
     expect(modes("xai", "grok-4.20-multi-agent-beta-0309")).toEqual(["low", "medium", "high", "xhigh"]);
   });
 
+  it("adapte Groq selon la famille reasoning", () => {
+    expect(modes("groq", "openai/gpt-oss-20b")).toEqual(["low", "medium", "high"]);
+    expect(modes("groq", "qwen/qwen3-32b")).toEqual(["off", "auto"]);
+    expect(modes("groq", "openai/gpt-oss-safeguard-20b")).toEqual(["auto"]);
+  });
+
+  it("adapte DeepSeek, Mistral et Moonshot", () => {
+    expect(modes("deepseek", "deepseek-v4-pro")).toEqual(["off", "high", "xhigh"]);
+    expect(modes("mistral", "mistral-small-latest")).toEqual(["off", "high"]);
+    expect(modes("mistral", "magistral-medium-latest")).toEqual(["auto"]);
+    expect(modes("mistral", "mistral-small-2506")).toEqual([]);
+    expect(modes("moonshot", "kimi-k2.5")).toEqual(["off", "auto"]);
+    expect(modes("moonshot", "kimi-k2-thinking")).toEqual(["auto"]);
+  });
+
   it("affiche OFF/AUTO pour Z.ai quand le modèle supporte le thinking", () => {
     expect(modes("zai", "glm-5")).toEqual(["off", "auto"]);
     expect(modes("zai", "glm-4.6")).toEqual(["off", "auto"]);
