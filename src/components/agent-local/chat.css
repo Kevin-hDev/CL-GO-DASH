@@ -66,23 +66,6 @@
   flex-direction: column;
 }
 
-.chat-textarea {
-  width: 100%;
-  resize: none;
-  background: transparent;
-  padding: var(--space-sm) var(--space-md);
-  font-size: var(--text-sm);
-  font-family: var(--font-sans);
-  color: var(--ink);
-  outline: none;
-  border: none;
-  min-height: 44px;
-}
-
-.chat-textarea::placeholder {
-  color: var(--ink-faint);
-}
-
 /* Ligne 3 : + ... model send */
 .chat-input-row3 {
   display: flex;
