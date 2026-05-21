@@ -43,12 +43,11 @@ pub fn parse_models_list(
                 .or_else(|| m["context_window"].as_u64())
                 .or_else(|| m["max_context_length"].as_u64())
                 .map(|v| v as u32);
+            let supported_parameters = supported_parameters(m);
+            let has_param = |name: &str| supported_parameters.iter().any(|p| p == name);
             // OpenRouter: `supported_parameters` incluant "tools"
             // Mistral: `capabilities.function_calling: true`
-            let supports_tools = m["supported_parameters"]
-                .as_array()
-                .map(|arr| arr.iter().any(|v| v.as_str() == Some("tools")))
-                .unwrap_or(false)
+            let supports_tools = has_param("tools")
                 || m["capabilities"]["function_calling"]
                     .as_bool()
                     .unwrap_or(false);
@@ -69,13 +68,18 @@ pub fn parse_models_list(
                     .unwrap_or(false);
             let is_free = is_price_free(&m["pricing"]["prompt"])
                 && is_price_free(&m["pricing"]["completion"]);
+            let supports_thinking = has_param("reasoning")
+                || has_param("reasoning_effort")
+                || has_param("include_reasoning");
+            let reasoning_modes = reasoning_modes_from_params(provider_id, &supported_parameters);
             Some(ModelInfo {
                 id,
                 owned_by,
                 context_length,
                 supports_tools,
                 supports_vision,
-                supports_thinking: false,
+                supports_thinking,
+                reasoning_modes,
                 is_free,
             })
         })
@@ -98,6 +102,28 @@ pub fn parse_chat_response(body: &serde_json::Value) -> Result<ChatResponse, Llm
     };
 
     Ok(ChatResponse { content, usage })
+}
+
+fn supported_parameters(m: &serde_json::Value) -> Vec<String> {
+    m["supported_parameters"]
+        .as_array()
+        .map(|arr| {
+            arr.iter()
+                .filter_map(|v| v.as_str().map(str::to_string))
+                .take(64)
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+fn reasoning_modes_from_params(provider_id: &str, params: &[String]) -> Vec<String> {
+    if provider_id != "openrouter" || !params.iter().any(|p| p == "reasoning") {
+        return Vec::new();
+    }
+    ["off", "auto", "low", "medium", "high", "xhigh"]
+        .iter()
+        .map(|mode| mode.to_string())
+        .collect()
 }
 
 /// Prix = "0" ou absent → gratuit.

@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct OllamaModel {
     pub name: String,
     pub size: u64,
@@ -59,6 +59,22 @@ pub struct RegistryTag {
     pub context_length: Option<u64>,
 }
 
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum OllamaThink {
+    Bool(bool),
+    Level(String),
+}
+
+impl OllamaThink {
+    pub fn enabled(&self) -> bool {
+        match self {
+            Self::Bool(value) => *value,
+            Self::Level(_) => true,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ChatRequest {
     pub model: String,
@@ -70,7 +86,7 @@ pub struct ChatRequest {
     pub options: Option<ChatOptions>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub keep_alive: Option<String>,
-    pub think: Option<bool>,
+    pub think: Option<OllamaThink>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

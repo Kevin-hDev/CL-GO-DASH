@@ -204,6 +204,13 @@
     "modelEmpty": "Ningún modelo encontrado.",
     "selectModel": "Elegir un modelo",
     "thinkingToggle": "Pensamiento extendido",
+    "reasoningTitle": "Razonamiento",
+    "reasoningOff": "Desactivado",
+    "reasoningAuto": "Activado",
+    "reasoningLow": "Bajo",
+    "reasoningMedium": "Medio",
+    "reasoningHigh": "Alto",
+    "reasoningXhigh": "Muy alto",
     "exportMd": "Descargar como Markdown",
     "search": "Buscar en la conversación",
     "send": "Enviar",
@@ -625,12 +632,7 @@
     "logout": "Cerrar sesión",
     "loggedIn": "Conectado",
     "loggedOut": "No conectado",
-    "loggingIn": "Conectando…",
-    "effortLabel": "Nivel de esfuerzo",
-    "effortLow": "Limitado",
-    "effortMedium": "Intermedio",
-    "effortHigh": "Profundo",
-    "effortXhigh": "Muy alto"
+    "loggingIn": "Conectando…"
   },
   "ollamaSetup": {
     "title": "Configuración de Ollama",

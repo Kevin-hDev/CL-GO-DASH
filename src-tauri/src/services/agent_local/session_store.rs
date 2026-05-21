@@ -66,13 +66,15 @@ pub async fn create_full(
     is_heartbeat: bool,
     project_id: Option<String>,
 ) -> Result<AgentSession, String> {
+    let reasoning_mode = crate::services::reasoning::default_mode(provider, model);
     let session = AgentSession {
         id: Uuid::new_v4().to_string(),
         name: name.to_string(),
         created_at: Utc::now(),
         model: model.to_string(),
         provider: provider.to_string(),
-        thinking_enabled: false,
+        thinking_enabled: crate::services::reasoning::enabled(reasoning_mode.as_deref(), false),
+        reasoning_mode,
         accumulated_tokens: 0,
         messages: Vec::new(),
         is_heartbeat,
@@ -170,11 +172,58 @@ pub async fn rename(id: &str, name: &str) -> Result<(), String> {
     save(&session).await
 }
 
-pub async fn update_model(id: &str, model: &str, provider: &str) -> Result<(), String> {
+pub async fn update_model(
+    id: &str,
+    model: &str,
+    provider: &str,
+    reasoning_mode: Option<String>,
+    supports_thinking: Option<bool>,
+) -> Result<(), String> {
     validate_session_id(id)?;
     let mut session = get(id).await?;
+    let previous_mode = reasoning_mode.or_else(|| session.reasoning_mode.clone());
+    let supports_thinking = supports_thinking.unwrap_or_else(|| {
+        crate::services::reasoning::provider_model_supports_thinking(provider, model)
+    });
     session.model = model.to_string();
     session.provider = provider.to_string();
+    session.reasoning_mode = crate::services::reasoning::normalize_for_model(
+        provider,
+        model,
+        previous_mode.as_deref(),
+        supports_thinking,
+    );
+    session.thinking_enabled =
+        crate::services::reasoning::enabled(session.reasoning_mode.as_deref(), false);
+    save(&session).await
+}
+
+pub async fn update_reasoning(
+    id: &str,
+    reasoning_mode: Option<String>,
+    supports_thinking: Option<bool>,
+) -> Result<(), String> {
+    validate_session_id(id)?;
+    let mut session = get(id).await?;
+    let mode = crate::services::reasoning::sanitize_mode(reasoning_mode);
+    let supports_thinking = supports_thinking.unwrap_or_else(|| {
+        if session.provider == "ollama" && mode.is_some() {
+            true
+        } else {
+            crate::services::reasoning::provider_model_supports_thinking(
+                &session.provider,
+                &session.model,
+            )
+        }
+    });
+    let mode = crate::services::reasoning::normalize_for_model(
+        &session.provider,
+        &session.model,
+        mode.as_deref(),
+        supports_thinking,
+    );
+    session.thinking_enabled = !matches!(mode.as_deref(), None | Some("off"));
+    session.reasoning_mode = mode;
     save(&session).await
 }
 

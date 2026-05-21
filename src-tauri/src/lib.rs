@@ -175,6 +175,7 @@ pub fn run() {
             commands::create_agent_session,
             commands::rename_agent_session,
             commands::update_session_model,
+            commands::update_session_reasoning,
             commands::delete_agent_session,
             commands::export_agent_session_markdown,
             commands::truncate_session_at,
@@ -294,8 +295,6 @@ pub fn run() {
             commands::codex_logout,
             commands::codex_status,
             commands::codex_models,
-            commands::codex_set_effort,
-            commands::codex_get_effort,
             // Forecast
             commands::run_forecast,
             commands::list_forecast_analyses,

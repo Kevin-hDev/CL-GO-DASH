@@ -15,9 +15,10 @@ pub async fn stream_chat(
     messages: &[ChatMessage],
     tools: &[serde_json::Value],
     think: bool,
+    reasoning_mode: Option<&str>,
     cancel: CancellationToken,
 ) -> Result<StreamResult, String> {
-    let resp = request::post_codex_stream(model, messages, tools, think).await?;
+    let resp = request::post_codex_stream(model, messages, tools, think, reasoning_mode).await?;
     consume_sse(on_event, resp, cancel).await
 }
 
@@ -26,9 +27,10 @@ pub async fn collect_chat_silent(
     messages: &[ChatMessage],
     tools: &[serde_json::Value],
     think: bool,
+    reasoning_mode: Option<&str>,
     cancel: CancellationToken,
 ) -> Result<StreamResult, String> {
-    let resp = request::post_codex_stream(model, messages, tools, think).await?;
+    let resp = request::post_codex_stream(model, messages, tools, think, reasoning_mode).await?;
     consume_sse_silent(resp, cancel).await
 }
 

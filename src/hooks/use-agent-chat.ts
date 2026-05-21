@@ -17,6 +17,7 @@ export function useAgentChat(
   onPermissionRequest?: (id: string, toolName: string, args: Record<string, unknown>) => void,
   supportsTools?: boolean,
   supportsThinking?: boolean,
+  reasoningMode?: string | null,
   permissionMode?: string,
 ) {
   const [state, setState] = useState<ChatState>(EMPTY_CHAT_STATE);
@@ -28,9 +29,9 @@ export function useAgentChat(
   const { startStream, stopStream, subscribeToStream, getStreamSnapshot } = useAgentStream();
   // eslint-disable-next-line react-hooks/refs -- callback capture pattern for stable closures
   sessionRef.current = sessionId;
-  const thinkingRef = useRef(supportsThinking);
+  const reasoningModeRef = useRef(reasoningMode);
   // eslint-disable-next-line react-hooks/refs -- callback capture pattern for stable closures
-  thinkingRef.current = supportsThinking;
+  reasoningModeRef.current = reasoningMode;
   // eslint-disable-next-line react-hooks/refs -- callback capture pattern for stable closures
   permissionRequestRef.current = onPermissionRequest;
   const permModeRef = useRef(permissionMode);
@@ -112,14 +113,15 @@ export function useAgentChat(
       model,
       provider,
       llmMsgs,
-      thinkingRef.current ?? false,
+      reasoningModeRef.current !== "off" && !!reasoningModeRef.current,
       { displayMessages: displayMsgs, baseTokenCount: baseTokenCountOverride ?? state.tokenCount },
       workingDir,
       supportsTools,
-      thinkingRef.current,
+      supportsThinking,
+      reasoningModeRef.current,
       permissionMode,
     );
-  }, [model, provider, startStream, state.tokenCount, supportsTools]);
+  }, [model, provider, startStream, state.tokenCount, supportsTools, supportsThinking]);
 
   const sendMessage = useCallback(async (
     text: string,

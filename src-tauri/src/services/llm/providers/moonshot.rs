@@ -3,7 +3,15 @@ pub fn supports_tools(model: &str) -> bool {
 }
 
 pub fn supports_thinking(model: &str) -> bool {
-    model.contains("thinking")
+    is_forced_thinking(model) || is_switchable_thinking(model)
+}
+
+pub fn is_forced_thinking(model: &str) -> bool {
+    model.contains("k2-thinking") || model.contains("thinking-preview")
+}
+
+pub fn is_switchable_thinking(model: &str) -> bool {
+    model.starts_with("kimi-k2.5")
 }
 
 pub fn supports_vision(model: &str) -> bool {
@@ -28,6 +36,7 @@ mod tests {
     fn thinking() {
         assert!(supports_thinking("kimi-k2-thinking"));
         assert!(supports_thinking("kimi-thinking-preview"));
+        assert!(supports_thinking("kimi-k2.5"));
         assert!(!supports_thinking("kimi-k2.6"));
         assert!(!supports_thinking("kimi-latest"));
     }

@@ -18,6 +18,7 @@ pub async fn chat_stream(
     working_dir: Option<String>,
     supports_tools: Option<bool>,
     supports_thinking: Option<bool>,
+    reasoning_mode: Option<String>,
     permission_mode: Option<String>,
     streams: tauri::State<'_, ActiveStreams>,
 ) -> Result<u64, String> {
@@ -63,6 +64,7 @@ pub async fn chat_stream(
             working_dir,
             supports_tools,
             supports_thinking,
+            reasoning_mode,
             permission_mode,
             cancel,
         )

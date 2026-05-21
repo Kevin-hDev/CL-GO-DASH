@@ -1,13 +1,13 @@
 use crate::services::agent_local::ollama_base_url;
 use crate::services::agent_local::types_ollama::{
-    ChatMessage, ChatRequest, StreamResult, ToolCallFunction, ToolCallOllama,
+    ChatMessage, ChatRequest, OllamaThink, StreamResult, ToolCallFunction, ToolCallOllama,
 };
 
 pub fn build_request(
     model: &str,
     messages: &[ChatMessage],
     tools: &[serde_json::Value],
-    think: bool,
+    think: OllamaThink,
 ) -> ChatRequest {
     let keep_alive = crate::services::config::read_config()
         .map(|c| c.advanced.keep_alive)

@@ -66,7 +66,7 @@ pub(crate) fn emit_session_updated(app: &tauri::AppHandle, session_id: &str) {
 pub(crate) async fn sync_session_model(session_id: &str, provider: &str, model: &str) {
     if let Ok(session) = session_store::get(session_id).await {
         if session.provider != provider || session.model != model {
-            let _ = session_store::update_model(session_id, model, provider).await;
+            let _ = session_store::update_model(session_id, model, provider, None, None).await;
         }
     }
 }

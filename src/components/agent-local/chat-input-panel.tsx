@@ -5,13 +5,14 @@ import { ProjectSelector } from "./project-selector";
 import { SubagentAccordion } from "./subagent-accordion";
 import type { DroppedFile } from "@/hooks/use-file-drop";
 import type { PermissionMode } from "@/hooks/use-permission-mode";
+import type { ReasoningMode } from "@/lib/reasoning-modes";
 import type { PermissionDecision, PermissionRequest } from "@/hooks/use-permission-requests";
 import type { Project, SubagentInfo } from "@/types/agent";
 
 interface ChatInputPanelProps {
   model: string;
   provider: string;
-  thinking: boolean;
+  reasoningMode?: string | null;
   files: DroppedFile[];
   contextUsed: number;
   contextMax: number;
@@ -31,7 +32,7 @@ interface ChatInputPanelProps {
   onClearFiles: () => void;
   onAddFiles: (paths: string[]) => void;
   onModelChange: (model: string, provider: string) => void;
-  onToggleThinking: () => void;
+  onReasoningModeChange: (mode: ReasoningMode) => void;
   onProjectSelect: (id: string | null) => void;
   onAddProject: () => void;
   activeSubagents?: SubagentInfo[];
@@ -60,7 +61,7 @@ export function ChatInputPanel(props: ChatInputPanelProps) {
           modelName={props.model}
           providerName={props.provider}
           isStreaming={props.isStreaming}
-          thinkingEnabled={props.thinking}
+          reasoningMode={props.reasoningMode}
           files={props.files}
           contextUsed={props.contextUsed}
           contextMax={props.contextMax}
@@ -73,7 +74,7 @@ export function ChatInputPanel(props: ChatInputPanelProps) {
           onClearFiles={props.onClearFiles}
           onFileImport={() => void importFiles(props.onAddFiles)}
           onModelChange={props.onModelChange}
-          onToggleThinking={props.onToggleThinking}
+          onReasoningModeChange={props.onReasoningModeChange}
         />
         <ProjectSelector
           projects={props.projects}

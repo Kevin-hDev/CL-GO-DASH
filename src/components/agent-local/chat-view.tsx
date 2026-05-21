@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { MessageList } from "./message-list";
 import { ChatInput } from "./chat-input";
 import { FileDropZone } from "./file-drop-zone";
@@ -18,11 +18,13 @@ import { useSessionFiles } from "@/hooks/use-session-files";
 import { useSubagents } from "@/hooks/use-subagents";
 import { useSubagentSynthesis } from "@/hooks/use-subagent-synthesis";
 import { useChatActions } from "@/hooks/use-chat-actions";
+import { useAvailableModels } from "@/hooks/use-available-models";
 import { PermissionDialog } from "./permission-dialog";
 import { TerminalPanel } from "@/components/terminal/terminal-panel";
 import type { useTerminal } from "@/hooks/use-terminal";
 import type { Project } from "@/types/agent";
 import type { FileOperation } from "@/types/file-preview";
+import type { ReasoningMode } from "@/lib/reasoning-modes";
 import { useGitBranch } from "@/hooks/use-git-branch";
 import { ScrollBottomButton } from "./scroll-bottom-button";
 import "./chat.css";
@@ -42,8 +44,8 @@ interface ChatViewProps {
   initialWorkingDir?: string;
   initialSkills?: { name: string; content: string }[];
   initialFiles?: DroppedFile[];
-  thinking: boolean;
-  onToggleThinking: () => void;
+  reasoningMode?: string | null;
+  onReasoningModeChange: (mode: ReasoningMode) => void;
   onInitialMessageSent?: () => void;
   terminalState: ReturnType<typeof useTerminal>;
   onFileOperationsChange?: (operations: FileOperation[]) => void;
@@ -56,15 +58,23 @@ export function ChatView({
   sessionId, model, provider, projects, onAddProject,
   onSessionsRefresh, onApplySwitch, onNewSession, onNewSessionInProject, onAutoRename,
   initialMessage, initialWorkingDir, initialSkills, initialFiles,
-  thinking, onToggleThinking, onInitialMessageSent,
+  reasoningMode, onReasoningModeChange, onInitialMessageSent,
   terminalState, onFileOperationsChange, onFilePreviewPath,
   onOpenSubagent, isSubagent = false,
 }: ChatViewProps) {
   const permissions = usePermissionRequests();
   const permMode = usePermissionMode(sessionId);
+  const { groups: availableModels } = useAvailableModels();
+  const selectedModelCaps = useMemo(
+    () => availableModels.get(provider)?.find((entry) => entry.id === model) ?? null,
+    [availableModels, provider, model],
+  );
   const chat = useAgentChat(sessionId, model, provider, (id, toolName, args) =>
     permissions.enqueue({ id, toolName, arguments: args }),
-    undefined, thinking, permMode.mode,
+    selectedModelCaps?.supports_tools,
+    selectedModelCaps?.supports_thinking,
+    reasoningMode,
+    permMode.mode,
   );
   const subagents = useSubagents(isSubagent ? undefined : sessionId);
   const fileDrop = useFileDrop();
@@ -148,12 +158,12 @@ export function ChatView({
               <PermissionDialog request={permissions.current} onDecide={(id, decision) => void permissions.respond(id, decision)} />
             )}
             <ChatInput
-              modelName={model} providerName={provider} isStreaming={chat.isStreaming} thinkingEnabled={thinking}
+              modelName={model} providerName={provider} isStreaming={chat.isStreaming} reasoningMode={reasoningMode}
               files={fileDrop.files} contextUsed={context.used} contextMax={context.max}
               permissionMode={permMode.mode} onPermissionModeChange={(m) => void permMode.change(m)}
               onRemoveFile={fileDrop.removeFile} onPreviewFile={setPreview} onSend={handleSend}
               onStop={() => void chat.stop()} onClearFiles={fileDrop.clearFiles} onFileImport={handleFileImport}
-              onModelChange={handleModelSelect} onToggleThinking={onToggleThinking} onBuiltInCommand={handleBuiltInCommand}
+              onModelChange={handleModelSelect} onReasoningModeChange={onReasoningModeChange} onBuiltInCommand={handleBuiltInCommand}
             />
             <ChatProjectControls
               projects={projects}

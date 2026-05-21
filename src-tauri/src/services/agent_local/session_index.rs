@@ -75,6 +75,8 @@ pub fn meta_from_session(session: &AgentSession) -> AgentSessionMeta {
         created_at: session.created_at,
         model: session.model.clone(),
         provider: session.provider.clone(),
+        thinking_enabled: session.thinking_enabled,
+        reasoning_mode: session.reasoning_mode.clone(),
         message_count: session.messages.len(),
         is_heartbeat: session.is_heartbeat,
         is_gateway: session.is_gateway,

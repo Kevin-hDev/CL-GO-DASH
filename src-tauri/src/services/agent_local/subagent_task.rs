@@ -123,6 +123,7 @@ async fn run_inner(
         Some(working_dir.to_string_lossy().to_string()),
         None,
         None,
+        None,
         Some("subagent".to_string()),
         cancel.clone(),
     )

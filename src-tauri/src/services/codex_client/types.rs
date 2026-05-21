@@ -9,8 +9,6 @@ pub const CODEX_MODELS: &[(&str, u32)] = &[
     ("gpt-5.4-pro", 258_000),
 ];
 
-pub const CODEX_EFFORT_LEVELS: &[&str] = &["low", "medium", "high", "xhigh"];
-
 #[derive(Serialize)]
 pub struct CodexRequest {
     pub model: String,

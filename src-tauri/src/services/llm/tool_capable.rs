@@ -2,7 +2,7 @@
 //!
 //! Patterns hardcodés pour les providers dont l'API n'expose pas les capabilities.
 //! Ollama : détection dynamique via `/api/show` (ne pas utiliser ici).
-//! OpenRouter : permissif (`true`), l'UI filtre via le flag API `/models`.
+//! OpenRouter : capacités lues depuis `/models`, pas depuis des patterns de nom.
 
 fn strip_org_prefix(model_id: &str) -> &str {
     model_id
@@ -67,19 +67,12 @@ pub fn supports_tools(provider_id: &str, model_id: &str) -> bool {
 pub fn supports_thinking(provider_id: &str, model_id: &str) -> bool {
     let model = strip_org_prefix(model_id).to_lowercase();
     match provider_id {
-        "deepseek" => model.contains("reasoner") || model.contains("r1"),
-        "groq" => model.contains("r1") || model.contains("qwq"),
+        "deepseek" => super::providers::deepseek::supports_thinking(&model),
+        "groq" => super::providers::groq::supports_thinking(&model),
         "openai" => model.starts_with("o3") || model.starts_with("o4"),
         "google" => model.contains("thinking"),
-        "openrouter" => {
-            model.contains("r1")
-                || model.contains("qwq")
-                || model.contains("thinking")
-                || model.contains("reasoner")
-                || model.starts_with("o3")
-                || model.starts_with("o4")
-        }
-        "mistral" => model.contains("thinking"),
+        "openrouter" => false,
+        "mistral" => super::providers::mistral::supports_thinking(&model),
         "xai" => super::providers::xai::supports_thinking(&model),
         "moonshot" => super::providers::moonshot::supports_thinking(&model),
         "zai" => super::providers::zai::supports_thinking(&model),

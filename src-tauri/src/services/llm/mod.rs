@@ -11,13 +11,18 @@ pub mod model_registry;
 pub mod openai_compat;
 mod openai_compat_models;
 mod openai_compat_parsing;
-mod providers;
+#[cfg(test)]
+mod openai_compat_parsing_tests;
+pub(crate) mod providers;
 pub mod quota;
 pub mod registry_search;
 mod retry;
 pub mod stream;
 pub mod stream_convert;
 mod stream_http;
+mod stream_reasoning;
+#[cfg(test)]
+mod stream_reasoning_tests;
 mod stream_silent;
 mod stream_sse;
 mod stream_tools;

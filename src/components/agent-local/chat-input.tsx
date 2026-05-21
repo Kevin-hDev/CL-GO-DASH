@@ -13,6 +13,7 @@ import { ContextProgress } from "./context-progress";
 import { PermissionModeSelector } from "./permission-mode-selector";
 import type { DroppedFile } from "@/hooks/use-file-drop";
 import type { PermissionMode } from "@/hooks/use-permission-mode";
+import type { ReasoningMode } from "@/lib/reasoning-modes";
 import "./chat.css";
 
 const K_UP = "ArrowUp";
@@ -28,7 +29,7 @@ interface ChatInputProps {
   modelName: string;
   providerName: string;
   isStreaming: boolean;
-  thinkingEnabled: boolean;
+  reasoningMode?: string | null;
   files?: DroppedFile[];
   contextUsed: number;
   contextMax: number;
@@ -38,7 +39,7 @@ interface ChatInputProps {
   onStop: () => void;
   onFileImport: () => void;
   onModelChange: (model: string, provider: string) => void;
-  onToggleThinking: () => void;
+  onReasoningModeChange: (mode: ReasoningMode) => void;
   onRemoveFile?: (index: number) => void;
   onPreviewFile?: (file: DroppedFile) => void;
   onClearFiles?: () => void;
@@ -46,10 +47,10 @@ interface ChatInputProps {
 }
 
 export function ChatInput({
-  modelName, providerName, isStreaming, thinkingEnabled, files,
+  modelName, providerName, isStreaming, reasoningMode, files,
   contextUsed, contextMax,
   permissionMode, onPermissionModeChange,
-  onSend, onStop, onFileImport, onModelChange, onToggleThinking,
+  onSend, onStop, onFileImport, onModelChange, onReasoningModeChange,
   onRemoveFile, onPreviewFile, onClearFiles,
 }: ChatInputProps) {
   const { t } = useTranslation();
@@ -160,8 +161,8 @@ export function ChatInput({
           selectedModel={modelName}
           selectedProvider={providerName}
           onSelect={onModelChange}
-          thinkingEnabled={thinkingEnabled}
-          onToggleThinking={onToggleThinking}
+          reasoningMode={reasoningMode}
+          onReasoningModeChange={onReasoningModeChange}
         />
         <div className="chat-input-spacer" />
         <SendStopButton state={buttonState} onSend={handleSend} onStop={onStop} />

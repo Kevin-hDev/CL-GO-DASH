@@ -164,6 +164,7 @@ pub(crate) async fn run_stream_task(
     working_dir: Option<String>,
     supports_tools_hint: Option<bool>,
     supports_thinking_hint: Option<bool>,
+    reasoning_mode: Option<String>,
     permission_mode_override: Option<String>,
     cancel: CancellationToken,
 ) -> Result<Vec<ChatMessage>, String> {
@@ -259,12 +260,27 @@ pub(crate) async fn run_stream_task(
         );
         append_git_section(&mut msgs, &snap);
 
+        let model_supports_thinking = supports_thinking_hint.unwrap_or_else(|| {
+            crate::services::reasoning::provider_model_supports_thinking("ollama", &model)
+        });
+        let effective_reasoning_mode = crate::services::reasoning::normalize_for_model(
+            "ollama",
+            &model,
+            reasoning_mode.as_deref(),
+            model_supports_thinking,
+        );
+        let ollama_think = crate::services::reasoning::ollama_think(
+            &model,
+            effective_reasoning_mode.as_deref(),
+            think && model_supports_thinking,
+        )
+        .unwrap_or(crate::services::agent_local::types_ollama::OllamaThink::Bool(false));
         agent_loop::run_agent_loop(
             &on_event,
             &mut msgs,
             &model,
             final_tools,
-            think,
+            ollama_think,
             working_dir,
             session_id.clone(),
             cancel,
@@ -286,10 +302,11 @@ pub(crate) async fn run_stream_task(
                 || tool_capable::supports_tools(&provider, &model)
         });
         let model_supports_thinking = supports_thinking_hint.unwrap_or_else(|| {
-            registry_caps
-                .as_ref()
-                .map(|c| c.supports_thinking)
-                .unwrap_or(false)
+            provider == "codex-oauth"
+                || registry_caps
+                    .as_ref()
+                    .map(|c| c.supports_thinking)
+                    .unwrap_or(false)
                 || tool_capable::supports_thinking(&provider, &model)
         });
 
@@ -351,7 +368,15 @@ pub(crate) async fn run_stream_task(
             &response_language,
         );
         append_git_section(&mut msgs, &snap);
-        let think_active = think && model_supports_thinking;
+        let effective_reasoning_mode = crate::services::reasoning::normalize_for_model(
+            &provider,
+            &model,
+            reasoning_mode.as_deref(),
+            model_supports_thinking,
+        );
+        let think_active =
+            crate::services::reasoning::enabled(effective_reasoning_mode.as_deref(), think)
+                && model_supports_thinking;
         llm::agent_loop::run_agent_loop(
             &on_event,
             &provider,
@@ -359,6 +384,7 @@ pub(crate) async fn run_stream_task(
             &mut msgs,
             &openai_tools,
             think_active,
+            effective_reasoning_mode.as_deref(),
             working_dir,
             session_id.clone(),
             cancel,

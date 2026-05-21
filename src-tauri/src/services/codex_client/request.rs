@@ -1,29 +1,10 @@
-use std::sync::Mutex;
 use std::time::Duration;
 
 use super::convert;
-use super::types::{self, CodexRequest, CODEX_API_BASE};
+use super::types::{CodexRequest, ReasoningConfig, CODEX_API_BASE};
 use crate::services::agent_local::types_ollama::ChatMessage;
 use crate::services::codex_oauth::store::CodexTokens;
 use crate::services::codex_oauth::token;
-
-static EFFORT: Mutex<String> = Mutex::new(String::new());
-
-pub fn set_effort(level: &str) {
-    if types::CODEX_EFFORT_LEVELS.contains(&level) {
-        if let Ok(mut val) = EFFORT.lock() {
-            *val = level.to_string();
-        }
-    }
-}
-
-pub fn get_effort() -> String {
-    EFFORT
-        .lock()
-        .ok()
-        .and_then(|v| if v.is_empty() { None } else { Some(v.clone()) })
-        .unwrap_or_else(|| "medium".to_string())
-}
 
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(180);
 
@@ -32,9 +13,10 @@ pub async fn post_codex_stream(
     messages: &[ChatMessage],
     tools: &[serde_json::Value],
     think: bool,
+    reasoning_mode: Option<&str>,
 ) -> Result<reqwest::Response, String> {
     let creds = token::ensure_valid().await?;
-    send_request(&creds, model, messages, tools, think).await
+    send_request(&creds, model, messages, tools, think, reasoning_mode).await
 }
 
 async fn send_request(
@@ -43,12 +25,13 @@ async fn send_request(
     messages: &[ChatMessage],
     tools: &[serde_json::Value],
     _think: bool,
+    reasoning_mode: Option<&str>,
 ) -> Result<reqwest::Response, String> {
     let (instructions, input) = convert::convert_messages(messages);
     let converted_tools = convert::convert_tools_to_responses_api(tools);
 
-    let effort = get_effort();
-    let reasoning = Some(types::ReasoningConfig {
+    let effort = crate::services::reasoning::codex_effort(reasoning_mode);
+    let reasoning = Some(ReasoningConfig {
         effort,
         summary: "auto".to_string(),
     });

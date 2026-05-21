@@ -204,6 +204,13 @@
     "modelEmpty": "Kein passendes Modell.",
     "selectModel": "Modell wählen",
     "thinkingToggle": "Erweitertes Denken",
+    "reasoningTitle": "Denken",
+    "reasoningOff": "Aus",
+    "reasoningAuto": "Ein",
+    "reasoningLow": "Niedrig",
+    "reasoningMedium": "Mittel",
+    "reasoningHigh": "Hoch",
+    "reasoningXhigh": "Sehr hoch",
     "exportMd": "Als Markdown herunterladen",
     "search": "Im Gespräch suchen",
     "send": "Senden",
@@ -625,12 +632,7 @@
     "logout": "Abmelden",
     "loggedIn": "Verbunden",
     "loggedOut": "Nicht verbunden",
-    "loggingIn": "Verbindung wird hergestellt…",
-    "effortLabel": "Aufwandsstufe",
-    "effortLow": "Gering",
-    "effortMedium": "Mittel",
-    "effortHigh": "Hoch",
-    "effortXhigh": "Sehr hoch"
+    "loggingIn": "Verbindung wird hergestellt…"
   },
   "ollamaSetup": {
     "title": "Ollama Setup",

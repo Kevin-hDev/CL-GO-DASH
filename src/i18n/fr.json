@@ -205,6 +205,13 @@
     "modelEmpty": "Aucun modèle ne correspond.",
     "selectModel": "Choisir un modèle",
     "thinkingToggle": "Réflexion étendue",
+    "reasoningTitle": "Réflexion",
+    "reasoningOff": "Désactivée",
+    "reasoningAuto": "Activée",
+    "reasoningLow": "Limitée",
+    "reasoningMedium": "Moyenne",
+    "reasoningHigh": "Forte",
+    "reasoningXhigh": "Très forte",
     "send": "Envoyer",
     "cancel": "Annuler",
     "compression": "Compression",
@@ -625,12 +632,7 @@
     "logout": "Se déconnecter",
     "loggedIn": "Connecté",
     "loggedOut": "Non connecté",
-    "loggingIn": "Connexion en cours…",
-    "effortLabel": "Niveau d'effort",
-    "effortLow": "Limité",
-    "effortMedium": "Intermédiaire",
-    "effortHigh": "Approfondi",
-    "effortXhigh": "Très élevé"
+    "loggingIn": "Connexion en cours…"
   },
   "ollamaSetup": {
     "title": "Configuration d'Ollama",

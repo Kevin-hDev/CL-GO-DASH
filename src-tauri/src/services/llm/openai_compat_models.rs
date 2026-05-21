@@ -103,9 +103,10 @@ pub(super) fn static_model_infos(provider_id: &str) -> Option<Vec<ModelInfo>> {
                 id: m.id.to_string(),
                 owned_by: None,
                 context_length: Some(m.ctx),
-                supports_tools: false,
-                supports_vision: false,
-                supports_thinking: false,
+                supports_tools: super::tool_capable::supports_tools(provider_id, m.id),
+                supports_vision: super::tool_capable::supports_vision(provider_id, m.id),
+                supports_thinking: super::tool_capable::supports_thinking(provider_id, m.id),
+                reasoning_modes: Vec::new(),
                 is_free: false,
             })
             .collect()
@@ -125,5 +126,32 @@ fn static_models(provider_id: &str) -> Option<&'static [StaticModel]> {
         "zai" => Some(ZAI_MODELS),
         "xai" => Some(XAI_MODELS),
         _ => None,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn xai_static_models_expose_reasoning_capabilities() {
+        let models = static_model_infos("xai").unwrap();
+        let grok_mini = models.iter().find(|m| m.id == "grok-3-mini").unwrap();
+        let grok_plain = models.iter().find(|m| m.id == "grok-4").unwrap();
+
+        assert!(grok_mini.supports_thinking);
+        assert!(!grok_plain.supports_thinking);
+    }
+
+    #[test]
+    fn zai_static_models_expose_reasoning_capabilities() {
+        let models = static_model_infos("zai").unwrap();
+        let glm_5 = models.iter().find(|m| m.id == "glm-5").unwrap();
+        let glm_46 = models.iter().find(|m| m.id == "glm-4.6").unwrap();
+        let glm_flash = models.iter().find(|m| m.id == "glm-4.5-flash").unwrap();
+
+        assert!(glm_5.supports_thinking);
+        assert!(glm_46.supports_thinking);
+        assert!(glm_flash.supports_thinking);
     }
 }

@@ -15,6 +15,11 @@ import { useAgentLocalControlledTerminal } from "@/hooks/use-agent-local-control
 import { useArrowNavigation } from "@/hooks/use-arrow-navigation";
 import type { FileOperation } from "@/types/file-preview";
 import type { AgentLocalNavState, DeepPartial } from "@/types/navigation";
+import {
+  normalizeReasoningMode,
+  reasoningModeOptions,
+  type ReasoningMode,
+} from "@/lib/reasoning-modes";
 
 interface UseAgentLocalTabOpts {
   navState: AgentLocalNavState;
@@ -24,7 +29,7 @@ interface UseAgentLocalTabOpts {
 }
 
 export function useAgentLocalTab({ navState, onSessionChange, onNavChange, listFocused }: UseAgentLocalTabOpts) {
-  const { sessions, refresh, create, rename, remove, updateModel } = useAgentSessions();
+  const { sessions, refresh, create, rename, remove, updateModel, updateReasoning } = useAgentSessions();
   const tabState = useAgentTabs();
   const projectsHook = useProjects();
 
@@ -40,14 +45,34 @@ export function useAgentLocalTab({ navState, onSessionChange, onNavChange, listF
   const terminalState = useTerminal(terminalGroupKey, terminalCwd, validGroupKeys);
   const { model: defaultModel, provider: defaultProvider } = useDefaultModel();
   const [welcomeModel, setWelcomeModel] = useState<{ model: string; provider: string } | null>(null);
-  const [thinking, setThinking] = useState(false);
+  const [welcomeReasoningMode, setWelcomeReasoningMode] = useState<string | null>(null);
   const [fileOperations, setFileOperations] = useState<FileOperation[]>([]);
 
   const { groups: availableModels } = useAvailableModels();
 
+  const normalizeForSelectedModel = useCallback(
+    (nextModel: string, nextProvider: string, currentMode: string | null | undefined) => {
+      const entry = availableModels.get(nextProvider)?.find((m) => m.id === nextModel) ?? null;
+      const options = reasoningModeOptions(entry);
+      return {
+        mode: normalizeReasoningMode(currentMode, options),
+        supportsThinking: entry?.supports_thinking ?? false,
+      };
+    },
+    [availableModels],
+  );
+
   const currentDefault = welcomeModel ?? { model: defaultModel, provider: defaultProvider };
   const model = activeSession?.model ?? currentDefault.model;
   const provider = activeSession?.provider ?? currentDefault.provider;
+  const reasoningMode = activeSession
+    ? activeSession.reasoning_mode ?? (activeSession.thinking_enabled ? "auto" : null)
+    : welcomeReasoningMode;
+  const welcomeReasoning = normalizeForSelectedModel(
+    currentDefault.model,
+    currentDefault.provider,
+    welcomeReasoningMode,
+  );
   const filePreviewState = useFilePreview(tabState.activeSessionId ?? null, fileOperations);
 
   useEffect(() => {
@@ -75,9 +100,34 @@ export function useAgentLocalTab({ navState, onSessionChange, onNavChange, listF
     defaultProvider,
     welcomeModel,
     setWelcomeModel,
+    welcomeReasoningMode,
+    welcomeSupportsThinking: welcomeReasoning.supportsThinking,
     projectsHook,
     onSessionChange,
   });
+
+  const setReasoningMode = useCallback((mode: ReasoningMode) => {
+    const currentSupportsThinking = normalizeForSelectedModel(model, provider, mode).supportsThinking;
+    if (tabState.activeSessionId) {
+      void updateReasoning(tabState.activeSessionId, mode, currentSupportsThinking);
+      return;
+    }
+    setWelcomeReasoningMode(mode);
+  }, [model, provider, normalizeForSelectedModel, tabState.activeSessionId, updateReasoning]);
+
+  const updateModelWithReasoning = useCallback(
+    async (id: string, nextModel: string, nextProvider: string) => {
+      const nextReasoning = normalizeForSelectedModel(nextModel, nextProvider, reasoningMode);
+      await updateModel(
+        id,
+        nextModel,
+        nextProvider,
+        nextReasoning.mode,
+        nextReasoning.supportsThinking,
+      );
+    },
+    [normalizeForSelectedModel, reasoningMode, updateModel],
+  );
 
   const applySessionSelection = useCallback(async (id: string) => {
     const existingIdx = tabState.tabs.findIndex((tab) => tab.session_id.localeCompare(id) === 0);
@@ -151,11 +201,11 @@ export function useAgentLocalTab({ navState, onSessionChange, onNavChange, listF
   }, [terminalState, projectsHook]);
 
   return {
-    sessions, refresh, rename, remove, updateModel,
+    sessions, refresh, rename, remove, updateModel: updateModelWithReasoning,
     tabState, projectsHook, terminal, activeSession,
     model, provider, currentDefault, activeProject,
     filePreview, fileOperations, setFileOperations,
-    thinking, setThinking, welcomeModel, setWelcomeModel,
+    reasoningMode, setReasoningMode, welcomeModel, setWelcomeModel,
     sessionActions, handleSelectById, handleDeleteProject,
   };
 }

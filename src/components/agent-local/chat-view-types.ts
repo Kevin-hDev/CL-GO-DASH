@@ -2,6 +2,7 @@ import type { DroppedFile } from "@/hooks/use-file-drop";
 import type { useTerminal } from "@/hooks/use-terminal";
 import type { Project } from "@/types/agent";
 import type { FileOperation } from "@/types/file-preview";
+import type { ReasoningMode } from "@/lib/reasoning-modes";
 
 export interface ChatViewProps {
   sessionId: string;
@@ -17,8 +18,8 @@ export interface ChatViewProps {
   initialWorkingDir?: string;
   initialSkills?: { name: string; content: string }[];
   initialFiles?: DroppedFile[];
-  thinking: boolean;
-  onToggleThinking: () => void;
+  reasoningMode?: string | null;
+  onReasoningModeChange: (mode: ReasoningMode) => void;
   onInitialMessageSent?: () => void;
   terminalState: ReturnType<typeof useTerminal>;
   onFileOperationsChange?: (operations: FileOperation[]) => void;

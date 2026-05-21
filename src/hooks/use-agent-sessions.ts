@@ -52,12 +52,21 @@ export function useAgentSessions() {
   }, [refresh]);
 
   const create = useCallback(
-    async (name: string, model: string, provider: string = "ollama", projectId?: string) => {
+    async (
+      name: string,
+      model: string,
+      provider: string = "ollama",
+      projectId?: string,
+      reasoningMode?: string | null,
+      supportsThinking?: boolean,
+    ) => {
       const session = await invoke<AgentSessionMeta>("create_agent_session", {
         name,
         model,
         provider,
         projectId: projectId ?? null,
+        reasoningMode: reasoningMode ?? null,
+        supportsThinking: supportsThinking ?? null,
       });
       await refresh();
       return session;
@@ -76,12 +85,36 @@ export function useAgentSessions() {
   }, [refresh]);
 
   const updateModel = useCallback(
-    async (id: string, model: string, provider: string = "ollama") => {
-      await invoke("update_session_model", { id, model, provider });
+    async (
+      id: string,
+      model: string,
+      provider: string = "ollama",
+      reasoningMode?: string | null,
+      supportsThinking?: boolean,
+    ) => {
+      await invoke("update_session_model", {
+        id,
+        model,
+        provider,
+        reasoningMode: reasoningMode ?? null,
+        supportsThinking: supportsThinking ?? null,
+      });
       await refresh();
     },
     [refresh],
   );
 
-  return { sessions, loading, refresh, create, rename, remove, updateModel };
+  const updateReasoning = useCallback(
+    async (id: string, reasoningMode: string | null, supportsThinking?: boolean) => {
+      await invoke("update_session_reasoning", {
+        id,
+        reasoningMode,
+        supportsThinking: supportsThinking ?? null,
+      });
+      await refresh();
+    },
+    [refresh],
+  );
+
+  return { sessions, loading, refresh, create, rename, remove, updateModel, updateReasoning };
 }

@@ -8,6 +8,7 @@ pub struct RequestConfig<'a> {
     pub messages: &'a [ChatMessage],
     pub tools: &'a [serde_json::Value],
     pub think: bool,
+    pub reasoning_mode: Option<&'a str>,
 }
 
 #[derive(Debug)]
@@ -48,17 +49,13 @@ pub async fn post_chat_request(cfg: &RequestConfig<'_>) -> Result<reqwest::Respo
     if let Some(max) = spec.default_max_tokens {
         payload["max_tokens"] = max.into();
     }
-    if cfg.think {
-        match cfg.provider_id {
-            "deepseek" | "google" | "openrouter" | "zai" => {
-                payload["reasoning_effort"] = "high".into();
-            }
-            "openai" => {
-                payload["reasoning"] = serde_json::json!({"effort": "high"});
-            }
-            _ => {}
-        }
-    }
+    super::stream_reasoning::apply(
+        &mut payload,
+        cfg.provider_id,
+        cfg.model,
+        cfg.think,
+        cfg.reasoning_mode,
+    );
     if !cfg.tools.is_empty() {
         payload["tools"] = serde_json::Value::Array(cfg.tools.to_vec());
         payload["tool_choice"] = "auto".into();

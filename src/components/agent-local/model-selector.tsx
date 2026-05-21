@@ -9,6 +9,11 @@ import {
   type AvailableModel,
 } from "@/hooks/use-available-models";
 import { useFavoriteModels } from "@/hooks/use-favorite-models";
+import {
+  normalizeReasoningMode,
+  reasoningModeOptions,
+  type ReasoningMode,
+} from "@/lib/reasoning-modes";
 import { ModelSelectorList } from "./model-selector-list";
 import "./model-selector.css";
 
@@ -16,16 +21,16 @@ interface ModelSelectorProps {
   selectedModel: string;
   selectedProvider: string;
   onSelect: (model: string, provider: string) => void;
-  thinkingEnabled: boolean;
-  onToggleThinking: () => void;
+  reasoningMode?: string | null;
+  onReasoningModeChange: (mode: ReasoningMode) => void;
 }
 
 export function ModelSelector({
   selectedModel,
   selectedProvider,
   onSelect,
-  thinkingEnabled,
-  onToggleThinking,
+  reasoningMode,
+  onReasoningModeChange,
 }: ModelSelectorProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -42,7 +47,10 @@ export function ModelSelector({
     return list?.find((m) => m.id === selectedModel) ?? null;
   }, [groups, selectedProvider, selectedModel]);
 
-  const showThinkingToggle = selectedEntry?.supports_thinking ?? false;
+  const modeOptions = useMemo(() => reasoningModeOptions(selectedEntry), [selectedEntry]);
+  const selectedReasoningMode = normalizeReasoningMode(reasoningMode, modeOptions);
+  const selectedReasoningLabel = modeOptions.find((option) => option.mode === selectedReasoningMode)?.labelKey;
+  const showReasoningModes = modeOptions.length > 0;
 
   const filteredGroups = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -77,57 +85,61 @@ export function ModelSelector({
         className={`ms-trigger${selectedModel ? "" : " ms-trigger-empty"}`}
       >
         {selectedModel || t("agentLocal.selectModel")}
-        {thinkingEnabled && showThinkingToggle && (
-          <span style={{ marginLeft: 4, color: "var(--select-text)" }}>{t("agentLocal.thinkingToggle")}</span>
+        {selectedReasoningLabel && selectedReasoningMode !== "off" && (
+          <span className="ms-trigger-reasoning">{t(selectedReasoningLabel)}</span>
         )}
       </button>
       {open && (
-        <div className="ms-dropdown">
-          <div className="ms-search">
-            <MagnifyingGlass size={14} className="ms-search-icon" />
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={(event) => {
-                if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
-                event.preventDefault();
-                focusDropdownList(event.key === "ArrowDown" ? 1 : -1);
-              }}
-              placeholder={t("agentLocal.modelSearch")}
-              className="ms-search-input"
-              autoFocus
-            />
-          </div>
-
-          {showThinkingToggle && (
-            <div className="ms-thinking" role="button" tabIndex={0} onClick={onToggleThinking} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onToggleThinking(); }}>
-              <span>{t("agentLocal.thinkingToggle")}</span>
-              <span
-                style={{
-                  color: thinkingEnabled ? "var(--pulse)" : "var(--ink-faint)",
+        <div className={`ms-dropdown${showReasoningModes ? " ms-dropdown-with-reasoning" : ""}`}>
+          <div className="ms-main">
+            <div className="ms-search">
+              <MagnifyingGlass size={14} className="ms-search-icon" />
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+                  event.preventDefault();
+                  focusDropdownList(event.key === "ArrowDown" ? 1 : -1);
                 }}
-              >
-                {thinkingEnabled ? "ON" : "OFF"}
-              </span>
+                placeholder={t("agentLocal.modelSearch")}
+                className="ms-search-input"
+                autoFocus
+              />
             </div>
-          )}
 
-          <div className="ms-list">
-            <ModelSelectorList
-              groups={filteredGroups}
-              favorites={favorites}
-              isFavorite={isFavorite}
-              onToggleFavorite={(p, m) => void toggleFav(p, m)}
-              selectedModel={selectedModel}
-              selectedProvider={selectedProvider}
-              onSelect={(model, provider) => {
-                onSelect(model, provider);
-                setOpen(false);
-                setQuery("");
-              }}
-            />
+            <div className="ms-list">
+              <ModelSelectorList
+                groups={filteredGroups}
+                favorites={favorites}
+                isFavorite={isFavorite}
+                onToggleFavorite={(p, m) => void toggleFav(p, m)}
+                selectedModel={selectedModel}
+                selectedProvider={selectedProvider}
+                onSelect={(model, provider) => {
+                  onSelect(model, provider);
+                  setOpen(false);
+                  setQuery("");
+                }}
+              />
+            </div>
           </div>
+          {showReasoningModes && (
+            <aside className="ms-reasoning-panel" aria-label={t("agentLocal.reasoningTitle")}>
+              <div className="ms-reasoning-title">{t("agentLocal.reasoningTitle")}</div>
+              {modeOptions.map((option) => (
+                <button
+                  key={option.mode}
+                  type="button"
+                  className={`ms-reasoning-option${selectedReasoningMode === option.mode ? " ms-reasoning-option-active" : ""}`}
+                  onClick={() => onReasoningModeChange(option.mode)}
+                >
+                  {t(option.labelKey)}
+                </button>
+              ))}
+            </aside>
+          )}
         </div>
       )}
     </div>

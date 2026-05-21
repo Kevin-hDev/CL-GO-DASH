@@ -204,6 +204,13 @@
     "modelEmpty": "一致するモデルがありません。",
     "selectModel": "モデルを選択",
     "thinkingToggle": "拡張思考",
+    "reasoningTitle": "推論",
+    "reasoningOff": "オフ",
+    "reasoningAuto": "オン",
+    "reasoningLow": "低",
+    "reasoningMedium": "中",
+    "reasoningHigh": "高",
+    "reasoningXhigh": "最高",
     "exportMd": "Markdown としてダウンロード",
     "search": "会話内を検索",
     "send": "送信",
@@ -625,12 +632,7 @@
     "logout": "ログアウト",
     "loggedIn": "接続済み",
     "loggedOut": "未接続",
-    "loggingIn": "接続中…",
-    "effortLabel": "推論レベル",
-    "effortLow": "軽量",
-    "effortMedium": "標準",
-    "effortHigh": "詳細",
-    "effortXhigh": "最大"
+    "loggingIn": "接続中…"
   },
   "ollamaSetup": {
     "title": "Ollama セットアップ",
