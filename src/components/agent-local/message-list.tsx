@@ -1,15 +1,12 @@
 import { useRef, memo } from "react";
 import { UserMessage } from "./user-message";
 import { AssistantMessage } from "./assistant-message";
-import { ToolBubble, SavedToolBubble } from "./tool-bubble";
-import { ThinkingSection } from "./thinking-section";
+import { SavedToolTimeline, StreamToolTimeline } from "./message-tool-timeline";
 import { ErrorBubble } from "./error-bubble";
 import { CompressionIndicator } from "./compression-indicator";
 import { ContextCompressionMarker } from "./context-compression-marker";
 import { SubagentBubble } from "./subagent-bubble";
-import { BranchBubble } from "./branch-bubble";
 import { LoadingIndicator } from "./working-stats";
-import { extractBranchActivity } from "./message-tool-aggregation";
 import { useCompression } from "@/hooks/use-compression";
 import { isCompressionContextOnlyMessage, isCompressionSummaryMessage } from "@/lib/context-messages";
 import { isSubagentInjectedMessage, extractSubagentsFromMessages } from "@/lib/subagent-message-utils";
@@ -103,21 +100,17 @@ export function MessageList({
         return null;
       })}
 
-      {isStreaming && completedSegments.map((seg, i) => (
-        <div key={`seg-${i}`}>
-          {seg.thinking && <ThinkingSection content={seg.thinking} />}
-          {seg.content && <AssistantMessage content={seg.content} />}
-          {seg.tools.length > 0 && <ToolBubble tools={seg.tools} onFilePreview={onFilePreview} />}
-        </div>
-      ))}
-
-      {isStreaming && (currentContent || currentThinking) && (
-        <AssistantMessage
-          content={currentContent} thinking={currentThinking} isStreaming
-          streamStartedAt={streamStartedAt} liveTokenCount={liveTokenCount}
+      {isStreaming && (
+        <StreamToolTimeline
+          completedSegments={completedSegments}
+          currentContent={currentContent}
+          currentThinking={currentThinking}
+          currentTools={currentTools}
+          streamStartedAt={streamStartedAt}
+          liveTokenCount={liveTokenCount}
+          onFilePreview={onFilePreview}
         />
       )}
-      {isStreaming && currentTools.length > 0 && <ToolBubble tools={currentTools} onFilePreview={onFilePreview} />}
       {isStreaming && !isCompressing && !currentContent && !currentThinking && !hasActiveTools(currentTools) && (
         <LoadingIndicator startedAt={loadingStartedAt} liveTokenCount={liveTokenCount} />
       )}
@@ -139,34 +132,15 @@ export const SegmentedAssistantMessage = memo(function SegmentedAssistantMessage
   msg, onReload, onFilePreview, tps, totalElapsedMs,
 }: { msg: AgentMessage; onReload?: (id: string) => void; onFilePreview?: (path: string) => void; tps: number; totalElapsedMs: number }) {
   if (msg.segments && msg.segments.length > 0) {
-    const lastSegIdx = msg.segments.length - 1;
     return (
-      <>
-        {msg.segments.map((seg, i) => {
-          const branchActivity = extractBranchActivity(seg.tools);
-          return (
-            <div key={`${msg.id}-seg-${i}`}>
-              {seg.thinking && <ThinkingSection content={seg.thinking} />}
-              {seg.content && (
-                <AssistantMessage
-                  content={seg.content}
-                  tokens={i === lastSegIdx ? msg.tokens : undefined}
-                  tps={i === lastSegIdx ? tps : undefined}
-                  totalElapsedMs={i === lastSegIdx ? totalElapsedMs : undefined}
-                />
-              )}
-              {seg.tools.length > 0 && <SavedToolBubble tools={seg.tools} onFilePreview={onFilePreview} />}
-              {branchActivity && (
-                <BranchBubble
-                  action={branchActivity.action}
-                  branchName={branchActivity.branchName}
-                  path={branchActivity.path}
-                />
-              )}
-            </div>
-          );
-        })}
-      </>
+      <SavedToolTimeline
+        messageId={msg.id}
+        segments={msg.segments}
+        tokens={msg.tokens}
+        tps={tps}
+        totalElapsedMs={totalElapsedMs}
+        onFilePreview={onFilePreview}
+      />
     );
   }
   return (

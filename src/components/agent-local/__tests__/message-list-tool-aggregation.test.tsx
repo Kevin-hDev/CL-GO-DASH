@@ -35,6 +35,8 @@ vi.mock("react-i18next", () => ({
       if (key === "agentLocal.toolActivity.toggleDetails") return "Show tool details";
       if (key === "agentLocal.toolActivity.groups.command") return "Commands";
       if (key === "agentLocal.toolActivity.groups.modification") return "Changes";
+      if (key === "agentLocal.toolActivity.groups.exploration") return "Exploration";
+      if (key === "agentLocal.toolActivity.counts.files") return `${count} file read`;
       if (key === "agentLocal.toolActivity.counts.commands") return `${count} command executed`;
       if (key === "agentLocal.toolActivity.counts.writes") return `${count} file written`;
       if (key === "agentLocal.toolActivity.counts.edits") return `${count} file edited`;
@@ -77,18 +79,13 @@ function assistantWithSegmentTools(): AgentMessage {
         ],
       },
       {
+        content: "",
+        tools: [{ name: "edit_file", summary: "b.ts", result: "ok", old_text: "a", new_text: "b" }],
+      },
+      {
         thinking: "second reflection",
         content: "",
-        tools: [
-          { name: "bash", summary: "npm run build", result: "ok" },
-          {
-            name: "edit_file",
-            summary: "b.ts",
-            result: "ok",
-            old_text: "a",
-            new_text: "b",
-          },
-        ],
+        tools: [{ name: "bash", summary: "npm run build", result: "ok" }],
       },
     ],
   };
@@ -107,9 +104,8 @@ describe("MessageList tool aggregation", () => {
     const bubbles = container.querySelectorAll(".chat-bubble");
     expect(bubbles).toHaveLength(2);
     expect(bubbles[0].textContent).toContain("Commands: 1 command executed");
-    expect(bubbles[0].textContent).toContain("Changes: 1 file written");
+    expect(bubbles[0].textContent).toContain("Changes: 1 file written and 1 file edited");
     expect(bubbles[1].textContent).toContain("Commands: 1 command executed");
-    expect(bubbles[1].textContent).toContain("Changes: 1 file edited");
     expect(container.textContent).not.toContain("npm test");
 
     fireEvent.click(bubbles[0].querySelectorAll(".tb-group-toggle")[0]);
@@ -131,10 +127,15 @@ describe("MessageList tool aggregation", () => {
               { name: "write_file", args: { path: "a.ts", content: "x" }, result: "ok" },
             ],
           },
+          {
+            thinking: "",
+            content: "",
+            tools: [{ name: "read_file", args: { path: "a.ts" }, result: "contents" }],
+          },
           { thinking: "second reflection", content: "", tools: [{ name: "bash", args: { command: "npm run build" }, result: "ok" }] },
         ]}
         currentContent=""
-        currentThinking="third reflection"
+        currentThinking=""
         currentTools={[{ name: "edit_file", args: { path: "b.ts", old_string: "a", new_string: "b" }, result: "ok" }]}
         isStreaming
         tps={0}
@@ -145,10 +146,11 @@ describe("MessageList tool aggregation", () => {
     );
 
     const bubbles = container.querySelectorAll(".chat-bubble");
-    expect(bubbles).toHaveLength(3);
+    expect(bubbles).toHaveLength(2);
     expect(bubbles[0].textContent).toContain("Commands: 1 command executed");
     expect(bubbles[0].textContent).toContain("Changes: 1 file written");
+    expect(bubbles[0].textContent).toContain("Exploration: 1 file read");
     expect(bubbles[1].textContent).toContain("Commands: 1 command executed");
-    expect(bubbles[2].textContent).toContain("Changes: 1 file edited");
+    expect(bubbles[1].textContent).toContain("Changes: 1 file edited");
   });
 });
