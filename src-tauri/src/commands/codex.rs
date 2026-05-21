@@ -51,6 +51,7 @@ pub fn codex_models() -> Vec<ModelInfo> {
             supports_tools: true,
             supports_vision: false,
             supports_thinking: true,
+            reasoning_modes: Vec::new(),
             is_free: true,
         })
         .collect()

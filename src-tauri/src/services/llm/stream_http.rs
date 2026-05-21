@@ -51,12 +51,23 @@ pub async fn post_chat_request(cfg: &RequestConfig<'_>) -> Result<reqwest::Respo
     }
     if cfg.provider_id == "zai" && cfg.reasoning_mode == Some("off") {
         payload["thinking"] = serde_json::json!({ "type": "disabled" });
+    } else if cfg.provider_id == "openrouter" && cfg.reasoning_mode == Some("off") {
+        payload["reasoning"] = serde_json::json!({ "effort": "none" });
     } else if cfg.think {
         match cfg.provider_id {
-            "deepseek" | "google" | "openrouter" => {
+            "deepseek" | "google" => {
                 if let Some(effort) = crate::services::reasoning::simple_effort(cfg.reasoning_mode)
                 {
                     payload["reasoning_effort"] = effort.into();
+                }
+            }
+            "openrouter" => {
+                if cfg.reasoning_mode == Some("auto") {
+                    payload["reasoning"] = serde_json::json!({ "enabled": true });
+                } else if let Some(effort) =
+                    crate::services::reasoning::openrouter_effort(cfg.reasoning_mode)
+                {
+                    payload["reasoning"] = serde_json::json!({ "effort": effort });
                 }
             }
             "openai" => {

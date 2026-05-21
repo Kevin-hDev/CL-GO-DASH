@@ -4,6 +4,7 @@ import { listen } from "@tauri-apps/api/event";
 import { cleanupTauriListener } from "@/lib/tauri-listen";
 import type { OllamaModel } from "@/types/agent";
 import type { ProviderSpec } from "@/types/api";
+import type { ReasoningMode } from "@/lib/reasoning-modes";
 
 export interface AvailableModel {
   id: string;
@@ -13,6 +14,7 @@ export interface AvailableModel {
   supports_tools: boolean;
   supports_vision?: boolean;
   supports_thinking?: boolean;
+  reasoning_modes?: ReasoningMode[];
   is_free?: boolean;
   hint?: string;
 }
@@ -24,6 +26,7 @@ interface LlmModelInfo {
   supports_tools: boolean;
   supports_vision?: boolean;
   supports_thinking?: boolean;
+  reasoning_modes?: ReasoningMode[];
   is_free?: boolean;
 }
 
@@ -76,6 +79,7 @@ async function fetchCloudModels(): Promise<Map<string, AvailableModel[]>> {
         supports_tools: m.supports_tools,
         supports_vision: m.supports_vision ?? false,
         supports_thinking: m.supports_thinking ?? false,
+        reasoning_modes: m.reasoning_modes,
         is_free: m.is_free ?? false,
         hint: m.context_length ? `${Math.round(m.context_length / 1000)}K ctx` : undefined,
       }),
@@ -99,6 +103,7 @@ async function fetchCodexModels(): Promise<AvailableModel[]> {
         supports_tools: m.supports_tools,
         supports_vision: m.supports_vision ?? false,
         supports_thinking: m.supports_thinking ?? false,
+        reasoning_modes: m.reasoning_modes,
         is_free: true,
         hint: m.context_length ? `${Math.round(m.context_length / 1000)}K ctx` : undefined,
       }),

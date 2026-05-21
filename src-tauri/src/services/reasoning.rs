@@ -31,6 +31,7 @@ pub fn supported_modes(
         "ollama" if is_gpt_oss(model) => &["low", "medium", "high"],
         "ollama" => &["off", "auto"],
         "openai" => &["off", "low", "medium", "high", "xhigh"],
+        "openrouter" => &["off", "auto", "low", "medium", "high", "xhigh"],
         "xai" if is_xai_fixed_reasoning(model) => &["low", "medium", "high", "xhigh"],
         "xai" => &["off", "low", "medium", "high"],
         "mistral" => &["off", "high"],
@@ -131,6 +132,17 @@ pub fn simple_effort(mode: Option<&str>) -> Option<&'static str> {
         Some("medium") | Some("auto") => Some("medium"),
         Some("high") | Some("xhigh") => Some("high"),
         None => None,
+        _ => None,
+    }
+}
+
+pub fn openrouter_effort(mode: Option<&str>) -> Option<&'static str> {
+    match mode {
+        Some("off") => Some("none"),
+        Some("low") => Some("low"),
+        Some("medium") => Some("medium"),
+        Some("high") => Some("high"),
+        Some("xhigh") => Some("xhigh"),
         _ => None,
     }
 }

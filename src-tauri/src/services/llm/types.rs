@@ -75,6 +75,8 @@ pub struct ModelInfo {
     pub supports_vision: bool,
     #[serde(default)]
     pub supports_thinking: bool,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub reasoning_modes: Vec<String>,
     #[serde(default)]
     pub is_free: bool,
 }

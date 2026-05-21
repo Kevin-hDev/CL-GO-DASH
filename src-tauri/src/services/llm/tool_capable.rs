@@ -2,7 +2,7 @@
 //!
 //! Patterns hardcodés pour les providers dont l'API n'expose pas les capabilities.
 //! Ollama : détection dynamique via `/api/show` (ne pas utiliser ici).
-//! OpenRouter : permissif (`true`), l'UI filtre via le flag API `/models`.
+//! OpenRouter : capacités lues depuis `/models`, pas depuis des patterns de nom.
 
 fn strip_org_prefix(model_id: &str) -> &str {
     model_id
@@ -71,14 +71,7 @@ pub fn supports_thinking(provider_id: &str, model_id: &str) -> bool {
         "groq" => model.contains("r1") || model.contains("qwq"),
         "openai" => model.starts_with("o3") || model.starts_with("o4"),
         "google" => model.contains("thinking"),
-        "openrouter" => {
-            model.contains("r1")
-                || model.contains("qwq")
-                || model.contains("thinking")
-                || model.contains("reasoner")
-                || model.starts_with("o3")
-                || model.starts_with("o4")
-        }
+        "openrouter" => false,
         "mistral" => model.contains("thinking"),
         "xai" => super::providers::xai::supports_thinking(&model),
         "moonshot" => super::providers::moonshot::supports_thinking(&model),

@@ -81,6 +81,7 @@ describe("useAgentSessions", () => {
       provider: "ollama",
       projectId: null,
       reasoningMode: null,
+      supportsThinking: null,
     });
     expect(invoke).toHaveBeenCalledWith("list_agent_sessions");
     expect(result.current.sessions).toEqual([mockSession, newSession]);

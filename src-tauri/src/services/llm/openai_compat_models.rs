@@ -106,6 +106,7 @@ pub(super) fn static_model_infos(provider_id: &str) -> Option<Vec<ModelInfo>> {
                 supports_tools: super::tool_capable::supports_tools(provider_id, m.id),
                 supports_vision: super::tool_capable::supports_vision(provider_id, m.id),
                 supports_thinking: super::tool_capable::supports_thinking(provider_id, m.id),
+                reasoning_modes: Vec::new(),
                 is_free: false,
             })
             .collect()

@@ -68,6 +68,11 @@ export function useAgentLocalTab({ navState, onSessionChange, onNavChange, listF
   const reasoningMode = activeSession
     ? activeSession.reasoning_mode ?? (activeSession.thinking_enabled ? "auto" : null)
     : welcomeReasoningMode;
+  const welcomeReasoning = normalizeForSelectedModel(
+    currentDefault.model,
+    currentDefault.provider,
+    welcomeReasoningMode,
+  );
   const filePreviewState = useFilePreview(tabState.activeSessionId ?? null, fileOperations);
 
   useEffect(() => {
@@ -96,6 +101,7 @@ export function useAgentLocalTab({ navState, onSessionChange, onNavChange, listF
     welcomeModel,
     setWelcomeModel,
     welcomeReasoningMode,
+    welcomeSupportsThinking: welcomeReasoning.supportsThinking,
     projectsHook,
     onSessionChange,
   });

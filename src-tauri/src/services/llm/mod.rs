@@ -11,6 +11,8 @@ pub mod model_registry;
 pub mod openai_compat;
 mod openai_compat_models;
 mod openai_compat_parsing;
+#[cfg(test)]
+mod openai_compat_parsing_tests;
 mod providers;
 pub mod quota;
 pub mod registry_search;

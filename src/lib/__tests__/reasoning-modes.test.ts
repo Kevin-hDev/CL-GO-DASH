@@ -6,7 +6,7 @@ import {
 } from "@/lib/reasoning-modes";
 import type { AvailableModel } from "@/hooks/use-available-models";
 
-function model(provider: string, id: string): AvailableModel {
+function model(provider: string, id: string, reasoningModes?: ReasoningMode[]): AvailableModel {
   return {
     id,
     provider_id: provider,
@@ -14,6 +14,7 @@ function model(provider: string, id: string): AvailableModel {
     is_local: provider === "ollama",
     supports_tools: false,
     supports_thinking: true,
+    reasoning_modes: reasoningModes,
   };
 }
 
@@ -39,6 +40,18 @@ describe("reasoning modes", () => {
     expect(modes("zai", "glm-5")).toEqual(["off", "auto"]);
     expect(modes("zai", "glm-4.6")).toEqual(["off", "auto"]);
     expect(modes("zai", "glm-4.5-flash")).toEqual(["off", "auto"]);
+  });
+
+  it("utilise les modes dynamiques exposés par OpenRouter", () => {
+    const openrouter = model("openrouter", "z-ai/glm-5.1", ["off", "auto", "low", "medium", "high", "xhigh"]);
+    expect(reasoningModeOptions(openrouter).map((option) => option.mode)).toEqual([
+      "off",
+      "auto",
+      "low",
+      "medium",
+      "high",
+      "xhigh",
+    ]);
   });
 
   it("normalise un mode invalide vers la valeur sûre", () => {

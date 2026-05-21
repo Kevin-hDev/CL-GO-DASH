@@ -52,13 +52,21 @@ export function useAgentSessions() {
   }, [refresh]);
 
   const create = useCallback(
-    async (name: string, model: string, provider: string = "ollama", projectId?: string, reasoningMode?: string | null) => {
+    async (
+      name: string,
+      model: string,
+      provider: string = "ollama",
+      projectId?: string,
+      reasoningMode?: string | null,
+      supportsThinking?: boolean,
+    ) => {
       const session = await invoke<AgentSessionMeta>("create_agent_session", {
         name,
         model,
         provider,
         projectId: projectId ?? null,
         reasoningMode: reasoningMode ?? null,
+        supportsThinking: supportsThinking ?? null,
       });
       await refresh();
       return session;

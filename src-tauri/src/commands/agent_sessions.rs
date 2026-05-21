@@ -34,6 +34,7 @@ pub async fn create_agent_session(
     provider: Option<String>,
     project_id: Option<String>,
     reasoning_mode: Option<String>,
+    supports_thinking: Option<bool>,
 ) -> Result<AgentSession, String> {
     let provider = provider.unwrap_or_else(|| "ollama".to_string());
     let requested_project_id = project_id.clone();
@@ -52,7 +53,7 @@ pub async fn create_agent_session(
         }
     }
     if reasoning_mode.is_some() {
-        session_store::update_reasoning(&session.id, reasoning_mode, None).await?;
+        session_store::update_reasoning(&session.id, reasoning_mode, supports_thinking).await?;
         if let Ok(updated) = session_store::get(&session.id).await {
             session = updated;
         }
