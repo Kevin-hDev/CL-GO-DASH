@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Spinner } from "@phosphor-icons/react";
 import { CaretDown, CaretUp, Check } from "@/components/ui/icons";
 import type { TFunction } from "i18next";
@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import type { ToolActivityGroup, ToolActivityCounts } from "@/lib/tool-activity-summary";
 import type { RenderableTool } from "./tool-detail-row";
 import { ToolDetailRow } from "./tool-detail-row";
+import { useCollapsiblePresence } from "./use-collapsible-presence";
 
 const COUNT_ORDER: Array<keyof ToolActivityCounts> = [
   "files",
@@ -52,7 +53,7 @@ function ToolActivityGroupRow({
   projectPath?: string;
 }) {
   const { t, i18n } = useTranslation();
-  const [isOpen, setIsOpen] = useState(false);
+  const { open: isOpen, mounted, toggle, onTransitionEnd } = useCollapsiblePresence();
   const title = useMemo(() => summaryText(group, t, i18n.language), [group, t, i18n.language]);
 
   return (
@@ -62,7 +63,7 @@ function ToolActivityGroupRow({
         className="tb-group-toggle"
         aria-expanded={isOpen}
         aria-label={t("agentLocal.toolActivity.toggleDetails")}
-        onClick={() => setIsOpen((open) => !open)}
+        onClick={toggle}
       >
         <span className="tb-arrow tb-group-arrow" aria-hidden="true">
           {isOpen ? <CaretUp size={14} weight="bold" /> : <CaretDown size={14} weight="bold" />}
@@ -79,8 +80,8 @@ function ToolActivityGroupRow({
           {!group.isPending && !group.hasError && <Check size={12} />}
         </span>
       </button>
-      <div className={`tb-group-accordion${isOpen ? " tb-open" : ""}`}>
-        {isOpen && (
+      <div className={`tb-group-accordion${isOpen ? " tb-open" : ""}`} onTransitionEnd={onTransitionEnd}>
+        {mounted && (
           <div className="tb-group-details">
             {group.tools.map((tool, index) => (
               <ToolDetailRow

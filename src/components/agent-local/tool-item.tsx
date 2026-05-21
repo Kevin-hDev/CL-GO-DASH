@@ -2,14 +2,15 @@ import { useCallback, useRef, useState, type ReactNode } from "react";
 import { Spinner } from "@phosphor-icons/react";
 import { CaretDown, CaretUp, Copy, Check } from "@/components/ui/icons";
 import { isFileTool } from "@/lib/tool-file-path";
+import { useCollapsiblePresence } from "./use-collapsible-presence";
 
 const TOOL_COLORS: Record<string, string> = {
   bash: "var(--tool-bash)",
   glob: "var(--tool-search)", grep: "var(--tool-search)", list_dir: "var(--tool-search)",
   read_file: "var(--tool-read)", read_spreadsheet: "var(--tool-read)",
   read_document: "var(--tool-read)", read_image: "var(--tool-read)",
-  write_file: "var(--tool-write)", write_spreadsheet: "var(--tool-write)",
-  write_document: "var(--tool-write)",
+  write_file: "var(--tool-edit)", write_spreadsheet: "var(--tool-edit)",
+  write_document: "var(--tool-edit)",
   edit_file: "var(--tool-edit)", process_image: "var(--tool-edit)",
   web_search: "var(--tool-web)", web_fetch: "var(--tool-web)",
   create_branch: "var(--tool-bash)", checkout_branch: "var(--tool-bash)",
@@ -89,7 +90,7 @@ export function ToolItem({
   const hasResult = !!result && !isError && !hasPreview && RESULT_PREVIEW_TOOLS.has(name);
   const canToggle = hasPreview || hasResult;
   const showCommandPreview = name === "bash" && hasResult;
-  const [isOpen, setIsOpen] = useState(false);
+  const { open: isOpen, mounted, toggle, onTransitionEnd } = useCollapsiblePresence();
   const clickablePath = isFileTool(name) && summary.trim().length > 0 && !!onFilePreview;
   const shownName = displayName ?? name;
   const shownSummary = displaySummary ?? summary;
@@ -103,7 +104,7 @@ export function ToolItem({
     <div>
       <div className="tb-row" style={ROW_STYLE}>
         {canToggle ? (
-          <button className="tb-toggle" onClick={() => setIsOpen(!isOpen)}>
+          <button className="tb-toggle" onClick={toggle}>
             <span className="tb-arrow tb-tool-arrow" aria-hidden="true">
               {isOpen ? <CaretUp size={13} weight="bold" /> : <CaretDown size={13} weight="bold" />}
             </span>
@@ -145,8 +146,8 @@ export function ToolItem({
         {done && isError && <ErrorCross message={errorMessage} />}
       </div>
       {canToggle && (
-        <div className={`tb-accordion${isOpen ? " tb-open" : ""}`}>
-          {isOpen && (
+        <div className={`tb-accordion${isOpen ? " tb-open" : ""}`} onTransitionEnd={onTransitionEnd}>
+          {mounted && (
             <div className="tb-accordion-inner">
               {showCommandPreview && <div className="tb-command-preview">{summary}</div>}
               {hasPreview && children}

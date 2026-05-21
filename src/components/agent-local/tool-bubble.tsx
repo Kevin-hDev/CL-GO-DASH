@@ -8,6 +8,7 @@ import {
   streamToolToRenderable,
 } from "./tool-detail-row";
 import "./tool-bubble.css";
+import "./tool-bubble-detail.css";
 
 export function ToolBubble({
   tools,
