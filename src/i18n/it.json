@@ -261,6 +261,17 @@
         "gitActions_other": "{{count}} azioni git",
         "otherActions_one": "{{count}} azione",
         "otherActions_other": "{{count}} azioni"
+      },
+      "actions": {
+        "read": "Lettura",
+        "create": "Creazione",
+        "edit": "Modifica",
+        "list": "Lista",
+        "search": "Ricerca",
+        "run": "Comando",
+        "createBranch": "Crea branch",
+        "switchBranch": "Cambia branch",
+        "tool": "Strumento"
       }
     }
   },
@@ -700,11 +711,11 @@
       "subtitle": "Permetti agli LLM di connettersi ad altre app e servizi",
       "browseBtn": "Sfoglia connettori"
     },
-  "sidebar": {
-    "configured": "Configurati",
-    "empty": "Nessun connettore configurato",
-    "loadError": "Impossibile caricare i connettori"
-  },
+    "sidebar": {
+      "configured": "Configurati",
+      "empty": "Nessun connettore configurato",
+      "loadError": "Impossibile caricare i connettori"
+    },
     "detail": {
       "connected": "Connesso",
       "disconnected": "Disconnesso",

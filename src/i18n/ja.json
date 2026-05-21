@@ -261,6 +261,17 @@
         "gitActions_other": "{{count}} 件のGit操作",
         "otherActions_one": "{{count}} 件の操作",
         "otherActions_other": "{{count}} 件の操作"
+      },
+      "actions": {
+        "read": "読み取り",
+        "create": "作成",
+        "edit": "編集",
+        "list": "一覧",
+        "search": "検索",
+        "run": "コマンド",
+        "createBranch": "ブランチ作成",
+        "switchBranch": "ブランチ切替",
+        "tool": "ツール"
       }
     }
   },
@@ -700,11 +711,11 @@
       "subtitle": "LLM が他のアプリやサービスに接続できるようにします",
       "browseBtn": "コネクターを探す"
     },
-  "sidebar": {
-    "configured": "設定済み",
-    "empty": "設定済みのコネクターはありません",
-    "loadError": "コネクターを読み込めませんでした"
-  },
+    "sidebar": {
+      "configured": "設定済み",
+      "empty": "設定済みのコネクターはありません",
+      "loadError": "コネクターを読み込めませんでした"
+    },
     "detail": {
       "connected": "接続済み",
       "disconnected": "切断済み",

@@ -260,6 +260,17 @@
         "gitActions_other": "{{count}} git actions",
         "otherActions_one": "{{count}} action",
         "otherActions_other": "{{count}} actions"
+      },
+      "actions": {
+        "read": "Read",
+        "create": "Create",
+        "edit": "Edit",
+        "list": "List",
+        "search": "Search",
+        "run": "Run",
+        "createBranch": "Create branch",
+        "switchBranch": "Switch branch",
+        "tool": "Tool"
       }
     }
   },
@@ -682,11 +693,11 @@
       "subtitle": "Allow LLMs to connect to other apps and services",
       "browseBtn": "Browse connectors"
     },
-  "sidebar": {
-    "configured": "Configured",
-    "empty": "No connector configured",
-    "loadError": "Unable to load connectors"
-  },
+    "sidebar": {
+      "configured": "Configured",
+      "empty": "No connector configured",
+      "loadError": "Unable to load connectors"
+    },
     "detail": {
       "connected": "Connected",
       "disconnected": "Disconnected",

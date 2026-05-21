@@ -261,6 +261,17 @@
         "gitActions_other": "{{count}} 个 Git 操作",
         "otherActions_one": "{{count}} 个操作",
         "otherActions_other": "{{count}} 个操作"
+      },
+      "actions": {
+        "read": "读取",
+        "create": "创建",
+        "edit": "修改",
+        "list": "列表",
+        "search": "搜索",
+        "run": "命令",
+        "createBranch": "创建分支",
+        "switchBranch": "切换分支",
+        "tool": "工具"
       }
     }
   },
@@ -700,11 +711,11 @@
       "subtitle": "允许 LLM 连接其他应用和服务",
       "browseBtn": "浏览连接器"
     },
-  "sidebar": {
-    "configured": "已配置",
-    "empty": "没有已配置的连接器",
-    "loadError": "无法加载连接器"
-  },
+    "sidebar": {
+      "configured": "已配置",
+      "empty": "没有已配置的连接器",
+      "loadError": "无法加载连接器"
+    },
     "detail": {
       "connected": "已连接",
       "disconnected": "已断开",

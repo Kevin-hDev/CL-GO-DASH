@@ -140,6 +140,7 @@ export function ChatView({
             onReload={handleReload} onEdit={handleEdit}
             onFileClick={handleFileClick}
             onFilePreview={onFilePreviewPath}
+            projectPath={proj.selectedProject?.path}
             completedSubagents={subagents.completed.length > 0 ? subagents.completed : undefined}
             onOpenSubagent={onOpenSubagent}
           />

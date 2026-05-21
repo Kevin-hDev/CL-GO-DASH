@@ -78,9 +78,11 @@ function ErrorCross({ message }: { message?: string }) {
 }
 
 export function ToolItem({
-  name, summary, done, isError, errorMessage, result, onFilePreview, children,
+  name, summary, displayName, displaySummary, additions, deletions,
+  done, isError, errorMessage, result, onFilePreview, children,
 }: {
-  name: string; summary: string; done: boolean; isError?: boolean; errorMessage?: string;
+  name: string; summary: string; displayName?: string; displaySummary?: string;
+  additions?: number; deletions?: number; done: boolean; isError?: boolean; errorMessage?: string;
   result?: string; onFilePreview?: (path: string) => void; children?: ReactNode;
 }) {
   const hasPreview = hasPreviewContent(children);
@@ -88,6 +90,8 @@ export function ToolItem({
   const canToggle = hasPreview || hasResult;
   const [isOpen, setIsOpen] = useState(false);
   const clickablePath = isFileTool(name) && summary.trim().length > 0 && !!onFilePreview;
+  const shownName = displayName ?? name;
+  const shownSummary = displaySummary ?? summary;
   const openPreview = () => {
     if (!clickablePath || !onFilePreview) return;
     onFilePreview(summary);
@@ -99,10 +103,10 @@ export function ToolItem({
         {canToggle ? (
           <button className="tb-toggle" onClick={() => setIsOpen(!isOpen)}>
             <span className="tb-arrow">{isOpen ? "v" : ">"}</span>
-            <span style={{ color: TOOL_COLORS[name] ?? "var(--ink-muted)", fontWeight: 600 }}>{name}</span>
+            <span style={{ color: TOOL_COLORS[name] ?? "var(--ink-muted)", fontWeight: 600 }}>{shownName}</span>
           </button>
         ) : (
-          <span style={{ color: TOOL_COLORS[name] ?? "var(--ink-muted)", fontWeight: 600, flexShrink: 0, minWidth: 70 }}>{name}</span>
+          <span style={{ color: TOOL_COLORS[name] ?? "var(--ink-muted)", fontWeight: 600, flexShrink: 0, minWidth: 70 }}>{shownName}</span>
         )}
         <span
           role={clickablePath ? "button" : undefined}
@@ -119,7 +123,13 @@ export function ToolItem({
             if (!clickablePath) return;
             if (e.key.startsWith("Ent") || e.key.startsWith(" ")) { e.preventDefault(); openPreview(); }
           }}
-        >{summary}</span>
+        >{shownSummary}</span>
+        {additions != null && deletions != null && (
+          <span className="tb-change-stats">
+            <span className="tb-change-add">+{additions}</span>
+            <span className="tb-change-del">-{deletions}</span>
+          </span>
+        )}
         {!done && <Spinner size={12} style={{ color: "var(--ink-faint)", animation: "spin 1s linear infinite", flexShrink: 0 }} />}
         {done && !isError && <Check size={12} style={{ color: "var(--signal-ok)", flexShrink: 0 }} />}
         {done && isError && <ErrorCross message={errorMessage} />}

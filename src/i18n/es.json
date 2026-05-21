@@ -261,6 +261,17 @@
         "gitActions_other": "{{count}} acciones git",
         "otherActions_one": "{{count}} acción",
         "otherActions_other": "{{count}} acciones"
+      },
+      "actions": {
+        "read": "Lectura",
+        "create": "Creación",
+        "edit": "Modificación",
+        "list": "Lista",
+        "search": "Búsqueda",
+        "run": "Comando",
+        "createBranch": "Crear rama",
+        "switchBranch": "Cambiar rama",
+        "tool": "Herramienta"
       }
     }
   },
@@ -700,11 +711,11 @@
       "subtitle": "Permite que los LLM se conecten a otras aplicaciones y servicios",
       "browseBtn": "Explorar conectores"
     },
-  "sidebar": {
-    "configured": "Configurados",
-    "empty": "Ningún conector configurado",
-    "loadError": "No se pudieron cargar los conectores"
-  },
+    "sidebar": {
+      "configured": "Configurados",
+      "empty": "Ningún conector configurado",
+      "loadError": "No se pudieron cargar los conectores"
+    },
     "detail": {
       "connected": "Conectado",
       "disconnected": "Desconectado",

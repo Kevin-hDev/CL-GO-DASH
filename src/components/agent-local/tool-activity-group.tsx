@@ -45,9 +45,11 @@ function summaryText(
 function ToolActivityGroupRow({
   group,
   onFilePreview,
+  projectPath,
 }: {
   group: ToolActivityGroup<RenderableTool>;
   onFilePreview?: (path: string) => void;
+  projectPath?: string;
 }) {
   const { t, i18n } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
@@ -84,6 +86,7 @@ function ToolActivityGroupRow({
                 tool={tool}
                 previousTools={group.tools.slice(0, index)}
                 onFilePreview={onFilePreview}
+                projectPath={projectPath}
               />
             ))}
           </div>
@@ -96,9 +99,11 @@ function ToolActivityGroupRow({
 export function ToolActivityGroupList({
   groups,
   onFilePreview,
+  projectPath,
 }: {
   groups: Array<ToolActivityGroup<RenderableTool>>;
   onFilePreview?: (path: string) => void;
+  projectPath?: string;
 }) {
   return (
     <div className="tb-group-list">
@@ -107,6 +112,7 @@ export function ToolActivityGroupList({
           key={group.kind}
           group={group}
           onFilePreview={onFilePreview}
+          projectPath={projectPath}
         />
       ))}
     </div>

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import type { ToolActivity } from "@/hooks/agent-chat-utils";
 import type { ToolActivityRecord } from "@/types/agent";
 import { ContentPreview, DiffPreview, WebResultsPreview } from "./tool-previews";
@@ -8,6 +9,7 @@ import {
   WriteSpreadsheetPreview,
 } from "./tool-office-previews";
 import { ToolItem } from "./tool-item";
+import { toolDisplayInfo } from "./tool-display";
 
 export interface RenderableTool {
   name: string;
@@ -81,21 +83,29 @@ export function ToolDetailRow({
   tool,
   previousTools,
   onFilePreview,
+  projectPath,
 }: {
   tool: RenderableTool;
   previousTools: RenderableTool[];
   onFilePreview?: (path: string) => void;
+  projectPath?: string;
 }) {
+  const { t } = useTranslation();
   const skipWrite = tool.name === "write_file"
     && previousTools.some((prev) => prev.name === "edit_file" && prev.summary === tool.summary);
   const done = tool.result !== undefined || tool.is_error !== undefined;
   const operations = tool.content ?? tool.args?.operations;
   const documentContent = tool.content ?? tool.args?.content;
+  const display = toolDisplayInfo(tool, projectPath, t);
 
   return (
     <ToolItem
       name={tool.name}
       summary={tool.summary}
+      displayName={display.label}
+      displaySummary={display.summary}
+      additions={display.additions}
+      deletions={display.deletions}
       done={done}
       isError={tool.is_error}
       errorMessage={tool.is_error ? tool.result : undefined}

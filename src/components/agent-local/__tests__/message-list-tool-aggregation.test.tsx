@@ -40,6 +40,15 @@ vi.mock("react-i18next", () => ({
       if (key === "agentLocal.toolActivity.counts.commands") return `${count} command executed`;
       if (key === "agentLocal.toolActivity.counts.writes") return `${count} file written`;
       if (key === "agentLocal.toolActivity.counts.edits") return `${count} file edited`;
+      if (key === "agentLocal.toolActivity.actions.read") return "Read";
+      if (key === "agentLocal.toolActivity.actions.create") return "Create";
+      if (key === "agentLocal.toolActivity.actions.edit") return "Edit";
+      if (key === "agentLocal.toolActivity.actions.list") return "List";
+      if (key === "agentLocal.toolActivity.actions.search") return "Search";
+      if (key === "agentLocal.toolActivity.actions.run") return "Run";
+      if (key === "agentLocal.toolActivity.actions.createBranch") return "Create branch";
+      if (key === "agentLocal.toolActivity.actions.switchBranch") return "Switch branch";
+      if (key === "agentLocal.toolActivity.actions.tool") return "Tool";
       return key;
     },
   }),

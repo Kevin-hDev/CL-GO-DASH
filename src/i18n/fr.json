@@ -260,6 +260,17 @@
         "gitActions_other": "{{count}} actions git",
         "otherActions_one": "{{count}} action",
         "otherActions_other": "{{count}} actions"
+      },
+      "actions": {
+        "read": "Lecture",
+        "create": "Création",
+        "edit": "Modification",
+        "list": "Liste",
+        "search": "Recherche",
+        "run": "Commande",
+        "createBranch": "Création branche",
+        "switchBranch": "Changement branche",
+        "tool": "Outil"
       }
     }
   },
@@ -682,11 +693,11 @@
       "subtitle": "Permettez aux LLM de se connecter à d'autres applications et services",
       "browseBtn": "Parcourir les connecteurs"
     },
-  "sidebar": {
-    "configured": "Configurés",
-    "empty": "Aucun connecteur configuré",
-    "loadError": "Impossible de charger les connecteurs"
-  },
+    "sidebar": {
+      "configured": "Configurés",
+      "empty": "Aucun connecteur configuré",
+      "loadError": "Impossible de charger les connecteurs"
+    },
     "detail": {
       "connected": "Connecté",
       "disconnected": "Déconnecté",

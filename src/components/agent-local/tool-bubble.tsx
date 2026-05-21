@@ -12,9 +12,11 @@ import "./tool-bubble.css";
 export function ToolBubble({
   tools,
   onFilePreview,
+  projectPath,
 }: {
   tools: ToolActivity[];
   onFilePreview?: (path: string) => void;
+  projectPath?: string;
 }) {
   const groups = useMemo(
     () => groupToolActivities(tools.map(streamToolToRenderable)),
@@ -23,7 +25,7 @@ export function ToolBubble({
   if (groups.length === 0) return null;
   return (
     <div className="chat-bubble">
-      <ToolActivityGroupList groups={groups} onFilePreview={onFilePreview} />
+      <ToolActivityGroupList groups={groups} onFilePreview={onFilePreview} projectPath={projectPath} />
     </div>
   );
 }
@@ -31,9 +33,11 @@ export function ToolBubble({
 export function SavedToolBubble({
   tools,
   onFilePreview,
+  projectPath,
 }: {
   tools: ToolActivityRecord[];
   onFilePreview?: (path: string) => void;
+  projectPath?: string;
 }) {
   const groups = useMemo(
     () => groupToolActivities(tools.map(savedToolToRenderable)),
@@ -42,7 +46,7 @@ export function SavedToolBubble({
   if (groups.length === 0) return null;
   return (
     <div className="chat-bubble">
-      <ToolActivityGroupList groups={groups} onFilePreview={onFilePreview} />
+      <ToolActivityGroupList groups={groups} onFilePreview={onFilePreview} projectPath={projectPath} />
     </div>
   );
 }

@@ -261,6 +261,17 @@
         "gitActions_other": "{{count}} Git-Aktionen",
         "otherActions_one": "{{count}} Aktion",
         "otherActions_other": "{{count}} Aktionen"
+      },
+      "actions": {
+        "read": "Lesen",
+        "create": "Erstellen",
+        "edit": "Bearbeiten",
+        "list": "Liste",
+        "search": "Suche",
+        "run": "Befehl",
+        "createBranch": "Branch erstellen",
+        "switchBranch": "Branch wechseln",
+        "tool": "Tool"
       }
     }
   },
@@ -700,11 +711,11 @@
       "subtitle": "Erlaubt LLMs, sich mit anderen Apps und Diensten zu verbinden",
       "browseBtn": "Connectors durchsuchen"
     },
-  "sidebar": {
-    "configured": "Konfiguriert",
-    "empty": "Kein Connector konfiguriert",
-    "loadError": "Connectors konnten nicht geladen werden"
-  },
+    "sidebar": {
+      "configured": "Konfiguriert",
+      "empty": "Kein Connector konfiguriert",
+      "loadError": "Connectors konnten nicht geladen werden"
+    },
     "detail": {
       "connected": "Verbunden",
       "disconnected": "Getrennt",

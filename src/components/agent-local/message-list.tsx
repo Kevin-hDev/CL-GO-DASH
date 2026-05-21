@@ -34,6 +34,7 @@ interface MessageListProps {
   onEdit?: (messageId: string, newContent: string) => void;
   onFileClick?: (file: { name: string; path?: string; thumbnail?: string }) => void;
   onFilePreview?: (path: string) => void;
+  projectPath?: string;
   completedSubagents?: SubagentInfo[];
   onOpenSubagent?: (sessionId: string) => void;
 }
@@ -42,7 +43,7 @@ export function MessageList({
   sessionId, messages, completedSegments, currentContent, currentThinking,
   currentTools, isStreaming, tps, totalElapsedMs, segmentStartedAt,
   liveTokenCount, error, isConnectionError, onRetry, onReload, onEdit, onFileClick, onFilePreview,
-  completedSubagents, onOpenSubagent,
+  projectPath, completedSubagents, onOpenSubagent,
 }: MessageListProps) {
   const lastAssistantIdx = findLastIndex(messages, (m) => m.role === "assistant");
   const { isCompressing } = useCompression(sessionId);
@@ -92,6 +93,7 @@ export function MessageList({
             <SegmentedAssistantMessage
               key={msg.id} msg={msg} onReload={onReload}
               onFilePreview={onFilePreview}
+              projectPath={projectPath}
               tps={isLast ? tps : 0}
               totalElapsedMs={isLast ? totalElapsedMs : 0}
             />
@@ -109,6 +111,7 @@ export function MessageList({
           streamStartedAt={streamStartedAt}
           liveTokenCount={liveTokenCount}
           onFilePreview={onFilePreview}
+          projectPath={projectPath}
         />
       )}
       {isStreaming && !isCompressing && !currentContent && !currentThinking && !hasActiveTools(currentTools) && (
@@ -130,7 +133,11 @@ export function MessageList({
 
 export const SegmentedAssistantMessage = memo(function SegmentedAssistantMessage({
   msg, onReload, onFilePreview, tps, totalElapsedMs,
-}: { msg: AgentMessage; onReload?: (id: string) => void; onFilePreview?: (path: string) => void; tps: number; totalElapsedMs: number }) {
+  projectPath,
+}: {
+  msg: AgentMessage; onReload?: (id: string) => void; onFilePreview?: (path: string) => void;
+  tps: number; totalElapsedMs: number; projectPath?: string;
+}) {
   if (msg.segments && msg.segments.length > 0) {
     return (
       <SavedToolTimeline
@@ -140,6 +147,7 @@ export const SegmentedAssistantMessage = memo(function SegmentedAssistantMessage
         tps={tps}
         totalElapsedMs={totalElapsedMs}
         onFilePreview={onFilePreview}
+        projectPath={projectPath}
       />
     );
   }

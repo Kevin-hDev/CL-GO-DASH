@@ -15,6 +15,7 @@ interface StreamToolTimelineProps {
   streamStartedAt: number | null;
   liveTokenCount: number;
   onFilePreview?: (path: string) => void;
+  projectPath?: string;
 }
 
 export function StreamToolTimeline({
@@ -25,6 +26,7 @@ export function StreamToolTimeline({
   streamStartedAt,
   liveTokenCount,
   onFilePreview,
+  projectPath,
 }: StreamToolTimelineProps) {
   const segments = [
     ...completedSegments,
@@ -51,7 +53,9 @@ export function StreamToolTimeline({
               {block.content && <AssistantMessage content={block.content} />}
             </>
           )}
-          {block.tools.length > 0 && <ToolBubble tools={block.tools} onFilePreview={onFilePreview} />}
+          {block.tools.length > 0 && (
+            <ToolBubble tools={block.tools} onFilePreview={onFilePreview} projectPath={projectPath} />
+          )}
         </div>
       ))}
     </>
@@ -65,6 +69,7 @@ interface SavedToolTimelineProps {
   tps: number;
   totalElapsedMs: number;
   onFilePreview?: (path: string) => void;
+  projectPath?: string;
 }
 
 export function SavedToolTimeline({
@@ -74,6 +79,7 @@ export function SavedToolTimeline({
   tps,
   totalElapsedMs,
   onFilePreview,
+  projectPath,
 }: SavedToolTimelineProps) {
   const blocks = buildToolTimelineBlocks(segments);
   const lastTextIndex = findLastIndex(blocks, (block) => !!block.content);
@@ -93,7 +99,9 @@ export function SavedToolTimeline({
                 totalElapsedMs={showStats ? totalElapsedMs : undefined}
               />
             )}
-            {block.tools.length > 0 && <SavedToolBubble tools={block.tools} onFilePreview={onFilePreview} />}
+            {block.tools.length > 0 && (
+              <SavedToolBubble tools={block.tools} onFilePreview={onFilePreview} projectPath={projectPath} />
+            )}
             {branchActivity && (
               <BranchBubble
                 action={branchActivity.action}
