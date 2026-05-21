@@ -93,6 +93,7 @@ export function ToolItem({
   const clickablePath = isFileTool(name) && summary.trim().length > 0 && !!onFilePreview;
   const shownName = displayName ?? name;
   const shownSummary = displaySummary ?? summary;
+  const forceSingleLineSummary = name === "bash";
   const openPreview = () => {
     if (!clickablePath || !onFilePreview) return;
     onFilePreview(summary);
@@ -114,7 +115,12 @@ export function ToolItem({
           tabIndex={clickablePath ? 0 : undefined}
           style={{
             color: clickablePath ? "var(--ink)" : "var(--ink-muted)",
-            wordBreak: "break-all", flex: 1,
+            wordBreak: forceSingleLineSummary ? "normal" : "break-all",
+            flex: 1,
+            minWidth: 0,
+            overflow: forceSingleLineSummary ? "hidden" : undefined,
+            textOverflow: forceSingleLineSummary ? "ellipsis" : undefined,
+            whiteSpace: forceSingleLineSummary ? "nowrap" : undefined,
             cursor: clickablePath ? "pointer" : "default",
             textDecoration: clickablePath ? "underline" : "none",
             textDecorationColor: "var(--edge)",
