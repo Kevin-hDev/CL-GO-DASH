@@ -95,29 +95,43 @@
   margin-top: 6px;
   padding: 6px 8px;
   border-radius: 4px;
-  background: color-mix(in srgb, var(--tool-web) 6%, transparent);
-  border: 1px solid color-mix(in srgb, var(--tool-web) 12%, transparent);
+  background: var(--surface-glass);
+  border: 1px solid var(--edge);
   font-size: 11px;
   font-family: var(--font-mono, monospace);
 }
 
 .tp-web-title {
-  color: var(--tool-web);
+  color: var(--ink);
   font-weight: 600;
 }
 
 .tp-web-url {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   color: var(--ink-faint);
   font-size: 10px;
   word-break: break-all;
+}
+
+.tp-web-url-text {
+  min-width: 0;
+}
+
+.tp-web-favicon {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  flex-shrink: 0;
 }
 
 .tp-web-fetch {
   margin-top: 6px;
   padding: 6px 8px;
   border-radius: 4px;
-  background: color-mix(in srgb, var(--tool-web) 6%, transparent);
-  border: 1px solid color-mix(in srgb, var(--tool-web) 12%, transparent);
+  background: var(--surface-glass);
+  border: 1px solid var(--edge);
   font-size: 10px;
   color: var(--ink-muted);
   white-space: pre-wrap;

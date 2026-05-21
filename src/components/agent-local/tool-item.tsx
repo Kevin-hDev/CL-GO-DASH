@@ -13,7 +13,7 @@ const TOOL_COLORS: Record<string, string> = {
   write_file: "var(--tool-edit)", write_spreadsheet: "var(--tool-edit)",
   write_document: "var(--tool-edit)",
   edit_file: "var(--tool-edit)", process_image: "var(--tool-edit)",
-  web_search: "var(--tool-web)", web_fetch: "var(--tool-web)",
+  web_search: "var(--ink)", web_fetch: "var(--ink)",
   create_branch: "var(--tool-bash)", checkout_branch: "var(--tool-bash)",
   forecast: "var(--tool-forecast)", forecast_analyze: "var(--tool-forecast)",
   forecast_read: "var(--tool-forecast)",

@@ -56,7 +56,7 @@
 }
 
 .tb-group-web {
-  --tb-group-color: var(--tool-web);
+  --tb-group-color: var(--ink);
 }
 
 .tb-group-git {
