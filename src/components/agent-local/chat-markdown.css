@@ -13,15 +13,21 @@
   margin-bottom: 0;
 }
 
-/* Tables — style Claude.ai : cellules séparées par gaps, coins arrondis */
-.chat-md table {
-  border-collapse: separate;
-  border-spacing: 3px;
-  display: block;
-  width: max-content;
+.chat-md-table-scroll {
   max-width: 100%;
   overflow-x: auto;
   margin: var(--space-sm) 0;
+  scrollbar-width: thin;
+}
+
+/* Tables — cellules séparées, mais colonnes pilotées par leur rôle */
+.chat-md table {
+  border-collapse: separate;
+  border-spacing: 3px;
+  width: 100%;
+  min-width: min(38rem, 100%);
+  table-layout: auto;
+  margin: 0;
   font-size: var(--text-xs);
   white-space: normal;
   border: none;
@@ -32,6 +38,35 @@
   padding: 10px 16px;
   text-align: left;
   border-radius: 4px;
+  vertical-align: top;
+  line-height: 1.35;
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
+.chat-md th:first-child,
+.chat-md td:first-child {
+  width: 6.5rem;
+  min-width: 6.5rem;
+  white-space: nowrap;
+}
+
+.chat-md th:nth-child(2),
+.chat-md td:nth-child(2) {
+  width: clamp(10rem, 28%, 14rem);
+  min-width: 10rem;
+}
+
+.chat-md th:last-child,
+.chat-md td:last-child {
+  width: auto;
+  min-width: 18rem;
+}
+
+.chat-md .chat-md-cell-list-break {
+  display: block;
+  margin-top: 0.35em;
 }
 
 .chat-md th {
