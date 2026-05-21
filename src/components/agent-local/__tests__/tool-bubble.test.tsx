@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, cleanup, fireEvent } from "@testing-library/react";
+import { ToolBubble } from "../tool-bubble";
 
 afterEach(cleanup);
-import { ToolBubble } from "../tool-bubble";
 
 vi.mock("@phosphor-icons/react", () => ({
   Spinner: () => <span data-testid="spinner" />,
@@ -10,6 +10,30 @@ vi.mock("@phosphor-icons/react", () => ({
 vi.mock("@/components/ui/icons", () => ({
   Copy: () => <span />,
   Check: () => <span data-testid="check-icon" />,
+}));
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    i18n: { language: "en" },
+    t: (key: string, opts?: Record<string, unknown>) => {
+      const text = (value: unknown) => (
+        typeof value === "string" || typeof value === "number" ? String(value) : ""
+      );
+      const count = text(opts?.count);
+      if (key === "agentLocal.toolActivity.summary") {
+        return `${text(opts?.group)}: ${text(opts?.details)}`;
+      }
+      if (key === "agentLocal.toolActivity.inProgress") return "in progress";
+      if (key === "agentLocal.toolActivity.toggleDetails") return "Show tool details";
+      if (key === "agentLocal.toolActivity.groups.command") return "Commands";
+      if (key === "agentLocal.toolActivity.groups.modification") return "Changes";
+      if (key === "agentLocal.toolActivity.groups.web") return "Web";
+      if (key === "agentLocal.toolActivity.counts.commands") return `${count} command executed`;
+      if (key === "agentLocal.toolActivity.counts.writes") return `${count} file written`;
+      if (key === "agentLocal.toolActivity.counts.edits") return `${count} file edited`;
+      if (key === "agentLocal.toolActivity.counts.webSearches") return `${count} web search`;
+      return key;
+    },
+  }),
 }));
 vi.mock("../tool-previews", () => ({
   ContentPreview: () => <div data-testid="content-preview" />,
@@ -31,6 +55,17 @@ vi.mock("@/lib/tool-file-path", () => ({
 
 beforeEach(() => vi.clearAllMocks());
 
+function openGroup(container: HTMLElement) {
+  const toggle = container.querySelector(".tb-group-toggle");
+  if (!toggle) throw new Error("group toggle absent");
+  fireEvent.click(toggle);
+}
+
+function openTool(container: HTMLElement) {
+  const toggle = container.querySelector(".tb-toggle");
+  if (!toggle) throw new Error("tool toggle absent");
+  fireEvent.click(toggle);
+}
 
 describe("ToolBubble", () => {
   it("retourne null si tools est vide", () => {
@@ -38,28 +73,26 @@ describe("ToolBubble", () => {
     expect(container.innerHTML).toBe("");
   });
 
-  it("affiche le nom de l'outil bash", () => {
-    const { container } = render(
-      <ToolBubble tools={[{ name: "bash", args: { command: "ls -la" } }]} />,
-    );
-    expect(container.textContent).toContain("bash");
-  });
-
-  it("affiche le résumé (command) pour bash", () => {
+  it("affiche un résumé compact pour bash et masque la commande brute", () => {
     const { container } = render(
       <ToolBubble tools={[{ name: "bash", args: { command: "echo hello" } }]} />,
     );
+
+    expect(container.textContent).toContain("Commands");
+    expect(container.textContent).not.toContain("echo hello");
+    openGroup(container);
+    expect(container.textContent).toContain("bash");
     expect(container.textContent).toContain("echo hello");
   });
 
-  it("affiche le spinner quand result est absent (en cours)", () => {
+  it("affiche le spinner du groupe quand un tool est en cours", () => {
     const { getByTestId } = render(
       <ToolBubble tools={[{ name: "bash", args: { command: "sleep 5" } }]} />,
     );
     expect(getByTestId("spinner")).toBeTruthy();
   });
 
-  it("affiche l'état terminé quand result est présent et pas d'erreur", () => {
+  it("affiche l'état terminé quand tous les tools sont terminés", () => {
     const { getByTestId } = render(
       <ToolBubble
         tools={[{ name: "bash", args: { command: "ls" }, result: "fichier.txt", isError: false }]}
@@ -68,7 +101,7 @@ describe("ToolBubble", () => {
     expect(getByTestId("check-icon")).toBeTruthy();
   });
 
-  it("affiche x quand isError vaut true", () => {
+  it("affiche x sur le groupe quand un tool échoue", () => {
     const { container } = render(
       <ToolBubble
         tools={[{ name: "bash", args: { command: "exit 1" }, result: "erreur", isError: true }]}
@@ -77,20 +110,20 @@ describe("ToolBubble", () => {
     expect(container.textContent).toContain("x");
   });
 
-  it("affiche ContentPreview pour write_file avec content string", () => {
+  it("affiche ContentPreview après ouverture du groupe puis du tool", () => {
     const { container, getByTestId, queryByTestId } = render(
       <ToolBubble
         tools={[{ name: "write_file", args: { path: "/tmp/foo.ts", content: "const x = 1;" }, result: "ok" }]}
       />,
     );
     expect(queryByTestId("content-preview")).toBeNull();
-    const toggle = container.querySelector(".tb-toggle");
-    if (!toggle) throw new Error("toggle absent");
-    fireEvent.click(toggle);
+    openGroup(container);
+    expect(queryByTestId("content-preview")).toBeNull();
+    openTool(container);
     expect(getByTestId("content-preview")).toBeTruthy();
   });
 
-  it("affiche DiffPreview pour edit_file avec old_string et new_string", () => {
+  it("affiche DiffPreview après ouverture du groupe puis du tool", () => {
     const { container, getByTestId, queryByTestId } = render(
       <ToolBubble
         tools={[{
@@ -101,14 +134,13 @@ describe("ToolBubble", () => {
       />,
     );
     expect(queryByTestId("diff-preview")).toBeNull();
-    const toggle = container.querySelector(".tb-toggle");
-    if (!toggle) throw new Error("toggle absent");
-    fireEvent.click(toggle);
+    openGroup(container);
+    openTool(container);
     expect(getByTestId("diff-preview")).toBeTruthy();
   });
 
-  it("n'affiche pas ContentPreview pour write_file si précédé d'edit_file sur le même path (skipWrite)", () => {
-    const { queryByTestId } = render(
+  it("n'affiche pas ContentPreview pour write_file précédé d'edit_file sur le même path", () => {
+    const { container, queryByTestId } = render(
       <ToolBubble
         tools={[
           { name: "edit_file", args: { path: "/tmp/foo.ts", old_string: "a", new_string: "b" }, result: "ok" },
@@ -116,34 +148,29 @@ describe("ToolBubble", () => {
         ]}
       />,
     );
+    openGroup(container);
     expect(queryByTestId("content-preview")).toBeNull();
   });
 
-  it("affiche WebResultsPreview pour web_search avec un résultat", () => {
+  it("affiche WebResultsPreview après ouverture du groupe puis du tool", () => {
     const { container, getByTestId, queryByTestId } = render(
       <ToolBubble
-        tools={[{ name: "web_search", args: { query: "vitest jsdom" }, result: '{"results":[]}' }]}
+        tools={[{ name: "web_search", args: { query: "vitest jsdom" }, result: "{\"results\":[]}" }]}
       />,
     );
     expect(queryByTestId("web-preview")).toBeNull();
-    const toggle = container.querySelector(".tb-toggle");
-    if (!toggle) throw new Error("toggle absent");
-    fireEvent.click(toggle);
+    openGroup(container);
+    openTool(container);
     expect(getByTestId("web-preview")).toBeTruthy();
   });
 
-  it("garde les previews fermées par défaut", () => {
+  it("garde les groupes et previews fermés par défaut", () => {
     const { container } = render(
       <ToolBubble
         tools={[{ name: "write_file", args: { path: "/tmp/foo.ts", content: "const x = 1;" }, result: "ok" }]}
       />,
     );
+    expect(container.querySelector(".tb-group-accordion.tb-open")).toBeNull();
     expect(container.querySelector(".tb-accordion.tb-open")).toBeNull();
-
-    const toggle = container.querySelector(".tb-toggle");
-    expect(toggle).toBeTruthy();
-    if (!toggle) throw new Error("toggle absent");
-    fireEvent.click(toggle);
-    expect(container.querySelector(".tb-accordion.tb-open")).toBeTruthy();
   });
 });

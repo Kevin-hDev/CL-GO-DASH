@@ -227,7 +227,42 @@
     "tools": "Tools",
     "tokens": "tokens",
     "tps": "t/s",
-    "fileReadError": "Impossibile leggere il file"
+    "fileReadError": "Impossibile leggere il file",
+    "toolActivity": {
+      "summary": "{{group}}: {{details}}",
+      "inProgress": "in corso",
+      "toggleDetails": "Mostra dettagli degli strumenti",
+      "groups": {
+        "exploration": "Esplorazione",
+        "modification": "Modifiche",
+        "command": "Comandi",
+        "web": "Web",
+        "git": "Git",
+        "other": "Strumenti"
+      },
+      "counts": {
+        "files_one": "{{count}} file esplorato",
+        "files_other": "{{count}} file esplorati",
+        "searches_one": "{{count}} ricerca",
+        "searches_other": "{{count}} ricerche",
+        "lists_one": "{{count}} lista",
+        "lists_other": "{{count}} liste",
+        "writes_one": "{{count}} file scritto",
+        "writes_other": "{{count}} file scritti",
+        "edits_one": "{{count}} file modificato",
+        "edits_other": "{{count}} file modificati",
+        "commands_one": "{{count}} comando eseguito",
+        "commands_other": "{{count}} comandi eseguiti",
+        "webSearches_one": "{{count}} ricerca web",
+        "webSearches_other": "{{count}} ricerche web",
+        "webFetches_one": "{{count}} pagina recuperata",
+        "webFetches_other": "{{count}} pagine recuperate",
+        "gitActions_one": "{{count}} azione git",
+        "gitActions_other": "{{count}} azioni git",
+        "otherActions_one": "{{count}} azione",
+        "otherActions_other": "{{count}} azioni"
+      }
+    }
   },
   "switchModel": {
     "title": "Cambio modello",

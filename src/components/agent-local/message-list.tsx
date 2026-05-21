@@ -9,10 +9,11 @@ import { ContextCompressionMarker } from "./context-compression-marker";
 import { SubagentBubble } from "./subagent-bubble";
 import { BranchBubble } from "./branch-bubble";
 import { LoadingIndicator } from "./working-stats";
+import { extractBranchActivity } from "./message-tool-aggregation";
 import { useCompression } from "@/hooks/use-compression";
 import { isCompressionContextOnlyMessage, isCompressionSummaryMessage } from "@/lib/context-messages";
 import { isSubagentInjectedMessage, extractSubagentsFromMessages } from "@/lib/subagent-message-utils";
-import type { AgentMessage, SubagentInfo, ToolActivityRecord } from "@/types/agent";
+import type { AgentMessage, SubagentInfo } from "@/types/agent";
 import type { ToolActivity, StreamSegment } from "@/hooks/agent-chat-utils";
 import "./chat.css";
 import "./messages.css";
@@ -141,21 +142,30 @@ export const SegmentedAssistantMessage = memo(function SegmentedAssistantMessage
     const lastSegIdx = msg.segments.length - 1;
     return (
       <>
-        {msg.segments.map((seg, i) => (
-          <div key={`${msg.id}-seg-${i}`}>
-            {seg.thinking && <ThinkingSection content={seg.thinking} />}
-            {seg.content && (
-              <AssistantMessage
-                content={seg.content}
-                tokens={i === lastSegIdx ? msg.tokens : undefined}
-                tps={i === lastSegIdx ? tps : undefined}
-                totalElapsedMs={i === lastSegIdx ? totalElapsedMs : undefined}
-              />
-            )}
-            {seg.tools.length > 0 && <SavedToolBubble tools={seg.tools} onFilePreview={onFilePreview} />}
-            {(() => { const b = extractBranchActivity(seg.tools); return b ? <BranchBubble action={b.action} branchName={b.branchName} path={b.path} /> : null; })()}
-          </div>
-        ))}
+        {msg.segments.map((seg, i) => {
+          const branchActivity = extractBranchActivity(seg.tools);
+          return (
+            <div key={`${msg.id}-seg-${i}`}>
+              {seg.thinking && <ThinkingSection content={seg.thinking} />}
+              {seg.content && (
+                <AssistantMessage
+                  content={seg.content}
+                  tokens={i === lastSegIdx ? msg.tokens : undefined}
+                  tps={i === lastSegIdx ? tps : undefined}
+                  totalElapsedMs={i === lastSegIdx ? totalElapsedMs : undefined}
+                />
+              )}
+              {seg.tools.length > 0 && <SavedToolBubble tools={seg.tools} onFilePreview={onFilePreview} />}
+              {branchActivity && (
+                <BranchBubble
+                  action={branchActivity.action}
+                  branchName={branchActivity.branchName}
+                  path={branchActivity.path}
+                />
+              )}
+            </div>
+          );
+        })}
       </>
     );
   }
@@ -172,18 +182,6 @@ export const SegmentedAssistantMessage = memo(function SegmentedAssistantMessage
 
 export function hasActiveTools(tools: ToolActivity[]): boolean {
   return tools.length > 0 && tools.some((t) => !t.result);
-}
-
-function extractBranchActivity(tools: ToolActivityRecord[]): { action: "created" | "switched"; branchName: string; path?: string } | null {
-  for (const t of tools) {
-    if (t.name === "create_branch" && t.result && !t.is_error) {
-      return { action: "created", branchName: t.summary, path: t.result };
-    }
-    if (t.name === "checkout_branch" && t.result && !t.is_error) {
-      return { action: "switched", branchName: t.summary };
-    }
-  }
-  return null;
 }
 
 function findLastIndex<T>(arr: T[], pred: (item: T) => boolean): number {

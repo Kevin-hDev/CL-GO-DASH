@@ -33,6 +33,112 @@
   min-height: 0;
 }
 
+.tb-group-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tb-group {
+  --tb-group-color: var(--ink-muted);
+}
+
+.tb-group-exploration {
+  --tb-group-color: var(--tool-read);
+}
+
+.tb-group-modification {
+  --tb-group-color: var(--tool-edit);
+}
+
+.tb-group-command {
+  --tb-group-color: var(--tool-bash);
+}
+
+.tb-group-web {
+  --tb-group-color: var(--tool-web);
+}
+
+.tb-group-git {
+  --tb-group-color: var(--tool-bash);
+}
+
+.tb-group-toggle {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  width: 100%;
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--ink-muted);
+  font: inherit;
+  text-align: left;
+}
+
+.tb-group-toggle:hover {
+  color: var(--ink);
+}
+
+.tb-group-toggle .tb-arrow {
+  color: var(--tb-group-color);
+}
+
+.tb-group-title {
+  flex: 1;
+  min-width: 0;
+  color: inherit;
+  font-size: 12px;
+  line-height: 1.6;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tb-group-progress {
+  color: var(--ink-faint);
+}
+
+.tb-group-state {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  color: var(--signal-ok);
+  flex-shrink: 0;
+}
+
+.tb-group-error {
+  color: var(--signal-error);
+  font-size: 10px;
+}
+
+.tb-group-accordion {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 300ms ease;
+}
+
+.tb-group-accordion.tb-open {
+  grid-template-rows: 1fr;
+}
+
+.tb-group-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 0;
+  overflow: hidden;
+  padding-top: 6px;
+  padding-left: 18px;
+}
+
+.tb-spinner {
+  color: var(--ink-faint);
+  animation: spin 1s linear infinite;
+}
+
 .tb-toggle {
   display: flex;
   align-items: baseline;

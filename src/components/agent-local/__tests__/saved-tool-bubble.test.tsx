@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, cleanup, fireEvent } from "@testing-library/react";
+import { SavedToolBubble } from "../tool-bubble";
 
 afterEach(cleanup);
-import { SavedToolBubble } from "../tool-bubble";
 
 vi.mock("@phosphor-icons/react", () => ({
   Spinner: () => <span data-testid="spinner" />,
@@ -10,6 +10,28 @@ vi.mock("@phosphor-icons/react", () => ({
 vi.mock("@/components/ui/icons", () => ({
   Copy: () => <span />,
   Check: () => <span data-testid="check-icon" />,
+}));
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    i18n: { language: "en" },
+    t: (key: string, opts?: Record<string, unknown>) => {
+      const text = (value: unknown) => (
+        typeof value === "string" || typeof value === "number" ? String(value) : ""
+      );
+      const count = text(opts?.count);
+      if (key === "agentLocal.toolActivity.summary") {
+        return `${text(opts?.group)}: ${text(opts?.details)}`;
+      }
+      if (key === "agentLocal.toolActivity.inProgress") return "in progress";
+      if (key === "agentLocal.toolActivity.toggleDetails") return "Show tool details";
+      if (key === "agentLocal.toolActivity.groups.command") return "Commands";
+      if (key === "agentLocal.toolActivity.groups.modification") return "Changes";
+      if (key === "agentLocal.toolActivity.counts.commands") return `${count} command executed`;
+      if (key === "agentLocal.toolActivity.counts.writes") return `${count} file written`;
+      if (key === "agentLocal.toolActivity.counts.edits") return `${count} file edited`;
+      return key;
+    },
+  }),
 }));
 vi.mock("../tool-previews", () => ({
   ContentPreview: () => <div data-testid="content-preview" />,
@@ -31,32 +53,45 @@ vi.mock("@/lib/tool-file-path", () => ({
 
 beforeEach(() => vi.clearAllMocks());
 
+function openGroup(container: HTMLElement) {
+  const toggle = container.querySelector(".tb-group-toggle");
+  if (!toggle) throw new Error("group toggle absent");
+  fireEvent.click(toggle);
+}
+
+function openTool(container: HTMLElement, index = 0) {
+  const toggle = container.querySelectorAll(".tb-toggle")[index];
+  if (!toggle) throw new Error("tool toggle absent");
+  fireEvent.click(toggle);
+}
+
 describe("SavedToolBubble", () => {
   it("retourne null si tools est vide", () => {
     const { container } = render(<SavedToolBubble tools={[]} />);
     expect(container.innerHTML).toBe("");
   });
 
-  it("affiche le nom et le summary", () => {
+  it("affiche un résumé compact puis les détails sauvegardés", () => {
     const { container } = render(
-      <SavedToolBubble
-        tools={[{ name: "bash", summary: "npm run build", result: "ok" }]}
-      />,
+      <SavedToolBubble tools={[{ name: "bash", summary: "npm run build", result: "ok" }]} />,
     );
+
+    expect(container.textContent).toContain("Commands");
+    expect(container.textContent).not.toContain("npm run build");
+    openGroup(container);
     expect(container.textContent).toContain("bash");
     expect(container.textContent).toContain("npm run build");
   });
 
-  it("affiche ContentPreview pour write_file avec content", () => {
+  it("affiche ContentPreview après ouverture du groupe puis du tool", () => {
     const { container, getByTestId, queryByTestId } = render(
       <SavedToolBubble
         tools={[{ name: "write_file", summary: "/tmp/bar.ts", content: "export const x = 1;", result: "ok" }]}
       />,
     );
     expect(queryByTestId("content-preview")).toBeNull();
-    const toggle = container.querySelector(".tb-toggle");
-    if (!toggle) throw new Error("toggle absent");
-    fireEvent.click(toggle);
+    openGroup(container);
+    openTool(container);
     expect(getByTestId("content-preview")).toBeTruthy();
   });
 
@@ -73,9 +108,8 @@ describe("SavedToolBubble", () => {
       />,
     );
     expect(queryByTestId("diff-preview")).toBeNull();
-    const toggle = container.querySelector(".tb-toggle");
-    if (!toggle) throw new Error("toggle absent");
-    fireEvent.click(toggle);
+    openGroup(container);
+    openTool(container);
     expect(getByTestId("diff-preview")).toBeTruthy();
   });
 
@@ -89,13 +123,12 @@ describe("SavedToolBubble", () => {
       />,
     );
     expect(queryByTestId("content-preview")).toBeNull();
-    const toggle = container.querySelectorAll(".tb-toggle")[1];
-    if (!toggle) throw new Error("toggle absent");
-    fireEvent.click(toggle);
+    openGroup(container);
+    openTool(container, 1);
     expect(getByTestId("content-preview")).toBeTruthy();
   });
 
-  it("garde les previews sauvegardées fermées par défaut", () => {
+  it("garde les groupes et previews sauvegardés fermés par défaut", () => {
     const { container } = render(
       <SavedToolBubble
         tools={[{
@@ -107,12 +140,8 @@ describe("SavedToolBubble", () => {
         }]}
       />,
     );
-    expect(container.querySelector(".tb-accordion.tb-open")).toBeNull();
 
-    const toggle = container.querySelector(".tb-toggle");
-    expect(toggle).toBeTruthy();
-    if (!toggle) throw new Error("toggle absent");
-    fireEvent.click(toggle);
-    expect(container.querySelector(".tb-accordion.tb-open")).toBeTruthy();
+    expect(container.querySelector(".tb-group-accordion.tb-open")).toBeNull();
+    expect(container.querySelector(".tb-accordion.tb-open")).toBeNull();
   });
 });
