@@ -271,6 +271,10 @@
         "run": "コマンド",
         "createBranch": "ブランチ作成",
         "switchBranch": "ブランチ切替",
+        "skill": "Skill",
+        "agent": "エージェント",
+        "forecast": "Forecast",
+        "mcp": "MCP",
         "tool": "ツール"
       }
     }

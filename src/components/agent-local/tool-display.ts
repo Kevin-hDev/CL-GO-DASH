@@ -33,6 +33,11 @@ export function toolDisplayInfo(
 }
 
 function actionKey(name: string): string {
+  if (name === "load_skill") return "skill";
+  if (name === "delegate_task") return "agent";
+  if (name === "forecast" || name === "forecast_models" || name === "forecast_read") return "read";
+  if (name === "forecast_analyze") return "forecast";
+  if (name === "search_mcp_tools") return "mcp";
   if (name === "list_dir") return "list";
   if (name === "grep" || name === "glob") return "search";
   if (name.startsWith("read_")) return "read";

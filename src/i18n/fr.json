@@ -270,6 +270,10 @@
         "run": "Commande",
         "createBranch": "Création branche",
         "switchBranch": "Changement branche",
+        "skill": "Skill",
+        "agent": "Agent",
+        "forecast": "Forecast",
+        "mcp": "MCP",
         "tool": "Outil"
       }
     }

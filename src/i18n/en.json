@@ -270,6 +270,10 @@
         "run": "Run",
         "createBranch": "Create branch",
         "switchBranch": "Switch branch",
+        "skill": "Skill",
+        "agent": "Agent",
+        "forecast": "Forecast",
+        "mcp": "MCP",
         "tool": "Tool"
       }
     }

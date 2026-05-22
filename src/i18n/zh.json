@@ -271,6 +271,10 @@
         "run": "命令",
         "createBranch": "创建分支",
         "switchBranch": "切换分支",
+        "skill": "Skill",
+        "agent": "代理",
+        "forecast": "Forecast",
+        "mcp": "MCP",
         "tool": "工具"
       }
     }

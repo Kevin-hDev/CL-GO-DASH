@@ -7,6 +7,10 @@ const t = ((key: string) => ({
   "agentLocal.toolActivity.actions.read": "Read",
   "agentLocal.toolActivity.actions.create": "Create",
   "agentLocal.toolActivity.actions.edit": "Edit",
+  "agentLocal.toolActivity.actions.skill": "Skill",
+  "agentLocal.toolActivity.actions.agent": "Agent",
+  "agentLocal.toolActivity.actions.forecast": "Forecast",
+  "agentLocal.toolActivity.actions.mcp": "MCP",
 }[key] ?? key)) as TFunction;
 
 describe("toolDisplayInfo", () => {
@@ -56,6 +60,16 @@ describe("toolDisplayInfo", () => {
       label: "bash",
       summary: "npm test",
     });
+  });
+
+  it("affiche les tools spécialisés avec des noms explicites", () => {
+    expect(toolDisplayInfo({ name: "load_skill", summary: "context7-docs" }, undefined, t).label).toBe("Skill");
+    expect(toolDisplayInfo({ name: "delegate_task", summary: "audit" }, undefined, t).label).toBe("Agent");
+    expect(toolDisplayInfo({ name: "forecast", summary: "sales" }, undefined, t).label).toBe("Read");
+    expect(toolDisplayInfo({ name: "forecast_models", summary: "models" }, undefined, t).label).toBe("Read");
+    expect(toolDisplayInfo({ name: "forecast_read", summary: "analysis" }, undefined, t).label).toBe("Read");
+    expect(toolDisplayInfo({ name: "forecast_analyze", summary: "scenario" }, undefined, t).label).toBe("Forecast");
+    expect(toolDisplayInfo({ name: "search_mcp_tools", summary: "linear" }, undefined, t).label).toBe("MCP");
   });
 
   it("tronque les commandes bash longues sur une seule ligne", () => {
