@@ -1,7 +1,7 @@
 .search-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: transparent;
   z-index: 9999;
   display: flex;
   justify-content: center;
@@ -11,16 +11,20 @@
 .search-dialog {
   width: 560px;
   max-height: 420px;
-  background: var(--surface-overlay);
+  background: var(--shell);
   border: 1px solid var(--edge);
   border-radius: var(--radius-md);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
   display: flex;
   flex-direction: column;
   overflow: hidden;
   animation: search-dialog-in 120ms ease-out;
+}
+
+[data-theme="dark"] .search-dialog {
+  background: var(--surface-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 @keyframes search-dialog-in {
