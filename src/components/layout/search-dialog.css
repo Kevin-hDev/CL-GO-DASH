@@ -11,10 +11,12 @@
 .search-dialog {
   width: 560px;
   max-height: 420px;
-  background: var(--shell);
-  border: 1px solid var(--surface-hover);
+  background: var(--surface-overlay);
+  border: 1px solid var(--edge);
   border-radius: var(--radius-md);
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
