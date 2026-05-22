@@ -227,7 +227,57 @@
     "tools": "Tools",
     "tokens": "tokens",
     "tps": "t/s",
-    "fileReadError": "ファイルを読み取れませんでした"
+    "fileReadError": "ファイルを読み取れませんでした",
+    "toolActivity": {
+      "summary": "{{group}}：{{details}}",
+      "inProgress": "進行中",
+      "toggleDetails": "ツール詳細を表示",
+      "groups": {
+        "exploration": "探索",
+        "modification": "変更",
+        "command": "コマンド",
+        "web": "Web",
+        "git": "Git",
+        "other": "ツール"
+      },
+      "counts": {
+        "files_one": "{{count}} 件のファイルを探索",
+        "files_other": "{{count}} 件のファイルを探索",
+        "searches_one": "{{count}} 件の検索",
+        "searches_other": "{{count}} 件の検索",
+        "lists_one": "{{count}} 件の一覧",
+        "lists_other": "{{count}} 件の一覧",
+        "writes_one": "{{count}} 件のファイルを書き込み",
+        "writes_other": "{{count}} 件のファイルを書き込み",
+        "edits_one": "{{count}} 件のファイルを編集",
+        "edits_other": "{{count}} 件のファイルを編集",
+        "commands_one": "{{count}} 件のコマンドを実行",
+        "commands_other": "{{count}} 件のコマンドを実行",
+        "webSearches_one": "{{count}} 件のWeb検索",
+        "webSearches_other": "{{count}} 件のWeb検索",
+        "webFetches_one": "{{count}} 件のページを取得",
+        "webFetches_other": "{{count}} 件のページを取得",
+        "gitActions_one": "{{count}} 件のGit操作",
+        "gitActions_other": "{{count}} 件のGit操作",
+        "otherActions_one": "{{count}} 件の操作",
+        "otherActions_other": "{{count}} 件の操作"
+      },
+      "actions": {
+        "read": "読み取り",
+        "create": "作成",
+        "edit": "編集",
+        "list": "一覧",
+        "search": "検索",
+        "run": "コマンド",
+        "createBranch": "ブランチ作成",
+        "switchBranch": "ブランチ切替",
+        "skill": "Skill",
+        "agent": "エージェント",
+        "forecast": "Forecast",
+        "mcp": "MCP",
+        "tool": "ツール"
+      }
+    }
   },
   "switchModel": {
     "title": "モデルの変更",
@@ -665,11 +715,11 @@
       "subtitle": "LLM が他のアプリやサービスに接続できるようにします",
       "browseBtn": "コネクターを探す"
     },
-  "sidebar": {
-    "configured": "設定済み",
-    "empty": "設定済みのコネクターはありません",
-    "loadError": "コネクターを読み込めませんでした"
-  },
+    "sidebar": {
+      "configured": "設定済み",
+      "empty": "設定済みのコネクターはありません",
+      "loadError": "コネクターを読み込めませんでした"
+    },
     "detail": {
       "connected": "接続済み",
       "disconnected": "切断済み",

@@ -1,0 +1,52 @@
+.chat-textarea-shell {
+  position: relative;
+  min-height: 44px;
+}
+
+.chat-textarea,
+.chat-textarea-highlight {
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--text-sm);
+  font-family: var(--font-sans);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+.chat-textarea-highlight {
+  position: absolute;
+  inset: 0;
+  color: var(--ink);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.skill-inline-highlight {
+  color: var(--pulse);
+  font-weight: inherit;
+}
+
+.chat-textarea {
+  position: relative;
+  resize: none;
+  background: transparent;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  caret-color: var(--ink);
+  outline: none;
+  border: none;
+  min-height: 44px;
+  z-index: 1;
+}
+
+.chat-textarea::placeholder {
+  color: var(--ink-faint);
+  -webkit-text-fill-color: var(--ink-faint);
+}
+
+.chat-textarea::selection {
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  background: var(--select-bg);
+}

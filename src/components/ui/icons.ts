@@ -18,6 +18,7 @@ export {
   Gear,
   X,
   CaretDown,
+  CaretUp,
   CaretRight,
   DownloadSimple,
   FileText,

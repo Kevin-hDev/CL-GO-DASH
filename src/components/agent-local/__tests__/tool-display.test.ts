@@ -1,0 +1,82 @@
+import { describe, expect, it } from "vitest";
+import { shortenPath, toolDisplayInfo } from "../tool-display";
+import type { RenderableTool } from "../tool-detail-row";
+import type { TFunction } from "i18next";
+
+const t = ((key: string) => ({
+  "agentLocal.toolActivity.actions.read": "Read",
+  "agentLocal.toolActivity.actions.create": "Create",
+  "agentLocal.toolActivity.actions.edit": "Edit",
+  "agentLocal.toolActivity.actions.skill": "Skill",
+  "agentLocal.toolActivity.actions.agent": "Agent",
+  "agentLocal.toolActivity.actions.forecast": "Forecast",
+  "agentLocal.toolActivity.actions.mcp": "MCP",
+}[key] ?? key)) as TFunction;
+
+describe("toolDisplayInfo", () => {
+  it("raccourcit les chemins depuis la racine projet", () => {
+    const path = "/Users/kevinh/Projects/systeme-pulse/src/App.tsx";
+    expect(shortenPath(path, "/Users/kevinh/Projects/systeme-pulse")).toBe("systeme-pulse/src/App.tsx");
+  });
+
+  it("affiche une création avec stats + lignes", () => {
+    const tool: RenderableTool = {
+      name: "write_file",
+      summary: "/Users/kevinh/Projects/systeme-pulse/vite.config.ts",
+      content: "a\nb\n",
+    };
+    expect(toolDisplayInfo(tool, "/Users/kevinh/Projects/systeme-pulse", t)).toEqual({
+      label: "Create",
+      summary: "systeme-pulse/vite.config.ts",
+      additions: 2,
+      deletions: 0,
+    });
+  });
+
+  it("affiche une modification avec stats old/new", () => {
+    const tool: RenderableTool = {
+      name: "edit_file",
+      summary: "/Users/kevinh/Projects/systeme-pulse/src/main.rs",
+      old_text: "a\nb\nc",
+      new_text: "a",
+    };
+    expect(toolDisplayInfo(tool, "/Users/kevinh/Projects/systeme-pulse", t)).toEqual({
+      label: "Edit",
+      summary: "systeme-pulse/src/main.rs",
+      additions: 1,
+      deletions: 3,
+    });
+  });
+
+  it("ne change pas web_search", () => {
+    expect(toolDisplayInfo({ name: "web_search", summary: "tauri docs" }, undefined, t)).toEqual({
+      label: "web_search",
+      summary: "tauri docs",
+    });
+  });
+
+  it("garde bash comme nom de tool affiché", () => {
+    expect(toolDisplayInfo({ name: "bash", summary: "npm test" }, undefined, t)).toEqual({
+      label: "bash",
+      summary: "npm test",
+    });
+  });
+
+  it("affiche les tools spécialisés avec des noms explicites", () => {
+    expect(toolDisplayInfo({ name: "load_skill", summary: "context7-docs" }, undefined, t).label).toBe("Skill");
+    expect(toolDisplayInfo({ name: "delegate_task", summary: "audit" }, undefined, t).label).toBe("Agent");
+    expect(toolDisplayInfo({ name: "forecast", summary: "sales" }, undefined, t).label).toBe("Read");
+    expect(toolDisplayInfo({ name: "forecast_models", summary: "models" }, undefined, t).label).toBe("Read");
+    expect(toolDisplayInfo({ name: "forecast_read", summary: "analysis" }, undefined, t).label).toBe("Read");
+    expect(toolDisplayInfo({ name: "forecast_analyze", summary: "scenario" }, undefined, t).label).toBe("Forecast");
+    expect(toolDisplayInfo({ name: "search_mcp_tools", summary: "linear" }, undefined, t).label).toBe("MCP");
+  });
+
+  it("tronque les commandes bash longues sur une seule ligne", () => {
+    const command = `${"a".repeat(110)}\necho done`;
+    expect(toolDisplayInfo({ name: "bash", summary: command }, undefined, t)).toEqual({
+      label: "bash",
+      summary: `${"a".repeat(96)}...`,
+    });
+  });
+});

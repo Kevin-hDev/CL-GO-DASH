@@ -3,6 +3,8 @@ import { useTranslation } from "react-i18next";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";
+import rehypeRaw from "rehype-raw";
+import rehypeSanitize from "rehype-sanitize";
 import type { Components } from "react-markdown";
 import { open } from "@tauri-apps/plugin-shell";
 import { CodeBlock } from "./code-block";
@@ -44,6 +46,19 @@ function closeUnclosedCodeBlocks(text: string): string {
 }
 
 const mdComponents: Components = {
+  table({ children }) {
+    return (
+      <div className="chat-md-table-scroll">
+        <table>{children}</table>
+      </div>
+    );
+  },
+  th({ children }) {
+    return <th>{formatTableCell(children)}</th>;
+  },
+  td({ children }) {
+    return <td>{formatTableCell(children)}</td>;
+  },
   pre({ children }) {
     const child = children as React.ReactElement<{ className?: string; children?: React.ReactNode }>;
     const className = child?.props?.className || "";
@@ -67,6 +82,21 @@ const mdComponents: Components = {
 };
 
 const remarkPlugins = [remarkGfm, remarkBreaks];
+const rehypePlugins = [rehypeRaw, rehypeSanitize];
+
+function formatTableCell(children: React.ReactNode): React.ReactNode {
+  if (typeof children !== "string") return children;
+  const parts = splitCompactList(children);
+  if (parts.length <= 1) return children;
+  return parts.map((part, index) => (
+    index === 0 ? part : <span key={index} className="chat-md-cell-list-break">{part}</span>
+  ));
+}
+
+function splitCompactList(text: string): string[] {
+  const marker = /(\s+)(?=(?:[2-9]|[1-9]\d)[.)]\s|[2-9]️⃣\s)/g;
+  return text.split(marker).filter((part) => part.trim().length > 0);
+}
 
 function ChatMarkdown({ content }: { content: string }) {
   const prepared = useMemo(() => closeUnclosedCodeBlocks(content), [content]);
@@ -74,7 +104,7 @@ function ChatMarkdown({ content }: { content: string }) {
 
   return (
     <>
-      <ReactMarkdown remarkPlugins={remarkPlugins} components={mdComponents}>
+      <ReactMarkdown remarkPlugins={remarkPlugins} rehypePlugins={rehypePlugins} components={mdComponents}>
         {prepared}
       </ReactMarkdown>
       {urls.length > 0 && (

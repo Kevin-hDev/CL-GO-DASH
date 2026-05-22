@@ -226,7 +226,57 @@
     "tools": "Tools",
     "tokens": "tokens",
     "tps": "t/s",
-    "fileReadError": "Could not read file"
+    "fileReadError": "Could not read file",
+    "toolActivity": {
+      "summary": "{{group}}: {{details}}",
+      "inProgress": "in progress",
+      "toggleDetails": "Show tool details",
+      "groups": {
+        "exploration": "Exploration",
+        "modification": "Changes",
+        "command": "Commands",
+        "web": "Web",
+        "git": "Git",
+        "other": "Tools"
+      },
+      "counts": {
+        "files_one": "{{count}} file explored",
+        "files_other": "{{count}} files explored",
+        "searches_one": "{{count}} search",
+        "searches_other": "{{count}} searches",
+        "lists_one": "{{count}} list",
+        "lists_other": "{{count}} lists",
+        "writes_one": "{{count}} file written",
+        "writes_other": "{{count}} files written",
+        "edits_one": "{{count}} file edited",
+        "edits_other": "{{count}} files edited",
+        "commands_one": "{{count}} command executed",
+        "commands_other": "{{count}} commands executed",
+        "webSearches_one": "{{count}} web search",
+        "webSearches_other": "{{count}} web searches",
+        "webFetches_one": "{{count}} page fetched",
+        "webFetches_other": "{{count}} pages fetched",
+        "gitActions_one": "{{count}} git action",
+        "gitActions_other": "{{count}} git actions",
+        "otherActions_one": "{{count}} action",
+        "otherActions_other": "{{count}} actions"
+      },
+      "actions": {
+        "read": "Read",
+        "create": "Create",
+        "edit": "Edit",
+        "list": "List",
+        "search": "Search",
+        "run": "Run",
+        "createBranch": "Create branch",
+        "switchBranch": "Switch branch",
+        "skill": "Skill",
+        "agent": "Agent",
+        "forecast": "Forecast",
+        "mcp": "MCP",
+        "tool": "Tool"
+      }
+    }
   },
   "switchModel": {
     "title": "Model change",
@@ -647,11 +697,11 @@
       "subtitle": "Allow LLMs to connect to other apps and services",
       "browseBtn": "Browse connectors"
     },
-  "sidebar": {
-    "configured": "Configured",
-    "empty": "No connector configured",
-    "loadError": "Unable to load connectors"
-  },
+    "sidebar": {
+      "configured": "Configured",
+      "empty": "No connector configured",
+      "loadError": "Unable to load connectors"
+    },
     "detail": {
       "connected": "Connected",
       "disconnected": "Disconnected",

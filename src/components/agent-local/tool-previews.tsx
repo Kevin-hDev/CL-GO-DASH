@@ -36,7 +36,6 @@ function useDiffInfo(path?: string, newText?: string, oldText?: string, fallback
   const [content, setContent] = useState<string | null>(null);
 
   useEffect(() => {
-    if (fallback) { setStartLine(fallback); }
     if (!path) return;
 
     readFilePreview(path)
@@ -51,10 +50,12 @@ function useDiffInfo(path?: string, newText?: string, oldText?: string, fallback
           }
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        setContent(null);
+      });
   }, [path, newText, oldText, fallback]);
 
-  return { startLine, content };
+  return { startLine: fallback ?? startLine, content };
 }
 
 export function ContentPreview({ content, path }: { content: string; path?: string }) {
@@ -135,10 +136,22 @@ export function WebResultsPreview({ content, isSearch }: { content: string; isSe
           const lines = block.split("\n");
           const title = (lines[0] ?? "").replace(/\*\*/g, "");
           const url = lines[1] ?? "";
+          const favicon = faviconUrl(url);
           return (
-            <div key={i} style={{ marginBottom: i < blocks.length - 1 ? 6 : 0 }}>
+            <div key={i} className="tp-web-item">
               <div className="tp-web-title">{title}</div>
-              <div className="tp-web-url">{url}</div>
+              <div className="tp-web-url">
+                <span className="tp-web-url-text">{url}</span>
+                {favicon && (
+                  <img
+                    className="tp-web-favicon"
+                    src={favicon}
+                    alt=""
+                    loading="lazy"
+                    onError={(e) => { e.currentTarget.style.display = "none"; }}
+                  />
+                )}
+              </div>
             </div>
           );
         })}
@@ -151,4 +164,14 @@ export function WebResultsPreview({ content, isSearch }: { content: string; isSe
       {preview}
     </div>
   );
+}
+
+function faviconUrl(rawUrl: string): string | null {
+  try {
+    const parsed = new URL(rawUrl);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null;
+    return `${parsed.origin}/favicon.ico`;
+  } catch {
+    return null;
+  }
 }

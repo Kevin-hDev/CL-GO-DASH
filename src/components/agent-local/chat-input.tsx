@@ -6,15 +6,16 @@ import { useSlashCommands } from "@/hooks/use-slash-commands";
 import { useActiveSkills } from "@/hooks/use-active-skills";
 import { SendStopButton } from "./send-stop-button";
 import { SlashAutocomplete } from "./slash-autocomplete";
-import { SkillBadge } from "./skill-badge";
 import { ModelSelector } from "./model-selector";
 import { FileThumbnail } from "./file-thumbnail";
 import { ContextProgress } from "./context-progress";
 import { PermissionModeSelector } from "./permission-mode-selector";
+import { activeSkillsInText, highlightSkillText } from "@/lib/skill-text";
 import type { DroppedFile } from "@/hooks/use-file-drop";
 import type { PermissionMode } from "@/hooks/use-permission-mode";
 import type { ReasoningMode } from "@/lib/reasoning-modes";
 import "./chat.css";
+import "./chat-input-textarea.css";
 
 const K_UP = "ArrowUp";
 const K_DOWN = "ArrowDown";
@@ -59,10 +60,12 @@ export function ChatInput({
   const slash = useSlashCommands();
   const skills = useActiveSkills(slash, text, setText);
   const bubbleRef = useRef<HTMLDivElement>(null);
+  const highlightRef = useRef<HTMLDivElement>(null);
 
   const hasText = text.trim().length > 0;
   const hasFiles = files != null && files.length > 0;
-  const hasContent = hasText || hasFiles || skills.activeSkills.length > 0;
+  const hasContent = hasText || hasFiles;
+  const visibleSkillNames = activeSkillsInText(text, skills.activeSkills).map((s) => s.name);
 
   const handleSend = useCallback(() => {
     if (!hasContent || isStreaming) return;
@@ -78,6 +81,12 @@ export function ChatInput({
     resize();
     slash.handleInput(value);
   }, [resize, slash]);
+
+  const handleTextareaScroll = useCallback((e: React.UIEvent<HTMLTextAreaElement>) => {
+    if (highlightRef.current) {
+      highlightRef.current.scrollTop = e.currentTarget.scrollTop;
+    }
+  }, []);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     const pressed = eventKey(e);
@@ -125,24 +134,24 @@ export function ChatInput({
           onSelect={(s) => void skills.handleSelectSkill(s)}
         />
       )}
-      {skills.activeSkills.length > 0 && (
-        <div style={{ padding: "var(--space-xs) var(--space-sm) 0", display: "flex", gap: 6, flexWrap: "wrap" }}>
-          {skills.activeSkills.map((s) => (
-            <SkillBadge key={s.name} skill={s} onRemove={() => skills.handleRemoveSkill(s.name)} />
-          ))}
+      <div className="chat-textarea-shell">
+        <div className="chat-textarea-highlight" ref={highlightRef} aria-hidden="true">
+          {highlightSkillText(text, visibleSkillNames)}
+          {text.endsWith("\n") ? "\n" : null}
         </div>
-      )}
-      <textarea
-        ref={ref}
-        value={text}
-        onChange={(e) => handleChange(e.target.value)}
-        onKeyDown={handleKeyDown}
-        placeholder={t("agentLocal.placeholder")}
-        className="chat-textarea"
-        rows={2}
-      />
+        <textarea
+          ref={ref}
+          value={text}
+          onChange={(e) => handleChange(e.target.value)}
+          onScroll={handleTextareaScroll}
+          onKeyDown={handleKeyDown}
+          placeholder={t("agentLocal.placeholder")}
+          className="chat-textarea"
+          rows={2}
+        />
+      </div>
       {files && files.length > 0 && (
-        <div style={{ display: "flex", gap: 6, padding: "0 var(--space-sm)", flexWrap: "wrap" }}>
+        <div className="chat-file-list">
           {files.map((f, i) => (
             <FileThumbnail
               key={`${f.name}-${i}`}

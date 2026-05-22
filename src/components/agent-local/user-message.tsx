@@ -3,6 +3,7 @@ import { MessageActions } from "./message-actions";
 import { EditMessage } from "./edit-message";
 import { useHoverClass } from "@/hooks/use-hover-class";
 import { linkifyWithPreviews } from "@/lib/linkify";
+import { highlightSkillNodes } from "@/lib/skill-text";
 import "./user-message.css";
 
 interface FileInfo {
@@ -42,22 +43,14 @@ export const UserMessage = memo(function UserMessage({
   const { text: textNodes, previews } = hasText
     ? linkifyWithPreviews(content)
     : { text: [], previews: null };
+  const renderedText = highlightSkillNodes(textNodes, skillNames);
 
   return (
     <div className="msg-user" ref={hoverRef}>
       <div className="msg-user-wrap">
-        {(hasText || (skillNames && skillNames.length > 0)) && (
+        {hasText && (
           <div className="msg-user-bubble">
-            {hasText && textNodes}
-            {skillNames && skillNames.map((name) => (
-              <span key={name} className="msg-skill-badge">
-                <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <rect x="3" y="3" width="14" height="14" rx="3" />
-                  <path d="M8 7l4 3-4 3" />
-                </svg>
-                {name}
-              </span>
-            ))}
+            {renderedText}
             {previews}
           </div>
         )}

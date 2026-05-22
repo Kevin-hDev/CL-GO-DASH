@@ -227,7 +227,57 @@
     "tools": "Tools",
     "tokens": "tokens",
     "tps": "t/s",
-    "fileReadError": "无法读取文件"
+    "fileReadError": "无法读取文件",
+    "toolActivity": {
+      "summary": "{{group}}：{{details}}",
+      "inProgress": "进行中",
+      "toggleDetails": "显示工具详情",
+      "groups": {
+        "exploration": "探索",
+        "modification": "更改",
+        "command": "命令",
+        "web": "网页",
+        "git": "Git",
+        "other": "工具"
+      },
+      "counts": {
+        "files_one": "{{count}} 个文件已探索",
+        "files_other": "{{count}} 个文件已探索",
+        "searches_one": "{{count}} 次搜索",
+        "searches_other": "{{count}} 次搜索",
+        "lists_one": "{{count}} 次列表",
+        "lists_other": "{{count}} 次列表",
+        "writes_one": "{{count}} 个文件已写入",
+        "writes_other": "{{count}} 个文件已写入",
+        "edits_one": "{{count}} 个文件已修改",
+        "edits_other": "{{count}} 个文件已修改",
+        "commands_one": "{{count}} 条命令已执行",
+        "commands_other": "{{count}} 条命令已执行",
+        "webSearches_one": "{{count}} 次网页搜索",
+        "webSearches_other": "{{count}} 次网页搜索",
+        "webFetches_one": "{{count}} 个页面已获取",
+        "webFetches_other": "{{count}} 个页面已获取",
+        "gitActions_one": "{{count}} 个 Git 操作",
+        "gitActions_other": "{{count}} 个 Git 操作",
+        "otherActions_one": "{{count}} 个操作",
+        "otherActions_other": "{{count}} 个操作"
+      },
+      "actions": {
+        "read": "读取",
+        "create": "创建",
+        "edit": "修改",
+        "list": "列表",
+        "search": "搜索",
+        "run": "命令",
+        "createBranch": "创建分支",
+        "switchBranch": "切换分支",
+        "skill": "Skill",
+        "agent": "代理",
+        "forecast": "Forecast",
+        "mcp": "MCP",
+        "tool": "工具"
+      }
+    }
   },
   "switchModel": {
     "title": "切换模型",
@@ -665,11 +715,11 @@
       "subtitle": "允许 LLM 连接其他应用和服务",
       "browseBtn": "浏览连接器"
     },
-  "sidebar": {
-    "configured": "已配置",
-    "empty": "没有已配置的连接器",
-    "loadError": "无法加载连接器"
-  },
+    "sidebar": {
+      "configured": "已配置",
+      "empty": "没有已配置的连接器",
+      "loadError": "无法加载连接器"
+    },
     "detail": {
       "connected": "已连接",
       "disconnected": "已断开",

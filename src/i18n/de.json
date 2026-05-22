@@ -227,7 +227,57 @@
     "tools": "Tools",
     "tokens": "tokens",
     "tps": "t/s",
-    "fileReadError": "Datei konnte nicht gelesen werden"
+    "fileReadError": "Datei konnte nicht gelesen werden",
+    "toolActivity": {
+      "summary": "{{group}}: {{details}}",
+      "inProgress": "läuft",
+      "toggleDetails": "Tool-Details anzeigen",
+      "groups": {
+        "exploration": "Erkundung",
+        "modification": "Änderungen",
+        "command": "Befehle",
+        "web": "Web",
+        "git": "Git",
+        "other": "Tools"
+      },
+      "counts": {
+        "files_one": "{{count}} erkundete Datei",
+        "files_other": "{{count}} erkundete Dateien",
+        "searches_one": "{{count}} Suche",
+        "searches_other": "{{count}} Suchen",
+        "lists_one": "{{count}} Liste",
+        "lists_other": "{{count}} Listen",
+        "writes_one": "{{count}} geschriebene Datei",
+        "writes_other": "{{count}} geschriebene Dateien",
+        "edits_one": "{{count}} bearbeitete Datei",
+        "edits_other": "{{count}} bearbeitete Dateien",
+        "commands_one": "{{count}} ausgeführter Befehl",
+        "commands_other": "{{count}} ausgeführte Befehle",
+        "webSearches_one": "{{count}} Websuche",
+        "webSearches_other": "{{count}} Websuchen",
+        "webFetches_one": "{{count}} abgerufene Seite",
+        "webFetches_other": "{{count}} abgerufene Seiten",
+        "gitActions_one": "{{count}} Git-Aktion",
+        "gitActions_other": "{{count}} Git-Aktionen",
+        "otherActions_one": "{{count}} Aktion",
+        "otherActions_other": "{{count}} Aktionen"
+      },
+      "actions": {
+        "read": "Lesen",
+        "create": "Erstellen",
+        "edit": "Bearbeiten",
+        "list": "Liste",
+        "search": "Suche",
+        "run": "Befehl",
+        "createBranch": "Branch erstellen",
+        "switchBranch": "Branch wechseln",
+        "skill": "Skill",
+        "agent": "Agent",
+        "forecast": "Forecast",
+        "mcp": "MCP",
+        "tool": "Tool"
+      }
+    }
   },
   "switchModel": {
     "title": "Modellwechsel",
@@ -665,11 +715,11 @@
       "subtitle": "Erlaubt LLMs, sich mit anderen Apps und Diensten zu verbinden",
       "browseBtn": "Connectors durchsuchen"
     },
-  "sidebar": {
-    "configured": "Konfiguriert",
-    "empty": "Kein Connector konfiguriert",
-    "loadError": "Connectors konnten nicht geladen werden"
-  },
+    "sidebar": {
+      "configured": "Konfiguriert",
+      "empty": "Kein Connector konfiguriert",
+      "loadError": "Connectors konnten nicht geladen werden"
+    },
     "detail": {
       "connected": "Verbunden",
       "disconnected": "Getrennt",

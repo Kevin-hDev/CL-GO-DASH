@@ -226,7 +226,57 @@
     "tools": "Outils",
     "tokens": "tokens",
     "tps": "t/s",
-    "fileReadError": "Impossible de lire le fichier"
+    "fileReadError": "Impossible de lire le fichier",
+    "toolActivity": {
+      "summary": "{{group}} : {{details}}",
+      "inProgress": "en cours",
+      "toggleDetails": "Afficher les détails des outils",
+      "groups": {
+        "exploration": "Exploration",
+        "modification": "Modifications",
+        "command": "Commandes",
+        "web": "Web",
+        "git": "Git",
+        "other": "Outils"
+      },
+      "counts": {
+        "files_one": "{{count}} fichier exploré",
+        "files_other": "{{count}} fichiers explorés",
+        "searches_one": "{{count}} recherche",
+        "searches_other": "{{count}} recherches",
+        "lists_one": "{{count}} liste",
+        "lists_other": "{{count}} listes",
+        "writes_one": "{{count}} fichier écrit",
+        "writes_other": "{{count}} fichiers écrits",
+        "edits_one": "{{count}} fichier modifié",
+        "edits_other": "{{count}} fichiers modifiés",
+        "commands_one": "{{count}} commande exécutée",
+        "commands_other": "{{count}} commandes exécutées",
+        "webSearches_one": "{{count}} recherche web",
+        "webSearches_other": "{{count}} recherches web",
+        "webFetches_one": "{{count}} page récupérée",
+        "webFetches_other": "{{count}} pages récupérées",
+        "gitActions_one": "{{count}} action git",
+        "gitActions_other": "{{count}} actions git",
+        "otherActions_one": "{{count}} action",
+        "otherActions_other": "{{count}} actions"
+      },
+      "actions": {
+        "read": "Lecture",
+        "create": "Création",
+        "edit": "Modification",
+        "list": "Liste",
+        "search": "Recherche",
+        "run": "Commande",
+        "createBranch": "Création branche",
+        "switchBranch": "Changement branche",
+        "skill": "Skill",
+        "agent": "Agent",
+        "forecast": "Forecast",
+        "mcp": "MCP",
+        "tool": "Outil"
+      }
+    }
   },
   "switchModel": {
     "title": "Changement de modèle",
@@ -647,11 +697,11 @@
       "subtitle": "Permettez aux LLM de se connecter à d'autres applications et services",
       "browseBtn": "Parcourir les connecteurs"
     },
-  "sidebar": {
-    "configured": "Configurés",
-    "empty": "Aucun connecteur configuré",
-    "loadError": "Impossible de charger les connecteurs"
-  },
+    "sidebar": {
+      "configured": "Configurés",
+      "empty": "Aucun connecteur configuré",
+      "loadError": "Impossible de charger les connecteurs"
+    },
     "detail": {
       "connected": "Connecté",
       "disconnected": "Déconnecté",

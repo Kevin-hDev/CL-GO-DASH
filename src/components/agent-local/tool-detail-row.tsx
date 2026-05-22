@@ -1,0 +1,143 @@
+import { useTranslation } from "react-i18next";
+import type { ToolActivity } from "@/hooks/agent-chat-utils";
+import type { ToolActivityRecord } from "@/types/agent";
+import { ContentPreview, DiffPreview, WebResultsPreview } from "./tool-previews";
+import {
+  DocumentResultPreview,
+  ReadSpreadsheetPreview,
+  WriteDocumentPreview,
+  WriteSpreadsheetPreview,
+} from "./tool-office-previews";
+import { ToolItem } from "./tool-item";
+import { toolDisplayInfo } from "./tool-display";
+
+export interface RenderableTool {
+  name: string;
+  summary: string;
+  args?: Record<string, unknown>;
+  result?: string;
+  is_error?: boolean;
+  content?: string;
+  old_text?: string;
+  new_text?: string;
+  start_line?: number;
+}
+
+function str(v: unknown, fallback = ""): string {
+  return typeof v === "string" ? v : fallback;
+}
+
+function parseLineFromResult(result?: string): number | undefined {
+  if (!result) return undefined;
+  const match = /\(ligne (\d+)\)/.exec(result);
+  return match ? Number(match[1]) : undefined;
+}
+
+function toolSummary(t: ToolActivity): string {
+  const a = t.args;
+  if (t.name === "bash") return str(a.command);
+  if (t.name === "grep" || t.name === "glob") return str(a.pattern);
+  if (t.name === "read_file" || t.name === "write_file") return str(a.path);
+  if (t.name === "edit_file") return str(a.path);
+  if (t.name === "list_dir") return str(a.path, ".");
+  if (t.name === "web_search") return str(a.query);
+  if (t.name === "web_fetch") return str(a.url);
+  if (t.name === "create_branch" || t.name === "checkout_branch") return str(a.branch_name);
+  if (["read_spreadsheet", "read_document", "read_image", "write_spreadsheet", "write_document"].includes(t.name)) {
+    return str(a.path);
+  }
+  if (t.name === "process_image") return str(a.input_path);
+  return JSON.stringify(a).slice(0, 80);
+}
+
+export function streamToolToRenderable(t: ToolActivity): RenderableTool {
+  const summary = toolSummary(t);
+  return {
+    name: t.name,
+    summary,
+    args: t.args,
+    result: t.result,
+    is_error: t.isError,
+    content: t.name === "write_file" ? str(t.args.content) : undefined,
+    old_text: t.name === "edit_file" ? str(t.args.old_string) : undefined,
+    new_text: t.name === "edit_file" ? str(t.args.new_string) : undefined,
+    start_line: parseLineFromResult(t.result),
+  };
+}
+
+export function savedToolToRenderable(t: ToolActivityRecord): RenderableTool {
+  return {
+    name: t.name,
+    summary: t.summary,
+    args: t.args,
+    result: t.result,
+    is_error: t.is_error,
+    content: t.content,
+    old_text: t.old_text,
+    new_text: t.new_text,
+    start_line: t.start_line,
+  };
+}
+
+export function ToolDetailRow({
+  tool,
+  previousTools,
+  onFilePreview,
+  projectPath,
+}: {
+  tool: RenderableTool;
+  previousTools: RenderableTool[];
+  onFilePreview?: (path: string) => void;
+  projectPath?: string;
+}) {
+  const { t } = useTranslation();
+  const skipWrite = tool.name === "write_file"
+    && previousTools.some((prev) => prev.name === "edit_file" && prev.summary === tool.summary);
+  const done = tool.result !== undefined || tool.is_error !== undefined;
+  const operations = tool.content ?? tool.args?.operations;
+  const documentContent = tool.content ?? tool.args?.content;
+  const display = toolDisplayInfo(tool, projectPath, t);
+
+  return (
+    <ToolItem
+      name={tool.name}
+      summary={tool.summary}
+      displayName={display.label}
+      displaySummary={display.summary}
+      additions={display.additions}
+      deletions={display.deletions}
+      done={done}
+      isError={tool.is_error}
+      errorMessage={tool.is_error ? tool.result : undefined}
+      result={tool.result}
+      onFilePreview={onFilePreview}
+    >
+      {tool.name === "write_file" && tool.content && !skipWrite && (
+        <ContentPreview content={tool.content} path={tool.summary} />
+      )}
+      {tool.old_text != null && tool.new_text != null && (
+        <DiffPreview
+          oldText={tool.old_text}
+          newText={tool.new_text}
+          path={tool.summary}
+          startLine={tool.start_line}
+        />
+      )}
+      {(tool.name === "web_search" || tool.name === "web_fetch") && tool.result && (
+        <WebResultsPreview content={tool.result} isSearch={tool.name === "web_search"} />
+      )}
+      {tool.name === "read_spreadsheet" && tool.result && !tool.is_error && (
+        <ReadSpreadsheetPreview result={tool.result} />
+      )}
+      {tool.name === "read_document" && tool.result && !tool.is_error && (
+        <DocumentResultPreview result={tool.result} />
+      )}
+      {tool.name === "write_spreadsheet" && tool.result && !tool.is_error && operations != null && (
+        <WriteSpreadsheetPreview operations={operations} />
+      )}
+      {tool.name === "write_document" && tool.result && !tool.is_error && documentContent != null && (
+        <WriteDocumentPreview content={documentContent} />
+      )}
+    </ToolItem>
+  );
+}

@@ -7,6 +7,7 @@
 - **Provider reasoning modes** — per-session reasoning effort controls for Codex, OpenAI, OpenRouter, Ollama GPT-OSS, Groq, DeepSeek, Mistral, Moonshot, xAI, and Z.ai
 - **Dynamic OpenRouter reasoning** — reasoning support and effort levels are detected from OpenRouter model metadata when available
 - **Persistent reasoning settings** — each chat session keeps its own reasoning mode across app restarts
+- **Tool display refactor** — compact, collapsible tool activity summaries with clearer detail labels
 
 ---
 

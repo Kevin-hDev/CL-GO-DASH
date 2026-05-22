@@ -33,9 +33,115 @@
   min-height: 0;
 }
 
+.tb-group-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tb-group {
+  --tb-group-color: var(--ink-muted);
+}
+
+.tb-group-exploration {
+  --tb-group-color: var(--tool-read);
+}
+
+.tb-group-modification {
+  --tb-group-color: var(--tool-edit);
+}
+
+.tb-group-command {
+  --tb-group-color: var(--tool-bash);
+}
+
+.tb-group-web {
+  --tb-group-color: var(--ink);
+}
+
+.tb-group-git {
+  --tb-group-color: var(--tool-bash);
+}
+
+.tb-group-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--ink-muted);
+  font: inherit;
+  text-align: left;
+}
+
+.tb-group-toggle:hover {
+  color: var(--ink);
+}
+
+[data-theme="dark"] .tb-group-toggle:hover {
+  color: var(--ink-on-pulse);
+}
+
+.tb-group-title {
+  flex: 1;
+  min-width: 0;
+  color: inherit;
+  font-size: 12px;
+  line-height: 1.6;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tb-group-progress {
+  color: var(--ink-faint);
+}
+
+.tb-group-state {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  color: var(--signal-ok);
+  flex-shrink: 0;
+}
+
+.tb-group-error {
+  color: var(--signal-error);
+  font-size: 10px;
+}
+
+.tb-group-accordion {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 300ms ease;
+}
+
+.tb-group-accordion.tb-open {
+  grid-template-rows: 1fr;
+}
+
+.tb-group-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 0;
+  overflow: hidden;
+  padding-top: 6px;
+  padding-left: 18px;
+}
+
+.tb-spinner {
+  color: var(--ink-faint);
+  animation: spin 1s linear infinite;
+}
+
 .tb-toggle {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 4px;
   cursor: pointer;
   border: none;
@@ -52,83 +158,33 @@
   font-size: 9px;
   color: var(--ink-faint);
   flex-shrink: 0;
-  transition: transform 200ms ease;
-  width: 10px;
+  width: 16px;
+  height: 16px;
   text-align: center;
 }
 
-.tb-error-anchor {
-  position: relative;
-  flex-shrink: 0;
-}
-
-.tb-error-tooltip {
-  position: absolute;
-  bottom: calc(100% + 2px);
-  right: -8px;
-  width: max-content;
-  max-width: 360px;
-  background: var(--toast-bg);
-  border-radius: var(--radius-sm, 6px);
-  padding: 6px 8px 6px 10px;
-  box-shadow: var(--shadow-card);
-  display: flex;
+.tb-group-arrow,
+.tb-tool-arrow {
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  animation: tb-tooltip-in 150ms ease-out;
-  z-index: 10;
+  justify-content: center;
+  width: 16px;
+  color: var(--ink-on-pulse);
+  opacity: 0;
+  line-height: 0;
+  pointer-events: none;
 }
 
-.tb-error-tooltip::after {
-  content: "";
-  position: absolute;
-  bottom: -6px;
-  left: 0;
-  right: 0;
-  height: 6px;
+.tb-group-toggle:hover .tb-group-arrow,
+.tb-row:hover .tb-tool-arrow {
+  animation: tb-arrow-peek 1200ms ease forwards;
 }
 
-.tb-error-tooltip-text {
-  color: var(--toast-error-text);
-  font-size: 10px;
-  font-family: var(--font-mono, monospace);
-  line-height: 1.4;
-  word-break: break-word;
+[data-theme="dark"] .tb-row:hover .tb-item-summary {
+  color: var(--ink-on-pulse) !important;
 }
 
-.tb-error-tooltip-copy {
-  background: none;
-  border: none;
-  color: var(--ink-faint);
-  cursor: pointer;
-  padding: 2px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  border-radius: 3px;
-}
-
-.tb-error-tooltip-copy:hover {
-  color: var(--ink);
-  background: var(--surface-hover);
-}
-
-@keyframes tb-tooltip-in {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.tb-result-preview {
-  margin-top: 4px;
-  padding: 6px 10px;
-  background: var(--void);
-  border-radius: var(--radius-sm, 4px);
-  font-size: 11px;
-  font-family: var(--font-mono, monospace);
-  color: var(--ink-muted);
-  white-space: pre-wrap;
-  word-break: break-all;
-  max-height: 240px;
-  overflow-y: auto;
-  line-height: 1.5;
+@keyframes tb-arrow-peek {
+  0%, 70% { opacity: 1; }
+  100% { opacity: 0; }
 }

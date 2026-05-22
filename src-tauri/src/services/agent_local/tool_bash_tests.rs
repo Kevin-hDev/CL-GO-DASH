@@ -69,3 +69,33 @@ async fn test_cwd_update_after_cd() {
         Err(e) => panic!("execute_shell a échoué : {e}"),
     }
 }
+
+#[test]
+fn test_dev_server_command_detected_as_background() {
+    assert!(super::super::tool_bash_long::should_run_in_background(
+        "npm run dev -- --host 127.0.0.1"
+    ));
+    assert!(super::super::tool_bash_long::should_run_in_background(
+        "cargo watch -x check"
+    ));
+    assert!(!super::super::tool_bash_long::should_run_in_background(
+        "cargo check"
+    ));
+}
+
+#[cfg(not(target_os = "windows"))]
+#[tokio::test]
+async fn test_background_command_returns_when_ready() {
+    let command = "printf 'Local: http://127.0.0.1:5173\\n'; while true; do sleep 1; done";
+    let started = std::time::Instant::now();
+    let out = execute_shell(command, std::path::Path::new("/tmp"), Some(10)).await;
+    super::super::tool_bash_background::abort_all_for_test();
+
+    let shell_out = out.expect("commande longue devrait réussir");
+    assert_eq!(shell_out.exit_code, 0);
+    assert!(
+        started.elapsed() < std::time::Duration::from_secs(3),
+        "la commande ne doit pas attendre le timeout complet"
+    );
+    assert!(shell_out.stdout.contains("Commande longue active"));
+}

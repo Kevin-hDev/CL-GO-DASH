@@ -25,6 +25,11 @@ pub async fn execute_shell(
         });
     }
 
+    if super::tool_bash_long::should_run_in_background(command) {
+        return super::tool_bash_long::execute_background_shell(command, working_dir, timeout_secs)
+            .await;
+    }
+
     let secs = timeout_secs.unwrap_or(DEFAULT_TIMEOUT).min(MAX_TIMEOUT);
     let (shell, flag) = detect_shell();
     let marker = generate_cwd_marker();
@@ -106,7 +111,7 @@ fn extract_cwd(raw_stdout: &str, marker: &str) -> (String, Option<String>) {
     }
 }
 
-fn detect_shell() -> (String, String) {
+pub(super) fn detect_shell() -> (String, String) {
     if cfg!(target_os = "windows") {
         ("powershell".to_string(), "-Command".to_string())
     } else {
@@ -115,7 +120,7 @@ fn detect_shell() -> (String, String) {
     }
 }
 
-fn truncate_output(output: &str) -> String {
+pub(super) fn truncate_output(output: &str) -> String {
     let mut result = String::new();
     let mut line_count = 0;
     for line in output.lines() {

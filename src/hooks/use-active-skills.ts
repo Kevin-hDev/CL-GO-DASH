@@ -2,12 +2,12 @@ import { useState, useCallback, useRef } from "react";
 import type { SkillInfo } from "@/types/agent";
 import type { useSlashCommands } from "@/hooks/use-slash-commands";
 import type { SlashItem } from "@/hooks/use-slash-commands";
+import { activeSkillsInText, replaceSlashToken } from "@/lib/skill-text";
 
 export interface ActiveSkillsState {
   activeSkills: SkillInfo[];
   skillContentsRef: React.RefObject<Map<string, string>>;
   handleSelectSkill: (item: SlashItem) => Promise<void>;
-  handleRemoveSkill: (name: string) => void;
   getSkillsPayload: () => { name: string; content: string }[] | undefined;
   clearSkills: () => void;
 }
@@ -30,25 +30,21 @@ export function useActiveSkills(
     }
 
     const { skill, content } = result;
-    if (activeSkills.some((s) => s.name === skill.name)) return;
-    setActiveSkills((prev) => [...prev, skill]);
+    if (!activeSkills.some((s) => s.name === skill.name)) {
+      setActiveSkills((prev) => [...prev, skill]);
+    }
     skillContentsRef.current.set(skill.name, content);
-    const lastSlash = text.lastIndexOf("/");
-    setText(lastSlash > 0 ? text.slice(0, lastSlash).trimEnd() : "");
+    setText(replaceSlashToken(text, skill.name));
   }, [slash, text, setText, activeSkills]);
 
-  const handleRemoveSkill = useCallback((name: string) => {
-    setActiveSkills((prev) => prev.filter((s) => s.name !== name));
-    skillContentsRef.current.delete(name);
-  }, []);
-
   const getSkillsPayload = useCallback(() => {
-    if (activeSkills.length === 0) return undefined;
-    return activeSkills.map((s) => ({
+    const visibleSkills = activeSkillsInText(text, activeSkills);
+    if (visibleSkills.length === 0) return undefined;
+    return visibleSkills.map((s) => ({
       name: s.name,
       content: skillContentsRef.current.get(s.name) ?? "",
     }));
-  }, [activeSkills]);
+  }, [activeSkills, text]);
 
   const clearSkills = useCallback(() => {
     setActiveSkills([]);
@@ -56,8 +52,10 @@ export function useActiveSkills(
   }, []);
 
   return {
-    activeSkills, skillContentsRef,
-    handleSelectSkill, handleRemoveSkill,
-    getSkillsPayload, clearSkills,
+    activeSkills,
+    skillContentsRef,
+    handleSelectSkill,
+    getSkillsPayload,
+    clearSkills,
   };
 }
