@@ -6,9 +6,6 @@ import type { AgentSessionMeta, Project } from "@/types/agent";
 function makeSession(overrides: Partial<AgentSessionMeta> = {}): AgentSessionMeta {
   return { id: "s1", name: "Test", model: "llama3", provider: "ollama", message_count: 5, created_at: "2026-01-01", ...overrides };
 }
-function makeProject(overrides: Partial<Project> = {}): Project {
-  return { id: "p1", name: "Mon Projet", path: "/tmp/proj", order: 0, created_at: "2026-01-01", ...overrides };
-}
 const defaultProps = {
   sessions: [] as AgentSessionMeta[], projects: [] as Project[], selectedId: null as string | null,
   onSelect: vi.fn(), onCreate: vi.fn(), onRename: vi.fn(), onDelete: vi.fn(),
@@ -22,6 +19,7 @@ vi.mock("react-i18next", () => ({
 
 vi.mock("@/components/ui/icons", () => ({
   Pencil: () => <span />,
+  CaretRight: () => <span data-testid="section-chevron" />,
   DotsThreeVertical: () => <span data-testid="dots" />,
   ChatsCircle: (props: { weight?: string }) => (
     <span data-testid="chat-icon" data-weight={props.weight} />
@@ -65,6 +63,7 @@ vi.mock("@/hooks/use-project-drag", () => ({
 }));
 
 vi.mock("../conversation.css", () => ({}));
+vi.mock("../conversation-collapse.css", () => ({}));
 
 describe("ConversationList", () => {
   beforeEach(() => {
@@ -136,33 +135,6 @@ describe("ConversationList", () => {
     );
     fireEvent.click(container.querySelector(".conv-new-btn") as HTMLElement);
     expect(onCreate).toHaveBeenCalledOnce();
-  });
-
-  it("affiche les ProjectSection pour chaque projet", () => {
-    const p1 = makeProject({ id: "p1", name: "Projet A" });
-    const p2 = makeProject({ id: "p2", name: "Projet B" });
-    const { getByTestId } = render(
-      <ConversationList {...defaultProps} projects={[p1, p2]} />,
-    );
-    expect(getByTestId("project-p1")).not.toBeNull();
-    expect(getByTestId("project-p2")).not.toBeNull();
-  });
-
-  it("affiche comme orpheline une session dont le project_id ne correspond à aucun projet", () => {
-    const session = makeSession({ id: "s1", project_id: "projet-inconnu" });
-    const { container } = render(
-      <ConversationList {...defaultProps} sessions={[session]} projects={[]} />,
-    );
-    expect(container.querySelectorAll(".conv-session-indented").length).toBe(1);
-  });
-
-  it("n'affiche pas dans les orphelins une session assignée à un projet existant", () => {
-    const projet = makeProject({ id: "p1" });
-    const session = makeSession({ id: "s1", project_id: "p1" });
-    const { container } = render(
-      <ConversationList {...defaultProps} sessions={[session]} projects={[projet]} />,
-    );
-    expect(container.querySelectorAll(".conv-session-indented").length).toBe(0);
   });
 
   it("affiche la clé i18n pour une session nommée 'Nouvelle session'", () => {

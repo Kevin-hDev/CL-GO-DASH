@@ -1,11 +1,13 @@
 import { useState, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  FolderSimple, FolderOpen, DotsThreeVertical, PencilSimple,
+  FolderOpen, DotsThreeVertical, PencilSimple,
   X,
 } from "@/components/ui/icons";
 import { WastebasketIcon } from "@/components/ui/wastebasket-icon";
 import { ComposeIcon } from "@/components/ui/compose-icon";
+import { FolderStateIcon } from "@/components/ui/folder-state-icon";
+import { CollapsePanel } from "./collapse-panel";
 import { ContextMenu, type ContextMenuItem } from "@/components/ui/context-menu";
 import { ConversationSessionItem } from "./conversation-session-item";
 import { useKeyboard } from "@/hooks/use-keyboard";
@@ -108,7 +110,7 @@ export function ProjectSection({
           />
         ) : (
           <>
-            <FolderSimple size={14} className="conv-icon" />
+            <FolderStateIcon open={!collapsed} size={14} className="conv-icon conv-folder-icon" />
             <span className="conv-project-name">{project.name}</span>
             <div className="conv-project-actions">
               <button className="conv-project-action-btn" onClick={(e) => { e.stopPropagation(); setCtx({ x: e.clientX, y: e.clientY }); }}>
@@ -122,29 +124,31 @@ export function ProjectSection({
         )}
       </div>
 
-      {!collapsed && sessions.map((s) => {
-        const active = idMatch(selectedId, s.id);
-        const isRenaming = idMatch(renamingSessionId, s.id);
-        return (
-          <ConversationSessionItem
-            key={s.id}
-            session={s}
-            active={active}
-            renaming={isRenaming}
-            inputRef={sessionInputRef}
-            onSelect={onSelect}
-            onRenameSubmit={handleSessionRename}
-            onCancelRename={() => setRenamingSessionId(null)}
-            onMenu={handleSessionMenu}
-          />
-        );
-      })}
+      <CollapsePanel open={!collapsed}>
+        {sessions.map((s) => {
+          const active = idMatch(selectedId, s.id);
+          const isRenaming = idMatch(renamingSessionId, s.id);
+          return (
+            <ConversationSessionItem
+              key={s.id}
+              session={s}
+              active={active}
+              renaming={isRenaming}
+              inputRef={sessionInputRef}
+              onSelect={onSelect}
+              onRenameSubmit={handleSessionRename}
+              onCancelRename={() => setRenamingSessionId(null)}
+              onMenu={handleSessionMenu}
+            />
+          );
+        })}
 
-      {!collapsed && sessions.length === 0 && (
-        <div className="conv-session-indented" style={{ color: "var(--ink-faint)", fontSize: "var(--text-xs)", paddingTop: "var(--space-xs)", paddingBottom: "var(--space-xs)" }}>
-          {t("projects.noDiscussion")}
-        </div>
-      )}
+        {sessions.length === 0 && (
+          <div className="conv-session-indented" style={{ color: "var(--ink-faint)", fontSize: "var(--text-xs)", paddingTop: "var(--space-xs)", paddingBottom: "var(--space-xs)" }}>
+            {t("projects.noDiscussion")}
+          </div>
+        )}
+      </CollapsePanel>
 
       {ctx && <ContextMenu x={ctx.x} y={ctx.y} items={projectMenuItems} onClose={() => setCtx(null)} />}
       {sessionCtx && <ContextMenu x={sessionCtx.x} y={sessionCtx.y} items={sessionMenuItems} onClose={() => setSessionCtx(null)} />}

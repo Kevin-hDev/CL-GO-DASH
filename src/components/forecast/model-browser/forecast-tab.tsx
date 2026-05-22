@@ -4,11 +4,7 @@ import { listen } from "@tauri-apps/api/event";
 import { useTranslation } from "react-i18next";
 import { cleanupTauriListener } from "@/lib/tauri-listen";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ThemedIcon } from "@/components/ui/themed-icon";
-import modelfileDark from "@/assets/modelfile.png";
-import modelfileLight from "@/assets/modelfile-light.png";
-import modelsDark from "@/assets/models.png";
-import modelsLight from "@/assets/models-light.png";
+import { ModelfileIcon, ModelsIcon } from "@/components/ui/model-browser-icons";
 import {
   isForecastModelSelectable,
   listForecastFamilies,
@@ -112,14 +108,14 @@ export function useForecastTabSlots({ navState, onNavChange, onNavReplace }: For
           className={`ollama-subtab ${subTab === "config" ? "active" : ""}`}
           onClick={() => onNavChange({ forecastSubTab: "config" })}
         >
-          <ThemedIcon darkSrc={modelfileDark} lightSrc={modelfileLight} size="1.2rem" />
+          <ModelfileIcon />
           {t("forecast.modelConfig.sidebarTitle")}
         </button>
         <button
           className={`ollama-subtab ${subTab === "models" ? "active" : ""}`}
           onClick={() => onNavChange({ forecastSubTab: "models" })}
         >
-          <ThemedIcon darkSrc={modelsDark} lightSrc={modelsLight} size="1.2rem" />
+          <ModelsIcon />
           {t("forecast.models.sidebarTitle")}
         </button>
       </div>

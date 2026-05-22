@@ -6,11 +6,14 @@ import { ComposeIcon } from "@/components/ui/compose-icon";
 import { ContextMenu, type ContextMenuItem } from "@/components/ui/context-menu";
 import { ProjectSection } from "./project-section";
 import { ConversationSessionItem } from "./conversation-session-item";
+import { CollapsePanel } from "./collapse-panel";
+import { ConversationSectionToggle } from "./conversation-section-toggle";
 import { useKeyboard } from "@/hooks/use-keyboard";
 import { useProjectDrag } from "@/hooks/use-project-drag";
 import type { AgentSessionMeta, Project } from "@/types/agent";
 import { idMatch } from "@/lib/utils";
 import "./conversation.css";
+import "./conversation-collapse.css";
 interface ConversationListProps {
   sessions: AgentSessionMeta[];
   projects: Project[];
@@ -118,72 +121,64 @@ export function ConversationList({
       <div className={`conv-list ${drag.draggingId ? "is-dragging" : ""}`}>
         {projects.length > 0 && (
           <>
-            <div
-              className="conv-section-label conv-section-toggle"
-              role="button"
-              tabIndex={0}
-              onClick={() => setProjectsCollapsed((c) => !c)}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setProjectsCollapsed((c) => !c); }}
-            >
+            <ConversationSectionToggle open={!projectsCollapsed} onToggle={() => setProjectsCollapsed((c) => !c)}>
               {t("projects.title", "Projets")}
-            </div>
-            {!projectsCollapsed && displayOrder.map((id) => {
-              const p = projectMap.get(id);
-              if (!p) return null;
-              return (
-                <ProjectSection
-                  key={p.id}
-                  project={p}
-                  sessions={mainSessions.filter((s) => s.project_id === p.id)}
-                  selectedId={selectedId}
-                  isDragOver={false}
-                  isDragging={drag.draggingId === p.id}
-                  onSelect={onSelect}
-                  onNewSession={onNewSessionInProject}
-                  onRenameProject={onRenameProject}
-                  onDeleteProject={onDeleteProject}
-                  onOpenFolder={onOpenFolder}
-                  onRenameSession={onRename}
-                  onDeleteSession={onDelete}
-                  onGrab={drag.onGrab}
-                  collapsed={collapsedProjects.has(p.id)}
-                  onToggleCollapse={() => toggleProject(p.id)}
-                />
-              );
-            })}
+            </ConversationSectionToggle>
+            <CollapsePanel open={!projectsCollapsed}>
+              {displayOrder.map((id) => {
+                const p = projectMap.get(id);
+                if (!p) return null;
+                return (
+                  <ProjectSection
+                    key={p.id}
+                    project={p}
+                    sessions={mainSessions.filter((s) => s.project_id === p.id)}
+                    selectedId={selectedId}
+                    isDragOver={false}
+                    isDragging={drag.draggingId === p.id}
+                    onSelect={onSelect}
+                    onNewSession={onNewSessionInProject}
+                    onRenameProject={onRenameProject}
+                    onDeleteProject={onDeleteProject}
+                    onOpenFolder={onOpenFolder}
+                    onRenameSession={onRename}
+                    onDeleteSession={onDelete}
+                    onGrab={drag.onGrab}
+                    collapsed={collapsedProjects.has(p.id)}
+                    onToggleCollapse={() => toggleProject(p.id)}
+                  />
+                );
+              })}
+            </CollapsePanel>
           </>
         )}
 
         {orphanSessions.length > 0 && (
           <>
             {projects.length > 0 && (
-              <div
-                className="conv-section-label conv-section-toggle"
-                role="button"
-                tabIndex={0}
-                onClick={() => setDiscussionsCollapsed((c) => !c)}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setDiscussionsCollapsed((c) => !c); }}
-              >
+              <ConversationSectionToggle open={!discussionsCollapsed} onToggle={() => setDiscussionsCollapsed((c) => !c)}>
                 {t("projects.discussions", "Discussions")}
-              </div>
+              </ConversationSectionToggle>
             )}
-            {!discussionsCollapsed && orphanSessions.map((s) => {
-              const active = idMatch(selectedId, s.id);
-              const renaming = idMatch(renamingId, s.id);
-              return (
-                <ConversationSessionItem
-                  key={s.id}
-                  session={s}
-                  active={active}
-                  renaming={renaming}
-                  inputRef={inputRef}
-                  onSelect={onSelect}
-                  onRenameSubmit={handleRenameSubmit}
-                  onCancelRename={() => setRenamingId(null)}
-                  onMenu={handleSessionMenu}
-                />
-              );
-            })}
+            <CollapsePanel open={!discussionsCollapsed}>
+              {orphanSessions.map((s) => {
+                const active = idMatch(selectedId, s.id);
+                const renaming = idMatch(renamingId, s.id);
+                return (
+                  <ConversationSessionItem
+                    key={s.id}
+                    session={s}
+                    active={active}
+                    renaming={renaming}
+                    inputRef={inputRef}
+                    onSelect={onSelect}
+                    onRenameSubmit={handleRenameSubmit}
+                    onCancelRename={() => setRenamingId(null)}
+                    onMenu={handleSessionMenu}
+                  />
+                );
+              })}
+            </CollapsePanel>
           </>
         )}
 

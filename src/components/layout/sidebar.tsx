@@ -3,9 +3,7 @@ import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import { UserCircle, ChatsCircle, Gear } from "@/components/ui/icons";
 import type { Icon } from "@phosphor-icons/react";
-import { ThemedIcon } from "@/components/ui/themed-icon";
-import heartbeatDark from "@/assets/heartbeat.png";
-import heartbeatLight from "@/assets/heartbeat-light.png";
+import { HeartbeatIcon } from "@/components/ui/heartbeat-icon";
 import { DragRegion } from "./drag-region";
 
 function useSidebarExpand() {
@@ -26,15 +24,14 @@ export type TabId = "heartbeat" | "personality" | "agent-local" | "settings";
 interface NavItem {
   id: TabId;
   icon?: Icon;
-  imgDark?: string;
-  imgLight?: string;
+  customIcon?: typeof HeartbeatIcon;
   iconSize?: string;
   i18nKey: string;
 }
 
 const NAV_ITEMS: NavItem[] = [
   { id: "agent-local", icon: ChatsCircle, i18nKey: "nav.agentLocal" },
-  { id: "heartbeat", imgDark: heartbeatDark, imgLight: heartbeatLight, iconSize: "1.44rem", i18nKey: "nav.heartbeat" },
+  { id: "heartbeat", customIcon: HeartbeatIcon, iconSize: "1.44rem", i18nKey: "nav.heartbeat" },
   { id: "personality", icon: UserCircle, i18nKey: "nav.personality" },
 ];
 
@@ -108,16 +105,13 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
                   activeTab === item.id && "text-[var(--ink)]",
                 )}
               />
-            ) : item.imgDark && item.imgLight ? (
-              <ThemedIcon
-                darkSrc={item.imgDark}
-                lightSrc={item.imgLight}
+            ) : item.customIcon ? (
+              <item.customIcon
                 size={item.iconSize ?? ICON_SIZE}
-                style={{
-                  flexShrink: 0,
-                  opacity: activeTab === item.id ? 1 : 0.5,
-                  transition: "opacity 200ms ease-out",
-                }}
+                className={cn(
+                  "shrink-0 text-[var(--ink-muted)]",
+                  activeTab === item.id && "text-[var(--ink)]",
+                )}
               />
             ) : null}
             <span

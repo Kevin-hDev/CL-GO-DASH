@@ -2,16 +2,12 @@ import { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useOllamaModels } from "@/hooks/use-ollama-models";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ThemedIcon } from "@/components/ui/themed-icon";
+import { ModelfileIcon, ModelsIcon } from "@/components/ui/model-browser-icons";
 import { ModelfileList } from "./modelfile-list";
 import { ModelfileViewer } from "./modelfile-viewer";
 import { ModelSearch } from "./model-search";
 import { ModelVariantsList } from "./model-variants-list";
 import { ModelProfile } from "./model-profile";
-import modelfileDark from "@/assets/modelfile.png";
-import modelfileLight from "@/assets/modelfile-light.png";
-import modelsDark from "@/assets/models.png";
-import modelsLight from "@/assets/models-light.png";
 import type { RegistryModel } from "@/types/agent";
 import type { DeepPartial, SettingsNavState } from "@/types/navigation";
 import "./ollama.css";
@@ -49,9 +45,9 @@ export function useOllamaTabSlots({ navState, onNavChange, onNavReplace }: Ollam
             onClick={() => onNavChange({ ollamaSubTab: tab })}
           >
             {tab === "modelfile" ? (
-              <><ThemedIcon darkSrc={modelfileDark} lightSrc={modelfileLight} size="1.2rem" /> {t("ollama.modelfileTab")}</>
+              <><ModelfileIcon /> {t("ollama.modelfileTab")}</>
             ) : (
-              <><ThemedIcon darkSrc={modelsDark} lightSrc={modelsLight} size="1.2rem" /> {t("ollama.modelsTab")}</>
+              <><ModelsIcon /> {t("ollama.modelsTab")}</>
             )}
           </button>
         ))}
