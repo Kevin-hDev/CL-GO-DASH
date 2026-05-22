@@ -60,7 +60,7 @@ export function ErrorCross({ message }: { message?: string }) {
 
   return (
     <span ref={anchorRef} className="tb-error-anchor" onMouseEnter={enter} onMouseLeave={leave}>
-      <span style={{ color: "var(--signal-error)", fontSize: "10px" }}>x</span>
+      <span className="tb-error-mark">x</span>
       {tooltip}
     </span>
   );

@@ -74,6 +74,13 @@
   gap: var(--space-xs);
 }
 
+.chat-file-list {
+  display: flex;
+  gap: var(--space-xs);
+  padding: 0 var(--space-sm);
+  flex-wrap: wrap;
+}
+
 .chat-input-spacer { flex: 1; }
 
 .send-btn {

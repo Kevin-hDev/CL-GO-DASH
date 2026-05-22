@@ -1,4 +1,4 @@
-import { useRef, memo } from "react";
+import { memo } from "react";
 import { UserMessage } from "./user-message";
 import { AssistantMessage } from "./assistant-message";
 import { SavedToolTimeline, StreamToolTimeline } from "./message-tool-timeline";
@@ -47,16 +47,14 @@ export function MessageList({
 }: MessageListProps) {
   const lastAssistantIdx = findLastIndex(messages, (m) => m.role === "assistant");
   const { isCompressing } = useCompression(sessionId);
-  const fallbackRef = useRef<number | null>(null);
-  if (isStreaming && !segmentStartedAt && fallbackRef.current === null) fallbackRef.current = Date.now();
-  if (!isStreaming) fallbackRef.current = null;
-  const streamStartedAt = segmentStartedAt ?? fallbackRef.current;
-  const loadingStartedAt = streamStartedAt ?? Date.now();
+  const streamStartedAt = segmentStartedAt;
 
   const extractedAgents = completedSubagents && completedSubagents.length > 0
     ? completedSubagents
     : extractSubagentsFromMessages(messages);
-  let bubbleRendered = false;
+  const subagentBubbleMessageId = extractedAgents.length > 0
+    ? messages.find(isSubagentInjectedMessage)?.id
+    : null;
 
   return (
     <>
@@ -64,8 +62,7 @@ export function MessageList({
         if (isCompressionSummaryMessage(msg)) return <ContextCompressionMarker key={msg.id} />;
         if (isCompressionContextOnlyMessage(msg)) return null;
         if (isSubagentInjectedMessage(msg)) {
-          if (!bubbleRendered && extractedAgents.length > 0) {
-            bubbleRendered = true;
+          if (msg.id === subagentBubbleMessageId) {
             return (
               <SubagentBubble
                 key={`sa-bubble-${msg.id}`}
@@ -114,8 +111,8 @@ export function MessageList({
           projectPath={projectPath}
         />
       )}
-      {isStreaming && !isCompressing && !currentContent && !currentThinking && !hasActiveTools(currentTools) && (
-        <LoadingIndicator startedAt={loadingStartedAt} liveTokenCount={liveTokenCount} />
+      {isStreaming && streamStartedAt != null && !isCompressing && !currentContent && !currentThinking && !hasActiveTools(currentTools) && (
+        <LoadingIndicator startedAt={streamStartedAt} liveTokenCount={liveTokenCount} />
       )}
 
       {isCompressing && <CompressionIndicator />}

@@ -9,6 +9,9 @@ use tokio::time::{sleep, Duration, Instant};
 const DEFAULT_STARTUP_TIMEOUT: u64 = 30;
 const MAX_STARTUP_TIMEOUT: u64 = 60;
 const POLL_INTERVAL_MS: u64 = 100;
+const BACKGROUND_LINE_BUFFER: usize = 256;
+const MAX_CAPTURE_BYTES: usize = 64 * 1024;
+const TRUNCATION_MARKER: &str = "[sortie tronquée pendant le démarrage]";
 const BACKGROUND_PATTERNS: &str = "npm run dev|pnpm dev|yarn dev|bun dev|npm start|vite|next dev|next start|nuxt dev|astro dev|svelte-kit dev|tauri dev|cargo tauri dev|python -m http.server|http-server|uvicorn |flask run|rails server|cargo watch|--watch|tail -f|docker logs -f|kubectl logs -f|kubectl port-forward|ngrok |while true";
 const READY_MARKERS: &str = "local:|localhost|127.0.0.1|listening|ready|server running|running at|compiled successfully|application running|press h + enter|http://|https://";
 
@@ -45,7 +48,7 @@ pub async fn execute_background_shell(
         .spawn()
         .map_err(|e| format!("Erreur lancement shell: {e}"))?;
 
-    let (tx, mut rx) = mpsc::unbounded_channel();
+    let (tx, mut rx) = mpsc::channel(BACKGROUND_LINE_BUFFER);
     spawn_child_readers(&mut child, tx);
 
     let deadline = Instant::now() + startup_timeout(timeout_secs);
@@ -83,7 +86,7 @@ pub async fn execute_background_shell(
     }
 }
 
-fn spawn_child_readers(child: &mut Child, tx: mpsc::UnboundedSender<LineEvent>) {
+fn spawn_child_readers(child: &mut Child, tx: mpsc::Sender<LineEvent>) {
     if let Some(stdout) = child.stdout.take() {
         spawn_reader(StreamKind::Stdout, stdout, tx.clone());
     }
@@ -92,20 +95,22 @@ fn spawn_child_readers(child: &mut Child, tx: mpsc::UnboundedSender<LineEvent>) 
     }
 }
 
-fn spawn_reader<R>(kind: StreamKind, stream: R, tx: mpsc::UnboundedSender<LineEvent>)
+fn spawn_reader<R>(kind: StreamKind, stream: R, tx: mpsc::Sender<LineEvent>)
 where
     R: AsyncRead + Unpin + Send + 'static,
 {
     tokio::spawn(async move {
         let mut lines = BufReader::new(stream).lines();
         while let Ok(Some(line)) = lines.next_line().await {
-            let _ = tx.send(LineEvent { kind, line });
+            if tx.send(LineEvent { kind, line }).await.is_err() {
+                break;
+            }
         }
     });
 }
 
 fn drain_pending_lines(
-    rx: &mut mpsc::UnboundedReceiver<LineEvent>,
+    rx: &mut mpsc::Receiver<LineEvent>,
     stdout: &mut String,
     stderr: &mut String,
 ) {
@@ -123,6 +128,27 @@ fn append_event(event: LineEvent, stdout: &mut String, stderr: &mut String) {
         target.push('\n');
     }
     target.push_str(&event.line);
+    trim_capture(target);
+}
+
+fn trim_capture(output: &mut String) {
+    if output.len() <= MAX_CAPTURE_BYTES {
+        return;
+    }
+
+    let marker_len = TRUNCATION_MARKER.len() + 1;
+    let budget = MAX_CAPTURE_BYTES.saturating_sub(marker_len);
+    let start = output
+        .char_indices()
+        .rev()
+        .find(|(idx, _)| output.len().saturating_sub(*idx) <= budget)
+        .map(|(idx, _)| idx)
+        .unwrap_or(output.len());
+    let tail = output[start..].to_string();
+    output.clear();
+    output.push_str(TRUNCATION_MARKER);
+    output.push('\n');
+    output.push_str(&tail);
 }
 
 fn output_is_ready(output: &str) -> bool {

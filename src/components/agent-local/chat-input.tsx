@@ -151,7 +151,7 @@ export function ChatInput({
         />
       </div>
       {files && files.length > 0 && (
-        <div style={{ display: "flex", gap: 6, padding: "0 var(--space-sm)", flexWrap: "wrap" }}>
+        <div className="chat-file-list">
           {files.map((f, i) => (
             <FileThumbnail
               key={`${f.name}-${i}`}

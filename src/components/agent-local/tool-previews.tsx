@@ -50,7 +50,9 @@ function useDiffInfo(path?: string, newText?: string, oldText?: string, fallback
           }
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        setContent(null);
+      });
   }, [path, newText, oldText, fallback]);
 
   return { startLine: fallback ?? startLine, content };
@@ -136,7 +138,7 @@ export function WebResultsPreview({ content, isSearch }: { content: string; isSe
           const url = lines[1] ?? "";
           const favicon = faviconUrl(url);
           return (
-            <div key={i} style={{ marginBottom: i < blocks.length - 1 ? 6 : 0 }}>
+            <div key={i} className="tp-web-item">
               <div className="tp-web-title">{title}</div>
               <div className="tp-web-url">
                 <span className="tp-web-url-text">{url}</span>

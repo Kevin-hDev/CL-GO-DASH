@@ -5,6 +5,7 @@ import { activeSkillsInText, replaceSlashToken } from "@/lib/skill-text";
 const skills: SkillInfo[] = [
   { name: "context7-docs", description: "", path: "", source: "user" },
   { name: "frontend-design", description: "", path: "", source: "user" },
+  { name: "sharp-edges:sharp-edges", description: "", path: "", source: "user" },
 ];
 
 describe("skill-text", () => {
@@ -25,5 +26,16 @@ describe("skill-text", () => {
 
   it("ignore un skill supprimé du texte", () => {
     expect(activeSkillsInText("Pas de skill ici", skills)).toEqual([]);
+  });
+
+  it("supporte les noms avec ponctuation sans regex dynamique", () => {
+    const text = "Audit /sharp-edges:sharp-edges.";
+    expect(activeSkillsInText(text, skills).map((s) => s.name)).toEqual([
+      "sharp-edges:sharp-edges",
+    ]);
+  });
+
+  it("ne détecte pas les tokens collés à un mot", () => {
+    expect(activeSkillsInText("foo/context7-docs", skills)).toEqual([]);
   });
 });

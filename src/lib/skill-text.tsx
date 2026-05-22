@@ -14,7 +14,12 @@ export function activeSkillsInText(
   text: string,
   skills: SkillInfo[],
 ): SkillInfo[] {
-  return skills.filter((skill) => skillTokenRegex(skill.name).test(text));
+  const activeNames = new Set(
+    splitSkillText(text, skills.map((skill) => skill.name))
+      .filter((part) => part.kind === "skill")
+      .map((part) => part.text.slice(1)),
+  );
+  return skills.filter((skill) => activeNames.has(skill.name));
 }
 
 export function highlightSkillText(
@@ -53,27 +58,26 @@ export function highlightSkillNodes(
 }
 
 function splitSkillText(text: string, skillNames: string[]) {
-  const pattern = skillNames
-    .filter(Boolean)
-    .sort((a, b) => b.length - a.length)
-    .map(escapeRegex)
-    .join("|");
-  if (!pattern) return [{ kind: "text" as const, text }];
+  const names = skillNames.filter(Boolean).sort((a, b) => b.length - a.length);
+  if (names.length < 1) return [{ kind: "text" as const, text }];
 
-  const regex = new RegExp(`(^|\\s)(/(${pattern}))(?=$|\\s|[.,;:!?])`, "g");
   const parts: Array<{ kind: "text" | "skill"; text: string }> = [];
   let lastIndex = 0;
-  let match: RegExpExecArray | null;
 
-  while ((match = regex.exec(text)) !== null) {
-    const prefix = match[1] ?? "";
-    const skill = match[2] ?? "";
-    const skillStart = match.index + prefix.length;
-    if (skillStart > lastIndex) {
-      parts.push({ kind: "text", text: text.slice(lastIndex, skillStart) });
+  for (let index = 0; index < text.length; index += 1) {
+    if (text[index] !== "/" || !isTokenStart(text, index)) continue;
+    const name = matchingSkillName(text, index + 1, names);
+    if (!name) continue;
+
+    const end = index + 1 + name.length;
+    if (!isTokenEnd(text, end)) continue;
+
+    if (index > lastIndex) {
+      parts.push({ kind: "text", text: text.slice(lastIndex, index) });
     }
-    parts.push({ kind: "skill", text: skill });
-    lastIndex = skillStart + skill.length;
+    parts.push({ kind: "skill", text: text.slice(index, end) });
+    lastIndex = end;
+    index = end - 1;
   }
 
   if (lastIndex < text.length) {
@@ -82,10 +86,24 @@ function splitSkillText(text: string, skillNames: string[]) {
   return parts.length > 0 ? parts : [{ kind: "text", text }];
 }
 
-function skillTokenRegex(skillName: string): RegExp {
-  return new RegExp(`(^|\\s)/${escapeRegex(skillName)}(?=$|\\s|[.,;:!?])`);
+function matchingSkillName(text: string, start: number, skillNames: string[]): string | null {
+  for (const name of skillNames) {
+    if (text.startsWith(name, start)) return name;
+  }
+  return null;
 }
 
-function escapeRegex(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+function isTokenStart(text: string, index: number): boolean {
+  return index === 0 || isWhitespace(text[index - 1]);
+}
+
+function isTokenEnd(text: string, index: number): boolean {
+  if (index >= text.length) return true;
+  const char = text[index];
+  return isWhitespace(char) || char === "." || char === "," || char === ";"
+    || char === ":" || char === "!" || char === "?";
+}
+
+function isWhitespace(char: string | undefined): boolean {
+  return char === " " || char === "\n" || char === "\r" || char === "\t";
 }

@@ -3,6 +3,11 @@
   flex-shrink: 0;
 }
 
+.tb-error-mark {
+  color: var(--signal-error);
+  font-size: var(--text-xs);
+}
+
 .tb-change-stats {
   display: inline-flex;
   align-items: baseline;
