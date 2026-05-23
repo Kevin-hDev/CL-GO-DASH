@@ -1,0 +1,19 @@
+pub mod lifecycle;
+
+mod client;
+mod paths;
+mod process;
+mod runtime;
+mod settings;
+
+pub use lifecycle::SearxngSidecar;
+
+use crate::services::agent_local::types_tools::SearchResult;
+
+pub async fn search(query: &str) -> Result<Vec<SearchResult>, String> {
+    lifecycle::search(query).await
+}
+
+pub async fn stop(sidecar: &SearxngSidecar) {
+    lifecycle::stop(sidecar).await;
+}

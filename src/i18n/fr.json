@@ -653,7 +653,8 @@
     "modelNotFound": "Modèle introuvable",
     "rateLimited": "Trop de requêtes, réessaye dans un instant",
     "authFailed": "Authentification échouée, vérifie ta clé API",
-    "toolFailed": "L'outil a échoué"
+    "toolFailed": "L'outil a échoué",
+    "webToolFailed": "Outil web échoué : {{message}}"
   },
   "updates": {
     "tooltip": "Mises à jour disponibles",

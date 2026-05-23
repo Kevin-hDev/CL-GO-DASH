@@ -653,7 +653,8 @@
     "modelNotFound": "Model not found",
     "rateLimited": "Too many requests, try again shortly",
     "authFailed": "Authentication failed, check your API key",
-    "toolFailed": "Tool failed"
+    "toolFailed": "Tool failed",
+    "webToolFailed": "Web tool failed: {{message}}"
   },
   "updates": {
     "tooltip": "Updates available",

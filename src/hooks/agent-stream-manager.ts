@@ -11,7 +11,9 @@ import {
   enforceSessionLimit, scheduleCleanup, clearCleanup, trimSubscribers,
   type StreamRecord,
 } from "./agent-stream-cleanup";
+import { showToast } from "@/lib/toast-emitter";
 import type { AgentMessage, StreamEvent } from "@/types/agent";
+import { webToolErrorToastMessage } from "./web-tool-error-toast";
 
 const EVENT_NAME = "agent-stream-event";
 
@@ -137,6 +139,9 @@ function handleStreamEvent(sessionId: string, event: StreamEvent) {
   if (record.history.length > MAX_EVENTS_PER_SESSION) {
     record.history.splice(0, record.history.length - MAX_EVENTS_PER_SESSION);
   }
+
+  const toastMessage = webToolErrorToastMessage(sessionId, event);
+  if (toastMessage) showToast(toastMessage, "error");
 
   // Compression terminée : recharger la session depuis le store
   if (event.event === "compressionComplete") {

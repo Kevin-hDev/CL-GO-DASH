@@ -653,7 +653,8 @@
     "modelNotFound": "Modello non trovato",
     "rateLimited": "Troppe richieste, riprova tra poco",
     "authFailed": "Autenticazione fallita, controlla la tua chiave API",
-    "toolFailed": "Strumento fallito"
+    "toolFailed": "Strumento fallito",
+    "webToolFailed": "Strumento web non riuscito: {{message}}"
   },
   "updates": {
     "tooltip": "Aggiornamenti disponibili",

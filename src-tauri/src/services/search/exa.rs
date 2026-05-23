@@ -5,20 +5,21 @@
 
 use crate::services::agent_local::types_tools::SearchResult;
 use crate::services::api_keys;
+use crate::services::search::common;
 use reqwest::Client;
 use std::time::Duration;
 
 const URL: &str = "https://api.exa.ai/search";
-const MAX_RESULTS: usize = 10;
 const TIMEOUT: Duration = Duration::from_secs(15);
 
 pub async fn search(query: &str) -> Result<Vec<SearchResult>, String> {
+    let query = common::validate_query(query)?;
     let key = api_keys::get_key("exa")?;
     let client = Client::new();
 
     let payload = serde_json::json!({
         "query": query,
-        "numResults": MAX_RESULTS,
+        "numResults": common::MAX_RESULTS,
         "contents": {
             "text": { "maxCharacters": 500 }
         }
@@ -37,23 +38,22 @@ pub async fn search(query: &str) -> Result<Vec<SearchResult>, String> {
         return Err(format!("Exa: HTTP {}", resp.status()));
     }
 
-    let json: serde_json::Value = resp.json().await.map_err(|e| format!("Exa parse: {e}"))?;
+    let json = common::read_json_bounded(resp, "Exa").await?;
 
     let results = json["results"]
         .as_array()
-        .unwrap_or(&Vec::new())
-        .iter()
-        .take(MAX_RESULTS)
-        .map(|r| SearchResult {
-            title: r["title"].as_str().unwrap_or("").to_string(),
-            url: r["url"].as_str().unwrap_or("").to_string(),
-            snippet: r["text"]
-                .as_str()
-                .unwrap_or_else(|| r["summary"].as_str().unwrap_or(""))
-                .chars()
-                .take(300)
-                .collect(),
+        .into_iter()
+        .flatten()
+        .filter_map(|r| {
+            common::make_result(
+                r["title"].as_str().unwrap_or(""),
+                r["url"].as_str().unwrap_or(""),
+                r["text"]
+                    .as_str()
+                    .unwrap_or_else(|| r["summary"].as_str().unwrap_or("")),
+            )
         })
+        .take(common::MAX_RESULTS)
         .collect();
     Ok(results)
 }

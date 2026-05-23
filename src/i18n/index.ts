@@ -8,7 +8,7 @@ import it from "./it.json";
 import zh from "./zh.json";
 import ja from "./ja.json";
 
-const savedLang = localStorage.getItem("clgo-language") || "en";
+const savedLang = readSavedLang();
 
 void i18n.use(initReactI18next).init({
   resources: {
@@ -26,3 +26,12 @@ void i18n.use(initReactI18next).init({
 });
 
 export default i18n;
+
+function readSavedLang(): string {
+  if (typeof window === "undefined") return "en";
+  try {
+    return window.localStorage.getItem("clgo-language") || "en";
+  } catch {
+    return "en";
+  }
+}

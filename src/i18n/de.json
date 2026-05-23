@@ -653,7 +653,8 @@
     "modelNotFound": "Modell nicht gefunden",
     "rateLimited": "Zu viele Anfragen, versuche es gleich erneut",
     "authFailed": "Authentifizierung fehlgeschlagen, überprüfe deinen API-Schlüssel",
-    "toolFailed": "Werkzeug fehlgeschlagen"
+    "toolFailed": "Werkzeug fehlgeschlagen",
+    "webToolFailed": "Web-Werkzeug fehlgeschlagen: {{message}}"
   },
   "updates": {
     "tooltip": "Updates verfügbar",

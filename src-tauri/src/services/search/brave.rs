@@ -2,12 +2,12 @@
 
 use crate::services::agent_local::types_tools::SearchResult;
 use crate::services::api_keys;
+use crate::services::search::common;
 use reqwest::Client;
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
 
 const URL: &str = "https://api.search.brave.com/res/v1/web/search";
-const MAX_RESULTS: usize = 10;
 const TIMEOUT: Duration = Duration::from_secs(10);
 const MIN_INTERVAL: Duration = Duration::from_millis(1100);
 
@@ -35,12 +35,16 @@ async fn wait_rate_limit() {
 }
 
 pub async fn search(query: &str) -> Result<Vec<SearchResult>, String> {
+    let query = common::validate_query(query)?;
     wait_rate_limit().await;
     let key = api_keys::get_key("brave")?;
     let client = Client::new();
     let resp = client
         .get(URL)
-        .query(&[("q", query), ("count", &MAX_RESULTS.to_string())])
+        .query(&[
+            ("q", query.as_str()),
+            ("count", &common::MAX_RESULTS.to_string()),
+        ])
         .header("X-Subscription-Token", &*key)
         .timeout(TIMEOUT)
         .send()
@@ -51,18 +55,20 @@ pub async fn search(query: &str) -> Result<Vec<SearchResult>, String> {
         return Err(format!("Brave: HTTP {}", resp.status()));
     }
 
-    let json: serde_json::Value = resp.json().await.map_err(|e| format!("Brave parse: {e}"))?;
+    let json = common::read_json_bounded(resp, "Brave").await?;
 
     let results = json["web"]["results"]
         .as_array()
-        .unwrap_or(&Vec::new())
-        .iter()
-        .take(MAX_RESULTS)
-        .map(|r| SearchResult {
-            title: r["title"].as_str().unwrap_or("").to_string(),
-            url: r["url"].as_str().unwrap_or("").to_string(),
-            snippet: r["description"].as_str().unwrap_or("").to_string(),
+        .into_iter()
+        .flatten()
+        .filter_map(|r| {
+            common::make_result(
+                r["title"].as_str().unwrap_or(""),
+                r["url"].as_str().unwrap_or(""),
+                r["description"].as_str().unwrap_or(""),
+            )
         })
+        .take(common::MAX_RESULTS)
         .collect();
     Ok(results)
 }

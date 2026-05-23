@@ -62,6 +62,11 @@ fn cleanup(app_handle: &tauri::AppHandle) {
             services::forecast::sidecar::stop(chronos.inner()).await;
         });
     }
+    if let Some(searxng) = app_handle.try_state::<services::searxng::SearxngSidecar>() {
+        tauri::async_runtime::block_on(async {
+            services::searxng::stop(searxng.inner()).await;
+        });
+    }
     ollama_kill::release_vram_blocking();
     ollama_lifecycle::stop_sidecar(app_handle);
 }

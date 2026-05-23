@@ -31,6 +31,7 @@ pub mod reasoning;
 mod reasoning_tests;
 pub mod scheduler;
 pub mod search;
+pub mod searxng;
 pub mod stream_utils;
 pub mod terminal;
 pub mod vault;

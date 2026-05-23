@@ -128,6 +128,8 @@ pub mod tool_validate_tests;
 pub mod tool_web_fetch;
 pub mod tool_web_fetch_ip;
 #[cfg(test)]
+pub mod tool_web_fetch_network_tests;
+#[cfg(test)]
 pub mod tool_web_fetch_tests;
 pub mod tool_web_search;
 pub mod translation_cache;

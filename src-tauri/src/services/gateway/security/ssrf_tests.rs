@@ -75,10 +75,10 @@ fn multicast_blocked() {
 
 #[tokio::test]
 async fn rejects_non_http_scheme() {
-    assert!(matches!(
-        is_safe_url("ftp://example.com", false).await,
-        SsrfVerdict::Blocked(_)
-    ));
+    match is_safe_url("ftp://example.com", false).await {
+        SsrfVerdict::Blocked(reason) => assert!(reason.contains("schéma")),
+        SsrfVerdict::Safe => panic!("ftp must be blocked"),
+    }
 }
 
 #[tokio::test]
@@ -93,6 +93,22 @@ async fn rejects_metadata_host() {
 async fn rejects_missing_host() {
     assert!(matches!(
         is_safe_url("http:///path", false).await,
+        SsrfVerdict::Blocked(_)
+    ));
+}
+
+#[tokio::test]
+async fn rejects_url_credentials() {
+    assert!(matches!(
+        is_safe_url("https://user:pass@example.com", false).await,
+        SsrfVerdict::Blocked(_)
+    ));
+}
+
+#[tokio::test]
+async fn rejects_blocked_ports_before_dns() {
+    assert!(matches!(
+        is_safe_url("https://example.com:22", false).await,
         SsrfVerdict::Blocked(_)
     ));
 }

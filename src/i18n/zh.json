@@ -653,7 +653,8 @@
     "modelNotFound": "未找到模型",
     "rateLimited": "请求过多，请稍后重试",
     "authFailed": "认证失败，请检查 API 密钥",
-    "toolFailed": "工具执行失败"
+    "toolFailed": "工具执行失败",
+    "webToolFailed": "网页工具执行失败：{{message}}"
   },
   "updates": {
     "tooltip": "有可用更新",

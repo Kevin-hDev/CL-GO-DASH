@@ -653,7 +653,8 @@
     "modelNotFound": "Modelo no encontrado",
     "rateLimited": "Demasiadas solicitudes, inténtalo de nuevo en un momento",
     "authFailed": "Autenticación fallida, verifica tu clave API",
-    "toolFailed": "La herramienta falló"
+    "toolFailed": "La herramienta falló",
+    "webToolFailed": "La herramienta web falló: {{message}}"
   },
   "updates": {
     "tooltip": "Actualizaciones disponibles",

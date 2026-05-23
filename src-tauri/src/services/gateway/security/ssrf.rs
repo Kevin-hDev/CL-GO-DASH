@@ -1,6 +1,7 @@
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
 use tokio::net::lookup_host;
+use url::Url;
 
 const BLOCKED_METADATA_IPS: &[IpAddr] = &[
     IpAddr::V4(Ipv4Addr::new(169, 254, 169, 254)),
@@ -11,55 +12,121 @@ const BLOCKED_METADATA_IPS: &[IpAddr] = &[
 ];
 
 const BLOCKED_METADATA_HOSTS: &[&str] = &["metadata.google.internal", "metadata.goog"];
+const MAX_URL_CHARS: usize = 2048;
+const BLOCKED_PORTS: &[u16] = &[
+    0, 22, 23, 25, 53, 110, 135, 137, 138, 139, 143, 389, 445, 465, 587, 993, 995, 1433, 1521,
+    2049, 2375, 2376, 3306, 3389, 5432, 5672, 5900, 6379, 9200, 9300, 11211, 27017,
+];
 
+pub struct SafeUrl {
+    pub url: Url,
+    pub host: String,
+    pub port: u16,
+    pub ip: IpAddr,
+}
+
+#[cfg(test)]
 pub enum SsrfVerdict {
     Safe,
     Blocked(String),
 }
 
+#[cfg(test)]
 pub async fn is_safe_url(url_str: &str, allow_private: bool) -> SsrfVerdict {
-    let parsed = match url::Url::parse(url_str) {
-        Ok(u) => u,
-        Err(_) => return SsrfVerdict::Blocked("URL invalide".into()),
-    };
+    match validate_url(url_str, allow_private).await {
+        Ok(_) => SsrfVerdict::Safe,
+        Err(reason) => SsrfVerdict::Blocked(reason),
+    }
+}
+
+pub async fn validate_url(url_str: &str, allow_private: bool) -> Result<SafeUrl, String> {
+    if url_str.chars().count() > MAX_URL_CHARS {
+        return Err("URL trop longue".to_string());
+    }
+    let parsed = Url::parse(url_str).map_err(|_| "URL invalide".to_string())?;
 
     match parsed.scheme() {
         "http" | "https" => {}
-        _ => return SsrfVerdict::Blocked("schéma non autorisé".into()),
+        _ => return Err("schéma non autorisé".to_string()),
+    }
+    if !parsed.username().is_empty() || parsed.password().is_some() {
+        return Err("identifiants URL interdits".to_string());
     }
 
-    let host = match parsed.host_str() {
-        Some(h) => h.to_lowercase().trim_end_matches('.').to_string(),
-        None => return SsrfVerdict::Blocked("hôte manquant".into()),
-    };
+    let host = parsed
+        .host_str()
+        .ok_or_else(|| "hôte manquant".to_string())?
+        .to_lowercase()
+        .trim_end_matches('.')
+        .to_string();
 
     if BLOCKED_METADATA_HOSTS.iter().any(|h| host == *h) {
-        return SsrfVerdict::Blocked("cloud metadata bloqué".into());
+        return Err("cloud metadata bloqué".to_string());
+    }
+    if is_blocked_host_literal(&host) && !allow_private {
+        return Err("adresse privée bloquée".to_string());
     }
 
     let port = parsed.port_or_known_default().unwrap_or(443);
-    let lookup = format!("{}:{}", host, port);
-
-    let addrs = match lookup_host(&lookup).await {
-        Ok(a) => a.collect::<Vec<_>>(),
-        Err(_) => return SsrfVerdict::Blocked("résolution DNS échouée".into()),
-    };
-
-    if addrs.is_empty() {
-        return SsrfVerdict::Blocked("aucune adresse résolue".into());
+    if is_blocked_port(port) {
+        return Err("port non autorisé".to_string());
     }
 
-    for addr in &addrs {
+    let lookup = format!("{}:{}", host, port);
+    let addrs = resolve_host(&lookup).await?;
+    let ip = validate_resolved_addrs(&addrs, allow_private)?;
+    Ok(SafeUrl {
+        url: parsed,
+        host,
+        port,
+        ip,
+    })
+}
+
+async fn resolve_host(lookup: &str) -> Result<Vec<std::net::SocketAddr>, String> {
+    lookup_host(lookup)
+        .await
+        .map(|addrs| addrs.collect::<Vec<_>>())
+        .map_err(|_| "résolution DNS échouée".to_string())
+}
+
+fn validate_resolved_addrs(
+    addrs: &[std::net::SocketAddr],
+    allow_private: bool,
+) -> Result<IpAddr, String> {
+    if addrs.is_empty() {
+        return Err("aucune adresse résolue".to_string());
+    }
+    for addr in addrs {
         let ip = addr.ip();
         if is_metadata_ip(&ip) {
-            return SsrfVerdict::Blocked("cloud metadata bloqué".into());
+            return Err("cloud metadata bloqué".to_string());
         }
         if !allow_private && is_blocked_ip(&ip) {
-            return SsrfVerdict::Blocked("adresse privée bloquée".into());
+            return Err("adresse privée bloquée".to_string());
         }
     }
+    Ok(addrs[0].ip())
+}
 
-    SsrfVerdict::Safe
+fn is_blocked_host_literal(host: &str) -> bool {
+    host == "localhost"
+        || host == "0.0.0.0"
+        || host == "::1"
+        || host.starts_with("0177.")
+        || host.starts_with("0x7f")
+        || host.starts_with("127.")
+        || host.starts_with("10.")
+        || host.starts_with("192.168.")
+        || host.starts_with("169.254.")
+        || host.starts_with("fc00:")
+        || host.starts_with("fd")
+        || host.starts_with("fe80:")
+        || host.starts_with("::ffff:127.")
+}
+
+fn is_blocked_port(port: u16) -> bool {
+    BLOCKED_PORTS.contains(&port)
 }
 
 pub fn is_metadata_ip(ip: &IpAddr) -> bool {

@@ -42,6 +42,7 @@ pub fn run() {
         .manage(ActiveStreams(Mutex::new(HashMap::new())))
         .manage(PullCancel(Mutex::new(None)))
         .manage(OllamaSidecar::new())
+        .manage(services::searxng::SearxngSidecar::new())
         .manage(services::terminal::PtyManager::new())
         .manage(GatewayService::new())
         .manage(commands::file_tree_watcher::FileTreeWatcher::new())

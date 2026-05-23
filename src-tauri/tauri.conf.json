@@ -5,7 +5,7 @@
   "identifier": "com.clgo.dash",
   "build": {
     "beforeDevCommand": "npm run dev",
-    "beforeBuildCommand": "npm run build",
+    "beforeBuildCommand": "npm run build && cd src-tauri && bash scripts/prepare-searxng.sh",
     "devUrl": "http://localhost:5173",
     "frontendDist": "../dist"
   },
@@ -42,7 +42,8 @@
     ],
     "resources": [
       "default-skills/**/*",
-      "resources/forecast-sidecar/**/*"
+      "resources/forecast-sidecar/**/*",
+      "resources/searxng-sidecar/**/*"
     ]
   }
 }

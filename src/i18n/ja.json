@@ -653,7 +653,8 @@
     "modelNotFound": "モデルが見つかりません",
     "rateLimited": "リクエストが多すぎます。しばらくしてから再試行してください",
     "authFailed": "認証に失敗しました。APIキーを確認してください",
-    "toolFailed": "ツールが失敗しました"
+    "toolFailed": "ツールが失敗しました",
+    "webToolFailed": "Webツールが失敗しました: {{message}}"
   },
   "updates": {
     "tooltip": "アップデートが利用可能です",
