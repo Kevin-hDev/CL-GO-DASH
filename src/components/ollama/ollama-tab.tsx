@@ -52,15 +52,13 @@ export function useOllamaTabSlots({ navState, onNavChange, onNavReplace }: Ollam
   const setupDetail = useMemo(() => (
     <div className="ollama-setup-detail">
       <OllamaSetupScreen
-        onComplete={() => {
-          invoke("patch_advanced_settings", { patch: ollamaSetupSkippedPatch(false) }).catch(() => {});
-          invoke("start_ollama_sidecar").catch(() => {});
+        onComplete={async () => {
+          await invoke("patch_advanced_settings", { patch: ollamaSetupSkippedPatch(false) });
           setOllamaInstalled(true);
-          void ollamaModels.refresh();
         }}
       />
     </div>
-  ), [ollamaModels]);
+  ), []);
 
   const list = useMemo(() => (
     <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>

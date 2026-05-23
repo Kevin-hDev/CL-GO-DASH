@@ -1,13 +1,13 @@
-#[cfg(target_os = "windows")]
-use super::app_update_install_paths::{
-    batch_escape_text, batch_quote_path, current_windows_install_dir,
-};
 #[cfg(target_os = "linux")]
 use super::app_update_install_paths::current_linux_appimage;
 #[cfg(target_os = "macos")]
 use super::app_update_install_paths::current_macos_app_bundle;
 #[cfg(any(target_os = "macos", target_os = "linux"))]
 use super::app_update_install_paths::sh_quote_path;
+#[cfg(target_os = "windows")]
+use super::app_update_install_paths::{
+    batch_escape_text, batch_quote_path, current_windows_install_dir,
+};
 
 pub(crate) fn spawn_update_script(path: &std::path::Path) -> Result<(), String> {
     if cfg!(target_os = "macos") {

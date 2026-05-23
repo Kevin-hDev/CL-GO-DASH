@@ -266,6 +266,7 @@ pub fn run() {
             // Ollama setup
             commands::is_ollama_installed,
             commands::download_ollama,
+            commands::cancel_ollama_setup,
             commands::update_ollama_binary,
             commands::start_ollama_sidecar,
             commands::restart_ollama_sidecar,

@@ -1,5 +1,6 @@
 use super::ollama_setup::OllamaSetupProgress;
 use tauri::ipc::Channel;
+use tokio_util::sync::CancellationToken;
 
 const MIN_ARCHIVE_BYTES: u64 = 10 * 1024 * 1024;
 const MAX_BINARY_BYTES: u64 = 3 * 1024 * 1024 * 1024;
@@ -9,6 +10,8 @@ pub async fn download_file(
     url: &str,
     dest: &std::path::Path,
     on_progress: &Channel<OllamaSetupProgress>,
+    cancel: &CancellationToken,
+    status: &str,
 ) -> Result<(), String> {
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(DOWNLOAD_TIMEOUT_SECS))
@@ -18,15 +21,15 @@ pub async fn download_file(
             "ollama-download-error".to_string()
         })?;
 
-    let resp = client
-        .get(url)
-        .header("User-Agent", "CL-GO-DASH")
-        .send()
-        .await
-        .map_err(|e| {
-            eprintln!("[ollama-dl] network: {e}");
-            "ollama-download-error".to_string()
-        })?;
+    let resp = tokio::select! {
+        _ = cancel.cancelled() => return Err(super::ollama_setup_cancel::cancelled_error()),
+        result = client.get(url).header("User-Agent", "CL-GO-DASH").send() => {
+            result.map_err(|e| {
+                eprintln!("[ollama-dl] network: {e}");
+                "ollama-download-error".to_string()
+            })?
+        }
+    };
 
     if !resp.status().is_success() {
         return Err("ollama-download-refused".into());
@@ -61,7 +64,13 @@ pub async fn download_file(
     let mut stream = resp.bytes_stream();
     let mut downloaded: u64 = 0;
 
-    while let Some(chunk) = stream.next().await {
+    while let Some(chunk) = tokio::select! {
+        _ = cancel.cancelled() => {
+            let _ = tokio::fs::remove_file(dest).await;
+            return Err(super::ollama_setup_cancel::cancelled_error());
+        }
+        chunk = stream.next() => chunk
+    } {
         let chunk = chunk.map_err(|e| {
             eprintln!("[ollama-dl] stream: {e}");
             "ollama-download-error".to_string()
@@ -78,7 +87,7 @@ pub async fn download_file(
         let _ = on_progress.send(OllamaSetupProgress {
             completed: downloaded,
             total,
-            status: "downloading".into(),
+            status: status.into(),
         });
     }
 

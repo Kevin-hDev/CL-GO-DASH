@@ -43,6 +43,9 @@ pub(crate) mod ollama_extract_tar_safe;
 mod ollama_extract_tests;
 pub(crate) mod ollama_extract_zip;
 pub mod ollama_setup;
+pub(crate) mod ollama_setup_cancel;
+pub(crate) mod ollama_setup_install;
+pub(crate) mod ollama_setup_start;
 #[cfg(test)]
 mod ollama_setup_tests;
 pub mod ollama_updates;

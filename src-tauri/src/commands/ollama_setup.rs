@@ -1,8 +1,12 @@
 use crate::services::ollama_lifecycle;
 use serde::Serialize;
+use std::sync::LazyLock;
 use tauri::ipc::Channel;
+use tokio::sync::Mutex;
+use tokio_util::sync::CancellationToken;
 
-const FALLBACK_OLLAMA_VERSION: &str = "0.21.1";
+pub(crate) const FALLBACK_OLLAMA_VERSION: &str = "0.24.0";
+static OLLAMA_INSTALL_LOCK: LazyLock<Mutex<()>> = LazyLock::new(|| Mutex::new(()));
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -18,12 +22,36 @@ pub async fn is_ollama_installed() -> bool {
 }
 
 #[tauri::command]
-pub async fn download_ollama(on_progress: Channel<OllamaSetupProgress>) -> Result<(), String> {
+pub async fn download_ollama(
+    app: tauri::AppHandle,
+    on_progress: Channel<OllamaSetupProgress>,
+) -> Result<(), String> {
+    let _guard = OLLAMA_INSTALL_LOCK.lock().await;
+    let cancel = CancellationToken::new();
+    super::ollama_setup_cancel::register(cancel.clone()).await;
+    let result = run_download_ollama(app, on_progress, &cancel).await;
+    super::ollama_setup_cancel::clear().await;
+    result
+}
+
+async fn run_download_ollama(
+    app: tauri::AppHandle,
+    on_progress: Channel<OllamaSetupProgress>,
+    cancel: &CancellationToken,
+) -> Result<(), String> {
     if ollama_lifecycle::ollama_binary_path().is_ok() {
-        return Ok(());
+        return super::ollama_setup_start::start_sidecar_and_wait(&app, &on_progress, cancel).await;
     }
     let dest = ollama_lifecycle::ollama_bundle_dir();
-    install_ollama_to(&dest, FALLBACK_OLLAMA_VERSION, &on_progress).await
+    let version = resolve_install_version().await;
+    super::ollama_setup_install::install_ollama_to(&dest, &version, &on_progress, cancel).await?;
+    super::ollama_setup_start::start_sidecar_and_wait(&app, &on_progress, cancel).await
+}
+
+#[tauri::command]
+pub async fn cancel_ollama_setup() -> Result<(), String> {
+    super::ollama_setup_cancel::cancel_active().await;
+    Ok(())
 }
 
 #[tauri::command]
@@ -41,7 +69,14 @@ pub async fn update_ollama_binary(
     let staging = dest.with_file_name("ollama-bundle-staging");
     let _ = std::fs::remove_dir_all(&staging);
 
-    if let Err(e) = install_ollama_to(&staging, version, &on_progress).await {
+    if let Err(e) = super::ollama_setup_install::install_ollama_to(
+        &staging,
+        version,
+        &on_progress,
+        &CancellationToken::new(),
+    )
+    .await
+    {
         let _ = std::fs::remove_dir_all(&staging);
         let _ = on_progress.send(OllamaSetupProgress {
             completed: 0,
@@ -106,114 +141,18 @@ pub async fn check_model_fits_vram(size_bytes: u64) -> bool {
     model_mb < vram_mb
 }
 
-async fn install_ollama_to(
-    dest: &std::path::Path,
-    version: &str,
-    on_progress: &Channel<OllamaSetupProgress>,
-) -> Result<(), String> {
-    let archives = archives_to_download();
+use super::ollama_bundle_utils::is_valid_semver;
 
-    std::fs::create_dir_all(&dest).map_err(|e| {
-        eprintln!("[ollama-setup] mkdir {}: {e}", dest.display());
-        "Impossible de créer le dossier d'installation".to_string()
-    })?;
-
-    let checksums: Vec<Option<String>> = fetch_checksums(version, &archives).await;
-
-    for (i, archive_name) in archives.iter().enumerate() {
-        let url = format!(
-            "https://github.com/ollama/ollama/releases/download/v{}/{}",
-            version, archive_name
-        );
-
-        let status = if i == 0 {
-            "downloading"
-        } else {
-            "downloading-rocm"
-        };
-        let _ = on_progress.send(OllamaSetupProgress {
-            completed: 0,
-            total: 0,
-            status: status.into(),
-        });
-
-        let tmp = std::env::temp_dir().join(format!(
-            "cl-go-ollama-{}-{archive_name}",
-            std::process::id()
-        ));
-        if let Err(err) = download_file(&url, &tmp, on_progress).await {
-            let _ = std::fs::remove_file(&tmp);
-            let _ = std::fs::remove_dir_all(dest);
-            return Err(err);
+async fn resolve_install_version() -> String {
+    match super::ollama_version::fetch_latest_github_version().await {
+        Ok((version, _)) if is_valid_semver(&version) => version,
+        Ok((version, _)) => {
+            eprintln!("[ollama-setup] latest version invalid: {version}");
+            FALLBACK_OLLAMA_VERSION.to_string()
         }
-
-        if let Some(Some(expected)) = checksums.get(i) {
-            let _ = on_progress.send(OllamaSetupProgress {
-                completed: 0,
-                total: 0,
-                status: "verifying".into(),
-            });
-            if let Err(err) = super::ollama_checksum::verify_file_sha256(&tmp, expected) {
-                let _ = std::fs::remove_file(&tmp);
-                let _ = std::fs::remove_dir_all(dest);
-                return Err(err);
-            }
-        }
-
-        let _ = on_progress.send(OllamaSetupProgress {
-            completed: 0,
-            total: 0,
-            status: "extracting".into(),
-        });
-
-        if let Err(err) = super::ollama_extract::extract_overlay(&tmp, dest, archive_name) {
-            let _ = std::fs::remove_dir_all(dest);
-            let _ = std::fs::remove_file(&tmp);
-            return Err(err);
-        }
-        let _ = std::fs::remove_file(&tmp);
-    }
-
-    let binary = find_binary_in(dest).ok_or_else(|| {
-        let _ = std::fs::remove_dir_all(dest);
-        "installation incomplète: binaire Ollama introuvable".to_string()
-    })?;
-
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        let _ = std::fs::set_permissions(&binary, std::fs::Permissions::from_mode(0o755));
-    }
-
-    #[cfg(target_os = "macos")]
-    {
-        let _ = std::process::Command::new("xattr")
-            .args(["-d", "com.apple.quarantine"])
-            .arg(&binary)
-            .output();
-        eprintln!("[ollama] quarantine attribute supprimé");
-    }
-
-    write_version_file(dest, version);
-    eprintln!("[ollama-setup] installé v{version}: {}", binary.display());
-    Ok(())
-}
-
-use super::ollama_bundle_utils::{
-    archives_to_download, find_binary_in, is_valid_semver, write_version_file,
-};
-use super::ollama_download::download_file;
-
-async fn fetch_checksums(version: &str, archives: &[&str]) -> Vec<Option<String>> {
-    let mut result = Vec::with_capacity(archives.len());
-    for name in archives {
-        match super::ollama_checksum::fetch_expected_hash(version, name).await {
-            Ok(hash) => result.push(Some(hash)),
-            Err(e) => {
-                eprintln!("[ollama-setup] checksum unavailable for {name}: {e}");
-                result.push(None);
-            }
+        Err(e) => {
+            eprintln!("[ollama-setup] latest version unavailable: {e}");
+            FALLBACK_OLLAMA_VERSION.to_string()
         }
     }
-    result
 }

@@ -27,9 +27,8 @@ export function useOllamaSetupGate() {
     void loadOllamaGate();
   }, []);
 
-  const completeOllamaSetup = useCallback(() => {
-    invoke("patch_advanced_settings", { patch: ollamaSetupSkippedPatch(false) }).catch(() => {});
-    invoke("start_ollama_sidecar").catch(() => {});
+  const completeOllamaSetup = useCallback(async () => {
+    await invoke("patch_advanced_settings", { patch: ollamaSetupSkippedPatch(false) });
     setShowOllamaSetup(false);
   }, []);
 
