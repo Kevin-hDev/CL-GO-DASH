@@ -1,13 +1,24 @@
 use crate::services::agent_local::{app_handle_global, types_tools::SearchResult};
 use std::process::Child;
+use std::sync::Mutex as StdMutex;
+use std::time::{Duration, Instant};
 use tauri::Manager;
 use tokio::sync::Mutex;
+
+const START_FAILURE_COOLDOWN: Duration = Duration::from_secs(30);
+
+static LAST_START_FAILURE: StdMutex<Option<StartFailure>> = StdMutex::new(None);
 
 pub struct SearxngSidecar(pub Mutex<Option<SearxngHandle>>);
 
 pub struct SearxngHandle {
     child: Child,
     port: u16,
+}
+
+struct StartFailure {
+    at: Instant,
+    message: String,
 }
 
 impl SearxngSidecar {
@@ -41,20 +52,26 @@ async fn ensure_running(app: &tauri::AppHandle) -> Result<String, String> {
         }
     }
 
+    if let Some(error) = recent_start_failure() {
+        return Err(error);
+    }
+
     super::process::kill_orphan_sidecar();
     let source = super::paths::source_dir(app)?;
     let python = super::runtime::ensure_runtime(&source).await?;
     let port = super::settings::find_free_port()?;
     let settings = super::settings::write_settings(port)?;
-    let child = super::process::spawn(&python, &source, &settings, port)?;
+    let mut child = super::process::spawn(&python, &source, &settings, port)?;
     let pid = child.id();
     super::process::save_pid(pid);
     let url = base_url(port);
-    if let Err(e) = wait_until_ready(&url).await {
+    if let Err(e) = wait_until_ready(&url, &mut child).await {
+        remember_start_failure(&e);
         super::process::kill_child_process(child);
         return Err(e);
     }
     eprintln!("[searxng] sidecar démarré pid={pid} port={port}");
+    clear_start_failure();
     *guard = Some(SearxngHandle { child, port });
     Ok(url)
 }
@@ -67,12 +84,23 @@ pub async fn stop(sidecar: &SearxngSidecar) {
     super::process::clear_pid_file();
 }
 
-async fn wait_until_ready(base_url: &str) -> Result<(), String> {
+async fn wait_until_ready(base_url: &str, child: &mut Child) -> Result<(), String> {
     let client = reqwest::Client::new();
     let url = format!("{}/healthz", base_url);
     for _ in 0..40 {
+        if let Ok(Some(status)) = child.try_wait() {
+            let hint = super::process::startup_log_hint()
+                .map(|hint| format!(" ({hint})"))
+                .unwrap_or_default();
+            return Err(format!("SearXNG: arrêt au démarrage {status}{hint}"));
+        }
         tokio::time::sleep(std::time::Duration::from_millis(250)).await;
-        if let Ok(resp) = client.get(&url).send().await {
+        if let Ok(resp) = client
+            .get(&url)
+            .timeout(std::time::Duration::from_millis(500))
+            .send()
+            .await
+        {
             if resp.status().is_success() {
                 return Ok(());
             }
@@ -83,6 +111,27 @@ async fn wait_until_ready(base_url: &str) -> Result<(), String> {
 
 fn base_url(port: u16) -> String {
     format!("http://127.0.0.1:{port}")
+}
+
+fn recent_start_failure() -> Option<String> {
+    let guard = LAST_START_FAILURE.lock().ok()?;
+    let failure = guard.as_ref()?;
+    (failure.at.elapsed() < START_FAILURE_COOLDOWN).then(|| failure.message.clone())
+}
+
+fn remember_start_failure(error: &str) {
+    if let Ok(mut guard) = LAST_START_FAILURE.lock() {
+        *guard = Some(StartFailure {
+            at: Instant::now(),
+            message: error.to_string(),
+        });
+    }
+}
+
+fn clear_start_failure() {
+    if let Ok(mut guard) = LAST_START_FAILURE.lock() {
+        *guard = None;
+    }
 }
 
 fn safe_log_error(error: &str) -> String {
@@ -104,5 +153,17 @@ mod tests {
         let output = safe_log_error(&input);
         assert!(!output.contains('\n'));
         assert!(output.chars().count() <= 240);
+    }
+
+    #[test]
+    fn start_failure_cache_expires() {
+        clear_start_failure();
+        remember_start_failure("SearXNG: arrêt au démarrage");
+        assert_eq!(
+            recent_start_failure(),
+            Some("SearXNG: arrêt au démarrage".to_string())
+        );
+        clear_start_failure();
+        assert_eq!(recent_start_failure(), None);
     }
 }

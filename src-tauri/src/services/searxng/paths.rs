@@ -62,7 +62,10 @@ fn extract_source_archive(archive: &Path) -> Result<PathBuf, String> {
     let stamp = archive_hash(archive)?;
     let stamp_path = sidecar_dir().join(".source-archive.sha256");
     let installed = std::fs::read_to_string(&stamp_path).unwrap_or_default();
-    if installed == stamp && valid_source(&final_dir) {
+    if installed == stamp
+        && valid_source(&final_dir)
+        && super::source_filter::is_clean_source(&final_dir)
+    {
         super::wheels::sync_from_archive_parent(archive)?;
         return Ok(final_dir);
     }
@@ -83,6 +86,9 @@ fn extract_source_archive(archive: &Path) -> Result<PathBuf, String> {
             continue;
         }
         let path = safe_archive_path(&entry)?;
+        if super::source_filter::should_skip_archive_path(&path) {
+            continue;
+        }
         entry
             .unpack(tmp_dir.join(path))
             .map_err(|_| "SearXNG: extraction impossible".to_string())?;

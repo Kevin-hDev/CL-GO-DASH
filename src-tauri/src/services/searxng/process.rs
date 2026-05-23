@@ -7,6 +7,10 @@ fn pid_path() -> PathBuf {
     data_dir().join("searxng-sidecar.pid")
 }
 
+fn log_path() -> PathBuf {
+    data_dir().join("logs").join("searxng-sidecar.log")
+}
+
 pub fn save_pid(pid: u32) {
     let tmp = pid_path().with_extension("tmp");
     if std::fs::write(&tmp, pid.to_string()).is_ok() {
@@ -32,8 +36,8 @@ pub fn kill_orphan_sidecar() {
 pub fn spawn(python: &Path, source: &Path, settings: &Path, port: u16) -> Result<Child, String> {
     let log_dir = data_dir().join("logs");
     let _ = std::fs::create_dir_all(&log_dir);
-    let stderr = std::fs::File::create(log_dir.join("searxng-sidecar.log"))
-        .map_err(|_| "SearXNG: log indisponible".to_string())?;
+    let stderr =
+        std::fs::File::create(log_path()).map_err(|_| "SearXNG: log indisponible".to_string())?;
     let mut cmd = Command::new(python);
     cmd.args(["-m", "searx.webapp"])
         .current_dir(source)
@@ -57,6 +61,10 @@ pub fn spawn(python: &Path, source: &Path, settings: &Path, port: u16) -> Result
 
 pub fn kill_child_process(mut child: Child) {
     let pid = child.id();
+    if let Ok(Some(_)) = child.try_wait() {
+        clear_pid_file();
+        return;
+    }
     eprintln!("[searxng] kill sidecar pid={pid}");
     ollama_kill::tree_kill(pid);
     let start = Instant::now();
@@ -70,6 +78,36 @@ pub fn kill_child_process(mut child: Child) {
     let _ = child.kill();
     let _ = child.wait();
     clear_pid_file();
+}
+
+pub fn startup_log_hint() -> Option<String> {
+    let body = std::fs::read_to_string(log_path()).ok()?;
+    for marker in [
+        "ModuleNotFoundError:",
+        "ImportError:",
+        "No module named",
+        "secret_key",
+    ] {
+        if let Some(line) = body.lines().rev().find(|line| line.contains(marker)) {
+            return Some(sanitize_log_hint(line));
+        }
+    }
+    None
+}
+
+fn sanitize_log_hint(line: &str) -> String {
+    let mut out = String::new();
+    for ch in line.chars() {
+        if ch.is_control() {
+            out.push(' ');
+        } else {
+            out.push(ch);
+        }
+        if out.chars().count() >= 180 {
+            break;
+        }
+    }
+    out.trim().to_string()
 }
 
 fn read_saved_pid() -> Option<u32> {
@@ -119,5 +157,12 @@ mod tests {
         ));
         assert!(!process_text_matches("python -m searx.webapp"));
         assert!(!process_text_matches("searxng-sidecar unrelated"));
+    }
+
+    #[test]
+    fn sanitize_log_hint_removes_control_chars() {
+        let hint = sanitize_log_hint("ModuleNotFoundError:\nNo module named 'x'");
+        assert!(!hint.contains('\n'));
+        assert!(hint.contains("ModuleNotFoundError:"));
     }
 }

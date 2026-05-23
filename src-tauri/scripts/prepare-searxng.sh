@@ -28,6 +28,11 @@ if [[ ! -f "$SOURCE/requirements.txt" || ! -f "$SOURCE/setup.py" ]]; then
   exit 1
 fi
 
+if find "$SOURCE" \( -name '._*' -o -name '.DS_Store' -o -name '.py' \) -print -quit | grep -q .; then
+  echo "SearXNG bundle pollue par des metadonnees macOS" >&2
+  exit 1
+fi
+
 HASH="$(shasum -a 256 "$SOURCE/requirements.txt" "$SOURCE/setup.py" | shasum -a 256 | cut -d ' ' -f 1)"
 if [[ -f "$STAMP" && "$(cat "$STAMP")" == "$HASH" ]] && compgen -G "$WHEELS/*.whl" >/dev/null; then
   exit 0
