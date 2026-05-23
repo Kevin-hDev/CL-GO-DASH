@@ -118,7 +118,7 @@ export function OllamaSetupScreen({ onComplete, onSkip }: OllamaSetupScreenProps
           </div>
           <span className="oss-status-text">{statusText}</span>
           <button
-            className="ollama-btn ollama-btn-cancel oss-cancel-btn"
+            className="ollama-btn ollama-btn-primary oss-cancel-btn"
             onClick={() => void handleCancel()}
             disabled={cancelling}
           >
