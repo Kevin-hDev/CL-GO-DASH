@@ -78,8 +78,8 @@ fn extract_source_archive(archive: &Path) -> Result<PathBuf, String> {
         .map_err(|_| "SearXNG: archive invalide".to_string())?
     {
         let mut entry = entry.map_err(|_| "SearXNG: archive invalide".to_string())?;
-        if entry.header().entry_type().is_symlink() || entry.header().entry_type().is_hard_link() {
-            return Err("SearXNG: archive invalide".to_string());
+        if should_skip_entry(entry.header().entry_type()) {
+            continue;
         }
         let path = safe_archive_path(&entry)?;
         entry
@@ -124,4 +124,41 @@ fn valid_source(source: &Path) -> bool {
         && source.join("requirements.txt").exists()
         && source.join("LICENSE").exists()
         && source.join("searx").join("webapp.py").exists()
+}
+
+fn should_skip_entry(entry_type: tar::EntryType) -> bool {
+    entry_type.is_symlink() || entry_type.is_hard_link()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn bundled_archive_contains_required_source_files() {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("resources")
+            .join("searxng-sidecar")
+            .join("source.tar.gz");
+        let file = std::fs::File::open(path).unwrap();
+        let decoder = flate2::read::GzDecoder::new(file);
+        let mut archive = tar::Archive::new(decoder);
+        let names: Vec<String> = archive
+            .entries()
+            .unwrap()
+            .filter_map(|entry| entry.ok())
+            .filter_map(|entry| entry.path().ok().map(|p| p.to_string_lossy().to_string()))
+            .collect();
+
+        assert!(names.iter().any(|name| name == "source/LICENSE"));
+        assert!(names.iter().any(|name| name == "source/requirements.txt"));
+        assert!(names.iter().any(|name| name == "source/searx/webapp.py"));
+    }
+
+    #[test]
+    fn skips_links_from_upstream_archive() {
+        assert!(should_skip_entry(tar::EntryType::Symlink));
+        assert!(should_skip_entry(tar::EntryType::Link));
+        assert!(!should_skip_entry(tar::EntryType::Regular));
+    }
 }
