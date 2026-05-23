@@ -120,11 +120,11 @@ pub fn run() {
             tauri::async_runtime::spawn(services::llm::model_registry::init());
             Ok(())
         })
-        .on_window_event(|window, event| {
+        .on_window_event(|_window, _event| {
             #[cfg(target_os = "macos")]
-            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
-                if window.label() == "main" {
-                    let _ = window.hide();
+            if let tauri::WindowEvent::CloseRequested { api, .. } = _event {
+                if _window.label() == "main" {
+                    let _ = _window.hide();
                     api.prevent_close();
                 }
             }
@@ -323,5 +323,5 @@ pub fn run() {
         .build(tauri::generate_context!())
         .expect("error while building tauri application");
 
-    app.run(|app_handle, event| app_events::handle_run_event(app_handle, event));
+    app.run(app_events::handle_run_event);
 }

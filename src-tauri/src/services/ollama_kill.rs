@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 use std::process::{Child, Command};
 use std::time::Duration;
+#[cfg(unix)]
 use sysinfo::{Pid, System};
 
 fn pid_file_path() -> PathBuf {
@@ -124,7 +125,9 @@ pub fn tree_kill(pid: u32) {
     }
 }
 
+#[cfg(unix)]
 const MAX_CHILDREN: usize = 256;
+#[cfg(unix)]
 const MAX_DEPTH: u32 = 10;
 
 #[cfg(unix)]

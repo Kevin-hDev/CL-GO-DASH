@@ -13,18 +13,16 @@ pub fn handle_run_event(app_handle: &tauri::AppHandle, event: RunEvent) {
             event: WindowEvent::CloseRequested { .. },
             ..
         } => {
-            if label != "main" {
-                return;
-            }
-
-            #[cfg(not(target_os = "macos"))]
-            {
-                if should_hide_instead_of_quit(app_handle) {
-                    if let Some(win) = app_handle.get_webview_window("main") {
-                        let _ = win.hide();
+            if label == "main" {
+                #[cfg(not(target_os = "macos"))]
+                {
+                    if should_hide_instead_of_quit() {
+                        if let Some(win) = app_handle.get_webview_window("main") {
+                            let _ = win.hide();
+                        }
+                    } else {
+                        cleanup(app_handle);
                     }
-                } else {
-                    cleanup(app_handle);
                 }
             }
         }
@@ -43,7 +41,7 @@ pub fn handle_run_event(app_handle: &tauri::AppHandle, event: RunEvent) {
 }
 
 #[cfg(not(target_os = "macos"))]
-fn should_hide_instead_of_quit(app_handle: &tauri::AppHandle) -> bool {
+fn should_hide_instead_of_quit() -> bool {
     let config = services::config::read_config().unwrap_or_default();
     let gateway_active = config.gateway.enabled && config.gateway.run_when_window_closed;
     let tray_visible = config.advanced.show_tray;
