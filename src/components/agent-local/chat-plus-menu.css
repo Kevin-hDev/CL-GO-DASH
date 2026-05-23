@@ -5,18 +5,17 @@
   bottom: calc(100% + 8px);
   left: 0;
   min-width: 240px;
-  background: var(--shell);
+  background: var(--popover-bg, var(--shell));
   border: 1px solid var(--edge);
   border-radius: var(--radius-md);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
   padding: var(--space-xs);
   z-index: 50;
+  backdrop-filter: var(--popover-backdrop-filter, none);
+  -webkit-backdrop-filter: var(--popover-backdrop-filter, none);
 }
 
 [data-theme="dark"] .cpm-dropdown {
-  background: var(--surface-glass);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
   border-color: transparent;
 }
 
@@ -50,18 +49,17 @@
   position: absolute;
   bottom: calc(100% + 8px);
   min-width: 220px;
-  background: var(--shell);
+  background: var(--popover-bg, var(--shell));
   border: 1px solid var(--edge);
   border-radius: var(--radius-md);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
   padding: var(--space-xs);
   z-index: 51;
+  backdrop-filter: var(--popover-backdrop-filter, none);
+  -webkit-backdrop-filter: var(--popover-backdrop-filter, none);
 }
 
 [data-theme="dark"] .cpm-submenu {
-  background: var(--surface-glass);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
   border-color: transparent;
 }
 

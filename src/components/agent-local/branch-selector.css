@@ -42,12 +42,14 @@
   max-width: 380px;
   max-height: 340px;
   overflow-y: auto;
-  background: var(--surface);
+  background: var(--popover-bg, var(--surface));
   border: 1px solid var(--edge);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-card);
   padding: var(--space-xs);
   z-index: 50;
+  backdrop-filter: var(--popover-backdrop-filter, none);
+  -webkit-backdrop-filter: var(--popover-backdrop-filter, none);
 }
 
 .bs-dropdown-search {
@@ -151,8 +153,5 @@
 }
 
 [data-theme="dark"] .bs-dropdown {
-  background: var(--surface-glass);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
   border-color: transparent;
 }

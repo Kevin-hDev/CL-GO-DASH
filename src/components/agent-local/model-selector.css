@@ -40,10 +40,12 @@
   flex-direction: column;
   border-radius: var(--radius-md);
   border: 1px solid var(--edge);
-  background: var(--shell);
+  background: var(--popover-bg, var(--shell));
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
   z-index: 50;
   overflow: hidden;
+  backdrop-filter: var(--popover-backdrop-filter, none);
+  -webkit-backdrop-filter: var(--popover-backdrop-filter, none);
 }
 
 .ms-dropdown-with-reasoning {
@@ -51,12 +53,6 @@
   max-width: min(439px, calc(100vw - 24px));
   flex-direction: row;
   align-items: stretch;
-}
-
-[data-theme="dark"] .ms-dropdown {
-  background: var(--surface-glass);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
 }
 
 .ms-main {

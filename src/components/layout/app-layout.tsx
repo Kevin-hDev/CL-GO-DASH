@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, type ReactNode } from "react";
+import { useState, useCallback, useEffect, useRef, type ReactNode } from "react";
 import { Sidebar, type TabId } from "./sidebar";
 import { DragRegion } from "./drag-region";
 import { WindowToolbar } from "./window-toolbar";
@@ -44,6 +44,17 @@ export function AppLayout({
 
   const [listWidth, setListWidth] = useState<number | null>(null);
   const dragging = useRef(false);
+
+  useEffect(() => {
+    const platformClass = IS_MAC ? "os-mac" : "os-other";
+    const previousClass = IS_MAC ? "os-other" : "os-mac";
+    document.body.classList.add(platformClass);
+    document.body.classList.remove(previousClass);
+
+    return () => {
+      document.body.classList.remove(platformClass);
+    };
+  }, []);
 
   const handleResizeStart = useCallback((e: React.PointerEvent) => {
     e.preventDefault();

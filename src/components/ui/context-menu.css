@@ -1,12 +1,14 @@
 .context-menu {
   position: fixed;
-  background: var(--void);
+  background: var(--popover-bg, var(--void));
   border: 1px solid var(--edge);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-card);
   padding: var(--space-xs);
   z-index: 100;
   min-width: 160px;
+  backdrop-filter: var(--popover-backdrop-filter, none);
+  -webkit-backdrop-filter: var(--popover-backdrop-filter, none);
 }
 
 .context-item {

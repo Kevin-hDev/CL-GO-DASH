@@ -41,12 +41,14 @@
   left: 0;
   min-width: 260px;
   max-width: 360px;
-  background: var(--surface);
+  background: var(--popover-bg, var(--surface));
   border: 1px solid var(--edge);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-card);
   padding: var(--space-xs);
   z-index: 50;
+  backdrop-filter: var(--popover-backdrop-filter, none);
+  -webkit-backdrop-filter: var(--popover-backdrop-filter, none);
 }
 
 .project-dropdown-search {
@@ -91,8 +93,5 @@
 }
 
 [data-theme="dark"] .project-dropdown {
-  background: var(--surface-glass);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
   border-color: transparent;
 }

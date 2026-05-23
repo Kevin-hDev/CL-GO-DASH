@@ -1,3 +1,9 @@
+.app-root,
+body.os-mac {
+  --popover-bg: var(--surface-glass);
+  --popover-backdrop-filter: blur(20px);
+}
+
 .app-root {
   display: flex;
   height: 100vh;
@@ -105,6 +111,12 @@
 }
 
 /* Linux/Windows : pas de blur, sidebar quasi-opaque */
+.app-root.os-other,
+body.os-other {
+  --popover-bg: var(--shell-opaque);
+  --popover-backdrop-filter: none;
+}
+
 .app-root.os-other {
   background: transparent;
   padding: 0;

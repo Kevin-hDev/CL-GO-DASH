@@ -8,15 +8,11 @@
   overflow-y: auto;
   border-radius: var(--radius-md);
   border: 1px solid var(--edge);
-  background: var(--shell);
+  background: var(--popover-bg, var(--shell));
   box-shadow: var(--shadow-card);
   z-index: 50;
-}
-
-[data-theme="dark"] .slash-dropdown {
-  background: var(--surface-glass);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: var(--popover-backdrop-filter, none);
+  -webkit-backdrop-filter: var(--popover-backdrop-filter, none);
 }
 
 .slash-item {
