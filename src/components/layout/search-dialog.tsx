@@ -1,10 +1,12 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback, useId } from "react";
 import { useTranslation } from "react-i18next";
 import { useAgentSessions } from "@/hooks/use-agent-sessions";
 import { useProjects } from "@/hooks/use-projects";
 import "./search-dialog.css";
 
 const MAX_RECENT = 6;
+const MAX_RESULTS = 50;
+const MAX_QUERY_LENGTH = 120;
 
 interface SearchDialogProps {
   open: boolean;
@@ -19,6 +21,8 @@ export function SearchDialog({ open, onClose, onSelect }: SearchDialogProps) {
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const dialogLabelId = useId();
+  const resultsId = useId();
 
   const projectMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -27,19 +31,27 @@ export function SearchDialog({ open, onClose, onSelect }: SearchDialogProps) {
   }, [projects]);
 
   const sorted = useMemo(
-    () => [...sessions].sort((a, b) => b.created_at.localeCompare(a.created_at)),
+    () => sessions
+      .filter((s) => !s.parent_session_id)
+      .sort((a, b) => b.created_at.localeCompare(a.created_at)),
     [sessions],
   );
 
   const filtered = useMemo(() => {
     if (!query.trim()) return sorted.slice(0, MAX_RECENT);
     const q = query.toLowerCase();
-    return sorted.filter((s) => {
+    const results = [];
+    for (const s of sorted) {
       const name = s.name.toLowerCase();
       const proj = s.project_id ? (projectMap.get(s.project_id) ?? "").toLowerCase() : "";
-      return name.includes(q) || proj.includes(q);
-    });
+      if (name.includes(q) || proj.includes(q)) results.push(s);
+      if (results.length >= MAX_RESULTS) break;
+    }
+    return results;
   }, [sorted, query, projectMap]);
+  const highlightedIndex = filtered.length > 0
+    ? Math.min(selectedIndex, filtered.length - 1)
+    : 0;
 
   useEffect(() => {
     if (open) {
@@ -70,7 +82,7 @@ export function SearchDialog({ open, onClose, onSelect }: SearchDialogProps) {
           break;
         case "ArrowDown":
           e.preventDefault();
-          setSelectedIndex((i) => Math.min(i + 1, filtered.length - 1));
+          setSelectedIndex((i) => filtered.length < 1 ? 0 : Math.min(i + 1, filtered.length - 1));
           break;
         case "ArrowUp":
           e.preventDefault();
@@ -79,40 +91,60 @@ export function SearchDialog({ open, onClose, onSelect }: SearchDialogProps) {
         case "Enter":
           if (filtered.length > 0) {
             e.preventDefault();
-            handleSelect(filtered[selectedIndex].id);
+            handleSelect(filtered[highlightedIndex].id);
           }
           break;
       }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [open, filtered, selectedIndex, onClose, handleSelect]);
+  }, [open, filtered, highlightedIndex, onClose, handleSelect]);
 
   if (!open) return null;
 
   return (
-    <div className="search-overlay" role="presentation" onMouseDown={onClose}>
-      <div className="search-dialog" data-keyboard-scope="local" role="presentation" onMouseDown={(e) => e.stopPropagation()}>
+    <div
+      className="search-overlay"
+      role="presentation"
+      onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div
+        className="search-dialog"
+        data-keyboard-scope="local"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={dialogLabelId}
+      >
+        <h2 id={dialogLabelId} className="search-dialog-title">
+          {t("settings.shortcuts.searchDialog")}
+        </h2>
         <input
           ref={inputRef}
           className="search-input"
           type="text"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => setQuery(e.target.value.slice(0, MAX_QUERY_LENGTH))}
           placeholder={t("search.placeholder")}
           spellCheck={false}
           autoComplete="off"
+          maxLength={MAX_QUERY_LENGTH}
+          aria-label={t("search.placeholder")}
+          aria-controls={resultsId}
+          aria-activedescendant={filtered.length > 0 ? `search-result-${highlightedIndex}` : undefined}
         />
 
         {filtered.length > 0 && (
-          <div className="search-results">
+          <div className="search-results" id={resultsId} role="listbox">
             <div className="search-results-label">
               {query.trim() ? t("search.results") : t("search.recent")}
             </div>
             {filtered.map((session, i) => (
               <button
                 key={session.id}
-                className={`search-result-item${i - selectedIndex ? "" : " selected"}`}
+                id={`search-result-${i}`}
+                role="option"
+                aria-selected={i === highlightedIndex}
+                className={`search-result-item${i === highlightedIndex ? " selected" : ""}`}
                 onMouseEnter={() => setSelectedIndex(i)}
                 onClick={() => handleSelect(session.id)}
               >
