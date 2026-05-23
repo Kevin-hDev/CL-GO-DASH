@@ -22,14 +22,16 @@ describe("webToolErrorToastMessage", () => {
   });
 
   it("ne duplique pas le même toolCallIndex", () => {
-    const event = toolError("web_fetch", 4, "SearXNG: timeout au démarrage");
+    const event = toolError("web_search", 4, "SearXNG: timeout au démarrage");
     expect(webToolErrorToastMessage("s1", event)).not.toBeNull();
     expect(webToolErrorToastMessage("s1", event)).toBeNull();
   });
 
-  it("ignore les refus HTTP attendus de web_fetch côté UI", () => {
+  it("ignore les erreurs web_fetch côté UI", () => {
     expect(webToolErrorToastMessage("s1", toolError("web_fetch", 4, "HTTP 403"))).toBeNull();
-    expect(webToolErrorToastMessage("s1", toolError("web_fetch", 5, "HTTP 404"))).toBeNull();
+    expect(
+      webToolErrorToastMessage("s1", toolError("web_fetch", 5, "Erreur fetch: requête échouée"))
+    ).toBeNull();
   });
 
   it("garde les erreurs provider web_search visibles", () => {

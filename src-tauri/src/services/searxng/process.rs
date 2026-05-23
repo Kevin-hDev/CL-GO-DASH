@@ -49,6 +49,10 @@ pub fn spawn(python: &Path, source: &Path, settings: &Path, port: u16) -> Result
         .stdout(Stdio::null())
         .stderr(Stdio::from(stderr));
 
+    if let Some(path) = super::compat::python_path()? {
+        cmd.env("PYTHONPATH", path);
+    }
+
     #[cfg(target_os = "windows")]
     {
         use std::os::windows::process::CommandExt;

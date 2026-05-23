@@ -1,6 +1,7 @@
 pub mod lifecycle;
 
 mod client;
+mod compat;
 mod paths;
 mod process;
 mod runtime;
