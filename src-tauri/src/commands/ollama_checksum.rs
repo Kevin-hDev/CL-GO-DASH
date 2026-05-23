@@ -1,5 +1,7 @@
 use sha2::{Digest, Sha256};
+use std::io::Read;
 use std::path::Path;
+use tokio_util::sync::CancellationToken;
 
 const CHECKSUM_TIMEOUT_SECS: u64 = 15;
 const MAX_CHECKSUM_BYTES: usize = 8 * 1024;
@@ -57,14 +59,32 @@ fn parse_sha256_line(content: &str, archive_name: &str) -> Option<String> {
     None
 }
 
-pub fn verify_file_sha256(path: &Path, expected: &str) -> Result<(), String> {
-    let data = std::fs::read(path).map_err(|e| {
-        eprintln!("[ollama-checksum] read: {e}");
+pub fn verify_file_sha256(
+    path: &Path,
+    expected: &str,
+    cancel: &CancellationToken,
+) -> Result<(), String> {
+    let mut file = std::fs::File::open(path).map_err(|e| {
+        eprintln!("[ollama-checksum] open: {e}");
         "checksum-read-error".to_string()
     })?;
-
     let mut hasher = Sha256::new();
-    hasher.update(&data);
+    let mut buffer = [0u8; 64 * 1024];
+
+    loop {
+        if cancel.is_cancelled() {
+            return Err(super::ollama_setup_cancel::cancelled_error());
+        }
+        let read = file.read(&mut buffer).map_err(|e| {
+            eprintln!("[ollama-checksum] read: {e}");
+            "checksum-read-error".to_string()
+        })?;
+        if read == 0 {
+            break;
+        }
+        hasher.update(&buffer[..read]);
+    }
+
     let actual = format!("{:x}", hasher.finalize());
 
     if actual != expected {
@@ -116,11 +136,13 @@ mod tests {
         std::fs::write(&path, b"hello world").unwrap();
 
         let expected = "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9";
-        assert!(verify_file_sha256(&path, expected).is_ok());
+        let cancel = CancellationToken::new();
+        assert!(verify_file_sha256(&path, expected, &cancel).is_ok());
 
         assert!(verify_file_sha256(
             &path,
-            "0000000000000000000000000000000000000000000000000000000000000000"
+            "0000000000000000000000000000000000000000000000000000000000000000",
+            &cancel
         )
         .is_err());
 

@@ -38,7 +38,12 @@ pub fn ollama_binary_path() -> Result<PathBuf, String> {
 }
 
 pub fn is_ollama_ready() -> bool {
-    ollama_binary_path().is_ok() || ollama_port::is_port_open(ollama_port::get_port())
+    ollama_port::detect_existing_instance(ollama_port::get_port())
+        || ollama_port::detect_existing_instance(11434)
+}
+
+pub fn is_ollama_installed_or_external() -> bool {
+    ollama_binary_path().is_ok() || is_ollama_ready()
 }
 
 pub fn start_sidecar(app: &AppHandle) -> Result<bool, String> {

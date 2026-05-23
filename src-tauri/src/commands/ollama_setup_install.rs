@@ -1,4 +1,5 @@
 use std::path::Path;
+use uuid::Uuid;
 
 use tauri::ipc::Channel;
 use tokio_util::sync::CancellationToken;
@@ -14,10 +15,13 @@ pub(crate) async fn install_ollama_to(
     cancel: &CancellationToken,
 ) -> Result<(), String> {
     let archives = archives_to_download();
+    if !dest.join("VERSION").exists() {
+        let _ = std::fs::remove_dir_all(dest);
+    }
     let result = install_archives_to(dest, version, on_progress, cancel, &archives).await;
     if let Err(err) = &result {
         if super::ollama_setup_cancel::is_cancelled_error(err) {
-            cleanup_cancelled_install(dest, &archives);
+            cleanup_cancelled_install(dest);
         }
     }
     result
@@ -35,7 +39,7 @@ async fn install_archives_to(
         "Impossible de créer le dossier d'installation".to_string()
     })?;
 
-    let checksums: Vec<Option<String>> = fetch_checksums(version, archives).await;
+    let checksums = fetch_checksums(version, archives).await?;
 
     for (i, archive_name) in archives.iter().enumerate() {
         ensure_not_cancelled(cancel)?;
@@ -55,28 +59,27 @@ async fn install_archives_to(
             status: status.into(),
         });
 
-        let tmp = std::env::temp_dir().join(format!(
-            "cl-go-ollama-{}-{archive_name}",
-            std::process::id()
-        ));
+        let tmp =
+            std::env::temp_dir().join(format!("cl-go-ollama-{}-{archive_name}", Uuid::new_v4()));
         if let Err(err) = download_file(&url, &tmp, on_progress, cancel, status).await {
             let _ = std::fs::remove_file(&tmp);
             let _ = std::fs::remove_dir_all(dest);
             return Err(err);
         }
 
-        if let Some(Some(expected)) = checksums.get(i) {
-            ensure_not_cancelled(cancel)?;
-            let _ = on_progress.send(OllamaSetupProgress {
-                completed: 0,
-                total: 0,
-                status: "verifying".into(),
-            });
-            if let Err(err) = super::ollama_checksum::verify_file_sha256(&tmp, expected) {
-                let _ = std::fs::remove_file(&tmp);
-                let _ = std::fs::remove_dir_all(dest);
-                return Err(err);
-            }
+        let expected = checksums
+            .get(i)
+            .ok_or_else(|| "checksum-not-found".to_string())?;
+        ensure_not_cancelled(cancel)?;
+        let _ = on_progress.send(OllamaSetupProgress {
+            completed: 0,
+            total: 0,
+            status: "verifying".into(),
+        });
+        if let Err(err) = super::ollama_checksum::verify_file_sha256(&tmp, expected, cancel) {
+            let _ = std::fs::remove_file(&tmp);
+            let _ = std::fs::remove_dir_all(dest);
+            return Err(err);
         }
 
         ensure_not_cancelled(cancel)?;
@@ -86,7 +89,7 @@ async fn install_archives_to(
             status: "extracting".into(),
         });
 
-        if let Err(err) = super::ollama_extract::extract_overlay(&tmp, dest, archive_name) {
+        if let Err(err) = super::ollama_extract::extract_overlay(&tmp, dest, archive_name, cancel) {
             let _ = std::fs::remove_dir_all(dest);
             let _ = std::fs::remove_file(&tmp);
             return Err(err);
@@ -120,14 +123,7 @@ async fn install_archives_to(
     Ok(())
 }
 
-fn cleanup_cancelled_install(dest: &Path, archives: &[&str]) {
-    for archive_name in archives {
-        let tmp = std::env::temp_dir().join(format!(
-            "cl-go-ollama-{}-{archive_name}",
-            std::process::id()
-        ));
-        let _ = std::fs::remove_file(tmp);
-    }
+fn cleanup_cancelled_install(dest: &Path) {
     let _ = std::fs::remove_dir_all(dest);
     eprintln!("[ollama-setup] installation annulée, fichiers partiels supprimés");
 }
@@ -139,16 +135,16 @@ fn ensure_not_cancelled(cancel: &CancellationToken) -> Result<(), String> {
     Ok(())
 }
 
-async fn fetch_checksums(version: &str, archives: &[&str]) -> Vec<Option<String>> {
+async fn fetch_checksums(version: &str, archives: &[&str]) -> Result<Vec<String>, String> {
     let mut result = Vec::with_capacity(archives.len());
     for name in archives {
         match super::ollama_checksum::fetch_expected_hash(version, name).await {
-            Ok(hash) => result.push(Some(hash)),
+            Ok(hash) => result.push(hash),
             Err(e) => {
                 eprintln!("[ollama-setup] checksum unavailable for {name}: {e}");
-                result.push(None);
+                return Err("checksum-not-available".to_string());
             }
         }
     }
-    result
+    Ok(result)
 }

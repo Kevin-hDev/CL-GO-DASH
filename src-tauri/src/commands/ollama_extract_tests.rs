@@ -1,4 +1,5 @@
 use crate::commands::ollama_extract::safe_unpack_tar;
+use tokio_util::sync::CancellationToken;
 
 #[test]
 fn safe_unpack_rejects_parent_dir() {
@@ -38,7 +39,7 @@ fn safe_unpack_rejects_parent_dir() {
 
     let file = std::fs::File::open(&tar_path).unwrap();
     let archive = tar::Archive::new(file);
-    let result = safe_unpack_tar(archive, &dest);
+    let result = safe_unpack_tar(archive, &dest, &CancellationToken::new());
 
     assert!(result.is_err(), "should reject archive with ..");
     assert!(
@@ -63,7 +64,7 @@ fn safe_unpack_accepts_safe_relative_symlink() {
 
     let file = std::fs::File::open(&tar_path).unwrap();
     let archive = tar::Archive::new(file);
-    let result = safe_unpack_tar(archive, &dest);
+    let result = safe_unpack_tar(archive, &dest, &CancellationToken::new());
 
     assert!(result.is_ok(), "safe relative symlink should be accepted");
     assert!(std::fs::symlink_metadata(dest.join("libggml-base.dylib")).is_ok());
@@ -84,7 +85,7 @@ fn safe_unpack_rejects_absolute_symlink() {
 
     let file = std::fs::File::open(&tar_path).unwrap();
     let archive = tar::Archive::new(file);
-    let result = safe_unpack_tar(archive, &dest);
+    let result = safe_unpack_tar(archive, &dest, &CancellationToken::new());
 
     assert!(result.is_err(), "should reject absolute symlink target");
     let _ = std::fs::remove_dir_all(&dir);
@@ -104,7 +105,7 @@ fn safe_unpack_rejects_parent_symlink() {
 
     let file = std::fs::File::open(&tar_path).unwrap();
     let archive = tar::Archive::new(file);
-    let result = safe_unpack_tar(archive, &dest);
+    let result = safe_unpack_tar(archive, &dest, &CancellationToken::new());
 
     assert!(result.is_err(), "should reject symlink target with ..");
     let _ = std::fs::remove_dir_all(&dir);
@@ -136,7 +137,7 @@ fn safe_unpack_accepts_valid_tar() {
 
     let file = std::fs::File::open(&tar_path).unwrap();
     let archive = tar::Archive::new(file);
-    let result = safe_unpack_tar(archive, &dest);
+    let result = safe_unpack_tar(archive, &dest, &CancellationToken::new());
 
     assert!(result.is_ok());
     assert!(dest.join("bin/ollama").exists());
@@ -174,7 +175,7 @@ fn safe_unpack_rejects_hardlink() {
 
     let file = std::fs::File::open(&tar_path).unwrap();
     let archive = tar::Archive::new(file);
-    let result = safe_unpack_tar(archive, &dest);
+    let result = safe_unpack_tar(archive, &dest, &CancellationToken::new());
 
     assert!(result.is_err(), "should reject hardlink entries");
     let _ = std::fs::remove_dir_all(&dir);

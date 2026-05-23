@@ -18,7 +18,7 @@ pub struct OllamaSetupProgress {
 
 #[tauri::command]
 pub async fn is_ollama_installed() -> bool {
-    ollama_lifecycle::is_ollama_ready()
+    ollama_lifecycle::is_ollama_installed_or_external()
 }
 
 #[tauri::command]

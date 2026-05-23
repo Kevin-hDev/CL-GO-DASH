@@ -53,10 +53,15 @@ pub async fn download_file(
         return Err("ollama-download-too-large".into());
     }
 
-    let mut file = tokio::fs::File::create(dest).await.map_err(|e| {
-        eprintln!("[ollama-dl] fs create: {e}");
-        "ollama-write-error".to_string()
-    })?;
+    let mut file = tokio::fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(dest)
+        .await
+        .map_err(|e| {
+            eprintln!("[ollama-dl] fs create: {e}");
+            "ollama-write-error".to_string()
+        })?;
 
     use futures_util::StreamExt;
     use tokio::io::AsyncWriteExt;

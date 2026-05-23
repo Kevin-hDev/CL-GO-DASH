@@ -80,6 +80,10 @@ export function OllamaSetupScreen({ onComplete, onSkip }: OllamaSetupScreenProps
     setError(null);
     try {
       await invoke("cancel_ollama_setup");
+      setDownloading(false);
+      setCancelling(false);
+      setStatus("");
+      setPercent(0);
     } catch {
       cancelledRef.current = false;
       setCancelling(false);

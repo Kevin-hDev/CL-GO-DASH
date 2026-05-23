@@ -60,6 +60,7 @@ describe("OllamaSetupScreen", () => {
     fireEvent.click(screen.getByText("ollamaSetup.cancel"));
 
     await waitFor(() => expect(invoke).toHaveBeenCalledWith("cancel_ollama_setup"));
-    expect(screen.getAllByText("ollamaSetup.cancelling").length).toBeGreaterThan(0);
+    await waitFor(() => expect(screen.getByText("ollamaSetup.download")).toBeTruthy());
+    expect(screen.queryByText("ollamaSetup.cancelling")).toBeNull();
   });
 });
