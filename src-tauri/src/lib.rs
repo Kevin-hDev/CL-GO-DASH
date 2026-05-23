@@ -63,6 +63,7 @@ pub fn run() {
                     let _ = handle.emit("vault-init-failed", msg);
                 });
             }
+            services::searxng::prepare_on_startup(app.handle().clone());
             if ollama_lifecycle::ollama_binary_path().is_ok() {
                 let handle = app.handle().clone();
                 tauri::async_runtime::spawn(async move {

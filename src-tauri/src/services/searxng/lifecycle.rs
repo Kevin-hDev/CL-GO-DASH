@@ -22,6 +22,14 @@ pub async fn search(query: &str) -> Result<Vec<SearchResult>, String> {
     super::client::search(&base_url, query).await
 }
 
+pub fn prepare_on_startup(app: tauri::AppHandle) {
+    tauri::async_runtime::spawn(async move {
+        if let Err(e) = ensure_running(&app).await {
+            eprintln!("[searxng] warmup failed: {}", safe_log_error(&e));
+        }
+    });
+}
+
 async fn ensure_running(app: &tauri::AppHandle) -> Result<String, String> {
     let state = app.state::<SearxngSidecar>();
     let mut guard = state.0.lock().await;
@@ -75,4 +83,26 @@ async fn wait_until_ready(base_url: &str) -> Result<(), String> {
 
 fn base_url(port: u16) -> String {
     format!("http://127.0.0.1:{port}")
+}
+
+fn safe_log_error(error: &str) -> String {
+    let cleaned: String = error
+        .chars()
+        .map(|ch| if ch.is_control() { ' ' } else { ch })
+        .take(240)
+        .collect();
+    cleaned.trim().to_string()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn safe_log_error_removes_control_chars_and_truncates() {
+        let input = format!("SearXNG: timeout\n{}", "x".repeat(400));
+        let output = safe_log_error(&input);
+        assert!(!output.contains('\n'));
+        assert!(output.chars().count() <= 240);
+    }
 }

@@ -15,6 +15,10 @@ pub async fn search(query: &str) -> Result<Vec<SearchResult>, String> {
     lifecycle::search(query).await
 }
 
+pub fn prepare_on_startup(app: tauri::AppHandle) {
+    lifecycle::prepare_on_startup(app);
+}
+
 pub async fn stop(sidecar: &SearxngSidecar) {
     lifecycle::stop(sidecar).await;
 }
