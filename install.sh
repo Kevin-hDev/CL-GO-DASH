@@ -17,7 +17,7 @@ info "Détection : ${OS} ${ARCH}"
 case "${OS}" in
   Darwin) PLATFORM="macos"; EXT=".dmg" ;;
   Linux)  PLATFORM="linux"; EXT=".AppImage" ;;
-  *)      fail "OS non supporté : ${OS}. Sur Windows, télécharge le .msi depuis GitHub." ;;
+  *)      fail "OS non supporté : ${OS}. Sur Windows, lance install.ps1 ou télécharge le fichier -setup.exe depuis GitHub." ;;
 esac
 
 command -v curl &>/dev/null || fail "curl est requis. Installe-le et relance."

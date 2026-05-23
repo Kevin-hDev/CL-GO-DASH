@@ -20,11 +20,8 @@ try {
 $version = $release.tag_name -replace "^v", ""
 if (-not $version) { Fail "Aucune release trouvée." }
 
-$asset = $release.assets | Where-Object { $_.name -like "*.msi" } | Select-Object -First 1
-if (-not $asset) {
-    $asset = $release.assets | Where-Object { $_.name -like "*.exe" } | Select-Object -First 1
-}
-if (-not $asset) { Fail "Pas d'installeur Windows dans la release v$version." }
+$asset = $release.assets | Where-Object { $_.name -like "*-setup.exe" } | Select-Object -First 1
+if (-not $asset) { Fail "Pas d'installeur Windows NSIS (-setup.exe) dans la release v$version." }
 
 $url = $asset.browser_download_url
 $tmpDir = Join-Path $env:TEMP "cl-go-update"
@@ -49,11 +46,7 @@ if (-not (Test-Path $installDir)) {
 }
 
 Info "Installation dans $installDir..."
-if ($tmpFile -like "*.msi") {
-    Start-Process msiexec.exe -ArgumentList "/i", "`"$tmpFile`"", "/passive", "INSTALLDIR=`"$installDir`"" -Wait
-} else {
-    Start-Process $tmpFile -ArgumentList "/S", "/D=$installDir" -Wait
-}
+Start-Process $tmpFile -ArgumentList "/S", "/D=$installDir" -Wait
 
 Remove-Item -Recurse -Force $tmpDir -ErrorAction SilentlyContinue
 

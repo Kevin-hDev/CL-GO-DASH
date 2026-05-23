@@ -53,13 +53,15 @@ Le script `install.sh` :
    - macOS : mount DMG → copie dans `/Applications/` → démonte → lance
    - Linux : copie dans `~/.local/bin/` → chmod +x → lance
 
+Le `.deb` Linux reste publié pour Ubuntu/Debian quand tu veux une installation via le gestionnaire de paquets. Le script `install.sh` garde l'AppImage par défaut, car les mises à jour intégrées de l'app utilisent aussi l'AppImage.
+
 ### Windows
 
 ```powershell
 irm https://raw.githubusercontent.com/Kevin-hDev/CL-GO-DASH/main/install.ps1 | iex
 ```
 
-Le script `install.ps1` cherche d'abord `.msi` puis `.exe` dans les assets de la release. Il lance `msiexec /i /passive` pour un MSI ou l'exe avec `/S` pour un NSIS.
+Le script `install.ps1` cherche l'asset Windows NSIS `-setup.exe` dans les assets de la release. Il lance l'exe avec `/S` et `/D=...`.
 
 ---
 
@@ -184,7 +186,7 @@ Les logs stderr d'Ollama sont écrits dans `~/.local/share/cl-go-dash/logs/ollam
 | Version | Problème | Cause | Fix |
 |---|---|---|---|
 | v0.6.8 | Ollama sur CPU malgré GPU AMD | Aucune variable GPU injectée au sidecar | Injection `OLLAMA_VULKAN=1` + logs stderr |
-| v0.6.9 | Bouton mise à jour invisible | Code cherchait `.msi`, le CI produit NSIS `.exe` | `platform_extension()` → `-setup.exe` + lancement direct NSIS `/S` |
+| v0.6.9 | Bouton mise à jour invisible | Code cherchait le mauvais type d'asset Windows, le CI produit NSIS `.exe` | `platform_extension()` → `-setup.exe` + lancement direct NSIS `/S` |
 | v0.7.0 | Toggles personnalité cassés | `path.split("/")` ne sépare pas les backslash Windows | `path.split(/[\\/]/)` |
 | v0.7.0 | Pas de choix CPU/GPU | — | Sélecteur dans Settings/Avancé + `restart_ollama_sidecar` |
 | v0.7.1 | Contour fenêtre invisible | Padding 1px insuffisant sur Windows/Linux | Padding 3px sur `.os-other` uniquement |
@@ -362,10 +364,10 @@ Au lancement, un écran avec l'icône de l'app s'affiche pendant que React charg
 ## Points d'attention
 
 - **Repo public** : obligatoire pour que l'API GitHub Releases fonctionne sans token d'authentification
-- **Pas de code signing** : macOS Gatekeeper bloque si téléchargé via navigateur → d'où le `curl` (pas de quarantaine) et le téléchargement direct depuis l'app en Rust
+- **macOS** : le script `curl` et le téléchargement direct depuis l'app évitent la quarantaine ajoutée par certains navigateurs
 - **Ollama téléchargé au premier lancement** : le CI ne bundle PAS Ollama — il est téléchargé dans `~/.local/share/cl-go-dash/ollama-bundle/` au premier lancement
 - **Ubuntu 22.04** : builder sur la plus vieille version cible garantit la compatibilité avec 22.04, 24.04, 25.04 (glibc forward-compatible)
 - **Chemins Windows** : toujours utiliser `split(/[\\/]/)` côté frontend pour extraire un nom de fichier d'un path — `split("/")` ne fonctionne pas avec les backslash Windows
 - **ROCm Linux** : production-ready (v7.2.2), auto-détecté par `select_archive_name()`. Le bundle ROCm est téléchargé automatiquement pour les GPU AMD
 - **ROCm Windows** : pas fiable pour Ollama (avril 2026), Vulkan utilisé à la place
-- **Windows Defender — Accès contrôlé aux dossiers** : au premier lancement, `ollama.exe` (binaire non signé) peut être bloqué par la protection anti-ransomware quand il essaie d'écrire sur le disque (modèles dans `~/.ollama/models/`). L'utilisateur doit cliquer "Autoriser" dans la notification — ça ne redemande plus ensuite. Pas de contournement possible sans code signing
+- **Windows Defender — Accès contrôlé aux dossiers** : au premier lancement, `ollama.exe` peut être bloqué par la protection anti-ransomware quand il essaie d'écrire sur le disque (modèles dans `~/.ollama/models/`). L'utilisateur doit cliquer "Autoriser" dans la notification — ça ne redemande plus ensuite.
