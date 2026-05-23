@@ -12,11 +12,13 @@ interface OllamaSetupProgress {
 
 interface OllamaSetupScreenProps {
   onComplete: () => void;
+  onSkip?: () => void | Promise<void>;
 }
 
-export function OllamaSetupScreen({ onComplete }: OllamaSetupScreenProps) {
+export function OllamaSetupScreen({ onComplete, onSkip }: OllamaSetupScreenProps) {
   const { t } = useTranslation();
   const [downloading, setDownloading] = useState(false);
+  const [skipping, setSkipping] = useState(false);
   const [percent, setPercent] = useState(0);
   const [status, setStatus] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -37,11 +39,23 @@ export function OllamaSetupScreen({ onComplete }: OllamaSetupScreenProps) {
     try {
       await invoke("download_ollama", { onProgress: channel });
       onComplete();
-    } catch (e) {
+    } catch {
       setError(t("errors.operationFailed"));
       setDownloading(false);
     }
-  }, [onComplete]);
+  }, [onComplete, t]);
+
+  const handleSkip = useCallback(async () => {
+    if (!onSkip) return;
+    setSkipping(true);
+    setError(null);
+    try {
+      await onSkip();
+    } catch {
+      setError(t("errors.operationFailed"));
+      setSkipping(false);
+    }
+  }, [onSkip, t]);
 
   return (
     <div className="oss-container">
@@ -66,12 +80,24 @@ export function OllamaSetupScreen({ onComplete }: OllamaSetupScreenProps) {
           </span>
         </div>
       ) : (
-        <button
-          className="ollama-btn ollama-btn-primary oss-download-btn"
-          onClick={() => void handleDownload()}
-        >
-          {t("ollamaSetup.download")}
-        </button>
+        <div className="oss-actions">
+          <button
+            className="ollama-btn ollama-btn-primary oss-download-btn"
+            onClick={() => void handleDownload()}
+            disabled={skipping}
+          >
+            {t("ollamaSetup.download")}
+          </button>
+          {onSkip && (
+            <button
+              className="ollama-btn oss-skip-btn"
+              onClick={() => void handleSkip()}
+              disabled={skipping}
+            >
+              {skipping ? t("ollamaSetup.skipping") : t("ollamaSetup.skip")}
+            </button>
+          )}
+        </div>
       )}
 
       {error && (

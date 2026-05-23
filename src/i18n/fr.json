@@ -686,8 +686,10 @@
   },
   "ollamaSetup": {
     "title": "Configuration d'Ollama",
-    "description": "Ollama permet de faire tourner des modèles d'IA directement sur ta machine. Le téléchargement inclut le support GPU pour de meilleures performances.",
+    "description": "Ollama permet de faire tourner des modèles d'IA directement sur ta machine. Tu peux aussi passer cette étape et utiliser les providers cloud.",
     "download": "Télécharger Ollama",
+    "skip": "Passer",
+    "skipping": "Passage en cours…",
     "extracting": "Installation en cours…",
     "downloadingGpu": "Téléchargement GPU…",
     "error": "L'installation a échoué. Détails ci-dessous."

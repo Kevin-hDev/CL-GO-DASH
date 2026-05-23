@@ -42,6 +42,18 @@
   padding-right: 3px;
 }
 
+.ollama-setup-list-placeholder {
+  flex: 1;
+  min-height: 0;
+}
+
+.ollama-setup-detail {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+}
+
 .ollama-model-item {
   padding: 5px var(--space-sm);
   border-radius: var(--radius-sm);
@@ -149,5 +161,4 @@
   background: var(--pulse);
   transition: width 200ms ease-out;
 }
-
 

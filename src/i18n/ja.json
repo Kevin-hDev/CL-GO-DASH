@@ -686,8 +686,10 @@
   },
   "ollamaSetup": {
     "title": "Ollama セットアップ",
-    "description": "Ollama を使うとローカルマシン上で AI モデルを実行できます。ダウンロードにはパフォーマンス向上のための GPU サポートが含まれています。",
+    "description": "Ollama を使うとローカルマシン上で AI モデルを実行できます。この手順をスキップしてクラウドプロバイダーを使うこともできます。",
     "download": "Ollama をダウンロード",
+    "skip": "スキップ",
+    "skipping": "スキップ中…",
     "extracting": "インストール中…",
     "downloadingGpu": "GPU サポートをダウンロード中…",
     "error": "インストールに失敗しました。詳細は以下を確認してください。"

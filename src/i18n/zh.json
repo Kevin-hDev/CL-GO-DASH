@@ -686,8 +686,10 @@
   },
   "ollamaSetup": {
     "title": "Ollama 安装",
-    "description": "Ollama 让您在本地机器上运行 AI 模型。下载包含 GPU 支持以获得更佳性能。",
+    "description": "Ollama 让您在本地机器上运行 AI 模型。您也可以跳过此步骤并使用云端提供商。",
     "download": "下载 Ollama",
+    "skip": "跳过",
+    "skipping": "正在跳过…",
     "extracting": "正在安装…",
     "downloadingGpu": "正在下载 GPU 支持…",
     "error": "安装失败，详情如下。"

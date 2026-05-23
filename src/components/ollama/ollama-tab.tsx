@@ -1,13 +1,16 @@
 import { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { invoke } from "@tauri-apps/api/core";
 import { useOllamaModels } from "@/hooks/use-ollama-models";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ModelfileIcon, ModelsIcon } from "@/components/ui/model-browser-icons";
+import { ollamaSetupSkippedPatch } from "@/lib/ollama-setup-gate";
 import { ModelfileList } from "./modelfile-list";
 import { ModelfileViewer } from "./modelfile-viewer";
 import { ModelSearch } from "./model-search";
 import { ModelVariantsList } from "./model-variants-list";
 import { ModelProfile } from "./model-profile";
+import { OllamaSetupScreen } from "./ollama-setup-screen";
 import type { RegistryModel } from "@/types/agent";
 import type { DeepPartial, SettingsNavState } from "@/types/navigation";
 import "./ollama.css";
@@ -28,12 +31,36 @@ export function useOllamaTabSlots({ navState, onNavChange, onNavReplace }: Ollam
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<RegistryModel[]>([]);
   const [searching, setSearching] = useState(false);
+  const [ollamaInstalled, setOllamaInstalled] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    invoke<boolean>("is_ollama_installed")
+      .then(setOllamaInstalled)
+      .catch(() => setOllamaInstalled(true));
+  }, []);
 
   useEffect(() => {
     if (!selectedInstalled && ollamaModels.models.length > 0) {
       onNavReplace({ ollamaInstalledModel: ollamaModels.models[0].name });
     }
   }, [ollamaModels.models, selectedInstalled, onNavReplace]);
+
+  const setupList = useMemo(() => (
+    <div className="ollama-setup-list-placeholder" />
+  ), []);
+
+  const setupDetail = useMemo(() => (
+    <div className="ollama-setup-detail">
+      <OllamaSetupScreen
+        onComplete={() => {
+          invoke("patch_advanced_settings", { patch: ollamaSetupSkippedPatch(false) }).catch(() => {});
+          invoke("start_ollama_sidecar").catch(() => {});
+          setOllamaInstalled(true);
+          void ollamaModels.refresh();
+        }}
+      />
+    </div>
+  ), [ollamaModels]);
 
   const list = useMemo(() => (
     <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
@@ -118,5 +145,8 @@ export function useOllamaTabSlots({ navState, onNavChange, onNavReplace }: Ollam
     );
   }, [onNavReplace, selectedFamily, selectedInstalled, selectedVariant, subTab, t]);
 
-  return useMemo(() => ({ list, detail }), [list, detail]);
+  return useMemo(
+    () => (ollamaInstalled === false ? { list: setupList, detail: setupDetail } : { list, detail }),
+    [detail, list, ollamaInstalled, setupDetail, setupList],
+  );
 }

@@ -686,8 +686,10 @@
   },
   "ollamaSetup": {
     "title": "Ollama Setup",
-    "description": "Ollama lets you run AI models locally on your machine. The download includes GPU support for better performance.",
+    "description": "Ollama lets you run AI models locally on your machine. You can also skip this step and use cloud providers.",
     "download": "Download Ollama",
+    "skip": "Skip",
+    "skipping": "Skipping…",
     "extracting": "Installing…",
     "downloadingGpu": "Downloading GPU support…",
     "error": "Installation failed. Details below."

@@ -27,6 +27,7 @@ pub struct AdvancedSettings {
     pub compression_threshold: u8,
     pub response_language: String,
     pub link_preview_enabled: bool,
+    pub ollama_setup_skipped: bool,
 }
 
 impl Default for AdvancedSettings {
@@ -45,6 +46,7 @@ impl Default for AdvancedSettings {
             compression_threshold: 85,
             response_language: String::new(),
             link_preview_enabled: true,
+            ollama_setup_skipped: false,
         }
     }
 }
@@ -58,6 +60,12 @@ mod tests {
         let settings = AdvancedSettings::default();
         assert!(settings.compression_enabled);
         assert_eq!(settings.compression_threshold, 85);
+    }
+
+    #[test]
+    fn ollama_setup_is_not_skipped_by_default() {
+        let settings = AdvancedSettings::default();
+        assert!(!settings.ollama_setup_skipped);
     }
 
     #[test]

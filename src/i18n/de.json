@@ -686,8 +686,10 @@
   },
   "ollamaSetup": {
     "title": "Ollama Setup",
-    "description": "Ollama ermöglicht es, KI-Modelle lokal auf deinem Computer auszuführen. Der Download enthält GPU-Unterstützung für bessere Leistung.",
+    "description": "Ollama ermöglicht es, KI-Modelle lokal auf deinem Computer auszuführen. Du kannst diesen Schritt auch überspringen und Cloud-Provider nutzen.",
     "download": "Ollama herunterladen",
+    "skip": "Überspringen",
+    "skipping": "Wird übersprungen…",
     "extracting": "Wird installiert…",
     "downloadingGpu": "GPU-Unterstützung wird heruntergeladen…",
     "error": "Installation fehlgeschlagen. Details unten."

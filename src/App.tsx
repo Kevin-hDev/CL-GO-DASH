@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from "react";
-import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useTranslation } from "react-i18next";
 import { AppLayout } from "@/components/layout/app-layout";
@@ -14,6 +13,7 @@ import { AgentLocalTab } from "@/components/agent-local/agent-local-tab";
 import { SettingsTab } from "@/components/settings/settings-tab";
 import { ForecastDocsWindow } from "@/components/forecast-docs/forecast-docs-window";
 import { cleanupTauriListener } from "@/lib/tauri-listen";
+import { useOllamaSetupGate } from "@/hooks/use-ollama-setup-gate";
 import type { TabId } from "@/components/layout/sidebar";
 import {
   DEFAULT_APP_NAV,
@@ -46,11 +46,14 @@ function MainApp() {
   const { t } = useTranslation();
 
   const [vaultError, setVaultError] = useState<string | null>(null);
-  const [ollamaReady, setOllamaReady] = useState<boolean | null>(null);
   const { focusedPanel } = usePanelFocus();
+  const {
+    showOllamaSetup,
+    completeOllamaSetup,
+    skipOllamaSetup,
+  } = useOllamaSetupGate();
 
   useEffect(() => {
-    invoke<boolean>("is_ollama_installed").then(setOllamaReady).catch(() => setOllamaReady(true));
     const unlisten = listen<string>("vault-init-failed", (e) => {
       setVaultError(e.payload);
     });
@@ -99,17 +102,17 @@ function MainApp() {
     return () => clearTimeout(timer);
   }, []);
 
-  if (ollamaReady === false) {
+  if (showOllamaSetup) {
     return (
       <div style={{
         width: "100vw", height: "100vh",
         background: "var(--void)",
         display: "flex", alignItems: "center", justifyContent: "center",
       }}>
-        <OllamaSetupScreen onComplete={() => {
-          invoke("start_ollama_sidecar").catch(() => {});
-          setOllamaReady(true);
-        }} />
+        <OllamaSetupScreen
+          onComplete={completeOllamaSetup}
+          onSkip={skipOllamaSetup}
+        />
       </div>
     );
   }

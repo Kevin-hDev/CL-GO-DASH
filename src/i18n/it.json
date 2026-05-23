@@ -686,8 +686,10 @@
   },
   "ollamaSetup": {
     "title": "Configurazione Ollama",
-    "description": "Ollama ti permette di eseguire modelli AI localmente sul tuo computer. Il download include il supporto GPU per prestazioni migliori.",
+    "description": "Ollama ti permette di eseguire modelli AI localmente sul tuo computer. Puoi anche saltare questo passaggio e usare provider cloud.",
     "download": "Scarica Ollama",
+    "skip": "Salta",
+    "skipping": "Salto in corso…",
     "extracting": "Installazione in corso…",
     "downloadingGpu": "Download del supporto GPU in corso…",
     "error": "Installazione fallita. Dettagli di seguito."

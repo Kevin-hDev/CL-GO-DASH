@@ -43,6 +43,18 @@
   font-size: var(--text-sm);
 }
 
+.oss-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.oss-skip-btn {
+  padding: 8px 20px;
+  font-size: var(--text-sm);
+}
+
 .oss-error-block {
   text-align: center;
   max-width: 400px;
