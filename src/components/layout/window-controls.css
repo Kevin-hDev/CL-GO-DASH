@@ -11,6 +11,10 @@
   -webkit-user-select: none;
 }
 
+.os-other .window-controls {
+  top: 12px;
+}
+
 .wc-btn {
   width: 12px;
   height: 12px;
