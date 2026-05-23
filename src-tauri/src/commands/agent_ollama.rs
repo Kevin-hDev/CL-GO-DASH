@@ -7,6 +7,7 @@ use crate::services::agent_local::translator;
 use crate::services::agent_local::types_ollama::{
     ModelInfo, OllamaModel, PullProgress, RegistryModel, RegistryModelDetails, RegistryTag,
 };
+use crate::services::ollama_lifecycle;
 use crate::PullCancel;
 use tauri::ipc::Channel;
 use tauri::Emitter;
@@ -16,6 +17,9 @@ use tokio_util::sync::CancellationToken;
 pub async fn list_ollama_models(
     ollama: tauri::State<'_, OllamaClient>,
 ) -> Result<Vec<OllamaModel>, String> {
+    if !ollama_lifecycle::is_ollama_ready() {
+        return Ok(Vec::new());
+    }
     ollama.list_models().await
 }
 

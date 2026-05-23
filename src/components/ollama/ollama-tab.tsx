@@ -23,7 +23,6 @@ interface OllamaTabProps {
 
 export function useOllamaTabSlots({ navState, onNavChange, onNavReplace }: OllamaTabProps): { list: React.ReactNode; detail: React.ReactNode } {
   const { t } = useTranslation();
-  const ollamaModels = useOllamaModels();
   const subTab = navState.ollamaSubTab;
   const selectedInstalled = navState.ollamaInstalledModel;
   const selectedFamily = navState.ollamaFamily;
@@ -32,6 +31,7 @@ export function useOllamaTabSlots({ navState, onNavChange, onNavReplace }: Ollam
   const [searchResults, setSearchResults] = useState<RegistryModel[]>([]);
   const [searching, setSearching] = useState(false);
   const [ollamaInstalled, setOllamaInstalled] = useState<boolean | null>(null);
+  const ollamaModels = useOllamaModels({ enabled: ollamaInstalled === true });
 
   useEffect(() => {
     invoke<boolean>("is_ollama_installed")

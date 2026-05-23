@@ -52,6 +52,8 @@
   min-width: 0;
   min-height: 0;
   display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .ollama-model-item {
@@ -161,4 +163,3 @@
   background: var(--pulse);
   transition: width 200ms ease-out;
 }
-

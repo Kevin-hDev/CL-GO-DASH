@@ -33,6 +33,7 @@ const mocks = vi.hoisted(() => {
   return {
     invoke: vi.fn((cmd: string) => {
       if (cmd === "get_advanced_settings") return Promise.resolve({});
+      if (cmd === "is_ollama_installed") return Promise.resolve(true);
       if (cmd === "get_modelfile") return Promise.resolve("FROM llama3.2:latest\nPARAMETER temperature 0.7\n");
       if (cmd === "get_selected_forecast_model") return Promise.resolve("chronos-bolt-small");
       if (cmd === "list_configured_providers") return Promise.resolve(["groq", "brave", "nixtla"]);
