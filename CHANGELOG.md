@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.9.1
+
+### Fixes
+
+- **Ollama setup flow** — added persistent Skip support and made the same setup available later from Settings > Ollama
+- **Ollama install UX** — improved progress states, cancellation, cleanup of partial installs, and setup screen alignment
+- **Ollama setup hardening** — strict checksum verification, safer archive extraction, and no Ollama polling when it is not installed
+
+---
+
 ## v0.9.0
 
 ### Features
