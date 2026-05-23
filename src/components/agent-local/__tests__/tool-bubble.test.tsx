@@ -189,6 +189,43 @@ describe("ToolBubble", () => {
     expect(getByTestId("web-preview")).toBeTruthy();
   });
 
+  it("masque le détail brut des erreurs web_fetch", () => {
+    const { container, queryByTestId } = render(
+      <ToolBubble
+        tools={[{
+          name: "web_fetch",
+          args: { url: "https://example.com/private" },
+          result: "HTTP 403 secret_key=abc123456",
+          isError: true,
+        }]}
+      />,
+    );
+
+    openGroup(container);
+    expect(container.textContent).toContain("x");
+    expect(container.textContent).not.toContain("HTTP 403");
+    expect(container.textContent).not.toContain("secret_key");
+    expect(container.querySelector(".tb-toggle")).toBeNull();
+    expect(queryByTestId("web-preview")).toBeNull();
+  });
+
+  it("nettoie le détail affichable des erreurs web_search", () => {
+    const { container } = render(
+      <ToolBubble
+        tools={[{
+          name: "web_search",
+          args: { query: "news" },
+          result: "SearXNG: secret_key=abc123456 /Users/me/file",
+          isError: true,
+        }]}
+      />,
+    );
+
+    openGroup(container);
+    expect(container.innerHTML).not.toContain("abc123456");
+    expect(container.innerHTML).not.toContain("/Users/me/file");
+  });
+
   it("garde les groupes et previews fermés par défaut", () => {
     const { container } = render(
       <ToolBubble

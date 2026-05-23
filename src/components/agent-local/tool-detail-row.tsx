@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { ToolActivity } from "@/hooks/agent-chat-utils";
+import { sanitizeToolError } from "@/lib/tool-error-sanitize";
 import type { ToolActivityRecord } from "@/types/agent";
 import { ContentPreview, DiffPreview, WebResultsPreview } from "./tool-previews";
 import {
@@ -97,6 +98,12 @@ export function ToolDetailRow({
   const operations = tool.content ?? tool.args?.operations;
   const documentContent = tool.content ?? tool.args?.content;
   const display = toolDisplayInfo(tool, projectPath, t);
+  const errorMessage = tool.is_error && tool.name !== "web_fetch"
+    ? sanitizeToolError(tool.result ?? "")
+    : undefined;
+  const showWebPreview = (tool.name === "web_search" || tool.name === "web_fetch")
+    && tool.result
+    && !tool.is_error;
 
   return (
     <ToolItem
@@ -108,8 +115,8 @@ export function ToolDetailRow({
       deletions={display.deletions}
       done={done}
       isError={tool.is_error}
-      errorMessage={tool.is_error ? tool.result : undefined}
-      result={tool.result}
+      errorMessage={errorMessage}
+      result={tool.is_error ? undefined : tool.result}
       onFilePreview={onFilePreview}
     >
       {tool.name === "write_file" && tool.content && !skipWrite && (
@@ -123,7 +130,7 @@ export function ToolDetailRow({
           startLine={tool.start_line}
         />
       )}
-      {(tool.name === "web_search" || tool.name === "web_fetch") && tool.result && (
+      {showWebPreview && tool.result && (
         <WebResultsPreview content={tool.result} isSearch={tool.name === "web_search"} />
       )}
       {tool.name === "read_spreadsheet" && tool.result && !tool.is_error && (

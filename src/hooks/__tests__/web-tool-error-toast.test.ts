@@ -47,9 +47,9 @@ describe("webToolErrorToastMessage", () => {
 
 describe("sanitizeWebToolError", () => {
   it("retire secrets et chemins locaux du détail visible", () => {
-    const msg = sanitizeWebToolError("Bearer abcdefghijkl token=secret /Users/me/app/file.ts");
+    const msg = sanitizeWebToolError("Bearer abcdefghijkl secret_key=abc123456 /Users/me/app/file.ts");
     expect(msg).toContain("Bearer [redacted]");
-    expect(msg).toContain("token=[redacted]");
+    expect(msg).toContain("secret_key=[redacted]");
     expect(msg).toContain("[path]");
   });
 });

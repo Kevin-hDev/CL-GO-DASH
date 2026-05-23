@@ -40,8 +40,15 @@ fi
 
 if command -v uv >/dev/null 2>&1; then
   PYTHON=(uv run python3)
-else
+elif command -v python3 >/dev/null 2>&1; then
   PYTHON=(python3)
+elif command -v python >/dev/null 2>&1; then
+  PYTHON=(python)
+elif command -v py >/dev/null 2>&1; then
+  PYTHON=(py -3)
+else
+  echo "Python introuvable pour preparer SearXNG" >&2
+  exit 1
 fi
 
 rm -r "$TMP" 2>/dev/null || true

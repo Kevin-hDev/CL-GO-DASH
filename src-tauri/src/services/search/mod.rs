@@ -12,6 +12,7 @@ pub mod firecrawl;
 
 use crate::services::agent_local::types_tools::SearchResult;
 use crate::services::api_keys;
+use std::future::Future;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum SearchProvider {
@@ -47,19 +48,14 @@ const PROVIDER_ORDER: [SearchProvider; 3] = [
 /// Orchestrateur de recherche web — essaie chaque provider dans l'ordre.
 pub async fn run_search(query: &str) -> Result<Vec<SearchResult>, String> {
     let query = common::validate_query(query)?;
-    let mut failures = Vec::new();
-    let mut configured = false;
-
-    for provider in PROVIDER_ORDER {
-        if !api_keys::has_key(provider.id()) {
-            continue;
-        }
-        configured = true;
-        match search_with_provider(provider, &query).await {
-            Ok(results) if !results.is_empty() => return Ok(results),
-            Ok(_) => failures.push(format!("{}: résultat vide", provider.label())),
-            Err(e) => failures.push(common::sanitize_error(&e)),
-        }
+    let (configured, mut failures, provider_result) = try_configured_providers(
+        &query,
+        |provider| api_keys::has_key(provider.id()),
+        |provider, query| async move { search_with_provider(provider, &query).await },
+    )
+    .await;
+    if let Some(results) = provider_result {
+        return Ok(results);
     }
 
     match crate::services::searxng::search(&query).await {
@@ -76,6 +72,34 @@ pub async fn run_search(query: &str) -> Result<Vec<SearchResult>, String> {
             format_failures(&failures)
         ))
     }
+}
+
+async fn try_configured_providers<HasKey, SearchFn, SearchFut>(
+    query: &str,
+    has_key: HasKey,
+    mut search_fn: SearchFn,
+) -> (bool, Vec<String>, Option<Vec<SearchResult>>)
+where
+    HasKey: Fn(SearchProvider) -> bool,
+    SearchFn: FnMut(SearchProvider, String) -> SearchFut,
+    SearchFut: Future<Output = Result<Vec<SearchResult>, String>>,
+{
+    let mut failures = Vec::new();
+    let mut configured = false;
+
+    for provider in PROVIDER_ORDER {
+        if !has_key(provider) {
+            continue;
+        }
+        configured = true;
+        match search_fn(provider, query.to_string()).await {
+            Ok(results) if !results.is_empty() => return (configured, failures, Some(results)),
+            Ok(_) => failures.push(format!("{}: résultat vide", provider.label())),
+            Err(e) => failures.push(common::sanitize_error(&e)),
+        }
+    }
+
+    (configured, failures, None)
 }
 
 async fn search_with_provider(
@@ -108,28 +132,4 @@ pub async fn test_connection(provider_id: &str) -> Result<(), String> {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn provider_order_keeps_brave_first_and_searxng_external() {
-        assert_eq!(
-            PROVIDER_ORDER,
-            [
-                SearchProvider::Brave,
-                SearchProvider::Exa,
-                SearchProvider::Firecrawl
-            ]
-        );
-    }
-
-    #[test]
-    fn failure_message_keeps_causes() {
-        let msg = format_failures(&[
-            "Brave: HTTP 429".to_string(),
-            "SearXNG: timeout au démarrage".to_string(),
-        ]);
-        assert!(msg.contains("Brave: HTTP 429"));
-        assert!(msg.contains("SearXNG: timeout au démarrage"));
-    }
-}
+mod tests;
