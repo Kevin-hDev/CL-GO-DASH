@@ -17,15 +17,18 @@ fn ensure_runtime_blocking(source: &Path) -> Result<PathBuf, String> {
     let python = venv_python(&venv);
     if !python.exists() {
         let base_python = find_python()?;
-        run(Command::new(base_python).args(["-m", "venv"]).arg(&venv))?;
+        run(
+            Command::new(base_python).args(["-m", "venv"]).arg(&venv),
+            "venv",
+        )?;
     }
 
     let stamp_path = venv.join(STAMP);
     let stamp = source_stamp(source)?;
     let installed = std::fs::read_to_string(&stamp_path).unwrap_or_default();
     if installed != stamp {
-        run(Command::new(&python).args(["-m", "pip", "install", "--upgrade", "pip"]))?;
-        install_source(&python, source)?;
+        install_build_tools(&python, source)?;
+        install_requirements(&python, source)?;
         std::fs::write(stamp_path, stamp)
             .map_err(|_| "SearXNG: validation runtime impossible".to_string())?;
     }
@@ -50,35 +53,54 @@ fn source_stamp(source: &Path) -> Result<String, String> {
     Ok(hex::encode(hasher.finalize()))
 }
 
-fn install_source(python: &Path, source: &Path) -> Result<(), String> {
-    let wheels = source
-        .parent()
-        .map(|p| p.join("wheels"))
-        .filter(|p| wheelhouse_usable(p));
-    if let Some(wheels) = wheels {
-        run(Command::new(python)
-            .args(["-m", "pip", "install", "--no-index", "--find-links"])
-            .arg(wheels)
-            .args(["-e"])
-            .arg(source))
+fn install_build_tools(python: &Path, source: &Path) -> Result<(), String> {
+    if let Some(wheels) = wheelhouse_for_source(source) {
+        run(
+            Command::new(python)
+                .args(["-m", "pip", "install", "--no-index", "--find-links"])
+                .arg(wheels)
+                .args(["setuptools", "wheel"]),
+            "outils Python",
+        )
     } else {
-        run(Command::new(python)
-            .args(["-m", "pip", "install", "-e"])
-            .arg(source))
+        run(
+            Command::new(python).args([
+                "-m",
+                "pip",
+                "install",
+                "--upgrade",
+                "pip",
+                "setuptools",
+                "wheel",
+            ]),
+            "outils Python",
+        )
     }
 }
 
-fn wheelhouse_usable(path: &Path) -> bool {
-    let Ok(entries) = std::fs::read_dir(path) else {
-        return false;
-    };
-    entries.flatten().any(|entry| {
-        entry
-            .path()
-            .extension()
-            .and_then(|ext| ext.to_str())
-            .is_some_and(|ext| ext.eq_ignore_ascii_case("whl"))
-    })
+fn install_requirements(python: &Path, source: &Path) -> Result<(), String> {
+    let requirements = source.join("requirements.txt");
+    if let Some(wheels) = wheelhouse_for_source(source) {
+        run(
+            Command::new(python)
+                .args(["-m", "pip", "install", "--no-index", "--find-links"])
+                .arg(wheels)
+                .args(["-r"])
+                .arg(requirements),
+            "dépendances Python",
+        )
+    } else {
+        run(
+            Command::new(python)
+                .args(["-m", "pip", "install", "-r"])
+                .arg(requirements),
+            "dépendances Python",
+        )
+    }
+}
+
+fn wheelhouse_for_source(source: &Path) -> Option<PathBuf> {
+    super::wheels::for_source(source)
 }
 
 fn find_python() -> Result<PathBuf, String> {
@@ -105,7 +127,7 @@ fn venv_python(venv: &Path) -> PathBuf {
     }
 }
 
-fn run(command: &mut Command) -> Result<(), String> {
+fn run(command: &mut Command, step: &str) -> Result<(), String> {
     command.env("PIP_DISABLE_PIP_VERSION_CHECK", "1");
     command.env("PIP_NO_INPUT", "1");
     command.env("PYTHONUNBUFFERED", "1");
@@ -115,7 +137,33 @@ fn run(command: &mut Command) -> Result<(), String> {
     if output.status.success() {
         return Ok(());
     }
-    Err("SearXNG: installation runtime échouée".to_string())
+    Err(format!(
+        "SearXNG: installation runtime échouée ({})",
+        safe_failure_hint(&output.stderr, step)
+    ))
+}
+
+fn safe_failure_hint(stderr: &[u8], step: &str) -> String {
+    let text = String::from_utf8_lossy(stderr);
+    for marker in [
+        "No module named",
+        "No matching distribution found",
+        "Could not find a version",
+    ] {
+        if let Some(line) = text.lines().find(|line| line.contains(marker)) {
+            return truncate(line.trim(), 180);
+        }
+    }
+    step.to_string()
+}
+
+fn truncate(input: &str, max_chars: usize) -> String {
+    if input.chars().count() <= max_chars {
+        return input.to_string();
+    }
+    let mut out: String = input.chars().take(max_chars).collect();
+    out.push_str("...");
+    out
 }
 
 #[cfg(test)]
@@ -123,10 +171,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn wheelhouse_requires_at_least_one_wheel() {
-        let dir = tempfile::tempdir().unwrap();
-        assert!(!wheelhouse_usable(dir.path()));
-        std::fs::write(dir.path().join("a.whl"), b"wheel").unwrap();
-        assert!(wheelhouse_usable(dir.path()));
+    fn failure_hint_keeps_safe_python_reason() {
+        let hint = safe_failure_hint(b"ModuleNotFoundError: No module named 'msgspec'", "SearXNG");
+        assert!(hint.contains("No module named"));
     }
 }

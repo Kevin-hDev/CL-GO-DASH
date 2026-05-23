@@ -45,6 +45,10 @@ mkdir -p "$TMP"
   --only-binary=:all: \
   --dest "$TMP" \
   -r "$SOURCE/requirements.txt"
+"${PYTHON[@]}" -m pip download \
+  --only-binary=:all: \
+  --dest "$TMP" \
+  setuptools wheel
 
 SIZE="$(tar -czf - -C "$TMP" . | wc -c | tr -d ' ')"
 rm -r "$WHEELS" 2>/dev/null || true

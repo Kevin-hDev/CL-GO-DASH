@@ -5,6 +5,7 @@ mod paths;
 mod process;
 mod runtime;
 mod settings;
+mod wheels;
 
 pub use lifecycle::SearxngSidecar;
 

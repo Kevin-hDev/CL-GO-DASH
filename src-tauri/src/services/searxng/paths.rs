@@ -63,6 +63,7 @@ fn extract_source_archive(archive: &Path) -> Result<PathBuf, String> {
     let stamp_path = sidecar_dir().join(".source-archive.sha256");
     let installed = std::fs::read_to_string(&stamp_path).unwrap_or_default();
     if installed == stamp && valid_source(&final_dir) {
+        super::wheels::sync_from_archive_parent(archive)?;
         return Ok(final_dir);
     }
     let tmp_dir = sidecar_dir().join("source.tmp");
@@ -72,8 +73,8 @@ fn extract_source_archive(archive: &Path) -> Result<PathBuf, String> {
     let file =
         std::fs::File::open(archive).map_err(|_| "SearXNG: source introuvable".to_string())?;
     let decoder = flate2::read::GzDecoder::new(file);
-    let mut archive = tar::Archive::new(decoder);
-    for entry in archive
+    let mut tar_archive = tar::Archive::new(decoder);
+    for entry in tar_archive
         .entries()
         .map_err(|_| "SearXNG: archive invalide".to_string())?
     {
@@ -96,6 +97,7 @@ fn extract_source_archive(archive: &Path) -> Result<PathBuf, String> {
         .map_err(|_| "SearXNG: extraction impossible".to_string())?;
     std::fs::write(stamp_path, stamp).map_err(|_| "SearXNG: extraction impossible".to_string())?;
     let _ = std::fs::remove_dir_all(&tmp_dir);
+    super::wheels::sync_from_archive_parent(archive)?;
     Ok(final_dir)
 }
 
