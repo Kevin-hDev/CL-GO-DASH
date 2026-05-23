@@ -37,10 +37,11 @@ pub fn start(handle: tauri::AppHandle) {
                 .map(|r| r.status().is_success())
                 .unwrap_or(false);
 
+            emit_gpu_status(&handle, &client, &base, running).await;
+
             if running {
                 consecutive_failures = 0;
                 restart_attempts = 0;
-                emit_gpu_status(&handle, &client, &base).await;
             } else {
                 if crate::services::ollama_lifecycle::ollama_binary_path().is_err() {
                     tokio::time::sleep(POLL_INTERVAL).await;
@@ -80,7 +81,12 @@ pub fn start(handle: tauri::AppHandle) {
     });
 }
 
-async fn emit_gpu_status(handle: &tauri::AppHandle, client: &reqwest::Client, base: &str) {
+async fn emit_gpu_status(
+    handle: &tauri::AppHandle,
+    client: &reqwest::Client,
+    base: &str,
+    ollama_running: bool,
+) {
     let (vram_total, vram_used) = tokio::task::spawn_blocking(|| {
         use crate::services::gpu_vram;
         (
@@ -91,11 +97,15 @@ async fn emit_gpu_status(handle: &tauri::AppHandle, client: &reqwest::Client, ba
     .await
     .unwrap_or((0, 0));
 
-    let url = format!("{base}/api/ps");
     let empty = ollama_ps::PsResponse { models: vec![] };
-    let ps = match client.get(&url).send().await {
-        Ok(r) => r.json::<ollama_ps::PsResponse>().await.unwrap_or(empty),
-        Err(_) => empty,
+    let ps = if ollama_running {
+        let url = format!("{base}/api/ps");
+        match client.get(&url).send().await {
+            Ok(r) => r.json::<ollama_ps::PsResponse>().await.unwrap_or(empty),
+            Err(_) => empty,
+        }
+    } else {
+        empty
     };
     let status = ollama_ps::build_gpu_status(&ps, vram_total, vram_used);
     let _ = handle.emit("ollama-gpu-status", &status);

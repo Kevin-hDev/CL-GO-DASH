@@ -27,7 +27,11 @@ export function GpuStatusBadge() {
   if (!showGpuStatus || !gpu.accelerator) return null;
 
   const pct = gpu.vramPercent;
-  const label = pct > 0 ? `${gpu.accelerator} ${pct}%` : gpu.accelerator;
+  const label = pct > 0
+    ? `${gpu.accelerator} ${pct}%`
+    : gpu.vramUsedMb > 0
+      ? `${gpu.accelerator} ${formatMb(gpu.vramUsedMb)}`
+      : gpu.accelerator;
   const isHigh = pct >= 85;
 
   const usedStr = gpu.vramUsedMb > 0 ? formatMb(gpu.vramUsedMb) : "—";

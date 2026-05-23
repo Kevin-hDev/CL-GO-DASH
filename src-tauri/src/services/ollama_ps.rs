@@ -28,9 +28,12 @@ pub fn build_gpu_status(
     vram_total_mb: u64,
     vram_used_mb: u64,
 ) -> GpuStatusPayload {
+    let has_gpu_model = ps.models.iter().any(|model| model.size_vram > 0);
+    let has_gpu_signal = has_gpu_model || vram_total_mb > 0 || vram_used_mb > 0;
+
     match ps.models.first() {
         Some(model) => {
-            let accelerator = if model.size_vram > 0 { "GPU" } else { "CPU" };
+            let accelerator = if has_gpu_signal { "GPU" } else { "CPU" };
             GpuStatusPayload {
                 accelerator: accelerator.into(),
                 vram_used_mb,
@@ -39,7 +42,7 @@ pub fn build_gpu_status(
             }
         }
         None => {
-            let idle_accel = if vram_total_mb > 0 { "GPU" } else { "CPU" };
+            let idle_accel = if has_gpu_signal { "GPU" } else { "CPU" };
             GpuStatusPayload {
                 accelerator: idle_accel.into(),
                 vram_used_mb,
@@ -68,8 +71,18 @@ mod tests {
     fn cpu_fallback() {
         let json = r#"{"models":[{"name":"gemma4:e4b","size":3000000000,"size_vram":0}]}"#;
         let ps: PsResponse = serde_json::from_str(json).unwrap();
-        let status = build_gpu_status(&ps, 8000, 3000);
+        let status = build_gpu_status(&ps, 0, 0);
         assert_eq!(status.accelerator, "CPU");
+    }
+
+    #[test]
+    fn gpu_with_system_usage_without_total() {
+        let json = r#"{"models":[{"name":"qwen3:14b","size":9000000000,"size_vram":5368709120}]}"#;
+        let ps: PsResponse = serde_json::from_str(json).unwrap();
+        let status = build_gpu_status(&ps, 0, 5120);
+        assert_eq!(status.accelerator, "GPU");
+        assert_eq!(status.vram_used_mb, 5120);
+        assert_eq!(status.vram_total_mb, 0);
     }
 
     #[test]
