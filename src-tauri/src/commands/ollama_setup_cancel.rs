@@ -23,3 +23,7 @@ pub(crate) async fn cancel_active() {
 pub(crate) fn cancelled_error() -> String {
     "ollama-setup-cancelled".to_string()
 }
+
+pub(crate) fn is_cancelled_error(err: &str) -> bool {
+    err == "ollama-setup-cancelled"
+}

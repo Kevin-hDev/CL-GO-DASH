@@ -14,13 +14,28 @@ pub(crate) async fn install_ollama_to(
     cancel: &CancellationToken,
 ) -> Result<(), String> {
     let archives = archives_to_download();
+    let result = install_archives_to(dest, version, on_progress, cancel, &archives).await;
+    if let Err(err) = &result {
+        if super::ollama_setup_cancel::is_cancelled_error(err) {
+            cleanup_cancelled_install(dest, &archives);
+        }
+    }
+    result
+}
 
+async fn install_archives_to(
+    dest: &Path,
+    version: &str,
+    on_progress: &Channel<OllamaSetupProgress>,
+    cancel: &CancellationToken,
+    archives: &[&str],
+) -> Result<(), String> {
     std::fs::create_dir_all(dest).map_err(|e| {
         eprintln!("[ollama-setup] mkdir {}: {e}", dest.display());
         "Impossible de créer le dossier d'installation".to_string()
     })?;
 
-    let checksums: Vec<Option<String>> = fetch_checksums(version, &archives).await;
+    let checksums: Vec<Option<String>> = fetch_checksums(version, archives).await;
 
     for (i, archive_name) in archives.iter().enumerate() {
         ensure_not_cancelled(cancel)?;
@@ -103,6 +118,18 @@ pub(crate) async fn install_ollama_to(
     write_version_file(dest, version);
     eprintln!("[ollama-setup] installé v{version}: {}", binary.display());
     Ok(())
+}
+
+fn cleanup_cancelled_install(dest: &Path, archives: &[&str]) {
+    for archive_name in archives {
+        let tmp = std::env::temp_dir().join(format!(
+            "cl-go-ollama-{}-{archive_name}",
+            std::process::id()
+        ));
+        let _ = std::fs::remove_file(tmp);
+    }
+    let _ = std::fs::remove_dir_all(dest);
+    eprintln!("[ollama-setup] installation annulée, fichiers partiels supprimés");
 }
 
 fn ensure_not_cancelled(cancel: &CancellationToken) -> Result<(), String> {

@@ -27,9 +27,16 @@ pub async fn download_ollama(
     on_progress: Channel<OllamaSetupProgress>,
 ) -> Result<(), String> {
     let _guard = OLLAMA_INSTALL_LOCK.lock().await;
+    let had_existing_binary = ollama_lifecycle::ollama_binary_path().is_ok();
     let cancel = CancellationToken::new();
     super::ollama_setup_cancel::register(cancel.clone()).await;
-    let result = run_download_ollama(app, on_progress, &cancel).await;
+    let result = run_download_ollama(app.clone(), on_progress, &cancel).await;
+    if let Err(err) = &result {
+        if !had_existing_binary && super::ollama_setup_cancel::is_cancelled_error(err) {
+            ollama_lifecycle::stop_sidecar(&app);
+            let _ = std::fs::remove_dir_all(ollama_lifecycle::ollama_bundle_dir());
+        }
+    }
     super::ollama_setup_cancel::clear().await;
     result
 }

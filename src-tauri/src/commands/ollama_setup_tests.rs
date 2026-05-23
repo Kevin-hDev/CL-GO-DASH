@@ -27,6 +27,18 @@ fn fallback_install_version_is_current_supported_release() {
     assert!(is_valid_semver(FALLBACK_OLLAMA_VERSION));
 }
 
+#[test]
+fn cancelled_error_is_detected_exactly() {
+    let err = crate::commands::ollama_setup_cancel::cancelled_error();
+
+    assert!(crate::commands::ollama_setup_cancel::is_cancelled_error(
+        &err
+    ));
+    assert!(!crate::commands::ollama_setup_cancel::is_cancelled_error(
+        "cancelled"
+    ));
+}
+
 #[tokio::test]
 async fn cancel_active_setup_cancels_registered_token() {
     let token = CancellationToken::new();
