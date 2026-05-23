@@ -24,15 +24,20 @@
 
 ### Téléchargement + auto-install (par OS)
 
-**Backend Rust** : `commands/app_update_install.rs`
+**Backend Rust** :
+- `commands/app_update_install.rs` — téléchargement de l'asset
+- `commands/app_update_install_paths.rs` — résolution de l'installation actuelle
+- `commands/app_update_install_scripts.rs` — script de remplacement par OS
 
 | OS | Asset | Processus |
 |---|---|---|
-| **macOS** | `.dmg` | Télécharge dans `/tmp/` → `hdiutil attach` → `cp -Rf` dans `/Applications/` → `hdiutil detach` → `open` la nouvelle app |
-| **Linux** | `.AppImage` | Télécharge dans `/tmp/` → `cp` dans `~/.local/bin/CL-GO.AppImage` → `chmod +x` → lance |
-| **Windows** | `-setup.exe` (NSIS) | Télécharge dans `%TEMP%` → lance l'installeur avec `/S` (silencieux) |
+| **macOS** | `.dmg` | Télécharge dans `/tmp/` → retrouve le `.app` actuellement lancé → `hdiutil attach` → remplace ce même `.app` → `hdiutil detach` → relance |
+| **Linux** | `.AppImage` | Télécharge dans `/tmp/` → retrouve l'AppImage courante via `APPIMAGE` → remplace ce même fichier → `chmod +x` → relance |
+| **Windows** | `-setup.exe` (NSIS) | Télécharge dans `%TEMP%` → retrouve le dossier de l'exe courant → lance l'installeur avec `/S` et `/D=...` sur ce même dossier |
 
-L'app se ferme automatiquement (`app.exit(0)`) après avoir lancé un script shell (macOS/Linux) ou l'installeur (Windows) en arrière-plan. Le script attend que l'app soit fermée avant de copier.
+L'app se ferme automatiquement (`app.exit(0)`) après avoir lancé un script shell (macOS/Linux) ou l'installeur (Windows) en arrière-plan. Le script attend que l'app soit fermée avant de remplacer l'installation existante.
+
+L'auto-update ne réinstalle pas dans un chemin par défaut : il remplace l'installation réellement lancée. Ça évite les doublons quand l'utilisateur a choisi un dossier personnalisé pendant la première installation.
 
 ---
 

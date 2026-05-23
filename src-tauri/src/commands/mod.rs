@@ -9,6 +9,8 @@ pub(crate) mod agent_working_dir;
 pub mod api_keys;
 pub mod app_update;
 pub mod app_update_install;
+pub(crate) mod app_update_install_paths;
+pub(crate) mod app_update_install_scripts;
 pub mod codex;
 pub mod config;
 pub mod favorite_models;
