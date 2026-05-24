@@ -115,6 +115,21 @@ describe("OnboardingApi", () => {
     expect(onComplete).not.toHaveBeenCalled();
   });
 
+  it("remasque la cle quand l'utilisateur change de provider", async () => {
+    render(<OnboardingApi onComplete={vi.fn()} />);
+
+    await waitFor(() => expect(screen.getAllByText("openai").length).toBeGreaterThan(0));
+    const openAiInput = screen.getByLabelText("onboarding.api.keyLabel:openai");
+    fireEvent.change(openAiInput, { target: { value: "sk-test" } });
+    fireEvent.click(screen.getByRole("button", { name: "apiKeys.dialog.showKey" }));
+    expect(openAiInput.getAttribute("type")).toBe("text");
+
+    fireEvent.click(screen.getByRole("button", { name: /mistral/ }));
+
+    const mistralInput = screen.getByLabelText("onboarding.api.keyLabel:mistral");
+    expect(mistralInput.getAttribute("type")).toBe("password");
+  });
+
   it("continue seulement quand l'utilisateur passe l'etape", async () => {
     const onComplete = vi.fn();
     render(<OnboardingApi onComplete={onComplete} />);

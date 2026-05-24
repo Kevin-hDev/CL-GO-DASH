@@ -125,6 +125,7 @@ export function OnboardingApi({ onComplete }: OnboardingApiProps) {
             : t("onboarding.api.keyLabelFallback")}
         </label>
         <ApiKeySecretInput
+          key={selected?.id ?? "empty"}
           id="ob-api-key"
           inputClassName="ob-api-input"
           value={apiKey}
