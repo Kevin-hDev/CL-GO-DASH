@@ -18,9 +18,6 @@ pub struct OllamaSetupProgress {
 
 #[tauri::command]
 pub async fn is_ollama_installed() -> bool {
-    if crate::services::dev_mode::force_first_launch() {
-        return false;
-    }
     ollama_lifecycle::is_ollama_installed_or_external()
 }
 
