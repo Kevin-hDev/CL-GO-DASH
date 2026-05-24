@@ -48,8 +48,12 @@ describe("OnboardingApi", () => {
       if (command === "list_llm_providers_catalog") {
         return Promise.resolve([
           provider("openai", "llm"),
+          provider("mistral", "llm"),
           provider("brave", "search"),
         ]);
+      }
+      if (command === "list_configured_providers") {
+        return Promise.resolve([]);
       }
       return Promise.resolve();
     });
@@ -66,6 +70,26 @@ describe("OnboardingApi", () => {
     await waitFor(() => expect(screen.getAllByText("openai").length).toBeGreaterThan(0));
 
     expect(screen.queryByText("brave")).toBeNull();
+  });
+
+  it("affiche les providers deja configures", async () => {
+    vi.mocked(invoke).mockImplementation((command) => {
+      if (command === "list_llm_providers_catalog") {
+        return Promise.resolve([
+          provider("openai", "llm"),
+          provider("mistral", "llm"),
+        ]);
+      }
+      if (command === "list_configured_providers") {
+        return Promise.resolve(["mistral"]);
+      }
+      return Promise.resolve();
+    });
+
+    render(<OnboardingApi onComplete={vi.fn()} />);
+
+    await waitFor(() => expect(screen.getAllByText("mistral").length).toBeGreaterThan(0));
+    expect(screen.getByText("apiKeys.details.connected")).toBeTruthy();
   });
 
   it("teste puis enregistre la cle sans quitter la page", async () => {
@@ -87,6 +111,7 @@ describe("OnboardingApi", () => {
       key: "sk-test",
     });
     expect(await screen.findByText("apiKeys.dialog.testOk")).toBeTruthy();
+    expect(screen.getByText("apiKeys.details.connected")).toBeTruthy();
     expect(onComplete).not.toHaveBeenCalled();
   });
 

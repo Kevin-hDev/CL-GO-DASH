@@ -90,6 +90,10 @@
   text-align: center;
 }
 
+.ob-provider-card.is-configured {
+  border-color: var(--toast-ok-text);
+}
+
 .ob-provider-name {
   color: var(--ink);
   font-size: var(--text-sm);
@@ -100,6 +104,15 @@
   color: var(--ink-faint);
   font-size: var(--text-xs);
   line-height: 1.35;
+}
+
+.ob-provider-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  color: var(--toast-ok-text);
+  font-size: var(--text-xs);
+  font-weight: 700;
 }
 
 .ob-provider-empty {

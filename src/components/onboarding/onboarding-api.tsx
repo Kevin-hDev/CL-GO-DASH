@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-shell";
-import { ArrowSquareOut, CaretRight } from "@/components/ui/icons";
+import { ArrowSquareOut, CaretRight, Check } from "@/components/ui/icons";
 import { showToast } from "@/lib/toast-emitter";
 import { ProviderIcon } from "@/lib/provider-icons";
 import { getProviderDescription, type ProviderSpec } from "@/types/api";
@@ -16,19 +16,25 @@ type SaveState = "idle" | "saving" | "saved" | "error";
 export function OnboardingApi({ onComplete }: OnboardingApiProps) {
   const { t, i18n } = useTranslation();
   const [providers, setProviders] = useState<ProviderSpec[]>([]);
+  const [configuredIds, setConfiguredIds] = useState<string[]>([]);
   const [selectedId, setSelectedId] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [saveState, setSaveState] = useState<SaveState>("idle");
 
   useEffect(() => {
-    invoke<ProviderSpec[]>("list_llm_providers_catalog")
-      .then((items) => {
+    Promise.all([
+      invoke<ProviderSpec[]>("list_llm_providers_catalog"),
+      invoke<string[]>("list_configured_providers"),
+    ])
+      .then(([items, configured]) => {
         const llmProviders = items.filter((item) => item.category === "llm").slice(0, 32);
         setProviders(llmProviders);
+        setConfiguredIds(configured);
         setSelectedId((current) => current || llmProviders[0]?.id || "");
       })
       .catch(() => {
         setProviders([]);
+        setConfiguredIds([]);
       });
   }, []);
 
@@ -36,6 +42,8 @@ export function OnboardingApi({ onComplete }: OnboardingApiProps) {
     () => providers.find((provider) => provider.id === selectedId) ?? null,
     [providers, selectedId],
   );
+  const configuredSet = useMemo(() => new Set(configuredIds), [configuredIds]);
+  const selectedConfigured = selected ? configuredSet.has(selected.id) : false;
 
   const finish = useCallback(async () => {
     setApiKey("");
@@ -55,6 +63,9 @@ export function OnboardingApi({ onComplete }: OnboardingApiProps) {
     try {
       await invoke("test_api_key_with_value", { provider: selected.id, key });
       await invoke("set_api_key", { provider: selected.id, key });
+      setConfiguredIds((current) =>
+        current.includes(selected.id) ? current : [...current, selected.id],
+      );
       setApiKey("");
       setSaveState("saved");
       showToast(t("apiKeys.dialog.testOk"), "success");
@@ -73,11 +84,17 @@ export function OnboardingApi({ onComplete }: OnboardingApiProps) {
       <div className="ob-provider-grid">
         {providers.length === 0 ? (
           <div className="ob-provider-empty">{t("onboarding.api.loading")}</div>
-        ) : providers.map((provider) => (
+        ) : providers.map((provider) => {
+          const isConfigured = configuredSet.has(provider.id);
+          return (
           <button
             key={provider.id}
             type="button"
-            className={`ob-provider-card ${provider.id === selectedId ? "is-active" : ""}`}
+            className={[
+              "ob-provider-card",
+              provider.id === selectedId ? "is-active" : "",
+              isConfigured ? "is-configured" : "",
+            ].filter(Boolean).join(" ")}
             onClick={() => selectProvider(provider.id)}
           >
             <ProviderIcon
@@ -89,8 +106,15 @@ export function OnboardingApi({ onComplete }: OnboardingApiProps) {
             <span className="ob-provider-desc">
               {getProviderDescription(provider, i18n.language)}
             </span>
+            {isConfigured && (
+              <span className="ob-provider-status">
+                <Check size={12} weight="bold" />
+                {t("apiKeys.details.connected")}
+              </span>
+            )}
           </button>
-        ))}
+          );
+        })}
       </div>
 
       <div className="ob-api-form">
@@ -108,7 +132,11 @@ export function OnboardingApi({ onComplete }: OnboardingApiProps) {
             setApiKey(event.target.value);
             setSaveState("idle");
           }}
-          placeholder={t("onboarding.api.keyPlaceholder")}
+          placeholder={
+            selectedConfigured
+              ? t("apiKeys.dialog.keyPlaceholderEdit")
+              : t("onboarding.api.keyPlaceholder")
+          }
           disabled={!selected || saveState === "saving"}
         />
         {selected && (
@@ -138,7 +166,9 @@ export function OnboardingApi({ onComplete }: OnboardingApiProps) {
         >
           {saveState === "saving"
             ? t("onboarding.api.saving")
-            : t("apiKeys.dialog.addAndTest")}
+            : selectedConfigured
+              ? t("apiKeys.dialog.save")
+              : t("apiKeys.dialog.addAndTest")}
           <CaretRight size={16} weight="bold" />
         </button>
         <button
