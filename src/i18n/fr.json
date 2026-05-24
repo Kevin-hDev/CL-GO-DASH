@@ -47,7 +47,9 @@
       "cancel": "Annuler",
       "addAndTest": "Ajouter et tester",
       "save": "Enregistrer",
-      "clearKey": "Effacer la clé"
+      "clearKey": "Effacer la clé",
+      "showKey": "Afficher",
+      "hideKey": "Masquer"
     },
     "picker": {
       "title": "Ajouter un provider",

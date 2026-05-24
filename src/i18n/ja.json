@@ -47,7 +47,9 @@
       "cancel": "キャンセル",
       "addAndTest": "追加してテスト",
       "save": "保存",
-      "clearKey": "キーをクリア"
+      "clearKey": "キーをクリア",
+      "showKey": "表示",
+      "hideKey": "非表示"
     },
     "picker": {
       "title": "プロバイダーを追加",

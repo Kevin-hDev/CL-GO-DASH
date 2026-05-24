@@ -47,7 +47,9 @@
       "cancel": "Abbrechen",
       "addAndTest": "Hinzufügen und testen",
       "save": "Speichern",
-      "clearKey": "Schlüssel löschen"
+      "clearKey": "Schlüssel löschen",
+      "showKey": "Anzeigen",
+      "hideKey": "Verbergen"
     },
     "picker": {
       "title": "Anbieter hinzufügen",

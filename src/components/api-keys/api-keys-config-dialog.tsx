@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { open } from "@tauri-apps/plugin-shell";
 import { X, ArrowSquareOut } from "@/components/ui/icons";
 import { getProviderDescription, type ProviderSpec } from "@/types/api";
+import { ApiKeySecretInput } from "./api-key-secret-input";
 
 interface ApiKeysConfigDialogProps {
   provider: ProviderSpec;
@@ -91,11 +92,10 @@ export function ApiKeysConfigDialog({
         <form className="wk-form" onSubmit={(e) => void handleSubmit(e)}>
           <div className="wk-form-field">
             <label className="wk-form-label">{t("apiKeys.dialog.apiKey")}</label>
-            <input
-              type="password"
-              className="wk-input"
+            <ApiKeySecretInput
+              inputClassName="wk-input"
               value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
+              onChange={setApiKey}
               placeholder={
                 alreadyConfigured
                   ? t("apiKeys.dialog.keyPlaceholderEdit")

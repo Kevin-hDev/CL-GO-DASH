@@ -47,7 +47,9 @@
       "cancel": "取消",
       "addAndTest": "添加并验证",
       "save": "保存",
-      "clearKey": "清除密钥"
+      "clearKey": "清除密钥",
+      "showKey": "显示",
+      "hideKey": "隐藏"
     },
     "picker": {
       "title": "添加提供商",

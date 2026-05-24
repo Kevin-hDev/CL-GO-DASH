@@ -47,7 +47,9 @@
       "cancel": "Cancelar",
       "addAndTest": "Añadir y verificar",
       "save": "Guardar",
-      "clearKey": "Eliminar clave"
+      "clearKey": "Eliminar clave",
+      "showKey": "Mostrar",
+      "hideKey": "Ocultar"
     },
     "picker": {
       "title": "Añadir un proveedor",

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-shell";
 import { ArrowSquareOut, CaretRight, Check } from "@/components/ui/icons";
+import { ApiKeySecretInput } from "@/components/api-keys/api-key-secret-input";
 import { showToast } from "@/lib/toast-emitter";
 import { ProviderIcon } from "@/lib/provider-icons";
 import { getProviderDescription, type ProviderSpec } from "@/types/api";
@@ -123,13 +124,12 @@ export function OnboardingApi({ onComplete }: OnboardingApiProps) {
             ? t("onboarding.api.keyLabel", { name: selected.display_name })
             : t("onboarding.api.keyLabelFallback")}
         </label>
-        <input
+        <ApiKeySecretInput
           id="ob-api-key"
-          type="password"
-          className="ob-api-input"
+          inputClassName="ob-api-input"
           value={apiKey}
-          onChange={(event) => {
-            setApiKey(event.target.value);
+          onChange={(value) => {
+            setApiKey(value);
             setSaveState("idle");
           }}
           placeholder={
