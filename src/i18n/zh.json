@@ -685,6 +685,31 @@
     "loggedOut": "未连接",
     "loggingIn": "连接中…"
   },
+  "onboarding": {
+    "common": {
+      "continue": "继续",
+      "skip": "跳过"
+    },
+    "welcome": {
+      "title": "欢迎使用 CL-GO",
+      "description": "一个可使用本地模型或云端提供商的 AI 助手，你可以按自己的偏好选择。",
+      "getStarted": "开始"
+    },
+    "preferences": {
+      "title": "自定义 CL-GO",
+      "description": "在打开应用前选择主题和界面语言。"
+    },
+    "api": {
+      "title": "设置 LLM 提供商",
+      "description": "添加 API 密钥以使用云端模型。此处只显示 LLM 提供商。",
+      "loading": "正在加载 LLM 提供商…",
+      "keyLabel": "{{name}} API 密钥",
+      "keyLabelFallback": "API 密钥",
+      "keyPlaceholder": "粘贴你的 API 密钥",
+      "getKey": "获取 {{name}} 密钥",
+      "saving": "正在检查…"
+    }
+  },
   "ollamaSetup": {
     "title": "Ollama 安装",
     "description": "Ollama 让您在本地机器上运行 AI 模型。您也可以跳过此步骤并使用云端提供商。",

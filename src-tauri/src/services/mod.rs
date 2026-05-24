@@ -4,6 +4,7 @@ pub mod codex_client;
 pub mod codex_oauth;
 pub mod compress;
 pub mod config;
+pub mod dev_mode;
 pub mod env_detect;
 pub mod favorite_models;
 pub mod file_watcher;

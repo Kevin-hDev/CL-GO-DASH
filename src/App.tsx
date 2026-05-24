@@ -3,6 +3,7 @@ import { listen } from "@tauri-apps/api/event";
 import { useTranslation } from "react-i18next";
 import { AppLayout } from "@/components/layout/app-layout";
 import { OllamaSetupScreen } from "@/components/ollama/ollama-setup-screen";
+import { OnboardingScreen } from "@/components/onboarding/onboarding-screen";
 import { useTheme } from "@/hooks/use-theme";
 import { useTabHistory } from "@/hooks/use-tab-history";
 import { useArrowNavigation } from "@/hooks/use-arrow-navigation";
@@ -13,8 +14,9 @@ import { AgentLocalTab } from "@/components/agent-local/agent-local-tab";
 import { SettingsTab } from "@/components/settings/settings-tab";
 import { ForecastDocsWindow } from "@/components/forecast-docs/forecast-docs-window";
 import { cleanupTauriListener } from "@/lib/tauri-listen";
-import { useOllamaSetupGate } from "@/hooks/use-ollama-setup-gate";
+import { useStartupGate } from "@/hooks/use-startup-gate";
 import type { TabId } from "@/components/layout/sidebar";
+import "./App.css";
 import {
   DEFAULT_APP_NAV,
   type AgentLocalNavState,
@@ -47,11 +49,7 @@ function MainApp() {
 
   const [vaultError, setVaultError] = useState<string | null>(null);
   const { focusedPanel } = usePanelFocus();
-  const {
-    showOllamaSetup,
-    completeOllamaSetup,
-    skipOllamaSetup,
-  } = useOllamaSetupGate();
+  const startupGate = useStartupGate();
 
   useEffect(() => {
     const unlisten = listen<string>("vault-init-failed", (e) => {
@@ -94,24 +92,38 @@ function MainApp() {
   }, [pushNav]);
 
   useEffect(() => {
+    if (startupGate.view === "loading") return;
     const timer = setTimeout(() => {
       requestAnimationFrame(() => {
         document.getElementById("splash")?.remove();
       });
     }, 150);
     return () => clearTimeout(timer);
-  }, []);
+  }, [startupGate.view]);
 
-  if (showOllamaSetup) {
+  if (startupGate.view === "loading") {
+    return null;
+  }
+
+  if (startupGate.view === "onboarding") {
     return (
-      <div style={{
-        width: "100vw", height: "100vh",
-        background: "var(--void)",
-        display: "flex", alignItems: "center", justifyContent: "center",
-      }}>
+      <OnboardingScreen
+        themeChoice={choice}
+        onThemeChange={setTheme}
+        showOllamaStep={startupGate.showOllamaSetup}
+        onCompleteOnboarding={startupGate.completeOnboarding}
+        onCompleteOllama={startupGate.completeOllamaSetup}
+        onSkipOllama={startupGate.skipOllamaSetup}
+      />
+    );
+  }
+
+  if (startupGate.view === "ollama") {
+    return (
+      <div className="app-startup-shell">
         <OllamaSetupScreen
-          onComplete={completeOllamaSetup}
-          onSkip={skipOllamaSetup}
+          onComplete={startupGate.completeOllamaSetup}
+          onSkip={startupGate.skipOllamaSetup}
         />
       </div>
     );

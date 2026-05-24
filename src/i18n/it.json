@@ -685,6 +685,31 @@
     "loggedOut": "Non connesso",
     "loggingIn": "Connessione in corso…"
   },
+  "onboarding": {
+    "common": {
+      "continue": "Continua",
+      "skip": "Salta"
+    },
+    "welcome": {
+      "title": "Benvenuto in CL-GO",
+      "description": "Un assistente AI per lavorare con modelli locali o provider cloud, in base alle tue preferenze.",
+      "getStarted": "Inizia"
+    },
+    "preferences": {
+      "title": "Personalizza CL-GO",
+      "description": "Scegli il tema e la lingua dell'interfaccia prima di aprire l'app."
+    },
+    "api": {
+      "title": "Configura un provider LLM",
+      "description": "Aggiungi una chiave API per usare modelli cloud. Qui vengono mostrati solo provider LLM.",
+      "loading": "Caricamento provider LLM…",
+      "keyLabel": "Chiave API {{name}}",
+      "keyLabelFallback": "Chiave API",
+      "keyPlaceholder": "Incolla la tua chiave API",
+      "getKey": "Ottieni una chiave {{name}}",
+      "saving": "Verifica…"
+    }
+  },
   "ollamaSetup": {
     "title": "Configurazione Ollama",
     "description": "Ollama ti permette di eseguire modelli AI localmente sul tuo computer. Puoi anche saltare questo passaggio e usare provider cloud.",

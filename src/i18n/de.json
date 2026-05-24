@@ -685,6 +685,31 @@
     "loggedOut": "Nicht verbunden",
     "loggingIn": "Verbindung wird hergestellt…"
   },
+  "onboarding": {
+    "common": {
+      "continue": "Weiter",
+      "skip": "Überspringen"
+    },
+    "welcome": {
+      "title": "Willkommen bei CL-GO",
+      "description": "Ein KI-Assistent für lokale Modelle oder Cloud-Provider, je nachdem, was du bevorzugst.",
+      "getStarted": "Loslegen"
+    },
+    "preferences": {
+      "title": "CL-GO anpassen",
+      "description": "Wähle Design und Oberflächensprache, bevor du die App öffnest."
+    },
+    "api": {
+      "title": "LLM-Provider einrichten",
+      "description": "Füge einen API-Schlüssel hinzu, um Cloud-Modelle zu nutzen. Hier werden nur LLM-Provider angezeigt.",
+      "loading": "LLM-Provider werden geladen…",
+      "keyLabel": "{{name}} API-Schlüssel",
+      "keyLabelFallback": "API-Schlüssel",
+      "keyPlaceholder": "API-Schlüssel einfügen",
+      "getKey": "{{name}} Schlüssel erhalten",
+      "saving": "Prüfung läuft…"
+    }
+  },
   "ollamaSetup": {
     "title": "Ollama Setup",
     "description": "Ollama ermöglicht es, KI-Modelle lokal auf deinem Computer auszuführen. Du kannst diesen Schritt auch überspringen und Cloud-Provider nutzen.",

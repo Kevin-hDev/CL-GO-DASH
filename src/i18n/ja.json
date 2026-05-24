@@ -685,6 +685,31 @@
     "loggedOut": "未接続",
     "loggingIn": "接続中…"
   },
+  "onboarding": {
+    "common": {
+      "continue": "続ける",
+      "skip": "スキップ"
+    },
+    "welcome": {
+      "title": "CL-GO へようこそ",
+      "description": "ローカルモデルまたはクラウドプロバイダーを好みに合わせて使える AI アシスタントです。",
+      "getStarted": "始める"
+    },
+    "preferences": {
+      "title": "CL-GO をカスタマイズ",
+      "description": "アプリを開く前にテーマとインターフェース言語を選択します。"
+    },
+    "api": {
+      "title": "LLM プロバイダーを設定",
+      "description": "クラウドモデルを使うために API キーを追加します。ここには LLM プロバイダーのみ表示されます。",
+      "loading": "LLM プロバイダーを読み込み中…",
+      "keyLabel": "{{name}} API キー",
+      "keyLabelFallback": "API キー",
+      "keyPlaceholder": "API キーを貼り付け",
+      "getKey": "{{name}} キーを取得",
+      "saving": "確認中…"
+    }
+  },
   "ollamaSetup": {
     "title": "Ollama セットアップ",
     "description": "Ollama を使うとローカルマシン上で AI モデルを実行できます。この手順をスキップしてクラウドプロバイダーを使うこともできます。",

@@ -16,7 +16,7 @@ pub fn save_config(mut config: ClgoConfig) -> Result<(), String> {
 #[tauri::command]
 pub fn get_advanced_settings() -> Result<AdvancedSettings, String> {
     let config = config_service::read_config()?;
-    Ok(config.advanced)
+    Ok(apply_dev_first_launch_override(config.advanced))
 }
 
 #[tauri::command]
@@ -45,6 +45,14 @@ fn protect_advanced_settings(
 fn normalize_advanced_settings(mut settings: AdvancedSettings) -> AdvancedSettings {
     if !settings.autostart {
         settings.start_hidden = false;
+    }
+    settings
+}
+
+fn apply_dev_first_launch_override(mut settings: AdvancedSettings) -> AdvancedSettings {
+    if crate::services::dev_mode::force_first_launch() {
+        settings.onboarding_completed = false;
+        settings.ollama_setup_skipped = false;
     }
     settings
 }
@@ -126,6 +134,20 @@ mod tests {
 
         assert!(normalized.autostart);
         assert!(normalized.start_hidden);
+    }
+
+    #[test]
+    fn dev_first_launch_override_resets_onboarding_flags() {
+        let settings = AdvancedSettings {
+            onboarding_completed: true,
+            ollama_setup_skipped: true,
+            ..Default::default()
+        };
+
+        let overridden = apply_dev_first_launch_override(settings);
+
+        assert!(!overridden.onboarding_completed);
+        assert!(!overridden.ollama_setup_skipped);
     }
 }
 

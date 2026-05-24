@@ -28,6 +28,7 @@ pub struct AdvancedSettings {
     pub response_language: String,
     pub link_preview_enabled: bool,
     pub ollama_setup_skipped: bool,
+    pub onboarding_completed: bool,
 }
 
 impl Default for AdvancedSettings {
@@ -47,6 +48,7 @@ impl Default for AdvancedSettings {
             response_language: String::new(),
             link_preview_enabled: true,
             ollama_setup_skipped: false,
+            onboarding_completed: false,
         }
     }
 }
@@ -66,6 +68,12 @@ mod tests {
     fn ollama_setup_is_not_skipped_by_default() {
         let settings = AdvancedSettings::default();
         assert!(!settings.ollama_setup_skipped);
+    }
+
+    #[test]
+    fn onboarding_is_not_completed_by_default() {
+        let settings = AdvancedSettings::default();
+        assert!(!settings.onboarding_completed);
     }
 
     #[test]
