@@ -66,11 +66,17 @@
     "jsdom": "^29.0.2",
     "typescript": "^6.0.2",
     "typescript-eslint": "^8.59.2",
-    "vite": "^8.0.3",
+    "vite": "^8.0.16",
     "vitest": "^4.1.4"
   },
   "overrides": {
     "devalue": "5.8.1",
-    "svelte": "5.55.7"
+    "svelte": "5.55.7",
+    "undici": "7.28.0",
+    "js-yaml": "4.2.0",
+    "@babel/core": "7.29.6",
+    "minimatch@10.2.5": {
+      "brace-expansion": "5.0.6"
+    }
   }
 }
