@@ -11,6 +11,7 @@
     "lint": "node scripts/check-react-component-calls.mjs && eslint src/",
     "lint:react-boundaries": "node scripts/check-react-component-calls.mjs",
     "test": "vitest run",
+    "test:install": "bash scripts/test-install-sh.sh",
     "test:watch": "vitest"
   },
   "dependencies": {

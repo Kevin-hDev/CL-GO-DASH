@@ -1,8 +1,6 @@
-#[cfg(target_os = "linux")]
-use super::app_update_install_paths::current_linux_appimage;
 #[cfg(target_os = "macos")]
 use super::app_update_install_paths::current_macos_app_bundle;
-#[cfg(any(target_os = "macos", target_os = "linux"))]
+#[cfg(any(target_os = "macos", target_os = "linux", test))]
 use super::app_update_install_paths::sh_quote_path;
 #[cfg(target_os = "windows")]
 use super::app_update_install_paths::{
@@ -57,26 +55,35 @@ fn spawn_macos_update(_: &std::path::Path) -> Result<(), String> {
 }
 
 #[cfg(target_os = "linux")]
-fn spawn_linux_update(appimage: &std::path::Path) -> Result<(), String> {
-    let src = sh_quote_path(appimage);
-    let dest = current_linux_appimage()?;
-    let dest_str = sh_quote_path(&dest);
+fn spawn_linux_update(deb: &std::path::Path) -> Result<(), String> {
+    run_shell_script(&linux_update_script(deb))
+}
+
+#[cfg(any(target_os = "linux", test))]
+fn linux_update_script(deb: &std::path::Path) -> String {
+    let src = sh_quote_path(deb);
     let log = sh_quote_path(&update_log_path());
-    let script = format!(
+    format!(
         r#"#!/bin/bash
 exec >> {log} 2>&1
 echo "=== update $(date) ==="
 sleep 1
 while pgrep -x "cl-go-dash" > /dev/null 2>&1; do sleep 0.5; done
-mkdir -p "$(dirname {dest_str})"
-cp -f {src} {dest_str}
-chmod +x {dest_str}
+if command -v pkexec > /dev/null 2>&1; then
+  pkexec apt-get install -y {src}
+elif command -v x-terminal-emulator > /dev/null 2>&1; then
+  x-terminal-emulator -e bash -lc "sudo apt-get install -y {src}; status=\$?; rm -f {src}; if [ \"\$status\" -eq 0 ]; then cl-go-dash >/dev/null 2>&1 & fi; exit \"\$status\""
+  exit 0
+else
+  sudo apt-get install -y {src}
+fi
+status=$?
+if [ "$status" -ne 0 ]; then echo "install failed"; exit "$status"; fi
 rm -f {src}
-{dest_str} &
+cl-go-dash >/dev/null 2>&1 &
 echo "done"
 "#
-    );
-    run_shell_script(&script)
+    )
 }
 
 #[cfg(not(target_os = "linux"))]
@@ -161,4 +168,20 @@ fn run_shell_script(content: &str) -> Result<(), String> {
         })?;
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use std::path::Path;
+
+    use super::*;
+
+    #[test]
+    fn linux_update_script_installs_deb_package() {
+        let script = linux_update_script(Path::new("/tmp/CL GO/update.deb"));
+
+        assert!(script.contains("apt-get install -y '/tmp/CL GO/update.deb'"));
+        assert!(script.contains("cl-go-dash >/dev/null 2>&1 &"));
+        assert!(!script.contains("AppImage"));
+    }
 }

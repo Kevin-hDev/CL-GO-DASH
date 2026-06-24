@@ -127,7 +127,6 @@ mod tests {
         assert!(normalized.autostart);
         assert!(normalized.start_hidden);
     }
-
 }
 
 const PATCH_BLOCKED_KEYS: &[&str] = &["allowed_paths"];

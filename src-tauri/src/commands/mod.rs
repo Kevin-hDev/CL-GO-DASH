@@ -8,6 +8,7 @@ pub mod agent_tools;
 pub(crate) mod agent_working_dir;
 pub mod api_keys;
 pub mod app_update;
+pub(crate) mod app_update_assets;
 pub mod app_update_install;
 pub(crate) mod app_update_install_paths;
 pub(crate) mod app_update_install_scripts;

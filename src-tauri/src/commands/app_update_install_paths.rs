@@ -12,27 +12,6 @@ pub(crate) fn current_macos_app_bundle() -> Result<PathBuf, String> {
     })
 }
 
-#[cfg(target_os = "linux")]
-pub(crate) fn current_linux_appimage() -> Result<PathBuf, String> {
-    if let Some(path) = non_empty_env_path("APPIMAGE") {
-        return Ok(path);
-    }
-
-    let exe = std::env::current_exe().map_err(|e| {
-        eprintln!("[update] current exe: {e}");
-        "update-install-path-error".to_string()
-    })?;
-    if is_appimage(&exe) {
-        return Ok(exe);
-    }
-
-    eprintln!(
-        "[update] APPIMAGE env missing and current exe is not an AppImage: {}",
-        exe.display()
-    );
-    Err("update-install-path-error".to_string())
-}
-
 #[cfg(target_os = "windows")]
 pub(crate) fn current_windows_install_dir() -> Result<PathBuf, String> {
     let exe = std::env::current_exe().map_err(|e| {
@@ -70,23 +49,11 @@ pub(crate) fn batch_escape_text(value: &str) -> Result<String, String> {
     Ok(value.replace('%', "%%"))
 }
 
-#[cfg(target_os = "linux")]
-fn non_empty_env_path(name: &str) -> Option<PathBuf> {
-    std::env::var_os(name)
-        .filter(|value| !value.is_empty())
-        .map(PathBuf::from)
-}
-
 #[cfg(any(target_os = "macos", test))]
 fn macos_app_bundle_from_exe(exe: &Path) -> Option<PathBuf> {
     exe.ancestors()
         .find(|path| path.extension().is_some_and(|ext| ext == "app"))
         .map(Path::to_path_buf)
-}
-
-#[cfg(any(target_os = "linux", test))]
-fn is_appimage(path: &Path) -> bool {
-    path.extension().is_some_and(|ext| ext == "AppImage")
 }
 
 #[cfg(test)]
@@ -100,12 +67,6 @@ mod tests {
             macos_app_bundle_from_exe(exe).as_deref(),
             Some(Path::new("/Applications/CL-GO.app"))
         );
-    }
-
-    #[test]
-    fn rejects_non_appimage_linux_exe() {
-        assert!(!is_appimage(Path::new("/tmp/.mount_CL-GO/AppRun")));
-        assert!(is_appimage(Path::new("/home/me/Apps/CL-GO.AppImage")));
     }
 
     #[test]

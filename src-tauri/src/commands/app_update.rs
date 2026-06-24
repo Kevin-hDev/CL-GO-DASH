@@ -1,5 +1,7 @@
 use serde::Serialize;
 
+use super::app_update_assets::{asset_extension, current_platform};
+
 const GITHUB_REPO: &str = "Kevin-hDev/CL-GO-DASH";
 
 #[derive(Serialize, Clone)]
@@ -59,9 +61,11 @@ pub async fn check_app_update() -> Result<Option<AppUpdateInfo>, String> {
 }
 
 fn find_platform_asset(json: &serde_json::Value) -> Option<String> {
-    let assets = json["assets"].as_array()?;
-    let ext = platform_extension();
+    find_asset_by_extension(json, asset_extension(current_platform()))
+}
 
+fn find_asset_by_extension(json: &serde_json::Value, ext: &str) -> Option<String> {
+    let assets = json["assets"].as_array()?;
     assets.iter().find_map(|a| {
         let name = a["name"].as_str().unwrap_or_default();
         if name.ends_with(ext) {
@@ -70,16 +74,6 @@ fn find_platform_asset(json: &serde_json::Value) -> Option<String> {
             None
         }
     })
-}
-
-fn platform_extension() -> &'static str {
-    if cfg!(target_os = "macos") {
-        ".dmg"
-    } else if cfg!(target_os = "windows") {
-        "-setup.exe"
-    } else {
-        ".AppImage"
-    }
 }
 
 pub(crate) fn version_gt(remote: &str, local: &str) -> bool {
@@ -101,4 +95,46 @@ pub(crate) fn version_gt(remote: &str, local: &str) -> bool {
         }
     }
     false
+}
+
+#[cfg(test)]
+mod tests {
+    use serde_json::json;
+
+    use super::*;
+
+    #[test]
+    fn finds_linux_deb_when_appimage_is_also_present() {
+        let release = json!({
+            "assets": [
+                {
+                    "name": "CL-GO_0.9.1_amd64.AppImage",
+                    "browser_download_url": "https://example.invalid/app.AppImage"
+                },
+                {
+                    "name": "CL-GO_0.9.1_amd64.deb",
+                    "browser_download_url": "https://example.invalid/app.deb"
+                }
+            ]
+        });
+
+        assert_eq!(
+            find_asset_by_extension(&release, ".deb").as_deref(),
+            Some("https://example.invalid/app.deb")
+        );
+    }
+
+    #[test]
+    fn ignores_assets_with_partial_extension_matches() {
+        let release = json!({
+            "assets": [
+                {
+                    "name": "CL-GO_0.9.1_amd64.deb.sha256",
+                    "browser_download_url": "https://example.invalid/app.deb.sha256"
+                }
+            ]
+        });
+
+        assert!(find_asset_by_extension(&release, ".deb").is_none());
+    }
 }

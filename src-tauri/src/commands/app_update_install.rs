@@ -1,6 +1,7 @@
 use serde::Serialize;
 use tauri::ipc::Channel;
 
+use super::app_update_assets::{current_platform, temp_extension};
 use super::app_update_install_scripts::spawn_update_script;
 
 #[derive(Debug, Clone, Serialize)]
@@ -46,13 +47,7 @@ pub async fn download_app_update(
     }
 
     let total = resp.content_length().unwrap_or(0);
-    let ext = if cfg!(target_os = "macos") {
-        "dmg"
-    } else if cfg!(target_os = "windows") {
-        "exe"
-    } else {
-        "AppImage"
-    };
+    let ext = temp_extension(current_platform());
     let tmp = std::env::temp_dir().join(format!("CL-GO-update.{}", ext));
 
     let mut file = tokio::fs::File::create(&tmp).await.map_err(|e| {

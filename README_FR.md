@@ -71,9 +71,9 @@ curl -fsSL https://raw.githubusercontent.com/Kevin-hDev/CL-GO-DASH/main/install.
 
 Télécharge la dernière release, installe l'app et la lance automatiquement.
 - **macOS** : installe dans `/Applications/`
-- **Linux** : installe l'AppImage dans `~/.local/bin/` (dépendances système installées automatiquement)
+- **Linux** : installe le paquet Debian via `apt-get` (Ubuntu/Debian uniquement)
 
-Pour Ubuntu/Debian, la release fournit aussi un paquet `.deb` si tu veux une installation via le gestionnaire de paquets.
+L'installateur Linux utilise le fichier `.deb` de la release pour rendre l'app visible dans le menu système.
 
 ### Windows (PowerShell)
 
@@ -109,7 +109,7 @@ cd src-tauri && bash scripts/download-ollama.sh
 
 ```bash
 npm run tauri dev       # Mode dev (hot reload)
-npm run tauri build     # Build release (.dmg / -setup.exe / .AppImage + .deb)
+npm run tauri build     # Build release (.dmg / -setup.exe / .deb)
 npx tsc --noEmit        # Check TypeScript
 cd src-tauri && cargo check    # Check Rust
 cd src-tauri && cargo clippy --all-targets  # Lint strict
