@@ -88,7 +88,21 @@ if find "$SOURCE" \( -name '._*' -o -name '.DS_Store' -o -name '.AppleDouble' -o
   exit 1
 fi
 
-HASH="$(shasum -a 256 "$SOURCE/requirements.txt" "$SOURCE/setup.py" | shasum -a 256 | cut -d ' ' -f 1)"
+HASH="$("${PYTHON[@]}" - "$SOURCE/requirements.txt" "$SOURCE/setup.py" <<'PY'
+import hashlib
+import sys
+
+outer = hashlib.sha256()
+for path in sys.argv[1:]:
+    digest = hashlib.sha256()
+    with open(path, "rb") as source:
+        for chunk in iter(lambda: source.read(1024 * 1024), b""):
+            digest.update(chunk)
+    outer.update(digest.digest())
+
+print(outer.hexdigest())
+PY
+)"
 if [[ -f "$STAMP" && "$(cat "$STAMP")" == "$HASH" ]] && compgen -G "$WHEELS/*.whl" >/dev/null; then
   exit 0
 fi
