@@ -7,6 +7,8 @@
 - **First-launch onboarding** — added welcome, theme/language, and LLM provider setup steps
 - **API key setup** — added visibility toggles and clearer configured-provider states
 - **Linux installation** — switched Linux installs and app updates to Debian packages
+- **Vision support** — improved image handling and capability detection across local and cloud providers
+- **Thinking support** — normalized provider reasoning output so it stays in the dedicated Thinking section
 
 ### Maintenance
 

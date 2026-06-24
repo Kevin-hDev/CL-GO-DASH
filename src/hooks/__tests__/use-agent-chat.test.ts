@@ -2,12 +2,38 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { invoke } from "@tauri-apps/api/core";
 import { useAgentChat } from "../use-agent-chat";
-import type { AgentSession } from "@/types/agent";
+import type { AgentMessage, AgentSession, FileAttachment } from "@/types/agent";
 
-const startStream = vi.fn();
+type StartStreamMock = (
+  sessionId: string,
+  model: string,
+  provider: string,
+  messages: AgentMessage[],
+) => void | Promise<void>;
+
+const startStream = vi.fn<StartStreamMock>();
 const stopStream = vi.fn();
 const subscribeToStream = vi.fn(() => () => {});
 const getStreamSnapshot = vi.fn(() => null);
+
+interface TruncatePayload {
+  sessionId: string;
+  messageId: string;
+  replacement: AgentMessage | null;
+}
+
+let lastStreamMessages: AgentMessage[] | null = null;
+let lastTruncatePayload: TruncatePayload | null = null;
+
+function mockSessionInvoke(currentSession: AgentSession) {
+  vi.mocked(invoke).mockImplementation((command: string, payload?: unknown) => {
+    if (command === "get_agent_session") return Promise.resolve(currentSession);
+    if (command === "truncate_and_replace_at") {
+      lastTruncatePayload = payload as TruncatePayload;
+    }
+    return Promise.resolve(undefined);
+  });
+}
 
 vi.mock("@tauri-apps/api/core", () => ({ invoke: vi.fn() }));
 vi.mock("../use-agent-stream", () => ({
@@ -36,10 +62,12 @@ const session: AgentSession = {
 describe("useAgentChat", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(invoke).mockImplementation((command) => {
-      if (command === "get_agent_session") return Promise.resolve(session);
-      return Promise.resolve(undefined);
+    lastStreamMessages = null;
+    lastTruncatePayload = null;
+    startStream.mockImplementation((_sessionId, _model, _provider, messages) => {
+      lastStreamMessages = messages;
     });
+    mockSessionInvoke(session);
   });
 
   it("reload utilise truncate_and_replace_at sans ancienne commande truncate_session_at", async () => {
@@ -92,5 +120,32 @@ describe("useAgentChat", () => {
       "auto",
       undefined,
     );
+  });
+
+  it("conserve les fichiers quand un message utilisateur est édité", async () => {
+    const imageFile: FileAttachment = {
+      name: "logo.png",
+      path: "/tmp/logo.png",
+      mime_type: "image/png",
+      size: 123,
+      thumbnail: "data:image/png;base64,abc",
+    };
+    mockSessionInvoke({
+      ...session,
+      messages: [{ ...session.messages[0], files: [imageFile] }, session.messages[1]],
+    });
+    const { result } = renderHook(() => useAgentChat("session-1", "llama3", "ollama"));
+    await waitFor(() => expect(result.current.sessionLoading).toBe(false));
+
+    await act(async () => {
+      await result.current.edit("m1", "Décris mieux cette image");
+    });
+
+    expect(lastTruncatePayload?.sessionId).toBe("session-1");
+    expect(lastTruncatePayload?.messageId).toBe("m1");
+    expect(lastTruncatePayload?.replacement?.role).toBe("user");
+    expect(lastTruncatePayload?.replacement?.content).toBe("Décris mieux cette image");
+    expect(lastTruncatePayload?.replacement?.files).toEqual([imageFile]);
+    expect(lastStreamMessages?.[0]?.files).toEqual([imageFile]);
   });
 });

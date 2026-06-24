@@ -4,10 +4,10 @@ import { useAgentStream } from "./use-agent-stream";
 import { listenGatewaySessionUpdates } from "./use-gateway-session-updates";
 import { EMPTY_CHAT_STATE, type ChatState } from "./agent-chat-stream-callbacks";
 import { resolveSessionTokenCount } from "./agent-token-estimate";
+import { createEditedUserMessage, createUserMessage, pendingFilesToAttachments } from "./agent-message-builders";
 import { showToast } from "@/lib/toast-emitter";
 import i18n from "@/i18n";
 import type { AgentMessage, AgentSession } from "@/types/agent";
-
 const MAX_DELIVERED_PERMISSIONS = 64;
 
 export function useAgentChat(
@@ -141,13 +141,9 @@ export function useAgentChat(
       const session = await invoke<Record<string, unknown>>("get_agent_session", { id: sessionId });
       if (!session.project_id) { session.project_id = projectId; await invoke("save_agent_session", { session }).catch(() => showToast(i18n.t("errors.sessionSaveFailed"), "error")); }
     }
-    const files = (sentFiles ?? []).map((f) => ({ name: f.name, path: f.path ?? "", mime_type: "", size: 0, thumbnail: f.preview }));
+    const files = pendingFilesToAttachments(sentFiles);
     const skillNames = hasSkill ? skills.map((s) => s.name) : undefined;
-    const userMsg: AgentMessage = {
-      id: crypto.randomUUID(), role: "user", content: text || "",
-      files, timestamp: new Date().toISOString(),
-      skill_names: skillNames,
-    };
+    const userMsg = createUserMessage(text || "", files, skillNames);
     const displayMsgs = [...state.messages, userMsg];
     const llmMsgs = [...state.messages];
     if (hasSkill) {
@@ -185,7 +181,7 @@ export function useAgentChat(
     if (!sessionId) return;
     const idx = state.messages.findIndex((m) => m.id === messageId);
     if (idx < 0) return;
-    const newMsg: AgentMessage = { id: crypto.randomUUID(), role: "user", content: newContent, files: [], timestamp: new Date().toISOString() };
+    const newMsg = createEditedUserMessage(state.messages[idx], newContent);
     await invoke("truncate_and_replace_at", { sessionId, messageId, replacement: newMsg }).catch(() => showToast(i18n.t("errors.sessionSaveFailed"), "error"));
     const freshTokenCount = await syncTokenCount();
     const msgs = [...state.messages.slice(0, idx), newMsg];
