@@ -38,6 +38,8 @@ pub fn parse(data: &str) -> Vec<ParsedChunk> {
 fn parse_delta(delta: &Value, out: &mut Vec<ParsedChunk>) {
     push_string(out, ParsedChunk::Thinking, &delta["reasoning_content"]);
     push_string(out, ParsedChunk::Thinking, &delta["reasoning"]);
+    push_string(out, ParsedChunk::Thinking, &delta["thought"]);
+    push_string(out, ParsedChunk::Thinking, &delta["thought_summary"]);
     parse_reasoning_details(&delta["reasoning_details"], out);
     parse_google_extra_content(&delta["extra_content"], out);
     parse_content(&delta["content"], out);
@@ -81,8 +83,12 @@ fn parse_content(value: &Value, out: &mut Vec<ParsedChunk>) {
         return;
     };
     for item in items {
+        if item["thought"].as_bool() == Some(true) {
+            parse_thinking_chunk(item, out);
+            continue;
+        }
         match item["type"].as_str().unwrap_or_default() {
-            "thinking" => parse_thinking_chunk(item, out),
+            "thinking" | "thought" | "thought_summary" => parse_thinking_chunk(item, out),
             "text" => push_string(out, ParsedChunk::Content, &item["text"]),
             _ => {}
         }

@@ -18,14 +18,16 @@ pub enum FilteredChunk {
 }
 
 pub struct ThinkTagFilter {
-    in_think: bool,
+    active_close_tag: Option<&'static str>,
     pending: String,
 }
+
+const THINK_TAGS: &[(&str, &str)] = &[("<think>", "</think>"), ("<thought>", "</thought>")];
 
 impl ThinkTagFilter {
     pub fn new() -> Self {
         Self {
-            in_think: false,
+            active_close_tag: None,
             pending: String::new(),
         }
     }
@@ -35,33 +37,33 @@ impl ThinkTagFilter {
         let mut output = Vec::new();
 
         loop {
-            if self.in_think {
-                if let Some(pos) = self.pending.find("</think>") {
+            if let Some(close_tag) = self.active_close_tag {
+                if let Some(pos) = self.pending.find(close_tag) {
                     let thinking = self.pending[..pos].to_string();
                     if !thinking.is_empty() {
                         output.push(FilteredChunk::Thinking(thinking));
                     }
-                    self.pending = self.pending[pos + 8..].to_string();
-                    self.in_think = false;
+                    self.pending = self.pending[pos + close_tag.len()..].to_string();
+                    self.active_close_tag = None;
                     continue;
                 }
-                let safe = safe_flush_len(&self.pending, "</think>");
+                let safe = safe_flush_len(&self.pending, close_tag);
                 if safe > 0 {
                     output.push(FilteredChunk::Thinking(self.pending[..safe].to_string()));
                     self.pending = self.pending[safe..].to_string();
                 }
                 break;
             } else {
-                if let Some(pos) = self.pending.find("<think>") {
+                if let Some((pos, open_tag, close_tag)) = find_open_tag(&self.pending) {
                     let content = self.pending[..pos].to_string();
                     if !content.is_empty() {
                         output.push(FilteredChunk::Content(content));
                     }
-                    self.pending = self.pending[pos + 7..].to_string();
-                    self.in_think = true;
+                    self.pending = self.pending[pos + open_tag.len()..].to_string();
+                    self.active_close_tag = Some(close_tag);
                     continue;
                 }
-                let safe = safe_flush_len(&self.pending, "<think>");
+                let safe = safe_content_flush_len(&self.pending);
                 if safe > 0 {
                     output.push(FilteredChunk::Content(self.pending[..safe].to_string()));
                     self.pending = self.pending[safe..].to_string();
@@ -78,12 +80,27 @@ impl ThinkTagFilter {
             return vec![];
         }
         let text = std::mem::take(&mut self.pending);
-        if self.in_think {
+        if self.active_close_tag.is_some() {
             vec![FilteredChunk::Thinking(text)]
         } else {
             vec![FilteredChunk::Content(text)]
         }
     }
+}
+
+fn find_open_tag(text: &str) -> Option<(usize, &'static str, &'static str)> {
+    THINK_TAGS
+        .iter()
+        .filter_map(|(open, close)| text.find(open).map(|pos| (pos, *open, *close)))
+        .min_by_key(|(pos, _, _)| *pos)
+}
+
+fn safe_content_flush_len(text: &str) -> usize {
+    THINK_TAGS
+        .iter()
+        .map(|(open, _)| safe_flush_len(text, open))
+        .min()
+        .unwrap_or(text.len())
 }
 
 fn safe_flush_len(text: &str, tag: &str) -> usize {
@@ -97,110 +114,5 @@ fn safe_flush_len(text: &str, tag: &str) -> usize {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn filter_complete_tags_single_chunk() {
-        let mut f = ThinkTagFilter::new();
-        let out = f.feed("<think>my thoughts</think>visible answer");
-        let mut out = out.into_iter().chain(f.flush());
-        match out.next().unwrap() {
-            FilteredChunk::Thinking(t) => assert_eq!(t, "my thoughts"),
-            _ => panic!("expected thinking"),
-        }
-        match out.next().unwrap() {
-            FilteredChunk::Content(c) => assert_eq!(c, "visible answer"),
-            _ => panic!("expected content"),
-        }
-    }
-
-    #[test]
-    fn filter_split_across_chunks() {
-        let mut f = ThinkTagFilter::new();
-        let mut all = vec![];
-        all.extend(f.feed("<"));
-        all.extend(f.feed("think>"));
-        all.extend(f.feed("reasoning here"));
-        all.extend(f.feed("</"));
-        all.extend(f.feed("think>"));
-        all.extend(f.feed("the answer"));
-        all.extend(f.flush());
-
-        let thinking: String = all
-            .iter()
-            .filter_map(|c| match c {
-                FilteredChunk::Thinking(t) => Some(t.as_str()),
-                _ => None,
-            })
-            .collect();
-        let content: String = all
-            .iter()
-            .filter_map(|c| match c {
-                FilteredChunk::Content(t) => Some(t.as_str()),
-                _ => None,
-            })
-            .collect();
-
-        assert_eq!(thinking, "reasoning here");
-        assert_eq!(content, "the answer");
-    }
-
-    #[test]
-    fn filter_no_tags() {
-        let mut f = ThinkTagFilter::new();
-        let out = f.feed("just normal content");
-        let out: Vec<_> = out.into_iter().chain(f.flush()).collect();
-        assert_eq!(out.len(), 1);
-        match &out[0] {
-            FilteredChunk::Content(c) => assert_eq!(c, "just normal content"),
-            _ => panic!("expected content"),
-        }
-    }
-
-    #[test]
-    fn filter_multiple_think_blocks() {
-        let mut f = ThinkTagFilter::new();
-        let out = f.feed("<think>first</think>middle<think>second</think>end");
-        let out: Vec<_> = out.into_iter().chain(f.flush()).collect();
-        let types: Vec<&str> = out
-            .iter()
-            .map(|c| match c {
-                FilteredChunk::Content(_) => "C",
-                FilteredChunk::Thinking(_) => "T",
-            })
-            .collect();
-        assert_eq!(types, vec!["T", "C", "T", "C"]);
-    }
-
-    #[test]
-    fn filter_token_by_token() {
-        let mut f = ThinkTagFilter::new();
-        let tokens = [
-            "<", "think", ">", "I ", "need ", "to ", "think", "</", "think", ">", "Hello",
-        ];
-        let mut all = vec![];
-        for t in tokens {
-            all.extend(f.feed(t));
-        }
-        all.extend(f.flush());
-
-        let thinking: String = all
-            .iter()
-            .filter_map(|c| match c {
-                FilteredChunk::Thinking(t) => Some(t.as_str()),
-                _ => None,
-            })
-            .collect();
-        let content: String = all
-            .iter()
-            .filter_map(|c| match c {
-                FilteredChunk::Content(t) => Some(t.as_str()),
-                _ => None,
-            })
-            .collect();
-
-        assert_eq!(thinking, "I need to think");
-        assert_eq!(content, "Hello");
-    }
-}
+#[path = "stream_utils_tests.rs"]
+mod tests;

@@ -74,6 +74,41 @@ fn parses_gemini_extra_content_thoughts_without_signature() {
 }
 
 #[test]
+fn parses_gemini_thought_summary_delta() {
+    let chunks = parse(json!({
+        "choices": [{ "delta": { "thought_summary": "checking", "content": "answer" } }]
+    }));
+    assert_eq!(
+        chunks,
+        vec![
+            ParsedChunk::Thinking("checking".into()),
+            ParsedChunk::Content("answer".into())
+        ]
+    );
+}
+
+#[test]
+fn parses_thought_content_parts() {
+    let chunks = parse(json!({
+        "choices": [{
+            "delta": {
+                "content": [
+                    { "type": "thought", "text": "hidden" },
+                    { "type": "text", "text": "visible" }
+                ]
+            }
+        }]
+    }));
+    assert_eq!(
+        chunks,
+        vec![
+            ParsedChunk::Thinking("hidden".into()),
+            ParsedChunk::Content("visible".into())
+        ]
+    );
+}
+
+#[test]
 fn returns_tool_calls_and_usage() {
     let chunks = parse(json!({
         "choices": [{ "delta": { "tool_calls": [{ "id": "a" }] } }],
