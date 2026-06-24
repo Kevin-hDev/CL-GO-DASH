@@ -85,3 +85,55 @@ fn preserves_gemini_tool_call_extra_content() {
         Some(json!({ "google": { "thought_signature": "sig-a" } }))
     );
 }
+
+#[test]
+fn ignores_tool_calls_over_limit() {
+    let mut acc = ToolCallAccumulator::new();
+    for index in 0..(MAX_TOOL_CALLS + 4) {
+        acc.ingest(&[json!({
+            "index": index,
+            "id": format!("call_{index}"),
+            "type": "function",
+            "function": { "name": "read_file", "arguments": "{\"path\":\"a\"}" }
+        })]);
+    }
+
+    let (calls, ids, _) = acc.finalize();
+    assert_eq!(calls.len(), MAX_TOOL_CALLS);
+    assert_eq!(ids.len(), MAX_TOOL_CALLS);
+}
+
+#[test]
+fn drops_tool_call_when_arguments_exceed_limit() {
+    let mut acc = ToolCallAccumulator::new();
+    acc.ingest(&[json!({
+        "index": 0,
+        "id": "call_large",
+        "type": "function",
+        "function": { "name": "read_file", "arguments": "{" }
+    })]);
+    acc.ingest(&[json!({
+        "index": 0,
+        "function": { "arguments": "x".repeat(MAX_TOOL_ARGUMENT_CHARS + 1) }
+    })]);
+
+    let (calls, ids, extra) = acc.finalize();
+    assert!(calls.is_empty());
+    assert!(ids.is_empty());
+    assert!(extra.is_empty());
+}
+
+#[test]
+fn drops_tool_call_when_extra_content_exceeds_limit() {
+    let mut acc = ToolCallAccumulator::new();
+    acc.ingest(&[json!({
+        "index": 0,
+        "id": "call_extra",
+        "type": "function",
+        "extra_content": { "google": { "thought_signature": "x".repeat(MAX_EXTRA_CONTENT_CHARS + 1) } },
+        "function": { "name": "read_file", "arguments": "{\"path\":\"a\"}" }
+    })]);
+
+    let (calls, _, _) = acc.finalize();
+    assert!(calls.is_empty());
+}

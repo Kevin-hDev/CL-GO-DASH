@@ -9,6 +9,12 @@
 use serde_json::Value;
 use std::collections::HashMap;
 
+const MAX_TOOL_CALLS: usize = 32;
+const MAX_TOOL_ARGUMENT_CHARS: usize = 256 * 1024;
+const MAX_TOOL_ID_CHARS: usize = 256;
+const MAX_TOOL_NAME_CHARS: usize = 128;
+const MAX_EXTRA_CONTENT_CHARS: usize = 64 * 1024;
+
 pub type FinalizedToolCalls = (Vec<(String, Value)>, Vec<String>, Vec<Option<Value>>);
 
 #[derive(Debug, Clone, Default)]
@@ -17,7 +23,9 @@ pub struct ToolCallAcc {
     pub name: String,
     /// Arguments bruts concaténés. Parsés en JSON Value à la finalisation.
     pub arguments: String,
+    pub argument_chars: usize,
     pub extra_content: Option<Value>,
+    pub exceeded_limit: bool,
 }
 
 #[derive(Debug, Default)]
@@ -54,26 +62,43 @@ impl ToolCallAccumulator {
                 0
             });
 
+            if !self.by_index.contains_key(&index) && self.by_index.len() >= MAX_TOOL_CALLS {
+                continue;
+            }
             let entry = self.by_index.entry(index).or_insert_with(|| {
                 self.order.push(index);
                 ToolCallAcc::default()
             });
 
             if let Some(id) = tc["id"].as_str() {
-                if !id.is_empty() && entry.id.is_empty() {
+                if id.chars().count() > MAX_TOOL_ID_CHARS {
+                    entry.exceeded_limit = true;
+                } else if !id.is_empty() && entry.id.is_empty() {
                     entry.id = id.to_string();
                 }
             }
             if let Some(name) = tc["function"]["name"].as_str() {
-                if !name.is_empty() && entry.name.is_empty() {
+                if name.chars().count() > MAX_TOOL_NAME_CHARS {
+                    entry.exceeded_limit = true;
+                } else if !name.is_empty() && entry.name.is_empty() {
                     entry.name = name.to_string();
                 }
             }
             if let Some(args_frag) = tc["function"]["arguments"].as_str() {
-                entry.arguments.push_str(args_frag);
+                append_bounded(
+                    &mut entry.arguments,
+                    &mut entry.argument_chars,
+                    args_frag,
+                    MAX_TOOL_ARGUMENT_CHARS,
+                    &mut entry.exceeded_limit,
+                );
             }
             if !tc["extra_content"].is_null() {
-                entry.extra_content = Some(tc["extra_content"].clone());
+                if value_len(&tc["extra_content"]) <= MAX_EXTRA_CONTENT_CHARS {
+                    entry.extra_content = Some(tc["extra_content"].clone());
+                } else {
+                    entry.exceeded_limit = true;
+                }
             }
         }
     }
@@ -93,7 +118,7 @@ impl ToolCallAccumulator {
             let Some(acc) = self.by_index.get(&idx) else {
                 continue;
             };
-            if acc.name.is_empty() {
+            if acc.name.is_empty() || acc.exceeded_limit {
                 continue;
             }
             let args_value: Value = if acc.arguments.trim().is_empty() {
@@ -110,6 +135,28 @@ impl ToolCallAccumulator {
         }
         (tool_calls, ids, extra_content)
     }
+}
+
+fn append_bounded(
+    target: &mut String,
+    current_chars: &mut usize,
+    fragment: &str,
+    max_chars: usize,
+    exceeded: &mut bool,
+) {
+    let fragment_chars = fragment.chars().count();
+    if current_chars.saturating_add(fragment_chars) > max_chars {
+        *exceeded = true;
+        return;
+    }
+    *current_chars += fragment_chars;
+    target.push_str(fragment);
+}
+
+fn value_len(value: &Value) -> usize {
+    serde_json::to_string(value)
+        .map(|s| s.chars().count())
+        .unwrap_or(MAX_EXTRA_CONTENT_CHARS + 1)
 }
 
 #[cfg(test)]
