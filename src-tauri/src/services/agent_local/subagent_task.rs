@@ -124,6 +124,7 @@ async fn run_inner(
         None,
         None,
         None,
+        None,
         Some("subagent".to_string()),
         cancel.clone(),
     )

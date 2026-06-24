@@ -127,6 +127,7 @@ impl GatewayAgentBridge {
             None,
             None,
             None,
+            None,
             Some("auto".to_string()),
             CancellationToken::new(),
         )

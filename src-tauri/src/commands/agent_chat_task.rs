@@ -164,6 +164,7 @@ pub(crate) async fn run_stream_task(
     working_dir: Option<String>,
     supports_tools_hint: Option<bool>,
     supports_thinking_hint: Option<bool>,
+    supports_vision_hint: Option<bool>,
     reasoning_mode: Option<String>,
     permission_mode_override: Option<String>,
     cancel: CancellationToken,
@@ -316,12 +317,14 @@ pub(crate) async fn run_stream_task(
                 || tool_capable::supports_thinking(&provider, &model)
         });
 
-        let model_supports_vision = registry_caps
-            .as_ref()
-            .map(|c| c.supports_vision)
-            .unwrap_or(false)
-            || provider == "codex-oauth"
-            || tool_capable::supports_vision(&provider, &model);
+        let model_supports_vision = supports_vision_hint.unwrap_or_else(|| {
+            registry_caps
+                .as_ref()
+                .map(|c| c.supports_vision)
+                .unwrap_or(false)
+                || provider == "codex-oauth"
+                || tool_capable::supports_vision(&provider, &model)
+        });
 
         let final_tools = if is_chat {
             tool_dispatcher::get_chat_tool_definitions()

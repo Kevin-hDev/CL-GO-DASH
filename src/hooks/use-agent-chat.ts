@@ -17,6 +17,7 @@ export function useAgentChat(
   onPermissionRequest?: (id: string, toolName: string, args: Record<string, unknown>) => void,
   supportsTools?: boolean,
   supportsThinking?: boolean,
+  supportsVision?: boolean,
   reasoningMode?: string | null,
   permissionMode?: string,
 ) {
@@ -118,10 +119,11 @@ export function useAgentChat(
       workingDir,
       supportsTools,
       supportsThinking,
+      supportsVision,
       reasoningModeRef.current,
       permissionMode,
     );
-  }, [model, provider, startStream, state.tokenCount, supportsTools, supportsThinking]);
+  }, [model, provider, startStream, state.tokenCount, supportsTools, supportsThinking, supportsVision]);
 
   const sendMessage = useCallback(async (
     text: string,

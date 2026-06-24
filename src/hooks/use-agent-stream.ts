@@ -57,6 +57,7 @@ export function useAgentStream() {
     workingDir?: string,
     supportsTools?: boolean,
     supportsThinking?: boolean,
+    supportsVision?: boolean,
     reasoningMode?: string | null,
     permissionMode?: string,
   ) => {
@@ -133,6 +134,7 @@ export function useAgentStream() {
         workingDir: workingDir ?? null,
         supportsTools: supportsTools ?? null,
         supportsThinking: supportsThinking ?? null,
+        supportsVision: supportsVision ?? null,
         reasoningMode: reasoningMode ?? null,
         permissionMode: permissionMode ?? null,
       });

@@ -58,4 +58,39 @@ describe("useAgentChat", () => {
     expect(invoke).not.toHaveBeenCalledWith("truncate_session_at", expect.anything());
     expect(startStream).toHaveBeenCalled();
   });
+
+  it("transmet le support vision du modèle sélectionné au stream", async () => {
+    const { result } = renderHook(() =>
+      useAgentChat(
+        "session-1",
+        "google/gemma-4-31b-it",
+        "openrouter",
+        undefined,
+        true,
+        true,
+        true,
+        "auto",
+      ),
+    );
+    await waitFor(() => expect(result.current.sessionLoading).toBe(false));
+
+    await act(async () => {
+      await result.current.sendMessage("décris l'image");
+    });
+
+    expect(startStream).toHaveBeenLastCalledWith(
+      "session-1",
+      "google/gemma-4-31b-it",
+      "openrouter",
+      expect.any(Array),
+      true,
+      expect.any(Object),
+      undefined,
+      true,
+      true,
+      true,
+      "auto",
+      undefined,
+    );
+  });
 });

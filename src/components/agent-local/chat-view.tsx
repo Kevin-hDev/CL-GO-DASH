@@ -73,6 +73,7 @@ export function ChatView({
     permissions.enqueue({ id, toolName, arguments: args }),
     selectedModelCaps?.supports_tools,
     selectedModelCaps?.supports_thinking,
+    selectedModelCaps?.supports_vision,
     reasoningMode,
     permMode.mode,
   );

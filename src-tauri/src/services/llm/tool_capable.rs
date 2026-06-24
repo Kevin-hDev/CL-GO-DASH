@@ -85,7 +85,7 @@ pub fn supports_vision(provider_id: &str, model_id: &str) -> bool {
     let model = strip_org_prefix(model_id).to_lowercase();
     match provider_id {
         "groq" => model.starts_with("llama-4") || model.contains("vision"),
-        "google" => model.contains("gemini"),
+        "google" => model.contains("gemini") || is_gemma4_vision_model(&model),
         "mistral" => {
             model.starts_with("mistral-large")
                 || model.starts_with("mistral-medium")
@@ -94,7 +94,7 @@ pub fn supports_vision(provider_id: &str, model_id: &str) -> bool {
                 || model.starts_with("pixtral")
         }
         "cerebras" => false,
-        "openrouter" => false,
+        "openrouter" => is_gemma4_vision_model(&model),
         "openai" => {
             model.starts_with("gpt-4o")
                 || model.starts_with("gpt-4-turbo")
@@ -108,6 +108,12 @@ pub fn supports_vision(provider_id: &str, model_id: &str) -> bool {
         "zai" => super::providers::zai::supports_vision(&model),
         _ => false,
     }
+}
+
+fn is_gemma4_vision_model(model: &str) -> bool {
+    model.starts_with("gemma-4")
+        || model.starts_with("google/gemma-4")
+        || model.contains("/gemma-4")
 }
 
 #[cfg(test)]
@@ -178,6 +184,13 @@ mod tests {
     fn vision_detection_updates() {
         assert!(supports_vision("mistral", "mistral-medium-latest"));
         assert!(supports_vision("mistral", "ministral-3-8b-2512"));
+        assert!(supports_vision("google", "gemma-4-31b-it"));
+        assert!(supports_vision("google", "gemma-4-26b-a4b-it"));
+        assert!(supports_vision("openrouter", "google/gemma-4-31b-it"));
+        assert!(supports_vision(
+            "openrouter",
+            "google/gemma-4-26b-a4b-it:free"
+        ));
         assert!(!supports_vision("deepseek", "deepseek-vl"));
     }
 
