@@ -3,7 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { readFile } from "@tauri-apps/plugin-fs";
 import { agentStreamManager, type StreamSnapshot } from "./agent-stream-manager";
 import { expandToolActivities, expandSegmentsToChat } from "./agent-chat-utils";
-import type { AgentMessage } from "@/types/agent";
+import type { AgentMessage, FileAttachment } from "@/types/agent";
 
 const IMAGE_EXTS = ["png", "jpg", "jpeg", "gif", "webp"];
 const TEXT_EXTS = [
@@ -30,6 +30,29 @@ function uint8ToBase64(bytes: Uint8Array): string {
     binary += String.fromCharCode(bytes[i]);
   }
   return btoa(binary);
+}
+
+function thumbnailToBase64(thumbnail?: string): string | null {
+  if (!thumbnail) return null;
+  const marker = ";base64,";
+  const markerIndex = thumbnail.indexOf(marker);
+  if (markerIndex < 0 || !thumbnail.startsWith("data:image/")) return null;
+  const payload = thumbnail.slice(markerIndex + marker.length).trim();
+  return payload.length > 0 ? payload : null;
+}
+
+async function imageAttachmentToBase64(file: FileAttachment): Promise<string | null> {
+  if (file.path) {
+    try {
+      return uint8ToBase64(await readFile(file.path));
+    } catch {
+      const fallback = thumbnailToBase64(file.thumbnail);
+      if (fallback) return fallback;
+      console.warn("Lecture image impossible.");
+      return null;
+    }
+  }
+  return thumbnailToBase64(file.thumbnail);
 }
 
 function clipTextForContext(text: string, maxChars: number): string {
@@ -74,16 +97,12 @@ export function useAgentStream() {
       let remainingTextChars = MAX_TEXT_CHARS_PER_MESSAGE;
 
       if (m.files && m.files.length > 0) {
-        const imageFiles = m.files.filter((f) => f.path && isImageFile(f.name));
+        const imageFiles = m.files.filter((f) => isImageFile(f.name));
         if (imageFiles.length > 0) {
           images = [];
           for (const f of imageFiles) {
-            try {
-              const bytes = await readFile(f.path);
-              images.push(uint8ToBase64(bytes));
-            } catch {
-              console.warn("Lecture image impossible.");
-            }
+            const image = await imageAttachmentToBase64(f);
+            if (image) images.push(image);
           }
           if (images.length === 0) images = null;
         }
