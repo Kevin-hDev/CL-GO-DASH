@@ -17,9 +17,20 @@ cleanup() {
 }
 trap cleanup EXIT
 
+extract_archive() {
+  local archive="$1"
+  local dest="$2"
+
+  if tar --version 2>/dev/null | grep -qi "gnu tar"; then
+    tar --warning=no-unknown-keyword -xzf "$archive" -C "$dest"
+  else
+    COPYFILE_DISABLE=1 tar -xzf "$archive" -C "$dest"
+  fi
+}
+
 if [[ ! -d "$SOURCE" && -f "$ARCHIVE" ]]; then
   SOURCE_TMP="$(mktemp -d)"
-  tar -xzf "$ARCHIVE" -C "$SOURCE_TMP"
+  extract_archive "$ARCHIVE" "$SOURCE_TMP"
   SOURCE="$SOURCE_TMP/source"
 fi
 
@@ -28,7 +39,7 @@ if [[ ! -f "$SOURCE/requirements.txt" || ! -f "$SOURCE/setup.py" ]]; then
   exit 1
 fi
 
-if find "$SOURCE" \( -name '._*' -o -name '.DS_Store' -o -name '.py' \) -print -quit | grep -q .; then
+if find "$SOURCE" \( -name '._*' -o -name '.DS_Store' -o -name '.AppleDouble' -o -name '__MACOSX' -o -name '.py' \) -print -quit | grep -q .; then
   echo "SearXNG bundle pollue par des metadonnees macOS" >&2
   exit 1
 fi
