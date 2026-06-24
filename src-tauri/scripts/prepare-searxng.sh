@@ -17,15 +17,59 @@ cleanup() {
 }
 trap cleanup EXIT
 
+if command -v uv >/dev/null 2>&1; then
+  PYTHON=(uv run python3)
+elif command -v python3 >/dev/null 2>&1; then
+  PYTHON=(python3)
+elif command -v python >/dev/null 2>&1; then
+  PYTHON=(python)
+elif command -v py >/dev/null 2>&1; then
+  PYTHON=(py -3)
+else
+  echo "Python introuvable pour preparer SearXNG" >&2
+  exit 1
+fi
+
 extract_archive() {
   local archive="$1"
   local dest="$2"
 
-  if tar --version 2>/dev/null | grep -qi "gnu tar"; then
-    tar --warning=no-unknown-keyword -xzf "$archive" -C "$dest"
-  else
-    COPYFILE_DISABLE=1 tar -xzf "$archive" -C "$dest"
-  fi
+  "${PYTHON[@]}" - "$archive" "$dest" <<'PY'
+import shutil
+import sys
+import tarfile
+from pathlib import Path, PurePosixPath
+
+archive = Path(sys.argv[1])
+dest = Path(sys.argv[2])
+
+
+def is_metadata(name: str) -> bool:
+    return any(
+        part.startswith("._")
+        or part in {".DS_Store", ".AppleDouble", "__MACOSX", ".py"}
+        for part in PurePosixPath(name).parts
+    )
+
+
+with tarfile.open(archive, "r:gz") as tar:
+    for member in tar:
+        path = PurePosixPath(member.name)
+        if path.is_absolute() or ".." in path.parts:
+            raise SystemExit(f"Chemin SearXNG dangereux: {member.name}")
+        if is_metadata(member.name):
+            continue
+        target = dest.joinpath(*path.parts)
+        if member.isdir():
+            target.mkdir(parents=True, exist_ok=True)
+        elif member.isfile():
+            target.parent.mkdir(parents=True, exist_ok=True)
+            source = tar.extractfile(member)
+            if source is None:
+                raise SystemExit(f"Fichier SearXNG illisible: {member.name}")
+            with source, target.open("wb") as output:
+                shutil.copyfileobj(source, output)
+PY
 }
 
 if [[ ! -d "$SOURCE" && -f "$ARCHIVE" ]]; then
@@ -47,19 +91,6 @@ fi
 HASH="$(shasum -a 256 "$SOURCE/requirements.txt" "$SOURCE/setup.py" | shasum -a 256 | cut -d ' ' -f 1)"
 if [[ -f "$STAMP" && "$(cat "$STAMP")" == "$HASH" ]] && compgen -G "$WHEELS/*.whl" >/dev/null; then
   exit 0
-fi
-
-if command -v uv >/dev/null 2>&1; then
-  PYTHON=(uv run python3)
-elif command -v python3 >/dev/null 2>&1; then
-  PYTHON=(python3)
-elif command -v python >/dev/null 2>&1; then
-  PYTHON=(python)
-elif command -v py >/dev/null 2>&1; then
-  PYTHON=(py -3)
-else
-  echo "Python introuvable pour preparer SearXNG" >&2
-  exit 1
 fi
 
 rm -r "$TMP" 2>/dev/null || true
