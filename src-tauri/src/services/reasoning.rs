@@ -22,6 +22,14 @@ fn lower(model: &str) -> String {
     model.to_lowercase()
 }
 
+fn is_gemini_fixed_reasoning(model: &str) -> bool {
+    model.to_lowercase().starts_with("gemini-3.5-flash")
+}
+
+fn is_zai_effort_reasoning(model: &str) -> bool {
+    model.to_lowercase().starts_with("glm-5.2")
+}
+
 pub fn supported_modes(
     provider: &str,
     model: &str,
@@ -36,6 +44,8 @@ pub fn supported_modes(
         "ollama" => &["off", "auto"],
         "openai" => &["off", "low", "medium", "high", "xhigh"],
         "openrouter" => &["off", "auto", "low", "medium", "high", "xhigh"],
+        "google" if is_gemini_fixed_reasoning(model) => &["low", "medium", "high"],
+        "google" => &["off", "auto"],
         "groq" if crate::services::llm::providers::groq::is_gpt_oss_effort(&lower(model)) => {
             &["low", "medium", "high"]
         }
@@ -63,6 +73,9 @@ pub fn supported_modes(
         "moonshot" => &["off", "auto"],
         "xai" if is_xai_fixed_reasoning(model) => &["low", "medium", "high", "xhigh"],
         "xai" => &["off", "low", "medium", "high"],
+        "zai" if is_zai_effort_reasoning(model) => {
+            &["off", "auto", "low", "medium", "high", "xhigh"]
+        }
         "zai" => &["off", "auto"],
         _ => &["off", "auto"],
     }
@@ -160,6 +173,17 @@ pub fn simple_effort(mode: Option<&str>) -> Option<&'static str> {
         Some("medium") | Some("auto") => Some("medium"),
         Some("high") | Some("xhigh") => Some("high"),
         None => None,
+        _ => None,
+    }
+}
+
+pub fn zai_effort(mode: Option<&str>) -> Option<&'static str> {
+    match mode {
+        Some("off") => Some("none"),
+        Some("low") => Some("low"),
+        Some("medium") => Some("medium"),
+        Some("high") => Some("high"),
+        Some("xhigh") => Some("xhigh"),
         _ => None,
     }
 }

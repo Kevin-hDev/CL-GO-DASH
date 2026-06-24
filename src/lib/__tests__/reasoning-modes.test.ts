@@ -47,15 +47,21 @@ describe("reasoning modes", () => {
     expect(modes("mistral", "mistral-small-latest")).toEqual(["off", "high"]);
     expect(modes("mistral", "magistral-medium-latest")).toEqual(["auto"]);
     expect(modes("mistral", "mistral-small-2506")).toEqual([]);
-    expect(modes("moonshot", "kimi-k2.5")).toEqual(["off", "auto"]);
-    expect(modes("moonshot", "kimi-k2-thinking")).toEqual(["auto"]);
-  });
+      expect(modes("moonshot", "kimi-k2.5")).toEqual(["off", "auto"]);
+      expect(modes("moonshot", "kimi-k2-thinking")).toEqual(["auto"]);
+      expect(modes("moonshot", "kimi-k2.7-code")).toEqual(["auto"]);
+    });
 
-  it("affiche OFF/AUTO pour Z.ai quand le modèle supporte le thinking", () => {
-    expect(modes("zai", "glm-5")).toEqual(["off", "auto"]);
-    expect(modes("zai", "glm-4.6")).toEqual(["off", "auto"]);
-    expect(modes("zai", "glm-4.5-flash")).toEqual(["off", "auto"]);
-  });
+    it("affiche OFF/AUTO pour Z.ai quand le modèle supporte le thinking", () => {
+      expect(modes("zai", "glm-5")).toEqual(["off", "auto"]);
+      expect(modes("zai", "glm-4.6")).toEqual(["off", "auto"]);
+      expect(modes("zai", "glm-4.5-flash")).toEqual(["off", "auto"]);
+    });
+
+    it("affiche les niveaux d'effort pour Gemini 3.5 et GLM-5.2", () => {
+      expect(modes("google", "gemini-3.5-flash")).toEqual(["low", "medium", "high"]);
+      expect(modes("zai", "glm-5.2")).toEqual(["off", "auto", "low", "medium", "high", "xhigh"]);
+    });
 
   it("utilise les modes dynamiques exposés par OpenRouter", () => {
     const openrouter = model("openrouter", "z-ai/glm-5.1", ["off", "auto", "low", "medium", "high", "xhigh"]);

@@ -53,12 +53,24 @@ function isMistralAdjustable(model: AvailableModel | null): boolean {
 
 function isMoonshotForced(model: AvailableModel | null): boolean {
   const name = modelName(model);
-  return name.includes("k2-thinking") || name.includes("thinking-preview");
+  return (
+    name.startsWith("kimi-k2.7-code")
+    || name.includes("k2-thinking")
+    || name.includes("thinking-preview")
+  );
 }
 
 function isGrokMultiAgent(model: AvailableModel | null): boolean {
   const name = modelName(model);
   return name.includes("reasoning") || name.includes("multi-agent") || name.includes("4.20-reasoning");
+}
+
+function isGeminiFixedReasoning(model: AvailableModel | null): boolean {
+  return modelName(model).startsWith("gemini-3.5-flash");
+}
+
+function isZaiEffortReasoning(model: AvailableModel | null): boolean {
+  return modelName(model).startsWith("glm-5.2");
 }
 
 export function reasoningModeOptions(model: AvailableModel | null): ReasoningModeOption[] {
@@ -73,6 +85,10 @@ export function reasoningModeOptions(model: AvailableModel | null): ReasoningMod
         : options(["off", "auto"]);
     case "openai":
       return options(["off", "low", "medium", "high", "xhigh"]);
+    case "google":
+      return isGeminiFixedReasoning(model)
+        ? options(["low", "medium", "high"])
+        : options(["off", "auto"]);
     case "groq":
       if (isGroqGptOssEffort(model)) return options(["low", "medium", "high"]);
       if (isGroqQwenSwitchable(model)) return options(["off", "auto"]);
@@ -90,7 +106,9 @@ export function reasoningModeOptions(model: AvailableModel | null): ReasoningMod
     case "moonshot":
       return isMoonshotForced(model) ? options(["auto"]) : options(["off", "auto"]);
     case "zai":
-      return options(["off", "auto"]);
+      return isZaiEffortReasoning(model)
+        ? options(["off", "auto", "low", "medium", "high", "xhigh"])
+        : options(["off", "auto"]);
     default:
       return options(["off", "auto"]);
   }

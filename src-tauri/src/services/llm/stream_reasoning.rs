@@ -11,7 +11,7 @@ pub fn apply(
         return;
     }
     match provider_id {
-        "zai" => apply_thinking(payload, reasoning_mode),
+        "zai" => apply_zai(payload, model, reasoning_mode),
         "openrouter" => apply_openrouter(payload, think, reasoning_mode),
         "deepseek" => apply_deepseek(payload, reasoning_mode),
         "groq" => apply_groq(payload, model, think, reasoning_mode),
@@ -28,6 +28,15 @@ fn apply_thinking(payload: &mut Value, reasoning_mode: Option<&str>) {
     payload["thinking"] = serde_json::json!({
         "type": if reasoning_mode == Some("off") { "disabled" } else { "enabled" }
     });
+}
+
+fn apply_zai(payload: &mut Value, model: &str, reasoning_mode: Option<&str>) {
+    apply_thinking(payload, reasoning_mode);
+    if model.to_lowercase().starts_with("glm-5.2") {
+        if let Some(effort) = crate::services::reasoning::zai_effort(reasoning_mode) {
+            payload["reasoning_effort"] = effort.into();
+        }
+    }
 }
 
 fn apply_openrouter(payload: &mut Value, think: bool, reasoning_mode: Option<&str>) {

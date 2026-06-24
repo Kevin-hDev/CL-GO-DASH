@@ -59,6 +59,28 @@ mod tests {
     }
 
     #[test]
+    fn embedded_registry_contains_recent_provider_models() {
+        let map = parse_registry(include_str!("../../../resources/litellm-models.json"));
+
+        let gemini = map.get("gemini/gemini-3.5-flash").unwrap();
+        assert!(gemini.supports_function_calling);
+        assert!(gemini.supports_reasoning);
+        assert!(gemini.supports_vision);
+        assert_eq!(gemini.max_input_tokens, Some(1_048_576));
+
+        let glm = map.get("zai/glm-5.2").unwrap();
+        assert!(glm.supports_function_calling);
+        assert!(glm.supports_reasoning);
+        assert_eq!(glm.max_input_tokens, Some(1_000_000));
+
+        let kimi = map.get("moonshot/kimi-k2.7-code").unwrap();
+        assert!(kimi.supports_function_calling);
+        assert!(kimi.supports_reasoning);
+        assert!(kimi.supports_vision);
+        assert_eq!(kimi.max_input_tokens, Some(262_144));
+    }
+
+    #[test]
     fn empty_json_object() {
         let map = parse_registry("{}");
         assert!(map.is_empty());

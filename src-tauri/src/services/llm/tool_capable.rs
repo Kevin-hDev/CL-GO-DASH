@@ -70,7 +70,7 @@ pub fn supports_thinking(provider_id: &str, model_id: &str) -> bool {
         "deepseek" => super::providers::deepseek::supports_thinking(&model),
         "groq" => super::providers::groq::supports_thinking(&model),
         "openai" => model.starts_with("o3") || model.starts_with("o4"),
-        "google" => model.contains("thinking"),
+        "google" => model.starts_with("gemini-3.5-flash") || model.contains("thinking"),
         "openrouter" => false,
         "mistral" => super::providers::mistral::supports_thinking(&model),
         "xai" => super::providers::xai::supports_thinking(&model),
@@ -122,10 +122,17 @@ mod tests {
     #[test]
     fn gemini_tool_capable() {
         assert!(supports_tools("google", "gemini-2.5-pro"));
+        assert!(supports_tools("google", "gemini-3.5-flash"));
         assert!(supports_tools("google", "gemini-3.1-pro"));
         assert!(supports_tools("google", "gemini-2.5-flash"));
         assert!(!supports_tools("google", "gemini-2.5-flash-lite"));
         assert!(!supports_tools("google", "text-embedding-004"));
+    }
+
+    #[test]
+    fn gemini_35_flash_supports_thinking_and_vision() {
+        assert!(supports_thinking("google", "gemini-3.5-flash"));
+        assert!(supports_vision("google", "gemini-3.5-flash"));
     }
 
     #[test]

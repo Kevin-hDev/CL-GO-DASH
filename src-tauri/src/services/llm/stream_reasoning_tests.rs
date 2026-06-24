@@ -46,6 +46,28 @@ fn moonshot_switchable_can_disable_thinking() {
 
     let forced = payload("moonshot", "kimi-k2-thinking", Some("auto"));
     assert!(forced.get("thinking").is_none());
+
+    let k27 = payload("moonshot", "kimi-k2.7-code", Some("auto"));
+    assert!(k27.get("thinking").is_none());
+}
+
+#[test]
+fn zai_glm_52_uses_reasoning_effort() {
+    let high = payload("zai", "glm-5.2", Some("high"));
+    assert_eq!(high["thinking"], json!({ "type": "enabled" }));
+    assert_eq!(high["reasoning_effort"], "high");
+
+    let off = payload("zai", "glm-5.2", Some("off"));
+    assert_eq!(off["thinking"], json!({ "type": "disabled" }));
+    assert_eq!(off["reasoning_effort"], "none");
+}
+
+#[test]
+fn google_gemini_35_uses_reasoning_effort() {
+    assert_eq!(
+        payload("google", "gemini-3.5-flash", Some("low"))["reasoning_effort"],
+        "low"
+    );
 }
 
 #[test]

@@ -20,6 +20,7 @@ mod tests {
     #[test]
     fn tools() {
         assert!(supports_tools("glm-5"));
+        assert!(supports_tools("glm-5.2"));
         assert!(supports_tools("glm-5-code"));
         assert!(supports_tools("glm-4.7"));
         assert!(supports_tools("glm-4.5-flash"));
@@ -30,6 +31,7 @@ mod tests {
     #[test]
     fn thinking() {
         assert!(supports_thinking("glm-5"));
+        assert!(supports_thinking("glm-5.2"));
         assert!(supports_thinking("glm-5-code"));
         assert!(supports_thinking("glm-4.7"));
         assert!(supports_thinking("glm-4.6"));

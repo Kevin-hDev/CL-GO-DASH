@@ -51,8 +51,8 @@ pub const LLM_PROVIDERS: &[ProviderSpec] = &[
         models_endpoint: "/models",
         signup_url: "https://aistudio.google.com/app/apikey",
         free_tier_label: "1M tokens/min",
-        short_description: "Gemini 2.5 Flash / 3.1 Pro — free tier permanent.",
-        short_description_en: "Gemini 2.5 Flash / 3.1 Pro — permanent free tier.",
+        short_description: "Gemini 3.5 Flash — multimodal, tools et raisonnement.",
+        short_description_en: "Gemini 3.5 Flash — multimodal, tools and reasoning.",
         default_max_tokens: None,
     },
     ProviderSpec {
@@ -135,8 +135,8 @@ pub const LLM_PROVIDERS: &[ProviderSpec] = &[
         models_endpoint: "/models",
         signup_url: "https://platform.kimi.ai/console/api-keys",
         free_tier_label: "Low-cost ($0.60/Mtok)",
-        short_description: "Kimi K2.6 — multimodal, MoE 1T paramètres.",
-        short_description_en: "Kimi K2.6 — multimodal, 1T parameter MoE.",
+        short_description: "Kimi K2.7 Code — agentic coding, multimodal, contexte 256K.",
+        short_description_en: "Kimi K2.7 Code — agentic coding, multimodal, 256K context.",
         default_max_tokens: Some(64_000),
     },
     ProviderSpec {
@@ -147,8 +147,8 @@ pub const LLM_PROVIDERS: &[ProviderSpec] = &[
         models_endpoint: "",
         signup_url: "https://z.ai/manage-apikey/apikey-list",
         free_tier_label: "GLM-4.5-Flash gratuit",
-        short_description: "GLM-5.1 — open-source ZhipuAI, vision et raisonnement.",
-        short_description_en: "GLM-5.1 — ZhipuAI open-source, vision and reasoning.",
+        short_description: "GLM-5.2 — contexte 1M, coding long-horizon et raisonnement.",
+        short_description_en: "GLM-5.2 — 1M context, long-horizon coding and reasoning.",
         default_max_tokens: Some(64_000),
     },
 ];

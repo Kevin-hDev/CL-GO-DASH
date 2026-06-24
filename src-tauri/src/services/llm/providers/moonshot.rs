@@ -7,15 +7,20 @@ pub fn supports_thinking(model: &str) -> bool {
 }
 
 pub fn is_forced_thinking(model: &str) -> bool {
-    model.contains("k2-thinking") || model.contains("thinking-preview")
+    model.starts_with("kimi-k2.7-code")
+        || model.contains("k2-thinking")
+        || model.contains("thinking-preview")
 }
 
 pub fn is_switchable_thinking(model: &str) -> bool {
-    model.starts_with("kimi-k2.5")
+    model.starts_with("kimi-k2.5") || model.starts_with("kimi-k2.6")
 }
 
 pub fn supports_vision(model: &str) -> bool {
-    model.contains("k2.5") || model.contains("k2.6") || model.contains("vision")
+    model.contains("k2.5")
+        || model.contains("k2.6")
+        || model.contains("k2.7")
+        || model.contains("vision")
 }
 
 #[cfg(test)]
@@ -25,6 +30,8 @@ mod tests {
     #[test]
     fn tools() {
         assert!(supports_tools("kimi-k2.6"));
+        assert!(supports_tools("kimi-k2.7-code"));
+        assert!(supports_tools("kimi-k2.7-code-highspeed"));
         assert!(supports_tools("kimi-k2.5"));
         assert!(supports_tools("kimi-k2-thinking"));
         assert!(supports_tools("kimi-latest"));
@@ -37,7 +44,9 @@ mod tests {
         assert!(supports_thinking("kimi-k2-thinking"));
         assert!(supports_thinking("kimi-thinking-preview"));
         assert!(supports_thinking("kimi-k2.5"));
-        assert!(!supports_thinking("kimi-k2.6"));
+        assert!(supports_thinking("kimi-k2.6"));
+        assert!(supports_thinking("kimi-k2.7-code"));
+        assert!(supports_thinking("kimi-k2.7-code-highspeed"));
         assert!(!supports_thinking("kimi-latest"));
     }
 
@@ -45,6 +54,8 @@ mod tests {
     fn vision() {
         assert!(supports_vision("kimi-k2.5"));
         assert!(supports_vision("kimi-k2.6"));
+        assert!(supports_vision("kimi-k2.7-code"));
+        assert!(supports_vision("kimi-k2.7-code-highspeed"));
         assert!(supports_vision("moonshot-v1-128k-vision-preview"));
         assert!(!supports_vision("kimi-k2-thinking"));
         assert!(!supports_vision("kimi-latest"));

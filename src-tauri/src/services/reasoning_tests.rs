@@ -39,6 +39,18 @@ fn provider_specific_modes_are_distinct() {
         supported_modes("deepseek", "deepseek-v4-pro", true),
         &["off", "high", "xhigh"]
     );
+    assert_eq!(
+        supported_modes("google", "gemini-3.5-flash", true),
+        &["low", "medium", "high"]
+    );
+    assert_eq!(
+        supported_modes("zai", "glm-5.2", true),
+        &["off", "auto", "low", "medium", "high", "xhigh"]
+    );
+    assert_eq!(
+        supported_modes("moonshot", "kimi-k2.7-code", true),
+        &["auto"]
+    );
 }
 
 #[test]

@@ -7,6 +7,10 @@ struct StaticModel {
 
 const ZAI_MODELS: &[StaticModel] = &[
     StaticModel {
+        id: "glm-5.2",
+        ctx: 1_000_000,
+    },
+    StaticModel {
         id: "glm-5.1",
         ctx: 200_000,
     },
@@ -146,10 +150,13 @@ mod tests {
     #[test]
     fn zai_static_models_expose_reasoning_capabilities() {
         let models = static_model_infos("zai").unwrap();
+        let glm_52 = models.iter().find(|m| m.id == "glm-5.2").unwrap();
         let glm_5 = models.iter().find(|m| m.id == "glm-5").unwrap();
         let glm_46 = models.iter().find(|m| m.id == "glm-4.6").unwrap();
         let glm_flash = models.iter().find(|m| m.id == "glm-4.5-flash").unwrap();
 
+        assert_eq!(glm_52.context_length, Some(1_000_000));
+        assert!(glm_52.supports_thinking);
         assert!(glm_5.supports_thinking);
         assert!(glm_46.supports_thinking);
         assert!(glm_flash.supports_thinking);
