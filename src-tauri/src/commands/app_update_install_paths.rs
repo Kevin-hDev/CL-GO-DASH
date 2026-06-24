@@ -2,6 +2,8 @@ use std::path::{Path, PathBuf};
 
 #[cfg(target_os = "macos")]
 pub(crate) fn current_macos_app_bundle() -> Result<PathBuf, String> {
+    // `current_exe` is only used to locate the running app bundle after launch.
+    // Update trust is enforced separately by the release URL allowlist.
     let exe = std::env::current_exe().map_err(|e| {
         eprintln!("[update] current exe: {e}");
         "update-install-path-error".to_string()
@@ -14,6 +16,8 @@ pub(crate) fn current_macos_app_bundle() -> Result<PathBuf, String> {
 
 #[cfg(target_os = "windows")]
 pub(crate) fn current_windows_install_dir() -> Result<PathBuf, String> {
+    // `current_exe` is only used to locate the current install directory.
+    // Update trust is enforced separately by the release URL allowlist.
     let exe = std::env::current_exe().map_err(|e| {
         eprintln!("[update] current exe: {e}");
         "update-install-path-error".to_string()

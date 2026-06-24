@@ -95,17 +95,20 @@ pub fn tree_kill(pid: u32) {
         for &child_pid in children.iter().rev() {
             let raw = child_pid.as_u32() as i32;
             eprintln!("[ollama] kill child pid={raw}");
+            // SAFETY: `raw` is only passed as an OS pid; libc::kill touches no Rust memory.
             unsafe {
                 libc::kill(raw, libc::SIGTERM);
             }
         }
 
+        // SAFETY: `pid` is only passed as an OS pid; libc::kill touches no Rust memory.
         unsafe {
             libc::kill(pid as i32, libc::SIGTERM);
         }
 
         let start = std::time::Instant::now();
         while start.elapsed() < Duration::from_secs(3) {
+            // SAFETY: signal 0 checks process existence and does not touch memory.
             if unsafe { libc::kill(pid as i32, 0) != 0 } {
                 eprintln!("[ollama] arbre pid={pid} arrêté");
                 return;
@@ -114,10 +117,12 @@ pub fn tree_kill(pid: u32) {
         }
 
         for &child_pid in children.iter().rev() {
+            // SAFETY: child pids are only passed as OS pids; libc::kill touches no Rust memory.
             unsafe {
                 libc::kill(child_pid.as_u32() as i32, libc::SIGKILL);
             }
         }
+        // SAFETY: `pid` is only passed as an OS pid; libc::kill touches no Rust memory.
         unsafe {
             libc::kill(pid as i32, libc::SIGKILL);
         }

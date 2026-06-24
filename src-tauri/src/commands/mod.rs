@@ -12,6 +12,7 @@ pub(crate) mod app_update_assets;
 pub mod app_update_install;
 pub(crate) mod app_update_install_paths;
 pub(crate) mod app_update_install_scripts;
+pub(crate) mod app_update_install_temp;
 pub mod codex;
 pub mod config;
 pub mod favorite_models;

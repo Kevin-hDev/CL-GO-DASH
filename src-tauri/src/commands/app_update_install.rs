@@ -3,6 +3,7 @@ use tauri::ipc::Channel;
 
 use super::app_update_assets::{current_platform, temp_extension};
 use super::app_update_install_scripts::spawn_update_script;
+use super::app_update_install_temp::create_unique_temp_file;
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -48,12 +49,8 @@ pub async fn download_app_update(
 
     let total = resp.content_length().unwrap_or(0);
     let ext = temp_extension(current_platform());
-    let tmp = std::env::temp_dir().join(format!("CL-GO-update.{}", ext));
-
-    let mut file = tokio::fs::File::create(&tmp).await.map_err(|e| {
-        eprintln!("[update] create file: {e}");
-        "update-write-error".to_string()
-    })?;
+    let (tmp, file) = create_unique_temp_file("CL-GO-update", &format!(".{ext}"))?;
+    let mut file = tokio::fs::File::from_std(file);
 
     use futures_util::StreamExt;
     use tokio::io::AsyncWriteExt;

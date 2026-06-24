@@ -1,12 +1,21 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, type ReactNode } from "react";
 import { Copy, Check } from "@/components/ui/icons";
-import { highlightCode } from "@/lib/highlight";
+import { highlightCodeNodes, type HighlightNode } from "@/lib/highlight";
 import "@/components/file-preview/file-preview-highlight.css";
 import "./messages.css";
 
 interface CodeBlockProps {
   code: string;
   language?: string;
+}
+
+function renderHighlightNode(node: HighlightNode, index: number): ReactNode {
+  if (typeof node === "string") return node;
+  return (
+    <span key={index} className={node.className}>
+      {node.children.map(renderHighlightNode)}
+    </span>
+  );
 }
 
 export function CodeBlock({ code, language }: CodeBlockProps) {
@@ -18,8 +27,8 @@ export function CodeBlock({ code, language }: CodeBlockProps) {
     setTimeout(() => setCopied(false), 2000);
   }, [code]);
 
-  const html = useMemo(
-    () => language ? highlightCode(code, language) : null,
+  const highlighted = useMemo(
+    () => language ? highlightCodeNodes(code, language) : null,
     [code, language],
   );
 
@@ -32,8 +41,8 @@ export function CodeBlock({ code, language }: CodeBlockProps) {
         </button>
       </div>
       <pre>
-        {html
-          ? <code dangerouslySetInnerHTML={{ __html: html }} />
+        {highlighted
+          ? <code>{highlighted.map(renderHighlightNode)}</code>
           : <code>{code}</code>
         }
       </pre>

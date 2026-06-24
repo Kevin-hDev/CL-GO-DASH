@@ -1,5 +1,6 @@
 import { createLowlight, common } from "lowlight";
 import { toHtml } from "hast-util-to-html";
+import type { RootContent } from "hast";
 import { languageFromPath } from "./code-language";
 
 const lowlight = createLowlight(common);
@@ -17,6 +18,11 @@ const LANG_ALIASES: Record<string, string> = {
   yml: "yaml",
 };
 
+export type HighlightNode = string | {
+  className?: string;
+  children: HighlightNode[];
+};
+
 function escapeHtml(s: string): string {
   return s
     .replace(/&/g, "&amp;")
@@ -25,11 +31,36 @@ function escapeHtml(s: string): string {
     .replace(/"/g, "&quot;");
 }
 
+function classNameFrom(value: unknown): string | undefined {
+  if (Array.isArray(value)) return value.filter((item) => typeof item === "string").join(" ");
+  return typeof value === "string" ? value : undefined;
+}
+
+function toHighlightNodes(node: RootContent): HighlightNode[] {
+  if (node.type === "text") return [node.value];
+  if (node.type !== "element") return [];
+
+  const children = node.children.flatMap(toHighlightNodes);
+  if (node.tagName !== "span") return children;
+
+  return [{
+    className: classNameFrom(node.properties.className),
+    children,
+  }];
+}
+
 export function highlightCode(code: string, language: string): string {
   const resolved = LANG_ALIASES[language] ?? language;
   if (!resolved || !lowlight.registered(resolved)) return escapeHtml(code);
   const tree = lowlight.highlight(resolved, code);
   return toHtml(tree);
+}
+
+export function highlightCodeNodes(code: string, language: string): HighlightNode[] {
+  const resolved = LANG_ALIASES[language] ?? language;
+  if (!resolved || !lowlight.registered(resolved)) return [code];
+  const tree = lowlight.highlight(resolved, code);
+  return tree.children.flatMap(toHighlightNodes);
 }
 
 export function highlightLines(code: string, path: string): string[] {

@@ -8,28 +8,13 @@ import deepseekSvg from "@/assets/deepseek-color.svg";
 import braveIconSvg from "@/assets/brave/Brave-icon.svg";
 import exaSvg from "@/assets/exa-color.svg";
 import firecrawlIconSvg from "@/assets/Firecrawl/Firecrawl-icon.svg";
-import xaiRaw from "@/assets/Grok/grok-icon.svg?raw";
-import moonshotRaw from "@/assets/moonshot-ai/moonshot-icon.svg?raw";
+import xaiSvg from "@/assets/Grok/grok-icon.svg";
+import moonshotSvg from "@/assets/moonshot-ai/moonshot-icon.svg";
 import zaiSvg from "@/assets/Z/Z.ai.svg";
 
-function scopeSvg(raw: string, prefix: string): string {
-  let s = raw;
-  s = s.replace(/\bid="([^"]+)"/g, `id="${prefix}$1"`);
-  s = s.replace(/url\(#([^)]+)\)/g, `url(#${prefix}$1)`);
-  s = s.replace(/xlink:href="#([^"]+)"/g, `xlink:href="#${prefix}$1"`);
-  s = s.replace(/href="#([^"]+)"/g, `href="#${prefix}$1"`);
-  s = s.replace(/class="([^"]+)"/g, (_match, classes: string) => {
-    const scoped = classes.split(/\s+/).map((c) => `${prefix}${c}`).join(" ");
-    return `class="${scoped}"`;
-  });
-  s = s.replace(/\.st(\d+)\s*\{/g, `.${prefix}st$1{`);
-  return s;
-}
-
 interface ImgEntry { kind: "img"; src: string; mono?: boolean }
-interface SvgEntry { kind: "svg"; raw: string }
 
-type ProviderIconEntry = ImgEntry | SvgEntry;
+type ProviderIconEntry = ImgEntry;
 
 const ICONS: Record<string, ProviderIconEntry> = {
   groq:       { kind: "img", src: groqSvg, mono: true },
@@ -42,8 +27,8 @@ const ICONS: Record<string, ProviderIconEntry> = {
   brave:      { kind: "img", src: braveIconSvg },
   exa:        { kind: "img", src: exaSvg },
   firecrawl:  { kind: "img", src: firecrawlIconSvg },
-  xai:        { kind: "svg", raw: scopeSvg(xaiRaw, "xai-") },
-  moonshot:   { kind: "svg", raw: scopeSvg(moonshotRaw, "moon-") },
+  xai:        { kind: "img", src: xaiSvg },
+  moonshot:   { kind: "img", src: moonshotSvg },
   zai:        { kind: "img", src: zaiSvg },
 };
 
@@ -67,16 +52,6 @@ export function ProviderIcon({ providerId, displayName, size = 40 }: ProviderIco
       }}>
         {displayName.charAt(0).toUpperCase()}
       </div>
-    );
-  }
-
-  if (entry.kind === "svg") {
-    return (
-      <span
-        className="mcp-icon-inline"
-        style={{ width: size, height: size, display: "inline-flex", flexShrink: 0 }}
-        dangerouslySetInnerHTML={{ __html: entry.raw }}
-      />
     );
   }
 
