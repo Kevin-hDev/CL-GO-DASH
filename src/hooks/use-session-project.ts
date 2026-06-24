@@ -13,11 +13,20 @@ export function useSessionProject(
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
-    invoke<AgentSession>("get_agent_session", { id: sessionId })
-      .then((s) => setSelectedProjectId(s.project_id ?? null))
-      .catch((e) => console.warn("Session project load:", e))
-      .finally(() => setLoading(false));
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      setLoading(true);
+      invoke<AgentSession>("get_agent_session", { id: sessionId })
+        .then((s) => {
+          if (!cancelled) setSelectedProjectId(s.project_id ?? null);
+        })
+        .catch((e) => console.warn("Session project load:", e))
+        .finally(() => {
+          if (!cancelled) setLoading(false);
+        });
+    });
+    return () => { cancelled = true; };
   }, [sessionId]);
 
   const selectedProject = projects.find((p) => p.id === selectedProjectId);

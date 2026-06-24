@@ -1,4 +1,4 @@
-use super::agent_chat_task::run_stream_task;
+use super::agent_chat_task::{run_stream_task, StreamCapabilityHints, StreamTaskParams};
 
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::types_ollama::{ChatMessage, StreamEvent};
@@ -54,22 +54,24 @@ pub async fn chat_stream(
 
     tauri::async_runtime::spawn(async move {
         let emitter = AgentEventEmitter::new(task_app.clone(), stream_session.clone());
-        let result = run_stream_task(
-            emitter.clone(),
-            stream_session.clone(),
+        let result = run_stream_task(StreamTaskParams {
+            on_event: emitter.clone(),
+            session_id: stream_session.clone(),
             model,
             messages,
             tools,
             think,
             provider,
             working_dir,
-            supports_tools,
-            supports_thinking,
-            supports_vision,
+            capability_hints: StreamCapabilityHints {
+                supports_tools,
+                supports_thinking,
+                supports_vision,
+            },
             reasoning_mode,
-            permission_mode,
+            permission_mode_override: permission_mode,
             cancel,
-        )
+        })
         .await;
 
         // Cleanup : ne supprime que si NOTRE génération est encore active

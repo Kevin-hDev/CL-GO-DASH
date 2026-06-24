@@ -47,7 +47,7 @@ export function ParametersEditor({
         .map((p): [string, string] => [p.key.trim(), p.value.trim()]);
       await invoke("update_parameters", { name: modelName, parameters: payload });
       onSave();
-    } catch (e: unknown) {
+    } catch {
       setError(t("errors.operationFailed"));
     } finally {
       setSaving(false);
@@ -119,4 +119,3 @@ export function ParametersEditor({
     </div>
   );
 }
-

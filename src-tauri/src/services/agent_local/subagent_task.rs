@@ -1,3 +1,4 @@
+use crate::commands::agent_chat_task::{run_stream_task, StreamCapabilityHints, StreamTaskParams};
 use crate::services::agent_local::session_store;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::subagent_registry;
@@ -112,22 +113,20 @@ async fn run_inner(
         });
     }
 
-    let result = crate::commands::agent_chat_task::run_stream_task(
-        emitter,
-        child_session_id.clone(),
+    let result = run_stream_task(StreamTaskParams {
+        on_event: emitter,
+        session_id: child_session_id.clone(),
         model,
         messages,
         tools,
-        false,
+        think: false,
         provider,
-        Some(working_dir.to_string_lossy().to_string()),
-        None,
-        None,
-        None,
-        None,
-        Some("subagent".to_string()),
-        cancel.clone(),
-    )
+        working_dir: Some(working_dir.to_string_lossy().to_string()),
+        capability_hints: StreamCapabilityHints::default(),
+        reasoning_mode: None,
+        permission_mode_override: Some("subagent".to_string()),
+        cancel: cancel.clone(),
+    })
     .await;
 
     let was_cancelled = cancel.is_cancelled();

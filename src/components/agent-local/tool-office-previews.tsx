@@ -59,14 +59,31 @@ function SpreadsheetTable({ data }: { data: SpreadsheetData }) {
   );
 }
 
+function parseSpreadsheetData(result: string): SpreadsheetData | null {
+  try {
+    const parsed = JSON.parse(result) as Record<string, unknown>;
+    if (!Array.isArray(parsed.headers)) return null;
+    const rows = Array.isArray(parsed.rows)
+      ? parsed.rows.filter((row): row is unknown[] => Array.isArray(row))
+      : [];
+    return {
+      sheet: typeof parsed.sheet === "string" ? parsed.sheet : "Sheet1",
+      headers: parsed.headers.map(cellText),
+      rows,
+      total_rows: typeof parsed.total_rows === "number" ? parsed.total_rows : rows.length,
+      sheets: Array.isArray(parsed.sheets) ? parsed.sheets.map(cellText) : ["Sheet1"],
+      truncated: typeof parsed.truncated === "boolean" ? parsed.truncated : false,
+      startRow: typeof parsed.startRow === "number" ? parsed.startRow : undefined,
+      startCol: typeof parsed.startCol === "number" ? parsed.startCol : undefined,
+    };
+  } catch (e) {
+    console.warn("parseReadSpreadsheet:", e);
+    return null;
+  }
+}
+
 export function ReadSpreadsheetPreview({ result }: { result: string }) {
-  const data = useMemo(() => {
-    try {
-      const parsed = JSON.parse(result) as Record<string, unknown>;
-      if (!Array.isArray(parsed.headers)) return null;
-      return { headers: parsed.headers, rows: Array.isArray(parsed.rows) ? parsed.rows : [], total_rows: typeof parsed.total_rows === "number" ? parsed.total_rows : 0 } as SpreadsheetData;
-    } catch (e) { console.warn("parseReadSpreadsheet:", e); return null; }
-  }, [result]);
+  const data = useMemo(() => parseSpreadsheetData(result), [result]);
   if (!data || data.headers.length === 0) return null;
   return <SpreadsheetTable data={data} />;
 }

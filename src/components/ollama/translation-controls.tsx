@@ -38,7 +38,7 @@ export function TranslationControls({
         targetLang: lang,
       });
       onChange(lang, translated);
-    } catch (e: unknown) {
+    } catch {
       setError(t("errors.operationFailed"));
       onChange(null, null);
     } finally {

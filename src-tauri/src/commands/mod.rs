@@ -60,6 +60,7 @@ pub mod search;
 pub mod subagents;
 #[cfg(test)]
 pub mod subagents_tests;
+pub(crate) mod subagents_validation;
 pub mod terminal;
 
 pub use agent_chat::*;

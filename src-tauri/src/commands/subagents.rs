@@ -1,3 +1,5 @@
+use super::agent_chat_task::{run_stream_task, StreamCapabilityHints, StreamTaskParams};
+use super::subagents_validation::validate_session_id;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::types_ollama::{ChatMessage, StreamEvent};
 use crate::services::agent_local::types_session::AgentSessionMeta;
@@ -6,6 +8,9 @@ use crate::ActiveStreams;
 use serde::Serialize;
 use tauri::Manager;
 use tokio_util::sync::CancellationToken;
+
+#[cfg(test)]
+pub use super::subagents_validation::validate_session_id_for_test;
 
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -16,19 +21,6 @@ pub struct SubagentInfo {
     pub status: String,
     pub prompt_preview: String,
     pub run_id: Option<String>,
-}
-
-fn validate_session_id(id: &str) -> Result<(), String> {
-    if id.is_empty() || id.len() > 64 || id.contains("..") || id.contains('/') {
-        return Err("Identifiant de session invalide".to_string());
-    }
-    Ok(())
-}
-
-#[cfg(test)]
-#[allow(dead_code)]
-pub fn validate_session_id_for_test(id: &str) -> Result<(), String> {
-    validate_session_id(id)
 }
 
 #[tauri::command]
@@ -44,7 +36,7 @@ pub async fn list_subagents(
             s.parent_session_id.as_deref() == Some(&parent_session_id)
                 && run_id
                     .as_ref()
-                    .map_or(true, |rid| s.subagent_run_id.as_deref() == Some(rid))
+                    .is_none_or(|rid| s.subagent_run_id.as_deref() == Some(rid))
         })
         .collect())
 }
@@ -136,22 +128,20 @@ pub async fn synthesize_subagent_results(
             messages: fresh.messages.clone(),
             token_count: fresh.accumulated_tokens,
         });
-        let result = super::agent_chat_task::run_stream_task(
-            emitter.clone(),
-            parent_session_id.clone(),
-            fresh.model,
+        let result = run_stream_task(StreamTaskParams {
+            on_event: emitter.clone(),
+            session_id: parent_session_id.clone(),
+            model: fresh.model,
             messages,
-            vec![],
-            false,
-            fresh.provider,
-            None,
-            None,
-            None,
-            None,
-            None,
-            Some("auto".to_string()),
+            tools: vec![],
+            think: false,
+            provider: fresh.provider,
+            working_dir: None,
+            capability_hints: StreamCapabilityHints::default(),
+            reasoning_mode: None,
+            permission_mode_override: Some("auto".to_string()),
             cancel,
-        )
+        })
         .await;
 
         let is_current = {

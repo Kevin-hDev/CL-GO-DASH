@@ -3,7 +3,7 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 use tokio_util::sync::CancellationToken;
 
-use crate::commands::agent_chat_task::run_stream_task;
+use crate::commands::agent_chat_task::{run_stream_task, StreamCapabilityHints, StreamTaskParams};
 use crate::models::GatewayConfig;
 use crate::services::agent_local::session_store;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
@@ -115,22 +115,20 @@ impl GatewayAgentBridge {
         emit_session_updated(&app, &session_id);
 
         let emitter = AgentEventEmitter::new(app.clone(), session_id.clone());
-        let final_messages = match run_stream_task(
-            emitter,
-            session_id.clone(),
+        let final_messages = match run_stream_task(StreamTaskParams {
+            on_event: emitter,
+            session_id: session_id.clone(),
             model,
             messages,
-            vec![],
-            false,
+            tools: vec![],
+            think: false,
             provider,
-            None,
-            None,
-            None,
-            None,
-            None,
-            Some("auto".to_string()),
-            CancellationToken::new(),
-        )
+            working_dir: None,
+            capability_hints: StreamCapabilityHints::default(),
+            reasoning_mode: None,
+            permission_mode_override: Some("auto".to_string()),
+            cancel: CancellationToken::new(),
+        })
         .await
         {
             Ok(messages) => messages,

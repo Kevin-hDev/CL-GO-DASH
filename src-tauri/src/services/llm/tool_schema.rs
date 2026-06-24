@@ -32,8 +32,12 @@ fn normalize_schema(value: &mut Value) {
                 return;
             }
 
-            for child in map.values_mut() {
-                normalize_schema(child);
+            for (key, child) in map.iter_mut() {
+                if key == "properties" {
+                    normalize_properties(child);
+                } else {
+                    normalize_schema(child);
+                }
             }
 
             match map.get("type").and_then(Value::as_str) {
@@ -77,6 +81,22 @@ fn normalize_schema(value: &mut Value) {
             }
         }
         _ => {}
+    }
+}
+
+fn normalize_properties(value: &mut Value) {
+    if let Value::Object(properties) = value {
+        for schema in properties.values_mut() {
+            normalize_property_schema(schema);
+        }
+    }
+}
+
+fn normalize_property_schema(value: &mut Value) {
+    match value {
+        Value::Object(_) => normalize_schema(value),
+        Value::Bool(_) => {}
+        _ => *value = json!({"type": "string"}),
     }
 }
 

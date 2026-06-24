@@ -21,7 +21,7 @@ function formatElapsed(ms: number): string {
 export function SubagentAccordion({ subagents, onCancel, onOpen }: SubagentAccordionProps) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(true);
-  const [now, setNow] = useState(Date.now());
+  const [now, setNow] = useState(0);
 
   const hasRunning = subagents.some((s) => s.status === "running");
 

@@ -54,6 +54,28 @@ fn replaces_empty_schema_objects_for_gemini_backends() {
 }
 
 #[test]
+fn wraps_primitive_property_schemas_for_gemini_backends() {
+    let tools = vec![json!({
+        "type": "function",
+        "function": {
+            "name": "x",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "type": "string",
+                    "allowed": true
+                }
+            }
+        }
+    })];
+
+    let fixed = tools_for_provider("google", "gemini-2.5-pro", &tools);
+    let props = &fixed[0]["function"]["parameters"]["properties"];
+    assert_eq!(props["type"]["type"], "string");
+    assert_eq!(props["allowed"], true);
+}
+
+#[test]
 fn app_tool_definitions_are_safe_for_gemini_backends() {
     let tools = crate::services::agent_local::tool_dispatcher::get_tool_definitions();
     let fixed = tools_for_provider("openrouter", "google/gemma-4-31b-it", &tools);

@@ -94,11 +94,15 @@ export function useSubagents(parentSessionId: string | undefined) {
 
   useEffect(() => {
     if (!parentSessionId) {
-      setActive([]);
-      setCompleted([]);
-      setAllDone(false);
-      setDoneRunId(undefined);
-      return;
+      let cancelled = false;
+      queueMicrotask(() => {
+        if (cancelled) return;
+        setActive([]);
+        setCompleted([]);
+        setAllDone(false);
+        setDoneRunId(undefined);
+      });
+      return () => { cancelled = true; };
     }
 
     void ensureGlobalListener();

@@ -7,7 +7,7 @@ export function WorkingStats({ startedAt, liveTokenCount }: {
   startedAt: number; liveTokenCount: number;
 }) {
   const { t } = useTranslation();
-  const [now, setNow] = useState(Date.now());
+  const [now, setNow] = useState(startedAt);
 
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 500);

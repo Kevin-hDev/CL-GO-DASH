@@ -12,8 +12,12 @@ export function useChatScroll(sessionId: string, isStreaming: boolean, deps: unk
   const autoScrollRef = useRef(true);
 
   useLayoutEffect(() => {
+    let cancelled = false;
     autoScrollRef.current = true;
-    setIsAtBottom(true);
+    queueMicrotask(() => {
+      if (!cancelled) setIsAtBottom(true);
+    });
+    return () => { cancelled = true; };
   }, [sessionId]);
 
   useEffect(() => {

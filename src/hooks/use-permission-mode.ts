@@ -34,8 +34,13 @@ export function usePermissionMode(sessionId?: string) {
   }, []);
 
   useEffect(() => {
-    reloadDefault();
-    setLoaded(true);
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      reloadDefault();
+      setLoaded(true);
+    });
+    return () => { cancelled = true; };
   }, [reloadDefault]);
 
   useFsEvent("fs:config-changed", reloadDefault);
@@ -43,12 +48,11 @@ export function usePermissionMode(sessionId?: string) {
   useEffect(() => {
     if (!sessionId) return;
     const stored = sessionModes.get(sessionId);
-    if (stored) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- sync state reset on sessionId change is intentional
-      setMode(stored);
-    } else {
-      setMode(defaultMode);
-    }
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled) setMode(stored ?? defaultMode);
+    });
+    return () => { cancelled = true; };
   }, [sessionId]);
 
   const change = useCallback(async (next: PermissionMode) => {

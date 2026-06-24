@@ -24,7 +24,7 @@ export function useFavoriteModels() {
     void refresh();
   }, [refresh]);
 
-  useFsEvent("fs:config-changed", refresh);
+  useFsEvent("fs:config-changed", () => { void refresh(); });
 
   const isFavorite = useCallback(
     (provider: string, model: string) =>

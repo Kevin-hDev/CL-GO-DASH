@@ -1,0 +1,90 @@
+use super::common::{self, StreamMode};
+use super::params::StreamTaskParams;
+use crate::services::agent_local::agent_loop;
+use crate::services::agent_local::tool_dispatcher;
+use crate::services::agent_local::types_ollama::{ChatMessage, OllamaThink, StreamEvent};
+
+pub(crate) async fn run(
+    params: StreamTaskParams,
+    mode: StreamMode,
+    response_language: String,
+) -> Result<Vec<ChatMessage>, String> {
+    let ctx = crate::services::compress::context_resolve::resolve_ollama(&params.model).await;
+    let final_tools = resolve_tools(&params, &mode);
+    let working_dir = common::resolve_working_dir(&params.working_dir)?;
+    common::update_working_dir(&params.session_id, &working_dir).await;
+
+    let snap = common::collect_git_snapshot(&working_dir).await;
+    let ollama_think = resolve_ollama_think(&params);
+    let mut messages = params.messages;
+    let image_report = crate::services::llm::vision::sanitize_messages(&mut messages, true);
+    if image_report.invalid_removed > 0 {
+        let _ = params.on_event.send(StreamEvent::Notice {
+            message_key: crate::services::llm::vision::NOTICE_IMAGE_SKIPPED.to_string(),
+        });
+    }
+
+    let agent_md = common::agent_md_content(&mode, &working_dir).await;
+    let skills = common::skills_tuples(!mode.is_chat && !mode.is_subagent).await;
+    common::prepare_with_context(
+        &mut messages,
+        common::PromptContext {
+            working_dir: &working_dir,
+            snap: &snap,
+            has_tools: true,
+            agent_md_content: agent_md,
+            skills: &skills,
+            model: &params.model,
+            mode: &mode.mode,
+            response_language: &response_language,
+        },
+    );
+
+    agent_loop::run_agent_loop(
+        &params.on_event,
+        &mut messages,
+        &params.model,
+        final_tools,
+        ollama_think,
+        working_dir,
+        params.session_id.clone(),
+        params.cancel,
+        ctx.native,
+        ctx.configured,
+        &mode.mode,
+    )
+    .await?;
+    Ok(messages)
+}
+
+fn resolve_tools(params: &StreamTaskParams, mode: &StreamMode) -> Vec<serde_json::Value> {
+    if !params.tools.is_empty() {
+        return params.tools.clone();
+    }
+    if mode.is_chat {
+        tool_dispatcher::get_chat_tool_definitions()
+    } else {
+        tool_dispatcher::get_tool_definitions()
+    }
+}
+
+fn resolve_ollama_think(params: &StreamTaskParams) -> OllamaThink {
+    let supports_thinking = params
+        .capability_hints
+        .supports_thinking
+        .unwrap_or_else(|| {
+            crate::services::reasoning::provider_model_supports_thinking("ollama", &params.model)
+        });
+    let effective_mode = crate::services::reasoning::normalize_for_model(
+        "ollama",
+        &params.model,
+        params.reasoning_mode.as_deref(),
+        supports_thinking,
+    );
+    crate::services::reasoning::ollama_think(
+        &params.model,
+        effective_mode.as_deref(),
+        params.think && supports_thinking,
+    )
+    .unwrap_or(OllamaThink::Bool(false))
+}
