@@ -136,6 +136,7 @@ pub mod translation_cache;
 pub mod translator;
 pub mod types_ollama;
 pub mod types_session;
+pub mod types_stream;
 pub mod types_tools;
 pub mod write_guard;
 #[cfg(test)]

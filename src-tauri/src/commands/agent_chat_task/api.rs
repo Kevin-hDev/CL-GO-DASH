@@ -44,6 +44,7 @@ pub(crate) async fn run(
             response_language: &response_language,
         },
     );
+    super::gemma4_thinking_guard::apply(&mut messages, &params.provider, &params.model);
 
     let effective_reasoning_mode = crate::services::reasoning::normalize_for_model(
         &params.provider,

@@ -38,3 +38,28 @@ fn openrouter_models_use_supported_parameters_for_reasoning() {
     assert!(!plain.supports_thinking);
     assert!(plain.reasoning_modes.is_empty());
 }
+
+#[test]
+fn google_models_use_name_based_reasoning_modes() {
+    let body = json!({
+        "data": [
+            {
+                "id": "gemini-3.5-flash",
+                "capabilities": { "completion_chat": true },
+                "pricing": { "prompt": "0", "completion": "0" }
+            },
+            {
+                "id": "gemini-2.5-flash",
+                "capabilities": { "completion_chat": true },
+                "pricing": { "prompt": "0", "completion": "0" }
+            }
+        ]
+    });
+
+    let models = parse_models_list(&body, "google").unwrap();
+    let gemini_35 = models.iter().find(|m| m.id == "gemini-3.5-flash").unwrap();
+    let gemini_25 = models.iter().find(|m| m.id == "gemini-2.5-flash").unwrap();
+
+    assert_eq!(gemini_35.reasoning_modes, ["low", "medium", "high"]);
+    assert_eq!(gemini_25.reasoning_modes, ["off", "low", "medium", "high"]);
+}

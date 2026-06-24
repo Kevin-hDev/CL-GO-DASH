@@ -9,12 +9,15 @@
 use serde_json::Value;
 use std::collections::HashMap;
 
+pub type FinalizedToolCalls = (Vec<(String, Value)>, Vec<String>, Vec<Option<Value>>);
+
 #[derive(Debug, Clone, Default)]
 pub struct ToolCallAcc {
     pub id: String,
     pub name: String,
     /// Arguments bruts concaténés. Parsés en JSON Value à la finalisation.
     pub arguments: String,
+    pub extra_content: Option<Value>,
 }
 
 #[derive(Debug, Default)]
@@ -69,18 +72,22 @@ impl ToolCallAccumulator {
             if let Some(args_frag) = tc["function"]["arguments"].as_str() {
                 entry.arguments.push_str(args_frag);
             }
+            if !tc["extra_content"].is_null() {
+                entry.extra_content = Some(tc["extra_content"].clone());
+            }
         }
     }
 
     /// Finalise : retourne (tool_calls au format Ollama, IDs alignés).
     /// Parse chaque `arguments` string comme JSON Value.
-    pub fn finalize(self) -> (Vec<(String, Value)>, Vec<String>) {
+    pub fn finalize(self) -> FinalizedToolCalls {
         // Tri par order d'apparition (préserve l'ordre des parallel calls).
         let mut ordered: Vec<usize> = self.order.clone();
         ordered.dedup();
 
         let mut tool_calls = Vec::with_capacity(ordered.len());
         let mut ids = Vec::with_capacity(ordered.len());
+        let mut extra_content = Vec::with_capacity(ordered.len());
 
         for idx in ordered {
             let Some(acc) = self.by_index.get(&idx) else {
@@ -99,84 +106,12 @@ impl ToolCallAccumulator {
             };
             tool_calls.push((acc.name.clone(), args_value));
             ids.push(acc.id.clone());
+            extra_content.push(acc.extra_content.clone());
         }
-        (tool_calls, ids)
+        (tool_calls, ids, extra_content)
     }
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use serde_json::json;
-
-    #[test]
-    fn accumulates_fragmented_arguments_openai_style() {
-        // Cas OpenAI/Mistral/DeepSeek : arguments fragmentés sur plusieurs chunks.
-        let mut acc = ToolCallAccumulator::new();
-        acc.ingest(&[json!({
-            "index": 0, "id": "call_1", "type": "function",
-            "function": { "name": "web_search", "arguments": "" }
-        })]);
-        acc.ingest(&[json!({
-            "index": 0, "function": { "arguments": "{\"query\":" }
-        })]);
-        acc.ingest(&[json!({
-            "index": 0, "function": { "arguments": " \"rust tauri 2\"}" }
-        })]);
-        let (calls, ids) = acc.finalize();
-        assert_eq!(calls.len(), 1);
-        assert_eq!(calls[0].0, "web_search");
-        assert_eq!(calls[0].1["query"], "rust tauri 2");
-        assert_eq!(ids[0], "call_1");
-    }
-
-    #[test]
-    fn accumulates_complete_tool_call_groq_style() {
-        // Cas Groq : tool_call complet en un seul chunk.
-        let mut acc = ToolCallAccumulator::new();
-        acc.ingest(&[json!({
-            "index": 0, "id": "call_x", "type": "function",
-            "function": {
-                "name": "read_file",
-                "arguments": "{\"path\": \"/tmp/x\"}"
-            }
-        })]);
-        let (calls, _) = acc.finalize();
-        assert_eq!(calls.len(), 1);
-        assert_eq!(calls[0].1["path"], "/tmp/x");
-    }
-
-    #[test]
-    fn accumulates_parallel_tool_calls_by_index() {
-        // Deux tools en parallèle avec index différents.
-        let mut acc = ToolCallAccumulator::new();
-        acc.ingest(&[
-            json!({
-                "index": 0, "id": "a", "type": "function",
-                "function": { "name": "f1", "arguments": "{\"x\":1}" }
-            }),
-            json!({
-                "index": 1, "id": "b", "type": "function",
-                "function": { "name": "f2", "arguments": "{\"y\":2}" }
-            }),
-        ]);
-        let (calls, ids) = acc.finalize();
-        assert_eq!(calls.len(), 2);
-        assert_eq!(calls[0].0, "f1");
-        assert_eq!(calls[1].0, "f2");
-        assert_eq!(ids, vec!["a".to_string(), "b".to_string()]);
-    }
-
-    #[test]
-    fn tolerates_gemini_missing_index() {
-        // Quirk Gemini : index absent. On synthétise un index par id.
-        let mut acc = ToolCallAccumulator::new();
-        acc.ingest(&[json!({
-            "id": "0", "type": "function",
-            "function": { "name": "g1", "arguments": "{\"q\":\"x\"}" }
-        })]);
-        let (calls, _) = acc.finalize();
-        assert_eq!(calls.len(), 1);
-        assert_eq!(calls[0].0, "g1");
-    }
-}
+#[path = "stream_tools_tests.rs"]
+mod tests;

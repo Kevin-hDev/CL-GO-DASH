@@ -17,7 +17,7 @@ pub fn apply(
         "groq" => apply_groq(payload, model, think, reasoning_mode),
         "mistral" => apply_mistral(payload, think, reasoning_mode),
         "moonshot" => apply_moonshot(payload, model, reasoning_mode),
-        "google" => apply_simple_effort(payload, think, reasoning_mode),
+        "google" => apply_google(payload, model, think, reasoning_mode),
         "openai" => apply_openai(payload, think, reasoning_mode),
         "xai" => apply_simple_effort(payload, think, reasoning_mode),
         _ => {}
@@ -110,6 +110,36 @@ fn apply_simple_effort(payload: &mut Value, think: bool, reasoning_mode: Option<
         if let Some(effort) = crate::services::reasoning::simple_effort(reasoning_mode) {
             payload["reasoning_effort"] = effort.into();
         }
+    }
+}
+
+fn apply_google(payload: &mut Value, model: &str, think: bool, reasoning_mode: Option<&str>) {
+    if reasoning_mode == Some("off") {
+        payload["reasoning_effort"] = "none".into();
+        return;
+    }
+    if !think {
+        return;
+    }
+    let effort = crate::services::reasoning::simple_effort(reasoning_mode).unwrap_or("medium");
+    let mut thinking_config = serde_json::json!({ "include_thoughts": true });
+    if is_gemini_25(model) {
+        thinking_config["thinking_budget"] = google_thinking_budget(effort).into();
+    } else {
+        thinking_config["thinking_level"] = effort.into();
+    }
+    payload["extra_body"]["google"]["thinking_config"] = thinking_config;
+}
+
+fn is_gemini_25(model: &str) -> bool {
+    model.to_lowercase().contains("gemini-2.5")
+}
+
+fn google_thinking_budget(effort: &str) -> u32 {
+    match effort {
+        "low" => 1_024,
+        "high" => 24_576,
+        _ => 8_192,
     }
 }
 

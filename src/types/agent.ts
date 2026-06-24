@@ -157,6 +157,7 @@ export interface ToolActivityRecord {
 }
 
 export interface ToolCallRequest {
+  extra_content?: unknown;
   function: { name: string; arguments: Record<string, unknown> };
 }
 

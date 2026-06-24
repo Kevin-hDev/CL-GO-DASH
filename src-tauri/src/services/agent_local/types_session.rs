@@ -127,6 +127,8 @@ pub struct SavedSegment {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ToolCallRequest {
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub extra_content: Option<serde_json::Value>,
     pub function: ToolCallRequestFunction,
 }
 

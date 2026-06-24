@@ -70,8 +70,16 @@ pub fn parse_models_list(
                 && is_price_free(&m["pricing"]["completion"]);
             let supports_thinking = has_param("reasoning")
                 || has_param("reasoning_effort")
-                || has_param("include_reasoning");
-            let reasoning_modes = reasoning_modes_from_params(provider_id, &supported_parameters);
+                || has_param("include_reasoning")
+                || super::tool_capable::supports_thinking(provider_id, &id);
+            let reasoning_modes = if supports_thinking {
+                crate::services::reasoning::supported_modes(provider_id, &id, true)
+                    .iter()
+                    .map(|mode| mode.to_string())
+                    .collect()
+            } else {
+                Vec::new()
+            };
             Some(ModelInfo {
                 id,
                 owned_by,
@@ -114,16 +122,6 @@ fn supported_parameters(m: &serde_json::Value) -> Vec<String> {
                 .collect()
         })
         .unwrap_or_default()
-}
-
-fn reasoning_modes_from_params(provider_id: &str, params: &[String]) -> Vec<String> {
-    if provider_id != "openrouter" || !params.iter().any(|p| p == "reasoning") {
-        return Vec::new();
-    }
-    ["off", "auto", "low", "medium", "high", "xhigh"]
-        .iter()
-        .map(|mode| mode.to_string())
-        .collect()
 }
 
 /// Prix = "0" ou absent → gratuit.

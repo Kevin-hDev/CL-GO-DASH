@@ -48,6 +48,7 @@ fn convert_splits_tool_calls_into_separate_items() {
             content: "Je vais lire le fichier.".into(),
             tool_calls: Some(vec![ToolCallOllama {
                 id: Some("call_1".into()),
+                extra_content: None,
                 function: ToolCallFunction {
                     name: "read_file".into(),
                     arguments: serde_json::json!({"path": "/tmp/test.txt"}),

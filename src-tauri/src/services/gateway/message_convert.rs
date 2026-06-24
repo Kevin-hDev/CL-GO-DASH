@@ -34,7 +34,10 @@ pub fn chat_to_agent_message(m: &ChatMessage) -> Option<AgentMessage> {
         role: m.role.clone(),
         content: m.content.clone(),
         thinking: None,
-        tool_calls: m.tool_calls.as_ref().map(chat_tool_calls_to_session),
+        tool_calls: m
+            .tool_calls
+            .as_ref()
+            .map(|calls| chat_tool_calls_to_session(calls)),
         tool_name: m.tool_name.clone(),
         tool_activities: None,
         segments: None,
@@ -86,6 +89,7 @@ fn push_tool_turn(
             *id_counter += 1;
             ToolCallOllama {
                 id: Some(id),
+                extra_content: None,
                 function: ToolCallFunction {
                     name: tool.name.clone(),
                     arguments: tool.args.clone().unwrap_or_default(),
@@ -125,6 +129,7 @@ fn session_tool_calls_to_chat(calls: Option<&Vec<ToolCallRequest>>) -> Option<Ve
             .iter()
             .map(|call| ToolCallOllama {
                 id: None,
+                extra_content: call.extra_content.clone(),
                 function: ToolCallFunction {
                     name: call.function.name.clone(),
                     arguments: call.function.arguments.clone(),
@@ -134,10 +139,11 @@ fn session_tool_calls_to_chat(calls: Option<&Vec<ToolCallRequest>>) -> Option<Ve
     })
 }
 
-fn chat_tool_calls_to_session(calls: &Vec<ToolCallOllama>) -> Vec<ToolCallRequest> {
+fn chat_tool_calls_to_session(calls: &[ToolCallOllama]) -> Vec<ToolCallRequest> {
     calls
         .iter()
         .map(|call| ToolCallRequest {
+            extra_content: call.extra_content.clone(),
             function: crate::services::agent_local::types_session::ToolCallRequestFunction {
                 name: call.function.name.clone(),
                 arguments: call.function.arguments.clone(),

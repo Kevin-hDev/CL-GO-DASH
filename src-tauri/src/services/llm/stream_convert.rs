@@ -28,7 +28,7 @@ pub fn message_to_openai(msg: &ChatMessage, provider_id: &str) -> Value {
                 obj["reasoning_content"] = json!(rc);
             }
             if let Some(tcs) = &msg.tool_calls {
-                let tc_arr: Vec<Value> = tcs
+                let mut tc_arr: Vec<Value> = tcs
                     .iter()
                     .enumerate()
                     .map(|(i, tc)| {
@@ -45,6 +45,11 @@ pub fn message_to_openai(msg: &ChatMessage, provider_id: &str) -> Value {
                         })
                     })
                     .collect();
+                for (value, tc) in tc_arr.iter_mut().zip(tcs.iter()) {
+                    if let Some(extra_content) = &tc.extra_content {
+                        value["extra_content"] = extra_content.clone();
+                    }
+                }
                 obj["tool_calls"] = json!(tc_arr);
             }
             obj

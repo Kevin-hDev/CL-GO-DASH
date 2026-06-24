@@ -44,6 +44,10 @@ fn provider_specific_modes_are_distinct() {
         &["low", "medium", "high"]
     );
     assert_eq!(
+        supported_modes("google", "gemini-2.5-flash", true),
+        &["off", "low", "medium", "high"]
+    );
+    assert_eq!(
         supported_modes("zai", "glm-5.2", true),
         &["off", "auto", "low", "medium", "high", "xhigh"]
     );

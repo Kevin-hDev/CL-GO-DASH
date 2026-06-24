@@ -1,4 +1,5 @@
 use super::*;
+use crate::services::agent_local::types_ollama::{ToolCallFunction, ToolCallOllama};
 use crate::services::llm::vision;
 
 fn user_with_png() -> ChatMessage {
@@ -38,4 +39,29 @@ fn strip_images_adds_user_note() {
     vision::strip_images(&mut msgs);
     assert!(msgs[0].images.is_none());
     assert!(msgs[0].content.contains("does not support vision"));
+}
+
+#[test]
+fn assistant_tool_call_preserves_extra_content() {
+    let msg = ChatMessage {
+        role: "assistant".into(),
+        content: String::new(),
+        tool_calls: Some(vec![ToolCallOllama {
+            id: Some("function-call-1".into()),
+            extra_content: Some(serde_json::json!({
+                "google": { "thought_signature": "sig-a" }
+            })),
+            function: ToolCallFunction {
+                name: "read_file".into(),
+                arguments: serde_json::json!({ "path": "a" }),
+            },
+        }]),
+        ..Default::default()
+    };
+
+    let out = message_to_openai(&msg, "google");
+    assert_eq!(
+        out["tool_calls"][0]["extra_content"],
+        serde_json::json!({ "google": { "thought_signature": "sig-a" } })
+    );
 }

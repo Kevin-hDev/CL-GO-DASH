@@ -144,6 +144,7 @@ mod tests {
             content: String::new(),
             tool_calls: Some(vec![ToolCallOllama {
                 id: None,
+                extra_content: None,
                 function: ToolCallFunction {
                     name: "read_file".to_string(),
                     arguments: serde_json::json!({ "path": path }),

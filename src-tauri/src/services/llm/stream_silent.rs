@@ -1,4 +1,5 @@
 use super::{
+    stream_chunk::{self, ParsedChunk},
     stream_http::{post_chat_request, RequestConfig},
     stream_sse::is_done_marker,
     stream_tools::ToolCallAccumulator,
@@ -69,12 +70,15 @@ async fn consume_silent(
         }
     }
 
-    let (tool_calls, ids) = acc.finalize();
+    let (tool_calls, ids, extra_content) = acc.finalize();
     for (i, (name, args)) in tool_calls.iter().enumerate() {
         result.tool_calls.push((name.clone(), args.clone()));
         if let Some(id) = ids.get(i) {
             result.tool_call_ids.push(id.clone());
         }
+        result
+            .tool_call_extra_content
+            .push(extra_content.get(i).cloned().flatten());
     }
 
     Ok(result)
@@ -86,33 +90,24 @@ fn process_chunk_silent(
     acc: &mut ToolCallAccumulator,
     think_filter: &mut ThinkTagFilter,
 ) {
-    let chunk: serde_json::Value = match serde_json::from_str(data) {
-        Ok(v) => v,
-        Err(_) => return,
-    };
-    if let Some(choice) = chunk["choices"].as_array().and_then(|a| a.first()) {
-        let delta = &choice["delta"];
-        if let Some(content) = delta["content"].as_str() {
-            if !content.is_empty() {
-                for filtered in think_filter.feed(content) {
+    for chunk in stream_chunk::parse(data) {
+        match chunk {
+            ParsedChunk::Content(content) => {
+                for filtered in think_filter.feed(&content) {
                     if let FilteredChunk::Content(c) = filtered {
                         result.content.push_str(&c);
                     }
                 }
             }
+            ParsedChunk::Thinking(_) => {}
+            ParsedChunk::ToolCalls(tool_calls) => acc.ingest(&tool_calls),
+            ParsedChunk::Usage {
+                completion_tokens,
+                prompt_tokens,
+            } => {
+                result.eval_count = completion_tokens;
+                result.prompt_tokens = prompt_tokens;
+            }
         }
-        if let Some(tcs) = delta["tool_calls"].as_array() {
-            acc.ingest(tcs);
-        }
-    }
-    if let Some(usage) = chunk["usage"].as_object() {
-        result.eval_count = usage
-            .get("completion_tokens")
-            .and_then(|v| v.as_u64())
-            .unwrap_or(0) as u32;
-        result.prompt_tokens = usage
-            .get("prompt_tokens")
-            .and_then(|v| v.as_u64())
-            .unwrap_or(0) as u32;
     }
 }

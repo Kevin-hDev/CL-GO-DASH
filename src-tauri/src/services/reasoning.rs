@@ -22,10 +22,6 @@ fn lower(model: &str) -> String {
     model.to_lowercase()
 }
 
-fn is_gemini_fixed_reasoning(model: &str) -> bool {
-    model.to_lowercase().starts_with("gemini-3.5-flash")
-}
-
 fn is_zai_effort_reasoning(model: &str) -> bool {
     model.to_lowercase().starts_with("glm-5.2")
 }
@@ -44,8 +40,7 @@ pub fn supported_modes(
         "ollama" => &["off", "auto"],
         "openai" => &["off", "low", "medium", "high", "xhigh"],
         "openrouter" => &["off", "auto", "low", "medium", "high", "xhigh"],
-        "google" if is_gemini_fixed_reasoning(model) => &["low", "medium", "high"],
-        "google" => &["off", "auto"],
+        "google" => crate::services::reasoning_google::supported_modes(model),
         "groq" if crate::services::llm::providers::groq::is_gpt_oss_effort(&lower(model)) => {
             &["low", "medium", "high"]
         }

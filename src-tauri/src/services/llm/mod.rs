@@ -18,6 +18,9 @@ pub mod quota;
 pub mod registry_search;
 mod retry;
 pub mod stream;
+mod stream_chunk;
+#[cfg(test)]
+mod stream_chunk_tests;
 pub mod stream_convert;
 mod stream_http;
 mod stream_reasoning;

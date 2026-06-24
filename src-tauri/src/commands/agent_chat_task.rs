@@ -1,6 +1,7 @@
 mod api;
 mod common;
 mod compress;
+mod gemma4_thinking_guard;
 mod ollama;
 mod params;
 

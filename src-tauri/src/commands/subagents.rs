@@ -180,6 +180,7 @@ fn to_chat_message(
                 .map(
                     |call| crate::services::agent_local::types_ollama::ToolCallOllama {
                         id: None,
+                        extra_content: call.extra_content.clone(),
                         function: crate::services::agent_local::types_ollama::ToolCallFunction {
                             name: call.function.name.clone(),
                             arguments: call.function.arguments.clone(),

@@ -65,8 +65,9 @@ function isGrokMultiAgent(model: AvailableModel | null): boolean {
   return name.includes("reasoning") || name.includes("multi-agent") || name.includes("4.20-reasoning");
 }
 
-function isGeminiFixedReasoning(model: AvailableModel | null): boolean {
-  return modelName(model).startsWith("gemini-3.5-flash");
+function isGeminiForcedReasoning(model: AvailableModel | null): boolean {
+  const name = modelName(model);
+  return name.startsWith("gemini-3") || name.startsWith("gemini-2.5-pro");
 }
 
 function isZaiEffortReasoning(model: AvailableModel | null): boolean {
@@ -86,9 +87,9 @@ export function reasoningModeOptions(model: AvailableModel | null): ReasoningMod
     case "openai":
       return options(["off", "low", "medium", "high", "xhigh"]);
     case "google":
-      return isGeminiFixedReasoning(model)
+      return isGeminiForcedReasoning(model)
         ? options(["low", "medium", "high"])
-        : options(["off", "auto"]);
+        : options(["off", "low", "medium", "high"]);
     case "groq":
       if (isGroqGptOssEffort(model)) return options(["low", "medium", "high"]);
       if (isGroqQwenSwitchable(model)) return options(["off", "auto"]);

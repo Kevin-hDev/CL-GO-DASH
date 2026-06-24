@@ -63,10 +63,23 @@ fn zai_glm_52_uses_reasoning_effort() {
 }
 
 #[test]
-fn google_gemini_35_uses_reasoning_effort() {
+fn google_gemini_35_requests_thought_summaries() {
+    let payload = payload("google", "gemini-3.5-flash", Some("low"));
     assert_eq!(
-        payload("google", "gemini-3.5-flash", Some("low"))["reasoning_effort"],
-        "low"
+        payload["extra_body"]["google"]["thinking_config"],
+        json!({ "include_thoughts": true, "thinking_level": "low" })
+    );
+    assert!(payload["extra_body"]["google"]
+        .get("thought_tag_marker")
+        .is_none());
+}
+
+#[test]
+fn google_gemini_25_uses_thinking_budget() {
+    let payload = payload("google", "gemini-2.5-flash", Some("high"));
+    assert_eq!(
+        payload["extra_body"]["google"]["thinking_config"],
+        json!({ "include_thoughts": true, "thinking_budget": 24576 })
     );
 }
 

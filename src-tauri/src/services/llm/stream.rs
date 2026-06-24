@@ -1,4 +1,5 @@
 use super::{
+    stream_chunk::{self, ParsedChunk},
     stream_http::{post_chat_request, RequestConfig, RequestError},
     stream_sse::is_done_marker,
     stream_tools::ToolCallAccumulator,
@@ -128,7 +129,7 @@ async fn consume_stream(
         }
     }
 
-    let (tool_calls, ids) = acc.finalize();
+    let (tool_calls, ids, extra_content) = acc.finalize();
     for (i, (name, args)) in tool_calls.iter().enumerate() {
         let _ = on_event.send(StreamEvent::ToolCall {
             name: name.clone(),
@@ -138,6 +139,9 @@ async fn consume_stream(
         if let Some(id) = ids.get(i) {
             result.tool_call_ids.push(id.clone());
         }
+        result
+            .tool_call_extra_content
+            .push(extra_content.get(i).cloned().flatten());
     }
 
     let first = first_token.unwrap_or_else(std::time::Instant::now);
@@ -152,27 +156,15 @@ fn process_chunk(
     acc: &mut ToolCallAccumulator,
     think_filter: &mut ThinkTagFilter,
 ) {
-    let chunk: serde_json::Value = match serde_json::from_str(data) {
-        Ok(v) => v,
-        Err(_) => return,
-    };
-    if let Some(choice) = chunk["choices"].as_array().and_then(|a| a.first()) {
-        let delta = &choice["delta"];
-        if let Some(thinking) = delta["reasoning_content"]
-            .as_str()
-            .or_else(|| delta["reasoning"].as_str())
-        {
-            if !thinking.is_empty() {
-                result.thinking.push_str(thinking);
+    for chunk in stream_chunk::parse(data) {
+        match chunk {
+            ParsedChunk::Thinking(thinking) => {
+                result.thinking.push_str(&thinking);
                 *token_count += 1;
-                let _ = on_event.send(StreamEvent::Thinking {
-                    content: thinking.to_string(),
-                });
+                let _ = on_event.send(StreamEvent::Thinking { content: thinking });
             }
-        }
-        if let Some(content) = delta["content"].as_str() {
-            if !content.is_empty() {
-                for filtered in think_filter.feed(content) {
+            ParsedChunk::Content(content) => {
+                for filtered in think_filter.feed(&content) {
                     match filtered {
                         FilteredChunk::Thinking(t) => {
                             result.thinking.push_str(&t);
@@ -194,20 +186,15 @@ fn process_chunk(
                     }
                 }
             }
+            ParsedChunk::ToolCalls(tool_calls) => acc.ingest(&tool_calls),
+            ParsedChunk::Usage {
+                completion_tokens,
+                prompt_tokens,
+            } => {
+                result.eval_count = completion_tokens;
+                result.prompt_tokens = prompt_tokens;
+            }
         }
-        if let Some(tcs) = delta["tool_calls"].as_array() {
-            acc.ingest(tcs);
-        }
-    }
-    if let Some(usage) = chunk["usage"].as_object() {
-        result.eval_count = usage
-            .get("completion_tokens")
-            .and_then(|v| v.as_u64())
-            .unwrap_or(0) as u32;
-        result.prompt_tokens = usage
-            .get("prompt_tokens")
-            .and_then(|v| v.as_u64())
-            .unwrap_or(0) as u32;
     }
 }
 pub use super::stream_silent::collect_chat_silent;

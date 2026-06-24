@@ -44,6 +44,7 @@ pub fn build_assistant_message(result: &StreamResult) -> ChatMessage {
                 .enumerate()
                 .map(|(i, (name, args))| ToolCallOllama {
                     id: result.tool_call_ids.get(i).cloned(),
+                    extra_content: result.tool_call_extra_content.get(i).cloned().flatten(),
                     function: ToolCallFunction {
                         name: name.clone(),
                         arguments: args.clone(),
