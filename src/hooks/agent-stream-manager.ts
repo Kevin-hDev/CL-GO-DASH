@@ -2,33 +2,41 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import i18n from "@/i18n";
 import {
-  applyStreamEvent, createManagedStreamState, toChatState,
+  applyStreamEvent,
+  createManagedStreamState,
   finishPartialStream,
-  type ChatState, type ManagedStreamState, type PermissionRequestState,
 } from "./agent-chat-stream-callbacks";
 import {
   MAX_EVENTS_PER_SESSION,
-  enforceSessionLimit, scheduleCleanup, clearCleanup, trimSubscribers,
+  scheduleCleanup, clearCleanup, trimSubscribers,
   type StreamRecord,
 } from "./agent-stream-cleanup";
+import {
+  flushFrameNotify,
+  scheduleFrameNotify,
+  shouldDeferStreamEvent,
+} from "./agent-stream-notify";
+import {
+  getOrCreateRecord,
+  getRecord,
+  persistAssistant,
+  records,
+  snapshot,
+  touchSession,
+  type StreamSnapshot,
+} from "./agent-stream-records";
 import { showToast } from "@/lib/toast-emitter";
 import type { AgentMessage, StreamEvent } from "@/types/agent";
 import { webToolErrorToastMessage } from "./web-tool-error-toast";
+
+export type { StreamSnapshot } from "./agent-stream-records";
 
 const EVENT_NAME = "agent-stream-event";
 
 interface StreamEnvelope { sessionId: string; event: StreamEvent }
 
-export interface StreamSnapshot extends ChatState {
-  pendingPermissions: PermissionRequestState[];
-  completed: boolean;
-  error?: string;
-  isConnectionError?: boolean;
-}
-
 type Subscriber = (snapshot: StreamSnapshot) => void;
 
-const records = new Map<string, StreamRecord>();
 let listenPromise: Promise<UnlistenFn> | null = null;
 
 export const agentStreamManager = { startSession, stopSession, failSession,
@@ -53,37 +61,37 @@ async function startSession(sessionId: string, messages: AgentMessage[], tokenCo
   record.started = true;
   record.isGateway = false; // session UI explicite — le frontend gère la persistance
   touchSession(sessionId, record);
-  notify(record);
+  flushFrameNotify(record, notify);
 }
 
 function stopSession(sessionId: string) {
-  const record = records.get(sessionId);
+  const record = getRecord(sessionId);
   if (!record) return;
   const result = finishPartialStream(record.state);
   record.state = result.state;
-  notify(record);
+  flushFrameNotify(record, notify);
   if (result.assistantMessage && !record.state.persisted && !record.isGateway) {
-    persistAssistant(sessionId, record, result.assistantMessage, 0);
+    persistAssistant(sessionId, record, result.assistantMessage, 0, notify);
   }
 }
 
 function failSession(sessionId: string) {
-  const record = records.get(sessionId);
+  const record = getRecord(sessionId);
   if (!record) return;
   record.state = { ...record.state, isStreaming: false, completed: true,
     error: i18n.t("errors.streamStartFailed"), updatedAt: Date.now() };
-  notify(record);
+  flushFrameNotify(record, notify);
   scheduleCleanup(sessionId, record, records);
 }
 
 function getSnapshot(sessionId: string): StreamSnapshot | null {
-  const record = records.get(sessionId);
+  const record = getRecord(sessionId);
   if (!record?.started) return null;
   return snapshot(record.state);
 }
 
 function isStreaming(sessionId: string): boolean {
-  return records.get(sessionId)?.state.isStreaming ?? false;
+  return getRecord(sessionId)?.state.isStreaming ?? false;
 }
 
 function subscribe(sessionId: string, subscriber: Subscriber): () => void {
@@ -115,7 +123,7 @@ function handleStreamEvent(sessionId: string, event: StreamEvent) {
   }
 
   if (event.event === "subagentSpawned" || event.event === "subagentCompleted") {
-    notify(record);
+    flushFrameNotify(record, notify);
     return;
   }
 
@@ -128,7 +136,7 @@ function handleStreamEvent(sessionId: string, event: StreamEvent) {
       persisted: false,
       completed: false,
     };
-    notify(record);
+    flushFrameNotify(record, notify);
     return;
   }
 
@@ -159,7 +167,7 @@ function handleStreamEvent(sessionId: string, event: StreamEvent) {
         tokenCount: session.accumulated_tokens,
         persisted: true,
       };
-      notify(record);
+      flushFrameNotify(record, notify);
     }).catch(() => console.warn("session reload after compression failed"));
     return;
   }
@@ -167,12 +175,16 @@ function handleStreamEvent(sessionId: string, event: StreamEvent) {
   const result = applyStreamEvent(record.state, event);
   record.state = result.state;
   touchSession(sessionId, record);
-  notify(record);
+  if (shouldDeferStreamEvent(event)) {
+    scheduleFrameNotify(record, notify);
+  } else {
+    flushFrameNotify(record, notify);
+  }
 
   // Pour les sessions gateway, le backend persiste déjà — skip persistAssistant.
   // Pour les sessions UI normales, persistAssistant comme avant.
   if (result.assistantMessage && !record.state.persisted && !record.isGateway) {
-    persistAssistant(sessionId, record, result.assistantMessage, result.assistantTokens ?? 0);
+    persistAssistant(sessionId, record, result.assistantMessage, result.assistantTokens ?? 0, notify);
   }
 
   if (record.state.completed && record.subscribers.size === 0) {
@@ -180,54 +192,8 @@ function handleStreamEvent(sessionId: string, event: StreamEvent) {
   }
 }
 
-function persistAssistant(
-  sessionId: string, record: StreamRecord, message: AgentMessage, tokens: number,
-) {
-  record.state = { ...record.state, persisted: true };
-  invoke("add_messages_to_session", {
-    id: sessionId,
-    messages: [message],
-    tokens,
-  }).catch(() => {
-    console.warn("persist failed for session", sessionId.slice(0, 8));
-    record.state = { ...record.state, persisted: false };
-    notify(record);
-  });
-}
-
-function getOrCreateRecord(sessionId: string): StreamRecord {
-  let record = records.get(sessionId);
-  if (record) return record;
-  record = {
-    state: { ...createManagedStreamState([], 0), isStreaming: false },
-    history: [],
-    subscribers: new Map(),
-    nextSubscriberId: 1,
-    cleanupTimer: null,
-    started: false,
-    isGateway: false,
-  };
-  records.set(sessionId, record);
-  enforceSessionLimit(records);
-  return record;
-}
-
 function notify(record: StreamRecord) {
   if (!record.started) return;
   const value = snapshot(record.state);
   for (const subscriber of record.subscribers.values()) (subscriber as Subscriber)(value);
-}
-
-function snapshot(state: ManagedStreamState): StreamSnapshot {
-  return {
-    ...toChatState(state), pendingPermissions: [...state.pendingPermissions],
-    completed: state.completed, error: state.error,
-    isConnectionError: state.isConnectionError,
-  };
-}
-
-function touchSession(sessionId: string, record: StreamRecord) {
-  records.delete(sessionId);
-  records.set(sessionId, record);
-  enforceSessionLimit(records);
 }

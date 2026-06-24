@@ -9,6 +9,7 @@
 - **Linux installation** — switched Linux installs and app updates to Debian packages
 - **Vision support** — improved image handling and capability detection across local and cloud providers
 - **Thinking support** — normalized provider reasoning output so it stays in the dedicated Thinking section
+- **Streaming display** — batched live token and thinking updates per animation frame for smoother chat rendering
 
 ### Maintenance
 

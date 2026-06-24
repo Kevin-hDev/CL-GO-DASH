@@ -12,6 +12,7 @@ export interface StreamRecord {
   subscribers: Map<number, (snapshot: unknown) => void>;
   nextSubscriberId: number;
   cleanupTimer: ReturnType<typeof setTimeout> | null;
+  notifyHandle: { cancel: () => void } | null;
   started: boolean;
   /** true si la session a été initiée par le gateway (pas de startSession() appelé depuis l'UI).
    *  Dans ce cas le backend persiste déjà les messages — le frontend ne doit pas appeler persistAssistant. */
@@ -23,6 +24,7 @@ export function enforceSessionLimit(records: Map<string, StreamRecord>) {
     if (records.size <= MAX_SESSIONS) return;
     if (record.state.isStreaming || record.subscribers.size > 0) continue;
     clearCleanup(record);
+    clearScheduledNotify(record);
     records.delete(sessionId);
   }
 }
@@ -35,6 +37,7 @@ export function scheduleCleanup(
   clearCleanup(record);
   record.cleanupTimer = setTimeout(() => {
     if (record.subscribers.size === 0 && !record.state.isStreaming) {
+      clearScheduledNotify(record);
       records.delete(sessionId);
     }
   }, CLEANUP_DELAY_MS);
@@ -43,6 +46,11 @@ export function scheduleCleanup(
 export function clearCleanup(record: StreamRecord) {
   if (record.cleanupTimer) clearTimeout(record.cleanupTimer);
   record.cleanupTimer = null;
+}
+
+export function clearScheduledNotify(record: StreamRecord) {
+  record.notifyHandle?.cancel();
+  record.notifyHandle = null;
 }
 
 export function trimSubscribers(record: StreamRecord) {
