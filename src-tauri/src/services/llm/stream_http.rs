@@ -57,7 +57,8 @@ pub async fn post_chat_request(cfg: &RequestConfig<'_>) -> Result<reqwest::Respo
         cfg.reasoning_mode,
     );
     if !cfg.tools.is_empty() {
-        payload["tools"] = serde_json::Value::Array(cfg.tools.to_vec());
+        let tools = super::tool_schema::tools_for_provider(cfg.provider_id, cfg.model, cfg.tools);
+        payload["tools"] = serde_json::Value::Array(tools);
         payload["tool_choice"] = "auto".into();
         if cfg.provider_id == "zai" {
             payload["tool_stream"] = true.into();

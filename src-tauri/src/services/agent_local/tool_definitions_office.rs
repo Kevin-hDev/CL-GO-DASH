@@ -77,9 +77,9 @@ pub fn office_tool_definitions() -> Vec<Value> {
                                 "cell": {"type": "string"},
                                 "row": {"type": "integer"},
                                 "col": {"type": "integer"},
-                                "value": {},
+                                "value": {"type": "string", "description": "Cell value. Pass numbers or booleans as text if needed."},
                                 "formula": {"type": "string"},
-                                "values": {"type": "array"},
+                                "values": {"type": "array", "items": {"type": "string"}},
                                 "name": {"type": "string"},
                                 "width": {"type": "number"}
                             },
@@ -117,7 +117,7 @@ pub fn office_tool_definitions() -> Vec<Value> {
                                 "bold": {"type": "boolean", "description": "For paragraph only"},
                                 "italic": {"type": "boolean", "description": "For paragraph only"},
                                 "headers": {"type": "array", "items": {"type": "string"}, "description": "For table only — column headers"},
-                                "rows": {"type": "array", "description": "For table only — array of arrays"},
+                                "rows": {"type": "array", "items": {"type": "array", "items": {"type": "string"}}, "description": "For table only — array of arrays"},
                                 "items": {"type": "array", "items": {"type": "string"}, "description": "For list only"},
                                 "ordered": {"type": "boolean", "description": "For list only (true=numbered, false=bullets)"}
                             },
@@ -144,7 +144,19 @@ pub fn office_tool_definitions() -> Vec<Value> {
                     "operations": {
                         "type": "array",
                         "description": "Optional. Operations: resize ({type,width,height,mode:'fit'|'fill'|'exact'}), crop ({type,x,y,width,height}), quality ({type,value:1-100}). Omit for simple format conversion.",
-                        "items": {"type": "object"}
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "type": {"type": "string", "enum": ["resize", "crop", "quality"]},
+                                "width": {"type": "integer"},
+                                "height": {"type": "integer"},
+                                "mode": {"type": "string", "enum": ["fit", "fill", "exact"]},
+                                "x": {"type": "integer"},
+                                "y": {"type": "integer"},
+                                "value": {"type": "integer"}
+                            },
+                            "required": ["type"]
+                        }
                     }
                 },
                 "required": ["input_path", "output_path"]

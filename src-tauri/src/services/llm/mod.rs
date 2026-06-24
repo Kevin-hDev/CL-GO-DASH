@@ -28,6 +28,7 @@ mod stream_sse;
 mod stream_tools;
 mod timeouts;
 pub mod tool_capable;
+mod tool_schema;
 pub mod types;
 pub mod vision;
 

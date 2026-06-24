@@ -29,7 +29,7 @@ pub fn supports_tools(provider_id: &str, model_id: &str) -> bool {
             let has_gemini = model.contains("gemini");
             let is_pro = model.contains("pro");
             let is_flash_full = model.contains("flash") && !model.contains("flash-lite");
-            has_gemini && (is_pro || is_flash_full)
+            is_gemma4_vision_model(&model) || (has_gemini && (is_pro || is_flash_full))
         }
         "mistral" => {
             model.starts_with("mistral-large")
@@ -133,6 +133,8 @@ mod tests {
         assert!(supports_tools("google", "gemini-3.5-flash"));
         assert!(supports_tools("google", "gemini-3.1-pro"));
         assert!(supports_tools("google", "gemini-2.5-flash"));
+        assert!(supports_tools("google", "gemma-4-31b-it"));
+        assert!(supports_tools("google", "gemma-4-26b-a4b-it"));
         assert!(!supports_tools("google", "gemini-2.5-flash-lite"));
         assert!(!supports_tools("google", "text-embedding-004"));
     }
