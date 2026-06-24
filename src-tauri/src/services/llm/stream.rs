@@ -5,7 +5,7 @@ use super::{
 };
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::types_ollama::{ChatMessage, StreamEvent, StreamResult};
-use crate::services::llm::stream_convert;
+use crate::services::llm::vision;
 use crate::services::stream_utils::{compute_tps, FilteredChunk, ThinkTagFilter};
 use eventsource_stream::Eventsource;
 use futures_util::StreamExt;
@@ -62,7 +62,11 @@ pub async fn stream_chat_no_done(
         Err(RequestError::RetryWithoutImages(msg)) => {
             eprintln!("[llm stream] retry sans images: {msg}");
             let mut msgs_clean = messages.to_vec();
-            stream_convert::strip_images(&mut msgs_clean);
+            if vision::strip_images(&mut msgs_clean) > 0 {
+                let _ = on_event.send(StreamEvent::Notice {
+                    message_key: vision::NOTICE_UNSUPPORTED_MODEL.to_string(),
+                });
+            }
             let cfg2 = RequestConfig {
                 provider_id,
                 model,

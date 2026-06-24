@@ -93,6 +93,14 @@ describe("events neutres", () => {
     });
     expect(s.currentContent).toBe("contenu existant");
   });
+
+  it("notice ne modifie pas l'état observable", () => {
+    const state = makeState({ currentContent: "contenu existant" });
+    const { state: s } = applyStreamEvent(state, {
+      event: "notice", data: { messageKey: "vision.unsupportedModel" },
+    });
+    expect(s.currentContent).toBe("contenu existant");
+  });
 });
 
 describe("finishPartialStream", () => {

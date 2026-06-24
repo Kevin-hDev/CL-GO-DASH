@@ -212,6 +212,7 @@ export type StreamEvent =
   | { event: "permissionRequest"; data: { id: string; toolName: string; arguments: Record<string, unknown> } }
   | { event: "done"; data: { evalCount: number; evalDurationNs: number; finalTps: number; promptTokens: number; contextTokens: number } }
   | { event: "error"; data: { message: string } }
+  | { event: "notice"; data: { messageKey: string } }
   | { event: "compressing"; data: { status: string } }
   | { event: "compressionComplete"; data: Record<string, never> }
   | { event: "sessionSnapshot"; data: { messages: AgentMessage[]; tokenCount: number } }

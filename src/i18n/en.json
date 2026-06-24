@@ -809,6 +809,10 @@
     "noConnectors": "No connectors",
     "pluginsEmpty": "Coming soon"
   },
+  "vision": {
+    "unsupportedModel": "Vision is not supported by this model",
+    "imageSkipped": "Some images were not sent"
+  },
   "subagents": {
     "backgroundCount_one": "{{count}} agent in background",
     "backgroundCount_other": "{{count}} agents in background",

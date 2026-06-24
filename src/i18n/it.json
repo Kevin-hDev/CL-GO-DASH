@@ -815,6 +815,10 @@
       "errorGeneric": "Connessione non riuscita. Riprova."
     }
   },
+  "vision": {
+    "unsupportedModel": "Questo modello non supporta la visione",
+    "imageSkipped": "Alcune immagini non sono state inviate"
+  },
   "forecast": {
     "title": "Previsione",
     "noAnalysis": "Nessuna analisi in corso",

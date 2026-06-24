@@ -1,4 +1,5 @@
 use crate::services::agent_local::types_ollama::ChatMessage;
+use crate::services::llm::vision;
 
 pub fn convert_messages(messages: &[ChatMessage]) -> (String, Vec<serde_json::Value>) {
     let mut instructions = String::new();
@@ -45,9 +46,31 @@ pub fn convert_messages(messages: &[ChatMessage]) -> (String, Vec<serde_json::Va
             }
         }
 
-        input.push(serde_json::json!({"role": msg.role, "content": msg.content}));
+        if msg.role == "user" {
+            input.push(user_message_to_responses(msg));
+        } else {
+            input.push(serde_json::json!({"role": msg.role, "content": msg.content}));
+        }
     }
     (instructions, input)
+}
+
+fn user_message_to_responses(msg: &ChatMessage) -> serde_json::Value {
+    let Some(images) = &msg.images else {
+        return serde_json::json!({"role": "user", "content": msg.content});
+    };
+    if images.is_empty() {
+        return serde_json::json!({"role": "user", "content": msg.content});
+    }
+
+    let mut content = Vec::new();
+    if !msg.content.is_empty() {
+        content.push(serde_json::json!({"type": "input_text", "text": msg.content}));
+    }
+    for image in images {
+        content.push(vision::responses_image_part(image));
+    }
+    serde_json::json!({"role": "user", "content": content})
 }
 
 fn fix_array_schemas(v: &mut serde_json::Value) {
@@ -92,71 +115,5 @@ pub fn convert_tools_to_responses_api(tools: &[serde_json::Value]) -> Vec<serde_
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::services::agent_local::types_ollama::{ToolCallFunction, ToolCallOllama};
-
-    #[test]
-    fn convert_extracts_system_as_instructions() {
-        let msgs = vec![
-            ChatMessage {
-                role: "system".into(),
-                content: "Tu es un assistant.".into(),
-                ..Default::default()
-            },
-            ChatMessage {
-                role: "user".into(),
-                content: "Bonjour".into(),
-                ..Default::default()
-            },
-        ];
-        let (instructions, input) = convert_messages(&msgs);
-        assert_eq!(instructions, "Tu es un assistant.");
-        assert_eq!(input.len(), 1);
-        assert_eq!(input[0]["role"], "user");
-    }
-
-    #[test]
-    fn convert_handles_no_system() {
-        let msgs = vec![ChatMessage {
-            role: "user".into(),
-            content: "Hello".into(),
-            ..Default::default()
-        }];
-        let (instructions, input) = convert_messages(&msgs);
-        assert!(instructions.is_empty());
-        assert_eq!(input.len(), 1);
-    }
-
-    #[test]
-    fn convert_splits_tool_calls_into_separate_items() {
-        let msgs = vec![
-            ChatMessage {
-                role: "assistant".into(),
-                content: "Je vais lire le fichier.".into(),
-                tool_calls: Some(vec![ToolCallOllama {
-                    id: Some("call_1".into()),
-                    function: ToolCallFunction {
-                        name: "read_file".into(),
-                        arguments: serde_json::json!({"path": "/tmp/test.txt"}),
-                    },
-                }]),
-                ..Default::default()
-            },
-            ChatMessage {
-                role: "tool".into(),
-                content: "contenu du fichier".into(),
-                tool_call_id: Some("call_1".into()),
-                ..Default::default()
-            },
-        ];
-        let (_, input) = convert_messages(&msgs);
-        assert_eq!(input.len(), 3);
-        assert_eq!(input[0]["role"], "assistant");
-        assert_eq!(input[1]["type"], "function_call");
-        assert_eq!(input[1]["name"], "read_file");
-        assert_eq!(input[1]["call_id"], "call_1");
-        assert_eq!(input[2]["type"], "function_call_output");
-        assert_eq!(input[2]["call_id"], "call_1");
-    }
-}
+#[path = "convert_tests.rs"]
+mod tests;

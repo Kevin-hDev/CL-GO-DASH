@@ -4,6 +4,7 @@ use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::types_ollama::{
     ChatMessage, ChatRequest, StreamEvent, StreamResult,
 };
+use crate::services::llm::vision;
 use crate::services::stream_utils::ThinkTagFilter;
 use futures_util::StreamExt;
 use std::time::Duration;
@@ -111,6 +112,11 @@ async fn stream_chat_inner(
                 "images"
             };
             eprintln!("[ollama-stream] modèle sans {feature}, retry");
+            if feature == "images" {
+                let _ = on_event.send(StreamEvent::Notice {
+                    message_key: vision::NOTICE_UNSUPPORTED_MODEL.to_string(),
+                });
+            }
             return Box::pin(stream_chat_inner(
                 on_event, &retry_req, cancel, emit_done, tool_tx,
             ))

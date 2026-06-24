@@ -5,7 +5,7 @@ use crate::services::agent_local::chat_prompts::prepare_messages;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::tool_dispatcher;
 use crate::services::agent_local::tool_skill_loader;
-use crate::services::agent_local::types_ollama::ChatMessage;
+use crate::services::agent_local::types_ollama::{ChatMessage, StreamEvent};
 use crate::services::git_context::{self, GitSnapshot};
 use crate::services::llm;
 use crate::services::personality_injection;
@@ -49,7 +49,7 @@ async fn collect_git_snapshot(working_dir: &std::path::Path) -> GitSnapshot {
     .unwrap_or_default()
 }
 
-fn append_git_section(messages: &mut Vec<ChatMessage>, snap: &GitSnapshot) {
+fn append_git_section(messages: &mut [ChatMessage], snap: &GitSnapshot) {
     if let Some(section) = git_context::format_git_section(snap) {
         if let Some(first) = messages.first_mut().filter(|m| m.role == "system") {
             first.content.push_str(&format!("\n\n{section}"));
@@ -229,6 +229,12 @@ pub(crate) async fn run_stream_task(
             session_store::update_working_dir(&session_id, &working_dir.to_string_lossy()).await;
         let snap = collect_git_snapshot(&working_dir).await;
         let mut msgs = messages;
+        let image_report = crate::services::llm::vision::sanitize_messages(&mut msgs, true);
+        if image_report.invalid_removed > 0 {
+            let _ = on_event.send(StreamEvent::Notice {
+                message_key: crate::services::llm::vision::NOTICE_IMAGE_SKIPPED.to_string(),
+            });
+        }
         let agent_md_content = if is_chat || is_subagent {
             None
         } else {
@@ -314,6 +320,7 @@ pub(crate) async fn run_stream_task(
             .as_ref()
             .map(|c| c.supports_vision)
             .unwrap_or(false)
+            || provider == "codex-oauth"
             || tool_capable::supports_vision(&provider, &model);
 
         let final_tools = if is_chat {
@@ -333,8 +340,16 @@ pub(crate) async fn run_stream_task(
             session_store::update_working_dir(&session_id, &working_dir.to_string_lossy()).await;
         let snap = collect_git_snapshot(&working_dir).await;
         let mut msgs = messages;
-        if !model_supports_vision {
-            llm::stream_convert::strip_images(&mut msgs);
+        let image_report =
+            crate::services::llm::vision::sanitize_messages(&mut msgs, model_supports_vision);
+        if image_report.unsupported_removed > 0 {
+            let _ = on_event.send(StreamEvent::Notice {
+                message_key: crate::services::llm::vision::NOTICE_UNSUPPORTED_MODEL.to_string(),
+            });
+        } else if image_report.invalid_removed > 0 {
+            let _ = on_event.send(StreamEvent::Notice {
+                message_key: crate::services::llm::vision::NOTICE_IMAGE_SKIPPED.to_string(),
+            });
         }
         let agent_md_content = if is_chat || is_subagent {
             None

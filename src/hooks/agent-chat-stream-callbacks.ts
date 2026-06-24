@@ -76,6 +76,8 @@ export function applyStreamEvent(
       partial.state.isConnectionError = next.isConnectionError;
       return partial;
     }
+    case "notice":
+      break;
   }
   return { state: next };
 }

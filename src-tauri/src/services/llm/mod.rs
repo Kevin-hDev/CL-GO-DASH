@@ -29,6 +29,7 @@ mod stream_tools;
 mod timeouts;
 pub mod tool_capable;
 pub mod types;
+pub mod vision;
 
 pub(crate) fn sanitize_log_body(body: &str) -> String {
     let truncated = if body.len() > 200 {

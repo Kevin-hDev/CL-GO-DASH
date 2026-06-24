@@ -88,7 +88,9 @@ pub fn supports_vision(provider_id: &str, model_id: &str) -> bool {
         "google" => model.contains("gemini"),
         "mistral" => {
             model.starts_with("mistral-large")
-                || model.starts_with("mistral-small-3")
+                || model.starts_with("mistral-medium")
+                || model.starts_with("mistral-small")
+                || model.starts_with("ministral")
                 || model.starts_with("pixtral")
         }
         "cerebras" => false,
@@ -100,7 +102,7 @@ pub fn supports_vision(provider_id: &str, model_id: &str) -> bool {
                 || model.starts_with("o4")
                 || model.starts_with("o3")
         }
-        "deepseek" => model.contains("vl"),
+        "deepseek" => false,
         "xai" => super::providers::xai::supports_vision(&model),
         "moonshot" => super::providers::moonshot::supports_vision(&model),
         "zai" => super::providers::zai::supports_vision(&model),
@@ -170,6 +172,13 @@ mod tests {
         assert!(supports_tools("mistral", "devstral-small-latest"));
         assert!(supports_tools("mistral", "magistral-medium-latest"));
         assert!(supports_tools("mistral", "pixtral-large-latest"));
+    }
+
+    #[test]
+    fn vision_detection_updates() {
+        assert!(supports_vision("mistral", "mistral-medium-latest"));
+        assert!(supports_vision("mistral", "ministral-3-8b-2512"));
+        assert!(!supports_vision("deepseek", "deepseek-vl"));
     }
 
     #[test]

@@ -30,7 +30,9 @@ pub async fn list_llm_models(provider_id: String) -> Result<Vec<ModelInfo>, Stri
         match model_registry::lookup(&provider_id, &m.id).await {
             Some(caps) => {
                 m.supports_tools = m.supports_tools || caps.supports_tools;
-                m.supports_vision = caps.supports_vision;
+                m.supports_vision = m.supports_vision
+                    || caps.supports_vision
+                    || tool_capable::supports_vision(&provider_id, &m.id);
                 m.supports_thinking = m.supports_thinking
                     || caps.supports_thinking
                     || tool_capable::supports_thinking(&provider_id, &m.id);

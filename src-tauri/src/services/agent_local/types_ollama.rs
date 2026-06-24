@@ -174,6 +174,10 @@ pub enum StreamEvent {
         #[serde(default)]
         is_connection: bool,
     },
+    #[serde(rename_all = "camelCase")]
+    Notice {
+        message_key: String,
+    },
     Compressing {
         status: String,
     },

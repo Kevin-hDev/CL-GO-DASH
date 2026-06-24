@@ -1,4 +1,5 @@
 use crate::services::agent_local::types_ollama::ChatMessage;
+use crate::services::llm::vision;
 use serde_json::{json, Value};
 
 pub fn message_to_openai(msg: &ChatMessage, provider_id: &str) -> Value {
@@ -53,7 +54,7 @@ pub fn message_to_openai(msg: &ChatMessage, provider_id: &str) -> Value {
                 if !images.is_empty() {
                     let mut parts = vec![json!({"type": "text", "text": msg.content})];
                     for img in images {
-                        parts.push(build_image_part(img, provider_id));
+                        parts.push(vision::openai_image_part(img, provider_id));
                     }
                     return json!({ "role": "user", "content": parts });
                 }
@@ -66,36 +67,6 @@ pub fn message_to_openai(msg: &ChatMessage, provider_id: &str) -> Value {
     }
 }
 
-fn detect_mime(b64: &str) -> &'static str {
-    let prefix = &b64[..b64.len().min(16)];
-    if prefix.starts_with("/9j/") {
-        "image/jpeg"
-    } else if prefix.starts_with("iVBOR") {
-        "image/png"
-    } else if prefix.starts_with("R0lGO") {
-        "image/gif"
-    } else if prefix.starts_with("UklGR") {
-        "image/webp"
-    } else {
-        "image/png"
-    }
-}
-
-fn build_image_part(base64_data: &str, provider_id: &str) -> Value {
-    let mime = detect_mime(base64_data);
-    let data_url = format!("data:{mime};base64,{base64_data}");
-    match provider_id {
-        "mistral" => json!({
-            "type": "image_url",
-            "image_url": data_url,
-        }),
-        _ => json!({
-            "type": "image_url",
-            "image_url": { "url": data_url },
-        }),
-    }
-}
-
 pub fn messages_to_openai(messages: &[ChatMessage], provider_id: &str) -> Vec<Value> {
     messages
         .iter()
@@ -103,21 +74,6 @@ pub fn messages_to_openai(messages: &[ChatMessage], provider_id: &str) -> Vec<Va
         .collect()
 }
 
-pub fn strip_images(messages: &mut [ChatMessage]) {
-    for msg in messages.iter_mut() {
-        if msg.role == "user" {
-            if let Some(images) = &msg.images {
-                if !images.is_empty() {
-                    let count = images.len();
-                    let note = if count == 1 {
-                        "\n\n[1 image was attached but this model does not support vision]"
-                    } else {
-                        "\n\n[Images were attached but this model does not support vision]"
-                    };
-                    msg.content.push_str(note);
-                    msg.images = None;
-                }
-            }
-        }
-    }
-}
+#[cfg(test)]
+#[path = "stream_convert_tests.rs"]
+mod tests;

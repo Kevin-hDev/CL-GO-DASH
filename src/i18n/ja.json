@@ -815,6 +815,10 @@
       "errorGeneric": "接続に失敗しました。もう一度お試しください。"
     }
   },
+  "vision": {
+    "unsupportedModel": "このモデルはビジョンに対応していません",
+    "imageSkipped": "一部の画像は送信されませんでした"
+  },
   "forecast": {
     "title": "予測",
     "noAnalysis": "分析が進行中ではありません",

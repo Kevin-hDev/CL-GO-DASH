@@ -815,6 +815,10 @@
       "errorGeneric": "Verbindung fehlgeschlagen. Bitte erneut versuchen."
     }
   },
+  "vision": {
+    "unsupportedModel": "Dieses Modell unterstützt keine Vision",
+    "imageSkipped": "Einige Bilder wurden nicht gesendet"
+  },
   "forecast": {
     "title": "Prognose",
     "noAnalysis": "Keine laufende Analyse",

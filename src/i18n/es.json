@@ -815,6 +815,10 @@
       "errorGeneric": "La conexión falló. Inténtalo de nuevo."
     }
   },
+  "vision": {
+    "unsupportedModel": "Este modelo no admite visión",
+    "imageSkipped": "Algunas imágenes no se enviaron"
+  },
   "forecast": {
     "title": "Pronóstico",
     "noAnalysis": "Sin análisis en curso",

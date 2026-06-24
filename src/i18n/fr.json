@@ -809,6 +809,10 @@
     "noConnectors": "Aucun connecteur",
     "pluginsEmpty": "Bientôt disponible"
   },
+  "vision": {
+    "unsupportedModel": "Vision non prise en charge par ce modèle",
+    "imageSkipped": "Certaines images n'ont pas été envoyées"
+  },
   "subagents": {
     "backgroundCount_one": "{{count}} agent en arrière-plan",
     "backgroundCount_other": "{{count}} agents en arrière-plan",

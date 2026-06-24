@@ -49,7 +49,7 @@ pub fn codex_models() -> Vec<ModelInfo> {
             owned_by: Some("openai".to_string()),
             context_length: Some(*ctx),
             supports_tools: true,
-            supports_vision: false,
+            supports_vision: true,
             supports_thinking: true,
             reasoning_modes: Vec::new(),
             is_free: true,

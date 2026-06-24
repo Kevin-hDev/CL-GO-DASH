@@ -132,6 +132,11 @@ function handleStreamEvent(sessionId: string, event: StreamEvent) {
     return;
   }
 
+  if (event.event === "notice") {
+    showToast(i18n.t(event.data.messageKey), "info");
+    return;
+  }
+
   if (!record.state.isStreaming && event.event !== "done" && event.event !== "error") {
     record.state = { ...record.state, isStreaming: true, persisted: false, completed: false };
   }
