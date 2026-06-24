@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.9.2
+
+### Improvements
+
+- **First-launch onboarding** — added welcome, theme/language, and LLM provider setup steps
+- **API key setup** — added visibility toggles and clearer configured-provider states
+- **Linux installation** — switched Linux installs and app updates to Debian packages
+
+### Maintenance
+
+- Removed obsolete Tauri command wrappers
+
+---
+
 ## v0.9.1
 
 ### Fixes
