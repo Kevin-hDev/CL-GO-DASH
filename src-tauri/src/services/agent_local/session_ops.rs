@@ -16,19 +16,6 @@ pub async fn export_markdown(id: &str) -> Result<String, String> {
     Ok(md)
 }
 
-pub async fn truncate_at(session_id: &str, message_id: &str) -> Result<(), String> {
-    validate_session_id(session_id)?;
-    let lock = lock_session(session_id).await;
-    let _guard = lock.lock().await;
-    let mut session = get(session_id).await?;
-    if let Some(idx) = session.messages.iter().position(|m| m.id == message_id) {
-        session.messages.truncate(idx);
-        session.accumulated_tokens = session.messages.iter().map(|m| m.tokens).sum();
-        save(&session).await?;
-    }
-    Ok(())
-}
-
 pub async fn truncate_and_replace(
     session_id: &str,
     message_id: &str,

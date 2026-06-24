@@ -251,9 +251,7 @@ pub async fn delete(id: &str) -> Result<(), String> {
     Ok(())
 }
 
-pub use super::session_ops::{
-    clear_project_id, export_markdown, truncate_and_replace, truncate_at,
-};
+pub use super::session_ops::{clear_project_id, export_markdown, truncate_and_replace};
 
 #[path = "session_store_tests.rs"]
 #[cfg(test)]

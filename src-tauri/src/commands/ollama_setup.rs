@@ -127,11 +127,6 @@ pub async fn update_ollama_binary(
 }
 
 #[tauri::command]
-pub async fn start_ollama_sidecar(app: tauri::AppHandle) -> Result<bool, String> {
-    ollama_lifecycle::start_sidecar(&app)
-}
-
-#[tauri::command]
 pub async fn restart_ollama_sidecar(app: tauri::AppHandle) -> Result<bool, String> {
     ollama_lifecycle::stop_sidecar(&app);
     tokio::time::sleep(std::time::Duration::from_secs(1)).await;

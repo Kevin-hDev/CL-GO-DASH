@@ -97,11 +97,6 @@ pub async fn export_agent_session_markdown(id: String) -> Result<String, String>
 }
 
 #[tauri::command]
-pub async fn truncate_session_at(session_id: String, message_id: String) -> Result<(), String> {
-    session_store::truncate_at(&session_id, &message_id).await
-}
-
-#[tauri::command]
 pub async fn truncate_and_replace_at(
     session_id: String,
     message_id: String,

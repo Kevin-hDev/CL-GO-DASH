@@ -180,7 +180,6 @@ pub fn run() {
             commands::update_session_reasoning,
             commands::delete_agent_session,
             commands::export_agent_session_markdown,
-            commands::truncate_session_at,
             commands::truncate_and_replace_at,
             commands::get_tab_state,
             commands::save_tab_state,
@@ -195,7 +194,6 @@ pub fn run() {
             // Agent Local — Tools
             commands::list_skills,
             commands::load_skill,
-            commands::set_brave_api_key,
             // API Keys (multi-provider)
             commands::set_api_key,
             commands::delete_api_key,
@@ -270,7 +268,6 @@ pub fn run() {
             commands::download_ollama,
             commands::cancel_ollama_setup,
             commands::update_ollama_binary,
-            commands::start_ollama_sidecar,
             commands::restart_ollama_sidecar,
             commands::check_model_fits_vram,
             // Link preview
