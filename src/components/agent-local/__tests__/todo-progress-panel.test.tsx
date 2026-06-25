@@ -43,10 +43,10 @@ describe("TodoProgressPanel", () => {
       { content: "Tester", status: "pending" },
     ]);
 
-    const { getByText } = render(<TodoProgressPanel sessionId="s1" />);
+    const { getAllByText, getByText } = render(<TodoProgressPanel sessionId="s1" />);
 
     expect(getByText("1/3 tasks")).toBeTruthy();
-    expect(getByText("Implémente")).toBeTruthy();
+    expect(getAllByText("Implémente")).toHaveLength(2);
     expect(getByText("33%")).toBeTruthy();
   });
 

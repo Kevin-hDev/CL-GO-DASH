@@ -33,13 +33,15 @@ export function TodoProgressPanel({ sessionId }: TodoProgressPanelProps) {
         <span className="tdp-percent">{summary.percent}%</span>
         <ChevronDown className={`tdp-chevron${expanded ? " tdp-chevron-open" : ""}`} aria-hidden="true" />
       </button>
-      {expanded && (
-        <div className="tdp-list">
-          {todos.map((todo, index) => (
-            <TodoRow key={`${todo.status}-${index}-${todo.content}`} todo={todo} />
-          ))}
+      <div className={`tdp-accordion${expanded ? " tdp-open" : ""}`}>
+        <div className="tdp-accordion-inner">
+          <div className="tdp-list">
+            {todos.map((todo, index) => (
+              <TodoRow key={`${todo.status}-${index}-${todo.content}`} todo={todo} />
+            ))}
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

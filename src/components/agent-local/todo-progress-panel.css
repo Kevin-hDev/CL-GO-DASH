@@ -1,8 +1,19 @@
 .tdp-panel {
-  border: 1px solid var(--border-subtle);
+  margin-bottom: 6px;
+  border: 1px solid var(--edge);
   border-radius: var(--radius-md, 8px);
-  background: var(--surface-secondary);
+  background: var(--surface);
   overflow: hidden;
+}
+
+[data-theme="light"] .tdp-panel {
+  border-color: transparent;
+  background: rgba(215, 215, 220, 0.40);
+}
+
+[data-theme="dark"] .tdp-panel {
+  border-color: transparent;
+  background: var(--surface-glass);
 }
 
 .tdp-toggle {
@@ -57,15 +68,30 @@
 
 .tdp-chevron {
   color: var(--text-tertiary);
-  transition: transform 160ms ease;
+  transition: transform 300ms ease;
 }
 
 .tdp-chevron-open {
   transform: rotate(180deg);
 }
 
+.tdp-accordion {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 400ms ease;
+}
+
+.tdp-accordion.tdp-open {
+  grid-template-rows: 1fr;
+}
+
+.tdp-accordion-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+
 .tdp-list {
-  max-height: 190px;
+  max-height: 175px;
   overflow-y: auto;
   scrollbar-width: thin;
 }
