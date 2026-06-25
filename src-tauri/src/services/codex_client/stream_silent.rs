@@ -14,7 +14,7 @@ pub async fn collect_chat_silent(
     max_output_tokens: Option<u32>,
     cancel: CancellationToken,
 ) -> Result<StreamResult, String> {
-    let resp = if let Some(max) = max_output_tokens {
+    let resp = if max_output_tokens.is_some() {
         request::post_codex_stream_with_timeout(
             model,
             messages,
@@ -22,7 +22,6 @@ pub async fn collect_chat_silent(
             think,
             reasoning_mode,
             std::time::Duration::from_secs(CODEX_IDLE_TIMEOUT_SECS),
-            Some(max),
         )
         .await?
     } else {
@@ -32,6 +31,7 @@ pub async fn collect_chat_silent(
         resp,
         cancel,
         std::time::Duration::from_secs(CODEX_IDLE_TIMEOUT_SECS),
+        max_output_tokens,
     )
     .await
 }
@@ -53,16 +53,16 @@ pub async fn collect_chat_silent_for_compression(
         think,
         reasoning_mode,
         timeout,
-        max_output_tokens,
     )
     .await?;
-    consume_sse_silent(resp, cancel, timeout).await
+    consume_sse_silent(resp, cancel, timeout, max_output_tokens).await
 }
 
 async fn consume_sse_silent(
     resp: reqwest::Response,
     cancel: CancellationToken,
     idle_timeout: std::time::Duration,
+    max_output_tokens: Option<u32>,
 ) -> Result<StreamResult, String> {
     let mut sse = resp.bytes_stream().eventsource();
     let mut result = StreamResult::default();
@@ -97,6 +97,9 @@ async fn consume_sse_silent(
                 result
                     .content
                     .push_str(parsed["delta"].as_str().unwrap_or(""));
+                if output_is_over_local_limit(&result, max_output_tokens) {
+                    break;
+                }
             }
             "response.done" | "response.completed" => {
                 if let Some(usage) = parsed.pointer("/response/usage") {
@@ -111,4 +114,34 @@ async fn consume_sse_silent(
     }
 
     Ok(result)
+}
+
+fn output_is_over_local_limit(result: &StreamResult, max_output_tokens: Option<u32>) -> bool {
+    let Some(max) = max_output_tokens else {
+        return false;
+    };
+    result.content.chars().count() >= max as usize * 6
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn local_output_limit_is_optional() {
+        let result = StreamResult {
+            content: "x".repeat(100),
+            ..Default::default()
+        };
+        assert!(!output_is_over_local_limit(&result, None));
+    }
+
+    #[test]
+    fn local_output_limit_uses_safe_char_estimate() {
+        let result = StreamResult {
+            content: "x".repeat(60),
+            ..Default::default()
+        };
+        assert!(output_is_over_local_limit(&result, Some(10)));
+    }
 }

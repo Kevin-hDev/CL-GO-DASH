@@ -10,7 +10,6 @@ const REQUEST_TIMEOUT: Duration = Duration::from_secs(180);
 
 struct RequestOptions {
     timeout: Duration,
-    max_output_tokens: Option<u32>,
 }
 
 pub async fn post_codex_stream(
@@ -30,7 +29,6 @@ pub async fn post_codex_stream(
         reasoning_mode,
         RequestOptions {
             timeout: REQUEST_TIMEOUT,
-            max_output_tokens: None,
         },
     )
     .await
@@ -43,7 +41,6 @@ pub async fn post_codex_stream_with_timeout(
     think: bool,
     reasoning_mode: Option<&str>,
     timeout: Duration,
-    max_output_tokens: Option<u32>,
 ) -> Result<reqwest::Response, String> {
     let creds = token::ensure_valid().await?;
     send_request(
@@ -53,10 +50,7 @@ pub async fn post_codex_stream_with_timeout(
         tools,
         think,
         reasoning_mode,
-        RequestOptions {
-            timeout,
-            max_output_tokens,
-        },
+        RequestOptions { timeout },
     )
     .await
 }
@@ -94,7 +88,6 @@ async fn send_request(
         },
         reasoning,
         include,
-        max_output_tokens: options.max_output_tokens,
     };
     let url = format!("{CODEX_API_BASE}/responses");
     let body_json = serde_json::to_string(&body).map_err(|e| format!("json: {e}"))?;
