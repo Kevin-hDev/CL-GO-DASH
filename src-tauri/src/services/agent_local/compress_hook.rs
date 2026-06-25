@@ -20,11 +20,8 @@ pub async fn try_auto_compress(
         Ok(c) => c.advanced,
         Err(_) => return,
     };
-    let used = if last_context_tokens > 0 {
-        last_context_tokens as usize
-    } else {
-        token_estimate::estimate_tokens(messages)
-    };
+    let estimated = token_estimate::estimate_tokens(messages);
+    let used = context_used_for_compression(last_context_tokens, estimated);
     if !engine::should_auto_compress(
         config.compression_enabled,
         native_context,
@@ -80,6 +77,10 @@ pub async fn try_auto_compress(
     let _ = on_event.send(StreamEvent::CompressionComplete {});
 }
 
+fn context_used_for_compression(last_context_tokens: u32, estimated_tokens: usize) -> usize {
+    std::cmp::max(last_context_tokens as usize, estimated_tokens)
+}
+
 async fn save_compressed_session(
     session_id: &str,
     summary: &str,
@@ -116,7 +117,7 @@ async fn save_compressed_session(
     let mut session_messages = vec![summary_msg];
 
     if let Some(file_context) = file_context {
-        let context_tokens = token_estimate::estimate_tokens(&[file_context.clone()]) as u32;
+        let context_tokens = token_estimate::estimate_tokens(std::slice::from_ref(file_context)) as u32;
         session_messages.push(AgentMessage {
             id: uuid::Uuid::new_v4().to_string(),
             role: "assistant".to_string(),
@@ -134,7 +135,7 @@ async fn save_compressed_session(
     }
 
     if let Some(last) = last_assistant {
-        let last_tokens = token_estimate::estimate_tokens(&[last.clone()]) as u32;
+        let last_tokens = token_estimate::estimate_tokens(std::slice::from_ref(last)) as u32;
         session_messages.push(AgentMessage {
             id: uuid::Uuid::new_v4().to_string(),
             role: "assistant".to_string(),
@@ -155,5 +156,20 @@ async fn save_compressed_session(
         session.messages = session_messages;
         session.accumulated_tokens = session.messages.iter().map(|m| m.tokens).sum();
         let _ = session_store::save(&session).await;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::context_used_for_compression;
+
+    #[test]
+    fn uses_estimate_when_current_messages_are_larger() {
+        assert_eq!(context_used_for_compression(10_000, 12_000), 12_000);
+    }
+
+    #[test]
+    fn uses_provider_count_when_it_is_larger() {
+        assert_eq!(context_used_for_compression(15_000, 12_000), 15_000);
     }
 }

@@ -19,7 +19,7 @@ export interface ChatState {
   currentTools: ToolActivity[];
   isStreaming: boolean;
   tps: number;
-  tokenCount: number;
+  sessionTokenCount: number;
   lastRequestTokens: number;
   liveTokenCount: number;
   streamStartedAt: number | null;
@@ -43,7 +43,7 @@ export interface ManagedStreamState extends ChatState {
 export const EMPTY_CHAT_STATE: ChatState = {
   messages: [], completedSegments: [], currentContent: "",
   currentThinking: "", currentTools: [], isStreaming: false,
-  tps: 0, tokenCount: 0, lastRequestTokens: 0,
+  tps: 0, sessionTokenCount: 0, lastRequestTokens: 0,
   liveTokenCount: 0, streamStartedAt: null, segmentStartedAt: null,
   totalElapsedMs: 0,
 };
@@ -56,11 +56,11 @@ export interface StreamApplyResult {
 
 export function createManagedStreamState(
   messages: AgentMessage[],
-  tokenCount: number,
+  sessionTokenCount: number,
 ): ManagedStreamState {
   const now = Date.now();
   return {
-    ...EMPTY_CHAT_STATE, messages, tokenCount, isStreaming: true,
+    ...EMPTY_CHAT_STATE, messages, sessionTokenCount, isStreaming: true,
     streamStartedAt: now, segmentStartedAt: now,
     pendingPermissions: [], completed: false, persisted: false,
     updatedAt: now,
@@ -72,7 +72,7 @@ export function toChatState(state: ManagedStreamState): ChatState {
     messages: state.messages, completedSegments: state.completedSegments,
     currentContent: state.currentContent, currentThinking: state.currentThinking,
     currentTools: state.currentTools, isStreaming: state.isStreaming,
-    tps: state.tps, tokenCount: state.tokenCount,
+    tps: state.tps, sessionTokenCount: state.sessionTokenCount,
     lastRequestTokens: state.lastRequestTokens,
     liveTokenCount: state.liveTokenCount,
     streamStartedAt: state.streamStartedAt,

@@ -79,7 +79,7 @@ export function ChatView({
   );
   const subagents = useSubagents(isSubagent ? undefined : sessionId);
   const fileDrop = useFileDrop();
-  const context = useContextProgress(model, chat.tokenCount, provider);
+  const context = useContextProgress(model, chat.sessionTokenCount, provider);
   const [preview, setPreview] = useState<DroppedFile | null>(null);
   const proj = useSessionProject(sessionId, projects, onAddProject, chat.messages.length > 0);
   const git = useGitBranch(proj.selectedProject?.path, sessionId);

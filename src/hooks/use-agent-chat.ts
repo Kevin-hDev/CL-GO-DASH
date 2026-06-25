@@ -85,14 +85,14 @@ export function useAgentChat(
         setState((s) => ({
           ...s,
           messages: session.messages,
-          tokenCount: resolveSessionTokenCount(session),
+          sessionTokenCount: resolveSessionTokenCount(session),
         }));
         setSessionLoading(false);
       })
       .catch((e: unknown) => { console.warn("Session load:", e); setSessionLoading(false); });
 
     const stopGatewayListener = listenGatewaySessionUpdates(sessionId, sessionRef, (session) => {
-      setState((s) => ({ ...s, messages: session.messages, tokenCount: resolveSessionTokenCount(session) }));
+      setState((s) => ({ ...s, messages: session.messages, sessionTokenCount: resolveSessionTokenCount(session) }));
     });
     return () => {
       alive = false;
@@ -115,7 +115,7 @@ export function useAgentChat(
       provider,
       llmMsgs,
       reasoningModeRef.current !== "off" && !!reasoningModeRef.current,
-      { displayMessages: displayMsgs, baseTokenCount: baseTokenCountOverride ?? state.tokenCount },
+      { displayMessages: displayMsgs, baseTokenCount: baseTokenCountOverride ?? state.sessionTokenCount },
       workingDir,
       supportsTools,
       supportsThinking,
@@ -123,7 +123,7 @@ export function useAgentChat(
       reasoningModeRef.current,
       permissionMode,
     );
-  }, [model, provider, startStream, state.tokenCount, supportsTools, supportsThinking, supportsVision]);
+  }, [model, provider, startStream, state.sessionTokenCount, supportsTools, supportsThinking, supportsVision]);
 
   const sendMessage = useCallback(async (
     text: string,
@@ -157,15 +157,16 @@ export function useAgentChat(
   }, [sessionId, state.messages, doStream]);
 
   const syncTokenCount = useCallback(async (): Promise<number> => {
-    if (!sessionId) return state.tokenCount;
+    if (!sessionId) return state.sessionTokenCount;
     const session = await invoke<AgentSession>("get_agent_session", { id: sessionId }).catch(() => null);
     if (session) {
       sessionWorkingDirRef.current = session.working_dir || sessionWorkingDirRef.current;
-      setState((s) => ({ ...s, tokenCount: session.accumulated_tokens }));
-      return session.accumulated_tokens;
+      const sessionTokenCount = resolveSessionTokenCount(session);
+      setState((s) => ({ ...s, sessionTokenCount }));
+      return sessionTokenCount;
     }
-    return state.tokenCount;
-  }, [sessionId, state.tokenCount]);
+    return state.sessionTokenCount;
+  }, [sessionId, state.sessionTokenCount]);
 
   const reload = useCallback(async (messageId: string) => {
     if (!sessionId) return;

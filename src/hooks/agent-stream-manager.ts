@@ -25,6 +25,7 @@ import {
   touchSession,
   type StreamSnapshot,
 } from "./agent-stream-records";
+import { estimateAgentMessagesTokens } from "./agent-token-estimate";
 import { showToast } from "@/lib/toast-emitter";
 import type { AgentMessage, StreamEvent } from "@/types/agent";
 import { webToolErrorToastMessage } from "./web-tool-error-toast";
@@ -52,11 +53,11 @@ function ensureListener() {
   return listenPromise;
 }
 
-async function startSession(sessionId: string, messages: AgentMessage[], tokenCount: number) {
+async function startSession(sessionId: string, messages: AgentMessage[], sessionTokenCount: number) {
   await ensureListener();
   const record = getOrCreateRecord(sessionId);
   clearCleanup(record);
-  record.state = createManagedStreamState(messages, tokenCount);
+  record.state = createManagedStreamState(messages, sessionTokenCount);
   record.history = [];
   record.started = true;
   record.isGateway = false; // session UI explicite — le frontend gère la persistance
@@ -131,7 +132,7 @@ function handleStreamEvent(sessionId: string, event: StreamEvent) {
     record.state = {
       ...record.state,
       messages: event.data.messages,
-      tokenCount: event.data.tokenCount,
+      sessionTokenCount: estimateAgentMessagesTokens(event.data.messages),
       isStreaming: true,
       persisted: false,
       completed: false,
@@ -164,7 +165,7 @@ function handleStreamEvent(sessionId: string, event: StreamEvent) {
       record.state = {
         ...record.state,
         messages: session.messages,
-        tokenCount: session.accumulated_tokens,
+        sessionTokenCount: estimateAgentMessagesTokens(session.messages),
         persisted: true,
       };
       flushFrameNotify(record, notify);

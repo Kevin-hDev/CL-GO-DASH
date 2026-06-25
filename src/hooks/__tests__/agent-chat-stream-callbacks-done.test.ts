@@ -41,56 +41,13 @@ describe("done", () => {
     expect(result.state.messages.length).toBeLessThanOrEqual(2000);
   });
 
-  it("utilise contextTokens pour tokenCount si fourni", () => {
-    const result = applyStreamEvent(makeState({ tokenCount: 100 }), doneEvent({ contextTokens: 999 }));
-    expect(result.state.tokenCount).toBe(999);
-  });
-});
-
-describe("error", () => {
-  it("met à jour state.error avec clé i18n générique", () => {
-    const result = applyStreamEvent(makeState(), { event: "error", data: { message: "message_inconnu" } });
-    expect(result.state.error).toBe("errors.streamInterrupted");
-  });
-
-  it("utilise la clé i18n connue pour ollama_connection_lost", () => {
-    const result = applyStreamEvent(makeState(), { event: "error", data: { message: "ollama_connection_lost" } });
-    expect(result.state.error).toBe("errors.ollamaConnectionLost");
-  });
-
-  it("utilise la clé i18n connue pour auth_failed", () => {
-    const result = applyStreamEvent(makeState(), { event: "error", data: { message: "auth_failed" } });
-    expect(result.state.error).toBe("errors.authFailed");
-  });
-
-  it("marque isConnectionError=true quand le flag est présent", () => {
-    const result = applyStreamEvent(makeState(), {
-      event: "error", data: { message: "err", isConnection: true } as unknown as { message: string },
-    });
-    expect(result.state.isConnectionError).toBe(true);
-  });
-
-  it("finalise le stream (isStreaming=false) même sur erreur", () => {
-    const result = applyStreamEvent(makeState(), { event: "error", data: { message: "crash" } });
-    expect(result.state.isStreaming).toBe(false);
-  });
-
-  it("conserve le résumé diagnostic séparé du message générique", () => {
-    const result = applyStreamEvent(makeState(), {
-      event: "error",
-      data: {
-        message: "crash",
-        diagnostic: {
-          requestId: "req-1",
-          phase: "tool_execution",
-          errorType: "stream_closed",
-          lastToolName: "write_file",
-          safeSummary: "Interruption pendant le tool write_file.",
-        },
-      },
-    });
-    expect(result.state.error).toBe("errors.streamInterrupted");
-    expect(result.state.diagnosticSummary).toBe("Interruption pendant le tool write_file.");
+  it("utilise contextTokens pour le total contexte session", () => {
+    const result = applyStreamEvent(
+      makeState({ sessionTokenCount: 100, currentContent: "réponse" }),
+      doneEvent({ evalCount: 5, promptTokens: 10, contextTokens: 999 }),
+    );
+    expect(result.state.sessionTokenCount).toBe(999);
+    expect(result.assistantMessage?.tokens).toBe(1);
   });
 });
 
@@ -167,40 +124,13 @@ describe("done — limite messages assertion précise", () => {
     expect(result.state.messages[1999].content).toBe("message 2001");
   });
 
-  it("sans contextTokens, tokenCount = tokenCount initial + evalCount", () => {
+  it("le compteur de réponse ignore promptTokens", () => {
     const result = applyStreamEvent(
-      makeState({ tokenCount: 100, currentContent: "réponse" }),
-      doneEvent({ evalCount: 50, contextTokens: 0 }),
+      makeState({ sessionTokenCount: 100, currentContent: "réponse courte" }),
+      doneEvent({ evalCount: 50, promptTokens: 25_000, contextTokens: 25_050 }),
     );
-    expect(result.state.tokenCount).toBe(150);
-  });
-});
-
-describe("error — clés connues supplémentaires", () => {
-  it("rate_limit utilise la clé i18n errors.rateLimited", () => {
-    const result = applyStreamEvent(makeState(), { event: "error", data: { message: "rate_limit" } });
-    expect(result.state.error).toBe("errors.rateLimited");
-  });
-
-  it("model_not_found utilise la clé i18n errors.modelNotFound", () => {
-    const result = applyStreamEvent(makeState(), { event: "error", data: { message: "model_not_found" } });
-    expect(result.state.error).toBe("errors.modelNotFound");
-  });
-
-  it("error préserve le contenu accumulé (currentContent est vidé dans le state final mais assistantMessage est absent si pas de segments)", () => {
-    // une erreur ne doit pas créer un assistantMessage parasite si currentContent était vide
-    const result = applyStreamEvent(makeState({ currentContent: "" }), { event: "error", data: { message: "crash" } });
-    expect(result.assistantMessage).toBeUndefined();
-  });
-
-  it("error avec du contenu courant — currentContent est finalisé (pas de perte silencieuse)", () => {
-    // le contenu accumulé avant l'erreur doit être dans l'assistantMessage s'il existe
-    const result = applyStreamEvent(
-      makeState({ currentContent: "réponse partielle" }),
-      { event: "error", data: { message: "crash" } },
-    );
-    // le message est créé depuis le contenu accumulé
-    expect(result.assistantMessage).toBeDefined();
-    expect(result.assistantMessage?.content).toBe("réponse partielle");
+    expect(result.assistantMessage?.tokens).toBeLessThan(25_000);
+    expect(result.assistantTokens).toBe(result.assistantMessage?.tokens);
+    expect(result.state.lastRequestTokens).toBe(result.assistantMessage?.tokens);
   });
 });

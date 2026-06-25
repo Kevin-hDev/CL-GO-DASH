@@ -8,6 +8,7 @@ import {
   type ChatState, type ManagedStreamState, type StreamApplyResult,
   type PermissionRequestState,
 } from "./agent-chat-stream-types";
+import { estimateAgentMessagesTokens } from "./agent-token-estimate";
 
 export type { ChatState, ManagedStreamState, PermissionRequestState, StreamApplyResult };
 export { EMPTY_CHAT_STATE, createManagedStreamState, toChatState } from "./agent-chat-stream-types";
@@ -83,7 +84,7 @@ export function applyStreamEvent(
       next.error = errorKey ? i18n.t(errorKey) : i18n.t("errors.streamInterrupted");
       next.isConnectionError = (event.data as Record<string, unknown>).isConnection === true;
       next.diagnosticSummary = event.data.diagnostic?.safeSummary;
-      const partial = finalizeStream(next, 0, 0, next.tokenCount);
+      const partial = finalizeStream(next, 0, 0, 0);
       partial.state.error = next.error;
       partial.state.isConnectionError = next.isConnectionError;
       partial.state.diagnosticSummary = next.diagnosticSummary;
@@ -125,16 +126,15 @@ function addPermission(
 }
 
 export function finishPartialStream(state: ManagedStreamState): StreamApplyResult {
-  return finalizeStream(state, 0, 0, state.tps);
+  return finalizeStream(state, 0, state.tps, 0);
 }
 
 function finishStream(state: ManagedStreamState, event: Extract<StreamEvent, { event: "done" }>) {
-  const contextTokens = event.data.contextTokens || 0;
   return finalizeStream(
     state,
     event.data.evalCount || 0,
     event.data.finalTps,
-    contextTokens,
+    event.data.contextTokens || 0,
   );
 }
 
@@ -144,32 +144,36 @@ function finalizeStream(
   const all = state.currentContent || state.currentThinking || state.currentTools.length > 0
     ? appendCurrentSegment(state) : state.completedSegments;
   const totalMs = state.streamStartedAt ? Date.now() - state.streamStartedAt : 0;
-  const resolvedTokenCount = contextTokens > 0
-    ? contextTokens
-    : state.tokenCount + outputTokens;
+  const built = all.length > 0 ? buildSegmentedMessage(all) : null;
+  const assistantMessage: AgentMessage | undefined = built ? {
+    id: crypto.randomUUID(), role: "assistant", content: built.content,
+    thinking: built.thinking, tool_activities: built.toolRecords,
+    segments: built.segments, files: [], timestamp: new Date().toISOString(),
+    tokens: 0,
+  } : undefined;
+  if (assistantMessage) {
+    const messageTokens = estimateAgentMessagesTokens([assistantMessage]);
+    assistantMessage.tokens = messageTokens > 0 ? messageTokens : outputTokens;
+  }
+  const allMessages = assistantMessage ? [...state.messages, assistantMessage] : [...state.messages];
+  if (allMessages.length > MAX_MESSAGES_PER_SESSION) {
+    allMessages.splice(0, allMessages.length - MAX_MESSAGES_PER_SESSION);
+  }
+  const visibleSessionTokens = estimateAgentMessagesTokens(allMessages);
+  const resolvedSessionTokenCount = Math.max(contextTokens, visibleSessionTokens);
   const next: ManagedStreamState = {
     ...state, completedSegments: [], currentContent: "", currentThinking: "",
     currentTools: [], isStreaming: false, tps,
-    tokenCount: resolvedTokenCount,
-    lastRequestTokens: outputTokens, liveTokenCount: 0,
+    sessionTokenCount: resolvedSessionTokenCount,
+    lastRequestTokens: assistantMessage?.tokens ?? outputTokens, liveTokenCount: 0,
     streamStartedAt: null, segmentStartedAt: null, totalElapsedMs: totalMs,
     pendingPermissions: [], interactiveChoice: undefined,
     completed: true, updatedAt: Date.now(),
   };
   if (all.length === 0) return { state: next };
-  const built = buildSegmentedMessage(all);
-  const assistantMessage: AgentMessage = {
-    id: crypto.randomUUID(), role: "assistant", content: built.content,
-    thinking: built.thinking, tool_activities: built.toolRecords,
-    segments: built.segments, files: [], timestamp: new Date().toISOString(),
-    tokens: outputTokens,
-  };
-  const allMessages = [...next.messages, assistantMessage];
-  if (allMessages.length > MAX_MESSAGES_PER_SESSION) {
-    allMessages.splice(0, allMessages.length - MAX_MESSAGES_PER_SESSION);
-  }
+  if (!assistantMessage) return { state: next };
   return {
     state: { ...next, messages: allMessages },
-    assistantMessage, assistantTokens: outputTokens,
+    assistantMessage, assistantTokens: assistantMessage.tokens ?? outputTokens,
   };
 }

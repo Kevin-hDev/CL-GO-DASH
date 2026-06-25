@@ -7,7 +7,7 @@ export function estimateAgentMessagesTokens(messages: AgentMessage[]): number {
 }
 
 export function resolveSessionTokenCount(session: AgentSession): number {
-  return Math.max(session.accumulated_tokens, estimateAgentMessagesTokens(session.messages));
+  return estimateAgentMessagesTokens(session.messages);
 }
 
 function estimateMessage(message: AgentMessage): number {
@@ -22,8 +22,11 @@ function estimateMessage(message: AgentMessage): number {
   if (message.tool_activities) {
     for (const activity of message.tool_activities) {
       chars += activity.summary.length;
+      chars += JSON.stringify(activity.args ?? {}).length;
       chars += activity.result?.length ?? 0;
       chars += activity.content?.length ?? 0;
+      chars += activity.old_text?.length ?? 0;
+      chars += activity.new_text?.length ?? 0;
     }
   }
   return Math.floor(chars / CHARS_PER_TOKEN);
