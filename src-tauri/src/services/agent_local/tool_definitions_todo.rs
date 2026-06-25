@@ -85,7 +85,14 @@ pub fn agent_diagnostics_definition() -> Value {
         "Read recent safe stream diagnostics for this session. Hidden from the user UI.",
         serde_json::json!({
             "type": "object",
-            "properties": {}
+            "properties": {
+                "limit": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 20,
+                    "description": "How many recent non-diagnostic tool calls to include. Defaults to 1."
+                }
+            }
         }),
     )
 }

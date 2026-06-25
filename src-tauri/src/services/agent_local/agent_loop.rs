@@ -111,7 +111,11 @@ pub async fn run_agent_loop(
         }
         for (name, args) in &result.tool_calls {
             super::tool_executor_diagnostics::detected(
-                &session_id, &request_id, name, args, &working_dir,
+                &session_id,
+                &request_id,
+                name,
+                args,
+                &working_dir,
             )
             .await;
         }
@@ -135,9 +139,13 @@ pub async fn run_agent_loop(
 
         if let Err(msg) = breaker.check(&result.tool_calls) {
             eager_handle.abort();
-            let diagnostic =
-                super::stream_diagnostics::record_failure(&session_id, Some(&request_id), &msg, false)
-                    .await;
+            let diagnostic = super::stream_diagnostics::record_failure(
+                &session_id,
+                Some(&request_id),
+                &msg,
+                false,
+            )
+            .await;
             let _ = on_event.send(StreamEvent::Error {
                 message: msg,
                 is_connection: false,

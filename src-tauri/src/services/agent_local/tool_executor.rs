@@ -90,14 +90,23 @@ async fn run_sequential(
     write_guard: &mut WriteGuard,
 ) {
     for (idx, (name, args)) in tool_calls.iter().enumerate() {
-        let arg_summary =
-            super::tool_executor_diagnostics::started(session_id, request_id, name, args, working_dir)
-                .await;
+        let arg_summary = super::tool_executor_diagnostics::started(
+            session_id,
+            request_id,
+            name,
+            args,
+            working_dir,
+        )
+        .await;
         match run_pre_hooks(name, args) {
             PreHookDecision::Deny(msg) => {
                 let tr = tool_dispatcher::enrich_error(ToolResult::err(msg), name);
                 super::tool_executor_diagnostics::completed(
-                    session_id, request_id, name, arg_summary, true,
+                    session_id,
+                    request_id,
+                    name,
+                    arg_summary,
+                    true,
                 )
                 .await;
                 push_tool_result(on_event, messages, name, tr, idx);
@@ -110,7 +119,11 @@ async fn run_sequential(
         if let Err(msg) = check_write_guard(name, effective_args, working_dir, write_guard) {
             let tr = tool_dispatcher::enrich_error(ToolResult::err(msg), name);
             super::tool_executor_diagnostics::completed(
-                session_id, request_id, name, arg_summary, true,
+                session_id,
+                request_id,
+                name,
+                arg_summary,
+                true,
             )
             .await;
             push_tool_result(on_event, messages, name, tr, idx);

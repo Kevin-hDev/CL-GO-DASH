@@ -74,7 +74,10 @@ fn safe_path(value: &str, working_dir: &Path) -> String {
 }
 
 fn safe_relative_path(path: &Path) -> String {
-    if path.components().any(|c| matches!(c, std::path::Component::ParentDir)) {
+    if path
+        .components()
+        .any(|c| matches!(c, std::path::Component::ParentDir))
+    {
         return "[unsafe path]".to_string();
     }
     safe_text(&path.to_string_lossy())

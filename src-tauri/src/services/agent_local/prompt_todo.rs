@@ -8,4 +8,5 @@ If you must switch to diagnosis or another task while a checklist is unfinished,
 Use todo_history to inspect saved checklists and todo_resume to continue one when relevant.
 Use todo_delete when a saved checklist is no longer relevant and should not be resumed.
 Use agent_diagnostics after a stream interruption or unexplained failure before creating a new diagnostic checklist.
+Pass agent_diagnostics limit when you need several recent tool calls; omit it for the latest relevant tool only.
 Do not use todo_write for simple questions, single-step edits, or casual conversation.";

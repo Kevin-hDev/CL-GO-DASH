@@ -12,9 +12,14 @@ pub async fn execute_tracked_write(
     args: &Value,
     ctx: WriteExecContext<'_>,
 ) -> ToolResult {
-    let summary =
-        super::tool_executor_diagnostics::started(ctx.session_id, ctx.request_id, name, args, ctx.working_dir)
-            .await;
+    let summary = super::tool_executor_diagnostics::started(
+        ctx.session_id,
+        ctx.request_id,
+        name,
+        args,
+        ctx.working_dir,
+    )
+    .await;
     let result = execute_write(
         on_event,
         name,

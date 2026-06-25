@@ -175,14 +175,13 @@ pub async fn synthesize_subagent_results(
         };
         if let Err(message) = result {
             if is_current && message != "Annulé" {
-                let diagnostic =
-                    crate::services::agent_local::stream_diagnostics::record_failure(
-                        &parent_session_id,
-                        Some(&request_id),
-                        &message,
-                        false,
-                    )
-                    .await;
+                let diagnostic = crate::services::agent_local::stream_diagnostics::record_failure(
+                    &parent_session_id,
+                    Some(&request_id),
+                    &message,
+                    false,
+                )
+                .await;
                 let _ = emitter.send(StreamEvent::Error {
                     message,
                     is_connection: false,

@@ -3,6 +3,7 @@ use serde_json::json;
 use uuid::Uuid;
 
 use super::stream_diagnostics_support as support;
+use super::stream_diagnostics_tools as diagnostic_tools;
 use super::types_diagnostics::{
     AgentDiagnosticRun, AgentDiagnosticTool, AgentErrorDiagnosticSummary,
 };
@@ -23,6 +24,7 @@ pub async fn start_request(session_id: &str, generation: u64) -> String {
             phase: "request_start".to_string(),
             error_type: None,
             last_tool: None,
+            recent_tools: vec![],
             active_todo: support::active_todo(session),
             safe_summary: Some("Requête agent démarrée.".to_string()),
             events: vec![support::event(
@@ -65,12 +67,18 @@ pub async fn record_tool(
         };
         run.phase = phase.to_string();
         run.severity = if is_error { "warning" } else { "info" }.to_string();
-        run.last_tool = Some(AgentDiagnosticTool {
+        let tool = AgentDiagnosticTool {
             name: support::clip(name),
             status: status.to_string(),
             args: args.clone(),
             is_error,
-        });
+        };
+        run.last_tool = Some(tool.clone());
+        run.recent_tools.push(tool);
+        support::trim(
+            &mut run.recent_tools,
+            diagnostic_tools::MAX_DIAGNOSTIC_TOOLS,
+        );
         run.active_todo = support::active_todo(session);
         run.safe_summary = Some(support::clip(&message));
         support::push_event(run, phase, &message, Some(name), None);
@@ -134,11 +142,16 @@ pub async fn record_failure(
     summary
 }
 
-pub async fn diagnostics_text(session_id: &str) -> Result<String, String> {
+pub async fn diagnostics_text(session_id: &str, limit: usize) -> Result<String, String> {
     super::session_store::validate_session_id(session_id)?;
     let session = super::session_store::get(session_id).await?;
+    let limit = diagnostic_tools::bounded_tool_limit(limit);
+    let recent_tools = diagnostic_tools::recent_relevant_tools(&session, limit);
     serde_json::to_string_pretty(&json!({
         "latest": session.diagnostic_runs.last(),
+        "current_tool": session.diagnostic_runs.last().and_then(|run| run.last_tool.as_ref()),
+        "last_relevant_tool": recent_tools.first(),
+        "recent_tools": recent_tools,
         "recent": session.diagnostic_runs.iter().rev().take(5).collect::<Vec<_>>(),
         "legacy_stream_failures": session.stream_failures.iter().rev().take(5).collect::<Vec<_>>(),
     }))

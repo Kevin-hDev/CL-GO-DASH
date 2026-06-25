@@ -16,6 +16,8 @@ pub struct AgentDiagnosticRun {
     pub error_type: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub last_tool: Option<AgentDiagnosticTool>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub recent_tools: Vec<AgentDiagnosticTool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub active_todo: Option<AgentDiagnosticTodo>,
     #[serde(default, skip_serializing_if = "Option::is_none")]

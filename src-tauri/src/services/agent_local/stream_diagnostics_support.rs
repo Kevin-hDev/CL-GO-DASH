@@ -1,6 +1,9 @@
 use chrono::Utc;
 
-use super::types_diagnostics::{AgentDiagnosticEvent, AgentDiagnosticRun, AgentDiagnosticTodo, AgentErrorDiagnosticSummary, AgentStreamFailure};
+use super::types_diagnostics::{
+    AgentDiagnosticEvent, AgentDiagnosticRun, AgentDiagnosticTodo, AgentErrorDiagnosticSummary,
+    AgentStreamFailure,
+};
 use super::types_session::AgentSession;
 use super::types_todo::AgentTodoStatus;
 
@@ -72,9 +75,15 @@ pub(crate) fn summary_from_run(run: &AgentDiagnosticRun) -> AgentErrorDiagnostic
     AgentErrorDiagnosticSummary {
         request_id: run.request_id.clone(),
         phase: run.phase.clone(),
-        error_type: run.error_type.clone().unwrap_or_else(|| "unknown".to_string()),
+        error_type: run
+            .error_type
+            .clone()
+            .unwrap_or_else(|| "unknown".to_string()),
         last_tool_name: run.last_tool.as_ref().map(|tool| tool.name.clone()),
-        safe_summary: run.safe_summary.clone().unwrap_or_else(|| "Flux interrompu.".to_string()),
+        safe_summary: run
+            .safe_summary
+            .clone()
+            .unwrap_or_else(|| "Flux interrompu.".to_string()),
     }
 }
 
@@ -86,7 +95,8 @@ pub(crate) fn push_event(
     error_type: Option<&str>,
 ) {
     run.updated_at = Utc::now();
-    run.events.push(event(phase, message, tool_name, error_type));
+    run.events
+        .push(event(phase, message, tool_name, error_type));
     trim(&mut run.events, MAX_DIAGNOSTIC_EVENTS);
 }
 
@@ -105,7 +115,11 @@ pub(crate) fn event(
     }
 }
 
-pub(crate) async fn update_run<F>(session_id: &str, request_id: &str, mut f: F) -> Result<(), String>
+pub(crate) async fn update_run<F>(
+    session_id: &str,
+    request_id: &str,
+    mut f: F,
+) -> Result<(), String>
 where
     F: FnMut(&mut AgentSession, &mut AgentDiagnosticRun),
 {
@@ -132,7 +146,10 @@ where
 }
 
 pub(crate) fn find_run(session: &AgentSession, request_id: &str) -> Option<usize> {
-    session.diagnostic_runs.iter().position(|run| run.request_id == request_id)
+    session
+        .diagnostic_runs
+        .iter()
+        .position(|run| run.request_id == request_id)
 }
 
 pub(crate) fn trim<T>(items: &mut Vec<T>, max: usize) {
@@ -159,9 +176,15 @@ pub(crate) fn clip(value: &str) -> String {
 
 fn safe_summary(run: &AgentDiagnosticRun, error_type: &str) -> String {
     if let Some(tool) = &run.last_tool {
-        return clip(&format!("Interruption pendant le tool {} ({error_type}).", tool.name));
+        return clip(&format!(
+            "Interruption pendant le tool {} ({error_type}).",
+            tool.name
+        ));
     }
-    clip(&format!("Interruption pendant {} ({error_type}).", run.phase))
+    clip(&format!(
+        "Interruption pendant {} ({error_type}).",
+        run.phase
+    ))
 }
 
 fn safe_code(message: &str) -> String {

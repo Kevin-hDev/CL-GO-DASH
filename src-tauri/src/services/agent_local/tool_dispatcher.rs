@@ -176,7 +176,12 @@ async fn dispatch_inner(
         "todo_resume" => super::tool_todo::execute_resume(args, session_id).await,
         "todo_delete" => super::tool_todo::execute_delete(args, session_id).await,
         "agent_diagnostics" => {
-            match super::stream_diagnostics::diagnostics_text(session_id).await {
+            let limit = args
+                .get("limit")
+                .and_then(|value| value.as_u64())
+                .and_then(|value| usize::try_from(value).ok())
+                .unwrap_or(super::stream_diagnostics_tools::DEFAULT_TOOL_LIMIT);
+            match super::stream_diagnostics::diagnostics_text(session_id, limit).await {
                 Ok(text) => ToolResult::ok(text),
                 Err(_) => ToolResult::err("Diagnostics indisponibles."),
             }

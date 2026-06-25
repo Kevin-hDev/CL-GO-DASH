@@ -7,7 +7,13 @@ use chrono::Utc;
 fn diagnostic_events_are_bounded() {
     let mut run = test_run();
     for i in 0..20 {
-        push_event(&mut run, "tool_execution", &format!("event {i}"), None, None);
+        push_event(
+            &mut run,
+            "tool_execution",
+            &format!("event {i}"),
+            None,
+            None,
+        );
     }
     assert_eq!(run.events.len(), 12);
     assert_eq!(run.events[0].message, "event 8");
@@ -46,6 +52,7 @@ fn test_run() -> AgentDiagnosticRun {
         phase: "request_start".to_string(),
         error_type: None,
         last_tool: None,
+        recent_tools: vec![],
         active_todo: None,
         safe_summary: None,
         events: vec![event("request_start", "start", None, None)],

@@ -113,7 +113,11 @@ pub async fn run_agent_loop(
         }
         for (name, args) in &result.tool_calls {
             crate::services::agent_local::tool_executor_diagnostics::detected(
-                &session_id, &request_id, name, args, &working_dir,
+                &session_id,
+                &request_id,
+                name,
+                args,
+                &working_dir,
             )
             .await;
         }

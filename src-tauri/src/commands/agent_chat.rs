@@ -74,14 +74,14 @@ pub async fn chat_stream(
     let stream_session = session_id.clone();
     let task_app = app.clone();
 
-	    tauri::async_runtime::spawn(async move {
-	        let emitter = AgentEventEmitter::new(task_app.clone(), stream_session.clone());
+    tauri::async_runtime::spawn(async move {
+        let emitter = AgentEventEmitter::new(task_app.clone(), stream_session.clone());
         let stream_request_id = request_id.clone();
-	        let result = run_stream_task(StreamTaskParams {
-	            on_event: emitter.clone(),
-	            session_id: stream_session.clone(),
-                request_id: stream_request_id.clone(),
-	            model,
+        let result = run_stream_task(StreamTaskParams {
+            on_event: emitter.clone(),
+            session_id: stream_session.clone(),
+            request_id: stream_request_id.clone(),
+            model,
             messages,
             tools,
             think,
@@ -104,7 +104,7 @@ pub async fn chat_stream(
             let state = task_app.state::<ActiveStreams>();
             let mut map = state.0.lock().await;
             match map.get(&stream_session) {
-	                Some((_, gen, _)) if *gen == generation => {
+                Some((_, gen, _)) if *gen == generation => {
                     map.remove(&stream_session);
                     true
                 }

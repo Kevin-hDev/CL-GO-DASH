@@ -28,7 +28,9 @@ pub fn is_read_only(name: &str) -> bool {
 }
 
 struct BatchEntry<'a> {
-    global_idx: usize, name: &'a str, effective_args: &'a Value,
+    global_idx: usize,
+    name: &'a str,
+    effective_args: &'a Value,
 }
 
 pub async fn run_with_parallel_reads(

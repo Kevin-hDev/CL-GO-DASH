@@ -66,6 +66,8 @@ mod tests {
     fn hidden_todo_tools_validate_args() {
         assert!(validate("todo_history", &json!({})).is_ok());
         assert!(validate("agent_diagnostics", &json!({})).is_ok());
+        assert!(validate("agent_diagnostics", &json!({"limit": 10})).is_ok());
+        assert!(validate("agent_diagnostics", &json!({"limit": "10"})).is_err());
         assert!(validate("todo_pause", &json!({"reason": "debug"})).is_ok());
         assert!(validate("todo_resume", &json!({"id": "abc"})).is_ok());
         assert!(validate("todo_resume", &json!({})).is_err());
