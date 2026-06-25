@@ -1,5 +1,6 @@
 use super::*;
 use crate::services::agent_local::types_session::AgentSession;
+use crate::services::agent_local::types_todo::{AgentTodoRunStatus, AgentTodoStatus};
 use chrono::Utc;
 use serde_json::json;
 
@@ -64,6 +65,72 @@ fn apply_todos_updates_session() {
 
     assert_eq!(session.todos.len(), 1);
     assert_eq!(session.todos[0].content, "Valider");
+    assert_eq!(session.todo_runs.len(), 1);
+    assert!(session.active_todo_run_id.is_some());
+}
+
+#[test]
+fn apply_todos_updates_existing_run_for_same_tasks() {
+    let mut session = test_session();
+    let first = parse_todos(&json!({
+        "todos": [{"content": "Lire", "status": "pending"}]
+    }))
+    .unwrap();
+    apply_todos_to_session(&mut session, first);
+    let run_id = session.active_todo_run_id.clone();
+    let second = parse_todos(&json!({
+        "todos": [{"content": "Lire", "status": "completed"}]
+    }))
+    .unwrap();
+
+    apply_todos_to_session(&mut session, second);
+
+    assert_eq!(session.todo_runs.len(), 1);
+    assert_eq!(session.active_todo_run_id, run_id);
+    assert_eq!(session.todo_runs[0].status, AgentTodoRunStatus::Completed);
+}
+
+#[test]
+fn apply_todos_auto_pauses_different_unfinished_run() {
+    let mut session = test_session();
+    let first = parse_todos(&json!({
+        "todos": [{"content": "Implémenter feature", "status": "in_progress"}]
+    }))
+    .unwrap();
+    apply_todos_to_session(&mut session, first);
+    let first_id = session.active_todo_run_id.clone().unwrap();
+    let second = parse_todos(&json!({
+        "todos": [{"content": "Diagnostiquer erreur", "status": "in_progress"}]
+    }))
+    .unwrap();
+
+    apply_todos_to_session(&mut session, second);
+
+    assert_eq!(session.todo_runs.len(), 2);
+    assert_ne!(
+        session.active_todo_run_id.as_deref(),
+        Some(first_id.as_str())
+    );
+    assert_eq!(session.todo_runs[0].status, AgentTodoRunStatus::Paused);
+}
+
+#[test]
+fn pause_and_resume_restore_active_todos() {
+    let mut session = test_session();
+    let todos = parse_todos(&json!({
+        "todos": [{"content": "Reprendre", "status": "pending"}]
+    }))
+    .unwrap();
+    apply_todos_to_session(&mut session, todos);
+    let run_id = session.active_todo_run_id.clone().unwrap();
+
+    super::super::tool_todo_state::pause_active(&mut session, Some("Attente".into()));
+    assert!(session.todos.is_empty());
+    assert_eq!(session.todo_runs[0].status, AgentTodoRunStatus::Paused);
+
+    let active = super::super::tool_todo_state::resume_run(&mut session, &run_id).unwrap();
+    assert_eq!(active[0].content, "Reprendre");
+    assert_eq!(session.active_todo_run_id.as_deref(), Some(run_id.as_str()));
 }
 
 fn test_session() -> AgentSession {
@@ -78,6 +145,9 @@ fn test_session() -> AgentSession {
         accumulated_tokens: 0,
         messages: vec![],
         todos: vec![],
+        todo_runs: vec![],
+        active_todo_run_id: None,
+        stream_failures: vec![],
         is_heartbeat: false,
         is_gateway: false,
         gateway_channel_key: None,

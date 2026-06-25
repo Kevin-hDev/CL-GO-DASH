@@ -1,11 +1,12 @@
 use serde_json::Value;
 
-use super::types_todo::{AgentTodoItem, AgentTodoStatus};
+use super::tool_todo_parse::{optional_text, MAX_TODO_REASON_CHARS};
+use super::types_todo::AgentTodoItem;
 use crate::services::agent_local::types_ollama::StreamEvent;
 use crate::services::agent_local::types_tools::ToolResult;
 
-const MAX_TODOS: usize = 50;
-const MAX_TODO_TEXT_CHARS: usize = 180;
+pub(crate) use super::tool_todo_parse::parse_todos;
+pub(crate) use super::tool_todo_state::apply_todos_to_session;
 
 pub async fn execute(args: &Value, session_id: &str) -> ToolResult {
     let todos = match parse_todos(args) {
@@ -13,66 +14,80 @@ pub async fn execute(args: &Value, session_id: &str) -> ToolResult {
         Err(err) => return ToolResult::err(err),
     };
 
-    match save_todos(session_id, todos.clone()).await {
-        Ok(()) => {
-            emit_update(session_id, todos);
+    match save_with(session_id, |session| {
+        apply_todos_to_session(session, todos.clone());
+        session.todos.clone()
+    })
+    .await
+    {
+        Ok(active) => {
+            emit_update(session_id, active);
             ToolResult::ok("Todo list mise à jour.")
         }
         Err(_) => ToolResult::err("Mise à jour de la todo impossible."),
     }
 }
 
-pub(crate) fn parse_todos(args: &Value) -> Result<Vec<AgentTodoItem>, String> {
-    let raw = args
-        .get("todos")
-        .and_then(Value::as_array)
-        .ok_or_else(|| "paramètre 'todos' requis".to_string())?;
-    if raw.len() > MAX_TODOS {
-        return Err(format!("maximum {MAX_TODOS} tâches"));
+pub async fn execute_history(_args: &Value, session_id: &str) -> ToolResult {
+    match load_session(session_id).await {
+        Ok(session) => ToolResult::ok(super::tool_todo_summary::history_summary(&session)),
+        Err(_) => ToolResult::err("Historique todo indisponible."),
     }
+}
 
-    let mut in_progress = 0usize;
-    let mut todos = Vec::with_capacity(raw.len());
-    for item in raw {
-        let obj = item
-            .as_object()
-            .ok_or_else(|| "chaque tâche doit être un objet JSON".to_string())?;
-        let content = clean_text(obj.get("content"), "content")?;
-        let active_form = match obj.get("active_form").or_else(|| obj.get("activeForm")) {
-            Some(Value::Null) | None => None,
-            value => Some(clean_text(value, "active_form")?),
-        };
-        let status = parse_status(obj.get("status"))?;
-        if status == AgentTodoStatus::InProgress {
-            in_progress += 1;
+pub async fn execute_pause(args: &Value, session_id: &str) -> ToolResult {
+    let reason = match optional_text(args, "reason", MAX_TODO_REASON_CHARS) {
+        Ok(value) => value,
+        Err(err) => return ToolResult::err(err),
+    };
+    match save_with(session_id, |session| {
+        super::tool_todo_state::pause_active(session, reason.clone());
+        session.todos.clone()
+    })
+    .await
+    {
+        Ok(active) => {
+            emit_update(session_id, active);
+            ToolResult::ok("Todo list mise de côté.")
         }
-        todos.push(AgentTodoItem {
-            content,
-            active_form,
-            status,
-        });
+        Err(_) => ToolResult::err("Mise en pause de la todo impossible."),
     }
-
-    if in_progress > 1 {
-        return Err("une seule tâche peut être en cours".to_string());
-    }
-    Ok(todos)
 }
 
-pub(crate) fn apply_todos_to_session(
-    session: &mut super::types_session::AgentSession,
-    todos: Vec<AgentTodoItem>,
+pub async fn execute_resume(args: &Value, session_id: &str) -> ToolResult {
+    let Some(run_id) = args.get("id").and_then(Value::as_str) else {
+        return ToolResult::err("paramètre 'id' requis");
+    };
+    match save_with(session_id, |session| {
+        super::tool_todo_state::resume_run(session, run_id)
+    })
+    .await
+    {
+        Ok(Ok(active)) => {
+            emit_update(session_id, active);
+            ToolResult::ok("Todo list reprise.")
+        }
+        Ok(Err(err)) => ToolResult::err(err),
+        Err(_) => ToolResult::err("Reprise de la todo impossible."),
+    }
+}
+
+pub async fn append_session_reminder(
+    messages: &mut [super::types_ollama::ChatMessage],
+    session_id: &str,
 ) {
-    session.todos = todos;
-}
-
-async fn save_todos(session_id: &str, todos: Vec<AgentTodoItem>) -> Result<(), String> {
-    super::session_store::validate_session_id(session_id)?;
-    let lock = super::session_store::lock_session(session_id).await;
-    let _guard = lock.lock().await;
-    let mut session = super::session_store::get(session_id).await?;
-    apply_todos_to_session(&mut session, todos);
-    super::session_store::save(&session).await
+    let Ok(session) = load_session(session_id).await else {
+        return;
+    };
+    let Some(reminder) = super::tool_todo_summary::reminder(&session) else {
+        return;
+    };
+    if let Some(system) = messages
+        .first_mut()
+        .filter(|message| message.role == "system")
+    {
+        system.content.push_str(&reminder);
+    }
 }
 
 pub(crate) fn emit_update(session_id: &str, todos: Vec<AgentTodoItem>) {
@@ -83,30 +98,22 @@ pub(crate) fn emit_update(session_id: &str, todos: Vec<AgentTodoItem>) {
     let _ = emitter.send(StreamEvent::TodoUpdated { todos });
 }
 
-fn clean_text(value: Option<&Value>, name: &str) -> Result<String, String> {
-    let text = value
-        .and_then(Value::as_str)
-        .ok_or_else(|| format!("'{name}' doit être une chaîne"))?
-        .trim();
-    if text.is_empty() {
-        return Err(format!("'{name}' ne peut pas être vide"));
-    }
-    if text.chars().count() > MAX_TODO_TEXT_CHARS {
-        return Err(format!("'{name}' est trop long"));
-    }
-    if text.chars().any(|ch| ch.is_control()) {
-        return Err(format!("'{name}' contient des caractères invalides"));
-    }
-    Ok(text.to_string())
+async fn save_with<T>(
+    session_id: &str,
+    edit: impl FnOnce(&mut super::types_session::AgentSession) -> T,
+) -> Result<T, String> {
+    super::session_store::validate_session_id(session_id)?;
+    let lock = super::session_store::lock_session(session_id).await;
+    let _guard = lock.lock().await;
+    let mut session = super::session_store::get(session_id).await?;
+    let result = edit(&mut session);
+    super::session_store::save(&session).await?;
+    Ok(result)
 }
 
-fn parse_status(value: Option<&Value>) -> Result<AgentTodoStatus, String> {
-    match value.and_then(Value::as_str) {
-        Some("pending") => Ok(AgentTodoStatus::Pending),
-        Some("in_progress") => Ok(AgentTodoStatus::InProgress),
-        Some("completed") => Ok(AgentTodoStatus::Completed),
-        _ => Err("'status' doit valoir pending, in_progress ou completed".to_string()),
-    }
+async fn load_session(session_id: &str) -> Result<super::types_session::AgentSession, String> {
+    super::session_store::validate_session_id(session_id)?;
+    super::session_store::get(session_id).await
 }
 
 #[cfg(test)]

@@ -91,6 +91,13 @@ describe("ToolBubble", () => {
     expect(container.innerHTML).toBe("");
   });
 
+  it("retourne null si seuls les tools internes sont présents", () => {
+    const { container } = render(
+      <ToolBubble tools={[{ name: "todo_resume", args: { id: "abc" }, result: "ok" }]} />,
+    );
+    expect(container.innerHTML).toBe("");
+  });
+
   it("affiche un résumé compact pour bash et masque la commande brute", () => {
     const { container } = render(
       <ToolBubble tools={[{ name: "bash", args: { command: "echo hello" } }]} />,

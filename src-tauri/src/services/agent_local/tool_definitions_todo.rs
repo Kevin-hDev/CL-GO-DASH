@@ -26,3 +26,52 @@ pub fn todo_write_definition() -> Value {
         }),
     )
 }
+
+pub fn todo_history_definition() -> Value {
+    super::tool_definitions::tool_def(
+        "todo_history",
+        "List saved todo checklists for this session. Hidden from the user UI.",
+        serde_json::json!({
+            "type": "object",
+            "properties": {}
+        }),
+    )
+}
+
+pub fn todo_pause_definition() -> Value {
+    super::tool_definitions::tool_def(
+        "todo_pause",
+        "Pause the active checklist before switching to another task or diagnostic.",
+        serde_json::json!({
+            "type": "object",
+            "properties": {
+                "reason": {"type": "string", "description": "Short reason for pausing"}
+            }
+        }),
+    )
+}
+
+pub fn todo_resume_definition() -> Value {
+    super::tool_definitions::tool_def(
+        "todo_resume",
+        "Resume a saved checklist by id and make it visible as the active todo.",
+        serde_json::json!({
+            "type": "object",
+            "properties": {
+                "id": {"type": "string", "description": "Todo checklist id from todo_history"}
+            },
+            "required": ["id"]
+        }),
+    )
+}
+
+pub fn agent_diagnostics_definition() -> Value {
+    super::tool_definitions::tool_def(
+        "agent_diagnostics",
+        "Read recent safe stream diagnostics for this session. Hidden from the user UI.",
+        serde_json::json!({
+            "type": "object",
+            "properties": {}
+        }),
+    )
+}

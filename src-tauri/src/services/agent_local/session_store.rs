@@ -78,6 +78,9 @@ pub async fn create_full(
         accumulated_tokens: 0,
         messages: Vec::new(),
         todos: Vec::new(),
+        todo_runs: Vec::new(),
+        active_todo_run_id: None,
+        stream_failures: Vec::new(),
         is_heartbeat,
         is_gateway: false,
         gateway_channel_key: None,
@@ -156,6 +159,7 @@ pub async fn add_messages(
         && super::types_todo::all_completed(&session.todos);
     if should_clear_todos {
         session.todos.clear();
+        session.active_todo_run_id = None;
     }
     if tokens > 0 {
         if let Some(last) = new_messages.last_mut() {

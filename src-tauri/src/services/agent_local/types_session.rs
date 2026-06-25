@@ -1,7 +1,8 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-use super::types_todo::AgentTodoItem;
+use super::types_diagnostics::AgentStreamFailure;
+use super::types_todo::{AgentTodoItem, AgentTodoRun};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AgentSession {
@@ -19,6 +20,12 @@ pub struct AgentSession {
     pub messages: Vec<AgentMessage>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub todos: Vec<AgentTodoItem>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub todo_runs: Vec<AgentTodoRun>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub active_todo_run_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub stream_failures: Vec<AgentStreamFailure>,
     #[serde(default)]
     pub is_heartbeat: bool,
     #[serde(default)]

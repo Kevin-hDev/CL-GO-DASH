@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import type { ToolActivity } from "@/hooks/agent-chat-utils";
 import type { ToolActivityRecord } from "@/types/agent";
 import { groupToolActivities } from "@/lib/tool-activity-summary";
+import { isHiddenAgentTool } from "@/lib/hidden-agent-tools";
 import { ToolActivityGroupList } from "./tool-activity-group";
 import {
   savedToolToRenderable,
@@ -55,5 +56,5 @@ export function SavedToolBubble({
 }
 
 function isVisibleTool(tool: { name: string }) {
-  return tool.name !== "todo_write";
+  return !isHiddenAgentTool(tool.name);
 }

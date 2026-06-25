@@ -63,6 +63,15 @@ mod tests {
     }
 
     #[test]
+    fn hidden_todo_tools_validate_args() {
+        assert!(validate("todo_history", &json!({})).is_ok());
+        assert!(validate("agent_diagnostics", &json!({})).is_ok());
+        assert!(validate("todo_pause", &json!({"reason": "debug"})).is_ok());
+        assert!(validate("todo_resume", &json!({"id": "abc"})).is_ok());
+        assert!(validate("todo_resume", &json!({})).is_err());
+    }
+
+    #[test]
     fn unknown_tool_passes_through() {
         let args = json!({"anything": true});
         assert!(validate("unknown_future_tool", &args).is_ok());

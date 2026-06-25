@@ -46,6 +46,9 @@ pub mod session_ops;
 pub mod session_store;
 pub mod session_subagents;
 pub mod skill_parser;
+pub mod stream_diagnostics;
+#[cfg(test)]
+pub mod stream_diagnostics_tests;
 pub mod stream_events;
 pub mod subagent_orchestrator;
 pub mod subagent_prompts;
@@ -125,6 +128,9 @@ pub mod tool_spreadsheet_write_new;
 #[cfg(test)]
 pub mod tool_spreadsheet_write_tests;
 pub mod tool_todo;
+pub mod tool_todo_parse;
+pub mod tool_todo_state;
+pub mod tool_todo_summary;
 pub mod tool_validate;
 #[cfg(test)]
 pub mod tool_validate_tests;
@@ -137,6 +143,7 @@ pub mod tool_web_fetch_tests;
 pub mod tool_web_search;
 pub mod translation_cache;
 pub mod translator;
+pub mod types_diagnostics;
 pub mod types_ollama;
 pub mod types_session;
 pub mod types_stream;

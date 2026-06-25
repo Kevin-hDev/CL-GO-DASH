@@ -2,6 +2,7 @@ import { buildSegmentedMessage } from "./agent-chat-utils";
 import type { StreamSegment, ToolActivity } from "./agent-chat-utils";
 import type { AgentMessage, StreamEvent } from "@/types/agent";
 import i18n from "@/i18n";
+import { isHiddenAgentTool } from "@/lib/hidden-agent-tools";
 import {
   MAX_PENDING_PERMISSIONS, MAX_MESSAGES_PER_SESSION, KNOWN_ERROR_KEYS,
   type ChatState, type ManagedStreamState, type StreamApplyResult,
@@ -35,13 +36,13 @@ export function applyStreamEvent(
       break;
     case "toolCall":
       ensureTimers();
-      if (event.data.name === "todo_write") break;
+      if (isHiddenAgentTool(event.data.name)) break;
       next.currentTools = [...next.currentTools, {
         name: event.data.name, args: event.data.arguments,
       }];
       break;
     case "toolResult":
-      if (event.data.name === "todo_write") {
+      if (isHiddenAgentTool(event.data.name)) {
         next.pendingPermissions = [];
         break;
       }

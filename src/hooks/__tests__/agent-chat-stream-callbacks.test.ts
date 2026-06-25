@@ -61,6 +61,13 @@ describe("toolCall", () => {
     });
     expect(s.currentTools).toHaveLength(0);
   });
+  it("ignore les tools internes de todo et diagnostic", () => {
+    let s = makeState();
+    for (const name of ["todo_history", "todo_pause", "todo_resume", "agent_diagnostics"]) {
+      s = applyStreamEvent(s, { event: "toolCall", data: { name, arguments: {} } }).state;
+    }
+    expect(s.currentTools).toHaveLength(0);
+  });
 });
 
 describe("toolResult", () => {
@@ -93,6 +100,14 @@ describe("toolResult", () => {
       event: "toolResult",
       data: { name: "todo_write", toolCallIndex: 0, content: "ok", isError: false },
     }).state;
+    expect(s.currentTools[0].result).toBeUndefined();
+  });
+  it("ignore les résultats des tools internes", () => {
+    const state = makeState({ currentTools: [{ name: "bash", args: {} }] });
+    const { state: s } = applyStreamEvent(state, {
+      event: "toolResult",
+      data: { name: "todo_history", toolCallIndex: 0, content: "hidden", isError: false },
+    });
     expect(s.currentTools[0].result).toBeUndefined();
   });
 });

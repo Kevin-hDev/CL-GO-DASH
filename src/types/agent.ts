@@ -86,6 +86,9 @@ export interface AgentSession {
   accumulated_tokens: number;
   messages: AgentMessage[];
   todos?: AgentTodoItem[];
+  todo_runs?: AgentTodoRun[];
+  active_todo_run_id?: string;
+  stream_failures?: AgentStreamFailure[];
   project_id?: string;
   working_dir?: string;
   parent_session_id?: string;
@@ -97,11 +100,30 @@ export interface AgentSession {
 }
 
 export type AgentTodoStatus = "pending" | "in_progress" | "completed";
+export type AgentTodoRunStatus = "active" | "paused" | "completed" | "abandoned";
 
 export interface AgentTodoItem {
   content: string;
   active_form?: string;
   status: AgentTodoStatus;
+}
+
+export interface AgentTodoRun {
+  id: string;
+  title: string;
+  status: AgentTodoRunStatus;
+  todos: AgentTodoItem[];
+  created_at: string;
+  updated_at: string;
+  paused_reason?: string;
+}
+
+export interface AgentStreamFailure {
+  code: string;
+  occurred_at: string;
+  is_connection: boolean;
+  active_todo_run_id?: string;
+  active_todo_title?: string;
 }
 
 export interface AgentSessionMeta {
@@ -221,7 +243,7 @@ export type StreamEvent =
   | { event: "turnEnd"; data: Record<string, never> }
   | { event: "permissionRequest"; data: { id: string; toolName: string; arguments: Record<string, unknown> } }
   | { event: "done"; data: { evalCount: number; evalDurationNs: number; finalTps: number; promptTokens: number; contextTokens: number } }
-  | { event: "error"; data: { message: string } }
+  | { event: "error"; data: { message: string; isConnection?: boolean } }
   | { event: "notice"; data: { messageKey: string } }
   | { event: "compressing"; data: { status: string } }
   | { event: "compressionComplete"; data: Record<string, never> }

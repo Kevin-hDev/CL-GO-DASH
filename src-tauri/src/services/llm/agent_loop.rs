@@ -105,6 +105,12 @@ pub async fn run_agent_loop(
         }
 
         if turn == MAX_TURNS - 1 {
+            crate::services::agent_local::stream_diagnostics::record_failure(
+                &session_id,
+                "Limite de tours atteinte",
+                false,
+            )
+            .await;
             let _ = on_event.send(StreamEvent::Error {
                 message: "Limite de tours atteinte".to_string(),
                 is_connection: false,
@@ -113,6 +119,12 @@ pub async fn run_agent_loop(
         }
 
         if let Err(msg) = breaker.check(&result.tool_calls) {
+            crate::services::agent_local::stream_diagnostics::record_failure(
+                &session_id,
+                &msg,
+                false,
+            )
+            .await;
             let _ = on_event.send(StreamEvent::Error {
                 message: msg,
                 is_connection: false,

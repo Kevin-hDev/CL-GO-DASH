@@ -39,6 +39,11 @@ pub(crate) async fn run(
             response_language: &response_language,
         },
     );
+    crate::services::agent_local::tool_todo::append_session_reminder(
+        &mut messages,
+        &params.session_id,
+    )
+    .await;
 
     agent_loop::run_agent_loop(
         &params.on_event,

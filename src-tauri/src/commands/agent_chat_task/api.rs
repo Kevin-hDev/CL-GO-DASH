@@ -44,6 +44,11 @@ pub(crate) async fn run(
             response_language: &response_language,
         },
     );
+    crate::services::agent_local::tool_todo::append_session_reminder(
+        &mut messages,
+        &params.session_id,
+    )
+    .await;
     super::gemma4_thinking_guard::apply(&mut messages, &params.provider, &params.model);
 
     let effective_reasoning_mode = crate::services::reasoning::normalize_for_model(

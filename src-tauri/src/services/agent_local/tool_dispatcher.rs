@@ -171,6 +171,15 @@ async fn dispatch_inner(
             }
         }
         "todo_write" => super::tool_todo::execute(args, session_id).await,
+        "todo_history" => super::tool_todo::execute_history(args, session_id).await,
+        "todo_pause" => super::tool_todo::execute_pause(args, session_id).await,
+        "todo_resume" => super::tool_todo::execute_resume(args, session_id).await,
+        "agent_diagnostics" => {
+            match super::stream_diagnostics::diagnostics_text(session_id).await {
+                Ok(text) => ToolResult::ok(text),
+                Err(_) => ToolResult::err("Diagnostics indisponibles."),
+            }
+        }
         "load_skill" => {
             let name = args["skill_name"].as_str().unwrap_or("");
             match tool_skill_loader::load_skill(name).await {

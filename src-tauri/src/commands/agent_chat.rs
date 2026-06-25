@@ -98,6 +98,12 @@ pub async fn chat_stream(
             // via stopSession(). Envoyer ce message tuerait un nouveau stream.
             if is_current && message != "Annulé" {
                 let is_conn = message == "ollama_connection_lost";
+                crate::services::agent_local::stream_diagnostics::record_failure(
+                    &stream_session,
+                    &message,
+                    is_conn,
+                )
+                .await;
                 let _ = emitter.send(StreamEvent::Error {
                     message,
                     is_connection: is_conn,
