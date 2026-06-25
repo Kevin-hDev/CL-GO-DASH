@@ -1,9 +1,9 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { invoke, Channel } from "@tauri-apps/api/core";
+import { invoke } from "@tauri-apps/api/core";
 import { Check } from "@/components/ui/icons";
 import { showToast } from "@/lib/toast-emitter";
-import type { PullProgress } from "@/types/agent";
+import { useModelDownloads } from "@/hooks/use-model-downloads";
 import "./ollama.css";
 
 interface ModelInstallButtonProps {
@@ -19,74 +19,54 @@ function isEscapeKey(e: KeyboardEvent): boolean {
   return e.code === "Escape";
 }
 
-export function ModelInstallButton({
-  fullName, isInstalled, hasUpdate, sizeGb,
-}: ModelInstallButtonProps) {
+export function ModelInstallButton(props: ModelInstallButtonProps) {
+  const { fullName, isInstalled, hasUpdate, sizeGb } = props;
   const { t } = useTranslation();
-  const [busy, setBusy] = useState(false);
-  const [status, setStatus] = useState("");
-  const [percent, setPercent] = useState(0);
-  const cancelledRef = useRef(false);
+  const { activeDownload, startDownload, cancelDownload } = useModelDownloads();
+  const ownDownload = activeDownload?.kind === "ollama" && activeDownload.modelId === fullName
+    ? activeDownload
+    : null;
+  const blocked = Boolean(activeDownload && !ownDownload);
 
   const handleInstall = useCallback(async () => {
     if (sizeGb && sizeGb > 0) {
       const sizeBytes = Math.round(sizeGb * 1_073_741_824);
       const fits = await invoke<boolean>("check_model_fits_vram", { sizeBytes }).catch(() => true);
-      if (!fits) {
-        showToast(t("ollama.vramWarning"), "info", 4000);
-      }
+      if (!fits) showToast(t("ollama.vramWarning"), "info", 4000);
     }
-
-    cancelledRef.current = false;
-    setBusy(true);
-    setStatus(t("ollama.starting"));
-    setPercent(0);
-
-    const channel = new Channel<PullProgress>();
-    channel.onmessage = (event: PullProgress) => {
-      setStatus(event.status);
-      if (event.total && event.completed) {
-        setPercent(Math.round((event.completed / event.total) * 100));
-      }
-    };
-
     try {
-      await invoke("pull_ollama_model", {
-        name: fullName,
+      await startDownload({
+        kind: "ollama",
+        modelId: fullName,
         isUpdate: isInstalled && hasUpdate,
-        onProgress: channel,
       });
-      setStatus("");
     } catch {
-      if (!cancelledRef.current) setStatus(t("ollama.pullError"));
-    } finally {
-      setBusy(false);
+      showToast(t("modelDownloads.errors.alreadyActive"), "info", 3000);
     }
-  }, [fullName, isInstalled, hasUpdate, sizeGb, t]);
+  }, [fullName, hasUpdate, isInstalled, sizeGb, startDownload, t]);
 
   const handleCancel = useCallback(async () => {
-    cancelledRef.current = true;
-    await invoke("cancel_pull_ollama_model").catch(() => {});
-  }, []);
+    if (ownDownload) await cancelDownload(ownDownload.id).catch(() => {});
+  }, [cancelDownload, ownDownload]);
 
   useEffect(() => {
-    if (!busy) return;
+    if (!ownDownload) return;
     const onEsc = (e: KeyboardEvent) => {
       if (isEscapeKey(e)) void handleCancel();
     };
     window.addEventListener("keydown", onEsc);
     return () => window.removeEventListener("keydown", onEsc);
-  }, [busy, handleCancel]);
+  }, [handleCancel, ownDownload]);
 
-  if (busy) {
+  if (ownDownload) {
     return (
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
           <div className="ollama-progress-bar">
-            <div className="ollama-progress-fill" style={{ width: `${percent}%` }} />
+            <div className="ollama-progress-fill" style={{ width: `${ownDownload.percent}%` }} />
           </div>
           <span style={{ fontSize: "var(--text-xs)", color: "var(--ink-faint)" }}>
-            {status}
+            {t(`modelDownloads.phases.${ownDownload.phase}`)}
           </span>
         </div>
         <button
@@ -102,38 +82,27 @@ export function ModelInstallButton({
 
   if (isInstalled && !hasUpdate) {
     return (
-      <div
-        title={t("ollama.installedUpToDate")}
-        style={{
-          display: "flex", alignItems: "center",
-          color: "var(--select-text)",
-        }}
-      >
+      <div title={t("ollama.installedUpToDate")} style={{ display: "flex", alignItems: "center", color: "var(--select-text)" }}>
         <Check size={18} />
       </div>
     );
   }
 
-  if (isInstalled && hasUpdate) {
-    return (
-      <button
-        className="ollama-btn ollama-btn-primary"
-        style={{ width: BTN_WIDTH }}
-        onClick={() => void handleInstall()}
-        title={t("ollama.updateAvailable")}
-      >
-        {t("ollama.update")}
-      </button>
-    );
-  }
+  const label = blocked
+    ? t("modelDownloads.busy")
+    : isInstalled && hasUpdate
+      ? t("ollama.update")
+      : t("ollama.install");
 
   return (
     <button
       className="ollama-btn ollama-btn-primary"
       style={{ width: BTN_WIDTH }}
+      disabled={blocked}
       onClick={() => void handleInstall()}
+      title={isInstalled && hasUpdate ? t("ollama.updateAvailable") : undefined}
     >
-      {t("ollama.install")}
+      {label}
     </button>
   );
 }

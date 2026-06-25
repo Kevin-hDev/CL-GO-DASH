@@ -2,7 +2,6 @@ use crate::services::agent_local::ollama_base_url;
 use crate::services::agent_local::types_ollama::{PullProgress, RegistryModel};
 use futures_util::StreamExt;
 use reqwest::Client;
-use tauri::ipc::Channel;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio_util::io::StreamReader;
 use tokio_util::sync::CancellationToken;
@@ -66,12 +65,15 @@ fn parse_search_html(html: &str) -> Vec<RegistryModel> {
     models
 }
 
-pub async fn pull_model(
+pub async fn pull_model_with_callback<F>(
     name: &str,
-    on_progress: &Channel<PullProgress>,
+    mut on_progress: F,
     cancel: &CancellationToken,
     pulled_digests: &mut Vec<String>,
-) -> Result<(), String> {
+) -> Result<(), String>
+where
+    F: FnMut(PullProgress),
+{
     let client = Client::builder()
         .timeout(std::time::Duration::from_secs(3600))
         .build()
@@ -115,7 +117,7 @@ pub async fn pull_model(
                     }
                     let completed = chunk["completed"].as_u64();
                     let total = chunk["total"].as_u64();
-                    let _ = on_progress.send(PullProgress {
+                    on_progress(PullProgress {
                         status: status.clone(), completed, total,
                     });
                     if status == "success" { return Ok(()); }

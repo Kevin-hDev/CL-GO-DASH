@@ -141,11 +141,3 @@ impl ForecastResult {
         }
     }
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ModelDownloadProgress {
-    pub model_name: String,
-    pub downloaded: u64,
-    pub total: u64,
-    pub percent: f64,
-}

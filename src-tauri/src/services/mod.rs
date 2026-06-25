@@ -17,6 +17,11 @@ pub mod link_preview;
 pub mod llm;
 pub mod mcp_bridge;
 pub mod mcp_oauth;
+pub mod model_downloads;
+pub mod model_downloads_store;
+#[cfg(test)]
+mod model_downloads_store_tests;
+pub mod model_downloads_types;
 pub mod ollama_env;
 pub mod ollama_kill;
 #[cfg(test)]

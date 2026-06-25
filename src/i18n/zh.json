@@ -314,6 +314,22 @@
       "web_fetch": "访问网址"
     }
   },
+  "modelDownloads": {
+    "busy": "忙碌",
+    "kinds": {
+      "ollama": "Ollama",
+      "forecast": "Forecast"
+    },
+    "phases": {
+      "starting": "正在启动",
+      "downloading": "正在下载",
+      "installing": "正在安装",
+      "completed": "已完成"
+    },
+    "errors": {
+      "alreadyActive": "模型下载已在进行中。"
+    }
+  },
   "ollama": {
     "title": "Ollama",
     "noModels": "未安装任何模型",
@@ -1271,6 +1287,7 @@
       "installed": "已安装",
       "installError": "错误",
       "downloading": "下载中...",
+      "cancel": "取消",
       "notInstalledSuffix": "(未安装)",
       "parameters": "参数",
       "specs": "规格",

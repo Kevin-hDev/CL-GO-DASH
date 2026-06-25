@@ -34,6 +34,7 @@ pub mod link_preview;
 pub mod llm;
 pub mod mcp_connectors;
 pub mod mcp_oauth;
+pub mod model_downloads;
 #[cfg(test)]
 mod ollama_audit_tests;
 pub mod ollama_bundle_utils;
@@ -90,6 +91,7 @@ pub use link_preview::*;
 pub use llm::*;
 pub use mcp_connectors::*;
 pub use mcp_oauth::*;
+pub use model_downloads::*;
 pub use ollama_setup::*;
 pub use ollama_updates::*;
 pub use ollama_version::*;

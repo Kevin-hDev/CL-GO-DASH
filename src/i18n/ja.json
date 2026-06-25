@@ -314,6 +314,22 @@
       "web_fetch": "URL を取得する"
     }
   },
+  "modelDownloads": {
+    "busy": "使用中",
+    "kinds": {
+      "ollama": "Ollama",
+      "forecast": "Forecast"
+    },
+    "phases": {
+      "starting": "開始中",
+      "downloading": "ダウンロード中",
+      "installing": "インストール中",
+      "completed": "完了"
+    },
+    "errors": {
+      "alreadyActive": "モデルのダウンロードがすでに実行中です。"
+    }
+  },
   "ollama": {
     "title": "Ollama",
     "noModels": "インストール済みのモデルがありません",
@@ -1271,6 +1287,7 @@
       "installed": "インストール済み",
       "installError": "エラー",
       "downloading": "ダウンロード中...",
+      "cancel": "キャンセル",
       "notInstalledSuffix": "(未インストール)",
       "parameters": "パラメータ",
       "specs": "仕様",

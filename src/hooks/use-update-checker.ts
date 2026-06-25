@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { invoke, Channel } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { showToast } from "@/lib/toast-emitter";
 import { cleanupTauriListener } from "@/lib/tauri-listen";
 import i18n from "@/i18n";
-import type { PullProgress } from "@/types/agent";
+import { useModelDownloads } from "@/hooks/use-model-downloads";
 
 const CHECK_INTERVAL_MS = 60 * 60 * 1000;
 
@@ -36,10 +36,9 @@ export interface PullingState {
 }
 
 export function useUpdateChecker() {
+  const { activeDownload, startDownload } = useModelDownloads();
   const [appUpdate, setAppUpdate] = useState<AppUpdate | null>(null);
   const [ollamaUpdates, setOllamaUpdates] = useState<OllamaModelUpdate[]>([]);
-  const [pulling, setPulling] = useState<PullingState | null>(null);
-  const pullingRef = useRef(false);
   const [ollamaBinaryUpdate, setOllamaBinaryUpdate] =
     useState<OllamaBinaryUpdate | null>(null);
   const [ollamaBinaryUpdating, setOllamaBinaryUpdating] = useState(false);
@@ -78,7 +77,6 @@ export function useUpdateChecker() {
     void checkAll();
     timerRef.current = setInterval(() => void checkAll(), CHECK_INTERVAL_MS);
     const unlisten = listen("ollama-models-changed", () => {
-      if (pullingRef.current) return;
       invoke<OllamaModelUpdate[]>("check_ollama_updates")
         .then(setOllamaUpdates)
         .catch(() => {});
@@ -111,32 +109,16 @@ export function useUpdateChecker() {
   }, []);
 
   const pullModel = useCallback(async (fullName: string) => {
-    pullingRef.current = true;
-    setPulling({ fullName, percent: 0, status: "" });
-
-    const channel = new Channel<PullProgress>();
-    channel.onmessage = (event: PullProgress) => {
-      const pct =
-        event.total && event.completed
-          ? Math.round((event.completed / event.total) * 100)
-          : 0;
-      setPulling({ fullName, percent: pct, status: event.status });
-    };
-
     try {
-      await invoke("pull_ollama_model", {
-        name: fullName,
+      await startDownload({
+        kind: "ollama",
+        modelId: fullName,
         isUpdate: true,
-        onProgress: channel,
       });
-      setOllamaUpdates((prev) => prev.filter((u) => u.fullName !== fullName));
     } catch {
-      showToast(i18n.t("errors.updateFailed"), "error");
-    } finally {
-      pullingRef.current = false;
-      setPulling(null);
+      showToast(i18n.t("modelDownloads.errors.alreadyActive"), "error");
     }
-  }, []);
+  }, [startDownload]);
 
   const updateOllamaBinary = useCallback(async () => {
     if (!ollamaBinaryUpdate) return;
@@ -176,6 +158,18 @@ export function useUpdateChecker() {
 
   const totalCount =
     (appUpdate ? 1 : 0) + (ollamaBinaryUpdate ? 1 : 0) + ollamaUpdates.length;
+
+  const pulling = useMemo<PullingState | null>(() => {
+    if (!activeDownload || activeDownload.kind !== "ollama") return null;
+    if (!ollamaUpdates.some((update) => update.fullName === activeDownload.modelId)) {
+      return null;
+    }
+    return {
+      fullName: activeDownload.modelId,
+      percent: activeDownload.percent,
+      status: i18n.t(`modelDownloads.phases.${activeDownload.phase}`),
+    };
+  }, [activeDownload, ollamaUpdates]);
 
   return {
     appUpdate,

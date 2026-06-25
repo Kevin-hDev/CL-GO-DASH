@@ -1,8 +1,8 @@
-use crate::services::forecast::types::ModelDownloadProgress;
 use crate::services::forecast::{catalog, validation};
+use crate::services::model_downloads::{ModelDownloadPhase, ProgressUpdate};
 use crate::services::paths::data_dir;
 use std::path::PathBuf;
-use tauri::ipc::Channel;
+use tokio_util::sync::CancellationToken;
 
 pub mod download;
 pub mod download_github;
@@ -22,10 +22,14 @@ pub fn is_installed(model_id: &str) -> bool {
     model_path(model_id).join(".complete").exists()
 }
 
-pub async fn install(
+pub async fn install_with_callback<F>(
     model_id: &str,
-    on_progress: &Channel<ModelDownloadProgress>,
-) -> Result<(), String> {
+    cancel: &CancellationToken,
+    on_progress: F,
+) -> Result<(), String>
+where
+    F: Fn(ProgressUpdate) + Send + Sync,
+{
     validation::validate_model_id(model_id)?;
     let spec =
         catalog::find_model(model_id).ok_or_else(|| format!("Modèle inconnu: {model_id}"))?;
@@ -41,14 +45,14 @@ pub async fn install(
         .map_err(|_| "Impossible de préparer l'installation".to_string())?;
 
     let download_result = if let Some(repo) = hf_repo {
-        download::download_model(repo, spec.hf_revision, &staging_dir, model_id, on_progress).await
+        download::download_model(repo, spec.hf_revision, &staging_dir, cancel, &on_progress).await
     } else if let Some(repo) = github_repo {
         download_github::download_repo_snapshot(
             repo,
             spec.github_revision,
             &staging_dir,
-            model_id,
-            on_progress,
+            cancel,
+            &on_progress,
         )
         .await
     } else {
@@ -59,6 +63,16 @@ pub async fn install(
         let _ = tokio::fs::remove_dir_all(&staging_dir).await;
         return Err(e);
     }
+    if cancel.is_cancelled() {
+        let _ = tokio::fs::remove_dir_all(&staging_dir).await;
+        return Err("cancelled".into());
+    }
+    on_progress(ProgressUpdate {
+        phase: ModelDownloadPhase::Installing,
+        downloaded: 0,
+        total: 0,
+        percent: 99,
+    });
     tokio::fs::write(staging_dir.join(".complete"), b"ok")
         .await
         .map_err(|_| "Validation installation échouée".to_string())?;

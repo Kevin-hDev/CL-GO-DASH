@@ -313,6 +313,22 @@
       "web_fetch": "fetch a URL"
     }
   },
+  "modelDownloads": {
+    "busy": "Busy",
+    "kinds": {
+      "ollama": "Ollama",
+      "forecast": "Forecast"
+    },
+    "phases": {
+      "starting": "Starting",
+      "downloading": "Downloading",
+      "installing": "Installing",
+      "completed": "Completed"
+    },
+    "errors": {
+      "alreadyActive": "A model download is already running."
+    }
+  },
   "ollama": {
     "title": "Ollama",
     "noModels": "No models installed",
@@ -1278,6 +1294,7 @@
       "installed": "Installed",
       "installError": "Error",
       "downloading": "Downloading...",
+      "cancel": "Cancel",
       "notInstalledSuffix": "(not installed)",
       "parameters": "Parameters",
       "specs": "Specifications",

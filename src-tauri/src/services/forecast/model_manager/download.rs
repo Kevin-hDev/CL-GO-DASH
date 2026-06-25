@@ -1,9 +1,9 @@
-use crate::services::forecast::types::ModelDownloadProgress;
+use crate::services::model_downloads::{ModelDownloadPhase, ProgressUpdate};
 use futures_util::StreamExt;
 use std::path::Component;
 use std::path::Path;
-use tauri::ipc::Channel;
 use tokio::io::AsyncWriteExt;
+use tokio_util::sync::CancellationToken;
 
 const MAX_MODEL_FILES: usize = 128;
 const MIN_PROGRESS_STEP: f64 = 1.0;
@@ -12,8 +12,8 @@ pub async fn download_model(
     hf_repo: &str,
     hf_revision: Option<&str>,
     target_dir: &Path,
-    model_id: &str,
-    on_progress: &Channel<ModelDownloadProgress>,
+    cancel: &CancellationToken,
+    on_progress: &(dyn Fn(ProgressUpdate) + Send + Sync),
 ) -> Result<(), String> {
     let files = list_hf_files(hf_repo, hf_revision).await?;
     let total_size: u64 = files.iter().map(|(_, size)| size).sum();
@@ -35,18 +35,18 @@ pub async fn download_model(
             &dest,
             &mut downloaded,
             total_size,
-            model_id,
+            cancel,
             on_progress,
             &mut last_percent_sent,
         )
         .await?;
     }
 
-    let _ = on_progress.send(ModelDownloadProgress {
-        model_name: model_id.to_string(),
+    on_progress(ProgressUpdate {
+        phase: ModelDownloadPhase::Downloading,
         downloaded: total_size,
         total: total_size,
-        percent: 100.0,
+        percent: 99,
     });
     Ok(())
 }
@@ -114,8 +114,8 @@ async fn download_single(
     dest: &Path,
     downloaded: &mut u64,
     total_size: u64,
-    model_id: &str,
-    on_progress: &Channel<ModelDownloadProgress>,
+    cancel: &CancellationToken,
+    on_progress: &(dyn Fn(ProgressUpdate) + Send + Sync),
     last_percent_sent: &mut f64,
 ) -> Result<(), String> {
     let client = reqwest::Client::new();
@@ -137,6 +137,10 @@ async fn download_single(
     let mut stream = resp.bytes_stream();
 
     while let Some(chunk) = stream.next().await {
+        if cancel.is_cancelled() {
+            let _ = tokio::fs::remove_file(&tmp).await;
+            return Err("cancelled".into());
+        }
         let chunk = chunk.map_err(|_| "Stream échoué".to_string())?;
         file.write_all(&chunk)
             .await
@@ -150,11 +154,11 @@ async fn download_single(
         };
         if percent >= *last_percent_sent + MIN_PROGRESS_STEP || percent >= 99.9 {
             *last_percent_sent = percent;
-            let _ = on_progress.send(ModelDownloadProgress {
-                model_name: model_id.to_string(),
+            on_progress(ProgressUpdate {
+                phase: ModelDownloadPhase::Downloading,
                 downloaded: *downloaded,
                 total: total_size,
-                percent,
+                percent: percent.round() as u8,
             });
         }
     }

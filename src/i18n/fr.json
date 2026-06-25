@@ -313,6 +313,22 @@
       "web_fetch": "récupérer une URL"
     }
   },
+  "modelDownloads": {
+    "busy": "Occupé",
+    "kinds": {
+      "ollama": "Ollama",
+      "forecast": "Forecast"
+    },
+    "phases": {
+      "starting": "Démarrage",
+      "downloading": "Téléchargement",
+      "installing": "Installation",
+      "completed": "Terminé"
+    },
+    "errors": {
+      "alreadyActive": "Un téléchargement de modèle est déjà en cours."
+    }
+  },
   "ollama": {
     "title": "Ollama",
     "noModels": "Aucun modèle installé",
@@ -1278,6 +1294,7 @@
       "installed": "Installé",
       "installError": "Erreur",
       "downloading": "Téléchargement...",
+      "cancel": "Annuler",
       "notInstalledSuffix": "(non installé)",
       "parameters": "Paramètres",
       "specs": "Spécifications",

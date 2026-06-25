@@ -18,7 +18,6 @@ use tokio::sync::Mutex;
 use tokio_util::sync::CancellationToken;
 
 pub struct ActiveStreams(pub Mutex<HashMap<String, (CancellationToken, u64)>>);
-pub struct PullCancel(pub Mutex<Option<CancellationToken>>);
 
 static STREAM_GENERATION: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
@@ -40,8 +39,8 @@ pub fn run() {
         }))
         .manage(OllamaClient::new())
         .manage(ActiveStreams(Mutex::new(HashMap::new())))
-        .manage(PullCancel(Mutex::new(None)))
         .manage(OllamaSidecar::new())
+        .manage(services::model_downloads::ModelDownloadManager::new())
         .manage(services::searxng::SearxngSidecar::new())
         .manage(services::terminal::PtyManager::new())
         .manage(GatewayService::new())
@@ -160,8 +159,6 @@ pub fn run() {
             commands::get_registry_model_details,
             commands::list_registry_tags,
             commands::translate_description,
-            commands::pull_ollama_model,
-            commands::cancel_pull_ollama_model,
             commands::delete_ollama_model,
             commands::get_modelfile,
             commands::update_modelfile,
@@ -270,6 +267,9 @@ pub fn run() {
             commands::update_ollama_binary,
             commands::restart_ollama_sidecar,
             commands::check_model_fits_vram,
+            commands::start_model_download,
+            commands::list_model_downloads,
+            commands::cancel_model_download,
             // Link preview
             commands::fetch_link_preview,
             // Git operations
@@ -316,7 +316,6 @@ pub fn run() {
             commands::get_forecast_model_config,
             commands::set_forecast_model_config,
             commands::get_forecast_model_details,
-            commands::install_forecast_model,
             commands::uninstall_forecast_model,
             commands::list_forecast_providers_catalog,
         ])

@@ -190,6 +190,21 @@
   text-align: right;
 }
 
+.fmi-cancel {
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  background: transparent;
+  color: var(--ink-muted);
+  font-size: var(--text-xs);
+  cursor: pointer;
+}
+
+.fmi-cancel:hover {
+  background: var(--surface-hover);
+  color: var(--ink);
+}
+
 .fmi-error {
   font-size: var(--text-xs);
   color: var(--signal-error);

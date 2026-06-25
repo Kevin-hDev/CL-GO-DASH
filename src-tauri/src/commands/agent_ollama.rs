@@ -5,13 +5,10 @@ use crate::services::agent_local::ollama_registry_details;
 use crate::services::agent_local::translation_cache;
 use crate::services::agent_local::translator;
 use crate::services::agent_local::types_ollama::{
-    ModelInfo, OllamaModel, PullProgress, RegistryModel, RegistryModelDetails, RegistryTag,
+    ModelInfo, OllamaModel, RegistryModel, RegistryModelDetails, RegistryTag,
 };
 use crate::services::ollama_lifecycle;
-use crate::PullCancel;
-use tauri::ipc::Channel;
 use tauri::Emitter;
-use tokio_util::sync::CancellationToken;
 
 #[tauri::command]
 pub async fn list_ollama_models(
@@ -65,64 +62,6 @@ pub async fn translate_description(
         translator::translate_text(&text, &target_lang, translator_model.as_deref()).await?;
     translation_cache::set_cached(&model_name, &target_lang, &translated).await?;
     Ok(translated)
-}
-
-#[tauri::command]
-pub async fn pull_ollama_model(
-    app: tauri::AppHandle,
-    name: String,
-    is_update: bool,
-    on_progress: Channel<PullProgress>,
-    pull_cancel: tauri::State<'_, PullCancel>,
-    ollama: tauri::State<'_, OllamaClient>,
-) -> Result<(), String> {
-    let saved = if is_update {
-        model_customizations::save_for_update(&ollama, &name).await
-    } else {
-        None
-    };
-
-    let cancel = CancellationToken::new();
-    {
-        *pull_cancel.0.lock().await = Some(cancel.clone());
-    }
-
-    let mut digests = Vec::new();
-    let result = ollama_registry::pull_model(&name, &on_progress, &cancel, &mut digests).await;
-
-    {
-        *pull_cancel.0.lock().await = None;
-    }
-
-    match result {
-        Ok(()) => {
-            if let Some(perso) = saved {
-                model_customizations::restore_after_update(&ollama, &name, &perso).await;
-            }
-            let _ = app.emit("ollama-models-changed", ());
-            Ok(())
-        }
-        Err(ref e) if e == "cancelled" => {
-            if !is_update {
-                tokio::time::sleep(std::time::Duration::from_millis(500)).await;
-                let cleaned = ollama_registry::cleanup_partial_blobs(&digests);
-                eprintln!("[pull] cancel {name} — {cleaned} fichiers partiels supprimés (digests: {digests:?})");
-                let _ = ollama_registry::delete_model(&name).await;
-            }
-            Err("cancelled".to_string())
-        }
-        Err(e) => Err(e),
-    }
-}
-
-#[tauri::command]
-pub async fn cancel_pull_ollama_model(
-    pull_cancel: tauri::State<'_, PullCancel>,
-) -> Result<(), String> {
-    if let Some(cancel) = pull_cancel.0.lock().await.take() {
-        cancel.cancel();
-    }
-    Ok(())
 }
 
 #[tauri::command]

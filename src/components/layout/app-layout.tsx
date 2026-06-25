@@ -10,6 +10,7 @@ import { GpuStatusBadge } from "@/components/agent-local/gpu-status-badge";
 import { WindowControls } from "./window-controls";
 import { PanelSlotProvider, PanelSlotTarget } from "./panel-slots";
 import { useAppLayoutShortcuts, useWindowFullscreen } from "./use-app-layout-effects";
+import { ModelDownloadBadge } from "./model-download-badge";
 import "./app-layout.css";
 
 const GPU_BADGE_OFFSET = 12;
@@ -137,6 +138,7 @@ export function AppLayout({
             }}
           />
           <PanelSlotTarget name="detail" />
+          <ModelDownloadBadge />
         </div>
         <SearchDialog
           open={searchOpen}
