@@ -149,11 +149,15 @@
 
 .icp-submit {
   height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm, 6px);
   background: var(--surface);
   color: var(--text-primary);
   cursor: pointer;
+  padding: 0;
 }
 
 .icp-submit:disabled {
