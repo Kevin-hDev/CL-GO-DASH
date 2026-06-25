@@ -1,4 +1,5 @@
-use super::stream_diagnostics_support::{apply_failure, event, push_event};
+use super::stream_diagnostics_failure::apply_failure;
+use super::stream_diagnostics_support::{event, push_event};
 use super::types_diagnostics::AgentDiagnosticRun;
 use super::types_session::AgentSession;
 use chrono::Utc;

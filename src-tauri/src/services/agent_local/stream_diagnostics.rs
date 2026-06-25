@@ -2,6 +2,8 @@ use chrono::Utc;
 use serde_json::json;
 use uuid::Uuid;
 
+use super::diagnostic_redaction;
+use super::stream_diagnostics_failure as failure;
 use super::stream_diagnostics_support as support;
 use super::stream_diagnostics_tools as diagnostic_tools;
 use super::types_diagnostics::{
@@ -70,7 +72,7 @@ pub async fn record_tool(
         let tool = AgentDiagnosticTool {
             name: support::clip(name),
             status: status.to_string(),
-            args: args.clone(),
+            args: args.clone().map(diagnostic_redaction::redact_value),
             is_error,
         };
         run.last_tool = Some(tool.clone());
@@ -133,8 +135,8 @@ pub async fn record_failure(
         push_failure(session, message, is_connection);
         if let Some(id) = request_id {
             if let Some(idx) = support::find_run(session, id) {
-                support::apply_failure(session, idx, message, is_connection);
-                summary = Some(support::summary_from_run(&session.diagnostic_runs[idx]));
+                failure::apply_failure(session, idx, message, is_connection);
+                summary = Some(failure::summary_from_run(&session.diagnostic_runs[idx]));
             }
         }
     })
@@ -162,5 +164,5 @@ pub async fn diagnostics_text(session_id: &str, limit: usize) -> Result<String, 
 }
 
 pub(crate) fn push_failure(session: &mut AgentSession, message: &str, is_connection: bool) {
-    support::push_failure(session, message, is_connection);
+    failure::push_failure(session, message, is_connection);
 }

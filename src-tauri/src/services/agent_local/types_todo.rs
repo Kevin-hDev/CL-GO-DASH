@@ -23,7 +23,6 @@ pub enum AgentTodoRunStatus {
     Active,
     Paused,
     Completed,
-    Abandoned,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

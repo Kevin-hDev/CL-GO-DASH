@@ -20,6 +20,7 @@ pub mod context_budget;
 pub mod diagnostic_args;
 #[cfg(test)]
 mod diagnostic_args_tests;
+pub mod diagnostic_redaction;
 pub mod eager_dispatch;
 pub mod model_customizations;
 pub mod model_size;
@@ -50,6 +51,7 @@ pub mod session_store;
 pub mod session_subagents;
 pub mod skill_parser;
 pub mod stream_diagnostics;
+pub mod stream_diagnostics_failure;
 pub mod stream_diagnostics_support;
 #[cfg(test)]
 mod stream_diagnostics_support_tests;

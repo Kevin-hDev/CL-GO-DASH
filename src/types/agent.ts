@@ -100,7 +100,7 @@ export interface AgentSession {
 }
 
 export type AgentTodoStatus = "pending" | "in_progress" | "completed";
-export type AgentTodoRunStatus = "active" | "paused" | "completed" | "abandoned";
+export type AgentTodoRunStatus = "active" | "paused" | "completed";
 
 export interface AgentTodoItem {
   content: string;

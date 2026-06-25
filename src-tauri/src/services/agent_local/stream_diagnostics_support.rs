@@ -1,9 +1,7 @@
 use chrono::Utc;
 
-use super::types_diagnostics::{
-    AgentDiagnosticEvent, AgentDiagnosticRun, AgentDiagnosticTodo, AgentErrorDiagnosticSummary,
-    AgentStreamFailure,
-};
+use super::diagnostic_redaction;
+use super::types_diagnostics::{AgentDiagnosticEvent, AgentDiagnosticRun, AgentDiagnosticTodo};
 use super::types_session::AgentSession;
 use super::types_todo::AgentTodoStatus;
 
@@ -34,57 +32,6 @@ pub(crate) fn active_todo(session: &AgentSession) -> Option<AgentDiagnosticTodo>
         total: run.todos.len(),
         progress: format!("{completed}/{}", run.todos.len()),
     })
-}
-
-pub(crate) fn push_failure(session: &mut AgentSession, message: &str, is_connection: bool) {
-    let active = session
-        .active_todo_run_id
-        .as_ref()
-        .and_then(|id| session.todo_runs.iter().find(|run| &run.id == id));
-    session.stream_failures.push(AgentStreamFailure {
-        code: safe_code(message),
-        occurred_at: Utc::now(),
-        is_connection,
-        active_todo_run_id: active.map(|run| run.id.clone()),
-        active_todo_title: active.map(|run| run.title.clone()),
-    });
-    trim(&mut session.stream_failures, MAX_STREAM_FAILURES);
-}
-
-pub(crate) fn apply_failure(
-    session: &mut AgentSession,
-    idx: usize,
-    message: &str,
-    is_connection: bool,
-) {
-    let todo = active_todo(session);
-    let run = &mut session.diagnostic_runs[idx];
-    let error_type = classify_error(message, is_connection);
-    run.status = "failed".to_string();
-    run.phase = "failed".to_string();
-    run.severity = "error".to_string();
-    run.error_type = Some(error_type.clone());
-    run.ended_at = Some(Utc::now());
-    run.updated_at = Utc::now();
-    run.active_todo = todo;
-    run.safe_summary = Some(safe_summary(run, &error_type));
-    push_event(run, "failed", message, None, Some(&error_type));
-}
-
-pub(crate) fn summary_from_run(run: &AgentDiagnosticRun) -> AgentErrorDiagnosticSummary {
-    AgentErrorDiagnosticSummary {
-        request_id: run.request_id.clone(),
-        phase: run.phase.clone(),
-        error_type: run
-            .error_type
-            .clone()
-            .unwrap_or_else(|| "unknown".to_string()),
-        last_tool_name: run.last_tool.as_ref().map(|tool| tool.name.clone()),
-        safe_summary: run
-            .safe_summary
-            .clone()
-            .unwrap_or_else(|| "Flux interrompu.".to_string()),
-    }
 }
 
 pub(crate) fn push_event(
@@ -159,7 +106,7 @@ pub(crate) fn trim<T>(items: &mut Vec<T>, max: usize) {
 }
 
 pub(crate) fn clip(value: &str) -> String {
-    let clean = value.replace(['\n', '\r', '\t'], " ");
+    let clean = diagnostic_redaction::redact_text(value).replace(['\n', '\r', '\t'], " ");
     let mut end = clean.len();
     for (count, (idx, _)) in clean.char_indices().enumerate() {
         if count == MAX_TEXT {
@@ -172,45 +119,4 @@ pub(crate) fn clip(value: &str) -> String {
         out.push_str("...");
     }
     out
-}
-
-fn safe_summary(run: &AgentDiagnosticRun, error_type: &str) -> String {
-    if let Some(tool) = &run.last_tool {
-        return clip(&format!(
-            "Interruption pendant le tool {} ({error_type}).",
-            tool.name
-        ));
-    }
-    clip(&format!(
-        "Interruption pendant {} ({error_type}).",
-        run.phase
-    ))
-}
-
-fn safe_code(message: &str) -> String {
-    let code = classify_error(message, message == "ollama_connection_lost");
-    if code == "unknown" {
-        "stream_error".to_string()
-    } else {
-        code
-    }
-}
-
-fn classify_error(message: &str, is_connection: bool) -> String {
-    if is_connection || message == "ollama_connection_lost" {
-        return "connection_lost".to_string();
-    }
-    if message.contains("Timeout") || message.contains("timeout") {
-        return "timeout".to_string();
-    }
-    if message.contains("Limite de tours") {
-        return "max_turns".to_string();
-    }
-    if message.contains("répété") || message.contains("circuit") {
-        return "circuit_breaker".to_string();
-    }
-    if message.contains("HTTP") || message.contains("rate") || message.contains("auth") {
-        return "provider_error".to_string();
-    }
-    "unknown".to_string()
 }
