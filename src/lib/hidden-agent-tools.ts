@@ -5,6 +5,7 @@ const HIDDEN_AGENT_TOOLS = new Set([
   "todo_resume",
   "todo_delete",
   "agent_diagnostics",
+  "ask_user_choice",
 ]);
 
 export function isHiddenAgentTool(name: string) {

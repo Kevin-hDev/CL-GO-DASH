@@ -7,7 +7,7 @@ use crate::services::agent_local::{permission_gate, permission_policy, sensitive
 use serde_json::Value;
 use tokio_util::sync::CancellationToken;
 
-use super::tool_executor_helpers::check_write_guard;
+use super::tool_executor_helpers::{check_write_guard, dispatch_or_interactive};
 
 pub(super) async fn execute_write(
     on_event: &AgentEventEmitter,
@@ -63,7 +63,15 @@ pub(super) async fn execute_write(
             if cancel.is_cancelled() {
                 ToolResult::err("Annulé.")
             } else {
-                tool_dispatcher::dispatch(name, args, working_dir, session_id).await
+                dispatch_or_interactive(
+                    on_event,
+                    name,
+                    args,
+                    working_dir,
+                    session_id,
+                    cancel.clone(),
+                )
+                .await
             }
         }
     };

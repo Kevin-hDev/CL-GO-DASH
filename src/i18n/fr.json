@@ -851,6 +851,15 @@
       "completed": "terminée"
     }
   },
+  "interactiveChoice": {
+    "title": "Choix interactif",
+    "step": "{{current}}/{{total}}",
+    "recommended": "Recommandé",
+    "otherLabel": "Autre",
+    "other": "Autre réponse",
+    "otherPlaceholder": "Écrire votre réponse",
+    "inputLocked": "Répondez à la question ci-dessus"
+  },
   "forecast": {
     "title": "Forecast",
     "noAnalysis": "Aucune analyse en cours",

@@ -38,6 +38,7 @@ static TODO_PAUSE: Schema = &[("reason", Ty::Str, false)];
 static TODO_RESUME: Schema = &[("id", Ty::Str, true)];
 static TODO_DELETE: Schema = &[("id", Ty::Str, true)];
 static AGENT_DIAGNOSTICS: Schema = &[("limit", Ty::Int, false)];
+static ASK_USER_CHOICE: Schema = &[("questions", Ty::Arr, true)];
 static LOAD_SKILL: Schema = &[("skill_name", Ty::Str, true)];
 static CREATE_BRANCH: Schema = &[("branch_name", Ty::Str, true)];
 static CHECKOUT_BRANCH: Schema = &[("branch_name", Ty::Str, true)];
@@ -103,6 +104,7 @@ fn schema(tool: &str) -> Option<Schema> {
         "todo_resume" => TODO_RESUME,
         "todo_delete" => TODO_DELETE,
         "agent_diagnostics" => AGENT_DIAGNOSTICS,
+        "ask_user_choice" => ASK_USER_CHOICE,
         "load_skill" => LOAD_SKILL,
         "create_branch" => CREATE_BRANCH,
         "checkout_branch" => CHECKOUT_BRANCH,

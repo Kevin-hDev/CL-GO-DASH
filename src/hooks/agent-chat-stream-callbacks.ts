@@ -44,6 +44,7 @@ export function applyStreamEvent(
     case "toolResult":
       if (isHiddenAgentTool(event.data.name)) {
         next.pendingPermissions = [];
+        if (event.data.name === "ask_user_choice") next.interactiveChoice = undefined;
         break;
       }
       next.currentTools = applyToolResult(
@@ -70,6 +71,9 @@ export function applyStreamEvent(
     case "subagentSpawned":
     case "subagentCompleted":
     case "todoUpdated":
+      break;
+    case "interactiveChoiceRequest":
+      next.interactiveChoice = event.data;
       break;
     case "done":
       return finishStream(next, event);
@@ -149,7 +153,8 @@ function finalizeStream(
     tokenCount: resolvedTokenCount,
     lastRequestTokens: outputTokens, liveTokenCount: 0,
     streamStartedAt: null, segmentStartedAt: null, totalElapsedMs: totalMs,
-    pendingPermissions: [], completed: true, updatedAt: Date.now(),
+    pendingPermissions: [], interactiveChoice: undefined,
+    completed: true, updatedAt: Date.now(),
   };
   if (all.length === 0) return { state: next };
   const built = buildSegmentedMessage(all);

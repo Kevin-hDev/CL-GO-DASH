@@ -123,6 +123,7 @@ pub fn get_tool_definitions() -> Vec<Value> {
         super::tool_definitions_todo::todo_resume_definition(),
         super::tool_definitions_todo::todo_delete_definition(),
         super::tool_definitions_todo::agent_diagnostics_definition(),
+        super::tool_definitions_interactive::ask_user_choice_definition(),
         tool_def(
             "load_skill",
             "Load a skill by name for specialized workflows.",
@@ -166,36 +167,11 @@ pub fn get_tool_definitions() -> Vec<Value> {
     defs
 }
 
-pub fn get_chat_tool_definitions() -> Vec<Value> {
-    let mut defs = vec![
-        tool_def(
-            "web_search",
-            "Search the web for current information, documentation, or solutions.",
-            serde_json::json!({
-                "type": "object",
-                "properties": {
-                    "query": {"type": "string", "description": "Search query"}
-                },
-                "required": ["query"]
-            }),
-        ),
-        tool_def(
-            "web_fetch",
-            "Fetch and extract content from a URL.",
-            serde_json::json!({
-                "type": "object",
-                "properties": {
-                    "url": {"type": "string", "description": "URL to fetch"}
-                },
-                "required": ["url"]
-            }),
-        ),
-    ];
-    defs.extend(super::tool_definitions_mcp::mcp_tool_definitions());
-    defs
-}
-
-pub(super) fn tool_def(name: &str, description: &str, parameters: Value) -> Value {
+pub(in crate::services::agent_local) fn tool_def(
+    name: &str,
+    description: &str,
+    parameters: Value,
+) -> Value {
     serde_json::json!({
         "type": "function",
         "function": { "name": name, "description": description, "parameters": parameters }

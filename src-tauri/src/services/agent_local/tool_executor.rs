@@ -8,7 +8,9 @@ use crate::services::agent_local::write_guard::WriteGuard;
 use std::collections::HashMap;
 use tokio_util::sync::CancellationToken;
 
-use super::tool_executor_helpers::{check_write_guard, post_record_read, push_tool_result};
+use super::tool_executor_helpers::{
+    check_write_guard, dispatch_or_interactive, post_record_read, push_tool_result,
+};
 use super::tool_executor_parallel::run_with_parallel_reads;
 
 pub async fn run_tools(
@@ -133,7 +135,15 @@ async fn run_sequential(
         let allowed =
             check_allowed(on_event, name, effective_args, session_id, cancel.clone()).await;
         let tr = if allowed {
-            tool_dispatcher::dispatch(name, effective_args, working_dir, session_id).await
+            dispatch_or_interactive(
+                on_event,
+                name,
+                effective_args,
+                working_dir,
+                session_id,
+                cancel.clone(),
+            )
+            .await
         } else {
             ToolResult::err("L'utilisateur a refusé cette action.")
         };

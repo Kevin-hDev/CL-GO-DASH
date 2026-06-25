@@ -2,9 +2,10 @@ use std::path::Path;
 
 pub fn build(working_dir: &Path, is_git: bool, git_root: Option<&Path>) -> String {
     format!(
-        "{IDENTITY}\n\n{CAPABILITIES}\n\n{}\n\n{TOOLS}\n\n{}\n\n{WEB_SEARCH}\n\n{SAFETY}\n\n{STYLE}",
+        "{IDENTITY}\n\n{CAPABILITIES}\n\n{}\n\n{TOOLS}\n\n{}\n\n{}\n\n{WEB_SEARCH}\n\n{SAFETY}\n\n{STYLE}",
         env_section(working_dir, is_git, git_root),
         super::prompt_todo::TODO,
+        super::prompt_interactive::INTERACTIVE,
     )
 }
 
@@ -29,6 +30,7 @@ Default timeout is 120s. For long-running commands, set a higher timeout (up to 
 - **glob**: Find files by name patterns.
 - **web_search**: Search the web for information.
 - **web_fetch**: Fetch content from a URL.
+- **ask_user_choice**: Ask the user to choose between concrete options when their decision changes the next step.
 - **load_skill**: Load a skill by name for specialized tasks.
 - **read_spreadsheet**: Read Excel (.xlsx/.xls/.ods) or CSV files. Returns JSON with headers and rows.
 - **write_spreadsheet**: Create or modify Excel (.xlsx) files with operations (set_cell, set_row, set_formula).

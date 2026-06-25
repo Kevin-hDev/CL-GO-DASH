@@ -770,6 +770,15 @@
       "completed": "完了"
     }
   },
+  "interactiveChoice": {
+    "title": "対話式の選択",
+    "step": "{{current}}/{{total}}",
+    "recommended": "推奨",
+    "otherLabel": "その他",
+    "other": "別の回答",
+    "otherPlaceholder": "回答を入力",
+    "inputLocked": "上の質問に回答してください"
+  },
   "connectors": {
     "main": {
       "subtitle": "LLM が他のアプリやサービスに接続できるようにします",

@@ -770,6 +770,15 @@
       "completed": "abgeschlossen"
     }
   },
+  "interactiveChoice": {
+    "title": "Interaktive Auswahl",
+    "step": "{{current}}/{{total}}",
+    "recommended": "Empfohlen",
+    "otherLabel": "Andere",
+    "other": "Andere Antwort",
+    "otherPlaceholder": "Antwort schreiben",
+    "inputLocked": "Beantworte die Frage oben"
+  },
   "connectors": {
     "main": {
       "subtitle": "Erlaubt LLMs, sich mit anderen Apps und Diensten zu verbinden",

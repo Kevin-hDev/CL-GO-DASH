@@ -2,6 +2,7 @@ use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::types_ollama::{ChatMessage, StreamEvent};
 use crate::services::agent_local::types_tools::ToolResult;
 use crate::services::agent_local::write_guard::WriteGuard;
+use tokio_util::sync::CancellationToken;
 
 pub fn check_write_guard(
     name: &str,
@@ -65,4 +66,18 @@ pub fn push_tool_result(
         tool_call_id: None,
         reasoning_content: None,
     });
+}
+
+pub async fn dispatch_or_interactive(
+    on_event: &AgentEventEmitter,
+    name: &str,
+    args: &serde_json::Value,
+    working_dir: &std::path::Path,
+    session_id: &str,
+    cancel: CancellationToken,
+) -> ToolResult {
+    if name == "ask_user_choice" {
+        return super::tool_interactive::execute(args, on_event, cancel).await;
+    }
+    super::tool_dispatcher::dispatch(name, args, working_dir, session_id).await
 }

@@ -2,9 +2,10 @@ use std::path::Path;
 
 pub fn build(working_dir: &Path, is_git: bool, git_root: Option<&Path>) -> String {
     format!(
-        "{IDENTITY}\n\n{CAPABILITIES}\n\n{}\n\n{TOOLS}\n\n{}\n\n{WEB_SEARCH}\n\n{CODE}\n\n{GIT}\n\n{SAFETY}\n\n{ERRORS}\n\n{STYLE}",
+        "{IDENTITY}\n\n{CAPABILITIES}\n\n{}\n\n{TOOLS}\n\n{}\n\n{}\n\n{WEB_SEARCH}\n\n{CODE}\n\n{GIT}\n\n{SAFETY}\n\n{ERRORS}\n\n{STYLE}",
         env_section(working_dir, is_git, git_root),
         super::prompt_todo::TODO,
+        super::prompt_interactive::INTERACTIVE,
     )
 }
 
@@ -36,6 +37,7 @@ Prefer this over write_file for modifications — it sends only the diff.
 - **glob**: Find files by name patterns across the project.
 - **web_search**: Search the web for current information, documentation, or solutions.
 - **web_fetch**: Fetch and extract content from a URL.
+- **ask_user_choice**: Ask the user to choose between concrete options when their decision changes the next step.
 - **load_skill**: Load a skill by name for specialized workflows.
 - **read_spreadsheet**: Read Excel (.xlsx/.xls/.ods) or CSV/TSV files. Returns structured JSON with headers and rows. \
 Supports sheet selection, cell range filtering, and row limits.

@@ -5,6 +5,7 @@ import { FileDropZone } from "./file-drop-zone";
 import { ChatOverlays } from "./chat-overlays";
 import { SubagentAccordion } from "./subagent-accordion";
 import { TodoProgressPanel } from "./todo-progress-panel";
+import { InteractiveChoicePanel } from "./interactive-choice-panel";
 import { ChatProjectControls } from "./chat-project-controls";
 import { useAgentChat } from "@/hooks/use-agent-chat";
 import { useContextProgress } from "@/hooks/use-context-progress";
@@ -29,7 +30,6 @@ import type { ReasoningMode } from "@/lib/reasoning-modes";
 import { useGitBranch } from "@/hooks/use-git-branch";
 import { ScrollBottomButton } from "./scroll-bottom-button";
 import "./chat.css";
-
 interface ChatViewProps {
   sessionId: string;
   model: string;
@@ -54,7 +54,6 @@ interface ChatViewProps {
   onOpenSubagent?: (sessionId: string) => void;
   isSubagent?: boolean;
 }
-
 export function ChatView({
   sessionId, model, provider, projects, onAddProject,
   onSessionsRefresh, onApplySwitch, onNewSession, onNewSessionInProject, onAutoRename,
@@ -85,7 +84,6 @@ export function ChatView({
   const proj = useSessionProject(sessionId, projects, onAddProject, chat.messages.length > 0);
   const git = useGitBranch(proj.selectedProject?.path, sessionId);
   const fileOperations = useSessionFiles(chat.messages);
-
   useEffect(() => {
     onFileOperationsChange?.(fileOperations);
   }, [fileOperations, onFileOperationsChange]);
@@ -152,6 +150,7 @@ export function ChatView({
         <div className="chat-input-area">
           <div className="chat-input-column">
             <TodoProgressPanel sessionId={isSubagent ? undefined : sessionId} />
+            <InteractiveChoicePanel request={chat.interactiveChoice} />
             {subagents.active.length > 0 && (
               <SubagentAccordion
                 subagents={subagents.active}
@@ -165,6 +164,7 @@ export function ChatView({
             <ChatInput
               modelName={model} providerName={provider} isStreaming={chat.isStreaming} reasoningMode={reasoningMode}
               files={fileDrop.files} contextUsed={context.used} contextMax={context.max}
+              interactivePending={!!chat.interactiveChoice}
               permissionMode={permMode.mode} onPermissionModeChange={(m) => void permMode.change(m)}
               onRemoveFile={fileDrop.removeFile} onPreviewFile={setPreview} onSend={handleSend}
               onStop={() => void chat.stop()} onClearFiles={fileDrop.clearFiles} onFileImport={handleFileImport}

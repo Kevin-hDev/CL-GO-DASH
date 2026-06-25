@@ -1,3 +1,11 @@
+import type { AgentInteractiveChoiceRequest } from "./agent-interactive";
+export type {
+  AgentInteractiveAnswer,
+  AgentInteractiveChoiceRequest,
+  AgentInteractiveOption,
+  AgentInteractiveQuestion,
+} from "./agent-interactive";
+
 export interface OllamaModel {
   name: string;
   size: number;
@@ -258,4 +266,5 @@ export type StreamEvent =
   | { event: "sessionSnapshot"; data: { messages: AgentMessage[]; tokenCount: number } }
   | { event: "subagentSpawned"; data: { subagentSessionId: string; subagentName: string; subagentType: string; promptPreview: string; runId?: string } }
   | { event: "subagentCompleted"; data: { subagentSessionId: string; success: boolean; status: "completed" | "failed" | "cancelled"; summary: string; allDone: boolean; runId?: string } }
-  | { event: "todoUpdated"; data: { todos: AgentTodoItem[] } };
+  | { event: "todoUpdated"; data: { todos: AgentTodoItem[] } }
+  | { event: "interactiveChoiceRequest"; data: AgentInteractiveChoiceRequest };

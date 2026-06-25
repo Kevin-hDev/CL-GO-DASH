@@ -61,9 +61,9 @@ describe("toolCall", () => {
     });
     expect(s.currentTools).toHaveLength(0);
   });
-  it("ignore les tools internes de todo et diagnostic", () => {
+  it("ignore les tools internes de todo, diagnostic et choix interactif", () => {
     let s = makeState();
-    for (const name of ["todo_history", "todo_pause", "todo_resume", "todo_delete", "agent_diagnostics"]) {
+    for (const name of ["todo_history", "todo_pause", "todo_resume", "todo_delete", "agent_diagnostics", "ask_user_choice"]) {
       s = applyStreamEvent(s, { event: "toolCall", data: { name, arguments: {} } }).state;
     }
     expect(s.currentTools).toHaveLength(0);
@@ -109,6 +109,35 @@ describe("toolResult", () => {
       data: { name: "todo_history", toolCallIndex: 0, content: "hidden", isError: false },
     });
     expect(s.currentTools[0].result).toBeUndefined();
+  });
+  it("vide le choix interactif quand ask_user_choice retourne un résultat", () => {
+    const state = makeState({ interactiveChoice: {
+      id: "choice-1",
+      currentIndex: 0,
+      total: 1,
+      questions: [{ header: "Plan", question: "Choisir ?", options: [] }],
+    } });
+    const { state: s } = applyStreamEvent(state, {
+      event: "toolResult",
+      data: { name: "ask_user_choice", toolCallIndex: 0, content: "ok", isError: false },
+    });
+    expect(s.interactiveChoice).toBeUndefined();
+  });
+});
+
+describe("interactiveChoiceRequest", () => {
+  it("stocke la demande interactive courante", () => {
+    const request = {
+      id: "choice-1",
+      currentIndex: 0,
+      total: 1,
+      questions: [{ header: "Plan", question: "Choisir ?", options: [] }],
+    };
+    const { state: s } = applyStreamEvent(makeState(), {
+      event: "interactiveChoiceRequest",
+      data: request,
+    });
+    expect(s.interactiveChoice).toEqual(request);
   });
 });
 

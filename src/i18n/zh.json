@@ -770,6 +770,15 @@
       "completed": "已完成"
     }
   },
+  "interactiveChoice": {
+    "title": "交互选择",
+    "step": "{{current}}/{{total}}",
+    "recommended": "推荐",
+    "otherLabel": "其他",
+    "other": "其他回答",
+    "otherPlaceholder": "输入你的回答",
+    "inputLocked": "请先回答上方问题"
+  },
   "connectors": {
     "main": {
       "subtitle": "允许 LLM 连接其他应用和服务",

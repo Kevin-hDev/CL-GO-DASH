@@ -2,7 +2,8 @@ use std::path::Path;
 
 pub fn build(working_dir: &Path) -> String {
     format!(
-        "{IDENTITY}\n\n{CAPABILITIES}\n\n{WEB_SEARCH}\n\n{MODES}\n\n{}\n\n{STYLE}",
+        "{IDENTITY}\n\n{CAPABILITIES}\n\n{}\n\n{WEB_SEARCH}\n\n{MODES}\n\n{}\n\n{STYLE}",
+        super::prompt_interactive::INTERACTIVE,
         env_section(working_dir),
     )
 }
@@ -18,6 +19,7 @@ const CAPABILITIES: &str = "\
 You have access to two web tools:
 - **web_search**: Search the web for current information.
 - **web_fetch**: Fetch and extract content from a URL.
+- **ask_user_choice**: Ask the user to choose between concrete options when their decision changes the next step.
 
 Use them proactively when questions need up-to-date information. Do not wait to be asked.
 

@@ -1,0 +1,94 @@
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { invoke } from "@tauri-apps/api/core";
+import { InteractiveChoicePanel } from "../interactive-choice-panel";
+
+vi.mock("@tauri-apps/api/core", () => ({ invoke: vi.fn() }));
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string, opts?: Record<string, unknown>) => {
+      const text = (value: unknown) => (
+        typeof value === "string" || typeof value === "number" ? String(value) : ""
+      );
+      if (key === "interactiveChoice.otherLabel") return "Other";
+      if (key === "interactiveChoice.other") return "Other answer";
+      if (key === "interactiveChoice.recommended") return "Recommended";
+      if (key === "interactiveChoice.otherPlaceholder") return "Write your answer";
+      if (key === "interactiveChoice.step") return `${text(opts?.current)}/${text(opts?.total)}`;
+      return key;
+    },
+  }),
+}));
+vi.mock("../interactive-choice-panel.css", () => ({}));
+
+const request = {
+  id: "choice-1",
+  currentIndex: 0,
+  total: 1,
+  questions: [{
+    header: "Plan",
+    question: "What next?",
+    options: [
+      { label: "Fast", description: "Do the minimum", recommended: true },
+      { label: "Complete", description: "Do the full pass" },
+    ],
+  }],
+};
+
+afterEach(cleanup);
+
+beforeEach(() => {
+  vi.mocked(invoke).mockResolvedValue(undefined);
+});
+
+describe("InteractiveChoicePanel", () => {
+  it("affiche la question et les choix", () => {
+    render(<InteractiveChoicePanel request={request} />);
+
+    expect(screen.getByText("What next?")).toBeTruthy();
+    expect(screen.getByText("Fast")).toBeTruthy();
+    expect(screen.getByText("Recommended")).toBeTruthy();
+  });
+
+  it("valide un choix au clic", async () => {
+    render(<InteractiveChoicePanel request={request} />);
+
+    fireEvent.click(screen.getByText("Complete"));
+
+    await waitFor(() => expect(invoke).toHaveBeenCalledWith("respond_to_interactive_choice", {
+      id: "choice-1",
+      answers: [{ questionIndex: 0, selectedLabels: ["Complete"] }],
+    }));
+  });
+
+  it("navigue avec les flèches et valide avec Entrée", async () => {
+    render(<InteractiveChoicePanel request={request} />);
+
+    fireEvent.keyDown(window, { key: "ArrowDown" });
+    fireEvent.keyDown(window, { key: "Enter" });
+
+    await waitFor(() => expect(invoke).toHaveBeenCalledWith("respond_to_interactive_choice", {
+      id: "choice-1",
+      answers: [{ questionIndex: 0, selectedLabels: ["Complete"] }],
+    }));
+  });
+
+  it("ouvre Autre et envoie la réponse libre", async () => {
+    render(<InteractiveChoicePanel request={request} />);
+
+    fireEvent.click(screen.getByText("Other"));
+    fireEvent.change(screen.getByPlaceholderText("Write your answer"), {
+      target: { value: "Use a custom path" },
+    });
+    fireEvent.keyDown(window, { key: "Enter" });
+
+    await waitFor(() => expect(invoke).toHaveBeenCalledWith("respond_to_interactive_choice", {
+      id: "choice-1",
+      answers: [{
+        questionIndex: 0,
+        selectedLabels: ["other"],
+        customAnswer: "Use a custom path",
+      }],
+    }));
+  });
+});

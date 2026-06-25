@@ -7,9 +7,8 @@ use crate::services::paths::data_dir;
 use serde_json::Value;
 use std::path::Path;
 
-pub use crate::services::agent_local::tool_definitions::{
-    get_chat_tool_definitions, get_tool_definitions,
-};
+pub use crate::services::agent_local::tool_definitions::get_tool_definitions;
+pub use crate::services::agent_local::tool_definitions_chat::get_chat_tool_definitions;
 
 // Seuils de taille max par outil (en caractères)
 const MAX_CHARS_BASH: usize = 30_000;
@@ -175,6 +174,7 @@ async fn dispatch_inner(
         "todo_pause" => super::tool_todo::execute_pause(args, session_id).await,
         "todo_resume" => super::tool_todo::execute_resume(args, session_id).await,
         "todo_delete" => super::tool_todo::execute_delete(args, session_id).await,
+        "ask_user_choice" => ToolResult::err("Contexte interactif indisponible."),
         "agent_diagnostics" => {
             let limit = args
                 .get("limit")

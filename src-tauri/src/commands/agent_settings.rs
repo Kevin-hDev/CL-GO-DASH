@@ -1,5 +1,6 @@
 use crate::services::agent_local::agent_settings::{self, AgentSettings};
 use crate::services::agent_local::permission_gate;
+use crate::services::agent_local::types_interactive::AgentInteractiveAnswer;
 
 #[tauri::command]
 pub async fn get_agent_settings() -> Result<AgentSettings, String> {
@@ -24,4 +25,12 @@ pub async fn respond_to_permission(id: String, decision: String) -> Result<(), S
     };
     permission_gate::respond(&id, parsed).await;
     Ok(())
+}
+
+#[tauri::command]
+pub async fn respond_to_interactive_choice(
+    id: String,
+    answers: Vec<AgentInteractiveAnswer>,
+) -> Result<(), String> {
+    crate::services::agent_local::tool_interactive::respond(id, answers).await
 }

@@ -93,7 +93,7 @@ describe("ToolBubble", () => {
 
   it("retourne null si seuls les tools internes sont présents", () => {
     const { container } = render(
-      <ToolBubble tools={[{ name: "todo_delete", args: { id: "abc" }, result: "ok" }]} />,
+      <ToolBubble tools={[{ name: "ask_user_choice", args: { questions: [] }, result: "ok" }]} />,
     );
     expect(container.innerHTML).toBe("");
   });

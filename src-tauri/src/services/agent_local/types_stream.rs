@@ -83,6 +83,13 @@ pub enum StreamEvent {
     TodoUpdated {
         todos: Vec<crate::services::agent_local::types_todo::AgentTodoItem>,
     },
+    #[serde(rename_all = "camelCase")]
+    InteractiveChoiceRequest {
+        id: String,
+        questions: Vec<crate::services::agent_local::types_interactive::AgentInteractiveQuestion>,
+        current_index: usize,
+        total: usize,
+    },
 }
 
 #[derive(Debug, Default)]

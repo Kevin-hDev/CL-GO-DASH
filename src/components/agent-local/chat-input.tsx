@@ -34,6 +34,7 @@ interface ChatInputProps {
   files?: DroppedFile[];
   contextUsed: number;
   contextMax: number;
+  interactivePending?: boolean;
   permissionMode: PermissionMode;
   onPermissionModeChange: (mode: PermissionMode) => void;
   onSend: (text: string, files?: DroppedFile[], skills?: { name: string; content: string }[]) => void;
@@ -49,7 +50,7 @@ interface ChatInputProps {
 
 export function ChatInput({
   modelName, providerName, isStreaming, reasoningMode, files,
-  contextUsed, contextMax,
+  contextUsed, contextMax, interactivePending = false,
   permissionMode, onPermissionModeChange,
   onSend, onStop, onFileImport, onModelChange, onReasoningModeChange,
   onRemoveFile, onPreviewFile, onClearFiles,
@@ -68,7 +69,7 @@ export function ChatInput({
   const visibleSkillNames = activeSkillsInText(text, skills.activeSkills).map((s) => s.name);
 
   const handleSend = useCallback(() => {
-    if (!hasContent || isStreaming) return;
+    if (!hasContent || isStreaming || interactivePending) return;
     onSend(text.trim(), hasFiles ? files : undefined, skills.getSkillsPayload());
     setText("");
     skills.clearSkills();
@@ -122,7 +123,7 @@ export function ChatInput({
   }, [slash.showDropdown, slash]);
 
   const buttonState = isStreaming ? "stop" as const
-    : hasContent ? "send" as const
+    : hasContent && !interactivePending ? "send" as const
     : "hidden" as const;
 
   return (
@@ -145,8 +146,9 @@ export function ChatInput({
           onChange={(e) => handleChange(e.target.value)}
           onScroll={handleTextareaScroll}
           onKeyDown={handleKeyDown}
-          placeholder={t("agentLocal.placeholder")}
+          placeholder={interactivePending ? t("interactiveChoice.inputLocked") : t("agentLocal.placeholder")}
           className="chat-textarea"
+          disabled={interactivePending}
           rows={2}
         />
       </div>

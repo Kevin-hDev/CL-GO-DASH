@@ -183,6 +183,7 @@ pub fn run() {
             commands::get_agent_settings,
             commands::set_permission_mode,
             commands::respond_to_permission,
+            commands::respond_to_interactive_choice,
             // Agent Local — Subagents
             commands::list_subagents,
             commands::get_active_subagents,
