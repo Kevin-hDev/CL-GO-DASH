@@ -147,11 +147,14 @@ pub async fn diagnostics_text(session_id: &str, limit: usize) -> Result<String, 
     let session = super::session_store::get(session_id).await?;
     let limit = diagnostic_tools::bounded_tool_limit(limit);
     let recent_tools = diagnostic_tools::recent_relevant_tools(&session, limit);
+    let recent_work_tools = diagnostic_tools::recent_work_tools(&session, limit);
     serde_json::to_string_pretty(&json!({
         "latest": session.diagnostic_runs.last(),
         "current_tool": session.diagnostic_runs.last().and_then(|run| run.last_tool.as_ref()),
         "last_relevant_tool": recent_tools.first(),
+        "last_work_tool": recent_work_tools.first(),
         "recent_tools": recent_tools,
+        "recent_work_tools": recent_work_tools,
         "recent": session.diagnostic_runs.iter().rev().take(5).collect::<Vec<_>>(),
         "legacy_stream_failures": session.stream_failures.iter().rev().take(5).collect::<Vec<_>>(),
     }))

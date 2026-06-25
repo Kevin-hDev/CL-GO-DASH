@@ -12,13 +12,25 @@ pub(crate) fn recent_relevant_tools(
     session: &AgentSession,
     limit: usize,
 ) -> Vec<AgentDiagnosticTool> {
+    recent_tools_matching(session, limit, |name| !is_internal_diagnostic_tool(name))
+}
+
+pub(crate) fn recent_work_tools(session: &AgentSession, limit: usize) -> Vec<AgentDiagnosticTool> {
+    recent_tools_matching(session, limit, is_work_tool)
+}
+
+fn recent_tools_matching(
+    session: &AgentSession,
+    limit: usize,
+    keep: impl Fn(&str) -> bool,
+) -> Vec<AgentDiagnosticTool> {
     let limit = bounded_tool_limit(limit);
     session
         .diagnostic_runs
         .iter()
         .rev()
         .flat_map(|run| run.recent_tools.iter().rev())
-        .filter(|tool| !is_internal_diagnostic_tool(&tool.name))
+        .filter(|tool| keep(&tool.name))
         .take(limit)
         .cloned()
         .collect()
@@ -26,6 +38,18 @@ pub(crate) fn recent_relevant_tools(
 
 fn is_internal_diagnostic_tool(name: &str) -> bool {
     matches!(name, "agent_diagnostics")
+}
+
+fn is_work_tool(name: &str) -> bool {
+    !matches!(
+        name,
+        "agent_diagnostics"
+            | "todo_write"
+            | "todo_history"
+            | "todo_pause"
+            | "todo_resume"
+            | "todo_delete"
+    )
 }
 
 #[cfg(test)]
@@ -45,6 +69,27 @@ mod tests {
         ]));
 
         let tools = recent_relevant_tools(&session, 2);
+
+        assert_eq!(
+            tools
+                .iter()
+                .map(|tool| tool.name.as_str())
+                .collect::<Vec<_>>(),
+            vec!["grep", "write_file"]
+        );
+    }
+
+    #[test]
+    fn recent_work_tools_skip_todo_and_diagnostic_tools() {
+        let mut session = test_session();
+        session.diagnostic_runs.push(test_run(vec![
+            tool("write_file", "completed"),
+            tool("todo_write", "completed"),
+            tool("agent_diagnostics", "started"),
+            tool("grep", "completed"),
+        ]));
+
+        let tools = recent_work_tools(&session, 5);
 
         assert_eq!(
             tools

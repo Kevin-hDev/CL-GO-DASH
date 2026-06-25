@@ -9,4 +9,5 @@ Use todo_history to inspect saved checklists and todo_resume to continue one whe
 Use todo_delete when a saved checklist is no longer relevant and should not be resumed.
 Use agent_diagnostics after a stream interruption or unexplained failure before creating a new diagnostic checklist.
 Pass agent_diagnostics limit when you need several recent tool calls; omit it for the latest relevant tool only.
+Prefer recent_work_tools or last_work_tool when diagnosing file, shell, search, or execution tools.
 Do not use todo_write for simple questions, single-step edits, or casual conversation.";
