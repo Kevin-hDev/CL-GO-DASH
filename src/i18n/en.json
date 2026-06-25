@@ -842,6 +842,15 @@
     "failed": "failed",
     "cancelled": "cancelled"
   },
+  "todos": {
+    "progress": "{{done}}/{{total}} tasks",
+    "noActive": "Todo complete",
+    "status": {
+      "pending": "pending",
+      "in_progress": "in progress",
+      "completed": "completed"
+    }
+  },
   "forecast": {
     "title": "Forecast",
     "noAnalysis": "No analysis in progress",

@@ -57,6 +57,12 @@ mod tests {
     }
 
     #[test]
+    fn todo_write_requires_todos_array() {
+        assert!(validate("todo_write", &json!({"todos": []})).is_ok());
+        assert!(validate("todo_write", &json!({"todos": "nope"})).is_err());
+    }
+
+    #[test]
     fn unknown_tool_passes_through() {
         let args = json!({"anything": true});
         assert!(validate("unknown_future_tool", &args).is_ok());

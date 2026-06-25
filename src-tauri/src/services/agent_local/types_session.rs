@@ -1,6 +1,8 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
+use super::types_todo::AgentTodoItem;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AgentSession {
     pub id: String,
@@ -15,6 +17,8 @@ pub struct AgentSession {
     pub reasoning_mode: Option<String>,
     pub accumulated_tokens: u32,
     pub messages: Vec<AgentMessage>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub todos: Vec<AgentTodoItem>,
     #[serde(default)]
     pub is_heartbeat: bool,
     #[serde(default)]

@@ -170,6 +170,7 @@ async fn dispatch_inner(
                 Err(e) => ToolResult::err(e),
             }
         }
+        "todo_write" => super::tool_todo::execute(args, session_id).await,
         "load_skill" => {
             let name = args["skill_name"].as_str().unwrap_or("");
             match tool_skill_loader::load_skill(name).await {

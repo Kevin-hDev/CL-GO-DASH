@@ -84,6 +84,13 @@ describe("ToolBubble", () => {
     expect(container.innerHTML).toBe("");
   });
 
+  it("retourne null si seul todo_write est présent", () => {
+    const { container } = render(
+      <ToolBubble tools={[{ name: "todo_write", args: { todos: [] }, result: "ok" }]} />,
+    );
+    expect(container.innerHTML).toBe("");
+  });
+
   it("affiche un résumé compact pour bash et masque la commande brute", () => {
     const { container } = render(
       <ToolBubble tools={[{ name: "bash", args: { command: "echo hello" } }]} />,

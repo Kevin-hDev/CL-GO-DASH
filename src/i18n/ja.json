@@ -761,6 +761,15 @@
     "failed": "失敗",
     "cancelled": "キャンセル済み"
   },
+  "todos": {
+    "progress": "{{done}}/{{total}} 件のタスク",
+    "noActive": "Todo 完了",
+    "status": {
+      "pending": "未着手",
+      "in_progress": "進行中",
+      "completed": "完了"
+    }
+  },
   "connectors": {
     "main": {
       "subtitle": "LLM が他のアプリやサービスに接続できるようにします",

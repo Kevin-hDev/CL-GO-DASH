@@ -77,6 +77,7 @@ pub async fn create_full(
         reasoning_mode,
         accumulated_tokens: 0,
         messages: Vec::new(),
+        todos: Vec::new(),
         is_heartbeat,
         is_gateway: false,
         gateway_channel_key: None,
@@ -151,6 +152,11 @@ pub async fn add_messages(
     let lock = lock_session(id).await;
     let _guard = lock.lock().await;
     let mut session = get(id).await?;
+    let should_clear_todos = new_messages.iter().any(|m| m.role == "user")
+        && super::types_todo::all_completed(&session.todos);
+    if should_clear_todos {
+        session.todos.clear();
+    }
     if tokens > 0 {
         if let Some(last) = new_messages.last_mut() {
             last.tokens = tokens;
@@ -162,7 +168,11 @@ pub async fn add_messages(
         session.messages.drain(..excess);
     }
     session.accumulated_tokens = session.messages.iter().map(|m| m.tokens).sum();
-    save(&session).await
+    let result = save(&session).await;
+    if result.is_ok() && should_clear_todos {
+        super::tool_todo::emit_update(id, Vec::new());
+    }
+    result
 }
 
 pub async fn rename(id: &str, name: &str) -> Result<(), String> {

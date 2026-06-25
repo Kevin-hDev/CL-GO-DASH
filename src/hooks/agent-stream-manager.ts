@@ -122,7 +122,7 @@ function handleStreamEvent(sessionId: string, event: StreamEvent) {
     record.started = true;
   }
 
-  if (event.event === "subagentSpawned" || event.event === "subagentCompleted") {
+  if (event.event === "subagentSpawned" || event.event === "subagentCompleted" || event.event === "todoUpdated") {
     flushFrameNotify(record, notify);
     return;
   }

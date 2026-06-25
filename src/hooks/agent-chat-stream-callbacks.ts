@@ -35,11 +35,16 @@ export function applyStreamEvent(
       break;
     case "toolCall":
       ensureTimers();
+      if (event.data.name === "todo_write") break;
       next.currentTools = [...next.currentTools, {
         name: event.data.name, args: event.data.arguments,
       }];
       break;
     case "toolResult":
+      if (event.data.name === "todo_write") {
+        next.pendingPermissions = [];
+        break;
+      }
       next.currentTools = applyToolResult(
         next.currentTools,
         event.data.toolCallIndex ?? -1,
@@ -63,6 +68,7 @@ export function applyStreamEvent(
       break;
     case "subagentSpawned":
     case "subagentCompleted":
+    case "todoUpdated":
       break;
     case "done":
       return finishStream(next, event);

@@ -761,6 +761,15 @@
     "failed": "fallito",
     "cancelled": "annullato"
   },
+  "todos": {
+    "progress": "{{done}}/{{total}} attività",
+    "noActive": "Todo completata",
+    "status": {
+      "pending": "in attesa",
+      "in_progress": "in corso",
+      "completed": "completata"
+    }
+  },
   "connectors": {
     "main": {
       "subtitle": "Permetti agli LLM di connettersi ad altre app e servizi",

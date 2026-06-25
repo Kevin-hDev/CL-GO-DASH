@@ -117,6 +117,7 @@ pub fn get_tool_definitions() -> Vec<Value> {
                 "required": ["url"]
             }),
         ),
+        super::tool_definitions_todo::todo_write_definition(),
         tool_def(
             "load_skill",
             "Load a skill by name for specialized workflows.",

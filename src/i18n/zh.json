@@ -761,6 +761,15 @@
     "failed": "失败",
     "cancelled": "已取消"
   },
+  "todos": {
+    "progress": "{{done}}/{{total}} 项任务",
+    "noActive": "待办已完成",
+    "status": {
+      "pending": "待办",
+      "in_progress": "进行中",
+      "completed": "已完成"
+    }
+  },
   "connectors": {
     "main": {
       "subtitle": "允许 LLM 连接其他应用和服务",

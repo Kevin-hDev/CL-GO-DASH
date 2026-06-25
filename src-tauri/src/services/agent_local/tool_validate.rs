@@ -32,6 +32,7 @@ static GREP: Schema = &[
 static GLOB: Schema = &[("pattern", Ty::Str, true), ("path", Ty::Str, false)];
 static WEB_SEARCH: Schema = &[("query", Ty::Str, true)];
 static WEB_FETCH: Schema = &[("url", Ty::Str, true)];
+static TODO_WRITE: Schema = &[("todos", Ty::Arr, true)];
 static LOAD_SKILL: Schema = &[("skill_name", Ty::Str, true)];
 static CREATE_BRANCH: Schema = &[("branch_name", Ty::Str, true)];
 static CHECKOUT_BRANCH: Schema = &[("branch_name", Ty::Str, true)];
@@ -91,6 +92,7 @@ fn schema(tool: &str) -> Option<Schema> {
         "glob" => GLOB,
         "web_search" => WEB_SEARCH,
         "web_fetch" => WEB_FETCH,
+        "todo_write" => TODO_WRITE,
         "load_skill" => LOAD_SKILL,
         "create_branch" => CREATE_BRANCH,
         "checkout_branch" => CHECKOUT_BRANCH,

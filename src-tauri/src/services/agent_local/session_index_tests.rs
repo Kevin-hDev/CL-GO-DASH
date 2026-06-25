@@ -14,6 +14,7 @@ fn test_session(id: &str, name: &str, heartbeat: bool) -> AgentSession {
         reasoning_mode: None,
         accumulated_tokens: 0,
         messages: vec![],
+        todos: vec![],
         is_heartbeat: heartbeat,
         is_gateway: false,
         gateway_channel_key: None,

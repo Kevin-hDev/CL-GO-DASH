@@ -54,6 +54,13 @@ describe("toolCall", () => {
     s = applyStreamEvent(s, { event: "toolCall", data: { name: "grep", arguments: {} } }).state;
     expect(s.currentTools).toHaveLength(2);
   });
+  it("ignore todo_write dans les outils visibles", () => {
+    const { state: s } = applyStreamEvent(makeState(), {
+      event: "toolCall",
+      data: { name: "todo_write", arguments: { todos: [] } },
+    });
+    expect(s.currentTools).toHaveLength(0);
+  });
 });
 
 describe("toolResult", () => {
@@ -72,6 +79,21 @@ describe("toolResult", () => {
     const state = makeState({ currentTools: [{ name: "bash", args: {} }], pendingPermissions: [{ id: "p1", toolName: "bash", arguments: {} }] });
     const { state: s } = applyStreamEvent(state, { event: "toolResult", data: { name: "bash", toolCallIndex: 0, content: "ok", isError: false } });
     expect(s.pendingPermissions).toHaveLength(0);
+  });
+  it("ignore le résultat todo_write sans toucher l'outil suivant", () => {
+    let s = applyStreamEvent(makeState(), {
+      event: "toolCall",
+      data: { name: "todo_write", arguments: { todos: [] } },
+    }).state;
+    s = applyStreamEvent(s, {
+      event: "toolCall",
+      data: { name: "bash", arguments: { command: "ls" } },
+    }).state;
+    s = applyStreamEvent(s, {
+      event: "toolResult",
+      data: { name: "todo_write", toolCallIndex: 0, content: "ok", isError: false },
+    }).state;
+    expect(s.currentTools[0].result).toBeUndefined();
   });
 });
 

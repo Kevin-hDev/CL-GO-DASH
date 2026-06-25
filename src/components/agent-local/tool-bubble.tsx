@@ -19,9 +19,10 @@ export function ToolBubble({
   onFilePreview?: (path: string) => void;
   projectPath?: string;
 }) {
+  const visibleTools = useMemo(() => tools.filter(isVisibleTool), [tools]);
   const groups = useMemo(
-    () => groupToolActivities(tools.map(streamToolToRenderable)),
-    [tools],
+    () => groupToolActivities(visibleTools.map(streamToolToRenderable)),
+    [visibleTools],
   );
   if (groups.length === 0) return null;
   return (
@@ -40,9 +41,10 @@ export function SavedToolBubble({
   onFilePreview?: (path: string) => void;
   projectPath?: string;
 }) {
+  const visibleTools = useMemo(() => tools.filter(isVisibleTool), [tools]);
   const groups = useMemo(
-    () => groupToolActivities(tools.map(savedToolToRenderable)),
-    [tools],
+    () => groupToolActivities(visibleTools.map(savedToolToRenderable)),
+    [visibleTools],
   );
   if (groups.length === 0) return null;
   return (
@@ -50,4 +52,8 @@ export function SavedToolBubble({
       <ToolActivityGroupList groups={groups} onFilePreview={onFilePreview} projectPath={projectPath} />
     </div>
   );
+}
+
+function isVisibleTool(tool: { name: string }) {
+  return tool.name !== "todo_write";
 }

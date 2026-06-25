@@ -842,6 +842,15 @@
     "failed": "échoué",
     "cancelled": "annulé"
   },
+  "todos": {
+    "progress": "{{done}}/{{total}} tâches",
+    "noActive": "Todo terminée",
+    "status": {
+      "pending": "à faire",
+      "in_progress": "en cours",
+      "completed": "terminée"
+    }
+  },
   "forecast": {
     "title": "Forecast",
     "noAnalysis": "Aucune analyse en cours",

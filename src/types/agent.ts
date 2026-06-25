@@ -85,6 +85,7 @@ export interface AgentSession {
   reasoning_mode?: string;
   accumulated_tokens: number;
   messages: AgentMessage[];
+  todos?: AgentTodoItem[];
   project_id?: string;
   working_dir?: string;
   parent_session_id?: string;
@@ -93,6 +94,14 @@ export interface AgentSession {
   subagent_prompt?: string;
   subagent_status?: "running" | "completed" | "failed" | "cancelled";
   subagent_run_id?: string;
+}
+
+export type AgentTodoStatus = "pending" | "in_progress" | "completed";
+
+export interface AgentTodoItem {
+  content: string;
+  active_form?: string;
+  status: AgentTodoStatus;
 }
 
 export interface AgentSessionMeta {
@@ -218,4 +227,5 @@ export type StreamEvent =
   | { event: "compressionComplete"; data: Record<string, never> }
   | { event: "sessionSnapshot"; data: { messages: AgentMessage[]; tokenCount: number } }
   | { event: "subagentSpawned"; data: { subagentSessionId: string; subagentName: string; subagentType: string; promptPreview: string; runId?: string } }
-  | { event: "subagentCompleted"; data: { subagentSessionId: string; success: boolean; status: "completed" | "failed" | "cancelled"; summary: string; allDone: boolean; runId?: string } };
+  | { event: "subagentCompleted"; data: { subagentSessionId: string; success: boolean; status: "completed" | "failed" | "cancelled"; summary: string; allDone: boolean; runId?: string } }
+  | { event: "todoUpdated"; data: { todos: AgentTodoItem[] } };

@@ -38,6 +38,7 @@ pub mod prompt_chat_compact;
 pub mod prompt_chat_detailed;
 pub mod prompt_compact;
 pub mod prompt_detailed;
+pub mod prompt_todo;
 pub mod security;
 pub mod sensitive_data;
 pub mod session_index;
@@ -68,6 +69,7 @@ pub mod tool_definitions_forecast;
 pub mod tool_definitions_mcp;
 pub mod tool_definitions_office;
 pub mod tool_definitions_subagent;
+pub mod tool_definitions_todo;
 pub mod tool_delegate;
 pub mod tool_dispatcher;
 pub mod tool_dispatcher_forecast;
@@ -122,6 +124,7 @@ pub mod tool_spreadsheet_write_edit;
 pub mod tool_spreadsheet_write_new;
 #[cfg(test)]
 pub mod tool_spreadsheet_write_tests;
+pub mod tool_todo;
 pub mod tool_validate;
 #[cfg(test)]
 pub mod tool_validate_tests;
@@ -137,6 +140,7 @@ pub mod translator;
 pub mod types_ollama;
 pub mod types_session;
 pub mod types_stream;
+pub mod types_todo;
 pub mod types_tools;
 pub mod write_guard;
 #[cfg(test)]

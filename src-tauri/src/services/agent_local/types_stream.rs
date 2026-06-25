@@ -76,6 +76,10 @@ pub enum StreamEvent {
         all_done: bool,
         run_id: Option<String>,
     },
+    #[serde(rename_all = "camelCase")]
+    TodoUpdated {
+        todos: Vec<crate::services::agent_local::types_todo::AgentTodoItem>,
+    },
 }
 
 #[derive(Debug, Default)]

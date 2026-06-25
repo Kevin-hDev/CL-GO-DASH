@@ -4,6 +4,7 @@ import { ChatInput } from "./chat-input";
 import { FileDropZone } from "./file-drop-zone";
 import { ChatOverlays } from "./chat-overlays";
 import { SubagentAccordion } from "./subagent-accordion";
+import { TodoProgressPanel } from "./todo-progress-panel";
 import { ChatProjectControls } from "./chat-project-controls";
 import { useAgentChat } from "@/hooks/use-agent-chat";
 import { useContextProgress } from "@/hooks/use-context-progress";
@@ -149,6 +150,7 @@ export function ChatView({
         {!isAtBottom && <ScrollBottomButton onClick={scrollToBottom} />}
         <div className="chat-input-area">
           <div className="chat-input-column">
+            <TodoProgressPanel sessionId={isSubagent ? undefined : sessionId} />
             {subagents.active.length > 0 && (
               <SubagentAccordion
                 subagents={subagents.active}

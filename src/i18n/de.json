@@ -761,6 +761,15 @@
     "failed": "fehlgeschlagen",
     "cancelled": "abgebrochen"
   },
+  "todos": {
+    "progress": "{{done}}/{{total}} Aufgaben",
+    "noActive": "Todo abgeschlossen",
+    "status": {
+      "pending": "offen",
+      "in_progress": "in Arbeit",
+      "completed": "abgeschlossen"
+    }
+  },
   "connectors": {
     "main": {
       "subtitle": "Erlaubt LLMs, sich mit anderen Apps und Diensten zu verbinden",
