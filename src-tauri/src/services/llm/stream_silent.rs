@@ -1,6 +1,6 @@
 use super::{
     stream_chunk::{self, ParsedChunk},
-    stream_http::{post_chat_request, RequestConfig},
+    stream_http::{post_chat_request, post_chat_request_with_timeout, RequestConfig},
     stream_sse::is_done_marker,
     stream_tools::ToolCallAccumulator,
 };
@@ -9,6 +9,7 @@ use crate::services::agent_local::types_ollama::StreamResult;
 use crate::services::stream_utils::{FilteredChunk, ThinkTagFilter};
 use eventsource_stream::Eventsource;
 use futures_util::StreamExt;
+use std::time::Duration;
 use tokio_util::sync::CancellationToken;
 
 pub async fn collect_chat_silent(
@@ -24,6 +25,7 @@ pub async fn collect_chat_silent(
             &[],
             false,
             None,
+            None,
             cancel,
         )
         .await;
@@ -35,14 +37,51 @@ pub async fn collect_chat_silent(
         tools: &[],
         think: false,
         reasoning_mode: None,
+        max_tokens: None,
     };
     let resp = post_chat_request(&cfg).await.map_err(|e| e.to_string())?;
-    consume_silent(resp, cancel).await
+    consume_silent(resp, cancel, super::timeouts::idle_timeout()).await
+}
+
+pub async fn collect_chat_silent_for_compression(
+    provider_id: &str,
+    model: &str,
+    messages: &[ChatMessage],
+    max_tokens: u32,
+    cancel: CancellationToken,
+) -> Result<StreamResult, String> {
+    let timeout = crate::services::compress::timeouts::compression_timeout();
+    if provider_id == "codex-oauth" {
+        return crate::services::codex_client::stream::collect_chat_silent_for_compression(
+            model,
+            messages,
+            &[],
+            false,
+            None,
+            Some(max_tokens),
+            cancel,
+        )
+        .await;
+    }
+    let cfg = RequestConfig {
+        provider_id,
+        model,
+        messages,
+        tools: &[],
+        think: false,
+        reasoning_mode: None,
+        max_tokens: Some(max_tokens),
+    };
+    let resp = post_chat_request_with_timeout(&cfg, timeout)
+        .await
+        .map_err(|e| e.to_string())?;
+    consume_silent(resp, cancel, timeout).await
 }
 
 async fn consume_silent(
     resp: reqwest::Response,
     cancel: CancellationToken,
+    idle_timeout: Duration,
 ) -> Result<StreamResult, String> {
     let mut stream = resp.bytes_stream().eventsource();
     let mut result = StreamResult::default();
@@ -52,8 +91,11 @@ async fn consume_silent(
     loop {
         tokio::select! {
             _ = cancel.cancelled() => return Err("Annulé".to_string()),
-            _ = tokio::time::sleep(super::timeouts::idle_timeout()) => {
-                return Err("Timeout compression : aucune réponse depuis 180s".to_string());
+            _ = tokio::time::sleep(idle_timeout) => {
+                return Err(format!(
+                    "Timeout compression : aucune réponse depuis {}s",
+                    idle_timeout.as_secs()
+                ));
             }
             event = stream.next() => {
                 let Some(event) = event else { break; };

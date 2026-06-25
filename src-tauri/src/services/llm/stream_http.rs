@@ -9,6 +9,7 @@ pub struct RequestConfig<'a> {
     pub tools: &'a [serde_json::Value],
     pub think: bool,
     pub reasoning_mode: Option<&'a str>,
+    pub max_tokens: Option<u32>,
 }
 
 #[derive(Debug)]
@@ -29,6 +30,13 @@ impl std::fmt::Display for RequestError {
 }
 
 pub async fn post_chat_request(cfg: &RequestConfig<'_>) -> Result<reqwest::Response, RequestError> {
+    post_chat_request_with_timeout(cfg, super::timeouts::request_timeout()).await
+}
+
+pub async fn post_chat_request_with_timeout(
+    cfg: &RequestConfig<'_>,
+    timeout: std::time::Duration,
+) -> Result<reqwest::Response, RequestError> {
     if cfg.model.len() > 128 {
         return Err(RequestError::Fatal("nom de modèle trop long".into()));
     }
@@ -46,7 +54,7 @@ pub async fn post_chat_request(cfg: &RequestConfig<'_>) -> Result<reqwest::Respo
         "stream": true,
         "stream_options": { "include_usage": true },
     });
-    if let Some(max) = spec.default_max_tokens {
+    if let Some(max) = cfg.max_tokens.or(spec.default_max_tokens) {
         payload["max_tokens"] = max.into();
     }
     super::stream_reasoning::apply(
@@ -72,7 +80,7 @@ pub async fn post_chat_request(cfg: &RequestConfig<'_>) -> Result<reqwest::Respo
     }
 
     let client = reqwest::Client::builder()
-        .timeout(super::timeouts::request_timeout())
+        .timeout(timeout)
         .build()
         .map_err(|e| RequestError::Fatal(format!("HTTP client: {e}")))?;
 

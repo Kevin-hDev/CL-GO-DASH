@@ -1,9 +1,8 @@
-//! Agent loop pour providers LLM API (OpenAI-compat).
-//!
 //! Miroir de `agent_local/agent_loop.rs` côté Ollama : boucle chat + tool_calls + exec
 //! jusqu'à ce que le modèle n'appelle plus d'outil. Réutilise `tool_executor::run_tools`
 //! pour dispatcher et gérer les permissions.
 
+use super::agent_loop_tools;
 use super::compress_hook;
 use super::retry;
 use crate::services::agent_local::circuit_breaker;
@@ -54,12 +53,13 @@ pub async fn run_agent_loop(
         }
 
         tool_result_budget::apply_budget(messages);
-        compress_hook::try_auto_compress(
+        let _ = compress_hook::try_auto_compress(
             on_event,
             provider_id,
             model,
             messages,
             &session_id,
+            &request_id,
             native_context,
             configured_context,
             last_prompt + last_eval,
@@ -95,32 +95,34 @@ pub async fn run_agent_loop(
         messages.push(super::agent_loop_message::build_assistant_message(&result));
 
         // Check post-réponse : compresser si le seuil a été dépassé pendant la génération
-        compress_hook::try_auto_compress(
+        if let Some(context_tokens) = compress_hook::try_auto_compress(
             on_event,
             provider_id,
             model,
             messages,
             &session_id,
+            &request_id,
             native_context,
             configured_context,
             last_prompt + last_eval,
             cancel.clone(),
         )
-        .await;
+        .await
+        {
+            last_prompt = 0;
+            last_eval = context_tokens;
+        }
 
         if result.tool_calls.is_empty() {
             break;
         }
-        for (name, args) in &result.tool_calls {
-            crate::services::agent_local::tool_executor_diagnostics::detected(
-                &session_id,
-                &request_id,
-                name,
-                args,
-                &working_dir,
-            )
-            .await;
-        }
+        agent_loop_tools::record_detected_tool_calls(
+            &session_id,
+            &request_id,
+            &result.tool_calls,
+            &working_dir,
+        )
+        .await;
 
         if turn == MAX_TURNS - 1 {
             let diagnostic = crate::services::agent_local::stream_diagnostics::record_failure(
@@ -172,12 +174,7 @@ pub async fn run_agent_loop(
 
         // Patch : assigne tool_call_id aux messages role:"tool" juste poussés,
         // dans l'ordre des tool_calls. Requis pour OpenAI-compat au tour suivant.
-        let pushed = &mut messages[before..];
-        for (i, msg) in pushed.iter_mut().enumerate() {
-            if msg.role == "tool" {
-                msg.tool_call_id = result.tool_call_ids.get(i).cloned();
-            }
-        }
+        agent_loop_tools::assign_tool_call_ids(messages, before, &result.tool_call_ids);
 
         let _ = on_event.send(StreamEvent::TurnEnd {});
     }

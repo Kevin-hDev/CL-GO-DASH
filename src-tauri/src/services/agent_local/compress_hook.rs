@@ -11,14 +11,15 @@ pub async fn try_auto_compress(
     messages: &mut Vec<ChatMessage>,
     model: &str,
     session_id: &str,
+    request_id: &str,
     native_context: u64,
     configured_context: u64,
     last_context_tokens: u32,
     cancel: CancellationToken,
-) {
+) -> Option<u32> {
     let config = match crate::services::config::read_config() {
         Ok(c) => c.advanced,
-        Err(_) => return,
+        Err(_) => return None,
     };
     let estimated = token_estimate::estimate_tokens(messages);
     let used = context_used_for_compression(last_context_tokens, estimated);
@@ -29,12 +30,19 @@ pub async fn try_auto_compress(
         used,
         config.compression_threshold,
     ) {
-        return;
+        return None;
     }
 
     let _ = on_event.send(StreamEvent::Compressing {
         status: "start".to_string(),
     });
+    super::stream_diagnostics::mark_phase(
+        session_id,
+        request_id,
+        "compression",
+        "Auto-compression du contexte démarrée.",
+    )
+    .await;
 
     // Garder la dernière réponse assistant pour ne pas la perdre
     let last_assistant = messages
@@ -44,10 +52,23 @@ pub async fn try_auto_compress(
         .cloned();
 
     let file_context = context_capsules::recent_file_context_message(messages, configured_context);
-    let summary_instruction = summary_budget::summary_instruction(configured_context);
+    let (summary_instruction, output_limit) =
+        summary_budget::summary_instruction_for_input(configured_context, estimated);
     let compress_msgs =
         engine::build_compression_request_content(messages, summary_instruction.as_deref());
-    match ollama_stream::collect_chat(model, compress_msgs).await {
+    eprintln!(
+        "[compress] auto ollama start session={session_id} input_tokens={estimated} output_limit={output_limit}"
+    );
+    let compression = ollama_stream::collect_chat_with_timeout_and_limit(
+        model,
+        compress_msgs,
+        crate::services::compress::timeouts::compression_timeout(),
+        Some(output_limit),
+    );
+    match tokio::select! {
+        _ = cancel.cancelled() => Err("Annulé".to_string()),
+        result = compression => result,
+    } {
         Ok((content, _)) => {
             let summary = prompt::extract_summary(&content);
             engine::apply_compression(messages, &summary, true);
@@ -63,18 +84,21 @@ pub async fn try_auto_compress(
                 last_assistant.as_ref(),
             )
             .await;
+            let current_tokens = token_estimate::estimate_tokens(messages) as u32;
+            send_compression_done(on_event);
+            eprintln!(
+                "[compress] auto ollama done session={session_id} context_tokens={current_tokens}"
+            );
+            Some(current_tokens)
         }
         Err(e) => {
             if !cancel.is_cancelled() {
                 eprintln!("[compress] Échec compression Ollama : {e}");
             }
+            send_compressing_done(on_event);
+            None
         }
     }
-
-    let _ = on_event.send(StreamEvent::Compressing {
-        status: "done".to_string(),
-    });
-    let _ = on_event.send(StreamEvent::CompressionComplete {});
 }
 
 fn context_used_for_compression(last_context_tokens: u32, estimated_tokens: usize) -> usize {
@@ -117,7 +141,8 @@ async fn save_compressed_session(
     let mut session_messages = vec![summary_msg];
 
     if let Some(file_context) = file_context {
-        let context_tokens = token_estimate::estimate_tokens(std::slice::from_ref(file_context)) as u32;
+        let context_tokens =
+            token_estimate::estimate_tokens(std::slice::from_ref(file_context)) as u32;
         session_messages.push(AgentMessage {
             id: uuid::Uuid::new_v4().to_string(),
             role: "assistant".to_string(),
@@ -159,17 +184,17 @@ async fn save_compressed_session(
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::context_used_for_compression;
-
-    #[test]
-    fn uses_estimate_when_current_messages_are_larger() {
-        assert_eq!(context_used_for_compression(10_000, 12_000), 12_000);
-    }
-
-    #[test]
-    fn uses_provider_count_when_it_is_larger() {
-        assert_eq!(context_used_for_compression(15_000, 12_000), 15_000);
-    }
+fn send_compression_done(on_event: &AgentEventEmitter) {
+    send_compressing_done(on_event);
+    let _ = on_event.send(StreamEvent::CompressionComplete {});
 }
+
+fn send_compressing_done(on_event: &AgentEventEmitter) {
+    let _ = on_event.send(StreamEvent::Compressing {
+        status: "done".to_string(),
+    });
+}
+
+#[cfg(test)]
+#[path = "compress_hook_tests.rs"]
+mod tests;

@@ -40,6 +40,29 @@ fn failure_summary_uses_last_tool_without_raw_error() {
     );
 }
 
+#[test]
+fn failure_keeps_compression_phase_and_classifies_wrapped_ollama_loss() {
+    let mut session = test_session();
+    let mut run = test_run();
+    run.phase = "compression".to_string();
+    session.diagnostic_runs.push(run);
+
+    apply_failure(
+        &mut session,
+        0,
+        "Compression Ollama : ollama_connection_lost",
+        false,
+    );
+
+    let run = &session.diagnostic_runs[0];
+    assert_eq!(run.phase, "compression");
+    assert_eq!(run.error_type.as_deref(), Some("connection_lost"));
+    assert_eq!(
+        run.safe_summary.as_deref(),
+        Some("Interruption pendant compression (connection_lost).")
+    );
+}
+
 fn test_run() -> AgentDiagnosticRun {
     let now = Utc::now();
     AgentDiagnosticRun {

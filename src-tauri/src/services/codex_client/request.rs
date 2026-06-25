@@ -8,6 +8,11 @@ use crate::services::codex_oauth::token;
 
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(180);
 
+struct RequestOptions {
+    timeout: Duration,
+    max_output_tokens: Option<u32>,
+}
+
 pub async fn post_codex_stream(
     model: &str,
     messages: &[ChatMessage],
@@ -16,7 +21,44 @@ pub async fn post_codex_stream(
     reasoning_mode: Option<&str>,
 ) -> Result<reqwest::Response, String> {
     let creds = token::ensure_valid().await?;
-    send_request(&creds, model, messages, tools, think, reasoning_mode).await
+    send_request(
+        &creds,
+        model,
+        messages,
+        tools,
+        think,
+        reasoning_mode,
+        RequestOptions {
+            timeout: REQUEST_TIMEOUT,
+            max_output_tokens: None,
+        },
+    )
+    .await
+}
+
+pub async fn post_codex_stream_with_timeout(
+    model: &str,
+    messages: &[ChatMessage],
+    tools: &[serde_json::Value],
+    think: bool,
+    reasoning_mode: Option<&str>,
+    timeout: Duration,
+    max_output_tokens: Option<u32>,
+) -> Result<reqwest::Response, String> {
+    let creds = token::ensure_valid().await?;
+    send_request(
+        &creds,
+        model,
+        messages,
+        tools,
+        think,
+        reasoning_mode,
+        RequestOptions {
+            timeout,
+            max_output_tokens,
+        },
+    )
+    .await
 }
 
 async fn send_request(
@@ -26,6 +68,7 @@ async fn send_request(
     tools: &[serde_json::Value],
     _think: bool,
     reasoning_mode: Option<&str>,
+    options: RequestOptions,
 ) -> Result<reqwest::Response, String> {
     let (instructions, input) = convert::convert_messages(messages);
     let converted_tools = convert::convert_tools_to_responses_api(tools);
@@ -51,12 +94,13 @@ async fn send_request(
         },
         reasoning,
         include,
+        max_output_tokens: options.max_output_tokens,
     };
     let url = format!("{CODEX_API_BASE}/responses");
     let body_json = serde_json::to_string(&body).map_err(|e| format!("json: {e}"))?;
 
     let client = reqwest::Client::builder()
-        .timeout(REQUEST_TIMEOUT)
+        .timeout(options.timeout)
         .build()
         .map_err(|e| format!("http client: {e}"))?;
 

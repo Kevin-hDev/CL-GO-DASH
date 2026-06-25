@@ -12,6 +12,7 @@ pub(crate) fn is_compress_command(messages: &[ChatMessage]) -> bool {
 pub(crate) async fn handle_compress_command(
     on_event: &AgentEventEmitter,
     session_id: &str,
+    request_id: &str,
     messages: &[ChatMessage],
     model: &str,
     provider: &str,
@@ -24,6 +25,13 @@ pub(crate) async fn handle_compress_command(
     let _ = on_event.send(StreamEvent::Compressing {
         status: "start".to_string(),
     });
+    crate::services::agent_local::stream_diagnostics::mark_phase(
+        session_id,
+        request_id,
+        "compression",
+        "Compression du contexte démarrée.",
+    )
+    .await;
 
     let msgs_without_command: Vec<ChatMessage> = messages
         .iter()
@@ -31,8 +39,31 @@ pub(crate) async fn handle_compress_command(
         .cloned()
         .collect();
 
-    let compress_msgs = engine::build_compression_request_content(&msgs_without_command, None);
-    let summary_raw = collect_summary(provider, model, compress_msgs, cancel).await?;
+    let input_tokens =
+        crate::services::compress::token_estimate::estimate_tokens(&msgs_without_command);
+    let context = resolve_context_window(provider, model).await;
+    let (summary_instruction, output_limit) =
+        crate::services::compress::summary_budget::summary_instruction_for_input(
+            context,
+            input_tokens,
+        );
+    eprintln!(
+        "[compress] manual start session={session_id} provider={provider} input_tokens={input_tokens} output_limit={output_limit}"
+    );
+
+    let compress_msgs = engine::build_compression_request_content(
+        &msgs_without_command,
+        summary_instruction.as_deref(),
+    );
+    let summary_raw =
+        match collect_summary(provider, model, compress_msgs, output_limit, cancel).await {
+            Ok(summary) => summary,
+            Err(err) => {
+                eprintln!("[compress] manual failed session={session_id}: {err}");
+                send_compressing_done(on_event);
+                return Err(err);
+            }
+        };
     let summary = prompt::extract_summary(&summary_raw);
     let summary_content = prompt::format_summary_message(&summary, false);
     let summary_tokens = estimate_summary_tokens(&summary_content);
@@ -59,6 +90,7 @@ pub(crate) async fn handle_compress_command(
     }
 
     send_compression_done(on_event, summary_tokens as u32);
+    eprintln!("[compress] manual done session={session_id} summary_tokens={summary_tokens}");
     Ok(())
 }
 
@@ -66,18 +98,44 @@ async fn collect_summary(
     provider: &str,
     model: &str,
     messages: Vec<ChatMessage>,
+    output_limit: u32,
     cancel: CancellationToken,
 ) -> Result<String, String> {
+    let timeout = crate::services::compress::timeouts::compression_timeout();
     if provider == "ollama" {
-        return crate::services::agent_local::ollama_stream::collect_chat(model, messages)
-            .await
-            .map(|(content, _)| content)
-            .map_err(|err| format!("Compression Ollama : {err}"));
+        let compression =
+            crate::services::agent_local::ollama_stream::collect_chat_with_timeout_and_limit(
+                model,
+                messages,
+                timeout,
+                Some(output_limit),
+            );
+        return tokio::select! {
+            _ = cancel.cancelled() => Err("Annulé".to_string()),
+            result = compression => result
+                .map(|(content, _)| content)
+                .map_err(|err| format!("Compression Ollama : {err}")),
+        };
     }
-    crate::services::llm::stream::collect_chat_silent(provider, model, &messages, cancel)
-        .await
-        .map(|result| result.content)
-        .map_err(|err| format!("Compression LLM : {err}"))
+    crate::services::llm::stream::collect_chat_silent_for_compression(
+        provider,
+        model,
+        &messages,
+        output_limit,
+        cancel,
+    )
+    .await
+    .map(|result| result.content)
+    .map_err(|err| format!("Compression LLM : {err}"))
+}
+
+async fn resolve_context_window(provider: &str, model: &str) -> u64 {
+    let ctx = if provider == "ollama" {
+        crate::services::compress::context_resolve::resolve_ollama(model).await
+    } else {
+        crate::services::compress::context_resolve::resolve_api(provider, model).await
+    };
+    ctx.configured
 }
 
 fn estimate_summary_tokens(summary_content: &str) -> usize {
@@ -94,9 +152,7 @@ fn estimate_summary_tokens(summary_content: &str) -> usize {
 }
 
 fn send_compression_done(on_event: &AgentEventEmitter, summary_tokens: u32) {
-    let _ = on_event.send(StreamEvent::Compressing {
-        status: "done".to_string(),
-    });
+    send_compressing_done(on_event);
     let _ = on_event.send(StreamEvent::CompressionComplete {});
     let _ = on_event.send(StreamEvent::Done {
         eval_count: 0,
@@ -104,5 +160,11 @@ fn send_compression_done(on_event: &AgentEventEmitter, summary_tokens: u32) {
         final_tps: 0.0,
         prompt_tokens: 0,
         context_tokens: summary_tokens,
+    });
+}
+
+fn send_compressing_done(on_event: &AgentEventEmitter) {
+    let _ = on_event.send(StreamEvent::Compressing {
+        status: "done".to_string(),
     });
 }

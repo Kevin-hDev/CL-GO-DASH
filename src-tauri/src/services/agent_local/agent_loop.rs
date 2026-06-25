@@ -44,11 +44,12 @@ pub async fn run_agent_loop(
         }
 
         tool_result_budget::apply_budget(messages);
-        compress_hook::try_auto_compress(
+        let _ = compress_hook::try_auto_compress(
             on_event,
             messages,
             model,
             &session_id,
+            &request_id,
             native_context,
             configured_context,
             last_prompt + last_eval,
@@ -93,17 +94,22 @@ pub async fn run_agent_loop(
         messages.push(agent_loop_support::build_assistant_message(&result));
 
         // Check post-réponse : compresser si le seuil a été dépassé pendant la génération
-        compress_hook::try_auto_compress(
+        if let Some(context_tokens) = compress_hook::try_auto_compress(
             on_event,
             messages,
             model,
             &session_id,
+            &request_id,
             native_context,
             configured_context,
             last_prompt + last_eval,
             cancel.clone(),
         )
-        .await;
+        .await
+        {
+            last_prompt = 0;
+            last_eval = context_tokens;
+        }
 
         if result.tool_calls.is_empty() {
             eager_handle.abort();

@@ -31,7 +31,6 @@ pub(crate) fn apply_failure(
     let run = &mut session.diagnostic_runs[idx];
     let error_type = classify_error(message, is_connection);
     run.status = "failed".to_string();
-    run.phase = "failed".to_string();
     run.severity = "error".to_string();
     run.error_type = Some(error_type.clone());
     run.ended_at = Some(Utc::now());
@@ -71,7 +70,7 @@ fn safe_summary(run: &AgentDiagnosticRun, error_type: &str) -> String {
 }
 
 fn safe_code(message: &str) -> String {
-    let code = classify_error(message, message == "ollama_connection_lost");
+    let code = classify_error(message, message.contains("ollama_connection_lost"));
     if code == "unknown" {
         "stream_error".to_string()
     } else {
@@ -80,7 +79,7 @@ fn safe_code(message: &str) -> String {
 }
 
 fn classify_error(message: &str, is_connection: bool) -> String {
-    if is_connection || message == "ollama_connection_lost" {
+    if is_connection || message.contains("ollama_connection_lost") {
         return "connection_lost".to_string();
     }
     if message.contains("Timeout") || message.contains("timeout") {

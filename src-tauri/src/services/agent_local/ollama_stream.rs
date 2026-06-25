@@ -1,65 +1,18 @@
 use crate::services::agent_local::ollama_base_url;
 use crate::services::agent_local::ollama_stream_process::process_chunk;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
-use crate::services::agent_local::types_ollama::{
-    ChatMessage, ChatRequest, StreamEvent, StreamResult,
-};
+use crate::services::agent_local::types_ollama::{ChatRequest, StreamEvent, StreamResult};
 use crate::services::llm::vision;
 use crate::services::stream_utils::ThinkTagFilter;
 use futures_util::StreamExt;
-use std::time::Duration;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::sync::mpsc;
 use tokio_util::io::StreamReader;
 use tokio_util::sync::CancellationToken;
 
-const COLLECT_TIMEOUT_SECS: u64 = 180;
-
-/// Appel Ollama non-interactif (sans streaming UI).
-pub async fn collect_chat(
-    model: &str,
-    messages: Vec<ChatMessage>,
-) -> Result<(String, u32), String> {
-    let body = serde_json::json!({
-        "model": model,
-        "messages": messages,
-        "stream": false,
-    });
-
-    let client = reqwest::Client::builder()
-        .timeout(Duration::from_secs(COLLECT_TIMEOUT_SECS))
-        .build()
-        .map_err(|e| format!("Client HTTP : {e}"))?;
-
-    let resp = client
-        .post(format!("{}/api/chat", ollama_base_url()))
-        .json(&body)
-        .send()
-        .await
-        .map_err(|e| {
-            if e.is_connect() || e.is_timeout() {
-                "ollama_connection_lost".to_string()
-            } else {
-                format!("Ollama: {e}")
-            }
-        })?;
-
-    if !resp.status().is_success() {
-        return Err(format!("Ollama HTTP {}", resp.status()));
-    }
-
-    let value: serde_json::Value = resp
-        .json()
-        .await
-        .map_err(|e| format!("Réponse Ollama invalide : {e}"))?;
-
-    let content = value["message"]["content"]
-        .as_str()
-        .unwrap_or("")
-        .to_string();
-    let tokens = value["eval_count"].as_u64().unwrap_or(0) as u32;
-    Ok((content, tokens))
-}
+pub use crate::services::agent_local::ollama_collect::{
+    collect_chat, collect_chat_with_timeout_and_limit,
+};
 
 /// Variante avec eager dispatch : les tool calls sont envoyés via `tool_tx` dès réception.
 pub async fn stream_chat_with_tool_notify(

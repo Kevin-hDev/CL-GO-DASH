@@ -1,6 +1,5 @@
 pub fn build_compression_prompt(custom_instructions: Option<&str>) -> String {
     let mut prompt = String::from(PREAMBLE);
-    prompt.push_str(ANALYSIS_INSTRUCTION);
     prompt.push_str(BASE_PROMPT);
     if let Some(instructions) = custom_instructions {
         prompt.push_str("\n\nAdditional Instructions:\n");
@@ -16,25 +15,7 @@ CRITICAL: Respond with TEXT ONLY. Do NOT call any tools.
 - Do NOT use Read, Bash, Grep, Glob, Edit, Write, or ANY other tool.
 - You already have all the context you need in the conversation above.
 - Tool calls will be REJECTED and will waste your only turn — you will fail the task.
-- Your entire response must be plain text: an <analysis> block followed by a <summary> block.
-
-";
-
-const ANALYSIS_INSTRUCTION: &str = "\
-Before providing your final summary, wrap your analysis in <analysis> tags to organize \
-your thoughts and ensure you've covered all necessary points. In your analysis process:
-
-1. Chronologically analyze each message and section of the conversation. For each section \
-thoroughly identify:
-   - The user's explicit requests and intents
-   - Your approach to addressing the user's requests
-   - Key decisions, technical concepts and code patterns
-   - Specific details like file names, full code snippets, function signatures, file edits
-   - Errors encountered and how they were fixed
-   - Pay special attention to specific user feedback, especially if the user told you \
-to do something differently.
-2. Double-check for technical accuracy and completeness, addressing each required element \
-thoroughly.
+- Your entire response must be plain text inside a single <summary> block.
 
 ";
 
@@ -51,8 +32,7 @@ in detail.
 2. Key Technical Concepts: List all important technical concepts, technologies, and \
 frameworks discussed.
 3. Files and Code Sections: Enumerate specific files and code sections examined, modified, \
-or created. Include full code snippets where applicable and explain why each read or edit \
-matters.
+or created. Include short snippets only when essential and explain why each read or edit matters.
 4. Errors and Fixes: List all errors encountered and how they were resolved. Pay special \
 attention to specific user feedback.
 5. Problem Solving: Document problems solved and any ongoing troubleshooting efforts.
@@ -67,8 +47,8 @@ verbatim citations where possible.
 ";
 
 const TRAILER: &str = "\n\
-REMINDER: Do NOT call any tools. Respond with plain text only — an <analysis> block \
-followed by a <summary> block. Tool calls will be rejected and you will fail the task.";
+REMINDER: Do NOT call any tools. Respond with plain text only inside one <summary> block. \
+Tool calls will be rejected and you will fail the task.";
 
 pub fn format_summary_message(summary: &str, suppress_follow_up: bool) -> String {
     let mut msg = String::from(
@@ -128,7 +108,7 @@ mod tests {
     #[test]
     fn prompt_has_analysis_block_instruction() {
         let prompt = build_compression_prompt(None);
-        assert!(prompt.contains("<analysis>"));
+        assert!(!prompt.contains("<analysis>"));
         assert!(prompt.contains("<summary>"));
     }
 

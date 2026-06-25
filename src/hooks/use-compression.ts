@@ -8,17 +8,23 @@ interface StreamEventPayload {
 }
 
 export function useCompression(sessionId: string) {
-  const [isCompressing, setIsCompressing] = useState(false);
+  const [state, setState] = useState({ sessionId: "", isCompressing: false });
 
   useEffect(() => {
     const unlisten = listen<StreamEventPayload>("agent-stream-event", (ev) => {
       if (ev.payload.sessionId !== sessionId) return;
       if (ev.payload.event.event === "compressing") {
-        setIsCompressing(ev.payload.event.data?.status === "start");
+        setState({
+          sessionId,
+          isCompressing: ev.payload.event.data?.status === "start",
+        });
+      }
+      if (["compressionComplete", "done", "error"].includes(ev.payload.event.event)) {
+        setState({ sessionId, isCompressing: false });
       }
     });
     return () => { cleanupTauriListener(unlisten); };
   }, [sessionId]);
 
-  return { isCompressing };
+  return { isCompressing: state.sessionId === sessionId && state.isCompressing };
 }

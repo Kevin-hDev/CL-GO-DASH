@@ -16,6 +16,7 @@ pub(crate) async fn run_stream_task(params: StreamTaskParams) -> Result<Vec<Chat
         compress::handle_compress_command(
             &params.on_event,
             &params.session_id,
+            &params.request_id,
             &params.messages,
             &params.model,
             &params.provider,
