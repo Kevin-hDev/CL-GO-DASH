@@ -14,6 +14,7 @@ export interface StreamSnapshot extends ChatState {
   completed: boolean;
   error?: string;
   isConnectionError?: boolean;
+  diagnosticSummary?: string;
 }
 
 export const records = new Map<string, StreamRecord>();
@@ -51,6 +52,7 @@ export function snapshot(state: StreamRecord["state"]): StreamSnapshot {
     ...toChatState(state), pendingPermissions: [...state.pendingPermissions],
     completed: state.completed, error: state.error,
     isConnectionError: state.isConnectionError,
+    diagnosticSummary: state.diagnosticSummary,
   };
 }
 

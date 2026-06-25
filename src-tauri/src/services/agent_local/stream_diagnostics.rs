@@ -1,87 +1,150 @@
 use chrono::Utc;
+use serde_json::json;
+use uuid::Uuid;
 
-use super::types_diagnostics::AgentStreamFailure;
+use super::stream_diagnostics_support as support;
+use super::types_diagnostics::{
+    AgentDiagnosticRun, AgentDiagnosticTool, AgentErrorDiagnosticSummary,
+};
 use super::types_session::AgentSession;
 
-const MAX_STREAM_FAILURES: usize = 20;
+pub async fn start_request(session_id: &str, generation: u64) -> String {
+    let request_id = Uuid::new_v4().to_string();
+    let _ = support::update_session(session_id, |session| {
+        let now = Utc::now();
+        session.diagnostic_runs.push(AgentDiagnosticRun {
+            request_id: request_id.clone(),
+            generation,
+            status: "running".to_string(),
+            severity: "info".to_string(),
+            started_at: now,
+            updated_at: now,
+            ended_at: None,
+            phase: "request_start".to_string(),
+            error_type: None,
+            last_tool: None,
+            active_todo: support::active_todo(session),
+            safe_summary: Some("Requête agent démarrée.".to_string()),
+            events: vec![support::event(
+                "request_start",
+                "Requête agent démarrée.",
+                None,
+                None,
+            )],
+        });
+        support::trim(&mut session.diagnostic_runs, support::MAX_DIAGNOSTIC_RUNS);
+    })
+    .await;
+    request_id
+}
 
-pub async fn record_failure(session_id: &str, message: &str, is_connection: bool) {
-    if super::session_store::validate_session_id(session_id).is_err() {
-        return;
-    }
-    let lock = super::session_store::lock_session(session_id).await;
-    let _guard = lock.lock().await;
-    let Ok(mut session) = super::session_store::get(session_id).await else {
-        return;
-    };
-    push_failure(&mut session, message, is_connection);
-    let _ = super::session_store::save(&session).await;
+pub async fn mark_phase(session_id: &str, request_id: &str, phase: &str, message: &str) {
+    let _ = support::update_run(session_id, request_id, |session, run| {
+        run.phase = phase.to_string();
+        run.safe_summary = Some(support::clip(message));
+        run.active_todo = support::active_todo(session);
+        support::push_event(run, phase, message, None, None);
+    })
+    .await;
+}
+
+pub async fn record_tool(
+    session_id: &str,
+    request_id: &str,
+    name: &str,
+    status: &str,
+    args: Option<serde_json::Value>,
+    is_error: bool,
+) {
+    let message = format!("Tool {name} {status}");
+    let _ = support::update_run(session_id, request_id, |session, run| {
+        let phase = if status == "completed" {
+            "tool_result"
+        } else {
+            "tool_execution"
+        };
+        run.phase = phase.to_string();
+        run.severity = if is_error { "warning" } else { "info" }.to_string();
+        run.last_tool = Some(AgentDiagnosticTool {
+            name: support::clip(name),
+            status: status.to_string(),
+            args: args.clone(),
+            is_error,
+        });
+        run.active_todo = support::active_todo(session);
+        run.safe_summary = Some(support::clip(&message));
+        support::push_event(run, phase, &message, Some(name), None);
+    })
+    .await;
+}
+
+pub async fn record_retry(session_id: &str, request_id: &str, message: &str) {
+    let _ = support::update_run(session_id, request_id, |_session, run| {
+        run.phase = "retrying".to_string();
+        run.severity = "warning".to_string();
+        run.safe_summary = Some(support::clip(message));
+        support::push_event(run, "retrying", message, None, None);
+    })
+    .await;
+}
+
+pub async fn record_completed(session_id: &str, request_id: &str) {
+    let _ = support::update_run(session_id, request_id, |session, run| {
+        run.status = "completed".to_string();
+        run.phase = "completed".to_string();
+        run.severity = "info".to_string();
+        run.ended_at = Some(Utc::now());
+        run.active_todo = support::active_todo(session);
+        run.safe_summary = Some("Requête terminée.".to_string());
+        support::push_event(run, "completed", "Requête terminée.", None, None);
+    })
+    .await;
+}
+
+pub async fn record_cancelled(session_id: &str, request_id: &str) {
+    let _ = support::update_run(session_id, request_id, |_session, run| {
+        run.status = "cancelled".to_string();
+        run.phase = "failed".to_string();
+        run.severity = "warning".to_string();
+        run.error_type = Some("cancelled".to_string());
+        run.ended_at = Some(Utc::now());
+        run.safe_summary = Some("Requête annulée.".to_string());
+        support::push_event(run, "failed", "Requête annulée.", None, Some("cancelled"));
+    })
+    .await;
+}
+
+pub async fn record_failure(
+    session_id: &str,
+    request_id: Option<&str>,
+    message: &str,
+    is_connection: bool,
+) -> Option<AgentErrorDiagnosticSummary> {
+    let mut summary = None;
+    let _ = support::update_session(session_id, |session| {
+        push_failure(session, message, is_connection);
+        if let Some(id) = request_id {
+            if let Some(idx) = support::find_run(session, id) {
+                support::apply_failure(session, idx, message, is_connection);
+                summary = Some(support::summary_from_run(&session.diagnostic_runs[idx]));
+            }
+        }
+    })
+    .await;
+    summary
 }
 
 pub async fn diagnostics_text(session_id: &str) -> Result<String, String> {
     super::session_store::validate_session_id(session_id)?;
     let session = super::session_store::get(session_id).await?;
-    Ok(format_diagnostics(&session))
+    serde_json::to_string_pretty(&json!({
+        "latest": session.diagnostic_runs.last(),
+        "recent": session.diagnostic_runs.iter().rev().take(5).collect::<Vec<_>>(),
+        "legacy_stream_failures": session.stream_failures.iter().rev().take(5).collect::<Vec<_>>(),
+    }))
+    .map_err(|_| "Diagnostics indisponibles.".to_string())
 }
 
 pub(crate) fn push_failure(session: &mut AgentSession, message: &str, is_connection: bool) {
-    let active = session
-        .active_todo_run_id
-        .as_ref()
-        .and_then(|id| session.todo_runs.iter().find(|run| &run.id == id));
-    session.stream_failures.push(AgentStreamFailure {
-        code: safe_code(message),
-        occurred_at: Utc::now(),
-        is_connection,
-        active_todo_run_id: active.map(|run| run.id.clone()),
-        active_todo_title: active.map(|run| run.title.clone()),
-    });
-    while session.stream_failures.len() > MAX_STREAM_FAILURES {
-        session.stream_failures.remove(0);
-    }
-}
-
-fn format_diagnostics(session: &AgentSession) -> String {
-    if session.stream_failures.is_empty() {
-        return "Aucun diagnostic de stream enregistré.".to_string();
-    }
-    session
-        .stream_failures
-        .iter()
-        .rev()
-        .map(|failure| {
-            let todo = failure
-                .active_todo_title
-                .as_ref()
-                .map(|title| format!(" todo=\"{title}\""))
-                .unwrap_or_default();
-            format!(
-                "- at={} code={} connection={}{}",
-                failure.occurred_at.to_rfc3339(),
-                failure.code,
-                failure.is_connection,
-                todo
-            )
-        })
-        .collect::<Vec<_>>()
-        .join("\n")
-}
-
-fn safe_code(message: &str) -> String {
-    if message == "ollama_connection_lost" {
-        return "ollama_connection_lost".to_string();
-    }
-    if message.contains("Timeout") {
-        return "stream_timeout".to_string();
-    }
-    if message.contains("Limite de tours") {
-        return "max_turns_reached".to_string();
-    }
-    if message.contains("Ollama HTTP") || message.contains("Erreur serveur Ollama") {
-        return "ollama_server_error".to_string();
-    }
-    if message == "model_not_found" || message == "rate_limit" || message == "auth_failed" {
-        return message.to_string();
-    }
-    "stream_error".to_string()
+    support::push_failure(session, message, is_connection);
 }

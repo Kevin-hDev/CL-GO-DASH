@@ -26,15 +26,30 @@ pub async fn chat_stream(
     const MAX_ACTIVE_STREAMS: usize = 32;
     let cancel = CancellationToken::new();
     let generation = crate::STREAM_GENERATION.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-    {
+    let old_stream = {
         let mut map = streams.0.lock().await;
         if map.len() >= MAX_ACTIVE_STREAMS {
             return Err("Trop de flux actifs simultanément".to_string());
         }
-        if let Some((old_token, _)) = map.remove(&session_id) {
-            old_token.cancel();
-        }
-        map.insert(session_id.clone(), (cancel.clone(), generation));
+        map.remove(&session_id)
+    };
+    if let Some((old_token, _, old_request_id)) = old_stream {
+        old_token.cancel();
+        crate::services::agent_local::stream_diagnostics::record_cancelled(
+            &session_id,
+            &old_request_id,
+        )
+        .await;
+    }
+    let request_id =
+        crate::services::agent_local::stream_diagnostics::start_request(&session_id, generation)
+            .await;
+    {
+        let mut map = streams.0.lock().await;
+        map.insert(
+            session_id.clone(),
+            (cancel.clone(), generation, request_id.clone()),
+        );
     }
     let provider = provider.unwrap_or_else(|| "ollama".to_string());
     let resolved_working_dir =
@@ -44,6 +59,13 @@ pub async fn chat_stream(
             Ok(dir) => dir,
             Err(err) => {
                 streams.0.lock().await.remove(&session_id);
+                crate::services::agent_local::stream_diagnostics::record_failure(
+                    &session_id,
+                    Some(&request_id),
+                    &err,
+                    false,
+                )
+                .await;
                 return Err(err);
             }
         };
@@ -52,12 +74,14 @@ pub async fn chat_stream(
     let stream_session = session_id.clone();
     let task_app = app.clone();
 
-    tauri::async_runtime::spawn(async move {
-        let emitter = AgentEventEmitter::new(task_app.clone(), stream_session.clone());
-        let result = run_stream_task(StreamTaskParams {
-            on_event: emitter.clone(),
-            session_id: stream_session.clone(),
-            model,
+	    tauri::async_runtime::spawn(async move {
+	        let emitter = AgentEventEmitter::new(task_app.clone(), stream_session.clone());
+        let stream_request_id = request_id.clone();
+	        let result = run_stream_task(StreamTaskParams {
+	            on_event: emitter.clone(),
+	            session_id: stream_session.clone(),
+                request_id: stream_request_id.clone(),
+	            model,
             messages,
             tools,
             think,
@@ -80,7 +104,7 @@ pub async fn chat_stream(
             let state = task_app.state::<ActiveStreams>();
             let mut map = state.0.lock().await;
             match map.get(&stream_session) {
-                Some((_, gen)) if *gen == generation => {
+	                Some((_, gen, _)) if *gen == generation => {
                     map.remove(&stream_session);
                     true
                 }
@@ -98,8 +122,9 @@ pub async fn chat_stream(
             // via stopSession(). Envoyer ce message tuerait un nouveau stream.
             if is_current && message != "Annulé" {
                 let is_conn = message == "ollama_connection_lost";
-                crate::services::agent_local::stream_diagnostics::record_failure(
+                let diagnostic = crate::services::agent_local::stream_diagnostics::record_failure(
                     &stream_session,
+                    Some(&stream_request_id),
                     &message,
                     is_conn,
                 )
@@ -107,6 +132,7 @@ pub async fn chat_stream(
                 let _ = emitter.send(StreamEvent::Error {
                     message,
                     is_connection: is_conn,
+                    diagnostic,
                 });
             }
         }
@@ -123,13 +149,19 @@ pub async fn cancel_agent_request(
 ) -> Result<(), String> {
     let mut cancelled = false;
     let mut map = streams.0.lock().await;
-    if let Some((token, gen)) = map.get(&session_id) {
+    if let Some((token, gen, request_id)) = map.get(&session_id) {
         if generation.is_none() || generation == Some(*gen) {
             let token = token.clone();
             let gen = *gen;
+            let request_id = request_id.clone();
             map.remove(&session_id);
             drop(map);
             token.cancel();
+            crate::services::agent_local::stream_diagnostics::record_cancelled(
+                &session_id,
+                &request_id,
+            )
+            .await;
             cancelled = true;
             eprintln!("[cancel] session={session_id} gen={gen}");
         }

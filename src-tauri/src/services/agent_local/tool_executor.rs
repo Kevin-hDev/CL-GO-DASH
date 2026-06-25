@@ -18,6 +18,7 @@ pub async fn run_tools(
     working_dir: &std::path::Path,
     mode: &str,
     session_id: &str,
+    request_id: &str,
     cancel: CancellationToken,
     write_guard: &mut WriteGuard,
 ) {
@@ -28,6 +29,7 @@ pub async fn run_tools(
         working_dir,
         mode,
         session_id,
+        request_id,
         cancel,
         write_guard,
         None,
@@ -42,6 +44,7 @@ pub async fn run_tools_with_eager(
     working_dir: &std::path::Path,
     mode: &str,
     session_id: &str,
+    request_id: &str,
     cancel: CancellationToken,
     write_guard: &mut WriteGuard,
     mut eager_results: Option<HashMap<usize, ToolResult>>,
@@ -53,6 +56,7 @@ pub async fn run_tools_with_eager(
             tool_calls,
             working_dir,
             session_id,
+            request_id,
             cancel,
             write_guard,
         )
@@ -68,6 +72,7 @@ pub async fn run_tools_with_eager(
             write_guard,
             eager_results.as_mut(),
             session_id,
+            request_id,
         )
         .await;
     }
@@ -80,13 +85,21 @@ async fn run_sequential(
     tool_calls: &[(String, serde_json::Value)],
     working_dir: &std::path::Path,
     session_id: &str,
+    request_id: &str,
     cancel: CancellationToken,
     write_guard: &mut WriteGuard,
 ) {
     for (idx, (name, args)) in tool_calls.iter().enumerate() {
+        let arg_summary =
+            super::tool_executor_diagnostics::started(session_id, request_id, name, args, working_dir)
+                .await;
         match run_pre_hooks(name, args) {
             PreHookDecision::Deny(msg) => {
                 let tr = tool_dispatcher::enrich_error(ToolResult::err(msg), name);
+                super::tool_executor_diagnostics::completed(
+                    session_id, request_id, name, arg_summary, true,
+                )
+                .await;
                 push_tool_result(on_event, messages, name, tr, idx);
                 continue;
             }
@@ -96,6 +109,10 @@ async fn run_sequential(
 
         if let Err(msg) = check_write_guard(name, effective_args, working_dir, write_guard) {
             let tr = tool_dispatcher::enrich_error(ToolResult::err(msg), name);
+            super::tool_executor_diagnostics::completed(
+                session_id, request_id, name, arg_summary, true,
+            )
+            .await;
             push_tool_result(on_event, messages, name, tr, idx);
             continue;
         }
@@ -110,6 +127,14 @@ async fn run_sequential(
 
         let tr = run_post_hooks(name, effective_args, tr);
         post_record_read(name, effective_args, working_dir, &tr, write_guard);
+        super::tool_executor_diagnostics::completed(
+            session_id,
+            request_id,
+            name,
+            arg_summary,
+            tr.is_error,
+        )
+        .await;
         push_tool_result(on_event, messages, name, tr, idx);
     }
 }

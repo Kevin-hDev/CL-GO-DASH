@@ -1,6 +1,5 @@
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::tool_dispatcher;
-use crate::services::agent_local::tool_executor_write::execute_write;
 use crate::services::agent_local::tool_hooks::{run_post_hooks, run_pre_hooks, PreHookDecision};
 use crate::services::agent_local::types_ollama::ChatMessage;
 use crate::services::agent_local::types_tools::ToolResult;
@@ -11,7 +10,6 @@ use std::collections::HashMap;
 use tokio_util::sync::CancellationToken;
 
 const MAX_PARALLEL: usize = 10;
-
 use super::tool_executor_helpers::{post_record_read, push_tool_result};
 
 pub fn is_read_only(name: &str) -> bool {
@@ -29,15 +27,10 @@ pub fn is_read_only(name: &str) -> bool {
     )
 }
 
-/// Entrée dans le batch : nom, args effectifs, index global.
 struct BatchEntry<'a> {
-    global_idx: usize,
-    name: &'a str,
-    effective_args: &'a Value,
+    global_idx: usize, name: &'a str, effective_args: &'a Value,
 }
 
-/// Mode auto : les read-only consécutifs sont parallélisés, les writes sont séquentiels.
-/// Si `eager_results` est fourni, les résultats pré-calculés sont réutilisés directement.
 pub async fn run_with_parallel_reads(
     on_event: &AgentEventEmitter,
     messages: &mut Vec<ChatMessage>,
@@ -48,15 +41,14 @@ pub async fn run_with_parallel_reads(
     write_guard: &mut WriteGuard,
     mut eager_results: Option<&mut HashMap<usize, ToolResult>>,
     session_id: &str,
+    request_id: &str,
 ) {
     let mut read_batch: Vec<BatchEntry> = Vec::new();
     let mut indexed_results: Vec<Option<(&str, ToolResult)>> = vec![None; tool_calls.len()];
-
     let mut i = 0;
     while i <= tool_calls.len() {
         let is_last = i == tool_calls.len();
         let is_write = !is_last && !is_read_only(tool_calls[i].0.as_str());
-
         if is_last || is_write {
             if !read_batch.is_empty() {
                 let batch: Vec<_> = std::mem::take(&mut read_batch);
@@ -68,24 +60,26 @@ pub async fn run_with_parallel_reads(
                     write_guard,
                     &mut eager_results,
                     session_id,
+                    request_id,
                 )
                 .await;
             }
-
             if is_last {
                 break;
             }
-
             let (name, args) = &tool_calls[i];
-            let tr = execute_write(
+            let tr = super::tool_executor_parallel_write::execute_tracked_write(
                 on_event,
                 name,
                 args,
-                working_dir,
-                mode,
-                write_guard,
-                session_id,
-                cancel.clone(),
+                super::tool_executor_parallel_write::WriteExecContext {
+                    working_dir,
+                    mode,
+                    write_guard,
+                    session_id,
+                    request_id,
+                    cancel: cancel.clone(),
+                },
             )
             .await;
             indexed_results[i] = Some((name.as_str(), tr));
@@ -95,6 +89,11 @@ pub async fn run_with_parallel_reads(
             match run_pre_hooks(name, args) {
                 PreHookDecision::Deny(msg) => {
                     let tr = tool_dispatcher::enrich_error(ToolResult::err(msg), name);
+                    let summary = super::diagnostic_args::summarize(name, args, working_dir);
+                    super::tool_executor_diagnostics::completed(
+                        session_id, request_id, name, summary, true,
+                    )
+                    .await;
                     indexed_results[i] = Some((name.as_str(), tr));
                 }
                 PreHookDecision::Allow => {
@@ -124,6 +123,7 @@ async fn flush_read_batch<'a>(
     write_guard: &mut WriteGuard,
     eager_results: &mut Option<&mut HashMap<usize, ToolResult>>,
     session_id: &str,
+    request_id: &str,
 ) {
     for chunk in batch.chunks(MAX_PARALLEL) {
         if cancel.is_cancelled() {
@@ -159,12 +159,19 @@ async fn flush_read_batch<'a>(
                 .iter()
                 .map(|&pos| {
                     let entry = &chunk[pos];
-                    tool_dispatcher::dispatch(
-                        entry.name,
-                        entry.effective_args,
-                        working_dir,
-                        session_id,
-                    )
+                    let sid = session_id.to_string();
+                    let rid = request_id.to_string();
+                    let wd = working_dir.to_path_buf();
+                    async move {
+                        super::tool_executor_parallel_dispatch::dispatch_read(
+                            entry.name,
+                            entry.effective_args,
+                            &wd,
+                            &sid,
+                            &rid,
+                        )
+                        .await
+                    }
                 })
                 .collect();
             let dispatched = join_all(futs).await;

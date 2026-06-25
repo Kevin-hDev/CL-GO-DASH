@@ -113,12 +113,29 @@ pub async fn synthesize_subagent_results(
 
     let cancel = CancellationToken::new();
     let generation = crate::STREAM_GENERATION.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    let old_stream = {
+        let mut map = streams.0.lock().await;
+        map.remove(&parent_session_id)
+    };
+    if let Some((old_token, _, old_request_id)) = old_stream {
+        old_token.cancel();
+        crate::services::agent_local::stream_diagnostics::record_cancelled(
+            &parent_session_id,
+            &old_request_id,
+        )
+        .await;
+    }
+    let request_id = crate::services::agent_local::stream_diagnostics::start_request(
+        &parent_session_id,
+        generation,
+    )
+    .await;
     {
         let mut map = streams.0.lock().await;
-        if let Some((old_token, _)) = map.remove(&parent_session_id) {
-            old_token.cancel();
-        }
-        map.insert(parent_session_id.clone(), (cancel.clone(), generation));
+        map.insert(
+            parent_session_id.clone(),
+            (cancel.clone(), generation, request_id.clone()),
+        );
     }
 
     let task_app = app.clone();
@@ -131,6 +148,7 @@ pub async fn synthesize_subagent_results(
         let result = run_stream_task(StreamTaskParams {
             on_event: emitter.clone(),
             session_id: parent_session_id.clone(),
+            request_id: request_id.clone(),
             model: fresh.model,
             messages,
             tools: vec![],
@@ -148,7 +166,7 @@ pub async fn synthesize_subagent_results(
             let state = task_app.state::<ActiveStreams>();
             let mut map = state.0.lock().await;
             match map.get(&parent_session_id) {
-                Some((_, gen)) if *gen == generation => {
+                Some((_, gen, _)) if *gen == generation => {
                     map.remove(&parent_session_id);
                     true
                 }
@@ -157,9 +175,18 @@ pub async fn synthesize_subagent_results(
         };
         if let Err(message) = result {
             if is_current && message != "Annulé" {
+                let diagnostic =
+                    crate::services::agent_local::stream_diagnostics::record_failure(
+                        &parent_session_id,
+                        Some(&request_id),
+                        &message,
+                        false,
+                    )
+                    .await;
                 let _ = emitter.send(StreamEvent::Error {
                     message,
                     is_connection: false,
+                    diagnostic,
                 });
             }
         }

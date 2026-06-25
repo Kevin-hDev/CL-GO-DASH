@@ -115,9 +115,12 @@ impl GatewayAgentBridge {
         emit_session_updated(&app, &session_id);
 
         let emitter = AgentEventEmitter::new(app.clone(), session_id.clone());
+        let request_id =
+            crate::services::agent_local::stream_diagnostics::start_request(&session_id, 0).await;
         let final_messages = match run_stream_task(StreamTaskParams {
             on_event: emitter,
             session_id: session_id.clone(),
+            request_id: request_id.clone(),
             model,
             messages,
             tools: vec![],
@@ -133,6 +136,13 @@ impl GatewayAgentBridge {
         {
             Ok(messages) => messages,
             Err(e) => {
+                crate::services::agent_local::stream_diagnostics::record_failure(
+                    &session_id,
+                    Some(&request_id),
+                    &e,
+                    false,
+                )
+                .await;
                 let safe = audit::sanitize_error(&e);
                 audit_msg(&msg, AuditAction::AgentError, None, Some(&safe));
                 return Err(BridgeError::AgentError(safe));

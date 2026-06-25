@@ -81,6 +81,7 @@ pub async fn create_full(
         todo_runs: Vec::new(),
         active_todo_run_id: None,
         stream_failures: Vec::new(),
+        diagnostic_runs: Vec::new(),
         is_heartbeat,
         is_gateway: false,
         gateway_channel_key: None,

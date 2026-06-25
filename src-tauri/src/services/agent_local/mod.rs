@@ -17,6 +17,9 @@ pub mod circuit_breaker;
 pub mod circuit_breaker_tests;
 pub mod compress_hook;
 pub mod context_budget;
+pub mod diagnostic_args;
+#[cfg(test)]
+mod diagnostic_args_tests;
 pub mod eager_dispatch;
 pub mod model_customizations;
 pub mod model_size;
@@ -47,6 +50,9 @@ pub mod session_store;
 pub mod session_subagents;
 pub mod skill_parser;
 pub mod stream_diagnostics;
+pub mod stream_diagnostics_support;
+#[cfg(test)]
+mod stream_diagnostics_support_tests;
 #[cfg(test)]
 pub mod stream_diagnostics_tests;
 pub mod stream_events;
@@ -92,8 +98,11 @@ pub mod tool_document_write;
 pub mod tool_document_write_tests;
 pub mod tool_document_write_xml;
 pub mod tool_executor;
+pub mod tool_executor_diagnostics;
 pub mod tool_executor_helpers;
 pub mod tool_executor_parallel;
+pub mod tool_executor_parallel_dispatch;
+pub mod tool_executor_parallel_write;
 #[cfg(test)]
 pub mod tool_executor_parallel_tests;
 pub mod tool_executor_write;

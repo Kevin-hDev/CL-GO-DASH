@@ -27,6 +27,7 @@ export interface ChatState {
   totalElapsedMs: number;
   error?: string;
   isConnectionError?: boolean;
+  diagnosticSummary?: string;
 }
 
 export interface PermissionRequestState {
@@ -35,7 +36,7 @@ export interface PermissionRequestState {
 
 export interface ManagedStreamState extends ChatState {
   pendingPermissions: PermissionRequestState[];
-  completed: boolean; persisted: boolean; updatedAt: number; error?: string; isConnectionError?: boolean;
+  completed: boolean; persisted: boolean; updatedAt: number; error?: string; isConnectionError?: boolean; diagnosticSummary?: string;
 }
 
 export const EMPTY_CHAT_STATE: ChatState = {
@@ -78,5 +79,6 @@ export function toChatState(state: ManagedStreamState): ChatState {
     totalElapsedMs: state.totalElapsedMs,
     error: state.error,
     isConnectionError: state.isConnectionError,
+    diagnosticSummary: state.diagnosticSummary,
   };
 }

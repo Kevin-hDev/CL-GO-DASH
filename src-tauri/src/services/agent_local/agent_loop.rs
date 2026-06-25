@@ -21,6 +21,7 @@ pub async fn run_agent_loop(
     think: OllamaThink,
     working_dir: PathBuf,
     session_id: String,
+    request_id: String,
     cancel: CancellationToken,
     native_context: u64,
     configured_context: u64,
@@ -64,8 +65,16 @@ pub async fn run_agent_loop(
             tool_rx,
             eager_working_dir,
             session_id.clone(),
+            request_id.clone(),
         ));
 
+        super::stream_diagnostics::mark_phase(
+            &session_id,
+            &request_id,
+            "model_stream",
+            "Stream modèle démarré.",
+        )
+        .await;
         let result = ollama_stream::stream_chat_with_tool_notify(
             on_event,
             &request,
@@ -100,11 +109,18 @@ pub async fn run_agent_loop(
             eager_handle.abort();
             break;
         }
+        for (name, args) in &result.tool_calls {
+            super::tool_executor_diagnostics::detected(
+                &session_id, &request_id, name, args, &working_dir,
+            )
+            .await;
+        }
 
         if turn == MAX_TURNS - 1 {
             eager_handle.abort();
-            super::stream_diagnostics::record_failure(
+            let diagnostic = super::stream_diagnostics::record_failure(
                 &session_id,
+                Some(&request_id),
                 "Limite de tours atteinte",
                 false,
             )
@@ -112,16 +128,20 @@ pub async fn run_agent_loop(
             let _ = on_event.send(StreamEvent::Error {
                 message: "Limite de tours atteinte".to_string(),
                 is_connection: false,
+                diagnostic,
             });
             break;
         }
 
         if let Err(msg) = breaker.check(&result.tool_calls) {
             eager_handle.abort();
-            super::stream_diagnostics::record_failure(&session_id, &msg, false).await;
+            let diagnostic =
+                super::stream_diagnostics::record_failure(&session_id, Some(&request_id), &msg, false)
+                    .await;
             let _ = on_event.send(StreamEvent::Error {
                 message: msg,
                 is_connection: false,
+                diagnostic,
             });
             break;
         }
@@ -136,6 +156,7 @@ pub async fn run_agent_loop(
             &working_dir,
             &mode,
             &session_id,
+            &request_id,
             cancel.clone(),
             &mut write_guard,
             Some(eager_results),
@@ -159,6 +180,7 @@ pub async fn run_agent_loop(
         context_tokens: last_prompt + last_eval,
     });
 
+    super::stream_diagnostics::record_completed(&session_id, &request_id).await;
     agent_loop_support::decharge_gpu(model).await;
     Ok(total_eval + total_prompt)
 }

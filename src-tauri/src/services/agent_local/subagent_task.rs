@@ -105,6 +105,7 @@ async fn run_inner(
         super::subagent_working_dir::resolve(project_id.as_deref(), &child_session_id, is_explorer)
             .await?;
     let emitter = AgentEventEmitter::new(app, child_session_id.clone());
+    let request_id = super::stream_diagnostics::start_request(&child_session_id, 0).await;
 
     if let Ok(child_session) = session_store::get(&child_session_id).await {
         let _ = emitter.send(StreamEvent::SessionSnapshot {
@@ -116,6 +117,7 @@ async fn run_inner(
     let result = run_stream_task(StreamTaskParams {
         on_event: emitter,
         session_id: child_session_id.clone(),
+        request_id: request_id.clone(),
         model,
         messages,
         tools,
@@ -145,7 +147,16 @@ async fn run_inner(
             "cancelled".to_string(),
             "Sous-agent annulé.".to_string(),
         )),
-        Err(e) => Err(e),
+        Err(e) => {
+            super::stream_diagnostics::record_failure(
+                &child_session_id,
+                Some(&request_id),
+                &e,
+                false,
+            )
+            .await;
+            Err(e)
+        }
     }
 }
 

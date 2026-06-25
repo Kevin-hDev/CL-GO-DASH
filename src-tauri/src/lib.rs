@@ -17,7 +17,7 @@ use tauri::Manager;
 use tokio::sync::Mutex;
 use tokio_util::sync::CancellationToken;
 
-pub struct ActiveStreams(pub Mutex<HashMap<String, (CancellationToken, u64)>>);
+pub struct ActiveStreams(pub Mutex<HashMap<String, (CancellationToken, u64, String)>>);
 
 static STREAM_GENERATION: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 

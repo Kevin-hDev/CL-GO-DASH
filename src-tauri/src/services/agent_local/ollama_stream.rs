@@ -95,6 +95,7 @@ async fn stream_chat_inner(
             let _ = on_event.send(StreamEvent::Error {
                 message: msg.clone(),
                 is_connection: e.is_connect() || e.is_timeout(),
+                diagnostic: None,
             });
             return Err(msg);
         }
@@ -127,6 +128,7 @@ async fn stream_chat_inner(
         let _ = on_event.send(StreamEvent::Error {
             message: "Erreur serveur Ollama".into(),
             is_connection: false,
+            diagnostic: None,
         });
         return Err(msg);
     }
@@ -148,7 +150,7 @@ async fn stream_chat_inner(
             }
             _ = tokio::time::sleep(std::time::Duration::from_secs(300)) => {
                 let msg = "Timeout : aucune réponse d'Ollama depuis 5 min".to_string();
-                let _ = on_event.send(StreamEvent::Error { message: msg.clone(), is_connection: false });
+                let _ = on_event.send(StreamEvent::Error { message: msg.clone(), is_connection: false, diagnostic: None });
                 return Err(msg);
             }
             line = lines.next_line() => {
@@ -158,7 +160,7 @@ async fn stream_chat_inner(
                             &text, on_event, &mut token_count, &mut first_token,
                             &mut result, emit_done, tool_tx.as_ref(), &mut think_filter,
                         ) {
-                            let _ = on_event.send(StreamEvent::Error { message: e.clone(), is_connection: false });
+                            let _ = on_event.send(StreamEvent::Error { message: e.clone(), is_connection: false, diagnostic: None });
                             return Err(e);
                         }
                     }
@@ -169,7 +171,7 @@ async fn stream_chat_inner(
                             || e.kind() == std::io::ErrorKind::UnexpectedEof
                             || e.to_string().contains("decoding");
                         let msg = "ollama_connection_lost".to_string();
-                        let _ = on_event.send(StreamEvent::Error { message: msg.clone(), is_connection: is_conn });
+                        let _ = on_event.send(StreamEvent::Error { message: msg.clone(), is_connection: is_conn, diagnostic: None });
                         return Err(msg);
                     }
                 }

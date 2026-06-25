@@ -74,6 +74,24 @@ describe("error", () => {
     const result = applyStreamEvent(makeState(), { event: "error", data: { message: "crash" } });
     expect(result.state.isStreaming).toBe(false);
   });
+
+  it("conserve le résumé diagnostic séparé du message générique", () => {
+    const result = applyStreamEvent(makeState(), {
+      event: "error",
+      data: {
+        message: "crash",
+        diagnostic: {
+          requestId: "req-1",
+          phase: "tool_execution",
+          errorType: "stream_closed",
+          lastToolName: "write_file",
+          safeSummary: "Interruption pendant le tool write_file.",
+        },
+      },
+    });
+    expect(result.state.error).toBe("errors.streamInterrupted");
+    expect(result.state.diagnosticSummary).toBe("Interruption pendant le tool write_file.");
+  });
 });
 
 describe("events neutres", () => {

@@ -70,6 +70,7 @@ pub(crate) async fn run(
         effective_reasoning_mode.as_deref(),
         working_dir,
         params.session_id.clone(),
+        params.request_id.clone(),
         params.cancel,
         ctx.native,
         ctx.configured,

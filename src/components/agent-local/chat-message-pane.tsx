@@ -21,6 +21,7 @@ interface ChatMessagePaneProps {
   liveTokenCount: number;
   error?: string;
   isConnectionError?: boolean;
+  diagnosticSummary?: string;
   onScroll: () => void;
   onScrollToBottom: () => void;
   onRetry: () => void;
@@ -48,6 +49,7 @@ export function ChatMessagePane(props: ChatMessagePaneProps) {
           liveTokenCount={props.liveTokenCount}
           error={props.error}
           isConnectionError={props.isConnectionError}
+          diagnosticSummary={props.diagnosticSummary}
           onRetry={props.onRetry}
           onReload={props.onReload}
           onEdit={props.onEdit}

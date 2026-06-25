@@ -29,6 +29,7 @@ interface MessageListProps {
   liveTokenCount: number;
   error?: string;
   isConnectionError?: boolean;
+  diagnosticSummary?: string;
   onRetry?: () => void;
   onReload?: (messageId: string) => void;
   onEdit?: (messageId: string, newContent: string) => void;
@@ -42,7 +43,7 @@ interface MessageListProps {
 export function MessageList({
   sessionId, messages, completedSegments, currentContent, currentThinking,
   currentTools, isStreaming, tps, totalElapsedMs, segmentStartedAt,
-  liveTokenCount, error, isConnectionError, onRetry, onReload, onEdit, onFileClick, onFilePreview,
+  liveTokenCount, error, isConnectionError, diagnosticSummary, onRetry, onReload, onEdit, onFileClick, onFilePreview,
   projectPath, completedSubagents, onOpenSubagent,
 }: MessageListProps) {
   const lastAssistantIdx = findLastIndex(messages, (m) => m.role === "assistant");
@@ -121,6 +122,7 @@ export function MessageList({
         <ErrorBubble
           message={error}
           isConnection={isConnectionError}
+          diagnosticSummary={diagnosticSummary}
           onRetry={onRetry}
         />
       )}

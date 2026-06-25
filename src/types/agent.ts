@@ -126,6 +126,14 @@ export interface AgentStreamFailure {
   active_todo_title?: string;
 }
 
+export interface AgentErrorDiagnosticSummary {
+  requestId: string;
+  phase: string;
+  errorType: string;
+  lastToolName?: string;
+  safeSummary: string;
+}
+
 export interface AgentSessionMeta {
   id: string;
   name: string;
@@ -243,7 +251,7 @@ export type StreamEvent =
   | { event: "turnEnd"; data: Record<string, never> }
   | { event: "permissionRequest"; data: { id: string; toolName: string; arguments: Record<string, unknown> } }
   | { event: "done"; data: { evalCount: number; evalDurationNs: number; finalTps: number; promptTokens: number; contextTokens: number } }
-  | { event: "error"; data: { message: string; isConnection?: boolean } }
+  | { event: "error"; data: { message: string; isConnection?: boolean; diagnostic?: AgentErrorDiagnosticSummary } }
   | { event: "notice"; data: { messageKey: string } }
   | { event: "compressing"; data: { status: string } }
   | { event: "compressionComplete"; data: Record<string, never> }

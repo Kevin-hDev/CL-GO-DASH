@@ -11,9 +11,7 @@ use crate::services::agent_local::context_budget;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::tool_executor;
 use crate::services::agent_local::tool_result_budget;
-use crate::services::agent_local::types_ollama::{
-    ChatMessage, StreamEvent, StreamResult, ToolCallFunction, ToolCallOllama,
-};
+use crate::services::agent_local::types_ollama::{ChatMessage, StreamEvent};
 use crate::services::agent_local::write_guard::WriteGuard;
 use std::path::PathBuf;
 use tokio_util::sync::CancellationToken;
@@ -36,6 +34,7 @@ pub async fn run_agent_loop(
     reasoning_mode: Option<&str>,
     working_dir: PathBuf,
     session_id: String,
+    request_id: String,
     cancel: CancellationToken,
     native_context: u64,
     configured_context: u64,
@@ -68,8 +67,17 @@ pub async fn run_agent_loop(
         )
         .await;
         context_budget::prepare_for_request(messages, configured_context);
+        crate::services::agent_local::stream_diagnostics::mark_phase(
+            &session_id,
+            &request_id,
+            "model_stream",
+            "Stream modèle démarré.",
+        )
+        .await;
         let result = retry::retry_stream(
             on_event,
+            &session_id,
+            &request_id,
             provider_id,
             model,
             messages,
@@ -84,7 +92,7 @@ pub async fn run_agent_loop(
         total_prompt += result.prompt_tokens;
         last_prompt = result.prompt_tokens;
         last_eval = result.eval_count;
-        messages.push(build_assistant_message(&result));
+        messages.push(super::agent_loop_message::build_assistant_message(&result));
 
         // Check post-réponse : compresser si le seuil a été dépassé pendant la génération
         compress_hook::try_auto_compress(
@@ -103,10 +111,17 @@ pub async fn run_agent_loop(
         if result.tool_calls.is_empty() {
             break;
         }
+        for (name, args) in &result.tool_calls {
+            crate::services::agent_local::tool_executor_diagnostics::detected(
+                &session_id, &request_id, name, args, &working_dir,
+            )
+            .await;
+        }
 
         if turn == MAX_TURNS - 1 {
-            crate::services::agent_local::stream_diagnostics::record_failure(
+            let diagnostic = crate::services::agent_local::stream_diagnostics::record_failure(
                 &session_id,
+                Some(&request_id),
                 "Limite de tours atteinte",
                 false,
             )
@@ -114,13 +129,15 @@ pub async fn run_agent_loop(
             let _ = on_event.send(StreamEvent::Error {
                 message: "Limite de tours atteinte".to_string(),
                 is_connection: false,
+                diagnostic,
             });
             break;
         }
 
         if let Err(msg) = breaker.check(&result.tool_calls) {
-            crate::services::agent_local::stream_diagnostics::record_failure(
+            let diagnostic = crate::services::agent_local::stream_diagnostics::record_failure(
                 &session_id,
+                Some(&request_id),
                 &msg,
                 false,
             )
@@ -128,6 +145,7 @@ pub async fn run_agent_loop(
             let _ = on_event.send(StreamEvent::Error {
                 message: msg,
                 is_connection: false,
+                diagnostic,
             });
             break;
         }
@@ -142,6 +160,7 @@ pub async fn run_agent_loop(
             &working_dir,
             &mode,
             &session_id,
+            &request_id,
             cancel.clone(),
             &mut write_guard,
         )
@@ -173,39 +192,7 @@ pub async fn run_agent_loop(
         context_tokens: last_prompt + last_eval,
     });
 
+    crate::services::agent_local::stream_diagnostics::record_completed(&session_id, &request_id)
+        .await;
     Ok(total_eval + total_prompt)
-}
-
-fn build_assistant_message(result: &StreamResult) -> ChatMessage {
-    let tool_calls = if result.tool_calls.is_empty() {
-        None
-    } else {
-        Some(
-            result
-                .tool_calls
-                .iter()
-                .enumerate()
-                .map(|(i, (name, args))| ToolCallOllama {
-                    id: result.tool_call_ids.get(i).cloned(),
-                    extra_content: result.tool_call_extra_content.get(i).cloned().flatten(),
-                    function: ToolCallFunction {
-                        name: name.clone(),
-                        arguments: args.clone(),
-                    },
-                })
-                .collect(),
-        )
-    };
-    let reasoning = if result.thinking.is_empty() {
-        None
-    } else {
-        Some(result.thinking.clone())
-    };
-    ChatMessage {
-        role: "assistant".to_string(),
-        content: result.content.clone(),
-        tool_calls,
-        reasoning_content: reasoning,
-        ..Default::default()
-    }
 }

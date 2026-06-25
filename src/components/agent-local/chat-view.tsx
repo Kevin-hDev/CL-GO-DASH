@@ -138,6 +138,7 @@ export function ChatView({
             isStreaming={chat.isStreaming} tps={chat.tps} totalElapsedMs={chat.totalElapsedMs}
             segmentStartedAt={chat.streamStartedAt} liveTokenCount={chat.liveTokenCount}
             error={chat.error} isConnectionError={chat.isConnectionError}
+            diagnosticSummary={chat.diagnosticSummary}
             onRetry={handleRetry}
             onReload={handleReload} onEdit={handleEdit}
             onFileClick={handleFileClick}

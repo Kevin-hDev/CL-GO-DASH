@@ -78,9 +78,11 @@ export function applyStreamEvent(
       const errorKey = KNOWN_ERROR_KEYS[rawMsg];
       next.error = errorKey ? i18n.t(errorKey) : i18n.t("errors.streamInterrupted");
       next.isConnectionError = (event.data as Record<string, unknown>).isConnection === true;
+      next.diagnosticSummary = event.data.diagnostic?.safeSummary;
       const partial = finalizeStream(next, 0, 0, next.tokenCount);
       partial.state.error = next.error;
       partial.state.isConnectionError = next.isConnectionError;
+      partial.state.diagnosticSummary = next.diagnosticSummary;
       return partial;
     }
     case "notice":

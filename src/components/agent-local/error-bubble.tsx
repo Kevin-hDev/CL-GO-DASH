@@ -17,14 +17,15 @@ const BUBBLE_STYLE = {
 interface ErrorBubbleProps {
   message: string;
   isConnection?: boolean;
+  diagnosticSummary?: string;
   onRetry?: () => void;
 }
 
-export function ErrorBubble({ message, isConnection, onRetry }: ErrorBubbleProps) {
+export function ErrorBubble({ message, isConnection, diagnosticSummary, onRetry }: ErrorBubbleProps) {
   const { t } = useTranslation();
 
   if (isConnection && onRetry) {
-    return <ConnectionErrorBubble onRetry={onRetry} />;
+    return <ConnectionErrorBubble diagnosticSummary={diagnosticSummary} onRetry={onRetry} />;
   }
 
   return (
@@ -33,11 +34,20 @@ export function ErrorBubble({ message, isConnection, onRetry }: ErrorBubbleProps
       color: "var(--toast-error-text)",
     }} className="chat-bubble">
       {message === "ollama_connection_lost" ? t("errors.ollamaConnectionLost") : message}
+      {diagnosticSummary && (
+        <div style={{ marginTop: 6, opacity: 0.78 }}>{diagnosticSummary}</div>
+      )}
     </div>
   );
 }
 
-function ConnectionErrorBubble({ onRetry }: { onRetry: () => void }) {
+function ConnectionErrorBubble({
+  diagnosticSummary,
+  onRetry,
+}: {
+  diagnosticSummary?: string;
+  onRetry: () => void;
+}) {
   const { t } = useTranslation();
   const [elapsed, setElapsed] = useState(0);
   const [ollamaUp, setOllamaUp] = useState(false);
@@ -84,6 +94,9 @@ function ConnectionErrorBubble({ onRetry }: { onRetry: () => void }) {
         color: "var(--toast-ok-text)",
       }} className="chat-bubble">
         {t("errors.ollamaReconnecting", { seconds: countdown })}
+        {diagnosticSummary && (
+          <div style={{ marginTop: 6, opacity: 0.78 }}>{diagnosticSummary}</div>
+        )}
       </div>
     );
   }
@@ -94,6 +107,9 @@ function ConnectionErrorBubble({ onRetry }: { onRetry: () => void }) {
       color: "var(--toast-error-text)",
     }} className="chat-bubble">
       {t("errors.ollamaWaiting", { seconds: elapsed })}
+      {diagnosticSummary && (
+        <div style={{ marginTop: 6, opacity: 0.78 }}>{diagnosticSummary}</div>
+      )}
     </div>
   );
 }

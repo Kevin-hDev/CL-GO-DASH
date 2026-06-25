@@ -12,6 +12,7 @@ pub(crate) struct StreamCapabilityHints {
 pub(crate) struct StreamTaskParams {
     pub on_event: AgentEventEmitter,
     pub session_id: String,
+    pub request_id: String,
     pub model: String,
     pub messages: Vec<ChatMessage>,
     pub tools: Vec<serde_json::Value>,

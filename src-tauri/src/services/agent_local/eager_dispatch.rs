@@ -12,6 +12,7 @@ pub async fn collect_eager_results(
     mut rx: mpsc::UnboundedReceiver<(usize, String, serde_json::Value)>,
     working_dir: PathBuf,
     session_id: String,
+    request_id: String,
 ) -> HashMap<usize, ToolResult> {
     let mut handles: Vec<tokio::task::JoinHandle<(usize, ToolResult)>> = Vec::new();
     let mut count = 0;
@@ -26,8 +27,28 @@ pub async fn collect_eager_results(
         count += 1;
         let wd = working_dir.clone();
         let sid = session_id.clone();
+        let rid = request_id.clone();
         let handle = tokio::spawn(async move {
+            let arg_summary = super::diagnostic_args::summarize(&name, &args, &wd);
+            super::stream_diagnostics::record_tool(
+                &sid,
+                &rid,
+                &name,
+                "started",
+                arg_summary.clone(),
+                false,
+            )
+            .await;
             let result = tool_dispatcher::dispatch(&name, &args, &wd, &sid).await;
+            super::stream_diagnostics::record_tool(
+                &sid,
+                &rid,
+                &name,
+                "completed",
+                arg_summary,
+                result.is_error,
+            )
+            .await;
             (idx, result)
         });
         handles.push(handle);

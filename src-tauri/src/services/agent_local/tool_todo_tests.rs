@@ -191,6 +191,7 @@ fn test_session() -> AgentSession {
         todo_runs: vec![],
         active_todo_run_id: None,
         stream_failures: vec![],
+        diagnostic_runs: vec![],
         is_heartbeat: false,
         is_gateway: false,
         gateway_channel_key: None,

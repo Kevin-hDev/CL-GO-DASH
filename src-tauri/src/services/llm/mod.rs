@@ -5,6 +5,7 @@
 //! en changeant `base_url` et `api_key`.
 
 pub mod agent_loop;
+mod agent_loop_message;
 pub mod catalog;
 pub mod compress_hook;
 pub mod model_registry;

@@ -28,6 +28,8 @@ fn is_retryable_error(error: &str) -> bool {
 
 pub async fn retry_stream(
     on_event: &AgentEventEmitter,
+    session_id: &str,
+    request_id: &str,
     provider_id: &str,
     model: &str,
     messages: &[ChatMessage],
@@ -43,6 +45,12 @@ pub async fn retry_stream(
         }
         if attempt > 0 {
             eprintln!("[llm retry] attempt={attempt}/{MAX_RETRIES} error={last_error}");
+            crate::services::agent_local::stream_diagnostics::record_retry(
+                session_id,
+                request_id,
+                "Nouvelle tentative provider.",
+            )
+            .await;
             let delay = RETRY_BASE_MS * (1 << (attempt - 1));
             tokio::time::sleep(tokio::time::Duration::from_millis(delay)).await;
         }
