@@ -69,6 +69,8 @@ mod tests {
         assert!(validate("todo_pause", &json!({"reason": "debug"})).is_ok());
         assert!(validate("todo_resume", &json!({"id": "abc"})).is_ok());
         assert!(validate("todo_resume", &json!({})).is_err());
+        assert!(validate("todo_delete", &json!({"id": "abc"})).is_ok());
+        assert!(validate("todo_delete", &json!({})).is_err());
     }
 
     #[test]

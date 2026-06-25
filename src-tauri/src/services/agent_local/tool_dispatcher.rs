@@ -174,6 +174,7 @@ async fn dispatch_inner(
         "todo_history" => super::tool_todo::execute_history(args, session_id).await,
         "todo_pause" => super::tool_todo::execute_pause(args, session_id).await,
         "todo_resume" => super::tool_todo::execute_resume(args, session_id).await,
+        "todo_delete" => super::tool_todo::execute_delete(args, session_id).await,
         "agent_diagnostics" => {
             match super::stream_diagnostics::diagnostics_text(session_id).await {
                 Ok(text) => ToolResult::ok(text),

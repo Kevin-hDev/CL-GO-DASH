@@ -65,6 +65,20 @@ pub fn todo_resume_definition() -> Value {
     )
 }
 
+pub fn todo_delete_definition() -> Value {
+    super::tool_definitions::tool_def(
+        "todo_delete",
+        "Delete a saved checklist by id when it should not be resumed later. Hidden from the user UI.",
+        serde_json::json!({
+            "type": "object",
+            "properties": {
+                "id": {"type": "string", "description": "Todo checklist id from todo_history"}
+            },
+            "required": ["id"]
+        }),
+    )
+}
+
 pub fn agent_diagnostics_definition() -> Value {
     super::tool_definitions::tool_def(
         "agent_diagnostics",

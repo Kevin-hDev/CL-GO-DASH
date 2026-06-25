@@ -72,6 +72,24 @@ pub async fn execute_resume(args: &Value, session_id: &str) -> ToolResult {
     }
 }
 
+pub async fn execute_delete(args: &Value, session_id: &str) -> ToolResult {
+    let Some(run_id) = args.get("id").and_then(Value::as_str) else {
+        return ToolResult::err("paramètre 'id' requis");
+    };
+    match save_with(session_id, |session| {
+        super::tool_todo_state::delete_run(session, run_id)
+    })
+    .await
+    {
+        Ok(Ok(active)) => {
+            emit_update(session_id, active);
+            ToolResult::ok("Todo list supprimée.")
+        }
+        Ok(Err(err)) => ToolResult::err(err),
+        Err(_) => ToolResult::err("Suppression de la todo impossible."),
+    }
+}
+
 pub async fn append_session_reminder(
     messages: &mut [super::types_ollama::ChatMessage],
     session_id: &str,

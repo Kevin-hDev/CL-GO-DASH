@@ -3,6 +3,7 @@ const HIDDEN_AGENT_TOOLS = new Set([
   "todo_history",
   "todo_pause",
   "todo_resume",
+  "todo_delete",
   "agent_diagnostics",
 ]);
 

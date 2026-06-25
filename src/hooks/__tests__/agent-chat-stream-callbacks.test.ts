@@ -63,7 +63,7 @@ describe("toolCall", () => {
   });
   it("ignore les tools internes de todo et diagnostic", () => {
     let s = makeState();
-    for (const name of ["todo_history", "todo_pause", "todo_resume", "agent_diagnostics"]) {
+    for (const name of ["todo_history", "todo_pause", "todo_resume", "todo_delete", "agent_diagnostics"]) {
       s = applyStreamEvent(s, { event: "toolCall", data: { name, arguments: {} } }).state;
     }
     expect(s.currentTools).toHaveLength(0);

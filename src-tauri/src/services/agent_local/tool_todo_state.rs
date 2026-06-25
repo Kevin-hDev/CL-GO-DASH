@@ -74,6 +74,23 @@ pub fn resume_run(session: &mut AgentSession, run_id: &str) -> Result<Vec<AgentT
     Ok(session.todos.clone())
 }
 
+pub fn delete_run(session: &mut AgentSession, run_id: &str) -> Result<Vec<AgentTodoItem>, String> {
+    validate_run_id(run_id)?;
+    migrate_legacy_todos(session);
+    let index = session
+        .todo_runs
+        .iter()
+        .position(|run| run.id == run_id)
+        .ok_or_else(|| "todo introuvable".to_string())?;
+    let was_active = session.active_todo_run_id.as_deref() == Some(run_id);
+    session.todo_runs.remove(index);
+    if was_active {
+        session.active_todo_run_id = None;
+        session.todos.clear();
+    }
+    Ok(session.todos.clone())
+}
+
 pub fn completed_count(todos: &[AgentTodoItem]) -> usize {
     todos
         .iter()

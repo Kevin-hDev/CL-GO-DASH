@@ -36,6 +36,7 @@ static TODO_WRITE: Schema = &[("todos", Ty::Arr, true)];
 static TODO_HISTORY: Schema = &[];
 static TODO_PAUSE: Schema = &[("reason", Ty::Str, false)];
 static TODO_RESUME: Schema = &[("id", Ty::Str, true)];
+static TODO_DELETE: Schema = &[("id", Ty::Str, true)];
 static AGENT_DIAGNOSTICS: Schema = &[];
 static LOAD_SKILL: Schema = &[("skill_name", Ty::Str, true)];
 static CREATE_BRANCH: Schema = &[("branch_name", Ty::Str, true)];
@@ -100,6 +101,7 @@ fn schema(tool: &str) -> Option<Schema> {
         "todo_history" => TODO_HISTORY,
         "todo_pause" => TODO_PAUSE,
         "todo_resume" => TODO_RESUME,
+        "todo_delete" => TODO_DELETE,
         "agent_diagnostics" => AGENT_DIAGNOSTICS,
         "load_skill" => LOAD_SKILL,
         "create_branch" => CREATE_BRANCH,

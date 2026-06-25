@@ -133,6 +133,49 @@ fn pause_and_resume_restore_active_todos() {
     assert_eq!(session.active_todo_run_id.as_deref(), Some(run_id.as_str()));
 }
 
+#[test]
+fn delete_paused_run_removes_it_from_history() {
+    let mut session = test_session();
+    let first = parse_todos(&json!({
+        "todos": [{"content": "Ancienne tâche", "status": "in_progress"}]
+    }))
+    .unwrap();
+    apply_todos_to_session(&mut session, first);
+    let paused_id = session.active_todo_run_id.clone().unwrap();
+    let second = parse_todos(&json!({
+        "todos": [{"content": "Nouvelle tâche", "status": "in_progress"}]
+    }))
+    .unwrap();
+    apply_todos_to_session(&mut session, second);
+
+    let active = super::super::tool_todo_state::delete_run(&mut session, &paused_id).unwrap();
+
+    assert_eq!(session.todo_runs.len(), 1);
+    assert_eq!(active, session.todos);
+    assert_ne!(
+        session.active_todo_run_id.as_deref(),
+        Some(paused_id.as_str())
+    );
+}
+
+#[test]
+fn delete_active_run_clears_visible_todos() {
+    let mut session = test_session();
+    let todos = parse_todos(&json!({
+        "todos": [{"content": "Active", "status": "in_progress"}]
+    }))
+    .unwrap();
+    apply_todos_to_session(&mut session, todos);
+    let run_id = session.active_todo_run_id.clone().unwrap();
+
+    let active = super::super::tool_todo_state::delete_run(&mut session, &run_id).unwrap();
+
+    assert!(active.is_empty());
+    assert!(session.todos.is_empty());
+    assert!(session.active_todo_run_id.is_none());
+    assert!(session.todo_runs.is_empty());
+}
+
 fn test_session() -> AgentSession {
     AgentSession {
         id: "abc-123".into(),

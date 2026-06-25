@@ -121,6 +121,7 @@ pub fn get_tool_definitions() -> Vec<Value> {
         super::tool_definitions_todo::todo_history_definition(),
         super::tool_definitions_todo::todo_pause_definition(),
         super::tool_definitions_todo::todo_resume_definition(),
+        super::tool_definitions_todo::todo_delete_definition(),
         super::tool_definitions_todo::agent_diagnostics_definition(),
         tool_def(
             "load_skill",
