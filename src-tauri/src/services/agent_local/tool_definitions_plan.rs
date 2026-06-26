@@ -5,7 +5,8 @@ pub fn planmode_definition() -> Value {
         "planmode",
         "Publish or update the current implementation plan while Plan mode is active. \
          Use only after read-only exploration and after every important question has been answered. \
-         After this tool succeeds, ask the user to approve with ask_user_choice.",
+         After this tool succeeds, you must call ask_user_choice for final approval before any implementation. \
+         Do not ask approval in normal assistant text.",
         serde_json::json!({
             "type": "object",
             "properties": {
@@ -20,7 +21,8 @@ pub fn planmode_definition() -> Value {
 pub fn exitplanmode_definition() -> Value {
     super::tool_definitions::tool_def(
         "exitplanmode",
-        "Exit Plan mode only after the user answered the final plan approval choice.",
+        "Exit Plan mode only after the user answered the final ask_user_choice plan approval. \
+         When status is approved and this tool succeeds, immediately start implementation.",
         serde_json::json!({
             "type": "object",
             "properties": {

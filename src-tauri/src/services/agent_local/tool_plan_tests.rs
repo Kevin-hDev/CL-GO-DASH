@@ -32,13 +32,16 @@ fn upsert_keeps_history_bounded_by_caller_order() {
 fn invalid_exit_status_is_rejected() {
     let args = json!({"status": "done"});
     let status = args.get("status").and_then(serde_json::Value::as_str);
-    assert!(!matches!(status, Some("approved" | "rejected" | "cancelled")));
+    assert!(!matches!(
+        status,
+        Some("approved" | "rejected" | "cancelled")
+    ));
 }
 
 #[test]
 fn approved_exit_message_tells_model_to_continue() {
-    let message = super::exit_message(super::AgentPlanStatus::Approved);
+    let message = super::super::tool_plan_messages::exited(super::AgentPlanStatus::Approved);
     assert!(message.contains("todo_write"));
-    assert!(message.contains("immédiatement"));
-    assert!(message.contains("sans attendre"));
+    assert!(message.contains("immediately start implementation"));
+    assert!(message.contains("without waiting for another user message"));
 }

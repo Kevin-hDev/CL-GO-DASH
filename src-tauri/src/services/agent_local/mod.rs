@@ -3,6 +3,8 @@ pub fn ollama_base_url() -> String {
 }
 
 pub mod agent_loop;
+pub mod agent_loop_errors;
+pub mod agent_loop_plan;
 pub mod agent_loop_support;
 pub mod agent_md;
 pub mod agent_settings;
@@ -39,6 +41,7 @@ pub mod permission_gate;
 #[cfg(test)]
 pub mod permission_gate_tests;
 pub mod permission_policy;
+pub mod plan_mode_controller;
 pub mod project_store;
 pub mod prompt_chat_compact;
 pub mod prompt_chat_detailed;
@@ -54,6 +57,7 @@ pub mod session_ops;
 pub mod session_store;
 pub mod session_subagents;
 pub mod skill_parser;
+pub mod stream_buffer;
 pub mod stream_diagnostics;
 pub mod stream_diagnostics_failure;
 pub mod stream_diagnostics_support;
@@ -143,6 +147,7 @@ pub mod tool_office_utils;
 pub mod tool_plan;
 pub mod tool_plan_approval;
 pub mod tool_plan_guard;
+pub mod tool_plan_messages;
 pub mod tool_result_budget;
 #[cfg(test)]
 pub mod tool_result_budget_tests;

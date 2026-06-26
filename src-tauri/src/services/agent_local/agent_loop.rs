@@ -7,7 +7,9 @@ use crate::services::agent_local::tool_executor;
 use crate::services::agent_local::tool_result_budget;
 use crate::services::agent_local::types_ollama::{ChatMessage, OllamaThink, StreamEvent};
 use crate::services::agent_local::write_guard::WriteGuard;
-use crate::services::agent_local::{agent_loop_support, ollama_stream};
+use crate::services::agent_local::{
+    agent_loop_errors, agent_loop_plan, agent_loop_support, ollama_stream,
+};
 use std::path::PathBuf;
 use tokio_util::sync::CancellationToken;
 
@@ -35,10 +37,9 @@ pub async fn run_agent_loop(
     let start = std::time::Instant::now();
     let mut breaker = circuit_breaker::CircuitBreaker::new();
     let mut write_guard = WriteGuard::new();
+    let mut plan_repairs = 0;
 
-    // Cleanup des résultats persistés > 24h (une fois par session)
     tool_result_budget::cleanup_old_results();
-
     for turn in 0..MAX_TURNS {
         if cancel.is_cancelled() {
             return Err("Annulé".to_string());
@@ -58,6 +59,7 @@ pub async fn run_agent_loop(
         )
         .await;
         context_budget::prepare_for_request(messages, configured_context);
+        let plan_active = agent_loop_plan::active(&session_id, plan_mode_active).await;
         let request = agent_loop_support::build_request(model, messages, &tools, think.clone());
 
         let (tool_tx, tool_rx) = tokio::sync::mpsc::unbounded_channel();
@@ -81,6 +83,7 @@ pub async fn run_agent_loop(
             &request,
             cancel.clone(),
             tool_tx,
+            plan_active,
         )
         .await?;
 
@@ -88,6 +91,28 @@ pub async fn run_agent_loop(
         total_prompt += result.prompt_tokens;
         last_prompt = result.prompt_tokens;
         last_eval = result.eval_count;
+        match agent_loop_plan::check_result(
+            on_event,
+            messages,
+            &session_id,
+            &request_id,
+            &result,
+            plan_active,
+            plan_repairs,
+        )
+        .await
+        {
+            agent_loop_plan::PlanLoopAction::Accept => {}
+            agent_loop_plan::PlanLoopAction::Retry => {
+                plan_repairs += 1;
+                eager_handle.abort();
+                continue;
+            }
+            agent_loop_plan::PlanLoopAction::Stop => {
+                eager_handle.abort();
+                break;
+            }
+        }
         messages.push(agent_loop_support::build_assistant_message(&result));
 
         if let Some(context_tokens) = compress_hook::try_auto_compress(
@@ -124,35 +149,13 @@ pub async fn run_agent_loop(
 
         if turn == MAX_TURNS - 1 {
             eager_handle.abort();
-            let diagnostic = super::stream_diagnostics::record_failure(
-                &session_id,
-                Some(&request_id),
-                "Limite de tours atteinte",
-                false,
-            )
-            .await;
-            let _ = on_event.send(StreamEvent::Error {
-                message: "Limite de tours atteinte".to_string(),
-                is_connection: false,
-                diagnostic,
-            });
+            agent_loop_errors::max_turns(on_event, &session_id, &request_id).await;
             break;
         }
 
         if let Err(msg) = breaker.check(&result.tool_calls) {
             eager_handle.abort();
-            let diagnostic = super::stream_diagnostics::record_failure(
-                &session_id,
-                Some(&request_id),
-                &msg,
-                false,
-            )
-            .await;
-            let _ = on_event.send(StreamEvent::Error {
-                message: msg,
-                is_connection: false,
-                diagnostic,
-            });
+            agent_loop_errors::send(on_event, &session_id, &request_id, &msg).await;
             break;
         }
 
@@ -169,7 +172,7 @@ pub async fn run_agent_loop(
             &request_id,
             cancel.clone(),
             &mut write_guard,
-            plan_mode_active,
+            plan_active,
             Some(eager_results),
         )
         .await;

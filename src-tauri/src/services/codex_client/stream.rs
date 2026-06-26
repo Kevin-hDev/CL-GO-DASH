@@ -19,15 +19,17 @@ pub async fn stream_chat(
     think: bool,
     reasoning_mode: Option<&str>,
     cancel: CancellationToken,
+    buffer_content: bool,
 ) -> Result<StreamResult, String> {
     let resp = request::post_codex_stream(model, messages, tools, think, reasoning_mode).await?;
-    consume_sse(on_event, resp, cancel).await
+    consume_sse(on_event, resp, cancel, buffer_content).await
 }
 
 async fn consume_sse(
     on_event: &AgentEventEmitter,
     resp: reqwest::Response,
     cancel: CancellationToken,
+    buffer_content: bool,
 ) -> Result<StreamResult, String> {
     let mut sse = resp.bytes_stream().eventsource();
     let mut result = StreamResult::default();
@@ -80,12 +82,15 @@ async fn consume_sse(
                 }
                 token_count += 1;
                 result.content.push_str(delta);
-                let tps = compute_tps(token_count, first_token);
-                let _ = on_event.send(StreamEvent::Token {
-                    content: delta.to_string(),
-                    token_count,
-                    tps,
-                });
+                result.content_chunks.push(delta.to_string());
+                if !buffer_content {
+                    let tps = compute_tps(token_count, first_token);
+                    let _ = on_event.send(StreamEvent::Token {
+                        content: delta.to_string(),
+                        token_count,
+                        tps,
+                    });
+                }
             }
             "response.output_item.added" => {
                 if let Some(item) = parsed.get("item") {

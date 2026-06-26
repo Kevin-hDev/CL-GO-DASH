@@ -1,10 +1,8 @@
-//! Miroir de `agent_local/agent_loop.rs` côté Ollama : boucle chat + tool_calls + exec
-//! jusqu'à ce que le modèle n'appelle plus d'outil. Réutilise `tool_executor::run_tools`
-//! pour dispatcher et gérer les permissions.
-
 use super::agent_loop_tools;
 use super::compress_hook;
 use super::retry;
+use crate::services::agent_local::agent_loop_errors;
+use crate::services::agent_local::agent_loop_plan;
 use crate::services::agent_local::circuit_breaker;
 use crate::services::agent_local::context_budget;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
@@ -17,8 +15,6 @@ use tokio_util::sync::CancellationToken;
 
 const MAX_TURNS: usize = 30;
 
-/// Les tool defs d'Ollama sont déjà au format OpenAI `{type: "function", function: {...}}`.
-/// Cette fonction est l'identité — gardée pour lisibilité et future divergence.
 pub fn convert_tools_to_openai(tools: &[serde_json::Value]) -> Vec<serde_json::Value> {
     tools.to_vec()
 }
@@ -47,6 +43,7 @@ pub async fn run_agent_loop(
     let start = std::time::Instant::now();
     let mut breaker = circuit_breaker::CircuitBreaker::new();
     let mut write_guard = WriteGuard::new();
+    let mut plan_repairs = 0;
 
     for turn in 0..MAX_TURNS {
         if cancel.is_cancelled() {
@@ -68,6 +65,7 @@ pub async fn run_agent_loop(
         )
         .await;
         context_budget::prepare_for_request(messages, configured_context);
+        let plan_active = agent_loop_plan::active(&session_id, plan_mode_active).await;
         crate::services::agent_local::stream_diagnostics::mark_phase(
             &session_id,
             &request_id,
@@ -86,6 +84,7 @@ pub async fn run_agent_loop(
             think,
             reasoning_mode,
             cancel.clone(),
+            plan_active,
         )
         .await?;
 
@@ -93,6 +92,24 @@ pub async fn run_agent_loop(
         total_prompt += result.prompt_tokens;
         last_prompt = result.prompt_tokens;
         last_eval = result.eval_count;
+        match agent_loop_plan::check_result(
+            on_event,
+            messages,
+            &session_id,
+            &request_id,
+            &result,
+            plan_active,
+            plan_repairs,
+        )
+        .await
+        {
+            agent_loop_plan::PlanLoopAction::Accept => {}
+            agent_loop_plan::PlanLoopAction::Retry => {
+                plan_repairs += 1;
+                continue;
+            }
+            agent_loop_plan::PlanLoopAction::Stop => break,
+        }
         messages.push(super::agent_loop_message::build_assistant_message(&result));
 
         if let Some(context_tokens) = compress_hook::try_auto_compress(
@@ -125,38 +142,15 @@ pub async fn run_agent_loop(
         .await;
 
         if turn == MAX_TURNS - 1 {
-            let diagnostic = crate::services::agent_local::stream_diagnostics::record_failure(
-                &session_id,
-                Some(&request_id),
-                "Limite de tours atteinte",
-                false,
-            )
-            .await;
-            let _ = on_event.send(StreamEvent::Error {
-                message: "Limite de tours atteinte".to_string(),
-                is_connection: false,
-                diagnostic,
-            });
+            agent_loop_errors::max_turns(on_event, &session_id, &request_id).await;
             break;
         }
 
         if let Err(msg) = breaker.check(&result.tool_calls) {
-            let diagnostic = crate::services::agent_local::stream_diagnostics::record_failure(
-                &session_id,
-                Some(&request_id),
-                &msg,
-                false,
-            )
-            .await;
-            let _ = on_event.send(StreamEvent::Error {
-                message: msg,
-                is_connection: false,
-                diagnostic,
-            });
+            agent_loop_errors::send(on_event, &session_id, &request_id, &msg).await;
             break;
         }
 
-        // Snapshot longueur avant push des tool results → patch post-run.
         let before = messages.len();
         let mode = permission_mode.to_string();
         tool_executor::run_tools(
@@ -169,12 +163,10 @@ pub async fn run_agent_loop(
             &request_id,
             cancel.clone(),
             &mut write_guard,
-            plan_mode_active,
+            plan_active,
         )
         .await;
 
-        // Patch : assigne tool_call_id aux messages role:"tool" juste poussés,
-        // dans l'ordre des tool_calls. Requis pour OpenAI-compat au tour suivant.
         agent_loop_tools::assign_tool_call_ids(messages, before, &result.tool_call_ids);
 
         let _ = on_event.send(StreamEvent::TurnEnd {});

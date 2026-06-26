@@ -4,5 +4,6 @@ pub const INTERACTIVE: &str = "\
 Use ask_user_choice only when the user's answer materially changes the next step.
 Good cases: the user requests interactive mode, a blocking ambiguity exists, several strategies have different tradeoffs, important planning, brainstorming direction, product/design choices, risky actions, or resuming after interruption.
 Avoid it for simple questions, normal conversation, minor clarification, obvious next steps, or every implementation step.
+If another active workflow explicitly requires ask_user_choice, that workflow takes priority over the sparing-use rule.
 When you call it, provide concrete options and mark at most one option as recommended with recommended: true.
 The UI will add an \"Other\" option automatically, so do not include your own Other option.";

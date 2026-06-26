@@ -1,6 +1,6 @@
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::types_ollama::{StreamEvent, StreamResult};
-use crate::services::stream_utils::{compute_tps, FilteredChunk, ThinkTagFilter};
+use crate::services::stream_utils::{FilteredChunk, ThinkTagFilter};
 use tokio::sync::mpsc;
 
 pub fn process_chunk(
@@ -12,6 +12,7 @@ pub fn process_chunk(
     should_emit_done: bool,
     tool_tx: Option<&mpsc::UnboundedSender<(usize, String, serde_json::Value)>>,
     think_filter: &mut ThinkTagFilter,
+    buffer_content: bool,
 ) -> Result<(), String> {
     let chunk: serde_json::Value =
         serde_json::from_str(text).map_err(|e| format!("JSON invalide: {e}"))?;
@@ -24,7 +25,14 @@ pub fn process_chunk(
     if chunk["done"].as_bool() == Some(true) {
         result.eval_count = chunk["eval_count"].as_u64().unwrap_or(0) as u32;
         result.prompt_tokens = chunk["prompt_eval_count"].as_u64().unwrap_or(0) as u32;
-        flush_filter(think_filter, on_event, token_count, first_token, result);
+        flush_filter(
+            think_filter,
+            on_event,
+            token_count,
+            first_token,
+            result,
+            buffer_content,
+        );
         if should_emit_done {
             return emit_done(on_event, &chunk);
         }
@@ -51,6 +59,7 @@ pub fn process_chunk(
                 token_count,
                 first_token,
                 result,
+                buffer_content,
             );
         }
     }
@@ -82,6 +91,7 @@ fn emit_filtered(
     token_count: &mut u32,
     first_token: &mut Option<std::time::Instant>,
     result: &mut StreamResult,
+    buffer_content: bool,
 ) {
     for chunk in filter.feed(content) {
         match chunk {
@@ -90,17 +100,14 @@ fn emit_filtered(
                 let _ = on_event.send(StreamEvent::Thinking { content: t });
             }
             FilteredChunk::Content(c) => {
-                result.content.push_str(&c);
-                *token_count += 1;
-                if first_token.is_none() {
-                    *first_token = Some(std::time::Instant::now());
-                }
-                let tps = compute_tps(*token_count, *first_token);
-                let _ = on_event.send(StreamEvent::Token {
-                    content: c,
-                    token_count: *token_count,
-                    tps,
-                });
+                super::stream_buffer::record_content(
+                    on_event,
+                    result,
+                    c,
+                    token_count,
+                    first_token,
+                    buffer_content,
+                );
             }
         }
     }
@@ -112,6 +119,7 @@ fn flush_filter(
     token_count: &mut u32,
     first_token: &mut Option<std::time::Instant>,
     result: &mut StreamResult,
+    buffer_content: bool,
 ) {
     for chunk in filter.flush() {
         match chunk {
@@ -120,17 +128,14 @@ fn flush_filter(
                 let _ = on_event.send(StreamEvent::Thinking { content: t });
             }
             FilteredChunk::Content(c) => {
-                result.content.push_str(&c);
-                *token_count += 1;
-                if first_token.is_none() {
-                    *first_token = Some(std::time::Instant::now());
-                }
-                let tps = compute_tps(*token_count, *first_token);
-                let _ = on_event.send(StreamEvent::Token {
-                    content: c,
-                    token_count: *token_count,
-                    tps,
-                });
+                super::stream_buffer::record_content(
+                    on_event,
+                    result,
+                    c,
+                    token_count,
+                    first_token,
+                    buffer_content,
+                );
             }
         }
     }

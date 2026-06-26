@@ -1,8 +1,6 @@
 use super::stream_events::AgentEventEmitter;
 use super::types_interactive::AgentInteractiveAnswer;
-use super::types_plan::{
-    AgentPlanApprovalDecision, AgentPlanStatus, AgentPlanWorkflowStatus,
-};
+use super::types_plan::{AgentPlanApprovalDecision, AgentPlanStatus, AgentPlanWorkflowStatus};
 use super::types_session::AgentSession;
 use super::types_stream::StreamEvent;
 
@@ -14,7 +12,9 @@ pub async fn record_answers(
     let lock = super::session_store::lock_session(session_id).await;
     let _guard = lock.lock().await;
     let mut session = super::session_store::get(session_id).await?;
-    if !session.plan_mode_enabled || session.plan_workflow_status != AgentPlanWorkflowStatus::AwaitingApproval {
+    if !session.plan_mode_enabled
+        || session.plan_workflow_status != AgentPlanWorkflowStatus::AwaitingApproval
+    {
         return Ok(None);
     }
     match classify_answers(answers) {
@@ -51,18 +51,18 @@ pub fn validate_exit(session: &AgentSession, status: AgentPlanStatus) -> Result<
             {
                 Ok(())
             } else {
-                Err("Validation utilisateur requise avant sortie du Mode plan.".to_string())
+                Err("User approval is required before exiting Plan Mode.".to_string())
             }
         }
         AgentPlanStatus::Rejected => {
             if session.plan_approval_decision == Some(AgentPlanApprovalDecision::QuitPlan) {
                 Ok(())
             } else {
-                Err("Choix utilisateur requis avant de quitter le Mode plan.".to_string())
+                Err("User choice is required before exiting Plan Mode.".to_string())
             }
         }
         AgentPlanStatus::Cancelled => Ok(()),
-        _ => Err("Statut de plan invalide.".to_string()),
+        _ => Err("Invalid plan status.".to_string()),
     }
 }
 
@@ -82,6 +82,15 @@ pub(crate) fn classify_answers(
         return Some(AgentPlanApprovalDecision::ContinuePlanning);
     }
     if text.contains("quitter") && text.contains("mode") && text.contains("plan") {
+        return Some(AgentPlanApprovalDecision::QuitPlan);
+    }
+    if text.contains("implement") && text.contains("plan") {
+        return Some(AgentPlanApprovalDecision::Implement);
+    }
+    if text.contains("continue") && text.contains("planning") {
+        return Some(AgentPlanApprovalDecision::ContinuePlanning);
+    }
+    if text.contains("exit") && text.contains("plan") && text.contains("mode") {
         return Some(AgentPlanApprovalDecision::QuitPlan);
     }
     None
@@ -170,6 +179,10 @@ mod tests {
         assert_eq!(
             classify_answers(&[answer("Quitter le mode plan")]),
             Some(AgentPlanApprovalDecision::QuitPlan)
+        );
+        assert_eq!(
+            classify_answers(&[answer("Implement this plan")]),
+            Some(AgentPlanApprovalDecision::Implement)
         );
     }
 

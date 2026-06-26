@@ -34,7 +34,7 @@ pub fn ensure_allowed(tool_name: &str, args: &Value, plan_mode_active: bool) -> 
     if !plan_mode_active || is_allowed_in_plan_mode(tool_name, args) {
         return Ok(());
     }
-    Err("Action indisponible pendant le mode plan.".to_string())
+    Err("Action unavailable while Plan Mode is active.".to_string())
 }
 
 pub async fn ensure_allowed_for_session(

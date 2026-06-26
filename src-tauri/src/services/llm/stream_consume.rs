@@ -5,7 +5,8 @@ use super::{
 };
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::types_ollama::{StreamEvent, StreamResult};
-use crate::services::stream_utils::{compute_tps, FilteredChunk, ThinkTagFilter};
+use crate::services::stream_utils::FilteredChunk;
+use crate::services::stream_utils::ThinkTagFilter;
 use eventsource_stream::Eventsource;
 use futures_util::StreamExt;
 use tokio_util::sync::CancellationToken;
@@ -14,6 +15,7 @@ pub(super) async fn consume_stream(
     on_event: &AgentEventEmitter,
     resp: reqwest::Response,
     cancel: CancellationToken,
+    buffer_content: bool,
 ) -> Result<(StreamResult, u32, std::time::Instant), String> {
     let mut stream = resp.bytes_stream().eventsource();
     let mut result = StreamResult::default();
@@ -32,7 +34,7 @@ pub(super) async fn consume_stream(
                 let Some(event) = event else { break; };
                 let event = event.map_err(|e| format!("SSE: {e}"))?;
                 if is_done_marker(&event.data) { break; }
-                process_chunk(&event.data, on_event, &mut token_count, &mut first_token, &mut result, &mut acc, &mut think_filter);
+                process_chunk(&event.data, on_event, &mut token_count, &mut first_token, &mut result, &mut acc, &mut think_filter, buffer_content);
             }
         }
     }
@@ -44,14 +46,14 @@ pub(super) async fn consume_stream(
                 let _ = on_event.send(StreamEvent::Thinking { content: t });
             }
             FilteredChunk::Content(c) => {
-                result.content.push_str(&c);
-                token_count += 1;
-                let tps = compute_tps(token_count, first_token);
-                let _ = on_event.send(StreamEvent::Token {
-                    content: c,
-                    token_count,
-                    tps,
-                });
+                crate::services::agent_local::stream_buffer::record_content(
+                    on_event,
+                    &mut result,
+                    c,
+                    &mut token_count,
+                    &mut first_token,
+                    buffer_content,
+                );
             }
         }
     }
@@ -83,6 +85,7 @@ fn process_chunk(
     result: &mut StreamResult,
     acc: &mut ToolCallAccumulator,
     think_filter: &mut ThinkTagFilter,
+    buffer_content: bool,
 ) {
     for chunk in stream_chunk::parse(data) {
         match chunk {
@@ -99,17 +102,14 @@ fn process_chunk(
                             let _ = on_event.send(StreamEvent::Thinking { content: t });
                         }
                         FilteredChunk::Content(c) => {
-                            result.content.push_str(&c);
-                            *token_count += 1;
-                            if first_token.is_none() {
-                                *first_token = Some(std::time::Instant::now());
-                            }
-                            let tps = compute_tps(*token_count, *first_token);
-                            let _ = on_event.send(StreamEvent::Token {
-                                content: c,
-                                token_count: *token_count,
-                                tps,
-                            });
+                            crate::services::agent_local::stream_buffer::record_content(
+                                on_event,
+                                result,
+                                c,
+                                token_count,
+                                first_token,
+                                buffer_content,
+                            );
                         }
                     }
                 }

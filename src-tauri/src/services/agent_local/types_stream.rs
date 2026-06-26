@@ -103,6 +103,7 @@ pub enum StreamEvent {
 #[derive(Debug, Default)]
 pub struct StreamResult {
     pub content: String,
+    pub content_chunks: Vec<String>,
     pub thinking: String,
     pub tool_calls: Vec<(String, serde_json::Value)>,
     /// IDs OpenAI-compat alignés avec `tool_calls` (vide pour Ollama).

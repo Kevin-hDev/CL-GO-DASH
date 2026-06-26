@@ -36,35 +36,25 @@ pub async fn is_enabled(session_id: &str) -> bool {
 
 pub async fn execute(args: &Value, on_event: &AgentEventEmitter, session_id: &str) -> ToolResult {
     match write_plan(args, on_event, session_id).await {
-        Ok(run) => ToolResult::ok(format!(
-            "Plan '{}' publié. Tu dois maintenant appeler ask_user_choice avec la question 'Mettre en oeuvre le plan ?' et les options 'Mettre en oeuvre le plan', 'Continuer a planifier', 'Quitter le mode plan'.",
-            run.title
-        )),
+        Ok(run) => ToolResult::ok(super::tool_plan_messages::published(&run.title)),
         Err(err) => ToolResult::err(err),
     }
 }
 
-pub async fn execute_exit(args: &Value, on_event: &AgentEventEmitter, session_id: &str) -> ToolResult {
+pub async fn execute_exit(
+    args: &Value,
+    on_event: &AgentEventEmitter,
+    session_id: &str,
+) -> ToolResult {
     let status = match args.get("status").and_then(Value::as_str) {
         Some("approved") => AgentPlanStatus::Approved,
         Some("rejected") => AgentPlanStatus::Rejected,
         Some("cancelled") => AgentPlanStatus::Cancelled,
-        _ => return ToolResult::err("Statut de plan invalide."),
+        _ => return ToolResult::err(super::tool_plan_messages::INVALID_STATUS),
     };
     match exit_plan(session_id, status, on_event).await {
-        Ok(()) => ToolResult::ok(exit_message(status)),
+        Ok(()) => ToolResult::ok(super::tool_plan_messages::exited(status)),
         Err(err) => ToolResult::err(err),
-    }
-}
-
-fn exit_message(status: AgentPlanStatus) -> &'static str {
-    match status {
-        AgentPlanStatus::Approved => {
-            "Mode plan quitté. Le plan est validé. todo_write et les tools d'écriture sont disponibles. Tu dois commencer immédiatement l'implémentation sans attendre un nouveau message utilisateur."
-        }
-        AgentPlanStatus::Rejected => "Mode plan quitté. Le plan n'est pas validé.",
-        AgentPlanStatus::Cancelled => "Mode plan annulé.",
-        _ => "Mode plan quitté.",
     }
 }
 
@@ -76,14 +66,14 @@ async fn write_plan(
     let title = clean_text(required_str(args, "title")?, MAX_TITLE_CHARS)?;
     let content = clean_text(required_str(args, "content")?, MAX_CONTENT_CHARS)?;
     if title.is_empty() || content.is_empty() {
-        return Err("Plan invalide.".to_string());
+        return Err(super::tool_plan_messages::INVALID_PLAN.to_string());
     }
 
     let lock = super::session_store::lock_session(session_id).await;
     let _guard = lock.lock().await;
     let mut session = super::session_store::get(session_id).await?;
     if !session.plan_mode_enabled {
-        return Err("Mode plan inactif.".to_string());
+        return Err(super::tool_plan_messages::PLAN_INACTIVE.to_string());
     }
 
     let now = Utc::now();
@@ -134,7 +124,7 @@ async fn exit_plan(
     let _guard = lock.lock().await;
     let mut session = super::session_store::get(session_id).await?;
     if !session.plan_mode_enabled {
-        return Err("Mode plan inactif.".to_string());
+        return Err(super::tool_plan_messages::PLAN_INACTIVE.to_string());
     }
     super::tool_plan_approval::validate_exit(&session, status)?;
     if let Some(active_id) = session.active_plan_id.clone() {
@@ -161,13 +151,13 @@ async fn exit_plan(
 fn required_str<'a>(args: &'a Value, key: &str) -> Result<&'a str, String> {
     args.get(key)
         .and_then(Value::as_str)
-        .ok_or_else(|| "Plan invalide.".to_string())
+        .ok_or_else(|| super::tool_plan_messages::INVALID_PLAN.to_string())
 }
 
 fn clean_text(value: &str, max_chars: usize) -> Result<String, String> {
     let trimmed = value.trim();
     if trimmed.chars().count() > max_chars || trimmed.contains('\0') {
-        return Err("Plan invalide.".to_string());
+        return Err(super::tool_plan_messages::INVALID_PLAN.to_string());
     }
     Ok(trimmed.to_string())
 }
@@ -187,12 +177,20 @@ fn plan_path(session_id: &str, plan_id: &str) -> Result<PathBuf, String> {
 }
 
 async fn write_markdown(path: &Path, title: &str, content: &str) -> Result<(), String> {
-    let dir = path.parent().ok_or_else(|| "Plan invalide.".to_string())?;
-    tokio::fs::create_dir_all(dir).await.map_err(|_| "Plan indisponible.".to_string())?;
+    let dir = path
+        .parent()
+        .ok_or_else(|| super::tool_plan_messages::INVALID_PLAN.to_string())?;
+    tokio::fs::create_dir_all(dir)
+        .await
+        .map_err(|_| super::tool_plan_messages::PLAN_UNAVAILABLE.to_string())?;
     let body = format!("# {title}\n\n{content}\n");
     let tmp = path.with_extension(format!("{}.tmp", Uuid::new_v4()));
-    tokio::fs::write(&tmp, body).await.map_err(|_| "Plan indisponible.".to_string())?;
-    tokio::fs::rename(&tmp, path).await.map_err(|_| "Plan indisponible.".to_string())
+    tokio::fs::write(&tmp, body)
+        .await
+        .map_err(|_| super::tool_plan_messages::PLAN_UNAVAILABLE.to_string())?;
+    tokio::fs::rename(&tmp, path)
+        .await
+        .map_err(|_| super::tool_plan_messages::PLAN_UNAVAILABLE.to_string())
 }
 
 #[cfg(test)]

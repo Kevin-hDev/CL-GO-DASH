@@ -20,8 +20,17 @@ pub async fn stream_chat_with_tool_notify(
     request: &ChatRequest,
     cancel: CancellationToken,
     tool_tx: mpsc::UnboundedSender<(usize, String, serde_json::Value)>,
+    buffer_content: bool,
 ) -> Result<StreamResult, String> {
-    stream_chat_inner(on_event, request, cancel, false, Some(tool_tx)).await
+    stream_chat_inner(
+        on_event,
+        request,
+        cancel,
+        false,
+        Some(tool_tx),
+        buffer_content,
+    )
+    .await
 }
 
 async fn stream_chat_inner(
@@ -30,6 +39,7 @@ async fn stream_chat_inner(
     cancel: CancellationToken,
     emit_done: bool,
     tool_tx: Option<mpsc::UnboundedSender<(usize, String, serde_json::Value)>>,
+    buffer_content: bool,
 ) -> Result<StreamResult, String> {
     let client = reqwest::Client::new();
     let resp = match client
@@ -72,7 +82,12 @@ async fn stream_chat_inner(
                 });
             }
             return Box::pin(stream_chat_inner(
-                on_event, &retry_req, cancel, emit_done, tool_tx,
+                on_event,
+                &retry_req,
+                cancel,
+                emit_done,
+                tool_tx,
+                buffer_content,
             ))
             .await;
         }
@@ -112,6 +127,7 @@ async fn stream_chat_inner(
                         if let Err(e) = process_chunk(
                             &text, on_event, &mut token_count, &mut first_token,
                             &mut result, emit_done, tool_tx.as_ref(), &mut think_filter,
+                            buffer_content,
                         ) {
                             let _ = on_event.send(StreamEvent::Error { message: e.clone(), is_connection: false, diagnostic: None });
                             return Err(e);

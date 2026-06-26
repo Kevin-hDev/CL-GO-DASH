@@ -37,6 +37,7 @@ pub async fn retry_stream(
     think: bool,
     reasoning_mode: Option<&str>,
     cancel: CancellationToken,
+    buffer_content: bool,
 ) -> Result<StreamResult, String> {
     let mut last_error = String::new();
     for attempt in 0..=MAX_RETRIES {
@@ -63,6 +64,7 @@ pub async fn retry_stream(
             think,
             reasoning_mode,
             cancel.clone(),
+            buffer_content,
         )
         .await
         {

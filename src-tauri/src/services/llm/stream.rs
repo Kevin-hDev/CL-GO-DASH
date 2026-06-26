@@ -13,6 +13,7 @@ pub async fn stream_chat_no_done(
     think: bool,
     reasoning_mode: Option<&str>,
     cancel: CancellationToken,
+    buffer_content: bool,
 ) -> Result<StreamResult, String> {
     if provider_id == "codex-oauth" {
         return crate::services::codex_client::stream::stream_chat(
@@ -23,6 +24,7 @@ pub async fn stream_chat_no_done(
             think,
             reasoning_mode,
             cancel,
+            buffer_content,
         )
         .await;
     }
@@ -37,7 +39,7 @@ pub async fn stream_chat_no_done(
     };
     match post_chat_request(&cfg).await {
         Ok(resp) => {
-            let (result, _, _) = consume_stream(on_event, resp, cancel).await?;
+            let (result, _, _) = consume_stream(on_event, resp, cancel, buffer_content).await?;
             Ok(result)
         }
         Err(RequestError::RetryWithoutTools(msg)) => {
@@ -52,7 +54,7 @@ pub async fn stream_chat_no_done(
                 max_tokens: None,
             };
             let resp = post_chat_request(&cfg2).await.map_err(|e| e.to_string())?;
-            let (result, _, _) = consume_stream(on_event, resp, cancel).await?;
+            let (result, _, _) = consume_stream(on_event, resp, cancel, buffer_content).await?;
             Ok(result)
         }
         Err(RequestError::RetryWithoutImages(msg)) => {
@@ -73,7 +75,7 @@ pub async fn stream_chat_no_done(
                 max_tokens: None,
             };
             let resp = post_chat_request(&cfg2).await.map_err(|e| e.to_string())?;
-            let (result, _, _) = consume_stream(on_event, resp, cancel).await?;
+            let (result, _, _) = consume_stream(on_event, resp, cancel, buffer_content).await?;
             Ok(result)
         }
         Err(RequestError::Fatal(msg)) => Err(msg),
