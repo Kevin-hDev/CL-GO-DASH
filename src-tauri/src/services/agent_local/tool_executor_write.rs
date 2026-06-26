@@ -18,7 +18,19 @@ pub(super) async fn execute_write(
     write_guard: &mut WriteGuard,
     session_id: &str,
     cancel: CancellationToken,
+    plan_mode_active: bool,
 ) -> ToolResult {
+    if let Err(msg) =
+        super::tool_plan_guard::ensure_allowed_for_session(
+            name,
+            args,
+            session_id,
+            plan_mode_active,
+        )
+        .await
+    {
+        return tool_dispatcher::enrich_error(ToolResult::err(msg), name);
+    }
     match run_pre_hooks(name, args) {
         PreHookDecision::Deny(msg) => {
             return tool_dispatcher::enrich_error(ToolResult::err(msg), name);

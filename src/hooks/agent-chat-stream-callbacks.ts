@@ -73,6 +73,13 @@ export function applyStreamEvent(
     case "subagentCompleted":
     case "todoUpdated":
       break;
+    case "planPreviewUpdated":
+      next.planPreview = event.data.plan;
+      break;
+    case "planModeUpdated":
+      next.planModeEnabled = event.data.enabled;
+      if (!event.data.enabled) next.planPreview = null;
+      break;
     case "interactiveChoiceRequest":
       next.interactiveChoice = event.data;
       break;

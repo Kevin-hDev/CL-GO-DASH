@@ -10,13 +10,23 @@ pub async fn execute(
     args: &serde_json::Value,
     on_event: &AgentEventEmitter,
     cancel: CancellationToken,
+    session_id: Option<&str>,
 ) -> ToolResult {
     let questions = match super::tool_interactive_parse::parse_questions(args) {
         Ok(questions) => questions,
         Err(err) => return ToolResult::err(err),
     };
     match request(on_event, questions, cancel).await {
-        Ok(answers) => ToolResult::ok(result_json(&answers)),
+        Ok(answers) => {
+            let plan_decision = match session_id {
+                Some(id) => super::tool_plan_approval::record_answers(id, &answers, on_event)
+                    .await
+                    .ok()
+                    .flatten(),
+                None => None,
+            };
+            ToolResult::ok(result_json(&answers, plan_decision))
+        }
         Err(err) => ToolResult::err(err),
     }
 }
@@ -33,7 +43,7 @@ async fn request(
     super::interactive_choice_gate::request(on_event, questions, cancel).await
 }
 
-fn result_json(answers: &[AgentInteractiveAnswer]) -> String {
+fn result_json(answers: &[AgentInteractiveAnswer], plan_decision: Option<&str>) -> String {
     let selected_labels: Vec<_> = answers
         .iter()
         .map(|answer| answer.selected_labels.clone())
@@ -42,12 +52,16 @@ fn result_json(answers: &[AgentInteractiveAnswer]) -> String {
         .iter()
         .filter_map(|answer| answer.custom_answer.clone())
         .collect();
-    json!({
+    let mut value = json!({
         "completed": true,
         "answers": answers,
         "selected_labels": selected_labels,
         "custom_answers": custom_answers,
-    })
+    });
+    if let Some(decision) = plan_decision {
+        value["plan_mode_decision"] = json!(decision);
+    }
+    value
     .to_string()
 }
 

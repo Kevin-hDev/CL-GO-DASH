@@ -136,12 +136,9 @@ export function ChatView({
             isStreaming={chat.isStreaming} tps={chat.tps} totalElapsedMs={chat.totalElapsedMs}
             segmentStartedAt={chat.streamStartedAt} liveTokenCount={chat.liveTokenCount}
             error={chat.error} isConnectionError={chat.isConnectionError}
-            diagnosticSummary={chat.diagnosticSummary}
-            onRetry={handleRetry}
+            diagnosticSummary={chat.diagnosticSummary} planPreview={chat.planPreview} onRetry={handleRetry}
             onReload={handleReload} onEdit={handleEdit}
-            onFileClick={handleFileClick}
-            onFilePreview={onFilePreviewPath}
-            projectPath={proj.selectedProject?.path}
+            onFileClick={handleFileClick} onFilePreview={onFilePreviewPath} projectPath={proj.selectedProject?.path}
             completedSubagents={subagents.completed.length > 0 ? subagents.completed : undefined}
             onOpenSubagent={onOpenSubagent}
           />
@@ -166,6 +163,8 @@ export function ChatView({
               files={fileDrop.files} contextUsed={context.used} contextMax={context.max}
               interactivePending={!!chat.interactiveChoice}
               permissionMode={permMode.mode} onPermissionModeChange={(m) => void permMode.change(m)}
+              planModeEnabled={chat.planModeEnabled}
+              onPlanModeChange={(enabled) => void chat.setPlanModeEnabled(enabled)}
               onRemoveFile={fileDrop.removeFile} onPreviewFile={setPreview} onSend={handleSend}
               onStop={() => void chat.stop()} onClearFiles={fileDrop.clearFiles} onFileImport={handleFileImport}
               onModelChange={handleModelSelect} onReasoningModeChange={onReasoningModeChange} onBuiltInCommand={handleBuiltInCommand}

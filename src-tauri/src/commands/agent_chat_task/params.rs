@@ -22,5 +22,6 @@ pub(crate) struct StreamTaskParams {
     pub capability_hints: StreamCapabilityHints,
     pub reasoning_mode: Option<String>,
     pub permission_mode_override: Option<String>,
+    pub plan_mode: Option<bool>,
     pub cancel: CancellationToken,
 }

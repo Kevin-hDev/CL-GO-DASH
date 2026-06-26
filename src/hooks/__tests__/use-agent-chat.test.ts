@@ -119,6 +119,7 @@ describe("useAgentChat", () => {
       true,
       "auto",
       undefined,
+      false,
     );
   });
 

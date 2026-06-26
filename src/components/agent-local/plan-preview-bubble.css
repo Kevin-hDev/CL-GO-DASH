@@ -1,0 +1,27 @@
+.ppb-root {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ppb-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink-muted);
+}
+
+.ppb-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.ppb-content {
+  max-height: 420px;
+  overflow: auto;
+  color: var(--ink-muted);
+}

@@ -26,6 +26,7 @@ pub async fn run_agent_loop(
     native_context: u64,
     configured_context: u64,
     permission_mode: &str,
+    plan_mode_active: bool,
 ) -> Result<u32, String> {
     let mut total_eval: u32 = 0;
     let mut total_prompt: u32 = 0;
@@ -59,7 +60,6 @@ pub async fn run_agent_loop(
         context_budget::prepare_for_request(messages, configured_context);
         let request = agent_loop_support::build_request(model, messages, &tools, think.clone());
 
-        // Eager dispatch : lancer les read-only tools dès qu'ils arrivent dans le stream
         let (tool_tx, tool_rx) = tokio::sync::mpsc::unbounded_channel();
         let eager_working_dir = working_dir.clone();
         let eager_handle = tokio::spawn(eager_dispatch::collect_eager_results(
@@ -84,16 +84,12 @@ pub async fn run_agent_loop(
         )
         .await?;
 
-        // Le sender est droppé quand le stream se termine → le receiver se ferme
-        // et collect_eager_results peut retourner ses résultats.
-
         total_eval += result.eval_count;
         total_prompt += result.prompt_tokens;
         last_prompt = result.prompt_tokens;
         last_eval = result.eval_count;
         messages.push(agent_loop_support::build_assistant_message(&result));
 
-        // Check post-réponse : compresser si le seuil a été dépassé pendant la génération
         if let Some(context_tokens) = compress_hook::try_auto_compress(
             on_event,
             messages,
@@ -173,6 +169,7 @@ pub async fn run_agent_loop(
             &request_id,
             cancel.clone(),
             &mut write_guard,
+            plan_mode_active,
             Some(eager_results),
         )
         .await;

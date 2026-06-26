@@ -2,6 +2,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 use super::types_diagnostics::{AgentDiagnosticRun, AgentStreamFailure};
+use super::types_plan::{AgentPlanApprovalDecision, AgentPlanRun, AgentPlanWorkflowStatus};
 use super::types_todo::{AgentTodoItem, AgentTodoRun};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -28,6 +29,16 @@ pub struct AgentSession {
     pub stream_failures: Vec<AgentStreamFailure>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub diagnostic_runs: Vec<AgentDiagnosticRun>,
+    #[serde(default)]
+    pub plan_mode_enabled: bool,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub plan_runs: Vec<AgentPlanRun>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub active_plan_id: Option<String>,
+    #[serde(default)]
+    pub plan_workflow_status: AgentPlanWorkflowStatus,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub plan_approval_decision: Option<AgentPlanApprovalDecision>,
     #[serde(default)]
     pub is_heartbeat: bool,
     #[serde(default)]

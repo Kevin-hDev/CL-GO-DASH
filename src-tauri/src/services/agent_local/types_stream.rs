@@ -84,6 +84,14 @@ pub enum StreamEvent {
         todos: Vec<crate::services::agent_local::types_todo::AgentTodoItem>,
     },
     #[serde(rename_all = "camelCase")]
+    PlanPreviewUpdated {
+        plan: Option<crate::services::agent_local::types_plan::AgentPlanPreview>,
+    },
+    #[serde(rename_all = "camelCase")]
+    PlanModeUpdated {
+        enabled: bool,
+    },
+    #[serde(rename_all = "camelCase")]
     InteractiveChoiceRequest {
         id: String,
         questions: Vec<crate::services::agent_local::types_interactive::AgentInteractiveQuestion>,

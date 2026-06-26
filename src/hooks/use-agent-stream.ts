@@ -83,6 +83,7 @@ export function useAgentStream() {
     supportsVision?: boolean,
     reasoningMode?: string | null,
     permissionMode?: string,
+    planMode?: boolean,
   ) => {
     streamingRef.current = true;
     await agentStreamManager.startSession(
@@ -156,6 +157,7 @@ export function useAgentStream() {
         supportsVision: supportsVision ?? null,
         reasoningMode: reasoningMode ?? null,
         permissionMode: permissionMode ?? null,
+        planMode: planMode ?? null,
       });
       generationRef.current = gen;
     } catch {

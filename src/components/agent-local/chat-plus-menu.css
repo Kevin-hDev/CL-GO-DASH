@@ -39,6 +39,13 @@
 
 .cpm-caret { margin-left: auto; color: var(--ink-faint); }
 
+.cpm-item-desc {
+  color: var(--ink-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .cpm-separator {
   height: 1px;
   background: var(--edge);

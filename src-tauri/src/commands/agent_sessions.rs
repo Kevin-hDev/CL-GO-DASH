@@ -87,6 +87,11 @@ pub async fn update_session_reasoning(
 }
 
 #[tauri::command]
+pub async fn set_session_plan_mode(id: String, enabled: bool) -> Result<(), String> {
+    crate::services::agent_local::tool_plan::set_enabled(&id, enabled).await
+}
+
+#[tauri::command]
 pub async fn delete_agent_session(id: String) -> Result<(), String> {
     session_store::delete(&id).await
 }

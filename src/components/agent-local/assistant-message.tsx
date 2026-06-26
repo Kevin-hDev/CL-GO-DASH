@@ -98,7 +98,7 @@ function splitCompactList(text: string): string[] {
   return text.split(marker).filter((part) => part.trim().length > 0);
 }
 
-function ChatMarkdown({ content }: { content: string }) {
+export function ChatMarkdown({ content }: { content: string }) {
   const prepared = useMemo(() => closeUnclosedCodeBlocks(content), [content]);
   const urls = useMemo(() => (isPreviewEnabled() ? extractUrls(content) : []), [content]);
 

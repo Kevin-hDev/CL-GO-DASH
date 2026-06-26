@@ -1396,5 +1396,15 @@
       "crps": "CRPS",
       "bias": "Bias"
     }
+  },
+  "chatMenu": {
+    "addFile": "Aggiungi immagine o file",
+    "planMode": "Modalità piano",
+    "planModeDesc": "Prepara un piano prima di modificare",
+    "disablePlanMode": "Disattiva modalità piano",
+    "connectors": "Connettori",
+    "plugins": "Plugin",
+    "noConnectors": "Nessun connettore",
+    "pluginsEmpty": "Prossimamente"
   }
 }

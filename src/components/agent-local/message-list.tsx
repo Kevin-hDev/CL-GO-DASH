@@ -6,11 +6,12 @@ import { ErrorBubble } from "./error-bubble";
 import { CompressionIndicator } from "./compression-indicator";
 import { ContextCompressionMarker } from "./context-compression-marker";
 import { SubagentBubble } from "./subagent-bubble";
+import { PlanPreviewBubble } from "./plan-preview-bubble";
 import { LoadingIndicator } from "./working-stats";
 import { useCompression } from "@/hooks/use-compression";
 import { isCompressionContextOnlyMessage, isCompressionSummaryMessage } from "@/lib/context-messages";
 import { isSubagentInjectedMessage, extractSubagentsFromMessages } from "@/lib/subagent-message-utils";
-import type { AgentMessage, SubagentInfo } from "@/types/agent";
+import type { AgentMessage, AgentPlanPreview, SubagentInfo } from "@/types/agent";
 import type { ToolActivity, StreamSegment } from "@/hooks/agent-chat-utils";
 import "./chat.css";
 import "./messages.css";
@@ -38,13 +39,14 @@ interface MessageListProps {
   projectPath?: string;
   completedSubagents?: SubagentInfo[];
   onOpenSubagent?: (sessionId: string) => void;
+  planPreview?: AgentPlanPreview | null;
 }
 
 export function MessageList({
   sessionId, messages, completedSegments, currentContent, currentThinking,
   currentTools, isStreaming, tps, totalElapsedMs, segmentStartedAt,
   liveTokenCount, error, isConnectionError, diagnosticSummary, onRetry, onReload, onEdit, onFileClick, onFilePreview,
-  projectPath, completedSubagents, onOpenSubagent,
+  projectPath, completedSubagents, onOpenSubagent, planPreview,
 }: MessageListProps) {
   const lastAssistantIdx = findLastIndex(messages, (m) => m.role === "assistant");
   const { isCompressing } = useCompression(sessionId);
@@ -99,6 +101,8 @@ export function MessageList({
         }
         return null;
       })}
+
+      {planPreview && <PlanPreviewBubble plan={planPreview} />}
 
       {isStreaming && (
         <StreamToolTimeline

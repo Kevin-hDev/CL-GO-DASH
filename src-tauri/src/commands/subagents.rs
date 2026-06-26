@@ -158,6 +158,7 @@ pub async fn synthesize_subagent_results(
             capability_hints: StreamCapabilityHints::default(),
             reasoning_mode: None,
             permission_mode_override: Some("auto".to_string()),
+            plan_mode: Some(false),
             cancel,
         })
         .await;

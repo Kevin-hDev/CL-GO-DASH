@@ -124,6 +124,8 @@ pub fn get_tool_definitions() -> Vec<Value> {
         super::tool_definitions_todo::todo_delete_definition(),
         super::tool_definitions_todo::agent_diagnostics_definition(),
         super::tool_definitions_interactive::ask_user_choice_definition(),
+        super::tool_definitions_plan::planmode_definition(),
+        super::tool_definitions_plan::exitplanmode_definition(),
         tool_def(
             "load_skill",
             "Load a skill by name for specialized workflows.",

@@ -77,7 +77,13 @@ pub async fn dispatch_or_interactive(
     cancel: CancellationToken,
 ) -> ToolResult {
     if name == "ask_user_choice" {
-        return super::tool_interactive::execute(args, on_event, cancel).await;
+        return super::tool_interactive::execute(args, on_event, cancel, Some(session_id)).await;
+    }
+    if name == "planmode" {
+        return super::tool_plan::execute(args, on_event, session_id).await;
+    }
+    if name == "exitplanmode" {
+        return super::tool_plan::execute_exit(args, on_event, session_id).await;
     }
     super::tool_dispatcher::dispatch(name, args, working_dir, session_id).await
 }

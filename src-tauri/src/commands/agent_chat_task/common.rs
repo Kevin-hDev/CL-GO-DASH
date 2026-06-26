@@ -23,6 +23,7 @@ pub(crate) struct PromptContext<'a> {
     pub model: &'a str,
     pub mode: &'a str,
     pub response_language: &'a str,
+    pub plan_mode_active: bool,
 }
 
 pub(crate) async fn resolve_permission_mode(override_mode: Option<&str>) -> StreamMode {
@@ -111,6 +112,7 @@ pub(crate) async fn skills_tuples(load: bool) -> Vec<(String, String)> {
 }
 
 pub(crate) fn prepare_with_context(messages: &mut Vec<ChatMessage>, ctx: PromptContext<'_>) {
+    let plan_mode_active = ctx.plan_mode_active;
     prepare_messages(
         messages,
         ctx.working_dir,
@@ -124,6 +126,16 @@ pub(crate) fn prepare_with_context(messages: &mut Vec<ChatMessage>, ctx: PromptC
         ctx.response_language,
     );
     append_git_section(messages, ctx.snap);
+    if plan_mode_active {
+        append_plan_mode(messages);
+    }
+}
+
+fn append_plan_mode(messages: &mut [ChatMessage]) {
+    if let Some(first) = messages.first_mut().filter(|m| m.role == "system") {
+        first.content.push_str("\n\n");
+        first.content.push_str(crate::services::agent_local::prompt_plan::PLAN_MODE);
+    }
 }
 
 pub(crate) fn merge_personality(

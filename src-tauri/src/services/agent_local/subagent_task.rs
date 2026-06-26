@@ -127,6 +127,7 @@ async fn run_inner(
         capability_hints: StreamCapabilityHints::default(),
         reasoning_mode: None,
         permission_mode_override: Some("subagent".to_string()),
+        plan_mode: Some(false),
         cancel: cancel.clone(),
     })
     .await;

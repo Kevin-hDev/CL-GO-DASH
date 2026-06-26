@@ -820,6 +820,9 @@
   },
   "chatMenu": {
     "addFile": "Add an image or file",
+    "planMode": "Plan mode",
+    "planModeDesc": "Prepare a plan before editing",
+    "disablePlanMode": "Disable Plan mode",
     "connectors": "Connectors",
     "plugins": "Plugins",
     "noConnectors": "No connectors",

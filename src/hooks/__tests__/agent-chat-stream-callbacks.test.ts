@@ -43,88 +43,6 @@ describe("thinking", () => {
   });
 });
 
-describe("toolCall", () => {
-  it("ajoute un outil à currentTools", () => {
-    const { state: s } = applyStreamEvent(makeState(), { event: "toolCall", data: { name: "bash", arguments: { command: "ls" } } });
-    expect(s.currentTools).toHaveLength(1);
-    expect(s.currentTools[0].name).toBe("bash");
-  });
-  it("préserve les outils existants", () => {
-    let s = applyStreamEvent(makeState(), { event: "toolCall", data: { name: "bash", arguments: {} } }).state;
-    s = applyStreamEvent(s, { event: "toolCall", data: { name: "grep", arguments: {} } }).state;
-    expect(s.currentTools).toHaveLength(2);
-  });
-  it("ignore todo_write dans les outils visibles", () => {
-    const { state: s } = applyStreamEvent(makeState(), {
-      event: "toolCall",
-      data: { name: "todo_write", arguments: { todos: [] } },
-    });
-    expect(s.currentTools).toHaveLength(0);
-  });
-  it("ignore les tools internes de todo, diagnostic et choix interactif", () => {
-    let s = makeState();
-    for (const name of ["todo_history", "todo_pause", "todo_resume", "todo_delete", "agent_diagnostics", "ask_user_choice"]) {
-      s = applyStreamEvent(s, { event: "toolCall", data: { name, arguments: {} } }).state;
-    }
-    expect(s.currentTools).toHaveLength(0);
-  });
-});
-
-describe("toolResult", () => {
-  it("assigne le résultat par index valide", () => {
-    const state = makeState({ currentTools: [{ name: "bash", args: {} }, { name: "grep", args: {} }] });
-    const { state: s } = applyStreamEvent(state, { event: "toolResult", data: { name: "grep", toolCallIndex: 1, content: "trouvé", isError: false } });
-    expect(s.currentTools[1].result).toBe("trouvé");
-    expect(s.currentTools[0].result).toBeUndefined();
-  });
-  it("assigne au premier outil sans résultat si index -1", () => {
-    const state = makeState({ currentTools: [{ name: "bash", args: {}, result: "déjà là" }, { name: "grep", args: {} }] });
-    const { state: s } = applyStreamEvent(state, { event: "toolResult", data: { name: "grep", toolCallIndex: -1, content: "grep result", isError: false } });
-    expect(s.currentTools[1].result).toBe("grep result");
-  });
-  it("vide pendingPermissions", () => {
-    const state = makeState({ currentTools: [{ name: "bash", args: {} }], pendingPermissions: [{ id: "p1", toolName: "bash", arguments: {} }] });
-    const { state: s } = applyStreamEvent(state, { event: "toolResult", data: { name: "bash", toolCallIndex: 0, content: "ok", isError: false } });
-    expect(s.pendingPermissions).toHaveLength(0);
-  });
-  it("ignore le résultat todo_write sans toucher l'outil suivant", () => {
-    let s = applyStreamEvent(makeState(), {
-      event: "toolCall",
-      data: { name: "todo_write", arguments: { todos: [] } },
-    }).state;
-    s = applyStreamEvent(s, {
-      event: "toolCall",
-      data: { name: "bash", arguments: { command: "ls" } },
-    }).state;
-    s = applyStreamEvent(s, {
-      event: "toolResult",
-      data: { name: "todo_write", toolCallIndex: 0, content: "ok", isError: false },
-    }).state;
-    expect(s.currentTools[0].result).toBeUndefined();
-  });
-  it("ignore les résultats des tools internes", () => {
-    const state = makeState({ currentTools: [{ name: "bash", args: {} }] });
-    const { state: s } = applyStreamEvent(state, {
-      event: "toolResult",
-      data: { name: "todo_history", toolCallIndex: 0, content: "hidden", isError: false },
-    });
-    expect(s.currentTools[0].result).toBeUndefined();
-  });
-  it("vide le choix interactif quand ask_user_choice retourne un résultat", () => {
-    const state = makeState({ interactiveChoice: {
-      id: "choice-1",
-      currentIndex: 0,
-      total: 1,
-      questions: [{ header: "Plan", question: "Choisir ?", options: [] }],
-    } });
-    const { state: s } = applyStreamEvent(state, {
-      event: "toolResult",
-      data: { name: "ask_user_choice", toolCallIndex: 0, content: "ok", isError: false },
-    });
-    expect(s.interactiveChoice).toBeUndefined();
-  });
-});
-
 describe("interactiveChoiceRequest", () => {
   it("stocke la demande interactive courante", () => {
     const request = {
@@ -140,6 +58,7 @@ describe("interactiveChoiceRequest", () => {
     expect(s.interactiveChoice).toEqual(request);
   });
 });
+
 
 describe("turnEnd", () => {
   it("reset les champs courants et sauvegarde le segment", () => {

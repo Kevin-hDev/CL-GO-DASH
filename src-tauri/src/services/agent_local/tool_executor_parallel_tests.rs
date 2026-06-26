@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::services::agent_local::tool_executor_parallel::is_read_only;
+    use crate::services::agent_local::tool_executor_read_only::is_read_only;
 
     #[test]
     fn read_only_classification() {

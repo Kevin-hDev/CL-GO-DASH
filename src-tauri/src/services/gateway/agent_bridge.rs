@@ -130,6 +130,7 @@ impl GatewayAgentBridge {
             capability_hints: StreamCapabilityHints::default(),
             reasoning_mode: None,
             permission_mode_override: Some("auto".to_string()),
+            plan_mode: Some(false),
             cancel: CancellationToken::new(),
         })
         .await

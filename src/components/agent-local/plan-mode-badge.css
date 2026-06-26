@@ -1,0 +1,29 @@
+.pmb-root {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 9px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink-muted);
+  cursor: pointer;
+  font-size: var(--text-sm);
+  transition: color var(--ease-smooth), background var(--ease-smooth);
+}
+
+.pmb-root:hover {
+  background: var(--select-bg);
+  color: var(--select-text);
+}
+
+.pmb-x {
+  opacity: 0;
+  margin-left: -2px;
+  transition: opacity var(--ease-smooth);
+}
+
+.pmb-root:hover .pmb-x {
+  opacity: 1;
+}

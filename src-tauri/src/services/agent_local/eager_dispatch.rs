@@ -1,5 +1,5 @@
 use crate::services::agent_local::tool_dispatcher;
-use crate::services::agent_local::tool_executor_parallel::is_read_only;
+use crate::services::agent_local::tool_executor_read_only::is_read_only;
 use crate::services::agent_local::tool_hooks::{run_pre_hooks, PreHookDecision};
 use crate::services::agent_local::types_tools::ToolResult;
 use std::collections::HashMap;

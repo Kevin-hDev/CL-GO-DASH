@@ -21,6 +21,7 @@ pub async fn chat_stream(
     supports_vision: Option<bool>,
     reasoning_mode: Option<String>,
     permission_mode: Option<String>,
+    plan_mode: Option<bool>,
     streams: tauri::State<'_, ActiveStreams>,
 ) -> Result<u64, String> {
     const MAX_ACTIVE_STREAMS: usize = 32;
@@ -94,6 +95,7 @@ pub async fn chat_stream(
             },
             reasoning_mode,
             permission_mode_override: permission_mode,
+            plan_mode,
             cancel,
         })
         .await;

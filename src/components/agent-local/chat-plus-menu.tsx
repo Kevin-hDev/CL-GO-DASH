@@ -1,15 +1,17 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Plus, Image, Plugs, PuzzlePiece, CaretRight } from "@/components/ui/icons";
+import { Plus, Image, Plugs, PuzzlePiece, CaretRight, ClipboardText } from "@/components/ui/icons";
 import { useConnectors } from "@/hooks/use-connectors";
 import { McpIcon } from "@/lib/mcp-icons";
 import "./chat-plus-menu.css";
 
 interface ChatPlusMenuProps {
   onFileImport: () => void;
+  planModeEnabled: boolean;
+  onPlanModeChange: (enabled: boolean) => void;
 }
 
-export function ChatPlusMenu({ onFileImport }: ChatPlusMenuProps) {
+export function ChatPlusMenu({ onFileImport, planModeEnabled, onPlanModeChange }: ChatPlusMenuProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [submenu, setSubmenu] = useState<"connectors" | "plugins" | null>(null);
@@ -52,6 +54,19 @@ export function ChatPlusMenu({ onFileImport }: ChatPlusMenuProps) {
           <button type="button" className="cpm-item" onClick={handleFileImport}>
             <Image size={16} weight="regular" />
             <span>{t("chatMenu.addFile")}</span>
+          </button>
+
+          <button
+            type="button"
+            className="cpm-item"
+            onClick={() => onPlanModeChange(!planModeEnabled)}
+          >
+            <ClipboardText size={16} weight="regular" />
+            <span>{t("chatMenu.planMode")}</span>
+            <span className="cpm-item-desc">{t("chatMenu.planModeDesc")}</span>
+            <div className={`cpm-toggle ${planModeEnabled ? "on" : ""}`}>
+              <div className="cpm-toggle-dot" />
+            </div>
           </button>
 
           <div className="cpm-separator" />

@@ -1,0 +1,63 @@
+import { describe, expect, it, vi } from "vitest";
+import { applyStreamEvent, createManagedStreamState } from "@/hooks/agent-chat-stream-callbacks";
+import type { ManagedStreamState } from "@/hooks/agent-chat-stream-callbacks";
+
+vi.mock("@/i18n", () => ({ default: { t: (key: string) => key } }));
+
+function makeState(overrides: Partial<ManagedStreamState> = {}): ManagedStreamState {
+  return { ...createManagedStreamState([], 0), streamStartedAt: null, segmentStartedAt: null, ...overrides };
+}
+
+describe("toolCall", () => {
+  it("ajoute un outil à currentTools", () => {
+    const event = { event: "toolCall" as const, data: { name: "bash", arguments: { command: "ls" } } };
+    const { state } = applyStreamEvent(makeState(), event);
+    expect(state.currentTools).toHaveLength(1);
+    expect(state.currentTools[0].name).toBe("bash");
+  });
+
+  it("ignore les tools internes", () => {
+    let state = makeState();
+    const names = ["todo_history", "todo_pause", "todo_resume", "todo_delete", "agent_diagnostics", "ask_user_choice", "planmode", "exitplanmode"];
+    for (const name of names) {
+      state = applyStreamEvent(state, { event: "toolCall", data: { name, arguments: {} } }).state;
+    }
+    expect(state.currentTools).toHaveLength(0);
+  });
+});
+
+describe("toolResult", () => {
+  it("assigne le résultat par index valide", () => {
+    const currentTools = [{ name: "bash", args: {} }, { name: "grep", args: {} }];
+    const state = makeState({ currentTools });
+    const result = applyStreamEvent(state, {
+      event: "toolResult",
+      data: { name: "grep", toolCallIndex: 1, content: "trouvé", isError: false },
+    });
+    expect(result.state.currentTools[1].result).toBe("trouvé");
+    expect(result.state.currentTools[0].result).toBeUndefined();
+  });
+
+  it("ignore les résultats des tools internes", () => {
+    const state = makeState({ currentTools: [{ name: "bash", args: {} }] });
+    const result = applyStreamEvent(state, {
+      event: "toolResult",
+      data: { name: "todo_history", toolCallIndex: 0, content: "hidden", isError: false },
+    });
+    expect(result.state.currentTools[0].result).toBeUndefined();
+  });
+
+  it("vide le choix interactif quand ask_user_choice retourne un résultat", () => {
+    const state = makeState({ interactiveChoice: {
+      id: "choice-1",
+      currentIndex: 0,
+      total: 1,
+      questions: [{ header: "Plan", question: "Choisir ?", options: [] }],
+    } });
+    const result = applyStreamEvent(state, {
+      event: "toolResult",
+      data: { name: "ask_user_choice", toolCallIndex: 0, content: "ok", isError: false },
+    });
+    expect(result.state.interactiveChoice).toBeUndefined();
+  });
+});

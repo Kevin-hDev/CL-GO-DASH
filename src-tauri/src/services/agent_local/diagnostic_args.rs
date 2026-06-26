@@ -37,7 +37,7 @@ pub fn summarize(tool_name: &str, args: &Value, working_dir: &Path) -> Option<Va
         }
         "todo_resume" | "todo_delete" => add_text(&mut out, "id", args),
         "todo_pause" => add_text(&mut out, "reason", args),
-        "todo_history" | "agent_diagnostics" | "ask_user_choice" => {}
+        "todo_history" | "agent_diagnostics" | "ask_user_choice" | "planmode" | "exitplanmode" => {}
         "mcp" => add_text(&mut out, "tool_id", args),
         _ => {}
     }

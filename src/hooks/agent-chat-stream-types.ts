@@ -1,5 +1,5 @@
 import type { StreamSegment, ToolActivity } from "./agent-chat-utils";
-import type { AgentInteractiveChoiceRequest, AgentMessage } from "@/types/agent";
+import type { AgentInteractiveChoiceRequest, AgentMessage, AgentPlanPreview } from "@/types/agent";
 
 export const MAX_PENDING_PERMISSIONS = 32;
 export const MAX_MESSAGES_PER_SESSION = 2000;
@@ -29,6 +29,8 @@ export interface ChatState {
   isConnectionError?: boolean;
   diagnosticSummary?: string;
   interactiveChoice?: AgentInteractiveChoiceRequest;
+  planPreview?: AgentPlanPreview | null;
+  planModeEnabled?: boolean;
 }
 
 export interface PermissionRequestState {
@@ -82,5 +84,7 @@ export function toChatState(state: ManagedStreamState): ChatState {
     isConnectionError: state.isConnectionError,
     diagnosticSummary: state.diagnosticSummary,
     interactiveChoice: state.interactiveChoice,
+    planPreview: state.planPreview,
+    planModeEnabled: state.planModeEnabled,
   };
 }

@@ -1,17 +1,12 @@
-use crate::services::agent_local::permission_gate::{self, PermissionDecision};
 use crate::services::agent_local::stream_events::AgentEventEmitter;
-use crate::services::agent_local::tool_dispatcher;
-use crate::services::agent_local::tool_hooks::{run_post_hooks, run_pre_hooks, PreHookDecision};
 use crate::services::agent_local::types_ollama::ChatMessage;
 use crate::services::agent_local::types_tools::ToolResult;
 use crate::services::agent_local::write_guard::WriteGuard;
 use std::collections::HashMap;
 use tokio_util::sync::CancellationToken;
 
-use super::tool_executor_helpers::{
-    check_write_guard, dispatch_or_interactive, post_record_read, push_tool_result,
-};
 use super::tool_executor_parallel::run_with_parallel_reads;
+use super::tool_executor_sequential::run_sequential;
 
 pub async fn run_tools(
     on_event: &AgentEventEmitter,
@@ -23,6 +18,7 @@ pub async fn run_tools(
     request_id: &str,
     cancel: CancellationToken,
     write_guard: &mut WriteGuard,
+    plan_mode_active: bool,
 ) {
     run_tools_with_eager(
         on_event,
@@ -34,6 +30,7 @@ pub async fn run_tools(
         request_id,
         cancel,
         write_guard,
+        plan_mode_active,
         None,
     )
     .await;
@@ -49,6 +46,7 @@ pub async fn run_tools_with_eager(
     request_id: &str,
     cancel: CancellationToken,
     write_guard: &mut WriteGuard,
+    plan_mode_active: bool,
     mut eager_results: Option<HashMap<usize, ToolResult>>,
 ) {
     if mode == "manual" {
@@ -61,6 +59,7 @@ pub async fn run_tools_with_eager(
             request_id,
             cancel,
             write_guard,
+            plan_mode_active,
         )
         .await;
     } else {
@@ -75,112 +74,8 @@ pub async fn run_tools_with_eager(
             eager_results.as_mut(),
             session_id,
             request_id,
+            plan_mode_active,
         )
         .await;
-    }
-}
-
-/// Mode manuel : permission demandée un par un, exécution séquentielle.
-async fn run_sequential(
-    on_event: &AgentEventEmitter,
-    messages: &mut Vec<ChatMessage>,
-    tool_calls: &[(String, serde_json::Value)],
-    working_dir: &std::path::Path,
-    session_id: &str,
-    request_id: &str,
-    cancel: CancellationToken,
-    write_guard: &mut WriteGuard,
-) {
-    for (idx, (name, args)) in tool_calls.iter().enumerate() {
-        let arg_summary = super::tool_executor_diagnostics::started(
-            session_id,
-            request_id,
-            name,
-            args,
-            working_dir,
-        )
-        .await;
-        match run_pre_hooks(name, args) {
-            PreHookDecision::Deny(msg) => {
-                let tr = tool_dispatcher::enrich_error(ToolResult::err(msg), name);
-                super::tool_executor_diagnostics::completed(
-                    session_id,
-                    request_id,
-                    name,
-                    arg_summary,
-                    true,
-                )
-                .await;
-                push_tool_result(on_event, messages, name, tr, idx);
-                continue;
-            }
-            PreHookDecision::Allow => {}
-        }
-        let effective_args = args;
-
-        if let Err(msg) = check_write_guard(name, effective_args, working_dir, write_guard) {
-            let tr = tool_dispatcher::enrich_error(ToolResult::err(msg), name);
-            super::tool_executor_diagnostics::completed(
-                session_id,
-                request_id,
-                name,
-                arg_summary,
-                true,
-            )
-            .await;
-            push_tool_result(on_event, messages, name, tr, idx);
-            continue;
-        }
-
-        let allowed =
-            check_allowed(on_event, name, effective_args, session_id, cancel.clone()).await;
-        let tr = if allowed {
-            dispatch_or_interactive(
-                on_event,
-                name,
-                effective_args,
-                working_dir,
-                session_id,
-                cancel.clone(),
-            )
-            .await
-        } else {
-            ToolResult::err("L'utilisateur a refusé cette action.")
-        };
-
-        let tr = run_post_hooks(name, effective_args, tr);
-        post_record_read(name, effective_args, working_dir, &tr, write_guard);
-        super::tool_executor_diagnostics::completed(
-            session_id,
-            request_id,
-            name,
-            arg_summary,
-            tr.is_error,
-        )
-        .await;
-        push_tool_result(on_event, messages, name, tr, idx);
-    }
-}
-
-async fn check_allowed(
-    on_event: &AgentEventEmitter,
-    name: &str,
-    args: &serde_json::Value,
-    session_id: &str,
-    cancel: CancellationToken,
-) -> bool {
-    if !permission_gate::requires_permission(name, args) {
-        return true;
-    }
-    if permission_gate::is_allowed(session_id, name).await {
-        return true;
-    }
-    match permission_gate::request(on_event, name, args, cancel).await {
-        PermissionDecision::Allow => true,
-        PermissionDecision::AllowSession => {
-            permission_gate::mark_allowed(session_id, name).await;
-            true
-        }
-        PermissionDecision::Deny => false,
     }
 }

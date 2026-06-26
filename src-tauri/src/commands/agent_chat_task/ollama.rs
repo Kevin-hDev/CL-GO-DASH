@@ -13,6 +13,7 @@ pub(crate) async fn run(
     let final_tools = resolve_tools(&params, &mode);
     let working_dir = common::resolve_working_dir(&params.working_dir)?;
     common::update_working_dir(&params.session_id, &working_dir).await;
+    let plan_mode_active = resolve_plan_mode(&params).await;
 
     let snap = common::collect_git_snapshot(&working_dir).await;
     let ollama_think = resolve_ollama_think(&params);
@@ -37,6 +38,7 @@ pub(crate) async fn run(
             model: &params.model,
             mode: &mode.mode,
             response_language: &response_language,
+            plan_mode_active,
         },
     );
     crate::services::agent_local::tool_todo::append_session_reminder(
@@ -58,9 +60,17 @@ pub(crate) async fn run(
         ctx.native,
         ctx.configured,
         &mode.mode,
+        plan_mode_active,
     )
     .await?;
     Ok(messages)
+}
+
+async fn resolve_plan_mode(params: &StreamTaskParams) -> bool {
+    match params.plan_mode {
+        Some(value) => value,
+        None => crate::services::agent_local::tool_plan::is_enabled(&params.session_id).await,
+    }
 }
 
 fn resolve_tools(params: &StreamTaskParams, mode: &StreamMode) -> Vec<serde_json::Value> {

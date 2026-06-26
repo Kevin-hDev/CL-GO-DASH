@@ -10,6 +10,7 @@ import { ModelSelector } from "./model-selector";
 import { FileThumbnail } from "./file-thumbnail";
 import { ContextProgress } from "./context-progress";
 import { PermissionModeSelector } from "./permission-mode-selector";
+import { PlanModeBadge } from "./plan-mode-badge";
 import { activeSkillsInText, highlightSkillText } from "@/lib/skill-text";
 import type { DroppedFile } from "@/hooks/use-file-drop";
 import type { PermissionMode } from "@/hooks/use-permission-mode";
@@ -36,7 +37,9 @@ interface ChatInputProps {
   contextMax: number;
   interactivePending?: boolean;
   permissionMode: PermissionMode;
+  planModeEnabled?: boolean;
   onPermissionModeChange: (mode: PermissionMode) => void;
+  onPlanModeChange?: (enabled: boolean) => void;
   onSend: (text: string, files?: DroppedFile[], skills?: { name: string; content: string }[]) => void;
   onStop: () => void;
   onFileImport: () => void;
@@ -51,7 +54,7 @@ interface ChatInputProps {
 export function ChatInput({
   modelName, providerName, isStreaming, reasoningMode, files,
   contextUsed, contextMax, interactivePending = false,
-  permissionMode, onPermissionModeChange,
+  permissionMode, planModeEnabled = false, onPermissionModeChange, onPlanModeChange,
   onSend, onStop, onFileImport, onModelChange, onReasoningModeChange,
   onRemoveFile, onPreviewFile, onClearFiles,
 }: ChatInputProps) {
@@ -165,7 +168,11 @@ export function ChatInput({
         </div>
       )}
       <div className="chat-input-row3">
-        <ChatPlusMenu onFileImport={onFileImport} />
+        <ChatPlusMenu
+          onFileImport={onFileImport}
+          planModeEnabled={planModeEnabled}
+          onPlanModeChange={onPlanModeChange ?? (() => {})}
+        />
         <ContextProgress used={contextUsed} max={contextMax} />
         <PermissionModeSelector mode={permissionMode} onChange={onPermissionModeChange} />
         <ModelSelector
@@ -175,6 +182,9 @@ export function ChatInput({
           reasoningMode={reasoningMode}
           onReasoningModeChange={onReasoningModeChange}
         />
+        {planModeEnabled && (
+          <PlanModeBadge onDisable={() => onPlanModeChange?.(false)} />
+        )}
         <div className="chat-input-spacer" />
         <SendStopButton state={buttonState} onSend={handleSend} onStop={onStop} />
       </div>
