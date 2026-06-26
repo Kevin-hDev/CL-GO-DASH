@@ -6,7 +6,7 @@ use super::types_stream::StreamEvent;
 use super::types_tools::ToolResult;
 use chrono::Utc;
 use serde_json::Value;
-use std::path::{Path, PathBuf};
+use tokio_util::sync::CancellationToken;
 use uuid::Uuid;
 
 const MAX_TITLE_CHARS: usize = 120;
@@ -34,9 +34,19 @@ pub async fn is_enabled(session_id: &str) -> bool {
         .unwrap_or(false)
 }
 
-pub async fn execute(args: &Value, on_event: &AgentEventEmitter, session_id: &str) -> ToolResult {
+pub async fn execute(
+    args: &Value,
+    on_event: &AgentEventEmitter,
+    session_id: &str,
+    cancel: CancellationToken,
+) -> ToolResult {
     match write_plan(args, on_event, session_id).await {
-        Ok(run) => ToolResult::ok(super::tool_plan_messages::published(&run.title)),
+        Ok(run) => {
+            super::tool_plan_approval_request::request_approval(
+                on_event, session_id, cancel, &run.title,
+            )
+            .await
+        }
         Err(err) => ToolResult::err(err),
     }
 }
@@ -81,8 +91,8 @@ async fn write_plan(
         .active_plan_id
         .clone()
         .unwrap_or_else(|| Uuid::new_v4().to_string());
-    let path = plan_path(session_id, &plan_id)?;
-    write_markdown(&path, &title, &content).await?;
+    let path = super::tool_plan_storage::plan_path(session_id, &plan_id)?;
+    super::tool_plan_storage::write_markdown(&path, &title, &content).await?;
 
     let run = AgentPlanRun {
         id: plan_id.clone(),
@@ -100,7 +110,7 @@ async fn write_plan(
     session.active_plan_id = Some(plan_id.clone());
     session.plan_workflow_status = AgentPlanWorkflowStatus::AwaitingApproval;
     session.plan_approval_decision = None;
-    upsert_run(&mut session.plan_runs, run.clone());
+    super::tool_plan_storage::upsert_run(&mut session.plan_runs, run.clone());
     session.plan_runs.truncate(MAX_PLAN_RUNS);
     super::session_store::save(&session).await?;
 
@@ -160,37 +170,6 @@ fn clean_text(value: &str, max_chars: usize) -> Result<String, String> {
         return Err(super::tool_plan_messages::INVALID_PLAN.to_string());
     }
     Ok(trimmed.to_string())
-}
-
-fn upsert_run(runs: &mut Vec<AgentPlanRun>, run: AgentPlanRun) {
-    runs.retain(|existing| existing.id != run.id);
-    runs.insert(0, run);
-}
-
-fn plan_path(session_id: &str, plan_id: &str) -> Result<PathBuf, String> {
-    super::session_store::validate_session_id(session_id)?;
-    super::session_store::validate_session_id(plan_id)?;
-    Ok(crate::services::paths::data_dir()
-        .join("plans")
-        .join(session_id)
-        .join(format!("{plan_id}.md")))
-}
-
-async fn write_markdown(path: &Path, title: &str, content: &str) -> Result<(), String> {
-    let dir = path
-        .parent()
-        .ok_or_else(|| super::tool_plan_messages::INVALID_PLAN.to_string())?;
-    tokio::fs::create_dir_all(dir)
-        .await
-        .map_err(|_| super::tool_plan_messages::PLAN_UNAVAILABLE.to_string())?;
-    let body = format!("# {title}\n\n{content}\n");
-    let tmp = path.with_extension(format!("{}.tmp", Uuid::new_v4()));
-    tokio::fs::write(&tmp, body)
-        .await
-        .map_err(|_| super::tool_plan_messages::PLAN_UNAVAILABLE.to_string())?;
-    tokio::fs::rename(&tmp, path)
-        .await
-        .map_err(|_| super::tool_plan_messages::PLAN_UNAVAILABLE.to_string())
 }
 
 #[cfg(test)]

@@ -11,7 +11,7 @@ fn upsert_keeps_history_bounded_by_caller_order() {
     let now = chrono::Utc::now();
     let mut runs = Vec::new();
     for idx in 0..25 {
-        super::upsert_run(
+        super::super::tool_plan_storage::upsert_run(
             &mut runs,
             super::AgentPlanRun {
                 id: format!("00000000-0000-0000-0000-{idx:012}"),

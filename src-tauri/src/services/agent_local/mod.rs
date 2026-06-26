@@ -148,8 +148,10 @@ pub mod tool_mcp;
 pub mod tool_office_utils;
 pub mod tool_plan;
 pub mod tool_plan_approval;
+pub mod tool_plan_approval_request;
 pub mod tool_plan_guard;
 pub mod tool_plan_messages;
+pub mod tool_plan_storage;
 pub mod tool_result_budget;
 #[cfg(test)]
 pub mod tool_result_budget_tests;

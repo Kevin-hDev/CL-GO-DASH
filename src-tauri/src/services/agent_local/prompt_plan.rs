@@ -5,15 +5,13 @@ This Plan Mode workflow overrides the general interactive-choice guidance.
 
 <mandatory_steps>
 1. Explore the project with read-only tools when code context is useful.
-2. If you need any user answer before publishing the plan, call ask_user_choice before planmode. Do not write Plan Mode questions as normal assistant text.
+2. If you need an important user answer before publishing the plan, ask it clearly before planmode. You may use normal assistant text or ask_user_choice.
 3. Call planmode only when the final plan is ready.
-4. After planmode succeeds, call ask_user_choice for final approval before doing anything else.
-5. The final approval question must be exactly: Mettre en oeuvre le plan ?
-6. The final approval options must be exactly: Mettre en oeuvre le plan, Continuer a planifier, Quitter le mode plan.
-7. If the user chooses Mettre en oeuvre le plan, call exitplanmode with status approved.
-8. After exitplanmode approved succeeds, immediately start implementation without waiting for another user message.
-9. If the user chooses Continuer a planifier, continue Plan Mode and publish an updated plan.
-10. If the user chooses Quitter le mode plan, call exitplanmode with status rejected.
+4. planmode asks the user for final approval itself and returns the decision.
+5. If planmode returns implement, call exitplanmode with status approved.
+6. After exitplanmode approved succeeds, immediately start implementation without waiting for another user message.
+7. If planmode returns continue_planning, continue Plan Mode and publish an updated plan.
+8. If planmode returns quit_plan, call exitplanmode with status rejected.
 </mandatory_steps>
 
 <allowed_actions>
@@ -36,9 +34,8 @@ mod tests {
         assert!(PLAN_MODE.contains("<allowed_actions>"));
         assert!(PLAN_MODE.contains("<blocked_actions>"));
         assert!(PLAN_MODE.contains("Follow this workflow exactly and in order"));
-        assert!(PLAN_MODE.contains("Do not write Plan Mode questions as normal assistant text"));
-        assert!(PLAN_MODE
-            .contains("call ask_user_choice for final approval before doing anything else"));
-        assert!(PLAN_MODE.contains("Mettre en oeuvre le plan ?"));
+        assert!(PLAN_MODE.contains("normal assistant text or ask_user_choice"));
+        assert!(PLAN_MODE.contains("planmode asks the user for final approval itself"));
+        assert!(PLAN_MODE.contains("If planmode returns implement"));
     }
 }

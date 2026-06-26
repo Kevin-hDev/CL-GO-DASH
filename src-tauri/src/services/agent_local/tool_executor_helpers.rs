@@ -80,7 +80,7 @@ pub async fn dispatch_or_interactive(
         return super::tool_interactive::execute(args, on_event, cancel, Some(session_id)).await;
     }
     if name == "planmode" {
-        return super::tool_plan::execute(args, on_event, session_id).await;
+        return super::tool_plan::execute(args, on_event, session_id, cancel).await;
     }
     if name == "exitplanmode" {
         return super::tool_plan::execute_exit(args, on_event, session_id).await;

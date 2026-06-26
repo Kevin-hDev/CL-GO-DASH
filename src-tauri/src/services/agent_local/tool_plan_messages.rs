@@ -5,13 +5,25 @@ pub const INVALID_STATUS: &str = "Invalid plan status.";
 pub const PLAN_INACTIVE: &str = "Plan Mode is not active.";
 pub const PLAN_UNAVAILABLE: &str = "Plan unavailable.";
 
-pub fn published(title: &str) -> String {
-    format!(
-        "Plan '{title}' has been published. You must now call ask_user_choice for final approval \
-         with the exact question 'Mettre en oeuvre le plan ?' and the exact options \
-         'Mettre en oeuvre le plan', 'Continuer a planifier', 'Quitter le mode plan'. \
-         Do not continue implementation before that approval."
-    )
+pub fn published(title: &str, decision: Option<&str>) -> String {
+    match decision {
+        Some("implement") => format!(
+            "Plan '{title}' has been published and approved by the user. \
+             Call exitplanmode with status approved now. After it succeeds, immediately start implementation."
+        ),
+        Some("continue_planning") => format!(
+            "Plan '{title}' has been published. The user chose to continue planning. \
+             Stay in Plan Mode, adjust the plan, then call planmode again when ready."
+        ),
+        Some("quit_plan") => format!(
+            "Plan '{title}' has been published. The user chose to quit Plan Mode. \
+             Call exitplanmode with status rejected now."
+        ),
+        _ => format!(
+            "Plan '{title}' has been published, but the approval choice was not recognized. \
+             Stay in Plan Mode and ask for clarification."
+        ),
+    }
 }
 
 pub fn exited(status: AgentPlanStatus) -> &'static str {

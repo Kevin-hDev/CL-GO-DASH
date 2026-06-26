@@ -37,17 +37,8 @@ pub(crate) fn decide(
     result: &StreamResult,
     repair_count: usize,
 ) -> PlanModeDecision {
-    if asks_user_question(&result.content) && !has_tool(result, "ask_user_choice") {
-        return repair_or_fail(repair_count, QUESTION_REPAIR);
-    }
     match workflow {
-        AgentPlanWorkflowStatus::AwaitingApproval => {
-            if has_tool(result, "ask_user_choice") {
-                PlanModeDecision::Accept
-            } else {
-                repair_or_fail(repair_count, APPROVAL_REPAIR)
-            }
-        }
+        AgentPlanWorkflowStatus::AwaitingApproval => repair_or_fail(repair_count, APPROVAL_REPAIR),
         AgentPlanWorkflowStatus::Approved => {
             if has_tool(result, "exitplanmode") {
                 PlanModeDecision::Accept
@@ -55,6 +46,14 @@ pub(crate) fn decide(
                 repair_or_fail(repair_count, EXIT_REPAIR)
             }
         }
+        AgentPlanWorkflowStatus::Rejected => {
+            if has_tool(result, "exitplanmode") {
+                PlanModeDecision::Accept
+            } else {
+                repair_or_fail(repair_count, REJECTED_REPAIR)
+            }
+        }
+        _ if asks_user_question(&result.content) => PlanModeDecision::Accept,
         _ if result.tool_calls.is_empty() => repair_or_fail(repair_count, NEXT_ACTION_REPAIR),
         _ => PlanModeDecision::Accept,
     }
@@ -84,15 +83,9 @@ fn asks_user_question(content: &str) -> bool {
     content.contains('?') || content.contains('？')
 }
 
-const QUESTION_REPAIR: &str = "\
-<plan_mode_backend_correction>
-You asked the user a Plan Mode question in normal assistant text. That output is invalid and was not shown to the user.
-Call ask_user_choice now with 1 to 4 concrete questions and 2 to 4 options per question. Do not answer with normal text.
-</plan_mode_backend_correction>";
-
 const APPROVAL_REPAIR: &str = "\
 <plan_mode_backend_correction>
-The plan is published and waiting for final approval. Call ask_user_choice now with the exact question 'Mettre en oeuvre le plan ?' and the exact options 'Mettre en oeuvre le plan', 'Continuer a planifier', 'Quitter le mode plan'. Do not do anything else first.
+The plan is published and waiting for final approval. Do not ask approval yourself. Call planmode again only if you need to update the plan; otherwise wait for the backend approval result.
 </plan_mode_backend_correction>";
 
 const EXIT_REPAIR: &str = "\
@@ -100,9 +93,14 @@ const EXIT_REPAIR: &str = "\
 The user approved the plan. Call exitplanmode with status approved now. After it succeeds, immediately start implementation.
 </plan_mode_backend_correction>";
 
+const REJECTED_REPAIR: &str = "\
+<plan_mode_backend_correction>
+The user chose to quit Plan Mode. Call exitplanmode with status rejected now.
+</plan_mode_backend_correction>";
+
 const NEXT_ACTION_REPAIR: &str = "\
 <plan_mode_backend_correction>
-Plan Mode is active. You cannot finish with normal assistant text. Call ask_user_choice if you need user input, call planmode if the plan is ready, or use read-only tools if more context is needed.
+Plan Mode is active. You can ask important clarification questions in normal assistant text, call planmode if the plan is ready, or use read-only tools if more context is needed.
 </plan_mode_backend_correction>";
 
 #[cfg(test)]
@@ -126,14 +124,14 @@ mod tests {
     }
 
     #[test]
-    fn rejects_plain_text_questions_without_interactive_tool() {
+    fn accepts_plain_text_questions_before_plan_publish() {
         let result = StreamResult {
             content: "Which option should I use?".into(),
             ..Default::default()
         };
         assert!(matches!(
             decide(AgentPlanWorkflowStatus::NeedsContext, &result, 0),
-            PlanModeDecision::Retry(_)
+            PlanModeDecision::Accept
         ));
     }
 
