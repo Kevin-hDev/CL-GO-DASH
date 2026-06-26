@@ -1,7 +1,8 @@
+use super::plan_mode_debug;
 use super::types_ollama::{ChatMessage, StreamResult};
 use super::types_plan::AgentPlanWorkflowStatus;
 
-const MAX_REPAIRS: usize = 2;
+const MAX_REPAIRS: usize = 4;
 
 pub enum PlanModeDecision {
     Accept,
@@ -20,7 +21,15 @@ pub async fn evaluate(
     if !session.plan_mode_enabled {
         return PlanModeDecision::Accept;
     }
-    decide(session.plan_workflow_status, result, repair_count)
+    let decision = decide(session.plan_workflow_status, result, repair_count);
+    plan_mode_debug::controller_decision(
+        session_id,
+        session.plan_workflow_status,
+        repair_count,
+        result,
+        &decision,
+    );
+    decision
 }
 
 pub(crate) fn decide(
@@ -138,6 +147,19 @@ mod tests {
         assert!(matches!(
             decide(AgentPlanWorkflowStatus::NeedsContext, &result, MAX_REPAIRS),
             PlanModeDecision::Fail(_)
+        ));
+    }
+
+    #[test]
+    fn still_repairs_before_limit() {
+        let result = StreamResult::default();
+        assert!(matches!(
+            decide(
+                AgentPlanWorkflowStatus::NeedsContext,
+                &result,
+                MAX_REPAIRS - 1
+            ),
+            PlanModeDecision::Retry(_)
         ));
     }
 }

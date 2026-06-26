@@ -61,8 +61,7 @@ fn result_json(answers: &[AgentInteractiveAnswer], plan_decision: Option<&str>) 
     if let Some(decision) = plan_decision {
         value["plan_mode_decision"] = json!(decision);
     }
-    value
-    .to_string()
+    value.to_string()
 }
 
 pub(crate) fn emit_request(

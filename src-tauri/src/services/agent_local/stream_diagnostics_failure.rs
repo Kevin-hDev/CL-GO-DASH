@@ -36,7 +36,7 @@ pub(crate) fn apply_failure(
     run.ended_at = Some(Utc::now());
     run.updated_at = Utc::now();
     run.active_todo = todo;
-    run.safe_summary = Some(safe_summary(run, &error_type));
+    run.safe_summary = Some(safe_summary(run, &error_type, message));
     support::push_event(run, "failed", message, None, Some(&error_type));
 }
 
@@ -56,8 +56,20 @@ pub(crate) fn summary_from_run(run: &AgentDiagnosticRun) -> AgentErrorDiagnostic
     }
 }
 
-fn safe_summary(run: &AgentDiagnosticRun, error_type: &str) -> String {
+fn safe_summary(run: &AgentDiagnosticRun, error_type: &str, message: &str) -> String {
+    if message
+        .to_ascii_lowercase()
+        .contains("plan mode workflow could not be enforced")
+    {
+        return "Workflow Plan Mode non respecté par le modèle.".to_string();
+    }
     if let Some(tool) = &run.last_tool {
+        if error_type == "max_turns" {
+            return support::clip(&format!(
+                "Limite de tours agent atteinte après le dernier tool {}.",
+                tool.name
+            ));
+        }
         return support::clip(&format!(
             "Interruption pendant le tool {} ({error_type}).",
             tool.name
@@ -79,10 +91,11 @@ fn safe_code(message: &str) -> String {
 }
 
 fn classify_error(message: &str, is_connection: bool) -> String {
+    let lower = message.to_ascii_lowercase();
     if is_connection || message.contains("ollama_connection_lost") {
         return "connection_lost".to_string();
     }
-    if message.contains("Timeout") || message.contains("timeout") {
+    if lower.contains("timeout") {
         return "timeout".to_string();
     }
     if message.contains("Limite de tours") {
@@ -91,8 +104,18 @@ fn classify_error(message: &str, is_connection: bool) -> String {
     if message.contains("répété") || message.contains("circuit") {
         return "circuit_breaker".to_string();
     }
-    if message.contains("HTTP") || message.contains("rate") || message.contains("auth") {
+    if lower.contains("http")
+        || lower.contains("api")
+        || lower.contains("rate")
+        || lower.contains("auth")
+        || lower.contains("internal server error")
+        || lower.contains("bad request")
+        || lower.contains("sse:")
+    {
         return "provider_error".to_string();
+    }
+    if lower.contains("plan mode workflow") {
+        return "tool_error".to_string();
     }
     "unknown".to_string()
 }

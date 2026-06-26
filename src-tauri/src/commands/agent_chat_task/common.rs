@@ -134,7 +134,9 @@ pub(crate) fn prepare_with_context(messages: &mut Vec<ChatMessage>, ctx: PromptC
 fn append_plan_mode(messages: &mut [ChatMessage]) {
     if let Some(first) = messages.first_mut().filter(|m| m.role == "system") {
         first.content.push_str("\n\n");
-        first.content.push_str(crate::services::agent_local::prompt_plan::PLAN_MODE);
+        first
+            .content
+            .push_str(crate::services::agent_local::prompt_plan::PLAN_MODE);
     }
 }
 

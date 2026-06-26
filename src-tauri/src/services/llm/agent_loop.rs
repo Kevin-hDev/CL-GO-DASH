@@ -2,6 +2,7 @@ use super::agent_loop_tools;
 use super::compress_hook;
 use super::retry;
 use crate::services::agent_local::agent_loop_errors;
+use crate::services::agent_local::agent_loop_limits::MAX_TURNS;
 use crate::services::agent_local::agent_loop_plan;
 use crate::services::agent_local::circuit_breaker;
 use crate::services::agent_local::context_budget;
@@ -12,8 +13,6 @@ use crate::services::agent_local::types_ollama::{ChatMessage, StreamEvent};
 use crate::services::agent_local::write_guard::WriteGuard;
 use std::path::PathBuf;
 use tokio_util::sync::CancellationToken;
-
-const MAX_TURNS: usize = 30;
 
 pub fn convert_tools_to_openai(tools: &[serde_json::Value]) -> Vec<serde_json::Value> {
     tools.to_vec()
@@ -108,7 +107,7 @@ pub async fn run_agent_loop(
                 plan_repairs += 1;
                 continue;
             }
-            agent_loop_plan::PlanLoopAction::Stop => break,
+            agent_loop_plan::PlanLoopAction::Stop(message) => return Err(message.to_string()),
         }
         messages.push(super::agent_loop_message::build_assistant_message(&result));
 
@@ -142,14 +141,10 @@ pub async fn run_agent_loop(
         .await;
 
         if turn == MAX_TURNS - 1 {
-            agent_loop_errors::max_turns(on_event, &session_id, &request_id).await;
-            break;
+            return Err(agent_loop_errors::max_turns_message());
         }
 
-        if let Err(msg) = breaker.check(&result.tool_calls) {
-            agent_loop_errors::send(on_event, &session_id, &request_id, &msg).await;
-            break;
-        }
+        breaker.check(&result.tool_calls)?;
 
         let before = messages.len();
         let mode = permission_mode.to_string();

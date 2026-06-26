@@ -1,11 +1,11 @@
 use super::plan_mode_controller::{self, PlanModeDecision};
 use super::stream_events::AgentEventEmitter;
-use super::types_ollama::{ChatMessage, StreamEvent, StreamResult};
+use super::types_ollama::{ChatMessage, StreamResult};
 
 pub enum PlanLoopAction {
     Accept,
     Retry,
-    Stop,
+    Stop(&'static str),
 }
 
 pub async fn active(session_id: &str, fallback: bool) -> bool {
@@ -34,19 +34,8 @@ pub async fn check_result(
             PlanLoopAction::Retry
         }
         PlanModeDecision::Fail(message) => {
-            let diagnostic = super::stream_diagnostics::record_failure(
-                session_id,
-                Some(request_id),
-                message,
-                false,
-            )
-            .await;
-            let _ = on_event.send(StreamEvent::Error {
-                message: "Plan Mode workflow failed.".to_string(),
-                is_connection: false,
-                diagnostic,
-            });
-            PlanLoopAction::Stop
+            super::plan_mode_debug::workflow_failed(session_id, request_id, message);
+            PlanLoopAction::Stop(message)
         }
     }
 }

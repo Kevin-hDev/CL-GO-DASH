@@ -9,14 +9,8 @@ pub async fn denied_with_summary(
     arg_summary: Option<Value>,
 ) -> ToolResult {
     let tr = super::tool_dispatcher::enrich_error(ToolResult::err(msg), name);
-    super::tool_executor_diagnostics::completed(
-        session_id,
-        request_id,
-        name,
-        arg_summary,
-        true,
-    )
-    .await;
+    super::tool_executor_diagnostics::completed(session_id, request_id, name, arg_summary, true)
+        .await;
     tr
 }
 

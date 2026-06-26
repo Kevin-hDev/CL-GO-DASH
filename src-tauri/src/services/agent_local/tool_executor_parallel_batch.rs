@@ -40,7 +40,13 @@ pub(super) async fn flush_read_batch<'a>(
         for (pos, entry) in chunk.iter().enumerate() {
             if let Some(ref mut eager) = eager_results.as_deref_mut() {
                 if let Some(tr) = eager.remove(&entry.global_idx) {
-                    post_record_read(entry.name, entry.effective_args, working_dir, &tr, write_guard);
+                    post_record_read(
+                        entry.name,
+                        entry.effective_args,
+                        working_dir,
+                        &tr,
+                        write_guard,
+                    );
                     let tr = run_post_hooks(entry.name, entry.effective_args, tr);
                     chunk_results[pos] = Some(tr);
                     continue;
@@ -57,14 +63,22 @@ pub(super) async fn flush_read_batch<'a>(
             let dispatched = join_all(futs).await;
             for (pos, tr) in pending_indices.iter().zip(dispatched.into_iter()) {
                 let entry = &chunk[*pos];
-                post_record_read(entry.name, entry.effective_args, working_dir, &tr, write_guard);
+                post_record_read(
+                    entry.name,
+                    entry.effective_args,
+                    working_dir,
+                    &tr,
+                    write_guard,
+                );
                 let tr = run_post_hooks(entry.name, entry.effective_args, tr);
                 chunk_results[*pos] = Some(tr);
             }
         }
 
         for (pos, entry) in chunk.iter().enumerate() {
-            let tr = chunk_results[pos].take().unwrap_or_else(|| ToolResult::err("Annulé."));
+            let tr = chunk_results[pos]
+                .take()
+                .unwrap_or_else(|| ToolResult::err("Annulé."));
             indexed_results[entry.global_idx] = Some((entry.name, tr));
         }
     }

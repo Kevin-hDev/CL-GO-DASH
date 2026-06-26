@@ -58,7 +58,12 @@ pub async fn run_with_parallel_reads(
             .await;
             if let Err(msg) = plan_check {
                 let tr = super::tool_executor_plan::denied_from_args(
-                    session_id, request_id, name, msg, args, working_dir,
+                    session_id,
+                    request_id,
+                    name,
+                    msg,
+                    args,
+                    working_dir,
                 )
                 .await;
                 indexed_results[i] = Some((name.as_str(), tr));
@@ -93,7 +98,12 @@ pub async fn run_with_parallel_reads(
             .await;
             if let Err(msg) = plan_check {
                 let tr = super::tool_executor_plan::denied_from_args(
-                    session_id, request_id, name, msg, args, working_dir,
+                    session_id,
+                    request_id,
+                    name,
+                    msg,
+                    args,
+                    working_dir,
                 )
                 .await;
                 indexed_results[i] = Some((name.as_str(), tr));

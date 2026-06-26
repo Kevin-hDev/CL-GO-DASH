@@ -8,13 +8,11 @@ use crate::services::agent_local::tool_result_budget;
 use crate::services::agent_local::types_ollama::{ChatMessage, OllamaThink, StreamEvent};
 use crate::services::agent_local::write_guard::WriteGuard;
 use crate::services::agent_local::{
-    agent_loop_errors, agent_loop_plan, agent_loop_support, ollama_stream,
+    agent_loop_errors, agent_loop_limits::MAX_TURNS, agent_loop_plan, agent_loop_support,
+    ollama_stream,
 };
 use std::path::PathBuf;
 use tokio_util::sync::CancellationToken;
-
-const MAX_TURNS: usize = 30;
-
 pub async fn run_agent_loop(
     on_event: &AgentEventEmitter,
     messages: &mut Vec<ChatMessage>,
@@ -108,9 +106,10 @@ pub async fn run_agent_loop(
                 eager_handle.abort();
                 continue;
             }
-            agent_loop_plan::PlanLoopAction::Stop => {
+            agent_loop_plan::PlanLoopAction::Stop(message) => {
                 eager_handle.abort();
-                break;
+                agent_loop_support::decharge_gpu(model).await;
+                return Err(message.to_string());
             }
         }
         messages.push(agent_loop_support::build_assistant_message(&result));
@@ -149,14 +148,14 @@ pub async fn run_agent_loop(
 
         if turn == MAX_TURNS - 1 {
             eager_handle.abort();
-            agent_loop_errors::max_turns(on_event, &session_id, &request_id).await;
-            break;
+            agent_loop_support::decharge_gpu(model).await;
+            return Err(agent_loop_errors::max_turns_message());
         }
 
         if let Err(msg) = breaker.check(&result.tool_calls) {
             eager_handle.abort();
-            agent_loop_errors::send(on_event, &session_id, &request_id, &msg).await;
-            break;
+            agent_loop_support::decharge_gpu(model).await;
+            return Err(msg);
         }
 
         let eager_results = eager_handle.await.unwrap_or_default();

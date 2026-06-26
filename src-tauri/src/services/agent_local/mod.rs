@@ -4,6 +4,7 @@ pub fn ollama_base_url() -> String {
 
 pub mod agent_loop;
 pub mod agent_loop_errors;
+pub mod agent_loop_limits;
 pub mod agent_loop_plan;
 pub mod agent_loop_support;
 pub mod agent_md;
@@ -42,6 +43,7 @@ pub mod permission_gate;
 pub mod permission_gate_tests;
 pub mod permission_policy;
 pub mod plan_mode_controller;
+pub mod plan_mode_debug;
 pub mod project_store;
 pub mod prompt_chat_compact;
 pub mod prompt_chat_detailed;

@@ -63,6 +63,68 @@ fn failure_keeps_compression_phase_and_classifies_wrapped_ollama_loss() {
     );
 }
 
+#[test]
+fn max_turns_summary_does_not_blame_last_tool() {
+    let mut session = test_session();
+    session.diagnostic_runs.push(test_run());
+    session.diagnostic_runs[0].last_tool = Some(super::types_diagnostics::AgentDiagnosticTool {
+        name: "list_dir".to_string(),
+        status: "detected".to_string(),
+        args: None,
+        is_error: false,
+    });
+
+    apply_failure(
+        &mut session,
+        0,
+        "Limite de tours agent atteinte (200).",
+        false,
+    );
+
+    let run = &session.diagnostic_runs[0];
+    assert_eq!(run.error_type.as_deref(), Some("max_turns"));
+    assert_eq!(
+        run.safe_summary.as_deref(),
+        Some("Limite de tours agent atteinte après le dernier tool list_dir.")
+    );
+}
+
+#[test]
+fn codex_api_500_is_provider_error() {
+    let mut session = test_session();
+    session.diagnostic_runs.push(test_run());
+
+    apply_failure(
+        &mut session,
+        0,
+        "Codex API 500 Internal Server Error",
+        false,
+    );
+
+    let run = &session.diagnostic_runs[0];
+    assert_eq!(run.error_type.as_deref(), Some("provider_error"));
+}
+
+#[test]
+fn plan_mode_workflow_failure_has_clear_summary() {
+    let mut session = test_session();
+    session.diagnostic_runs.push(test_run());
+
+    apply_failure(
+        &mut session,
+        0,
+        "Plan Mode workflow could not be enforced.",
+        false,
+    );
+
+    let run = &session.diagnostic_runs[0];
+    assert_eq!(run.error_type.as_deref(), Some("tool_error"));
+    assert_eq!(
+        run.safe_summary.as_deref(),
+        Some("Workflow Plan Mode non respecté par le modèle.")
+    );
+}
+
 fn test_run() -> AgentDiagnosticRun {
     let now = Utc::now();
     AgentDiagnosticRun {
