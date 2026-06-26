@@ -102,14 +102,18 @@ pub async fn run_agent_loop(
         )
         .await
         {
-            agent_loop_plan::PlanLoopAction::Accept => {}
+            agent_loop_plan::PlanLoopAction::Accept => plan_repairs = 0,
             agent_loop_plan::PlanLoopAction::Retry => {
                 plan_repairs += 1;
                 continue;
             }
             agent_loop_plan::PlanLoopAction::Stop(message) => return Err(message.to_string()),
         }
-        messages.push(super::agent_loop_message::build_assistant_message(&result));
+        let mut assistant_message = super::agent_loop_message::build_assistant_message(&result);
+        if plan_active && !result.tool_calls.is_empty() {
+            assistant_message.content.clear();
+        }
+        messages.push(assistant_message);
 
         if let Some(context_tokens) = compress_hook::try_auto_compress(
             on_event,

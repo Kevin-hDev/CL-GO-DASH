@@ -37,28 +37,25 @@ pub(crate) fn decide(
     result: &StreamResult,
     repair_count: usize,
 ) -> PlanModeDecision {
-    if repair_count >= MAX_REPAIRS {
-        return PlanModeDecision::Fail("Plan Mode workflow could not be enforced.");
-    }
     if asks_user_question(&result.content) && !has_tool(result, "ask_user_choice") {
-        return PlanModeDecision::Retry(QUESTION_REPAIR);
+        return repair_or_fail(repair_count, QUESTION_REPAIR);
     }
     match workflow {
         AgentPlanWorkflowStatus::AwaitingApproval => {
             if has_tool(result, "ask_user_choice") {
                 PlanModeDecision::Accept
             } else {
-                PlanModeDecision::Retry(APPROVAL_REPAIR)
+                repair_or_fail(repair_count, APPROVAL_REPAIR)
             }
         }
         AgentPlanWorkflowStatus::Approved => {
             if has_tool(result, "exitplanmode") {
                 PlanModeDecision::Accept
             } else {
-                PlanModeDecision::Retry(EXIT_REPAIR)
+                repair_or_fail(repair_count, EXIT_REPAIR)
             }
         }
-        _ if result.tool_calls.is_empty() => PlanModeDecision::Retry(NEXT_ACTION_REPAIR),
+        _ if result.tool_calls.is_empty() => repair_or_fail(repair_count, NEXT_ACTION_REPAIR),
         _ => PlanModeDecision::Accept,
     }
 }
@@ -73,6 +70,14 @@ pub fn correction_message(content: &'static str) -> ChatMessage {
 
 fn has_tool(result: &StreamResult, name: &str) -> bool {
     result.tool_calls.iter().any(|(tool, _)| tool == name)
+}
+
+fn repair_or_fail(repair_count: usize, correction: &'static str) -> PlanModeDecision {
+    if repair_count >= MAX_REPAIRS {
+        PlanModeDecision::Fail("Plan Mode workflow could not be enforced.")
+    } else {
+        PlanModeDecision::Retry(correction)
+    }
 }
 
 fn asks_user_question(content: &str) -> bool {
@@ -160,6 +165,18 @@ mod tests {
                 MAX_REPAIRS - 1
             ),
             PlanModeDecision::Retry(_)
+        ));
+    }
+
+    #[test]
+    fn accepts_valid_tool_even_after_repairs() {
+        let result = StreamResult {
+            tool_calls: vec![("ask_user_choice".into(), serde_json::json!({}))],
+            ..Default::default()
+        };
+        assert!(matches!(
+            decide(AgentPlanWorkflowStatus::NeedsContext, &result, MAX_REPAIRS),
+            PlanModeDecision::Accept
         ));
     }
 }

@@ -1,15 +1,10 @@
-use crate::services::agent_local::circuit_breaker;
-use crate::services::agent_local::compress_hook;
-use crate::services::agent_local::context_budget;
-use crate::services::agent_local::eager_dispatch;
-use crate::services::agent_local::stream_events::AgentEventEmitter;
-use crate::services::agent_local::tool_executor;
-use crate::services::agent_local::tool_result_budget;
-use crate::services::agent_local::types_ollama::{ChatMessage, OllamaThink, StreamEvent};
-use crate::services::agent_local::write_guard::WriteGuard;
-use crate::services::agent_local::{
+use super::stream_events::AgentEventEmitter;
+use super::types_ollama::{ChatMessage, OllamaThink, StreamEvent};
+use super::write_guard::WriteGuard;
+use super::{
     agent_loop_errors, agent_loop_limits::MAX_TURNS, agent_loop_plan, agent_loop_support,
-    ollama_stream,
+    circuit_breaker, compress_hook, context_budget, eager_dispatch, ollama_stream, tool_executor,
+    tool_result_budget,
 };
 use std::path::PathBuf;
 use tokio_util::sync::CancellationToken;
@@ -100,7 +95,7 @@ pub async fn run_agent_loop(
         )
         .await
         {
-            agent_loop_plan::PlanLoopAction::Accept => {}
+            agent_loop_plan::PlanLoopAction::Accept => plan_repairs = 0,
             agent_loop_plan::PlanLoopAction::Retry => {
                 plan_repairs += 1;
                 eager_handle.abort();
@@ -112,7 +107,11 @@ pub async fn run_agent_loop(
                 return Err(message.to_string());
             }
         }
-        messages.push(agent_loop_support::build_assistant_message(&result));
+        let mut assistant_message = agent_loop_support::build_assistant_message(&result);
+        if plan_active && !result.tool_calls.is_empty() {
+            assistant_message.content.clear();
+        }
+        messages.push(assistant_message);
 
         if let Some(context_tokens) = compress_hook::try_auto_compress(
             on_event,

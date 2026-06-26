@@ -26,7 +26,9 @@ pub async fn check_result(
     }
     match plan_mode_controller::evaluate(session_id, result, repair_count).await {
         PlanModeDecision::Accept => {
-            super::stream_buffer::emit_buffered_content(on_event, result);
+            if result.tool_calls.is_empty() {
+                super::stream_buffer::emit_buffered_content(on_event, result);
+            }
             PlanLoopAction::Accept
         }
         PlanModeDecision::Retry(correction) => {
