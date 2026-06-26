@@ -9,10 +9,8 @@ vi.mock("@phosphor-icons/react", () => ({
   Spinner: () => <span data-testid="spinner" />,
 }));
 vi.mock("@/components/ui/icons", () => ({
-  Copy: () => <span />,
-  CaretDown: () => <span />,
-  CaretUp: () => <span />,
-  Check: () => <span data-testid="check-icon" />,
+  Copy: () => <span />, CaretDown: () => <span />, CaretUp: () => <span />,
+  Check: () => <span data-testid="check-icon" />, ClipboardText: () => <span />,
 }));
 vi.mock("@tauri-apps/plugin-shell", () => ({ open: vi.fn() }));
 vi.mock("@/hooks/use-hover-class", () => ({ useHoverClass: () => ({ current: null }) }));
@@ -163,5 +161,39 @@ describe("MessageList tool aggregation", () => {
     expect(bubbles[0].textContent).toContain("Exploration: 1 file read");
     expect(bubbles[1].textContent).toContain("Commands: 1 command executed");
     expect(bubbles[1].textContent).toContain("Changes: 1 file edited");
+  });
+
+  it("affiche la preview du plan après la timeline du stream", () => {
+    const { container } = render(
+      <MessageList
+        sessionId="session-1"
+        messages={[]}
+        completedSegments={[
+          {
+            thinking: "",
+            content: "",
+            tools: [{ name: "grep", args: { pattern: "Plan" }, result: "ok" }],
+          },
+        ]}
+        currentContent=""
+        currentThinking="thinking before plan"
+        currentTools={[]}
+        isStreaming
+        tps={0}
+        totalElapsedMs={0}
+        segmentStartedAt={1}
+        liveTokenCount={0}
+        planPreview={{
+          id: "plan-1",
+          title: "Plan validé",
+          content: "## Étapes\n\n- Implémenter",
+          status: "awaiting_approval",
+        }}
+      />,
+    );
+
+    const text = container.textContent ?? "", planIndex = text.indexOf("Plan validé");
+    expect(text.indexOf("Exploration: 1 file read")).toBeLessThan(planIndex);
+    expect(text.indexOf("thinking before plan")).toBeLessThan(planIndex);
   });
 });

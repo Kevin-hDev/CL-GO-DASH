@@ -104,7 +104,7 @@ export function ChatView({
 
   const { containerRef, isAtBottom, scrollToBottom } = useChatScroll(
     sessionId, chat.isStreaming,
-    [chat.currentContent, chat.currentThinking, chat.completedSegments, chat.messages],
+    [chat.currentContent, chat.currentThinking, chat.completedSegments, chat.messages, chat.planPreview],
   );
 
   const handleRetry = useCallback(() => {

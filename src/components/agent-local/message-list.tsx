@@ -102,8 +102,6 @@ export function MessageList({
         return null;
       })}
 
-      {planPreview && <PlanPreviewBubble plan={planPreview} />}
-
       {isStreaming && (
         <StreamToolTimeline
           completedSegments={completedSegments}
@@ -116,6 +114,7 @@ export function MessageList({
           projectPath={projectPath}
         />
       )}
+      {planPreview && <PlanPreviewBubble plan={planPreview} />}
       {isStreaming && streamStartedAt != null && !isCompressing && !currentContent && !currentThinking && !hasActiveTools(currentTools) && (
         <LoadingIndicator startedAt={streamStartedAt} liveTokenCount={liveTokenCount} />
       )}
