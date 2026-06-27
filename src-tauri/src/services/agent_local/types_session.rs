@@ -173,15 +173,3 @@ pub struct FileAttachment {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub thumbnail: Option<String>,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct TabState {
-    pub tabs: Vec<TabInfo>,
-    pub active_index: usize,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct TabInfo {
-    pub session_id: String,
-    pub label: String,
-}

@@ -3,13 +3,6 @@ import { useTranslation } from "react-i18next";
 import type { AgentSessionMeta, Project } from "@/types/agent";
 import type { DroppedFile } from "@/hooks/use-file-drop";
 
-interface TabStateRef {
-  deselectTab: () => void;
-  addTab: (sessionId: string, label: string) => Promise<void>;
-  activeIndex: number;
-  renameTab: (index: number, label: string) => Promise<void>;
-}
-
 interface ProjectsHookRef {
   projects: Project[];
 }
@@ -24,7 +17,6 @@ interface RenameFn {
 
 export interface SessionActionsDeps {
   create: CreateFn;
-  tabState: TabStateRef;
   rename: RenameFn;
   defaultModel: string;
   defaultProvider: string;
@@ -40,7 +32,6 @@ export function useSessionActions(deps: SessionActionsDeps) {
   const { t } = useTranslation();
   const {
     create,
-    tabState,
     rename,
     defaultModel,
     defaultProvider,
@@ -58,18 +49,16 @@ export function useSessionActions(deps: SessionActionsDeps) {
   const [pendingFiles, setPendingFiles] = useState<DroppedFile[] | undefined>(undefined);
 
   const handleCreate = useCallback(() => {
-    tabState.deselectTab();
     onSessionChange?.(null);
-  }, [tabState, onSessionChange]);
+  }, [onSessionChange]);
 
   const handleCreateWithModel = useCallback(
     async (newModel: string, newProvider: string) => {
       const name = t("agentLocal.newSession");
       const session = await create(name, newModel, newProvider);
-      await tabState.addTab(session.id, session.name);
       onSessionChange?.(session.id);
     },
-    [create, tabState, t, onSessionChange],
+    [create, t, onSessionChange],
   );
 
   const handleWelcomeSend = useCallback(
@@ -90,40 +79,34 @@ export function useSessionActions(deps: SessionActionsDeps) {
       setPendingSkills(skills);
       setPendingFiles(files && files.length > 0 ? files : undefined);
       setWelcomeModel(null);
-      await tabState.addTab(session.id, session.name);
       onSessionChange?.(session.id);
     },
-    [create, tabState, defaultModel, defaultProvider, welcomeModel, setWelcomeModel, welcomeReasoningMode, welcomeSupportsThinking, t, projectsHook.projects, onSessionChange],
+    [create, defaultModel, defaultProvider, welcomeModel, setWelcomeModel, welcomeReasoningMode, welcomeSupportsThinking, t, projectsHook.projects, onSessionChange],
   );
 
   const handleAutoRename = useCallback(
     async (id: string, name: string) => {
       await rename(id, name);
-      if (tabState.activeIndex >= 0) {
-        await tabState.renameTab(tabState.activeIndex, name);
-      }
     },
-    [rename, tabState],
+    [rename],
   );
 
   const handleCreateInProject = useCallback(
     async (projectId: string) => {
       const name = t("agentLocal.newSession");
       const session = await create(name, defaultModel, defaultProvider, projectId);
-      await tabState.addTab(session.id, session.name);
       onSessionChange?.(session.id);
     },
-    [create, tabState, defaultModel, defaultProvider, t, onSessionChange],
+    [create, defaultModel, defaultProvider, t, onSessionChange],
   );
 
   const handleCreateInProjectWithModel = useCallback(
     async (newModel: string, newProvider: string, projectId: string) => {
       const name = t("agentLocal.newSession");
       const session = await create(name, newModel, newProvider, projectId);
-      await tabState.addTab(session.id, session.name);
       onSessionChange?.(session.id);
     },
-    [create, tabState, t, onSessionChange],
+    [create, t, onSessionChange],
   );
 
   return {

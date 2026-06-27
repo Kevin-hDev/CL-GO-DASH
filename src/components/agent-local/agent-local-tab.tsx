@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, memo } from "react";
 import { useTranslation } from "react-i18next";
 import { ConversationList } from "./conversation-list";
-import { TabBar } from "./tab-bar";
+import { ChatHeader } from "./chat-header";
 import { AgentChatDetail } from "./agent-chat-detail";
 import { WelcomeView } from "./welcome-view";
 import { useAgentLocalTab } from "@/hooks/use-agent-local-tab";
@@ -9,7 +9,6 @@ import { useFileTree } from "@/hooks/use-file-tree";
 import { useForecastPanel } from "@/hooks/use-forecast-panel";
 import { useAgentLocalPanelNav } from "@/hooks/use-agent-local-panel-nav";
 import { useAgentLocalControlledPanels } from "@/hooks/use-agent-local-controlled-panels";
-import { useAgentLocalTabSessionNav } from "@/hooks/use-agent-local-tab-session-nav";
 import { ForecastPanel } from "@/components/forecast/forecast-panel";
 import { openForecastDocsWindow } from "@/components/forecast/open-forecast-docs";
 import { PanelSlot } from "@/components/layout/panel-slots";
@@ -24,12 +23,12 @@ export const AgentLocalTab = memo(function AgentLocalTab({
 }: AgentLocalTabProps) {
   const { t } = useTranslation();
   const s = useAgentLocalTab({ navState, onSessionChange, onNavChange, listFocused });
-  const { sessions, refresh, rename, remove, updateModel } = s;
-  const { tabState, projectsHook, terminal, activeSession } = s;
+  const { sessions, refresh, rename, updateModel } = s;
+  const { projectsHook, terminal, activeSession, activeSessionId } = s;
   const { model, provider, currentDefault, activeProject } = s;
   const { filePreview, fileOperations, setFileOperations } = s;
   const { reasoningMode, setReasoningMode, setWelcomeModel } = s;
-  const { sessionActions, handleSelectById, handleDeleteProject } = s;
+  const { sessionActions, handleSelectById, handleDeleteProject, handleDeleteSession } = s;
   const {
     pendingMessage, setPendingMessage,
     pendingWorkingDir, setPendingWorkingDir,
@@ -40,8 +39,8 @@ export const AgentLocalTab = memo(function AgentLocalTab({
     handleCreateInProject, handleCreateInProjectWithModel,
   } = sessionActions;
   const terminalCwd = activeProject?.path || "";
-  const fileTree = useFileTree(tabState.activeSessionId, activeProject?.path);
-  const forecast = useForecastPanel(tabState.activeSessionId ?? null);
+  const fileTree = useFileTree(activeSessionId, activeProject?.path);
+  const forecast = useForecastPanel(activeSessionId ?? null);
   useAgentLocalPanelNav({ navState, fileTree, forecast });
   const { fileTreeNav, forecastNav } = useAgentLocalControlledPanels({ navState, fileTree, forecast, onNavChange });
   const [fullscreenSwitching, setFullscreenSwitching] = useState(false);
@@ -60,8 +59,6 @@ export const AgentLocalTab = memo(function AgentLocalTab({
   const handleOpenForecastDocs = useCallback(() => {
     void openForecastDocsWindow(t("forecast.docs.windowTitle")).catch(() => {});
   }, [t]);
-  const { handleTabSelect, handleTabClose, handleDeleteSession } =
-    useAgentLocalTabSessionNav({ tabState, remove, onSessionChange });
   const forecastContent = useMemo(() => (
     <ForecastPanel
       activeSection={forecastNav.activeSection}
@@ -82,7 +79,7 @@ export const AgentLocalTab = memo(function AgentLocalTab({
     <ConversationList
       sessions={sessions}
       projects={projectsHook.projects}
-      selectedId={tabState.activeSessionId}
+      selectedId={activeSessionId}
       onSelect={(id) => void handleSelectById(id)}
       onCreate={handleCreate}
       onRename={(id, name) => void rename(id, name)}
@@ -93,42 +90,33 @@ export const AgentLocalTab = memo(function AgentLocalTab({
       onOpenFolder={(path) => void projectsHook.openFolder(path)}
       onReorderProjects={(ids) => void projectsHook.reorder(ids)}
     />
-  ), [handleCreate, handleCreateInProject, handleDeleteProject, handleDeleteSession, handleSelectById, projectsHook, rename, sessions, tabState]);
+  ), [activeSessionId, handleCreate, handleCreateInProject, handleDeleteProject, handleDeleteSession, handleSelectById, projectsHook, rename, sessions]);
 
   const detail = useMemo(() => (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
-      {tabState.tabs.length > 0 && (
-        <div style={{ flexShrink: 0 }}>
-          <TabBar
-            tabs={tabState.tabs}
-            activeIndex={tabState.activeIndex}
-            canAddTab={tabState.canAddTab}
-            sessionId={tabState.activeSessionId ?? null}
-            terminalOpen={terminal.isOpen}
-            previewOpen={filePreview.open}
-            panelMode={forecastNav.panelMode}
-            showForecastDocs={filePreview.open && forecastNav.panelMode === "forecast"}
-            onSelect={handleTabSelect}
-            onClose={handleTabClose}
-            onAdd={handleCreate}
-            onRename={(i, name) => void tabState.renameTab(i, name)}
-            onReorder={(from, to) => void tabState.reorderTabs(from, to)}
-            onTogglePreview={filePreview.toggleOpen}
-            onOpenForecastDocs={handleOpenForecastDocs}
-            onPanelModeChange={forecastNav.setPanelMode}
-            onToggleTerminal={() => {
-              if (!terminal.isOpen && terminal.tabs.length === 0) {
-                terminal.addTab(terminalCwd);
-              } else {
-                terminal.togglePanel();
-              }
-            }}
-          />
-        </div>
-      )}
-      {tabState.activeSessionId ? (
+      <div style={{ flexShrink: 0 }}>
+        <ChatHeader
+          sessionName={activeSession?.name ?? null}
+          sessionId={activeSessionId ?? null}
+          terminalOpen={terminal.isOpen}
+          previewOpen={filePreview.open}
+          panelMode={forecastNav.panelMode}
+          showForecastDocs={filePreview.open && forecastNav.panelMode === "forecast"}
+          onTogglePreview={filePreview.toggleOpen}
+          onOpenForecastDocs={handleOpenForecastDocs}
+          onPanelModeChange={forecastNav.setPanelMode}
+          onToggleTerminal={() => {
+            if (!terminal.isOpen && terminal.tabs.length === 0) {
+              terminal.addTab(terminalCwd);
+            } else {
+              terminal.togglePanel();
+            }
+          }}
+        />
+      </div>
+      {activeSessionId ? (
         <AgentChatDetail
-          sessionId={tabState.activeSessionId}
+          sessionId={activeSessionId}
           model={model}
           provider={provider}
           projects={projectsHook.projects}
@@ -185,13 +173,13 @@ export const AgentLocalTab = memo(function AgentLocalTab({
       )}
     </div>
   ), [
-    activeProject?.path, activeSession?.parent_session_id, currentDefault.model, currentDefault.provider,
+    activeProject?.path, activeSession?.name, activeSession?.parent_session_id, activeSessionId, currentDefault.model, currentDefault.provider,
     fileOperations, filePreview, fileTreeNav, forecastNav.panelMode, forecastNav.setPanelMode, forecastContent,
     fullscreenSwitching, handleAutoRename, handleCreate, handleCreateInProjectWithModel, handleCreateWithModel,
-    handleOpenForecastDocs, handlePreviewFullscreenChange, handleSelectById, handleTabClose, handleTabSelect, handleWelcomeSend, model,
+    handleOpenForecastDocs, handlePreviewFullscreenChange, handleSelectById, handleWelcomeSend, model,
     pendingFiles, pendingMessage, pendingSkills, pendingWorkingDir, projectsHook, provider, refresh,
     setFileOperations, setPendingFiles, setPendingMessage, setPendingSkills, setPendingWorkingDir, setReasoningMode,
-    setWelcomeModel, tabState, terminal, terminalCwd, reasoningMode, updateModel,
+    setWelcomeModel, terminal, terminalCwd, reasoningMode, updateModel,
   ]);
 
   return <><PanelSlot name="list">{list}</PanelSlot><PanelSlot name="detail">{detail}</PanelSlot></>;

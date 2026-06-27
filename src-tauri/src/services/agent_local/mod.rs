@@ -84,7 +84,6 @@ pub mod subagent_task;
 pub mod subagent_task_tests;
 pub mod subagent_working_dir;
 pub mod subagent_worktree;
-pub mod tab_store;
 pub mod tool_bash;
 pub mod tool_bash_background;
 pub mod tool_bash_long;

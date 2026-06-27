@@ -40,8 +40,6 @@ export type {
   AgentStreamFailure,
   Project,
   SubagentInfo,
-  TabInfo,
-  TabState,
 } from "./agent-session";
 export type {
   AgentTodoItem,

@@ -6,7 +6,6 @@ pub const PROTECTED_APP_FILES: &[&str] = &[
     "config.json",
     "secrets.enc",
     "agent-settings.json",
-    "agent-tabs.json",
     "configured-providers.json",
 ];
 
