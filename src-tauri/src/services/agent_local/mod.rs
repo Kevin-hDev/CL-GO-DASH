@@ -57,6 +57,8 @@ pub mod sensitive_data;
 pub mod session_index;
 pub mod session_ops;
 pub mod session_store;
+pub mod session_store_todos;
+pub mod session_store_updates;
 pub mod session_subagents;
 pub mod skill_parser;
 pub mod stream_buffer;
@@ -167,6 +169,9 @@ pub mod tool_spreadsheet_write_new;
 #[cfg(test)]
 pub mod tool_spreadsheet_write_tests;
 pub mod tool_todo;
+#[cfg(test)]
+mod tool_todo_memory_tests;
+pub mod tool_todo_neglect;
 pub mod tool_todo_parse;
 pub mod tool_todo_state;
 pub mod tool_todo_summary;

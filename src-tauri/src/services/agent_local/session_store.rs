@@ -78,6 +78,7 @@ pub async fn create_full(
         accumulated_tokens: 0,
         messages: Vec::new(),
         todos: Vec::new(),
+        todo_neglect_count: 0,
         todo_runs: Vec::new(),
         active_todo_run_id: None,
         stream_failures: Vec::new(),
@@ -161,12 +162,9 @@ pub async fn add_messages(
     let lock = lock_session(id).await;
     let _guard = lock.lock().await;
     let mut session = get(id).await?;
-    let should_clear_todos = new_messages.iter().any(|m| m.role == "user")
-        && super::types_todo::all_completed(&session.todos);
-    if should_clear_todos {
-        session.todos.clear();
-        session.active_todo_run_id = None;
-    }
+    let has_user_message = new_messages.iter().any(|m| m.role == "user");
+    let todo_housekeeping =
+        super::session_store_todos::apply_user_turn(&mut session, has_user_message);
     if tokens > 0 {
         if let Some(last) = new_messages.last_mut() {
             last.tokens = tokens;
@@ -179,7 +177,7 @@ pub async fn add_messages(
     }
     session.accumulated_tokens = session.messages.iter().map(|m| m.tokens).sum();
     let result = save(&session).await;
-    if result.is_ok() && should_clear_todos {
+    if result.is_ok() && todo_housekeeping.should_emit_empty_update {
         super::tool_todo::emit_update(id, Vec::new());
     }
     result
@@ -189,75 +187,6 @@ pub async fn rename(id: &str, name: &str) -> Result<(), String> {
     validate_session_id(id)?;
     let mut session = get(id).await?;
     session.name = name.to_string();
-    save(&session).await
-}
-
-pub async fn update_model(
-    id: &str,
-    model: &str,
-    provider: &str,
-    reasoning_mode: Option<String>,
-    supports_thinking: Option<bool>,
-) -> Result<(), String> {
-    validate_session_id(id)?;
-    let mut session = get(id).await?;
-    let previous_mode = reasoning_mode.or_else(|| session.reasoning_mode.clone());
-    let supports_thinking = supports_thinking.unwrap_or_else(|| {
-        crate::services::reasoning::provider_model_supports_thinking(provider, model)
-    });
-    session.model = model.to_string();
-    session.provider = provider.to_string();
-    session.reasoning_mode = crate::services::reasoning::normalize_for_model(
-        provider,
-        model,
-        previous_mode.as_deref(),
-        supports_thinking,
-    );
-    session.thinking_enabled =
-        crate::services::reasoning::enabled(session.reasoning_mode.as_deref(), false);
-    save(&session).await
-}
-
-pub async fn update_reasoning(
-    id: &str,
-    reasoning_mode: Option<String>,
-    supports_thinking: Option<bool>,
-) -> Result<(), String> {
-    validate_session_id(id)?;
-    let mut session = get(id).await?;
-    let mode = crate::services::reasoning::sanitize_mode(reasoning_mode);
-    let supports_thinking = supports_thinking.unwrap_or_else(|| {
-        if session.provider == "ollama" && mode.is_some() {
-            true
-        } else {
-            crate::services::reasoning::provider_model_supports_thinking(
-                &session.provider,
-                &session.model,
-            )
-        }
-    });
-    let mode = crate::services::reasoning::normalize_for_model(
-        &session.provider,
-        &session.model,
-        mode.as_deref(),
-        supports_thinking,
-    );
-    session.thinking_enabled = !matches!(mode.as_deref(), None | Some("off"));
-    session.reasoning_mode = mode;
-    save(&session).await
-}
-
-pub async fn update_working_dir(id: &str, dir: &str) -> Result<(), String> {
-    validate_session_id(id)?;
-    let path = std::path::Path::new(dir);
-    if !path.is_absolute() || !path.is_dir() {
-        return Err(format!("Répertoire invalide : {dir}"));
-    }
-    let canonical = path
-        .canonicalize()
-        .map_err(|e| format!("Canonicalize : {e}"))?;
-    let mut session = get(id).await?;
-    session.working_dir = canonical.to_string_lossy().to_string();
     save(&session).await
 }
 
@@ -272,6 +201,7 @@ pub async fn delete(id: &str) -> Result<(), String> {
 }
 
 pub use super::session_ops::{clear_project_id, export_markdown, truncate_and_replace};
+pub use super::session_store_updates::{update_model, update_reasoning, update_working_dir};
 
 #[path = "session_store_tests.rs"]
 #[cfg(test)]

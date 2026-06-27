@@ -67,6 +67,7 @@ fn apply_todos_updates_session() {
     assert_eq!(session.todos[0].content, "Valider");
     assert_eq!(session.todo_runs.len(), 1);
     assert!(session.active_todo_run_id.is_some());
+    assert_eq!(session.todo_neglect_count, 0);
 }
 
 #[test]
@@ -188,6 +189,7 @@ fn test_session() -> AgentSession {
         accumulated_tokens: 0,
         messages: vec![],
         todos: vec![],
+        todo_neglect_count: 0,
         todo_runs: vec![],
         active_todo_run_id: None,
         stream_failures: vec![],

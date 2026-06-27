@@ -21,6 +21,8 @@ pub struct AgentSession {
     pub messages: Vec<AgentMessage>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub todos: Vec<AgentTodoItem>,
+    #[serde(default)]
+    pub todo_neglect_count: u32,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub todo_runs: Vec<AgentTodoRun>,
     #[serde(default, skip_serializing_if = "Option::is_none")]

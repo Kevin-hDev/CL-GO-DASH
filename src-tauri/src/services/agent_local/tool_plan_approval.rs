@@ -136,6 +136,7 @@ mod tests {
             accumulated_tokens: 0,
             messages: Vec::<AgentMessage>::new(),
             todos: vec![],
+            todo_neglect_count: 0,
             todo_runs: vec![],
             active_todo_run_id: None,
             stream_failures: vec![],

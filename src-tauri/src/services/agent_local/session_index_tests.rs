@@ -15,6 +15,7 @@ fn test_session(id: &str, name: &str, heartbeat: bool) -> AgentSession {
         accumulated_tokens: 0,
         messages: vec![],
         todos: vec![],
+        todo_neglect_count: 0,
         todo_runs: vec![],
         active_todo_run_id: None,
         stream_failures: vec![],

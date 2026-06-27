@@ -10,6 +10,7 @@ pub const MAX_TODO_RUNS: usize = 20;
 
 pub fn apply_todos_to_session(session: &mut AgentSession, todos: Vec<AgentTodoItem>) {
     migrate_legacy_todos(session);
+    session.todo_neglect_count = 0;
     if todos.is_empty() {
         session.todos.clear();
         session.active_todo_run_id = None;
@@ -39,6 +40,7 @@ pub fn apply_todos_to_session(session: &mut AgentSession, todos: Vec<AgentTodoIt
 
 pub fn pause_active(session: &mut AgentSession, reason: Option<String>) -> bool {
     migrate_legacy_todos(session);
+    session.todo_neglect_count = 0;
     let Some(index) = active_run_index(session) else {
         session.todos.clear();
         session.active_todo_run_id = None;
@@ -53,6 +55,7 @@ pub fn pause_active(session: &mut AgentSession, reason: Option<String>) -> bool 
 pub fn resume_run(session: &mut AgentSession, run_id: &str) -> Result<Vec<AgentTodoItem>, String> {
     validate_run_id(run_id)?;
     migrate_legacy_todos(session);
+    session.todo_neglect_count = 0;
     let now = Utc::now();
     if let Some(index) = active_run_index(session) {
         pause_run(
@@ -77,6 +80,7 @@ pub fn resume_run(session: &mut AgentSession, run_id: &str) -> Result<Vec<AgentT
 pub fn delete_run(session: &mut AgentSession, run_id: &str) -> Result<Vec<AgentTodoItem>, String> {
     validate_run_id(run_id)?;
     migrate_legacy_todos(session);
+    session.todo_neglect_count = 0;
     let index = session
         .todo_runs
         .iter()
@@ -114,14 +118,14 @@ fn create_active_run(session: &mut AgentSession, todos: Vec<AgentTodoItem>, now:
     prune_runs(session);
 }
 
-fn migrate_legacy_todos(session: &mut AgentSession) {
+pub(super) fn migrate_legacy_todos(session: &mut AgentSession) {
     if !session.todo_runs.is_empty() || session.todos.is_empty() {
         return;
     }
     create_active_run(session, session.todos.clone(), Utc::now());
 }
 
-fn active_run_index(session: &AgentSession) -> Option<usize> {
+pub(super) fn active_run_index(session: &AgentSession) -> Option<usize> {
     let active_id = session.active_todo_run_id.as_ref()?;
     session
         .todo_runs
@@ -137,7 +141,7 @@ fn update_run(run: &mut AgentTodoRun, todos: Vec<AgentTodoItem>, now: DateTime<U
     run.paused_reason = None;
 }
 
-fn pause_run(run: &mut AgentTodoRun, reason: Option<String>, now: DateTime<Utc>) {
+pub(super) fn pause_run(run: &mut AgentTodoRun, reason: Option<String>, now: DateTime<Utc>) {
     if run.status != AgentTodoRunStatus::Completed {
         run.status = AgentTodoRunStatus::Paused;
     }
@@ -157,12 +161,18 @@ fn same_todo_list(current: &[AgentTodoItem], next: &[AgentTodoItem]) -> bool {
     if current.is_empty() || next.is_empty() {
         return false;
     }
+    if normalize(&current[0].content) == normalize(&next[0].content) {
+        return true;
+    }
     let current_keys: HashSet<String> = current
         .iter()
         .map(|todo| normalize(&todo.content))
         .collect();
-    next.iter()
-        .any(|todo| current_keys.contains(&normalize(&todo.content)))
+    let matches = next
+        .iter()
+        .filter(|todo| current_keys.contains(&normalize(&todo.content)))
+        .count();
+    matches * 2 >= current.len().max(next.len())
 }
 
 fn infer_title(todos: &[AgentTodoItem]) -> String {
