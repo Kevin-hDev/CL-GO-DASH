@@ -5,7 +5,9 @@ Application desktop agentique (Tauri 2 + React 19) pour LLM locaux via Ollama et
 ## Fonctionnalités
 
 - **Agent Local** : chat avec n'importe quel modèle Ollama ou provider cloud, gestion des conversations en onglets, permissions manuelles/auto/chat sur les outils, réflexion approfondie, modèles favoris, projets et contexte `AGENTS.md`
-- **Outils** : bash, lecture/écriture de fichiers, web fetch/search, actions Git, arbre de fichiers, preview de fichiers, preview Office, link preview, outils MCP et outils Forecast
+- **Planification agent** : Plan mode avec exploration en lecture seule, plans Markdown locaux, validation utilisateur obligatoire et passage à l'implémentation
+- **Workflow agent UI** : progression todo en temps réel, historique todo caché pour l'agent, choix interactifs et diagnostics sécurisés après erreur de flux ou d'outil
+- **Outils** : bash, lecture/écriture de fichiers, web fetch/search, actions Git, arbre de fichiers, preview de fichiers, preview Office, link preview, outils MCP, outils Forecast, diagnostics, todos et choix interactifs
 - **Subagents** : lance des assistants isolés depuis une conversation et fusionne leurs résultats dans le chat principal
 - **Réveils** : scheduler interne qui prompt un LLM à heure fixe (ponctuel / journalier / hebdomadaire), réponses stockées dans une conversation dédiée par modèle
 - **Forecast** : prévisions de séries temporelles avec modèles locaux et cloud, historique, comparaisons, scénarios, notes, exports et analyses appelables par l'Agent Local
@@ -123,7 +125,7 @@ src-tauri/                # Backend Rust + Tauri
 ├── src/
 │   ├── commands/         # Tauri IPC (agent_chat, heartbeat, api_keys, llm, forecast, mcp, gateway, ...)
 │   ├── services/
-│   │   ├── agent_local/  # Session store, outils, permission gate, subagents, tool results
+│   │   ├── agent_local/  # Sessions, outils, permissions, subagents, todos, diagnostics, Plan mode
 │   │   ├── llm/          # Client unifié OpenAI-compat, catalog, streaming SSE
 │   │   ├── search/       # Brave, Exa, Firecrawl + routing
 │   │   ├── forecast/     # Catalogue Forecast, runs, scénarios, notes, exports, runtime sidecar
@@ -180,6 +182,7 @@ Données dans `~/.local/share/cl-go-dash/` sur les 3 OS :
 | `agent-sessions/*.json` | Conversations Agent Local |
 | `agent-settings.json` | Mode permissions par défaut (auto/manuel/chat) |
 | `agent-tabs.json` | État des onglets ouverts |
+| `plans/<session_id>/*.md` | Plans Markdown locaux créés par le Plan mode |
 | `projects.json` | Projets enregistrés |
 | `favorite-models.json` | Liste des modèles favoris |
 | `terminal-tabs.json` | Onglets du terminal intégré |
@@ -221,6 +224,7 @@ L'application embarque **Ollama** comme sidecar pour éviter toute dépendance e
 - **JS ne voit jamais une clé** : aucune commande Tauri n'expose `get_api_key`
 - **Path traversal** : canonicalize + starts_with sur tout chemin venant du frontend
 - **Collections bornées** : ActiveStreams (32), PTY sessions (16), messages par session (2000)
+- **Diagnostics sécurisés** : les diagnostics agent stockent uniquement des résumés bornés et filtrés
 - **Logs filtrés** : body HTTP providers tronqué à 200 chars, jamais de secret dans les logs
 
 ## Licence
