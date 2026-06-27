@@ -1,50 +1,48 @@
 import { useTranslation } from "react-i18next";
 import { BookOpen, TerminalSquare } from "lucide-react";
-import { Plus } from "@/components/ui/icons";
+import { DragRegion } from "@/components/layout/drag-region";
 import { Tooltip } from "@/components/ui/tooltip";
 import { MOD, ALT } from "@/lib/platform";
 import type { PanelMode } from "@/hooks/use-forecast-panel";
 import { ModeSelector } from "./mode-selector";
-import "./tab-bar-actions.css";
+import "./chat-header.css";
 
-interface TabBarActionsProps {
-  canAddTab: boolean;
+interface ChatHeaderProps {
+  sessionName: string | null;
   sessionId: string | null;
   terminalOpen: boolean;
   previewOpen: boolean;
   showForecastDocs?: boolean;
   panelMode?: PanelMode;
-  onAdd: () => void;
   onToggleTerminal: () => void;
   onTogglePreview: () => void;
   onOpenForecastDocs?: () => void;
   onPanelModeChange?: (mode: PanelMode) => void;
 }
 
-export function TabBarActions({
-  canAddTab,
+export function ChatHeader({
+  sessionName,
   sessionId,
   terminalOpen,
   previewOpen,
   showForecastDocs,
   panelMode,
-  onAdd,
   onToggleTerminal,
   onTogglePreview,
   onOpenForecastDocs,
   onPanelModeChange,
-}: TabBarActionsProps) {
+}: ChatHeaderProps) {
   const { t } = useTranslation();
+  const label = sessionName ?? t("agentLocal.newSession");
 
   return (
-    <>
-      {canAddTab && (
-        <button className="tab-add" onClick={onAdd}>
-          <Plus size={14} />
-        </button>
-      )}
+    <div className="chat-header" role="presentation">
+      <span className="chat-header-title" title={sessionName ?? undefined}>
+        {label}
+      </span>
+      <DragRegion style={{ flex: 1, minWidth: 0 }} />
       {sessionId && (
-        <span className="tab-actions">
+        <span className="chat-header-actions">
           {showForecastDocs && onOpenForecastDocs && (
             <Tooltip label={t("forecast.docs.openTooltip")} align="right">
               <button
@@ -88,6 +86,6 @@ export function TabBarActions({
           </Tooltip>
         </span>
       )}
-    </>
+    </div>
   );
 }

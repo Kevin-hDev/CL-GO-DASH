@@ -1,0 +1,53 @@
+/* En-tête du chat : nom de session (gauche) + actions (droite) + zone drag (milieu). */
+
+.chat-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-height: 32px;
+  padding: 0 var(--space-sm) 0 var(--space-md);
+  background: var(--void);
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+}
+
+.chat-header-title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 280px;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.chat-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+/* Boutons d'action partagés (aussi utilisé par ModeSelector). */
+.tab-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: all var(--ease-smooth);
+}
+
+.tab-action-btn:hover,
+.tab-action-btn.active {
+  color: var(--ink);
+  background: var(--surface-hover);
+}

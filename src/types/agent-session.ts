@@ -74,13 +74,3 @@ export interface SubagentInfo {
   runId?: string;
   spawnedAt?: number;
 }
-
-export interface TabState {
-  tabs: TabInfo[];
-  active_index: number;
-}
-
-export interface TabInfo {
-  session_id: string;
-  label: string;
-}

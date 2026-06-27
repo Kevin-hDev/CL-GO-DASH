@@ -54,7 +54,6 @@ pub(crate) fn copy_items(src: &std::path::Path, dst: &std::path::Path) {
     let items: &[&str] = &[
         "agent-sessions",
         "agent-settings.json",
-        "agent-tabs.json",
         "config.json",
         "memory",
         "inbox",

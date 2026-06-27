@@ -179,8 +179,6 @@ pub fn run() {
             commands::delete_agent_session,
             commands::export_agent_session_markdown,
             commands::truncate_and_replace_at,
-            commands::get_tab_state,
-            commands::save_tab_state,
             commands::get_agent_settings,
             commands::set_permission_mode,
             commands::respond_to_permission,

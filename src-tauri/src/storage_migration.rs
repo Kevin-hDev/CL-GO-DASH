@@ -87,7 +87,6 @@ fn init_base_structure(base: &std::path::Path) -> Result<(), String> {
     let json_defaults: &[(&str, &str)] = &[
         ("config.json", "{}"),
         ("agent-settings.json", "{\"permissionMode\":\"auto\"}"),
-        ("agent-tabs.json", "[]"),
         ("configured-providers.json", "[]"),
         ("favorite-models.json", "[]"),
         ("projects.json", "[]"),

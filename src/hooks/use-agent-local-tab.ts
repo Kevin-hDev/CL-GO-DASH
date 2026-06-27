@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useAgentSessions } from "@/hooks/use-agent-sessions";
-import { useAgentTabs } from "@/hooks/use-agent-tabs";
 import { useProjects } from "@/hooks/use-projects";
 import { useTerminal } from "@/hooks/use-terminal";
 import { useDefaultModel } from "@/hooks/use-default-model";
@@ -30,11 +29,11 @@ interface UseAgentLocalTabOpts {
 
 export function useAgentLocalTab({ navState, onSessionChange, onNavChange, listFocused }: UseAgentLocalTabOpts) {
   const { sessions, refresh, create, rename, remove, updateModel, updateReasoning } = useAgentSessions();
-  const tabState = useAgentTabs();
   const projectsHook = useProjects();
+  const activeSessionId = navState.sessionId;
 
-  const activeSession = tabState.activeSessionId
-    ? sessions.find((s) => s.id.localeCompare(tabState.activeSessionId) === 0)
+  const activeSession = activeSessionId
+    ? sessions.find((s) => s.id.localeCompare(activeSessionId) === 0)
     : null;
   const activeProject = activeSession?.project_id
     ? projectsHook.projects.find((p) => p.id === activeSession.project_id)
@@ -73,7 +72,7 @@ export function useAgentLocalTab({ navState, onSessionChange, onNavChange, listF
     currentDefault.provider,
     welcomeReasoningMode,
   );
-  const filePreviewState = useFilePreview(tabState.activeSessionId ?? null, fileOperations);
+  const filePreviewState = useFilePreview(activeSessionId ?? null, fileOperations);
 
   useEffect(() => {
     if (!model || availableModels.size === 0) return;
@@ -84,17 +83,16 @@ export function useAgentLocalTab({ navState, onSessionChange, onNavChange, listF
     const allModels = Array.from(availableModels.values()).flat();
     if (allModels.length === 0) return;
     const fallback = allModels[0];
-    if (tabState.activeSessionId) {
-      void updateModel(tabState.activeSessionId, fallback.id, fallback.provider_id);
+    if (activeSessionId) {
+      void updateModel(activeSessionId, fallback.id, fallback.provider_id);
     } else {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- fallback when selected model is removed
       setWelcomeModel({ model: fallback.id, provider: fallback.provider_id });
     }
-  }, [availableModels, model, provider, tabState.activeSessionId, updateModel]);
+  }, [availableModels, model, provider, activeSessionId, updateModel]);
 
   const sessionActions = useSessionActions({
     create,
-    tabState,
     rename,
     defaultModel,
     defaultProvider,
@@ -108,12 +106,12 @@ export function useAgentLocalTab({ navState, onSessionChange, onNavChange, listF
 
   const setReasoningMode = useCallback((mode: ReasoningMode) => {
     const currentSupportsThinking = normalizeForSelectedModel(model, provider, mode).supportsThinking;
-    if (tabState.activeSessionId) {
-      void updateReasoning(tabState.activeSessionId, mode, currentSupportsThinking);
+    if (activeSessionId) {
+      void updateReasoning(activeSessionId, mode, currentSupportsThinking);
       return;
     }
     setWelcomeReasoningMode(mode);
-  }, [model, provider, normalizeForSelectedModel, tabState.activeSessionId, updateReasoning]);
+  }, [model, provider, normalizeForSelectedModel, activeSessionId, updateReasoning]);
 
   const updateModelWithReasoning = useCallback(
     async (id: string, nextModel: string, nextProvider: string) => {
@@ -129,40 +127,15 @@ export function useAgentLocalTab({ navState, onSessionChange, onNavChange, listF
     [normalizeForSelectedModel, reasoningMode, updateModel],
   );
 
-  const applySessionSelection = useCallback(async (id: string) => {
-    const existingIdx = tabState.tabs.findIndex((tab) => tab.session_id.localeCompare(id) === 0);
-    if (existingIdx >= 0) {
-      await tabState.selectTab(existingIdx);
-      return;
-    }
-    const label = sessions.find((s) => s.id.localeCompare(id) === 0)?.name ?? "Chat";
-    if (tabState.activeIndex >= 0 && tabState.activeIndex < tabState.tabs.length) {
-      await tabState.updateTab(tabState.activeIndex, id, label);
-    } else {
-      await tabState.addTab(id, label);
-    }
-  }, [tabState, sessions]);
-
   const handleSelectById = useCallback(async (id: string) => {
-    await applySessionSelection(id);
     onSessionChange?.(id);
-  }, [applySessionSelection, onSessionChange]);
-
-  useEffect(() => {
-    if (navState.sessionId === tabState.activeSessionId) return;
-    if (navState.sessionId === null) {
-      void tabState.deselectTab();
-    } else {
-      void applySessionSelection(navState.sessionId);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only react to requested session changes
-  }, [navState.sessionId]);
+  }, [onSessionChange]);
 
   const filePreview = useAgentLocalControlledPreview({ navState, filePreviewState, onNavChange });
   const terminal = useAgentLocalControlledTerminal({ navState, terminalState, terminalCwd, onNavChange });
 
   useAgentLocalShortcuts({
-    activeSessionId: tabState.activeSessionId,
+    activeSessionId,
     terminalOpen: terminal.isOpen,
     terminalTabsCount: terminal.tabs.length,
     terminalCwd,
@@ -185,7 +158,7 @@ export function useAgentLocalTab({ navState, onSessionChange, onNavChange, listF
 
   useArrowNavigation({
     items: visibleSessionIds,
-    selectedId: tabState.activeSessionId,
+    selectedId: activeSessionId,
     onSelect: (id) => void handleSelectById(id),
     enabled: listFocused,
     focusActiveSelector: "[data-nav-zone='list'] [data-nav-active='true']",
@@ -200,12 +173,17 @@ export function useAgentLocalTab({ navState, onSessionChange, onNavChange, listF
     void projectsHook.remove(projectId);
   }, [terminalState, projectsHook]);
 
+  const handleDeleteSession = useCallback(async (id: string) => {
+    await remove(id);
+    onSessionChange?.(null);
+  }, [remove, onSessionChange]);
+
   return {
     sessions, refresh, rename, remove, updateModel: updateModelWithReasoning,
-    tabState, projectsHook, terminal, activeSession,
+    projectsHook, terminal, activeSession, activeSessionId,
     model, provider, currentDefault, activeProject,
     filePreview, fileOperations, setFileOperations,
     reasoningMode, setReasoningMode, welcomeModel, setWelcomeModel,
-    sessionActions, handleSelectById, handleDeleteProject,
+    sessionActions, handleSelectById, handleDeleteProject, handleDeleteSession,
   };
 }

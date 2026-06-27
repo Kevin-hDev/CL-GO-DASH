@@ -1,7 +1,7 @@
 use crate::services::agent_local::types_session::{
-    AgentMessage, AgentSession, AgentSessionMeta, TabState,
+    AgentMessage, AgentSession, AgentSessionMeta,
 };
-use crate::services::agent_local::{session_store, tab_store};
+use crate::services::agent_local::session_store;
 
 #[tauri::command]
 pub async fn list_agent_sessions() -> Result<Vec<AgentSessionMeta>, String> {
@@ -108,14 +108,4 @@ pub async fn truncate_and_replace_at(
     replacement: Option<AgentMessage>,
 ) -> Result<(), String> {
     session_store::truncate_and_replace(&session_id, &message_id, replacement).await
-}
-
-#[tauri::command]
-pub async fn get_tab_state() -> Result<TabState, String> {
-    tab_store::get_state().await
-}
-
-#[tauri::command]
-pub async fn save_tab_state(state: TabState) -> Result<(), String> {
-    tab_store::save_state(&state).await
 }
