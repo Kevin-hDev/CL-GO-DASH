@@ -33,13 +33,13 @@ export function ChatHeader({
   onPanelModeChange,
 }: ChatHeaderProps) {
   const { t } = useTranslation();
-  const label = sessionName ?? t("agentLocal.newSession");
-
   return (
     <div className="chat-header" role="presentation">
-      <span className="chat-header-title" title={sessionName ?? undefined}>
-        {label}
-      </span>
+      {sessionName ? (
+        <span className="chat-header-title" title={sessionName}>
+          {sessionName}
+        </span>
+      ) : null}
       <DragRegion style={{ flex: 1, minWidth: 0 }} />
       {sessionId && (
         <span className="chat-header-actions">

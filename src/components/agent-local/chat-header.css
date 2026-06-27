@@ -10,6 +10,18 @@
   position: relative;
   z-index: 2;
   flex-shrink: 0;
+  /* Animé en sync avec le repli des sidebars (cf. .sidebar-hidden). */
+  transition: padding-left 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Quand les sidebars sont masquées, le titre vient se loger à droite
+   du bouton "nouvelle session" flottant de la window-toolbar. */
+.sidebar-hidden .chat-header {
+  padding-left: 229px;
+}
+
+.sidebar-hidden.is-fullscreen .chat-header {
+  padding-left: 185px;
 }
 
 .chat-header-title {
