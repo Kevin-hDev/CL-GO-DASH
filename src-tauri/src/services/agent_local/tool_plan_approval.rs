@@ -1,4 +1,7 @@
 use super::stream_events::AgentEventEmitter;
+use super::tool_plan_approval_request::{
+    APPROVAL_ID_CONTINUE, APPROVAL_ID_IMPLEMENT, APPROVAL_ID_QUIT,
+};
 use super::types_interactive::AgentInteractiveAnswer;
 use super::types_plan::{AgentPlanApprovalDecision, AgentPlanStatus, AgentPlanWorkflowStatus};
 use super::types_session::AgentSession;
@@ -61,7 +64,9 @@ pub fn validate_exit(session: &AgentSession, status: AgentPlanStatus) -> Result<
                 Err("User choice is required before exiting Plan Mode.".to_string())
             }
         }
-        AgentPlanStatus::Cancelled => Ok(()),
+        AgentPlanStatus::Cancelled => {
+            Err("User choice is required before cancelling Plan Mode.".to_string())
+        }
         _ => Err("Invalid plan status.".to_string()),
     }
 }
@@ -69,31 +74,18 @@ pub fn validate_exit(session: &AgentSession, status: AgentPlanStatus) -> Result<
 pub(crate) fn classify_answers(
     answers: &[AgentInteractiveAnswer],
 ) -> Option<AgentPlanApprovalDecision> {
-    let text = answers
+    let ids = answers
         .iter()
-        .flat_map(|answer| answer.selected_labels.iter())
-        .map(|label| normalize(label))
+        .flat_map(|answer| answer.selected_ids.iter())
+        .map(String::as_str)
         .collect::<Vec<_>>()
         .join(" ");
-    if text.contains("mettre") && text.contains("oeuvre") && text.contains("plan") {
-        return Some(AgentPlanApprovalDecision::Implement);
+    match ids.as_str() {
+        APPROVAL_ID_IMPLEMENT => Some(AgentPlanApprovalDecision::Implement),
+        APPROVAL_ID_CONTINUE => Some(AgentPlanApprovalDecision::ContinuePlanning),
+        APPROVAL_ID_QUIT => Some(AgentPlanApprovalDecision::QuitPlan),
+        _ => None,
     }
-    if text.contains("continuer") && text.contains("planifier") {
-        return Some(AgentPlanApprovalDecision::ContinuePlanning);
-    }
-    if text.contains("quitter") && text.contains("mode") && text.contains("plan") {
-        return Some(AgentPlanApprovalDecision::QuitPlan);
-    }
-    if text.contains("implement") && text.contains("plan") {
-        return Some(AgentPlanApprovalDecision::Implement);
-    }
-    if text.contains("continue") && text.contains("planning") {
-        return Some(AgentPlanApprovalDecision::ContinuePlanning);
-    }
-    if text.contains("exit") && text.contains("plan") && text.contains("mode") {
-        return Some(AgentPlanApprovalDecision::QuitPlan);
-    }
-    None
 }
 
 fn mark_active_run(session: &mut AgentSession, status: AgentPlanStatus) {
@@ -105,15 +97,6 @@ fn mark_active_run(session: &mut AgentSession, status: AgentPlanStatus) {
     }
 }
 
-fn normalize(value: &str) -> String {
-    value
-        .to_lowercase()
-        .replace('œ', "oe")
-        .replace(['é', 'è', 'ê'], "e")
-        .replace('à', "a")
-        .replace('ù', "u")
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -123,7 +106,17 @@ mod tests {
     fn answer(label: &str) -> AgentInteractiveAnswer {
         AgentInteractiveAnswer {
             question_index: 0,
+            selected_ids: vec![],
             selected_labels: vec![label.to_string()],
+            custom_answer: None,
+        }
+    }
+
+    fn answer_id(id: &str) -> AgentInteractiveAnswer {
+        AgentInteractiveAnswer {
+            question_index: 0,
+            selected_ids: vec![id.to_string()],
+            selected_labels: vec!["label".to_string()],
             custom_answer: None,
         }
     }
@@ -167,22 +160,26 @@ mod tests {
     }
 
     #[test]
-    fn classifies_plan_approval_choices() {
+    fn classifies_plan_approval_choices_by_stable_id() {
         assert_eq!(
-            classify_answers(&[answer("Mettre en oeuvre le plan")]),
+            classify_answers(&[answer_id(APPROVAL_ID_IMPLEMENT)]),
             Some(AgentPlanApprovalDecision::Implement)
         );
         assert_eq!(
-            classify_answers(&[answer("Continuer a planifier")]),
+            classify_answers(&[answer_id(APPROVAL_ID_CONTINUE)]),
             Some(AgentPlanApprovalDecision::ContinuePlanning)
         );
         assert_eq!(
-            classify_answers(&[answer("Quitter le mode plan")]),
+            classify_answers(&[answer_id(APPROVAL_ID_QUIT)]),
             Some(AgentPlanApprovalDecision::QuitPlan)
         );
+    }
+
+    #[test]
+    fn labels_do_not_approve_plan_without_id() {
         assert_eq!(
-            classify_answers(&[answer("Implement this plan")]),
-            Some(AgentPlanApprovalDecision::Implement)
+            classify_answers(&[answer("Mettre en oeuvre le plan")]),
+            None
         );
     }
 
@@ -196,5 +193,26 @@ mod tests {
             Some(AgentPlanApprovalDecision::Implement),
         );
         assert!(validate_exit(&allowed, AgentPlanStatus::Approved).is_ok());
+    }
+
+    #[test]
+    fn rejected_exit_requires_quit_plan_decision() {
+        let continue_planning = session(
+            AgentPlanWorkflowStatus::CollectingQuestions,
+            Some(AgentPlanApprovalDecision::ContinuePlanning),
+        );
+        assert!(validate_exit(&continue_planning, AgentPlanStatus::Rejected).is_err());
+
+        let quit = session(
+            AgentPlanWorkflowStatus::Rejected,
+            Some(AgentPlanApprovalDecision::QuitPlan),
+        );
+        assert!(validate_exit(&quit, AgentPlanStatus::Rejected).is_ok());
+    }
+
+    #[test]
+    fn cancelled_exit_requires_user_path() {
+        let session = session(AgentPlanWorkflowStatus::AwaitingApproval, None);
+        assert!(validate_exit(&session, AgentPlanStatus::Cancelled).is_err());
     }
 }

@@ -28,7 +28,7 @@ pub fn exitplanmode_definition() -> Value {
             "properties": {
                 "status": {
                     "type": "string",
-                    "enum": ["approved", "rejected", "cancelled"],
+                    "enum": ["approved", "rejected"],
                     "description": "Final plan decision"
                 }
             },

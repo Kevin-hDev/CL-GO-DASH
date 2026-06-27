@@ -136,7 +136,7 @@ fn append_plan_mode(messages: &mut [ChatMessage]) {
         first.content.push_str("\n\n");
         first
             .content
-            .push_str(crate::services::agent_local::prompt_plan::PLAN_MODE);
+            .push_str(&crate::services::agent_local::prompt_plan::plan_mode_prompt());
     }
 }
 

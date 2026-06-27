@@ -1,4 +1,6 @@
-pub const PLAN_MODE: &str = "\
+pub fn plan_mode_prompt() -> String {
+    format!(
+        "\
 <critical_plan_mode_workflow>
 You are in Plan Mode. Follow this workflow exactly and in order.
 This Plan Mode workflow overrides the general interactive-choice guidance.
@@ -15,27 +17,37 @@ This Plan Mode workflow overrides the general interactive-choice guidance.
 </mandatory_steps>
 
 <allowed_actions>
-Use read_file, list_dir, grep, glob, web_search, web_fetch, read-only document/image/spreadsheet tools, agent_diagnostics, ask_user_choice, planmode, and exitplanmode.
+Use only these read-only or Plan Mode tools: {}.
 </allowed_actions>
 
 <blocked_actions>
 Keep the codebase unchanged until exitplanmode approved succeeds. The backend blocks write tools and todo_write while Plan Mode is active.
 </blocked_actions>
-</critical_plan_mode_workflow>";
+</critical_plan_mode_workflow>",
+        super::tool_plan_guard::PLAN_MODE_ALLOWED_ACTIONS_TEXT
+    )
+}
 
 #[cfg(test)]
 mod tests {
-    use super::PLAN_MODE;
-
     #[test]
     fn plan_prompt_uses_strict_workflow_markers() {
-        assert!(PLAN_MODE.contains("<critical_plan_mode_workflow>"));
-        assert!(PLAN_MODE.contains("<mandatory_steps>"));
-        assert!(PLAN_MODE.contains("<allowed_actions>"));
-        assert!(PLAN_MODE.contains("<blocked_actions>"));
-        assert!(PLAN_MODE.contains("Follow this workflow exactly and in order"));
-        assert!(PLAN_MODE.contains("normal assistant text or ask_user_choice"));
-        assert!(PLAN_MODE.contains("planmode asks the user for final approval itself"));
-        assert!(PLAN_MODE.contains("If planmode returns implement"));
+        let prompt = super::plan_mode_prompt();
+        assert!(prompt.contains("<critical_plan_mode_workflow>"));
+        assert!(prompt.contains("<mandatory_steps>"));
+        assert!(prompt.contains("<allowed_actions>"));
+        assert!(prompt.contains("<blocked_actions>"));
+        assert!(prompt.contains("Follow this workflow exactly and in order"));
+        assert!(prompt.contains("normal assistant text or ask_user_choice"));
+        assert!(prompt.contains("planmode asks the user for final approval itself"));
+        assert!(prompt.contains("If planmode returns implement"));
+    }
+
+    #[test]
+    fn plan_prompt_lists_guard_allowed_tools() {
+        let prompt = super::plan_mode_prompt();
+        for tool in super::super::tool_plan_guard::PLAN_MODE_ALLOWED_TOOL_NAMES {
+            assert!(prompt.contains(tool), "missing {tool}");
+        }
     }
 }

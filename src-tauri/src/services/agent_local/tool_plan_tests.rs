@@ -32,10 +32,7 @@ fn upsert_keeps_history_bounded_by_caller_order() {
 fn invalid_exit_status_is_rejected() {
     let args = json!({"status": "done"});
     let status = args.get("status").and_then(serde_json::Value::as_str);
-    assert!(!matches!(
-        status,
-        Some("approved" | "rejected" | "cancelled")
-    ));
+    assert!(!matches!(status, Some("approved" | "rejected")));
 }
 
 #[test]

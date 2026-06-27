@@ -4,6 +4,10 @@ use super::stream_events::AgentEventEmitter;
 use super::types_interactive::{AgentInteractiveOption, AgentInteractiveQuestion};
 use super::types_tools::ToolResult;
 
+pub const APPROVAL_ID_IMPLEMENT: &str = "implement_plan";
+pub const APPROVAL_ID_CONTINUE: &str = "continue_planning";
+pub const APPROVAL_ID_QUIT: &str = "quit_plan";
+
 pub async fn request_approval(
     on_event: &AgentEventEmitter,
     session_id: &str,
@@ -31,18 +35,21 @@ pub(crate) fn approval_question() -> AgentInteractiveQuestion {
         multi_select: false,
         options: vec![
             AgentInteractiveOption {
+                id: Some(APPROVAL_ID_IMPLEMENT.to_string()),
                 label: "Mettre en oeuvre le plan".to_string(),
                 description: "Valider le plan et lancer l'implementation.".to_string(),
                 recommended: true,
                 preview: None,
             },
             AgentInteractiveOption {
+                id: Some(APPROVAL_ID_CONTINUE.to_string()),
                 label: "Continuer a planifier".to_string(),
                 description: "Reprendre le mode plan et ajuster le plan.".to_string(),
                 recommended: false,
                 preview: None,
             },
             AgentInteractiveOption {
+                id: Some(APPROVAL_ID_QUIT.to_string()),
                 label: "Quitter le mode plan".to_string(),
                 description: "Refuser ce plan et sortir du mode plan.".to_string(),
                 recommended: false,
@@ -63,5 +70,9 @@ mod tests {
         assert_eq!(question.options[0].label, "Mettre en oeuvre le plan");
         assert_eq!(question.options[1].label, "Continuer a planifier");
         assert_eq!(question.options[2].label, "Quitter le mode plan");
+        assert_eq!(
+            question.options[0].id.as_deref(),
+            Some(super::APPROVAL_ID_IMPLEMENT)
+        );
     }
 }

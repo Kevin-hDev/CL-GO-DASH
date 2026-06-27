@@ -9,8 +9,8 @@ fn valid_args() -> serde_json::Value {
             "header": "Plan",
             "question": "Quelle suite choisir ?",
             "options": [
-                {"label": "Rapide", "description": "Faire le minimum", "recommended": true},
-                {"label": "Complet", "description": "Faire toute la passe"}
+                {"id": "fast", "label": "Rapide", "description": "Faire le minimum", "recommended": true},
+                {"id": "complete", "label": "Complet", "description": "Faire toute la passe"}
             ]
         }]
     })
@@ -22,6 +22,7 @@ fn parse_accepts_valid_choice_request() {
 
     assert_eq!(questions.len(), 1);
     assert_eq!(questions[0].options.len(), 2);
+    assert_eq!(questions[0].options[0].id.as_deref(), Some("fast"));
     assert!(questions[0].options[0].recommended);
 }
 
@@ -81,7 +82,42 @@ fn validate_answers_rejects_unknown_label() {
         &questions,
         vec![AgentInteractiveAnswer {
             question_index: 0,
+            selected_ids: vec![],
             selected_labels: vec!["Inconnu".into()],
+            custom_answer: None,
+        }],
+    )
+    .unwrap_err();
+
+    assert!(err.contains("inconnu"));
+}
+
+#[test]
+fn validate_answers_accepts_known_id() {
+    let questions = parse_questions(&valid_args()).unwrap();
+    let answers = validate_answers(
+        &questions,
+        vec![AgentInteractiveAnswer {
+            question_index: 0,
+            selected_ids: vec!["complete".into()],
+            selected_labels: vec!["Complet".into()],
+            custom_answer: None,
+        }],
+    )
+    .unwrap();
+
+    assert_eq!(answers[0].selected_ids, vec!["complete"]);
+}
+
+#[test]
+fn validate_answers_rejects_unknown_id() {
+    let questions = parse_questions(&valid_args()).unwrap();
+    let err = validate_answers(
+        &questions,
+        vec![AgentInteractiveAnswer {
+            question_index: 0,
+            selected_ids: vec!["missing".into()],
+            selected_labels: vec!["Complet".into()],
             custom_answer: None,
         }],
     )

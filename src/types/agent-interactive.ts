@@ -1,4 +1,5 @@
 export interface AgentInteractiveOption {
+  id?: string;
   label: string;
   description: string;
   recommended?: boolean;
@@ -21,6 +22,7 @@ export interface AgentInteractiveChoiceRequest {
 
 export interface AgentInteractiveAnswer {
   questionIndex: number;
+  selectedIds: string[];
   selectedLabels: string[];
   customAnswer?: string;
 }

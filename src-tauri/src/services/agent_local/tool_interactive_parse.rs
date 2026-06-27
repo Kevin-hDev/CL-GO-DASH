@@ -10,6 +10,7 @@ pub const MAX_OPTIONS: usize = 4;
 pub const MAX_HEADER_CHARS: usize = 12;
 pub const MAX_QUESTION_CHARS: usize = 240;
 pub const MAX_LABEL_CHARS: usize = 80;
+pub const MAX_OPTION_ID_CHARS: usize = 80;
 pub const MAX_DESCRIPTION_CHARS: usize = 240;
 pub const MAX_PREVIEW_CHARS: usize = 500;
 pub const MAX_CUSTOM_ANSWER_CHARS: usize = 500;
@@ -36,10 +37,13 @@ pub fn validate_answers(
         let Some(question) = questions.get(answer.question_index) else {
             return Err("réponse interactive invalide".into());
         };
-        if answer.selected_labels.is_empty() && answer.custom_answer.is_none() {
+        if answer.selected_labels.is_empty()
+            && answer.selected_ids.is_empty()
+            && answer.custom_answer.is_none()
+        {
             return Err("réponse interactive vide".into());
         }
-        if !question.multi_select && answer.selected_labels.len() > 1 {
+        if !question.multi_select && selected_count(answer) > 1 {
             return Err("choix multiple non autorisé".into());
         }
         for label in &answer.selected_labels {
@@ -47,6 +51,19 @@ pub fn validate_answers(
                 return Err("choix trop long".into());
             }
             if label != "other" && !question.options.iter().any(|option| option.label == *label) {
+                return Err("choix inconnu".into());
+            }
+        }
+        for id in &answer.selected_ids {
+            if chars_len(id) > MAX_OPTION_ID_CHARS {
+                return Err("identifiant de choix trop long".into());
+            }
+            if id != "other"
+                && !question
+                    .options
+                    .iter()
+                    .any(|option| option.id.as_deref() == Some(id))
+            {
                 return Err("choix inconnu".into());
             }
         }
@@ -94,6 +111,7 @@ fn parse_option(value: &Value) -> Result<AgentInteractiveOption, String> {
         .as_object()
         .ok_or_else(|| "chaque option doit être un objet".to_string())?;
     Ok(AgentInteractiveOption {
+        id: optional_text(obj.get("id"), MAX_OPTION_ID_CHARS, "id")?,
         label: required_text(obj.get("label"), MAX_LABEL_CHARS, "label")?,
         description: required_text(obj.get("description"), MAX_DESCRIPTION_CHARS, "description")?,
         recommended: obj
@@ -131,4 +149,8 @@ fn validate_text(text: &str, max: usize, label: &str) -> Result<String, String> 
 
 fn chars_len(value: &str) -> usize {
     value.chars().count()
+}
+
+fn selected_count(answer: &AgentInteractiveAnswer) -> usize {
+    answer.selected_labels.len().max(answer.selected_ids.len())
 }

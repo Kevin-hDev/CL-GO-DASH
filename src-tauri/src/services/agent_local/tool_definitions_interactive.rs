@@ -5,8 +5,8 @@ pub fn ask_user_choice_definition() -> Value {
         "ask_user_choice",
         "Ask the user to choose between concrete options when their decision changes the next step. \
          Use sparingly unless an active workflow requires it. \
-         In Plan Mode, this is the mandatory way to ask user questions before publishing a plan or before final approval. \
-         Do not ask those Plan Mode questions in normal assistant text. \
+         In Plan Mode, prefer this tool for important user questions before publishing a plan. \
+         Final Plan Mode approval is handled by planmode itself. \
          Always include a recommended option when useful.",
         serde_json::json!({
             "type": "object",
@@ -26,9 +26,10 @@ pub fn ask_user_choice_definition() -> Value {
                                 "minItems": 2,
                                 "maxItems": 4,
                                 "items": {
-                                    "type": "object",
-                                    "properties": {
-                                        "label": {"type": "string"},
+	                                    "type": "object",
+	                                    "properties": {
+	                                        "id": {"type": "string", "description": "Stable option id for machine-readable answers"},
+	                                        "label": {"type": "string"},
                                         "description": {"type": "string"},
                                         "recommended": {"type": "boolean"},
                                         "preview": {"type": "string"}

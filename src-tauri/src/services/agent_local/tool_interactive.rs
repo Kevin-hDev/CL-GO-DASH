@@ -48,6 +48,10 @@ fn result_json(answers: &[AgentInteractiveAnswer], plan_decision: Option<&str>) 
         .iter()
         .map(|answer| answer.selected_labels.clone())
         .collect();
+    let selected_ids: Vec<_> = answers
+        .iter()
+        .map(|answer| answer.selected_ids.clone())
+        .collect();
     let custom_answers: Vec<_> = answers
         .iter()
         .filter_map(|answer| answer.custom_answer.clone())
@@ -55,6 +59,7 @@ fn result_json(answers: &[AgentInteractiveAnswer], plan_decision: Option<&str>) 
     let mut value = json!({
         "completed": true,
         "answers": answers,
+        "selected_ids": selected_ids,
         "selected_labels": selected_labels,
         "custom_answers": custom_answers,
     });

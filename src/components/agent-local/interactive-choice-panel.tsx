@@ -55,15 +55,16 @@ function InteractiveChoicePanelInner({
     onResolved?.();
   }, [answers, onResolved, request, step, submitting]);
 
-  const choose = useCallback((label: string) => {
+  const choose = useCallback((option: ReturnType<typeof withOther>[number]) => {
     if (!question) return;
-    if (label === OTHER_VALUE) {
+    if (option.id === OTHER_VALUE) {
       setOtherMode(true);
       return;
     }
     void submitAnswer({
       questionIndex: step,
-      selectedLabels: [label],
+      selectedIds: option.id ? [option.id] : [],
+      selectedLabels: [option.label],
     });
   }, [question, step, submitAnswer]);
 
@@ -72,6 +73,7 @@ function InteractiveChoicePanelInner({
     if (!custom) return;
     void submitAnswer({
       questionIndex: step,
+      selectedIds: [OTHER_VALUE],
       selectedLabels: [OTHER_VALUE],
       customAnswer: custom,
     });
@@ -96,7 +98,10 @@ function InteractiveChoicePanelInner({
       } else if (event.key === "Enter" && !event.shiftKey) {
         event.preventDefault();
         if (otherMode) submitOther();
-        else choose(options[activeIndex]?.label ?? "");
+        else {
+          const option = options[activeIndex];
+          if (option) choose(option);
+        }
       } else if (event.key === "Escape") {
         event.preventDefault();
         if (otherMode) setOtherMode(false);
@@ -129,7 +134,7 @@ function InteractiveChoicePanelInner({
             otherLabel={t("interactiveChoice.otherLabel")}
             recommendedLabel={t("interactiveChoice.recommended")}
             onHover={() => setActiveIndex(index)}
-            onChoose={() => choose(option.label)}
+            onChoose={() => choose(option)}
           />
         ))}
       </div>
@@ -154,7 +159,7 @@ function InteractiveChoicePanelInner({
 function withOther(question: AgentInteractiveQuestion | undefined, label: string) {
   return [
     ...(question?.options ?? []),
-    { label: OTHER_VALUE, description: label, recommended: false },
+    { id: OTHER_VALUE, label: OTHER_VALUE, description: label, recommended: false },
   ];
 }
 

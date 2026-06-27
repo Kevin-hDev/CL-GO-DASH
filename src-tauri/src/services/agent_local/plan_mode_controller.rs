@@ -38,7 +38,12 @@ pub(crate) fn decide(
     repair_count: usize,
 ) -> PlanModeDecision {
     match workflow {
-        AgentPlanWorkflowStatus::AwaitingApproval => repair_or_fail(repair_count, APPROVAL_REPAIR),
+        AgentPlanWorkflowStatus::NeedsContext | AgentPlanWorkflowStatus::CollectingQuestions => {
+            decide_before_plan(result, repair_count)
+        }
+        AgentPlanWorkflowStatus::PlanPublished | AgentPlanWorkflowStatus::AwaitingApproval => {
+            repair_or_fail(repair_count, APPROVAL_REPAIR)
+        }
         AgentPlanWorkflowStatus::Approved => {
             if has_tool(result, "exitplanmode") {
                 PlanModeDecision::Accept
@@ -53,9 +58,7 @@ pub(crate) fn decide(
                 repair_or_fail(repair_count, REJECTED_REPAIR)
             }
         }
-        _ if asks_user_question(&result.content) => PlanModeDecision::Accept,
-        _ if result.tool_calls.is_empty() => repair_or_fail(repair_count, NEXT_ACTION_REPAIR),
-        _ => PlanModeDecision::Accept,
+        AgentPlanWorkflowStatus::Cancelled => PlanModeDecision::Fail("Plan Mode was cancelled."),
     }
 }
 
@@ -69,6 +72,13 @@ pub fn correction_message(content: &'static str) -> ChatMessage {
 
 fn has_tool(result: &StreamResult, name: &str) -> bool {
     result.tool_calls.iter().any(|(tool, _)| tool == name)
+}
+
+fn decide_before_plan(result: &StreamResult, repair_count: usize) -> PlanModeDecision {
+    if !result.tool_calls.is_empty() || asks_user_question(&result.content) {
+        return PlanModeDecision::Accept;
+    }
+    repair_or_fail(repair_count, NEXT_ACTION_REPAIR)
 }
 
 fn repair_or_fail(repair_count: usize, correction: &'static str) -> PlanModeDecision {
@@ -136,6 +146,30 @@ mod tests {
     }
 
     #[test]
+    fn repairs_plain_text_questions_after_plan_publish() {
+        let result = StreamResult {
+            content: "Should I implement it?".into(),
+            ..Default::default()
+        };
+        assert!(matches!(
+            decide(AgentPlanWorkflowStatus::AwaitingApproval, &result, 0),
+            PlanModeDecision::Retry(_)
+        ));
+    }
+
+    #[test]
+    fn plan_published_legacy_state_requires_approval_flow() {
+        let result = StreamResult {
+            tool_calls: vec![("ask_user_choice".into(), serde_json::json!({}))],
+            ..Default::default()
+        };
+        assert!(matches!(
+            decide(AgentPlanWorkflowStatus::PlanPublished, &result, 0),
+            PlanModeDecision::Retry(_)
+        ));
+    }
+
+    #[test]
     fn requires_final_approval_after_plan_is_published() {
         let result = StreamResult::default();
         assert!(matches!(
@@ -149,6 +183,15 @@ mod tests {
         let result = StreamResult::default();
         assert!(matches!(
             decide(AgentPlanWorkflowStatus::NeedsContext, &result, MAX_REPAIRS),
+            PlanModeDecision::Fail(_)
+        ));
+    }
+
+    #[test]
+    fn cancelled_state_fails_explicitly() {
+        let result = StreamResult::default();
+        assert!(matches!(
+            decide(AgentPlanWorkflowStatus::Cancelled, &result, 0),
             PlanModeDecision::Fail(_)
         ));
     }
