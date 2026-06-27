@@ -29,8 +29,8 @@ const request = {
     header: "Plan",
     question: "What next?",
     options: [
-	      { label: "Fast", description: "Do the minimum", recommended: true },
-	      { id: "complete", label: "Complete", description: "Do the full pass" },
+      { label: "Fast", description: "Do the minimum", recommended: true },
+      { id: "complete", label: "Complete", description: "Do the full pass" },
     ],
   }],
 };
@@ -56,10 +56,10 @@ describe("InteractiveChoicePanel", () => {
 
     fireEvent.click(screen.getByText("Complete"));
 
-	    await waitFor(() => expect(invoke).toHaveBeenCalledWith("respond_to_interactive_choice", {
-	      id: "choice-1",
-	      answers: [{ questionIndex: 0, selectedIds: ["complete"], selectedLabels: ["Complete"] }],
-	    }));
+    await waitFor(() => expect(invoke).toHaveBeenCalledWith("respond_to_interactive_choice", {
+      id: "choice-1",
+      answers: [{ questionIndex: 0, selectedIds: ["complete"], selectedLabels: ["Complete"] }],
+    }));
     expect(onResolved).toHaveBeenCalledOnce();
   });
 
@@ -69,10 +69,10 @@ describe("InteractiveChoicePanel", () => {
     fireEvent.keyDown(window, { key: "ArrowDown" });
     fireEvent.keyDown(window, { key: "Enter" });
 
-	    await waitFor(() => expect(invoke).toHaveBeenCalledWith("respond_to_interactive_choice", {
-	      id: "choice-1",
-	      answers: [{ questionIndex: 0, selectedIds: ["complete"], selectedLabels: ["Complete"] }],
-	    }));
+    await waitFor(() => expect(invoke).toHaveBeenCalledWith("respond_to_interactive_choice", {
+      id: "choice-1",
+      answers: [{ questionIndex: 0, selectedIds: ["complete"], selectedLabels: ["Complete"] }],
+    }));
   });
 
   it("ouvre Autre et envoie la réponse libre", async () => {
@@ -87,9 +87,9 @@ describe("InteractiveChoicePanel", () => {
     await waitFor(() => expect(invoke).toHaveBeenCalledWith("respond_to_interactive_choice", {
       id: "choice-1",
       answers: [{
-	        questionIndex: 0,
-	        selectedIds: ["other"],
-	        selectedLabels: ["other"],
+        questionIndex: 0,
+        selectedIds: ["other"],
+        selectedLabels: ["other"],
         customAnswer: "Use a custom path",
       }],
     }));

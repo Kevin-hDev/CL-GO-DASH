@@ -26,10 +26,10 @@ pub fn ask_user_choice_definition() -> Value {
                                 "minItems": 2,
                                 "maxItems": 4,
                                 "items": {
-	                                    "type": "object",
-	                                    "properties": {
-	                                        "id": {"type": "string", "description": "Stable option id for machine-readable answers"},
-	                                        "label": {"type": "string"},
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {"type": "string", "description": "Stable option id for machine-readable answers"},
+                                        "label": {"type": "string"},
                                         "description": {"type": "string"},
                                         "recommended": {"type": "boolean"},
                                         "preview": {"type": "string"}

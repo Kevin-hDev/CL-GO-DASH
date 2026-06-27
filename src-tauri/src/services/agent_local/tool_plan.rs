@@ -59,7 +59,6 @@ pub async fn execute_exit(
     let status = match args.get("status").and_then(Value::as_str) {
         Some("approved") => AgentPlanStatus::Approved,
         Some("rejected") => AgentPlanStatus::Rejected,
-        Some("cancelled") => AgentPlanStatus::Cancelled,
         _ => return ToolResult::err(super::tool_plan_messages::INVALID_STATUS),
     };
     match exit_plan(session_id, status, on_event).await {
@@ -146,7 +145,6 @@ async fn exit_plan(
     session.plan_workflow_status = match status {
         AgentPlanStatus::Approved => AgentPlanWorkflowStatus::Approved,
         AgentPlanStatus::Rejected => AgentPlanWorkflowStatus::Rejected,
-        AgentPlanStatus::Cancelled => AgentPlanWorkflowStatus::Cancelled,
         _ => session.plan_workflow_status,
     };
     session.plan_mode_enabled = false;
