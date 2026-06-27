@@ -7,6 +7,7 @@
 - **Agent todo lists** — live task progress panel with hidden todo history, pause/resume, and delete support
 - **Agent diagnostics** — structured safe diagnostics for stream errors, recent tools, and recovery context
 - **Interactive choices** — `ask_user_choice` tool with keyboard/mouse selection and recommended options
+- **Plan mode** — read-only planning workflow with local Markdown plans, approval gating, and implementation handoff
 
 ---
 
