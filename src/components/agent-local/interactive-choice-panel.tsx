@@ -11,16 +11,23 @@ import "./interactive-choice-panel.css";
 
 interface InteractiveChoicePanelProps {
   request?: AgentInteractiveChoiceRequest;
+  onResolved?: () => void;
 }
 
 const OTHER_VALUE = "other";
 
-export function InteractiveChoicePanel({ request }: InteractiveChoicePanelProps) {
+export function InteractiveChoicePanel({ request, onResolved }: InteractiveChoicePanelProps) {
   if (!request) return null;
-  return <InteractiveChoicePanelInner key={request.id} request={request} />;
+  return <InteractiveChoicePanelInner key={request.id} request={request} onResolved={onResolved} />;
 }
 
-function InteractiveChoicePanelInner({ request }: { request: AgentInteractiveChoiceRequest }) {
+function InteractiveChoicePanelInner({
+  request,
+  onResolved,
+}: {
+  request: AgentInteractiveChoiceRequest;
+  onResolved?: () => void;
+}) {
   const { t } = useTranslation();
   const [step, setStep] = useState(0);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -45,7 +52,8 @@ function InteractiveChoicePanelInner({ request }: { request: AgentInteractiveCho
     }
     setSubmitting(true);
     await invoke("respond_to_interactive_choice", { id: request.id, answers: nextAnswers });
-  }, [answers, request, step, submitting]);
+    onResolved?.();
+  }, [answers, onResolved, request, step, submitting]);
 
   const choose = useCallback((label: string) => {
     if (!question) return;
@@ -73,8 +81,8 @@ function InteractiveChoicePanelInner({ request }: { request: AgentInteractiveCho
     void invoke("respond_to_interactive_choice", {
       id: request.id,
       answers: [],
-    }).catch(() => undefined);
-  }, [request]);
+    }).then(() => onResolved?.()).catch(() => undefined);
+  }, [onResolved, request]);
 
   useEffect(() => {
     if (!question) return;

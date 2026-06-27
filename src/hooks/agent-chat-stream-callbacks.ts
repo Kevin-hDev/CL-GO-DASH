@@ -45,7 +45,9 @@ export function applyStreamEvent(
     case "toolResult":
       if (isHiddenAgentTool(event.data.name)) {
         next.pendingPermissions = [];
-        if (event.data.name === "ask_user_choice") next.interactiveChoice = undefined;
+        if (event.data.name === "ask_user_choice" || event.data.name === "planmode") {
+          next.interactiveChoice = undefined;
+        }
         break;
       }
       next.currentTools = applyToolResult(

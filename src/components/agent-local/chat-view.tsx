@@ -147,7 +147,7 @@ export function ChatView({
         <div className="chat-input-area">
           <div className="chat-input-column">
             <TodoProgressPanel sessionId={isSubagent ? undefined : sessionId} />
-            <InteractiveChoicePanel request={chat.interactiveChoice} />
+            <InteractiveChoicePanel request={chat.interactiveChoice} onResolved={chat.clearInteractiveChoice} />
             {subagents.active.length > 0 && (
               <SubagentAccordion
                 subagents={subagents.active}

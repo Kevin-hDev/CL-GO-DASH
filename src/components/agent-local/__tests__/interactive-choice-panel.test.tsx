@@ -51,7 +51,8 @@ describe("InteractiveChoicePanel", () => {
   });
 
   it("valide un choix au clic", async () => {
-    render(<InteractiveChoicePanel request={request} />);
+    const onResolved = vi.fn();
+    render(<InteractiveChoicePanel request={request} onResolved={onResolved} />);
 
     fireEvent.click(screen.getByText("Complete"));
 
@@ -59,6 +60,7 @@ describe("InteractiveChoicePanel", () => {
       id: "choice-1",
       answers: [{ questionIndex: 0, selectedLabels: ["Complete"] }],
     }));
+    expect(onResolved).toHaveBeenCalledOnce();
   });
 
   it("navigue avec les flèches et valide avec Entrée", async () => {

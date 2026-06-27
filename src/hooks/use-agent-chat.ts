@@ -187,12 +187,12 @@ export function useAgentChat(
     setState((s) => ({ ...s, isStreaming: false }));
   }, [sessionId, stopStream]);
 
+  const clearInteractiveChoice = useCallback(() => setState((s) => ({ ...s, interactiveChoice: undefined })), []);
   const ready = state.messages.length > 0 || !sessionId;
 
   return {
     ...state, ready, sessionLoading,
-    planModeEnabled,
-    setPlanModeEnabled,
-    sendMessage, reload, edit, stop,
+    planModeEnabled, setPlanModeEnabled,
+    sendMessage, reload, edit, stop, clearInteractiveChoice,
   };
 }

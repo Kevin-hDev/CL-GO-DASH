@@ -60,4 +60,18 @@ describe("toolResult", () => {
     });
     expect(result.state.interactiveChoice).toBeUndefined();
   });
+
+  it("vide le choix interactif quand planmode retourne sa validation backend", () => {
+    const state = makeState({ interactiveChoice: {
+      id: "choice-1",
+      currentIndex: 0,
+      total: 1,
+      questions: [{ header: "Plan", question: "Valider ?", options: [] }],
+    } });
+    const result = applyStreamEvent(state, {
+      event: "toolResult",
+      data: { name: "planmode", toolCallIndex: 0, content: "approved", isError: false },
+    });
+    expect(result.state.interactiveChoice).toBeUndefined();
+  });
 });
