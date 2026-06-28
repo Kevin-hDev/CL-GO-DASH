@@ -56,12 +56,17 @@ pub fn office_tool_definitions() -> Vec<Value> {
         tool_def(
             "write_spreadsheet",
             "Create or modify an Excel file (.xlsx). Relative paths resolve from the working directory. \
-             Use operations array to set cells, formulas, rows. \
+             Use operations array to set cells, formulas, rows, and formatting. \
              New files get a default sheet named 'Sheet1'. Each operation can target a specific sheet via 'sheet' (default: first sheet). \
              Do not use add_sheet for single-sheet files — Sheet1 is created automatically. \
+             Formatting ops: set_format (bold/italic/underline/font_color/bg_color/font_size, optional 'value' to rewrite the cell), \
+             set_number_format (number_format like '0.00', 'DD/MM/YYYY', '#,##0 €'), set_border (border_style: thin|medium|thick, border_sides: [top,bottom,left,right]), \
+             merge_cells (start_cell + end_cell like 'A1' and 'C3'), set_row_height (row + height). \
              Example: {\"path\": \"output.xlsx\", \"operations\": [\
              {\"type\": \"set_row\", \"row\": 0, \"values\": [\"Name\", \"Age\"]}, \
-             {\"type\": \"set_cell\", \"cell\": \"A2\", \"value\": \"Alice\"}]}",
+             {\"type\": \"set_cell\", \"cell\": \"A2\", \"value\": \"Alice\"}, \
+             {\"type\": \"set_format\", \"cell\": \"A1\", \"bold\": true, \"bg_color\": \"FF0000\"}, \
+             {\"type\": \"merge_cells\", \"start_cell\": \"A1\", \"end_cell\": \"C1\"}]}",
             serde_json::json!({
                 "type": "object",
                 "properties": {
@@ -72,7 +77,7 @@ pub fn office_tool_definitions() -> Vec<Value> {
                         "items": {
                             "type": "object",
                             "properties": {
-                                "type": {"type": "string", "enum": ["set_cell", "set_formula", "set_row", "add_sheet", "set_column_width"]},
+                                "type": {"type": "string", "enum": ["set_cell", "set_formula", "set_row", "add_sheet", "set_column_width", "set_format", "set_number_format", "set_border", "merge_cells", "set_row_height"]},
                                 "sheet": {"type": "string", "description": "Target sheet name (default: first sheet)"},
                                 "cell": {"type": "string"},
                                 "row": {"type": "integer"},
@@ -81,7 +86,19 @@ pub fn office_tool_definitions() -> Vec<Value> {
                                 "formula": {"type": "string"},
                                 "values": {"type": "array", "items": {"type": "string"}},
                                 "name": {"type": "string"},
-                                "width": {"type": "number"}
+                                "width": {"type": "number"},
+                                "bold": {"type": "boolean", "description": "For set_format"},
+                                "italic": {"type": "boolean", "description": "For set_format"},
+                                "underline": {"type": "boolean", "description": "For set_format"},
+                                "font_color": {"type": "string", "description": "For set_format — hex RRGGBB (e.g. 'FF0000')"},
+                                "bg_color": {"type": "string", "description": "For set_format — hex RRGGBB (e.g. 'FFFF00')"},
+                                "font_size": {"type": "number", "description": "For set_format"},
+                                "number_format": {"type": "string", "description": "For set_number_format (e.g. '0.00', 'DD/MM/YYYY', '#,##0 €')"},
+                                "border_style": {"type": "string", "enum": ["thin", "medium", "thick"], "description": "For set_border"},
+                                "border_sides": {"type": "array", "items": {"type": "string", "enum": ["top", "bottom", "left", "right"]}, "description": "For set_border — which sides get the border"},
+                                "start_cell": {"type": "string", "description": "For merge_cells (e.g. 'A1')"},
+                                "end_cell": {"type": "string", "description": "For merge_cells (e.g. 'C3')"},
+                                "height": {"type": "number", "description": "For set_row_height"}
                             },
                             "required": ["type"]
                         }
@@ -94,11 +111,12 @@ pub fn office_tool_definitions() -> Vec<Value> {
             "write_document",
             "Create a Word document (.docx) from content blocks. Relative paths resolve from the working directory. \
              Only include fields relevant to each block type. \
-             heading: {type, text, level}. paragraph: {type, text, bold?, italic?}. \
+             heading: {type, text, level, align?}. paragraph: {type, text, bold?, italic?, runs?, align?} — use 'runs' (array of {text, bold?, italic?, underline?, color?}) to mix styles within one paragraph. \
              table: {type, headers, rows}. list: {type, items, ordered}. \
+             align (heading/paragraph): 'left'|'center'|'right'|'justify'. color: hex RRGGBB (e.g. 'FF0000'). \
              Example: {\"path\": \"doc.docx\", \"content\": [\
-             {\"type\": \"heading\", \"text\": \"Title\", \"level\": 1}, \
-             {\"type\": \"paragraph\", \"text\": \"Hello world\"}, \
+             {\"type\": \"heading\", \"text\": \"Title\", \"level\": 1, \"align\": \"center\"}, \
+             {\"type\": \"paragraph\", \"runs\": [{\"text\": \"Hello \"}, {\"text\": \"world\", \"bold\": true, \"color\": \"FF0000\"}]}, \
              {\"type\": \"table\", \"headers\": [\"A\",\"B\"], \"rows\": [[\"1\",\"2\"]]}, \
              {\"type\": \"list\", \"items\": [\"a\",\"b\"], \"ordered\": true}]}",
             serde_json::json!({
@@ -114,8 +132,24 @@ pub fn office_tool_definitions() -> Vec<Value> {
                                 "type": {"type": "string", "enum": ["heading", "paragraph", "table", "list"]},
                                 "text": {"type": "string", "description": "For heading/paragraph only"},
                                 "level": {"type": "integer", "description": "For heading only (1-6)"},
-                                "bold": {"type": "boolean", "description": "For paragraph only"},
-                                "italic": {"type": "boolean", "description": "For paragraph only"},
+                                "bold": {"type": "boolean", "description": "For paragraph only (when not using runs)"},
+                                "italic": {"type": "boolean", "description": "For paragraph only (when not using runs)"},
+                                "align": {"type": "string", "enum": ["left", "center", "right", "justify"], "description": "For heading/paragraph alignment"},
+                                "runs": {
+                                    "type": "array",
+                                    "description": "For paragraph only — array of styled segments. Overrides 'text' when present.",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "text": {"type": "string"},
+                                            "bold": {"type": "boolean"},
+                                            "italic": {"type": "boolean"},
+                                            "underline": {"type": "boolean"},
+                                            "color": {"type": "string", "description": "hex RRGGBB (e.g. 'FF0000')"}
+                                        },
+                                        "required": ["text"]
+                                    }
+                                },
                                 "headers": {"type": "array", "items": {"type": "string"}, "description": "For table only — column headers"},
                                 "rows": {"type": "array", "items": {"type": "array", "items": {"type": "string"}}, "description": "For table only — array of arrays"},
                                 "items": {"type": "array", "items": {"type": "string"}, "description": "For list only"},

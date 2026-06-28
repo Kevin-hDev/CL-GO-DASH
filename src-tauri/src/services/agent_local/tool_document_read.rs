@@ -112,7 +112,11 @@ fn extract_text_from_ooxml(xml: &str) -> Result<String, String> {
     use quick_xml::Reader;
 
     let mut reader = Reader::from_str(xml);
-    reader.config_mut().trim_text(true);
+    // IMPORTANT : trim_text désactivé. Sinon les espaces entre runs OOXML
+    // (ex: "un " + "<w:r>mot</w:r>" + " et ") sont supprimés et le texte
+    // des runs se retrouve collé ("unmot"). On gère le trim au niveau
+    // paragraphe final, pas au niveau de chaque événement texte.
+    reader.config_mut().trim_text(false);
 
     let mut result = String::new();
     let mut in_paragraph = false;
@@ -128,11 +132,18 @@ fn extract_text_from_ooxml(xml: &str) -> Result<String, String> {
             }
             Ok(Event::End(ref e)) => {
                 if e.local_name().as_ref() == b"p" {
-                    if !para_text.is_empty() {
+                    // Trim + collapse des espaces multiples (issus de l'indentation
+                    // XML entre runs) en un seul espace. Préserve les espaces
+                    // significatifs entre runs ("un " + "mot" = "un mot").
+                    let normalized: String = para_text
+                        .split_whitespace()
+                        .collect::<Vec<_>>()
+                        .join(" ");
+                    if !normalized.is_empty() {
                         if !result.is_empty() {
                             result.push('\n');
                         }
-                        result.push_str(&para_text);
+                        result.push_str(&normalized);
                         if result.chars().count() > MAX_EXTRACTED_DOC_CHARS {
                             return Err("Document trop volumineux".to_string());
                         }

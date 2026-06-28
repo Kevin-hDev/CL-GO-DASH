@@ -78,8 +78,10 @@ mod tests {
         let mut xml = String::new();
         use std::io::Read;
         doc.read_to_string(&mut xml).unwrap();
-        assert!(xml.contains("1. Premier"));
-        assert!(xml.contains("2. Deuxième"));
+        // Vraie numérotation OOXML : référence au numId 1 (ordered)
+        assert!(xml.contains("<w:numPr>"), "devrait utiliser w:numPr: {xml}");
+        assert!(xml.contains("w:val=\"1\""), "devrait référencer numId 1 (ordered)");
+        assert!(xml.contains("Premier"));
     }
 
     #[tokio::test]
@@ -97,7 +99,10 @@ mod tests {
         let mut xml = String::new();
         use std::io::Read;
         doc.read_to_string(&mut xml).unwrap();
-        assert!(xml.contains("• Item A"));
+        // Vraie numérotation OOXML : référence au numId 2 (bullet)
+        assert!(xml.contains("<w:numPr>"), "devrait utiliser w:numPr: {xml}");
+        assert!(xml.contains("w:val=\"2\""), "devrait référencer numId 2 (bullet)");
+        assert!(xml.contains("Item A"));
     }
 
     #[tokio::test]

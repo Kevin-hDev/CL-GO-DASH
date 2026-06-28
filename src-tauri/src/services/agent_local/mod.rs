@@ -113,6 +113,10 @@ pub mod tool_document_read;
 pub mod tool_document_read_tests;
 pub mod tool_document_write;
 pub mod tool_document_write_list;
+pub mod tool_document_write_numbering;
+pub mod tool_document_write_styles;
+#[cfg(test)]
+pub mod tool_document_format_tests;
 #[cfg(test)]
 pub mod tool_document_write_tests;
 pub mod tool_document_write_xml;
@@ -171,6 +175,8 @@ pub mod tool_spreadsheet_read_tests;
 pub mod tool_spreadsheet_write;
 pub mod tool_spreadsheet_write_edit;
 pub mod tool_spreadsheet_write_new;
+#[cfg(test)]
+pub mod tool_spreadsheet_format_tests;
 #[cfg(test)]
 pub mod tool_spreadsheet_write_tests;
 pub mod tool_todo;

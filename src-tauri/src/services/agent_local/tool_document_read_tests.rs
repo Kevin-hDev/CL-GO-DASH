@@ -111,4 +111,48 @@ mod tests {
         let result = read_document("", None, tmp.path()).await;
         assert!(result.is_error);
     }
+
+    /// Régression : les runs multiples dans un paragraphe ne doivent pas être
+    /// collés sans espaces. Avant le fix, "un " + "mot" donnait "unmot".
+    #[tokio::test]
+    async fn read_docx_preserves_spaces_between_runs() {
+        let tmp = working_dir();
+        let docx_path = tmp.path().join("runs.docx");
+
+        let file = std::fs::File::create(&docx_path).unwrap();
+        let mut zip = zip::ZipWriter::new(file);
+        let options = zip::write::SimpleFileOptions::default();
+        zip.start_file("word/document.xml", options).unwrap();
+        use std::io::Write;
+        zip.write_all(
+            br#"<?xml version="1.0" encoding="UTF-8"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:body>
+    <w:p>
+      <w:r><w:t xml:space="preserve">Cette phrase contient un </w:t></w:r>
+      <w:r><w:rPr><w:b/></w:rPr><w:t>mot rouge</w:t></w:r>
+      <w:r><w:t xml:space="preserve"> et un </w:t></w:r>
+      <w:r><w:rPr><w:b/><w:color w:val="2F5496"/></w:rPr><w:t>segment bleu</w:t></w:r>
+      <w:r><w:t xml:space="preserve"> soulign&#233;.</w:t></w:r>
+    </w:p>
+  </w:body>
+</w:document>"#,
+        )
+        .unwrap();
+        zip.finish().unwrap();
+
+        let result = read_document(docx_path.to_str().unwrap(), None, tmp.path()).await;
+        assert!(!result.is_error, "Erreur: {}", result.content);
+        let json: serde_json::Value = serde_json::from_str(&result.content).unwrap();
+        let text = json["text"].as_str().unwrap();
+        // Le bug collait : "unmot" au lieu de "un mot"
+        assert!(
+            text.contains("un mot rouge"),
+            "espaces entre runs perdus: {text}"
+        );
+        assert!(
+            text.contains("et un segment"),
+            "espaces entre runs perdus: {text}"
+        );
+    }
 }

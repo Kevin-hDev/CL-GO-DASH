@@ -130,6 +130,46 @@ pub fn normalize_formula(formula: &str) -> String {
     result
 }
 
+/// Valide et normalise une couleur hex (ex: "FF0000", "#FF0000", "ff0000").
+/// Retourne la forme canonique RRGGBB (6 chiffres, majuscules, sans '#').
+/// Les backends ajoutent le préfixe alpha si nécessaire (rust_xlsxwriter = RRGGBB,
+/// umya = "FF" + RRGGBB).
+///
+/// Une valeur vide/null est traitée comme "absente" et retourne `None` (pas d'erreur).
+/// Une valeur non-vide mais invalide échoue fermé.
+pub fn validate_color_hex(val: &Value, field: &str) -> Result<Option<String>, String> {
+    // Vide/null → absent (ignoré silencieusement par le caller).
+    if val.is_null() {
+        return Ok(None);
+    }
+    let raw = match val.as_str() {
+        Some(s) => s,
+        None => return Err(format!("{field} doit être une chaîne")),
+    };
+    let trimmed = raw.trim();
+    if trimmed.is_empty() {
+        return Ok(None);
+    }
+    let cleaned = trimmed.trim_start_matches('#');
+    let is_hex = cleaned.len() == 6 && cleaned.chars().all(|c| c.is_ascii_hexdigit());
+    if !is_hex {
+        return Err(format!(
+            "{field} couleur invalide (format attendu RRGGBB, ex: 'FF0000')"
+        ));
+    }
+    Ok(Some(cleaned.to_ascii_uppercase()))
+}
+
+/// Mappe un nom de style de bordure vers l'identifiant OOXML.
+pub fn border_style_name(val: &Value) -> Result<&'static str, String> {
+    match val.as_str().map(|s| s.trim().to_ascii_lowercase()).as_deref() {
+        Some("thin") => Ok("thin"),
+        Some("medium") => Ok("medium"),
+        Some("thick") => Ok("thick"),
+        _ => Err("border_style invalide (valeurs: thin|medium|thick)".to_string()),
+    }
+}
+
 /// Coerce une Value en Vec<Value> pour les arrays de `values` dans set_row.
 pub fn coerce_values_array(val: &Value) -> Option<Vec<Value>> {
     if let Some(arr) = val.as_array() {
