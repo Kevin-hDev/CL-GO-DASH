@@ -10,7 +10,7 @@ use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::tool_executor;
 use crate::services::agent_local::tool_result_budget;
 use crate::services::agent_local::types_ollama::{ChatMessage, StreamEvent};
-use crate::services::agent_local::write_guard::WriteGuard;
+use crate::services::agent_local::write_guard_registry;
 use std::path::PathBuf;
 use tokio_util::sync::CancellationToken;
 
@@ -41,7 +41,8 @@ pub async fn run_agent_loop(
     let mut last_eval: u32 = 0;
     let start = std::time::Instant::now();
     let mut breaker = circuit_breaker::CircuitBreaker::new();
-    let mut write_guard = WriteGuard::new();
+    let write_guard_arc = write_guard_registry::lock(&session_id).await;
+    let mut write_guard = write_guard_arc.lock().await;
     let mut plan_repairs = 0;
 
     for turn in 0..MAX_TURNS {

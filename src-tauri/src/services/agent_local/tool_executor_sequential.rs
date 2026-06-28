@@ -8,7 +8,8 @@ use crate::services::agent_local::write_guard::WriteGuard;
 use tokio_util::sync::CancellationToken;
 
 use super::tool_executor_helpers::{
-    check_write_guard, dispatch_or_interactive, post_record_read, push_tool_result,
+    check_write_guard, dispatch_or_interactive, post_record_read, post_record_write,
+    push_tool_result,
 };
 
 pub async fn run_sequential(
@@ -109,6 +110,7 @@ pub async fn run_sequential(
 
         let tr = run_post_hooks(name, args, tr);
         post_record_read(name, args, working_dir, &tr, write_guard);
+        post_record_write(name, args, working_dir, &tr, write_guard);
         super::tool_executor_diagnostics::completed(
             session_id,
             request_id,

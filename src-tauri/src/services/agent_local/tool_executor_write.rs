@@ -7,7 +7,7 @@ use crate::services::agent_local::{permission_gate, permission_policy, sensitive
 use serde_json::Value;
 use tokio_util::sync::CancellationToken;
 
-use super::tool_executor_helpers::{check_write_guard, dispatch_or_interactive};
+use super::tool_executor_helpers::{check_write_guard, dispatch_or_interactive, post_record_write};
 
 pub(super) async fn execute_write(
     on_event: &AgentEventEmitter,
@@ -91,7 +91,10 @@ pub(super) async fn execute_write(
             }
         }
     };
-    run_post_hooks(name, args, tr)
+    let tr = run_post_hooks(name, args, tr);
+    // Enregistre le fichier écrit comme "déjà vu" pour ne pas bloquer le tour suivant.
+    post_record_write(name, args, working_dir, &tr, write_guard);
+    tr
 }
 
 fn must_prompt_for_sensitive_bash(name: &str, args: &Value) -> bool {

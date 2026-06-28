@@ -22,7 +22,12 @@ fn warns_write_to_existing_unread_file() {
     assert!(path.exists());
     let result = guard.check_write(path);
     assert!(result.is_err());
-    assert!(result.unwrap_err().contains("non lu avant écriture"));
+    let msg = result.unwrap_err();
+    assert!(
+        msg.contains("Écriture bloquée"),
+        "le message doit indiquer un blocage, pas un warning: {msg}"
+    );
+    assert!(msg.contains("read_file"), "doit mentionner read_file: {msg}");
 }
 
 #[test]

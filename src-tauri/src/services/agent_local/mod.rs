@@ -207,5 +207,9 @@ pub mod types_stream;
 pub mod types_todo;
 pub mod types_tools;
 pub mod write_guard;
+pub mod write_guard_extract;
+pub mod write_guard_registry;
+#[cfg(test)]
+pub mod write_guard_helpers_tests;
 #[cfg(test)]
 pub mod write_guard_tests;

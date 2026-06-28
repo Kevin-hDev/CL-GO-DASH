@@ -197,6 +197,8 @@ pub async fn delete(id: &str) -> Result<(), String> {
         .await
         .map_err(|e| format!("Erreur suppression: {e}"))?;
     let _ = crate::services::agent_local::session_index::remove_entry(id).await;
+    // Nettoie aussi le WriteGuard persistant de la session.
+    crate::services::agent_local::write_guard_registry::remove(id);
     Ok(())
 }
 

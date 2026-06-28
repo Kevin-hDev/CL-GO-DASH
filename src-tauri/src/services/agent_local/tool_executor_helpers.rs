@@ -29,6 +29,9 @@ pub fn check_write_guard(
     Ok(())
 }
 
+/// Enregistre les fichiers "vus" après un tool read-only réussi.
+/// - read_file/read_document/read_spreadsheet/read_image/process_image → le chemin lu.
+/// - grep/glob/list_dir → tous les fichiers retournés dans le résultat.
 pub fn post_record_read(
     name: &str,
     args: &serde_json::Value,
@@ -36,24 +39,67 @@ pub fn post_record_read(
     tr: &ToolResult,
     write_guard: &mut WriteGuard,
 ) {
-    if !tr.is_error {
-        let path_str = match name {
-            "read_file" | "read_document" | "read_spreadsheet" | "read_image" => {
-                args["path"].as_str()
-            }
-            "process_image" => args["input_path"].as_str(),
-            _ => None,
-        };
-        if let Some(path_str) = path_str {
-            let p = std::path::Path::new(path_str);
-            let resolved = if p.is_absolute() {
-                p.to_path_buf()
-            } else {
-                working_dir.join(p)
-            };
-            write_guard.record_read(&resolved);
-        }
+    if tr.is_error {
+        return;
     }
+    match name {
+        "read_file" | "read_document" | "read_spreadsheet" | "read_image" => {
+            if let Some(path_str) = args["path"].as_str() {
+                record_path(write_guard, path_str, working_dir);
+            }
+        }
+        "process_image" => {
+            if let Some(path_str) = args["input_path"].as_str() {
+                record_path(write_guard, path_str, working_dir);
+            }
+        }
+        "grep" | "glob" | "list_dir" => {
+            let seen = super::write_guard_extract::extract_seen_paths(
+                name,
+                args,
+                working_dir,
+                &tr.content,
+            );
+            if !seen.is_empty() {
+                write_guard.record_reads(&seen);
+            }
+        }
+        _ => {}
+    }
+}
+
+/// Enregistre un fichier comme "déjà lu" après qu'il a été écrit/édité.
+/// Évite le blocage au tour suivant sur un fichier que l'IA vient de modifier.
+pub fn post_record_write(
+    name: &str,
+    args: &serde_json::Value,
+    working_dir: &std::path::Path,
+    tr: &ToolResult,
+    write_guard: &mut WriteGuard,
+) {
+    if tr.is_error {
+        return;
+    }
+    let path_str = match name {
+        "write_file" | "edit_file" | "write_spreadsheet" | "write_document" => {
+            args["path"].as_str()
+        }
+        "process_image" => args["output_path"].as_str(),
+        _ => return,
+    };
+    if let Some(path_str) = path_str {
+        record_path(write_guard, path_str, working_dir);
+    }
+}
+
+fn record_path(write_guard: &mut WriteGuard, path_str: &str, working_dir: &std::path::Path) {
+    let p = std::path::Path::new(path_str);
+    let resolved = if p.is_absolute() {
+        p.to_path_buf()
+    } else {
+        working_dir.join(p)
+    };
+    write_guard.record_read(&resolved);
 }
 
 pub fn push_tool_result(

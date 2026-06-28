@@ -1,6 +1,6 @@
 use super::stream_events::AgentEventEmitter;
 use super::types_ollama::{ChatMessage, OllamaThink, StreamEvent};
-use super::write_guard::WriteGuard;
+use super::write_guard_registry;
 use super::{
     agent_loop_errors, agent_loop_limits::MAX_TURNS, agent_loop_plan, agent_loop_support,
     circuit_breaker, compress_hook, context_budget, eager_dispatch, ollama_stream, tool_executor,
@@ -29,7 +29,8 @@ pub async fn run_agent_loop(
     let mut last_eval: u32 = 0;
     let start = std::time::Instant::now();
     let mut breaker = circuit_breaker::CircuitBreaker::new();
-    let mut write_guard = WriteGuard::new();
+    let write_guard_arc = write_guard_registry::lock(&session_id).await;
+    let mut write_guard = write_guard_arc.lock().await;
     let mut plan_repairs = 0;
 
     tool_result_budget::cleanup_old_results();
