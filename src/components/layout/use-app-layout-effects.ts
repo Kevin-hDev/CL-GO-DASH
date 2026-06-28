@@ -1,9 +1,7 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { cleanupTauriListener } from "@/lib/tauri-listen";
 import { IS_MAC } from "@/lib/platform";
-import { CHAT_MIN_WIDTH, FILE_PREVIEW_MIN_WIDTH } from "@/hooks/file-preview-storage";
-import { FILE_TREE_MIN_WIDTH } from "@/hooks/file-tree-layout";
 
 const SIDEBAR_HIDDEN_OFFSET_FALLBACK = 260;
 const SIDEBAR_HIDE_GUARD = 8;
@@ -14,16 +12,6 @@ interface ShortcutHandlers {
   onNewSession?: () => void;
   toggleSearch: () => void;
   toggleSidebar: () => void;
-}
-
-export function shouldAutoHideSidebarForAgentPanels(
-  detailWidth: number,
-  previewOpen: boolean,
-  fileTreeOpen: boolean,
-): boolean {
-  return previewOpen
-    && fileTreeOpen
-    && detailWidth < CHAT_MIN_WIDTH + FILE_PREVIEW_MIN_WIDTH + FILE_TREE_MIN_WIDTH;
 }
 
 export function sidebarHiddenOffsetFromWidth(width: number): number {
@@ -103,60 +91,6 @@ export function useAppLayoutShortcuts({
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [toggleSidebar, toggleSearch, onBack, onForward, onNewSession]);
-}
-
-export function useAgentPanelsAutoSidebar(
-  sidebarOpen: boolean,
-  manualReveal: boolean,
-  onAutoHide: () => void,
-) {
-  const sidebarOpenRef = useRef(sidebarOpen);
-  const manualRevealRef = useRef(manualReveal);
-
-  useLayoutEffect(() => {
-    sidebarOpenRef.current = sidebarOpen;
-    manualRevealRef.current = manualReveal;
-  }, [sidebarOpen, manualReveal]);
-
-  useEffect(() => {
-    const detail = document.querySelector(".app-detail-panel");
-    if (!(detail instanceof HTMLElement)) return;
-
-    let raf = 0;
-    const sync = () => {
-      const agentDetail = detail.querySelector(".agent-detail-with-preview");
-      const previewOpen = !!agentDetail?.querySelector(".fp-panel.open");
-      const fileTreeOpen = !!agentDetail?.querySelector(".ft-panel.open");
-      const shouldHide = shouldAutoHideSidebarForAgentPanels(
-        detail.getBoundingClientRect().width,
-        previewOpen,
-        fileTreeOpen,
-      );
-
-      if (shouldHide && sidebarOpenRef.current && !manualRevealRef.current) {
-        onAutoHide();
-      }
-    };
-
-    const schedule = () => {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(sync);
-    };
-
-    schedule();
-    const resizeObserver = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(schedule);
-    resizeObserver?.observe(detail);
-    const mutationObserver = new MutationObserver(schedule);
-    mutationObserver.observe(detail, { attributes: true, attributeFilter: ["class"], subtree: true });
-    window.addEventListener("resize", schedule);
-
-    return () => {
-      cancelAnimationFrame(raf);
-      resizeObserver?.disconnect();
-      mutationObserver.disconnect();
-      window.removeEventListener("resize", schedule);
-    };
-  }, [onAutoHide]);
 }
 
 export function useSidebarHiddenOffset(sidebarOpen: boolean): number {

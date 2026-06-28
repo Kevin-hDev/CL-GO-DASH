@@ -1,12 +1,15 @@
 import { fireEvent, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  shouldAutoHideSidebarForAgentPanels,
   sidebarHiddenOffsetFromWidth,
-  useAgentPanelsAutoSidebar,
   useAppLayoutShortcuts,
   useSidebarHiddenOffset,
 } from "../use-app-layout-effects";
+import {
+  projectedDetailWidthWithSidebarOpen,
+  shouldAutoHideSidebarForAgentPanels,
+  useAgentPanelsAutoSidebar,
+} from "../agent-panels-auto-sidebar";
 
 class ResizeObserverMock {
   static instances: ResizeObserverMock[] = [];
@@ -40,7 +43,7 @@ function setElementWidth(element: Element, width: number) {
   });
 }
 
-function installLayoutDom(detailWidth: number) {
+function installLayoutDom(detailWidth: number, sidebarWidth = 0) {
   document.body.innerHTML = `
     <div class="app-sidebar-block"></div>
     <section class="app-detail-panel">
@@ -51,7 +54,9 @@ function installLayoutDom(detailWidth: number) {
     </section>
   `;
   const detail = document.querySelector(".app-detail-panel")!;
+  const sidebar = document.querySelector(".app-sidebar-block")!;
   setElementWidth(detail, detailWidth);
+  setElementWidth(sidebar, sidebarWidth);
   return detail;
 }
 
@@ -99,6 +104,13 @@ describe("shouldAutoHideSidebarForAgentPanels", () => {
   });
 });
 
+describe("projectedDetailWidthWithSidebarOpen", () => {
+  it("projette la largeur detail quand la sidebar masquee serait reouverte", () => {
+    expect(projectedDetailWidthWithSidebarOpen(1020, 260, false)).toBe(760);
+    expect(projectedDetailWidthWithSidebarOpen(760, 260, true)).toBe(760);
+  });
+});
+
 describe("useAgentPanelsAutoSidebar", () => {
   it("masque quand les panneaux agent sont trop serres", async () => {
     installLayoutDom(760);
@@ -126,6 +138,28 @@ describe("useAgentPanelsAutoSidebar", () => {
     renderHook(() => useAgentPanelsAutoSidebar(true, true, onAutoHide));
     ResizeObserverMock.instances[0]?.trigger();
 
+    expect(onAutoHide).not.toHaveBeenCalled();
+  });
+
+  it("garde l'info serree quand la sidebar est deja masquee", async () => {
+    installLayoutDom(1020, 260);
+    const onAutoHide = vi.fn();
+    const onTightChange = vi.fn();
+
+    renderHook(() => useAgentPanelsAutoSidebar(false, false, onAutoHide, onTightChange));
+
+    await waitFor(() => expect(onTightChange).toHaveBeenLastCalledWith(true));
+    expect(onAutoHide).not.toHaveBeenCalled();
+  });
+
+  it("efface l'info serree quand la sidebar projetee rentre a nouveau", async () => {
+    installLayoutDom(1120, 260);
+    const onAutoHide = vi.fn();
+    const onTightChange = vi.fn();
+
+    renderHook(() => useAgentPanelsAutoSidebar(false, false, onAutoHide, onTightChange));
+
+    await waitFor(() => expect(onTightChange).toHaveBeenLastCalledWith(false));
     expect(onAutoHide).not.toHaveBeenCalled();
   });
 });

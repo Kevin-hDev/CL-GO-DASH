@@ -10,8 +10,16 @@ import { IS_MAC } from "@/lib/platform";
 import { GpuStatusBadge } from "@/components/agent-local/gpu-status-badge";
 import { WindowControls } from "./window-controls";
 import { PanelSlotProvider, PanelSlotTarget } from "./panel-slots";
-import { useAgentPanelsAutoSidebar, useAppLayoutShortcuts, useSidebarHiddenOffset, useWindowFullscreen } from "./use-app-layout-effects";
+import { useAgentPanelsAutoSidebar } from "./agent-panels-auto-sidebar";
+import { useAppLayoutShortcuts, useSidebarHiddenOffset, useWindowFullscreen } from "./use-app-layout-effects";
 import { ModelDownloadBadge } from "./model-download-badge";
+import {
+  INITIAL_AGENT_SIDEBAR_LAYOUT_STATE,
+  autoHideAgentSidebar,
+  setAgentPanelsTight,
+  shouldCompactAgentChat,
+  toggleAgentSidebar,
+} from "./sidebar-compact-state";
 import "./app-layout.css";
 
 const GPU_BADGE_OFFSET = 12;
@@ -38,14 +46,12 @@ export function AppLayout({
   onBack, onForward, canGoBack, canGoForward,
   onSearchSelect, onNewSession,
 }: AppLayoutProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [manualSidebarReveal, setManualSidebarReveal] = useState(false);
-  const [autoSidebarHidden, setAutoSidebarHidden] = useState(false);
+  const [agentSidebar, setAgentSidebar] = useState(INITIAL_AGENT_SIDEBAR_LAYOUT_STATE);
   const [searchOpen, setSearchOpen] = useState(false);
   const [updatesOpen, setUpdatesOpen] = useState(false);
   const fullscreen = useWindowFullscreen();
   const updates = useUpdateChecker();
-  const sidebarHiddenOffset = useSidebarHiddenOffset(sidebarOpen);
+  const sidebarHiddenOffset = useSidebarHiddenOffset(agentSidebar.sidebarOpen);
 
   const [listWidth, setListWidth] = useState<number | null>(null);
   const dragging = useRef(false);
@@ -87,29 +93,22 @@ export function AppLayout({
   const openSearch = useCallback(() => setSearchOpen(true), []);
   const closeSearch = useCallback(() => setSearchOpen(false), []);
   const toggleSearch = useCallback(() => setSearchOpen((o) => !o), []);
-  const toggleSidebar = useCallback(() => {
-    setSidebarOpen((open) => {
-      const nextOpen = !open;
-      setManualSidebarReveal(nextOpen && autoSidebarHidden);
-      if (nextOpen || !autoSidebarHidden) setAutoSidebarHidden(false);
-      return nextOpen;
-    });
-  }, [autoSidebarHidden]);
+  const toggleSidebar = useCallback(() => setAgentSidebar(toggleAgentSidebar), []);
   const toggleUpdates = useCallback(() => setUpdatesOpen((o) => !o), []);
   const closeUpdates = useCallback(() => setUpdatesOpen(false), []);
-  const handleAutoSidebarHide = useCallback(() => {
-    setManualSidebarReveal(false);
-    setAutoSidebarHidden(true);
-    setSidebarOpen(false);
+  const handleAutoSidebarHide = useCallback(() => setAgentSidebar(autoHideAgentSidebar), []);
+  const handleAgentPanelsTightChange = useCallback((tight: boolean) => {
+    setAgentSidebar((state) => setAgentPanelsTight(state, tight));
   }, []);
 
   useAppLayoutShortcuts({ onBack, onForward, onNewSession, toggleSearch, toggleSidebar });
   useAgentPanelsAutoSidebar(
-    sidebarOpen,
-    manualSidebarReveal,
+    agentSidebar.sidebarOpen,
+    agentSidebar.manualReveal,
     handleAutoSidebarHide,
+    handleAgentPanelsTightChange,
   );
-  const compactAgentChat = sidebarOpen && manualSidebarReveal;
+  const compactAgentChat = shouldCompactAgentChat(agentSidebar);
   const layoutStyle = {
     "--app-sidebar-hidden-offset": `${sidebarHiddenOffset}px`,
     "--agent-chat-min-width": `${compactAgentChat ? 0 : CHAT_MIN_WIDTH}px`,
@@ -118,12 +117,12 @@ export function AppLayout({
   return (
     <PanelSlotProvider>
       <div
-        className={`app-root ${IS_MAC ? "os-mac" : "os-other"} ${sidebarOpen ? "" : "sidebar-hidden"} ${compactAgentChat ? "agent-chat-compact" : ""} ${fullscreen ? "is-fullscreen" : ""}`}
+        className={`app-root ${IS_MAC ? "os-mac" : "os-other"} ${agentSidebar.sidebarOpen ? "" : "sidebar-hidden"} ${compactAgentChat ? "agent-chat-compact" : ""} ${fullscreen ? "is-fullscreen" : ""}`}
         style={layoutStyle}
       >
         <WindowControls />
         <WindowToolbar
-          sidebarOpen={sidebarOpen}
+          sidebarOpen={agentSidebar.sidebarOpen}
           onToggleSidebar={toggleSidebar}
           onBack={onBack}
           onForward={onForward}
@@ -134,7 +133,7 @@ export function AppLayout({
           canGoBack={canGoBack}
           canGoForward={canGoForward}
         />
-        <div className={`app-sidebar-block ${sidebarOpen ? "" : "app-sidebar-hidden"}`}>
+        <div className={`app-sidebar-block ${agentSidebar.sidebarOpen ? "" : "app-sidebar-hidden"}`}>
           <Sidebar activeTab={activeTab} onTabChange={onTabChange} />
           <div
             className="app-list-panel" data-nav-zone="list" tabIndex={-1}
