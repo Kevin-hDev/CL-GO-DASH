@@ -6,6 +6,14 @@
 
 - **Single chat session** — removed the multi-tab chat; replaced with a single-session header showing the session name in bold, with smooth animation when collapsing the sidebars
 
+### Office tools improvements
+
+- **Excel formatting** — added `set_format` (bold/italic/underline, font/background color, font size), `set_number_format` (number/date/currency), `set_border` (thin/medium/thick per side), `merge_cells`, and `set_row_height` operations; available on both create and edit backends
+- **Word rich text** — paragraphs now support multiple runs with per-segment bold/italic/underline/color, plus paragraph and heading alignment
+- **Word styles** — added a proper `styles.xml` (Heading1–6 and Normal) and real OOXML list numbering via `numbering.xml` (replaces the fake `"1."`/`"•"` text prefixes)
+- **Office bug fixes** — `read_document` now preserves spaces between runs (no more collated words); empty optional fields (e.g. `bg_color: ""`) are ignored instead of erroring
+- **Security** — `rm -rf /tmp/...` is no longer a false positive of the destructive command filter (regex now requires a terminator after the dangerous target)
+
 ---
 
 ## v0.9.3
