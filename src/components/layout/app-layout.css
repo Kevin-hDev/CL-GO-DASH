@@ -5,6 +5,7 @@ body.os-mac {
 }
 
 .app-root {
+  --app-sidebar-hidden-offset: calc(var(--sidebar-collapsed) + var(--list-width) + 20px);
   display: flex;
   height: 100vh;
   padding: 1px;
@@ -33,7 +34,7 @@ body.os-mac {
 }
 
 .app-sidebar-block.app-sidebar-hidden {
-  margin-left: calc(-1 * (var(--sidebar-collapsed) + var(--list-width) + 20px));
+  margin-left: calc(-1 * var(--app-sidebar-hidden-offset));
   opacity: 0;
   pointer-events: none;
 }

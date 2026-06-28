@@ -5,6 +5,9 @@ import { IS_MAC } from "@/lib/platform";
 import { CHAT_MIN_WIDTH, FILE_PREVIEW_MIN_WIDTH } from "@/hooks/file-preview-storage";
 import { FILE_TREE_MIN_WIDTH } from "@/hooks/file-tree-layout";
 
+const SIDEBAR_HIDDEN_OFFSET_FALLBACK = 260;
+const SIDEBAR_HIDE_GUARD = 8;
+
 interface ShortcutHandlers {
   onBack: () => void;
   onForward: () => void;
@@ -21,6 +24,11 @@ export function shouldAutoHideSidebarForAgentPanels(
   return previewOpen
     && fileTreeOpen
     && detailWidth < CHAT_MIN_WIDTH + FILE_PREVIEW_MIN_WIDTH + FILE_TREE_MIN_WIDTH;
+}
+
+export function sidebarHiddenOffsetFromWidth(width: number): number {
+  const safeWidth = Number.isFinite(width) ? Math.max(0, width) : 0;
+  return Math.ceil(safeWidth) + SIDEBAR_HIDE_GUARD;
 }
 
 export function useWindowFullscreen() {
@@ -101,7 +109,11 @@ export function useAgentPanelsAutoSidebar(
   sidebarOpen: boolean,
   setSidebarOpen: Dispatch<SetStateAction<boolean>>,
 ) {
-  const autoHiddenRef = useRef(false);
+  const sidebarOpenRef = useRef(sidebarOpen);
+
+  useEffect(() => {
+    sidebarOpenRef.current = sidebarOpen;
+  }, [sidebarOpen]);
 
   useEffect(() => {
     const detail = document.querySelector(".app-detail-panel");
@@ -118,16 +130,9 @@ export function useAgentPanelsAutoSidebar(
         fileTreeOpen,
       );
 
-      if (shouldHide && sidebarOpen) {
-        autoHiddenRef.current = true;
+      if (shouldHide && sidebarOpenRef.current) {
         setSidebarOpen(false);
-        return;
       }
-      if (!shouldHide && autoHiddenRef.current && !sidebarOpen) {
-        autoHiddenRef.current = false;
-        setSidebarOpen(true);
-      }
-      if (!shouldHide && sidebarOpen) autoHiddenRef.current = false;
     };
 
     const schedule = () => {
@@ -148,5 +153,38 @@ export function useAgentPanelsAutoSidebar(
       mutationObserver.disconnect();
       window.removeEventListener("resize", schedule);
     };
-  }, [sidebarOpen, setSidebarOpen]);
+  }, [setSidebarOpen]);
+}
+
+export function useSidebarHiddenOffset(sidebarOpen: boolean): number {
+  const [offset, setOffset] = useState(SIDEBAR_HIDDEN_OFFSET_FALLBACK);
+
+  useEffect(() => {
+    const sidebar = document.querySelector(".app-sidebar-block");
+    if (!(sidebar instanceof HTMLElement)) return;
+
+    let raf = 0;
+    const measure = () => {
+      const next = sidebarHiddenOffsetFromWidth(sidebar.getBoundingClientRect().width);
+      setOffset(next);
+    };
+    const schedule = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(measure);
+    };
+
+    schedule();
+    const resizeObserver = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(schedule);
+    resizeObserver?.observe(sidebar);
+    for (const child of sidebar.children) resizeObserver?.observe(child);
+    window.addEventListener("resize", schedule);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      resizeObserver?.disconnect();
+      window.removeEventListener("resize", schedule);
+    };
+  }, [sidebarOpen]);
+
+  return offset;
 }

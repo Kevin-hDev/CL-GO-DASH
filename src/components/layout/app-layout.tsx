@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef, type ReactNode } from "react";
+import { useState, useCallback, useEffect, useRef, type CSSProperties, type ReactNode } from "react";
 import { Sidebar, type TabId } from "./sidebar";
 import { DragRegion } from "./drag-region";
 import { WindowToolbar } from "./window-toolbar";
@@ -9,7 +9,7 @@ import { IS_MAC } from "@/lib/platform";
 import { GpuStatusBadge } from "@/components/agent-local/gpu-status-badge";
 import { WindowControls } from "./window-controls";
 import { PanelSlotProvider, PanelSlotTarget } from "./panel-slots";
-import { useAgentPanelsAutoSidebar, useAppLayoutShortcuts, useWindowFullscreen } from "./use-app-layout-effects";
+import { useAgentPanelsAutoSidebar, useAppLayoutShortcuts, useSidebarHiddenOffset, useWindowFullscreen } from "./use-app-layout-effects";
 import { ModelDownloadBadge } from "./model-download-badge";
 import "./app-layout.css";
 
@@ -42,6 +42,7 @@ export function AppLayout({
   const [updatesOpen, setUpdatesOpen] = useState(false);
   const fullscreen = useWindowFullscreen();
   const updates = useUpdateChecker();
+  const sidebarHiddenOffset = useSidebarHiddenOffset(sidebarOpen);
 
   const [listWidth, setListWidth] = useState<number | null>(null);
   const dragging = useRef(false);
@@ -89,10 +90,16 @@ export function AppLayout({
 
   useAppLayoutShortcuts({ onBack, onForward, onNewSession, toggleSearch, toggleSidebar });
   useAgentPanelsAutoSidebar(sidebarOpen, setSidebarOpen);
+  const layoutStyle = {
+    "--app-sidebar-hidden-offset": `${sidebarHiddenOffset}px`,
+  } as CSSProperties;
 
   return (
     <PanelSlotProvider>
-      <div className={`app-root ${IS_MAC ? "os-mac" : "os-other"} ${sidebarOpen ? "" : "sidebar-hidden"} ${fullscreen ? "is-fullscreen" : ""}`}>
+      <div
+        className={`app-root ${IS_MAC ? "os-mac" : "os-other"} ${sidebarOpen ? "" : "sidebar-hidden"} ${fullscreen ? "is-fullscreen" : ""}`}
+        style={layoutStyle}
+      >
         <WindowControls />
         <WindowToolbar
           sidebarOpen={sidebarOpen}
