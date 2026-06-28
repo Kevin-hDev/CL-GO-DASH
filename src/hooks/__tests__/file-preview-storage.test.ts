@@ -14,6 +14,12 @@ describe("clampFilePreviewWidthForContainer", () => {
     expect(clampFilePreviewWidthForContainer(120, 1000)).toBe(FILE_PREVIEW_MIN_WIDTH);
   });
 
+  it("ouvre par défaut avec une largeur plus confortable que le minimum", async () => {
+    const storage = await import("../file-preview-storage");
+    expect(storage.FILE_PREVIEW_DEFAULT_WIDTH).toBe(360);
+    expect(storage.FILE_PREVIEW_MIN_WIDTH).toBe(250);
+  });
+
   it("tient compte de la largeur forecast ajoutée au panel", () => {
     expect(clampFilePreviewWidthForContainer(900, 1000, 100)).toBe(1000 - CHAT_MIN_WIDTH - 100);
   });

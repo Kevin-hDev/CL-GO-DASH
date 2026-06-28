@@ -9,7 +9,7 @@ import { IS_MAC } from "@/lib/platform";
 import { GpuStatusBadge } from "@/components/agent-local/gpu-status-badge";
 import { WindowControls } from "./window-controls";
 import { PanelSlotProvider, PanelSlotTarget } from "./panel-slots";
-import { useAppLayoutShortcuts, useWindowFullscreen } from "./use-app-layout-effects";
+import { useAgentPanelsAutoSidebar, useAppLayoutShortcuts, useWindowFullscreen } from "./use-app-layout-effects";
 import { ModelDownloadBadge } from "./model-download-badge";
 import "./app-layout.css";
 
@@ -88,6 +88,7 @@ export function AppLayout({
   const closeUpdates = useCallback(() => setUpdatesOpen(false), []);
 
   useAppLayoutShortcuts({ onBack, onForward, onNewSession, toggleSearch, toggleSidebar });
+  useAgentPanelsAutoSidebar(sidebarOpen, setSidebarOpen);
 
   return (
     <PanelSlotProvider>

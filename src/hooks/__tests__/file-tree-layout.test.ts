@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import {
   FILE_TREE_MAX_WIDTH,
+  FILE_TREE_FALLBACK_MIN_WIDTH,
   FILE_TREE_MIN_WIDTH,
   clampFileTreeWidthForContainer,
   measureFileTreeLayout,
@@ -31,6 +32,10 @@ describe("file tree layout", () => {
 
   it("garde la largeur minimale quand il y a assez de place", () => {
     expect(clampFileTreeWidthForContainer(120, 1200, 360)).toBe(FILE_TREE_MIN_WIDTH);
+  });
+
+  it("descend au fallback quand l'espace est serre", () => {
+    expect(clampFileTreeWidthForContainer(80, 610, 120)).toBe(FILE_TREE_FALLBACK_MIN_WIDTH);
   });
 
   it("respecte la largeur maximale statique", () => {

@@ -2,7 +2,8 @@ import { CHAT_MIN_WIDTH } from "./file-preview-storage";
 import { siblingPanelWidth } from "./file-preview-layout";
 
 export const FILE_TREE_DEFAULT_WIDTH = 240;
-export const FILE_TREE_MIN_WIDTH = 240;
+export const FILE_TREE_MIN_WIDTH = 160;
+export const FILE_TREE_FALLBACK_MIN_WIDTH = 120;
 export const FILE_TREE_MAX_WIDTH = 500;
 
 export interface FileTreeLayout {
@@ -22,7 +23,8 @@ export function clampFileTreeWidthForContainer(
 ): number {
   const available = containerWidth - CHAT_MIN_WIDTH - Math.max(0, reservedWidth);
   const maxWidth = Math.min(FILE_TREE_MAX_WIDTH, Math.max(0, available));
-  const minWidth = Math.min(FILE_TREE_MIN_WIDTH, maxWidth);
+  const compactMinWidth = maxWidth < FILE_TREE_MIN_WIDTH ? FILE_TREE_FALLBACK_MIN_WIDTH : FILE_TREE_MIN_WIDTH;
+  const minWidth = Math.min(compactMinWidth, maxWidth);
   const width = typeof value === "number" && Number.isFinite(value) ? value : FILE_TREE_DEFAULT_WIDTH;
   return Math.min(maxWidth, Math.max(minWidth, width));
 }
