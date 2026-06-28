@@ -7,6 +7,7 @@ import {
 } from "../use-app-layout-effects";
 import {
   projectedDetailWidthWithSidebarOpen,
+  sidebarProjectionWidth,
   shouldAutoHideSidebarForAgentPanels,
   useAgentPanelsAutoSidebar,
 } from "../agent-panels-auto-sidebar";
@@ -109,6 +110,18 @@ describe("projectedDetailWidthWithSidebarOpen", () => {
     expect(projectedDetailWidthWithSidebarOpen(1020, 260, false)).toBe(760);
     expect(projectedDetailWidthWithSidebarOpen(760, 260, true)).toBe(760);
   });
+
+  it("projette avec la largeur expanded quand la sidebar est masquee", () => {
+    installLayoutDom(1040, 232);
+    const sidebar = document.querySelector(".app-sidebar-block") as HTMLElement;
+    sidebar.style.setProperty("--sidebar-collapsed", "60px");
+    sidebar.style.setProperty("--sidebar-expanded", "132px");
+
+    const sidebarWidth = sidebarProjectionWidth(sidebar, false);
+
+    expect(sidebarWidth).toBe(304);
+    expect(projectedDetailWidthWithSidebarOpen(1040, sidebarWidth, false)).toBe(736);
+  });
 });
 
 describe("useAgentPanelsAutoSidebar", () => {
@@ -160,6 +173,20 @@ describe("useAgentPanelsAutoSidebar", () => {
     renderHook(() => useAgentPanelsAutoSidebar(false, false, onAutoHide, onTightChange));
 
     await waitFor(() => expect(onTightChange).toHaveBeenLastCalledWith(false));
+    expect(onAutoHide).not.toHaveBeenCalled();
+  });
+
+  it("anticipe le hover expanded quand la sidebar est masquee", async () => {
+    installLayoutDom(1040, 232);
+    const sidebar = document.querySelector(".app-sidebar-block") as HTMLElement;
+    sidebar.style.setProperty("--sidebar-collapsed", "60px");
+    sidebar.style.setProperty("--sidebar-expanded", "132px");
+    const onAutoHide = vi.fn();
+    const onTightChange = vi.fn();
+
+    renderHook(() => useAgentPanelsAutoSidebar(false, false, onAutoHide, onTightChange));
+
+    await waitFor(() => expect(onTightChange).toHaveBeenLastCalledWith(true));
     expect(onAutoHide).not.toHaveBeenCalled();
   });
 });

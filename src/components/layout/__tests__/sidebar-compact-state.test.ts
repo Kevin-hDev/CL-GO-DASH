@@ -25,10 +25,26 @@ describe("sidebar compact state", () => {
 
   it("revient au comportement normal quand l'espace n'est plus serre", () => {
     let state = autoHideAgentSidebar(INITIAL_AGENT_SIDEBAR_LAYOUT_STATE);
-    state = setAgentPanelsTight(state, false);
     state = toggleAgentSidebar(state);
+    state = setAgentPanelsTight(state, false);
 
     expect(state).toMatchObject({ sidebarOpen: true, manualReveal: false, panelsTight: false });
     expect(shouldCompactAgentChat(state)).toBe(false);
+  });
+
+  it("active l'override utilisateur meme si la projection disait que ca rentrait", () => {
+    let state = {
+      ...INITIAL_AGENT_SIDEBAR_LAYOUT_STATE,
+      sidebarOpen: false,
+      panelsTight: false,
+    };
+
+    state = toggleAgentSidebar(state);
+    expect(state).toMatchObject({ sidebarOpen: true, manualReveal: true, panelsTight: false });
+    expect(shouldCompactAgentChat(state)).toBe(false);
+
+    state = setAgentPanelsTight(state, true);
+    expect(state).toMatchObject({ sidebarOpen: true, manualReveal: true, panelsTight: true });
+    expect(shouldCompactAgentChat(state)).toBe(true);
   });
 });

@@ -15,7 +15,7 @@ export function toggleAgentSidebar(state: AgentSidebarLayoutState): AgentSidebar
   return {
     ...state,
     sidebarOpen,
-    manualReveal: sidebarOpen && state.panelsTight,
+    manualReveal: sidebarOpen,
   };
 }
 

@@ -23,6 +23,27 @@ export function projectedDetailWidthWithSidebarOpen(
   return Math.max(0, safeDetailWidth - safeSidebarWidth);
 }
 
+function cssLengthToPx(value: string, remBase: number): number {
+  const trimmed = value.trim();
+  const amount = Number.parseFloat(trimmed);
+  if (!Number.isFinite(amount)) return 0;
+  if (trimmed.endsWith("rem")) return amount * remBase;
+  return amount;
+}
+
+export function sidebarProjectionWidth(sidebar: Element | null, sidebarOpen: boolean): number {
+  if (!(sidebar instanceof HTMLElement)) return 0;
+  const width = sidebar.getBoundingClientRect().width;
+  if (sidebarOpen) return width;
+
+  const style = getComputedStyle(sidebar);
+  const rootStyle = getComputedStyle(document.documentElement);
+  const remBase = cssLengthToPx(rootStyle.fontSize, 16) || 16;
+  const collapsed = cssLengthToPx(style.getPropertyValue("--sidebar-collapsed"), remBase);
+  const expanded = cssLengthToPx(style.getPropertyValue("--sidebar-expanded"), remBase);
+  return width + Math.max(0, expanded - collapsed);
+}
+
 export function useAgentPanelsAutoSidebar(
   sidebarOpen: boolean,
   manualReveal: boolean,
@@ -47,7 +68,7 @@ export function useAgentPanelsAutoSidebar(
       const agentDetail = detail.querySelector(".agent-detail-with-preview");
       const previewOpen = !!agentDetail?.querySelector(".fp-panel.open");
       const fileTreeOpen = !!agentDetail?.querySelector(".ft-panel.open");
-      const sidebarWidth = sidebar instanceof HTMLElement ? sidebar.getBoundingClientRect().width : 0;
+      const sidebarWidth = sidebarProjectionWidth(sidebar, sidebarOpenRef.current);
       const projectedDetailWidth = projectedDetailWidthWithSidebarOpen(
         detail.getBoundingClientRect().width,
         sidebarWidth,
