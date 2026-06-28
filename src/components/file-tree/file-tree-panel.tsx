@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { filterTree } from "@/lib/file-tree-filter";
 import { FileTreeFilter } from "./file-tree-filter";
@@ -50,6 +50,13 @@ export function FileTreePanel({ tree, onFileSelect, activePath }: FileTreePanelP
     () => visibleFileTreeEntries({ rootEntries: filtered.entries, childrenMap: tree.childrenMap, expandedPaths: mergedExpanded }),
     [filtered.entries, tree.childrenMap, mergedExpanded],
   );
+  const { toggleExpand } = tree;
+  const handleToggle = useCallback((path: string) => {
+    void toggleExpand(path);
+  }, [toggleExpand]);
+  const handleSelect = useCallback((path: string) => {
+    onFileSelect(path);
+  }, [onFileSelect]);
 
   const handleTreeKeyDown = (event: React.KeyboardEvent) => {
     if (!["ArrowDown", "ArrowUp", "ArrowRight", "ArrowLeft"].includes(event.key)) return;
@@ -69,7 +76,7 @@ export function FileTreePanel({ tree, onFileSelect, activePath }: FileTreePanelP
     }
 
     if (event.key === "ArrowRight" && item.entry.is_dir) {
-      if (!mergedExpanded.has(item.entry.path)) void tree.toggleExpand(item.entry.path);
+      if (!mergedExpanded.has(item.entry.path)) handleToggle(item.entry.path);
       else {
         const firstChild = tree.childrenMap.get(item.entry.path)?.[0];
         if (firstChild) focusFileTreePath(firstChild.path);
@@ -78,7 +85,7 @@ export function FileTreePanel({ tree, onFileSelect, activePath }: FileTreePanelP
     }
 
     if (event.key === "ArrowLeft") {
-      if (item.entry.is_dir && mergedExpanded.has(item.entry.path)) void tree.toggleExpand(item.entry.path);
+      if (item.entry.is_dir && mergedExpanded.has(item.entry.path)) handleToggle(item.entry.path);
       else if (item.parentPath) focusFileTreePath(item.parentPath);
     }
   };
@@ -112,8 +119,8 @@ export function FileTreePanel({ tree, onFileSelect, activePath }: FileTreePanelP
               expandedPaths={mergedExpanded}
               childrenMap={tree.childrenMap}
               activePath={activePath}
-              onToggle={(path) => void tree.toggleExpand(path)}
-              onSelect={onFileSelect}
+              onToggle={handleToggle}
+              onSelect={handleSelect}
             />
           ))
         )}

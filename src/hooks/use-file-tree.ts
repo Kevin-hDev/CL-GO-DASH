@@ -3,10 +3,9 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import type { FileEntry } from "@/lib/file-tree-filter";
 import { cleanupTauriListener } from "@/lib/tauri-listen";
+import { clampFileTreeStoredWidth } from "./file-tree-layout";
+import { useFileTreeResize } from "./use-file-tree-resize";
 
-const DEFAULT_WIDTH = 240;
-const MIN_WIDTH = 240;
-const MAX_WIDTH = 500;
 const MAX_EXPANDED = 500;
 const MAX_CACHED_DIRS = 600;
 
@@ -18,16 +17,15 @@ function readStoredWidth(sessionId: string | null): number {
   try {
     const raw = localStorage.getItem(treeStorageKey(sessionId));
     const parsed = Number(raw);
-    if (parsed >= MIN_WIDTH && parsed <= MAX_WIDTH) return parsed;
+    return clampFileTreeStoredWidth(parsed);
   } catch { /* ignore */ }
-  return DEFAULT_WIDTH;
+  return clampFileTreeStoredWidth(undefined);
 }
 
 export function useFileTree(sessionId: string | null, projectPath: string | undefined) {
   const [open, setOpen] = useState(false);
   const [width, setWidth] = useState(() => readStoredWidth(sessionId));
-  const [resizing, setResizing] = useState(false);
-  const resizeRef = useRef<{ startX: number; startWidth: number } | null>(null);
+  const { resizing, startResize } = useFileTreeResize(open, width, setWidth);
 
   const [rootEntries, setRootEntries] = useState<FileEntry[]>([]);
   const [childrenMap, setChildrenMap] = useState<Map<string, FileEntry[]>>(new Map());
@@ -134,30 +132,6 @@ export function useFileTree(sessionId: string | null, projectPath: string | unde
   useEffect(() => {
     localStorage.setItem(treeStorageKey(sessionId), String(width));
   }, [sessionId, width]);
-
-  const startResize = useCallback((event: React.PointerEvent) => {
-    event.preventDefault();
-    resizeRef.current = { startX: event.clientX, startWidth: width };
-    setResizing(true);
-  }, [width]);
-
-  useEffect(() => {
-    const onMove = (event: PointerEvent) => {
-      if (!resizeRef.current) return;
-      const delta = resizeRef.current.startX - event.clientX;
-      setWidth(Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, resizeRef.current.startWidth + delta)));
-    };
-    const onUp = () => {
-      resizeRef.current = null;
-      setResizing(false);
-    };
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
-    return () => {
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-    };
-  }, []);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- session switch must reset the project tree state

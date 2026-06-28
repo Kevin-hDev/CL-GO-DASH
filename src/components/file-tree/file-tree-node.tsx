@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { FileIcon } from "@/components/file-preview/file-icon";
 import type { FileEntry } from "@/lib/file-tree-filter";
@@ -17,7 +17,7 @@ interface FileTreeNodeProps {
   onSelect: (path: string) => void;
 }
 
-export function FileTreeNode({
+function FileTreeNodeComponent({
   entry,
   depth,
   maxDepth,
@@ -118,3 +118,5 @@ export function FileTreeNode({
     </div>
   );
 }
+
+export const FileTreeNode = memo(FileTreeNodeComponent);

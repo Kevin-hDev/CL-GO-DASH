@@ -25,6 +25,29 @@
   transition: none;
 }
 
+body.al-panel-resizing {
+  cursor: ew-resize;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+body.al-panel-resizing .agent-detail-with-preview,
+body.al-panel-resizing .agent-detail-with-preview * {
+  cursor: ew-resize !important;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+body.al-panel-resizing .agent-detail-with-preview * {
+  pointer-events: none !important;
+}
+
+body.al-panel-resizing .fp-panel,
+body.al-panel-resizing .ft-panel,
+body.al-panel-resizing .agent-detail-chat {
+  transition: none !important;
+}
+
 .sa-parent-btn {
   position: absolute;
   top: 8px;

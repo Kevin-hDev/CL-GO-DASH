@@ -83,7 +83,7 @@ export const AgentLocalTab = memo(function AgentLocalTab({
       onSelect={(id) => void handleSelectById(id)}
       onCreate={handleCreate}
       onRename={(id, name) => void rename(id, name)}
-      onDelete={handleDeleteSession}
+      onDelete={(id) => void handleDeleteSession(id)}
       onNewSessionInProject={(pid) => void handleCreateInProject(pid)}
       onRenameProject={(id, name) => void projectsHook.rename(id, name)}
       onDeleteProject={handleDeleteProject}

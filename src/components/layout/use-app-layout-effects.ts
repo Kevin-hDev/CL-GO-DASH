@@ -56,6 +56,7 @@ export function useAppLayoutShortcuts({
 
       switch (e.code) {
         case "KeyB":
+          if (e.altKey) break;
           e.preventDefault();
           toggleSidebar();
           break;

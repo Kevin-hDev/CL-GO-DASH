@@ -40,12 +40,13 @@ export function useAgentLocalControlledPreview({ navState, filePreviewState, onN
       previewOpen: nextOpen,
       previewFullscreen: nextOpen ? navState.previewFullscreen : false,
       previewActiveTab: navState.previewActiveTab || "summary",
+      ...(nextOpen ? {} : { fileTreeOpen: false }),
     });
   }, [filePreviewState, navState.previewActiveTab, navState.previewFullscreen, navState.previewOpen, onNavChange]);
 
   const closePanel = useCallback(() => {
     filePreviewState.closePanel();
-    onNavChange?.({ previewOpen: false, previewFullscreen: false });
+    onNavChange?.({ previewOpen: false, previewFullscreen: false, fileTreeOpen: false });
   }, [filePreviewState, onNavChange]);
 
   const openOperation = useCallback((operation: FileOperation) => {

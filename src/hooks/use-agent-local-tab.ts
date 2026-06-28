@@ -127,7 +127,7 @@ export function useAgentLocalTab({ navState, onSessionChange, onNavChange, listF
     [normalizeForSelectedModel, reasoningMode, updateModel],
   );
 
-  const handleSelectById = useCallback(async (id: string) => {
+  const handleSelectById = useCallback((id: string) => {
     onSessionChange?.(id);
   }, [onSessionChange]);
 
@@ -141,6 +141,7 @@ export function useAgentLocalTab({ navState, onSessionChange, onNavChange, listF
     terminalCwd,
     onAddTerminalTab: terminal.addTab,
     onToggleTerminal: terminal.togglePanel,
+    onTogglePreview: filePreview.toggleOpen,
   });
 
   useAgentLocalTabPanelSync({ navState, filePreview: filePreviewState, terminal: terminalState });

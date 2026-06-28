@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { fileNameFromPath } from "@/lib/file-preview-utils";
-import { IS_MAC } from "@/lib/platform";
 import type { FileOperation, FilePreviewActiveTab } from "@/types/file-preview";
 import {
   clampFilePreviewWidthForContainer,
@@ -13,6 +12,7 @@ import {
   measurePreviewFullscreenWidth,
   measurePreviewLayout,
 } from "./file-preview-layout";
+import { beginPanelResize } from "./panel-resize";
 import { useFilePreviewPanelState } from "./use-file-preview-panel-state";
 const MAX_TABS = 6;
 
@@ -40,6 +40,7 @@ export function useFilePreview(sessionId: string | null, operations: FileOperati
     container: Element | null;
     reservedWidth: number;
   } | null>(null);
+  const stopResizeRef = useRef<(() => void) | null>(null);
 
   const allOperations = useMemo(() => [...operations, ...fallbackOps], [operations, fallbackOps]);
   const operationById = useMemo(() => new Map(allOperations.map((op) => [op.id, op])), [allOperations]);
@@ -103,10 +104,11 @@ export function useFilePreview(sessionId: string | null, operations: FileOperati
   }, [open, setOpen, setFullscreen]);
 
   const startResize = useCallback((event: React.PointerEvent) => {
-    event.preventDefault();
     const target = event.currentTarget as HTMLElement;
     const panel = target.closest(".fp-panel");
     const layout = measurePreviewLayout(panel, extraWidth);
+    stopResizeRef.current?.();
+    stopResizeRef.current = beginPanelResize(event, ".fp-panel");
     resizeRef.current = {
       startX: event.clientX,
       startWidth: width,
@@ -153,28 +155,23 @@ export function useFilePreview(sessionId: string | null, operations: FileOperati
         resizeRef.current.reservedWidth,
       ));
     };
-    const onUp = () => {
+    const stopResize = () => {
       resizeRef.current = null;
+      stopResizeRef.current?.();
+      stopResizeRef.current = null;
       setResizing(false);
     };
     window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointerup", stopResize);
+    window.addEventListener("pointercancel", stopResize);
     return () => {
       window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointerup", stopResize);
+      window.removeEventListener("pointercancel", stopResize);
+      stopResizeRef.current?.();
+      stopResizeRef.current = null;
     };
   }, [setWidth]);
-
-  useEffect(() => {
-    const handler = (event: KeyboardEvent) => {
-      const mod = IS_MAC ? event.metaKey : event.ctrlKey;
-      if (!mod || !event.altKey || event.code !== "KeyB") return;
-      event.preventDefault();
-      toggleOpen();
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [toggleOpen]);
 
   return {
     open,
