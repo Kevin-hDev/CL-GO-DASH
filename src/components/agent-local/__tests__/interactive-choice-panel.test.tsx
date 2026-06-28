@@ -22,6 +22,7 @@ vi.mock("react-i18next", () => ({
 vi.mock("../interactive-choice-panel.css", () => ({}));
 
 const request = {
+  sessionId: "session-1",
   id: "choice-1",
   currentIndex: 0,
   total: 1,
@@ -57,6 +58,7 @@ describe("InteractiveChoicePanel", () => {
     fireEvent.click(screen.getByText("Complete"));
 
     await waitFor(() => expect(invoke).toHaveBeenCalledWith("respond_to_interactive_choice", {
+      sessionId: "session-1",
       id: "choice-1",
       answers: [{ questionIndex: 0, selectedIds: ["complete"], selectedLabels: ["Complete"] }],
     }));
@@ -70,6 +72,7 @@ describe("InteractiveChoicePanel", () => {
     fireEvent.keyDown(window, { key: "Enter" });
 
     await waitFor(() => expect(invoke).toHaveBeenCalledWith("respond_to_interactive_choice", {
+      sessionId: "session-1",
       id: "choice-1",
       answers: [{ questionIndex: 0, selectedIds: ["complete"], selectedLabels: ["Complete"] }],
     }));
@@ -85,6 +88,7 @@ describe("InteractiveChoicePanel", () => {
     fireEvent.keyDown(window, { key: "Enter" });
 
     await waitFor(() => expect(invoke).toHaveBeenCalledWith("respond_to_interactive_choice", {
+      sessionId: "session-1",
       id: "choice-1",
       answers: [{
         questionIndex: 0,

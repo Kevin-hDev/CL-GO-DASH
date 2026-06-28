@@ -88,6 +88,15 @@ mod tests {
     }
 
     #[test]
+    fn post_hook_redacts_read_file_secret() {
+        let result = ToolResult::ok("token=abcd123456");
+        let args = json!({ "path": ".env" });
+        let after = run_post_hooks("read_file", &args, result);
+        assert!(!after.content.contains("abcd123456"));
+        assert!(after.content.contains("[REDACTED]"));
+    }
+
+    #[test]
     fn post_hook_passes_through_error() {
         let result = ToolResult::err("quelque chose a échoué");
         let args = json!({});
@@ -102,6 +111,14 @@ mod tests {
         let args = json!({ "command": "cat .env" });
         let after = run_post_hooks("bash", &args, result);
         assert!(!after.content.contains("abcd1234"));
+        assert!(after.content.contains("[REDACTED]"));
+    }
+
+    #[test]
+    fn post_hook_redacts_pem_block() {
+        let pem = "-----BEGIN PRIVATE KEY-----\nabcdef\n-----END PRIVATE KEY-----";
+        let after = run_post_hooks("grep", &json!({}), ToolResult::ok(pem));
+        assert!(!after.content.contains("abcdef"));
         assert!(after.content.contains("[REDACTED]"));
     }
 }

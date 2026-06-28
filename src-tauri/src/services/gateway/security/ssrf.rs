@@ -120,7 +120,7 @@ fn is_blocked_host_literal(host: &str) -> bool {
         || host.starts_with("192.168.")
         || host.starts_with("169.254.")
         || host.starts_with("fc00:")
-        || host.starts_with("fd")
+        || (host.starts_with("fd") && host.contains(':'))
         || host.starts_with("fe80:")
         || host.starts_with("::ffff:127.")
 }

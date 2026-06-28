@@ -2,16 +2,25 @@ use crate::services::agent_local::types_tools::ToolResult;
 use serde_json::Value;
 use std::path::Path;
 
+const MAX_LOG_BYTES: u64 = 10 * 1024 * 1024;
+
 fn log_tool_call(tool_name: &str, args: &Value) {
     let entry = serde_json::json!({
         "ts": chrono::Local::now().to_rfc3339(),
         "tool": tool_name,
-        "args": args,
+        "args": crate::services::agent_local::sensitive_data::redact_json(args),
     });
     eprintln!("[office-tool] {}", entry);
     let dir = crate::services::paths::data_dir().join("logs");
     let _ = std::fs::create_dir_all(&dir);
     let path = dir.join("tool-calls.jsonl");
+    if std::fs::metadata(&path)
+        .map(|meta| meta.len() > MAX_LOG_BYTES)
+        .unwrap_or(false)
+    {
+        let rotated = dir.join("tool-calls.jsonl.1");
+        let _ = std::fs::rename(&path, rotated);
+    }
     if let Ok(mut f) = std::fs::OpenOptions::new()
         .create(true)
         .append(true)

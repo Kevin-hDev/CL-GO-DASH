@@ -15,7 +15,7 @@ pub async fn request_approval(
     title: &str,
 ) -> ToolResult {
     let questions = vec![approval_question()];
-    match super::interactive_choice_gate::request(on_event, questions, cancel).await {
+    match super::interactive_choice_gate::request(on_event, session_id, questions, cancel).await {
         Ok(answers) => {
             match super::tool_plan_approval::record_answers(session_id, &answers, on_event).await {
                 Ok(decision) => {

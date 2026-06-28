@@ -69,6 +69,15 @@ pub(super) async fn execute_write(
         Ok(()) => {
             if cancel.is_cancelled() {
                 ToolResult::err("Annulé.")
+            } else if let Err(msg) = super::tool_plan_guard::ensure_allowed_for_session(
+                name,
+                args,
+                session_id,
+                plan_mode_active,
+            )
+            .await
+            {
+                tool_dispatcher::enrich_error(ToolResult::err(msg), name)
             } else {
                 dispatch_or_interactive(
                     on_event,

@@ -1,7 +1,9 @@
 use crate::services::agent_local::security::validate_read_path;
+use crate::services::agent_local::tool_office_limits::{ensure_source_size, MAX_CSV_SOURCE_BYTES};
 use crate::services::agent_local::types_tools::ToolResult;
 use regex::Regex;
 use serde_json::Value;
+use std::io::BufRead;
 use std::path::Path;
 use std::sync::LazyLock;
 
@@ -87,10 +89,14 @@ fn detect_csv_delimiter(first_line: &str) -> u8 {
 }
 
 pub fn read_csv(resolved: &Path, max_rows: usize) -> Result<Value, String> {
-    let content = std::fs::read_to_string(resolved)
-        .map_err(|_| "Impossible de lire le fichier".to_string())?;
-    let first_line = content.lines().next().unwrap_or("");
-    let delimiter = detect_csv_delimiter(first_line);
+    ensure_source_size(resolved, MAX_CSV_SOURCE_BYTES, "CSV")?;
+    let file =
+        std::fs::File::open(resolved).map_err(|_| "Impossible de lire le fichier".to_string())?;
+    let mut first_line = String::new();
+    std::io::BufReader::new(file)
+        .read_line(&mut first_line)
+        .map_err(|_| "Impossible de lire le CSV".to_string())?;
+    let delimiter = detect_csv_delimiter(&first_line);
 
     let mut rdr = csv::ReaderBuilder::new()
         .delimiter(delimiter)

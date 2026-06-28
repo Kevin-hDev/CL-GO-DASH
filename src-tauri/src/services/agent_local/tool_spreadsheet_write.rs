@@ -1,4 +1,7 @@
 use crate::services::agent_local::security::validate_write_path;
+use crate::services::agent_local::tool_office_limits::{
+    ensure_source_size, validate_zip_archive, MAX_SPREADSHEET_SOURCE_BYTES,
+};
 use crate::services::agent_local::types_tools::ToolResult;
 use serde_json::Value;
 use std::path::Path;
@@ -29,12 +32,6 @@ fn try_parse_json_array(s: &str) -> Option<Vec<Value>> {
     if let Ok(parsed) = serde_json::from_str::<Value>(trimmed) {
         return coerce_parsed(parsed);
     }
-    let repaired = repair_json(trimmed);
-    if repaired != trimmed {
-        if let Ok(parsed) = serde_json::from_str::<Value>(&repaired) {
-            return coerce_parsed(parsed);
-        }
-    }
     None
 }
 
@@ -48,18 +45,17 @@ fn coerce_parsed(val: Value) -> Option<Vec<Value>> {
     None
 }
 
-fn repair_json(s: &str) -> String {
-    let mut r = s.replace("], {", "]}, {").replace("],{", "]},{");
-    r = r.replace(",]", "]").replace(", ]", "]");
-    r = r.replace(",}", "}").replace(", }", "}");
-    if r.starts_with('[') && !r.ends_with(']') {
-        r.push(']');
+pub fn validate_spreadsheet_input(path: &Path) -> Result<(), String> {
+    ensure_source_size(path, MAX_SPREADSHEET_SOURCE_BYTES, "Spreadsheet")?;
+    let ext = path
+        .extension()
+        .and_then(|e| e.to_str())
+        .map(|s| s.to_ascii_lowercase())
+        .unwrap_or_default();
+    if matches!(ext.as_str(), "xlsx" | "xlsm" | "ods") {
+        validate_zip_archive(path, "Spreadsheet")?;
     }
-    if r.starts_with('{') && !r.ends_with('}') && !r.starts_with("[{") {
-        r.push('}');
-    }
-    r = r.replace('\'', "\"");
-    r
+    Ok(())
 }
 
 pub fn describe_value_type(value: &Value) -> String {
@@ -144,5 +140,6 @@ pub fn parse_cell_ref(cell: &str) -> Option<(u32, u16)> {
         return None;
     }
 
-    Some((row_num - 1, col_idx as u16))
+    let col = u16::try_from(col_idx).ok()?;
+    Some((row_num - 1, col))
 }

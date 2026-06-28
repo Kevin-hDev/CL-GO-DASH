@@ -24,7 +24,17 @@ fn is_protected_app_file(path_str: &str) -> bool {
 pub fn run_pre_hooks(tool_name: &str, args: &Value) -> PreHookDecision {
     if matches!(
         tool_name,
-        "write_file" | "edit_file" | "read_file" | "write_spreadsheet" | "write_document"
+        "write_file"
+            | "edit_file"
+            | "read_file"
+            | "write_spreadsheet"
+            | "write_document"
+            | "list_dir"
+            | "glob"
+            | "grep"
+            | "read_spreadsheet"
+            | "read_document"
+            | "read_image"
     ) {
         if let Some(path) = args["path"].as_str() {
             if path.contains("..") {
@@ -62,7 +72,10 @@ pub fn run_pre_hooks(tool_name: &str, args: &Value) -> PreHookDecision {
 /// Hooks exécutés APRÈS chaque tool call.
 /// Peut modifier le résultat (ex: filtrer des données sensibles).
 pub fn run_post_hooks(tool_name: &str, _args: &Value, result: ToolResult) -> ToolResult {
-    if tool_name == "bash" {
+    if matches!(
+        tool_name,
+        "bash" | "read_file" | "grep" | "glob" | "list_dir"
+    ) {
         return ToolResult {
             content: crate::services::agent_local::sensitive_data::redact_text(&result.content),
             ..result

@@ -1,9 +1,16 @@
 use crate::services::agent_local::security::{validate_read_path, validate_write_path};
+use crate::services::agent_local::tool_office_limits::{
+    ensure_source_size, MAX_IMAGE_SOURCE_BYTES,
+};
 use crate::services::agent_local::types_tools::ToolResult;
 use image::imageops::FilterType;
 use image::DynamicImage;
+use image::ImageReader;
 use serde_json::Value;
 use std::path::Path;
+
+const MAX_DIMENSION: u32 = 8000;
+const MAX_PIXELS: u64 = 50_000_000;
 
 pub async fn process_image(
     input_path: &str,
@@ -31,6 +38,13 @@ pub async fn process_image(
         Ok(p) => p,
         Err(e) => return ToolResult::err(e),
     };
+
+    if let Err(e) = ensure_source_size(&validated_in, MAX_IMAGE_SOURCE_BYTES, "Image") {
+        return ToolResult::err(e);
+    }
+    if let Err(e) = validate_image_dimensions(&validated_in) {
+        return ToolResult::err(e);
+    }
 
     let mut img = match image::open(&validated_in) {
         Ok(i) => i,
@@ -71,6 +85,7 @@ pub async fn process_image(
 
     let (width, height) = (img.width(), img.height());
 
+    let warning = webp_quality_warning(&validated_out, quality);
     if let Err(e) = save_image(&img, &validated_out, quality) {
         return ToolResult::err(e);
     }
@@ -84,18 +99,16 @@ pub async fn process_image(
         "output_path": validated_out.to_string_lossy(),
         "width": width,
         "height": height,
-        "file_size_bytes": file_size
+        "file_size_bytes": file_size,
+        "warning": warning
     });
     ToolResult::ok(json.to_string())
 }
 
 fn apply_resize(img: DynamicImage, op: &Value) -> Result<DynamicImage, ToolResult> {
-    let w = op["width"]
-        .as_u64()
-        .ok_or_else(|| ToolResult::err("resize: 'width' requis"))? as u32;
-    let h = op["height"]
-        .as_u64()
-        .ok_or_else(|| ToolResult::err("resize: 'height' requis"))? as u32;
+    let w = bounded_dimension(&op["width"], "resize: 'width' requis")?;
+    let h = bounded_dimension(&op["height"], "resize: 'height' requis")?;
+    ensure_pixel_budget(w, h)?;
     let mode = op["mode"].as_str().unwrap_or("fit");
 
     let resized = match mode {
@@ -107,20 +120,65 @@ fn apply_resize(img: DynamicImage, op: &Value) -> Result<DynamicImage, ToolResul
 }
 
 fn apply_crop(img: DynamicImage, op: &Value) -> Result<DynamicImage, ToolResult> {
-    let x = op["x"]
-        .as_u64()
-        .ok_or_else(|| ToolResult::err("crop: 'x' requis"))? as u32;
-    let y = op["y"]
-        .as_u64()
-        .ok_or_else(|| ToolResult::err("crop: 'y' requis"))? as u32;
-    let w = op["width"]
-        .as_u64()
-        .ok_or_else(|| ToolResult::err("crop: 'width' requis"))? as u32;
-    let h = op["height"]
-        .as_u64()
-        .ok_or_else(|| ToolResult::err("crop: 'height' requis"))? as u32;
+    let x = bounded_coordinate(&op["x"], "crop: 'x' requis")?;
+    let y = bounded_coordinate(&op["y"], "crop: 'y' requis")?;
+    let w = bounded_dimension(&op["width"], "crop: 'width' requis")?;
+    let h = bounded_dimension(&op["height"], "crop: 'height' requis")?;
+    ensure_pixel_budget(w, h)?;
+    if x.saturating_add(w) > img.width() || y.saturating_add(h) > img.height() {
+        return Err(ToolResult::err("crop hors limites de l'image"));
+    }
 
     Ok(img.crop_imm(x, y, w, h))
+}
+
+fn validate_image_dimensions(path: &Path) -> Result<(), String> {
+    let reader = ImageReader::open(path)
+        .map_err(|_| "Impossible d'ouvrir l'image".to_string())?
+        .with_guessed_format()
+        .map_err(|_| "Format image invalide".to_string())?;
+    let (w, h) = reader
+        .into_dimensions()
+        .map_err(|_| "Impossible de lire les dimensions de l'image".to_string())?;
+    if w == 0 || h == 0 || w > MAX_DIMENSION || h > MAX_DIMENSION {
+        return Err("Dimensions image non supportées".to_string());
+    }
+    ensure_pixel_budget(w, h).map_err(|e| e.content)
+}
+
+fn bounded_dimension(value: &Value, missing: &str) -> Result<u32, ToolResult> {
+    let raw = value.as_u64().ok_or_else(|| ToolResult::err(missing))?;
+    let dimension = u32::try_from(raw).map_err(|_| ToolResult::err("Dimension trop grande"))?;
+    if dimension == 0 || dimension > MAX_DIMENSION {
+        return Err(ToolResult::err("Dimension hors limites"));
+    }
+    Ok(dimension)
+}
+
+fn bounded_coordinate(value: &Value, missing: &str) -> Result<u32, ToolResult> {
+    let raw = value.as_u64().ok_or_else(|| ToolResult::err(missing))?;
+    u32::try_from(raw).map_err(|_| ToolResult::err("Coordonnée trop grande"))
+}
+
+fn ensure_pixel_budget(w: u32, h: u32) -> Result<(), ToolResult> {
+    let pixels = u64::from(w).saturating_mul(u64::from(h));
+    if pixels > MAX_PIXELS {
+        return Err(ToolResult::err("Image trop grande"));
+    }
+    Ok(())
+}
+
+fn webp_quality_warning(path: &Path, quality: Option<u8>) -> Option<&'static str> {
+    let ext = path
+        .extension()
+        .and_then(|e| e.to_str())
+        .map(|s| s.to_ascii_lowercase())
+        .unwrap_or_default();
+    if quality.is_some() && ext == "webp" {
+        Some("quality ignorée pour WebP lossless")
+    } else {
+        None
+    }
 }
 
 fn save_image(img: &DynamicImage, path: &Path, quality: Option<u8>) -> Result<(), String> {

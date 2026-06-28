@@ -23,6 +23,15 @@ const DESTRUCTIVE_PATTERNS: &[&str] = &[
 ];
 
 static S7_EVAL_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r#"eval\s+"?\$"#).unwrap());
+static FIND_DELETE_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"(?i)\bfind\b.*\s-delete\b").unwrap());
+static RSYNC_DELETE_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"(?i)\brsync\b.*\s--delete\b").unwrap());
+static DD_DEVICE_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"(?i)\bdd\b.*\bof=/dev/").unwrap());
+static RM_RF_TARGET_REGEX: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"(?i)\brm\s+-[a-z]*r[a-z]*f[a-z]*\s+(/|~|\$home|\$\{home\})(\s|$)").unwrap()
+});
 
 fn config_allowed_paths() -> Vec<PathBuf> {
     crate::services::config::read_config()
@@ -38,18 +47,23 @@ pub fn allowed_write_roots() -> Vec<PathBuf> {
 }
 
 pub fn check_destructive_command(cmd: &str) -> Result<(), String> {
+    let normalized = cmd.split_whitespace().collect::<Vec<_>>().join(" ");
+    let normalized_lower = normalized.to_ascii_lowercase();
     for pattern in DESTRUCTIVE_PATTERNS {
-        if cmd.contains(pattern) {
+        if normalized_lower.contains(&pattern.to_ascii_lowercase()) {
             return Err(format!(
                 "Commande bloquée : pattern dangereux « {pattern} »"
             ));
         }
     }
-    if S7_EVAL_REGEX.is_match(cmd) {
-        return Err(
-            "Commande bloquée : eval avec expansion de variable (utiliser une liste d'arguments)"
-                .into(),
-        );
+    if S7_EVAL_REGEX.is_match(&normalized)
+        || FIND_DELETE_REGEX.is_match(&normalized)
+        || RSYNC_DELETE_REGEX.is_match(&normalized)
+        || DD_DEVICE_REGEX.is_match(&normalized)
+        || RM_RF_TARGET_REGEX.is_match(&normalized)
+        || normalized_lower.contains("mkfs ")
+    {
+        return Err("Commande bloquée : pattern dangereux détecté".into());
     }
     Ok(())
 }

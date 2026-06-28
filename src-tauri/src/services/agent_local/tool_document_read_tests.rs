@@ -68,6 +68,23 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn read_docx_rejects_malformed_xml() {
+        let tmp = working_dir();
+        let docx_path = tmp.path().join("bad.docx");
+        let file = std::fs::File::create(&docx_path).unwrap();
+        let mut zip = zip::ZipWriter::new(file);
+        let options = zip::write::SimpleFileOptions::default();
+        zip.start_file("word/document.xml", options).unwrap();
+        use std::io::Write;
+        zip.write_all(br#"<w:document><w:p><w:t>partial"#).unwrap();
+        zip.finish().unwrap();
+
+        let result = read_document(docx_path.to_str().unwrap(), None, tmp.path()).await;
+        assert!(result.is_error);
+        assert!(result.content.contains("malformé"));
+    }
+
+    #[tokio::test]
     async fn read_invalid_path() {
         let tmp = working_dir();
         let result = read_document("/nonexistent/file.pdf", None, tmp.path()).await;

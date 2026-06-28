@@ -93,6 +93,7 @@ pub enum StreamEvent {
     },
     #[serde(rename_all = "camelCase")]
     InteractiveChoiceRequest {
+        session_id: String,
         id: String,
         questions: Vec<crate::services::agent_local::types_interactive::AgentInteractiveQuestion>,
         current_index: usize,

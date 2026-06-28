@@ -14,6 +14,7 @@ export interface AgentInteractiveQuestion {
 }
 
 export interface AgentInteractiveChoiceRequest {
+  sessionId: string;
   id: string;
   questions: AgentInteractiveQuestion[];
   currentIndex: number;

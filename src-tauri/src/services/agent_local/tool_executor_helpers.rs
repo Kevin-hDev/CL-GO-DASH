@@ -10,8 +10,14 @@ pub fn check_write_guard(
     working_dir: &std::path::Path,
     write_guard: &mut WriteGuard,
 ) -> Result<(), String> {
-    if matches!(name, "write_file" | "edit_file") {
-        let path_str = args["path"].as_str().unwrap_or("");
+    let path_str = match name {
+        "write_file" | "edit_file" | "write_spreadsheet" | "write_document" => {
+            args["path"].as_str().unwrap_or("")
+        }
+        "process_image" => args["output_path"].as_str().unwrap_or(""),
+        _ => "",
+    };
+    if !path_str.is_empty() {
         let p = std::path::Path::new(path_str);
         let resolved = if p.is_absolute() {
             p.to_path_buf()
@@ -30,8 +36,15 @@ pub fn post_record_read(
     tr: &ToolResult,
     write_guard: &mut WriteGuard,
 ) {
-    if name == "read_file" && !tr.is_error {
-        if let Some(path_str) = args["path"].as_str() {
+    if !tr.is_error {
+        let path_str = match name {
+            "read_file" | "read_document" | "read_spreadsheet" | "read_image" => {
+                args["path"].as_str()
+            }
+            "process_image" => args["input_path"].as_str(),
+            _ => None,
+        };
+        if let Some(path_str) = path_str {
             let p = std::path::Path::new(path_str);
             let resolved = if p.is_absolute() {
                 p.to_path_buf()

@@ -46,6 +46,7 @@ describe("thinking", () => {
 describe("interactiveChoiceRequest", () => {
   it("stocke la demande interactive courante", () => {
     const request = {
+      sessionId: "session-1",
       id: "choice-1",
       currentIndex: 0,
       total: 1,

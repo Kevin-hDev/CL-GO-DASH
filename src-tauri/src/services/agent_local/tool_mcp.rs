@@ -3,8 +3,10 @@ use serde_json::Value;
 use crate::services::agent_local::types_tools::ToolResult;
 use crate::services::mcp_bridge::registry;
 use crate::services::mcp_bridge::transport::McpToolDef;
+use std::time::Duration;
 
 const MAX_TOOLS_PER_SERVICE: usize = 15;
+const MCP_CALL_TIMEOUT: Duration = Duration::from_secs(60);
 
 pub async fn execute(args: &Value) -> ToolResult {
     let mode = args["mode"].as_str().unwrap_or("search");
@@ -135,9 +137,15 @@ async fn call(args: &Value) -> ToolResult {
         return ToolResult::err("arguments MCP trop volumineux (max 64 Ko)".to_string());
     }
 
-    match connector.transport.call_tool(tool_name, arguments).await {
-        Ok(result) => ToolResult::ok(sanitize_mcp_output(&result)),
-        Err(_) => ToolResult::err("appel MCP échoué".to_string()),
+    match tokio::time::timeout(
+        MCP_CALL_TIMEOUT,
+        connector.transport.call_tool(tool_name, arguments),
+    )
+    .await
+    {
+        Ok(Ok(result)) => ToolResult::ok(sanitize_mcp_output(&result)),
+        Ok(Err(_)) => ToolResult::err("appel MCP échoué".to_string()),
+        Err(_) => ToolResult::err("Le connecteur MCP n'a pas répondu dans les temps.".to_string()),
     }
 }
 

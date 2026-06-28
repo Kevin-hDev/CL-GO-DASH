@@ -4,7 +4,12 @@ import { LinkPreviewCard } from "@/components/agent-local/link-preview-card";
 const MAX_PREVIEWS = 5;
 
 function isPreviewEnabled(): boolean {
-  return localStorage.getItem("clgo-link-preview") !== "false";
+  if (typeof localStorage === "undefined") return true;
+  try {
+    return localStorage.getItem("clgo-link-preview") !== "false";
+  } catch {
+    return true;
+  }
 }
 
 interface LinkifyResult {

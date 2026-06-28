@@ -1,11 +1,12 @@
 use crate::services::agent_local::tool_office_utils::{
-    coerce_values_array, normalize_formula, value_as_f64, value_as_u32,
+    coerce_values_array, normalize_formula, try_value_as_u32, value_as_f64,
 };
 use crate::services::agent_local::tool_spreadsheet_write::parse_cell_ref;
 use serde_json::Value;
 use std::path::Path;
 
 pub fn edit_xlsx(path: &Path, ops: &[Value]) -> Result<(), String> {
+    super::tool_spreadsheet_write::validate_spreadsheet_input(path)?;
     let mut book = umya_spreadsheet::reader::xlsx::read(path)
         .map_err(|_| "Impossible d'ouvrir le fichier xlsx".to_string())?;
 
@@ -21,7 +22,7 @@ pub fn edit_xlsx(path: &Path, ops: &[Value]) -> Result<(), String> {
                     .map_err(|_| "Erreur création feuille".to_string())?;
             }
             "set_column_width" => apply_set_column_width(&mut book, op)?,
-            _ => {}
+            _ => return Err(format!("Opération inconnue: {op_type}")),
         }
     }
 
@@ -65,7 +66,7 @@ fn apply_set_formula(book: &mut umya_spreadsheet::Spreadsheet, op: &Value) -> Re
 }
 
 fn apply_set_row(book: &mut umya_spreadsheet::Spreadsheet, op: &Value) -> Result<(), String> {
-    let row_idx = value_as_u32(&op["row"]).unwrap_or(0);
+    let row_idx = try_value_as_u32(&op["row"], "row")?;
     let row_1based = row_idx + 1;
     let values = match coerce_values_array(&op["values"]) {
         Some(v) => v,
@@ -77,9 +78,11 @@ fn apply_set_row(book: &mut umya_spreadsheet::Spreadsheet, op: &Value) -> Result
         .ok_or("Feuille introuvable")?;
 
     for (col_idx, val) in values.iter().enumerate() {
-        let col_1based = (col_idx as u32) + 1;
+        let col_1based = u32::try_from(col_idx)
+            .map_err(|_| "col trop grand".to_string())?
+            .saturating_add(1);
         let cell = sheet.get_cell_mut((col_1based, row_1based));
-        set_cell_value(cell, &val);
+        set_cell_value(cell, val);
     }
     Ok(())
 }
@@ -88,7 +91,7 @@ fn apply_set_column_width(
     book: &mut umya_spreadsheet::Spreadsheet,
     op: &Value,
 ) -> Result<(), String> {
-    let col_idx = value_as_u32(&op["col"]).unwrap_or(0);
+    let col_idx = try_value_as_u32(&op["col"], "col")?;
     let col_1based = col_idx + 1;
     let width = value_as_f64(&op["width"]).unwrap_or(8.43);
     let sheet_name = resolve_sheet_name(book, op);
@@ -106,8 +109,8 @@ fn resolve_col_row_1based(op: &Value) -> Result<(u32, u32), String> {
         let (row_0b, col_0b) = parse_cell_ref(cell_str).ok_or("Référence de cellule invalide")?;
         Ok((col_0b as u32 + 1, row_0b + 1))
     } else {
-        let row = value_as_u32(&op["row"]).unwrap_or(0);
-        let col = value_as_u32(&op["col"]).unwrap_or(0);
+        let row = try_value_as_u32(&op["row"], "row")?;
+        let col = try_value_as_u32(&op["col"], "col")?;
         Ok((col + 1, row + 1))
     }
 }
@@ -115,9 +118,7 @@ fn resolve_col_row_1based(op: &Value) -> Result<(u32, u32), String> {
 fn set_cell_value(cell: &mut umya_spreadsheet::Cell, val: &Value) {
     match val {
         Value::String(s) => {
-            if s.starts_with('=') {
-                cell.set_formula(&normalize_formula(s));
-            } else if let Ok(n) = s.parse::<f64>() {
+            if let Ok(n) = s.parse::<f64>() {
                 cell.set_value_number(n);
             } else if s.eq_ignore_ascii_case("true") || s.eq_ignore_ascii_case("false") {
                 cell.set_value_bool(s.eq_ignore_ascii_case("true"));
@@ -133,7 +134,7 @@ fn set_cell_value(cell: &mut umya_spreadsheet::Cell, val: &Value) {
         }
         Value::Null => {}
         _ => {
-            cell.set_value(&val.to_string());
+            cell.set_value(val.to_string());
         }
     }
 }

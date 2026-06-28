@@ -4,11 +4,13 @@ use crate::services::agent_local::write_guard::WriteGuard;
 use futures_util::future::join_all;
 use serde_json::Value;
 use std::collections::HashMap;
+use std::time::Duration;
 use tokio_util::sync::CancellationToken;
 
 use super::tool_executor_helpers::post_record_read;
 
 const MAX_PARALLEL: usize = 10;
+const READ_BATCH_TIMEOUT: Duration = Duration::from_secs(600);
 
 pub(super) struct BatchEntry<'a> {
     pub global_idx: usize,
@@ -60,18 +62,33 @@ pub(super) async fn flush_read_batch<'a>(
                 .iter()
                 .map(|&pos| dispatch_pending(&chunk[pos], working_dir, session_id, request_id))
                 .collect();
-            let dispatched = join_all(futs).await;
-            for (pos, tr) in pending_indices.iter().zip(dispatched.into_iter()) {
-                let entry = &chunk[*pos];
-                post_record_read(
-                    entry.name,
-                    entry.effective_args,
-                    working_dir,
-                    &tr,
-                    write_guard,
-                );
-                let tr = run_post_hooks(entry.name, entry.effective_args, tr);
-                chunk_results[*pos] = Some(tr);
+            let dispatched = tokio::select! {
+                results = join_all(futs) => Some(results),
+                _ = cancel.cancelled() => None,
+                _ = tokio::time::sleep(READ_BATCH_TIMEOUT) => None,
+            };
+            if let Some(dispatched) = dispatched {
+                for (pos, tr) in pending_indices.iter().zip(dispatched.into_iter()) {
+                    let entry = &chunk[*pos];
+                    post_record_read(
+                        entry.name,
+                        entry.effective_args,
+                        working_dir,
+                        &tr,
+                        write_guard,
+                    );
+                    let tr = run_post_hooks(entry.name, entry.effective_args, tr);
+                    chunk_results[*pos] = Some(tr);
+                }
+            } else {
+                let msg = if cancel.is_cancelled() {
+                    "Annulé."
+                } else {
+                    "Timeout du batch de lectures."
+                };
+                for pos in &pending_indices {
+                    chunk_results[*pos] = Some(ToolResult::err(msg));
+                }
             }
         }
 

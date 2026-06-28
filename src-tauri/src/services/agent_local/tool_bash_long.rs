@@ -38,6 +38,7 @@ pub async fn execute_background_shell(
     working_dir: &Path,
     timeout_secs: Option<u64>,
 ) -> Result<ShellOutput, String> {
+    super::security::check_destructive_command(command)?;
     let (shell, flag) = super::tool_bash::detect_shell();
     let mut child = Command::new(&shell)
         .args([&flag, command])

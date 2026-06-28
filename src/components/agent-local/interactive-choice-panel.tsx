@@ -51,7 +51,11 @@ function InteractiveChoicePanelInner({
       return;
     }
     setSubmitting(true);
-    await invoke("respond_to_interactive_choice", { id: request.id, answers: nextAnswers });
+    await invoke("respond_to_interactive_choice", {
+      sessionId: request.sessionId,
+      id: request.id,
+      answers: nextAnswers,
+    });
     onResolved?.();
   }, [answers, onResolved, request, step, submitting]);
 
@@ -81,6 +85,7 @@ function InteractiveChoicePanelInner({
 
   const cancel = useCallback(() => {
     void invoke("respond_to_interactive_choice", {
+      sessionId: request.sessionId,
       id: request.id,
       answers: [],
     }).then(() => onResolved?.()).catch(() => undefined);

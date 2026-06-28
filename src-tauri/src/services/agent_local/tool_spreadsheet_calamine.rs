@@ -2,6 +2,9 @@ use calamine::{Data, Reader};
 use serde_json::Value;
 use std::path::Path;
 
+const EXTRA_ROW_FOR_TRUNCATION: usize = 1;
+const HARD_MAX_COLS: usize = 1000;
+
 fn cell_or_formula(
     cell: &Data,
     abs_row: u32,
@@ -38,6 +41,7 @@ pub fn read_excel(
     range_str: Option<&str>,
     max_rows: usize,
 ) -> Result<Value, String> {
+    super::tool_spreadsheet_write::validate_spreadsheet_input(resolved)?;
     let mut workbook: calamine::Sheets<_> = calamine::open_workbook_auto(resolved)
         .map_err(|_| "Impossible d'ouvrir le fichier".to_string())?;
 
@@ -82,6 +86,7 @@ pub fn read_excel(
                     .iter()
                     .enumerate()
                     .filter(|(col_idx, _)| *col_idx >= cs && *col_idx <= ce)
+                    .take(HARD_MAX_COLS)
                     .map(|(col_idx, cell)| {
                         let abs_row = start_row + row_idx as u32;
                         let abs_col = start_col + col_idx as u32;
@@ -93,6 +98,7 @@ pub fn read_excel(
                 Some(
                     row.iter()
                         .enumerate()
+                        .take(HARD_MAX_COLS)
                         .map(|(col_idx, cell)| {
                             let abs_row = start_row + row_idx as u32;
                             let abs_col = start_col + col_idx as u32;
@@ -102,6 +108,11 @@ pub fn read_excel(
                 )
             }
         })
+        .take(
+            max_rows
+                .saturating_add(EXTRA_ROW_FOR_TRUNCATION)
+                .saturating_add(1),
+        )
         .collect();
 
     super::tool_spreadsheet_read::build_result(all_rows, max_rows, &sheet_name, &sheet_names)

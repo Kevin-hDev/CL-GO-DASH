@@ -1,5 +1,5 @@
 use crate::services::agent_local::tool_office_utils::{
-    coerce_values_array, normalize_formula, value_as_f64, value_as_u16, value_as_u32,
+    coerce_values_array, normalize_formula, try_value_as_u16, try_value_as_u32, value_as_f64,
 };
 use crate::services::agent_local::tool_spreadsheet_write::parse_cell_ref;
 use rust_xlsxwriter::Workbook;
@@ -41,7 +41,7 @@ pub fn create_xlsx(path: &Path, ops: &[Value]) -> Result<(), String> {
             "set_row" => apply_set_row(ws, op)?,
             "set_column_width" => apply_set_column_width(ws, op)?,
             "add_sheet" => {}
-            _ => {}
+            _ => return Err(format!("Opération inconnue: {op_type}")),
         }
     }
 
@@ -65,19 +65,20 @@ fn apply_set_formula(ws: &mut rust_xlsxwriter::Worksheet, op: &Value) -> Result<
 }
 
 fn apply_set_row(ws: &mut rust_xlsxwriter::Worksheet, op: &Value) -> Result<(), String> {
-    let row = value_as_u32(&op["row"]).unwrap_or(0);
+    let row = try_value_as_u32(&op["row"], "row")?;
     let values = match coerce_values_array(&op["values"]) {
         Some(v) => v,
         None => return Ok(()),
     };
     for (col_idx, val) in values.iter().enumerate() {
-        write_value(ws, row, col_idx as u16, val)?;
+        let col = u16::try_from(col_idx).map_err(|_| "col trop grand".to_string())?;
+        write_value(ws, row, col, val)?;
     }
     Ok(())
 }
 
 fn apply_set_column_width(ws: &mut rust_xlsxwriter::Worksheet, op: &Value) -> Result<(), String> {
-    let col = value_as_u16(&op["col"]).unwrap_or(0);
+    let col = try_value_as_u16(&op["col"], "col")?;
     let width = value_as_f64(&op["width"]).unwrap_or(8.43);
     ws.set_column_width(col, width)
         .map(|_| ())
@@ -88,8 +89,8 @@ fn resolve_cell_position(op: &Value) -> Result<(u32, u16), String> {
     if let Some(cell_ref) = op["cell"].as_str() {
         parse_cell_ref(cell_ref).ok_or_else(|| "Référence de cellule invalide".to_string())
     } else {
-        let row = value_as_u32(&op["row"]).unwrap_or(0);
-        let col = value_as_u16(&op["col"]).unwrap_or(0);
+        let row = try_value_as_u32(&op["row"], "row")?;
+        let col = try_value_as_u16(&op["col"], "col")?;
         Ok((row, col))
     }
 }
@@ -102,10 +103,7 @@ pub fn write_value(
 ) -> Result<(), String> {
     match val {
         Value::String(s) => {
-            if s.starts_with('=') {
-                let formula = normalize_formula(s);
-                ws.write_formula(row, col, formula.as_str())
-            } else if let Ok(n) = s.parse::<f64>() {
+            if let Ok(n) = s.parse::<f64>() {
                 ws.write_number(row, col, n)
             } else if s.eq_ignore_ascii_case("true") || s.eq_ignore_ascii_case("false") {
                 ws.write_boolean(row, col, s.eq_ignore_ascii_case("true"))
@@ -116,7 +114,7 @@ pub fn write_value(
         Value::Number(n) => ws.write_number(row, col, n.as_f64().unwrap_or(0.0)),
         Value::Bool(b) => ws.write_boolean(row, col, *b),
         Value::Null => return Ok(()),
-        _ => ws.write_string(row, col, &val.to_string()),
+        _ => ws.write_string(row, col, val.to_string()),
     }
     .map(|_| ())
     .map_err(|_| "Erreur écriture cellule".to_string())

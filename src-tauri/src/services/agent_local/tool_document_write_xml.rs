@@ -33,8 +33,8 @@ pub fn build_document_xml(blocks: &[serde_json::Value]) -> Result<String, String
             "heading" => write_heading(&mut writer, block)?,
             "paragraph" => write_paragraph(&mut writer, block)?,
             "table" => write_table(&mut writer, block)?,
-            "list" => write_list(&mut writer, block)?,
-            _ => {}
+            "list" => super::tool_document_write_list::write_list(&mut writer, block)?,
+            _ => return Err(format!("Bloc document inconnu: {block_type}")),
         }
     }
 
@@ -207,34 +207,5 @@ fn write_table_row(
     writer
         .write_event(Event::End(BytesEnd::new("w:tr")))
         .map_err(|e| format!("XML error: {e}"))?;
-    Ok(())
-}
-
-fn write_list(
-    writer: &mut Writer<Cursor<Vec<u8>>>,
-    block: &serde_json::Value,
-) -> Result<(), String> {
-    let items = match block["items"].as_array() {
-        Some(arr) => arr,
-        None => return Ok(()),
-    };
-    let ordered = block["ordered"].as_bool().unwrap_or(false);
-
-    for (idx, item) in items.iter().enumerate() {
-        let text = item.as_str().unwrap_or("");
-        let prefix = if ordered {
-            format!("{}. {}", idx + 1, text)
-        } else {
-            format!("• {}", text)
-        };
-
-        writer
-            .write_event(Event::Start(BytesStart::new("w:p")))
-            .map_err(|e| format!("XML error: {e}"))?;
-        write_run(writer, &prefix, false, false)?;
-        writer
-            .write_event(Event::End(BytesEnd::new("w:p")))
-            .map_err(|e| format!("XML error: {e}"))?;
-    }
     Ok(())
 }

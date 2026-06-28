@@ -65,7 +65,7 @@ fn is_blocked_host(host: &str) -> bool {
         || is_172_private(host)
         || host.starts_with("169.254.")
         || host.starts_with("fc00:")
-        || host.starts_with("fd")
+        || (host.starts_with("fd") && host.contains(':'))
         || host.starts_with("fe80:")
         || host.starts_with("::ffff:127.")
 }

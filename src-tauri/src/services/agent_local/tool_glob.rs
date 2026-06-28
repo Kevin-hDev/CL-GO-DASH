@@ -49,6 +49,7 @@ fn glob_blocking(pattern: &str, root: &Path, cancelled: &AtomicBool) -> ToolResu
         .build();
 
     let mut results: Vec<String> = Vec::new();
+    let mut skipped_errors = 0usize;
     let mut truncated = false;
 
     for dent in walk {
@@ -61,7 +62,10 @@ fn glob_blocking(pattern: &str, root: &Path, cancelled: &AtomicBool) -> ToolResu
         }
         let entry = match dent {
             Ok(e) => e,
-            Err(_) => continue,
+            Err(_) => {
+                skipped_errors = skipped_errors.saturating_add(1);
+                continue;
+            }
         };
         if !entry.file_type().map(|t| t.is_file()).unwrap_or(false) {
             continue;
@@ -76,6 +80,11 @@ fn glob_blocking(pattern: &str, root: &Path, cancelled: &AtomicBool) -> ToolResu
     let mut output = results.join("\n");
     if truncated {
         output.push_str(&format!("\n... [tronqué à {MAX_RESULTS} résultats]"));
+    }
+    if skipped_errors > 0 {
+        output.push_str(&format!(
+            "\n... [{skipped_errors} erreur(s) de lecture ignorée(s)]"
+        ));
     }
     if output.is_empty() {
         output = "(aucun résultat)".into();

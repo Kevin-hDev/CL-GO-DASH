@@ -3,9 +3,9 @@ use std::path::{Path, PathBuf};
 
 /// Résout un chemin relatif/absolu/tilde en chemin absolu.
 pub fn resolve_path(path: &str, working_dir: &Path) -> PathBuf {
-    if path.starts_with('~') {
+    if let Some(stripped) = path.strip_prefix('~') {
         if let Some(home) = dirs::home_dir() {
-            return home.join(path.strip_prefix("~/").unwrap_or(&path[1..]));
+            return home.join(path.strip_prefix("~/").unwrap_or(stripped));
         }
     }
     let raw = Path::new(path);
@@ -16,20 +16,23 @@ pub fn resolve_path(path: &str, working_dir: &Path) -> PathBuf {
     }
 }
 
-/// Extrait un u32 d'une Value, tolère string ou number.
-pub fn value_as_u32(val: &Value) -> Option<u32> {
+pub fn try_value_as_u32(val: &Value, field: &str) -> Result<u32, String> {
     if let Some(n) = val.as_u64() {
-        return Some(n as u32);
+        return u32::try_from(n).map_err(|_| format!("{field} trop grand"));
     }
-    if let Some(n) = val.as_f64() {
-        return Some(n as u32);
+    if let Some(n) = val.as_i64() {
+        return u32::try_from(n).map_err(|_| format!("{field} invalide"));
     }
-    val.as_str().and_then(|s| s.trim().parse::<u32>().ok())
+    val.as_str()
+        .ok_or_else(|| format!("{field} invalide"))?
+        .trim()
+        .parse::<u32>()
+        .map_err(|_| format!("{field} invalide"))
 }
 
-/// Extrait un u16 d'une Value, tolère string ou number.
-pub fn value_as_u16(val: &Value) -> Option<u16> {
-    value_as_u32(val).map(|n| n as u16)
+pub fn try_value_as_u16(val: &Value, field: &str) -> Result<u16, String> {
+    let n = try_value_as_u32(val, field)?;
+    u16::try_from(n).map_err(|_| format!("{field} trop grand"))
 }
 
 /// Extrait un f64 d'une Value, tolère string ou number.
@@ -86,16 +89,45 @@ const FR_FORMULAS: &[(&str, &str)] = &[
 
 /// Normalise une formule : traduit le français, remplace `;` par `,`.
 pub fn normalize_formula(formula: &str) -> String {
-    let mut result = formula.to_string();
-    for &(fr, en) in FR_FORMULAS {
-        if fr == en {
+    let mut result = String::with_capacity(formula.len());
+    let mut in_string = false;
+    let mut index = 0usize;
+    while index < formula.len() {
+        let rest = &formula[index..];
+        let Some(ch) = rest.chars().next() else {
+            break;
+        };
+        if ch == '"' {
+            in_string = !in_string;
+            result.push(ch);
+            index += ch.len_utf8();
             continue;
         }
-        let pattern = format!("{}(", fr);
-        let replacement = format!("{}(", en);
-        result = result.replace(&pattern, &replacement);
+        if !in_string {
+            let mut replaced = false;
+            for &(fr, en) in FR_FORMULAS {
+                let pattern = format!("{fr}(");
+                if rest.starts_with(&pattern) {
+                    result.push_str(en);
+                    result.push('(');
+                    index += pattern.len();
+                    replaced = true;
+                    break;
+                }
+            }
+            if replaced {
+                continue;
+            }
+            if ch == ';' {
+                result.push(',');
+                index += 1;
+                continue;
+            }
+        }
+        result.push(ch);
+        index += ch.len_utf8();
     }
-    result.replace(';', ",")
+    result
 }
 
 /// Coerce une Value en Vec<Value> pour les arrays de `values` dans set_row.

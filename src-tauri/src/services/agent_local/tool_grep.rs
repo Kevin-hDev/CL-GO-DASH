@@ -81,6 +81,7 @@ fn grep_blocking(
 
     let mut searcher = Searcher::new();
     let mut results: Vec<String> = Vec::new();
+    let mut skipped_errors = 0usize;
     let mut truncated = false;
 
     for dent in walk_builder.build() {
@@ -93,7 +94,10 @@ fn grep_blocking(
         }
         let entry = match dent {
             Ok(e) => e,
-            Err(_) => continue,
+            Err(_) => {
+                skipped_errors = skipped_errors.saturating_add(1);
+                continue;
+            }
         };
         if !entry.file_type().map(|t| t.is_file()).unwrap_or(false) {
             continue;
@@ -104,7 +108,9 @@ fn grep_blocking(
             results: &mut results,
             max: MAX_RESULTS,
         };
-        let _ = searcher.search_path(&matcher, path, &mut sink);
+        if searcher.search_path(&matcher, path, &mut sink).is_err() {
+            skipped_errors = skipped_errors.saturating_add(1);
+        }
         if results.len() >= MAX_RESULTS {
             truncated = true;
             break;
@@ -114,6 +120,11 @@ fn grep_blocking(
     let mut output = results.join("\n");
     if truncated {
         output.push_str(&format!("\n... [tronqué à {MAX_RESULTS} lignes]"));
+    }
+    if skipped_errors > 0 {
+        output.push_str(&format!(
+            "\n... [{skipped_errors} erreur(s) de lecture ignorée(s)]"
+        ));
     }
     if output.is_empty() {
         output = "(aucun résultat)".into();

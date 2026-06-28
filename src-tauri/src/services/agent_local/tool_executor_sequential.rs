@@ -83,15 +83,26 @@ pub async fn run_sequential(
 
         let allowed = check_allowed(on_event, name, args, session_id, cancel.clone()).await;
         let tr = if allowed {
-            dispatch_or_interactive(
-                on_event,
+            if let Err(msg) = super::tool_plan_guard::ensure_allowed_for_session(
                 name,
                 args,
-                working_dir,
                 session_id,
-                cancel.clone(),
+                plan_mode_active,
             )
             .await
+            {
+                tool_dispatcher::enrich_error(ToolResult::err(msg), name)
+            } else {
+                dispatch_or_interactive(
+                    on_event,
+                    name,
+                    args,
+                    working_dir,
+                    session_id,
+                    cancel.clone(),
+                )
+                .await
+            }
         } else {
             ToolResult::err("L'utilisateur a refusé cette action.")
         };

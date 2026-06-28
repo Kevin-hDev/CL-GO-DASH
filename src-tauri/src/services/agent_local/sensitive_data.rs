@@ -40,6 +40,11 @@ static TOKEN_RE: LazyLock<Regex> = LazyLock::new(|| {
         .expect("token regex")
 });
 
+static PEM_BLOCK_RE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"(?is)-----BEGIN [A-Z0-9 ]*(PRIVATE KEY|CERTIFICATE)[A-Z0-9 ]*-----.*?-----END [A-Z0-9 ]*(PRIVATE KEY|CERTIFICATE)[A-Z0-9 ]*-----")
+        .expect("pem regex")
+});
+
 pub fn bash_touches_sensitive_data(command: &str) -> bool {
     let normalized = command.replace('\\', "/").to_lowercase();
     SENSITIVE_PATH_MARKERS
@@ -49,7 +54,8 @@ pub fn bash_touches_sensitive_data(command: &str) -> bool {
 }
 
 pub fn redact_text(content: &str) -> String {
-    let tokens_redacted = TOKEN_RE.replace_all(content, "[REDACTED]");
+    let pem_redacted = PEM_BLOCK_RE.replace_all(content, "[REDACTED]");
+    let tokens_redacted = TOKEN_RE.replace_all(&pem_redacted, "[REDACTED]");
     SECRET_VALUE_RE
         .replace_all(&tokens_redacted, "$1$2[REDACTED]")
         .into_owned()

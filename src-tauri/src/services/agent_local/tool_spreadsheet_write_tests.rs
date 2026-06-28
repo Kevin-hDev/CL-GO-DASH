@@ -46,6 +46,11 @@ mod tests {
         assert_eq!(parse_cell_ref("A0"), None);
     }
 
+    #[test]
+    fn parse_column_overflow_invalid() {
+        assert_eq!(parse_cell_ref("ZZZZ1"), None);
+    }
+
     // --- Tests écriture xlsx ---
 
     #[tokio::test]
@@ -104,6 +109,36 @@ mod tests {
         assert!(!result.is_error, "Erreur: {}", result.content);
         // On vérifie juste que le fichier est créé — calamine ne calcule pas les formules
         assert!(path.exists());
+    }
+
+    #[tokio::test]
+    async fn set_cell_does_not_create_formula() {
+        let dir = tmp();
+        let path = dir.path().join("formula-text.xlsx");
+
+        let ops = json!([
+            {"type": "set_cell", "cell": "A1", "value": "=HYPERLINK(\"http://example.test\")"}
+        ]);
+
+        let result = write_spreadsheet(path.to_str().unwrap(), &ops, dir.path()).await;
+        assert!(!result.is_error, "Erreur: {}", result.content);
+
+        let mut wb: Sheets<_> = open_workbook_auto(&path).unwrap();
+        let formulas = wb.worksheet_formula("Sheet1").unwrap();
+        assert!(formulas
+            .get((0, 0))
+            .map(String::as_str)
+            .unwrap_or("")
+            .is_empty());
+    }
+
+    #[tokio::test]
+    async fn unknown_operation_is_error() {
+        let dir = tmp();
+        let path = dir.path().join("unknown.xlsx");
+        let ops = json!([{ "type": "surprise" }]);
+        let result = write_spreadsheet(path.to_str().unwrap(), &ops, dir.path()).await;
+        assert!(result.is_error);
     }
 
     #[tokio::test]

@@ -1,6 +1,7 @@
 use crate::services::agent_local::security;
 use crate::services::agent_local::types_tools::ToolResult;
 use std::path::{Path, PathBuf};
+use tokio::io::AsyncWriteExt;
 
 const MAX_READ_SIZE: u64 = 20 * 1024 * 1024;
 const MAX_LIST_ENTRIES: usize = 500;
@@ -64,28 +65,57 @@ pub async fn read_file(path: &str, working_dir: &Path, offset: usize, limit: usi
 }
 
 pub async fn write_file(path: &str, content: &str, working_dir: &Path) -> ToolResult {
+    let raw = if Path::new(path).is_absolute() {
+        PathBuf::from(path)
+    } else {
+        working_dir.join(path)
+    };
+    if matches!(
+        tokio::fs::symlink_metadata(&raw).await,
+        Ok(meta) if meta.file_type().is_symlink()
+    ) {
+        return ToolResult::err("Écriture sur symlink interdite");
+    }
     let resolved = match resolve_write_path(path, working_dir) {
         Ok(p) => p,
         Err(e) => return ToolResult::err(e),
     };
     if let Some(parent) = resolved.parent() {
-        if let Err(e) = tokio::fs::create_dir_all(parent).await {
-            return ToolResult::err(security::sanitize_error(e));
-        }
         if let Ok(real_parent) = parent.canonicalize() {
             let roots = security::allowed_write_roots();
             if !roots.iter().any(|r| real_parent.starts_with(r)) {
                 return ToolResult::err("Écriture interdite hors des zones autorisées");
             }
         }
+        if let Err(e) = tokio::fs::create_dir_all(parent).await {
+            return ToolResult::err(security::sanitize_error(e));
+        }
     }
     if resolved.is_symlink() {
         return ToolResult::err("Écriture sur symlink interdite");
     }
-    match tokio::fs::write(&resolved, content).await {
+    match write_no_follow(&resolved, content).await {
         Ok(()) => ToolResult::ok(format!("Écrit: {}", resolved.display())),
         Err(e) => ToolResult::err(security::sanitize_error(e)),
     }
+}
+
+async fn write_no_follow(path: &Path, content: &str) -> std::io::Result<()> {
+    let metadata = tokio::fs::symlink_metadata(path).await;
+    if matches!(metadata, Ok(meta) if meta.file_type().is_symlink()) {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::PermissionDenied,
+            "symlink",
+        ));
+    }
+    let mut options = tokio::fs::OpenOptions::new();
+    options.write(true).create(true).truncate(true);
+    #[cfg(unix)]
+    {
+        options.custom_flags(libc::O_NOFOLLOW);
+    }
+    let mut file = options.open(path).await?;
+    file.write_all(content.as_bytes()).await
 }
 
 pub async fn edit_file(
@@ -140,7 +170,13 @@ pub async fn list_dir(path: &str, working_dir: &Path) -> ToolResult {
         }
         let mut read_dir = match tokio::fs::read_dir(&dir).await {
             Ok(r) => r,
-            Err(_) => continue,
+            Err(e) => {
+                entries.push(format!(
+                    "... [erreur lecture dossier: {}]",
+                    security::sanitize_error(e)
+                ));
+                continue;
+            }
         };
         let mut children = Vec::new();
         while let Ok(Some(entry)) = read_dir.next_entry().await {

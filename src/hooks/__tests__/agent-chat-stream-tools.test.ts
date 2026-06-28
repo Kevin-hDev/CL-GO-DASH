@@ -49,6 +49,7 @@ describe("toolResult", () => {
 
   it("vide le choix interactif quand ask_user_choice retourne un résultat", () => {
     const state = makeState({ interactiveChoice: {
+      sessionId: "session-1",
       id: "choice-1",
       currentIndex: 0,
       total: 1,
@@ -63,6 +64,7 @@ describe("toolResult", () => {
 
   it("vide le choix interactif quand planmode retourne sa validation backend", () => {
     const state = makeState({ interactiveChoice: {
+      sessionId: "session-1",
       id: "choice-1",
       currentIndex: 0,
       total: 1,

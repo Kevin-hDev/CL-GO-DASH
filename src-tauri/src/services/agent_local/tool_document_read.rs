@@ -1,6 +1,13 @@
 use crate::services::agent_local::security::validate_read_path;
+use crate::services::agent_local::tool_office_limits::{
+    ensure_source_size, ensure_zip_entry_safe, validate_zip_archive, MAX_DOCX_SOURCE_BYTES,
+    MAX_DOCX_XML_BYTES,
+};
 use crate::services::agent_local::types_tools::ToolResult;
+use std::io::Read;
 use std::path::Path;
+
+const MAX_EXTRACTED_DOC_CHARS: usize = 1_000_000;
 
 pub async fn read_document(path: &str, _pages: Option<&str>, working_dir: &Path) -> ToolResult {
     if path.is_empty() {
@@ -48,6 +55,13 @@ fn read_pdf(path: &Path) -> ToolResult {
 }
 
 fn read_docx(path: &Path) -> ToolResult {
+    if let Err(e) = ensure_source_size(path, MAX_DOCX_SOURCE_BYTES, "Document DOCX") {
+        return ToolResult::err(e);
+    }
+    if let Err(e) = validate_zip_archive(path, "Document DOCX") {
+        return ToolResult::err(e);
+    }
+
     let file = match std::fs::File::open(path) {
         Ok(f) => f,
         Err(_) => return ToolResult::err("Impossible d'ouvrir le fichier"),
@@ -60,17 +74,30 @@ fn read_docx(path: &Path) -> ToolResult {
 
     let xml_content = match archive.by_name("word/document.xml") {
         Ok(mut entry) => {
-            use std::io::Read;
+            if let Err(e) = ensure_zip_entry_safe(&entry, MAX_DOCX_XML_BYTES, "XML DOCX") {
+                return ToolResult::err(e);
+            }
             let mut buf = String::new();
-            if entry.read_to_string(&mut buf).is_err() {
+            if entry
+                .by_ref()
+                .take(MAX_DOCX_XML_BYTES + 1)
+                .read_to_string(&mut buf)
+                .is_err()
+            {
                 return ToolResult::err("Impossible de lire le contenu du document");
+            }
+            if buf.len() as u64 > MAX_DOCX_XML_BYTES {
+                return ToolResult::err("XML DOCX trop volumineux");
             }
             buf
         }
         Err(_) => return ToolResult::err("Structure DOCX invalide"),
     };
 
-    let text = extract_text_from_ooxml(&xml_content);
+    let text = match extract_text_from_ooxml(&xml_content) {
+        Ok(text) => text,
+        Err(e) => return ToolResult::err(e),
+    };
     let char_count = text.chars().count();
     let json = serde_json::json!({
         "format": "docx",
@@ -80,7 +107,7 @@ fn read_docx(path: &Path) -> ToolResult {
     ToolResult::ok(json.to_string())
 }
 
-fn extract_text_from_ooxml(xml: &str) -> String {
+fn extract_text_from_ooxml(xml: &str) -> Result<String, String> {
     use quick_xml::events::Event;
     use quick_xml::Reader;
 
@@ -93,36 +120,40 @@ fn extract_text_from_ooxml(xml: &str) -> String {
 
     loop {
         match reader.read_event() {
-            Ok(Event::Start(ref e)) => match e.local_name().as_ref() {
-                b"p" => {
+            Ok(Event::Start(ref e)) => {
+                if e.local_name().as_ref() == b"p" {
                     in_paragraph = true;
                     para_text.clear();
                 }
-                _ => {}
-            },
-            Ok(Event::End(ref e)) => match e.local_name().as_ref() {
-                b"p" => {
+            }
+            Ok(Event::End(ref e)) => {
+                if e.local_name().as_ref() == b"p" {
                     if !para_text.is_empty() {
                         if !result.is_empty() {
                             result.push('\n');
                         }
                         result.push_str(&para_text);
+                        if result.chars().count() > MAX_EXTRACTED_DOC_CHARS {
+                            return Err("Document trop volumineux".to_string());
+                        }
                     }
                     in_paragraph = false;
                     para_text.clear();
                 }
-                _ => {}
-            },
+            }
             Ok(Event::Text(ref e)) if in_paragraph => {
                 if let Ok(s) = e.unescape() {
                     para_text.push_str(&s);
                 }
             }
+            Ok(Event::Eof) if in_paragraph || !para_text.is_empty() => {
+                return Err("Document XML malformé".to_string());
+            }
             Ok(Event::Eof) => break,
-            Err(_) => break,
+            Err(_) => return Err("Document XML malformé".to_string()),
             _ => {}
         }
     }
 
-    result
+    Ok(result)
 }

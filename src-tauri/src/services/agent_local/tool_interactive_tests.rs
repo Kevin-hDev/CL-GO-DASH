@@ -1,7 +1,11 @@
 use serde_json::json;
+use std::sync::LazyLock;
+use tokio::sync::Mutex;
 
 use super::tool_interactive_parse::{parse_questions, validate_answers};
 use super::types_interactive::AgentInteractiveAnswer;
+
+static PENDING_TEST_LOCK: LazyLock<Mutex<()>> = LazyLock::new(|| Mutex::new(()));
 
 fn valid_args() -> serde_json::Value {
     json!({
@@ -128,11 +132,28 @@ fn validate_answers_rejects_unknown_id() {
 
 #[tokio::test]
 async fn pending_store_is_bounded_for_tests() {
+    let _guard = PENDING_TEST_LOCK.lock().await;
     super::interactive_choice_gate::fill_pending_for_test(64).await;
 
     assert_eq!(
         super::interactive_choice_gate::pending_len_for_test().await,
         64
+    );
+    super::interactive_choice_gate::clear_pending_for_test().await;
+}
+
+#[tokio::test]
+async fn respond_rejects_wrong_session() {
+    let _guard = PENDING_TEST_LOCK.lock().await;
+    super::interactive_choice_gate::clear_pending_for_test().await;
+    super::interactive_choice_gate::insert_pending_for_test("choice-1", "session-a").await;
+
+    let result = super::interactive_choice_gate::respond("session-b", "choice-1", vec![]).await;
+
+    assert!(result.is_err());
+    assert_eq!(
+        super::interactive_choice_gate::pending_len_for_test().await,
+        1
     );
     super::interactive_choice_gate::clear_pending_for_test().await;
 }

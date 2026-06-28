@@ -36,7 +36,12 @@ function extractUrls(text: string): string[] {
 }
 
 function isPreviewEnabled(): boolean {
-  return localStorage.getItem("clgo-link-preview") !== "false";
+  if (typeof localStorage === "undefined") return true;
+  try {
+    return localStorage.getItem("clgo-link-preview") !== "false";
+  } catch {
+    return true;
+  }
 }
 
 function closeUnclosedCodeBlocks(text: string): string {

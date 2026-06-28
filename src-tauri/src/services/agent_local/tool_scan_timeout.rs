@@ -23,18 +23,19 @@ where
     F: FnOnce(Arc<AtomicBool>) -> ToolResult + Send + 'static,
 {
     let cancelled = Arc::new(AtomicBool::new(false));
-    let handle = tokio::task::spawn_blocking({
+    let mut handle = tokio::task::spawn_blocking({
         let cancelled = Arc::clone(&cancelled);
         move || work(cancelled)
     });
 
     tokio::select! {
-        result = handle => match result {
+        result = &mut handle => match result {
             Ok(result) => result,
             Err(err) => ToolResult::err(format!("Erreur interne: {err}")),
         },
         _ = tokio::time::sleep(duration) => {
             cancelled.store(true, Ordering::Relaxed);
+            handle.abort();
             ToolResult::err(format!("Timeout après {}s", duration.as_secs()))
         }
     }

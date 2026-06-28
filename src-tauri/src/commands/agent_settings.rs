@@ -29,8 +29,9 @@ pub async fn respond_to_permission(id: String, decision: String) -> Result<(), S
 
 #[tauri::command]
 pub async fn respond_to_interactive_choice(
+    session_id: String,
     id: String,
     answers: Vec<AgentInteractiveAnswer>,
 ) -> Result<(), String> {
-    crate::services::agent_local::tool_interactive::respond(id, answers).await
+    crate::services::agent_local::tool_interactive::respond(session_id, id, answers).await
 }

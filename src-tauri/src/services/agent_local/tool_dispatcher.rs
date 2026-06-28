@@ -3,80 +3,11 @@ use crate::services::agent_local::types_tools::ToolResult;
 use crate::services::agent_local::{
     tool_bash, tool_files, tool_glob, tool_grep, tool_validate, tool_web_fetch, tool_web_search,
 };
-use crate::services::paths::data_dir;
 use serde_json::Value;
 use std::path::Path;
 
 pub use crate::services::agent_local::tool_definitions::get_tool_definitions;
 pub use crate::services::agent_local::tool_definitions_chat::get_chat_tool_definitions;
-
-// Seuils de taille max par outil (en caractères)
-const MAX_CHARS_BASH: usize = 30_000;
-const MAX_CHARS_GREP: usize = 10_000;
-const MAX_CHARS_GLOB: usize = 5_000;
-const MAX_CHARS_WEB_FETCH: usize = 50_000;
-const MAX_CHARS_WEB_SEARCH: usize = 10_000;
-const MAX_CHARS_LIST_DIR: usize = 10_000;
-const PREVIEW_SIZE: usize = 2_000;
-
-/// Retourne le seuil max (en chars) pour un outil donné.
-/// `None` = pas de troncature (ex: read_file qui gère lui-même l'offset).
-fn max_chars_for_tool(name: &str) -> Option<usize> {
-    match name {
-        "bash" => Some(MAX_CHARS_BASH),
-        "grep" => Some(MAX_CHARS_GREP),
-        "glob" => Some(MAX_CHARS_GLOB),
-        "web_fetch" => Some(MAX_CHARS_WEB_FETCH),
-        "web_search" => Some(MAX_CHARS_WEB_SEARCH),
-        "list_dir" => Some(MAX_CHARS_LIST_DIR),
-        _ => None,
-    }
-}
-
-/// Tronque le résultat si dépassement du seuil. Ne touche jamais les erreurs.
-/// Quand tronqué, sauvegarde le résultat complet sur disque et inclut le chemin dans le message.
-fn truncate_result(mut result: ToolResult, tool_name: &str, session_id: &str) -> ToolResult {
-    if result.is_error {
-        return result;
-    }
-    let Some(max) = max_chars_for_tool(tool_name) else {
-        return result;
-    };
-    let total = result.content.chars().count();
-    if total <= max {
-        return result;
-    }
-
-    // Sauvegarder le résultat complet sur disque
-    let persist_path = persist_result(&result.content, session_id);
-
-    // Preview UTF-8-safe : on prend PREVIEW_SIZE caractères au plus
-    let preview: String = result.content.chars().take(PREVIEW_SIZE).collect();
-    let omitted = total - PREVIEW_SIZE;
-    let total_kb = total / 1024;
-
-    let file_hint = match persist_path {
-        Some(p) => format!("\n[Résultat complet disponible : {}]", p),
-        None => String::new(),
-    };
-
-    result.content = format!(
-        "[Résultat tronqué — {total_kb} Ko total, preview ci-dessous]{file_hint}\n{preview}\n[{omitted} chars omis]"
-    );
-    result.truncated = true;
-    result
-}
-
-/// Persiste le contenu complet dans data_dir()/tool-results/{session_id}/{uuid}.txt.
-/// Retourne le chemin du fichier si la sauvegarde a réussi.
-fn persist_result(content: &str, session_id: &str) -> Option<String> {
-    let dir = data_dir().join("tool-results").join(session_id);
-    std::fs::create_dir_all(&dir).ok()?;
-    let file_name = format!("{}.txt", uuid::Uuid::new_v4());
-    let path = dir.join(&file_name);
-    std::fs::write(&path, content).ok()?;
-    Some(path.to_string_lossy().into_owned())
-}
 
 async fn dispatch_inner(
     tool_name: &str,
@@ -91,18 +22,16 @@ async fn dispatch_inner(
             match tool_bash::execute_shell(cmd, working_dir, timeout).await {
                 Ok(out) => {
                     if let Some(ref cwd) = out.new_cwd {
-                        let sid = session_id.to_string();
-                        let dir = cwd.clone();
-                        tokio::spawn(async move {
-                            if let Err(e) =
-                                crate::services::agent_local::session_store::update_working_dir(
-                                    &sid, &dir,
-                                )
-                                .await
-                            {
-                                eprintln!("[cwd-track] échec update_working_dir: {e}");
-                            }
-                        });
+                        if let Err(e) =
+                            crate::services::agent_local::session_store::update_working_dir(
+                                session_id, cwd,
+                            )
+                            .await
+                        {
+                            return ToolResult::err(format!(
+                                "Commande exécutée, mais mise à jour du dossier courant impossible: {e}"
+                            ));
+                        }
                     }
                     let content = format!("{}\n{}", out.stdout, out.stderr).trim().to_string();
                     if out.exit_code != 0 {
@@ -221,45 +150,7 @@ async fn dispatch_inner(
             }
         }
         "delegate_task" => {
-            let Some(app) = super::app_handle_global::get() else {
-                return ToolResult::err("AppHandle non initialisé");
-            };
-            let emitter = crate::services::agent_local::stream_events::AgentEventEmitter::new(
-                app.clone(),
-                session_id.to_string(),
-            );
-            match super::tool_delegate::prepare_delegate(
-                args.clone(),
-                app.clone(),
-                session_id.to_string(),
-                emitter,
-            )
-            .await
-            {
-                Err(tr) => tr,
-                Ok(spawned) => {
-                    let msg = spawned.result_message.clone();
-                    let child_id = spawned.child_id.clone();
-                    if let Err(e) = super::subagent_spawn_channel::send(
-                        super::subagent_spawn_channel::SpawnRequest {
-                            app: spawned.app,
-                            child_session_id: spawned.child_id,
-                            model: spawned.model,
-                            provider: spawned.provider,
-                            prompt: spawned.prompt,
-                            subagent_type: spawned.subagent_type,
-                            parent_emitter: spawned.parent_emitter,
-                            cancel: spawned.cancel,
-                            project_id: spawned.project_id,
-                        },
-                    ) {
-                        super::subagent_registry::unregister(&child_id).await;
-                        let _ = super::session_subagents::mark_status(&child_id, "failed").await;
-                        return ToolResult::err(e);
-                    }
-                    ToolResult::ok(msg)
-                }
-            }
+            super::tool_dispatcher_delegate::dispatch_delegate(args, session_id).await
         }
         _ => {
             if let Some(result) = super::tool_dispatcher_forecast::dispatch_forecast(
@@ -325,6 +216,6 @@ pub async fn dispatch(
         Err(msg) => return ToolResult::err(format!("[{tool_name}] {msg}")),
     };
     let result = dispatch_inner(tool_name, &args, working_dir, session_id).await;
-    let result = truncate_result(result, tool_name, session_id);
+    let result = super::tool_result_truncate::truncate_result(result, tool_name, session_id);
     enrich_error(result, tool_name)
 }

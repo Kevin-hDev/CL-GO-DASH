@@ -1,4 +1,4 @@
-use crate::services::agent_local::tool_files::{read_file, DEFAULT_LIMIT};
+use crate::services::agent_local::tool_files::{read_file, write_file, DEFAULT_LIMIT};
 // MAX_LIMIT est 50_000 — on le réimporte pour les tests de borne
 const MAX_LIMIT: usize = 50_000;
 use std::io::Write;
@@ -160,4 +160,19 @@ async fn read_file_limit_overflow_with_large_offset() {
         result.content.trim().is_empty(),
         "offset au-delà de la fin → contenu vide"
     );
+}
+
+#[cfg(unix)]
+#[tokio::test]
+async fn write_file_rejects_symlink() {
+    let dir = tempfile::tempdir().unwrap();
+    let target = dir.path().join("target.txt");
+    let link = dir.path().join("link.txt");
+    std::fs::write(&target, "original").unwrap();
+    std::os::unix::fs::symlink(&target, &link).unwrap();
+
+    let result = write_file(link.to_str().unwrap(), "changed", dir.path()).await;
+
+    assert!(result.is_error);
+    assert_eq!(std::fs::read_to_string(target).unwrap(), "original");
 }

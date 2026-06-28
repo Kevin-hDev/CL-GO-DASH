@@ -98,6 +98,7 @@ pub mod tool_definitions_subagent;
 pub mod tool_definitions_todo;
 pub mod tool_delegate;
 pub mod tool_dispatcher;
+pub mod tool_dispatcher_delegate;
 pub mod tool_dispatcher_forecast;
 pub mod tool_dispatcher_forecast_analyze;
 pub mod tool_dispatcher_forecast_models;
@@ -111,6 +112,7 @@ pub mod tool_document_read;
 #[cfg(test)]
 pub mod tool_document_read_tests;
 pub mod tool_document_write;
+pub mod tool_document_write_list;
 #[cfg(test)]
 pub mod tool_document_write_tests;
 pub mod tool_document_write_xml;
@@ -137,6 +139,8 @@ pub mod tool_hooks;
 pub mod tool_hooks_tests;
 pub mod tool_image_process;
 #[cfg(test)]
+pub mod tool_image_process_limits_tests;
+#[cfg(test)]
 pub mod tool_image_process_tests;
 pub mod tool_image_read;
 #[cfg(test)]
@@ -146,6 +150,7 @@ pub mod tool_interactive_parse;
 #[cfg(test)]
 pub mod tool_interactive_tests;
 pub mod tool_mcp;
+pub mod tool_office_limits;
 pub mod tool_office_utils;
 pub mod tool_plan;
 pub mod tool_plan_approval;
@@ -156,6 +161,7 @@ pub mod tool_plan_storage;
 pub mod tool_result_budget;
 #[cfg(test)]
 pub mod tool_result_budget_tests;
+pub mod tool_result_truncate;
 pub mod tool_scan_timeout;
 pub mod tool_skill_loader;
 pub mod tool_spreadsheet_calamine;

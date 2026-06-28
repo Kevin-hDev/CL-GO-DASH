@@ -7,6 +7,9 @@ mod tests {
     #[test]
     fn blocks_rm_rf_root() {
         assert!(check_destructive_command("rm -rf /").is_err());
+        assert!(check_destructive_command("rm  -rf  /").is_err());
+        assert!(check_destructive_command("rm -rf $HOME").is_err());
+        assert!(check_destructive_command("rm -rf ~").is_err());
         assert!(check_destructive_command("sudo rm -rf / --no-preserve-root").is_err());
     }
 
@@ -32,6 +35,13 @@ mod tests {
         assert!(check_destructive_command("mkfs.ext4 /dev/sda1").is_err());
         assert!(check_destructive_command("echo > /dev/sda").is_err());
         assert!(check_destructive_command("fdisk /dev/sda").is_err());
+        assert!(check_destructive_command("dd if=/tmp/file of=/dev/sda").is_err());
+    }
+
+    #[test]
+    fn blocks_delete_scans_and_rsync_delete() {
+        assert!(check_destructive_command("find . -delete").is_err());
+        assert!(check_destructive_command("rsync -a --delete src/ dst/").is_err());
     }
 
     #[test]

@@ -16,31 +16,37 @@ pub async fn execute(
         Ok(questions) => questions,
         Err(err) => return ToolResult::err(err),
     };
-    match request(on_event, questions, cancel).await {
+    let Some(session_id) = session_id else {
+        return ToolResult::err("Contexte interactif indisponible.");
+    };
+    match request(on_event, session_id, questions, cancel).await {
         Ok(answers) => {
-            let plan_decision = match session_id {
-                Some(id) => super::tool_plan_approval::record_answers(id, &answers, on_event)
+            let plan_decision =
+                super::tool_plan_approval::record_answers(session_id, &answers, on_event)
                     .await
                     .ok()
-                    .flatten(),
-                None => None,
-            };
+                    .flatten();
             ToolResult::ok(result_json(&answers, plan_decision))
         }
         Err(err) => ToolResult::err(err),
     }
 }
 
-pub async fn respond(id: String, answers: Vec<AgentInteractiveAnswer>) -> Result<(), String> {
-    super::interactive_choice_gate::respond(&id, answers).await
+pub async fn respond(
+    session_id: String,
+    id: String,
+    answers: Vec<AgentInteractiveAnswer>,
+) -> Result<(), String> {
+    super::interactive_choice_gate::respond(&session_id, &id, answers).await
 }
 
 async fn request(
     on_event: &AgentEventEmitter,
+    session_id: &str,
     questions: Vec<AgentInteractiveQuestion>,
     cancel: CancellationToken,
 ) -> Result<Vec<AgentInteractiveAnswer>, String> {
-    super::interactive_choice_gate::request(on_event, questions, cancel).await
+    super::interactive_choice_gate::request(on_event, session_id, questions, cancel).await
 }
 
 fn result_json(answers: &[AgentInteractiveAnswer], plan_decision: Option<&str>) -> String {
@@ -71,11 +77,13 @@ fn result_json(answers: &[AgentInteractiveAnswer], plan_decision: Option<&str>) 
 
 pub(crate) fn emit_request(
     on_event: &AgentEventEmitter,
+    session_id: String,
     id: String,
     questions: Vec<AgentInteractiveQuestion>,
 ) {
     let total = questions.len();
     let _ = on_event.send(StreamEvent::InteractiveChoiceRequest {
+        session_id,
         id,
         questions,
         current_index: 0,
