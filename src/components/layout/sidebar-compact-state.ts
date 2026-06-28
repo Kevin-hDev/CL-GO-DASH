@@ -37,7 +37,7 @@ export function setAgentPanelsTight(
   return {
     ...state,
     panelsTight,
-    manualReveal: panelsTight ? state.manualReveal : false,
+    manualReveal: panelsTight || state.sidebarOpen ? state.manualReveal : false,
   };
 }
 

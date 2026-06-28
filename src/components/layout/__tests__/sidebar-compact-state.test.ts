@@ -28,7 +28,7 @@ describe("sidebar compact state", () => {
     state = toggleAgentSidebar(state);
     state = setAgentPanelsTight(state, false);
 
-    expect(state).toMatchObject({ sidebarOpen: true, manualReveal: false, panelsTight: false });
+    expect(state).toMatchObject({ sidebarOpen: true, manualReveal: true, panelsTight: false });
     expect(shouldCompactAgentChat(state)).toBe(false);
   });
 
@@ -42,6 +42,19 @@ describe("sidebar compact state", () => {
     state = toggleAgentSidebar(state);
     expect(state).toMatchObject({ sidebarOpen: true, manualReveal: true, panelsTight: false });
     expect(shouldCompactAgentChat(state)).toBe(false);
+
+    state = setAgentPanelsTight(state, true);
+    expect(state).toMatchObject({ sidebarOpen: true, manualReveal: true, panelsTight: true });
+    expect(shouldCompactAgentChat(state)).toBe(true);
+  });
+
+  it("ne perd pas l'override pendant un tick large de transition", () => {
+    let state = autoHideAgentSidebar(INITIAL_AGENT_SIDEBAR_LAYOUT_STATE);
+    state = toggleAgentSidebar(state);
+    expect(state).toMatchObject({ sidebarOpen: true, manualReveal: true, panelsTight: true });
+
+    state = setAgentPanelsTight(state, false);
+    expect(state).toMatchObject({ sidebarOpen: true, manualReveal: true, panelsTight: false });
 
     state = setAgentPanelsTight(state, true);
     expect(state).toMatchObject({ sidebarOpen: true, manualReveal: true, panelsTight: true });
