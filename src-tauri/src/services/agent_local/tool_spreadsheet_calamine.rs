@@ -70,6 +70,19 @@ pub fn read_excel(
         .worksheet_range(&sheet_name)
         .map_err(|_| "Impossible de lire la feuille".to_string())?;
 
+    // Calamine matérialise la feuille entière en RAM sous forme de `Range<Data>`
+    // dense. Une feuille malveillante peut déclarer une dimension énorme
+    // (ex. `A1:XFD1048576`) et allouer plusieurs Go. On borne le nombre de
+    // cellules AVANT d'itérer — `max_rows`/`HARD_MAX_COLS` ne limitent que le
+    // résultat JSON, pas la structure interne chargée ici.
+    let height = range.height();
+    let width = range.width();
+    super::tool_office_limits::ensure_cell_budget(
+        height as u64,
+        width as u64,
+        "Feuille",
+    )?;
+
     let formulas = workbook.worksheet_formula(&sheet_name).ok();
     let (start_row, start_col) = range.start().unwrap_or((0, 0));
 

@@ -11,6 +11,25 @@ pub const MAX_SPREADSHEET_SOURCE_BYTES: u64 = 50 * 1024 * 1024;
 pub const MAX_CSV_SOURCE_BYTES: u64 = 50 * 1024 * 1024;
 pub const MAX_IMAGE_SOURCE_BYTES: u64 = 50 * 1024 * 1024;
 
+/// Nombre maximal de cellules d'une feuille chargée par calamine.
+/// Calamine matérialise un `Range<Data>` dense ; une feuille déclarant
+/// `dimension ref="A1:XFD1048576"` peut allouer plusieurs Go de RAM même
+/// si le fichier source est petit. On borne le produit hauteur × largeur
+/// avant d'itérer, au-delà des limites `max_rows`/`HARD_MAX_COLS` qui ne
+/// s'appliquent qu'au résultat JSON.
+pub const MAX_SPREADSHEET_CELLS: u64 = 5_000_000;
+
+pub fn ensure_cell_budget(height: u64, width: u64, label: &str) -> Result<(), String> {
+    let cells = height.saturating_mul(width);
+    if cells > MAX_SPREADSHEET_CELLS {
+        return Err(format!(
+            "{label} trop volumineuse ({} cellules, max {MAX_SPREADSHEET_CELLS})",
+            cells
+        ));
+    }
+    Ok(())
+}
+
 pub fn ensure_source_size(path: &Path, max_bytes: u64, label: &str) -> Result<(), String> {
     let len = std::fs::metadata(path)
         .map_err(|_| format!("{label} inaccessible"))?
