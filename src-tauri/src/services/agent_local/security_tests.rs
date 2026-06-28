@@ -73,6 +73,29 @@ mod tests {
         assert!(check_destructive_command("eval 'echo static'").is_ok());
     }
 
+    #[test]
+    fn allows_rm_rf_subpath() {
+        // rm -rf <sous-chemin> doit passer : /tmp, /home/user/x, ./build, etc.
+        assert!(check_destructive_command("rm -rf /tmp/x").is_ok());
+        assert!(check_destructive_command("rm -rf /tmp/office-tools-retest.xlsx").is_ok());
+        assert!(check_destructive_command("rm -rf /home/user/projet/node_modules").is_ok());
+        assert!(check_destructive_command("rm -rf ./build").is_ok());
+        assert!(check_destructive_command("rm -rf target/debug").is_ok());
+    }
+
+    #[test]
+    fn blocks_rm_rf_root_wildcard_only() {
+        // rm -rf / (seul), /* , $HOME, ~ doivent rester bloqués
+        assert!(check_destructive_command("rm -rf /").is_err());
+        assert!(check_destructive_command("rm -rf /*").is_err());
+        assert!(check_destructive_command("rm -rf *").is_err());
+        assert!(check_destructive_command("rm -rf $HOME").is_err());
+        assert!(check_destructive_command("rm -rf ~").is_err());
+        // Avec séparateur en fin de commande
+        assert!(check_destructive_command("rm -rf / ; echo done").is_err());
+        assert!(check_destructive_command("rm -rf / && echo done").is_err());
+    }
+
     // --- validate_write_path (default = full disk) ---
 
     #[test]
