@@ -39,6 +39,7 @@ export function useFilePreview(sessionId: string | null, operations: FileOperati
     startWidth: number;
     container: Element | null;
     reservedWidth: number;
+    chatMinWidth: number;
   } | null>(null);
   const stopResizeRef = useRef<(() => void) | null>(null);
 
@@ -114,6 +115,7 @@ export function useFilePreview(sessionId: string | null, operations: FileOperati
       startWidth: width,
       container: layout.container,
       reservedWidth: layout.reservedWidth,
+      chatMinWidth: layout.chatMinWidth,
     };
     setResizing(true);
   }, [width, extraWidth]);
@@ -153,6 +155,7 @@ export function useFilePreview(sessionId: string | null, operations: FileOperati
         resizeRef.current.startWidth + delta,
         containerWidth,
         resizeRef.current.reservedWidth,
+        resizeRef.current.chatMinWidth,
       ));
     };
     const stopResize = () => {

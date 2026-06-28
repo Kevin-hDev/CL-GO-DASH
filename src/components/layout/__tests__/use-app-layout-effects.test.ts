@@ -102,21 +102,31 @@ describe("shouldAutoHideSidebarForAgentPanels", () => {
 describe("useAgentPanelsAutoSidebar", () => {
   it("masque quand les panneaux agent sont trop serres", async () => {
     installLayoutDom(760);
-    const setSidebarOpen = vi.fn();
+    const onAutoHide = vi.fn();
 
-    renderHook(() => useAgentPanelsAutoSidebar(true, setSidebarOpen));
+    renderHook(() => useAgentPanelsAutoSidebar(true, false, onAutoHide));
 
-    await waitFor(() => expect(setSidebarOpen).toHaveBeenCalledWith(false));
+    await waitFor(() => expect(onAutoHide).toHaveBeenCalled());
   });
 
   it("ne rouvre pas automatiquement la sidebar apres un masquage automatique", () => {
     installLayoutDom(900);
-    const setSidebarOpen = vi.fn();
+    const onAutoHide = vi.fn();
 
-    renderHook(() => useAgentPanelsAutoSidebar(false, setSidebarOpen));
+    renderHook(() => useAgentPanelsAutoSidebar(false, false, onAutoHide));
     ResizeObserverMock.instances[0]?.trigger();
 
-    expect(setSidebarOpen).not.toHaveBeenCalled();
+    expect(onAutoHide).not.toHaveBeenCalled();
+  });
+
+  it("respecte la reouverture manuelle meme si l'espace reste serre", () => {
+    installLayoutDom(760);
+    const onAutoHide = vi.fn();
+
+    renderHook(() => useAgentPanelsAutoSidebar(true, true, onAutoHide));
+    ResizeObserverMock.instances[0]?.trigger();
+
+    expect(onAutoHide).not.toHaveBeenCalled();
   });
 });
 

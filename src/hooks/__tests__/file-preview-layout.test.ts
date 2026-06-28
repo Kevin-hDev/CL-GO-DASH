@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import {
+  chatMinWidthForContainer,
   clampPreviewWidthForLayout,
   measurePreviewLayout,
   siblingPanelWidth,
@@ -77,5 +78,17 @@ describe("file preview layout", () => {
     setWidth(sidebar, 240);
 
     expect(clampPreviewWidthForLayout(900, panel, 320)).toBe(280);
+  });
+
+  it("lit le minimum de chat compact depuis le conteneur", () => {
+    document.body.innerHTML = `
+      <div class="agent-detail-with-preview" style="--agent-chat-min-width: 0px">
+        <main class="agent-detail-chat"></main>
+        <section class="fp-panel open"></section>
+      </div>
+    `;
+    const container = document.querySelector(".agent-detail-with-preview")!;
+
+    expect(chatMinWidthForContainer(container)).toBe(0);
   });
 });

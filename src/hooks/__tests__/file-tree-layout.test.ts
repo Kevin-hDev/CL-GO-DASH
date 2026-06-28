@@ -37,6 +37,10 @@ describe("file tree layout", () => {
     expect(clampFileTreeWidthForContainer(80, 610, 120)).toBe(130);
   });
 
+  it("utilise le minimum dynamique du chat en mode compact", () => {
+    expect(clampFileTreeWidthForContainer(240, 400, 250, 0)).toBe(150);
+  });
+
   it("respecte la largeur maximale statique", () => {
     expect(clampFileTreeWidthForContainer(900, 1600, 360)).toBe(FILE_TREE_MAX_WIDTH);
   });

@@ -5,6 +5,7 @@ import { WindowToolbar } from "./window-toolbar";
 import { SearchDialog } from "./search-dialog";
 import { UpdateNotifications } from "./update-notifications";
 import { useUpdateChecker } from "@/hooks/use-update-checker";
+import { CHAT_MIN_WIDTH } from "@/hooks/file-preview-storage";
 import { IS_MAC } from "@/lib/platform";
 import { GpuStatusBadge } from "@/components/agent-local/gpu-status-badge";
 import { WindowControls } from "./window-controls";
@@ -38,6 +39,8 @@ export function AppLayout({
   onSearchSelect, onNewSession,
 }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [manualSidebarReveal, setManualSidebarReveal] = useState(false);
+  const [autoSidebarHidden, setAutoSidebarHidden] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [updatesOpen, setUpdatesOpen] = useState(false);
   const fullscreen = useWindowFullscreen();
@@ -84,20 +87,38 @@ export function AppLayout({
   const openSearch = useCallback(() => setSearchOpen(true), []);
   const closeSearch = useCallback(() => setSearchOpen(false), []);
   const toggleSearch = useCallback(() => setSearchOpen((o) => !o), []);
-  const toggleSidebar = useCallback(() => setSidebarOpen((o) => !o), []);
+  const toggleSidebar = useCallback(() => {
+    setSidebarOpen((open) => {
+      const nextOpen = !open;
+      setManualSidebarReveal(nextOpen && autoSidebarHidden);
+      if (nextOpen || !autoSidebarHidden) setAutoSidebarHidden(false);
+      return nextOpen;
+    });
+  }, [autoSidebarHidden]);
   const toggleUpdates = useCallback(() => setUpdatesOpen((o) => !o), []);
   const closeUpdates = useCallback(() => setUpdatesOpen(false), []);
+  const handleAutoSidebarHide = useCallback(() => {
+    setManualSidebarReveal(false);
+    setAutoSidebarHidden(true);
+    setSidebarOpen(false);
+  }, []);
 
   useAppLayoutShortcuts({ onBack, onForward, onNewSession, toggleSearch, toggleSidebar });
-  useAgentPanelsAutoSidebar(sidebarOpen, setSidebarOpen);
+  useAgentPanelsAutoSidebar(
+    sidebarOpen,
+    manualSidebarReveal,
+    handleAutoSidebarHide,
+  );
+  const compactAgentChat = sidebarOpen && manualSidebarReveal;
   const layoutStyle = {
     "--app-sidebar-hidden-offset": `${sidebarHiddenOffset}px`,
+    "--agent-chat-min-width": `${compactAgentChat ? 0 : CHAT_MIN_WIDTH}px`,
   } as CSSProperties;
 
   return (
     <PanelSlotProvider>
       <div
-        className={`app-root ${IS_MAC ? "os-mac" : "os-other"} ${sidebarOpen ? "" : "sidebar-hidden"} ${fullscreen ? "is-fullscreen" : ""}`}
+        className={`app-root ${IS_MAC ? "os-mac" : "os-other"} ${sidebarOpen ? "" : "sidebar-hidden"} ${compactAgentChat ? "agent-chat-compact" : ""} ${fullscreen ? "is-fullscreen" : ""}`}
         style={layoutStyle}
       >
         <WindowControls />

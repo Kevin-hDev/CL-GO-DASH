@@ -29,8 +29,10 @@ export function clampFilePreviewWidthForContainer(
   value: unknown,
   containerWidth: number,
   reservedWidth = 0,
+  chatMinWidth = CHAT_MIN_WIDTH,
 ): number {
-  const maxWidth = Math.max(0, containerWidth - CHAT_MIN_WIDTH - Math.max(0, reservedWidth));
+  const safeChatMinWidth = Math.max(0, chatMinWidth);
+  const maxWidth = Math.max(0, containerWidth - safeChatMinWidth - Math.max(0, reservedWidth));
   const minWidth = Math.min(FILE_PREVIEW_MIN_WIDTH, maxWidth);
   const width = typeof value === "number" && Number.isFinite(value) ? value : FILE_PREVIEW_DEFAULT_WIDTH;
   return Math.min(maxWidth, Math.max(minWidth, width));

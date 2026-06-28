@@ -1,5 +1,5 @@
 import { CHAT_MIN_WIDTH } from "./file-preview-storage";
-import { siblingPanelWidth } from "./file-preview-layout";
+import { chatMinWidthForContainer, siblingPanelWidth } from "./file-preview-layout";
 
 export const FILE_TREE_DEFAULT_WIDTH = 240;
 export const FILE_TREE_MIN_WIDTH = 160;
@@ -9,6 +9,7 @@ export interface FileTreeLayout {
   container: Element | null;
   containerWidth: number;
   reservedWidth: number;
+  chatMinWidth: number;
 }
 
 export function findOpenFileTreePanel(): Element | null {
@@ -19,8 +20,9 @@ export function clampFileTreeWidthForContainer(
   value: unknown,
   containerWidth: number,
   reservedWidth = 0,
+  chatMinWidth = CHAT_MIN_WIDTH,
 ): number {
-  const available = containerWidth - CHAT_MIN_WIDTH - Math.max(0, reservedWidth);
+  const available = containerWidth - Math.max(0, chatMinWidth) - Math.max(0, reservedWidth);
   const maxWidth = Math.min(FILE_TREE_MAX_WIDTH, Math.max(0, available));
   const minWidth = Math.min(FILE_TREE_MIN_WIDTH, maxWidth);
   const width = typeof value === "number" && Number.isFinite(value) ? value : FILE_TREE_DEFAULT_WIDTH;
@@ -38,10 +40,11 @@ export function measureFileTreeLayout(panel: Element | null): FileTreeLayout {
     container,
     containerWidth: container?.getBoundingClientRect().width ?? window.innerWidth,
     reservedWidth: siblingPanelWidth(panel, container),
+    chatMinWidth: chatMinWidthForContainer(container),
   };
 }
 
 export function clampTreeWidthForLayout(width: number, panel: Element | null): number {
   const layout = measureFileTreeLayout(panel);
-  return clampFileTreeWidthForContainer(width, layout.containerWidth, layout.reservedWidth);
+  return clampFileTreeWidthForContainer(width, layout.containerWidth, layout.reservedWidth, layout.chatMinWidth);
 }

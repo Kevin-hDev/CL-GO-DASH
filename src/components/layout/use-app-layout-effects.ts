@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { cleanupTauriListener } from "@/lib/tauri-listen";
 import { IS_MAC } from "@/lib/platform";
@@ -107,13 +107,16 @@ export function useAppLayoutShortcuts({
 
 export function useAgentPanelsAutoSidebar(
   sidebarOpen: boolean,
-  setSidebarOpen: Dispatch<SetStateAction<boolean>>,
+  manualReveal: boolean,
+  onAutoHide: () => void,
 ) {
   const sidebarOpenRef = useRef(sidebarOpen);
+  const manualRevealRef = useRef(manualReveal);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     sidebarOpenRef.current = sidebarOpen;
-  }, [sidebarOpen]);
+    manualRevealRef.current = manualReveal;
+  }, [sidebarOpen, manualReveal]);
 
   useEffect(() => {
     const detail = document.querySelector(".app-detail-panel");
@@ -130,8 +133,8 @@ export function useAgentPanelsAutoSidebar(
         fileTreeOpen,
       );
 
-      if (shouldHide && sidebarOpenRef.current) {
-        setSidebarOpen(false);
+      if (shouldHide && sidebarOpenRef.current && !manualRevealRef.current) {
+        onAutoHide();
       }
     };
 
@@ -153,7 +156,7 @@ export function useAgentPanelsAutoSidebar(
       mutationObserver.disconnect();
       window.removeEventListener("resize", schedule);
     };
-  }, [setSidebarOpen]);
+  }, [onAutoHide]);
 }
 
 export function useSidebarHiddenOffset(sidebarOpen: boolean): number {

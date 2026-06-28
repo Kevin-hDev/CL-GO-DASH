@@ -19,6 +19,7 @@ interface ResizeState {
   startWidth: number;
   container: Element | null;
   reservedWidth: number;
+  chatMinWidth: number;
 }
 
 export function useFileTreeResize(
@@ -41,6 +42,7 @@ export function useFileTreeResize(
       startWidth: width,
       container: layout.container,
       reservedWidth: layout.reservedWidth,
+      chatMinWidth: layout.chatMinWidth,
     };
     setResizing(true);
   }, [width]);
@@ -64,7 +66,12 @@ export function useFileTreeResize(
     if (!layout.container || typeof ResizeObserver === "undefined") return;
     const updateWidth = () => setWidth((current) => {
       const nextLayout = measureFileTreeLayout(panel);
-      return clampFileTreeWidthForContainer(current, nextLayout.containerWidth, nextLayout.reservedWidth);
+      return clampFileTreeWidthForContainer(
+        current,
+        nextLayout.containerWidth,
+        nextLayout.reservedWidth,
+        nextLayout.chatMinWidth,
+      );
     });
     const observer = new ResizeObserver(updateWidth);
     observer.observe(layout.container);
@@ -83,6 +90,7 @@ export function useFileTreeResize(
         resizeRef.current.startWidth + delta,
         containerWidth,
         resizeRef.current.reservedWidth,
+        resizeRef.current.chatMinWidth,
       ));
     };
     const stopResize = () => {
