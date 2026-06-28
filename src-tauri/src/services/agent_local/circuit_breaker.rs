@@ -1,4 +1,4 @@
-const MAX_CONSECUTIVE_IDENTICAL: usize = 3;
+const MAX_CONSECUTIVE_IDENTICAL: usize = 6;
 
 pub struct CircuitBreaker {
     last_signature: Option<String>,

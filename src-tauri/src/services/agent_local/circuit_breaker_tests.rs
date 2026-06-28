@@ -24,15 +24,18 @@ mod tests {
         let mut breaker = CircuitBreaker::new();
         let calls = call("bash", 42);
 
-        // 1er appel : OK
-        assert!(breaker.check(&calls).is_ok());
-        // 2ème appel identique : OK (seuil = 3, count = 2)
-        assert!(breaker.check(&calls).is_ok());
-        // 3ème appel identique : ERREUR (count atteint MAX_CONSECUTIVE_IDENTICAL)
+        // 1 à 5 appels identiques : OK (seuil = 6)
+        for i in 1..=5 {
+            assert!(
+                breaker.check(&calls).is_ok(),
+                "l'appel #{i} identique devrait être autorisé"
+            );
+        }
+        // 6ème appel identique : ERREUR (count atteint MAX_CONSECUTIVE_IDENTICAL)
         let result = breaker.check(&calls);
         assert!(
             result.is_err(),
-            "le 3ème appel identique consécutif devrait déclencher le circuit breaker"
+            "le 6ème appel identique consécutif devrait déclencher le circuit breaker"
         );
         let msg = result.unwrap_err();
         assert!(msg.contains("Circuit breaker"), "message inattendu : {msg}");
@@ -53,15 +56,19 @@ mod tests {
             json!({ "content": "y", "path": "x" }),
         )];
 
-        // 1er appel (ab) : OK
-        assert!(breaker.check(&call_ab).is_ok());
-        // 2ème appel (ba, clés inversées) : même signature normalisée → compteur = 2, OK
-        assert!(breaker.check(&call_ba).is_ok());
-        // 3ème appel (ab) : compteur = 3 → ERREUR circuit breaker
+        // 1 à 5 alternances (ab/ba = même signature normalisée) : OK
+        for i in 1..=5 {
+            let c = if i % 2 == 1 { &call_ab } else { &call_ba };
+            assert!(
+                breaker.check(c).is_ok(),
+                "l'appel #{i} (clés inversées) devrait être autorisé"
+            );
+        }
+        // 6ème appel : compteur = 6 → ERREUR circuit breaker
         let result = breaker.check(&call_ab);
         assert!(
             result.is_err(),
-            "les clés inversées doivent être détectées comme identiques"
+            "les clés inversées doivent être détectées comme identiques au 6ème appel"
         );
     }
 
@@ -71,15 +78,20 @@ mod tests {
         let same = call("bash", 99);
         let different = call("bash", 100);
 
-        // 2 appels identiques : OK
-        assert!(breaker.check(&same).is_ok());
-        assert!(breaker.check(&same).is_ok());
+        // 5 appels identiques : OK
+        for _ in 0..5 {
+            assert!(breaker.check(&same).is_ok());
+        }
         // Appel différent : reset → OK
         assert!(breaker.check(&different).is_ok());
         // Reprendre les appels identiques au début (compteur remis à 1)
-        assert!(breaker.check(&same).is_ok());
-        assert!(breaker.check(&same).is_ok());
-        // Maintenant le 3ème identique consécutif => ERREUR
+        for i in 1..=5 {
+            assert!(
+                breaker.check(&same).is_ok(),
+                "l'appel #{i} identique après reset devrait être autorisé"
+            );
+        }
+        // Maintenant le 6ème identique consécutif => ERREUR
         assert!(breaker.check(&same).is_err());
     }
 }
