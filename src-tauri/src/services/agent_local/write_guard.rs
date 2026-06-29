@@ -46,10 +46,4 @@ impl WriteGuard {
         }
         Err("Écriture bloquée : fichier non lu avant modification. Utilise read_file sur ce chemin d'abord.".to_string())
     }
-
-    /// Nombre de chemins actuellement enregistrés (tests/debug).
-    #[cfg(test)]
-    pub fn read_paths_count(&self) -> usize {
-        self.read_paths.len()
-    }
 }
