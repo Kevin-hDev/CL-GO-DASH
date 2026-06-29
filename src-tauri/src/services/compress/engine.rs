@@ -78,6 +78,7 @@ pub fn build_post_compression_messages(
 
 /// Applique la compression : remplace les messages par le system prompt original + boundary + résumé.
 /// Retourne le nombre de messages avant compression.
+#[cfg(test)]
 pub fn apply_compression(
     messages: &mut Vec<ChatMessage>,
     summary: &str,

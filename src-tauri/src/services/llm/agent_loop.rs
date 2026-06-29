@@ -1,5 +1,5 @@
+use super::agent_loop_compression::LoopCompression;
 use super::agent_loop_tools;
-use super::compress_hook;
 use super::retry;
 use crate::services::agent_local::agent_loop_errors;
 use crate::services::agent_local::agent_loop_limits::MAX_TURNS;
@@ -45,6 +45,15 @@ pub async fn run_agent_loop(
     let write_guard_arc = write_guard_registry::lock(&session_id).await;
     let mut write_guard = write_guard_arc.lock().await;
     let mut plan_repairs = 0;
+    let compression = LoopCompression {
+        on_event,
+        provider_id,
+        model,
+        session_id: &session_id,
+        request_id: &request_id,
+        native_context,
+        configured_context,
+    };
 
     for turn in 0..MAX_TURNS {
         if cancel.is_cancelled() {
@@ -52,19 +61,9 @@ pub async fn run_agent_loop(
         }
 
         tool_result_budget::apply_budget(messages);
-        let _ = compress_hook::try_auto_compress(
-            on_event,
-            provider_id,
-            model,
-            messages,
-            &session_id,
-            &request_id,
-            native_context,
-            configured_context,
-            token_counting::sum_real_counts(last_prompt, last_eval),
-            cancel.clone(),
-        )
-        .await;
+        let _ = compression
+            .try_run(messages, last_prompt, last_eval, cancel.clone())
+            .await;
         context_budget::prepare_for_request(messages, configured_context);
         let plan_active = agent_loop_plan::active(&session_id, plan_mode_active).await;
         crate::services::agent_local::stream_diagnostics::mark_phase(
@@ -117,19 +116,9 @@ pub async fn run_agent_loop(
         }
         messages.push(assistant_message);
 
-        if let Some(context_tokens) = compress_hook::try_auto_compress(
-            on_event,
-            provider_id,
-            model,
-            messages,
-            &session_id,
-            &request_id,
-            native_context,
-            configured_context,
-            token_counting::sum_real_counts(last_prompt, last_eval),
-            cancel.clone(),
-        )
-        .await
+        if let Some(context_tokens) = compression
+            .try_run(messages, last_prompt, last_eval, cancel.clone())
+            .await
         {
             let _ = context_tokens;
             last_prompt = None;
@@ -171,7 +160,18 @@ pub async fn run_agent_loop(
 
         agent_loop_tools::assign_tool_call_ids(messages, before, &result.tool_call_ids);
 
-        let _ = on_event.send(StreamEvent::TurnEnd {});
+        let compressed_after_tools = compression
+            .try_run(messages, last_prompt, last_eval, cancel.clone())
+            .await
+            .is_some();
+        if compressed_after_tools {
+            last_prompt = None;
+            last_eval = None;
+        }
+
+        if !compressed_after_tools {
+            let _ = on_event.send(StreamEvent::TurnEnd {});
+        }
     }
 
     let elapsed_ns = start.elapsed().as_nanos() as u64;

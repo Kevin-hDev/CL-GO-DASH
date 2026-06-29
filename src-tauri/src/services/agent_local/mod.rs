@@ -3,6 +3,7 @@ pub fn ollama_base_url() -> String {
 }
 
 pub mod agent_loop;
+mod agent_loop_compression;
 pub mod agent_loop_errors;
 pub mod agent_loop_limits;
 pub mod agent_loop_plan;

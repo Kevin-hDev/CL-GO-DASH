@@ -1,4 +1,4 @@
-use super::context_used_for_compression;
+use crate::services::compress::state::context_used_for_compression;
 
 #[test]
 fn uses_estimate_when_current_messages_are_larger() {

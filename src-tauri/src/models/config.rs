@@ -53,6 +53,13 @@ impl Default for AdvancedSettings {
     }
 }
 
+impl AdvancedSettings {
+    pub fn normalized(mut self) -> Self {
+        self.compression_threshold = self.compression_threshold.min(100);
+        self
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -78,10 +85,22 @@ mod tests {
 
     #[test]
     fn compression_threshold_bounds() {
-        let mut settings = AdvancedSettings::default();
-        settings.compression_threshold = 0;
+        let mut settings = AdvancedSettings {
+            compression_threshold: 0,
+            ..Default::default()
+        };
         assert_eq!(settings.compression_threshold, 0);
         settings.compression_threshold = 100;
+        assert_eq!(settings.compression_threshold, 100);
+    }
+
+    #[test]
+    fn compression_threshold_is_clamped() {
+        let settings = AdvancedSettings {
+            compression_threshold: 150,
+            ..Default::default()
+        }
+        .normalized();
         assert_eq!(settings.compression_threshold, 100);
     }
 }

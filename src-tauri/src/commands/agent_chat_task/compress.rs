@@ -18,9 +18,7 @@ pub(crate) async fn handle_compress_command(
     provider: &str,
     cancel: CancellationToken,
 ) -> Result<(), String> {
-    use crate::services::agent_local::session_store;
-    use crate::services::agent_local::types_session::AgentMessage;
-    use crate::services::compress::{engine, prompt};
+    use crate::services::compress::{engine, prompt, state};
 
     let _ = on_event.send(StreamEvent::Compressing {
         status: "start".to_string(),
@@ -33,7 +31,7 @@ pub(crate) async fn handle_compress_command(
     )
     .await;
 
-    let msgs_without_command: Vec<ChatMessage> = messages
+    let mut msgs_without_command: Vec<ChatMessage> = messages
         .iter()
         .filter(|m| !(m.role == "user" && m.content.trim() == "/compress"))
         .cloned()
@@ -65,33 +63,17 @@ pub(crate) async fn handle_compress_command(
             }
         };
     let summary = prompt::extract_summary(&summary_raw);
-    let summary_content = prompt::format_summary_message(&summary, false);
-    let summary_tokens = estimate_summary_tokens(&summary_content);
+    let current_tokens = state::apply_and_save(
+        session_id,
+        &mut msgs_without_command,
+        &summary,
+        context,
+        false,
+    )
+    .await?;
 
-    let compressed_msg = AgentMessage {
-        id: uuid::Uuid::new_v4().to_string(),
-        role: "assistant".to_string(),
-        content: summary_content,
-        thinking: None,
-        tool_calls: None,
-        tool_name: None,
-        tool_activities: None,
-        segments: None,
-        files: vec![],
-        timestamp: chrono::Utc::now(),
-        tokens: summary_tokens as u32,
-        skill_names: None,
-    };
-
-    if let Ok(mut session) = session_store::get(session_id).await {
-        session.messages = vec![compressed_msg];
-        session.accumulated_tokens =
-            crate::services::token_counting::estimate_agent_messages_tokens(&session.messages);
-        let _ = session_store::save(&session).await;
-    }
-
-    send_compression_done(on_event, summary_tokens as u32);
-    eprintln!("[compress] manual done session={session_id} summary_tokens={summary_tokens}");
+    send_compression_done(on_event);
+    eprintln!("[compress] manual done session={session_id} context_tokens={current_tokens}");
     Ok(())
 }
 
@@ -139,28 +121,15 @@ async fn resolve_context_window(provider: &str, model: &str) -> u64 {
     ctx.configured
 }
 
-fn estimate_summary_tokens(summary_content: &str) -> usize {
-    let summary_chat_msg = ChatMessage {
-        role: "assistant".to_string(),
-        content: summary_content.to_string(),
-        images: None,
-        tool_calls: None,
-        tool_name: None,
-        tool_call_id: None,
-        reasoning_content: None,
-    };
-    crate::services::compress::token_estimate::estimate_tokens(&[summary_chat_msg])
-}
-
-fn send_compression_done(on_event: &AgentEventEmitter, summary_tokens: u32) {
+fn send_compression_done(on_event: &AgentEventEmitter) {
     send_compressing_done(on_event);
     let _ = on_event.send(StreamEvent::CompressionComplete {});
     let _ = on_event.send(StreamEvent::Done {
-        eval_count: Some(0),
+        eval_count: None,
         eval_duration_ns: 0,
         final_tps: 0.0,
-        prompt_tokens: Some(0),
-        context_tokens: Some(summary_tokens),
+        prompt_tokens: None,
+        context_tokens: None,
     });
 }
 

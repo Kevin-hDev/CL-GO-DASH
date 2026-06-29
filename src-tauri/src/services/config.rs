@@ -40,8 +40,9 @@ pub fn read_config() -> Result<ClgoConfig, String> {
     }
 
     if let Some(adv) = obj.get("advanced") {
-        config.advanced =
-            serde_json::from_value::<AdvancedSettings>(adv.clone()).unwrap_or_default();
+        config.advanced = serde_json::from_value::<AdvancedSettings>(adv.clone())
+            .unwrap_or_default()
+            .normalized();
     }
 
     if let Some(gw) = obj.get("gateway") {

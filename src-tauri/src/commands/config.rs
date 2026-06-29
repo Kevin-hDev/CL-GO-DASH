@@ -43,6 +43,7 @@ fn protect_advanced_settings(
 }
 
 fn normalize_advanced_settings(mut settings: AdvancedSettings) -> AdvancedSettings {
+    settings = settings.normalized();
     if !settings.autostart {
         settings.start_hidden = false;
     }
@@ -126,6 +127,18 @@ mod tests {
 
         assert!(normalized.autostart);
         assert!(normalized.start_hidden);
+    }
+
+    #[test]
+    fn normalize_clamps_compression_threshold() {
+        let settings = AdvancedSettings {
+            compression_threshold: 150,
+            ..Default::default()
+        };
+
+        let normalized = normalize_advanced_settings(settings);
+
+        assert_eq!(normalized.compression_threshold, 100);
     }
 }
 

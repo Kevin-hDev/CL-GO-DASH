@@ -1,9 +1,10 @@
+use super::agent_loop_compression::LoopCompression;
 use super::stream_events::AgentEventEmitter;
 use super::types_ollama::{ChatMessage, OllamaThink, StreamEvent};
 use super::write_guard_registry;
 use super::{
     agent_loop_errors, agent_loop_limits::MAX_TURNS, agent_loop_plan, agent_loop_support,
-    circuit_breaker, compress_hook, context_budget, eager_dispatch, ollama_stream, tool_executor,
+    circuit_breaker, context_budget, eager_dispatch, ollama_stream, tool_executor,
     tool_result_budget,
 };
 use crate::services::token_counting;
@@ -33,7 +34,14 @@ pub async fn run_agent_loop(
     let write_guard_arc = write_guard_registry::lock(&session_id).await;
     let mut write_guard = write_guard_arc.lock().await;
     let mut plan_repairs = 0;
-
+    let compression = LoopCompression {
+        on_event,
+        model,
+        session_id: &session_id,
+        request_id: &request_id,
+        native_context,
+        configured_context,
+    };
     tool_result_budget::cleanup_old_results();
     for turn in 0..MAX_TURNS {
         if cancel.is_cancelled() {
@@ -41,22 +49,12 @@ pub async fn run_agent_loop(
         }
 
         tool_result_budget::apply_budget(messages);
-        let _ = compress_hook::try_auto_compress(
-            on_event,
-            messages,
-            model,
-            &session_id,
-            &request_id,
-            native_context,
-            configured_context,
-            token_counting::sum_real_counts(last_prompt, last_eval),
-            cancel.clone(),
-        )
-        .await;
+        let _ = compression
+            .try_run(messages, last_prompt, last_eval, cancel.clone())
+            .await;
         context_budget::prepare_for_request(messages, configured_context);
         let plan_active = agent_loop_plan::active(&session_id, plan_mode_active).await;
         let request = agent_loop_support::build_request(model, messages, &tools, think.clone());
-
         let (tool_tx, tool_rx) = tokio::sync::mpsc::unbounded_channel();
         let eager_working_dir = working_dir.clone();
         let eager_handle = tokio::spawn(eager_dispatch::collect_eager_results(
@@ -65,7 +63,6 @@ pub async fn run_agent_loop(
             session_id.clone(),
             request_id.clone(),
         ));
-
         super::stream_diagnostics::mark_phase(
             &session_id,
             &request_id,
@@ -81,7 +78,6 @@ pub async fn run_agent_loop(
             plan_active,
         )
         .await?;
-
         token_counting::add_real_count(&mut total_eval, result.eval_count);
         token_counting::add_real_count(&mut total_prompt, result.prompt_tokens);
         last_prompt = result.prompt_tokens;
@@ -115,20 +111,11 @@ pub async fn run_agent_loop(
         }
         messages.push(assistant_message);
 
-        if let Some(context_tokens) = compress_hook::try_auto_compress(
-            on_event,
-            messages,
-            model,
-            &session_id,
-            &request_id,
-            native_context,
-            configured_context,
-            token_counting::sum_real_counts(last_prompt, last_eval),
-            cancel.clone(),
-        )
-        .await
+        if compression
+            .try_run(messages, last_prompt, last_eval, cancel.clone())
+            .await
+            .is_some()
         {
-            let _ = context_tokens;
             last_prompt = None;
             last_eval = None;
         }
@@ -178,7 +165,18 @@ pub async fn run_agent_loop(
         )
         .await;
 
-        let _ = on_event.send(StreamEvent::TurnEnd {});
+        let compressed_after_tools = compression
+            .try_run(messages, last_prompt, last_eval, cancel.clone())
+            .await
+            .is_some();
+        if compressed_after_tools {
+            last_prompt = None;
+            last_eval = None;
+        }
+
+        if !compressed_after_tools {
+            let _ = on_event.send(StreamEvent::TurnEnd {});
+        }
     }
 
     let elapsed_ns = start.elapsed().as_nanos() as u64;
