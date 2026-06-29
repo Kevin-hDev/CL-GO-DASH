@@ -18,9 +18,9 @@ fn resolve_git_dir(repo_path: &PathBuf) -> Option<PathBuf> {
     }
     if dot_git.is_file() {
         let content = std::fs::read_to_string(&dot_git).ok()?;
-        let gitdir = content.trim().strip_prefix("gitdir: ")?;
-        let resolved = if std::path::Path::new(gitdir).is_absolute() {
-            PathBuf::from(gitdir)
+        let gitdir = parse_gitdir_content(&content)?;
+        let resolved = if std::path::Path::new(&gitdir).is_absolute() {
+            gitdir
         } else {
             repo_path.join(gitdir)
         };
@@ -29,6 +29,17 @@ fn resolve_git_dir(repo_path: &PathBuf) -> Option<PathBuf> {
         }
     }
     None
+}
+
+/// Parse le contenu d'un fichier `.git` de worktree linked.
+/// Format attendu : `gitdir: /chemin/vers/.git/worktrees/<name>`.
+/// Retourne le chemin brut (absolu ou relatif tel qu'écrit), sans résoudre.
+pub(super) fn parse_gitdir_content(content: &str) -> Option<PathBuf> {
+    let gitdir = content.trim().strip_prefix("gitdir: ")?;
+    if gitdir.is_empty() {
+        return None;
+    }
+    Some(PathBuf::from(gitdir))
 }
 
 pub fn setup_git_watcher(app: AppHandle, repo_path: PathBuf) -> Result<(), String> {

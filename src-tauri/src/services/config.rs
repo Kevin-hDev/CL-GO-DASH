@@ -2,7 +2,7 @@ use crate::models::{
     AdvancedSettings, ClgoConfig, GatewayConfig, HeartbeatConfig, ScheduledWakeup,
 };
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 fn config_path() -> PathBuf {
     crate::services::paths::data_dir().join("config.json")
@@ -13,8 +13,16 @@ fn config_path() -> PathBuf {
 /// - JSON corrompu → config par défaut + log
 /// - wakeups au format obsolète (CL-GO legacy) → ignorés un par un + log
 pub fn read_config() -> Result<ClgoConfig, String> {
-    let path = config_path();
-    let content = match fs::read_to_string(&path) {
+    read_config_from_path(&config_path(), &crate::services::paths::data_dir())
+}
+
+/// Variante testable : lit le config depuis `path` et écrit la sentinelle de
+/// corruption dans `data_dir`. La logique de parsing tolérant vit ici.
+pub(crate) fn read_config_from_path(
+    path: &Path,
+    data_dir: &Path,
+) -> Result<ClgoConfig, String> {
+    let content = match fs::read_to_string(path) {
         Ok(c) => c,
         Err(_) => return Ok(ClgoConfig::default()),
     };
@@ -23,7 +31,7 @@ pub fn read_config() -> Result<ClgoConfig, String> {
         Ok(v) => v,
         Err(e) => {
             eprintln!("[config] JSON invalide ({}), reset à zéro", e);
-            let sentinel = crate::services::paths::data_dir().join(".config-corrupted");
+            let sentinel = data_dir.join(".config-corrupted");
             let _ = fs::write(&sentinel, format!("{}", e));
             return Ok(ClgoConfig::default());
         }
@@ -69,7 +77,11 @@ pub fn read_config() -> Result<ClgoConfig, String> {
 }
 
 pub fn write_config(config: &ClgoConfig) -> Result<(), String> {
-    let path = config_path();
+    write_config_to_path(&config_path(), config)
+}
+
+/// Variante testable : écrit atomiquement (tmp + rename) le config vers `path`.
+pub(crate) fn write_config_to_path(path: &Path, config: &ClgoConfig) -> Result<(), String> {
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent).map_err(|e| format!("Cannot create config dir: {}", e))?;
     }
@@ -84,3 +96,7 @@ pub fn write_config(config: &ClgoConfig) -> Result<(), String> {
 
     Ok(())
 }
+
+#[cfg(test)]
+#[path = "config_resilience_tests.rs"]
+mod resilience_tests;

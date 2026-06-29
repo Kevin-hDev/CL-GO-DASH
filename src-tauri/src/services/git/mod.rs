@@ -6,6 +6,10 @@ pub mod github_auth;
 pub mod repo;
 pub mod status;
 #[cfg(test)]
+mod status_tests;
+#[cfg(test)]
 mod tests;
 pub mod watcher;
+#[cfg(test)]
+mod watcher_tests;
 pub mod worktree_list;

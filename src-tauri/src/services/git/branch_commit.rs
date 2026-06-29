@@ -66,7 +66,7 @@ fn create_wip_commit(
     Ok(())
 }
 
-fn build_commit_message(target_branch: &str, description: Option<&str>) -> String {
+pub(super) fn build_commit_message(target_branch: &str, description: Option<&str>) -> String {
     let subject = format!("WIP: save changes before switching to {target_branch}");
     match description {
         Some(body) if !body.is_empty() => format!("{subject}\n\n{body}"),
@@ -74,7 +74,7 @@ fn build_commit_message(target_branch: &str, description: Option<&str>) -> Strin
     }
 }
 
-fn sanitize_description(description: Option<String>) -> Result<Option<String>, String> {
+pub(super) fn sanitize_description(description: Option<String>) -> Result<Option<String>, String> {
     let Some(description) = description else {
         return Ok(None);
     };

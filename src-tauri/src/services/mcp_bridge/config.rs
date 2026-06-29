@@ -148,7 +148,7 @@ pub(crate) fn load_from_path(path: &Path) -> Result<Vec<StoredConnector>, String
     Ok(parsed)
 }
 
-fn save_to_path(path: &Path, list: &[StoredConnector]) -> Result<(), String> {
+pub(crate) fn save_to_path(path: &Path, list: &[StoredConnector]) -> Result<(), String> {
     if list.len() > MAX_CONNECTORS {
         return Err("limite de connecteurs atteinte".to_string());
     }
