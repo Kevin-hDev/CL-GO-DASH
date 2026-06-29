@@ -6,6 +6,7 @@ import { SearchDialog } from "./search-dialog";
 import { UpdateNotifications } from "./update-notifications";
 import { useUpdateChecker } from "@/hooks/use-update-checker";
 import { CHAT_MIN_WIDTH } from "@/hooks/file-preview-storage";
+import { CHAT_COMPACT_MIN_WIDTH } from "@/hooks/agent-panel-layout-solver";
 import { IS_MAC } from "@/lib/platform";
 import { GpuStatusBadge } from "@/components/agent-local/gpu-status-badge";
 import { WindowControls } from "./window-controls";
@@ -109,9 +110,11 @@ export function AppLayout({
     handleAgentPanelsTightChange,
   );
   const compactAgentChat = shouldCompactAgentChat(agentSidebar);
+  const chatTargetMinWidth = compactAgentChat ? CHAT_COMPACT_MIN_WIDTH : CHAT_MIN_WIDTH;
   const layoutStyle = {
     "--app-sidebar-hidden-offset": `${sidebarHiddenOffset}px`,
-    "--agent-chat-min-width": `${compactAgentChat ? 0 : CHAT_MIN_WIDTH}px`,
+    "--agent-chat-target-min-width": `${chatTargetMinWidth}px`,
+    "--agent-chat-min-width": `${chatTargetMinWidth}px`,
   } as CSSProperties;
 
   return (

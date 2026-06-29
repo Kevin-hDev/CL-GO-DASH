@@ -17,7 +17,7 @@
 }
 
 .agent-chat-compact .agent-detail-chat {
-  min-width: 0;
+  min-width: var(--agent-chat-min-width, var(--agent-chat-target-min-width, 240px));
 }
 
 .agent-detail-chat-fs {

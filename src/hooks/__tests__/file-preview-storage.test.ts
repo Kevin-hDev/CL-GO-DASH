@@ -24,8 +24,8 @@ describe("clampFilePreviewWidthForContainer", () => {
     expect(clampFilePreviewWidthForContainer(900, 1000, 100)).toBe(1000 - CHAT_MIN_WIDTH - 100);
   });
 
-  it("privilégie le minimum du chat si le conteneur est trop étroit", () => {
-    expect(clampFilePreviewWidthForContainer(360, 560)).toBe(560 - CHAT_MIN_WIDTH);
+  it("garde le minimum preview et laisse le chat se compacter si besoin", () => {
+    expect(clampFilePreviewWidthForContainer(360, 560)).toBe(FILE_PREVIEW_MIN_WIDTH);
   });
 
   it("laisse la preview garder sa largeur quand le chat compact accepte 0px", () => {

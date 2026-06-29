@@ -1,8 +1,10 @@
+import type { CSSProperties } from "react";
 import { ChatView } from "./chat-view";
 import { FilePreviewPanel } from "@/components/file-preview/file-preview-panel";
 import { FileTreePanel } from "@/components/file-tree/file-tree-panel";
 import type { useFilePreview } from "@/hooks/use-file-preview";
 import type { useFileTree } from "@/hooks/use-file-tree";
+import { useAgentPanelLayout } from "@/hooks/use-agent-panel-layout";
 import type { DroppedFile } from "@/hooks/use-file-drop";
 import type { useTerminal } from "@/hooks/use-terminal";
 import type { Project } from "@/types/agent";
@@ -44,8 +46,21 @@ interface AgentChatDetailProps {
 }
 
 export function AgentChatDetail(props: AgentChatDetailProps) {
+  const previewDesiredWidth = props.filePreview.width + props.filePreview.extraWidth;
+  const { containerRef, layout } = useAgentPanelLayout({
+    previewOpen: props.filePreview.open,
+    previewFullscreen: props.filePreview.fullscreen,
+    previewDesiredWidth,
+    fileTreeOpen: props.fileTree.open,
+    fileTreeDesiredWidth: props.fileTree.width,
+  });
+  const layoutStyle = {
+    "--agent-chat-min-width": `${layout.chatMinWidth}px`,
+    "--ft-active-width": `${props.fileTree.open ? layout.fileTreeWidth : 0}px`,
+  } as CSSProperties;
+
   return (
-    <div className="agent-detail-with-preview">
+    <div className="agent-detail-with-preview" ref={containerRef} style={layoutStyle}>
       {props.parentSessionId && (
         <button
           className="sa-parent-btn"
@@ -85,6 +100,7 @@ export function AgentChatDetail(props: AgentChatDetailProps) {
         open={props.filePreview.open}
         fullscreen={props.filePreview.fullscreen}
         width={props.filePreview.width}
+        displayWidth={layout.previewWidth}
         extraWidth={props.filePreview.extraWidth}
         fullscreenWidth={props.filePreview.fullscreenWidth}
         fullscreenSwitching={props.fullscreenSwitching}
@@ -107,6 +123,7 @@ export function AgentChatDetail(props: AgentChatDetailProps) {
       />
       <FileTreePanel
         tree={props.fileTree}
+        displayWidth={layout.fileTreeWidth}
         onFileSelect={props.filePreview.openPath}
         activePath={props.filePreview.tabs.find((tab) => tab.id === props.filePreview.activeTab)?.path ?? null}
       />

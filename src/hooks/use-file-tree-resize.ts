@@ -9,7 +9,6 @@ import {
 } from "react";
 import {
   clampFileTreeWidthForContainer,
-  findOpenFileTreePanel,
   measureFileTreeLayout,
 } from "./file-tree-layout";
 import { beginPanelResize } from "./panel-resize";
@@ -23,7 +22,6 @@ interface ResizeState {
 }
 
 export function useFileTreeResize(
-  open: boolean,
   width: number,
   setWidth: Dispatch<SetStateAction<number>>,
 ) {
@@ -46,40 +44,6 @@ export function useFileTreeResize(
     };
     setResizing(true);
   }, [width]);
-
-  useEffect(() => {
-    if (!open || resizing) return;
-    const panel = findOpenFileTreePanel();
-    if (!panel) return;
-    const layout = measureFileTreeLayout(panel);
-    setWidth((current) => clampFileTreeWidthForContainer(
-      current,
-      layout.containerWidth,
-      layout.reservedWidth,
-    ));
-  }, [open, resizing, setWidth]);
-
-  useEffect(() => {
-    if (!open) return;
-    const panel = findOpenFileTreePanel();
-    const layout = measureFileTreeLayout(panel);
-    if (!layout.container || typeof ResizeObserver === "undefined") return;
-    const updateWidth = () => setWidth((current) => {
-      const nextLayout = measureFileTreeLayout(panel);
-      return clampFileTreeWidthForContainer(
-        current,
-        nextLayout.containerWidth,
-        nextLayout.reservedWidth,
-        nextLayout.chatMinWidth,
-      );
-    });
-    const observer = new ResizeObserver(updateWidth);
-    observer.observe(layout.container);
-    for (const child of layout.container.children) {
-      if (child !== panel && !child.classList.contains("agent-detail-chat")) observer.observe(child);
-    }
-    return () => observer.disconnect();
-  }, [open, setWidth]);
 
   useEffect(() => {
     const onMove = (event: PointerEvent) => {

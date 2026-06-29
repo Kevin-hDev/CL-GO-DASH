@@ -7,7 +7,6 @@ import {
   writeStoredFilePreviewTabs,
 } from "./file-preview-storage";
 import {
-  clampPreviewWidthForLayout,
   findOpenPreviewPanel,
   measurePreviewFullscreenWidth,
   measurePreviewLayout,
@@ -119,14 +118,6 @@ export function useFilePreview(sessionId: string | null, operations: FileOperati
     };
     setResizing(true);
   }, [width, extraWidth]);
-
-  useEffect(() => {
-    if (!open || fullscreen || resizing) return;
-    const panel = findOpenPreviewPanel();
-    if (!panel) return;
-    const nextWidth = clampPreviewWidthForLayout(width, panel, extraWidth);
-    if (nextWidth !== width) setWidth((current) => clampPreviewWidthForLayout(current, panel, extraWidth));
-  }, [open, fullscreen, resizing, width, extraWidth, setWidth]);
 
   useEffect(() => {
     if (!open) return;

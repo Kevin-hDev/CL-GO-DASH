@@ -23,7 +23,7 @@
 
 .fp-panel.open {
   width: var(--fp-width) !important;
-  max-width: max(0px, calc(100% - var(--agent-chat-min-width, 360px)));
+  max-width: max(0px, calc(100% - var(--agent-chat-min-width, 360px) - var(--ft-active-width, 0px)));
   transform: translateX(0);
   opacity: 1;
   pointer-events: auto;

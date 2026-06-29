@@ -34,7 +34,7 @@ describe("file tree layout", () => {
   });
 
   it("ne descend pas vers un fallback illisible quand l'espace est serre", () => {
-    expect(clampFileTreeWidthForContainer(80, 610, 120)).toBe(130);
+    expect(clampFileTreeWidthForContainer(80, 610, 120)).toBe(FILE_TREE_MIN_WIDTH);
   });
 
   it("utilise le minimum dynamique du chat en mode compact", () => {

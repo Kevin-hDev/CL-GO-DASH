@@ -25,7 +25,7 @@ function readStoredWidth(sessionId: string | null): number {
 export function useFileTree(sessionId: string | null, projectPath: string | undefined) {
   const [open, setOpen] = useState(false);
   const [width, setWidth] = useState(() => readStoredWidth(sessionId));
-  const { resizing, startResize } = useFileTreeResize(open, width, setWidth);
+  const { resizing, startResize } = useFileTreeResize(width, setWidth);
 
   const [rootEntries, setRootEntries] = useState<FileEntry[]>([]);
   const [childrenMap, setChildrenMap] = useState<Map<string, FileEntry[]>>(new Map());

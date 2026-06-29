@@ -1,16 +1,7 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
-import { CHAT_MIN_WIDTH, FILE_PREVIEW_MIN_WIDTH } from "@/hooks/file-preview-storage";
-import { FILE_TREE_MIN_WIDTH } from "@/hooks/file-tree-layout";
+import { shouldAutoHideSidebarForAgentPanels } from "@/hooks/agent-panel-layout-solver";
 
-export function shouldAutoHideSidebarForAgentPanels(
-  detailWidth: number,
-  previewOpen: boolean,
-  fileTreeOpen: boolean,
-): boolean {
-  return previewOpen
-    && fileTreeOpen
-    && detailWidth < CHAT_MIN_WIDTH + FILE_PREVIEW_MIN_WIDTH + FILE_TREE_MIN_WIDTH;
-}
+export { shouldAutoHideSidebarForAgentPanels };
 
 export function projectedDetailWidthWithSidebarOpen(
   detailWidth: number,

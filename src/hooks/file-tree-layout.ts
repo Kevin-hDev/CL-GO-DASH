@@ -22,9 +22,10 @@ export function clampFileTreeWidthForContainer(
   reservedWidth = 0,
   chatMinWidth = CHAT_MIN_WIDTH,
 ): number {
-  const available = containerWidth - Math.max(0, chatMinWidth) - Math.max(0, reservedWidth);
-  const maxWidth = Math.min(FILE_TREE_MAX_WIDTH, Math.max(0, available));
-  const minWidth = Math.min(FILE_TREE_MIN_WIDTH, maxWidth);
+  const panelSpace = Math.max(0, containerWidth - Math.max(0, reservedWidth));
+  const targetChatMaxWidth = Math.max(0, panelSpace - Math.max(0, chatMinWidth));
+  const maxWidth = Math.min(FILE_TREE_MAX_WIDTH, Math.max(Math.min(FILE_TREE_MIN_WIDTH, panelSpace), targetChatMaxWidth));
+  const minWidth = Math.min(FILE_TREE_MIN_WIDTH, panelSpace);
   const width = typeof value === "number" && Number.isFinite(value) ? value : FILE_TREE_DEFAULT_WIDTH;
   return Math.min(maxWidth, Math.max(minWidth, width));
 }

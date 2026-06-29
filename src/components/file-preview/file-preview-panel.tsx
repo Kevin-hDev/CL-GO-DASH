@@ -16,6 +16,7 @@ interface FilePreviewPanelProps {
   open: boolean;
   fullscreen: boolean;
   width: number;
+  displayWidth?: number;
   extraWidth?: number;
   fullscreenWidth: number;
   fullscreenSwitching: boolean;
@@ -54,7 +55,7 @@ export function FilePreviewPanel(props: FilePreviewPanelProps) {
       className={`fp-panel ${props.open ? "open" : ""} ${props.fullscreen ? "fullscreen" : ""} ${props.fullscreenSwitching ? "fullscreen-switching" : ""} ${props.resizing ? "resizing" : ""}`}
       data-nav-zone="filePreview"
       style={{
-        "--fp-width": `${props.width + (props.extraWidth ?? 0)}px`,
+        "--fp-width": `${props.displayWidth ?? props.width + (props.extraWidth ?? 0)}px`,
         "--fp-full-width": `${props.fullscreenWidth}px`,
       } as React.CSSProperties}
       aria-hidden={!props.open}

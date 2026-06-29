@@ -11,11 +11,12 @@ const MAX_RENDER_DEPTH = 50;
 
 interface FileTreePanelProps {
   tree: ReturnType<typeof useFileTree>;
+  displayWidth?: number;
   onFileSelect: (path: string) => void;
   activePath: string | null;
 }
 
-export function FileTreePanel({ tree, onFileSelect, activePath }: FileTreePanelProps) {
+export function FileTreePanel({ tree, displayWidth, onFileSelect, activePath }: FileTreePanelProps) {
   const { t } = useTranslation();
   const [debouncedFilter, setDebouncedFilter] = useState("");
   const timerRef = useRef(0);
@@ -94,7 +95,7 @@ export function FileTreePanel({ tree, onFileSelect, activePath }: FileTreePanelP
     <aside
       className={`ft-panel ${tree.open ? "open" : ""} ${tree.resizing ? "resizing" : ""}`}
       data-nav-zone="fileTree"
-      style={{ "--ft-width": `${tree.width}px` } as React.CSSProperties}
+      style={{ "--ft-width": `${displayWidth ?? tree.width}px` } as React.CSSProperties}
       aria-hidden={!tree.open}
     >
       <div className="ft-resize" onPointerDown={tree.startResize} />
