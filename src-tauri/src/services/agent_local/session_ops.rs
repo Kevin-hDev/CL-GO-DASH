@@ -35,7 +35,8 @@ pub async fn truncate_and_replace(
                 session.messages.truncate(idx + 1);
             }
         }
-        session.accumulated_tokens = session.messages.iter().map(|m| m.tokens).sum();
+        session.accumulated_tokens =
+            crate::services::token_counting::estimate_agent_messages_tokens(&session.messages);
         save(&session).await?;
     }
     Ok(())

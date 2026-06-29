@@ -15,7 +15,7 @@ pub async fn try_auto_compress(
     request_id: &str,
     native_context: u64,
     configured_context: u64,
-    last_context_tokens: u32,
+    last_context_tokens: Option<u32>,
     cancel: CancellationToken,
 ) -> Option<u32> {
     let config = match crate::services::config::read_config() {
@@ -99,8 +99,13 @@ pub async fn try_auto_compress(
     }
 }
 
-fn context_used_for_compression(last_context_tokens: u32, estimated_tokens: usize) -> usize {
-    std::cmp::max(last_context_tokens as usize, estimated_tokens)
+fn context_used_for_compression(
+    last_context_tokens: Option<u32>,
+    estimated_tokens: usize,
+) -> usize {
+    last_context_tokens
+        .map(|tokens| std::cmp::max(tokens as usize, estimated_tokens))
+        .unwrap_or(estimated_tokens)
 }
 
 async fn save_compressed_session(
@@ -177,7 +182,8 @@ async fn save_compressed_session(
 
     if let Ok(mut session) = session_store::get(session_id).await {
         session.messages = session_messages;
-        session.accumulated_tokens = session.messages.iter().map(|m| m.tokens).sum();
+        session.accumulated_tokens =
+            crate::services::token_counting::estimate_agent_messages_tokens(&session.messages);
         let _ = session_store::save(&session).await;
     }
 }

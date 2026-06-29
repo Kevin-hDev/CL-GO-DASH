@@ -85,7 +85,8 @@ pub(crate) async fn handle_compress_command(
 
     if let Ok(mut session) = session_store::get(session_id).await {
         session.messages = vec![compressed_msg];
-        session.accumulated_tokens = summary_tokens as u32;
+        session.accumulated_tokens =
+            crate::services::token_counting::estimate_agent_messages_tokens(&session.messages);
         let _ = session_store::save(&session).await;
     }
 
@@ -155,11 +156,11 @@ fn send_compression_done(on_event: &AgentEventEmitter, summary_tokens: u32) {
     send_compressing_done(on_event);
     let _ = on_event.send(StreamEvent::CompressionComplete {});
     let _ = on_event.send(StreamEvent::Done {
-        eval_count: 0,
+        eval_count: Some(0),
         eval_duration_ns: 0,
         final_tps: 0.0,
-        prompt_tokens: 0,
-        context_tokens: summary_tokens,
+        prompt_tokens: Some(0),
+        context_tokens: Some(summary_tokens),
     });
 }
 

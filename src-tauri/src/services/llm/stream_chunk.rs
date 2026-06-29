@@ -6,8 +6,8 @@ pub enum ParsedChunk {
     Content(String),
     ToolCalls(Vec<Value>),
     Usage {
-        completion_tokens: u32,
-        prompt_tokens: u32,
+        completion_tokens: Option<u32>,
+        prompt_tokens: Option<u32>,
     },
 }
 
@@ -25,11 +25,11 @@ pub fn parse(data: &str) -> Vec<ParsedChunk> {
             completion_tokens: usage
                 .get("completion_tokens")
                 .and_then(|v| v.as_u64())
-                .unwrap_or(0) as u32,
+                .map(|v| v as u32),
             prompt_tokens: usage
                 .get("prompt_tokens")
                 .and_then(|v| v.as_u64())
-                .unwrap_or(0) as u32,
+                .map(|v| v as u32),
         });
     }
     out

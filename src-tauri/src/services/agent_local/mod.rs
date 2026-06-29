@@ -38,6 +38,8 @@ pub mod ollama_registry_details;
 mod ollama_registry_tests;
 pub mod ollama_stream;
 pub mod ollama_stream_process;
+#[cfg(test)]
+mod ollama_stream_process_tests;
 pub mod permission_gate;
 #[cfg(test)]
 pub mod permission_gate_tests;

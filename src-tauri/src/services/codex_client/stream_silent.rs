@@ -103,8 +103,8 @@ async fn consume_sse_silent(
             }
             "response.done" | "response.completed" => {
                 if let Some(usage) = parsed.pointer("/response/usage") {
-                    result.prompt_tokens = usage["input_tokens"].as_u64().unwrap_or(0) as u32;
-                    result.eval_count = usage["output_tokens"].as_u64().unwrap_or(0) as u32;
+                    result.prompt_tokens = usage["input_tokens"].as_u64().map(|v| v as u32);
+                    result.eval_count = usage["output_tokens"].as_u64().map(|v| v as u32);
                 }
                 break;
             }

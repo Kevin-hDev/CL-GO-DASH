@@ -23,8 +23,8 @@ pub fn process_chunk(
     }
 
     if chunk["done"].as_bool() == Some(true) {
-        result.eval_count = chunk["eval_count"].as_u64().unwrap_or(0) as u32;
-        result.prompt_tokens = chunk["prompt_eval_count"].as_u64().unwrap_or(0) as u32;
+        result.eval_count = chunk["eval_count"].as_u64().map(|v| v as u32);
+        result.prompt_tokens = chunk["prompt_eval_count"].as_u64().map(|v| v as u32);
         flush_filter(
             think_filter,
             on_event,
@@ -142,21 +142,45 @@ fn flush_filter(
 }
 
 pub fn emit_done(on_event: &AgentEventEmitter, chunk: &serde_json::Value) -> Result<(), String> {
-    let ec = chunk["eval_count"].as_u64().unwrap_or(0) as u32;
+    let counts = done_counts(chunk);
     let ed = chunk["eval_duration"].as_u64().unwrap_or(1);
-    let pt = chunk["prompt_eval_count"].as_u64().unwrap_or(0) as u32;
+    let eval_count = counts.eval_count.unwrap_or(0);
     let final_tps = if ed > 0 {
-        ec as f64 / (ed as f64 / 1e9)
+        eval_count as f64 / (ed as f64 / 1e9)
     } else {
         0.0
     };
 
     let _ = on_event.send(StreamEvent::Done {
-        eval_count: ec,
+        eval_count: counts.eval_count,
         eval_duration_ns: ed,
         final_tps,
-        prompt_tokens: pt,
-        context_tokens: pt + ec,
+        prompt_tokens: counts.prompt_tokens,
+        context_tokens: counts.context_tokens,
     });
     Ok(())
+}
+
+#[derive(Debug, PartialEq)]
+pub(crate) struct DoneCounts {
+    pub(crate) eval_count: Option<u32>,
+    pub(crate) prompt_tokens: Option<u32>,
+    pub(crate) context_tokens: Option<u32>,
+}
+
+pub(crate) fn done_counts(chunk: &serde_json::Value) -> DoneCounts {
+    let eval_count = chunk["eval_count"].as_u64().map(|value| value as u32);
+    let prompt_tokens = chunk["prompt_eval_count"]
+        .as_u64()
+        .map(|value| value as u32);
+    let context_tokens = match (prompt_tokens, eval_count) {
+        (Some(prompt), Some(eval)) => Some(prompt.saturating_add(eval)),
+        _ => None,
+    };
+
+    DoneCounts {
+        eval_count,
+        prompt_tokens,
+        context_tokens,
+    }
 }

@@ -93,7 +93,7 @@ export function applyStreamEvent(
       next.error = errorKey ? i18n.t(errorKey) : i18n.t("errors.streamInterrupted");
       next.isConnectionError = (event.data as Record<string, unknown>).isConnection === true;
       next.diagnosticSummary = event.data.diagnostic?.safeSummary;
-      const partial = finalizeStream(next, 0, 0, 0);
+      const partial = finalizeStream(next, null, 0, null);
       partial.state.error = next.error;
       partial.state.isConnectionError = next.isConnectionError;
       partial.state.diagnosticSummary = next.diagnosticSummary;
@@ -135,20 +135,20 @@ function addPermission(
 }
 
 export function finishPartialStream(state: ManagedStreamState): StreamApplyResult {
-  return finalizeStream(state, 0, state.tps, 0);
+  return finalizeStream(state, null, state.tps, null);
 }
 
 function finishStream(state: ManagedStreamState, event: Extract<StreamEvent, { event: "done" }>) {
   return finalizeStream(
     state,
-    event.data.evalCount || 0,
+    event.data.evalCount,
     event.data.finalTps,
-    event.data.contextTokens || 0,
+    event.data.contextTokens,
   );
 }
 
 function finalizeStream(
-  state: ManagedStreamState, outputTokens: number, tps: number, contextTokens: number,
+  state: ManagedStreamState, outputTokens: number | null, tps: number, contextTokens: number | null,
 ): StreamApplyResult {
   const all = state.currentContent || state.currentThinking || state.currentTools.length > 0
     ? appendCurrentSegment(state) : state.completedSegments;
@@ -162,19 +162,21 @@ function finalizeStream(
   } : undefined;
   if (assistantMessage) {
     const messageTokens = estimateAgentMessagesTokens([assistantMessage]);
-    assistantMessage.tokens = messageTokens > 0 ? messageTokens : outputTokens;
+    assistantMessage.tokens = outputTokens ?? messageTokens;
   }
   const allMessages = assistantMessage ? [...state.messages, assistantMessage] : [...state.messages];
   if (allMessages.length > MAX_MESSAGES_PER_SESSION) {
     allMessages.splice(0, allMessages.length - MAX_MESSAGES_PER_SESSION);
   }
   const visibleSessionTokens = estimateAgentMessagesTokens(allMessages);
-  const resolvedSessionTokenCount = Math.max(contextTokens, visibleSessionTokens);
+  const hasRealContextTokens = contextTokens !== null;
+  const resolvedSessionTokenCount = hasRealContextTokens ? contextTokens : visibleSessionTokens;
   const next: ManagedStreamState = {
     ...state, completedSegments: [], currentContent: "", currentThinking: "",
     currentTools: [], isStreaming: false, tps,
     sessionTokenCount: resolvedSessionTokenCount,
-    lastRequestTokens: assistantMessage?.tokens ?? outputTokens, liveTokenCount: 0,
+    sessionTokenCountEstimated: !hasRealContextTokens,
+    lastRequestTokens: assistantMessage?.tokens ?? outputTokens ?? 0, liveTokenCount: 0,
     streamStartedAt: null, segmentStartedAt: null, totalElapsedMs: totalMs,
     pendingPermissions: [], interactiveChoice: undefined,
     completed: true, updatedAt: Date.now(),
@@ -183,6 +185,6 @@ function finalizeStream(
   if (!assistantMessage) return { state: next };
   return {
     state: { ...next, messages: allMessages },
-    assistantMessage, assistantTokens: assistantMessage.tokens ?? outputTokens,
+    assistantMessage, assistantTokens: assistantMessage.tokens ?? outputTokens ?? 0,
   };
 }

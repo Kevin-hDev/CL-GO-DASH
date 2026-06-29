@@ -99,7 +99,12 @@ pub async fn collect_chat(
             tokio_util::sync::CancellationToken::new(),
         )
         .await?;
-        return Ok((result.content, result.prompt_tokens + result.eval_count));
+        let total = crate::services::token_counting::sum_real_counts(
+            result.prompt_tokens,
+            result.eval_count,
+        )
+        .unwrap_or(0);
+        return Ok((result.content, total));
     }
     let provider = openai_compat::OpenAiCompatProvider::new(provider_id).map_err(String::from)?;
     let req = types::ChatRequest {

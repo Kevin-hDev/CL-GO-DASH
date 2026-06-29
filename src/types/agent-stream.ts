@@ -18,7 +18,7 @@ export type StreamEvent =
   | { event: "toolResult"; data: { name: string; content: string; isError: boolean; truncated?: boolean; toolCallIndex: number } }
   | { event: "turnEnd"; data: Record<string, never> }
   | { event: "permissionRequest"; data: { id: string; toolName: string; arguments: Record<string, unknown> } }
-  | { event: "done"; data: { evalCount: number; evalDurationNs: number; finalTps: number; promptTokens: number; contextTokens: number } }
+  | { event: "done"; data: { evalCount: number | null; evalDurationNs: number; finalTps: number; promptTokens: number | null; contextTokens: number | null } }
   | { event: "error"; data: { message: string; isConnection?: boolean; diagnostic?: AgentErrorDiagnosticSummary } }
   | { event: "notice"; data: { messageKey: string } }
   | { event: "compressing"; data: { status: string } }

@@ -34,11 +34,11 @@ pub enum StreamEvent {
     },
     #[serde(rename_all = "camelCase")]
     Done {
-        eval_count: u32,
+        eval_count: Option<u32>,
         eval_duration_ns: u64,
         final_tps: f64,
-        prompt_tokens: u32,
-        context_tokens: u32,
+        prompt_tokens: Option<u32>,
+        context_tokens: Option<u32>,
     },
     #[serde(rename_all = "camelCase")]
     Error {
@@ -110,8 +110,8 @@ pub struct StreamResult {
     /// IDs OpenAI-compat alignés avec `tool_calls` (vide pour Ollama).
     pub tool_call_ids: Vec<String>,
     pub tool_call_extra_content: Vec<Option<serde_json::Value>>,
-    pub eval_count: u32,
-    pub prompt_tokens: u32,
+    pub eval_count: Option<u32>,
+    pub prompt_tokens: Option<u32>,
 }
 
 #[derive(Debug, Clone, Serialize)]
