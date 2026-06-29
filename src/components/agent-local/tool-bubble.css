@@ -1,21 +1,7 @@
-.chat-bubble {
+/* Conteneur racine inline (remplace l'ancienne .chat-bubble) */
+.tb-stream {
   width: 100%;
-  max-width: 720px;
-  border-radius: var(--radius-md, 8px);
-  padding: 10px 14px;
-  align-self: center;
-  margin: 6px auto;
-  background: var(--void);
-  border: 1px solid var(--edge);
-}
-
-[data-theme="light"] .chat-bubble {
-  border-color: rgba(0, 0, 0, 0.12);
-}
-
-[data-theme="dark"] .chat-bubble {
-  background: var(--surface-glass);
-  border: none;
+  margin: 4px 0;
 }
 
 .tb-accordion {
@@ -36,33 +22,10 @@
 .tb-group-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 2px;
 }
 
-.tb-group {
-  --tb-group-color: var(--ink-muted);
-}
-
-.tb-group-exploration {
-  --tb-group-color: var(--tool-read);
-}
-
-.tb-group-modification {
-  --tb-group-color: var(--tool-edit);
-}
-
-.tb-group-command {
-  --tb-group-color: var(--tool-bash);
-}
-
-.tb-group-web {
-  --tb-group-color: var(--ink);
-}
-
-.tb-group-git {
-  --tb-group-color: var(--tool-bash);
-}
-
+/* En-tête de groupe */
 .tb-group-toggle {
   display: flex;
   align-items: center;
@@ -72,7 +35,7 @@
   border: none;
   background: none;
   padding: 0;
-  color: var(--ink-muted);
+  color: var(--ink-faint);
   font: inherit;
   text-align: left;
 }
@@ -85,35 +48,48 @@
   color: var(--ink-on-pulse);
 }
 
+.tb-group-icon {
+  flex-shrink: 0;
+}
+
 .tb-group-title {
-  flex: 1;
   min-width: 0;
   color: inherit;
   font-size: 12px;
   line-height: 1.6;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tb-group-sep {
+  color: var(--ink-faint);
+  opacity: 0.7;
+}
+
+.tb-group-details-text {
+  color: inherit;
+  opacity: 0.85;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .tb-group-progress {
   color: var(--ink-faint);
+  flex-shrink: 0;
 }
 
 .tb-group-state {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 14px;
-  color: var(--signal-ok);
+  width: 16px;
+  color: var(--ink-faint);
   flex-shrink: 0;
 }
 
-.tb-group-error {
-  color: var(--signal-error);
-  font-size: 10px;
-}
-
+/* Accordion du groupe : les sous-lignes restent toujours muted */
 .tb-group-accordion {
   display: grid;
   grid-template-rows: 0fr;
@@ -127,16 +103,27 @@
 .tb-group-details {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
   min-height: 0;
   overflow: hidden;
-  padding-top: 6px;
-  padding-left: 18px;
+  padding-top: 4px;
+  padding-left: 23px;
 }
 
 .tb-spinner {
   color: var(--ink-faint);
   animation: spin 1s linear infinite;
+}
+
+/* Ligne d'outil individuelle */
+.tb-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-family: var(--font-mono, monospace);
+  line-height: 1.6;
+  color: var(--ink-faint);
 }
 
 .tb-toggle {
@@ -148,12 +135,102 @@
   background: none;
   padding: 0;
   font: inherit;
+  color: inherit;
 }
 
-.tb-toggle:hover {
+.tb-tool-icon {
+  flex-shrink: 0;
+  color: inherit;
+}
+
+.tb-tool-verb {
+  font-weight: 600;
+  flex-shrink: 0;
+  color: inherit;
+}
+
+.tb-item-summary {
+  /* grow:0, shrink:1, basis:auto → taille naturelle, peut rétrécir avec troncature */
+  flex: 0 1 auto;
+  min-width: 0;
+  color: inherit;
+  /* Une seule ligne : troncature en gardant la fin du texte */
+  white-space: nowrap;
+  overflow: hidden;
+  direction: rtl;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+
+.tb-item-summary[role="button"] {
+  color: var(--ink-faint);
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: var(--edge);
+  unicode-bidi: plaintext;
+}
+
+.tb-item-summary[role="button"]:hover {
+  color: var(--ink);
+}
+
+/* Layout fichier : dossiers tronçables (gauche) + nom fixe (droite) */
+.tb-item-dirs {
+  /* grow:0, shrink:1, basis:auto → taille naturelle, peut rétrécir avec troncature */
+  flex: 0 1 auto;
+  min-width: 0;
+  color: inherit;
   opacity: 0.8;
+  white-space: nowrap;
+  overflow: hidden;
+  direction: rtl;
+  text-overflow: ellipsis;
+  text-align: left;
+  unicode-bidi: plaintext;
 }
 
+.tb-item-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  color: inherit;
+  white-space: nowrap;
+}
+
+.tb-item-name-text {
+  color: inherit;
+}
+
+.tb-change-stats {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  flex-shrink: 0;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+}
+
+.tb-change-add {
+  color: var(--signal-ok);
+}
+
+.tb-change-del {
+  color: var(--signal-error);
+}
+
+.tb-status-anchor {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.tb-status-img {
+  display: block;
+}
+
+/* Chevron : uniquement au survol */
 .tb-arrow {
   font-size: 9px;
   color: var(--ink-faint);
@@ -178,10 +255,6 @@
 .tb-group-toggle:hover .tb-group-arrow,
 .tb-row:hover .tb-tool-arrow {
   animation: tb-arrow-peek 1200ms ease forwards;
-}
-
-[data-theme="dark"] .tb-row:hover .tb-item-summary {
-  color: var(--ink-on-pulse) !important;
 }
 
 @keyframes tb-arrow-peek {

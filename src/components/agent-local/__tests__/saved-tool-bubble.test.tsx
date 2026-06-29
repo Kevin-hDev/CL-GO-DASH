@@ -13,6 +13,17 @@ vi.mock("@/components/ui/icons", () => ({
   CaretUp: () => <span />,
   Check: () => <span data-testid="check-icon" />,
 }));
+vi.mock("../tool-icons", () => ({
+  ToolIcon: ({ name }: { name: string }) => <span data-testid={`tool-icon-${name}`} />,
+}));
+vi.mock("../tool-status-icon", () => ({
+  ToolStatusIcon: ({ status, message }: { status: string; message?: string }) => (
+    <span data-testid={`status-icon-${status}`} data-message={message ?? ""} />
+  ),
+}));
+vi.mock("@/components/file-preview/file-icon", () => ({
+  FileIcon: ({ name }: { name: string }) => <span data-testid={`file-icon-${name}`} />,
+}));
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     i18n: { language: "en" },
@@ -21,9 +32,6 @@ vi.mock("react-i18next", () => ({
         typeof value === "string" || typeof value === "number" ? String(value) : ""
       );
       const count = text(opts?.count);
-      if (key === "agentLocal.toolActivity.summary") {
-        return `${text(opts?.group)}: ${text(opts?.details)}`;
-      }
       if (key === "agentLocal.toolActivity.inProgress") return "in progress";
       if (key === "agentLocal.toolActivity.toggleDetails") return "Show tool details";
       if (key === "agentLocal.toolActivity.groups.command") return "Commands";

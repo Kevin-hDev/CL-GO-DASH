@@ -1,11 +1,14 @@
 import { useMemo } from "react";
 import { Spinner } from "@phosphor-icons/react";
-import { CaretDown, CaretUp, Check } from "@/components/ui/icons";
+import { CaretDown, CaretUp } from "@/components/ui/icons";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
-import type { ToolActivityGroup, ToolActivityCounts } from "@/lib/tool-activity-summary";
+import type { ToolActivityCounts, ToolActivityGroup } from "@/lib/tool-activity-summary";
+import { groupIcon } from "@/lib/tool-activity-summary";
 import type { RenderableTool } from "./tool-detail-row";
 import { ToolDetailRow } from "./tool-detail-row";
+import { ToolIcon } from "./tool-icons";
+import { ToolStatusIcon } from "./tool-status-icon";
 import { useCollapsiblePresence } from "./use-collapsible-presence";
 
 const COUNT_ORDER: Array<keyof ToolActivityCounts> = [
@@ -21,26 +24,19 @@ const COUNT_ORDER: Array<keyof ToolActivityCounts> = [
   "otherActions",
 ];
 
-function joinParts(parts: string[], language: string): string {
+function joinParts(parts: string[]): string {
   if (parts.length <= 1) return parts[0] ?? "";
-  try {
-    return new Intl.ListFormat(language, { style: "long", type: "conjunction" }).format(parts);
-  } catch {
-    return parts.join(", ");
-  }
+  return parts.join(", ");
 }
 
-function summaryText(
+function summaryDetails(
   group: ToolActivityGroup<RenderableTool>,
   t: TFunction,
-  language: string,
 ): string {
   const parts = COUNT_ORDER
     .filter((key) => group.counts[key] > 0)
     .map((key) => t(`agentLocal.toolActivity.counts.${key}`, { count: group.counts[key] }));
-  const label = t(`agentLocal.toolActivity.groups.${group.kind}`);
-  const details = joinParts(parts, language);
-  return details ? t("agentLocal.toolActivity.summary", { group: label, details }) : label;
+  return joinParts(parts);
 }
 
 function ToolActivityGroupRow({
@@ -52,9 +48,13 @@ function ToolActivityGroupRow({
   onFilePreview?: (path: string) => void;
   projectPath?: string;
 }) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { open: isOpen, mounted, toggle, onTransitionEnd } = useCollapsiblePresence();
-  const title = useMemo(() => summaryText(group, t, i18n.language), [group, t, i18n.language]);
+  const label = t(`agentLocal.toolActivity.groups.${group.kind}`);
+  const details = useMemo(
+    () => summaryDetails(group, t),
+    [group, t],
+  );
 
   return (
     <div className={`tb-group tb-group-${group.kind}`}>
@@ -65,19 +65,33 @@ function ToolActivityGroupRow({
         aria-label={t("agentLocal.toolActivity.toggleDetails")}
         onClick={toggle}
       >
-        <span className="tb-arrow tb-group-arrow" aria-hidden="true">
-          {isOpen ? <CaretUp size={14} weight="bold" /> : <CaretDown size={14} weight="bold" />}
-        </span>
+        <ToolIcon name={groupIcon(group.kind)} size={15} className="tb-group-icon" aria-hidden="true" />
         <span className="tb-group-title">
-          {title}
+          {details ? (
+            <>
+              {label}
+              <span className="tb-group-sep" aria-hidden="true"> · </span>
+              <span className="tb-group-details-text">{details}</span>
+            </>
+          ) : (
+            label
+          )}
           {group.isPending && (
             <span className="tb-group-progress"> {t("agentLocal.toolActivity.inProgress")}</span>
           )}
         </span>
+        <span className="tb-arrow tb-group-arrow" aria-hidden="true">
+          {isOpen ? <CaretUp size={14} weight="bold" /> : <CaretDown size={14} weight="bold" />}
+        </span>
         <span className="tb-group-state" aria-hidden="true">
-          {group.isPending && <Spinner size={12} className="tb-spinner" />}
-          {!group.isPending && group.hasError && <span className="tb-group-error">x</span>}
-          {!group.isPending && !group.hasError && <Check size={12} />}
+          {group.isPending && <Spinner size={14} className="tb-spinner" />}
+          {!group.isPending && (
+            <ToolStatusIcon
+              status={group.hasError ? "error" : "success"}
+              size={14}
+              message={group.hasError ? t("agentLocal.toolActivity.groupError") : undefined}
+            />
+          )}
         </span>
       </button>
       <div className={`tb-group-accordion${isOpen ? " tb-open" : ""}`} onTransitionEnd={onTransitionEnd}>

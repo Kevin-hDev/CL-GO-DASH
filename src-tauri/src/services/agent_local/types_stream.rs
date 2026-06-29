@@ -24,6 +24,8 @@ pub enum StreamEvent {
         #[serde(default)]
         truncated: bool,
         tool_call_index: usize,
+        #[serde(skip_serializing_if = "Option::is_none", default)]
+        resolved_path: Option<String>,
     },
     TurnEnd {},
     #[serde(rename_all = "camelCase")]

@@ -55,6 +55,7 @@ export function applyStreamEvent(
         event.data.toolCallIndex ?? -1,
         event.data.content,
         event.data.isError,
+        event.data.resolvedPath,
       );
       next.pendingPermissions = [];
       break;
@@ -106,15 +107,19 @@ export function applyStreamEvent(
 }
 
 function applyToolResult(
-  tools: ToolActivity[], index: number, content: string, isError: boolean,
+  tools: ToolActivity[], index: number, content: string, isError: boolean, resolvedPath?: string,
 ): ToolActivity[] {
   const next = [...tools];
+  const apply = (i: number) => {
+    next[i] = { ...next[i], result: content, isError };
+    if (resolvedPath) next[i].resolvedPath = resolvedPath;
+  };
   if (index >= 0 && index < next.length && !next[index].result) {
-    next[index] = { ...next[index], result: content, isError };
+    apply(index);
   } else {
     for (let i = 0; i < next.length; i++) {
       if (!next[i].result) {
-        next[i] = { ...next[i], result: content, isError };
+        apply(i);
         break;
       }
     }

@@ -29,6 +29,7 @@ export interface ToolActivityRecord {
   old_text?: string;
   new_text?: string;
   start_line?: number;
+  resolved_path?: string;
 }
 
 export interface ToolCallRequest {

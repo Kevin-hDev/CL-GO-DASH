@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { shortenPath, toolDisplayInfo } from "../tool-display";
+import { filePathSegments, shortenPath, toolDisplayInfo } from "../tool-display";
 import type { RenderableTool } from "../tool-detail-row";
 import type { TFunction } from "i18next";
 
@@ -11,6 +11,9 @@ const t = ((key: string) => ({
   "agentLocal.toolActivity.actions.agent": "Agent",
   "agentLocal.toolActivity.actions.forecast": "Forecast",
   "agentLocal.toolActivity.actions.mcp": "MCP",
+  "agentLocal.toolActivity.actions.list": "List",
+  "agentLocal.toolActivity.actions.search": "Search",
+  "agentLocal.toolActivity.actions.run": "Run",
 }[key] ?? key)) as TFunction;
 
 describe("toolDisplayInfo", () => {
@@ -19,7 +22,36 @@ describe("toolDisplayInfo", () => {
     expect(shortenPath(path, "/Users/kevinh/Projects/systeme-pulse")).toBe("systeme-pulse/src/App.tsx");
   });
 
-  it("affiche une création avec stats + lignes", () => {
+  it("limite à 3 dossiers parents maximum", () => {
+    const deep = "/Users/kevinh/Projects/systeme-pulse/a/b/c/d/e/file.ts";
+    expect(shortenPath(deep, "/Users/kevinh/Projects/systeme-pulse")).toBe("…/c/d/e/file.ts");
+  });
+
+  it("garde le chemin complet s'il a 3 dossiers ou moins", () => {
+    const shallow = "/Users/kevinh/Projects/systeme-pulse/src/main.rs";
+    expect(shortenPath(shallow, "/Users/kevinh/Projects/systeme-pulse")).toBe("systeme-pulse/src/main.rs");
+  });
+});
+
+describe("filePathSegments", () => {
+  it("sépare les dossiers (tronçables) du nom de fichier (fixe)", () => {
+    const seg = filePathSegments(
+      "/Users/kevinh/Projects/systeme-pulse/a/b/c/d/e/file.ts",
+      "/Users/kevinh/Projects/systeme-pulse",
+    );
+    expect(seg.dirs).toBe("…/c/d/e/");
+    expect(seg.fileName).toBe("file.ts");
+  });
+
+  it("retourne dirs vide si seulement le nom de fichier", () => {
+    const seg = filePathSegments("config.json", undefined);
+    expect(seg.dirs).toBe("");
+    expect(seg.fileName).toBe("config.json");
+  });
+});
+
+describe("toolDisplayInfo", () => {
+  it("affiche une création avec stats + lignes + icône + segments chemin", () => {
     const tool: RenderableTool = {
       name: "write_file",
       summary: "/Users/kevinh/Projects/systeme-pulse/vite.config.ts",
@@ -30,10 +62,13 @@ describe("toolDisplayInfo", () => {
       summary: "systeme-pulse/vite.config.ts",
       additions: 2,
       deletions: 0,
+      icon: "FilePlus",
+      dir: "systeme-pulse/",
+      fileName: "vite.config.ts",
     });
   });
 
-  it("affiche une modification avec stats old/new", () => {
+  it("affiche une modification avec stats old/new + icône + segments chemin", () => {
     const tool: RenderableTool = {
       name: "edit_file",
       summary: "/Users/kevinh/Projects/systeme-pulse/src/main.rs",
@@ -45,6 +80,9 @@ describe("toolDisplayInfo", () => {
       summary: "systeme-pulse/src/main.rs",
       additions: 1,
       deletions: 3,
+      icon: "Pencil",
+      dir: "systeme-pulse/src/",
+      fileName: "main.rs",
     });
   });
 
@@ -52,6 +90,7 @@ describe("toolDisplayInfo", () => {
     expect(toolDisplayInfo({ name: "web_search", summary: "tauri docs" }, undefined, t)).toEqual({
       label: "web_search",
       summary: "tauri docs",
+      icon: "Globe",
     });
   });
 
@@ -59,6 +98,7 @@ describe("toolDisplayInfo", () => {
     expect(toolDisplayInfo({ name: "bash", summary: "npm test" }, undefined, t)).toEqual({
       label: "bash",
       summary: "npm test",
+      icon: "TerminalWindow",
     });
   });
 
@@ -77,6 +117,42 @@ describe("toolDisplayInfo", () => {
     expect(toolDisplayInfo({ name: "bash", summary: command }, undefined, t)).toEqual({
       label: "bash",
       summary: `${"a".repeat(96)}...`,
+      icon: "TerminalWindow",
     });
+  });
+
+  it("associe la bonne icône Phosphor à chaque type d'outil", () => {
+    const cases: Array<[string, string]> = [
+      ["read_file", "BookOpenText"],
+      ["read_spreadsheet", "FileText"],
+      ["read_document", "FileText"],
+      ["read_image", "Image"],
+      ["write_file", "FilePlus"],
+      ["write_spreadsheet", "FilePlus"],
+      ["write_document", "FilePlus"],
+      ["edit_file", "Pencil"],
+      ["process_image", "Pencil"],
+      ["bash", "TerminalWindow"],
+      ["web_search", "Globe"],
+      ["web_fetch", "Link"],
+      ["list_dir", "FolderOpen"],
+      ["grep", "MagnifyingGlass"],
+      ["glob", "MagnifyingGlass"],
+      ["create_branch", "GitBranch"],
+      ["checkout_branch", "GitBranch"],
+      ["load_skill", "Sparkle"],
+      ["delegate_task", "Users"],
+      ["forecast", "ChartLineUp"],
+      ["forecast_analyze", "ChartLineUp"],
+      ["search_mcp_tools", "Plugs"],
+    ];
+    for (const [name, expectedIcon] of cases) {
+      const info = toolDisplayInfo({ name, summary: "x" }, undefined, t);
+      expect(info.icon).toBe(expectedIcon);
+    }
+  });
+
+  it("retourne l'icône Wrench par défaut pour un outil inconnu", () => {
+    expect(toolDisplayInfo({ name: "outil_inconnu", summary: "x" }, undefined, t).icon).toBe("Wrench");
   });
 });

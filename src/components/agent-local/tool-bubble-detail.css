@@ -1,30 +1,4 @@
-.tb-error-anchor {
-  position: relative;
-  flex-shrink: 0;
-}
-
-.tb-error-mark {
-  color: var(--signal-error);
-  font-size: var(--text-xs);
-}
-
-.tb-change-stats {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 4px;
-  flex-shrink: 0;
-  font-family: var(--font-mono, monospace);
-  font-size: 11px;
-}
-
-.tb-change-add {
-  color: var(--signal-ok);
-}
-
-.tb-change-del {
-  color: var(--signal-error);
-}
-
+/* Tooltip d'erreur (conservé : branché sur ToolStatusIcon) */
 .tb-error-tooltip {
   position: fixed;
   width: max-content;
@@ -70,6 +44,7 @@
   to { opacity: 1; }
 }
 
+/* Previews de commande / résultat (dépliés) */
 .tb-command-preview,
 .tb-result-preview {
   margin-top: 4px;

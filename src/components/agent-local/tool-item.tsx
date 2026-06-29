@@ -1,34 +1,17 @@
 import type { ReactNode } from "react";
 import { Spinner } from "@phosphor-icons/react";
-import { CaretDown, CaretUp, Check } from "@/components/ui/icons";
+import { CaretDown, CaretUp } from "@/components/ui/icons";
 import { isFileTool } from "@/lib/tool-file-path";
-import { ErrorCross } from "./tool-error-tooltip";
+import { FileIcon } from "@/components/file-preview/file-icon";
+import { ToolIcon } from "./tool-icons";
+import { ToolStatusIcon } from "./tool-status-icon";
 import { useCollapsiblePresence } from "./use-collapsible-presence";
-
-const TOOL_COLORS: Record<string, string> = {
-  bash: "var(--tool-bash)",
-  glob: "var(--tool-search)", grep: "var(--tool-search)", list_dir: "var(--tool-search)",
-  read_file: "var(--tool-read)", read_spreadsheet: "var(--tool-read)",
-  read_document: "var(--tool-read)", read_image: "var(--tool-read)",
-  write_file: "var(--tool-edit)", write_spreadsheet: "var(--tool-edit)",
-  write_document: "var(--tool-edit)",
-  edit_file: "var(--tool-edit)", process_image: "var(--tool-edit)",
-  web_search: "var(--ink)", web_fetch: "var(--ink)",
-  create_branch: "var(--tool-bash)", checkout_branch: "var(--tool-bash)",
-  forecast: "var(--tool-forecast)", forecast_analyze: "var(--tool-forecast)",
-  forecast_read: "var(--tool-forecast)",
-};
 
 const RESULT_PREVIEW_TOOLS = new Set([
   "bash", "grep", "glob", "read_file", "list_dir",
   "read_spreadsheet", "read_document", "read_image",
   "web_search", "web_fetch", "forecast", "forecast_read",
 ]);
-
-const ROW_STYLE = {
-  display: "flex", alignItems: "center", gap: 8,
-  fontSize: "11px", fontFamily: "var(--font-mono, monospace)", lineHeight: 1.6,
-};
 
 function hasPreviewContent(children: ReactNode): boolean {
   if (!children) return false;
@@ -37,10 +20,11 @@ function hasPreviewContent(children: ReactNode): boolean {
 }
 
 export function ToolItem({
-  name, summary, displayName, displaySummary, additions, deletions,
-  done, isError, errorMessage, result, onFilePreview, children,
+  name, summary, icon, displayName, displaySummary, dir, fileName,
+  additions, deletions, done, isError, errorMessage, result, onFilePreview, children,
 }: {
-  name: string; summary: string; displayName?: string; displaySummary?: string;
+  name: string; summary: string; icon?: string; displayName?: string; displaySummary?: string;
+  dir?: string; fileName?: string;
   additions?: number; deletions?: number; done: boolean; isError?: boolean; errorMessage?: string;
   result?: string; onFilePreview?: (path: string) => void; children?: ReactNode;
 }) {
@@ -52,56 +36,72 @@ export function ToolItem({
   const clickablePath = isFileTool(name) && summary.trim().length > 0 && !!onFilePreview;
   const shownName = displayName ?? name;
   const shownSummary = displaySummary ?? summary;
-  const forceSingleLineSummary = name === "bash";
+  const hasFilePath = !!dir || !!fileName;
   const openPreview = () => {
     if (!clickablePath || !onFilePreview) return;
     onFilePreview(summary);
   };
 
+  const labelButton = canToggle ? (
+    <button className="tb-toggle" onClick={toggle}>
+      <span className="tb-arrow tb-tool-arrow" aria-hidden="true">
+        {isOpen ? <CaretUp size={13} weight="bold" /> : <CaretDown size={13} weight="bold" />}
+      </span>
+      {icon && <ToolIcon name={icon} size={14} className="tb-tool-icon" aria-hidden="true" />}
+      <span className="tb-tool-verb">{shownName}</span>
+    </button>
+  ) : (
+    <>
+      {icon && <ToolIcon name={icon} size={14} className="tb-tool-icon" aria-hidden="true" />}
+      <span className="tb-tool-verb">{shownName}</span>
+    </>
+  );
+
+  // Cas fichier : nom + icône + stats collés à droite, dossiers tronqués à gauche
+  const fileContent = hasFilePath ? (
+    <>
+      {dir && <span className="tb-item-dirs">{dir}</span>}
+      <span className="tb-item-name">
+        {fileName && <FileIcon name={fileName} size={14} />}
+        <span className="tb-item-name-text">{fileName ?? shownSummary}</span>
+      </span>
+      {additions != null && deletions != null && (
+        <span className="tb-change-stats">
+          <span className="tb-change-add">+{additions}</span>
+          <span className="tb-change-del">-{deletions}</span>
+        </span>
+      )}
+    </>
+  ) : null;
+
+  // Cas non-fichier : résumé simple tronquable
+  const summaryContent = !hasFilePath ? (
+    <span
+      className="tb-item-summary"
+      role={clickablePath ? "button" : undefined}
+      tabIndex={clickablePath ? 0 : undefined}
+      onClick={(e) => { if (clickablePath) { e.stopPropagation(); openPreview(); } }}
+      onKeyDown={(e) => {
+        if (!clickablePath) return;
+        if (e.key.startsWith("Ent") || e.key.startsWith(" ")) { e.preventDefault(); openPreview(); }
+      }}
+    >{shownSummary}</span>
+  ) : null;
+
   return (
     <div>
-      <div className="tb-row" style={ROW_STYLE}>
-        {canToggle ? (
-          <button className="tb-toggle" onClick={toggle}>
-            <span className="tb-arrow tb-tool-arrow" aria-hidden="true">
-              {isOpen ? <CaretUp size={13} weight="bold" /> : <CaretDown size={13} weight="bold" />}
-            </span>
-            <span style={{ color: TOOL_COLORS[name] ?? "var(--ink-muted)", fontWeight: 600 }}>{shownName}</span>
-          </button>
-        ) : (
-          <span style={{ color: TOOL_COLORS[name] ?? "var(--ink-muted)", fontWeight: 600, flexShrink: 0, minWidth: 70 }}>{shownName}</span>
+      <div className="tb-row">
+        {labelButton}
+        {fileContent}
+        {summaryContent}
+        {!done && <Spinner size={14} className="tb-spinner" />}
+        {done && (
+          <ToolStatusIcon
+            status={isError ? "error" : "success"}
+            size={14}
+            message={isError ? errorMessage : undefined}
+          />
         )}
-        <span
-          className="tb-item-summary"
-          role={clickablePath ? "button" : undefined}
-          tabIndex={clickablePath ? 0 : undefined}
-          style={{
-            color: clickablePath ? "var(--ink)" : "var(--ink-muted)",
-            wordBreak: forceSingleLineSummary ? "normal" : "break-all",
-            flex: 1,
-            minWidth: 0,
-            overflow: forceSingleLineSummary ? "hidden" : undefined,
-            textOverflow: forceSingleLineSummary ? "ellipsis" : undefined,
-            whiteSpace: forceSingleLineSummary ? "nowrap" : undefined,
-            cursor: clickablePath ? "pointer" : "default",
-            textDecoration: clickablePath ? "underline" : "none",
-            textDecorationColor: "var(--edge)",
-          }}
-          onClick={(e) => { if (clickablePath) { e.stopPropagation(); openPreview(); } }}
-          onKeyDown={(e) => {
-            if (!clickablePath) return;
-            if (e.key.startsWith("Ent") || e.key.startsWith(" ")) { e.preventDefault(); openPreview(); }
-          }}
-        >{shownSummary}</span>
-        {additions != null && deletions != null && (
-          <span className="tb-change-stats">
-            <span className="tb-change-add">+{additions}</span>
-            <span className="tb-change-del">-{deletions}</span>
-          </span>
-        )}
-        {!done && <Spinner size={12} style={{ color: "var(--ink-faint)", animation: "spin 1s linear infinite", flexShrink: 0 }} />}
-        {done && !isError && <Check size={12} style={{ color: "var(--signal-ok)", flexShrink: 0 }} />}
-        {done && isError && <ErrorCross message={errorMessage} />}
       </div>
       {canToggle && (
         <div className={`tb-accordion${isOpen ? " tb-open" : ""}`} onTransitionEnd={onTransitionEnd}>

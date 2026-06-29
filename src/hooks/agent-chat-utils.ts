@@ -5,6 +5,8 @@ export interface ToolActivity {
   args: Record<string, unknown>;
   result?: string;
   isError?: boolean;
+  /** Chemin absolu résolu côté backend (working_dir + path). Utilisé pour l'affichage. */
+  resolvedPath?: string;
 }
 
 export interface StreamSegment {
@@ -43,6 +45,7 @@ export function toolsToRecords(tools: ToolActivity[]): ToolActivityRecord[] {
       args: a,
       result: t.result,
       is_error: t.isError,
+      resolved_path: t.resolvedPath,
       content: t.name === "write_file" ? str(a.content)
         : t.name === "write_document" ? JSON.stringify(Array.isArray(a.content) ? a.content : [])
         : t.name === "write_spreadsheet" ? JSON.stringify(Array.isArray(a.operations) ? a.operations : [])

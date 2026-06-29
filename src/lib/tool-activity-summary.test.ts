@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { groupToolActivities } from "./tool-activity-summary";
+import { groupIcon, groupToolActivities } from "./tool-activity-summary";
 
 function tool(name: string, result = "ok") {
   return { name, summary: name, result };
@@ -59,5 +59,16 @@ describe("groupToolActivities", () => {
 
     expect(groups[0].isPending).toBe(true);
     expect(groups[0].hasError).toBe(false);
+  });
+});
+
+describe("groupIcon", () => {
+  it("associe la bonne icône Phosphor à chaque type de groupe", () => {
+    expect(groupIcon("exploration")).toBe("Compass");
+    expect(groupIcon("modification")).toBe("PencilSimple");
+    expect(groupIcon("command")).toBe("TerminalWindow");
+    expect(groupIcon("web")).toBe("Globe");
+    expect(groupIcon("git")).toBe("GitBranch");
+    expect(groupIcon("other")).toBe("Wrench");
   });
 });

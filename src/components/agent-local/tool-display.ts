@@ -6,6 +6,11 @@ export interface ToolDisplayInfo {
   summary: string;
   additions?: number;
   deletions?: number;
+  icon: string;
+  /** Partie dossier du chemin (tronçonable). Vide si pas un chemin de fichier. */
+  dir?: string;
+  /** Nom du fichier seul (toujours visible à droite). Vide si pas un chemin de fichier. */
+  fileName?: string;
 }
 
 const FILE_TOOLS = new Set([
@@ -13,22 +18,94 @@ const FILE_TOOLS = new Set([
   "read_image", "write_spreadsheet", "write_document", "process_image",
 ]);
 
+/** Nombre maximum de dossiers parents affichés avant le nom du fichier. */
+export const MAX_PARENT_DIRS = 3;
+
+/**
+ * Coupe un chemin pour ne garder que les `maxDirs` derniers dossiers parents
+ * + le nom du fichier. Si on coupe, on préfixe avec "…/".
+ * "a/b/c/d/e/file.ts" avec maxDirs=3 -> "…/c/d/e/file.ts"
+ */
+function trimToParentDirs(path: string, maxDirs: number): string {
+  const parts = path.split("/").filter(Boolean);
+  if (parts.length <= maxDirs + 1) return path;
+  const kept = parts.slice(parts.length - maxDirs - 1);
+  return `…/${kept.join("/")}`;
+}
+
+/**
+ * Sépare un chemin en deux segments : la partie dossier (tronçable) et le nom
+ * du fichier (fixe, toujours visible). Sert au layout flex qui tronque uniquement
+ * la partie gauche (dossiers).
+ */
+export function filePathSegments(path: string, projectPath?: string): {
+  dirs: string;
+  fileName: string;
+} {
+  const short = shortenPath(path, projectPath);
+  const parts = short.split("/").filter(Boolean);
+  if (parts.length === 0) return { dirs: "", fileName: "" };
+  if (parts.length === 1) return { dirs: "", fileName: parts[0] };
+  const fileName = parts[parts.length - 1];
+  const dirs = parts.slice(0, -1).join("/");
+  return { dirs: dirs ? `${dirs}/` : "", fileName };
+}
+
+const FILE_ICONS: Record<string, string> = {
+  read_file: "BookOpenText",
+  read_spreadsheet: "FileText",
+  read_document: "FileText",
+  read_image: "Image",
+  write_file: "FilePlus",
+  write_spreadsheet: "FilePlus",
+  write_document: "FilePlus",
+  edit_file: "Pencil",
+  process_image: "Pencil",
+  bash: "TerminalWindow",
+  web_search: "Globe",
+  web_fetch: "Link",
+  list_dir: "FolderOpen",
+  grep: "MagnifyingGlass",
+  glob: "MagnifyingGlass",
+  create_branch: "GitBranch",
+  checkout_branch: "GitBranch",
+  load_skill: "Sparkle",
+  delegate_task: "Users",
+  forecast: "ChartLineUp",
+  forecast_models: "ChartLineUp",
+  forecast_read: "ChartLineUp",
+  forecast_analyze: "ChartLineUp",
+  search_mcp_tools: "Plugs",
+};
+
+function iconFor(name: string): string {
+  return FILE_ICONS[name] ?? "Wrench";
+}
+
 export function toolDisplayInfo(
   tool: RenderableTool,
   projectPath: string | undefined,
   t: TFunction,
 ): ToolDisplayInfo {
   if (tool.name === "bash") {
-    return { label: tool.name, summary: compactCommand(tool.summary) };
+    return { label: tool.name, summary: compactCommand(tool.summary), icon: iconFor(tool.name) };
   }
   if (tool.name === "web_search" || tool.name === "web_fetch") {
-    return { label: tool.name, summary: tool.summary };
+    return { label: tool.name, summary: tool.summary, icon: iconFor(tool.name) };
   }
   const labelKey = actionKey(tool.name);
+  const summary = displaySummary(tool, projectPath);
+  const isFilePath = FILE_TOOLS.has(tool.name);
+  // Priorité au chemin résolu côté backend (toujours absolu), sinon fallback sur le summary.
+  const pathForDisplay = tool.resolved_path || tool.summary;
+  const segments = isFilePath ? filePathSegments(pathForDisplay, projectPath) : null;
   return {
     label: t(`agentLocal.toolActivity.actions.${labelKey}`),
-    summary: displaySummary(tool, projectPath),
+    summary,
     ...changeStats(tool),
+    icon: iconFor(tool.name),
+    dir: segments?.dirs,
+    fileName: segments?.fileName,
   };
 }
 
@@ -53,18 +130,29 @@ function displaySummary(tool: RenderableTool, projectPath?: string): string {
   return shortenPath(tool.summary, projectPath);
 }
 
+/**
+ * Raccourcit un chemin en gardant au maximum MAX_PARENT_DIRS dossiers parents
+ * + le nom du fichier. Si le chemin fait partie du projet, on repart de la racine
+ * du projet (rootName + chemin relatif). Sinon on retire le préfixe utilisateur.
+ */
 export function shortenPath(path: string, projectPath?: string): string {
   const normalized = path.replace(/\\/g, "/");
   const normalizedProject = projectPath?.replace(/\\/g, "/").replace(/\/+$/, "");
+  let displayPath = normalized;
   if (normalizedProject && isInsideProject(normalized, normalizedProject)) {
     const rootName = basename(normalizedProject);
     const relative = normalized.slice(normalizedProject.length).replace(/^\/+/, "");
-    return relative ? `${rootName}/${relative}` : rootName;
+    displayPath = relative ? `${rootName}/${relative}` : rootName;
+  } else {
+    const projectsMarker = "/Projects/";
+    const markerIndex = normalized.indexOf(projectsMarker);
+    if (markerIndex >= 0) {
+      displayPath = normalized.slice(markerIndex + projectsMarker.length);
+    } else {
+      displayPath = normalized.replace(/^\/Users\/[^/]+\//, "");
+    }
   }
-  const projectsMarker = "/Projects/";
-  const markerIndex = normalized.indexOf(projectsMarker);
-  if (markerIndex >= 0) return normalized.slice(markerIndex + projectsMarker.length);
-  return normalized.replace(/^\/Users\/[^/]+\//, "");
+  return trimToParentDirs(displayPath, MAX_PARENT_DIRS);
 }
 
 function isInsideProject(path: string, projectPath: string): boolean {

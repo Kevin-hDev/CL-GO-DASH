@@ -6,6 +6,19 @@ export type ToolActivityGroupKind =
   | "git"
   | "other";
 
+const GROUP_ICONS: Record<ToolActivityGroupKind, string> = {
+  exploration: "Compass",
+  modification: "PencilSimple",
+  command: "TerminalWindow",
+  web: "Globe",
+  git: "GitBranch",
+  other: "Wrench",
+};
+
+export function groupIcon(kind: ToolActivityGroupKind): string {
+  return GROUP_ICONS[kind];
+}
+
 export interface ToolActivitySummaryInput {
   name: string;
   result?: string;

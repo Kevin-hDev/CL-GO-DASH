@@ -12,6 +12,17 @@ vi.mock("@/components/ui/icons", () => ({
   Copy: () => <span />, CaretDown: () => <span />, CaretUp: () => <span />,
   Check: () => <span data-testid="check-icon" />, ClipboardText: () => <span />,
 }));
+vi.mock("../tool-icons", () => ({
+  ToolIcon: ({ name }: { name: string }) => <span data-testid={`tool-icon-${name}`} />,
+}));
+vi.mock("../tool-status-icon", () => ({
+  ToolStatusIcon: ({ status, message }: { status: string; message?: string }) => (
+    <span data-testid={`status-icon-${status}`} data-message={message ?? ""} />
+  ),
+}));
+vi.mock("@/components/file-preview/file-icon", () => ({
+  FileIcon: ({ name }: { name: string }) => <span data-testid={`file-icon-${name}`} />,
+}));
 vi.mock("@tauri-apps/plugin-shell", () => ({ open: vi.fn() }));
 vi.mock("@/hooks/use-hover-class", () => ({ useHoverClass: () => ({ current: null }) }));
 vi.mock("@/hooks/use-compression", () => ({ useCompression: () => ({ isCompressing: false }) }));
@@ -29,10 +40,8 @@ vi.mock("react-i18next", () => ({
         typeof value === "string" || typeof value === "number" ? String(value) : ""
       );
       const count = text(opts?.count);
-      if (key === "agentLocal.toolActivity.summary") {
-        return `${text(opts?.group)}: ${text(opts?.details)}`;
-      }
       if (key === "agentLocal.toolActivity.toggleDetails") return "Show tool details";
+      if (key === "agentLocal.toolActivity.groupError") return "An error occurred in this group";
       if (key === "agentLocal.toolActivity.groups.command") return "Commands";
       if (key === "agentLocal.toolActivity.groups.modification") return "Changes";
       if (key === "agentLocal.toolActivity.groups.exploration") return "Exploration";
@@ -101,7 +110,7 @@ function assistantWithSegmentTools(): AgentMessage {
 }
 
 describe("MessageList tool aggregation", () => {
-  it("garde une bulle compacte par segment sauvegardé pour préserver l'ordre", () => {
+  it("garde un flux compact par segment sauvegardé pour préserver l'ordre", () => {
     const { container } = render(
       <SegmentedAssistantMessage
         msg={assistantWithSegmentTools()}
@@ -110,14 +119,14 @@ describe("MessageList tool aggregation", () => {
       />,
     );
 
-    const bubbles = container.querySelectorAll(".chat-bubble");
-    expect(bubbles).toHaveLength(2);
-    expect(bubbles[0].textContent).toContain("Commands: 1 command executed");
-    expect(bubbles[0].textContent).toContain("Changes: 1 file written and 1 file edited");
-    expect(bubbles[1].textContent).toContain("Commands: 1 command executed");
+    const streams = container.querySelectorAll(".tb-stream");
+    expect(streams).toHaveLength(2);
+    expect(streams[0].textContent).toContain("Commands");
+    expect(streams[0].textContent).toContain("Changes");
+    expect(streams[1].textContent).toContain("Commands");
     expect(container.textContent).not.toContain("npm test");
 
-    fireEvent.click(bubbles[0].querySelectorAll(".tb-group-toggle")[0]);
+    fireEvent.click(streams[0].querySelectorAll(".tb-group-toggle")[0]);
     expect(container.textContent).toContain("npm test");
     expect(container.textContent).not.toContain("npm run build");
   });
@@ -154,13 +163,13 @@ describe("MessageList tool aggregation", () => {
       />,
     );
 
-    const bubbles = container.querySelectorAll(".chat-bubble");
-    expect(bubbles).toHaveLength(2);
-    expect(bubbles[0].textContent).toContain("Commands: 1 command executed");
-    expect(bubbles[0].textContent).toContain("Changes: 1 file written");
-    expect(bubbles[0].textContent).toContain("Exploration: 1 file read");
-    expect(bubbles[1].textContent).toContain("Commands: 1 command executed");
-    expect(bubbles[1].textContent).toContain("Changes: 1 file edited");
+    const streams = container.querySelectorAll(".tb-stream");
+    expect(streams).toHaveLength(2);
+    expect(streams[0].textContent).toContain("Commands");
+    expect(streams[0].textContent).toContain("Changes");
+    expect(streams[0].textContent).toContain("Exploration");
+    expect(streams[1].textContent).toContain("Commands");
+    expect(streams[1].textContent).toContain("Changes");
   });
 
   it("affiche la preview du plan après la timeline du stream", () => {
@@ -193,7 +202,7 @@ describe("MessageList tool aggregation", () => {
     );
 
     const text = container.textContent ?? "", planIndex = text.indexOf("Plan validé");
-    expect(text.indexOf("Exploration: 1 file read")).toBeLessThan(planIndex);
+    expect(text.indexOf("Exploration")).toBeLessThan(planIndex);
     expect(text.indexOf("thinking before plan")).toBeLessThan(planIndex);
   });
 });
