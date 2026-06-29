@@ -150,7 +150,8 @@
 }
 
 .tb-item-summary {
-  flex: 1;
+  /* grow:0, shrink:1, basis:auto → taille naturelle, peut rétrécir avec troncature */
+  flex: 0 1 auto;
   min-width: 0;
   color: inherit;
   /* Une seule ligne : troncature en gardant la fin du texte */
