@@ -71,3 +71,7 @@ pub fn clear() -> Result<(), String> {
 pub fn is_logged_in() -> bool {
     load().ok().flatten().is_some()
 }
+
+#[cfg(test)]
+#[path = "store_tests.rs"]
+mod tests;

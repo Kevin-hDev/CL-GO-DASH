@@ -9,3 +9,6 @@ pub mod validation;
 
 #[cfg(test)]
 mod ssrf_tests;
+
+#[cfg(test)]
+mod ssrf_edge_cases_tests;
