@@ -40,3 +40,7 @@ fn scale_quantiles(quantiles: &Quantiles, factor: f64) -> Quantiles {
 fn scale_values(values: &[f64], factor: f64) -> Vec<f64> {
     values.iter().map(|value| value * factor).collect()
 }
+
+#[cfg(test)]
+#[path = "scenario_percent_tests.rs"]
+mod tests;

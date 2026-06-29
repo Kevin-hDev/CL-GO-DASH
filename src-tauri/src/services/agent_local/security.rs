@@ -149,3 +149,7 @@ pub fn sanitize_error<E: std::fmt::Display>(err: E) -> String {
 #[path = "security_tests.rs"]
 #[cfg(test)]
 mod tests;
+
+#[path = "security_negative_tests.rs"]
+#[cfg(test)]
+mod negative_tests;

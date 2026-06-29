@@ -1,6 +1,8 @@
 mod chart;
 mod chart_data;
 mod common;
+#[cfg(test)]
+mod common_tests;
 mod csv;
 mod pdf;
 mod xlsx;

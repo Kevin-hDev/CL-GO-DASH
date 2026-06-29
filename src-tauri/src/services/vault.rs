@@ -27,15 +27,19 @@ const KNOWN_PROVIDERS: &[&str] = &[
 ];
 
 #[derive(Serialize, Deserialize)]
-struct VaultFile {
-    version: u8,
-    nonce: String,
-    data: String,
+pub(crate) struct VaultFile {
+    pub(crate) version: u8,
+    pub(crate) nonce: String,
+    pub(crate) data: String,
 }
 
 pub fn vault_path() -> std::path::PathBuf {
     crate::services::paths::data_dir().join("secrets.enc")
 }
+
+#[cfg(test)]
+#[path = "vault_tests.rs"]
+pub(crate) mod tests;
 
 pub fn load_or_create_master_key() -> Result<Zeroizing<Vec<u8>>, String> {
     let entry =
@@ -75,7 +79,7 @@ pub fn load_or_create_master_key() -> Result<Zeroizing<Vec<u8>>, String> {
     }
 }
 
-fn encrypt(master_key: &[u8], plaintext: &[u8]) -> Result<Vec<u8>, String> {
+pub(crate) fn encrypt(master_key: &[u8], plaintext: &[u8]) -> Result<Vec<u8>, String> {
     let cipher =
         XChaCha20Poly1305::new_from_slice(master_key).map_err(|e| format!("cipher init: {e}"))?;
 
@@ -95,7 +99,7 @@ fn encrypt(master_key: &[u8], plaintext: &[u8]) -> Result<Vec<u8>, String> {
     serde_json::to_vec_pretty(&vault_file).map_err(|e| format!("json: {e}"))
 }
 
-fn decrypt(master_key: &[u8], vault_bytes: &[u8]) -> Result<Vec<u8>, String> {
+pub(crate) fn decrypt(master_key: &[u8], vault_bytes: &[u8]) -> Result<Vec<u8>, String> {
     let vf: VaultFile =
         serde_json::from_slice(vault_bytes).map_err(|e| format!("vault parse: {e}"))?;
     if vf.version != VAULT_VERSION {

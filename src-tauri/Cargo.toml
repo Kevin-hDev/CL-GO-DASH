@@ -139,3 +139,13 @@ core-foundation = "0.10"
 libc = "0.2"
 
 [dev-dependencies]
+# Mock de serveur HTTP pour tests d'intégration (LLM, search, gateway, forecast)
+wiremock = "0.6"
+# Property testing (bornes de validation, parsing)
+proptest = "1"
+# Tests paramétrés lisibles (#[rstest])
+rstest = "0.26"
+# Diffs lisibles dans assert_eq! sur structures complexes
+pretty_assertions = "1"
+# Macros de test async (buffers, channels)
+tokio-test = "0.4"

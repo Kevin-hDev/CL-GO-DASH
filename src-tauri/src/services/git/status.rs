@@ -79,14 +79,24 @@ fn get_diff_stats(repo_path: &Path) -> HashMap<String, (u32, u32)> {
         if map.len() >= MAX_DIRTY_FILES {
             break;
         }
-        let parts: Vec<&str> = line.split('\t').collect();
-        if parts.len() >= 3 {
-            let add = parts[0].parse::<u32>().unwrap_or(0);
-            let del = parts[1].parse::<u32>().unwrap_or(0);
-            map.insert(parts[2].to_string(), (add, del));
+        if let Some((path, add, del)) = parse_numstat_line(line) {
+            map.insert(path, (add, del));
         }
     }
     map
+}
+
+/// Parse une ligne `git diff --numstat` au format `<add>\t<del>\t<path>`.
+/// Pour les fichiers binaires, git émet `-` à la place d'un nombre : on
+/// interprète ça comme 0. Retourne `None` si la ligne est malformée.
+pub(super) fn parse_numstat_line(line: &str) -> Option<(String, u32, u32)> {
+    let parts: Vec<&str> = line.split('\t').collect();
+    if parts.len() < 3 {
+        return None;
+    }
+    let add = parts[0].parse::<u32>().unwrap_or(0);
+    let del = parts[1].parse::<u32>().unwrap_or(0);
+    Some((parts[2].to_string(), add, del))
 }
 
 const MAX_FILE_READ: u64 = 1_048_576;

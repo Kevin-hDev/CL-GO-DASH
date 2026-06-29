@@ -293,3 +293,11 @@ pub async fn test_key(provider_id: &str) -> Result<(), String> {
 
 include!("api_keys_test_raw.rs");
 include!("api_keys_mcp.rs");
+
+#[cfg(test)]
+#[path = "api_keys_validate_tests.rs"]
+mod validate_tests;
+
+#[cfg(test)]
+#[path = "api_keys_mcp_tests.rs"]
+mod mcp_tests;

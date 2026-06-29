@@ -2,6 +2,8 @@ pub mod config;
 mod config_migration;
 #[cfg(test)]
 mod config_tests;
+#[cfg(test)]
+mod config_persistence_tests;
 pub mod env_keys;
 pub mod http;
 pub mod process_env;

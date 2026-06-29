@@ -39,6 +39,10 @@ mod tool_schema;
 pub mod types;
 pub mod vision;
 
+#[cfg(test)]
+#[path = "sanitize_log_body_tests.rs"]
+mod sanitize_log_body_tests;
+
 pub(crate) fn sanitize_log_body(body: &str) -> String {
     let truncated = if body.len() > 200 {
         &body[..body
@@ -60,16 +64,36 @@ pub(crate) fn sanitize_log_body(body: &str) -> String {
         "apikey",
     ] {
         if let Some(pos) = cleaned.to_lowercase().find(sensitive) {
-            let start = cleaned[pos..]
+            // Localise le séparateur de valeur (':' pour JSON/YAML, '=' pour
+            // query params / headers).
+            let sep = cleaned[pos..]
                 .find(':')
                 .or_else(|| cleaned[pos..].find('='))
-                .map(|i| pos + i + 1);
-            if let Some(s) = start {
-                let end = cleaned[s..]
-                    .find(&['"', ',', '}', '&', ' '][..])
-                    .map(|i| s + i)
-                    .unwrap_or(cleaned.len());
-                cleaned.replace_range(s..end, "[REDACTED]");
+                .map(|i| pos + i);
+            if let Some(sep_pos) = sep {
+                // Cas JSON : "api_key":"value" — le séparateur ':' est suivi
+                // d'un '"' ouvrant qu'il faut ignorer pour atteindre la vraie
+                // valeur. Sinon (query param / header), la valeur suit le ':'.
+                let bytes = cleaned.as_bytes();
+                let is_json = sep_pos + 1 < bytes.len() && bytes[sep_pos + 1] == b'"';
+                let value_start = if is_json { sep_pos + 2 } else { sep_pos + 1 };
+                // Fin de la valeur : en contexte JSON, on cherche le '"'
+                // fermant (pour capter "Bearer sk-xxx" avec espaces). Sinon,
+                // on s'arrête au prochain délimiteur classique.
+                let end = if is_json {
+                    cleaned[value_start..]
+                        .find('"')
+                        .map(|i| value_start + i)
+                        .unwrap_or(cleaned.len())
+                } else {
+                    cleaned[value_start..]
+                        .find(&['"', ',', '}', '&', ' '][..])
+                        .map(|i| value_start + i)
+                        .unwrap_or(cleaned.len())
+                };
+                if value_start <= end {
+                    cleaned.replace_range(value_start..end, "[REDACTED]");
+                }
             }
         }
     }

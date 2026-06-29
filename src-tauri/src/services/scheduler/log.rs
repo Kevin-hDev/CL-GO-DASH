@@ -166,4 +166,72 @@ mod tests {
         assert_eq!(generic_error("token secret leaked"), "Le réveil a échoué");
         assert_eq!(generic_error("Ollama HTTP 500"), "Ollama indisponible");
     }
+
+    #[test]
+    fn generic_error_maps_rate_limit() {
+        assert_eq!(
+            generic_error("rate limit exceeded"),
+            "Limite de requêtes atteinte"
+        );
+        assert_eq!(
+            generic_error("RATE LIMIT hit"),
+            "Limite de requêtes atteinte"
+        );
+    }
+
+    #[test]
+    fn generic_error_maps_auth_failures() {
+        // Un message backend contenant potentiellement un token à côté de
+        // "unauthorized" doit être masqué en message générique.
+        assert_eq!(generic_error("401 unauthorized"), "Authentification échouée");
+        assert_eq!(generic_error("clé API invalide"), "Authentification échouée");
+        assert_eq!(generic_error("auth failed"), "Authentification échouée");
+        // Note : "api key" sans accent ne matche pas la branche auth → message
+        // générique "Le réveil a échoué" (le token reste tout de même masqué).
+        assert_eq!(generic_error("invalid api key sk-xxx"), "Le réveil a échoué");
+    }
+
+    #[test]
+    fn generic_error_never_returns_input_string() {
+        // Sécurité : aucun message d'erreur brut ne doit être retourné tel quel.
+        // On teste une série d'entrées et on vérifie que la sortie est TOUJOURS
+        // un message générique, jamais l'entrée brute.
+        let sensitive_inputs = [
+            "Bearer sk-abcd1234efgh",
+            "Connection refused to 127.0.0.1:11434",
+            "panic at src/main.rs:42",
+            "internal server error with token xyz",
+            "/Users/secret/.config/keys.json not found",
+        ];
+        for input in sensitive_inputs {
+            let result = generic_error(input);
+            assert_ne!(
+                result, input,
+                "l'erreur brute ne doit jamais être retournée telle quelle"
+            );
+            // La sortie doit être un message français générique court.
+            assert!(!result.contains("sk-"));
+            assert!(!result.contains("127.0.0.1"));
+            assert!(!result.contains("panic"));
+            assert!(!result.contains("/Users/"));
+        }
+    }
+
+    #[test]
+    fn parse_runs_truncates_to_max_lines() {
+        // Le bornage MAX_LINES=500 doit être respecté : un contenu avec
+        // 600 lignes ne doit en retourner que 500 (les plus récentes).
+        let mut content = String::new();
+        for i in 0..600 {
+            let fired_at = format!("2026-05-17T{:02}:00:00Z", i);
+            content.push_str(&line(&format!("w{i}"), &fired_at, WakeupRunStatus::Ok));
+            content.push('\n');
+        }
+        let runs = parse_runs(&content, None);
+        assert_eq!(
+            runs.len(),
+            MAX_LINES,
+            "parse_runs doit tronquer à MAX_LINES (500)"
+        );
+    }
 }
