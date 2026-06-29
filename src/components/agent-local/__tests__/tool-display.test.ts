@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { shortenPath, toolDisplayInfo } from "../tool-display";
+import { filePathSegments, shortenPath, toolDisplayInfo } from "../tool-display";
 import type { RenderableTool } from "../tool-detail-row";
 import type { TFunction } from "i18next";
 
@@ -22,7 +22,36 @@ describe("toolDisplayInfo", () => {
     expect(shortenPath(path, "/Users/kevinh/Projects/systeme-pulse")).toBe("systeme-pulse/src/App.tsx");
   });
 
-  it("affiche une création avec stats + lignes + icône", () => {
+  it("limite à 3 dossiers parents maximum", () => {
+    const deep = "/Users/kevinh/Projects/systeme-pulse/a/b/c/d/e/file.ts";
+    expect(shortenPath(deep, "/Users/kevinh/Projects/systeme-pulse")).toBe("…/c/d/e/file.ts");
+  });
+
+  it("garde le chemin complet s'il a 3 dossiers ou moins", () => {
+    const shallow = "/Users/kevinh/Projects/systeme-pulse/src/main.rs";
+    expect(shortenPath(shallow, "/Users/kevinh/Projects/systeme-pulse")).toBe("systeme-pulse/src/main.rs");
+  });
+});
+
+describe("filePathSegments", () => {
+  it("sépare les dossiers (tronçables) du nom de fichier (fixe)", () => {
+    const seg = filePathSegments(
+      "/Users/kevinh/Projects/systeme-pulse/a/b/c/d/e/file.ts",
+      "/Users/kevinh/Projects/systeme-pulse",
+    );
+    expect(seg.dirs).toBe("…/c/d/e/");
+    expect(seg.fileName).toBe("file.ts");
+  });
+
+  it("retourne dirs vide si seulement le nom de fichier", () => {
+    const seg = filePathSegments("config.json", undefined);
+    expect(seg.dirs).toBe("");
+    expect(seg.fileName).toBe("config.json");
+  });
+});
+
+describe("toolDisplayInfo", () => {
+  it("affiche une création avec stats + lignes + icône + segments chemin", () => {
     const tool: RenderableTool = {
       name: "write_file",
       summary: "/Users/kevinh/Projects/systeme-pulse/vite.config.ts",
@@ -34,10 +63,12 @@ describe("toolDisplayInfo", () => {
       additions: 2,
       deletions: 0,
       icon: "FilePlus",
+      dir: "systeme-pulse/",
+      fileName: "vite.config.ts",
     });
   });
 
-  it("affiche une modification avec stats old/new + icône", () => {
+  it("affiche une modification avec stats old/new + icône + segments chemin", () => {
     const tool: RenderableTool = {
       name: "edit_file",
       summary: "/Users/kevinh/Projects/systeme-pulse/src/main.rs",
@@ -50,6 +81,8 @@ describe("toolDisplayInfo", () => {
       additions: 1,
       deletions: 3,
       icon: "Pencil",
+      dir: "systeme-pulse/src/",
+      fileName: "main.rs",
     });
   });
 

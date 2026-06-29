@@ -112,6 +112,8 @@ export function ToolDetailRow({
       icon={display.icon}
       displayName={display.label}
       displaySummary={display.summary}
+      dir={display.dir}
+      fileName={display.fileName}
       additions={display.additions}
       deletions={display.deletions}
       done={done}

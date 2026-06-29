@@ -154,7 +154,7 @@
   flex: 1;
   min-width: 0;
   color: inherit;
-  /* Une seule ligne : troncature en gardant le nom de fichier (fin du chemin) */
+  /* Une seule ligne : troncature en gardant la fin du texte */
   white-space: nowrap;
   overflow: hidden;
   direction: rtl;
@@ -172,6 +172,33 @@
 
 .tb-item-summary[role="button"]:hover {
   color: var(--ink);
+}
+
+/* Layout fichier : dossiers tronçables (gauche) + nom fixe (droite) */
+.tb-item-dirs {
+  flex: 1;
+  min-width: 0;
+  color: inherit;
+  opacity: 0.8;
+  white-space: nowrap;
+  overflow: hidden;
+  direction: rtl;
+  text-overflow: ellipsis;
+  text-align: left;
+  unicode-bidi: plaintext;
+}
+
+.tb-item-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  color: inherit;
+  white-space: nowrap;
+}
+
+.tb-item-name-text {
+  color: inherit;
 }
 
 .tb-change-stats {

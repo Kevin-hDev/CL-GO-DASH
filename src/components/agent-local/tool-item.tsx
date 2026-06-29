@@ -7,12 +7,6 @@ import { ToolIcon } from "./tool-icons";
 import { ToolStatusIcon } from "./tool-status-icon";
 import { useCollapsiblePresence } from "./use-collapsible-presence";
 
-const FILE_TOOL_NAMES = new Set([
-  "read_file", "write_file", "edit_file",
-  "read_spreadsheet", "read_document", "read_image",
-  "write_spreadsheet", "write_document", "process_image",
-]);
-
 const RESULT_PREVIEW_TOOLS = new Set([
   "bash", "grep", "glob", "read_file", "list_dir",
   "read_spreadsheet", "read_document", "read_image",
@@ -25,17 +19,12 @@ function hasPreviewContent(children: ReactNode): boolean {
   return true;
 }
 
-function fileBaseName(path: string): string {
-  const normalized = path.replace(/\\/g, "/");
-  const parts = normalized.split("/").filter(Boolean);
-  return parts.length > 0 ? parts[parts.length - 1] : path;
-}
-
 export function ToolItem({
-  name, summary, icon, displayName, displaySummary, additions, deletions,
-  done, isError, errorMessage, result, onFilePreview, children,
+  name, summary, icon, displayName, displaySummary, dir, fileName,
+  additions, deletions, done, isError, errorMessage, result, onFilePreview, children,
 }: {
   name: string; summary: string; icon?: string; displayName?: string; displaySummary?: string;
+  dir?: string; fileName?: string;
   additions?: number; deletions?: number; done: boolean; isError?: boolean; errorMessage?: string;
   result?: string; onFilePreview?: (path: string) => void; children?: ReactNode;
 }) {
@@ -47,49 +36,64 @@ export function ToolItem({
   const clickablePath = isFileTool(name) && summary.trim().length > 0 && !!onFilePreview;
   const shownName = displayName ?? name;
   const shownSummary = displaySummary ?? summary;
-  const isFileRow = FILE_TOOL_NAMES.has(name);
-  const fileName = isFileRow ? fileBaseName(summary) : "";
+  const hasFilePath = !!dir || !!fileName;
   const openPreview = () => {
     if (!clickablePath || !onFilePreview) return;
     onFilePreview(summary);
   };
 
+  const labelButton = canToggle ? (
+    <button className="tb-toggle" onClick={toggle}>
+      <span className="tb-arrow tb-tool-arrow" aria-hidden="true">
+        {isOpen ? <CaretUp size={13} weight="bold" /> : <CaretDown size={13} weight="bold" />}
+      </span>
+      {icon && <ToolIcon name={icon} size={14} className="tb-tool-icon" aria-hidden="true" />}
+      <span className="tb-tool-verb">{shownName}</span>
+    </button>
+  ) : (
+    <>
+      {icon && <ToolIcon name={icon} size={14} className="tb-tool-icon" aria-hidden="true" />}
+      <span className="tb-tool-verb">{shownName}</span>
+    </>
+  );
+
+  // Cas fichier : nom + icône + stats collés à droite, dossiers tronqués à gauche
+  const fileContent = hasFilePath ? (
+    <>
+      {dir && <span className="tb-item-dirs">{dir}</span>}
+      <span className="tb-item-name">
+        {fileName && <FileIcon name={fileName} size={14} />}
+        <span className="tb-item-name-text">{fileName ?? shownSummary}</span>
+      </span>
+      {additions != null && deletions != null && (
+        <span className="tb-change-stats">
+          <span className="tb-change-add">+{additions}</span>
+          <span className="tb-change-del">-{deletions}</span>
+        </span>
+      )}
+    </>
+  ) : null;
+
+  // Cas non-fichier : résumé simple tronquable
+  const summaryContent = !hasFilePath ? (
+    <span
+      className="tb-item-summary"
+      role={clickablePath ? "button" : undefined}
+      tabIndex={clickablePath ? 0 : undefined}
+      onClick={(e) => { if (clickablePath) { e.stopPropagation(); openPreview(); } }}
+      onKeyDown={(e) => {
+        if (!clickablePath) return;
+        if (e.key.startsWith("Ent") || e.key.startsWith(" ")) { e.preventDefault(); openPreview(); }
+      }}
+    >{shownSummary}</span>
+  ) : null;
+
   return (
     <div>
       <div className="tb-row">
-        {canToggle ? (
-          <button className="tb-toggle" onClick={toggle}>
-            <span className="tb-arrow tb-tool-arrow" aria-hidden="true">
-              {isOpen ? <CaretUp size={13} weight="bold" /> : <CaretDown size={13} weight="bold" />}
-            </span>
-            {icon && <ToolIcon name={icon} size={14} className="tb-tool-icon" aria-hidden="true" />}
-            <span className="tb-tool-verb">{shownName}</span>
-          </button>
-        ) : (
-          <>
-            {icon && <ToolIcon name={icon} size={14} className="tb-tool-icon" aria-hidden="true" />}
-            <span className="tb-tool-verb">{shownName}</span>
-          </>
-        )}
-        {isFileRow && fileName && (
-          <FileIcon name={fileName} size={14} />
-        )}
-        <span
-          className="tb-item-summary"
-          role={clickablePath ? "button" : undefined}
-          tabIndex={clickablePath ? 0 : undefined}
-          onClick={(e) => { if (clickablePath) { e.stopPropagation(); openPreview(); } }}
-          onKeyDown={(e) => {
-            if (!clickablePath) return;
-            if (e.key.startsWith("Ent") || e.key.startsWith(" ")) { e.preventDefault(); openPreview(); }
-          }}
-        >{shownSummary}</span>
-        {additions != null && deletions != null && (
-          <span className="tb-change-stats">
-            <span className="tb-change-add">+{additions}</span>
-            <span className="tb-change-del">-{deletions}</span>
-          </span>
-        )}
+        {labelButton}
+        {fileContent}
+        {summaryContent}
         {!done && <Spinner size={14} className="tb-spinner" />}
         {done && (
           <ToolStatusIcon
