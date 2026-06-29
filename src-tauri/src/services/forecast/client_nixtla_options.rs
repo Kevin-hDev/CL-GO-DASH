@@ -27,3 +27,7 @@ pub fn apply(payload: &mut Value, config: &Map<String, Value>) {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "client_nixtla_options_tests.rs"]
+mod tests;

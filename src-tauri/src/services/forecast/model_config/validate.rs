@@ -113,3 +113,7 @@ fn validate_range(spec: &ParamSpec, value: f64) -> Result<(), String> {
     }
     Ok(())
 }
+
+#[cfg(test)]
+#[path = "validate_tests.rs"]
+mod tests;

@@ -83,3 +83,7 @@ fn format_output(value: NaiveDateTime, source: &str) -> String {
     }
     value.date().format("%Y-%m-%d").to_string()
 }
+
+#[cfg(test)]
+#[path = "input_dates_tests.rs"]
+mod tests;
