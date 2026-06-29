@@ -23,6 +23,17 @@ fn accumulates_fragmented_arguments_openai_style() {
 }
 
 #[test]
+fn reports_pending_tool_call_before_finalize() {
+    let mut acc = ToolCallAccumulator::new();
+    assert!(!acc.has_pending());
+    acc.ingest(&[json!({
+        "index": 0, "id": "call_1", "type": "function",
+        "function": { "name": "web_search", "arguments": "{\"query\":" }
+    })]);
+    assert!(acc.has_pending());
+}
+
+#[test]
 fn accumulates_complete_tool_call_groq_style() {
     let mut acc = ToolCallAccumulator::new();
     acc.ingest(&[json!({

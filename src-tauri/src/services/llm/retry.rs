@@ -4,7 +4,8 @@
 
 use super::stream;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
-use crate::services::agent_local::types_ollama::{ChatMessage, StreamResult};
+use crate::services::agent_local::types_ollama::{ChatMessage, StreamOutcome};
+use crate::services::compress::realtime_budget::RealtimeBudget;
 use tokio_util::sync::CancellationToken;
 
 const MAX_RETRIES: usize = 5;
@@ -38,7 +39,8 @@ pub async fn retry_stream(
     reasoning_mode: Option<&str>,
     cancel: CancellationToken,
     buffer_content: bool,
-) -> Result<StreamResult, String> {
+    realtime_budget: Option<RealtimeBudget>,
+) -> Result<StreamOutcome, String> {
     let mut last_error = String::new();
     for attempt in 0..=MAX_RETRIES {
         if cancel.is_cancelled() {
@@ -65,6 +67,7 @@ pub async fn retry_stream(
             reasoning_mode,
             cancel.clone(),
             buffer_content,
+            realtime_budget.clone(),
         )
         .await
         {

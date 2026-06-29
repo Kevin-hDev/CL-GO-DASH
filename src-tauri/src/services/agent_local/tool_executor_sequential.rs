@@ -11,6 +11,7 @@ use super::tool_executor_helpers::{
     check_write_guard, dispatch_or_interactive, post_record_read, post_record_write,
     push_tool_result,
 };
+use super::tool_executor_compression::ToolCompression;
 
 pub async fn run_sequential(
     on_event: &AgentEventEmitter,
@@ -22,7 +23,10 @@ pub async fn run_sequential(
     cancel: CancellationToken,
     write_guard: &mut WriteGuard,
     plan_mode_active: bool,
-) {
+    tool_call_ids: &[String],
+    compression: Option<&ToolCompression<'_>>,
+) -> bool {
+    let mut compressed = false;
     for (idx, (name, args)) in tool_calls.iter().enumerate() {
         let arg_summary = super::tool_executor_diagnostics::started(
             session_id,
@@ -48,7 +52,10 @@ pub async fn run_sequential(
                 arg_summary,
             )
             .await;
-            push_tool_result(on_event, messages, name, tr, idx);
+            compressed |= push_and_compress(
+                on_event, messages, name, tr, idx, tool_call_ids, compression,
+            )
+            .await;
             continue;
         }
         match run_pre_hooks(name, args) {
@@ -62,7 +69,10 @@ pub async fn run_sequential(
                     true,
                 )
                 .await;
-                push_tool_result(on_event, messages, name, tr, idx);
+                compressed |= push_and_compress(
+                    on_event, messages, name, tr, idx, tool_call_ids, compression,
+                )
+                .await;
                 continue;
             }
             PreHookDecision::Allow => {}
@@ -78,7 +88,10 @@ pub async fn run_sequential(
                 true,
             )
             .await;
-            push_tool_result(on_event, messages, name, tr, idx);
+            compressed |= push_and_compress(
+                on_event, messages, name, tr, idx, tool_call_ids, compression,
+            )
+            .await;
             continue;
         }
 
@@ -119,7 +132,31 @@ pub async fn run_sequential(
             tr.is_error,
         )
         .await;
-        push_tool_result(on_event, messages, name, tr, idx);
+        compressed |= push_and_compress(
+            on_event, messages, name, tr, idx, tool_call_ids, compression,
+        )
+        .await;
+    }
+    compressed
+}
+
+fn tool_id(ids: &[String], idx: usize) -> Option<&str> {
+    ids.get(idx).map(String::as_str)
+}
+
+async fn push_and_compress(
+    on_event: &AgentEventEmitter,
+    messages: &mut Vec<ChatMessage>,
+    name: &str,
+    tr: ToolResult,
+    idx: usize,
+    tool_call_ids: &[String],
+    compression: Option<&ToolCompression<'_>>,
+) -> bool {
+    push_tool_result(on_event, messages, name, tr, idx, tool_id(tool_call_ids, idx));
+    match compression {
+        Some(compression) => compression.try_run(messages).await,
+        None => false,
     }
 }
 

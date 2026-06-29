@@ -114,6 +114,24 @@ pub struct StreamResult {
     pub prompt_tokens: Option<u32>,
 }
 
+#[derive(Debug)]
+pub enum StreamOutcome {
+    Completed(StreamResult),
+    InterruptedForCompression(StreamResult),
+}
+
+impl StreamOutcome {
+    pub fn into_result(self) -> StreamResult {
+        match self {
+            Self::Completed(result) | Self::InterruptedForCompression(result) => result,
+        }
+    }
+
+    pub fn is_interrupted(&self) -> bool {
+        matches!(self, Self::InterruptedForCompression(_))
+    }
+}
+
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PullProgress {

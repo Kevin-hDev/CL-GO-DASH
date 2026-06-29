@@ -2,6 +2,7 @@ pub mod context_capsules;
 pub mod context_resolve;
 pub mod engine;
 pub mod prompt;
+pub mod realtime_budget;
 pub mod state;
 mod state_recent;
 mod state_select;

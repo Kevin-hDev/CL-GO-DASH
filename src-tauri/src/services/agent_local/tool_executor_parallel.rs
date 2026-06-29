@@ -8,6 +8,7 @@ use std::collections::HashMap;
 use tokio_util::sync::CancellationToken;
 
 use super::tool_executor_helpers::push_tool_result;
+use super::tool_executor_compression::ToolCompression;
 use super::tool_executor_parallel_batch::{flush_read_batch, BatchEntry};
 
 pub async fn run_with_parallel_reads(
@@ -22,7 +23,9 @@ pub async fn run_with_parallel_reads(
     session_id: &str,
     request_id: &str,
     plan_mode_active: bool,
-) {
+    tool_call_ids: &[String],
+    compression: Option<&ToolCompression<'_>>,
+) -> bool {
     let mut read_batch: Vec<BatchEntry> = Vec::new();
     let mut indexed_results: Vec<Option<(&str, ToolResult)>> = vec![None; tool_calls.len()];
     let mut i = 0;
@@ -132,9 +135,18 @@ pub async fn run_with_parallel_reads(
         }
     }
 
+    let mut compressed = false;
     for (idx, slot) in indexed_results.into_iter().enumerate() {
         if let Some((name, tr)) = slot {
-            push_tool_result(on_event, messages, name, tr, idx);
+            push_tool_result(on_event, messages, name, tr, idx, tool_id(tool_call_ids, idx));
+            if let Some(compression) = compression {
+                compressed |= compression.try_run(messages).await;
+            }
         }
     }
+    compressed
+}
+
+fn tool_id(ids: &[String], idx: usize) -> Option<&str> {
+    ids.get(idx).map(String::as_str)
 }

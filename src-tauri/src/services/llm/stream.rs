@@ -1,7 +1,8 @@
 use super::stream_consume::consume_stream;
 use super::stream_http::{post_chat_request, RequestConfig, RequestError};
 use crate::services::agent_local::stream_events::AgentEventEmitter;
-use crate::services::agent_local::types_ollama::{ChatMessage, StreamEvent, StreamResult};
+use crate::services::agent_local::types_ollama::{ChatMessage, StreamEvent, StreamOutcome};
+use crate::services::compress::realtime_budget::RealtimeBudget;
 use crate::services::llm::vision;
 use tokio_util::sync::CancellationToken;
 pub async fn stream_chat_no_done(
@@ -14,9 +15,10 @@ pub async fn stream_chat_no_done(
     reasoning_mode: Option<&str>,
     cancel: CancellationToken,
     buffer_content: bool,
-) -> Result<StreamResult, String> {
+    realtime_budget: Option<RealtimeBudget>,
+) -> Result<StreamOutcome, String> {
     if provider_id == "codex-oauth" {
-        return crate::services::codex_client::stream::stream_chat(
+        return crate::services::codex_client::stream::stream_chat_with_budget(
             on_event,
             model,
             messages,
@@ -25,6 +27,7 @@ pub async fn stream_chat_no_done(
             reasoning_mode,
             cancel,
             buffer_content,
+            realtime_budget,
         )
         .await;
     }
@@ -39,8 +42,9 @@ pub async fn stream_chat_no_done(
     };
     match post_chat_request(&cfg).await {
         Ok(resp) => {
-            let (result, _, _) = consume_stream(on_event, resp, cancel, buffer_content).await?;
-            Ok(result)
+            let (outcome, _, _) =
+                consume_stream(on_event, resp, cancel, buffer_content, realtime_budget).await?;
+            Ok(outcome)
         }
         Err(RequestError::RetryWithoutTools(msg)) => {
             eprintln!("[llm stream] retry sans tools: {msg}");
@@ -54,8 +58,9 @@ pub async fn stream_chat_no_done(
                 max_tokens: None,
             };
             let resp = post_chat_request(&cfg2).await.map_err(|e| e.to_string())?;
-            let (result, _, _) = consume_stream(on_event, resp, cancel, buffer_content).await?;
-            Ok(result)
+            let (outcome, _, _) =
+                consume_stream(on_event, resp, cancel, buffer_content, realtime_budget).await?;
+            Ok(outcome)
         }
         Err(RequestError::RetryWithoutImages(msg)) => {
             eprintln!("[llm stream] retry sans images: {msg}");
@@ -75,8 +80,9 @@ pub async fn stream_chat_no_done(
                 max_tokens: None,
             };
             let resp = post_chat_request(&cfg2).await.map_err(|e| e.to_string())?;
-            let (result, _, _) = consume_stream(on_event, resp, cancel, buffer_content).await?;
-            Ok(result)
+            let (outcome, _, _) =
+                consume_stream(on_event, resp, cancel, buffer_content, realtime_budget).await?;
+            Ok(outcome)
         }
         Err(RequestError::Fatal(msg)) => Err(msg),
     }

@@ -3,6 +3,7 @@ pub fn ollama_base_url() -> String {
 }
 
 pub mod agent_loop;
+pub mod agent_loop_completion;
 mod agent_loop_compression;
 pub mod agent_loop_errors;
 pub mod agent_loop_limits;
@@ -41,6 +42,7 @@ pub mod ollama_stream;
 pub mod ollama_stream_process;
 #[cfg(test)]
 mod ollama_stream_process_tests;
+pub mod ollama_stream_retry;
 pub mod permission_gate;
 #[cfg(test)]
 pub mod permission_gate_tests;
@@ -124,6 +126,7 @@ pub mod tool_document_format_tests;
 pub mod tool_document_write_tests;
 pub mod tool_document_write_xml;
 pub mod tool_executor;
+pub mod tool_executor_compression;
 pub mod tool_executor_diagnostics;
 pub mod tool_executor_helpers;
 pub mod tool_executor_parallel;

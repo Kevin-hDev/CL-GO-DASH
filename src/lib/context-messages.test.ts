@@ -2,10 +2,10 @@ import { describe, expect, it } from "vitest";
 import { isCompressionContextOnlyMessage, isCompressionSummaryMessage } from "./context-messages";
 import type { AgentMessage } from "@/types/agent";
 
-function msg(content: string): AgentMessage {
+function msg(content: string, role: AgentMessage["role"] = "assistant"): AgentMessage {
   return {
     id: "m1",
-    role: "assistant",
+    role,
     content,
     files: [],
     timestamp: new Date().toISOString(),
@@ -15,6 +15,15 @@ function msg(content: string): AgentMessage {
 describe("context messages", () => {
   it("detecte un resume de compression", () => {
     const message = msg("This session is being continued from a previous conversation.\n\nSummary");
+    expect(isCompressionSummaryMessage(message)).toBe(true);
+    expect(isCompressionContextOnlyMessage(message)).toBe(true);
+  });
+
+  it("detecte un resume de compression meme avec role user", () => {
+    const message = msg(
+      "This session is being continued from a previous conversation.\n\nSummary",
+      "user",
+    );
     expect(isCompressionSummaryMessage(message)).toBe(true);
     expect(isCompressionContextOnlyMessage(message)).toBe(true);
   });

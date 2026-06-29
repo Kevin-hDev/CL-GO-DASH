@@ -42,7 +42,7 @@ describe("agentStreamManager", () => {
   it("recharge la session et vide les buffers après compressionComplete", async () => {
     const reloadedMessages = [
       message("m1", "user", "Résumé de compression"),
-      message("m2", "assistant", "Réponse conservée"),
+      message("m2", "assistant", "réponse partielle"),
     ];
     mocks.invoke.mockResolvedValue({
       messages: reloadedMessages,
@@ -67,6 +67,7 @@ describe("agentStreamManager", () => {
     });
 
     const after = agentStreamManager.getSnapshot("s1");
+    expect(after?.messages[1]?.content).toBe("réponse partielle");
     expect(after?.completedSegments).toEqual([]);
     expect(after?.currentContent).toBe("");
     expect(after?.currentThinking).toBe("");

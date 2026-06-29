@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-pub use super::types_stream::{PullProgress, StreamEvent, StreamResult};
+pub use super::types_stream::{PullProgress, StreamEvent, StreamOutcome, StreamResult};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct OllamaModel {

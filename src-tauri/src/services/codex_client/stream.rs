@@ -1,5 +1,6 @@
 use crate::services::agent_local::stream_events::AgentEventEmitter;
-use crate::services::agent_local::types_ollama::{ChatMessage, StreamEvent, StreamResult};
+use crate::services::agent_local::types_ollama::{ChatMessage, StreamEvent, StreamOutcome, StreamResult};
+use crate::services::compress::realtime_budget::RealtimeBudget;
 use crate::services::stream_utils::compute_tps;
 use eventsource_stream::Eventsource;
 use futures_util::StreamExt;
@@ -11,7 +12,7 @@ pub const CODEX_IDLE_TIMEOUT_SECS: u64 = 180;
 
 pub use super::stream_silent::{collect_chat_silent, collect_chat_silent_for_compression};
 
-pub async fn stream_chat(
+pub async fn stream_chat_with_budget(
     on_event: &AgentEventEmitter,
     model: &str,
     messages: &[ChatMessage],
@@ -20,9 +21,10 @@ pub async fn stream_chat(
     reasoning_mode: Option<&str>,
     cancel: CancellationToken,
     buffer_content: bool,
-) -> Result<StreamResult, String> {
+    realtime_budget: Option<RealtimeBudget>,
+) -> Result<StreamOutcome, String> {
     let resp = request::post_codex_stream(model, messages, tools, think, reasoning_mode).await?;
-    consume_sse(on_event, resp, cancel, buffer_content).await
+    consume_sse(on_event, resp, cancel, buffer_content, realtime_budget).await
 }
 
 async fn consume_sse(
@@ -30,7 +32,8 @@ async fn consume_sse(
     resp: reqwest::Response,
     cancel: CancellationToken,
     buffer_content: bool,
-) -> Result<StreamResult, String> {
+    mut realtime_budget: Option<RealtimeBudget>,
+) -> Result<StreamOutcome, String> {
     let mut sse = resp.bytes_stream().eventsource();
     let mut result = StreamResult::default();
     let mut token_count: u32 = 0;
@@ -39,6 +42,7 @@ async fn consume_sse(
     let mut cur_tool_id: Option<String> = None;
     let mut cur_tool_name: Option<String> = None;
     let mut cur_tool_args = String::new();
+    let mut interrupted = false;
 
     loop {
         let event = tokio::select! {
@@ -91,6 +95,14 @@ async fn consume_sse(
                         tps,
                     });
                 }
+                if should_interrupt(
+                    &mut realtime_budget,
+                    token_count,
+                    cur_tool_id.is_some() || !result.tool_calls.is_empty(),
+                ) {
+                    interrupted = true;
+                    break;
+                }
             }
             "response.output_item.added" => {
                 if let Some(item) = parsed.get("item") {
@@ -136,5 +148,20 @@ async fn consume_sse(
         }
     }
 
-    Ok(result)
+    if interrupted {
+        Ok(StreamOutcome::InterruptedForCompression(result))
+    } else {
+        Ok(StreamOutcome::Completed(result))
+    }
+}
+
+fn should_interrupt(
+    budget: &mut Option<RealtimeBudget>,
+    token_count: u32,
+    has_tool_call: bool,
+) -> bool {
+    !has_tool_call
+        && budget
+            .as_mut()
+            .is_some_and(|budget| budget.should_interrupt(token_count))
 }

@@ -113,7 +113,7 @@ fn emit_filtered(
     }
 }
 
-fn flush_filter(
+pub(crate) fn flush_filter(
     filter: &mut ThinkTagFilter,
     on_event: &AgentEventEmitter,
     token_count: &mut u32,

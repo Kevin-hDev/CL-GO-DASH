@@ -2,6 +2,7 @@ use crate::services::agent_local::ollama_base_url;
 use crate::services::agent_local::types_ollama::{
     ChatMessage, ChatRequest, OllamaThink, StreamResult, ToolCallFunction, ToolCallOllama,
 };
+use std::path::Path;
 
 pub fn build_request(
     model: &str,
@@ -84,4 +85,31 @@ pub async fn decharge_gpu(model: &str) {
         }))
         .send()
         .await;
+}
+
+pub async fn record_detected_tool_calls(
+    session_id: &str,
+    request_id: &str,
+    tool_calls: &[(String, serde_json::Value)],
+    working_dir: &Path,
+) {
+    for (name, args) in tool_calls {
+        super::tool_executor_diagnostics::detected(
+            session_id,
+            request_id,
+            name,
+            args,
+            working_dir,
+        )
+        .await;
+    }
+}
+
+pub async fn ensure_more_turns(turn: usize, model: &str) -> Result<(), String> {
+    if turn == super::agent_loop_limits::MAX_TURNS - 1 {
+        decharge_gpu(model).await;
+        Err(super::agent_loop_errors::max_turns_message())
+    } else {
+        Ok(())
+    }
 }

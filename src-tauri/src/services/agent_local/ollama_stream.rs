@@ -1,7 +1,11 @@
 use crate::services::agent_local::ollama_base_url;
-use crate::services::agent_local::ollama_stream_process::process_chunk;
+use crate::services::agent_local::ollama_stream_retry::build_retry_request;
+use crate::services::agent_local::ollama_stream_process::{flush_filter, process_chunk};
 use crate::services::agent_local::stream_events::AgentEventEmitter;
-use crate::services::agent_local::types_ollama::{ChatRequest, StreamEvent, StreamResult};
+use crate::services::agent_local::types_ollama::{
+    ChatRequest, StreamEvent, StreamOutcome, StreamResult,
+};
+use crate::services::compress::realtime_budget::RealtimeBudget;
 use crate::services::llm::vision;
 use crate::services::stream_utils::ThinkTagFilter;
 use futures_util::StreamExt;
@@ -21,7 +25,8 @@ pub async fn stream_chat_with_tool_notify(
     cancel: CancellationToken,
     tool_tx: mpsc::UnboundedSender<(usize, String, serde_json::Value)>,
     buffer_content: bool,
-) -> Result<StreamResult, String> {
+    realtime_budget: Option<RealtimeBudget>,
+) -> Result<StreamOutcome, String> {
     stream_chat_inner(
         on_event,
         request,
@@ -29,6 +34,7 @@ pub async fn stream_chat_with_tool_notify(
         false,
         Some(tool_tx),
         buffer_content,
+        realtime_budget,
     )
     .await
 }
@@ -40,7 +46,8 @@ async fn stream_chat_inner(
     emit_done: bool,
     tool_tx: Option<mpsc::UnboundedSender<(usize, String, serde_json::Value)>>,
     buffer_content: bool,
-) -> Result<StreamResult, String> {
+    mut realtime_budget: Option<RealtimeBudget>,
+) -> Result<StreamOutcome, String> {
     let client = reqwest::Client::new();
     let resp = match client
         .post(format!("{}/api/chat", ollama_base_url()))
@@ -88,6 +95,7 @@ async fn stream_chat_inner(
                 emit_done,
                 tool_tx,
                 buffer_content,
+                realtime_budget,
             ))
             .await;
         }
@@ -110,6 +118,7 @@ async fn stream_chat_inner(
     let mut first_token: Option<std::time::Instant> = None;
     let mut result = StreamResult::default();
     let mut think_filter = ThinkTagFilter::new();
+    let mut interrupted = false;
 
     loop {
         tokio::select! {
@@ -132,6 +141,10 @@ async fn stream_chat_inner(
                             let _ = on_event.send(StreamEvent::Error { message: e.clone(), is_connection: false, diagnostic: None });
                             return Err(e);
                         }
+                        if should_interrupt(&mut realtime_budget, token_count, !result.tool_calls.is_empty()) {
+                            interrupted = true;
+                            break;
+                        }
                     }
                     Ok(None) => break,
                     Err(e) => {
@@ -147,31 +160,28 @@ async fn stream_chat_inner(
             }
         }
     }
-    Ok(result)
+    if interrupted {
+        flush_filter(
+            &mut think_filter,
+            on_event,
+            &mut token_count,
+            &mut first_token,
+            &mut result,
+            buffer_content,
+        );
+        Ok(StreamOutcome::InterruptedForCompression(result))
+    } else {
+        Ok(StreamOutcome::Completed(result))
+    }
 }
 
-fn build_retry_request(request: &ChatRequest, error_body: &str) -> Option<ChatRequest> {
-    let mut retry = request.clone();
-    let mut changed = false;
-    if error_body.contains("does not support thinking")
-        && request.think.as_ref().is_some_and(|think| think.enabled())
-    {
-        retry.think = Some(crate::services::agent_local::types_ollama::OllamaThink::Bool(false));
-        changed = true;
-    }
-    if error_body.contains("does not support tools") && request.tools.is_some() {
-        retry.tools = None;
-        changed = true;
-    }
-    if error_body.contains("does not support images") {
-        for msg in &mut retry.messages {
-            msg.images = None;
-        }
-        changed = true;
-    }
-    if changed {
-        Some(retry)
-    } else {
-        None
-    }
+fn should_interrupt(
+    budget: &mut Option<RealtimeBudget>,
+    token_count: u32,
+    has_tool_call: bool,
+) -> bool {
+    !has_tool_call
+        && budget
+            .as_mut()
+            .is_some_and(|budget| budget.should_interrupt(token_count))
 }

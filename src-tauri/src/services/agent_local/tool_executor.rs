@@ -7,6 +7,7 @@ use tokio_util::sync::CancellationToken;
 
 use super::tool_executor_parallel::run_with_parallel_reads;
 use super::tool_executor_sequential::run_sequential;
+use super::tool_executor_compression::ToolCompression;
 
 pub async fn run_tools(
     on_event: &AgentEventEmitter,
@@ -19,7 +20,9 @@ pub async fn run_tools(
     cancel: CancellationToken,
     write_guard: &mut WriteGuard,
     plan_mode_active: bool,
-) {
+    tool_call_ids: &[String],
+    compression: Option<&ToolCompression<'_>>,
+) -> bool {
     run_tools_with_eager(
         on_event,
         messages,
@@ -32,8 +35,10 @@ pub async fn run_tools(
         write_guard,
         plan_mode_active,
         None,
+        tool_call_ids,
+        compression,
     )
-    .await;
+    .await
 }
 
 pub async fn run_tools_with_eager(
@@ -48,7 +53,9 @@ pub async fn run_tools_with_eager(
     write_guard: &mut WriteGuard,
     plan_mode_active: bool,
     mut eager_results: Option<HashMap<usize, ToolResult>>,
-) {
+    tool_call_ids: &[String],
+    compression: Option<&ToolCompression<'_>>,
+) -> bool {
     if mode == "manual" {
         run_sequential(
             on_event,
@@ -60,8 +67,10 @@ pub async fn run_tools_with_eager(
             cancel,
             write_guard,
             plan_mode_active,
+            tool_call_ids,
+            compression,
         )
-        .await;
+        .await
     } else {
         run_with_parallel_reads(
             on_event,
@@ -75,7 +84,9 @@ pub async fn run_tools_with_eager(
             session_id,
             request_id,
             plan_mode_active,
+            tool_call_ids,
+            compression,
         )
-        .await;
+        .await
     }
 }

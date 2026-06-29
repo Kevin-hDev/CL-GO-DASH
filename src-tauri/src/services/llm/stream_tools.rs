@@ -103,6 +103,10 @@ impl ToolCallAccumulator {
         }
     }
 
+    pub fn has_pending(&self) -> bool {
+        !self.order.is_empty()
+    }
+
     /// Finalise : retourne (tool_calls au format Ollama, IDs alignés).
     /// Parse chaque `arguments` string comme JSON Value.
     pub fn finalize(self) -> FinalizedToolCalls {

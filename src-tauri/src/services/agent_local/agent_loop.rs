@@ -1,11 +1,10 @@
-use super::agent_loop_compression::LoopCompression;
+use super::agent_loop_compression::{LastCounts, LoopCompression};
 use super::stream_events::AgentEventEmitter;
 use super::types_ollama::{ChatMessage, OllamaThink, StreamEvent};
 use super::write_guard_registry;
 use super::{
-    agent_loop_errors, agent_loop_limits::MAX_TURNS, agent_loop_plan, agent_loop_support,
-    circuit_breaker, context_budget, eager_dispatch, ollama_stream, tool_executor,
-    tool_result_budget,
+    agent_loop_limits::MAX_TURNS, agent_loop_plan, agent_loop_support, circuit_breaker,
+    context_budget, eager_dispatch, ollama_stream, tool_executor, tool_result_budget,
 };
 use crate::services::token_counting;
 use std::path::PathBuf;
@@ -47,12 +46,9 @@ pub async fn run_agent_loop(
         if cancel.is_cancelled() {
             return Err("Annulé".to_string());
         }
-
         tool_result_budget::apply_budget(messages);
-        let _ = compression
-            .try_run(messages, last_prompt, last_eval, cancel.clone())
-            .await;
         context_budget::prepare_for_request(messages, configured_context);
+        let realtime_budget = compression.realtime_budget(messages);
         let plan_active = agent_loop_plan::active(&session_id, plan_mode_active).await;
         let request = agent_loop_support::build_request(model, messages, &tools, think.clone());
         let (tool_tx, tool_rx) = tokio::sync::mpsc::unbounded_channel();
@@ -70,14 +66,29 @@ pub async fn run_agent_loop(
             "Stream modèle démarré.",
         )
         .await;
-        let result = ollama_stream::stream_chat_with_tool_notify(
+        let outcome = ollama_stream::stream_chat_with_tool_notify(
             on_event,
             &request,
             cancel.clone(),
             tool_tx,
             plan_active,
+            realtime_budget,
         )
         .await?;
+        let interrupted = outcome.is_interrupted();
+        let result = outcome.into_result();
+        if interrupted {
+            eager_handle.abort();
+            compression
+                .handle_interrupted(
+                    messages,
+                    &result,
+                    LastCounts::new(&mut last_prompt, &mut last_eval),
+                    cancel.clone(),
+                )
+                .await?;
+            continue;
+        }
         token_counting::add_real_count(&mut total_eval, result.eval_count);
         token_counting::add_real_count(&mut total_prompt, result.prompt_tokens);
         last_prompt = result.prompt_tokens;
@@ -110,47 +121,36 @@ pub async fn run_agent_loop(
             assistant_message.content.clear();
         }
         messages.push(assistant_message);
-
-        if compression
-            .try_run(messages, last_prompt, last_eval, cancel.clone())
-            .await
-            .is_some()
-        {
-            last_prompt = None;
-            last_eval = None;
-        }
-
+        compression
+            .try_run_and_reset(messages, &mut last_prompt, &mut last_eval, cancel.clone())
+            .await;
         if result.tool_calls.is_empty() {
             eager_handle.abort();
             break;
         }
-        for (name, args) in &result.tool_calls {
-            super::tool_executor_diagnostics::detected(
-                &session_id,
-                &request_id,
-                name,
-                args,
-                &working_dir,
-            )
-            .await;
-        }
-
+        agent_loop_support::record_detected_tool_calls(
+            &session_id,
+            &request_id,
+            &result.tool_calls,
+            &working_dir,
+        )
+        .await;
         if turn == MAX_TURNS - 1 {
             eager_handle.abort();
-            agent_loop_support::decharge_gpu(model).await;
-            return Err(agent_loop_errors::max_turns_message());
+            agent_loop_support::ensure_more_turns(turn, model).await?;
         }
-
         if let Err(msg) = breaker.check(&result.tool_calls) {
             eager_handle.abort();
             agent_loop_support::decharge_gpu(model).await;
             return Err(msg);
         }
-
         let eager_results = eager_handle.await.unwrap_or_default();
-
         let mode = permission_mode.to_string();
-        tool_executor::run_tools_with_eager(
+        let tool_compression = compression.tool_compression(
+            token_counting::sum_real_counts(last_prompt, last_eval),
+            cancel.clone(),
+        );
+        let compressed_during_tools = tool_executor::run_tools_with_eager(
             on_event,
             messages,
             &result.tool_calls,
@@ -162,38 +162,34 @@ pub async fn run_agent_loop(
             &mut write_guard,
             plan_active,
             Some(eager_results),
+            &[],
+            Some(&tool_compression),
         )
         .await;
 
         let compressed_after_tools = compression
-            .try_run(messages, last_prompt, last_eval, cancel.clone())
-            .await
-            .is_some();
-        if compressed_after_tools {
-            last_prompt = None;
-            last_eval = None;
-        }
-
+            .after_tools(
+                messages,
+                compressed_during_tools,
+                &mut last_prompt,
+                &mut last_eval,
+                cancel.clone(),
+            )
+            .await;
         if !compressed_after_tools {
             let _ = on_event.send(StreamEvent::TurnEnd {});
         }
     }
-
-    let elapsed_ns = start.elapsed().as_nanos() as u64;
-    let final_tps = if elapsed_ns > 0 {
-        total_eval.unwrap_or(0) as f64 / (elapsed_ns as f64 / 1e9)
-    } else {
-        0.0
-    };
-    let _ = on_event.send(StreamEvent::Done {
-        eval_count: total_eval,
-        eval_duration_ns: elapsed_ns,
-        final_tps,
-        prompt_tokens: total_prompt,
-        context_tokens: token_counting::sum_real_counts(last_prompt, last_eval),
-    });
+    let token_total = super::agent_loop_completion::emit_done(
+        on_event,
+        total_eval,
+        total_prompt,
+        last_prompt,
+        last_eval,
+        start,
+    );
 
     super::stream_diagnostics::record_completed(&session_id, &request_id).await;
     agent_loop_support::decharge_gpu(model).await;
-    Ok(token_counting::sum_real_counts(total_eval, total_prompt).unwrap_or(0))
+    Ok(token_total)
 }

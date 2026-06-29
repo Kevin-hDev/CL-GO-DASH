@@ -4,7 +4,8 @@ use super::{
     stream_tools::ToolCallAccumulator,
 };
 use crate::services::agent_local::stream_events::AgentEventEmitter;
-use crate::services::agent_local::types_ollama::{StreamEvent, StreamResult};
+use crate::services::agent_local::types_ollama::{StreamEvent, StreamOutcome, StreamResult};
+use crate::services::compress::realtime_budget::RealtimeBudget;
 use crate::services::stream_utils::FilteredChunk;
 use crate::services::stream_utils::ThinkTagFilter;
 use eventsource_stream::Eventsource;
@@ -16,13 +17,15 @@ pub(super) async fn consume_stream(
     resp: reqwest::Response,
     cancel: CancellationToken,
     buffer_content: bool,
-) -> Result<(StreamResult, u32, std::time::Instant), String> {
+    mut realtime_budget: Option<RealtimeBudget>,
+) -> Result<(StreamOutcome, u32, std::time::Instant), String> {
     let mut stream = resp.bytes_stream().eventsource();
     let mut result = StreamResult::default();
     let mut token_count: u32 = 0;
     let mut first_token: Option<std::time::Instant> = None;
     let mut acc = ToolCallAccumulator::new();
     let mut think_filter = ThinkTagFilter::new();
+    let mut interrupted = false;
 
     loop {
         tokio::select! {
@@ -35,6 +38,10 @@ pub(super) async fn consume_stream(
                 let event = event.map_err(|e| format!("SSE: {e}"))?;
                 if is_done_marker(&event.data) { break; }
                 process_chunk(&event.data, on_event, &mut token_count, &mut first_token, &mut result, &mut acc, &mut think_filter, buffer_content);
+                if should_interrupt(&mut realtime_budget, token_count, acc.has_pending()) {
+                    interrupted = true;
+                    break;
+                }
             }
         }
     }
@@ -74,7 +81,23 @@ pub(super) async fn consume_stream(
     }
 
     let first = first_token.unwrap_or_else(std::time::Instant::now);
-    Ok((result, token_count, first))
+    let outcome = if interrupted {
+        StreamOutcome::InterruptedForCompression(result)
+    } else {
+        StreamOutcome::Completed(result)
+    };
+    Ok((outcome, token_count, first))
+}
+
+fn should_interrupt(
+    budget: &mut Option<RealtimeBudget>,
+    token_count: u32,
+    has_pending_tool_call: bool,
+) -> bool {
+    !has_pending_tool_call
+        && budget
+            .as_mut()
+            .is_some_and(|budget| budget.should_interrupt(token_count))
 }
 
 fn process_chunk(

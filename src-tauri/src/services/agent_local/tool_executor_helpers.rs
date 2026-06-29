@@ -108,6 +108,7 @@ pub fn push_tool_result(
     name: &str,
     tr: ToolResult,
     tool_call_index: usize,
+    tool_call_id: Option<&str>,
 ) {
     let _ = on_event.send(StreamEvent::ToolResult {
         name: name.to_string(),
@@ -122,7 +123,7 @@ pub fn push_tool_result(
         images: None,
         tool_calls: None,
         tool_name: Some(name.to_string()),
-        tool_call_id: None,
+        tool_call_id: tool_call_id.map(str::to_string),
         reasoning_content: None,
     });
 }
