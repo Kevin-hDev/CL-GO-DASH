@@ -157,6 +157,7 @@ export const SegmentedAssistantMessage = memo(function SegmentedAssistantMessage
     <AssistantMessage
       content={msg.content} thinking={msg.thinking}
       toolActivities={msg.tool_activities}
+      projectPath={projectPath}
       onReload={onReload ? () => onReload(msg.id) : undefined}
       tokens={msg.tokens}
       tps={tps}

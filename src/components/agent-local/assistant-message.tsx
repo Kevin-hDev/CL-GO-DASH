@@ -125,6 +125,7 @@ interface AssistantMessageProps {
   content: string;
   thinking?: string;
   toolActivities?: ToolActivityRecord[];
+  projectPath?: string;
   isStreaming?: boolean;
   onReload?: () => void;
   tokens?: number;
@@ -140,7 +141,7 @@ function formatTokens(n: number): string {
 }
 
 export const AssistantMessage = memo(function AssistantMessage({
-  content, thinking, toolActivities, isStreaming, onReload,
+  content, thinking, toolActivities, projectPath, isStreaming, onReload,
   tokens, tps, totalElapsedMs, streamStartedAt, liveTokenCount,
 }: AssistantMessageProps) {
   const { t } = useTranslation();
@@ -153,7 +154,7 @@ export const AssistantMessage = memo(function AssistantMessage({
     <div className="msg-assistant" ref={hoverRef}>
       {thinking && <ThinkingSection content={thinking} isActive={isStreaming && !content} />}
       {toolActivities && toolActivities.length > 0 && (
-        <SavedToolBubble tools={toolActivities} />
+        <SavedToolBubble tools={toolActivities} projectPath={projectPath} />
       )}
       <div className="msg-assistant-content chat-md">
         {content && <ChatMarkdown content={content} />}

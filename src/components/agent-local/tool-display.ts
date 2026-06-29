@@ -96,7 +96,9 @@ export function toolDisplayInfo(
   const labelKey = actionKey(tool.name);
   const summary = displaySummary(tool, projectPath);
   const isFilePath = FILE_TOOLS.has(tool.name);
-  const segments = isFilePath ? filePathSegments(tool.summary, projectPath) : null;
+  // Priorité au chemin résolu côté backend (toujours absolu), sinon fallback sur le summary.
+  const pathForDisplay = tool.resolved_path || tool.summary;
+  const segments = isFilePath ? filePathSegments(pathForDisplay, projectPath) : null;
   return {
     label: t(`agentLocal.toolActivity.actions.${labelKey}`),
     summary,

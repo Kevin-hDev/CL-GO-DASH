@@ -9,7 +9,7 @@ use tokio_util::sync::CancellationToken;
 
 use super::tool_executor_helpers::{
     check_write_guard, dispatch_or_interactive, post_record_read, post_record_write,
-    push_tool_result,
+    push_tool_result, resolve_tool_path,
 };
 use super::tool_executor_compression::ToolCompression;
 
@@ -53,7 +53,7 @@ pub async fn run_sequential(
             )
             .await;
             compressed |= push_and_compress(
-                on_event, messages, name, tr, idx, tool_call_ids, compression,
+                on_event, messages, name, args, working_dir, tr, idx, tool_call_ids, compression,
             )
             .await;
             continue;
@@ -70,7 +70,7 @@ pub async fn run_sequential(
                 )
                 .await;
                 compressed |= push_and_compress(
-                    on_event, messages, name, tr, idx, tool_call_ids, compression,
+                    on_event, messages, name, args, working_dir, tr, idx, tool_call_ids, compression,
                 )
                 .await;
                 continue;
@@ -89,7 +89,7 @@ pub async fn run_sequential(
             )
             .await;
             compressed |= push_and_compress(
-                on_event, messages, name, tr, idx, tool_call_ids, compression,
+                on_event, messages, name, args, working_dir, tr, idx, tool_call_ids, compression,
             )
             .await;
             continue;
@@ -133,7 +133,7 @@ pub async fn run_sequential(
         )
         .await;
         compressed |= push_and_compress(
-            on_event, messages, name, tr, idx, tool_call_ids, compression,
+            on_event, messages, name, args, working_dir, tr, idx, tool_call_ids, compression,
         )
         .await;
     }
@@ -148,12 +148,23 @@ async fn push_and_compress(
     on_event: &AgentEventEmitter,
     messages: &mut Vec<ChatMessage>,
     name: &str,
+    args: &serde_json::Value,
+    working_dir: &std::path::Path,
     tr: ToolResult,
     idx: usize,
     tool_call_ids: &[String],
     compression: Option<&ToolCompression<'_>>,
 ) -> bool {
-    push_tool_result(on_event, messages, name, tr, idx, tool_id(tool_call_ids, idx));
+    let resolved_path = resolve_tool_path(name, args, working_dir);
+    push_tool_result(
+        on_event,
+        messages,
+        name,
+        tr,
+        idx,
+        tool_id(tool_call_ids, idx),
+        resolved_path,
+    );
     match compression {
         Some(compression) => compression.try_run(messages).await,
         None => false,

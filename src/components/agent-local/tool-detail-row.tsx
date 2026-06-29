@@ -22,6 +22,7 @@ export interface RenderableTool {
   old_text?: string;
   new_text?: string;
   start_line?: number;
+  resolved_path?: string;
 }
 
 function str(v: unknown, fallback = ""): string {
@@ -59,6 +60,7 @@ export function streamToolToRenderable(t: ToolActivity): RenderableTool {
     args: t.args,
     result: t.result,
     is_error: t.isError,
+    resolved_path: t.resolvedPath,
     content: t.name === "write_file" ? str(t.args.content) : undefined,
     old_text: t.name === "edit_file" ? str(t.args.old_string) : undefined,
     new_text: t.name === "edit_file" ? str(t.args.new_string) : undefined,
@@ -73,6 +75,7 @@ export function savedToolToRenderable(t: ToolActivityRecord): RenderableTool {
     args: t.args,
     result: t.result,
     is_error: t.is_error,
+    resolved_path: t.resolved_path,
     content: t.content,
     old_text: t.old_text,
     new_text: t.new_text,

@@ -53,7 +53,6 @@
 }
 
 .tb-group-title {
-  flex: 1;
   min-width: 0;
   color: inherit;
   font-size: 12px;

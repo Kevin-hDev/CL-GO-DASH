@@ -7,7 +7,7 @@ use crate::services::agent_local::write_guard::WriteGuard;
 use std::collections::HashMap;
 use tokio_util::sync::CancellationToken;
 
-use super::tool_executor_helpers::push_tool_result;
+use super::tool_executor_helpers::{push_tool_result, resolve_tool_path};
 use super::tool_executor_compression::ToolCompression;
 use super::tool_executor_parallel_batch::{flush_read_batch, BatchEntry};
 
@@ -138,7 +138,16 @@ pub async fn run_with_parallel_reads(
     let mut compressed = false;
     for (idx, slot) in indexed_results.into_iter().enumerate() {
         if let Some((name, tr)) = slot {
-            push_tool_result(on_event, messages, name, tr, idx, tool_id(tool_call_ids, idx));
+            let resolved_path = resolve_tool_path(name, &tool_calls[idx].1, working_dir);
+            push_tool_result(
+                on_event,
+                messages,
+                name,
+                tr,
+                idx,
+                tool_id(tool_call_ids, idx),
+                resolved_path,
+            );
             if let Some(compression) = compression {
                 compressed |= compression.try_run(messages).await;
             }

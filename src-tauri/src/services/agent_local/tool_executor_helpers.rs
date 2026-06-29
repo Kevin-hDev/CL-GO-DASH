@@ -102,6 +102,29 @@ fn record_path(write_guard: &mut WriteGuard, path_str: &str, working_dir: &std::
     write_guard.record_read(&resolved);
 }
 
+/// Résout le chemin d'un outil fichier pour l'affichage frontend.
+/// Retourne le chemin absolu résolu (working_dir + chemin relatif) pour les outils
+/// qui manipulent un fichier. Retourne None pour les outils sans fichier.
+pub fn resolve_tool_path(
+    name: &str,
+    args: &serde_json::Value,
+    working_dir: &std::path::Path,
+) -> Option<String> {
+    let path_str = match name {
+        "read_file" | "write_file" | "edit_file" | "read_spreadsheet" | "read_document"
+        | "read_image" | "write_spreadsheet" | "write_document" => args["path"].as_str(),
+        "process_image" => args["input_path"].as_str(),
+        _ => return None,
+    }?;
+    let p = std::path::Path::new(path_str);
+    let resolved = if p.is_absolute() {
+        p.to_path_buf()
+    } else {
+        working_dir.join(p)
+    };
+    resolved.to_str().map(|s| s.to_string())
+}
+
 pub fn push_tool_result(
     on_event: &AgentEventEmitter,
     messages: &mut Vec<ChatMessage>,
@@ -109,6 +132,7 @@ pub fn push_tool_result(
     tr: ToolResult,
     tool_call_index: usize,
     tool_call_id: Option<&str>,
+    resolved_path: Option<String>,
 ) {
     let _ = on_event.send(StreamEvent::ToolResult {
         name: name.to_string(),
@@ -116,6 +140,7 @@ pub fn push_tool_result(
         is_error: tr.is_error,
         truncated: tr.truncated,
         tool_call_index,
+        resolved_path,
     });
     messages.push(ChatMessage {
         role: "tool".to_string(),

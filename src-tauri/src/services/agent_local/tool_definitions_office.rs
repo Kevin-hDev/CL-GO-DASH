@@ -14,7 +14,8 @@ pub fn office_tool_definitions() -> Vec<Value> {
             "Read data from a spreadsheet (Excel .xlsx/.xls/.ods or CSV/TSV). Relative paths resolve from the working directory. \
              Returns JSON with headers and rows. \
              The first row is always used as column headers. Formulas are returned as text (e.g. '=SUM(A1:A5)'), not computed values. \
-             Example: {\"path\": \"data.xlsx\", \"sheet\": \"Sheet1\", \"max_rows\": 100}",
+             Always pass a relative path with its subdirectory (not a bare filename). \
+             Example: {\"path\": \"data/sales.xlsx\", \"sheet\": \"Sheet1\", \"max_rows\": 100}",
             serde_json::json!({
                 "type": "object",
                 "properties": {
@@ -30,7 +31,8 @@ pub fn office_tool_definitions() -> Vec<Value> {
             "read_document",
             "Extract text from PDF or Word (.docx). Relative paths resolve from the working directory. \
              Returns JSON with text content. \
-             Example: {\"path\": \"report.pdf\"}",
+             Always pass a relative path with its subdirectory (not a bare filename). \
+             Example: {\"path\": \"docs/report.pdf\"}",
             serde_json::json!({
                 "type": "object",
                 "properties": {
@@ -44,7 +46,8 @@ pub fn office_tool_definitions() -> Vec<Value> {
             "read_image",
             "Read image metadata (dimensions, format, size). Relative paths resolve from the working directory. \
              Supports JPEG, PNG, WebP, GIF, BMP. \
-             Example: {\"path\": \"photo.jpg\"}",
+             Always pass a relative path with its subdirectory (not a bare filename). \
+             Example: {\"path\": \"assets/photo.jpg\"}",
             serde_json::json!({
                 "type": "object",
                 "properties": {
@@ -62,7 +65,8 @@ pub fn office_tool_definitions() -> Vec<Value> {
              Formatting ops: set_format (bold/italic/underline/font_color/bg_color/font_size, optional 'value' to rewrite the cell), \
              set_number_format (number_format like '0.00', 'DD/MM/YYYY', '#,##0 €'), set_border (border_style: thin|medium|thick, border_sides: [top,bottom,left,right]), \
              merge_cells (start_cell + end_cell like 'A1' and 'C3'), set_row_height (row + height). \
-             Example: {\"path\": \"output.xlsx\", \"operations\": [\
+             Always pass a relative path with its subdirectory (not a bare filename). \
+             Example: {\"path\": \"output/report.xlsx\", \"operations\": [\
              {\"type\": \"set_row\", \"row\": 0, \"values\": [\"Name\", \"Age\"]}, \
              {\"type\": \"set_cell\", \"cell\": \"A2\", \"value\": \"Alice\"}, \
              {\"type\": \"set_format\", \"cell\": \"A1\", \"bold\": true, \"bg_color\": \"FF0000\"}, \
@@ -114,7 +118,8 @@ pub fn office_tool_definitions() -> Vec<Value> {
              heading: {type, text, level, align?}. paragraph: {type, text, bold?, italic?, runs?, align?} — use 'runs' (array of {text, bold?, italic?, underline?, color?}) to mix styles within one paragraph. \
              table: {type, headers, rows}. list: {type, items, ordered}. \
              align (heading/paragraph): 'left'|'center'|'right'|'justify'. color: hex RRGGBB (e.g. 'FF0000'). \
-             Example: {\"path\": \"doc.docx\", \"content\": [\
+             Always pass a relative path with its subdirectory (not a bare filename). \
+             Example: {\"path\": \"docs/report.docx\", \"content\": [\
              {\"type\": \"heading\", \"text\": \"Title\", \"level\": 1, \"align\": \"center\"}, \
              {\"type\": \"paragraph\", \"runs\": [{\"text\": \"Hello \"}, {\"text\": \"world\", \"bold\": true, \"color\": \"FF0000\"}]}, \
              {\"type\": \"table\", \"headers\": [\"A\",\"B\"], \"rows\": [[\"1\",\"2\"]]}, \
@@ -166,8 +171,9 @@ pub fn office_tool_definitions() -> Vec<Value> {
             "process_image",
             "Resize, crop, or convert an image. Relative paths resolve from the working directory. \
              To convert format, just change the extension. \
-             Example convert: {\"input_path\": \"photo.png\", \"output_path\": \"photo.webp\"} \
-             Example resize: {\"input_path\": \"photo.png\", \"output_path\": \"thumb.jpg\", \"operations\": [\
+             Always pass a relative path with its subdirectory (not a bare filename). \
+             Example convert: {\"input_path\": \"assets/photo.png\", \"output_path\": \"output/photo.webp\"} \
+             Example resize: {\"input_path\": \"assets/photo.png\", \"output_path\": \"output/thumb.jpg\", \"operations\": [\
              {\"type\": \"resize\", \"width\": 200, \"height\": 200, \"mode\": \"fit\"}, \
              {\"type\": \"quality\", \"value\": 85}]}",
             serde_json::json!({
