@@ -1,7 +1,14 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 
-export const FONT_SIZES = [112, 125, 137, 150, 162] as const;
+export const FONT_SIZES = [100, 112, 125, 137, 150] as const;
 export type FontSize = (typeof FONT_SIZES)[number];
+
+/**
+ * Base de la taille de police en pixels pour 100%.
+ * Le navigateur utilise 16px par défaut ; on monte à 18px (+2px) pour
+ * grossir légèrement toutes les polices sans changer les paliers affichés.
+ */
+const FONT_BASE_PX = 18;
 
 export const FONT_FAMILIES = [
   { id: "system", label: "System Default", value: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' },
@@ -17,7 +24,7 @@ export type FontFamilyId = (typeof FONT_FAMILIES)[number]["id"];
 
 function loadFontSize(): FontSize {
   const saved = Number(localStorage.getItem("clgo-font-size"));
-  return FONT_SIZES.includes(saved as FontSize) ? (saved as FontSize) : 112;
+  return FONT_SIZES.includes(saved as FontSize) ? (saved as FontSize) : 100;
 }
 
 function loadFontFamily(): FontFamilyId {
@@ -39,7 +46,8 @@ export function useSettings() {
   const fontFamily = FONT_FAMILIES.find((f) => f.id === fontFamilyId)!;
 
   useEffect(() => {
-    document.documentElement.style.fontSize = `${fontSize}%`;
+    // Base 18px (au lieu des 16px navigateur) × pourcentage du réglage.
+    document.documentElement.style.fontSize = `${(fontSize / 100) * FONT_BASE_PX}px`;
     localStorage.setItem("clgo-font-size", String(fontSize));
   }, [fontSize]);
 
