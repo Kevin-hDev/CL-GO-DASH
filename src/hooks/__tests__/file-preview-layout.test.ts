@@ -1,7 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import {
   chatMinWidthForContainer,
-  clampPreviewWidthForLayout,
   measurePreviewLayout,
   siblingPanelWidth,
 } from "../file-preview-layout";
@@ -61,23 +60,6 @@ describe("file preview layout", () => {
       containerWidth: 1200,
       reservedWidth: 560,
     });
-  });
-
-  it("reborne la preview quand les sidebars prennent de la place", () => {
-    document.body.innerHTML = `
-      <div class="agent-detail-with-preview">
-        <aside class="project-sidebar"></aside>
-        <main class="agent-detail-chat"></main>
-        <section class="fp-panel open"></section>
-      </div>
-    `;
-    const container = document.querySelector(".agent-detail-with-preview")!;
-    const sidebar = document.querySelector(".project-sidebar")!;
-    const panel = document.querySelector(".fp-panel")!;
-    setWidth(container, 1200);
-    setWidth(sidebar, 240);
-
-    expect(clampPreviewWidthForLayout(900, panel, 320)).toBe(280);
   });
 
   it("lit le minimum de chat compact depuis le conteneur", () => {

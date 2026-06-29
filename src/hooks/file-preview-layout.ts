@@ -1,4 +1,4 @@
-import { CHAT_MIN_WIDTH, clampFilePreviewWidthForContainer } from "./file-preview-storage";
+import { CHAT_MIN_WIDTH } from "./file-preview-storage";
 
 export interface FilePreviewLayout {
   container: Element | null;
@@ -33,11 +33,6 @@ export function measurePreviewLayout(panel: Element | null, extraWidth: number):
     reservedWidth: extraWidth + siblingPanelWidth(panel, container),
     chatMinWidth: chatMinWidthForContainer(container),
   };
-}
-
-export function clampPreviewWidthForLayout(width: number, panel: Element | null, extraWidth: number): number {
-  const layout = measurePreviewLayout(panel, extraWidth);
-  return clampFilePreviewWidthForContainer(width, layout.containerWidth, layout.reservedWidth, layout.chatMinWidth);
 }
 
 export function measurePreviewFullscreenWidth(panel: Element | null): number {

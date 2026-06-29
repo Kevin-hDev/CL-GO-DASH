@@ -12,10 +12,6 @@ export interface FileTreeLayout {
   chatMinWidth: number;
 }
 
-export function findOpenFileTreePanel(): Element | null {
-  return document.querySelector(".ft-panel.open");
-}
-
 export function clampFileTreeWidthForContainer(
   value: unknown,
   containerWidth: number,
@@ -43,9 +39,4 @@ export function measureFileTreeLayout(panel: Element | null): FileTreeLayout {
     reservedWidth: siblingPanelWidth(panel, container),
     chatMinWidth: chatMinWidthForContainer(container),
   };
-}
-
-export function clampTreeWidthForLayout(width: number, panel: Element | null): number {
-  const layout = measureFileTreeLayout(panel);
-  return clampFileTreeWidthForContainer(width, layout.containerWidth, layout.reservedWidth, layout.chatMinWidth);
 }
