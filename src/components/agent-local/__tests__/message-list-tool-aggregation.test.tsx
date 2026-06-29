@@ -40,9 +40,6 @@ vi.mock("react-i18next", () => ({
         typeof value === "string" || typeof value === "number" ? String(value) : ""
       );
       const count = text(opts?.count);
-      if (key === "agentLocal.toolActivity.summary") {
-        return `${text(opts?.group)}: ${text(opts?.details)}`;
-      }
       if (key === "agentLocal.toolActivity.toggleDetails") return "Show tool details";
       if (key === "agentLocal.toolActivity.groupError") return "An error occurred in this group";
       if (key === "agentLocal.toolActivity.groups.command") return "Commands";

@@ -69,13 +69,9 @@
 
   /* Tool colors — par type d'action */
   --tool-bash: #f97316;
-  --tool-search: #4a8fe2;
   --tool-read: #22d3ee;
   --tool-write: #3db86a;
-  --tool-edit: #e2b842;
   --tool-web: #9b7fff;
-  --tool-git: #f472b6;
-  --tool-forecast: #4a8fe2;
 
   /* Forecast panel */
   --fc-chart-bg: var(--surface-glass);

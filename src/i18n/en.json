@@ -230,7 +230,6 @@
     "tps": "t/s",
     "fileReadError": "Could not read file",
     "toolActivity": {
-      "summary": "{{group}}: {{details}}",
       "inProgress": "in progress",
       "toggleDetails": "Show tool details",
       "groups": {

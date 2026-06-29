@@ -231,7 +231,6 @@
     "tps": "t/s",
     "fileReadError": "无法读取文件",
     "toolActivity": {
-      "summary": "{{group}}：{{details}}",
       "inProgress": "进行中",
       "toggleDetails": "显示工具详情",
       "groups": {

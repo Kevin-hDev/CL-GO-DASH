@@ -231,7 +231,6 @@
     "tps": "t/s",
     "fileReadError": "ファイルを読み取れませんでした",
     "toolActivity": {
-      "summary": "{{group}}：{{details}}",
       "inProgress": "進行中",
       "toggleDetails": "ツール詳細を表示",
       "groups": {
