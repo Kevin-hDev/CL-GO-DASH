@@ -175,7 +175,8 @@
 
 /* Layout fichier : dossiers tronçables (gauche) + nom fixe (droite) */
 .tb-item-dirs {
-  flex: 1;
+  /* grow:0, shrink:1, basis:auto → taille naturelle, peut rétrécir avec troncature */
+  flex: 0 1 auto;
   min-width: 0;
   color: inherit;
   opacity: 0.8;
