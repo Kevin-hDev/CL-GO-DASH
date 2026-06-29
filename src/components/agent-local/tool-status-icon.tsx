@@ -1,15 +1,27 @@
 import { useCallback, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Check, Copy } from "@/components/ui/icons";
+import validateIcon from "@/assets/tool-status/validate.svg?url";
+import errorIcon from "@/assets/tool-status/error.svg?url";
 
 const HOVER_DELAY = 700;
+
+export type ToolStatus = "success" | "error";
 
 interface TooltipPosition {
   top: number;
   left: number;
 }
 
-export function ErrorCross({ message }: { message?: string }) {
+export function ToolStatusIcon({
+  status,
+  message,
+  size = 14,
+}: {
+  status: ToolStatus;
+  message?: string;
+  size?: number;
+}) {
   const anchorRef = useRef<HTMLSpanElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const [visible, setVisible] = useState(false);
@@ -17,6 +29,7 @@ export function ErrorCross({ message }: { message?: string }) {
   const [position, setPosition] = useState<TooltipPosition>();
 
   const enter = useCallback((event: React.MouseEvent<HTMLSpanElement>) => {
+    if (!message) return;
     clearTimeout(timerRef.current);
     const { clientX, clientY } = event;
     timerRef.current = setTimeout(() => {
@@ -28,7 +41,7 @@ export function ErrorCross({ message }: { message?: string }) {
       });
       setVisible(true);
     }, HOVER_DELAY);
-  }, []);
+  }, [message]);
 
   const leave = useCallback(() => {
     clearTimeout(timerRef.current);
@@ -42,6 +55,8 @@ export function ErrorCross({ message }: { message?: string }) {
       setTimeout(() => setCopied(false), 1500);
     });
   }, [message]);
+
+  const src = status === "error" ? errorIcon : validateIcon;
 
   const tooltip = visible && message && position && createPortal(
     <div
@@ -59,8 +74,15 @@ export function ErrorCross({ message }: { message?: string }) {
   );
 
   return (
-    <span ref={anchorRef} className="tb-error-anchor" onMouseEnter={enter} onMouseLeave={leave}>
-      <span className="tb-error-mark">x</span>
+    <span ref={anchorRef} className="tb-status-anchor" onMouseEnter={enter} onMouseLeave={leave}>
+      <img
+        className="tb-status-img"
+        src={src}
+        alt={status === "error" ? "Erreur" : "Succès"}
+        width={size}
+        height={size}
+        style={{ flexShrink: 0 }}
+      />
       {tooltip}
     </span>
   );

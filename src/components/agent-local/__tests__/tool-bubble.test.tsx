@@ -13,6 +13,17 @@ vi.mock("@/components/ui/icons", () => ({
   CaretUp: () => <span />,
   Check: () => <span data-testid="check-icon" />,
 }));
+vi.mock("../tool-icons", () => ({
+  ToolIcon: ({ name }: { name: string }) => <span data-testid={`tool-icon-${name}`} />,
+}));
+vi.mock("../tool-status-icon", () => ({
+  ToolStatusIcon: ({ status, message }: { status: string; message?: string }) => (
+    <span data-testid={`status-icon-${status}`} data-message={message ?? ""} />
+  ),
+}));
+vi.mock("@/components/file-preview/file-icon", () => ({
+  FileIcon: ({ name }: { name: string }) => <span data-testid={`file-icon-${name}`} />,
+}));
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     i18n: { language: "en" },
@@ -26,6 +37,7 @@ vi.mock("react-i18next", () => ({
       }
       if (key === "agentLocal.toolActivity.inProgress") return "in progress";
       if (key === "agentLocal.toolActivity.toggleDetails") return "Show tool details";
+      if (key === "agentLocal.toolActivity.groupError") return "An error occurred in this group";
       if (key === "agentLocal.toolActivity.groups.command") return "Commands";
       if (key === "agentLocal.toolActivity.groups.modification") return "Changes";
       if (key === "agentLocal.toolActivity.groups.web") return "Web";
@@ -137,16 +149,16 @@ describe("ToolBubble", () => {
         tools={[{ name: "bash", args: { command: "ls" }, result: "fichier.txt", isError: false }]}
       />,
     );
-    expect(getByTestId("check-icon")).toBeTruthy();
+    expect(getByTestId("status-icon-success")).toBeTruthy();
   });
 
-  it("affiche x sur le groupe quand un tool échoue", () => {
+  it("affiche l'icône d'erreur sur le groupe quand un tool échoue", () => {
     const { container } = render(
       <ToolBubble
         tools={[{ name: "bash", args: { command: "exit 1" }, result: "erreur", isError: true }]}
       />,
     );
-    expect(container.textContent).toContain("x");
+    expect(container.querySelector('[data-testid="status-icon-error"]')).toBeTruthy();
   });
 
   it("affiche ContentPreview après ouverture du groupe puis du tool", () => {
@@ -216,7 +228,7 @@ describe("ToolBubble", () => {
     );
 
     openGroup(container);
-    expect(container.textContent).toContain("x");
+    expect(container.querySelector('[data-testid="status-icon-error"]')).toBeTruthy();
     expect(container.textContent).not.toContain("HTTP 403");
     expect(container.textContent).not.toContain("secret_key");
     expect(container.querySelector(".tb-toggle")).toBeNull();

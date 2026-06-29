@@ -6,6 +6,7 @@ export interface ToolDisplayInfo {
   summary: string;
   additions?: number;
   deletions?: number;
+  icon: string;
 }
 
 const FILE_TOOLS = new Set([
@@ -13,22 +14,54 @@ const FILE_TOOLS = new Set([
   "read_image", "write_spreadsheet", "write_document", "process_image",
 ]);
 
+const FILE_ICONS: Record<string, string> = {
+  read_file: "BookOpenText",
+  read_spreadsheet: "FileText",
+  read_document: "FileText",
+  read_image: "Image",
+  write_file: "FilePlus",
+  write_spreadsheet: "FilePlus",
+  write_document: "FilePlus",
+  edit_file: "Pencil",
+  process_image: "Pencil",
+  bash: "TerminalWindow",
+  web_search: "Globe",
+  web_fetch: "Link",
+  list_dir: "FolderOpen",
+  grep: "MagnifyingGlass",
+  glob: "MagnifyingGlass",
+  create_branch: "GitBranch",
+  checkout_branch: "GitBranch",
+  load_skill: "Sparkle",
+  delegate_task: "Users",
+  forecast: "ChartLineUp",
+  forecast_models: "ChartLineUp",
+  forecast_read: "ChartLineUp",
+  forecast_analyze: "ChartLineUp",
+  search_mcp_tools: "Plugs",
+};
+
+function iconFor(name: string): string {
+  return FILE_ICONS[name] ?? "Wrench";
+}
+
 export function toolDisplayInfo(
   tool: RenderableTool,
   projectPath: string | undefined,
   t: TFunction,
 ): ToolDisplayInfo {
   if (tool.name === "bash") {
-    return { label: tool.name, summary: compactCommand(tool.summary) };
+    return { label: tool.name, summary: compactCommand(tool.summary), icon: iconFor(tool.name) };
   }
   if (tool.name === "web_search" || tool.name === "web_fetch") {
-    return { label: tool.name, summary: tool.summary };
+    return { label: tool.name, summary: tool.summary, icon: iconFor(tool.name) };
   }
   const labelKey = actionKey(tool.name);
   return {
     label: t(`agentLocal.toolActivity.actions.${labelKey}`),
     summary: displaySummary(tool, projectPath),
     ...changeStats(tool),
+    icon: iconFor(tool.name),
   };
 }
 

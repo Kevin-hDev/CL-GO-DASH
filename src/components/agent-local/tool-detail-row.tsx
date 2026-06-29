@@ -109,6 +109,7 @@ export function ToolDetailRow({
     <ToolItem
       name={tool.name}
       summary={tool.summary}
+      icon={display.icon}
       displayName={display.label}
       displaySummary={display.summary}
       additions={display.additions}

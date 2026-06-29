@@ -11,6 +11,9 @@ const t = ((key: string) => ({
   "agentLocal.toolActivity.actions.agent": "Agent",
   "agentLocal.toolActivity.actions.forecast": "Forecast",
   "agentLocal.toolActivity.actions.mcp": "MCP",
+  "agentLocal.toolActivity.actions.list": "List",
+  "agentLocal.toolActivity.actions.search": "Search",
+  "agentLocal.toolActivity.actions.run": "Run",
 }[key] ?? key)) as TFunction;
 
 describe("toolDisplayInfo", () => {
@@ -19,7 +22,7 @@ describe("toolDisplayInfo", () => {
     expect(shortenPath(path, "/Users/kevinh/Projects/systeme-pulse")).toBe("systeme-pulse/src/App.tsx");
   });
 
-  it("affiche une création avec stats + lignes", () => {
+  it("affiche une création avec stats + lignes + icône", () => {
     const tool: RenderableTool = {
       name: "write_file",
       summary: "/Users/kevinh/Projects/systeme-pulse/vite.config.ts",
@@ -30,10 +33,11 @@ describe("toolDisplayInfo", () => {
       summary: "systeme-pulse/vite.config.ts",
       additions: 2,
       deletions: 0,
+      icon: "FilePlus",
     });
   });
 
-  it("affiche une modification avec stats old/new", () => {
+  it("affiche une modification avec stats old/new + icône", () => {
     const tool: RenderableTool = {
       name: "edit_file",
       summary: "/Users/kevinh/Projects/systeme-pulse/src/main.rs",
@@ -45,6 +49,7 @@ describe("toolDisplayInfo", () => {
       summary: "systeme-pulse/src/main.rs",
       additions: 1,
       deletions: 3,
+      icon: "Pencil",
     });
   });
 
@@ -52,6 +57,7 @@ describe("toolDisplayInfo", () => {
     expect(toolDisplayInfo({ name: "web_search", summary: "tauri docs" }, undefined, t)).toEqual({
       label: "web_search",
       summary: "tauri docs",
+      icon: "Globe",
     });
   });
 
@@ -59,6 +65,7 @@ describe("toolDisplayInfo", () => {
     expect(toolDisplayInfo({ name: "bash", summary: "npm test" }, undefined, t)).toEqual({
       label: "bash",
       summary: "npm test",
+      icon: "TerminalWindow",
     });
   });
 
@@ -77,6 +84,42 @@ describe("toolDisplayInfo", () => {
     expect(toolDisplayInfo({ name: "bash", summary: command }, undefined, t)).toEqual({
       label: "bash",
       summary: `${"a".repeat(96)}...`,
+      icon: "TerminalWindow",
     });
+  });
+
+  it("associe la bonne icône Phosphor à chaque type d'outil", () => {
+    const cases: Array<[string, string]> = [
+      ["read_file", "BookOpenText"],
+      ["read_spreadsheet", "FileText"],
+      ["read_document", "FileText"],
+      ["read_image", "Image"],
+      ["write_file", "FilePlus"],
+      ["write_spreadsheet", "FilePlus"],
+      ["write_document", "FilePlus"],
+      ["edit_file", "Pencil"],
+      ["process_image", "Pencil"],
+      ["bash", "TerminalWindow"],
+      ["web_search", "Globe"],
+      ["web_fetch", "Link"],
+      ["list_dir", "FolderOpen"],
+      ["grep", "MagnifyingGlass"],
+      ["glob", "MagnifyingGlass"],
+      ["create_branch", "GitBranch"],
+      ["checkout_branch", "GitBranch"],
+      ["load_skill", "Sparkle"],
+      ["delegate_task", "Users"],
+      ["forecast", "ChartLineUp"],
+      ["forecast_analyze", "ChartLineUp"],
+      ["search_mcp_tools", "Plugs"],
+    ];
+    for (const [name, expectedIcon] of cases) {
+      const info = toolDisplayInfo({ name, summary: "x" }, undefined, t);
+      expect(info.icon).toBe(expectedIcon);
+    }
+  });
+
+  it("retourne l'icône Wrench par défaut pour un outil inconnu", () => {
+    expect(toolDisplayInfo({ name: "outil_inconnu", summary: "x" }, undefined, t).icon).toBe("Wrench");
   });
 });

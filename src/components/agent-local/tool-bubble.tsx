@@ -27,7 +27,7 @@ export function ToolBubble({
   );
   if (groups.length === 0) return null;
   return (
-    <div className="chat-bubble">
+    <div className="tb-stream">
       <ToolActivityGroupList groups={groups} onFilePreview={onFilePreview} projectPath={projectPath} />
     </div>
   );
@@ -49,7 +49,7 @@ export function SavedToolBubble({
   );
   if (groups.length === 0) return null;
   return (
-    <div className="chat-bubble">
+    <div className="tb-stream">
       <ToolActivityGroupList groups={groups} onFilePreview={onFilePreview} projectPath={projectPath} />
     </div>
   );
