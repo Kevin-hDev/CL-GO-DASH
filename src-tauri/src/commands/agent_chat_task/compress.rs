@@ -1,5 +1,6 @@
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::types_ollama::{ChatMessage, StreamEvent};
+use std::path::Path;
 use tokio_util::sync::CancellationToken;
 
 pub(crate) fn is_compress_command(messages: &[ChatMessage]) -> bool {
@@ -16,6 +17,7 @@ pub(crate) async fn handle_compress_command(
     messages: &[ChatMessage],
     model: &str,
     provider: &str,
+    working_dir: &Path,
     cancel: CancellationToken,
 ) -> Result<(), String> {
     use crate::services::compress::{engine, prompt, state};
@@ -69,6 +71,8 @@ pub(crate) async fn handle_compress_command(
         &summary,
         context,
         false,
+        working_dir,
+        state::CompressionMode::Manual,
     )
     .await?;
 

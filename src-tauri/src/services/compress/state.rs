@@ -1,7 +1,10 @@
 use crate::services::agent_local::session_store;
 use crate::services::agent_local::types_ollama::ChatMessage;
 use crate::services::agent_local::types_session::AgentMessage;
-use crate::services::compress::{context_capsules, engine, prompt, token_estimate};
+use crate::services::compress::{context_capsules_disk, engine, prompt, token_estimate};
+use std::path::Path;
+
+pub use context_capsules_disk::CompressionMode;
 
 pub fn context_used_for_compression(
     last_context_tokens: Option<u32>,
@@ -22,9 +25,18 @@ pub async fn apply_and_save(
     summary: &str,
     context_window: u64,
     suppress_follow_up: bool,
+    working_dir: &Path,
+    mode: CompressionMode,
 ) -> Result<u32, String> {
     let mut session = session_store::get(session_id).await?;
-    let context = context_capsules::recent_file_context_message(runtime_messages, context_window);
+    let context =
+        context_capsules_disk::compression_context_message(
+            runtime_messages,
+            context_window,
+            working_dir,
+            mode,
+        )
+        .await;
     let (runtime_recent, session_recent) =
         super::state_recent::recent_messages(&session.messages, runtime_messages);
 
@@ -41,6 +53,15 @@ pub async fn apply_and_save(
     session_store::save(&session).await?;
 
     Ok(token_estimate::estimate_tokens(runtime_messages) as u32)
+}
+
+pub fn request_start_index(messages: &[ChatMessage]) -> usize {
+    messages
+        .iter()
+        .rposition(|message| {
+            message.role == "user" && super::state_recent::include_chat_message(message)
+        })
+        .unwrap_or(0)
 }
 
 fn replace_runtime_messages(

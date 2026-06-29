@@ -2,6 +2,7 @@ use crate::services::agent_local::ollama_stream;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::types_ollama::{ChatMessage, StreamEvent};
 use crate::services::compress::{engine, prompt, state, summary_budget, token_estimate};
+use std::path::Path;
 use tokio_util::sync::CancellationToken;
 
 pub async fn try_auto_compress(
@@ -13,6 +14,7 @@ pub async fn try_auto_compress(
     native_context: u64,
     configured_context: u64,
     last_context_tokens: Option<u32>,
+    working_dir: &Path,
     cancel: CancellationToken,
 ) -> Option<u32> {
     let config = match crate::services::config::read_config() {
@@ -64,13 +66,23 @@ pub async fn try_auto_compress(
     } {
         Ok((content, _)) => {
             let summary = prompt::extract_summary(&content);
-            let current_tokens =
-                state::apply_and_save(session_id, messages, &summary, configured_context, true)
-                    .await
-                    .unwrap_or_else(|err| {
-                        eprintln!("[compress] save session failed: {err}");
-                        token_estimate::estimate_tokens(messages) as u32
-                    });
+            let mode = state::CompressionMode::Auto {
+                request_start_index: state::request_start_index(messages),
+            };
+            let current_tokens = state::apply_and_save(
+                session_id,
+                messages,
+                &summary,
+                configured_context,
+                true,
+                working_dir,
+                mode,
+            )
+            .await
+            .unwrap_or_else(|err| {
+                eprintln!("[compress] save session failed: {err}");
+                token_estimate::estimate_tokens(messages) as u32
+            });
             send_compression_done(on_event);
             eprintln!(
                 "[compress] auto ollama done session={session_id} context_tokens={current_tokens}"

@@ -1,4 +1,6 @@
 pub mod context_capsules;
+pub mod context_capsules_disk;
+mod context_capsules_disk_collect;
 pub mod context_resolve;
 pub mod engine;
 pub mod prompt;

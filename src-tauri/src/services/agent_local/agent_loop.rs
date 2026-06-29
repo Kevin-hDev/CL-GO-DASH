@@ -40,6 +40,7 @@ pub async fn run_agent_loop(
         request_id: &request_id,
         native_context,
         configured_context,
+        working_dir: &working_dir,
     };
     tool_result_budget::cleanup_old_results();
     for turn in 0..MAX_TURNS {

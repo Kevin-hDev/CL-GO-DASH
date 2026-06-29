@@ -37,6 +37,18 @@ fn context_used_prefers_larger_real_or_estimate() {
 }
 
 #[test]
+fn request_start_index_ignores_compression_context_and_command() {
+    let messages = vec![
+        chat("user", "vraie demande"),
+        chat("user", "This session is being continued from a previous conversation"),
+        chat("user", "Recent file context preserved across compression:\n- a.rs"),
+        chat("user", "/compress"),
+    ];
+
+    assert_eq!(state::request_start_index(&messages), 0);
+}
+
+#[test]
 fn open_tool_chain_is_not_safe_to_compress() {
     let mut assistant = chat("assistant", "");
     assistant.tool_calls = Some(vec![ToolCallOllama {

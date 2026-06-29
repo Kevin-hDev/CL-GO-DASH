@@ -8,7 +8,7 @@ const MAX_LIST_ENTRIES: usize = 500;
 pub const DEFAULT_LIMIT: usize = 2000;
 const MAX_LIMIT: usize = 50_000;
 
-fn resolve_read_path(path: &str, working_dir: &Path) -> Result<PathBuf, String> {
+pub(crate) fn resolve_read_path(path: &str, working_dir: &Path) -> Result<PathBuf, String> {
     let p = Path::new(path);
     let raw = if p.is_absolute() {
         p.to_path_buf()

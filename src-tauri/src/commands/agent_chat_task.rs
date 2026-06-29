@@ -13,6 +13,8 @@ pub(crate) use common::merge_personality;
 
 pub(crate) async fn run_stream_task(params: StreamTaskParams) -> Result<Vec<ChatMessage>, String> {
     if compress::is_compress_command(&params.messages) {
+        let working_dir = common::resolve_working_dir(&params.working_dir)?;
+        common::update_working_dir(&params.session_id, &working_dir).await;
         compress::handle_compress_command(
             &params.on_event,
             &params.session_id,
@@ -20,6 +22,7 @@ pub(crate) async fn run_stream_task(params: StreamTaskParams) -> Result<Vec<Chat
             &params.messages,
             &params.model,
             &params.provider,
+            &working_dir,
             params.cancel.clone(),
         )
         .await?;

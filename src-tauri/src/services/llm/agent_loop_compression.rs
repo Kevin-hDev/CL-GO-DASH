@@ -7,6 +7,7 @@ use crate::services::agent_local::tool_executor_compression::{
 use crate::services::agent_local::types_ollama::{ChatMessage, StreamResult};
 use crate::services::compress::{realtime_budget::RealtimeBudget, token_estimate};
 use crate::services::token_counting;
+use std::path::Path;
 use tokio_util::sync::CancellationToken;
 
 pub(super) struct LoopCompression<'a> {
@@ -17,6 +18,7 @@ pub(super) struct LoopCompression<'a> {
     pub request_id: &'a str,
     pub native_context: u64,
     pub configured_context: u64,
+    pub working_dir: &'a Path,
 }
 
 pub(super) struct LastCounts<'a> {
@@ -62,6 +64,7 @@ impl LoopCompression<'_> {
             self.native_context,
             self.configured_context,
             last_context_tokens,
+            self.working_dir,
             cancel,
         )
         .await
@@ -147,6 +150,7 @@ impl LoopCompression<'_> {
             native_context: self.native_context,
             configured_context: self.configured_context,
             last_context_tokens,
+            working_dir: self.working_dir,
             cancel,
         }
     }

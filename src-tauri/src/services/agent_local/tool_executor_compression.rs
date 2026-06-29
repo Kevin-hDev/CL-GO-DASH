@@ -1,5 +1,6 @@
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::types_ollama::ChatMessage;
+use std::path::Path;
 use tokio_util::sync::CancellationToken;
 
 pub enum ToolCompressionProvider<'a> {
@@ -15,6 +16,7 @@ pub struct ToolCompression<'a> {
     pub native_context: u64,
     pub configured_context: u64,
     pub last_context_tokens: Option<u32>,
+    pub working_dir: &'a Path,
     pub cancel: CancellationToken,
 }
 
@@ -31,6 +33,7 @@ impl ToolCompression<'_> {
                     self.native_context,
                     self.configured_context,
                     self.last_context_tokens,
+                    self.working_dir,
                     self.cancel.clone(),
                 )
                 .await
@@ -47,6 +50,7 @@ impl ToolCompression<'_> {
                     self.native_context,
                     self.configured_context,
                     self.last_context_tokens,
+                    self.working_dir,
                     self.cancel.clone(),
                 )
                 .await
