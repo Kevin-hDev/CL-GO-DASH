@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 
-export const FONT_SIZES = [100, 112, 125, 137, 150] as const;
+export const FONT_SIZES = [112, 125, 137, 150, 162] as const;
 export type FontSize = (typeof FONT_SIZES)[number];
 
 export const FONT_FAMILIES = [
@@ -17,7 +17,7 @@ export type FontFamilyId = (typeof FONT_FAMILIES)[number]["id"];
 
 function loadFontSize(): FontSize {
   const saved = Number(localStorage.getItem("clgo-font-size"));
-  return FONT_SIZES.includes(saved as FontSize) ? (saved as FontSize) : 100;
+  return FONT_SIZES.includes(saved as FontSize) ? (saved as FontSize) : 112;
 }
 
 function loadFontFamily(): FontFamilyId {

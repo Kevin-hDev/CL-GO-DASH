@@ -161,7 +161,7 @@
 .chat-loading-lottie { width: 48px; height: 48px; filter: var(--lottie-orange-filter); }
 
 .working-stats {
-  font-size: 11px;
+  font-size: 0.6875rem;
   font-family: var(--font-mono, monospace);
   color: var(--ink-faint);
 }
