@@ -40,10 +40,7 @@ describe("ActiveBadge", () => {
 
 describe("ScheduleBadge", () => {
   it("affiche le schedule formaté pour un wakeup daily", () => {
-    const schedule: WakeupSchedule = {
-      kind: "daily",
-      time: "08:00",
-    } as WakeupSchedule;
+    const schedule: WakeupSchedule = { kind: "daily", time: "08:00" };
     const { container } = render(<ScheduleBadge schedule={schedule} />);
     const badge = container.querySelector(".wk-badge-schedule");
     expect(badge).toBeTruthy();
@@ -56,7 +53,7 @@ describe("ScheduleBadge", () => {
       kind: "weekly",
       weekday: 1,
       time: "09:30",
-    } as WakeupSchedule;
+    };
     const { container } = render(<ScheduleBadge schedule={schedule} />);
     const badge = container.querySelector(".wk-badge-schedule");
     // formatSchedule produit "mar. 09h30" (formatage français).

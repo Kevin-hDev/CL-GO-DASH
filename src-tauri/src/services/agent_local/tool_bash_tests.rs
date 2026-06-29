@@ -60,10 +60,13 @@ async fn test_cwd_update_after_cd() {
     let out = execute_shell("cd /tmp", std::path::Path::new("/"), None).await;
     match out {
         Ok(shell_out) => {
-            assert_eq!(
-                shell_out.new_cwd.as_deref(),
-                Some("/private/tmp"),
-                "cd /tmp doit détecter le nouveau cwd"
+            // Sur macOS, /tmp est un symlink vers /private/tmp (résolu par
+            // canonicalize). Sur Linux, /tmp reste /tmp. On accepte les deux
+            // pour que le test soit cross-platform.
+            let cwd = shell_out.new_cwd.as_deref().unwrap_or("");
+            assert!(
+                cwd.ends_with("/tmp"),
+                "cd /tmp doit détecter le nouveau cwd, obtenu : {cwd}"
             );
         }
         Err(e) => panic!("execute_shell a échoué : {e}"),
