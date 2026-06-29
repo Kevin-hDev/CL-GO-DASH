@@ -4,6 +4,7 @@ use std::path::Path;
 use super::context_capsules_disk_collect::{recent_disk_file_events, recent_tool_events};
 
 pub(crate) const MAX_MANUAL_FILES: usize = 5;
+pub(crate) const MAX_AUTO_FILES: usize = 15;
 pub(crate) const MAX_RECENT_TOOLS: usize = 3;
 pub(crate) const TOKENS_PER_CHAR: usize = 4;
 pub(crate) const MIN_TOTAL_TOKENS: usize = 4_000;

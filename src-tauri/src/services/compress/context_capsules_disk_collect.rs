@@ -4,7 +4,7 @@ use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
 use super::context_capsules_disk::{
-    CapsuleEvent, CompressionMode, MAX_MANUAL_FILES, MAX_RECENT_TOOLS,
+    CapsuleEvent, CompressionMode, MAX_AUTO_FILES, MAX_MANUAL_FILES, MAX_RECENT_TOOLS,
 };
 
 const UNAVAILABLE_MARKER: &str = "[file unavailable: deleted, binary, or unreadable]";
@@ -34,12 +34,19 @@ pub async fn recent_disk_file_events(
             path: candidate.path,
             result,
         });
-        if matches!(mode, CompressionMode::Manual) && events.len() >= MAX_MANUAL_FILES {
+        if events.len() >= max_file_events(mode) {
             break;
         }
     }
     events.reverse();
     events
+}
+
+fn max_file_events(mode: CompressionMode) -> usize {
+    match mode {
+        CompressionMode::Manual => MAX_MANUAL_FILES,
+        CompressionMode::Auto { .. } => MAX_AUTO_FILES,
+    }
 }
 
 pub fn recent_tool_events(messages: &[ChatMessage]) -> Vec<CapsuleEvent> {

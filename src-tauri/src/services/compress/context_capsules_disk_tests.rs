@@ -1,7 +1,5 @@
 use super::*;
-use crate::services::agent_local::types_ollama::{
-    ChatMessage, ToolCallFunction, ToolCallOllama,
-};
+use crate::services::agent_local::types_ollama::{ChatMessage, ToolCallFunction, ToolCallOllama};
 use tempfile::tempdir;
 
 fn assistant(tool: &str, path: &str) -> ChatMessage {
@@ -92,8 +90,12 @@ async fn manual_keeps_only_five_recent_files() {
 #[tokio::test]
 async fn auto_scans_only_since_request_start() {
     let tmp = tempdir().unwrap();
-    tokio::fs::write(tmp.path().join("old.rs"), "old").await.unwrap();
-    tokio::fs::write(tmp.path().join("now.rs"), "now").await.unwrap();
+    tokio::fs::write(tmp.path().join("old.rs"), "old")
+        .await
+        .unwrap();
+    tokio::fs::write(tmp.path().join("now.rs"), "now")
+        .await
+        .unwrap();
     let messages = vec![
         user("ancienne demande"),
         assistant("read_file", "old.rs"),
@@ -114,6 +116,33 @@ async fn auto_scans_only_since_request_start() {
     .unwrap();
     assert!(!msg.content.contains("old.rs"));
     assert!(msg.content.contains("now.rs"));
+}
+
+#[tokio::test]
+async fn auto_keeps_only_fifteen_recent_files() {
+    let tmp = tempdir().unwrap();
+    let mut messages = vec![user("demande courante")];
+    for idx in 0..20 {
+        let name = format!("auto{idx}.rs");
+        tokio::fs::write(tmp.path().join(&name), format!("content {idx}"))
+            .await
+            .unwrap();
+        messages.push(assistant("read_file", &name));
+        messages.push(tool("ignored cache"));
+    }
+    let msg = compression_context_message(
+        &messages,
+        200_000,
+        tmp.path(),
+        CompressionMode::Auto {
+            request_start_index: 0,
+        },
+    )
+    .await
+    .unwrap();
+    assert!(!msg.content.contains("auto4.rs"));
+    assert!(msg.content.contains("auto5.rs"));
+    assert!(msg.content.contains("auto19.rs"));
 }
 
 #[tokio::test]
@@ -151,5 +180,8 @@ async fn large_file_is_truncated() {
     let msg = compression_context_message(&messages, 200_000, tmp.path(), CompressionMode::Manual)
         .await
         .unwrap();
-    assert!(msg.content.contains("[content truncated for context budget]"));
+    assert!(
+        msg.content
+            .contains("[content truncated for context budget]")
+    );
 }
