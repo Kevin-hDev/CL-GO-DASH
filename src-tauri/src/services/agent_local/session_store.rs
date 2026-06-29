@@ -175,7 +175,8 @@ pub async fn add_messages(
         let excess = session.messages.len() - MAX_MESSAGES_PER_SESSION;
         session.messages.drain(..excess);
     }
-    session.accumulated_tokens = session.messages.iter().map(|m| m.tokens).sum();
+    session.accumulated_tokens =
+        crate::services::token_counting::estimate_agent_messages_tokens(&session.messages);
     let result = save(&session).await;
     if result.is_ok() && todo_housekeeping.should_emit_empty_update {
         super::tool_todo::emit_update(id, Vec::new());

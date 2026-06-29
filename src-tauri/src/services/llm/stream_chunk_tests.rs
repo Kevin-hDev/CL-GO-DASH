@@ -119,9 +119,27 @@ fn returns_tool_calls_and_usage() {
         vec![
             ParsedChunk::ToolCalls(vec![json!({ "id": "a" })]),
             ParsedChunk::Usage {
-                completion_tokens: 3,
-                prompt_tokens: 2
+                completion_tokens: Some(3),
+                prompt_tokens: Some(2)
             }
         ]
     );
+}
+
+#[test]
+fn usage_missing_fields_stays_unavailable() {
+    let chunks = parse(json!({ "usage": { "prompt_tokens": 2 } }));
+    assert_eq!(
+        chunks,
+        vec![ParsedChunk::Usage {
+            completion_tokens: None,
+            prompt_tokens: Some(2)
+        }]
+    );
+}
+
+#[test]
+fn missing_usage_emits_no_usage_chunk() {
+    let chunks = parse(json!({ "choices": [{ "delta": { "content": "answer" } }] }));
+    assert_eq!(chunks, vec![ParsedChunk::Content("answer".into())]);
 }

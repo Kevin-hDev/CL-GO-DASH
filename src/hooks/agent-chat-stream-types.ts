@@ -20,6 +20,7 @@ export interface ChatState {
   isStreaming: boolean;
   tps: number;
   sessionTokenCount: number;
+  sessionTokenCountEstimated: boolean;
   lastRequestTokens: number;
   liveTokenCount: number;
   streamStartedAt: number | null;
@@ -45,7 +46,7 @@ export interface ManagedStreamState extends ChatState {
 export const EMPTY_CHAT_STATE: ChatState = {
   messages: [], completedSegments: [], currentContent: "",
   currentThinking: "", currentTools: [], isStreaming: false,
-  tps: 0, sessionTokenCount: 0, lastRequestTokens: 0,
+    tps: 0, sessionTokenCount: 0, sessionTokenCountEstimated: true, lastRequestTokens: 0,
   liveTokenCount: 0, streamStartedAt: null, segmentStartedAt: null,
   totalElapsedMs: 0,
 };
@@ -75,6 +76,7 @@ export function toChatState(state: ManagedStreamState): ChatState {
     currentContent: state.currentContent, currentThinking: state.currentThinking,
     currentTools: state.currentTools, isStreaming: state.isStreaming,
     tps: state.tps, sessionTokenCount: state.sessionTokenCount,
+    sessionTokenCountEstimated: state.sessionTokenCountEstimated,
     lastRequestTokens: state.lastRequestTokens,
     liveTokenCount: state.liveTokenCount,
     streamStartedAt: state.streamStartedAt,

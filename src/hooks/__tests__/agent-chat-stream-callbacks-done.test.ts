@@ -10,7 +10,7 @@ function makeState(overrides: Partial<ManagedStreamState> = {}): ManagedStreamSt
 }
 
 function doneEvent(overrides: Partial<StreamEvent & { event: "done" } extends { data: infer D } ? D : never> = {}): StreamEvent {
-  return { event: "done", data: { evalCount: 0, evalDurationNs: 0, finalTps: 5, promptTokens: 0, contextTokens: 0, ...overrides } };
+  return { event: "done", data: { evalCount: null, evalDurationNs: 0, finalTps: 5, promptTokens: null, contextTokens: null, ...overrides } };
 }
 
 describe("done", () => {
@@ -47,7 +47,17 @@ describe("done", () => {
       doneEvent({ evalCount: 5, promptTokens: 10, contextTokens: 999 }),
     );
     expect(result.state.sessionTokenCount).toBe(999);
-    expect(result.assistantMessage?.tokens).toBe(1);
+    expect(result.state.sessionTokenCountEstimated).toBe(false);
+    expect(result.assistantMessage?.tokens).toBe(5);
+  });
+
+  it("retombe sur l'estimation si contextTokens est absent", () => {
+    const result = applyStreamEvent(
+      makeState({ sessionTokenCount: 100, currentContent: "你".repeat(1000) }),
+      doneEvent({ evalCount: null, promptTokens: null, contextTokens: null }),
+    );
+    expect(result.state.sessionTokenCount).toBe(1250);
+    expect(result.state.sessionTokenCountEstimated).toBe(true);
   });
 });
 
@@ -129,7 +139,7 @@ describe("done — limite messages assertion précise", () => {
       makeState({ sessionTokenCount: 100, currentContent: "réponse courte" }),
       doneEvent({ evalCount: 50, promptTokens: 25_000, contextTokens: 25_050 }),
     );
-    expect(result.assistantMessage?.tokens).toBeLessThan(25_000);
+    expect(result.assistantMessage?.tokens).toBe(50);
     expect(result.assistantTokens).toBe(result.assistantMessage?.tokens);
     expect(result.state.lastRequestTokens).toBe(result.assistantMessage?.tokens);
   });

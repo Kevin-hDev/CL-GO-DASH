@@ -133,6 +133,7 @@ function handleStreamEvent(sessionId: string, event: StreamEvent) {
       ...record.state,
       messages: event.data.messages,
       sessionTokenCount: estimateAgentMessagesTokens(event.data.messages),
+      sessionTokenCountEstimated: true,
       isStreaming: true,
       persisted: false,
       completed: false,
@@ -166,6 +167,7 @@ function handleStreamEvent(sessionId: string, event: StreamEvent) {
         ...record.state,
         messages: session.messages,
         sessionTokenCount: estimateAgentMessagesTokens(session.messages),
+        sessionTokenCountEstimated: true,
         persisted: true,
       };
       flushFrameNotify(record, notify);

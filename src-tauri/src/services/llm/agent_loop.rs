@@ -11,6 +11,7 @@ use crate::services::agent_local::tool_executor;
 use crate::services::agent_local::tool_result_budget;
 use crate::services::agent_local::types_ollama::{ChatMessage, StreamEvent};
 use crate::services::agent_local::write_guard_registry;
+use crate::services::token_counting;
 use std::path::PathBuf;
 use tokio_util::sync::CancellationToken;
 
@@ -35,10 +36,10 @@ pub async fn run_agent_loop(
     permission_mode: &str,
     plan_mode_active: bool,
 ) -> Result<u32, String> {
-    let mut total_eval: u32 = 0;
-    let mut total_prompt: u32 = 0;
-    let mut last_prompt: u32 = 0;
-    let mut last_eval: u32 = 0;
+    let mut total_eval: Option<u32> = Some(0);
+    let mut total_prompt: Option<u32> = Some(0);
+    let mut last_prompt: Option<u32> = None;
+    let mut last_eval: Option<u32> = None;
     let start = std::time::Instant::now();
     let mut breaker = circuit_breaker::CircuitBreaker::new();
     let write_guard_arc = write_guard_registry::lock(&session_id).await;
@@ -60,7 +61,7 @@ pub async fn run_agent_loop(
             &request_id,
             native_context,
             configured_context,
-            last_prompt + last_eval,
+            token_counting::sum_real_counts(last_prompt, last_eval),
             cancel.clone(),
         )
         .await;
@@ -88,8 +89,8 @@ pub async fn run_agent_loop(
         )
         .await?;
 
-        total_eval += result.eval_count;
-        total_prompt += result.prompt_tokens;
+        token_counting::add_real_count(&mut total_eval, result.eval_count);
+        token_counting::add_real_count(&mut total_prompt, result.prompt_tokens);
         last_prompt = result.prompt_tokens;
         last_eval = result.eval_count;
         match agent_loop_plan::check_result(
@@ -125,13 +126,14 @@ pub async fn run_agent_loop(
             &request_id,
             native_context,
             configured_context,
-            last_prompt + last_eval,
+            token_counting::sum_real_counts(last_prompt, last_eval),
             cancel.clone(),
         )
         .await
         {
-            last_prompt = 0;
-            last_eval = context_tokens;
+            let _ = context_tokens;
+            last_prompt = None;
+            last_eval = None;
         }
 
         if result.tool_calls.is_empty() {
@@ -174,7 +176,7 @@ pub async fn run_agent_loop(
 
     let elapsed_ns = start.elapsed().as_nanos() as u64;
     let final_tps = if elapsed_ns > 0 {
-        total_eval as f64 / (elapsed_ns as f64 / 1e9)
+        total_eval.unwrap_or(0) as f64 / (elapsed_ns as f64 / 1e9)
     } else {
         0.0
     };
@@ -183,10 +185,10 @@ pub async fn run_agent_loop(
         eval_duration_ns: elapsed_ns,
         final_tps,
         prompt_tokens: total_prompt,
-        context_tokens: last_prompt + last_eval,
+        context_tokens: token_counting::sum_real_counts(last_prompt, last_eval),
     });
 
     crate::services::agent_local::stream_diagnostics::record_completed(&session_id, &request_id)
         .await;
-    Ok(total_eval + total_prompt)
+    Ok(token_counting::sum_real_counts(total_eval, total_prompt).unwrap_or(0))
 }

@@ -79,12 +79,18 @@ export function useAgentChat(
           ...s,
           messages: session.messages,
           sessionTokenCount: resolveSessionTokenCount(session),
+          sessionTokenCountEstimated: true,
         }));
         setSessionLoading(false);
       })
       .catch((e: unknown) => { console.warn("Session load:", e); setSessionLoading(false); });
     const stopGatewayListener = listenGatewaySessionUpdates(sessionId, sessionRef, (session) => {
-      setState((s) => ({ ...s, messages: session.messages, sessionTokenCount: resolveSessionTokenCount(session) }));
+      setState((s) => ({
+        ...s,
+        messages: session.messages,
+        sessionTokenCount: resolveSessionTokenCount(session),
+        sessionTokenCountEstimated: true,
+      }));
     });
     return () => {
       alive = false;
@@ -155,7 +161,7 @@ export function useAgentChat(
     if (session) {
       sessionWorkingDirRef.current = session.working_dir || sessionWorkingDirRef.current;
       const sessionTokenCount = resolveSessionTokenCount(session);
-      setState((s) => ({ ...s, sessionTokenCount }));
+      setState((s) => ({ ...s, sessionTokenCount, sessionTokenCountEstimated: true }));
       return sessionTokenCount;
     }
     return state.sessionTokenCount;

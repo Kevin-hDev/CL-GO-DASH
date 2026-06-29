@@ -1,25 +1,7 @@
 use crate::services::agent_local::types_ollama::ChatMessage;
 
-const BYTES_PER_TOKEN: usize = 4;
-
 pub fn estimate_tokens(messages: &[ChatMessage]) -> usize {
-    messages.iter().map(estimate_message_tokens).sum()
-}
-
-fn estimate_message_tokens(msg: &ChatMessage) -> usize {
-    let mut chars = msg.content.len();
-    if let Some(ref calls) = msg.tool_calls {
-        for call in calls {
-            chars += call.function.name.len();
-            chars += call.function.arguments.to_string().len();
-        }
-    }
-    let image_tokens = msg
-        .images
-        .as_ref()
-        .map(|images| images.len() * crate::services::llm::vision::IMAGE_TOKEN_ESTIMATE)
-        .unwrap_or(0);
-    (chars / BYTES_PER_TOKEN) + image_tokens
+    crate::services::token_counting::estimate_chat_tokens(messages)
 }
 
 pub fn should_compress(used_tokens: usize, context_window: u64, threshold_pct: u8) -> bool {
@@ -90,5 +72,11 @@ mod tests {
         let mut message = msg("user", "hello");
         message.images = Some(vec!["iVBORw0KGgo=".to_string()]);
         assert!(estimate_tokens(&[message]) >= crate::services::llm::vision::IMAGE_TOKEN_ESTIMATE);
+    }
+
+    #[test]
+    fn estimate_counts_cjk_conservatively() {
+        let msgs = vec![msg("user", &"你".repeat(1000))];
+        assert_eq!(estimate_tokens(&msgs), 1250);
     }
 }

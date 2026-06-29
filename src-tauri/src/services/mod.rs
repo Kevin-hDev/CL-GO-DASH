@@ -40,4 +40,5 @@ pub mod search;
 pub mod searxng;
 pub mod stream_utils;
 pub mod terminal;
+pub mod token_counting;
 pub mod vault;

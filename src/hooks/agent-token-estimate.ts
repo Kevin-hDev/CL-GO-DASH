@@ -11,23 +11,56 @@ export function resolveSessionTokenCount(session: AgentSession): number {
 }
 
 function estimateMessage(message: AgentMessage): number {
-  let chars = message.content.length;
-  chars += message.thinking?.length ?? 0;
+  let units = textUnits(message.content);
+  units += message.thinking ? textUnits(message.thinking) : 0;
   if (message.tool_calls) {
     for (const call of message.tool_calls) {
-      chars += call.function.name.length;
-      chars += JSON.stringify(call.function.arguments).length;
+      units += textUnits(call.function.name);
+      units += textUnits(JSON.stringify(call.function.arguments));
     }
   }
   if (message.tool_activities) {
     for (const activity of message.tool_activities) {
-      chars += activity.summary.length;
-      chars += JSON.stringify(activity.args ?? {}).length;
-      chars += activity.result?.length ?? 0;
-      chars += activity.content?.length ?? 0;
-      chars += activity.old_text?.length ?? 0;
-      chars += activity.new_text?.length ?? 0;
+      units += textUnits(activity.summary);
+      units += textUnits(JSON.stringify(activity.args ?? {}));
+      units += activity.result ? textUnits(activity.result) : 0;
+      units += activity.content ? textUnits(activity.content) : 0;
+      units += activity.old_text ? textUnits(activity.old_text) : 0;
+      units += activity.new_text ? textUnits(activity.new_text) : 0;
     }
   }
-  return Math.floor(chars / CHARS_PER_TOKEN);
+  return Math.ceil(units / CHARS_PER_TOKEN);
+}
+
+export function textUnits(input: string): number {
+  let units = 0;
+  for (const char of input) units += charUnits(char);
+  return units;
+}
+
+function charUnits(char: string): number {
+  const cp = char.codePointAt(0) ?? 0;
+  if (cp <= 0x7f) return 1;
+  if (isWideOrEmoji(cp)) return 5;
+  return 2;
+}
+
+function isWideOrEmoji(cp: number): boolean {
+  return (
+    (cp >= 0x1100 && cp <= 0x11ff) ||
+    (cp >= 0x2e80 && cp <= 0x2eff) ||
+    (cp >= 0x2f00 && cp <= 0x2fdf) ||
+    (cp >= 0x3000 && cp <= 0x30ff) ||
+    (cp >= 0x3130 && cp <= 0x318f) ||
+    (cp >= 0x31a0 && cp <= 0x31bf) ||
+    (cp >= 0x31f0 && cp <= 0x31ff) ||
+    (cp >= 0x3400 && cp <= 0x4dbf) ||
+    (cp >= 0x4e00 && cp <= 0x9fff) ||
+    (cp >= 0xac00 && cp <= 0xd7af) ||
+    (cp >= 0xf900 && cp <= 0xfaff) ||
+    (cp >= 0xfe00 && cp <= 0xfe0f) ||
+    (cp >= 0xff00 && cp <= 0xffef) ||
+    (cp >= 0x1f000 && cp <= 0x1faff) ||
+    (cp >= 0x20000 && cp <= 0x2ceaf)
+  );
 }
