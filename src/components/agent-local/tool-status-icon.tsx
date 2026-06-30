@@ -79,9 +79,7 @@ export function ToolStatusIcon({
         className="tb-status-img"
         src={src}
         alt={status === "error" ? "Erreur" : "Succès"}
-        width={size}
-        height={size}
-        style={{ flexShrink: 0 }}
+        style={{ width: size, height: size, flexShrink: 0 }}
       />
       {tooltip}
     </span>

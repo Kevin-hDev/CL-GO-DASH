@@ -104,9 +104,7 @@ export function FileIcon({ name, size = 18 }: { name: string; size?: number | st
       className="fp-icon"
       src={src}
       alt=""
-      width={size}
-      height={size}
-      style={{ flexShrink: 0 }}
+      style={{ width: size, height: size, flexShrink: 0 }}
     />
   );
 }
