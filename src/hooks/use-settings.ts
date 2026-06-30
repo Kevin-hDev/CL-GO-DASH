@@ -66,7 +66,6 @@ export function useSettings() {
   const [sidebarExpand, setSidebarExpandState] = useState(loadSidebarExpand);
 
   const fontFamily = FONT_FAMILIES.find((f) => f.id === fontFamilyId)!;
-  const codeTheme = CODE_THEMES.find((c) => c.id === codeThemeId)!;
 
   useEffect(() => {
     // Base 18px (au lieu des 16px navigateur) × pourcentage du réglage.
@@ -110,7 +109,7 @@ export function useSettings() {
   return useMemo(() => ({
     fontSize, setFontSize, decreaseFont, increaseFont,
     fontFamilyId, fontFamily, setFontFamily,
-    codeThemeId, codeTheme, setCodeTheme,
+    codeThemeId, setCodeTheme,
     sidebarExpand, setSidebarExpand,
   }) as const, [
     fontSize,
@@ -121,7 +120,6 @@ export function useSettings() {
     fontFamily,
     setFontFamily,
     codeThemeId,
-    codeTheme,
     setCodeTheme,
     sidebarExpand,
     setSidebarExpand,
