@@ -33,15 +33,16 @@ export function ChatHeader({
   onPanelModeChange,
 }: ChatHeaderProps) {
   const { t } = useTranslation();
+  const hasSession = Boolean(sessionId);
   return (
-    <div className="chat-header" role="presentation">
+    <div className={`chat-header ${hasSession ? "" : "chat-header-empty"}`} role="presentation">
       {sessionName ? (
         <span className="chat-header-title" title={sessionName}>
           {sessionName}
         </span>
       ) : null}
       <DragRegion style={{ flex: 1, minWidth: 0 }} />
-      {sessionId && (
+      {hasSession && (
         <span className="chat-header-actions">
           {showForecastDocs && onOpenForecastDocs && (
             <Tooltip label={t("forecast.docs.openTooltip")} align="right">
