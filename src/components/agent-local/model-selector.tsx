@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useClickOutside } from "@/hooks/use-click-outside";
 import { useKeyboard } from "@/hooks/use-keyboard";
 import { focusLocalListItem } from "@/hooks/use-local-list-navigation";
-import { CaretDown, MagnifyingGlass } from "@/components/ui/icons";
+import { Brain, CaretDown, MagnifyingGlass } from "@/components/ui/icons";
 import {
   useAvailableModels,
   type AvailableModel,
@@ -52,6 +52,8 @@ export function ModelSelector({
   const modeOptions = useMemo(() => reasoningModeOptions(selectedEntry), [selectedEntry]);
   const selectedReasoningMode = normalizeReasoningMode(reasoningMode, modeOptions);
   const selectedReasoningLabel = modeOptions.find((option) => option.mode === selectedReasoningMode)?.labelKey;
+  const simpleReasoningToggle = selectedReasoningMode === "auto"
+    && modeOptions.every((option) => option.mode === "off" || option.mode === "auto");
   const showReasoningModes = modeOptions.length > 0;
 
   const filteredGroups = useMemo(() => {
@@ -92,7 +94,10 @@ export function ModelSelector({
       >
         <span className="ms-trigger-label">{selectedModel || t("agentLocal.selectModel")}</span>
         {selectedReasoningLabel && selectedReasoningMode !== "off" && (
-          <span className="ms-trigger-reasoning">{t(selectedReasoningLabel)}</span>
+          <span className="ms-trigger-reasoning" title={t(selectedReasoningLabel)}>
+            <Brain size={12} className="ms-trigger-reasoning-icon" />
+            {!simpleReasoningToggle && <span>{t(selectedReasoningLabel)}</span>}
+          </span>
         )}
         <CaretDown size={10} className="ms-trigger-caret" />
       </button>

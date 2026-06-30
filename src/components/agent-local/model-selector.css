@@ -56,8 +56,15 @@
 }
 
 .ms-trigger-reasoning {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
   margin-left: 4px;
   color: var(--select-text);
+  flex-shrink: 0;
+}
+
+.ms-trigger-reasoning-icon {
   flex-shrink: 0;
 }
 
