@@ -25,17 +25,16 @@ interface NavItem {
   id: TabId;
   icon?: Icon;
   customIcon?: typeof HeartbeatIcon;
-  iconSize?: string;
   i18nKey: string;
 }
 
 const NAV_ITEMS: NavItem[] = [
   { id: "agent-local", icon: ChatsCircle, i18nKey: "nav.agentLocal" },
-  { id: "heartbeat", customIcon: HeartbeatIcon, iconSize: "1.44rem", i18nKey: "nav.heartbeat" },
+  { id: "heartbeat", customIcon: HeartbeatIcon, i18nKey: "nav.heartbeat" },
   { id: "personality", icon: UserCircle, i18nKey: "nav.personality" },
 ];
 
-const ICON_SIZE = "1.25rem";
+const ICON_SIZE = 16;
 
 interface SidebarProps {
   activeTab: TabId;
@@ -107,7 +106,7 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
               />
             ) : item.customIcon ? (
               <item.customIcon
-                size={item.iconSize ?? ICON_SIZE}
+                size={ICON_SIZE}
                 className={cn(
                   "shrink-0 text-[var(--ink-muted)]",
                   activeTab === item.id && "text-[var(--ink)]",
