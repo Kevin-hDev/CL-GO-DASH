@@ -75,7 +75,7 @@ pub async fn list_families() -> Vec<FamilyGroup> {
         .into_iter()
         .map(|(name, count)| FamilyGroup { name, count })
         .collect();
-    families.sort_by(|a, b| b.count.cmp(&a.count));
+    families.sort_by_key(|b| std::cmp::Reverse(b.count));
     families
 }
 

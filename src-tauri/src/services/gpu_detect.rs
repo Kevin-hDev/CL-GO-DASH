@@ -10,6 +10,7 @@ pub enum GpuVendor {
 
 pub use crate::services::gpu_vram::{compute_default_num_ctx, detect_vram_mb};
 
+#[allow(clippy::needless_return)] // pattern multi-cfg cross-plateforme
 pub fn detect() -> GpuVendor {
     #[cfg(target_os = "macos")]
     {
