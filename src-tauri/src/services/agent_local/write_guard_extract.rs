@@ -172,8 +172,12 @@ mod tests {
         let args = json!({"path": root.to_str().unwrap()});
         let paths = extract_from_list_dir(&args, root, content);
         assert_eq!(paths.len(), 2, "devrait trouver main.rs + helper.rs");
-        assert!(paths.iter().any(|p| p.to_string_lossy().ends_with("main.rs")));
-        assert!(paths.iter().any(|p| p.to_string_lossy().ends_with("helper.rs")));
+        assert!(paths
+            .iter()
+            .any(|p| p.to_string_lossy().ends_with("main.rs")));
+        assert!(paths
+            .iter()
+            .any(|p| p.to_string_lossy().ends_with("helper.rs")));
     }
 
     #[test]

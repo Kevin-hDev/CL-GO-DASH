@@ -5,9 +5,9 @@ use crate::services::agent_local::write_guard::WriteGuard;
 use std::collections::HashMap;
 use tokio_util::sync::CancellationToken;
 
+use super::tool_executor_compression::ToolCompression;
 use super::tool_executor_parallel::run_with_parallel_reads;
 use super::tool_executor_sequential::run_sequential;
-use super::tool_executor_compression::ToolCompression;
 
 pub async fn run_tools(
     on_event: &AgentEventEmitter,

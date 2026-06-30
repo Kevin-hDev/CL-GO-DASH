@@ -33,14 +33,12 @@ pub async fn list_git_branches(path: String) -> Result<Vec<branch::BranchInfo>, 
 #[tauri::command]
 pub async fn get_git_context(path: String) -> Result<branch::GitContext, String> {
     let repo_path = registered_project_path(&path).await?;
-    Ok(
-        tokio::task::spawn_blocking(move || branch::get_context(&repo_path))
-            .await
-            .map_err(|e| {
-                eprintln!("[git] get_context: {e}");
-                "Erreur interne".to_string()
-            })?,
-    )
+    tokio::task::spawn_blocking(move || branch::get_context(&repo_path))
+        .await
+        .map_err(|e| {
+            eprintln!("[git] get_context: {e}");
+            "Erreur interne".to_string()
+        })
 }
 
 #[tauri::command]

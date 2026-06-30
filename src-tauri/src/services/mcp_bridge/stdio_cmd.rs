@@ -31,10 +31,10 @@ pub fn parse_install_command(connector_id: &str, raw: &str) -> Result<ParsedComm
         args.push(part.to_string());
     }
 
-    if connector_id == stdio_catalog::IMESSAGE_CONNECTOR_ID {
-        if program != "deno" || args != stdio_catalog::IMESSAGE_ARGS {
-            return Err("commande iMessage non autorisée".to_string());
-        }
+    if connector_id == stdio_catalog::IMESSAGE_CONNECTOR_ID
+        && (program != "deno" || args != stdio_catalog::IMESSAGE_ARGS)
+    {
+        return Err("commande iMessage non autorisée".to_string());
     }
 
     if args.is_empty() {

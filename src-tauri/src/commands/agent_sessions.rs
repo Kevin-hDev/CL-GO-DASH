@@ -1,7 +1,5 @@
-use crate::services::agent_local::types_session::{
-    AgentMessage, AgentSession, AgentSessionMeta,
-};
 use crate::services::agent_local::session_store;
+use crate::services::agent_local::types_session::{AgentMessage, AgentSession, AgentSessionMeta};
 
 #[tauri::command]
 pub async fn list_agent_sessions() -> Result<Vec<AgentSessionMeta>, String> {

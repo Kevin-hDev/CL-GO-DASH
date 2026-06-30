@@ -22,10 +22,7 @@ fn parses_absolute_gitdir() {
 fn parses_relative_gitdir() {
     let content = "gitdir: ../.git/worktrees/feature";
     let result = parse_gitdir_content(content);
-    assert_eq!(
-        result,
-        Some(PathBuf::from("../.git/worktrees/feature"))
-    );
+    assert_eq!(result, Some(PathBuf::from("../.git/worktrees/feature")));
 }
 
 #[test]

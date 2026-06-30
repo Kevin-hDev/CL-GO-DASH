@@ -98,6 +98,6 @@ pub fn detect(file_path: &Path) -> Vec<DetectedEditor> {
         });
     }
 
-    editors.sort_by(|a, b| b.is_default.cmp(&a.is_default));
+    editors.sort_by_key(|b| std::cmp::Reverse(b.is_default));
     editors
 }

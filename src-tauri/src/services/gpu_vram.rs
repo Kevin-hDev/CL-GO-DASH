@@ -11,10 +11,11 @@ const CTX_HIGH: u32 = 32768;
 const CTX_MID: u32 = 16384;
 const CTX_LOW: u32 = 8192;
 
+#[allow(clippy::needless_return)] // pattern multi-cfg cross-plateforme
 pub fn detect_vram_mb() -> Option<u64> {
     #[cfg(target_os = "macos")]
     {
-        return macos::detect_total();
+        macos::detect_total()
     }
     #[cfg(target_os = "linux")]
     {
@@ -28,10 +29,11 @@ pub fn detect_vram_mb() -> Option<u64> {
     None
 }
 
+#[allow(clippy::needless_return)] // pattern multi-cfg cross-plateforme
 pub fn detect_vram_used_mb() -> Option<u64> {
     #[cfg(target_os = "macos")]
     {
-        return macos::detect_used();
+        macos::detect_used()
     }
     #[cfg(target_os = "linux")]
     {

@@ -29,14 +29,13 @@ pub async fn apply_and_save(
     mode: CompressionMode,
 ) -> Result<u32, String> {
     let mut session = session_store::get(session_id).await?;
-    let context =
-        context_capsules_disk::compression_context_message(
-            runtime_messages,
-            context_window,
-            working_dir,
-            mode,
-        )
-        .await;
+    let context = context_capsules_disk::compression_context_message(
+        runtime_messages,
+        context_window,
+        working_dir,
+        mode,
+    )
+    .await;
     let (runtime_recent, session_recent) =
         super::state_recent::recent_messages(&session.messages, runtime_messages);
 

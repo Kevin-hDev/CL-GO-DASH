@@ -30,8 +30,7 @@ impl RealtimeBudget {
         if !enabled || configured_context == 0 || threshold_pct == 0 {
             return None;
         }
-        let limit_tokens =
-            (configured_context as f64 * threshold_pct as f64 / 100.0) as usize;
+        let limit_tokens = (configured_context as f64 * threshold_pct as f64 / 100.0) as usize;
         Some(Self {
             base_tokens,
             limit_tokens,
@@ -44,9 +43,7 @@ impl RealtimeBudget {
             return false;
         }
         self.next_check_at = generated_tokens.saturating_add(CHECK_INTERVAL_TOKENS);
-        self.base_tokens
-            .saturating_add(generated_tokens as usize)
-            >= self.limit_tokens
+        self.base_tokens.saturating_add(generated_tokens as usize) >= self.limit_tokens
     }
 }
 

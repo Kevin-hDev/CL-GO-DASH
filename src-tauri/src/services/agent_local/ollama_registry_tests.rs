@@ -8,6 +8,6 @@ fn cleanup_partial_blobs_returns_zero_on_empty_digests() {
 
 #[test]
 fn cleanup_partial_blobs_returns_zero_on_nonexistent_dir() {
-    let count = cleanup_partial_blobs(&["sha256-abc123".to_string()]);
-    assert!(count == 0 || count > 0); // just shouldn't panic
+    let _count = cleanup_partial_blobs(&["sha256-abc123".to_string()]);
+    // just shouldn't panic
 }

@@ -1,4 +1,6 @@
-use std::path::{Path, PathBuf};
+use std::path::Path;
+#[cfg(any(target_os = "macos", target_os = "windows", test))]
+use std::path::PathBuf;
 
 #[cfg(target_os = "macos")]
 pub(crate) fn current_macos_app_bundle() -> Result<PathBuf, String> {

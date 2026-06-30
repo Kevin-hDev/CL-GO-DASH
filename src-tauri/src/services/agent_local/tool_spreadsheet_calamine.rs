@@ -77,11 +77,7 @@ pub fn read_excel(
     // résultat JSON, pas la structure interne chargée ici.
     let height = range.height();
     let width = range.width();
-    super::tool_office_limits::ensure_cell_budget(
-        height as u64,
-        width as u64,
-        "Feuille",
-    )?;
+    super::tool_office_limits::ensure_cell_budget(height as u64, width as u64, "Feuille")?;
 
     let formulas = workbook.worksheet_formula(&sheet_name).ok();
     let (start_row, start_col) = range.start().unwrap_or((0, 0));

@@ -33,7 +33,8 @@ static DD_DEVICE_REGEX: LazyLock<Regex> =
 /// `/tmp/x` ou `/home/user/projet`. La cible est matchée seulement si elle
 /// est suivie d'un séparateur de fin (espace, ;, &&, |, ou fin de chaîne).
 static RM_RF_TARGET_REGEX: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"(?i)\brm\s+-[a-z]*r[a-z]*f[a-z]*\s+(/\*|/|~|\$home|\$\{home\})(\s|;|&|\||$)").unwrap()
+    Regex::new(r"(?i)\brm\s+-[a-z]*r[a-z]*f[a-z]*\s+(/\*|/|~|\$home|\$\{home\})(\s|;|&|\||$)")
+        .unwrap()
 });
 
 fn config_allowed_paths() -> Vec<PathBuf> {

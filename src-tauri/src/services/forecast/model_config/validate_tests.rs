@@ -166,7 +166,9 @@ fn number_list_sorts_and_dedup() {
     values.insert("levels".into(), json!([95.0, 80.0, 90.0, 80.0]));
 
     let result = sanitize(&specs, values).unwrap();
-    let arr: Vec<f64> = result["levels"].as_array().unwrap()
+    let arr: Vec<f64> = result["levels"]
+        .as_array()
+        .unwrap()
         .iter()
         .map(|v| v.as_f64().unwrap())
         .collect();
@@ -178,7 +180,10 @@ fn number_list_rejects_too_many() {
     // MAX_NUMBER_LIST = 9.
     let specs = [spec("levels", ParamKind::NumberList)];
     let mut values = Map::new();
-    values.insert("levels".into(), json!([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]));
+    values.insert(
+        "levels".into(),
+        json!([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]),
+    );
 
     assert!(sanitize(&specs, values).is_err());
 }
@@ -203,7 +208,10 @@ fn null_and_empty_values_are_removed() {
     values.insert("b".into(), json!("   ")); // whitespace only
 
     let result = sanitize(&specs, values).unwrap();
-    assert!(result.is_empty(), "null et string vide doivent être retirés");
+    assert!(
+        result.is_empty(),
+        "null et string vide doivent être retirés"
+    );
 }
 
 #[test]
@@ -230,7 +238,10 @@ fn default_value_not_included_in_output() {
     values.insert("horizon".into(), json!(10));
 
     let result = sanitize(&specs, values).unwrap();
-    assert!(result.is_empty(), "la valeur par défaut ne doit pas être écrite");
+    assert!(
+        result.is_empty(),
+        "la valeur par défaut ne doit pas être écrite"
+    );
 }
 
 #[test]

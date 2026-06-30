@@ -85,7 +85,7 @@ fn validate_editor_path(editor_path: &str) -> Result<(), String> {
     #[cfg(target_os = "macos")]
     {
         let p = Path::new(editor_path);
-        if !p.is_absolute() || !p.extension().is_some_and(|e| e == "app") || !p.is_dir() {
+        if !p.is_absolute() || p.extension().is_none_or(|e| e != "app") || !p.is_dir() {
             return Err("Éditeur non autorisé".into());
         }
     }

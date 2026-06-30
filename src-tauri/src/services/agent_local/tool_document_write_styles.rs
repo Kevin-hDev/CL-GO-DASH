@@ -142,5 +142,5 @@ pub fn build_styles_xml() -> String {
     </w:rPr>
   </w:style>
 </w:styles>"#
-    .to_string()
+        .to_string()
 }

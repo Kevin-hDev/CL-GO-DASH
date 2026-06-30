@@ -17,7 +17,11 @@ pub fn write_list(
         None => return Ok(()),
     };
     let ordered = block["ordered"].as_bool().unwrap_or(false);
-    let num_id = if ordered { NUM_ID_ORDERED } else { NUM_ID_BULLET };
+    let num_id = if ordered {
+        NUM_ID_ORDERED
+    } else {
+        NUM_ID_BULLET
+    };
 
     for item in items.iter() {
         let text = item.as_str().unwrap_or("");

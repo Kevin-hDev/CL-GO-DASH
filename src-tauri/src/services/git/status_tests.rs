@@ -29,10 +29,7 @@ fn parses_binary_file_as_zeros() {
 #[test]
 fn parses_path_with_spaces() {
     let result = parse_numstat_line("5\t2\tmy file with spaces.rs");
-    assert_eq!(
-        result,
-        Some(("my file with spaces.rs".to_string(), 5, 2))
-    );
+    assert_eq!(result, Some(("my file with spaces.rs".to_string(), 5, 2)));
 }
 
 #[test]

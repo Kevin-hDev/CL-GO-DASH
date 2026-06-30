@@ -83,7 +83,7 @@ fn prepend_chat_system_prompt(messages: &mut Vec<ChatMessage>, working_dir: &Pat
     messages.insert(0, build_system_message(prompt));
 }
 
-fn append_response_language(messages: &mut Vec<ChatMessage>, lang: &str) {
+fn append_response_language(messages: &mut [ChatMessage], lang: &str) {
     if lang.is_empty() {
         return;
     }
@@ -95,7 +95,7 @@ fn append_response_language(messages: &mut Vec<ChatMessage>, lang: &str) {
     }
 }
 
-fn prepend_skills_listing(messages: &mut Vec<ChatMessage>, skills: &[(String, String)]) {
+fn prepend_skills_listing(messages: &mut [ChatMessage], skills: &[(String, String)]) {
     let listing = skills
         .iter()
         .map(|(name, desc)| format!("- {name}: {desc}"))

@@ -127,7 +127,7 @@ pub async fn get(id: &str) -> Result<AgentSession, String> {
 
 pub async fn list() -> Result<Vec<AgentSessionMeta>, String> {
     let mut metas = crate::services::agent_local::session_index::read_index().await?;
-    metas.sort_by(|a, b| b.created_at.cmp(&a.created_at));
+    metas.sort_by_key(|b| std::cmp::Reverse(b.created_at));
     Ok(metas)
 }
 

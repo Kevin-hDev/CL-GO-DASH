@@ -68,7 +68,7 @@ pub(super) async fn flush_read_batch<'a>(
                 _ = tokio::time::sleep(READ_BATCH_TIMEOUT) => None,
             };
             if let Some(dispatched) = dispatched {
-                for (pos, tr) in pending_indices.iter().zip(dispatched.into_iter()) {
+                for (pos, tr) in pending_indices.iter().zip(dispatched) {
                     let entry = &chunk[*pos];
                     post_record_read(
                         entry.name,

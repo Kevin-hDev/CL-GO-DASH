@@ -135,10 +135,8 @@ fn extract_text_from_ooxml(xml: &str) -> Result<String, String> {
                     // Trim + collapse des espaces multiples (issus de l'indentation
                     // XML entre runs) en un seul espace. Préserve les espaces
                     // significatifs entre runs ("un " + "mot" = "un mot").
-                    let normalized: String = para_text
-                        .split_whitespace()
-                        .collect::<Vec<_>>()
-                        .join(" ");
+                    let normalized: String =
+                        para_text.split_whitespace().collect::<Vec<_>>().join(" ");
                     if !normalized.is_empty() {
                         if !result.is_empty() {
                             result.push('\n');

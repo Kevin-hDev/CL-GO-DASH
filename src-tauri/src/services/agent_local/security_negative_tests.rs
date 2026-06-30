@@ -75,9 +75,7 @@ fn write_rejects_dotdot_escape() {
     // ../ depuis temp pour sortir de la zone temp.
     let escape = tmp.join("../../../.cl-go-dotdot-escape-test");
     let result = validate_write_path(&escape);
-    cleanup(&std::path::PathBuf::from(
-        std::path::Path::new("/").join(".cl-go-dotdot-escape-test"),
-    ));
+    cleanup(&std::path::Path::new("/").join(".cl-go-dotdot-escape-test"));
     assert!(
         result.is_err(),
         "un chemin avec ../ qui s'échappe des zones autorisées doit être rejeté"
@@ -113,5 +111,8 @@ fn read_allows_file_in_working_dir() {
     std::fs::write(&target, b"").unwrap();
     let result = validate_read_path(&target, &working);
     cleanup(&target);
-    assert!(result.is_ok(), "la lecture dans working_dir doit être autorisée");
+    assert!(
+        result.is_ok(),
+        "la lecture dans working_dir doit être autorisée"
+    );
 }

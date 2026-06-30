@@ -1,3 +1,11 @@
+// La base de code contient légitimement des fonctions à many paramètres
+// (commandes Tauri, exécuteurs d'outils avec contexte riche). Les refactorer
+// en structs serait risqué et hors-sujet. On désactive le lint globalement.
+#![allow(clippy::too_many_arguments)]
+// Plusieurs modules de tests compagnons portent le même nom que leur module
+// parent (convention *_tests.rs). C'est intentionnel et documenté.
+#![allow(clippy::module_inception)]
+
 mod app_events;
 mod commands;
 mod models;

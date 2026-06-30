@@ -94,14 +94,8 @@ pub async fn record_detected_tool_calls(
     working_dir: &Path,
 ) {
     for (name, args) in tool_calls {
-        super::tool_executor_diagnostics::detected(
-            session_id,
-            request_id,
-            name,
-            args,
-            working_dir,
-        )
-        .await;
+        super::tool_executor_diagnostics::detected(session_id, request_id, name, args, working_dir)
+            .await;
     }
 }
 

@@ -1,6 +1,6 @@
 use crate::services::agent_local::ollama_base_url;
-use crate::services::agent_local::ollama_stream_retry::build_retry_request;
 use crate::services::agent_local::ollama_stream_process::{flush_filter, process_chunk};
+use crate::services::agent_local::ollama_stream_retry::build_retry_request;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::types_ollama::{
     ChatRequest, StreamEvent, StreamOutcome, StreamResult,
@@ -111,7 +111,7 @@ async fn stream_chat_inner(
 
     let byte_stream = resp
         .bytes_stream()
-        .map(|r| r.map_err(|e| std::io::Error::other(e)));
+        .map(|r| r.map_err(std::io::Error::other));
     let mut lines = BufReader::new(StreamReader::new(byte_stream)).lines();
 
     let mut token_count: u32 = 0;

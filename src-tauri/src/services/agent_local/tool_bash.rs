@@ -122,8 +122,7 @@ pub(super) fn detect_shell() -> (String, String) {
 
 pub(super) fn truncate_output(output: &str) -> String {
     let mut result = String::new();
-    let mut line_count = 0;
-    for line in output.lines() {
+    for (line_count, line) in output.lines().enumerate() {
         if line_count >= MAX_LINES || result.len() + line.len() > MAX_BYTES {
             result.push_str("\n... [tronqué]");
             break;
@@ -132,7 +131,6 @@ pub(super) fn truncate_output(output: &str) -> String {
             result.push('\n');
         }
         result.push_str(line);
-        line_count += 1;
     }
     result
 }

@@ -151,13 +151,17 @@ fn cgnat_lower_boundary_blocked() {
 #[test]
 fn cgnat_upper_boundary_blocked() {
     // 100.127.255.255 = fin exacte du range CGNAT.
-    assert!(is_blocked_ip(&IpAddr::V4(Ipv4Addr::new(100, 127, 255, 255))));
+    assert!(is_blocked_ip(&IpAddr::V4(Ipv4Addr::new(
+        100, 127, 255, 255
+    ))));
 }
 
 #[test]
 fn just_below_cgnat_not_blocked() {
     // 100.63.255.255 = juste avant le range.
-    assert!(!is_blocked_ip(&IpAddr::V4(Ipv4Addr::new(100, 63, 255, 255))));
+    assert!(!is_blocked_ip(&IpAddr::V4(Ipv4Addr::new(
+        100, 63, 255, 255
+    ))));
 }
 
 #[test]

@@ -40,8 +40,14 @@ fn context_used_prefers_larger_real_or_estimate() {
 fn request_start_index_ignores_compression_context_and_command() {
     let messages = vec![
         chat("user", "vraie demande"),
-        chat("user", "This session is being continued from a previous conversation"),
-        chat("user", "Recent file context preserved across compression:\n- a.rs"),
+        chat(
+            "user",
+            "This session is being continued from a previous conversation",
+        ),
+        chat(
+            "user",
+            "Recent file context preserved across compression:\n- a.rs",
+        ),
         chat("user", "/compress"),
     ];
 

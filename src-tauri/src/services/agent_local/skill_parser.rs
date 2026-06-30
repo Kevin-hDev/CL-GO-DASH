@@ -1,6 +1,5 @@
 /// Parsing YAML frontmatter pour les fichiers skill.md / SKILL.md.
 /// Retourne (name, description, body) — body = contenu sans frontmatter.
-
 pub fn parse_skill_content(content: &str, fallback_name: &str) -> (String, String, String) {
     let trimmed = content.trim();
     if !trimmed.starts_with("---") {

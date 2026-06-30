@@ -1,6 +1,6 @@
 use crate::services::agent_local::tool_office_utils::{
-    border_style_name, coerce_values_array, normalize_formula, try_value_as_u16,
-    try_value_as_u32, validate_color_hex, value_as_f64,
+    border_style_name, coerce_values_array, normalize_formula, try_value_as_u16, try_value_as_u32,
+    validate_color_hex, value_as_f64,
 };
 use crate::services::agent_local::tool_spreadsheet_write::parse_cell_ref;
 use rust_xlsxwriter::{Color, Format, FormatBorder, Workbook};
@@ -195,7 +195,9 @@ fn apply_set_number_format(ws: &mut rust_xlsxwriter::Worksheet, op: &Value) -> R
                 Ok(n) => ws.write_number_with_format(row, col, n, &fmt),
                 Err(_) => ws.write_string_with_format(row, col, s, &fmt),
             },
-            Value::Number(n) => ws.write_number_with_format(row, col, n.as_f64().unwrap_or(0.0), &fmt),
+            Value::Number(n) => {
+                ws.write_number_with_format(row, col, n.as_f64().unwrap_or(0.0), &fmt)
+            }
             _ => ws.write_blank(row, col, &fmt),
         }
     }
@@ -218,8 +220,8 @@ fn apply_merge_cells(ws: &mut rust_xlsxwriter::Worksheet, op: &Value) -> Result<
     let end = op["end_cell"]
         .as_str()
         .ok_or_else(|| "end_cell requis".to_string())?;
-    let (first_row, first_col) = parse_cell_ref(start)
-        .ok_or_else(|| "Référence start_cell invalide".to_string())?;
+    let (first_row, first_col) =
+        parse_cell_ref(start).ok_or_else(|| "Référence start_cell invalide".to_string())?;
     let (last_row, last_col) =
         parse_cell_ref(end).ok_or_else(|| "Référence end_cell invalide".to_string())?;
     let fmt = Format::new();

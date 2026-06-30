@@ -223,6 +223,9 @@ mod tests {
             {"type": "set_border", "cell": "A1", "border_style": "gigantic"}
         ]);
         let result = write_spreadsheet(path.to_str().unwrap(), &ops, dir.path()).await;
-        assert!(result.is_error, "Devrait échouer sur style bordure invalide");
+        assert!(
+            result.is_error,
+            "Devrait échouer sur style bordure invalide"
+        );
     }
 }

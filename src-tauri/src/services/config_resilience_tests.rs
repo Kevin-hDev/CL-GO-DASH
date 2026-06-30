@@ -99,7 +99,10 @@ fn partial_config_keeps_valid_sections() {
 
     let config = read_config_from_path(&path, dir.path()).expect("read");
 
-    assert!(config.heartbeat.global_paused, "heartbeat valide doit être conservé");
+    assert!(
+        config.heartbeat.global_paused,
+        "heartbeat valide doit être conservé"
+    );
     // advanced invalide → reset à default (compression_threshold par défaut).
     // On compare un champ représentatif plutôt que la struct entière (pas de
     // derive PartialEq sur AdvancedSettings).

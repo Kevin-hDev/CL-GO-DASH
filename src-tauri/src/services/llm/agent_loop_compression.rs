@@ -1,5 +1,5 @@
-use super::compress_hook;
 use super::agent_loop_message;
+use super::compress_hook;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::tool_executor_compression::{
     ToolCompression, ToolCompressionProvider,

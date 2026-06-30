@@ -4,8 +4,13 @@ use std::path::Path;
 use tokio_util::sync::CancellationToken;
 
 pub enum ToolCompressionProvider<'a> {
-    Ollama { model: &'a str },
-    Cloud { provider_id: &'a str, model: &'a str },
+    Ollama {
+        model: &'a str,
+    },
+    Cloud {
+        provider_id: &'a str,
+        model: &'a str,
+    },
 }
 
 pub struct ToolCompression<'a> {

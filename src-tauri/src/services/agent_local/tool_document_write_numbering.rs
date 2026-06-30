@@ -45,5 +45,5 @@ pub fn build_numbering_xml() -> String {
     <w:abstractNumId w:val="1"/>
   </w:num>
 </w:numbering>"#
-    .to_string()
+        .to_string()
 }

@@ -102,14 +102,16 @@ fn save_to_path_rejects_list_over_max() {
     // Génère un JSON avec MAX+1 connecteurs notion (id identique mais le
     // comptage de load_from_path est sur len(), pas sur l'unicité).
     let oversize: Vec<serde_json::Value> = (0..MAX_CONNECTORS + 1)
-        .map(|_| serde_json::json!({
-            "id": "notion",
-            "status": "connected",
-            "enabled_in_chat": true,
-            "endpoint": "https://mcp.notion.com/mcp",
-            "install_command": null,
-            "env_keys": null,
-        }))
+        .map(|_| {
+            serde_json::json!({
+                "id": "notion",
+                "status": "connected",
+                "enabled_in_chat": true,
+                "endpoint": "https://mcp.notion.com/mcp",
+                "install_command": null,
+                "env_keys": null,
+            })
+        })
         .collect();
     std::fs::write(&path, serde_json::to_vec_pretty(&oversize).unwrap()).unwrap();
 
