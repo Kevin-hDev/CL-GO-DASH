@@ -108,10 +108,18 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space-xs);
   padding: var(--space-xs) var(--space-sm);
   font-size: var(--text-xs);
-  background: var(--shell);
+  background: var(--void);
   color: var(--ink-faint);
+  border-bottom: 1px solid var(--edge);
+}
+
+.code-block-lang {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .code-block pre {
