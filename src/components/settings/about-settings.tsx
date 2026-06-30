@@ -75,7 +75,7 @@ export function AboutSettings() {
               e.currentTarget.style.background = "var(--surface)";
             }}
           >
-            {t("about.viewOnGithub")} <ArrowSquareOut size={14} />
+            {t("about.viewOnGithub")} <ArrowSquareOut size="var(--icon-sm)" />
           </button>
         </div>
       </div>

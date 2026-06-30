@@ -82,9 +82,9 @@ function FileTreeNodeComponent({
         aria-expanded={entry.is_dir ? expanded : undefined}
       >
         <span className={`ft-chevron ${entry.is_dir ? "" : "ft-chevron-placeholder"} ${expanded ? "expanded" : ""}`}>
-          {entry.is_dir && <ChevronRight size={14} />}
+          {entry.is_dir && <ChevronRight size="var(--icon-sm)" />}
         </span>
-        {!entry.is_dir && <FileIcon name={entry.name} size={16} />}
+        {!entry.is_dir && <FileIcon name={entry.name} size="var(--icon-md)" />}
         <span className="ft-node-name">{entry.name}</span>
       </div>
       {entry.is_dir && childEntries && (

@@ -17,12 +17,12 @@ export function WakeupGrid({ wakeups, summaries, onSelect, onCreate }: WakeupGri
     <div className="wk-main">
       <div className="wk-header">
         <div className="wk-header-title">
-          <Pulse size={20} weight="regular" />
+          <Pulse size="var(--icon-xl)" weight="regular" />
           <span>{t("heartbeat.title")}</span>
         </div>
         <div className="wk-header-subtitle">{t("heartbeat.subtitle")}</div>
         <button className="wk-new-btn" onClick={onCreate} type="button">
-          <Plus size={14} weight="bold" />
+          <Plus size="var(--icon-sm)" weight="bold" />
           {t("heartbeat.newWakeup")}
         </button>
       </div>

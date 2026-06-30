@@ -59,7 +59,7 @@ export function McpBrowseModal({ catalog, configuredIds, onPick, onClose }: McpB
             <div className="mcb-title">{t("connectors.browse.title")}</div>
             <div className="mcb-subtitle">{t("connectors.browse.subtitle")}</div>
           </div>
-          <button type="button" className="wk-dialog-close" onClick={onClose}><X size={16} /></button>
+          <button type="button" className="wk-dialog-close" onClick={onClose}><X size="var(--icon-md)" /></button>
         </header>
 
         <div className="mcb-top-tabs">
@@ -86,7 +86,7 @@ export function McpBrowseModal({ catalog, configuredIds, onPick, onClose }: McpB
             </div>
 
             <div className="ak-connectors-search">
-              <MagnifyingGlass size={16} className="ak-connectors-search-icon" weight="regular" />
+              <MagnifyingGlass size="var(--icon-md)" className="ak-connectors-search-icon" weight="regular" />
               <input type="text" className="ak-connectors-search-input" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("connectors.browse.search")} autoFocus />
             </div>
 

@@ -71,7 +71,7 @@ export function McpConfigDialog({ connector, onClose, onValidated }: McpConfigDi
       <div className="wk-dialog" role="presentation" onClick={(e) => e.stopPropagation()} onKeyDown={() => {}}>
         <div className="wk-dialog-header">
           <h3>{t("connectors.config.addTitle", { name: connector.display_name })}</h3>
-          <button type="button" className="wk-dialog-close" onClick={onClose}><X size={16} /></button>
+          <button type="button" className="wk-dialog-close" onClick={onClose}><X size="var(--icon-md)" /></button>
         </div>
 
         <div className="mcc-info">

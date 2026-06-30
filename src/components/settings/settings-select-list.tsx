@@ -48,7 +48,7 @@ export function SettingsSelectList({
         onKeyDown={onItemKeyDown}
       >
         <div className="ss-option-check">
-          {opt.value === value && <Check size={14} weight="bold" />}
+          {opt.value === value && <Check size="var(--icon-sm)" weight="bold" />}
         </div>
         {opt.icon}
         <span className="ss-option-label">{opt.label}</span>
@@ -82,7 +82,7 @@ export function SettingsSelectList({
                 onKeyDown={onItemKeyDown}
               >
                 <CaretRight
-                  size={12}
+                  size="var(--icon-xs)"
                   weight="bold"
                   className={`ss-group-caret ${isCollapsed ? "" : "open"}`}
                 />

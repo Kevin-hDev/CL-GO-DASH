@@ -34,7 +34,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: "personality", icon: UserCircle, i18nKey: "nav.personality" },
 ];
 
-const ICON_SIZE = 16;
+const ICON_SIZE = "var(--icon-md)";
 
 interface SidebarProps {
   activeTab: TabId;

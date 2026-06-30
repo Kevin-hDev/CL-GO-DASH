@@ -86,9 +86,9 @@ export function PermissionModeSelector({ mode, onChange }: Props) {
         }}
         title={t("permissionMode.toggleHint")}
       >
-        <ModeIcon mode={mode} className="perm-mode-trigger-icon" size={18} />
+        <ModeIcon mode={mode} className="perm-mode-trigger-icon" size="var(--icon-lg)" />
         <span className={`perm-mode-text perm-mode-${mode}`}>{label}</span>
-        <CaretDown size={10} className="perm-mode-caret" />
+        <CaretDown size="var(--icon-2xs)" className="perm-mode-caret" />
       </button>
 
       {open && (
@@ -119,7 +119,7 @@ export function PermissionModeSelector({ mode, onChange }: Props) {
                   </span>
                 </span>
                 <span className="perm-mode-option-right">
-                  {m === mode && <Check size={18} />}
+                  {m === mode && <Check size="var(--icon-lg)" />}
                 </span>
               </button>
             );
@@ -133,11 +133,11 @@ export function PermissionModeSelector({ mode, onChange }: Props) {
 function ModeIcon({
   mode,
   className = "perm-mode-option-icon",
-  size = 22,
+  size = "var(--icon-2xl)",
 }: {
   mode: PermissionMode;
   className?: string;
-  size?: number;
+  size?: number | string;
 }) {
   const props = { size, weight: "regular" as const, className };
   if (mode === "chat") return <ChatCircleDots {...props} />;

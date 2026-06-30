@@ -63,13 +63,13 @@ export function ForecastNotesDetail(props: ForecastNotesDetailProps) {
             </button>
           )}
           <button type="button" className="fcn-icon-btn" onClick={() => props.onOpen(props.note as ForecastNote)}>
-            <ArrowSquareOut size={15} />
+            <ArrowSquareOut size="var(--icon-15)" />
           </button>
           <button type="button" className="fcn-icon-btn" onClick={() => props.onEdit(props.note as ForecastNote)}>
-            <Pencil size={15} />
+            <Pencil size="var(--icon-15)" />
           </button>
           <button type="button" className="fcn-icon-btn" onClick={() => setConfirmDelete((value) => !value)}>
-            <Trash size={15} />
+            <Trash size="var(--icon-15)" />
           </button>
         </div>
       </div>

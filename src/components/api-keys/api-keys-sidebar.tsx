@@ -29,7 +29,7 @@ export function ApiKeysSidebar({
               className={`ak-sidebar-item ${selectedId === p.id ? "active" : ""}`}
               onClick={() => onSelect(p.id)}
             >
-              <ProviderIcon providerId={p.id} displayName={p.display_name} size={18} />
+              <ProviderIcon providerId={p.id} displayName={p.display_name} size="var(--icon-lg)" />
               <span>{p.display_name}</span>
             </button>
           ))

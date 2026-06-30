@@ -11,7 +11,7 @@ export function PlanPreviewBubble({ plan }: PlanPreviewBubbleProps) {
   return (
     <div className="chat-bubble ppb-root">
       <div className="ppb-header">
-        <ClipboardText size={16} weight="regular" />
+        <ClipboardText size="var(--icon-md)" weight="regular" />
         <span className="ppb-title">{plan.title}</span>
       </div>
       <div className="ppb-content chat-md">

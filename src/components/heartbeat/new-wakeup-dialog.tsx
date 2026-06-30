@@ -94,7 +94,7 @@ export function NewWakeupDialog({
         <header className="wk-dialog-header">
           <span>{title}</span>
           <button type="button" className="wk-dialog-close" onClick={onClose}>
-            <X size={16} />
+            <X size="var(--icon-md)" />
           </button>
         </header>
 

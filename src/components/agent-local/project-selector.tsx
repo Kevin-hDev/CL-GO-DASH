@@ -55,7 +55,7 @@ export function ProjectSelector({
     return (
       <div className="project-selector-row">
         <div className="project-selector-indicator">
-          <FolderSimple size={14} />
+          <FolderSimple size="var(--icon-sm)" />
           <span>{selected.name}</span>
         </div>
       </div>
@@ -72,9 +72,9 @@ export function ProjectSelector({
         className="project-selector-btn"
         onClick={() => setOpen(!open)}
       >
-        <FolderSimple size={14} />
+        <FolderSimple size="var(--icon-sm)" />
         <span>{label}</span>
-        <CaretDown size={10} />
+        <CaretDown size="var(--icon-2xs)" />
       </button>
 
       {open && (
@@ -110,16 +110,16 @@ export function ProjectSelector({
               onClick={() => handleSelect(p.id)}
               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleSelect(p.id); }}
             >
-              <FolderSimple size={14} />
+              <FolderSimple size="var(--icon-sm)" />
               <span style={{ flex: 1 }}>{p.name}</span>
-              {p.id === selectedProjectId && <Check size={14} />}
+              {p.id === selectedProjectId && <Check size="var(--icon-sm)" />}
             </div>
           ))}
 
           <div className="project-dropdown-sep" />
 
           <div className="project-dropdown-item" role="button" tabIndex={0} onClick={handleAdd} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleAdd(); }}>
-            <FolderSimplePlus size={14} />
+            <FolderSimplePlus size="var(--icon-sm)" />
             <span>{t("projects.addNew", "Ajouter un nouveau projet")}</span>
           </div>
         </div>

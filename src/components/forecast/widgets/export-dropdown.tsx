@@ -67,7 +67,7 @@ export function ExportDropdown({ analysisId, onExport }: ExportDropdownProps) {
           else setOpen(true);
         }}
       >
-        <DownloadSimple size={16} />
+        <DownloadSimple size="var(--icon-md)" />
         {t("forecast.export.title")}
       </button>
       {open && (
@@ -89,7 +89,7 @@ export function ExportDropdown({ analysisId, onExport }: ExportDropdownProps) {
               }}
             >
               <span className="exd-icon">
-                {f.fileName ? <FileIcon name={f.fileName} size={18} /> : <ClipboardText size={18} />}
+                {f.fileName ? <FileIcon name={f.fileName} size="var(--icon-lg)" /> : <ClipboardText size="var(--icon-lg)" />}
               </span>
               {t(`forecast.export.${f.key}`)}
             </button>

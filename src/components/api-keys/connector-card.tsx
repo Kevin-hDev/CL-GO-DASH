@@ -37,11 +37,11 @@ export function ConnectorCard({
           <span className="ak-connector-card-tier">
             {provider.free_tier_label}
           </span>
-          <Key size={12} className="ak-connector-card-keyicon" weight="fill" />
+          <Key size="var(--icon-xs)" className="ak-connector-card-keyicon" weight="fill" />
         </div>
       </div>
       <div className={`ak-connector-card-action ${configured ? "done" : ""}`}>
-        {configured ? <Check size={16} weight="bold" /> : <Plus size={16} weight="bold" />}
+        {configured ? <Check size="var(--icon-md)" weight="bold" /> : <Plus size="var(--icon-md)" weight="bold" />}
       </div>
     </button>
   );

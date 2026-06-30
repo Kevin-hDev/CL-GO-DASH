@@ -12,9 +12,9 @@ interface OnboardingPreferencesProps {
 }
 
 const THEME_OPTIONS: { id: ThemeChoice; labelKey: string; icon: ReactNode }[] = [
-  { id: "light", labelKey: "settings.light", icon: <Sun size={18} /> },
-  { id: "dark", labelKey: "settings.dark", icon: <Moon size={18} /> },
-  { id: "system", labelKey: "settings.system", icon: <Gear size={18} /> },
+  { id: "light", labelKey: "settings.light", icon: <Sun size="var(--icon-lg)" /> },
+  { id: "dark", labelKey: "settings.dark", icon: <Moon size="var(--icon-lg)" /> },
+  { id: "system", labelKey: "settings.system", icon: <Gear size="var(--icon-lg)" /> },
 ];
 
 export function OnboardingPreferences({
@@ -66,7 +66,7 @@ export function OnboardingPreferences({
 
       <button type="button" className="ob-primary-btn" onClick={onNext}>
         {t("onboarding.common.continue")}
-        <CaretRight size={16} weight="bold" />
+        <CaretRight size="var(--icon-md)" weight="bold" />
       </button>
     </div>
   );

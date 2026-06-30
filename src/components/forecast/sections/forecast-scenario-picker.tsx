@@ -74,7 +74,7 @@ export function ForecastScenarioPicker({
                   }
                 >
                   <span>{formatMonth(group.id, i18n.language)}</span>
-                  <ChevronDown size={14} className={`fsp-chevron ${expanded ? "is-open" : ""}`} />
+                  <ChevronDown size="var(--icon-sm)" className={`fsp-chevron ${expanded ? "is-open" : ""}`} />
                 </button>
                 <div className={`fsp-group-items ${expanded ? "is-open" : ""}`}>
                   <div className="fsp-group-inner">

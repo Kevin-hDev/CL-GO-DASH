@@ -134,14 +134,14 @@ export function SettingsSelect({
         <span className={`ss-trigger-label ${isOverflowing ? "is-overflowing" : ""}`}>
           {displayLabel}
         </span>
-        <CaretDown size={14} weight="bold" className="ss-trigger-icon" />
+        <CaretDown size="var(--icon-sm)" weight="bold" className="ss-trigger-icon" />
       </div>
 
       {open && !disabled && (
         <div className={`ss-panel ${groups ? "ss-panel-fixed" : ""}`}>
           {searchable && (
             <div className="ss-search">
-              <MagnifyingGlass size={14} />
+              <MagnifyingGlass size="var(--icon-sm)" />
               <input
                 autoFocus
                 value={query}

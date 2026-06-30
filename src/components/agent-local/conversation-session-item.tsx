@@ -54,13 +54,13 @@ export function ConversationSessionItem({
         />
       ) : (
         <>
-          <ChatsCircle size={14} weight={active ? "fill" : "regular"} className="conv-icon" />
+          <ChatsCircle size="var(--icon-sm)" weight={active ? "fill" : "regular"} className="conv-icon" />
           <span className="conv-name">{displaySessionName(session.name, t)}</span>
           {session.is_gateway && channelId && (
-            <ChannelIcon channelId={channelId} size={18} className="conv-gateway-icon" />
+            <ChannelIcon channelId={channelId} size="var(--icon-lg)" className="conv-gateway-icon" />
           )}
           <button className="conv-session-menu-btn" onClick={(e) => onMenu(e, session.id)}>
-            <DotsThreeVertical size={14} />
+            <DotsThreeVertical size="var(--icon-sm)" />
           </button>
         </>
       )}

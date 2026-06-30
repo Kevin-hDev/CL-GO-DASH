@@ -94,8 +94,8 @@ export function ConversationList({
     setCtx({ x: rect.right, y: rect.bottom, id });
   }, []);
   const ctxItems: ContextMenuItem[] = ctx ? [
-    { label: t("history.rename"), icon: <Pencil size={14} />, onClick: () => { setRenamingId(ctx.id); setTimeout(() => inputRef.current?.focus(), 0); } },
-    { label: t("history.delete"), icon: <WastebasketIcon size={14} />, onClick: () => onDelete(ctx.id) },
+    { label: t("history.rename"), icon: <Pencil size="var(--icon-sm)" />, onClick: () => { setRenamingId(ctx.id); setTimeout(() => inputRef.current?.focus(), 0); } },
+    { label: t("history.delete"), icon: <WastebasketIcon size="var(--icon-sm)" />, onClick: () => onDelete(ctx.id) },
   ] : [];
   const handleRenameSubmit = (id: string, value: string) => {
     if (value.trim()) onRename(id, value.trim());
@@ -114,7 +114,7 @@ export function ConversationList({
     <>
       <div className="conv-header">
         <button className="conv-new-btn" onClick={onCreate}>
-          <ComposeIcon size={14} />
+          <ComposeIcon size="var(--icon-sm)" />
           <span>{t("agentLocal.newSession")}</span>
         </button>
       </div>

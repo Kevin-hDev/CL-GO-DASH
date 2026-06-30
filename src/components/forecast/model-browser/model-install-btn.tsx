@@ -58,7 +58,7 @@ export function ModelInstallBtn({ modelId, installed, onDone }: ModelInstallBtnP
   if (installed) {
     return (
       <div title={t("forecast.models.installed")} style={{ display: "flex", alignItems: "center", color: "var(--select-text)" }}>
-        <Check size={18} />
+        <Check size="var(--icon-lg)" />
       </div>
     );
   }

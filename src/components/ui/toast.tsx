@@ -79,7 +79,7 @@ function ToastItem({ toast, onDone }: { toast: Toast; onDone: () => void }) {
   if (toast.type === "check") {
     return (
       <div className={cls}>
-        <Check size={18} weight="bold" />
+        <Check size="var(--icon-lg)" weight="bold" />
       </div>
     );
   }

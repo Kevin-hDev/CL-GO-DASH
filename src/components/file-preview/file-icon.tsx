@@ -96,7 +96,7 @@ const NAME_ICONS: Record<string, string> = {
   ".gitattributes": iconGit,
 };
 
-export function FileIcon({ name, size = 18 }: { name: string; size?: number }) {
+export function FileIcon({ name, size = 18 }: { name: string; size?: number | string }) {
   const ext = name.split(".").pop()?.toLowerCase() ?? "";
   const src = NAME_ICONS[name] ?? EXT_ICONS[ext] ?? fileDefault;
   return (

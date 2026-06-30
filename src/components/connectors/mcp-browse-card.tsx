@@ -34,7 +34,7 @@ export function McpBrowseCard({ connector, configured, onAdd }: McpBrowseCardPro
           <span className="mcbc-cat">{connector.category.toUpperCase()}</span>
           <span className="mcbc-author">{connector.author}</span>
           <button type="button" className="mcbc-link" onClick={handleLinkClick} title={connector.url}>
-            <ArrowSquareOut size={12} />
+            <ArrowSquareOut size="var(--icon-xs)" />
           </button>
         </div>
       </div>
@@ -44,7 +44,7 @@ export function McpBrowseCard({ connector, configured, onAdd }: McpBrowseCardPro
         onClick={configured || locked ? undefined : onAdd}
         disabled={configured || locked}
       >
-        {configured ? <Check size={16} weight="bold" /> : <Plus size={16} weight="bold" />}
+        {configured ? <Check size="var(--icon-md)" weight="bold" /> : <Plus size="var(--icon-md)" weight="bold" />}
       </button>
     </div>
   );

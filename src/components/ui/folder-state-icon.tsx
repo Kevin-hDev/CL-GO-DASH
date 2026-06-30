@@ -1,6 +1,6 @@
 interface FolderStateIconProps {
   open: boolean;
-  size?: number;
+  size?: number | string;
   className?: string;
 }
 

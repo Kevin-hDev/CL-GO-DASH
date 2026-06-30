@@ -24,6 +24,16 @@
   --text-lg: 1rem;
   --text-xl: 1.25rem;
 
+  --icon-2xs: 0.5556rem;
+  --icon-xs: 0.6667rem;
+  --icon-13: 0.7222rem;
+  --icon-sm: 0.7778rem;
+  --icon-15: 0.8333rem;
+  --icon-md: 0.8889rem;
+  --icon-lg: 1rem;
+  --icon-xl: 1.1111rem;
+  --icon-2xl: 1.3333rem;
+
   --sidebar-collapsed: 2.75rem;
   --sidebar-expanded: 8.25rem;
   --list-width: 10.5rem;

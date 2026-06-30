@@ -109,7 +109,7 @@ export function OnboardingApi({ onComplete }: OnboardingApiProps) {
             </span>
             {isConfigured && (
               <span className="ob-provider-status">
-                <Check size={12} weight="bold" />
+                <Check size="var(--icon-xs)" weight="bold" />
                 {t("apiKeys.details.connected")}
               </span>
             )}
@@ -147,7 +147,7 @@ export function OnboardingApi({ onComplete }: OnboardingApiProps) {
             onClick={() => void open(selected.signup_url)}
           >
             {t("onboarding.api.getKey", { name: selected.display_name })}
-            <ArrowSquareOut size={13} />
+            <ArrowSquareOut size="var(--icon-13)" />
           </button>
         )}
         {saveState === "error" && (
@@ -170,7 +170,7 @@ export function OnboardingApi({ onComplete }: OnboardingApiProps) {
             : selectedConfigured
               ? t("apiKeys.dialog.save")
               : t("apiKeys.dialog.addAndTest")}
-          <CaretRight size={16} weight="bold" />
+          <CaretRight size="var(--icon-md)" weight="bold" />
         </button>
         <button
           type="button"

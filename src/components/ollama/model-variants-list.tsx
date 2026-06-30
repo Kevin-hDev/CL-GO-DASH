@@ -91,7 +91,7 @@ export function ModelVariantsList({
                 </span>
               )}
               {installed && !hasUpdate && (
-                <Check size={14} className="mvl-installed-icon" />
+                <Check size="var(--icon-sm)" className="mvl-installed-icon" />
               )}
             </div>
           );

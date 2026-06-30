@@ -16,9 +16,9 @@ export function PlanModeBadge({ onDisable }: PlanModeBadgeProps) {
       aria-label={t("chatMenu.disablePlanMode")}
       title={t("chatMenu.disablePlanMode")}
     >
-      <ClipboardText size={14} weight="regular" />
+      <ClipboardText size="var(--icon-sm)" weight="regular" />
       <span>{t("chatMenu.planMode")}</span>
-      <X size={12} className="pmb-x" />
+      <X size="var(--icon-xs)" className="pmb-x" />
     </button>
   );
 }

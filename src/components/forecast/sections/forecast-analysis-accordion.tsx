@@ -23,7 +23,7 @@ export function ForecastAnalysisAccordion({
           <span className="fca-accordion-title">{title}</span>
           {subtitle && <span className="fca-accordion-subtitle">{subtitle}</span>}
         </span>
-        <CaretDown size={14} className="fca-accordion-caret" />
+        <CaretDown size="var(--icon-sm)" className="fca-accordion-caret" />
       </button>
       <div className="fca-accordion-panel">
         <div className="fca-accordion-content">{children}</div>

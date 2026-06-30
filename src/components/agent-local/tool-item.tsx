@@ -45,14 +45,14 @@ export function ToolItem({
   const labelButton = canToggle ? (
     <button className="tb-toggle" onClick={toggle}>
       <span className="tb-arrow tb-tool-arrow" aria-hidden="true">
-        {isOpen ? <CaretUp size={13} weight="bold" /> : <CaretDown size={13} weight="bold" />}
+        {isOpen ? <CaretUp size="var(--icon-sm)" weight="bold" /> : <CaretDown size="var(--icon-sm)" weight="bold" />}
       </span>
-      {icon && <ToolIcon name={icon} size={14} className="tb-tool-icon" aria-hidden="true" />}
+      {icon && <ToolIcon name={icon} size="var(--icon-sm)" className="tb-tool-icon" aria-hidden="true" />}
       <span className="tb-tool-verb">{shownName}</span>
     </button>
   ) : (
     <>
-      {icon && <ToolIcon name={icon} size={14} className="tb-tool-icon" aria-hidden="true" />}
+      {icon && <ToolIcon name={icon} size="var(--icon-sm)" className="tb-tool-icon" aria-hidden="true" />}
       <span className="tb-tool-verb">{shownName}</span>
     </>
   );
@@ -62,7 +62,7 @@ export function ToolItem({
     <>
       {dir && <span className="tb-item-dirs">{dir}</span>}
       <span className="tb-item-name">
-        {fileName && <FileIcon name={fileName} size={14} />}
+        {fileName && <FileIcon name={fileName} size="var(--icon-sm)" />}
         <span className="tb-item-name-text">{fileName ?? shownSummary}</span>
       </span>
       {additions != null && deletions != null && (
@@ -94,11 +94,11 @@ export function ToolItem({
         {labelButton}
         {fileContent}
         {summaryContent}
-        {!done && <Spinner size={14} className="tb-spinner" />}
+        {!done && <Spinner size="var(--icon-sm)" className="tb-spinner" />}
         {done && (
           <ToolStatusIcon
             status={isError ? "error" : "success"}
-            size={14}
+            size="var(--icon-sm)"
             message={isError ? errorMessage : undefined}
           />
         )}

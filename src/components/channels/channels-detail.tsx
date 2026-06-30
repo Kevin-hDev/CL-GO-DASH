@@ -88,7 +88,7 @@ export function ChannelsDetail({ channelId, account, status, config, onSaveConfi
               {t(isRunning ? "channels.detail.connected" : "channels.detail.disconnected")}
             </button>
             <button type="button" className="ak-icon-btn danger" onClick={() => setConfirmDelete(true)} title={t("channels.detail.delete")}>
-              <Trash size={16} />
+              <Trash size="var(--icon-md)" />
             </button>
           </div>
         </div>

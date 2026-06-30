@@ -94,7 +94,7 @@ export const SettingsTab = memo(function SettingsTab({
           >
             {tab.icon ? (
               <tab.icon
-                size={16}
+                size="var(--icon-md)"
                 weight={subTab === tab.id ? "fill" : "regular"}
                 style={{ flexShrink: 0 }}
               />
@@ -102,7 +102,7 @@ export const SettingsTab = memo(function SettingsTab({
               <ThemedIcon
                 darkSrc={tab.imgDark}
                 lightSrc={tab.imgLight}
-                size="16px"
+                size="var(--icon-md)"
                 style={{
                   flexShrink: 0,
                   opacity: subTab === tab.id ? 1 : 0.6,

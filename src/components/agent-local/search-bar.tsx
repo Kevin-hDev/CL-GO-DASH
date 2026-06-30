@@ -39,7 +39,7 @@ export function SearchBar({ query, onChange, matchCount, onClose }: SearchBarPro
         </span>
       )}
       <button className="msg-action-btn" onClick={onClose}>
-        <X size={14} />
+        <X size="var(--icon-sm)" />
       </button>
     </div>
   );

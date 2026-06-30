@@ -100,7 +100,7 @@ export function useApiKeysTabSlots({ navState, onNavChange, onNavReplace }: ApiK
                 {t("apiKeys.main.title")}
               </h2>
               <button type="button" className="ak-connectors-btn" onClick={() => setDialog({ kind: "connectors" })}>
-                <Plus size={14} weight="bold" />
+                <Plus size="var(--icon-sm)" weight="bold" />
                 {t("apiKeys.main.connectorsBtn")}
               </button>
             </div>

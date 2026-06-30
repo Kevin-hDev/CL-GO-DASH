@@ -59,14 +59,14 @@ export function ModelSelectorItem({
           }
         }}
       >
-        <Star size={12} weight={isFav ? "fill" : "regular"} />
+        <Star size="var(--icon-xs)" weight={isFav ? "fill" : "regular"} />
       </span>
       <span className="ms-item-name">{m.id}</span>
       <span className="ms-item-right">
         {m.supports_vision && <span className="ms-badge-vision" title="Vision">V</span>}
         {m.supports_tools && <span className="ms-badge-tools" title="Tools">T</span>}
         {m.hint && <span className="ms-hint">{m.hint}</span>}
-        {isSelected && <Check size={12} />}
+        {isSelected && <Check size="var(--icon-xs)" />}
       </span>
     </div>
   );

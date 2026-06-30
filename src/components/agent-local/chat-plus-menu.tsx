@@ -46,13 +46,13 @@ export function ChatPlusMenu({ onFileImport, planModeEnabled, onPlanModeChange }
   return (
     <div className="cpm-wrapper" ref={menuRef}>
       <button className="chat-plus-btn" onClick={() => setOpen(!open)} type="button">
-        <Plus size={16} />
+        <Plus size="var(--icon-md)" />
       </button>
 
       {open && (
         <div className="cpm-dropdown" ref={dropdownRef}>
           <button type="button" className="cpm-item" onClick={handleFileImport}>
-            <Image size={16} weight="regular" />
+            <Image size="var(--icon-md)" weight="regular" />
             <span>{t("chatMenu.addFile")}</span>
           </button>
 
@@ -61,7 +61,7 @@ export function ChatPlusMenu({ onFileImport, planModeEnabled, onPlanModeChange }
             className="cpm-item"
             onClick={() => onPlanModeChange(!planModeEnabled)}
           >
-            <ClipboardText size={16} weight="regular" />
+            <ClipboardText size="var(--icon-md)" weight="regular" />
             <span>{t("chatMenu.planMode")}</span>
             <span className="cpm-item-desc">{t("chatMenu.planModeDesc")}</span>
             <div className={`cpm-toggle ${planModeEnabled ? "on" : ""}`}>
@@ -76,9 +76,9 @@ export function ChatPlusMenu({ onFileImport, planModeEnabled, onPlanModeChange }
             className={`cpm-item cpm-has-sub ${submenu === "connectors" ? "active" : ""}`}
             onMouseEnter={() => setSubmenu("connectors")}
           >
-            <Plugs size={16} weight="regular" />
+            <Plugs size="var(--icon-md)" weight="regular" />
             <span>{t("chatMenu.connectors")}</span>
-            <CaretRight size={12} className="cpm-caret" />
+            <CaretRight size="var(--icon-xs)" className="cpm-caret" />
           </button>
 
           <button
@@ -86,9 +86,9 @@ export function ChatPlusMenu({ onFileImport, planModeEnabled, onPlanModeChange }
             className={`cpm-item cpm-has-sub ${submenu === "plugins" ? "active" : ""}`}
             onMouseEnter={() => setSubmenu("plugins")}
           >
-            <PuzzlePiece size={16} weight="regular" />
+            <PuzzlePiece size="var(--icon-md)" weight="regular" />
             <span>{t("chatMenu.plugins")}</span>
-            <CaretRight size={12} className="cpm-caret" />
+            <CaretRight size="var(--icon-xs)" className="cpm-caret" />
           </button>
         </div>
       )}
@@ -100,7 +100,7 @@ export function ChatPlusMenu({ onFileImport, planModeEnabled, onPlanModeChange }
           ) : (
             connectedItems.map((c) => (
               <button key={c.id} type="button" className="cpm-sub-item" onClick={() => void toggleChatEnabled(c.id)}>
-                <McpIcon connectorId={c.id} displayName={c.display_name} size={18} />
+                <McpIcon connectorId={c.id} displayName={c.display_name} size="var(--icon-lg)" />
                 <span className={c.enabled_in_chat ? "" : "cpm-disabled"}>{c.display_name}</span>
                 <div className={`cpm-toggle ${c.enabled_in_chat ? "on" : ""}`}>
                   <div className="cpm-toggle-dot" />

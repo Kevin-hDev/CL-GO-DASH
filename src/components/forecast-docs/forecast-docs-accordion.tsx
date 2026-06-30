@@ -24,7 +24,7 @@ export function ForecastDocsAccordion({
         aria-controls={`fd-section-${section.id}`}
       >
         <span>{section.title}</span>
-        <ChevronDown size={15} className="fd-accordion-icon" />
+        <ChevronDown size="var(--icon-15)" className="fd-accordion-icon" />
       </button>
       <div id={`fd-section-${section.id}`} className="fd-accordion-panel">
         <div className="fd-accordion-content">

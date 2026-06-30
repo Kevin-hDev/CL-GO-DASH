@@ -25,7 +25,7 @@ export function FileThumbnail({ file, onRemove, onClick }: FileThumbnailProps) {
           style={{ width: 48, height: 48, objectFit: "cover", borderRadius: "var(--radius-sm)" }} />
       ) : (
         <>
-          <FileText size={16} style={{ color: "var(--ink-faint)" }} />
+          <FileText size="var(--icon-md)" style={{ color: "var(--ink-faint)" }} />
           <span style={{
             fontSize: "var(--text-xs)", color: "var(--ink-muted)",
             maxWidth: 80, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
@@ -43,7 +43,7 @@ export function FileThumbnail({ file, onRemove, onClick }: FileThumbnailProps) {
           cursor: "pointer", display: "flex",
         }}
       >
-        <X size={10} style={{ color: "var(--ink-faint)" }} />
+        <X size="var(--icon-2xs)" style={{ color: "var(--ink-faint)" }} />
       </button>
     </div>
   );

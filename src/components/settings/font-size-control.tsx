@@ -68,7 +68,7 @@ export function FontSizeControl({ value, onChange }: FontSizeControlProps) {
           aria-label={t("settings.general.fontSizeIncrease")}
           onClick={() => step(1)}
         >
-          <CaretUp size={12} weight="fill" />
+          <CaretUp size="var(--icon-xs)" weight="fill" />
         </button>
         <button
           type="button"
@@ -76,7 +76,7 @@ export function FontSizeControl({ value, onChange }: FontSizeControlProps) {
           aria-label={t("settings.general.fontSizeDecrease")}
           onClick={() => step(-1)}
         >
-          <CaretDown size={12} weight="fill" />
+          <CaretDown size="var(--icon-xs)" weight="fill" />
         </button>
       </div>
       <span className="fsc-unit">px</span>

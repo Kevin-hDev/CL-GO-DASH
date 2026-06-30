@@ -74,7 +74,7 @@ export function ConnectorsModal({
             </div>
           </div>
           <button type="button" className="wk-dialog-close" onClick={onClose}>
-            <X size={16} />
+            <X size="var(--icon-md)" />
           </button>
         </header>
 
@@ -93,7 +93,7 @@ export function ConnectorsModal({
 
         <div className="ak-connectors-search">
           <MagnifyingGlass
-            size={16}
+            size="var(--icon-md)"
             className="ak-connectors-search-icon"
             weight="regular"
           />

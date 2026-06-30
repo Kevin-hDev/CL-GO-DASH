@@ -142,7 +142,7 @@ export function ForecastHistoryRow({
           }}
           title={t("forecast.history.edit")}
         >
-          <Pencil size={15} />
+          <Pencil size="var(--icon-15)" />
         </button>
         <button
           type="button"
@@ -154,7 +154,7 @@ export function ForecastHistoryRow({
           }}
           title={t("forecast.history.delete")}
         >
-          <Trash size={15} />
+          <Trash size="var(--icon-15)" />
         </button>
       </div>
     </div>

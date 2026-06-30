@@ -100,12 +100,12 @@ export function ForecastModelSelector({
         <span className="fmsel-trigger-label">
           {selectedModel?.display_name ?? t("forecast.config.model")}
         </span>
-        <CaretDown size={14} className={`fmsel-caret ${open ? "open" : ""}`} />
+        <CaretDown size="var(--icon-sm)" className={`fmsel-caret ${open ? "open" : ""}`} />
       </button>
       {open && (
         <div className="ms-dropdown fmsel-dropdown">
           <div className="ms-search">
-            <MagnifyingGlass size={14} className="ms-search-icon" />
+            <MagnifyingGlass size="var(--icon-sm)" className="ms-search-icon" />
             <input
               type="text"
               value={query}

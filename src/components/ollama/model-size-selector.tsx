@@ -26,7 +26,7 @@ export function ModelSizeSelector({ models, selected, onSelect }: ModelSizeSelec
           </option>
         ))}
       </select>
-      <CaretDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 mss-caret pointer-events-none" />
+      <CaretDown size="var(--icon-xs)" className="absolute right-2 top-1/2 -translate-y-1/2 mss-caret pointer-events-none" />
     </div>
   );
 }

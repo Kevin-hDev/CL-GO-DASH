@@ -57,7 +57,7 @@ export function ChannelsAllowlist({ allowlist, onChange }: ChannelsAllowlistProp
             <span key={id} className="ch-allowlist-tag">
               {id}
               <button type="button" className="ch-allowlist-tag-remove" onClick={() => handleRemove(id)}>
-                <X size={10} />
+                <X size="var(--icon-2xs)" />
               </button>
             </span>
           ))}

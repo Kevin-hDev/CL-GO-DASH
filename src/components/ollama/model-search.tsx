@@ -89,7 +89,7 @@ export function ModelSearch({
                   </div>
                 )}
               </div>
-              {installed && <Check size={14} className="msearch-installed-icon" />}
+              {installed && <Check size="var(--icon-sm)" className="msearch-installed-icon" />}
             </div>
           );
         })}
