@@ -1,5 +1,5 @@
 use std::path::Path;
-#[cfg(any(target_os = "macos", target_os = "windows"))]
+#[cfg(any(target_os = "macos", target_os = "windows", test))]
 use std::path::PathBuf;
 
 #[cfg(target_os = "macos")]
