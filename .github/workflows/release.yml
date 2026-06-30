@@ -63,6 +63,49 @@ jobs:
       - name: Install npm dependencies
         run: npm ci
 
+      - name: Extract release notes
+        id: release_notes
+        shell: bash
+        env:
+          RELEASE_VERSION: ${{ inputs.version || github.ref_name }}
+        run: |
+          node <<'NODE'
+          const fs = require("fs");
+          const version = (process.env.RELEASE_VERSION || "").replace(/^v/, "");
+          const changelog = fs.readFileSync("CHANGELOG.md", "utf8").split(/\r?\n/);
+          const versionStart = changelog.findIndex((line) => line === `## v${version}`);
+          if (versionStart < 0) {
+            throw new Error(`Missing CHANGELOG.md section for v${version}`);
+          }
+
+          const versionEnd = changelog.findIndex((line, index) => index > versionStart && /^## v/.test(line));
+          const versionLines = changelog.slice(versionStart + 1, versionEnd < 0 ? undefined : versionEnd);
+          const notesStart = versionLines.findIndex((line) => line === "### App release notes");
+          if (notesStart < 0) {
+            throw new Error(`Missing ### App release notes section for v${version}`);
+          }
+
+          const nextHeading = versionLines.findIndex((line, index) =>
+            index > notesStart && (/^### /.test(line) || /^## /.test(line) || line === "---")
+          );
+          const lines = versionLines
+            .slice(notesStart + 1, nextHeading < 0 ? undefined : nextHeading)
+            .map((line) => line.trim())
+            .filter(Boolean);
+          const bullets = lines.filter((line) => line.startsWith("- "));
+          if (bullets.length < 1 || bullets.length > 6 || bullets.length !== lines.length) {
+            throw new Error("App release notes must contain 1 to 6 bullet lines only");
+          }
+          for (const bullet of bullets) {
+            if ([...bullet.slice(2)].length > 180) {
+              throw new Error(`App release note is too long: ${bullet}`);
+            }
+          }
+
+          const body = ["### App release notes", "", ...bullets].join("\n");
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `body<<EOF\n${body}\nEOF\n`);
+          NODE
+
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
         env:
@@ -72,7 +115,7 @@ jobs:
         with:
           tagName: ${{ inputs.version || github.ref_name }}
           releaseName: "CL-GO ${{ inputs.version || github.ref_name }}"
-          releaseBody: ""
+          releaseBody: ${{ steps.release_notes.outputs.body }}
           releaseDraft: false
           prerelease: false
           args: --target ${{ matrix.target }} --bundles ${{ matrix.bundles }}

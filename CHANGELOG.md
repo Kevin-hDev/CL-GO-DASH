@@ -2,9 +2,22 @@
 
 ## v0.9.4
 
+### App release notes
+
+- Context usage now shows a clear breakdown inside the chat input ring.
+- Chat controls, sidebars, icons, and dropdowns have been visually refined.
+- Font size is now configured directly in pixels with safer UI limits.
+- Settings now apply correctly as soon as the app starts.
+- Update notifications can now show short release notes.
+
 ### Changes
 
 - **Single chat session** — removed the multi-tab chat; replaced with a single-session header showing the session name in bold, with smooth animation when collapsing the sidebars
+- **Context usage details** — the chat context ring now opens a compact breakdown by messages, tools, MCP/connectors, skills, meta context, and system prompt
+- **Chat UI polish** — refreshed mode/model selectors, thinking indicators, header separator, input border, and sidebar hover alignment
+- **Font size control** — replaced percentage scaling with a direct pixel control from 10px to 24px, including legacy setting migration
+- **Settings startup fix** — font size and code theme settings now apply immediately when the app starts
+- **Glass dropdowns** — dropdowns and update bubbles now use the same readable glass/opaque background pattern across the app
 
 ### Office tools improvements
 

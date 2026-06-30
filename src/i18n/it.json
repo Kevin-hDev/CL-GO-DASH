@@ -705,7 +705,10 @@
     "modelUpdate": "Aggiorna",
     "version": "Versione {{version}}",
     "ollamaBinaryUpdate": "Aggiorna",
-    "updating": "Aggiornamento in corso…"
+    "updating": "Aggiornamento in corso…",
+    "releaseNotesTitle": "Note della versione {{version}}",
+    "showDetails": "Mostra dettagli",
+    "hideDetails": "Nascondi dettagli"
   },
   "units": {
     "gb": "GB"

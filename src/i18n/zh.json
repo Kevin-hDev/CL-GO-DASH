@@ -705,7 +705,10 @@
     "modelUpdate": "更新",
     "version": "版本 {{version}}",
     "ollamaBinaryUpdate": "更新",
-    "updating": "更新中…"
+    "updating": "更新中…",
+    "releaseNotesTitle": "{{version}} 版本说明",
+    "showDetails": "显示详情",
+    "hideDetails": "隐藏详情"
   },
   "units": {
     "gb": "GB"

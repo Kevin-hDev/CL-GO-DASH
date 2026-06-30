@@ -13,6 +13,7 @@ pub mod app_update_install;
 pub(crate) mod app_update_install_paths;
 pub(crate) mod app_update_install_scripts;
 pub(crate) mod app_update_install_temp;
+pub(crate) mod app_update_notes;
 pub mod codex;
 pub mod config;
 pub mod context_usage;

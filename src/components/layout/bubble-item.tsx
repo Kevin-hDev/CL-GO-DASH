@@ -1,5 +1,8 @@
+import { useMemo, useState } from "react";
 import { ThemedIcon } from "@/components/ui/themed-icon";
+import { CaretDown } from "@/components/ui/icons";
 import type { PullingState } from "@/hooks/use-update-checker";
+import { parseReleaseNotes } from "./update-release-notes";
 import logoIcon from "@/assets/logo.png";
 import ollamaDark from "@/assets/ollama.png";
 import ollamaLight from "@/assets/ollama-light.png";
@@ -9,6 +12,10 @@ export interface ItemData {
   type: "app" | "ollama-binary" | "ollama";
   name: string;
   sub: string;
+  version?: string;
+  title?: string | null;
+  publishedAt?: string | null;
+  notes?: string | null;
   fullName?: string;
   assetUrl?: string;
 }
@@ -35,9 +42,12 @@ export function BubbleItem({
   appDownloading, appPercent,
   onPullModel, onDownloadApp, onUpdateOllamaBinary, t,
 }: BubbleItemProps) {
+  const [expanded, setExpanded] = useState(false);
   const delay = closing
     ? (totalCount - 1 - index) * 80
     : index * 80;
+  const releaseNotes = useMemo(() => parseReleaseNotes(item.notes), [item.notes]);
+  const canExpand = item.type === "app" && releaseNotes.length > 0;
 
   const isOllamaPulling = pulling
     ? !pulling.fullName.localeCompare(item.fullName ?? "")
@@ -68,42 +78,94 @@ export function BubbleItem({
     }
   };
 
+  const releaseDate = formatReleaseDate(item.publishedAt);
+  const releaseTitle = item.title || (
+    item.version ? t("updates.releaseNotesTitle", { version: item.version }) : null
+  );
+
   return (
     <div
-      className={`update-bubble ${closing ? "bubble-closing" : ""}`}
+      className={`update-bubble ${expanded ? "update-bubble-expanded" : ""} ${closing ? "bubble-closing" : ""}`}
       style={{ animationDelay: `${delay}ms` }}
     >
-      {item.type === "app" ? (
-        <img src={logoIcon} alt="" className="update-bubble-icon" />
-      ) : (
-        <ThemedIcon
-          darkSrc={ollamaDark}
-          lightSrc={ollamaLight}
-          size={32}
-          style={{ borderRadius: 8 }}
-        />
-      )}
+      <div className="update-bubble-main">
+        {item.type === "app" ? (
+          <img src={logoIcon} alt="" className="update-bubble-icon" />
+        ) : (
+          <ThemedIcon
+            darkSrc={ollamaDark}
+            lightSrc={ollamaLight}
+            size={32}
+            style={{ borderRadius: 8 }}
+          />
+        )}
 
-      <div className="update-bubble-info">
-        <span className="update-bubble-name">{item.name}</span>
-        <span className="update-bubble-sub">{item.sub}</span>
+        <div className="update-bubble-info">
+          <span className="update-bubble-name">{item.name}</span>
+          <span className="update-bubble-sub">{item.sub}</span>
+        </div>
+
+        {showProgress ? (
+          <div className="update-bubble-progress">
+            <div className="update-bubble-progress-bar">
+              <div
+                className="update-bubble-progress-fill"
+                style={{ width: `${percent}%` }}
+              />
+            </div>
+            <span className="update-bubble-progress-text">{percent}%</span>
+          </div>
+        ) : (
+          <div className="update-bubble-actions">
+            <button className="update-bubble-btn" onClick={handleClick}>
+              {buttonLabel}
+            </button>
+            {canExpand && (
+              <button
+                className="update-bubble-toggle"
+                type="button"
+                aria-expanded={expanded}
+                aria-label={expanded ? t("updates.hideDetails") : t("updates.showDetails")}
+                onClick={() => setExpanded((current) => !current)}
+              >
+                <CaretDown size="var(--icon-sm)" className="update-bubble-caret" />
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
-      {showProgress ? (
-        <div className="update-bubble-progress">
-          <div className="update-bubble-progress-bar">
-            <div
-              className="update-bubble-progress-fill"
-              style={{ width: `${percent}%` }}
-            />
+      {canExpand && (
+        <div className="update-release-panel" aria-hidden={!expanded}>
+          <div className="update-release-inner">
+            {(releaseTitle || releaseDate) && (
+              <div className="update-release-head">
+                {releaseTitle && <span className="update-release-title">{releaseTitle}</span>}
+                {releaseDate && <span className="update-release-date">{releaseDate}</span>}
+              </div>
+            )}
+            {releaseNotes.map((section, sectionIndex) => (
+              <section className="update-release-section" key={`${section.title ?? "notes"}-${sectionIndex}`}>
+                {section.title && <h3>{section.title}</h3>}
+                {section.items.length > 0 && (
+                  <ul>
+                    {section.items.map((itemText, itemIndex) => (
+                      <li key={`${itemText}-${itemIndex}`}>{itemText}</li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+            ))}
           </div>
-          <span className="update-bubble-progress-text">{percent}%</span>
         </div>
-      ) : (
-        <button className="update-bubble-btn" onClick={handleClick}>
-          {buttonLabel}
-        </button>
       )}
     </div>
   );
+}
+
+function formatReleaseDate(value?: string | null): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(date);
 }

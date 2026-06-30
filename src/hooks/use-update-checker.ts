@@ -11,6 +11,9 @@ const CHECK_INTERVAL_MS = 60 * 60 * 1000;
 export interface AppUpdate {
   version: string;
   assetUrl: string;
+  title?: string | null;
+  publishedAt?: string | null;
+  notes?: string | null;
 }
 
 interface DownloadProgress {

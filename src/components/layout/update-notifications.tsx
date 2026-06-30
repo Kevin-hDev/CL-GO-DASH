@@ -96,6 +96,10 @@ function buildItems(
       type: "app",
       name: "CL-GO",
       sub: t("updates.version", { version: app.version }),
+      version: app.version,
+      title: app.title,
+      publishedAt: app.publishedAt,
+      notes: app.notes,
       assetUrl: app.assetUrl,
     });
   }
