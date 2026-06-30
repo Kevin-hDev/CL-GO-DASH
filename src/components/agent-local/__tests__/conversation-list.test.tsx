@@ -155,6 +155,15 @@ describe("ConversationList", () => {
     expect(container.querySelector(".conv-session-menu-btn")).not.toBeNull();
   });
 
+  it("ouvre le menu de session au clic sur les trois points", () => {
+    const session = makeSession({ id: "s1" });
+    const { container, getByTestId } = render(
+      <ConversationList {...defaultProps} sessions={[session]} />,
+    );
+    fireEvent.click(container.querySelector(".conv-session-menu-btn") as HTMLElement);
+    expect(getByTestId("context-menu")).not.toBeNull();
+  });
+
   it("affiche l'icône chat avec weight=fill pour la session active", () => {
     const session = makeSession({ id: "s1" });
     const { container } = render(

@@ -95,7 +95,9 @@
   font-variant-numeric: tabular-nums;
   line-height: 1;
   white-space: nowrap;
+  pointer-events: none;
   transition: opacity var(--ease-smooth);
+  z-index: 0;
 }
 
 .conv-gw-badge {
@@ -215,6 +217,9 @@
   align-items: center;
   justify-content: center;
   line-height: 0;
+  pointer-events: none;
+  position: relative;
+  z-index: 1;
 }
 
 .conv-item:hover .conv-session-age {
@@ -223,6 +228,7 @@
 
 .conv-item:hover .conv-session-menu-btn {
   opacity: 1;
+  pointer-events: auto;
 }
 
 .conv-session-menu-btn:hover {
