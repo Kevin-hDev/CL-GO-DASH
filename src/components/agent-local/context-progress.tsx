@@ -29,7 +29,7 @@ function formatTokens(n: number): string {
   return String(n);
 }
 
-const SIZE = 18;
+const SIZE = 16;
 const STROKE = 3;
 const RADIUS = (SIZE - STROKE) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
