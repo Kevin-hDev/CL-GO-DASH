@@ -81,7 +81,12 @@ export const SettingsTab = memo(function SettingsTab({
 
   const list = useMemo(() => (
     <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, overflow: "hidden" }}>
-      <div style={{ padding: "var(--space-sm)", flexShrink: 0 }}>
+      <div
+        style={{
+          padding: "var(--space-sm) var(--space-sm) var(--space-sm) max(0px, calc(var(--space-sm) - 4px))",
+          flexShrink: 0,
+        }}
+      >
         {SUB_TABS.map((tab) => (
           <div
             key={tab.id}
