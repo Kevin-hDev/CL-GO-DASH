@@ -1,6 +1,6 @@
 .app-root,
 body.os-mac {
-  --popover-bg: var(--surface-glass);
+  --popover-bg: var(--popover-surface);
   --popover-backdrop-filter: blur(20px);
 }
 

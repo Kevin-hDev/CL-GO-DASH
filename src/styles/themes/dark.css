@@ -35,6 +35,7 @@
   /* Surface variants */
   --surface-glass: rgba(37, 37, 37, 0.55);
   --surface-overlay: rgba(37, 37, 37, 0.70);
+  --popover-surface: rgba(37, 37, 37, 0.94);
   --tooltip-bg: #252525;
   --tooltip-border: rgba(255, 255, 255, 0.10);
   --tooltip-text: var(--ink);
