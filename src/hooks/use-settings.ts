@@ -1,14 +1,17 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 
-export const FONT_SIZES = [100, 112, 125, 137, 150] as const;
-export type FontSize = (typeof FONT_SIZES)[number];
+export const FONT_SIZE_MIN = 10;
+export const FONT_SIZE_MAX = 28;
+export const FONT_SIZE_DEFAULT = 18;
+export type FontSize = number;
 
-/**
- * Base de la taille de police en pixels pour 100%.
- * Le navigateur utilise 16px par défaut ; on monte à 18px (+2px) pour
- * grossir légèrement toutes les polices sans changer les paliers affichés.
- */
-const FONT_BASE_PX = 18;
+const LEGACY_FONT_SIZE_PX: Record<string, FontSize> = {
+  "100": 18,
+  "112": 20,
+  "125": 22,
+  "137": 25,
+  "150": 27,
+};
 
 export const FONT_FAMILIES = [
   { id: "system", label: "System Default", value: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' },
@@ -37,9 +40,22 @@ export const CODE_THEMES = [
 
 export type CodeThemeId = (typeof CODE_THEMES)[number]["id"];
 
+export function clampFontSizePx(value: number): FontSize {
+  if (!Number.isFinite(value)) return FONT_SIZE_DEFAULT;
+  return Math.min(FONT_SIZE_MAX, Math.max(FONT_SIZE_MIN, Math.round(value)));
+}
+
+export function parseStoredFontSize(raw: string | null): FontSize {
+  const value = raw?.trim();
+  if (!value) return FONT_SIZE_DEFAULT;
+  if (value in LEGACY_FONT_SIZE_PX) return LEGACY_FONT_SIZE_PX[value];
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return FONT_SIZE_DEFAULT;
+  return clampFontSizePx(parsed);
+}
+
 function loadFontSize(): FontSize {
-  const saved = Number(localStorage.getItem("clgo-font-size"));
-  return FONT_SIZES.includes(saved as FontSize) ? (saved as FontSize) : 100;
+  return parseStoredFontSize(localStorage.getItem("clgo-font-size"));
 }
 
 function loadFontFamily(): FontFamilyId {
@@ -60,8 +76,9 @@ function loadSidebarExpand(): boolean {
 }
 
 function applyFontSize(fontSize: FontSize) {
-  document.documentElement.style.fontSize = `${(fontSize / 100) * FONT_BASE_PX}px`;
-  localStorage.setItem("clgo-font-size", String(fontSize));
+  const next = clampFontSizePx(fontSize);
+  document.documentElement.style.fontSize = `${next}px`;
+  localStorage.setItem("clgo-font-size", String(next));
 }
 
 function applyFontFamily(fontFamilyId: FontFamilyId) {
@@ -101,7 +118,7 @@ export function useSettings() {
     applyCodeTheme(codeThemeId);
   }, [codeThemeId]);
 
-  const setFontSize = useCallback((size: FontSize) => setFontSizeState(size), []);
+  const setFontSize = useCallback((size: FontSize) => setFontSizeState(clampFontSizePx(size)), []);
   const setFontFamily = useCallback((id: FontFamilyId) => setFontFamilyIdState(id), []);
   const setCodeTheme = useCallback((id: CodeThemeId) => setCodeThemeIdState(id), []);
   const setSidebarExpand = useCallback((v: boolean) => {
@@ -111,17 +128,11 @@ export function useSettings() {
   }, []);
 
   const decreaseFont = useCallback(() => {
-    setFontSizeState((cur) => {
-      const idx = FONT_SIZES.indexOf(cur);
-      return idx > 0 ? FONT_SIZES[idx - 1] : cur;
-    });
+    setFontSizeState((cur) => clampFontSizePx(cur - 1));
   }, []);
 
   const increaseFont = useCallback(() => {
-    setFontSizeState((cur) => {
-      const idx = FONT_SIZES.indexOf(cur);
-      return idx < FONT_SIZES.length - 1 ? FONT_SIZES[idx + 1] : cur;
-    });
+    setFontSizeState((cur) => clampFontSizePx(cur + 1));
   }, []);
 
   return useMemo(() => ({

@@ -1,5 +1,26 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { applyStoredSettings } from "../use-settings";
+import { applyStoredSettings, parseStoredFontSize } from "../use-settings";
+
+describe("parseStoredFontSize", () => {
+  it.each([
+    ["100", 18],
+    ["112", 20],
+    ["125", 22],
+    ["137", 25],
+    ["150", 27],
+  ])("migre l'ancienne valeur %s%% vers %ipx", (raw, expected) => {
+    expect(parseStoredFontSize(raw)).toBe(expected);
+  });
+
+  it.each([
+    ["9", 10],
+    ["29", 28],
+    ["abc", 18],
+    [null, 18],
+  ])("normalise la valeur stockée %s", (raw, expected) => {
+    expect(parseStoredFontSize(raw)).toBe(expected);
+  });
+});
 
 describe("applyStoredSettings", () => {
   afterEach(() => {
@@ -16,7 +37,7 @@ describe("applyStoredSettings", () => {
 
     applyStoredSettings();
 
-    expect(document.documentElement.style.fontSize).toBe("22.5px");
+    expect(document.documentElement.style.fontSize).toBe("22px");
     expect(document.documentElement.style.getPropertyValue("--font-sans")).toBe(
       'Menlo, "SF Mono", Consolas, monospace',
     );
@@ -24,7 +45,7 @@ describe("applyStoredSettings", () => {
   });
 
   it("retombe sur les valeurs par défaut si le stockage contient des valeurs invalides", () => {
-    localStorage.setItem("clgo-font-size", "999");
+    localStorage.setItem("clgo-font-size", "abc");
     localStorage.setItem("clgo-font-family", "unknown");
     localStorage.setItem("clgo-code-theme", "unknown");
 
