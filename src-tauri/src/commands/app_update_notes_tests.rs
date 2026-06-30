@@ -18,8 +18,8 @@ fn valid_notes_json(version: &str) -> String {
 
 #[test]
 fn parses_release_notes_for_matching_version() {
-    let notes = parse_app_release_notes_json(valid_notes_json("0.9.4").as_bytes(), "0.9.4")
-        .expect("notes");
+    let notes =
+        parse_app_release_notes_json(valid_notes_json("0.9.4").as_bytes(), "0.9.4").expect("notes");
 
     assert_eq!(notes["en"], vec!["Complete English note."]);
     assert_eq!(notes["fr"], vec!["Note française complète."]);
@@ -56,7 +56,8 @@ fn rejects_overlong_notes_without_truncating() {
 
 #[test]
 fn rejects_incomplete_sentences() {
-    let json = valid_notes_json("0.9.4").replace("Complete English note.", "Incomplete English note");
+    let json =
+        valid_notes_json("0.9.4").replace("Complete English note.", "Incomplete English note");
 
     assert!(parse_app_release_notes_json(json.as_bytes(), "0.9.4").is_none());
 }
