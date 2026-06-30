@@ -9,7 +9,9 @@ import { SettingsCard } from "./settings-card";
 import { SettingsRow } from "./settings-row";
 import { SettingsSelect } from "./settings-select";
 import { ThemeSelector } from "./theme-selector";
+import { CodeThemePreview } from "./code-theme-preview";
 import {
+  CODE_THEME_OPTIONS,
   FONT_FAMILY_OPTIONS,
   FONT_SIZE_OPTIONS,
   LANGUAGE_OPTIONS,
@@ -120,6 +122,21 @@ export function GeneralSettings({ themeChoice, onThemeChange, settings }: Genera
             />
           </SettingsRow>
 
+          <SettingsRow
+            title={t("settings.general.codeThemeTitle")}
+            description={t("settings.general.codeThemeDesc")}
+          >
+            <SettingsSelect
+              options={CODE_THEME_OPTIONS}
+              value={settings.codeThemeId}
+              onChange={(v) => settings.setCodeTheme(v as typeof settings.codeThemeId)}
+            />
+          </SettingsRow>
+        </SettingsCard>
+
+        <CodeThemePreview themeId={settings.codeThemeId} />
+
+        <SettingsCard>
           <SettingsRow
             title={t("settings.general.languageTitle")}
             description={t("settings.general.languageDesc")}

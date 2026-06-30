@@ -22,6 +22,21 @@ export const FONT_FAMILIES = [
 
 export type FontFamilyId = (typeof FONT_FAMILIES)[number]["id"];
 
+/**
+ * Thèmes de coloration de code disponibles dans /settings.
+ * Chaque thème possède une variante dark + light (sélectionnée
+ * automatiquement selon le mode app via l'attribut data-theme).
+ */
+export const CODE_THEMES = [
+  { id: "default", label: "Défaut" },
+  { id: "github", label: "GitHub" },
+  { id: "one-dark-pro", label: "One Dark Pro" },
+  { id: "tokyo-night", label: "Tokyo Night" },
+  { id: "catppuccin", label: "Catppuccin" },
+] as const;
+
+export type CodeThemeId = (typeof CODE_THEMES)[number]["id"];
+
 function loadFontSize(): FontSize {
   const saved = Number(localStorage.getItem("clgo-font-size"));
   return FONT_SIZES.includes(saved as FontSize) ? (saved as FontSize) : 100;
@@ -33,6 +48,12 @@ function loadFontFamily(): FontFamilyId {
   return "system";
 }
 
+function loadCodeTheme(): CodeThemeId {
+  const saved = localStorage.getItem("clgo-code-theme");
+  if (saved && CODE_THEMES.some((c) => c.id === saved)) return saved as CodeThemeId;
+  return "default";
+}
+
 function loadSidebarExpand(): boolean {
   const saved = localStorage.getItem("clgo-sidebar-expand");
   return saved === null ? true : saved === "true";
@@ -41,6 +62,7 @@ function loadSidebarExpand(): boolean {
 export function useSettings() {
   const [fontSize, setFontSizeState] = useState<FontSize>(loadFontSize);
   const [fontFamilyId, setFontFamilyIdState] = useState<FontFamilyId>(loadFontFamily);
+  const [codeThemeId, setCodeThemeIdState] = useState<CodeThemeId>(loadCodeTheme);
   const [sidebarExpand, setSidebarExpandState] = useState(loadSidebarExpand);
 
   const fontFamily = FONT_FAMILIES.find((f) => f.id === fontFamilyId)!;
@@ -56,8 +78,14 @@ export function useSettings() {
     localStorage.setItem("clgo-font-family", fontFamilyId);
   }, [fontFamilyId, fontFamily.value]);
 
+  useEffect(() => {
+    document.documentElement.setAttribute("data-code-theme", codeThemeId);
+    localStorage.setItem("clgo-code-theme", codeThemeId);
+  }, [codeThemeId]);
+
   const setFontSize = useCallback((size: FontSize) => setFontSizeState(size), []);
   const setFontFamily = useCallback((id: FontFamilyId) => setFontFamilyIdState(id), []);
+  const setCodeTheme = useCallback((id: CodeThemeId) => setCodeThemeIdState(id), []);
   const setSidebarExpand = useCallback((v: boolean) => {
     setSidebarExpandState(v);
     localStorage.setItem("clgo-sidebar-expand", String(v));
@@ -81,6 +109,7 @@ export function useSettings() {
   return useMemo(() => ({
     fontSize, setFontSize, decreaseFont, increaseFont,
     fontFamilyId, fontFamily, setFontFamily,
+    codeThemeId, setCodeTheme,
     sidebarExpand, setSidebarExpand,
   }) as const, [
     fontSize,
@@ -90,6 +119,8 @@ export function useSettings() {
     fontFamilyId,
     fontFamily,
     setFontFamily,
+    codeThemeId,
+    setCodeTheme,
     sidebarExpand,
     setSidebarExpand,
   ]);

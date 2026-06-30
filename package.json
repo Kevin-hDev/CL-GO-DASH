@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@embedpdf/react-pdf-viewer": "^2.14.2",
+    "@fontsource-variable/jetbrains-mono": "^5.2.8",
     "@git-diff-view/react": "^0.1.3",
     "@iconify/icons-vscode-icons": "^1.2.29",
     "@iconify/react": "^6.0.2",

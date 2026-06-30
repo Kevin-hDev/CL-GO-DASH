@@ -489,6 +489,8 @@
       "fontSizeDesc": "アプリ内のテキストサイズ",
       "fontFamilyTitle": "フォントファミリー",
       "fontFamilyDesc": "アプリで使用するフォント",
+      "codeThemeTitle": "コードテーマ",
+      "codeThemeDesc": "コードブロックとプレビューの配色",
       "languageTitle": "言語",
       "languageDesc": "インターフェース言語",
       "responseLangTitle": "LLM 応答言語",

@@ -489,6 +489,8 @@
       "fontSizeDesc": "Dimensione del testo nell'app",
       "fontFamilyTitle": "Famiglia di caratteri",
       "fontFamilyDesc": "Font utilizzato nell'app",
+      "codeThemeTitle": "Tema del codice",
+      "codeThemeDesc": "Colorazione dei blocchi di codice e anteprime",
       "languageTitle": "Lingua",
       "languageDesc": "Lingua dell'interfaccia",
       "responseLangTitle": "Lingua di risposta del LLM",
