@@ -111,9 +111,8 @@
   gap: var(--space-xs);
   padding: var(--space-xs) var(--space-sm);
   font-size: var(--text-xs);
-  background: var(--void);
+  background: var(--shell);
   color: var(--ink-faint);
-  border-bottom: 1px solid var(--edge);
 }
 
 .code-block-lang {
@@ -127,7 +126,7 @@
   overflow-x: auto;
   font-size: var(--text-xs);
   font-family: var(--font-mono);
-  background: var(--void);
+  background: var(--shell);
   margin: 0;
   scrollbar-width: thin;
 }
