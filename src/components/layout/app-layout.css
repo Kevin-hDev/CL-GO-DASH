@@ -60,8 +60,8 @@ body.os-mac {
 .sb-nav-item {
   gap: 0;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
+  width: var(--nav-item-height);
+  height: var(--nav-item-height);
   overflow: hidden;
 }
 
@@ -70,11 +70,11 @@ body.os-mac {
 }
 
 .group\/sb:hover .sb-nav-item {
-  gap: 0.5rem;
+  gap: var(--nav-item-gap);
   justify-content: flex-start;
   width: auto;
-  height: auto;
-  padding-left: 0.625rem;
+  height: var(--nav-item-height);
+  padding-left: var(--nav-item-padding-x);
 }
 
 .group\/sb:not(:hover) .sb-nav-item {

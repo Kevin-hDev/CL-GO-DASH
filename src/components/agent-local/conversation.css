@@ -38,8 +38,9 @@
   display: flex;
   align-items: center;
   gap: var(--space-xs);
+  min-height: var(--nav-item-height);
   padding: 5px 2px 5px calc(var(--space-sm) - 8px);
-  border-radius: var(--radius-sm);
+  border-radius: var(--nav-item-radius);
   cursor: pointer;
   transition: all var(--ease-smooth);
   margin-bottom: 2px;

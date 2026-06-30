@@ -37,6 +37,10 @@
   --chrome-icon-docs: 17px;
   --chrome-icon-lg: 18px;
 
+  --nav-item-height: 1.75rem;
+  --nav-item-gap: var(--space-xs);
+  --nav-item-padding-x: var(--space-sm);
+  --nav-item-radius: var(--radius-sm);
   --sidebar-collapsed: 2.75rem;
   --sidebar-expanded: 8.25rem;
   --list-width: 10.5rem;
