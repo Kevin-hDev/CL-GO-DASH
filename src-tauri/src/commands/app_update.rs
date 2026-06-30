@@ -1,6 +1,9 @@
 use serde::Serialize;
 
 use super::app_update_assets::{asset_extension, current_platform};
+use super::app_update_notes::{
+    parse_app_release_notes_json, AppReleaseNotesByLocale, MAX_RELEASE_NOTES_BYTES,
+};
 
 const GITHUB_REPO: &str = "Kevin-hDev/CL-GO-DASH";
 
@@ -9,6 +12,9 @@ const GITHUB_REPO: &str = "Kevin-hDev/CL-GO-DASH";
 pub struct AppUpdateInfo {
     pub version: String,
     pub asset_url: String,
+    pub title: Option<String>,
+    pub published_at: Option<String>,
+    pub notes_by_locale: Option<AppReleaseNotesByLocale>,
 }
 
 #[tauri::command]
@@ -39,25 +45,63 @@ pub async fn check_app_update() -> Result<Option<AppUpdateInfo>, String> {
         "update-check-error".to_string()
     })?;
 
-    let tag = json["tag_name"]
-        .as_str()
-        .unwrap_or_default()
-        .trim_start_matches('v');
+    let mut update = match app_update_from_release(&json, env!("CARGO_PKG_VERSION")) {
+        Some(update) => update,
+        None => return Ok(None),
+    };
+    update.notes_by_locale = fetch_release_notes(&client, &update.version).await;
+    Ok(Some(update))
+}
 
-    let current = env!("CARGO_PKG_VERSION");
-    if tag.is_empty() || !version_gt(tag, current) {
-        return Ok(None);
+fn app_update_from_release(json: &serde_json::Value, current: &str) -> Option<AppUpdateInfo> {
+    let tag = json["tag_name"].as_str()?.trim_start_matches('v');
+    if !is_safe_version(tag) || !version_gt(tag, current) {
+        return None;
     }
 
-    let asset_url = find_platform_asset(&json).unwrap_or_default();
-    if asset_url.is_empty() {
-        return Ok(None);
-    }
-
-    Ok(Some(AppUpdateInfo {
+    let asset_url = find_platform_asset(json)?;
+    Some(AppUpdateInfo {
         version: tag.to_string(),
         asset_url,
-    }))
+        title: optional_string(json["name"].as_str()),
+        published_at: optional_string(json["published_at"].as_str()),
+        notes_by_locale: None,
+    })
+}
+
+async fn fetch_release_notes(
+    client: &reqwest::Client,
+    version: &str,
+) -> Option<AppReleaseNotesByLocale> {
+    let url = format!(
+        "https://raw.githubusercontent.com/{}/v{}/app-release-notes.json",
+        GITHUB_REPO, version
+    );
+    let resp = client
+        .get(url)
+        .header("User-Agent", "CL-GO-DASH")
+        .send()
+        .await
+        .ok()?;
+
+    if !resp.status().is_success() {
+        return None;
+    }
+    if let Some(length) = resp.content_length() {
+        if length > MAX_RELEASE_NOTES_BYTES as u64 {
+            return None;
+        }
+    }
+
+    let bytes = resp.bytes().await.ok()?;
+    parse_app_release_notes_json(&bytes, version)
+}
+
+fn optional_string(value: Option<&str>) -> Option<String> {
+    value
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .map(ToOwned::to_owned)
 }
 
 fn find_platform_asset(json: &serde_json::Value) -> Option<String> {
@@ -97,44 +141,16 @@ pub(crate) fn version_gt(remote: &str, local: &str) -> bool {
     false
 }
 
-#[cfg(test)]
-mod tests {
-    use serde_json::json;
-
-    use super::*;
-
-    #[test]
-    fn finds_linux_deb_when_appimage_is_also_present() {
-        let release = json!({
-            "assets": [
-                {
-                    "name": "CL-GO_0.9.1_amd64.AppImage",
-                    "browser_download_url": "https://example.invalid/app.AppImage"
-                },
-                {
-                    "name": "CL-GO_0.9.1_amd64.deb",
-                    "browser_download_url": "https://example.invalid/app.deb"
-                }
-            ]
-        });
-
-        assert_eq!(
-            find_asset_by_extension(&release, ".deb").as_deref(),
-            Some("https://example.invalid/app.deb")
-        );
-    }
-
-    #[test]
-    fn ignores_assets_with_partial_extension_matches() {
-        let release = json!({
-            "assets": [
-                {
-                    "name": "CL-GO_0.9.1_amd64.deb.sha256",
-                    "browser_download_url": "https://example.invalid/app.deb.sha256"
-                }
-            ]
-        });
-
-        assert!(find_asset_by_extension(&release, ".deb").is_none());
-    }
+fn is_safe_version(value: &str) -> bool {
+    !value.is_empty()
+        && value.len() <= 32
+        && !value.starts_with('.')
+        && !value.ends_with('.')
+        && value
+            .split('.')
+            .all(|part| !part.is_empty() && part.chars().all(|c| c.is_ascii_digit()))
 }
+
+#[cfg(test)]
+#[path = "app_update_tests.rs"]
+mod tests;

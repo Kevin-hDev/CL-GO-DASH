@@ -1,0 +1,60 @@
+{
+  "0.9.4": {
+    "de": [
+      "Die Kontextanzeige zeigt nun eine klare Aufschlüsselung direkt im Eingabefeld.",
+      "Chat-Steuerung, Sidebars, Icons und Dropdowns wurden optisch verfeinert.",
+      "Die Schriftgröße wird nun in Pixeln eingestellt und beim Start mit den Theme-Einstellungen angewendet.",
+      "Update-Benachrichtigungen öffnen jetzt kurze Versionshinweise mit besserem Glass-Hintergrund.",
+      "Office-Tools unterstützen nun reichere Excel-Formatierung sowie Word-Rich-Text und Styles.",
+      "Das Lesen von Office-Dokumenten und die Sicherheitsprüfungen wurden verbessert."
+    ],
+    "en": [
+      "Context usage now shows a clear breakdown inside the chat input ring.",
+      "Chat controls, sidebars, icons, and dropdowns have been visually refined.",
+      "Font size is now set in pixels and applies with theme settings at startup.",
+      "Update notifications now open short release notes with better glass styling.",
+      "Office tools now support richer Excel formatting plus Word rich text and styles.",
+      "Office document reading and safety checks have been improved."
+    ],
+    "es": [
+      "El uso del contexto ahora muestra un desglose claro en el anillo del campo de chat.",
+      "Los controles del chat, barras laterales, iconos y menús se han refinado visualmente.",
+      "El tamaño de fuente ahora se define en píxeles y se aplica al iniciar junto con el tema.",
+      "Las notificaciones de actualización ahora abren notas breves con mejor estilo glass.",
+      "Las herramientas Office ahora admiten más formato en Excel y texto enriquecido en Word.",
+      "La lectura de documentos Office y las comprobaciones de seguridad se han mejorado."
+    ],
+    "fr": [
+      "L'utilisation du contexte affiche maintenant un détail clair dans l'anneau du champ de chat.",
+      "Les contrôles du chat, les sidebars, les icônes et les menus ont été affinés visuellement.",
+      "La taille de police se règle maintenant en pixels et s'applique au démarrage avec le thème.",
+      "Les notifications d'update ouvrent maintenant des notes courtes avec un meilleur fond glass.",
+      "Les outils Office gèrent mieux le formatage Excel, le texte riche Word et les styles.",
+      "La lecture des documents Office et les contrôles de sécurité ont été améliorés."
+    ],
+    "it": [
+      "L'uso del contesto ora mostra un dettaglio chiaro nell'anello del campo chat.",
+      "Controlli della chat, sidebar, icone e menu sono stati rifiniti visivamente.",
+      "La dimensione del font ora si imposta in pixel e si applica all'avvio con il tema.",
+      "Le notifiche di aggiornamento ora aprono note brevi con uno stile glass migliore.",
+      "Gli strumenti Office ora supportano formattazione Excel più ricca, testo Word e stili.",
+      "La lettura dei documenti Office e i controlli di sicurezza sono stati migliorati."
+    ],
+    "ja": [
+      "コンテキスト使用量がチャット入力欄のリング内で明確に分解表示されるようになりました。",
+      "チャット操作、サイドバー、アイコン、ドロップダウンの見た目を調整しました。",
+      "フォントサイズはピクセルで設定でき、起動時にテーマ設定と一緒に適用されます。",
+      "更新通知で短いリリースノートを開けるようになり、glass 表現も改善しました。",
+      "Office ツールで Excel の詳細な書式設定と Word のリッチテキストやスタイルに対応しました。",
+      "Office ドキュメントの読み取りと安全チェックを改善しました。"
+    ],
+    "zh": [
+      "上下文用量现在会在聊天输入框圆环中显示清晰明细。",
+      "聊天控件、侧边栏、图标和下拉菜单的视觉效果已优化。",
+      "字体大小现在以像素设置，并会在启动时与主题设置一起应用。",
+      "更新通知现在可以展开简短版本说明，并改进了 glass 背景效果。",
+      "Office 工具现在支持更丰富的 Excel 格式，以及 Word 富文本和样式。",
+      "Office 文档读取和安全检查已改进。"
+    ]
+  }
+}

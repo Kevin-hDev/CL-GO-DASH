@@ -63,6 +63,13 @@ jobs:
       - name: Install npm dependencies
         run: npm ci
 
+      - name: Extract release notes
+        id: release_notes
+        shell: bash
+        env:
+          RELEASE_VERSION: ${{ inputs.version || github.ref_name }}
+        run: node scripts/app-release-notes.mjs "$RELEASE_VERSION"
+
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
         env:
@@ -72,7 +79,7 @@ jobs:
         with:
           tagName: ${{ inputs.version || github.ref_name }}
           releaseName: "CL-GO ${{ inputs.version || github.ref_name }}"
-          releaseBody: ""
+          releaseBody: ${{ steps.release_notes.outputs.body }}
           releaseDraft: false
           prerelease: false
           args: --target ${{ matrix.target }} --bundles ${{ matrix.bundles }}
