@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useClickOutside } from "@/hooks/use-click-outside";
 import { useKeyboard } from "@/hooks/use-keyboard";
 import { focusLocalListItem } from "@/hooks/use-local-list-navigation";
-import { MagnifyingGlass } from "@/components/ui/icons";
+import { CaretDown, MagnifyingGlass } from "@/components/ui/icons";
 import {
   useAvailableModels,
   type AvailableModel,
@@ -23,6 +23,7 @@ interface ModelSelectorProps {
   onSelect: (model: string, provider: string) => void;
   reasoningMode?: string | null;
   onReasoningModeChange: (mode: ReasoningMode) => void;
+  align?: "left" | "right";
 }
 
 export function ModelSelector({
@@ -31,6 +32,7 @@ export function ModelSelector({
   onSelect,
   reasoningMode,
   onReasoningModeChange,
+  align = "left",
 }: ModelSelectorProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -67,7 +69,11 @@ export function ModelSelector({
   };
 
   return (
-    <div ref={ref} style={{ position: "relative" }} data-keyboard-scope={open ? "local" : undefined}>
+    <div
+      ref={ref}
+      className={`ms-root${align === "right" ? " ms-root-align-right" : ""}`}
+      data-keyboard-scope={open ? "local" : undefined}
+    >
       <button
         type="button"
         onClick={() => setOpen(!open)}
@@ -84,10 +90,11 @@ export function ModelSelector({
         }}
         className={`ms-trigger${selectedModel ? "" : " ms-trigger-empty"}`}
       >
-        {selectedModel || t("agentLocal.selectModel")}
+        <span className="ms-trigger-label">{selectedModel || t("agentLocal.selectModel")}</span>
         {selectedReasoningLabel && selectedReasoningMode !== "off" && (
           <span className="ms-trigger-reasoning">{t(selectedReasoningLabel)}</span>
         )}
+        <CaretDown size={10} className="ms-trigger-caret" />
       </button>
       {open && (
         <div className={`ms-dropdown${showReasoningModes ? " ms-dropdown-with-reasoning" : ""}`}>

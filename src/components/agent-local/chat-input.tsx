@@ -177,17 +177,18 @@ export function ChatInput({
         />
         <ContextProgress used={contextUsed} max={contextMax} breakdown={contextBreakdown} />
         <PermissionModeSelector mode={permissionMode} onChange={onPermissionModeChange} />
+        {planModeEnabled && (
+          <PlanModeBadge onDisable={() => onPlanModeChange?.(false)} />
+        )}
+        <div className="chat-input-spacer" />
         <ModelSelector
           selectedModel={modelName}
           selectedProvider={providerName}
           onSelect={onModelChange}
           reasoningMode={reasoningMode}
           onReasoningModeChange={onReasoningModeChange}
+          align="right"
         />
-        {planModeEnabled && (
-          <PlanModeBadge onDisable={() => onPlanModeChange?.(false)} />
-        )}
-        <div className="chat-input-spacer" />
         <SendStopButton state={buttonState} onSend={handleSend} onStop={onStop} />
       </div>
     </div>
