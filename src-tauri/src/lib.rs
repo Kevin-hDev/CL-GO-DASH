@@ -174,6 +174,7 @@ pub fn run() {
             commands::update_parameters,
             // Agent Local — Chat + Sessions
             commands::chat_stream,
+            commands::estimate_context_hidden_usage,
             commands::cancel_agent_request,
             commands::list_agent_sessions,
             commands::get_agent_session,

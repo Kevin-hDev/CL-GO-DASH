@@ -10,6 +10,10 @@ pub fn estimate_chat_tokens(messages: &[ChatMessage]) -> usize {
     messages.iter().map(estimate_chat_message_tokens).sum()
 }
 
+pub fn estimate_text_tokens(input: &str) -> usize {
+    token_count_from_units(text_units(input))
+}
+
 pub fn estimate_agent_messages_tokens(messages: &[AgentMessage]) -> u32 {
     messages
         .iter()

@@ -1,5 +1,5 @@
 mod api;
-mod common;
+pub(crate) mod common;
 mod compress;
 mod gemma4_thinking_guard;
 mod ollama;

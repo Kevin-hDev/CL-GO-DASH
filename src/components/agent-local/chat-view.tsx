@@ -9,6 +9,7 @@ import { InteractiveChoicePanel } from "./interactive-choice-panel";
 import { ChatProjectControls } from "./chat-project-controls";
 import { useAgentChat } from "@/hooks/use-agent-chat";
 import { useContextProgress } from "@/hooks/use-context-progress";
+import { useContextUsage } from "@/hooks/use-context-usage";
 import { useFileDrop, type DroppedFile } from "@/hooks/use-file-drop";
 import { usePermissionMode } from "@/hooks/use-permission-mode";
 import { usePermissionRequests } from "@/hooks/use-permission-requests";
@@ -21,7 +22,6 @@ import { useSubagents } from "@/hooks/use-subagents";
 import { useSubagentSynthesis } from "@/hooks/use-subagent-synthesis";
 import { useChatActions } from "@/hooks/use-chat-actions";
 import { useAvailableModels } from "@/hooks/use-available-models";
-import { buildContextUsageBreakdown } from "@/hooks/context-usage-breakdown";
 import { PermissionDialog } from "./permission-dialog";
 import { TerminalPanel } from "@/components/terminal/terminal-panel";
 import type { useTerminal } from "@/hooks/use-terminal";
@@ -81,9 +81,13 @@ export function ChatView({
   const subagents = useSubagents(isSubagent ? undefined : sessionId);
   const fileDrop = useFileDrop();
   const context = useContextProgress(model, chat.sessionTokenCount, provider);
-  const contextUsage = useMemo(() => buildContextUsageBreakdown(chat.messages, { observedUsed: context.used }), [chat.messages, context.used]);
   const [preview, setPreview] = useState<DroppedFile | null>(null);
   const proj = useSessionProject(sessionId, projects, onAddProject, chat.messages.length > 0);
+  const contextUsage = useContextUsage({
+    sessionId, model, provider, messages: chat.messages, used: context.used,
+    workingDir: proj.selectedProject?.path, permissionMode: permMode.mode,
+    planMode: chat.planModeEnabled, supportsTools: selectedModelCaps?.supports_tools,
+  });
   const git = useGitBranch(proj.selectedProject?.path, sessionId);
   const fileOperations = useSessionFiles(chat.messages);
   useEffect(() => {
