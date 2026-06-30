@@ -228,6 +228,17 @@
     "working": "已工作 {{seconds}}s",
     "tools": "Tools",
     "tokens": "tokens",
+    "contextUsage": {
+      "title": "上下文窗口",
+      "categories": {
+        "messages": "消息",
+        "systemTools": "系统工具",
+        "mcpConnectors": "MCP / 连接器",
+        "skills": "Skills",
+        "metaContext": "元上下文",
+        "systemPrompt": "System prompt"
+      }
+    },
     "tps": "t/s",
     "fileReadError": "无法读取文件",
     "toolActivity": {
@@ -297,9 +308,12 @@
   },
   "permissionMode": {
     "title": "模式",
-    "chatLabel": "聊天",
-    "autoLabel": "自动权限",
-    "manualLabel": "手动权限",
+    "chatLabel": "聊天机器人",
+    "chatDescription": "聊天，不访问工具、文件或互联网",
+    "autoLabel": "完全访问",
+    "autoDescription": "不受限制地访问互联网和你电脑上的文件",
+    "manualLabel": "请求授权",
+    "manualDescription": "修改外部文件或使用互联网前始终先询问",
     "toggleHint": "切换模式（Shift+Tab）"
   },
   "permissionDialog": {

@@ -228,6 +228,17 @@
     "working": "Arbeitet seit {{seconds}}s",
     "tools": "Tools",
     "tokens": "tokens",
+    "contextUsage": {
+      "title": "Kontextfenster",
+      "categories": {
+        "messages": "Nachrichten",
+        "systemTools": "System-Tools",
+        "mcpConnectors": "MCP / Konnektoren",
+        "skills": "Skills",
+        "metaContext": "Meta-Kontext",
+        "systemPrompt": "System prompt"
+      }
+    },
     "tps": "t/s",
     "fileReadError": "Datei konnte nicht gelesen werden",
     "toolActivity": {
@@ -297,9 +308,12 @@
   },
   "permissionMode": {
     "title": "Modus",
-    "chatLabel": "Chat",
-    "autoLabel": "Automatische Berechtigungen",
-    "manualLabel": "Manuelle Berechtigungen",
+    "chatLabel": "Chatbot",
+    "chatDescription": "Chatten ohne Zugriff auf Werkzeuge, Dateien oder Internet",
+    "autoLabel": "Vollzugriff",
+    "autoDescription": "Uneingeschränkter Zugriff auf Internet und Dateien auf deinem Computer",
+    "manualLabel": "Autorisierung anfragen",
+    "manualDescription": "Immer fragen, bevor externe Dateien geändert oder das Internet genutzt wird",
     "toggleHint": "Modus wechseln (Shift+Tab)"
   },
   "permissionDialog": {

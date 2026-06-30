@@ -60,7 +60,7 @@
   position: relative;
   width: 100%;
   border-radius: 20px;
-  border: 1px solid var(--edge);
+  border: 0.5px solid var(--tooltip-border);
   background: var(--surface);
   display: flex;
   flex-direction: column;
@@ -168,10 +168,10 @@
 
 [data-theme="light"] .chat-input-bubble {
   background: rgba(215, 215, 220, 0.40);
-  border-color: transparent;
+  border-color: var(--tooltip-border);
 }
 
 [data-theme="dark"] .chat-input-bubble {
-  border-color: transparent;
+  border-color: var(--tooltip-border);
   background: var(--surface-glass);
 }

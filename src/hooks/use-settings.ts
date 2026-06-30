@@ -59,6 +59,28 @@ function loadSidebarExpand(): boolean {
   return saved === null ? true : saved === "true";
 }
 
+function applyFontSize(fontSize: FontSize) {
+  document.documentElement.style.fontSize = `${(fontSize / 100) * FONT_BASE_PX}px`;
+  localStorage.setItem("clgo-font-size", String(fontSize));
+}
+
+function applyFontFamily(fontFamilyId: FontFamilyId) {
+  const fontFamily = FONT_FAMILIES.find((f) => f.id === fontFamilyId)!;
+  document.documentElement.style.setProperty("--font-sans", fontFamily.value);
+  localStorage.setItem("clgo-font-family", fontFamilyId);
+}
+
+function applyCodeTheme(codeThemeId: CodeThemeId) {
+  document.documentElement.setAttribute("data-code-theme", codeThemeId);
+  localStorage.setItem("clgo-code-theme", codeThemeId);
+}
+
+export function applyStoredSettings() {
+  applyFontSize(loadFontSize());
+  applyFontFamily(loadFontFamily());
+  applyCodeTheme(loadCodeTheme());
+}
+
 export function useSettings() {
   const [fontSize, setFontSizeState] = useState<FontSize>(loadFontSize);
   const [fontFamilyId, setFontFamilyIdState] = useState<FontFamilyId>(loadFontFamily);
@@ -68,19 +90,15 @@ export function useSettings() {
   const fontFamily = FONT_FAMILIES.find((f) => f.id === fontFamilyId)!;
 
   useEffect(() => {
-    // Base 18px (au lieu des 16px navigateur) × pourcentage du réglage.
-    document.documentElement.style.fontSize = `${(fontSize / 100) * FONT_BASE_PX}px`;
-    localStorage.setItem("clgo-font-size", String(fontSize));
+    applyFontSize(fontSize);
   }, [fontSize]);
 
   useEffect(() => {
-    document.documentElement.style.setProperty("--font-sans", fontFamily.value);
-    localStorage.setItem("clgo-font-family", fontFamilyId);
-  }, [fontFamilyId, fontFamily.value]);
+    applyFontFamily(fontFamilyId);
+  }, [fontFamilyId]);
 
   useEffect(() => {
-    document.documentElement.setAttribute("data-code-theme", codeThemeId);
-    localStorage.setItem("clgo-code-theme", codeThemeId);
+    applyCodeTheme(codeThemeId);
   }, [codeThemeId]);
 
   const setFontSize = useCallback((size: FontSize) => setFontSizeState(size), []);

@@ -227,6 +227,17 @@
     "working": "En cours depuis {{seconds}}s",
     "tools": "Outils",
     "tokens": "tokens",
+    "contextUsage": {
+      "title": "Fenêtre de contexte",
+      "categories": {
+        "messages": "Messages",
+        "systemTools": "Outils système",
+        "mcpConnectors": "MCP / connecteurs",
+        "skills": "Skills",
+        "metaContext": "Meta contexte",
+        "systemPrompt": "System prompt"
+      }
+    },
     "tps": "t/s",
     "fileReadError": "Impossible de lire le fichier",
     "toolActivity": {
@@ -296,9 +307,12 @@
   },
   "permissionMode": {
     "title": "Mode",
-    "chatLabel": "Chat",
-    "autoLabel": "Auto permissions",
-    "manualLabel": "Manuel permissions",
+    "chatLabel": "Chatbot",
+    "chatDescription": "Discuter sans accès aux outils, aux fichiers ou à Internet",
+    "autoLabel": "Accès complet",
+    "autoDescription": "Accès non restreint à Internet et aux fichiers de votre ordinateur",
+    "manualLabel": "Demander l’autorisation",
+    "manualDescription": "Toujours demander avant de modifier les fichiers externes et d’utiliser Internet",
     "toggleHint": "Changer de mode (Shift+Tab)"
   },
   "permissionDialog": {

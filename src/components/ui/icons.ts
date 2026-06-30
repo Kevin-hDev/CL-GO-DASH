@@ -14,6 +14,7 @@ export {
   Copy,
   Check,
   Warning,
+  ShieldWarning,
   ArrowsClockwise,
   Gear,
   X,
@@ -52,4 +53,5 @@ export {
   ChatTeardropDots,
   Hash,
   ChartLineUp,
+  Brain,
 } from "@phosphor-icons/react";

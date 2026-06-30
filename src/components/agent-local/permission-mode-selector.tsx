@@ -1,6 +1,6 @@
 import { useMemo, useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { CaretDown, Check } from "@/components/ui/icons";
+import { CaretDown, ChatCircleDots, Check, Hand, ShieldWarning } from "@/components/ui/icons";
 import type { PermissionMode } from "@/hooks/use-permission-mode";
 import { focusLocalListItem, useLocalListNavigation } from "@/hooks/use-local-list-navigation";
 import "./permission-mode-selector.css";
@@ -75,7 +75,7 @@ export function PermissionModeSelector({ mode, onChange }: Props) {
     <div className="perm-mode-root" ref={rootRef} data-keyboard-scope={open ? "local" : undefined}>
       <button
         type="button"
-        className="perm-mode-trigger"
+        className={`perm-mode-trigger perm-mode-trigger-${mode}`}
         onClick={() => setOpen((v) => !v)}
         onKeyDown={(event) => {
           if (!open && (event.key === "Enter" || event.key === " " || event.key === "ArrowDown")) {
@@ -86,41 +86,63 @@ export function PermissionModeSelector({ mode, onChange }: Props) {
         }}
         title={t("permissionMode.toggleHint")}
       >
+        <ModeIcon mode={mode} className="perm-mode-trigger-icon" size={18} />
         <span className={`perm-mode-text perm-mode-${mode}`}>{label}</span>
         <CaretDown size={10} className="perm-mode-caret" />
       </button>
 
       {open && (
         <div className="perm-mode-dropdown" role="menu" tabIndex={-1} onKeyDown={listProps.onKeyDown}>
-          {MODES.map((m, i) => {
+          {MODES.map((m) => {
             const navId = modeNavId(m);
             return (
-            <button
-              key={m}
-              type="button"
-              role="menuitem"
-              className="perm-mode-option"
-              ref={getItemRef(navId)}
-              tabIndex={isActive(navId) ? 0 : -1}
-              data-local-nav-item="true"
-              data-local-nav-active={isActive(navId) ? "true" : undefined}
-              onFocus={() => activate(navId)}
-              onMouseEnter={() => activate(navId)}
-              onClick={() => { onChange(m); setOpen(false); }}
-            >
-              <span className={`perm-mode-option-label perm-mode-${m}`}>
-                {t(`permissionMode.${m}Label`)}
-              </span>
-              <span className="perm-mode-option-right">
-                {m === mode && <Check size={12} />}
-                <span className="perm-mode-option-num">{i + 1}</span>
-              </span>
-            </button>
-          ); })}
+              <button
+                key={m}
+                type="button"
+                role="menuitem"
+                className={`perm-mode-option perm-mode-option-${m}`}
+                ref={getItemRef(navId)}
+                tabIndex={isActive(navId) ? 0 : -1}
+                data-local-nav-item="true"
+                data-local-nav-active={isActive(navId) ? "true" : undefined}
+                onFocus={() => activate(navId)}
+                onMouseEnter={() => activate(navId)}
+                onClick={() => { onChange(m); setOpen(false); }}
+              >
+                <ModeIcon mode={m} />
+                <span className="perm-mode-option-copy">
+                  <span className={`perm-mode-option-label perm-mode-${m}`}>
+                    {t(`permissionMode.${m}Label`)}
+                  </span>
+                  <span className="perm-mode-option-description">
+                    {t(`permissionMode.${m}Description`)}
+                  </span>
+                </span>
+                <span className="perm-mode-option-right">
+                  {m === mode && <Check size={18} />}
+                </span>
+              </button>
+            );
+          })}
         </div>
       )}
     </div>
   );
+}
+
+function ModeIcon({
+  mode,
+  className = "perm-mode-option-icon",
+  size = 22,
+}: {
+  mode: PermissionMode;
+  className?: string;
+  size?: number;
+}) {
+  const props = { size, weight: "regular" as const, className };
+  if (mode === "chat") return <ChatCircleDots {...props} />;
+  if (mode === "manual") return <Hand {...props} />;
+  return <ShieldWarning {...props} />;
 }
 
 function modeNavId(mode: PermissionMode) {

@@ -1,7 +1,7 @@
 .window-toolbar {
   position: fixed;
-  top: 4px;
-  left: 76px;
+  top: 6px;
+  left: 78px;
   display: flex;
   align-items: center;
   gap: 0px;
@@ -11,12 +11,12 @@
 }
 
 .window-toolbar.is-mac {
-  top: 6px;
-  left: 78px;
+  top: 8px;
+  left: 80px;
 }
 
 .is-fullscreen.sidebar-hidden .window-toolbar {
-  left: 8px;
+  left: 10px;
 }
 
 .toolbar-btn {

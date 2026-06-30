@@ -1,7 +1,7 @@
 .window-controls {
   position: fixed;
-  top: 6px;
-  left: 13px;
+  top: 8px;
+  left: 15px;
   display: flex;
   align-items: center;
   gap: 8px;

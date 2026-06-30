@@ -1,4 +1,13 @@
+.ms-root {
+  position: relative;
+  min-width: 0;
+}
+
 .ms-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: min(220px, 40vw);
   font-size: var(--text-xs);
   color: var(--ink-faint);
   background: none;
@@ -13,9 +22,31 @@
   transition: border-color 120ms ease, background-color 120ms ease;
 }
 
-.ms-trigger:hover {
-  border-color: var(--edge);
-  background: var(--surface);
+.ms-trigger-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ms-trigger-caret {
+  flex-shrink: 0;
+  color: var(--ink-faint);
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.ms-trigger:hover .ms-trigger-caret,
+.ms-trigger:focus-visible .ms-trigger-caret {
+  opacity: 1;
+}
+
+.ms-trigger:hover,
+.ms-trigger:focus-visible {
+  border-color: transparent;
+  background: var(--select-bg);
+  color: var(--select-text);
+  outline: none;
 }
 
 .ms-trigger-empty {
@@ -25,8 +56,16 @@
 }
 
 .ms-trigger-reasoning {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
   margin-left: 4px;
   color: var(--select-text);
+  flex-shrink: 0;
+}
+
+.ms-trigger-reasoning-icon {
+  flex-shrink: 0;
 }
 
 .ms-dropdown {
@@ -46,6 +85,11 @@
   overflow: hidden;
   backdrop-filter: var(--popover-backdrop-filter, none);
   -webkit-backdrop-filter: var(--popover-backdrop-filter, none);
+}
+
+.ms-root-align-right .ms-dropdown {
+  right: 0;
+  left: auto;
 }
 
 .ms-dropdown-with-reasoning {

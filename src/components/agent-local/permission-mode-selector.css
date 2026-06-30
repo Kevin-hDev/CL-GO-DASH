@@ -19,9 +19,11 @@
   transition: border-color 120ms ease, background-color 120ms ease;
 }
 
-.perm-mode-trigger:hover {
-  border-color: var(--edge);
-  background: var(--surface);
+.perm-mode-trigger:hover,
+.perm-mode-trigger:focus-visible {
+  border-color: transparent;
+  background: var(--select-bg);
+  outline: none;
 }
 
 .perm-mode-caret {
@@ -30,7 +32,21 @@
   transition: opacity 120ms ease;
 }
 
-.perm-mode-trigger:hover .perm-mode-caret { opacity: 1; }
+.perm-mode-trigger-auto .perm-mode-caret {
+  color: var(--pulse);
+}
+
+.perm-mode-trigger-icon {
+  flex-shrink: 0;
+  color: var(--ink);
+}
+
+.perm-mode-trigger-auto .perm-mode-trigger-icon {
+  color: var(--pulse);
+}
+
+.perm-mode-trigger:hover .perm-mode-caret,
+.perm-mode-trigger:focus-visible .perm-mode-caret { opacity: 1; }
 
 .perm-mode-text {
   font-weight: 500;
@@ -38,22 +54,22 @@
 }
 
 .perm-mode-auto {
-  color: #ea580c;
+  color: var(--pulse);
 }
 
 .perm-mode-manual {
-  color: var(--signal-warning);
+  color: var(--ink);
 }
 
 .perm-mode-chat {
-  color: #4A9EE8;
+  color: var(--ink);
 }
 
 .perm-mode-dropdown {
   position: absolute;
   bottom: calc(100% + 6px);
   left: 0;
-  min-width: 220px;
+  width: min(620px, calc(100vw - 32px));
   background: var(--popover-bg, var(--shell));
   border: 1px solid var(--edge);
   border-radius: var(--radius-md);
@@ -70,10 +86,11 @@
 
 .perm-mode-option {
   width: 100%;
-  display: flex;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) 24px;
   align-items: center;
-  justify-content: space-between;
-  padding: 6px 8px;
+  gap: 12px;
+  padding: 10px 12px;
   border: none;
   background: transparent;
   cursor: pointer;
@@ -86,17 +103,42 @@
 .perm-mode-option:hover,
 .perm-mode-option[data-local-nav-active="true"] { background: var(--select-bg); }
 
-.perm-mode-option-label { font-weight: 500; }
+.perm-mode-option-icon {
+  color: var(--ink-muted);
+}
+
+.perm-mode-option-copy {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.perm-mode-option-label {
+  color: var(--ink);
+  font-size: var(--text-base);
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+.perm-mode-option-description {
+  overflow: hidden;
+  color: var(--ink-faint);
+  font-size: var(--text-sm);
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.perm-mode-option-auto .perm-mode-option-icon,
+.perm-mode-option-auto .perm-mode-option-label {
+  color: var(--pulse);
+}
 
 .perm-mode-option-right {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  color: var(--ink-faint);
+  color: var(--ink-muted);
   font-size: var(--text-xs);
-}
-
-.perm-mode-option-num {
-  min-width: 14px;
-  text-align: right;
 }

@@ -228,6 +228,17 @@
     "working": "作業中 {{seconds}}秒",
     "tools": "Tools",
     "tokens": "tokens",
+    "contextUsage": {
+      "title": "コンテキストウィンドウ",
+      "categories": {
+        "messages": "メッセージ",
+        "systemTools": "システムツール",
+        "mcpConnectors": "MCP / コネクタ",
+        "skills": "Skills",
+        "metaContext": "メタコンテキスト",
+        "systemPrompt": "System prompt"
+      }
+    },
     "tps": "t/s",
     "fileReadError": "ファイルを読み取れませんでした",
     "toolActivity": {
@@ -297,9 +308,12 @@
   },
   "permissionMode": {
     "title": "モード",
-    "chatLabel": "チャット",
-    "autoLabel": "自動許可",
-    "manualLabel": "手動許可",
+    "chatLabel": "チャットボット",
+    "chatDescription": "ツール、ファイル、インターネットにアクセスせずに会話します",
+    "autoLabel": "フルアクセス",
+    "autoDescription": "インターネットとコンピューター上のファイルへ制限なくアクセスします",
+    "manualLabel": "許可を求める",
+    "manualDescription": "外部ファイルを変更したりインターネットを使う前に必ず確認します",
     "toggleHint": "モードを切り替え（Shift+Tab）"
   },
   "permissionDialog": {
