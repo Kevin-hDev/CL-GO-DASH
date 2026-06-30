@@ -88,10 +88,10 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
               "transition-all duration-200 ease-out",
             )}
             style={{
-              paddingTop: 5,
-              paddingBottom: 5,
-              marginLeft: 9,
-              marginRight: 9,
+              paddingTop: "0.28rem",
+              paddingBottom: "0.28rem",
+              marginLeft: "0.5rem",
+              marginRight: "0.5rem",
               borderRadius: "var(--radius-md)",
               background: activeTab === item.id ? "var(--surface-hover)" : undefined,
             }}
@@ -116,9 +116,9 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
             ) : null}
             <span
               className={cn(
-                "text-sm text-[var(--ink-muted)]",
+                "sb-nav-label text-sm text-[var(--ink-muted)]",
                 "w-0 overflow-hidden opacity-0",
-                "group-hover/sb:w-auto group-hover/sb:overflow-visible group-hover/sb:opacity-100",
+                "group-hover/sb:opacity-100",
                 "transition-opacity duration-150",
                 activeTab === item.id && "text-[var(--ink)] font-medium",
               )}
@@ -144,11 +144,11 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
           "transition-all duration-200 ease-out",
         )}
         style={{
-          paddingTop: 5,
-          paddingBottom: 5,
-          marginLeft: 9,
-          marginRight: 9,
-          marginBottom: 12,
+          paddingTop: "0.28rem",
+          paddingBottom: "0.28rem",
+          marginLeft: "0.5rem",
+          marginRight: "0.5rem",
+          marginBottom: "0.67rem",
           borderRadius: "var(--radius-md)",
           background: activeTab === "settings" ? "var(--surface-hover)" : undefined,
         }}
@@ -162,9 +162,9 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
           )}
         />
         <span className={cn(
-          "text-sm text-[var(--ink-muted)]",
+          "sb-nav-label text-sm text-[var(--ink-muted)]",
           "w-0 overflow-hidden opacity-0",
-          "group-hover/sb:w-auto group-hover/sb:overflow-visible group-hover/sb:opacity-100",
+          "group-hover/sb:opacity-100",
           "transition-opacity duration-150",
           activeTab === "settings" && "text-[var(--ink)] font-medium",
         )}>
