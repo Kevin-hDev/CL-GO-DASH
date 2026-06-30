@@ -15,9 +15,17 @@
   border-color: transparent;
 }
 
-[data-theme="dark"] .settings-card:has(.ss-wrap.open) {
-  z-index: 10;
+.settings-card:has(.ss-wrap.open),
+.settings-card:has(.cs-dropdown) {
+  z-index: 1000;
   position: relative;
+  overflow: visible;
+}
+
+[data-theme="dark"] .settings-card:has(.ss-wrap.open),
+[data-theme="dark"] .settings-card:has(.cs-dropdown) {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .settings-row {

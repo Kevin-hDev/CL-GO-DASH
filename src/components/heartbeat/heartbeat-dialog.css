@@ -30,6 +30,11 @@
   border-color: transparent;
 }
 
+[data-theme="dark"] .wk-dialog:has(.cs-dropdown) {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
 .wk-dialog-header {
   display: flex;
   align-items: center;
