@@ -190,6 +190,13 @@
     "delete": "Supprimer",
     "loading": "Chargement…"
   },
+  "sessionAge": {
+    "minute": "{{count}} min",
+    "hour": "{{count}}H",
+    "day": "{{count}} j",
+    "month": "{{count}}M",
+    "year": "{{count}} ans"
+  },
   "agentLocal": {
     "title": "Conversations",
     "newSession": "Nouvelle session",

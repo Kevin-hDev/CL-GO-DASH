@@ -78,6 +78,25 @@
   -webkit-mask-image: linear-gradient(to right, black calc(100% - 16px), transparent);
 }
 
+.conv-session-tail {
+  position: relative;
+  display: flex;
+  flex: 0 0 3rem;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 3rem;
+  height: var(--nav-item-height);
+}
+
+.conv-session-age {
+  color: var(--ink-faint);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  white-space: nowrap;
+  transition: opacity var(--ease-smooth);
+}
+
 .conv-gw-badge {
   font-size: 9px;
   font-weight: 600;
@@ -182,7 +201,8 @@
 
 /* Session menu button (three dots) */
 .conv-session-menu-btn {
-  flex-shrink: 0;
+  position: absolute;
+  right: 0;
   padding: 2px;
   border-radius: var(--radius-sm);
   color: var(--ink-faint);
@@ -193,6 +213,11 @@
   transition: opacity var(--ease-smooth);
   display: flex;
   align-items: center;
+  justify-content: center;
+}
+
+.conv-item:hover .conv-session-age {
+  opacity: 0;
 }
 
 .conv-item:hover .conv-session-menu-btn {

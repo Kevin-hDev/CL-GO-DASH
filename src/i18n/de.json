@@ -191,6 +191,13 @@
     "delete": "Löschen",
     "loading": "Wird geladen…"
   },
+  "sessionAge": {
+    "minute": "{{count}} Min",
+    "hour": "{{count}} Std",
+    "day": "{{count}} T",
+    "month": "{{count}} M",
+    "year": "{{count}} J"
+  },
   "agentLocal": {
     "title": "Gespräche",
     "newSession": "Neue Sitzung",

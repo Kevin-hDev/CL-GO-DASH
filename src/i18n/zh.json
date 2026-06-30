@@ -191,6 +191,13 @@
     "delete": "删除",
     "loading": "加载中…"
   },
+  "sessionAge": {
+    "minute": "{{count}}分钟",
+    "hour": "{{count}}小时",
+    "day": "{{count}}天",
+    "month": "{{count}}月",
+    "year": "{{count}}年"
+  },
   "agentLocal": {
     "title": "对话",
     "newSession": "新建会话",

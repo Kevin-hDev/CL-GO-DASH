@@ -191,6 +191,13 @@
     "delete": "Eliminar",
     "loading": "Cargando…"
   },
+  "sessionAge": {
+    "minute": "{{count}} min",
+    "hour": "{{count}}h",
+    "day": "{{count}} d",
+    "month": "{{count}} mes",
+    "year": "{{count}} a"
+  },
   "agentLocal": {
     "title": "Conversaciones",
     "newSession": "Nueva sesión",

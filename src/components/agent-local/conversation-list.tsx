@@ -9,6 +9,7 @@ import { ConversationSessionItem } from "./conversation-session-item";
 import { CollapsePanel } from "./collapse-panel";
 import { ConversationSectionToggle } from "./conversation-section-toggle";
 import { useKeyboard } from "@/hooks/use-keyboard";
+import { useMinuteNow } from "@/hooks/use-minute-now";
 import { useProjectDrag } from "@/hooks/use-project-drag";
 import type { AgentSessionMeta, Project } from "@/types/agent";
 import { idMatch } from "@/lib/utils";
@@ -42,6 +43,7 @@ export function ConversationList({
   const [projectsCollapsed, setProjectsCollapsed] = useState(false);
   const [collapsedProjects, setCollapsedProjects] = useState<Set<string>>(new Set());
   const [discussionsCollapsed, setDiscussionsCollapsed] = useState(false);
+  const nowMs = useMinuteNow();
   const toggleProject = useCallback((id: string) => {
     setCollapsedProjects((prev) => {
       const next = new Set(prev);
@@ -146,6 +148,7 @@ export function ConversationList({
                     onGrab={drag.onGrab}
                     collapsed={collapsedProjects.has(p.id)}
                     onToggleCollapse={() => toggleProject(p.id)}
+                    nowMs={nowMs}
                   />
                 );
               })}
@@ -175,6 +178,7 @@ export function ConversationList({
                     onRenameSubmit={handleRenameSubmit}
                     onCancelRename={() => setRenamingId(null)}
                     onMenu={handleSessionMenu}
+                    nowMs={nowMs}
                   />
                 );
               })}

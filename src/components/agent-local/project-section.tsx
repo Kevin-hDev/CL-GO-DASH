@@ -30,6 +30,7 @@ interface ProjectSectionProps {
   isDragging: boolean;
   collapsed: boolean;
   onToggleCollapse: () => void;
+  nowMs: number;
 }
 
 export function ProjectSection({
@@ -37,6 +38,7 @@ export function ProjectSection({
   onSelect, onNewSession, onRenameProject, onDeleteProject,
   onOpenFolder, onRenameSession, onDeleteSession,
   onGrab, isDragging, collapsed, onToggleCollapse,
+  nowMs,
 }: ProjectSectionProps) {
   const { t } = useTranslation();
   const [ctx, setCtx] = useState<{ x: number; y: number } | null>(null);
@@ -139,6 +141,7 @@ export function ProjectSection({
               onRenameSubmit={handleSessionRename}
               onCancelRename={() => setRenamingSessionId(null)}
               onMenu={handleSessionMenu}
+              nowMs={nowMs}
             />
           );
         })}
