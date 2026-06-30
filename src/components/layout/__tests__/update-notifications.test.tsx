@@ -5,6 +5,7 @@ import { UpdateNotifications } from "../update-notifications";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
+    i18n: { language: "fr" },
     t: (key: string, opts?: Record<string, string>) => {
       if (key === "updates.version") return `Version ${opts?.version ?? ""}`;
       if (key === "updates.releaseNotesTitle") return `Notes ${opts?.version ?? ""}`;
@@ -55,7 +56,10 @@ describe("UpdateNotifications", () => {
         appUpdate={{
           version: "0.9.4",
           assetUrl: "https://example.invalid/app.dmg",
-          notes: "### Changes\n- Context details\n",
+          notesByLocale: {
+            en: ["Context details."],
+            fr: ["Détails du contexte."],
+          },
         }}
       />,
     );
@@ -65,6 +69,7 @@ describe("UpdateNotifications", () => {
 
     fireEvent.click(toggle);
     expect(screen.getByLabelText("updates.hideDetails")).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByText("Détails du contexte.")).toBeTruthy();
 
     fireEvent.click(screen.getByLabelText("updates.hideDetails"));
     expect(screen.getByLabelText("updates.showDetails")).toHaveAttribute("aria-expanded", "false");
@@ -77,7 +82,7 @@ describe("UpdateNotifications", () => {
         appUpdate={{
           version: "0.9.4",
           assetUrl: "https://example.invalid/app.dmg",
-          notes: null,
+          notesByLocale: null,
         }}
       />,
     );

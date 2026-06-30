@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { ThemedIcon } from "@/components/ui/themed-icon";
 import { CaretDown } from "@/components/ui/icons";
 import type { PullingState } from "@/hooks/use-update-checker";
-import { parseReleaseNotes } from "./update-release-notes";
+import { selectReleaseNotes, type ReleaseNotesByLocale } from "./update-release-notes";
 import logoIcon from "@/assets/logo.png";
 import ollamaDark from "@/assets/ollama.png";
 import ollamaLight from "@/assets/ollama-light.png";
@@ -15,7 +15,8 @@ export interface ItemData {
   version?: string;
   title?: string | null;
   publishedAt?: string | null;
-  notes?: string | null;
+  notesByLocale?: ReleaseNotesByLocale | null;
+  language?: string;
   fullName?: string;
   assetUrl?: string;
 }
@@ -46,7 +47,10 @@ export function BubbleItem({
   const delay = closing
     ? (totalCount - 1 - index) * 80
     : index * 80;
-  const releaseNotes = useMemo(() => parseReleaseNotes(item.notes), [item.notes]);
+  const releaseNotes = useMemo(
+    () => selectReleaseNotes(item.notesByLocale, item.language),
+    [item.notesByLocale, item.language],
+  );
   const canExpand = item.type === "app" && releaseNotes.length > 0;
 
   const isOllamaPulling = pulling
@@ -144,18 +148,13 @@ export function BubbleItem({
                 {releaseDate && <span className="update-release-date">{releaseDate}</span>}
               </div>
             )}
-            {releaseNotes.map((section, sectionIndex) => (
-              <section className="update-release-section" key={`${section.title ?? "notes"}-${sectionIndex}`}>
-                {section.title && <h3>{section.title}</h3>}
-                {section.items.length > 0 && (
-                  <ul>
-                    {section.items.map((itemText, itemIndex) => (
-                      <li key={`${itemText}-${itemIndex}`}>{itemText}</li>
-                    ))}
-                  </ul>
-                )}
-              </section>
-            ))}
+            <section className="update-release-section">
+              <ul>
+                {releaseNotes.map((itemText, itemIndex) => (
+                  <li key={`${itemText}-${itemIndex}`}>{itemText}</li>
+                ))}
+              </ul>
+            </section>
           </div>
         </div>
       )}

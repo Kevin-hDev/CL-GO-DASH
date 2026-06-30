@@ -29,11 +29,11 @@ export function UpdateNotifications({
   onPullModel, onDownloadApp, onUpdateOllamaBinary,
   anchorLeft,
 }: UpdateNotificationsProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [closing, setClosing] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
 
-  const items = buildItems(t, appUpdate, ollamaBinaryUpdate, ollamaUpdates);
+  const items = buildItems(t, i18n.language, appUpdate, ollamaBinaryUpdate, ollamaUpdates);
   const maxDelay = items.length * 80;
   const closeDelay = maxDelay + 400;
 
@@ -85,6 +85,7 @@ export function UpdateNotifications({
 
 function buildItems(
   t: (k: string, opts?: Record<string, string>) => string,
+  language: string,
   app: AppUpdate | null,
   binary: OllamaBinaryUpdate | null,
   models: OllamaModelUpdate[],
@@ -99,7 +100,8 @@ function buildItems(
       version: app.version,
       title: app.title,
       publishedAt: app.publishedAt,
-      notes: app.notes,
+      notesByLocale: app.notesByLocale,
+      language,
       assetUrl: app.assetUrl,
     });
   }

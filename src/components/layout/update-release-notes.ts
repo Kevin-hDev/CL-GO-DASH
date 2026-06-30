@@ -1,63 +1,29 @@
-export interface ReleaseNoteSection {
-  title: string | null;
-  items: string[];
-}
+export type ReleaseNotesByLocale = Partial<Record<string, string[]>>;
 
-const MAX_SECTIONS = 3;
+const FALLBACK_LOCALE = "en";
 const MAX_ITEMS = 6;
 const MAX_TEXT_LENGTH = 180;
 
-export function parseReleaseNotes(notes?: string | null): ReleaseNoteSection[] {
-  if (!notes?.trim()) return [];
+export function selectReleaseNotes(
+  notesByLocale?: ReleaseNotesByLocale | null,
+  language = FALLBACK_LOCALE,
+): string[] {
+  if (!notesByLocale) return [];
 
-  const sections: ReleaseNoteSection[] = [];
-  let current: ReleaseNoteSection | null = null;
-  let itemCount = 0;
+  const locale = normalizeLocale(language);
+  const items =
+    notesByLocale[locale] ??
+    notesByLocale[locale.split("-")[0]] ??
+    notesByLocale[FALLBACK_LOCALE] ??
+    [];
 
-  for (const raw of notes.split(/\r?\n/)) {
-    const line = raw.trim();
-    if (!line || line === "---") continue;
-
-    const heading = readHeading(line);
-    if (heading) {
-      if (sections.length >= MAX_SECTIONS) {
-        current = null;
-        continue;
-      }
-      current = { title: cleanText(heading), items: [] };
-      sections.push(current);
-      continue;
-    }
-
-    const bullet = readBullet(line) ?? line;
-    if (!current) {
-      if (sections.length >= MAX_SECTIONS) continue;
-      current = { title: null, items: [] };
-      sections.push(current);
-    }
-    if (itemCount >= MAX_ITEMS) continue;
-    const text = cleanText(bullet);
-    if ([...text].length > MAX_TEXT_LENGTH) continue;
-    current.items.push(text);
-    itemCount += 1;
-  }
-
-  return sections.filter((section) => section.items.length > 0);
+  return items
+    .filter((item): item is string => typeof item === "string")
+    .filter((item) => item.trim() === item && item.length > 0)
+    .filter((item) => [...item].length <= MAX_TEXT_LENGTH)
+    .slice(0, MAX_ITEMS);
 }
 
-function readHeading(line: string): string | null {
-  const match = /^(?:#{2,3})\s+(.+)$/.exec(line);
-  return match?.[1]?.trim() || null;
-}
-
-function readBullet(line: string): string | null {
-  const match = /^[-*]\s+(.+)$/.exec(line);
-  return match?.[1]?.trim() || null;
-}
-
-function cleanText(text: string): string {
-  return text
-    .replace(/\*\*/g, "")
-    .replace(/`/g, "")
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1");
+function normalizeLocale(language: string): string {
+  return language.trim().toLowerCase().replace(/_/g, "-") || FALLBACK_LOCALE;
 }

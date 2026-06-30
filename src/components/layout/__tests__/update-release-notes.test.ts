@@ -1,40 +1,35 @@
 import { describe, expect, it } from "vitest";
-import { parseReleaseNotes } from "../update-release-notes";
+import { selectReleaseNotes } from "../update-release-notes";
 
-describe("parseReleaseNotes", () => {
-  it("lit les sections et bullets courtes", () => {
-    const sections = parseReleaseNotes(`
-### Features
-- **Context usage** details
-- \`Font size\` in pixels
-
-### Fixes
-- Settings apply at startup
-`);
-
-    expect(sections).toEqual([
+describe("selectReleaseNotes", () => {
+  it("sélectionne les notes dans la langue active", () => {
+    const notes = selectReleaseNotes(
       {
-        title: "Features",
-        items: ["Context usage details", "Font size in pixels"],
+        en: ["English note."],
+        fr: ["Note française."],
       },
-      {
-        title: "Fixes",
-        items: ["Settings apply at startup"],
-      },
-    ]);
+      "fr",
+    );
+
+    expect(notes).toEqual(["Note française."]);
+  });
+
+  it("revient à l'anglais si la langue active manque", () => {
+    const notes = selectReleaseNotes({ en: ["English fallback."] }, "de");
+
+    expect(notes).toEqual(["English fallback."]);
   });
 
   it("limite les notes sans tronquer les phrases", () => {
-    const notes = Array.from({ length: 10 }, (_, i) => `- Item ${i}`).join("\n");
-    const sections = parseReleaseNotes(notes);
+    const notes = selectReleaseNotes({
+      en: Array.from({ length: 10 }, (_, i) => `Item ${i}.`),
+    });
 
-    expect(sections[0]?.items).toHaveLength(6);
-    expect(sections[0]?.items.join("\n")).not.toContain("…");
+    expect(notes).toHaveLength(6);
+    expect(notes.join("\n")).not.toContain("…");
   });
 
   it("ignore les lignes trop longues", () => {
-    const sections = parseReleaseNotes(`- ${"x".repeat(181)}`);
-
-    expect(sections).toEqual([]);
+    expect(selectReleaseNotes({ en: [`${"x".repeat(181)}.`] })).toEqual([]);
   });
 });

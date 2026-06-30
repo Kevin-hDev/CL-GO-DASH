@@ -9,6 +9,7 @@
 - Font size is now configured directly in pixels with safer UI limits.
 - Settings now apply correctly as soon as the app starts.
 - Update notifications can now show short release notes.
+- Office tools now support richer Excel formatting, Word rich text, and better document safety.
 
 ### Changes
 

@@ -13,7 +13,7 @@ export interface AppUpdate {
   assetUrl: string;
   title?: string | null;
   publishedAt?: string | null;
-  notes?: string | null;
+  notesByLocale?: Record<string, string[]> | null;
 }
 
 interface DownloadProgress {
