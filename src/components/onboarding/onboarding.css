@@ -8,7 +8,7 @@
 }
 
 .ob-shell.os-mac {
-  --popover-bg: var(--popover-surface);
+  --popover-bg: var(--surface-glass);
   --popover-backdrop-filter: blur(20px);
 }
 
