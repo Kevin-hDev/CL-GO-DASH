@@ -52,7 +52,7 @@ export function PersonalityList({
               onClick={() => onSelect(f.path)}
               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(f.path); } }}
             >
-              <div className="pers-icon"><FileText size={16} weight="duotone" /></div>
+              <div className="pers-icon"><FileText size="var(--icon-md)" weight="duotone" /></div>
               <div className="pers-item-body">
                 <div className="pers-item-name">{f.name}</div>
                 <div className="pers-item-desc">{f.description}</div>

@@ -52,7 +52,7 @@ export function ChannelsBrowseModal({ onPick, onClose }: ChannelsBrowseModalProp
             </p>
           </div>
           <button type="button" className="wk-dialog-close" onClick={onClose}>
-            <X size={16} />
+            <X size="var(--icon-md)" />
           </button>
         </header>
 
@@ -80,12 +80,12 @@ export function ChannelsBrowseModal({ onPick, onClose }: ChannelsBrowseModalProp
                   <div className="ak-connector-card-meta">
                     <span className="mcbc-cat">{t(`channels.browse.${spec.category}`)}</span>
                     <button type="button" className="mcbc-link" onClick={handleLinkClick} title={spec.url}>
-                      <ArrowSquareOut size={12} />
+                      <ArrowSquareOut size="var(--icon-xs)" />
                     </button>
                   </div>
                 </div>
                 <div className="ak-connector-card-action">
-                  <Plus size={16} weight="bold" />
+                  <Plus size="var(--icon-md)" weight="bold" />
                 </div>
               </div>
             );

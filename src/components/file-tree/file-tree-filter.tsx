@@ -20,7 +20,7 @@ export function FileTreeFilter({ value, onChange }: FileTreeFilterProps) {
 
   return (
     <div className="ft-filter-wrap">
-      <Search size={13} style={{ position: "absolute", left: 10, color: "var(--ink-faint)" }} />
+      <Search size="var(--icon-13)" style={{ position: "absolute", left: 10, color: "var(--ink-faint)" }} />
       <input
         ref={inputRef}
         className="ft-filter-input"
@@ -34,7 +34,7 @@ export function FileTreeFilter({ value, onChange }: FileTreeFilterProps) {
       />
       {value && (
         <button className="ft-filter-clear" onClick={() => onChange("")} type="button">
-          <X size={13} />
+          <X size="var(--icon-13)" />
         </button>
       )}
     </div>

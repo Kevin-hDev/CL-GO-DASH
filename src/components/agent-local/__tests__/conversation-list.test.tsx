@@ -145,6 +145,25 @@ describe("ConversationList", () => {
     expect(container.querySelector(".conv-name")?.textContent).toBe("agentLocal.newSession");
   });
 
+  it("affiche l'âge de la session dans la zone droite", () => {
+    const createdAt = new Date(Date.now() - 5 * 60_000).toISOString();
+    const session = makeSession({ id: "s1", created_at: createdAt });
+    const { container } = render(
+      <ConversationList {...defaultProps} sessions={[session]} />,
+    );
+    expect(container.querySelector(".conv-session-age")?.textContent).toBe("sessionAge.minute");
+    expect(container.querySelector(".conv-session-menu-btn")).not.toBeNull();
+  });
+
+  it("ouvre le menu de session au clic sur les trois points", () => {
+    const session = makeSession({ id: "s1" });
+    const { container, getByTestId } = render(
+      <ConversationList {...defaultProps} sessions={[session]} />,
+    );
+    fireEvent.click(container.querySelector(".conv-session-menu-btn") as HTMLElement);
+    expect(getByTestId("context-menu")).not.toBeNull();
+  });
+
   it("affiche l'icône chat avec weight=fill pour la session active", () => {
     const session = makeSession({ id: "s1" });
     const { container } = render(

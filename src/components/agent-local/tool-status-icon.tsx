@@ -20,7 +20,7 @@ export function ToolStatusIcon({
 }: {
   status: ToolStatus;
   message?: string;
-  size?: number;
+  size?: number | string;
 }) {
   const anchorRef = useRef<HTMLSpanElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -67,7 +67,7 @@ export function ToolStatusIcon({
     >
       <span className="tb-error-tooltip-text">{message}</span>
       <button type="button" className="tb-error-tooltip-copy" onClick={copy}>
-        {copied ? <Check size={12} weight="bold" /> : <Copy size={12} />}
+        {copied ? <Check size="var(--icon-xs)" weight="bold" /> : <Copy size="var(--icon-xs)" />}
       </button>
     </div>,
     document.body,
@@ -79,9 +79,7 @@ export function ToolStatusIcon({
         className="tb-status-img"
         src={src}
         alt={status === "error" ? "Erreur" : "Succès"}
-        width={size}
-        height={size}
-        style={{ flexShrink: 0 }}
+        style={{ width: size, height: size, flexShrink: 0 }}
       />
       {tooltip}
     </span>

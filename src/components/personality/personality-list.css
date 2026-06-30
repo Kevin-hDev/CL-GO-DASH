@@ -6,6 +6,10 @@
 }
 
 .pers-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: var(--text-sm);
   font-weight: 600;
   letter-spacing: 0.5px;
@@ -22,6 +26,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-sm);
+  min-width: 0;
   padding: 5px var(--space-sm);
   border-radius: var(--radius-sm);
   cursor: pointer;
@@ -49,11 +54,17 @@
 }
 
 .pers-item-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: var(--text-sm);
   color: var(--ink);
 }
 
 .pers-item-desc {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: var(--text-xs);
   color: var(--ink-faint);
   margin-top: 1px;

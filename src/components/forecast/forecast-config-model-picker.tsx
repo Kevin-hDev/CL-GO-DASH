@@ -76,7 +76,7 @@ export function ForecastConfigModelPicker({
               <span className="fcmp-group-label">{t(group.titleKey)}</span>
               <span className="fcmp-group-count">{group.models.length}</span>
               <ChevronDown
-                size={14}
+                size="var(--icon-sm)"
                 className={`fcmp-group-chevron ${isOpen ? "is-open" : ""}`}
               />
             </button>

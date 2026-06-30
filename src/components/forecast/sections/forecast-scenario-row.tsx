@@ -103,7 +103,7 @@ export function ForecastScenarioRow({
             }}
             title={t("forecast.scenarios.edit")}
           >
-            <Pencil size={13} />
+            <Pencil size="var(--icon-13)" />
           </button>
           <button
             className="fcs-icon-btn fcs-icon-btn-danger"
@@ -114,7 +114,7 @@ export function ForecastScenarioRow({
             }}
             title={t("forecast.scenarios.delete")}
           >
-            <Trash size={13} />
+            <Trash size="var(--icon-13)" />
           </button>
         </div>
       </div>

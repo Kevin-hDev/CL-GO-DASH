@@ -81,7 +81,12 @@ export const SettingsTab = memo(function SettingsTab({
 
   const list = useMemo(() => (
     <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, overflow: "hidden" }}>
-      <div style={{ padding: "var(--space-sm)", flexShrink: 0 }}>
+      <div
+        style={{
+          padding: "var(--space-sm) var(--space-sm) var(--space-sm) max(0px, calc(var(--space-sm) - 4px))",
+          flexShrink: 0,
+        }}
+      >
         {SUB_TABS.map((tab) => (
           <div
             key={tab.id}
@@ -94,7 +99,7 @@ export const SettingsTab = memo(function SettingsTab({
           >
             {tab.icon ? (
               <tab.icon
-                size={16}
+                size="var(--icon-md)"
                 weight={subTab === tab.id ? "fill" : "regular"}
                 style={{ flexShrink: 0 }}
               />
@@ -102,14 +107,14 @@ export const SettingsTab = memo(function SettingsTab({
               <ThemedIcon
                 darkSrc={tab.imgDark}
                 lightSrc={tab.imgLight}
-                size="16px"
+                size="var(--icon-md)"
                 style={{
                   flexShrink: 0,
                   opacity: subTab === tab.id ? 1 : 0.6,
                 }}
               />
             ) : null}
-            {t(tab.i18n)}
+            <span className="settings-subtab-label">{t(tab.i18n)}</span>
           </div>
         ))}
       </div>

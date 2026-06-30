@@ -5,6 +5,7 @@ import { ChannelIcon } from "@/components/channels/channel-icon";
 import type { AgentSessionMeta } from "@/types/agent";
 import type { ChannelType } from "@/types/channels";
 import { displaySessionName } from "@/lib/utils";
+import { getSessionAge } from "@/lib/session-age";
 import "./conversation-session-item.css";
 
 interface ConversationSessionItemProps {
@@ -16,14 +17,17 @@ interface ConversationSessionItemProps {
   onRenameSubmit: (id: string, value: string) => void;
   onCancelRename: () => void;
   onMenu: (e: MouseEvent, id: string) => void;
+  nowMs: number;
 }
 
 export function ConversationSessionItem({
   session, active, renaming, inputRef,
   onSelect, onRenameSubmit, onCancelRename, onMenu,
+  nowMs,
 }: ConversationSessionItemProps) {
   const { t } = useTranslation();
   const channelId = gatewayChannelId(session.gateway_channel_key);
+  const age = getSessionAge(session.created_at, nowMs);
 
   return (
     <div
@@ -54,14 +58,21 @@ export function ConversationSessionItem({
         />
       ) : (
         <>
-          <ChatsCircle size={14} weight={active ? "fill" : "regular"} className="conv-icon" />
+          <ChatsCircle size="var(--icon-sm)" weight={active ? "fill" : "regular"} className="conv-icon" />
           <span className="conv-name">{displaySessionName(session.name, t)}</span>
           {session.is_gateway && channelId && (
-            <ChannelIcon channelId={channelId} size={18} className="conv-gateway-icon" />
+            <ChannelIcon channelId={channelId} size="var(--icon-lg)" className="conv-gateway-icon" />
           )}
-          <button className="conv-session-menu-btn" onClick={(e) => onMenu(e, session.id)}>
-            <DotsThreeVertical size={14} />
-          </button>
+          <span className="conv-session-tail">
+            {age && (
+              <span className="conv-session-age">
+                {t(`sessionAge.${age.unit}`, { count: age.count })}
+              </span>
+            )}
+            <button className="conv-session-menu-btn" onClick={(e) => onMenu(e, session.id)}>
+              <DotsThreeVertical size="var(--icon-sm)" />
+            </button>
+          </span>
         </>
       )}
     </div>

@@ -99,7 +99,7 @@ export function BranchSelector({
     return (
       <div className="bs-row">
         <div className="bs-indicator">
-          <GitBranch size={14} />
+          <GitBranch size="var(--icon-sm)" />
           <span>{git.currentBranch || t("branches.detachedHead")}</span>
         </div>
       </div>
@@ -122,9 +122,9 @@ export function BranchSelector({
   return (
     <div className="bs-row" ref={dropRef}>
       <button className="bs-btn" onClick={() => setOpen(!open)}>
-        <GitBranch size={14} />
+        <GitBranch size="var(--icon-sm)" />
         <span>{label}</span>
-        <CaretDown size={10} />
+        <CaretDown size="var(--icon-2xs)" />
       </button>
       {open && (
         <div className="bs-dropdown">
@@ -189,7 +189,7 @@ export function BranchSelector({
                 if (e.key === "Enter" || e.key === " ") setCreating(true);
               }}
             >
-              <Plus size={14} />
+              <Plus size="var(--icon-sm)" />
               <span>{t("branches.createNew")}</span>
             </div>
           )}

@@ -128,7 +128,7 @@ export function ForecastPanel({
               onClick={() => setScenarioPickerOpen((open) => !open)}
               title={t("forecast.scenarios.togglePredictions")}
             >
-              {scenarioPickerOpen ? <PanelRightClose size={16} /> : <PanelRightOpen size={16} />}
+              {scenarioPickerOpen ? <PanelRightClose size="var(--icon-md)" /> : <PanelRightOpen size="var(--icon-md)" />}
             </button>
           ) : null
         }

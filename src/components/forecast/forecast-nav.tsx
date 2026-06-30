@@ -75,7 +75,7 @@ export function ForecastNav({ open, activeSection, onToggle, onSelect }: Forecas
         }}
       >
         <span className="fc-nav-label">{t(activeItem.i18nKey)}</span>
-        <ChevronDown size={14} className={`fc-nav-chevron ${open ? "is-open" : ""}`} />
+        <ChevronDown size="var(--icon-sm)" className={`fc-nav-chevron ${open ? "is-open" : ""}`} />
       </button>
       <div
         ref={panelRef}

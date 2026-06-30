@@ -37,7 +37,7 @@ export function FilterGroup({
         onClick={() => onToggle(groupId)}
       >
         <span className="fcf-group-title">{title}</span>
-        <ChevronDown size={14} className={`fcf-group-chevron ${open ? "is-open" : ""}`} />
+        <ChevronDown size="var(--icon-sm)" className={`fcf-group-chevron ${open ? "is-open" : ""}`} />
       </button>
       <div className={`fcf-group-items ${open ? "is-open" : ""}`}>
         <div className="fcf-group-content">{children}</div>

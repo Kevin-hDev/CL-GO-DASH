@@ -67,7 +67,7 @@ export function ThemeSelector({ value, onChange }: ThemeSelectorProps) {
                 right: 6,
                 color: "var(--ink)",
               }}>
-                <Check size={12} weight="bold" />
+                <Check size="var(--icon-xs)" weight="bold" />
               </div>
             )}
           </div>

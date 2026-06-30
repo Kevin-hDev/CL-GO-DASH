@@ -1,11 +1,3 @@
-.settings-card:has(.cs-dropdown) {
-  z-index: 1000;
-  position: relative;
-  overflow: visible;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-}
-
 .ch-browse-icon {
   width: 48px;
   height: 48px;

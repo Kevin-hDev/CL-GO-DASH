@@ -74,7 +74,7 @@ export function ChannelsConfigDialog({ channelId, onClose, onSaved }: ChannelsCo
         <header className="wk-dialog-header">
           <span>{t("channels.config.addTitle", { name: channelName })}</span>
           <button type="button" className="wk-dialog-close" onClick={onClose}>
-            <X size={16} />
+            <X size="var(--icon-md)" />
           </button>
         </header>
 

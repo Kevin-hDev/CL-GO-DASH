@@ -79,7 +79,7 @@ export function FilePreviewPanel(props: FilePreviewPanelProps) {
                 onClick={props.onToggleTree}
                 title={t("fileTree.toggleTree")}
               >
-                <FolderTree size={16} />
+                <FolderTree size="var(--icon-md)" />
               </button>
             )}
             <button
@@ -87,7 +87,7 @@ export function FilePreviewPanel(props: FilePreviewPanelProps) {
               onClick={() => props.onFullscreenChange(!props.fullscreen)}
               title={props.fullscreen ? t("filePreview.reduce") : t("filePreview.fullscreen")}
             >
-              {props.fullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+              {props.fullscreen ? <Minimize2 size="var(--icon-md)" /> : <Maximize2 size="var(--icon-md)" />}
             </button>
           </div>
           <div className="fp-body">

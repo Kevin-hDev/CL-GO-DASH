@@ -59,7 +59,7 @@ export function mcpHasTextIcon(connectorId: string): boolean {
 interface McpIconProps {
   connectorId: string;
   displayName: string;
-  size?: number;
+  size?: number | string;
   variant?: McpIconVariant;
   textWidth?: boolean;
 }
@@ -86,7 +86,7 @@ export function McpIcon({ connectorId, displayName, size = 40, variant = "icon",
 
 function McpSvgIcon({ entry, size, variant, textWidth }: {
   entry: SvgEntry;
-  size: number;
+  size: number | string;
   variant: McpIconVariant;
   textWidth?: boolean;
 }) {
@@ -114,14 +114,16 @@ function McpSvgIcon({ entry, size, variant, textWidth }: {
   );
 }
 
-function McpIconFallback({ displayName, connectorId, size }: { displayName: string; connectorId: string; size: number }) {
+function McpIconFallback({ displayName, connectorId, size }: { displayName: string; connectorId: string; size: number | string }) {
   const color = colorFor(connectorId);
   return (
     <div style={{
       width: size, height: size, borderRadius: 8,
       background: `${color}22`, color,
       display: "flex", alignItems: "center", justifyContent: "center",
-      fontWeight: 700, fontSize: size * 0.45, flexShrink: 0,
+      fontWeight: 700,
+      fontSize: typeof size === "number" ? size * 0.45 : `calc(${size} * 0.45)`,
+      flexShrink: 0,
     }}>
       {displayName.charAt(0).toUpperCase()}
     </div>

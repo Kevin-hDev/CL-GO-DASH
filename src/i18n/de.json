@@ -191,6 +191,13 @@
     "delete": "Löschen",
     "loading": "Wird geladen…"
   },
+  "sessionAge": {
+    "minute": "{{count}} Min",
+    "hour": "{{count}} Std",
+    "day": "{{count}} T",
+    "month": "{{count}} M",
+    "year": "{{count}} J"
+  },
   "agentLocal": {
     "title": "Gespräche",
     "newSession": "Neue Sitzung",
@@ -500,7 +507,9 @@
       "themeTitle": "Design",
       "themeDesc": "App-Erscheinungsbild",
       "fontSizeTitle": "Schriftgröße",
-      "fontSizeDesc": "Textgröße in der App",
+      "fontSizeDesc": "Basisgröße der Oberfläche in Pixeln",
+      "fontSizeIncrease": "Schriftgröße erhöhen",
+      "fontSizeDecrease": "Schriftgröße verringern",
       "fontFamilyTitle": "Schriftart",
       "fontFamilyDesc": "In der App verwendete Schriftart",
       "codeThemeTitle": "Code-Design",

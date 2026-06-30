@@ -44,7 +44,7 @@ export function WorktreeSwitchDialog({
         <header className="wk-dialog-header">
           <span>{t("switchWorktree.title")}</span>
           <button type="button" className="wk-dialog-close" onClick={onCancel}>
-            <X size={16} />
+            <X size="var(--icon-md)" />
           </button>
         </header>
 

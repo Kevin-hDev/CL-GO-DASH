@@ -191,6 +191,13 @@
     "delete": "Elimina",
     "loading": "Caricamento…"
   },
+  "sessionAge": {
+    "minute": "{{count}} min",
+    "hour": "{{count}}h",
+    "day": "{{count}} g",
+    "month": "{{count}}M",
+    "year": "{{count}} a"
+  },
   "agentLocal": {
     "title": "Conversazioni",
     "newSession": "Nuova sessione",
@@ -500,7 +507,9 @@
       "themeTitle": "Tema",
       "themeDesc": "Aspetto dell'app",
       "fontSizeTitle": "Dimensione carattere",
-      "fontSizeDesc": "Dimensione del testo nell'app",
+      "fontSizeDesc": "Dimensione base dell'interfaccia in pixel",
+      "fontSizeIncrease": "Aumenta dimensione carattere",
+      "fontSizeDecrease": "Riduci dimensione carattere",
       "fontFamilyTitle": "Famiglia di caratteri",
       "fontFamilyDesc": "Font utilizzato nell'app",
       "codeThemeTitle": "Tema del codice",

@@ -1,5 +1,5 @@
 /* Layout & spacing tokens — shared across all themes */
-/* All values in rem so they scale with font-size setting */
+/* Spacing and text scale with font-size; fixed chrome widths use px when needed. */
 :root {
   --space-xs: 0.25rem;
   --space-sm: 0.5rem;
@@ -24,7 +24,25 @@
   --text-lg: 1rem;
   --text-xl: 1.25rem;
 
-  --sidebar-collapsed: 3.75rem;
+  --icon-2xs: 0.5556rem;
+  --icon-xs: 0.6667rem;
+  --icon-13: 0.7222rem;
+  --icon-sm: 0.7778rem;
+  --icon-15: 0.8333rem;
+  --icon-md: 0.8889rem;
+  --icon-lg: 1rem;
+  --icon-xl: 1.1111rem;
+  --icon-2xl: 1.3333rem;
+  --chrome-icon-md: 16px;
+  --chrome-icon-docs: 17px;
+  --chrome-icon-lg: 18px;
+
+  --nav-item-height: 1.75rem;
+  --nav-item-gap: var(--space-xs);
+  --nav-item-padding-x: var(--space-sm);
+  --nav-item-radius: var(--radius-sm);
+  --sidebar-collapsed: 2.75rem;
   --sidebar-expanded: 8.25rem;
-  --list-width: 10.5rem;
+  /* 10.5rem at the default 18px root font size, kept stable across font-size settings. */
+  --list-width: 189px;
 }

@@ -35,7 +35,7 @@ const ICONS: Record<string, ProviderIconEntry> = {
 interface ProviderIconProps {
   providerId: string;
   displayName: string;
-  size?: number;
+  size?: number | string;
 }
 
 export function ProviderIcon({ providerId, displayName, size = 40 }: ProviderIconProps) {
@@ -48,7 +48,9 @@ export function ProviderIcon({ providerId, displayName, size = 40 }: ProviderIco
         width: size, height: size, borderRadius: 8,
         background: `${color}22`, color,
         display: "flex", alignItems: "center", justifyContent: "center",
-        fontWeight: 700, fontSize: size * 0.45, flexShrink: 0,
+        fontWeight: 700,
+        fontSize: typeof size === "number" ? size * 0.45 : `calc(${size} * 0.45)`,
+        flexShrink: 0,
       }}>
         {displayName.charAt(0).toUpperCase()}
       </div>

@@ -75,11 +75,11 @@ export function CodeBlock({ code, language }: CodeBlockProps) {
     <div className="code-block">
       <div className="code-block-header">
         <span className="code-block-lang">
-          {iconName && <FileIcon name={iconName} size={14} />}
+          {iconName && <FileIcon name={iconName} size="var(--icon-sm)" />}
           {language || ""}
         </span>
         <button className="msg-action-btn" onClick={() => void handleCopy()}>
-          {copied ? <Check size={14} /> : <Copy size={14} />}
+          {copied ? <Check size="var(--icon-sm)" /> : <Copy size="var(--icon-sm)" />}
         </button>
       </div>
       <pre>

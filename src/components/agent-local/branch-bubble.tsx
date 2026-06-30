@@ -17,7 +17,7 @@ export function BranchBubble({ action, branchName, path }: BranchBubbleProps) {
   return (
     <div className="chat-bubble">
       <div className="bb-content">
-        <GitBranch size={16} className="bb-icon" />
+        <GitBranch size="var(--icon-md)" className="bb-icon" />
         <span className="bb-label">{label}</span>
         <span className="bb-branch-name">{branchName}</span>
       </div>

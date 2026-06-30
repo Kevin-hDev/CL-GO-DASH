@@ -21,7 +21,7 @@ export function BranchGithubAuthDialog({
       {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions -- dialog stop-propagation pattern */}
       <div className="bcd-dialog" role="dialog" onClick={(e) => e.stopPropagation()}>
         <button className="bcd-close" onClick={onCancel} type="button">
-          <X size={16} />
+          <X size="var(--icon-md)" />
         </button>
         <div className="bcd-title">{t("branches.githubAuthTitle")}</div>
         <div className="bcd-description">{t("branches.githubAuthDescription")}</div>

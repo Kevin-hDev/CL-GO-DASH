@@ -132,10 +132,10 @@ export function TerminalTabBar({
               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); onClose(tab.id); } }}
             >
               <span className="tab-icon-terminal">
-                <TerminalSquare size={12} />
+                <TerminalSquare size="var(--icon-xs)" />
               </span>
               <span className="tab-icon-close">
-                <XIcon size={10} />
+                <XIcon size="var(--icon-2xs)" />
               </span>
             </div>
             {isEditing ? (
@@ -161,10 +161,10 @@ export function TerminalTabBar({
         );
       })}
       <button className="terminal-tab-add" onClick={onAdd}>
-        <Plus size={14} />
+        <Plus size="var(--icon-sm)" />
       </button>
       <button className="terminal-tab-bar-close" onClick={onClosePanel}>
-        <XIcon size={14} />
+        <XIcon size="var(--icon-sm)" />
       </button>
     </div>
   );

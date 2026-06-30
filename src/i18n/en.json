@@ -190,6 +190,13 @@
     "delete": "Delete",
     "loading": "Loading…"
   },
+  "sessionAge": {
+    "minute": "{{count}} min",
+    "hour": "{{count}}h",
+    "day": "{{count}}d",
+    "month": "{{count}}mo",
+    "year": "{{count}}y"
+  },
   "agentLocal": {
     "title": "Conversations",
     "newSession": "New session",
@@ -500,7 +507,9 @@
       "themeTitle": "Theme",
       "themeDesc": "App appearance",
       "fontSizeTitle": "Font size",
-      "fontSizeDesc": "Text size in the app",
+      "fontSizeDesc": "Base interface size in pixels",
+      "fontSizeIncrease": "Increase font size",
+      "fontSizeDecrease": "Decrease font size",
       "fontFamilyTitle": "Font family",
       "fontFamilyDesc": "Font used in the app",
       "codeThemeTitle": "Code theme",

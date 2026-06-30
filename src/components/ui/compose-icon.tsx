@@ -1,5 +1,5 @@
 interface ComposeIconProps {
-  size?: number;
+  size?: number | string;
   className?: string;
 }
 

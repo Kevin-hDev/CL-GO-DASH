@@ -57,7 +57,7 @@ export function BranchConflictDialog({
     <div className="bcd-overlay" ref={overlayRef} role="presentation" onClick={handleOverlayClick} onKeyDown={() => {}}>
       <div className="bcd-dialog" ref={dialogRef} tabIndex={-1}>
         <button className="bcd-close" onClick={onCancel} type="button">
-          <X size={16} />
+          <X size="var(--icon-md)" />
         </button>
 
         <div className="bcd-title">{t("branches.conflictTitle")}</div>
@@ -91,7 +91,7 @@ export function BranchConflictDialog({
             onClick={() => setDescriptionOpen((open) => !open)}
             aria-expanded={descriptionOpen}
           >
-            <CaretDown size={12} className={descriptionOpen ? "bcd-chevron-open" : ""} />
+            <CaretDown size="var(--icon-xs)" className={descriptionOpen ? "bcd-chevron-open" : ""} />
             <span>{t("branches.commitDescription")}</span>
           </button>
           <div className={`bcd-description-panel ${descriptionOpen ? "is-open" : ""}`}>

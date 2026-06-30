@@ -33,7 +33,7 @@ export function MarkdownViewer({
       <div className="md-header">
         <div className="md-title">{fileName}</div>
         <button className="btn" onClick={onOpenEditor}>
-          <ArrowSquareOut size={14} /> {t("personality.open")}
+          <ArrowSquareOut size="var(--icon-sm)" /> {t("personality.open")}
         </button>
       </div>
       <div className="md-scroll">

@@ -24,16 +24,16 @@ export function MessageActions({ messageRole, content, isStreaming, onReload, on
     <div className="msg-actions">
       {onReload && !isStreaming && (
         <button className="msg-action-btn" onClick={onReload}>
-          <ArrowsClockwise size={14} />
+          <ArrowsClockwise size="var(--icon-sm)" />
         </button>
       )}
       {messageRole === "user" && onEdit && (
         <button className="msg-action-btn" onClick={onEdit}>
-          <Pencil size={14} />
+          <Pencil size="var(--icon-sm)" />
         </button>
       )}
       <button className="msg-action-btn" onClick={() => void handleCopy()}>
-        {copied ? <Check size={14} /> : <Copy size={14} />}
+        {copied ? <Check size="var(--icon-sm)" /> : <Copy size="var(--icon-sm)" />}
       </button>
       {children}
     </div>

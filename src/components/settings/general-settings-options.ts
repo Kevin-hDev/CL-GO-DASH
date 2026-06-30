@@ -1,10 +1,5 @@
 import type { SelectOption } from "./settings-select";
-import { CODE_THEMES, FONT_FAMILIES, FONT_SIZES } from "@/hooks/use-settings";
-
-export const FONT_SIZE_OPTIONS: SelectOption[] = FONT_SIZES.map((s) => ({
-  value: String(s),
-  label: `${s}%`,
-}));
+import { CODE_THEMES, FONT_FAMILIES } from "@/hooks/use-settings";
 
 export const FONT_FAMILY_OPTIONS: SelectOption[] = FONT_FAMILIES.map((f) => ({
   value: f.id,

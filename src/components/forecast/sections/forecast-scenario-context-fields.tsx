@@ -74,7 +74,7 @@ export function ForecastScenarioContextFields({
             onClick={() => removeAdjustment(index)}
             title={t("forecast.scenarios.removeContext")}
           >
-            <X size={13} />
+            <X size="var(--icon-13)" />
           </button>
         </div>
       ))}
@@ -85,7 +85,7 @@ export function ForecastScenarioContextFields({
         disabled={!canAdd}
         onClick={addAdjustment}
       >
-        <Plus size={13} />
+        <Plus size="var(--icon-13)" />
         {t("forecast.scenarios.addContext")}
       </button>
     </div>

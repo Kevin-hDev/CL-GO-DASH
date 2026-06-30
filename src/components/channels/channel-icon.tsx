@@ -6,7 +6,7 @@ import "./channel-icon.css";
 
 interface ChannelIconProps {
   channelId: ChannelType;
-  size?: number;
+  size?: number | string;
   className?: string;
 }
 

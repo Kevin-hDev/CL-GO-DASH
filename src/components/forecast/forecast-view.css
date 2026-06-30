@@ -33,6 +33,11 @@
   outline: none;
 }
 
+.fc-view-toolbar-select option {
+  background: var(--shell-opaque);
+  color: var(--ink);
+}
+
 .fc-kpi-row {
   display: grid;
   grid-template-columns: repeat(4, 1fr);

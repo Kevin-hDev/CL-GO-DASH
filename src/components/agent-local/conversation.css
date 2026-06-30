@@ -3,7 +3,7 @@
 .conv-header {
   display: flex;
   align-items: center;
-  padding: var(--space-sm) var(--space-sm) var(--space-sm) calc(var(--space-sm) - 4px);
+  padding: var(--space-sm) var(--space-sm) var(--space-sm) max(0px, calc(var(--space-sm) - 8px));
 }
 
 .conv-new-btn {
@@ -11,6 +11,7 @@
   align-items: center;
   gap: var(--space-xs);
   width: 100%;
+  min-width: 0;
   padding: 5px var(--space-sm);
   border-radius: var(--radius-sm);
   font-size: var(--text-sm);
@@ -21,6 +22,19 @@
   border: none;
   background: none;
   text-align: left;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.conv-new-btn svg {
+  flex-shrink: 0;
+}
+
+.conv-new-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .conv-new-btn:hover {
@@ -31,15 +45,16 @@
 .conv-list {
   flex: 1;
   overflow-y: auto;
-  padding: 0 var(--space-sm) var(--space-sm) calc(var(--space-sm) - 4px);
+  padding: 0 var(--space-sm) var(--space-sm) max(0px, calc(var(--space-sm) - 8px));
 }
 
 .conv-item {
   display: flex;
   align-items: center;
   gap: var(--space-xs);
+  min-height: var(--nav-item-height);
   padding: 5px 2px 5px calc(var(--space-sm) - 8px);
-  border-radius: var(--radius-sm);
+  border-radius: var(--nav-item-radius);
   cursor: pointer;
   transition: all var(--ease-smooth);
   margin-bottom: 2px;
@@ -75,6 +90,28 @@
   overflow: hidden;
   mask-image: linear-gradient(to right, black calc(100% - 16px), transparent);
   -webkit-mask-image: linear-gradient(to right, black calc(100% - 16px), transparent);
+}
+
+.conv-session-tail {
+  display: inline-grid;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-items: end;
+  margin-right: 2px;
+  min-width: 0;
+  line-height: 1;
+}
+
+.conv-session-age {
+  grid-area: 1 / 1;
+  color: var(--ink-faint);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
+  transition: opacity var(--ease-smooth);
+  z-index: 0;
 }
 
 .conv-gw-badge {
@@ -181,7 +218,7 @@
 
 /* Session menu button (three dots) */
 .conv-session-menu-btn {
-  flex-shrink: 0;
+  grid-area: 1 / 1;
   padding: 2px;
   border-radius: var(--radius-sm);
   color: var(--ink-faint);
@@ -192,10 +229,20 @@
   transition: opacity var(--ease-smooth);
   display: flex;
   align-items: center;
+  justify-content: center;
+  line-height: 0;
+  pointer-events: none;
+  position: relative;
+  z-index: 1;
+}
+
+.conv-item:hover .conv-session-age {
+  opacity: 0;
 }
 
 .conv-item:hover .conv-session-menu-btn {
   opacity: 1;
+  pointer-events: auto;
 }
 
 .conv-session-menu-btn:hover {

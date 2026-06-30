@@ -95,17 +95,17 @@ export function ModelSelector({
         <span className="ms-trigger-label">{selectedModel || t("agentLocal.selectModel")}</span>
         {selectedReasoningLabel && selectedReasoningMode !== "off" && (
           <span className="ms-trigger-reasoning" title={t(selectedReasoningLabel)}>
-            <Brain size={12} className="ms-trigger-reasoning-icon" />
+            <Brain size="var(--icon-xs)" className="ms-trigger-reasoning-icon" />
             {!simpleReasoningToggle && <span>{t(selectedReasoningLabel)}</span>}
           </span>
         )}
-        <CaretDown size={10} className="ms-trigger-caret" />
+        <CaretDown size="var(--icon-2xs)" className="ms-trigger-caret" />
       </button>
       {open && (
         <div className={`ms-dropdown${showReasoningModes ? " ms-dropdown-with-reasoning" : ""}`}>
           <div className="ms-main">
             <div className="ms-search">
-              <MagnifyingGlass size={14} className="ms-search-icon" />
+              <MagnifyingGlass size="var(--icon-sm)" className="ms-search-icon" />
               <input
                 type="text"
                 value={query}

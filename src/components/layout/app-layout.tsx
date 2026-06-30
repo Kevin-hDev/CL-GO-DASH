@@ -14,6 +14,7 @@ import { PanelSlotProvider, PanelSlotTarget } from "./panel-slots";
 import { useAgentPanelsAutoSidebar } from "./agent-panels-auto-sidebar";
 import { useAppLayoutShortcuts, useSidebarHiddenOffset, useWindowFullscreen } from "./use-app-layout-effects";
 import { ModelDownloadBadge } from "./model-download-badge";
+import { getListMinWidthPx, nextListPanelWidth } from "./list-panel-width";
 import {
   INITIAL_AGENT_SIDEBAR_LAYOUT_STATE,
   autoHideAgentSidebar,
@@ -75,12 +76,11 @@ export function AppLayout({
     const listEl = (e.target as HTMLElement).closest(".app-sidebar-block")?.querySelector(".app-list-panel") as HTMLElement;
     if (!listEl) return;
     const startListW = listEl.getBoundingClientRect().width;
+    const minListW = getListMinWidthPx(listEl, startListW);
 
     const onMove = (ev: PointerEvent) => {
       const delta = ev.clientX - startX;
-      const newList = startListW + delta;
-      if (newList >= startListW) setListWidth(newList);
-      else setListWidth(null);
+      setListWidth(nextListPanelWidth(startListW, minListW, delta));
     };
     const onUp = () => {
       dragging.current = false;

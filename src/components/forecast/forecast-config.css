@@ -168,6 +168,11 @@
   transition: border-color 150ms ease;
 }
 
+.fcc-select option {
+  background: var(--shell-opaque);
+  color: var(--ink);
+}
+
 .fcc-input:focus,
 .fcc-select:focus {
   border-color: var(--pulse);

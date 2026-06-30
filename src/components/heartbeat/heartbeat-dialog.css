@@ -30,6 +30,11 @@
   border-color: transparent;
 }
 
+[data-theme="dark"] .wk-dialog:has(.cs-dropdown) {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
 .wk-dialog-header {
   display: flex;
   align-items: center;
@@ -100,6 +105,11 @@
   font-size: var(--text-sm);
   font-family: inherit;
   transition: border-color var(--ease-smooth);
+}
+
+.wk-input option {
+  background: var(--shell-opaque);
+  color: var(--ink);
 }
 
 .wk-input:focus {

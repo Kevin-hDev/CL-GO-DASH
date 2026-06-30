@@ -30,6 +30,7 @@ interface ProjectSectionProps {
   isDragging: boolean;
   collapsed: boolean;
   onToggleCollapse: () => void;
+  nowMs: number;
 }
 
 export function ProjectSection({
@@ -37,6 +38,7 @@ export function ProjectSection({
   onSelect, onNewSession, onRenameProject, onDeleteProject,
   onOpenFolder, onRenameSession, onDeleteSession,
   onGrab, isDragging, collapsed, onToggleCollapse,
+  nowMs,
 }: ProjectSectionProps) {
   const { t } = useTranslation();
   const [ctx, setCtx] = useState<{ x: number; y: number } | null>(null);
@@ -51,9 +53,9 @@ export function ProjectSection({
   });
 
   const projectMenuItems: ContextMenuItem[] = [
-    { label: t("projects.openFolder", "Ouvrir le dossier"), icon: <FolderOpen size={14} />, onClick: () => onOpenFolder(project.path) },
-    { label: t("projects.rename", "Renommer"), icon: <PencilSimple size={14} />, onClick: () => { setRenaming(true); setTimeout(() => inputRef.current?.focus(), 0); } },
-    { label: t("projects.delete", "Supprimer"), icon: <X size={14} />, onClick: () => onDeleteProject(project.id) },
+    { label: t("projects.openFolder", "Ouvrir le dossier"), icon: <FolderOpen size="var(--icon-sm)" />, onClick: () => onOpenFolder(project.path) },
+    { label: t("projects.rename", "Renommer"), icon: <PencilSimple size="var(--icon-sm)" />, onClick: () => { setRenaming(true); setTimeout(() => inputRef.current?.focus(), 0); } },
+    { label: t("projects.delete", "Supprimer"), icon: <X size="var(--icon-sm)" />, onClick: () => onDeleteProject(project.id) },
   ];
 
   const handleSessionMenu = useCallback((e: React.MouseEvent, id: string) => {
@@ -63,8 +65,8 @@ export function ProjectSection({
   }, []);
 
   const sessionMenuItems: ContextMenuItem[] = sessionCtx ? [
-    { label: t("history.rename"), icon: <PencilSimple size={14} />, onClick: () => { setRenamingSessionId(sessionCtx.id); setTimeout(() => sessionInputRef.current?.focus(), 0); } },
-    { label: t("history.delete"), icon: <WastebasketIcon size={14} />, onClick: () => onDeleteSession(sessionCtx.id) },
+    { label: t("history.rename"), icon: <PencilSimple size="var(--icon-sm)" />, onClick: () => { setRenamingSessionId(sessionCtx.id); setTimeout(() => sessionInputRef.current?.focus(), 0); } },
+    { label: t("history.delete"), icon: <WastebasketIcon size="var(--icon-sm)" />, onClick: () => onDeleteSession(sessionCtx.id) },
   ] : [];
 
   const handleRename = useCallback((value: string) => {
@@ -110,14 +112,14 @@ export function ProjectSection({
           />
         ) : (
           <>
-            <FolderStateIcon open={!collapsed} size={14} className="conv-icon conv-folder-icon" />
+            <FolderStateIcon open={!collapsed} size="var(--icon-sm)" className="conv-icon conv-folder-icon" />
             <span className="conv-project-name">{project.name}</span>
             <div className="conv-project-actions">
               <button className="conv-project-action-btn" onClick={(e) => { e.stopPropagation(); setCtx({ x: e.clientX, y: e.clientY }); }}>
-                <DotsThreeVertical size={14} />
+                <DotsThreeVertical size="var(--icon-sm)" />
               </button>
               <button className="conv-project-action-btn" onClick={(e) => { e.stopPropagation(); onNewSession(project.id); }}>
-                <ComposeIcon size={12} />
+                <ComposeIcon size="var(--icon-xs)" />
               </button>
             </div>
           </>
@@ -139,6 +141,7 @@ export function ProjectSection({
               onRenameSubmit={handleSessionRename}
               onCancelRename={() => setRenamingSessionId(null)}
               onMenu={handleSessionMenu}
+              nowMs={nowMs}
             />
           );
         })}

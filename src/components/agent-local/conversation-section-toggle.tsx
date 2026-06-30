@@ -24,7 +24,7 @@ export function ConversationSectionToggle({ open, onToggle, children }: Conversa
       onKeyDown={handleKeyDown}
     >
       <CaretRight
-        size={12}
+        size="var(--icon-xs)"
         className={`conv-collapse-chevron${open ? " conv-collapse-open" : ""}`}
       />
       {children}

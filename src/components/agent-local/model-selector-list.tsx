@@ -113,7 +113,7 @@ export function ModelSelectorList({
               onClick={() => toggle(providerId)}
             >
               <span className="ms-provider-caret">
-                {isOpen ? <CaretDown size={12} /> : <CaretRight size={12} />}
+                {isOpen ? <CaretDown size="var(--icon-xs)" /> : <CaretRight size="var(--icon-xs)" />}
               </span>
               <span className="ms-provider-name">{name}</span>
               <span className="ms-provider-count">

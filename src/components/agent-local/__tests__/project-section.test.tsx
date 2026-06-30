@@ -26,6 +26,7 @@ const baseProps = {
   onGrab: vi.fn(),
   isDragging: false,
   onToggleCollapse: vi.fn(),
+  nowMs: Date.UTC(2026, 5, 30, 12, 0, 0),
 };
 
 vi.mock("react-i18next", () => ({

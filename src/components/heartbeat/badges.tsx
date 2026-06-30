@@ -13,7 +13,7 @@ export function ActiveBadge({ active }: ActiveBadgeProps) {
   const className = active ? "wk-badge wk-badge-active" : "wk-badge wk-badge-inactive";
   return (
     <span className={className}>
-      <Clock size={12} weight="regular" />
+      <Clock size="var(--icon-xs)" weight="regular" />
       {label}
     </span>
   );

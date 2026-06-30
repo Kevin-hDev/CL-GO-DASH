@@ -83,7 +83,7 @@ export function ModelInstallButton(props: ModelInstallButtonProps) {
   if (isInstalled && !hasUpdate) {
     return (
       <div title={t("ollama.installedUpToDate")} style={{ display: "flex", alignItems: "center", color: "var(--select-text)" }}>
-        <Check size={18} />
+        <Check size="var(--icon-lg)" />
       </div>
     );
   }

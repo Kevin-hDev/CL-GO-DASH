@@ -60,6 +60,9 @@ body.os-mac {
 .sb-nav-item {
   gap: 0;
   justify-content: center;
+  width: var(--nav-item-height);
+  height: var(--nav-item-height);
+  overflow: hidden;
 }
 
 .sb-nav-item:hover {
@@ -67,9 +70,24 @@ body.os-mac {
 }
 
 .group\/sb:hover .sb-nav-item {
-  gap: 9px;
+  gap: var(--nav-item-gap);
   justify-content: flex-start;
-  padding-left: 11px;
+  width: auto;
+  height: var(--nav-item-height);
+  padding-left: var(--nav-item-padding-x);
+}
+
+.group\/sb:not(:hover) .sb-nav-item {
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.group\/sb:hover .sb-nav-label {
+  flex: 1;
+  min-width: 0;
+  width: auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .sb-locked:hover .sb-nav-item {

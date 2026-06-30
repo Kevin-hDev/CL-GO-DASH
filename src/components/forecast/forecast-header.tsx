@@ -51,7 +51,7 @@ export function ForecastHeader({
           onClick={() => onFullscreenChange(!fullscreen)}
           title={fullscreen ? "Réduire" : "Plein écran"}
         >
-          {fullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+          {fullscreen ? <Minimize2 size="var(--icon-md)" /> : <Maximize2 size="var(--icon-md)" />}
         </button>
         {hasAnalysis && (
           <button className="fp-icon-btn" onClick={onCloseAnalysis} title="Fermer">

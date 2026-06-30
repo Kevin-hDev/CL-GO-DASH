@@ -1,5 +1,5 @@
 interface WastebasketIconProps {
-  size?: number;
+  size?: number | string;
   className?: string;
 }
 

@@ -37,12 +37,12 @@ export function BranchSelectorBranchItem({
         if (e.key === "Enter" || e.key === " ") onSelect(branch.name);
       }}
     >
-      <GitBranch size={14} />
+      <GitBranch size="var(--icon-sm)" />
       <div className="bs-item-info">
         <span className="bs-item-name">{branch.name}</span>
         {dirtyLabel && <span className="bs-item-detail">{dirtyLabel}</span>}
       </div>
-      {branch.is_current && <Check size={14} />}
+      {branch.is_current && <Check size="var(--icon-sm)" />}
     </div>
   );
 }
@@ -63,7 +63,7 @@ export function BranchSelectorWorktreeItem({
         if (e.key === "Enter" || e.key === " ") onSelect(worktree.path, worktree.branch);
       }}
     >
-      <GitBranch size={14} />
+      <GitBranch size="var(--icon-sm)" />
       <div className="bs-item-info">
         <span className="bs-item-name">{name}</span>
         <span className="bs-item-detail">{worktree.path}</span>

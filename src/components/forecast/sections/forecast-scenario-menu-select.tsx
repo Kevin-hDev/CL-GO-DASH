@@ -74,7 +74,7 @@ export function ForecastScenarioMenuSelect({
         }}
       >
         <span className="fcs-menu-label">{selected?.label ?? placeholder ?? ""}</span>
-        <CaretDown size={13} className={`fcs-menu-caret ${open ? "is-open" : ""}`} />
+        <CaretDown size="var(--icon-13)" className={`fcs-menu-caret ${open ? "is-open" : ""}`} />
       </button>
       <div ref={panelRef} className={`fcs-menu-panel ${open ? "is-open" : ""}`} role="menu" tabIndex={-1} onKeyDown={nav.listProps.onKeyDown}>
         {options.map((option) => (

@@ -83,10 +83,10 @@ export function ApiKeysDetails({ provider, onEdit, onDelete, onAddConnector }: A
               {t("apiKeys.main.connectorsBtn")}
             </button>
             <button type="button" className="ak-icon-btn" onClick={onEdit} title={t("apiKeys.details.edit")}>
-              <Pencil size={16} />
+              <Pencil size="var(--icon-md)" />
             </button>
             <button type="button" className="ak-icon-btn danger" onClick={() => setConfirmDelete(true)} title={t("apiKeys.details.delete")}>
-              <Trash size={16} />
+              <Trash size="var(--icon-md)" />
             </button>
           </div>
         </div>
@@ -99,7 +99,7 @@ export function ApiKeysDetails({ provider, onEdit, onDelete, onAddConnector }: A
           />
           <DetailRow label={t("apiKeys.details.signupLink")}>
             <button type="button" className="ak-signup-link" onClick={() => void open(provider.signup_url)}>
-              {t("apiKeys.details.openSite")} <ArrowSquareOut size={12} />
+              {t("apiKeys.details.openSite")} <ArrowSquareOut size="var(--icon-xs)" />
             </button>
           </DetailRow>
           <DetailRow label={t("apiKeys.details.apiKey")} value="••••••••" last />

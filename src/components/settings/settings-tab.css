@@ -1,9 +1,11 @@
 .settings-subtab {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 5px var(--space-sm);
-  border-radius: var(--radius-sm);
+  gap: var(--nav-item-gap);
+  min-width: 0;
+  min-height: var(--nav-item-height);
+  padding: 5px var(--nav-item-padding-x);
+  border-radius: var(--nav-item-radius);
   cursor: pointer;
   font-size: var(--text-sm);
   color: var(--ink-muted);
@@ -11,6 +13,13 @@
   font-weight: 400;
   margin-bottom: 2px;
   transition: all 200ms ease;
+}
+
+.settings-subtab-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .settings-subtab:hover {

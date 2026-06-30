@@ -158,7 +158,7 @@ export function ForecastChart(props: ForecastChartProps) {
       {!props.compact && (
         <div ref={controlsRef} className="fcc-chart-controls">
           <button className="fcc-chart-reset" type="button" onClick={handleResetZoom}>
-            <ArrowsClockwise size={13} />
+            <ArrowsClockwise size="var(--icon-13)" />
           </button>
           <input
             className="fcc-chart-zoom"

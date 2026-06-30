@@ -54,7 +54,7 @@ export function FilePreview({ name, path, thumbnail, isImage, onClose }: FilePre
             cursor: "pointer", display: "flex",
           }}
         >
-          <X size={14} />
+          <X size="var(--icon-sm)" />
         </button>
         {isImage && thumbnail ? (
           <img src={thumbnail} alt={name}

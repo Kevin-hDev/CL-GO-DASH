@@ -44,7 +44,7 @@ export function WakeupDetails({
     <div className="wk-details">
       <div className="wk-details-header">
         <button className="wk-back" onClick={onBack} type="button">
-          <CaretLeft size={16} weight="regular" />
+          <CaretLeft size="var(--icon-md)" weight="regular" />
         </button>
         <div className="wk-details-title">
           <span className="wk-details-model">{wakeup.model}</span>
@@ -72,7 +72,7 @@ export function WakeupDetails({
             title={t("heartbeat.edit")}
             type="button"
           >
-            <Pencil size={16} />
+            <Pencil size="var(--icon-md)" />
           </button>
           {confirmDelete ? (
             <button
@@ -80,7 +80,7 @@ export function WakeupDetails({
               onClick={handleDelete}
               type="button"
             >
-              <Trash size={14} />
+              <Trash size="var(--icon-sm)" />
               {t("heartbeat.confirmDelete")}
             </button>
           ) : (
@@ -90,7 +90,7 @@ export function WakeupDetails({
               title={t("heartbeat.delete")}
               type="button"
             >
-              <Trash size={16} />
+              <Trash size="var(--icon-md)" />
             </button>
           )}
           <button

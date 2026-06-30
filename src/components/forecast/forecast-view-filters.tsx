@@ -111,7 +111,7 @@ export function ForecastViewFilters({
         }}
       >
         <span>{t("forecast.view.filters.button")}</span>
-        <ChevronDown size={14} className={`fcf-chevron ${open ? "is-open" : ""}`} />
+        <ChevronDown size="var(--icon-sm)" className={`fcf-chevron ${open ? "is-open" : ""}`} />
       </button>
       <div ref={panelRef} className={`fcf-panel ${open ? "is-open" : ""}`} role="menu" tabIndex={-1} onKeyDown={nav.listProps.onKeyDown}>
         {groups.map((group) => (

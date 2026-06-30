@@ -85,7 +85,7 @@ export function ApiKeysConfigDialog({
               : t("apiKeys.dialog.addTitle", { name: provider.display_name })}
           </span>
           <button type="button" className="wk-dialog-close" onClick={onClose}>
-            <X size={16} />
+            <X size="var(--icon-md)" />
           </button>
         </header>
 
@@ -110,7 +110,7 @@ export function ApiKeysConfigDialog({
               onClick={() => void open(provider.signup_url)}
             >
               {t("apiKeys.dialog.getKeyAt", { name: provider.display_name })}
-              <ArrowSquareOut size={12} />
+              <ArrowSquareOut size="var(--icon-xs)" />
             </button>
           </div>
 

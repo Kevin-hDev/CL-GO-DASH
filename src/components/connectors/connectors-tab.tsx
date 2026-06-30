@@ -92,7 +92,7 @@ export function useConnectorsTabSlots({ navState, onNavChange, onNavReplace }: C
     <div className="ct-browse-header">
       <p className="ct-subtitle">{t("connectors.main.subtitle")}</p>
       <button type="button" className="ak-connectors-btn" onClick={() => setDialog({ kind: "browse" })}>
-        <Plus size={14} weight="bold" />
+        <Plus size="var(--icon-sm)" weight="bold" />
         {t("connectors.main.browseBtn")}
       </button>
     </div>

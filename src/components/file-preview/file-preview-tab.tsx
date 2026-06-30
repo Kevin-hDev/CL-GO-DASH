@@ -29,9 +29,9 @@ export function FilePreviewTab({
     >
       <span className="fp-tab-icon">
         <span className="fp-tab-file-icon">
-          {summary ? <List size={15} /> : <FileIcon name={operation?.name ?? label} size={15} />}
+          {summary ? <List size="var(--icon-15)" /> : <FileIcon name={operation?.name ?? label} size="var(--icon-15)" />}
         </span>
-        {!summary && <X className="fp-tab-close" size={15} onClick={(event) => {
+        {!summary && <X className="fp-tab-close" size="var(--icon-15)" onClick={(event) => {
           event.stopPropagation();
           onClose?.();
         }} />}

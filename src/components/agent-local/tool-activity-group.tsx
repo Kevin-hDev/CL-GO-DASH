@@ -65,7 +65,7 @@ function ToolActivityGroupRow({
         aria-label={t("agentLocal.toolActivity.toggleDetails")}
         onClick={toggle}
       >
-        <ToolIcon name={groupIcon(group.kind)} size={15} className="tb-group-icon" aria-hidden="true" />
+        <ToolIcon name={groupIcon(group.kind)} size="var(--icon-sm)" className="tb-group-icon" aria-hidden="true" />
         <span className="tb-group-title">
           {details ? (
             <>
@@ -81,14 +81,14 @@ function ToolActivityGroupRow({
           )}
         </span>
         <span className="tb-arrow tb-group-arrow" aria-hidden="true">
-          {isOpen ? <CaretUp size={14} weight="bold" /> : <CaretDown size={14} weight="bold" />}
+          {isOpen ? <CaretUp size="var(--icon-sm)" weight="bold" /> : <CaretDown size="var(--icon-sm)" weight="bold" />}
         </span>
         <span className="tb-group-state" aria-hidden="true">
-          {group.isPending && <Spinner size={14} className="tb-spinner" />}
+          {group.isPending && <Spinner size="var(--icon-sm)" className="tb-spinner" />}
           {!group.isPending && (
             <ToolStatusIcon
               status={group.hasError ? "error" : "success"}
-              size={14}
+              size="var(--icon-sm)"
               message={group.hasError ? t("agentLocal.toolActivity.groupError") : undefined}
             />
           )}

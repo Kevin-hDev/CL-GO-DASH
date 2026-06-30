@@ -9,6 +9,7 @@ import { ConversationSessionItem } from "./conversation-session-item";
 import { CollapsePanel } from "./collapse-panel";
 import { ConversationSectionToggle } from "./conversation-section-toggle";
 import { useKeyboard } from "@/hooks/use-keyboard";
+import { useMinuteNow } from "@/hooks/use-minute-now";
 import { useProjectDrag } from "@/hooks/use-project-drag";
 import type { AgentSessionMeta, Project } from "@/types/agent";
 import { idMatch } from "@/lib/utils";
@@ -42,6 +43,7 @@ export function ConversationList({
   const [projectsCollapsed, setProjectsCollapsed] = useState(false);
   const [collapsedProjects, setCollapsedProjects] = useState<Set<string>>(new Set());
   const [discussionsCollapsed, setDiscussionsCollapsed] = useState(false);
+  const nowMs = useMinuteNow();
   const toggleProject = useCallback((id: string) => {
     setCollapsedProjects((prev) => {
       const next = new Set(prev);
@@ -94,8 +96,8 @@ export function ConversationList({
     setCtx({ x: rect.right, y: rect.bottom, id });
   }, []);
   const ctxItems: ContextMenuItem[] = ctx ? [
-    { label: t("history.rename"), icon: <Pencil size={14} />, onClick: () => { setRenamingId(ctx.id); setTimeout(() => inputRef.current?.focus(), 0); } },
-    { label: t("history.delete"), icon: <WastebasketIcon size={14} />, onClick: () => onDelete(ctx.id) },
+    { label: t("history.rename"), icon: <Pencil size="var(--icon-sm)" />, onClick: () => { setRenamingId(ctx.id); setTimeout(() => inputRef.current?.focus(), 0); } },
+    { label: t("history.delete"), icon: <WastebasketIcon size="var(--icon-sm)" />, onClick: () => onDelete(ctx.id) },
   ] : [];
   const handleRenameSubmit = (id: string, value: string) => {
     if (value.trim()) onRename(id, value.trim());
@@ -114,8 +116,8 @@ export function ConversationList({
     <>
       <div className="conv-header">
         <button className="conv-new-btn" onClick={onCreate}>
-          <ComposeIcon size={14} />
-          <span>{t("agentLocal.newSession")}</span>
+          <ComposeIcon size="var(--icon-sm)" />
+          <span className="conv-new-label">{t("agentLocal.newSession")}</span>
         </button>
       </div>
       <div className={`conv-list ${drag.draggingId ? "is-dragging" : ""}`}>
@@ -146,6 +148,7 @@ export function ConversationList({
                     onGrab={drag.onGrab}
                     collapsed={collapsedProjects.has(p.id)}
                     onToggleCollapse={() => toggleProject(p.id)}
+                    nowMs={nowMs}
                   />
                 );
               })}
@@ -175,6 +178,7 @@ export function ConversationList({
                     onRenameSubmit={handleRenameSubmit}
                     onCancelRename={() => setRenamingId(null)}
                     onMenu={handleSessionMenu}
+                    nowMs={nowMs}
                   />
                 );
               })}

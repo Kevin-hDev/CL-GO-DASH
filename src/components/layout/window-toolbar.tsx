@@ -31,35 +31,35 @@ export function WindowToolbar({
     <div className={`window-toolbar${IS_MAC ? " is-mac" : ""}`}>
       <Tooltip label={`${t("settings.shortcuts.toggleSidebar")} (${MOD}B)`}>
         <button className="toolbar-btn" onClick={onToggleSidebar}>
-          <SidebarToggleIcon size={16} />
+          <SidebarToggleIcon size="var(--chrome-icon-md)" />
         </button>
       </Tooltip>
       <Tooltip label={`${t("settings.shortcuts.goBack")} (${MOD}◀)`}>
         <button className="toolbar-btn" onClick={onBack} disabled={!canGoBack}>
-          <ArrowLeftIcon size={16} />
+          <ArrowLeftIcon size="var(--chrome-icon-md)" />
         </button>
       </Tooltip>
       <Tooltip label={`${t("settings.shortcuts.goForward")} (${MOD}▶)`}>
         <button className="toolbar-btn" onClick={onForward} disabled={!canGoForward}>
-          <ArrowRightIcon size={16} />
+          <ArrowRightIcon size="var(--chrome-icon-md)" />
         </button>
       </Tooltip>
       <Tooltip label={`${t("settings.shortcuts.searchDialog")} (${MOD}G)`}>
         <button className="toolbar-btn" onClick={onSearch}>
-          <SearchIcon size={16} />
+          <SearchIcon size="var(--chrome-icon-md)" />
         </button>
       </Tooltip>
       {sidebarOpen && updatesCount > 0 && (
         <Tooltip label={t("updates.tooltip")}>
           <button className="toolbar-btn toolbar-btn-update" onClick={onToggleUpdates}>
-            <img src={updateIcon} alt="" style={{ width: 16, height: 16 }} />
+            <img src={updateIcon} alt="" style={{ width: "var(--chrome-icon-md)", height: "var(--chrome-icon-md)" }} />
           </button>
         </Tooltip>
       )}
       {!sidebarOpen && (
         <Tooltip label={`${t("settings.shortcuts.newSession")} (${ALT}${MOD}N)`}>
           <button className="toolbar-btn" onClick={onNewSession}>
-            <ComposeIcon size={16} />
+            <ComposeIcon size="var(--chrome-icon-md)" />
           </button>
         </Tooltip>
       )}

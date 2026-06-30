@@ -85,7 +85,7 @@ export function useChannelsTabSlots({ navState, onNavChange, onNavReplace }: Cha
     <div className="ct-browse-header">
       <p className="ct-subtitle">{t("channels.main.subtitle")}</p>
       <button type="button" className="ak-connectors-btn" onClick={() => setDialog({ kind: "browse" })}>
-        <Plus size={14} weight="bold" />
+        <Plus size="var(--icon-sm)" weight="bold" />
         {t("channels.main.browseBtn")}
       </button>
     </div>

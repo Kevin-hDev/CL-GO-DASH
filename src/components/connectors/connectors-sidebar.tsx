@@ -34,7 +34,7 @@ export function ConnectorsSidebar({
               className={`cts-item ${selectedId === c.id ? "active" : ""}`}
               onClick={() => onSelect(c.id)}
             >
-              <McpIcon connectorId={c.id} displayName={c.display_name} size={18} />
+              <McpIcon connectorId={c.id} displayName={c.display_name} size="var(--icon-lg)" />
               <span>{c.display_name}</span>
               {c.status === "disconnected" && <span className="cts-dot-off" />}
             </button>

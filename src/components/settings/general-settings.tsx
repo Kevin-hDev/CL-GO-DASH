@@ -10,10 +10,10 @@ import { SettingsRow } from "./settings-row";
 import { SettingsSelect } from "./settings-select";
 import { ThemeSelector } from "./theme-selector";
 import { CodeThemePreview } from "./code-theme-preview";
+import { FontSizeControl } from "./font-size-control";
 import {
   CODE_THEME_OPTIONS,
   FONT_FAMILY_OPTIONS,
-  FONT_SIZE_OPTIONS,
   LANGUAGE_OPTIONS,
   RESPONSE_LANGUAGE_OPTIONS,
 } from "./general-settings-options";
@@ -104,11 +104,7 @@ export function GeneralSettings({ themeChoice, onThemeChange, settings }: Genera
             title={t("settings.general.fontSizeTitle")}
             description={t("settings.general.fontSizeDesc")}
           >
-            <SettingsSelect
-              options={FONT_SIZE_OPTIONS}
-              value={String(settings.fontSize)}
-              onChange={(v) => settings.setFontSize(Number(v) as typeof settings.fontSize)}
-            />
+            <FontSizeControl value={settings.fontSize} onChange={settings.setFontSize} />
           </SettingsRow>
 
           <SettingsRow

@@ -191,6 +191,13 @@
     "delete": "删除",
     "loading": "加载中…"
   },
+  "sessionAge": {
+    "minute": "{{count}}分钟",
+    "hour": "{{count}}小时",
+    "day": "{{count}}天",
+    "month": "{{count}}月",
+    "year": "{{count}}年"
+  },
   "agentLocal": {
     "title": "对话",
     "newSession": "新建会话",
@@ -500,7 +507,9 @@
       "themeTitle": "主题",
       "themeDesc": "应用外观",
       "fontSizeTitle": "字体大小",
-      "fontSizeDesc": "应用中的文字大小",
+      "fontSizeDesc": "界面基础字号（像素）",
+      "fontSizeIncrease": "增大字体大小",
+      "fontSizeDecrease": "减小字体大小",
       "fontFamilyTitle": "字体",
       "fontFamilyDesc": "应用中使用的字体",
       "codeThemeTitle": "代码主题",

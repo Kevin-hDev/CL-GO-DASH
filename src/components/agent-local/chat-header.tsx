@@ -33,15 +33,16 @@ export function ChatHeader({
   onPanelModeChange,
 }: ChatHeaderProps) {
   const { t } = useTranslation();
+  const hasSession = Boolean(sessionId);
   return (
-    <div className="chat-header" role="presentation">
+    <div className={`chat-header ${hasSession ? "" : "chat-header-empty"}`} role="presentation">
       {sessionName ? (
         <span className="chat-header-title" title={sessionName}>
           {sessionName}
         </span>
       ) : null}
       <DragRegion style={{ flex: 1, minWidth: 0 }} />
-      {sessionId && (
+      {hasSession && (
         <span className="chat-header-actions">
           {showForecastDocs && onOpenForecastDocs && (
             <Tooltip label={t("forecast.docs.openTooltip")} align="right">
@@ -52,7 +53,7 @@ export function ChatHeader({
                   onOpenForecastDocs();
                 }}
               >
-                <BookOpen size={17} />
+                <BookOpen size="var(--chrome-icon-docs)" />
               </button>
             </Tooltip>
           )}
@@ -67,7 +68,7 @@ export function ChatHeader({
                 onTogglePreview();
               }}
             >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="var(--chrome-icon-md)" height="var(--chrome-icon-md)" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="1" y="2" width="14" height="12" rx="2" />
                 <line x1="10" y1="2" x2="10" y2="14" />
               </svg>
@@ -81,7 +82,7 @@ export function ChatHeader({
                 onToggleTerminal();
               }}
             >
-              <TerminalSquare size={18} />
+              <TerminalSquare size="var(--chrome-icon-lg)" />
             </button>
           </Tooltip>
         </span>

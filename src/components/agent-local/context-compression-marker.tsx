@@ -5,7 +5,7 @@ export function ContextCompressionMarker() {
   const { t } = useTranslation();
   return (
     <div className="msg-context-compressed" aria-label={t("agentLocal.contextCompressed")}>
-      <Archive size={14} aria-hidden="true" />
+      <Archive size="var(--icon-sm)" aria-hidden="true" />
       <span>{t("agentLocal.contextCompressed")}</span>
     </div>
   );

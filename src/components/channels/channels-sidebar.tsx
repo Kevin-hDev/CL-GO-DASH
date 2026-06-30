@@ -38,7 +38,7 @@ export function ChannelsSidebar({ accounts, healthEntries, selectedKey, onSelect
                 className={`cts-item ${selectedKey === key ? "active" : ""}`}
                 onClick={() => onSelect(key)}
               >
-                <ChannelIcon channelId={acc.channelId} size={18} />
+                <ChannelIcon channelId={acc.channelId} size="var(--icon-lg)" />
                 <span>{acc.accountId}</span>
                 {status !== "running" && <span className="cts-dot-off" />}
               </button>

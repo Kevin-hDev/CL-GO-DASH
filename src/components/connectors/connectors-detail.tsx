@@ -60,7 +60,7 @@ export function ConnectorsDetail({ connector, onToggleStatus, onDelete }: Connec
               {t(isConnected ? "connectors.detail.connected" : "connectors.detail.disconnected")}
             </button>
             <button type="button" className="ak-icon-btn danger" onClick={() => setConfirmDelete(true)} title={t("connectors.detail.confirmDeleteBtn")}>
-              <Trash size={16} />
+              <Trash size="var(--icon-md)" />
             </button>
           </div>
         </div>
@@ -95,7 +95,7 @@ export function ConnectorsDetail({ connector, onToggleStatus, onDelete }: Connec
               className="ctd-link"
               onClick={() => void open(connector.url)}
             >
-              {t("connectors.detail.openSite")} <ArrowSquareOut size={12} />
+              {t("connectors.detail.openSite")} <ArrowSquareOut size="var(--icon-xs)" />
             </button>
           </div>
         </SettingsCard>

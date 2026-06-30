@@ -131,7 +131,7 @@ export function ForecastNotes({ analysisId }: ForecastNotesProps) {
           )}
         </div>
         <button className="fcn-new-btn" type="button" onClick={startCreate}>
-          <Plus size={14} />
+          <Plus size="var(--icon-sm)" />
           <span>{t("forecast.notes.new")}</span>
         </button>
       </div>

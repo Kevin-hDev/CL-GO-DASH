@@ -25,17 +25,16 @@ interface NavItem {
   id: TabId;
   icon?: Icon;
   customIcon?: typeof HeartbeatIcon;
-  iconSize?: string;
   i18nKey: string;
 }
 
 const NAV_ITEMS: NavItem[] = [
   { id: "agent-local", icon: ChatsCircle, i18nKey: "nav.agentLocal" },
-  { id: "heartbeat", customIcon: HeartbeatIcon, iconSize: "1.44rem", i18nKey: "nav.heartbeat" },
+  { id: "heartbeat", customIcon: HeartbeatIcon, i18nKey: "nav.heartbeat" },
   { id: "personality", icon: UserCircle, i18nKey: "nav.personality" },
 ];
 
-const ICON_SIZE = "1.25rem";
+const ICON_SIZE = "var(--icon-md)";
 
 interface SidebarProps {
   activeTab: TabId;
@@ -88,11 +87,11 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
               "transition-all duration-200 ease-out",
             )}
             style={{
-              paddingTop: 5,
-              paddingBottom: 5,
-              marginLeft: 9,
-              marginRight: 9,
-              borderRadius: "var(--radius-md)",
+              paddingTop: "0.28rem",
+              paddingBottom: "0.28rem",
+              marginLeft: "0.5rem",
+              marginRight: "0.5rem",
+              borderRadius: "var(--nav-item-radius)",
               background: activeTab === item.id ? "var(--surface-hover)" : undefined,
             }}
           >
@@ -107,7 +106,7 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
               />
             ) : item.customIcon ? (
               <item.customIcon
-                size={item.iconSize ?? ICON_SIZE}
+                size={ICON_SIZE}
                 className={cn(
                   "shrink-0 text-[var(--ink-muted)]",
                   activeTab === item.id && "text-[var(--ink)]",
@@ -116,9 +115,9 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
             ) : null}
             <span
               className={cn(
-                "text-sm text-[var(--ink-muted)]",
+                "sb-nav-label text-sm text-[var(--ink-muted)]",
                 "w-0 overflow-hidden opacity-0",
-                "group-hover/sb:w-auto group-hover/sb:overflow-visible group-hover/sb:opacity-100",
+                "group-hover/sb:opacity-100",
                 "transition-opacity duration-150",
                 activeTab === item.id && "text-[var(--ink)] font-medium",
               )}
@@ -144,12 +143,12 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
           "transition-all duration-200 ease-out",
         )}
         style={{
-          paddingTop: 5,
-          paddingBottom: 5,
-          marginLeft: 9,
-          marginRight: 9,
-          marginBottom: 12,
-          borderRadius: "var(--radius-md)",
+          paddingTop: "0.28rem",
+          paddingBottom: "0.28rem",
+          marginLeft: "0.5rem",
+          marginRight: "0.5rem",
+          marginBottom: "0.67rem",
+          borderRadius: "var(--nav-item-radius)",
           background: activeTab === "settings" ? "var(--surface-hover)" : undefined,
         }}
       >
@@ -162,9 +161,9 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
           )}
         />
         <span className={cn(
-          "text-sm text-[var(--ink-muted)]",
+          "sb-nav-label text-sm text-[var(--ink-muted)]",
           "w-0 overflow-hidden opacity-0",
-          "group-hover/sb:w-auto group-hover/sb:overflow-visible group-hover/sb:opacity-100",
+          "group-hover/sb:opacity-100",
           "transition-opacity duration-150",
           activeTab === "settings" && "text-[var(--ink)] font-medium",
         )}>
