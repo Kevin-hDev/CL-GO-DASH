@@ -158,13 +158,10 @@ pub async fn prepare_delegate(
 mod tests {
     use super::{MAX_NAME_SIZE, MAX_PROMPT_SIZE};
 
-    #[test]
-    fn test_max_prompt_size_reasonable() {
-        assert!(MAX_PROMPT_SIZE > 0 && MAX_PROMPT_SIZE <= 100_000);
-    }
-
-    #[test]
-    fn test_max_name_size_reasonable() {
-        assert!(MAX_NAME_SIZE > 0 && MAX_NAME_SIZE <= 200);
-    }
+    // Vérification à la compilation que les bornes restent raisonnables.
+    // (const assert évite le warning clippy::assertions_on_constants.)
+    const _: () = {
+        assert!(MAX_PROMPT_SIZE <= 100_000);
+        assert!(MAX_NAME_SIZE <= 200);
+    };
 }

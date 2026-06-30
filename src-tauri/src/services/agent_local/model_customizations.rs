@@ -49,10 +49,12 @@ pub async fn save_for_update(ollama: &OllamaClient, name: &str) -> Option<Parsed
 }
 
 pub async fn restore_after_update(ollama: &OllamaClient, name: &str, saved: &ParsedModelfile) {
-    let mut restored = ParsedModelfile::default();
-    restored.from = Some(name.to_string());
-    restored.system = saved.system.clone();
-    restored.parameters = saved.parameters.clone();
+    let restored = ParsedModelfile {
+        from: Some(name.to_string()),
+        system: saved.system.clone(),
+        parameters: saved.parameters.clone(),
+        ..Default::default()
+    };
     let payload = restored.to_api_payload(name);
     if let Err(e) = ollama.post_create(&payload).await {
         eprintln!("[pull] restore perso {name} échoué: {e}");

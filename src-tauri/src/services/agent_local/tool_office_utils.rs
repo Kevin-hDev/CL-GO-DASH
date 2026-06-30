@@ -162,7 +162,11 @@ pub fn validate_color_hex(val: &Value, field: &str) -> Result<Option<String>, St
 
 /// Mappe un nom de style de bordure vers l'identifiant OOXML.
 pub fn border_style_name(val: &Value) -> Result<&'static str, String> {
-    match val.as_str().map(|s| s.trim().to_ascii_lowercase()).as_deref() {
+    match val
+        .as_str()
+        .map(|s| s.trim().to_ascii_lowercase())
+        .as_deref()
+    {
         Some("thin") => Ok("thin"),
         Some("medium") => Ok("medium"),
         Some("thick") => Ok("thick"),

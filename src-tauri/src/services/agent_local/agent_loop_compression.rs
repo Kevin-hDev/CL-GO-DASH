@@ -1,5 +1,5 @@
-use super::compress_hook;
 use super::agent_loop_support;
+use super::compress_hook;
 use super::stream_events::AgentEventEmitter;
 use super::tool_executor_compression::{ToolCompression, ToolCompressionProvider};
 use super::types_ollama::{ChatMessage, StreamResult};

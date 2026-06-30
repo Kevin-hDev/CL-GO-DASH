@@ -1,6 +1,6 @@
 use crate::services::agent_local::tool_office_utils::{
-    border_style_name, coerce_values_array, normalize_formula, try_value_as_u32, validate_color_hex,
-    value_as_f64,
+    border_style_name, coerce_values_array, normalize_formula, try_value_as_u32,
+    validate_color_hex, value_as_f64,
 };
 use crate::services::agent_local::tool_spreadsheet_write::parse_cell_ref;
 use serde_json::Value;
@@ -181,14 +181,7 @@ fn apply_set_border(book: &mut umya_spreadsheet::Spreadsheet, op: &Value) -> Res
                 .filter_map(|v| v.as_str().map(|s| s.to_ascii_lowercase()))
                 .collect()
         })
-        .unwrap_or_else(|| {
-            vec![
-                "top".into(),
-                "bottom".into(),
-                "left".into(),
-                "right".into(),
-            ]
-        });
+        .unwrap_or_else(|| vec!["top".into(), "bottom".into(), "left".into(), "right".into()]);
     let borders = sheet.get_style_mut((col, row)).get_borders_mut();
     for side in sides {
         let mut border = umya_spreadsheet::Border::default();
@@ -239,9 +232,7 @@ fn apply_set_row_height(
     let sheet = book
         .get_sheet_by_name_mut(&sheet_name)
         .ok_or("Feuille introuvable")?;
-    sheet
-        .get_row_dimension_mut(&row_1based)
-        .set_height(height);
+    sheet.get_row_dimension_mut(&row_1based).set_height(height);
     Ok(())
 }
 

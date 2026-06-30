@@ -15,7 +15,13 @@ fn post_record_read_file_registers_path() {
 
     let args = json!({ "path": path.to_str().unwrap() });
     let tr = ToolResult::ok("hello".to_string());
-    post_record_read("read_file", &args, std::path::Path::new("."), &tr, &mut guard);
+    post_record_read(
+        "read_file",
+        &args,
+        std::path::Path::new("."),
+        &tr,
+        &mut guard,
+    );
 
     // Le fichier est maintenant enregistré → write autorisé
     assert!(guard.check_write(path).is_ok());
@@ -33,18 +39,20 @@ fn post_record_read_grep_registers_matched_files() {
     std::fs::write(&f2, "TODO also\n").unwrap();
 
     // Simule un résultat de grep
-    let content = format!(
-        "{}:1:TODO fix\n{}:1:TODO also",
-        f1.display(),
-        f2.display()
-    );
+    let content = format!("{}:1:TODO fix\n{}:1:TODO also", f1.display(), f2.display());
     let args = json!({ "pattern": "TODO", "path": dir.path().to_str().unwrap() });
     let tr = ToolResult::ok(content);
     post_record_read("grep", &args, dir.path(), &tr, &mut guard);
 
     // Les 2 fichiers sont maintenant "vus" → write autorisé sans read_file
-    assert!(guard.check_write(&f1).is_ok(), "f1 devrait être autorisé après grep");
-    assert!(guard.check_write(&f2).is_ok(), "f2 devrait être autorisé après grep");
+    assert!(
+        guard.check_write(&f1).is_ok(),
+        "f1 devrait être autorisé après grep"
+    );
+    assert!(
+        guard.check_write(&f2).is_ok(),
+        "f2 devrait être autorisé après grep"
+    );
 }
 
 /// glob doit enregistrer tous les fichiers trouvés.
@@ -62,8 +70,14 @@ fn post_record_read_glob_registers_found_files() {
     let tr = ToolResult::ok(content);
     post_record_read("glob", &args, dir.path(), &tr, &mut guard);
 
-    assert!(guard.check_write(&f1).is_ok(), "f1 devrait être autorisé après glob");
-    assert!(guard.check_write(&f2).is_ok(), "f2 devrait être autorisé après glob");
+    assert!(
+        guard.check_write(&f1).is_ok(),
+        "f1 devrait être autorisé après glob"
+    );
+    assert!(
+        guard.check_write(&f2).is_ok(),
+        "f2 devrait être autorisé après glob"
+    );
 }
 
 /// list_dir doit enregistrer les fichiers de l'arborescence.
@@ -82,8 +96,14 @@ fn post_record_read_list_dir_registers_files() {
 
     let main = dir.path().join("main.rs");
     let helper = dir.path().join("utils").join("helper.rs");
-    assert!(guard.check_write(&main).is_ok(), "main.rs devrait être autorisé après list_dir");
-    assert!(guard.check_write(&helper).is_ok(), "helper.rs devrait être autorisé");
+    assert!(
+        guard.check_write(&main).is_ok(),
+        "main.rs devrait être autorisé après list_dir"
+    );
+    assert!(
+        guard.check_write(&helper).is_ok(),
+        "helper.rs devrait être autorisé"
+    );
 }
 
 /// Un write réussi doit enregistrer le fichier comme "vu" pour le tour suivant.
@@ -100,7 +120,13 @@ fn post_record_write_registers_written_file() {
     // Simule un write_file réussi
     let args = json!({ "path": path.to_str().unwrap() });
     let tr = ToolResult::ok("ok".to_string());
-    post_record_write("write_file", &args, std::path::Path::new("."), &tr, &mut guard);
+    post_record_write(
+        "write_file",
+        &args,
+        std::path::Path::new("."),
+        &tr,
+        &mut guard,
+    );
 
     // Après write : autorisé (le fichier est "vu")
     assert!(
@@ -119,7 +145,13 @@ fn post_record_write_error_does_not_register() {
 
     let args = json!({ "path": path.to_str().unwrap() });
     let tr = ToolResult::err("échec écriture");
-    post_record_write("write_file", &args, std::path::Path::new("."), &tr, &mut guard);
+    post_record_write(
+        "write_file",
+        &args,
+        std::path::Path::new("."),
+        &tr,
+        &mut guard,
+    );
 
     // Toujours bloqué car le write a échoué
     assert!(guard.check_write(path).is_err());

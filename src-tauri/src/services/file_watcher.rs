@@ -89,9 +89,7 @@ pub fn start(app: &AppHandle) {
             }
         }
 
-        loop {
-            let Ok(first) = rx.recv() else { break };
-
+        while let Ok(first) = rx.recv() {
             thread::sleep(Duration::from_millis(DEBOUNCE_MS));
 
             let mut all_paths: Vec<PathBuf> = first.paths;

@@ -1,5 +1,7 @@
 use crate::services::agent_local::stream_events::AgentEventEmitter;
-use crate::services::agent_local::types_ollama::{ChatMessage, StreamEvent, StreamOutcome, StreamResult};
+use crate::services::agent_local::types_ollama::{
+    ChatMessage, StreamEvent, StreamOutcome, StreamResult,
+};
 use crate::services::compress::realtime_budget::RealtimeBudget;
 use crate::services::stream_utils::compute_tps;
 use eventsource_stream::Eventsource;

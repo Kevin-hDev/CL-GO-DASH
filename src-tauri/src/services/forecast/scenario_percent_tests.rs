@@ -2,7 +2,7 @@
 //! pourcentage aux prédictions et quantiles.
 
 use super::build_percent_scenario;
-use crate::services::forecast::types::{ForecastResult, Prediction, Quantiles};
+use crate::services::forecast::types::ForecastResult;
 
 fn result_with_predictions(values: &[f64], quantiles: (f64, f64, f64)) -> ForecastResult {
     serde_json::from_value(serde_json::json!({

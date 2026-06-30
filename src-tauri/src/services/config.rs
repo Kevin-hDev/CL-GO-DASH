@@ -18,10 +18,7 @@ pub fn read_config() -> Result<ClgoConfig, String> {
 
 /// Variante testable : lit le config depuis `path` et écrit la sentinelle de
 /// corruption dans `data_dir`. La logique de parsing tolérant vit ici.
-pub(crate) fn read_config_from_path(
-    path: &Path,
-    data_dir: &Path,
-) -> Result<ClgoConfig, String> {
+pub(crate) fn read_config_from_path(path: &Path, data_dir: &Path) -> Result<ClgoConfig, String> {
     let content = match fs::read_to_string(path) {
         Ok(c) => c,
         Err(_) => return Ok(ClgoConfig::default()),
@@ -92,7 +89,7 @@ pub(crate) fn write_config_to_path(path: &Path, config: &ClgoConfig) -> Result<(
 
     // Atomic write: tmp + rename
     fs::write(&tmp_path, &content).map_err(|e| format!("Cannot write tmp config: {}", e))?;
-    fs::rename(&tmp_path, &path).map_err(|e| format!("Cannot rename config: {}", e))?;
+    fs::rename(&tmp_path, path).map_err(|e| format!("Cannot rename config: {}", e))?;
 
     Ok(())
 }

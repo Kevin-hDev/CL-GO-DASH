@@ -180,8 +180,7 @@ async fn large_file_is_truncated() {
     let msg = compression_context_message(&messages, 200_000, tmp.path(), CompressionMode::Manual)
         .await
         .unwrap();
-    assert!(
-        msg.content
-            .contains("[content truncated for context budget]")
-    );
+    assert!(msg
+        .content
+        .contains("[content truncated for context budget]"));
 }

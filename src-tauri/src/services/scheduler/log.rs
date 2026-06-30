@@ -183,12 +183,21 @@ mod tests {
     fn generic_error_maps_auth_failures() {
         // Un message backend contenant potentiellement un token à côté de
         // "unauthorized" doit être masqué en message générique.
-        assert_eq!(generic_error("401 unauthorized"), "Authentification échouée");
-        assert_eq!(generic_error("clé API invalide"), "Authentification échouée");
+        assert_eq!(
+            generic_error("401 unauthorized"),
+            "Authentification échouée"
+        );
+        assert_eq!(
+            generic_error("clé API invalide"),
+            "Authentification échouée"
+        );
         assert_eq!(generic_error("auth failed"), "Authentification échouée");
         // Note : "api key" sans accent ne matche pas la branche auth → message
         // générique "Le réveil a échoué" (le token reste tout de même masqué).
-        assert_eq!(generic_error("invalid api key sk-xxx"), "Le réveil a échoué");
+        assert_eq!(
+            generic_error("invalid api key sk-xxx"),
+            "Le réveil a échoué"
+        );
     }
 
     #[test]

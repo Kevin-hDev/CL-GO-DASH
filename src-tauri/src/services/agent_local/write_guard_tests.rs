@@ -27,7 +27,10 @@ fn warns_write_to_existing_unread_file() {
         msg.contains("Écriture bloquée"),
         "le message doit indiquer un blocage, pas un warning: {msg}"
     );
-    assert!(msg.contains("read_file"), "doit mentionner read_file: {msg}");
+    assert!(
+        msg.contains("read_file"),
+        "doit mentionner read_file: {msg}"
+    );
 }
 
 #[test]

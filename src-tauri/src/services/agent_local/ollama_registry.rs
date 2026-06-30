@@ -88,7 +88,7 @@ where
 
     let byte_stream = resp
         .bytes_stream()
-        .map(|r| r.map_err(|e| std::io::Error::other(e)));
+        .map(|r| r.map_err(std::io::Error::other));
     let mut lines = BufReader::new(StreamReader::new(byte_stream)).lines();
     let digests = pulled_digests;
     let mut line_count: u64 = 0;

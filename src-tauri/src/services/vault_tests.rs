@@ -43,9 +43,7 @@ fn decrypt_fails_with_wrong_key() {
     // jamais retourner du pseudo-plaintext silencieux.
     let key = test_key();
     let mut wrong_key = vec![0u8; 32];
-    for b in &mut wrong_key {
-        *b = 0xFF;
-    }
+    wrong_key.fill(0xFF);
 
     let plaintext = b"top secret api key";
     let encrypted = encrypt(&key, plaintext).expect("encrypt");
@@ -83,10 +81,7 @@ fn decrypt_rejects_unsupported_version() {
     // par une version inconnue (99). La chaîne "version": 1 est présente en
     // tête du flux serde_json::to_vec_pretty.
     let needle = b"\"version\": 1";
-    if let Some(pos) = encrypted
-        .windows(needle.len())
-        .position(|w| w == needle)
-    {
+    if let Some(pos) = encrypted.windows(needle.len()).position(|w| w == needle) {
         encrypted[pos + needle.len() - 1] = b'9'; // version 9
         encrypted.insert(pos + needle.len(), b'9'); // 99
     }

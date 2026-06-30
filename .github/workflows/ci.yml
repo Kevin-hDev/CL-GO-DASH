@@ -33,15 +33,13 @@ jobs:
         with:
           workspaces: src-tauri
 
-      - name: Format check (advisory)
+      - name: Format check (bloquant)
         working-directory: src-tauri
         run: cargo fmt --check
-        continue-on-error: true
 
-      - name: Clippy (advisory)
+      - name: Clippy strict (bloquant)
         working-directory: src-tauri
-        run: cargo clippy --all-targets
-        continue-on-error: true
+        run: cargo clippy --all-targets -- -D warnings
 
       - name: Unit + integration tests
         working-directory: src-tauri

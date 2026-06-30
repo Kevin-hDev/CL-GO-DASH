@@ -80,7 +80,10 @@ mod tests {
         doc.read_to_string(&mut xml).unwrap();
         // Vraie numérotation OOXML : référence au numId 1 (ordered)
         assert!(xml.contains("<w:numPr>"), "devrait utiliser w:numPr: {xml}");
-        assert!(xml.contains("w:val=\"1\""), "devrait référencer numId 1 (ordered)");
+        assert!(
+            xml.contains("w:val=\"1\""),
+            "devrait référencer numId 1 (ordered)"
+        );
         assert!(xml.contains("Premier"));
     }
 
@@ -101,7 +104,10 @@ mod tests {
         doc.read_to_string(&mut xml).unwrap();
         // Vraie numérotation OOXML : référence au numId 2 (bullet)
         assert!(xml.contains("<w:numPr>"), "devrait utiliser w:numPr: {xml}");
-        assert!(xml.contains("w:val=\"2\""), "devrait référencer numId 2 (bullet)");
+        assert!(
+            xml.contains("w:val=\"2\""),
+            "devrait référencer numId 2 (bullet)"
+        );
         assert!(xml.contains("Item A"));
     }
 

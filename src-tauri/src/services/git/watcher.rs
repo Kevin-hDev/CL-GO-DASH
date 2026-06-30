@@ -1,5 +1,5 @@
 use notify::{Event, EventKind, RecursiveMode, Watcher};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc;
 use std::sync::Arc;
@@ -11,7 +11,7 @@ const DEBOUNCE_MS: u64 = 150;
 
 static WATCHER_ACTIVE: std::sync::Mutex<Option<Arc<AtomicBool>>> = std::sync::Mutex::new(None);
 
-fn resolve_git_dir(repo_path: &PathBuf) -> Option<PathBuf> {
+fn resolve_git_dir(repo_path: &Path) -> Option<PathBuf> {
     let dot_git = repo_path.join(".git");
     if dot_git.is_dir() {
         return Some(dot_git);

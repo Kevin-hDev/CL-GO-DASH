@@ -142,7 +142,7 @@ mod tests {
     fn write_agent_md_unknown_scope_returns_error() {
         // Vérifie que le chemin de scope inconnu retourne une erreur générique
         // On teste la logique du match directement
-        let result: Result<(), String> = match "unknown".as_ref() {
+        let result: Result<(), String> = match "unknown" {
             "global" | "project" => Ok(()),
             _ => Err("Scope invalide".to_string()),
         };

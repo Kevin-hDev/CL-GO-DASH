@@ -7,11 +7,11 @@ use crate::services::agent_local::types_tools::ToolResult;
 use crate::services::agent_local::write_guard::WriteGuard;
 use tokio_util::sync::CancellationToken;
 
+use super::tool_executor_compression::ToolCompression;
 use super::tool_executor_helpers::{
     check_write_guard, dispatch_or_interactive, post_record_read, post_record_write,
     push_tool_result, resolve_tool_path,
 };
-use super::tool_executor_compression::ToolCompression;
 
 pub async fn run_sequential(
     on_event: &AgentEventEmitter,
@@ -53,7 +53,15 @@ pub async fn run_sequential(
             )
             .await;
             compressed |= push_and_compress(
-                on_event, messages, name, args, working_dir, tr, idx, tool_call_ids, compression,
+                on_event,
+                messages,
+                name,
+                args,
+                working_dir,
+                tr,
+                idx,
+                tool_call_ids,
+                compression,
             )
             .await;
             continue;
@@ -70,7 +78,15 @@ pub async fn run_sequential(
                 )
                 .await;
                 compressed |= push_and_compress(
-                    on_event, messages, name, args, working_dir, tr, idx, tool_call_ids, compression,
+                    on_event,
+                    messages,
+                    name,
+                    args,
+                    working_dir,
+                    tr,
+                    idx,
+                    tool_call_ids,
+                    compression,
                 )
                 .await;
                 continue;
@@ -89,7 +105,15 @@ pub async fn run_sequential(
             )
             .await;
             compressed |= push_and_compress(
-                on_event, messages, name, args, working_dir, tr, idx, tool_call_ids, compression,
+                on_event,
+                messages,
+                name,
+                args,
+                working_dir,
+                tr,
+                idx,
+                tool_call_ids,
+                compression,
             )
             .await;
             continue;
@@ -133,7 +157,15 @@ pub async fn run_sequential(
         )
         .await;
         compressed |= push_and_compress(
-            on_event, messages, name, args, working_dir, tr, idx, tool_call_ids, compression,
+            on_event,
+            messages,
+            name,
+            args,
+            working_dir,
+            tr,
+            idx,
+            tool_call_ids,
+            compression,
         )
         .await;
     }

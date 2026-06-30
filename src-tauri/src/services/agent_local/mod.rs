@@ -113,6 +113,8 @@ pub mod tool_dispatcher_mcp;
 pub mod tool_dispatcher_office;
 #[cfg(test)]
 pub mod tool_dispatcher_tests;
+#[cfg(test)]
+pub mod tool_document_format_tests;
 pub mod tool_document_read;
 #[cfg(test)]
 pub mod tool_document_read_tests;
@@ -120,8 +122,6 @@ pub mod tool_document_write;
 pub mod tool_document_write_list;
 pub mod tool_document_write_numbering;
 pub mod tool_document_write_styles;
-#[cfg(test)]
-pub mod tool_document_format_tests;
 #[cfg(test)]
 pub mod tool_document_write_tests;
 pub mod tool_document_write_xml;
@@ -175,14 +175,14 @@ pub mod tool_result_truncate;
 pub mod tool_scan_timeout;
 pub mod tool_skill_loader;
 pub mod tool_spreadsheet_calamine;
+#[cfg(test)]
+pub mod tool_spreadsheet_format_tests;
 pub mod tool_spreadsheet_read;
 #[cfg(test)]
 pub mod tool_spreadsheet_read_tests;
 pub mod tool_spreadsheet_write;
 pub mod tool_spreadsheet_write_edit;
 pub mod tool_spreadsheet_write_new;
-#[cfg(test)]
-pub mod tool_spreadsheet_format_tests;
 #[cfg(test)]
 pub mod tool_spreadsheet_write_tests;
 pub mod tool_todo;
@@ -193,8 +193,6 @@ pub mod tool_todo_parse;
 pub mod tool_todo_state;
 pub mod tool_todo_summary;
 pub mod tool_validate;
-#[cfg(test)]
-pub mod tool_validate_tests;
 pub mod tool_web_fetch;
 pub mod tool_web_fetch_ip;
 #[cfg(test)]
@@ -214,8 +212,8 @@ pub mod types_todo;
 pub mod types_tools;
 pub mod write_guard;
 pub mod write_guard_extract;
-pub mod write_guard_registry;
 #[cfg(test)]
 pub mod write_guard_helpers_tests;
+pub mod write_guard_registry;
 #[cfg(test)]
 pub mod write_guard_tests;

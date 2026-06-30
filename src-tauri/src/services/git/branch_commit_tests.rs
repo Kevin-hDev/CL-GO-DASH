@@ -137,10 +137,9 @@ fn sanitize_description_rejects_control_chars() {
 
 #[test]
 fn sanitize_description_allows_newline_and_tab() {
-    let result =
-        branch_commit::sanitize_description(Some("line1\n\tindented".to_string()))
-            .unwrap()
-            .unwrap();
+    let result = branch_commit::sanitize_description(Some("line1\n\tindented".to_string()))
+        .unwrap()
+        .unwrap();
     assert_eq!(result, "line1\n\tindented");
 }
 
@@ -153,7 +152,9 @@ fn sanitize_description_rejects_overlong() {
 #[test]
 fn sanitize_description_accepts_at_max_length() {
     let exact = "a".repeat(2000);
-    let result = branch_commit::sanitize_description(Some(exact)).unwrap().unwrap();
+    let result = branch_commit::sanitize_description(Some(exact))
+        .unwrap()
+        .unwrap();
     assert_eq!(result.chars().count(), 2000);
 }
 
@@ -186,4 +187,3 @@ fn build_commit_message_with_empty_description_omits_body() {
     let msg = branch_commit::build_commit_message("dev", Some(""));
     assert_eq!(msg, "WIP: save changes before switching to dev");
 }
-

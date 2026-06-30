@@ -94,8 +94,7 @@ mod tests {
     async fn write_paragraph_align_center() {
         let dir = tmp();
         let path = dir.path().join("align.docx");
-        let content =
-            json!([{"type": "paragraph", "text": "centré", "align": "center"}]);
+        let content = json!([{"type": "paragraph", "text": "centré", "align": "center"}]);
         let result = write_document(path.to_str().unwrap(), &content, dir.path()).await;
         assert!(!result.is_error, "Erreur: {}", result.content);
         let xml = read_zip_entry(&path, "word/document.xml");
@@ -284,7 +283,11 @@ mod tests {
             "runs": [{"text": "ok", "color": ""}]
         }]);
         let result = write_document(path.to_str().unwrap(), &content, dir.path()).await;
-        assert!(!result.is_error, "couleur vide ne devrait pas échouer: {}", result.content);
+        assert!(
+            !result.is_error,
+            "couleur vide ne devrait pas échouer: {}",
+            result.content
+        );
         let xml = read_zip_entry(&path, "word/document.xml");
         assert!(xml.contains("ok"));
     }

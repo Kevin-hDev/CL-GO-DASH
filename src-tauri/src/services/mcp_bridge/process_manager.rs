@@ -33,9 +33,7 @@ static HANDLES: std::sync::LazyLock<Mutex<HashMap<String, ProcessHandle>>> =
 pub fn get_alive_handle(connector_id: &str) -> Option<ProcessHandle> {
     let mut pool = POOL.lock().ok()?;
     let entry = pool.get_mut(connector_id)?;
-    if entry.child.id().is_none() {
-        return None;
-    }
+    entry.child.id()?;
     entry.last_used = Instant::now();
     let handles = HANDLES.lock().ok()?;
     handles.get(connector_id).map(|h| ProcessHandle {

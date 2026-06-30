@@ -13,7 +13,7 @@ pub use crate::services::gpu_vram::{compute_default_num_ctx, detect_vram_mb};
 pub fn detect() -> GpuVendor {
     #[cfg(target_os = "macos")]
     {
-        return detect_macos();
+        detect_macos()
     }
     #[cfg(target_os = "linux")]
     {
