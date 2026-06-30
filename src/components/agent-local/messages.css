@@ -150,7 +150,7 @@
   align-items: center;
   font-size: 0.6875rem;
   font-family: var(--font-mono, monospace);
-  color: var(--tool-bash);
+  color: var(--pulse);
   margin-left: 4px;
 }
 
