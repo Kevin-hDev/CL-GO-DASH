@@ -79,16 +79,16 @@
 }
 
 .conv-session-tail {
-  position: relative;
-  display: flex;
-  flex: 0 0 3rem;
+  display: inline-grid;
+  flex: 0 0 auto;
   align-items: center;
-  justify-content: flex-end;
-  min-width: 3rem;
-  height: var(--nav-item-height);
+  justify-items: end;
+  min-width: 0;
+  line-height: 1;
 }
 
 .conv-session-age {
+  grid-area: 1 / 1;
   color: var(--ink-faint);
   font-size: var(--text-sm);
   font-variant-numeric: tabular-nums;
@@ -201,8 +201,7 @@
 
 /* Session menu button (three dots) */
 .conv-session-menu-btn {
-  position: absolute;
-  right: 0;
+  grid-area: 1 / 1;
   padding: 2px;
   border-radius: var(--radius-sm);
   color: var(--ink-faint);
@@ -214,6 +213,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  line-height: 0;
 }
 
 .conv-item:hover .conv-session-age {
