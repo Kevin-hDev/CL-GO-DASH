@@ -308,9 +308,12 @@
   },
   "permissionMode": {
     "title": "Modus",
-    "chatLabel": "Chat",
-    "autoLabel": "Automatische Berechtigungen",
-    "manualLabel": "Manuelle Berechtigungen",
+    "chatLabel": "Chatbot",
+    "chatDescription": "Chatten ohne Zugriff auf Werkzeuge, Dateien oder Internet",
+    "autoLabel": "Vollzugriff",
+    "autoDescription": "Uneingeschränkter Zugriff auf Internet und Dateien auf deinem Computer",
+    "manualLabel": "Autorisierung anfragen",
+    "manualDescription": "Immer fragen, bevor externe Dateien geändert oder das Internet genutzt wird",
     "toggleHint": "Modus wechseln (Shift+Tab)"
   },
   "permissionDialog": {

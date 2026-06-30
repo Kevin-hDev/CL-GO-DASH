@@ -14,6 +14,7 @@ export {
   Copy,
   Check,
   Warning,
+  ShieldWarning,
   ArrowsClockwise,
   Gear,
   X,

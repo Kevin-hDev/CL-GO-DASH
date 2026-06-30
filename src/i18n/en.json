@@ -307,9 +307,12 @@
   },
   "permissionMode": {
     "title": "Mode",
-    "chatLabel": "Chat",
-    "autoLabel": "Auto permissions",
-    "manualLabel": "Manual permissions",
+    "chatLabel": "Chatbot",
+    "chatDescription": "Chat without access to tools, files, or the Internet",
+    "autoLabel": "Full access",
+    "autoDescription": "Unrestricted access to the Internet and files on your computer",
+    "manualLabel": "Ask permission",
+    "manualDescription": "Always ask before changing external files or using the Internet",
     "toggleHint": "Switch mode (Shift+Tab)"
   },
   "permissionDialog": {
