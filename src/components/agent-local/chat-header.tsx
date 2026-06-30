@@ -52,7 +52,7 @@ export function ChatHeader({
                   onOpenForecastDocs();
                 }}
               >
-                <BookOpen size="var(--icon-lg)" />
+                <BookOpen size="var(--chrome-icon-docs)" />
               </button>
             </Tooltip>
           )}
@@ -67,7 +67,7 @@ export function ChatHeader({
                 onTogglePreview();
               }}
             >
-              <svg width="var(--icon-md)" height="var(--icon-md)" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="var(--chrome-icon-md)" height="var(--chrome-icon-md)" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="1" y="2" width="14" height="12" rx="2" />
                 <line x1="10" y1="2" x2="10" y2="14" />
               </svg>
@@ -81,7 +81,7 @@ export function ChatHeader({
                 onToggleTerminal();
               }}
             >
-              <TerminalSquare size="var(--icon-lg)" />
+              <TerminalSquare size="var(--chrome-icon-lg)" />
             </button>
           </Tooltip>
         </span>

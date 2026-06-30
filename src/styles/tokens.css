@@ -33,6 +33,9 @@
   --icon-lg: 1rem;
   --icon-xl: 1.1111rem;
   --icon-2xl: 1.3333rem;
+  --chrome-icon-md: 16px;
+  --chrome-icon-docs: 17px;
+  --chrome-icon-lg: 18px;
 
   --sidebar-collapsed: 2.75rem;
   --sidebar-expanded: 8.25rem;
