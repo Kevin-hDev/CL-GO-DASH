@@ -489,6 +489,8 @@
       "fontSizeDesc": "应用中的文字大小",
       "fontFamilyTitle": "字体",
       "fontFamilyDesc": "应用中使用的字体",
+      "codeThemeTitle": "代码主题",
+      "codeThemeDesc": "代码块和预览的配色",
       "languageTitle": "语言",
       "languageDesc": "界面语言",
       "responseLangTitle": "LLM 回复语言",

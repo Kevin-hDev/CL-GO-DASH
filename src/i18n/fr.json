@@ -489,6 +489,8 @@
       "fontSizeDesc": "Taille du texte dans l'application",
       "fontFamilyTitle": "Police d'écriture",
       "fontFamilyDesc": "Police utilisée dans l'application",
+      "codeThemeTitle": "Thème de code",
+      "codeThemeDesc": "Coloration des blocs de code et previews",
       "languageTitle": "Langue",
       "languageDesc": "Langue de l'interface",
       "responseLangTitle": "Langue de réponse du LLM",
