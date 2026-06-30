@@ -228,6 +228,17 @@
     "working": "已工作 {{seconds}}s",
     "tools": "Tools",
     "tokens": "tokens",
+    "contextUsage": {
+      "title": "上下文窗口",
+      "categories": {
+        "messages": "消息",
+        "systemTools": "系统工具",
+        "mcpConnectors": "MCP / 连接器",
+        "skills": "Skills",
+        "metaContext": "元上下文",
+        "systemPrompt": "System prompt"
+      }
+    },
     "tps": "t/s",
     "fileReadError": "无法读取文件",
     "toolActivity": {

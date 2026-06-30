@@ -13,6 +13,7 @@ import { PermissionModeSelector } from "./permission-mode-selector";
 import { PlanModeBadge } from "./plan-mode-badge";
 import { activeSkillsInText, highlightSkillText } from "@/lib/skill-text";
 import type { DroppedFile } from "@/hooks/use-file-drop";
+import type { ContextUsageBreakdown } from "@/hooks/context-usage-breakdown";
 import type { PermissionMode } from "@/hooks/use-permission-mode";
 import type { ReasoningMode } from "@/lib/reasoning-modes";
 import "./chat.css";
@@ -35,6 +36,7 @@ interface ChatInputProps {
   files?: DroppedFile[];
   contextUsed: number;
   contextMax: number;
+  contextBreakdown?: ContextUsageBreakdown;
   interactivePending?: boolean;
   permissionMode: PermissionMode;
   planModeEnabled?: boolean;
@@ -53,7 +55,7 @@ interface ChatInputProps {
 
 export function ChatInput({
   modelName, providerName, isStreaming, reasoningMode, files,
-  contextUsed, contextMax, interactivePending = false,
+  contextUsed, contextMax, contextBreakdown, interactivePending = false,
   permissionMode, planModeEnabled = false, onPermissionModeChange, onPlanModeChange,
   onSend, onStop, onFileImport, onModelChange, onReasoningModeChange,
   onRemoveFile, onPreviewFile, onClearFiles,
@@ -78,7 +80,7 @@ export function ChatInput({
     skills.clearSkills();
     onClearFiles?.();
     if (ref.current) ref.current.style.height = "auto";
-  }, [text, hasContent, hasFiles, files, skills, isStreaming, onSend, onClearFiles, ref]);
+  }, [text, hasContent, hasFiles, files, skills, isStreaming, interactivePending, onSend, onClearFiles, ref]);
 
   const handleChange = useCallback((value: string) => {
     setText(value);
@@ -173,7 +175,7 @@ export function ChatInput({
           planModeEnabled={planModeEnabled}
           onPlanModeChange={onPlanModeChange ?? (() => {})}
         />
-        <ContextProgress used={contextUsed} max={contextMax} />
+        <ContextProgress used={contextUsed} max={contextMax} breakdown={contextBreakdown} />
         <PermissionModeSelector mode={permissionMode} onChange={onPermissionModeChange} />
         <ModelSelector
           selectedModel={modelName}

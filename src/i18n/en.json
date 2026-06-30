@@ -227,6 +227,17 @@
     "working": "Working for {{seconds}}s",
     "tools": "Tools",
     "tokens": "tokens",
+    "contextUsage": {
+      "title": "Context window",
+      "categories": {
+        "messages": "Messages",
+        "systemTools": "System tools",
+        "mcpConnectors": "MCP / connectors",
+        "skills": "Skills",
+        "metaContext": "Meta context",
+        "systemPrompt": "System prompt"
+      }
+    },
     "tps": "t/s",
     "fileReadError": "Could not read file",
     "toolActivity": {

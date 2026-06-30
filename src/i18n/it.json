@@ -228,6 +228,17 @@
     "working": "In corso da {{seconds}}s",
     "tools": "Tools",
     "tokens": "tokens",
+    "contextUsage": {
+      "title": "Finestra di contesto",
+      "categories": {
+        "messages": "Messaggi",
+        "systemTools": "Strumenti di sistema",
+        "mcpConnectors": "MCP / connettori",
+        "skills": "Skills",
+        "metaContext": "Meta contesto",
+        "systemPrompt": "System prompt"
+      }
+    },
     "tps": "t/s",
     "fileReadError": "Impossibile leggere il file",
     "toolActivity": {

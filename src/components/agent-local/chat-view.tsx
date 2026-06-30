@@ -21,6 +21,7 @@ import { useSubagents } from "@/hooks/use-subagents";
 import { useSubagentSynthesis } from "@/hooks/use-subagent-synthesis";
 import { useChatActions } from "@/hooks/use-chat-actions";
 import { useAvailableModels } from "@/hooks/use-available-models";
+import { buildContextUsageBreakdown } from "@/hooks/context-usage-breakdown";
 import { PermissionDialog } from "./permission-dialog";
 import { TerminalPanel } from "@/components/terminal/terminal-panel";
 import type { useTerminal } from "@/hooks/use-terminal";
@@ -80,6 +81,7 @@ export function ChatView({
   const subagents = useSubagents(isSubagent ? undefined : sessionId);
   const fileDrop = useFileDrop();
   const context = useContextProgress(model, chat.sessionTokenCount, provider);
+  const contextUsage = useMemo(() => buildContextUsageBreakdown(chat.messages, { observedUsed: context.used }), [chat.messages, context.used]);
   const [preview, setPreview] = useState<DroppedFile | null>(null);
   const proj = useSessionProject(sessionId, projects, onAddProject, chat.messages.length > 0);
   const git = useGitBranch(proj.selectedProject?.path, sessionId);
@@ -87,13 +89,11 @@ export function ChatView({
   useEffect(() => {
     onFileOperationsChange?.(fileOperations);
   }, [fileOperations, onFileOperationsChange]);
-
   useSubagentSynthesis({
     parentSessionId: sessionId, allDone: subagents.allDone,
     runId: subagents.doneRunId, isStreaming: chat.isStreaming,
     onStarted: subagents.clearSynthesisSignal,
   });
-
   const { handleSend, handleBuiltInCommand, handleFileImport } = useChatActions({
     chat, selectedProjectPath: proj.selectedProject?.path,
     selectedProjectId: proj.selectedProjectId ?? undefined,
@@ -101,23 +101,19 @@ export function ChatView({
     initialMessage, initialWorkingDir, initialSkills, initialFiles,
     onInitialMessageSent, fileDrop,
   });
-
   const { containerRef, isAtBottom, scrollToBottom } = useChatScroll(
     sessionId, chat.isStreaming,
     [chat.currentContent, chat.currentThinking, chat.completedSegments, chat.messages, chat.planPreview],
   );
-
   const handleRetry = useCallback(() => {
     const u = [...chat.messages].reverse().find((m) => m.role === "user");
     if (u) void chat.reload(u.id);
   }, [chat]);
-
   const handleReload = useCallback((id: string) => void chat.reload(id), [chat]);
   const handleEdit = useCallback((id: string, c: string) => void chat.edit(id, c), [chat]);
   const handleFileClick = useCallback((f: { name: string; path?: string; thumbnail?: string }) => {
     setPreview({ name: f.name, path: f.path, type: "", size: 0, preview: f.thumbnail });
   }, []);
-
   const { pendingSwitch, setPendingSwitch, handleModelSelect, rememberedRef } = useModelSwitch({
     currentModel: model, currentProvider: provider,
     messagesLength: chat.messages.length, onApplySwitch, onNewSession,
@@ -125,7 +121,6 @@ export function ChatView({
   const worktreeSwitch = useWorktreeSessionSwitch({
     projects, model, provider, onAddProject, onNewSessionInProject,
   });
-
   return (
     <FileDropZone dragging={fileDrop.dragging} onDragChange={fileDrop.setDragging} onDropPaths={(paths) => void fileDrop.addByPaths(paths)}>
       <div className="chat-zone" style={{ opacity: chat.sessionLoading ? 0 : 1 }}>
@@ -160,7 +155,7 @@ export function ChatView({
             )}
             <ChatInput
               modelName={model} providerName={provider} isStreaming={chat.isStreaming} reasoningMode={reasoningMode}
-              files={fileDrop.files} contextUsed={context.used} contextMax={context.max}
+              files={fileDrop.files} contextUsed={contextUsage.used} contextMax={context.max} contextBreakdown={contextUsage}
               interactivePending={!!chat.interactiveChoice}
               permissionMode={permMode.mode} onPermissionModeChange={(m) => void permMode.change(m)}
               planModeEnabled={chat.planModeEnabled}

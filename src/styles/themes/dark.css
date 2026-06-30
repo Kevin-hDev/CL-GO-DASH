@@ -26,6 +26,8 @@
   --signal-error-pulse: rgba(239, 68, 68, 0.5);
   --signal-error-pulse-fade: rgba(239, 68, 68, 0);
   --signal-ok: #22c55e;
+  --context-ring-fill: #b8b8bf;
+  --context-ring-track: rgba(184, 184, 191, 0.20);
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3);
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
   --shadow-lg: 0 4px 24px rgba(0, 0, 0, 0.4);

@@ -228,6 +228,17 @@
     "working": "作業中 {{seconds}}秒",
     "tools": "Tools",
     "tokens": "tokens",
+    "contextUsage": {
+      "title": "コンテキストウィンドウ",
+      "categories": {
+        "messages": "メッセージ",
+        "systemTools": "システムツール",
+        "mcpConnectors": "MCP / コネクタ",
+        "skills": "Skills",
+        "metaContext": "メタコンテキスト",
+        "systemPrompt": "System prompt"
+      }
+    },
     "tps": "t/s",
     "fileReadError": "ファイルを読み取れませんでした",
     "toolActivity": {
