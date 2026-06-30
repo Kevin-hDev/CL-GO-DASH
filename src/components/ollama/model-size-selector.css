@@ -8,6 +8,11 @@
   color: var(--ink);
 }
 
+.mss-select option {
+  background: var(--shell-opaque);
+  color: var(--ink);
+}
+
 .mss-caret {
   color: var(--ink-faint);
 }

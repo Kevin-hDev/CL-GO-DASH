@@ -45,7 +45,7 @@
   overflow-y: auto;
   border-radius: var(--radius-sm);
   border: 1px solid var(--edge);
-  background: var(--popover-bg, var(--shell-opaque));
+  background: var(--popover-bg, var(--shell));
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
   z-index: 1000;
   backdrop-filter: var(--popover-backdrop-filter, none);

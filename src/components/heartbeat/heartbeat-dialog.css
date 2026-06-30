@@ -102,6 +102,11 @@
   transition: border-color var(--ease-smooth);
 }
 
+.wk-input option {
+  background: var(--shell-opaque);
+  color: var(--ink);
+}
+
 .wk-input:focus {
   outline: none;
   border-color: var(--edge);
