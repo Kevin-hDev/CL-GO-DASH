@@ -4,8 +4,8 @@
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  min-height: 32px;
-  padding: 0 var(--space-sm) 0 var(--space-md);
+  min-height: 38px;
+  padding: 0 var(--space-sm) 6px var(--space-md);
   background: var(--void);
   position: relative;
   z-index: 2;
@@ -22,6 +22,22 @@
 
 .sidebar-hidden.is-fullscreen .chat-header {
   padding-left: 185px;
+}
+
+.chat-header::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 0.5px;
+  background: var(--edge);
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.sidebar-hidden .chat-header::after {
+  left: -19px;
 }
 
 .chat-header-title {
