@@ -1,5 +1,5 @@
 /* Layout & spacing tokens — shared across all themes */
-/* All values in rem so they scale with font-size setting */
+/* Spacing and text scale with font-size; fixed chrome widths use px when needed. */
 :root {
   --space-xs: 0.25rem;
   --space-sm: 0.5rem;
@@ -43,5 +43,6 @@
   --nav-item-radius: var(--radius-sm);
   --sidebar-collapsed: 2.75rem;
   --sidebar-expanded: 8.25rem;
-  --list-width: 10.5rem;
+  /* 10.5rem at the default 18px root font size, kept stable across font-size settings. */
+  --list-width: 189px;
 }

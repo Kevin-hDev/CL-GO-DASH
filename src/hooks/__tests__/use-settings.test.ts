@@ -6,15 +6,15 @@ describe("parseStoredFontSize", () => {
     ["100", 18],
     ["112", 20],
     ["125", 22],
-    ["137", 25],
-    ["150", 27],
+    ["137", 24],
+    ["150", 24],
   ])("migre l'ancienne valeur %s%% vers %ipx", (raw, expected) => {
     expect(parseStoredFontSize(raw)).toBe(expected);
   });
 
   it.each([
     ["9", 10],
-    ["29", 28],
+    ["29", 24],
     ["abc", 18],
     [null, 18],
   ])("normalise la valeur stockée %s", (raw, expected) => {

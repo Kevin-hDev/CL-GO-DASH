@@ -114,7 +114,7 @@ export const SettingsTab = memo(function SettingsTab({
                 }}
               />
             ) : null}
-            {t(tab.i18n)}
+            <span className="settings-subtab-label">{t(tab.i18n)}</span>
           </div>
         ))}
       </div>

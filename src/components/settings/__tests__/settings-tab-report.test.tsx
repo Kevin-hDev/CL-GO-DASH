@@ -39,7 +39,7 @@ describe("SettingsTab slots", () => {
 
     await waitFor(() => {
       const active = screen.getAllByText(label)
-        .some((element) => element.getAttribute("data-nav-active") === "true");
+        .some((element) => element.closest('[role="button"]')?.getAttribute("data-nav-active") === "true");
       expect(active).toBe(true);
     });
 

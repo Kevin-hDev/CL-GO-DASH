@@ -48,6 +48,6 @@ describe("FontSizeControl", () => {
     fireEvent.change(input, { target: { value: "40" } });
     fireEvent.blur(input);
 
-    expect(onChange).toHaveBeenLastCalledWith(28);
+    expect(onChange).toHaveBeenLastCalledWith(24);
   });
 });

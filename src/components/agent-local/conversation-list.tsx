@@ -117,7 +117,7 @@ export function ConversationList({
       <div className="conv-header">
         <button className="conv-new-btn" onClick={onCreate}>
           <ComposeIcon size="var(--icon-sm)" />
-          <span>{t("agentLocal.newSession")}</span>
+          <span className="conv-new-label">{t("agentLocal.newSession")}</span>
         </button>
       </div>
       <div className={`conv-list ${drag.draggingId ? "is-dragging" : ""}`}>
