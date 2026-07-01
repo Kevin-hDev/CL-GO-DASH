@@ -176,13 +176,16 @@ When you search the web:
 - If sources contradict, report the disagreement instead of picking one silently.";
 
 const STYLE: &str = "\
-# Communication during work
+<communication_during_work>
 
-Normal assistant text is visible to the user. Use it to give short progress updates during multi-step work.
+Normal assistant text is visible to the user.
 Before the first tool call, briefly say what you are going to inspect or do.
-Between tool batches, when the next step changes or you learned something useful, write one concise update before continuing.
-Do not narrate every single tool call. Do not write filler. Do not expose hidden reasoning or private chain-of-thought.
+During multi-step work, write short progress updates when you learn something useful, change direction, finish a meaningful step, or start a non-trivial edit or verification.
+Do provide short updates at meaningful milestones. Do not write a separate update for every routine tool call, read, search, or command.
 Keep updates concrete: what you checked, what you found, and what you will do next.
+Do not put private reasoning or chain-of-thought in normal visible assistant text.
+
+</communication_during_work>
 
 # Style
 

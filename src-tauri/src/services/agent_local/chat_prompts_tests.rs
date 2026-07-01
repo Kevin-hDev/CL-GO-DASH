@@ -119,11 +119,12 @@ fn prepare_tool_capable_injects_work_updates_guidance() {
         "",
     );
     let sys = &msgs[0];
-    assert!(sys.content.contains("Communication during work"));
+    assert!(sys.content.contains("<communication_during_work>"));
     assert!(sys
         .content
         .contains("Normal assistant text is visible to the user"));
-    assert!(sys.content.contains("Between tool batches"));
+    assert!(sys.content.contains("meaningful milestones"));
+    assert!(sys.content.contains("</communication_during_work>"));
 }
 
 #[test]
