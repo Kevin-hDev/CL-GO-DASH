@@ -209,6 +209,8 @@
     "reload": "再読み込み",
     "edit": "編集",
     "copy": "コピー",
+    "showMore": "もっと見る",
+    "showLess": "閉じる",
     "modelSearch": "モデルを検索…",
     "modelEmpty": "一致するモデルがありません。",
     "selectModel": "モデルを選択",

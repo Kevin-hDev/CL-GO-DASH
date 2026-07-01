@@ -1,7 +1,10 @@
 import { useState, memo } from "react";
+import { useTranslation } from "react-i18next";
 import { MessageActions } from "./message-actions";
 import { EditMessage } from "./edit-message";
+import { CaretDown, CaretUp } from "@/components/ui/icons";
 import { useHoverClass } from "@/hooks/use-hover-class";
+import { useUserMessageOverflow } from "@/hooks/use-user-message-overflow";
 import { linkifyWithPreviews } from "@/lib/linkify";
 import { highlightSkillNodes } from "@/lib/skill-text";
 import "./user-message.css";
@@ -25,8 +28,11 @@ interface UserMessageProps {
 export const UserMessage = memo(function UserMessage({
   content, files, skillNames, isStreaming, onReload, onEdit, onFileClick,
 }: UserMessageProps) {
+  const { t } = useTranslation();
   const hoverRef = useHoverClass();
   const [editing, setEditing] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const { contentRef, hasOverflow, maxHeight } = useUserMessageOverflow(content, expanded);
 
   if (editing && onEdit) {
     return (
@@ -50,8 +56,25 @@ export const UserMessage = memo(function UserMessage({
       <div className="msg-user-wrap">
         {hasText && (
           <div className="msg-user-bubble">
-            {renderedText}
-            {previews}
+            <div
+              ref={contentRef}
+              className="msg-user-content"
+              style={maxHeight ? { maxHeight } : undefined}
+            >
+              {renderedText}
+              {previews}
+            </div>
+            {hasOverflow && (
+              <button
+                type="button"
+                className="msg-user-more"
+                aria-expanded={expanded}
+                onClick={() => setExpanded((value) => !value)}
+              >
+                <span>{t(expanded ? "agentLocal.showLess" : "agentLocal.showMore")}</span>
+                {expanded ? <CaretUp size="var(--icon-2xs)" /> : <CaretDown size="var(--icon-2xs)" />}
+              </button>
+            )}
           </div>
         )}
         {hasFiles && (

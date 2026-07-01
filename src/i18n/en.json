@@ -208,6 +208,8 @@
     "reload": "Reload",
     "edit": "Edit",
     "copy": "Copy",
+    "showMore": "Show more",
+    "showLess": "Show less",
     "modelSearch": "Search a model…",
     "modelEmpty": "No matching model.",
     "selectModel": "Choose a model",

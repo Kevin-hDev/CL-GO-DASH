@@ -209,6 +209,8 @@
     "reload": "Neu laden",
     "edit": "Bearbeiten",
     "copy": "Kopieren",
+    "showMore": "Mehr anzeigen",
+    "showLess": "Weniger anzeigen",
     "modelSearch": "Modell suchen…",
     "modelEmpty": "Kein passendes Modell.",
     "selectModel": "Modell wählen",

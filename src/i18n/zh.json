@@ -209,6 +209,8 @@
     "reload": "重新加载",
     "edit": "编辑",
     "copy": "复制",
+    "showMore": "显示更多",
+    "showLess": "收起",
     "modelSearch": "搜索模型…",
     "modelEmpty": "没有匹配的模型。",
     "selectModel": "选择模型",

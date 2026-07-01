@@ -208,6 +208,8 @@
     "reload": "Recharger",
     "edit": "Modifier",
     "copy": "Copier",
+    "showMore": "Afficher plus",
+    "showLess": "Afficher moins",
     "exportMd": "Télécharger en Markdown",
     "search": "Rechercher dans la conversation",
     "modelSearch": "Rechercher un modèle…",

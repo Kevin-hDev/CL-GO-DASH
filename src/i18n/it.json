@@ -209,6 +209,8 @@
     "reload": "Ricarica",
     "edit": "Modifica",
     "copy": "Copia",
+    "showMore": "Mostra di più",
+    "showLess": "Mostra meno",
     "modelSearch": "Cerca un modello…",
     "modelEmpty": "Nessun modello corrispondente.",
     "selectModel": "Scegli un modello",
