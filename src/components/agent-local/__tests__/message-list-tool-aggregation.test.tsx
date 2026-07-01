@@ -11,6 +11,7 @@ vi.mock("@phosphor-icons/react", () => ({
 vi.mock("@/components/ui/icons", () => ({
   Copy: () => <span />, CaretDown: () => <span />, CaretUp: () => <span />,
   Check: () => <span data-testid="check-icon" />, ClipboardText: () => <span />,
+  Brain: () => <span data-testid="brain-icon" />,
 }));
 vi.mock("../tool-icons", () => ({
   ToolIcon: ({ name }: { name: string }) => <span data-testid={`tool-icon-${name}`} />,

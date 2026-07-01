@@ -42,7 +42,7 @@
 
 /* Thinking */
 .thinking-toggle {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: var(--space-xs);
   font-size: var(--text-xs);
@@ -54,7 +54,22 @@
   margin-bottom: var(--space-sm);
 }
 
-.thinking-active span {
+.thinking-icon,
+.thinking-chevron {
+  flex: 0 0 auto;
+}
+
+.thinking-chevron {
+  opacity: 0;
+  transition: opacity var(--ease-smooth), color var(--ease-smooth);
+}
+
+.thinking-toggle:hover .thinking-chevron,
+.thinking-toggle:focus-visible .thinking-chevron {
+  opacity: 1;
+}
+
+.thinking-active .thinking-label {
   background: linear-gradient(
     90deg,
     var(--ink-faint) 0%,
@@ -75,7 +90,7 @@
   100% { background-position: -100% 0; }
 }
 
-.thinking-active:hover span {
+.thinking-active:hover .thinking-label {
   -webkit-text-fill-color: unset;
   background: none;
   color: var(--ink-muted);
