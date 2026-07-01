@@ -165,7 +165,7 @@
   align-items: center;
   font-size: 0.6875rem;
   font-family: var(--font-mono, monospace);
-  color: var(--pulse);
+  color: var(--ink-faint);
   margin-left: 4px;
 }
 
