@@ -1,6 +1,15 @@
-export function ScrollBottomButton({ onClick }: { onClick: () => void }) {
+interface ScrollBottomButtonProps {
+  onClick: () => void;
+  variant?: "floating" | "inline";
+}
+
+export function ScrollBottomButton({ onClick, variant = "floating" }: ScrollBottomButtonProps) {
+  const className = variant === "inline"
+    ? "scroll-bottom-btn scroll-bottom-btn-inline"
+    : "scroll-bottom-btn";
+
   return (
-    <button className="scroll-bottom-btn" onClick={onClick}>
+    <button type="button" className={className} onClick={onClick}>
       <svg className="scroll-bottom-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 17V3" />
         <path d="m6 11 6 6 6-6" />

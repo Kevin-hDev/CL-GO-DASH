@@ -45,6 +45,20 @@
   min-width: 0;
 }
 
+.chat-input-under-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  justify-content: space-between;
+  min-height: 32px;
+  flex-wrap: wrap;
+}
+
+.chat-input-project-slot {
+  display: flex;
+  min-width: 0;
+}
+
 .chat-tps-col {
   display: flex;
   flex-direction: column;
@@ -144,6 +158,12 @@
 }
 
 .scroll-bottom-btn:hover { opacity: 1; }
+
+.scroll-bottom-btn-inline {
+  position: static;
+  flex-shrink: 0;
+  margin-left: auto;
+}
 
 .scroll-bottom-icon { width: 16px; height: 16px; }
 

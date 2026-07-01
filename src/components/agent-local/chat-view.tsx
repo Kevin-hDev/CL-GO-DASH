@@ -142,7 +142,6 @@ export function ChatView({
             onOpenSubagent={onOpenSubagent}
           />
         </div>
-        {!isAtBottom && <ScrollBottomButton onClick={scrollToBottom} />}
         <div className="chat-input-area">
           <div className="chat-input-column">
             <TodoProgressPanel sessionId={isSubagent ? undefined : sessionId} />
@@ -168,12 +167,17 @@ export function ChatView({
               onStop={() => void chat.stop()} onClearFiles={fileDrop.clearFiles} onFileImport={handleFileImport}
               onModelChange={handleModelSelect} onReasoningModeChange={onReasoningModeChange} onBuiltInCommand={handleBuiltInCommand}
             />
-            <ChatProjectControls
-              projects={projects}
-              projectState={proj}
-              git={git}
-              onWorktreeSelect={worktreeSwitch.request}
-            />
+            <div className="chat-input-under-row">
+              <div className="chat-input-project-slot">
+                <ChatProjectControls
+                  projects={projects}
+                  projectState={proj}
+                  git={git}
+                  onWorktreeSelect={worktreeSwitch.request}
+                />
+              </div>
+              {!isAtBottom && <ScrollBottomButton variant="inline" onClick={scrollToBottom} />}
+            </div>
           </div>
         </div>
         <TerminalPanel
