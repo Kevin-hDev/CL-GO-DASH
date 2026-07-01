@@ -2,6 +2,15 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: var(--chat-column-width);
+  margin: 6px auto var(--space-md);
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid var(--edge);
+  background: var(--surface);
+  color: var(--ink);
 }
 
 .ppb-header {
@@ -24,4 +33,14 @@
   max-height: 420px;
   overflow: auto;
   color: var(--ink-muted);
+}
+
+[data-theme="light"] .ppb-root {
+  background: var(--surface-glass);
+  border-color: transparent;
+}
+
+[data-theme="dark"] .ppb-root {
+  background: var(--surface-glass);
+  border-color: transparent;
 }
