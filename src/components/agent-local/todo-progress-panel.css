@@ -126,6 +126,14 @@
   text-decoration: line-through;
 }
 
+.tdp-row-pending .tdp-status-icon {
+  color: var(--text-primary);
+}
+
 .tdp-row-in_progress .tdp-status-icon {
-  color: var(--accent);
+  color: var(--pulse);
+}
+
+.tdp-row-completed .tdp-status-icon {
+  color: var(--signal-ok);
 }
