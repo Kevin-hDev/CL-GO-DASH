@@ -130,7 +130,6 @@ export function SavedToolTimeline({
             content={finalBlock.content ?? ""}
             tokens={tokens}
             tps={tps}
-            totalElapsedMs={totalElapsedMs}
           />
         </>
       );

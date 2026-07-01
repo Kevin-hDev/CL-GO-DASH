@@ -27,12 +27,14 @@ vi.mock("../assistant-message", () => ({
     content,
     isStreaming,
     thinking,
+    totalElapsedMs,
   }: {
     content: string;
     isStreaming?: boolean;
     thinking?: string;
+    totalElapsedMs?: number;
   }) => (
-    <div data-testid={isStreaming ? "assistant-stream" : "assistant"}>
+    <div data-testid={isStreaming ? "assistant-stream" : "assistant"} data-elapsed={totalElapsedMs ?? ""}>
       {thinking && <span>{thinking}</span>}
       {content}
     </div>
@@ -103,7 +105,7 @@ describe("message tool timeline collapse", () => {
   });
 
   it("replie les segments sauvegardés par défaut et laisse la réponse finale visible", () => {
-    const { getByRole, getByText, queryByText } = render(
+    const { getByRole, getByTestId, getByText, queryByText } = render(
       <SavedToolTimeline
         messageId="m1"
         segments={[
@@ -117,6 +119,7 @@ describe("message tool timeline collapse", () => {
 
     const toggle = getByRole("button", { name: /Worked for 2 min 5 s/ });
     expect(getByText("saved final")).toBeTruthy();
+    expect(getByTestId("assistant")).toHaveAttribute("data-elapsed", "");
     expect(queryByText("saved intermediate")).toBeNull();
 
     fireEvent.click(toggle);
