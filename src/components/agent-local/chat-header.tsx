@@ -72,7 +72,7 @@ export function ChatHeader({
           {previewOpen && panelMode && onPanelModeChange && (
             <ModeSelector mode={panelMode} onChange={onPanelModeChange} />
           )}
-          {sessionSummary && summaryGit && (
+          {sessionSummary && (
             <SessionSummaryBubble
               summary={sessionSummary}
               git={summaryGit}

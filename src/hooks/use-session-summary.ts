@@ -2,12 +2,19 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { cleanupTauriListener } from "@/lib/tauri-listen";
+import { isHiddenAgentTool } from "@/lib/hidden-agent-tools";
+import { toolsToRecords, type ToolActivity } from "./agent-chat-utils";
 import {
+  addChangeSummaries,
   activeTodoRuns,
   childSubagents,
+  EMPTY_CHANGE_SUMMARY,
+  hasChangeSummary,
   summarizeLastRequestChanges,
+  summarizeToolChange,
 } from "@/lib/session-summary";
 import type { AgentSession, AgentSessionMeta, StreamEvent } from "@/types/agent";
+import type { SessionChangeSummary } from "@/lib/session-summary";
 
 interface StreamEnvelope {
   sessionId: string;
@@ -27,8 +34,11 @@ const REFRESH_EVENTS = new Set<StreamEvent["event"]>([
 export function useSessionSummary(sessionId: string | null) {
   const [session, setSession] = useState<AgentSession | null>(null);
   const [subagentSessions, setSubagentSessions] = useState<AgentSessionMeta[]>([]);
+  const [liveChanges, setLiveChanges] = useState<{ sessionId: string; summary: SessionChangeSummary } | null>(null);
   const timerRef = useRef<number | null>(null);
   const requestSeqRef = useRef(0);
+  const liveToolsRef = useRef<ToolActivity[]>([]);
+  const liveRequestChangesRef = useRef<SessionChangeSummary>(EMPTY_CHANGE_SUMMARY);
 
   const refresh = useCallback(async () => {
     const requestSeq = requestSeqRef.current + 1;
@@ -75,6 +85,30 @@ export function useSessionSummary(sessionId: string | null) {
     const streamUnlisten = listen<StreamEnvelope>("agent-stream-event", (event) => {
       const payload = event.payload;
       if (payload.sessionId !== sessionId) return;
+      if (payload.event.event === "toolCall") {
+        trackLiveToolCall(liveToolsRef.current, payload.event.data.name, payload.event.data.arguments);
+        return;
+      }
+      if (payload.event.event === "toolResult") {
+        const next = applyLiveToolResult(
+          liveToolsRef.current,
+          payload.event.data.toolCallIndex ?? -1,
+          payload.event.data.content,
+          payload.event.data.isError,
+          payload.event.data.resolvedPath,
+        );
+        liveToolsRef.current = next.tools;
+        const summary = next.completedTool ? summarizeToolChange(toolsToRecords([next.completedTool])[0]) : EMPTY_CHANGE_SUMMARY;
+        if (hasChangeSummary(summary)) {
+          liveRequestChangesRef.current = addChangeSummaries(liveRequestChangesRef.current, summary);
+          setLiveChanges({ sessionId, summary: liveRequestChangesRef.current });
+        }
+        return;
+      }
+      if (payload.event.event === "done" || payload.event.event === "error") {
+        liveToolsRef.current = [];
+        liveRequestChangesRef.current = EMPTY_CHANGE_SUMMARY;
+      }
       if (!REFRESH_EVENTS.has(payload.event.event)) return;
       scheduleRefresh(payload.event.event === "done" ? 300 : 80);
     });
@@ -85,13 +119,45 @@ export function useSessionSummary(sessionId: string | null) {
     };
   }, [scheduleRefresh, sessionId]);
 
+  const savedChanges = useMemo(() => summarizeLastRequestChanges(session?.messages ?? []), [session?.messages]);
+  const changes = liveChanges?.sessionId === sessionId && hasChangeSummary(liveChanges.summary)
+    ? liveChanges.summary
+    : savedChanges;
+
   return useMemo(() => ({
     session,
     activeTodos: activeTodoRuns(session),
     plans: session?.plan_runs ?? [],
     subagents: sessionId ? childSubagents(sessionId, subagentSessions) : [],
-    changes: summarizeLastRequestChanges(session?.messages ?? []),
-  }), [session, sessionId, subagentSessions]);
+    changes,
+  }), [changes, session, sessionId, subagentSessions]);
 }
 
 export type SessionSummaryHookState = ReturnType<typeof useSessionSummary>;
+
+function trackLiveToolCall(tools: ToolActivity[], name: string, args: Record<string, unknown>) {
+  if (isHiddenAgentTool(name)) return;
+  tools.push({ name, args });
+}
+
+function applyLiveToolResult(
+  tools: ToolActivity[],
+  index: number,
+  content: string,
+  isError: boolean,
+  resolvedPath?: string,
+): { tools: ToolActivity[]; completedTool?: ToolActivity } {
+  const next = [...tools];
+  const apply = (i: number) => {
+    next[i] = { ...next[i], result: content, isError };
+    if (resolvedPath) next[i].resolvedPath = resolvedPath;
+    return next[i];
+  };
+  if (index >= 0 && index < next.length && !next[index].result) {
+    return { tools: next, completedTool: apply(index) };
+  }
+  for (let i = 0; i < next.length; i += 1) {
+    if (!next[i].result) return { tools: next, completedTool: apply(i) };
+  }
+  return { tools: next };
+}

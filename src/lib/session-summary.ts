@@ -14,28 +14,56 @@ export interface SessionChangeSummary {
   files: number;
 }
 
-export function summarizeLastRequestChanges(messages: AgentMessage[]): SessionChangeSummary {
-  const message = findLastAssistantMessage(messages);
-  if (!message) return { additions: 0, deletions: 0, files: 0 };
+export const EMPTY_CHANGE_SUMMARY: SessionChangeSummary = {
+  additions: 0,
+  deletions: 0,
+  files: 0,
+};
 
-  return toolsFromMessage(message).reduce<SessionChangeSummary>((summary, tool) => {
-    if (tool.is_error) return summary;
-    if (tool.name === "write_file" && tool.content != null) {
-      return {
-        additions: summary.additions + countLines(tool.content),
-        deletions: summary.deletions,
-        files: summary.files + 1,
-      };
-    }
-    if (tool.name === "edit_file" && tool.old_text != null && tool.new_text != null) {
-      return {
-        additions: summary.additions + countLines(tool.new_text),
-        deletions: summary.deletions + countLines(tool.old_text),
-        files: summary.files + 1,
-      };
-    }
-    return summary;
-  }, { additions: 0, deletions: 0, files: 0 });
+export function summarizeLastRequestChanges(messages: AgentMessage[]): SessionChangeSummary {
+  for (let index = messages.length - 1; index >= 0; index -= 1) {
+    if (messages[index].role !== "assistant") continue;
+    const summary = summarizeToolChanges(toolsFromMessage(messages[index]));
+    if (hasChangeSummary(summary)) return summary;
+  }
+  return EMPTY_CHANGE_SUMMARY;
+}
+
+export function summarizeToolChanges(tools: ToolActivityRecord[]): SessionChangeSummary {
+  return tools.reduce<SessionChangeSummary>((summary, tool) => {
+    const next = summarizeToolChange(tool);
+    return addChangeSummaries(summary, next);
+  }, EMPTY_CHANGE_SUMMARY);
+}
+
+export function summarizeToolChange(tool: ToolActivityRecord): SessionChangeSummary {
+  if (tool.is_error) return EMPTY_CHANGE_SUMMARY;
+  if (tool.name === "write_file" && tool.content != null) {
+    return { additions: countLines(tool.content), deletions: 0, files: 1 };
+  }
+  if (tool.name === "edit_file" && tool.old_text != null && tool.new_text != null) {
+    return {
+      additions: countLines(tool.new_text),
+      deletions: countLines(tool.old_text),
+      files: 1,
+    };
+  }
+  return EMPTY_CHANGE_SUMMARY;
+}
+
+export function addChangeSummaries(
+  left: SessionChangeSummary,
+  right: SessionChangeSummary,
+): SessionChangeSummary {
+  return {
+    additions: left.additions + right.additions,
+    deletions: left.deletions + right.deletions,
+    files: left.files + right.files,
+  };
+}
+
+export function hasChangeSummary(summary: SessionChangeSummary): boolean {
+  return summary.files > 0 || summary.additions > 0 || summary.deletions > 0;
 }
 
 export function activeTodoRuns(session: Pick<AgentSession, "todo_runs"> | null): AgentTodoRun[] {
@@ -53,13 +81,6 @@ export function childSubagents(parentSessionId: string, sessions: AgentSessionMe
       promptPreview: "",
       runId: session.subagent_run_id,
     }));
-}
-
-function findLastAssistantMessage(messages: AgentMessage[]): AgentMessage | null {
-  for (let index = messages.length - 1; index >= 0; index -= 1) {
-    if (messages[index].role === "assistant") return messages[index];
-  }
-  return null;
 }
 
 function toolsFromMessage(message: AgentMessage): ToolActivityRecord[] {

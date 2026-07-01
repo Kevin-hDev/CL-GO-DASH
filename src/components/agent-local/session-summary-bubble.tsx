@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ClipboardText, FilePlus, GitBranch } from "@/components/ui/icons";
 import { Tooltip } from "@/components/ui/tooltip";
@@ -24,7 +24,7 @@ export interface SessionSummaryGitState {
 
 interface SessionSummaryBubbleProps {
   summary: SessionSummaryState;
-  git: SessionSummaryGitState;
+  git?: SessionSummaryGitState;
   onOpenPlan?: (plan: AgentPlanRun) => void;
   onOpenSubagent?: (sessionId: string) => void;
 }
@@ -46,6 +46,19 @@ export function SessionSummaryBubble({ summary, git, onOpenPlan, onOpenSubagent 
   const toggleSection = (key: SectionKey) => {
     setSections((current) => ({ ...current, [key]: !current[key] }));
   };
+
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      setOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown, { capture: true });
+    return () => window.removeEventListener("keydown", onKeyDown, { capture: true });
+  }, [open]);
 
   return (
     <span className="ssb-root" ref={rootRef}>
@@ -117,7 +130,8 @@ function ChangeStats({ additions, deletions }: { additions: number; deletions: n
   );
 }
 
-function branchLabel(git: SessionSummaryGitState, t: (key: string) => string): string {
+function branchLabel(git: SessionSummaryGitState | undefined, t: (key: string) => string): string {
+  if (!git) return t("agentLocal.sessionSummary.noGit");
   if (git.isLoading && !git.currentBranch) return t("common.loading");
   if (!git.isGitRepo) return t("agentLocal.sessionSummary.noGit");
   return git.currentBranch || t("branches.detachedHead");

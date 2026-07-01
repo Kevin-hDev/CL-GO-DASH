@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { fireEvent, render } from "@testing-library/react";
+import { act, fireEvent, render } from "@testing-library/react";
 import { SessionSummaryBubble } from "../session-summary-bubble";
 import type { SessionSummaryHookState } from "@/hooks/use-session-summary";
 
@@ -136,6 +136,36 @@ describe("SessionSummaryBubble", () => {
 
     expect(getByText("No changes")).toBeTruthy();
     expect(getByText("No Git repository")).toBeTruthy();
+  });
+
+  it("affiche le fallback branche si git est absent", () => {
+    const { getByRole, getByText } = render(
+      <SessionSummaryBubble summary={summary()} />,
+    );
+
+    fireEvent.click(getByRole("button", { name: "Toggle summary" }));
+
+    expect(getByText("No Git repository")).toBeTruthy();
+  });
+
+  it("ferme la bulle avec Échap sans propager l'événement", () => {
+    const { getByRole, queryByRole } = render(
+      <SessionSummaryBubble summary={summary()} git={git} />,
+    );
+    fireEvent.click(getByRole("button", { name: "Toggle summary" }));
+    expect(getByRole("dialog", { name: "Session summary" })).toBeTruthy();
+
+    const globalShortcut = vi.fn();
+    window.addEventListener("keydown", globalShortcut);
+    const event = new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true });
+    act(() => {
+      window.dispatchEvent(event);
+    });
+    window.removeEventListener("keydown", globalShortcut);
+
+    expect(event.defaultPrevented).toBe(true);
+    expect(globalShortcut).not.toHaveBeenCalled();
+    expect(queryByRole("dialog", { name: "Session summary" })).toBeNull();
   });
 });
 
