@@ -1,6 +1,6 @@
 import { buildSegmentedMessage } from "./agent-chat-utils";
 import type { StreamSegment, ToolActivity } from "./agent-chat-utils";
-import type { AgentMessage, StreamEvent } from "@/types/agent";
+import type { AgentMessage, StreamEvent, TokenPhase } from "@/types/agent";
 import i18n from "@/i18n";
 import { isHiddenAgentTool } from "@/lib/hidden-agent-tools";
 import {
@@ -9,6 +9,7 @@ import {
   type PermissionRequestState,
 } from "./agent-chat-stream-types";
 import { estimateAgentMessagesTokens } from "./agent-token-estimate";
+import { markUnconfirmedContentAsWork } from "./agent-chat-stream-partial";
 
 export type { ChatState, ManagedStreamState, PermissionRequestState, StreamApplyResult };
 export { EMPTY_CHAT_STATE, createManagedStreamState, toChatState } from "./agent-chat-stream-types";
@@ -26,9 +27,14 @@ export function applyStreamEvent(
   switch (event.event) {
     case "token":
       ensureTimers();
+      if (event.data.phase) prepareContentPhase(next, event.data.phase);
       next.currentContent += event.data.content;
       next.tps = event.data.tps;
       next.liveTokenCount = event.data.tokenCount || next.liveTokenCount + 1;
+      break;
+    case "contentPhase":
+      ensureTimers();
+      prepareContentPhase(next, event.data.phase);
       break;
     case "thinking":
       ensureTimers();
@@ -62,6 +68,7 @@ export function applyStreamEvent(
     case "turnEnd":
       next.completedSegments = appendCurrentSegment(next);
       next.currentContent = "";
+      next.currentContentPhase = undefined;
       next.currentThinking = "";
       next.currentTools = [];
       next.segmentStartedAt = null;
@@ -130,7 +137,23 @@ function applyToolResult(
 function appendCurrentSegment(state: ChatState): StreamSegment[] {
   return [...state.completedSegments, {
     thinking: state.currentThinking, tools: state.currentTools, content: state.currentContent,
+    phase: state.currentContentPhase,
   }];
+}
+
+function prepareContentPhase(state: ManagedStreamState, phase: TokenPhase) {
+  if (!state.currentContentPhase || state.currentContentPhase === phase) {
+    state.currentContentPhase = phase;
+    return;
+  }
+  if (state.currentContent || state.currentThinking || state.currentTools.length > 0) {
+    state.completedSegments = appendCurrentSegment(state);
+    state.currentContent = "";
+    state.currentThinking = "";
+    state.currentTools = [];
+    state.segmentStartedAt = Date.now();
+  }
+  state.currentContentPhase = phase;
 }
 
 function addPermission(
@@ -140,7 +163,7 @@ function addPermission(
 }
 
 export function finishPartialStream(state: ManagedStreamState): StreamApplyResult {
-  return finalizeStream(state, null, state.tps, null);
+  return finalizeStream(markUnconfirmedContentAsWork(state), null, state.tps, null);
 }
 
 function finishStream(state: ManagedStreamState, event: Extract<StreamEvent, { event: "done" }>) {
@@ -178,7 +201,7 @@ function finalizeStream(
   const resolvedSessionTokenCount = hasRealContextTokens ? contextTokens : visibleSessionTokens;
   const next: ManagedStreamState = {
     ...state, completedSegments: [], currentContent: "", currentThinking: "",
-    currentTools: [], isStreaming: false, tps,
+    currentContentPhase: undefined, currentTools: [], isStreaming: false, tps,
     sessionTokenCount: resolvedSessionTokenCount,
     sessionTokenCountEstimated: !hasRealContextTokens,
     lastRequestTokens: assistantMessage?.tokens ?? outputTokens ?? 0, liveTokenCount: 0,

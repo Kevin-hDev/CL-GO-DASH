@@ -11,7 +11,7 @@ import { LoadingIndicator } from "./working-stats";
 import { useCompression } from "@/hooks/use-compression";
 import { isCompressionContextOnlyMessage, isCompressionSummaryMessage } from "@/lib/context-messages";
 import { isSubagentInjectedMessage, extractSubagentsFromMessages } from "@/lib/subagent-message-utils";
-import type { AgentMessage, AgentPlanPreview, SubagentInfo } from "@/types/agent";
+import type { AgentMessage, AgentPlanPreview, SubagentInfo, TokenPhase } from "@/types/agent";
 import type { ToolActivity, StreamSegment } from "@/hooks/agent-chat-utils";
 import "./chat.css";
 import "./messages.css";
@@ -21,6 +21,7 @@ interface MessageListProps {
   messages: AgentMessage[];
   completedSegments: StreamSegment[];
   currentContent: string;
+  currentContentPhase?: TokenPhase;
   currentThinking: string;
   currentTools: ToolActivity[];
   isStreaming: boolean;
@@ -43,7 +44,7 @@ interface MessageListProps {
 }
 
 export function MessageList({
-  sessionId, messages, completedSegments, currentContent, currentThinking,
+  sessionId, messages, completedSegments, currentContent, currentContentPhase, currentThinking,
   currentTools, isStreaming, tps, totalElapsedMs, segmentStartedAt,
   liveTokenCount, error, isConnectionError, diagnosticSummary, onRetry, onReload, onEdit, onFileClick, onFilePreview,
   projectPath, completedSubagents, onOpenSubagent, planPreview,
@@ -107,6 +108,7 @@ export function MessageList({
         <StreamToolTimeline
           completedSegments={completedSegments}
           currentContent={currentContent}
+          currentContentPhase={currentContentPhase}
           currentThinking={currentThinking}
           currentTools={currentTools}
           streamStartedAt={streamStartedAt}

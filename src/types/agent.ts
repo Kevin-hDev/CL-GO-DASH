@@ -33,6 +33,7 @@ export type {
 export type {
   AgentErrorDiagnosticSummary,
   StreamEvent,
+  TokenPhase,
 } from "./agent-stream";
 export type {
   AgentSession,

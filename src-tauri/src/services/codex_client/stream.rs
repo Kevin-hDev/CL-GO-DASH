@@ -3,7 +3,6 @@ use crate::services::agent_local::types_ollama::{
     ChatMessage, StreamEvent, StreamOutcome, StreamResult,
 };
 use crate::services::compress::realtime_budget::RealtimeBudget;
-use crate::services::stream_utils::compute_tps;
 use eventsource_stream::Eventsource;
 use futures_util::StreamExt;
 use tokio_util::sync::CancellationToken;
@@ -83,20 +82,14 @@ async fn consume_sse(
                 if delta.is_empty() {
                     continue;
                 }
-                if first_token.is_none() {
-                    first_token = Some(std::time::Instant::now());
-                }
-                token_count += 1;
-                result.content.push_str(delta);
-                result.content_chunks.push(delta.to_string());
-                if !buffer_content {
-                    let tps = compute_tps(token_count, first_token);
-                    let _ = on_event.send(StreamEvent::Token {
-                        content: delta.to_string(),
-                        token_count,
-                        tps,
-                    });
-                }
+                crate::services::agent_local::stream_buffer::record_content(
+                    on_event,
+                    &mut result,
+                    delta.to_string(),
+                    &mut token_count,
+                    &mut first_token,
+                    buffer_content,
+                );
                 if should_interrupt(
                     &mut realtime_budget,
                     token_count,

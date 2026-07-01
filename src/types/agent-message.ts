@@ -18,6 +18,7 @@ export interface SavedSegment {
   thinking?: string;
   tools: ToolActivityRecord[];
   content: string;
+  phase?: "work" | "final";
 }
 
 export interface ToolActivityRecord {

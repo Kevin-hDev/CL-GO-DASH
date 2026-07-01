@@ -126,6 +126,27 @@ describe("finishPartialStream", () => {
     expect(result.assistantMessage?.content).toContain("segment 1");
     expect(result.assistantMessage?.content).toContain("segment 2");
   });
+
+  it("marque le contenu partiel non confirmé comme travail si une phase de travail existe", () => {
+    const result = finishPartialStream(makeState({
+      completedSegments: [{ thinking: "", tools: [{ name: "bash", args: {}, result: "ok" }], content: "" }],
+      currentContent: "fragment interrompu",
+    }));
+    expect(result.assistantMessage?.segments?.map((seg) => seg.phase)).toEqual(["work", "work"]);
+  });
+
+  it("ne replie pas un simple chat partiel sans indice de phase de travail", () => {
+    const result = finishPartialStream(makeState({ currentContent: "réponse interrompue" }));
+    expect(result.assistantMessage?.segments?.[0].phase).toBeUndefined();
+  });
+
+  it("conserve la phase finale si elle était déjà confirmée avant l'arrêt", () => {
+    const result = finishPartialStream(makeState({
+      currentContent: "réponse finale partielle",
+      currentContentPhase: "final",
+    }));
+    expect(result.assistantMessage?.segments?.[0].phase).toBe("final");
+  });
 });
 
 describe("done — limite messages assertion précise", () => {

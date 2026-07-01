@@ -107,7 +107,7 @@ export function ChatView({
   });
   const { containerRef, isAtBottom, scrollToBottom } = useChatScroll(
     sessionId, chat.isStreaming,
-    [chat.currentContent, chat.currentThinking, chat.completedSegments, chat.messages, chat.planPreview],
+    [chat.currentContent, chat.currentContentPhase, chat.currentThinking, chat.completedSegments, chat.messages, chat.planPreview],
   );
   const handleRetry = useCallback(() => {
     const u = [...chat.messages].reverse().find((m) => m.role === "user");
@@ -131,7 +131,8 @@ export function ChatView({
         <div className="chat-messages" ref={containerRef}>
           <MessageList
             sessionId={sessionId} messages={chat.messages} completedSegments={chat.completedSegments}
-            currentContent={chat.currentContent} currentThinking={chat.currentThinking} currentTools={chat.currentTools}
+            currentContent={chat.currentContent} currentContentPhase={chat.currentContentPhase}
+            currentThinking={chat.currentThinking} currentTools={chat.currentTools}
             isStreaming={chat.isStreaming} tps={chat.tps} totalElapsedMs={chat.totalElapsedMs}
             segmentStartedAt={chat.streamStartedAt} liveTokenCount={chat.liveTokenCount}
             error={chat.error} isConnectionError={chat.isConnectionError}

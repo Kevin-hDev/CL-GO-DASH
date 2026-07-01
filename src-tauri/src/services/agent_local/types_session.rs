@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use super::types_diagnostics::{AgentDiagnosticRun, AgentStreamFailure};
 use super::types_plan::{AgentPlanApprovalDecision, AgentPlanRun, AgentPlanWorkflowStatus};
+use super::types_stream::TokenPhase;
 use super::types_todo::{AgentTodoItem, AgentTodoRun};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -151,6 +152,8 @@ pub struct SavedSegment {
     pub thinking: Option<String>,
     pub tools: Vec<ToolActivityRecord>,
     pub content: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub phase: Option<TokenPhase>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -178,7 +181,8 @@ pub struct FileAttachment {
 
 #[cfg(test)]
 mod tests {
-    use super::AgentMessage;
+    use super::{AgentMessage, SavedSegment};
+    use crate::services::agent_local::types_stream::TokenPhase;
 
     #[test]
     fn agent_message_accepts_missing_work_duration() {
@@ -210,5 +214,17 @@ mod tests {
         let saved = serde_json::to_value(msg).unwrap();
 
         assert_eq!(saved["work_duration_ms"], 266000);
+    }
+
+    #[test]
+    fn saved_segment_accepts_phase() {
+        let segment: SavedSegment = serde_json::from_value(serde_json::json!({
+            "tools": [],
+            "content": "partial",
+            "phase": "work"
+        }))
+        .unwrap();
+
+        assert!(matches!(segment.phase, Some(TokenPhase::Work)));
     }
 }

@@ -12,6 +12,42 @@ describe("token", () => {
   it("accumule le contenu", () => {
     const { state: s } = applyStreamEvent(makeState(), { event: "token", data: { content: "bonjour", tps: 5, tokenCount: 1 } });
     expect(s.currentContent).toBe("bonjour");
+    expect(s.currentContentPhase).toBeUndefined();
+  });
+  it("stocke la phase de travail envoyée par le backend", () => {
+    const { state: s } = applyStreamEvent(makeState(), {
+      event: "token",
+      data: { content: "je travaille", tps: 5, tokenCount: 1, phase: "work" },
+    });
+    expect(s.currentContent).toBe("je travaille");
+    expect(s.currentContentPhase).toBe("work");
+  });
+  it("sépare le contenu de travail quand la phase finale commence", () => {
+    let s = applyStreamEvent(makeState(), {
+      event: "token",
+      data: { content: "travail", tps: 5, tokenCount: 1, phase: "work" },
+    }).state;
+    s = applyStreamEvent(s, {
+      event: "token",
+      data: { content: "final", tps: 5, tokenCount: 2, phase: "final" },
+    }).state;
+    expect(s.completedSegments).toHaveLength(1);
+    expect(s.completedSegments[0].content).toBe("travail");
+    expect(s.currentContent).toBe("final");
+    expect(s.currentContentPhase).toBe("final");
+  });
+  it("classe le contenu live quand le backend confirme la phase", () => {
+    let s = applyStreamEvent(makeState(), {
+      event: "token",
+      data: { content: "réponse live", tps: 5, tokenCount: 1 },
+    }).state;
+    expect(s.currentContentPhase).toBeUndefined();
+    s = applyStreamEvent(s, {
+      event: "contentPhase",
+      data: { phase: "final" },
+    }).state;
+    expect(s.currentContent).toBe("réponse live");
+    expect(s.currentContentPhase).toBe("final");
   });
   it("met à jour tps", () => {
     const { state: s } = applyStreamEvent(makeState(), { event: "token", data: { content: "x", tps: 42, tokenCount: 1 } });
@@ -66,6 +102,7 @@ describe("turnEnd", () => {
     const state = makeState({ currentContent: "contenu", currentThinking: "pensée", currentTools: [{ name: "bash", args: {} }] });
     const { state: s } = applyStreamEvent(state, { event: "turnEnd", data: {} });
     expect(s.currentContent).toBe("");
+    expect(s.currentContentPhase).toBeUndefined();
     expect(s.currentThinking).toBe("");
     expect(s.currentTools).toHaveLength(0);
     expect(s.completedSegments).toHaveLength(1);

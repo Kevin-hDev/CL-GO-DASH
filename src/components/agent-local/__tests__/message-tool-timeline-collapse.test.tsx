@@ -28,13 +28,19 @@ vi.mock("../assistant-message", () => ({
     isStreaming,
     thinking,
     totalElapsedMs,
+    showActions = true,
   }: {
     content: string;
     isStreaming?: boolean;
     thinking?: string;
     totalElapsedMs?: number;
+    showActions?: boolean;
   }) => (
-    <div data-testid={isStreaming ? "assistant-stream" : "assistant"} data-elapsed={totalElapsedMs ?? ""}>
+    <div
+      data-testid={isStreaming ? "assistant-stream" : "assistant"}
+      data-elapsed={totalElapsedMs ?? ""}
+      data-actions={showActions ? "true" : "false"}
+    >
       {thinking && <span>{thinking}</span>}
       {content}
     </div>
@@ -86,6 +92,7 @@ describe("message tool timeline collapse", () => {
         }]}
         currentThinking=""
         currentContent="final answer"
+        currentContentPhase="final"
         currentTools={[]}
         streamStartedAt={startedAt}
         liveTokenCount={0}
@@ -102,6 +109,47 @@ describe("message tool timeline collapse", () => {
     expect(getByText("intermediate note")).toBeTruthy();
     expect(getByText("thinking before final")).toBeTruthy();
     expect(getByText("bash")).toBeTruthy();
+  });
+
+  it("ne replie pas un texte de travail même après un ancien bloc de tools", () => {
+    const { getByText, queryByText } = render(
+      <StreamToolTimeline
+        completedSegments={[{
+          thinking: "thinking before work",
+          content: "",
+          tools: [{ name: "bash", args: {}, result: "ok" }],
+        }]}
+        currentThinking=""
+        currentContent="intermediate work note"
+        currentContentPhase="work"
+        currentTools={[]}
+        streamStartedAt={1}
+        liveTokenCount={0}
+      />,
+    );
+
+    expect(getByText("intermediate work note")).toBeTruthy();
+    expect(queryByText(/Worked for|Work completed/)).toBeNull();
+  });
+
+  it("ne replie pas un texte live tant que le backend n'a pas confirmé la phase finale", () => {
+    const { getByText, queryByText } = render(
+      <StreamToolTimeline
+        completedSegments={[{
+          thinking: "thinking before pending",
+          content: "",
+          tools: [{ name: "bash", args: {}, result: "ok" }],
+        }]}
+        currentThinking=""
+        currentContent="pending live text"
+        currentTools={[]}
+        streamStartedAt={1}
+        liveTokenCount={0}
+      />,
+    );
+
+    expect(getByText("pending live text")).toBeTruthy();
+    expect(queryByText(/Worked for|Work completed/)).toBeNull();
   });
 
   it("replie les segments sauvegardés par défaut et laisse la réponse finale visible", () => {
@@ -124,8 +172,32 @@ describe("message tool timeline collapse", () => {
 
     fireEvent.click(toggle);
     expect(getByText("saved intermediate")).toBeTruthy();
+    expect(getByText("saved intermediate").closest("[data-testid='assistant']")).toHaveAttribute("data-actions", "false");
     expect(getByText("saved thinking")).toBeTruthy();
     expect(getByText("grep")).toBeTruthy();
+  });
+
+  it("replie un stream sauvegardé annulé sans faux fragment final visible", () => {
+    const { getByRole, getByText, queryByText } = render(
+      <SavedToolTimeline
+        messageId="m-cancelled"
+        segments={[
+          { thinking: "saved thinking", content: "work note", tools: [{ name: "bash", summary: "x" }], phase: "work" },
+          { content: "last partial fragment", tools: [], phase: "work" },
+        ]}
+        tps={0}
+        totalElapsedMs={45_000}
+      />,
+    );
+
+    const toggle = getByRole("button", { name: /Worked for 45 s/ });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(queryByText("last partial fragment")).toBeNull();
+
+    fireEvent.click(toggle);
+    expect(getByText("work note")).toBeTruthy();
+    expect(getByText("last partial fragment")).toBeTruthy();
+    expect(getByText("bash")).toBeTruthy();
   });
 
   it("n'affiche pas de résumé quand il n'y a pas de phase de travail", () => {

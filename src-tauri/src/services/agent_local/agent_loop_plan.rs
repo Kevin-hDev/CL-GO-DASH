@@ -13,7 +13,7 @@ pub async fn active(session_id: &str, fallback: bool) -> bool {
 }
 
 pub async fn check_result(
-    on_event: &AgentEventEmitter,
+    _on_event: &AgentEventEmitter,
     messages: &mut Vec<ChatMessage>,
     session_id: &str,
     request_id: &str,
@@ -25,12 +25,7 @@ pub async fn check_result(
         return PlanLoopAction::Accept;
     }
     match plan_mode_controller::evaluate(session_id, result, repair_count).await {
-        PlanModeDecision::Accept => {
-            if result.tool_calls.is_empty() {
-                super::stream_buffer::emit_buffered_content(on_event, result);
-            }
-            PlanLoopAction::Accept
-        }
+        PlanModeDecision::Accept => PlanLoopAction::Accept,
         PlanModeDecision::Retry(correction) => {
             replace_correction(
                 messages,

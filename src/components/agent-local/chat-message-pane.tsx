@@ -2,7 +2,7 @@
 import { MessageList } from "./message-list";
 import { ScrollBottomButton } from "./scroll-bottom-button";
 import type { ToolActivity, StreamSegment } from "@/hooks/agent-chat-utils";
-import type { AgentMessage } from "@/types/agent";
+import type { AgentMessage, TokenPhase } from "@/types/agent";
 
 interface ChatMessagePaneProps {
   sessionId: string;
@@ -12,6 +12,7 @@ interface ChatMessagePaneProps {
   messages: AgentMessage[];
   completedSegments: StreamSegment[];
   currentContent: string;
+  currentContentPhase?: TokenPhase;
   currentThinking: string;
   currentTools: ToolActivity[];
   isStreaming: boolean;
@@ -40,6 +41,7 @@ export function ChatMessagePane(props: ChatMessagePaneProps) {
           messages={props.messages}
           completedSegments={props.completedSegments}
           currentContent={props.currentContent}
+          currentContentPhase={props.currentContentPhase}
           currentThinking={props.currentThinking}
           currentTools={props.currentTools}
           isStreaming={props.isStreaming}

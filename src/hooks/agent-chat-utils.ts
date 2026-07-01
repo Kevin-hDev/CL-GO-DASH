@@ -1,4 +1,4 @@
-import type { ToolActivityRecord } from "@/types/agent";
+import type { ToolActivityRecord, TokenPhase } from "@/types/agent";
 
 export interface ToolActivity {
   name: string;
@@ -13,6 +13,7 @@ export interface StreamSegment {
   thinking: string;
   tools: ToolActivity[];
   content: string;
+  phase?: TokenPhase;
 }
 
 function str(v: unknown, fallback = ""): string {
@@ -82,6 +83,7 @@ export function buildSegmentedMessage(
       thinking: seg.thinking || undefined,
       tools: toolsToRecords(seg.tools),
       content: seg.content,
+      phase: seg.phase,
     })),
   };
 }
@@ -90,6 +92,7 @@ export interface SavedSegment {
   thinking?: string;
   tools: ToolActivityRecord[];
   content: string;
+  phase?: TokenPhase;
 }
 
 interface ChatMsg {

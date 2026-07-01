@@ -14,11 +14,12 @@ import {
 } from "./message-tool-timeline-render";
 import { WorkStreamSummary } from "./work-stream-summary";
 import type { ToolActivity, StreamSegment } from "@/hooks/agent-chat-utils";
-import type { SavedSegment } from "@/types/agent";
+import type { SavedSegment, TokenPhase } from "@/types/agent";
 
 interface StreamToolTimelineProps {
   completedSegments: StreamSegment[];
   currentContent: string;
+  currentContentPhase?: TokenPhase;
   currentThinking: string;
   currentTools: ToolActivity[];
   streamStartedAt: number | null;
@@ -30,6 +31,7 @@ interface StreamToolTimelineProps {
 export function StreamToolTimeline({
   completedSegments,
   currentContent,
+  currentContentPhase,
   currentThinking,
   currentTools,
   streamStartedAt,
@@ -40,11 +42,17 @@ export function StreamToolTimeline({
   const segments = [
     ...completedSegments,
     ...(currentContent || currentThinking || currentTools.length > 0
-      ? [{ thinking: currentThinking, content: currentContent, tools: currentTools, isCurrent: true }]
+      ? [{
+        thinking: currentThinking,
+        content: currentContent,
+        tools: currentTools,
+        isCurrent: true,
+        phase: currentContentPhase,
+      }]
       : []),
   ];
   const blocks = buildToolTimelineBlocks(segments);
-  const finalIndex = isFinalStreamPhase(blocks, currentContent);
+  const finalIndex = isFinalStreamPhase(blocks, currentContent, currentContentPhase);
   if (finalIndex >= 0) {
     const finalBlock = blocks[finalIndex];
     const workBlocks = savedWorkBlocks(blocks, finalIndex);
@@ -107,7 +115,11 @@ export function SavedToolTimeline({
   projectPath,
 }: SavedToolTimelineProps) {
   const blocks = buildToolTimelineBlocks(segments);
-  const lastTextIndex = findLastIndex(blocks, (block) => !!block.content);
+  const hasPhase = blocks.some((block) => !!block.phase);
+  const explicitFinalIndex = findLastIndex(blocks, (block) => block.phase === "final" && !!block.content);
+  const lastTextIndex = explicitFinalIndex >= 0
+    ? explicitFinalIndex
+    : hasPhase ? -1 : findLastIndex(blocks, (block) => !!block.content);
   if (lastTextIndex >= 0) {
     const finalBlock = blocks[lastTextIndex];
     const workBlocks = savedWorkBlocks(blocks, lastTextIndex);
@@ -134,6 +146,21 @@ export function SavedToolTimeline({
         </>
       );
     }
+  }
+  if (hasPhase && blocks.some(hasWorkContent)) {
+    return (
+      <WorkStreamSummary durationMs={totalElapsedMs > 0 ? totalElapsedMs : undefined}>
+        {blocks.map((block, index) => (
+          <TimelineWorkBlock
+            key={`${messageId}-work-only-${index}`}
+            block={block}
+            bubbleKind="saved"
+            onFilePreview={onFilePreview}
+            projectPath={projectPath}
+          />
+        ))}
+      </WorkStreamSummary>
+    );
   }
 
   return (
