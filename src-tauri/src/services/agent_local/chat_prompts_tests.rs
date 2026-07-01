@@ -103,6 +103,30 @@ fn prepare_tool_capable_injects_tool_prompt() {
 }
 
 #[test]
+fn prepare_tool_capable_injects_work_updates_guidance() {
+    let mut msgs = vec![make_user_msg("hello")];
+    let wd = std::path::Path::new("/tmp/project");
+    prepare_messages(
+        &mut msgs,
+        wd,
+        false,
+        None,
+        true,
+        None,
+        &[],
+        TEST_MODEL_LARGE,
+        "auto",
+        "",
+    );
+    let sys = &msgs[0];
+    assert!(sys.content.contains("Communication during work"));
+    assert!(sys
+        .content
+        .contains("Normal assistant text is visible to the user"));
+    assert!(sys.content.contains("Between tool batches"));
+}
+
+#[test]
 fn prepare_not_tool_capable_no_agent_md() {
     let mut msgs = vec![make_user_msg("hello")];
     let wd = std::path::Path::new("/tmp/project");

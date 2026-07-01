@@ -4,7 +4,8 @@ use super::types_ollama::{ChatMessage, OllamaThink, StreamEvent};
 use super::write_guard_registry;
 use super::{
     agent_loop_limits::MAX_TURNS, agent_loop_plan, agent_loop_support, circuit_breaker,
-    context_budget, eager_dispatch, ollama_stream, tool_executor, tool_result_budget,
+    context_budget, eager_dispatch, ollama_stream, stream_diagnostics_model as model_diag,
+    stream_diagnostics_payload as payload_diag, tool_executor, tool_result_budget,
 };
 use crate::services::token_counting;
 use std::path::PathBuf;
@@ -24,10 +25,8 @@ pub async fn run_agent_loop(
     permission_mode: &str,
     plan_mode_active: bool,
 ) -> Result<u32, String> {
-    let mut total_eval: Option<u32> = Some(0);
-    let mut total_prompt: Option<u32> = Some(0);
-    let mut last_prompt: Option<u32> = None;
-    let mut last_eval: Option<u32> = None;
+    let (mut total_eval, mut total_prompt) = (Some(0), Some(0));
+    let (mut last_prompt, mut last_eval) = (None, None);
     let start = std::time::Instant::now();
     let mut breaker = circuit_breaker::CircuitBreaker::new();
     let write_guard_arc = write_guard_registry::lock(&session_id).await;
@@ -52,11 +51,12 @@ pub async fn run_agent_loop(
         let realtime_budget = compression.realtime_budget(messages);
         let plan_active = agent_loop_plan::active(&session_id, plan_mode_active).await;
         let request = agent_loop_support::build_request(model, messages, &tools, think.clone());
+        model_diag::record_model_request(&session_id, &request_id, turn, messages).await;
+        payload_diag::record_ollama_payload(&session_id, &request_id, turn, &request).await;
         let (tool_tx, tool_rx) = tokio::sync::mpsc::unbounded_channel();
-        let eager_working_dir = working_dir.clone();
         let eager_handle = tokio::spawn(eager_dispatch::collect_eager_results(
             tool_rx,
-            eager_working_dir,
+            working_dir.clone(),
             session_id.clone(),
             request_id.clone(),
         ));
@@ -78,6 +78,7 @@ pub async fn run_agent_loop(
         .await?;
         let interrupted = outcome.is_interrupted();
         let result = outcome.into_result();
+        model_diag::record_model_result(&session_id, &request_id, turn, &result).await;
         if interrupted {
             super::stream_buffer::finalize_interrupted_content(on_event, &result, plan_active);
             eager_handle.abort();

@@ -6,6 +6,8 @@ use crate::services::agent_local::agent_loop_limits::MAX_TURNS;
 use crate::services::agent_local::agent_loop_plan;
 use crate::services::agent_local::circuit_breaker;
 use crate::services::agent_local::context_budget;
+use crate::services::agent_local::stream_diagnostics_model as model_diag;
+use crate::services::agent_local::stream_diagnostics_payload as payload_diag;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::tool_executor;
 use crate::services::agent_local::tool_result_budget;
@@ -14,10 +16,6 @@ use crate::services::agent_local::write_guard_registry;
 use crate::services::token_counting;
 use std::path::PathBuf;
 use tokio_util::sync::CancellationToken;
-
-pub fn convert_tools_to_openai(tools: &[serde_json::Value]) -> Vec<serde_json::Value> {
-    tools.to_vec()
-}
 
 pub async fn run_agent_loop(
     on_event: &AgentEventEmitter,
@@ -36,10 +34,8 @@ pub async fn run_agent_loop(
     permission_mode: &str,
     plan_mode_active: bool,
 ) -> Result<u32, String> {
-    let mut total_eval: Option<u32> = Some(0);
-    let mut total_prompt: Option<u32> = Some(0);
-    let mut last_prompt: Option<u32> = None;
-    let mut last_eval: Option<u32> = None;
+    let (mut total_eval, mut total_prompt) = (Some(0), Some(0));
+    let (mut last_prompt, mut last_eval) = (None, None);
     let start = std::time::Instant::now();
     let mut breaker = circuit_breaker::CircuitBreaker::new();
     let write_guard_arc = write_guard_registry::lock(&session_id).await;
@@ -63,6 +59,9 @@ pub async fn run_agent_loop(
         context_budget::prepare_for_request(messages, configured_context);
         let realtime_budget = compression.realtime_budget(messages);
         let plan_active = agent_loop_plan::active(&session_id, plan_mode_active).await;
+        model_diag::record_model_request(&session_id, &request_id, turn, messages).await;
+        payload_diag::record_api_payload(&session_id, &request_id, turn, provider_id, messages)
+            .await;
         crate::services::agent_local::stream_diagnostics::mark_phase(
             &session_id,
             &request_id,
@@ -87,6 +86,7 @@ pub async fn run_agent_loop(
         .await?;
         let interrupted = outcome.is_interrupted();
         let result = outcome.into_result();
+        model_diag::record_model_result(&session_id, &request_id, turn, &result).await;
         if interrupted {
             crate::services::agent_local::stream_buffer::finalize_interrupted_content(
                 on_event,

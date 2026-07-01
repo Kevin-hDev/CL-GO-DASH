@@ -21,7 +21,7 @@ pub(crate) async fn run(
             .await;
     let caps = resolve_capabilities(&params).await;
     let final_tools = resolve_tools(&params, &mode, caps.tools);
-    let openai_tools = llm::agent_loop::convert_tools_to_openai(&final_tools);
+    let openai_tools = llm::agent_loop_tools::convert_tools_to_openai(&final_tools);
     let working_dir = common::resolve_working_dir(&params.working_dir)?;
     common::update_working_dir(&params.session_id, &working_dir).await;
     let plan_mode_active = resolve_plan_mode(&params).await;
