@@ -22,6 +22,8 @@ vi.mock("react-i18next", () => ({
         "agentLocal.sessionSummary.emptySubagents": "No subagent",
         "agentLocal.sessionSummary.planStatus.awaiting_approval": "to approve",
         "agentLocal.sessionSummary.subagentType.explorer": "Explore",
+        "todos.status.completed": "completed",
+        "todos.status.pending": "pending",
         "subagents.completed": "completed",
         "common.loading": "Loading",
       };
@@ -80,6 +82,33 @@ describe("SessionSummaryBubble", () => {
     expect(getByText("1/2")).toBeTruthy();
     expect(getByText("Plan title")).toBeTruthy();
     expect(getByText("Explore · Explorer")).toBeTruthy();
+  });
+
+  it("déplie une todo list et affiche ses tâches", () => {
+    const { getByRole, getByText } = render(
+      <SessionSummaryBubble summary={summary()} git={git} />,
+    );
+
+    fireEvent.click(getByRole("button", { name: "Toggle summary" }));
+    fireEvent.click(getByRole("button", { name: "Todo list (1)" }));
+    fireEvent.click(getByRole("button", { name: /Implement UI/ }));
+
+    expect(getByText("One")).toBeTruthy();
+    expect(getByText("Two")).toBeTruthy();
+    expect(getByText("pending")).toBeTruthy();
+  });
+
+  it("ouvre le plan au clic sur son entrée", () => {
+    const onOpenPlan = vi.fn();
+    const { getByRole, getByText } = render(
+      <SessionSummaryBubble summary={summary()} git={git} onOpenPlan={onOpenPlan} />,
+    );
+
+    fireEvent.click(getByRole("button", { name: "Toggle summary" }));
+    fireEvent.click(getByRole("button", { name: "Plan (1)" }));
+    fireEvent.click(getByText("Plan title"));
+
+    expect(onOpenPlan).toHaveBeenCalledWith(expect.objectContaining({ id: "plan-1" }));
   });
 
   it("ouvre la conversation enfant au clic sur un sous-agent", () => {

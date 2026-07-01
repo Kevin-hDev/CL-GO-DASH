@@ -1,10 +1,12 @@
 export type FileOperationType = "read" | "write" | "edit";
+export type FileOperationKind = "file" | "plan";
 
 export interface FileOperation {
   id: string;
   path: string;
   name: string;
   type: FileOperationType;
+  kind?: FileOperationKind;
   timestamp: string;
   content?: string;
   oldText?: string;

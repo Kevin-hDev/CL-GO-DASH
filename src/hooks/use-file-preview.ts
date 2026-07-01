@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { fileNameFromPath } from "@/lib/file-preview-utils";
+import type { AgentPlanRun } from "@/types/agent";
 import type { FileOperation, FilePreviewActiveTab } from "@/types/file-preview";
 import {
   clampFilePreviewWidthForContainer,
@@ -85,6 +86,21 @@ export function useFilePreview(sessionId: string | null, operations: FileOperati
     setFallbackOps((items) => [fallback, ...items.filter((item) => item.id !== fallback.id)].slice(0, MAX_TABS));
     return openOperation(fallback);
   }, [operations, openOperation]);
+
+  const openPlan = useCallback((plan: AgentPlanRun) => {
+    const operation: FileOperation = {
+      id: `plan:${plan.id}`,
+      path: plan.path,
+      name: plan.title,
+      type: "read",
+      kind: "plan",
+      timestamp: plan.updated_at,
+      additions: 0,
+      deletions: 0,
+    };
+    setFallbackOps((items) => [operation, ...items.filter((item) => item.id !== operation.id)].slice(0, MAX_TABS));
+    return openOperation(operation);
+  }, [openOperation]);
 
   const closeTab = useCallback((id: string) => {
     setTabIds((ids) => ids.filter((tabId) => tabId !== id));
@@ -184,6 +200,7 @@ export function useFilePreview(sessionId: string | null, operations: FileOperati
     closePanel,
     openOperation,
     openPath,
+    openPlan,
     closeTab,
     startResize,
   };

@@ -1,5 +1,6 @@
 import { useCallback, useMemo, type SetStateAction } from "react";
 import type { useFilePreview } from "@/hooks/use-file-preview";
+import type { AgentPlanRun } from "@/types/agent";
 import type { FileOperation } from "@/types/file-preview";
 import type { AgentLocalNavState, DeepPartial } from "@/types/navigation";
 
@@ -61,6 +62,12 @@ export function useAgentLocalControlledPreview({ navState, filePreviewState, onN
     return tabId;
   }, [filePreviewState, onNavChange]);
 
+  const openPlan = useCallback((plan: AgentPlanRun) => {
+    const tabId = filePreviewState.openPlan(plan);
+    onNavChange?.({ previewOpen: true, previewActiveTab: tabId });
+    return tabId;
+  }, [filePreviewState, onNavChange]);
+
   const closeTab = useCallback((id: string) => {
     filePreviewState.closeTab(id);
     if (navState.previewActiveTab === id) onNavChange?.({ previewActiveTab: "summary" });
@@ -78,10 +85,11 @@ export function useAgentLocalControlledPreview({ navState, filePreviewState, onN
     closePanel,
     openOperation,
     openPath,
+    openPlan,
     closeTab,
   }), [
     closePanel, closeTab, filePreviewState, navState.previewActiveTab,
     navState.previewFullscreen, navState.previewOpen, openOperation,
-    openPath, setActiveTab, setFullscreen, setOpen, toggleOpen,
+    openPath, openPlan, setActiveTab, setFullscreen, setOpen, toggleOpen,
   ]);
 }

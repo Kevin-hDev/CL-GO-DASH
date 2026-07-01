@@ -4,6 +4,7 @@ import { ClipboardText, FilePlus, GitBranch } from "@/components/ui/icons";
 import { Tooltip } from "@/components/ui/tooltip";
 import { useClickOutside } from "@/hooks/use-click-outside";
 import type { useSessionSummary } from "@/hooks/use-session-summary";
+import type { AgentPlanRun } from "@/types/agent";
 import {
   SessionSummaryPlanList,
   SessionSummarySubagentList,
@@ -24,12 +25,13 @@ export interface SessionSummaryGitState {
 interface SessionSummaryBubbleProps {
   summary: SessionSummaryState;
   git: SessionSummaryGitState;
+  onOpenPlan?: (plan: AgentPlanRun) => void;
   onOpenSubagent?: (sessionId: string) => void;
 }
 
 type SectionKey = "todos" | "plans" | "subagents";
 
-export function SessionSummaryBubble({ summary, git, onOpenSubagent }: SessionSummaryBubbleProps) {
+export function SessionSummaryBubble({ summary, git, onOpenPlan, onOpenSubagent }: SessionSummaryBubbleProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [sections, setSections] = useState<Record<SectionKey, boolean>>({
@@ -79,7 +81,13 @@ export function SessionSummaryBubble({ summary, git, onOpenSubagent }: SessionSu
             <SessionSummaryTodoList runs={summary.activeTodos} />
           </SessionSummarySection>
           <SessionSummarySection title={t("agentLocal.sessionSummary.sections.plans")} count={summary.plans.length} open={sections.plans} onToggle={() => toggleSection("plans")}>
-            <SessionSummaryPlanList plans={summary.plans} />
+            <SessionSummaryPlanList
+              plans={summary.plans}
+              onOpenPlan={(plan) => {
+                setOpen(false);
+                onOpenPlan?.(plan);
+              }}
+            />
           </SessionSummarySection>
           <SessionSummarySection title={t("agentLocal.sessionSummary.sections.subagents")} count={summary.subagents.length} open={sections.subagents} onToggle={() => toggleSection("subagents")}>
             <SessionSummarySubagentList

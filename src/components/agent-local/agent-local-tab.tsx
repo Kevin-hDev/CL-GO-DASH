@@ -111,6 +111,7 @@ export const AgentLocalTab = memo(function AgentLocalTab({
           onPanelModeChange={forecastNav.setPanelMode}
           sessionSummary={sessionSummary}
           summaryGit={summaryGit}
+          onOpenPlan={filePreview.openPlan}
           onOpenSubagent={(id) => void handleSelectById(id)}
           onToggleTerminal={() => {
             if (!terminal.isOpen && terminal.tabs.length === 0) {

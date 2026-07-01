@@ -6,6 +6,7 @@ import { svgSizeProps } from "@/components/ui/icon-size";
 import { MOD, ALT } from "@/lib/platform";
 import type { PanelMode } from "@/hooks/use-forecast-panel";
 import type { SessionSummaryHookState } from "@/hooks/use-session-summary";
+import type { AgentPlanRun } from "@/types/agent";
 import { ModeSelector } from "./mode-selector";
 import { SessionSummaryBubble, type SessionSummaryGitState } from "./session-summary-bubble";
 import "./chat-header.css";
@@ -23,6 +24,7 @@ interface ChatHeaderProps {
   onPanelModeChange?: (mode: PanelMode) => void;
   sessionSummary?: SessionSummaryHookState;
   summaryGit?: SessionSummaryGitState;
+  onOpenPlan?: (plan: AgentPlanRun) => void;
   onOpenSubagent?: (sessionId: string) => void;
 }
 
@@ -39,6 +41,7 @@ export function ChatHeader({
   onPanelModeChange,
   sessionSummary,
   summaryGit,
+  onOpenPlan,
   onOpenSubagent,
 }: ChatHeaderProps) {
   const { t } = useTranslation();
@@ -73,6 +76,7 @@ export function ChatHeader({
             <SessionSummaryBubble
               summary={sessionSummary}
               git={summaryGit}
+              onOpenPlan={onOpenPlan}
               onOpenSubagent={onOpenSubagent}
             />
           )}
