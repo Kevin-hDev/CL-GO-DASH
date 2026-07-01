@@ -44,6 +44,7 @@ pub fn chat_to_agent_message(m: &ChatMessage) -> Option<AgentMessage> {
         files: vec![],
         timestamp: chrono::Utc::now(),
         tokens: 0,
+        work_duration_ms: None,
         skill_names: None,
     })
 }
@@ -165,6 +166,7 @@ pub fn new_user_agent_message(content: &str) -> AgentMessage {
         files: vec![],
         timestamp: chrono::Utc::now(),
         tokens: 0,
+        work_duration_ms: None,
         skill_names: None,
     }
 }

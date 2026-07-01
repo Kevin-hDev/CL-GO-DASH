@@ -14,6 +14,17 @@ function doneEvent(overrides: Partial<StreamEvent & { event: "done" } extends { 
 }
 
 describe("done", () => {
+  it("ajoute la durée de travail au message final", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-07-01T12:00:10Z"));
+    const result = applyStreamEvent(
+      makeState({ streamStartedAt: Date.now() - 10_000, currentContent: "réponse" }),
+      doneEvent(),
+    );
+    expect(result.assistantMessage?.work_duration_ms).toBe(10_000);
+    vi.useRealTimers();
+  });
+
   it("finalise le stream (isStreaming=false, completed=true)", () => {
     const { state: s } = applyStreamEvent(makeState(), doneEvent({ finalTps: 12 }));
     expect(s.isStreaming).toBe(false);

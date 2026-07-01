@@ -24,6 +24,7 @@ pub(super) async fn inject_summary_in_parent(
         files: vec![],
         timestamp: chrono::Utc::now(),
         tokens: 0,
+        work_duration_ms: None,
         skill_names: None,
     };
     let _ = session_store::add_messages(parent_session_id, vec![msg], 0).await;

@@ -11,6 +11,7 @@ export interface AgentMessage {
   timestamp: string;
   skill_names?: string[];
   tokens?: number;
+  work_duration_ms?: number;
 }
 
 export interface SavedSegment {

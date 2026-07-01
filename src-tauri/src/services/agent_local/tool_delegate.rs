@@ -110,6 +110,7 @@ pub async fn prepare_delegate(
         files: vec![],
         timestamp: chrono::Utc::now(),
         tokens: 0,
+        work_duration_ms: None,
         skill_names: None,
     };
     let _ = session_store::add_messages(&child_id, vec![user_msg], 0).await;

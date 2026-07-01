@@ -57,6 +57,7 @@ pub fn chat_to_agent_message(message: &ChatMessage) -> AgentMessage {
         files: vec![],
         timestamp: chrono::Utc::now(),
         tokens,
+        work_duration_ms: None,
         skill_names: None,
     }
 }

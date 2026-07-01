@@ -1,0 +1,141 @@
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render } from "@testing-library/react";
+import { SavedToolTimeline, StreamToolTimeline } from "../message-tool-timeline";
+
+afterEach(() => {
+  cleanup();
+  vi.useRealTimers();
+});
+
+vi.mock("@/components/ui/icons", () => ({
+  CaretDown: () => <span data-testid="caret-down" />,
+  CaretRight: () => <span data-testid="caret-right" />,
+}));
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string, opts?: Record<string, unknown>) => {
+      const duration = opts?.duration;
+      const durationText = typeof duration === "string" || typeof duration === "number" ? String(duration) : "";
+      if (key === "agentLocal.workSummary") return `Worked for ${durationText}`;
+      if (key === "agentLocal.workSummaryNoDuration") return "Work completed";
+      return key;
+    },
+  }),
+}));
+vi.mock("../assistant-message", () => ({
+  AssistantMessage: ({
+    content,
+    isStreaming,
+    thinking,
+  }: {
+    content: string;
+    isStreaming?: boolean;
+    thinking?: string;
+  }) => (
+    <div data-testid={isStreaming ? "assistant-stream" : "assistant"}>
+      {thinking && <span>{thinking}</span>}
+      {content}
+    </div>
+  ),
+}));
+vi.mock("../thinking-section", () => ({
+  ThinkingSection: ({ content }: { content: string }) => <div data-testid="thinking">{content}</div>,
+}));
+vi.mock("../tool-bubble", () => ({
+  ToolBubble: ({ tools }: { tools: Array<{ name: string }> }) => (
+    <div data-testid="tool-bubble">{tools.map((tool) => tool.name).join(",")}</div>
+  ),
+  SavedToolBubble: ({ tools }: { tools: Array<{ name: string }> }) => (
+    <div data-testid="saved-tool-bubble">{tools.map((tool) => tool.name).join(",")}</div>
+  ),
+}));
+vi.mock("../branch-bubble", () => ({
+  BranchBubble: () => <div data-testid="branch-bubble" />,
+}));
+
+describe("message tool timeline collapse", () => {
+  it("garde la phase de travail visible tant que la réponse finale n'a pas commencé", () => {
+    const { getByText, queryByText } = render(
+      <StreamToolTimeline
+        completedSegments={[]}
+        currentThinking="thinking live"
+        currentContent=""
+        currentTools={[{ name: "bash", args: {} }]}
+        streamStartedAt={1}
+        liveTokenCount={0}
+      />,
+    );
+
+    expect(getByText("thinking live")).toBeTruthy();
+    expect(getByText("bash")).toBeTruthy();
+    expect(queryByText(/Worked for/)).toBeNull();
+  });
+
+  it("replie la phase de travail dès que la réponse finale commence", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-07-01T12:04:26Z"));
+    const startedAt = Date.now() - 266_000;
+    const { getByRole, getByText, queryByText } = render(
+      <StreamToolTimeline
+        completedSegments={[{
+          thinking: "thinking before final",
+          content: "intermediate note",
+          tools: [{ name: "bash", args: {}, result: "ok" }],
+        }]}
+        currentThinking=""
+        currentContent="final answer"
+        currentTools={[]}
+        streamStartedAt={startedAt}
+        liveTokenCount={0}
+      />,
+    );
+
+    const toggle = getByRole("button", { name: /Worked for 4 min 26 s/ });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(getByText("final answer")).toBeTruthy();
+    expect(queryByText("intermediate note")).toBeNull();
+
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    expect(getByText("intermediate note")).toBeTruthy();
+    expect(getByText("thinking before final")).toBeTruthy();
+    expect(getByText("bash")).toBeTruthy();
+  });
+
+  it("replie les segments sauvegardés par défaut et laisse la réponse finale visible", () => {
+    const { getByRole, getByText, queryByText } = render(
+      <SavedToolTimeline
+        messageId="m1"
+        segments={[
+          { thinking: "saved thinking", content: "saved intermediate", tools: [{ name: "grep", summary: "x" }] },
+          { content: "saved final", tools: [] },
+        ]}
+        tps={0}
+        totalElapsedMs={125_000}
+      />,
+    );
+
+    const toggle = getByRole("button", { name: /Worked for 2 min 5 s/ });
+    expect(getByText("saved final")).toBeTruthy();
+    expect(queryByText("saved intermediate")).toBeNull();
+
+    fireEvent.click(toggle);
+    expect(getByText("saved intermediate")).toBeTruthy();
+    expect(getByText("saved thinking")).toBeTruthy();
+    expect(getByText("grep")).toBeTruthy();
+  });
+
+  it("n'affiche pas de résumé quand il n'y a pas de phase de travail", () => {
+    const { getByText, queryByText } = render(
+      <SavedToolTimeline
+        messageId="m2"
+        segments={[{ content: "plain final", tools: [] }]}
+        tps={0}
+        totalElapsedMs={0}
+      />,
+    );
+
+    expect(getByText("plain final")).toBeTruthy();
+    expect(queryByText(/Worked for|Work completed/)).toBeNull();
+  });
+});

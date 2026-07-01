@@ -120,6 +120,8 @@ pub struct AgentMessage {
     #[serde(default)]
     pub tokens: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub work_duration_ms: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub skill_names: Option<Vec<String>>,
 }
 
@@ -172,4 +174,41 @@ pub struct FileAttachment {
     pub size: u64,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub thumbnail: Option<String>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::AgentMessage;
+
+    #[test]
+    fn agent_message_accepts_missing_work_duration() {
+        let msg: AgentMessage = serde_json::from_value(serde_json::json!({
+            "id": "m1",
+            "role": "assistant",
+            "content": "ok",
+            "files": [],
+            "timestamp": "2026-07-01T12:00:00Z",
+            "tokens": 0
+        }))
+        .unwrap();
+
+        assert_eq!(msg.work_duration_ms, None);
+    }
+
+    #[test]
+    fn agent_message_serializes_work_duration_when_present() {
+        let msg: AgentMessage = serde_json::from_value(serde_json::json!({
+            "id": "m1",
+            "role": "assistant",
+            "content": "ok",
+            "files": [],
+            "timestamp": "2026-07-01T12:00:00Z",
+            "tokens": 0,
+            "work_duration_ms": 266000
+        }))
+        .unwrap();
+        let saved = serde_json::to_value(msg).unwrap();
+
+        assert_eq!(saved["work_duration_ms"], 266000);
+    }
 }

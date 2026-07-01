@@ -83,6 +83,7 @@ async fn dispatch(_app: &AppHandle, wakeup: &ScheduledWakeup) -> Result<(String,
         files: Vec::new(),
         timestamp: Utc::now(),
         tokens: 0,
+        work_duration_ms: None,
         skill_names: None,
     };
 
@@ -98,6 +99,7 @@ async fn dispatch(_app: &AppHandle, wakeup: &ScheduledWakeup) -> Result<(String,
         files: Vec::new(),
         timestamp: Utc::now(),
         tokens,
+        work_duration_ms: None,
         skill_names: None,
     };
 

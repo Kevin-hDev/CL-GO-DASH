@@ -25,6 +25,7 @@ fn agent(role: &str, content: &str) -> AgentMessage {
         files: vec![],
         timestamp: chrono::Utc::now(),
         tokens: 0,
+        work_duration_ms: None,
         skill_names: None,
     }
 }
