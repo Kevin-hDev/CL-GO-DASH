@@ -1,3 +1,5 @@
+import { svgSizeProps } from "./icon-size";
+
 interface HeartbeatIconProps {
   size?: string | number;
   className?: string;
@@ -9,8 +11,7 @@ export function HeartbeatIcon({ size = 20, className }: HeartbeatIconProps) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width={size}
-      height={size}
+      {...svgSizeProps(size)}
       fill="currentColor"
       viewBox="0 0 256 256"
       className={className}

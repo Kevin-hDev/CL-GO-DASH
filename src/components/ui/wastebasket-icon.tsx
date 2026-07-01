@@ -1,3 +1,5 @@
+import { svgSizeProps } from "./icon-size";
+
 interface WastebasketIconProps {
   size?: number | string;
   className?: string;
@@ -6,8 +8,7 @@ interface WastebasketIconProps {
 export function WastebasketIcon({ size = 14, className }: WastebasketIconProps) {
   return (
     <svg
-      width={size}
-      height={size}
+      {...svgSizeProps(size)}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"

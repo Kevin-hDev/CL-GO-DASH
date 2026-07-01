@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown } from "@/components/ui/lucide-icons";
 import type { useLocalListNavigation } from "@/hooks/use-local-list-navigation";
 
 type NavApi = ReturnType<typeof useLocalListNavigation>;

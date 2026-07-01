@@ -1,5 +1,5 @@
 import { memo, useEffect, useRef, useState } from "react";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight } from "@/components/ui/lucide-icons";
 import { FileIcon } from "@/components/file-preview/file-icon";
 import type { FileEntry } from "@/lib/file-tree-filter";
 

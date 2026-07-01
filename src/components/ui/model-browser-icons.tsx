@@ -1,3 +1,5 @@
+import { svgSizeProps } from "./icon-size";
+
 interface ModelBrowserIconProps {
   size?: string | number;
   className?: string;
@@ -10,8 +12,7 @@ function ModelBrowserIcon({ path, size = "1.2rem", className }: ModelBrowserIcon
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width={size}
-      height={size}
+      {...svgSizeProps(size)}
       fill="currentColor"
       viewBox="0 0 256 256"
       className={className}

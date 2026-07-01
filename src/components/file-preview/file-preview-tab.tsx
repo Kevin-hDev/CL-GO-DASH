@@ -1,4 +1,4 @@
-import { List, X } from "lucide-react";
+import { List, X } from "@/components/ui/lucide-icons";
 import { FileIcon } from "./file-icon";
 import type { FileOperation } from "@/types/file-preview";
 

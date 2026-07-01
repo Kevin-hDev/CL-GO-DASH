@@ -4,14 +4,12 @@ import { ToolBubble } from "../tool-bubble";
 
 afterEach(cleanup);
 
-vi.mock("@phosphor-icons/react", () => ({
-  Spinner: () => <span data-testid="spinner" />,
-}));
 vi.mock("@/components/ui/icons", () => ({
   Copy: () => <span />,
   CaretDown: () => <span />,
   CaretUp: () => <span />,
   Check: () => <span data-testid="check-icon" />,
+  Spinner: () => <span data-testid="spinner" />,
 }));
 vi.mock("../tool-icons", () => ({
   ToolIcon: ({ name }: { name: string }) => <span data-testid={`tool-icon-${name}`} />,

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Maximize2, Minimize2 } from "lucide-react";
+import { Maximize2, Minimize2 } from "@/components/ui/lucide-icons";
 import type { ForecastSection } from "@/hooks/use-forecast-panel";
 import { ForecastNav } from "./forecast-nav";
 

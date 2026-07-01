@@ -1,7 +1,8 @@
 import { useTranslation } from "react-i18next";
-import { BookOpen, TerminalSquare } from "lucide-react";
+import { BookOpen, TerminalSquare } from "@/components/ui/lucide-icons";
 import { DragRegion } from "@/components/layout/drag-region";
 import { Tooltip } from "@/components/ui/tooltip";
+import { svgSizeProps } from "@/components/ui/icon-size";
 import { MOD, ALT } from "@/lib/platform";
 import type { PanelMode } from "@/hooks/use-forecast-panel";
 import { ModeSelector } from "./mode-selector";
@@ -68,7 +69,7 @@ export function ChatHeader({
                 onTogglePreview();
               }}
             >
-              <svg width="var(--chrome-icon-md)" height="var(--chrome-icon-md)" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg {...svgSizeProps("var(--chrome-icon-md)")} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="1" y="2" width="14" height="12" rx="2" />
                 <line x1="10" y1="2" x2="10" y2="14" />
               </svg>
