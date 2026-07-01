@@ -163,7 +163,7 @@ function finalizeStream(
     id: crypto.randomUUID(), role: "assistant", content: built.content,
     thinking: built.thinking, tool_activities: built.toolRecords,
     segments: built.segments, files: [], timestamp: new Date().toISOString(),
-    tokens: 0,
+    tokens: 0, work_duration_ms: totalMs > 0 ? totalMs : undefined,
   } : undefined;
   if (assistantMessage) {
     const messageTokens = estimateAgentMessagesTokens([assistantMessage]);

@@ -101,6 +101,7 @@ pub async fn synthesize_subagent_results(
         files: vec![],
         timestamp: chrono::Utc::now(),
         tokens: 0,
+        work_duration_ms: None,
         skill_names: None,
     };
     session_store::add_messages(&parent_session_id, vec![user_msg], 0).await?;

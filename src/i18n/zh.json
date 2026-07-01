@@ -235,6 +235,8 @@
     "freeCount": "{{free}} free / {{total}}",
     "thinkingDuration": "思考了 {{seconds}}s",
     "working": "已工作 {{seconds}}s",
+    "workSummary": "已工作 {{duration}}",
+    "workSummaryNoDuration": "工作已完成",
     "tools": "Tools",
     "tokens": "tokens",
     "contextUsage": {

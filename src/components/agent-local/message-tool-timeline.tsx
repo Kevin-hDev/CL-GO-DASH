@@ -1,9 +1,18 @@
 import { AssistantMessage } from "./assistant-message";
 import { BranchBubble } from "./branch-bubble";
 import { ThinkingSection } from "./thinking-section";
-import { ToolBubble, SavedToolBubble } from "./tool-bubble";
-import { buildToolTimelineBlocks, hasNarrative } from "./message-tool-blocks";
+import { SavedToolBubble } from "./tool-bubble";
+import { buildToolTimelineBlocks } from "./message-tool-blocks";
 import { extractBranchActivity } from "./message-tool-aggregation";
+import {
+  hasWorkContent,
+  isFinalStreamPhase,
+  LiveWorkStreamSummary,
+  savedWorkBlocks,
+  TimelineLiveBlock,
+  TimelineWorkBlock,
+} from "./message-tool-timeline-render";
+import { WorkStreamSummary } from "./work-stream-summary";
 import type { ToolActivity, StreamSegment } from "@/hooks/agent-chat-utils";
 import type { SavedSegment } from "@/types/agent";
 
@@ -35,28 +44,44 @@ export function StreamToolTimeline({
       : []),
   ];
   const blocks = buildToolTimelineBlocks(segments);
+  const finalIndex = isFinalStreamPhase(blocks, currentContent);
+  if (finalIndex >= 0) {
+    const finalBlock = blocks[finalIndex];
+    const workBlocks = savedWorkBlocks(blocks, finalIndex);
+    return (
+      <>
+        <LiveWorkStreamSummary startedAt={streamStartedAt}>
+          {workBlocks.map((block, index) => (
+            <TimelineWorkBlock
+              key={`stream-work-${index}`}
+              block={block}
+              bubbleKind="stream"
+              onFilePreview={onFilePreview}
+              projectPath={projectPath}
+            />
+          ))}
+        </LiveWorkStreamSummary>
+        <AssistantMessage
+          content={finalBlock.content ?? ""}
+          isStreaming
+          streamStartedAt={streamStartedAt}
+          liveTokenCount={liveTokenCount}
+        />
+      </>
+    );
+  }
+
   return (
     <>
       {blocks.map((block, index) => (
-        <div key={`stream-block-${index}`}>
-          {block.isCurrent && hasNarrative(block) ? (
-            <AssistantMessage
-              content={block.content ?? ""}
-              thinking={block.thinking}
-              isStreaming
-              streamStartedAt={streamStartedAt}
-              liveTokenCount={liveTokenCount}
-            />
-          ) : (
-            <>
-              {block.thinking && <ThinkingSection content={block.thinking} />}
-              {block.content && <AssistantMessage content={block.content} />}
-            </>
-          )}
-          {block.tools.length > 0 && (
-            <ToolBubble tools={block.tools} onFilePreview={onFilePreview} projectPath={projectPath} />
-          )}
-        </div>
+        <TimelineLiveBlock
+          key={`stream-block-${index}`}
+          block={block}
+          streamStartedAt={streamStartedAt}
+          liveTokenCount={liveTokenCount}
+          onFilePreview={onFilePreview}
+          projectPath={projectPath}
+        />
       ))}
     </>
   );
@@ -83,6 +108,35 @@ export function SavedToolTimeline({
 }: SavedToolTimelineProps) {
   const blocks = buildToolTimelineBlocks(segments);
   const lastTextIndex = findLastIndex(blocks, (block) => !!block.content);
+  if (lastTextIndex >= 0) {
+    const finalBlock = blocks[lastTextIndex];
+    const workBlocks = savedWorkBlocks(blocks, lastTextIndex);
+    const hasWork = workBlocks.some(hasWorkContent);
+    if (hasWork) {
+      return (
+        <>
+          <WorkStreamSummary durationMs={totalElapsedMs > 0 ? totalElapsedMs : undefined}>
+            {workBlocks.map((block, index) => (
+              <TimelineWorkBlock
+                key={`${messageId}-work-${index}`}
+                block={block}
+                bubbleKind="saved"
+                onFilePreview={onFilePreview}
+                projectPath={projectPath}
+              />
+            ))}
+          </WorkStreamSummary>
+          <AssistantMessage
+            content={finalBlock.content ?? ""}
+            tokens={tokens}
+            tps={tps}
+            totalElapsedMs={totalElapsedMs}
+          />
+        </>
+      );
+    }
+  }
+
   return (
     <>
       {blocks.map((block, index) => {

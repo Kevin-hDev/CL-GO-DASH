@@ -120,6 +120,7 @@ fn summary_agent_message(summary: &str, suppress_follow_up: bool) -> AgentMessag
         files: vec![],
         timestamp: chrono::Utc::now(),
         tokens: token_estimate::estimate_tokens(&[chat]) as u32,
+        work_duration_ms: None,
         skill_names: None,
     }
 }

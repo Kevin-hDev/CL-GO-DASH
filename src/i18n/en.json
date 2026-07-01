@@ -234,6 +234,8 @@
     "freeCount": "{{free}} free / {{total}}",
     "thinkingDuration": "Thought for {{seconds}}s",
     "working": "Working for {{seconds}}s",
+    "workSummary": "Worked for {{duration}}",
+    "workSummaryNoDuration": "Work completed",
     "tools": "Tools",
     "tokens": "tokens",
     "contextUsage": {

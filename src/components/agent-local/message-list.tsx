@@ -96,6 +96,7 @@ export function MessageList({
               projectPath={projectPath}
               tps={isLast ? tps : 0}
               totalElapsedMs={isLast ? totalElapsedMs : 0}
+              workDurationMs={msg.work_duration_ms}
             />
           );
         }
@@ -134,11 +135,11 @@ export function MessageList({
 }
 
 export const SegmentedAssistantMessage = memo(function SegmentedAssistantMessage({
-  msg, onReload, onFilePreview, tps, totalElapsedMs,
+  msg, onReload, onFilePreview, tps, totalElapsedMs, workDurationMs,
   projectPath,
 }: {
   msg: AgentMessage; onReload?: (id: string) => void; onFilePreview?: (path: string) => void;
-  tps: number; totalElapsedMs: number; projectPath?: string;
+  tps: number; totalElapsedMs: number; workDurationMs?: number; projectPath?: string;
 }) {
   if (msg.segments && msg.segments.length > 0) {
     return (
@@ -147,7 +148,7 @@ export const SegmentedAssistantMessage = memo(function SegmentedAssistantMessage
         segments={msg.segments}
         tokens={msg.tokens}
         tps={tps}
-        totalElapsedMs={totalElapsedMs}
+        totalElapsedMs={workDurationMs ?? totalElapsedMs}
         onFilePreview={onFilePreview}
         projectPath={projectPath}
       />
