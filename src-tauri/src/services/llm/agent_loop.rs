@@ -120,6 +120,11 @@ pub async fn run_agent_loop(
             }
             agent_loop_plan::PlanLoopAction::Stop(message) => return Err(message.to_string()),
         }
+        crate::services::agent_local::stream_buffer::finalize_content_phase(
+            on_event,
+            &result,
+            plan_active,
+        );
         let mut assistant_message = super::agent_loop_message::build_assistant_message(&result);
         if plan_active && !result.tool_calls.is_empty() {
             assistant_message.content.clear();

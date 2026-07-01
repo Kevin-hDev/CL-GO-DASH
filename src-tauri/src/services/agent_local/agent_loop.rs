@@ -117,6 +117,7 @@ pub async fn run_agent_loop(
                 return Err(message.to_string());
             }
         }
+        super::stream_buffer::finalize_content_phase(on_event, &result, plan_active);
         let mut assistant_message = agent_loop_support::build_assistant_message(&result);
         if plan_active && !result.tool_calls.is_empty() {
             assistant_message.content.clear();

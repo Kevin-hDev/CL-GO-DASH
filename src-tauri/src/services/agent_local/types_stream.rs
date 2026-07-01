@@ -1,6 +1,13 @@
 use serde::Serialize;
 
 #[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum TokenPhase {
+    Work,
+    Final,
+}
+
+#[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase", tag = "event", content = "data")]
 pub enum StreamEvent {
     #[serde(rename_all = "camelCase")]
@@ -8,6 +15,11 @@ pub enum StreamEvent {
         content: String,
         token_count: u32,
         tps: f64,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        phase: Option<TokenPhase>,
+    },
+    ContentPhase {
+        phase: TokenPhase,
     },
     Thinking {
         content: String,

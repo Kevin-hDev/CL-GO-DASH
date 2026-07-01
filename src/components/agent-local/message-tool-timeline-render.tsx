@@ -8,7 +8,7 @@ import { extractBranchActivity } from "./message-tool-aggregation";
 import { WorkStreamSummary } from "./work-stream-summary";
 import { hasNarrative } from "./message-tool-blocks";
 import type { ToolActivity } from "@/hooks/agent-chat-utils";
-import type { SavedSegment } from "@/types/agent";
+import type { SavedSegment, TokenPhase } from "@/types/agent";
 import type { ToolTimelineBlock } from "./message-tool-blocks";
 
 export function TimelineLiveBlock({
@@ -81,7 +81,7 @@ export function TimelineNarrative<T>({ block }: { block: ToolTimelineBlock<T> })
   return (
     <>
       {block.thinking && <ThinkingSection content={block.thinking} />}
-      {block.content && <AssistantMessage content={block.content} />}
+      {block.content && <AssistantMessage content={block.content} showActions={false} />}
     </>
   );
 }
@@ -89,7 +89,9 @@ export function TimelineNarrative<T>({ block }: { block: ToolTimelineBlock<T> })
 export function isFinalStreamPhase<T>(
   blocks: Array<ToolTimelineBlock<T>>,
   currentContent: string,
+  currentContentPhase?: TokenPhase,
 ): number {
+  if (currentContentPhase !== "final") return -1;
   if (!currentContent) return -1;
   const lastIndex = blocks.length - 1;
   const last = blocks[lastIndex];

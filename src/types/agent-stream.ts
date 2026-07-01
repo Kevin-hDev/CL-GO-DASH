@@ -11,8 +11,11 @@ export interface AgentErrorDiagnosticSummary {
   safeSummary: string;
 }
 
+export type TokenPhase = "work" | "final";
+
 export type StreamEvent =
-  | { event: "token"; data: { content: string; tokenCount: number; tps: number } }
+  | { event: "token"; data: { content: string; tokenCount: number; tps: number; phase?: TokenPhase } }
+  | { event: "contentPhase"; data: { phase: TokenPhase } }
   | { event: "thinking"; data: { content: string } }
   | { event: "toolCall"; data: { name: string; arguments: Record<string, unknown> } }
   | { event: "toolResult"; data: { name: string; content: string; isError: boolean; truncated?: boolean; toolCallIndex: number; resolvedPath?: string } }

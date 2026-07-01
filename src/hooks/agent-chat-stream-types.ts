@@ -1,5 +1,5 @@
 import type { StreamSegment, ToolActivity } from "./agent-chat-utils";
-import type { AgentInteractiveChoiceRequest, AgentMessage, AgentPlanPreview } from "@/types/agent";
+import type { AgentInteractiveChoiceRequest, AgentMessage, AgentPlanPreview, TokenPhase } from "@/types/agent";
 
 export const MAX_PENDING_PERMISSIONS = 32;
 export const MAX_MESSAGES_PER_SESSION = 2000;
@@ -15,6 +15,7 @@ export interface ChatState {
   messages: AgentMessage[];
   completedSegments: StreamSegment[];
   currentContent: string;
+  currentContentPhase?: TokenPhase;
   currentThinking: string;
   currentTools: ToolActivity[];
   isStreaming: boolean;
@@ -45,8 +46,8 @@ export interface ManagedStreamState extends ChatState {
 
 export const EMPTY_CHAT_STATE: ChatState = {
   messages: [], completedSegments: [], currentContent: "",
-  currentThinking: "", currentTools: [], isStreaming: false,
-    tps: 0, sessionTokenCount: 0, sessionTokenCountEstimated: true, lastRequestTokens: 0,
+  currentContentPhase: undefined, currentThinking: "", currentTools: [], isStreaming: false,
+  tps: 0, sessionTokenCount: 0, sessionTokenCountEstimated: true, lastRequestTokens: 0,
   liveTokenCount: 0, streamStartedAt: null, segmentStartedAt: null,
   totalElapsedMs: 0,
 };
@@ -73,7 +74,8 @@ export function createManagedStreamState(
 export function toChatState(state: ManagedStreamState): ChatState {
   return {
     messages: state.messages, completedSegments: state.completedSegments,
-    currentContent: state.currentContent, currentThinking: state.currentThinking,
+    currentContent: state.currentContent, currentContentPhase: state.currentContentPhase,
+    currentThinking: state.currentThinking,
     currentTools: state.currentTools, isStreaming: state.isStreaming,
     tps: state.tps, sessionTokenCount: state.sessionTokenCount,
     sessionTokenCountEstimated: state.sessionTokenCountEstimated,

@@ -133,6 +133,7 @@ interface AssistantMessageProps {
   totalElapsedMs?: number;
   streamStartedAt?: number | null;
   liveTokenCount?: number;
+  showActions?: boolean;
 }
 
 function formatTokens(n: number): string {
@@ -143,6 +144,7 @@ function formatTokens(n: number): string {
 export const AssistantMessage = memo(function AssistantMessage({
   content, thinking, toolActivities, projectPath, isStreaming, onReload,
   tokens, tps, totalElapsedMs, streamStartedAt, liveTokenCount,
+  showActions = true,
 }: AssistantMessageProps) {
   const { t } = useTranslation();
   const hoverRef = useHoverClass();
@@ -167,7 +169,7 @@ export const AssistantMessage = memo(function AssistantMessage({
           </>
         )}
       </div>
-      {!isStreaming && content.trim() && (
+      {showActions && !isStreaming && content.trim() && (
         <MessageActions messageRole="assistant" content={content} onReload={onReload}>
           {(hasTokens || hasTps || totalTime) && (
             <span className="msg-stats-inline">

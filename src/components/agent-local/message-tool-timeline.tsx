@@ -14,11 +14,12 @@ import {
 } from "./message-tool-timeline-render";
 import { WorkStreamSummary } from "./work-stream-summary";
 import type { ToolActivity, StreamSegment } from "@/hooks/agent-chat-utils";
-import type { SavedSegment } from "@/types/agent";
+import type { SavedSegment, TokenPhase } from "@/types/agent";
 
 interface StreamToolTimelineProps {
   completedSegments: StreamSegment[];
   currentContent: string;
+  currentContentPhase?: TokenPhase;
   currentThinking: string;
   currentTools: ToolActivity[];
   streamStartedAt: number | null;
@@ -30,6 +31,7 @@ interface StreamToolTimelineProps {
 export function StreamToolTimeline({
   completedSegments,
   currentContent,
+  currentContentPhase,
   currentThinking,
   currentTools,
   streamStartedAt,
@@ -44,7 +46,7 @@ export function StreamToolTimeline({
       : []),
   ];
   const blocks = buildToolTimelineBlocks(segments);
-  const finalIndex = isFinalStreamPhase(blocks, currentContent);
+  const finalIndex = isFinalStreamPhase(blocks, currentContent, currentContentPhase);
   if (finalIndex >= 0) {
     const finalBlock = blocks[finalIndex];
     const workBlocks = savedWorkBlocks(blocks, finalIndex);
