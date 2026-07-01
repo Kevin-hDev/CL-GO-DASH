@@ -53,7 +53,7 @@ describe("reduceSessionActivity", () => {
     expect(result.unreadIds.has("s1")).toBe(false);
   });
 
-  it("nettoie les sessions invisibles sans masquer la session active déjà signalée", () => {
+  it("nettoie les sessions en cours invisibles sans masquer les points terminés", () => {
     const result = cleanupSessionActivity(
       state(["s1", "hidden"], ["s2", "hidden"]),
       visibleIds,
@@ -61,6 +61,16 @@ describe("reduceSessionActivity", () => {
     );
 
     expect([...result.runningIds]).toEqual(["s1"]);
-    expect([...result.unreadIds]).toEqual(["s2"]);
+    expect([...result.unreadIds]).toEqual(["s2", "hidden"]);
+  });
+
+  it("conserve les points terminés quand la liste remonte sans session chargée", () => {
+    const result = cleanupSessionActivity(
+      state([], ["s1"]),
+      new Set(),
+      null,
+    );
+
+    expect([...result.unreadIds]).toEqual(["s1"]);
   });
 });

@@ -48,7 +48,7 @@ export function cleanupSessionActivity(
   _selectedId: string | null,
 ): SessionActivityState {
   const runningIds = filterVisible(state.runningIds, visibleIds);
-  const unreadIds = filterVisible(state.unreadIds, visibleIds);
+  const unreadIds = trimSet(state.unreadIds);
   return { runningIds, unreadIds };
 }
 
