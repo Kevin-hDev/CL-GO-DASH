@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Pencil } from "@/components/ui/icons";
 import { WastebasketIcon } from "@/components/ui/wastebasket-icon";
@@ -11,6 +11,7 @@ import { ConversationSectionToggle } from "./conversation-section-toggle";
 import { useKeyboard } from "@/hooks/use-keyboard";
 import { useMinuteNow } from "@/hooks/use-minute-now";
 import { useProjectDrag } from "@/hooks/use-project-drag";
+import { useSessionActivityIndicators } from "@/hooks/use-session-activity-indicators";
 import type { AgentSessionMeta, Project } from "@/types/agent";
 import { idMatch } from "@/lib/utils";
 import "./conversation.css";
@@ -107,10 +108,16 @@ export function ConversationList({
   const displayOrder = drag.liveOrder ?? projectIds;
   const projectMap = new Map(projects.map((p) => [p.id, p]));
   const projectIdSet = new Set(projectIds);
-  const mainSessions = sessions.filter((s) => !s.parent_session_id);
+  const mainSessions = useMemo(() => sessions.filter((s) => !s.parent_session_id), [sessions]);
+  const mainSessionIds = useMemo(() => mainSessions.map((s) => s.id), [mainSessions]);
+  const activity = useSessionActivityIndicators(mainSessionIds, selectedId);
   const orphanSessions = mainSessions.filter(
     (s) => !s.project_id || !projectIdSet.has(s.project_id),
   );
+  const handleSelect = useCallback((id: string) => {
+    activity.markViewed(id);
+    onSelect(id);
+  }, [activity, onSelect]);
 
   return (
     <>
@@ -131,14 +138,16 @@ export function ConversationList({
                 const p = projectMap.get(id);
                 if (!p) return null;
                 return (
-                  <ProjectSection
-                    key={p.id}
-                    project={p}
+	                  <ProjectSection
+	                    key={p.id}
+	                    project={p}
                     sessions={mainSessions.filter((s) => s.project_id === p.id)}
                     selectedId={selectedId}
+                    runningIds={activity.runningIds}
+                    unreadIds={activity.unreadIds}
                     isDragOver={false}
                     isDragging={drag.draggingId === p.id}
-                    onSelect={onSelect}
+                    onSelect={handleSelect}
                     onNewSession={onNewSessionInProject}
                     onRenameProject={onRenameProject}
                     onDeleteProject={onDeleteProject}
@@ -168,13 +177,15 @@ export function ConversationList({
                 const active = idMatch(selectedId, s.id);
                 const renaming = idMatch(renamingId, s.id);
                 return (
-                  <ConversationSessionItem
-                    key={s.id}
+	                  <ConversationSessionItem
+	                    key={s.id}
                     session={s}
                     active={active}
+                    isRunning={activity.runningIds.has(s.id)}
+                    hasUnread={activity.unreadIds.has(s.id)}
                     renaming={renaming}
                     inputRef={inputRef}
-                    onSelect={onSelect}
+                    onSelect={handleSelect}
                     onRenameSubmit={handleRenameSubmit}
                     onCancelRename={() => setRenamingId(null)}
                     onMenu={handleSessionMenu}

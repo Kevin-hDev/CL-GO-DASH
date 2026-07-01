@@ -3,6 +3,12 @@ import { render, fireEvent } from "@testing-library/react";
 import { ConversationList } from "../conversation-list";
 import type { AgentSessionMeta, Project } from "@/types/agent";
 
+const activityMocks = vi.hoisted(() => ({
+  runningIds: new Set<string>(),
+  unreadIds: new Set<string>(),
+  markViewed: vi.fn(),
+}));
+
 function makeSession(overrides: Partial<AgentSessionMeta> = {}): AgentSessionMeta {
   return { id: "s1", name: "Test", model: "llama3", provider: "ollama", message_count: 5, created_at: "2026-01-01", ...overrides };
 }
@@ -21,9 +27,9 @@ vi.mock("@/components/ui/icons", () => ({
   Pencil: () => <span />,
   CaretRight: () => <span data-testid="section-chevron" />,
   DotsThreeVertical: () => <span data-testid="dots" />,
-  ChatsCircle: (props: { weight?: string }) => (
-    <span data-testid="chat-icon" data-weight={props.weight} />
-  ),
+	  ChatsCircle: (props: { weight?: string; className?: string }) => (
+	    <span data-testid="chat-icon" data-weight={props.weight} className={props.className} />
+	  ),
   FolderOpen: () => <span />,
   FolderSimple: () => <span />,
   PencilSimple: () => <span />,
@@ -62,13 +68,19 @@ vi.mock("@/hooks/use-project-drag", () => ({
   }),
 }));
 
+vi.mock("@/hooks/use-session-activity-indicators", () => ({
+  useSessionActivityIndicators: () => activityMocks,
+}));
+
 vi.mock("../conversation.css", () => ({}));
 vi.mock("../conversation-collapse.css", () => ({}));
 
 describe("ConversationList", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
+	  beforeEach(() => {
+	    vi.clearAllMocks();
+	    activityMocks.runningIds = new Set<string>();
+	    activityMocks.unreadIds = new Set<string>();
+	  });
 
   it("affiche le bouton nouveau avec la classe .conv-new-btn", () => {
     const { container } = render(<ConversationList {...defaultProps} />);
@@ -118,15 +130,26 @@ describe("ConversationList", () => {
     expect(inactives.length).toBe(1);
   });
 
-  it("appelle onSelect au clic sur une session", () => {
+	  it("appelle onSelect au clic sur une session", () => {
     const onSelect = vi.fn();
     const session = makeSession({ id: "s42" });
     const { container } = render(
       <ConversationList {...defaultProps} sessions={[session]} onSelect={onSelect} />,
     );
-    fireEvent.click(container.querySelector(".conv-session-indented") as HTMLElement);
-    expect(onSelect).toHaveBeenCalledWith("s42");
-  });
+	    fireEvent.click(container.querySelector(".conv-session-indented") as HTMLElement);
+	    expect(onSelect).toHaveBeenCalledWith("s42");
+	  });
+
+	  it("retire l'indicateur terminé au clic sur une session", () => {
+	    const onSelect = vi.fn();
+	    const session = makeSession({ id: "s42" });
+	    const { container } = render(
+	      <ConversationList {...defaultProps} sessions={[session]} onSelect={onSelect} />,
+	    );
+	    fireEvent.click(container.querySelector(".conv-session-indented") as HTMLElement);
+	    expect(activityMocks.markViewed).toHaveBeenCalledWith("s42");
+	    expect(onSelect).toHaveBeenCalledWith("s42");
+	  });
 
   it("appelle onCreate au clic sur le bouton nouveau", () => {
     const onCreate = vi.fn();
@@ -145,17 +168,17 @@ describe("ConversationList", () => {
     expect(container.querySelector(".conv-name")?.textContent).toBe("agentLocal.newSession");
   });
 
-  it("affiche l'âge de la session dans la zone droite", () => {
+	  it("affiche l'âge de la session dans la zone droite", () => {
     const createdAt = new Date(Date.now() - 5 * 60_000).toISOString();
     const session = makeSession({ id: "s1", created_at: createdAt });
     const { container } = render(
       <ConversationList {...defaultProps} sessions={[session]} />,
     );
     expect(container.querySelector(".conv-session-age")?.textContent).toBe("sessionAge.minute");
-    expect(container.querySelector(".conv-session-menu-btn")).not.toBeNull();
-  });
+	    expect(container.querySelector(".conv-session-menu-btn")).not.toBeNull();
+	  });
 
-  it("ouvre le menu de session au clic sur les trois points", () => {
+	  it("ouvre le menu de session au clic sur les trois points", () => {
     const session = makeSession({ id: "s1" });
     const { container, getByTestId } = render(
       <ConversationList {...defaultProps} sessions={[session]} />,

@@ -11,6 +11,8 @@ import "./conversation-session-item.css";
 interface ConversationSessionItemProps {
   session: AgentSessionMeta;
   active: boolean;
+  isRunning: boolean;
+  hasUnread: boolean;
   renaming: boolean;
   inputRef: RefObject<HTMLInputElement | null>;
   onSelect: (id: string) => void;
@@ -21,17 +23,25 @@ interface ConversationSessionItemProps {
 }
 
 export function ConversationSessionItem({
-  session, active, renaming, inputRef,
+  session, active, isRunning, hasUnread, renaming, inputRef,
   onSelect, onRenameSubmit, onCancelRename, onMenu,
   nowMs,
 }: ConversationSessionItemProps) {
   const { t } = useTranslation();
   const channelId = gatewayChannelId(session.gateway_channel_key);
   const age = getSessionAge(session.created_at, nowMs);
+  const showUnread = hasUnread && !active;
+  const itemClass = [
+    "conv-item",
+    "conv-session-indented",
+    active ? "active" : "",
+    isRunning ? "is-running" : "",
+    showUnread ? "has-unread" : "",
+  ].filter(Boolean).join(" ");
 
   return (
     <div
-      className={`conv-item conv-session-indented ${active ? "active" : ""}`}
+      className={itemClass}
       role="button"
       tabIndex={active ? 0 : -1}
       aria-current={active ? "page" : undefined}
@@ -58,11 +68,20 @@ export function ConversationSessionItem({
         />
       ) : (
         <>
-          <ChatsCircle size="var(--icon-sm)" weight={active ? "fill" : "regular"} className="conv-icon" />
-          <span className="conv-name">{displaySessionName(session.name, t)}</span>
-          {session.is_gateway && channelId && (
-            <ChannelIcon channelId={channelId} size="var(--icon-lg)" className="conv-gateway-icon" />
-          )}
+          {showUnread && <span className="conv-unread-dot" aria-hidden="true" />}
+          <span className="conv-session-main">
+            <ChatsCircle
+              size="var(--icon-sm)"
+              weight={active ? "fill" : "regular"}
+              className={`conv-icon ${isRunning ? "conv-running-icon" : ""}`}
+            />
+            <span className={`conv-name ${isRunning ? "thinking-active" : ""}`}>
+              <span>{displaySessionName(session.name, t)}</span>
+            </span>
+            {session.is_gateway && channelId && (
+              <ChannelIcon channelId={channelId} size="var(--icon-lg)" className="conv-gateway-icon" />
+            )}
+          </span>
           <span className="conv-session-tail">
             {age && (
               <span className="conv-session-age">

@@ -65,6 +65,14 @@ vi.mock("@/hooks/use-project-drag", () => ({
   }),
 }));
 
+vi.mock("@/hooks/use-session-activity-indicators", () => ({
+  useSessionActivityIndicators: () => ({
+    runningIds: new Set<string>(),
+    unreadIds: new Set<string>(),
+    markViewed: vi.fn(),
+  }),
+}));
+
 vi.mock("../conversation.css", () => ({}));
 vi.mock("../conversation-collapse.css", () => ({}));
 

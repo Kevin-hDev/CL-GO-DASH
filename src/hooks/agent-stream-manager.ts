@@ -26,6 +26,7 @@ import {
   type StreamSnapshot,
 } from "./agent-stream-records";
 import { estimateAgentMessagesTokens } from "./agent-token-estimate";
+import { emitStreamActivity, subscribeStreamActivity, toStreamActivity } from "./agent-stream-activity";
 import { showToast } from "@/lib/toast-emitter";
 import type { AgentMessage, StreamEvent } from "@/types/agent";
 import { webToolErrorToastMessage } from "./web-tool-error-toast";
@@ -41,7 +42,7 @@ type Subscriber = (snapshot: StreamSnapshot) => void;
 let listenPromise: Promise<UnlistenFn> | null = null;
 
 export const agentStreamManager = { startSession, stopSession, failSession,
-  getSnapshot, isStreaming, subscribe };
+  getSnapshot, getActivity, isStreaming, subscribe, subscribeActivity: subscribeStreamActivity };
 
 function ensureListener() {
   if (!listenPromise) {
@@ -63,6 +64,7 @@ async function startSession(sessionId: string, messages: AgentMessage[], session
   record.isGateway = false; // session UI explicite — le frontend gère la persistance
   touchSession(sessionId, record);
   flushFrameNotify(record, notify);
+  notifyActivity(sessionId, record);
 }
 
 function stopSession(sessionId: string) {
@@ -71,6 +73,7 @@ function stopSession(sessionId: string) {
   const result = finishPartialStream(record.state);
   record.state = result.state;
   flushFrameNotify(record, notify);
+  notifyActivity(sessionId, record);
   if (result.assistantMessage && !record.state.persisted && !record.isGateway) {
     persistAssistant(sessionId, record, result.assistantMessage, 0, notify);
   }
@@ -82,6 +85,7 @@ function failSession(sessionId: string) {
   record.state = { ...record.state, isStreaming: false, completed: true,
     error: i18n.t("errors.streamStartFailed"), updatedAt: Date.now() };
   flushFrameNotify(record, notify);
+  notifyActivity(sessionId, record);
   scheduleCleanup(sessionId, record, records);
 }
 
@@ -89,6 +93,12 @@ function getSnapshot(sessionId: string): StreamSnapshot | null {
   const record = getRecord(sessionId);
   if (!record?.started) return null;
   return snapshot(record.state);
+}
+
+function getActivity(sessionId: string) {
+  const record = getRecord(sessionId);
+  if (!record?.started) return null;
+  return toStreamActivity(sessionId, record.state);
 }
 
 function isStreaming(sessionId: string): boolean {
@@ -139,6 +149,7 @@ function handleStreamEvent(sessionId: string, event: StreamEvent) {
       completed: false,
     };
     flushFrameNotify(record, notify);
+    notifyActivity(sessionId, record);
     return;
   }
 
@@ -179,6 +190,7 @@ function handleStreamEvent(sessionId: string, event: StreamEvent) {
         persisted: true,
       };
       flushFrameNotify(record, notify);
+      notifyActivity(sessionId, record);
     }).catch(() => console.warn("session reload after compression failed"));
     return;
   }
@@ -191,6 +203,7 @@ function handleStreamEvent(sessionId: string, event: StreamEvent) {
   } else {
     flushFrameNotify(record, notify);
   }
+  notifyActivity(sessionId, record);
 
   // Pour les sessions gateway, le backend persiste déjà — skip persistAssistant.
   // Pour les sessions UI normales, persistAssistant comme avant.
@@ -207,4 +220,9 @@ function notify(record: StreamRecord) {
   if (!record.started) return;
   const value = snapshot(record.state);
   for (const subscriber of record.subscribers.values()) (subscriber as Subscriber)(value);
+}
+
+function notifyActivity(sessionId: string, record: StreamRecord) {
+  if (!record.started) return;
+  emitStreamActivity(sessionId, record.state);
 }
