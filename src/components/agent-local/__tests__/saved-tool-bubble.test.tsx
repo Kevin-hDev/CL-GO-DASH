@@ -17,8 +17,8 @@ vi.mock("../tool-icons", () => ({
   ToolIcon: ({ name }: { name: string }) => <span data-testid={`tool-icon-${name}`} />,
 }));
 vi.mock("../tool-status-icon", () => ({
-  ToolStatusIcon: ({ status, message }: { status: string; message?: string }) => (
-    <span data-testid={`status-icon-${status}`} data-message={message ?? ""} />
+  ToolStatusIcon: ({ message }: { message?: string }) => (
+    <span data-testid="status-icon-error" data-message={message ?? ""} />
   ),
 }));
 vi.mock("@/components/file-preview/file-icon", () => ({

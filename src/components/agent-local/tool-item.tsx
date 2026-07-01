@@ -95,11 +95,10 @@ export function ToolItem({
         {fileContent}
         {summaryContent}
         {!done && <Spinner size="var(--icon-sm)" className="tb-spinner" />}
-        {done && (
+        {done && isError && (
           <ToolStatusIcon
-            status={isError ? "error" : "success"}
             size="var(--icon-sm)"
-            message={isError ? errorMessage : undefined}
+            message={errorMessage}
           />
         )}
       </div>

@@ -1,12 +1,9 @@
 import { useCallback, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Check, Copy } from "@/components/ui/icons";
-import validateIcon from "@/assets/tool-status/validate.svg?url";
 import errorIcon from "@/assets/tool-status/error.svg?url";
 
 const HOVER_DELAY = 700;
-
-export type ToolStatus = "success" | "error";
 
 interface TooltipPosition {
   top: number;
@@ -14,11 +11,9 @@ interface TooltipPosition {
 }
 
 export function ToolStatusIcon({
-  status,
   message,
   size = 14,
 }: {
-  status: ToolStatus;
   message?: string;
   size?: number | string;
 }) {
@@ -56,8 +51,6 @@ export function ToolStatusIcon({
     });
   }, [message]);
 
-  const src = status === "error" ? errorIcon : validateIcon;
-
   const tooltip = visible && message && position && createPortal(
     <div
       className="tb-error-tooltip"
@@ -77,8 +70,8 @@ export function ToolStatusIcon({
     <span ref={anchorRef} className="tb-status-anchor" onMouseEnter={enter} onMouseLeave={leave}>
       <img
         className="tb-status-img"
-        src={src}
-        alt={status === "error" ? "Erreur" : "Succès"}
+        src={errorIcon}
+        alt="Erreur"
         style={{ width: size, height: size, flexShrink: 0 }}
       />
       {tooltip}

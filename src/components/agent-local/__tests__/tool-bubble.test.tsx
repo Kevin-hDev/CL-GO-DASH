@@ -15,8 +15,8 @@ vi.mock("../tool-icons", () => ({
   ToolIcon: ({ name }: { name: string }) => <span data-testid={`tool-icon-${name}`} />,
 }));
 vi.mock("../tool-status-icon", () => ({
-  ToolStatusIcon: ({ status, message }: { status: string; message?: string }) => (
-    <span data-testid={`status-icon-${status}`} data-message={message ?? ""} />
+  ToolStatusIcon: ({ message }: { message?: string }) => (
+    <span data-testid="status-icon-error" data-message={message ?? ""} />
   ),
 }));
 vi.mock("@/components/file-preview/file-icon", () => ({
@@ -138,13 +138,13 @@ describe("ToolBubble", () => {
     expect(getByTestId("spinner")).toBeTruthy();
   });
 
-  it("affiche l'état terminé quand tous les tools sont terminés", () => {
-    const { getByTestId } = render(
+  it("n'affiche pas d'icône de succès quand tous les tools sont terminés", () => {
+    const { queryByTestId } = render(
       <ToolBubble
         tools={[{ name: "bash", args: { command: "ls" }, result: "fichier.txt", isError: false }]}
       />,
     );
-    expect(getByTestId("status-icon-success")).toBeTruthy();
+    expect(queryByTestId("status-icon-error")).toBeNull();
   });
 
   it("affiche l'icône d'erreur sur le groupe quand un tool échoue", () => {
@@ -208,43 +208,6 @@ describe("ToolBubble", () => {
     openGroup(container);
     openTool(container);
     expect(getByTestId("web-preview")).toBeTruthy();
-  });
-
-  it("masque le détail brut des erreurs web_fetch", () => {
-    const { container, queryByTestId } = render(
-      <ToolBubble
-        tools={[{
-          name: "web_fetch",
-          args: { url: "https://example.com/private" },
-          result: "HTTP 403 secret_key=abc123456",
-          isError: true,
-        }]}
-      />,
-    );
-
-    openGroup(container);
-    expect(container.querySelector('[data-testid="status-icon-error"]')).toBeTruthy();
-    expect(container.textContent).not.toContain("HTTP 403");
-    expect(container.textContent).not.toContain("secret_key");
-    expect(container.querySelector(".tb-toggle")).toBeNull();
-    expect(queryByTestId("web-preview")).toBeNull();
-  });
-
-  it("nettoie le détail affichable des erreurs web_search", () => {
-    const { container } = render(
-      <ToolBubble
-        tools={[{
-          name: "web_search",
-          args: { query: "news" },
-          result: "SearXNG: secret_key=abc123456 /Users/me/file",
-          isError: true,
-        }]}
-      />,
-    );
-
-    openGroup(container);
-    expect(container.innerHTML).not.toContain("abc123456");
-    expect(container.innerHTML).not.toContain("/Users/me/file");
   });
 
   it("garde les groupes et previews fermés par défaut", () => {

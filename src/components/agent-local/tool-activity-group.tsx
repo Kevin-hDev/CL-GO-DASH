@@ -85,11 +85,10 @@ function ToolActivityGroupRow({
         </span>
         <span className="tb-group-state" aria-hidden="true">
           {group.isPending && <Spinner size="var(--icon-sm)" className="tb-spinner" />}
-          {!group.isPending && (
+          {!group.isPending && group.hasError && (
             <ToolStatusIcon
-              status={group.hasError ? "error" : "success"}
               size="var(--icon-sm)"
-              message={group.hasError ? t("agentLocal.toolActivity.groupError") : undefined}
+              message={t("agentLocal.toolActivity.groupError")}
             />
           )}
         </span>
