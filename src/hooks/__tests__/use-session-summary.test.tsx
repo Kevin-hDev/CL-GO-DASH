@@ -58,6 +58,35 @@ describe("useSessionSummary", () => {
 
     expect(result.current.changes).toEqual({ additions: 1, deletions: 2, files: 1 });
   });
+
+  it("nettoie la diff live quand la session change", async () => {
+    invokeMock.mockImplementation((command: string, args?: { id?: string }) => {
+      if (command === "list_subagents") return Promise.resolve([]);
+      if (args?.id === "s2") return Promise.resolve(session([], "s2"));
+      return Promise.resolve(session([
+        assistant("m1", [{ name: "write_file", summary: "a.ts", content: "a\nb" }]),
+      ], "s1"));
+    });
+
+    const { result, rerender } = renderHook(({ sessionId }) => useSessionSummary(sessionId), {
+      initialProps: { sessionId: "s1" },
+    });
+    await waitFor(() => expect(result.current.changes).toEqual({ additions: 2, deletions: 0, files: 1 }));
+
+    act(() => {
+      emit("s1", { event: "toolCall", data: { name: "edit_file", arguments: { path: "a.ts", old_string: "x\ny", new_string: "z" } } });
+      emit("s1", { event: "toolResult", data: { name: "edit_file", content: "ok", isError: false, toolCallIndex: 0 } });
+    });
+    expect(result.current.changes).toEqual({ additions: 1, deletions: 2, files: 1 });
+
+    rerender({ sessionId: "s2" });
+    await waitFor(() => expect(result.current.session?.id).toBe("s2"));
+
+    rerender({ sessionId: "s1" });
+    await waitFor(() => expect(result.current.session?.id).toBe("s1"));
+
+    expect(result.current.changes).toEqual({ additions: 2, deletions: 0, files: 1 });
+  });
 });
 
 function emit(sessionId: string, event: StreamEvent) {
@@ -66,9 +95,9 @@ function emit(sessionId: string, event: StreamEvent) {
   }
 }
 
-function session(messages: AgentMessage[]): AgentSession {
+function session(messages: AgentMessage[], id = "s1"): AgentSession {
   return {
-    id: "s1",
+    id,
     name: "Session",
     created_at: "2026-07-01T12:00:00Z",
     model: "gpt",

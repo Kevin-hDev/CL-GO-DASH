@@ -70,11 +70,16 @@ export function useSessionSummary(sessionId: string | null) {
 
   useEffect(() => {
     let cancelled = false;
+    liveToolsRef.current = [];
+    liveRequestChangesRef.current = EMPTY_CHANGE_SUMMARY;
     queueMicrotask(() => {
       if (!cancelled) void refresh();
     });
     return () => {
       cancelled = true;
+      setLiveChanges(null);
+      liveToolsRef.current = [];
+      liveRequestChangesRef.current = EMPTY_CHANGE_SUMMARY;
       requestSeqRef.current += 1;
       if (timerRef.current !== null) window.clearTimeout(timerRef.current);
     };
