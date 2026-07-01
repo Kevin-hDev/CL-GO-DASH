@@ -177,6 +177,29 @@ describe("message tool timeline collapse", () => {
     expect(getByText("grep")).toBeTruthy();
   });
 
+  it("replie un stream sauvegardé annulé sans faux fragment final visible", () => {
+    const { getByRole, getByText, queryByText } = render(
+      <SavedToolTimeline
+        messageId="m-cancelled"
+        segments={[
+          { thinking: "saved thinking", content: "work note", tools: [{ name: "bash", summary: "x" }], phase: "work" },
+          { content: "last partial fragment", tools: [], phase: "work" },
+        ]}
+        tps={0}
+        totalElapsedMs={45_000}
+      />,
+    );
+
+    const toggle = getByRole("button", { name: /Worked for 45 s/ });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(queryByText("last partial fragment")).toBeNull();
+
+    fireEvent.click(toggle);
+    expect(getByText("work note")).toBeTruthy();
+    expect(getByText("last partial fragment")).toBeTruthy();
+    expect(getByText("bash")).toBeTruthy();
+  });
+
   it("n'affiche pas de résumé quand il n'y a pas de phase de travail", () => {
     const { getByText, queryByText } = render(
       <SavedToolTimeline

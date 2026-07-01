@@ -79,6 +79,7 @@ pub async fn run_agent_loop(
         let interrupted = outcome.is_interrupted();
         let result = outcome.into_result();
         if interrupted {
+            super::stream_buffer::finalize_interrupted_content(on_event, &result, plan_active);
             eager_handle.abort();
             compression
                 .handle_interrupted(

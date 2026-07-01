@@ -21,12 +21,22 @@ pub fn record_content(
     }
 }
 
-pub fn emit_buffered_content(on_event: &AgentEventEmitter, result: &StreamResult, phase: TokenPhase) {
+pub fn emit_buffered_content(
+    on_event: &AgentEventEmitter,
+    result: &StreamResult,
+    phase: TokenPhase,
+) {
     let mut token_count = 0;
     let first_token = Some(std::time::Instant::now());
     for chunk in &result.content_chunks {
         token_count += 1;
-        emit_token(on_event, chunk.clone(), token_count, first_token, Some(phase.clone()));
+        emit_token(
+            on_event,
+            chunk.clone(),
+            token_count,
+            first_token,
+            Some(phase.clone()),
+        );
     }
 }
 
@@ -44,6 +54,23 @@ pub fn finalize_content_phase(
     }
 }
 
+pub fn finalize_interrupted_content(
+    on_event: &AgentEventEmitter,
+    result: &StreamResult,
+    plan_active: bool,
+) {
+    if interrupted_phase_for_result(result).is_none() {
+        return;
+    }
+    if plan_active {
+        emit_buffered_content(on_event, result, TokenPhase::Work);
+    } else {
+        let _ = on_event.send(StreamEvent::ContentPhase {
+            phase: TokenPhase::Work,
+        });
+    }
+}
+
 pub fn content_phase_for_result(result: &StreamResult, plan_active: bool) -> Option<TokenPhase> {
     if result.content_chunks.is_empty() {
         return None;
@@ -56,6 +83,13 @@ pub fn content_phase_for_result(result: &StreamResult, plan_active: bool) -> Opt
     } else {
         TokenPhase::Work
     })
+}
+
+pub fn interrupted_phase_for_result(result: &StreamResult) -> Option<TokenPhase> {
+    if result.content_chunks.is_empty() {
+        return None;
+    }
+    Some(TokenPhase::Work)
 }
 
 fn emit_token(
@@ -138,5 +172,23 @@ mod tests {
         let value = serde_json::to_value(event).expect("serialize content phase");
         assert_eq!(value["event"], "contentPhase");
         assert_eq!(value["data"]["phase"], "work");
+    }
+
+    #[test]
+    fn classifies_interrupted_text_as_work() {
+        let result = StreamResult {
+            content_chunks: vec!["partial".into()],
+            ..Default::default()
+        };
+
+        assert!(matches!(
+            interrupted_phase_for_result(&result),
+            Some(TokenPhase::Work)
+        ));
+    }
+
+    #[test]
+    fn ignores_empty_interrupted_text() {
+        assert!(interrupted_phase_for_result(&StreamResult::default()).is_none());
     }
 }

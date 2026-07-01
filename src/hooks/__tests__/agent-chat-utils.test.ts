@@ -99,6 +99,12 @@ describe("buildSegmentedMessage", () => {
     const { toolRecords } = buildSegmentedMessage(segments);
     expect(toolRecords).toBeUndefined();
   });
+
+  it("conserve la phase des segments sauvegardés", () => {
+    const segments: StreamSegment[] = [{ thinking: "", tools: [], content: "travail", phase: "work" }];
+    const { segments: savedSegments } = buildSegmentedMessage(segments);
+    expect(savedSegments?.[0].phase).toBe("work");
+  });
 });
 
 describe("expandToolActivities", () => {

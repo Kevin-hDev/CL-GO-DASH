@@ -112,6 +112,7 @@ export function savedWorkBlocks<T>(
       tools: finalBlock.tools,
       content: "",
       isCurrent: false,
+      phase: "work",
     });
   }
   return workBlocks;

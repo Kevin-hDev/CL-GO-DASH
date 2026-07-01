@@ -3,6 +3,7 @@ export interface ToolTimelineSegment<T> {
   content?: string;
   tools: T[];
   isCurrent?: boolean;
+  phase?: "work" | "final";
 }
 
 export interface ToolTimelineBlock<T> {
@@ -10,6 +11,7 @@ export interface ToolTimelineBlock<T> {
   content?: string;
   tools: T[];
   isCurrent: boolean;
+  phase?: "work" | "final";
 }
 
 export function buildToolTimelineBlocks<T>(
@@ -18,12 +20,14 @@ export function buildToolTimelineBlocks<T>(
   const blocks: Array<ToolTimelineBlock<T>> = [];
   for (const segment of segments) {
     if (hasNarrative(segment)) {
-      blocks.push({
+      const block: ToolTimelineBlock<T> = {
         thinking: segment.thinking,
         content: segment.content,
         tools: [...segment.tools],
         isCurrent: segment.isCurrent === true,
-      });
+      };
+      if (segment.phase) block.phase = segment.phase;
+      blocks.push(block);
       continue;
     }
     if (segment.tools.length === 0) continue;
@@ -31,7 +35,9 @@ export function buildToolTimelineBlocks<T>(
     if (last) {
       last.tools.push(...segment.tools);
     } else {
-      blocks.push({ tools: [...segment.tools], isCurrent: false });
+      const block: ToolTimelineBlock<T> = { tools: [...segment.tools], isCurrent: false };
+      if (segment.phase) block.phase = segment.phase;
+      blocks.push(block);
     }
   }
   return blocks;

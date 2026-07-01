@@ -9,6 +9,7 @@ import {
   type PermissionRequestState,
 } from "./agent-chat-stream-types";
 import { estimateAgentMessagesTokens } from "./agent-token-estimate";
+import { markUnconfirmedContentAsWork } from "./agent-chat-stream-partial";
 
 export type { ChatState, ManagedStreamState, PermissionRequestState, StreamApplyResult };
 export { EMPTY_CHAT_STATE, createManagedStreamState, toChatState } from "./agent-chat-stream-types";
@@ -136,6 +137,7 @@ function applyToolResult(
 function appendCurrentSegment(state: ChatState): StreamSegment[] {
   return [...state.completedSegments, {
     thinking: state.currentThinking, tools: state.currentTools, content: state.currentContent,
+    phase: state.currentContentPhase,
   }];
 }
 
@@ -161,7 +163,7 @@ function addPermission(
 }
 
 export function finishPartialStream(state: ManagedStreamState): StreamApplyResult {
-  return finalizeStream(state, null, state.tps, null);
+  return finalizeStream(markUnconfirmedContentAsWork(state), null, state.tps, null);
 }
 
 function finishStream(state: ManagedStreamState, event: Extract<StreamEvent, { event: "done" }>) {

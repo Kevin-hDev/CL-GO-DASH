@@ -42,7 +42,13 @@ export function StreamToolTimeline({
   const segments = [
     ...completedSegments,
     ...(currentContent || currentThinking || currentTools.length > 0
-      ? [{ thinking: currentThinking, content: currentContent, tools: currentTools, isCurrent: true }]
+      ? [{
+        thinking: currentThinking,
+        content: currentContent,
+        tools: currentTools,
+        isCurrent: true,
+        phase: currentContentPhase,
+      }]
       : []),
   ];
   const blocks = buildToolTimelineBlocks(segments);
@@ -109,7 +115,11 @@ export function SavedToolTimeline({
   projectPath,
 }: SavedToolTimelineProps) {
   const blocks = buildToolTimelineBlocks(segments);
-  const lastTextIndex = findLastIndex(blocks, (block) => !!block.content);
+  const hasPhase = blocks.some((block) => !!block.phase);
+  const explicitFinalIndex = findLastIndex(blocks, (block) => block.phase === "final" && !!block.content);
+  const lastTextIndex = explicitFinalIndex >= 0
+    ? explicitFinalIndex
+    : hasPhase ? -1 : findLastIndex(blocks, (block) => !!block.content);
   if (lastTextIndex >= 0) {
     const finalBlock = blocks[lastTextIndex];
     const workBlocks = savedWorkBlocks(blocks, lastTextIndex);
@@ -136,6 +146,21 @@ export function SavedToolTimeline({
         </>
       );
     }
+  }
+  if (hasPhase && blocks.some(hasWorkContent)) {
+    return (
+      <WorkStreamSummary durationMs={totalElapsedMs > 0 ? totalElapsedMs : undefined}>
+        {blocks.map((block, index) => (
+          <TimelineWorkBlock
+            key={`${messageId}-work-only-${index}`}
+            block={block}
+            bubbleKind="saved"
+            onFilePreview={onFilePreview}
+            projectPath={projectPath}
+          />
+        ))}
+      </WorkStreamSummary>
+    );
   }
 
   return (
