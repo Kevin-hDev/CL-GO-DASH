@@ -39,6 +39,7 @@
   --tooltip-border: rgba(0, 0, 0, 0.12);
   --tooltip-text: var(--ink);
   --tooltip-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  --code-block-border: rgba(0, 0, 0, 0.12);
 
   /* Signal backgrounds (alpha) */
   --signal-ok-bg: rgba(22, 163, 74, 0.12);

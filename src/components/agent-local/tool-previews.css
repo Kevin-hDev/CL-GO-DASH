@@ -2,15 +2,20 @@
 
 .tp-wrapper {
   margin-top: var(--space-xs);
-  border-radius: 4px;
-  overflow: hidden;
-  border: 1px solid var(--edge);
+  max-height: 27.2em;
+  overflow: auto;
+  font-size: var(--text-xs, 11px);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--code-block-border, var(--edge));
+  background: var(--surface-glass);
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
 }
 
 .tp-line {
   display: flex;
   font-family: var(--font-mono, monospace);
-  font-size: var(--text-xs, 11px);
+  font-size: inherit;
   line-height: 1.7;
 }
 
@@ -75,9 +80,7 @@
 
 .tp-wrapper.tp-nowrap {
   overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: thin;
-  scrollbar-color: var(--scrollbar-thumb) transparent;
+  overflow-y: auto;
 }
 
 .tp-nowrap .tp-inner {

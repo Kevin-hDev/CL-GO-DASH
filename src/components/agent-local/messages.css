@@ -169,12 +169,12 @@
 }
 
 [data-theme="light"] .code-block {
-  border-color: rgba(0, 0, 0, 0.12);
+  border-color: var(--code-block-border);
 }
 
 [data-theme="dark"] .code-block {
   background: var(--surface-glass);
-  border-color: rgba(255, 255, 255, 0.08);
+  border-color: var(--code-block-border);
 }
 
 /* Clickable URLs */
