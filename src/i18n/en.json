@@ -233,7 +233,7 @@
     "favorites": "Favorites",
     "freeCount": "{{free}} free / {{total}}",
     "thinkingDuration": "Thought for {{seconds}}s",
-    "working": "Working for {{seconds}}s",
+    "working": "Working for {{duration}}",
     "workSummary": "Worked for {{duration}}",
     "workSummaryNoDuration": "Work completed",
     "tools": "Tools",

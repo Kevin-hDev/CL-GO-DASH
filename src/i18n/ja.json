@@ -234,7 +234,7 @@
     "favorites": "お気に入り",
     "freeCount": "{{free}} free / {{total}}",
     "thinkingDuration": "{{seconds}}秒間考えました",
-    "working": "作業中 {{seconds}}秒",
+    "working": "作業中 {{duration}}",
     "workSummary": "{{duration}}作業しました",
     "workSummaryNoDuration": "作業が完了しました",
     "tools": "Tools",

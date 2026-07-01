@@ -234,7 +234,7 @@
     "favorites": "Favoritos",
     "freeCount": "{{free}} free / {{total}}",
     "thinkingDuration": "Pensado durante {{seconds}}s",
-    "working": "Trabajando desde hace {{seconds}}s",
+    "working": "Trabajando desde hace {{duration}}",
     "workSummary": "Trabajó durante {{duration}}",
     "workSummaryNoDuration": "Trabajo completado",
     "tools": "Tools",
