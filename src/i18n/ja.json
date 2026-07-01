@@ -237,6 +237,35 @@
     "working": "作業中 {{duration}}",
     "workSummary": "{{duration}}作業しました",
     "workSummaryNoDuration": "作業が完了しました",
+    "sessionSummary": {
+      "tooltip": "セッション概要を表示/非表示",
+      "title": "セッション概要",
+      "environment": "環境",
+      "modifications": "変更",
+      "branch": "ブランチ",
+      "noGit": "Git リポジトリなし",
+      "noChanges": "変更なし",
+      "sections": {
+        "todos": "Todo リスト",
+        "plans": "プラン",
+        "subagents": "サブエージェント"
+      },
+      "emptyTodos": "有効な Todo はありません",
+      "emptyPlans": "プランはありません",
+      "emptySubagents": "サブエージェントはいません",
+      "todoProgress": "{{done}}/{{total}}",
+      "planStatus": {
+        "draft": "下書き",
+        "awaiting_approval": "承認待ち",
+        "approved": "承認済み",
+        "rejected": "却下",
+        "cancelled": "キャンセル"
+      },
+      "subagentType": {
+        "explorer": "Explore",
+        "coder": "Coder"
+      }
+    },
     "tools": "Tools",
     "tokens": "tokens",
     "contextUsage": {

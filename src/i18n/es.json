@@ -237,6 +237,35 @@
     "working": "Trabajando desde hace {{duration}}",
     "workSummary": "Trabajó durante {{duration}}",
     "workSummaryNoDuration": "Trabajo completado",
+    "sessionSummary": {
+      "tooltip": "Mostrar u ocultar resumen de sesión",
+      "title": "Resumen de sesión",
+      "environment": "Entorno",
+      "modifications": "Cambios",
+      "branch": "Rama",
+      "noGit": "Sin repositorio Git",
+      "noChanges": "Sin cambios",
+      "sections": {
+        "todos": "Todo list",
+        "plans": "Plan",
+        "subagents": "Subagentes"
+      },
+      "emptyTodos": "Ninguna todo activa",
+      "emptyPlans": "Ningún plan",
+      "emptySubagents": "Ningún subagente",
+      "todoProgress": "{{done}}/{{total}}",
+      "planStatus": {
+        "draft": "borrador",
+        "awaiting_approval": "por aprobar",
+        "approved": "aprobado",
+        "rejected": "rechazado",
+        "cancelled": "cancelado"
+      },
+      "subagentType": {
+        "explorer": "Explore",
+        "coder": "Coder"
+      }
+    },
     "tools": "Tools",
     "tokens": "tokens",
     "contextUsage": {

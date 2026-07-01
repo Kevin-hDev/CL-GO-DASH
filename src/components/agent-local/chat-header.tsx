@@ -5,7 +5,9 @@ import { Tooltip } from "@/components/ui/tooltip";
 import { svgSizeProps } from "@/components/ui/icon-size";
 import { MOD, ALT } from "@/lib/platform";
 import type { PanelMode } from "@/hooks/use-forecast-panel";
+import type { SessionSummaryHookState } from "@/hooks/use-session-summary";
 import { ModeSelector } from "./mode-selector";
+import { SessionSummaryBubble, type SessionSummaryGitState } from "./session-summary-bubble";
 import "./chat-header.css";
 
 interface ChatHeaderProps {
@@ -19,6 +21,9 @@ interface ChatHeaderProps {
   onTogglePreview: () => void;
   onOpenForecastDocs?: () => void;
   onPanelModeChange?: (mode: PanelMode) => void;
+  sessionSummary?: SessionSummaryHookState;
+  summaryGit?: SessionSummaryGitState;
+  onOpenSubagent?: (sessionId: string) => void;
 }
 
 export function ChatHeader({
@@ -32,6 +37,9 @@ export function ChatHeader({
   onTogglePreview,
   onOpenForecastDocs,
   onPanelModeChange,
+  sessionSummary,
+  summaryGit,
+  onOpenSubagent,
 }: ChatHeaderProps) {
   const { t } = useTranslation();
   const hasSession = Boolean(sessionId);
@@ -60,6 +68,13 @@ export function ChatHeader({
           )}
           {previewOpen && panelMode && onPanelModeChange && (
             <ModeSelector mode={panelMode} onChange={onPanelModeChange} />
+          )}
+          {sessionSummary && summaryGit && (
+            <SessionSummaryBubble
+              summary={sessionSummary}
+              git={summaryGit}
+              onOpenSubagent={onOpenSubagent}
+            />
           )}
           <Tooltip label={`${t("filePreview.togglePanel")} (${ALT}${MOD}B)`} align="right">
             <button
