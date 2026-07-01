@@ -1,4 +1,4 @@
-import { Archive } from "lucide-react";
+import { Archive } from "@/components/ui/lucide-icons";
 import { useTranslation } from "react-i18next";
 
 export function ContextCompressionMarker() {

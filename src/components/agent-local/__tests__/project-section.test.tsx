@@ -15,6 +15,8 @@ const baseProps = {
   project,
   sessions: [],
   selectedId: null,
+  runningIds: new Set<string>(),
+  unreadIds: new Set<string>(),
   isDragOver: false,
   onSelect: vi.fn(),
   onNewSession: vi.fn(),

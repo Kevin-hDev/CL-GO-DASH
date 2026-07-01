@@ -49,6 +49,7 @@
 }
 
 .conv-item {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--space-xs);
@@ -84,12 +85,84 @@
   color: var(--ink);
 }
 
+.conv-session-main {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex: 1;
+  min-width: 0;
+}
+
+.conv-unread-dot {
+  position: absolute;
+  left: calc(var(--space-sm) - 2px);
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--pulse);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.conv-name.thinking-active > span {
+  background: linear-gradient(
+    90deg,
+    var(--ink-faint) 0%,
+    var(--ink-faint) 40%,
+    var(--ink) 50%,
+    var(--ink-faint) 60%,
+    var(--ink-faint) 100%
+  );
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: thinking-shimmer 2s ease-in-out infinite;
+}
+
+.conv-name.thinking-active:hover > span {
+  background: linear-gradient(
+    90deg,
+    var(--ink-faint) 0%,
+    var(--ink-faint) 40%,
+    var(--ink) 50%,
+    var(--ink-faint) 60%,
+    var(--ink-faint) 100%
+  );
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: thinking-shimmer 2s ease-in-out infinite;
+}
+
+.conv-running-icon {
+  animation: conv-running-icon-shimmer 2s ease-in-out infinite;
+}
+
 .conv-name {
   flex: 1;
   min-width: 0;
   overflow: hidden;
   mask-image: linear-gradient(to right, black calc(100% - 16px), transparent);
   -webkit-mask-image: linear-gradient(to right, black calc(100% - 16px), transparent);
+}
+
+@keyframes thinking-shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+@keyframes conv-running-icon-shimmer {
+  0%, 100% {
+    color: var(--ink-faint);
+    opacity: 0.7;
+  }
+  50% {
+    color: var(--ink);
+    opacity: 1;
+  }
 }
 
 .conv-session-tail {

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Spinner } from "@phosphor-icons/react";
+import { Spinner } from "@/components/ui/icons";
 import { CaretDown, CaretUp } from "@/components/ui/icons";
 import { isFileTool } from "@/lib/tool-file-path";
 import { FileIcon } from "@/components/file-preview/file-icon";

@@ -18,7 +18,7 @@ import {
   Users,
   ChartLineUp,
   Plugs,
-} from "@phosphor-icons/react";
+} from "@/components/ui/icons";
 
 const ICONS = {
   Compass,

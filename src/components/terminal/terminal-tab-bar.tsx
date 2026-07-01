@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { TerminalSquare, X as XIcon, Plus } from "lucide-react";
+import { TerminalSquare, X as XIcon, Plus } from "@/components/ui/lucide-icons";
 import type { TerminalTab } from "@/hooks/use-terminal";
 import "./terminal-tab-bar.css";
 

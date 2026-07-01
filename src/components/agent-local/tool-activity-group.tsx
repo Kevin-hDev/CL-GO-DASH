@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Spinner } from "@phosphor-icons/react";
+import { Spinner } from "@/components/ui/icons";
 import { CaretDown, CaretUp } from "@/components/ui/icons";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";

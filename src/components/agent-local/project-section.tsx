@@ -18,6 +18,8 @@ interface ProjectSectionProps {
   project: Project;
   sessions: AgentSessionMeta[];
   selectedId: string | null;
+  runningIds: Set<string>;
+  unreadIds: Set<string>;
   isDragOver: boolean;
   onSelect: (id: string) => void;
   onNewSession: (projectId: string) => void;
@@ -35,6 +37,7 @@ interface ProjectSectionProps {
 
 export function ProjectSection({
   project, sessions, selectedId, isDragOver,
+  runningIds, unreadIds,
   onSelect, onNewSession, onRenameProject, onDeleteProject,
   onOpenFolder, onRenameSession, onDeleteSession,
   onGrab, isDragging, collapsed, onToggleCollapse,
@@ -135,6 +138,8 @@ export function ProjectSection({
               key={s.id}
               session={s}
               active={active}
+              isRunning={runningIds.has(s.id)}
+              hasUnread={unreadIds.has(s.id)}
               renaming={isRenaming}
               inputRef={sessionInputRef}
               onSelect={onSelect}

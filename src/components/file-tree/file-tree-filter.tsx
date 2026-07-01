@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Search, X } from "lucide-react";
+import { Search, X } from "@/components/ui/lucide-icons";
 
 interface FileTreeFilterProps {
   value: string;
