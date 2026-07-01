@@ -2,7 +2,10 @@
 
 .tp-wrapper {
   margin-top: var(--space-xs);
+  width: min(100%, var(--chat-column-width));
   max-height: 27.2em;
+  margin-left: auto;
+  margin-right: auto;
   overflow: auto;
   font-size: var(--text-xs, 11px);
   border-radius: var(--radius-sm);

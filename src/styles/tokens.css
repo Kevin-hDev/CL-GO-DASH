@@ -36,6 +36,7 @@
   --chrome-icon-md: 16px;
   --chrome-icon-docs: 17px;
   --chrome-icon-lg: 18px;
+  --chat-column-width: 720px;
 
   --nav-item-height: 1.75rem;
   --nav-item-gap: var(--space-xs);

@@ -9,7 +9,9 @@ import {
   streamToolToRenderable,
 } from "./tool-detail-row";
 import "./tool-bubble.css";
+import "./tool-bubble-arrows.css";
 import "./tool-bubble-detail.css";
+import "./tool-bubble-status.css";
 
 export function ToolBubble({
   tools,
