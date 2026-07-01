@@ -6,6 +6,7 @@ import type { PanelMode } from "@/hooks/use-forecast-panel";
 import { shouldWrapFile } from "@/lib/code-language";
 import { FilePreviewBreadcrumb } from "./file-preview-breadcrumb";
 import { FilePreviewContent } from "./file-preview-content";
+import { FilePreviewPlan } from "./file-preview-plan";
 import { FilePreviewSummary } from "./file-preview-summary";
 import { FilePreviewTabs } from "./file-preview-tabs";
 import "./file-preview-panel.css";
@@ -99,6 +100,8 @@ export function FilePreviewPanel(props: FilePreviewPanelProps) {
                   onOpen={props.onOpenOperation}
                 />
               </div>
+            ) : activeOperation.kind === "plan" ? (
+              <FilePreviewPlan operation={activeOperation} baseDir={props.baseDir} />
             ) : (
               <>
                 <FilePreviewBreadcrumb

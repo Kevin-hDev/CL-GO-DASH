@@ -237,6 +237,35 @@
     "working": "In corso da {{duration}}",
     "workSummary": "Ha lavorato per {{duration}}",
     "workSummaryNoDuration": "Lavoro completato",
+    "sessionSummary": {
+      "tooltip": "Mostra/nascondi riepilogo sessione",
+      "title": "Riepilogo sessione",
+      "environment": "Ambiente",
+      "modifications": "Modifiche",
+      "branch": "Branch",
+      "noGit": "Nessun repository Git",
+      "noChanges": "Nessuna modifica",
+      "sections": {
+        "todos": "Todo list",
+        "plans": "Plan",
+        "subagents": "Sotto-agenti"
+      },
+      "emptyTodos": "Nessuna todo attiva",
+      "emptyPlans": "Nessun plan",
+      "emptySubagents": "Nessun sotto-agente",
+      "todoProgress": "{{done}}/{{total}}",
+      "planStatus": {
+        "draft": "bozza",
+        "awaiting_approval": "da approvare",
+        "approved": "approvato",
+        "rejected": "respinto",
+        "cancelled": "annullato"
+      },
+      "subagentType": {
+        "explorer": "Explore",
+        "coder": "Coder"
+      }
+    },
     "tools": "Tools",
     "tokens": "tokens",
     "contextUsage": {

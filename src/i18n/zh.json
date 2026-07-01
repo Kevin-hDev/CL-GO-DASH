@@ -237,6 +237,35 @@
     "working": "已工作 {{duration}}",
     "workSummary": "已工作 {{duration}}",
     "workSummaryNoDuration": "工作已完成",
+    "sessionSummary": {
+      "tooltip": "显示/隐藏会话摘要",
+      "title": "会话摘要",
+      "environment": "环境",
+      "modifications": "修改",
+      "branch": "分支",
+      "noGit": "无 Git 仓库",
+      "noChanges": "无修改",
+      "sections": {
+        "todos": "Todo 列表",
+        "plans": "计划",
+        "subagents": "子代理"
+      },
+      "emptyTodos": "没有活跃 Todo",
+      "emptyPlans": "没有计划",
+      "emptySubagents": "没有子代理",
+      "todoProgress": "{{done}}/{{total}}",
+      "planStatus": {
+        "draft": "草稿",
+        "awaiting_approval": "待批准",
+        "approved": "已批准",
+        "rejected": "已拒绝",
+        "cancelled": "已取消"
+      },
+      "subagentType": {
+        "explorer": "Explore",
+        "coder": "Coder"
+      }
+    },
     "tools": "Tools",
     "tokens": "tokens",
     "contextUsage": {

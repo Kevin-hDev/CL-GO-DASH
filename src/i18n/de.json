@@ -237,6 +237,35 @@
     "working": "Arbeitet seit {{duration}}",
     "workSummary": "{{duration}} gearbeitet",
     "workSummaryNoDuration": "Arbeit abgeschlossen",
+    "sessionSummary": {
+      "tooltip": "Sitzungsübersicht ein-/ausblenden",
+      "title": "Sitzungsübersicht",
+      "environment": "Umgebung",
+      "modifications": "Änderungen",
+      "branch": "Branch",
+      "noGit": "Kein Git-Repository",
+      "noChanges": "Keine Änderungen",
+      "sections": {
+        "todos": "Todo-Liste",
+        "plans": "Plan",
+        "subagents": "Subagenten"
+      },
+      "emptyTodos": "Keine aktive Todo",
+      "emptyPlans": "Kein Plan",
+      "emptySubagents": "Kein Subagent",
+      "todoProgress": "{{done}}/{{total}}",
+      "planStatus": {
+        "draft": "Entwurf",
+        "awaiting_approval": "zu prüfen",
+        "approved": "genehmigt",
+        "rejected": "abgelehnt",
+        "cancelled": "abgebrochen"
+      },
+      "subagentType": {
+        "explorer": "Explore",
+        "coder": "Coder"
+      }
+    },
     "tools": "Tools",
     "tokens": "tokens",
     "contextUsage": {

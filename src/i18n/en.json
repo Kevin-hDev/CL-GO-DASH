@@ -236,6 +236,35 @@
     "working": "Working for {{duration}}",
     "workSummary": "Worked for {{duration}}",
     "workSummaryNoDuration": "Work completed",
+    "sessionSummary": {
+      "tooltip": "Toggle session summary",
+      "title": "Session summary",
+      "environment": "Environment",
+      "modifications": "Changes",
+      "branch": "Branch",
+      "noGit": "No Git repository",
+      "noChanges": "No changes",
+      "sections": {
+        "todos": "Todo list",
+        "plans": "Plan",
+        "subagents": "Subagents"
+      },
+      "emptyTodos": "No active todo",
+      "emptyPlans": "No plan",
+      "emptySubagents": "No subagent",
+      "todoProgress": "{{done}}/{{total}}",
+      "planStatus": {
+        "draft": "draft",
+        "awaiting_approval": "to approve",
+        "approved": "approved",
+        "rejected": "rejected",
+        "cancelled": "cancelled"
+      },
+      "subagentType": {
+        "explorer": "Explore",
+        "coder": "Coder"
+      }
+    },
     "tools": "Tools",
     "tokens": "tokens",
     "contextUsage": {

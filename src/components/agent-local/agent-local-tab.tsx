@@ -9,6 +9,8 @@ import { useFileTree } from "@/hooks/use-file-tree";
 import { useForecastPanel } from "@/hooks/use-forecast-panel";
 import { useAgentLocalPanelNav } from "@/hooks/use-agent-local-panel-nav";
 import { useAgentLocalControlledPanels } from "@/hooks/use-agent-local-controlled-panels";
+import { useGitBranch } from "@/hooks/use-git-branch";
+import { useSessionSummary } from "@/hooks/use-session-summary";
 import { ForecastPanel } from "@/components/forecast/forecast-panel";
 import { openForecastDocsWindow } from "@/components/forecast/open-forecast-docs";
 import { PanelSlot } from "@/components/layout/panel-slots";
@@ -39,6 +41,8 @@ export const AgentLocalTab = memo(function AgentLocalTab({
     handleCreateInProject, handleCreateInProjectWithModel,
   } = sessionActions;
   const terminalCwd = activeProject?.path || "";
+  const sessionSummary = useSessionSummary(activeSessionId ?? null);
+  const summaryGit = useGitBranch(activeProject?.path, activeSessionId ?? undefined);
   const fileTree = useFileTree(activeSessionId, activeProject?.path);
   const forecast = useForecastPanel(activeSessionId ?? null);
   useAgentLocalPanelNav({ navState, fileTree, forecast });
@@ -105,6 +109,10 @@ export const AgentLocalTab = memo(function AgentLocalTab({
           onTogglePreview={filePreview.toggleOpen}
           onOpenForecastDocs={handleOpenForecastDocs}
           onPanelModeChange={forecastNav.setPanelMode}
+          sessionSummary={sessionSummary}
+          summaryGit={summaryGit}
+          onOpenPlan={filePreview.openPlan}
+          onOpenSubagent={(id) => void handleSelectById(id)}
           onToggleTerminal={() => {
             if (!terminal.isOpen && terminal.tabs.length === 0) {
               terminal.addTab(terminalCwd);
@@ -178,8 +186,8 @@ export const AgentLocalTab = memo(function AgentLocalTab({
     fullscreenSwitching, handleAutoRename, handleCreate, handleCreateInProjectWithModel, handleCreateWithModel,
     handleOpenForecastDocs, handlePreviewFullscreenChange, handleSelectById, handleWelcomeSend, model,
     pendingFiles, pendingMessage, pendingSkills, pendingWorkingDir, projectsHook, provider, refresh,
-    setFileOperations, setPendingFiles, setPendingMessage, setPendingSkills, setPendingWorkingDir, setReasoningMode,
-    setWelcomeModel, terminal, terminalCwd, reasoningMode, updateModel,
+    sessionSummary, setFileOperations, setPendingFiles, setPendingMessage, setPendingSkills, setPendingWorkingDir, setReasoningMode,
+    setWelcomeModel, summaryGit, terminal, terminalCwd, reasoningMode, updateModel,
   ]);
 
   return <><PanelSlot name="list">{list}</PanelSlot><PanelSlot name="detail">{detail}</PanelSlot></>;
