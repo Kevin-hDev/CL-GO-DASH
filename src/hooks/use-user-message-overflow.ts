@@ -1,6 +1,6 @@
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 
-export const USER_MESSAGE_MAX_LINES = 20;
+const USER_MESSAGE_MAX_LINES = 20;
 
 interface OverflowLayout {
   hasOverflow: boolean;
@@ -8,7 +8,7 @@ interface OverflowLayout {
   collapsedHeight: number;
 }
 
-export function getUserMessageCollapsedHeight(element: HTMLElement, maxLines = USER_MESSAGE_MAX_LINES): number {
+function getUserMessageCollapsedHeight(element: HTMLElement, maxLines = USER_MESSAGE_MAX_LINES): number {
   const styles = window.getComputedStyle(element);
   const lineHeight = readLineHeight(styles);
   return Math.ceil(lineHeight * maxLines);
