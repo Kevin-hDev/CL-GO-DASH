@@ -14,13 +14,11 @@ function CodeLines({ lines, mode, path, startLine = 1 }: {
   path?: string;
   startLine?: number;
 }) {
-  const prefix = mode === "ok" ? "+" : mode === "error" ? "-" : " ";
   return (
     <>
       {lines.map((line, i) => (
         <div key={`${mode}-${i}`} className={`tp-line tp-line-${mode}`}>
           <span className="tp-num">{startLine + i}</span>
-          <span className={`tp-prefix tp-prefix-${mode}`}>{prefix}</span>
           {path
             ? <span className={`tp-code tp-code-${mode}`} dangerouslySetInnerHTML={{ __html: line || " " }} />
             : <span className={`tp-code tp-code-${mode}`}>{line}</span>

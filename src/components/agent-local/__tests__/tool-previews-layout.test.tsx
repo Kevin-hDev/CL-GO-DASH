@@ -14,5 +14,6 @@ describe("tool preview layout", () => {
 
     expect(wrapper).not.toBeNull();
     expect(lines).toHaveLength(24);
+    expect(container.querySelector(".tp-prefix")).toBeNull();
   });
 });

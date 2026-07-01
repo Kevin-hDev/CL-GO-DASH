@@ -27,42 +27,33 @@
   background: var(--diff-old-bg);
 }
 
-.tp-line-context {
-  background: transparent;
-}
-
 .tp-num {
-  width: 32px;
+  width: 46px;
   text-align: right;
-  padding-right: 8px;
+  padding-left: 14px;
+  padding-right: 12px;
   color: var(--ink-muted);
+  background: var(--void);
+  border-right: 1px solid var(--code-block-border, var(--edge));
   user-select: none;
   flex-shrink: 0;
 }
 
-.tp-prefix {
-  width: 16px;
-  text-align: center;
-  flex-shrink: 0;
-  user-select: none;
-}
-
-.tp-prefix-ok {
+.tp-line-ok .tp-num {
   color: var(--signal-ok);
+  background: var(--diff-add-gutter);
 }
 
-.tp-prefix-error {
+.tp-line-error .tp-num {
   color: var(--diff-old);
-}
-
-.tp-prefix-context {
-  color: transparent;
+  background: var(--diff-del-gutter);
 }
 
 .tp-code {
   flex: 1;
   white-space: pre-wrap;
   word-break: break-all;
+  padding-left: 14px;
   padding-right: 8px;
 }
 
