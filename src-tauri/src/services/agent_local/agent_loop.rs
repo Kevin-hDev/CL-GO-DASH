@@ -1,4 +1,5 @@
 use super::agent_loop_compression::{LastCounts, LoopCompression};
+use super::ollama_thinking_retry::{build_thinking_disabled_retry, is_thinking_only_dead_end};
 use super::stream_events::AgentEventEmitter;
 use super::types_ollama::{ChatMessage, OllamaThink, StreamEvent};
 use super::write_guard_registry;
@@ -54,7 +55,7 @@ pub async fn run_agent_loop(
         model_diag::record_model_request(&session_id, &request_id, turn, messages).await;
         payload_diag::record_ollama_payload(&session_id, &request_id, turn, &request).await;
         let (tool_tx, tool_rx) = tokio::sync::mpsc::unbounded_channel();
-        let eager_handle = tokio::spawn(eager_dispatch::collect_eager_results(
+        let mut eager_handle = tokio::spawn(eager_dispatch::collect_eager_results(
             tool_rx,
             working_dir.clone(),
             session_id.clone(),
@@ -73,12 +74,52 @@ pub async fn run_agent_loop(
             cancel.clone(),
             tool_tx,
             plan_active,
-            realtime_budget,
+            realtime_budget.clone(),
         )
         .await?;
         let interrupted = outcome.is_interrupted();
-        let result = outcome.into_result();
+        let mut result = outcome.into_result();
         model_diag::record_model_result(&session_id, &request_id, turn, &result).await;
+
+        // Contournement bug Ollama #10976 : si le modèle (Qwen3 notamment)
+        // a réfléchi mais n'a produit ni contenu ni appel d'outil, on relance
+        // une fois avec think=false. Le thinking-only est une régression Ollama
+        // connue, non corrigée côté serveur (PR #16758 encore ouverte).
+        if !interrupted && is_thinking_only_dead_end(&result) {
+            if let Some(retry_req) = build_thinking_disabled_retry(&request) {
+                eprintln!(
+                    "[agent-loop] thinking-only détecté (turn {turn}), retry think=false"
+                );
+                super::stream_diagnostics::mark_phase(
+                    &session_id,
+                    &request_id,
+                    "model_stream",
+                    "Retry thinking-only (think=false).",
+                )
+                .await;
+                // Le 1er stream étant un dead-end (0 tool_call), l'eager_handle
+                // d'origine n'a rien à consommer : on l'abandonne proprement.
+                eager_handle.abort();
+                let (retry_tx, retry_rx) = tokio::sync::mpsc::unbounded_channel();
+                eager_handle = tokio::spawn(eager_dispatch::collect_eager_results(
+                    retry_rx,
+                    working_dir.clone(),
+                    session_id.clone(),
+                    request_id.clone(),
+                ));
+                let retry_outcome = ollama_stream::stream_chat_with_tool_notify(
+                    on_event,
+                    &retry_req,
+                    cancel.clone(),
+                    retry_tx,
+                    plan_active,
+                    realtime_budget,
+                )
+                .await?;
+                result = retry_outcome.into_result();
+                model_diag::record_model_result(&session_id, &request_id, turn, &result).await;
+            }
+        }
         if interrupted {
             super::stream_buffer::finalize_interrupted_content(on_event, &result, plan_active);
             eager_handle.abort();
