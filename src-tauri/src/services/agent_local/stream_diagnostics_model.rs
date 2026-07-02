@@ -40,13 +40,16 @@ pub async fn record_model_result(
     result: &StreamResult,
 ) {
     let message = format!(
-        "model_result turn={} content_chars={} thinking_chars={} tool_calls={} prompt_tokens={} eval_tokens={}",
+        "model_result turn={} content_chars={} thinking_chars={} tool_calls={} prompt_tokens={} eval_tokens={} done_reason={} total_chunks={} empty_chunks={}",
         turn + 1,
         char_count(&result.content),
         char_count(&result.thinking),
         result.tool_calls.len(),
         opt_count(result.prompt_tokens),
-        opt_count(result.eval_count)
+        opt_count(result.eval_count),
+        result.done_reason.as_deref().unwrap_or("unknown"),
+        result.total_chunks,
+        result.empty_chunks
     );
     record(session_id, request_id, "model_result", &message).await;
 }

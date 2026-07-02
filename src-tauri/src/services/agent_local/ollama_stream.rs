@@ -1,6 +1,7 @@
 use crate::services::agent_local::ollama_base_url;
 use crate::services::agent_local::ollama_stream_process::{flush_filter, process_chunk};
 use crate::services::agent_local::ollama_stream_retry::build_retry_request;
+use crate::services::agent_local::ollama_tool_role::wrap_tool_results;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::types_ollama::{
     ChatRequest, StreamEvent, StreamOutcome, StreamResult,
@@ -48,10 +49,17 @@ async fn stream_chat_inner(
     buffer_content: bool,
     mut realtime_budget: Option<RealtimeBudget>,
 ) -> Result<StreamOutcome, String> {
+    // Conversion `role:"tool"` → `role:"user"` + balises `<tool_response>`.
+    // Certains modèles (Gemma via Ollama notamment) ne reconnaissent pas le
+    // rôle "tool" du standard OpenAI et s'arrêtent après 1 token.
+    // On ne modifie pas le Vec source — seulement la copie envoyée sur le wire.
+    let mut wire_request = request.clone();
+    wire_request.messages = wrap_tool_results(&request.messages);
+
     let client = reqwest::Client::new();
     let resp = match client
         .post(format!("{}/api/chat", ollama_base_url()))
-        .json(request)
+        .json(&wire_request)
         .send()
         .await
     {
@@ -109,10 +117,20 @@ async fn stream_chat_inner(
         return Err(msg);
     }
 
+    let http_status = resp.status();
     let byte_stream = resp
         .bytes_stream()
         .map(|r| r.map_err(std::io::Error::other));
     let mut lines = BufReader::new(StreamReader::new(byte_stream)).lines();
+
+    eprintln!(
+        "[ollama-stream] stream ouvert HTTP {} model={} think={:?} msgs={} tools={}",
+        http_status,
+        request.model,
+        request.think,
+        request.messages.len(),
+        request.tools.as_ref().map_or(0, Vec::len)
+    );
 
     let mut token_count: u32 = 0;
     let mut first_token: Option<std::time::Instant> = None;
@@ -169,8 +187,26 @@ async fn stream_chat_inner(
             &mut result,
             buffer_content,
         );
+        eprintln!(
+            "[ollama-stream] fin=interrupted content_chars={} thinking_chars={} tool_calls={} done_reason={} chunks={} empty_chunks={}",
+            result.content.chars().count(),
+            result.thinking.chars().count(),
+            result.tool_calls.len(),
+            result.done_reason.as_deref().unwrap_or("none"),
+            result.total_chunks,
+            result.empty_chunks
+        );
         Ok(StreamOutcome::InterruptedForCompression(result))
     } else {
+        eprintln!(
+            "[ollama-stream] fin=eof content_chars={} thinking_chars={} tool_calls={} done_reason={} chunks={} empty_chunks={}",
+            result.content.chars().count(),
+            result.thinking.chars().count(),
+            result.tool_calls.len(),
+            result.done_reason.as_deref().unwrap_or("none"),
+            result.total_chunks,
+            result.empty_chunks
+        );
         Ok(StreamOutcome::Completed(result))
     }
 }

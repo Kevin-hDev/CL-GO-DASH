@@ -43,6 +43,9 @@ pub mod ollama_stream_process;
 #[cfg(test)]
 mod ollama_stream_process_tests;
 pub mod ollama_stream_retry;
+pub mod ollama_tool_role;
+#[cfg(test)]
+mod ollama_tool_role_tests;
 pub mod permission_gate;
 #[cfg(test)]
 pub mod permission_gate_tests;

@@ -17,6 +17,8 @@ pub fn process_chunk(
     let chunk: serde_json::Value =
         serde_json::from_str(text).map_err(|e| format!("JSON invalide: {e}"))?;
 
+    result.total_chunks += 1;
+
     if let Some(err) = chunk["error"].as_str() {
         eprintln!("[ollama-stream] erreur modèle: {err}");
         return Err(format!("Ollama: {err}"));
@@ -25,6 +27,8 @@ pub fn process_chunk(
     if chunk["done"].as_bool() == Some(true) {
         result.eval_count = chunk["eval_count"].as_u64().map(|v| v as u32);
         result.prompt_tokens = chunk["prompt_eval_count"].as_u64().map(|v| v as u32);
+        result.done_reason = chunk["done_reason"].as_str().map(|s| s.to_string());
+        result.total_duration_ns = chunk["total_duration"].as_u64();
         flush_filter(
             think_filter,
             on_event,
@@ -41,8 +45,11 @@ pub fn process_chunk(
 
     let msg = &chunk["message"];
 
+    let mut chunk_has_payload = false;
+
     if let Some(thinking) = msg["thinking"].as_str() {
         if !thinking.is_empty() {
+            chunk_has_payload = true;
             result.thinking.push_str(thinking);
             let _ = on_event.send(StreamEvent::Thinking {
                 content: thinking.to_string(),
@@ -52,6 +59,7 @@ pub fn process_chunk(
 
     if let Some(content) = msg["content"].as_str() {
         if !content.is_empty() {
+            chunk_has_payload = true;
             emit_filtered(
                 think_filter,
                 content,
@@ -65,6 +73,9 @@ pub fn process_chunk(
     }
 
     if let Some(tool_calls) = msg["tool_calls"].as_array() {
+        if !tool_calls.is_empty() {
+            chunk_has_payload = true;
+        }
         for tc in tool_calls {
             let func = &tc["function"];
             let name = func["name"].as_str().unwrap_or("").to_string();
@@ -79,6 +90,10 @@ pub fn process_chunk(
                 let _ = tx.send((idx, name, args));
             }
         }
+    }
+
+    if !chunk_has_payload {
+        result.empty_chunks += 1;
     }
 
     Ok(())
