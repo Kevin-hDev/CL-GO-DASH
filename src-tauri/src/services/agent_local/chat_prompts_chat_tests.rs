@@ -34,7 +34,7 @@ fn chat_mode_injects_chat_prompt() {
     );
     let sys = &msgs[0];
     assert!(sys.content.contains("conversational assistant"));
-    assert!(sys.content.contains("Chat"));
+    assert!(sys.content.contains("Chatbot"));
     assert!(!sys.content.contains("autonomous"));
 }
 
@@ -98,8 +98,8 @@ fn chat_mode_mentions_other_modes() {
         "",
     );
     let sys = &msgs[0];
-    assert!(sys.content.contains("Manual permissions"));
-    assert!(sys.content.contains("Auto permissions"));
+    assert!(sys.content.contains("Ask for approval"));
+    assert!(sys.content.contains("Full access"));
 }
 
 #[test]

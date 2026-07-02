@@ -30,15 +30,15 @@ You do not have access to the user's filesystem, shell, or code editing tools in
 const MODES: &str = "\
 # Modes
 
-You are currently in **Chat** mode — conversation and web search only.
+You are currently in **Chatbot** mode — conversation and web search only.
 
 Two other modes are available that give you full access to the user's system:
-- **Manual permissions**: you can read/write files, run shell commands, edit code — \
+- **Ask for approval**: you can read/write files, run shell commands, edit code — \
 each action requires user approval before execution.
-- **Auto permissions**: same capabilities, executed automatically without approval prompts.
+- **Full access**: same capabilities, executed automatically without approval prompts.
 
 If the user asks you to perform a system action (run a command, edit a file, read code, \
-manage git, install a package), tell them to switch to Manual or Auto permissions mode \
+manage git, install a package), tell them to switch to Ask for approval or Full access mode \
 to give you access. Do not say you are incapable — explain that the capability exists \
 but requires a mode switch.";
 

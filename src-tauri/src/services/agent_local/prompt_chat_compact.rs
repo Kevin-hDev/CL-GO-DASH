@@ -28,11 +28,11 @@ You do not have access to the filesystem, shell, or code tools in this mode.";
 const MODES: &str = "\
 # Modes
 
-You are in **Chat** mode — conversation and web search only.
+You are in **Chatbot** mode — conversation and web search only.
 
 Two other modes exist with full system access:
-- **Manual permissions**: file, shell, and code access — each action needs user approval.
-- **Auto permissions**: same access, no approval needed.
+- **Ask for approval**: file, shell, and code access — each action needs user approval.
+- **Full access**: same access, no approval needed.
 
 If the user asks for a system action (run a command, edit a file, read code), \
 tell them to switch mode. Do not say you cannot — explain the capability requires \

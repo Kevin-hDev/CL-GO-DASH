@@ -293,8 +293,14 @@ fn small_model_gets_compact_prompt() {
         "",
     );
     let sys = &msgs[0];
-    assert!(!sys.content.contains("Working with git"));
+    // Compact now includes git guidance, but stays distinguishable from detailed.
+    assert!(!sys.content.contains("highly capable"));
+    assert!(!sys.content.contains("# Error handling"));
     assert!(sys.content.contains("autonomous"));
+    // New rules must be present even in the compact variant.
+    assert!(sys.content.contains("Never claim a task is complete"));
+    assert!(sys.content.contains("Advance on your own"));
+    assert!(sys.content.contains("verify it actually works"));
 }
 
 #[test]
@@ -317,6 +323,12 @@ fn large_model_gets_detailed_prompt() {
     assert!(sys.content.contains("Working with git"));
     assert!(sys.content.contains("Error handling"));
     assert!(sys.content.contains("highly capable"));
+    // Detailed-only rules.
+    assert!(sys.content.contains("# Verification"));
+    assert!(sys.content.contains("# Honesty"));
+    assert!(sys.content.contains("does NOT extend to the next context"));
+    assert!(sys.content.contains("prompt injection"));
+    assert!(sys.content.contains("file_path:line_number"));
 }
 
 // === new: env_section format tests ===
