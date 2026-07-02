@@ -45,11 +45,25 @@ pub const MAX_PARSER_RETRIES: u32 = 2;
 /// On exige DEUX conditions pour éviter les faux positifs :
 /// 1. Une erreur XML/parser (mot-clé caractéristique)
 /// 2. Une balise tool-call (`<function>` ou `<parameter>`)
+///
+/// **Important** : le body d'erreur vient de `resp.text()` (JSON brut de Go),
+/// où les `<` et `>` sont échappés en `\u003c` / `\u003e`. On normalise avant
+/// de comparer, sinon la détection échoue silencieusement.
 pub fn is_tool_parse_crash(text: &str) -> bool {
-    let lower = text.to_lowercase();
-    let has_tool_tag = TOOL_PARSE_CRASH_RE.is_match(text);
+    let normalized = normalize_json_escapes(text);
+    let lower = normalized.to_lowercase();
+    let has_tool_tag = TOOL_PARSE_CRASH_RE.is_match(&normalized);
     let has_xml_error = XML_ERROR_KEYWORDS.iter().any(|k| lower.contains(k));
     has_tool_tag && has_xml_error
+}
+
+/// Remplace les échappements JSON de Go (`\u003c`, `\u003e`, `\u0026`) par
+/// leurs caractères réels. Permet de détecter les balises `<function>` même
+/// dans le body brut non décodé renvoyé par `resp.text()`.
+fn normalize_json_escapes(text: &str) -> String {
+    text.replace("\\u003c", "<")
+        .replace("\\u003e", ">")
+        .replace("\\u0026", "&")
 }
 
 #[cfg(test)]
@@ -98,5 +112,26 @@ mod tests {
     fn does_not_match_xml_error_without_tool_tag() {
         // Erreur XML mais sans balise tool-call → pas le bug
         assert!(!is_tool_parse_crash("XML syntax error: unexpected EOF"));
+    }
+
+    #[test]
+    fn detects_http500_with_json_escaped_tags() {
+        // Body BRUT tel que renvoyé par resp.text() : Go échappe < en \u003c.
+        // C'est le cas réel observé en production — sans normalisation, la
+        // détection échouait silencieusement et le retry ne se déclenchait pas.
+        let body = r#"{"error":"XML syntax error on line 14: element \u003cparameter\u003e closed by \u003c/function\u003e"}"#;
+        assert!(is_tool_parse_crash(body));
+    }
+
+    #[test]
+    fn detects_http500_escaped_variant_2() {
+        let body = r#"{"error":"expected element type \u003cfunction\u003e but have \u003cparameter\u003e"}"#;
+        assert!(is_tool_parse_crash(body));
+    }
+
+    #[test]
+    fn detects_mid_stream_with_json_escaped_tags() {
+        let body = r#"{"error":"XML syntax error on line 3: element \u003cfunction\u003e closed by \u003c/parameter\u003e"}"#;
+        assert!(is_tool_parse_crash(body));
     }
 }
