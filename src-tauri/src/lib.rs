@@ -244,6 +244,7 @@ pub fn run() {
             commands::unwatch_project_directory,
             // File preview
             commands::read_file_preview,
+            commands::check_preview_files_exist,
             commands::detect_editors_for_file,
             commands::open_preview_file,
             commands::open_preview_with_editor,

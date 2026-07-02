@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { fileNameFromPath } from "@/lib/file-preview-utils";
+import { fileNameFromPath, normalizeFileOperationPath } from "@/lib/file-preview-utils";
 import type { AgentPlanRun } from "@/types/agent";
 import type { FileOperation, FilePreviewActiveTab } from "@/types/file-preview";
 import {
@@ -14,9 +14,15 @@ import {
 } from "./file-preview-layout";
 import { beginPanelResize } from "./panel-resize";
 import { useFilePreviewPanelState } from "./use-file-preview-panel-state";
+import { usePreviewFallbackExistence } from "./use-preview-fallback-existence";
+import { usePrunePreviewTabs } from "./use-prune-preview-tabs";
 const MAX_TABS = 6;
 
-export function useFilePreview(sessionId: string | null, operations: FileOperation[]) {
+export function useFilePreview(
+  sessionId: string | null,
+  operations: FileOperation[],
+  baseDir?: string,
+) {
   const {
     open,
     fullscreen,
@@ -50,14 +56,22 @@ export function useFilePreview(sessionId: string | null, operations: FileOperati
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- reset on session change is intentional
     setFallbackOps([]);
-    const valid = new Set(operations.map((op) => op.id));
-    setTabIds(readStoredFilePreviewTabs(sessionId).filter((id) => valid.has(id)));
+    setTabIds(readStoredFilePreviewTabs(sessionId));
     setActiveTab("summary");
-  }, [sessionId, operations]);
+  }, [sessionId]);
+
+  usePrunePreviewTabs(operationById, setTabIds, setActiveTab);
 
   useEffect(() => {
     writeStoredFilePreviewTabs(sessionId, tabIds);
   }, [sessionId, tabIds]);
+
+  const removeMissingFallbacks = useCallback((missingKeys: Set<string>) => {
+    setFallbackOps((items) => items.filter((item) => (
+      !missingKeys.has(normalizeFileOperationPath(item.path))
+    )));
+  }, []);
+  usePreviewFallbackExistence(fallbackOps, baseDir, removeMissingFallbacks);
 
   const openOperation = useCallback((operation: FileOperation) => {
     setOpen(true);

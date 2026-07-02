@@ -22,21 +22,65 @@ export function countLines(text?: string): number {
   return text.split(/\r?\n/).length;
 }
 
-const MAX_FILE_OPERATIONS = 500;
+export const MAX_FILE_OPERATIONS = 500;
 
-export function collectFileOperations(messages: AgentMessage[]): FileOperation[] {
-  const operations: FileOperation[] = [];
-  for (const message of messages) {
-    const tools = message.segments?.flatMap((segment) => inferSavedToolPaths(segment.tools))
-      ?? message.tool_activities
-      ?? [];
-    inferSavedToolPaths(tools).forEach((tool, index) => {
-      const operation = toolToOperation(tool, message.id, index, message.timestamp);
-      if (operation) operations.push(operation);
-    });
-    if (operations.length >= MAX_FILE_OPERATIONS) break;
+interface CollectFileOperationsOptions {
+  liveTools?: ToolActivityRecord[];
+}
+
+export function normalizeFileOperationPath(path: string): string {
+  return path.replaceAll("\\", "/").replace(/\/+$/, "");
+}
+
+export function collectFileOperations(
+  messages: AgentMessage[],
+  options: CollectFileOperationsOptions = {},
+): FileOperation[] {
+  const byPath = new Map<string, FileOperation>();
+  if (options.liveTools?.length) {
+    appendLatestToolOperations(
+      byPath,
+      options.liveTools,
+      "live",
+      new Date().toISOString(),
+    );
   }
-  return operations.slice(0, MAX_FILE_OPERATIONS);
+
+  for (let i = messages.length - 1; i >= 0 && byPath.size < MAX_FILE_OPERATIONS; i--) {
+    appendLatestToolOperations(
+      byPath,
+      toolsFromMessage(messages[i]),
+      messages[i].id,
+      messages[i].timestamp,
+    );
+  }
+
+  return Array.from(byPath.values());
+}
+
+function toolsFromMessage(message: AgentMessage): ToolActivityRecord[] {
+  const segmentTools = message.segments
+    ?.flatMap((segment) => inferSavedToolPaths(segment.tools))
+    ?? [];
+  return segmentTools.length > 0 ? segmentTools : message.tool_activities ?? [];
+}
+
+function appendLatestToolOperations(
+  byPath: Map<string, FileOperation>,
+  tools: ToolActivityRecord[],
+  messageId: string,
+  timestamp: string,
+) {
+  const inferred = inferSavedToolPaths(tools);
+  for (let index = inferred.length - 1; index >= 0; index--) {
+    if (byPath.size >= MAX_FILE_OPERATIONS) return;
+    const tool = inferred[index];
+    const operation = toolToOperation(tool, messageId, index, timestamp);
+    if (!operation) continue;
+    const key = normalizeFileOperationPath(operation.path);
+    if (!key || byPath.has(key)) continue;
+    byPath.set(key, { ...operation, id: `file:${key}` });
+  }
 }
 
 function toolToOperation(
@@ -45,12 +89,13 @@ function toolToOperation(
   index: number,
   timestamp: string,
 ): FileOperation | null {
-  if (tool.is_error || !tool.summary) return null;
+  const path = tool.resolved_path?.trim() || tool.summary.trim();
+  if (tool.is_error || !path) return null;
   if (tool.name === "write_file" && tool.content != null) {
     return {
       id: `${messageId}-${index}`,
-      path: tool.summary,
-      name: fileNameFromPath(tool.summary),
+      path,
+      name: fileNameFromPath(path),
       type: "write",
       timestamp,
       content: tool.content,
@@ -61,8 +106,8 @@ function toolToOperation(
   if (tool.name === "edit_file" && tool.old_text != null && tool.new_text != null) {
     return {
       id: `${messageId}-${index}`,
-      path: tool.summary,
-      name: fileNameFromPath(tool.summary),
+      path,
+      name: fileNameFromPath(path),
       type: "edit",
       timestamp,
       oldText: tool.old_text,
@@ -76,8 +121,8 @@ function toolToOperation(
   if (OFFICE_WRITE.includes(tool.name)) {
     return {
       id: `${messageId}-${index}`,
-      path: tool.summary,
-      name: fileNameFromPath(tool.summary),
+      path,
+      name: fileNameFromPath(path),
       type: "write",
       timestamp,
       content: tool.content,

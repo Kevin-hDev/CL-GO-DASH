@@ -1,8 +1,17 @@
 import { invoke } from "@tauri-apps/api/core";
 import type { PreviewEditor } from "@/types/file-preview";
 
+export interface PreviewFileExistence {
+  path: string;
+  exists: boolean;
+}
+
 export function readFilePreview(path: string, baseDir?: string) {
   return invoke<string>("read_file_preview", { path, baseDir });
+}
+
+export function checkPreviewFilesExist(paths: string[], baseDir?: string) {
+  return invoke<PreviewFileExistence[]>("check_preview_files_exist", { paths, baseDir });
 }
 
 export function detectEditorsForFile(path: string, baseDir?: string) {

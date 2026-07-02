@@ -1,9 +1,25 @@
-import { act, renderHook } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { act, renderHook, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { checkPreviewFilesExist } from "@/services/file-preview";
 import { useFilePreview } from "../use-file-preview";
 import type { FileOperation } from "@/types/file-preview";
 
+vi.mock("@tauri-apps/api/event", () => ({
+  listen: vi.fn(() => Promise.resolve(() => {})),
+}));
+
+vi.mock("@/services/file-preview", () => ({
+  checkPreviewFilesExist: vi.fn(),
+}));
+
+beforeEach(() => {
+  vi.mocked(checkPreviewFilesExist).mockImplementation((paths) => Promise.resolve(
+    paths.map((path) => ({ path, exists: true })),
+  ));
+});
+
 afterEach(() => {
+  vi.clearAllMocks();
   localStorage.clear();
 });
 
@@ -29,6 +45,22 @@ describe("useFilePreview", () => {
       additions: 0,
       deletions: 0,
     }));
+  });
+
+  it("ferme l'onglet complet quand le fichier disparaît du disque", async () => {
+    const path = "/repo/src/deleted.ts";
+    vi.mocked(checkPreviewFilesExist).mockResolvedValueOnce([{ path, exists: false }]);
+
+    const { result } = renderHook(() => useFilePreview("session-1", [], "/repo"));
+
+    act(() => {
+      result.current.openFullPath(path);
+    });
+
+    await waitFor(() => {
+      expect(result.current.tabs).toEqual([]);
+      expect(result.current.activeTab).toBe("summary");
+    });
   });
 });
 

@@ -89,7 +89,12 @@ export function ChatView({
     planMode: chat.planModeEnabled, supportsTools: selectedModelCaps?.supports_tools,
   });
   const git = useGitBranch(proj.selectedProject?.path, sessionId);
-  const fileOperations = useSessionFiles(chat.messages);
+  const fileOperations = useSessionFiles(
+    chat.messages,
+    chat.completedSegments,
+    chat.currentTools,
+    proj.selectedProject?.path,
+  );
   useEffect(() => {
     onFileOperationsChange?.(fileOperations);
   }, [fileOperations, onFileOperationsChange]);

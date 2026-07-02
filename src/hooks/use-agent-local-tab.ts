@@ -72,7 +72,7 @@ export function useAgentLocalTab({ navState, onSessionChange, onNavChange, listF
     currentDefault.provider,
     welcomeReasoningMode,
   );
-  const filePreviewState = useFilePreview(activeSessionId ?? null, fileOperations);
+  const filePreviewState = useFilePreview(activeSessionId ?? null, fileOperations, activeProject?.path);
 
   useEffect(() => {
     if (!model || availableModels.size === 0) return;

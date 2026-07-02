@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { countLines, fileNameFromPath, shortPath } from "./file-preview-utils";
+import {
+  collectFileOperations,
+  countLines,
+  fileNameFromPath,
+  shortPath,
+} from "./file-preview-utils";
+import type { AgentMessage, ToolActivityRecord } from "@/types/agent";
 
 describe("fileNameFromPath", () => {
   it("extrait le nom de fichier depuis un chemin Unix", () => {
@@ -93,3 +99,81 @@ describe("countLines — cas limites supplémentaires", () => {
     expect(countLines("ligne1\r\nligne2\r\nligne3")).toBe(3);
   });
 });
+
+describe("collectFileOperations", () => {
+  it("inclut un write_file live avant la fin du stream", () => {
+    const operations = collectFileOperations([], {
+      liveTools: [
+        tool({ name: "write_file", summary: "/repo/live.ts", content: "const a = 1;", result: "ok" }),
+      ],
+    });
+
+    expect(operations).toHaveLength(1);
+    expect(operations[0]).toEqual(expect.objectContaining({
+      path: "/repo/live.ts",
+      name: "live.ts",
+      type: "write",
+      additions: 1,
+      deletions: 0,
+    }));
+  });
+
+  it("ne garde qu'une ligne par fichier et remonte le dernier fichier touché", () => {
+    const messages = [
+      message("m1", [tool({ name: "write_file", summary: "/repo/a.ts", content: "a" })]),
+      message("m2", [tool({ name: "write_file", summary: "/repo/b.ts", content: "b" })]),
+      message("m3", [tool({
+        name: "edit_file",
+        summary: "/repo/a.ts",
+        old_text: "a\nb",
+        new_text: "c",
+      })]),
+    ];
+
+    const operations = collectFileOperations(messages);
+
+    expect(operations.map((operation) => operation.path)).toEqual(["/repo/a.ts", "/repo/b.ts"]);
+    expect(operations[0]).toEqual(expect.objectContaining({
+      type: "edit",
+      additions: 1,
+      deletions: 2,
+    }));
+  });
+
+  it("utilise le chemin résolu quand il est fourni par le backend", () => {
+    const operations = collectFileOperations([
+      message("m1", [tool({
+        name: "edit_file",
+        summary: "src/a.ts",
+        resolved_path: "/repo/src/a.ts",
+        old_text: "old",
+        new_text: "new",
+      })]),
+    ]);
+
+    expect(operations).toHaveLength(1);
+    expect(operations[0]).toEqual(expect.objectContaining({
+      path: "/repo/src/a.ts",
+      name: "a.ts",
+    }));
+  });
+});
+
+function message(id: string, tools: ToolActivityRecord[]): AgentMessage {
+  return {
+    id,
+    role: "assistant",
+    content: "",
+    files: [],
+    timestamp: "2026-07-02T10:00:00Z",
+    tool_activities: tools,
+  };
+}
+
+function tool(overrides: Partial<ToolActivityRecord>): ToolActivityRecord {
+  return {
+    name: "write_file",
+    summary: "/repo/file.ts",
+    ...overrides,
+  };
+}

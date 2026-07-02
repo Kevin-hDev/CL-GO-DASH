@@ -6,6 +6,13 @@ use super::file_preview_editors::{detect_editors_for_extension, DetectedEditor};
 
 const MAX_PREVIEW_SIZE: u64 = 2 * 1024 * 1024;
 const MAX_PATH_LEN: usize = 4096;
+const MAX_EXISTENCE_CHECKS: usize = 500;
+
+#[derive(serde::Serialize)]
+pub struct PreviewFileExistence {
+    path: String,
+    exists: bool,
+}
 
 #[tauri::command]
 pub async fn read_file_preview(path: String, base_dir: Option<String>) -> Result<String, String> {
@@ -26,6 +33,19 @@ pub async fn read_file_preview(path: String, base_dir: Option<String>) -> Result
         return Err("Fichier non supporté".into());
     }
     String::from_utf8(bytes).map_err(|_| "Fichier non supporté".to_string())
+}
+
+#[tauri::command]
+pub async fn check_preview_files_exist(
+    paths: Vec<String>,
+    base_dir: Option<String>,
+) -> Result<Vec<PreviewFileExistence>, String> {
+    let mut results = Vec::with_capacity(paths.len().min(MAX_EXISTENCE_CHECKS));
+    for path in paths.into_iter().take(MAX_EXISTENCE_CHECKS) {
+        let exists = preview_file_exists(&path, base_dir.as_deref()).await;
+        results.push(PreviewFileExistence { path, exists });
+    }
+    Ok(results)
 }
 
 #[tauri::command]
@@ -111,6 +131,16 @@ fn validate_editor_path(editor_path: &str) -> Result<(), String> {
     Ok(())
 }
 
+async fn preview_file_exists(path: &str, base_dir: Option<&str>) -> bool {
+    let Ok(resolved) = resolve_preview_path(path, base_dir) else {
+        return false;
+    };
+    tokio::fs::metadata(&resolved)
+        .await
+        .map(|metadata| metadata.is_file())
+        .unwrap_or(false)
+}
+
 pub(crate) fn resolve_preview_path(path: &str, base_dir: Option<&str>) -> Result<PathBuf, String> {
     validate_path_text(path)?;
     let raw_path = Path::new(path);
@@ -146,4 +176,41 @@ fn spawn_cmd(command: &str, args: &[&std::ffi::OsStr]) -> Result<(), String> {
         .spawn()
         .map(|_| ())
         .map_err(|_| "Impossible d'ouvrir l'éditeur".to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn check_preview_files_exist_reports_existing_and_missing_files() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        std::fs::write(dir.path().join("kept.txt"), "ok").expect("write file");
+
+        let results = check_preview_files_exist(
+            vec!["kept.txt".to_string(), "deleted.txt".to_string()],
+            Some(dir.path().to_string_lossy().to_string()),
+        )
+        .await
+        .expect("check files");
+
+        assert_eq!(results.len(), 2);
+        assert!(results[0].exists);
+        assert!(!results[1].exists);
+        assert_eq!(results[0].path, "kept.txt");
+    }
+
+    #[tokio::test]
+    async fn check_preview_files_exist_treats_invalid_paths_as_missing() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let results = check_preview_files_exist(
+            vec!["../secret.txt".to_string()],
+            Some(dir.path().to_string_lossy().to_string()),
+        )
+        .await
+        .expect("check files");
+
+        assert_eq!(results.len(), 1);
+        assert!(!results[0].exists);
+    }
 }
