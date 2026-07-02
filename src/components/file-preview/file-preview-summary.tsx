@@ -10,12 +10,14 @@ interface FilePreviewSummaryProps {
   operations: FileOperation[];
   baseDir?: string;
   onOpen: (operation: FileOperation) => void;
+  onOpenFile: (operation: FileOperation) => void;
 }
 
 export function FilePreviewSummary({
   operations,
   baseDir,
   onOpen,
+  onOpenFile,
 }: FilePreviewSummaryProps) {
   const { t } = useTranslation();
 
@@ -32,10 +34,17 @@ export function FilePreviewSummary({
       {operations.map((operation) => {
         const path = splitDisplayPath(shortPath(operation.path, baseDir), operation.name);
         return (
-          <button
+          <div
             key={operation.id}
             className="fp-summary-row"
+            role="button"
+            tabIndex={0}
             onClick={() => onOpen(operation)}
+            onKeyDown={(event) => {
+              if (event.key !== "Enter" && event.key !== " ") return;
+              event.preventDefault();
+              onOpen(operation);
+            }}
           >
             <FileIcon name={operation.name} size={18} />
             <span className="fp-summary-main" title={path.full}>
@@ -43,8 +52,18 @@ export function FilePreviewSummary({
               <span className="fp-summary-name">{operation.name}</span>
             </span>
             <FilePreviewStats operation={operation} showZero />
-            <ArrowSquareOut className="fp-summary-open" size="var(--icon-xs)" aria-hidden="true" />
-          </button>
+            <button
+              className="fp-summary-open"
+              type="button"
+              aria-label={t("filePreview.open")}
+              onClick={(event) => {
+                event.stopPropagation();
+                onOpenFile(operation);
+              }}
+            >
+              <ArrowSquareOut size="var(--icon-xs)" aria-hidden="true" />
+            </button>
+          </div>
         );
       })}
     </div>

@@ -16,7 +16,6 @@
   background: var(--surface);
   color: var(--ink);
   cursor: pointer;
-  font: inherit;
   text-align: left;
 }
 
@@ -41,6 +40,7 @@
   color: var(--ink);
   flex: 0 1 auto;
   font-weight: 500;
+  max-width: 70%;
   text-overflow: ellipsis;
 }
 
@@ -48,8 +48,11 @@
   min-width: 0;
   overflow: hidden;
   color: var(--ink-faint);
-  flex: 0 1 auto;
+  direction: rtl;
+  flex: 1 1 auto;
+  text-align: left;
   text-overflow: ellipsis;
+  unicode-bidi: plaintext;
 }
 
 .fp-summary-row .fp-stats {
@@ -60,10 +63,21 @@
 }
 
 .fp-summary-open {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 24px;
+  border: 0;
+  background: transparent;
   color: var(--ink-faint);
+  cursor: pointer;
   opacity: 0.9;
+  padding: 0;
 }
 
-.fp-summary-row:hover .fp-summary-open {
+.fp-summary-open:hover,
+.fp-summary-open:focus-visible {
   color: var(--ink-muted);
+  outline: none;
 }

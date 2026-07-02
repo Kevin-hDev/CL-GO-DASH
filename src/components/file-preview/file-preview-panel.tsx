@@ -30,6 +30,7 @@ interface FilePreviewPanelProps {
   onFullscreenChange: (fullscreen: boolean) => void;
   onActiveTabChange: (tab: FilePreviewActiveTab) => void;
   onOpenOperation: (operation: FileOperation) => void;
+  onOpenFilePath: (path: string) => void;
   onCloseTab: (id: string) => void;
   onResizeStart: (event: React.PointerEvent) => void;
   hasProject?: boolean;
@@ -98,6 +99,7 @@ export function FilePreviewPanel(props: FilePreviewPanelProps) {
                   operations={props.operations}
                   baseDir={props.baseDir}
                   onOpen={props.onOpenOperation}
+                  onOpenFile={(operation) => props.onOpenFilePath(operation.path)}
                 />
               </div>
             ) : activeOperation.kind === "plan" ? (

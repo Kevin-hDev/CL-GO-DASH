@@ -23,6 +23,7 @@ describe("FilePreviewSummary", () => {
         ]}
         baseDir="/repo"
         onOpen={vi.fn()}
+        onOpenFile={vi.fn()}
       />,
     );
 
@@ -42,14 +43,35 @@ describe("FilePreviewSummary", () => {
         operations={[file]}
         baseDir="/repo"
         onOpen={onOpen}
+        onOpenFile={vi.fn()}
       />,
     );
 
-    fireEvent.click(screen.getByRole("button"));
+    fireEvent.click(screen.getByRole("button", { name: /src\/hooks/ }));
 
     expect(screen.getByText("+24")).toBeTruthy();
     expect(screen.getByText("-0")).toBeTruthy();
     expect(onOpen).toHaveBeenCalledWith(file);
+  });
+
+  it("ouvre le fichier complet avec le bouton de droite sans ouvrir la diff", () => {
+    const onOpen = vi.fn();
+    const onOpenFile = vi.fn();
+    const file = operation({ additions: 6, deletions: 0 });
+
+    render(
+      <FilePreviewSummary
+        operations={[file]}
+        baseDir="/repo"
+        onOpen={onOpen}
+        onOpenFile={onOpenFile}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "filePreview.open" }));
+
+    expect(onOpenFile).toHaveBeenCalledWith(file);
+    expect(onOpen).not.toHaveBeenCalled();
   });
 });
 
