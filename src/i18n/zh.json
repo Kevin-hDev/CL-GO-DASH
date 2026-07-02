@@ -8,6 +8,10 @@
     "ollama": "Ollama",
     "apiKeys": "API 密钥"
   },
+  "common": {
+    "delete": "删除",
+    "loading": "加载中…"
+  },
   "apiKeys": {
     "main": {
       "title": "API 密钥",
@@ -56,7 +60,6 @@
       "allConfigured": "所有目录中的提供商均已配置。"
     },
     "connectors": {
-      "comingSoon": "即将推出",
       "title": "API 连接器",
       "subtitle": "为您的实例添加数据源。",
       "search": "搜索连接器…",
@@ -529,6 +532,7 @@
     "tabs": {
       "general": "通用",
       "ollama": "Ollama",
+      "connectors": "连接器",
       "apiKeys": "API 密钥",
       "llm": "LLM",
       "advanced": "高级",
@@ -656,6 +660,7 @@
     "failedToStart": "Terminal 启动失败"
   },
   "skills": {
+    "sourceBuiltIn": "内置",
     "sourceUser": "用户",
     "sourceProject": "项目",
     "noResults": "未找到 Skill",
@@ -677,6 +682,7 @@
     "description": "面向本地和云端 LLM 的智能桌面应用。"
   },
   "filePreview": {
+    "default": "默认",
     "noFiles": "本次会话中未创建或修改任何文件。",
     "filesModified": "文件",
     "loading": "正在读取文件...",

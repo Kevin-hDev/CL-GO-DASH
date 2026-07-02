@@ -8,6 +8,10 @@
     "ollama": "Ollama",
     "apiKeys": "API Keys"
   },
+  "common": {
+    "delete": "Delete",
+    "loading": "Loading…"
+  },
   "apiKeys": {
     "main": {
       "title": "API Keys",
@@ -656,6 +660,7 @@
     "failedToStart": "Terminal failed to start"
   },
   "skills": {
+    "sourceBuiltIn": "Built-in",
     "sourceUser": "User",
     "sourceProject": "Project",
     "noResults": "No skills found",
@@ -677,6 +682,7 @@
     "description": "Agentic desktop app for local and cloud LLMs."
   },
   "filePreview": {
+    "default": "default",
     "noFiles": "No files created or modified in this session.",
     "filesModified": "Files",
     "loading": "Reading file...",

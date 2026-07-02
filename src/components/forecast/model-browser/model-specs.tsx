@@ -128,7 +128,7 @@ function buildRows(
   ].filter(Boolean).join(", ") || "—";
 
   return [
-    { label: t("forecast.models.capabilitiesTitle"), value: capabilities },
+    { label: t("forecast.models.modelCapabilities"), value: capabilities },
     { label: t("forecast.models.diskSize"), value: model.is_cloud ? "—" : `${model.size_mb} MB`, mono: true },
     { label: t("forecast.models.parameters"), value: model.params, mono: true },
     { label: t("forecast.models.engine"), value: t(getForecastEngineKey(model)), mono: true },

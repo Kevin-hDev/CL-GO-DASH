@@ -8,6 +8,10 @@
     "ollama": "Ollama",
     "apiKeys": "Clé API"
   },
+  "common": {
+    "delete": "Supprimer",
+    "loading": "Chargement…"
+  },
   "apiKeys": {
     "main": {
       "title": "Clés API",
@@ -656,6 +660,7 @@
     "failedToStart": "Le terminal n'a pas pu démarrer"
   },
   "skills": {
+    "sourceBuiltIn": "Intégré",
     "sourceUser": "Personnel",
     "sourceProject": "Projet",
     "noResults": "Aucun skill trouvé",
@@ -677,6 +682,7 @@
     "description": "Application desktop agentique pour LLM locaux et cloud."
   },
   "filePreview": {
+    "default": "par défaut",
     "noFiles": "Aucun fichier créé ou modifié dans cette session.",
     "filesModified": "Fichiers",
     "loading": "Lecture du fichier...",

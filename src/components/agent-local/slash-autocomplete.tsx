@@ -65,7 +65,7 @@ export function SlashAutocomplete({ skills, activeIndex, onSelect }: SlashAutoco
           </div>
           <span className="slash-item-source">
             {isBuiltIn(item)
-              ? t("skills.sourceBuiltIn", { defaultValue: "built-in" })
+              ? t("skills.sourceBuiltIn")
               : t(`skills.source${item.source === "project" ? "Project" : "User"}`)}
           </span>
         </div>

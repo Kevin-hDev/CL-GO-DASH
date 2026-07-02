@@ -8,6 +8,10 @@
     "ollama": "Ollama",
     "apiKeys": "API キー"
   },
+  "common": {
+    "delete": "削除",
+    "loading": "読み込み中…"
+  },
   "apiKeys": {
     "main": {
       "title": "API キー",
@@ -56,7 +60,6 @@
       "allConfigured": "カタログのすべてのプロバイダーはすでに設定されています。"
     },
     "connectors": {
-      "comingSoon": "近日公開",
       "title": "API コネクター",
       "subtitle": "インスタンスにデータソースを追加します。",
       "search": "コネクターを検索…",
@@ -529,6 +532,7 @@
     "tabs": {
       "general": "一般",
       "ollama": "Ollama",
+      "connectors": "コネクタ",
       "apiKeys": "API キー",
       "llm": "LLM",
       "advanced": "詳細設定",
@@ -656,6 +660,7 @@
     "failedToStart": "Terminal を起動できませんでした"
   },
   "skills": {
+    "sourceBuiltIn": "内蔵",
     "sourceUser": "ユーザー",
     "sourceProject": "プロジェクト",
     "noResults": "Skill が見つかりません",
@@ -677,6 +682,7 @@
     "description": "ローカルおよびクラウド LLM 向けのエージェント型デスクトップアプリ。"
   },
   "filePreview": {
+    "default": "デフォルト",
     "noFiles": "このセッションで作成または変更されたファイルはありません。",
     "filesModified": "ファイル",
     "loading": "ファイルを読み込み中...",

@@ -33,7 +33,7 @@ export function FileTabMenu({ x, y, editors, onOpen, onOpenWith, onClose }: File
     };
   }, [onClose]);
 
-  const suffix = ` (${t("filePreview.default", "par défaut")})`;
+  const suffix = ` (${t("filePreview.default")})`;
 
   return createPortal(
     <div

@@ -8,6 +8,10 @@
     "ollama": "Ollama",
     "apiKeys": "API Keys"
   },
+  "common": {
+    "delete": "Löschen",
+    "loading": "Wird geladen…"
+  },
   "apiKeys": {
     "main": {
       "title": "API Keys",
@@ -56,7 +60,6 @@
       "allConfigured": "Alle Kataloganbieter sind bereits konfiguriert."
     },
     "connectors": {
-      "comingSoon": "Bald",
       "title": "API Connectors",
       "subtitle": "Datenquellen zu deiner Instanz hinzufügen.",
       "search": "Connectors suchen…",
@@ -529,6 +532,7 @@
     "tabs": {
       "general": "Allgemein",
       "ollama": "Ollama",
+      "connectors": "Connectors",
       "apiKeys": "API Keys",
       "llm": "LLM",
       "advanced": "Erweitert",
@@ -656,6 +660,7 @@
     "failedToStart": "Terminal konnte nicht gestartet werden"
   },
   "skills": {
+    "sourceBuiltIn": "Integriert",
     "sourceUser": "Benutzer",
     "sourceProject": "Projekt",
     "noResults": "Keine Skills gefunden",
@@ -677,6 +682,7 @@
     "description": "Agentische Desktop-App für lokale und Cloud-LLMs."
   },
   "filePreview": {
+    "default": "Standard",
     "noFiles": "Keine Dateien in dieser Sitzung erstellt oder geändert.",
     "filesModified": "Dateien",
     "loading": "Datei wird gelesen...",

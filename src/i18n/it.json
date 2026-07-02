@@ -8,6 +8,10 @@
     "ollama": "Ollama",
     "apiKeys": "Chiavi API"
   },
+  "common": {
+    "delete": "Elimina",
+    "loading": "Caricamento…"
+  },
   "apiKeys": {
     "main": {
       "title": "Chiavi API",
@@ -56,7 +60,6 @@
       "allConfigured": "Tutti i provider del catalogo sono già configurati."
     },
     "connectors": {
-      "comingSoon": "In arrivo",
       "title": "Connettori API",
       "subtitle": "Aggiungi sorgenti dati alla tua istanza.",
       "search": "Cerca connettori…",
@@ -529,6 +532,7 @@
     "tabs": {
       "general": "Generale",
       "ollama": "Ollama",
+      "connectors": "Connettori",
       "apiKeys": "Chiavi API",
       "llm": "LLM",
       "advanced": "Avanzate",
@@ -656,6 +660,7 @@
     "failedToStart": "Impossibile avviare il Terminal"
   },
   "skills": {
+    "sourceBuiltIn": "Integrato",
     "sourceUser": "Utente",
     "sourceProject": "Progetto",
     "noResults": "Nessun Skill trovato",
@@ -677,6 +682,7 @@
     "description": "App desktop agentique per LLM locali e cloud."
   },
   "filePreview": {
+    "default": "predefinito",
     "noFiles": "Nessun file creato o modificato in questa sessione.",
     "filesModified": "File",
     "loading": "Lettura del file in corso...",

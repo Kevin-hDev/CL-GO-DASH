@@ -8,6 +8,10 @@
     "ollama": "Ollama",
     "apiKeys": "Claves API"
   },
+  "common": {
+    "delete": "Eliminar",
+    "loading": "Cargando…"
+  },
   "apiKeys": {
     "main": {
       "title": "Claves API",
@@ -56,7 +60,6 @@
       "allConfigured": "Todos los proveedores del catálogo ya están configurados."
     },
     "connectors": {
-      "comingSoon": "Próximamente",
       "title": "Conectores API",
       "subtitle": "Añade fuentes de datos a tu instancia.",
       "search": "Buscar conectores…",
@@ -529,6 +532,7 @@
     "tabs": {
       "general": "General",
       "ollama": "Ollama",
+      "connectors": "Conectores",
       "apiKeys": "Claves API",
       "llm": "LLM",
       "advanced": "Avanzado",
@@ -656,6 +660,7 @@
     "failedToStart": "El Terminal no pudo iniciarse"
   },
   "skills": {
+    "sourceBuiltIn": "Integrado",
     "sourceUser": "Usuario",
     "sourceProject": "Proyecto",
     "noResults": "Ningún Skill encontrado",
@@ -677,6 +682,7 @@
     "description": "Aplicación de escritorio agéntica para LLMs locales y en la nube."
   },
   "filePreview": {
+    "default": "predeterminado",
     "noFiles": "Ningún archivo creado o modificado en esta sesión.",
     "filesModified": "Archivos",
     "loading": "Leyendo archivo...",
