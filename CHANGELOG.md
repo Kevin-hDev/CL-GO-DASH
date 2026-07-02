@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.9.5
+
+### Changes
+
+- **Session summary bubble** — added a compact session summary bubble with todos, generated plans, subagents, git state, and recent file changes; generated plans can be opened in the side preview panel with a dedicated plan layout
+
+---
+
 ## v0.9.4
 
 ### App release notes
