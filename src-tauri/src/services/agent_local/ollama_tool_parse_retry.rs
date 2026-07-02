@@ -7,17 +7,32 @@
 //! Deux manifestations selon le moment où Ollama détecte l'erreur :
 //! - HTTP 500 avec body `{"error":"expected element type <function> but have <parameter>"}`
 //!   si le crash survient avant ou pendant la génération
-//! - Chunk NDJSON `{"error":"..."}` si le crash survient en plein stream
+//! - Chunk NDJSON `{"error":"XML syntax error on line 3: element <function> closed by </parameter>"}`
+//!   si le crash survient en plein stream
 //!
 //! Contournement : retenter la requête (le modèle générera probablement un
 //! format correct au 2e essai, car le bug est intermittent).
 
-/// Patterns d'erreur caractéristiques du parser tool-call trop strict.
-/// On reste volontairement ciblé pour ne pas masquer d'autres erreurs 500.
-const PARSER_ERROR_MARKERS: &[&str] = &[
+use regex::Regex;
+use std::sync::LazyLock;
+
+/// Signature du bug : une erreur XML émise par le parser Ollama qui mentionne
+/// au moins une balise tool-call (`<function>` ou `<parameter>`).
+/// Ollama formule ce crash de plusieurs façons selon où il détecte l'erreur,
+/// d'où l'expression régulière plutôt qu'une correspondance exacte.
+static TOOL_PARSE_CRASH_RE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"(?i)(element\s+<function>|<parameter>|<function>)")
+        .expect("regex tool parse crash")
+});
+
+/// Mots-clés d'erreurs XML/parser qui accompagnent les balises tool-call.
+/// Au moins un doit être présent en plus d'une balise pour confirmer le bug.
+static XML_ERROR_KEYWORDS: &[&str] = &[
+    "xml syntax error",
     "expected element type",
-    "<function>",
-    "<parameter>",
+    "closed by",
+    "but have",
+    "element type",
 ];
 
 /// Nombre maximum de retries pour ce bug précis.
@@ -26,10 +41,15 @@ const PARSER_ERROR_MARKERS: &[&str] = &[
 pub const MAX_PARSER_RETRIES: u32 = 2;
 
 /// Renvoie `true` si le texte correspond au crash du parser tool-call.
-/// Insensible à la casse car Ollama peut formater le message différemment.
+///
+/// On exige DEUX conditions pour éviter les faux positifs :
+/// 1. Une erreur XML/parser (mot-clé caractéristique)
+/// 2. Une balise tool-call (`<function>` ou `<parameter>`)
 pub fn is_tool_parse_crash(text: &str) -> bool {
     let lower = text.to_lowercase();
-    PARSER_ERROR_MARKERS.iter().all(|m| lower.contains(m))
+    let has_tool_tag = TOOL_PARSE_CRASH_RE.is_match(text);
+    let has_xml_error = XML_ERROR_KEYWORDS.iter().any(|k| lower.contains(k));
+    has_tool_tag && has_xml_error
 }
 
 #[cfg(test)]
@@ -37,14 +57,27 @@ mod tests {
     use super::*;
 
     #[test]
-    fn detects_exact_error_message() {
+    fn detects_http_500_variant() {
         let msg = r#"{"error":"expected element type <function> but have <parameter>"}"#;
         assert!(is_tool_parse_crash(msg));
     }
 
     #[test]
-    fn detects_plain_text_error() {
-        let msg = "expected element type <function> but have <parameter>";
+    fn detects_mid_stream_variant() {
+        let msg = "XML syntax error on line 3: element <function> closed by </parameter>";
+        assert!(is_tool_parse_crash(msg));
+    }
+
+    #[test]
+    fn detects_plain_text_http_variant() {
+        assert!(is_tool_parse_crash(
+            "expected element type <function> but have <parameter>"
+        ));
+    }
+
+    #[test]
+    fn detects_case_insensitive() {
+        let msg = "Expected Element Type <FUNCTION> but have <Parameter>";
         assert!(is_tool_parse_crash(msg));
     }
 
@@ -56,15 +89,14 @@ mod tests {
     }
 
     #[test]
-    fn does_not_match_partial_markers() {
-        // Un seul marqueur ne suffit pas — il faut les 3 pour éviter les faux positifs
-        assert!(!is_tool_parse_crash("expected element type <something>"));
+    fn does_not_match_missing_keyword() {
+        // Balise tool-call seule sans mot-clé d'erreur XML → pas le bug
         assert!(!is_tool_parse_crash("missing <function> definition"));
     }
 
     #[test]
-    fn detects_case_insensitive() {
-        let msg = "Expected Element Type <FUNCTION> but have <Parameter>";
-        assert!(is_tool_parse_crash(msg));
+    fn does_not_match_xml_error_without_tool_tag() {
+        // Erreur XML mais sans balise tool-call → pas le bug
+        assert!(!is_tool_parse_crash("XML syntax error: unexpected EOF"));
     }
 }
