@@ -1,12 +1,13 @@
 {
   "nav": {
-    "appName": "CL-GO",
     "heartbeat": "Heartbeat",
     "personality": "/cl-go",
     "settings": "Paramètres",
-    "agentLocal": "Session",
-    "ollama": "Ollama",
-    "apiKeys": "Clé API"
+    "agentLocal": "Session"
+  },
+  "common": {
+    "delete": "Supprimer",
+    "loading": "Chargement…"
   },
   "apiKeys": {
     "main": {
@@ -19,8 +20,7 @@
     },
     "empty": {
       "title": "Aucun provider configuré",
-      "subtitle": "Ajoute une clé API pour accéder à des LLM distants (Groq, Gemini, Mistral…) ou des services de recherche web (Brave, Exa, Firecrawl).",
-      "addConnector": "Connecteurs API"
+      "subtitle": "Ajoute une clé API pour accéder à des LLM distants (Groq, Gemini, Mistral…) ou des services de recherche web (Brave, Exa, Firecrawl)."
     },
     "details": {
       "connected": "Connecté",
@@ -51,10 +51,6 @@
       "showKey": "Afficher",
       "hideKey": "Masquer"
     },
-    "picker": {
-      "title": "Ajouter un provider",
-      "allConfigured": "Tous les providers du catalogue sont déjà configurés."
-    },
     "connectors": {
       "title": "Connecteurs API",
       "subtitle": "Ajoutez des sources de données à votre instance.",
@@ -71,40 +67,27 @@
   },
   "channels": {
     "sidebar": {
-      "title": "Canaux",
-      "messaging": "Messagerie",
-      "pro": "Professionnel",
       "empty": "Aucun canal configuré",
-      "accounts": "{{count}} compte(s)",
       "configured": "Configurés"
     },
     "detail": {
-      "title": "Configuration",
-      "enabled": "Activé",
-      "disabled": "Désactivé",
       "token": "Token du bot",
       "tokenPlaceholder": "Collez le token ici…",
       "botToken": "Token bot Slack",
       "appToken": "Token app Slack",
       "appTokenPlaceholder": "Collez le token app ici…",
-      "tokenSet": "Token configuré",
-      "tokenMissing": "Token manquant",
       "allowlist": "Utilisateurs autorisés",
       "allowlistPlaceholder": "ID utilisateur…",
       "allowlistAdd": "Ajouter",
       "requireMention": "Mention requise en groupe",
       "provider": "Provider LLM",
       "model": "Modèle",
-      "testConnection": "Tester la connexion",
       "testSuccess": "Connexion réussie",
       "testFailed": "Connexion échouée",
-      "save": "Enregistrer",
       "delete": "Supprimer",
       "cancel": "Annuler",
-      "addAccount": "Ajouter un compte",
       "accountId": "Identifiant du compte",
       "confirmDelete": "Supprimer ce compte ?",
-      "confirmDeleteDesc": "Le token sera supprimé du coffre et le canal sera arrêté.",
       "connected": "Connecté",
       "disconnected": "Déconnecté"
     },
@@ -114,12 +97,6 @@
       "running": "Actif",
       "error": "Erreur",
       "stopping": "Arrêt…"
-    },
-    "gateway": {
-      "start": "Démarrer le gateway",
-      "stop": "Arrêter le gateway",
-      "running": "Gateway actif",
-      "stopped": "Gateway arrêté"
     },
     "browse": {
       "title": "Canaux de messagerie",
@@ -164,7 +141,6 @@
     "uncommitted": "Non validés : {{count}} fichier(s)",
     "createNew": "Créer et extraire une nouvelle branche…",
     "detachedHead": "HEAD détaché",
-    "noBranch": "Pas de dépôt git",
     "noMatch": "Aucune branche trouvée",
     "conflictTitle": "Effectuez un commit pour changer de branche",
     "conflictDescription": "Les modifications apportées aux fichiers suivants seraient remplacées par l'extraction :",
@@ -198,24 +174,15 @@
     "year": "{{count}} ans"
   },
   "agentLocal": {
-    "title": "Conversations",
     "newSession": "Nouvelle session",
     "noConversations": "Aucune conversation",
-    "selectOrCreate": "Sélectionne ou crée une conversation",
     "placeholder": "Comment puis-je vous aider ?",
-    "dropFiles": "Déposer les fichiers ici",
     "thinking": "Réflexion",
-    "reload": "Recharger",
-    "edit": "Modifier",
-    "copy": "Copier",
     "showMore": "Afficher plus",
     "showLess": "Afficher moins",
-    "exportMd": "Télécharger en Markdown",
-    "search": "Rechercher dans la conversation",
     "modelSearch": "Rechercher un modèle…",
     "modelEmpty": "Aucun modèle ne correspond.",
     "selectModel": "Choisir un modèle",
-    "thinkingToggle": "Réflexion étendue",
     "reasoningTitle": "Réflexion",
     "reasoningOff": "Désactivée",
     "reasoningAuto": "Activée",
@@ -265,7 +232,6 @@
         "coder": "Coder"
       }
     },
-    "tools": "Outils",
     "tokens": "tokens",
     "contextUsage": {
       "title": "Fenêtre de contexte",
@@ -346,7 +312,6 @@
     "close": "Fermer"
   },
   "permissionMode": {
-    "title": "Mode",
     "chatLabel": "Chatbot",
     "chatDescription": "Discuter sans accès aux outils, aux fichiers ou à Internet",
     "autoLabel": "Accès complet",
@@ -384,8 +349,6 @@
     }
   },
   "ollama": {
-    "title": "Ollama",
-    "noModels": "Aucun modèle installé",
     "selectModel": "Sélectionne un modèle",
     "edit": "Modifier",
     "editing": "Édition",
@@ -397,8 +360,6 @@
     "updateAvailable": "Une nouvelle version est disponible",
     "installedUpToDate": "Installé et à jour",
     "ctx": "ctx",
-    "starting": "Démarrage…",
-    "pullError": "Erreur de téléchargement",
     "vramWarning": "Ce modèle pourrait dépasser votre VRAM disponible",
     "editModelfile": "Éditer le modelfile",
     "systemPrompt": "System prompt",
@@ -428,7 +389,6 @@
     "paramsLabel": "Paramètres",
     "contextTokens": "K tokens",
     "remove": "Supprimer",
-    "delete": "Supprimer",
     "modelfileTab": "Modelfile",
     "modelsTab": "Modèles"
   },
@@ -481,7 +441,6 @@
       "provider": "Provider",
       "model": "Modèle",
       "pickModel": "Choisir un modèle",
-      "ollamaDown": "Ollama indisponible",
       "noToolCapable": "Aucun modèle tool-capable",
       "prompt": "Prompt",
       "description": "Description (courte)",
@@ -511,20 +470,13 @@
     "open": "Ouvrir",
     "inject": "Contexte",
     "injected": "Injecté",
-    "alwaysInjected": "Toujours injecté",
     "failedToLoad": "Échec du chargement",
     "failedToRead": "Échec de la lecture"
   },
   "settings": {
-    "title": "Paramètres",
-    "theme": "Thème",
-    "fontSize": "Taille de police",
-    "fontFamily": "Police d'écriture",
-    "fontPreview": "Le vif zéphyr jubile",
     "light": "Clair",
     "dark": "Sombre",
     "system": "Système",
-    "orange": "Orange",
     "tabs": {
       "general": "Général",
       "ollama": "Ollama",
@@ -635,31 +587,15 @@
       "deleteModel": "Confirmer ?"
     }
   },
-  "agentMd": {
-    "title": "Instructions Agent",
-    "subtitle": "Les fichiers AGENTS.md fournissent des instructions persistantes aux LLM capables d'utiliser des outils",
-    "globalTab": "Global",
-    "projectTab": "Projet",
-    "globalDescription": "Ces instructions s'appliquent à toutes les conversations avec des modèles capables d'utiliser des outils.",
-    "projectDescription": "Ces instructions s'appliquent uniquement aux conversations dans ce projet.",
-    "placeholder": "Écris tes instructions ici...\n\nExemple :\n# Règles\n- Explique toujours avant d'agir\n- Réponds toujours en français",
-    "saved": "Instructions sauvegardées",
-    "noProject": "Sélectionne un projet pour modifier les instructions de projet.",
-    "emptyGlobal": "Aucun AGENTS.md global trouvé",
-    "emptyProject": "Aucun AGENTS.md de projet trouvé",
-    "toolCapableOnly": "Injecté uniquement pour les modèles avec outils"
-  },
   "terminal": {
-    "title": "Terminal",
-    "newTab": "Nouveau terminal",
     "processExited": "Processus terminé avec le code {{code}}",
     "failedToStart": "Le terminal n'a pas pu démarrer"
   },
   "skills": {
+    "sourceBuiltIn": "Intégré",
     "sourceUser": "Personnel",
     "sourceProject": "Projet",
-    "noResults": "Aucun skill trouvé",
-    "badge": "Skill"
+    "noResults": "Aucun skill trouvé"
   },
   "search": {
     "placeholder": "Rechercher des conversations…",
@@ -669,24 +605,20 @@
   },
   "about": {
     "version": "Version",
-    "runtime": "Runtime",
     "tauri": "Tauri",
     "os": "Système",
-    "github": "GitHub",
     "viewOnGithub": "Voir sur GitHub",
     "description": "Application desktop agentique pour LLM locaux et cloud."
   },
   "filePreview": {
+    "default": "par défaut",
     "noFiles": "Aucun fichier créé ou modifié dans cette session.",
     "filesModified": "Fichiers",
     "loading": "Lecture du fichier...",
     "fileNotFound": "Le fichier n'a pas pu être lu. Il a peut-être été supprimé ou déplacé.",
-    "highlighting": "Coloration du fichier...",
-    "noDiff": "Aucune modification à afficher.",
     "togglePanel": "Aperçu fichiers",
     "reduce": "Réduire",
     "fullscreen": "Plein écran",
-    "noEditor": "Aucun éditeur externe détecté.",
     "open": "Ouvrir",
     "openWith": "Ouvrir avec...",
     "noEditorDetected": "Aucun éditeur détecté",
@@ -697,8 +629,6 @@
   },
   "fileTree": {
     "filterPlaceholder": "Filtrer les fichiers...",
-    "emptyDirectory": "Ce dossier est vide",
-    "tooManyEntries": "Trop d'éléments ({{count}} max)",
     "toggleTree": "Arborescence du projet",
     "loadError": "Impossible de lire ce dossier",
     "noResults": "Aucun résultat"
@@ -738,7 +668,6 @@
     "modelUpdate": "Mettre à jour",
     "version": "Version {{version}}",
     "ollamaBinaryUpdate": "Mettre à jour",
-    "updating": "Mise à jour…",
     "releaseNotesTitle": "Notes de version {{version}}",
     "showDetails": "Afficher les détails",
     "hideDetails": "Masquer les détails"
@@ -822,7 +751,6 @@
       "author": "Auteur",
       "website": "Site web",
       "openSite": "Ouvrir le site",
-      "confirmDeleteTitle": "Supprimer le connecteur ?",
       "confirmDeleteBtn": "Supprimer",
       "confirmDisconnectTitle": "Déconnecter {{name}} ?",
       "confirmDisconnectDesc": "Le LLM n'aura plus accès aux services {{name}}.",
@@ -856,7 +784,6 @@
       "testing": "Test en cours…",
       "testOk": "Connecteur validé.",
       "addAndTest": "Ajouter et tester",
-      "saveError": "Impossible de sauvegarder le token. Réessayez.",
       "testError": "Impossible de valider le connecteur. Vérifiez le token puis réessayez.",
       "cancel": "Annuler",
       "confirmAddDesc": "Ajouter {{name}} à vos connecteurs ?",
@@ -875,7 +802,6 @@
     }
   },
   "linkPreview": {
-    "loading": "Chargement de l'aperçu…",
     "noTitle": "Sans titre",
     "openSite": "Ouvrir le site"
   },
@@ -890,8 +816,7 @@
     "pluginsEmpty": "Bientôt disponible"
   },
   "vision": {
-    "unsupportedModel": "Vision non prise en charge par ce modèle",
-    "imageSkipped": "Certaines images n'ont pas été envoyées"
+    "unsupportedModel": "Vision non prise en charge par ce modèle"
   },
   "subagents": {
     "backgroundCount_one": "{{count}} agent en arrière-plan",
@@ -928,13 +853,11 @@
     "title": "Forecast",
     "noAnalysis": "Aucune analyse en cours",
     "docs": {
-      "button": "Docs",
       "windowTitle": "Documentation Forecast",
       "kicker": "Documentation technique",
       "status": "Guide Forecast",
       "navLabel": "Documentation Forecast",
       "openTooltip": "Ouvrir la documentation Forecast",
-      "openFailed": "Impossible d'ouvrir la documentation Forecast.",
       "nav": {
         "overview": "Vue d'ensemble",
         "datasets": "Datasets",
@@ -995,10 +918,6 @@
         "uncertainty": "Incertitude",
         "scenarios": "Scénarios",
         "variables": "Variables",
-        "events": "Événements",
-        "comparisons": "Comparaisons",
-        "anomalies": "Anomalies",
-        "quality": "Qualité",
         "history": "Historique",
         "forecast": "Prévision",
         "confidence": "Plage de confiance",
@@ -1027,7 +946,6 @@
       "percentHint": "Crée une courbe dérivée à partir de la prévision actuelle, sans relancer le modèle.",
       "contextHint": "Relance le modèle avec les nouvelles valeurs futures des variables sélectionnées.",
       "preview": "Aperçu",
-      "add": "Ajouter le scénario",
       "update": "Mettre à jour",
       "cancel": "Annuler",
       "edit": "Modifier",
@@ -1084,14 +1002,10 @@
         "hypothesis": "Hypothèse"
       },
       "empty": "Aucune note pour le moment.",
-      "emptySub": "Les notes ajoutées par l'agent apparaîtront ici avec leur position sur la prévision.",
-      "designPending": "Le design de cette section reste à choisir avant l'implémentation complète.",
-      "designPendingWithCount": "{{count}} note(s) existent déjà, mais l'interface finale reste à définir.",
       "selectNote": "Sélectionne une note ou crée une nouvelle note.",
       "titlePlaceholder": "Titre de la note",
       "datePlaceholder": "Date",
       "contentPlaceholder": "Contenu Markdown de la note",
-      "fileLabel": "Fichier local",
       "save": "Enregistrer",
       "saving": "Enregistrement",
       "cancel": "Annuler",
@@ -1361,63 +1275,30 @@
       }
     },
     "models": {
-      "manage": "Gérer les modèles",
       "title": "Modèles Forecast",
       "sidebarTitle": "Models",
-      "back": "Retour",
-      "summary": "Résumé",
       "modelCapabilities": "Capacités du modèle",
-      "appSupport": "Support actuel dans l'app",
       "engine": "Moteur utilisé",
       "install": "Installer",
-      "remove": "Supprimer",
-      "confirmRemove": "Confirmer ?",
-      "uninstall": "Désinstaller",
       "installed": "Installé",
-      "installError": "Erreur",
-      "downloading": "Téléchargement...",
       "cancel": "Annuler",
-      "notInstalledSuffix": "(non installé)",
       "parameters": "Paramètres",
-      "specs": "Spécifications",
       "diskSize": "Taille disque",
       "ram": "RAM",
-      "ramCpu": "RAM (CPU)",
-      "vramGpu": "VRAM (GPU)",
       "cpuLabel": "CPU",
       "gpuLabel": "GPU",
-      "hardwareLabel": "Profil matériel",
       "licenseLabel": "Licence",
       "libraryLabel": "Bibliothèque",
       "pipelineLabel": "Pipeline",
-      "downloadsLabel": "Téléchargements",
-      "likesLabel": "Likes",
-      "sourceLabel": "Source",
       "supported": "Supporté",
       "unsupported": "Non supporté",
       "uninstalled": "Non installé",
       "horizonMax": "Horizon max",
       "frequencies": "Fréquences",
-      "state": "État",
       "status": "Statut",
-      "usedSpace": "Espace utilisé",
-      "local": "Local",
       "cloud": "Cloud (clé requise)",
       "noKeyConfigured": "Clé API non configurée",
       "noneAvailable": "Aucun modèle disponible pour ce lancement.",
-      "families": {
-        "chronos-bolt": "Chronos-Bolt",
-        "chronos-2": "Chronos-2",
-        "timesfm-2-5": "TimesFM 2.5",
-        "timegpt-2": "TimeGPT-2",
-        "toto-2": "Datadog Toto 2.0",
-        "moirai-2": "MOIRAI 2.0",
-        "flowstate": "FlowState",
-        "tabpfn-ts": "TabPFN-TS",
-        "tirex": "TiRex",
-        "kairos": "Kairos",
-        "sundial": "Sundial"
-      },
       "hardware": {
         "light": "Machine légère",
         "balanced": "Machine moyenne",
@@ -1436,16 +1317,6 @@
         "multivariate": "Multi-séries",
         "probabilistic": "Prévision probabiliste",
         "backtesting": "Backtesting"
-      },
-      "descriptions": {
-        "chronos-bolt-tiny": "Très léger pour premiers tests et petites machines.",
-        "chronos-bolt-mini": "Bon équilibre entre rapidité locale et coût matériel.",
-        "chronos-bolt-small": "Choix local recommandé pour des prévisions plus sérieuses.",
-        "chronos-bolt-base": "Version locale plus lourde pour besoins plus exigeants.",
-        "chronos-2": "Nouveau moteur local Chronos plus ambitieux, prêt pour une évolution future vers plus de contexte.",
-        "timegpt-2-mini": "Version cloud simple pour essais rapides avec contexte externe.",
-        "timegpt-2-standard": "Version cloud équilibrée pour séries riches et contexte métier.",
-        "timegpt-2-pro": "Version cloud avancée pour usages plus ambitieux et multi-séries."
       }
     },
     "export": {
@@ -1460,12 +1331,6 @@
       "saved": "Export enregistré",
       "copied": "Export copié",
       "failed": "Export impossible"
-    },
-    "kpi": {
-      "mape": "MAPE",
-      "mae": "MAE",
-      "crps": "CRPS",
-      "bias": "Biais"
     }
   }
 }

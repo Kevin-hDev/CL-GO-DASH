@@ -1,12 +1,13 @@
 {
   "nav": {
-    "appName": "CL-GO",
     "heartbeat": "Heartbeat",
     "personality": "/cl-go",
     "settings": "設定",
-    "agentLocal": "セッション",
-    "ollama": "Ollama",
-    "apiKeys": "API キー"
+    "agentLocal": "セッション"
+  },
+  "common": {
+    "delete": "削除",
+    "loading": "読み込み中…"
   },
   "apiKeys": {
     "main": {
@@ -19,8 +20,7 @@
     },
     "empty": {
       "title": "プロバイダーが設定されていません",
-      "subtitle": "API キーを追加してリモート LLM（Groq、Gemini、Mistral…）やウェブ検索サービス（Brave、Exa、Firecrawl）にアクセスしましょう。",
-      "addConnector": "API コネクター"
+      "subtitle": "API キーを追加してリモート LLM（Groq、Gemini、Mistral…）やウェブ検索サービス（Brave、Exa、Firecrawl）にアクセスしましょう。"
     },
     "details": {
       "connected": "接続済み",
@@ -51,12 +51,7 @@
       "showKey": "表示",
       "hideKey": "非表示"
     },
-    "picker": {
-      "title": "プロバイダーを追加",
-      "allConfigured": "カタログのすべてのプロバイダーはすでに設定されています。"
-    },
     "connectors": {
-      "comingSoon": "近日公開",
       "title": "API コネクター",
       "subtitle": "インスタンスにデータソースを追加します。",
       "search": "コネクターを検索…",
@@ -72,40 +67,27 @@
   },
   "channels": {
     "sidebar": {
-      "title": "チャンネル",
-      "messaging": "メッセージング",
-      "pro": "プロフェッショナル",
       "empty": "チャンネルが設定されていません",
-      "accounts": "{{count}} アカウント",
       "configured": "設定済み"
     },
     "detail": {
-      "title": "設定",
-      "enabled": "有効",
-      "disabled": "無効",
       "token": "ボットトークン",
       "tokenPlaceholder": "トークンを貼り付け…",
       "botToken": "Slack ボットトークン",
       "appToken": "Slack アプリトークン",
       "appTokenPlaceholder": "アプリトークンを貼り付け…",
-      "tokenSet": "トークン設定済み",
-      "tokenMissing": "トークン未設定",
       "allowlist": "許可ユーザー",
       "allowlistPlaceholder": "ユーザー ID…",
       "allowlistAdd": "追加",
       "requireMention": "グループではメンション必須",
       "provider": "LLM プロバイダー",
       "model": "モデル",
-      "testConnection": "接続テスト",
       "testSuccess": "接続成功",
       "testFailed": "接続失敗",
-      "save": "保存",
       "delete": "削除",
       "cancel": "キャンセル",
-      "addAccount": "アカウント追加",
       "accountId": "アカウント ID",
       "confirmDelete": "このアカウントを削除しますか？",
-      "confirmDeleteDesc": "トークンはボールトから削除され、チャンネルは停止されます。",
       "connected": "接続済み",
       "disconnected": "未接続"
     },
@@ -116,18 +98,12 @@
       "error": "エラー",
       "stopping": "停止中…"
     },
-    "gateway": {
-      "start": "ゲートウェイを開始",
-      "stop": "ゲートウェイを停止",
-      "running": "ゲートウェイ稼働中",
-      "stopped": "ゲートウェイ停止中"
-    },
     "browse": {
       "title": "メッセージングチャネル",
-      "subtitle": "メッセージングボットを接続してLLMと通信します。",
-      "telegramDesc": "Telegramボット — ロングポーリング、グループとプライベートメッセージ。",
-      "slackDesc": "Slackボット — Socket Mode、チャネルとダイレクトメッセージ。",
-      "discordDesc": "Discordボット — Gateway WebSocket、サーバーとプライベートメッセージ。",
+      "subtitle": "メッセージングボットを接続して LLM と通信します。",
+      "telegramDesc": "Telegram ボット — ロングポーリング、グループとプライベートメッセージ。",
+      "slackDesc": "Slack ボット — Socket Mode、チャネルとダイレクトメッセージ。",
+      "discordDesc": "Discord ボット — Gateway WebSocket、サーバーとプライベートメッセージ。",
       "messaging": "メッセージング",
       "pro": "プロフェッショナル"
     },
@@ -138,7 +114,7 @@
       "addAndTest": "追加してテスト"
     },
     "main": {
-      "subtitle": "メッセージングボットを接続してLLMと通信します。",
+      "subtitle": "メッセージングボットを接続して LLM と通信します。",
       "browseBtn": "チャネルを閲覧"
     }
   },
@@ -162,10 +138,9 @@
     "search": "ブランチを検索",
     "title": "ブランチ",
     "worktrees": "ワークツリー",
-    "uncommitted": "未コミット: {{count}} ファイル",
+    "uncommitted": "未コミット： {{count}} ファイル",
     "createNew": "新しいブランチを作成してチェックアウト…",
     "detachedHead": "デタッチド HEAD",
-    "noBranch": "git リポジトリではありません",
     "noMatch": "ブランチが見つかりません",
     "conflictTitle": "ブランチを切り替えるにはコミットしてください",
     "conflictDescription": "以下のファイルへの変更はチェックアウトにより上書きされます：",
@@ -199,22 +174,15 @@
     "year": "{{count}}年"
   },
   "agentLocal": {
-    "title": "会話",
     "newSession": "新しいセッション",
     "noConversations": "会話がありません",
-    "selectOrCreate": "会話を選択または作成してください",
     "placeholder": "何かお手伝いできますか？",
-    "dropFiles": "ここにファイルをドロップ",
     "thinking": "考え中",
-    "reload": "再読み込み",
-    "edit": "編集",
-    "copy": "コピー",
     "showMore": "もっと見る",
     "showLess": "閉じる",
     "modelSearch": "モデルを検索…",
     "modelEmpty": "一致するモデルがありません。",
     "selectModel": "モデルを選択",
-    "thinkingToggle": "拡張思考",
     "reasoningTitle": "推論",
     "reasoningOff": "オフ",
     "reasoningAuto": "オン",
@@ -222,13 +190,11 @@
     "reasoningMedium": "中",
     "reasoningHigh": "高",
     "reasoningXhigh": "最高",
-    "exportMd": "Markdown としてダウンロード",
-    "search": "会話内を検索",
     "send": "送信",
     "cancel": "キャンセル",
     "compression": "Compression",
     "contextCompressed": "コンテキストを圧縮済み",
-    "searchBarPlaceholder": "検索...",
+    "searchBarPlaceholder": "検索…",
     "resultCount_one": "{{count}} 件",
     "resultCount_other": "{{count}} 件",
     "favorites": "お気に入り",
@@ -266,7 +232,6 @@
         "coder": "Coder"
       }
     },
-    "tools": "Tools",
     "tokens": "tokens",
     "contextUsage": {
       "title": "コンテキストウィンドウ",
@@ -305,12 +270,12 @@
         "edits_other": "{{count}} 編集",
         "commands_one": "{{count}} コマンド",
         "commands_other": "{{count}} コマンド",
-        "webSearches_one": "{{count}} Web検索",
-        "webSearches_other": "{{count}} Web検索",
+        "webSearches_one": "{{count}} Web 検索",
+        "webSearches_other": "{{count}} Web 検索",
         "webFetches_one": "{{count}} ページ",
         "webFetches_other": "{{count}} ページ",
-        "gitActions_one": "{{count}} Git操作",
-        "gitActions_other": "{{count}} Git操作",
+        "gitActions_one": "{{count}} Git 操作",
+        "gitActions_other": "{{count}} Git 操作",
         "otherActions_one": "{{count}} 操作",
         "otherActions_other": "{{count}} 操作"
       },
@@ -323,10 +288,10 @@
         "run": "実行",
         "createBranch": "ブランチ作成",
         "switchBranch": "ブランチ切替",
-        "skill": "Skill読込",
+        "skill": "Skill 読込",
         "agent": "委任",
         "forecast": "分析",
-        "mcp": "MCP検索",
+        "mcp": "MCP 検索",
         "tool": "ツール"
       },
       "groupError": "このグループでエラーが発生しました"
@@ -347,7 +312,6 @@
     "close": "閉じる"
   },
   "permissionMode": {
-    "title": "モード",
     "chatLabel": "チャットボット",
     "chatDescription": "ツール、ファイル、インターネットにアクセスせずに会話します",
     "autoLabel": "フルアクセス",
@@ -385,21 +349,17 @@
     }
   },
   "ollama": {
-    "title": "Ollama",
-    "noModels": "インストール済みのモデルがありません",
     "selectModel": "モデルを選択",
     "edit": "編集",
     "editing": "編集中",
     "save": "保存",
     "cancel": "キャンセル",
-    "searchPlaceholder": "モデルを検索...",
+    "searchPlaceholder": "モデルを検索…",
     "install": "インストール",
     "update": "更新",
     "updateAvailable": "新しいバージョンが利用可能です",
     "installedUpToDate": "インストール済み・最新",
     "ctx": "ctx",
-    "starting": "起動中…",
-    "pullError": "ダウンロードエラー",
     "vramWarning": "このモデルは利用可能な VRAM を超える可能性があります",
     "editModelfile": "Modelfile を編集",
     "systemPrompt": "System prompt",
@@ -414,7 +374,7 @@
     "translate": "翻訳…",
     "translating": "翻訳中…",
     "original": "原文",
-    "searchHint": "名前を入力（例：gemma、qwen、mistral）してEnterを押してください",
+    "searchHint": "名前を入力（例：gemma、qwen、mistral）して Enter を押してください",
     "loadingProfile": "プロフィールを読み込み中…",
     "loadingVariants": "バリアントを読み込み中…",
     "capabilities": "機能",
@@ -429,7 +389,6 @@
     "paramsLabel": "パラメーター",
     "contextTokens": "K トークン",
     "remove": "削除",
-    "delete": "削除",
     "modelfileTab": "Modelfile",
     "modelsTab": "モデル"
   },
@@ -482,7 +441,6 @@
       "provider": "プロバイダー",
       "model": "モデル",
       "pickModel": "モデルを選択",
-      "ollamaDown": "Ollama が利用できません",
       "noToolCapable": "ツール対応モデルがありません",
       "prompt": "プロンプト",
       "description": "説明（短め）",
@@ -512,23 +470,17 @@
     "open": "開く",
     "inject": "コンテキスト",
     "injected": "注入済み",
-    "alwaysInjected": "常に注入",
     "failedToLoad": "読み込みに失敗しました",
     "failedToRead": "ファイルの読み取りに失敗しました"
   },
   "settings": {
-    "title": "設定",
-    "theme": "テーマ",
-    "fontSize": "フォントサイズ",
-    "fontFamily": "フォントファミリー",
-    "fontPreview": "日本語テスト：漢字とひらがなとカタカナ",
     "light": "ライト",
     "dark": "ダーク",
     "system": "システム",
-    "orange": "オレンジ",
     "tabs": {
       "general": "一般",
       "ollama": "Ollama",
+      "connectors": "コネクタ",
       "apiKeys": "API キー",
       "llm": "LLM",
       "advanced": "詳細設定",
@@ -550,11 +502,11 @@
       "languageTitle": "言語",
       "languageDesc": "インターフェース言語",
       "responseLangTitle": "LLM 応答言語",
-      "responseLangDesc": "AIモデルが応答する言語",
+      "responseLangDesc": "AI モデルが応答する言語",
       "sidebarExpandTitle": "ホバーでサイドバーを展開",
       "sidebarExpandDesc": "マウスを重ねるとサイドバーが展開されます",
       "linkPreviewTitle": "リンクプレビュー",
-      "linkPreviewDesc": "チャット内のURLにプレビューカードを表示"
+      "linkPreviewDesc": "チャット内の URL にプレビューカードを表示"
     },
     "advanced": {
       "autostartTitle": "起動時に開く",
@@ -570,11 +522,11 @@
       "searchModel": "モデルを検索…",
       "keepAlive": {
         "immediately": "すぐに",
-        "2min": "2分後",
-        "5min": "5分後",
-        "10min": "10分後",
-        "15min": "15分後",
-        "30min": "30分後",
+        "2min": "2 分後",
+        "5min": "5 分後",
+        "10min": "10 分後",
+        "15min": "15 分後",
+        "30min": "30 分後",
         "onClose": "アプリを閉じたとき"
       },
       "hardwareAccelTitle": "ハードウェアアクセラレーション",
@@ -635,31 +587,15 @@
       "deleteModel": "確認しますか？"
     }
   },
-  "agentMd": {
-    "title": "エージェント指示",
-    "subtitle": "AGENTS.md ファイルはツール対応 LLM に永続的な指示を提供します",
-    "globalTab": "グローバル",
-    "projectTab": "プロジェクト",
-    "globalDescription": "これらの指示はツール対応モデルとのすべての会話に適用されます。",
-    "projectDescription": "これらの指示はこのプロジェクト内の会話にのみ適用されます。",
-    "placeholder": "指示をここに書いてください...\n\n例：\n# ルール\n- 行動する前に必ず説明する\n- すべての返答に日本語を使用する",
-    "saved": "指示を保存しました",
-    "noProject": "プロジェクトレベルの指示を編集するにはプロジェクトを選択してください。",
-    "emptyGlobal": "グローバル AGENTS.md が見つかりません",
-    "emptyProject": "プロジェクト AGENTS.md が見つかりません",
-    "toolCapableOnly": "ツール対応モデルにのみ注入されます"
-  },
   "terminal": {
-    "title": "Terminal",
-    "newTab": "新しい Terminal",
     "processExited": "プロセスがコード {{code}} で終了しました",
     "failedToStart": "Terminal を起動できませんでした"
   },
   "skills": {
+    "sourceBuiltIn": "内蔵",
     "sourceUser": "ユーザー",
     "sourceProject": "プロジェクト",
-    "noResults": "Skill が見つかりません",
-    "badge": "Skill"
+    "noResults": "Skill が見つかりません"
   },
   "search": {
     "placeholder": "会話を検索…",
@@ -669,26 +605,22 @@
   },
   "about": {
     "version": "バージョン",
-    "runtime": "ランタイム",
     "tauri": "Tauri",
     "os": "システム",
-    "github": "GitHub",
     "viewOnGithub": "GitHub で見る",
     "description": "ローカルおよびクラウド LLM 向けのエージェント型デスクトップアプリ。"
   },
   "filePreview": {
+    "default": "デフォルト",
     "noFiles": "このセッションで作成または変更されたファイルはありません。",
     "filesModified": "ファイル",
-    "loading": "ファイルを読み込み中...",
+    "loading": "ファイルを読み込み中…",
     "fileNotFound": "ファイルを読み取れませんでした。削除または移動された可能性があります。",
-    "highlighting": "ファイルをハイライト中...",
-    "noDiff": "表示する変更がありません。",
     "togglePanel": "ファイルプレビュー",
     "reduce": "縮小",
     "fullscreen": "全画面",
-    "noEditor": "外部エディターが検出されませんでした。",
     "open": "開く",
-    "openWith": "アプリで開く...",
+    "openWith": "アプリで開く…",
     "noEditorDetected": "エディターが検出されませんでした",
     "moreRows": "+{{count}} 行",
     "totalRows": "{{count}} 行（プレビュー制限あり）",
@@ -696,9 +628,7 @@
     "blockCount": "DOCX — {{count}} ブロック"
   },
   "fileTree": {
-    "filterPlaceholder": "ファイルを検索...",
-    "emptyDirectory": "このフォルダは空です",
-    "tooManyEntries": "エントリが多すぎます（最大{{count}}）",
+    "filterPlaceholder": "ファイルを検索…",
     "toggleTree": "プロジェクトファイルツリー",
     "loadError": "このフォルダを読み取れません",
     "noResults": "結果なし"
@@ -728,9 +658,9 @@
     "readError": "ファイルを読み取れませんでした",
     "modelNotFound": "モデルが見つかりません",
     "rateLimited": "リクエストが多すぎます。しばらくしてから再試行してください",
-    "authFailed": "認証に失敗しました。APIキーを確認してください",
+    "authFailed": "認証に失敗しました。API キーを確認してください",
     "toolFailed": "ツールが失敗しました",
-    "webToolFailed": "Webツールが失敗しました: {{message}}"
+    "webToolFailed": "Web ツールが失敗しました： {{message}}"
   },
   "updates": {
     "tooltip": "アップデートが利用可能です",
@@ -738,7 +668,6 @@
     "modelUpdate": "更新",
     "version": "バージョン {{version}}",
     "ollamaBinaryUpdate": "更新",
-    "updating": "更新中…",
     "releaseNotesTitle": "バージョン {{version}} のリリースノート",
     "showDetails": "詳細を表示",
     "hideDetails": "詳細を非表示"
@@ -757,7 +686,7 @@
   },
   "codex": {
     "title": "GPT via Codex（開発用）",
-    "description": "内部テスト用のChatGPT OAuth接続。",
+    "description": "内部テスト用の ChatGPT OAuth 接続。",
     "login": "ログイン",
     "logout": "ログアウト",
     "loggedIn": "接続済み",
@@ -805,7 +734,6 @@
     "error": "インストールに失敗しました。詳細は以下を確認してください。"
   },
   "linkPreview": {
-    "loading": "プレビューを読み込み中…",
     "noTitle": "タイトルなし",
     "openSite": "ウェブサイトを開く"
   },
@@ -813,7 +741,7 @@
     "backgroundCount_one": "{{count}} エージェントがバックグラウンドで実行中",
     "backgroundCount_other": "{{count}} エージェントがバックグラウンドで実行中",
     "stopAll": "すべて停止",
-    "running": "実行中...",
+    "running": "実行中…",
     "stop": "停止",
     "open": "開く",
     "bubbleLabel_one": "サブエージェント：{{count}} エージェント作成済み",
@@ -858,7 +786,6 @@
       "author": "作者",
       "website": "Web サイト",
       "openSite": "サイトを開く",
-      "confirmDeleteTitle": "コネクターを削除しますか？",
       "confirmDeleteBtn": "削除",
       "confirmDisconnectTitle": "{{name}} を切断しますか？",
       "confirmDisconnectDesc": "LLM は {{name}} のサービスにアクセスできなくなります。",
@@ -892,7 +819,6 @@
       "testing": "テスト中…",
       "testOk": "コネクターを検証しました。",
       "addAndTest": "追加してテスト",
-      "saveError": "トークンを保存できませんでした。もう一度お試しください。",
       "testError": "コネクターを検証できませんでした。トークンを確認して再試行してください。",
       "cancel": "キャンセル",
       "confirmAddDesc": "{{name}} をコネクターに追加しますか？",
@@ -911,20 +837,17 @@
     }
   },
   "vision": {
-    "unsupportedModel": "このモデルはビジョンに対応していません",
-    "imageSkipped": "一部の画像は送信されませんでした"
+    "unsupportedModel": "このモデルはビジョンに対応していません"
   },
   "forecast": {
     "title": "予測",
     "noAnalysis": "分析が進行中ではありません",
     "docs": {
-      "button": "Docs",
       "windowTitle": "Forecast ドキュメント",
       "kicker": "技術ドキュメント",
       "status": "Forecast ガイド",
       "navLabel": "Forecast ドキュメント",
       "openTooltip": "Forecast ドキュメントを開く",
-      "openFailed": "Forecast ドキュメントを開けませんでした。",
       "nav": {
         "overview": "概要",
         "datasets": "データセット",
@@ -943,7 +866,7 @@
     "askAgent": "エージェントに聞く",
     "importFile": "ファイルをインポート (CSV, Excel)",
     "pasteData": "データを貼り付け",
-    "fromUrl": "URLから",
+    "fromUrl": "URL から",
     "recentAnalyses": "最近の分析",
     "comingSoon": "近日対応",
     "panelMode": {
@@ -985,10 +908,6 @@
         "uncertainty": "不確実性",
         "scenarios": "シナリオ",
         "variables": "変数",
-        "events": "イベント",
-        "comparisons": "比較",
-        "anomalies": "異常",
-        "quality": "品質",
         "history": "履歴",
         "forecast": "予測",
         "confidence": "信頼区間",
@@ -1017,7 +936,6 @@
       "percentHint": "現在の予測から派生カーブを作成します。モデルの再実行は行いません。",
       "contextHint": "選択した変数の新しい未来値でモデルを再実行します。",
       "preview": "プレビュー",
-      "add": "シナリオを追加",
       "update": "更新",
       "cancel": "キャンセル",
       "edit": "編集",
@@ -1074,14 +992,10 @@
         "hypothesis": "仮説"
       },
       "empty": "まだノートはありません。",
-      "emptySub": "エージェントが追加したノートは、予測上の位置とともにここに表示されます。",
-      "designPending": "完全実装の前に、このセクションのデザインを決める必要があります。",
-      "designPendingWithCount": "{{count}} 件のノートは既にありますが、最終的な画面はまだ定義されていません。",
       "selectNote": "ノートを選択するか、新規作成してください。",
       "titlePlaceholder": "ノートのタイトル",
       "datePlaceholder": "日付",
       "contentPlaceholder": "ノートの Markdown 内容",
-      "fileLabel": "ローカルファイル",
       "save": "保存",
       "saving": "保存中",
       "cancel": "キャンセル",
@@ -1183,7 +1097,7 @@
     },
     "errors": {
       "importFailed": "インポートできません。ファイル形式を確認してください。",
-      "launchFailed": "計算に失敗しました。列、モデル、APIキーを確認してください。"
+      "launchFailed": "計算に失敗しました。列、モデル、API キーを確認してください。"
     },
     "modelConfig": {
       "sidebarTitle": "設定",
@@ -1198,7 +1112,7 @@
       "params": {
         "horizon_max_override": {
           "label": "予測期間の上限",
-          "description": "1回の予測で生成できる未来ポイント数の上限です。例: 日次で31なら31日、時間単位で24なら24時間。空または0ならモデル本来の上限を使います。"
+          "description": "1 回の予測で生成できる未来ポイント数の上限です。例： 日次で 31 なら 31 日、時間単位で 24 なら 24 時間。空または 0 ならモデル本来の上限を使います。"
         },
         "context_length": {
           "label": "最大履歴長",
@@ -1206,143 +1120,143 @@
         },
         "quantiles": {
           "label": "分位点",
-          "description": "モデルが返す確率分位です。0.5は中心予測、0.1と0.9は低め/高めの不確実性範囲です。範囲が広いほど不確実性が高いです。"
+          "description": "モデルが返す確率分位です。0.5 は中心予測、0.1 と 0.9 は低め/高めの不確実性範囲です。範囲が広いほど不確実性が高いです。"
         },
         "precision": {
           "label": "精度",
-          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+          "description": "ローカルで使用する数値形式。auto はエンジンに選択させ、float32 は安定性を優先、float16/bfloat16 は対応 GPU でメモリと VRAM を節約します。"
         },
         "dtype": {
           "label": "数値型",
-          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+          "description": "計算中に使用する数値型。auto を推奨。float32 はより堅牢、float16/bfloat16 は高速化とメモリ削減が可能ですが、すべてのエンジンが対応しているわけではありません。"
         },
         "batch_size": {
           "label": "バッチサイズ",
-          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+          "description": "同時に処理する系列の数。大きくすると大規模データセットを加速できますが、RAM/VRAM が増加します。メモリ不足の場合は減らしてください。"
         },
         "horizon_len": {
           "label": "内部予測期間",
-          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+          "description": "要求された予測期間と計算期間を分けるエンジン用の内部出力長。基本的に既定値のまま、予測不足や長い期間の拒否がない限り変更不要です。"
         },
         "prediction_length": {
           "label": "予測長",
-          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+          "description": "この設定が公開されている場合、エンジンが生成する将来のステップ数。要求された予測期間と一致させる必要があります。低すぎると予測が途切れ、高すぎると無駄に消費します。"
         },
         "confidence_level": {
           "label": "信頼度",
-          "description": "不確実性区間の幅です。0.9は90%で、より広く保守的です。0.8は狭いですが慎重さは下がります。"
+          "description": "不確実性区間の幅です。0.9 は 90%で、より広く保守的です。0.8 は狭いですが慎重さは下がります。"
         },
         "level": {
           "label": "レベル",
-          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+          "description": "TimeGPT に送信する区間のレベル。例 : 90 は 90% 信頼区間を要求します。レベルが高いほど表示される区間が広くなります。"
         },
         "normalization": {
           "label": "正規化",
-          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+          "description": "計算前に系列をより安定したスケールに戻します。値の桁差が大きい場合に有効。生のスケール自体がシグナルを担う場合は避けてください。"
         },
         "quantile_head": {
           "label": "分位点ヘッド",
-          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+          "description": "モデルがネイティブな確率ヘッドを備えている場合に有効化します。単一の中心曲線ではなく、実際の不確実性区間が必要な場合に有効にしてください。"
         },
         "xreg_mode": {
-          "label": "XReg",
-          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+          "label": "外部変数モード",
+          "description": "気象、トラフィック、祝日などの外部変数の使用方法を定義します。auto はエンジンに選択させ、無効化すると主にターゲットのみの予測になります。"
         },
         "clean_ex_first": {
           "label": "外生変数の清掃",
-          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+          "description": "計算前に TimeGPT に外部変数のクリーニングを要求します。気象やトラフィック列に欠損や外れ値がある場合に有効ですが、呼び出し時間が増加します。"
         },
         "finetune_steps": {
           "label": "微調整ステップ",
-          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+          "description": "現在のデータセットへ適応する小さなステップ数。大きくすると履歴に良く合致しますが、時間が増加し、少ないデータでは過学習する恐れがあります。"
         },
         "finetune_loss": {
           "label": "微調整損失",
-          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+          "description": "TimeGPT の適応に使用する関数。特別な要件がなければ既定値を維持してください。変更するとモデルのエラー罰則方式が変わります。"
         },
         "finetune_depth": {
           "label": "微調整深度",
-          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+          "description": "TimeGPT の適応強度。低い = 軽微な調整、高い = より強い適応。特定ドメインで有効ですが、少ない履歴ではリスクが高くなります。"
         },
         "feature_contributions": {
           "label": "寄与度",
-          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+          "description": "予測における各外部変数の推定重要度を要求します。結果の説明に有用ですが、呼び出しを遅くしたり、サービスによっては利用できない場合があります。"
         },
         "decode_block_size": {
           "label": "デコードブロック",
-          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+          "description": "Toto 用のブロックごとに生成されるポイント数。大きくすると長い予測期間を加速できますが、メモリ消費が増加します。制限のあるマシンでは小さくする方が安全です。"
         },
         "has_missing_values": {
           "label": "欠損値",
-          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+          "description": "履歴の一部の値が欠落していることをエンジンに指示します。データセットに欠損がある場合は有効にし、不要な処理を避けるなら無効のままにしてください。"
         },
         "non_negative_output": {
           "label": "非負出力",
-          "description": "予測値や下限が負にならないようにします。売上、収益、数量、在庫など0未満にならない指標で有効です。"
+          "description": "予測値や下限が負にならないようにします。売上、収益、数量、在庫など 0 未満にならない指標で有効です。"
         },
         "target_dim": {
           "label": "ターゲット次元",
-          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+          "description": "MOIRAI が同時に予測するターゲット変数の数。1 = 単一ターゲット。実際の多次元データセットでのみ増やしてください。"
         },
         "feat_dynamic_real_dim": {
           "label": "未来変数",
-          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+          "description": "MOIRAI に提供する既知の将来数値変数の数。例 : 予報気象、カレンダー、プロモーション。実際に存在する列と一致させる必要があります。"
         },
         "past_feat_dynamic_real_dim": {
           "label": "過去変数",
-          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+          "description": "MOIRAI に提供する過去の数値変数の数。過去の説明に使用します。既知の将来変数がある場合、それを置き換えることはできません。"
         },
         "scale_factor": {
           "label": "スケール係数",
-          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+          "description": "FlowState が使用する内部振幅を調整します。出力が常に小さすぎるまたは大きすぎる場合を除き、既定値を維持してください。"
         },
         "batch_first": {
-          "label": "Batch first",
-          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+          "label": "バッチファースト",
+          "description": "一部の PyTorch エンジンが期待する次元の順序。ランタイム互換性用の設定です。モデルが形状エラーを報告した場合のみ変更してください。"
         },
         "known_future_covariates": {
           "label": "既知の未来共変量",
-          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+          "description": "将来で既に判明している変数の使用を許可します : 祝日、予報気象、計画価格、キャンペーン。将来領域にこれらの列が入力されている場合に有効にしてください。"
         },
         "local_mode": {
           "label": "ローカルモード",
-          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+          "description": "エンジンが複数のモードを提供する場合、ローカル実行を強制します。外部呼び出しを避け、データをマシン上に保持するために有効のままにしてください。"
         },
         "probabilistic_output": {
           "label": "確率出力",
-          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+          "description": "単一の中心値ではなく、複数の軌跡や不確実性境界を要求します。リスクを確認するのに有用ですが、より時間がかかる場合があります。"
         },
         "backend": {
           "label": "バックエンド",
-          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+          "description": "アダプターが使用する内部エンジン。auto は利用可能な最適なものを選択します。変更は主に診断や、サポートに応じて CPU/GPU を強制するために使用します。"
         },
         "output_type": {
           "label": "出力タイプ",
-          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+          "description": "結果の形式を選択します : 単純な中心予測、または分位点/不確実性付きの出力。信頼区間を表示したい場合は quantiles を使用してください。"
         },
         "frequency_resampling": {
           "label": "再サンプリング",
-          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+          "description": "予測前にエンジンが日付を規則的な頻度に再調整するかどうかを指示します。日付の欠落がある場合に有効。欠落にビジネス上の意味がある場合はリスクがあります。"
         },
         "preserve_positivity": {
           "label": "正値を保持",
-          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+          "description": "Kairos に出力を正に保つよう要求します。収益、注文、トラフィック、ボリュームなど、負になり得ない指標に対して有効にしてください。"
         },
         "average_with_flipped_input": {
           "label": "反転入力",
-          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+          "description": "入力の反転版でも Kairos を実行し、結果を平均化します。曲線を安定化できますが、計算時間が増加します。"
         },
         "generation": {
           "label": "生成",
-          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+          "description": "対応している場合、エンジンの生成モードを有効化します。より豊かな軌跡を生成するのに有用。従来の予測が必要な場合は既定値を維持してください。"
         },
         "num_samples": {
           "label": "サンプル数",
-          "description": "予測時のモデル挙動を制御します。明確な理由がなければ既定値を推奨します。変更するとメモリ、速度、安定性に影響します。"
+          "description": "分位点を推定するためにシミュレートする軌跡の数。大きくすると不確実性が安定しますが、計算時間が増加します。"
         },
         "device": {
           "label": "デバイス",
-          "description": "Settings > 詳細から継承される実行ハードウェアです。autoはアプリが選択、GPUは高速、CPUは遅いが互換性が高いです。"
+          "description": "Settings > 詳細から継承される実行ハードウェアです。auto はアプリが選択、GPU は高速、CPU は遅いが互換性が高いです。"
         },
         "model_unload_timeout": {
           "label": "アンロード",
@@ -1351,63 +1265,30 @@
       }
     },
     "models": {
-      "manage": "モデル管理",
       "title": "Forecast モデル",
       "sidebarTitle": "Models",
-      "back": "戻る",
-      "summary": "概要",
       "modelCapabilities": "モデルの能力",
-      "appSupport": "アプリでの現在の対応",
       "engine": "使用エンジン",
       "install": "インストール",
-      "remove": "削除",
-      "confirmRemove": "確認しますか？",
-      "uninstall": "アンインストール",
       "installed": "インストール済み",
-      "installError": "エラー",
-      "downloading": "ダウンロード中...",
       "cancel": "キャンセル",
-      "notInstalledSuffix": "(未インストール)",
       "parameters": "パラメータ",
-      "specs": "仕様",
       "diskSize": "ディスクサイズ",
       "ram": "RAM",
-      "ramCpu": "RAM (CPU)",
-      "vramGpu": "VRAM (GPU)",
       "cpuLabel": "CPU",
       "gpuLabel": "GPU",
-      "hardwareLabel": "ハードウェア特性",
       "licenseLabel": "ライセンス",
       "libraryLabel": "ライブラリ",
       "pipelineLabel": "パイプライン",
-      "downloadsLabel": "ダウンロード数",
-      "likesLabel": "Likes",
-      "sourceLabel": "ソース",
       "supported": "対応",
       "unsupported": "非対応",
       "uninstalled": "未インストール",
       "horizonMax": "最大予測期間",
       "frequencies": "頻度",
-      "state": "状態",
       "status": "ステータス",
-      "usedSpace": "使用容量",
-      "local": "ローカル",
       "cloud": "クラウド (キー必要)",
-      "noKeyConfigured": "APIキー未設定",
+      "noKeyConfigured": "API キー未設定",
       "noneAvailable": "この起動で利用できるモデルはありません。",
-      "families": {
-        "chronos-bolt": "Chronos-Bolt",
-        "chronos-2": "Chronos-2",
-        "timesfm-2-5": "TimesFM 2.5",
-        "timegpt-2": "TimeGPT-2",
-        "toto-2": "Datadog Toto 2.0",
-        "moirai-2": "MOIRAI 2.0",
-        "flowstate": "FlowState",
-        "tabpfn-ts": "TabPFN-TS",
-        "tirex": "TiRex",
-        "kairos": "Kairos",
-        "sundial": "Sundial"
-      },
       "hardware": {
         "light": "軽量ハードウェア",
         "balanced": "標準ハードウェア",
@@ -1426,16 +1307,6 @@
         "multivariate": "複数系列",
         "probabilistic": "確率予測",
         "backtesting": "バックテスト"
-      },
-      "descriptions": {
-        "chronos-bolt-tiny": "初期テストや軽いマシン向けの非常に軽量なモデルです。",
-        "chronos-bolt-mini": "速度とハードウェア負荷のバランスが良いローカルモデルです。",
-        "chronos-bolt-small": "より本格的な予測に向いた推奨ローカルモデルです。",
-        "chronos-bolt-base": "より重い負荷向けの大型ローカルモデルです。",
-        "chronos-2": "より新しいローカル Chronos エンジンで、将来の豊かなコンテキスト対応に備えています。",
-        "timegpt-2-mini": "外部コンテキスト付きの素早い試験向けのシンプルなクラウドモデルです。",
-        "timegpt-2-standard": "より豊かな系列と業務コンテキスト向けのバランス型クラウドモデルです。",
-        "timegpt-2-pro": "より高度な複数系列用途向けの上位クラウドモデルです。"
       }
     },
     "export": {
@@ -1450,12 +1321,6 @@
       "saved": "エクスポートを保存しました",
       "copied": "エクスポートをコピーしました",
       "failed": "エクスポートできませんでした"
-    },
-    "kpi": {
-      "mape": "MAPE",
-      "mae": "MAE",
-      "crps": "CRPS",
-      "bias": "バイアス"
     }
   },
   "chatMenu": {

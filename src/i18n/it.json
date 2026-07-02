@@ -1,12 +1,13 @@
 {
   "nav": {
-    "appName": "CL-GO",
     "heartbeat": "Heartbeat",
     "personality": "/cl-go",
     "settings": "Impostazioni",
-    "agentLocal": "Sessione",
-    "ollama": "Ollama",
-    "apiKeys": "Chiavi API"
+    "agentLocal": "Sessione"
+  },
+  "common": {
+    "delete": "Elimina",
+    "loading": "Caricamento…"
   },
   "apiKeys": {
     "main": {
@@ -19,8 +20,7 @@
     },
     "empty": {
       "title": "Nessun provider configurato",
-      "subtitle": "Aggiungi una chiave API per accedere agli LLM remoti (Groq, Gemini, Mistral…) o ai servizi di ricerca web (Brave, Exa, Firecrawl).",
-      "addConnector": "Connettori API"
+      "subtitle": "Aggiungi una chiave API per accedere agli LLM remoti (Groq, Gemini, Mistral…) o ai servizi di ricerca web (Brave, Exa, Firecrawl)."
     },
     "details": {
       "connected": "Connesso",
@@ -51,12 +51,7 @@
       "showKey": "Mostra",
       "hideKey": "Nascondi"
     },
-    "picker": {
-      "title": "Aggiungi un provider",
-      "allConfigured": "Tutti i provider del catalogo sono già configurati."
-    },
     "connectors": {
-      "comingSoon": "In arrivo",
       "title": "Connettori API",
       "subtitle": "Aggiungi sorgenti dati alla tua istanza.",
       "search": "Cerca connettori…",
@@ -72,40 +67,27 @@
   },
   "channels": {
     "sidebar": {
-      "title": "Canali",
-      "messaging": "Messaggistica",
-      "pro": "Professionale",
       "empty": "Nessun canale configurato",
-      "accounts": "{{count}} account",
       "configured": "Configurati"
     },
     "detail": {
-      "title": "Configurazione",
-      "enabled": "Attivato",
-      "disabled": "Disattivato",
       "token": "Token del bot",
       "tokenPlaceholder": "Incolla il token qui…",
       "botToken": "Token bot Slack",
       "appToken": "Token app Slack",
       "appTokenPlaceholder": "Incolla qui il token app…",
-      "tokenSet": "Token configurato",
-      "tokenMissing": "Token mancante",
       "allowlist": "Utenti autorizzati",
       "allowlistPlaceholder": "ID utente…",
       "allowlistAdd": "Aggiungi",
       "requireMention": "Menzione richiesta nei gruppi",
       "provider": "Provider LLM",
       "model": "Modello",
-      "testConnection": "Testa connessione",
       "testSuccess": "Connessione riuscita",
       "testFailed": "Connessione fallita",
-      "save": "Salva",
       "delete": "Elimina",
       "cancel": "Annulla",
-      "addAccount": "Aggiungi account",
       "accountId": "ID account",
       "confirmDelete": "Eliminare questo account?",
-      "confirmDeleteDesc": "Il token sarà rimosso dal vault e il canale sarà fermato.",
       "connected": "Connesso",
       "disconnected": "Disconnesso"
     },
@@ -115,12 +97,6 @@
       "running": "Attivo",
       "error": "Errore",
       "stopping": "Arresto…"
-    },
-    "gateway": {
-      "start": "Avvia gateway",
-      "stop": "Ferma gateway",
-      "running": "Gateway attivo",
-      "stopped": "Gateway fermato"
     },
     "browse": {
       "title": "Canali di messaggistica",
@@ -165,7 +141,6 @@
     "uncommitted": "Non confermati: {{count}} file",
     "createNew": "Crea ed estrai un nuovo ramo…",
     "detachedHead": "HEAD distaccato",
-    "noBranch": "Non è un repository git",
     "noMatch": "Nessun ramo trovato",
     "conflictTitle": "Effettua un commit per cambiare ramo",
     "conflictDescription": "Le modifiche ai seguenti file verrebbero sovrascritte dall'estrazione:",
@@ -199,22 +174,15 @@
     "year": "{{count}} a"
   },
   "agentLocal": {
-    "title": "Conversazioni",
     "newSession": "Nuova sessione",
     "noConversations": "Nessuna conversazione",
-    "selectOrCreate": "Seleziona o crea una conversazione",
     "placeholder": "Come posso aiutarti?",
-    "dropFiles": "Trascina i file qui",
     "thinking": "Elaborazione in corso",
-    "reload": "Ricarica",
-    "edit": "Modifica",
-    "copy": "Copia",
     "showMore": "Mostra di più",
     "showLess": "Mostra meno",
     "modelSearch": "Cerca un modello…",
     "modelEmpty": "Nessun modello corrispondente.",
     "selectModel": "Scegli un modello",
-    "thinkingToggle": "Ragionamento esteso",
     "reasoningTitle": "Ragionamento",
     "reasoningOff": "Disattivato",
     "reasoningAuto": "Attivato",
@@ -222,8 +190,6 @@
     "reasoningMedium": "Medio",
     "reasoningHigh": "Alto",
     "reasoningXhigh": "Molto alto",
-    "exportMd": "Scarica come Markdown",
-    "search": "Cerca nella conversazione",
     "send": "Invia",
     "cancel": "Annulla",
     "compression": "Compression",
@@ -266,7 +232,6 @@
         "coder": "Coder"
       }
     },
-    "tools": "Tools",
     "tokens": "tokens",
     "contextUsage": {
       "title": "Finestra di contesto",
@@ -347,7 +312,6 @@
     "close": "Chiudi"
   },
   "permissionMode": {
-    "title": "Modalità",
     "chatLabel": "Chatbot",
     "chatDescription": "Conversare senza accesso a strumenti, file o Internet",
     "autoLabel": "Accesso completo",
@@ -385,8 +349,6 @@
     }
   },
   "ollama": {
-    "title": "Ollama",
-    "noModels": "Nessun modello installato",
     "selectModel": "Seleziona un modello",
     "edit": "Modifica",
     "editing": "Modifica in corso",
@@ -398,8 +360,6 @@
     "updateAvailable": "È disponibile una nuova versione",
     "installedUpToDate": "Installato e aggiornato",
     "ctx": "ctx",
-    "starting": "Avvio in corso…",
-    "pullError": "Errore di download",
     "vramWarning": "Questo modello potrebbe superare la VRAM disponibile",
     "editModelfile": "Modifica Modelfile",
     "systemPrompt": "System prompt",
@@ -429,7 +389,6 @@
     "paramsLabel": "Parametri",
     "contextTokens": "K token",
     "remove": "Rimuovi",
-    "delete": "Elimina",
     "modelfileTab": "Modelfile",
     "modelsTab": "Modelli"
   },
@@ -482,7 +441,6 @@
       "provider": "Provider",
       "model": "Modello",
       "pickModel": "Scegli un modello",
-      "ollamaDown": "Ollama non disponibile",
       "noToolCapable": "Nessun modello con supporto strumenti",
       "prompt": "Prompt",
       "description": "Descrizione (breve)",
@@ -512,23 +470,17 @@
     "open": "Apri",
     "inject": "Contesto",
     "injected": "Iniettato",
-    "alwaysInjected": "Sempre iniettato",
     "failedToLoad": "Caricamento fallito",
     "failedToRead": "Lettura del file fallita"
   },
   "settings": {
-    "title": "Impostazioni",
-    "theme": "Tema",
-    "fontSize": "Dimensione carattere",
-    "fontFamily": "Famiglia di caratteri",
-    "fontPreview": "Pranzo d'acqua fa volti sghembi",
     "light": "Chiaro",
     "dark": "Scuro",
     "system": "Sistema",
-    "orange": "Arancione",
     "tabs": {
       "general": "Generale",
       "ollama": "Ollama",
+      "connectors": "Connettori",
       "apiKeys": "Chiavi API",
       "llm": "LLM",
       "advanced": "Avanzate",
@@ -635,31 +587,15 @@
       "deleteModel": "Confermare?"
     }
   },
-  "agentMd": {
-    "title": "Istruzioni agente",
-    "subtitle": "I file AGENTS.md forniscono istruzioni persistenti agli LLM con supporto strumenti",
-    "globalTab": "Globale",
-    "projectTab": "Progetto",
-    "globalDescription": "Queste istruzioni si applicano a tutte le conversazioni con modelli dotati di strumenti.",
-    "projectDescription": "Queste istruzioni si applicano solo alle conversazioni all'interno di questo progetto.",
-    "placeholder": "Scrivi le tue istruzioni qui...\n\nEsempio:\n# Regole\n- Spiega sempre prima di agire\n- Usa l'italiano per tutte le risposte",
-    "saved": "Istruzioni salvate",
-    "noProject": "Seleziona un progetto per modificare le istruzioni a livello di progetto.",
-    "emptyGlobal": "Nessun AGENTS.md globale trovato",
-    "emptyProject": "Nessun AGENTS.md di progetto trovato",
-    "toolCapableOnly": "Iniettato solo per i modelli con supporto strumenti"
-  },
   "terminal": {
-    "title": "Terminal",
-    "newTab": "Nuovo Terminal",
     "processExited": "Processo terminato con codice {{code}}",
     "failedToStart": "Impossibile avviare il Terminal"
   },
   "skills": {
+    "sourceBuiltIn": "Integrato",
     "sourceUser": "Utente",
     "sourceProject": "Progetto",
-    "noResults": "Nessun Skill trovato",
-    "badge": "Skill"
+    "noResults": "Nessun Skill trovato"
   },
   "search": {
     "placeholder": "Cerca conversazioni…",
@@ -669,24 +605,20 @@
   },
   "about": {
     "version": "Versione",
-    "runtime": "Runtime",
     "tauri": "Tauri",
     "os": "Sistema",
-    "github": "GitHub",
     "viewOnGithub": "Visualizza su GitHub",
     "description": "App desktop agentique per LLM locali e cloud."
   },
   "filePreview": {
+    "default": "predefinito",
     "noFiles": "Nessun file creato o modificato in questa sessione.",
     "filesModified": "File",
     "loading": "Lettura del file in corso...",
     "fileNotFound": "Impossibile leggere il file. Potrebbe essere stato eliminato o spostato.",
-    "highlighting": "Evidenziazione del file in corso...",
-    "noDiff": "Nessuna modifica da visualizzare.",
     "togglePanel": "Anteprima file",
     "reduce": "Riduci",
     "fullscreen": "Schermo intero",
-    "noEditor": "Nessun editor esterno rilevato.",
     "open": "Apri",
     "openWith": "Apri con...",
     "noEditorDetected": "Nessun editor rilevato",
@@ -697,8 +629,6 @@
   },
   "fileTree": {
     "filterPlaceholder": "Filtra file...",
-    "emptyDirectory": "Questa cartella è vuota",
-    "tooManyEntries": "Troppi elementi (max {{count}})",
     "toggleTree": "Albero dei file del progetto",
     "loadError": "Impossibile leggere questa cartella",
     "noResults": "Nessun risultato"
@@ -738,7 +668,6 @@
     "modelUpdate": "Aggiorna",
     "version": "Versione {{version}}",
     "ollamaBinaryUpdate": "Aggiorna",
-    "updating": "Aggiornamento in corso…",
     "releaseNotesTitle": "Note della versione {{version}}",
     "showDetails": "Mostra dettagli",
     "hideDetails": "Nascondi dettagli"
@@ -805,7 +734,6 @@
     "error": "Installazione fallita. Dettagli di seguito."
   },
   "linkPreview": {
-    "loading": "Caricamento anteprima…",
     "noTitle": "Nessun titolo",
     "openSite": "Apri sito web"
   },
@@ -858,7 +786,6 @@
       "author": "Autore",
       "website": "Sito web",
       "openSite": "Apri sito",
-      "confirmDeleteTitle": "Eliminare il connettore?",
       "confirmDeleteBtn": "Elimina",
       "confirmDisconnectTitle": "Disconnettere {{name}}?",
       "confirmDisconnectDesc": "L'LLM non avrà più accesso ai servizi {{name}}.",
@@ -892,7 +819,6 @@
       "testing": "Test in corso…",
       "testOk": "Connettore validato.",
       "addAndTest": "Aggiungi e testa",
-      "saveError": "Impossibile salvare il token. Riprova.",
       "testError": "Impossibile validare il connettore. Controlla il token e riprova.",
       "cancel": "Annulla",
       "confirmAddDesc": "Aggiungere {{name}} ai tuoi connettori?",
@@ -911,20 +837,17 @@
     }
   },
   "vision": {
-    "unsupportedModel": "Questo modello non supporta la visione",
-    "imageSkipped": "Alcune immagini non sono state inviate"
+    "unsupportedModel": "Questo modello non supporta la visione"
   },
   "forecast": {
     "title": "Previsione",
     "noAnalysis": "Nessuna analisi in corso",
     "docs": {
-      "button": "Docs",
       "windowTitle": "Documentazione Forecast",
       "kicker": "Documentazione tecnica",
       "status": "Guida Forecast",
       "navLabel": "Documentazione Forecast",
       "openTooltip": "Apri la documentazione Forecast",
-      "openFailed": "Impossibile aprire la documentazione Forecast.",
       "nav": {
         "overview": "Panoramica",
         "datasets": "Dataset",
@@ -985,10 +908,6 @@
         "uncertainty": "Incertezza",
         "scenarios": "Scenari",
         "variables": "Variabili",
-        "events": "Eventi",
-        "comparisons": "Confronti",
-        "anomalies": "Anomalie",
-        "quality": "Qualità",
         "history": "Storico",
         "forecast": "Previsione",
         "confidence": "Intervallo di confidenza",
@@ -1017,7 +936,6 @@
       "percentHint": "Crea una curva derivata dalla previsione attuale senza rilanciare il modello.",
       "contextHint": "Rilancia il modello con i nuovi valori futuri delle variabili selezionate.",
       "preview": "Anteprima",
-      "add": "Aggiungi scenario",
       "update": "Aggiorna",
       "cancel": "Annulla",
       "edit": "Modifica",
@@ -1074,14 +992,10 @@
         "hypothesis": "Ipotesi"
       },
       "empty": "Ancora nessuna nota.",
-      "emptySub": "Le note aggiunte dall'agente appariranno qui con la loro posizione nella previsione.",
-      "designPending": "Il design di questa sezione deve ancora essere scelto prima dell'implementazione completa.",
-      "designPendingWithCount": "Esistono già {{count}} nota/e, ma l'interfaccia finale deve ancora essere definita.",
       "selectNote": "Seleziona una nota o creane una nuova.",
       "titlePlaceholder": "Titolo della nota",
       "datePlaceholder": "Data",
       "contentPlaceholder": "Contenuto Markdown della nota",
-      "fileLabel": "File locale",
       "save": "Salva",
       "saving": "Salvataggio",
       "cancel": "Annulla",
@@ -1351,63 +1265,30 @@
       }
     },
     "models": {
-      "manage": "Gestisci modelli",
       "title": "Modelli Forecast",
       "sidebarTitle": "Models",
-      "back": "Indietro",
-      "summary": "Riassunto",
       "modelCapabilities": "Capacità del modello",
-      "appSupport": "Supporto attuale nell'app",
       "engine": "Motore usato",
       "install": "Installa",
-      "remove": "Rimuovi",
-      "confirmRemove": "Confermare?",
-      "uninstall": "Disinstalla",
       "installed": "Installato",
-      "installError": "Errore",
-      "downloading": "Download...",
       "cancel": "Annulla",
-      "notInstalledSuffix": "(non installato)",
       "parameters": "Parametri",
-      "specs": "Specifiche",
       "diskSize": "Dimensione disco",
       "ram": "RAM",
-      "ramCpu": "RAM (CPU)",
-      "vramGpu": "VRAM (GPU)",
       "cpuLabel": "CPU",
       "gpuLabel": "GPU",
-      "hardwareLabel": "Profilo hardware",
       "licenseLabel": "Licenza",
       "libraryLabel": "Libreria",
       "pipelineLabel": "Pipeline",
-      "downloadsLabel": "Download",
-      "likesLabel": "Like",
-      "sourceLabel": "Fonte",
       "supported": "Supportato",
       "unsupported": "Non supportato",
       "uninstalled": "Non installato",
       "horizonMax": "Orizzonte max",
       "frequencies": "Frequenze",
-      "state": "Stato",
       "status": "Stato",
-      "usedSpace": "Spazio usato",
-      "local": "Locale",
       "cloud": "Cloud (chiave richiesta)",
       "noKeyConfigured": "Chiave API non configurata",
       "noneAvailable": "Nessun modello disponibile per questo avvio.",
-      "families": {
-        "chronos-bolt": "Chronos-Bolt",
-        "chronos-2": "Chronos-2",
-        "timesfm-2-5": "TimesFM 2.5",
-        "timegpt-2": "TimeGPT-2",
-        "toto-2": "Datadog Toto 2.0",
-        "moirai-2": "MOIRAI 2.0",
-        "flowstate": "FlowState",
-        "tabpfn-ts": "TabPFN-TS",
-        "tirex": "TiRex",
-        "kairos": "Kairos",
-        "sundial": "Sundial"
-      },
       "hardware": {
         "light": "Hardware leggero",
         "balanced": "Hardware bilanciato",
@@ -1426,16 +1307,6 @@
         "multivariate": "Multi-serie",
         "probabilistic": "Previsione probabilistica",
         "backtesting": "Backtesting"
-      },
-      "descriptions": {
-        "chronos-bolt-tiny": "Modello molto leggero per primi test e macchine modeste.",
-        "chronos-bolt-mini": "Opzione locale equilibrata tra velocità e costo hardware.",
-        "chronos-bolt-small": "Scelta locale consigliata per previsioni più serie.",
-        "chronos-bolt-base": "Versione locale più pesante per carichi più esigenti.",
-        "chronos-2": "Nuovo motore locale Chronos, pronto per una futura evoluzione verso più contesto.",
-        "timegpt-2-mini": "Opzione cloud semplice per test rapidi con contesto esterno.",
-        "timegpt-2-standard": "Opzione cloud equilibrata per serie più ricche e contesto business.",
-        "timegpt-2-pro": "Opzione cloud avanzata per usi multi-serie più ambiziosi."
       }
     },
     "export": {
@@ -1450,12 +1321,6 @@
       "saved": "Esportazione salvata",
       "copied": "Esportazione copiata",
       "failed": "Esportazione non riuscita"
-    },
-    "kpi": {
-      "mape": "MAPE",
-      "mae": "MAE",
-      "crps": "CRPS",
-      "bias": "Bias"
     }
   },
   "chatMenu": {

@@ -1,12 +1,13 @@
 {
   "nav": {
-    "appName": "CL-GO",
     "heartbeat": "Heartbeat",
     "personality": "/cl-go",
     "settings": "Settings",
-    "agentLocal": "Session",
-    "ollama": "Ollama",
-    "apiKeys": "API Keys"
+    "agentLocal": "Session"
+  },
+  "common": {
+    "delete": "Delete",
+    "loading": "Loading…"
   },
   "apiKeys": {
     "main": {
@@ -19,8 +20,7 @@
     },
     "empty": {
       "title": "No provider configured",
-      "subtitle": "Add an API key to access remote LLMs (Groq, Gemini, Mistral…) or web search services (Brave, Exa, Firecrawl).",
-      "addConnector": "API Connectors"
+      "subtitle": "Add an API key to access remote LLMs (Groq, Gemini, Mistral…) or web search services (Brave, Exa, Firecrawl)."
     },
     "details": {
       "connected": "Connected",
@@ -51,10 +51,6 @@
       "showKey": "Show",
       "hideKey": "Hide"
     },
-    "picker": {
-      "title": "Add a provider",
-      "allConfigured": "All catalog providers are already configured."
-    },
     "connectors": {
       "title": "API Connectors",
       "subtitle": "Add data sources to your instance.",
@@ -71,40 +67,27 @@
   },
   "channels": {
     "sidebar": {
-      "title": "Channels",
-      "messaging": "Messaging",
-      "pro": "Professional",
       "empty": "No channels configured",
-      "accounts": "{{count}} account(s)",
       "configured": "Configured"
     },
     "detail": {
-      "title": "Configuration",
-      "enabled": "Enabled",
-      "disabled": "Disabled",
       "token": "Bot token",
       "tokenPlaceholder": "Paste token here…",
       "botToken": "Slack bot token",
       "appToken": "Slack app token",
       "appTokenPlaceholder": "Paste app token here…",
-      "tokenSet": "Token configured",
-      "tokenMissing": "Token missing",
       "allowlist": "Allowed users",
       "allowlistPlaceholder": "User ID…",
       "allowlistAdd": "Add",
       "requireMention": "Mention required in groups",
       "provider": "LLM Provider",
       "model": "Model",
-      "testConnection": "Test connection",
       "testSuccess": "Connection successful",
       "testFailed": "Connection failed",
-      "save": "Save",
       "delete": "Delete",
       "cancel": "Cancel",
-      "addAccount": "Add account",
       "accountId": "Account ID",
       "confirmDelete": "Delete this account?",
-      "confirmDeleteDesc": "The token will be removed from the vault and the channel will be stopped.",
       "connected": "Connected",
       "disconnected": "Disconnected"
     },
@@ -114,12 +97,6 @@
       "running": "Active",
       "error": "Error",
       "stopping": "Stopping…"
-    },
-    "gateway": {
-      "start": "Start gateway",
-      "stop": "Stop gateway",
-      "running": "Gateway active",
-      "stopped": "Gateway stopped"
     },
     "browse": {
       "title": "Messaging channels",
@@ -164,7 +141,6 @@
     "uncommitted": "Uncommitted: {{count}} file(s)",
     "createNew": "Create and checkout a new branch…",
     "detachedHead": "Detached HEAD",
-    "noBranch": "Not a git repo",
     "noMatch": "No matching branch",
     "conflictTitle": "Commit changes to switch branch",
     "conflictDescription": "Changes to the following files would be overwritten by checkout:",
@@ -198,22 +174,15 @@
     "year": "{{count}}y"
   },
   "agentLocal": {
-    "title": "Conversations",
     "newSession": "New session",
     "noConversations": "No conversations",
-    "selectOrCreate": "Select or create a conversation",
     "placeholder": "How can I help you?",
-    "dropFiles": "Drop files here",
     "thinking": "Thinking",
-    "reload": "Reload",
-    "edit": "Edit",
-    "copy": "Copy",
     "showMore": "Show more",
     "showLess": "Show less",
     "modelSearch": "Search a model…",
     "modelEmpty": "No matching model.",
     "selectModel": "Choose a model",
-    "thinkingToggle": "Extended thinking",
     "reasoningTitle": "Reasoning",
     "reasoningOff": "Off",
     "reasoningAuto": "On",
@@ -221,8 +190,6 @@
     "reasoningMedium": "Medium",
     "reasoningHigh": "High",
     "reasoningXhigh": "Very high",
-    "exportMd": "Download as Markdown",
-    "search": "Search in conversation",
     "send": "Send",
     "cancel": "Cancel",
     "compression": "Compression",
@@ -265,7 +232,6 @@
         "coder": "Coder"
       }
     },
-    "tools": "Tools",
     "tokens": "tokens",
     "contextUsage": {
       "title": "Context window",
@@ -346,7 +312,6 @@
     "close": "Close"
   },
   "permissionMode": {
-    "title": "Mode",
     "chatLabel": "Chatbot",
     "chatDescription": "Chat without access to tools, files, or the Internet",
     "autoLabel": "Full access",
@@ -384,8 +349,6 @@
     }
   },
   "ollama": {
-    "title": "Ollama",
-    "noModels": "No models installed",
     "selectModel": "Select a model",
     "edit": "Edit",
     "editing": "Editing",
@@ -397,8 +360,6 @@
     "updateAvailable": "A new version is available",
     "installedUpToDate": "Installed and up to date",
     "ctx": "ctx",
-    "starting": "Starting…",
-    "pullError": "Download error",
     "vramWarning": "This model may exceed your available VRAM",
     "editModelfile": "Edit modelfile",
     "systemPrompt": "System prompt",
@@ -428,7 +389,6 @@
     "paramsLabel": "Parameters",
     "contextTokens": "K tokens",
     "remove": "Remove",
-    "delete": "Delete",
     "modelfileTab": "Modelfile",
     "modelsTab": "Models"
   },
@@ -481,7 +441,6 @@
       "provider": "Provider",
       "model": "Model",
       "pickModel": "Pick a model",
-      "ollamaDown": "Ollama unavailable",
       "noToolCapable": "No tool-capable model",
       "prompt": "Prompt",
       "description": "Description (short)",
@@ -511,20 +470,13 @@
     "open": "Open",
     "inject": "Context",
     "injected": "Injected",
-    "alwaysInjected": "Always injected",
     "failedToLoad": "Failed to load",
     "failedToRead": "Failed to read file"
   },
   "settings": {
-    "title": "Settings",
-    "theme": "Theme",
-    "fontSize": "Font size",
-    "fontFamily": "Font family",
-    "fontPreview": "The quick brown fox",
     "light": "Light",
     "dark": "Dark",
     "system": "System",
-    "orange": "Orange",
     "tabs": {
       "general": "General",
       "ollama": "Ollama",
@@ -635,31 +587,15 @@
       "deleteModel": "Confirm?"
     }
   },
-  "agentMd": {
-    "title": "Agent Instructions",
-    "subtitle": "AGENTS.md files provide persistent instructions to tool-capable LLMs",
-    "globalTab": "Global",
-    "projectTab": "Project",
-    "globalDescription": "These instructions apply to all conversations with tool-capable models.",
-    "projectDescription": "These instructions apply only to conversations within this project.",
-    "placeholder": "Write your instructions here...\n\nExample:\n# Rules\n- Always explain before acting\n- Use French for all responses",
-    "saved": "Instructions saved",
-    "noProject": "Select a project to edit project-level instructions.",
-    "emptyGlobal": "No global AGENTS.md found",
-    "emptyProject": "No project AGENTS.md found",
-    "toolCapableOnly": "Only injected for tool-capable models"
-  },
   "terminal": {
-    "title": "Terminal",
-    "newTab": "New terminal",
     "processExited": "Process exited with code {{code}}",
     "failedToStart": "Terminal failed to start"
   },
   "skills": {
+    "sourceBuiltIn": "Built-in",
     "sourceUser": "User",
     "sourceProject": "Project",
-    "noResults": "No skills found",
-    "badge": "Skill"
+    "noResults": "No skills found"
   },
   "search": {
     "placeholder": "Search conversations…",
@@ -669,24 +605,20 @@
   },
   "about": {
     "version": "Version",
-    "runtime": "Runtime",
     "tauri": "Tauri",
     "os": "System",
-    "github": "GitHub",
     "viewOnGithub": "View on GitHub",
     "description": "Agentic desktop app for local and cloud LLMs."
   },
   "filePreview": {
+    "default": "default",
     "noFiles": "No files created or modified in this session.",
     "filesModified": "Files",
     "loading": "Reading file...",
     "fileNotFound": "The file could not be read. It may have been deleted or moved.",
-    "highlighting": "Highlighting file...",
-    "noDiff": "No changes to display.",
     "togglePanel": "File preview",
     "reduce": "Reduce",
     "fullscreen": "Full screen",
-    "noEditor": "No external editor detected.",
     "open": "Open",
     "openWith": "Open with...",
     "noEditorDetected": "No editor detected",
@@ -697,8 +629,6 @@
   },
   "fileTree": {
     "filterPlaceholder": "Filter files...",
-    "emptyDirectory": "This folder is empty",
-    "tooManyEntries": "Too many entries ({{count}} max)",
     "toggleTree": "Project file tree",
     "loadError": "Could not read this folder",
     "noResults": "No results"
@@ -738,7 +668,6 @@
     "modelUpdate": "Update",
     "version": "Version {{version}}",
     "ollamaBinaryUpdate": "Update",
-    "updating": "Updating…",
     "releaseNotesTitle": "Version {{version}} release notes",
     "showDetails": "Show details",
     "hideDetails": "Hide details"
@@ -822,7 +751,6 @@
       "author": "Author",
       "website": "Website",
       "openSite": "Open site",
-      "confirmDeleteTitle": "Delete connector?",
       "confirmDeleteBtn": "Delete",
       "confirmDisconnectTitle": "Disconnect {{name}}?",
       "confirmDisconnectDesc": "The LLM will no longer have access to {{name}} services.",
@@ -856,7 +784,6 @@
       "testing": "Testing…",
       "testOk": "Connector validated.",
       "addAndTest": "Add and test",
-      "saveError": "Failed to save token. Please try again.",
       "testError": "Unable to validate the connector. Check the token and try again.",
       "cancel": "Cancel",
       "confirmAddDesc": "Add {{name}} to your connectors?",
@@ -875,7 +802,6 @@
     }
   },
   "linkPreview": {
-    "loading": "Loading preview…",
     "noTitle": "No title",
     "openSite": "Open website"
   },
@@ -890,8 +816,7 @@
     "pluginsEmpty": "Coming soon"
   },
   "vision": {
-    "unsupportedModel": "Vision is not supported by this model",
-    "imageSkipped": "Some images were not sent"
+    "unsupportedModel": "Vision is not supported by this model"
   },
   "subagents": {
     "backgroundCount_one": "{{count}} agent in background",
@@ -928,13 +853,11 @@
     "title": "Forecast",
     "noAnalysis": "No analysis in progress",
     "docs": {
-      "button": "Docs",
       "windowTitle": "Forecast documentation",
       "kicker": "Technical documentation",
       "status": "Forecast guide",
       "navLabel": "Forecast documentation",
       "openTooltip": "Open Forecast documentation",
-      "openFailed": "Could not open Forecast documentation.",
       "nav": {
         "overview": "Overview",
         "datasets": "Datasets",
@@ -995,10 +918,6 @@
         "uncertainty": "Uncertainty",
         "scenarios": "Scenarios",
         "variables": "Variables",
-        "events": "Events",
-        "comparisons": "Comparisons",
-        "anomalies": "Anomalies",
-        "quality": "Quality",
         "history": "History",
         "forecast": "Forecast",
         "confidence": "Confidence range",
@@ -1027,7 +946,6 @@
       "percentHint": "Creates a derived curve from the current forecast without rerunning the model.",
       "contextHint": "Reruns the model with the new future values for the selected variables.",
       "preview": "Preview",
-      "add": "Add scenario",
       "update": "Update",
       "cancel": "Cancel",
       "edit": "Edit",
@@ -1084,14 +1002,10 @@
         "hypothesis": "Hypothesis"
       },
       "empty": "No note yet.",
-      "emptySub": "Notes added by the agent will appear here with their position on the forecast.",
-      "designPending": "This section design still needs to be chosen before the full implementation.",
-      "designPendingWithCount": "{{count}} note(s) already exist, but the final interface still needs to be defined.",
       "selectNote": "Select a note or create a new one.",
       "titlePlaceholder": "Note title",
       "datePlaceholder": "Date",
       "contentPlaceholder": "Markdown note content",
-      "fileLabel": "Local file",
       "save": "Save",
       "saving": "Saving",
       "cancel": "Cancel",
@@ -1361,63 +1275,30 @@
       }
     },
     "models": {
-      "manage": "Manage models",
       "title": "Forecast models",
       "sidebarTitle": "Models",
-      "back": "Back",
-      "summary": "Summary",
       "modelCapabilities": "Model capabilities",
-      "appSupport": "Current app support",
       "engine": "Engine used",
       "install": "Install",
-      "remove": "Remove",
-      "confirmRemove": "Confirm?",
-      "uninstall": "Uninstall",
       "installed": "Installed",
-      "installError": "Error",
-      "downloading": "Downloading...",
       "cancel": "Cancel",
-      "notInstalledSuffix": "(not installed)",
       "parameters": "Parameters",
-      "specs": "Specifications",
       "diskSize": "Disk size",
       "ram": "RAM",
-      "ramCpu": "RAM (CPU)",
-      "vramGpu": "VRAM (GPU)",
       "cpuLabel": "CPU",
       "gpuLabel": "GPU",
-      "hardwareLabel": "Hardware profile",
       "licenseLabel": "License",
       "libraryLabel": "Library",
       "pipelineLabel": "Pipeline",
-      "downloadsLabel": "Downloads",
-      "likesLabel": "Likes",
-      "sourceLabel": "Source",
       "supported": "Supported",
       "unsupported": "Unsupported",
       "uninstalled": "Not installed",
       "horizonMax": "Max horizon",
       "frequencies": "Frequencies",
-      "state": "State",
       "status": "Status",
-      "usedSpace": "Used space",
-      "local": "Local",
       "cloud": "Cloud (key required)",
       "noKeyConfigured": "API key not configured",
       "noneAvailable": "No model is available for this launch.",
-      "families": {
-        "chronos-bolt": "Chronos-Bolt",
-        "chronos-2": "Chronos-2",
-        "timesfm-2-5": "TimesFM 2.5",
-        "timegpt-2": "TimeGPT-2",
-        "toto-2": "Datadog Toto 2.0",
-        "moirai-2": "MOIRAI 2.0",
-        "flowstate": "FlowState",
-        "tabpfn-ts": "TabPFN-TS",
-        "tirex": "TiRex",
-        "kairos": "Kairos",
-        "sundial": "Sundial"
-      },
       "hardware": {
         "light": "Light hardware",
         "balanced": "Balanced hardware",
@@ -1436,16 +1317,6 @@
         "multivariate": "Multi-series",
         "probabilistic": "Probabilistic forecast",
         "backtesting": "Backtesting"
-      },
-      "descriptions": {
-        "chronos-bolt-tiny": "Very light model for first tests and small machines.",
-        "chronos-bolt-mini": "Balanced local option for speed and hardware cost.",
-        "chronos-bolt-small": "Recommended local choice for more serious forecasts.",
-        "chronos-bolt-base": "Heavier local version for more demanding workloads.",
-        "chronos-2": "Newer local Chronos engine, ready for future evolution toward richer context support.",
-        "timegpt-2-mini": "Simple cloud option for quick tests with external context.",
-        "timegpt-2-standard": "Balanced cloud option for richer series and business context.",
-        "timegpt-2-pro": "Advanced cloud option for more ambitious multi-series use."
       }
     },
     "export": {
@@ -1460,12 +1331,6 @@
       "saved": "Export saved",
       "copied": "Export copied",
       "failed": "Export failed"
-    },
-    "kpi": {
-      "mape": "MAPE",
-      "mae": "MAE",
-      "crps": "CRPS",
-      "bias": "Bias"
     }
   }
 }
