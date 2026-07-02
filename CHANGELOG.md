@@ -5,6 +5,7 @@
 ### Changes
 
 - **Session summary bubble** — added a compact session summary bubble with todos, generated plans, subagents, git state, and recent file changes; generated plans can be opened in the side preview panel with a dedicated plan layout
+- **Chat and preview polish** — refreshed the chat input, Markdown bubble rendering, live tool display during streaming, collapsed work-phase summaries, and the visual layout of the side preview panel
 
 ---
 
