@@ -44,6 +44,7 @@ pub mod ollama_stream_process;
 mod ollama_stream_process_tests;
 pub mod ollama_stream_retry;
 pub mod ollama_thinking_retry;
+pub mod ollama_tool_parse_retry;
 pub mod ollama_tool_role;
 #[cfg(test)]
 mod ollama_tool_role_tests;
