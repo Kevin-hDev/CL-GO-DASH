@@ -146,6 +146,14 @@ export function SavedToolTimeline({
         </>
       );
     }
+    return (
+      <AssistantMessage
+        content={finalBlock.content ?? ""}
+        tokens={tokens}
+        tps={tps}
+        totalElapsedMs={totalElapsedMs}
+      />
+    );
   }
   if (hasPhase && blocks.some(hasWorkContent)) {
     return (

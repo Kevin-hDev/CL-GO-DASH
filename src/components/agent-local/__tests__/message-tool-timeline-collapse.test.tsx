@@ -213,4 +213,18 @@ describe("message tool timeline collapse", () => {
     expect(getByText("plain final")).toBeTruthy();
     expect(queryByText(/Worked for|Work completed/)).toBeNull();
   });
+
+  it("garde visible une réponse finale seule même si elle a une phase explicite", () => {
+    const { getByTestId, getByText, queryByText } = render(
+      <SavedToolTimeline
+        messageId="m-final-only"
+        segments={[{ content: "final only answer", tools: [], phase: "final" }]}
+        tps={0}
+        totalElapsedMs={3_000}
+      />,
+    );
+    expect(getByText("final only answer")).toBeTruthy();
+    expect(getByTestId("assistant")).toHaveAttribute("data-elapsed", "3000");
+    expect(queryByText(/Worked for|Work completed/)).toBeNull();
+  });
 });
