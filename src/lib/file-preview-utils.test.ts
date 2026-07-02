@@ -157,6 +157,30 @@ describe("collectFileOperations", () => {
       name: "a.ts",
     }));
   });
+
+  it("dédoublonne un ancien chemin relatif et une nouvelle opération absolue", () => {
+    const operations = collectFileOperations([
+      message("old", [tool({
+        name: "edit_file",
+        summary: "src/test_ui_card.tsx",
+        old_text: "a\nb\nc",
+        new_text: "x",
+      })]),
+      message("new", [tool({
+        name: "edit_file",
+        summary: "/repo/src/test_ui_card.tsx",
+        old_text: "a\nb\nc\nd\ne",
+        new_text: "x\ny\nz\n1\n2\n3\n4\n5\n6",
+      })]),
+    ], { baseDir: "/repo" });
+
+    expect(operations).toHaveLength(1);
+    expect(operations[0]).toEqual(expect.objectContaining({
+      path: "/repo/src/test_ui_card.tsx",
+      additions: 9,
+      deletions: 5,
+    }));
+  });
 });
 
 function message(id: string, tools: ToolActivityRecord[]): AgentMessage {

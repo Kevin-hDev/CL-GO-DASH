@@ -26,10 +26,18 @@ export const MAX_FILE_OPERATIONS = 500;
 
 interface CollectFileOperationsOptions {
   liveTools?: ToolActivityRecord[];
+  baseDir?: string;
 }
 
 export function normalizeFileOperationPath(path: string): string {
   return path.replaceAll("\\", "/").replace(/\/+$/, "");
+}
+
+export function fileOperationKey(path: string, baseDir?: string): string {
+  const normalizedPath = normalizeFileOperationPath(path);
+  if (!baseDir || isAbsolutePath(normalizedPath)) return normalizedPath;
+  const normalizedBase = normalizeFileOperationPath(baseDir);
+  return `${normalizedBase}/${normalizedPath}`.replace(/\/+/g, "/");
 }
 
 export function collectFileOperations(
@@ -43,6 +51,7 @@ export function collectFileOperations(
       options.liveTools,
       "live",
       new Date().toISOString(),
+      options.baseDir,
     );
   }
 
@@ -52,6 +61,7 @@ export function collectFileOperations(
       toolsFromMessage(messages[i]),
       messages[i].id,
       messages[i].timestamp,
+      options.baseDir,
     );
   }
 
@@ -70,6 +80,7 @@ function appendLatestToolOperations(
   tools: ToolActivityRecord[],
   messageId: string,
   timestamp: string,
+  baseDir: string | undefined,
 ) {
   const inferred = inferSavedToolPaths(tools);
   for (let index = inferred.length - 1; index >= 0; index--) {
@@ -77,10 +88,14 @@ function appendLatestToolOperations(
     const tool = inferred[index];
     const operation = toolToOperation(tool, messageId, index, timestamp);
     if (!operation) continue;
-    const key = normalizeFileOperationPath(operation.path);
+    const key = fileOperationKey(operation.path, baseDir);
     if (!key || byPath.has(key)) continue;
     byPath.set(key, { ...operation, id: `file:${key}` });
   }
+}
+
+function isAbsolutePath(path: string): boolean {
+  return path.startsWith("/") || /^[A-Za-z]:\//.test(path);
 }
 
 function toolToOperation(

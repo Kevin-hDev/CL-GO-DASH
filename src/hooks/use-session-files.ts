@@ -21,8 +21,8 @@ export function useSessionFiles(
     [completedSegments, currentTools],
   );
   const operations = useMemo(
-    () => collectFileOperations(messages, { liveTools }),
-    [messages, liveTools],
+    () => collectFileOperations(messages, { liveTools, baseDir }),
+    [messages, liveTools, baseDir],
   );
   return useExistingFileOperations(operations, baseDir, liveActivityKey(completedSegments, currentTools));
 }
