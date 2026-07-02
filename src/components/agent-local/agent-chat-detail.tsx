@@ -113,7 +113,7 @@ export function AgentChatDetail(props: AgentChatDetailProps) {
         onFullscreenChange={props.onPreviewFullscreenChange}
         onActiveTabChange={props.filePreview.setActiveTab}
         onOpenOperation={props.filePreview.openOperation}
-        onOpenFilePath={props.filePreview.openPath}
+        onOpenFilePath={props.filePreview.openFullPath}
         onCloseTab={props.filePreview.closeTab}
         onResizeStart={props.filePreview.startResize}
         hasProject={props.fileTree.hasProject}

@@ -28,7 +28,7 @@ describe("FilePreviewSummary", () => {
     );
 
     expect(screen.queryByText("filePreview.filesModified")).toBeNull();
-    expect(screen.getByText("src/components/agent-local/")).toBeTruthy();
+    expect(screen.getByText("src/components/agent-local/", { exact: false })).toBeTruthy();
     expect(screen.getByText("message-tool-blocks.ts")).toBeTruthy();
     expect(screen.getByText("+11")).toBeTruthy();
     expect(screen.getByText("-5")).toBeTruthy();
@@ -47,7 +47,7 @@ describe("FilePreviewSummary", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /src\/hooks/ }));
+    fireEvent.click(screen.getByRole("button", { name: /agent-chat-utils/ }));
 
     expect(screen.getByText("+24")).toBeTruthy();
     expect(screen.getByText("-0")).toBeTruthy();

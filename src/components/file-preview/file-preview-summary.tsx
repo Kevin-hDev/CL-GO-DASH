@@ -48,7 +48,11 @@ export function FilePreviewSummary({
           >
             <FileIcon name={operation.name} size={18} />
             <span className="fp-summary-main" title={path.full}>
-              {path.prefix && <span className="fp-summary-path">{path.prefix}</span>}
+              {path.prefix && (
+                <span className="fp-summary-path">
+                  <span className="fp-summary-path-inner">{path.prefix}</span>
+                </span>
+              )}
               <span className="fp-summary-name">{operation.name}</span>
             </span>
             <FilePreviewStats operation={operation} showZero />

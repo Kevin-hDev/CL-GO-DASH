@@ -69,11 +69,7 @@ export function useFilePreview(sessionId: string | null, operations: FileOperati
     return operation.id;
   }, [setOpen]);
 
-  const openPath = useCallback((path: string) => {
-    const operation = [...operations].reverse().find((op) => op.path === path);
-    if (operation) {
-      return openOperation(operation);
-    }
+  const openFullPath = useCallback((path: string) => {
     const fallback: FileOperation = {
       id: `read:${path}`,
       path,
@@ -85,7 +81,15 @@ export function useFilePreview(sessionId: string | null, operations: FileOperati
     };
     setFallbackOps((items) => [fallback, ...items.filter((item) => item.id !== fallback.id)].slice(0, MAX_TABS));
     return openOperation(fallback);
-  }, [operations, openOperation]);
+  }, [openOperation]);
+
+  const openPath = useCallback((path: string) => {
+    const operation = [...operations].reverse().find((op) => op.path === path);
+    if (operation) {
+      return openOperation(operation);
+    }
+    return openFullPath(path);
+  }, [operations, openOperation, openFullPath]);
 
   const openPlan = useCallback((plan: AgentPlanRun) => {
     const operation: FileOperation = {
@@ -200,6 +204,7 @@ export function useFilePreview(sessionId: string | null, operations: FileOperati
     closePanel,
     openOperation,
     openPath,
+    openFullPath,
     openPlan,
     closeTab,
     startResize,

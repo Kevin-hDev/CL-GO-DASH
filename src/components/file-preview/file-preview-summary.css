@@ -24,7 +24,8 @@
 }
 
 .fp-summary-main {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: baseline;
   min-width: 0;
   overflow: hidden;
@@ -38,21 +39,29 @@
   min-width: 0;
   overflow: hidden;
   color: var(--ink);
-  flex: 0 1 auto;
   font-weight: 500;
-  max-width: 70%;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .fp-summary-path {
   min-width: 0;
   overflow: hidden;
   color: var(--ink-faint);
+  display: block;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fp-summary-path-inner {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
   direction: rtl;
-  flex: 1 1 auto;
   text-align: left;
   text-overflow: ellipsis;
   unicode-bidi: plaintext;
+  white-space: nowrap;
 }
 
 .fp-summary-row .fp-stats {
