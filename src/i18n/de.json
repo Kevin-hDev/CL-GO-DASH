@@ -532,7 +532,7 @@
     "tabs": {
       "general": "Allgemein",
       "ollama": "Ollama",
-      "connectors": "Connectors",
+      "connectors": "Verbindungen",
       "apiKeys": "API Keys",
       "llm": "LLM",
       "advanced": "Erweitert",
