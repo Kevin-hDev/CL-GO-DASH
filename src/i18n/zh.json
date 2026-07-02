@@ -1,12 +1,9 @@
 {
   "nav": {
-    "appName": "CL-GO",
     "heartbeat": "Heartbeat",
     "personality": "/cl-go",
     "settings": "设置",
-    "agentLocal": "会话",
-    "ollama": "Ollama",
-    "apiKeys": "API 密钥"
+    "agentLocal": "会话"
   },
   "common": {
     "delete": "删除",
@@ -23,8 +20,7 @@
     },
     "empty": {
       "title": "暂无已配置的提供商",
-      "subtitle": "添加 API 密钥以访问远程 LLM（Groq、Gemini、Mistral…）或网络搜索服务（Brave、Exa、Firecrawl）。",
-      "addConnector": "API 连接器"
+      "subtitle": "添加 API 密钥以访问远程 LLM（Groq、Gemini、Mistral…）或网络搜索服务（Brave、Exa、Firecrawl）。"
     },
     "details": {
       "connected": "已连接",
@@ -55,10 +51,6 @@
       "showKey": "显示",
       "hideKey": "隐藏"
     },
-    "picker": {
-      "title": "添加提供商",
-      "allConfigured": "所有目录中的提供商均已配置。"
-    },
     "connectors": {
       "title": "API 连接器",
       "subtitle": "为您的实例添加数据源。",
@@ -75,40 +67,27 @@
   },
   "channels": {
     "sidebar": {
-      "title": "频道",
-      "messaging": "即时通讯",
-      "pro": "专业",
       "empty": "未配置任何频道",
-      "accounts": "{{count}} 个账户",
       "configured": "已配置"
     },
     "detail": {
-      "title": "配置",
-      "enabled": "已启用",
-      "disabled": "已禁用",
       "token": "机器人令牌",
       "tokenPlaceholder": "在此粘贴令牌…",
       "botToken": "Slack 机器人令牌",
       "appToken": "Slack 应用令牌",
       "appTokenPlaceholder": "在此粘贴应用令牌…",
-      "tokenSet": "令牌已配置",
-      "tokenMissing": "令牌缺失",
       "allowlist": "授权用户",
       "allowlistPlaceholder": "用户 ID…",
       "allowlistAdd": "添加",
       "requireMention": "群组中需要@提及",
       "provider": "LLM 提供商",
       "model": "模型",
-      "testConnection": "测试连接",
       "testSuccess": "连接成功",
       "testFailed": "连接失败",
-      "save": "保存",
       "delete": "删除",
       "cancel": "取消",
-      "addAccount": "添加账户",
       "accountId": "账户 ID",
       "confirmDelete": "删除此账户？",
-      "confirmDeleteDesc": "令牌将从保险库中移除，频道将被停止。",
       "connected": "已连接",
       "disconnected": "已断开"
     },
@@ -118,12 +97,6 @@
       "running": "运行中",
       "error": "错误",
       "stopping": "停止中…"
-    },
-    "gateway": {
-      "start": "启动网关",
-      "stop": "停止网关",
-      "running": "网关运行中",
-      "stopped": "网关已停止"
     },
     "browse": {
       "title": "消息渠道",
@@ -168,7 +141,6 @@
     "uncommitted": "未提交: {{count}} 个文件",
     "createNew": "创建并检出新分支…",
     "detachedHead": "分离的 HEAD",
-    "noBranch": "不是 git 仓库",
     "noMatch": "未找到匹配的分支",
     "conflictTitle": "提交更改以切换分支",
     "conflictDescription": "以下文件的更改将在检出时被覆盖：",
@@ -202,22 +174,15 @@
     "year": "{{count}}年"
   },
   "agentLocal": {
-    "title": "对话",
     "newSession": "新建会话",
     "noConversations": "暂无对话",
-    "selectOrCreate": "选择或创建一个对话",
     "placeholder": "有什么可以帮您的？",
-    "dropFiles": "将文件拖放到此处",
     "thinking": "思考中",
-    "reload": "重新加载",
-    "edit": "编辑",
-    "copy": "复制",
     "showMore": "显示更多",
     "showLess": "收起",
     "modelSearch": "搜索模型…",
     "modelEmpty": "没有匹配的模型。",
     "selectModel": "选择模型",
-    "thinkingToggle": "深度思考",
     "reasoningTitle": "推理",
     "reasoningOff": "关闭",
     "reasoningAuto": "开启",
@@ -225,8 +190,6 @@
     "reasoningMedium": "中",
     "reasoningHigh": "高",
     "reasoningXhigh": "最高",
-    "exportMd": "下载为 Markdown",
-    "search": "在对话中搜索",
     "send": "发送",
     "cancel": "取消",
     "compression": "Compression",
@@ -269,7 +232,6 @@
         "coder": "Coder"
       }
     },
-    "tools": "Tools",
     "tokens": "tokens",
     "contextUsage": {
       "title": "上下文窗口",
@@ -350,7 +312,6 @@
     "close": "关闭"
   },
   "permissionMode": {
-    "title": "模式",
     "chatLabel": "聊天机器人",
     "chatDescription": "聊天，不访问工具、文件或互联网",
     "autoLabel": "完全访问",
@@ -388,8 +349,6 @@
     }
   },
   "ollama": {
-    "title": "Ollama",
-    "noModels": "未安装任何模型",
     "selectModel": "选择模型",
     "edit": "编辑",
     "editing": "编辑中",
@@ -401,8 +360,6 @@
     "updateAvailable": "有新版本可用",
     "installedUpToDate": "已安装且为最新版本",
     "ctx": "ctx",
-    "starting": "启动中…",
-    "pullError": "下载错误",
     "vramWarning": "该模型可能超出您的可用 VRAM",
     "editModelfile": "编辑 Modelfile",
     "systemPrompt": "System prompt",
@@ -432,7 +389,6 @@
     "paramsLabel": "参数",
     "contextTokens": "K token",
     "remove": "移除",
-    "delete": "删除",
     "modelfileTab": "Modelfile",
     "modelsTab": "模型"
   },
@@ -485,7 +441,6 @@
       "provider": "提供商",
       "model": "模型",
       "pickModel": "选择模型",
-      "ollamaDown": "Ollama 不可用",
       "noToolCapable": "无支持工具的模型",
       "prompt": "提示词",
       "description": "描述（简短）",
@@ -515,20 +470,13 @@
     "open": "打开",
     "inject": "上下文",
     "injected": "已注入",
-    "alwaysInjected": "始终注入",
     "failedToLoad": "加载失败",
     "failedToRead": "读取文件失败"
   },
   "settings": {
-    "title": "设置",
-    "theme": "主题",
-    "fontSize": "字体大小",
-    "fontFamily": "字体",
-    "fontPreview": "春风送暖入屠苏",
     "light": "浅色",
     "dark": "深色",
     "system": "跟随系统",
-    "orange": "橙色",
     "tabs": {
       "general": "通用",
       "ollama": "Ollama",
@@ -639,23 +587,7 @@
       "deleteModel": "确认删除？"
     }
   },
-  "agentMd": {
-    "title": "助手指令",
-    "subtitle": "AGENTS.md 文件为支持工具的 LLM 提供持久化指令",
-    "globalTab": "全局",
-    "projectTab": "项目",
-    "globalDescription": "这些指令适用于所有支持工具的模型对话。",
-    "projectDescription": "这些指令仅适用于该项目内的对话。",
-    "placeholder": "在此编写您的指令...\n\n示例：\n# 规则\n- 操作前先解释\n- 所有回复使用中文",
-    "saved": "指令已保存",
-    "noProject": "请选择一个项目以编辑项目级指令。",
-    "emptyGlobal": "未找到全局 AGENTS.md",
-    "emptyProject": "未找到项目 AGENTS.md",
-    "toolCapableOnly": "仅注入到支持工具的模型"
-  },
   "terminal": {
-    "title": "Terminal",
-    "newTab": "新建 Terminal",
     "processExited": "进程已退出，退出码 {{code}}",
     "failedToStart": "Terminal 启动失败"
   },
@@ -663,8 +595,7 @@
     "sourceBuiltIn": "内置",
     "sourceUser": "用户",
     "sourceProject": "项目",
-    "noResults": "未找到 Skill",
-    "badge": "Skill"
+    "noResults": "未找到 Skill"
   },
   "search": {
     "placeholder": "搜索对话…",
@@ -674,10 +605,8 @@
   },
   "about": {
     "version": "版本",
-    "runtime": "运行时",
     "tauri": "Tauri",
     "os": "系统",
-    "github": "GitHub",
     "viewOnGithub": "在 GitHub 上查看",
     "description": "面向本地和云端 LLM 的智能桌面应用。"
   },
@@ -687,12 +616,9 @@
     "filesModified": "文件",
     "loading": "正在读取文件...",
     "fileNotFound": "无法读取该文件，它可能已被删除或移动。",
-    "highlighting": "正在高亮文件...",
-    "noDiff": "没有可显示的更改。",
     "togglePanel": "文件预览",
     "reduce": "缩小",
     "fullscreen": "全屏",
-    "noEditor": "未检测到外部编辑器。",
     "open": "打开",
     "openWith": "打开方式...",
     "noEditorDetected": "未检测到编辑器",
@@ -703,8 +629,6 @@
   },
   "fileTree": {
     "filterPlaceholder": "筛选文件...",
-    "emptyDirectory": "此文件夹为空",
-    "tooManyEntries": "条目过多（最多{{count}}）",
     "toggleTree": "项目文件树",
     "loadError": "无法读取此文件夹",
     "noResults": "无结果"
@@ -744,7 +668,6 @@
     "modelUpdate": "更新",
     "version": "版本 {{version}}",
     "ollamaBinaryUpdate": "更新",
-    "updating": "更新中…",
     "releaseNotesTitle": "{{version}} 版本说明",
     "showDetails": "显示详情",
     "hideDetails": "隐藏详情"
@@ -811,7 +734,6 @@
     "error": "安装失败，详情如下。"
   },
   "linkPreview": {
-    "loading": "正在加载预览…",
     "noTitle": "无标题",
     "openSite": "打开网站"
   },
@@ -864,7 +786,6 @@
       "author": "作者",
       "website": "网站",
       "openSite": "打开网站",
-      "confirmDeleteTitle": "删除连接器？",
       "confirmDeleteBtn": "删除",
       "confirmDisconnectTitle": "断开 {{name}}？",
       "confirmDisconnectDesc": "LLM 将无法再访问 {{name}} 服务。",
@@ -898,7 +819,6 @@
       "testing": "正在测试…",
       "testOk": "连接器已验证。",
       "addAndTest": "添加并测试",
-      "saveError": "无法保存令牌。请重试。",
       "testError": "无法验证连接器。请检查令牌后重试。",
       "cancel": "取消",
       "confirmAddDesc": "将 {{name}} 添加到你的连接器？",
@@ -917,20 +837,17 @@
     }
   },
   "vision": {
-    "unsupportedModel": "此模型不支持视觉",
-    "imageSkipped": "部分图片未发送"
+    "unsupportedModel": "此模型不支持视觉"
   },
   "forecast": {
     "title": "预测",
     "noAnalysis": "没有正在进行的分析",
     "docs": {
-      "button": "文档",
       "windowTitle": "Forecast 文档",
       "kicker": "技术文档",
       "status": "Forecast 指南",
       "navLabel": "Forecast 文档",
       "openTooltip": "打开 Forecast 文档",
-      "openFailed": "无法打开 Forecast 文档。",
       "nav": {
         "overview": "概览",
         "datasets": "数据集",
@@ -991,10 +908,6 @@
         "uncertainty": "不确定性",
         "scenarios": "场景",
         "variables": "变量",
-        "events": "事件",
-        "comparisons": "对比",
-        "anomalies": "异常",
-        "quality": "质量",
         "history": "历史",
         "forecast": "预测",
         "confidence": "置信区间",
@@ -1023,7 +936,6 @@
       "percentHint": "基于当前预测创建一条派生曲线，不会重新运行模型。",
       "contextHint": "用所选变量的新未来值重新运行模型。",
       "preview": "预览",
-      "add": "添加场景",
       "update": "更新",
       "cancel": "取消",
       "edit": "编辑",
@@ -1080,14 +992,10 @@
         "hypothesis": "假设"
       },
       "empty": "还没有笔记。",
-      "emptySub": "代理添加的笔记会显示在这里，并标出它们在预测中的位置。",
-      "designPending": "完整实现前仍需确定此部分的设计。",
-      "designPendingWithCount": "已有 {{count}} 条笔记，但最终界面仍需定义。",
       "selectNote": "选择一条笔记或新建笔记。",
       "titlePlaceholder": "笔记标题",
       "datePlaceholder": "日期",
       "contentPlaceholder": "笔记 Markdown 内容",
-      "fileLabel": "本地文件",
       "save": "保存",
       "saving": "正在保存",
       "cancel": "取消",
@@ -1357,63 +1265,30 @@
       }
     },
     "models": {
-      "manage": "管理模型",
       "title": "Forecast 模型",
       "sidebarTitle": "Models",
-      "back": "返回",
-      "summary": "摘要",
       "modelCapabilities": "模型能力",
-      "appSupport": "应用当前支持",
       "engine": "使用的引擎",
       "install": "安装",
-      "remove": "删除",
-      "confirmRemove": "确认？",
-      "uninstall": "卸载",
       "installed": "已安装",
-      "installError": "错误",
-      "downloading": "下载中...",
       "cancel": "取消",
-      "notInstalledSuffix": "(未安装)",
       "parameters": "参数",
-      "specs": "规格",
       "diskSize": "磁盘大小",
       "ram": "内存",
-      "ramCpu": "内存 (CPU)",
-      "vramGpu": "显存 (GPU)",
       "cpuLabel": "CPU",
       "gpuLabel": "GPU",
-      "hardwareLabel": "硬件档位",
       "licenseLabel": "许可证",
       "libraryLabel": "库",
       "pipelineLabel": "Pipeline",
-      "downloadsLabel": "下载量",
-      "likesLabel": "Likes",
-      "sourceLabel": "来源",
       "supported": "支持",
       "unsupported": "不支持",
       "uninstalled": "未安装",
       "horizonMax": "最大预测步长",
       "frequencies": "频率",
-      "state": "状态",
       "status": "状态",
-      "usedSpace": "已用空间",
-      "local": "本地",
       "cloud": "云端 (需要密钥)",
       "noKeyConfigured": "API密钥未配置",
       "noneAvailable": "当前启动没有可用模型。",
-      "families": {
-        "chronos-bolt": "Chronos-Bolt",
-        "chronos-2": "Chronos-2",
-        "timesfm-2-5": "TimesFM 2.5",
-        "timegpt-2": "TimeGPT-2",
-        "toto-2": "Datadog Toto 2.0",
-        "moirai-2": "MOIRAI 2.0",
-        "flowstate": "FlowState",
-        "tabpfn-ts": "TabPFN-TS",
-        "tirex": "TiRex",
-        "kairos": "Kairos",
-        "sundial": "Sundial"
-      },
       "hardware": {
         "light": "轻量硬件",
         "balanced": "均衡硬件",
@@ -1432,16 +1307,6 @@
         "multivariate": "多序列",
         "probabilistic": "概率预测",
         "backtesting": "回测"
-      },
-      "descriptions": {
-        "chronos-bolt-tiny": "非常轻量，适合初次测试和配置较低的机器。",
-        "chronos-bolt-mini": "本地速度与硬件成本之间较均衡的选择。",
-        "chronos-bolt-small": "更适合严肃预测任务的本地推荐选择。",
-        "chronos-bolt-base": "更重的本地版本，适合更高要求的工作负载。",
-        "chronos-2": "更新的本地 Chronos 引擎，为未来更丰富的上下文支持做好准备。",
-        "timegpt-2-mini": "适合结合外部上下文进行快速测试的简易云端选项。",
-        "timegpt-2-standard": "适合更丰富时间序列和业务上下文的均衡云端选项。",
-        "timegpt-2-pro": "适合更复杂多序列场景的高级云端选项。"
       }
     },
     "export": {
@@ -1456,12 +1321,6 @@
       "saved": "导出已保存",
       "copied": "导出已复制",
       "failed": "导出失败"
-    },
-    "kpi": {
-      "mape": "MAPE",
-      "mae": "MAE",
-      "crps": "CRPS",
-      "bias": "偏差"
     }
   },
   "chatMenu": {

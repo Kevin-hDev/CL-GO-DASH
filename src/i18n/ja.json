@@ -1,12 +1,9 @@
 {
   "nav": {
-    "appName": "CL-GO",
     "heartbeat": "Heartbeat",
     "personality": "/cl-go",
     "settings": "設定",
-    "agentLocal": "セッション",
-    "ollama": "Ollama",
-    "apiKeys": "API キー"
+    "agentLocal": "セッション"
   },
   "common": {
     "delete": "削除",
@@ -23,8 +20,7 @@
     },
     "empty": {
       "title": "プロバイダーが設定されていません",
-      "subtitle": "API キーを追加してリモート LLM（Groq、Gemini、Mistral…）やウェブ検索サービス（Brave、Exa、Firecrawl）にアクセスしましょう。",
-      "addConnector": "API コネクター"
+      "subtitle": "API キーを追加してリモート LLM（Groq、Gemini、Mistral…）やウェブ検索サービス（Brave、Exa、Firecrawl）にアクセスしましょう。"
     },
     "details": {
       "connected": "接続済み",
@@ -55,10 +51,6 @@
       "showKey": "表示",
       "hideKey": "非表示"
     },
-    "picker": {
-      "title": "プロバイダーを追加",
-      "allConfigured": "カタログのすべてのプロバイダーはすでに設定されています。"
-    },
     "connectors": {
       "title": "API コネクター",
       "subtitle": "インスタンスにデータソースを追加します。",
@@ -75,40 +67,27 @@
   },
   "channels": {
     "sidebar": {
-      "title": "チャンネル",
-      "messaging": "メッセージング",
-      "pro": "プロフェッショナル",
       "empty": "チャンネルが設定されていません",
-      "accounts": "{{count}} アカウント",
       "configured": "設定済み"
     },
     "detail": {
-      "title": "設定",
-      "enabled": "有効",
-      "disabled": "無効",
       "token": "ボットトークン",
       "tokenPlaceholder": "トークンを貼り付け…",
       "botToken": "Slack ボットトークン",
       "appToken": "Slack アプリトークン",
       "appTokenPlaceholder": "アプリトークンを貼り付け…",
-      "tokenSet": "トークン設定済み",
-      "tokenMissing": "トークン未設定",
       "allowlist": "許可ユーザー",
       "allowlistPlaceholder": "ユーザー ID…",
       "allowlistAdd": "追加",
       "requireMention": "グループではメンション必須",
       "provider": "LLM プロバイダー",
       "model": "モデル",
-      "testConnection": "接続テスト",
       "testSuccess": "接続成功",
       "testFailed": "接続失敗",
-      "save": "保存",
       "delete": "削除",
       "cancel": "キャンセル",
-      "addAccount": "アカウント追加",
       "accountId": "アカウント ID",
       "confirmDelete": "このアカウントを削除しますか？",
-      "confirmDeleteDesc": "トークンはボールトから削除され、チャンネルは停止されます。",
       "connected": "接続済み",
       "disconnected": "未接続"
     },
@@ -118,12 +97,6 @@
       "running": "稼働中",
       "error": "エラー",
       "stopping": "停止中…"
-    },
-    "gateway": {
-      "start": "ゲートウェイを開始",
-      "stop": "ゲートウェイを停止",
-      "running": "ゲートウェイ稼働中",
-      "stopped": "ゲートウェイ停止中"
     },
     "browse": {
       "title": "メッセージングチャネル",
@@ -168,7 +141,6 @@
     "uncommitted": "未コミット: {{count}} ファイル",
     "createNew": "新しいブランチを作成してチェックアウト…",
     "detachedHead": "デタッチド HEAD",
-    "noBranch": "git リポジトリではありません",
     "noMatch": "ブランチが見つかりません",
     "conflictTitle": "ブランチを切り替えるにはコミットしてください",
     "conflictDescription": "以下のファイルへの変更はチェックアウトにより上書きされます：",
@@ -202,22 +174,15 @@
     "year": "{{count}}年"
   },
   "agentLocal": {
-    "title": "会話",
     "newSession": "新しいセッション",
     "noConversations": "会話がありません",
-    "selectOrCreate": "会話を選択または作成してください",
     "placeholder": "何かお手伝いできますか？",
-    "dropFiles": "ここにファイルをドロップ",
     "thinking": "考え中",
-    "reload": "再読み込み",
-    "edit": "編集",
-    "copy": "コピー",
     "showMore": "もっと見る",
     "showLess": "閉じる",
     "modelSearch": "モデルを検索…",
     "modelEmpty": "一致するモデルがありません。",
     "selectModel": "モデルを選択",
-    "thinkingToggle": "拡張思考",
     "reasoningTitle": "推論",
     "reasoningOff": "オフ",
     "reasoningAuto": "オン",
@@ -225,8 +190,6 @@
     "reasoningMedium": "中",
     "reasoningHigh": "高",
     "reasoningXhigh": "最高",
-    "exportMd": "Markdown としてダウンロード",
-    "search": "会話内を検索",
     "send": "送信",
     "cancel": "キャンセル",
     "compression": "Compression",
@@ -269,7 +232,6 @@
         "coder": "Coder"
       }
     },
-    "tools": "Tools",
     "tokens": "tokens",
     "contextUsage": {
       "title": "コンテキストウィンドウ",
@@ -350,7 +312,6 @@
     "close": "閉じる"
   },
   "permissionMode": {
-    "title": "モード",
     "chatLabel": "チャットボット",
     "chatDescription": "ツール、ファイル、インターネットにアクセスせずに会話します",
     "autoLabel": "フルアクセス",
@@ -388,8 +349,6 @@
     }
   },
   "ollama": {
-    "title": "Ollama",
-    "noModels": "インストール済みのモデルがありません",
     "selectModel": "モデルを選択",
     "edit": "編集",
     "editing": "編集中",
@@ -401,8 +360,6 @@
     "updateAvailable": "新しいバージョンが利用可能です",
     "installedUpToDate": "インストール済み・最新",
     "ctx": "ctx",
-    "starting": "起動中…",
-    "pullError": "ダウンロードエラー",
     "vramWarning": "このモデルは利用可能な VRAM を超える可能性があります",
     "editModelfile": "Modelfile を編集",
     "systemPrompt": "System prompt",
@@ -432,7 +389,6 @@
     "paramsLabel": "パラメーター",
     "contextTokens": "K トークン",
     "remove": "削除",
-    "delete": "削除",
     "modelfileTab": "Modelfile",
     "modelsTab": "モデル"
   },
@@ -485,7 +441,6 @@
       "provider": "プロバイダー",
       "model": "モデル",
       "pickModel": "モデルを選択",
-      "ollamaDown": "Ollama が利用できません",
       "noToolCapable": "ツール対応モデルがありません",
       "prompt": "プロンプト",
       "description": "説明（短め）",
@@ -515,20 +470,13 @@
     "open": "開く",
     "inject": "コンテキスト",
     "injected": "注入済み",
-    "alwaysInjected": "常に注入",
     "failedToLoad": "読み込みに失敗しました",
     "failedToRead": "ファイルの読み取りに失敗しました"
   },
   "settings": {
-    "title": "設定",
-    "theme": "テーマ",
-    "fontSize": "フォントサイズ",
-    "fontFamily": "フォントファミリー",
-    "fontPreview": "日本語テスト：漢字とひらがなとカタカナ",
     "light": "ライト",
     "dark": "ダーク",
     "system": "システム",
-    "orange": "オレンジ",
     "tabs": {
       "general": "一般",
       "ollama": "Ollama",
@@ -639,23 +587,7 @@
       "deleteModel": "確認しますか？"
     }
   },
-  "agentMd": {
-    "title": "エージェント指示",
-    "subtitle": "AGENTS.md ファイルはツール対応 LLM に永続的な指示を提供します",
-    "globalTab": "グローバル",
-    "projectTab": "プロジェクト",
-    "globalDescription": "これらの指示はツール対応モデルとのすべての会話に適用されます。",
-    "projectDescription": "これらの指示はこのプロジェクト内の会話にのみ適用されます。",
-    "placeholder": "指示をここに書いてください...\n\n例：\n# ルール\n- 行動する前に必ず説明する\n- すべての返答に日本語を使用する",
-    "saved": "指示を保存しました",
-    "noProject": "プロジェクトレベルの指示を編集するにはプロジェクトを選択してください。",
-    "emptyGlobal": "グローバル AGENTS.md が見つかりません",
-    "emptyProject": "プロジェクト AGENTS.md が見つかりません",
-    "toolCapableOnly": "ツール対応モデルにのみ注入されます"
-  },
   "terminal": {
-    "title": "Terminal",
-    "newTab": "新しい Terminal",
     "processExited": "プロセスがコード {{code}} で終了しました",
     "failedToStart": "Terminal を起動できませんでした"
   },
@@ -663,8 +595,7 @@
     "sourceBuiltIn": "内蔵",
     "sourceUser": "ユーザー",
     "sourceProject": "プロジェクト",
-    "noResults": "Skill が見つかりません",
-    "badge": "Skill"
+    "noResults": "Skill が見つかりません"
   },
   "search": {
     "placeholder": "会話を検索…",
@@ -674,10 +605,8 @@
   },
   "about": {
     "version": "バージョン",
-    "runtime": "ランタイム",
     "tauri": "Tauri",
     "os": "システム",
-    "github": "GitHub",
     "viewOnGithub": "GitHub で見る",
     "description": "ローカルおよびクラウド LLM 向けのエージェント型デスクトップアプリ。"
   },
@@ -687,12 +616,9 @@
     "filesModified": "ファイル",
     "loading": "ファイルを読み込み中...",
     "fileNotFound": "ファイルを読み取れませんでした。削除または移動された可能性があります。",
-    "highlighting": "ファイルをハイライト中...",
-    "noDiff": "表示する変更がありません。",
     "togglePanel": "ファイルプレビュー",
     "reduce": "縮小",
     "fullscreen": "全画面",
-    "noEditor": "外部エディターが検出されませんでした。",
     "open": "開く",
     "openWith": "アプリで開く...",
     "noEditorDetected": "エディターが検出されませんでした",
@@ -703,8 +629,6 @@
   },
   "fileTree": {
     "filterPlaceholder": "ファイルを検索...",
-    "emptyDirectory": "このフォルダは空です",
-    "tooManyEntries": "エントリが多すぎます（最大{{count}}）",
     "toggleTree": "プロジェクトファイルツリー",
     "loadError": "このフォルダを読み取れません",
     "noResults": "結果なし"
@@ -744,7 +668,6 @@
     "modelUpdate": "更新",
     "version": "バージョン {{version}}",
     "ollamaBinaryUpdate": "更新",
-    "updating": "更新中…",
     "releaseNotesTitle": "バージョン {{version}} のリリースノート",
     "showDetails": "詳細を表示",
     "hideDetails": "詳細を非表示"
@@ -811,7 +734,6 @@
     "error": "インストールに失敗しました。詳細は以下を確認してください。"
   },
   "linkPreview": {
-    "loading": "プレビューを読み込み中…",
     "noTitle": "タイトルなし",
     "openSite": "ウェブサイトを開く"
   },
@@ -864,7 +786,6 @@
       "author": "作者",
       "website": "Web サイト",
       "openSite": "サイトを開く",
-      "confirmDeleteTitle": "コネクターを削除しますか？",
       "confirmDeleteBtn": "削除",
       "confirmDisconnectTitle": "{{name}} を切断しますか？",
       "confirmDisconnectDesc": "LLM は {{name}} のサービスにアクセスできなくなります。",
@@ -898,7 +819,6 @@
       "testing": "テスト中…",
       "testOk": "コネクターを検証しました。",
       "addAndTest": "追加してテスト",
-      "saveError": "トークンを保存できませんでした。もう一度お試しください。",
       "testError": "コネクターを検証できませんでした。トークンを確認して再試行してください。",
       "cancel": "キャンセル",
       "confirmAddDesc": "{{name}} をコネクターに追加しますか？",
@@ -917,20 +837,17 @@
     }
   },
   "vision": {
-    "unsupportedModel": "このモデルはビジョンに対応していません",
-    "imageSkipped": "一部の画像は送信されませんでした"
+    "unsupportedModel": "このモデルはビジョンに対応していません"
   },
   "forecast": {
     "title": "予測",
     "noAnalysis": "分析が進行中ではありません",
     "docs": {
-      "button": "Docs",
       "windowTitle": "Forecast ドキュメント",
       "kicker": "技術ドキュメント",
       "status": "Forecast ガイド",
       "navLabel": "Forecast ドキュメント",
       "openTooltip": "Forecast ドキュメントを開く",
-      "openFailed": "Forecast ドキュメントを開けませんでした。",
       "nav": {
         "overview": "概要",
         "datasets": "データセット",
@@ -991,10 +908,6 @@
         "uncertainty": "不確実性",
         "scenarios": "シナリオ",
         "variables": "変数",
-        "events": "イベント",
-        "comparisons": "比較",
-        "anomalies": "異常",
-        "quality": "品質",
         "history": "履歴",
         "forecast": "予測",
         "confidence": "信頼区間",
@@ -1023,7 +936,6 @@
       "percentHint": "現在の予測から派生カーブを作成します。モデルの再実行は行いません。",
       "contextHint": "選択した変数の新しい未来値でモデルを再実行します。",
       "preview": "プレビュー",
-      "add": "シナリオを追加",
       "update": "更新",
       "cancel": "キャンセル",
       "edit": "編集",
@@ -1080,14 +992,10 @@
         "hypothesis": "仮説"
       },
       "empty": "まだノートはありません。",
-      "emptySub": "エージェントが追加したノートは、予測上の位置とともにここに表示されます。",
-      "designPending": "完全実装の前に、このセクションのデザインを決める必要があります。",
-      "designPendingWithCount": "{{count}} 件のノートは既にありますが、最終的な画面はまだ定義されていません。",
       "selectNote": "ノートを選択するか、新規作成してください。",
       "titlePlaceholder": "ノートのタイトル",
       "datePlaceholder": "日付",
       "contentPlaceholder": "ノートの Markdown 内容",
-      "fileLabel": "ローカルファイル",
       "save": "保存",
       "saving": "保存中",
       "cancel": "キャンセル",
@@ -1357,63 +1265,30 @@
       }
     },
     "models": {
-      "manage": "モデル管理",
       "title": "Forecast モデル",
       "sidebarTitle": "Models",
-      "back": "戻る",
-      "summary": "概要",
       "modelCapabilities": "モデルの能力",
-      "appSupport": "アプリでの現在の対応",
       "engine": "使用エンジン",
       "install": "インストール",
-      "remove": "削除",
-      "confirmRemove": "確認しますか？",
-      "uninstall": "アンインストール",
       "installed": "インストール済み",
-      "installError": "エラー",
-      "downloading": "ダウンロード中...",
       "cancel": "キャンセル",
-      "notInstalledSuffix": "(未インストール)",
       "parameters": "パラメータ",
-      "specs": "仕様",
       "diskSize": "ディスクサイズ",
       "ram": "RAM",
-      "ramCpu": "RAM (CPU)",
-      "vramGpu": "VRAM (GPU)",
       "cpuLabel": "CPU",
       "gpuLabel": "GPU",
-      "hardwareLabel": "ハードウェア特性",
       "licenseLabel": "ライセンス",
       "libraryLabel": "ライブラリ",
       "pipelineLabel": "パイプライン",
-      "downloadsLabel": "ダウンロード数",
-      "likesLabel": "Likes",
-      "sourceLabel": "ソース",
       "supported": "対応",
       "unsupported": "非対応",
       "uninstalled": "未インストール",
       "horizonMax": "最大予測期間",
       "frequencies": "頻度",
-      "state": "状態",
       "status": "ステータス",
-      "usedSpace": "使用容量",
-      "local": "ローカル",
       "cloud": "クラウド (キー必要)",
       "noKeyConfigured": "APIキー未設定",
       "noneAvailable": "この起動で利用できるモデルはありません。",
-      "families": {
-        "chronos-bolt": "Chronos-Bolt",
-        "chronos-2": "Chronos-2",
-        "timesfm-2-5": "TimesFM 2.5",
-        "timegpt-2": "TimeGPT-2",
-        "toto-2": "Datadog Toto 2.0",
-        "moirai-2": "MOIRAI 2.0",
-        "flowstate": "FlowState",
-        "tabpfn-ts": "TabPFN-TS",
-        "tirex": "TiRex",
-        "kairos": "Kairos",
-        "sundial": "Sundial"
-      },
       "hardware": {
         "light": "軽量ハードウェア",
         "balanced": "標準ハードウェア",
@@ -1432,16 +1307,6 @@
         "multivariate": "複数系列",
         "probabilistic": "確率予測",
         "backtesting": "バックテスト"
-      },
-      "descriptions": {
-        "chronos-bolt-tiny": "初期テストや軽いマシン向けの非常に軽量なモデルです。",
-        "chronos-bolt-mini": "速度とハードウェア負荷のバランスが良いローカルモデルです。",
-        "chronos-bolt-small": "より本格的な予測に向いた推奨ローカルモデルです。",
-        "chronos-bolt-base": "より重い負荷向けの大型ローカルモデルです。",
-        "chronos-2": "より新しいローカル Chronos エンジンで、将来の豊かなコンテキスト対応に備えています。",
-        "timegpt-2-mini": "外部コンテキスト付きの素早い試験向けのシンプルなクラウドモデルです。",
-        "timegpt-2-standard": "より豊かな系列と業務コンテキスト向けのバランス型クラウドモデルです。",
-        "timegpt-2-pro": "より高度な複数系列用途向けの上位クラウドモデルです。"
       }
     },
     "export": {
@@ -1456,12 +1321,6 @@
       "saved": "エクスポートを保存しました",
       "copied": "エクスポートをコピーしました",
       "failed": "エクスポートできませんでした"
-    },
-    "kpi": {
-      "mape": "MAPE",
-      "mae": "MAE",
-      "crps": "CRPS",
-      "bias": "バイアス"
     }
   },
   "chatMenu": {
