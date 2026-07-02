@@ -40,4 +40,17 @@ describe("PermissionModeSelector", () => {
     expect(screen.queryByText("2")).toBeNull();
     expect(screen.queryByText("3")).toBeNull();
   });
+
+  it("ouvre la liste des modes dans un portail global", () => {
+    const { container } = render(
+      <div data-testid="host">
+        <PermissionModeSelector mode="auto" onChange={vi.fn()} />
+      </div>,
+    );
+
+    fireEvent.click(screen.getByTitle("Changer de mode (Shift+Tab)"));
+
+    expect(document.body.querySelector(".perm-mode-dropdown")).toBeTruthy();
+    expect(container.querySelector(".perm-mode-dropdown")).toBeNull();
+  });
 });

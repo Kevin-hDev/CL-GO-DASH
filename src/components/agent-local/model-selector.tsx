@@ -1,7 +1,8 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import { useClickOutside } from "@/hooks/use-click-outside";
 import { useKeyboard } from "@/hooks/use-keyboard";
+import { floatingMenuPortalRoot, useFloatingMenuPosition } from "@/hooks/use-floating-menu-position";
 import { focusLocalListItem } from "@/hooks/use-local-list-navigation";
 import { Brain, CaretDown, MagnifyingGlass } from "@/components/ui/icons";
 import {
@@ -38,11 +39,23 @@ export function ModelSelector({
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const ref = useRef<HTMLDivElement>(null);
+  const { anchorRef, floatingRef, floatingStyle, updateFloatingPosition } =
+    useFloatingMenuPosition(open, align, 4);
   const { groups } = useAvailableModels();
   const { favorites, isFavorite, toggle: toggleFav } = useFavoriteModels();
 
-  useClickOutside(ref, () => setOpen(false));
   useKeyboard({ onEscape: () => setOpen(false) });
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (ref.current?.contains(target) || floatingRef.current?.contains(target)) return;
+      setOpen(false);
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [floatingRef, open]);
 
   const selectedEntry = useMemo(() => {
     const list = groups.get(selectedProvider);
@@ -67,8 +80,71 @@ export function ModelSelector({
     return out;
   }, [groups, query]);
   const focusDropdownList = (direction: 1 | -1) => {
-    focusLocalListItem(ref.current?.querySelector<HTMLElement>(".ms-dropdown") ?? null, direction);
+    focusLocalListItem(floatingRef.current, direction);
   };
+
+  const dropdown = open ? (
+    <div
+      ref={floatingRef}
+      style={floatingStyle}
+      data-keyboard-scope="local"
+      className={`ms-dropdown${showReasoningModes ? " ms-dropdown-with-reasoning" : ""}`}
+    >
+      <div className="ms-main">
+        <div className="ms-search">
+          <MagnifyingGlass size="var(--icon-sm)" className="ms-search-icon" />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              requestAnimationFrame(updateFloatingPosition);
+            }}
+            onKeyDown={(event) => {
+              if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+              event.preventDefault();
+              focusDropdownList(event.key === "ArrowDown" ? 1 : -1);
+            }}
+            placeholder={t("agentLocal.modelSearch")}
+            className="ms-search-input"
+            autoFocus
+          />
+        </div>
+
+        <div className="ms-list">
+          <ModelSelectorList
+            groups={filteredGroups}
+            favorites={favorites}
+            isFavorite={isFavorite}
+            onToggleFavorite={(p, m) => void toggleFav(p, m)}
+            selectedModel={selectedModel}
+            selectedProvider={selectedProvider}
+            onSelect={(model, provider) => {
+              onSelect(model, provider);
+              setOpen(false);
+              setQuery("");
+            }}
+          />
+        </div>
+      </div>
+      {showReasoningModes && (
+        <aside className="ms-reasoning-panel" aria-label={t("agentLocal.reasoningTitle")}>
+          <div className="ms-reasoning-title">{t("agentLocal.reasoningTitle")}</div>
+          {modeOptions.map((option) => (
+            <button
+              key={option.mode}
+              type="button"
+              className={`ms-reasoning-option${selectedReasoningMode === option.mode ? " ms-reasoning-option-active" : ""}`}
+              onClick={() => onReasoningModeChange(option.mode)}
+            >
+              {t(option.labelKey)}
+            </button>
+          ))}
+        </aside>
+      )}
+    </div>
+  ) : null;
+  const portalRoot = floatingMenuPortalRoot();
 
   return (
     <div
@@ -77,6 +153,7 @@ export function ModelSelector({
       data-keyboard-scope={open ? "local" : undefined}
     >
       <button
+        ref={(node) => { anchorRef.current = node; }}
         type="button"
         onClick={() => setOpen(!open)}
         onKeyDown={(event) => {
@@ -101,59 +178,7 @@ export function ModelSelector({
         )}
         <CaretDown size="var(--icon-2xs)" className="ms-trigger-caret" />
       </button>
-      {open && (
-        <div className={`ms-dropdown${showReasoningModes ? " ms-dropdown-with-reasoning" : ""}`}>
-          <div className="ms-main">
-            <div className="ms-search">
-              <MagnifyingGlass size="var(--icon-sm)" className="ms-search-icon" />
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
-                  event.preventDefault();
-                  focusDropdownList(event.key === "ArrowDown" ? 1 : -1);
-                }}
-                placeholder={t("agentLocal.modelSearch")}
-                className="ms-search-input"
-                autoFocus
-              />
-            </div>
-
-            <div className="ms-list">
-              <ModelSelectorList
-                groups={filteredGroups}
-                favorites={favorites}
-                isFavorite={isFavorite}
-                onToggleFavorite={(p, m) => void toggleFav(p, m)}
-                selectedModel={selectedModel}
-                selectedProvider={selectedProvider}
-                onSelect={(model, provider) => {
-                  onSelect(model, provider);
-                  setOpen(false);
-                  setQuery("");
-                }}
-              />
-            </div>
-          </div>
-          {showReasoningModes && (
-            <aside className="ms-reasoning-panel" aria-label={t("agentLocal.reasoningTitle")}>
-              <div className="ms-reasoning-title">{t("agentLocal.reasoningTitle")}</div>
-              {modeOptions.map((option) => (
-                <button
-                  key={option.mode}
-                  type="button"
-                  className={`ms-reasoning-option${selectedReasoningMode === option.mode ? " ms-reasoning-option-active" : ""}`}
-                  onClick={() => onReasoningModeChange(option.mode)}
-                >
-                  {t(option.labelKey)}
-                </button>
-              ))}
-            </aside>
-          )}
-        </div>
-      )}
+      {dropdown ? createPortal(dropdown, portalRoot) : null}
     </div>
   );
 }

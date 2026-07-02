@@ -1,7 +1,9 @@
 import { useMemo, useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { CaretDown, ChatCircleDots, Check, Hand, ShieldWarning } from "@/components/ui/icons";
 import type { PermissionMode } from "@/hooks/use-permission-mode";
+import { floatingMenuPortalRoot, useFloatingMenuPosition } from "@/hooks/use-floating-menu-position";
 import { focusLocalListItem, useLocalListNavigation } from "@/hooks/use-local-list-navigation";
 import "./permission-mode-selector.css";
 
@@ -16,6 +18,7 @@ export function PermissionModeSelector({ mode, onChange }: Props) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
+  const { anchorRef, floatingRef, floatingStyle } = useFloatingMenuPosition(open, "left", 6);
   const navItems = useMemo(() => MODES.map((m) => ({
     id: modeNavId(m),
     onSelect: () => {
@@ -33,7 +36,9 @@ export function PermissionModeSelector({ mode, onChange }: Props) {
   useEffect(() => {
     if (!open) return;
     const onDoc = (e: MouseEvent) => {
-      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
+      const target = e.target as Node;
+      if (rootRef.current?.contains(target) || floatingRef.current?.contains(target)) return;
+      setOpen(false);
     };
     const onKey = (e: KeyboardEvent) => {
       const pressed = e.key;
@@ -62,18 +67,20 @@ export function PermissionModeSelector({ mode, onChange }: Props) {
       document.removeEventListener("mousedown", onDoc);
       document.removeEventListener("keydown", onKey);
     };
-  }, [open, onChange]);
+  }, [floatingRef, open, onChange]);
 
   useEffect(() => {
     if (!open) return;
-    requestAnimationFrame(() => focusLocalListItem(rootRef.current, 1));
-  }, [open]);
+    requestAnimationFrame(() => focusLocalListItem(floatingRef.current, 1));
+  }, [floatingRef, open]);
 
   const label = t(`permissionMode.${mode}Label`);
+  const portalRoot = floatingMenuPortalRoot();
 
   return (
     <div className="perm-mode-root" ref={rootRef} data-keyboard-scope={open ? "local" : undefined}>
       <button
+        ref={(node) => { anchorRef.current = node; }}
         type="button"
         className={`perm-mode-trigger perm-mode-trigger-${mode}`}
         onClick={() => setOpen((v) => !v)}
@@ -91,8 +98,16 @@ export function PermissionModeSelector({ mode, onChange }: Props) {
         <CaretDown size="var(--icon-2xs)" className="perm-mode-caret" />
       </button>
 
-      {open && (
-        <div className="perm-mode-dropdown" role="menu" tabIndex={-1} onKeyDown={listProps.onKeyDown}>
+      {open && createPortal(
+        <div
+          ref={floatingRef}
+          className="perm-mode-dropdown"
+          data-keyboard-scope="local"
+          role="menu"
+          tabIndex={-1}
+          style={floatingStyle}
+          onKeyDown={listProps.onKeyDown}
+        >
           {MODES.map((m) => {
             const navId = modeNavId(m);
             return (
@@ -124,7 +139,8 @@ export function PermissionModeSelector({ mode, onChange }: Props) {
               </button>
             );
           })}
-        </div>
+        </div>,
+        portalRoot,
       )}
     </div>
   );

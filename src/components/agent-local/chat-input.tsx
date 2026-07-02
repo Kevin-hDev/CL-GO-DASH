@@ -18,6 +18,7 @@ import type { PermissionMode } from "@/hooks/use-permission-mode";
 import type { ReasoningMode } from "@/lib/reasoning-modes";
 import "./chat.css";
 import "./chat-input-textarea.css";
+import "./chat-input-responsive.css";
 
 const K_UP = "ArrowUp";
 const K_DOWN = "ArrowDown";

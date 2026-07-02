@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ModelSelector } from "../model-selector";
 import type { AvailableModel } from "@/hooks/use-available-models";
@@ -87,5 +87,26 @@ describe("ModelSelector", () => {
     expect(screen.getByText("gpt-5")).toBeTruthy();
     expect(screen.getByText("Forte")).toBeTruthy();
     expect(container.querySelector(".ms-trigger-reasoning-icon")).toBeTruthy();
+  });
+
+  it("ouvre la liste des modèles dans un portail global", () => {
+    groups = new Map([["ollama", [model({ id: "llama3" })]]]);
+
+    const { container } = render(
+      <div data-testid="host">
+        <ModelSelector
+          selectedModel="llama3"
+          selectedProvider="ollama"
+          reasoningMode="auto"
+          onSelect={vi.fn()}
+          onReasoningModeChange={vi.fn()}
+        />
+      </div>,
+    );
+
+    fireEvent.click(screen.getByText("llama3"));
+
+    expect(document.body.querySelector(".ms-dropdown")).toBeTruthy();
+    expect(container.querySelector(".ms-dropdown")).toBeNull();
   });
 });
