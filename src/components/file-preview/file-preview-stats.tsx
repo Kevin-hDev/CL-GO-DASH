@@ -1,10 +1,16 @@
 import type { FileOperation } from "@/types/file-preview";
 
-export function FilePreviewStats({ operation }: { operation: FileOperation }) {
+export function FilePreviewStats({
+  operation,
+  showZero = false,
+}: {
+  operation: FileOperation;
+  showZero?: boolean;
+}) {
   return (
     <span className="fp-stats">
-      {operation.additions > 0 && <span className="fp-add">+{operation.additions}</span>}
-      {operation.deletions > 0 && <span className="fp-del">-{operation.deletions}</span>}
+      {(showZero || operation.additions > 0) && <span className="fp-add">+{operation.additions}</span>}
+      {(showZero || operation.deletions > 0) && <span className="fp-del">-{operation.deletions}</span>}
     </span>
   );
 }
