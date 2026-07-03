@@ -90,8 +90,18 @@ fn extract_source_archive(archive: &Path) -> Result<PathBuf, String> {
         if super::source_filter::should_skip_archive_path(&path) {
             continue;
         }
+        // The tar crate's Entry::unpack does NOT create missing parent
+        // directories. Some archives (including the bundled SearXNG one) omit
+        // top-level directory entries and start directly with files like
+        // `source/.coveragerc`, so we must materialize the parent ourselves
+        // or unpack fails with ENOENT.
+        let dst = tmp_dir.join(&path);
+        if let Some(parent) = dst.parent() {
+            std::fs::create_dir_all(parent)
+                .map_err(|e| format!("SearXNG: extraction impossible ({e})"))?;
+        }
         entry
-            .unpack(tmp_dir.join(path))
+            .unpack(&dst)
             .map_err(|e| format!("SearXNG: extraction impossible ({e})"))?;
     }
 

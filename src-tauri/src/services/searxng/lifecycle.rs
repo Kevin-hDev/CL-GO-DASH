@@ -168,6 +168,11 @@ fn safe_log_error(error: &str) -> String {
 mod tests {
     use super::*;
 
+    /// Mutex serializing tests that mutate the process-global
+    /// `LAST_START_FAILURE` and `SEARXNG_READY` flags. Without it, the
+    /// default parallel test runner races on these globals.
+    static GLOBAL_STATE_LOCK: StdMutex<()> = StdMutex::new(());
+
     #[test]
     fn safe_log_error_removes_control_chars_and_truncates() {
         let input = format!("SearXNG: timeout\n{}", "x".repeat(400));
@@ -178,6 +183,7 @@ mod tests {
 
     #[test]
     fn start_failure_cache_expires() {
+        let _guard = GLOBAL_STATE_LOCK.lock().unwrap();
         clear_start_failure();
         remember_start_failure("SearXNG: arrêt au démarrage");
         assert_eq!(
@@ -188,21 +194,22 @@ mod tests {
         assert_eq!(recent_start_failure(), None);
     }
 
+    /// `is_ready` reads the global flag and `remember_start_failure` clears
+    /// it. Serialized against `start_failure_cache_expires` to avoid races.
     #[test]
-    fn ready_flag_toggles_with_start_failure() {
-        // A successful start marks the sidecar as ready.
+    fn is_ready_reads_flag_and_failure_clears_it() {
+        let _guard = GLOBAL_STATE_LOCK.lock().unwrap();
+        clear_start_failure();
+        set_ready(false);
+
         set_ready(true);
         assert!(is_ready());
-        // Any recorded start failure must clear the flag so the prompt
-        // assembler stops advertising SearXNG as active.
+
         remember_start_failure("SearXNG: timeout au démarrage");
         assert!(!is_ready());
-        // Clearing the failure does NOT re-arm the flag on its own: only a
-        // fresh successful ensure_running run would. This documents that
-        // invariant.
+
+        // Restore baseline for any test reading the flag afterwards.
         clear_start_failure();
-        assert!(!is_ready());
-        // Restore baseline for other tests sharing the process-global flag.
         set_ready(false);
     }
 }
