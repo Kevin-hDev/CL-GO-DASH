@@ -35,3 +35,14 @@ fn bash_secret_command_is_redacted() {
     .unwrap();
     assert_eq!(out["command"], "[redacted command]");
 }
+
+#[test]
+fn todo_delete_active_arg_is_logged() {
+    let out = summarize(
+        "todo_delete",
+        &json!({"active": true}),
+        Path::new("/tmp/project"),
+    )
+    .unwrap();
+    assert_eq!(out["active"], true);
+}

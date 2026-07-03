@@ -65,7 +65,7 @@ function summary(): SessionSummaryHookState {
   return {
     session: null,
     changes: { additions: 0, deletions: 0, files: 0 },
-    activeTodos: [],
+    todoRuns: [],
     plans: [],
     subagents: [],
   };

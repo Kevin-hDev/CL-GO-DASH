@@ -177,6 +177,27 @@ fn delete_active_run_clears_visible_todos() {
     assert!(session.todo_runs.is_empty());
 }
 
+#[test]
+fn delete_active_arg_clears_visible_todos() {
+    let mut session = test_session();
+    let todos = parse_todos(&json!({
+        "todos": [{"content": "Active", "status": "in_progress"}]
+    }))
+    .unwrap();
+    apply_todos_to_session(&mut session, todos);
+    let run_id = session.active_todo_run_id.clone().unwrap();
+
+    let (active, deleted_id, status) =
+        super::delete_run_for_args(&mut session, &json!({"active": true})).unwrap();
+
+    assert!(active.is_empty());
+    assert_eq!(deleted_id, run_id);
+    assert_eq!(status, "active");
+    assert!(session.todos.is_empty());
+    assert!(session.active_todo_run_id.is_none());
+    assert!(session.todo_runs.is_empty());
+}
+
 fn test_session() -> AgentSession {
     AgentSession {
         id: "abc-123".into(),

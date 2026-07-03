@@ -6,12 +6,12 @@ import { isHiddenAgentTool } from "@/lib/hidden-agent-tools";
 import { toolsToRecords, type ToolActivity } from "./agent-chat-utils";
 import {
   addChangeSummaries,
-  activeTodoRuns,
   childSubagents,
   EMPTY_CHANGE_SUMMARY,
   hasChangeSummary,
   summarizeLastRequestChanges,
   summarizeToolChange,
+  visibleTodoRuns,
 } from "@/lib/session-summary";
 import type { AgentSession, AgentSessionMeta, StreamEvent } from "@/types/agent";
 import type { SessionChangeSummary } from "@/lib/session-summary";
@@ -131,7 +131,7 @@ export function useSessionSummary(sessionId: string | null) {
 
   return useMemo(() => ({
     session,
-    activeTodos: activeTodoRuns(session),
+    todoRuns: visibleTodoRuns(session),
     plans: session?.plan_runs ?? [],
     subagents: sessionId ? childSubagents(sessionId, subagentSessions) : [],
     changes,

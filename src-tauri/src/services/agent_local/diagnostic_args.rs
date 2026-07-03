@@ -35,7 +35,11 @@ pub fn summarize(tool_name: &str, args: &Value, working_dir: &Path) -> Option<Va
             let count = args["todos"].as_array().map(|v| v.len()).unwrap_or(0);
             out.insert("todos_count".to_string(), json!(count));
         }
-        "todo_resume" | "todo_delete" => add_text(&mut out, "id", args),
+        "todo_resume" => add_text(&mut out, "id", args),
+        "todo_delete" => {
+            add_text(&mut out, "id", args);
+            add_bool(&mut out, "active", args);
+        }
         "todo_pause" => add_text(&mut out, "reason", args),
         "todo_history" | "agent_diagnostics" | "ask_user_choice" | "planmode" | "exitplanmode" => {}
         "mcp" => add_text(&mut out, "tool_id", args),
@@ -47,6 +51,12 @@ pub fn summarize(tool_name: &str, args: &Value, working_dir: &Path) -> Option<Va
 fn add_text(out: &mut Map<String, Value>, key: &str, args: &Value) {
     if let Some(value) = args[key].as_str() {
         out.insert(key.to_string(), json!(safe_text(value)));
+    }
+}
+
+fn add_bool(out: &mut Map<String, Value>, key: &str, args: &Value) {
+    if let Some(value) = args[key].as_bool() {
+        out.insert(key.to_string(), json!(value));
     }
 }
 

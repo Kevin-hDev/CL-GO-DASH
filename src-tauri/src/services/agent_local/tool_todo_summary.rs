@@ -81,7 +81,8 @@ fn paused_runs(session: &AgentSession) -> Vec<&AgentTodoRun> {
 
 fn active_summary(run: &AgentTodoRun, neglect_count: u32, escalate: bool) -> Vec<String> {
     let mut lines = vec![format!(
-        "Active todo: \"{}\" ({}/{} done).",
+        "Active todo: id={} title=\"{}\" progress={}/{}.",
+        run.id,
         run.title,
         completed_count(&run.todos),
         run.todos.len()
@@ -89,7 +90,7 @@ fn active_summary(run: &AgentTodoRun, neglect_count: u32, escalate: bool) -> Vec
     lines.extend(run.todos.iter().map(format_todo_item));
     if escalate {
         lines.push(format!(
-            "Important: this active todo has not been updated for {neglect_count} user turns. Call todo_write to mark progress, todo_pause if you changed focus, or todo_delete only if it is obsolete."
+            "Important: this active todo has not been updated for {neglect_count} user turns. Call todo_write to mark progress, todo_pause if you changed focus, or todo_delete with active=true only if it is obsolete."
         ));
     }
     lines

@@ -72,6 +72,10 @@ mod tests {
         assert!(validate("todo_resume", &json!({"id": "abc"})).is_ok());
         assert!(validate("todo_resume", &json!({})).is_err());
         assert!(validate("todo_delete", &json!({"id": "abc"})).is_ok());
+        assert!(validate("todo_delete", &json!({"active": true})).is_ok());
+        assert!(validate("todo_delete", &json!({"active": false})).is_err());
+        assert!(validate("todo_delete", &json!({"active": "true"})).is_err());
+        assert!(validate("todo_delete", &json!({"id": "abc", "active": true})).is_err());
         assert!(validate("todo_delete", &json!({})).is_err());
     }
 

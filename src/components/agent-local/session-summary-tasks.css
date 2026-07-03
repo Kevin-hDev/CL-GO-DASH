@@ -13,6 +13,22 @@
   transform: rotate(180deg);
 }
 
+.ssb-item-status {
+  display: inline-flex;
+  width: var(--icon-sm);
+  height: var(--icon-sm);
+  align-items: center;
+  justify-content: center;
+}
+
+.ssb-item-status-active {
+  color: var(--pulse);
+}
+
+.ssb-item-status-paused {
+  color: var(--ink-faint);
+}
+
 .ssb-task-list {
   padding: 0 0 6px 28px;
 }

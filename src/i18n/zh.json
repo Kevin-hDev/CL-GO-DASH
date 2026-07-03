@@ -220,6 +220,10 @@
       "emptyPlans": "没有计划",
       "emptySubagents": "没有子代理",
       "todoProgress": "{{done}}/{{total}}",
+      "todoRunStatus": {
+        "active": "进行中",
+        "paused": "已暂停"
+      },
       "planStatus": {
         "draft": "草稿",
         "awaiting_approval": "待批准",

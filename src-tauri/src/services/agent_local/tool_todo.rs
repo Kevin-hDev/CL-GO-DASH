@@ -1,7 +1,7 @@
 use serde_json::Value;
 
 use super::tool_todo_parse::{optional_text, MAX_TODO_REASON_CHARS};
-use super::types_todo::AgentTodoItem;
+use super::types_todo::{AgentTodoItem, AgentTodoRunStatus};
 use crate::services::agent_local::types_ollama::StreamEvent;
 use crate::services::agent_local::types_tools::ToolResult;
 
@@ -73,21 +73,45 @@ pub async fn execute_resume(args: &Value, session_id: &str) -> ToolResult {
 }
 
 pub async fn execute_delete(args: &Value, session_id: &str) -> ToolResult {
-    let Some(run_id) = args.get("id").and_then(Value::as_str) else {
-        return ToolResult::err("paramètre 'id' requis");
-    };
-    match save_with(session_id, |session| {
-        super::tool_todo_state::delete_run(session, run_id)
-    })
-    .await
+    match save_with(session_id, |session| delete_run_for_args(session, args)).await
     {
-        Ok(Ok(active)) => {
+        Ok(Ok((active, run_id, status))) => {
             emit_update(session_id, active);
-            ToolResult::ok("Todo list supprimée.")
+            ToolResult::ok(format!("Todo list supprimée: id={run_id} status={status}."))
         }
         Ok(Err(err)) => ToolResult::err(err),
         Err(_) => ToolResult::err("Suppression de la todo impossible."),
     }
+}
+
+fn delete_run_for_args(
+    session: &mut super::types_session::AgentSession,
+    args: &Value,
+) -> Result<(Vec<AgentTodoItem>, String, String), String> {
+    let explicit_id = args.get("id").and_then(Value::as_str).map(str::to_string);
+    let delete_active = args.get("active").and_then(Value::as_bool).unwrap_or(false);
+    if explicit_id.is_some() && delete_active {
+        return Err("utiliser soit 'id', soit active=true".to_string());
+    }
+    if explicit_id.is_none() && !delete_active {
+        return Err("paramètre 'id' ou active=true requis".to_string());
+    }
+    let run_id = if delete_active {
+        session
+            .active_todo_run_id
+            .clone()
+            .ok_or_else(|| "aucune todo active à supprimer".to_string())?
+    } else {
+        explicit_id.ok_or_else(|| "paramètre 'id' ou active=true requis".to_string())?
+    };
+    let status = session
+        .todo_runs
+        .iter()
+        .find(|run| run.id == run_id)
+        .map(|run| todo_run_status_label(run.status).to_string())
+        .ok_or_else(|| "todo introuvable".to_string())?;
+    let active = super::tool_todo_state::delete_run(session, &run_id)?;
+    Ok((active, run_id, status))
 }
 
 pub async fn append_session_reminder(
@@ -114,6 +138,14 @@ pub(crate) fn emit_update(session_id: &str, todos: Vec<AgentTodoItem>) {
     };
     let emitter = super::stream_events::AgentEventEmitter::new(app.clone(), session_id.to_string());
     let _ = emitter.send(StreamEvent::TodoUpdated { todos });
+}
+
+fn todo_run_status_label(status: AgentTodoRunStatus) -> &'static str {
+    match status {
+        AgentTodoRunStatus::Active => "active",
+        AgentTodoRunStatus::Paused => "paused",
+        AgentTodoRunStatus::Completed => "completed",
+    }
 }
 
 async fn save_with<T>(

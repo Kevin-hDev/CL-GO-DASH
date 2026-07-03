@@ -66,8 +66,8 @@ export function hasChangeSummary(summary: SessionChangeSummary): boolean {
   return summary.files > 0 || summary.additions > 0 || summary.deletions > 0;
 }
 
-export function activeTodoRuns(session: Pick<AgentSession, "todo_runs"> | null): AgentTodoRun[] {
-  return (session?.todo_runs ?? []).filter((run) => run.status === "active");
+export function visibleTodoRuns(session: Pick<AgentSession, "todo_runs"> | null): AgentTodoRun[] {
+  return (session?.todo_runs ?? []).filter((run) => run.status === "active" || run.status === "paused");
 }
 
 export function childSubagents(parentSessionId: string, sessions: AgentSessionMeta[]): SubagentInfo[] {

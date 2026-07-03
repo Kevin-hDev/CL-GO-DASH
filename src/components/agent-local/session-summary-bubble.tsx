@@ -90,8 +90,8 @@ export function SessionSummaryBubble({ summary, git, onOpenPlan, onOpenSubagent 
             <span className="ssb-row-value" title={branch}>{branch}</span>
           </div>
           <div className="ssb-separator" />
-          <SessionSummarySection title={t("agentLocal.sessionSummary.sections.todos")} count={summary.activeTodos.length} open={sections.todos} onToggle={() => toggleSection("todos")}>
-            <SessionSummaryTodoList runs={summary.activeTodos} />
+          <SessionSummarySection title={t("agentLocal.sessionSummary.sections.todos")} count={summary.todoRuns.length} open={sections.todos} onToggle={() => toggleSection("todos")}>
+            <SessionSummaryTodoList runs={summary.todoRuns} />
           </SessionSummarySection>
           <SessionSummarySection title={t("agentLocal.sessionSummary.sections.plans")} count={summary.plans.length} open={sections.plans} onToggle={() => toggleSection("plans")}>
             <SessionSummaryPlanList

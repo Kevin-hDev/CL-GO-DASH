@@ -7,6 +7,7 @@ enum Ty {
     Float,
     Arr,
     Obj,
+    Bool,
 }
 
 type Schema = &'static [(&'static str, Ty, bool)];
@@ -36,7 +37,7 @@ static TODO_WRITE: Schema = &[("todos", Ty::Arr, true)];
 static TODO_HISTORY: Schema = &[];
 static TODO_PAUSE: Schema = &[("reason", Ty::Str, false)];
 static TODO_RESUME: Schema = &[("id", Ty::Str, true)];
-static TODO_DELETE: Schema = &[("id", Ty::Str, true)];
+static TODO_DELETE: Schema = &[("id", Ty::Str, false), ("active", Ty::Bool, false)];
 static AGENT_DIAGNOSTICS: Schema = &[("limit", Ty::Int, false)];
 static ASK_USER_CHOICE: Schema = &[("questions", Ty::Arr, true)];
 static PLANMODE: Schema = &[("title", Ty::Str, true), ("content", Ty::Str, true)];
@@ -135,6 +136,7 @@ fn type_ok(val: &Value, ty: Ty) -> bool {
         Ty::Float => val.is_f64() || val.is_u64() || val.is_i64(),
         Ty::Arr => val.is_array(),
         Ty::Obj => val.is_object(),
+        Ty::Bool => val.is_boolean(),
     }
 }
 
@@ -145,6 +147,7 @@ fn ty_label(ty: Ty) -> &'static str {
         Ty::Float => "number",
         Ty::Arr => "array",
         Ty::Obj => "object",
+        Ty::Bool => "boolean",
     }
 }
 
@@ -167,6 +170,15 @@ pub fn validate(tool: &str, args: &Value) -> Result<Value, String> {
             Some(v) if !v.is_null() && !type_ok(v, ty) => {
                 return Err(format!("'{name}' doit être de type {}", ty_label(ty)));
             }
+            _ => {}
+        }
+    }
+    if tool == "todo_delete" {
+        let has_id = matches!(obj.get("id"), Some(value) if !value.is_null());
+        let active = obj.get("active").and_then(Value::as_bool).unwrap_or(false);
+        match (has_id, active) {
+            (true, true) => return Err("utiliser soit 'id', soit active=true".to_string()),
+            (false, false) => return Err("paramètre 'id' ou active=true requis".to_string()),
             _ => {}
         }
     }

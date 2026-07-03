@@ -45,10 +45,12 @@ fn reminder_includes_active_todo_items() {
         }))
         .unwrap(),
     );
+    let active_id = session.active_todo_run_id.clone().unwrap();
 
     let reminder = super::tool_todo_summary::reminder(&session).unwrap();
 
     assert!(reminder.contains("Active todo"));
+    assert!(reminder.contains(&format!("id={active_id}")));
     assert!(reminder.contains("[completed] Lire"));
     assert!(reminder.contains("[in_progress] Coder"));
 }

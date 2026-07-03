@@ -21,6 +21,8 @@ vi.mock("react-i18next", () => ({
         "agentLocal.sessionSummary.emptyPlans": "No plan",
         "agentLocal.sessionSummary.emptySubagents": "No subagent",
         "agentLocal.sessionSummary.planStatus.awaiting_approval": "to approve",
+        "agentLocal.sessionSummary.todoRunStatus.active": "Active",
+        "agentLocal.sessionSummary.todoRunStatus.paused": "Paused",
         "agentLocal.sessionSummary.subagentType.explorer": "Explore",
         "todos.status.completed": "completed",
         "todos.status.pending": "pending",
@@ -69,33 +71,36 @@ describe("SessionSummaryBubble", () => {
   });
 
   it("déplie les sections Todo, Plan et Sous-agents", () => {
-    const { getByRole, getByText } = render(
+    const { getByRole, getByText, getByTitle } = render(
       <SessionSummaryBubble summary={summary()} git={git} />,
     );
 
     fireEvent.click(getByRole("button", { name: "Toggle summary" }));
-    fireEvent.click(getByRole("button", { name: "Todo list (1)" }));
+    fireEvent.click(getByRole("button", { name: "Todo list (2)" }));
     fireEvent.click(getByRole("button", { name: "Plan (1)" }));
     fireEvent.click(getByRole("button", { name: "Subagents (1)" }));
 
     expect(getByText("Implement UI")).toBeTruthy();
+    expect(getByText("Paused work")).toBeTruthy();
+    expect(getByTitle("Active")).toBeTruthy();
+    expect(getByTitle("Paused")).toBeTruthy();
     expect(getByText("1/2")).toBeTruthy();
     expect(getByText("Plan title")).toBeTruthy();
     expect(getByText("Explore · Explorer")).toBeTruthy();
   });
 
   it("déplie une todo list et affiche ses tâches", () => {
-    const { getByRole, getByText } = render(
+    const { getAllByText, getByRole, getByText } = render(
       <SessionSummaryBubble summary={summary()} git={git} />,
     );
 
     fireEvent.click(getByRole("button", { name: "Toggle summary" }));
-    fireEvent.click(getByRole("button", { name: "Todo list (1)" }));
+    fireEvent.click(getByRole("button", { name: "Todo list (2)" }));
     fireEvent.click(getByRole("button", { name: /Implement UI/ }));
 
     expect(getByText("One")).toBeTruthy();
     expect(getByText("Two")).toBeTruthy();
-    expect(getByText("pending")).toBeTruthy();
+    expect(getAllByText("pending").length).toBeGreaterThan(0);
   });
 
   it("ouvre le plan au clic sur son entrée", () => {
@@ -173,17 +178,27 @@ function summary(changes = { additions: 3, deletions: 1 }): SessionSummaryHookSt
   return {
     session: null,
     changes: { ...changes, files: changes.additions + changes.deletions > 0 ? 1 : 0 },
-    activeTodos: [{
-      id: "todo-1",
-      title: "Implement UI",
-      status: "active",
-      created_at: "",
-      updated_at: "",
-      todos: [
-        { content: "One", status: "completed" },
-        { content: "Two", status: "pending" },
-      ],
-    }],
+    todoRuns: [
+      {
+        id: "todo-1",
+        title: "Implement UI",
+        status: "active",
+        created_at: "",
+        updated_at: "",
+        todos: [
+          { content: "One", status: "completed" },
+          { content: "Two", status: "pending" },
+        ],
+      },
+      {
+        id: "todo-2",
+        title: "Paused work",
+        status: "paused",
+        created_at: "",
+        updated_at: "",
+        todos: [{ content: "Later", status: "pending" }],
+      },
+    ],
     plans: [{
       id: "plan-1",
       title: "Plan title",

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { CheckCircle2, ChevronDown, Circle, Clock3 } from "@/components/ui/lucide-icons";
-import { ClipboardText, FileText, Users } from "@/components/ui/icons";
+import { CheckCircle2, ChevronDown, Circle, Clock3, PauseCircle } from "@/components/ui/lucide-icons";
+import { FileText, Users } from "@/components/ui/icons";
 import type { AgentPlanRun, AgentTodoItem, AgentTodoRun, SubagentInfo } from "@/types/agent";
 import "./session-summary-tasks.css";
 
@@ -14,6 +14,8 @@ export function SessionSummaryTodoList({ runs }: { runs: AgentTodoRun[] }) {
   return runs.map((run) => {
     const done = run.todos.filter((todo) => todo.status === "completed").length;
     const open = openRunIds.has(run.id);
+    const statusLabel = t(`agentLocal.sessionSummary.todoRunStatus.${run.status}`);
+    const StatusIcon = run.status === "paused" ? PauseCircle : Clock3;
     return (
       <div className="ssb-run" key={run.id}>
         <button
@@ -27,7 +29,14 @@ export function SessionSummaryTodoList({ runs }: { runs: AgentTodoRun[] }) {
             return next;
           })}
         >
-          <ClipboardText size="var(--icon-sm)" className="ssb-item-icon" />
+          <span
+            aria-label={statusLabel}
+            className={`ssb-item-icon ssb-item-status ssb-item-status-${run.status}`}
+            role="img"
+            title={statusLabel}
+          >
+            <StatusIcon aria-hidden="true" size="var(--icon-sm)" />
+          </span>
           <span className="ssb-item-main" title={run.title}>{run.title}</span>
           <span className="ssb-item-meta">
             {t("agentLocal.sessionSummary.todoProgress", { done, total: run.todos.length })}

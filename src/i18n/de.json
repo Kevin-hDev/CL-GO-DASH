@@ -220,6 +220,10 @@
       "emptyPlans": "Kein Plan",
       "emptySubagents": "Kein Subagent",
       "todoProgress": "{{done}}/{{total}}",
+      "todoRunStatus": {
+        "active": "Aktiv",
+        "paused": "Pausiert"
+      },
       "planStatus": {
         "draft": "Entwurf",
         "awaiting_approval": "zu prüfen",

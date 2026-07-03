@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   addChangeSummaries,
-  activeTodoRuns,
   childSubagents,
   summarizeToolChange,
   summarizeLastRequestChanges,
+  visibleTodoRuns,
 } from "./session-summary";
 import type { AgentMessage, AgentSession, AgentSessionMeta } from "@/types/agent";
 
@@ -78,15 +78,16 @@ describe("session-summary", () => {
     expect(summary).toEqual({ additions: 0, deletions: 0, files: 0 });
   });
 
-  it("ne garde que les todo runs actifs", () => {
+  it("garde les todo runs actifs et en pause", () => {
     const session = {
       todo_runs: [
         { id: "a", title: "Active", status: "active", todos: [], created_at: "", updated_at: "" },
         { id: "p", title: "Paused", status: "paused", todos: [], created_at: "", updated_at: "" },
+        { id: "c", title: "Completed", status: "completed", todos: [], created_at: "", updated_at: "" },
       ],
     } satisfies Pick<AgentSession, "todo_runs">;
 
-    expect(activeTodoRuns(session).map((run) => run.title)).toEqual(["Active"]);
+    expect(visibleTodoRuns(session).map((run) => run.title)).toEqual(["Active", "Paused"]);
   });
 
   it("filtre les sous-agents par session parent", () => {

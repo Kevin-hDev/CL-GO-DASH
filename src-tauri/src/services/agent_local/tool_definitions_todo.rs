@@ -58,7 +58,7 @@ pub fn todo_resume_definition() -> Value {
         serde_json::json!({
             "type": "object",
             "properties": {
-                "id": {"type": "string", "description": "Todo checklist id from todo_history"}
+                "id": {"type": "string", "description": "Todo checklist id from Todo memory or todo_history"}
             },
             "required": ["id"]
         }),
@@ -68,13 +68,13 @@ pub fn todo_resume_definition() -> Value {
 pub fn todo_delete_definition() -> Value {
     super::tool_definitions::tool_def(
         "todo_delete",
-        "Delete a saved checklist by id when it should not be resumed later. Hidden from the user UI.",
+        "Delete a checklist only when it should not be resumed later. Provide exactly one of id or active=true. Hidden from the user UI.",
         serde_json::json!({
             "type": "object",
             "properties": {
-                "id": {"type": "string", "description": "Todo checklist id from todo_history"}
-            },
-            "required": ["id"]
+                "id": {"type": "string", "description": "Todo checklist id from Todo memory or todo_history"},
+                "active": {"type": "boolean", "description": "Set true to delete the current active checklist"}
+            }
         }),
     )
 }

@@ -17,6 +17,7 @@ import {
   Minimize2 as LuMinimize2,
   PanelRightClose as LuPanelRightClose,
   PanelRightOpen as LuPanelRightOpen,
+  PauseCircle as LuPauseCircle,
   Plus as LuPlus,
   Search as LuSearch,
   TerminalSquare as LuTerminalSquare,
@@ -54,6 +55,7 @@ export const Maximize2 = withSafeCssSize(LuMaximize2);
 export const Minimize2 = withSafeCssSize(LuMinimize2);
 export const PanelRightClose = withSafeCssSize(LuPanelRightClose);
 export const PanelRightOpen = withSafeCssSize(LuPanelRightOpen);
+export const PauseCircle = withSafeCssSize(LuPauseCircle);
 export const Plus = withSafeCssSize(LuPlus);
 export const Search = withSafeCssSize(LuSearch);
 export const TerminalSquare = withSafeCssSize(LuTerminalSquare);
