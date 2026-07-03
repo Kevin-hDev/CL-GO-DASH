@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import type { RetryIndicatorState } from "@/types/agent";
 
 const MAX_CONNECTION_RETRIES = 10;
-const CONNECTION_RETRY_DELAY_MS = 1000;
+const CONNECTION_RETRY_DELAY_MS = 2500;
 
 interface OllamaConnectionRetryOptions {
   error?: string;
@@ -72,7 +72,9 @@ export function useOllamaConnectionRetry({
           return;
         }
 
-        await wait(CONNECTION_RETRY_DELAY_MS);
+        if (attempt < MAX_CONNECTION_RETRIES) {
+          await wait(CONNECTION_RETRY_DELAY_MS);
+        }
       }
 
       if (!cancelled) {

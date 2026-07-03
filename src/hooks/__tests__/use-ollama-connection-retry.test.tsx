@@ -44,9 +44,9 @@ describe("useOllamaConnectionRetry", () => {
       await vi.advanceTimersByTimeAsync(0);
     });
     expect(result.current.indicator?.attempt).toBe(1);
-    for (let i = 0; i < 10; i += 1) {
+    for (let i = 0; i < 9; i += 1) {
       await act(async () => {
-        await vi.advanceTimersByTimeAsync(1000);
+        await vi.advanceTimersByTimeAsync(2500);
       });
     }
 
