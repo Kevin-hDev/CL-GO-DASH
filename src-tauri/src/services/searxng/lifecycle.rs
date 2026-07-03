@@ -1,5 +1,6 @@
 use crate::services::agent_local::{app_handle_global, types_tools::SearchResult};
 use std::process::Child;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex as StdMutex;
 use std::time::{Duration, Instant};
 use tauri::Manager;
@@ -8,6 +9,20 @@ use tokio::sync::Mutex;
 const START_FAILURE_COOLDOWN: Duration = Duration::from_secs(30);
 
 static LAST_START_FAILURE: StdMutex<Option<StartFailure>> = StdMutex::new(None);
+
+/// Best-effort flag set when a SearXNG sidecar has successfully started and not
+/// yet been detected as dead. Read synchronously by the prompt assembler.
+static SEARXNG_READY: AtomicBool = AtomicBool::new(false);
+
+/// Synchronous, non-blocking read of the last known SearXNG runtime state.
+/// True means a sidecar started successfully and has not been observed dead.
+pub fn is_ready() -> bool {
+    SEARXNG_READY.load(Ordering::Relaxed)
+}
+
+fn set_ready(value: bool) {
+    SEARXNG_READY.store(value, Ordering::Relaxed);
+}
 
 pub struct SearxngSidecar(pub Mutex<Option<SearxngHandle>>);
 
@@ -47,7 +62,10 @@ async fn ensure_running(app: &tauri::AppHandle) -> Result<String, String> {
     if let Some(handle) = guard.as_mut() {
         match handle.child.try_wait() {
             Ok(None) => return Ok(base_url(handle.port)),
-            Ok(Some(_)) => *guard = None,
+            Ok(Some(_)) => {
+                set_ready(false);
+                *guard = None;
+            }
             Err(_) => return Err("SearXNG: état processus illisible".to_string()),
         }
     }
@@ -72,6 +90,7 @@ async fn ensure_running(app: &tauri::AppHandle) -> Result<String, String> {
     }
     eprintln!("[searxng] sidecar démarré pid={pid} port={port}");
     clear_start_failure();
+    set_ready(true);
     *guard = Some(SearxngHandle { child, port });
     Ok(url)
 }
@@ -81,6 +100,7 @@ pub async fn stop(sidecar: &SearxngSidecar) {
     if let Some(handle) = guard.take() {
         super::process::kill_child_process(handle.child);
     }
+    set_ready(false);
     super::process::clear_pid_file();
 }
 
@@ -126,6 +146,7 @@ fn remember_start_failure(error: &str) {
             message: error.to_string(),
         });
     }
+    set_ready(false);
 }
 
 fn clear_start_failure() {
@@ -165,5 +186,23 @@ mod tests {
         );
         clear_start_failure();
         assert_eq!(recent_start_failure(), None);
+    }
+
+    #[test]
+    fn ready_flag_toggles_with_start_failure() {
+        // A successful start marks the sidecar as ready.
+        set_ready(true);
+        assert!(is_ready());
+        // Any recorded start failure must clear the flag so the prompt
+        // assembler stops advertising SearXNG as active.
+        remember_start_failure("SearXNG: timeout au démarrage");
+        assert!(!is_ready());
+        // Clearing the failure does NOT re-arm the flag on its own: only a
+        // fresh successful ensure_running run would. This documents that
+        // invariant.
+        clear_start_failure();
+        assert!(!is_ready());
+        // Restore baseline for other tests sharing the process-global flag.
+        set_ready(false);
     }
 }

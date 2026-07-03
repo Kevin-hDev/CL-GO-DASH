@@ -71,7 +71,8 @@ fn extract_source_archive(archive: &Path) -> Result<PathBuf, String> {
     }
     let tmp_dir = sidecar_dir().join("source.tmp");
     let _ = std::fs::remove_dir_all(&tmp_dir);
-    std::fs::create_dir_all(&tmp_dir).map_err(|_| "SearXNG: extraction impossible".to_string())?;
+    std::fs::create_dir_all(&tmp_dir)
+        .map_err(|e| format!("SearXNG: extraction impossible ({e})"))?;
 
     let file =
         std::fs::File::open(archive).map_err(|_| "SearXNG: source introuvable".to_string())?;
@@ -91,7 +92,7 @@ fn extract_source_archive(archive: &Path) -> Result<PathBuf, String> {
         }
         entry
             .unpack(tmp_dir.join(path))
-            .map_err(|_| "SearXNG: extraction impossible".to_string())?;
+            .map_err(|e| format!("SearXNG: extraction impossible ({e})"))?;
     }
 
     let extracted = tmp_dir.join("source");
@@ -100,8 +101,9 @@ fn extract_source_archive(archive: &Path) -> Result<PathBuf, String> {
     }
     let _ = std::fs::remove_dir_all(&final_dir);
     std::fs::rename(&extracted, &final_dir)
-        .map_err(|_| "SearXNG: extraction impossible".to_string())?;
-    std::fs::write(stamp_path, stamp).map_err(|_| "SearXNG: extraction impossible".to_string())?;
+        .map_err(|e| format!("SearXNG: extraction impossible ({e})"))?;
+    std::fs::write(stamp_path, stamp)
+        .map_err(|e| format!("SearXNG: extraction impossible ({e})"))?;
     let _ = std::fs::remove_dir_all(&tmp_dir);
     super::wheels::sync_from_archive_parent(archive)?;
     Ok(final_dir)

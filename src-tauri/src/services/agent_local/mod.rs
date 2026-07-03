@@ -18,11 +18,14 @@ pub mod chat_prompts;
 pub mod chat_prompts_chat_tests;
 #[cfg(test)]
 pub mod chat_prompts_tests;
+#[cfg(test)]
+pub mod chat_prompts_web_status_tests;
 pub mod circuit_breaker;
 #[cfg(test)]
 pub mod circuit_breaker_tests;
 pub mod compress_hook;
 pub mod context_budget;
+pub mod disabled_tools_hint;
 pub mod diagnostic_args;
 #[cfg(test)]
 mod diagnostic_args_tests;
@@ -235,6 +238,7 @@ pub mod types_session;
 pub mod types_stream;
 pub mod types_todo;
 pub mod types_tools;
+pub mod web_search_status;
 pub mod write_guard;
 pub mod write_guard_extract;
 #[cfg(test)]
