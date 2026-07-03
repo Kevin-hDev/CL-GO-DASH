@@ -195,6 +195,9 @@ pub mod tool_result_budget;
 pub mod tool_result_budget_tests;
 pub mod tool_result_truncate;
 pub mod tool_scan_timeout;
+pub mod tool_short_desc;
+#[cfg(test)]
+pub mod tool_short_desc_tests;
 pub mod tool_skill_loader;
 pub mod tool_spreadsheet_calamine;
 #[cfg(test)]
