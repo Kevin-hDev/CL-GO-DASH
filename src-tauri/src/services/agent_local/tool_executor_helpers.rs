@@ -80,6 +80,15 @@ pub fn post_record_write(
     if tr.is_error {
         return;
     }
+    if name == "bash" && !tr.affected_paths.is_empty() {
+        let paths = tr
+            .affected_paths
+            .iter()
+            .map(std::path::PathBuf::from)
+            .collect::<Vec<_>>();
+        write_guard.record_reads(&paths);
+        return;
+    }
     let path_str = match name {
         "write_file" | "edit_file" | "write_spreadsheet" | "write_document" => {
             args["path"].as_str()
@@ -134,6 +143,7 @@ pub fn push_tool_result(
     tool_call_id: Option<&str>,
     resolved_path: Option<String>,
 ) {
+    let affected_paths = tr.affected_paths.clone();
     let _ = on_event.send(StreamEvent::ToolResult {
         name: name.to_string(),
         content: tr.content.clone(),
@@ -141,6 +151,7 @@ pub fn push_tool_result(
         truncated: tr.truncated,
         tool_call_index,
         resolved_path,
+        affected_paths,
     });
     messages.push(ChatMessage {
         role: "tool".to_string(),

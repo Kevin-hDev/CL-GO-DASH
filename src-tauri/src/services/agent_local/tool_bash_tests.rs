@@ -73,6 +73,39 @@ async fn test_cwd_update_after_cd() {
     }
 }
 
+#[cfg(not(target_os = "windows"))]
+#[tokio::test]
+async fn test_execute_shell_reports_affected_paths() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let out = execute_shell(
+        "printf 'hello\\n' > created.md && printf 'tsx\\n' > component.tsx",
+        dir.path(),
+        None,
+    )
+    .await
+    .expect("execute shell");
+
+    let mut paths = out.affected_paths;
+    paths.sort();
+
+    let expected = vec![
+        dir.path()
+            .join("component.tsx")
+            .canonicalize()
+            .expect("component"),
+        dir.path()
+            .join("created.md")
+            .canonicalize()
+            .expect("created"),
+    ]
+    .into_iter()
+    .map(|path| path.to_string_lossy().to_string())
+    .collect::<Vec<_>>();
+
+    assert_eq!(out.exit_code, 0);
+    assert_eq!(paths, expected);
+}
+
 #[test]
 fn test_dev_server_command_detected_as_background() {
     assert!(super::super::tool_bash_long::should_run_in_background(

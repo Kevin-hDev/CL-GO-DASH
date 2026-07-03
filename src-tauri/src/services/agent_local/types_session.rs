@@ -144,6 +144,8 @@ pub struct ToolActivityRecord {
     pub new_text: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub start_line: Option<u32>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub affected_paths: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

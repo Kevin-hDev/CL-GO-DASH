@@ -32,6 +32,7 @@ export interface ToolActivityRecord {
   new_text?: string;
   start_line?: number;
   resolved_path?: string;
+  affected_paths?: string[];
 }
 
 export interface ToolCallRequest {
@@ -51,6 +52,7 @@ export interface ToolResult {
   content: string;
   is_error: boolean;
   truncated?: boolean;
+  affected_paths?: string[];
 }
 
 export interface SearchResult {

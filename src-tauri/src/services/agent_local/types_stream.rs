@@ -38,6 +38,8 @@ pub enum StreamEvent {
         tool_call_index: usize,
         #[serde(skip_serializing_if = "Option::is_none", default)]
         resolved_path: Option<String>,
+        #[serde(skip_serializing_if = "Vec::is_empty", default)]
+        affected_paths: Vec<String>,
     },
     TurnEnd {},
     #[serde(rename_all = "camelCase")]

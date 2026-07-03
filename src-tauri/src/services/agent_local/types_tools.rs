@@ -6,6 +6,8 @@ pub struct ToolResult {
     pub is_error: bool,
     #[serde(default)]
     pub truncated: bool,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub affected_paths: Vec<String>,
 }
 
 impl ToolResult {
@@ -14,6 +16,7 @@ impl ToolResult {
             content: content.into(),
             is_error: false,
             truncated: false,
+            affected_paths: Vec::new(),
         }
     }
 
@@ -22,7 +25,13 @@ impl ToolResult {
             content: content.into(),
             is_error: true,
             truncated: false,
+            affected_paths: Vec::new(),
         }
+    }
+
+    pub fn with_affected_paths(mut self, paths: Vec<String>) -> Self {
+        self.affected_paths = paths;
+        self
     }
 }
 
@@ -34,6 +43,8 @@ pub struct ShellOutput {
     pub timed_out: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub new_cwd: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub affected_paths: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

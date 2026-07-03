@@ -109,11 +109,13 @@ function appendLatestToolOperations(
   for (let index = inferred.length - 1; index >= 0; index--) {
     if (byPath.size >= MAX_FILE_OPERATIONS) return;
     const tool = inferred[index];
-    const operation = toolToOperation(tool, messageId, index, timestamp);
-    if (!operation) continue;
-    const key = fileOperationKey(operation.path, baseDir);
-    if (!key || byPath.has(key)) continue;
-    byPath.set(key, { ...operation, id: `file:${key}` });
+    const operations = toolToOperations(tool, messageId, index, timestamp);
+    for (const operation of operations) {
+      if (byPath.size >= MAX_FILE_OPERATIONS) return;
+      const key = fileOperationKey(operation.path, baseDir);
+      if (!key || byPath.has(key)) continue;
+      byPath.set(key, { ...operation, id: `file:${key}` });
+    }
   }
 }
 
@@ -132,16 +134,31 @@ function isAbsolutePath(path: string): boolean {
   return path.startsWith("/") || /^[A-Za-z]:\//.test(path);
 }
 
-function toolToOperation(
+function toolToOperations(
   tool: ToolActivityRecord,
   messageId: string,
   index: number,
   timestamp: string,
-): FileOperation | null {
+): FileOperation[] {
+  if (tool.is_error) return [];
+  if (tool.name === "bash" && tool.affected_paths?.length) {
+    return tool.affected_paths
+      .filter((path) => path.trim())
+      .map((path, pathIndex) => ({
+        id: `${messageId}-${index}-${pathIndex}`,
+        path,
+        name: fileNameFromPath(path),
+        type: "write",
+        timestamp,
+        additions: 0,
+        deletions: 0,
+      }));
+  }
+
   const path = tool.resolved_path?.trim() || tool.summary.trim();
-  if (tool.is_error || !path) return null;
+  if (!path) return [];
   if (tool.name === "write_file" && tool.content != null) {
-    return {
+    return [{
       id: `${messageId}-${index}`,
       path,
       name: fileNameFromPath(path),
@@ -150,10 +167,10 @@ function toolToOperation(
       content: tool.content,
       additions: countLines(tool.content),
       deletions: 0,
-    };
+    }];
   }
   if (tool.name === "edit_file" && tool.old_text != null && tool.new_text != null) {
-    return {
+    return [{
       id: `${messageId}-${index}`,
       path,
       name: fileNameFromPath(path),
@@ -164,11 +181,11 @@ function toolToOperation(
       startLine: tool.start_line,
       additions: countLines(tool.new_text),
       deletions: countLines(tool.old_text),
-    };
+    }];
   }
   const OFFICE_WRITE = ["write_spreadsheet", "write_document"];
   if (OFFICE_WRITE.includes(tool.name)) {
-    return {
+    return [{
       id: `${messageId}-${index}`,
       path,
       name: fileNameFromPath(path),
@@ -177,7 +194,7 @@ function toolToOperation(
       content: tool.content,
       additions: 0,
       deletions: 0,
-    };
+    }];
   }
-  return null;
+  return [];
 }

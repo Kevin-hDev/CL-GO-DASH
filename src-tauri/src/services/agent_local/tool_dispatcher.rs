@@ -37,7 +37,7 @@ async fn dispatch_inner(
                     if out.exit_code != 0 {
                         ToolResult::err(content)
                     } else {
-                        ToolResult::ok(content)
+                        ToolResult::ok(content).with_affected_paths(out.affected_paths)
                     }
                 }
                 Err(e) => ToolResult::err(e),

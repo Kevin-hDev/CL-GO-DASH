@@ -38,6 +38,23 @@ describe("toolResult", () => {
     expect(result.state.currentTools[0].result).toBeUndefined();
   });
 
+  it("attache les fichiers touchés par bash au tool courant", () => {
+    const currentTools = [{ name: "bash", args: { command: "touch a.md" } }];
+    const state = makeState({ currentTools });
+    const result = applyStreamEvent(state, {
+      event: "toolResult",
+      data: {
+        name: "bash",
+        toolCallIndex: 0,
+        content: "ok",
+        isError: false,
+        affectedPaths: ["/repo/a.md"],
+      },
+    });
+
+    expect(result.state.currentTools[0].affectedPaths).toEqual(["/repo/a.md"]);
+  });
+
   it("ignore les résultats des tools internes", () => {
     const state = makeState({ currentTools: [{ name: "bash", args: {} }] });
     const result = applyStreamEvent(state, {

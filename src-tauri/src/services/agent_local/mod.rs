@@ -99,6 +99,7 @@ pub mod subagent_working_dir;
 pub mod subagent_worktree;
 pub mod tool_bash;
 pub mod tool_bash_background;
+pub mod tool_bash_changes;
 pub mod tool_bash_long;
 pub mod tool_definitions;
 pub mod tool_definitions_chat;

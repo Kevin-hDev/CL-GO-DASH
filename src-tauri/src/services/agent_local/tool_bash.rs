@@ -22,12 +22,16 @@ pub async fn execute_shell(
             exit_code: -1,
             timed_out: false,
             new_cwd: None,
+            affected_paths: Vec::new(),
         });
     }
 
+    let before = super::tool_bash_changes::snapshot(working_dir);
     if super::tool_bash_long::should_run_in_background(command) {
-        return super::tool_bash_long::execute_background_shell(command, working_dir, timeout_secs)
-            .await;
+        let output =
+            super::tool_bash_long::execute_background_shell(command, working_dir, timeout_secs)
+                .await?;
+        return Ok(with_changed_paths(output, working_dir, before));
     }
 
     let secs = timeout_secs.unwrap_or(DEFAULT_TIMEOUT).min(MAX_TIMEOUT);
@@ -59,7 +63,9 @@ pub async fn execute_shell(
                 exit_code: out.status.code().unwrap_or(-1),
                 timed_out: false,
                 new_cwd,
+                affected_paths: Vec::new(),
             })
+            .map(|output| with_changed_paths(output, working_dir, before))
         }
         Ok(Err(e)) => Err(format!("Erreur exécution: {e}")),
         Err(_) => Ok(ShellOutput {
@@ -68,8 +74,21 @@ pub async fn execute_shell(
             exit_code: -1,
             timed_out: true,
             new_cwd: None,
+            affected_paths: Vec::new(),
         }),
     }
+}
+
+fn with_changed_paths(
+    mut output: ShellOutput,
+    working_dir: &Path,
+    before: super::tool_bash_changes::FileSnapshot,
+) -> ShellOutput {
+    if output.exit_code == 0 {
+        let after = super::tool_bash_changes::snapshot(working_dir);
+        output.affected_paths = super::tool_bash_changes::changed_paths(&before, &after);
+    }
+    output
 }
 
 fn generate_cwd_marker() -> String {

@@ -69,6 +69,7 @@ pub async fn execute_background_shell(
                 exit_code: status.code().unwrap_or(-1),
                 timed_out: false,
                 new_cwd: None,
+                affected_paths: Vec::new(),
             });
         }
 
@@ -178,6 +179,7 @@ fn background_started_output(child: Child, mut stdout: String, stderr: String) -
         exit_code: 0,
         timed_out: false,
         new_cwd: None,
+        affected_paths: Vec::new(),
     }
 }
 

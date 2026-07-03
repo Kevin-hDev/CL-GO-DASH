@@ -18,7 +18,7 @@ export type StreamEvent =
   | { event: "contentPhase"; data: { phase: TokenPhase } }
   | { event: "thinking"; data: { content: string } }
   | { event: "toolCall"; data: { name: string; arguments: Record<string, unknown> } }
-  | { event: "toolResult"; data: { name: string; content: string; isError: boolean; truncated?: boolean; toolCallIndex: number; resolvedPath?: string } }
+  | { event: "toolResult"; data: { name: string; content: string; isError: boolean; truncated?: boolean; toolCallIndex: number; resolvedPath?: string; affectedPaths?: string[] } }
   | { event: "turnEnd"; data: Record<string, never> }
   | { event: "permissionRequest"; data: { id: string; toolName: string; arguments: Record<string, unknown> } }
   | { event: "done"; data: { evalCount: number | null; evalDurationNs: number; finalTps: number; promptTokens: number | null; contextTokens: number | null } }
