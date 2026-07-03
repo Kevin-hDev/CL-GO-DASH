@@ -3,11 +3,10 @@ use serde_json::Value;
 pub fn ask_user_choice_definition() -> Value {
     super::tool_definitions::tool_def(
         "ask_user_choice",
-        "Ask the user to choose between concrete options when their decision changes the next step. \
-         Use sparingly unless an active workflow requires it. \
-         In Plan Mode, prefer this tool for important user questions before publishing a plan. \
-         Final Plan Mode approval is handled by planmode itself. \
-         Always include a recommended option when useful.",
+        "Ask the user to choose between concrete options when their answer changes the next step. \
+         When to use: multiple valid implementation approaches and the choice is the user's to make; ambiguous requirement where the next action depends on their preference; in Plan mode, before publishing a plan, to resolve open design questions. \
+         When NOT to use: the choice has a sensible default — pick it, mention it, and proceed; you only need plan approval — use planmode, not this tool; simple clarification that you can resolve by reading the code or docs. \
+         Keep it short: 1-4 questions, 2-4 options each, very short headers (max 12 chars). Mark the recommended option when useful. The user can always pick 'Other' to type a custom answer.",
         serde_json::json!({
             "type": "object",
             "properties": {

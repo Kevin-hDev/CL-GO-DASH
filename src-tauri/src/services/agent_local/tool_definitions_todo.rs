@@ -1,5 +1,17 @@
 use serde_json::Value;
 
+/// All todo + diagnostics tool definitions (groups `todo_list` and `agent_diagnostics`).
+pub fn todo_and_diagnostics_definitions() -> Vec<Value> {
+    vec![
+        todo_write_definition(),
+        todo_history_definition(),
+        todo_pause_definition(),
+        todo_resume_definition(),
+        todo_delete_definition(),
+        agent_diagnostics_definition(),
+    ]
+}
+
 pub fn todo_write_definition() -> Value {
     super::tool_definitions::tool_def(
         "todo_write",

@@ -3,13 +3,14 @@ use serde_json::Value;
 pub fn delegate_task_definition() -> Value {
     super::tool_definitions::tool_def(
         "delegate_task",
-        "Spawn an autonomous subagent to execute a subtask in the background. \
-         Types: 'explorer' (read-only: file search, code reading, web research) \
-         or 'coder' (file creation/modification in an isolated git worktree). \
-         You can spawn multiple subagents in parallel for independent subtasks. \
-         IMPORTANT: Once you delegate a task, do NOT perform the same work yourself. \
-         Wait for the subagent reports, then synthesize their results for the user. \
-         The subagent results are NOT visible to the user — you MUST relay them.",
+        "Spawn an autonomous subagent to handle a subtask in isolation. Results come back to you; they are NOT shown to the user, so you must relay a summary. \
+         Types: 'explorer' (read-only: read_file, list_dir, grep, glob, web_search, web_fetch) for research, file investigation, web lookups; \
+         or 'coder' (file creation/modification in an isolated git worktree) for parallel implementation work. \
+         When to use: independent subtasks that can run in parallel; open-ended research that would take several rounds of grep/glob/read; background work you don't need immediately. \
+         When NOT to use: reading a specific known file — use read_file directly; searching for a single class/function — use grep or glob directly; a 1-2 step task — do it yourself. \
+         IMPORTANT: once you delegate a task, do NOT do the same work yourself. Wait for the subagent report, then synthesize. \
+         Write a structured prompt using XML tags: <context>, <task>, <constraints>, <output_format>. Terse prompts produce shallow results. \
+         You can spawn multiple subagents in parallel for independent subtasks.",
         serde_json::json!({
             "type": "object",
             "properties": {
