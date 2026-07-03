@@ -2,7 +2,6 @@ import { memo } from "react";
 import { UserMessage } from "./user-message";
 import { AssistantMessage } from "./assistant-message";
 import { SavedToolTimeline, StreamToolTimeline } from "./message-tool-timeline";
-import { ErrorBubble } from "./error-bubble";
 import { CompressionIndicator } from "./compression-indicator";
 import { ContextCompressionMarker } from "./context-compression-marker";
 import { SubagentBubble } from "./subagent-bubble";
@@ -29,10 +28,6 @@ interface MessageListProps {
   totalElapsedMs: number;
   segmentStartedAt: number | null;
   liveTokenCount: number;
-  error?: string;
-  isConnectionError?: boolean;
-  diagnosticSummary?: string;
-  onRetry?: () => void;
   onReload?: (messageId: string) => void;
   onEdit?: (messageId: string, newContent: string) => void;
   onFileClick?: (file: { name: string; path?: string; thumbnail?: string }) => void;
@@ -46,7 +41,7 @@ interface MessageListProps {
 export function MessageList({
   sessionId, messages, completedSegments, currentContent, currentContentPhase, currentThinking,
   currentTools, isStreaming, tps, totalElapsedMs, segmentStartedAt,
-  liveTokenCount, error, isConnectionError, diagnosticSummary, onRetry, onReload, onEdit, onFileClick, onFilePreview,
+  liveTokenCount, onReload, onEdit, onFileClick, onFilePreview,
   projectPath, completedSubagents, onOpenSubagent, planPreview,
 }: MessageListProps) {
   const lastAssistantIdx = findLastIndex(messages, (m) => m.role === "assistant");
@@ -124,14 +119,6 @@ export function MessageList({
 
       {isCompressing && <CompressionIndicator />}
 
-      {error && !isStreaming && (
-        <ErrorBubble
-          message={error}
-          isConnection={isConnectionError}
-          diagnosticSummary={diagnosticSummary}
-          onRetry={onRetry}
-        />
-      )}
     </>
   );
 }

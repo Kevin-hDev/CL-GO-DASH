@@ -1,5 +1,11 @@
 import type { StreamSegment, ToolActivity } from "./agent-chat-utils";
-import type { AgentInteractiveChoiceRequest, AgentMessage, AgentPlanPreview, TokenPhase } from "@/types/agent";
+import type {
+  AgentInteractiveChoiceRequest,
+  AgentMessage,
+  AgentPlanPreview,
+  RetryIndicatorState,
+  TokenPhase,
+} from "@/types/agent";
 
 export const MAX_PENDING_PERMISSIONS = 32;
 export const MAX_MESSAGES_PER_SESSION = 2000;
@@ -9,6 +15,7 @@ export const KNOWN_ERROR_KEYS: Record<string, string> = {
   model_not_found: "errors.modelNotFound",
   rate_limit: "errors.rateLimited",
   auth_failed: "errors.authFailed",
+  ollama_server_error: "errors.ollamaServerError",
 };
 
 export interface ChatState {
@@ -30,6 +37,7 @@ export interface ChatState {
   error?: string;
   isConnectionError?: boolean;
   diagnosticSummary?: string;
+  retryIndicator?: RetryIndicatorState | null;
   interactiveChoice?: AgentInteractiveChoiceRequest;
   planPreview?: AgentPlanPreview | null;
   planModeEnabled?: boolean;
@@ -87,6 +95,7 @@ export function toChatState(state: ManagedStreamState): ChatState {
     error: state.error,
     isConnectionError: state.isConnectionError,
     diagnosticSummary: state.diagnosticSummary,
+    retryIndicator: state.retryIndicator,
     interactiveChoice: state.interactiveChoice,
     planPreview: state.planPreview,
     planModeEnabled: state.planModeEnabled,

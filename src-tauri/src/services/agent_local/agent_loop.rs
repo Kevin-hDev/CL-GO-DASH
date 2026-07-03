@@ -1,12 +1,12 @@
 use super::agent_loop_compression::{LastCounts, LoopCompression};
-use super::ollama_thinking_retry::{build_thinking_disabled_retry, is_thinking_only_dead_end};
 use super::stream_events::AgentEventEmitter;
 use super::types_ollama::{ChatMessage, OllamaThink, StreamEvent};
 use super::write_guard_registry;
 use super::{
-    agent_loop_limits::MAX_TURNS, agent_loop_plan, agent_loop_support, circuit_breaker,
-    context_budget, eager_dispatch, ollama_stream, stream_diagnostics_model as model_diag,
-    stream_diagnostics_payload as payload_diag, tool_executor, tool_result_budget,
+    agent_loop_limits::MAX_TURNS, agent_loop_plan, agent_loop_support, agent_loop_thinking_retry,
+    circuit_breaker, context_budget, eager_dispatch, ollama_stream,
+    stream_diagnostics_model as model_diag, stream_diagnostics_payload as payload_diag,
+    tool_executor, tool_result_budget,
 };
 use crate::services::token_counting;
 use std::path::PathBuf;
@@ -81,44 +81,25 @@ pub async fn run_agent_loop(
         let mut result = outcome.into_result();
         model_diag::record_model_result(&session_id, &request_id, turn, &result).await;
 
-        // Contournement bug Ollama #10976 : si le modèle (Qwen3 notamment)
-        // a réfléchi mais n'a produit ni contenu ni appel d'outil, on relance
-        // une fois avec think=false. Le thinking-only est une régression Ollama
-        // connue, non corrigée côté serveur (PR #16758 encore ouverte).
-        if !interrupted && is_thinking_only_dead_end(&result) {
-            if let Some(retry_req) = build_thinking_disabled_retry(&request) {
-                eprintln!(
-                    "[agent-loop] thinking-only détecté (turn {turn}), retry think=false"
-                );
-                super::stream_diagnostics::mark_phase(
-                    &session_id,
-                    &request_id,
-                    "model_stream",
-                    "Retry thinking-only (think=false).",
-                )
-                .await;
-                // Le 1er stream étant un dead-end (0 tool_call), l'eager_handle
-                // d'origine n'a rien à consommer : on l'abandonne proprement.
-                eager_handle.abort();
-                let (retry_tx, retry_rx) = tokio::sync::mpsc::unbounded_channel();
-                eager_handle = tokio::spawn(eager_dispatch::collect_eager_results(
-                    retry_rx,
-                    working_dir.clone(),
-                    session_id.clone(),
-                    request_id.clone(),
-                ));
-                let retry_outcome = ollama_stream::stream_chat_with_tool_notify(
+        if !interrupted {
+            let retry = agent_loop_thinking_retry::retry_if_needed(
+                agent_loop_thinking_retry::ThinkingRetryParams {
                     on_event,
-                    &retry_req,
-                    cancel.clone(),
-                    retry_tx,
+                    request: &request,
+                    result,
+                    eager_handle,
+                    turn,
+                    working_dir: working_dir.clone(),
+                    session_id: session_id.clone(),
+                    request_id: request_id.clone(),
+                    cancel: cancel.clone(),
                     plan_active,
                     realtime_budget,
-                )
-                .await?;
-                result = retry_outcome.into_result();
-                model_diag::record_model_result(&session_id, &request_id, turn, &result).await;
-            }
+                },
+            )
+            .await?;
+            result = retry.result;
+            eager_handle = retry.eager_handle;
         }
         if interrupted {
             super::stream_buffer::finalize_interrupted_content(on_event, &result, plan_active);

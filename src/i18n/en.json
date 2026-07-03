@@ -193,6 +193,14 @@
     "send": "Send",
     "cancel": "Cancel",
     "compression": "Compression",
+    "retry": {
+      "thinkingOnly": "Retrying...",
+      "parserCrash": "Fixing format...",
+      "featureDropped": "Adjusting feature...",
+      "server": "Retrying Ollama...",
+      "connection": "Reconnecting...",
+      "button": "Retry"
+    },
     "contextCompressed": "Context compressed",
     "searchBarPlaceholder": "Search...",
     "resultCount_one": "{{count}} result",
@@ -647,6 +655,7 @@
     "streamStartFailed": "Stream could not start.",
     "streamInterrupted": "Stream was interrupted.",
     "ollamaConnectionLost": "Connection to Ollama lost",
+    "ollamaServerError": "Ollama server error",
     "ollamaWaiting": "Connection to Ollama lost ({{seconds}}s) — reconnecting…",
     "ollamaReconnected": "Ollama reconnected",
     "ollamaReconnecting": "Ollama reconnected — retrying in {{seconds}}s…",

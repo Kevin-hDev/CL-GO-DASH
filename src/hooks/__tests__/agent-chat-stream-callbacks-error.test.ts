@@ -31,6 +31,9 @@ describe("error", () => {
     expect(applyStreamEvent(makeState(), {
       event: "error", data: { message: "model_not_found" },
     }).state.error).toBe("errors.modelNotFound");
+    expect(applyStreamEvent(makeState(), {
+      event: "error", data: { message: "ollama_server_error" },
+    }).state.error).toBe("errors.ollamaServerError");
   });
 
   it("marque isConnectionError=true quand le flag est présent", () => {

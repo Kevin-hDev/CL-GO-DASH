@@ -193,6 +193,14 @@
     "send": "送信",
     "cancel": "キャンセル",
     "compression": "Compression",
+    "retry": {
+      "thinkingOnly": "再試行中...",
+      "parserCrash": "形式を修正中...",
+      "featureDropped": "機能を調整中...",
+      "server": "Ollama を再試行中...",
+      "connection": "再接続中...",
+      "button": "再試行"
+    },
     "contextCompressed": "コンテキストを圧縮済み",
     "searchBarPlaceholder": "検索…",
     "resultCount_one": "{{count}} 件",
@@ -647,6 +655,7 @@
     "streamStartFailed": "ストリームを開始できませんでした。",
     "streamInterrupted": "ストリームが中断されました。",
     "ollamaConnectionLost": "Ollama への接続が失われました",
+    "ollamaServerError": "Ollama サーバーエラー",
     "ollamaWaiting": "Ollama への接続が失われました（{{seconds}}秒）— 再接続中…",
     "ollamaReconnected": "Ollama に再接続しました",
     "ollamaReconnecting": "Ollama に再接続しました — {{seconds}}秒後に再試行…",

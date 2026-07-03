@@ -1,16 +1,15 @@
-use crate::services::agent_local::ollama_base_url;
 use crate::services::agent_local::ollama_stream_process::{flush_filter, process_chunk};
-use crate::services::agent_local::ollama_stream_retry::build_retry_request;
+use crate::services::agent_local::ollama_stream_request::{
+    open_chat_response, OpenChatResponse, RetryCounts,
+};
 use crate::services::agent_local::ollama_tool_parse_retry::{
     is_tool_parse_crash, MAX_PARSER_RETRIES,
 };
-use crate::services::agent_local::ollama_tool_role::wrap_tool_results;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::types_ollama::{
     ChatRequest, StreamEvent, StreamOutcome, StreamResult,
 };
 use crate::services::compress::realtime_budget::RealtimeBudget;
-use crate::services::llm::vision;
 use crate::services::stream_utils::ThinkTagFilter;
 use futures_util::StreamExt;
 use tokio::io::{AsyncBufReadExt, BufReader};
@@ -39,7 +38,10 @@ pub async fn stream_chat_with_tool_notify(
         Some(tool_tx),
         buffer_content,
         realtime_budget,
-        0,
+        RetryCounts {
+            parser_retries: 0,
+            server_retries: 0,
+        },
     )
     .await
 }
@@ -52,96 +54,26 @@ async fn stream_chat_inner(
     tool_tx: Option<mpsc::UnboundedSender<(usize, String, serde_json::Value)>>,
     buffer_content: bool,
     mut realtime_budget: Option<RealtimeBudget>,
-    parser_retries: u32,
+    retry_counts: RetryCounts,
 ) -> Result<StreamOutcome, String> {
-    // Conversion `role:"tool"` → `role:"user"` + balises `<tool_response>`.
-    // Certains modèles (Gemma via Ollama notamment) ne reconnaissent pas le
-    // rôle "tool" du standard OpenAI et s'arrêtent après 1 token.
-    // On ne modifie pas le Vec source — seulement la copie envoyée sur le wire.
-    let mut wire_request = request.clone();
-    wire_request.messages = wrap_tool_results(&request.messages);
-
-    let client = reqwest::Client::new();
-    let resp = match client
-        .post(format!("{}/api/chat", ollama_base_url()))
-        .json(&wire_request)
-        .send()
-        .await
+    let resp = match open_chat_response(on_event, request, &cancel, retry_counts, !buffer_content)
+        .await?
     {
-        Ok(r) => r,
-        Err(e) => {
-            let msg = if e.is_connect() || e.is_timeout() {
-                "ollama_connection_lost".to_string()
-            } else {
-                format!("Ollama: {e}")
-            };
-            let _ = on_event.send(StreamEvent::Error {
-                message: msg.clone(),
-                is_connection: e.is_connect() || e.is_timeout(),
-                diagnostic: None,
-            });
-            return Err(msg);
+        OpenChatResponse::Ready(response) => response,
+        OpenChatResponse::Retry { request, counts } => {
+            return Box::pin(stream_chat_inner(
+                on_event,
+                &request,
+                cancel,
+                emit_done,
+                tool_tx,
+                buffer_content,
+                realtime_budget,
+                counts,
+            ))
+            .await;
         }
     };
-
-    if !resp.status().is_success() {
-        let status = resp.status();
-        let body = resp.text().await.unwrap_or_default();
-        if let Some(retry_req) = build_retry_request(request, &body) {
-            let feature = if retry_req.think != request.think {
-                "thinking"
-            } else if retry_req.tools != request.tools {
-                "tools"
-            } else {
-                "images"
-            };
-            eprintln!("[ollama-stream] modèle sans {feature}, retry");
-            if feature == "images" {
-                let _ = on_event.send(StreamEvent::Notice {
-                    message_key: vision::NOTICE_UNSUPPORTED_MODEL.to_string(),
-                });
-            }
-            return Box::pin(stream_chat_inner(
-                on_event,
-                &retry_req,
-                cancel,
-                emit_done,
-                tool_tx,
-                buffer_content,
-                realtime_budget,
-                parser_retries,
-            ))
-            .await;
-        }
-        // Bug Ollama #16383 : le parser tool-call trop strict crash quand Qwen3
-        // génère un appel d'outil légèrement mal formaté. L'erreur est
-        // intermittente → on retente la même requête jusqu'à MAX_PARSER_RETRIES.
-        if is_tool_parse_crash(&body) && parser_retries < MAX_PARSER_RETRIES {
-            eprintln!(
-                "[ollama-stream] crash parser tool-call (#{}), retry",
-                parser_retries + 1
-            );
-            return Box::pin(stream_chat_inner(
-                on_event,
-                request,
-                cancel,
-                emit_done,
-                tool_tx,
-                buffer_content,
-                realtime_budget,
-                parser_retries + 1,
-            ))
-            .await;
-        }
-        eprintln!("[ollama-stream] HTTP {status}: {body}");
-        let msg = format!("Ollama HTTP {status}");
-        let _ = on_event.send(StreamEvent::Error {
-            message: "Erreur serveur Ollama".into(),
-            is_connection: false,
-            diagnostic: None,
-        });
-        return Err(msg);
-    }
 
     let http_status = resp.status();
     let byte_stream = resp
@@ -186,13 +118,22 @@ async fn stream_chat_inner(
                             // stream. Si aucun contenu final n'a encore été émis (on
                             // n'a reçu que du thinking), on peut retenter proprement.
                             if is_tool_parse_crash(&e)
-                                && parser_retries < MAX_PARSER_RETRIES
+                                && retry_counts.parser_retries < MAX_PARSER_RETRIES
                                 && result.content.is_empty()
                             {
+                                let attempt = retry_counts.parser_retries + 1;
                                 eprintln!(
                                     "[ollama-stream] crash parser tool-call mid-stream (#{}), retry",
-                                    parser_retries + 1
+                                    attempt
                                 );
+                                if !buffer_content {
+                                    crate::services::agent_local::ollama_retry_indicator::send_retry_indicator(
+                                        on_event,
+                                        crate::services::agent_local::ollama_retry_indicator::REASON_PARSER_CRASH,
+                                        attempt,
+                                        MAX_PARSER_RETRIES,
+                                    );
+                                }
                                 return Box::pin(stream_chat_inner(
                                     on_event,
                                     request,
@@ -201,7 +142,10 @@ async fn stream_chat_inner(
                                     tool_tx,
                                     buffer_content,
                                     realtime_budget,
-                                    parser_retries + 1,
+                                    RetryCounts {
+                                        parser_retries: attempt,
+                                        ..retry_counts
+                                    },
                                 ))
                                 .await;
                             }

@@ -9,6 +9,7 @@ pub mod agent_loop_errors;
 pub mod agent_loop_limits;
 pub mod agent_loop_plan;
 pub mod agent_loop_support;
+pub mod agent_loop_thinking_retry;
 pub mod agent_md;
 pub mod agent_settings;
 pub mod app_handle_global;
@@ -38,10 +39,12 @@ pub mod ollama_registry;
 pub mod ollama_registry_details;
 #[cfg(test)]
 mod ollama_registry_tests;
+pub mod ollama_retry_indicator;
 pub mod ollama_stream;
 pub mod ollama_stream_process;
 #[cfg(test)]
 mod ollama_stream_process_tests;
+pub mod ollama_stream_request;
 pub mod ollama_stream_retry;
 pub mod ollama_thinking_retry;
 pub mod ollama_tool_parse_retry;

@@ -13,6 +13,12 @@ export interface AgentErrorDiagnosticSummary {
 
 export type TokenPhase = "work" | "final";
 
+export interface RetryIndicatorState {
+  reasonKey: string;
+  attempt: number;
+  maxAttempts: number;
+}
+
 export type StreamEvent =
   | { event: "token"; data: { content: string; tokenCount: number; tps: number; phase?: TokenPhase } }
   | { event: "contentPhase"; data: { phase: TokenPhase } }
@@ -24,6 +30,7 @@ export type StreamEvent =
   | { event: "done"; data: { evalCount: number | null; evalDurationNs: number; finalTps: number; promptTokens: number | null; contextTokens: number | null } }
   | { event: "error"; data: { message: string; isConnection?: boolean; diagnostic?: AgentErrorDiagnosticSummary } }
   | { event: "notice"; data: { messageKey: string } }
+  | { event: "retryIndicator"; data: RetryIndicatorState }
   | { event: "compressing"; data: { status: string } }
   | { event: "compressionComplete"; data: Record<string, never> }
   | { event: "sessionSnapshot"; data: { messages: AgentMessage[]; tokenCount: number } }

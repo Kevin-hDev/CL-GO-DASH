@@ -193,6 +193,14 @@
     "send": "发送",
     "cancel": "取消",
     "compression": "Compression",
+    "retry": {
+      "thinkingOnly": "正在重试...",
+      "parserCrash": "正在修正格式...",
+      "featureDropped": "正在调整功能...",
+      "server": "正在重试 Ollama...",
+      "connection": "正在重连...",
+      "button": "重试"
+    },
     "contextCompressed": "上下文已压缩",
     "searchBarPlaceholder": "搜索…",
     "resultCount_one": "{{count}} 条结果",
@@ -647,6 +655,7 @@
     "streamStartFailed": "流无法启动。",
     "streamInterrupted": "流传输被中断。",
     "ollamaConnectionLost": "与 Ollama 的连接已断开",
+    "ollamaServerError": "Ollama 服务器错误",
     "ollamaWaiting": "与 Ollama 的连接已断开（{{seconds}}s）— 正在重连…",
     "ollamaReconnected": "Ollama 已重新连接",
     "ollamaReconnecting": "Ollama 已重新连接 — 将在 {{seconds}}s 后重试…",

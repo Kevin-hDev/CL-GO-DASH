@@ -1,21 +1,17 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { ChatPlusMenu } from "./chat-plus-menu";
+import { ChatInputActionsRow } from "./chat-input-actions-row";
 import { useAutoResize } from "@/hooks/use-auto-resize";
 import { useSlashCommands } from "@/hooks/use-slash-commands";
 import { useActiveSkills } from "@/hooks/use-active-skills";
-import { SendStopButton } from "./send-stop-button";
 import { SlashAutocomplete } from "./slash-autocomplete";
-import { ModelSelector } from "./model-selector";
 import { FileThumbnail } from "./file-thumbnail";
-import { ContextProgress } from "./context-progress";
-import { PermissionModeSelector } from "./permission-mode-selector";
-import { PlanModeBadge } from "./plan-mode-badge";
 import { activeSkillsInText, highlightSkillText } from "@/lib/skill-text";
 import type { DroppedFile } from "@/hooks/use-file-drop";
 import type { ContextUsageBreakdown } from "@/hooks/context-usage-breakdown";
 import type { PermissionMode } from "@/hooks/use-permission-mode";
 import type { ReasoningMode } from "@/lib/reasoning-modes";
+import type { RetryIndicatorState } from "@/types/agent";
 import "./chat.css";
 import "./chat-input-textarea.css";
 import "./chat-input-responsive.css";
@@ -38,6 +34,7 @@ interface ChatInputProps {
   contextUsed: number;
   contextMax: number;
   contextBreakdown?: ContextUsageBreakdown;
+  retryIndicator?: RetryIndicatorState | null;
   interactivePending?: boolean;
   permissionMode: PermissionMode;
   planModeEnabled?: boolean;
@@ -56,7 +53,7 @@ interface ChatInputProps {
 
 export function ChatInput({
   modelName, providerName, isStreaming, reasoningMode, files,
-  contextUsed, contextMax, contextBreakdown, interactivePending = false,
+  contextUsed, contextMax, contextBreakdown, retryIndicator, interactivePending = false,
   permissionMode, planModeEnabled = false, onPermissionModeChange, onPlanModeChange,
   onSend, onStop, onFileImport, onModelChange, onReasoningModeChange,
   onRemoveFile, onPreviewFile, onClearFiles,
@@ -170,28 +167,25 @@ export function ChatInput({
           ))}
         </div>
       )}
-      <div className="chat-input-row3">
-        <ChatPlusMenu
-          onFileImport={onFileImport}
-          planModeEnabled={planModeEnabled}
-          onPlanModeChange={onPlanModeChange ?? (() => {})}
-        />
-        <ContextProgress used={contextUsed} max={contextMax} breakdown={contextBreakdown} />
-        <PermissionModeSelector mode={permissionMode} onChange={onPermissionModeChange} />
-        {planModeEnabled && (
-          <PlanModeBadge onDisable={() => onPlanModeChange?.(false)} />
-        )}
-        <div className="chat-input-spacer" />
-        <ModelSelector
-          selectedModel={modelName}
-          selectedProvider={providerName}
-          onSelect={onModelChange}
-          reasoningMode={reasoningMode}
-          onReasoningModeChange={onReasoningModeChange}
-          align="right"
-        />
-        <SendStopButton state={buttonState} onSend={handleSend} onStop={onStop} />
-      </div>
+      <ChatInputActionsRow
+        modelName={modelName}
+        providerName={providerName}
+        reasoningMode={reasoningMode}
+        contextUsed={contextUsed}
+        contextMax={contextMax}
+        contextBreakdown={contextBreakdown}
+        permissionMode={permissionMode}
+        planModeEnabled={planModeEnabled}
+        retryIndicator={retryIndicator}
+        buttonState={buttonState}
+        onPermissionModeChange={onPermissionModeChange}
+        onPlanModeChange={onPlanModeChange}
+        onFileImport={onFileImport}
+        onModelChange={onModelChange}
+        onReasoningModeChange={onReasoningModeChange}
+        onSend={handleSend}
+        onStop={onStop}
+      />
     </div>
   );
 }

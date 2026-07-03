@@ -1,18 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { listen } from "@tauri-apps/api/event";
 import { useTranslation } from "react-i18next";
-import { showToast } from "@/lib/toast-emitter";
-import { cleanupTauriListener } from "@/lib/tauri-listen";
-
-const BUBBLE_STYLE = {
-  width: "100%", maxWidth: 720,
-  borderRadius: "var(--radius-md, 8px)",
-  padding: "10px 14px",
-  alignSelf: "center" as const, margin: "6px auto",
-  fontSize: "12px",
-  fontFamily: "var(--font-mono, monospace)", lineHeight: 1.5,
-  wordBreak: "break-word" as const,
-};
+import "./error-bubble.css";
 
 interface ErrorBubbleProps {
   message: string;
@@ -21,94 +8,28 @@ interface ErrorBubbleProps {
   onRetry?: () => void;
 }
 
-export function ErrorBubble({ message, isConnection, diagnosticSummary, onRetry }: ErrorBubbleProps) {
-  const { t } = useTranslation();
-
-  if (isConnection && onRetry) {
-    return <ConnectionErrorBubble diagnosticSummary={diagnosticSummary} onRetry={onRetry} />;
-  }
-
-  return (
-    <div style={{
-      ...BUBBLE_STYLE,
-      color: "var(--toast-error-text)",
-    }} className="chat-bubble">
-      {message === "ollama_connection_lost" ? t("errors.ollamaConnectionLost") : message}
-      {diagnosticSummary && (
-        <div style={{ marginTop: 6, opacity: 0.78 }}>{diagnosticSummary}</div>
-      )}
-    </div>
-  );
-}
-
-function ConnectionErrorBubble({
+export function ErrorBubble({
+  message,
+  isConnection,
   diagnosticSummary,
   onRetry,
-}: {
-  diagnosticSummary?: string;
-  onRetry: () => void;
-}) {
+}: ErrorBubbleProps) {
   const { t } = useTranslation();
-  const [elapsed, setElapsed] = useState(0);
-  const [ollamaUp, setOllamaUp] = useState(false);
-  const [countdown, setCountdown] = useState(0);
-  const retried = useRef(false);
-
-  useEffect(() => {
-    if (ollamaUp) return;
-    const interval = setInterval(() => setElapsed((p) => p + 1), 1000);
-    return () => clearInterval(interval);
-  }, [ollamaUp]);
-
-  useEffect(() => {
-    const unlisten = listen<boolean>("ollama-status", (e) => {
-      if (e.payload && !retried.current) {
-        setOllamaUp(true);
-        showToast(t("errors.ollamaReconnected"), "success");
-      }
-    });
-    return () => { cleanupTauriListener(unlisten); };
-  }, [t]);
-
-  useEffect(() => {
-    if (!ollamaUp || retried.current) return;
-    setCountdown(3);
-    const interval = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          retried.current = true;
-          onRetry();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [ollamaUp, onRetry]);
-
-  if (ollamaUp) {
-    return (
-      <div style={{
-        ...BUBBLE_STYLE,
-        color: "var(--toast-ok-text)",
-      }} className="chat-bubble">
-        {t("errors.ollamaReconnecting", { seconds: countdown })}
-        {diagnosticSummary && (
-          <div style={{ marginTop: 6, opacity: 0.78 }}>{diagnosticSummary}</div>
-        )}
-      </div>
-    );
-  }
+  const visibleMessage = message === "ollama_connection_lost"
+    ? t("errors.ollamaConnectionLost")
+    : message;
+  const canRetry = !!onRetry && !isConnection;
 
   return (
-    <div style={{
-      ...BUBBLE_STYLE,
-      color: "var(--toast-error-text)",
-    }} className="chat-bubble">
-      {t("errors.ollamaWaiting", { seconds: elapsed })}
-      {diagnosticSummary && (
-        <div style={{ marginTop: 6, opacity: 0.78 }}>{diagnosticSummary}</div>
+    <div className="eb-root" role="alert">
+      <div className="eb-copy">
+        <div className="eb-message">{visibleMessage}</div>
+        {diagnosticSummary && <div className="eb-diagnostic">{diagnosticSummary}</div>}
+      </div>
+      {canRetry && (
+        <button type="button" className="eb-retry" onClick={onRetry}>
+          {t("agentLocal.retry.button")}
+        </button>
       )}
     </div>
   );

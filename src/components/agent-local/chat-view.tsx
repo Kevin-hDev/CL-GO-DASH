@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { MessageList } from "./message-list";
 import { ChatInput } from "./chat-input";
+import { ErrorBubble } from "./error-bubble";
 import { FileDropZone } from "./file-drop-zone";
 import { ChatOverlays } from "./chat-overlays";
 import { SubagentAccordion } from "./subagent-accordion";
@@ -22,6 +23,7 @@ import { useSubagents } from "@/hooks/use-subagents";
 import { useSubagentSynthesis } from "@/hooks/use-subagent-synthesis";
 import { useChatActions } from "@/hooks/use-chat-actions";
 import { useAvailableModels } from "@/hooks/use-available-models";
+import { useOllamaConnectionRetry } from "@/hooks/use-ollama-connection-retry";
 import { PermissionDialog } from "./permission-dialog";
 import { TerminalPanel } from "@/components/terminal/terminal-panel";
 import type { useTerminal } from "@/hooks/use-terminal";
@@ -114,10 +116,19 @@ export function ChatView({
     sessionId, chat.isStreaming,
     [chat.currentContent, chat.currentContentPhase, chat.currentThinking, chat.completedSegments, chat.messages, chat.planPreview],
   );
+  const { messages, reload } = chat;
   const handleRetry = useCallback(() => {
-    const u = [...chat.messages].reverse().find((m) => m.role === "user");
-    if (u) void chat.reload(u.id);
-  }, [chat]);
+    const u = [...messages].reverse().find((m) => m.role === "user");
+    if (u) void reload(u.id);
+  }, [messages, reload]);
+  const connectionRetry = useOllamaConnectionRetry({
+    error: chat.error,
+    isConnectionError: chat.isConnectionError,
+    isStreaming: chat.isStreaming,
+    onRetry: handleRetry,
+  });
+  const retryIndicator = chat.retryIndicator ?? connectionRetry.indicator;
+  const showError = !!chat.error && !chat.isStreaming && !connectionRetry.suppressError;
   const handleReload = useCallback((id: string) => void chat.reload(id), [chat]);
   const handleEdit = useCallback((id: string, c: string) => void chat.edit(id, c), [chat]);
   const handleFileClick = useCallback((f: { name: string; path?: string; thumbnail?: string }) => {
@@ -140,8 +151,7 @@ export function ChatView({
             currentThinking={chat.currentThinking} currentTools={chat.currentTools}
             isStreaming={chat.isStreaming} tps={chat.tps} totalElapsedMs={chat.totalElapsedMs}
             segmentStartedAt={chat.streamStartedAt} liveTokenCount={chat.liveTokenCount}
-            error={chat.error} isConnectionError={chat.isConnectionError}
-            diagnosticSummary={chat.diagnosticSummary} planPreview={chat.planPreview} onRetry={handleRetry}
+            planPreview={chat.planPreview}
             onReload={handleReload} onEdit={handleEdit}
             onFileClick={handleFileClick} onFilePreview={onFilePreviewPath} projectPath={proj.selectedProject?.path}
             completedSubagents={subagents.completed.length > 0 ? subagents.completed : undefined}
@@ -162,9 +172,18 @@ export function ChatView({
             {permissions.current && (
               <PermissionDialog request={permissions.current} onDecide={(id, decision) => void permissions.respond(id, decision)} />
             )}
+            {showError && chat.error && (
+              <ErrorBubble
+                message={chat.error}
+                isConnection={chat.isConnectionError}
+                diagnosticSummary={chat.diagnosticSummary}
+                onRetry={handleRetry}
+              />
+            )}
             <ChatInput
               modelName={model} providerName={provider} isStreaming={chat.isStreaming} reasoningMode={reasoningMode}
               files={fileDrop.files} contextUsed={contextUsage.used} contextMax={context.max} contextBreakdown={contextUsage}
+              retryIndicator={retryIndicator}
               interactivePending={!!chat.interactiveChoice}
               permissionMode={permMode.mode} onPermissionModeChange={(m) => void permMode.change(m)}
               planModeEnabled={chat.planModeEnabled}

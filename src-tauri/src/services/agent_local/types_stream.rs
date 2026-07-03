@@ -69,6 +69,12 @@ pub enum StreamEvent {
     Notice {
         message_key: String,
     },
+    #[serde(rename_all = "camelCase")]
+    RetryIndicator {
+        reason_key: String,
+        attempt: u32,
+        max_attempts: u32,
+    },
     Compressing {
         status: String,
     },

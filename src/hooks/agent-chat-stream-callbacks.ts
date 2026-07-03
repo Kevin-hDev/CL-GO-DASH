@@ -27,6 +27,7 @@ export function applyStreamEvent(
   switch (event.event) {
     case "token":
       ensureTimers();
+      next.retryIndicator = null;
       if (event.data.phase) prepareContentPhase(next, event.data.phase);
       next.currentContent += event.data.content;
       next.tps = event.data.tps;
@@ -67,6 +68,7 @@ export function applyStreamEvent(
       next.pendingPermissions = [];
       break;
     case "turnEnd":
+      next.retryIndicator = null;
       next.completedSegments = appendCurrentSegment(next);
       next.currentContent = "";
       next.currentContentPhase = undefined;
@@ -94,7 +96,11 @@ export function applyStreamEvent(
     case "interactiveChoiceRequest":
       next.interactiveChoice = event.data;
       break;
+    case "retryIndicator":
+      next.retryIndicator = event.data;
+      break;
     case "done":
+      next.retryIndicator = null;
       return finishStream(next, event);
     case "error": {
       const rawMsg = event.data.message || "";
@@ -106,6 +112,7 @@ export function applyStreamEvent(
       partial.state.error = next.error;
       partial.state.isConnectionError = next.isConnectionError;
       partial.state.diagnosticSummary = next.diagnosticSummary;
+      partial.state.retryIndicator = null;
       return partial;
     }
     case "notice":

@@ -20,12 +20,8 @@ interface ChatMessagePaneProps {
   totalElapsedMs: number;
   segmentStartedAt: number | null;
   liveTokenCount: number;
-  error?: string;
-  isConnectionError?: boolean;
-  diagnosticSummary?: string;
   onScroll: () => void;
   onScrollToBottom: () => void;
-  onRetry: () => void;
   onReload: (id: string) => void;
   onEdit: (id: string, content: string) => void;
   onFileClick: (file: { name: string; path?: string; thumbnail?: string }) => void;
@@ -49,10 +45,6 @@ export function ChatMessagePane(props: ChatMessagePaneProps) {
           totalElapsedMs={props.totalElapsedMs}
           segmentStartedAt={props.segmentStartedAt}
           liveTokenCount={props.liveTokenCount}
-          error={props.error}
-          isConnectionError={props.isConnectionError}
-          diagnosticSummary={props.diagnosticSummary}
-          onRetry={props.onRetry}
           onReload={props.onReload}
           onEdit={props.onEdit}
           onFileClick={props.onFileClick}

@@ -32,6 +32,7 @@ export type {
 } from "./agent-plan";
 export type {
   AgentErrorDiagnosticSummary,
+  RetryIndicatorState,
   StreamEvent,
   TokenPhase,
 } from "./agent-stream";
