@@ -126,6 +126,16 @@ pub struct StreamResult {
     pub tool_call_extra_content: Vec<Option<serde_json::Value>>,
     pub eval_count: Option<u32>,
     pub prompt_tokens: Option<u32>,
+    /// Diagnostic Ollama : raison de fin renvoyée par le chunk `done:true`
+    /// (ex: "stop", "length", "tool_call"). None si le champ est absent.
+    pub done_reason: Option<String>,
+    /// Diagnostic Ollama : durée totale (ns) annoncée par le chunk final.
+    pub total_duration_ns: Option<u64>,
+    /// Diagnostic : nombre total de chunks NDJSON reçus d'Ollama.
+    pub total_chunks: u32,
+    /// Diagnostic : chunks reçus sans contenu/thinking/tool_call ni `done:true`.
+    /// Piste du bug "stream s'arrête après un tool" (cf. pydantic-ai #1292).
+    pub empty_chunks: u32,
 }
 
 #[derive(Debug)]

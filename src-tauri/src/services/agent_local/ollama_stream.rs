@@ -1,6 +1,10 @@
 use crate::services::agent_local::ollama_base_url;
 use crate::services::agent_local::ollama_stream_process::{flush_filter, process_chunk};
 use crate::services::agent_local::ollama_stream_retry::build_retry_request;
+use crate::services::agent_local::ollama_tool_parse_retry::{
+    is_tool_parse_crash, MAX_PARSER_RETRIES,
+};
+use crate::services::agent_local::ollama_tool_role::wrap_tool_results;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::types_ollama::{
     ChatRequest, StreamEvent, StreamOutcome, StreamResult,
@@ -35,6 +39,7 @@ pub async fn stream_chat_with_tool_notify(
         Some(tool_tx),
         buffer_content,
         realtime_budget,
+        0,
     )
     .await
 }
@@ -47,11 +52,19 @@ async fn stream_chat_inner(
     tool_tx: Option<mpsc::UnboundedSender<(usize, String, serde_json::Value)>>,
     buffer_content: bool,
     mut realtime_budget: Option<RealtimeBudget>,
+    parser_retries: u32,
 ) -> Result<StreamOutcome, String> {
+    // Conversion `role:"tool"` → `role:"user"` + balises `<tool_response>`.
+    // Certains modèles (Gemma via Ollama notamment) ne reconnaissent pas le
+    // rôle "tool" du standard OpenAI et s'arrêtent après 1 token.
+    // On ne modifie pas le Vec source — seulement la copie envoyée sur le wire.
+    let mut wire_request = request.clone();
+    wire_request.messages = wrap_tool_results(&request.messages);
+
     let client = reqwest::Client::new();
     let resp = match client
         .post(format!("{}/api/chat", ollama_base_url()))
-        .json(request)
+        .json(&wire_request)
         .send()
         .await
     {
@@ -96,6 +109,27 @@ async fn stream_chat_inner(
                 tool_tx,
                 buffer_content,
                 realtime_budget,
+                parser_retries,
+            ))
+            .await;
+        }
+        // Bug Ollama #16383 : le parser tool-call trop strict crash quand Qwen3
+        // génère un appel d'outil légèrement mal formaté. L'erreur est
+        // intermittente → on retente la même requête jusqu'à MAX_PARSER_RETRIES.
+        if is_tool_parse_crash(&body) && parser_retries < MAX_PARSER_RETRIES {
+            eprintln!(
+                "[ollama-stream] crash parser tool-call (#{}), retry",
+                parser_retries + 1
+            );
+            return Box::pin(stream_chat_inner(
+                on_event,
+                request,
+                cancel,
+                emit_done,
+                tool_tx,
+                buffer_content,
+                realtime_budget,
+                parser_retries + 1,
             ))
             .await;
         }
@@ -109,10 +143,20 @@ async fn stream_chat_inner(
         return Err(msg);
     }
 
+    let http_status = resp.status();
     let byte_stream = resp
         .bytes_stream()
         .map(|r| r.map_err(std::io::Error::other));
     let mut lines = BufReader::new(StreamReader::new(byte_stream)).lines();
+
+    eprintln!(
+        "[ollama-stream] stream ouvert HTTP {} model={} think={:?} msgs={} tools={}",
+        http_status,
+        request.model,
+        request.think,
+        request.messages.len(),
+        request.tools.as_ref().map_or(0, Vec::len)
+    );
 
     let mut token_count: u32 = 0;
     let mut first_token: Option<std::time::Instant> = None;
@@ -138,6 +182,29 @@ async fn stream_chat_inner(
                             &mut result, emit_done, tool_tx.as_ref(), &mut think_filter,
                             buffer_content,
                         ) {
+                            // Bug Ollama #16383 : crash du parser tool-call en plein
+                            // stream. Si aucun contenu final n'a encore été émis (on
+                            // n'a reçu que du thinking), on peut retenter proprement.
+                            if is_tool_parse_crash(&e)
+                                && parser_retries < MAX_PARSER_RETRIES
+                                && result.content.is_empty()
+                            {
+                                eprintln!(
+                                    "[ollama-stream] crash parser tool-call mid-stream (#{}), retry",
+                                    parser_retries + 1
+                                );
+                                return Box::pin(stream_chat_inner(
+                                    on_event,
+                                    request,
+                                    cancel,
+                                    emit_done,
+                                    tool_tx,
+                                    buffer_content,
+                                    realtime_budget,
+                                    parser_retries + 1,
+                                ))
+                                .await;
+                            }
                             let _ = on_event.send(StreamEvent::Error { message: e.clone(), is_connection: false, diagnostic: None });
                             return Err(e);
                         }
@@ -169,8 +236,26 @@ async fn stream_chat_inner(
             &mut result,
             buffer_content,
         );
+        eprintln!(
+            "[ollama-stream] fin=interrupted content_chars={} thinking_chars={} tool_calls={} done_reason={} chunks={} empty_chunks={}",
+            result.content.chars().count(),
+            result.thinking.chars().count(),
+            result.tool_calls.len(),
+            result.done_reason.as_deref().unwrap_or("none"),
+            result.total_chunks,
+            result.empty_chunks
+        );
         Ok(StreamOutcome::InterruptedForCompression(result))
     } else {
+        eprintln!(
+            "[ollama-stream] fin=eof content_chars={} thinking_chars={} tool_calls={} done_reason={} chunks={} empty_chunks={}",
+            result.content.chars().count(),
+            result.thinking.chars().count(),
+            result.tool_calls.len(),
+            result.done_reason.as_deref().unwrap_or("none"),
+            result.total_chunks,
+            result.empty_chunks
+        );
         Ok(StreamOutcome::Completed(result))
     }
 }

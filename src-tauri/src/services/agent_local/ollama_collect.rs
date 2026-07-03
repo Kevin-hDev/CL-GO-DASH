@@ -1,4 +1,5 @@
 use crate::services::agent_local::ollama_base_url;
+use crate::services::agent_local::ollama_tool_role::wrap_tool_results;
 use crate::services::agent_local::types_ollama::ChatMessage;
 use std::time::Duration;
 
@@ -26,9 +27,11 @@ pub async fn collect_chat_with_timeout_and_limit(
     timeout: Duration,
     num_predict: Option<u32>,
 ) -> Result<(String, u32), String> {
+    // Conversion `role:"tool"` → `role:"user"` + `<tool_response>` (cf. ollama_tool_role).
+    let wire_messages = wrap_tool_results(&messages);
     let mut body = serde_json::json!({
         "model": model,
-        "messages": messages,
+        "messages": wire_messages,
         "stream": false,
     });
     if let Some(limit) = num_predict {

@@ -42,6 +42,37 @@ pub async fn record_ollama_payload(
     let mut stats = native_payload_stats(&request.messages);
     stats.tool_calls += request.tools.as_ref().map_or(0, Vec::len);
     record_payload(session_id, request_id, turn, "ollama", "ollama_chat", stats).await;
+    record_ollama_tool_messages(session_id, request_id, turn, &request.messages).await;
+}
+
+/// Log ciblé sur les messages `role="tool"` du payload : taille du contenu,
+/// tool_name, et présence/absence de tool_call_id.
+async fn record_ollama_tool_messages(
+    session_id: &str,
+    request_id: &str,
+    turn: usize,
+    messages: &[ChatMessage],
+) {
+    for (i, m) in messages.iter().enumerate() {
+        if m.role != "tool" {
+            continue;
+        }
+        let content_chars = m.content.chars().count();
+        let tool_name = m.tool_name.clone().unwrap_or_default();
+        let has_id = m.tool_call_id.is_some();
+        let message = format!(
+            "ollama_tool_msg turn={} idx={} tool_name={} content_chars={} has_tool_call_id={}",
+            turn + 1,
+            i,
+            tool_name,
+            content_chars,
+            has_id
+        );
+        let _ = support::update_run(session_id, request_id, |_session, run| {
+            support::push_event(run, "ollama_tool_msg", &message, None, None);
+        })
+        .await;
+    }
 }
 
 async fn record_payload(
