@@ -1,6 +1,6 @@
 use crate::services::agent_local::agent_md;
 use crate::services::agent_local::agent_settings;
-use crate::services::agent_local::chat_prompts::prepare_messages;
+use crate::services::agent_local::chat_prompts::prepare_messages_with_tools;
 use crate::services::agent_local::session_store;
 use crate::services::agent_local::tool_skill_loader;
 use crate::services::agent_local::types_ollama::ChatMessage;
@@ -24,6 +24,7 @@ pub(crate) struct PromptContext<'a> {
     pub mode: &'a str,
     pub response_language: &'a str,
     pub plan_mode_active: bool,
+    pub enabled_tool_names: &'a [String],
 }
 
 pub(crate) async fn resolve_permission_mode(override_mode: Option<&str>) -> StreamMode {
@@ -113,7 +114,7 @@ pub(crate) async fn skills_tuples(load: bool) -> Vec<(String, String)> {
 
 pub(crate) fn prepare_with_context(messages: &mut Vec<ChatMessage>, ctx: PromptContext<'_>) {
     let plan_mode_active = ctx.plan_mode_active;
-    prepare_messages(
+    prepare_messages_with_tools(
         messages,
         ctx.working_dir,
         ctx.snap.is_git,
@@ -124,6 +125,7 @@ pub(crate) fn prepare_with_context(messages: &mut Vec<ChatMessage>, ctx: PromptC
         ctx.model,
         ctx.mode,
         ctx.response_language,
+        ctx.enabled_tool_names,
     );
     append_git_section(messages, ctx.snap);
     if plan_mode_active {

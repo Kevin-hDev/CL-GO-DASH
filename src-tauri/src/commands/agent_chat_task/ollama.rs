@@ -1,6 +1,8 @@
 use super::common::{self, StreamMode};
 use super::params::StreamTaskParams;
+use crate::services::agent_local::agent_settings::AgentSettings;
 use crate::services::agent_local::agent_loop;
+use crate::services::agent_local::tool_catalog;
 use crate::services::agent_local::tool_dispatcher;
 use crate::services::agent_local::types_ollama::{ChatMessage, OllamaThink, StreamEvent};
 
@@ -10,10 +12,13 @@ pub(crate) async fn run(
     response_language: String,
 ) -> Result<Vec<ChatMessage>, String> {
     let ctx = crate::services::compress::context_resolve::resolve_ollama(&params.model).await;
-    let final_tools = resolve_tools(&params, &mode);
+    let settings = crate::services::agent_local::agent_settings::load().await;
+    let final_tools = resolve_tools(&params, &mode, &settings);
+    let enabled_tool_names = tool_catalog::tool_names(&final_tools);
     let working_dir = common::resolve_working_dir(&params.working_dir)?;
     common::update_working_dir(&params.session_id, &working_dir).await;
-    let plan_mode_active = resolve_plan_mode(&params).await;
+    let plan_mode_active =
+        resolve_plan_mode(&params).await && tool_catalog::has_plan_tools(&enabled_tool_names);
 
     let snap = common::collect_git_snapshot(&working_dir).await;
     let ollama_think = resolve_ollama_think(&params);
@@ -26,7 +31,12 @@ pub(crate) async fn run(
     }
 
     let agent_md = common::agent_md_content(&mode, &working_dir).await;
-    let skills = common::skills_tuples(!mode.is_chat && !mode.is_subagent).await;
+    let skills = common::skills_tuples(
+        !mode.is_chat
+            && !mode.is_subagent
+            && tool_catalog::has_tool(&enabled_tool_names, "load_skill"),
+    )
+    .await;
     common::prepare_with_context(
         &mut messages,
         common::PromptContext {
@@ -39,13 +49,16 @@ pub(crate) async fn run(
             mode: &mode.mode,
             response_language: &response_language,
             plan_mode_active,
+            enabled_tool_names: &enabled_tool_names,
         },
     );
-    crate::services::agent_local::tool_todo::append_session_reminder(
-        &mut messages,
-        &params.session_id,
-    )
-    .await;
+    if todo_tools_enabled(&enabled_tool_names) {
+        crate::services::agent_local::tool_todo::append_session_reminder(
+            &mut messages,
+            &params.session_id,
+        )
+        .await;
+    }
 
     agent_loop::run_agent_loop(
         &params.on_event,
@@ -73,15 +86,33 @@ async fn resolve_plan_mode(params: &StreamTaskParams) -> bool {
     }
 }
 
-fn resolve_tools(params: &StreamTaskParams, mode: &StreamMode) -> Vec<serde_json::Value> {
-    if !params.tools.is_empty() {
-        return params.tools.clone();
-    }
-    if mode.is_chat {
+fn resolve_tools(
+    params: &StreamTaskParams,
+    mode: &StreamMode,
+    settings: &AgentSettings,
+) -> Vec<serde_json::Value> {
+    let defs = if !params.tools.is_empty() {
+        params.tools.clone()
+    } else if mode.is_chat {
         tool_dispatcher::get_chat_tool_definitions()
     } else {
         tool_dispatcher::get_tool_definitions()
-    }
+    };
+    tool_catalog::filter_tool_definitions(defs, &settings.enabled_optional_tools)
+}
+
+fn todo_tools_enabled(enabled_tool_names: &[String]) -> bool {
+    tool_catalog::has_any_tool(
+        enabled_tool_names,
+        &[
+            "todo_write",
+            "todo_history",
+            "todo_pause",
+            "todo_resume",
+            "todo_delete",
+            "agent_diagnostics",
+        ],
+    )
 }
 
 fn resolve_ollama_think(params: &StreamTaskParams) -> OllamaThink {

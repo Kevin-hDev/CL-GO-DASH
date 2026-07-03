@@ -1,10 +1,11 @@
 /* @vitest-environment jsdom */
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { StrictMode } from "react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { SettingsSubTab } from "@/types/navigation";
 import {
   CHILD_COMMANDS,
+  invokeCalls,
   invokedCommands,
   resetSettingsTestEnvironment,
   SettingsHarness,
@@ -44,5 +45,29 @@ describe("SettingsTab slots", () => {
     });
 
     await waitFor(() => expect(screen.getAllByText(expectedContent).length).toBeGreaterThan(0));
+  });
+
+  it("ouvre Tools avec tools verrouillés, optionnels et état grisé", async () => {
+    render(<StrictMode><SettingsHarness /></StrictMode>);
+    const [item] = await screen.findAllByText("settings.tabs.tools");
+    fireEvent.click(item);
+
+    const bashRow = (await screen.findByText("bash")).closest(".settings-row");
+    const loadSkillRow = screen.getByText("load_skill").closest(".settings-row");
+    const forecastRow = screen.getByText("forecast").closest(".settings-row");
+
+    expect(bashRow?.querySelector("input")).toBeNull();
+    expect(loadSkillRow ? within(loadSkillRow as HTMLElement).getByRole("checkbox") : null).toBeTruthy();
+    expect(forecastRow).toHaveClass("is-off");
+
+    const loadToggle = within(loadSkillRow as HTMLElement).getByRole("checkbox");
+    fireEvent.click(loadToggle);
+
+    await waitFor(() => {
+      expect(invokeCalls()).toContainEqual([
+        "set_agent_tool_enabled",
+        { toolId: "load_skill", enabled: false },
+      ]);
+    });
   });
 });

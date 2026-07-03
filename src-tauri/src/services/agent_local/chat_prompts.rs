@@ -35,6 +35,13 @@ fn prepend_tool_system_prompt(
     messages.insert(0, build_system_message(prompt));
 }
 
+fn filter_tool_prompt(messages: &mut [ChatMessage], enabled_tool_names: &[String]) {
+    if let Some(first) = messages.first_mut().filter(|m| m.role == "system") {
+        first.content =
+            super::tool_prompt_filter::filter_system_prompt(&first.content, enabled_tool_names);
+    }
+}
+
 pub fn prepend_agent_md_context(messages: &mut Vec<ChatMessage>, agent_md: Option<String>) {
     let content = match agent_md {
         Some(c) if !c.is_empty() => c,
@@ -47,6 +54,7 @@ pub fn prepend_agent_md_context(messages: &mut Vec<ChatMessage>, agent_md: Optio
     }
 }
 
+#[cfg(test)]
 pub fn prepare_messages(
     messages: &mut Vec<ChatMessage>,
     working_dir: &Path,
@@ -59,16 +67,55 @@ pub fn prepare_messages(
     mode: &str,
     response_language: &str,
 ) {
+    let enabled_tool_names = default_prompt_tool_names();
+    prepare_messages_with_tools(
+        messages,
+        working_dir,
+        is_git,
+        git_root,
+        has_tools,
+        agent_md,
+        skills,
+        model,
+        mode,
+        response_language,
+        &enabled_tool_names,
+    );
+}
+
+pub fn prepare_messages_with_tools(
+    messages: &mut Vec<ChatMessage>,
+    working_dir: &Path,
+    is_git: bool,
+    git_root: Option<&Path>,
+    has_tools: bool,
+    agent_md: Option<String>,
+    skills: &[(String, String)],
+    model: &str,
+    mode: &str,
+    response_language: &str,
+    enabled_tool_names: &[String],
+) {
     if mode == "chat" {
         prepend_chat_system_prompt(messages, working_dir, model);
+        filter_tool_prompt(messages, enabled_tool_names);
     } else {
         prepend_tool_system_prompt(messages, working_dir, is_git, git_root, model);
+        filter_tool_prompt(messages, enabled_tool_names);
         if has_tools && !skills.is_empty() {
             prepend_skills_listing(messages, skills);
         }
         prepend_agent_md_context(messages, agent_md);
     }
     append_response_language(messages, response_language);
+}
+
+#[cfg(test)]
+fn default_prompt_tool_names() -> Vec<String> {
+    super::tool_catalog::catalog()
+        .iter()
+        .map(|tool| tool.id.to_string())
+        .collect()
 }
 
 fn prepend_chat_system_prompt(messages: &mut Vec<ChatMessage>, working_dir: &Path, model: &str) {

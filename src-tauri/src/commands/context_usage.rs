@@ -2,7 +2,7 @@ use super::agent_chat_task::common;
 use crate::services::agent_local::{
     model_size::{self, PromptTier},
     prompt_chat_compact, prompt_chat_detailed, prompt_compact, prompt_detailed, prompt_plan,
-    tool_definitions_chat, tool_definitions_mcp, tool_dispatcher,
+    tool_catalog, tool_definitions_chat, tool_definitions_mcp, tool_dispatcher,
 };
 use serde::Serialize;
 use serde_json::Value;
@@ -32,16 +32,28 @@ pub async fn estimate_context_hidden_usage(
     let snap = common::collect_git_snapshot(&working_dir).await;
     let has_tools =
         mode.is_chat || provider.as_deref() == Some("ollama") || supports_tools.unwrap_or(false);
+    let settings = crate::services::agent_local::agent_settings::load().await;
+    let defs = filtered_tool_definitions(&mode.mode, has_tools, &settings.enabled_optional_tools);
+    let enabled_tool_names = tool_catalog::tool_names(&defs);
     let plan_active = match plan_mode {
         Some(value) => value,
         None => crate::services::agent_local::tool_plan::is_enabled(&session_id).await,
-    };
+    } && tool_catalog::has_plan_tools(&enabled_tool_names);
 
-    let system_prompt_tokens = estimate(&base_prompt(&mode.mode, &model, &working_dir, &snap));
+    let system_prompt_tokens = estimate(&base_prompt(
+        &mode.mode,
+        &model,
+        &working_dir,
+        &snap,
+        &enabled_tool_names,
+    ));
     let meta_context_tokens = meta_context_tokens(&mode, &working_dir, &snap, plan_active).await;
-    let skill_context_tokens = skill_context_tokens(&mode, has_tools).await;
-    let (system_tool_definition_tokens, mcp_definition_tokens) =
-        tool_definition_tokens(&mode.mode, has_tools);
+    let skill_context_tokens = skill_context_tokens(
+        &mode,
+        !defs.is_empty() && tool_catalog::has_tool(&enabled_tool_names, "load_skill"),
+    )
+    .await;
+    let (system_tool_definition_tokens, mcp_definition_tokens) = tool_definition_tokens(defs);
 
     Ok(HiddenContextUsage {
         system_prompt_tokens,
@@ -57,8 +69,9 @@ fn base_prompt(
     model: &str,
     working_dir: &std::path::Path,
     snap: &crate::services::git_context::GitSnapshot,
+    enabled_tool_names: &[String],
 ) -> String {
-    match (mode == "chat", model_size::detect_tier(model)) {
+    let prompt = match (mode == "chat", model_size::detect_tier(model)) {
         (true, PromptTier::Compact) => prompt_chat_compact::build(working_dir),
         (true, PromptTier::Detailed) => prompt_chat_detailed::build(working_dir),
         (false, PromptTier::Compact) => {
@@ -67,7 +80,11 @@ fn base_prompt(
         (false, PromptTier::Detailed) => {
             prompt_detailed::build(working_dir, snap.is_git, snap.git_root.as_deref())
         }
-    }
+    };
+    crate::services::agent_local::tool_prompt_filter::filter_system_prompt(
+        &prompt,
+        enabled_tool_names,
+    )
 }
 
 async fn meta_context_tokens(
@@ -110,16 +127,24 @@ async fn skill_context_tokens(mode: &common::StreamMode, has_tools: bool) -> usi
     ))
 }
 
-fn tool_definition_tokens(mode: &str, has_tools: bool) -> (usize, usize) {
+fn filtered_tool_definitions(
+    mode: &str,
+    has_tools: bool,
+    enabled_optional_tools: &[String],
+) -> Vec<Value> {
     if !has_tools {
-        return (0, 0);
+        return vec![];
     }
-    let mcp_names = mcp_tool_names();
     let defs = if mode == "chat" {
         tool_definitions_chat::get_chat_tool_definitions()
     } else {
         tool_dispatcher::get_tool_definitions()
     };
+    tool_catalog::filter_tool_definitions(defs, enabled_optional_tools)
+}
+
+fn tool_definition_tokens(defs: Vec<Value>) -> (usize, usize) {
+    let mcp_names = mcp_tool_names();
     defs.into_iter().fold((0, 0), |(system, mcp), def| {
         let tokens = estimate(&def.to_string());
         if tool_name(&def).is_some_and(|name| mcp_names.contains(&name)) {

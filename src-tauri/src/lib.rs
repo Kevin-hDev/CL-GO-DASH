@@ -190,6 +190,8 @@ pub fn run() {
             commands::truncate_and_replace_at,
             commands::get_agent_settings,
             commands::set_permission_mode,
+            commands::list_agent_tool_catalog,
+            commands::set_agent_tool_enabled,
             commands::respond_to_permission,
             commands::respond_to_interactive_choice,
             // Agent Local — Subagents

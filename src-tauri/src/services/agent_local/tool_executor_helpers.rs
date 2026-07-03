@@ -172,6 +172,11 @@ pub async fn dispatch_or_interactive(
     session_id: &str,
     cancel: CancellationToken,
 ) -> ToolResult {
+    if super::tool_catalog::is_optional_tool(name)
+        && !super::agent_settings::is_tool_enabled(name).await
+    {
+        return ToolResult::err("Outil désactivé dans les paramètres.");
+    }
     if name == "ask_user_choice" {
         return super::tool_interactive::execute(args, on_event, cancel, Some(session_id)).await;
     }

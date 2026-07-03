@@ -9,10 +9,22 @@ pub async fn get_agent_settings() -> Result<AgentSettings, String> {
 
 #[tauri::command]
 pub async fn set_permission_mode(mode: String) -> Result<(), String> {
-    let settings = AgentSettings {
-        permission_mode: mode,
-    };
+    let settings = agent_settings::with_permission_mode(agent_settings::load().await, mode)?;
     agent_settings::save(&settings).await
+}
+
+#[tauri::command]
+pub async fn list_agent_tool_catalog(
+) -> Result<Vec<crate::services::agent_local::tool_catalog::ToolCatalogEntry>, String> {
+    Ok(crate::services::agent_local::tool_catalog::catalog())
+}
+
+#[tauri::command]
+pub async fn set_agent_tool_enabled(
+    tool_id: String,
+    enabled: bool,
+) -> Result<AgentSettings, String> {
+    agent_settings::set_optional_tool_enabled(tool_id, enabled).await
 }
 
 #[tauri::command]

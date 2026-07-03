@@ -211,6 +211,11 @@ pub async fn dispatch(
     working_dir: &Path,
     session_id: &str,
 ) -> ToolResult {
+    if super::tool_catalog::is_optional_tool(tool_name)
+        && !super::agent_settings::is_tool_enabled(tool_name).await
+    {
+        return ToolResult::err("Outil désactivé dans les paramètres.");
+    }
     let args = match tool_validate::validate(tool_name, args) {
         Ok(cleaned) => cleaned,
         Err(msg) => return ToolResult::err(format!("[{tool_name}] {msg}")),

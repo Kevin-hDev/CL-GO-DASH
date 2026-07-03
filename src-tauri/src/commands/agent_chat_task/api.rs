@@ -1,6 +1,6 @@
 use super::common::{self, StreamMode};
 use super::params::StreamTaskParams;
-use crate::services::agent_local::tool_dispatcher;
+use crate::services::agent_local::{agent_settings::AgentSettings, tool_catalog, tool_dispatcher};
 use crate::services::agent_local::types_ollama::{ChatMessage, StreamEvent};
 use crate::services::llm;
 use crate::services::llm::{model_registry, tool_capable};
@@ -20,16 +20,25 @@ pub(crate) async fn run(
         crate::services::compress::context_resolve::resolve_api(&params.provider, &params.model)
             .await;
     let caps = resolve_capabilities(&params).await;
-    let final_tools = resolve_tools(&params, &mode, caps.tools);
+    let settings = crate::services::agent_local::agent_settings::load().await;
+    let final_tools = resolve_tools(&params, &mode, caps.tools, &settings);
+    let enabled_tool_names = tool_catalog::tool_names(&final_tools);
     let openai_tools = llm::agent_loop_tools::convert_tools_to_openai(&final_tools);
     let working_dir = common::resolve_working_dir(&params.working_dir)?;
     common::update_working_dir(&params.session_id, &working_dir).await;
-    let plan_mode_active = resolve_plan_mode(&params).await;
+    let plan_mode_active =
+        resolve_plan_mode(&params).await && tool_catalog::has_plan_tools(&enabled_tool_names);
 
     let snap = common::collect_git_snapshot(&working_dir).await;
     let agent_md = common::agent_md_content(&mode, &working_dir).await;
-    let has_tools = mode.is_chat || caps.tools;
-    let skills = common::skills_tuples(!mode.is_chat && !mode.is_subagent && caps.tools).await;
+    let has_tools = !final_tools.is_empty();
+    let skills = common::skills_tuples(
+        !mode.is_chat
+            && !mode.is_subagent
+            && has_tools
+            && tool_catalog::has_tool(&enabled_tool_names, "load_skill"),
+    )
+    .await;
     let mut messages = params.messages;
     sanitize_images(&params.on_event, &mut messages, caps.vision);
     common::prepare_with_context(
@@ -44,13 +53,16 @@ pub(crate) async fn run(
             mode: &mode.mode,
             response_language: &response_language,
             plan_mode_active,
+            enabled_tool_names: &enabled_tool_names,
         },
     );
-    crate::services::agent_local::tool_todo::append_session_reminder(
-        &mut messages,
-        &params.session_id,
-    )
-    .await;
+    if todo_tools_enabled(&enabled_tool_names) {
+        crate::services::agent_local::tool_todo::append_session_reminder(
+            &mut messages,
+            &params.session_id,
+        )
+        .await;
+    }
     super::gemma4_thinking_guard::apply(&mut messages, &params.provider, &params.model);
 
     let effective_reasoning_mode = crate::services::reasoning::normalize_for_model(
@@ -126,18 +138,32 @@ fn resolve_tools(
     params: &StreamTaskParams,
     mode: &StreamMode,
     model_supports_tools: bool,
+    settings: &AgentSettings,
 ) -> Vec<serde_json::Value> {
-    if mode.is_chat {
-        return tool_dispatcher::get_chat_tool_definitions();
-    }
-    if !model_supports_tools {
-        return vec![];
-    }
-    if params.tools.is_empty() {
+    let defs = if mode.is_chat {
+        tool_dispatcher::get_chat_tool_definitions()
+    } else if !model_supports_tools {
+        vec![]
+    } else if params.tools.is_empty() {
         tool_dispatcher::get_tool_definitions()
     } else {
         params.tools.clone()
-    }
+    };
+    tool_catalog::filter_tool_definitions(defs, &settings.enabled_optional_tools)
+}
+
+fn todo_tools_enabled(enabled_tool_names: &[String]) -> bool {
+    tool_catalog::has_any_tool(
+        enabled_tool_names,
+        &[
+            "todo_write",
+            "todo_history",
+            "todo_pause",
+            "todo_resume",
+            "todo_delete",
+            "agent_diagnostics",
+        ],
+    )
 }
 
 fn sanitize_images(

@@ -4,10 +4,11 @@ import { useTranslation } from "react-i18next";
 import { useSettings } from "@/hooks/use-settings";
 import { useArrowNavigation } from "@/hooks/use-arrow-navigation";
 import type { ThemeChoice } from "@/hooks/use-theme";
-import { GearSix, Key, Sliders, Info, BookOpenText, Keyboard, Plugs, Broadcast, ChartLineUp } from "@/components/ui/icons";
+import { GearSix, Key, Sliders, Info, BookOpenText, Keyboard, Plugs, Broadcast, ChartLineUp, Wrench } from "@/components/ui/icons";
 import { ThemedIcon } from "@/components/ui/themed-icon";
 import { GeneralSettings } from "./general-settings";
 import { AdvancedSettings } from "./advanced-settings";
+import { ToolsSettings } from "./tools-settings";
 import { ShortcutsSettings } from "./shortcuts-settings";
 import { AboutSettings } from "./about-settings";
 import { LlmExplorer } from "./llm-explorer";
@@ -38,6 +39,7 @@ const SUB_TABS: SubTabDef[] = [
   { id: "api-keys", i18n: "settings.tabs.apiKeys", icon: Key },
   { id: "forecast", i18n: "forecast.title", icon: ChartLineUp },
   { id: "llm", i18n: "settings.tabs.llm", icon: BookOpenText },
+  { id: "tools", i18n: "settings.tabs.tools", icon: Wrench },
   { id: "advanced", i18n: "settings.tabs.advanced", icon: Sliders },
   { id: "shortcuts", i18n: "settings.tabs.shortcuts", icon: Keyboard },
   { id: "about", i18n: "settings.tabs.about", icon: Info },
@@ -147,6 +149,7 @@ export const SettingsTab = memo(function SettingsTab({
     if (subTab === "llm") {
       return <LlmExplorer navState={navState.llmView} onNavChange={(llmView) => onNavChange({ llmView })} />;
     }
+    if (subTab === "tools") return <ToolsSettings />;
     if (subTab === "advanced") return <AdvancedSettings />;
     if (subTab === "shortcuts") return <ShortcutsSettings />;
     if (subTab === "about") return <AboutSettings />;

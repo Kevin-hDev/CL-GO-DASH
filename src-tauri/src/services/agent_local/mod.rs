@@ -104,6 +104,9 @@ pub mod tool_bash;
 pub mod tool_bash_background;
 pub mod tool_bash_changes;
 pub mod tool_bash_long;
+pub mod tool_catalog;
+#[cfg(test)]
+pub mod tool_catalog_tests;
 pub mod tool_definitions;
 pub mod tool_definitions_chat;
 pub mod tool_definitions_forecast;
@@ -125,6 +128,7 @@ pub mod tool_dispatcher_mcp;
 pub mod tool_dispatcher_office;
 #[cfg(test)]
 pub mod tool_dispatcher_tests;
+pub mod tool_prompt_filter;
 #[cfg(test)]
 pub mod tool_document_format_tests;
 pub mod tool_document_read;
