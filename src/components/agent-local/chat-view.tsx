@@ -17,7 +17,7 @@ import { useSessionProject } from "@/hooks/use-session-project";
 import { useChatScroll } from "@/hooks/use-chat-scroll";
 import { useModelSwitch } from "@/hooks/use-model-switch";
 import { useWorktreeSessionSwitch } from "@/hooks/use-worktree-session-switch";
-import { useSessionFiles } from "@/hooks/use-session-files";
+import { useSessionFileGroups } from "@/hooks/use-session-files";
 import { useSubagents } from "@/hooks/use-subagents";
 import { useSubagentSynthesis } from "@/hooks/use-subagent-synthesis";
 import { useChatActions } from "@/hooks/use-chat-actions";
@@ -26,7 +26,7 @@ import { PermissionDialog } from "./permission-dialog";
 import { TerminalPanel } from "@/components/terminal/terminal-panel";
 import type { useTerminal } from "@/hooks/use-terminal";
 import type { Project } from "@/types/agent";
-import type { FileOperation } from "@/types/file-preview";
+import type { FileOperationGroups } from "@/types/file-preview";
 import type { ReasoningMode } from "@/lib/reasoning-modes";
 import { useGitBranch } from "@/hooks/use-git-branch";
 import { ScrollBottomButton } from "./scroll-bottom-button";
@@ -50,7 +50,7 @@ interface ChatViewProps {
   onReasoningModeChange: (mode: ReasoningMode) => void;
   onInitialMessageSent?: () => void;
   terminalState: ReturnType<typeof useTerminal>;
-  onFileOperationsChange?: (operations: FileOperation[]) => void;
+  onFileOperationsChange?: (operations: FileOperationGroups) => void;
   onFilePreviewPath?: (path: string) => void;
   onOpenSubagent?: (sessionId: string) => void;
   isSubagent?: boolean;
@@ -89,7 +89,7 @@ export function ChatView({
     planMode: chat.planModeEnabled, supportsTools: selectedModelCaps?.supports_tools,
   });
   const git = useGitBranch(proj.selectedProject?.path, sessionId);
-  const fileOperations = useSessionFiles(
+  const fileOperations = useSessionFileGroups(
     chat.messages,
     chat.completedSegments,
     chat.currentTools,

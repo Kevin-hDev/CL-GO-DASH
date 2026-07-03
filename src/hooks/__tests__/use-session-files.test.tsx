@@ -1,7 +1,7 @@
 import { renderHook, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { checkPreviewFilesExist } from "@/services/file-preview";
-import { useSessionFiles } from "../use-session-files";
+import { useSessionFileGroups, useSessionFiles } from "../use-session-files";
 import type { AgentMessage, ToolActivityRecord } from "@/types/agent";
 import type { ToolActivity } from "../agent-chat-utils";
 
@@ -83,6 +83,42 @@ describe("useSessionFiles", () => {
     resolveSecond([{ path: "/repo/new.ts", exists: true }]);
     await waitFor(() => {
       expect(result.current.map((operation) => operation.path)).toEqual(["/repo/new.ts"]);
+    });
+  });
+
+  it("garde la dernière exécution modifiante si une requête plus récente ne modifie rien", async () => {
+    vi.mocked(checkPreviewFilesExist).mockImplementation((paths) => Promise.resolve(
+      paths.map((path) => ({ path, exists: true })),
+    ));
+
+    const { result } = renderHook(() => useSessionFileGroups([
+      message("write", [tool({ summary: "/repo/changed.ts" })]),
+      message("read", [{ name: "read_file", summary: "/repo/changed.ts", result: "ok" }]),
+    ], [], [], "/repo"));
+
+    await waitFor(() => {
+      expect(result.current.latest.map((operation) => operation.path)).toEqual(["/repo/changed.ts"]);
+      expect(result.current.all.map((operation) => operation.path)).toEqual(["/repo/changed.ts"]);
+    });
+  });
+
+  it("remplace la dernière exécution par les fichiers live modifiés pendant le stream", async () => {
+    vi.mocked(checkPreviewFilesExist).mockImplementation((paths) => Promise.resolve(
+      paths.map((path) => ({ path, exists: true })),
+    ));
+    const live: ToolActivity = {
+      name: "write_file",
+      args: { path: "/repo/live.ts", content: "a\nb" },
+      result: "ok",
+    };
+
+    const { result } = renderHook(() => useSessionFileGroups([
+      message("old", [tool({ summary: "/repo/old.ts" })]),
+    ], [], [live], "/repo"));
+
+    await waitFor(() => {
+      expect(result.current.latest.map((operation) => operation.path)).toEqual(["/repo/live.ts"]);
+      expect(result.current.all.map((operation) => operation.path)).toEqual(["/repo/live.ts", "/repo/old.ts"]);
     });
   });
 });

@@ -613,6 +613,10 @@
   "filePreview": {
     "default": "デフォルト",
     "noFiles": "このセッションで作成または変更されたファイルはありません。",
+    "listModes": {
+      "latest": "最新の実行",
+      "all": "すべてのファイル"
+    },
     "filesModified": "ファイル",
     "loading": "ファイルを読み込み中…",
     "fileNotFound": "ファイルを読み取れませんでした。削除または移動された可能性があります。",

@@ -8,7 +8,7 @@ import { useAgentPanelLayout } from "@/hooks/use-agent-panel-layout";
 import type { DroppedFile } from "@/hooks/use-file-drop";
 import type { useTerminal } from "@/hooks/use-terminal";
 import type { Project } from "@/types/agent";
-import type { FileOperation } from "@/types/file-preview";
+import type { FileOperationGroups } from "@/types/file-preview";
 import type { PanelMode } from "@/hooks/use-forecast-panel";
 import type { ReasoningMode } from "@/lib/reasoning-modes";
 
@@ -26,7 +26,7 @@ interface AgentChatDetailProps {
   terminal: ReturnType<typeof useTerminal>;
   filePreview: ReturnType<typeof useFilePreview>;
   fullscreenSwitching: boolean;
-  fileOperations: FileOperation[];
+  fileOperations: FileOperationGroups;
   onAddProject: (path: string) => Promise<Project>;
   onSessionsRefresh: () => void;
   onUpdateModel: (id: string, model: string, provider: string) => void;
@@ -35,7 +35,7 @@ interface AgentChatDetailProps {
   onAutoRename: (id: string, name: string) => void;
   onReasoningModeChange: (mode: ReasoningMode) => void;
   onInitialMessageSent: () => void;
-  onFileOperationsChange: (operations: FileOperation[]) => void;
+  onFileOperationsChange: (operations: FileOperationGroups) => void;
   onPreviewFullscreenChange: (fullscreen: boolean) => void;
   fileTree: ReturnType<typeof useFileTree>;
   parentSessionId?: string;
@@ -105,13 +105,16 @@ export function AgentChatDetail(props: AgentChatDetailProps) {
         fullscreenWidth={props.filePreview.fullscreenWidth}
         fullscreenSwitching={props.fullscreenSwitching}
         resizing={props.filePreview.resizing}
-        operations={props.fileOperations}
+        allOperations={props.fileOperations.all}
+        latestOperations={props.fileOperations.latest}
         tabs={props.filePreview.tabs}
         activeTab={props.filePreview.activeTab}
+        listMode={props.filePreview.listMode}
         baseDir={props.activeProjectPath}
         onClose={props.filePreview.closePanel}
         onFullscreenChange={props.onPreviewFullscreenChange}
         onActiveTabChange={props.filePreview.setActiveTab}
+        onListModeChange={props.filePreview.setListMode}
         onOpenOperation={props.filePreview.openOperation}
         onOpenFilePath={props.filePreview.openFullPath}
         onCloseTab={props.filePreview.closeTab}

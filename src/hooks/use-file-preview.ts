@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { fileNameFromPath, normalizeFileOperationPath } from "@/lib/file-preview-utils";
 import type { AgentPlanRun } from "@/types/agent";
-import type { FileOperation, FilePreviewActiveTab } from "@/types/file-preview";
+import type { FileOperation, FilePreviewActiveTab, FilePreviewListMode } from "@/types/file-preview";
 import {
   clampFilePreviewWidthForContainer,
   readStoredFilePreviewTabs,
@@ -34,6 +34,7 @@ export function useFilePreview(
     setExtraWidth,
   } = useFilePreviewPanelState(sessionId);
   const [activeTab, setActiveTab] = useState<FilePreviewActiveTab>("summary");
+  const [listMode, setListMode] = useState<FilePreviewListMode>("latest");
   const [tabIds, setTabIds] = useState<string[]>(() => readStoredFilePreviewTabs(sessionId));
   const [fallbackOps, setFallbackOps] = useState<FileOperation[]>([]);
   const [resizing, setResizing] = useState(false);
@@ -57,7 +58,7 @@ export function useFilePreview(
     // eslint-disable-next-line react-hooks/set-state-in-effect -- reset on session change is intentional
     setFallbackOps([]);
     setTabIds(readStoredFilePreviewTabs(sessionId));
-    setActiveTab("summary");
+    setActiveTab("summary"); setListMode("latest");
   }, [sessionId]);
 
   usePrunePreviewTabs(operationById, setTabIds, setActiveTab);
@@ -205,6 +206,7 @@ export function useFilePreview(
     open,
     fullscreen,
     activeTab,
+    listMode,
     tabs,
     width,
     extraWidth,
@@ -214,6 +216,7 @@ export function useFilePreview(
     setFullscreen,
     setExtraWidth,
     setActiveTab,
+    setListMode,
     toggleOpen,
     closePanel,
     openOperation,

@@ -16,6 +16,11 @@ export interface FileOperation {
   deletions: number;
 }
 
+export interface FileOperationGroups {
+  all: FileOperation[];
+  latest: FileOperation[];
+}
+
 export interface PreviewEditor {
   name: string;
   path: string;
@@ -23,3 +28,4 @@ export interface PreviewEditor {
 }
 
 export type FilePreviewActiveTab = string;
+export type FilePreviewListMode = "latest" | "all";

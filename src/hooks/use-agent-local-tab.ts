@@ -12,7 +12,7 @@ import { useAgentLocalTabPanelSync } from "@/hooks/use-agent-local-tab-panel-syn
 import { useAgentLocalControlledPreview } from "@/hooks/use-agent-local-controlled-preview";
 import { useAgentLocalControlledTerminal } from "@/hooks/use-agent-local-controlled-terminal";
 import { useArrowNavigation } from "@/hooks/use-arrow-navigation";
-import type { FileOperation } from "@/types/file-preview";
+import type { FileOperationGroups } from "@/types/file-preview";
 import type { AgentLocalNavState, DeepPartial } from "@/types/navigation";
 import {
   normalizeReasoningMode,
@@ -45,7 +45,7 @@ export function useAgentLocalTab({ navState, onSessionChange, onNavChange, listF
   const { model: defaultModel, provider: defaultProvider } = useDefaultModel();
   const [welcomeModel, setWelcomeModel] = useState<{ model: string; provider: string } | null>(null);
   const [welcomeReasoningMode, setWelcomeReasoningMode] = useState<string | null>(null);
-  const [fileOperations, setFileOperations] = useState<FileOperation[]>([]);
+  const [fileOperations, setFileOperations] = useState<FileOperationGroups>({ all: [], latest: [] });
 
   const { groups: availableModels } = useAvailableModels();
 
@@ -72,7 +72,7 @@ export function useAgentLocalTab({ navState, onSessionChange, onNavChange, listF
     currentDefault.provider,
     welcomeReasoningMode,
   );
-  const filePreviewState = useFilePreview(activeSessionId ?? null, fileOperations, activeProject?.path);
+  const filePreviewState = useFilePreview(activeSessionId ?? null, fileOperations.all, activeProject?.path);
 
   useEffect(() => {
     if (!model || availableModels.size === 0) return;

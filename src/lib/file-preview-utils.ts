@@ -1,5 +1,5 @@
 import type { AgentMessage, ToolActivityRecord } from "@/types/agent";
-import type { FileOperation } from "@/types/file-preview";
+import type { FileOperation, FileOperationGroups } from "@/types/file-preview";
 import { inferSavedToolPaths } from "./tool-file-path";
 
 const FILE_SEPARATOR = /[/\\]/;
@@ -44,6 +44,13 @@ export function collectFileOperations(
   messages: AgentMessage[],
   options: CollectFileOperationsOptions = {},
 ): FileOperation[] {
+  return collectFileOperationGroups(messages, options).all;
+}
+
+export function collectFileOperationGroups(
+  messages: AgentMessage[],
+  options: CollectFileOperationsOptions = {},
+): FileOperationGroups {
   const byPath = new Map<string, FileOperation>();
   if (options.liveTools?.length) {
     appendLatestToolOperations(
@@ -55,7 +62,23 @@ export function collectFileOperations(
     );
   }
 
+  const latestLive = collectLatestToolOperations(
+    options.liveTools ?? [],
+    "live",
+    new Date().toISOString(),
+    options.baseDir,
+  );
+
+  let latest = latestLive;
   for (let i = messages.length - 1; i >= 0 && byPath.size < MAX_FILE_OPERATIONS; i--) {
+    if (latest.length === 0) {
+      latest = collectLatestToolOperations(
+        toolsFromMessage(messages[i]),
+        messages[i].id,
+        messages[i].timestamp,
+        options.baseDir,
+      );
+    }
     appendLatestToolOperations(
       byPath,
       toolsFromMessage(messages[i]),
@@ -65,7 +88,7 @@ export function collectFileOperations(
     );
   }
 
-  return Array.from(byPath.values());
+  return { all: Array.from(byPath.values()), latest };
 }
 
 function toolsFromMessage(message: AgentMessage): ToolActivityRecord[] {
@@ -92,6 +115,17 @@ function appendLatestToolOperations(
     if (!key || byPath.has(key)) continue;
     byPath.set(key, { ...operation, id: `file:${key}` });
   }
+}
+
+function collectLatestToolOperations(
+  tools: ToolActivityRecord[],
+  messageId: string,
+  timestamp: string,
+  baseDir: string | undefined,
+): FileOperation[] {
+  const byPath = new Map<string, FileOperation>();
+  appendLatestToolOperations(byPath, tools, messageId, timestamp, baseDir);
+  return Array.from(byPath.values());
 }
 
 function isAbsolutePath(path: string): boolean {

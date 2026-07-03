@@ -613,6 +613,10 @@
   "filePreview": {
     "default": "predeterminado",
     "noFiles": "Ningún archivo creado o modificado en esta sesión.",
+    "listModes": {
+      "latest": "Última ejecución",
+      "all": "Todos los archivos"
+    },
     "filesModified": "Archivos",
     "loading": "Leyendo archivo...",
     "fileNotFound": "No se pudo leer el archivo. Es posible que haya sido eliminado o movido.",

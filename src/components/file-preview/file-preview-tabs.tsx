@@ -1,14 +1,17 @@
 import { useState } from "react";
 import { detectEditorsForFile } from "@/services/file-preview";
-import type { FileOperation, FilePreviewActiveTab, PreviewEditor } from "@/types/file-preview";
+import type { FileOperation, FilePreviewActiveTab, FilePreviewListMode, PreviewEditor } from "@/types/file-preview";
 import { FileTabMenu } from "./file-tab-menu";
 import { FilePreviewTab } from "./file-preview-tab";
+import { FilePreviewSummarySelector } from "./file-preview-summary-selector";
 
 interface FilePreviewTabsProps {
   tabs: FileOperation[];
   activeTab: FilePreviewActiveTab;
+  listMode: FilePreviewListMode;
   baseDir?: string;
   onSelect: (id: FilePreviewActiveTab) => void;
+  onListModeChange: (mode: FilePreviewListMode) => void;
   onClose: (id: string) => void;
   onOpenDefault: (operation: FileOperation) => void;
   onOpenWith: (operation: FileOperation, editorPath: string) => void;
@@ -17,8 +20,10 @@ interface FilePreviewTabsProps {
 export function FilePreviewTabs({
   tabs,
   activeTab,
+  listMode,
   baseDir,
   onSelect,
+  onListModeChange,
   onClose,
   onOpenDefault,
   onOpenWith,
@@ -44,11 +49,11 @@ export function FilePreviewTabs({
 
   return (
     <div className="fp-tabs">
-      <FilePreviewTab
-        summary
-        label="R"
+      <FilePreviewSummarySelector
         active={activeTab === "summary"}
+        mode={listMode}
         onSelect={() => onSelect("summary")}
+        onModeChange={onListModeChange}
       />
       <div className="fp-tabs-files">
         {tabs.map((tab) => (

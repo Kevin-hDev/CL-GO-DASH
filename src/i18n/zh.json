@@ -613,6 +613,10 @@
   "filePreview": {
     "default": "默认",
     "noFiles": "本次会话中未创建或修改任何文件。",
+    "listModes": {
+      "latest": "最近一次执行",
+      "all": "所有文件"
+    },
     "filesModified": "文件",
     "loading": "正在读取文件…",
     "fileNotFound": "无法读取该文件，它可能已被删除或移动。",

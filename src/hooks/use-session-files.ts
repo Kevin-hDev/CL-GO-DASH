@@ -1,13 +1,22 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
-import { collectFileOperations, normalizeFileOperationPath } from "@/lib/file-preview-utils";
+import { collectFileOperationGroups, normalizeFileOperationPath } from "@/lib/file-preview-utils";
 import { checkPreviewFilesExist } from "@/services/file-preview";
 import { cleanupTauriListener } from "@/lib/tauri-listen";
 import { toolsToRecords, type StreamSegment, type ToolActivity } from "./agent-chat-utils";
 import type { AgentMessage } from "@/types/agent";
-import type { FileOperation } from "@/types/file-preview";
+import type { FileOperation, FileOperationGroups } from "@/types/file-preview";
 
 export function useSessionFiles(
+  messages: AgentMessage[],
+  completedSegments: StreamSegment[] = [],
+  currentTools: ToolActivity[] = [],
+  baseDir?: string,
+) {
+  return useSessionFileGroups(messages, completedSegments, currentTools, baseDir).all;
+}
+
+export function useSessionFileGroups(
   messages: AgentMessage[],
   completedSegments: StreamSegment[] = [],
   currentTools: ToolActivity[] = [],
@@ -20,15 +29,15 @@ export function useSessionFiles(
     ].filter(isCompletedTool)),
     [completedSegments, currentTools],
   );
-  const operations = useMemo(
-    () => collectFileOperations(messages, { liveTools, baseDir }),
+  const groups = useMemo(
+    () => collectFileOperationGroups(messages, { liveTools, baseDir }),
     [messages, liveTools, baseDir],
   );
-  return useExistingFileOperations(operations, baseDir, liveActivityKey(completedSegments, currentTools));
+  return useExistingFileOperationGroups(groups, baseDir, liveActivityKey(completedSegments, currentTools));
 }
 
-function useExistingFileOperations(
-  operations: FileOperation[],
+function useExistingFileOperationGroups(
+  groups: FileOperationGroups,
   baseDir: string | undefined,
   activityKey: string,
 ) {
@@ -37,7 +46,7 @@ function useExistingFileOperations(
     values: new Map(),
   });
   const requestRef = useRef(0);
-  const paths = useMemo(() => operations.map((operation) => operation.path), [operations]);
+  const paths = useMemo(() => groups.all.map((operation) => operation.path), [groups.all]);
   const pathListKey = useMemo(() => paths.join("\0"), [paths]);
   const existenceKey = useMemo(() => `${baseDir ?? ""}\0${pathListKey}`, [baseDir, pathListKey]);
   const pathsForCheck = useMemo(() => (
@@ -78,11 +87,17 @@ function useExistingFileOperations(
   }, [refreshExists]);
 
   return useMemo(
-    () => operations.filter((operation) => (
-      existence.key === existenceKey
-        && existence.values.get(normalizeFileOperationPath(operation.path)) === true
-    )),
-    [operations, existence, existenceKey],
+    () => {
+      const existing = (operation: FileOperation) => (
+        existence.key === existenceKey
+          && existence.values.get(normalizeFileOperationPath(operation.path)) === true
+      );
+      return {
+        all: groups.all.filter(existing),
+        latest: groups.latest.filter(existing),
+      };
+    },
+    [groups, existence, existenceKey],
   );
 }
 

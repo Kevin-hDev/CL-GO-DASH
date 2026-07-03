@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Maximize2, Minimize2, FolderTree } from "@/components/ui/lucide-icons";
 import { openPreviewFile, openPreviewWithEditor } from "@/services/file-preview";
-import type { FileOperation, FilePreviewActiveTab } from "@/types/file-preview";
+import type { FileOperation, FilePreviewActiveTab, FilePreviewListMode } from "@/types/file-preview";
 import type { PanelMode } from "@/hooks/use-forecast-panel";
 import { shouldWrapFile } from "@/lib/code-language";
 import { FilePreviewBreadcrumb } from "./file-preview-breadcrumb";
@@ -22,13 +22,16 @@ interface FilePreviewPanelProps {
   fullscreenWidth: number;
   fullscreenSwitching: boolean;
   resizing: boolean;
-  operations: FileOperation[];
+  allOperations: FileOperation[];
+  latestOperations: FileOperation[];
   tabs: FileOperation[];
   activeTab: FilePreviewActiveTab;
+  listMode: FilePreviewListMode;
   baseDir?: string;
   onClose: () => void;
   onFullscreenChange: (fullscreen: boolean) => void;
   onActiveTabChange: (tab: FilePreviewActiveTab) => void;
+  onListModeChange: (mode: FilePreviewListMode) => void;
   onOpenOperation: (operation: FileOperation) => void;
   onOpenFilePath: (path: string) => void;
   onCloseTab: (id: string) => void;
@@ -43,6 +46,7 @@ interface FilePreviewPanelProps {
 export function FilePreviewPanel(props: FilePreviewPanelProps) {
   const { t } = useTranslation();
   const activeOperation = props.tabs.find((tab) => tab.id === props.activeTab);
+  const summaryOperations = props.listMode === "latest" ? props.latestOperations : props.allOperations;
 
   const openDefault = (operation: FileOperation) => {
     openPreviewFile(operation.path, props.baseDir).catch(() => {});
@@ -69,8 +73,10 @@ export function FilePreviewPanel(props: FilePreviewPanelProps) {
             <FilePreviewTabs
               tabs={props.tabs}
               activeTab={props.activeTab}
+              listMode={props.listMode}
               baseDir={props.baseDir}
               onSelect={props.onActiveTabChange}
+              onListModeChange={props.onListModeChange}
               onClose={props.onCloseTab}
               onOpenDefault={openDefault}
               onOpenWith={openWith}
@@ -96,7 +102,7 @@ export function FilePreviewPanel(props: FilePreviewPanelProps) {
             {props.activeTab === "summary" || !activeOperation ? (
               <div className="fp-summary-scroll">
                 <FilePreviewSummary
-                  operations={props.operations}
+                  operations={summaryOperations}
                   baseDir={props.baseDir}
                   onOpen={props.onOpenOperation}
                   onOpenFile={(operation) => props.onOpenFilePath(operation.path)}
