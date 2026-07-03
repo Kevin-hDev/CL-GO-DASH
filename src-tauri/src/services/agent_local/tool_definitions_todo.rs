@@ -12,7 +12,7 @@ pub fn todo_and_diagnostics_definitions() -> Vec<Value> {
     ]
 }
 
-pub fn todo_write_definition() -> Value {
+fn todo_write_definition() -> Value {
     super::tool_definitions::tool_def(
         "todo_write",
         "Create or update the current task checklist. Use this for multi-step coding tasks. \
@@ -39,7 +39,7 @@ pub fn todo_write_definition() -> Value {
     )
 }
 
-pub fn todo_history_definition() -> Value {
+fn todo_history_definition() -> Value {
     super::tool_definitions::tool_def(
         "todo_history",
         "List saved todo checklists for this session. Hidden from the user UI.",
@@ -50,7 +50,7 @@ pub fn todo_history_definition() -> Value {
     )
 }
 
-pub fn todo_pause_definition() -> Value {
+fn todo_pause_definition() -> Value {
     super::tool_definitions::tool_def(
         "todo_pause",
         "Pause the active checklist before switching to another task or diagnostic.",
@@ -63,7 +63,7 @@ pub fn todo_pause_definition() -> Value {
     )
 }
 
-pub fn todo_resume_definition() -> Value {
+fn todo_resume_definition() -> Value {
     super::tool_definitions::tool_def(
         "todo_resume",
         "Resume a saved checklist by id and make it visible as the active todo.",
@@ -77,7 +77,7 @@ pub fn todo_resume_definition() -> Value {
     )
 }
 
-pub fn todo_delete_definition() -> Value {
+fn todo_delete_definition() -> Value {
     super::tool_definitions::tool_def(
         "todo_delete",
         "Delete a checklist only when it should not be resumed later. Provide exactly one of id or active=true. \
@@ -92,7 +92,7 @@ pub fn todo_delete_definition() -> Value {
     )
 }
 
-pub fn agent_diagnostics_definition() -> Value {
+fn agent_diagnostics_definition() -> Value {
     super::tool_definitions::tool_def(
         "agent_diagnostics",
         "Read recent safe stream diagnostics for this session. Hidden from the user UI.",
