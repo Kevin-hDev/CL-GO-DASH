@@ -20,11 +20,25 @@ pub async fn list_agent_tool_catalog(
 }
 
 #[tauri::command]
+pub async fn list_agent_tool_groups(
+) -> Result<Vec<crate::services::agent_local::tool_group_catalog::ToolGroupEntry>, String> {
+    Ok(crate::services::agent_local::tool_group_catalog::groups())
+}
+
+#[tauri::command]
 pub async fn set_agent_tool_enabled(
     tool_id: String,
     enabled: bool,
 ) -> Result<AgentSettings, String> {
     agent_settings::set_optional_tool_enabled(tool_id, enabled).await
+}
+
+#[tauri::command]
+pub async fn set_agent_tool_group_enabled(
+    group_id: String,
+    enabled: bool,
+) -> Result<AgentSettings, String> {
+    agent_settings::set_tool_group_enabled(group_id, enabled).await
 }
 
 #[tauri::command]

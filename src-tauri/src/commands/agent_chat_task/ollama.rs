@@ -1,7 +1,7 @@
 use super::common::{self, StreamMode};
 use super::params::StreamTaskParams;
-use crate::services::agent_local::agent_settings::AgentSettings;
 use crate::services::agent_local::agent_loop;
+use crate::services::agent_local::agent_settings::AgentSettings;
 use crate::services::agent_local::tool_catalog;
 use crate::services::agent_local::tool_dispatcher;
 use crate::services::agent_local::types_ollama::{ChatMessage, OllamaThink, StreamEvent};

@@ -26,7 +26,12 @@ vi.mock("@tauri-apps/api/core", async () => {
       if (cmd === "get_advanced_settings") return Promise.resolve({});
       if (cmd === "get_agent_settings") return Promise.resolve(data.agentSettings());
       if (cmd === "list_agent_tool_catalog") return Promise.resolve(data.agentToolCatalog());
+      if (cmd === "list_agent_tool_groups") return Promise.resolve(data.agentToolGroups());
       if (cmd === "set_agent_tool_enabled") {
+        const enabled = args?.enabled === false ? [] : ["load_skill"];
+        return Promise.resolve({ permission_mode: "auto", enabled_optional_tools: enabled });
+      }
+      if (cmd === "set_agent_tool_group_enabled") {
         const enabled = args?.enabled === false ? [] : ["load_skill"];
         return Promise.resolve({ permission_mode: "auto", enabled_optional_tools: enabled });
       }

@@ -13,7 +13,7 @@ export function provider(id: string, displayName: string, category: string) {
 export function agentSettings() {
   return {
     permission_mode: "auto",
-    enabled_optional_tools: ["load_skill"],
+    enabled_optional_tools: ["load_skill", "planmode", "exitplanmode"],
   };
 }
 
@@ -23,6 +23,20 @@ export function agentToolCatalog() {
     { id: "search_mcp_tools", locked: true, defaultEnabled: true, group: "mcp" },
     { id: "load_skill", locked: false, defaultEnabled: true, group: "workflow" },
     { id: "forecast", locked: false, defaultEnabled: false, group: "forecast" },
+  ];
+}
+
+export function agentToolGroups() {
+  return [
+    { id: "web", locked: true, defaultEnabled: true, toolIds: ["web_search", "web_fetch"] },
+    { id: "skills", locked: false, defaultEnabled: true, toolIds: ["load_skill"] },
+    { id: "plan_mode", locked: false, defaultEnabled: true, toolIds: ["planmode", "exitplanmode"] },
+    {
+      id: "forecast",
+      locked: false,
+      defaultEnabled: false,
+      toolIds: ["forecast", "forecast_models", "forecast_analyze", "forecast_read"],
+    },
   ];
 }
 

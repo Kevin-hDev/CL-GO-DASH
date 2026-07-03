@@ -126,13 +126,12 @@ pub fn is_optional_tool(tool_id: &str) -> bool {
 pub fn is_enabled(tool_id: &str, enabled_optional_tools: &[String]) -> bool {
     is_locked_tool(tool_id)
         || (is_optional_tool(tool_id)
-            && enabled_optional_tools.iter().any(|enabled| enabled == tool_id))
+            && enabled_optional_tools
+                .iter()
+                .any(|enabled| enabled == tool_id))
 }
 
-pub fn filter_tool_definitions(
-    defs: Vec<Value>,
-    enabled_optional_tools: &[String],
-) -> Vec<Value> {
+pub fn filter_tool_definitions(defs: Vec<Value>, enabled_optional_tools: &[String]) -> Vec<Value> {
     defs.into_iter()
         .filter(|def| {
             tool_name(def)

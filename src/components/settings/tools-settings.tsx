@@ -13,26 +13,25 @@ interface AgentSettings {
   enabled_optional_tools?: string[];
 }
 
-interface ToolCatalogEntry {
+interface ToolGroupEntry {
   id: string;
   locked: boolean;
-  defaultEnabled: boolean;
-  group: string;
+  toolIds: string[];
 }
 
 export function ToolsSettings() {
   const { t } = useTranslation();
-  const [catalog, setCatalog] = useState<ToolCatalogEntry[]>([]);
+  const [groups, setGroups] = useState<ToolGroupEntry[]>([]);
   const [enabledTools, setEnabledTools] = useState<string[]>([]);
 
   const load = useCallback(() => {
     void Promise.all([
       invoke<AgentSettings>("get_agent_settings"),
-      invoke<ToolCatalogEntry[]>("list_agent_tool_catalog"),
+      invoke<ToolGroupEntry[]>("list_agent_tool_groups"),
     ])
-      .then(([settings, tools]) => {
+      .then(([settings, toolGroups]) => {
         setEnabledTools(settings.enabled_optional_tools ?? []);
-        setCatalog(tools);
+        setGroups(toolGroups);
       })
       .catch(() => showToast(i18n.t("errors.operationFailed"), "error"));
   }, []);
@@ -42,16 +41,20 @@ export function ToolsSettings() {
   }, [load]);
 
   const enabledSet = useMemo(() => new Set(enabledTools), [enabledTools]);
-  const locked = useMemo(() => catalog.filter((tool) => tool.locked), [catalog]);
-  const optional = useMemo(() => catalog.filter((tool) => !tool.locked), [catalog]);
+  const locked = useMemo(() => groups.filter((group) => group.locked), [groups]);
+  const optional = useMemo(() => groups.filter((group) => !group.locked), [groups]);
 
-  const toggleTool = useCallback((tool: ToolCatalogEntry, enabled: boolean) => {
+  const isGroupEnabled = useCallback((group: ToolGroupEntry) => {
+    return group.locked || group.toolIds.every((toolId) => enabledSet.has(toolId));
+  }, [enabledSet]);
+
+  const toggleGroup = useCallback((group: ToolGroupEntry, enabled: boolean) => {
     const previous = enabledTools;
     const next = enabled
-      ? [...new Set([...enabledTools, tool.id])]
-      : enabledTools.filter((id) => id !== tool.id);
+      ? [...new Set([...enabledTools, ...group.toolIds])]
+      : enabledTools.filter((id) => !group.toolIds.includes(id));
     setEnabledTools(next);
-    invoke<AgentSettings>("set_agent_tool_enabled", { toolId: tool.id, enabled })
+    invoke<AgentSettings>("set_agent_tool_group_enabled", { groupId: group.id, enabled })
       .then((settings) => setEnabledTools(settings.enabled_optional_tools ?? []))
       .catch(() => {
         setEnabledTools(previous);
@@ -66,11 +69,11 @@ export function ToolsSettings() {
 
         <h3 className="ats-section-title">{t("settings.tools.lockedTitle")}</h3>
         <SettingsCard>
-          {locked.map((tool) => (
+          {locked.map((group) => (
             <SettingsRow
-              key={tool.id}
-              title={tool.id}
-              description={t(`settings.tools.descriptions.${tool.id}`)}
+              key={group.id}
+              title={t(`settings.tools.groups.${group.id}.title`)}
+              description={t(`settings.tools.groups.${group.id}.description`)}
               className="ats-tool-row"
             >
               <span className="ats-lock-pill">{t("settings.tools.lockedBadge")}</span>
@@ -80,19 +83,19 @@ export function ToolsSettings() {
 
         <h3 className="ats-section-title">{t("settings.tools.optionalTitle")}</h3>
         <SettingsCard>
-          {optional.map((tool) => {
-            const enabled = enabledSet.has(tool.id);
+          {optional.map((group) => {
+            const enabled = isGroupEnabled(group);
             return (
               <SettingsRow
-                key={tool.id}
-                title={tool.id}
-                description={t(`settings.tools.descriptions.${tool.id}`)}
+                key={group.id}
+                title={t(`settings.tools.groups.${group.id}.title`)}
+                description={t(`settings.tools.groups.${group.id}.description`)}
                 className={`ats-tool-row${enabled ? "" : " is-off"}`}
               >
                 <RoundToggle
                   checked={enabled}
-                  onChange={(checked) => toggleTool(tool, checked)}
-                  title={t(`settings.tools.descriptions.${tool.id}`)}
+                  onChange={(checked) => toggleGroup(group, checked)}
+                  title={t(`settings.tools.groups.${group.id}.description`)}
                 />
               </SettingsRow>
             );

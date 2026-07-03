@@ -128,7 +128,6 @@ pub mod tool_dispatcher_mcp;
 pub mod tool_dispatcher_office;
 #[cfg(test)]
 pub mod tool_dispatcher_tests;
-pub mod tool_prompt_filter;
 #[cfg(test)]
 pub mod tool_document_format_tests;
 pub mod tool_document_read;
@@ -160,6 +159,7 @@ pub mod tool_files;
 pub mod tool_files_tests;
 pub mod tool_glob;
 pub mod tool_grep;
+pub mod tool_group_catalog;
 pub mod tool_hooks;
 #[cfg(test)]
 pub mod tool_hooks_tests;
@@ -184,6 +184,7 @@ pub mod tool_plan_approval_request;
 pub mod tool_plan_guard;
 pub mod tool_plan_messages;
 pub mod tool_plan_storage;
+pub mod tool_prompt_filter;
 pub mod tool_result_budget;
 #[cfg(test)]
 pub mod tool_result_budget_tests;

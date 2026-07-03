@@ -87,6 +87,30 @@ pub fn with_permission_mode(
     Ok(settings.normalized())
 }
 
+pub fn with_tool_group_enabled(
+    mut settings: AgentSettings,
+    group_id: &str,
+    enabled: bool,
+) -> Result<AgentSettings, String> {
+    let tool_ids = super::tool_group_catalog::optional_group_tool_ids(group_id)?;
+    if enabled {
+        for tool_id in tool_ids {
+            if !settings
+                .enabled_optional_tools
+                .iter()
+                .any(|id| id == tool_id)
+            {
+                settings.enabled_optional_tools.push((*tool_id).to_string());
+            }
+        }
+    } else {
+        settings
+            .enabled_optional_tools
+            .retain(|id| !tool_ids.contains(&id.as_str()));
+    }
+    Ok(settings.normalized())
+}
+
 pub async fn set_optional_tool_enabled(
     tool_id: String,
     enabled: bool,
@@ -94,13 +118,26 @@ pub async fn set_optional_tool_enabled(
     super::tool_catalog::validate_optional_tool_id(&tool_id)?;
     let mut settings = load().await;
     if enabled {
-        if !settings.enabled_optional_tools.iter().any(|id| id == &tool_id) {
+        if !settings
+            .enabled_optional_tools
+            .iter()
+            .any(|id| id == &tool_id)
+        {
             settings.enabled_optional_tools.push(tool_id);
         }
     } else {
         settings.enabled_optional_tools.retain(|id| id != &tool_id);
     }
     let settings = settings.normalized();
+    save(&settings).await?;
+    Ok(settings)
+}
+
+pub async fn set_tool_group_enabled(
+    group_id: String,
+    enabled: bool,
+) -> Result<AgentSettings, String> {
+    let settings = with_tool_group_enabled(load().await, &group_id, enabled)?;
     save(&settings).await?;
     Ok(settings)
 }
@@ -142,5 +179,24 @@ mod tests {
 
         assert_eq!(updated.permission_mode, "manual");
         assert_eq!(updated.enabled_optional_tools, vec!["load_skill"]);
+    }
+
+    #[test]
+    fn grouped_toggle_updates_all_real_tools() {
+        let settings = AgentSettings {
+            permission_mode: "auto".to_string(),
+            enabled_optional_tools: vec!["planmode".to_string(), "exitplanmode".to_string()],
+        };
+
+        let updated = with_tool_group_enabled(settings, "plan_mode", false).unwrap();
+
+        assert!(updated.enabled_optional_tools.is_empty());
+    }
+
+    #[test]
+    fn grouped_toggle_rejects_locked_group() {
+        let settings = AgentSettings::default();
+
+        assert!(with_tool_group_enabled(settings, "web", false).is_err());
     }
 }

@@ -56,7 +56,9 @@ mod tests {
         StreamResult {
             content: content.to_string(),
             thinking: thinking.to_string(),
-            tool_calls: (0..tools).map(|_| ("x".into(), serde_json::json!({}))).collect(),
+            tool_calls: (0..tools)
+                .map(|_| ("x".into(), serde_json::json!({})))
+                .collect(),
             done_reason: done.map(str::to_string),
             ..Default::default()
         }
@@ -64,7 +66,12 @@ mod tests {
 
     #[test]
     fn detects_thinking_only_dead_end() {
-        let r = result("", "Je dois créer un fichier puis répondre à l'utilisateur.", 0, Some("stop"));
+        let r = result(
+            "",
+            "Je dois créer un fichier puis répondre à l'utilisateur.",
+            0,
+            Some("stop"),
+        );
         assert!(is_thinking_only_dead_end(&r));
     }
 
@@ -88,7 +95,12 @@ mod tests {
 
     #[test]
     fn ignores_when_done_reason_is_tool_call() {
-        let r = result("", "réflexion longue et détaillée du modèle", 0, Some("tool_calls"));
+        let r = result(
+            "",
+            "réflexion longue et détaillée du modèle",
+            0,
+            Some("tool_calls"),
+        );
         assert!(!is_thinking_only_dead_end(&r));
     }
 

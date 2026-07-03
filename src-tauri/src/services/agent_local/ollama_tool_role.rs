@@ -31,7 +31,10 @@ pub fn wrap_tool_results(messages: &[ChatMessage]) -> Vec<ChatMessage> {
             }
             let wrapped = match &m.tool_name {
                 Some(name) if !name.is_empty() => {
-                    format!("{TOOL_RESPONSE_OPEN} name=\"{name}\"\n{}\n{TOOL_RESPONSE_CLOSE}", m.content)
+                    format!(
+                        "{TOOL_RESPONSE_OPEN} name=\"{name}\"\n{}\n{TOOL_RESPONSE_CLOSE}",
+                        m.content
+                    )
                 }
                 _ => format!("{TOOL_RESPONSE_OPEN}\n{}\n{TOOL_RESPONSE_CLOSE}", m.content),
             };

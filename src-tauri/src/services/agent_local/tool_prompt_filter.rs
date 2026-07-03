@@ -19,8 +19,8 @@ pub fn filter_system_prompt(content: &str, enabled_tool_names: &[String]) -> Str
 
     for line in content.lines() {
         if line.starts_with("# ") {
-            skip_section =
-                (!has_todo && line == TODO_SECTION) || (!has_interactive && line == INTERACTIVE_SECTION);
+            skip_section = (!has_todo && line == TODO_SECTION)
+                || (!has_interactive && line == INTERACTIVE_SECTION);
         }
         if skip_section || should_drop_line(line, enabled_tool_names) {
             continue;
@@ -33,7 +33,8 @@ pub fn filter_system_prompt(content: &str, enabled_tool_names: &[String]) -> Str
 
 fn should_drop_line(line: &str, enabled_tool_names: &[String]) -> bool {
     for entry in super::tool_catalog::catalog() {
-        if !super::tool_catalog::has_tool(enabled_tool_names, entry.id) && mentions_tool(line, entry.id)
+        if !super::tool_catalog::has_tool(enabled_tool_names, entry.id)
+            && mentions_tool(line, entry.id)
         {
             return true;
         }

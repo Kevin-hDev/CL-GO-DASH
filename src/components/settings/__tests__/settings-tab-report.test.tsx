@@ -52,21 +52,21 @@ describe("SettingsTab slots", () => {
     const [item] = await screen.findAllByText("settings.tabs.tools");
     fireEvent.click(item);
 
-    const bashRow = (await screen.findByText("bash")).closest(".settings-row");
-    const loadSkillRow = screen.getByText("load_skill").closest(".settings-row");
-    const forecastRow = screen.getByText("forecast").closest(".settings-row");
+    const webRow = (await screen.findByText("settings.tools.groups.web.title")).closest(".settings-row");
+    const skillsRow = screen.getByText("settings.tools.groups.skills.title").closest(".settings-row");
+    const forecastRow = screen.getByText("settings.tools.groups.forecast.title").closest(".settings-row");
 
-    expect(bashRow?.querySelector("input")).toBeNull();
-    expect(loadSkillRow ? within(loadSkillRow as HTMLElement).getByRole("checkbox") : null).toBeTruthy();
+    expect(webRow?.querySelector("input")).toBeNull();
+    expect(skillsRow ? within(skillsRow as HTMLElement).getByRole("checkbox") : null).toBeTruthy();
     expect(forecastRow).toHaveClass("is-off");
 
-    const loadToggle = within(loadSkillRow as HTMLElement).getByRole("checkbox");
-    fireEvent.click(loadToggle);
+    const skillsToggle = within(skillsRow as HTMLElement).getByRole("checkbox");
+    fireEvent.click(skillsToggle);
 
     await waitFor(() => {
       expect(invokeCalls()).toContainEqual([
-        "set_agent_tool_enabled",
-        { toolId: "load_skill", enabled: false },
+        "set_agent_tool_group_enabled",
+        { groupId: "skills", enabled: false },
       ]);
     });
   });

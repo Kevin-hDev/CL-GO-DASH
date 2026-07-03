@@ -191,7 +191,9 @@ pub fn run() {
             commands::get_agent_settings,
             commands::set_permission_mode,
             commands::list_agent_tool_catalog,
+            commands::list_agent_tool_groups,
             commands::set_agent_tool_enabled,
+            commands::set_agent_tool_group_enabled,
             commands::respond_to_permission,
             commands::respond_to_interactive_choice,
             // Agent Local — Subagents
