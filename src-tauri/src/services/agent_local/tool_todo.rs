@@ -73,8 +73,7 @@ pub async fn execute_resume(args: &Value, session_id: &str) -> ToolResult {
 }
 
 pub async fn execute_delete(args: &Value, session_id: &str) -> ToolResult {
-    match save_with(session_id, |session| delete_run_for_args(session, args)).await
-    {
+    match save_with(session_id, |session| delete_run_for_args(session, args)).await {
         Ok(Ok((active, run_id, status))) => {
             emit_update(session_id, active);
             ToolResult::ok(format!("Todo list supprimée: id={run_id} status={status}."))
@@ -100,7 +99,7 @@ fn delete_run_for_args(
         session
             .active_todo_run_id
             .clone()
-            .ok_or_else(|| "aucune todo active à supprimer".to_string())?
+            .ok_or_else(|| delete_active_missing_message(session))?
     } else {
         explicit_id.ok_or_else(|| "paramètre 'id' ou active=true requis".to_string())?
     };
@@ -112,6 +111,28 @@ fn delete_run_for_args(
         .ok_or_else(|| "todo introuvable".to_string())?;
     let active = super::tool_todo_state::delete_run(session, &run_id)?;
     Ok((active, run_id, status))
+}
+
+fn delete_active_missing_message(session: &super::types_session::AgentSession) -> String {
+    let paused: Vec<_> = session
+        .todo_runs
+        .iter()
+        .filter(|run| run.status == AgentTodoRunStatus::Paused)
+        .collect();
+    if paused.is_empty() {
+        return "aucune todo active à supprimer".to_string();
+    }
+
+    let ids = paused
+        .iter()
+        .map(|run| format!("id={} title=\"{}\"", run.id, run.title))
+        .collect::<Vec<_>>()
+        .join("; ");
+    format!(
+        "aucune todo active à supprimer. {count} todo list(s) en pause existent: {ids}. \
+         Utilise todo_delete avec l'id exact de chaque todo en pause, ou todo_history pour relire la liste.",
+        count = paused.len()
+    )
 }
 
 pub async fn append_session_reminder(

@@ -198,6 +198,25 @@ fn delete_active_arg_clears_visible_todos() {
     assert!(session.todo_runs.is_empty());
 }
 
+#[test]
+fn delete_active_arg_guides_when_only_paused_runs_exist() {
+    let mut session = test_session();
+    let first = parse_todos(&json!({
+        "todos": [{"content": "Ancienne tâche", "status": "in_progress"}]
+    }))
+    .unwrap();
+    apply_todos_to_session(&mut session, first);
+    let paused_id = session.active_todo_run_id.clone().unwrap();
+    super::super::tool_todo_state::pause_active(&mut session, Some("Pause".into()));
+
+    let err = super::delete_run_for_args(&mut session, &json!({"active": true})).unwrap_err();
+
+    assert!(err.contains("aucune todo active"));
+    assert!(err.contains("todo list(s) en pause"));
+    assert!(err.contains(&paused_id));
+    assert!(err.contains("todo_history"));
+}
+
 fn test_session() -> AgentSession {
     AgentSession {
         id: "abc-123".into(),
