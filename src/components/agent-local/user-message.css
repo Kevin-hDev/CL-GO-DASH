@@ -76,11 +76,6 @@
   background: var(--surface-glass);
 }
 
-.msg-skill-inline {
-  color: var(--pulse);
-  font-weight: 600;
-}
-
 .msg-files {
   display: flex;
   gap: 8px;

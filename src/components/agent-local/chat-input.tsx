@@ -1,12 +1,11 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { ChatInputActionsRow } from "./chat-input-actions-row";
-import { useAutoResize } from "@/hooks/use-auto-resize";
+import { ChatInputEditor } from "./chat-input-editor";
 import { useSlashCommands } from "@/hooks/use-slash-commands";
 import { useActiveSkills } from "@/hooks/use-active-skills";
 import { SlashAutocomplete } from "./slash-autocomplete";
 import { FileThumbnail } from "./file-thumbnail";
-import { activeSkillsInText, highlightSkillText } from "@/lib/skill-text";
 import type { DroppedFile } from "@/hooks/use-file-drop";
 import type { ContextUsageBreakdown } from "@/hooks/context-usage-breakdown";
 import type { PermissionMode } from "@/hooks/use-permission-mode";
@@ -20,10 +19,6 @@ const K_UP = "ArrowUp";
 const K_DOWN = "ArrowDown";
 const K_ENTER = "Enter";
 const K_ESC = "Escape";
-
-function eventKey(e: React.KeyboardEvent | KeyboardEvent): string {
-  return (e as unknown as Record<string, string>)["key"];
-}
 
 interface ChatInputProps {
   modelName: string;
@@ -48,7 +43,6 @@ interface ChatInputProps {
   onRemoveFile?: (index: number) => void;
   onPreviewFile?: (file: DroppedFile) => void;
   onClearFiles?: () => void;
-  onBuiltInCommand?: (name: string) => void;
 }
 
 export function ChatInput({
@@ -60,16 +54,13 @@ export function ChatInput({
 }: ChatInputProps) {
   const { t } = useTranslation();
   const [text, setText] = useState("");
-  const { ref, resize } = useAutoResize(200);
   const slash = useSlashCommands();
   const skills = useActiveSkills(slash, text, setText);
   const bubbleRef = useRef<HTMLDivElement>(null);
-  const highlightRef = useRef<HTMLDivElement>(null);
 
   const hasText = text.trim().length > 0;
   const hasFiles = files != null && files.length > 0;
   const hasContent = hasText || hasFiles;
-  const visibleSkillNames = activeSkillsInText(text, skills.activeSkills).map((s) => s.name);
 
   const handleSend = useCallback(() => {
     if (!hasContent || isStreaming || interactivePending) return;
@@ -77,41 +68,41 @@ export function ChatInput({
     setText("");
     skills.clearSkills();
     onClearFiles?.();
-    if (ref.current) ref.current.style.height = "auto";
-  }, [text, hasContent, hasFiles, files, skills, isStreaming, interactivePending, onSend, onClearFiles, ref]);
+  }, [text, hasContent, hasFiles, files, skills, isStreaming, interactivePending, onSend, onClearFiles]);
 
   const handleChange = useCallback((value: string) => {
     setText(value);
-    resize();
     slash.handleInput(value);
-  }, [resize, slash]);
+  }, [slash]);
 
-  const handleTextareaScroll = useCallback((e: React.UIEvent<HTMLTextAreaElement>) => {
-    if (highlightRef.current) {
-      highlightRef.current.scrollTop = e.currentTarget.scrollTop;
-    }
-  }, []);
-
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    const pressed = eventKey(e);
+  const handleKeyEvent = useCallback((event: KeyboardEvent): boolean | void => {
+    const pressed = event.key;
     if (slash.showDropdown) {
-      if (pressed === K_UP) { e.preventDefault(); slash.moveUp(); return; }
-      if (pressed === K_DOWN) { e.preventDefault(); slash.moveDown(); return; }
+      if (pressed === K_UP) { event.preventDefault(); slash.moveUp(); return true; }
+      if (pressed === K_DOWN) { event.preventDefault(); slash.moveDown(); return true; }
       if (pressed === K_ENTER) {
-        e.preventDefault();
+        event.preventDefault();
         const selected = slash.skills[slash.activeIndex];
         if (selected) void skills.handleSelectSkill(selected);
-        return;
+        return true;
       }
-      if (pressed === K_ESC) { e.preventDefault(); slash.close(); return; }
+      if (pressed === K_ESC) { event.preventDefault(); slash.close(); return true; }
     }
-    if (pressed === K_ENTER && !e.shiftKey) { e.preventDefault(); handleSend(); }
-    if (pressed === K_ESC) onStop();
+    if (pressed === K_ENTER && !event.shiftKey) {
+      event.preventDefault();
+      handleSend();
+      return true;
+    }
+    if (pressed === K_ESC) {
+      event.preventDefault();
+      onStop();
+      return true;
+    }
   }, [handleSend, onStop, slash, skills]);
 
   useEffect(() => {
     if (!isStreaming) return;
-    const handler = (e: KeyboardEvent) => { if (eventKey(e) === K_ESC) onStop(); };
+    const handler = (e: KeyboardEvent) => { if (e.key === K_ESC) onStop(); };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [isStreaming, onStop]);
@@ -130,7 +121,7 @@ export function ChatInput({
     : "hidden" as const;
 
   return (
-    <div className="chat-input-bubble" data-keyboard-scope="local" ref={bubbleRef}>
+    <div className="chat-input-bubble" ref={bubbleRef}>
       {slash.showDropdown && (
         <SlashAutocomplete
           skills={slash.skills}
@@ -138,23 +129,14 @@ export function ChatInput({
           onSelect={(s) => void skills.handleSelectSkill(s)}
         />
       )}
-      <div className="chat-textarea-shell">
-        <div className="chat-textarea-highlight" ref={highlightRef} aria-hidden="true">
-          {highlightSkillText(text, visibleSkillNames)}
-          {text.endsWith("\n") ? "\n" : null}
-        </div>
-        <textarea
-          ref={ref}
-          value={text}
-          onChange={(e) => handleChange(e.target.value)}
-          onScroll={handleTextareaScroll}
-          onKeyDown={handleKeyDown}
-          placeholder={interactivePending ? t("interactiveChoice.inputLocked") : t("agentLocal.placeholder")}
-          className="chat-textarea"
-          disabled={interactivePending}
-          rows={2}
-        />
-      </div>
+      <ChatInputEditor
+        value={text}
+        placeholder={interactivePending ? t("interactiveChoice.inputLocked") : t("agentLocal.placeholder")}
+        readOnly={interactivePending}
+        activeSkills={skills.activeSkills}
+        onTextChange={handleChange}
+        onKeyEvent={handleKeyEvent}
+      />
       {files && files.length > 0 && (
         <div className="chat-file-list">
           {files.map((f, i) => (
