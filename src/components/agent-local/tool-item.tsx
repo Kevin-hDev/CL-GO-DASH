@@ -5,12 +5,19 @@ import { isFileTool } from "@/lib/tool-file-path";
 import { FileIcon } from "@/components/file-preview/file-icon";
 import { ToolIcon } from "./tool-icons";
 import { ToolStatusIcon } from "./tool-status-icon";
+import { ToolResultMarkdown } from "./tool-result-markdown";
 import { useCollapsiblePresence } from "./use-collapsible-presence";
 
 const RESULT_PREVIEW_TOOLS = new Set([
   "bash", "grep", "glob", "read_file", "list_dir",
   "read_spreadsheet", "read_document", "read_image",
   "web_search", "web_fetch", "forecast", "forecast_read",
+]);
+
+// Outils dont le résultat texte est rendu en Markdown (style bulle, sans
+// couleurs de code). Les autres gardent le rendu texte brut.
+const MARKDOWN_RESULT_TOOLS = new Set([
+  "bash", "grep", "glob", "list_dir", "web_search", "web_fetch",
 ]);
 
 function hasPreviewContent(children: ReactNode): boolean {
@@ -108,7 +115,13 @@ export function ToolItem({
             <div className="tb-accordion-inner">
               {showCommandPreview && <div className="tb-command-preview">{summary}</div>}
               {hasPreview && children}
-              {hasResult && <div className="tb-result-preview">{result}</div>}
+              {hasResult && (
+                MARKDOWN_RESULT_TOOLS.has(name) ? (
+                  <ToolResultMarkdown content={result} />
+                ) : (
+                  <div className="tb-result-preview">{result}</div>
+                )
+              )}
             </div>
           )}
         </div>
