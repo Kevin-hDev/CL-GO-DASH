@@ -226,6 +226,48 @@ describe("useSlashCommands — cas limites handleInput", () => {
       });
     }).not.toThrow();
   });
+
+  it('détecte un slash tapé AVANT du texte existant (cursor après le slash)', () => {
+    // Cas du bug : texte "hello", utilisateur tape "/" devant → "/hello",
+    // mais le curseur est juste après le "/" (position 1), pas à la fin.
+    const { result } = renderHook(() => useSlashCommands());
+
+    act(() => {
+      result.current.handleInput("/hello", 1);
+    });
+
+    expect(result.current.showDropdown).toBe(true);
+  });
+
+  it('filtre correctement quand le slash précède du texte existant', () => {
+    // Texte "hk-dev", utilisateur tape "/" devant → "/hk-dev",
+    // curseur après le "hk" (position 3) → filtre = "hk".
+    vi.mocked(invoke).mockResolvedValue([mockSkill]);
+    const { result } = renderHook(() => useSlashCommands());
+
+    act(() => {
+      result.current.handleInput("/hk-dev", 3);
+    });
+
+    expect(result.current.showDropdown).toBe(true);
+    // La liste filtrée ne contient que les items dont le nom matche "hk".
+    expect(result.current.skills.every((s) =>
+      s.name.toLowerCase().includes("hk") || s.description.toLowerCase().includes("hk"),
+    )).toBe(true);
+  });
+
+  it('ferme le dropdown quand le curseur sort du token slash', () => {
+    // "/hello" avec curseur à la fin (position 6) → le token contient "hello"
+    // qui n\'est pas un filtre valide, mais le slash est détecté. Ici on vérifie
+    // que si le curseur est après un espace, on ferme.
+    const { result } = renderHook(() => useSlashCommands());
+
+    act(() => {
+      result.current.handleInput("/hk plus de texte", 14);
+    });
+
+    expect(result.current.showDropdown).toBe(false);
+  });
 });
 
 describe("useSlashCommands — selectItem", () => {

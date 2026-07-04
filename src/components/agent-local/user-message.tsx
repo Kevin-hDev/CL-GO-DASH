@@ -49,7 +49,9 @@ export const UserMessage = memo(function UserMessage({
   const { text: textNodes, previews } = hasText
     ? linkifyWithPreviews(content)
     : { text: [], previews: null };
-  const renderedText = highlightSkillNodes(textNodes, skillNames);
+  const renderedText = highlightSkillNodes(textNodes, skillNames, {
+    builtInNames: ["compress"],
+  });
 
   return (
     <div className="msg-user" ref={hoverRef}>

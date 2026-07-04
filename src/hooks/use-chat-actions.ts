@@ -58,10 +58,6 @@ export function useChatActions({
       });
   }, [chat, selectedProjectPath, selectedProjectId, onSessionsRefresh, onAutoRename, sessionId]);
 
-  const handleBuiltInCommand = useCallback((name: string) => {
-    if (name === "compress") void chat.sendMessage("/compress");
-  }, [chat]);
-
   const handleFileImport = useCallback(() => {
     void (async () => {
       const result = await openFileDialog({ multiple: true });
@@ -71,5 +67,5 @@ export function useChatActions({
     })();
   }, [fileDrop]);
 
-  return { handleSend, handleBuiltInCommand, handleFileImport };
+  return { handleSend, handleFileImport };
 }

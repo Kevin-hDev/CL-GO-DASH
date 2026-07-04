@@ -105,7 +105,7 @@ export function ChatView({
     runId: subagents.doneRunId, isStreaming: chat.isStreaming,
     onStarted: subagents.clearSynthesisSignal,
   });
-  const { handleSend, handleBuiltInCommand, handleFileImport } = useChatActions({
+  const { handleSend, handleFileImport } = useChatActions({
     chat, selectedProjectPath: proj.selectedProject?.path,
     selectedProjectId: proj.selectedProjectId ?? undefined,
     onSessionsRefresh, onAutoRename, sessionId,
@@ -190,7 +190,7 @@ export function ChatView({
               onPlanModeChange={(enabled) => void chat.setPlanModeEnabled(enabled)}
               onRemoveFile={fileDrop.removeFile} onPreviewFile={setPreview} onSend={handleSend}
               onStop={() => void chat.stop()} onClearFiles={fileDrop.clearFiles} onFileImport={handleFileImport}
-              onModelChange={handleModelSelect} onReasoningModeChange={onReasoningModeChange} onBuiltInCommand={handleBuiltInCommand}
+              onModelChange={handleModelSelect} onReasoningModeChange={onReasoningModeChange}
             />
             <div className="chat-input-under-row">
               <div className="chat-input-project-slot">
