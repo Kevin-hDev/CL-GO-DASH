@@ -8,7 +8,7 @@
   padding: var(--space-sm);
   background: var(--shell);
   border: 1px solid var(--edge);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md-bubble);
   font-size: var(--text-xs);
   font-family: var(--font-mono);
   color: var(--ink-muted);

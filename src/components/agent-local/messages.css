@@ -114,7 +114,7 @@
 .code-block {
   position: relative;
   margin: var(--space-sm) 0;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md-bubble);
   overflow: hidden;
   border: 1px solid var(--edge);
 }
