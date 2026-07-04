@@ -244,6 +244,13 @@
         "coder": "Coder"
       }
     },
+    "fileChanges": {
+      "changed_one": "{{count}} archivo modificado",
+      "changed_other": "{{count}} archivos modificados",
+      "toggle": "Mostrar archivos modificados",
+      "review": "Review",
+      "reviewFile": "Review {{name}}"
+    },
     "tokens": "tokens",
     "contextUsage": {
       "title": "Ventana de contexto",

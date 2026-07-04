@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  collectMessageFileOperations,
   collectFileOperations,
   countLines,
   fileNameFromPath,
@@ -180,6 +181,28 @@ describe("collectFileOperations", () => {
       additions: 9,
       deletions: 5,
     }));
+  });
+});
+
+describe("collectMessageFileOperations", () => {
+  it("retourne uniquement les fichiers du message donné", () => {
+    const oldMessage = message("old", [tool({ summary: "/repo/old.ts", content: "old" })]);
+    const currentMessage = message("current", [tool({ summary: "/repo/current.ts", content: "new" })]);
+
+    expect(collectMessageFileOperations(currentMessage).map((operation) => operation.path)).toEqual([
+      "/repo/current.ts",
+    ]);
+    expect(collectMessageFileOperations(oldMessage).map((operation) => operation.path)).toEqual([
+      "/repo/old.ts",
+    ]);
+  });
+
+  it("retourne une liste vide si ce message ne modifie rien", () => {
+    const operations = collectMessageFileOperations(message("read", [
+      tool({ name: "read_file", summary: "/repo/current.ts", result: "ok" }),
+    ]));
+
+    expect(operations).toEqual([]);
   });
 });
 

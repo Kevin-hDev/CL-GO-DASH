@@ -27,7 +27,7 @@ import { PermissionDialog } from "./permission-dialog";
 import { TerminalPanel } from "@/components/terminal/terminal-panel";
 import type { useTerminal } from "@/hooks/use-terminal";
 import type { Project } from "@/types/agent";
-import type { FileOperationGroups } from "@/types/file-preview";
+import type { FileOperation, FileOperationGroups } from "@/types/file-preview";
 import type { ReasoningMode } from "@/lib/reasoning-modes";
 import { useGitBranch } from "@/hooks/use-git-branch";
 import { ScrollBottomButton } from "./scroll-bottom-button";
@@ -52,7 +52,7 @@ interface ChatViewProps {
   onInitialMessageSent?: () => void;
   terminalState: ReturnType<typeof useTerminal>;
   onFileOperationsChange?: (operations: FileOperationGroups) => void;
-  onFilePreviewPath?: (path: string) => void;
+  onFilePreviewPath?: (target: string | FileOperation) => void;
   onOpenSubagent?: (sessionId: string) => void;
   isSubagent?: boolean;
 }
@@ -153,6 +153,7 @@ export function ChatView({
             planPreview={chat.planPreview}
             onReload={handleReload} onEdit={handleEdit}
             onFileClick={handleFileClick} onFilePreview={onFilePreviewPath} projectPath={proj.selectedProject?.path}
+            onFileReview={onFilePreviewPath}
             completedSubagents={subagents.completed.length > 0 ? subagents.completed : undefined}
             onOpenSubagent={onOpenSubagent}
           />
