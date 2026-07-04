@@ -69,7 +69,7 @@ export function LlmExplorer({ navState, onNavChange }: LlmExplorerProps) {
     } catch (e) {
       console.warn("[llm] search error:", e);
     }
-  }, [query]);
+  }, [query, onNavChange]);
 
   const handleFamilyClick = useCallback(async (family: string) => {
     try {
@@ -80,7 +80,7 @@ export function LlmExplorer({ navState, onNavChange }: LlmExplorerProps) {
     } catch (e) {
       console.warn("[llm] family error:", e);
     }
-  }, []);
+  }, [onNavChange]);
 
   const handleModelClick = useCallback((model: RegistryModelInfo) => {
     setView((prev) => ({ kind: "detail", model, prev }));

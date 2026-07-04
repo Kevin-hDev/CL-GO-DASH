@@ -43,6 +43,7 @@ export function useChatScroll(sessionId: string, isStreaming: boolean, deps: unk
     if (!autoScrollRef.current) return;
     const el = containerRef.current;
     if (el) el.scrollTop = el.scrollHeight;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- deps is a passthrough for caller-controlled re-runs
   }, [sessionId, isStreaming, ...deps]);
 
   const scrollToBottom = useCallback(() => {

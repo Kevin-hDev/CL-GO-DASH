@@ -31,7 +31,7 @@ export function ModelVariantsList({
       .then((list) => setTags(list))
       .catch(() => setError(t("errors.operationFailed")))
       .finally(() => setLoading(false));
-  }, [familyName]);
+  }, [familyName, t]);
 
   const findLocal = (tagName: string): OllamaModel | undefined => {
     const fullName = `${familyName}:${tagName}`;

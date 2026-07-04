@@ -97,9 +97,11 @@ function parseDeclarations(raw: string): SvgDeclarations {
 }
 
 function removeAttributes(attrs: string, names: string[]): string {
-  return names.reduce((next, name) => (
-    next.replace(new RegExp(`\\s${escapeRegExp(name)}="[^"]*"`, "g"), "")
-  ), attrs);
+  return names.reduce((next, name) => {
+    // eslint-disable-next-line security/detect-non-literal-regexp -- name is escaped, no injection vector
+    const pattern = new RegExp(`\\s${escapeRegExp(name)}="[^"]*"`, "g");
+    return next.replace(pattern, "");
+  }, attrs);
 }
 
 function escapeRegExp(value: string): string {

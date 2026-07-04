@@ -183,7 +183,7 @@ export const AgentLocalTab = memo(function AgentLocalTab({
   ), [
     activeProject?.path, activeSession?.name, activeSession?.parent_session_id, activeSessionId, currentDefault.model, currentDefault.provider,
     fileOperations, filePreview, fileTreeNav, forecastNav.panelMode, forecastNav.setPanelMode, forecastContent,
-    fullscreenSwitching, handleAutoRename, handleCreate, handleCreateInProjectWithModel, handleCreateWithModel,
+    fullscreenSwitching, handleAutoRename, handleCreateInProjectWithModel, handleCreateWithModel,
     handleOpenForecastDocs, handlePreviewFullscreenChange, handleSelectById, handleWelcomeSend, model,
     pendingFiles, pendingMessage, pendingSkills, pendingWorkingDir, projectsHook, provider, refresh,
     sessionSummary, setFileOperations, setPendingFiles, setPendingMessage, setPendingSkills, setPendingWorkingDir, setReasoningMode,
