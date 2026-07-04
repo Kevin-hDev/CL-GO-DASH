@@ -56,8 +56,7 @@
 }
 
 .icp-title,
-.icp-question,
-.icp-option-description {
+.icp-question {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -77,8 +76,9 @@
 
 .icp-options {
   display: grid;
-  gap: 1px;
+  gap: 2px;
   border-top: 1px solid var(--border-subtle);
+  padding: 4px;
 }
 
 .icp-option {
@@ -90,10 +90,12 @@
   min-height: 34px;
   padding: 7px 12px;
   border: 0;
+  border-radius: var(--radius-sm, 6px);
   background: transparent;
   color: var(--text-secondary);
   text-align: left;
   cursor: pointer;
+  transition: background-color 120ms ease;
 }
 
 .icp-option:hover,
@@ -112,11 +114,14 @@
 .icp-option-label {
   min-width: 0;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
   color: var(--text-primary);
   font-size: var(--text-sm);
   font-weight: 600;
+  word-break: break-word;
 }
 
 .icp-recommended {
@@ -129,7 +134,17 @@
   grid-column: 2;
   color: var(--text-tertiary);
   font-size: var(--text-xs);
-  white-space: nowrap;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
+}
+
+.icp-option-description-text {
+  color: inherit;
+  font-size: inherit;
 }
 
 .icp-arrow {
