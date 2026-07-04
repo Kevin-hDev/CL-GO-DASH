@@ -4,14 +4,14 @@ use super::types_interactive::{
     AgentInteractiveAnswer, AgentInteractiveOption, AgentInteractiveQuestion,
 };
 
-pub const MAX_QUESTIONS: usize = 4;
+pub const MAX_QUESTIONS: usize = 5;
 pub const MIN_OPTIONS: usize = 2;
 pub const MAX_OPTIONS: usize = 4;
-pub const MAX_HEADER_CHARS: usize = 12;
-pub const MAX_QUESTION_CHARS: usize = 240;
+pub const MAX_HEADER_CHARS: usize = 30;
+pub const MAX_QUESTION_CHARS: usize = 500;
 pub const MAX_LABEL_CHARS: usize = 80;
 pub const MAX_OPTION_ID_CHARS: usize = 80;
-pub const MAX_DESCRIPTION_CHARS: usize = 240;
+pub const MAX_DESCRIPTION_CHARS: usize = 500;
 pub const MAX_PREVIEW_CHARS: usize = 500;
 pub const MAX_CUSTOM_ANSWER_CHARS: usize = 500;
 
@@ -21,7 +21,7 @@ pub fn parse_questions(args: &Value) -> Result<Vec<AgentInteractiveQuestion>, St
         .and_then(Value::as_array)
         .ok_or_else(|| "paramètre 'questions' requis".to_string())?;
     if items.is_empty() || items.len() > MAX_QUESTIONS {
-        return Err("questions doit contenir entre 1 et 4 éléments".into());
+        return Err("questions doit contenir entre 1 et 5 éléments".into());
     }
     items.iter().map(parse_question).collect()
 }

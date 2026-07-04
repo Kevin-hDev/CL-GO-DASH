@@ -31,8 +31,8 @@ fn parse_accepts_valid_choice_request() {
 }
 
 #[test]
-fn parse_rejects_more_than_four_questions() {
-    let questions: Vec<_> = (0..5)
+fn parse_rejects_more_than_five_questions() {
+    let questions: Vec<_> = (0..6)
         .map(|index| {
             json!({
                 "header": format!("Q{index}"),
