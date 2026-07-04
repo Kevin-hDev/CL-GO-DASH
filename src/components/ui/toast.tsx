@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, createContext, useContext } from "react";
+import { useState, useEffect, useCallback, createContext } from "react";
 import type { ReactNode } from "react";
 import { Check } from "@/components/ui/icons";
 import { registerToast } from "@/lib/toast-emitter";
@@ -18,10 +18,6 @@ interface ToastContextValue {
 }
 
 const ToastContext = createContext<ToastContextValue>({ show: () => {} });
-
-export function useToast() {
-  return useContext(ToastContext);
-}
 
 const MAX_TOASTS = 10;
 const EXIT_DURATION = 300;

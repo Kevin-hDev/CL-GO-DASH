@@ -1,25 +1,6 @@
 // Types frontend alignés sur le backend Rust (src-tauri/src/services/api_keys.rs).
 // Les provider_ids doivent rester cohérents entre Rust et TS.
 
-export type LlmProviderId =
-  | "groq"
-  | "google"
-  | "mistral"
-  | "cerebras"
-  | "openrouter"
-  | "openai"
-  | "deepseek"
-  | "xai"
-  | "moonshot"
-  | "zai";
-
-export type SearchProviderId =
-  | "brave"
-  | "exa"
-  | "firecrawl";
-
-export type ProviderId = string;
-
 export type ProviderCategory = "llm" | "search" | "scraping" | "forecast";
 
 /**
@@ -37,21 +18,6 @@ export interface ProviderSpec {
   base_url?: string;
   models_endpoint?: string;
 }
-
-/**
- * Provider configuré (clé enregistrée dans le keystore OS).
- * Ne contient JAMAIS la clé en clair — juste l'identifiant.
- */
-export interface ConfiguredProvider {
-  id: ProviderId;
-}
-
-/**
- * Résultat d'un test de connexion.
- */
-export type TestKeyResult =
-  | { ok: true }
-  | { ok: false; error: string };
 
 export function getProviderDescription(provider: ProviderSpec, lang: string): string {
   return lang === "fr" ? provider.short_description : provider.short_description_en;
