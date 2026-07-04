@@ -90,26 +90,26 @@ describe("SavedToolBubble", () => {
     expect(container.innerHTML).toBe("");
   });
 
-  it("affiche un résumé compact puis les détails sauvegardés", () => {
+  it("affiche directement un bash sauvegardé unique", () => {
     const { container } = render(
       <SavedToolBubble tools={[{ name: "bash", summary: "npm run build", result: "ok" }]} />,
     );
 
-    expect(container.textContent).toContain("Commands");
-    expect(container.textContent).not.toContain("npm run build");
-    openGroup(container);
     expect(container.textContent).toContain("bash");
     expect(container.textContent).toContain("npm run build");
+    expect(container.querySelector(".tb-group-toggle")).toBeNull();
+    expect(container.textContent).not.toContain("ok");
+    openTool(container);
+    expect(container.textContent).toContain("ok");
   });
 
-  it("affiche ContentPreview après ouverture du groupe puis du tool", () => {
+  it("affiche ContentPreview après ouverture du tool", () => {
     const { container, getByTestId, queryByTestId } = render(
       <SavedToolBubble
         tools={[{ name: "write_file", summary: "/tmp/bar.ts", content: "export const x = 1;", result: "ok" }]}
       />,
     );
     expect(queryByTestId("content-preview")).toBeNull();
-    openGroup(container);
     openTool(container);
     expect(getByTestId("content-preview")).toBeTruthy();
   });
@@ -127,7 +127,6 @@ describe("SavedToolBubble", () => {
       />,
     );
     expect(queryByTestId("diff-preview")).toBeNull();
-    openGroup(container);
     openTool(container);
     expect(getByTestId("diff-preview")).toBeTruthy();
   });
@@ -147,7 +146,7 @@ describe("SavedToolBubble", () => {
     expect(getByTestId("content-preview")).toBeTruthy();
   });
 
-  it("garde les groupes et previews sauvegardés fermés par défaut", () => {
+  it("garde la preview d'un tool sauvegardé unique fermée par défaut", () => {
     const { container } = render(
       <SavedToolBubble
         tools={[{
@@ -160,7 +159,7 @@ describe("SavedToolBubble", () => {
       />,
     );
 
-    expect(container.querySelector(".tb-group-accordion.tb-open")).toBeNull();
+    expect(container.querySelector(".tb-group-toggle")).toBeNull();
     expect(container.querySelector(".tb-accordion.tb-open")).toBeNull();
   });
 });

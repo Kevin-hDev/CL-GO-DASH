@@ -124,12 +124,22 @@ export function ToolActivityGroupList({
   return (
     <div className="tb-group-list">
       {groups.map((group) => (
-        <ToolActivityGroupRow
-          key={group.kind}
-          group={group}
-          onFilePreview={onFilePreview}
-          projectPath={projectPath}
-        />
+        group.tools.length === 1 ? (
+          <ToolDetailRow
+            key={group.kind}
+            tool={group.tools[0]}
+            previousTools={[]}
+            onFilePreview={onFilePreview}
+            projectPath={projectPath}
+          />
+        ) : (
+          <ToolActivityGroupRow
+            key={group.kind}
+            group={group}
+            onFilePreview={onFilePreview}
+            projectPath={projectPath}
+          />
+        )
       ))}
     </div>
   );

@@ -5,6 +5,7 @@ import { groupToolActivities } from "@/lib/tool-activity-summary";
 import { isHiddenAgentTool } from "@/lib/hidden-agent-tools";
 import { ToolActivityGroupList } from "./tool-activity-group";
 import {
+  type RenderableTool,
   savedToolToRenderable,
   streamToolToRenderable,
 } from "./tool-detail-row";
@@ -22,17 +23,11 @@ export function ToolBubble({
   onFilePreview?: (path: string) => void;
   projectPath?: string;
 }) {
-  const visibleTools = useMemo(() => tools.filter(isVisibleTool), [tools]);
-  const groups = useMemo(
-    () => groupToolActivities(visibleTools.map(streamToolToRenderable)),
-    [visibleTools],
+  const renderableTools = useMemo(
+    () => tools.filter(isVisibleTool).map(streamToolToRenderable),
+    [tools],
   );
-  if (groups.length === 0) return null;
-  return (
-    <div className="tb-stream">
-      <ToolActivityGroupList groups={groups} onFilePreview={onFilePreview} projectPath={projectPath} />
-    </div>
-  );
+  return <ToolActivityList tools={renderableTools} onFilePreview={onFilePreview} projectPath={projectPath} />;
 }
 
 export function SavedToolBubble({
@@ -44,12 +39,24 @@ export function SavedToolBubble({
   onFilePreview?: (path: string) => void;
   projectPath?: string;
 }) {
-  const visibleTools = useMemo(() => tools.filter(isVisibleTool), [tools]);
-  const groups = useMemo(
-    () => groupToolActivities(visibleTools.map(savedToolToRenderable)),
-    [visibleTools],
+  const renderableTools = useMemo(
+    () => tools.filter(isVisibleTool).map(savedToolToRenderable),
+    [tools],
   );
-  if (groups.length === 0) return null;
+  return <ToolActivityList tools={renderableTools} onFilePreview={onFilePreview} projectPath={projectPath} />;
+}
+
+function ToolActivityList({
+  tools,
+  onFilePreview,
+  projectPath,
+}: {
+  tools: RenderableTool[];
+  onFilePreview?: (path: string) => void;
+  projectPath?: string;
+}) {
+  const groups = useMemo(() => groupToolActivities(tools), [tools]);
+  if (tools.length === 0) return null;
   return (
     <div className="tb-stream">
       <ToolActivityGroupList groups={groups} onFilePreview={onFilePreview} projectPath={projectPath} />
