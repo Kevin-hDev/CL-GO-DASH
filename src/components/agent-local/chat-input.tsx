@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { ChatInputActionsRow } from "./chat-input-actions-row";
 import { ChatInputEditor } from "./chat-input-editor";
+import { InteractiveChoicePanel } from "./interactive-choice-panel";
 import { useSlashCommands } from "@/hooks/use-slash-commands";
 import { useActiveSkills } from "@/hooks/use-active-skills";
 import { SlashAutocomplete } from "./slash-autocomplete";
@@ -10,6 +11,7 @@ import type { DroppedFile } from "@/hooks/use-file-drop";
 import type { ContextUsageBreakdown } from "@/hooks/context-usage-breakdown";
 import type { PermissionMode } from "@/hooks/use-permission-mode";
 import type { ReasoningMode } from "@/lib/reasoning-modes";
+import type { AgentInteractiveChoiceRequest } from "@/types/agent";
 import type { RetryIndicatorState } from "@/types/agent";
 import "./chat.css";
 import "./chat-input-textarea.css";
@@ -30,7 +32,8 @@ interface ChatInputProps {
   contextMax: number;
   contextBreakdown?: ContextUsageBreakdown;
   retryIndicator?: RetryIndicatorState | null;
-  interactivePending?: boolean;
+  interactiveRequest?: AgentInteractiveChoiceRequest | null;
+  onInteractiveResolved?: () => void;
   permissionMode: PermissionMode;
   planModeEnabled?: boolean;
   onPermissionModeChange: (mode: PermissionMode) => void;
@@ -47,7 +50,8 @@ interface ChatInputProps {
 
 export function ChatInput({
   modelName, providerName, isStreaming, reasoningMode, files,
-  contextUsed, contextMax, contextBreakdown, retryIndicator, interactivePending = false,
+  contextUsed, contextMax, contextBreakdown, retryIndicator,
+  interactiveRequest, onInteractiveResolved,
   permissionMode, planModeEnabled = false, onPermissionModeChange, onPlanModeChange,
   onSend, onStop, onFileImport, onModelChange, onReasoningModeChange,
   onRemoveFile, onPreviewFile, onClearFiles,
@@ -58,6 +62,7 @@ export function ChatInput({
   const skills = useActiveSkills(slash, text, setText);
   const bubbleRef = useRef<HTMLDivElement>(null);
 
+  const interactivePending = !!interactiveRequest;
   const hasText = text.trim().length > 0;
   const hasFiles = files != null && files.length > 0;
   const hasContent = hasText || hasFiles;
@@ -75,6 +80,19 @@ export function ChatInput({
     slash.handleInput(value, cursorPos);
   }, [slash]);
 
+  // Shared Enter logic. Bound both as the high-priority keymap (so it wins over
+  // defaultKeymap's insertNewlineAndIndent) and inside handleKeyEvent (for the
+  // slash-dropdown branch, where we still need the full KeyboardEvent).
+  const handleEnter = useCallback((): boolean => {
+    if (slash.showDropdown) {
+      const selected = slash.skills[slash.activeIndex];
+      if (selected) void skills.handleSelectSkill(selected);
+      return true;
+    }
+    handleSend();
+    return true;
+  }, [handleSend, slash.showDropdown, slash.skills, slash.activeIndex, skills]);
+
   const handleKeyEvent = useCallback((event: KeyboardEvent): boolean | void => {
     const pressed = event.key;
     if (slash.showDropdown) {
@@ -82,23 +100,20 @@ export function ChatInput({
       if (pressed === K_DOWN) { event.preventDefault(); slash.moveDown(); return true; }
       if (pressed === K_ENTER) {
         event.preventDefault();
-        const selected = slash.skills[slash.activeIndex];
-        if (selected) void skills.handleSelectSkill(selected);
-        return true;
+        return handleEnter();
       }
       if (pressed === K_ESC) { event.preventDefault(); slash.close(); return true; }
     }
     if (pressed === K_ENTER && !event.shiftKey) {
       event.preventDefault();
-      handleSend();
-      return true;
+      return handleEnter();
     }
     if (pressed === K_ESC) {
       event.preventDefault();
       onStop();
       return true;
     }
-  }, [handleSend, onStop, slash, skills]);
+  }, [handleEnter, onStop, slash]);
 
   useEffect(() => {
     if (!isStreaming) return;
@@ -121,53 +136,60 @@ export function ChatInput({
     : "hidden" as const;
 
   return (
-    <div className="chat-input-bubble" ref={bubbleRef}>
-      {slash.showDropdown && (
-        <SlashAutocomplete
-          skills={slash.skills}
-          activeIndex={slash.activeIndex}
-          onSelect={(s) => void skills.handleSelectSkill(s)}
-        />
-      )}
-      <ChatInputEditor
-        value={text}
-        placeholder={interactivePending ? t("interactiveChoice.inputLocked") : t("agentLocal.placeholder")}
-        readOnly={interactivePending}
-        activeSkills={skills.activeSkills}
-        onTextChange={handleChange}
-        onKeyEvent={handleKeyEvent}
-      />
-      {files && files.length > 0 && (
-        <div className="chat-file-list">
-          {files.map((f, i) => (
-            <FileThumbnail
-              key={`${f.name}-${i}`}
-              file={f}
-              onRemove={() => onRemoveFile?.(i)}
-              onClick={() => onPreviewFile?.(f)}
+    <div className={`chat-input-bubble${interactivePending ? " chat-input-bubble-interactive" : ""}`} ref={bubbleRef}>
+      {interactivePending ? (
+        <InteractiveChoicePanel request={interactiveRequest ?? undefined} onResolved={onInteractiveResolved} />
+      ) : (
+        <>
+          {slash.showDropdown && (
+            <SlashAutocomplete
+              skills={slash.skills}
+              activeIndex={slash.activeIndex}
+              onSelect={(s) => void skills.handleSelectSkill(s)}
             />
-          ))}
-        </div>
+          )}
+          <ChatInputEditor
+            value={text}
+            placeholder={t("agentLocal.placeholder")}
+            readOnly={false}
+            activeSkills={skills.activeSkills}
+            onTextChange={handleChange}
+            onEnter={handleEnter}
+            onKeyEvent={handleKeyEvent}
+          />
+          {files && files.length > 0 && (
+            <div className="chat-file-list">
+              {files.map((f, i) => (
+                <FileThumbnail
+                  key={`${f.name}-${i}`}
+                  file={f}
+                  onRemove={() => onRemoveFile?.(i)}
+                  onClick={() => onPreviewFile?.(f)}
+                />
+              ))}
+            </div>
+          )}
+          <ChatInputActionsRow
+            modelName={modelName}
+            providerName={providerName}
+            reasoningMode={reasoningMode}
+            contextUsed={contextUsed}
+            contextMax={contextMax}
+            contextBreakdown={contextBreakdown}
+            permissionMode={permissionMode}
+            planModeEnabled={planModeEnabled}
+            retryIndicator={retryIndicator}
+            buttonState={buttonState}
+            onPermissionModeChange={onPermissionModeChange}
+            onPlanModeChange={onPlanModeChange}
+            onFileImport={onFileImport}
+            onModelChange={onModelChange}
+            onReasoningModeChange={onReasoningModeChange}
+            onSend={handleSend}
+            onStop={onStop}
+          />
+        </>
       )}
-      <ChatInputActionsRow
-        modelName={modelName}
-        providerName={providerName}
-        reasoningMode={reasoningMode}
-        contextUsed={contextUsed}
-        contextMax={contextMax}
-        contextBreakdown={contextBreakdown}
-        permissionMode={permissionMode}
-        planModeEnabled={planModeEnabled}
-        retryIndicator={retryIndicator}
-        buttonState={buttonState}
-        onPermissionModeChange={onPermissionModeChange}
-        onPlanModeChange={onPlanModeChange}
-        onFileImport={onFileImport}
-        onModelChange={onModelChange}
-        onReasoningModeChange={onReasoningModeChange}
-        onSend={handleSend}
-        onStop={onStop}
-      />
     </div>
   );
 }

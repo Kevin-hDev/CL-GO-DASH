@@ -19,7 +19,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { EditorView, keymap, placeholder as cmPlaceholder } from "@codemirror/view";
-import { Compartment, EditorState, EditorSelection } from "@codemirror/state";
+import { Compartment, EditorState, EditorSelection, Prec } from "@codemirror/state";
 import { history, defaultKeymap, historyKeymap } from "@codemirror/commands";
 
 import { skillChipExtension, type SkillChipConfig } from "@/components/agent-local/skill-chip-extension";
@@ -31,6 +31,12 @@ interface UseCodemirrorChatOptions {
   chipConfig: SkillChipConfig;
   /** Called whenever the document text or selection changes from inside CM. */
   onChange: (value: string, cursorPos: number) => void;
+  /**
+   * High-priority handler for Enter (without Shift). Bound at the front of the
+   * keymap so it wins over `defaultKeymap`'s `insertNewlineAndIndent`.
+   * Return true to consume (default when omitted).
+   */
+  onEnter?: () => boolean | void;
   /** Raw keydown forwarded from CM. Return `true` to stop CM's own handling. */
   onKeyEvent?: (event: KeyboardEvent) => boolean | void;
   /** Max editor height before internal scroll kicks in. */
@@ -43,6 +49,7 @@ export function useCodemirrorChat({
   readOnly,
   chipConfig,
   onChange,
+  onEnter,
   onKeyEvent,
   maxHeight = 200,
 }: UseCodemirrorChatOptions) {
@@ -60,16 +67,20 @@ export function useCodemirrorChat({
   // Updated in an effect (not during render) to comply with React 19's
   // strict ref-mutation rules.
   const onChangeRef = useRef(onChange);
+  const onEnterRef = useRef(onEnter);
   const onKeyEventRef = useRef(onKeyEvent);
   useEffect(() => {
     onChangeRef.current = onChange;
+    onEnterRef.current = onEnter;
     onKeyEventRef.current = onKeyEvent;
-  }, [onChange, onKeyEvent]);
+  }, [onChange, onEnter, onKeyEvent]);
 
   // IME composition guard: Enter must not send while composing.
   const composingRef = useRef(false);
 
   // Auto-resize: clamp the host height to the natural content height.
+  // The scroller only reports its own content; the host adds vertical padding
+  // (border-box), so we must add it back to size the host correctly.
   const resize = useCallback(() => {
     const host = hostRef.current;
     const view = viewRef.current;
@@ -77,7 +88,10 @@ export function useCodemirrorChat({
     const scroller = view.scrollDOM;
     if (!scroller) return;
     host.style.height = "auto";
-    const natural = scroller.scrollHeight;
+    const style = getComputedStyle(host);
+    const padTop = parseFloat(style.paddingTop) || 0;
+    const padBottom = parseFloat(style.paddingBottom) || 0;
+    const natural = scroller.scrollHeight + padTop + padBottom;
     host.style.height = `${Math.min(natural, maxHeight)}px`;
   }, [maxHeight]);
   const resizeRef = useRef(resize);
@@ -99,11 +113,22 @@ export function useCodemirrorChat({
       },
     });
 
+    // High-priority Enter binding: wins over defaultKeymap's
+    // insertNewlineAndIndent so Enter sends instead of inserting a newline.
+    // Shift+Enter returns false → not consumed → falls through to the default
+    // newline insertion.
+    const enterKeymap = Prec.highest(keymap.of([{
+      key: "Enter",
+      shift: () => false,
+      run: () => onEnterRef.current?.() ?? true,
+    }]));
+
     const view = new EditorView({
       state: EditorState.create({
         doc: value,
         extensions: [
           EditorView.lineWrapping,
+          enterKeymap,
           history(),
           keymap.of([...defaultKeymap, ...historyKeymap]),
           placeholderComp.of(cmPlaceholder(placeholder)),

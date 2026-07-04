@@ -6,7 +6,6 @@ import { FileDropZone } from "./file-drop-zone";
 import { ChatOverlays } from "./chat-overlays";
 import { SubagentAccordion } from "./subagent-accordion";
 import { TodoProgressPanel } from "./todo-progress-panel";
-import { InteractiveChoicePanel } from "./interactive-choice-panel";
 import { ChatProjectControls } from "./chat-project-controls";
 import { useAgentChat } from "@/hooks/use-agent-chat";
 import { useContextProgress } from "@/hooks/use-context-progress";
@@ -161,7 +160,6 @@ export function ChatView({
         <div className="chat-input-area">
           <div className="chat-input-column">
             <TodoProgressPanel sessionId={isSubagent ? undefined : sessionId} />
-            <InteractiveChoicePanel request={chat.interactiveChoice} onResolved={chat.clearInteractiveChoice} />
             {subagents.active.length > 0 && (
               <SubagentAccordion
                 subagents={subagents.active}
@@ -184,7 +182,8 @@ export function ChatView({
               modelName={model} providerName={provider} isStreaming={chat.isStreaming} reasoningMode={reasoningMode}
               files={fileDrop.files} contextUsed={contextUsage.used} contextMax={context.max} contextBreakdown={contextUsage}
               retryIndicator={retryIndicator}
-              interactivePending={!!chat.interactiveChoice}
+              interactiveRequest={chat.interactiveChoice}
+              onInteractiveResolved={chat.clearInteractiveChoice}
               permissionMode={permMode.mode} onPermissionModeChange={(m) => void permMode.change(m)}
               planModeEnabled={chat.planModeEnabled}
               onPlanModeChange={(enabled) => void chat.setPlanModeEnabled(enabled)}

@@ -49,13 +49,6 @@ function toHighlightNodes(node: RootContent): HighlightNode[] {
   }];
 }
 
-export function highlightCode(code: string, language: string): string {
-  const resolved = LANG_ALIASES[language] ?? language;
-  if (!resolved || !lowlight.registered(resolved)) return escapeHtml(code);
-  const tree = lowlight.highlight(resolved, code);
-  return toHtml(tree);
-}
-
 export function highlightCodeNodes(code: string, language: string): HighlightNode[] {
   const resolved = LANG_ALIASES[language] ?? language;
   if (!resolved || !lowlight.registered(resolved)) return [code];

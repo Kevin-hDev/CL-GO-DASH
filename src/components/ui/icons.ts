@@ -4,18 +4,14 @@ import {
   Pulse as PhPulse,
   ClipboardText as PhClipboardText,
   UserCircle as PhUserCircle,
-  ChatCircle as PhChatCircle,
   Sliders as PhSliders,
   Moon as PhMoon,
   Sun as PhSun,
-  Fire as PhFire,
   Pencil as PhPencil,
   Trash as PhTrash,
-  Play as PhPlay,
   Plus as PhPlus,
   Copy as PhCopy,
   Check as PhCheck,
-  Warning as PhWarning,
   ShieldWarning as PhShieldWarning,
   ArrowsClockwise as PhArrowsClockwise,
   Gear as PhGear,
@@ -46,13 +42,8 @@ import {
   Plugs as PhPlugs,
   PuzzlePiece as PhPuzzlePiece,
   Image as PhImage,
-  ToggleLeft as PhToggleLeft,
-  ToggleRight as PhToggleRight,
   GitBranch as PhGitBranch,
-  GitFork as PhGitFork,
-  GitMerge as PhGitMerge,
   Broadcast as PhBroadcast,
-  ChatTeardropDots as PhChatTeardropDots,
   Hash as PhHash,
   ChartLineUp as PhChartLineUp,
   Brain as PhBrain,
@@ -85,18 +76,14 @@ function withSafeCssSize(Component: Icon): Icon {
 export const Pulse = withSafeCssSize(PhPulse);
 export const ClipboardText = withSafeCssSize(PhClipboardText);
 export const UserCircle = withSafeCssSize(PhUserCircle);
-export const ChatCircle = withSafeCssSize(PhChatCircle);
 export const Sliders = withSafeCssSize(PhSliders);
 export const Moon = withSafeCssSize(PhMoon);
 export const Sun = withSafeCssSize(PhSun);
-export const Fire = withSafeCssSize(PhFire);
 export const Pencil = withSafeCssSize(PhPencil);
 export const Trash = withSafeCssSize(PhTrash);
-export const Play = withSafeCssSize(PhPlay);
 export const Plus = withSafeCssSize(PhPlus);
 export const Copy = withSafeCssSize(PhCopy);
 export const Check = withSafeCssSize(PhCheck);
-export const Warning = withSafeCssSize(PhWarning);
 export const ShieldWarning = withSafeCssSize(PhShieldWarning);
 export const ArrowsClockwise = withSafeCssSize(PhArrowsClockwise);
 export const Gear = withSafeCssSize(PhGear);
@@ -127,13 +114,8 @@ export const BookOpenText = withSafeCssSize(PhBookOpenText);
 export const Plugs = withSafeCssSize(PhPlugs);
 export const PuzzlePiece = withSafeCssSize(PhPuzzlePiece);
 export const Image = withSafeCssSize(PhImage);
-export const ToggleLeft = withSafeCssSize(PhToggleLeft);
-export const ToggleRight = withSafeCssSize(PhToggleRight);
 export const GitBranch = withSafeCssSize(PhGitBranch);
-export const GitFork = withSafeCssSize(PhGitFork);
-export const GitMerge = withSafeCssSize(PhGitMerge);
 export const Broadcast = withSafeCssSize(PhBroadcast);
-export const ChatTeardropDots = withSafeCssSize(PhChatTeardropDots);
 export const Hash = withSafeCssSize(PhHash);
 export const ChartLineUp = withSafeCssSize(PhChartLineUp);
 export const Brain = withSafeCssSize(PhBrain);
