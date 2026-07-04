@@ -1,3 +1,7 @@
+/*
+ * Standalone panel (e.g. isolated tests): keeps its own chrome so it renders
+ * correctly outside of the chat bubble.
+ */
 .icp-panel {
   margin-bottom: 6px;
   border: 1px solid var(--edge);
@@ -14,6 +18,19 @@
 [data-theme="dark"] .icp-panel {
   border-color: transparent;
   background: var(--surface-glass);
+}
+
+/*
+ * In-bubble mode: the panel replaces the editor inside .chat-input-bubble,
+ * which already provides the border, background and radius. We neutralize the
+ * panel's own chrome and let its children breathe inside the 20px bubble.
+ */
+.chat-input-bubble-interactive .icp-panel {
+  margin-bottom: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 4px var(--space-sm) var(--space-sm);
 }
 
 .icp-header {

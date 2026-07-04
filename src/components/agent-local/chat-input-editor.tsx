@@ -19,6 +19,7 @@ interface ChatInputEditorProps {
   readOnly: boolean;
   activeSkills: SkillInfo[];
   onTextChange: (value: string, cursorPos: number) => void;
+  onEnter: () => boolean | void;
   onKeyEvent: (event: KeyboardEvent) => boolean | void;
 }
 
@@ -28,6 +29,7 @@ function ChatInputEditorImpl({
   readOnly,
   activeSkills,
   onTextChange,
+  onEnter,
   onKeyEvent,
 }: ChatInputEditorProps) {
   const skillNames = activeSkillsInText(value, activeSkills).map((s) => s.name);
@@ -42,6 +44,7 @@ function ChatInputEditorImpl({
     readOnly,
     chipConfig,
     onChange: onTextChange,
+    onEnter,
     onKeyEvent: onKeyEvent,
   });
 
