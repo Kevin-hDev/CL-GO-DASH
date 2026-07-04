@@ -39,8 +39,15 @@
 
 .cpm-caret { margin-left: auto; color: var(--ink-faint); }
 
+.cpm-item > span:not(.cpm-item-desc) {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 .cpm-item-desc {
   color: var(--ink-faint);
+  flex: 1 1 auto;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

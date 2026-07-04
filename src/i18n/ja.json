@@ -1374,7 +1374,7 @@
   "chatMenu": {
     "addFile": "画像またはファイルを追加",
     "planMode": "計画モード",
-    "planModeDesc": "編集前に計画を作成",
+    "planModeDesc": "計画を作成",
     "disablePlanMode": "計画モードを無効化",
     "connectors": "コネクター",
     "plugins": "プラグイン",

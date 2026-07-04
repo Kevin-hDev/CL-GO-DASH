@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { render, cleanup, fireEvent } from "@testing-library/react";
+import { render, cleanup } from "@testing-library/react";
 import { ToolBubble } from "../tool-bubble";
 
 afterEach(cleanup);
@@ -51,12 +51,6 @@ vi.mock("../tool-office-previews", () => ({
 vi.mock("../tool-bubble.css", () => ({}));
 vi.mock("@/lib/tool-file-path", () => ({ isFileTool: () => false }));
 
-function openGroup(container: HTMLElement) {
-  const toggle = container.querySelector(".tb-group-toggle");
-  if (!toggle) throw new Error("group toggle absent");
-  fireEvent.click(toggle);
-}
-
 describe("ToolBubble error details", () => {
   it("masque le détail brut des erreurs web_fetch", () => {
     const { container, queryByTestId } = render(
@@ -70,7 +64,6 @@ describe("ToolBubble error details", () => {
       />,
     );
 
-    openGroup(container);
     expect(container.querySelector('[data-testid="status-icon-error"]')).toBeTruthy();
     expect(container.textContent).not.toContain("HTTP 403");
     expect(container.textContent).not.toContain("secret_key");
@@ -90,7 +83,6 @@ describe("ToolBubble error details", () => {
       />,
     );
 
-    openGroup(container);
     expect(container.innerHTML).not.toContain("abc123456");
     expect(container.innerHTML).not.toContain("/Users/me/file");
   });

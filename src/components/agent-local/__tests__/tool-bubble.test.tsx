@@ -105,16 +105,14 @@ describe("ToolBubble", () => {
     expect(container.innerHTML).toBe("");
   });
 
-  it("affiche un résumé compact pour bash et masque la commande brute", () => {
+  it("affiche directement un bash unique", () => {
     const { container } = render(
       <ToolBubble tools={[{ name: "bash", args: { command: "echo hello" } }]} />,
     );
 
-    expect(container.textContent).toContain("Commands");
-    expect(container.textContent).not.toContain("echo hello");
-    openGroup(container);
     expect(container.textContent).toContain("bash");
     expect(container.textContent).toContain("echo hello");
+    expect(container.querySelector(".tb-group-toggle")).toBeNull();
   });
 
   it("masque la commande bash complète jusqu'au dépliage du tool", () => {
@@ -123,7 +121,6 @@ describe("ToolBubble", () => {
       <ToolBubble tools={[{ name: "bash", args: { command }, result: "ok", isError: false }]} />,
     );
 
-    openGroup(container);
     expect(container.textContent).toContain(`${"a".repeat(96)}...`);
     expect(container.textContent).not.toContain(command);
     openTool(container);
@@ -131,7 +128,7 @@ describe("ToolBubble", () => {
     expect(container.textContent).toContain("ok");
   });
 
-  it("affiche le spinner du groupe quand un tool est en cours", () => {
+  it("affiche le spinner quand un tool est en cours", () => {
     const { getByTestId } = render(
       <ToolBubble tools={[{ name: "bash", args: { command: "sleep 5" } }]} />,
     );
@@ -147,7 +144,7 @@ describe("ToolBubble", () => {
     expect(queryByTestId("status-icon-error")).toBeNull();
   });
 
-  it("affiche l'icône d'erreur sur le groupe quand un tool échoue", () => {
+  it("affiche l'icône d'erreur quand un tool échoue", () => {
     const { container } = render(
       <ToolBubble
         tools={[{ name: "bash", args: { command: "exit 1" }, result: "erreur", isError: true }]}
@@ -156,14 +153,12 @@ describe("ToolBubble", () => {
     expect(container.querySelector('[data-testid="status-icon-error"]')).toBeTruthy();
   });
 
-  it("affiche ContentPreview après ouverture du groupe puis du tool", () => {
+  it("affiche ContentPreview après ouverture du tool", () => {
     const { container, getByTestId, queryByTestId } = render(
       <ToolBubble
         tools={[{ name: "write_file", args: { path: "/tmp/foo.ts", content: "const x = 1;" }, result: "ok" }]}
       />,
     );
-    expect(queryByTestId("content-preview")).toBeNull();
-    openGroup(container);
     expect(queryByTestId("content-preview")).toBeNull();
     openTool(container);
     expect(getByTestId("content-preview")).toBeTruthy();
@@ -180,7 +175,6 @@ describe("ToolBubble", () => {
       />,
     );
     expect(queryByTestId("diff-preview")).toBeNull();
-    openGroup(container);
     openTool(container);
     expect(getByTestId("diff-preview")).toBeTruthy();
   });
@@ -198,25 +192,24 @@ describe("ToolBubble", () => {
     expect(queryByTestId("content-preview")).toBeNull();
   });
 
-  it("affiche WebResultsPreview après ouverture du groupe puis du tool", () => {
+  it("affiche WebResultsPreview après ouverture du tool", () => {
     const { container, getByTestId, queryByTestId } = render(
       <ToolBubble
         tools={[{ name: "web_search", args: { query: "vitest jsdom" }, result: "{\"results\":[]}" }]}
       />,
     );
     expect(queryByTestId("web-preview")).toBeNull();
-    openGroup(container);
     openTool(container);
     expect(getByTestId("web-preview")).toBeTruthy();
   });
 
-  it("garde les groupes et previews fermés par défaut", () => {
+  it("garde la preview d'un tool unique fermée par défaut", () => {
     const { container } = render(
       <ToolBubble
         tools={[{ name: "write_file", args: { path: "/tmp/foo.ts", content: "const x = 1;" }, result: "ok" }]}
       />,
     );
-    expect(container.querySelector(".tb-group-accordion.tb-open")).toBeNull();
+    expect(container.querySelector(".tb-group-toggle")).toBeNull();
     expect(container.querySelector(".tb-accordion.tb-open")).toBeNull();
   });
 });

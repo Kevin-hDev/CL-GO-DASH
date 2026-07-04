@@ -856,7 +856,7 @@
   "chatMenu": {
     "addFile": "Ajouter une image ou un fichier",
     "planMode": "Mode plan",
-    "planModeDesc": "Préparer un plan avant modification",
+    "planModeDesc": "Préparer un plan",
     "disablePlanMode": "Désactiver le mode plan",
     "connectors": "Connecteurs",
     "plugins": "Plugins",

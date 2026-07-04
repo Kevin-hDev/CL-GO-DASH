@@ -124,14 +124,17 @@ describe("MessageList tool aggregation", () => {
 
     const streams = container.querySelectorAll(".tb-stream");
     expect(streams).toHaveLength(2);
-    expect(streams[0].textContent).toContain("Commands");
+    expect(streams[0].textContent).toContain("bash");
+    expect(streams[0].textContent).toContain("npm test");
+    expect(streams[0].textContent).not.toContain("Commands");
     expect(streams[0].textContent).toContain("Changes");
-    expect(streams[1].textContent).toContain("Commands");
-    expect(container.textContent).not.toContain("npm test");
+    expect(streams[1].querySelector(".tb-group-toggle")).toBeNull();
+    expect(streams[1].textContent).toContain("bash");
+    expect(streams[1].textContent).toContain("npm run build");
+    expect(streams[0].textContent).not.toContain("npm run build");
 
     fireEvent.click(streams[0].querySelectorAll(".tb-group-toggle")[0]);
-    expect(container.textContent).toContain("npm test");
-    expect(container.textContent).not.toContain("npm run build");
+    expect(streams[0].textContent).not.toContain("npm run build");
   });
 
   it("garde les tools du stream sous le segment qui les a produits", () => {
@@ -168,11 +171,14 @@ describe("MessageList tool aggregation", () => {
 
     const streams = container.querySelectorAll(".tb-stream");
     expect(streams).toHaveLength(2);
-    expect(streams[0].textContent).toContain("Commands");
-    expect(streams[0].textContent).toContain("Changes");
-    expect(streams[0].textContent).toContain("Exploration");
-    expect(streams[1].textContent).toContain("Commands");
-    expect(streams[1].textContent).toContain("Changes");
+    expect(streams[0].querySelector(".tb-group-toggle")).toBeNull();
+    expect(streams[0].textContent).toContain("npm test");
+    expect(streams[0].textContent).toContain("a.ts");
+    expect(streams[0].textContent).not.toContain("npm run build");
+    expect(streams[0].textContent).not.toContain("b.ts");
+    expect(streams[1].querySelector(".tb-group-toggle")).toBeNull();
+    expect(streams[1].textContent).toContain("npm run build");
+    expect(streams[1].textContent).toContain("b.ts");
   });
 
   it("affiche la preview du plan après la timeline du stream", () => {

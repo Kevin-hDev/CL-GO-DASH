@@ -46,12 +46,6 @@ vi.mock("@/lib/tool-file-path", () => ({
   isFileTool: (name: string) => name === "read_file",
 }));
 
-function openGroup(container: HTMLElement) {
-  const toggle = container.querySelector(".tb-group-toggle");
-  if (!toggle) throw new Error("group toggle absent");
-  fireEvent.click(toggle);
-}
-
 function openTool(container: HTMLElement) {
   const toggle = container.querySelector(".tb-toggle");
   if (!toggle) throw new Error("tool toggle absent");
@@ -65,7 +59,6 @@ describe("read_file result bubble", () => {
       <ToolBubble tools={[{ name: "read_file", args: { path: "/tmp/a.ts" }, result: content }]} />,
     );
 
-    openGroup(container);
     openTool(container);
 
     expect(container.querySelector(".tb-result-md")).not.toBeNull();
@@ -80,7 +73,6 @@ describe("read_file result bubble", () => {
       <SavedToolBubble tools={[{ name: "read_file", summary: "/tmp/a.ts", result: content }]} />,
     );
 
-    openGroup(container);
     openTool(container);
 
     expect(container.querySelector(".tb-result-md")).not.toBeNull();
