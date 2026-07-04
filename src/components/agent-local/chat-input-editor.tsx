@@ -18,7 +18,7 @@ interface ChatInputEditorProps {
   placeholder: string;
   readOnly: boolean;
   activeSkills: SkillInfo[];
-  onTextChange: (value: string) => void;
+  onTextChange: (value: string, cursorPos: number) => void;
   onKeyEvent: (event: KeyboardEvent) => boolean | void;
 }
 

@@ -29,8 +29,8 @@ interface UseCodemirrorChatOptions {
   placeholder: string;
   readOnly: boolean;
   chipConfig: SkillChipConfig;
-  /** Called whenever the document text changes from inside CM. */
-  onChange: (value: string) => void;
+  /** Called whenever the document text or selection changes from inside CM. */
+  onChange: (value: string, cursorPos: number) => void;
   /** Raw keydown forwarded from CM. Return `true` to stop CM's own handling. */
   onKeyEvent?: (event: KeyboardEvent) => boolean | void;
   /** Max editor height before internal scroll kicks in. */
@@ -114,8 +114,11 @@ export function useCodemirrorChat({
             EditorView.editable.of(!readOnly),
           ]),
           EditorView.updateListener.of((update) => {
-            if (!update.docChanged) return;
-            onChangeRef.current(update.state.doc.toString());
+            if (!update.docChanged && !update.selectionSet) return;
+            onChangeRef.current(
+              update.state.doc.toString(),
+              update.state.selection.main.head,
+            );
             requestAnimationFrame(() => resizeRef.current());
           }),
           EditorView.theme({

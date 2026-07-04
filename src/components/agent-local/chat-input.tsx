@@ -70,9 +70,9 @@ export function ChatInput({
     onClearFiles?.();
   }, [text, hasContent, hasFiles, files, skills, isStreaming, interactivePending, onSend, onClearFiles]);
 
-  const handleChange = useCallback((value: string) => {
+  const handleChange = useCallback((value: string, cursorPos: number) => {
     setText(value);
-    slash.handleInput(value);
+    slash.handleInput(value, cursorPos);
   }, [slash]);
 
   const handleKeyEvent = useCallback((event: KeyboardEvent): boolean | void => {
