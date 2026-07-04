@@ -100,9 +100,6 @@ which = "7"
 # Terminal PTY cross-platform
 portable-pty = "0.9"
 
-# Token counting (goliapkg — supporte LLaMA, Qwen, DeepSeek, Mistral)
-tiktoken = "3.1"
-
 # Archive extraction (Ollama bundle)
 zstd = "0.13"
 tar = "0.4"
@@ -117,7 +114,6 @@ notify-debouncer-mini = "0.5"
 git2 = "0.20"
 
 # Tools grep/glob (crates de ripgrep)
-grep = "0.3"
 grep-regex = "0.1"
 grep-searcher = "0.1"
 ignore = "0.4"
