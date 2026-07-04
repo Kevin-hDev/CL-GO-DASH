@@ -244,6 +244,13 @@
         "coder": "Coder"
       }
     },
+    "fileChanges": {
+      "changed_one": "{{count}} 件のファイルを変更",
+      "changed_other": "{{count}} 件のファイルを変更",
+      "toggle": "変更ファイルを表示",
+      "review": "Review",
+      "reviewFile": "Review {{name}}"
+    },
     "tokens": "tokens",
     "contextUsage": {
       "title": "コンテキストウィンドウ",

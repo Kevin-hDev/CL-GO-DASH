@@ -10,6 +10,7 @@ vi.mock("@phosphor-icons/react", () => ({
 }));
 vi.mock("@/components/ui/icons", () => ({
   Copy: () => <span />, CaretDown: () => <span />, CaretUp: () => <span />,
+  CaretRight: () => <span />,
   Check: () => <span data-testid="check-icon" />, ClipboardText: () => <span />,
   Brain: () => <span data-testid="brain-icon" />,
 }));
@@ -76,6 +77,7 @@ vi.mock("../tool-office-previews", () => ({
 }));
 vi.mock("@/lib/tool-file-path", () => ({
   isFileTool: (name: string) => ["write_file", "edit_file"].includes(name),
+  inferSavedToolPaths: <T,>(tools: T[]) => tools,
 }));
 vi.mock("../chat.css", () => ({}));
 vi.mock("../messages.css", () => ({}));

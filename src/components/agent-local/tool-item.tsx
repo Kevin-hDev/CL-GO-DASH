@@ -5,7 +5,7 @@ import { isFileTool } from "@/lib/tool-file-path";
 import { FileIcon } from "@/components/file-preview/file-icon";
 import { ToolIcon } from "./tool-icons";
 import { ToolStatusIcon } from "./tool-status-icon";
-import { ToolResultMarkdown } from "./tool-result-markdown";
+import { ToolResultCode, ToolResultMarkdown } from "./tool-result-markdown";
 import { useCollapsiblePresence } from "./use-collapsible-presence";
 
 const RESULT_PREVIEW_TOOLS = new Set([
@@ -19,6 +19,8 @@ const RESULT_PREVIEW_TOOLS = new Set([
 const MARKDOWN_RESULT_TOOLS = new Set([
   "bash", "grep", "glob", "list_dir", "web_search", "web_fetch",
 ]);
+
+const TEXT_RESULT_TOOLS = new Set(["read_file"]);
 
 function hasPreviewContent(children: ReactNode): boolean {
   if (!children) return false;
@@ -118,6 +120,8 @@ export function ToolItem({
               {hasResult && (
                 MARKDOWN_RESULT_TOOLS.has(name) ? (
                   <ToolResultMarkdown content={result} />
+                ) : TEXT_RESULT_TOOLS.has(name) ? (
+                  <ToolResultCode content={result} path={summary} />
                 ) : (
                   <div className="tb-result-preview">{result}</div>
                 )

@@ -47,7 +47,9 @@
 /* Previews de commande / résultat (dépliés) */
 .tb-command-preview,
 .tb-result-preview {
-  margin-top: 4px;
+  width: min(100%, var(--chat-column-width));
+  box-sizing: border-box;
+  margin: 4px auto 0;
   padding: 6px 10px;
   background: var(--void);
   border-radius: var(--radius-sm, 4px);

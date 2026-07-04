@@ -8,7 +8,7 @@ import { useAgentPanelLayout } from "@/hooks/use-agent-panel-layout";
 import type { DroppedFile } from "@/hooks/use-file-drop";
 import type { useTerminal } from "@/hooks/use-terminal";
 import type { Project } from "@/types/agent";
-import type { FileOperationGroups } from "@/types/file-preview";
+import type { FileOperation, FileOperationGroups } from "@/types/file-preview";
 import type { PanelMode } from "@/hooks/use-forecast-panel";
 import type { ReasoningMode } from "@/lib/reasoning-modes";
 
@@ -47,6 +47,9 @@ interface AgentChatDetailProps {
 
 export function AgentChatDetail(props: AgentChatDetailProps) {
   const previewDesiredWidth = props.filePreview.width + props.filePreview.extraWidth;
+  const openPreviewTarget = (target: string | FileOperation) => (
+    typeof target === "string" ? props.filePreview.openPath(target) : props.filePreview.openOperation(target)
+  );
   const { containerRef, layout } = useAgentPanelLayout({
     previewOpen: props.filePreview.open,
     previewFullscreen: props.filePreview.fullscreen,
@@ -91,7 +94,7 @@ export function AgentChatDetail(props: AgentChatDetailProps) {
           onInitialMessageSent={props.onInitialMessageSent}
           terminalState={props.terminal}
           onFileOperationsChange={props.onFileOperationsChange}
-          onFilePreviewPath={props.filePreview.openPath}
+          onFilePreviewPath={openPreviewTarget}
           onOpenSubagent={props.onOpenSubagent}
           isSubagent={!!props.parentSessionId}
         />

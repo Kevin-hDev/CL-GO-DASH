@@ -4,7 +4,9 @@
  * mais sans coloration syntaxique.
  */
 .tb-result-md {
-  margin-top: var(--space-xs);
+  width: min(100%, var(--chat-column-width));
+  box-sizing: border-box;
+  margin: var(--space-xs) auto 0;
   padding: var(--space-sm);
   background: var(--shell);
   border: 1px solid var(--edge);
@@ -55,6 +57,14 @@
   white-space: pre-wrap;
   word-break: break-all;
   overflow-x: auto;
+}
+
+.tb-result-code {
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  white-space: pre-wrap;
+  word-break: break-all;
 }
 
 /* Inline code sans couleur */

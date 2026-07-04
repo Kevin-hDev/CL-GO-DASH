@@ -76,13 +76,14 @@ export function useFilePreview(
 
   const openOperation = useCallback((operation: FileOperation) => {
     setOpen(true);
+    setFallbackOps((items) => operations.some((item) => item.id === operation.id) || items.some((item) => item.id === operation.id) ? items : [operation, ...items].slice(0, MAX_TABS));
     setActiveTab(operation.id);
     setTabIds((ids) => {
       const next = [operation.id, ...ids.filter((id) => id !== operation.id)];
       return next.slice(0, MAX_TABS);
     });
     return operation.id;
-  }, [setOpen]);
+  }, [operations, setOpen]);
 
   const openFullPath = useCallback((path: string) => {
     const fallback: FileOperation = {

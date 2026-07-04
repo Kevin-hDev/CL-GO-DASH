@@ -6,12 +6,15 @@ import { CompressionIndicator } from "./compression-indicator";
 import { ContextCompressionMarker } from "./context-compression-marker";
 import { SubagentBubble } from "./subagent-bubble";
 import { PlanPreviewBubble } from "./plan-preview-bubble";
+import { FileChangeBubble } from "./file-change-bubble";
 import { LoadingIndicator } from "./working-stats";
 import { useCompression } from "@/hooks/use-compression";
 import { isCompressionContextOnlyMessage, isCompressionSummaryMessage } from "@/lib/context-messages";
 import { isSubagentInjectedMessage, extractSubagentsFromMessages } from "@/lib/subagent-message-utils";
+import { collectMessageFileOperations } from "@/lib/file-preview-utils";
 import type { AgentMessage, AgentPlanPreview, SubagentInfo, TokenPhase } from "@/types/agent";
 import type { ToolActivity, StreamSegment } from "@/hooks/agent-chat-utils";
+import type { FileOperation } from "@/types/file-preview";
 import "./chat.css";
 import "./messages.css";
 
@@ -32,6 +35,7 @@ interface MessageListProps {
   onEdit?: (messageId: string, newContent: string) => void;
   onFileClick?: (file: { name: string; path?: string; thumbnail?: string }) => void;
   onFilePreview?: (path: string) => void;
+  onFileReview?: (operation: FileOperation) => void;
   projectPath?: string;
   completedSubagents?: SubagentInfo[];
   onOpenSubagent?: (sessionId: string) => void;
@@ -41,7 +45,7 @@ interface MessageListProps {
 export function MessageList({
   sessionId, messages, completedSegments, currentContent, currentContentPhase, currentThinking,
   currentTools, isStreaming, tps, totalElapsedMs, segmentStartedAt,
-  liveTokenCount, onReload, onEdit, onFileClick, onFilePreview,
+  liveTokenCount, onReload, onEdit, onFileClick, onFilePreview, onFileReview,
   projectPath, completedSubagents, onOpenSubagent, planPreview,
 }: MessageListProps) {
   const lastAssistantIdx = findLastIndex(messages, (m) => m.role === "assistant");
@@ -89,6 +93,7 @@ export function MessageList({
             <SegmentedAssistantMessage
               key={msg.id} msg={msg} onReload={onReload}
               onFilePreview={onFilePreview}
+              onFileReview={onFileReview}
               projectPath={projectPath}
               tps={isLast ? tps : 0}
               totalElapsedMs={isLast ? totalElapsedMs : 0}
@@ -124,34 +129,42 @@ export function MessageList({
 }
 
 export const SegmentedAssistantMessage = memo(function SegmentedAssistantMessage({
-  msg, onReload, onFilePreview, tps, totalElapsedMs, workDurationMs,
+  msg, onReload, onFilePreview, onFileReview, tps, totalElapsedMs, workDurationMs,
   projectPath,
 }: {
   msg: AgentMessage; onReload?: (id: string) => void; onFilePreview?: (path: string) => void;
-  tps: number; totalElapsedMs: number; workDurationMs?: number; projectPath?: string;
+  onFileReview?: (operation: FileOperation) => void; tps: number; totalElapsedMs: number;
+  workDurationMs?: number; projectPath?: string;
 }) {
+  const fileChanges = collectMessageFileOperations(msg, projectPath);
   if (msg.segments && msg.segments.length > 0) {
     return (
-      <SavedToolTimeline
-        messageId={msg.id}
-        segments={msg.segments}
-        tokens={msg.tokens}
-        tps={tps}
-        totalElapsedMs={workDurationMs ?? totalElapsedMs}
-        onFilePreview={onFilePreview}
-        projectPath={projectPath}
-      />
+      <>
+        <SavedToolTimeline
+          messageId={msg.id}
+          segments={msg.segments}
+          tokens={msg.tokens}
+          tps={tps}
+          totalElapsedMs={workDurationMs ?? totalElapsedMs}
+          onFilePreview={onFilePreview}
+          projectPath={projectPath}
+        />
+        <FileChangeBubble operations={fileChanges} baseDir={projectPath} onReview={onFileReview} />
+      </>
     );
   }
   return (
-    <AssistantMessage
-      content={msg.content} thinking={msg.thinking}
-      toolActivities={msg.tool_activities}
-      projectPath={projectPath}
-      onReload={onReload ? () => onReload(msg.id) : undefined}
-      tokens={msg.tokens}
-      tps={tps}
-    />
+    <>
+      <AssistantMessage
+        content={msg.content} thinking={msg.thinking}
+        toolActivities={msg.tool_activities}
+        projectPath={projectPath}
+        onReload={onReload ? () => onReload(msg.id) : undefined}
+        tokens={msg.tokens}
+        tps={tps}
+      />
+      <FileChangeBubble operations={fileChanges} baseDir={projectPath} onReview={onFileReview} />
+    </>
   );
 });
 
