@@ -1,7 +1,7 @@
 use serde_json::Value;
 
 pub fn ask_user_choice_definition() -> Value {
-        super::tool_definitions::tool_def(
+    super::tool_definitions::tool_def(
         "ask_user_choice",
         "Ask the user to choose between concrete options when their answer changes the next step. \
          When to use: multiple valid implementation approaches and the choice is the user's to make; ambiguous requirement where the next action depends on their preference; in Plan mode, before publishing a plan, to resolve open design questions. \
