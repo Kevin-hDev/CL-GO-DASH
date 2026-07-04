@@ -57,6 +57,14 @@
   overflow-x: auto;
 }
 
+.tb-result-code {
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
 /* Inline code sans couleur */
 .tb-result-md :not(pre) > code {
   background: var(--void);
