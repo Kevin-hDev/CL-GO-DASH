@@ -1374,7 +1374,7 @@
   "chatMenu": {
     "addFile": "添加图片或文件",
     "planMode": "计划模式",
-    "planModeDesc": "编辑前先准备计划",
+    "planModeDesc": "准备计划",
     "disablePlanMode": "关闭计划模式",
     "connectors": "连接器",
     "plugins": "插件",

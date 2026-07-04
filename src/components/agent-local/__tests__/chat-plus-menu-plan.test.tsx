@@ -14,7 +14,7 @@ vi.mock("react-i18next", () => ({
     t: (key: string) => {
       if (key === "chatMenu.addFile") return "Add file";
       if (key === "chatMenu.planMode") return "Plan mode";
-      if (key === "chatMenu.planModeDesc") return "Prepare before editing";
+      if (key === "chatMenu.planModeDesc") return "Prepare a plan";
       if (key === "chatMenu.connectors") return "Connectors";
       if (key === "chatMenu.plugins") return "Plugins";
       return key;
@@ -43,7 +43,7 @@ describe("ChatPlusMenu plan mode", () => {
     fireEvent.click(getAllByRole("button")[0]);
     fireEvent.click(getByText("Plan mode"));
 
-    expect(getByText("Prepare before editing")).toBeTruthy();
+    expect(getByText("Prepare a plan")).toBeTruthy();
     expect(onPlanModeChange).toHaveBeenCalledWith(true);
   });
 
