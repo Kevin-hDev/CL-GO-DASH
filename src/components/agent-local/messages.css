@@ -46,7 +46,7 @@
   align-items: center;
   gap: var(--space-xs);
   font-size: var(--text-xs);
-  color: var(--ink-faint);
+  color: var(--agent-trace-text);
   cursor: pointer;
   border: none;
   background: none;
@@ -72,11 +72,11 @@
 .thinking-active .thinking-label {
   background: linear-gradient(
     90deg,
-    var(--ink-faint) 0%,
-    var(--ink-faint) 40%,
-    rgba(255, 255, 255, 0.9) 50%,
-    var(--ink-faint) 60%,
-    var(--ink-faint) 100%
+    var(--agent-trace-text) 0%,
+    var(--agent-trace-text) 40%,
+    var(--agent-trace-hover) 50%,
+    var(--agent-trace-text) 60%,
+    var(--agent-trace-text) 100%
   );
   background-size: 200% 100%;
   background-clip: text;
@@ -93,18 +93,18 @@
 .thinking-active:hover .thinking-label {
   -webkit-text-fill-color: unset;
   background: none;
-  color: var(--ink-muted);
+  color: var(--agent-trace-hover);
   animation: none;
 }
 
-.thinking-toggle:hover { color: var(--ink-muted); }
+.thinking-toggle:hover { color: var(--agent-trace-hover); }
 
 .thinking-content {
   margin-top: var(--space-xs);
   padding-left: var(--space-sm);
   border-left: 2px solid var(--thinking-accent);
   font-size: var(--text-xs);
-  color: var(--thinking-accent);
+  color: var(--agent-trace-text);
   white-space: pre-wrap;
   max-height: 240px;
   overflow-y: auto;

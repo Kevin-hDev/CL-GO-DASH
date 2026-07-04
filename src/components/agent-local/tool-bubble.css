@@ -35,17 +35,13 @@
   border: none;
   background: none;
   padding: 0;
-  color: var(--ink-faint);
+  color: var(--agent-trace-text);
   font: inherit;
   text-align: left;
 }
 
 .tb-group-toggle:hover {
-  color: var(--ink);
-}
-
-[data-theme="dark"] .tb-group-toggle:hover {
-  color: var(--ink-on-pulse);
+  color: var(--agent-trace-hover);
 }
 
 .tb-group-icon {
@@ -63,20 +59,19 @@
 }
 
 .tb-group-sep {
-  color: var(--ink-faint);
+  color: var(--agent-trace-text);
   opacity: 0.7;
 }
 
 .tb-group-details-text {
   color: inherit;
-  opacity: 0.85;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .tb-group-progress {
-  color: var(--ink-faint);
+  color: var(--agent-trace-text);
   flex-shrink: 0;
 }
 
@@ -85,7 +80,7 @@
   align-items: center;
   justify-content: center;
   width: 16px;
-  color: var(--ink-faint);
+  color: var(--agent-trace-text);
   flex-shrink: 0;
 }
 
@@ -114,7 +109,7 @@
 }
 
 .tb-spinner {
-  color: var(--ink-faint);
+  color: var(--agent-trace-text);
   animation: spin 1s linear infinite;
 }
 
@@ -126,7 +121,7 @@
   font-size: 0.6875rem;
   font-family: var(--font-mono, monospace);
   line-height: 1.6;
-  color: var(--ink-faint);
+  color: var(--agent-trace-text);
 }
 
 .tb-toggle {
@@ -166,7 +161,7 @@
 }
 
 .tb-item-summary[role="button"] {
-  color: var(--ink-faint);
+  color: var(--agent-trace-text);
   cursor: pointer;
   text-decoration: underline;
   text-decoration-color: var(--edge);
@@ -174,7 +169,7 @@
 }
 
 .tb-item-summary[role="button"]:hover {
-  color: var(--ink);
+  color: var(--agent-trace-hover);
 }
 
 /* Layout fichier : dossiers tronçables (gauche) + nom fixe (droite) */
@@ -183,7 +178,6 @@
   flex: 0 1 auto;
   min-width: 0;
   color: inherit;
-  opacity: 0.8;
   white-space: nowrap;
   overflow: hidden;
   direction: rtl;
@@ -202,7 +196,7 @@
 }
 
 .tb-item-name-text {
-  color: inherit;
+  color: var(--ink);
 }
 
 .tb-change-stats {

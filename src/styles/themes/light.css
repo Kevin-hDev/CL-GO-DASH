@@ -40,6 +40,9 @@
   --tooltip-text: var(--ink);
   --tooltip-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
   --code-block-border: rgba(0, 0, 0, 0.12);
+  --agent-trace-text: #6f6f76;
+  --agent-trace-hover: #4f4f55;
+  --agent-trace-border: rgba(92, 92, 92, 0.22);
 
   /* Signal backgrounds (alpha) */
   --signal-ok-bg: rgba(22, 163, 74, 0.12);
@@ -68,7 +71,7 @@
   /* Lottie recolor → #f97316 */
   --lottie-orange-filter: brightness(0) saturate(100%) invert(45%) sepia(98%) saturate(1800%) hue-rotate(360deg) brightness(100%);
 
-  --thinking-accent: #2577C9;
+  --thinking-accent: var(--agent-trace-border);
 
   /* Tool colors — par type d'action */
   --tool-bash: #ea580c;
