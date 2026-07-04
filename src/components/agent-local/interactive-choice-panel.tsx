@@ -7,6 +7,7 @@ import type {
   AgentInteractiveChoiceRequest,
   AgentInteractiveQuestion,
 } from "@/types/agent";
+import { InteractiveChoiceTooltip } from "./interactive-choice-tooltip";
 import "./interactive-choice-panel.css";
 
 interface InteractiveChoicePanelProps {
@@ -195,10 +196,16 @@ function ChoiceButton({
       disabled={disabled}
     >
       <span className="icp-option-main">
-        <span className="icp-option-label">{label}</span>
+        <InteractiveChoiceTooltip fullText={label}>
+          <span className="icp-option-label">{label}</span>
+        </InteractiveChoiceTooltip>
         {option.recommended && <span className="icp-recommended">{recommendedLabel}</span>}
       </span>
-      <span className="icp-option-description">{option.description}</span>
+      {option.description && (
+        <InteractiveChoiceTooltip className="icp-option-description" fullText={option.description}>
+          <span className="icp-option-description-text">{option.description}</span>
+        </InteractiveChoiceTooltip>
+      )}
       {active && <ChevronRight className="icp-arrow" aria-hidden="true" />}
     </button>
   );
