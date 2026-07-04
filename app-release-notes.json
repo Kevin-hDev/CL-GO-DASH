@@ -1,4 +1,55 @@
 {
+  "0.9.5": {
+    "de": [
+      "Der Chat zeigt jetzt eine kompakte Zusammenfassung der Sitzung mit Todos, Plänen, Subagenten, Git-Status und zuletzt geänderten Dateien.",
+      "Antworten können jetzt eine Blase mit den Dateien anzeigen, die nur in dieser Anfrage geändert wurden.",
+      "Einzelne Tool-Aufrufe werden direkter angezeigt, während mehrere Tools weiterhin gruppiert bleiben.",
+      "Chat, Markdown-Blasen, Tool-Ergebnisse und das Vorschaupanel wurden visuell verfeinert.",
+      "Die Tools-Einstellungen zeigen jetzt wichtige Tools und optionale Tool-Gruppen klarer an."
+    ],
+    "en": [
+      "The chat now shows a compact session summary with todos, generated plans, subagents, git status, and recent file changes.",
+      "Assistant replies can now show a file changes bubble for only the files modified during that request.",
+      "Single tool calls now appear directly, while multiple tools still stay grouped for readability.",
+      "Chat rendering, Markdown bubbles, tool results, and the side preview panel have been visually refined.",
+      "Tools settings now clearly show always-on tools and optional tool groups."
+    ],
+    "es": [
+      "El chat ahora muestra un resumen compacto de sesión con tareas, planes, subagentes, estado Git y archivos recientes.",
+      "Las respuestas ahora pueden mostrar una burbuja con solo los archivos modificados durante esa petición.",
+      "Las llamadas únicas a herramientas ahora se muestran directamente, mientras que varias herramientas siguen agrupadas.",
+      "El renderizado del chat, las burbujas Markdown, los resultados de herramientas y la vista previa se han refinado.",
+      "Los ajustes de herramientas ahora muestran mejor las herramientas siempre activas y los grupos opcionales."
+    ],
+    "fr": [
+      "Le chat affiche maintenant un résumé compact avec todos, plans générés, sous-agents, état Git et fichiers récents.",
+      "Les réponses peuvent maintenant afficher une bulle avec uniquement les fichiers modifiés pendant la requête.",
+      "Les appels tool uniques s'affichent maintenant directement, tandis que plusieurs tools restent groupés.",
+      "Le rendu du chat, les bulles Markdown, les résultats de tools et le panneau preview ont été affinés.",
+      "Les réglages Tools montrent maintenant plus clairement les tools toujours actifs et les groupes optionnels."
+    ],
+    "it": [
+      "La chat ora mostra un riepilogo compatto con todo, piani generati, subagenti, stato Git e file recenti.",
+      "Le risposte ora possono mostrare una bolla con solo i file modificati durante quella richiesta.",
+      "Le singole chiamate agli strumenti ora appaiono direttamente, mentre più strumenti restano raggruppati.",
+      "Rendering della chat, bolle Markdown, risultati degli strumenti e pannello di anteprima sono stati rifiniti.",
+      "Le impostazioni Tools mostrano meglio gli strumenti sempre attivi e i gruppi opzionali."
+    ],
+    "ja": [
+      "チャットに、Todo、生成された計画、サブエージェント、Git 状態、最近の変更ファイルをまとめた概要が表示されます。",
+      "返信に、そのリクエストで変更されたファイルだけを示すバブルを表示できるようになりました。",
+      "単一のツール呼び出しは直接表示され、複数のツールは読みやすいようにグループ化されます。",
+      "チャット表示、Markdown バブル、ツール結果、サイドプレビューの見た目を調整しました。",
+      "Tools 設定で、常時有効なツールと任意のツールグループが分かりやすくなりました。"
+    ],
+    "zh": [
+      "聊天现在会显示紧凑的会话摘要，包括待办、生成的计划、子代理、Git 状态和最近文件变化。",
+      "助手回复现在可以显示文件变化气泡，只包含本次请求修改的文件。",
+      "单个工具调用现在会直接显示，多个工具仍会保持分组以便阅读。",
+      "聊天渲染、Markdown 气泡、工具结果和侧边预览面板的视觉效果已优化。",
+      "Tools 设置现在更清楚地显示常开工具和可选工具组。"
+    ]
+  },
   "0.9.4": {
     "de": [
       "Die Kontextanzeige zeigt nun eine klare Aufschlüsselung direkt im Eingabefeld.",
