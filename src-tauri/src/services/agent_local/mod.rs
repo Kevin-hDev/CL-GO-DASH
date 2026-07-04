@@ -25,11 +25,11 @@ pub mod circuit_breaker;
 pub mod circuit_breaker_tests;
 pub mod compress_hook;
 pub mod context_budget;
-pub mod disabled_tools_hint;
 pub mod diagnostic_args;
 #[cfg(test)]
 mod diagnostic_args_tests;
 pub mod diagnostic_redaction;
+pub mod disabled_tools_hint;
 pub mod eager_dispatch;
 pub mod interactive_choice_gate;
 pub mod model_customizations;

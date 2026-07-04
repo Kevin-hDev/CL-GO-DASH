@@ -116,7 +116,11 @@ fn hint_present_when_some_tools_disabled() {
         "",
         &enabled,
     );
-    let system = messages.first().expect("system prompt present").content.clone();
+    let system = messages
+        .first()
+        .expect("system prompt present")
+        .content
+        .clone();
 
     assert!(
         system.contains("## Disabled tools"),
