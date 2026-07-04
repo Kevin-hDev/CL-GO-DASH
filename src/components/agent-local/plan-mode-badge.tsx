@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { ClipboardText, X } from "@/components/ui/icons";
+import { X } from "@/components/ui/icons";
 import "./plan-mode-badge.css";
 
 interface PlanModeBadgeProps {
@@ -16,9 +16,8 @@ export function PlanModeBadge({ onDisable }: PlanModeBadgeProps) {
       aria-label={t("chatMenu.disablePlanMode")}
       title={t("chatMenu.disablePlanMode")}
     >
-      <ClipboardText size="var(--icon-sm)" weight="regular" />
-      <span>{t("chatMenu.planMode")}</span>
-      <X size="var(--icon-xs)" className="pmb-x" />
+      <span className="pmb-text">{t("chatMenu.planMode")}</span>
+      <X size="var(--icon-2xs)" className="pmb-x" />
     </button>
   );
 }
