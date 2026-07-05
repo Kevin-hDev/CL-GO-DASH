@@ -12,6 +12,20 @@ describe("validateBranchName", () => {
     [".hidden"],
     ["foo/"],
     ["foo//bar"],
+    ["foo~bar"],
+    ["foo^bar"],
+    ["foo?bar"],
+    ["foo*bar"],
+    ["foo[bar"],
+    ["foo@{bar"],
+    ["feature.lock"],
+    ["foo\tbar"],
+    ["foo\nbar"],
+    ["foo\rbar"],
+    ["foo\x7fbar"],
+    ["/foo"],
+    ["foo."],
+    ["-feature"],
   ])("rejette %s", (name) => {
     expect(validateBranchName(name).valid).toBe(false);
   });
@@ -19,6 +33,8 @@ describe("validateBranchName", () => {
   it.each([
     ["feature"],
     ["feature/foo"],
+    ["feature/foo/bar"],
+    ["a".repeat(100)],
   ])("accepte %s", (name) => {
     expect(validateBranchName(name)).toEqual({ valid: true });
   });

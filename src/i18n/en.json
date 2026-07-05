@@ -152,7 +152,6 @@
     "commitRequired": "Commit your changes to continue",
     "commitDescription": "Description",
     "createSubmit": "Create branch",
-    "createError": "Invalid name or branch already exists",
     "errorInvalidName": "Invalid name: forbidden characters or wrong format",
     "errorNameTooLong": "Name too long (max 100 characters)",
     "errorAlreadyExists": "This branch already exists",

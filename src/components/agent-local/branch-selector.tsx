@@ -42,7 +42,11 @@ export function BranchSelector({
       setOpen(false);
     }
   }});
-  useClickOutside(dropRef, () => { setOpen(false); setCreating(false); });
+  useClickOutside(dropRef, () => {
+    if (isCreating) return;
+    setOpen(false);
+    setCreating(false);
+  });
   useEffect(() => {
     if (open && !creating && searchRef.current) searchRef.current.focus();
   }, [open, creating]);

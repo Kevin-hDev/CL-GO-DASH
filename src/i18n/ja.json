@@ -152,7 +152,6 @@
     "commitRequired": "続行するには変更をコミットしてください",
     "commitDescription": "説明",
     "createSubmit": "ブランチを作成",
-    "createError": "無効な名前またはブランチが既に存在します",
     "errorInvalidName": "無効な名前です。使用できない文字または形式です",
     "errorNameTooLong": "名前が長すぎます（最大100文字）",
     "errorAlreadyExists": "このブランチはすでに存在します",

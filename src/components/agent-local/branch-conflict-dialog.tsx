@@ -107,7 +107,7 @@ export function BranchConflictDialog({
         </div>
 
         <div className="bcd-hint">{t("branches.commitRequired")}</div>
-        {error && <div className="bs-create-error">{error}</div>}
+        {error && <div className="bcd-error">{error}</div>}
 
         <div className="bcd-actions">
           <button className="bcd-btn" onClick={onCancel} type="button" disabled={busy}>

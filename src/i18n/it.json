@@ -152,7 +152,6 @@
     "commitRequired": "Effettua un commit delle modifiche per continuare",
     "commitDescription": "Descrizione",
     "createSubmit": "Crea ramo",
-    "createError": "Nome non valido o ramo già esistente",
     "errorInvalidName": "Nome non valido: caratteri vietati o formato errato",
     "errorNameTooLong": "Nome troppo lungo (max 100 caratteri)",
     "errorAlreadyExists": "Questo ramo esiste già",

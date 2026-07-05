@@ -55,4 +55,12 @@ describe("BranchSelectorCreateForm", () => {
 
     expect(props.onSubmit).toHaveBeenCalledOnce();
   });
+
+  it("ne soumet pas pendant isCreating même avec Entrée", () => {
+    const props = renderForm({ isCreating: true });
+
+    fireEvent.keyDown(screen.getByPlaceholderText("branch name"), { key: "Enter" });
+
+    expect(props.onSubmit).not.toHaveBeenCalled();
+  });
 });

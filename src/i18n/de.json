@@ -152,7 +152,6 @@
     "commitRequired": "Committen Sie Ihre Änderungen, um fortzufahren",
     "commitDescription": "Beschreibung",
     "createSubmit": "Branch erstellen",
-    "createError": "Ungültiger Name oder Branch existiert bereits",
     "errorInvalidName": "Ungültiger Name: verbotene Zeichen oder falsches Format",
     "errorNameTooLong": "Name zu lang (max. 100 Zeichen)",
     "errorAlreadyExists": "Dieser Branch existiert bereits",

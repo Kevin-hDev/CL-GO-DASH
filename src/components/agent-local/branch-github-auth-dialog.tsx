@@ -27,7 +27,7 @@ export function BranchGithubAuthDialog({
         <div className="bcd-description">{t("branches.githubAuthDescription")}</div>
         {state === "connecting" && <div className="bcd-hint">{t("branches.githubAuthConnecting")}</div>}
         {state === "testing" && <div className="bcd-hint">{t("branches.githubAuthTesting")}</div>}
-        {state === "error" && <div className="bs-create-error">{t("branches.githubAuthError")}</div>}
+        {state === "error" && <div className="bcd-error">{t("branches.githubAuthError")}</div>}
         <div className="bcd-actions">
           <button className="bcd-btn" onClick={onCancel} type="button" disabled={busy}>
             {t("branches.githubAuthCancel")}

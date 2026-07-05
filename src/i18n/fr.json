@@ -152,7 +152,6 @@
     "commitRequired": "Effectuez un commit de vos modifications pour continuer",
     "commitDescription": "Description",
     "createSubmit": "Créer la branche",
-    "createError": "Nom invalide ou branche déjà existante",
     "errorInvalidName": "Nom invalide : caractères interdits ou format incorrect",
     "errorNameTooLong": "Nom trop long (max 100 caractères)",
     "errorAlreadyExists": "Cette branche existe déjà",

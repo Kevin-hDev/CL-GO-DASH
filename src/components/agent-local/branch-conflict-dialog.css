@@ -149,6 +149,12 @@
   margin-bottom: var(--space-sm);
 }
 
+.bcd-error {
+  padding-top: var(--space-xxs, 2px);
+  font-size: 10px;
+  color: var(--signal-warning);
+}
+
 .bcd-actions {
   display: flex;
   justify-content: flex-end;
