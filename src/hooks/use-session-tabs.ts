@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { markSessionUnread } from "@/hooks/use-session-activity-indicators";
 import type { CloneMode, CloneSessionResult, SessionTabs } from "@/types/agent";
 
 interface CloneMessageOptions {
@@ -64,6 +65,9 @@ export function useSessionTabs(
     });
     await onSessionsRefresh?.();
     setTabs(result.tabs);
+    if (options.mode === "summary") {
+      markSessionUnread(rootSessionId);
+    }
     return result;
   }, [onSessionsRefresh, rootSessionId]);
 

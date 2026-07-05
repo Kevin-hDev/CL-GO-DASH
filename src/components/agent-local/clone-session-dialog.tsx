@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { X } from "@/components/ui/icons";
+import { CompressionIndicator } from "./compression-indicator";
 import type { CloneMode } from "@/types/agent";
 import "./clone-session-dialog.css";
 
@@ -60,54 +61,56 @@ export function CloneSessionDialog({
         </header>
 
         <div className="wk-form csp-body">
-          <ChoiceButton active={choice === "cut"} onClick={() => setChoice("cut")}>
-            {t("agentLocal.clone.cut")}
-          </ChoiceButton>
-          <ChoiceButton
-            active={choice === "summary"}
-            disabled={!canSummarize}
-            onClick={() => setChoice("summary")}
-          >
-            {t("agentLocal.clone.summary")}
-          </ChoiceButton>
-          <ChoiceButton
-            active={choice === "summary_focus"}
-            disabled={!canSummarize}
-            onClick={() => setChoice("summary_focus")}
-          >
-            {t("agentLocal.clone.summaryFocus")}
-          </ChoiceButton>
+          {busy ? (
+            <div className="csp-loading">
+              <CompressionIndicator label={t("agentLocal.clone.running")} />
+            </div>
+          ) : (
+            <>
+              <ChoiceButton active={choice === "cut"} onClick={() => setChoice("cut")}>
+                {t("agentLocal.clone.cut")}
+              </ChoiceButton>
+              <ChoiceButton
+                active={choice === "summary"}
+                disabled={!canSummarize}
+                onClick={() => setChoice("summary")}
+              >
+                {t("agentLocal.clone.summary")}
+              </ChoiceButton>
+              <ChoiceButton
+                active={choice === "summary_focus"}
+                disabled={!canSummarize}
+                onClick={() => setChoice("summary_focus")}
+              >
+                {t("agentLocal.clone.summaryFocus")}
+              </ChoiceButton>
 
-          {choice === "summary_focus" && (
-            <textarea
-              className="csp-focus"
-              value={focus}
-              placeholder={t("agentLocal.clone.focusPlaceholder")}
-              onChange={(event) => setFocus(event.target.value)}
-            />
+              {choice === "summary_focus" && (
+                <textarea
+                  className="csp-focus"
+                  value={focus}
+                  placeholder={t("agentLocal.clone.focusPlaceholder")}
+                  onChange={(event) => setFocus(event.target.value)}
+                />
+              )}
+
+              {error && <div className="csp-error">{t("agentLocal.clone.summaryFailed")}</div>}
+
+              <footer className="wk-dialog-footer">
+                <button type="button" className="wk-btn-secondary" onClick={onCancel}>
+                  {t("agentLocal.cancel")}
+                </button>
+                {error && (
+                  <button type="button" className="wk-btn-secondary" onClick={() => submit("cut")}>
+                    {t("agentLocal.clone.withoutSummary")}
+                  </button>
+                )}
+                <button type="button" className="wk-btn-primary" onClick={() => submit()}>
+                  {error ? t("agentLocal.retry.button") : t("agentLocal.clone.create")}
+                </button>
+              </footer>
+            </>
           )}
-
-          {error && <div className="csp-error">{t("agentLocal.clone.summaryFailed")}</div>}
-
-          <footer className="wk-dialog-footer">
-            <button type="button" className="wk-btn-secondary" onClick={onCancel} disabled={busy}>
-              {t("agentLocal.cancel")}
-            </button>
-            {error ? (
-              <>
-                <button type="button" className="wk-btn-secondary" onClick={() => submit("cut")} disabled={busy}>
-                  {t("agentLocal.clone.withoutSummary")}
-                </button>
-                <button type="button" className="wk-btn-primary" onClick={() => submit()} disabled={busy}>
-                  {busy ? t("agentLocal.clone.running") : t("agentLocal.retry.button")}
-                </button>
-              </>
-            ) : (
-              <button type="button" className="wk-btn-primary" onClick={() => submit()} disabled={busy}>
-                {busy ? t("agentLocal.clone.running") : t("agentLocal.clone.create")}
-              </button>
-            )}
-          </footer>
         </div>
       </div>
     </div>

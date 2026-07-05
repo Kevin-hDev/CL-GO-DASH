@@ -81,6 +81,15 @@ export function useSessionActivityIndicators(sessionIds: string[], selectedId: s
   return { ...state, markViewed };
 }
 
+export function markSessionUnread(sessionId: string) {
+  updateStore((current) => {
+    if (!sessionId || currentSelectedId === sessionId) return current;
+    const unreadIds = new Set(current.unreadIds);
+    unreadIds.add(sessionId);
+    return trimSessionActivity({ runningIds: current.runningIds, unreadIds });
+  });
+}
+
 function filterVisible(ids: Set<string>, visibleIds: Set<string>): Set<string> {
   const next = new Set<string>();
   for (const id of ids) {

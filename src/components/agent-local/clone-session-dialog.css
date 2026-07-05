@@ -16,12 +16,19 @@
   font-size: var(--text-sm);
   text-align: left;
   cursor: pointer;
+  outline: none;
 }
 
 .csp-choice:hover:not(:disabled),
 .csp-choice-active {
   color: var(--ink);
-  border-color: var(--edge-strong);
+  border-color: var(--edge);
+  background: var(--surface-hover);
+}
+
+.csp-choice:focus-visible {
+  color: var(--ink);
+  border-color: var(--edge);
   background: var(--surface-hover);
 }
 
@@ -54,4 +61,11 @@
   color: var(--signal-error);
   background: var(--signal-error-bg);
   font-size: var(--text-sm);
+}
+
+.csp-loading {
+  display: flex;
+  justify-content: center;
+  min-height: 160px;
+  padding: 32px 0 24px;
 }
