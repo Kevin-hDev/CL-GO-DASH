@@ -5,6 +5,7 @@
 ### Changes
 
 - **Archived chats** — deleting a chat now archives it first; Settings includes a new Archived chats tab to restore sessions or permanently delete archived chats grouped by project and standalone discussions.
+- **Session branching** — clone a chat from a message into a header tab, optionally carry forward hidden summary context, and keep branch sessions out of the main sidebar.
 
 ---
 
