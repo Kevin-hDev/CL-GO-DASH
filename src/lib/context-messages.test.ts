@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { isCompressionContextOnlyMessage, isCompressionSummaryMessage } from "./context-messages";
+import {
+  isCloneSummaryContextMessage,
+  isCompressionContextOnlyMessage,
+  isCompressionSummaryMessage,
+} from "./context-messages";
 import type { AgentMessage } from "@/types/agent";
 
 function msg(content: string, role: AgentMessage["role"] = "assistant"): AgentMessage {
@@ -31,6 +35,12 @@ describe("context messages", () => {
   it("detecte le contexte fichiers conserve", () => {
     const message = msg("Recent file context preserved across compression:\n- read_file: app.ts");
     expect(isCompressionSummaryMessage(message)).toBe(false);
+    expect(isCompressionContextOnlyMessage(message)).toBe(true);
+  });
+
+  it("detecte un resume cache de clone", () => {
+    const message = msg("This cloned session includes hidden branch context:\n\nSummary", "user");
+    expect(isCloneSummaryContextMessage(message)).toBe(true);
     expect(isCompressionContextOnlyMessage(message)).toBe(true);
   });
 

@@ -1,7 +1,10 @@
 import { FilePreview } from "./file-preview";
+import { CloneSessionDialog } from "./clone-session-dialog";
 import { SwitchModelDialog } from "./switch-model-dialog";
 import { WorktreeSwitchDialog } from "./worktree-switch-dialog";
+import type { CloneMode } from "@/types/agent";
 import type { DroppedFile } from "@/hooks/use-file-drop";
+import type { PendingCloneDialog } from "@/hooks/use-chat-clone";
 import type { WorktreeSwitchTarget } from "@/hooks/use-worktree-session-switch";
 
 interface ChatOverlaysProps {
@@ -9,9 +12,13 @@ interface ChatOverlaysProps {
   currentModel: string;
   pendingSwitch: { model: string; provider: string } | null;
   pendingWorktreeSwitch: WorktreeSwitchTarget | null;
+  pendingClone: PendingCloneDialog | null;
+  cloneBusy: boolean;
   onClosePreview: () => void;
   onCancelSwitch: () => void;
   onCancelWorktreeSwitch: () => void;
+  onCancelClone: () => void;
+  onSubmitClone: (mode: CloneMode, customFocus?: string) => void;
   onNewSession: (remember: boolean) => void;
   onContinue: (remember: boolean) => void;
   onNewWorktreeSession: () => void;
@@ -22,9 +29,13 @@ export function ChatOverlays({
   currentModel,
   pendingSwitch,
   pendingWorktreeSwitch,
+  pendingClone,
+  cloneBusy,
   onClosePreview,
   onCancelSwitch,
   onCancelWorktreeSwitch,
+  onCancelClone,
+  onSubmitClone,
   onNewSession,
   onContinue,
   onNewWorktreeSession,
@@ -55,6 +66,15 @@ export function ChatOverlays({
           path={pendingWorktreeSwitch.path}
           onCancel={onCancelWorktreeSwitch}
           onNewSession={onNewWorktreeSession}
+        />
+      )}
+      {pendingClone && (
+        <CloneSessionDialog
+          canSummarize={pendingClone.canSummarize}
+          busy={cloneBusy}
+          error={pendingClone.error}
+          onCancel={onCancelClone}
+          onSubmit={onSubmitClone}
         />
       )}
     </>

@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
-import { ArrowsClockwise, Pencil, Copy, Check } from "@/components/ui/icons";
+import { useTranslation } from "react-i18next";
+import { ArrowsClockwise, Pencil, Copy, Check, GitBranch } from "@/components/ui/icons";
 import "./messages.css";
 
 interface MessageActionsProps {
@@ -8,10 +9,14 @@ interface MessageActionsProps {
   isStreaming?: boolean;
   onReload?: () => void;
   onEdit?: () => void;
+  onClone?: () => void;
   children?: React.ReactNode;
 }
 
-export function MessageActions({ messageRole, content, isStreaming, onReload, onEdit, children }: MessageActionsProps) {
+export function MessageActions({
+  messageRole, content, isStreaming, onReload, onEdit, onClone, children,
+}: MessageActionsProps) {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
 
   const handleCopy = useCallback(async () => {
@@ -30,6 +35,11 @@ export function MessageActions({ messageRole, content, isStreaming, onReload, on
       {messageRole === "user" && onEdit && (
         <button className="msg-action-btn" onClick={onEdit}>
           <Pencil size="var(--icon-sm)" />
+        </button>
+      )}
+      {onClone && !isStreaming && (
+        <button className="msg-action-btn" onClick={onClone} title={t("agentLocal.clone.action")}>
+          <GitBranch size="var(--icon-sm)" />
         </button>
       )}
       <button className="msg-action-btn" onClick={() => void handleCopy()}>

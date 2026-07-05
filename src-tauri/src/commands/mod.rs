@@ -1,5 +1,6 @@
 pub mod agent_chat;
 pub(crate) mod agent_chat_task;
+pub mod agent_clone;
 pub mod agent_md;
 pub mod agent_ollama;
 pub mod agent_sessions;
@@ -68,6 +69,7 @@ pub(crate) mod subagents_validation;
 pub mod terminal;
 
 pub use agent_chat::*;
+pub use agent_clone::*;
 pub use agent_md::*;
 pub use agent_ollama::*;
 pub use agent_sessions::*;

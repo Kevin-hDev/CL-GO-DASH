@@ -193,6 +193,22 @@
     "reasoningXhigh": "最高",
     "send": "发送",
     "cancel": "取消",
+    "clone": {
+      "action": "克隆",
+      "title": "克隆会话",
+      "close": "关闭",
+      "tabs": "会话分支",
+      "mainTab": "Main",
+      "closeTab": "关闭标签",
+      "cut": "从这条消息克隆",
+      "summary": "使用隐藏摘要克隆",
+      "summaryFocus": "使用自定义重点克隆",
+      "focusPlaceholder": "摘要要优先关注的内容...",
+      "create": "创建",
+      "running": "正在摘要...",
+      "summaryFailed": "无法生成摘要。",
+      "withoutSummary": "不使用摘要"
+    },
     "compression": "Compression",
     "retry": {
       "thinkingOnly": "正在重试...",

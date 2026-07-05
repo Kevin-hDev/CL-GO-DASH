@@ -2,6 +2,8 @@ import type { AgentMessage } from "./agent-message";
 import type { AgentPlanApprovalDecision, AgentPlanRun, AgentPlanWorkflowStatus } from "./agent-plan";
 import type { AgentTodoItem, AgentTodoRun } from "./agent-todo";
 
+export type CloneMode = "cut" | "summary";
+
 export interface Project {
   id: string;
   name: string;
@@ -47,6 +49,12 @@ export interface AgentSession {
   subagent_prompt?: string;
   subagent_status?: "running" | "completed" | "failed" | "cancelled";
   subagent_run_id?: string;
+  clone_parent_session_id?: string;
+  clone_parent_message_id?: string;
+  clone_mode?: CloneMode;
+  clone_summary?: string;
+  clone_read_files?: string[];
+  clone_modified_files?: string[];
 }
 
 export interface AgentSessionMeta {
@@ -65,8 +73,33 @@ export interface AgentSessionMeta {
   subagent_type?: "explorer" | "coder";
   subagent_status?: "running" | "completed" | "failed" | "cancelled";
   subagent_run_id?: string;
+  clone_parent_session_id?: string;
+  clone_parent_message_id?: string;
+  clone_mode?: CloneMode;
   is_gateway?: boolean;
   gateway_channel_key?: string;
+}
+
+export interface SessionTab {
+  tab_id: string;
+  session_id: string;
+  label: string;
+  is_main: boolean;
+  clone_parent_session_id?: string;
+  clone_parent_message_id?: string;
+  clone_mode?: CloneMode;
+}
+
+export interface SessionTabs {
+  active_tab_id: string;
+  tabs: SessionTab[];
+}
+
+export interface CloneSessionResult {
+  root_session_id: string;
+  clone_session_id: string;
+  operation_id: string;
+  tabs: SessionTabs;
 }
 
 export interface SubagentInfo {

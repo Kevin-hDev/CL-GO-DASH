@@ -193,6 +193,22 @@
     "reasoningXhigh": "Sehr hoch",
     "send": "Senden",
     "cancel": "Abbrechen",
+    "clone": {
+      "action": "Klonen",
+      "title": "Sitzung klonen",
+      "close": "Schließen",
+      "tabs": "Sitzungszweige",
+      "mainTab": "Main",
+      "closeTab": "Tab schließen",
+      "cut": "Ab dieser Nachricht klonen",
+      "summary": "Mit verborgenem Summary klonen",
+      "summaryFocus": "Mit eigenem Fokus klonen",
+      "focusPlaceholder": "Fokuspunkt für das Summary...",
+      "create": "Erstellen",
+      "running": "Summary läuft...",
+      "summaryFailed": "Das Summary konnte nicht erstellt werden.",
+      "withoutSummary": "Ohne Summary"
+    },
     "compression": "Compression",
     "retry": {
       "thinkingOnly": "Erneuter Versuch...",

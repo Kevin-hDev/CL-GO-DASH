@@ -180,5 +180,11 @@ fn test_session() -> AgentSession {
         subagent_prompt: None,
         subagent_status: None,
         subagent_run_id: None,
+        clone_parent_session_id: None,
+        clone_parent_message_id: None,
+        clone_mode: None,
+        clone_summary: None,
+        clone_read_files: Vec::new(),
+        clone_modified_files: Vec::new(),
     }
 }

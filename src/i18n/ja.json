@@ -193,6 +193,22 @@
     "reasoningXhigh": "最高",
     "send": "送信",
     "cancel": "キャンセル",
+    "clone": {
+      "action": "クローン",
+      "title": "セッションをクローン",
+      "close": "閉じる",
+      "tabs": "セッション分岐",
+      "mainTab": "Main",
+      "closeTab": "タブを閉じる",
+      "cut": "このメッセージからクローン",
+      "summary": "隠し要約付きでクローン",
+      "summaryFocus": "カスタム重点でクローン",
+      "focusPlaceholder": "要約で重視する点...",
+      "create": "作成",
+      "running": "要約中...",
+      "summaryFailed": "要約を生成できませんでした。",
+      "withoutSummary": "要約なし"
+    },
     "compression": "Compression",
     "retry": {
       "thinkingOnly": "再試行中...",

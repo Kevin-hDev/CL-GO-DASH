@@ -108,7 +108,10 @@ export function ConversationList({
   const displayOrder = drag.liveOrder ?? projectIds;
   const projectMap = new Map(projects.map((p) => [p.id, p]));
   const projectIdSet = new Set(projectIds);
-  const mainSessions = useMemo(() => sessions.filter((s) => !s.parent_session_id), [sessions]);
+  const mainSessions = useMemo(
+    () => sessions.filter((s) => !s.parent_session_id && !s.clone_parent_session_id),
+    [sessions],
+  );
   const mainSessionIds = useMemo(() => mainSessions.map((s) => s.id), [mainSessions]);
   const activity = useSessionActivityIndicators(mainSessionIds, selectedId);
   const orphanSessions = mainSessions.filter(

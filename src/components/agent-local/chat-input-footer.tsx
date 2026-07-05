@@ -1,0 +1,37 @@
+import { ChatProjectControls } from "./chat-project-controls";
+import { ScrollBottomButton } from "./scroll-bottom-button";
+import type { useGitBranch } from "@/hooks/use-git-branch";
+import type { useSessionProject } from "@/hooks/use-session-project";
+import type { Project } from "@/types/agent";
+
+interface ChatInputFooterProps {
+  projects: Project[];
+  projectState: ReturnType<typeof useSessionProject>;
+  git: ReturnType<typeof useGitBranch>;
+  showScrollBottom: boolean;
+  onScrollBottom: () => void;
+  onWorktreeSelect: (path: string, branch: string) => void;
+}
+
+export function ChatInputFooter({
+  projects,
+  projectState,
+  git,
+  showScrollBottom,
+  onScrollBottom,
+  onWorktreeSelect,
+}: ChatInputFooterProps) {
+  return (
+    <div className="chat-input-under-row">
+      <div className="chat-input-project-slot">
+        <ChatProjectControls
+          projects={projects}
+          projectState={projectState}
+          git={git}
+          onWorktreeSelect={onWorktreeSelect}
+        />
+      </div>
+      {showScrollBottom && <ScrollBottomButton variant="inline" onClick={onScrollBottom} />}
+    </div>
+  );
+}

@@ -22,11 +22,12 @@ interface UserMessageProps {
   isStreaming?: boolean;
   onReload?: () => void;
   onEdit?: (newContent: string) => void;
+  onClone?: () => void;
   onFileClick?: (file: FileInfo) => void;
 }
 
 export const UserMessage = memo(function UserMessage({
-  content, files, skillNames, isStreaming, onReload, onEdit, onFileClick,
+  content, files, skillNames, isStreaming, onReload, onEdit, onClone, onFileClick,
 }: UserMessageProps) {
   const { t } = useTranslation();
   const hoverRef = useHoverClass();
@@ -92,6 +93,7 @@ export const UserMessage = memo(function UserMessage({
           isStreaming={isStreaming}
           onReload={onReload}
           onEdit={onEdit ? () => setEditing(true) : undefined}
+          onClone={onClone}
         />
       </div>
     </div>

@@ -10,6 +10,13 @@ pub use super::types_message::{
 use super::types_plan::{AgentPlanApprovalDecision, AgentPlanRun, AgentPlanWorkflowStatus};
 use super::types_todo::{AgentTodoItem, AgentTodoRun};
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CloneMode {
+    Cut,
+    Summary,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AgentSession {
     pub id: String,
@@ -72,6 +79,18 @@ pub struct AgentSession {
     pub subagent_status: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub subagent_run_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub clone_parent_session_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub clone_parent_message_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub clone_mode: Option<CloneMode>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub clone_summary: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub clone_read_files: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub clone_modified_files: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -107,6 +126,12 @@ pub struct AgentSessionMeta {
     pub subagent_status: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub subagent_run_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub clone_parent_session_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub clone_parent_message_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub clone_mode: Option<CloneMode>,
 }
 
 fn default_provider() -> String {

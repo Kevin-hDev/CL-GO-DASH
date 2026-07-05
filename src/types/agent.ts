@@ -40,7 +40,11 @@ export type {
   AgentSession,
   AgentSessionMeta,
   AgentStreamFailure,
+  CloneMode,
+  CloneSessionResult,
   Project,
+  SessionTab,
+  SessionTabs,
   SubagentInfo,
 } from "./agent-session";
 export type {

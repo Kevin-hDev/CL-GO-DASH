@@ -102,6 +102,12 @@ pub async fn create_full(
         subagent_prompt: None,
         subagent_status: None,
         subagent_run_id: None,
+        clone_parent_session_id: None,
+        clone_parent_message_id: None,
+        clone_mode: None,
+        clone_summary: None,
+        clone_read_files: Vec::new(),
+        clone_modified_files: Vec::new(),
     };
     save(&session).await?;
     Ok(session)
@@ -196,7 +202,7 @@ pub async fn rename(id: &str, name: &str) -> Result<(), String> {
     save(&session).await
 }
 
-pub async fn delete(id: &str) -> Result<(), String> {
+pub(crate) async fn delete_one(id: &str) -> Result<(), String> {
     validate_session_id(id)?;
     let path = sessions_dir().join(format!("{id}.json"));
     tokio::fs::remove_file(&path)
@@ -208,7 +214,19 @@ pub async fn delete(id: &str) -> Result<(), String> {
     Ok(())
 }
 
-pub use super::session_archive::{archive, list_archived, restore};
+pub async fn delete(id: &str) -> Result<(), String> {
+    super::session_family::delete_family(id).await
+}
+
+pub async fn archive(id: &str) -> Result<(), String> {
+    super::session_family::archive_family(id).await
+}
+
+pub async fn restore(id: &str) -> Result<(), String> {
+    super::session_family::restore_with_parent(id).await
+}
+
+pub use super::session_archive::list_archived;
 pub use super::session_ops::{clear_project_id, export_markdown, truncate_and_replace};
 pub use super::session_store_updates::{update_model, update_reasoning, update_working_dir};
 

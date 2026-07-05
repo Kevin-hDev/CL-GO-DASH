@@ -88,6 +88,9 @@ pub fn meta_from_session(session: &AgentSession) -> AgentSessionMeta {
         subagent_type: session.subagent_type.clone(),
         subagent_status: session.subagent_status.clone(),
         subagent_run_id: session.subagent_run_id.clone(),
+        clone_parent_session_id: session.clone_parent_session_id.clone(),
+        clone_parent_message_id: session.clone_parent_message_id.clone(),
+        clone_mode: session.clone_mode.clone(),
     }
 }
 

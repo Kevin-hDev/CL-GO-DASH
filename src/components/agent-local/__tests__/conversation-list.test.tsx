@@ -115,6 +115,15 @@ describe("ConversationList", () => {
     expect(container.querySelectorAll(".conv-session-indented").length).toBe(1);
   });
 
+  it("n'affiche pas les clones avec clone_parent_session_id", () => {
+    const parent = makeSession({ id: "parent" });
+    const clone = makeSession({ id: "clone", clone_parent_session_id: "parent" });
+    const { container } = render(
+      <ConversationList {...defaultProps} sessions={[parent, clone]} />,
+    );
+    expect(container.querySelectorAll(".conv-session-indented").length).toBe(1);
+  });
+
   it("marque la session active avec la classe .active", () => {
     const session = makeSession({ id: "s1" });
     const { container } = render(

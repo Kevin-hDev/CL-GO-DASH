@@ -193,6 +193,22 @@
     "reasoningXhigh": "Molto alto",
     "send": "Invia",
     "cancel": "Annulla",
+    "clone": {
+      "action": "Clona",
+      "title": "Clona sessione",
+      "close": "Chiudi",
+      "tabs": "Rami sessione",
+      "mainTab": "Main",
+      "closeTab": "Chiudi scheda",
+      "cut": "Clona da questo messaggio",
+      "summary": "Clona con riepilogo nascosto",
+      "summaryFocus": "Clona con focus personalizzato",
+      "focusPlaceholder": "Punto da privilegiare nel riepilogo...",
+      "create": "Crea",
+      "running": "Riepilogo in corso...",
+      "summaryFailed": "Non è stato possibile generare il riepilogo.",
+      "withoutSummary": "Senza riepilogo"
+    },
     "compression": "Compression",
     "retry": {
       "thinkingOnly": "Nuovo tentativo...",

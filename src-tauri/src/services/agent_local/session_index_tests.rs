@@ -38,6 +38,12 @@ fn test_session(id: &str, name: &str, heartbeat: bool) -> AgentSession {
         subagent_prompt: None,
         subagent_status: None,
         subagent_run_id: None,
+        clone_parent_session_id: None,
+        clone_parent_message_id: None,
+        clone_mode: None,
+        clone_summary: None,
+        clone_read_files: Vec::new(),
+        clone_modified_files: Vec::new(),
     }
 }
 
@@ -61,6 +67,9 @@ fn test_meta(id: &str, count: usize) -> AgentSessionMeta {
         subagent_type: None,
         subagent_status: None,
         subagent_run_id: None,
+        clone_parent_session_id: None,
+        clone_parent_message_id: None,
+        clone_mode: None,
     }
 }
 
@@ -175,6 +184,9 @@ async fn meta_from_session_extracts_all_fields() {
     s.subagent_type = Some("worker".into());
     s.subagent_status = Some("running".into());
     s.subagent_run_id = Some("r1".into());
+    s.clone_parent_session_id = Some("parent".into());
+    s.clone_parent_message_id = Some("msg".into());
+    s.clone_mode = Some(crate::services::agent_local::types_session::CloneMode::Cut);
 
     let meta = meta_from_session(&s);
     assert_eq!(meta.id, "mf");
@@ -185,6 +197,12 @@ async fn meta_from_session_extracts_all_fields() {
     assert_eq!(meta.subagent_type, Some("worker".into()));
     assert_eq!(meta.subagent_status, Some("running".into()));
     assert_eq!(meta.subagent_run_id, Some("r1".into()));
+    assert_eq!(meta.clone_parent_session_id, Some("parent".into()));
+    assert_eq!(meta.clone_parent_message_id, Some("msg".into()));
+    assert_eq!(
+        meta.clone_mode,
+        Some(crate::services::agent_local::types_session::CloneMode::Cut)
+    );
 }
 
 #[tokio::test]

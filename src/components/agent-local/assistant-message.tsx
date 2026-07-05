@@ -128,6 +128,7 @@ interface AssistantMessageProps {
   projectPath?: string;
   isStreaming?: boolean;
   onReload?: () => void;
+  onClone?: () => void;
   tokens?: number;
   tps?: number;
   totalElapsedMs?: number;
@@ -142,7 +143,7 @@ function formatTokens(n: number): string {
 }
 
 export const AssistantMessage = memo(function AssistantMessage({
-  content, thinking, toolActivities, projectPath, isStreaming, onReload,
+  content, thinking, toolActivities, projectPath, isStreaming, onReload, onClone,
   tokens, tps, totalElapsedMs, streamStartedAt, liveTokenCount,
   showActions = true,
 }: AssistantMessageProps) {
@@ -170,7 +171,7 @@ export const AssistantMessage = memo(function AssistantMessage({
         )}
       </div>
       {showActions && !isStreaming && content.trim() && (
-        <MessageActions messageRole="assistant" content={content} onReload={onReload}>
+        <MessageActions messageRole="assistant" content={content} onReload={onReload} onClone={onClone}>
           {(hasTokens || hasTps || totalTime) && (
             <span className="msg-stats-inline">
               {totalTime && <><span>{totalTime}</span><span>&middot;</span></>}

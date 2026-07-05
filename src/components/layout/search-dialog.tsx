@@ -32,7 +32,7 @@ export function SearchDialog({ open, onClose, onSelect }: SearchDialogProps) {
 
   const sorted = useMemo(
     () => sessions
-      .filter((s) => !s.parent_session_id)
+      .filter((s) => !s.parent_session_id && !s.clone_parent_session_id)
       .sort((a, b) => b.created_at.localeCompare(a.created_at)),
     [sessions],
   );

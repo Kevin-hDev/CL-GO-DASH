@@ -193,6 +193,22 @@
     "reasoningXhigh": "Muy alto",
     "send": "Enviar",
     "cancel": "Cancelar",
+    "clone": {
+      "action": "Clonar",
+      "title": "Clonar sesión",
+      "close": "Cerrar",
+      "tabs": "Ramas de sesión",
+      "mainTab": "Main",
+      "closeTab": "Cerrar pestaña",
+      "cut": "Clonar desde este mensaje",
+      "summary": "Clonar con resumen oculto",
+      "summaryFocus": "Clonar con foco personalizado",
+      "focusPlaceholder": "Punto a priorizar en el resumen...",
+      "create": "Crear",
+      "running": "Resumen en curso...",
+      "summaryFailed": "No se pudo generar el resumen.",
+      "withoutSummary": "Sin resumen"
+    },
     "compression": "Compression",
     "retry": {
       "thinkingOnly": "Reintentando...",

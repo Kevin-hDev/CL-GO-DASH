@@ -11,6 +11,7 @@ import { useAgentLocalPanelNav } from "@/hooks/use-agent-local-panel-nav";
 import { useAgentLocalControlledPanels } from "@/hooks/use-agent-local-controlled-panels";
 import { useGitBranch } from "@/hooks/use-git-branch";
 import { useSessionSummary } from "@/hooks/use-session-summary";
+import { useSessionTabs } from "@/hooks/use-session-tabs";
 import { ForecastPanel } from "@/components/forecast/forecast-panel";
 import { openForecastDocsWindow } from "@/components/forecast/open-forecast-docs";
 import { PanelSlot } from "@/components/layout/panel-slots";
@@ -40,11 +41,24 @@ export const AgentLocalTab = memo(function AgentLocalTab({
     handleWelcomeSend, handleAutoRename,
     handleCreateInProject, handleCreateInProjectWithModel,
   } = sessionActions;
-  const terminalCwd = activeProject?.path || "";
-  const sessionSummary = useSessionSummary(activeSessionId ?? null);
-  const summaryGit = useGitBranch(activeProject?.path, activeSessionId ?? undefined);
-  const fileTree = useFileTree(activeSessionId, activeProject?.path);
-  const forecast = useForecastPanel(activeSessionId ?? null);
+  const sessionTabs = useSessionTabs(activeSessionId, refresh);
+  const displaySessionId = sessionTabs.activeSessionId ?? activeSessionId;
+  const displaySession = displaySessionId
+    ? sessions.find((session) => session.id === displaySessionId) ?? activeSession
+    : null;
+  const displayProject = displaySession?.project_id
+    ? projectsHook.projects.find((project) => project.id === displaySession.project_id) ?? activeProject
+    : activeProject;
+  const displayModel = displaySession?.model ?? model;
+  const displayProvider = displaySession?.provider ?? provider;
+  const displayReasoningMode = displaySession
+    ? displaySession.reasoning_mode ?? (displaySession.thinking_enabled ? "auto" : null)
+    : reasoningMode;
+  const terminalCwd = displayProject?.path || "";
+  const sessionSummary = useSessionSummary(displaySessionId ?? null);
+  const summaryGit = useGitBranch(displayProject?.path, displaySessionId ?? undefined);
+  const fileTree = useFileTree(displaySessionId, displayProject?.path);
+  const forecast = useForecastPanel(displaySessionId ?? null);
   useAgentLocalPanelNav({ navState, fileTree, forecast });
   const { fileTreeNav, forecastNav } = useAgentLocalControlledPanels({ navState, fileTree, forecast, onNavChange });
   const [fullscreenSwitching, setFullscreenSwitching] = useState(false);
@@ -111,6 +125,10 @@ export const AgentLocalTab = memo(function AgentLocalTab({
           onPanelModeChange={forecastNav.setPanelMode}
           sessionSummary={sessionSummary}
           summaryGit={summaryGit}
+          sessionTabs={sessionTabs.tabs}
+          onSelectSessionTab={(id) => void sessionTabs.selectTab(id)}
+          onCloseSessionTab={(id) => void sessionTabs.closeTab(id)}
+          onRenameSessionTab={(id, label) => void sessionTabs.renameTab(id, label)}
           onOpenPlan={filePreview.openPlan}
           onOpenSubagent={(id) => void handleSelectById(id)}
           onToggleTerminal={() => {
@@ -122,18 +140,18 @@ export const AgentLocalTab = memo(function AgentLocalTab({
           }}
         />
       </div>
-      {activeSessionId ? (
+      {displaySessionId ? (
         <AgentChatDetail
-          sessionId={activeSessionId}
-          model={model}
-          provider={provider}
+          sessionId={displaySessionId}
+          model={displayModel}
+          provider={displayProvider}
           projects={projectsHook.projects}
-          activeProjectPath={activeProject?.path}
+          activeProjectPath={displayProject?.path}
           pendingMessage={pendingMessage}
           pendingWorkingDir={pendingWorkingDir}
           pendingSkills={pendingSkills}
           pendingFiles={pendingFiles}
-          reasoningMode={reasoningMode}
+          reasoningMode={displayReasoningMode}
           terminal={terminal}
           filePreview={filePreview}
           fullscreenSwitching={fullscreenSwitching}
@@ -157,13 +175,16 @@ export const AgentLocalTab = memo(function AgentLocalTab({
           onPreviewFullscreenChange={handlePreviewFullscreenChange}
           panelMode={forecastNav.panelMode}
           forecastContent={forecastContent}
-          parentSessionId={activeSession?.parent_session_id}
+          parentSessionId={displaySession?.parent_session_id}
           onOpenSubagent={(id) => void handleSelectById(id)}
           onGoToParent={() => {
-            if (activeSession?.parent_session_id) {
-              void handleSelectById(activeSession.parent_session_id);
+            if (displaySession?.parent_session_id) {
+              void handleSelectById(displaySession.parent_session_id);
             }
           }}
+          canCloneMessages={!displaySession?.parent_session_id && !displaySession?.clone_parent_session_id}
+          onCloneMessage={(messageId, cloneMode, customFocus) =>
+            sessionTabs.cloneMessage({ messageId, mode: cloneMode, customFocus }).then(() => undefined)}
         />
       ) : (
         <div style={{ flex: 1, minHeight: 0, overflow: "hidden" }}>
@@ -181,12 +202,14 @@ export const AgentLocalTab = memo(function AgentLocalTab({
       )}
     </div>
   ), [
-    activeProject?.path, activeSession?.name, activeSession?.parent_session_id, activeSessionId, currentDefault.model, currentDefault.provider,
+    activeSession?.name, activeSessionId, currentDefault.model, currentDefault.provider, displayModel, displayProject?.path,
+    displayProvider, displayReasoningMode, displaySession?.clone_parent_session_id, displaySession?.parent_session_id,
+    displaySessionId,
     fileOperations, filePreview, fileTreeNav, forecastNav.panelMode, forecastNav.setPanelMode, forecastContent,
     fullscreenSwitching, handleAutoRename, handleCreateInProjectWithModel, handleCreateWithModel,
-    handleOpenForecastDocs, handlePreviewFullscreenChange, handleSelectById, handleWelcomeSend, model,
-    pendingFiles, pendingMessage, pendingSkills, pendingWorkingDir, projectsHook, provider, refresh,
-    sessionSummary, setFileOperations, setPendingFiles, setPendingMessage, setPendingSkills, setPendingWorkingDir, setReasoningMode,
+    handleOpenForecastDocs, handlePreviewFullscreenChange, handleSelectById, handleWelcomeSend,
+    pendingFiles, pendingMessage, pendingSkills, pendingWorkingDir, projectsHook, refresh,
+    sessionSummary, sessionTabs, setFileOperations, setPendingFiles, setPendingMessage, setPendingSkills, setPendingWorkingDir, setReasoningMode,
     setWelcomeModel, summaryGit, terminal, terminalCwd, reasoningMode, updateModel,
   ]);
 

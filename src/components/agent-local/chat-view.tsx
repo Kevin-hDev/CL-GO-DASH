@@ -6,7 +6,8 @@ import { FileDropZone } from "./file-drop-zone";
 import { ChatOverlays } from "./chat-overlays";
 import { SubagentAccordion } from "./subagent-accordion";
 import { TodoProgressPanel } from "./todo-progress-panel";
-import { ChatProjectControls } from "./chat-project-controls";
+import { ChatInputFooter } from "./chat-input-footer";
+import { ChatTerminalDock } from "./chat-terminal-dock";
 import { useAgentChat } from "@/hooks/use-agent-chat";
 import { useContextProgress } from "@/hooks/use-context-progress";
 import { useContextUsage } from "@/hooks/use-context-usage";
@@ -21,16 +22,15 @@ import { useSessionFileGroups } from "@/hooks/use-session-files";
 import { useSubagents } from "@/hooks/use-subagents";
 import { useSubagentSynthesis } from "@/hooks/use-subagent-synthesis";
 import { useChatActions } from "@/hooks/use-chat-actions";
+import { useChatClone } from "@/hooks/use-chat-clone";
 import { useAvailableModels } from "@/hooks/use-available-models";
 import { useOllamaConnectionRetry } from "@/hooks/use-ollama-connection-retry";
 import { PermissionDialog } from "./permission-dialog";
-import { TerminalPanel } from "@/components/terminal/terminal-panel";
 import type { useTerminal } from "@/hooks/use-terminal";
-import type { Project } from "@/types/agent";
+import type { CloneMode, Project } from "@/types/agent";
 import type { FileOperation, FileOperationGroups } from "@/types/file-preview";
 import type { ReasoningMode } from "@/lib/reasoning-modes";
 import { useGitBranch } from "@/hooks/use-git-branch";
-import { ScrollBottomButton } from "./scroll-bottom-button";
 import "./chat.css";
 interface ChatViewProps {
   sessionId: string;
@@ -55,6 +55,8 @@ interface ChatViewProps {
   onFilePreviewPath?: (target: string | FileOperation) => void;
   onOpenSubagent?: (sessionId: string) => void;
   isSubagent?: boolean;
+  canCloneMessages?: boolean;
+  onCloneMessage?: (messageId: string, mode: CloneMode, customFocus?: string) => Promise<void>;
 }
 export function ChatView({
   sessionId, model, provider, projects, onAddProject,
@@ -63,6 +65,7 @@ export function ChatView({
   reasoningMode, onReasoningModeChange, onInitialMessageSent,
   terminalState, onFileOperationsChange, onFilePreviewPath,
   onOpenSubagent, isSubagent = false,
+  canCloneMessages = false, onCloneMessage,
 }: ChatViewProps) {
   const permissions = usePermissionRequests();
   const permMode = usePermissionMode(sessionId);
@@ -116,6 +119,7 @@ export function ChatView({
     [chat.currentContent, chat.currentContentPhase, chat.currentThinking, chat.completedSegments, chat.messages, chat.planPreview],
   );
   const { messages, reload } = chat;
+  const clone = useChatClone(chat.messages, onCloneMessage);
   const handleRetry = useCallback(() => {
     const u = [...messages].reverse().find((m) => m.role === "user");
     if (u) void reload(u.id);
@@ -152,6 +156,7 @@ export function ChatView({
             segmentStartedAt={chat.streamStartedAt} liveTokenCount={chat.liveTokenCount}
             planPreview={chat.planPreview}
             onReload={handleReload} onEdit={handleEdit}
+            onCloneMessage={canCloneMessages && onCloneMessage ? clone.requestClone : undefined}
             onFileClick={handleFileClick} onFilePreview={onFilePreviewPath} projectPath={proj.selectedProject?.path}
             onFileReview={onFilePreviewPath}
             completedSubagents={subagents.completed.length > 0 ? subagents.completed : undefined}
@@ -192,32 +197,27 @@ export function ChatView({
               onStop={() => void chat.stop()} onClearFiles={fileDrop.clearFiles} onFileImport={handleFileImport}
               onModelChange={handleModelSelect} onReasoningModeChange={onReasoningModeChange}
             />
-            <div className="chat-input-under-row">
-              <div className="chat-input-project-slot">
-                <ChatProjectControls
-                  projects={projects}
-                  projectState={proj}
-                  git={git}
-                  onWorktreeSelect={worktreeSwitch.request}
-                />
-              </div>
-              {!isAtBottom && <ScrollBottomButton variant="inline" onClick={scrollToBottom} />}
-            </div>
+            <ChatInputFooter
+              projects={projects}
+              projectState={proj}
+              git={git}
+              showScrollBottom={!isAtBottom}
+              onScrollBottom={scrollToBottom}
+              onWorktreeSelect={worktreeSwitch.request}
+            />
           </div>
         </div>
-        <TerminalPanel
-          tabs={terminalState.tabs} activeTabId={terminalState.activeTabId} allTabs={terminalState.allTabs()}
-          activeGroupKey={terminalState.groupKey} isOpen={terminalState.isOpen} panelHeight={terminalState.panelHeight}
-          onAddTab={terminalState.addTab} onCloseTab={terminalState.closeTab} onSelectTab={terminalState.setActiveTab}
-          onRenameTab={terminalState.renameTab} onReorderTabs={terminalState.reorderTabs} onTogglePanel={terminalState.togglePanel}
-          onPtyReady={terminalState.setPtyId} onResize={terminalState.resizePanel} onSetMaxHeight={terminalState.setMaxHeight}
-        />
+        <ChatTerminalDock terminalState={terminalState} />
       </div>
       <ChatOverlays
         preview={preview} currentModel={model} pendingSwitch={pendingSwitch}
         pendingWorktreeSwitch={worktreeSwitch.pending}
+        pendingClone={clone.pendingClone}
+        cloneBusy={clone.cloneBusy}
         onClosePreview={() => setPreview(null)} onCancelSwitch={() => setPendingSwitch(null)}
         onCancelWorktreeSwitch={worktreeSwitch.cancel}
+        onCancelClone={clone.cancelClone}
+        onSubmitClone={(mode, customFocus) => void clone.submitClone(mode, customFocus)}
         onNewSession={(remember) => { if (remember) rememberedRef.current = "new"; onNewSession?.(pendingSwitch!.model, pendingSwitch!.provider); setPendingSwitch(null); }}
         onContinue={(remember) => { if (remember) rememberedRef.current = "continue"; onApplySwitch?.(pendingSwitch!.model, pendingSwitch!.provider); setPendingSwitch(null); }}
         onNewWorktreeSession={() => void worktreeSwitch.createSession()}

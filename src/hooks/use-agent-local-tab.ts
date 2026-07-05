@@ -148,10 +148,11 @@ export function useAgentLocalTab({ navState, onSessionChange, onNavChange, listF
 
   const visibleSessionIds = useMemo(() => {
     const projectIdSet = new Set(projectsHook.projects.map((p) => p.id));
+    const visibleSessions = sessions.filter((s) => !s.parent_session_id && !s.clone_parent_session_id);
     const byProject = projectsHook.projects.flatMap((p) =>
-      sessions.filter((s) => s.project_id === p.id).map((s) => s.id),
+      visibleSessions.filter((s) => s.project_id === p.id).map((s) => s.id),
     );
-    const orphans = sessions
+    const orphans = visibleSessions
       .filter((s) => !s.project_id || !projectIdSet.has(s.project_id))
       .map((s) => s.id);
     return [...byProject, ...orphans];

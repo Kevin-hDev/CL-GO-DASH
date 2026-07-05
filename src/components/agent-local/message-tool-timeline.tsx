@@ -102,6 +102,7 @@ interface SavedToolTimelineProps {
   tps: number;
   totalElapsedMs: number;
   onFilePreview?: (path: string) => void;
+  onClone?: () => void;
   projectPath?: string;
 }
 
@@ -112,6 +113,7 @@ export function SavedToolTimeline({
   tps,
   totalElapsedMs,
   onFilePreview,
+  onClone,
   projectPath,
 }: SavedToolTimelineProps) {
   const blocks = buildToolTimelineBlocks(segments);
@@ -142,6 +144,7 @@ export function SavedToolTimeline({
             content={finalBlock.content ?? ""}
             tokens={tokens}
             tps={tps}
+            onClone={onClone}
           />
         </>
       );
@@ -152,6 +155,7 @@ export function SavedToolTimeline({
         tokens={tokens}
         tps={tps}
         totalElapsedMs={totalElapsedMs}
+        onClone={onClone}
       />
     );
   }
@@ -185,6 +189,7 @@ export function SavedToolTimeline({
                 tokens={showStats ? tokens : undefined}
                 tps={showStats ? tps : undefined}
                 totalElapsedMs={showStats ? totalElapsedMs : undefined}
+                onClone={showStats ? onClone : undefined}
               />
             )}
             {block.tools.length > 0 && (

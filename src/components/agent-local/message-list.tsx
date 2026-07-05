@@ -33,6 +33,7 @@ interface MessageListProps {
   liveTokenCount: number;
   onReload?: (messageId: string) => void;
   onEdit?: (messageId: string, newContent: string) => void;
+  onCloneMessage?: (messageId: string) => void;
   onFileClick?: (file: { name: string; path?: string; thumbnail?: string }) => void;
   onFilePreview?: (path: string) => void;
   onFileReview?: (operation: FileOperation) => void;
@@ -45,7 +46,7 @@ interface MessageListProps {
 export function MessageList({
   sessionId, messages, completedSegments, currentContent, currentContentPhase, currentThinking,
   currentTools, isStreaming, tps, totalElapsedMs, segmentStartedAt,
-  liveTokenCount, onReload, onEdit, onFileClick, onFilePreview, onFileReview,
+  liveTokenCount, onReload, onEdit, onCloneMessage, onFileClick, onFilePreview, onFileReview,
   projectPath, completedSubagents, onOpenSubagent, planPreview,
 }: MessageListProps) {
   const lastAssistantIdx = findLastIndex(messages, (m) => m.role === "assistant");
@@ -83,6 +84,7 @@ export function MessageList({
               skillNames={msg.skill_names} isStreaming={isStreaming}
               onReload={onReload ? () => onReload(msg.id) : undefined}
               onEdit={onEdit ? (c) => onEdit(msg.id, c) : undefined}
+              onClone={onCloneMessage ? () => onCloneMessage(msg.id) : undefined}
               onFileClick={onFileClick}
             />
           );
@@ -92,6 +94,7 @@ export function MessageList({
           return (
             <SegmentedAssistantMessage
               key={msg.id} msg={msg} onReload={onReload}
+              onClone={onCloneMessage}
               onFilePreview={onFilePreview}
               onFileReview={onFileReview}
               projectPath={projectPath}
@@ -129,11 +132,11 @@ export function MessageList({
 }
 
 export const SegmentedAssistantMessage = memo(function SegmentedAssistantMessage({
-  msg, onReload, onFilePreview, onFileReview, tps, totalElapsedMs, workDurationMs,
+  msg, onReload, onClone, onFilePreview, onFileReview, tps, totalElapsedMs, workDurationMs,
   projectPath,
 }: {
   msg: AgentMessage; onReload?: (id: string) => void; onFilePreview?: (path: string) => void;
-  onFileReview?: (operation: FileOperation) => void; tps: number; totalElapsedMs: number;
+  onClone?: (id: string) => void; onFileReview?: (operation: FileOperation) => void; tps: number; totalElapsedMs: number;
   workDurationMs?: number; projectPath?: string;
 }) {
   const fileChanges = collectMessageFileOperations(msg, projectPath);
@@ -148,6 +151,7 @@ export const SegmentedAssistantMessage = memo(function SegmentedAssistantMessage
           totalElapsedMs={workDurationMs ?? totalElapsedMs}
           onFilePreview={onFilePreview}
           projectPath={projectPath}
+          onClone={() => onClone?.(msg.id)}
         />
         <FileChangeBubble operations={fileChanges} baseDir={projectPath} onReview={onFileReview} />
       </>
@@ -160,6 +164,7 @@ export const SegmentedAssistantMessage = memo(function SegmentedAssistantMessage
         toolActivities={msg.tool_activities}
         projectPath={projectPath}
         onReload={onReload ? () => onReload(msg.id) : undefined}
+        onClone={onClone ? () => onClone(msg.id) : undefined}
         tokens={msg.tokens}
         tps={tps}
       />

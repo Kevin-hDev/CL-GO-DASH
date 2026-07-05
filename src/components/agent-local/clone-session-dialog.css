@@ -1,0 +1,57 @@
+.csp-dialog {
+  width: min(460px, calc(100vw - 32px));
+}
+
+.csp-body {
+  gap: 8px;
+}
+
+.csp-choice {
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-sm);
+  background: var(--shell);
+  color: var(--ink-muted);
+  font-size: var(--text-sm);
+  text-align: left;
+  cursor: pointer;
+}
+
+.csp-choice:hover:not(:disabled),
+.csp-choice-active {
+  color: var(--ink);
+  border-color: var(--edge-strong);
+  background: var(--surface-hover);
+}
+
+.csp-choice:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.csp-focus {
+  min-height: 86px;
+  max-height: 160px;
+  resize: vertical;
+  padding: 8px 10px;
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-sm);
+  background: var(--shell);
+  color: var(--ink);
+  font-size: var(--text-sm);
+  outline: none;
+}
+
+.csp-focus:focus {
+  border-color: var(--edge-strong);
+}
+
+.csp-error {
+  padding: 8px 10px;
+  border: 1px solid var(--signal-error-border);
+  border-radius: var(--radius-sm);
+  color: var(--signal-error);
+  background: var(--signal-error-bg);
+  font-size: var(--text-sm);
+}

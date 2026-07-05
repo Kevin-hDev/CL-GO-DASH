@@ -193,6 +193,22 @@
     "reasoningXhigh": "Very high",
     "send": "Send",
     "cancel": "Cancel",
+    "clone": {
+      "action": "Clone",
+      "title": "Clone session",
+      "close": "Close",
+      "tabs": "Session branches",
+      "mainTab": "Main",
+      "closeTab": "Close tab",
+      "cut": "Clone from this message",
+      "summary": "Clone with hidden summary",
+      "summaryFocus": "Clone with custom focus",
+      "focusPlaceholder": "Focus point for the summary...",
+      "create": "Create",
+      "running": "Summarizing...",
+      "summaryFailed": "The summary could not be generated.",
+      "withoutSummary": "Without summary"
+    },
     "compression": "Compression",
     "retry": {
       "thinkingOnly": "Retrying...",
