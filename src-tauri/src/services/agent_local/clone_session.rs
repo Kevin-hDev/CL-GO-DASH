@@ -35,6 +35,7 @@ pub async fn clone_session(
 ) -> Result<CloneSessionResult, String> {
     validate_session_id(session_id)?;
     validate_simple_id(message_id, 128)?;
+    let custom_focus = super::clone_summary_prompt::validate_custom_focus(custom_focus)?;
     let operation_id = operation_id.unwrap_or_else(|| Uuid::new_v4().to_string());
     validate_simple_id(&operation_id, 128)?;
     let cancel = register_operation(&operation_id).await?;

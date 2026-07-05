@@ -46,12 +46,24 @@
 }
 
 .chat-input-under-row {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--space-sm);
   justify-content: space-between;
   min-height: 32px;
   flex-wrap: wrap;
+}
+
+.chat-input-center-slot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: min(320px, 44vw);
 }
 
 .chat-input-project-slot {
@@ -177,8 +189,7 @@
   border-color: transparent;
 }
 
-.chat-loading { display: flex; align-items: center; gap: 8px; margin-bottom: var(--space-md); }
-.chat-loading-lottie { width: 48px; height: 48px; filter: var(--lottie-orange-filter); }
+.chat-loading { display: flex; align-items: center; margin-bottom: var(--space-md); }
 
 .working-stats {
   font-size: 0.6875rem;

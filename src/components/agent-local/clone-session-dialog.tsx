@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { X } from "@/components/ui/icons";
-import { CompressionIndicator } from "./compression-indicator";
+import { CloneSummaryRunIndicator } from "./clone-summary-run-button";
 import type { CloneMode } from "@/types/agent";
 import "./clone-session-dialog.css";
 
@@ -12,6 +12,7 @@ interface CloneSessionDialogProps {
   busy: boolean;
   error?: string | null;
   onCancel: () => void;
+  onAbort: () => void;
   onSubmit: (mode: CloneMode, customFocus?: string) => void;
 }
 
@@ -20,6 +21,7 @@ export function CloneSessionDialog({
   busy,
   error,
   onCancel,
+  onAbort,
   onSubmit,
 }: CloneSessionDialogProps) {
   const { t } = useTranslation();
@@ -35,6 +37,7 @@ export function CloneSessionDialog({
   }, [onCancel]);
 
   const submit = (nextChoice = choice) => {
+    if (busy) return;
     if (nextChoice === "summary_focus") {
       onSubmit("summary", focus);
       return;
@@ -52,7 +55,11 @@ export function CloneSessionDialog({
       onKeyDown={(event) => { if (event.key === "Escape") onCancel(); }}
     >
       {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions -- dialog stop-propagation pattern */}
-      <div className="wk-dialog csp-dialog" onClick={(event) => event.stopPropagation()} role="dialog">
+      <div
+        className={`wk-dialog csp-dialog ${busy ? "csp-dialog-busy" : ""}`}
+        onClick={(event) => event.stopPropagation()}
+        role="dialog"
+      >
         <header className="wk-dialog-header">
           <span>{t("agentLocal.clone.title")}</span>
           <button type="button" className="wk-dialog-close" onClick={onCancel}>
@@ -60,11 +67,18 @@ export function CloneSessionDialog({
           </button>
         </header>
 
-        <div className="wk-form csp-body">
+        <div className={`wk-form csp-body ${busy ? "csp-body-busy" : ""}`}>
           {busy ? (
-            <div className="csp-loading">
-              <CompressionIndicator label={t("agentLocal.clone.running")} />
-            </div>
+            <>
+              <div className="csp-loading">
+                <CloneSummaryRunIndicator className="csp-running-indicator" />
+              </div>
+              <footer className="wk-dialog-footer">
+                <button type="button" className="wk-btn-secondary" onClick={onAbort}>
+                  {t("agentLocal.cancel")}
+                </button>
+              </footer>
+            </>
           ) : (
             <>
               <ChoiceButton active={choice === "cut"} onClick={() => setChoice("cut")}>
@@ -105,7 +119,7 @@ export function CloneSessionDialog({
                     {t("agentLocal.clone.withoutSummary")}
                   </button>
                 )}
-                <button type="button" className="wk-btn-primary" onClick={() => submit()}>
+                <button type="button" className="wk-btn-primary" disabled={busy} onClick={() => submit()}>
                   {error ? t("agentLocal.retry.button") : t("agentLocal.clone.create")}
                 </button>
               </footer>

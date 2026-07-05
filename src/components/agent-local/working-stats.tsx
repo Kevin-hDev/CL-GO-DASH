@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useLottie } from "lottie-react";
-import thinkingAnimation from "@/assets/thinking-loader.json";
+import { InlineActivityIndicator } from "./inline-activity-indicator";
 import { formatCompactDuration } from "@/lib/duration-format";
 
 export function WorkingStats({ startedAt, liveTokenCount }: {
@@ -31,13 +30,11 @@ export function WorkingStats({ startedAt, liveTokenCount }: {
 export function LoadingIndicator({ startedAt, liveTokenCount }: {
   startedAt: number; liveTokenCount: number;
 }) {
-  const { View } = useLottie({
-    animationData: thinkingAnimation, loop: true, className: "chat-loading-lottie",
-  });
   return (
     <div className="chat-loading">
-      {View}
-      <WorkingStats startedAt={startedAt} liveTokenCount={liveTokenCount} />
+      <InlineActivityIndicator className="chat-loading-indicator">
+        <WorkingStats startedAt={startedAt} liveTokenCount={liveTokenCount} />
+      </InlineActivityIndicator>
     </div>
   );
 }

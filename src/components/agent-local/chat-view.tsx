@@ -8,6 +8,7 @@ import { SubagentAccordion } from "./subagent-accordion";
 import { TodoProgressPanel } from "./todo-progress-panel";
 import { ChatInputFooter } from "./chat-input-footer";
 import { ChatTerminalDock } from "./chat-terminal-dock";
+import { CloneSummaryRunButton } from "./clone-summary-run-button";
 import { useAgentChat } from "@/hooks/use-agent-chat";
 import { useContextProgress } from "@/hooks/use-context-progress";
 import { useContextUsage } from "@/hooks/use-context-usage";
@@ -22,42 +23,13 @@ import { useSessionFileGroups } from "@/hooks/use-session-files";
 import { useSubagents } from "@/hooks/use-subagents";
 import { useSubagentSynthesis } from "@/hooks/use-subagent-synthesis";
 import { useChatActions } from "@/hooks/use-chat-actions";
-import { useChatClone, type CloneMessageHandler } from "@/hooks/use-chat-clone";
+import { useChatClone } from "@/hooks/use-chat-clone";
 import { useAvailableModels } from "@/hooks/use-available-models";
 import { useOllamaConnectionRetry } from "@/hooks/use-ollama-connection-retry";
 import { PermissionDialog } from "./permission-dialog";
-import type { useTerminal } from "@/hooks/use-terminal";
-import type { Project } from "@/types/agent";
-import type { FileOperation, FileOperationGroups } from "@/types/file-preview";
-import type { ReasoningMode } from "@/lib/reasoning-modes";
+import type { ChatViewProps } from "./chat-view-types";
 import { useGitBranch } from "@/hooks/use-git-branch";
 import "./chat.css";
-interface ChatViewProps {
-  sessionId: string;
-  model: string;
-  provider: string;
-  projects: Project[];
-  onAddProject: (path: string) => Promise<Project>;
-  onSessionsRefresh?: () => void;
-  onApplySwitch?: (model: string, provider: string) => void;
-  onNewSession?: (model: string, provider: string) => void;
-  onNewSessionInProject?: (model: string, provider: string, projectId: string) => void;
-  onAutoRename?: (id: string, name: string) => void;
-  initialMessage?: string;
-  initialWorkingDir?: string;
-  initialSkills?: { name: string; content: string }[];
-  initialFiles?: DroppedFile[];
-  reasoningMode?: string | null;
-  onReasoningModeChange: (mode: ReasoningMode) => void;
-  onInitialMessageSent?: () => void;
-  terminalState: ReturnType<typeof useTerminal>;
-  onFileOperationsChange?: (operations: FileOperationGroups) => void;
-  onFilePreviewPath?: (target: string | FileOperation) => void;
-  onOpenSubagent?: (sessionId: string) => void;
-  isSubagent?: boolean;
-  canCloneMessages?: boolean;
-  onCloneMessage?: CloneMessageHandler;
-}
 export function ChatView({
   sessionId, model, provider, projects, onAddProject,
   onSessionsRefresh, onApplySwitch, onNewSession, onNewSessionInProject, onAutoRename,
@@ -65,7 +37,7 @@ export function ChatView({
   reasoningMode, onReasoningModeChange, onInitialMessageSent,
   terminalState, onFileOperationsChange, onFilePreviewPath,
   onOpenSubagent, isSubagent = false,
-  canCloneMessages = false, onCloneMessage,
+  canCloneMessages = false, onCloneMessage, onCancelCloneSummary,
 }: ChatViewProps) {
   const permissions = usePermissionRequests();
   const permMode = usePermissionMode(sessionId);
@@ -119,7 +91,7 @@ export function ChatView({
     [chat.currentContent, chat.currentContentPhase, chat.currentThinking, chat.completedSegments, chat.messages, chat.planPreview],
   );
   const { messages, reload } = chat;
-  const clone = useChatClone(chat.messages, onCloneMessage);
+  const clone = useChatClone(sessionId, chat.messages, onCloneMessage, onCancelCloneSummary);
   const handleRetry = useCallback(() => {
     const u = [...messages].reverse().find((m) => m.role === "user");
     if (u) void reload(u.id);
@@ -202,6 +174,9 @@ export function ChatView({
               projectState={proj}
               git={git}
               showScrollBottom={!isAtBottom}
+              centerSlot={clone.summaryRun && !clone.summaryRun.visible
+                ? <CloneSummaryRunButton onClick={clone.showRunningClone} />
+                : null}
               onScrollBottom={scrollToBottom}
               onWorktreeSelect={worktreeSwitch.request}
             />
@@ -217,6 +192,7 @@ export function ChatView({
         onClosePreview={() => setPreview(null)} onCancelSwitch={() => setPendingSwitch(null)}
         onCancelWorktreeSwitch={worktreeSwitch.cancel}
         onCancelClone={clone.cancelClone}
+        onAbortClone={() => void clone.abortClone()}
         onSubmitClone={(mode, customFocus) => void clone.submitClone(mode, customFocus)}
         onNewSession={(remember) => { if (remember) rememberedRef.current = "new"; onNewSession?.(pendingSwitch!.model, pendingSwitch!.provider); setPendingSwitch(null); }}
         onContinue={(remember) => { if (remember) rememberedRef.current = "continue"; onApplySwitch?.(pendingSwitch!.model, pendingSwitch!.provider); setPendingSwitch(null); }}

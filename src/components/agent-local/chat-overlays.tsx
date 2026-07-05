@@ -18,6 +18,7 @@ interface ChatOverlaysProps {
   onCancelSwitch: () => void;
   onCancelWorktreeSwitch: () => void;
   onCancelClone: () => void;
+  onAbortClone: () => void;
   onSubmitClone: (mode: CloneMode, customFocus?: string) => void;
   onNewSession: (remember: boolean) => void;
   onContinue: (remember: boolean) => void;
@@ -35,6 +36,7 @@ export function ChatOverlays({
   onCancelSwitch,
   onCancelWorktreeSwitch,
   onCancelClone,
+  onAbortClone,
   onSubmitClone,
   onNewSession,
   onContinue,
@@ -74,6 +76,7 @@ export function ChatOverlays({
           busy={cloneBusy}
           error={pendingClone.error}
           onCancel={onCancelClone}
+          onAbort={onAbortClone}
           onSubmit={onSubmitClone}
         />
       )}

@@ -189,8 +189,10 @@ export const AgentLocalTab = memo(function AgentLocalTab({
               messageId,
               mode: cloneMode,
               customFocus,
+              operationId: options?.operationId,
               shouldActivateOnComplete: options?.shouldActivateOnComplete,
             }).then(() => undefined)}
+          onCancelCloneSummary={(operationId) => sessionTabs.cancelCloneSummary(operationId)}
         />
       ) : (
         <div style={{ flex: 1, minHeight: 0, overflow: "hidden" }}>

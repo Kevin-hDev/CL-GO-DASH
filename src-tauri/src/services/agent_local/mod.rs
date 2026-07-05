@@ -25,6 +25,7 @@ pub mod circuit_breaker;
 pub mod circuit_breaker_tests;
 pub mod clone_session;
 pub mod clone_summary;
+pub mod clone_summary_prompt;
 pub mod compress_hook;
 pub mod context_budget;
 pub mod diagnostic_args;

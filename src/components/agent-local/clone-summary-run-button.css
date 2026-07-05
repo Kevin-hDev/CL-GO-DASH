@@ -1,0 +1,13 @@
+.csr-summary-run {
+  max-width: 100%;
+  padding: 2px 8px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--pulse);
+  cursor: pointer;
+}
+
+.csr-summary-run:hover {
+  background: var(--surface-hover);
+}

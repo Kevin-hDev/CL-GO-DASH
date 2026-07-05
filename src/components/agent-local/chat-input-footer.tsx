@@ -9,6 +9,7 @@ interface ChatInputFooterProps {
   projectState: ReturnType<typeof useSessionProject>;
   git: ReturnType<typeof useGitBranch>;
   showScrollBottom: boolean;
+  centerSlot?: React.ReactNode;
   onScrollBottom: () => void;
   onWorktreeSelect: (path: string, branch: string) => void;
 }
@@ -18,6 +19,7 @@ export function ChatInputFooter({
   projectState,
   git,
   showScrollBottom,
+  centerSlot,
   onScrollBottom,
   onWorktreeSelect,
 }: ChatInputFooterProps) {
@@ -31,6 +33,7 @@ export function ChatInputFooter({
           onWorktreeSelect={onWorktreeSelect}
         />
       </div>
+      {centerSlot && <div className="chat-input-center-slot">{centerSlot}</div>}
       {showScrollBottom && <ScrollBottomButton variant="inline" onClick={onScrollBottom} />}
     </div>
   );

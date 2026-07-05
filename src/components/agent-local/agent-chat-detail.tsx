@@ -44,6 +44,7 @@ interface AgentChatDetailProps {
   onGoToParent?: () => void;
   canCloneMessages?: boolean;
   onCloneMessage?: CloneMessageHandler;
+  onCancelCloneSummary?: (operationId: string) => Promise<void>;
   panelMode?: PanelMode;
   forecastContent?: React.ReactNode;
 }
@@ -102,6 +103,7 @@ export function AgentChatDetail(props: AgentChatDetailProps) {
           isSubagent={!!props.parentSessionId}
           canCloneMessages={props.canCloneMessages}
           onCloneMessage={props.onCloneMessage}
+          onCancelCloneSummary={props.onCancelCloneSummary}
         />
       </div>
       <FilePreviewPanel

@@ -11,6 +11,7 @@ interface CloneMessageOptions {
   messageId: string;
   mode: CloneMode;
   customFocus?: string;
+  operationId?: string;
   shouldActivateOnComplete?: () => boolean;
 }
 
@@ -72,7 +73,7 @@ export function useSessionTabs(
   const cloneMessage = useCallback(async (options: CloneMessageOptions) => {
     if (!rootSessionId) throw new Error("missing_session");
     const previousActiveTabId = tabs?.active_tab_id ?? "main";
-    const operationId = crypto.randomUUID();
+    const operationId = options.operationId ?? crypto.randomUUID();
     if (options.mode === "summary") {
       markSessionRunning(rootSessionId);
     }

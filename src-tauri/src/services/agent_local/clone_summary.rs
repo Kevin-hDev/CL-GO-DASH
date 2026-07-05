@@ -5,31 +5,14 @@ pub const CLONE_SUMMARY_PREFIX: &str = "This cloned session includes hidden bran
 const MAX_SUMMARY_INPUT_CHARS: usize = 120_000;
 const MAX_TOOL_RESULT_CHARS: usize = 2_000;
 const MAX_TRACKED_FILES: usize = 200;
+const TRUNCATED_MARKER: &str = "\n[Truncated]";
 
 pub fn hidden_context_content(summary: &str) -> String {
     format!("{CLONE_SUMMARY_PREFIX}\n\n{}", summary.trim())
 }
 
 pub fn build_summary_messages(serialized: &str, focus: Option<&str>) -> Vec<ChatMessage> {
-    let focus_block = focus
-        .map(str::trim)
-        .filter(|value| !value.is_empty())
-        .map(|value| format!("\n\nFocus demandé:\n{value}"))
-        .unwrap_or_default();
-    vec![
-        ChatMessage {
-            role: "system".to_string(),
-            content: "Summarize hidden context for a cloned coding session. Be concise, factual, and preserve decisions, files, commands, errors, and unresolved work. Do not invent file paths.".to_string(),
-            ..Default::default()
-        },
-        ChatMessage {
-            role: "user".to_string(),
-            content: format!(
-                "The user cloned the conversation from an earlier message. Summarize only the conversation that happened after that point so the clone can continue with useful hidden context.{focus_block}\n\nConversation after the clone point:\n{serialized}"
-            ),
-            ..Default::default()
-        },
-    ]
+    super::clone_summary_prompt::build_summary_messages(serialized, focus)
 }
 
 pub fn serialize_messages(messages: &[AgentMessage]) -> String {
@@ -47,6 +30,7 @@ pub fn serialize_messages(messages: &[AgentMessage]) -> String {
         }
         push_bounded(&mut out, "\n</message>\n");
         if out.chars().count() >= MAX_SUMMARY_INPUT_CHARS {
+            append_truncated_marker(&mut out);
             break;
         }
     }
@@ -157,64 +141,15 @@ fn take_chars(value: &str, max_chars: usize) -> String {
     value.chars().take(max_chars).collect()
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use chrono::Utc;
-    use serde_json::json;
-
-    fn message_with_tool(tool: ToolActivityRecord) -> AgentMessage {
-        AgentMessage {
-            id: "m1".into(),
-            role: "assistant".into(),
-            content: "done".into(),
-            thinking: None,
-            tool_calls: None,
-            tool_name: None,
-            tool_activities: Some(vec![tool]),
-            segments: None,
-            files: vec![],
-            timestamp: Utc::now(),
-            tokens: 0,
-            work_duration_ms: None,
-            skill_names: None,
-        }
-    }
-
-    #[test]
-    fn serialize_limits_tool_result() {
-        let tool = ToolActivityRecord {
-            name: "read_file".into(),
-            summary: "read".into(),
-            args: Some(json!({"path": "src/main.rs"})),
-            result: Some("a".repeat(MAX_TOOL_RESULT_CHARS + 50)),
-            is_error: None,
-            content: None,
-            old_text: None,
-            new_text: None,
-            start_line: None,
-            affected_paths: vec![],
-        };
-        let serialized = serialize_messages(&[message_with_tool(tool)]);
-        assert!(serialized.len() < MAX_TOOL_RESULT_CHARS + 500);
-    }
-
-    #[test]
-    fn extract_files_uses_tool_traces() {
-        let tool = ToolActivityRecord {
-            name: "edit_file".into(),
-            summary: "edit".into(),
-            args: Some(json!({"path": "src/lib.rs"})),
-            result: None,
-            is_error: None,
-            content: None,
-            old_text: None,
-            new_text: None,
-            start_line: None,
-            affected_paths: vec!["src/lib.rs".into()],
-        };
-        let (read, modified) = extract_traced_files(&[message_with_tool(tool)]);
-        assert!(read.is_empty());
-        assert_eq!(modified, vec!["src/lib.rs"]);
-    }
+fn append_truncated_marker(out: &mut String) {
+    let marker_len = TRUNCATED_MARKER.chars().count();
+    let keep = MAX_SUMMARY_INPUT_CHARS.saturating_sub(marker_len);
+    let trimmed = take_chars(out, keep);
+    out.clear();
+    out.push_str(&trimmed);
+    out.push_str(TRUNCATED_MARKER);
 }
+
+#[cfg(test)]
+#[path = "clone_summary_tests.rs"]
+mod tests;
