@@ -164,6 +164,7 @@
   "history": {
     "rename": "Renombrar",
     "delete": "Eliminar",
+    "archive": "Archivar",
     "loading": "Cargando…"
   },
   "sessionAge": {
@@ -503,10 +504,30 @@
       "apiKeys": "Claves API",
       "llm": "LLM",
       "tools": "Tools",
+      "archivedChats": "Chats archivados",
       "advanced": "Avanzado",
       "shortcuts": "Atajos de teclado",
       "about": "Acerca de",
       "channels": "Canales"
+    },
+    "archivedChats": {
+      "title": "Chats archivados",
+      "deleteAll": "Eliminar todo",
+      "searchPlaceholder": "Buscar conversaciones archivadas",
+      "allProjects": "Todos los proyectos",
+      "count": "{{count}} conversación(es)",
+      "restore": "Desarchivar",
+      "delete": "Eliminar",
+      "confirmDeleteButton": "Confirmar",
+      "empty": "No hay chats archivados",
+      "loading": "Cargando archivos…",
+      "restoreOk": "Chat desarchivado",
+      "restoreFailed": "No se pudo desarchivar el chat",
+      "deleteOk": "Chat eliminado",
+      "deleteAllOk": "Chats archivados eliminados",
+      "deleteFailed": "No se pudo eliminar el chat",
+      "deleteConfirm": "¿Eliminar definitivamente este chat archivado?",
+      "deleteAllConfirm": "¿Eliminar definitivamente todos los chats archivados?"
     },
     "general": {
       "themeTitle": "Tema",

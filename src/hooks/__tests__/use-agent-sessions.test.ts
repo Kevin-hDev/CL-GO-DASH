@@ -126,6 +126,42 @@ describe("useAgentSessions", () => {
     expect(result.current.sessions).toEqual([]);
   });
 
+  it("archive appelle invoke archive_agent_session puis refresh", async () => {
+    vi.mocked(invoke)
+      .mockResolvedValueOnce([mockSession])
+      .mockResolvedValueOnce(undefined)
+      .mockResolvedValueOnce([]);
+
+    const { result } = renderHook(() => useAgentSessions());
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    await act(async () => {
+      await result.current.archive("session-1");
+    });
+
+    expect(invoke).toHaveBeenCalledWith("archive_agent_session", { id: "session-1" });
+    expect(result.current.sessions).toEqual([]);
+  });
+
+  it("restore appelle invoke restore_agent_session puis refresh", async () => {
+    vi.mocked(invoke)
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce(undefined)
+      .mockResolvedValueOnce([mockSession]);
+
+    const { result } = renderHook(() => useAgentSessions());
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    await act(async () => {
+      await result.current.restore("session-1");
+    });
+
+    expect(invoke).toHaveBeenCalledWith("restore_agent_session", { id: "session-1" });
+    expect(result.current.sessions).toEqual([mockSession]);
+  });
+
   it("updateModel appelle invoke update_session_model puis refresh", async () => {
     const updated: AgentSessionMeta = { ...mockSession, model: "mistral", provider: "ollama" };
 

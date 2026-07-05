@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Pencil } from "@/components/ui/icons";
-import { WastebasketIcon } from "@/components/ui/wastebasket-icon";
+import { Archive } from "@/components/ui/lucide-icons";
 import { ComposeIcon } from "@/components/ui/compose-icon";
 import { ContextMenu, type ContextMenuItem } from "@/components/ui/context-menu";
 import { ProjectSection } from "./project-section";
@@ -98,7 +98,7 @@ export function ConversationList({
   }, []);
   const ctxItems: ContextMenuItem[] = ctx ? [
     { label: t("history.rename"), icon: <Pencil size="var(--icon-sm)" />, onClick: () => { setRenamingId(ctx.id); setTimeout(() => inputRef.current?.focus(), 0); } },
-    { label: t("history.delete"), icon: <WastebasketIcon size="var(--icon-sm)" />, onClick: () => onDelete(ctx.id) },
+    { label: t("history.archive"), icon: <Archive size="var(--icon-sm)" />, onClick: () => onDelete(ctx.id) },
   ] : [];
   const handleRenameSubmit = (id: string, value: string) => {
     if (value.trim()) onRename(id, value.trim());

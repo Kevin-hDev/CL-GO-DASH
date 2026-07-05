@@ -1,13 +1,15 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, type ReactNode } from "react";
 import { useClickOutside } from "@/hooks/use-click-outside";
 import { useKeyboard } from "@/hooks/use-keyboard";
 
 interface ConfirmButtonProps {
-  label: string;
-  confirmLabel: string;
+  label: ReactNode;
+  confirmLabel: ReactNode;
   onConfirm: () => void;
   disabled?: boolean;
   className?: string;
+  title?: string;
+  ariaLabel?: string;
 }
 
 export function ConfirmButton({
@@ -16,6 +18,8 @@ export function ConfirmButton({
   onConfirm,
   disabled,
   className,
+  title,
+  ariaLabel,
 }: ConfirmButtonProps) {
   const [confirming, setConfirming] = useState(false);
   const ref = useRef<HTMLButtonElement>(null);
@@ -50,10 +54,14 @@ export function ConfirmButton({
 
   return (
     <button
+      type="button"
       ref={ref}
       className={className}
       onClick={handleClick}
       disabled={disabled}
+      title={title}
+      aria-label={confirming && typeof confirmLabel === "string" ? confirmLabel : ariaLabel}
+      data-confirming={confirming ? "true" : undefined}
       style={confirming ? {
         color: "var(--signal-error)",
         borderColor: "var(--signal-error)",

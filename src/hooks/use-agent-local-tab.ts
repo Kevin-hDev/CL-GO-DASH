@@ -28,7 +28,7 @@ interface UseAgentLocalTabOpts {
 }
 
 export function useAgentLocalTab({ navState, onSessionChange, onNavChange, listFocused }: UseAgentLocalTabOpts) {
-  const { sessions, refresh, create, rename, remove, updateModel, updateReasoning } = useAgentSessions();
+  const { sessions, refresh, create, rename, remove, archive, updateModel, updateReasoning } = useAgentSessions();
   const projectsHook = useProjects();
   const activeSessionId = navState.sessionId;
 
@@ -175,9 +175,9 @@ export function useAgentLocalTab({ navState, onSessionChange, onNavChange, listF
   }, [terminalState, projectsHook]);
 
   const handleDeleteSession = useCallback(async (id: string) => {
-    await remove(id);
+    await archive(id);
     onSessionChange?.(null);
-  }, [remove, onSessionChange]);
+  }, [archive, onSessionChange]);
 
   return {
     sessions, refresh, rename, remove, updateModel: updateModelWithReasoning,

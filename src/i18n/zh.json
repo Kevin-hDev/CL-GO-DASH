@@ -164,6 +164,7 @@
   "history": {
     "rename": "重命名",
     "delete": "删除",
+    "archive": "归档",
     "loading": "加载中…"
   },
   "sessionAge": {
@@ -503,10 +504,30 @@
       "apiKeys": "API 密钥",
       "llm": "LLM",
       "tools": "Tools",
+      "archivedChats": "已归档聊天",
       "advanced": "高级",
       "shortcuts": "键盘快捷键",
       "about": "关于",
       "channels": "频道"
+    },
+    "archivedChats": {
+      "title": "已归档聊天",
+      "deleteAll": "全部删除",
+      "searchPlaceholder": "搜索已归档对话",
+      "allProjects": "所有项目",
+      "count": "{{count}} 个对话",
+      "restore": "取消归档",
+      "delete": "删除",
+      "confirmDeleteButton": "确认",
+      "empty": "没有已归档聊天",
+      "loading": "正在加载归档…",
+      "restoreOk": "聊天已取消归档",
+      "restoreFailed": "无法取消归档聊天",
+      "deleteOk": "聊天已删除",
+      "deleteAllOk": "已归档聊天已删除",
+      "deleteFailed": "无法删除聊天",
+      "deleteConfirm": "永久删除这个已归档聊天？",
+      "deleteAllConfirm": "永久删除所有已归档聊天？"
     },
     "general": {
       "themeTitle": "主题",

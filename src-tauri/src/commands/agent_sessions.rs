@@ -7,6 +7,11 @@ pub async fn list_agent_sessions() -> Result<Vec<AgentSessionMeta>, String> {
 }
 
 #[tauri::command]
+pub async fn list_archived_agent_sessions() -> Result<Vec<AgentSessionMeta>, String> {
+    session_store::list_archived().await
+}
+
+#[tauri::command]
 pub async fn get_agent_session(id: String) -> Result<AgentSession, String> {
     session_store::get(&id).await
 }
@@ -92,6 +97,16 @@ pub async fn set_session_plan_mode(id: String, enabled: bool) -> Result<(), Stri
 #[tauri::command]
 pub async fn delete_agent_session(id: String) -> Result<(), String> {
     session_store::delete(&id).await
+}
+
+#[tauri::command]
+pub async fn archive_agent_session(id: String) -> Result<(), String> {
+    session_store::archive(&id).await
+}
+
+#[tauri::command]
+pub async fn restore_agent_session(id: String) -> Result<(), String> {
+    session_store::restore(&id).await
 }
 
 #[tauri::command]

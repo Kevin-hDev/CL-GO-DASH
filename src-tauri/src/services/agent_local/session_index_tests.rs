@@ -8,6 +8,8 @@ fn test_session(id: &str, name: &str, heartbeat: bool) -> AgentSession {
         id: id.into(),
         name: name.into(),
         created_at: Utc::now(),
+        updated_at: None,
+        archived_at: None,
         model: "llama3".into(),
         provider: "ollama".into(),
         thinking_enabled: false,
@@ -44,6 +46,8 @@ fn test_meta(id: &str, count: usize) -> AgentSessionMeta {
         id: id.into(),
         name: id.into(),
         created_at: Utc::now(),
+        updated_at: None,
+        archived_at: None,
         model: "llama3".into(),
         provider: "ollama".into(),
         thinking_enabled: false,
@@ -164,6 +168,9 @@ async fn rebuild_empty_and_nonexistent() {
 #[tokio::test]
 async fn meta_from_session_extracts_all_fields() {
     let mut s = test_session("mf", "Meta", true);
+    let now = Utc::now();
+    s.updated_at = Some(now);
+    s.archived_at = Some(now);
     s.project_id = Some("p1".into());
     s.subagent_type = Some("worker".into());
     s.subagent_status = Some("running".into());
@@ -172,6 +179,8 @@ async fn meta_from_session_extracts_all_fields() {
     let meta = meta_from_session(&s);
     assert_eq!(meta.id, "mf");
     assert!(meta.is_heartbeat);
+    assert_eq!(meta.updated_at, Some(now));
+    assert_eq!(meta.archived_at, Some(now));
     assert_eq!(meta.project_id, Some("p1".into()));
     assert_eq!(meta.subagent_type, Some("worker".into()));
     assert_eq!(meta.subagent_status, Some("running".into()));

@@ -164,6 +164,7 @@
   "history": {
     "rename": "Umbenennen",
     "delete": "Löschen",
+    "archive": "Archivieren",
     "loading": "Wird geladen…"
   },
   "sessionAge": {
@@ -503,10 +504,30 @@
       "apiKeys": "API Keys",
       "llm": "LLM",
       "tools": "Tools",
+      "archivedChats": "Archivierte Chats",
       "advanced": "Erweitert",
       "shortcuts": "Tastenkürzel",
       "about": "Über",
       "channels": "Kanäle"
+    },
+    "archivedChats": {
+      "title": "Archivierte Chats",
+      "deleteAll": "Alle löschen",
+      "searchPlaceholder": "Archivierte Gespräche suchen",
+      "allProjects": "Alle Projekte",
+      "count": "{{count}} Gespräch(e)",
+      "restore": "Wiederherstellen",
+      "delete": "Löschen",
+      "confirmDeleteButton": "Bestätigen",
+      "empty": "Keine archivierten Chats",
+      "loading": "Archive werden geladen…",
+      "restoreOk": "Chat wiederhergestellt",
+      "restoreFailed": "Chat konnte nicht wiederhergestellt werden",
+      "deleteOk": "Chat gelöscht",
+      "deleteAllOk": "Archivierte Chats gelöscht",
+      "deleteFailed": "Chat konnte nicht gelöscht werden",
+      "deleteConfirm": "Diesen archivierten Chat endgültig löschen?",
+      "deleteAllConfirm": "Alle archivierten Chats endgültig löschen?"
     },
     "general": {
       "themeTitle": "Design",

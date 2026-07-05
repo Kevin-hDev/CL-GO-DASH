@@ -5,10 +5,12 @@ import { useSettings } from "@/hooks/use-settings";
 import { useArrowNavigation } from "@/hooks/use-arrow-navigation";
 import type { ThemeChoice } from "@/hooks/use-theme";
 import { GearSix, Key, Sliders, Info, BookOpenText, Keyboard, Plugs, Broadcast, ChartLineUp, Wrench } from "@/components/ui/icons";
+import { Archive } from "@/components/ui/lucide-icons";
 import { ThemedIcon } from "@/components/ui/themed-icon";
 import { GeneralSettings } from "./general-settings";
 import { AdvancedSettings } from "./advanced-settings";
 import { ToolsSettings } from "./tools-settings";
+import { ArchivedChatsSettings } from "./archived-chats-settings";
 import { ShortcutsSettings } from "./shortcuts-settings";
 import { AboutSettings } from "./about-settings";
 import { LlmExplorer } from "./llm-explorer";
@@ -40,6 +42,7 @@ const SUB_TABS: SubTabDef[] = [
   { id: "forecast", i18n: "forecast.title", icon: ChartLineUp },
   { id: "llm", i18n: "settings.tabs.llm", icon: BookOpenText },
   { id: "tools", i18n: "settings.tabs.tools", icon: Wrench },
+  { id: "archived-chats", i18n: "settings.tabs.archivedChats", icon: Archive },
   { id: "advanced", i18n: "settings.tabs.advanced", icon: Sliders },
   { id: "shortcuts", i18n: "settings.tabs.shortcuts", icon: Keyboard },
   { id: "about", i18n: "settings.tabs.about", icon: Info },
@@ -150,6 +153,7 @@ export const SettingsTab = memo(function SettingsTab({
       return <LlmExplorer navState={navState.llmView} onNavChange={(llmView) => onNavChange({ llmView })} />;
     }
     if (subTab === "tools") return <ToolsSettings />;
+    if (subTab === "archived-chats") return <ArchivedChatsSettings />;
     if (subTab === "advanced") return <AdvancedSettings />;
     if (subTab === "shortcuts") return <ShortcutsSettings />;
     if (subTab === "about") return <AboutSettings />;

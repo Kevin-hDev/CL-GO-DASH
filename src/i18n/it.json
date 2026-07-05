@@ -164,6 +164,7 @@
   "history": {
     "rename": "Rinomina",
     "delete": "Elimina",
+    "archive": "Archivia",
     "loading": "Caricamento…"
   },
   "sessionAge": {
@@ -503,10 +504,30 @@
       "apiKeys": "Chiavi API",
       "llm": "LLM",
       "tools": "Tools",
+      "archivedChats": "Chat archiviate",
       "advanced": "Avanzate",
       "shortcuts": "Scorciatoie da tastiera",
       "about": "Informazioni",
       "channels": "Canali"
+    },
+    "archivedChats": {
+      "title": "Chat archiviate",
+      "deleteAll": "Elimina tutto",
+      "searchPlaceholder": "Cerca conversazioni archiviate",
+      "allProjects": "Tutti i progetti",
+      "count": "{{count}} conversazione/i",
+      "restore": "Ripristina",
+      "delete": "Elimina",
+      "confirmDeleteButton": "Conferma",
+      "empty": "Nessuna chat archiviata",
+      "loading": "Caricamento archivi…",
+      "restoreOk": "Chat ripristinata",
+      "restoreFailed": "Impossibile ripristinare la chat",
+      "deleteOk": "Chat eliminata",
+      "deleteAllOk": "Chat archiviate eliminate",
+      "deleteFailed": "Impossibile eliminare la chat",
+      "deleteConfirm": "Eliminare definitivamente questa chat archiviata?",
+      "deleteAllConfirm": "Eliminare definitivamente tutte le chat archiviate?"
     },
     "general": {
       "themeTitle": "Tema",

@@ -22,6 +22,8 @@ export interface AgentSession {
   id: string;
   name: string;
   created_at: string;
+  updated_at?: string;
+  archived_at?: string;
   model: string;
   provider: string;
   thinking_enabled: boolean;
@@ -51,6 +53,8 @@ export interface AgentSessionMeta {
   id: string;
   name: string;
   created_at: string;
+  updated_at?: string;
+  archived_at?: string;
   model: string;
   provider: string;
   thinking_enabled?: boolean;
