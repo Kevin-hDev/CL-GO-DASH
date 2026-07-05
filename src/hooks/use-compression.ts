@@ -19,7 +19,7 @@ export function useCompression(sessionId: string) {
           isCompressing: ev.payload.event.data?.status === "start",
         });
       }
-      if (["compressionComplete", "done", "error"].includes(ev.payload.event.event)) {
+      if (["compressionComplete", "done", "error", "turnEnd"].includes(ev.payload.event.event)) {
         setState({ sessionId, isCompressing: false });
       }
     });

@@ -52,6 +52,8 @@ export function MessageList({
   const lastAssistantIdx = findLastIndex(messages, (m) => m.role === "assistant");
   const { isCompressing } = useCompression(sessionId);
   const streamStartedAt = segmentStartedAt;
+  const hasCompressionMarker = messages.some(isCompressionSummaryMessage);
+  const showCompressionIndicator = isCompressing && !hasCompressionMarker;
 
   const extractedAgents = completedSubagents && completedSubagents.length > 0
     ? completedSubagents
@@ -121,11 +123,11 @@ export function MessageList({
         />
       )}
       {planPreview && <PlanPreviewBubble plan={planPreview} />}
-      {isStreaming && streamStartedAt != null && !isCompressing && !currentContent && !currentThinking && !hasActiveTools(currentTools) && (
+      {isStreaming && streamStartedAt != null && !showCompressionIndicator && !currentContent && !currentThinking && !hasActiveTools(currentTools) && (
         <LoadingIndicator startedAt={streamStartedAt} liveTokenCount={liveTokenCount} />
       )}
 
-      {isCompressing && <CompressionIndicator />}
+      {showCompressionIndicator && <CompressionIndicator />}
 
     </>
   );
