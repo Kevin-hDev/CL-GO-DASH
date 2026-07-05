@@ -164,6 +164,7 @@
   "history": {
     "rename": "Rename",
     "delete": "Delete",
+    "archive": "Archive",
     "loading": "Loading…"
   },
   "sessionAge": {
@@ -503,10 +504,30 @@
       "apiKeys": "API Keys",
       "llm": "LLM",
       "tools": "Tools",
+      "archivedChats": "Archived chats",
       "advanced": "Advanced",
       "shortcuts": "Keyboard Shortcuts",
       "about": "About",
       "channels": "Channels"
+    },
+    "archivedChats": {
+      "title": "Archived chats",
+      "deleteAll": "Delete all",
+      "searchPlaceholder": "Search archived conversations",
+      "allProjects": "All projects",
+      "count": "{{count}} conversation(s)",
+      "restore": "Restore",
+      "delete": "Delete",
+      "confirmDeleteButton": "Confirm",
+      "empty": "No archived chats",
+      "loading": "Loading archives…",
+      "restoreOk": "Chat restored",
+      "restoreFailed": "Could not restore chat",
+      "deleteOk": "Chat deleted",
+      "deleteAllOk": "Archived chats deleted",
+      "deleteFailed": "Could not delete chat",
+      "deleteConfirm": "Permanently delete this archived chat?",
+      "deleteAllConfirm": "Permanently delete all archived chats?"
     },
     "general": {
       "themeTitle": "Theme",

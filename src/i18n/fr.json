@@ -164,6 +164,7 @@
   "history": {
     "rename": "Renommer",
     "delete": "Supprimer",
+    "archive": "Archiver",
     "loading": "Chargement…"
   },
   "sessionAge": {
@@ -503,10 +504,30 @@
       "apiKeys": "Clés API",
       "llm": "LLM",
       "tools": "Tools",
+      "archivedChats": "Chats archivés",
       "advanced": "Avancé",
       "shortcuts": "Raccourcis clavier",
       "about": "À propos",
       "channels": "Canaux"
+    },
+    "archivedChats": {
+      "title": "Chats archivés",
+      "deleteAll": "Tout supprimer",
+      "searchPlaceholder": "Rechercher des discussions archivées",
+      "allProjects": "Tous les projets",
+      "count": "{{count}} discussion(s)",
+      "restore": "Désarchiver",
+      "delete": "Supprimer",
+      "confirmDeleteButton": "Confirmer",
+      "empty": "Aucun chat archivé",
+      "loading": "Chargement des archives…",
+      "restoreOk": "Chat désarchivé",
+      "restoreFailed": "Impossible de désarchiver le chat",
+      "deleteOk": "Chat supprimé",
+      "deleteAllOk": "Chats archivés supprimés",
+      "deleteFailed": "Impossible de supprimer le chat",
+      "deleteConfirm": "Supprimer définitivement ce chat archivé ?",
+      "deleteAllConfirm": "Supprimer définitivement tous les chats archivés ?"
     },
     "general": {
       "themeTitle": "Thème",

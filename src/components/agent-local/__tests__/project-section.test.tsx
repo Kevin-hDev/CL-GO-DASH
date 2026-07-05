@@ -48,8 +48,8 @@ vi.mock("@/components/ui/folder-state-icon", () => ({
   ),
 }));
 
-vi.mock("@/components/ui/wastebasket-icon", () => ({
-  WastebasketIcon: () => <span />,
+vi.mock("@/components/ui/lucide-icons", () => ({
+  Archive: () => <span />,
 }));
 
 vi.mock("@/components/ui/compose-icon", () => ({

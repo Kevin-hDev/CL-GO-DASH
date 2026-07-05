@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.9.6
+
+### Changes
+
+- **Archived chats** — deleting a chat now archives it first; Settings includes a new Archived chats tab to restore sessions or permanently delete archived chats grouped by project and standalone discussions.
+
+---
+
 ## v0.9.5
 
 ### Changes

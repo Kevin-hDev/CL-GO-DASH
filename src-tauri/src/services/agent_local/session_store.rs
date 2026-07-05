@@ -67,10 +67,13 @@ pub async fn create_full(
     project_id: Option<String>,
 ) -> Result<AgentSession, String> {
     let reasoning_mode = crate::services::reasoning::default_mode(provider, model);
+    let now = Utc::now();
     let session = AgentSession {
         id: Uuid::new_v4().to_string(),
         name: name.to_string(),
-        created_at: Utc::now(),
+        created_at: now,
+        updated_at: Some(now),
+        archived_at: None,
         model: model.to_string(),
         provider: provider.to_string(),
         thinking_enabled: crate::services::reasoning::enabled(reasoning_mode.as_deref(), false),
@@ -110,8 +113,8 @@ pub async fn find_heartbeat_session(provider: &str, model: &str) -> Result<Optio
     let metas = crate::services::agent_local::session_index::read_index().await?;
     let best = metas
         .iter()
-        .filter(|m| m.is_heartbeat && m.provider == provider && m.model == model)
-        .max_by_key(|m| m.created_at)
+        .filter(|m| super::session_archive::is_active(m) && m.is_heartbeat && m.provider == provider && m.model == model)
+        .max_by_key(|m| super::session_archive::activity_at(m))
         .map(|m| m.id.clone());
     Ok(best)
 }
@@ -127,7 +130,8 @@ pub async fn get(id: &str) -> Result<AgentSession, String> {
 
 pub async fn list() -> Result<Vec<AgentSessionMeta>, String> {
     let mut metas = crate::services::agent_local::session_index::read_index().await?;
-    metas.sort_by_key(|b| std::cmp::Reverse(b.created_at));
+    metas.retain(super::session_archive::is_active);
+    super::session_archive::sort_recent_first(&mut metas);
     Ok(metas)
 }
 
@@ -171,6 +175,7 @@ pub async fn add_messages(
         }
     }
     session.messages.extend(new_messages);
+    session.updated_at = Some(Utc::now());
     if session.messages.len() > MAX_MESSAGES_PER_SESSION {
         let excess = session.messages.len() - MAX_MESSAGES_PER_SESSION;
         session.messages.drain(..excess);
@@ -203,6 +208,7 @@ pub async fn delete(id: &str) -> Result<(), String> {
     Ok(())
 }
 
+pub use super::session_archive::{archive, list_archived, restore};
 pub use super::session_ops::{clear_project_id, export_markdown, truncate_and_replace};
 pub use super::session_store_updates::{update_model, update_reasoning, update_working_dir};
 

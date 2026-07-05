@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { cleanupTauriListener } from "@/lib/tauri-listen";
 import type { AgentSessionMeta } from "@/types/agent";
+import { AGENT_SESSIONS_CHANGED } from "./agent-session-events";
 
 export function useAgentSessions() {
   const [sessions, setSessions] = useState<AgentSessionMeta[]>([]);
@@ -28,9 +29,11 @@ export function useAgentSessions() {
     const refreshFromEvent = () => {
       void refresh();
     };
+    window.addEventListener(AGENT_SESSIONS_CHANGED, refreshFromEvent);
     const unlistenWakeup = listen("wakeup-completed", refreshFromEvent);
     const unlistenGateway = listen("agent-session-updated", refreshFromEvent);
     return () => {
+      window.removeEventListener(AGENT_SESSIONS_CHANGED, refreshFromEvent);
       cleanupTauriListener(unlistenWakeup);
       cleanupTauriListener(unlistenGateway);
     };
@@ -84,6 +87,16 @@ export function useAgentSessions() {
     await refresh();
   }, [refresh]);
 
+  const archive = useCallback(async (id: string) => {
+    await invoke("archive_agent_session", { id });
+    await refresh();
+  }, [refresh]);
+
+  const restore = useCallback(async (id: string) => {
+    await invoke("restore_agent_session", { id });
+    await refresh();
+  }, [refresh]);
+
   const updateModel = useCallback(
     async (
       id: string,
@@ -116,5 +129,16 @@ export function useAgentSessions() {
     [refresh],
   );
 
-  return { sessions, loading, refresh, create, rename, remove, updateModel, updateReasoning };
+  return {
+    sessions,
+    loading,
+    refresh,
+    create,
+    rename,
+    remove,
+    archive,
+    restore,
+    updateModel,
+    updateReasoning,
+  };
 }
