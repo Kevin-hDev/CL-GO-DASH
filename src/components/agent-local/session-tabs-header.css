@@ -25,6 +25,16 @@
   background: var(--surface-hover);
 }
 
+.sth-tab-attention {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--pulse) 24%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--pulse) 38%, transparent);
+}
+
+.sth-tab-attention:hover {
+  background: color-mix(in srgb, var(--pulse) 30%, transparent);
+}
+
 .sth-label,
 .sth-close {
   display: inline-flex;

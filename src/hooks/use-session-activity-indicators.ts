@@ -90,6 +90,37 @@ export function markSessionUnread(sessionId: string) {
   });
 }
 
+export function markSessionRunning(sessionId: string) {
+  updateStore((current) => {
+    if (!sessionId) return current;
+    const runningIds = new Set(current.runningIds);
+    const unreadIds = new Set(current.unreadIds);
+    runningIds.add(sessionId);
+    unreadIds.delete(sessionId);
+    return trimSessionActivity({ runningIds, unreadIds });
+  });
+}
+
+export function markSessionComplete(sessionId: string) {
+  updateStore((current) => {
+    if (!sessionId) return current;
+    const runningIds = new Set(current.runningIds);
+    const unreadIds = new Set(current.unreadIds);
+    runningIds.delete(sessionId);
+    if (currentSelectedId !== sessionId) unreadIds.add(sessionId);
+    return trimSessionActivity({ runningIds, unreadIds });
+  });
+}
+
+export function clearSessionRunning(sessionId: string) {
+  updateStore((current) => {
+    if (!sessionId || !current.runningIds.has(sessionId)) return current;
+    const runningIds = new Set(current.runningIds);
+    runningIds.delete(sessionId);
+    return trimSessionActivity({ runningIds, unreadIds: current.unreadIds });
+  });
+}
+
 function filterVisible(ids: Set<string>, visibleIds: Set<string>): Set<string> {
   const next = new Set<string>();
   for (const id of ids) {

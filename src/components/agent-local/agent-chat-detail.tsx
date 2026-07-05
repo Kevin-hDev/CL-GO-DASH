@@ -7,7 +7,8 @@ import type { useFileTree } from "@/hooks/use-file-tree";
 import { useAgentPanelLayout } from "@/hooks/use-agent-panel-layout";
 import type { DroppedFile } from "@/hooks/use-file-drop";
 import type { useTerminal } from "@/hooks/use-terminal";
-import type { CloneMode, Project } from "@/types/agent";
+import type { CloneMessageHandler } from "@/hooks/use-chat-clone";
+import type { Project } from "@/types/agent";
 import type { FileOperation, FileOperationGroups } from "@/types/file-preview";
 import type { PanelMode } from "@/hooks/use-forecast-panel";
 import type { ReasoningMode } from "@/lib/reasoning-modes";
@@ -42,7 +43,7 @@ interface AgentChatDetailProps {
   onOpenSubagent?: (sessionId: string) => void;
   onGoToParent?: () => void;
   canCloneMessages?: boolean;
-  onCloneMessage?: (messageId: string, mode: CloneMode, customFocus?: string) => Promise<void>;
+  onCloneMessage?: CloneMessageHandler;
   panelMode?: PanelMode;
   forecastContent?: React.ReactNode;
 }

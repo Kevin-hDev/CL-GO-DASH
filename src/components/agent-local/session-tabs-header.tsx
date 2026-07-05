@@ -6,12 +6,19 @@ import "./session-tabs-header.css";
 
 interface SessionTabsHeaderProps {
   tabs: SessionTabs | null;
+  attentionTabIds?: Set<string>;
   onSelect: (tabId: string) => void;
   onClose: (tabId: string) => void;
   onRename: (tabId: string, label: string) => void;
 }
 
-export function SessionTabsHeader({ tabs, onSelect, onClose, onRename }: SessionTabsHeaderProps) {
+export function SessionTabsHeader({
+  tabs,
+  attentionTabIds,
+  onSelect,
+  onClose,
+  onRename,
+}: SessionTabsHeaderProps) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
@@ -32,11 +39,12 @@ export function SessionTabsHeader({ tabs, onSelect, onClose, onRename }: Session
     <div className="sth-tabs" role="tablist" aria-label={t("agentLocal.clone.tabs")}>
       {tabs.tabs.map((tab) => {
         const active = tab.tab_id === tabs.active_tab_id;
+        const attention = !active && attentionTabIds?.has(tab.tab_id);
         const label = tab.is_main ? t("agentLocal.clone.mainTab") : tab.label;
         return (
           <div
             key={tab.tab_id}
-            className={`sth-tab ${active ? "sth-tab-active" : ""}`}
+            className={`sth-tab ${active ? "sth-tab-active" : ""} ${attention ? "sth-tab-attention" : ""}`}
             role="tab"
             aria-selected={active}
           >

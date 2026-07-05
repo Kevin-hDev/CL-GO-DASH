@@ -26,6 +26,7 @@ interface ChatHeaderProps {
   sessionSummary?: SessionSummaryHookState;
   summaryGit?: SessionSummaryGitState;
   sessionTabs?: SessionTabs | null;
+  sessionTabAttentionIds?: Set<string>;
   onSelectSessionTab?: (tabId: string) => void;
   onCloseSessionTab?: (tabId: string) => void;
   onRenameSessionTab?: (tabId: string, label: string) => void;
@@ -47,6 +48,7 @@ export function ChatHeader({
   sessionSummary,
   summaryGit,
   sessionTabs,
+  sessionTabAttentionIds,
   onSelectSessionTab,
   onCloseSessionTab,
   onRenameSessionTab,
@@ -65,6 +67,7 @@ export function ChatHeader({
       {sessionTabs && onSelectSessionTab && onCloseSessionTab && onRenameSessionTab && (
         <SessionTabsHeader
           tabs={sessionTabs}
+          attentionTabIds={sessionTabAttentionIds}
           onSelect={onSelectSessionTab}
           onClose={onCloseSessionTab}
           onRename={onRenameSessionTab}

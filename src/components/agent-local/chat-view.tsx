@@ -22,12 +22,12 @@ import { useSessionFileGroups } from "@/hooks/use-session-files";
 import { useSubagents } from "@/hooks/use-subagents";
 import { useSubagentSynthesis } from "@/hooks/use-subagent-synthesis";
 import { useChatActions } from "@/hooks/use-chat-actions";
-import { useChatClone } from "@/hooks/use-chat-clone";
+import { useChatClone, type CloneMessageHandler } from "@/hooks/use-chat-clone";
 import { useAvailableModels } from "@/hooks/use-available-models";
 import { useOllamaConnectionRetry } from "@/hooks/use-ollama-connection-retry";
 import { PermissionDialog } from "./permission-dialog";
 import type { useTerminal } from "@/hooks/use-terminal";
-import type { CloneMode, Project } from "@/types/agent";
+import type { Project } from "@/types/agent";
 import type { FileOperation, FileOperationGroups } from "@/types/file-preview";
 import type { ReasoningMode } from "@/lib/reasoning-modes";
 import { useGitBranch } from "@/hooks/use-git-branch";
@@ -56,7 +56,7 @@ interface ChatViewProps {
   onOpenSubagent?: (sessionId: string) => void;
   isSubagent?: boolean;
   canCloneMessages?: boolean;
-  onCloneMessage?: (messageId: string, mode: CloneMode, customFocus?: string) => Promise<void>;
+  onCloneMessage?: CloneMessageHandler;
 }
 export function ChatView({
   sessionId, model, provider, projects, onAddProject,

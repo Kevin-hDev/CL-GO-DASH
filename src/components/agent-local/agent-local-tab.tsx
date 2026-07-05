@@ -126,6 +126,7 @@ export const AgentLocalTab = memo(function AgentLocalTab({
           sessionSummary={sessionSummary}
           summaryGit={summaryGit}
           sessionTabs={sessionTabs.tabs}
+          sessionTabAttentionIds={sessionTabs.attentionTabIds}
           onSelectSessionTab={(id) => void sessionTabs.selectTab(id)}
           onCloseSessionTab={(id) => void sessionTabs.closeTab(id)}
           onRenameSessionTab={(id, label) => void sessionTabs.renameTab(id, label)}
@@ -183,8 +184,13 @@ export const AgentLocalTab = memo(function AgentLocalTab({
             }
           }}
           canCloneMessages={!displaySession?.parent_session_id && !displaySession?.clone_parent_session_id}
-          onCloneMessage={(messageId, cloneMode, customFocus) =>
-            sessionTabs.cloneMessage({ messageId, mode: cloneMode, customFocus }).then(() => undefined)}
+          onCloneMessage={(messageId, cloneMode, customFocus, options) =>
+            sessionTabs.cloneMessage({
+              messageId,
+              mode: cloneMode,
+              customFocus,
+              shouldActivateOnComplete: options?.shouldActivateOnComplete,
+            }).then(() => undefined)}
         />
       ) : (
         <div style={{ flex: 1, minHeight: 0, overflow: "hidden" }}>
