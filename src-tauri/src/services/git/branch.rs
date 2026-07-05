@@ -1,9 +1,11 @@
-use super::{github_auth, repo as git_repo};
+use super::repo as git_repo;
 use git2::{BranchType, StatusOptions};
 use serde::Serialize;
 use std::path::Path;
 
 const MAX_BRANCHES: usize = 500;
+
+pub use super::branch_create::{create_branch, validate_branch_name, CreateBranchError};
 
 #[derive(Debug, Clone, Serialize)]
 pub struct BranchInfo {
@@ -96,36 +98,8 @@ pub fn get_context(repo_path: &Path) -> GitContext {
     }
 }
 
-pub(super) fn validate_branch_name(name: &str) -> Result<(), String> {
-    if name.is_empty()
-        || name.contains("..")
-        || name.contains('\0')
-        || name.contains('\\')
-        || name.contains(':')
-        || name.contains('~')
-        || name.contains('^')
-        || name.contains('?')
-        || name.contains('*')
-        || name.contains('[')
-        || name.contains("@{")
-        || name.contains("//")
-        || name.starts_with('/')
-        || name.ends_with('/')
-        || name.ends_with(".lock")
-        || name.as_bytes().iter().any(|&b| b <= 0x20 || b == 0x7f)
-    {
-        return Err("Nom de branche invalide".to_string());
-    }
-    for segment in name.split('/') {
-        if segment.is_empty() || segment.starts_with('.') || segment.ends_with('.') {
-            return Err("Nom de branche invalide".to_string());
-        }
-    }
-    Ok(())
-}
-
 pub fn checkout_branch(repo_path: &Path, branch_name: &str) -> Result<(), String> {
-    validate_branch_name(branch_name)?;
+    validate_branch_name(branch_name).map_err(|e| e.to_string())?;
 
     let repo = git_repo::open(repo_path)?;
 
@@ -145,34 +119,6 @@ pub fn checkout_branch(repo_path: &Path, branch_name: &str) -> Result<(), String
         repo.set_head(refname)
             .map_err(|e| format!("Mise à jour HEAD : {e}"))?;
     }
-
-    Ok(())
-}
-
-pub fn create_branch(repo_path: &Path, branch_name: &str) -> Result<(), String> {
-    validate_branch_name(branch_name)?;
-
-    if branch_name.starts_with('-') || branch_name.contains(' ') {
-        return Err("Nom de branche invalide".to_string());
-    }
-    if branch_name.len() > 100 {
-        return Err("Nom de branche trop long".to_string());
-    }
-
-    let repo = git_repo::open(repo_path)?;
-    github_auth::ensure_branch_creation_allowed(&repo)?;
-
-    let head_commit = repo
-        .head()
-        .map_err(|e| format!("HEAD invalide : {e}"))?
-        .peel_to_commit()
-        .map_err(|e| format!("Commit HEAD : {e}"))?;
-
-    repo.branch(branch_name, &head_commit, false)
-        .map_err(|e| format!("Création branche : {e}"))?;
-
-    repo.set_head(&format!("refs/heads/{branch_name}"))
-        .map_err(|e| format!("Mise à jour HEAD : {e}"))?;
 
     Ok(())
 }

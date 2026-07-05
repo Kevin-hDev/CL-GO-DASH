@@ -53,13 +53,18 @@ pub async fn checkout_git_branch(path: String, branch_name: String) -> Result<()
 }
 
 #[tauri::command]
-pub async fn create_git_branch(path: String, branch_name: String) -> Result<(), String> {
-    let repo_path = registered_project_path(&path).await?;
+pub async fn create_git_branch(
+    path: String,
+    branch_name: String,
+) -> Result<(), branch::CreateBranchError> {
+    let repo_path = registered_project_path(&path)
+        .await
+        .map_err(|_| branch::CreateBranchError::InternalError)?;
     tokio::task::spawn_blocking(move || branch::create_branch(&repo_path, &branch_name))
         .await
         .map_err(|e| {
             eprintln!("[git] create_branch: {e}");
-            "Erreur interne".to_string()
+            branch::CreateBranchError::InternalError
         })?
 }
 

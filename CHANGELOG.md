@@ -1,5 +1,17 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+
+- Manual Git branch creation now reports clear typed errors for empty repositories, duplicate branches, invalid names, and internal failures.
+
+### Changed
+
+- Manual Git branch creation now validates branch names before submit, blocks duplicate submits, and shows success feedback.
+
+---
+
 ## v0.9.6
 
 ### Changes

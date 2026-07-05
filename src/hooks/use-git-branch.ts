@@ -3,14 +3,14 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { cleanupTauriListener } from "@/lib/tauri-listen";
 
-interface BranchInfo {
+export interface BranchInfo {
   name: string;
   is_current: boolean;
   is_remote: boolean;
   dirty_count: number;
 }
 
-interface WorktreeInfo {
+export interface WorktreeInfo {
   path: string;
   branch: string;
   is_current: boolean;
@@ -25,10 +25,47 @@ interface GitBranchState {
   isLoading: boolean;
 }
 
-export type GitCreateBranchResult = {
-  ok: boolean;
-  reason?: "github_auth_required";
-};
+export type GitCreateBranchErrorKind =
+  | "invalid_name"
+  | "name_too_long"
+  | "already_exists"
+  | "unborn_head"
+  | "github_auth_required"
+  | "internal_error";
+
+export type GitCreateBranchResult =
+  | { ok: true }
+  | { ok: false; reason?: "github_auth_required"; kind?: GitCreateBranchErrorKind };
+
+const CREATE_BRANCH_ERROR_KINDS = new Set<GitCreateBranchErrorKind>([
+  "invalid_name",
+  "name_too_long",
+  "already_exists",
+  "unborn_head",
+  "github_auth_required",
+  "internal_error",
+]);
+
+function parseCreateBranchError(error: unknown): GitCreateBranchErrorKind | null {
+  const fromObject = readCreateBranchKind(error);
+  if (fromObject) return fromObject;
+  if (typeof error !== "string") return null;
+  if (error.includes("GITHUB_AUTH_REQUIRED")) return "github_auth_required";
+  try {
+    return readCreateBranchKind(JSON.parse(error));
+  } catch {
+    return null;
+  }
+}
+
+function readCreateBranchKind(value: unknown): GitCreateBranchErrorKind | null {
+  if (!value || typeof value !== "object") return null;
+  const kind = (value as { kind?: unknown }).kind;
+  if (typeof kind !== "string") return null;
+  return CREATE_BRANCH_ERROR_KINDS.has(kind as GitCreateBranchErrorKind)
+    ? kind as GitCreateBranchErrorKind
+    : null;
+}
 
 const INITIAL_STATE: GitBranchState = {
   branches: [],
@@ -132,10 +169,11 @@ export function useGitBranch(projectPath: string | undefined, sessionId?: string
       await refresh();
       return { ok: true };
     } catch (e) {
-      if (String(e).includes("GITHUB_AUTH_REQUIRED")) {
-        return { ok: false, reason: "github_auth_required" };
+      const kind = parseCreateBranchError(e);
+      if (kind === "github_auth_required") {
+        return { ok: false, reason: "github_auth_required", kind };
       }
-      return { ok: false };
+      return { ok: false, kind: kind ?? "internal_error" };
     }
   }, [refresh]);
 

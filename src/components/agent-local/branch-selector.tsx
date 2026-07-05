@@ -1,11 +1,14 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { GitBranch, CaretDown, Plus } from "@/components/ui/icons";
+import { GitBranch, CaretDown } from "@/components/ui/icons";
 import { BranchSelectorCreateForm } from "./branch-selector-create-form";
-import { BranchSelectorBranchItem, BranchSelectorWorktreeItem } from "./branch-selector-items";
+import { BranchSelectorBranchItem, BranchSelectorCreateItem, BranchSelectorLockedIndicator, BranchSelectorWorktreeItem } from "./branch-selector-items";
+import { branchCreateErrorKey, getVisibleBranchOptions } from "./branch-selector-utils";
 import { useKeyboard } from "@/hooks/use-keyboard";
 import { useClickOutside } from "@/hooks/use-click-outside";
 import type { useGitBranch } from "@/hooks/use-git-branch";
+import { showToast } from "@/lib/toast-emitter";
+import { validateBranchName } from "@/lib/branch-name";
 import "./branch-selector.css";
 type GitBranchHook = ReturnType<typeof useGitBranch>;
 
@@ -26,6 +29,7 @@ export function BranchSelector({
   const [creating, setCreating] = useState(false);
   const [createName, setCreateName] = useState("");
   const [createError, setCreateError] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
   const dropRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const createRef = useRef<HTMLInputElement>(null);
@@ -63,59 +67,59 @@ export function BranchSelector({
   }, [git, onConflict]);
 
   const handleCreate = useCallback(async () => {
+    if (isCreating) return;
     const name = createName.trim();
-    if (!name) return;
-    const result = await git.create(name);
-    if (result.ok) {
-      setOpen(false);
-      setCreating(false);
-      setCreateName("");
-      setCreateError("");
-      setSearch("");
-    } else if (result.reason === "github_auth_required") {
-      setOpen(false);
-      setCreating(false);
-      setCreateName("");
-      setCreateError("");
-      onGithubAuthRequired();
-    } else {
-      setCreateError(t("branches.createError"));
+    const validation = validateBranchName(name);
+    if (!validation.valid) {
+      setCreateError(t(branchCreateErrorKey(validation.reason)));
+      return;
     }
-  }, [createName, git, onGithubAuthRequired, t]);
+
+    setIsCreating(true);
+    try {
+      const result = await git.create(name);
+      if (result.ok) {
+        showToast(`${t("branches.bubbleCreated")}: ${name}`, "success", 3000);
+        setOpen(false);
+        setCreating(false);
+        setCreateName("");
+        setCreateError("");
+        setSearch("");
+      } else if (result.reason === "github_auth_required") {
+        setOpen(false);
+        setCreating(false);
+        setCreateName("");
+        setCreateError("");
+        onGithubAuthRequired();
+      } else {
+        setCreateError(t(branchCreateErrorKey(result.kind)));
+      }
+    } finally {
+      setIsCreating(false);
+    }
+  }, [createName, git, isCreating, onGithubAuthRequired, t]);
 
   const handleWorktreeSelect = useCallback((path: string, branch: string) => {
     setOpen(false);
     onWorktreeSelect(path, branch);
   }, [onWorktreeSelect]);
   const cancelCreate = useCallback(() => {
+    if (isCreating) return;
     setCreating(false);
     setCreateName("");
     setCreateError("");
-  }, []);
+  }, [isCreating]);
 
   if (!git.isGitRepo) return null;
 
   if (locked) {
-    return (
-      <div className="bs-row">
-        <div className="bs-indicator">
-          <GitBranch size="var(--icon-sm)" />
-          <span>{git.currentBranch || t("branches.detachedHead")}</span>
-        </div>
-      </div>
-    );
+    return <BranchSelectorLockedIndicator label={git.currentBranch || t("branches.detachedHead")} />;
   }
 
-  const lowerSearch = search.toLowerCase();
-  const otherWorktreeBranches = new Set(
-    git.worktrees.filter((w) => !w.is_current && w.branch).map((w) => w.branch),
-  );
-  const filteredBranches = git.branches.filter((b) =>
-    b.name.toLowerCase().includes(lowerSearch)
-      && (b.is_current || !otherWorktreeBranches.has(b.name)),
-  );
-  const filteredWorktrees = git.worktrees.filter((w) =>
-    !w.is_current && `${w.branch} ${w.path}`.toLowerCase().includes(lowerSearch),
+  const { filteredBranches, filteredWorktrees } = getVisibleBranchOptions(
+    git.branches,
+    git.worktrees,
+    search,
   );
 
   const label = git.currentBranch || t("branches.detachedHead");
@@ -174,24 +178,17 @@ export function BranchSelector({
               inputRef={createRef}
               value={createName}
               error={createError}
+              isCreating={isCreating}
               placeholder={t("branches.createPlaceholder")}
               onValueChange={(value) => { setCreateName(value); setCreateError(""); }}
               onSubmit={() => void handleCreate()}
               onCancel={cancelCreate}
             />
           ) : (
-            <div
-              className="bs-item"
-              role="button"
-              tabIndex={0}
-              onClick={() => setCreating(true)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") setCreating(true);
-              }}
-            >
-              <Plus size="var(--icon-sm)" />
-              <span>{t("branches.createNew")}</span>
-            </div>
+            <BranchSelectorCreateItem
+              label={t("branches.createNew")}
+              onStart={() => setCreating(true)}
+            />
           )}
         </div>
       )}

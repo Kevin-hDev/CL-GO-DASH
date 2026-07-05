@@ -1,4 +1,4 @@
-import { GitBranch, Check } from "@/components/ui/icons";
+import { GitBranch, Check, Plus } from "@/components/ui/icons";
 
 interface BranchItem {
   name: string;
@@ -20,6 +20,15 @@ interface BranchSelectorBranchItemProps {
 interface BranchSelectorWorktreeItemProps {
   worktree: WorktreeItem;
   onSelect: (path: string, branch: string) => void;
+}
+
+interface BranchSelectorCreateItemProps {
+  label: string;
+  onStart: () => void;
+}
+
+interface BranchSelectorLockedIndicatorProps {
+  label: string;
 }
 
 export function BranchSelectorBranchItem({
@@ -67,6 +76,34 @@ export function BranchSelectorWorktreeItem({
       <div className="bs-item-info">
         <span className="bs-item-name">{name}</span>
         <span className="bs-item-detail">{worktree.path}</span>
+      </div>
+    </div>
+  );
+}
+
+export function BranchSelectorCreateItem({ label, onStart }: BranchSelectorCreateItemProps) {
+  return (
+    <div
+      className="bs-item"
+      role="button"
+      tabIndex={0}
+      onClick={onStart}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") onStart();
+      }}
+    >
+      <Plus size="var(--icon-sm)" />
+      <span>{label}</span>
+    </div>
+  );
+}
+
+export function BranchSelectorLockedIndicator({ label }: BranchSelectorLockedIndicatorProps) {
+  return (
+    <div className="bs-row">
+      <div className="bs-indicator">
+        <GitBranch size="var(--icon-sm)" />
+        <span>{label}</span>
       </div>
     </div>
   );

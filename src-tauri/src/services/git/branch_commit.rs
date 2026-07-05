@@ -11,7 +11,7 @@ pub fn commit_all_and_checkout(
     target_branch: &str,
     description: Option<String>,
 ) -> Result<(), String> {
-    branch::validate_branch_name(target_branch)?;
+    branch::validate_branch_name(target_branch).map_err(|e| e.to_string())?;
     let git_repo = repo::open(repo_path)?;
     let workdir = repo::workdir(&git_repo)?;
     ensure_local_branch_exists(&git_repo, target_branch)?;

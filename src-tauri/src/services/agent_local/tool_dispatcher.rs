@@ -136,7 +136,7 @@ async fn dispatch_inner(
                     branch_name,
                     working_dir.display()
                 )),
-                Err(e) => ToolResult::err(e),
+                Err(e) => ToolResult::err(e.to_string()),
             }
         }
         "checkout_branch" => {

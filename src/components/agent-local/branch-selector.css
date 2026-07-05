@@ -131,7 +131,15 @@
   padding: var(--space-xs) var(--space-sm);
 }
 
+.bs-create-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
 .bs-create-input {
+  flex: 1;
+  min-width: 0;
   width: 100%;
   padding: var(--space-xs) var(--space-sm);
   border: 1px solid var(--accent);
@@ -144,6 +152,37 @@
 
 .bs-create-input::placeholder {
   color: var(--ink-faint);
+}
+
+.bs-create-input:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.bs-create-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: background var(--ease-smooth), color var(--ease-smooth), border-color var(--ease-smooth);
+}
+
+.bs-create-submit:hover:not(:disabled) {
+  background: var(--surface-hover);
+  color: var(--ink);
+  border-color: var(--ink-faint);
+}
+
+.bs-create-submit:disabled {
+  opacity: 0.45;
+  cursor: default;
 }
 
 .bs-create-error {
