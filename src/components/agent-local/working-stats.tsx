@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { InlineActivityIndicator } from "./inline-activity-indicator";
 import { formatCompactDuration } from "@/lib/duration-format";
 
-export function WorkingStats({ startedAt, liveTokenCount }: {
+function WorkingStats({ startedAt, liveTokenCount }: {
   startedAt: number; liveTokenCount: number;
 }) {
   const { t } = useTranslation();

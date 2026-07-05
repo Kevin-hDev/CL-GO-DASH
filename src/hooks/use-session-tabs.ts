@@ -21,7 +21,6 @@ export function useSessionTabs(
 ) {
   const [tabs, setTabs] = useState<SessionTabs | null>(null);
   const [attentionTabs, setAttentionTabs] = useState<Record<string, string[]>>({});
-  const [loading, setLoading] = useState(false);
   const rootSessionIdRef = useRef(rootSessionId);
 
   useEffect(() => {
@@ -33,12 +32,11 @@ export function useSessionTabs(
       setTabs(null);
       return;
     }
-    setLoading(true);
     try {
       const next = await invoke<SessionTabs>("list_session_tabs", { sessionId: rootSessionId });
       setTabs(next);
-    } finally {
-      setLoading(false);
+    } catch {
+      setTabs(null);
     }
   }, [rootSessionId]);
 
@@ -47,12 +45,11 @@ export function useSessionTabs(
     void refreshTabs();
   }, [refreshTabs]);
 
-  const activeTab = useMemo(() => {
-    if (!tabs) return null;
-    return tabs.tabs.find((tab) => tab.tab_id === tabs.active_tab_id) ?? tabs.tabs[0] ?? null;
-  }, [tabs]);
-
-  const activeSessionId = activeTab?.session_id ?? rootSessionId ?? null;
+  const activeSessionId = useMemo(() => {
+    if (!tabs) return rootSessionId ?? null;
+    const active = tabs.tabs.find((tab) => tab.tab_id === tabs.active_tab_id) ?? tabs.tabs[0];
+    return active?.session_id ?? rootSessionId ?? null;
+  }, [tabs, rootSessionId]);
   const attentionTabIds = useMemo(
     () => new Set(rootSessionId ? attentionTabs[rootSessionId] ?? [] : []),
     [attentionTabs, rootSessionId],
@@ -131,11 +128,8 @@ export function useSessionTabs(
 
   return {
     tabs,
-    loading,
-    activeTab,
     activeSessionId,
     attentionTabIds,
-    refreshTabs,
     selectTab,
     cloneMessage,
     cancelCloneSummary,

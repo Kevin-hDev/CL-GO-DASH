@@ -175,7 +175,7 @@ export const SegmentedAssistantMessage = memo(function SegmentedAssistantMessage
   );
 });
 
-export function hasActiveTools(tools: ToolActivity[]): boolean {
+function hasActiveTools(tools: ToolActivity[]): boolean {
   return tools.length > 0 && tools.some((t) => !t.result);
 }
 
