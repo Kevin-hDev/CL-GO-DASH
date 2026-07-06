@@ -33,4 +33,5 @@ export interface ChatViewProps {
   onCancelCloneSummary?: (operationId: string) => Promise<void>;
   activeSessionTab?: SessionTab | null;
   onCreateCloneGitBranch?: (path: string, cloneSessionId: string) => Promise<string>;
+  onLinkCloneGitBranch?: (path: string, cloneSessionId: string, branchName: string) => Promise<void>;
 }

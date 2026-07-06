@@ -17,6 +17,7 @@ interface ChatProjectControlsProps {
   projectState: ReturnType<typeof useSessionProject>;
   git: ReturnType<typeof useGitBranch>;
   onWorktreeSelect: (path: string, branch: string) => void;
+  onBranchReady?: (branchName: string) => Promise<void> | void;
   cloneGitBranch?: {
     visible: boolean;
     state: "idle" | "loading" | "success";
@@ -31,6 +32,7 @@ export function ChatProjectControls({
   projectState,
   git,
   onWorktreeSelect,
+  onBranchReady,
   cloneGitBranch,
 }: ChatProjectControlsProps) {
   const { t } = useTranslation();
@@ -59,6 +61,7 @@ export function ChatProjectControls({
           onConflict={(branch, dirtyCount) => setBranchConflict({ branch, dirtyCount })}
           onWorktreeSelect={onWorktreeSelect}
           onGithubAuthRequired={githubAuth.request}
+          onBranchReady={onBranchReady}
         />
         {cloneGitBranch?.visible && (
           <CloneGitBranchButton
@@ -88,6 +91,7 @@ export function ChatProjectControls({
                   commitDescription,
                 });
                 await git.refresh();
+                await onBranchReady?.(branch);
                 setBranchConflict(null);
               } catch (e) {
                 console.error("commit_and_checkout:", e);

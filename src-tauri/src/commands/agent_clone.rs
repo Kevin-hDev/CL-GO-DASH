@@ -86,6 +86,23 @@ pub async fn unlink_clone_git_branch(
 }
 
 #[tauri::command]
+pub async fn link_clone_git_branch(
+    session_id: String,
+    clone_session_id: String,
+    path: String,
+    branch_name: String,
+) -> Result<SessionTabs, String> {
+    let repo_path = registered_project_path(&path).await?;
+    crate::services::agent_local::clone_git_link::link_existing_branch(
+        &session_id,
+        &clone_session_id,
+        &repo_path,
+        &branch_name,
+    )
+    .await
+}
+
+#[tauri::command]
 pub async fn close_session_tab_and_cleanup_git_branch(
     session_id: String,
     tab_id: String,

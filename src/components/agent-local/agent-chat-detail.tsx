@@ -47,6 +47,7 @@ interface AgentChatDetailProps {
   onCancelCloneSummary?: (operationId: string) => Promise<void>;
   activeSessionTab?: SessionTab | null;
   onCreateCloneGitBranch?: (path: string, cloneSessionId: string) => Promise<string>;
+  onLinkCloneGitBranch?: (path: string, cloneSessionId: string, branchName: string) => Promise<void>;
   panelMode?: PanelMode;
   forecastContent?: React.ReactNode;
 }
@@ -108,6 +109,7 @@ export function AgentChatDetail(props: AgentChatDetailProps) {
           onCancelCloneSummary={props.onCancelCloneSummary}
           activeSessionTab={props.activeSessionTab}
           onCreateCloneGitBranch={props.onCreateCloneGitBranch}
+          onLinkCloneGitBranch={props.onLinkCloneGitBranch}
         />
       </div>
       <FilePreviewPanel

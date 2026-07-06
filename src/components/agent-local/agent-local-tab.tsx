@@ -198,6 +198,7 @@ export const AgentLocalTab = memo(function AgentLocalTab({
           onCancelCloneSummary={(operationId) => sessionTabs.cancelCloneSummary(operationId)}
           activeSessionTab={sessionTabs.activeTab}
           onCreateCloneGitBranch={sessionTabs.createCloneGitBranch}
+          onLinkCloneGitBranch={sessionTabs.linkCloneGitBranch}
         />
       ) : (
         <div style={{ flex: 1, minHeight: 0, overflow: "hidden" }}>

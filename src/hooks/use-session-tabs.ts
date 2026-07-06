@@ -168,6 +168,7 @@ export function useSessionTabs(
     cancelCloneSummary,
     createCloneGitBranch: gitActions.createCloneGitBranch,
     unlinkCloneGitBranch: gitActions.unlinkCloneGitBranch,
+    linkCloneGitBranch: gitActions.linkCloneGitBranch,
     closeTab,
     closeTabWithGitCleanup: gitActions.closeTabWithGitCleanup,
     renameTab,

@@ -39,7 +39,7 @@ export function ChatView({
   terminalState, onFileOperationsChange, onFilePreviewPath,
   onOpenSubagent, isSubagent = false,
   canCloneMessages = false, onCloneMessage, onCancelCloneSummary,
-  activeSessionTab, onCreateCloneGitBranch,
+  activeSessionTab, onCreateCloneGitBranch, onLinkCloneGitBranch,
 }: ChatViewProps) {
   const permissions = usePermissionRequests();
   const permMode = usePermissionMode(sessionId);
@@ -101,6 +101,13 @@ export function ChatView({
     activeSessionTab,
     onCreateCloneGitBranch,
   });
+  const handleBranchReady = useCallback(async (branchName: string) => {
+    const projectPath = proj.selectedProject?.path;
+    if (!projectPath || !activeSessionTab || activeSessionTab.is_main || activeSessionTab.git_branch) {
+      return;
+    }
+    await onLinkCloneGitBranch?.(projectPath, activeSessionTab.session_id, branchName);
+  }, [activeSessionTab, onLinkCloneGitBranch, proj.selectedProject?.path]);
   const handleRetry = useCallback(() => {
     const u = [...messages].reverse().find((m) => m.role === "user");
     if (u) void reload(u.id);
@@ -188,6 +195,7 @@ export function ChatView({
                 : null}
               onScrollBottom={scrollToBottom}
               onWorktreeSelect={worktreeSwitch.request}
+              onBranchReady={handleBranchReady}
               cloneGitBranch={cloneGitBranch}
             />
           </div>

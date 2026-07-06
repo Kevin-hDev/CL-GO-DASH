@@ -197,6 +197,7 @@ pub fn run() {
             commands::rename_session_tab,
             commands::create_clone_git_branch,
             commands::unlink_clone_git_branch,
+            commands::link_clone_git_branch,
             commands::close_session_tab_and_cleanup_git_branch,
             commands::export_agent_session_markdown,
             commands::truncate_and_replace_at,

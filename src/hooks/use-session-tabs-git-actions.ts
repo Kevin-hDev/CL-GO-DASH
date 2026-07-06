@@ -35,6 +35,22 @@ export function useSessionTabsGitActions({
     await onSessionsRefresh?.();
   }, [onSessionsRefresh, rootSessionId, setTabs]);
 
+  const linkCloneGitBranch = useCallback(async (
+    path: string,
+    cloneSessionId: string,
+    branchName: string,
+  ) => {
+    if (!rootSessionId) return;
+    const next = await invoke<SessionTabs>("link_clone_git_branch", {
+      sessionId: rootSessionId,
+      cloneSessionId,
+      path,
+      branchName,
+    });
+    setTabs(next);
+    await onSessionsRefresh?.();
+  }, [onSessionsRefresh, rootSessionId, setTabs]);
+
   const closeTabWithGitCleanup = useCallback(async (
     tabId: string,
     path: string,
@@ -51,5 +67,5 @@ export function useSessionTabsGitActions({
     setTabs(next);
   }, [onSessionsRefresh, rootSessionId, setTabs]);
 
-  return { createCloneGitBranch, unlinkCloneGitBranch, closeTabWithGitCleanup };
+  return { createCloneGitBranch, unlinkCloneGitBranch, linkCloneGitBranch, closeTabWithGitCleanup };
 }
