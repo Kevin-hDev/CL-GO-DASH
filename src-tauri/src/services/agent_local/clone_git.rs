@@ -2,7 +2,7 @@ use super::{session_store, session_tabs};
 use crate::services::git::{branch, branch_delete};
 use rand::RngCore;
 use serde::Serialize;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 const MAX_BRANCH_RETRIES: usize = 3;
 
@@ -32,7 +32,7 @@ pub async fn create_linked_branch(
         return Ok(CloneGitBranchResult { branch_name, tabs });
     }
 
-    let branch_name = create_unique_branch(repo_path)?;
+    let branch_name = create_unique_branch(repo_path).await?;
     clone.git_branch = Some(branch_name.clone());
     session_store::save(&clone)
         .await
@@ -43,7 +43,7 @@ pub async fn create_linked_branch(
         Some(branch_name.clone()),
     )
     .await
-    .map_err(|_| branch::CreateBranchError::InternalError)?;
+        .map_err(|_| branch::CreateBranchError::InternalError)?;
     Ok(CloneGitBranchResult { branch_name, tabs })
 }
 
@@ -65,32 +65,74 @@ pub async fn close_tab_with_branch_cleanup(
     fallback_branch: Option<&str>,
 ) -> Result<session_tabs::SessionTabs, String> {
     let tab = session_tabs::get_tab(root_session_id, tab_id).await?;
-    let Some(git_branch) = tab.git_branch.as_deref() else {
+    let Some(git_branch) = tab.git_branch.as_deref().map(str::to_string) else {
         return session_tabs::close_tab(root_session_id, tab_id).await;
     };
-    checkout_fallback_if_needed(repo_path, git_branch, fallback_branch)?;
-    if branch_delete::branch_exists(repo_path, git_branch)? {
-        branch_delete::delete_branch(repo_path, git_branch)?;
-    }
+
+    // Fallback explicite du frontend, sinon checkpoint persisté dans session-tabs.json.
+    let checkpoint = match fallback_branch.map(str::to_string) {
+        Some(branch) => Some(branch),
+        None => session_tabs::get_main_checkpoint_branch(root_session_id).await?,
+    };
+
+    // 1. Unlink d'abord : si la suppression Git échoue ensuite, le tab reste dans un état
+    //    cohérent (plus de git_branch lié, branche encore présente dans le repo).
     unlink_branch(root_session_id, &tab.session_id).await?;
+
+    // 2. Switch vers le fallback si on était sur la branche clone, puis suppression.
+    //    Tout est synchro disque → spawn_blocking pour ne pas bloquer le runtime Tokio.
+    let repo_path: PathBuf = repo_path.to_path_buf();
+    tokio::task::spawn_blocking(move || -> Result<(), String> {
+        let context = branch::get_context(&repo_path);
+        if context.branch == git_branch {
+            let Some(fallback) = checkpoint.as_deref() else {
+                return Err("Action impossible".to_string());
+            };
+            if fallback == git_branch {
+                return Err("Action impossible".to_string());
+            }
+            if !branch_delete::branch_exists(&repo_path, fallback)? {
+                return Err("Branche introuvable".to_string());
+            }
+            branch::checkout_branch(&repo_path, fallback)?;
+        }
+        if branch_delete::branch_exists(&repo_path, &git_branch)? {
+            branch_delete::delete_branch(&repo_path, &git_branch)?;
+        }
+        Ok(())
+    })
+    .await
+    .map_err(|e| {
+        eprintln!("[clone-git] close cleanup join: {e}");
+        "Erreur interne".to_string()
+    })??;
+
     session_tabs::close_tab(root_session_id, tab_id).await
 }
 
-fn create_unique_branch(repo_path: &Path) -> Result<String, branch::CreateBranchError> {
-    create_unique_branch_from_candidates(repo_path, (0..MAX_BRANCH_RETRIES).map(|_| random_branch_name()))
+async fn create_unique_branch(repo_path: &Path) -> Result<String, branch::CreateBranchError> {
+    let candidates: Vec<String> = (0..MAX_BRANCH_RETRIES).map(|_| random_branch_name()).collect();
+    create_unique_branch_from_candidates(repo_path.to_path_buf(), candidates).await
 }
 
-fn create_unique_branch_from_candidates<I>(
-    repo_path: &Path,
-    candidates: I,
-) -> Result<String, branch::CreateBranchError>
-where
-    I: IntoIterator<Item = String>,
-{
+async fn create_unique_branch_from_candidates(
+    repo_path: PathBuf,
+    candidates: Vec<String>,
+) -> Result<String, branch::CreateBranchError> {
     let mut last_error = branch::CreateBranchError::AlreadyExists;
     for branch_name in candidates.into_iter().take(MAX_BRANCH_RETRIES) {
         branch::validate_branch_name(&branch_name)?;
-        match branch::create_branch(repo_path, &branch_name) {
+        let repo_for_create = repo_path.clone();
+        let name_for_create = branch_name.clone();
+        let result = tokio::task::spawn_blocking(move || {
+            branch::create_branch(&repo_for_create, &name_for_create)
+        })
+        .await
+        .map_err(|e| {
+            eprintln!("[clone-git] create_branch join: {e}");
+            branch::CreateBranchError::InternalError
+        })?;
+        match result {
             Ok(()) => return Ok(branch_name),
             Err(branch::CreateBranchError::AlreadyExists) => {
                 last_error = branch::CreateBranchError::AlreadyExists;
@@ -115,22 +157,6 @@ fn hex_lower(bytes: &[u8]) -> String {
         out.push(HEX[(byte & 0x0f) as usize] as char);
     }
     out
-}
-
-fn checkout_fallback_if_needed(
-    repo_path: &Path,
-    git_branch: &str,
-    fallback_branch: Option<&str>,
-) -> Result<(), String> {
-    let context = branch::get_context(repo_path);
-    if context.branch != git_branch {
-        return Ok(());
-    }
-    let fallback = fallback_branch.ok_or_else(|| "Action impossible".to_string())?;
-    if fallback == git_branch {
-        return Err("Action impossible".into());
-    }
-    branch::checkout_branch(repo_path, fallback)
 }
 
 fn ensure_clone_belongs_to_root(

@@ -13,7 +13,7 @@ use uuid::Uuid;
 pub(super) static TABS_LOCK: Mutex<()> = Mutex::const_new(());
 
 pub use super::session_tabs_state::{SessionTab, SessionTabs};
-pub use super::session_tabs_git::{get_tab, set_clone_git_branch};
+pub use super::session_tabs_git::{get_main_checkpoint_branch, get_tab, set_clone_git_branch};
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub(super) struct SessionTabsFile {

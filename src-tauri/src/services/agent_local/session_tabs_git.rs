@@ -15,6 +15,17 @@ pub async fn get_tab(root_session_id: &str, tab_id: &str) -> Result<SessionTab, 
         .ok_or_else(|| "Action impossible".to_string())
 }
 
+/// Lit le `main_checkpoint_branch` persisté dans `session-tabs.json` pour la session
+/// principale donnée. Source de vérité pour le fallback auto lors du nettoyage de
+/// branche (sans dépendre d'une valeur envoyée par le frontend).
+pub async fn get_main_checkpoint_branch(root_session_id: &str) -> Result<Option<String>, String> {
+    validate_session_id(root_session_id)?;
+    let _guard = TABS_LOCK.lock().await;
+    let file = read_file().await?;
+    let tabs = normalize_tabs(root_session_id, file.sessions.get(root_session_id).cloned());
+    Ok(tabs.main_checkpoint_branch)
+}
+
 pub async fn set_clone_git_branch(
     root_session_id: &str,
     clone_session_id: &str,

@@ -17,9 +17,8 @@ pub async fn archive(id: &str) -> Result<(), String> {
     let mut session = get(id).await?;
     if session.archived_at.is_none() {
         session.archived_at = Some(Utc::now());
-        save(&session).await?;
     }
-    Ok(())
+    save(&session).await
 }
 
 pub async fn restore(id: &str) -> Result<(), String> {

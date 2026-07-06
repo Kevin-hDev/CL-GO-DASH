@@ -29,27 +29,29 @@ fn hex_lower_formats_bytes() {
     assert_eq!(hex_lower(&[0xab, 0x01, 0x9f, 0x00]), "ab019f00");
 }
 
-#[test]
-fn unique_branch_retries_on_collision() {
+#[tokio::test]
+async fn unique_branch_retries_on_collision() {
     let tmp = init_repo_with_commit();
     branch::create_branch(tmp.path(), "clone-00000000").expect("seed branch");
     let result = create_unique_branch_from_candidates(
-        tmp.path(),
-        ["clone-00000000".to_string(), "clone-11111111".to_string()],
+        tmp.path().to_path_buf(),
+        ["clone-00000000".to_string(), "clone-11111111".to_string()].to_vec(),
     )
+    .await
     .expect("create branch");
     assert_eq!(result, "clone-11111111");
 }
 
-#[test]
-fn unique_branch_fails_after_three_collisions() {
+#[tokio::test]
+async fn unique_branch_fails_after_three_collisions() {
     let tmp = init_repo_with_commit();
     for name in ["clone-00000000", "clone-11111111", "clone-22222222"] {
         branch::create_branch(tmp.path(), name).expect("seed branch");
     }
     let result = create_unique_branch_from_candidates(
-        tmp.path(),
-        ["clone-00000000", "clone-11111111", "clone-22222222"].map(str::to_string),
-    );
+        tmp.path().to_path_buf(),
+        ["clone-00000000", "clone-11111111", "clone-22222222"].map(str::to_string).to_vec(),
+    )
+    .await;
     assert_eq!(result, Err(branch::CreateBranchError::AlreadyExists));
 }

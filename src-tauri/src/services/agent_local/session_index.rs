@@ -1,8 +1,16 @@
 use crate::services::agent_local::types_session::{AgentSession, AgentSessionMeta};
 use std::path::{Path, PathBuf};
+use std::time::SystemTime;
 use tokio::sync::Mutex;
 
 static INDEX_LOCK: Mutex<()> = Mutex::const_new(());
+static INDEX_RECONCILE_FINGERPRINT: Mutex<Option<IndexFingerprint>> = Mutex::const_new(None);
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct IndexFingerprint {
+    len: u64,
+    modified: Option<SystemTime>,
+}
 
 fn index_path() -> PathBuf {
     crate::services::paths::data_dir()
@@ -11,14 +19,71 @@ fn index_path() -> PathBuf {
 }
 
 pub async fn read_index() -> Result<Vec<AgentSessionMeta>, String> {
+    let mut last_fingerprint = INDEX_RECONCILE_FINGERPRINT.lock().await;
     let path = index_path();
     match tokio::fs::read_to_string(&path).await {
         Ok(data) => match serde_json::from_str::<Vec<AgentSessionMeta>>(&data) {
-            Ok(entries) => Ok(entries),
-            Err(_) => rebuild_index().await,
+            Ok(entries) => {
+                let fingerprint = index_fingerprint(&path).await;
+                if last_fingerprint.as_ref() == fingerprint.as_ref() {
+                    Ok(entries)
+                } else {
+                    let entries = reconcile_index(&path, entries).await?;
+                    *last_fingerprint = index_fingerprint(&path).await;
+                    Ok(entries)
+                }
+            }
+            Err(_) => {
+                let entries = rebuild_index().await?;
+                *last_fingerprint = index_fingerprint(&path).await;
+                Ok(entries)
+            }
         },
-        Err(_) => rebuild_index().await,
+        Err(_) => {
+            let entries = rebuild_index().await?;
+            *last_fingerprint = index_fingerprint(&path).await;
+            Ok(entries)
+        }
     }
+}
+
+async fn index_fingerprint(path: &Path) -> Option<IndexFingerprint> {
+    let metadata = tokio::fs::metadata(path).await.ok()?;
+    Some(IndexFingerprint {
+        len: metadata.len(),
+        modified: metadata.modified().ok(),
+    })
+}
+
+async fn reconcile_index(
+    index_path: &Path,
+    entries: Vec<AgentSessionMeta>,
+) -> Result<Vec<AgentSessionMeta>, String> {
+    let Some(dir) = index_path.parent() else {
+        return Ok(entries);
+    };
+    for meta in &entries {
+        let path = dir.join(format!("{}.json", meta.id));
+        let Ok(data) = tokio::fs::read_to_string(&path).await else {
+            return rebuild_index_from(dir).await;
+        };
+        let Ok(session) = serde_json::from_str::<AgentSession>(&data) else {
+            continue;
+        };
+        if index_meta_drifted(meta, &session) {
+            return rebuild_index_from(dir).await;
+        }
+    }
+    Ok(entries)
+}
+
+fn index_meta_drifted(meta: &AgentSessionMeta, session: &AgentSession) -> bool {
+    meta.archived_at != session.archived_at
+        || meta.parent_session_id != session.parent_session_id
+        || meta.clone_parent_session_id != session.clone_parent_session_id
+        || meta.clone_parent_message_id != session.clone_parent_message_id
+        || meta.clone_mode != session.clone_mode
+        || meta.git_branch != session.git_branch
 }
 
 pub async fn rebuild_index() -> Result<Vec<AgentSessionMeta>, String> {
@@ -58,14 +123,18 @@ pub async fn upsert_entry(meta: AgentSessionMeta) -> Result<(), String> {
     } else {
         entries.push(meta);
     }
-    write_index(&entries).await
+    write_index(&entries).await?;
+    refresh_reconcile_fingerprint().await;
+    Ok(())
 }
 
 pub async fn remove_entry(id: &str) -> Result<(), String> {
     let _guard = INDEX_LOCK.lock().await;
     let mut entries = read_index_raw().await;
     entries.retain(|e| e.id != id);
-    write_index(&entries).await
+    write_index(&entries).await?;
+    refresh_reconcile_fingerprint().await;
+    Ok(())
 }
 
 pub fn meta_from_session(session: &AgentSession) -> AgentSessionMeta {
@@ -125,6 +194,15 @@ pub(crate) async fn write_index_to(dir: &Path, entries: &[AgentSessionMeta]) -> 
     Ok(())
 }
 
+async fn refresh_reconcile_fingerprint() {
+    let mut last_fingerprint = INDEX_RECONCILE_FINGERPRINT.lock().await;
+    *last_fingerprint = index_fingerprint(&index_path()).await;
+}
+
 #[path = "session_index_tests.rs"]
 #[cfg(test)]
 mod tests;
+
+#[path = "session_index_reconcile_tests.rs"]
+#[cfg(test)]
+mod reconcile_tests;

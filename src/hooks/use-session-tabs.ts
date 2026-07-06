@@ -6,6 +6,12 @@ import {
   markSessionRunning,
 } from "@/hooks/use-session-activity-indicators";
 import { useSessionTabsGitActions } from "@/hooks/use-session-tabs-git-actions";
+import {
+  addAttentionTab,
+  findCloneTabId,
+  removeAttentionTab,
+  savePreviousActiveTab,
+} from "@/hooks/use-session-tabs-helpers";
 import type { CloneMode, CloneSessionResult, SessionTab, SessionTabs } from "@/types/agent";
 
 interface CloneMessageOptions {
@@ -158,44 +164,4 @@ export function useSessionTabs(
     closeTabWithGitCleanup: gitActions.closeTabWithGitCleanup,
     renameTab,
   };
-}
-
-function findCloneTabId(result: CloneSessionResult): string | null {
-  return result.tabs.tabs.find((tab) => tab.session_id === result.clone_session_id)?.tab_id ?? null;
-}
-
-async function savePreviousActiveTab(
-  rootSessionId: string,
-  tabs: SessionTabs,
-  previousActiveTabId: string,
-): Promise<SessionTabs> {
-  const activeTabExists = tabs.tabs.some((tab) => tab.tab_id === previousActiveTabId);
-  return invoke<SessionTabs>("save_session_tabs", {
-    sessionId: rootSessionId,
-    tabs: { ...tabs, active_tab_id: activeTabExists ? previousActiveTabId : "main" },
-  });
-}
-
-function addAttentionTab(
-  current: Record<string, string[]>,
-  rootSessionId: string,
-  tabId: string,
-): Record<string, string[]> {
-  const ids = current[rootSessionId] ?? [];
-  if (ids.includes(tabId)) return current;
-  return { ...current, [rootSessionId]: [...ids, tabId].slice(-3) };
-}
-
-function removeAttentionTab(
-  current: Record<string, string[]>,
-  rootSessionId: string,
-  tabId: string,
-): Record<string, string[]> {
-  const ids = current[rootSessionId];
-  if (!ids?.includes(tabId)) return current;
-  const nextIds = ids.filter((id) => id !== tabId);
-  const next = { ...current };
-  if (nextIds.length > 0) next[rootSessionId] = nextIds;
-  else delete next[rootSessionId];
-  return next;
 }

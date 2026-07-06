@@ -2,6 +2,7 @@ import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useTranslation } from "react-i18next";
 import { ProjectSelector } from "./project-selector";
+import "./chat-project-controls.css";
 import { BranchSelector } from "./branch-selector";
 import { BranchConflictDialog } from "./branch-conflict-dialog";
 import { BranchGithubAuthDialog } from "./branch-github-auth-dialog";
@@ -44,7 +45,7 @@ export function ChatProjectControls({
 
   return (
     <>
-      <div style={{ display: "flex", alignItems: "center", gap: "var(--space-xs)", flexWrap: "wrap" }}>
+      <div className="cpc-row">
         <ProjectSelector
           projects={projects}
           selectedProjectId={projectState.selectedProjectId}
