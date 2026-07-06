@@ -219,6 +219,7 @@
       "gitCreated": "Git ブランチを作成しました",
       "gitBranchMissing": "リンクされた git ブランチはもう存在しません。",
       "gitMissingCheckpoint": "クリーンアップできません: メインブランチが不明です。",
+      "gitBranchLinkedElsewhere": "クリーンアップできません: このブランチは別のセッションにもリンクされています。",
       "gitArchiveTitle": "このクローンをアーカイブしますか？",
       "gitArchiveDescription": "このセッションは Git ブランチ \"{{branch}}\" にリンクされています。",
       "gitArchiveKeep": "はい",

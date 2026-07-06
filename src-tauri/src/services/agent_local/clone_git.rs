@@ -11,6 +11,7 @@ use serde::Serialize;
 use std::path::{Path, PathBuf};
 
 const MAX_BRANCH_RETRIES: usize = 3;
+pub const BRANCH_LINKED_TO_OTHER_SESSION_ERROR: &str = "clone_branch_linked_to_other_session";
 
 #[derive(Debug, Clone, Serialize)]
 pub struct CloneGitBranchResult {
@@ -83,8 +84,7 @@ pub async fn close_tab_with_branch_cleanup(
     };
 
     if branch_linked_by_other_session(&git_branch, &tab.session_id).await? {
-        unlink_branch(root_session_id, &tab.session_id).await?;
-        return session_tabs::close_tab(root_session_id, tab_id).await;
+        return Err(BRANCH_LINKED_TO_OTHER_SESSION_ERROR.into());
     }
 
     // Switch vers le fallback si on était sur la branche clone, puis suppression.

@@ -4,6 +4,8 @@ import { CloneGitArchiveDialog } from "@/components/agent-local/clone-git-archiv
 import { showToast } from "@/lib/toast-emitter";
 import type { SessionTab, SessionTabs } from "@/types/agent";
 
+const BRANCH_LINKED_TO_OTHER_SESSION_ERROR = "clone_branch_linked_to_other_session";
+
 interface Options {
   tabs: SessionTabs | null;
   projectPath?: string;
@@ -52,7 +54,7 @@ export function useCloneTabArchive({
     setBusy(true);
     void onCloseTabWithGitCleanup(pending.tab_id, projectPath, fallbackBranch)
       .then(() => setPending(null))
-      .catch(() => showToast(t("errors.operationFailed"), "error"))
+      .catch((err) => showToast(t(cleanupErrorKey(err)), "error", 3000))
       .finally(() => setBusy(false));
   }, [getMainBranch, onCloseTabWithGitCleanup, pending, projectPath, t]);
 
@@ -67,4 +69,14 @@ export function useCloneTabArchive({
   ) : null;
 
   return { closeTab, dialog };
+}
+
+function cleanupErrorKey(err: unknown): string {
+  if (
+    err === BRANCH_LINKED_TO_OTHER_SESSION_ERROR
+    || (err instanceof Error && err.message === BRANCH_LINKED_TO_OTHER_SESSION_ERROR)
+  ) {
+    return "agentLocal.clone.gitBranchLinkedElsewhere";
+  }
+  return "errors.operationFailed";
 }

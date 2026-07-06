@@ -1,4 +1,4 @@
-import { act, render, renderHook, screen, fireEvent } from "@testing-library/react";
+import { act, render, renderHook, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { useCloneTabArchive } from "../use-clone-tab-archive";
 import { showToast } from "@/lib/toast-emitter";
@@ -42,5 +42,28 @@ describe("useCloneTabArchive", () => {
 
     expect(cleanup).not.toHaveBeenCalled();
     expect(showToast).toHaveBeenCalledWith("agentLocal.clone.gitMissingCheckpoint", "error", 3000);
+  });
+
+  it("affiche une erreur claire quand la branche est liée ailleurs", async () => {
+    const cleanup = vi.fn().mockRejectedValue("clone_branch_linked_to_other_session");
+    const { result } = renderHook(() => useCloneTabArchive({
+      tabs,
+      projectPath: "/repo",
+      onCloseTab: vi.fn(),
+      onCloseTabWithGitCleanup: cleanup,
+      getMainBranch: () => "main",
+    }));
+
+    act(() => result.current.closeTab("branch-1"));
+    render(<>{result.current.dialog}</>);
+    fireEvent.click(screen.getByRole("button", { name: "agentLocal.clone.gitArchiveCleanup" }));
+
+    await waitFor(() => {
+      expect(showToast).toHaveBeenCalledWith(
+        "agentLocal.clone.gitBranchLinkedElsewhere",
+        "error",
+        3000,
+      );
+    });
   });
 });
