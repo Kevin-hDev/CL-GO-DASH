@@ -1,4 +1,10 @@
-use super::{session_store, session_tabs};
+use super::{
+    clone_git_checks::{
+        branch_linked_by_other_session, clone_linked_branch, ensure_clone_belongs_to_root,
+        ensure_clone_belongs_to_root_string,
+    },
+    session_store, session_tabs,
+};
 use crate::services::git::{branch, branch_delete};
 use rand::RngCore;
 use serde::Serialize;
@@ -20,7 +26,7 @@ pub async fn create_linked_branch(
     let mut clone = session_store::get(clone_session_id)
         .await
         .map_err(|_| branch::CreateBranchError::InternalError)?;
-    ensure_clone_belongs_to_root(&clone, root_session_id)?;
+    ensure_clone_belongs_to_root(&clone, root_session_id).await?;
     if let Some(branch_name) = clone.git_branch.clone() {
         let tabs = session_tabs::set_clone_git_branch(
             root_session_id,
@@ -52,7 +58,7 @@ pub async fn unlink_branch(
     clone_session_id: &str,
 ) -> Result<session_tabs::SessionTabs, String> {
     let mut clone = session_store::get(clone_session_id).await?;
-    ensure_clone_belongs_to_root_string(&clone, root_session_id)?;
+    ensure_clone_belongs_to_root_string(&clone, root_session_id).await?;
     clone.git_branch = None;
     session_store::save(&clone).await?;
     session_tabs::set_clone_git_branch(root_session_id, clone_session_id, None).await
@@ -66,7 +72,7 @@ pub async fn close_tab_with_branch_cleanup(
 ) -> Result<session_tabs::SessionTabs, String> {
     let tab = session_tabs::get_tab(root_session_id, tab_id).await?;
     let clone = session_store::get(&tab.session_id).await?;
-    let Some(git_branch) = clone_linked_branch(&clone, root_session_id)? else {
+    let Some(git_branch) = clone_linked_branch(&clone, root_session_id).await? else {
         return session_tabs::close_tab(root_session_id, tab_id).await;
     };
 
@@ -76,12 +82,13 @@ pub async fn close_tab_with_branch_cleanup(
         None => session_tabs::get_main_checkpoint_branch(root_session_id).await?,
     };
 
-    // 1. Unlink d'abord : si la suppression Git échoue ensuite, le tab reste dans un état
-    //    cohérent (plus de git_branch lié, branche encore présente dans le repo).
-    unlink_branch(root_session_id, &tab.session_id).await?;
+    if branch_linked_by_other_session(&git_branch, &tab.session_id).await? {
+        unlink_branch(root_session_id, &tab.session_id).await?;
+        return session_tabs::close_tab(root_session_id, tab_id).await;
+    }
 
-    // 2. Switch vers le fallback si on était sur la branche clone, puis suppression.
-    //    Tout est synchro disque → spawn_blocking pour ne pas bloquer le runtime Tokio.
+    // Switch vers le fallback si on était sur la branche clone, puis suppression.
+    // Tout est synchro disque → spawn_blocking pour ne pas bloquer le runtime Tokio.
     let repo_path: PathBuf = repo_path.to_path_buf();
     tokio::task::spawn_blocking(move || -> Result<(), String> {
         let context = branch::get_context(&repo_path);
@@ -108,6 +115,7 @@ pub async fn close_tab_with_branch_cleanup(
         "Erreur interne".to_string()
     })??;
 
+    unlink_branch(root_session_id, &tab.session_id).await?;
     session_tabs::close_tab(root_session_id, tab_id).await
 }
 
@@ -160,44 +168,6 @@ fn hex_lower(bytes: &[u8]) -> String {
         out.push(HEX[(byte & 0x0f) as usize] as char);
     }
     out
-}
-
-fn ensure_clone_belongs_to_root(
-    clone: &super::types_session::AgentSession,
-    root_session_id: &str,
-) -> Result<(), branch::CreateBranchError> {
-    if clone_belongs_to_root(clone, root_session_id) {
-        Ok(())
-    } else {
-        Err(branch::CreateBranchError::InternalError)
-    }
-}
-
-fn ensure_clone_belongs_to_root_string(
-    clone: &super::types_session::AgentSession,
-    root_session_id: &str,
-) -> Result<(), String> {
-    if clone_belongs_to_root(clone, root_session_id) {
-        Ok(())
-    } else {
-        Err("Action impossible".into())
-    }
-}
-
-fn clone_linked_branch(
-    clone: &super::types_session::AgentSession,
-    root_session_id: &str,
-) -> Result<Option<String>, String> {
-    ensure_clone_belongs_to_root_string(clone, root_session_id)?;
-    Ok(clone.git_branch.clone())
-}
-
-fn clone_belongs_to_root(
-    clone: &super::types_session::AgentSession,
-    root_session_id: &str,
-) -> bool {
-    clone.clone_root_session_id.as_deref() == Some(root_session_id)
-        || clone.clone_parent_session_id.as_deref() == Some(root_session_id)
 }
 
 #[cfg(test)]

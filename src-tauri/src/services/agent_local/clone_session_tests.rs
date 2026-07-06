@@ -72,7 +72,7 @@ fn session() -> AgentSession {
 #[test]
 fn build_clone_cuts_at_selected_message() {
     let source = session();
-    let clone = build_clone(&source, "m2", CloneMode::Cut, 1);
+    let clone = build_clone(&source, "m2", CloneMode::Cut, 1, &source.id);
 
     assert_eq!(clone.messages.len(), 2);
     assert_eq!(clone.messages[1].id, "m2");
@@ -89,7 +89,9 @@ fn hidden_context_message_uses_clone_prefix() {
     let hidden = hidden_context_message("Useful summary");
 
     assert_eq!(hidden.role, "user");
-    assert!(hidden.content.starts_with(clone_summary::CLONE_SUMMARY_PREFIX));
+    assert!(hidden
+        .content
+        .starts_with(clone_summary::CLONE_SUMMARY_PREFIX));
 }
 
 /// Construit une session qui est elle-même un clone (parent immédiat + racine
@@ -108,11 +110,17 @@ fn build_clone_from_main_sets_root_to_main() {
     // Clone depuis la session principale : la racine du nouveau clone est
     // l'id de la session principale.
     let source = session();
-    let clone = build_clone(&source, "m2", CloneMode::Cut, 1);
+    let clone = build_clone(&source, "m2", CloneMode::Cut, 1, &source.id);
 
-    assert_eq!(clone.clone_root_session_id.as_deref(), Some(source.id.as_str()));
+    assert_eq!(
+        clone.clone_root_session_id.as_deref(),
+        Some(source.id.as_str())
+    );
     // Le parent immédiat est aussi la racine dans ce cas.
-    assert_eq!(clone.clone_parent_session_id.as_deref(), Some(source.id.as_str()));
+    assert_eq!(
+        clone.clone_parent_session_id.as_deref(),
+        Some(source.id.as_str())
+    );
 }
 
 #[test]
@@ -122,7 +130,7 @@ fn build_clone_from_clone_propagates_root_id() {
     let root_id = "root-11111111-1111-1111-1111-111111111111";
     let clone_intermediate_id = "clone-22222222-2222-2222-2222-222222222222";
     let source = clone_session_as_source(root_id, clone_intermediate_id);
-    let clone = build_clone(&source, "m2", CloneMode::Cut, 1);
+    let clone = build_clone(&source, "m2", CloneMode::Cut, 1, root_id);
 
     assert_eq!(clone.clone_root_session_id.as_deref(), Some(root_id));
     assert_eq!(
@@ -130,8 +138,24 @@ fn build_clone_from_clone_propagates_root_id() {
         Some(clone_intermediate_id)
     );
     // Le parent immédiat et la racine diffèrent bien : on est sur un clone-de-clone.
-    assert_ne!(
-        clone.clone_parent_session_id,
-        clone.clone_root_session_id
+    assert_ne!(clone.clone_parent_session_id, clone.clone_root_session_id);
+}
+
+#[test]
+fn build_clone_does_not_inherit_git_branch() {
+    let mut source = clone_session_as_source(
+        "root-11111111-1111-1111-1111-111111111111",
+        "clone-22222222-2222-2222-2222-222222222222",
     );
+    source.git_branch = Some("clone-12345678".into());
+
+    let clone = build_clone(
+        &source,
+        "m2",
+        CloneMode::Cut,
+        1,
+        "root-11111111-1111-1111-1111-111111111111",
+    );
+
+    assert_eq!(clone.git_branch, None);
 }

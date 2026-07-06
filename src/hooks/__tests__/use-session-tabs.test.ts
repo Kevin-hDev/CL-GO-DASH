@@ -91,6 +91,39 @@ describe("useSessionTabs", () => {
     })).rejects.toThrow("max tabs");
   });
 
+  it("ignore les onglets de clone retournés pour une autre racine", async () => {
+    const wrongRootTabs: SessionTabs = {
+      active_tab_id: "branch-1",
+      tabs: [
+        { tab_id: "main", session_id: "clone-root", label: "Main", is_main: true },
+        { tab_id: "branch-1", session_id: "nested", label: "Branche 1", is_main: false },
+      ],
+    };
+    vi.mocked(invoke).mockImplementation((command: string) => {
+      if (command === "list_session_tabs") return Promise.resolve(rootTabs);
+      if (command === "clone_agent_session") {
+        return Promise.resolve({
+          ...cloneResult,
+          root_session_id: "clone-root",
+          tabs: wrongRootTabs,
+        });
+      }
+      return Promise.resolve(rootTabs);
+    });
+    const { result } = renderHook(() => useSessionTabs("root"));
+    await waitFor(() => expect(result.current.tabs).toEqual(rootTabs));
+
+    await act(async () => {
+      await result.current.cloneMessage({
+        messageId: "m1",
+        mode: "cut",
+        operationId: "op-frontend",
+      });
+    });
+
+    expect(result.current.tabs).toEqual(rootTabs);
+  });
+
   it("crée et lie une branche git de clone", async () => {
     const linkedTabs: SessionTabs = {
       ...cloneTabs,

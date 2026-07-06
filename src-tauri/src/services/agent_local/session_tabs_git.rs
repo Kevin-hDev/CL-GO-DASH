@@ -1,8 +1,10 @@
 use super::session_store::validate_session_id;
-use super::{session_store, session_tabs::{
-    read_file, write_file, SessionTab, SessionTabs, TABS_LOCK,
-}};
-use super::session_tabs_state::normalize_tabs;
+use super::session_tabs_state::{normalize_tabs, MAIN_TAB_ID};
+use super::{
+    session_tabs_file::{read_file, write_file, TABS_LOCK},
+    session_store,
+    session_tabs::{SessionTab, SessionTabs},
+};
 
 pub async fn get_tab(root_session_id: &str, tab_id: &str) -> Result<SessionTab, String> {
     validate_session_id(root_session_id)?;
@@ -44,19 +46,55 @@ pub async fn set_clone_git_branch(
         return Err("Action impossible".into());
     };
     tab.git_branch = git_branch;
-    file.sessions.insert(root_session_id.to_string(), tabs.clone());
+    file.sessions
+        .insert(root_session_id.to_string(), tabs.clone());
     write_file(&file).await?;
     Ok(tabs)
 }
 
-pub async fn sync_git_branches_from_sessions(tabs: &mut SessionTabs) {
-    for tab in &mut tabs.tabs {
+pub async fn sync_git_branches_from_sessions(
+    root_session_id: &str,
+    tabs: &mut SessionTabs,
+) -> Result<(), String> {
+    let metas = super::session_index::read_index().await?;
+    let mut synced_tabs = Vec::with_capacity(tabs.tabs.len());
+    for mut tab in tabs.tabs.drain(..) {
         if tab.is_main {
             tab.git_branch = None;
+            synced_tabs.push(tab);
             continue;
         }
-        if let Ok(session) = session_store::get(&tab.session_id).await {
-            tab.git_branch = session.git_branch;
+        let Ok(mut session) = session_store::get(&tab.session_id).await else {
+            continue;
+        };
+        let Ok(root_id) = super::clone_roots::root_id_from_metas(
+            &metas,
+            &session.id,
+            session.clone_parent_session_id.as_deref(),
+        ) else {
+            continue;
+        };
+        if root_id != root_session_id {
+            continue;
         }
+        if let Some(branch) = session.git_branch.clone() {
+            if super::clone_roots::git_branch_shared_with_ancestor(
+                &metas,
+                &session.id,
+                session.clone_parent_session_id.as_deref(),
+                &branch,
+            ) {
+                session.git_branch = None;
+                let _ = session_store::save(&session).await;
+            }
+        }
+        tab.clone_parent_session_id = Some(root_session_id.to_string());
+        tab.git_branch = session.git_branch;
+        synced_tabs.push(tab);
     }
+    tabs.tabs = synced_tabs;
+    if !tabs.tabs.iter().any(|tab| tab.tab_id == tabs.active_tab_id) {
+        tabs.active_tab_id = MAIN_TAB_ID.to_string();
+    }
+    Ok(())
 }

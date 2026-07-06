@@ -30,8 +30,13 @@ pub async fn restore_with_parent(id: &str) -> Result<(), String> {
         super::session_archive::restore(ancestor).await?;
     }
     super::session_archive::restore(id).await?;
-    if let Some(root_id) = meta.clone_parent_session_id.as_deref() {
-        super::session_tabs::ensure_clone_tab(root_id, id).await?;
+    if meta.clone_parent_session_id.is_some() {
+        let root_id = super::clone_roots::root_id_from_metas(
+            &metas,
+            &meta.id,
+            meta.clone_parent_session_id.as_deref(),
+        )?;
+        super::session_tabs::ensure_clone_tab(&root_id, id).await?;
     }
     Ok(())
 }
@@ -55,7 +60,8 @@ pub(crate) fn family_ids(metas: &[AgentSessionMeta], id: &str) -> Vec<String> {
             break;
         }
         for meta in metas {
-            if parent_id(meta) != Some(parent.as_str()) || result.iter().any(|seen| seen == &meta.id)
+            if parent_id(meta) != Some(parent.as_str())
+                || result.iter().any(|seen| seen == &meta.id)
             {
                 continue;
             }
@@ -66,7 +72,10 @@ pub(crate) fn family_ids(metas: &[AgentSessionMeta], id: &str) -> Vec<String> {
     result
 }
 
-fn ancestor_ids(metas: &[AgentSessionMeta], meta: &AgentSessionMeta) -> Result<Vec<String>, String> {
+fn ancestor_ids(
+    metas: &[AgentSessionMeta],
+    meta: &AgentSessionMeta,
+) -> Result<Vec<String>, String> {
     let mut ancestors = Vec::new();
     let mut current = meta;
     while let Some(parent) = parent_id(current) {

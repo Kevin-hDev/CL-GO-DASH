@@ -109,6 +109,10 @@ export function useSessionTabs(
         operationId,
       });
       await onSessionsRefresh?.();
+      if (result.root_session_id !== rootSessionId) {
+        await refreshTabs();
+        return result;
+      }
       const cloneTabId = findCloneTabId(result);
       const shouldActivate = options.shouldActivateOnComplete?.() ?? true;
       const canActivate = shouldActivate && rootSessionIdRef.current === rootSessionId;
@@ -125,7 +129,7 @@ export function useSessionTabs(
       if (options.mode === "summary") clearSessionRunning(rootSessionId);
       throw error;
     }
-  }, [activeSessionId, onSessionsRefresh, rootSessionId, tabs?.active_tab_id]);
+  }, [activeSessionId, onSessionsRefresh, refreshTabs, rootSessionId, tabs?.active_tab_id]);
 
   const cancelCloneSummary = useCallback(async (operationId: string) => {
     await invoke("cancel_clone_summary", { operationId });

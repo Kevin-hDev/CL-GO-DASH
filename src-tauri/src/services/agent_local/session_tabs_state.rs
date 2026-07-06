@@ -6,7 +6,7 @@ use std::collections::HashSet;
 pub const MAX_TABS_PER_SESSION: usize = 3;
 pub const MAIN_TAB_ID: &str = "main";
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SessionTab {
     pub tab_id: String,
     pub session_id: String,
@@ -22,7 +22,7 @@ pub struct SessionTab {
     pub git_branch: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SessionTabs {
     pub active_tab_id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -94,6 +94,9 @@ pub fn validate_tabs(root_session_id: &str, tabs: &SessionTabs) -> Result<(), St
         if tab.is_main && tab.session_id != root_session_id {
             return Err("Action impossible".into());
         }
+        if !tab.is_main && tab.clone_parent_session_id.as_deref() != Some(root_session_id) {
+            return Err("Action impossible".into());
+        }
         if !ids.insert(tab.tab_id.clone()) {
             return Err("Action impossible".into());
         }
@@ -143,12 +146,32 @@ mod tests {
 
     #[test]
     fn normalize_preserves_main_checkpoint_branch() {
-        let tabs = normalize_tabs(ROOT, Some(SessionTabs {
-            active_tab_id: MAIN_TAB_ID.to_string(),
-            main_checkpoint_branch: Some("main".to_string()),
-            tabs: vec![main_tab(ROOT)],
-        }));
+        let tabs = normalize_tabs(
+            ROOT,
+            Some(SessionTabs {
+                active_tab_id: MAIN_TAB_ID.to_string(),
+                main_checkpoint_branch: Some("main".to_string()),
+                tabs: vec![main_tab(ROOT)],
+            }),
+        );
 
         assert_eq!(tabs.main_checkpoint_branch.as_deref(), Some("main"));
+    }
+
+    #[test]
+    fn validate_rejects_clone_tab_from_another_root() {
+        let mut tabs = normalize_tabs(ROOT, None);
+        tabs.tabs.push(SessionTab {
+            tab_id: "branch-1".into(),
+            session_id: "550e8400-e29b-41d4-a716-446655440001".into(),
+            label: "Branch 1".into(),
+            is_main: false,
+            clone_parent_session_id: Some("550e8400-e29b-41d4-a716-446655440002".into()),
+            clone_parent_message_id: None,
+            clone_mode: Some(CloneMode::Cut),
+            git_branch: None,
+        });
+
+        assert!(validate_tabs(ROOT, &tabs).is_err());
     }
 }
