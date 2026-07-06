@@ -1,10 +1,12 @@
 use super::session_store::validate_session_id;
 use super::session_tabs_state::{normalize_tabs, MAIN_TAB_ID};
 use super::{
-    session_tabs_file::{read_file, write_file, TABS_LOCK},
     session_store,
     session_tabs::{SessionTab, SessionTabs},
+    session_tabs_file::{read_file, write_file, TABS_LOCK},
 };
+use crate::services::git::branch;
+use std::collections::HashSet;
 
 pub async fn get_tab(root_session_id: &str, tab_id: &str) -> Result<SessionTab, String> {
     validate_session_id(root_session_id)?;
@@ -50,6 +52,40 @@ pub async fn set_clone_git_branch(
         .insert(root_session_id.to_string(), tabs.clone());
     write_file(&file).await?;
     Ok(tabs)
+}
+
+pub async fn clear_git_branch_for_sessions(session_ids: &[String]) -> Result<(), String> {
+    let ids: HashSet<&str> = session_ids.iter().map(String::as_str).collect();
+    for session_id in &ids {
+        validate_session_id(session_id)?;
+    }
+    let _guard = TABS_LOCK.lock().await;
+    let mut file = read_file().await?;
+    for tabs in file.sessions.values_mut() {
+        for tab in &mut tabs.tabs {
+            if ids.contains(tab.session_id.as_str()) {
+                tab.git_branch = None;
+            }
+        }
+    }
+    write_file(&file).await
+}
+
+pub async fn replace_main_checkpoint_branch(
+    deleted_branch: &str,
+    replacement_branch: &str,
+) -> Result<(), String> {
+    branch::validate_branch_name(deleted_branch).map_err(|_| "Action impossible".to_string())?;
+    branch::validate_branch_name(replacement_branch)
+        .map_err(|_| "Action impossible".to_string())?;
+    let _guard = TABS_LOCK.lock().await;
+    let mut file = read_file().await?;
+    for tabs in file.sessions.values_mut() {
+        if tabs.main_checkpoint_branch.as_deref() == Some(deleted_branch) {
+            tabs.main_checkpoint_branch = Some(replacement_branch.to_string());
+        }
+    }
+    write_file(&file).await
 }
 
 pub async fn sync_git_branches_from_sessions(

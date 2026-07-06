@@ -24,6 +24,7 @@ pub mod circuit_breaker;
 #[cfg(test)]
 pub mod circuit_breaker_tests;
 pub mod clone_git;
+pub mod clone_git_cleanup;
 pub mod clone_git_checks;
 pub mod clone_git_link;
 pub mod clone_roots;

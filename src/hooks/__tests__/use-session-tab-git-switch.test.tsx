@@ -77,11 +77,11 @@ describe("useSessionTabGitSwitch", () => {
     await waitFor(() => expect(onSelectTab).toHaveBeenCalledWith("branch-1"));
   });
 
-  it("persiste la branche principale quand l'onglet main est actif", async () => {
+  it("persiste la branche principale quand aucun checkpoint n'existe", async () => {
     const save = vi.fn().mockResolvedValue(undefined);
     renderHook(() => useSessionTabGitSwitch({
       rootSessionId: "root",
-      tabs,
+      tabs: { ...tabs, main_checkpoint_branch: undefined },
       git: git({ currentBranch: "main" }),
       projectPath: "/repo",
       onSelectTab: vi.fn(),
@@ -90,5 +90,39 @@ describe("useSessionTabGitSwitch", () => {
     }));
 
     await waitFor(() => expect(save).toHaveBeenCalledWith("main"));
+  });
+
+  it("ne remplace pas un checkpoint principal existant", async () => {
+    const save = vi.fn().mockResolvedValue(undefined);
+    renderHook(() => useSessionTabGitSwitch({
+      rootSessionId: "root",
+      tabs,
+      git: git({ currentBranch: "Delete-branch" }),
+      projectPath: "/repo",
+      onSelectTab: vi.fn(),
+      onUnlinkCloneGitBranch: vi.fn(),
+      onSaveMainCheckpointBranch: save,
+    }));
+
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(save).not.toHaveBeenCalled();
+  });
+
+  it("ne persiste pas une branche de clone comme branche principale", async () => {
+    const save = vi.fn().mockResolvedValue(undefined);
+    renderHook(() => useSessionTabGitSwitch({
+      rootSessionId: "root",
+      tabs,
+      git: git({ currentBranch: "clone-11111111" }),
+      projectPath: "/repo",
+      onSelectTab: vi.fn(),
+      onUnlinkCloneGitBranch: vi.fn(),
+      onSaveMainCheckpointBranch: save,
+    }));
+
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(save).not.toHaveBeenCalled();
   });
 });

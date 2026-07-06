@@ -1,17 +1,15 @@
 use super::{
-    clone_git_checks::{
-        branch_linked_by_other_session, clone_linked_branch, ensure_clone_belongs_to_root,
-        ensure_clone_belongs_to_root_string,
-    },
+    clone_git_checks::{ensure_clone_belongs_to_root, ensure_clone_belongs_to_root_string},
     session_store, session_tabs,
 };
-use crate::services::git::{branch, branch_delete};
+use crate::services::git::branch;
 use rand::RngCore;
 use serde::Serialize;
 use std::path::{Path, PathBuf};
 
+pub use super::clone_git_cleanup::close_tab_with_branch_cleanup;
+
 const MAX_BRANCH_RETRIES: usize = 3;
-pub const BRANCH_LINKED_TO_OTHER_SESSION_ERROR: &str = "clone_branch_linked_to_other_session";
 
 #[derive(Debug, Clone, Serialize)]
 pub struct CloneGitBranchResult {
@@ -63,60 +61,6 @@ pub async fn unlink_branch(
     clone.git_branch = None;
     session_store::save(&clone).await?;
     session_tabs::set_clone_git_branch(root_session_id, clone_session_id, None).await
-}
-
-pub async fn close_tab_with_branch_cleanup(
-    root_session_id: &str,
-    tab_id: &str,
-    repo_path: &Path,
-    fallback_branch: Option<&str>,
-) -> Result<session_tabs::SessionTabs, String> {
-    let tab = session_tabs::get_tab(root_session_id, tab_id).await?;
-    let clone = session_store::get(&tab.session_id).await?;
-    let Some(git_branch) = clone_linked_branch(&clone, root_session_id).await? else {
-        return session_tabs::close_tab(root_session_id, tab_id).await;
-    };
-
-    // Fallback explicite du frontend, sinon checkpoint persisté dans session-tabs.json.
-    let checkpoint = match fallback_branch.map(str::to_string) {
-        Some(branch) => Some(branch),
-        None => session_tabs::get_main_checkpoint_branch(root_session_id).await?,
-    };
-
-    if branch_linked_by_other_session(&git_branch, &tab.session_id).await? {
-        return Err(BRANCH_LINKED_TO_OTHER_SESSION_ERROR.into());
-    }
-
-    // Switch vers le fallback si on était sur la branche clone, puis suppression.
-    // Tout est synchro disque → spawn_blocking pour ne pas bloquer le runtime Tokio.
-    let repo_path: PathBuf = repo_path.to_path_buf();
-    tokio::task::spawn_blocking(move || -> Result<(), String> {
-        let context = branch::get_context(&repo_path);
-        if context.branch == git_branch {
-            let Some(fallback) = checkpoint.as_deref() else {
-                return Err("Action impossible".to_string());
-            };
-            if fallback == git_branch {
-                return Err("Action impossible".to_string());
-            }
-            if !branch_delete::branch_exists(&repo_path, fallback)? {
-                return Err("Branche introuvable".to_string());
-            }
-            branch::checkout_branch(&repo_path, fallback)?;
-        }
-        if branch_delete::branch_exists(&repo_path, &git_branch)? {
-            branch_delete::delete_branch(&repo_path, &git_branch)?;
-        }
-        Ok(())
-    })
-    .await
-    .map_err(|e| {
-        eprintln!("[clone-git] close cleanup join: {e}");
-        "Erreur interne".to_string()
-    })??;
-
-    unlink_branch(root_session_id, &tab.session_id).await?;
-    session_tabs::close_tab(root_session_id, tab_id).await
 }
 
 async fn create_unique_branch(repo_path: &Path) -> Result<String, branch::CreateBranchError> {

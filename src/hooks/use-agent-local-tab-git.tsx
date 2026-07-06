@@ -31,6 +31,7 @@ export function useAgentLocalTabGit({
     onCloseTab: sessionTabs.closeTab,
     onCloseTabWithGitCleanup: sessionTabs.closeTabWithGitCleanup,
     getMainBranch: tabSwitch.getMainBranch,
+    onAfterCleanup: git.refresh,
   });
 
   return {

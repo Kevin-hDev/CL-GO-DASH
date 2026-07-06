@@ -219,7 +219,6 @@
       "gitCreated": "Branche git créée",
       "gitBranchMissing": "La branche git liée n'existe plus.",
       "gitMissingCheckpoint": "Impossible de nettoyer : branche principale inconnue.",
-      "gitBranchLinkedElsewhere": "Impossible de nettoyer : cette branche est aussi liée à une autre session.",
       "gitArchiveTitle": "Archiver ce clone ?",
       "gitArchiveDescription": "Cette session est liée à la branche Git \"{{branch}}\".",
       "gitArchiveKeep": "Oui",

@@ -219,7 +219,6 @@
       "gitCreated": "Git branch created",
       "gitBranchMissing": "The linked git branch no longer exists.",
       "gitMissingCheckpoint": "Cannot clean up: main branch is unknown.",
-      "gitBranchLinkedElsewhere": "Cannot clean up: this branch is also linked to another session.",
       "gitArchiveTitle": "Archive this clone?",
       "gitArchiveDescription": "This session is linked to the Git branch \"{{branch}}\".",
       "gitArchiveKeep": "Yes",

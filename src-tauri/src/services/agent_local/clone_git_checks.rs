@@ -30,16 +30,6 @@ pub(super) async fn clone_linked_branch(
     Ok(clone.git_branch.clone())
 }
 
-pub(super) async fn branch_linked_by_other_session(
-    branch_name: &str,
-    session_id: &str,
-) -> Result<bool, String> {
-    let metas = super::session_index::read_index().await?;
-    Ok(metas
-        .iter()
-        .any(|meta| meta.id != session_id && meta.git_branch.as_deref() == Some(branch_name)))
-}
-
 async fn clone_belongs_to_root(
     clone: &super::types_session::AgentSession,
     root_session_id: &str,

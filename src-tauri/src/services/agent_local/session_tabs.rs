@@ -6,7 +6,10 @@ use super::session_tabs_state::{
 };
 use super::types_session::CloneMode;
 
-pub use super::session_tabs_git::{get_main_checkpoint_branch, get_tab, set_clone_git_branch};
+pub use super::session_tabs_git::{
+    clear_git_branch_for_sessions, get_main_checkpoint_branch, get_tab,
+    replace_main_checkpoint_branch, set_clone_git_branch,
+};
 pub use super::session_tabs_state::{SessionTab, SessionTabs};
 
 pub async fn list(root_session_id: &str) -> Result<SessionTabs, String> {

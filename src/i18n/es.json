@@ -219,7 +219,6 @@
       "gitCreated": "Rama git creada",
       "gitBranchMissing": "La rama git vinculada ya no existe.",
       "gitMissingCheckpoint": "No se puede limpiar: se desconoce la rama principal.",
-      "gitBranchLinkedElsewhere": "No se puede limpiar: esta rama también está vinculada a otra sesión.",
       "gitArchiveTitle": "¿Archivar este clon?",
       "gitArchiveDescription": "Esta sesión está vinculada a la rama Git \"{{branch}}\".",
       "gitArchiveKeep": "Sí",

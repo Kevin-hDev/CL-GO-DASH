@@ -39,10 +39,25 @@ export function useSessionTabGitSwitch({
   );
 
   useEffect(() => {
-    if (rootSessionId && activeTab?.is_main && git.currentBranch) {
+    const linkedCloneBranch = tabs?.tabs.some(
+      (tab) => !tab.is_main && tab.git_branch === git.currentBranch,
+    );
+    if (
+      rootSessionId &&
+      activeTab?.is_main &&
+      git.currentBranch &&
+      !tabs?.main_checkpoint_branch &&
+      !linkedCloneBranch
+    ) {
       void onSaveMainCheckpointBranch(git.currentBranch);
     }
-  }, [activeTab?.is_main, git.currentBranch, onSaveMainCheckpointBranch, rootSessionId]);
+  }, [
+    activeTab?.is_main,
+    git.currentBranch,
+    onSaveMainCheckpointBranch,
+    rootSessionId,
+    tabs,
+  ]);
 
   const selectTab = useCallback(async (tabId: string) => {
     if (!tabs || !rootSessionId) return;

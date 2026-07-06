@@ -219,7 +219,6 @@
       "gitCreated": "Git 分支已创建",
       "gitBranchMissing": "关联的 git 分支已不存在。",
       "gitMissingCheckpoint": "无法清理：主分支未知。",
-      "gitBranchLinkedElsewhere": "无法清理：此分支也关联到另一个会话。",
       "gitArchiveTitle": "归档此克隆？",
       "gitArchiveDescription": "此会话已关联到 Git 分支 \"{{branch}}\"。",
       "gitArchiveKeep": "是",
