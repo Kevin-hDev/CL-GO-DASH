@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { ArrowsClockwise, Pencil, Copy, Check, GitBranch } from "@/components/ui/icons";
+import { ArrowsClockwise, Pencil, Copy, Check, GitFork } from "@/components/ui/icons";
 import "./messages.css";
 
 interface MessageActionsProps {
@@ -39,7 +39,7 @@ export function MessageActions({
       )}
       {onClone && !isStreaming && (
         <button className="msg-action-btn" onClick={onClone} title={t("agentLocal.clone.action")}>
-          <GitBranch size="var(--icon-sm)" />
+          <GitFork size="var(--icon-sm)" />
         </button>
       )}
       <button className="msg-action-btn" onClick={() => void handleCopy()}>

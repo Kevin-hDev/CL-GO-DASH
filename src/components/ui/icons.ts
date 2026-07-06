@@ -43,6 +43,7 @@ import {
   PuzzlePiece as PhPuzzlePiece,
   Image as PhImage,
   GitBranch as PhGitBranch,
+  GitFork as PhGitFork,
   Broadcast as PhBroadcast,
   Hash as PhHash,
   ChartLineUp as PhChartLineUp,
@@ -115,6 +116,7 @@ export const Plugs = withSafeCssSize(PhPlugs);
 export const PuzzlePiece = withSafeCssSize(PhPuzzlePiece);
 export const Image = withSafeCssSize(PhImage);
 export const GitBranch = withSafeCssSize(PhGitBranch);
+export const GitFork = withSafeCssSize(PhGitFork);
 export const Broadcast = withSafeCssSize(PhBroadcast);
 export const Hash = withSafeCssSize(PhHash);
 export const ChartLineUp = withSafeCssSize(PhChartLineUp);
