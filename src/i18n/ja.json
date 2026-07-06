@@ -213,7 +213,18 @@
       "create": "作成",
       "running": "要約中...",
       "summaryFailed": "要約を生成できませんでした。",
-      "withoutSummary": "要約なし"
+      "withoutSummary": "要約なし",
+      "gitCreate": "新しい git ブランチ",
+      "gitCreating": "作成中...",
+      "gitCreated": "Git ブランチを作成しました",
+      "gitNoIsolation": "分離なし — メインブランチ",
+      "gitBranchMissing": "リンクされた git ブランチはもう存在しません。",
+      "gitMissingCheckpoint": "クリーンアップできません: メインブランチが不明です。",
+      "gitArchiveTitle": "このクローンをアーカイブしますか？",
+      "gitArchiveDescription": "このセッションは Git ブランチ \"{{branch}}\" にリンクされています。",
+      "gitArchiveKeep": "はい",
+      "gitArchiveCancel": "キャンセル",
+      "gitArchiveCleanup": "ブランチを削除してアーカイブ"
     },
     "compression": "Compression",
     "retry": {

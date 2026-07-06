@@ -213,7 +213,18 @@
       "create": "Create",
       "running": "Summarizing...",
       "summaryFailed": "The summary could not be generated.",
-      "withoutSummary": "Without summary"
+      "withoutSummary": "Without summary",
+      "gitCreate": "New git branch",
+      "gitCreating": "Creating...",
+      "gitCreated": "Git branch created",
+      "gitNoIsolation": "No isolation — main branch",
+      "gitBranchMissing": "The linked git branch no longer exists.",
+      "gitMissingCheckpoint": "Cannot clean up: main branch is unknown.",
+      "gitArchiveTitle": "Archive this clone?",
+      "gitArchiveDescription": "This session is linked to the Git branch \"{{branch}}\".",
+      "gitArchiveKeep": "Yes",
+      "gitArchiveCancel": "Cancel",
+      "gitArchiveCleanup": "Clean branch and archive"
     },
     "compression": "Compression",
     "retry": {

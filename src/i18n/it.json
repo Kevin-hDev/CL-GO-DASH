@@ -213,7 +213,18 @@
       "create": "Crea",
       "running": "Riepilogo in corso...",
       "summaryFailed": "Non è stato possibile generare il riepilogo.",
-      "withoutSummary": "Senza riepilogo"
+      "withoutSummary": "Senza riepilogo",
+      "gitCreate": "Nuovo branch git",
+      "gitCreating": "Creazione...",
+      "gitCreated": "Branch git creato",
+      "gitNoIsolation": "Nessun isolamento — branch principale",
+      "gitBranchMissing": "Il branch git collegato non esiste più.",
+      "gitMissingCheckpoint": "Impossibile pulire: branch principale sconosciuto.",
+      "gitArchiveTitle": "Archiviare questo clone?",
+      "gitArchiveDescription": "Questa sessione è collegata al branch Git \"{{branch}}\".",
+      "gitArchiveKeep": "Sì",
+      "gitArchiveCancel": "Annulla",
+      "gitArchiveCleanup": "Pulisci il branch e archivia"
     },
     "compression": "Compression",
     "retry": {

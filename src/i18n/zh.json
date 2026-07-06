@@ -213,7 +213,18 @@
       "create": "创建",
       "running": "正在摘要...",
       "summaryFailed": "无法生成摘要。",
-      "withoutSummary": "不使用摘要"
+      "withoutSummary": "不使用摘要",
+      "gitCreate": "新建 git 分支",
+      "gitCreating": "正在创建...",
+      "gitCreated": "Git 分支已创建",
+      "gitNoIsolation": "无隔离 — 主分支",
+      "gitBranchMissing": "关联的 git 分支已不存在。",
+      "gitMissingCheckpoint": "无法清理：主分支未知。",
+      "gitArchiveTitle": "归档此克隆？",
+      "gitArchiveDescription": "此会话已关联到 Git 分支 \"{{branch}}\"。",
+      "gitArchiveKeep": "是",
+      "gitArchiveCancel": "取消",
+      "gitArchiveCleanup": "清理分支并归档"
     },
     "compression": "Compression",
     "retry": {

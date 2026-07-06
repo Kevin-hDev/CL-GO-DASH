@@ -55,6 +55,7 @@ export interface AgentSession {
   clone_summary?: string;
   clone_read_files?: string[];
   clone_modified_files?: string[];
+  git_branch?: string;
 }
 
 export interface AgentSessionMeta {
@@ -76,6 +77,7 @@ export interface AgentSessionMeta {
   clone_parent_session_id?: string;
   clone_parent_message_id?: string;
   clone_mode?: CloneMode;
+  git_branch?: string;
   is_gateway?: boolean;
   gateway_channel_key?: string;
 }
@@ -88,10 +90,12 @@ export interface SessionTab {
   clone_parent_session_id?: string;
   clone_parent_message_id?: string;
   clone_mode?: CloneMode;
+  git_branch?: string;
 }
 
 export interface SessionTabs {
   active_tab_id: string;
+  main_checkpoint_branch?: string;
   tabs: SessionTab[];
 }
 

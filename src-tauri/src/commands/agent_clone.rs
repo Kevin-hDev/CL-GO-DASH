@@ -1,6 +1,17 @@
 use crate::services::agent_local::clone_session::CloneSessionResult;
+use crate::services::agent_local::clone_git::CloneGitBranchResult;
 use crate::services::agent_local::session_tabs::SessionTabs;
 use crate::services::agent_local::types_session::CloneMode;
+use crate::services::git::branch::CreateBranchError;
+use std::path::{Path, PathBuf};
+
+async fn registered_project_path(path: &str) -> Result<PathBuf, String> {
+    let repo_path = Path::new(path);
+    if !repo_path.is_dir() {
+        return Err("Répertoire introuvable".into());
+    }
+    crate::services::agent_local::project_store::authorize_path(repo_path).await
+}
 
 #[tauri::command]
 pub async fn clone_agent_session(
@@ -47,4 +58,46 @@ pub async fn rename_session_tab(
     label: String,
 ) -> Result<SessionTabs, String> {
     crate::services::agent_local::session_tabs::rename_tab(&session_id, &tab_id, &label).await
+}
+
+#[tauri::command]
+pub async fn create_clone_git_branch(
+    session_id: String,
+    clone_session_id: String,
+    path: String,
+) -> Result<CloneGitBranchResult, CreateBranchError> {
+    let repo_path = registered_project_path(&path)
+        .await
+        .map_err(|_| CreateBranchError::InternalError)?;
+    crate::services::agent_local::clone_git::create_linked_branch(
+        &session_id,
+        &clone_session_id,
+        &repo_path,
+    )
+    .await
+}
+
+#[tauri::command]
+pub async fn unlink_clone_git_branch(
+    session_id: String,
+    clone_session_id: String,
+) -> Result<SessionTabs, String> {
+    crate::services::agent_local::clone_git::unlink_branch(&session_id, &clone_session_id).await
+}
+
+#[tauri::command]
+pub async fn close_session_tab_and_cleanup_git_branch(
+    session_id: String,
+    tab_id: String,
+    path: String,
+    fallback_branch: Option<String>,
+) -> Result<SessionTabs, String> {
+    let repo_path = registered_project_path(&path).await?;
+    crate::services::agent_local::clone_git::close_tab_with_branch_cleanup(
+        &session_id,
+        &tab_id,
+        &repo_path,
+        fallback_branch.as_deref(),
+    )
+    .await
 }

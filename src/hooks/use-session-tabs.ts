@@ -5,7 +5,8 @@ import {
   markSessionComplete,
   markSessionRunning,
 } from "@/hooks/use-session-activity-indicators";
-import type { CloneMode, CloneSessionResult, SessionTabs } from "@/types/agent";
+import { useSessionTabsGitActions } from "@/hooks/use-session-tabs-git-actions";
+import type { CloneMode, CloneSessionResult, SessionTab, SessionTabs } from "@/types/agent";
 
 interface CloneMessageOptions {
   messageId: string;
@@ -50,6 +51,10 @@ export function useSessionTabs(
     const active = tabs.tabs.find((tab) => tab.tab_id === tabs.active_tab_id) ?? tabs.tabs[0];
     return active?.session_id ?? rootSessionId ?? null;
   }, [tabs, rootSessionId]);
+  const activeTab = useMemo<SessionTab | null>(() => {
+    if (!tabs) return null;
+    return tabs.tabs.find((tab) => tab.tab_id === tabs.active_tab_id) ?? tabs.tabs[0] ?? null;
+  }, [tabs]);
   const attentionTabIds = useMemo(
     () => new Set(rootSessionId ? attentionTabs[rootSessionId] ?? [] : []),
     [attentionTabs, rootSessionId],
@@ -59,6 +64,17 @@ export function useSessionTabs(
     if (!rootSessionId || !tabs || tabId === tabs.active_tab_id) return;
     setAttentionTabs((current) => removeAttentionTab(current, rootSessionId, tabId));
     const next = { ...tabs, active_tab_id: tabId };
+    setTabs(next);
+    const saved = await invoke<SessionTabs>("save_session_tabs", {
+      sessionId: rootSessionId,
+      tabs: next,
+    });
+    setTabs(saved);
+  }, [rootSessionId, tabs]);
+
+  const saveMainCheckpointBranch = useCallback(async (branchName: string) => {
+    if (!rootSessionId || !tabs || tabs.main_checkpoint_branch === branchName) return;
+    const next = { ...tabs, main_checkpoint_branch: branchName };
     setTabs(next);
     const saved = await invoke<SessionTabs>("save_session_tabs", {
       sessionId: rootSessionId,
@@ -104,6 +120,7 @@ export function useSessionTabs(
   const cancelCloneSummary = useCallback(async (operationId: string) => {
     await invoke("cancel_clone_summary", { operationId });
   }, []);
+  const gitActions = useSessionTabsGitActions({ rootSessionId, setTabs, onSessionsRefresh });
 
   const closeTab = useCallback(async (tabId: string) => {
     if (!rootSessionId) return;
@@ -128,12 +145,17 @@ export function useSessionTabs(
 
   return {
     tabs,
+    activeTab,
     activeSessionId,
     attentionTabIds,
     selectTab,
+    saveMainCheckpointBranch,
     cloneMessage,
     cancelCloneSummary,
+    createCloneGitBranch: gitActions.createCloneGitBranch,
+    unlinkCloneGitBranch: gitActions.unlinkCloneGitBranch,
     closeTab,
+    closeTabWithGitCleanup: gitActions.closeTabWithGitCleanup,
     renameTab,
   };
 }

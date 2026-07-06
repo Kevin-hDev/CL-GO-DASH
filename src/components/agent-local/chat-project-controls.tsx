@@ -5,6 +5,7 @@ import { ProjectSelector } from "./project-selector";
 import { BranchSelector } from "./branch-selector";
 import { BranchConflictDialog } from "./branch-conflict-dialog";
 import { BranchGithubAuthDialog } from "./branch-github-auth-dialog";
+import { CloneGitBranchButton } from "./clone-git-branch-button";
 import { useGithubBranchAuth } from "@/hooks/use-github-branch-auth";
 import type { useGitBranch } from "@/hooks/use-git-branch";
 import type { useSessionProject } from "@/hooks/use-session-project";
@@ -15,6 +16,14 @@ interface ChatProjectControlsProps {
   projectState: ReturnType<typeof useSessionProject>;
   git: ReturnType<typeof useGitBranch>;
   onWorktreeSelect: (path: string, branch: string) => void;
+  cloneGitBranch?: {
+    visible: boolean;
+    state: "idle" | "loading" | "success" | "linked";
+    label: string;
+    disabled?: boolean;
+    branchSelectorLockedLabel?: string;
+    onCreate: () => void;
+  };
 }
 
 export function ChatProjectControls({
@@ -22,6 +31,7 @@ export function ChatProjectControls({
   projectState,
   git,
   onWorktreeSelect,
+  cloneGitBranch,
 }: ChatProjectControlsProps) {
   const { t } = useTranslation();
   const githubAuth = useGithubBranchAuth(() => void git.refresh());
@@ -45,11 +55,20 @@ export function ChatProjectControls({
         />
         <BranchSelector
           git={git}
-          locked={false}
+          locked={!!cloneGitBranch?.branchSelectorLockedLabel}
+          lockedLabel={cloneGitBranch?.branchSelectorLockedLabel}
           onConflict={(branch, dirtyCount) => setBranchConflict({ branch, dirtyCount })}
           onWorktreeSelect={onWorktreeSelect}
           onGithubAuthRequired={githubAuth.request}
         />
+        {cloneGitBranch?.visible && (
+          <CloneGitBranchButton
+            state={cloneGitBranch.state}
+            label={cloneGitBranch.label}
+            disabled={cloneGitBranch.disabled}
+            onClick={cloneGitBranch.onCreate}
+          />
+        )}
       </div>
 
       {branchConflict && projectState.selectedProject && (

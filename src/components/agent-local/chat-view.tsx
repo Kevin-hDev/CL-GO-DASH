@@ -24,6 +24,7 @@ import { useSubagents } from "@/hooks/use-subagents";
 import { useSubagentSynthesis } from "@/hooks/use-subagent-synthesis";
 import { useChatActions } from "@/hooks/use-chat-actions";
 import { useChatClone } from "@/hooks/use-chat-clone";
+import { useCloneGitBranchAction } from "@/hooks/use-clone-git-branch-action";
 import { useAvailableModels } from "@/hooks/use-available-models";
 import { useOllamaConnectionRetry } from "@/hooks/use-ollama-connection-retry";
 import { PermissionDialog } from "./permission-dialog";
@@ -38,6 +39,7 @@ export function ChatView({
   terminalState, onFileOperationsChange, onFilePreviewPath,
   onOpenSubagent, isSubagent = false,
   canCloneMessages = false, onCloneMessage, onCancelCloneSummary,
+  activeSessionTab, onCreateCloneGitBranch,
 }: ChatViewProps) {
   const permissions = usePermissionRequests();
   const permMode = usePermissionMode(sessionId);
@@ -92,6 +94,13 @@ export function ChatView({
   );
   const { messages, reload } = chat;
   const clone = useChatClone(sessionId, chat.messages, onCloneMessage, onCancelCloneSummary);
+  const cloneGitBranch = useCloneGitBranchAction({
+    projectPath: proj.selectedProject?.path,
+    git,
+    isStreaming: chat.isStreaming,
+    activeSessionTab,
+    onCreateCloneGitBranch,
+  });
   const handleRetry = useCallback(() => {
     const u = [...messages].reverse().find((m) => m.role === "user");
     if (u) void reload(u.id);
@@ -179,6 +188,7 @@ export function ChatView({
                 : null}
               onScrollBottom={scrollToBottom}
               onWorktreeSelect={worktreeSwitch.request}
+              cloneGitBranch={cloneGitBranch}
             />
           </div>
         </div>

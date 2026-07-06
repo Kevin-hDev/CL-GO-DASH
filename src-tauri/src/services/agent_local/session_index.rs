@@ -91,6 +91,7 @@ pub fn meta_from_session(session: &AgentSession) -> AgentSessionMeta {
         clone_parent_session_id: session.clone_parent_session_id.clone(),
         clone_parent_message_id: session.clone_parent_message_id.clone(),
         clone_mode: session.clone_mode.clone(),
+        git_branch: session.git_branch.clone(),
     }
 }
 

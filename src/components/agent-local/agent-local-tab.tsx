@@ -12,6 +12,7 @@ import { useAgentLocalControlledPanels } from "@/hooks/use-agent-local-controlle
 import { useGitBranch } from "@/hooks/use-git-branch";
 import { useSessionSummary } from "@/hooks/use-session-summary";
 import { useSessionTabs } from "@/hooks/use-session-tabs";
+import { useAgentLocalTabGit } from "@/hooks/use-agent-local-tab-git";
 import { ForecastPanel } from "@/components/forecast/forecast-panel";
 import { openForecastDocsWindow } from "@/components/forecast/open-forecast-docs";
 import { PanelSlot } from "@/components/layout/panel-slots";
@@ -57,6 +58,12 @@ export const AgentLocalTab = memo(function AgentLocalTab({
   const terminalCwd = displayProject?.path || "";
   const sessionSummary = useSessionSummary(displaySessionId ?? null);
   const summaryGit = useGitBranch(displayProject?.path, displaySessionId ?? undefined);
+  const tabGit = useAgentLocalTabGit({
+    rootSessionId: activeSessionId,
+    git: summaryGit,
+    projectPath: displayProject?.path,
+    sessionTabs,
+  });
   const fileTree = useFileTree(displaySessionId, displayProject?.path);
   const forecast = useForecastPanel(displaySessionId ?? null);
   useAgentLocalPanelNav({ navState, fileTree, forecast });
@@ -127,8 +134,8 @@ export const AgentLocalTab = memo(function AgentLocalTab({
           summaryGit={summaryGit}
           sessionTabs={sessionTabs.tabs}
           sessionTabAttentionIds={sessionTabs.attentionTabIds}
-          onSelectSessionTab={(id) => void sessionTabs.selectTab(id)}
-          onCloseSessionTab={(id) => void sessionTabs.closeTab(id)}
+          onSelectSessionTab={(id) => void tabGit.selectTab(id)}
+          onCloseSessionTab={tabGit.closeTab}
           onRenameSessionTab={(id, label) => void sessionTabs.renameTab(id, label)}
           onOpenPlan={filePreview.openPlan}
           onOpenSubagent={(id) => void handleSelectById(id)}
@@ -178,11 +185,7 @@ export const AgentLocalTab = memo(function AgentLocalTab({
           forecastContent={forecastContent}
           parentSessionId={displaySession?.parent_session_id}
           onOpenSubagent={(id) => void handleSelectById(id)}
-          onGoToParent={() => {
-            if (displaySession?.parent_session_id) {
-              void handleSelectById(displaySession.parent_session_id);
-            }
-          }}
+          onGoToParent={() => displaySession?.parent_session_id && void handleSelectById(displaySession.parent_session_id)}
           canCloneMessages={!displaySession?.parent_session_id && !displaySession?.clone_parent_session_id}
           onCloneMessage={(messageId, cloneMode, customFocus, options) =>
             sessionTabs.cloneMessage({
@@ -193,6 +196,8 @@ export const AgentLocalTab = memo(function AgentLocalTab({
               shouldActivateOnComplete: options?.shouldActivateOnComplete,
             }).then(() => undefined)}
           onCancelCloneSummary={(operationId) => sessionTabs.cancelCloneSummary(operationId)}
+          activeSessionTab={sessionTabs.activeTab}
+          onCreateCloneGitBranch={sessionTabs.createCloneGitBranch}
         />
       ) : (
         <div style={{ flex: 1, minHeight: 0, overflow: "hidden" }}>
@@ -218,8 +223,8 @@ export const AgentLocalTab = memo(function AgentLocalTab({
     handleOpenForecastDocs, handlePreviewFullscreenChange, handleSelectById, handleWelcomeSend,
     pendingFiles, pendingMessage, pendingSkills, pendingWorkingDir, projectsHook, refresh,
     sessionSummary, sessionTabs, setFileOperations, setPendingFiles, setPendingMessage, setPendingSkills, setPendingWorkingDir, setReasoningMode,
-    setWelcomeModel, summaryGit, terminal, terminalCwd, reasoningMode, updateModel,
+    setWelcomeModel, summaryGit, tabGit, terminal, terminalCwd, reasoningMode, updateModel,
   ]);
 
-  return <><PanelSlot name="list">{list}</PanelSlot><PanelSlot name="detail">{detail}</PanelSlot></>;
+  return <><PanelSlot name="list">{list}</PanelSlot><PanelSlot name="detail">{detail}</PanelSlot>{tabGit.dialogs}</>;
 });

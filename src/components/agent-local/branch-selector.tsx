@@ -15,13 +15,14 @@ type GitBranchHook = ReturnType<typeof useGitBranch>;
 interface BranchSelectorProps {
   git: GitBranchHook;
   locked: boolean;
+  lockedLabel?: string;
   onConflict: (branchName: string, dirtyCount: number) => void;
   onWorktreeSelect: (path: string, branch: string) => void;
   onGithubAuthRequired: () => void;
 }
 
 export function BranchSelector({
-  git, locked, onConflict, onWorktreeSelect, onGithubAuthRequired,
+  git, locked, lockedLabel, onConflict, onWorktreeSelect, onGithubAuthRequired,
 }: BranchSelectorProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -117,7 +118,7 @@ export function BranchSelector({
   if (!git.isGitRepo) return null;
 
   if (locked) {
-    return <BranchSelectorLockedIndicator label={git.currentBranch || t("branches.detachedHead")} />;
+    return <BranchSelectorLockedIndicator label={lockedLabel || git.currentBranch || t("branches.detachedHead")} />;
   }
 
   const { filteredBranches, filteredWorktrees } = getVisibleBranchOptions(

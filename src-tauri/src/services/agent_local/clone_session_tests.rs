@@ -64,6 +64,7 @@ fn session() -> AgentSession {
         clone_summary: None,
         clone_read_files: Vec::new(),
         clone_modified_files: Vec::new(),
+        git_branch: None,
     }
 }
 

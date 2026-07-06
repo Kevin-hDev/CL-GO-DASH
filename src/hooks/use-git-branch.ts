@@ -46,7 +46,7 @@ const CREATE_BRANCH_ERROR_KINDS = new Set<GitCreateBranchErrorKind>([
   "internal_error",
 ]);
 
-function parseCreateBranchError(error: unknown): GitCreateBranchErrorKind | null {
+export function parseCreateBranchError(error: unknown): GitCreateBranchErrorKind | null {
   const fromObject = readCreateBranchKind(error);
   if (fromObject) return fromObject;
   if (typeof error !== "string") return null;

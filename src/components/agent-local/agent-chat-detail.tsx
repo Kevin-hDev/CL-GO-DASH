@@ -8,7 +8,7 @@ import { useAgentPanelLayout } from "@/hooks/use-agent-panel-layout";
 import type { DroppedFile } from "@/hooks/use-file-drop";
 import type { useTerminal } from "@/hooks/use-terminal";
 import type { CloneMessageHandler } from "@/hooks/use-chat-clone";
-import type { Project } from "@/types/agent";
+import type { Project, SessionTab } from "@/types/agent";
 import type { FileOperation, FileOperationGroups } from "@/types/file-preview";
 import type { PanelMode } from "@/hooks/use-forecast-panel";
 import type { ReasoningMode } from "@/lib/reasoning-modes";
@@ -45,6 +45,8 @@ interface AgentChatDetailProps {
   canCloneMessages?: boolean;
   onCloneMessage?: CloneMessageHandler;
   onCancelCloneSummary?: (operationId: string) => Promise<void>;
+  activeSessionTab?: SessionTab | null;
+  onCreateCloneGitBranch?: (path: string, cloneSessionId: string) => Promise<string>;
   panelMode?: PanelMode;
   forecastContent?: React.ReactNode;
 }
@@ -104,6 +106,8 @@ export function AgentChatDetail(props: AgentChatDetailProps) {
           canCloneMessages={props.canCloneMessages}
           onCloneMessage={props.onCloneMessage}
           onCancelCloneSummary={props.onCancelCloneSummary}
+          activeSessionTab={props.activeSessionTab}
+          onCreateCloneGitBranch={props.onCreateCloneGitBranch}
         />
       </div>
       <FilePreviewPanel

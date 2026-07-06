@@ -18,17 +18,22 @@ pub struct SessionTab {
     pub clone_parent_message_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub clone_mode: Option<CloneMode>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub git_branch: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SessionTabs {
     pub active_tab_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub main_checkpoint_branch: Option<String>,
     pub tabs: Vec<SessionTab>,
 }
 
 pub fn normalize_tabs(root_session_id: &str, tabs: Option<SessionTabs>) -> SessionTabs {
     let mut normalized = tabs.unwrap_or_else(|| SessionTabs {
         active_tab_id: MAIN_TAB_ID.to_string(),
+        main_checkpoint_branch: None,
         tabs: Vec::new(),
     });
     normalized.tabs.retain(|tab| !tab.session_id.is_empty());
@@ -43,6 +48,7 @@ pub fn normalize_tabs(root_session_id: &str, tabs: Option<SessionTabs>) -> Sessi
             tab.clone_parent_session_id = None;
             tab.clone_parent_message_id = None;
             tab.clone_mode = None;
+            tab.git_branch = None;
         }
     }
     if !normalized
@@ -64,6 +70,7 @@ pub fn main_tab(root_session_id: &str) -> SessionTab {
         clone_parent_session_id: None,
         clone_parent_message_id: None,
         clone_mode: None,
+        git_branch: None,
     }
 }
 
@@ -128,8 +135,20 @@ mod tests {
                 clone_parent_session_id: Some(ROOT.to_string()),
                 clone_parent_message_id: None,
                 clone_mode: Some(CloneMode::Cut),
+                git_branch: None,
             });
         }
         assert!(validate_tabs(ROOT, &tabs).is_err());
+    }
+
+    #[test]
+    fn normalize_preserves_main_checkpoint_branch() {
+        let tabs = normalize_tabs(ROOT, Some(SessionTabs {
+            active_tab_id: MAIN_TAB_ID.to_string(),
+            main_checkpoint_branch: Some("main".to_string()),
+            tabs: vec![main_tab(ROOT)],
+        }));
+
+        assert_eq!(tabs.main_checkpoint_branch.as_deref(), Some("main"));
     }
 }

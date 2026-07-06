@@ -23,6 +23,7 @@ pub mod chat_prompts_web_status_tests;
 pub mod circuit_breaker;
 #[cfg(test)]
 pub mod circuit_breaker_tests;
+pub mod clone_git;
 pub mod clone_session;
 pub mod clone_summary;
 pub mod clone_summary_prompt;
@@ -82,6 +83,7 @@ pub mod session_store;
 pub mod session_store_todos;
 pub mod session_store_updates;
 pub mod session_tabs;
+pub mod session_tabs_git;
 pub mod session_tabs_state;
 pub mod session_subagents;
 pub mod skill_parser;

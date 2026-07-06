@@ -91,6 +91,8 @@ pub struct AgentSession {
     pub clone_read_files: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub clone_modified_files: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub git_branch: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -132,6 +134,8 @@ pub struct AgentSessionMeta {
     pub clone_parent_message_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub clone_mode: Option<CloneMode>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub git_branch: Option<String>,
 }
 
 fn default_provider() -> String {
