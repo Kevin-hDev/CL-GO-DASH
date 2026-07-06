@@ -153,34 +153,34 @@ export function ModelSelector({
       className={`ms-root${align === "right" ? " ms-root-align-right" : ""}`}
       data-keyboard-scope={open ? "local" : undefined}
     >
-      <button
-        ref={(node) => { anchorRef.current = node; }}
-        type="button"
-        onClick={() => setOpen(!open)}
-        onKeyDown={(event) => {
-          if (!open && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
-            setOpen(true);
-            requestAnimationFrame(() => focusDropdownList(event.key === "ArrowDown" ? 1 : -1));
-            return;
-          }
-          if (open && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
-            event.preventDefault();
-            focusDropdownList(event.key === "ArrowDown" ? 1 : -1);
-          }
-        }}
-        className={`ms-trigger${selectedModel ? "" : " ms-trigger-empty"}`}
-      >
-        <span className="ms-trigger-label">{selectedModel || t("agentLocal.selectModel")}</span>
-        {selectedReasoningLabel && selectedReasoningMode !== "off" && (
-          <Tooltip label={t(selectedReasoningLabel)}>
+      <Tooltip label={t("agentLocal.selectModelHint")} align="right">
+        <button
+          ref={(node) => { anchorRef.current = node; }}
+          type="button"
+          onClick={() => setOpen(!open)}
+          onKeyDown={(event) => {
+            if (!open && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
+              setOpen(true);
+              requestAnimationFrame(() => focusDropdownList(event.key === "ArrowDown" ? 1 : -1));
+              return;
+            }
+            if (open && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
+              event.preventDefault();
+              focusDropdownList(event.key === "ArrowDown" ? 1 : -1);
+            }
+          }}
+          className={`ms-trigger${selectedModel ? "" : " ms-trigger-empty"}`}
+        >
+          <span className="ms-trigger-label">{selectedModel || t("agentLocal.selectModel")}</span>
+          {selectedReasoningLabel && selectedReasoningMode !== "off" && (
             <span className="ms-trigger-reasoning">
               <Brain size="var(--icon-xs)" className="ms-trigger-reasoning-icon" />
               {!simpleReasoningToggle && <span>{t(selectedReasoningLabel)}</span>}
             </span>
-          </Tooltip>
-        )}
-        <CaretDown size="var(--icon-2xs)" className="ms-trigger-caret" />
-      </button>
+          )}
+          <CaretDown size="var(--icon-2xs)" className="ms-trigger-caret" />
+        </button>
+      </Tooltip>
       {dropdown ? createPortal(dropdown, portalRoot) : null}
     </div>
   );

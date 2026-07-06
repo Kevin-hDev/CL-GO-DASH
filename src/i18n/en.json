@@ -72,6 +72,7 @@
     },
     "detail": {
       "token": "Bot token",
+      "removeUser": "Remove",
       "tokenPlaceholder": "Paste token here…",
       "botToken": "Slack bot token",
       "appToken": "Slack app token",
@@ -190,6 +191,7 @@
     "modelSearch": "Search a model…",
     "modelEmpty": "No matching model.",
     "selectModel": "Choose a model",
+    "selectModelHint": "Select model",
     "reasoningTitle": "Reasoning",
     "reasoningOff": "Off",
     "reasoningAuto": "On",
@@ -199,6 +201,10 @@
     "reasoningXhigh": "Very high",
     "send": "Send",
     "cancel": "Cancel",
+    "stop": "Stop",
+    "editMessage": "Edit and regenerate",
+    "regenerate": "Regenerate",
+    "copy": "Copy",
     "clone": {
       "action": "Clone",
       "title": "Clone session",
@@ -370,7 +376,7 @@
     "autoDescription": "Unrestricted access to the Internet and files on your computer",
     "manualLabel": "Ask permission",
     "manualDescription": "Always ask before changing external files or using the Internet",
-    "toggleHint": "Switch mode (Shift+Tab)"
+    "toggleHint": "Change permissions (Shift+Tab)"
   },
   "permissionDialog": {
     "title": "Allow {{action}}?",
@@ -445,6 +451,8 @@
     "modelsTab": "Models"
   },
   "heartbeat": {
+    "back": "Back",
+    "toggle": "Enable/Disable",
     "title": "Wakeups",
     "subtitle": "Automate scheduled tasks for any LLM",
     "empty": "No wakeup configured yet. Click New wakeup to start.",
@@ -684,6 +692,8 @@
     }
   },
   "terminal": {
+    "newTab": "New tab",
+    "closePanel": "Close panel",
     "processExited": "Process exited with code {{code}}",
     "failedToStart": "Terminal failed to start"
   },
@@ -707,6 +717,7 @@
     "description": "Agentic desktop app for local and cloud LLMs."
   },
   "filePreview": {
+    "closeTab": "Close tab",
     "default": "default",
     "noFiles": "No files created or modified in this session.",
     "listModes": {
@@ -728,6 +739,7 @@
     "blockCount": "DOCX — {{count}} blocks"
   },
   "fileTree": {
+    "clearFilter": "Clear filter",
     "filterPlaceholder": "Filter files...",
     "toggleTree": "Project file tree",
     "loadError": "Could not read this folder",
@@ -907,6 +919,7 @@
     "openSite": "Open website"
   },
   "chatMenu": {
+    "plusButtonHint": "Add files and more",
     "addFile": "Add an image or file",
     "planMode": "Plan mode",
     "planModeDesc": "Prepare a plan",
@@ -951,6 +964,9 @@
     "inputLocked": "Answer the question above"
   },
   "forecast": {
+    "chart": {
+      "resetZoom": "Reset zoom"
+    },
     "title": "Forecast",
     "noAnalysis": "No analysis in progress",
     "docs": {
@@ -1084,6 +1100,9 @@
       "loadFailed": "Unable to load comparisons."
     },
     "notes": {
+      "open": "Open note",
+      "edit": "Edit",
+      "delete": "Delete",
       "timeline": "Annotated timeline",
       "timelineEmpty": "No note placed on this forecast.",
       "count_one": "{{count}} note",

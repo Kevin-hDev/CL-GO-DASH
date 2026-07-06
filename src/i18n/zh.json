@@ -72,6 +72,7 @@
     },
     "detail": {
       "token": "机器人令牌",
+      "removeUser": "移除",
       "tokenPlaceholder": "在此粘贴令牌…",
       "botToken": "Slack 机器人令牌",
       "appToken": "Slack 应用令牌",
@@ -190,6 +191,7 @@
     "modelSearch": "搜索模型…",
     "modelEmpty": "没有匹配的模型。",
     "selectModel": "选择模型",
+    "selectModelHint": "选择模型",
     "reasoningTitle": "推理",
     "reasoningOff": "关闭",
     "reasoningAuto": "开启",
@@ -199,6 +201,10 @@
     "reasoningXhigh": "最高",
     "send": "发送",
     "cancel": "取消",
+    "stop": "停止",
+    "editMessage": "编辑并重新生成",
+    "regenerate": "重新生成",
+    "copy": "复制",
     "clone": {
       "action": "克隆",
       "title": "克隆会话",
@@ -370,7 +376,7 @@
     "autoDescription": "不受限制地访问互联网和你电脑上的文件",
     "manualLabel": "请求授权",
     "manualDescription": "修改外部文件或使用互联网前始终先询问",
-    "toggleHint": "切换模式（Shift+Tab）"
+    "toggleHint": "修改权限（Shift+Tab）"
   },
   "permissionDialog": {
     "title": "允许 {{action}}？",
@@ -445,6 +451,8 @@
     "modelsTab": "模型"
   },
   "heartbeat": {
+    "back": "返回",
+    "toggle": "启用/禁用",
     "title": "定时唤醒",
     "subtitle": "为任意 LLM 自动化计划任务",
     "empty": "尚未配置任何唤醒。点击「新建唤醒」开始。",
@@ -684,6 +692,8 @@
     }
   },
   "terminal": {
+    "newTab": "新标签页",
+    "closePanel": "关闭面板",
     "processExited": "进程已退出，退出码 {{code}}",
     "failedToStart": "Terminal 启动失败"
   },
@@ -707,6 +717,7 @@
     "description": "面向本地和云端 LLM 的智能桌面应用。"
   },
   "filePreview": {
+    "closeTab": "关闭标签页",
     "default": "默认",
     "noFiles": "本次会话中未创建或修改任何文件。",
     "listModes": {
@@ -728,6 +739,7 @@
     "blockCount": "DOCX — {{count}} 个块"
   },
   "fileTree": {
+    "clearFilter": "清除筛选",
     "filterPlaceholder": "筛选文件…",
     "toggleTree": "项目文件树",
     "loadError": "无法读取此文件夹",
@@ -941,6 +953,9 @@
     "unsupportedModel": "此模型不支持视觉"
   },
   "forecast": {
+    "chart": {
+      "resetZoom": "重置缩放"
+    },
     "title": "预测",
     "noAnalysis": "没有正在进行的分析",
     "docs": {
@@ -1074,6 +1089,9 @@
       "loadFailed": "无法加载对比。"
     },
     "notes": {
+      "open": "打开笔记",
+      "edit": "编辑",
+      "delete": "删除",
       "timeline": "注释时间线",
       "timelineEmpty": "此预测上还没有笔记。",
       "count_one": "{{count}} 条笔记",
@@ -1425,6 +1443,7 @@
     }
   },
   "chatMenu": {
+    "plusButtonHint": "添加文件及更多",
     "addFile": "添加图片或文件",
     "planMode": "计划模式",
     "planModeDesc": "准备计划",

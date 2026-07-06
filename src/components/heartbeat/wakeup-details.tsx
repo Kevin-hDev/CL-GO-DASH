@@ -44,9 +44,11 @@ export function WakeupDetails({
   return (
     <div className="wk-details">
       <div className="wk-details-header">
-        <button className="wk-back" onClick={onBack} type="button">
-          <CaretLeft size="var(--icon-md)" weight="regular" />
-        </button>
+        <Tooltip label={t("heartbeat.back")}>
+          <button className="wk-back" onClick={onBack} type="button">
+            <CaretLeft size="var(--icon-md)" weight="regular" />
+          </button>
+        </Tooltip>
         <div className="wk-details-title">
           <span className="wk-details-model">{wakeup.model}</span>
           {wakeup.provider !== "ollama" && (
@@ -109,14 +111,16 @@ export function WakeupDetails({
               </button>
             </Tooltip>
           ) : (
-            <button
-              className="wk-toggle-pill"
-              data-active={wakeup.active}
-              onClick={() => onToggle(!wakeup.active)}
-              type="button"
-            >
-              <span className="wk-toggle-dot" />
-            </button>
+            <Tooltip label={t("heartbeat.toggle")} align="right">
+              <button
+                className="wk-toggle-pill"
+                data-active={wakeup.active}
+                onClick={() => onToggle(!wakeup.active)}
+                type="button"
+              >
+                <span className="wk-toggle-dot" />
+              </button>
+            </Tooltip>
           )}
         </div>
       </div>

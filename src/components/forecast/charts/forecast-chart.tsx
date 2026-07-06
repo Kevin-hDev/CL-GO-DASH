@@ -5,6 +5,8 @@ import { LineChart, ScatterChart } from "echarts/charts";
 import { DataZoomComponent, GridComponent, TooltipComponent } from "echarts/components";
 import { CanvasRenderer } from "echarts/renderers";
 import { ArrowsClockwise } from "@/components/ui/icons";
+import { Tooltip } from "@/components/ui/tooltip";
+import i18n from "@/i18n";
 import {
   dateKey,
   readDataIndex,
@@ -157,9 +159,11 @@ export function ForecastChart(props: ForecastChartProps) {
       <div ref={containerRef} className="fcc-chart-root" />
       {!props.compact && (
         <div ref={controlsRef} className="fcc-chart-controls">
-          <button className="fcc-chart-reset" type="button" onClick={handleResetZoom}>
-            <ArrowsClockwise size="var(--icon-13)" />
-          </button>
+          <Tooltip label={i18n.t("forecast.chart.resetZoom")}>
+            <button className="fcc-chart-reset" type="button" onClick={handleResetZoom}>
+              <ArrowsClockwise size="var(--icon-13)" />
+            </button>
+          </Tooltip>
           <input
             className="fcc-chart-zoom"
             type="range"

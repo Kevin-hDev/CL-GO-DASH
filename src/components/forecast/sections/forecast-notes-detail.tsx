@@ -1,6 +1,7 @@
 import type { TFunction } from "i18next";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowSquareOut, Pencil, Trash } from "@/components/ui/icons";
+import { Tooltip } from "@/components/ui/tooltip";
 import { ForecastScenarioMenuSelect } from "./forecast-scenario-menu-select";
 import { ForecastNotesMarkdown } from "./forecast-notes-markdown";
 import type { ForecastNote, ForecastNoteDraft } from "./forecast-notes-types";
@@ -62,15 +63,21 @@ export function ForecastNotesDetail(props: ForecastNotesDetailProps) {
               {props.t("forecast.notes.confirmDelete")}
             </button>
           )}
-          <button type="button" className="fcn-icon-btn" onClick={() => props.onOpen(props.note as ForecastNote)}>
-            <ArrowSquareOut size="var(--icon-15)" />
-          </button>
-          <button type="button" className="fcn-icon-btn" onClick={() => props.onEdit(props.note as ForecastNote)}>
-            <Pencil size="var(--icon-15)" />
-          </button>
-          <button type="button" className="fcn-icon-btn" onClick={() => setConfirmDelete((value) => !value)}>
-            <Trash size="var(--icon-15)" />
-          </button>
+          <Tooltip label={props.t("forecast.notes.open")}>
+            <button type="button" className="fcn-icon-btn" onClick={() => props.onOpen(props.note as ForecastNote)}>
+              <ArrowSquareOut size="var(--icon-15)" />
+            </button>
+          </Tooltip>
+          <Tooltip label={props.t("forecast.notes.edit")}>
+            <button type="button" className="fcn-icon-btn" onClick={() => props.onEdit(props.note as ForecastNote)}>
+              <Pencil size="var(--icon-15)" />
+            </button>
+          </Tooltip>
+          <Tooltip label={props.t("forecast.notes.delete")}>
+            <button type="button" className="fcn-icon-btn" onClick={() => setConfirmDelete((value) => !value)}>
+              <Trash size="var(--icon-15)" />
+            </button>
+          </Tooltip>
         </div>
       </div>
       <ForecastNotesMarkdown content={props.note.content || props.note.title} />

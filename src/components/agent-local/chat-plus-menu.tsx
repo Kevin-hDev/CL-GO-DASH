@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Plus, Image, Plugs, PuzzlePiece, CaretRight, ClipboardText } from "@/components/ui/icons";
+import { Tooltip } from "@/components/ui/tooltip";
 import { useConnectors } from "@/hooks/use-connectors";
 import { McpIcon } from "@/lib/mcp-icons";
 import "./chat-plus-menu.css";
@@ -45,9 +46,11 @@ export function ChatPlusMenu({ onFileImport, planModeEnabled, onPlanModeChange }
 
   return (
     <div className="cpm-wrapper" ref={menuRef}>
-      <button className="chat-plus-btn" onClick={() => setOpen(!open)} type="button">
-        <Plus size="var(--icon-md)" />
-      </button>
+      <Tooltip label={t("chatMenu.plusButtonHint")}>
+        <button className="chat-plus-btn" onClick={() => setOpen(!open)} type="button">
+          <Plus size="var(--icon-md)" />
+        </button>
+      </Tooltip>
 
       {open && (
         <div className="cpm-dropdown" ref={dropdownRef}>

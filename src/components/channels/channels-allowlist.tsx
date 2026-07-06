@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { X } from "@/components/ui/icons";
+import { Tooltip } from "@/components/ui/tooltip";
 
 const MAX_ALLOWLIST_USERS = 100;
 
@@ -56,9 +57,11 @@ export function ChannelsAllowlist({ allowlist, onChange }: ChannelsAllowlistProp
           {allowlist.map((id) => (
             <span key={id} className="ch-allowlist-tag">
               {id}
-              <button type="button" className="ch-allowlist-tag-remove" onClick={() => handleRemove(id)}>
-                <X size="var(--icon-2xs)" />
-              </button>
+              <Tooltip label={t("channels.detail.removeUser")}>
+                <button type="button" className="ch-allowlist-tag-remove" onClick={() => handleRemove(id)}>
+                  <X size="var(--icon-2xs)" />
+                </button>
+              </Tooltip>
             </span>
           ))}
         </div>

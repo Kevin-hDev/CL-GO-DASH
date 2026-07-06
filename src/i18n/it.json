@@ -72,6 +72,7 @@
     },
     "detail": {
       "token": "Token del bot",
+      "removeUser": "Rimuovi",
       "tokenPlaceholder": "Incolla il token qui…",
       "botToken": "Token bot Slack",
       "appToken": "Token app Slack",
@@ -190,6 +191,7 @@
     "modelSearch": "Cerca un modello…",
     "modelEmpty": "Nessun modello corrispondente.",
     "selectModel": "Scegli un modello",
+    "selectModelHint": "Seleziona modello",
     "reasoningTitle": "Ragionamento",
     "reasoningOff": "Disattivato",
     "reasoningAuto": "Attivato",
@@ -199,6 +201,10 @@
     "reasoningXhigh": "Molto alto",
     "send": "Invia",
     "cancel": "Annulla",
+    "stop": "Ferma",
+    "editMessage": "Modifica e rigenera",
+    "regenerate": "Rigenera",
+    "copy": "Copia",
     "clone": {
       "action": "Clona",
       "title": "Clona sessione",
@@ -370,7 +376,7 @@
     "autoDescription": "Accesso senza restrizioni a Internet e ai file del computer",
     "manualLabel": "Chiedi autorizzazione",
     "manualDescription": "Chiedere sempre prima di modificare file esterni o usare Internet",
-    "toggleHint": "Cambia modalità (Shift+Tab)"
+    "toggleHint": "Modifica i permessi (Shift+Tab)"
   },
   "permissionDialog": {
     "title": "Autorizzare {{action}}?",
@@ -445,6 +451,8 @@
     "modelsTab": "Modelli"
   },
   "heartbeat": {
+    "back": "Indietro",
+    "toggle": "Attiva/Disattiva",
     "title": "Wakeups",
     "subtitle": "Automatizza le attività pianificate per qualsiasi LLM",
     "empty": "Nessun wakeup configurato. Clicca su Nuovo wakeup per iniziare.",
@@ -684,6 +692,8 @@
     }
   },
   "terminal": {
+    "newTab": "Nuova scheda",
+    "closePanel": "Chiudi pannello",
     "processExited": "Processo terminato con codice {{code}}",
     "failedToStart": "Impossibile avviare il Terminal"
   },
@@ -707,6 +717,7 @@
     "description": "App desktop agentique per LLM locali e cloud."
   },
   "filePreview": {
+    "closeTab": "Chiudi scheda",
     "default": "predefinito",
     "noFiles": "Nessun file creato o modificato in questa sessione.",
     "listModes": {
@@ -728,6 +739,7 @@
     "blockCount": "DOCX — {{count}} blocchi"
   },
   "fileTree": {
+    "clearFilter": "Cancella filtro",
     "filterPlaceholder": "Filtra file...",
     "toggleTree": "Albero dei file del progetto",
     "loadError": "Impossibile leggere questa cartella",
@@ -941,6 +953,9 @@
     "unsupportedModel": "Questo modello non supporta la visione"
   },
   "forecast": {
+    "chart": {
+      "resetZoom": "Reimposta zoom"
+    },
     "title": "Previsione",
     "noAnalysis": "Nessuna analisi in corso",
     "docs": {
@@ -1074,6 +1089,9 @@
       "loadFailed": "Impossibile caricare i confronti."
     },
     "notes": {
+      "open": "Apri nota",
+      "edit": "Modifica",
+      "delete": "Elimina",
       "timeline": "Timeline annotata",
       "timelineEmpty": "Nessuna nota su questa previsione.",
       "count_one": "{{count}} nota",
@@ -1425,6 +1443,7 @@
     }
   },
   "chatMenu": {
+    "plusButtonHint": "Aggiungi file e altro",
     "addFile": "Aggiungi immagine o file",
     "planMode": "Modalità piano",
     "planModeDesc": "Prepara un piano",

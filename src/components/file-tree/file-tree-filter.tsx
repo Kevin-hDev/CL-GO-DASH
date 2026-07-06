@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Search, X } from "@/components/ui/lucide-icons";
+import { Tooltip } from "@/components/ui/tooltip";
 
 interface FileTreeFilterProps {
   value: string;
@@ -33,9 +34,11 @@ export function FileTreeFilter({ value, onChange }: FileTreeFilterProps) {
         spellCheck={false}
       />
       {value && (
-        <button className="ft-filter-clear" onClick={() => onChange("")} type="button">
-          <X size="var(--icon-13)" />
-        </button>
+        <Tooltip label={t("fileTree.clearFilter")}>
+          <button className="ft-filter-clear" onClick={() => onChange("")} type="button">
+            <X size="var(--icon-13)" />
+          </button>
+        </Tooltip>
       )}
     </div>
   );

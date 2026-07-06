@@ -72,6 +72,7 @@
     },
     "detail": {
       "token": "ボットトークン",
+      "removeUser": "削除",
       "tokenPlaceholder": "トークンを貼り付け…",
       "botToken": "Slack ボットトークン",
       "appToken": "Slack アプリトークン",
@@ -190,6 +191,7 @@
     "modelSearch": "モデルを検索…",
     "modelEmpty": "一致するモデルがありません。",
     "selectModel": "モデルを選択",
+    "selectModelHint": "モデルを選択",
     "reasoningTitle": "推論",
     "reasoningOff": "オフ",
     "reasoningAuto": "オン",
@@ -199,6 +201,10 @@
     "reasoningXhigh": "最高",
     "send": "送信",
     "cancel": "キャンセル",
+    "stop": "停止",
+    "editMessage": "編集して再生成",
+    "regenerate": "再生成",
+    "copy": "コピー",
     "clone": {
       "action": "クローン",
       "title": "セッションをクローン",
@@ -370,7 +376,7 @@
     "autoDescription": "インターネットとコンピューター上のファイルへ制限なくアクセスします",
     "manualLabel": "許可を求める",
     "manualDescription": "外部ファイルを変更したりインターネットを使う前に必ず確認します",
-    "toggleHint": "モードを切り替え（Shift+Tab）"
+    "toggleHint": "権限を変更（Shift+Tab）"
   },
   "permissionDialog": {
     "title": "{{action}} を許可しますか？",
@@ -445,6 +451,8 @@
     "modelsTab": "モデル"
   },
   "heartbeat": {
+    "back": "戻る",
+    "toggle": "有効/無効",
     "title": "ウェイクアップ",
     "subtitle": "任意の LLM にスケジュールタスクを自動化",
     "empty": "ウェイクアップが設定されていません。「新しいウェイクアップ」をクリックして開始してください。",
@@ -684,6 +692,8 @@
     }
   },
   "terminal": {
+    "newTab": "新しいタブ",
+    "closePanel": "パネルを閉じる",
     "processExited": "プロセスがコード {{code}} で終了しました",
     "failedToStart": "Terminal を起動できませんでした"
   },
@@ -707,6 +717,7 @@
     "description": "ローカルおよびクラウド LLM 向けのエージェント型デスクトップアプリ。"
   },
   "filePreview": {
+    "closeTab": "タブを閉じる",
     "default": "デフォルト",
     "noFiles": "このセッションで作成または変更されたファイルはありません。",
     "listModes": {
@@ -728,6 +739,7 @@
     "blockCount": "DOCX — {{count}} ブロック"
   },
   "fileTree": {
+    "clearFilter": "フィルターをクリア",
     "filterPlaceholder": "ファイルを検索…",
     "toggleTree": "プロジェクトファイルツリー",
     "loadError": "このフォルダを読み取れません",
@@ -941,6 +953,9 @@
     "unsupportedModel": "このモデルはビジョンに対応していません"
   },
   "forecast": {
+    "chart": {
+      "resetZoom": "ズームをリセット"
+    },
     "title": "予測",
     "noAnalysis": "分析が進行中ではありません",
     "docs": {
@@ -1074,6 +1089,9 @@
       "loadFailed": "比較を読み込めません。"
     },
     "notes": {
+      "open": "ノートを開く",
+      "edit": "編集",
+      "delete": "削除",
       "timeline": "注釈付きタイムライン",
       "timelineEmpty": "この予測にはまだノートがありません。",
       "count_one": "{{count}} 件のノート",
@@ -1425,6 +1443,7 @@
     }
   },
   "chatMenu": {
+    "plusButtonHint": "ファイルなどを追加",
     "addFile": "画像またはファイルを追加",
     "planMode": "計画モード",
     "planModeDesc": "計画を作成",

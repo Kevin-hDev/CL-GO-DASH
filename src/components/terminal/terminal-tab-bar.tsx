@@ -1,5 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { TerminalSquare, X as XIcon, Plus } from "@/components/ui/lucide-icons";
+import { Tooltip } from "@/components/ui/tooltip";
 import type { TerminalTab } from "@/hooks/use-terminal";
 import "./terminal-tab-bar.css";
 
@@ -26,6 +28,7 @@ export function TerminalTabBar({
   onReorder,
   onClosePanel,
 }: TerminalTabBarProps) {
+  const { t } = useTranslation();
   const [editingTabId, setEditingTabId] = useState<string | null>(null);
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
@@ -160,12 +163,16 @@ export function TerminalTabBar({
           </div>
         );
       })}
-      <button className="terminal-tab-add" onClick={onAdd}>
-        <Plus size="var(--icon-sm)" />
-      </button>
-      <button className="terminal-tab-bar-close" onClick={onClosePanel}>
-        <XIcon size="var(--icon-sm)" />
-      </button>
+      <Tooltip label={t("terminal.newTab")}>
+        <button className="terminal-tab-add" onClick={onAdd}>
+          <Plus size="var(--icon-sm)" />
+        </button>
+      </Tooltip>
+      <Tooltip label={t("terminal.closePanel")} align="right">
+        <button className="terminal-tab-bar-close" onClick={onClosePanel}>
+          <XIcon size="var(--icon-sm)" />
+        </button>
+      </Tooltip>
     </div>
   );
 }

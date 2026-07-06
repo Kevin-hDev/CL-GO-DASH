@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+import { Tooltip } from "@/components/ui/tooltip";
 import "./chat.css";
 
 type ButtonState = "hidden" | "send" | "stop";
@@ -26,15 +28,18 @@ function StopIcon() {
 }
 
 export function SendStopButton({ state, onSend, onStop }: SendStopButtonProps) {
+  const { t } = useTranslation();
   const isStop = state === "stop";
   const disabled = state === "hidden";
   return (
-    <button
-      className={`send-btn ${isStop ? "stop" : "send"}`}
-      onClick={isStop ? onStop : onSend}
-      disabled={disabled}
-    >
-      {isStop ? <StopIcon /> : <SendIcon />}
-    </button>
+    <Tooltip label={isStop ? t("agentLocal.stop") : t("agentLocal.send")} align="right">
+      <button
+        className={`send-btn ${isStop ? "stop" : "send"}`}
+        onClick={isStop ? onStop : onSend}
+        disabled={disabled}
+      >
+        {isStop ? <StopIcon /> : <SendIcon />}
+      </button>
+    </Tooltip>
   );
 }

@@ -72,6 +72,7 @@
     },
     "detail": {
       "token": "Token du bot",
+      "removeUser": "Retirer",
       "tokenPlaceholder": "Collez le token ici…",
       "botToken": "Token bot Slack",
       "appToken": "Token app Slack",
@@ -190,6 +191,7 @@
     "modelSearch": "Rechercher un modèle…",
     "modelEmpty": "Aucun modèle ne correspond.",
     "selectModel": "Choisir un modèle",
+    "selectModelHint": "Sélectionner le modèle",
     "reasoningTitle": "Réflexion",
     "reasoningOff": "Désactivée",
     "reasoningAuto": "Activée",
@@ -199,6 +201,10 @@
     "reasoningXhigh": "Très forte",
     "send": "Envoyer",
     "cancel": "Annuler",
+    "stop": "Arrêter",
+    "editMessage": "Modifier et relancer",
+    "regenerate": "Relancer",
+    "copy": "Copier",
     "clone": {
       "action": "Cloner",
       "title": "Cloner la session",
@@ -370,7 +376,7 @@
     "autoDescription": "Accès non restreint à Internet et aux fichiers de votre ordinateur",
     "manualLabel": "Demander l’autorisation",
     "manualDescription": "Toujours demander avant de modifier les fichiers externes et d’utiliser Internet",
-    "toggleHint": "Changer de mode (Shift+Tab)"
+    "toggleHint": "Modifier les permissions (Shift+Tab)"
   },
   "permissionDialog": {
     "title": "Autoriser à {{action}} ?",
@@ -445,6 +451,8 @@
     "modelsTab": "Modèles"
   },
   "heartbeat": {
+    "back": "Retour",
+    "toggle": "Activer/Désactiver",
     "title": "Réveils",
     "subtitle": "Créer des réveils automatisés pour planifier différentes tâches",
     "empty": "Aucun réveil configuré. Clique sur Nouveau réveil pour commencer.",
@@ -684,6 +692,8 @@
     }
   },
   "terminal": {
+    "newTab": "Nouvel onglet",
+    "closePanel": "Fermer le panneau",
     "processExited": "Processus terminé avec le code {{code}}",
     "failedToStart": "Le terminal n'a pas pu démarrer"
   },
@@ -707,6 +717,7 @@
     "description": "Application desktop agentique pour LLM locaux et cloud."
   },
   "filePreview": {
+    "closeTab": "Fermer l'onglet",
     "default": "par défaut",
     "noFiles": "Aucun fichier créé ou modifié dans cette session.",
     "listModes": {
@@ -728,6 +739,7 @@
     "blockCount": "DOCX — {{count}} blocs"
   },
   "fileTree": {
+    "clearFilter": "Effacer le filtre",
     "filterPlaceholder": "Filtrer les fichiers...",
     "toggleTree": "Arborescence du projet",
     "loadError": "Impossible de lire ce dossier",
@@ -907,6 +919,7 @@
     "openSite": "Ouvrir le site"
   },
   "chatMenu": {
+    "plusButtonHint": "Ajouter des fichiers et plus encore",
     "addFile": "Ajouter une image ou un fichier",
     "planMode": "Mode plan",
     "planModeDesc": "Préparer un plan",
@@ -951,6 +964,9 @@
     "inputLocked": "Répondez à la question ci-dessus"
   },
   "forecast": {
+    "chart": {
+      "resetZoom": "Réinitialiser le zoom"
+    },
     "title": "Forecast",
     "noAnalysis": "Aucune analyse en cours",
     "docs": {
@@ -1084,6 +1100,9 @@
       "loadFailed": "Impossible de charger les comparaisons."
     },
     "notes": {
+      "open": "Ouvrir la note",
+      "edit": "Modifier",
+      "delete": "Supprimer",
       "timeline": "Timeline annotée",
       "timelineEmpty": "Aucune note placée sur cette prévision.",
       "count_one": "{{count}} note",

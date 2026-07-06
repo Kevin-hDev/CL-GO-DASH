@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, memo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { Tooltip } from "@/components/ui/tooltip";
 import { useWakeups } from "@/hooks/use-wakeups";
 import { useArrowNavigation } from "@/hooks/use-arrow-navigation";
 import { formatDateTime, formatSchedule } from "@/lib/wakeup-format";
@@ -68,11 +69,12 @@ export const HeartbeatTab = memo(function HeartbeatTab({
     <div className="wk-sidebar">
       <div className="wk-sidebar-header">
         <span className="wk-sidebar-title">{t("heartbeat.sidebar.title")}</span>
-        <RoundToggle
-          checked={!globalPaused}
-          onChange={(on) => void setPaused(!on)}
-          title={globalPaused ? t("heartbeat.sidebar.resume") : t("heartbeat.sidebar.pause")}
-        />
+        <Tooltip label={globalPaused ? t("heartbeat.sidebar.resume") : t("heartbeat.sidebar.pause")} align="right">
+          <RoundToggle
+            checked={!globalPaused}
+            onChange={(on) => void setPaused(!on)}
+          />
+        </Tooltip>
       </div>
       <div className="wk-sidebar-list">
         {activeWakeups.length === 0 ? (

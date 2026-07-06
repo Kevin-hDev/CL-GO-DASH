@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { ArrowSquareOut } from "@/components/ui/icons";
+import { Tooltip } from "@/components/ui/tooltip";
 import { shortPath } from "@/lib/file-preview-utils";
 import type { FileOperation } from "@/types/file-preview";
 import { FileIcon } from "./file-icon";
@@ -56,17 +57,19 @@ export function FilePreviewSummary({
               <span className="fp-summary-name">{operation.name}</span>
             </span>
             <FilePreviewStats operation={operation} showZero />
-            <button
-              className="fp-summary-open"
-              type="button"
-              aria-label={t("filePreview.open")}
-              onClick={(event) => {
-                event.stopPropagation();
-                onOpenFile(operation);
-              }}
-            >
-              <ArrowSquareOut size="var(--icon-xs)" aria-hidden="true" />
-            </button>
+            <Tooltip label={t("filePreview.open")}>
+              <button
+                className="fp-summary-open"
+                type="button"
+                aria-label={t("filePreview.open")}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onOpenFile(operation);
+                }}
+              >
+                <ArrowSquareOut size="var(--icon-xs)" aria-hidden="true" />
+              </button>
+            </Tooltip>
           </div>
         );
       })}
