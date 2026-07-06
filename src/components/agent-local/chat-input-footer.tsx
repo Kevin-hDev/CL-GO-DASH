@@ -12,6 +12,14 @@ interface ChatInputFooterProps {
   centerSlot?: React.ReactNode;
   onScrollBottom: () => void;
   onWorktreeSelect: (path: string, branch: string) => void;
+  onBranchReady?: (branchName: string) => Promise<void> | void;
+  cloneGitBranch?: {
+    visible: boolean;
+    state: "idle" | "loading" | "success";
+    label: string;
+    disabled?: boolean;
+    onCreate: () => void;
+  };
 }
 
 export function ChatInputFooter({
@@ -22,6 +30,8 @@ export function ChatInputFooter({
   centerSlot,
   onScrollBottom,
   onWorktreeSelect,
+  onBranchReady,
+  cloneGitBranch,
 }: ChatInputFooterProps) {
   return (
     <div className="chat-input-under-row">
@@ -31,6 +41,8 @@ export function ChatInputFooter({
           projectState={projectState}
           git={git}
           onWorktreeSelect={onWorktreeSelect}
+          onBranchReady={onBranchReady}
+          cloneGitBranch={cloneGitBranch}
         />
       </div>
       {centerSlot && <div className="chat-input-center-slot">{centerSlot}</div>}

@@ -91,6 +91,15 @@ pub struct AgentSession {
     pub clone_read_files: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub clone_modified_files: Vec<String>,
+    /// Racine du groupe d'onglets (la session principale d'origine).
+    /// `None` pour la session principale elle-même, ou pour les anciennes
+    /// sessions créées avant l'introduction de ce champ.
+    /// Contrairement à `clone_parent_session_id` qui pointe vers le parent
+    /// **immédiat**, ce champ pointe toujours vers la **racine** du groupe.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub clone_root_session_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub git_branch: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -132,6 +141,10 @@ pub struct AgentSessionMeta {
     pub clone_parent_message_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub clone_mode: Option<CloneMode>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub clone_root_session_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub git_branch: Option<String>,
 }
 
 fn default_provider() -> String {

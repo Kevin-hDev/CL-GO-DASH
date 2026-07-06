@@ -9,6 +9,7 @@
 ### Changed
 
 - Manual Git branch creation now validates branch names before submit, blocks duplicate submits, and shows success feedback.
+- Session branching can now manually link clone tabs to isolated Git branches and clean those branches during archive.
 
 ---
 

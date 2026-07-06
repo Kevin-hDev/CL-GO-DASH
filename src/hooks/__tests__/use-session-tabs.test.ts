@@ -90,4 +90,97 @@ describe("useSessionTabs", () => {
       operationId: "op-frontend",
     })).rejects.toThrow("max tabs");
   });
+
+  it("ignore les onglets de clone retournés pour une autre racine", async () => {
+    const wrongRootTabs: SessionTabs = {
+      active_tab_id: "branch-1",
+      tabs: [
+        { tab_id: "main", session_id: "clone-root", label: "Main", is_main: true },
+        { tab_id: "branch-1", session_id: "nested", label: "Branche 1", is_main: false },
+      ],
+    };
+    vi.mocked(invoke).mockImplementation((command: string) => {
+      if (command === "list_session_tabs") return Promise.resolve(rootTabs);
+      if (command === "clone_agent_session") {
+        return Promise.resolve({
+          ...cloneResult,
+          root_session_id: "clone-root",
+          tabs: wrongRootTabs,
+        });
+      }
+      return Promise.resolve(rootTabs);
+    });
+    const { result } = renderHook(() => useSessionTabs("root"));
+    await waitFor(() => expect(result.current.tabs).toEqual(rootTabs));
+
+    await act(async () => {
+      await result.current.cloneMessage({
+        messageId: "m1",
+        mode: "cut",
+        operationId: "op-frontend",
+      });
+    });
+
+    expect(result.current.tabs).toEqual(rootTabs);
+  });
+
+  it("crée et lie une branche git de clone", async () => {
+    const linkedTabs: SessionTabs = {
+      ...cloneTabs,
+      tabs: cloneTabs.tabs.map((tab) =>
+        tab.session_id === "clone" ? { ...tab, git_branch: "clone-11111111" } : tab),
+    };
+    vi.mocked(invoke).mockImplementation((command: string) => {
+      if (command === "list_session_tabs") return Promise.resolve(cloneTabs);
+      if (command === "create_clone_git_branch") {
+        return Promise.resolve({ branch_name: "clone-11111111", tabs: linkedTabs });
+      }
+      return Promise.resolve(rootTabs);
+    });
+    const { result } = renderHook(() => useSessionTabs("root"));
+    await waitFor(() => expect(result.current.tabs).toEqual(cloneTabs));
+
+    let branchName = "";
+    await act(async () => {
+      branchName = await result.current.createCloneGitBranch("/repo", "clone");
+    });
+    expect(branchName).toBe("clone-11111111");
+
+    expect(invoke).toHaveBeenCalledWith("create_clone_git_branch", {
+      sessionId: "root",
+      cloneSessionId: "clone",
+      path: "/repo",
+    });
+    await waitFor(() => expect(result.current.tabs).toEqual(linkedTabs));
+  });
+
+  it("nettoie la branche git avant de fermer un onglet clone", async () => {
+    const { result } = renderHook(() => useSessionTabs("root"));
+    await waitFor(() => expect(result.current.tabs).toEqual(rootTabs));
+
+    await act(async () => {
+      await result.current.closeTabWithGitCleanup("branch-1", "/repo", "main");
+    });
+
+    expect(invoke).toHaveBeenCalledWith("close_session_tab_and_cleanup_git_branch", {
+      sessionId: "root",
+      tabId: "branch-1",
+      path: "/repo",
+      fallbackBranch: "main",
+    });
+  });
+
+  it("sauvegarde le checkpoint de branche principale dans les onglets", async () => {
+    const { result } = renderHook(() => useSessionTabs("root"));
+    await waitFor(() => expect(result.current.tabs).toEqual(rootTabs));
+
+    await act(async () => {
+      await result.current.saveMainCheckpointBranch("main");
+    });
+
+    expect(invoke).toHaveBeenCalledWith("save_session_tabs", {
+      sessionId: "root",
+      tabs: { ...rootTabs, main_checkpoint_branch: "main" },
+    });
+  });
 });

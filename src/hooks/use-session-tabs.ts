@@ -5,7 +5,14 @@ import {
   markSessionComplete,
   markSessionRunning,
 } from "@/hooks/use-session-activity-indicators";
-import type { CloneMode, CloneSessionResult, SessionTabs } from "@/types/agent";
+import { useSessionTabsGitActions } from "@/hooks/use-session-tabs-git-actions";
+import {
+  addAttentionTab,
+  findCloneTabId,
+  removeAttentionTab,
+  savePreviousActiveTab,
+} from "@/hooks/use-session-tabs-helpers";
+import type { CloneMode, CloneSessionResult, SessionTab, SessionTabs } from "@/types/agent";
 
 interface CloneMessageOptions {
   messageId: string;
@@ -50,6 +57,10 @@ export function useSessionTabs(
     const active = tabs.tabs.find((tab) => tab.tab_id === tabs.active_tab_id) ?? tabs.tabs[0];
     return active?.session_id ?? rootSessionId ?? null;
   }, [tabs, rootSessionId]);
+  const activeTab = useMemo<SessionTab | null>(() => {
+    if (!tabs) return null;
+    return tabs.tabs.find((tab) => tab.tab_id === tabs.active_tab_id) ?? tabs.tabs[0] ?? null;
+  }, [tabs]);
   const attentionTabIds = useMemo(
     () => new Set(rootSessionId ? attentionTabs[rootSessionId] ?? [] : []),
     [attentionTabs, rootSessionId],
@@ -67,22 +78,41 @@ export function useSessionTabs(
     setTabs(saved);
   }, [rootSessionId, tabs]);
 
+  const saveMainCheckpointBranch = useCallback(async (branchName: string) => {
+    if (!rootSessionId || !tabs || tabs.main_checkpoint_branch === branchName) return;
+    const next = { ...tabs, main_checkpoint_branch: branchName };
+    setTabs(next);
+    const saved = await invoke<SessionTabs>("save_session_tabs", {
+      sessionId: rootSessionId,
+      tabs: next,
+    });
+    setTabs(saved);
+  }, [rootSessionId, tabs]);
+
   const cloneMessage = useCallback(async (options: CloneMessageOptions) => {
     if (!rootSessionId) throw new Error("missing_session");
     const previousActiveTabId = tabs?.active_tab_id ?? "main";
     const operationId = options.operationId ?? crypto.randomUUID();
+    // On clone la session actuellement affichée (qui peut être un clone si
+    // l'utilisateur est sur un onglet clone), pas la racine. Le backend
+    // retrouvant la racine via `clone_root_session_id` pour grouper le tab.
+    const sourceSessionId = activeSessionId ?? rootSessionId;
     if (options.mode === "summary") {
       markSessionRunning(rootSessionId);
     }
     try {
       const result = await invoke<CloneSessionResult>("clone_agent_session", {
-        sessionId: rootSessionId,
+        sessionId: sourceSessionId,
         messageId: options.messageId,
         mode: options.mode,
         customFocus: options.customFocus?.trim() || null,
         operationId,
       });
       await onSessionsRefresh?.();
+      if (result.root_session_id !== rootSessionId) {
+        await refreshTabs();
+        return result;
+      }
       const cloneTabId = findCloneTabId(result);
       const shouldActivate = options.shouldActivateOnComplete?.() ?? true;
       const canActivate = shouldActivate && rootSessionIdRef.current === rootSessionId;
@@ -99,11 +129,12 @@ export function useSessionTabs(
       if (options.mode === "summary") clearSessionRunning(rootSessionId);
       throw error;
     }
-  }, [onSessionsRefresh, rootSessionId, tabs?.active_tab_id]);
+  }, [activeSessionId, onSessionsRefresh, refreshTabs, rootSessionId, tabs?.active_tab_id]);
 
   const cancelCloneSummary = useCallback(async (operationId: string) => {
     await invoke("cancel_clone_summary", { operationId });
   }, []);
+  const gitActions = useSessionTabsGitActions({ rootSessionId, setTabs, onSessionsRefresh });
 
   const closeTab = useCallback(async (tabId: string) => {
     if (!rootSessionId) return;
@@ -128,52 +159,18 @@ export function useSessionTabs(
 
   return {
     tabs,
+    activeTab,
     activeSessionId,
     attentionTabIds,
     selectTab,
+    saveMainCheckpointBranch,
     cloneMessage,
     cancelCloneSummary,
+    createCloneGitBranch: gitActions.createCloneGitBranch,
+    unlinkCloneGitBranch: gitActions.unlinkCloneGitBranch,
+    linkCloneGitBranch: gitActions.linkCloneGitBranch,
     closeTab,
+    closeTabWithGitCleanup: gitActions.closeTabWithGitCleanup,
     renameTab,
   };
-}
-
-function findCloneTabId(result: CloneSessionResult): string | null {
-  return result.tabs.tabs.find((tab) => tab.session_id === result.clone_session_id)?.tab_id ?? null;
-}
-
-async function savePreviousActiveTab(
-  rootSessionId: string,
-  tabs: SessionTabs,
-  previousActiveTabId: string,
-): Promise<SessionTabs> {
-  const activeTabExists = tabs.tabs.some((tab) => tab.tab_id === previousActiveTabId);
-  return invoke<SessionTabs>("save_session_tabs", {
-    sessionId: rootSessionId,
-    tabs: { ...tabs, active_tab_id: activeTabExists ? previousActiveTabId : "main" },
-  });
-}
-
-function addAttentionTab(
-  current: Record<string, string[]>,
-  rootSessionId: string,
-  tabId: string,
-): Record<string, string[]> {
-  const ids = current[rootSessionId] ?? [];
-  if (ids.includes(tabId)) return current;
-  return { ...current, [rootSessionId]: [...ids, tabId].slice(-3) };
-}
-
-function removeAttentionTab(
-  current: Record<string, string[]>,
-  rootSessionId: string,
-  tabId: string,
-): Record<string, string[]> {
-  const ids = current[rootSessionId];
-  if (!ids?.includes(tabId)) return current;
-  const nextIds = ids.filter((id) => id !== tabId);
-  const next = { ...current };
-  if (nextIds.length > 0) next[rootSessionId] = nextIds;
-  else delete next[rootSessionId];
-  return next;
 }

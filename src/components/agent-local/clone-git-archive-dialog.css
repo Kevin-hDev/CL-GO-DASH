@@ -1,0 +1,75 @@
+.cga-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--void) 55%, transparent);
+}
+
+.cga-dialog {
+  position: relative;
+  width: min(420px, calc(100vw - 32px));
+  padding: var(--space-xl);
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-lg);
+  background: var(--popover-bg, var(--shell));
+  box-shadow: var(--shadow-card);
+  backdrop-filter: var(--popover-backdrop-filter, none);
+  -webkit-backdrop-filter: var(--popover-backdrop-filter, none);
+}
+
+.cga-close {
+  position: absolute;
+  top: var(--space-sm);
+  right: var(--space-sm);
+  border: 0;
+  background: transparent;
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+
+.cga-title {
+  padding-right: var(--space-xl);
+  color: var(--ink);
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.cga-text {
+  margin-top: var(--space-md);
+  color: var(--ink-muted);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+}
+
+.cga-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+}
+
+.cga-btn {
+  min-height: 36px;
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--ink-muted);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.cga-btn:hover:not(:disabled) {
+  background: var(--surface-hover);
+  color: var(--ink);
+}
+
+.cga-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.cga-btn-wide {
+  grid-column: 1 / -1;
+}

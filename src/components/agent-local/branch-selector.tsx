@@ -15,13 +15,15 @@ type GitBranchHook = ReturnType<typeof useGitBranch>;
 interface BranchSelectorProps {
   git: GitBranchHook;
   locked: boolean;
+  lockedLabel?: string;
   onConflict: (branchName: string, dirtyCount: number) => void;
   onWorktreeSelect: (path: string, branch: string) => void;
   onGithubAuthRequired: () => void;
+  onBranchReady?: (branchName: string) => Promise<void> | void;
 }
 
 export function BranchSelector({
-  git, locked, onConflict, onWorktreeSelect, onGithubAuthRequired,
+  git, locked, lockedLabel, onConflict, onWorktreeSelect, onGithubAuthRequired, onBranchReady,
 }: BranchSelectorProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -55,6 +57,14 @@ export function BranchSelector({
     if (creating && createRef.current) createRef.current.focus();
   }, [creating]);
 
+  const notifyBranchReady = useCallback(async (name: string) => {
+    try {
+      await onBranchReady?.(name);
+    } catch {
+      showToast(t("branches.errorInternal"), "error", 3000);
+    }
+  }, [onBranchReady, t]);
+
   const handleSelect = useCallback(async (name: string) => {
     if (name === git.currentBranch) {
       setOpen(false);
@@ -62,13 +72,14 @@ export function BranchSelector({
     }
     const result = await git.checkout(name);
     if (result.ok) {
+      await notifyBranchReady(name);
       setOpen(false);
       setSearch("");
     } else if (result.dirtyCount != null) {
       setOpen(false);
       onConflict(name, result.dirtyCount);
     }
-  }, [git, onConflict]);
+  }, [git, notifyBranchReady, onConflict]);
 
   const handleCreate = useCallback(async () => {
     if (isCreating) return;
@@ -83,6 +94,7 @@ export function BranchSelector({
     try {
       const result = await git.create(name);
       if (result.ok) {
+        await notifyBranchReady(name);
         showToast(`${t("branches.bubbleCreated")}: ${name}`, "success", 3000);
         setOpen(false);
         setCreating(false);
@@ -101,7 +113,7 @@ export function BranchSelector({
     } finally {
       setIsCreating(false);
     }
-  }, [createName, git, isCreating, onGithubAuthRequired, t]);
+  }, [createName, git, isCreating, notifyBranchReady, onGithubAuthRequired, t]);
 
   const handleWorktreeSelect = useCallback((path: string, branch: string) => {
     setOpen(false);
@@ -117,7 +129,7 @@ export function BranchSelector({
   if (!git.isGitRepo) return null;
 
   if (locked) {
-    return <BranchSelectorLockedIndicator label={git.currentBranch || t("branches.detachedHead")} />;
+    return <BranchSelectorLockedIndicator label={lockedLabel || git.currentBranch || t("branches.detachedHead")} />;
   }
 
   const { filteredBranches, filteredWorktrees } = getVisibleBranchOptions(

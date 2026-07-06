@@ -2,9 +2,11 @@ import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useTranslation } from "react-i18next";
 import { ProjectSelector } from "./project-selector";
+import "./chat-project-controls.css";
 import { BranchSelector } from "./branch-selector";
 import { BranchConflictDialog } from "./branch-conflict-dialog";
 import { BranchGithubAuthDialog } from "./branch-github-auth-dialog";
+import { CloneGitBranchButton } from "./clone-git-branch-button";
 import { useGithubBranchAuth } from "@/hooks/use-github-branch-auth";
 import type { useGitBranch } from "@/hooks/use-git-branch";
 import type { useSessionProject } from "@/hooks/use-session-project";
@@ -15,6 +17,14 @@ interface ChatProjectControlsProps {
   projectState: ReturnType<typeof useSessionProject>;
   git: ReturnType<typeof useGitBranch>;
   onWorktreeSelect: (path: string, branch: string) => void;
+  onBranchReady?: (branchName: string) => Promise<void> | void;
+  cloneGitBranch?: {
+    visible: boolean;
+    state: "idle" | "loading" | "success";
+    label: string;
+    disabled?: boolean;
+    onCreate: () => void;
+  };
 }
 
 export function ChatProjectControls({
@@ -22,6 +32,8 @@ export function ChatProjectControls({
   projectState,
   git,
   onWorktreeSelect,
+  onBranchReady,
+  cloneGitBranch,
 }: ChatProjectControlsProps) {
   const { t } = useTranslation();
   const githubAuth = useGithubBranchAuth(() => void git.refresh());
@@ -34,7 +46,7 @@ export function ChatProjectControls({
 
   return (
     <>
-      <div style={{ display: "flex", alignItems: "center", gap: "var(--space-xs)", flexWrap: "wrap" }}>
+      <div className="cpc-row">
         <ProjectSelector
           projects={projects}
           selectedProjectId={projectState.selectedProjectId}
@@ -49,7 +61,16 @@ export function ChatProjectControls({
           onConflict={(branch, dirtyCount) => setBranchConflict({ branch, dirtyCount })}
           onWorktreeSelect={onWorktreeSelect}
           onGithubAuthRequired={githubAuth.request}
+          onBranchReady={onBranchReady}
         />
+        {cloneGitBranch?.visible && (
+          <CloneGitBranchButton
+            state={cloneGitBranch.state}
+            label={cloneGitBranch.label}
+            disabled={cloneGitBranch.disabled}
+            onClick={cloneGitBranch.onCreate}
+          />
+        )}
       </div>
 
       {branchConflict && projectState.selectedProject && (
@@ -70,6 +91,7 @@ export function ChatProjectControls({
                   commitDescription,
                 });
                 await git.refresh();
+                await onBranchReady?.(branch);
                 setBranchConflict(null);
               } catch (e) {
                 console.error("commit_and_checkout:", e);

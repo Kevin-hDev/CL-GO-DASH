@@ -16,8 +16,18 @@ pub fn build_summary_messages(serialized: &str, focus: Option<&str>) -> Vec<Chat
 }
 
 pub fn serialize_messages(messages: &[AgentMessage]) -> String {
+    let mut inherited = String::new();
     let mut out = String::new();
     for msg in messages {
+        // Le contexte caché hérité d'un clone parent (résumé cumulatif) est
+        // extrait dans une section dédiée plutôt que sérialisé comme un
+        // message utilisateur normal. Le LLM reçoit alors une entrée claire
+        // `<inherited_context>` en tête, puis le reste de la conversation.
+        if msg.content.trim_start().starts_with(CLONE_SUMMARY_PREFIX) {
+            push_bounded(&mut inherited, msg.content.trim());
+            push_bounded(&mut inherited, "\n\n");
+            continue;
+        }
         push_bounded(&mut out, &format!("\n<message role=\"{}\">\n", msg.role));
         push_bounded(&mut out, msg.content.trim());
         if let Some(thinking) = msg.thinking.as_deref().filter(|value| !value.trim().is_empty()) {
@@ -33,6 +43,16 @@ pub fn serialize_messages(messages: &[AgentMessage]) -> String {
             append_truncated_marker(&mut out);
             break;
         }
+    }
+    if !inherited.is_empty() {
+        let prefix = format!(
+            "<inherited_context>\n{}\n</inherited_context>\n\n",
+            inherited.trim()
+        );
+        // On insère le bloc hérité en tête, dans le budget global.
+        let remaining = MAX_SUMMARY_INPUT_CHARS.saturating_sub(out.chars().count());
+        let prefix_bounded = take_chars(&prefix, remaining);
+        out = format!("{prefix_bounded}{out}");
     }
     out
 }

@@ -213,7 +213,18 @@
       "create": "Erstellen",
       "running": "Summary läuft...",
       "summaryFailed": "Das Summary konnte nicht erstellt werden.",
-      "withoutSummary": "Ohne Summary"
+      "withoutSummary": "Ohne Summary",
+      "gitCreate": "Neuer Git-Branch",
+      "gitCreating": "Wird erstellt...",
+      "gitCreated": "Git-Branch erstellt",
+      "gitBranchMissing": "Der verknüpfte Git-Branch existiert nicht mehr.",
+      "gitMissingCheckpoint": "Bereinigung nicht möglich: Hauptbranch unbekannt.",
+      "gitBranchLinkedElsewhere": "Bereinigung nicht möglich: Dieser Branch ist auch mit einer anderen Sitzung verknüpft.",
+      "gitArchiveTitle": "Diesen Klon archivieren?",
+      "gitArchiveDescription": "Diese Sitzung ist mit dem Git-Branch \"{{branch}}\" verknüpft.",
+      "gitArchiveKeep": "Ja",
+      "gitArchiveCancel": "Abbrechen",
+      "gitArchiveCleanup": "Branch bereinigen und archivieren"
     },
     "compression": "Compression",
     "retry": {

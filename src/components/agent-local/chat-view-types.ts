@@ -1,7 +1,7 @@
 import type { CloneMessageHandler } from "@/hooks/use-chat-clone";
 import type { DroppedFile } from "@/hooks/use-file-drop";
 import type { useTerminal } from "@/hooks/use-terminal";
-import type { Project } from "@/types/agent";
+import type { Project, SessionTab } from "@/types/agent";
 import type { FileOperation, FileOperationGroups } from "@/types/file-preview";
 import type { ReasoningMode } from "@/lib/reasoning-modes";
 
@@ -31,4 +31,7 @@ export interface ChatViewProps {
   canCloneMessages?: boolean;
   onCloneMessage?: CloneMessageHandler;
   onCancelCloneSummary?: (operationId: string) => Promise<void>;
+  activeSessionTab?: SessionTab | null;
+  onCreateCloneGitBranch?: (path: string, cloneSessionId: string) => Promise<string>;
+  onLinkCloneGitBranch?: (path: string, cloneSessionId: string, branchName: string) => Promise<void>;
 }
