@@ -19,10 +19,9 @@ interface ChatProjectControlsProps {
   onWorktreeSelect: (path: string, branch: string) => void;
   cloneGitBranch?: {
     visible: boolean;
-    state: "idle" | "loading" | "success" | "linked";
+    state: "idle" | "loading" | "success";
     label: string;
     disabled?: boolean;
-    branchSelectorLockedLabel?: string;
     onCreate: () => void;
   };
 }
@@ -56,8 +55,7 @@ export function ChatProjectControls({
         />
         <BranchSelector
           git={git}
-          locked={!!cloneGitBranch?.branchSelectorLockedLabel}
-          lockedLabel={cloneGitBranch?.branchSelectorLockedLabel}
+          locked={false}
           onConflict={(branch, dirtyCount) => setBranchConflict({ branch, dirtyCount })}
           onWorktreeSelect={onWorktreeSelect}
           onGithubAuthRequired={githubAuth.request}

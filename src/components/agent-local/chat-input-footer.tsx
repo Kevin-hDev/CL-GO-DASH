@@ -14,10 +14,9 @@ interface ChatInputFooterProps {
   onWorktreeSelect: (path: string, branch: string) => void;
   cloneGitBranch?: {
     visible: boolean;
-    state: "idle" | "loading" | "success" | "linked";
+    state: "idle" | "loading" | "success";
     label: string;
     disabled?: boolean;
-    branchSelectorLockedLabel?: string;
     onCreate: () => void;
   };
 }

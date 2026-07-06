@@ -2,7 +2,7 @@ import { Check, GitBranch, Spinner } from "@/components/ui/icons";
 import "./clone-git-branch-button.css";
 
 interface CloneGitBranchButtonProps {
-  state: "idle" | "loading" | "success" | "linked";
+  state: "idle" | "loading" | "success";
   label: string;
   disabled?: boolean;
   onClick: () => void;

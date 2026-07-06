@@ -5,7 +5,7 @@ import { parseCreateBranchError, type useGitBranch } from "@/hooks/use-git-branc
 import { showToast } from "@/lib/toast-emitter";
 import type { SessionTab } from "@/types/agent";
 
-export type CloneGitBranchActionState = "idle" | "loading" | "success" | "linked";
+export type CloneGitBranchActionState = "idle" | "loading" | "success";
 
 interface Options {
   projectPath?: string;
@@ -51,20 +51,19 @@ export function useCloneGitBranchAction({
     && isCloneTab
     && !activeSessionTab.git_branch
     && git.isGitRepo;
-  const linked = isCloneTab && !!activeSessionTab?.git_branch && git.isGitRepo;
-  const visible = eligible || linked || state === "loading" || state === "success";
-  const effectiveState: CloneGitBranchActionState = linked && state !== "success" ? "linked" : state;
+  // Une fois la branche liée, on masque le bouton V2 : le BranchSelector affiche
+  // déjà la branche courante, l'utilisateur garde son switch/création manuels.
+  // On ne re-vient qu'aux états transitoires loading/success (pendant puis juste
+  // après la création), puis on disparaît.
+  const visible = eligible || state === "loading" || state === "success";
+  const effectiveState: CloneGitBranchActionState = state;
   const disabled = isStreaming || effectiveState !== "idle";
-  const branchSelectorLockedLabel = eligible
-    ? t("agentLocal.clone.gitNoIsolation")
-    : undefined;
 
   const label = useMemo(() => {
-    if (effectiveState === "linked") return activeSessionTab?.git_branch ?? "";
     if (effectiveState === "loading") return t("agentLocal.clone.gitCreating");
     if (effectiveState === "success") return t("agentLocal.clone.gitCreated");
     return t("agentLocal.clone.gitCreate");
-  }, [activeSessionTab?.git_branch, effectiveState, t]);
+  }, [effectiveState, t]);
 
   const onCreate = useCallback(() => {
     if (disabled || !eligible || !activeSessionTab || !projectPath || !onCreateCloneGitBranch) {
@@ -84,5 +83,5 @@ export function useCloneGitBranchAction({
     })();
   }, [activeSessionTab, disabled, eligible, git, onCreateCloneGitBranch, projectPath, t]);
 
-  return { visible, state: effectiveState, label, disabled, branchSelectorLockedLabel, onCreate };
+  return { visible, state: effectiveState, label, disabled, onCreate };
 }

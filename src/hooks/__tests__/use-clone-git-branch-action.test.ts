@@ -46,13 +46,13 @@ describe("useCloneGitBranchAction", () => {
       }),
       { initialProps: { tab: cloneTab } },
     );
+    // Clone sans branche liée → bouton visible, BranchSelector non locké.
     expect(result.current.visible).toBe(true);
-    expect(result.current.branchSelectorLockedLabel).toBe("agentLocal.clone.gitNoIsolation");
+    expect(result.current.state).toBe("idle");
 
+    // Clone avec branche liée → bouton masqué (le BranchSelector affiche la branche).
     rerender({ tab: { ...cloneTab, git_branch: "clone-11111111" } });
-    expect(result.current.visible).toBe(true);
-    expect(result.current.state).toBe("linked");
-    expect(result.current.label).toBe("clone-11111111");
+    expect(result.current.visible).toBe(false);
   });
 
   it("passe en succès après création", async () => {
