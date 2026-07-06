@@ -165,6 +165,7 @@ mod tests {
             clone_summary: None,
             clone_read_files: Vec::new(),
             clone_modified_files: Vec::new(),
+        clone_root_session_id: None,
             git_branch: None,
         }
     }

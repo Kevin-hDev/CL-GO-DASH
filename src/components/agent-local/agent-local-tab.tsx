@@ -186,7 +186,7 @@ export const AgentLocalTab = memo(function AgentLocalTab({
           parentSessionId={displaySession?.parent_session_id}
           onOpenSubagent={(id) => void handleSelectById(id)}
           onGoToParent={() => displaySession?.parent_session_id && void handleSelectById(displaySession.parent_session_id)}
-          canCloneMessages={!displaySession?.parent_session_id && !displaySession?.clone_parent_session_id}
+          canCloneMessages={!displaySession?.parent_session_id}
           onCloneMessage={(messageId, cloneMode, customFocus, options) =>
             sessionTabs.cloneMessage({
               messageId,

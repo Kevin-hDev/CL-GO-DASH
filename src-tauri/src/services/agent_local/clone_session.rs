@@ -64,7 +64,11 @@ async fn clone_session_inner(
     cancel: CancellationToken,
 ) -> Result<CloneSessionResult, String> {
     let source = session_store::get(session_id).await?;
-    if source.parent_session_id.is_some() || source.clone_parent_session_id.is_some() {
+    // Les subagents (parent_session_id) ne sont pas clonables. Les clones
+    // (clone_parent_session_id) le sont désormais : on autorise le clone-de-clone
+    // pour permettre à l'utilisateur de réitérer sur une branche en conservant
+    // la mémoire des erreurs évitées (résumé cumulatif).
+    if source.parent_session_id.is_some() {
         return Err("Action impossible".into());
     }
     let Some(index) = source.messages.iter().position(|message| message.id == message_id) else {
@@ -76,9 +80,17 @@ async fn clone_session_inner(
     }
     let mut clone = build_clone(&source, message_id, mode.clone(), index);
     let clone_id = clone.id.clone();
+    // Le tab atterrit dans le groupe d'onglets de la racine (la session
+    // principale d'origine), pas dans un groupe spécifique au clone parent.
+    // On clone la valeur ici car `clone` est emprunté mutable plus bas dans
+    // `complete_summary`.
+    let root_id = clone
+        .clone_root_session_id
+        .clone()
+        .unwrap_or_else(|| session_id.to_string());
     session_store::save(&clone).await?;
     let tabs =
-        super::session_tabs::add_clone_tab(session_id, &clone_id, message_id, mode.clone())
+        super::session_tabs::add_clone_tab(&root_id, &clone_id, message_id, mode.clone())
             .await?;
     if matches!(mode, CloneMode::Summary) {
         match complete_summary(&mut clone, &suffix, custom_focus.as_deref(), cancel).await {
@@ -91,7 +103,7 @@ async fn clone_session_inner(
         }
     }
     Ok(CloneSessionResult {
-        root_session_id: session_id.to_string(),
+        root_session_id: root_id,
         clone_session_id: clone_id,
         operation_id: operation_id.to_string(),
         tabs,
@@ -122,6 +134,15 @@ fn build_clone(
     clone.clone_summary = None;
     clone.clone_read_files.clear();
     clone.clone_modified_files.clear();
+    // La racine du groupe est héritée du parent si le parent est lui-même un
+    // clone (clone-de-clone), sinon c'est l'id de la session source (qui est
+    // la racine). Cela permet de retrouver le groupe d'onglets d'origine
+    // quelle que soit la profondeur de la chaîne de clones.
+    let root_id = source
+        .clone_root_session_id
+        .as_deref()
+        .unwrap_or(&source.id);
+    clone.clone_root_session_id = Some(root_id.to_string());
     clone.parent_session_id = None;
     clone.subagent_type = None;
     clone.subagent_worktree = None;

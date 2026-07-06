@@ -93,12 +93,16 @@ export function useSessionTabs(
     if (!rootSessionId) throw new Error("missing_session");
     const previousActiveTabId = tabs?.active_tab_id ?? "main";
     const operationId = options.operationId ?? crypto.randomUUID();
+    // On clone la session actuellement affichée (qui peut être un clone si
+    // l'utilisateur est sur un onglet clone), pas la racine. Le backend
+    // retrouvant la racine via `clone_root_session_id` pour grouper le tab.
+    const sourceSessionId = activeSessionId ?? rootSessionId;
     if (options.mode === "summary") {
       markSessionRunning(rootSessionId);
     }
     try {
       const result = await invoke<CloneSessionResult>("clone_agent_session", {
-        sessionId: rootSessionId,
+        sessionId: sourceSessionId,
         messageId: options.messageId,
         mode: options.mode,
         customFocus: options.customFocus?.trim() || null,
@@ -121,7 +125,7 @@ export function useSessionTabs(
       if (options.mode === "summary") clearSessionRunning(rootSessionId);
       throw error;
     }
-  }, [onSessionsRefresh, rootSessionId, tabs?.active_tab_id]);
+  }, [activeSessionId, onSessionsRefresh, rootSessionId, tabs?.active_tab_id]);
 
   const cancelCloneSummary = useCallback(async (operationId: string) => {
     await invoke("cancel_clone_summary", { operationId });

@@ -55,6 +55,9 @@ export interface AgentSession {
   clone_summary?: string;
   clone_read_files?: string[];
   clone_modified_files?: string[];
+  /** Racine du groupe d'onglets (session principale d'origine). Contrairement
+   *  à `clone_parent_session_id` (parent immédiat), pointe toujours vers la racine. */
+  clone_root_session_id?: string;
   git_branch?: string;
 }
 
@@ -77,6 +80,7 @@ export interface AgentSessionMeta {
   clone_parent_session_id?: string;
   clone_parent_message_id?: string;
   clone_mode?: CloneMode;
+  clone_root_session_id?: string;
   git_branch?: string;
   is_gateway?: boolean;
   gateway_channel_key?: string;

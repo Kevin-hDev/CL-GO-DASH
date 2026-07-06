@@ -83,6 +83,7 @@ fn index_meta_drifted(meta: &AgentSessionMeta, session: &AgentSession) -> bool {
         || meta.clone_parent_session_id != session.clone_parent_session_id
         || meta.clone_parent_message_id != session.clone_parent_message_id
         || meta.clone_mode != session.clone_mode
+        || meta.clone_root_session_id != session.clone_root_session_id
         || meta.git_branch != session.git_branch
 }
 
@@ -160,6 +161,7 @@ pub fn meta_from_session(session: &AgentSession) -> AgentSessionMeta {
         clone_parent_session_id: session.clone_parent_session_id.clone(),
         clone_parent_message_id: session.clone_parent_message_id.clone(),
         clone_mode: session.clone_mode.clone(),
+        clone_root_session_id: session.clone_root_session_id.clone(),
         git_branch: session.git_branch.clone(),
     }
 }

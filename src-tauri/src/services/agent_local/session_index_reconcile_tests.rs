@@ -43,6 +43,7 @@ fn session(id: &str) -> AgentSession {
         clone_summary: Some("summary".into()),
         clone_read_files: vec![],
         clone_modified_files: vec![],
+        clone_root_session_id: None,
         git_branch: None,
     }
 }

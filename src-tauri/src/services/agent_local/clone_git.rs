@@ -163,7 +163,10 @@ fn ensure_clone_belongs_to_root(
     clone: &super::types_session::AgentSession,
     root_session_id: &str,
 ) -> Result<(), branch::CreateBranchError> {
-    if clone.clone_parent_session_id.as_deref() == Some(root_session_id) {
+    // On compare la racine du groupe d'onglets (clone_root_session_id), pas le
+    // parent immédiat (clone_parent_session_id), pour autoriser la création de
+    // branche git sur un clone-de-clone tant qu'il appartient au bon groupe.
+    if clone.clone_root_session_id.as_deref() == Some(root_session_id) {
         Ok(())
     } else {
         Err(branch::CreateBranchError::InternalError)
@@ -174,7 +177,7 @@ fn ensure_clone_belongs_to_root_string(
     clone: &super::types_session::AgentSession,
     root_session_id: &str,
 ) -> Result<(), String> {
-    if clone.clone_parent_session_id.as_deref() == Some(root_session_id) {
+    if clone.clone_root_session_id.as_deref() == Some(root_session_id) {
         Ok(())
     } else {
         Err("Action impossible".into())

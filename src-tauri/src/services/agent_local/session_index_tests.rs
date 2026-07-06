@@ -44,6 +44,7 @@ fn test_session(id: &str, name: &str, heartbeat: bool) -> AgentSession {
         clone_summary: None,
         clone_read_files: Vec::new(),
         clone_modified_files: Vec::new(),
+        clone_root_session_id: None,
         git_branch: None,
     }
 }
@@ -71,6 +72,7 @@ fn test_meta(id: &str, count: usize) -> AgentSessionMeta {
         clone_parent_session_id: None,
         clone_parent_message_id: None,
         clone_mode: None,
+        clone_root_session_id: None,
         git_branch: None,
     }
 }
@@ -189,6 +191,7 @@ async fn meta_from_session_extracts_all_fields() {
     s.clone_parent_session_id = Some("parent".into());
     s.clone_parent_message_id = Some("msg".into());
     s.clone_mode = Some(crate::services::agent_local::types_session::CloneMode::Cut);
+    s.clone_root_session_id = Some("root".into());
     s.git_branch = Some("clone-11111111".into());
 
     let meta = meta_from_session(&s);
@@ -206,6 +209,7 @@ async fn meta_from_session_extracts_all_fields() {
         meta.clone_mode,
         Some(crate::services::agent_local::types_session::CloneMode::Cut)
     );
+    assert_eq!(meta.clone_root_session_id, Some("root".into()));
     assert_eq!(meta.git_branch, Some("clone-11111111".into()));
 }
 

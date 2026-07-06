@@ -55,3 +55,76 @@ async fn unique_branch_fails_after_three_collisions() {
     .await;
     assert_eq!(result, Err(branch::CreateBranchError::AlreadyExists));
 }
+
+#[test]
+fn ensure_clone_belongs_to_root_accepts_clone_of_clone() {
+    // Un clone-de-clone a `clone_root_session_id == root` mais
+    // `clone_parent_session_id != root` (pointe vers le clone intermédiaire).
+    // Le check doit accepter ce cas grâce à la comparaison sur la racine.
+    use crate::services::agent_local::types_session::AgentSession;
+    use chrono::Utc;
+
+    let root_id = "root-aaaaaaaa-1111-1111-1111-111111111111";
+    let intermediate_id = "clone-bbbbbbbb-2222-2222-2222-222222222222";
+    let intermediate = AgentSession {
+        id: intermediate_id.into(),
+        name: "Clone intermediate".into(),
+        created_at: Utc::now(),
+        updated_at: None,
+        archived_at: None,
+        model: "llama3".into(),
+        provider: "ollama".into(),
+        thinking_enabled: false,
+        reasoning_mode: None,
+        accumulated_tokens: 0,
+        messages: vec![],
+        todos: vec![],
+        todo_neglect_count: 0,
+        todo_runs: vec![],
+        active_todo_run_id: None,
+        stream_failures: vec![],
+        diagnostic_runs: vec![],
+        plan_mode_enabled: false,
+        plan_runs: vec![],
+        active_plan_id: None,
+        plan_workflow_status: Default::default(),
+        plan_approval_decision: None,
+        is_heartbeat: false,
+        is_gateway: false,
+        gateway_channel_key: None,
+        project_id: None,
+        working_dir: String::new(),
+        parent_session_id: None,
+        subagent_type: None,
+        subagent_worktree: None,
+        subagent_prompt: None,
+        subagent_status: None,
+        subagent_run_id: None,
+        clone_parent_session_id: Some(root_id.into()),
+        clone_parent_message_id: None,
+        clone_mode: None,
+        clone_summary: None,
+        clone_read_files: vec![],
+        clone_modified_files: vec![],
+        clone_root_session_id: Some(root_id.into()),
+        git_branch: None,
+    };
+
+    // Le clone intermédiaire lui-même appartient bien au groupe.
+    assert!(ensure_clone_belongs_to_root(&intermediate, root_id).is_ok());
+    assert!(ensure_clone_belongs_to_root_string(&intermediate, root_id).is_ok());
+
+    // Simule un clone-de-clone : parent direct = clone intermédiaire,
+    // racine = root. Le check doit quand même accepter.
+    let mut clone_of_clone = intermediate.clone();
+    clone_of_clone.id = "clone-of-clone".into();
+    clone_of_clone.clone_parent_session_id = Some(intermediate_id.into());
+    clone_of_clone.clone_root_session_id = Some(root_id.into());
+
+    assert!(ensure_clone_belongs_to_root(&clone_of_clone, root_id).is_ok());
+    assert!(ensure_clone_belongs_to_root_string(&clone_of_clone, root_id).is_ok());
+
+    // Un clone qui n'appartient pas au groupe doit être refusé.
+    let other_root = "other-cccccccc-3333-3333-3333-333333333333";
+    assert!(ensure_clone_belongs_to_root(&clone_of_clone, other_root).is_err());
+}

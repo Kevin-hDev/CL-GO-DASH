@@ -120,6 +120,7 @@ mod tests {
             clone_parent_session_id: clone_parent.map(str::to_string),
             clone_parent_message_id: None,
             clone_mode: None,
+            clone_root_session_id: None,
             git_branch: None,
         }
     }
