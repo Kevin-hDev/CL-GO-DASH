@@ -81,3 +81,24 @@ async fn reconcile_rebuilds_stale_active_clone_index() {
         session.clone_parent_message_id
     );
 }
+
+#[tokio::test]
+async fn reconcile_rebuilds_when_index_id_is_invalid() {
+    let tmp = TempDir::new().unwrap();
+    let valid_session = session("clone-2");
+    let mut invalid_meta = meta_from_session(&valid_session);
+    invalid_meta.id = "../outside".into();
+    tokio::fs::write(
+        tmp.path().join("clone-2.json"),
+        serde_json::to_string_pretty(&valid_session).unwrap(),
+    )
+    .await
+    .unwrap();
+
+    let entries = reconcile_index(&tmp.path().join("index.json"), vec![invalid_meta])
+        .await
+        .unwrap();
+
+    assert_eq!(entries.len(), 1);
+    assert_eq!(entries[0].id, "clone-2");
+}

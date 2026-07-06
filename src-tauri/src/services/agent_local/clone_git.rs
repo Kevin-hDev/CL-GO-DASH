@@ -43,7 +43,7 @@ pub async fn create_linked_branch(
         Some(branch_name.clone()),
     )
     .await
-        .map_err(|_| branch::CreateBranchError::InternalError)?;
+    .map_err(|_| branch::CreateBranchError::InternalError)?;
     Ok(CloneGitBranchResult { branch_name, tabs })
 }
 
@@ -65,7 +65,8 @@ pub async fn close_tab_with_branch_cleanup(
     fallback_branch: Option<&str>,
 ) -> Result<session_tabs::SessionTabs, String> {
     let tab = session_tabs::get_tab(root_session_id, tab_id).await?;
-    let Some(git_branch) = tab.git_branch.as_deref().map(str::to_string) else {
+    let clone = session_store::get(&tab.session_id).await?;
+    let Some(git_branch) = clone_linked_branch(&clone, root_session_id)? else {
         return session_tabs::close_tab(root_session_id, tab_id).await;
     };
 
@@ -111,7 +112,9 @@ pub async fn close_tab_with_branch_cleanup(
 }
 
 async fn create_unique_branch(repo_path: &Path) -> Result<String, branch::CreateBranchError> {
-    let candidates: Vec<String> = (0..MAX_BRANCH_RETRIES).map(|_| random_branch_name()).collect();
+    let candidates: Vec<String> = (0..MAX_BRANCH_RETRIES)
+        .map(|_| random_branch_name())
+        .collect();
     create_unique_branch_from_candidates(repo_path.to_path_buf(), candidates).await
 }
 
@@ -163,10 +166,7 @@ fn ensure_clone_belongs_to_root(
     clone: &super::types_session::AgentSession,
     root_session_id: &str,
 ) -> Result<(), branch::CreateBranchError> {
-    // On compare la racine du groupe d'onglets (clone_root_session_id), pas le
-    // parent immédiat (clone_parent_session_id), pour autoriser la création de
-    // branche git sur un clone-de-clone tant qu'il appartient au bon groupe.
-    if clone.clone_root_session_id.as_deref() == Some(root_session_id) {
+    if clone_belongs_to_root(clone, root_session_id) {
         Ok(())
     } else {
         Err(branch::CreateBranchError::InternalError)
@@ -177,11 +177,27 @@ fn ensure_clone_belongs_to_root_string(
     clone: &super::types_session::AgentSession,
     root_session_id: &str,
 ) -> Result<(), String> {
-    if clone.clone_root_session_id.as_deref() == Some(root_session_id) {
+    if clone_belongs_to_root(clone, root_session_id) {
         Ok(())
     } else {
         Err("Action impossible".into())
     }
+}
+
+fn clone_linked_branch(
+    clone: &super::types_session::AgentSession,
+    root_session_id: &str,
+) -> Result<Option<String>, String> {
+    ensure_clone_belongs_to_root_string(clone, root_session_id)?;
+    Ok(clone.git_branch.clone())
+}
+
+fn clone_belongs_to_root(
+    clone: &super::types_session::AgentSession,
+    root_session_id: &str,
+) -> bool {
+    clone.clone_root_session_id.as_deref() == Some(root_session_id)
+        || clone.clone_parent_session_id.as_deref() == Some(root_session_id)
 }
 
 #[cfg(test)]

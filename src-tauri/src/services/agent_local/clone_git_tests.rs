@@ -6,7 +6,9 @@ fn init_repo_with_commit() -> tempfile::TempDir {
     let repo = Repository::init(tmp.path()).expect("init repo");
     std::fs::write(tmp.path().join("README.md"), "init").expect("write file");
     let mut index = repo.index().expect("index");
-    index.add_path(std::path::Path::new("README.md")).expect("add");
+    index
+        .add_path(std::path::Path::new("README.md"))
+        .expect("add");
     index.write().expect("write index");
     let tree_id = index.write_tree().expect("tree");
     let tree = repo.find_tree(tree_id).expect("find tree");
@@ -50,7 +52,9 @@ async fn unique_branch_fails_after_three_collisions() {
     }
     let result = create_unique_branch_from_candidates(
         tmp.path().to_path_buf(),
-        ["clone-00000000", "clone-11111111", "clone-22222222"].map(str::to_string).to_vec(),
+        ["clone-00000000", "clone-11111111", "clone-22222222"]
+            .map(str::to_string)
+            .to_vec(),
     )
     .await;
     assert_eq!(result, Err(branch::CreateBranchError::AlreadyExists));
@@ -127,4 +131,58 @@ fn ensure_clone_belongs_to_root_accepts_clone_of_clone() {
     // Un clone qui n'appartient pas au groupe doit être refusé.
     let other_root = "other-cccccccc-3333-3333-3333-333333333333";
     assert!(ensure_clone_belongs_to_root(&clone_of_clone, other_root).is_err());
+}
+
+#[test]
+fn clone_linked_branch_uses_session_as_source_of_truth() {
+    use crate::services::agent_local::types_session::AgentSession;
+    use chrono::Utc;
+
+    let root_id = "root-aaaaaaaa-1111-1111-1111-111111111111";
+    let clone = AgentSession {
+        id: "clone-bbbbbbbb-2222-2222-2222-222222222222".into(),
+        name: "Clone".into(),
+        created_at: Utc::now(),
+        updated_at: None,
+        archived_at: None,
+        model: "llama3".into(),
+        provider: "ollama".into(),
+        thinking_enabled: false,
+        reasoning_mode: None,
+        accumulated_tokens: 0,
+        messages: vec![],
+        todos: vec![],
+        todo_neglect_count: 0,
+        todo_runs: vec![],
+        active_todo_run_id: None,
+        stream_failures: vec![],
+        diagnostic_runs: vec![],
+        plan_mode_enabled: false,
+        plan_runs: vec![],
+        active_plan_id: None,
+        plan_workflow_status: Default::default(),
+        plan_approval_decision: None,
+        is_heartbeat: false,
+        is_gateway: false,
+        gateway_channel_key: None,
+        project_id: None,
+        working_dir: String::new(),
+        parent_session_id: None,
+        subagent_type: None,
+        subagent_worktree: None,
+        subagent_prompt: None,
+        subagent_status: None,
+        subagent_run_id: None,
+        clone_parent_session_id: Some(root_id.into()),
+        clone_parent_message_id: None,
+        clone_mode: None,
+        clone_summary: None,
+        clone_read_files: vec![],
+        clone_modified_files: vec![],
+        clone_root_session_id: None,
+        git_branch: Some("clone-12345678".into()),
+    };
+
+    let branch = clone_linked_branch(&clone, root_id).expect("linked branch");
+    assert_eq!(branch.as_deref(), Some("clone-12345678"));
 }

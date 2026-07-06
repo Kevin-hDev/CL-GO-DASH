@@ -1,3 +1,4 @@
+use super::session_store::validate_session_id;
 use crate::services::agent_local::types_session::{AgentSession, AgentSessionMeta};
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
@@ -63,6 +64,9 @@ async fn reconcile_index(
         return Ok(entries);
     };
     for meta in &entries {
+        if validate_session_id(&meta.id).is_err() {
+            return rebuild_index_from(dir).await;
+        }
         let path = dir.join(format!("{}.json", meta.id));
         let Ok(data) = tokio::fs::read_to_string(&path).await else {
             return rebuild_index_from(dir).await;
