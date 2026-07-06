@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
+import { Tooltip } from "@/components/ui/tooltip";
 import type { ModelParameter } from "./modelfile-utils";
 import "./ollama.css";
 import "./parameters-editor.css";
@@ -95,13 +96,14 @@ export function ParametersEditor({
               placeholder="32768"
               className="pe-input pe-input-value"
             />
-            <button
-              className="ollama-btn pe-remove-btn"
-              onClick={() => removeRow(idx)}
-              title={t("ollama.remove")}
-            >
-              ×
-            </button>
+            <Tooltip label={t("ollama.remove")}>
+              <button
+                className="ollama-btn pe-remove-btn"
+                onClick={() => removeRow(idx)}
+              >
+                ×
+              </button>
+            </Tooltip>
           </div>
         ))}
 

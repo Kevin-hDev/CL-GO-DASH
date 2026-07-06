@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import type { PersonalityFile } from "@/types/personality";
 import { FileText } from "@/components/ui/icons";
+import { Tooltip } from "@/components/ui/tooltip";
 import { RoundToggle } from "@/components/heartbeat/round-toggle";
 import "./personality-list.css";
 
@@ -57,7 +58,11 @@ export function PersonalityList({
                 <div className="pers-item-name">{f.name}</div>
                 <div className="pers-item-desc">{f.description}</div>
               </div>
-              {injected && <div className="pers-inject-dot" title={t("personality.injected")} />}
+              {injected && (
+                <Tooltip label={t("personality.injected")} align="right">
+                  <div className="pers-inject-dot" />
+                </Tooltip>
+              )}
             </div>
           );
         })}

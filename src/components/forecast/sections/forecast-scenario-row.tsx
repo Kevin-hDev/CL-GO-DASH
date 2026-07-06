@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pencil, Trash } from "@/components/ui/icons";
+import { Tooltip } from "@/components/ui/tooltip";
 import type { ForecastScenario } from "./forecast-scenario-types";
 
 interface ForecastScenarioRowProps {
@@ -94,28 +95,30 @@ export function ForecastScenarioRow({
               {t("forecast.scenarios.confirmDelete")}
             </button>
           )}
-          <button
-            className="fcs-icon-btn"
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              onEdit(scenario);
-            }}
-            title={t("forecast.scenarios.edit")}
-          >
-            <Pencil size="var(--icon-13)" />
-          </button>
-          <button
-            className="fcs-icon-btn fcs-icon-btn-danger"
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              setConfirmDelete(true);
-            }}
-            title={t("forecast.scenarios.delete")}
-          >
-            <Trash size="var(--icon-13)" />
-          </button>
+          <Tooltip label={t("forecast.scenarios.edit")}>
+            <button
+              className="fcs-icon-btn"
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                onEdit(scenario);
+              }}
+            >
+              <Pencil size="var(--icon-13)" />
+            </button>
+          </Tooltip>
+          <Tooltip label={t("forecast.scenarios.delete")}>
+            <button
+              className="fcs-icon-btn fcs-icon-btn-danger"
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                setConfirmDelete(true);
+              }}
+            >
+              <Trash size="var(--icon-13)" />
+            </button>
+          </Tooltip>
         </div>
       </div>
     </div>

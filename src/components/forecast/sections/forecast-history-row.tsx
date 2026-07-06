@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pencil, Trash } from "@/components/ui/icons";
+import { Tooltip } from "@/components/ui/tooltip";
 import type { AnalysisMeta } from "./forecast-history";
 
 interface ForecastHistoryRowProps {
@@ -131,19 +132,21 @@ export function ForecastHistoryRow({
             </button>
           </div>
         )}
-        <button
-          type="button"
-          className="fch-icon-btn"
-          onClick={(event) => {
-            event.stopPropagation();
-            setConfirmDelete(false);
-            setDraftName(analysis.name);
-            setEditing(true);
-          }}
-          title={t("forecast.history.edit")}
-        >
-          <Pencil size="var(--icon-15)" />
-        </button>
+        <Tooltip label={t("forecast.history.edit")}>
+          <button
+            type="button"
+            className="fch-icon-btn"
+            onClick={(event) => {
+              event.stopPropagation();
+              setConfirmDelete(false);
+              setDraftName(analysis.name);
+              setEditing(true);
+            }}
+          >
+            <Pencil size="var(--icon-15)" />
+          </button>
+        </Tooltip>
+      <Tooltip label={t("forecast.history.delete")}>
         <button
           type="button"
           className="fch-icon-btn fch-icon-btn-danger"
@@ -152,10 +155,10 @@ export function ForecastHistoryRow({
             setEditing(false);
             setConfirmDelete(true);
           }}
-          title={t("forecast.history.delete")}
         >
           <Trash size="var(--icon-15)" />
         </button>
+      </Tooltip>
       </div>
     </div>
   );

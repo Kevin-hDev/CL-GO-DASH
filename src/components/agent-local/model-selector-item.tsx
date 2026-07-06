@@ -1,5 +1,7 @@
 import type { KeyboardEvent } from "react";
+import { useTranslation } from "react-i18next";
 import { Check, Star } from "@/components/ui/icons";
+import { Tooltip } from "@/components/ui/tooltip";
 import type { AvailableModel } from "@/hooks/use-available-models";
 import type { useLocalListNavigation } from "@/hooks/use-local-list-navigation";
 
@@ -30,6 +32,7 @@ export function ModelSelectorItem({
   onSelect,
   onToggleFav,
 }: ModelSelectorItemProps) {
+  const { t } = useTranslation();
   const isPaid = !m.is_free && !m.is_local;
   return (
     <div
@@ -63,8 +66,16 @@ export function ModelSelectorItem({
       </span>
       <span className="ms-item-name">{m.id}</span>
       <span className="ms-item-right">
-        {m.supports_vision && <span className="ms-badge-vision" title="Vision">V</span>}
-        {m.supports_tools && <span className="ms-badge-tools" title="Tools">T</span>}
+        {m.supports_vision && (
+          <Tooltip label={t("settings.llm.vision")}>
+            <span className="ms-badge-vision">V</span>
+          </Tooltip>
+        )}
+        {m.supports_tools && (
+          <Tooltip label={t("settings.llm.tools")}>
+            <span className="ms-badge-tools">T</span>
+          </Tooltip>
+        )}
         {m.hint && <span className="ms-hint">{m.hint}</span>}
         {isSelected && <Check size="var(--icon-xs)" />}
       </span>

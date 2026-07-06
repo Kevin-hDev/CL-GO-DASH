@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
 import { Trash } from "@/components/ui/icons";
+import { Tooltip } from "@/components/ui/tooltip";
 import { SettingsCard } from "@/components/settings/settings-card";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { useAvailableModels } from "@/hooks/use-available-models";
@@ -87,9 +88,11 @@ export function ChannelsDetail({ channelId, account, status, config, onSaveConfi
               <span className="ctd-status-dot" />
               {t(isRunning ? "channels.detail.connected" : "channels.detail.disconnected")}
             </button>
-            <button type="button" className="ak-icon-btn danger" onClick={() => setConfirmDelete(true)} title={t("channels.detail.delete")}>
-              <Trash size="var(--icon-md)" />
-            </button>
+            <Tooltip label={t("channels.detail.delete")} align="right">
+              <button type="button" className="ak-icon-btn danger" onClick={() => setConfirmDelete(true)}>
+                <Trash size="var(--icon-md)" />
+              </button>
+            </Tooltip>
           </div>
         </div>
 

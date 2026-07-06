@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
+import { Tooltip } from "@/components/ui/tooltip";
 import type { PanelMode } from "@/hooks/use-forecast-panel";
 import "./mode-selector.css";
 
@@ -40,20 +41,21 @@ export function ModeSelector({ mode, onChange }: ModeSelectorProps) {
 
   return (
     <>
-      <button
-        ref={btnRef}
-        className={`tab-action-btn ${mode === "forecast" ? "active" : ""}`}
-        onClick={() => (open ? setOpen(false) : openMenu())}
-        title={t("forecast.panelMode.title")}
-      >
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
-          stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"
-          strokeLinejoin="round">
-          <rect x="1" y="2" width="6" height="12" rx="1.5" />
-          <rect x="9" y="2" width="6" height="12" rx="1.5" />
-          <path d="M5.5 8h5" strokeDasharray="2 2" />
-        </svg>
-      </button>
+      <Tooltip label={t("forecast.panelMode.title")}>
+        <button
+          ref={btnRef}
+          className={`tab-action-btn ${mode === "forecast" ? "active" : ""}`}
+          onClick={() => (open ? setOpen(false) : openMenu())}
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
+            stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"
+            strokeLinejoin="round">
+            <rect x="1" y="2" width="6" height="12" rx="1.5" />
+            <rect x="9" y="2" width="6" height="12" rx="1.5" />
+            <path d="M5.5 8h5" strokeDasharray="2 2" />
+          </svg>
+        </button>
+      </Tooltip>
       {open && createPortal(
         <div ref={menuRef} className="ms-menu" style={{ top: pos.top, right: pos.right }}>
           <button className="ms-item" onClick={() => pick("preview")}>

@@ -28,7 +28,7 @@ describe("PermissionModeSelector", () => {
   it("affiche les titres et descriptions sans chiffres visibles", () => {
     render(<PermissionModeSelector mode="auto" onChange={vi.fn()} />);
 
-    fireEvent.click(screen.getByTitle("Changer de mode (Shift+Tab)"));
+    fireEvent.click(screen.getByRole("button"));
 
     expect(screen.getByText("Chatbot")).toBeTruthy();
     expect(screen.getByText("Demander l’autorisation")).toBeTruthy();
@@ -48,7 +48,7 @@ describe("PermissionModeSelector", () => {
       </div>,
     );
 
-    fireEvent.click(screen.getByTitle("Changer de mode (Shift+Tab)"));
+    fireEvent.click(screen.getByRole("button"));
 
     expect(document.body.querySelector(".perm-mode-dropdown")).toBeTruthy();
     expect(container.querySelector(".perm-mode-dropdown")).toBeNull();

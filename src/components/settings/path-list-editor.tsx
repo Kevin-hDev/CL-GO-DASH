@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { open as openFileDialog } from "@tauri-apps/plugin-dialog";
+import { Tooltip } from "@/components/ui/tooltip";
 import { IS_MAC } from "@/lib/platform";
 
 interface PathListEditorProps {
@@ -62,22 +63,23 @@ export function PathListEditor({ paths, onChange }: PathListEditorProps) {
           }}>
             {p !== formatLabel(p, t) ? "" : p}
           </span>
-          <button
-            onClick={() => handleRemove(i)}
-            style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              color: "var(--ink-muted)",
-              fontSize: 16,
-              lineHeight: 1,
-              padding: "0 2px",
-              flexShrink: 0,
-            }}
-            title={t("common.delete")}
-          >
-            ×
-          </button>
+          <Tooltip label={t("common.delete")}>
+            <button
+              onClick={() => handleRemove(i)}
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: "var(--ink-muted)",
+                fontSize: 16,
+                lineHeight: 1,
+                padding: "0 2px",
+                flexShrink: 0,
+              }}
+            >
+              ×
+            </button>
+          </Tooltip>
         </div>
       ))}
 

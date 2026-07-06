@@ -1,5 +1,6 @@
 import { Plus, X } from "@/components/ui/icons";
 import { useTranslation } from "react-i18next";
+import { Tooltip } from "@/components/ui/tooltip";
 import { ForecastScenarioMenuSelect } from "./forecast-scenario-menu-select";
 import type { ForecastScenarioCovariateAdjustment } from "./forecast-scenario-types";
 
@@ -68,14 +69,15 @@ export function ForecastScenarioContextFields({
             onChange={(event) => updateAdjustment(index, { value: Number(event.target.value) })}
             aria-label={t("forecast.scenarios.contextValue")}
           />
-          <button
-            className="fcs-icon-btn"
-            type="button"
-            onClick={() => removeAdjustment(index)}
-            title={t("forecast.scenarios.removeContext")}
-          >
-            <X size="var(--icon-13)" />
-          </button>
+          <Tooltip label={t("forecast.scenarios.removeContext")}>
+            <button
+              className="fcs-icon-btn"
+              type="button"
+              onClick={() => removeAdjustment(index)}
+            >
+              <X size="var(--icon-13)" />
+            </button>
+          </Tooltip>
         </div>
       ))}
 

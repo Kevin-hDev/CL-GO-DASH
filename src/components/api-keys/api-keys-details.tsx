@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-shell";
 import { Pencil, Trash, ArrowSquareOut } from "@/components/ui/icons";
+import { Tooltip } from "@/components/ui/tooltip";
 import { SettingsCard } from "@/components/settings/settings-card";
 import { ProviderIcon } from "@/lib/provider-icons";
 import { getProviderDescription, type ProviderSpec } from "@/types/api";
@@ -82,12 +83,16 @@ export function ApiKeysDetails({ provider, onEdit, onDelete, onAddConnector }: A
             <button type="button" className="ak-connectors-btn" onClick={onAddConnector}>
               {t("apiKeys.main.connectorsBtn")}
             </button>
-            <button type="button" className="ak-icon-btn" onClick={onEdit} title={t("apiKeys.details.edit")}>
-              <Pencil size="var(--icon-md)" />
-            </button>
-            <button type="button" className="ak-icon-btn danger" onClick={() => setConfirmDelete(true)} title={t("apiKeys.details.delete")}>
-              <Trash size="var(--icon-md)" />
-            </button>
+            <Tooltip label={t("apiKeys.details.edit")} align="right">
+              <button type="button" className="ak-icon-btn" onClick={onEdit}>
+                <Pencil size="var(--icon-md)" />
+              </button>
+            </Tooltip>
+            <Tooltip label={t("apiKeys.details.delete")} align="right">
+              <button type="button" className="ak-icon-btn danger" onClick={() => setConfirmDelete(true)}>
+                <Trash size="var(--icon-md)" />
+              </button>
+            </Tooltip>
           </div>
         </div>
 

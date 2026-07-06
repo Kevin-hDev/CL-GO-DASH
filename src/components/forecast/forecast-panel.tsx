@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
 import { PanelRightOpen, PanelRightClose } from "@/components/ui/lucide-icons";
+import { Tooltip } from "@/components/ui/tooltip";
 import type { ForecastSection } from "@/hooks/use-forecast-panel";
 import { ForecastHeader } from "./forecast-header";
 import { ForecastEmpty } from "./forecast-empty";
@@ -123,13 +124,14 @@ export function ForecastPanel({
         }
         rightSlot={
           activeSection === "scenarios" && hasAnalysis ? (
-            <button
-              className={`fp-icon-btn ${scenarioPickerOpen ? "fp-icon-btn-active" : ""}`}
-              onClick={() => setScenarioPickerOpen((open) => !open)}
-              title={t("forecast.scenarios.togglePredictions")}
-            >
-              {scenarioPickerOpen ? <PanelRightClose size="var(--icon-md)" /> : <PanelRightOpen size="var(--icon-md)" />}
-            </button>
+            <Tooltip label={t("forecast.scenarios.togglePredictions")} align="right">
+              <button
+                className={`fp-icon-btn ${scenarioPickerOpen ? "fp-icon-btn-active" : ""}`}
+                onClick={() => setScenarioPickerOpen((open) => !open)}
+              >
+                {scenarioPickerOpen ? <PanelRightClose size="var(--icon-md)" /> : <PanelRightOpen size="var(--icon-md)" />}
+              </button>
+            </Tooltip>
           ) : null
         }
         onToggleNav={onToggleNav}

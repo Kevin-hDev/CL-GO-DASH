@@ -2,6 +2,7 @@ import { useMemo, useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { CaretDown, ChatCircleDots, Check, Hand, ShieldWarning } from "@/components/ui/icons";
+import { Tooltip } from "@/components/ui/tooltip";
 import type { PermissionMode } from "@/hooks/use-permission-mode";
 import { floatingMenuPortalRoot, useFloatingMenuPosition } from "@/hooks/use-floating-menu-position";
 import { focusLocalListItem, useLocalListNavigation } from "@/hooks/use-local-list-navigation";
@@ -79,24 +80,25 @@ export function PermissionModeSelector({ mode, onChange }: Props) {
 
   return (
     <div className="perm-mode-root" ref={rootRef} data-keyboard-scope={open ? "local" : undefined}>
-      <button
-        ref={(node) => { anchorRef.current = node; }}
-        type="button"
-        className={`perm-mode-trigger perm-mode-trigger-${mode}`}
-        onClick={() => setOpen((v) => !v)}
-        onKeyDown={(event) => {
-          if (!open && (event.key === "Enter" || event.key === " " || event.key === "ArrowDown")) {
-            setOpen(true);
-            return;
-          }
-          if (open) listProps.onKeyDown(event);
-        }}
-        title={t("permissionMode.toggleHint")}
-      >
-        <ModeIcon mode={mode} className="perm-mode-trigger-icon" size="var(--icon-lg)" />
-        <span className={`perm-mode-text perm-mode-${mode}`}>{label}</span>
-        <CaretDown size="var(--icon-2xs)" className="perm-mode-caret" />
-      </button>
+      <Tooltip label={t("permissionMode.toggleHint")}>
+        <button
+          ref={(node) => { anchorRef.current = node; }}
+          type="button"
+          className={`perm-mode-trigger perm-mode-trigger-${mode}`}
+          onClick={() => setOpen((v) => !v)}
+          onKeyDown={(event) => {
+            if (!open && (event.key === "Enter" || event.key === " " || event.key === "ArrowDown")) {
+              setOpen(true);
+              return;
+            }
+            if (open) listProps.onKeyDown(event);
+          }}
+        >
+          <ModeIcon mode={mode} className="perm-mode-trigger-icon" size="var(--icon-lg)" />
+          <span className={`perm-mode-text perm-mode-${mode}`}>{label}</span>
+          <CaretDown size="var(--icon-2xs)" className="perm-mode-caret" />
+        </button>
+      </Tooltip>
 
       {open && createPortal(
         <div

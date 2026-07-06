@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CaretLeft, Pencil, Trash } from "@/components/ui/icons";
+import { Tooltip } from "@/components/ui/tooltip";
 import type { ScheduledWakeup, WakeupRun, WakeupStatusSummary } from "@/types/wakeup";
 import { formatDateTime, formatRunStatus, formatSchedule } from "@/lib/wakeup-format";
 import { ActiveBadge } from "./badges";
@@ -66,14 +67,15 @@ export function WakeupDetails({
           <ActiveBadge active={wakeup.active} />
         </div>
         <div className="wk-details-actions">
-          <button
-            className="wk-icon-btn"
-            onClick={onEdit}
-            title={t("heartbeat.edit")}
-            type="button"
-          >
-            <Pencil size="var(--icon-md)" />
-          </button>
+          <Tooltip label={t("heartbeat.edit")}>
+            <button
+              className="wk-icon-btn"
+              onClick={onEdit}
+              type="button"
+            >
+              <Pencil size="var(--icon-md)" />
+            </button>
+          </Tooltip>
           {confirmDelete ? (
             <button
               className="wk-confirm-delete"
@@ -84,25 +86,38 @@ export function WakeupDetails({
               {t("heartbeat.confirmDelete")}
             </button>
           ) : (
+            <Tooltip label={t("heartbeat.delete")}>
+              <button
+                className="wk-icon-btn wk-icon-btn-danger"
+                onClick={handleDelete}
+                type="button"
+              >
+                <Trash size="var(--icon-md)" />
+              </button>
+            </Tooltip>
+          )}
+          {disableToggle ? (
+            <Tooltip label={t("heartbeat.pausedHint")} align="right">
+              <button
+                className="wk-toggle-pill"
+                data-active={wakeup.active}
+                disabled
+                onClick={() => onToggle(!wakeup.active)}
+                type="button"
+              >
+                <span className="wk-toggle-dot" />
+              </button>
+            </Tooltip>
+          ) : (
             <button
-              className="wk-icon-btn wk-icon-btn-danger"
-              onClick={handleDelete}
-              title={t("heartbeat.delete")}
+              className="wk-toggle-pill"
+              data-active={wakeup.active}
+              onClick={() => onToggle(!wakeup.active)}
               type="button"
             >
-              <Trash size="var(--icon-md)" />
+              <span className="wk-toggle-dot" />
             </button>
           )}
-          <button
-            className="wk-toggle-pill"
-            data-active={wakeup.active}
-            disabled={disableToggle}
-            onClick={() => onToggle(!wakeup.active)}
-            title={disableToggle ? t("heartbeat.pausedHint") : ""}
-            type="button"
-          >
-            <span className="wk-toggle-dot" />
-          </button>
         </div>
       </div>
 

@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Maximize2, Minimize2, FolderTree } from "@/components/ui/lucide-icons";
+import { Tooltip } from "@/components/ui/tooltip";
 import { openPreviewFile, openPreviewWithEditor } from "@/services/file-preview";
 import type { FileOperation, FilePreviewActiveTab, FilePreviewListMode } from "@/types/file-preview";
 import type { PanelMode } from "@/hooks/use-forecast-panel";
@@ -82,21 +83,23 @@ export function FilePreviewPanel(props: FilePreviewPanelProps) {
               onOpenWith={openWith}
             />
             {props.hasProject && (
-              <button
-                className={`fp-icon-btn ${props.treeOpen ? "fp-icon-btn-active" : ""}`}
-                onClick={props.onToggleTree}
-                title={t("fileTree.toggleTree")}
-              >
-                <FolderTree size="var(--icon-md)" />
-              </button>
+              <Tooltip label={t("fileTree.toggleTree")}>
+                <button
+                  className={`fp-icon-btn ${props.treeOpen ? "fp-icon-btn-active" : ""}`}
+                  onClick={props.onToggleTree}
+                >
+                  <FolderTree size="var(--icon-md)" />
+                </button>
+              </Tooltip>
             )}
-            <button
-              className="fp-icon-btn"
-              onClick={() => props.onFullscreenChange(!props.fullscreen)}
-              title={props.fullscreen ? t("filePreview.reduce") : t("filePreview.fullscreen")}
-            >
-              {props.fullscreen ? <Minimize2 size="var(--icon-md)" /> : <Maximize2 size="var(--icon-md)" />}
-            </button>
+            <Tooltip label={props.fullscreen ? t("filePreview.reduce") : t("filePreview.fullscreen")} align="right">
+              <button
+                className="fp-icon-btn"
+                onClick={() => props.onFullscreenChange(!props.fullscreen)}
+              >
+                {props.fullscreen ? <Minimize2 size="var(--icon-md)" /> : <Maximize2 size="var(--icon-md)" />}
+              </button>
+            </Tooltip>
           </div>
           <div className="fp-body">
             {props.activeTab === "summary" || !activeOperation ? (

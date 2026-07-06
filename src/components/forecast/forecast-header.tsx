@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { Maximize2, Minimize2 } from "@/components/ui/lucide-icons";
+import { Tooltip } from "@/components/ui/tooltip";
 import type { ForecastSection } from "@/hooks/use-forecast-panel";
 import { ForecastNav } from "./forecast-nav";
 
@@ -30,6 +32,7 @@ export function ForecastHeader({
   onCloseAnalysis,
   onFullscreenChange,
 }: ForecastHeaderProps) {
+  const { t } = useTranslation();
   return (
     <div className="fc-head">
       <div className="fc-head-left">
@@ -46,20 +49,23 @@ export function ForecastHeader({
       </div>
       <div className="fc-head-actions">
         {rightSlot}
-        <button
-          className="fp-icon-btn"
-          onClick={() => onFullscreenChange(!fullscreen)}
-          title={fullscreen ? "Réduire" : "Plein écran"}
-        >
-          {fullscreen ? <Minimize2 size="var(--icon-md)" /> : <Maximize2 size="var(--icon-md)" />}
-        </button>
-        {hasAnalysis && (
-          <button className="fp-icon-btn" onClick={onCloseAnalysis} title="Fermer">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"
-              stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-              <path d="M3 3l8 8M11 3l-8 8" />
-            </svg>
+        <Tooltip label={fullscreen ? t("a11y.minimize") : t("a11y.maximize")} align="right">
+          <button
+            className="fp-icon-btn"
+            onClick={() => onFullscreenChange(!fullscreen)}
+          >
+            {fullscreen ? <Minimize2 size="var(--icon-md)" /> : <Maximize2 size="var(--icon-md)" />}
           </button>
+        </Tooltip>
+        {hasAnalysis && (
+          <Tooltip label={t("a11y.close")} align="right">
+            <button className="fp-icon-btn" onClick={onCloseAnalysis}>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"
+                stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                <path d="M3 3l8 8M11 3l-8 8" />
+              </svg>
+            </button>
+          </Tooltip>
         )}
       </div>
     </div>

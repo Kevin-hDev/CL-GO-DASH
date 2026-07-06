@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { Tooltip } from "@/components/ui/tooltip";
 import type { SubagentInfo } from "@/types/agent";
 import "./subagent-accordion.css";
 
@@ -46,14 +47,15 @@ export function SubagentAccordion({ subagents, onCancel, onOpen }: SubagentAccor
             {t("subagents.backgroundCount", { count: subagents.length })}
           </span>
         </button>
-        <button
-          className="sa-stop-all"
-          onClick={() => subagents.forEach((s) => onCancel(s.sessionId))}
-          title={t("subagents.stopAll")}
-          type="button"
-        >
-          ■
-        </button>
+        <Tooltip label={t("subagents.stopAll")}>
+          <button
+            className="sa-stop-all"
+            onClick={() => subagents.forEach((s) => onCancel(s.sessionId))}
+            type="button"
+          >
+            ■
+          </button>
+        </Tooltip>
         <button
           className="sa-chevron-btn"
           onClick={() => setExpanded((v) => !v)}
@@ -78,14 +80,15 @@ export function SubagentAccordion({ subagents, onCancel, onOpen }: SubagentAccor
                   {agent.spawnedAt && (
                     <span className="sa-agent-timer">{formatElapsed(now - agent.spawnedAt)}</span>
                   )}
-                  <button
-                    className="sa-btn-stop"
-                    onClick={() => onCancel(agent.sessionId)}
-                    title={t("subagents.stop")}
-                    type="button"
-                  >
-                    ■
-                  </button>
+                  <Tooltip label={t("subagents.stop")}>
+                    <button
+                      className="sa-btn-stop"
+                      onClick={() => onCancel(agent.sessionId)}
+                      type="button"
+                    >
+                      ■
+                    </button>
+                  </Tooltip>
                 </>
               )}
               <button

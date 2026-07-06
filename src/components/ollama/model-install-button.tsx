@@ -2,6 +2,7 @@ import { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
 import { Check } from "@/components/ui/icons";
+import { Tooltip } from "@/components/ui/tooltip";
 import { showToast } from "@/lib/toast-emitter";
 import { useModelDownloads } from "@/hooks/use-model-downloads";
 import "./ollama.css";
@@ -82,9 +83,11 @@ export function ModelInstallButton(props: ModelInstallButtonProps) {
 
   if (isInstalled && !hasUpdate) {
     return (
-      <div title={t("ollama.installedUpToDate")} style={{ display: "flex", alignItems: "center", color: "var(--select-text)" }}>
-        <Check size="var(--icon-lg)" />
-      </div>
+      <Tooltip label={t("ollama.installedUpToDate")}>
+        <div style={{ display: "flex", alignItems: "center", color: "var(--select-text)" }}>
+          <Check size="var(--icon-lg)" />
+        </div>
+      </Tooltip>
     );
   }
 
@@ -94,15 +97,23 @@ export function ModelInstallButton(props: ModelInstallButtonProps) {
       ? t("ollama.update")
       : t("ollama.install");
 
-  return (
+  const showUpdateTooltip = isInstalled && hasUpdate;
+  const button = (
     <button
       className="ollama-btn ollama-btn-primary"
       style={{ width: BTN_WIDTH }}
       disabled={blocked}
       onClick={() => void handleInstall()}
-      title={isInstalled && hasUpdate ? t("ollama.updateAvailable") : undefined}
     >
       {label}
     </button>
+  );
+
+  return showUpdateTooltip ? (
+    <Tooltip label={t("ollama.updateAvailable")} align="right">
+      {button}
+    </Tooltip>
+  ) : (
+    button
   );
 }

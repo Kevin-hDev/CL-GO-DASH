@@ -1,6 +1,7 @@
 import { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Check } from "@/components/ui/icons";
+import { Tooltip } from "@/components/ui/tooltip";
 import { useModelDownloads } from "@/hooks/use-model-downloads";
 
 interface ModelInstallBtnProps {
@@ -57,9 +58,11 @@ export function ModelInstallBtn({ modelId, installed, onDone }: ModelInstallBtnP
 
   if (installed) {
     return (
-      <div title={t("forecast.models.installed")} style={{ display: "flex", alignItems: "center", color: "var(--select-text)" }}>
-        <Check size="var(--icon-lg)" />
-      </div>
+      <Tooltip label={t("forecast.models.installed")}>
+        <div style={{ display: "flex", alignItems: "center", color: "var(--select-text)" }}>
+          <Check size="var(--icon-lg)" />
+        </div>
+      </Tooltip>
     );
   }
 

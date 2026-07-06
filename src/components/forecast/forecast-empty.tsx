@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
+import { Tooltip } from "@/components/ui/tooltip";
 import "./forecast-empty.css";
 
 interface ForecastAnalysisMeta {
@@ -59,12 +60,16 @@ export function ForecastEmpty({ onLoadAnalysis, onImportFile, error }: ForecastE
           </svg>
           {t("forecast.importFile")}
         </button>
-        <button className="fc-empty-btn" disabled title={t("forecast.comingSoon")}>
-          {t("forecast.pasteData")}
-        </button>
-        <button className="fc-empty-btn" disabled title={t("forecast.comingSoon")}>
-          {t("forecast.fromUrl")}
-        </button>
+        <Tooltip label={t("forecast.comingSoon")}>
+          <button className="fc-empty-btn" disabled>
+            {t("forecast.pasteData")}
+          </button>
+        </Tooltip>
+        <Tooltip label={t("forecast.comingSoon")}>
+          <button className="fc-empty-btn" disabled>
+            {t("forecast.fromUrl")}
+          </button>
+        </Tooltip>
       </div>
       {recent.length > 0 && (
         <div className="fc-recent">

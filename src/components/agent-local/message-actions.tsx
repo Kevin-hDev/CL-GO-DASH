@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { ArrowsClockwise, Pencil, Copy, Check, GitFork } from "@/components/ui/icons";
+import { Tooltip } from "@/components/ui/tooltip";
 import "./messages.css";
 
 interface MessageActionsProps {
@@ -38,9 +39,11 @@ export function MessageActions({
         </button>
       )}
       {onClone && !isStreaming && (
-        <button className="msg-action-btn" onClick={onClone} title={t("agentLocal.clone.action")}>
-          <GitFork size="var(--icon-sm)" />
-        </button>
+        <Tooltip label={t("agentLocal.clone.action")}>
+          <button className="msg-action-btn" onClick={onClone}>
+            <GitFork size="var(--icon-sm)" />
+          </button>
+        </Tooltip>
       )}
       <button className="msg-action-btn" onClick={() => void handleCopy()}>
         {copied ? <Check size="var(--icon-sm)" /> : <Copy size="var(--icon-sm)" />}

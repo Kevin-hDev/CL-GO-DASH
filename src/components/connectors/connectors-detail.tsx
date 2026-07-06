@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { open } from "@tauri-apps/plugin-shell";
 import { Trash, ArrowSquareOut } from "@/components/ui/icons";
+import { Tooltip } from "@/components/ui/tooltip";
 import { McpIcon, mcpHasTextIcon } from "@/lib/mcp-icons";
 import { SettingsCard } from "@/components/settings/settings-card";
 import { getMcpDescription } from "@/types/mcp";
@@ -59,9 +60,11 @@ export function ConnectorsDetail({ connector, onToggleStatus, onDelete }: Connec
               <span className="ctd-status-dot" />
               {t(isConnected ? "connectors.detail.connected" : "connectors.detail.disconnected")}
             </button>
-            <button type="button" className="ak-icon-btn danger" onClick={() => setConfirmDelete(true)} title={t("connectors.detail.confirmDeleteBtn")}>
-              <Trash size="var(--icon-md)" />
-            </button>
+            <Tooltip label={t("connectors.detail.confirmDeleteBtn")} align="right">
+              <button type="button" className="ak-icon-btn danger" onClick={() => setConfirmDelete(true)}>
+                <Trash size="var(--icon-md)" />
+              </button>
+            </Tooltip>
           </div>
         </div>
 

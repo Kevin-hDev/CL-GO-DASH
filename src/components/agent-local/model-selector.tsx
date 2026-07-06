@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { useKeyboard } from "@/hooks/use-keyboard";
+import { Tooltip } from "@/components/ui/tooltip";
 import { floatingMenuPortalRoot, useFloatingMenuPosition } from "@/hooks/use-floating-menu-position";
 import { focusLocalListItem } from "@/hooks/use-local-list-navigation";
 import { Brain, CaretDown, MagnifyingGlass } from "@/components/ui/icons";
@@ -171,10 +172,12 @@ export function ModelSelector({
       >
         <span className="ms-trigger-label">{selectedModel || t("agentLocal.selectModel")}</span>
         {selectedReasoningLabel && selectedReasoningMode !== "off" && (
-          <span className="ms-trigger-reasoning" title={t(selectedReasoningLabel)}>
-            <Brain size="var(--icon-xs)" className="ms-trigger-reasoning-icon" />
-            {!simpleReasoningToggle && <span>{t(selectedReasoningLabel)}</span>}
-          </span>
+          <Tooltip label={t(selectedReasoningLabel)}>
+            <span className="ms-trigger-reasoning">
+              <Brain size="var(--icon-xs)" className="ms-trigger-reasoning-icon" />
+              {!simpleReasoningToggle && <span>{t(selectedReasoningLabel)}</span>}
+            </span>
+          </Tooltip>
         )}
         <CaretDown size="var(--icon-2xs)" className="ms-trigger-caret" />
       </button>
