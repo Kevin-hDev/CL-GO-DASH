@@ -217,7 +217,6 @@
       "gitCreate": "新しい git ブランチ",
       "gitCreating": "作成中...",
       "gitCreated": "Git ブランチを作成しました",
-      "gitNoIsolation": "分離なし — メインブランチ",
       "gitBranchMissing": "リンクされた git ブランチはもう存在しません。",
       "gitMissingCheckpoint": "クリーンアップできません: メインブランチが不明です。",
       "gitArchiveTitle": "このクローンをアーカイブしますか？",

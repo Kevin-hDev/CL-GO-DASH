@@ -5,7 +5,7 @@ import { parseCreateBranchError, type useGitBranch } from "@/hooks/use-git-branc
 import { showToast } from "@/lib/toast-emitter";
 import type { SessionTab } from "@/types/agent";
 
-export type CloneGitBranchActionState = "idle" | "loading" | "success";
+type CloneGitBranchActionState = "idle" | "loading" | "success";
 
 interface Options {
   projectPath?: string;

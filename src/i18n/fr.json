@@ -217,7 +217,6 @@
       "gitCreate": "Nouvelle branche git",
       "gitCreating": "Création...",
       "gitCreated": "Branche git créée",
-      "gitNoIsolation": "Aucune isolation — branche principale",
       "gitBranchMissing": "La branche git liée n'existe plus.",
       "gitMissingCheckpoint": "Impossible de nettoyer : branche principale inconnue.",
       "gitArchiveTitle": "Archiver ce clone ?",

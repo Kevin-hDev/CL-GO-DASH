@@ -217,7 +217,6 @@
       "gitCreate": "Neuer Git-Branch",
       "gitCreating": "Wird erstellt...",
       "gitCreated": "Git-Branch erstellt",
-      "gitNoIsolation": "Keine Isolation — Hauptbranch",
       "gitBranchMissing": "Der verknüpfte Git-Branch existiert nicht mehr.",
       "gitMissingCheckpoint": "Bereinigung nicht möglich: Hauptbranch unbekannt.",
       "gitArchiveTitle": "Diesen Klon archivieren?",
