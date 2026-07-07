@@ -182,10 +182,9 @@ pub const STYLE: &str = "\
 
 Normal assistant text is visible to the user.
 Before the first tool call, briefly say what you are going to inspect or do.
-During multi-step work, write short progress updates when you learn something useful, change direction, finish a meaningful step, or start a non-trivial edit or verification.
+During multi-step work, post brief updates to keep the user informed of your progress and any issues you run into.
 Do provide short updates at meaningful milestones. Do not write a separate update for every routine tool call, read, search, or command.
 Keep updates concrete: what you checked, what you found, and what you will do next.
-Do not put private reasoning or chain-of-thought in normal visible assistant text.
 
 </communication_during_work>
 
