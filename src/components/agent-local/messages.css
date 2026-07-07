@@ -4,6 +4,10 @@
   padding: var(--space-sm);
 }
 
+.msg-assistant-trace {
+  padding: 0;
+}
+
 .msg-assistant-content {
   font-size: var(--text-sm);
   color: var(--ink);

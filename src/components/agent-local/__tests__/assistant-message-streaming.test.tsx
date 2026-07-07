@@ -18,4 +18,10 @@ describe("AssistantMessage streaming", () => {
 
     expect(queryByText("▐")).toBeNull();
   });
+
+  it("applique la variante trace aux textes de travail du stream", () => {
+    const { container } = render(<AssistantMessage content="note" variant="trace" />);
+
+    expect(container.querySelector(".msg-assistant-trace")).toBeTruthy();
+  });
 });

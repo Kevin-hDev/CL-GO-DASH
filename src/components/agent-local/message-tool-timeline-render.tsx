@@ -33,6 +33,7 @@ export function TimelineLiveBlock({
           thinking={block.thinking}
           isStreaming
           thinkingActive={activeStreamItem?.kind === "thinking"}
+          variant="trace"
         />
       ) : (
         <TimelineNarrative block={block} />
@@ -95,7 +96,7 @@ export function TimelineNarrative<T>({ block }: { block: ToolTimelineBlock<T> })
   return (
     <>
       {block.thinking && <ThinkingSection content={block.thinking} />}
-      {block.content && <AssistantMessage content={block.content} showActions={false} />}
+      {block.content && <AssistantMessage content={block.content} showActions={false} variant="trace" />}
     </>
   );
 }

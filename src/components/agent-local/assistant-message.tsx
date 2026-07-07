@@ -134,6 +134,7 @@ interface AssistantMessageProps {
   tps?: number;
   totalElapsedMs?: number;
   showActions?: boolean;
+  variant?: "default" | "trace";
 }
 
 function formatTokens(n: number): string {
@@ -150,6 +151,7 @@ export const AssistantMessage = memo(function AssistantMessage({
   content, thinking, thinkingActive, toolActivities, projectPath, isStreaming, onReload, onClone,
   tokens, tps, totalElapsedMs,
   showActions = true,
+  variant = "default",
 }: AssistantMessageProps) {
   const { t } = useTranslation();
   const hoverRef = useHoverClass();
@@ -158,7 +160,7 @@ export const AssistantMessage = memo(function AssistantMessage({
   const totalTime = formatTotalElapsed(totalElapsedMs ?? 0);
 
   return (
-    <div className="msg-assistant" ref={hoverRef}>
+    <div className={`msg-assistant${variant === "trace" ? " msg-assistant-trace" : ""}`} ref={hoverRef}>
       {thinking && <ThinkingSection content={thinking} isActive={thinkingActive ?? (isStreaming && !content)} />}
       {toolActivities && toolActivities.length > 0 && (
         <SavedToolBubble tools={toolActivities} projectPath={projectPath} />
