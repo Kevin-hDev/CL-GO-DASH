@@ -861,7 +861,8 @@
     "bubbleLabel_other": "サブエージェント：{{count}} エージェント作成済み",
     "completed": "完了",
     "failed": "失敗",
-    "cancelled": "キャンセル済み"
+    "cancelled": "キャンセル済み",
+    "interrupted": "中断済み"
   },
   "todos": {
     "progress": "{{done}}/{{total}} 件のタスク",

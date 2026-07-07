@@ -113,7 +113,15 @@ pub async fn prepare_delegate(
         work_duration_ms: None,
         skill_names: None,
     };
-    let _ = session_store::add_messages(&child_id, vec![user_msg], 0).await;
+    if let Err(e) = session_store::add_messages(&child_id, vec![user_msg], 0).await {
+        // Fail closed : ne pas démarrer un sous-agent dont le prompt n'est
+        // pas persisté. On nettoie la session enfant créée plus haut.
+        eprintln!("[subagent] persistance prompt enfant {}: {e}", child_id);
+        let _ = super::session_subagents::mark_status(&child_id, "failed").await;
+        return Err(ToolResult::err(format!(
+            "Erreur interne lors de la création du sous-agent: {e}"
+        )));
+    }
 
     let cancel = CancellationToken::new();
     if let Err(e) = subagent_registry::register(

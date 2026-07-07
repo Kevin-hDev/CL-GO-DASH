@@ -60,6 +60,10 @@ pub fn run() {
             if let Err(e) = storage_migration::run(app.handle()) {
                 eprintln!("[storage migration] {}", e);
             }
+            // Cleanup des sous-agents orphelins (crash précédent) : non bloquant.
+            tauri::async_runtime::spawn(async {
+                services::agent_local::subagent_startup_cleanup::cleanup_orphans().await;
+            });
             let _ = dotenvy::dotenv();
             if let Err(e) = services::api_keys::init() {
                 eprintln!("[vault] init failed: {}", e);

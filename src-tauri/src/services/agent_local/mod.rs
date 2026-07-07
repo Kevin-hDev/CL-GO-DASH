@@ -114,6 +114,8 @@ pub mod subagent_registry;
 #[cfg(test)]
 pub mod subagent_registry_tests;
 pub mod subagent_spawn_channel;
+pub mod subagent_startup_cleanup;
+pub mod subagent_summary;
 pub mod subagent_task;
 #[cfg(test)]
 pub mod subagent_task_tests;

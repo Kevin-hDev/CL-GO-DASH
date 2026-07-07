@@ -33,22 +33,36 @@ pub async fn run(
     let parent_session_id = parent_emitter.session_id().to_string();
     let run_id = subagent_registry::get_run_id_for_child(&child_session_id).await;
 
-    let (success, status, summary) = match result {
+    let (mut success, mut status, mut summary) = match result {
         Ok(s) => s,
         Err(e) => (false, "failed".to_string(), format!("Erreur : {e}")),
     };
 
-    update_session_status(&child_session_id, &status).await;
+    if let Err(e) = update_session_status(&child_session_id, &status).await {
+        // Non fatal : on logge mais on continue. Le statut disque sera
+        // reclassé en "interrupted" au prochain démarrage par le cleanup.
+        eprintln!("[subagent] persistance statut {}: {e}", child_session_id);
+    }
 
     let child_name = super::subagent_orchestrator::get_child_name(&child_session_id).await;
-    super::subagent_orchestrator::inject_summary_in_parent(
+    if let Err(e) = super::subagent_orchestrator::inject_summary_in_parent(
         &parent_session_id,
         &child_session_id,
         &child_name,
         &summary,
         success,
     )
-    .await;
+    .await
+    {
+        // Fail closed : on rend l'échec visible à l'utilisateur via le
+        // résumé remonté au parent, plutôt que d'avaler silencieusement.
+        eprintln!("[subagent] injection rapport parent {}: {e}", child_session_id);
+        success = false;
+        status = "failed".to_string();
+        summary = format!(
+            "{summary}\n\n⚠️ Rapport non injecté dans la session parente : {e}"
+        );
+    }
 
     super::subagent_working_dir::cleanup(&child_session_id).await;
     subagent_registry::unregister(&child_session_id).await;
@@ -135,7 +149,7 @@ async fn run_inner(
     let was_cancelled = cancel.is_cancelled();
     match result {
         Ok(final_msgs) => {
-            let summary = extract_summary_from_messages(&final_msgs);
+            let summary = super::subagent_summary::extract_summary_from_messages(&final_msgs);
             let status = if was_cancelled {
                 "cancelled"
             } else {
@@ -161,39 +175,6 @@ async fn run_inner(
     }
 }
 
-#[cfg(test)]
-#[allow(dead_code)]
-pub fn extract_summary_for_test(msgs: &[ChatMessage]) -> String {
-    extract_summary_from_messages(msgs)
-}
-
-fn extract_summary_from_messages(msgs: &[ChatMessage]) -> String {
-    if let Some(m) = msgs
-        .iter()
-        .rev()
-        .find(|m| m.role == "assistant" && !m.content.trim().is_empty())
-    {
-        return m.content.clone();
-    }
-    let tool_results: Vec<&str> = msgs
-        .iter()
-        .rev()
-        .take(6)
-        .filter(|m| m.role == "tool" && !m.content.trim().is_empty())
-        .map(|m| m.content.as_str())
-        .collect();
-    if !tool_results.is_empty() {
-        let joined: String = tool_results
-            .into_iter()
-            .rev()
-            .collect::<Vec<_>>()
-            .join("\n---\n");
-        let truncated: String = joined.chars().take(2000).collect();
-        return format!("[Résultats d'outils]\n{truncated}");
-    }
-    "Aucune réponse".to_string()
-}
-
-async fn update_session_status(session_id: &str, status: &str) {
-    let _ = super::session_subagents::mark_status(session_id, status).await;
+async fn update_session_status(session_id: &str, status: &str) -> Result<(), String> {
+    super::session_subagents::mark_status(session_id, status).await
 }

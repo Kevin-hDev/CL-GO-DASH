@@ -861,7 +861,8 @@
     "bubbleLabel_other": "子代理：已创建 {{count}} 个代理",
     "completed": "已完成",
     "failed": "失败",
-    "cancelled": "已取消"
+    "cancelled": "已取消",
+    "interrupted": "已中断"
   },
   "todos": {
     "progress": "{{done}}/{{total}} 项任务",

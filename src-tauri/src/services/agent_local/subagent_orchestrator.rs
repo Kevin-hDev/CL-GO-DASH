@@ -7,7 +7,7 @@ pub(super) async fn inject_summary_in_parent(
     child_name: &str,
     summary: &str,
     success: bool,
-) {
+) -> Result<(), String> {
     let status_label = if success { "terminé" } else { "échoué" };
     let content = format!(
         "[Rapport du sous-agent \"{child_name}\" — {status_label} — sid:{child_session_id}]\n\n{summary}"
@@ -27,7 +27,7 @@ pub(super) async fn inject_summary_in_parent(
         work_duration_ms: None,
         skill_names: None,
     };
-    let _ = session_store::add_messages(parent_session_id, vec![msg], 0).await;
+    session_store::add_messages(parent_session_id, vec![msg], 0).await
 }
 
 pub(super) async fn get_child_name(child_id: &str) -> String {

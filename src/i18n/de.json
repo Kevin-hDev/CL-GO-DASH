@@ -861,7 +861,8 @@
     "bubbleLabel_other": "Subagenten: {{count}} Agenten erstellt",
     "completed": "abgeschlossen",
     "failed": "fehlgeschlagen",
-    "cancelled": "abgebrochen"
+    "cancelled": "abgebrochen",
+    "interrupted": "unterbrochen"
   },
   "todos": {
     "progress": "{{done}}/{{total}} Aufgaben",

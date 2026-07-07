@@ -943,7 +943,8 @@
     "bubbleLabel_other": "Sous-agents : {{count}} agents créés",
     "completed": "terminé",
     "failed": "échoué",
-    "cancelled": "annulé"
+    "cancelled": "annulé",
+    "interrupted": "interrompu"
   },
   "todos": {
     "progress": "{{done}}/{{total}} tâches",

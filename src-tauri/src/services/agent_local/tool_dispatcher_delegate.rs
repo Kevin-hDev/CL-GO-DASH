@@ -35,7 +35,11 @@ pub async fn dispatch_delegate(args: &Value, session_id: &str) -> ToolResult {
                 })
             {
                 super::subagent_registry::unregister(&child_id).await;
-                let _ = super::session_subagents::mark_status(&child_id, "failed").await;
+                if let Err(mark_err) =
+                    super::session_subagents::mark_status(&child_id, "failed").await
+                {
+                    eprintln!("[delegate] mark_status failed {child_id}: {mark_err}");
+                }
                 return ToolResult::err(e);
             }
             ToolResult::ok(msg)

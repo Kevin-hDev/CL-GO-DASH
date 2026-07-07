@@ -861,7 +861,8 @@
     "bubbleLabel_other": "Sotto-agenti: {{count}} agenti creati",
     "completed": "completato",
     "failed": "fallito",
-    "cancelled": "annullato"
+    "cancelled": "annullato",
+    "interrupted": "interrotto"
   },
   "todos": {
     "progress": "{{done}}/{{total}} attività",
