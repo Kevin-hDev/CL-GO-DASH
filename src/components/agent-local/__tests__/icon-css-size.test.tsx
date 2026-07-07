@@ -7,8 +7,8 @@ afterEach(() => cleanup());
 
 describe("CSS icon sizes", () => {
   it("applies CSS variable sizes to tool status images via style", () => {
-    const { getByRole } = render(<ToolStatusIcon size="var(--icon-sm)" />);
-    const img = getByRole("img", { name: "Erreur" });
+    const { getByAltText } = render(<ToolStatusIcon size="var(--icon-sm)" />);
+    const img = getByAltText("Erreur");
 
     expect(img).toHaveStyle({ width: "var(--icon-sm)", height: "var(--icon-sm)" });
     expect(img).not.toHaveAttribute("width");

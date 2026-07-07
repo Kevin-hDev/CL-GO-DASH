@@ -1,5 +1,4 @@
 import { useCallback, useRef, useState } from "react";
-import type { CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { Check, Copy } from "@/components/ui/icons";
 import errorIcon from "@/assets/tool-status/error.svg?url";
@@ -69,24 +68,13 @@ export function ToolStatusIcon({
 
   return (
     <span ref={anchorRef} className="tb-status-anchor" onMouseEnter={enter} onMouseLeave={leave}>
-      <span
-        role="img"
-        aria-label="Erreur"
+      <img
         className="tb-status-img"
-        style={iconStyle(size)}
+        src={errorIcon}
+        alt="Erreur"
+        style={{ width: size, height: size, flexShrink: 0 }}
       />
       {tooltip}
     </span>
   );
-}
-
-function iconStyle(size: number | string): CSSProperties {
-  const mask = `url(${errorIcon})`;
-  return {
-    width: size,
-    height: size,
-    flexShrink: 0,
-    maskImage: mask,
-    WebkitMaskImage: mask,
-  };
 }

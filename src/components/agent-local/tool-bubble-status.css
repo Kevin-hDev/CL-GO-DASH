@@ -7,11 +7,4 @@
 
 .tb-status-img {
   display: block;
-  background: var(--tool-status-error);
-  mask-position: center;
-  mask-repeat: no-repeat;
-  mask-size: contain;
-  -webkit-mask-position: center;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-size: contain;
 }

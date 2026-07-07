@@ -22,7 +22,6 @@
   --signal-idle: #5a5a64;
   --signal-live: #f59e0b;
   --signal-error: #ef4444;
-  --tool-status-error: #f87171;
   --signal-error-border: rgba(239, 68, 68, 0.3);
   --signal-error-pulse: rgba(239, 68, 68, 0.5);
   --signal-error-pulse-fade: rgba(239, 68, 68, 0);
