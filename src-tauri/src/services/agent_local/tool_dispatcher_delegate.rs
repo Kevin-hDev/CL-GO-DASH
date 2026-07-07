@@ -1,9 +1,22 @@
 use crate::services::agent_local::types_tools::ToolResult;
 use serde_json::Value;
+use tokio::sync::oneshot;
+
+pub struct PendingDelegate {
+    child_id: String,
+    receiver: oneshot::Receiver<super::subagent_completion::SubagentCompletion>,
+}
 
 pub async fn dispatch_delegate(args: &Value, session_id: &str) -> ToolResult {
+    match spawn_delegate(args, session_id).await {
+        Ok(pending) => pending.wait().await,
+        Err(tr) => tr,
+    }
+}
+
+pub async fn spawn_delegate(args: &Value, session_id: &str) -> Result<PendingDelegate, ToolResult> {
     let Some(app) = super::app_handle_global::get() else {
-        return ToolResult::err("AppHandle non initialisé");
+        return Err(ToolResult::err("AppHandle non initialisé"));
     };
     let emitter = crate::services::agent_local::stream_events::AgentEventEmitter::new(
         app.clone(),
@@ -17,10 +30,10 @@ pub async fn dispatch_delegate(args: &Value, session_id: &str) -> ToolResult {
     )
     .await
     {
-        Err(tr) => tr,
+        Err(tr) => Err(tr),
         Ok(spawned) => {
-            let msg = spawned.result_message.clone();
             let child_id = spawned.child_id.clone();
+            let (tx, rx) = oneshot::channel();
             if let Err(e) =
                 super::subagent_spawn_channel::send(super::subagent_spawn_channel::SpawnRequest {
                     app: spawned.app,
@@ -32,6 +45,7 @@ pub async fn dispatch_delegate(args: &Value, session_id: &str) -> ToolResult {
                     parent_emitter: spawned.parent_emitter,
                     cancel: spawned.cancel,
                     project_id: spawned.project_id,
+                    completion_tx: Some(tx),
                 })
             {
                 super::subagent_registry::unregister(&child_id).await;
@@ -41,9 +55,32 @@ pub async fn dispatch_delegate(args: &Value, session_id: &str) -> ToolResult {
                 {
                     eprintln!("[delegate] mark_status failed {child_id}: {mark_err}");
                 }
-                return ToolResult::err(e);
+                return Err(ToolResult::err(e));
             }
-            ToolResult::ok(msg)
+            Ok(PendingDelegate {
+                child_id,
+                receiver: rx,
+            })
+        }
+    }
+}
+
+impl PendingDelegate {
+    pub async fn wait(self) -> ToolResult {
+        match self.receiver.await {
+            Ok(completion) => completion.to_tool_result(),
+            Err(_) => {
+                super::subagent_registry::unregister(&self.child_id).await;
+                if let Err(e) = super::session_subagents::mark_status(
+                    &self.child_id,
+                    super::subagent_status::FAILED,
+                )
+                .await
+                {
+                    eprintln!("[delegate] mark_status failed {}: {e}", self.child_id);
+                }
+                ToolResult::err("Le sous-agent n'a pas pu terminer correctement.")
+            }
         }
     }
 }

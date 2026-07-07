@@ -1,7 +1,8 @@
 use crate::services::agent_local::stream_events::AgentEventEmitter;
+use crate::services::agent_local::subagent_completion::SubagentCompletion;
 use std::sync::OnceLock;
 use tauri::AppHandle;
-use tokio::sync::mpsc;
+use tokio::sync::{mpsc, oneshot};
 
 pub struct SpawnRequest {
     pub app: AppHandle,
@@ -13,6 +14,7 @@ pub struct SpawnRequest {
     pub parent_emitter: AgentEventEmitter,
     pub cancel: tokio_util::sync::CancellationToken,
     pub project_id: Option<String>,
+    pub completion_tx: Option<oneshot::Sender<SubagentCompletion>>,
 }
 
 const MAX_QUEUED: usize = 8;
@@ -45,6 +47,7 @@ async fn receiver_loop(mut rx: mpsc::Receiver<SpawnRequest>) {
                 req.parent_emitter,
                 req.cancel,
                 req.project_id,
+                req.completion_tx,
             )
             .await;
         });

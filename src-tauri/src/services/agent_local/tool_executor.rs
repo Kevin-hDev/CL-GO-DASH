@@ -56,6 +56,26 @@ pub async fn run_tools_with_eager(
     tool_call_ids: &[String],
     compression: Option<&ToolCompression<'_>>,
 ) -> bool {
+    if !tool_calls.is_empty()
+        && tool_calls
+            .iter()
+            .all(|(name, _)| name == super::tool_executor_delegate_batch::DELEGATE_TOOL)
+    {
+        return super::tool_executor_delegate_batch::run_delegate_only_tools(
+            on_event,
+            messages,
+            tool_calls,
+            working_dir,
+            session_id,
+            request_id,
+            cancel,
+            plan_mode_active,
+            tool_call_ids,
+            compression,
+        )
+        .await;
+    }
+
     if mode == "manual" {
         run_sequential(
             on_event,

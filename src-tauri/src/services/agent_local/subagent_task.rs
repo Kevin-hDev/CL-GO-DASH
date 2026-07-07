@@ -1,9 +1,11 @@
 use crate::commands::agent_chat_task::{run_stream_task, StreamCapabilityHints, StreamTaskParams};
 use crate::services::agent_local::session_store;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
+use crate::services::agent_local::subagent_completion::SubagentCompletion;
 use crate::services::agent_local::subagent_registry;
 use crate::services::agent_local::types_ollama::{ChatMessage, StreamEvent};
 use tauri::AppHandle;
+use tokio::sync::oneshot;
 use tokio_util::sync::CancellationToken;
 
 pub async fn run(
@@ -16,6 +18,7 @@ pub async fn run(
     parent_emitter: AgentEventEmitter,
     cancel: CancellationToken,
     project_id: Option<String>,
+    completion_tx: Option<oneshot::Sender<SubagentCompletion>>,
 ) {
     let result = run_inner(
         app,
@@ -23,7 +26,7 @@ pub async fn run(
         model,
         provider,
         prompt,
-        subagent_type,
+        subagent_type.clone(),
         &parent_emitter,
         cancel,
         project_id,
@@ -49,36 +52,46 @@ pub async fn run(
     }
 
     let child_name = super::subagent_orchestrator::get_child_name(&child_session_id).await;
-    if let Err(e) = super::subagent_orchestrator::inject_summary_in_parent(
-        &parent_session_id,
-        &child_session_id,
-        &child_name,
-        &summary,
-        success,
-    )
-    .await
-    {
-        // Fail closed : on rend l'échec visible à l'utilisateur via le
-        // résumé remonté au parent, plutôt que d'avaler silencieusement.
-        eprintln!(
-            "[subagent] injection rapport parent {}: {e}",
-            child_session_id
-        );
-        success = false;
-        status = super::subagent_status::FAILED.to_string();
-        if let Err(mark_err) = update_session_status(&child_session_id, &status).await {
+    let should_inject_parent_report = completion_tx.is_none();
+    if should_inject_parent_report {
+        if let Err(e) = super::subagent_orchestrator::inject_summary_in_parent(
+            &parent_session_id,
+            &child_session_id,
+            &child_name,
+            &summary,
+            success,
+        )
+        .await
+        {
             eprintln!(
-                "[subagent] persistance statut failed après injection {}: {mark_err}",
+                "[subagent] injection rapport parent {}: {e}",
                 child_session_id
             );
+            success = false;
+            status = super::subagent_status::FAILED.to_string();
+            if let Err(mark_err) = update_session_status(&child_session_id, &status).await {
+                eprintln!(
+                    "[subagent] persistance statut failed après injection {}: {mark_err}",
+                    child_session_id
+                );
+            }
+            summary = format!("{summary}\n\nRapport non injecté dans la session parente.");
         }
-        summary = format!("{summary}\n\nRapport non injecté dans la session parente.");
     }
 
     super::subagent_working_dir::cleanup(&child_session_id).await;
     subagent_registry::unregister(&child_session_id).await;
 
     let remaining = subagent_registry::list_for_parent(&parent_session_id).await;
+    let completion = SubagentCompletion {
+        child_session_id: child_session_id.clone(),
+        name: child_name.clone(),
+        subagent_type,
+        status: status.clone(),
+        success,
+        summary: summary.clone(),
+        run_id: run_id.clone(),
+    };
     let _ = parent_emitter.send(StreamEvent::SubagentCompleted {
         subagent_session_id: child_session_id,
         success,
@@ -87,6 +100,9 @@ pub async fn run(
         all_done: remaining.is_empty(),
         run_id,
     });
+    if let Some(tx) = completion_tx {
+        let _ = tx.send(completion);
+    }
 }
 
 async fn run_inner(

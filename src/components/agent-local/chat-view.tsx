@@ -21,7 +21,6 @@ import { useModelSwitch } from "@/hooks/use-model-switch";
 import { useWorktreeSessionSwitch } from "@/hooks/use-worktree-session-switch";
 import { useSessionFileGroups } from "@/hooks/use-session-files";
 import { useSubagents } from "@/hooks/use-subagents";
-import { useSubagentSynthesis } from "@/hooks/use-subagent-synthesis";
 import { useChatActions } from "@/hooks/use-chat-actions";
 import { useChatClone } from "@/hooks/use-chat-clone";
 import { useCloneGitBranchAction } from "@/hooks/use-clone-git-branch-action";
@@ -76,11 +75,6 @@ export function ChatView({
   useEffect(() => {
     onFileOperationsChange?.(fileOperations);
   }, [fileOperations, onFileOperationsChange]);
-  useSubagentSynthesis({
-    parentSessionId: sessionId, allDone: subagents.allDone,
-    runId: subagents.doneRunId, isStreaming: chat.isStreaming,
-    onStarted: subagents.clearSynthesisSignal,
-  });
   const { handleSend, handleFileImport } = useChatActions({
     chat, selectedProjectPath: proj.selectedProject?.path,
     selectedProjectId: proj.selectedProjectId ?? undefined,

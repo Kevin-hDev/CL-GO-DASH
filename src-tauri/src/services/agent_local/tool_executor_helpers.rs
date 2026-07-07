@@ -143,7 +143,17 @@ pub fn push_tool_result(
     tool_call_id: Option<&str>,
     resolved_path: Option<String>,
 ) {
-    let affected_paths = tr.affected_paths.clone();
+    emit_tool_result(on_event, name, &tr, tool_call_index, resolved_path);
+    push_tool_message(messages, name, tr, tool_call_id);
+}
+
+pub fn emit_tool_result(
+    on_event: &AgentEventEmitter,
+    name: &str,
+    tr: &ToolResult,
+    tool_call_index: usize,
+    resolved_path: Option<String>,
+) {
     let _ = on_event.send(StreamEvent::ToolResult {
         name: name.to_string(),
         content: tr.content.clone(),
@@ -151,8 +161,16 @@ pub fn push_tool_result(
         truncated: tr.truncated,
         tool_call_index,
         resolved_path,
-        affected_paths,
+        affected_paths: tr.affected_paths.clone(),
     });
+}
+
+pub fn push_tool_message(
+    messages: &mut Vec<ChatMessage>,
+    name: &str,
+    tr: ToolResult,
+    tool_call_id: Option<&str>,
+) {
     messages.push(ChatMessage {
         role: "tool".to_string(),
         content: tr.content,

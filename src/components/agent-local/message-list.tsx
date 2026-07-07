@@ -111,6 +111,13 @@ export function MessageList({
         return null;
       })}
 
+      {extractedAgents.length > 0 && !subagentBubbleMessageId && (
+        <SubagentBubble
+          subagents={extractedAgents}
+          onOpen={(id) => onOpenSubagent?.(id)}
+        />
+      )}
+
       {isStreaming && (
         <StreamToolTimeline
           completedSegments={completedSegments}

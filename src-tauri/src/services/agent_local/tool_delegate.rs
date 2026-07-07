@@ -21,7 +21,6 @@ pub struct SpawnedSubagent {
     pub parent_emitter: AgentEventEmitter,
     pub cancel: CancellationToken,
     pub project_id: Option<String>,
-    pub result_message: String,
 }
 
 pub async fn prepare_delegate(
@@ -156,11 +155,6 @@ pub async fn prepare_delegate(
         parent_emitter,
         cancel,
         project_id: parent.project_id.clone(),
-        result_message: format!(
-            "Subagent '{name}' ({subagent_type}) spawned. Task: {prompt_preview}\n\
-             The subagent is working autonomously. Do NOT perform this same work yourself. \
-             Wait for the subagent report, then synthesize results for the user."
-        ),
     })
 }
 

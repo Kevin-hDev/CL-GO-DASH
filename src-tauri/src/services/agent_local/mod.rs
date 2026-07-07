@@ -106,6 +106,7 @@ mod stream_diagnostics_support_tests;
 pub mod stream_diagnostics_tests;
 pub mod stream_diagnostics_tools;
 pub mod stream_events;
+pub mod subagent_completion;
 pub mod subagent_orchestrator;
 pub mod subagent_prompts;
 #[cfg(test)]
@@ -169,6 +170,7 @@ pub mod tool_document_write_tests;
 pub mod tool_document_write_xml;
 pub mod tool_executor;
 pub mod tool_executor_compression;
+pub mod tool_executor_delegate_batch;
 pub mod tool_executor_diagnostics;
 pub mod tool_executor_helpers;
 pub mod tool_executor_parallel;

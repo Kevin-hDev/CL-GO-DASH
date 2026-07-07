@@ -99,6 +99,7 @@ function stopSession(sessionId: string, generation?: number | null) {
 function failSession(sessionId: string) {
   const record = getRecord(sessionId);
   if (!record) return;
+  record.activeGeneration = null;
   record.state = { ...record.state, isStreaming: false, completed: true,
     activeStreamItem: null, error: i18n.t("errors.streamStartFailed"), updatedAt: Date.now() };
   flushFrameNotify(record, notify);
@@ -196,6 +197,7 @@ function handleStreamEvent(sessionId: string, event: StreamEvent, generation: nu
 
   const result = applyStreamEvent(record.state, event);
   record.state = result.state;
+  if (record.state.completed) record.activeGeneration = null;
   touchSession(sessionId, record);
   if (shouldDeferStreamEvent(event)) {
     scheduleFrameNotify(record, notify);

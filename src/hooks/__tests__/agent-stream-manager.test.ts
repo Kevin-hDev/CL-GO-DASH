@@ -102,4 +102,30 @@ describe("agentStreamManager", () => {
     expect(after?.isStreaming).toBe(true);
     expect(after?.currentContent).toBe("nouveau");
   });
+
+  it("accepte une génération backend après une fin normale", async () => {
+    await agentStreamManager.startSession("s1", [message("u1", "user", "Question")], 10);
+    agentStreamManager.setSessionGeneration("s1", 7);
+    emit("s1", { event: "token", data: { content: "réponse", tokenCount: 1, tps: 1 } }, 7);
+    emit("s1", {
+      event: "done",
+      data: {
+        evalCount: 1,
+        evalDurationNs: 0,
+        finalTps: 1,
+        promptTokens: 1,
+        contextTokens: 12,
+      },
+    }, 7);
+
+    emit("s1", {
+      event: "sessionSnapshot",
+      data: { messages: [message("u2", "user", "Synthèse")], tokenCount: 12 },
+    }, 8);
+    emit("s1", { event: "token", data: { content: "suite", tokenCount: 1, tps: 1 } }, 8);
+
+    const after = agentStreamManager.getSnapshot("s1");
+    expect(after?.isStreaming).toBe(true);
+    expect(after?.currentContent).toBe("suite");
+  });
 });
