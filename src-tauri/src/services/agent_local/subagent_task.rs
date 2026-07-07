@@ -35,7 +35,11 @@ pub async fn run(
 
     let (mut success, mut status, mut summary) = match result {
         Ok(s) => s,
-        Err(e) => (false, "failed".to_string(), format!("Erreur : {e}")),
+        Err(e) => (
+            false,
+            super::subagent_status::FAILED.to_string(),
+            format!("Erreur : {e}"),
+        ),
     };
 
     if let Err(e) = update_session_status(&child_session_id, &status).await {
@@ -56,12 +60,19 @@ pub async fn run(
     {
         // Fail closed : on rend l'échec visible à l'utilisateur via le
         // résumé remonté au parent, plutôt que d'avaler silencieusement.
-        eprintln!("[subagent] injection rapport parent {}: {e}", child_session_id);
-        success = false;
-        status = "failed".to_string();
-        summary = format!(
-            "{summary}\n\n⚠️ Rapport non injecté dans la session parente : {e}"
+        eprintln!(
+            "[subagent] injection rapport parent {}: {e}",
+            child_session_id
         );
+        success = false;
+        status = super::subagent_status::FAILED.to_string();
+        if let Err(mark_err) = update_session_status(&child_session_id, &status).await {
+            eprintln!(
+                "[subagent] persistance statut failed après injection {}: {mark_err}",
+                child_session_id
+            );
+        }
+        summary = format!("{summary}\n\nRapport non injecté dans la session parente.");
     }
 
     super::subagent_working_dir::cleanup(&child_session_id).await;
@@ -151,15 +162,15 @@ async fn run_inner(
         Ok(final_msgs) => {
             let summary = super::subagent_summary::extract_summary_from_messages(&final_msgs);
             let status = if was_cancelled {
-                "cancelled"
+                super::subagent_status::CANCELLED
             } else {
-                "completed"
+                super::subagent_status::COMPLETED
             };
             Ok((!was_cancelled, status.to_string(), summary))
         }
         Err(e) if was_cancelled || e == "Annulé" => Ok((
             false,
-            "cancelled".to_string(),
+            super::subagent_status::CANCELLED.to_string(),
             "Sous-agent annulé.".to_string(),
         )),
         Err(e) => {

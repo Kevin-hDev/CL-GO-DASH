@@ -55,14 +55,16 @@ pub fn run() {
         .manage(commands::file_tree_watcher::FileTreeWatcher::new())
         .manage(services::forecast::sidecar::ChronosSidecar::new())
         .setup(|app| {
+            let startup_cutoff = chrono::Utc::now();
             services::agent_local::app_handle_global::init(app.handle().clone());
             services::agent_local::subagent_spawn_channel::init();
             if let Err(e) = storage_migration::run(app.handle()) {
                 eprintln!("[storage migration] {}", e);
             }
             // Cleanup des sous-agents orphelins (crash précédent) : non bloquant.
-            tauri::async_runtime::spawn(async {
-                services::agent_local::subagent_startup_cleanup::cleanup_orphans().await;
+            tauri::async_runtime::spawn(async move {
+                services::agent_local::subagent_startup_cleanup::cleanup_orphans(startup_cutoff)
+                    .await;
             });
             let _ = dotenvy::dotenv();
             if let Err(e) = services::api_keys::init() {

@@ -1,10 +1,7 @@
 use crate::services::agent_local::session_store;
 
 pub async fn mark_status(session_id: &str, status: &str) -> Result<(), String> {
-    if !matches!(
-        status,
-        "running" | "completed" | "failed" | "cancelled" | "interrupted"
-    ) {
+    if !super::subagent_status::is_valid(status) {
         return Err("Statut sous-agent invalide".to_string());
     }
     let mut session = session_store::get(session_id).await?;
@@ -26,12 +23,8 @@ mod tests {
 
     #[test]
     fn test_interrupted_status_is_accepted_by_match() {
-        // Vérifie au niveau du pattern que "interrupted" est bien reconnu,
-        // sans toucher au filesystem (mark_status lit la session sur disque).
-        let accepted = matches!(
-            "interrupted",
-            "running" | "completed" | "failed" | "cancelled" | "interrupted"
-        );
+        let accepted =
+            super::super::subagent_status::is_valid(super::super::subagent_status::INTERRUPTED);
         assert!(accepted, "Le statut 'interrupted' doit être accepté");
     }
 }

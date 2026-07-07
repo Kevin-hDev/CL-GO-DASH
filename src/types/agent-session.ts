@@ -3,6 +3,7 @@ import type { AgentPlanApprovalDecision, AgentPlanRun, AgentPlanWorkflowStatus }
 import type { AgentTodoItem, AgentTodoRun } from "./agent-todo";
 
 export type CloneMode = "cut" | "summary";
+export type SubagentStatus = "running" | "completed" | "failed" | "cancelled" | "interrupted";
 
 export interface Project {
   id: string;
@@ -47,7 +48,7 @@ export interface AgentSession {
   subagent_type?: "explorer" | "coder";
   subagent_worktree?: string;
   subagent_prompt?: string;
-  subagent_status?: "running" | "completed" | "failed" | "cancelled";
+  subagent_status?: SubagentStatus;
   subagent_run_id?: string;
   clone_parent_session_id?: string;
   clone_parent_message_id?: string;
@@ -75,7 +76,7 @@ export interface AgentSessionMeta {
   project_id?: string;
   parent_session_id?: string;
   subagent_type?: "explorer" | "coder";
-  subagent_status?: "running" | "completed" | "failed" | "cancelled";
+  subagent_status?: SubagentStatus;
   subagent_run_id?: string;
   clone_parent_session_id?: string;
   clone_parent_message_id?: string;
@@ -114,7 +115,7 @@ export interface SubagentInfo {
   sessionId: string;
   name: string;
   type: "explorer" | "coder";
-  status: "running" | "completed" | "failed" | "cancelled";
+  status: SubagentStatus;
   promptPreview: string;
   runId?: string;
   spawnedAt?: number;

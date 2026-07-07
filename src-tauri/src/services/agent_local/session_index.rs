@@ -84,6 +84,9 @@ async fn reconcile_index(
 fn index_meta_drifted(meta: &AgentSessionMeta, session: &AgentSession) -> bool {
     meta.archived_at != session.archived_at
         || meta.parent_session_id != session.parent_session_id
+        || meta.subagent_type != session.subagent_type
+        || meta.subagent_status != session.subagent_status
+        || meta.subagent_run_id != session.subagent_run_id
         || meta.clone_parent_session_id != session.clone_parent_session_id
         || meta.clone_parent_message_id != session.clone_parent_message_id
         || meta.clone_mode != session.clone_mode

@@ -1,6 +1,7 @@
 import type { AgentInteractiveChoiceRequest } from "./agent-interactive";
 import type { AgentMessage } from "./agent-message";
 import type { AgentPlanPreview } from "./agent-plan";
+import type { SubagentStatus } from "./agent-session";
 import type { AgentTodoItem } from "./agent-todo";
 
 export interface AgentErrorDiagnosticSummary {
@@ -35,7 +36,7 @@ export type StreamEvent =
   | { event: "compressionComplete"; data: Record<string, never> }
   | { event: "sessionSnapshot"; data: { messages: AgentMessage[]; tokenCount: number } }
   | { event: "subagentSpawned"; data: { subagentSessionId: string; subagentName: string; subagentType: string; promptPreview: string; runId?: string } }
-  | { event: "subagentCompleted"; data: { subagentSessionId: string; success: boolean; status: "completed" | "failed" | "cancelled"; summary: string; allDone: boolean; runId?: string } }
+  | { event: "subagentCompleted"; data: { subagentSessionId: string; success: boolean; status: SubagentStatus; summary: string; allDone: boolean; runId?: string } }
   | { event: "todoUpdated"; data: { todos: AgentTodoItem[] } }
   | { event: "planPreviewUpdated"; data: { plan: AgentPlanPreview | null } }
   | { event: "planModeUpdated"; data: { enabled: boolean } }

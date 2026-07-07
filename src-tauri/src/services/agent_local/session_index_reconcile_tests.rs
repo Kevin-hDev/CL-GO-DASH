@@ -83,6 +83,36 @@ async fn reconcile_rebuilds_stale_active_clone_index() {
 }
 
 #[tokio::test]
+async fn reconcile_rebuilds_stale_subagent_index() {
+    let tmp = TempDir::new().unwrap();
+    let mut session = session("clone-3");
+    session.parent_session_id = Some("parent".into());
+    session.subagent_type = Some("coder".into());
+    session.subagent_status = Some("running".into());
+    session.subagent_run_id = Some("run-1".into());
+    let stale = AgentSessionMeta {
+        subagent_type: Some("explorer".into()),
+        subagent_status: Some("completed".into()),
+        subagent_run_id: Some("old-run".into()),
+        ..meta_from_session(&session)
+    };
+    tokio::fs::write(
+        tmp.path().join("clone-3.json"),
+        serde_json::to_string_pretty(&session).unwrap(),
+    )
+    .await
+    .unwrap();
+
+    let entries = reconcile_index(&tmp.path().join("index.json"), vec![stale])
+        .await
+        .unwrap();
+
+    assert_eq!(entries[0].subagent_type, session.subagent_type);
+    assert_eq!(entries[0].subagent_status, session.subagent_status);
+    assert_eq!(entries[0].subagent_run_id, session.subagent_run_id);
+}
+
+#[tokio::test]
 async fn reconcile_rebuilds_when_index_id_is_invalid() {
     let tmp = TempDir::new().unwrap();
     let valid_session = session("clone-2");

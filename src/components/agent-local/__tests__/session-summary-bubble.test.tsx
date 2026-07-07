@@ -27,6 +27,7 @@ vi.mock("react-i18next", () => ({
         "todos.status.completed": "completed",
         "todos.status.pending": "pending",
         "subagents.completed": "completed",
+        "subagents.interrupted": "interrupted",
         "common.loading": "Loading",
       };
       if (key === "agentLocal.sessionSummary.todoProgress") {
@@ -87,6 +88,7 @@ describe("SessionSummaryBubble", () => {
     expect(getByText("1/2")).toBeTruthy();
     expect(getByText("Plan title")).toBeTruthy();
     expect(getByText("Explore · Explorer")).toBeTruthy();
+    expect(getByText("interrupted")).toBeTruthy();
   });
 
   it("déplie une todo list et affiche ses tâches", () => {
@@ -211,7 +213,7 @@ function summary(changes = { additions: 3, deletions: 1 }): SessionSummaryHookSt
       sessionId: "child-1",
       name: "Explorer",
       type: "explorer",
-      status: "completed",
+      status: "interrupted",
       promptPreview: "",
     }],
   };

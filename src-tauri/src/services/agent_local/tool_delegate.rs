@@ -80,7 +80,7 @@ pub async fn prepare_delegate(
             s.parent_session_id = Some(parent_session_id.clone());
             s.subagent_type = Some(subagent_type.to_string());
             s.subagent_prompt = Some(prompt.clone());
-            s.subagent_status = Some("running".to_string());
+            s.subagent_status = Some(super::subagent_status::RUNNING.to_string());
             s.subagent_run_id = Some(run_id.clone());
             if session_store::save(&s).await.is_err() {
                 return Err(ToolResult::err(
@@ -117,7 +117,8 @@ pub async fn prepare_delegate(
         // Fail closed : ne pas démarrer un sous-agent dont le prompt n'est
         // pas persisté. On nettoie la session enfant créée plus haut.
         eprintln!("[subagent] persistance prompt enfant {}: {e}", child_id);
-        let _ = super::session_subagents::mark_status(&child_id, "failed").await;
+        let _ =
+            super::session_subagents::mark_status(&child_id, super::subagent_status::FAILED).await;
         return Err(ToolResult::err(format!(
             "Erreur interne lors de la création du sous-agent: {e}"
         )));

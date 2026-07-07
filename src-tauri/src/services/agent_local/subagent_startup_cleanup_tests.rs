@@ -1,110 +1,157 @@
-use super::cleanup_orphans;
-use crate::services::agent_local::session_store;
-use crate::services::agent_local::session_subagents::mark_status;
-use crate::services::agent_local::subagent_worktree::create_for_child;
-use std::path::PathBuf;
+use super::cleanup_orphans_in_dir;
+use crate::services::agent_local::session_index;
+use crate::services::agent_local::subagent_status;
+use crate::services::agent_local::types_session::AgentSession;
+use chrono::{Duration, Utc};
+use tempfile::TempDir;
 use uuid::Uuid;
 
-fn temp_git_repo() -> PathBuf {
-    let path = std::env::temp_dir()
-        .join(format!("cl-go-subagent-cleanup-{}", Uuid::new_v4()));
-    std::fs::create_dir_all(&path).expect("create test dir");
-    std::process::Command::new("git")
-        .args(["init"])
-        .arg(&path)
-        .output()
-        .expect("git init");
-    // Commit initial requis pour pouvoir attacher un worktree sur HEAD.
-    std::fs::write(path.join("README.md"), "init").expect("write readme");
-    std::process::Command::new("git")
-        .args(["-C"])
-        .arg(&path)
-        .args(["add", "."])
-        .output()
-        .expect("git add");
-    std::process::Command::new("git")
-        .args(["-C"])
-        .arg(&path)
-        .args([
-            "-c",
-            "user.email=test@cl-go.test",
-            "-c",
-            "user.name=Test",
-            "commit",
-            "-m",
-            "init",
-        ])
-        .output()
-        .expect("git commit");
-    path
+fn session(id: &str, status: &str, parent: bool, offset_secs: i64) -> AgentSession {
+    let created_at = Utc::now() + Duration::seconds(offset_secs);
+    AgentSession {
+        id: id.to_string(),
+        name: id.to_string(),
+        created_at,
+        updated_at: Some(created_at),
+        archived_at: None,
+        model: "llama3".into(),
+        provider: "ollama".into(),
+        thinking_enabled: false,
+        reasoning_mode: None,
+        accumulated_tokens: 0,
+        messages: vec![],
+        todos: vec![],
+        todo_neglect_count: 0,
+        todo_runs: vec![],
+        active_todo_run_id: None,
+        stream_failures: vec![],
+        diagnostic_runs: vec![],
+        plan_mode_enabled: false,
+        plan_runs: vec![],
+        active_plan_id: None,
+        plan_workflow_status: Default::default(),
+        plan_approval_decision: None,
+        is_heartbeat: false,
+        is_gateway: false,
+        gateway_channel_key: None,
+        project_id: None,
+        working_dir: String::new(),
+        parent_session_id: parent.then(|| Uuid::new_v4().to_string()),
+        subagent_type: Some("coder".into()),
+        subagent_worktree: None,
+        subagent_prompt: None,
+        subagent_status: Some(status.to_string()),
+        subagent_run_id: Some("run-1".into()),
+        clone_parent_session_id: None,
+        clone_parent_message_id: None,
+        clone_mode: None,
+        clone_summary: None,
+        clone_read_files: vec![],
+        clone_modified_files: vec![],
+        clone_root_session_id: None,
+        git_branch: None,
+    }
+}
+
+async fn write_session(dir: &TempDir, session: &AgentSession) {
+    let path = dir.path().join(format!("{}.json", session.id));
+    let data = serde_json::to_string_pretty(session).expect("serialize");
+    tokio::fs::write(path, data).await.expect("write session");
+}
+
+async fn read_session(dir: &TempDir, id: &str) -> AgentSession {
+    let data = tokio::fs::read_to_string(dir.path().join(format!("{id}.json")))
+        .await
+        .expect("read session");
+    serde_json::from_str(&data).expect("parse session")
 }
 
 #[tokio::test]
-async fn cleanup_reclassifies_running_orphans_and_removes_worktrees() {
-    // Dépôt git réel pour pouvoir créer un vrai worktree.
-    let repo = temp_git_repo();
+async fn cleanup_reclassifies_old_running_orphans() {
+    let dir = TempDir::new().expect("tempdir");
+    let cutoff = Utc::now();
+    let orphan = session(
+        "11111111-1111-1111-1111-111111111111",
+        subagent_status::RUNNING,
+        true,
+        -5,
+    );
+    let done = session(
+        "22222222-2222-2222-2222-222222222222",
+        subagent_status::COMPLETED,
+        true,
+        -5,
+    );
+    write_session(&dir, &orphan).await;
+    write_session(&dir, &done).await;
 
-    // Session A : sous-agent "running" orphelin avec un vrai worktree.
-    let mut orphan = session_store::create_full("orphan", "llama3", "ollama", false, None)
+    let cleaned = cleanup_orphans_in_dir(dir.path(), cutoff, false)
         .await
-        .expect("create orphan session");
-    orphan.parent_session_id = Some(Uuid::new_v4().to_string());
-    orphan.subagent_status = Some("running".to_string());
+        .expect("cleanup");
 
-    let worktree = create_for_child(&repo, &orphan.id).await.expect("worktree");
-    assert!(worktree.is_dir(), "le worktree doit exister avant cleanup");
-    orphan.subagent_worktree = Some(worktree.to_string_lossy().to_string());
-    session_store::save(&orphan).await.expect("save orphan");
-
-    // Session B : sous-agent déjà "completed", ne doit pas être touché.
-    let mut done = session_store::create_full("done", "llama3", "ollama", false, None)
-        .await
-        .expect("create done session");
-    done.parent_session_id = Some(Uuid::new_v4().to_string());
-    done.subagent_status = Some("completed".to_string());
-    session_store::save(&done).await.expect("save done");
-
-    cleanup_orphans().await;
-
-    let after_orphan = session_store::get(&orphan.id).await.expect("reload orphan");
+    assert_eq!(cleaned, 1);
+    let after_orphan = read_session(&dir, &orphan.id).await;
+    let after_done = read_session(&dir, &done.id).await;
     assert_eq!(
         after_orphan.subagent_status.as_deref(),
-        Some("interrupted"),
-        "un sous-agent running orphan doit devenir interrupted"
+        Some(subagent_status::INTERRUPTED)
     );
-    assert!(
-        !worktree.exists(),
-        "le worktree de l'orphelin doit être supprimé"
-    );
-
-    let after_done = session_store::get(&done.id).await.expect("reload done");
     assert_eq!(
         after_done.subagent_status.as_deref(),
-        Some("completed"),
-        "un sous-agent completed ne doit pas être modifié"
+        Some(subagent_status::COMPLETED)
     );
-
-    // Nettoyage.
-    let _ = session_store::delete(&orphan.id).await;
-    let _ = session_store::delete(&done.id).await;
-    let _ = std::fs::remove_dir_all(&repo);
 }
 
 #[tokio::test]
-async fn mark_status_persists_interrupted() {
-    let mut session = session_store::create_full("s", "llama3", "ollama", false, None)
+async fn cleanup_ignores_running_subagents_newer_than_cutoff() {
+    let dir = TempDir::new().expect("tempdir");
+    let cutoff = Utc::now();
+    let recent = session(
+        "33333333-3333-3333-3333-333333333333",
+        subagent_status::RUNNING,
+        true,
+        5,
+    );
+    write_session(&dir, &recent).await;
+
+    let cleaned = cleanup_orphans_in_dir(dir.path(), cutoff, false)
         .await
-        .expect("create session");
-    session.parent_session_id = Some(Uuid::new_v4().to_string());
-    session.subagent_status = Some("running".to_string());
-    session_store::save(&session).await.expect("save");
+        .expect("cleanup");
 
-    mark_status(&session.id, "interrupted")
+    assert_eq!(cleaned, 0);
+    let after = read_session(&dir, &recent.id).await;
+    assert_eq!(
+        after.subagent_status.as_deref(),
+        Some(subagent_status::RUNNING)
+    );
+}
+
+#[tokio::test]
+async fn cleanup_uses_rebuilt_index_when_sidecar_is_stale() {
+    let dir = TempDir::new().expect("tempdir");
+    let cutoff = Utc::now();
+    let orphan = session(
+        "44444444-4444-4444-4444-444444444444",
+        subagent_status::RUNNING,
+        true,
+        -5,
+    );
+    write_session(&dir, &orphan).await;
+
+    let mut stale_meta = session_index::meta_from_session(&orphan);
+    stale_meta.subagent_status = Some(subagent_status::COMPLETED.into());
+    session_index::write_index_to(dir.path(), &[stale_meta])
         .await
-        .expect("mark_status interrupted");
+        .expect("write stale index");
 
-    let reloaded = session_store::get(&session.id).await.expect("reload");
-    assert_eq!(reloaded.subagent_status.as_deref(), Some("interrupted"));
+    let cleaned = cleanup_orphans_in_dir(dir.path(), cutoff, false)
+        .await
+        .expect("cleanup");
 
-    let _ = session_store::delete(&session.id).await;
+    assert_eq!(cleaned, 1);
+    let after = read_session(&dir, &orphan.id).await;
+    assert_eq!(
+        after.subagent_status.as_deref(),
+        Some(subagent_status::INTERRUPTED)
+    );
 }

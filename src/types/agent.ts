@@ -46,6 +46,7 @@ export type {
   SessionTab,
   SessionTabs,
   SubagentInfo,
+  SubagentStatus,
 } from "./agent-session";
 export type {
   AgentTodoItem,
