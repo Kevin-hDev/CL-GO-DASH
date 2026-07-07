@@ -11,7 +11,6 @@ interface StreamEnvelope {
 interface StoreEntry {
   active: SubagentInfo[];
   completed: SubagentInfo[];
-  allDone: boolean;
   runId?: string;
 }
 
@@ -35,7 +34,7 @@ function ensureGlobalListener() {
 
     if (e.event === "subagentSpawned") {
       const runId = e.data.runId;
-      const store = globalStore.get(parentId) ?? { active: [], completed: [], allDone: false, runId };
+      const store = globalStore.get(parentId) ?? { active: [], completed: [], runId };
       if (runId && store.runId && store.runId !== runId) {
         store.completed = [];
         store.active = [];
@@ -53,13 +52,12 @@ function ensureGlobalListener() {
           spawnedAt: Date.now(),
         },
       ];
-      store.allDone = false;
       globalStore.set(parentId, store);
       evictGlobalStore();
     }
 
     if (e.event === "subagentCompleted") {
-      const store = globalStore.get(parentId) ?? { active: [], completed: [], allDone: false };
+      const store = globalStore.get(parentId) ?? { active: [], completed: [] };
       const found = store.active.find(
         (s) => s.sessionId === e.data.subagentSessionId,
       );
@@ -77,7 +75,6 @@ function ensureGlobalListener() {
           runId: e.data.runId ?? found?.runId ?? store.runId,
         },
       ];
-      store.allDone = e.data.allDone;
       globalStore.set(parentId, store);
       evictGlobalStore();
     }
@@ -88,8 +85,6 @@ function ensureGlobalListener() {
 export function useSubagents(parentSessionId: string | undefined) {
   const [active, setActive] = useState<SubagentInfo[]>([]);
   const [completed, setCompleted] = useState<SubagentInfo[]>([]);
-  const [allDone, setAllDone] = useState(false);
-  const [doneRunId, setDoneRunId] = useState<string | undefined>(undefined);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -99,8 +94,6 @@ export function useSubagents(parentSessionId: string | undefined) {
         if (cancelled) return;
         setActive([]);
         setCompleted([]);
-        setAllDone(false);
-        setDoneRunId(undefined);
       });
       return () => { cancelled = true; };
     }
@@ -132,11 +125,6 @@ export function useSubagents(parentSessionId: string | undefined) {
           }
           return prev;
         });
-        if (store.allDone) {
-          setAllDone(true);
-          setDoneRunId(store.runId);
-          store.allDone = false;
-        }
       }
     };
 
@@ -162,11 +150,5 @@ export function useSubagents(parentSessionId: string | undefined) {
     [parentSessionId],
   );
 
-  const clearAllDone = useCallback(() => setAllDone(false), []);
-  const clearSynthesisSignal = useCallback(() => {
-    setAllDone(false);
-    setDoneRunId(undefined);
-  }, []);
-
-  return { active, completed, allDone, doneRunId, cancelSubagent, clearAllDone, clearSynthesisSignal };
+  return { active, completed, cancelSubagent };
 }

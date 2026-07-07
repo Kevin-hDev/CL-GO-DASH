@@ -107,7 +107,6 @@ pub mod stream_diagnostics_tests;
 pub mod stream_diagnostics_tools;
 pub mod stream_events;
 pub mod subagent_completion;
-pub mod subagent_orchestrator;
 pub mod subagent_prompts;
 #[cfg(test)]
 pub mod subagent_prompts_tests;

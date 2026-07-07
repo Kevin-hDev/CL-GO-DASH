@@ -45,7 +45,7 @@ pub async fn spawn_delegate(args: &Value, session_id: &str) -> Result<PendingDel
                     parent_emitter: spawned.parent_emitter,
                     cancel: spawned.cancel,
                     project_id: spawned.project_id,
-                    completion_tx: Some(tx),
+                    completion_tx: tx,
                 })
             {
                 super::subagent_registry::unregister(&child_id).await;

@@ -217,9 +217,7 @@ pub fn run() {
             commands::respond_to_interactive_choice,
             // Agent Local — Subagents
             commands::list_subagents,
-            commands::get_active_subagents,
             commands::cancel_subagent,
-            commands::synthesize_subagent_results,
             // Agent Local — Tools
             commands::list_skills,
             commands::load_skill,

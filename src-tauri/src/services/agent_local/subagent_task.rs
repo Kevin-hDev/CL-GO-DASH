@@ -18,7 +18,7 @@ pub async fn run(
     parent_emitter: AgentEventEmitter,
     cancel: CancellationToken,
     project_id: Option<String>,
-    completion_tx: Option<oneshot::Sender<SubagentCompletion>>,
+    completion_tx: oneshot::Sender<SubagentCompletion>,
 ) {
     let result = run_inner(
         app,
@@ -33,10 +33,9 @@ pub async fn run(
     )
     .await;
 
-    let parent_session_id = parent_emitter.session_id().to_string();
     let run_id = subagent_registry::get_run_id_for_child(&child_session_id).await;
 
-    let (mut success, mut status, mut summary) = match result {
+    let (success, status, summary) = match result {
         Ok(s) => s,
         Err(e) => (
             false,
@@ -51,41 +50,14 @@ pub async fn run(
         eprintln!("[subagent] persistance statut {}: {e}", child_session_id);
     }
 
-    let child_name = super::subagent_orchestrator::get_child_name(&child_session_id).await;
-    let should_inject_parent_report = completion_tx.is_none();
-    if should_inject_parent_report {
-        if let Err(e) = super::subagent_orchestrator::inject_summary_in_parent(
-            &parent_session_id,
-            &child_session_id,
-            &child_name,
-            &summary,
-            success,
-        )
-        .await
-        {
-            eprintln!(
-                "[subagent] injection rapport parent {}: {e}",
-                child_session_id
-            );
-            success = false;
-            status = super::subagent_status::FAILED.to_string();
-            if let Err(mark_err) = update_session_status(&child_session_id, &status).await {
-                eprintln!(
-                    "[subagent] persistance statut failed après injection {}: {mark_err}",
-                    child_session_id
-                );
-            }
-            summary = format!("{summary}\n\nRapport non injecté dans la session parente.");
-        }
-    }
+    let child_name = get_child_name(&child_session_id).await;
 
     super::subagent_working_dir::cleanup(&child_session_id).await;
     subagent_registry::unregister(&child_session_id).await;
 
-    let remaining = subagent_registry::list_for_parent(&parent_session_id).await;
     let completion = SubagentCompletion {
         child_session_id: child_session_id.clone(),
-        name: child_name.clone(),
+        name: child_name,
         subagent_type,
         status: status.clone(),
         success,
@@ -97,12 +69,16 @@ pub async fn run(
         success,
         status,
         summary,
-        all_done: remaining.is_empty(),
         run_id,
     });
-    if let Some(tx) = completion_tx {
-        let _ = tx.send(completion);
-    }
+    let _ = completion_tx.send(completion);
+}
+
+async fn get_child_name(child_id: &str) -> String {
+    session_store::get(child_id)
+        .await
+        .map(|s| s.name.clone())
+        .unwrap_or_else(|_| "agent".to_string())
 }
 
 async fn run_inner(

@@ -6,13 +6,9 @@ use tokio_util::sync::CancellationToken;
 const MAX_PER_PARENT: usize = 4;
 const MAX_TOTAL: usize = 8;
 
-#[derive(Clone)]
-pub struct SubagentEntry {
+struct SubagentEntry {
     pub cancel: CancellationToken,
     pub parent_session_id: String,
-    pub session_id: String,
-    pub name: String,
-    pub subagent_type: String,
     pub run_id: String,
 }
 
@@ -41,8 +37,6 @@ pub async fn register(
     parent_id: &str,
     child_id: &str,
     cancel: CancellationToken,
-    name: &str,
-    subagent_type: &str,
 ) -> Result<String, String> {
     let mut state = REGISTRY.lock().await;
     if state.entries.len() >= MAX_TOTAL {
@@ -68,9 +62,6 @@ pub async fn register(
         SubagentEntry {
             cancel,
             parent_session_id: parent_id.to_string(),
-            session_id: child_id.to_string(),
-            name: name.to_string(),
-            subagent_type: subagent_type.to_string(),
             run_id: run_id.clone(),
         },
     );
@@ -89,17 +80,6 @@ pub async fn unregister(child_id: &str) {
             state.run_ids.remove(parent);
         }
     }
-}
-
-pub async fn list_for_parent(parent_id: &str) -> Vec<SubagentEntry> {
-    REGISTRY
-        .lock()
-        .await
-        .entries
-        .values()
-        .filter(|e| e.parent_session_id == parent_id)
-        .cloned()
-        .collect()
 }
 
 pub async fn get_run_id_for_child(child_id: &str) -> Option<String> {

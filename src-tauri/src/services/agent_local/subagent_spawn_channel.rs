@@ -14,7 +14,7 @@ pub struct SpawnRequest {
     pub parent_emitter: AgentEventEmitter,
     pub cancel: tokio_util::sync::CancellationToken,
     pub project_id: Option<String>,
-    pub completion_tx: Option<oneshot::Sender<SubagentCompletion>>,
+    pub completion_tx: oneshot::Sender<SubagentCompletion>,
 }
 
 const MAX_QUEUED: usize = 8;

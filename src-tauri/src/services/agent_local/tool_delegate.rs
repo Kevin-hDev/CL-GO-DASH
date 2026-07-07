@@ -124,14 +124,7 @@ pub async fn prepare_delegate(
     }
 
     let cancel = CancellationToken::new();
-    if let Err(e) = subagent_registry::register(
-        &parent_session_id,
-        &child_id,
-        cancel.clone(),
-        &name,
-        subagent_type,
-    )
-    .await
+    if let Err(e) = subagent_registry::register(&parent_session_id, &child_id, cancel.clone()).await
     {
         return Err(ToolResult::err(e));
     }

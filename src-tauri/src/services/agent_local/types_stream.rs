@@ -98,7 +98,6 @@ pub enum StreamEvent {
         success: bool,
         status: String,
         summary: String,
-        all_done: bool,
         run_id: Option<String>,
     },
     #[serde(rename_all = "camelCase")]
