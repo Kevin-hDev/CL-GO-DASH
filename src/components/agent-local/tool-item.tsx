@@ -65,16 +65,15 @@ export function ToolItem({
   };
 
   const labelButton = canToggle ? (
-    <button className="tb-toggle" onClick={toggle}>
+    <button type="button" className="tb-toggle" onClick={toggle}>
+      {icon && <ToolIcon name={icon} size="var(--icon-sm)" className="tb-tool-icon" aria-hidden="true" />}
+      <span className={`tb-tool-verb${activeClass}`}>{shownName}</span>
       <span className="tb-arrow tb-tool-arrow" aria-hidden="true">
         {isOpen ? <CaretUp size="var(--icon-sm)" weight="bold" /> : <CaretDown size="var(--icon-sm)" weight="bold" />}
       </span>
-      {icon && <ToolIcon name={icon} size="var(--icon-sm)" className="tb-tool-icon" aria-hidden="true" />}
-      <span className={`tb-tool-verb${activeClass}`}>{shownName}</span>
     </button>
   ) : (
     <span className="tb-static-label">
-      <span className="tb-arrow tb-tool-arrow tb-tool-arrow-spacer" aria-hidden="true" />
       {icon && <ToolIcon name={icon} size="var(--icon-sm)" className="tb-tool-icon" aria-hidden="true" />}
       <span className={`tb-tool-verb${activeClass}`}>{shownName}</span>
     </span>

@@ -58,6 +58,19 @@ describe("ToolBubble single row rendering", () => {
     expect(container.textContent).toContain("npm test");
   });
 
+  it("place le chevron de détail à droite du libellé du tool", () => {
+    const { container } = render(
+      <ToolBubble tools={[{ name: "bash", args: { command: "npm test" }, result: "ok" }]} />,
+    );
+    const toggle = container.querySelector(".tb-toggle");
+    if (!toggle) throw new Error("tool toggle absent");
+
+    const children = Array.from(toggle.children);
+    expect(children[0]?.getAttribute("data-testid")).toBe("tool-icon-TerminalWindow");
+    expect(children[1]?.textContent).toBe("bash");
+    expect(children[2]?.classList.contains("tb-tool-arrow")).toBe(true);
+  });
+
   it("ignore les tools cachés pour décider du rendu direct", () => {
     const { container } = render(
       <ToolBubble

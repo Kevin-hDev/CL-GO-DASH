@@ -1,7 +1,7 @@
 /* Chevron : uniquement au survol */
 .tb-arrow {
   font-size: 0.5625rem;
-  color: var(--ink-faint);
+  color: inherit;
   flex-shrink: 0;
   width: 16px;
   height: 16px;
@@ -14,22 +14,16 @@
   align-items: center;
   justify-content: center;
   width: 16px;
-  color: var(--ink-on-pulse);
   opacity: 0;
   line-height: 0;
   pointer-events: none;
+  transition: opacity var(--ease-smooth), color var(--ease-smooth);
 }
 
 .tb-group-toggle:hover .tb-group-arrow,
+.tb-group-toggle:focus-visible .tb-group-arrow,
+.tb-toggle:hover .tb-tool-arrow,
+.tb-toggle:focus-visible .tb-tool-arrow,
 .tb-row:hover .tb-tool-arrow {
-  animation: tb-arrow-peek 1200ms ease forwards;
-}
-
-.tb-row:hover .tb-tool-arrow-spacer {
-  animation: none;
-}
-
-@keyframes tb-arrow-peek {
-  0%, 70% { opacity: 1; }
-  100% { opacity: 0; }
+  opacity: 1;
 }

@@ -68,7 +68,7 @@ describe("ToolBubble error details", () => {
     expect(container.textContent).not.toContain("HTTP 403");
     expect(container.textContent).not.toContain("secret_key");
     expect(container.querySelector(".tb-toggle")).toBeNull();
-    expect(container.querySelector(".tb-tool-arrow-spacer")).toBeTruthy();
+    expect(container.querySelector(".tb-tool-arrow-spacer")).toBeNull();
     expect(queryByTestId("web-preview")).toBeNull();
   });
 
