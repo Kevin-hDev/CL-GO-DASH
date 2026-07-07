@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { KeyboardEvent, MouseEvent, ReactNode } from "react";
 import { Spinner } from "@/components/ui/icons";
 import { CaretDown, CaretUp } from "@/components/ui/icons";
 import { isFileTool } from "@/lib/tool-file-path";
@@ -51,6 +51,18 @@ export function ToolItem({
     if (!clickablePath || !onFilePreview) return;
     onFilePreview(summary);
   };
+  const handlePreviewClick = (e: MouseEvent<HTMLElement>) => {
+    if (!clickablePath) return;
+    e.stopPropagation();
+    openPreview();
+  };
+  const handlePreviewKeyDown = (e: KeyboardEvent<HTMLElement>) => {
+    if (!clickablePath) return;
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      openPreview();
+    }
+  };
 
   const labelButton = canToggle ? (
     <button className="tb-toggle" onClick={toggle}>
@@ -72,7 +84,13 @@ export function ToolItem({
   const fileContent = hasFilePath ? (
     <>
       {dir && <span className={`tb-item-dirs${activeClass}`}>{dir}</span>}
-      <span className="tb-item-name">
+      <span
+        className="tb-item-name"
+        role={clickablePath ? "button" : undefined}
+        tabIndex={clickablePath ? 0 : undefined}
+        onClick={handlePreviewClick}
+        onKeyDown={handlePreviewKeyDown}
+      >
         {fileName && <FileIcon name={fileName} size="var(--icon-sm)" />}
         <span className={`tb-item-name-text${activeClass}`}>{fileName ?? shownSummary}</span>
       </span>
@@ -91,11 +109,8 @@ export function ToolItem({
       className={`tb-item-summary${activeClass}`}
       role={clickablePath ? "button" : undefined}
       tabIndex={clickablePath ? 0 : undefined}
-      onClick={(e) => { if (clickablePath) { e.stopPropagation(); openPreview(); } }}
-      onKeyDown={(e) => {
-        if (!clickablePath) return;
-        if (e.key.startsWith("Ent") || e.key.startsWith(" ")) { e.preventDefault(); openPreview(); }
-      }}
+      onClick={handlePreviewClick}
+      onKeyDown={handlePreviewKeyDown}
     >{shownSummary}</span>
   ) : null;
 

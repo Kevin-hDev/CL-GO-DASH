@@ -164,7 +164,8 @@
   text-align: left;
 }
 
-.tb-item-summary[role="button"] {
+.tb-item-summary[role="button"],
+.tb-item-name[role="button"] {
   color: var(--agent-trace-text);
   cursor: pointer;
   text-decoration: underline;
@@ -172,7 +173,9 @@
   unicode-bidi: plaintext;
 }
 
-.tb-item-summary[role="button"]:hover {
+.tb-item-summary[role="button"]:hover,
+.tb-item-name[role="button"]:hover,
+.tb-item-name[role="button"]:hover .tb-item-name-text {
   color: var(--agent-trace-hover);
 }
 
