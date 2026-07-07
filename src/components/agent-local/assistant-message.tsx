@@ -11,9 +11,9 @@ import { CodeBlock } from "./code-block";
 import { ThinkingSection } from "./thinking-section";
 import { MessageActions } from "./message-actions";
 import { SavedToolBubble } from "./tool-bubble";
-import { StreamingStats, formatTotalElapsed } from "./streaming-stats";
 import { LinkPreviewCard } from "./link-preview-card";
 import { useHoverClass } from "@/hooks/use-hover-class";
+import { formatCompactDuration } from "@/lib/duration-format";
 import type { ToolActivityRecord } from "@/types/agent";
 import "./messages.css";
 import "./chat-markdown.css";
@@ -133,8 +133,6 @@ interface AssistantMessageProps {
   tokens?: number;
   tps?: number;
   totalElapsedMs?: number;
-  streamStartedAt?: number | null;
-  liveTokenCount?: number;
   showActions?: boolean;
 }
 
@@ -143,9 +141,14 @@ function formatTokens(n: number): string {
   return String(n);
 }
 
+function formatTotalElapsed(ms: number): string {
+  if (ms <= 0) return "";
+  return formatCompactDuration(ms);
+}
+
 export const AssistantMessage = memo(function AssistantMessage({
   content, thinking, thinkingActive, toolActivities, projectPath, isStreaming, onReload, onClone,
-  tokens, tps, totalElapsedMs, streamStartedAt, liveTokenCount,
+  tokens, tps, totalElapsedMs,
   showActions = true,
 }: AssistantMessageProps) {
   const { t } = useTranslation();
@@ -162,14 +165,6 @@ export const AssistantMessage = memo(function AssistantMessage({
       )}
       <div className="msg-assistant-content chat-md">
         {content && <ChatMarkdown content={content} />}
-        {isStreaming && (
-          <>
-            <span style={{ animation: "pulse-dot 1s infinite" }}>&#9610;</span>
-            {!content && (
-              <StreamingStats segmentStartedAt={streamStartedAt ?? null} liveTokenCount={liveTokenCount ?? 0} />
-            )}
-          </>
-        )}
       </div>
       {showActions && !isStreaming && content.trim() && (
         <MessageActions messageRole="assistant" content={content} onReload={onReload} onClone={onClone}>

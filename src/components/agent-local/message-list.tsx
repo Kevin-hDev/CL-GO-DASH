@@ -120,13 +120,12 @@ export function MessageList({
           currentTools={currentTools}
           activeStreamItem={activeStreamItem}
           streamStartedAt={streamStartedAt}
-          liveTokenCount={liveTokenCount}
           onFilePreview={onFilePreview}
           projectPath={projectPath}
         />
       )}
       {planPreview && <PlanPreviewBubble plan={planPreview} />}
-      {isStreaming && streamStartedAt != null && !showCompressionIndicator && !currentContent && !currentThinking && !hasActiveTools(currentTools) && (
+      {isStreaming && streamStartedAt != null && (
         <LoadingIndicator startedAt={streamStartedAt} liveTokenCount={liveTokenCount} />
       )}
 
@@ -177,10 +176,6 @@ export const SegmentedAssistantMessage = memo(function SegmentedAssistantMessage
     </>
   );
 });
-
-function hasActiveTools(tools: ToolActivity[]): boolean {
-  return tools.length > 0 && tools.some((t) => !t.result);
-}
 
 function findLastIndex<T>(arr: T[], pred: (item: T) => boolean): number {
   for (let i = arr.length - 1; i >= 0; i--) {

@@ -25,7 +25,6 @@ interface StreamToolTimelineProps {
   currentTools: ToolActivity[];
   activeStreamItem?: ActiveStreamItem;
   streamStartedAt: number | null;
-  liveTokenCount: number;
   onFilePreview?: (path: string) => void;
   projectPath?: string;
 }
@@ -38,7 +37,6 @@ export function StreamToolTimeline({
   currentTools,
   activeStreamItem = null,
   streamStartedAt,
-  liveTokenCount,
   onFilePreview,
   projectPath,
 }: StreamToolTimelineProps) {
@@ -77,8 +75,6 @@ export function StreamToolTimeline({
         <AssistantMessage
           content={finalBlock.content ?? ""}
           isStreaming
-          streamStartedAt={streamStartedAt}
-          liveTokenCount={liveTokenCount}
         />
       </>
     );
@@ -90,8 +86,6 @@ export function StreamToolTimeline({
         <TimelineLiveBlock
           key={`stream-block-${index}`}
           block={block}
-          streamStartedAt={streamStartedAt}
-          liveTokenCount={liveTokenCount}
           activeStreamItem={activeStreamItem}
           activeTool={activeTool}
           onFilePreview={onFilePreview}

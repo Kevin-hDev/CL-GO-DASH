@@ -70,7 +70,6 @@ describe("message tool timeline collapse", () => {
         currentContent=""
         currentTools={[{ name: "bash", args: {} }]}
         streamStartedAt={1}
-        liveTokenCount={0}
       />,
     );
 
@@ -95,7 +94,6 @@ describe("message tool timeline collapse", () => {
         currentContentPhase="final"
         currentTools={[]}
         streamStartedAt={startedAt}
-        liveTokenCount={0}
       />,
     );
 
@@ -124,7 +122,6 @@ describe("message tool timeline collapse", () => {
         currentContentPhase="work"
         currentTools={[]}
         streamStartedAt={1}
-        liveTokenCount={0}
       />,
     );
 
@@ -144,7 +141,6 @@ describe("message tool timeline collapse", () => {
         currentContent="pending live text"
         currentTools={[]}
         streamStartedAt={1}
-        liveTokenCount={0}
       />,
     );
 

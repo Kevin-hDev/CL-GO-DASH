@@ -14,16 +14,12 @@ import type { ToolTimelineBlock } from "./message-tool-blocks";
 
 export function TimelineLiveBlock({
   block,
-  streamStartedAt,
-  liveTokenCount,
   activeStreamItem,
   activeTool,
   onFilePreview,
   projectPath,
 }: {
   block: ToolTimelineBlock<ToolActivity>;
-  streamStartedAt: number | null;
-  liveTokenCount: number;
   activeStreamItem: ActiveStreamItem;
   activeTool?: ToolActivity;
   onFilePreview?: (path: string) => void;
@@ -37,8 +33,6 @@ export function TimelineLiveBlock({
           thinking={block.thinking}
           isStreaming
           thinkingActive={activeStreamItem?.kind === "thinking"}
-          streamStartedAt={streamStartedAt}
-          liveTokenCount={liveTokenCount}
         />
       ) : (
         <TimelineNarrative block={block} />

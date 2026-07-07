@@ -10,7 +10,7 @@ import {
 } from "./agent-chat-stream-types";
 import { estimateAgentMessagesTokens } from "./agent-token-estimate";
 import { markUnconfirmedContentAsWork } from "./agent-chat-stream-partial";
-import { lastPendingToolItem, thinkingItem, toolItem } from "./active-stream-item";
+import { activeItemAfterToolResult, thinkingItem, toolItem } from "./active-stream-item";
 import { applyToolResult } from "./agent-chat-tool-results";
 
 export type { ChatState, ManagedStreamState, PermissionRequestState, StreamApplyResult };
@@ -54,7 +54,7 @@ export function applyStreamEvent(
         name: event.data.name, args: event.data.arguments,
       }];
       break;
-    case "toolResult":
+    case "toolResult": {
       if (isHiddenAgentTool(event.data.name)) {
         next.pendingPermissions = [];
         if (event.data.name === "ask_user_choice" || event.data.name === "planmode") {
@@ -62,17 +62,19 @@ export function applyStreamEvent(
         }
         break;
       }
+      const toolCallIndex = event.data.toolCallIndex ?? -1;
       next.currentTools = applyToolResult(
         next.currentTools,
-        event.data.toolCallIndex ?? -1,
+        toolCallIndex,
         event.data.content,
         event.data.isError,
         event.data.resolvedPath,
         event.data.affectedPaths,
       );
-      next.activeStreamItem = lastPendingToolItem(next.currentTools);
+      next.activeStreamItem = activeItemAfterToolResult(next.currentTools, toolCallIndex);
       next.pendingPermissions = [];
       break;
+    }
     case "turnEnd":
       next.retryIndicator = null;
       next.completedSegments = appendCurrentSegment(next);

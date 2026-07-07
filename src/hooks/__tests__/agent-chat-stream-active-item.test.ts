@@ -34,7 +34,7 @@ describe("activeStreamItem", () => {
     expect(state.activeStreamItem).toEqual({ kind: "tool", toolIndex: 1 });
   });
 
-  it("coupe l'animation quand le seul tool actif finit", () => {
+  it("garde le tool terminé actif jusqu'au prochain événement visible", () => {
     let state = applyStreamEvent(makeState(), {
       event: "toolCall",
       data: { name: "bash", arguments: { command: "pwd" } },
@@ -43,7 +43,7 @@ describe("activeStreamItem", () => {
       event: "toolResult",
       data: { name: "bash", toolCallIndex: 0, content: "ok", isError: false },
     }).state;
-    expect(state.activeStreamItem).toBeNull();
+    expect(state.activeStreamItem).toEqual({ kind: "tool", toolIndex: 0 });
   });
 
   it("revient au dernier tool encore en cours quand le plus récent finit", () => {
@@ -58,7 +58,7 @@ describe("activeStreamItem", () => {
   });
 
   it("coupe l'animation sur un token texte visible", () => {
-    const state = makeState({ activeStreamItem: { kind: "thinking" } });
+    const state = makeState({ activeStreamItem: { kind: "tool", toolIndex: 0 } });
     const result = applyStreamEvent(state, {
       event: "token",
       data: { content: "texte", tps: 1, tokenCount: 1 },

@@ -22,6 +22,13 @@ export function lastPendingToolItem(tools: ToolActivity[]): ActiveStreamItem {
   return null;
 }
 
+export function activeItemAfterToolResult(tools: ToolActivity[], finishedToolIndex: number): ActiveStreamItem {
+  const pending = lastPendingToolItem(tools);
+  if (pending) return pending;
+  if (finishedToolIndex >= 0 && finishedToolIndex < tools.length) return toolItem(finishedToolIndex);
+  return null;
+}
+
 export function isActiveTool(item: ActiveStreamItem, toolIndex?: number): boolean {
   return item?.kind === "tool" && toolIndex === item.toolIndex;
 }
