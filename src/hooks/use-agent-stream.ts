@@ -69,6 +69,8 @@ interface StreamStartState {
 export function useAgentStream() {
   const streamingRef = useRef(false);
   const generationRef = useRef<number | null>(null);
+  const runRef = useRef(0);
+  const stoppingRef = useRef(false);
 
   const startStream = useCallback(async (
     sessionId: string,
@@ -85,6 +87,8 @@ export function useAgentStream() {
     permissionMode?: string,
     planMode?: boolean,
   ) => {
+    const run = ++runRef.current;
+    stoppingRef.current = false;
     streamingRef.current = true;
     await agentStreamManager.startSession(
       sessionId,
@@ -159,7 +163,13 @@ export function useAgentStream() {
         permissionMode: permissionMode ?? null,
         planMode: planMode ?? null,
       });
+      if (runRef.current !== run || stoppingRef.current) {
+        agentStreamManager.stopSession(sessionId, gen);
+        await invoke("cancel_agent_request", { sessionId, generation: gen }).catch(() => {});
+        return;
+      }
       generationRef.current = gen;
+      agentStreamManager.setSessionGeneration(sessionId, gen);
     } catch {
       agentStreamManager.failSession(sessionId);
       streamingRef.current = false;
@@ -167,11 +177,15 @@ export function useAgentStream() {
   }, []);
 
   const stopStream = useCallback(async (sessionId: string) => {
+    if (stoppingRef.current) return;
+    stoppingRef.current = true;
+    runRef.current += 1;
     const gen = generationRef.current;
     generationRef.current = null;
-    await invoke("cancel_agent_request", { sessionId, generation: gen });
     streamingRef.current = false;
-    agentStreamManager.stopSession(sessionId);
+    agentStreamManager.stopSession(sessionId, gen);
+    await invoke("cancel_agent_request", { sessionId, generation: gen }).catch(() => {});
+    stoppingRef.current = false;
   }, []);
 
   const subscribeToStream = useCallback(

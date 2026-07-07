@@ -5,6 +5,7 @@ const CLEANUP_DELAY_MS = 5 * 60 * 1000;
 export const MAX_SESSIONS = 64;
 export const MAX_EVENTS_PER_SESSION = 4096;
 export const MAX_SUBSCRIBERS_PER_SESSION = 32;
+export const MAX_CANCELLED_GENERATIONS = 16;
 
 export interface StreamRecord {
   state: ManagedStreamState;
@@ -17,6 +18,9 @@ export interface StreamRecord {
   /** true si la session a été initiée par le gateway (pas de startSession() appelé depuis l'UI).
    *  Dans ce cas le backend persiste déjà les messages — le frontend ne doit pas appeler persistAssistant. */
   isGateway: boolean;
+  activeGeneration: number | null;
+  cancelledGenerations: number[];
+  cancelledWithoutGeneration: boolean;
 }
 
 export function enforceSessionLimit(records: Map<string, StreamRecord>) {

@@ -110,14 +110,19 @@ export function ChatInput({
     }
     if (pressed === K_ESC) {
       event.preventDefault();
-      onStop();
+      event.stopPropagation();
+      if (isStreaming) onStop();
       return true;
     }
-  }, [handleEnter, onStop, slash]);
+  }, [handleEnter, isStreaming, onStop, slash]);
 
   useEffect(() => {
     if (!isStreaming) return;
-    const handler = (e: KeyboardEvent) => { if (e.key === K_ESC) onStop(); };
+    const handler = (e: KeyboardEvent) => {
+      if (e.key !== K_ESC) return;
+      e.preventDefault();
+      onStop();
+    };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [isStreaming, onStop]);

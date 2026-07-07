@@ -147,6 +147,24 @@ describe("finishPartialStream", () => {
     }));
     expect(result.assistantMessage?.segments?.[0].phase).toBe("final");
   });
+
+  it("marque les outils encore en cours comme annulés", () => {
+    const result = finishPartialStream(makeState({
+      currentTools: [
+        { name: "bash", args: { command: "sleep 10" } },
+        { name: "read_file", args: { path: "a.txt" }, result: "ok" },
+      ],
+    }));
+    expect(result.assistantMessage?.tool_activities?.[0]).toMatchObject({
+      name: "bash",
+      result: "Annulé.",
+      is_error: true,
+    });
+    expect(result.assistantMessage?.tool_activities?.[1]).toMatchObject({
+      name: "read_file",
+      result: "ok",
+    });
+  });
 });
 
 describe("done — limite messages assertion précise", () => {

@@ -1,4 +1,3 @@
-import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import i18n from "@/i18n";
 import {
@@ -17,6 +16,11 @@ import {
   shouldDeferStreamEvent,
 } from "./agent-stream-notify";
 import {
+  acceptsStreamEvent,
+  markStreamCancelled,
+  setStreamGeneration as applyStreamGeneration,
+} from "./agent-stream-generations";
+import {
   getOrCreateRecord,
   getRecord,
   persistAssistant,
@@ -27,6 +31,7 @@ import {
 } from "./agent-stream-records";
 import { estimateAgentMessagesTokens } from "./agent-token-estimate";
 import { emitStreamActivity, subscribeStreamActivity, toStreamActivity } from "./agent-stream-activity";
+import { handleCompressionComplete } from "./agent-stream-compression-complete";
 import { showToast } from "@/lib/toast-emitter";
 import type { AgentMessage, StreamEvent } from "@/types/agent";
 import { webToolErrorToastMessage } from "./web-tool-error-toast";
@@ -34,20 +39,24 @@ import { webToolErrorToastMessage } from "./web-tool-error-toast";
 export type { StreamSnapshot } from "./agent-stream-records";
 const EVENT_NAME = "agent-stream-event";
 
-interface StreamEnvelope { sessionId: string; event: StreamEvent }
+interface StreamEnvelope { sessionId: string; generation?: number; event: StreamEvent }
 
 type Subscriber = (snapshot: StreamSnapshot) => void;
 
 let listenPromise: Promise<UnlistenFn> | null = null;
 
-export const agentStreamManager = { startSession, stopSession, failSession,
+export const agentStreamManager = { startSession, stopSession, failSession, setSessionGeneration,
   getSnapshot, getActivity, isStreaming, subscribe, subscribeActivity: subscribeStreamActivity };
 
 function ensureListener() {
   if (!listenPromise) {
     listenPromise = listen<StreamEnvelope>(EVENT_NAME, (event) => {
       if (!event.payload?.sessionId) return;
-      handleStreamEvent(event.payload.sessionId, event.payload.event);
+      handleStreamEvent(
+        event.payload.sessionId,
+        event.payload.event,
+        typeof event.payload.generation === "number" ? event.payload.generation : null,
+      );
     });
   }
   return listenPromise;
@@ -61,14 +70,23 @@ async function startSession(sessionId: string, messages: AgentMessage[], session
   record.history = [];
   record.started = true;
   record.isGateway = false; // session UI explicite — le frontend gère la persistance
+  record.activeGeneration = null;
+  record.cancelledWithoutGeneration = false;
   touchSession(sessionId, record);
   flushFrameNotify(record, notify);
   notifyActivity(sessionId, record);
 }
 
-function stopSession(sessionId: string) {
+function setSessionGeneration(sessionId: string, generation: number) {
   const record = getRecord(sessionId);
   if (!record) return;
+  applyStreamGeneration(record, generation);
+}
+
+function stopSession(sessionId: string, generation?: number | null) {
+  const record = getRecord(sessionId);
+  if (!record) return;
+  markStreamCancelled(record, generation);
   const result = finishPartialStream(record.state);
   record.state = result.state;
   flushFrameNotify(record, notify);
@@ -120,7 +138,7 @@ function subscribe(sessionId: string, subscriber: Subscriber): () => void {
   };
 }
 
-function handleStreamEvent(sessionId: string, event: StreamEvent) {
+function handleStreamEvent(sessionId: string, event: StreamEvent, generation: number | null) {
   const record = getOrCreateRecord(sessionId);
   clearCleanup(record);
 
@@ -131,6 +149,8 @@ function handleStreamEvent(sessionId: string, event: StreamEvent) {
     record.isGateway = true;
     record.started = true;
   }
+
+  if (!acceptsStreamEvent(record, generation, event)) return;
 
   if (event.event === "subagentSpawned" || event.event === "subagentCompleted" || event.event === "todoUpdated") {
     flushFrameNotify(record, notify);
@@ -169,30 +189,8 @@ function handleStreamEvent(sessionId: string, event: StreamEvent) {
   const toastMessage = webToolErrorToastMessage(sessionId, event);
   if (toastMessage) showToast(toastMessage, "error");
 
-  // Compression terminée : recharger la session depuis le store
   if (event.event === "compressionComplete") {
-    invoke<{ messages: AgentMessage[]; accumulated_tokens: number }>(
-      "get_agent_session", { id: sessionId },
-    ).then((session) => {
-      record.state = {
-        ...record.state,
-        messages: session.messages,
-        completedSegments: [],
-        currentContent: "",
-        currentThinking: "",
-        currentTools: [],
-        activeStreamItem: null,
-        liveTokenCount: 0,
-        streamStartedAt: null,
-        segmentStartedAt: null,
-        isStreaming: false,
-        sessionTokenCount: estimateAgentMessagesTokens(session.messages),
-        sessionTokenCountEstimated: true,
-        persisted: true,
-      };
-      flushFrameNotify(record, notify);
-      notifyActivity(sessionId, record);
-    }).catch(() => console.warn("session reload after compression failed"));
+    handleCompressionComplete(sessionId, record, notify, notifyActivity);
     return;
   }
 

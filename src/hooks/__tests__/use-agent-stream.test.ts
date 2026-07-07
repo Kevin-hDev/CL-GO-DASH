@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   startSession: vi.fn(),
   failSession: vi.fn(),
   stopSession: vi.fn(),
+  setSessionGeneration: vi.fn(),
   subscribe: vi.fn(),
   getSnapshot: vi.fn(),
   isStreaming: vi.fn(),
@@ -27,6 +28,7 @@ vi.mock("../agent-stream-manager", () => ({
     startSession: mocks.startSession,
     failSession: mocks.failSession,
     stopSession: mocks.stopSession,
+    setSessionGeneration: mocks.setSessionGeneration,
     subscribe: mocks.subscribe,
     getSnapshot: mocks.getSnapshot,
     isStreaming: mocks.isStreaming,
@@ -102,5 +104,48 @@ describe("useAgentStream", () => {
     expect(mocks.invoke).toHaveBeenCalledWith("chat_stream", expect.objectContaining({
       messages: [expect.objectContaining({ images: ["pasted123"] })],
     }));
+  });
+
+  it("enregistre la génération retournée par le backend", async () => {
+    const message = userMessage([]);
+    mocks.invoke.mockResolvedValue(42);
+    const { result } = renderHook(() => useAgentStream());
+
+    await act(async () => {
+      await result.current.startStream(
+        "session-1",
+        "model",
+        "provider",
+        [message],
+        false,
+        { displayMessages: [message], baseTokenCount: 0 },
+      );
+    });
+
+    expect(mocks.setSessionGeneration).toHaveBeenCalledWith("session-1", 42);
+  });
+
+  it("stoppe localement avec la génération active", async () => {
+    const message = userMessage([]);
+    mocks.invoke.mockResolvedValue(42);
+    const { result } = renderHook(() => useAgentStream());
+
+    await act(async () => {
+      await result.current.startStream(
+        "session-1",
+        "model",
+        "provider",
+        [message],
+        false,
+        { displayMessages: [message], baseTokenCount: 0 },
+      );
+      await result.current.stopStream("session-1");
+    });
+
+    expect(mocks.stopSession).toHaveBeenCalledWith("session-1", 42);
+    expect(mocks.invoke).toHaveBeenLastCalledWith("cancel_agent_request", {
+      sessionId: "session-1",
+      generation: 42,
+    });
   });
 });

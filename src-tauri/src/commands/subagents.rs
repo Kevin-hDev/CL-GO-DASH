@@ -141,7 +141,11 @@ pub async fn synthesize_subagent_results(
 
     let task_app = app.clone();
     tauri::async_runtime::spawn(async move {
-        let emitter = AgentEventEmitter::new(task_app.clone(), parent_session_id.clone());
+        let emitter = AgentEventEmitter::with_generation(
+            task_app.clone(),
+            parent_session_id.clone(),
+            generation,
+        );
         let _ = emitter.send(StreamEvent::SessionSnapshot {
             messages: fresh.messages.clone(),
             token_count: fresh.accumulated_tokens,

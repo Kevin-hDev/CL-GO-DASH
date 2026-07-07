@@ -76,7 +76,11 @@ pub async fn chat_stream(
     let task_app = app.clone();
 
     tauri::async_runtime::spawn(async move {
-        let emitter = AgentEventEmitter::new(task_app.clone(), stream_session.clone());
+        let emitter = AgentEventEmitter::with_generation(
+            task_app.clone(),
+            stream_session.clone(),
+            generation,
+        );
         let stream_request_id = request_id.clone();
         let result = run_stream_task(StreamTaskParams {
             on_event: emitter.clone(),

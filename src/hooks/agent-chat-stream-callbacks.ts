@@ -160,7 +160,18 @@ function addPermission(
 }
 
 export function finishPartialStream(state: ManagedStreamState): StreamApplyResult {
-  return finalizeStream(markUnconfirmedContentAsWork(state), null, state.tps, null);
+  return finalizeStream(markPendingToolsCancelled(markUnconfirmedContentAsWork(state)), null, state.tps, null);
+}
+
+function markPendingToolsCancelled(state: ManagedStreamState): ManagedStreamState {
+  if (state.currentTools.every((tool) => tool.result)) return state;
+  return {
+    ...state,
+    currentTools: state.currentTools.map((tool) => tool.result
+      ? tool
+      : { ...tool, result: "Annulé.", isError: true }),
+    activeStreamItem: null,
+  };
 }
 
 function finishStream(state: ManagedStreamState, event: Extract<StreamEvent, { event: "done" }>) {

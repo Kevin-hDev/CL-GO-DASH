@@ -17,6 +17,9 @@ function makeRecord(): StreamRecord {
     notifyHandle: null,
     started: true,
     isGateway: false,
+    activeGeneration: null,
+    cancelledGenerations: [],
+    cancelledWithoutGeneration: false,
   };
 }
 

@@ -35,6 +35,9 @@ export function getOrCreateRecord(sessionId: string): StreamRecord {
     notifyHandle: null,
     started: false,
     isGateway: false,
+    activeGeneration: null,
+    cancelledGenerations: [],
+    cancelledWithoutGeneration: false,
   };
   records.set(sessionId, record);
   enforceSessionLimit(records);

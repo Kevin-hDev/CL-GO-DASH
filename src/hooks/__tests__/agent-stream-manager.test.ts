@@ -8,7 +8,7 @@ const mocks = vi.hoisted(() => ({
   listen: vi.fn(),
 }));
 
-let streamHandler: ((event: { payload: { sessionId: string; event: StreamEvent } }) => void) | null = null;
+let streamHandler: ((event: { payload: { sessionId: string; generation?: number; event: StreamEvent } }) => void) | null = null;
 
 vi.mock("@tauri-apps/api/core", () => ({
   invoke: mocks.invoke,
@@ -22,14 +22,13 @@ function message(id: string, role: AgentMessage["role"], content: string): Agent
   return { id, role, content, timestamp: "2026-06-24T10:00:00Z", files: [] };
 }
 
-function emit(sessionId: string, event: StreamEvent) {
-  streamHandler?.({ payload: { sessionId, event } });
+function emit(sessionId: string, event: StreamEvent, generation?: number) {
+  streamHandler?.({ payload: { sessionId, event, generation } });
 }
 
 describe("agentStreamManager", () => {
   beforeEach(() => {
     records.clear();
-    streamHandler = null;
     vi.clearAllMocks();
     vi.stubGlobal("requestAnimationFrame", vi.fn());
     vi.stubGlobal("cancelAnimationFrame", vi.fn());
@@ -74,5 +73,33 @@ describe("agentStreamManager", () => {
     expect(after?.currentTools).toEqual([]);
     expect(after?.isStreaming).toBe(false);
     expect(mocks.invoke).toHaveBeenCalledWith("get_agent_session", { id: "s1" });
+  });
+
+  it("ignore les events tardifs d'une génération annulée", async () => {
+    await agentStreamManager.startSession("s1", [message("u1", "user", "Question")], 10);
+    agentStreamManager.setSessionGeneration("s1", 7);
+    emit("s1", { event: "token", data: { content: "début", tokenCount: 1, tps: 1 } }, 7);
+
+    agentStreamManager.stopSession("s1", 7);
+    emit("s1", { event: "token", data: { content: " fantôme", tokenCount: 2, tps: 1 } }, 7);
+
+    const after = agentStreamManager.getSnapshot("s1");
+    expect(after?.isStreaming).toBe(false);
+    expect(after?.currentContent).toBe("");
+    const lastMessage = after?.messages[after.messages.length - 1];
+    expect(lastMessage?.content).toBe("début");
+  });
+
+  it("accepte une nouvelle génération après l'annulation de la précédente", async () => {
+    await agentStreamManager.startSession("s1", [message("u1", "user", "Question")], 10);
+    agentStreamManager.setSessionGeneration("s1", 7);
+    agentStreamManager.stopSession("s1", 7);
+
+    await agentStreamManager.startSession("s1", [message("u2", "user", "Suite")], 11);
+    emit("s1", { event: "token", data: { content: "nouveau", tokenCount: 1, tps: 1 } }, 8);
+
+    const after = agentStreamManager.getSnapshot("s1");
+    expect(after?.isStreaming).toBe(true);
+    expect(after?.currentContent).toBe("nouveau");
   });
 });
