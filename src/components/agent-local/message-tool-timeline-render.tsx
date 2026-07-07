@@ -15,13 +15,13 @@ import type { ToolTimelineBlock } from "./message-tool-blocks";
 export function TimelineLiveBlock({
   block,
   activeStreamItem,
-  activeTool,
+  activeTools,
   onFilePreview,
   projectPath,
 }: {
   block: ToolTimelineBlock<ToolActivity>;
   activeStreamItem: ActiveStreamItem;
-  activeTool?: ToolActivity;
+  activeTools?: ToolActivity[];
   onFilePreview?: (path: string) => void;
   projectPath?: string;
 }) {
@@ -40,7 +40,7 @@ export function TimelineLiveBlock({
       {block.tools.length > 0 && (
         <ToolBubble
           tools={block.tools}
-          activeTool={activeTool}
+          activeTools={activeTools}
           onFilePreview={onFilePreview}
           projectPath={projectPath}
         />
@@ -52,13 +52,13 @@ export function TimelineLiveBlock({
 export function TimelineWorkBlock<T extends ToolActivity | SavedSegment["tools"][number]>({
   block,
   bubbleKind,
-  activeTool,
+  activeTools,
   onFilePreview,
   projectPath,
 }: {
   block: ToolTimelineBlock<T>;
   bubbleKind: "stream" | "saved";
-  activeTool?: ToolActivity;
+  activeTools?: ToolActivity[];
   onFilePreview?: (path: string) => void;
   projectPath?: string;
 }) {
@@ -73,7 +73,7 @@ export function TimelineWorkBlock<T extends ToolActivity | SavedSegment["tools"]
           ? (
             <ToolBubble
               tools={block.tools as ToolActivity[]}
-              activeTool={activeTool}
+              activeTools={activeTools}
               onFilePreview={onFilePreview}
               projectPath={projectPath}
             />

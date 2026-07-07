@@ -40,7 +40,9 @@ export function StreamToolTimeline({
   onFilePreview,
   projectPath,
 }: StreamToolTimelineProps) {
-  const activeTool = activeStreamItem?.kind === "tool" ? currentTools[activeStreamItem.toolIndex] : undefined;
+  const activeTools = activeStreamItem?.kind === "tools"
+    ? activeStreamItem.toolIndices.flatMap((index) => currentTools[index] ? [currentTools[index]] : [])
+    : [];
   const segments = [
     ...completedSegments,
     ...(currentContent || currentThinking || currentTools.length > 0
@@ -66,7 +68,7 @@ export function StreamToolTimeline({
               key={`stream-work-${index}`}
               block={block}
               bubbleKind="stream"
-              activeTool={activeTool}
+              activeTools={activeTools}
               onFilePreview={onFilePreview}
               projectPath={projectPath}
             />
@@ -87,7 +89,7 @@ export function StreamToolTimeline({
           key={`stream-block-${index}`}
           block={block}
           activeStreamItem={activeStreamItem}
-          activeTool={activeTool}
+          activeTools={activeTools}
           onFilePreview={onFilePreview}
           projectPath={projectPath}
         />

@@ -17,21 +17,21 @@ import "./stream-active.css";
 
 export function ToolBubble({
   tools,
-  activeTool,
+  activeTools = [],
   onFilePreview,
   projectPath,
 }: {
   tools: ToolActivity[];
-  activeTool?: ToolActivity;
+  activeTools?: ToolActivity[];
   onFilePreview?: (path: string) => void;
   projectPath?: string;
 }) {
   const renderableTools = useMemo(
     () => tools
-      .map((tool) => ({ tool, isActive: tool === activeTool }))
+      .map((tool) => ({ tool, isActive: activeTools.includes(tool) }))
       .filter(({ tool }) => isVisibleTool(tool))
       .map(({ tool, isActive }) => streamToolToRenderable(tool, isActive)),
-    [tools, activeTool],
+    [tools, activeTools],
   );
   return (
     <ToolActivityList

@@ -22,7 +22,7 @@ describe("activeStreamItem", () => {
     expect(state.activeStreamItem).toEqual({ kind: "thinking" });
   });
 
-  it("active le dernier tool lancé", () => {
+  it("active tous les tools lancés sans résultat", () => {
     let state = applyStreamEvent(makeState(), {
       event: "toolCall",
       data: { name: "bash", arguments: { command: "pwd" } },
@@ -31,7 +31,7 @@ describe("activeStreamItem", () => {
       event: "toolCall",
       data: { name: "grep", arguments: { pattern: "x" } },
     }).state;
-    expect(state.activeStreamItem).toEqual({ kind: "tool", toolIndex: 1 });
+    expect(state.activeStreamItem).toEqual({ kind: "tools", toolIndices: [0, 1] });
   });
 
   it("garde le tool terminé actif jusqu'au prochain événement visible", () => {
@@ -43,10 +43,10 @@ describe("activeStreamItem", () => {
       event: "toolResult",
       data: { name: "bash", toolCallIndex: 0, content: "ok", isError: false },
     }).state;
-    expect(state.activeStreamItem).toEqual({ kind: "tool", toolIndex: 0 });
+    expect(state.activeStreamItem).toEqual({ kind: "tools", toolIndices: [0] });
   });
 
-  it("revient au dernier tool encore en cours quand le plus récent finit", () => {
+  it("revient aux tools encore en cours quand le plus récent finit", () => {
     let state = makeState();
     state = applyStreamEvent(state, { event: "toolCall", data: { name: "bash", arguments: {} } }).state;
     state = applyStreamEvent(state, { event: "toolCall", data: { name: "grep", arguments: {} } }).state;
@@ -54,11 +54,11 @@ describe("activeStreamItem", () => {
       event: "toolResult",
       data: { name: "grep", toolCallIndex: 1, content: "ok", isError: false },
     }).state;
-    expect(state.activeStreamItem).toEqual({ kind: "tool", toolIndex: 0 });
+    expect(state.activeStreamItem).toEqual({ kind: "tools", toolIndices: [0] });
   });
 
   it("coupe l'animation sur un token texte visible", () => {
-    const state = makeState({ activeStreamItem: { kind: "tool", toolIndex: 0 } });
+    const state = makeState({ activeStreamItem: { kind: "tools", toolIndices: [0] } });
     const result = applyStreamEvent(state, {
       event: "token",
       data: { content: "texte", tps: 1, tokenCount: 1 },
@@ -67,7 +67,7 @@ describe("activeStreamItem", () => {
   });
 
   it("nettoie l'élément actif sur turnEnd, done et error", () => {
-    const active = { kind: "tool" as const, toolIndex: 0 };
+    const active = { kind: "tools" as const, toolIndices: [0] };
     expect(applyStreamEvent(makeState({ activeStreamItem: active }), {
       event: "turnEnd", data: {},
     }).state.activeStreamItem).toBeNull();

@@ -56,10 +56,26 @@ describe("ToolBubble active stream item", () => {
   it("anime uniquement la ligne du tool actif", () => {
     const activeTool: ToolActivity = { name: "bash", args: { command: "sleep 1" } };
     const doneTool: ToolActivity = { name: "grep", args: { pattern: "x" }, result: "ok", isError: false };
-    const { container } = render(<ToolBubble tools={[activeTool, doneTool]} activeTool={activeTool} />);
+    const { container } = render(<ToolBubble tools={[activeTool, doneTool]} activeTools={[activeTool]} />);
 
     expect(container.querySelector(".tb-row.stream-active")).toBeTruthy();
     expect(container.querySelector(".tb-tool-verb.stream-active-label")).toBeTruthy();
+  });
+
+  it("anime plusieurs tools actifs en même temps dans un groupe ouvert", () => {
+    const firstTool: ToolActivity = { name: "bash", args: { command: "sleep 10" } };
+    const secondTool: ToolActivity = { name: "bash", args: { command: "sleep 20" } };
+    const doneTool: ToolActivity = { name: "bash", args: { command: "pwd" }, result: "ok", isError: false };
+    const { container, getByRole } = render(
+      <ToolBubble tools={[firstTool, secondTool, doneTool]} activeTools={[firstTool, secondTool]} />,
+    );
+
+    expect(container.querySelector(".tb-group-toggle.stream-active")).toBeTruthy();
+
+    fireEvent.click(getByRole("button", { name: "Show tool details" }));
+
+    expect(container.querySelectorAll(".tb-row.stream-active")).toHaveLength(2);
+    expect(container.querySelectorAll(".tb-tool-verb.stream-active-label")).toHaveLength(2);
   });
 
   it("n'anime aucun tool quand l'outil actif est terminé", () => {
@@ -73,7 +89,7 @@ describe("ToolBubble active stream item", () => {
   it("anime le groupe fermé puis la ligne exacte quand le groupe est ouvert", () => {
     const firstTool: ToolActivity = { name: "bash", args: { command: "pwd" }, result: "ok", isError: false };
     const activeTool: ToolActivity = { name: "bash", args: { command: "sleep 1" } };
-    const { container, getByRole } = render(<ToolBubble tools={[firstTool, activeTool]} activeTool={activeTool} />);
+    const { container, getByRole } = render(<ToolBubble tools={[firstTool, activeTool]} activeTools={[activeTool]} />);
 
     expect(container.querySelector(".tb-group-toggle.stream-active")).toBeTruthy();
     expect(container.querySelector(".tb-group-title.stream-active-label")).toBeTruthy();

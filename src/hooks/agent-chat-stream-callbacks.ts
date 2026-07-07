@@ -10,7 +10,7 @@ import {
 } from "./agent-chat-stream-types";
 import { estimateAgentMessagesTokens } from "./agent-token-estimate";
 import { markUnconfirmedContentAsWork } from "./agent-chat-stream-partial";
-import { activeItemAfterToolResult, thinkingItem, toolItem } from "./active-stream-item";
+import { activeItemAfterToolResult, pendingToolIndices, thinkingItem, toolItems } from "./active-stream-item";
 import { applyToolResult } from "./agent-chat-tool-results";
 
 export type { ChatState, ManagedStreamState, PermissionRequestState, StreamApplyResult };
@@ -49,10 +49,10 @@ export function applyStreamEvent(
     case "toolCall":
       ensureTimers();
       if (isHiddenAgentTool(event.data.name)) break;
-      next.activeStreamItem = toolItem(next.currentTools.length);
       next.currentTools = [...next.currentTools, {
         name: event.data.name, args: event.data.arguments,
       }];
+      next.activeStreamItem = toolItems(pendingToolIndices(next.currentTools));
       break;
     case "toolResult": {
       if (isHiddenAgentTool(event.data.name)) {
