@@ -37,6 +37,11 @@ fn session(id: &str) -> AgentSession {
         subagent_prompt: None,
         subagent_status: None,
         subagent_run_id: None,
+        subagent_description: None,
+        subagent_color_key: None,
+        subagent_summary: None,
+        subagent_queued_prompts: Vec::new(),
+        subagent_hidden_reports: Vec::new(),
         clone_parent_session_id: Some("parent".into()),
         clone_parent_message_id: Some("message".into()),
         clone_mode: Some(crate::services::agent_local::types_session::CloneMode::Summary),
@@ -90,10 +95,16 @@ async fn reconcile_rebuilds_stale_subagent_index() {
     session.subagent_type = Some("coder".into());
     session.subagent_status = Some("running".into());
     session.subagent_run_id = Some("run-1".into());
+    session.subagent_description = Some("Implémentation".into());
+    session.subagent_color_key = Some("claudiator".into());
+    session.subagent_summary = Some("En cours".into());
     let stale = AgentSessionMeta {
         subagent_type: Some("explorer".into()),
         subagent_status: Some("completed".into()),
         subagent_run_id: Some("old-run".into()),
+        subagent_description: Some("Ancien".into()),
+        subagent_color_key: Some("geminitor".into()),
+        subagent_summary: Some("Ancien résumé".into()),
         ..meta_from_session(&session)
     };
     tokio::fs::write(
@@ -110,6 +121,12 @@ async fn reconcile_rebuilds_stale_subagent_index() {
     assert_eq!(entries[0].subagent_type, session.subagent_type);
     assert_eq!(entries[0].subagent_status, session.subagent_status);
     assert_eq!(entries[0].subagent_run_id, session.subagent_run_id);
+    assert_eq!(
+        entries[0].subagent_description,
+        session.subagent_description
+    );
+    assert_eq!(entries[0].subagent_color_key, session.subagent_color_key);
+    assert_eq!(entries[0].subagent_summary, session.subagent_summary);
 }
 
 #[tokio::test]

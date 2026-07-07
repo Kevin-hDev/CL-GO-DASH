@@ -69,8 +69,13 @@ export function SubagentAccordion({ subagents, onCancel, onOpen }: SubagentAccor
         <div className="sa-accordion-body-inner">
         {subagents.map((agent) => (
           <div key={agent.sessionId} className="sa-agent-row">
-            <span className={`sa-agent-dot sa-dot-${agent.type}`} />
-            <span className="sa-agent-name">{agent.name}</span>
+            <span className={`sa-agent-dot ${colorClass("sa-dot", agent)}`} />
+            <span className="sa-agent-main">
+              <span className="sa-agent-name">{agent.name}</span>
+              {agent.description && (
+                <span className="sa-agent-description">{agent.description}</span>
+              )}
+            </span>
             <span className="sa-agent-status">
               {t(`subagents.${agent.status}`, { defaultValue: agent.status })}
             </span>
@@ -106,4 +111,9 @@ export function SubagentAccordion({ subagents, onCancel, onOpen }: SubagentAccor
       </div>
     </div>
   );
+}
+
+function colorClass(prefix: string, agent: SubagentInfo): string {
+  const key = agent.colorKey || (agent.type === "coder" ? "claudiator" : "geminitor");
+  return `${prefix}-${key}`;
 }

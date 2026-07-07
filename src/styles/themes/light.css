@@ -78,6 +78,8 @@
   --tool-read: #0891b2;
   --tool-write: #16a34a;
   --tool-web: #7c3aed;
+  --subagent-claudiator: #ea580c;
+  --subagent-geminitor: #0284c7;
 
   /* Forecast panel */
   --fc-chart-bg: var(--void);

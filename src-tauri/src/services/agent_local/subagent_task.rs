@@ -3,13 +3,14 @@ use crate::services::agent_local::session_store;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::subagent_completion::SubagentCompletion;
 use crate::services::agent_local::subagent_registry;
-use crate::services::agent_local::types_ollama::{ChatMessage, StreamEvent};
+use crate::services::agent_local::types_ollama::StreamEvent;
 use tauri::AppHandle;
 use tokio::sync::oneshot;
 use tokio_util::sync::CancellationToken;
 
 pub async fn run(
     app: AppHandle,
+    parent_session_id: String,
     child_session_id: String,
     model: String,
     provider: String,
@@ -18,8 +19,19 @@ pub async fn run(
     parent_emitter: AgentEventEmitter,
     cancel: CancellationToken,
     project_id: Option<String>,
-    completion_tx: oneshot::Sender<SubagentCompletion>,
+    detached: bool,
+    completion_tx: Option<oneshot::Sender<SubagentCompletion>>,
 ) {
+    let next_run = super::subagent_queued::QueuedSubagentRun {
+        app: app.clone(),
+        parent_session_id: parent_session_id.clone(),
+        child_session_id: child_session_id.clone(),
+        model: model.clone(),
+        provider: provider.clone(),
+        subagent_type: subagent_type.clone(),
+        parent_emitter: parent_emitter.clone(),
+        project_id: project_id.clone(),
+    };
     let result = run_inner(
         app,
         child_session_id.clone(),
@@ -37,17 +49,23 @@ pub async fn run(
 
     let (success, status, summary) = match result {
         Ok(s) => s,
-        Err(e) => (
-            false,
-            super::subagent_status::FAILED.to_string(),
-            format!("Erreur : {e}"),
-        ),
+        Err(e) => {
+            eprintln!("[subagent] échec {}: {e}", child_session_id);
+            (
+                false,
+                super::subagent_status::FAILED.to_string(),
+                "Le sous-agent n'a pas pu terminer correctement.".to_string(),
+            )
+        }
     };
 
     if let Err(e) = update_session_status(&child_session_id, &status).await {
         // Non fatal : on logge mais on continue. Le statut disque sera
         // reclassé en "interrupted" au prochain démarrage par le cleanup.
         eprintln!("[subagent] persistance statut {}: {e}", child_session_id);
+    }
+    if let Err(e) = update_session_summary(&child_session_id, &summary).await {
+        eprintln!("[subagent] persistance résumé {}: {e}", child_session_id);
     }
 
     let child_name = get_child_name(&child_session_id).await;
@@ -71,7 +89,27 @@ pub async fn run(
         summary,
         run_id,
     });
-    let _ = completion_tx.send(completion);
+    if detached {
+        let report = super::subagent_hidden_reports::build_report(
+            completion.child_session_id.clone(),
+            completion.name.clone(),
+            completion.subagent_type.clone(),
+            completion.status.clone(),
+            completion.summary.clone(),
+        );
+        if let Err(e) = super::subagent_hidden_reports::append(&parent_session_id, report).await {
+            eprintln!("[subagent] rapport parent {}: {e}", parent_session_id);
+        }
+        if let Err(e) = super::subagent_queued::spawn_next_if_present(next_run).await {
+            eprintln!(
+                "[subagent] relance file {}: {e}",
+                completion.child_session_id
+            );
+        }
+    }
+    if let Some(tx) = completion_tx {
+        let _ = tx.send(completion);
+    }
 }
 
 async fn get_child_name(child_id: &str) -> String {
@@ -105,18 +143,8 @@ async fn run_inner(
         super::subagent_prompts::coder_system(project_id.as_deref()).await
     };
 
-    let messages = vec![
-        ChatMessage {
-            role: "system".to_string(),
-            content: system_prompt,
-            ..Default::default()
-        },
-        ChatMessage {
-            role: "user".to_string(),
-            content: prompt.clone(),
-            ..Default::default()
-        },
-    ];
+    let messages =
+        super::subagent_context::build_messages(&child_session_id, system_prompt, &prompt).await;
 
     let working_dir =
         super::subagent_working_dir::resolve(project_id.as_deref(), &child_session_id, is_explorer)
@@ -180,4 +208,10 @@ async fn run_inner(
 
 async fn update_session_status(session_id: &str, status: &str) -> Result<(), String> {
     super::session_subagents::mark_status(session_id, status).await
+}
+
+async fn update_session_summary(session_id: &str, summary: &str) -> Result<(), String> {
+    let mut session = session_store::get(session_id).await?;
+    session.subagent_summary = Some(summary.to_string());
+    session_store::save(&session).await
 }

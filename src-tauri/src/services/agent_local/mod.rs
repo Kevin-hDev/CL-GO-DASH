@@ -107,9 +107,13 @@ pub mod stream_diagnostics_tests;
 pub mod stream_diagnostics_tools;
 pub mod stream_events;
 pub mod subagent_completion;
+pub mod subagent_context;
+pub mod subagent_hidden_reports;
+pub mod subagent_profile;
 pub mod subagent_prompts;
 #[cfg(test)]
 pub mod subagent_prompts_tests;
+pub mod subagent_queued;
 pub mod subagent_registry;
 #[cfg(test)]
 pub mod subagent_registry_tests;
@@ -233,6 +237,7 @@ pub mod tool_spreadsheet_write_edit;
 pub mod tool_spreadsheet_write_new;
 #[cfg(test)]
 pub mod tool_spreadsheet_write_tests;
+pub mod tool_subagent_control;
 pub mod tool_todo;
 #[cfg(test)]
 mod tool_todo_memory_tests;

@@ -88,6 +88,32 @@ mod tests {
     }
 
     #[test]
+    fn subagent_tools_validate_new_args() {
+        assert!(validate(
+            "delegate_task",
+            &json!({
+                "prompt": "Analyse",
+                "subagent_type": "explorer",
+                "mode": "detach",
+                "display_name": "Geminitor",
+                "description": "Analyse ciblée",
+                "subagent_id": "child"
+            })
+        )
+        .is_ok());
+        assert!(validate(
+            "wait_subagent",
+            &json!({"subagent_ids": ["a", "b"], "timeout_ms": 1000})
+        )
+        .is_ok());
+        assert!(validate(
+            "message_subagent",
+            &json!({"subagent_id": "a", "prompt": "Suite"})
+        )
+        .is_ok());
+    }
+
+    #[test]
     fn unknown_tool_passes_through() {
         let args = json!({"anything": true});
         assert!(validate("unknown_future_tool", &args).is_ok());

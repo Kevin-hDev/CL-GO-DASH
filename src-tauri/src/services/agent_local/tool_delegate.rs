@@ -9,7 +9,6 @@ use tokio_util::sync::CancellationToken;
 
 const MAX_PROMPT_PREVIEW: usize = 120;
 const MAX_PROMPT_SIZE: usize = 50_000;
-const MAX_NAME_SIZE: usize = 100;
 
 pub struct SpawnedSubagent {
     pub app: AppHandle,
@@ -32,11 +31,8 @@ pub async fn prepare_delegate(
     let prompt = match args["prompt"].as_str() {
         Some(p) if !p.trim().is_empty() => {
             let trimmed = p.trim();
-            if trimmed.len() > MAX_PROMPT_SIZE {
-                return Err(ToolResult::err(format!(
-                    "Prompt trop long ({} chars, max {MAX_PROMPT_SIZE})",
-                    trimmed.len()
-                )));
+            if trimmed.chars().count() > MAX_PROMPT_SIZE {
+                return Err(ToolResult::err("Prompt sous-agent trop long."));
             }
             trimmed.to_string()
         }
@@ -45,15 +41,18 @@ pub async fn prepare_delegate(
     let subagent_type = match args["subagent_type"].as_str() {
         Some("explorer") => "explorer",
         Some("coder") => "coder",
-        Some(other) => {
-            return Err(ToolResult::err(format!(
-                "Type '{other}' invalide. Valeurs acceptées : 'explorer', 'coder'"
-            )))
-        }
+        Some(_) => return Err(ToolResult::err("Type de sous-agent invalide.")),
         None => return Err(ToolResult::err("Paramètre 'subagent_type' manquant")),
     };
-    let raw_name = args["name"].as_str().unwrap_or(subagent_type);
-    let name: String = raw_name.chars().take(MAX_NAME_SIZE).collect();
+    let name = super::subagent_profile::clean_name(
+        args["display_name"]
+            .as_str()
+            .or_else(|| args["name"].as_str()),
+        subagent_type,
+    );
+    let description =
+        super::subagent_profile::clean_description(args["description"].as_str(), &prompt);
+    let color_key = super::subagent_profile::default_color_key(subagent_type).to_string();
 
     let parent = match session_store::get(&parent_session_id).await {
         Ok(s) => s,
@@ -66,32 +65,40 @@ pub async fn prepare_delegate(
 
     let run_id = subagent_registry::get_or_create_run_id(&parent_session_id).await;
 
-    let child = match session_store::create_full(
-        &name,
-        &parent.model,
-        &parent.provider,
-        false,
-        parent.project_id.clone(),
-    )
-    .await
-    {
-        Ok(mut s) => {
-            s.parent_session_id = Some(parent_session_id.clone());
-            s.subagent_type = Some(subagent_type.to_string());
-            s.subagent_prompt = Some(prompt.clone());
-            s.subagent_status = Some(super::subagent_status::RUNNING.to_string());
-            s.subagent_run_id = Some(run_id.clone());
-            if session_store::save(&s).await.is_err() {
-                return Err(ToolResult::err(
-                    "Erreur interne lors de la création du sous-agent",
-                ));
+    let child = match args["subagent_id"].as_str() {
+        Some(id) if !id.trim().is_empty() => {
+            match prepare_existing_child(
+                id.trim(),
+                &parent_session_id,
+                subagent_type,
+                &prompt,
+                &name,
+                &description,
+                &color_key,
+                &run_id,
+            )
+            .await
+            {
+                Ok(session) => session,
+                Err(result) => return Err(result),
             }
-            s
         }
-        Err(_) => {
-            return Err(ToolResult::err(
-                "Erreur interne lors de la création du sous-agent",
-            ))
+        _ => {
+            match create_child(
+                &parent,
+                &parent_session_id,
+                subagent_type,
+                &prompt,
+                &name,
+                &description,
+                &color_key,
+                &run_id,
+            )
+            .await
+            {
+                Ok(session) => session,
+                Err(result) => return Err(result),
+            }
         }
     };
 
@@ -118,14 +125,16 @@ pub async fn prepare_delegate(
         eprintln!("[subagent] persistance prompt enfant {}: {e}", child_id);
         let _ =
             super::session_subagents::mark_status(&child_id, super::subagent_status::FAILED).await;
-        return Err(ToolResult::err(format!(
-            "Erreur interne lors de la création du sous-agent: {e}"
-        )));
+        return Err(ToolResult::err(
+            "Erreur interne lors de la création du sous-agent",
+        ));
     }
 
     let cancel = CancellationToken::new();
     if let Err(e) = subagent_registry::register(&parent_session_id, &child_id, cancel.clone()).await
     {
+        let _ =
+            super::session_subagents::mark_status(&child_id, super::subagent_status::FAILED).await;
         return Err(ToolResult::err(e));
     }
 
@@ -134,6 +143,8 @@ pub async fn prepare_delegate(
         subagent_session_id: child_id.clone(),
         subagent_name: name.clone(),
         subagent_type: subagent_type.to_string(),
+        subagent_description: description,
+        subagent_color_key: color_key,
         prompt_preview: prompt_preview.clone(),
         run_id: Some(run_id),
     });
@@ -151,14 +162,79 @@ pub async fn prepare_delegate(
     })
 }
 
+async fn prepare_existing_child(
+    child_id: &str,
+    parent_session_id: &str,
+    subagent_type: &str,
+    prompt: &str,
+    name: &str,
+    description: &str,
+    color_key: &str,
+    run_id: &str,
+) -> Result<crate::services::agent_local::types_session::AgentSession, ToolResult> {
+    let mut child = match session_store::get(child_id).await {
+        Ok(session) => session,
+        Err(_) => return Err(ToolResult::err("Sous-agent introuvable.")),
+    };
+    if child.parent_session_id.as_deref() != Some(parent_session_id) {
+        return Err(ToolResult::err("Sous-agent introuvable."));
+    }
+    if child.subagent_status.as_deref() == Some(super::subagent_status::RUNNING) {
+        return Err(ToolResult::err("Ce sous-agent est déjà en cours."));
+    }
+    child.name = name.to_string();
+    child.subagent_type = Some(subagent_type.to_string());
+    child.subagent_prompt = Some(prompt.to_string());
+    child.subagent_status = Some(super::subagent_status::RUNNING.to_string());
+    child.subagent_run_id = Some(run_id.to_string());
+    child.subagent_description = Some(description.to_string());
+    child.subagent_color_key = Some(color_key.to_string());
+    child.subagent_summary = None;
+    session_store::save(&child)
+        .await
+        .map_err(|_| ToolResult::err("Erreur interne lors de la préparation du sous-agent"))?;
+    Ok(child)
+}
+
+async fn create_child(
+    parent: &crate::services::agent_local::types_session::AgentSession,
+    parent_session_id: &str,
+    subagent_type: &str,
+    prompt: &str,
+    name: &str,
+    description: &str,
+    color_key: &str,
+    run_id: &str,
+) -> Result<crate::services::agent_local::types_session::AgentSession, ToolResult> {
+    let mut child = session_store::create_full(
+        name,
+        &parent.model,
+        &parent.provider,
+        false,
+        parent.project_id.clone(),
+    )
+    .await
+    .map_err(|_| ToolResult::err("Erreur interne lors de la création du sous-agent"))?;
+    child.parent_session_id = Some(parent_session_id.to_string());
+    child.subagent_type = Some(subagent_type.to_string());
+    child.subagent_prompt = Some(prompt.to_string());
+    child.subagent_status = Some(super::subagent_status::RUNNING.to_string());
+    child.subagent_run_id = Some(run_id.to_string());
+    child.subagent_description = Some(description.to_string());
+    child.subagent_color_key = Some(color_key.to_string());
+    session_store::save(&child)
+        .await
+        .map_err(|_| ToolResult::err("Erreur interne lors de la création du sous-agent"))?;
+    Ok(child)
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{MAX_NAME_SIZE, MAX_PROMPT_SIZE};
+    use super::MAX_PROMPT_SIZE;
 
     // Vérification à la compilation que les bornes restent raisonnables.
     // (const assert évite le warning clippy::assertions_on_constants.)
     const _: () = {
         assert!(MAX_PROMPT_SIZE <= 100_000);
-        assert!(MAX_NAME_SIZE <= 200);
     };
 }

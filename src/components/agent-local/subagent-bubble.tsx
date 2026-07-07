@@ -36,10 +36,12 @@ export function SubagentBubble({ subagents, onOpen }: SubagentBubbleProps) {
                 onClick={() => onOpen(agent.sessionId)}
                 type="button"
               >
-                <span className={`sb-dot sb-dot-${agent.type}`} />
-                <span className="sb-agent-name">{agent.name}</span>
-                <span className="sb-prompt-preview">
-                  {agent.promptPreview || "..."}
+                <span className={`sb-dot ${colorClass("sb-dot", agent)}`} />
+                <span className="sb-agent-text">
+                  <span className="sb-agent-name">{agent.name}</span>
+                  <span className="sb-agent-description">
+                    {agent.description || agent.promptPreview || "..."}
+                  </span>
                 </span>
               </button>
             ))}
@@ -48,4 +50,9 @@ export function SubagentBubble({ subagents, onOpen }: SubagentBubbleProps) {
       </div>
     </div>
   );
+}
+
+function colorClass(prefix: string, agent: SubagentInfo): string {
+  const key = agent.colorKey || (agent.type === "coder" ? "claudiator" : "geminitor");
+  return `${prefix}-${key}`;
 }

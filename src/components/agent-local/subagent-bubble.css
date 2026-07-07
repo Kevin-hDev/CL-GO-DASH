@@ -67,20 +67,28 @@
   flex-shrink: 0;
 }
 
+.sb-dot-geminitor,
 .sb-dot-explorer {
-  background: var(--tool-read, #4ec9b0);
+  background: var(--subagent-geminitor);
 }
 
+.sb-dot-claudiator,
 .sb-dot-coder {
-  background: var(--tool-write, #ce9178);
+  background: var(--subagent-claudiator);
+}
+
+.sb-agent-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .sb-agent-name {
   font-weight: 500;
-  flex-shrink: 0;
 }
 
-.sb-prompt-preview {
+.sb-agent-description {
   color: var(--text-tertiary);
   font-size: 12px;
   overflow: hidden;

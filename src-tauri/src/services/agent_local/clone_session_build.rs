@@ -36,6 +36,11 @@ pub(super) fn build_clone(
     clone.subagent_prompt = None;
     clone.subagent_status = None;
     clone.subagent_run_id = None;
+    clone.subagent_description = None;
+    clone.subagent_color_key = None;
+    clone.subagent_summary = None;
+    clone.subagent_queued_prompts.clear();
+    clone.subagent_hidden_reports.clear();
     clone
 }
 

@@ -85,7 +85,14 @@ describe("events neutres", () => {
     const state = makeState({ currentContent: "contenu existant" });
     const { state: s } = applyStreamEvent(state, {
       event: "subagentSpawned",
-      data: { subagentSessionId: "s1", subagentName: "test", subagentType: "explorer", promptPreview: "..." },
+      data: {
+        subagentSessionId: "s1",
+        subagentName: "test",
+        subagentType: "explorer",
+        subagentDescription: "Analyse",
+        subagentColorKey: "geminitor",
+        promptPreview: "...",
+      },
     });
     expect(s.currentContent).toBe("contenu existant");
   });

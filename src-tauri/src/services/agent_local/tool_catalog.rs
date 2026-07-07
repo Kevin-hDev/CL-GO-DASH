@@ -11,7 +11,7 @@ pub struct ToolCatalogEntry {
     pub group: &'static str,
 }
 
-pub const MAX_OPTIONAL_TOOLS: usize = 23;
+pub const MAX_OPTIONAL_TOOLS: usize = 28;
 
 const LOCKED_TOOLS: &[ToolCatalogEntry] = &[
     locked("bash", "core"),
@@ -30,6 +30,11 @@ const OPTIONAL_TOOLS: &[ToolCatalogEntry] = &[
     optional_default("load_skill", "workflow"),
     optional_default("ask_user_choice", "workflow"),
     optional_default("delegate_task", "workflow"),
+    optional_default("list_subagents", "workflow"),
+    optional_default("get_subagent", "workflow"),
+    optional_default("wait_subagent", "workflow"),
+    optional_default("cancel_subagent", "workflow"),
+    optional_default("message_subagent", "workflow"),
     optional_default("planmode", "workflow"),
     optional_default("exitplanmode", "workflow"),
     optional_off("todo_write", "todo"),

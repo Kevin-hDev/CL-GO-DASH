@@ -44,6 +44,11 @@ describe("context messages", () => {
     expect(isCompressionContextOnlyMessage(message)).toBe(true);
   });
 
+  it("detecte un rapport cache de sous-agent", () => {
+    const message = msg("Subagent report context:\n<subagent id=\"s1\">Résumé</subagent>", "user");
+    expect(isCompressionContextOnlyMessage(message)).toBe(true);
+  });
+
   it("ignore les messages normaux", () => {
     const message = msg("Voici la reponse visible pour l'utilisateur.");
     expect(isCompressionSummaryMessage(message)).toBe(false);

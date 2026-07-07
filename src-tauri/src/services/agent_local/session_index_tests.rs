@@ -38,6 +38,11 @@ fn test_session(id: &str, name: &str, heartbeat: bool) -> AgentSession {
         subagent_prompt: None,
         subagent_status: None,
         subagent_run_id: None,
+        subagent_description: None,
+        subagent_color_key: None,
+        subagent_summary: None,
+        subagent_queued_prompts: Vec::new(),
+        subagent_hidden_reports: Vec::new(),
         clone_parent_session_id: None,
         clone_parent_message_id: None,
         clone_mode: None,
@@ -69,6 +74,9 @@ fn test_meta(id: &str, count: usize) -> AgentSessionMeta {
         subagent_type: None,
         subagent_status: None,
         subagent_run_id: None,
+        subagent_description: None,
+        subagent_color_key: None,
+        subagent_summary: None,
         clone_parent_session_id: None,
         clone_parent_message_id: None,
         clone_mode: None,
@@ -188,6 +196,9 @@ async fn meta_from_session_extracts_all_fields() {
     s.subagent_type = Some("worker".into());
     s.subagent_status = Some("running".into());
     s.subagent_run_id = Some("r1".into());
+    s.subagent_description = Some("Analyse".into());
+    s.subagent_color_key = Some("geminitor".into());
+    s.subagent_summary = Some("Résumé".into());
     s.clone_parent_session_id = Some("parent".into());
     s.clone_parent_message_id = Some("msg".into());
     s.clone_mode = Some(crate::services::agent_local::types_session::CloneMode::Cut);
@@ -203,6 +214,9 @@ async fn meta_from_session_extracts_all_fields() {
     assert_eq!(meta.subagent_type, Some("worker".into()));
     assert_eq!(meta.subagent_status, Some("running".into()));
     assert_eq!(meta.subagent_run_id, Some("r1".into()));
+    assert_eq!(meta.subagent_description, Some("Analyse".into()));
+    assert_eq!(meta.subagent_color_key, Some("geminitor".into()));
+    assert_eq!(meta.subagent_summary, Some("Résumé".into()));
     assert_eq!(meta.clone_parent_session_id, Some("parent".into()));
     assert_eq!(meta.clone_parent_message_id, Some("msg".into()));
     assert_eq!(

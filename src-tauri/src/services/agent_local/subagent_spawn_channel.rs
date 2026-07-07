@@ -6,6 +6,7 @@ use tokio::sync::{mpsc, oneshot};
 
 pub struct SpawnRequest {
     pub app: AppHandle,
+    pub parent_session_id: String,
     pub child_session_id: String,
     pub model: String,
     pub provider: String,
@@ -14,7 +15,8 @@ pub struct SpawnRequest {
     pub parent_emitter: AgentEventEmitter,
     pub cancel: tokio_util::sync::CancellationToken,
     pub project_id: Option<String>,
-    pub completion_tx: oneshot::Sender<SubagentCompletion>,
+    pub detached: bool,
+    pub completion_tx: Option<oneshot::Sender<SubagentCompletion>>,
 }
 
 const MAX_QUEUED: usize = 8;
@@ -39,6 +41,7 @@ async fn receiver_loop(mut rx: mpsc::Receiver<SpawnRequest>) {
         tauri::async_runtime::spawn(async move {
             super::subagent_task::run(
                 req.app,
+                req.parent_session_id,
                 req.child_session_id,
                 req.model,
                 req.provider,
@@ -47,6 +50,7 @@ async fn receiver_loop(mut rx: mpsc::Receiver<SpawnRequest>) {
                 req.parent_emitter,
                 req.cancel,
                 req.project_id,
+                req.detached,
                 req.completion_tx,
             )
             .await;
