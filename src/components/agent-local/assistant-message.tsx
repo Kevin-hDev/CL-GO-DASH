@@ -124,6 +124,7 @@ export function ChatMarkdown({ content }: { content: string }) {
 interface AssistantMessageProps {
   content: string;
   thinking?: string;
+  thinkingActive?: boolean;
   toolActivities?: ToolActivityRecord[];
   projectPath?: string;
   isStreaming?: boolean;
@@ -143,7 +144,7 @@ function formatTokens(n: number): string {
 }
 
 export const AssistantMessage = memo(function AssistantMessage({
-  content, thinking, toolActivities, projectPath, isStreaming, onReload, onClone,
+  content, thinking, thinkingActive, toolActivities, projectPath, isStreaming, onReload, onClone,
   tokens, tps, totalElapsedMs, streamStartedAt, liveTokenCount,
   showActions = true,
 }: AssistantMessageProps) {
@@ -155,7 +156,7 @@ export const AssistantMessage = memo(function AssistantMessage({
 
   return (
     <div className="msg-assistant" ref={hoverRef}>
-      {thinking && <ThinkingSection content={thinking} isActive={isStreaming && !content} />}
+      {thinking && <ThinkingSection content={thinking} isActive={thinkingActive ?? (isStreaming && !content)} />}
       {toolActivities && toolActivities.length > 0 && (
         <SavedToolBubble tools={toolActivities} projectPath={projectPath} />
       )}

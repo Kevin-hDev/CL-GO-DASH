@@ -1,5 +1,5 @@
 import { buildSegmentedMessage } from "./agent-chat-utils";
-import type { StreamSegment, ToolActivity } from "./agent-chat-utils";
+import type { StreamSegment } from "./agent-chat-utils";
 import type { AgentMessage, StreamEvent, TokenPhase } from "@/types/agent";
 import i18n from "@/i18n";
 import { isHiddenAgentTool } from "@/lib/hidden-agent-tools";
@@ -10,6 +10,8 @@ import {
 } from "./agent-chat-stream-types";
 import { estimateAgentMessagesTokens } from "./agent-token-estimate";
 import { markUnconfirmedContentAsWork } from "./agent-chat-stream-partial";
+import { lastPendingToolItem, thinkingItem, toolItem } from "./active-stream-item";
+import { applyToolResult } from "./agent-chat-tool-results";
 
 export type { ChatState, ManagedStreamState, PermissionRequestState, StreamApplyResult };
 export { EMPTY_CHAT_STATE, createManagedStreamState, toChatState } from "./agent-chat-stream-types";
@@ -28,6 +30,7 @@ export function applyStreamEvent(
     case "token":
       ensureTimers();
       next.retryIndicator = null;
+      next.activeStreamItem = null;
       if (event.data.phase) prepareContentPhase(next, event.data.phase);
       next.currentContent += event.data.content;
       next.tps = event.data.tps;
@@ -40,11 +43,13 @@ export function applyStreamEvent(
     case "thinking":
       ensureTimers();
       next.currentThinking += event.data.content;
+      next.activeStreamItem = thinkingItem();
       next.liveTokenCount += 1;
       break;
     case "toolCall":
       ensureTimers();
       if (isHiddenAgentTool(event.data.name)) break;
+      next.activeStreamItem = toolItem(next.currentTools.length);
       next.currentTools = [...next.currentTools, {
         name: event.data.name, args: event.data.arguments,
       }];
@@ -65,6 +70,7 @@ export function applyStreamEvent(
         event.data.resolvedPath,
         event.data.affectedPaths,
       );
+      next.activeStreamItem = lastPendingToolItem(next.currentTools);
       next.pendingPermissions = [];
       break;
     case "turnEnd":
@@ -74,6 +80,7 @@ export function applyStreamEvent(
       next.currentContentPhase = undefined;
       next.currentThinking = "";
       next.currentTools = [];
+      next.activeStreamItem = null;
       next.segmentStartedAt = null;
       break;
     case "permissionRequest":
@@ -121,29 +128,6 @@ export function applyStreamEvent(
   return { state: next };
 }
 
-function applyToolResult(
-  tools: ToolActivity[], index: number, content: string, isError: boolean, resolvedPath?: string,
-  affectedPaths?: string[],
-): ToolActivity[] {
-  const next = [...tools];
-  const apply = (i: number) => {
-    next[i] = { ...next[i], result: content, isError };
-    if (resolvedPath) next[i].resolvedPath = resolvedPath;
-    if (affectedPaths?.length) next[i].affectedPaths = affectedPaths;
-  };
-  if (index >= 0 && index < next.length && !next[index].result) {
-    apply(index);
-  } else {
-    for (let i = 0; i < next.length; i++) {
-      if (!next[i].result) {
-        apply(i);
-        break;
-      }
-    }
-  }
-  return next;
-}
-
 function appendCurrentSegment(state: ChatState): StreamSegment[] {
   return [...state.completedSegments, {
     thinking: state.currentThinking, tools: state.currentTools, content: state.currentContent,
@@ -161,6 +145,7 @@ function prepareContentPhase(state: ManagedStreamState, phase: TokenPhase) {
     state.currentContent = "";
     state.currentThinking = "";
     state.currentTools = [];
+    state.activeStreamItem = null;
     state.segmentStartedAt = Date.now();
   }
   state.currentContentPhase = phase;
@@ -211,7 +196,8 @@ function finalizeStream(
   const resolvedSessionTokenCount = hasRealContextTokens ? contextTokens : visibleSessionTokens;
   const next: ManagedStreamState = {
     ...state, completedSegments: [], currentContent: "", currentThinking: "",
-    currentContentPhase: undefined, currentTools: [], isStreaming: false, tps,
+    currentContentPhase: undefined, currentTools: [], activeStreamItem: null,
+    isStreaming: false, tps,
     sessionTokenCount: resolvedSessionTokenCount,
     sessionTokenCountEstimated: !hasRealContextTokens,
     lastRequestTokens: assistantMessage?.tokens ?? outputTokens ?? 0, liveTokenCount: 0,

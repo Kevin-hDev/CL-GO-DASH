@@ -55,18 +55,19 @@ function ToolActivityGroupRow({
     () => summaryDetails(group, t),
     [group, t],
   );
+  const groupActive = group.tools.some((tool) => tool.isActive);
 
   return (
     <div className={`tb-group tb-group-${group.kind}`}>
       <button
         type="button"
-        className="tb-group-toggle"
+        className={`tb-group-toggle${groupActive && !isOpen ? " stream-active" : ""}`}
         aria-expanded={isOpen}
         aria-label={t("agentLocal.toolActivity.toggleDetails")}
         onClick={toggle}
       >
         <ToolIcon name={groupIcon(group.kind)} size="var(--icon-sm)" className="tb-group-icon" aria-hidden="true" />
-        <span className="tb-group-title">
+        <span className={`tb-group-title${groupActive && !isOpen ? " stream-active-label" : ""}`}>
           {details ? (
             <>
               {label}
@@ -101,6 +102,7 @@ function ToolActivityGroupRow({
                 key={`${tool.name}-${index}-${tool.summary}`}
                 tool={tool}
                 previousTools={group.tools.slice(0, index)}
+                isActive={isOpen && tool.isActive}
                 onFilePreview={onFilePreview}
                 projectPath={projectPath}
               />
@@ -129,6 +131,7 @@ export function ToolActivityGroupList({
             key={group.kind}
             tool={group.tools[0]}
             previousTools={[]}
+            isActive={group.tools[0].isActive}
             onFilePreview={onFilePreview}
             projectPath={projectPath}
           />

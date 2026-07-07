@@ -14,6 +14,7 @@ import { isSubagentInjectedMessage, extractSubagentsFromMessages } from "@/lib/s
 import { collectMessageFileOperations } from "@/lib/file-preview-utils";
 import type { AgentMessage, AgentPlanPreview, SubagentInfo, TokenPhase } from "@/types/agent";
 import type { ToolActivity, StreamSegment } from "@/hooks/agent-chat-utils";
+import type { ActiveStreamItem } from "@/hooks/active-stream-item";
 import type { FileOperation } from "@/types/file-preview";
 import "./chat.css";
 import "./messages.css";
@@ -26,6 +27,7 @@ interface MessageListProps {
   currentContentPhase?: TokenPhase;
   currentThinking: string;
   currentTools: ToolActivity[];
+  activeStreamItem?: ActiveStreamItem;
   isStreaming: boolean;
   tps: number;
   totalElapsedMs: number;
@@ -45,7 +47,7 @@ interface MessageListProps {
 
 export function MessageList({
   sessionId, messages, completedSegments, currentContent, currentContentPhase, currentThinking,
-  currentTools, isStreaming, tps, totalElapsedMs, segmentStartedAt,
+  currentTools, activeStreamItem = null, isStreaming, tps, totalElapsedMs, segmentStartedAt,
   liveTokenCount, onReload, onEdit, onCloneMessage, onFileClick, onFilePreview, onFileReview,
   projectPath, completedSubagents, onOpenSubagent, planPreview,
 }: MessageListProps) {
@@ -116,6 +118,7 @@ export function MessageList({
           currentContentPhase={currentContentPhase}
           currentThinking={currentThinking}
           currentTools={currentTools}
+          activeStreamItem={activeStreamItem}
           streamStartedAt={streamStartedAt}
           liveTokenCount={liveTokenCount}
           onFilePreview={onFilePreview}

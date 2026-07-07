@@ -32,7 +32,6 @@ import type { AgentMessage, StreamEvent } from "@/types/agent";
 import { webToolErrorToastMessage } from "./web-tool-error-toast";
 
 export type { StreamSnapshot } from "./agent-stream-records";
-
 const EVENT_NAME = "agent-stream-event";
 
 interface StreamEnvelope { sessionId: string; event: StreamEvent }
@@ -83,7 +82,7 @@ function failSession(sessionId: string) {
   const record = getRecord(sessionId);
   if (!record) return;
   record.state = { ...record.state, isStreaming: false, completed: true,
-    error: i18n.t("errors.streamStartFailed"), updatedAt: Date.now() };
+    activeStreamItem: null, error: i18n.t("errors.streamStartFailed"), updatedAt: Date.now() };
   flushFrameNotify(record, notify);
   notifyActivity(sessionId, record);
   scheduleCleanup(sessionId, record, records);
@@ -145,6 +144,7 @@ function handleStreamEvent(sessionId: string, event: StreamEvent) {
       sessionTokenCount: estimateAgentMessagesTokens(event.data.messages),
       sessionTokenCountEstimated: true,
       isStreaming: true,
+      activeStreamItem: null,
       persisted: false,
       completed: false,
     };
@@ -181,6 +181,7 @@ function handleStreamEvent(sessionId: string, event: StreamEvent) {
         currentContent: "",
         currentThinking: "",
         currentTools: [],
+        activeStreamItem: null,
         liveTokenCount: 0,
         streamStartedAt: null,
         segmentStartedAt: null,

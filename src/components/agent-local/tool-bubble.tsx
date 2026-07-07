@@ -13,21 +13,33 @@ import "./tool-bubble.css";
 import "./tool-bubble-arrows.css";
 import "./tool-bubble-detail.css";
 import "./tool-bubble-status.css";
+import "./stream-active.css";
 
 export function ToolBubble({
   tools,
+  activeTool,
   onFilePreview,
   projectPath,
 }: {
   tools: ToolActivity[];
+  activeTool?: ToolActivity;
   onFilePreview?: (path: string) => void;
   projectPath?: string;
 }) {
   const renderableTools = useMemo(
-    () => tools.filter(isVisibleTool).map(streamToolToRenderable),
-    [tools],
+    () => tools
+      .map((tool) => ({ tool, isActive: tool === activeTool }))
+      .filter(({ tool }) => isVisibleTool(tool))
+      .map(({ tool, isActive }) => streamToolToRenderable(tool, isActive)),
+    [tools, activeTool],
   );
-  return <ToolActivityList tools={renderableTools} onFilePreview={onFilePreview} projectPath={projectPath} />;
+  return (
+    <ToolActivityList
+      tools={renderableTools}
+      onFilePreview={onFilePreview}
+      projectPath={projectPath}
+    />
+  );
 }
 
 export function SavedToolBubble({
@@ -59,7 +71,11 @@ function ToolActivityList({
   if (tools.length === 0) return null;
   return (
     <div className="tb-stream">
-      <ToolActivityGroupList groups={groups} onFilePreview={onFilePreview} projectPath={projectPath} />
+      <ToolActivityGroupList
+        groups={groups}
+        onFilePreview={onFilePreview}
+        projectPath={projectPath}
+      />
     </div>
   );
 }

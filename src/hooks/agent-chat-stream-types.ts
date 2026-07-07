@@ -6,6 +6,7 @@ import type {
   RetryIndicatorState,
   TokenPhase,
 } from "@/types/agent";
+import type { ActiveStreamItem } from "./active-stream-item";
 
 export const MAX_PENDING_PERMISSIONS = 32;
 export const MAX_MESSAGES_PER_SESSION = 2000;
@@ -25,6 +26,7 @@ export interface ChatState {
   currentContentPhase?: TokenPhase;
   currentThinking: string;
   currentTools: ToolActivity[];
+  activeStreamItem: ActiveStreamItem;
   isStreaming: boolean;
   tps: number;
   sessionTokenCount: number;
@@ -54,7 +56,8 @@ export interface ManagedStreamState extends ChatState {
 
 export const EMPTY_CHAT_STATE: ChatState = {
   messages: [], completedSegments: [], currentContent: "",
-  currentContentPhase: undefined, currentThinking: "", currentTools: [], isStreaming: false,
+  currentContentPhase: undefined, currentThinking: "", currentTools: [],
+  activeStreamItem: null, isStreaming: false,
   tps: 0, sessionTokenCount: 0, sessionTokenCountEstimated: true, lastRequestTokens: 0,
   liveTokenCount: 0, streamStartedAt: null, segmentStartedAt: null,
   totalElapsedMs: 0,
@@ -84,7 +87,8 @@ export function toChatState(state: ManagedStreamState): ChatState {
     messages: state.messages, completedSegments: state.completedSegments,
     currentContent: state.currentContent, currentContentPhase: state.currentContentPhase,
     currentThinking: state.currentThinking,
-    currentTools: state.currentTools, isStreaming: state.isStreaming,
+    currentTools: state.currentTools, activeStreamItem: state.activeStreamItem,
+    isStreaming: state.isStreaming,
     tps: state.tps, sessionTokenCount: state.sessionTokenCount,
     sessionTokenCountEstimated: state.sessionTokenCountEstimated,
     lastRequestTokens: state.lastRequestTokens,

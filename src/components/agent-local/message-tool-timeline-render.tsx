@@ -8,6 +8,7 @@ import { extractBranchActivity } from "./message-tool-aggregation";
 import { WorkStreamSummary } from "./work-stream-summary";
 import { hasNarrative } from "./message-tool-blocks";
 import type { ToolActivity } from "@/hooks/agent-chat-utils";
+import type { ActiveStreamItem } from "@/hooks/active-stream-item";
 import type { SavedSegment, TokenPhase } from "@/types/agent";
 import type { ToolTimelineBlock } from "./message-tool-blocks";
 
@@ -15,12 +16,16 @@ export function TimelineLiveBlock({
   block,
   streamStartedAt,
   liveTokenCount,
+  activeStreamItem,
+  activeTool,
   onFilePreview,
   projectPath,
 }: {
   block: ToolTimelineBlock<ToolActivity>;
   streamStartedAt: number | null;
   liveTokenCount: number;
+  activeStreamItem: ActiveStreamItem;
+  activeTool?: ToolActivity;
   onFilePreview?: (path: string) => void;
   projectPath?: string;
 }) {
@@ -31,6 +36,7 @@ export function TimelineLiveBlock({
           content={block.content ?? ""}
           thinking={block.thinking}
           isStreaming
+          thinkingActive={activeStreamItem?.kind === "thinking"}
           streamStartedAt={streamStartedAt}
           liveTokenCount={liveTokenCount}
         />
@@ -38,7 +44,12 @@ export function TimelineLiveBlock({
         <TimelineNarrative block={block} />
       )}
       {block.tools.length > 0 && (
-        <ToolBubble tools={block.tools} onFilePreview={onFilePreview} projectPath={projectPath} />
+        <ToolBubble
+          tools={block.tools}
+          activeTool={activeTool}
+          onFilePreview={onFilePreview}
+          projectPath={projectPath}
+        />
       )}
     </div>
   );
@@ -47,11 +58,13 @@ export function TimelineLiveBlock({
 export function TimelineWorkBlock<T extends ToolActivity | SavedSegment["tools"][number]>({
   block,
   bubbleKind,
+  activeTool,
   onFilePreview,
   projectPath,
 }: {
   block: ToolTimelineBlock<T>;
   bubbleKind: "stream" | "saved";
+  activeTool?: ToolActivity;
   onFilePreview?: (path: string) => void;
   projectPath?: string;
 }) {
@@ -63,7 +76,14 @@ export function TimelineWorkBlock<T extends ToolActivity | SavedSegment["tools"]
       <TimelineNarrative block={block} />
       {block.tools.length > 0 && (
         bubbleKind === "stream"
-          ? <ToolBubble tools={block.tools as ToolActivity[]} onFilePreview={onFilePreview} projectPath={projectPath} />
+          ? (
+            <ToolBubble
+              tools={block.tools as ToolActivity[]}
+              activeTool={activeTool}
+              onFilePreview={onFilePreview}
+              projectPath={projectPath}
+            />
+          )
           : <SavedToolBubble tools={block.tools as SavedSegment["tools"]} onFilePreview={onFilePreview} projectPath={projectPath} />
       )}
       {branchActivity && (

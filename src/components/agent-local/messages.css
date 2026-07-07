@@ -69,34 +69,6 @@
   opacity: 1;
 }
 
-.thinking-active .thinking-label {
-  background: linear-gradient(
-    90deg,
-    var(--agent-trace-text) 0%,
-    var(--agent-trace-text) 40%,
-    var(--agent-trace-hover) 50%,
-    var(--agent-trace-text) 60%,
-    var(--agent-trace-text) 100%
-  );
-  background-size: 200% 100%;
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: thinking-shimmer 2s ease-in-out infinite;
-}
-
-@keyframes thinking-shimmer {
-  0% { background-position: 100% 0; }
-  100% { background-position: -100% 0; }
-}
-
-.thinking-active:hover .thinking-label {
-  -webkit-text-fill-color: unset;
-  background: none;
-  color: var(--agent-trace-hover);
-  animation: none;
-}
-
 .thinking-toggle:hover { color: var(--agent-trace-hover); }
 
 .thinking-content {

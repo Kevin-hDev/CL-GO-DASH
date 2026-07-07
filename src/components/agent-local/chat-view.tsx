@@ -140,6 +140,7 @@ export function ChatView({
             sessionId={sessionId} messages={chat.messages} completedSegments={chat.completedSegments}
             currentContent={chat.currentContent} currentContentPhase={chat.currentContentPhase}
             currentThinking={chat.currentThinking} currentTools={chat.currentTools}
+            activeStreamItem={chat.activeStreamItem}
             isStreaming={chat.isStreaming} tps={chat.tps} totalElapsedMs={chat.totalElapsedMs}
             segmentStartedAt={chat.streamStartedAt} liveTokenCount={chat.liveTokenCount}
             planPreview={chat.planPreview}

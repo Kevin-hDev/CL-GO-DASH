@@ -28,6 +28,15 @@ describe("ThinkingSection", () => {
     expect(getByRole("button")).toHaveAttribute("aria-expanded", "false");
   });
 
+  it("applique la classe active uniquement quand le thinking est actif", () => {
+    const inactive = render(<ThinkingSection content="raisonnement" />);
+    expect(inactive.getByRole("button").querySelector(".stream-active-label")).toBeNull();
+    cleanup();
+
+    const active = render(<ThinkingSection content="raisonnement" isActive />);
+    expect(active.getByRole("button").querySelector(".stream-active-label")).toBeTruthy();
+  });
+
   it("déplie puis replie le contenu de réflexion", () => {
     const { getByRole, getByText, getByTestId } = render(<ThinkingSection content="raisonnement" />);
     const button = getByRole("button");

@@ -14,6 +14,7 @@ import {
 } from "./message-tool-timeline-render";
 import { WorkStreamSummary } from "./work-stream-summary";
 import type { ToolActivity, StreamSegment } from "@/hooks/agent-chat-utils";
+import type { ActiveStreamItem } from "@/hooks/active-stream-item";
 import type { SavedSegment, TokenPhase } from "@/types/agent";
 
 interface StreamToolTimelineProps {
@@ -22,6 +23,7 @@ interface StreamToolTimelineProps {
   currentContentPhase?: TokenPhase;
   currentThinking: string;
   currentTools: ToolActivity[];
+  activeStreamItem?: ActiveStreamItem;
   streamStartedAt: number | null;
   liveTokenCount: number;
   onFilePreview?: (path: string) => void;
@@ -34,11 +36,13 @@ export function StreamToolTimeline({
   currentContentPhase,
   currentThinking,
   currentTools,
+  activeStreamItem = null,
   streamStartedAt,
   liveTokenCount,
   onFilePreview,
   projectPath,
 }: StreamToolTimelineProps) {
+  const activeTool = activeStreamItem?.kind === "tool" ? currentTools[activeStreamItem.toolIndex] : undefined;
   const segments = [
     ...completedSegments,
     ...(currentContent || currentThinking || currentTools.length > 0
@@ -64,6 +68,7 @@ export function StreamToolTimeline({
               key={`stream-work-${index}`}
               block={block}
               bubbleKind="stream"
+              activeTool={activeTool}
               onFilePreview={onFilePreview}
               projectPath={projectPath}
             />
@@ -87,6 +92,8 @@ export function StreamToolTimeline({
           block={block}
           streamStartedAt={streamStartedAt}
           liveTokenCount={liveTokenCount}
+          activeStreamItem={activeStreamItem}
+          activeTool={activeTool}
           onFilePreview={onFilePreview}
           projectPath={projectPath}
         />

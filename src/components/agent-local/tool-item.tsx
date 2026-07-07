@@ -30,11 +30,11 @@ function hasPreviewContent(children: ReactNode): boolean {
 
 export function ToolItem({
   name, summary, icon, displayName, displaySummary, dir, fileName,
-  additions, deletions, done, isError, errorMessage, result, onFilePreview, children,
+  additions, deletions, done, isActive, isError, errorMessage, result, onFilePreview, children,
 }: {
   name: string; summary: string; icon?: string; displayName?: string; displaySummary?: string;
   dir?: string; fileName?: string;
-  additions?: number; deletions?: number; done: boolean; isError?: boolean; errorMessage?: string;
+  additions?: number; deletions?: number; done: boolean; isActive?: boolean; isError?: boolean; errorMessage?: string;
   result?: string; onFilePreview?: (path: string) => void; children?: ReactNode;
 }) {
   const hasPreview = hasPreviewContent(children);
@@ -46,6 +46,7 @@ export function ToolItem({
   const shownName = displayName ?? name;
   const shownSummary = displaySummary ?? summary;
   const hasFilePath = !!dir || !!fileName;
+  const activeClass = isActive ? " stream-active-label" : "";
   const openPreview = () => {
     if (!clickablePath || !onFilePreview) return;
     onFilePreview(summary);
@@ -57,22 +58,22 @@ export function ToolItem({
         {isOpen ? <CaretUp size="var(--icon-sm)" weight="bold" /> : <CaretDown size="var(--icon-sm)" weight="bold" />}
       </span>
       {icon && <ToolIcon name={icon} size="var(--icon-sm)" className="tb-tool-icon" aria-hidden="true" />}
-      <span className="tb-tool-verb">{shownName}</span>
+      <span className={`tb-tool-verb${activeClass}`}>{shownName}</span>
     </button>
   ) : (
     <>
       {icon && <ToolIcon name={icon} size="var(--icon-sm)" className="tb-tool-icon" aria-hidden="true" />}
-      <span className="tb-tool-verb">{shownName}</span>
+      <span className={`tb-tool-verb${activeClass}`}>{shownName}</span>
     </>
   );
 
   // Cas fichier : nom + icône + stats collés à droite, dossiers tronqués à gauche
   const fileContent = hasFilePath ? (
     <>
-      {dir && <span className="tb-item-dirs">{dir}</span>}
+      {dir && <span className={`tb-item-dirs${activeClass}`}>{dir}</span>}
       <span className="tb-item-name">
         {fileName && <FileIcon name={fileName} size="var(--icon-sm)" />}
-        <span className="tb-item-name-text">{fileName ?? shownSummary}</span>
+        <span className={`tb-item-name-text${activeClass}`}>{fileName ?? shownSummary}</span>
       </span>
       {additions != null && deletions != null && (
         <span className="tb-change-stats">
@@ -86,7 +87,7 @@ export function ToolItem({
   // Cas non-fichier : résumé simple tronquable
   const summaryContent = !hasFilePath ? (
     <span
-      className="tb-item-summary"
+      className={`tb-item-summary${activeClass}`}
       role={clickablePath ? "button" : undefined}
       tabIndex={clickablePath ? 0 : undefined}
       onClick={(e) => { if (clickablePath) { e.stopPropagation(); openPreview(); } }}
@@ -99,7 +100,7 @@ export function ToolItem({
 
   return (
     <div>
-      <div className="tb-row">
+      <div className={`tb-row${isActive ? " stream-active" : ""}`}>
         {labelButton}
         {fileContent}
         {summaryContent}

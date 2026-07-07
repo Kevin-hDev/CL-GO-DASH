@@ -15,6 +15,7 @@ import { toolDisplayInfo } from "./tool-display";
 export interface RenderableTool {
   name: string;
   summary: string;
+  isActive?: boolean;
   args?: Record<string, unknown>;
   result?: string;
   is_error?: boolean;
@@ -52,11 +53,12 @@ function toolSummary(t: ToolActivity): string {
   return JSON.stringify(a).slice(0, 80);
 }
 
-export function streamToolToRenderable(t: ToolActivity): RenderableTool {
+export function streamToolToRenderable(t: ToolActivity, isActive?: boolean): RenderableTool {
   const summary = toolSummary(t);
   return {
     name: t.name,
     summary,
+    isActive,
     args: t.args,
     result: t.result,
     is_error: t.isError,
@@ -86,11 +88,13 @@ export function savedToolToRenderable(t: ToolActivityRecord): RenderableTool {
 export function ToolDetailRow({
   tool,
   previousTools,
+  isActive,
   onFilePreview,
   projectPath,
 }: {
   tool: RenderableTool;
   previousTools: RenderableTool[];
+  isActive?: boolean;
   onFilePreview?: (path: string) => void;
   projectPath?: string;
 }) {
@@ -120,6 +124,7 @@ export function ToolDetailRow({
       additions={display.additions}
       deletions={display.deletions}
       done={done}
+      isActive={isActive}
       isError={tool.is_error}
       errorMessage={errorMessage}
       result={tool.is_error ? undefined : tool.result}
