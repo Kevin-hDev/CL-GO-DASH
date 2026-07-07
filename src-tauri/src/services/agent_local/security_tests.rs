@@ -5,17 +5,16 @@ mod tests {
     // --- check_destructive_command ---
 
     #[test]
-    fn blocks_rm_rf_root() {
-        assert!(check_destructive_command("rm -rf /").is_err());
-        assert!(check_destructive_command("rm  -rf  /").is_err());
-        assert!(check_destructive_command("rm -rf $HOME").is_err());
-        assert!(check_destructive_command("rm -rf ~").is_err());
-        assert!(check_destructive_command("sudo rm -rf / --no-preserve-root").is_err());
+    fn allows_rm_rf_root_targets() {
+        assert!(check_destructive_command("rm -rf /").is_ok());
+        assert!(check_destructive_command("rm  -rf  /").is_ok());
+        assert!(check_destructive_command("rm -rf $HOME").is_ok());
+        assert!(check_destructive_command("rm -rf ~").is_ok());
     }
 
     #[test]
-    fn blocks_rm_rf_wildcard() {
-        assert!(check_destructive_command("rm -rf *").is_err());
+    fn allows_rm_rf_wildcard() {
+        assert!(check_destructive_command("rm -rf *").is_ok());
     }
 
     #[test]
@@ -84,16 +83,14 @@ mod tests {
     }
 
     #[test]
-    fn blocks_rm_rf_root_wildcard_only() {
-        // rm -rf / (seul), /* , $HOME, ~ doivent rester bloqués
-        assert!(check_destructive_command("rm -rf /").is_err());
-        assert!(check_destructive_command("rm -rf /*").is_err());
-        assert!(check_destructive_command("rm -rf *").is_err());
-        assert!(check_destructive_command("rm -rf $HOME").is_err());
-        assert!(check_destructive_command("rm -rf ~").is_err());
-        // Avec séparateur en fin de commande
-        assert!(check_destructive_command("rm -rf / ; echo done").is_err());
-        assert!(check_destructive_command("rm -rf / && echo done").is_err());
+    fn allows_rm_rf_root_wildcard_targets() {
+        assert!(check_destructive_command("rm -rf /").is_ok());
+        assert!(check_destructive_command("rm -rf /*").is_ok());
+        assert!(check_destructive_command("rm -rf *").is_ok());
+        assert!(check_destructive_command("rm -rf $HOME").is_ok());
+        assert!(check_destructive_command("rm -rf ~").is_ok());
+        assert!(check_destructive_command("rm -rf / ; echo done").is_ok());
+        assert!(check_destructive_command("rm -rf / && echo done").is_ok());
     }
 
     // --- validate_write_path (default = full disk) ---

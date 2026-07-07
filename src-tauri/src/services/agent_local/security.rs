@@ -3,7 +3,6 @@ use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
 
 const DESTRUCTIVE_PATTERNS: &[&str] = &[
-    "rm -rf *",
     "sudo rm",
     "chmod 777",
     "dd if=",
@@ -28,14 +27,6 @@ static RSYNC_DELETE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"(?i)\brsync\b.*\s--delete\b").unwrap());
 static DD_DEVICE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"(?i)\bdd\b.*\bof=/dev/").unwrap());
-/// Bloque `rm -rf <cible_dangereuse>` où la cible est la racine /, le home,
-/// ou la racine avec wildcard — mais PAS un sous-chemin légitime comme
-/// `/tmp/x` ou `/home/user/projet`. La cible est matchée seulement si elle
-/// est suivie d'un séparateur de fin (espace, ;, &&, |, ou fin de chaîne).
-static RM_RF_TARGET_REGEX: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"(?i)\brm\s+-[a-z]*r[a-z]*f[a-z]*\s+(/\*|/|~|\$home|\$\{home\})(\s|;|&|\||$)")
-        .unwrap()
-});
 
 fn config_allowed_paths() -> Vec<PathBuf> {
     crate::services::config::read_config()
@@ -64,7 +55,6 @@ pub fn check_destructive_command(cmd: &str) -> Result<(), String> {
         || FIND_DELETE_REGEX.is_match(&normalized)
         || RSYNC_DELETE_REGEX.is_match(&normalized)
         || DD_DEVICE_REGEX.is_match(&normalized)
-        || RM_RF_TARGET_REGEX.is_match(&normalized)
         || normalized_lower.contains("mkfs ")
     {
         return Err("Commande bloquée : pattern dangereux détecté".into());

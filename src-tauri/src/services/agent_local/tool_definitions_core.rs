@@ -12,9 +12,9 @@ pub fn core_tool_definitions() -> Vec<Value> {
              find files with glob (not find); search contents with grep (not grep/rg); \
              read a file with read_file (not cat/head/tail); edit a file with edit_file (not sed/awk); \
              create a file with write_file (not echo/cat <<EOF). \
-             Permissions: read-only commands (ls, cat, git status/log/diff, pwd, etc.) run without confirmation. \
-             Mutating commands require explicit user approval. There is no 'always allow' for bash — every session is asked anew. \
-             Safety: destructive commands are blocked (rm -rf /, chmod 777, mkfs, dd, fork bombs, etc.). \
+             Permissions: in Ask for approval mode, read-only commands (ls, cat, git status/log/diff, pwd, etc.) run without confirmation, \
+             while mutating commands require explicit user approval. In Full access mode, bash commands run without approval prompts. \
+             Safety: system-level destructive commands are blocked (chmod 777, mkfs, dd, fork bombs, etc.). \
              Never skip git hooks (--no-verify), never force-push to main/master, never amend an existing commit unless the user explicitly asks. \
              Investigate hook failures instead of bypassing them. \
              Never run interactive editors (vim, nano, less) — the shell is non-interactive. \
