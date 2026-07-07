@@ -129,6 +129,14 @@
 
 .send-stop-icon { width: 24px; height: 24px; }
 
+.send-stop-confirm-text {
+  fill: currentColor;
+  font-family: var(--font-sans);
+  font-size: 122px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
 .send-btn { color: var(--ink-muted); }
 
 .chat-plus-btn {

@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Tooltip } from "@/components/ui/tooltip";
 import "./chat.css";
 
-type ButtonState = "hidden" | "send" | "stop";
+type ButtonState = "hidden" | "send" | "stop" | "confirmStop";
 
 interface SendStopButtonProps {
   state: ButtonState;
@@ -27,18 +27,29 @@ function StopIcon() {
   );
 }
 
+function ConfirmStopIcon() {
+  return (
+    <svg className="send-stop-icon" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="256" cy="256" r="240" stroke="currentColor" strokeWidth="32" />
+      <text x="256" y="266" className="send-stop-confirm-text" textAnchor="middle" dominantBaseline="middle">ESC</text>
+    </svg>
+  );
+}
+
 export function SendStopButton({ state, onSend, onStop }: SendStopButtonProps) {
   const { t } = useTranslation();
-  const isStop = state === "stop";
+  const isStop = state === "stop" || state === "confirmStop";
   const disabled = state === "hidden";
   return (
     <Tooltip label={isStop ? t("agentLocal.stop") : t("agentLocal.send")} align="right">
       <button
-        className={`send-btn ${isStop ? "stop" : "send"}`}
+        type="button"
+        aria-label={isStop ? t("agentLocal.stop") : t("agentLocal.send")}
+        className={`send-btn ${isStop ? "stop" : "send"}${state === "confirmStop" ? " confirm-stop" : ""}`}
         onClick={isStop ? onStop : onSend}
         disabled={disabled}
       >
-        {isStop ? <StopIcon /> : <SendIcon />}
+        {state === "confirmStop" ? <ConfirmStopIcon /> : isStop ? <StopIcon /> : <SendIcon />}
       </button>
     </Tooltip>
   );

@@ -7,6 +7,7 @@ import { useSlashCommands } from "@/hooks/use-slash-commands";
 import { useActiveSkills } from "@/hooks/use-active-skills";
 import { SlashAutocomplete } from "./slash-autocomplete";
 import { FileThumbnail } from "./file-thumbnail";
+import { useStopConfirmation } from "./use-stop-confirmation";
 import type { DroppedFile } from "@/hooks/use-file-drop";
 import type { ContextUsageBreakdown } from "@/hooks/context-usage-breakdown";
 import type { PermissionMode } from "@/hooks/use-permission-mode";
@@ -61,6 +62,7 @@ export function ChatInput({
   const slash = useSlashCommands();
   const skills = useActiveSkills(slash, text, setText);
   const bubbleRef = useRef<HTMLDivElement>(null);
+  const { isConfirmingStop, requestStop } = useStopConfirmation(isStreaming, onStop);
 
   const interactivePending = !!interactiveRequest;
   const hasText = text.trim().length > 0;
@@ -111,21 +113,21 @@ export function ChatInput({
     if (pressed === K_ESC) {
       event.preventDefault();
       event.stopPropagation();
-      if (isStreaming) onStop();
+      if (isStreaming) requestStop();
       return true;
     }
-  }, [handleEnter, isStreaming, onStop, slash]);
+  }, [handleEnter, isStreaming, requestStop, slash]);
 
   useEffect(() => {
     if (!isStreaming) return;
     const handler = (e: KeyboardEvent) => {
       if (e.key !== K_ESC) return;
       e.preventDefault();
-      onStop();
+      requestStop();
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [isStreaming, onStop]);
+  }, [isStreaming, requestStop]);
 
   useEffect(() => {
     if (!slash.showDropdown) return;
@@ -136,7 +138,7 @@ export function ChatInput({
     return () => document.removeEventListener("mousedown", handler);
   }, [slash.showDropdown, slash]);
 
-  const buttonState = isStreaming ? "stop" as const
+  const buttonState = isStreaming ? (isConfirmingStop ? "confirmStop" as const : "stop" as const)
     : hasContent && !interactivePending ? "send" as const
     : "hidden" as const;
 
@@ -191,7 +193,7 @@ export function ChatInput({
             onModelChange={onModelChange}
             onReasoningModeChange={onReasoningModeChange}
             onSend={handleSend}
-            onStop={onStop}
+            onStop={requestStop}
           />
         </>
       )}

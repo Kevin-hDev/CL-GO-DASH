@@ -10,7 +10,7 @@ import type { PermissionMode } from "@/hooks/use-permission-mode";
 import type { ReasoningMode } from "@/lib/reasoning-modes";
 import type { RetryIndicatorState } from "@/types/agent";
 
-type ButtonState = "stop" | "send" | "hidden";
+type ButtonState = "stop" | "confirmStop" | "send" | "hidden";
 
 interface ChatInputActionsRowProps {
   modelName: string;
