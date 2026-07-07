@@ -1,5 +1,5 @@
-use crate::services::agent_local::clone_session::CloneSessionResult;
 use crate::services::agent_local::clone_git::CloneGitBranchResult;
+use crate::services::agent_local::clone_session::CloneSessionResult;
 use crate::services::agent_local::session_tabs::SessionTabs;
 use crate::services::agent_local::types_session::CloneMode;
 use crate::services::git::branch::CreateBranchError;
@@ -42,7 +42,10 @@ pub async fn list_session_tabs(session_id: String) -> Result<SessionTabs, String
 }
 
 #[tauri::command]
-pub async fn save_session_tabs(session_id: String, tabs: SessionTabs) -> Result<SessionTabs, String> {
+pub async fn save_session_tabs(
+    session_id: String,
+    tabs: SessionTabs,
+) -> Result<SessionTabs, String> {
     crate::services::agent_local::session_tabs::save_tabs(&session_id, tabs).await
 }
 

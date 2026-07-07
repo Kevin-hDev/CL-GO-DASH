@@ -1,10 +1,10 @@
 pub mod branch;
-mod branch_create;
-#[cfg(test)]
-mod branch_create_tests;
 pub mod branch_commit;
 #[cfg(test)]
 mod branch_commit_tests;
+mod branch_create;
+#[cfg(test)]
+mod branch_create_tests;
 pub mod branch_delete;
 pub mod github_auth;
 pub mod repo;

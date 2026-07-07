@@ -15,7 +15,9 @@ pub fn delete_branch(repo_path: &Path, branch_name: &str) -> Result<(), String> 
     let mut branch = repo
         .find_branch(branch_name, BranchType::Local)
         .map_err(|_| "Branche introuvable".to_string())?;
-    branch.delete().map_err(|_| "Suppression impossible".to_string())
+    branch
+        .delete()
+        .map_err(|_| "Suppression impossible".to_string())
 }
 
 pub fn branch_exists(repo_path: &Path, branch_name: &str) -> Result<bool, String> {
@@ -35,7 +37,9 @@ mod tests {
         let repo = Repository::init(tmp.path()).expect("init repo");
         std::fs::write(tmp.path().join("README.md"), "init").expect("write file");
         let mut index = repo.index().expect("index");
-        index.add_path(std::path::Path::new("README.md")).expect("add");
+        index
+            .add_path(std::path::Path::new("README.md"))
+            .expect("add");
         index.write().expect("write index");
         let tree_id = index.write_tree().expect("tree");
         let tree = repo.find_tree(tree_id).expect("find tree");

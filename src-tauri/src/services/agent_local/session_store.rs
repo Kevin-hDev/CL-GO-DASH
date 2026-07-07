@@ -121,7 +121,12 @@ pub async fn find_heartbeat_session(provider: &str, model: &str) -> Result<Optio
     let metas = crate::services::agent_local::session_index::read_index().await?;
     let best = metas
         .iter()
-        .filter(|m| super::session_archive::is_active(m) && m.is_heartbeat && m.provider == provider && m.model == model)
+        .filter(|m| {
+            super::session_archive::is_active(m)
+                && m.is_heartbeat
+                && m.provider == provider
+                && m.model == model
+        })
         .max_by_key(|m| super::session_archive::activity_at(m))
         .map(|m| m.id.clone());
     Ok(best)

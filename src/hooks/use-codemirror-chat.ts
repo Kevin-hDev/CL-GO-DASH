@@ -148,7 +148,11 @@ export function useCodemirrorChat({
           }),
           EditorView.theme({
             "&": { backgroundColor: "transparent", height: "100%" },
-            ".cm-scroller": { overflow: "hidden" },
+            ".cm-scroller": {
+              overflowX: "hidden",
+              overflowY: "auto",
+              overscrollBehavior: "contain",
+            },
             ".cm-content": { padding: 0, caretColor: "var(--ink)" },
             "&.cm-focused": { outline: "none" },
           }),

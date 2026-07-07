@@ -53,7 +53,10 @@ pub fn create_branch(repo_path: &Path, branch_name: &str) -> Result<(), CreateBr
         return Err(CreateBranchError::AlreadyExists);
     }
 
-    if repo.is_empty().map_err(|_| CreateBranchError::InternalError)? {
+    if repo
+        .is_empty()
+        .map_err(|_| CreateBranchError::InternalError)?
+    {
         return Err(CreateBranchError::UnbornHead);
     }
 

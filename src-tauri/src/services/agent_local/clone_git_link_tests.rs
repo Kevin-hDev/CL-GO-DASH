@@ -55,7 +55,9 @@ fn init_repo_with_branch(branch_name: &str) -> tempfile::TempDir {
     let repo = Repository::init(tmp.path()).expect("init repo");
     std::fs::write(tmp.path().join("README.md"), "init").expect("write file");
     let mut index = repo.index().expect("index");
-    index.add_path(std::path::Path::new("README.md")).expect("add");
+    index
+        .add_path(std::path::Path::new("README.md"))
+        .expect("add");
     index.write().expect("write index");
     let tree_id = index.write_tree().expect("tree");
     let tree = repo.find_tree(tree_id).expect("find tree");
@@ -76,7 +78,9 @@ async fn link_existing_branch_saves_session_and_tab() {
     let root = session(&root_id, None);
     let clone = session(&clone_id, Some(&root_id));
     super::session_store::save(&root).await.expect("save root");
-    super::session_store::save(&clone).await.expect("save clone");
+    super::session_store::save(&clone)
+        .await
+        .expect("save clone");
     super::session_tabs::add_clone_tab(&root_id, &clone_id, "m1", CloneMode::Cut)
         .await
         .expect("add tab");
@@ -85,9 +89,15 @@ async fn link_existing_branch_saves_session_and_tab() {
         .await
         .expect("link branch");
 
-    let saved = super::session_store::get(&clone_id).await.expect("saved clone");
+    let saved = super::session_store::get(&clone_id)
+        .await
+        .expect("saved clone");
     assert_eq!(saved.git_branch.as_deref(), Some("feature/manual"));
-    let tab = tabs.tabs.iter().find(|tab| tab.session_id == clone_id).expect("tab");
+    let tab = tabs
+        .tabs
+        .iter()
+        .find(|tab| tab.session_id == clone_id)
+        .expect("tab");
     assert_eq!(tab.git_branch.as_deref(), Some("feature/manual"));
 
     let _ = super::session_tabs::remove_session_from_tabs(&clone_id).await;

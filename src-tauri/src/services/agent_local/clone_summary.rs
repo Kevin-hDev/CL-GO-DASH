@@ -30,7 +30,11 @@ pub fn serialize_messages(messages: &[AgentMessage]) -> String {
         }
         push_bounded(&mut out, &format!("\n<message role=\"{}\">\n", msg.role));
         push_bounded(&mut out, msg.content.trim());
-        if let Some(thinking) = msg.thinking.as_deref().filter(|value| !value.trim().is_empty()) {
+        if let Some(thinking) = msg
+            .thinking
+            .as_deref()
+            .filter(|value| !value.trim().is_empty())
+        {
             push_bounded(&mut out, "\n<thinking>\n");
             push_bounded(&mut out, thinking.trim());
             push_bounded(&mut out, "\n</thinking>");
@@ -95,11 +99,22 @@ fn collect_tool_files(
 ) {
     let is_read = matches!(
         tool.name.as_str(),
-        "read_file" | "grep" | "glob" | "list_dir" | "read_document" | "read_image" | "read_spreadsheet"
+        "read_file"
+            | "grep"
+            | "glob"
+            | "list_dir"
+            | "read_document"
+            | "read_image"
+            | "read_spreadsheet"
     );
     let is_write = matches!(
         tool.name.as_str(),
-        "write_file" | "edit_file" | "process_image" | "write_document" | "write_spreadsheet" | "bash"
+        "write_file"
+            | "edit_file"
+            | "process_image"
+            | "write_document"
+            | "write_spreadsheet"
+            | "bash"
     );
     if is_read {
         add_arg_path(tool, read_files);
@@ -113,7 +128,9 @@ fn collect_tool_files(
 }
 
 fn add_arg_path(tool: &ToolActivityRecord, files: &mut Vec<String>) {
-    let Some(args) = &tool.args else { return; };
+    let Some(args) = &tool.args else {
+        return;
+    };
     for key in ["path", "file", "output_path"] {
         if let Some(path) = args.get(key).and_then(|value| value.as_str()) {
             add_path(files, path);
@@ -136,7 +153,10 @@ fn add_path(files: &mut Vec<String>, path: &str) {
 
 fn message_tools(message: &AgentMessage) -> Vec<&ToolActivityRecord> {
     if let Some(segments) = &message.segments {
-        let tools: Vec<_> = segments.iter().flat_map(|segment| segment.tools.iter()).collect();
+        let tools: Vec<_> = segments
+            .iter()
+            .flat_map(|segment| segment.tools.iter())
+            .collect();
         if !tools.is_empty() {
             return tools;
         }
