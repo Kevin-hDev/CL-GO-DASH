@@ -124,16 +124,20 @@
   color: var(--agent-trace-text);
 }
 
-.tb-toggle {
+.tb-toggle,
+.tb-static-label {
   display: flex;
   align-items: center;
   gap: 4px;
+  color: inherit;
+  font: inherit;
+}
+
+.tb-toggle {
   cursor: pointer;
   border: none;
   background: none;
   padding: 0;
-  font: inherit;
-  color: inherit;
 }
 
 .tb-tool-icon {

@@ -25,6 +25,10 @@
   animation: tb-arrow-peek 1200ms ease forwards;
 }
 
+.tb-row:hover .tb-tool-arrow-spacer {
+  animation: none;
+}
+
 @keyframes tb-arrow-peek {
   0%, 70% { opacity: 1; }
   100% { opacity: 0; }

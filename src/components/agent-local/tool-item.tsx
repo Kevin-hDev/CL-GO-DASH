@@ -61,10 +61,11 @@ export function ToolItem({
       <span className={`tb-tool-verb${activeClass}`}>{shownName}</span>
     </button>
   ) : (
-    <>
+    <span className="tb-static-label">
+      <span className="tb-arrow tb-tool-arrow tb-tool-arrow-spacer" aria-hidden="true" />
       {icon && <ToolIcon name={icon} size="var(--icon-sm)" className="tb-tool-icon" aria-hidden="true" />}
       <span className={`tb-tool-verb${activeClass}`}>{shownName}</span>
-    </>
+    </span>
   );
 
   // Cas fichier : nom + icône + stats collés à droite, dossiers tronqués à gauche
