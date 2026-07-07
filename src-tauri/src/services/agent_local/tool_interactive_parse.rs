@@ -11,9 +11,9 @@ pub const MAX_HEADER_CHARS: usize = 30;
 pub const MAX_QUESTION_CHARS: usize = 500;
 pub const MAX_LABEL_CHARS: usize = 80;
 pub const MAX_OPTION_ID_CHARS: usize = 80;
-pub const MAX_DESCRIPTION_CHARS: usize = 500;
-pub const MAX_PREVIEW_CHARS: usize = 500;
-pub const MAX_CUSTOM_ANSWER_CHARS: usize = 500;
+pub const MAX_DESCRIPTION_CHARS: usize = 1500;
+pub const MAX_PREVIEW_CHARS: usize = 1500;
+pub const MAX_CUSTOM_ANSWER_CHARS: usize = 1500;
 
 pub fn parse_questions(args: &Value) -> Result<Vec<AgentInteractiveQuestion>, String> {
     let items = args
