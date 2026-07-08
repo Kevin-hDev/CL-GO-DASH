@@ -11,7 +11,15 @@ pub struct ToolCatalogEntry {
     pub group: &'static str,
 }
 
-pub const MAX_OPTIONAL_TOOLS: usize = 23;
+pub const MAX_OPTIONAL_TOOLS: usize = 28;
+pub const SUBAGENT_TOOLS: &[&str] = &[
+    "delegate_task",
+    "list_subagents",
+    "get_subagent",
+    "wait_subagent",
+    "cancel_subagent",
+    "message_subagent",
+];
 
 const LOCKED_TOOLS: &[ToolCatalogEntry] = &[
     locked("bash", "core"),
@@ -29,7 +37,12 @@ const LOCKED_TOOLS: &[ToolCatalogEntry] = &[
 const OPTIONAL_TOOLS: &[ToolCatalogEntry] = &[
     optional_default("load_skill", "workflow"),
     optional_default("ask_user_choice", "workflow"),
-    optional_default("delegate_task", "workflow"),
+    optional_default("delegate_task", "subagents"),
+    optional_default("list_subagents", "subagents"),
+    optional_default("get_subagent", "subagents"),
+    optional_default("wait_subagent", "subagents"),
+    optional_default("cancel_subagent", "subagents"),
+    optional_default("message_subagent", "subagents"),
     optional_default("planmode", "workflow"),
     optional_default("exitplanmode", "workflow"),
     optional_off("todo_write", "todo"),
@@ -96,7 +109,12 @@ pub fn default_enabled_optional_tools() -> Vec<String> {
 }
 
 pub fn normalize_enabled_optional_tools(input: &[String]) -> Vec<String> {
-    let selected: BTreeSet<&str> = input.iter().map(String::as_str).collect();
+    let mut selected: BTreeSet<&str> = input.iter().map(String::as_str).collect();
+    if selected.contains("delegate_task") {
+        selected.extend(SUBAGENT_TOOLS.iter().copied());
+    } else {
+        selected.retain(|tool_id| !SUBAGENT_TOOLS.contains(tool_id));
+    }
     OPTIONAL_TOOLS
         .iter()
         .filter(|tool| selected.contains(tool.id))
@@ -121,6 +139,10 @@ pub fn is_locked_tool(tool_id: &str) -> bool {
 
 pub fn is_optional_tool(tool_id: &str) -> bool {
     OPTIONAL_TOOLS.iter().any(|tool| tool.id == tool_id)
+}
+
+pub fn is_subagent_tool(tool_id: &str) -> bool {
+    SUBAGENT_TOOLS.contains(&tool_id)
 }
 
 pub fn is_enabled(tool_id: &str, enabled_optional_tools: &[String]) -> bool {

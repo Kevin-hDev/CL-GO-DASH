@@ -11,7 +11,7 @@ pub async fn chat_stream(
     app: tauri::AppHandle,
     session_id: String,
     model: String,
-    messages: Vec<ChatMessage>,
+    mut messages: Vec<ChatMessage>,
     tools: Vec<serde_json::Value>,
     think: bool,
     provider: Option<String>,
@@ -71,6 +71,7 @@ pub async fn chat_stream(
             }
         };
     let working_dir = Some(resolved_working_dir.path.to_string_lossy().to_string());
+    inject_hidden_subagent_reports(&session_id, &mut messages).await;
     eprintln!("[stream] start session={session_id} gen={generation}");
     let stream_session = session_id.clone();
     let task_app = app.clone();
@@ -145,6 +146,19 @@ pub async fn chat_stream(
     });
 
     Ok(generation)
+}
+
+async fn inject_hidden_subagent_reports(session_id: &str, messages: &mut Vec<ChatMessage>) {
+    let reports =
+        crate::services::agent_local::subagent_hidden_reports::take_for_context(session_id).await;
+    if reports.is_empty() {
+        return;
+    }
+    let insert_at = messages
+        .iter()
+        .rposition(|message| message.role == "user")
+        .unwrap_or(messages.len());
+    messages.splice(insert_at..insert_at, reports);
 }
 
 #[tauri::command]

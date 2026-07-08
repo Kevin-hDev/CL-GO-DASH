@@ -89,6 +89,8 @@ pub enum StreamEvent {
         subagent_session_id: String,
         subagent_name: String,
         subagent_type: String,
+        subagent_description: String,
+        subagent_color_key: String,
         prompt_preview: String,
         run_id: Option<String>,
     },

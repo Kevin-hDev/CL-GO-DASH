@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@/components/ui/tooltip";
+import { subagentColorKey, subagentDisplayName, subagentSecondaryText } from "@/lib/subagent-display";
 import type { SubagentInfo } from "@/types/agent";
 import "./subagent-accordion.css";
 
@@ -69,8 +70,11 @@ export function SubagentAccordion({ subagents, onCancel, onOpen }: SubagentAccor
         <div className="sa-accordion-body-inner">
         {subagents.map((agent) => (
           <div key={agent.sessionId} className="sa-agent-row">
-            <span className={`sa-agent-dot sa-dot-${agent.type}`} />
-            <span className="sa-agent-name">{agent.name}</span>
+            <span className={`sa-agent-dot ${colorClass("sa-dot", agent)}`} />
+            <span className="sa-agent-main">
+              <span className="sa-agent-name">{subagentDisplayName(agent)}</span>
+              <span className="sa-agent-description">{subagentSecondaryText(agent)}</span>
+            </span>
             <span className="sa-agent-status">
               {t(`subagents.${agent.status}`, { defaultValue: agent.status })}
             </span>
@@ -106,4 +110,9 @@ export function SubagentAccordion({ subagents, onCancel, onOpen }: SubagentAccor
       </div>
     </div>
   );
+}
+
+function colorClass(prefix: string, agent: SubagentInfo): string {
+  const key = subagentColorKey(agent);
+  return `${prefix}-${key}`;
 }

@@ -44,8 +44,9 @@ pub fn finalize_content_phase(
     on_event: &AgentEventEmitter,
     result: &StreamResult,
     plan_active: bool,
+    force_work_phase: bool,
 ) {
-    if let Some(phase) = content_phase_for_result(result, plan_active) {
+    if let Some(phase) = content_phase_for_result(result, plan_active, force_work_phase) {
         if plan_active {
             emit_buffered_content(on_event, result, phase);
         } else {
@@ -71,12 +72,19 @@ pub fn finalize_interrupted_content(
     }
 }
 
-pub fn content_phase_for_result(result: &StreamResult, plan_active: bool) -> Option<TokenPhase> {
+pub fn content_phase_for_result(
+    result: &StreamResult,
+    plan_active: bool,
+    force_work_phase: bool,
+) -> Option<TokenPhase> {
     if result.content_chunks.is_empty() {
         return None;
     }
     if plan_active && !result.tool_calls.is_empty() {
         return None;
+    }
+    if force_work_phase {
+        return Some(TokenPhase::Work);
     }
     Some(if result.tool_calls.is_empty() {
         TokenPhase::Final
@@ -120,7 +128,7 @@ mod tests {
         };
 
         assert!(matches!(
-            content_phase_for_result(&result, false),
+            content_phase_for_result(&result, false, false),
             Some(TokenPhase::Final)
         ));
     }
@@ -134,7 +142,20 @@ mod tests {
         };
 
         assert!(matches!(
-            content_phase_for_result(&result, false),
+            content_phase_for_result(&result, false, false),
+            Some(TokenPhase::Work)
+        ));
+    }
+
+    #[test]
+    fn forces_plain_turn_as_work_while_subagent_runs() {
+        let result = StreamResult {
+            content_chunks: vec!["still working".into()],
+            ..Default::default()
+        };
+
+        assert!(matches!(
+            content_phase_for_result(&result, false, true),
             Some(TokenPhase::Work)
         ));
     }
@@ -147,7 +168,7 @@ mod tests {
             ..Default::default()
         };
 
-        assert!(content_phase_for_result(&result, true).is_none());
+        assert!(content_phase_for_result(&result, true, false).is_none());
     }
 
     #[test]

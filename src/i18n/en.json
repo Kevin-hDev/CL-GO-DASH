@@ -601,7 +601,7 @@
         "mcp": { "title": "MCP connectors", "description": "Lets the model discover tools from enabled MCP connectors." },
         "skills": { "title": "Skills", "description": "Loads specialized workflows only when the task needs them." },
         "user_choice": { "title": "User choices", "description": "Lets the model ask you to choose between important options." },
-        "subagents": { "title": "Subagents", "description": "Lets the model delegate an independent task to a background agent." },
+        "subagents": { "title": "Subagents", "description": "Lets the model create and control child sessions for independent tasks." },
         "plan_mode": { "title": "Plan mode", "description": "Lets the model draft a plan and leave Plan mode after validation." },
         "todo_list": { "title": "Todo list", "description": "Lets the model create, update, pause, resume, and delete work checklists." },
         "agent_diagnostics": { "title": "Agent diagnostics", "description": "Lets the model read recent diagnostics after an error or interruption." },
@@ -933,8 +933,8 @@
     "unsupportedModel": "Vision is not supported by this model"
   },
   "subagents": {
-    "backgroundCount_one": "{{count}} agent in background",
-    "backgroundCount_other": "{{count}} agents in background",
+    "backgroundCount_one": "{{count}} active subagent",
+    "backgroundCount_other": "{{count}} active subagents",
     "stopAll": "Stop all",
     "running": "running...",
     "stop": "Stop",

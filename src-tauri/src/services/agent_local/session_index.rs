@@ -87,6 +87,10 @@ fn index_meta_drifted(meta: &AgentSessionMeta, session: &AgentSession) -> bool {
         || meta.subagent_type != session.subagent_type
         || meta.subagent_status != session.subagent_status
         || meta.subagent_run_id != session.subagent_run_id
+        || meta.subagent_description != session.subagent_description
+        || meta.subagent_color_key != session.subagent_color_key
+        || meta.subagent_summary != session.subagent_summary
+        || meta.subagent_last_activity != session.subagent_last_activity
         || meta.clone_parent_session_id != session.clone_parent_session_id
         || meta.clone_parent_message_id != session.clone_parent_message_id
         || meta.clone_mode != session.clone_mode
@@ -165,6 +169,10 @@ pub fn meta_from_session(session: &AgentSession) -> AgentSessionMeta {
         subagent_type: session.subagent_type.clone(),
         subagent_status: session.subagent_status.clone(),
         subagent_run_id: session.subagent_run_id.clone(),
+        subagent_description: session.subagent_description.clone(),
+        subagent_color_key: session.subagent_color_key.clone(),
+        subagent_summary: session.subagent_summary.clone(),
+        subagent_last_activity: session.subagent_last_activity.clone(),
         clone_parent_session_id: session.clone_parent_session_id.clone(),
         clone_parent_message_id: session.clone_parent_message_id.clone(),
         clone_mode: session.clone_mode.clone(),

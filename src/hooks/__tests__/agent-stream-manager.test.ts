@@ -103,6 +103,20 @@ describe("agentStreamManager", () => {
     expect(after?.currentContent).toBe("nouveau");
   });
 
+  it("retire une permission résolue du snapshot global", async () => {
+    await agentStreamManager.startSession("s1", [message("u1", "user", "Question")], 10);
+    emit("s1", {
+      event: "permissionRequest",
+      data: { id: "perm-1", toolName: "bash", arguments: { command: "sleep 8" } },
+    });
+
+    expect(agentStreamManager.getSnapshot("s1")?.pendingPermissions).toHaveLength(1);
+
+    agentStreamManager.clearPermission("perm-1");
+
+    expect(agentStreamManager.getSnapshot("s1")?.pendingPermissions).toEqual([]);
+  });
+
   it("accepte une génération backend après une fin normale", async () => {
     await agentStreamManager.startSession("s1", [message("u1", "user", "Question")], 10);
     agentStreamManager.setSessionGeneration("s1", 7);

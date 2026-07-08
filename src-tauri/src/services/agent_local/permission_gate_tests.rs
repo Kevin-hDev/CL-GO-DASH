@@ -1,4 +1,4 @@
-use crate::services::agent_local::permission_gate::requires_permission;
+use crate::services::agent_local::permission_gate::{diagnostic_entry, requires_permission};
 use serde_json::json;
 
 #[test]
@@ -186,4 +186,13 @@ fn unsafe_bash_background() {
 fn unsafe_bash_input_redirect() {
     let args = json!({ "command": "cat < /etc/shadow" });
     assert!(requires_permission("bash", &args));
+}
+
+#[test]
+fn diagnostic_entry_omits_arguments() {
+    let entry = diagnostic_entry("request", Some("bash"), Some("permission_prompt_sent"));
+    assert_eq!(entry["event"], "request");
+    assert_eq!(entry["tool"], "bash");
+    assert!(entry.get("args").is_none());
+    assert!(entry.get("command").is_none());
 }

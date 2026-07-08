@@ -10,6 +10,26 @@ pub use super::types_message::{
 use super::types_plan::{AgentPlanApprovalDecision, AgentPlanRun, AgentPlanWorkflowStatus};
 use super::types_todo::{AgentTodoItem, AgentTodoRun};
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct SubagentHiddenReport {
+    pub id: String,
+    pub child_session_id: String,
+    pub name: String,
+    pub subagent_type: String,
+    pub status: String,
+    pub summary: String,
+    pub created_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct SubagentLastActivity {
+    pub kind: String,
+    pub label: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub detail: Option<String>,
+    pub updated_at: DateTime<Utc>,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum CloneMode {
@@ -80,6 +100,18 @@ pub struct AgentSession {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub subagent_run_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub subagent_description: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub subagent_color_key: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub subagent_summary: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub subagent_last_activity: Option<SubagentLastActivity>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub subagent_queued_prompts: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub subagent_hidden_reports: Vec<SubagentHiddenReport>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub clone_parent_session_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub clone_parent_message_id: Option<String>,
@@ -135,6 +167,14 @@ pub struct AgentSessionMeta {
     pub subagent_status: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub subagent_run_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub subagent_description: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub subagent_color_key: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub subagent_summary: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub subagent_last_activity: Option<SubagentLastActivity>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub clone_parent_session_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]

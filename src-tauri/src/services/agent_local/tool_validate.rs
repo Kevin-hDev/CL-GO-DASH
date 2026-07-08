@@ -49,7 +49,17 @@ static DELEGATE_TASK: Schema = &[
     ("prompt", Ty::Str, true),
     ("subagent_type", Ty::Str, true),
     ("name", Ty::Str, false),
+    ("display_name", Ty::Str, false),
+    ("description", Ty::Str, false),
+    ("subagent_id", Ty::Str, false),
 ];
+static SUBAGENT_ID: Schema = &[("subagent_id", Ty::Str, true)];
+static WAIT_SUBAGENT: Schema = &[
+    ("subagent_id", Ty::Str, false),
+    ("subagent_ids", Ty::Arr, false),
+    ("timeout_ms", Ty::Int, false),
+];
+static MESSAGE_SUBAGENT: Schema = &[("subagent_id", Ty::Str, true), ("prompt", Ty::Str, true)];
 static READ_SPREADSHEET: Schema = &[
     ("path", Ty::Str, true),
     ("sheet", Ty::Str, false),
@@ -114,6 +124,11 @@ fn schema(tool: &str) -> Option<Schema> {
         "create_branch" => CREATE_BRANCH,
         "checkout_branch" => CHECKOUT_BRANCH,
         "delegate_task" => DELEGATE_TASK,
+        "list_subagents" => &[],
+        "get_subagent" => SUBAGENT_ID,
+        "wait_subagent" => WAIT_SUBAGENT,
+        "cancel_subagent" => SUBAGENT_ID,
+        "message_subagent" => MESSAGE_SUBAGENT,
         "read_spreadsheet" => READ_SPREADSHEET,
         "read_document" => READ_DOCUMENT,
         "read_image" => READ_IMAGE,

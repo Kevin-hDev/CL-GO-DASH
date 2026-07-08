@@ -8,6 +8,11 @@ fn defaults_match_product_choice() {
             "load_skill",
             "ask_user_choice",
             "delegate_task",
+            "list_subagents",
+            "get_subagent",
+            "wait_subagent",
+            "cancel_subagent",
+            "message_subagent",
             "planmode",
             "exitplanmode"
         ]
@@ -32,4 +37,12 @@ fn filtered_definitions_keep_locked_and_enabled_optional_tools() {
     assert!(has_tool(&names, "load_skill"));
     assert!(!has_tool(&names, "todo_write"));
     assert!(!has_tool(&names, "forecast"));
+}
+
+#[test]
+fn delegate_task_enables_all_subagent_control_tools() {
+    let enabled = normalize_enabled_optional_tools(&["delegate_task".to_string()]);
+    for tool_id in SUBAGENT_TOOLS {
+        assert!(enabled.iter().any(|id| id == tool_id));
+    }
 }

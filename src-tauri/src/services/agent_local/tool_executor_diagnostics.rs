@@ -18,6 +18,7 @@ pub async fn started(
         false,
     )
     .await;
+    super::subagent_activity::record_tool_started(session_id, name, summary.as_ref()).await;
     summary
 }
 
@@ -47,8 +48,10 @@ pub async fn completed(
         request_id,
         name,
         "completed",
-        summary,
+        summary.clone(),
         is_error,
     )
     .await;
+    super::subagent_activity::record_tool_completed(session_id, name, summary.as_ref(), is_error)
+        .await;
 }

@@ -601,7 +601,7 @@
         "mcp": { "title": "MCP コネクタ", "description": "有効な MCP コネクタが提供するツールをモデルが発見できるようにします。" },
         "skills": { "title": "Skills", "description": "作業に必要な場合だけ専門ワークフローを読み込みます。" },
         "user_choice": { "title": "ユーザー選択", "description": "重要な選択肢についてモデルがユーザーに確認できるようにします。" },
-        "subagents": { "title": "サブエージェント", "description": "独立した作業をバックグラウンドエージェントに任せられるようにします。" },
+        "subagents": { "title": "サブエージェント", "description": "独立した作業用の子セッションを作成して制御できるようにします。" },
         "plan_mode": { "title": "Plan mode", "description": "計画を作成し、承認後に計画モードを終了できるようにします。" },
         "todo_list": { "title": "Todo list", "description": "作業チェックリストの作成、更新、一時停止、再開、削除を可能にします。" },
         "agent_diagnostics": { "title": "エージェント診断", "description": "エラーや中断後に最近の診断を読めるようにします。" },
@@ -851,8 +851,8 @@
     "openSite": "ウェブサイトを開く"
   },
   "subagents": {
-    "backgroundCount_one": "{{count}} エージェントがバックグラウンドで実行中",
-    "backgroundCount_other": "{{count}} エージェントがバックグラウンドで実行中",
+    "backgroundCount_one": "{{count}} 件のアクティブなサブエージェント",
+    "backgroundCount_other": "{{count}} 件のアクティブなサブエージェント",
     "stopAll": "すべて停止",
     "running": "実行中…",
     "stop": "停止",

@@ -100,6 +100,19 @@ describe("session-summary", () => {
     expect(childSubagents("parent", sessions).map((agent) => agent.sessionId))
       .toEqual(["child-a", "child-b"]);
   });
+
+  it("conserve les métadonnées visibles des sous-agents", () => {
+    const sessions = [meta("child-a", "parent", "explorer")];
+    sessions[0].subagent_description = "Analyse repo";
+    sessions[0].subagent_color_key = "geminitor";
+    sessions[0].subagent_summary = "Résumé final";
+
+    expect(childSubagents("parent", sessions)[0]).toMatchObject({
+      description: "Analyse repo",
+      colorKey: "geminitor",
+      summary: "Résumé final",
+    });
+  });
 });
 
 function meta(id: string, parent: string, type: "explorer" | "coder"): AgentSessionMeta {

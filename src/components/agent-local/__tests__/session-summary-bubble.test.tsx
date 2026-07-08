@@ -87,7 +87,8 @@ describe("SessionSummaryBubble", () => {
     expect(getByTitle("Paused")).toBeTruthy();
     expect(getByText("1/2")).toBeTruthy();
     expect(getByText("Plan title")).toBeTruthy();
-    expect(getByText("Explore · Explorer")).toBeTruthy();
+    expect(getByText("Geminitor")).toBeTruthy();
+    expect(getByText("Analyse sous-agent")).toBeTruthy();
     expect(getByText("interrupted")).toBeTruthy();
   });
 
@@ -126,7 +127,7 @@ describe("SessionSummaryBubble", () => {
 
     fireEvent.click(getByRole("button", { name: "Toggle summary" }));
     fireEvent.click(getByRole("button", { name: "Subagents (1)" }));
-    fireEvent.click(getByText("Explore · Explorer"));
+    fireEvent.click(getByText("Geminitor"));
 
     expect(onOpenSubagent).toHaveBeenCalledWith("child-1");
   });
@@ -215,6 +216,7 @@ function summary(changes = { additions: 3, deletions: 1 }): SessionSummaryHookSt
       type: "explorer",
       status: "interrupted",
       promptPreview: "",
+      description: "Analyse sous-agent",
     }],
   };
 }

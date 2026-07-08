@@ -18,13 +18,7 @@ pub fn prepend(messages: &mut [ChatMessage], enabled_tool_names: &[String]) {
     if disabled.is_empty() {
         return;
     }
-    let listing = disabled
-        .iter()
-        .filter_map(|id| {
-            super::tool_short_desc::tool_short_desc(id).map(|d| format!("- {id}: {d}"))
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
+    let listing = disabled_listing(&disabled);
     if listing.is_empty() {
         return;
     }
@@ -36,5 +30,42 @@ pub fn prepend(messages: &mut [ChatMessage], enabled_tool_names: &[String]) {
     );
     if let Some(first) = messages.first_mut().filter(|m| m.role == "system") {
         first.content.push_str(&section);
+    }
+}
+
+fn disabled_listing(disabled: &[&str]) -> String {
+    let subagents_disabled = disabled.contains(&"delegate_task");
+    let mut lines = Vec::new();
+    if subagents_disabled {
+        lines.push(
+            "- subagents: Spawn and control child agents for parallel or isolated work".to_string(),
+        );
+    }
+    lines.extend(
+        disabled
+            .iter()
+            .filter(|id| !(subagents_disabled && super::tool_catalog::is_subagent_tool(id)))
+            .filter_map(|id| {
+                super::tool_short_desc::tool_short_desc(id).map(|d| format!("- {id}: {d}"))
+            }),
+    );
+    lines.join("\n")
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn subagents_are_collapsed_as_one_disabled_feature() {
+        let listing = super::disabled_listing(&[
+            "delegate_task",
+            "list_subagents",
+            "get_subagent",
+            "forecast",
+        ]);
+
+        assert!(listing.contains("- subagents:"));
+        assert!(!listing.contains("- delegate_task:"));
+        assert!(!listing.contains("- list_subagents:"));
+        assert!(listing.contains("- forecast:"));
     }
 }

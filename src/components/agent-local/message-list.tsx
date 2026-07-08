@@ -10,7 +10,6 @@ import { FileChangeBubble } from "./file-change-bubble";
 import { LoadingIndicator } from "./working-stats";
 import { useCompression } from "@/hooks/use-compression";
 import { isCompressionContextOnlyMessage, isCompressionSummaryMessage } from "@/lib/context-messages";
-import { isSubagentInjectedMessage, extractSubagentsFromMessages } from "@/lib/subagent-message-utils";
 import { collectMessageFileOperations } from "@/lib/file-preview-utils";
 import type { AgentMessage, AgentPlanPreview, SubagentInfo, TokenPhase } from "@/types/agent";
 import type { ToolActivity, StreamSegment } from "@/hooks/agent-chat-utils";
@@ -57,30 +56,13 @@ export function MessageList({
   const hasCompressionMarker = messages.some(isCompressionSummaryMessage);
   const showCompressionIndicator = isCompressing && !hasCompressionMarker;
 
-  const extractedAgents = completedSubagents && completedSubagents.length > 0
-    ? completedSubagents
-    : extractSubagentsFromMessages(messages);
-  const subagentBubbleMessageId = extractedAgents.length > 0
-    ? messages.find(isSubagentInjectedMessage)?.id
-    : null;
+  const extractedAgents = completedSubagents ?? [];
 
   return (
     <>
       {messages.map((msg, idx) => {
         if (isCompressionSummaryMessage(msg)) return <ContextCompressionMarker key={msg.id} />;
         if (isCompressionContextOnlyMessage(msg)) return null;
-        if (isSubagentInjectedMessage(msg)) {
-          if (msg.id === subagentBubbleMessageId) {
-            return (
-              <SubagentBubble
-                key={`sa-bubble-${msg.id}`}
-                subagents={extractedAgents}
-                onOpen={(id) => onOpenSubagent?.(id)}
-              />
-            );
-          }
-          return null;
-        }
         if (msg.role === "user") {
           return (
             <UserMessage
@@ -111,7 +93,7 @@ export function MessageList({
         return null;
       })}
 
-      {extractedAgents.length > 0 && !subagentBubbleMessageId && (
+      {extractedAgents.length > 0 && (
         <SubagentBubble
           subagents={extractedAgents}
           onOpen={(id) => onOpenSubagent?.(id)}

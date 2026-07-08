@@ -24,6 +24,12 @@ function evictGlobalStore() {
   }
 }
 
+function subagentSignature(items: SubagentInfo[]) {
+  return items
+    .map((item) => `${item.sessionId}:${item.status}:${item.runId ?? ""}:${item.summary ?? ""}`)
+    .join("|");
+}
+
 let globalListenerPromise: Promise<void> | null = null;
 
 function ensureGlobalListener() {
@@ -40,14 +46,19 @@ function ensureGlobalListener() {
         store.active = [];
       }
       store.runId = runId;
+      store.completed = store.completed.filter(
+        (s) => s.sessionId !== e.data.subagentSessionId,
+      );
       store.active = [
-        ...store.active,
+        ...store.active.filter((s) => s.sessionId !== e.data.subagentSessionId),
         {
           sessionId: e.data.subagentSessionId,
           name: e.data.subagentName,
           type: e.data.subagentType as "explorer" | "coder",
           status: "running",
           promptPreview: e.data.promptPreview,
+          description: e.data.subagentDescription,
+          colorKey: e.data.subagentColorKey,
           runId,
           spawnedAt: Date.now(),
         },
@@ -72,6 +83,10 @@ function ensureGlobalListener() {
           type: found?.type ?? "explorer",
           status: e.data.status,
           promptPreview: found?.promptPreview ?? "",
+          description: found?.description ?? "",
+          colorKey: found?.colorKey,
+          summary: e.data.summary,
+          lastActivity: found?.lastActivity,
           runId: e.data.runId ?? found?.runId ?? store.runId,
         },
       ];
@@ -109,6 +124,10 @@ export function useSubagents(parentSessionId: string | undefined) {
         type: item.subagent_type ?? "explorer",
         status: item.subagent_status ?? "completed",
         promptPreview: "",
+        description: item.subagent_description,
+        colorKey: item.subagent_color_key,
+        summary: item.subagent_summary,
+        lastActivity: item.subagent_last_activity,
         runId: item.subagent_run_id,
       }));
       setCompleted(mapped.filter((item) => item.status !== "running"));
@@ -120,7 +139,10 @@ export function useSubagents(parentSessionId: string | undefined) {
       if (store) {
         setActive([...store.active]);
         setCompleted((prev) => {
-          if (store.completed.length > 0 && store.completed.length !== prev.length) {
+          if (
+            store.completed.length > 0
+            && subagentSignature(store.completed) !== subagentSignature(prev)
+          ) {
             return [...store.completed];
           }
           return prev;

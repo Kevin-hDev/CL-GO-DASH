@@ -102,17 +102,34 @@
   border-radius: 50%;
 }
 
+.sa-dot-geminitor,
 .sa-dot-explorer {
-  background: var(--tool-read, #4ec9b0);
+  background: var(--subagent-geminitor);
 }
 
+.sa-dot-claudiator,
 .sa-dot-coder {
-  background: var(--tool-write, #ce9178);
+  background: var(--subagent-claudiator);
+}
+
+.sa-agent-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
 .sa-agent-name {
   color: var(--text-primary);
   font-weight: 500;
+}
+
+.sa-agent-description {
+  color: var(--text-tertiary);
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 260px;
 }
 
 .sa-agent-timer {

@@ -21,4 +21,18 @@ mod tests {
 
         let _ = std::fs::remove_dir_all(project);
     }
+
+    #[test]
+    fn queued_followup_keeps_session_running() {
+        let status = super::super::subagent_task::effective_session_status("completed", true);
+
+        assert_eq!(status, "running");
+    }
+
+    #[test]
+    fn final_run_keeps_completed_status() {
+        let status = super::super::subagent_task::effective_session_status("completed", false);
+
+        assert_eq!(status, "completed");
+    }
 }

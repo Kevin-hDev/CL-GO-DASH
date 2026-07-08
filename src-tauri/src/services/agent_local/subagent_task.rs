@@ -1,15 +1,13 @@
-use crate::commands::agent_chat_task::{run_stream_task, StreamCapabilityHints, StreamTaskParams};
 use crate::services::agent_local::session_store;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
-use crate::services::agent_local::subagent_completion::SubagentCompletion;
 use crate::services::agent_local::subagent_registry;
-use crate::services::agent_local::types_ollama::{ChatMessage, StreamEvent};
+use crate::services::agent_local::types_ollama::StreamEvent;
 use tauri::AppHandle;
-use tokio::sync::oneshot;
 use tokio_util::sync::CancellationToken;
 
 pub async fn run(
     app: AppHandle,
+    parent_session_id: String,
     child_session_id: String,
     model: String,
     provider: String,
@@ -18,16 +16,24 @@ pub async fn run(
     parent_emitter: AgentEventEmitter,
     cancel: CancellationToken,
     project_id: Option<String>,
-    completion_tx: oneshot::Sender<SubagentCompletion>,
 ) {
-    let result = run_inner(
+    let next_run = super::subagent_queued::QueuedSubagentRun {
+        app: app.clone(),
+        parent_session_id: parent_session_id.clone(),
+        child_session_id: child_session_id.clone(),
+        model: model.clone(),
+        provider: provider.clone(),
+        subagent_type: subagent_type.clone(),
+        parent_emitter: parent_emitter.clone(),
+        project_id: project_id.clone(),
+    };
+    let result = super::subagent_task_stream::run_inner(
         app,
         child_session_id.clone(),
         model,
         provider,
         prompt,
         subagent_type.clone(),
-        &parent_emitter,
         cancel,
         project_id,
     )
@@ -37,41 +43,67 @@ pub async fn run(
 
     let (success, status, summary) = match result {
         Ok(s) => s,
-        Err(e) => (
-            false,
-            super::subagent_status::FAILED.to_string(),
-            format!("Erreur : {e}"),
-        ),
+        Err(_) => {
+            eprintln!("[subagent] échec {}", child_session_id);
+            (
+                false,
+                super::subagent_status::FAILED.to_string(),
+                "Le sous-agent n'a pas pu terminer correctement.".to_string(),
+            )
+        }
     };
+    let queued_followup = has_queued_followup(&child_session_id, &status).await;
+    let session_status = effective_session_status(&status, queued_followup);
 
-    if let Err(e) = update_session_status(&child_session_id, &status).await {
+    if update_session_status(&child_session_id, session_status)
+        .await
+        .is_err()
+    {
         // Non fatal : on logge mais on continue. Le statut disque sera
         // reclassé en "interrupted" au prochain démarrage par le cleanup.
-        eprintln!("[subagent] persistance statut {}: {e}", child_session_id);
+        eprintln!("[subagent] persistance statut {}", child_session_id);
+    }
+    if update_session_summary(&child_session_id, &summary, session_status)
+        .await
+        .is_err()
+    {
+        eprintln!("[subagent] persistance résumé {}", child_session_id);
     }
 
     let child_name = get_child_name(&child_session_id).await;
+    let report = super::subagent_hidden_reports::build_report(
+        child_session_id.clone(),
+        child_name.clone(),
+        subagent_type.clone(),
+        session_status.to_string(),
+        summary.clone(),
+    );
+    if super::subagent_hidden_reports::append(&parent_session_id, report)
+        .await
+        .is_err()
+    {
+        eprintln!("[subagent] rapport parent {}", parent_session_id);
+    }
+
+    if !queued_followup {
+        let _ = parent_emitter.send(StreamEvent::SubagentCompleted {
+            subagent_session_id: child_session_id.clone(),
+            success,
+            status: status.clone(),
+            summary: summary.clone(),
+            run_id,
+        });
+    }
 
     super::subagent_working_dir::cleanup(&child_session_id).await;
     subagent_registry::unregister(&child_session_id).await;
 
-    let completion = SubagentCompletion {
-        child_session_id: child_session_id.clone(),
-        name: child_name,
-        subagent_type,
-        status: status.clone(),
-        success,
-        summary: summary.clone(),
-        run_id: run_id.clone(),
-    };
-    let _ = parent_emitter.send(StreamEvent::SubagentCompleted {
-        subagent_session_id: child_session_id,
-        success,
-        status,
-        summary,
-        run_id,
-    });
-    let _ = completion_tx.send(completion);
+    if super::subagent_queued::spawn_next_if_present(next_run)
+        .await
+        .is_err()
+    {
+        eprintln!("[subagent] relance file {}", child_session_id);
+    }
 }
 
 async fn get_child_name(child_id: &str) -> String {
@@ -81,103 +113,46 @@ async fn get_child_name(child_id: &str) -> String {
         .unwrap_or_else(|_| "agent".to_string())
 }
 
-async fn run_inner(
-    app: AppHandle,
-    child_session_id: String,
-    model: String,
-    provider: String,
-    prompt: String,
-    subagent_type: String,
-    _parent_emitter: &AgentEventEmitter,
-    cancel: CancellationToken,
-    project_id: Option<String>,
-) -> Result<(bool, String, String), String> {
-    let is_explorer = subagent_type == "explorer";
-    let tools = if is_explorer {
-        super::tool_definitions_subagent::get_explorer_tool_definitions()
+async fn has_queued_followup(child_id: &str, status: &str) -> bool {
+    status == super::subagent_status::COMPLETED
+        && session_store::get(child_id)
+            .await
+            .map(|session| !session.subagent_queued_prompts.is_empty())
+            .unwrap_or(false)
+}
+
+pub fn effective_session_status(status: &str, queued_followup: bool) -> &str {
+    if queued_followup {
+        super::subagent_status::RUNNING
     } else {
-        super::tool_dispatcher::get_tool_definitions()
-    };
-
-    let system_prompt = if is_explorer {
-        super::subagent_prompts::explorer_system()
-    } else {
-        super::subagent_prompts::coder_system(project_id.as_deref()).await
-    };
-
-    let messages = vec![
-        ChatMessage {
-            role: "system".to_string(),
-            content: system_prompt,
-            ..Default::default()
-        },
-        ChatMessage {
-            role: "user".to_string(),
-            content: prompt.clone(),
-            ..Default::default()
-        },
-    ];
-
-    let working_dir =
-        super::subagent_working_dir::resolve(project_id.as_deref(), &child_session_id, is_explorer)
-            .await?;
-    let emitter = AgentEventEmitter::new(app, child_session_id.clone());
-    let request_id = super::stream_diagnostics::start_request(&child_session_id, 0).await;
-
-    if let Ok(child_session) = session_store::get(&child_session_id).await {
-        let _ = emitter.send(StreamEvent::SessionSnapshot {
-            messages: child_session.messages,
-            token_count: child_session.accumulated_tokens,
-        });
-    }
-
-    let result = run_stream_task(StreamTaskParams {
-        on_event: emitter,
-        session_id: child_session_id.clone(),
-        request_id: request_id.clone(),
-        model,
-        messages,
-        tools,
-        think: false,
-        provider,
-        working_dir: Some(working_dir.to_string_lossy().to_string()),
-        capability_hints: StreamCapabilityHints::default(),
-        reasoning_mode: None,
-        permission_mode_override: Some("subagent".to_string()),
-        plan_mode: Some(false),
-        cancel: cancel.clone(),
-    })
-    .await;
-
-    let was_cancelled = cancel.is_cancelled();
-    match result {
-        Ok(final_msgs) => {
-            let summary = super::subagent_summary::extract_summary_from_messages(&final_msgs);
-            let status = if was_cancelled {
-                super::subagent_status::CANCELLED
-            } else {
-                super::subagent_status::COMPLETED
-            };
-            Ok((!was_cancelled, status.to_string(), summary))
-        }
-        Err(e) if was_cancelled || e == "Annulé" => Ok((
-            false,
-            super::subagent_status::CANCELLED.to_string(),
-            "Sous-agent annulé.".to_string(),
-        )),
-        Err(e) => {
-            super::stream_diagnostics::record_failure(
-                &child_session_id,
-                Some(&request_id),
-                &e,
-                false,
-            )
-            .await;
-            Err(e)
-        }
+        status
     }
 }
 
 async fn update_session_status(session_id: &str, status: &str) -> Result<(), String> {
     super::session_subagents::mark_status(session_id, status).await
+}
+
+async fn update_session_summary(
+    session_id: &str,
+    summary: &str,
+    status: &str,
+) -> Result<(), String> {
+    let mut session = session_store::get(session_id).await?;
+    session.subagent_summary = Some(summary.to_string());
+    session.subagent_last_activity = Some(super::types_session::SubagentLastActivity {
+        kind: "status".to_string(),
+        label: final_activity_label(status).to_string(),
+        detail: Some(summary.chars().take(220).collect()),
+        updated_at: chrono::Utc::now(),
+    });
+    session_store::save(&session).await
+}
+
+fn final_activity_label(status: &str) -> &'static str {
+    match status {
+        super::subagent_status::CANCELLED => "Annulé",
+        super::subagent_status::FAILED => "Échoué",
+        _ => "Terminé",
+    }
 }

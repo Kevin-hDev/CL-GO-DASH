@@ -153,6 +153,11 @@ async fn dispatch_inner(
             super::tool_dispatcher_delegate::dispatch_delegate(args, session_id).await
         }
         _ => {
+            if let Some(result) =
+                super::tool_subagent_control::dispatch(tool_name, args, session_id).await
+            {
+                return result;
+            }
             if let Some(result) = super::tool_dispatcher_forecast::dispatch_forecast(
                 tool_name,
                 args,

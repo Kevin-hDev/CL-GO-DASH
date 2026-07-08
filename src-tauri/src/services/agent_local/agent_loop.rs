@@ -6,7 +6,7 @@ use super::{
     agent_loop_limits::MAX_TURNS, agent_loop_plan, agent_loop_support, agent_loop_thinking_retry,
     circuit_breaker, context_budget, eager_dispatch, ollama_stream,
     stream_diagnostics_model as model_diag, stream_diagnostics_payload as payload_diag,
-    tool_executor, tool_result_budget,
+    subagent_orchestration, tool_executor, tool_result_budget,
 };
 use crate::services::token_counting;
 use std::path::PathBuf;
@@ -33,6 +33,7 @@ pub async fn run_agent_loop(
     let write_guard_arc = write_guard_registry::lock(&session_id).await;
     let mut write_guard = write_guard_arc.lock().await;
     let mut plan_repairs = 0;
+    let mut subagents = subagent_orchestration::ParentSubagentOrchestrator::new(&session_id).await;
     let compression = LoopCompression {
         on_event,
         model,
@@ -47,6 +48,7 @@ pub async fn run_agent_loop(
         if cancel.is_cancelled() {
             return Err("Annulé".to_string());
         }
+        subagents.inject_pending_reports(messages).await;
         tool_result_budget::apply_budget(messages);
         context_budget::prepare_for_request(messages, configured_context);
         let realtime_budget = compression.realtime_budget(messages);
@@ -80,7 +82,6 @@ pub async fn run_agent_loop(
         let interrupted = outcome.is_interrupted();
         let mut result = outcome.into_result();
         model_diag::record_model_result(&session_id, &request_id, turn, &result).await;
-
         if !interrupted {
             let retry = agent_loop_thinking_retry::retry_if_needed(
                 agent_loop_thinking_retry::ThinkingRetryParams {
@@ -141,7 +142,9 @@ pub async fn run_agent_loop(
                 return Err(message.to_string());
             }
         }
-        super::stream_buffer::finalize_content_phase(on_event, &result, plan_active);
+        subagents
+            .finalize_content_phase(on_event, &result, plan_active)
+            .await;
         let mut assistant_message = agent_loop_support::build_assistant_message(&result);
         if plan_active && !result.tool_calls.is_empty() {
             assistant_message.content.clear();
@@ -152,6 +155,12 @@ pub async fn run_agent_loop(
             .await;
         if result.tool_calls.is_empty() {
             eager_handle.abort();
+            if subagents
+                .continue_after_no_tool_turn(on_event, messages, cancel.clone())
+                .await?
+            {
+                continue;
+            }
             break;
         }
         agent_loop_support::record_detected_tool_calls(
@@ -192,7 +201,6 @@ pub async fn run_agent_loop(
             Some(&tool_compression),
         )
         .await;
-
         let compressed_after_tools = compression
             .after_tools(
                 messages,

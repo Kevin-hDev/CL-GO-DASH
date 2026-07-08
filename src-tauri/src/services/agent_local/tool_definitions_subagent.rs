@@ -6,9 +6,9 @@ pub fn delegate_task_definition() -> Value {
         "Spawn an autonomous subagent to handle a subtask in isolation. Results come back to you; they are NOT shown to the user, so you must relay a summary. \
          Types: 'explorer' (read-only: read_file, list_dir, grep, glob, web_search, web_fetch) for research, file investigation, web lookups; \
          or 'coder' (file creation/modification in an isolated git worktree) for parallel implementation work. \
-         When to use: independent subtasks that can run in parallel; open-ended research that would take several rounds of grep/glob/read; background work you don't need immediately. \
+         The subagent keeps working in its visible child session while you continue. The parent stream stays active until subagents from the current turn finish. \
          When NOT to use: reading a specific known file — use read_file directly; searching for a single class/function — use grep or glob directly; a 1-2 step task — do it yourself. \
-         IMPORTANT: once you delegate a task, do NOT do the same work yourself. Wait for the subagent report, then synthesize. \
+         IMPORTANT: once you delegate a task, do NOT do the same work yourself and do NOT write a final answer before the required subagent reports arrive. \
          Write a structured prompt using XML tags: <context>, <task>, <constraints>, <output_format>. Terse prompts produce shallow results. \
          You can spawn multiple subagents in parallel for independent subtasks.",
         serde_json::json!({
@@ -30,12 +30,81 @@ pub fn delegate_task_definition() -> Value {
                 },
                 "name": {
                     "type": "string",
-                    "description": "Short name to identify this subagent in the UI (optional)"
+                    "description": "Legacy short name to identify this subagent in the UI (optional)"
+                },
+                "display_name": {
+                    "type": "string",
+                    "description": "Short visible name. Defaults to Claudiator for coder and Geminitor for explorer."
+                },
+                "description": {
+                    "type": "string",
+                    "description": "Short visible mission description for the child session."
+                },
+                "subagent_id": {
+                    "type": "string",
+                    "description": "Existing child session id to reuse instead of creating a fresh subagent."
                 }
             },
             "required": ["prompt", "subagent_type"]
         }),
     )
+}
+
+pub fn subagent_control_definitions() -> Vec<Value> {
+    use super::tool_definitions::tool_def;
+    vec![
+        tool_def(
+            "list_subagents",
+            "List subagents owned by this parent session with short status, name, description, and id.",
+            serde_json::json!({ "type": "object", "properties": {} }),
+        ),
+        tool_def(
+            "get_subagent",
+            "Get status, description, and final summary for one child subagent session.",
+            serde_json::json!({
+                "type": "object",
+                "properties": { "subagent_id": { "type": "string", "description": "Child subagent session id" } },
+                "required": ["subagent_id"]
+            }),
+        ),
+        tool_def(
+            "wait_subagent",
+            "Wait for one or more child subagents to finish and return their final reports.",
+            serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "subagent_id": { "type": "string", "description": "Child subagent session id" },
+                    "subagent_ids": {
+                        "type": "array",
+                        "items": { "type": "string" },
+                        "description": "Child subagent session ids"
+                    },
+                    "timeout_ms": { "type": "integer", "description": "Maximum wait time, default 30000, max 300000" }
+                }
+            }),
+        ),
+        tool_def(
+            "cancel_subagent",
+            "Cancel a running child subagent owned by this parent session.",
+            serde_json::json!({
+                "type": "object",
+                "properties": { "subagent_id": { "type": "string", "description": "Child subagent session id" } },
+                "required": ["subagent_id"]
+            }),
+        ),
+        tool_def(
+            "message_subagent",
+            "Send a new instruction to an existing child subagent session. Running sessions queue the instruction for a later run.",
+            serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "subagent_id": { "type": "string", "description": "Child subagent session id" },
+                    "prompt": { "type": "string", "description": "Instruction to send to the child subagent" }
+                },
+                "required": ["subagent_id", "prompt"]
+            }),
+        ),
+    ]
 }
 
 pub fn get_explorer_tool_definitions() -> Vec<Value> {

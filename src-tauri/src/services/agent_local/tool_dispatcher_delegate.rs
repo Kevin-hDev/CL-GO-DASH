@@ -1,10 +1,8 @@
 use crate::services::agent_local::types_tools::ToolResult;
 use serde_json::Value;
-use tokio::sync::oneshot;
 
 pub struct PendingDelegate {
     child_id: String,
-    receiver: oneshot::Receiver<super::subagent_completion::SubagentCompletion>,
 }
 
 pub async fn dispatch_delegate(args: &Value, session_id: &str) -> ToolResult {
@@ -33,10 +31,10 @@ pub async fn spawn_delegate(args: &Value, session_id: &str) -> Result<PendingDel
         Err(tr) => Err(tr),
         Ok(spawned) => {
             let child_id = spawned.child_id.clone();
-            let (tx, rx) = oneshot::channel();
             if let Err(e) =
                 super::subagent_spawn_channel::send(super::subagent_spawn_channel::SpawnRequest {
                     app: spawned.app,
+                    parent_session_id: session_id.to_string(),
                     child_session_id: spawned.child_id,
                     model: spawned.model,
                     provider: spawned.provider,
@@ -45,7 +43,6 @@ pub async fn spawn_delegate(args: &Value, session_id: &str) -> Result<PendingDel
                     parent_emitter: spawned.parent_emitter,
                     cancel: spawned.cancel,
                     project_id: spawned.project_id,
-                    completion_tx: tx,
                 })
             {
                 super::subagent_registry::unregister(&child_id).await;
@@ -57,30 +54,27 @@ pub async fn spawn_delegate(args: &Value, session_id: &str) -> Result<PendingDel
                 }
                 return Err(ToolResult::err(e));
             }
-            Ok(PendingDelegate {
-                child_id,
-                receiver: rx,
-            })
+            Ok(PendingDelegate { child_id })
         }
     }
 }
 
 impl PendingDelegate {
     pub async fn wait(self) -> ToolResult {
-        match self.receiver.await {
-            Ok(completion) => completion.to_tool_result(),
-            Err(_) => {
-                super::subagent_registry::unregister(&self.child_id).await;
-                if let Err(e) = super::session_subagents::mark_status(
-                    &self.child_id,
-                    super::subagent_status::FAILED,
-                )
-                .await
-                {
-                    eprintln!("[delegate] mark_status failed {}: {e}", self.child_id);
-                }
-                ToolResult::err("Le sous-agent n'a pas pu terminer correctement.")
-            }
-        }
+        ToolResult::ok(format!(
+            "<subagent id=\"{}\" state=\"running\">\n\
+             Sous-agent lancé en session enfant. Le stream parent reste actif jusqu'au rapport. \
+             Ne rédige pas de réponse finale avant réception du rapport final.\n\
+             </subagent>",
+            escape_xml(&self.child_id)
+        ))
     }
+}
+
+fn escape_xml(value: &str) -> String {
+    value
+        .replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('"', "&quot;")
 }
