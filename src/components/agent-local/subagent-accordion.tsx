@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@/components/ui/tooltip";
+import { ChevronDown, Settings, Square } from "@/components/ui/lucide-icons";
 import { subagentColorKey, subagentDisplayName, subagentSecondaryText } from "@/lib/subagent-display";
 import type { SubagentInfo } from "@/types/agent";
 import "./subagent-accordion.css";
@@ -43,7 +44,7 @@ export function SubagentAccordion({ subagents, onCancel, onOpen }: SubagentAccor
           onClick={() => setExpanded((v) => !v)}
           type="button"
         >
-          <span className="sa-accordion-icon">⚙</span>
+          <Settings className="sa-accordion-icon" aria-hidden="true" />
           <span className="sa-accordion-title">
             {t("subagents.backgroundCount", { count: subagents.length })}
           </span>
@@ -54,7 +55,7 @@ export function SubagentAccordion({ subagents, onCancel, onOpen }: SubagentAccor
             onClick={() => subagents.forEach((s) => onCancel(s.sessionId))}
             type="button"
           >
-            ■
+            <Square aria-hidden="true" />
           </button>
         </Tooltip>
         <button
@@ -62,7 +63,7 @@ export function SubagentAccordion({ subagents, onCancel, onOpen }: SubagentAccor
           onClick={() => setExpanded((v) => !v)}
           type="button"
         >
-          <span className={`sa-chevron ${expanded ? "sa-chevron-up" : ""}`}>›</span>
+          <ChevronDown className={`sa-chevron ${expanded ? "sa-chevron-up" : ""}`} aria-hidden="true" />
         </button>
       </div>
       <div className={`tb-accordion${expanded ? " tb-open" : ""}`}>
@@ -92,7 +93,7 @@ export function SubagentAccordion({ subagents, onCancel, onOpen }: SubagentAccor
                       onClick={() => onCancel(agent.sessionId)}
                       type="button"
                     >
-                      ■
+                      <Square aria-hidden="true" />
                     </button>
                   </Tooltip>
                 </>

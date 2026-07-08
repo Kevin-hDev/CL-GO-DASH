@@ -28,6 +28,12 @@ vi.mock("@/components/ui/tooltip", () => ({
   Tooltip: ({ children }: { children: ReactNode }) => <>{children}</>,
 }));
 
+vi.mock("@/components/ui/lucide-icons", () => ({
+  ChevronDown: (props: Record<string, unknown>) => <span data-testid="chevron" {...props} />,
+  Settings: (props: Record<string, unknown>) => <span data-testid="settings" {...props} />,
+  Square: (props: Record<string, unknown>) => <span data-testid="square" {...props} />,
+}));
+
 describe("SubagentAccordion", () => {
   it("affiche les noms produit et le statut sur la première ligne", () => {
     const { container, getByText } = render(
@@ -42,6 +48,20 @@ describe("SubagentAccordion", () => {
     expect(getByText("Geminitor")).toBeTruthy();
     expect(getByText("Audit subagents long")).toBeTruthy();
     expect(container.querySelectorAll(".sa-agent-heading .sa-agent-status")).toHaveLength(2);
+  });
+
+  it("utilise les styles de bulle du composer et des boutons icônes", () => {
+    const { container } = render(
+      <SubagentAccordion
+        subagents={[agent("coder", "Audit subagents long")]}
+        onCancel={vi.fn()}
+        onOpen={vi.fn()}
+      />,
+    );
+
+    expect(container.querySelector(".sa-accordion")).toBeTruthy();
+    expect(container.querySelector(".sa-stop-all svg, .sa-stop-all [data-testid='square']")).toBeTruthy();
+    expect(container.querySelector(".sa-chevron-btn [data-testid='chevron']")).toBeTruthy();
   });
 });
 
