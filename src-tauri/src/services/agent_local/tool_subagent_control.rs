@@ -68,8 +68,7 @@ async fn wait(args: &Value, parent_id: &str) -> ToolResult {
         for id in &ids {
             match owned_child_by_id(id, parent_id).await {
                 Ok(child) => {
-                    any_running |=
-                        child.subagent_status.as_deref() == Some(super::subagent_status::RUNNING);
+                    any_running |= child_has_pending_work(&child);
                     children.push(child);
                 }
                 Err(result) => return result,
@@ -167,3 +166,12 @@ fn subagent_ids(args: &Value) -> Result<Vec<String>, ToolResult> {
     }
     Err(ToolResult::err("Sous-agent introuvable."))
 }
+
+fn child_has_pending_work(child: &AgentSession) -> bool {
+    child.subagent_status.as_deref() == Some(super::subagent_status::RUNNING)
+        || !child.subagent_queued_prompts.is_empty()
+}
+
+#[cfg(test)]
+#[path = "tool_subagent_control_tests.rs"]
+mod tests;

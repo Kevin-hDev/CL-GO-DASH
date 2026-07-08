@@ -7,12 +7,13 @@ pub(super) fn format_meta(meta: AgentSessionMeta) -> String {
         .map(|activity| text_field(&activity.label))
         .unwrap_or_default();
     format!(
-        "- id={} name=\"{}\" type={} status={} description=\"{}\" last_activity=\"{}\"",
+        "- id={} name=\"{}\" type={} status={} run_id=\"{}\" description=\"{}\" last_activity=\"{}\"",
         meta.id,
         text_field(&meta.name),
         meta.subagent_type.unwrap_or_else(|| "explorer".to_string()),
         meta.subagent_status
             .unwrap_or_else(|| "completed".to_string()),
+        text_field(&meta.subagent_run_id.unwrap_or_default()),
         text_field(&meta.subagent_description.unwrap_or_default()),
         activity
     )
@@ -40,11 +41,13 @@ pub(super) fn format_child(child: &AgentSession) -> String {
         })
         .unwrap_or_else(|| "<last_activity />".to_string());
     format!(
-        "<subagent id=\"{}\" name=\"{}\" type=\"{}\" status=\"{}\">\n<description>{}</description>\n{}\n<summary>{}</summary>\n</subagent>",
+        "<subagent id=\"{}\" name=\"{}\" type=\"{}\" status=\"{}\" run_id=\"{}\" queued_prompts=\"{}\">\n<description>{}</description>\n{}\n<summary>{}</summary>\n</subagent>",
         xml_attr(&child.id),
         xml_attr(&child.name),
         xml_attr(child.subagent_type.as_deref().unwrap_or("explorer")),
         xml_attr(child.subagent_status.as_deref().unwrap_or("completed")),
+        xml_attr(child.subagent_run_id.as_deref().unwrap_or("")),
+        child.subagent_queued_prompts.len(),
         xml_text(child.subagent_description.as_deref().unwrap_or("")),
         activity,
         xml_text(child.subagent_summary.as_deref().unwrap_or(""))
