@@ -70,6 +70,29 @@ describe("collectMessageSubagents", () => {
     });
     expect(agents[0].promptPreview).toHaveLength(120);
   });
+
+  it("borne l'inspection des gros messages et des gros résultats", () => {
+    const hugeResult = `${"x".repeat(2_000)}<subagent id="late-child" state="running" />`;
+    const agents = collectMessageSubagents({
+      ...message([]),
+      segments: [
+        {
+          content: "",
+          tools: [{ ...delegate("visible-child"), result: hugeResult }],
+          phase: "work",
+        },
+        ...Array.from({ length: 400 }, (_, index) => ({
+          content: "",
+          tools: [delegate(`child-${index}`)],
+          phase: "work" as const,
+        })),
+      ],
+    });
+
+    expect(agents).toHaveLength(64);
+    expect(agents.some((agent) => agent.sessionId === "late-child")).toBe(false);
+    expect(agents.some((agent) => agent.sessionId === "child-399")).toBe(false);
+  });
 });
 
 function message(tools: ToolActivityRecord[]): AgentMessage {
