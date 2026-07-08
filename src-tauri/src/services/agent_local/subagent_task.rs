@@ -2,12 +2,13 @@ use crate::services::agent_local::session_store;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::subagent_registry;
 use crate::services::agent_local::types_ollama::StreamEvent;
+use crate::services::agent_local::types_session::AgentSession;
 use tauri::AppHandle;
 use tokio_util::sync::CancellationToken;
 
-struct FinalizedSubagent {
-    queued_followup: bool,
-    session_status: String,
+pub(super) struct FinalizedSubagent {
+    pub(super) queued_followup: bool,
+    pub(super) session_status: String,
 }
 
 pub async fn run(
@@ -46,7 +47,7 @@ pub async fn run(
 
     let run_id = subagent_registry::get_run_id_for_child(&child_session_id).await;
 
-    let (success, status, summary) = match result {
+    let (mut success, mut status, mut summary) = match result {
         Ok(s) => s,
         Err(_) => {
             eprintln!("[subagent] échec {}", child_session_id);
@@ -61,10 +62,18 @@ pub async fn run(
         Ok(value) => value,
         Err(_) => {
             eprintln!("[subagent] persistance statut {}", child_session_id);
+            success = false;
+            status = super::subagent_status::FAILED.to_string();
+            summary = "Le sous-agent n'a pas pu terminer correctement.".to_string();
+            let _ = super::session_subagents::mark_status(
+                &child_session_id,
+                super::subagent_status::FAILED,
+            )
+            .await;
             subagent_registry::unregister(&child_session_id).await;
             FinalizedSubagent {
                 queued_followup: false,
-                session_status: status.clone(),
+                session_status: super::subagent_status::FAILED.to_string(),
             }
         }
     };
@@ -100,12 +109,17 @@ pub async fn run(
         subagent_registry::unregister(&child_session_id).await;
     }
 
-    if finalized.queued_followup
-        && super::subagent_queued::spawn_next_if_present(next_run)
-            .await
-            .is_err()
-    {
-        eprintln!("[subagent] relance file {}", child_session_id);
+    if finalized.queued_followup {
+        match super::subagent_queued::spawn_next_if_present(next_run).await {
+            Ok(true) => {}
+            Ok(false) => session_store::remove_session_lock(&child_session_id).await,
+            Err(_) => {
+                eprintln!("[subagent] relance file {}", child_session_id);
+                session_store::remove_session_lock(&child_session_id).await;
+            }
+        }
+    } else {
+        session_store::remove_session_lock(&child_session_id).await;
     }
 }
 
@@ -132,6 +146,26 @@ async fn finalize_session_after_run(
     let lock = session_store::lock_session(session_id).await;
     let _guard = lock.lock().await;
     let mut session = session_store::get(session_id).await?;
+    let finalized = apply_finalized_subagent_state(&mut session, status, summary);
+    let queued_followup = finalized.queued_followup;
+    session.subagent_last_activity = Some(super::types_session::SubagentLastActivity {
+        kind: "status".to_string(),
+        label: final_activity_label(&finalized.session_status).to_string(),
+        detail: Some(summary.chars().take(220).collect()),
+        updated_at: chrono::Utc::now(),
+    });
+    let save_result = session_store::save(&session).await;
+    if !queued_followup {
+        subagent_registry::unregister(session_id).await;
+    }
+    save_result.map(|_| finalized)
+}
+
+pub(super) fn apply_finalized_subagent_state(
+    session: &mut AgentSession,
+    status: &str,
+    summary: &str,
+) -> FinalizedSubagent {
     let queued_followup =
         status == super::subagent_status::COMPLETED && !session.subagent_queued_prompts.is_empty();
     let session_status = effective_session_status(status, queued_followup);
@@ -140,21 +174,11 @@ async fn finalize_session_after_run(
     }
     session.subagent_summary = Some(summary.to_string());
     session.subagent_status = Some(session_status.to_string());
-    session.subagent_last_activity = Some(super::types_session::SubagentLastActivity {
-        kind: "status".to_string(),
-        label: final_activity_label(session_status).to_string(),
-        detail: Some(summary.chars().take(220).collect()),
-        updated_at: chrono::Utc::now(),
-    });
     session.updated_at = Some(chrono::Utc::now());
-    let save_result = session_store::save(&session).await;
-    if !queued_followup {
-        subagent_registry::unregister(session_id).await;
-    }
-    save_result.map(|_| FinalizedSubagent {
+    FinalizedSubagent {
         queued_followup,
         session_status: session_status.to_string(),
-    })
+    }
 }
 
 pub(super) fn final_activity_label(status: &str) -> &'static str {

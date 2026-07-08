@@ -23,7 +23,7 @@
   padding: 0 12px;
   background: none;
   border: none;
-  color: var(--text-secondary);
+  color: var(--ink-muted);
   font-size: var(--text-sm);
   cursor: pointer;
 }
@@ -60,14 +60,14 @@
   justify-content: center;
   background: none;
   border: none;
-  color: var(--text-tertiary);
+  color: var(--ink-faint);
   cursor: pointer;
   padding: 0;
   border-radius: 50%;
 }
 
 .sa-stop-all:hover {
-  color: var(--error);
+  color: var(--signal-error);
   background: var(--surface-hover);
 }
 
@@ -98,7 +98,7 @@
   gap: 8px;
   min-height: 46px;
   padding: 7px 12px;
-  border-top: 1px solid var(--border-subtle);
+  border-top: 1px solid var(--edge);
   font-size: var(--text-sm);
 }
 
@@ -132,7 +132,7 @@
 }
 
 .sa-agent-name {
-  color: var(--text-primary);
+  color: var(--ink);
   font-weight: 500;
   min-width: 0;
   overflow: hidden;
@@ -141,7 +141,7 @@
 }
 
 .sa-agent-description {
-  color: var(--text-tertiary);
+  color: var(--ink-faint);
   font-size: var(--text-xs);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -149,14 +149,14 @@
 }
 
 .sa-agent-timer {
-  color: var(--text-tertiary);
+  color: var(--ink-faint);
   font-size: 11px;
   font-variant-numeric: tabular-nums;
   min-width: 36px;
 }
 
 .sa-agent-status {
-  color: var(--text-tertiary);
+  color: var(--ink-faint);
   font-size: 12px;
   flex-shrink: 0;
 }
@@ -176,7 +176,7 @@
   padding: 0 8px;
   font-size: var(--text-xs);
   cursor: pointer;
-  color: var(--text-secondary);
+  color: var(--ink-muted);
 }
 
 .sa-btn-stop {
@@ -199,12 +199,12 @@
 }
 
 .sa-btn-stop:hover {
-  color: var(--error);
+  color: var(--signal-error);
   background: var(--surface-hover);
 }
 
 .sa-btn-open:hover {
-  color: var(--accent);
+  color: var(--pulse);
   background: var(--surface-hover);
 }
 

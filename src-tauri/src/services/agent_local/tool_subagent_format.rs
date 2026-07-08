@@ -7,15 +7,14 @@ pub(super) fn format_meta(meta: AgentSessionMeta) -> String {
         .map(|activity| text_field(&activity.label))
         .unwrap_or_default();
     format!(
-        "- id={} name=\"{}\" type={} status={} run_id=\"{}\" description=\"{}\" last_activity=\"{}\"",
-        meta.id,
-        text_field(&meta.name),
-        meta.subagent_type.unwrap_or_else(|| "explorer".to_string()),
-        meta.subagent_status
-            .unwrap_or_else(|| "completed".to_string()),
-        text_field(&meta.subagent_run_id.unwrap_or_default()),
-        text_field(&meta.subagent_description.unwrap_or_default()),
-        activity
+        "- id=\"{}\" name=\"{}\" type=\"{}\" status=\"{}\" run_id=\"{}\" description=\"{}\" last_activity=\"{}\"",
+        xml_attr(&meta.id),
+        xml_attr(&meta.name),
+        xml_attr(&meta.subagent_type.unwrap_or_else(|| "explorer".to_string())),
+        xml_attr(&meta.subagent_status.unwrap_or_else(|| "completed".to_string())),
+        xml_attr(&meta.subagent_run_id.unwrap_or_default()),
+        xml_attr(&meta.subagent_description.unwrap_or_default()),
+        xml_attr(&activity)
     )
 }
 
@@ -72,4 +71,57 @@ fn xml_text(value: &str) -> String {
         .replace('<', "&lt;")
         .replace('>', "&gt;")
         .replace('"', "&quot;")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::services::agent_local::types_session::{AgentSessionMeta, SubagentLastActivity};
+    use chrono::Utc;
+
+    #[test]
+    fn format_meta_escapes_fields() {
+        let meta = AgentSessionMeta {
+            id: "child<&".into(),
+            name: "Gemini\"tor".into(),
+            created_at: Utc::now(),
+            updated_at: Some(Utc::now()),
+            archived_at: None,
+            model: "llama3".into(),
+            provider: "ollama".into(),
+            thinking_enabled: false,
+            reasoning_mode: None,
+            message_count: 0,
+            is_heartbeat: false,
+            is_gateway: false,
+            gateway_channel_key: None,
+            project_id: None,
+            parent_session_id: Some("parent".into()),
+            subagent_type: Some("explorer".into()),
+            subagent_status: Some("running".into()),
+            subagent_run_id: Some("run\"1".into()),
+            subagent_description: Some("<analyse>".into()),
+            subagent_color_key: Some("geminitor".into()),
+            subagent_summary: None,
+            subagent_last_activity: Some(SubagentLastActivity {
+                kind: "tool".into(),
+                label: "bash <ok>".into(),
+                detail: None,
+                updated_at: Utc::now(),
+            }),
+            clone_parent_session_id: None,
+            clone_parent_message_id: None,
+            clone_mode: None,
+            clone_root_session_id: None,
+            git_branch: None,
+        };
+
+        let line = format_meta(meta);
+
+        assert!(line.contains("id=\"child&lt;&amp;\""));
+        assert!(line.contains("name=\"Gemini&quot;tor\""));
+        assert!(line.contains("run_id=\"run&quot;1\""));
+        assert!(line.contains("description=\"&lt;analyse&gt;\""));
+        assert!(line.contains("last_activity=\"bash &lt;ok&gt;\""));
+    }
 }

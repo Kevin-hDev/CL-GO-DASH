@@ -121,12 +121,9 @@ async fn message(args: &Value, parent_id: &str) -> ToolResult {
             return ToolResult::err("Sous-agent introuvable.");
         };
         if child_has_pending_work(&child).await {
-            if child.subagent_queued_prompts.len() >= MAX_QUEUED_PROMPTS {
-                return ToolResult::err("File de consignes sous-agent pleine.");
+            if let Err(result) = enqueue_prompt(&mut child, prompt) {
+                return result;
             }
-            child.subagent_queued_prompts.push(prompt.to_string());
-            child.subagent_status = Some(super::subagent_status::RUNNING.to_string());
-            child.updated_at = Some(chrono::Utc::now());
             if super::session_store::save(&child).await.is_err() {
                 return ToolResult::err("Sous-agent indisponible.");
             }
@@ -141,6 +138,16 @@ async fn message(args: &Value, parent_id: &str) -> ToolResult {
         })
     };
     super::tool_dispatcher_delegate::dispatch_delegate(&payload, parent_id).await
+}
+
+fn enqueue_prompt(child: &mut AgentSession, prompt: &str) -> Result<(), ToolResult> {
+    if child.subagent_queued_prompts.len() >= MAX_QUEUED_PROMPTS {
+        return Err(ToolResult::err("File de consignes sous-agent pleine."));
+    }
+    child.subagent_queued_prompts.push(prompt.to_string());
+    child.subagent_status = Some(super::subagent_status::RUNNING.to_string());
+    child.updated_at = Some(chrono::Utc::now());
+    Ok(())
 }
 
 async fn owned_child(args: &Value, parent_id: &str) -> Result<AgentSession, ToolResult> {

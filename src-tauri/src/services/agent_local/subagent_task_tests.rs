@@ -1,6 +1,8 @@
 #[cfg(test)]
 mod tests {
     use crate::services::agent_local::subagent_working_dir::create_coder_worktree_for_test;
+    use crate::services::agent_local::types_session::AgentSession;
+    use chrono::Utc;
     use uuid::Uuid;
 
     fn temp_dir() -> std::path::PathBuf {
@@ -42,5 +44,89 @@ mod tests {
             super::super::subagent_task::final_activity_label("running"),
             "En cours"
         );
+    }
+
+    #[test]
+    fn finalized_state_keeps_queued_child_running() {
+        let mut child = child_session("completed");
+        child.subagent_queued_prompts.push("suite".into());
+
+        let finalized = super::super::subagent_task::apply_finalized_subagent_state(
+            &mut child,
+            "completed",
+            "rapport",
+        );
+
+        assert!(finalized.queued_followup);
+        assert_eq!(finalized.session_status, "running");
+        assert_eq!(child.subagent_status.as_deref(), Some("running"));
+        assert_eq!(child.subagent_queued_prompts, vec!["suite"]);
+    }
+
+    #[test]
+    fn finalized_state_clears_queue_for_terminal_status() {
+        let mut child = child_session("completed");
+        child.subagent_queued_prompts.push("suite".into());
+
+        let finalized = super::super::subagent_task::apply_finalized_subagent_state(
+            &mut child, "failed", "rapport",
+        );
+
+        assert!(!finalized.queued_followup);
+        assert_eq!(finalized.session_status, "failed");
+        assert!(child.subagent_queued_prompts.is_empty());
+        assert_eq!(child.subagent_summary.as_deref(), Some("rapport"));
+    }
+
+    fn child_session(status: &str) -> AgentSession {
+        AgentSession {
+            id: Uuid::new_v4().to_string(),
+            name: "Geminitor".into(),
+            created_at: Utc::now(),
+            updated_at: Some(Utc::now()),
+            archived_at: None,
+            model: "llama3".into(),
+            provider: "ollama".into(),
+            thinking_enabled: false,
+            reasoning_mode: None,
+            accumulated_tokens: 0,
+            messages: Vec::new(),
+            todos: Vec::new(),
+            todo_neglect_count: 0,
+            todo_runs: Vec::new(),
+            active_todo_run_id: None,
+            stream_failures: Vec::new(),
+            diagnostic_runs: Vec::new(),
+            plan_mode_enabled: false,
+            plan_runs: Vec::new(),
+            active_plan_id: None,
+            plan_workflow_status: Default::default(),
+            plan_approval_decision: None,
+            is_heartbeat: false,
+            is_gateway: false,
+            gateway_channel_key: None,
+            project_id: None,
+            working_dir: String::new(),
+            parent_session_id: Some("parent".into()),
+            subagent_type: Some("explorer".into()),
+            subagent_worktree: None,
+            subagent_prompt: None,
+            subagent_status: Some(status.into()),
+            subagent_run_id: Some("run-1".into()),
+            subagent_description: Some("Analyse".into()),
+            subagent_color_key: Some("geminitor".into()),
+            subagent_summary: None,
+            subagent_last_activity: None,
+            subagent_queued_prompts: Vec::new(),
+            subagent_hidden_reports: Vec::new(),
+            clone_parent_session_id: None,
+            clone_parent_message_id: None,
+            clone_mode: None,
+            clone_summary: None,
+            clone_read_files: Vec::new(),
+            clone_modified_files: Vec::new(),
+            clone_root_session_id: None,
+            git_branch: None,
+        }
     }
 }

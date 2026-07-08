@@ -69,6 +69,20 @@ mod tests {
         assert!(!saved_pending_work(&child));
     }
 
+    #[tokio::test]
+    async fn normalize_session_marks_queued_completed_child_running() {
+        let mut child = child("child", "completed");
+        child.subagent_run_id = None;
+        child.subagent_queued_prompts.push("suite".into());
+
+        let normalized = normalize_session(child).await;
+
+        assert_eq!(
+            normalized.subagent_status.as_deref(),
+            Some(super::super::subagent_status::RUNNING)
+        );
+    }
+
     fn child(id: &str, status: &str) -> AgentSession {
         AgentSession {
             id: id.into(),

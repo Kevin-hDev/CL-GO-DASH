@@ -9,6 +9,8 @@ const MAX_REPORT_SUMMARY_CHARS: usize = 12_000;
 pub const SUBAGENT_REPORT_CONTEXT_PREFIX: &str = "Subagent report context:";
 
 pub async fn append(parent_id: &str, report: SubagentHiddenReport) -> Result<(), String> {
+    let lock = super::session_store::lock_session(parent_id).await;
+    let _guard = lock.lock().await;
     let mut session = super::session_store::get(parent_id).await?;
     if session
         .subagent_hidden_reports
@@ -25,6 +27,8 @@ pub async fn append(parent_id: &str, report: SubagentHiddenReport) -> Result<(),
 }
 
 pub async fn take_for_context(session_id: &str) -> Vec<ChatMessage> {
+    let lock = super::session_store::lock_session(session_id).await;
+    let _guard = lock.lock().await;
     let Ok(mut session) = super::session_store::get(session_id).await else {
         return Vec::new();
     };
@@ -39,6 +43,8 @@ pub async fn take_for_context(session_id: &str) -> Vec<ChatMessage> {
 }
 
 pub async fn has_pending_except(session_id: &str, ignored_child_ids: &BTreeSet<String>) -> bool {
+    let lock = super::session_store::lock_session(session_id).await;
+    let _guard = lock.lock().await;
     super::session_store::get(session_id)
         .await
         .map(|session| {

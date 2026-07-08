@@ -31,12 +31,12 @@ pub fn clean_description(input: Option<&str>, prompt: &str) -> String {
     bounded_non_empty(input, fallback, MAX_DESCRIPTION_CHARS)
 }
 
-pub fn legacy_mission_label<'a>(input: Option<&'a str>, subagent_type: &str) -> Option<&'a str> {
+pub fn legacy_mission_label(input: Option<&str>, subagent_type: &str) -> Option<String> {
     let value = input?.trim();
     if value.is_empty() || is_default_or_legacy_name(value, subagent_type) {
         None
     } else {
-        Some(value)
+        Some(bounded_non_empty(Some(value), value, MAX_DESCRIPTION_CHARS))
     }
 }
 
@@ -86,9 +86,17 @@ mod tests {
     fn legacy_custom_name_can_become_mission_description() {
         assert_eq!(
             legacy_mission_label(Some("Audit subagents long"), "explorer"),
-            Some("Audit subagents long")
+            Some("Audit subagents long".to_string())
         );
         assert_eq!(legacy_mission_label(Some("Geminitor"), "explorer"), None);
         assert_eq!(legacy_mission_label(Some("agent"), "coder"), None);
+    }
+
+    #[test]
+    fn legacy_custom_name_is_bounded() {
+        let input = "x".repeat(MAX_DESCRIPTION_CHARS + 20);
+        let label = legacy_mission_label(Some(&input), "explorer").unwrap();
+
+        assert_eq!(label.chars().count(), MAX_DESCRIPTION_CHARS);
     }
 }

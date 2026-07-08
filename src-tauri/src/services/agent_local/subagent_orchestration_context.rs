@@ -147,6 +147,27 @@ mod tests {
         assert!(!messages[1].content.contains("stale"));
     }
 
+    #[test]
+    fn replace_gate_removes_gate_when_no_active_subagent() {
+        let mut messages = vec![
+            ChatMessage {
+                role: "user".into(),
+                content: "normal".into(),
+                ..Default::default()
+            },
+            ChatMessage {
+                role: "user".into(),
+                content: format!("{SUBAGENT_ORCHESTRATION_CONTEXT_PREFIX}\nstale"),
+                ..Default::default()
+            },
+        ];
+
+        replace_gate_context(&mut messages, &[], false);
+
+        assert_eq!(messages.len(), 1);
+        assert_eq!(messages[0].content, "normal");
+    }
+
     fn empty_subagent(id: &str) -> AgentSession {
         AgentSession {
             id: id.into(),

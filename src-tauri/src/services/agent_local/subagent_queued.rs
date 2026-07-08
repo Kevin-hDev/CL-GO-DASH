@@ -37,6 +37,7 @@ pub async fn spawn_next_if_present(params: QueuedSubagentRun) -> Result<bool, St
                 super::subagent_status::FAILED,
             )
             .await;
+            super::session_store::remove_session_lock(&params.child_session_id).await;
             return Err(e);
         }
     };
@@ -78,6 +79,7 @@ pub async fn spawn_next_if_present(params: QueuedSubagentRun) -> Result<bool, St
             super::subagent_status::FAILED,
         )
         .await;
+        super::session_store::remove_session_lock(&params.child_session_id).await;
         return Err(e);
     }
 
