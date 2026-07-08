@@ -24,10 +24,14 @@ fn reminder_blocks_final_answer_until_reports() {
         updated_at: Utc::now(),
     });
 
-    let content = build_reminder_content(&[session]);
+    let content =
+        super::super::subagent_orchestration_context::build_gate_content(&[session], false);
 
-    assert!(content.starts_with(SUBAGENT_ORCHESTRATION_CONTEXT_PREFIX));
-    assert!(content.contains("Do not write a final answer yet"));
+    assert!(content.starts_with(
+        super::super::subagent_orchestration_context::SUBAGENT_ORCHESTRATION_CONTEXT_PREFIX
+    ));
+    assert!(content.contains("final_answer_allowed=\"false\""));
+    assert!(content.contains("Final answer is locked"));
     assert!(content.contains("bash démarré"));
 }
 
@@ -37,7 +41,8 @@ fn reminder_escapes_subagent_fields() {
     session.name = "Gemini\"tor".into();
     session.subagent_description = Some("<analyse>".into());
 
-    let content = build_reminder_content(&[session]);
+    let content =
+        super::super::subagent_orchestration_context::build_gate_content(&[session], true);
 
     assert!(content.contains("id=\"child&lt;&amp;\""));
     assert!(content.contains("name=\"Gemini&quot;tor\""));
