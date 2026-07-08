@@ -75,16 +75,15 @@
 }
 
 .ssb-subagent-icon {
-  color: var(--subagent-geminitor);
+  width: 22px;
+  height: 22px;
 }
 
-.ssb-subagent-claudiator,
-.ssb-subagent-coder {
+.ssb-subagent-icon.sai-claudiator {
   color: var(--subagent-claudiator);
 }
 
-.ssb-subagent-geminitor,
-.ssb-subagent-explorer {
+.ssb-subagent-icon.sai-geminitor {
   color: var(--subagent-geminitor);
 }
 

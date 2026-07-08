@@ -67,7 +67,7 @@
 
 .sb-agent-row {
   display: grid;
-  grid-template-columns: 14px minmax(0, 1fr);
+  grid-template-columns: 22px minmax(0, 1fr);
   align-items: center;
   gap: 8px;
   width: 100%;
@@ -92,21 +92,9 @@
   outline: none;
 }
 
-.sb-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.sb-dot-geminitor,
-.sb-dot-explorer {
-  background: var(--subagent-geminitor);
-}
-
-.sb-dot-claudiator,
-.sb-dot-coder {
-  background: var(--subagent-claudiator);
+.sb-agent-icon {
+  width: 22px;
+  height: 22px;
 }
 
 .sb-agent-text {

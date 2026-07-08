@@ -46,7 +46,6 @@ vi.mock("@/components/ui/icons", () => ({
   FilePlus: () => <span data-testid="file-plus" />,
   FileText: () => <span data-testid="file-text" />,
   GitBranch: () => <span data-testid="git-branch" />,
-  Users: () => <span data-testid="users" />,
 }));
 
 const git = {
@@ -72,7 +71,7 @@ describe("SessionSummaryBubble", () => {
   });
 
   it("déplie les sections Todo, Plan et Sous-agents", () => {
-    const { getByRole, getByText, getByTitle } = render(
+    const { container, getByRole, getByText, getByTitle } = render(
       <SessionSummaryBubble summary={summary()} git={git} />,
     );
 
@@ -90,6 +89,27 @@ describe("SessionSummaryBubble", () => {
     expect(getByText("Geminitor")).toBeTruthy();
     expect(getByText("Analyse sous-agent")).toBeTruthy();
     expect(getByText("interrupted")).toBeTruthy();
+    expect(container.querySelector(".sai-geminitor")).toBeTruthy();
+  });
+
+  it("anime l'icône d'un sous-agent actif dans le résumé", () => {
+    const activeSummary = summary();
+    activeSummary.subagents = [{
+      sessionId: "child-running",
+      name: "Coder",
+      type: "coder",
+      status: "running",
+      promptPreview: "",
+      description: "Implémentation",
+    }];
+    const { container, getByRole } = render(
+      <SessionSummaryBubble summary={activeSummary} git={git} />,
+    );
+
+    fireEvent.click(getByRole("button", { name: "Toggle summary" }));
+    fireEvent.click(getByRole("button", { name: "Subagents (1)" }));
+
+    expect(container.querySelector(".sai-claudiator.sai-running")).toBeTruthy();
   });
 
   it("déplie une todo list et affiche ses tâches", () => {

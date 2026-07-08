@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CheckCircle2, ChevronDown, Circle, Clock3, PauseCircle } from "@/components/ui/lucide-icons";
-import { FileText, Users } from "@/components/ui/icons";
-import { subagentColorKey, subagentDisplayName, subagentSecondaryText } from "@/lib/subagent-display";
+import { FileText } from "@/components/ui/icons";
+import { subagentDisplayName, subagentSecondaryText } from "@/lib/subagent-display";
 import type { AgentPlanRun, AgentTodoItem, AgentTodoRun, SubagentInfo } from "@/types/agent";
+import { SubagentIcon } from "./subagent-icon";
 import "./session-summary-tasks.css";
 
 export function SessionSummaryTodoList({ runs }: { runs: AgentTodoRun[] }) {
@@ -106,10 +107,7 @@ export function SessionSummarySubagentList({
         type="button"
         onClick={() => onOpen(agent.sessionId)}
       >
-        <Users
-          size="var(--icon-sm)"
-          className={`ssb-item-icon ssb-subagent-icon ssb-subagent-${subagentColorKey(agent)}`}
-        />
+        <SubagentIcon agent={agent} className="ssb-item-icon ssb-subagent-icon" />
         <span className="ssb-item-main ssb-subagent-main" title={`${name} - ${secondary}`}>
           <span className="ssb-subagent-name">{name}</span>
           <span className="ssb-subagent-desc">{secondary}</span>

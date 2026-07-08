@@ -48,6 +48,8 @@ describe("SubagentAccordion", () => {
     expect(getByText("Geminitor")).toBeTruthy();
     expect(getByText("Audit subagents long")).toBeTruthy();
     expect(container.querySelectorAll(".sa-agent-heading .sa-agent-status")).toHaveLength(2);
+    expect(container.querySelector(".sai-claudiator.sai-running")).toBeTruthy();
+    expect(container.querySelector(".sai-geminitor.sai-running")).toBeTruthy();
   });
 
   it("utilise les styles de bulle du composer et des boutons icônes", () => {
