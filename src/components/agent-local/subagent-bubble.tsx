@@ -16,7 +16,7 @@ export function SubagentBubble({ subagents, onOpen }: SubagentBubbleProps) {
   if (subagents.length === 0) return null;
 
   return (
-    <div className="chat-bubble">
+    <div className="chat-bubble sb-root">
       <button
         className="sb-header"
         onClick={() => setExpanded((v) => !v)}

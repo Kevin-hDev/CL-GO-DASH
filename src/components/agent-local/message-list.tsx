@@ -11,6 +11,7 @@ import { LoadingIndicator } from "./working-stats";
 import { useCompression } from "@/hooks/use-compression";
 import { isCompressionContextOnlyMessage, isCompressionSummaryMessage } from "@/lib/context-messages";
 import { collectMessageFileOperations } from "@/lib/file-preview-utils";
+import { collectMessageSubagents } from "@/lib/message-subagents";
 import type { AgentMessage, AgentPlanPreview, SubagentInfo, TokenPhase } from "@/types/agent";
 import type { ToolActivity, StreamSegment } from "@/hooks/agent-chat-utils";
 import type { ActiveStreamItem } from "@/hooks/active-stream-item";
@@ -39,7 +40,7 @@ interface MessageListProps {
   onFilePreview?: (path: string) => void;
   onFileReview?: (operation: FileOperation) => void;
   projectPath?: string;
-  completedSubagents?: SubagentInfo[];
+  knownSubagents?: SubagentInfo[];
   onOpenSubagent?: (sessionId: string) => void;
   planPreview?: AgentPlanPreview | null;
 }
@@ -48,15 +49,13 @@ export function MessageList({
   sessionId, messages, completedSegments, currentContent, currentContentPhase, currentThinking,
   currentTools, activeStreamItem = null, isStreaming, tps, totalElapsedMs, segmentStartedAt,
   liveTokenCount, onReload, onEdit, onCloneMessage, onFileClick, onFilePreview, onFileReview,
-  projectPath, completedSubagents, onOpenSubagent, planPreview,
+  projectPath, knownSubagents = [], onOpenSubagent, planPreview,
 }: MessageListProps) {
   const lastAssistantIdx = findLastIndex(messages, (m) => m.role === "assistant");
   const { isCompressing } = useCompression(sessionId);
   const streamStartedAt = segmentStartedAt;
   const hasCompressionMarker = messages.some(isCompressionSummaryMessage);
   const showCompressionIndicator = isCompressing && !hasCompressionMarker;
-
-  const extractedAgents = completedSubagents ?? [];
 
   return (
     <>
@@ -84,6 +83,8 @@ export function MessageList({
               onFilePreview={onFilePreview}
               onFileReview={onFileReview}
               projectPath={projectPath}
+              knownSubagents={knownSubagents}
+              onOpenSubagent={onOpenSubagent}
               tps={isLast ? tps : 0}
               totalElapsedMs={isLast ? totalElapsedMs : 0}
               workDurationMs={msg.work_duration_ms}
@@ -92,13 +93,6 @@ export function MessageList({
         }
         return null;
       })}
-
-      {extractedAgents.length > 0 && (
-        <SubagentBubble
-          subagents={extractedAgents}
-          onOpen={(id) => onOpenSubagent?.(id)}
-        />
-      )}
 
       {isStreaming && (
         <StreamToolTimeline
@@ -126,13 +120,15 @@ export function MessageList({
 
 export const SegmentedAssistantMessage = memo(function SegmentedAssistantMessage({
   msg, onReload, onClone, onFilePreview, onFileReview, tps, totalElapsedMs, workDurationMs,
-  projectPath,
+  projectPath, knownSubagents = [], onOpenSubagent,
 }: {
   msg: AgentMessage; onReload?: (id: string) => void; onFilePreview?: (path: string) => void;
   onClone?: (id: string) => void; onFileReview?: (operation: FileOperation) => void; tps: number; totalElapsedMs: number;
-  workDurationMs?: number; projectPath?: string;
+  workDurationMs?: number; projectPath?: string; knownSubagents?: SubagentInfo[];
+  onOpenSubagent?: (sessionId: string) => void;
 }) {
   const fileChanges = collectMessageFileOperations(msg, projectPath);
+  const messageSubagents = collectMessageSubagents(msg, knownSubagents);
   if (msg.segments && msg.segments.length > 0) {
     return (
       <>
@@ -146,6 +142,7 @@ export const SegmentedAssistantMessage = memo(function SegmentedAssistantMessage
           projectPath={projectPath}
           onClone={() => onClone?.(msg.id)}
         />
+        <SubagentBubble subagents={messageSubagents} onOpen={(id) => onOpenSubagent?.(id)} />
         <FileChangeBubble operations={fileChanges} baseDir={projectPath} onReview={onFileReview} />
       </>
     );
@@ -161,6 +158,7 @@ export const SegmentedAssistantMessage = memo(function SegmentedAssistantMessage
         tokens={msg.tokens}
         tps={tps}
       />
+      <SubagentBubble subagents={messageSubagents} onOpen={(id) => onOpenSubagent?.(id)} />
       <FileChangeBubble operations={fileChanges} baseDir={projectPath} onReview={onFileReview} />
     </>
   );
