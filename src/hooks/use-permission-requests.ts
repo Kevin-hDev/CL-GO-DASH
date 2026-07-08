@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { agentStreamManager } from "./agent-stream-manager";
 
 const MAX_PERMISSION_QUEUE = 32;
 
@@ -24,6 +25,7 @@ export function usePermissionRequests() {
     } catch (e) {
       console.error("respond_to_permission:", e);
     }
+    agentStreamManager.clearPermission(id);
     setQueue((q) => q.filter((r) => r.id !== id));
   }, []);
 

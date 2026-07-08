@@ -42,6 +42,17 @@ fn write_file_outside_data_dir_does_not_need_permission() {
 }
 
 #[test]
+fn write_file_inside_subagent_worktree_does_not_need_permission() {
+    let path = data_dir().join("subagent-worktrees/child/file.md");
+    let args = json!({ "path": path.to_string_lossy() });
+    assert!(!is_data_dir_write(
+        "write_file",
+        &args,
+        &PathBuf::from("/tmp")
+    ));
+}
+
+#[test]
 fn edit_file_in_data_dir_needs_permission() {
     let args = json!({ "path": data_dir().join("config.json").to_string_lossy() });
     assert!(is_data_dir_write(
@@ -77,9 +88,23 @@ fn unsafe_bash_from_data_dir_needs_permission() {
 }
 
 #[test]
+fn unsafe_bash_from_subagent_worktree_does_not_need_permission() {
+    let args = json!({ "command": "touch generated.txt" });
+    let working_dir = data_dir().join("subagent-worktrees/child");
+    assert!(!is_data_dir_write("bash", &args, &working_dir));
+}
+
+#[test]
 fn safe_bash_from_data_dir_does_not_need_permission() {
     let args = json!({ "command": "ls -la" });
     assert!(!is_data_dir_write("bash", &args, &data_dir()));
+}
+
+#[test]
+fn unsafe_bash_mentions_subagent_worktree_does_not_need_permission() {
+    let target = data_dir().join("subagent-worktrees/child/generated.txt");
+    let args = json!({ "command": format!("touch {}", target.display()) });
+    assert!(!is_data_dir_write("bash", &args, &PathBuf::from("/tmp")));
 }
 
 #[test]

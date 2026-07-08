@@ -118,6 +118,7 @@ pub async fn request(
         tool_name: tool_name.to_string(),
         arguments: arguments.clone(),
     });
+    eprintln!("[permission] request id={id} tool={tool_name}");
 
     tokio::select! {
         res = rx => res.unwrap_or(PermissionDecision::Deny),
@@ -130,7 +131,10 @@ pub async fn request(
 
 pub async fn respond(id: &str, decision: PermissionDecision) {
     if let Some(tx) = PENDING.lock().await.remove(id) {
+        eprintln!("[permission] respond id={id} decision={decision:?} found=true");
         let _ = tx.send(decision);
+    } else {
+        eprintln!("[permission] respond id={id} decision={decision:?} found=false");
     }
 }
 

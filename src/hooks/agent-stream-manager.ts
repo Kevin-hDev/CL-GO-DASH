@@ -33,6 +33,7 @@ import { estimateAgentMessagesTokens } from "./agent-token-estimate";
 import { emitStreamActivity, subscribeStreamActivity, toStreamActivity } from "./agent-stream-activity";
 import { handleCompressionComplete } from "./agent-stream-compression-complete";
 import { showToast } from "@/lib/toast-emitter";
+import { clearStreamPermission } from "./agent-stream-permissions";
 import type { AgentMessage, StreamEvent } from "@/types/agent";
 import { webToolErrorToastMessage } from "./web-tool-error-toast";
 
@@ -46,7 +47,7 @@ type Subscriber = (snapshot: StreamSnapshot) => void;
 let listenPromise: Promise<UnlistenFn> | null = null;
 
 export const agentStreamManager = { startSession, stopSession, failSession, setSessionGeneration,
-  getSnapshot, getActivity, isStreaming, subscribe, subscribeActivity: subscribeStreamActivity };
+  clearPermission: clearStreamPermission, getSnapshot, getActivity, isStreaming, subscribe, subscribeActivity: subscribeStreamActivity };
 
 function ensureListener() {
   if (!listenPromise) {
