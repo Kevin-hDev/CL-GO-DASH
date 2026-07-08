@@ -6,6 +6,9 @@ pub async fn resolve(
     child_session_id: &str,
     is_explorer: bool,
 ) -> Result<PathBuf, String> {
+    if !is_explorer && project_id.is_none() {
+        return Err("Un sous-agent code doit être lancé depuis un projet.".to_string());
+    }
     let base = super::subagent_prompts::resolve_project_dir(project_id).await;
     if !is_explorer && project_id.is_some() && base != dirs::home_dir().unwrap_or_default() {
         return create_coder_worktree(&base, child_session_id).await;
@@ -33,8 +36,8 @@ async fn create_coder_worktree(base: &Path, child_session_id: &str) -> Result<Pa
 pub async fn cleanup(child_session_id: &str) {
     if let Ok(session) = session_store::get(child_session_id).await {
         if let Some(wt_path) = &session.subagent_worktree {
-            if let Err(e) = super::subagent_worktree::remove(wt_path).await {
-                eprintln!("[subagent] cleanup worktree: {e}");
+            if super::subagent_worktree::remove(wt_path).await.is_err() {
+                eprintln!("[subagent] cleanup worktree");
             }
         }
     }

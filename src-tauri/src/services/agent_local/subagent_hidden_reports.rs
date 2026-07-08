@@ -1,11 +1,11 @@
 use super::types_ollama::ChatMessage;
 use super::types_session::SubagentHiddenReport;
 use chrono::Utc;
-use serde_json::json;
 use std::collections::BTreeSet;
 use uuid::Uuid;
 
 const MAX_PENDING_REPORTS: usize = 16;
+const MAX_REPORT_SUMMARY_CHARS: usize = 12_000;
 pub const SUBAGENT_REPORT_CONTEXT_PREFIX: &str = "Subagent report context:";
 
 pub async fn append(parent_id: &str, report: SubagentHiddenReport) -> Result<(), String> {
@@ -15,32 +15,13 @@ pub async fn append(parent_id: &str, report: SubagentHiddenReport) -> Result<(),
         .iter()
         .any(|seen| is_same_report(seen, &report))
     {
-        super::subagent_flow_log::record(
-            "hidden_report_duplicate_ignored",
-            Some(parent_id),
-            Some(&report.child_session_id),
-            None,
-            json!({"status": report.status}),
-        );
         return Ok(());
     }
-    let child_session_id = report.child_session_id.clone();
-    let status = report.status.clone();
     session.subagent_hidden_reports.push(report);
     while session.subagent_hidden_reports.len() > MAX_PENDING_REPORTS {
         session.subagent_hidden_reports.remove(0);
     }
-    let result = super::session_store::save(&session).await;
-    if result.is_ok() {
-        super::subagent_flow_log::record(
-            "hidden_report_stored",
-            Some(parent_id),
-            Some(&child_session_id),
-            None,
-            json!({"pending": session.subagent_hidden_reports.len(), "status": status}),
-        );
-    }
-    result
+    super::session_store::save(&session).await
 }
 
 pub async fn take_for_context(session_id: &str) -> Vec<ChatMessage> {
@@ -52,22 +33,8 @@ pub async fn take_for_context(session_id: &str) -> Vec<ChatMessage> {
     }
     let reports = std::mem::take(&mut session.subagent_hidden_reports);
     if super::session_store::save(&session).await.is_err() {
-        super::subagent_flow_log::record(
-            "hidden_reports_take_save_failed",
-            Some(session_id),
-            None,
-            None,
-            json!({"count": reports.len()}),
-        );
         return Vec::new();
     }
-    super::subagent_flow_log::record(
-        "hidden_reports_taken_for_context",
-        Some(session_id),
-        None,
-        None,
-        json!({"count": reports.len()}),
-    );
     reports.into_iter().map(report_to_message).collect()
 }
 
@@ -96,7 +63,7 @@ pub fn build_report(
         name,
         subagent_type,
         status,
-        summary,
+        summary: truncate_chars(&summary, MAX_REPORT_SUMMARY_CHARS),
         created_at: Utc::now(),
     }
 }
@@ -135,6 +102,14 @@ fn escape_xml(value: &str) -> String {
         .replace('"', "&quot;")
 }
 
+fn truncate_chars(value: &str, max_chars: usize) -> String {
+    let mut output = value.chars().take(max_chars).collect::<String>();
+    if value.chars().count() > max_chars {
+        output.push_str("\n[rapport tronqué]");
+    }
+    output
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -166,5 +141,21 @@ mod tests {
         let mut second = first.clone();
         second.id = "another-id".into();
         assert!(is_same_report(&first, &second));
+    }
+
+    #[test]
+    fn build_report_truncates_large_summary() {
+        let report = build_report(
+            "child".into(),
+            "Geminitor".into(),
+            "explorer".into(),
+            "completed".into(),
+            "x".repeat(MAX_REPORT_SUMMARY_CHARS + 10),
+        );
+        assert_eq!(
+            report.summary.chars().count(),
+            MAX_REPORT_SUMMARY_CHARS + "\n[rapport tronqué]".chars().count()
+        );
+        assert!(report.summary.contains("[rapport tronqué]"));
     }
 }

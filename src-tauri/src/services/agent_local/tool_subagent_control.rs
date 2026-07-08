@@ -8,15 +8,14 @@ const DEFAULT_WAIT_MS: u64 = 30_000;
 const MAX_WAIT_MS: u64 = 300_000;
 const MAX_PROMPT_SIZE: usize = 50_000;
 const MAX_QUEUED_PROMPTS: usize = 8;
+const MAX_WAIT_SUBAGENT_IDS: usize = 16;
 
 pub async fn dispatch(tool_name: &str, args: &Value, parent_id: &str) -> Option<ToolResult> {
-    super::subagent_flow_log::record(
-        "control_tool_called",
-        Some(parent_id),
-        args["subagent_id"].as_str(),
-        None,
-        json!({"tool": tool_name}),
-    );
+    if is_child_session(parent_id).await {
+        return Some(ToolResult::err(
+            "Les sous-agents ne peuvent pas piloter d'autres sous-agents.",
+        ));
+    }
     Some(match tool_name {
         "list_subagents" => list(parent_id).await,
         "get_subagent" => get(args, parent_id).await,
@@ -109,13 +108,6 @@ async fn message(args: &Value, parent_id: &str) -> ToolResult {
         if super::session_store::save(&child).await.is_err() {
             return ToolResult::err("Sous-agent indisponible.");
         }
-        super::subagent_flow_log::record(
-            "message_subagent_queued",
-            Some(parent_id),
-            Some(&child.id),
-            None,
-            json!({"queued": child.subagent_queued_prompts.len()}),
-        );
         return ToolResult::ok("Instruction ajoutée à la file du sous-agent.".to_string());
     }
     let payload = json!({
@@ -147,6 +139,9 @@ async fn owned_child_by_id(id: &str, parent_id: &str) -> Result<AgentSession, To
 
 fn subagent_ids(args: &Value) -> Result<Vec<String>, ToolResult> {
     if let Some(ids) = args["subagent_ids"].as_array() {
+        if ids.len() > MAX_WAIT_SUBAGENT_IDS {
+            return Err(ToolResult::err("Trop de sous-agents demandés."));
+        }
         let values = ids
             .iter()
             .filter_map(|value| value.as_str().map(str::trim))
@@ -154,6 +149,9 @@ fn subagent_ids(args: &Value) -> Result<Vec<String>, ToolResult> {
             .map(ToString::to_string)
             .collect::<Vec<_>>();
         if !values.is_empty() {
+            if values.len() > MAX_WAIT_SUBAGENT_IDS {
+                return Err(ToolResult::err("Trop de sous-agents demandés."));
+            }
             return Ok(values);
         }
     }
@@ -165,6 +163,13 @@ fn subagent_ids(args: &Value) -> Result<Vec<String>, ToolResult> {
         return Ok(vec![id.to_string()]);
     }
     Err(ToolResult::err("Sous-agent introuvable."))
+}
+
+async fn is_child_session(session_id: &str) -> bool {
+    super::session_store::get(session_id)
+        .await
+        .map(|session| session.parent_session_id.is_some())
+        .unwrap_or(false)
 }
 
 fn child_has_pending_work(child: &AgentSession) -> bool {

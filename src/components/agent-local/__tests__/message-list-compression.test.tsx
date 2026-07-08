@@ -29,10 +29,6 @@ vi.mock("../subagent-bubble", () => ({ SubagentBubble: () => null }));
 vi.mock("../plan-preview-bubble", () => ({ PlanPreviewBubble: () => null }));
 vi.mock("../file-change-bubble", () => ({ FileChangeBubble: () => null }));
 vi.mock("../working-stats", () => ({ LoadingIndicator: () => null }));
-vi.mock("@/lib/subagent-message-utils", () => ({
-  extractSubagentsFromMessages: () => [],
-  isSubagentInjectedMessage: () => false,
-}));
 vi.mock("@/lib/file-preview-utils", () => ({
   collectMessageFileOperations: () => [],
 }));

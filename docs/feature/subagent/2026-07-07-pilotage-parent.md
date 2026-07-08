@@ -128,6 +128,80 @@ Elle doit stocker au minimum :
 Le registre memoire reste borne.
 Les donnees importantes doivent aussi etre persistables via les sessions existantes pour eviter de perdre l'etat au redemarrage.
 
+### Version ideale : separer session enfant et runs
+
+La version la plus propre a long terme est de ne pas confondre :
+
+- la session enfant, qui est l'espace durable et consultable par l'utilisateur ;
+- le run, qui est une execution precise d'une consigne dans cette session.
+
+Aujourd'hui, CL-GO-DASH stocke surtout un statut global sur la session enfant via `subagent_status` et `subagent_run_id`.
+Cela fonctionne, mais devient ambigu quand `message_subagent` ajoute une consigne en file :
+
+```text
+session enfant A
+run 1 termine
+run 2 demarre automatiquement
+```
+
+Dans ce cas, dire simplement `session A completed` puis `session A running` est difficile a comprendre.
+Le correctif actuel garde la session en `running` tant qu'un run suivant est en file.
+C'est coherent avec le modele actuel, mais ce n'est pas le modele ideal.
+
+Modele cible :
+
+```text
+SubagentSession
+  id
+  parent_session_id
+  name
+  description
+  subagent_type
+  aggregate_status
+  last_activity
+  current_run_id
+  run_history[]
+
+SubagentRun
+  id
+  child_session_id
+  parent_session_id
+  prompt
+  status
+  started_at
+  completed_at
+  summary
+  hidden_report_id
+  queued_by
+```
+
+Regles cible :
+
+- `SubagentSession.aggregate_status` reste `running` si au moins un run est actif ou en file.
+- Un run termine peut etre `completed` sans faire passer la session a `completed` si un autre run doit demarrer.
+- `wait_subagent` attend la session complete par defaut, pas seulement le run courant.
+- `wait_subagent` peut accepter plus tard un `run_id` pour attendre un run precis.
+- `get_subagent` affiche l'etat global de la session et le run courant.
+- `list_subagents` affiche l'etat global de la session, pas uniquement le dernier run termine.
+- Les rapports caches sont lies a un run, puis agreges dans la session.
+- L'UI peut montrer une session enfant stable avec un historique de runs repliable.
+
+Exemple ideal :
+
+```xml
+<subagent id="A" status="running" current_run_id="run-2">
+  <run id="run-1" status="completed">
+    <summary>Premier sleep termine.</summary>
+  </run>
+  <run id="run-2" status="running">
+    <last_activity>sleep 30</last_activity>
+  </run>
+</subagent>
+```
+
+Ce modele supprime l'ambiguite `completed -> running` sur une meme session.
+Il permet aussi au parent de raisonner clairement : un run peut etre termine, mais le sous-agent reste actif tant que la file n'est pas vide.
+
 ### Tools exposes au parent
 
 Tu gardes `delegate_task`, mais tu ne exposes pas deux modes au LLM.

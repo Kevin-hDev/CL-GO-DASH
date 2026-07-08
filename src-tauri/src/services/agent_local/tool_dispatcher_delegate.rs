@@ -1,10 +1,8 @@
 use crate::services::agent_local::types_tools::ToolResult;
-use serde_json::json;
 use serde_json::Value;
 
 pub struct PendingDelegate {
     child_id: String,
-    parent_id: String,
 }
 
 pub async fn dispatch_delegate(args: &Value, session_id: &str) -> ToolResult {
@@ -33,7 +31,6 @@ pub async fn spawn_delegate(args: &Value, session_id: &str) -> Result<PendingDel
         Err(tr) => Err(tr),
         Ok(spawned) => {
             let child_id = spawned.child_id.clone();
-            let run_id = super::subagent_registry::get_run_id_for_child(&child_id).await;
             if let Err(e) =
                 super::subagent_spawn_channel::send(super::subagent_spawn_channel::SpawnRequest {
                     app: spawned.app,
@@ -57,37 +54,27 @@ pub async fn spawn_delegate(args: &Value, session_id: &str) -> Result<PendingDel
                 }
                 return Err(ToolResult::err(e));
             }
-            super::subagent_flow_log::record(
-                "spawn_request_queued",
-                Some(session_id),
-                Some(&child_id),
-                run_id.as_deref(),
-                json!({}),
-            );
-            Ok(PendingDelegate {
-                child_id,
-                parent_id: session_id.to_string(),
-            })
+            Ok(PendingDelegate { child_id })
         }
     }
 }
 
 impl PendingDelegate {
     pub async fn wait(self) -> ToolResult {
-        let run_id = super::subagent_registry::get_run_id_for_child(&self.child_id).await;
-        super::subagent_flow_log::record(
-            "delegate_tool_returned",
-            Some(&self.parent_id),
-            Some(&self.child_id),
-            run_id.as_deref(),
-            json!({"state": "running"}),
-        );
         ToolResult::ok(format!(
             "<subagent id=\"{}\" state=\"running\">\n\
              Sous-agent lancé en session enfant. Le stream parent reste actif jusqu'au rapport. \
              Ne rédige pas de réponse finale avant réception du rapport final.\n\
              </subagent>",
-            self.child_id
+            escape_xml(&self.child_id)
         ))
     }
+}
+
+fn escape_xml(value: &str) -> String {
+    value
+        .replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('"', "&quot;")
 }

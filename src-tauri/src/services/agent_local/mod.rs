@@ -108,7 +108,6 @@ pub mod stream_diagnostics_tools;
 pub mod stream_events;
 pub mod subagent_activity;
 pub mod subagent_context;
-pub mod subagent_flow_log;
 pub mod subagent_hidden_reports;
 pub mod subagent_orchestration;
 pub mod subagent_profile;

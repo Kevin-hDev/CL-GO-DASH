@@ -2,7 +2,6 @@ use crate::services::agent_local::session_store;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::subagent_registry;
 use crate::services::agent_local::types_ollama::StreamEvent;
-use serde_json::json;
 use tauri::AppHandle;
 use tokio_util::sync::CancellationToken;
 
@@ -18,14 +17,6 @@ pub async fn run(
     cancel: CancellationToken,
     project_id: Option<String>,
 ) {
-    let run_id = subagent_registry::get_run_id_for_child(&child_session_id).await;
-    super::subagent_flow_log::record(
-        "task_run_started",
-        Some(&parent_session_id),
-        Some(&child_session_id),
-        run_id.as_deref(),
-        json!({"type": subagent_type}),
-    );
     let next_run = super::subagent_queued::QueuedSubagentRun {
         app: app.clone(),
         parent_session_id: parent_session_id.clone(),
@@ -52,8 +43,8 @@ pub async fn run(
 
     let (success, status, summary) = match result {
         Ok(s) => s,
-        Err(e) => {
-            eprintln!("[subagent] échec {}: {e}", child_session_id);
+        Err(_) => {
+            eprintln!("[subagent] échec {}", child_session_id);
             (
                 false,
                 super::subagent_status::FAILED.to_string(),
@@ -61,31 +52,23 @@ pub async fn run(
             )
         }
     };
-    super::subagent_flow_log::record(
-        "task_run_finished",
-        Some(&parent_session_id),
-        Some(&child_session_id),
-        run_id.as_deref(),
-        json!({"status": status.as_str(), "success": success}),
-    );
     let queued_followup = has_queued_followup(&child_session_id, &status).await;
     let session_status = effective_session_status(&status, queued_followup);
 
-    if let Err(e) = update_session_status(&child_session_id, session_status).await {
+    if update_session_status(&child_session_id, session_status)
+        .await
+        .is_err()
+    {
         // Non fatal : on logge mais on continue. Le statut disque sera
         // reclassé en "interrupted" au prochain démarrage par le cleanup.
-        eprintln!("[subagent] persistance statut {}: {e}", child_session_id);
+        eprintln!("[subagent] persistance statut {}", child_session_id);
     }
-    if let Err(e) = update_session_summary(&child_session_id, &summary, session_status).await {
-        eprintln!("[subagent] persistance résumé {}: {e}", child_session_id);
+    if update_session_summary(&child_session_id, &summary, session_status)
+        .await
+        .is_err()
+    {
+        eprintln!("[subagent] persistance résumé {}", child_session_id);
     }
-    super::subagent_flow_log::record(
-        "session_final_state_persisted",
-        Some(&parent_session_id),
-        Some(&child_session_id),
-        run_id.as_deref(),
-        json!({"status": session_status, "queued_followup": queued_followup}),
-    );
 
     let child_name = get_child_name(&child_session_id).await;
     let report = super::subagent_hidden_reports::build_report(
@@ -95,34 +78,14 @@ pub async fn run(
         session_status.to_string(),
         summary.clone(),
     );
-    if let Err(e) = super::subagent_hidden_reports::append(&parent_session_id, report).await {
-        eprintln!("[subagent] rapport parent {}: {e}", parent_session_id);
-        super::subagent_flow_log::record(
-            "hidden_report_append_failed",
-            Some(&parent_session_id),
-            Some(&child_session_id),
-            run_id.as_deref(),
-            json!({}),
-        );
-    } else {
-        super::subagent_flow_log::record(
-            "hidden_report_appended",
-            Some(&parent_session_id),
-            Some(&child_session_id),
-            run_id.as_deref(),
-            json!({"status": session_status}),
-        );
+    if super::subagent_hidden_reports::append(&parent_session_id, report)
+        .await
+        .is_err()
+    {
+        eprintln!("[subagent] rapport parent {}", parent_session_id);
     }
 
-    if queued_followup {
-        super::subagent_flow_log::record(
-            "completion_event_skipped_for_queue",
-            Some(&parent_session_id),
-            Some(&child_session_id),
-            run_id.as_deref(),
-            json!({"status": status.as_str()}),
-        );
-    } else {
+    if !queued_followup {
         let _ = parent_emitter.send(StreamEvent::SubagentCompleted {
             subagent_session_id: child_session_id.clone(),
             success,
@@ -131,27 +94,15 @@ pub async fn run(
             run_id,
         });
     }
-    let current_run_id = subagent_registry::get_run_id_for_child(&child_session_id).await;
-    super::subagent_flow_log::record(
-        "completion_event_sent",
-        Some(&parent_session_id),
-        Some(&child_session_id),
-        current_run_id.as_deref(),
-        json!({"status": session_status, "success": success, "sent": !queued_followup}),
-    );
 
     super::subagent_working_dir::cleanup(&child_session_id).await;
     subagent_registry::unregister(&child_session_id).await;
-    super::subagent_flow_log::record(
-        "registry_unregistered",
-        Some(&parent_session_id),
-        Some(&child_session_id),
-        None,
-        json!({}),
-    );
 
-    if let Err(e) = super::subagent_queued::spawn_next_if_present(next_run).await {
-        eprintln!("[subagent] relance file {}: {e}", child_session_id);
+    if super::subagent_queued::spawn_next_if_present(next_run)
+        .await
+        .is_err()
+    {
+        eprintln!("[subagent] relance file {}", child_session_id);
     }
 }
 

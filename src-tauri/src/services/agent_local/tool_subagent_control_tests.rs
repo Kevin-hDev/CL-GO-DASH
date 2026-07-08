@@ -1,6 +1,7 @@
 use super::*;
 use crate::services::agent_local::types_session::AgentSession;
 use chrono::Utc;
+use serde_json::json;
 
 #[test]
 fn running_child_has_pending_work() {
@@ -18,6 +19,17 @@ fn queued_prompt_keeps_completed_child_active_for_wait() {
     child.subagent_queued_prompts.push("suite".into());
 
     assert!(child_has_pending_work(&child));
+}
+
+#[test]
+fn wait_subagent_rejects_too_many_ids() {
+    let ids = (0..=MAX_WAIT_SUBAGENT_IDS)
+        .map(|idx| json!(format!("child-{idx}")))
+        .collect::<Vec<_>>();
+
+    let result = subagent_ids(&json!({ "subagent_ids": ids }));
+
+    assert!(result.is_err());
 }
 
 fn child(status: &str) -> AgentSession {

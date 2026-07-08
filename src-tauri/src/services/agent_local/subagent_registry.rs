@@ -15,22 +15,26 @@ struct SubagentEntry {
 struct RegistryState {
     entries: HashMap<String, SubagentEntry>,
     run_ids: HashMap<String, String>,
+    run_claims: HashMap<String, usize>,
 }
 
 static REGISTRY: LazyLock<Mutex<RegistryState>> = LazyLock::new(|| {
     Mutex::new(RegistryState {
         entries: HashMap::new(),
         run_ids: HashMap::new(),
+        run_claims: HashMap::new(),
     })
 });
 
 pub async fn get_or_create_run_id(parent_id: &str) -> String {
     let mut state = REGISTRY.lock().await;
-    state
+    let run_id = state
         .run_ids
         .entry(parent_id.to_string())
         .or_insert_with(|| uuid::Uuid::new_v4().to_string())
-        .clone()
+        .clone();
+    *state.run_claims.entry(parent_id.to_string()).or_insert(0) += 1;
+    run_id
 }
 
 pub async fn register(
@@ -57,6 +61,7 @@ pub async fn register(
         .entry(parent_id.to_string())
         .or_insert_with(|| uuid::Uuid::new_v4().to_string())
         .clone();
+    release_claim_locked(&mut state, parent_id);
     state.entries.insert(
         child_id.to_string(),
         SubagentEntry {
@@ -76,9 +81,37 @@ pub async fn unregister(child_id: &str) {
             .entries
             .values()
             .any(|e| e.parent_session_id == *parent);
-        if !remaining {
+        let has_claims = state.run_claims.get(parent).copied().unwrap_or(0) > 0;
+        if !remaining && !has_claims {
             state.run_ids.remove(parent);
         }
+    }
+}
+
+pub async fn release_run_claim(parent_id: &str, run_id: &str) {
+    let mut state = REGISTRY.lock().await;
+    if state.run_ids.get(parent_id).map(String::as_str) != Some(run_id) {
+        return;
+    }
+    release_claim_locked(&mut state, parent_id);
+    let has_entries = state
+        .entries
+        .values()
+        .any(|entry| entry.parent_session_id == parent_id);
+    let has_claims = state.run_claims.get(parent_id).copied().unwrap_or(0) > 0;
+    if !has_entries && !has_claims {
+        state.run_ids.remove(parent_id);
+    }
+}
+
+fn release_claim_locked(state: &mut RegistryState, parent_id: &str) {
+    let Some(count) = state.run_claims.get_mut(parent_id) else {
+        return;
+    };
+    if *count > 1 {
+        *count -= 1;
+    } else {
+        state.run_claims.remove(parent_id);
     }
 }
 

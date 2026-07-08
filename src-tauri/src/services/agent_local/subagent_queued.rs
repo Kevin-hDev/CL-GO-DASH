@@ -1,7 +1,6 @@
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::types_ollama::StreamEvent;
 use crate::services::agent_local::types_session::AgentMessage;
-use serde_json::json;
 use tauri::AppHandle;
 use tokio_util::sync::CancellationToken;
 
@@ -22,13 +21,6 @@ pub async fn spawn_next_if_present(params: QueuedSubagentRun) -> Result<bool, St
     let Some((prompt, name, description, color_key)) =
         take_next_prompt(&params.child_session_id).await?
     else {
-        super::subagent_flow_log::record(
-            "queued_next_absent",
-            Some(&params.parent_session_id),
-            Some(&params.child_session_id),
-            None,
-            json!({}),
-        );
         return Ok(false);
     };
 
@@ -47,23 +39,9 @@ pub async fn spawn_next_if_present(params: QueuedSubagentRun) -> Result<bool, St
                 super::subagent_status::FAILED,
             )
             .await;
-            super::subagent_flow_log::record(
-                "queued_next_register_failed",
-                Some(&params.parent_session_id),
-                Some(&params.child_session_id),
-                None,
-                json!({}),
-            );
             return Err(e);
         }
     };
-    super::subagent_flow_log::record(
-        "queued_next_registered",
-        Some(&params.parent_session_id),
-        Some(&params.child_session_id),
-        Some(&run_id),
-        json!({"type": params.subagent_type}),
-    );
 
     let preview = prompt.chars().take(MAX_PROMPT_PREVIEW).collect();
     let _ = params.parent_emitter.send(StreamEvent::SubagentSpawned {
@@ -98,13 +76,6 @@ pub async fn spawn_next_if_present(params: QueuedSubagentRun) -> Result<bool, St
         .await;
         return Err(e);
     }
-    super::subagent_flow_log::record(
-        "queued_next_spawn_request_queued",
-        None,
-        Some(&params.child_session_id),
-        None,
-        json!({}),
-    );
 
     Ok(true)
 }

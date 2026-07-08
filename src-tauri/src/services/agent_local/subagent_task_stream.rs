@@ -1,9 +1,7 @@
 use crate::commands::agent_chat_task::{run_stream_task, StreamCapabilityHints, StreamTaskParams};
 use crate::services::agent_local::session_store;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
-use crate::services::agent_local::subagent_registry;
 use crate::services::agent_local::types_ollama::StreamEvent;
-use serde_json::json;
 use tauri::AppHandle;
 use tokio_util::sync::CancellationToken;
 
@@ -35,14 +33,6 @@ pub(super) async fn run_inner(
     let working_dir =
         super::subagent_working_dir::resolve(project_id.as_deref(), &child_session_id, is_explorer)
             .await?;
-    let run_id = subagent_registry::get_run_id_for_child(&child_session_id).await;
-    super::subagent_flow_log::record(
-        "child_working_dir_resolved",
-        None,
-        Some(&child_session_id),
-        run_id.as_deref(),
-        json!({"type": subagent_type, "explorer": is_explorer}),
-    );
 
     let emitter = AgentEventEmitter::new(app, child_session_id.clone());
     let request_id = super::stream_diagnostics::start_request(&child_session_id, 0).await;
@@ -71,13 +61,6 @@ pub(super) async fn run_inner(
         cancel: cancel.clone(),
     })
     .await;
-    super::subagent_flow_log::record(
-        "child_stream_task_returned",
-        None,
-        Some(&child_session_id),
-        run_id.as_deref(),
-        json!({"ok": result.is_ok(), "cancelled": cancel.is_cancelled()}),
-    );
 
     finalize_stream_result(result, &child_session_id, &request_id, cancel).await
 }
@@ -104,15 +87,15 @@ async fn finalize_stream_result(
             super::subagent_status::CANCELLED.to_string(),
             "Sous-agent annulé.".to_string(),
         )),
-        Err(e) => {
+        Err(_) => {
             super::stream_diagnostics::record_failure(
                 child_session_id,
                 Some(request_id),
-                &e,
+                "Le sous-agent n'a pas pu terminer correctement.",
                 false,
             )
             .await;
-            Err(e)
+            Err("Le sous-agent n'a pas pu terminer correctement.".to_string())
         }
     }
 }

@@ -3,7 +3,6 @@ use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::subagent_registry;
 use crate::services::agent_local::types_ollama::StreamEvent;
 use crate::services::agent_local::types_tools::ToolResult;
-use serde_json::json;
 use serde_json::Value;
 use tauri::AppHandle;
 use tokio_util::sync::CancellationToken;
@@ -63,15 +62,18 @@ pub async fn prepare_delegate(
             ))
         }
     };
+    if parent.parent_session_id.is_some() {
+        return Err(ToolResult::err(
+            "Les sous-agents ne peuvent pas lancer d'autres sous-agents.",
+        ));
+    }
+    if subagent_type == "coder" && parent.project_id.is_none() {
+        return Err(ToolResult::err(
+            "Un sous-agent code doit être lancé depuis un projet.",
+        ));
+    }
 
     let run_id = subagent_registry::get_or_create_run_id(&parent_session_id).await;
-    super::subagent_flow_log::record(
-        "prepare_delegate",
-        Some(&parent_session_id),
-        None,
-        Some(&run_id),
-        json!({"type": subagent_type, "reuse": args["subagent_id"].as_str().is_some()}),
-    );
 
     let child = match args["subagent_id"].as_str() {
         Some(id) if !id.trim().is_empty() => {
@@ -88,7 +90,10 @@ pub async fn prepare_delegate(
             .await
             {
                 Ok(session) => session,
-                Err(result) => return Err(result),
+                Err(result) => {
+                    subagent_registry::release_run_claim(&parent_session_id, &run_id).await;
+                    return Err(result);
+                }
             }
         }
         _ => {
@@ -105,19 +110,15 @@ pub async fn prepare_delegate(
             .await
             {
                 Ok(session) => session,
-                Err(result) => return Err(result),
+                Err(result) => {
+                    subagent_registry::release_run_claim(&parent_session_id, &run_id).await;
+                    return Err(result);
+                }
             }
         }
     };
 
     let child_id = child.id.clone();
-    super::subagent_flow_log::record(
-        "child_session_ready",
-        Some(&parent_session_id),
-        Some(&child_id),
-        Some(&run_id),
-        json!({"type": subagent_type}),
-    );
 
     let user_msg = crate::services::agent_local::types_session::AgentMessage {
         id: uuid::Uuid::new_v4().to_string(),
@@ -134,38 +135,29 @@ pub async fn prepare_delegate(
         work_duration_ms: None,
         skill_names: None,
     };
-    if let Err(e) = session_store::add_messages(&child_id, vec![user_msg], 0).await {
+    if session_store::add_messages(&child_id, vec![user_msg], 0)
+        .await
+        .is_err()
+    {
         // Fail closed : ne pas démarrer un sous-agent dont le prompt n'est
         // pas persisté. On nettoie la session enfant créée plus haut.
-        eprintln!("[subagent] persistance prompt enfant {}: {e}", child_id);
+        eprintln!("[subagent] persistance prompt enfant {}", child_id);
         let _ =
             super::session_subagents::mark_status(&child_id, super::subagent_status::FAILED).await;
+        subagent_registry::release_run_claim(&parent_session_id, &run_id).await;
         return Err(ToolResult::err(
             "Erreur interne lors de la création du sous-agent",
         ));
     }
-    super::subagent_flow_log::record(
-        "child_prompt_persisted",
-        Some(&parent_session_id),
-        Some(&child_id),
-        Some(&run_id),
-        json!({}),
-    );
 
     let cancel = CancellationToken::new();
     if let Err(e) = subagent_registry::register(&parent_session_id, &child_id, cancel.clone()).await
     {
         let _ =
             super::session_subagents::mark_status(&child_id, super::subagent_status::FAILED).await;
+        subagent_registry::release_run_claim(&parent_session_id, &run_id).await;
         return Err(ToolResult::err(e));
     }
-    super::subagent_flow_log::record(
-        "registry_registered",
-        Some(&parent_session_id),
-        Some(&child_id),
-        Some(&run_id),
-        json!({}),
-    );
 
     let prompt_preview: String = prompt.chars().take(MAX_PROMPT_PREVIEW).collect();
     let _ = parent_emitter.send(StreamEvent::SubagentSpawned {
@@ -177,13 +169,6 @@ pub async fn prepare_delegate(
         prompt_preview: prompt_preview.clone(),
         run_id: Some(run_id.clone()),
     });
-    super::subagent_flow_log::record(
-        "spawn_event_sent",
-        Some(&parent_session_id),
-        Some(&child_id),
-        Some(&run_id),
-        json!({"type": subagent_type}),
-    );
 
     Ok(SpawnedSubagent {
         app,

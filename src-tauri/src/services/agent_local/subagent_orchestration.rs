@@ -2,7 +2,6 @@ use super::stream_events::AgentEventEmitter;
 use super::types_ollama::ChatMessage;
 use super::types_session::AgentSession;
 use super::types_stream::{StreamEvent, StreamResult};
-use serde_json::json;
 use std::collections::BTreeSet;
 use std::time::{Duration, Instant};
 use tokio_util::sync::CancellationToken;
@@ -21,13 +20,6 @@ pub struct ParentSubagentOrchestrator {
 impl ParentSubagentOrchestrator {
     pub async fn new(parent_session_id: &str) -> Self {
         let initial_active = active_set(parent_session_id).await;
-        super::subagent_flow_log::record(
-            "parent_orchestrator_created",
-            Some(parent_session_id),
-            None,
-            None,
-            json!({"initial_active": initial_active.len()}),
-        );
         Self {
             parent_session_id: parent_session_id.to_string(),
             initial_active,
@@ -42,15 +34,7 @@ impl ParentSubagentOrchestrator {
         if reports.is_empty() {
             return false;
         }
-        let count = reports.len();
         messages.extend(reports);
-        super::subagent_flow_log::record(
-            "parent_orchestrator_reports_injected",
-            Some(&self.parent_session_id),
-            None,
-            None,
-            json!({"count": count}),
-        );
         true
     }
 
@@ -92,13 +76,6 @@ impl ParentSubagentOrchestrator {
     ) -> Result<bool, String> {
         loop {
             if cancel.is_cancelled() {
-                super::subagent_flow_log::record(
-                    "parent_orchestrator_cancelled",
-                    Some(&self.parent_session_id),
-                    None,
-                    None,
-                    json!({}),
-                );
                 return Err("Annulé".to_string());
             }
             if self.inject_pending_reports(messages).await {
@@ -106,26 +83,12 @@ impl ParentSubagentOrchestrator {
             }
             let active = self.current_turn_active().await;
             if active.is_empty() {
-                super::subagent_flow_log::record(
-                    "parent_orchestrator_finish_allowed",
-                    Some(&self.parent_session_id),
-                    None,
-                    None,
-                    json!({}),
-                );
                 return Ok(false);
             }
             if should_emit_reminder(self.reminder_sent, self.last_reminder_at, Instant::now()) {
                 messages.push(reminder_message(&active));
                 self.reminder_sent = true;
                 self.last_reminder_at = Some(Instant::now());
-                super::subagent_flow_log::record(
-                    "parent_orchestrator_reminder_injected",
-                    Some(&self.parent_session_id),
-                    None,
-                    None,
-                    json!({"active": active.len()}),
-                );
                 return Ok(true);
             }
             tokio::select! {
