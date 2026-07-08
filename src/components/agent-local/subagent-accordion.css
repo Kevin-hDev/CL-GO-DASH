@@ -1,8 +1,8 @@
 .sa-accordion {
   margin-bottom: 6px;
-  border-radius: var(--radius-md, 8px);
-  background: var(--surface-secondary);
-  border: 1px solid var(--border-subtle);
+  border-radius: 20px;
+  background: var(--chat-composer-bg);
+  border: 0.5px solid var(--chat-composer-border);
   overflow: hidden;
 }
 
@@ -91,7 +91,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 12px;
+  padding: 8px 12px;
   border-top: 1px solid var(--border-subtle);
   font-size: 13px;
 }
@@ -115,12 +115,24 @@
 .sa-agent-main {
   display: flex;
   flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.sa-agent-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
   min-width: 0;
 }
 
 .sa-agent-name {
   color: var(--text-primary);
   font-weight: 500;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .sa-agent-description {
@@ -140,14 +152,15 @@
 }
 
 .sa-agent-status {
-  flex: 1;
   color: var(--text-tertiary);
   font-size: 12px;
+  flex-shrink: 0;
 }
 
 .sa-agent-actions {
   display: flex;
   gap: 4px;
+  flex-shrink: 0;
 }
 
 .sa-btn-stop,

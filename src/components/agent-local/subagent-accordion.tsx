@@ -72,11 +72,13 @@ export function SubagentAccordion({ subagents, onCancel, onOpen }: SubagentAccor
           <div key={agent.sessionId} className="sa-agent-row">
             <span className={`sa-agent-dot ${colorClass("sa-dot", agent)}`} />
             <span className="sa-agent-main">
-              <span className="sa-agent-name">{subagentDisplayName(agent)}</span>
+              <span className="sa-agent-heading">
+                <span className="sa-agent-name">{subagentDisplayName(agent)}</span>
+                <span className="sa-agent-status">
+                  {t(`subagents.${agent.status}`, { defaultValue: agent.status })}
+                </span>
+              </span>
               <span className="sa-agent-description">{subagentSecondaryText(agent)}</span>
-            </span>
-            <span className="sa-agent-status">
-              {t(`subagents.${agent.status}`, { defaultValue: agent.status })}
             </span>
             <div className="sa-agent-actions">
               {agent.status === "running" && (

@@ -30,11 +30,11 @@ pub fn delegate_task_definition() -> Value {
                 },
                 "name": {
                     "type": "string",
-                    "description": "Legacy short name to identify this subagent in the UI (optional)"
+                    "description": "Legacy mission label. The visible agent identity is fixed by type."
                 },
                 "display_name": {
                     "type": "string",
-                    "description": "Short visible name. Defaults to Claudiator for coder and Geminitor for explorer."
+                    "description": "Legacy mission label. Visible identities are Claudiator for coder and Geminitor for explorer."
                 },
                 "description": {
                     "type": "string",

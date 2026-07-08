@@ -86,8 +86,8 @@
   position: relative;
   width: 100%;
   border-radius: 20px;
-  border: 0.5px solid var(--tooltip-border);
-  background: var(--surface);
+  border: 0.5px solid var(--chat-composer-border);
+  background: var(--chat-composer-bg);
   display: flex;
   flex-direction: column;
 }
@@ -203,14 +203,4 @@
   font-size: 0.6875rem;
   font-family: var(--font-mono, monospace);
   color: var(--ink-faint);
-}
-
-[data-theme="light"] .chat-input-bubble {
-  background: rgba(215, 215, 220, 0.40);
-  border-color: var(--tooltip-border);
-}
-
-[data-theme="dark"] .chat-input-bubble {
-  border-color: var(--tooltip-border);
-  background: var(--surface-glass);
 }

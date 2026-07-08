@@ -9,8 +9,7 @@ export function subagentDefaultName(type: SubagentType): string {
 }
 
 export function subagentDisplayName(agent: Pick<SubagentInfo, "name" | "type">): string {
-  const name = agent.name.trim();
-  return LEGACY_NAMES.has(name.toLowerCase()) ? subagentDefaultName(agent.type) : name;
+  return subagentDefaultName(agent.type);
 }
 
 export function subagentColorKey(
@@ -20,5 +19,19 @@ export function subagentColorKey(
 }
 
 export function subagentSecondaryText(agent: SubagentInfo): string {
-  return agent.description || agent.lastActivity?.label || agent.summary || agent.promptPreview || "...";
+  return agent.description
+    || legacyMissionName(agent)
+    || agent.lastActivity?.label
+    || agent.summary
+    || agent.promptPreview
+    || "...";
+}
+
+function legacyMissionName(agent: Pick<SubagentInfo, "name" | "type">): string | undefined {
+  const name = agent.name.trim();
+  if (!name) return undefined;
+  if (LEGACY_NAMES.has(name.toLowerCase())) return undefined;
+  return name.toLowerCase() === subagentDefaultName(agent.type).toLowerCase()
+    ? undefined
+    : name;
 }

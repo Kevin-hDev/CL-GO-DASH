@@ -3,7 +3,6 @@ pub const GEMINITOR: &str = "Geminitor";
 pub const CLAUDIATOR_COLOR: &str = "claudiator";
 pub const GEMINITOR_COLOR: &str = "geminitor";
 
-const MAX_NAME_CHARS: usize = 100;
 const MAX_DESCRIPTION_CHARS: usize = 160;
 
 pub fn default_name(subagent_type: &str) -> &'static str {
@@ -20,9 +19,8 @@ pub fn default_color_key(subagent_type: &str) -> &'static str {
     }
 }
 
-pub fn clean_name(input: Option<&str>, subagent_type: &str) -> String {
-    let fallback = default_name(subagent_type);
-    bounded_non_empty(input, fallback, MAX_NAME_CHARS)
+pub fn clean_name(_input: Option<&str>, subagent_type: &str) -> String {
+    default_name(subagent_type).to_string()
 }
 
 pub fn clean_description(input: Option<&str>, prompt: &str) -> String {
@@ -31,6 +29,23 @@ pub fn clean_description(input: Option<&str>, prompt: &str) -> String {
         .find(|line| !line.trim().is_empty())
         .unwrap_or("Mission sous-agent");
     bounded_non_empty(input, fallback, MAX_DESCRIPTION_CHARS)
+}
+
+pub fn legacy_mission_label<'a>(input: Option<&'a str>, subagent_type: &str) -> Option<&'a str> {
+    let value = input?.trim();
+    if value.is_empty() || is_default_or_legacy_name(value, subagent_type) {
+        None
+    } else {
+        Some(value)
+    }
+}
+
+fn is_default_or_legacy_name(value: &str, subagent_type: &str) -> bool {
+    let normalized = value.to_lowercase();
+    matches!(
+        normalized.as_str(),
+        "agent" | "explore" | "explorer" | "coder"
+    ) || normalized == default_name(subagent_type).to_lowercase()
 }
 
 fn bounded_non_empty(input: Option<&str>, fallback: &str, max_chars: usize) -> String {
@@ -56,5 +71,24 @@ mod tests {
         assert_eq!(default_color_key("coder"), "claudiator");
         assert_eq!(default_name("explorer"), "Geminitor");
         assert_eq!(default_color_key("explorer"), "geminitor");
+    }
+
+    #[test]
+    fn clean_name_keeps_product_identity() {
+        assert_eq!(
+            clean_name(Some("Audit subagents long"), "explorer"),
+            "Geminitor"
+        );
+        assert_eq!(clean_name(Some("Implementation"), "coder"), "Claudiator");
+    }
+
+    #[test]
+    fn legacy_custom_name_can_become_mission_description() {
+        assert_eq!(
+            legacy_mission_label(Some("Audit subagents long"), "explorer"),
+            Some("Audit subagents long")
+        );
+        assert_eq!(legacy_mission_label(Some("Geminitor"), "explorer"), None);
+        assert_eq!(legacy_mission_label(Some("agent"), "coder"), None);
     }
 }
