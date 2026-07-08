@@ -43,9 +43,14 @@ pub async fn check_data_dir_write(
     cancel: CancellationToken,
 ) -> bool {
     if !is_data_dir_write(name, args, working_dir) {
+        permission_gate::log_diagnostic("data_dir_check_clear", Some(name), Some("not_protected"));
         return true;
     }
-    eprintln!("[permission] data_dir_write_gate tool={name}");
+    permission_gate::log_diagnostic(
+        "data_dir_write_gate",
+        Some(name),
+        Some("protected_data_dir"),
+    );
     match permission_gate::request(on_event, name, args, cancel).await {
         PermissionDecision::Allow | PermissionDecision::AllowSession => true,
         PermissionDecision::Deny => false,

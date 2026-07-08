@@ -1,4 +1,5 @@
-use super::types_session::{AgentSession, AgentSessionMeta};
+use super::tool_subagent_format::{format_child, format_children, format_meta};
+use super::types_session::AgentSession;
 use super::types_tools::ToolResult;
 use serde_json::{json, Value};
 use std::time::{Duration, Instant};
@@ -9,6 +10,13 @@ const MAX_PROMPT_SIZE: usize = 50_000;
 const MAX_QUEUED_PROMPTS: usize = 8;
 
 pub async fn dispatch(tool_name: &str, args: &Value, parent_id: &str) -> Option<ToolResult> {
+    super::subagent_flow_log::record(
+        "control_tool_called",
+        Some(parent_id),
+        args["subagent_id"].as_str(),
+        None,
+        json!({"tool": tool_name}),
+    );
     Some(match tool_name {
         "list_subagents" => list(parent_id).await,
         "get_subagent" => get(args, parent_id).await,
@@ -102,6 +110,13 @@ async fn message(args: &Value, parent_id: &str) -> ToolResult {
         if super::session_store::save(&child).await.is_err() {
             return ToolResult::err("Sous-agent indisponible.");
         }
+        super::subagent_flow_log::record(
+            "message_subagent_queued",
+            Some(parent_id),
+            Some(&child.id),
+            None,
+            json!({"queued": child.subagent_queued_prompts.len()}),
+        );
         return ToolResult::ok("Instruction ajoutée à la file du sous-agent.".to_string());
     }
     let payload = json!({
@@ -151,75 +166,4 @@ fn subagent_ids(args: &Value) -> Result<Vec<String>, ToolResult> {
         return Ok(vec![id.to_string()]);
     }
     Err(ToolResult::err("Sous-agent introuvable."))
-}
-
-fn format_meta(meta: AgentSessionMeta) -> String {
-    let activity = meta
-        .subagent_last_activity
-        .as_ref()
-        .map(|activity| text_field(&activity.label))
-        .unwrap_or_default();
-    format!(
-        "- id={} name=\"{}\" type={} status={} description=\"{}\" last_activity=\"{}\"",
-        meta.id,
-        text_field(&meta.name),
-        meta.subagent_type.unwrap_or_else(|| "explorer".to_string()),
-        meta.subagent_status
-            .unwrap_or_else(|| "completed".to_string()),
-        text_field(&meta.subagent_description.unwrap_or_default()),
-        activity
-    )
-}
-
-fn format_children(children: &[AgentSession]) -> String {
-    children
-        .iter()
-        .map(format_child)
-        .collect::<Vec<_>>()
-        .join("\n")
-}
-
-fn format_child(child: &AgentSession) -> String {
-    let activity = child
-        .subagent_last_activity
-        .as_ref()
-        .map(|activity| {
-            format!(
-                "<last_activity kind=\"{}\" label=\"{}\">{}</last_activity>",
-                xml_attr(&activity.kind),
-                xml_attr(&activity.label),
-                xml_text(activity.detail.as_deref().unwrap_or(""))
-            )
-        })
-        .unwrap_or_else(|| "<last_activity />".to_string());
-    format!(
-        "<subagent id=\"{}\" name=\"{}\" type=\"{}\" status=\"{}\">\n<description>{}</description>\n{}\n<summary>{}</summary>\n</subagent>",
-        xml_attr(&child.id),
-        xml_attr(&child.name),
-        xml_attr(child.subagent_type.as_deref().unwrap_or("explorer")),
-        xml_attr(child.subagent_status.as_deref().unwrap_or("completed")),
-        xml_text(child.subagent_description.as_deref().unwrap_or("")),
-        activity,
-        xml_text(child.subagent_summary.as_deref().unwrap_or(""))
-    )
-}
-
-fn text_field(value: &str) -> String {
-    value.split_whitespace().collect::<Vec<_>>().join(" ")
-}
-
-fn xml_attr(value: &str) -> String {
-    text_field(value)
-        .replace('&', "&amp;")
-        .replace('<', "&lt;")
-        .replace('>', "&gt;")
-        .replace('"', "&quot;")
-}
-
-fn xml_text(value: &str) -> String {
-    value
-        .replace('&', "&amp;")
-        .replace('<', "&lt;")
-        .replace('>', "&gt;")
-        .replace('"', "&quot;")
 }

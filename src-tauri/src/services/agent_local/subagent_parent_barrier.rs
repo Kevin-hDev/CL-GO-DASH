@@ -1,5 +1,6 @@
 use super::types_ollama::ChatMessage;
 use super::types_session::AgentSession;
+use serde_json::json;
 use std::collections::BTreeSet;
 use std::time::{Duration, Instant};
 use tokio_util::sync::CancellationToken;
@@ -22,9 +23,17 @@ pub struct ParentSubagentBarrier {
 
 impl ParentSubagentBarrier {
     pub async fn new(parent_session_id: &str) -> Self {
+        let initial_active = active_set(parent_session_id).await;
+        super::subagent_flow_log::record(
+            "parent_barrier_created",
+            Some(parent_session_id),
+            None,
+            None,
+            json!({"initial_active": initial_active.len()}),
+        );
         Self {
             parent_session_id: parent_session_id.to_string(),
-            initial_active: active_set(parent_session_id).await,
+            initial_active,
             last_reminder_at: None,
             reminder_sent: false,
         }
@@ -37,19 +46,47 @@ impl ParentSubagentBarrier {
     ) -> Result<BarrierAction, String> {
         loop {
             if cancel.is_cancelled() {
+                super::subagent_flow_log::record(
+                    "parent_barrier_cancelled",
+                    Some(&self.parent_session_id),
+                    None,
+                    None,
+                    json!({}),
+                );
                 return Err("Annulé".to_string());
             }
             if append_hidden_reports(&self.parent_session_id, messages).await {
+                super::subagent_flow_log::record(
+                    "parent_barrier_reports_injected",
+                    Some(&self.parent_session_id),
+                    None,
+                    None,
+                    json!({}),
+                );
                 return Ok(BarrierAction::Continue);
             }
             let active = self.current_turn_active().await;
             if active.is_empty() {
+                super::subagent_flow_log::record(
+                    "parent_barrier_finish_allowed",
+                    Some(&self.parent_session_id),
+                    None,
+                    None,
+                    json!({}),
+                );
                 return Ok(BarrierAction::Finish);
             }
             if should_emit_reminder(self.reminder_sent, self.last_reminder_at, Instant::now()) {
                 messages.push(reminder_message(&active));
                 self.reminder_sent = true;
                 self.last_reminder_at = Some(Instant::now());
+                super::subagent_flow_log::record(
+                    "parent_barrier_reminder_injected",
+                    Some(&self.parent_session_id),
+                    None,
+                    None,
+                    json!({"active": active.len()}),
+                );
                 return Ok(BarrierAction::Continue);
             }
             tokio::select! {

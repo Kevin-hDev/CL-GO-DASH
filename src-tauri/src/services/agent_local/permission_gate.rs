@@ -93,9 +93,47 @@ pub fn requires_permission(tool_name: &str, args: &serde_json::Value) -> bool {
 }
 
 const MAX_PENDING: usize = 64;
+const MAX_DIAGNOSTIC_LOG_BYTES: u64 = 2 * 1024 * 1024;
 
 static PENDING: LazyLock<Mutex<HashMap<String, oneshot::Sender<PermissionDecision>>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
+
+pub(crate) fn log_diagnostic(event: &str, tool_name: Option<&str>, detail: Option<&str>) {
+    let entry = diagnostic_entry(event, tool_name, detail);
+    eprintln!("[permission] {}", entry);
+
+    let dir = crate::services::paths::data_dir().join("logs");
+    let _ = std::fs::create_dir_all(&dir);
+    let path = dir.join("permission-diagnostics.jsonl");
+    if std::fs::metadata(&path)
+        .map(|meta| meta.len() > MAX_DIAGNOSTIC_LOG_BYTES)
+        .unwrap_or(false)
+    {
+        let rotated = dir.join("permission-diagnostics.jsonl.1");
+        let _ = std::fs::rename(&path, rotated);
+    }
+    if let Ok(mut file) = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&path)
+    {
+        use std::io::Write;
+        let _ = writeln!(file, "{}", entry);
+    }
+}
+
+pub(crate) fn diagnostic_entry(
+    event: &str,
+    tool_name: Option<&str>,
+    detail: Option<&str>,
+) -> serde_json::Value {
+    serde_json::json!({
+        "ts": chrono::Local::now().to_rfc3339(),
+        "event": event,
+        "tool": tool_name,
+        "detail": detail,
+    })
+}
 
 pub async fn request(
     on_event: &AgentEventEmitter,
@@ -118,7 +156,7 @@ pub async fn request(
         tool_name: tool_name.to_string(),
         arguments: arguments.clone(),
     });
-    eprintln!("[permission] request id={id} tool={tool_name}");
+    log_diagnostic("request", Some(tool_name), Some("permission_prompt_sent"));
 
     tokio::select! {
         res = rx => res.unwrap_or(PermissionDecision::Deny),
@@ -131,10 +169,15 @@ pub async fn request(
 
 pub async fn respond(id: &str, decision: PermissionDecision) {
     if let Some(tx) = PENDING.lock().await.remove(id) {
-        eprintln!("[permission] respond id={id} decision={decision:?} found=true");
+        let detail = match decision {
+            PermissionDecision::Allow => "allow",
+            PermissionDecision::AllowSession => "allow_session",
+            PermissionDecision::Deny => "deny",
+        };
+        log_diagnostic("respond_found", None, Some(detail));
         let _ = tx.send(decision);
     } else {
-        eprintln!("[permission] respond id={id} decision={decision:?} found=false");
+        log_diagnostic("respond_missing", None, Some("stale_or_unknown_permission"));
     }
 }
 

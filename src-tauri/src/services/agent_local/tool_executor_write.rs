@@ -39,6 +39,7 @@ pub(super) async fn execute_write(
             return ToolResult::err("L'utilisateur a refusé cette action.");
         }
     } else if permission_policy::uses_auto_bypass(mode) {
+        permission_gate::log_diagnostic("auto_bypass_check", Some(name), Some(mode));
         if !permission_policy::check_data_dir_write(
             on_event,
             name,

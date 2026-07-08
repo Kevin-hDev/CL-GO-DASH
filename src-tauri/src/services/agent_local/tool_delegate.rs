@@ -3,6 +3,7 @@ use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::subagent_registry;
 use crate::services::agent_local::types_ollama::StreamEvent;
 use crate::services::agent_local::types_tools::ToolResult;
+use serde_json::json;
 use serde_json::Value;
 use tauri::AppHandle;
 use tokio_util::sync::CancellationToken;
@@ -64,10 +65,17 @@ pub async fn prepare_delegate(
     };
 
     let run_id = subagent_registry::get_or_create_run_id(&parent_session_id).await;
+    super::subagent_flow_log::record(
+        "prepare_delegate",
+        Some(&parent_session_id),
+        None,
+        Some(&run_id),
+        json!({"type": subagent_type, "reuse": args["subagent_id"].as_str().is_some()}),
+    );
 
     let child = match args["subagent_id"].as_str() {
         Some(id) if !id.trim().is_empty() => {
-            match prepare_existing_child(
+            match super::tool_delegate_child::prepare_existing_child(
                 id.trim(),
                 &parent_session_id,
                 subagent_type,
@@ -84,7 +92,7 @@ pub async fn prepare_delegate(
             }
         }
         _ => {
-            match create_child(
+            match super::tool_delegate_child::create_child(
                 &parent,
                 &parent_session_id,
                 subagent_type,
@@ -103,6 +111,13 @@ pub async fn prepare_delegate(
     };
 
     let child_id = child.id.clone();
+    super::subagent_flow_log::record(
+        "child_session_ready",
+        Some(&parent_session_id),
+        Some(&child_id),
+        Some(&run_id),
+        json!({"type": subagent_type}),
+    );
 
     let user_msg = crate::services::agent_local::types_session::AgentMessage {
         id: uuid::Uuid::new_v4().to_string(),
@@ -129,6 +144,13 @@ pub async fn prepare_delegate(
             "Erreur interne lors de la création du sous-agent",
         ));
     }
+    super::subagent_flow_log::record(
+        "child_prompt_persisted",
+        Some(&parent_session_id),
+        Some(&child_id),
+        Some(&run_id),
+        json!({}),
+    );
 
     let cancel = CancellationToken::new();
     if let Err(e) = subagent_registry::register(&parent_session_id, &child_id, cancel.clone()).await
@@ -137,6 +159,13 @@ pub async fn prepare_delegate(
             super::session_subagents::mark_status(&child_id, super::subagent_status::FAILED).await;
         return Err(ToolResult::err(e));
     }
+    super::subagent_flow_log::record(
+        "registry_registered",
+        Some(&parent_session_id),
+        Some(&child_id),
+        Some(&run_id),
+        json!({}),
+    );
 
     let prompt_preview: String = prompt.chars().take(MAX_PROMPT_PREVIEW).collect();
     let _ = parent_emitter.send(StreamEvent::SubagentSpawned {
@@ -146,8 +175,15 @@ pub async fn prepare_delegate(
         subagent_description: description,
         subagent_color_key: color_key,
         prompt_preview: prompt_preview.clone(),
-        run_id: Some(run_id),
+        run_id: Some(run_id.clone()),
     });
+    super::subagent_flow_log::record(
+        "spawn_event_sent",
+        Some(&parent_session_id),
+        Some(&child_id),
+        Some(&run_id),
+        json!({"type": subagent_type}),
+    );
 
     Ok(SpawnedSubagent {
         app,
@@ -160,72 +196,6 @@ pub async fn prepare_delegate(
         cancel,
         project_id: parent.project_id.clone(),
     })
-}
-
-async fn prepare_existing_child(
-    child_id: &str,
-    parent_session_id: &str,
-    subagent_type: &str,
-    prompt: &str,
-    name: &str,
-    description: &str,
-    color_key: &str,
-    run_id: &str,
-) -> Result<crate::services::agent_local::types_session::AgentSession, ToolResult> {
-    let mut child = match session_store::get(child_id).await {
-        Ok(session) => session,
-        Err(_) => return Err(ToolResult::err("Sous-agent introuvable.")),
-    };
-    if child.parent_session_id.as_deref() != Some(parent_session_id) {
-        return Err(ToolResult::err("Sous-agent introuvable."));
-    }
-    if child.subagent_status.as_deref() == Some(super::subagent_status::RUNNING) {
-        return Err(ToolResult::err("Ce sous-agent est déjà en cours."));
-    }
-    child.name = name.to_string();
-    child.subagent_type = Some(subagent_type.to_string());
-    child.subagent_prompt = Some(prompt.to_string());
-    child.subagent_status = Some(super::subagent_status::RUNNING.to_string());
-    child.subagent_run_id = Some(run_id.to_string());
-    child.subagent_description = Some(description.to_string());
-    child.subagent_color_key = Some(color_key.to_string());
-    child.subagent_summary = None;
-    session_store::save(&child)
-        .await
-        .map_err(|_| ToolResult::err("Erreur interne lors de la préparation du sous-agent"))?;
-    Ok(child)
-}
-
-async fn create_child(
-    parent: &crate::services::agent_local::types_session::AgentSession,
-    parent_session_id: &str,
-    subagent_type: &str,
-    prompt: &str,
-    name: &str,
-    description: &str,
-    color_key: &str,
-    run_id: &str,
-) -> Result<crate::services::agent_local::types_session::AgentSession, ToolResult> {
-    let mut child = session_store::create_full(
-        name,
-        &parent.model,
-        &parent.provider,
-        false,
-        parent.project_id.clone(),
-    )
-    .await
-    .map_err(|_| ToolResult::err("Erreur interne lors de la création du sous-agent"))?;
-    child.parent_session_id = Some(parent_session_id.to_string());
-    child.subagent_type = Some(subagent_type.to_string());
-    child.subagent_prompt = Some(prompt.to_string());
-    child.subagent_status = Some(super::subagent_status::RUNNING.to_string());
-    child.subagent_run_id = Some(run_id.to_string());
-    child.subagent_description = Some(description.to_string());
-    child.subagent_color_key = Some(color_key.to_string());
-    session_store::save(&child)
-        .await
-        .map_err(|_| ToolResult::err("Erreur interne lors de la création du sous-agent"))?;
-    Ok(child)
 }
 
 #[cfg(test)]

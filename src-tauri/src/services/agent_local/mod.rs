@@ -108,6 +108,7 @@ pub mod stream_diagnostics_tools;
 pub mod stream_events;
 pub mod subagent_activity;
 pub mod subagent_context;
+pub mod subagent_flow_log;
 pub mod subagent_hidden_reports;
 pub mod subagent_parent_barrier;
 pub mod subagent_profile;
@@ -123,6 +124,7 @@ pub mod subagent_startup_cleanup;
 pub mod subagent_status;
 pub mod subagent_summary;
 pub mod subagent_task;
+pub mod subagent_task_stream;
 #[cfg(test)]
 pub mod subagent_task_tests;
 pub mod subagent_working_dir;
@@ -149,6 +151,7 @@ pub mod tool_definitions_subagent;
 pub mod tool_definitions_todo;
 pub mod tool_definitions_web;
 pub mod tool_delegate;
+pub mod tool_delegate_child;
 pub mod tool_dispatcher;
 pub mod tool_dispatcher_delegate;
 pub mod tool_dispatcher_forecast;
@@ -239,6 +242,7 @@ pub mod tool_spreadsheet_write_new;
 #[cfg(test)]
 pub mod tool_spreadsheet_write_tests;
 pub mod tool_subagent_control;
+pub mod tool_subagent_format;
 pub mod tool_todo;
 #[cfg(test)]
 mod tool_todo_memory_tests;

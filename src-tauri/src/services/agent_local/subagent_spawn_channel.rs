@@ -36,6 +36,15 @@ pub fn send(req: SpawnRequest) -> Result<(), String> {
 async fn receiver_loop(mut rx: mpsc::Receiver<SpawnRequest>) {
     while let Some(req) = rx.recv().await {
         tauri::async_runtime::spawn(async move {
+            let run_id =
+                super::subagent_registry::get_run_id_for_child(&req.child_session_id).await;
+            super::subagent_flow_log::record(
+                "spawn_worker_started",
+                Some(&req.parent_session_id),
+                Some(&req.child_session_id),
+                run_id.as_deref(),
+                serde_json::json!({"type": req.subagent_type}),
+            );
             super::subagent_task::run(
                 req.app,
                 req.parent_session_id,
