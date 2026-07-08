@@ -18,11 +18,9 @@ pub struct QueuedSubagentRun {
 }
 
 pub async fn spawn_next_if_present(params: QueuedSubagentRun) -> Result<bool, String> {
-    let Some((prompt, name, description, color_key)) =
-        take_next_prompt(&params.child_session_id).await?
-    else {
+    if !has_next_prompt(&params.child_session_id).await? {
         return Ok(false);
-    };
+    }
 
     let cancel = CancellationToken::new();
     let run_id = match super::subagent_registry::register(
@@ -39,8 +37,15 @@ pub async fn spawn_next_if_present(params: QueuedSubagentRun) -> Result<bool, St
                 super::subagent_status::FAILED,
             )
             .await;
+            super::session_store::remove_session_lock(&params.child_session_id).await;
             return Err(e);
         }
+    };
+    let Some((prompt, name, description, color_key)) =
+        take_next_prompt(&params.child_session_id, &run_id).await?
+    else {
+        super::subagent_registry::unregister(&params.child_session_id).await;
+        return Ok(false);
     };
 
     let preview = prompt.chars().take(MAX_PROMPT_PREVIEW).collect();
@@ -74,15 +79,26 @@ pub async fn spawn_next_if_present(params: QueuedSubagentRun) -> Result<bool, St
             super::subagent_status::FAILED,
         )
         .await;
+        super::session_store::remove_session_lock(&params.child_session_id).await;
         return Err(e);
     }
 
     Ok(true)
 }
 
+async fn has_next_prompt(child_id: &str) -> Result<bool, String> {
+    let lock = super::session_store::lock_session(child_id).await;
+    let _guard = lock.lock().await;
+    let child = super::session_store::get(child_id).await?;
+    Ok(!child.subagent_queued_prompts.is_empty())
+}
+
 async fn take_next_prompt(
     child_id: &str,
+    run_id: &str,
 ) -> Result<Option<(String, String, String, String)>, String> {
+    let lock = super::session_store::lock_session(child_id).await;
+    let _guard = lock.lock().await;
     let mut child = super::session_store::get(child_id).await?;
     if child.subagent_queued_prompts.is_empty() {
         return Ok(None);
@@ -90,7 +106,14 @@ async fn take_next_prompt(
     let prompt = child.subagent_queued_prompts.remove(0);
     child.subagent_prompt = Some(prompt.clone());
     child.subagent_status = Some(super::subagent_status::RUNNING.to_string());
+    child.subagent_run_id = Some(run_id.to_string());
     child.subagent_summary = None;
+    child.subagent_last_activity = Some(super::types_session::SubagentLastActivity {
+        kind: "status".to_string(),
+        label: "Relancé".to_string(),
+        detail: Some(prompt.chars().take(220).collect()),
+        updated_at: chrono::Utc::now(),
+    });
     child.updated_at = Some(chrono::Utc::now());
     let name = child.name.clone();
     let description = child.subagent_description.clone().unwrap_or_default();

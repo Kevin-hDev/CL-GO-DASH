@@ -50,8 +50,20 @@ pub async fn prepare_delegate(
             .or_else(|| args["name"].as_str()),
         subagent_type,
     );
+    let legacy_label = super::subagent_profile::legacy_mission_label(
+        args["display_name"]
+            .as_str()
+            .or_else(|| args["name"].as_str()),
+        subagent_type,
+    );
+    let description_owned = args["description"]
+        .as_str()
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .map(ToString::to_string)
+        .or(legacy_label);
     let description =
-        super::subagent_profile::clean_description(args["description"].as_str(), &prompt);
+        super::subagent_profile::clean_description(description_owned.as_deref(), &prompt);
     let color_key = super::subagent_profile::default_color_key(subagent_type).to_string();
 
     let parent = match session_store::get(&parent_session_id).await {

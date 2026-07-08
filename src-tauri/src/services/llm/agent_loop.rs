@@ -57,7 +57,7 @@ pub async fn run_agent_loop(
         if cancel.is_cancelled() {
             return Err("Annulé".to_string());
         }
-        subagents.inject_pending_reports(messages).await;
+        subagents.prepare_for_model_request(messages).await;
         tool_result_budget::apply_budget(messages);
         context_budget::prepare_for_request(messages, configured_context);
         let realtime_budget = compression.realtime_budget(messages);

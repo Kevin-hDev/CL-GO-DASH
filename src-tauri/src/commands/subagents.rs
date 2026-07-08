@@ -1,6 +1,8 @@
 use super::subagents_validation::validate_session_id;
 use crate::services::agent_local::types_session::AgentSessionMeta;
-use crate::services::agent_local::{session_store, session_subagents, subagent_registry};
+use crate::services::agent_local::{
+    session_store, session_subagents, subagent_live_state, subagent_registry,
+};
 
 #[cfg(test)]
 pub use super::subagents_validation::validate_session_id_for_test;
@@ -12,15 +14,20 @@ pub async fn list_subagents(
 ) -> Result<Vec<AgentSessionMeta>, String> {
     validate_session_id(&parent_session_id)?;
     let all = session_store::list().await?;
-    Ok(all
+    let mut visible = Vec::new();
+    for item in all
         .into_iter()
-        .filter(|s| {
-            s.parent_session_id.as_deref() == Some(&parent_session_id)
-                && run_id
-                    .as_ref()
-                    .is_none_or(|rid| s.subagent_run_id.as_deref() == Some(rid))
-        })
-        .collect())
+        .filter(|s| s.parent_session_id.as_deref() == Some(&parent_session_id))
+    {
+        let normalized = subagent_live_state::normalize_meta(item).await;
+        if run_id
+            .as_ref()
+            .is_none_or(|rid| normalized.subagent_run_id.as_deref() == Some(rid))
+        {
+            visible.push(normalized);
+        }
+    }
+    Ok(visible)
 }
 
 #[tauri::command]

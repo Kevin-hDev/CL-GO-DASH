@@ -8,13 +8,13 @@ use tokio_util::sync::CancellationToken;
 
 pub const REMINDER_INTERVAL: Duration = Duration::from_secs(10 * 60);
 const POLL_INTERVAL: Duration = Duration::from_secs(1);
-pub const SUBAGENT_ORCHESTRATION_CONTEXT_PREFIX: &str = "Subagent orchestration context:";
 
 pub struct ParentSubagentOrchestrator {
     parent_session_id: String,
     initial_active: BTreeSet<String>,
     last_reminder_at: Option<Instant>,
     reminder_sent: bool,
+    reports_injected_since_last_request: bool,
 }
 
 impl ParentSubagentOrchestrator {
@@ -25,6 +25,7 @@ impl ParentSubagentOrchestrator {
             initial_active,
             last_reminder_at: None,
             reminder_sent: false,
+            reports_injected_since_last_request: false,
         }
     }
 
@@ -36,6 +37,19 @@ impl ParentSubagentOrchestrator {
         }
         messages.extend(reports);
         true
+    }
+
+    pub async fn prepare_for_model_request(&mut self, messages: &mut Vec<ChatMessage>) {
+        super::subagent_orchestration_context::remove_gate_context(messages);
+        let reports_injected =
+            self.reports_injected_since_last_request || self.inject_pending_reports(messages).await;
+        self.reports_injected_since_last_request = false;
+        let active = self.current_turn_active().await;
+        super::subagent_orchestration_context::replace_gate_context(
+            messages,
+            &active,
+            reports_injected,
+        );
     }
 
     pub async fn finalize_content_phase(
@@ -79,6 +93,7 @@ impl ParentSubagentOrchestrator {
                 return Err("Annulé".to_string());
             }
             if self.inject_pending_reports(messages).await {
+                self.reports_injected_since_last_request = true;
                 return Ok(true);
             }
             let active = self.current_turn_active().await;
@@ -86,7 +101,9 @@ impl ParentSubagentOrchestrator {
                 return Ok(false);
             }
             if should_emit_reminder(self.reminder_sent, self.last_reminder_at, Instant::now()) {
-                messages.push(reminder_message(&active));
+                super::subagent_orchestration_context::replace_gate_context(
+                    messages, &active, false,
+                );
                 self.reminder_sent = true;
                 self.last_reminder_at = Some(Instant::now());
                 return Ok(true);
@@ -128,64 +145,8 @@ async fn active_set(parent_session_id: &str) -> BTreeSet<String> {
         .collect()
 }
 
-fn reminder_message(active: &[AgentSession]) -> ChatMessage {
-    ChatMessage {
-        role: "user".to_string(),
-        content: build_reminder_content(active),
-        ..Default::default()
-    }
-}
-
-pub fn build_reminder_content(active: &[AgentSession]) -> String {
-    let items = active
-        .iter()
-        .map(format_active_subagent)
-        .collect::<Vec<_>>()
-        .join("\n");
-    format!(
-        "{SUBAGENT_ORCHESTRATION_CONTEXT_PREFIX}\n\
-         <subagent_orchestration>\n\
-         <instruction>Current-turn subagents are still running. Do not write a final answer yet. \
-         Check active subagents, update the user briefly, then keep waiting until the required reports arrive.</instruction>\n\
-         <active_subagents>\n{items}\n</active_subagents>\n\
-         </subagent_orchestration>"
-    )
-}
-
-fn format_active_subagent(session: &AgentSession) -> String {
-    let activity = session
-        .subagent_last_activity
-        .as_ref()
-        .map(|activity| {
-            format!(
-                "<last_activity kind=\"{}\" label=\"{}\">{}</last_activity>",
-                xml(&activity.kind),
-                xml(&activity.label),
-                xml(activity.detail.as_deref().unwrap_or(""))
-            )
-        })
-        .unwrap_or_else(|| "<last_activity />".to_string());
-    format!(
-        "<subagent id=\"{}\" name=\"{}\" type=\"{}\" status=\"{}\"><description>{}</description>{}</subagent>",
-        xml(&session.id),
-        xml(&session.name),
-        xml(session.subagent_type.as_deref().unwrap_or("explorer")),
-        xml(session.subagent_status.as_deref().unwrap_or("running")),
-        xml(session.subagent_description.as_deref().unwrap_or("")),
-        activity
-    )
-}
-
 pub fn should_emit_reminder(sent: bool, last_at: Option<Instant>, now: Instant) -> bool {
     !sent || last_at.is_some_and(|last| now.duration_since(last) >= REMINDER_INTERVAL)
-}
-
-fn xml(value: &str) -> String {
-    value
-        .replace('&', "&amp;")
-        .replace('<', "&lt;")
-        .replace('>', "&gt;")
-        .replace('"', "&quot;")
 }
 
 #[cfg(test)]

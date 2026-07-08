@@ -1,37 +1,11 @@
 use crate::services::agent_local::types_session::{AgentSession, AgentSessionMeta};
 use chrono::Utc;
-use regex::Regex;
-use std::collections::HashMap;
 use std::path::PathBuf;
-use std::sync::LazyLock;
-use tokio::sync::Mutex;
 use uuid::Uuid;
 
-static SESSION_ID_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^[a-f0-9\-]+$").unwrap());
-
-pub fn validate_session_id(id: &str) -> Result<(), String> {
-    if id.is_empty() || id.len() > 64 {
-        return Err("Identifiant de session invalide".into());
-    }
-    if !SESSION_ID_REGEX.is_match(id) {
-        return Err("Identifiant de session invalide".into());
-    }
-    Ok(())
-}
-
-static SESSION_LOCKS: LazyLock<Mutex<HashMap<String, std::sync::Arc<Mutex<()>>>>> =
-    LazyLock::new(|| Mutex::new(HashMap::new()));
-
-pub(crate) async fn lock_session(id: &str) -> std::sync::Arc<Mutex<()>> {
-    let mut map = SESSION_LOCKS.lock().await;
-    map.entry(id.to_string())
-        .or_insert_with(|| std::sync::Arc::new(Mutex::new(())))
-        .clone()
-}
-
-pub async fn remove_session_lock(id: &str) {
-    SESSION_LOCKS.lock().await.remove(id);
-}
+pub use super::session_id::validate_session_id;
+pub(crate) use super::session_locks::lock_session;
+pub use super::session_locks::remove_session_lock;
 
 fn sessions_dir() -> PathBuf {
     crate::services::paths::data_dir().join("agent-sessions")

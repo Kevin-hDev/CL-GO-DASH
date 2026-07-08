@@ -39,6 +39,8 @@
   --tooltip-border: rgba(0, 0, 0, 0.12);
   --tooltip-text: var(--ink);
   --tooltip-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  --chat-composer-bg: rgba(215, 215, 220, 0.40);
+  --chat-composer-border: var(--tooltip-border);
   --code-block-border: rgba(0, 0, 0, 0.12);
   --agent-trace-text: #6f6f76;
   --agent-trace-hover: #4f4f55;

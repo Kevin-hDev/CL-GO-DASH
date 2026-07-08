@@ -20,6 +20,8 @@ import {
   PauseCircle as LuPauseCircle,
   Plus as LuPlus,
   Search as LuSearch,
+  Settings as LuSettings,
+  Square as LuSquare,
   TerminalSquare as LuTerminalSquare,
   X as LuX,
 } from "lucide-react";
@@ -58,5 +60,7 @@ export const PanelRightOpen = withSafeCssSize(LuPanelRightOpen);
 export const PauseCircle = withSafeCssSize(LuPauseCircle);
 export const Plus = withSafeCssSize(LuPlus);
 export const Search = withSafeCssSize(LuSearch);
+export const Settings = withSafeCssSize(LuSettings);
+export const Square = withSafeCssSize(LuSquare);
 export const TerminalSquare = withSafeCssSize(LuTerminalSquare);
 export const X = withSafeCssSize(LuX);

@@ -1,26 +1,30 @@
 .sa-accordion {
   margin-bottom: 6px;
-  border-radius: var(--radius-md, 8px);
-  background: var(--surface-secondary);
-  border: 1px solid var(--border-subtle);
+  border-radius: 20px;
+  background: var(--chat-composer-bg);
+  border: 0.5px solid var(--chat-composer-border);
   overflow: hidden;
+  container-type: inline-size;
 }
 
 .sa-accordion-header {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 32px 32px;
   align-items: center;
+  min-height: 42px;
 }
 
 .sa-accordion-toggle {
-  flex: 1;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 12px;
+  min-width: 0;
+  min-height: 42px;
+  padding: 0 12px;
   background: none;
   border: none;
-  color: var(--text-secondary);
-  font-size: 13px;
+  color: var(--ink-muted);
+  font-size: var(--text-sm);
   cursor: pointer;
 }
 
@@ -29,7 +33,9 @@
 }
 
 .sa-accordion-icon {
-  font-size: 17px;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
   animation: sa-spin 2s linear infinite;
 }
 
@@ -38,32 +44,31 @@
 }
 
 .sa-accordion-title {
-  flex: 1;
+  min-width: 0;
   text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.sa-stop-all {
+.sa-stop-all,
+.sa-chevron-btn {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: none;
   border: none;
-  color: var(--text-tertiary);
+  color: var(--ink-faint);
   cursor: pointer;
-  font-size: 12px;
-  padding: 8px;
-  border-radius: 4px;
+  padding: 0;
+  border-radius: 50%;
 }
 
 .sa-stop-all:hover {
-  color: var(--error);
+  color: var(--signal-error);
   background: var(--surface-hover);
-}
-
-.sa-chevron-btn {
-  background: none;
-  border: none;
-  color: var(--text-tertiary);
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 4px;
 }
 
 .sa-chevron-btn:hover {
@@ -71,14 +76,13 @@
 }
 
 .sa-chevron {
-  display: inline-block;
+  width: 16px;
+  height: 16px;
   transition: transform 300ms ease;
-  transform: rotate(90deg);
-  font-size: 14px;
 }
 
 .sa-chevron-up {
-  transform: rotate(270deg);
+  transform: rotate(180deg);
 }
 
 .sa-accordion-body-inner {
@@ -88,12 +92,14 @@
 }
 
 .sa-agent-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 14px minmax(0, 1fr) max-content;
   align-items: center;
   gap: 8px;
-  padding: 6px 12px;
-  border-top: 1px solid var(--border-subtle);
-  font-size: 13px;
+  min-height: 46px;
+  padding: 7px 12px;
+  border-top: 1px solid var(--edge);
+  font-size: var(--text-sm);
 }
 
 .sa-agent-dot {
@@ -118,55 +124,98 @@
   min-width: 0;
 }
 
-.sa-agent-name {
-  color: var(--text-primary);
-  font-weight: 500;
+.sa-agent-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
 }
 
-.sa-agent-description {
-  color: var(--text-tertiary);
-  font-size: 11px;
+.sa-agent-name {
+  color: var(--ink);
+  font-weight: 500;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 260px;
+}
+
+.sa-agent-description {
+  color: var(--ink-faint);
+  font-size: var(--text-xs);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .sa-agent-timer {
-  color: var(--text-tertiary);
+  color: var(--ink-faint);
   font-size: 11px;
   font-variant-numeric: tabular-nums;
   min-width: 36px;
 }
 
 .sa-agent-status {
-  flex: 1;
-  color: var(--text-tertiary);
+  color: var(--ink-faint);
   font-size: 12px;
+  flex-shrink: 0;
 }
 
 .sa-agent-actions {
   display: flex;
+  align-items: center;
   gap: 4px;
 }
 
 .sa-btn-stop,
 .sa-btn-open {
   background: none;
-  border: 1px solid var(--border-subtle);
-  border-radius: 4px;
-  padding: 2px 8px;
-  font-size: 12px;
+  border: 0;
+  border-radius: 999px;
+  min-height: 28px;
+  padding: 0 8px;
+  font-size: var(--text-xs);
   cursor: pointer;
-  color: var(--text-secondary);
+  color: var(--ink-muted);
+}
+
+.sa-btn-stop {
+  width: 28px;
+  padding: 0;
+}
+
+.sa-stop-all svg,
+.sa-btn-stop svg {
+  width: 12px;
+  height: 12px;
+  fill: currentColor;
+}
+
+.sa-btn-stop,
+.sa-btn-open,
+.sa-stop-all,
+.sa-chevron-btn {
+  transition: background var(--ease-smooth), color var(--ease-smooth);
 }
 
 .sa-btn-stop:hover {
-  color: var(--error);
-  border-color: var(--error);
+  color: var(--signal-error);
+  background: var(--surface-hover);
 }
 
 .sa-btn-open:hover {
-  color: var(--accent);
-  border-color: var(--accent);
+  color: var(--pulse);
+  background: var(--surface-hover);
+}
+
+@container (max-width: 520px) {
+  .sa-agent-row {
+    grid-template-columns: 14px minmax(0, 1fr);
+  }
+
+  .sa-agent-actions {
+    grid-column: 2;
+    justify-content: flex-start;
+    margin-top: 4px;
+  }
 }

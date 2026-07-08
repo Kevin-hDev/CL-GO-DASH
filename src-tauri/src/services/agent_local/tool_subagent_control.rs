@@ -29,11 +29,15 @@ pub async fn dispatch(tool_name: &str, args: &Value, parent_id: &str) -> Option<
 async fn list(parent_id: &str) -> ToolResult {
     match super::session_store::list().await {
         Ok(items) => {
-            let rows = items
+            let mut rows = Vec::new();
+            for item in items
                 .into_iter()
                 .filter(|item| item.parent_session_id.as_deref() == Some(parent_id))
-                .map(format_meta)
-                .collect::<Vec<_>>();
+            {
+                rows.push(format_meta(
+                    super::subagent_live_state::normalize_meta(item).await,
+                ));
+            }
             ToolResult::ok(if rows.is_empty() {
                 "Aucun sous-agent pour cette session.".to_string()
             } else {
@@ -46,7 +50,9 @@ async fn list(parent_id: &str) -> ToolResult {
 
 async fn get(args: &Value, parent_id: &str) -> ToolResult {
     match owned_child(args, parent_id).await {
-        Ok(child) => ToolResult::ok(format_child(&child)),
+        Ok(child) => ToolResult::ok(format_child(
+            &super::subagent_live_state::normalize_session(child).await,
+        )),
         Err(result) => result,
     }
 }
@@ -67,7 +73,8 @@ async fn wait(args: &Value, parent_id: &str) -> ToolResult {
         for id in &ids {
             match owned_child_by_id(id, parent_id).await {
                 Ok(child) => {
-                    any_running |= child_has_pending_work(&child);
+                    let child = super::subagent_live_state::normalize_session(child).await;
+                    any_running |= child_has_pending_work(&child).await;
                     children.push(child);
                 }
                 Err(result) => return result,
@@ -97,27 +104,50 @@ async fn message(args: &Value, parent_id: &str) -> ToolResult {
         Some(value) if !value.is_empty() && value.chars().count() <= MAX_PROMPT_SIZE => value,
         _ => return ToolResult::err("Instruction sous-agent invalide."),
     };
-    let Ok(mut child) = owned_child(args, parent_id).await else {
+    let Some(child_id) = args["subagent_id"]
+        .as_str()
+        .map(str::trim)
+        .filter(|id| !id.is_empty())
+    else {
         return ToolResult::err("Sous-agent introuvable.");
     };
-    if child.subagent_status.as_deref() == Some(super::subagent_status::RUNNING) {
-        if child.subagent_queued_prompts.len() >= MAX_QUEUED_PROMPTS {
-            return ToolResult::err("File de consignes sous-agent pleine.");
-        }
-        child.subagent_queued_prompts.push(prompt.to_string());
-        if super::session_store::save(&child).await.is_err() {
-            return ToolResult::err("Sous-agent indisponible.");
-        }
-        return ToolResult::ok("Instruction ajoutée à la file du sous-agent.".to_string());
+    if super::session_store::validate_session_id(child_id).is_err() {
+        return ToolResult::err("Sous-agent introuvable.");
     }
-    let payload = json!({
-        "subagent_id": child.id,
-        "subagent_type": child.subagent_type.unwrap_or_else(|| "explorer".to_string()),
-        "display_name": child.name,
-        "description": child.subagent_description.unwrap_or_default(),
-        "prompt": prompt
-    });
+    let payload = {
+        let lock = super::session_store::lock_session(child_id).await;
+        let _guard = lock.lock().await;
+        let Ok(mut child) = owned_child_by_id(child_id, parent_id).await else {
+            return ToolResult::err("Sous-agent introuvable.");
+        };
+        if child_has_pending_work(&child).await {
+            if let Err(result) = enqueue_prompt(&mut child, prompt) {
+                return result;
+            }
+            if super::session_store::save(&child).await.is_err() {
+                return ToolResult::err("Sous-agent indisponible.");
+            }
+            return ToolResult::ok("Instruction ajoutée à la file du sous-agent.".to_string());
+        }
+        json!({
+            "subagent_id": child.id,
+            "subagent_type": child.subagent_type.unwrap_or_else(|| "explorer".to_string()),
+            "display_name": child.name,
+            "description": child.subagent_description.unwrap_or_default(),
+            "prompt": prompt
+        })
+    };
     super::tool_dispatcher_delegate::dispatch_delegate(&payload, parent_id).await
+}
+
+fn enqueue_prompt(child: &mut AgentSession, prompt: &str) -> Result<(), ToolResult> {
+    if child.subagent_queued_prompts.len() >= MAX_QUEUED_PROMPTS {
+        return Err(ToolResult::err("File de consignes sous-agent pleine."));
+    }
+    child.subagent_queued_prompts.push(prompt.to_string());
+    child.subagent_status = Some(super::subagent_status::RUNNING.to_string());
+    child.updated_at = Some(chrono::Utc::now());
+    Ok(())
 }
 
 async fn owned_child(args: &Value, parent_id: &str) -> Result<AgentSession, ToolResult> {
@@ -172,9 +202,8 @@ async fn is_child_session(session_id: &str) -> bool {
         .unwrap_or(false)
 }
 
-fn child_has_pending_work(child: &AgentSession) -> bool {
-    child.subagent_status.as_deref() == Some(super::subagent_status::RUNNING)
-        || !child.subagent_queued_prompts.is_empty()
+async fn child_has_pending_work(child: &AgentSession) -> bool {
+    super::subagent_live_state::has_pending_work(child).await
 }
 
 #[cfg(test)]
