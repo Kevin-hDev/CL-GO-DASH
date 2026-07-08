@@ -35,4 +35,12 @@ mod tests {
 
         assert_eq!(status, "completed");
     }
+
+    #[test]
+    fn running_activity_label_is_not_completed() {
+        assert_eq!(
+            super::super::subagent_task::final_activity_label("running"),
+            "En cours"
+        );
+    }
 }

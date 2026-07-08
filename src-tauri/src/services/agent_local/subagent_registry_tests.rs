@@ -4,6 +4,8 @@ mod tests {
         active_children_for_parent, cancel_one, get_or_create_run_id, get_run_id_for_child,
         register, release_run_claim, unregister,
     };
+    use crate::services::agent_local::types_session::AgentSessionMeta;
+    use chrono::Utc;
     use tokio_util::sync::CancellationToken;
 
     const MAX_PER_PARENT: usize = 4;
@@ -36,7 +38,14 @@ mod tests {
             .await
             .unwrap();
         let fetched = get_run_id_for_child(&child).await;
-        assert_eq!(fetched, Some(run_id));
+        assert_eq!(fetched, Some(run_id.clone()));
+        let normalized = crate::services::agent_local::subagent_live_state::normalize_meta(meta(
+            &child,
+            "completed",
+        ))
+        .await;
+        assert_eq!(normalized.subagent_status.as_deref(), Some("running"));
+        assert_eq!(normalized.subagent_run_id.as_deref(), Some(run_id.as_str()));
         assert_eq!(
             active_children_for_parent(&parent).await,
             vec![child.clone()]
@@ -87,6 +96,38 @@ mod tests {
             .is_err());
         for c in &all_children {
             unregister(c).await;
+        }
+    }
+
+    fn meta(id: &str, status: &str) -> AgentSessionMeta {
+        AgentSessionMeta {
+            id: id.into(),
+            name: "Geminitor".into(),
+            created_at: Utc::now(),
+            updated_at: Some(Utc::now()),
+            archived_at: None,
+            model: "llama3".into(),
+            provider: "ollama".into(),
+            thinking_enabled: false,
+            reasoning_mode: None,
+            message_count: 0,
+            is_heartbeat: false,
+            is_gateway: false,
+            gateway_channel_key: None,
+            project_id: None,
+            parent_session_id: Some("parent".into()),
+            subagent_type: Some("explorer".into()),
+            subagent_status: Some(status.into()),
+            subagent_run_id: Some("saved-run".into()),
+            subagent_description: Some("Analyse".into()),
+            subagent_color_key: Some("geminitor".into()),
+            subagent_summary: None,
+            subagent_last_activity: None,
+            clone_parent_session_id: None,
+            clone_parent_message_id: None,
+            clone_mode: None,
+            clone_root_session_id: None,
+            git_branch: None,
         }
     }
 }

@@ -3,22 +3,22 @@ use crate::services::agent_local::types_session::AgentSession;
 use chrono::Utc;
 use serde_json::json;
 
-#[test]
-fn running_child_has_pending_work() {
+#[tokio::test]
+async fn running_child_has_pending_work() {
     let mut child = child("running");
 
-    assert!(child_has_pending_work(&child));
+    assert!(child_has_pending_work(&child).await);
 
     child.subagent_status = Some("completed".into());
-    assert!(!child_has_pending_work(&child));
+    assert!(!child_has_pending_work(&child).await);
 }
 
-#[test]
-fn queued_prompt_keeps_completed_child_active_for_wait() {
+#[tokio::test]
+async fn queued_prompt_keeps_completed_child_active_for_wait() {
     let mut child = child("completed");
     child.subagent_queued_prompts.push("suite".into());
 
-    assert!(child_has_pending_work(&child));
+    assert!(child_has_pending_work(&child).await);
 }
 
 #[test]
@@ -34,7 +34,7 @@ fn wait_subagent_rejects_too_many_ids() {
 
 fn child(status: &str) -> AgentSession {
     AgentSession {
-        id: "child".into(),
+        id: uuid::Uuid::new_v4().to_string(),
         name: "Geminitor".into(),
         created_at: Utc::now(),
         updated_at: Some(Utc::now()),

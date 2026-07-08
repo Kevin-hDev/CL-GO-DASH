@@ -12,6 +12,11 @@ pub(super) async fn prepare_existing_child(
     color_key: &str,
     run_id: &str,
 ) -> Result<AgentSession, ToolResult> {
+    if session_store::validate_session_id(child_id).is_err() {
+        return Err(ToolResult::err("Sous-agent introuvable."));
+    }
+    let lock = session_store::lock_session(child_id).await;
+    let _guard = lock.lock().await;
     let mut child = match session_store::get(child_id).await {
         Ok(session) => session,
         Err(_) => return Err(ToolResult::err("Sous-agent introuvable.")),
@@ -19,7 +24,7 @@ pub(super) async fn prepare_existing_child(
     if child.parent_session_id.as_deref() != Some(parent_session_id) {
         return Err(ToolResult::err("Sous-agent introuvable."));
     }
-    if child.subagent_status.as_deref() == Some(super::subagent_status::RUNNING) {
+    if super::subagent_live_state::has_pending_work(&child).await {
         return Err(ToolResult::err("Ce sous-agent est déjà en cours."));
     }
     child.name = name.to_string();
