@@ -49,6 +49,11 @@ describe("context messages", () => {
     expect(isCompressionContextOnlyMessage(message)).toBe(true);
   });
 
+  it("detecte un rappel cache de pilotage sous-agent", () => {
+    const message = msg("Subagent orchestration context:\n<subagent_orchestration />", "user");
+    expect(isCompressionContextOnlyMessage(message)).toBe(true);
+  });
+
   it("ignore les messages normaux", () => {
     const message = msg("Voici la reponse visible pour l'utilisateur.");
     expect(isCompressionSummaryMessage(message)).toBe(false);

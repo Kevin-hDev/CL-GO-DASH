@@ -109,8 +109,7 @@ async fn message(args: &Value, parent_id: &str) -> ToolResult {
         "subagent_type": child.subagent_type.unwrap_or_else(|| "explorer".to_string()),
         "display_name": child.name,
         "description": child.subagent_description.unwrap_or_default(),
-        "prompt": prompt,
-        "mode": "detach"
+        "prompt": prompt
     });
     super::tool_dispatcher_delegate::dispatch_delegate(&payload, parent_id).await
 }
@@ -155,14 +154,20 @@ fn subagent_ids(args: &Value) -> Result<Vec<String>, ToolResult> {
 }
 
 fn format_meta(meta: AgentSessionMeta) -> String {
+    let activity = meta
+        .subagent_last_activity
+        .as_ref()
+        .map(|activity| text_field(&activity.label))
+        .unwrap_or_default();
     format!(
-        "- id={} name=\"{}\" type={} status={} description=\"{}\"",
+        "- id={} name=\"{}\" type={} status={} description=\"{}\" last_activity=\"{}\"",
         meta.id,
         text_field(&meta.name),
         meta.subagent_type.unwrap_or_else(|| "explorer".to_string()),
         meta.subagent_status
             .unwrap_or_else(|| "completed".to_string()),
-        text_field(&meta.subagent_description.unwrap_or_default())
+        text_field(&meta.subagent_description.unwrap_or_default()),
+        activity
     )
 }
 
@@ -175,13 +180,26 @@ fn format_children(children: &[AgentSession]) -> String {
 }
 
 fn format_child(child: &AgentSession) -> String {
+    let activity = child
+        .subagent_last_activity
+        .as_ref()
+        .map(|activity| {
+            format!(
+                "<last_activity kind=\"{}\" label=\"{}\">{}</last_activity>",
+                xml_attr(&activity.kind),
+                xml_attr(&activity.label),
+                xml_text(activity.detail.as_deref().unwrap_or(""))
+            )
+        })
+        .unwrap_or_else(|| "<last_activity />".to_string());
     format!(
-        "<subagent id=\"{}\" name=\"{}\" type=\"{}\" status=\"{}\">\n<description>{}</description>\n<summary>{}</summary>\n</subagent>",
+        "<subagent id=\"{}\" name=\"{}\" type=\"{}\" status=\"{}\">\n<description>{}</description>\n{}\n<summary>{}</summary>\n</subagent>",
         xml_attr(&child.id),
         xml_attr(&child.name),
         xml_attr(child.subagent_type.as_deref().unwrap_or("explorer")),
         xml_attr(child.subagent_status.as_deref().unwrap_or("completed")),
         xml_text(child.subagent_description.as_deref().unwrap_or("")),
+        activity,
         xml_text(child.subagent_summary.as_deref().unwrap_or(""))
     )
 }

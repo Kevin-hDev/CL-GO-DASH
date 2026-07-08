@@ -66,8 +66,6 @@ pub async fn spawn_next_if_present(params: QueuedSubagentRun) -> Result<bool, St
             parent_emitter: params.parent_emitter,
             cancel,
             project_id: params.project_id,
-            detached: true,
-            completion_tx: None,
         })
     {
         super::subagent_registry::unregister(&params.child_session_id).await;

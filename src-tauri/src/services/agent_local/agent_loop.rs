@@ -6,7 +6,7 @@ use super::{
     agent_loop_limits::MAX_TURNS, agent_loop_plan, agent_loop_support, agent_loop_thinking_retry,
     circuit_breaker, context_budget, eager_dispatch, ollama_stream,
     stream_diagnostics_model as model_diag, stream_diagnostics_payload as payload_diag,
-    tool_executor, tool_result_budget,
+    subagent_parent_barrier, tool_executor, tool_result_budget,
 };
 use crate::services::token_counting;
 use std::path::PathBuf;
@@ -33,6 +33,8 @@ pub async fn run_agent_loop(
     let write_guard_arc = write_guard_registry::lock(&session_id).await;
     let mut write_guard = write_guard_arc.lock().await;
     let mut plan_repairs = 0;
+    let mut subagent_barrier =
+        subagent_parent_barrier::ParentSubagentBarrier::new(&session_id).await;
     let compression = LoopCompression {
         on_event,
         model,
@@ -152,7 +154,13 @@ pub async fn run_agent_loop(
             .await;
         if result.tool_calls.is_empty() {
             eager_handle.abort();
-            break;
+            match subagent_barrier
+                .after_no_tool_turn(messages, cancel.clone())
+                .await?
+            {
+                subagent_parent_barrier::BarrierAction::Continue => continue,
+                subagent_parent_barrier::BarrierAction::Finish => break,
+            }
         }
         agent_loop_support::record_detected_tool_calls(
             &session_id,

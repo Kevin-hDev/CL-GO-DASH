@@ -6,9 +6,9 @@ pub fn delegate_task_definition() -> Value {
         "Spawn an autonomous subagent to handle a subtask in isolation. Results come back to you; they are NOT shown to the user, so you must relay a summary. \
          Types: 'explorer' (read-only: read_file, list_dir, grep, glob, web_search, web_fetch) for research, file investigation, web lookups; \
          or 'coder' (file creation/modification in an isolated git worktree) for parallel implementation work. \
-         Use mode='wait' when you need the report before continuing. Use mode='detach' when the subagent should keep working in its visible child session while you continue. \
+         The subagent keeps working in its visible child session while you continue. The parent stream stays active until subagents from the current turn finish. \
          When NOT to use: reading a specific known file — use read_file directly; searching for a single class/function — use grep or glob directly; a 1-2 step task — do it yourself. \
-         IMPORTANT: once you delegate a task, do NOT do the same work yourself. Wait for the subagent report when needed, then synthesize. \
+         IMPORTANT: once you delegate a task, do NOT do the same work yourself and do NOT write a final answer before the required subagent reports arrive. \
          Write a structured prompt using XML tags: <context>, <task>, <constraints>, <output_format>. Terse prompts produce shallow results. \
          You can spawn multiple subagents in parallel for independent subtasks.",
         serde_json::json!({
@@ -39,11 +39,6 @@ pub fn delegate_task_definition() -> Value {
                 "description": {
                     "type": "string",
                     "description": "Short visible mission description for the child session."
-                },
-                "mode": {
-                    "type": "string",
-                    "enum": ["wait", "detach"],
-                    "description": "wait = return the final report as this tool result. detach = return immediately with a subagent_id."
                 },
                 "subagent_id": {
                     "type": "string",

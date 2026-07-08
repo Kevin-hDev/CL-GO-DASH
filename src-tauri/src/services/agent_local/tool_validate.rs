@@ -51,7 +51,6 @@ static DELEGATE_TASK: Schema = &[
     ("name", Ty::Str, false),
     ("display_name", Ty::Str, false),
     ("description", Ty::Str, false),
-    ("mode", Ty::Str, false),
     ("subagent_id", Ty::Str, false),
 ];
 static SUBAGENT_ID: Schema = &[("subagent_id", Ty::Str, true)];

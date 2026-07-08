@@ -106,9 +106,10 @@ mod stream_diagnostics_support_tests;
 pub mod stream_diagnostics_tests;
 pub mod stream_diagnostics_tools;
 pub mod stream_events;
-pub mod subagent_completion;
+pub mod subagent_activity;
 pub mod subagent_context;
 pub mod subagent_hidden_reports;
+pub mod subagent_parent_barrier;
 pub mod subagent_profile;
 pub mod subagent_prompts;
 #[cfg(test)]

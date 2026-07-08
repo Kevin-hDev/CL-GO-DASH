@@ -9,6 +9,7 @@ use crate::services::agent_local::context_budget;
 use crate::services::agent_local::stream_diagnostics_model as model_diag;
 use crate::services::agent_local::stream_diagnostics_payload as payload_diag;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
+use crate::services::agent_local::subagent_parent_barrier;
 use crate::services::agent_local::tool_executor;
 use crate::services::agent_local::tool_result_budget;
 use crate::services::agent_local::types_ollama::{ChatMessage, StreamEvent};
@@ -41,6 +42,8 @@ pub async fn run_agent_loop(
     let write_guard_arc = write_guard_registry::lock(&session_id).await;
     let mut write_guard = write_guard_arc.lock().await;
     let mut plan_repairs = 0;
+    let mut subagent_barrier =
+        subagent_parent_barrier::ParentSubagentBarrier::new(&session_id).await;
     let compression = LoopCompression {
         on_event,
         provider_id,
@@ -139,7 +142,13 @@ pub async fn run_agent_loop(
             .try_run_and_reset(messages, &mut last_prompt, &mut last_eval, cancel.clone())
             .await;
         if result.tool_calls.is_empty() {
-            break;
+            match subagent_barrier
+                .after_no_tool_turn(messages, cancel.clone())
+                .await?
+            {
+                subagent_parent_barrier::BarrierAction::Continue => continue,
+                subagent_parent_barrier::BarrierAction::Finish => break,
+            }
         }
         agent_loop_tools::record_detected_tool_calls(
             &session_id,

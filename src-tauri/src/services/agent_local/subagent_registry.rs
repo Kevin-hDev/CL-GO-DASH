@@ -91,6 +91,17 @@ pub async fn get_run_id_for_child(child_id: &str) -> Option<String> {
         .map(|e| e.run_id.clone())
 }
 
+pub async fn active_children_for_parent(parent_id: &str) -> Vec<String> {
+    REGISTRY
+        .lock()
+        .await
+        .entries
+        .iter()
+        .filter(|(_, entry)| entry.parent_session_id == parent_id)
+        .map(|(child_id, _)| child_id.clone())
+        .collect()
+}
+
 pub async fn cancel_one(child_id: &str) -> bool {
     let state = REGISTRY.lock().await;
     if let Some(entry) = state.entries.get(child_id) {

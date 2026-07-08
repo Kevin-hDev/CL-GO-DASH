@@ -21,6 +21,15 @@ pub struct SubagentHiddenReport {
     pub created_at: DateTime<Utc>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct SubagentLastActivity {
+    pub kind: String,
+    pub label: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub detail: Option<String>,
+    pub updated_at: DateTime<Utc>,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum CloneMode {
@@ -96,6 +105,8 @@ pub struct AgentSession {
     pub subagent_color_key: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub subagent_summary: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub subagent_last_activity: Option<SubagentLastActivity>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub subagent_queued_prompts: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -162,6 +173,8 @@ pub struct AgentSessionMeta {
     pub subagent_color_key: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub subagent_summary: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub subagent_last_activity: Option<SubagentLastActivity>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub clone_parent_session_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]

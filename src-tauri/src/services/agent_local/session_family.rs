@@ -129,6 +129,7 @@ mod tests {
             subagent_description: None,
             subagent_color_key: None,
             subagent_summary: None,
+            subagent_last_activity: None,
             clone_parent_session_id: clone_parent.map(str::to_string),
             clone_parent_message_id: None,
             clone_mode: None,

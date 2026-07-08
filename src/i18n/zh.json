@@ -601,7 +601,7 @@
         "mcp": { "title": "MCP 连接器", "description": "允许模型发现已启用 MCP 连接器提供的工具。" },
         "skills": { "title": "Skills", "description": "任务需要时加载专用工作流。" },
         "user_choice": { "title": "用户选择", "description": "允许模型让你在重要选项之间选择。" },
-        "subagents": { "title": "子代理", "description": "允许把独立任务交给后台代理处理。" },
+        "subagents": { "title": "子代理", "description": "允许为独立任务创建并控制子会话。" },
         "plan_mode": { "title": "Plan mode", "description": "允许先准备计划，并在确认后退出计划模式。" },
         "todo_list": { "title": "Todo list", "description": "允许创建、更新、暂停、恢复和删除工作清单。" },
         "agent_diagnostics": { "title": "代理诊断", "description": "允许在错误或中断后读取最近诊断。" },
@@ -851,8 +851,8 @@
     "openSite": "打开网站"
   },
   "subagents": {
-    "backgroundCount_one": "{{count}} 个代理在后台运行",
-    "backgroundCount_other": "{{count}} 个代理在后台运行",
+    "backgroundCount_one": "{{count}} 个活跃子代理",
+    "backgroundCount_other": "{{count}} 个活跃子代理",
     "stopAll": "全部停止",
     "running": "运行中…",
     "stop": "停止",

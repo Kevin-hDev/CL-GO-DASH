@@ -73,3 +73,36 @@
   color: var(--ink-faint);
   text-decoration: line-through;
 }
+
+.ssb-subagent-icon {
+  color: var(--subagent-geminitor);
+}
+
+.ssb-subagent-claudiator,
+.ssb-subagent-coder {
+  color: var(--subagent-claudiator);
+}
+
+.ssb-subagent-geminitor,
+.ssb-subagent-explorer {
+  color: var(--subagent-geminitor);
+}
+
+.ssb-subagent-main {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.ssb-subagent-name,
+.ssb-subagent-desc {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ssb-subagent-desc {
+  color: var(--ink-faint);
+  font-size: var(--text-xs);
+}

@@ -25,7 +25,12 @@ const LOCKED_GROUPS: &[ToolGroupEntry] = &[
 const OPTIONAL_GROUPS: &[ToolGroupEntry] = &[
     group("skills", false, true, &["load_skill"]),
     group("user_choice", false, true, &["ask_user_choice"]),
-    group("subagents", false, true, &["delegate_task"]),
+    group(
+        "subagents",
+        false,
+        true,
+        super::tool_catalog::SUBAGENT_TOOLS,
+    ),
     group("plan_mode", false, true, &["planmode", "exitplanmode"]),
     group(
         "todo_list",
@@ -125,6 +130,13 @@ mod tests {
         let plan_tools = optional_group_tool_ids("plan_mode").unwrap();
 
         assert_eq!(plan_tools, ["planmode", "exitplanmode"]);
+    }
+
+    #[test]
+    fn subagent_group_contains_all_control_tools() {
+        let tools = optional_group_tool_ids("subagents").unwrap();
+
+        assert_eq!(tools, super::super::tool_catalog::SUBAGENT_TOOLS);
     }
 
     #[test]

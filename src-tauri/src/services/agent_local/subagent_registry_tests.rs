@@ -1,7 +1,8 @@
 #[cfg(test)]
 mod tests {
     use crate::services::agent_local::subagent_registry::{
-        cancel_one, get_or_create_run_id, get_run_id_for_child, register, unregister,
+        active_children_for_parent, cancel_one, get_or_create_run_id, get_run_id_for_child,
+        register, unregister,
     };
     use tokio_util::sync::CancellationToken;
 
@@ -33,8 +34,13 @@ mod tests {
             .unwrap();
         let fetched = get_run_id_for_child(&child).await;
         assert_eq!(fetched, Some(run_id));
+        assert_eq!(
+            active_children_for_parent(&parent).await,
+            vec![child.clone()]
+        );
         unregister(&child).await;
         assert_eq!(get_run_id_for_child(&child).await, None);
+        assert!(active_children_for_parent(&parent).await.is_empty());
 
         // --- cancel_one ---
         let parent = uid();

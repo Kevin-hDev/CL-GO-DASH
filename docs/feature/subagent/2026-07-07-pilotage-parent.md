@@ -3,17 +3,18 @@
 ## Resume
 
 OpenCode separe le demarrage d'un sous-agent et la reception de son resultat final.
-Avec un mode detache, le parent recoit tout de suite un identifiant, continue son travail, puis recupere le rapport plus tard.
+Le parent recoit un identifiant, peut continuer son travail en parallele, mais l'orchestrateur garde le controle tant que les sous-agents actifs n'ont pas termine.
 
 CL-GO-DASH lance deja les sous-agents en sessions enfants et peut en lancer plusieurs en parallele.
-Le comportement bloquant reste disponible avec `mode: "wait"`, mais le nouveau pilotage ajoute `mode: "detach"` pour rendre la main au parent.
+La cible n'est plus d'avoir deux modes `wait` et `detach`.
+La cible est un seul comportement : le parent delegue, continue ce qu'il peut faire, puis reste actif en attente jusqu'a reception des rapports.
 
 ## Objectif produit
 
 Tu transformes les sous-agents en vrais jobs pilotables par le parent.
 Le parent doit pouvoir :
 
-- lancer un sous-agent en mode detache ;
+- lancer un sous-agent pilotable ;
 - continuer a utiliser d'autres tools pendant que le sous-agent travaille ;
 - voir quels sous-agents sont actifs ;
 - lire l'etat ou le dernier avancement d'un sous-agent ;
@@ -21,6 +22,9 @@ Le parent doit pouvoir :
 - attendre explicitement un ou plusieurs sous-agents ;
 - annuler un sous-agent si besoin ;
 - reutiliser plus tard une session enfant terminee.
+
+Le parent ne doit pas produire de reponse finale utilisateur tant qu'un sous-agent du tour courant est actif.
+Il peut envoyer des messages courts d'avancement, mais la synthese finale commence seulement apres reception des rapports attendus.
 
 ## Nommage attendu
 
@@ -69,9 +73,9 @@ Le point important est la separation entre :
 - attendre son resultat ;
 - injecter son rapport final plus tard.
 
-## Etat actuel CL-GO-DASH
+## Etat avant refonte CL-GO-DASH
 
-Le tool actuel est `delegate_task`.
+Avant cette refonte, le tool etait `delegate_task`.
 Il accepte `prompt`, `subagent_type` et `name`.
 
 Le backend cree une session enfant avec :
@@ -126,15 +130,15 @@ Les donnees importantes doivent aussi etre persistables via les sessions existan
 
 ### Tools exposes au parent
 
-Tu gardes `delegate_task`, mais tu ajoutes le mode detache :
+Tu gardes `delegate_task`, mais tu ne exposes pas deux modes au LLM.
+`delegate_task` lance toujours un sous-agent pilotable :
 
 ```json
 {
   "prompt": "...",
   "subagent_type": "explorer",
   "display_name": "Geminitor",
-  "description": "Analyse sous-agent repo Claude Code",
-  "mode": "detach"
+  "description": "Analyse sous-agent repo Claude Code"
 }
 ```
 
@@ -157,11 +161,17 @@ Tu ajoutes ensuite des tools explicites :
 Ces tools doivent retourner des messages courts et generiques en cas d'erreur.
 Les details internes restent uniquement dans les logs.
 
+Ces tools appartiennent tous a la meme feature que `delegate_task`.
+Cote settings, l'utilisateur active/desactive la feature "Sous-agents" comme un seul groupe logique.
+Si `delegate_task` est actif, les tools de pilotage doivent etre disponibles aussi.
+Si `delegate_task` est desactive, tous les tools sous-agent sont desactives et apparaissent seulement dans la liste courte des tools indisponibles.
+
 ### Rapport final differe
 
-Quand un sous-agent detache termine, CL-GO-DASH ajoute un rapport cache borne dans la session parent.
+Quand un sous-agent termine, CL-GO-DASH ajoute un rapport cache borne dans la session parent.
 Ce rapport n'apparait pas comme message visible dans le chat parent.
-Il est injecte une seule fois dans le contexte LLM du parent au prochain tour.
+Il est injecte une seule fois dans le contexte LLM du parent pendant le stream courant.
+Un reveil automatique au prochain tour reste seulement un filet de securite si le stream est coupe par erreur.
 
 Le parent doit recevoir plus tard :
 
@@ -171,31 +181,58 @@ Le parent doit recevoir plus tard :
 </subagent>
 ```
 
-Si le parent est encore en stream, il peut continuer naturellement.
-Si le parent n'est plus en stream, le resultat reste dans la session et pourra etre consomme au prochain tour.
+Le stream parent doit rester actif tant qu'un sous-agent du tour courant est actif.
+Le backend ne doit pas laisser le parent cloturer definitivement avant reception des rapports attendus.
 
-### Compatibilite avec le flux actuel
+### Boucle d'orchestration parent
 
-Tu conserves le comportement bloquant par defaut pour eviter une rupture brutale :
+Le backend controle la boucle :
 
-- `mode` absent ou `mode: "wait"` : `delegate_task` attend le rapport comme aujourd'hui.
-- `mode: "detach"` : `delegate_task` retourne immediatement un ID.
+- le parent lance un ou plusieurs sous-agents ;
+- le parent continue les actions qu'il peut faire en parallele ;
+- si le parent arrive a une fin de tour alors que des sous-agents sont encore actifs, le backend garde le stream ouvert ;
+- le backend injecte un rappel cache dans le contexte du parent ;
+- le parent doit checker l'etat des sous-agents et informer brievement l'utilisateur de l'avancement ;
+- le rappel est reinjecte toutes les 10 minutes tant qu'un sous-agent reste actif ;
+- quand les rapports arrivent, ils sont injectes en contexte cache ;
+- le parent peut alors synthétiser la reponse finale ou continuer si les rapports ouvrent une nouvelle piste utile.
+
+Format cible du rappel cache :
+
+```xml
+<subagent_orchestration>
+  <reason>subagents_still_running</reason>
+  <instruction>
+    Check active subagents, update the user briefly, then keep waiting.
+    Do not produce the final answer until required subagent reports are available.
+  </instruction>
+  <active_subagents>
+    <subagent id="..." name="Geminitor" status="running" elapsed="12m">
+      <description>Analyse du repo</description>
+      <last_activity>read_file src/...</last_activity>
+    </subagent>
+  </active_subagents>
+</subagent_orchestration>
+```
 
 ## Priorites
 
 ### P0
 
-- Tu ajoutes `mode: "wait" | "detach"` a `delegate_task`.
+- Tu retires `mode: "wait" | "detach"` comme choix expose au LLM.
 - Tu ajoutes `display_name` et `description`.
 - Tu exposes un `subagent_id` stable au parent.
 - Tu crees le registre `SubagentJob`.
-- Tu garantis que le parent peut continuer son stream apres un lancement detache.
+- Tu garantis que le parent peut continuer son stream apres delegation.
+- Tu garantis que le stream parent ne se ferme pas tant qu'un sous-agent du tour courant est actif.
 
 ### P1
 
 - Tu ajoutes `list_subagents`, `get_subagent`, `wait_subagent`, `cancel_subagent`.
-- Tu ajoutes l'injection du rapport final differe dans le contexte parent.
+- Tu ajoutes l'injection du rapport final cache dans le contexte parent pendant le stream courant.
 - Tu permets de reutiliser une session enfant avec `subagent_id`.
+- Tu ajoutes les rappels caches immediats puis toutes les 10 minutes.
+- Tu corriges le groupe settings : `delegate_task` active/desactive tous les tools sous-agent.
 
 ### P2
 
@@ -208,7 +245,10 @@ Tu conserves le comportement bloquant par defaut pour eviter une rupture brutale
 - Ne laisse pas une collection de jobs grossir sans limite.
 - N'expose pas les erreurs internes au parent ou a l'utilisateur.
 - Annule les sous-agents enfants quand le parent est annule.
+- Ne laisse pas le parent envoyer une reponse finale tant qu'un sous-agent du tour courant est actif.
 - Ne reinjecte pas deux fois le meme rapport final.
+- Les rappels d'attente ne doivent pas creer de messages visibles dans la conversation parent.
+- Les messages d'avancement visibles du parent sont autorises, mais doivent rester courts.
 - Garde l'ordre logique des rapports quand plusieurs sous-agents terminent en ordre inverse.
 - Marque les jobs actifs comme `interrupted` au redemarrage si le process a ete ferme.
 - Evite qu'un sous-agent termine reste indefiniment considere comme actif.
@@ -217,6 +257,9 @@ Tu conserves le comportement bloquant par defaut pour eviter une rupture brutale
 
 - Les noms par defaut sont codes pour cette iteration : `Claudiator` et `Geminitor`.
 - Le rapport final differe est cache comme contexte technique pour le parent.
+- Le rappel d'orchestration est cache comme contexte technique pour le parent.
+- Le timeout de rappel est 10 minutes.
+- Le reveil automatique apres fin de sous-agent sert uniquement de fallback, pas de mecanisme principal.
 - Un sous-agent `coder` reutilise doit-il garder le meme worktree ou repartir dans un nouveau worktree ?
 - Le parent peut annuler un sous-agent sans confirmation utilisateur.
 - Faut-il autoriser un sous-agent a lancer lui-meme d'autres sous-agents ?

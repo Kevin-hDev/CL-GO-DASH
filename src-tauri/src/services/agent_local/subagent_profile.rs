@@ -1,5 +1,3 @@
-use serde::{Deserialize, Serialize};
-
 pub const CLAUDIATOR: &str = "Claudiator";
 pub const GEMINITOR: &str = "Geminitor";
 pub const CLAUDIATOR_COLOR: &str = "claudiator";
@@ -7,27 +5,6 @@ pub const GEMINITOR_COLOR: &str = "geminitor";
 
 const MAX_NAME_CHARS: usize = 100;
 const MAX_DESCRIPTION_CHARS: usize = 160;
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum SubagentLaunchMode {
-    Wait,
-    Detach,
-}
-
-impl SubagentLaunchMode {
-    pub fn parse(value: Option<&str>) -> Result<Self, String> {
-        match value.unwrap_or("wait") {
-            "wait" => Ok(Self::Wait),
-            "detach" => Ok(Self::Detach),
-            _ => Err("Mode sous-agent invalide.".to_string()),
-        }
-    }
-
-    pub fn is_detach(self) -> bool {
-        matches!(self, Self::Detach)
-    }
-}
 
 pub fn default_name(subagent_type: &str) -> &'static str {
     match subagent_type {
@@ -79,17 +56,5 @@ mod tests {
         assert_eq!(default_color_key("coder"), "claudiator");
         assert_eq!(default_name("explorer"), "Geminitor");
         assert_eq!(default_color_key("explorer"), "geminitor");
-    }
-
-    #[test]
-    fn launch_mode_defaults_to_wait() {
-        assert_eq!(
-            SubagentLaunchMode::parse(None).unwrap(),
-            SubagentLaunchMode::Wait
-        );
-        assert!(SubagentLaunchMode::parse(Some("detach"))
-            .unwrap()
-            .is_detach());
-        assert!(SubagentLaunchMode::parse(Some("bad")).is_err());
     }
 }

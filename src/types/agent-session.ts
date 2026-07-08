@@ -5,6 +5,13 @@ import type { AgentTodoItem, AgentTodoRun } from "./agent-todo";
 export type CloneMode = "cut" | "summary";
 export type SubagentStatus = "running" | "completed" | "failed" | "cancelled" | "interrupted";
 
+export interface SubagentLastActivity {
+  kind: string;
+  label: string;
+  detail?: string;
+  updated_at: string;
+}
+
 export interface Project {
   id: string;
   name: string;
@@ -53,6 +60,7 @@ export interface AgentSession {
   subagent_description?: string;
   subagent_color_key?: string;
   subagent_summary?: string;
+  subagent_last_activity?: SubagentLastActivity;
   clone_parent_session_id?: string;
   clone_parent_message_id?: string;
   clone_mode?: CloneMode;
@@ -84,6 +92,7 @@ export interface AgentSessionMeta {
   subagent_description?: string;
   subagent_color_key?: string;
   subagent_summary?: string;
+  subagent_last_activity?: SubagentLastActivity;
   clone_parent_session_id?: string;
   clone_parent_message_id?: string;
   clone_mode?: CloneMode;
@@ -126,6 +135,7 @@ export interface SubagentInfo {
   description?: string;
   colorKey?: string;
   summary?: string;
+  lastActivity?: SubagentLastActivity;
   runId?: string;
   spawnedAt?: number;
 }

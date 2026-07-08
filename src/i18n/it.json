@@ -601,7 +601,7 @@
         "mcp": { "title": "Connettori MCP", "description": "Permette di scoprire strumenti dai connettori MCP attivati." },
         "skills": { "title": "Skills", "description": "Carica workflow specializzati quando un'attività li richiede." },
         "user_choice": { "title": "Scelte utente", "description": "Permette al modello di chiederti di scegliere tra opzioni importanti." },
-        "subagents": { "title": "Sotto-agenti", "description": "Permette di delegare un'attività indipendente a un agente in background." },
+        "subagents": { "title": "Sotto-agenti", "description": "Permette di creare e controllare sessioni figlie per attività indipendenti." },
         "plan_mode": { "title": "Plan mode", "description": "Permette di preparare un piano e uscire dalla modalità piano dopo la validazione." },
         "todo_list": { "title": "Todo list", "description": "Permette di creare, aggiornare, mettere in pausa, riprendere ed eliminare checklist di lavoro." },
         "agent_diagnostics": { "title": "Diagnostica agente", "description": "Permette di leggere diagnostiche recenti dopo un errore o un'interruzione." },
@@ -851,8 +851,8 @@
     "openSite": "Apri sito web"
   },
   "subagents": {
-    "backgroundCount_one": "{{count}} agente in background",
-    "backgroundCount_other": "{{count}} agenti in background",
+    "backgroundCount_one": "{{count}} sotto-agente attivo",
+    "backgroundCount_other": "{{count}} sotto-agenti attivi",
     "stopAll": "Ferma tutto",
     "running": "in corso...",
     "stop": "Ferma",

@@ -85,6 +85,8 @@ function ensureGlobalListener() {
           promptPreview: found?.promptPreview ?? "",
           description: found?.description ?? "",
           colorKey: found?.colorKey,
+          summary: e.data.summary,
+          lastActivity: found?.lastActivity,
           runId: e.data.runId ?? found?.runId ?? store.runId,
         },
       ];
@@ -125,6 +127,7 @@ export function useSubagents(parentSessionId: string | undefined) {
         description: item.subagent_description,
         colorKey: item.subagent_color_key,
         summary: item.subagent_summary,
+        lastActivity: item.subagent_last_activity,
         runId: item.subagent_run_id,
       }));
       setCompleted(mapped.filter((item) => item.status !== "running"));

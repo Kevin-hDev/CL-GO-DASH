@@ -112,6 +112,7 @@ mod tests {
             subagent_description: None,
             subagent_color_key: None,
             subagent_summary: None,
+            subagent_last_activity: None,
             subagent_queued_prompts: Vec::new(),
             subagent_hidden_reports: Vec::new(),
             clone_parent_session_id: None,

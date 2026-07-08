@@ -79,6 +79,10 @@ export function childSubagents(parentSessionId: string, sessions: AgentSessionMe
       type: session.subagent_type ?? "explorer",
       status: session.subagent_status ?? "completed",
       promptPreview: "",
+      description: session.subagent_description,
+      colorKey: session.subagent_color_key,
+      summary: session.subagent_summary,
+      lastActivity: session.subagent_last_activity,
       runId: session.subagent_run_id,
     }));
 }
