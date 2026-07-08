@@ -170,7 +170,7 @@ Si `delegate_task` est desactive, tous les tools sous-agent sont desactives et a
 
 Quand un sous-agent termine, CL-GO-DASH ajoute un rapport cache borne dans la session parent.
 Ce rapport n'apparait pas comme message visible dans le chat parent.
-Il est injecte une seule fois dans le contexte LLM du parent pendant le stream courant.
+Il est injecte une seule fois dans le contexte LLM du parent pendant le stream courant, au prochain point sur de reprise du parent.
 Un reveil automatique au prochain tour reste seulement un filet de securite si le stream est coupe par erreur.
 
 Le parent doit recevoir plus tard :
@@ -184,18 +184,94 @@ Le parent doit recevoir plus tard :
 Le stream parent doit rester actif tant qu'un sous-agent du tour courant est actif.
 Le backend ne doit pas laisser le parent cloturer definitivement avant reception des rapports attendus.
 
+### Rapports pendant que le parent travaille
+
+Un rapport de sous-agent peut arriver pendant que le parent est deja occupe :
+
+- en train de recevoir une reponse modele ;
+- en train d'executer un tool ;
+- en train d'enchainer plusieurs actions utiles en parallele.
+
+Dans ce cas, le rapport ne doit pas interrompre brutalement l'appel en cours.
+Le rapport doit etre stocke comme contexte cache en attente.
+Le parent doit le recevoir au prochain point sur, c'est-a-dire avant le prochain appel modele qui peut utiliser cette information.
+
+Objectif produit :
+
+- le parent n'est pas perturbe au milieu d'un appel ou d'un tool ;
+- le rapport n'attend pas forcement la toute fin du travail parent ;
+- si le rapport contient une information necessaire, le parent peut l'utiliser pour la suite de son travail ;
+- le parent peut informer brievement l'utilisateur qu'un sous-agent a termine, puis continuer son propre travail ;
+- la reponse finale reste interdite tant que tous les sous-agents requis ne sont pas termines.
+
+Comportement cible :
+
+```text
+Parent travaille en parallele
+Sous-agent A termine
+Rapport A stocke
+Parent arrive au prochain point sur
+Rapport A injecte dans le contexte
+Parent peut adapter la suite de son travail
+```
+
+Ce point est important : "rapport cache" ne veut pas dire "rapport injecte uniquement quand le parent pense avoir fini".
+Le rapport doit etre disponible des que l'orchestrateur peut relancer proprement le modele parent.
+
+### Plusieurs sous-agents
+
+Quand plusieurs sous-agents sont lances dans le meme tour, leurs rapports peuvent arriver dans n'importe quel ordre.
+
+Le parent doit pouvoir recevoir un rapport partiel sans etre autorise a faire la synthese finale.
+Exemple cible :
+
+```text
+Le premier sous-agent a termine. Son retour est interessant.
+Je vais maintenant verifier ou en est le second sous-agent et attendre son rapport avant la synthese finale.
+```
+
+Regles cible :
+
+- chaque rapport termine est stocke une seule fois ;
+- chaque rapport termine est injecte au parent au prochain point sur ;
+- le parent peut faire un update court visible apres un rapport partiel ;
+- les sous-agents encore actifs continuent de bloquer la reponse finale ;
+- la vraie synthese finale commence seulement quand les rapports requis sont disponibles ;
+- l'ordre de contexte doit rester coherent pour le parent meme si les sous-agents finissent en ordre inverse.
+
 ### Boucle d'orchestration parent
 
 Le backend controle la boucle :
 
 - le parent lance un ou plusieurs sous-agents ;
 - le parent continue les actions qu'il peut faire en parallele ;
+- si un rapport de sous-agent arrive pendant que le parent travaille, il est stocke puis injecte au prochain point sur ;
 - si le parent arrive a une fin de tour alors que des sous-agents sont encore actifs, le backend garde le stream ouvert ;
 - le backend injecte un rappel cache dans le contexte du parent ;
 - le parent doit checker l'etat des sous-agents et informer brievement l'utilisateur de l'avancement ;
 - le rappel est reinjecte toutes les 10 minutes tant qu'un sous-agent reste actif ;
 - quand les rapports arrivent, ils sont injectes en contexte cache ;
 - le parent peut alors synthétiser la reponse finale ou continuer si les rapports ouvrent une nouvelle piste utile.
+
+### Phases de texte visibles
+
+Tant qu'un sous-agent du tour courant reste actif, tout texte visible emis par le parent est un update de travail.
+Ce texte ne doit pas etre classe comme reponse finale.
+
+Regle cible :
+
+- sous-agent actif : texte parent visible = phase `work` ;
+- rapport partiel recu mais autre sous-agent actif : texte parent visible = phase `work` ;
+- tous les rapports requis recus et plus aucun sous-agent actif : le parent peut enfin produire une phase `final`.
+
+Le backend doit donc empecher une phase `final` prematuree.
+Il doit aussi separer proprement les tours internes du stream pour eviter que l'UI melange :
+
+- ancienne phase de travail ;
+- update intermediaire ;
+- vraie reponse finale.
+
+Un `turnEnd` ou un equivalent de separation doit etre emis quand l'orchestrateur relance un tour interne.
 
 Format cible du rappel cache :
 
@@ -225,11 +301,13 @@ Format cible du rappel cache :
 - Tu crees le registre `SubagentJob`.
 - Tu garantis que le parent peut continuer son stream apres delegation.
 - Tu garantis que le stream parent ne se ferme pas tant qu'un sous-agent du tour courant est actif.
+- Tu garantis qu'aucun texte parent n'est marque `final` tant qu'un sous-agent du tour courant est actif.
 
 ### P1
 
 - Tu ajoutes `list_subagents`, `get_subagent`, `wait_subagent`, `cancel_subagent`.
 - Tu ajoutes l'injection du rapport final cache dans le contexte parent pendant le stream courant.
+- Tu injectes les rapports termines au prochain point sur, pas uniquement quand le parent croit avoir fini.
 - Tu permets de reutiliser une session enfant avec `subagent_id`.
 - Tu ajoutes les rappels caches immediats puis toutes les 10 minutes.
 - Tu corriges le groupe settings : `delegate_task` active/desactive tous les tools sous-agent.
@@ -246,12 +324,29 @@ Format cible du rappel cache :
 - N'expose pas les erreurs internes au parent ou a l'utilisateur.
 - Annule les sous-agents enfants quand le parent est annule.
 - Ne laisse pas le parent envoyer une reponse finale tant qu'un sous-agent du tour courant est actif.
+- Ne laisse pas l'UI afficher un update intermediaire comme une reponse finale.
 - Ne reinjecte pas deux fois le meme rapport final.
 - Les rappels d'attente ne doivent pas creer de messages visibles dans la conversation parent.
 - Les messages d'avancement visibles du parent sont autorises, mais doivent rester courts.
 - Garde l'ordre logique des rapports quand plusieurs sous-agents terminent en ordre inverse.
+- Permets au parent d'utiliser un rapport partiel si ce rapport arrive pendant que d'autres sous-agents continuent.
 - Marque les jobs actifs comme `interrupted` au redemarrage si le process a ete ferme.
 - Evite qu'un sous-agent termine reste indefiniment considere comme actif.
+
+## Etat observe le 2026-07-08
+
+Le diagnostic a montre deux limites importantes dans l'implementation courante :
+
+- la barriere sous-agent s'execute trop tard : elle garde le stream actif, mais seulement apres que le parent a deja pu produire un texte classe `final` ;
+- les rapports caches sont consommes surtout quand la barriere s'execute apres un tour sans tool call, donc un rapport peut rester en attente si le parent continue a enchainer des tools.
+
+Correction cible :
+
+- introduire un vrai etat d'orchestration du tour courant ;
+- savoir si des sous-agents du tour courant sont actifs avant de classifier le texte visible ;
+- injecter les rapports termines avant le prochain appel modele possible ;
+- garder les updates intermediaires en phase `work` ;
+- n'autoriser la phase `final` qu'apres reception des rapports requis et absence de sous-agent actif.
 
 ## Questions a trancher
 

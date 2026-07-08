@@ -1,4 +1,4 @@
-use serde_json::{json, Value};
+use serde_json::{json, Map, Value};
 
 const MAX_LOG_BYTES: u64 = 4 * 1024 * 1024;
 
@@ -39,14 +39,20 @@ pub fn entry(
     run_id: Option<&str>,
     detail: Value,
 ) -> Value {
-    json!({
-        "ts": chrono::Local::now().to_rfc3339(),
-        "event": event,
-        "parent_session_id": parent_id,
-        "child_session_id": child_id,
-        "run_id": run_id,
-        "detail": detail,
-    })
+    let mut entry = Map::new();
+    entry.insert("ts".into(), json!(chrono::Local::now().to_rfc3339()));
+    entry.insert("event".into(), json!(event));
+    if let Some(parent_id) = parent_id {
+        entry.insert("parent_session_id".into(), json!(parent_id));
+    }
+    if let Some(child_id) = child_id {
+        entry.insert("child_session_id".into(), json!(child_id));
+    }
+    if let Some(run_id) = run_id {
+        entry.insert("run_id".into(), json!(run_id));
+    }
+    entry.insert("detail".into(), detail);
+    Value::Object(entry)
 }
 
 #[cfg(test)]
@@ -67,5 +73,14 @@ mod tests {
         assert!(entry.get("prompt").is_none());
         assert!(entry.get("summary").is_none());
         assert!(entry.get("report").is_none());
+    }
+
+    #[test]
+    fn entry_omits_absent_ids() {
+        let entry = entry("event", None, None, None, json!({}));
+
+        assert!(entry.get("parent_session_id").is_none());
+        assert!(entry.get("child_session_id").is_none());
+        assert!(entry.get("run_id").is_none());
     }
 }

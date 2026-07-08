@@ -31,6 +31,19 @@ fn reminder_blocks_final_answer_until_reports() {
     assert!(content.contains("bash démarré"));
 }
 
+#[test]
+fn reminder_escapes_subagent_fields() {
+    let mut session = empty_subagent("child<&");
+    session.name = "Gemini\"tor".into();
+    session.subagent_description = Some("<analyse>".into());
+
+    let content = build_reminder_content(&[session]);
+
+    assert!(content.contains("id=\"child&lt;&amp;\""));
+    assert!(content.contains("name=\"Gemini&quot;tor\""));
+    assert!(content.contains("&lt;analyse&gt;"));
+}
+
 fn empty_subagent(id: &str) -> AgentSession {
     AgentSession {
         id: id.into(),

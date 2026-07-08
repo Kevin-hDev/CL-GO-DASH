@@ -1,5 +1,7 @@
+use super::stream_events::AgentEventEmitter;
 use super::types_ollama::ChatMessage;
 use super::types_session::AgentSession;
+use super::types_stream::{StreamEvent, StreamResult};
 use serde_json::json;
 use std::collections::BTreeSet;
 use std::time::{Duration, Instant};
@@ -9,23 +11,18 @@ pub const REMINDER_INTERVAL: Duration = Duration::from_secs(10 * 60);
 const POLL_INTERVAL: Duration = Duration::from_secs(1);
 pub const SUBAGENT_ORCHESTRATION_CONTEXT_PREFIX: &str = "Subagent orchestration context:";
 
-pub enum BarrierAction {
-    Continue,
-    Finish,
-}
-
-pub struct ParentSubagentBarrier {
+pub struct ParentSubagentOrchestrator {
     parent_session_id: String,
     initial_active: BTreeSet<String>,
     last_reminder_at: Option<Instant>,
     reminder_sent: bool,
 }
 
-impl ParentSubagentBarrier {
+impl ParentSubagentOrchestrator {
     pub async fn new(parent_session_id: &str) -> Self {
         let initial_active = active_set(parent_session_id).await;
         super::subagent_flow_log::record(
-            "parent_barrier_created",
+            "parent_orchestrator_created",
             Some(parent_session_id),
             None,
             None,
@@ -39,15 +36,64 @@ impl ParentSubagentBarrier {
         }
     }
 
+    pub async fn inject_pending_reports(&mut self, messages: &mut Vec<ChatMessage>) -> bool {
+        let reports =
+            super::subagent_hidden_reports::take_for_context(&self.parent_session_id).await;
+        if reports.is_empty() {
+            return false;
+        }
+        let count = reports.len();
+        messages.extend(reports);
+        super::subagent_flow_log::record(
+            "parent_orchestrator_reports_injected",
+            Some(&self.parent_session_id),
+            None,
+            None,
+            json!({"count": count}),
+        );
+        true
+    }
+
+    pub async fn finalize_content_phase(
+        &self,
+        on_event: &AgentEventEmitter,
+        result: &StreamResult,
+        plan_active: bool,
+    ) {
+        let awaiting_report = super::subagent_hidden_reports::has_pending_except(
+            &self.parent_session_id,
+            &self.initial_active,
+        )
+        .await;
+        super::stream_buffer::finalize_content_phase(
+            on_event,
+            result,
+            plan_active,
+            awaiting_report || !self.current_turn_active().await.is_empty(),
+        );
+    }
+    pub async fn continue_after_no_tool_turn(
+        &mut self,
+        on_event: &AgentEventEmitter,
+        messages: &mut Vec<ChatMessage>,
+        cancel: CancellationToken,
+    ) -> Result<bool, String> {
+        let should_continue = self.after_no_tool_turn(messages, cancel).await?;
+        if should_continue {
+            let _ = on_event.send(StreamEvent::TurnEnd {});
+        }
+        Ok(should_continue)
+    }
+
     pub async fn after_no_tool_turn(
         &mut self,
         messages: &mut Vec<ChatMessage>,
         cancel: CancellationToken,
-    ) -> Result<BarrierAction, String> {
+    ) -> Result<bool, String> {
         loop {
             if cancel.is_cancelled() {
                 super::subagent_flow_log::record(
-                    "parent_barrier_cancelled",
+                    "parent_orchestrator_cancelled",
                     Some(&self.parent_session_id),
                     None,
                     None,
@@ -55,39 +101,32 @@ impl ParentSubagentBarrier {
                 );
                 return Err("Annulé".to_string());
             }
-            if append_hidden_reports(&self.parent_session_id, messages).await {
-                super::subagent_flow_log::record(
-                    "parent_barrier_reports_injected",
-                    Some(&self.parent_session_id),
-                    None,
-                    None,
-                    json!({}),
-                );
-                return Ok(BarrierAction::Continue);
+            if self.inject_pending_reports(messages).await {
+                return Ok(true);
             }
             let active = self.current_turn_active().await;
             if active.is_empty() {
                 super::subagent_flow_log::record(
-                    "parent_barrier_finish_allowed",
+                    "parent_orchestrator_finish_allowed",
                     Some(&self.parent_session_id),
                     None,
                     None,
                     json!({}),
                 );
-                return Ok(BarrierAction::Finish);
+                return Ok(false);
             }
             if should_emit_reminder(self.reminder_sent, self.last_reminder_at, Instant::now()) {
                 messages.push(reminder_message(&active));
                 self.reminder_sent = true;
                 self.last_reminder_at = Some(Instant::now());
                 super::subagent_flow_log::record(
-                    "parent_barrier_reminder_injected",
+                    "parent_orchestrator_reminder_injected",
                     Some(&self.parent_session_id),
                     None,
                     None,
                     json!({"active": active.len()}),
                 );
-                return Ok(BarrierAction::Continue);
+                return Ok(true);
             }
             tokio::select! {
                 _ = cancel.cancelled() => return Err("Annulé".to_string()),
@@ -97,19 +136,26 @@ impl ParentSubagentBarrier {
     }
 
     async fn current_turn_active(&self) -> Vec<AgentSession> {
-        let ids = super::subagent_registry::active_children_for_parent(&self.parent_session_id)
-            .await
-            .into_iter()
-            .filter(|id| !self.initial_active.contains(id))
-            .collect::<Vec<_>>();
-        let mut sessions = Vec::with_capacity(ids.len());
-        for id in ids {
-            if let Ok(session) = super::session_store::get(&id).await {
-                sessions.push(session);
-            }
-        }
-        sessions
+        current_turn_active(&self.parent_session_id, &self.initial_active).await
     }
+}
+
+async fn current_turn_active(
+    parent_session_id: &str,
+    initial_active: &BTreeSet<String>,
+) -> Vec<AgentSession> {
+    let ids = super::subagent_registry::active_children_for_parent(parent_session_id)
+        .await
+        .into_iter()
+        .filter(|id| !initial_active.contains(id))
+        .collect::<Vec<_>>();
+    let mut sessions = Vec::with_capacity(ids.len());
+    for id in ids {
+        if let Ok(session) = super::session_store::get(&id).await {
+            sessions.push(session);
+        }
+    }
+    sessions
 }
 
 async fn active_set(parent_session_id: &str) -> BTreeSet<String> {
@@ -117,15 +163,6 @@ async fn active_set(parent_session_id: &str) -> BTreeSet<String> {
         .await
         .into_iter()
         .collect()
-}
-
-async fn append_hidden_reports(parent_session_id: &str, messages: &mut Vec<ChatMessage>) -> bool {
-    let reports = super::subagent_hidden_reports::take_for_context(parent_session_id).await;
-    if reports.is_empty() {
-        return false;
-    }
-    messages.extend(reports);
-    true
 }
 
 fn reminder_message(active: &[AgentSession]) -> ChatMessage {
@@ -146,7 +183,7 @@ pub fn build_reminder_content(active: &[AgentSession]) -> String {
         "{SUBAGENT_ORCHESTRATION_CONTEXT_PREFIX}\n\
          <subagent_orchestration>\n\
          <instruction>Current-turn subagents are still running. Do not write a final answer yet. \
-         Check their state with list_subagents/get_subagent/wait_subagent when useful, share only a brief progress update with the user, then keep waiting until the required reports arrive.</instruction>\n\
+         Check active subagents, update the user briefly, then keep waiting until the required reports arrive.</instruction>\n\
          <active_subagents>\n{items}\n</active_subagents>\n\
          </subagent_orchestration>"
     )
@@ -189,5 +226,5 @@ fn xml(value: &str) -> String {
 }
 
 #[cfg(test)]
-#[path = "subagent_parent_barrier_tests.rs"]
+#[path = "subagent_orchestration_tests.rs"]
 mod tests;

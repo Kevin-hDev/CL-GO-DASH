@@ -9,7 +9,7 @@ use crate::services::agent_local::context_budget;
 use crate::services::agent_local::stream_diagnostics_model as model_diag;
 use crate::services::agent_local::stream_diagnostics_payload as payload_diag;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
-use crate::services::agent_local::subagent_parent_barrier;
+use crate::services::agent_local::subagent_orchestration;
 use crate::services::agent_local::tool_executor;
 use crate::services::agent_local::tool_result_budget;
 use crate::services::agent_local::types_ollama::{ChatMessage, StreamEvent};
@@ -42,8 +42,7 @@ pub async fn run_agent_loop(
     let write_guard_arc = write_guard_registry::lock(&session_id).await;
     let mut write_guard = write_guard_arc.lock().await;
     let mut plan_repairs = 0;
-    let mut subagent_barrier =
-        subagent_parent_barrier::ParentSubagentBarrier::new(&session_id).await;
+    let mut subagents = subagent_orchestration::ParentSubagentOrchestrator::new(&session_id).await;
     let compression = LoopCompression {
         on_event,
         provider_id,
@@ -58,6 +57,7 @@ pub async fn run_agent_loop(
         if cancel.is_cancelled() {
             return Err("Annulé".to_string());
         }
+        subagents.inject_pending_reports(messages).await;
         tool_result_budget::apply_budget(messages);
         context_budget::prepare_for_request(messages, configured_context);
         let realtime_budget = compression.realtime_budget(messages);
@@ -128,11 +128,9 @@ pub async fn run_agent_loop(
             }
             agent_loop_plan::PlanLoopAction::Stop(message) => return Err(message.to_string()),
         }
-        crate::services::agent_local::stream_buffer::finalize_content_phase(
-            on_event,
-            &result,
-            plan_active,
-        );
+        subagents
+            .finalize_content_phase(on_event, &result, plan_active)
+            .await;
         let mut assistant_message = super::agent_loop_message::build_assistant_message(&result);
         if plan_active && !result.tool_calls.is_empty() {
             assistant_message.content.clear();
@@ -142,13 +140,13 @@ pub async fn run_agent_loop(
             .try_run_and_reset(messages, &mut last_prompt, &mut last_eval, cancel.clone())
             .await;
         if result.tool_calls.is_empty() {
-            match subagent_barrier
-                .after_no_tool_turn(messages, cancel.clone())
+            if subagents
+                .continue_after_no_tool_turn(on_event, messages, cancel.clone())
                 .await?
             {
-                subagent_parent_barrier::BarrierAction::Continue => continue,
-                subagent_parent_barrier::BarrierAction::Finish => break,
+                continue;
             }
+            break;
         }
         agent_loop_tools::record_detected_tool_calls(
             &session_id,

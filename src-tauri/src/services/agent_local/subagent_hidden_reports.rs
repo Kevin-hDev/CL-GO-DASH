@@ -2,6 +2,7 @@ use super::types_ollama::ChatMessage;
 use super::types_session::SubagentHiddenReport;
 use chrono::Utc;
 use serde_json::json;
+use std::collections::BTreeSet;
 use uuid::Uuid;
 
 const MAX_PENDING_REPORTS: usize = 16;
@@ -68,6 +69,18 @@ pub async fn take_for_context(session_id: &str) -> Vec<ChatMessage> {
         json!({"count": reports.len()}),
     );
     reports.into_iter().map(report_to_message).collect()
+}
+
+pub async fn has_pending_except(session_id: &str, ignored_child_ids: &BTreeSet<String>) -> bool {
+    super::session_store::get(session_id)
+        .await
+        .map(|session| {
+            session
+                .subagent_hidden_reports
+                .iter()
+                .any(|report| !ignored_child_ids.contains(&report.child_session_id))
+        })
+        .unwrap_or(false)
 }
 
 pub fn build_report(

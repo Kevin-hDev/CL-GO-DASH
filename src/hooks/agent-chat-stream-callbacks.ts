@@ -131,6 +131,9 @@ export function applyStreamEvent(
 }
 
 function appendCurrentSegment(state: ChatState): StreamSegment[] {
+  if (!state.currentThinking && !state.currentContent && state.currentTools.length === 0) {
+    return state.completedSegments;
+  }
   return [...state.completedSegments, {
     thinking: state.currentThinking, tools: state.currentTools, content: state.currentContent,
     phase: state.currentContentPhase,

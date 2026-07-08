@@ -115,6 +115,12 @@ describe("turnEnd", () => {
     expect(seg.thinking).toBe("t");
     expect(seg.tools[0].name).toBe("bash");
   });
+  it("ignore un turnEnd vide", () => {
+    const state = makeState({ completedSegments: [{ content: "existant", thinking: "", tools: [] }] });
+    const { state: s } = applyStreamEvent(state, { event: "turnEnd", data: {} });
+    expect(s.completedSegments).toHaveLength(1);
+    expect(s.completedSegments[0].content).toBe("existant");
+  });
 });
 
 describe("permissionRequest", () => {
