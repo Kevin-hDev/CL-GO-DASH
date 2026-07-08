@@ -56,6 +56,10 @@ export function ChatView({
     permMode.mode,
   );
   const subagents = useSubagents(isSubagent ? undefined : sessionId);
+  const knownSubagents = useMemo(
+    () => [...subagents.active, ...subagents.completed],
+    [subagents.active, subagents.completed],
+  );
   const fileDrop = useFileDrop();
   const context = useContextProgress(model, chat.sessionTokenCount, provider);
   const [preview, setPreview] = useState<DroppedFile | null>(null);
@@ -142,7 +146,7 @@ export function ChatView({
             onCloneMessage={canCloneMessages && onCloneMessage ? clone.requestClone : undefined}
             onFileClick={handleFileClick} onFilePreview={onFilePreviewPath} projectPath={proj.selectedProject?.path}
             onFileReview={onFilePreviewPath}
-            completedSubagents={subagents.completed.length > 0 ? subagents.completed : undefined}
+            knownSubagents={knownSubagents}
             onOpenSubagent={onOpenSubagent}
           />
         </div>
