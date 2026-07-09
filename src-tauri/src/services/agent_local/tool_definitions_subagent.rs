@@ -68,22 +68,6 @@ pub fn subagent_control_definitions() -> Vec<Value> {
             }),
         ),
         tool_def(
-            "wait_subagent",
-            "Wait for one or more child subagents to finish and return their final reports.",
-            serde_json::json!({
-                "type": "object",
-                "properties": {
-                    "subagent_id": { "type": "string", "description": "Child subagent session id" },
-                    "subagent_ids": {
-                        "type": "array",
-                        "items": { "type": "string" },
-                        "description": "Child subagent session ids"
-                    },
-                    "timeout_ms": { "type": "integer", "description": "Maximum wait time, default 30000, max 300000" }
-                }
-            }),
-        ),
-        tool_def(
             "cancel_subagent",
             "Cancel a running child subagent owned by this parent session.",
             serde_json::json!({

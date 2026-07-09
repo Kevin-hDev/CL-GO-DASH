@@ -14,7 +14,6 @@ pub fn tool_short_desc(id: &str) -> Option<&'static str> {
         "delegate_task" => "Spawn a subagent for parallel or isolated work",
         "list_subagents" => "List child subagents for this session",
         "get_subagent" => "Inspect one child subagent",
-        "wait_subagent" => "Wait for child subagent reports",
         "cancel_subagent" => "Cancel a running child subagent",
         "message_subagent" => "Send a new instruction to a child subagent",
         "planmode" => "Publish a plan and request user approval (Plan mode)",

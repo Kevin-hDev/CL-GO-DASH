@@ -16,7 +16,6 @@ pub const SUBAGENT_TOOLS: &[&str] = &[
     "delegate_task",
     "list_subagents",
     "get_subagent",
-    "wait_subagent",
     "cancel_subagent",
     "message_subagent",
 ];
@@ -40,7 +39,6 @@ const OPTIONAL_TOOLS: &[ToolCatalogEntry] = &[
     optional_default("delegate_task", "subagents"),
     optional_default("list_subagents", "subagents"),
     optional_default("get_subagent", "subagents"),
-    optional_default("wait_subagent", "subagents"),
     optional_default("cancel_subagent", "subagents"),
     optional_default("message_subagent", "subagents"),
     optional_default("planmode", "workflow"),

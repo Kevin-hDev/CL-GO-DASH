@@ -1,14 +1,10 @@
-use super::tool_subagent_format::{format_child, format_children, format_meta};
+use super::tool_subagent_format::{format_child, format_meta};
 use super::types_session::AgentSession;
 use super::types_tools::ToolResult;
 use serde_json::{json, Value};
-use std::time::{Duration, Instant};
 
-const DEFAULT_WAIT_MS: u64 = 30_000;
-const MAX_WAIT_MS: u64 = 300_000;
 const MAX_PROMPT_SIZE: usize = 50_000;
 const MAX_QUEUED_PROMPTS: usize = 8;
-const MAX_WAIT_SUBAGENT_IDS: usize = 16;
 
 pub async fn dispatch(tool_name: &str, args: &Value, parent_id: &str) -> Option<ToolResult> {
     if is_child_session(parent_id).await {
@@ -19,7 +15,6 @@ pub async fn dispatch(tool_name: &str, args: &Value, parent_id: &str) -> Option<
     Some(match tool_name {
         "list_subagents" => list(parent_id).await,
         "get_subagent" => get(args, parent_id).await,
-        "wait_subagent" => wait(args, parent_id).await,
         "cancel_subagent" => cancel(args, parent_id).await,
         "message_subagent" => message(args, parent_id).await,
         _ => return None,
@@ -54,36 +49,6 @@ async fn get(args: &Value, parent_id: &str) -> ToolResult {
             &super::subagent_live_state::normalize_session(child).await,
         )),
         Err(result) => result,
-    }
-}
-
-async fn wait(args: &Value, parent_id: &str) -> ToolResult {
-    let ids = match subagent_ids(args) {
-        Ok(ids) => ids,
-        Err(result) => return result,
-    };
-    let timeout = args["timeout_ms"]
-        .as_u64()
-        .unwrap_or(DEFAULT_WAIT_MS)
-        .min(MAX_WAIT_MS);
-    let started = Instant::now();
-    loop {
-        let mut children = Vec::with_capacity(ids.len());
-        let mut any_running = false;
-        for id in &ids {
-            match owned_child_by_id(id, parent_id).await {
-                Ok(child) => {
-                    let child = super::subagent_live_state::normalize_session(child).await;
-                    any_running |= child_has_pending_work(&child).await;
-                    children.push(child);
-                }
-                Err(result) => return result,
-            }
-        }
-        if !any_running || started.elapsed() >= Duration::from_millis(timeout) {
-            return ToolResult::ok(format_children(&children));
-        }
-        tokio::time::sleep(Duration::from_millis(250)).await;
     }
 }
 
@@ -165,34 +130,6 @@ async fn owned_child_by_id(id: &str, parent_id: &str) -> Result<AgentSession, To
         return Err(ToolResult::err("Sous-agent introuvable."));
     }
     Ok(child)
-}
-
-fn subagent_ids(args: &Value) -> Result<Vec<String>, ToolResult> {
-    if let Some(ids) = args["subagent_ids"].as_array() {
-        if ids.len() > MAX_WAIT_SUBAGENT_IDS {
-            return Err(ToolResult::err("Trop de sous-agents demandés."));
-        }
-        let values = ids
-            .iter()
-            .filter_map(|value| value.as_str().map(str::trim))
-            .filter(|value| !value.is_empty())
-            .map(ToString::to_string)
-            .collect::<Vec<_>>();
-        if !values.is_empty() {
-            if values.len() > MAX_WAIT_SUBAGENT_IDS {
-                return Err(ToolResult::err("Trop de sous-agents demandés."));
-            }
-            return Ok(values);
-        }
-    }
-    if let Some(id) = args["subagent_id"]
-        .as_str()
-        .map(str::trim)
-        .filter(|id| !id.is_empty())
-    {
-        return Ok(vec![id.to_string()]);
-    }
-    Err(ToolResult::err("Sous-agent introuvable."))
 }
 
 async fn is_child_session(session_id: &str) -> bool {
