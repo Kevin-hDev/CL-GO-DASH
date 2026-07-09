@@ -75,16 +75,15 @@
 }
 
 .ssb-subagent-icon {
-  color: var(--subagent-geminitor);
+  width: 22px;
+  height: 22px;
 }
 
-.ssb-subagent-claudiator,
-.ssb-subagent-coder {
+.ssb-subagent-icon.sai-claudiator {
   color: var(--subagent-claudiator);
 }
 
-.ssb-subagent-geminitor,
-.ssb-subagent-explorer {
+.ssb-subagent-icon.sai-geminitor {
   color: var(--subagent-geminitor);
 }
 
@@ -105,4 +104,53 @@
 .ssb-subagent-desc {
   color: var(--ink-faint);
   font-size: var(--text-xs);
+}
+
+.ssb-subagent-action-wrap {
+  display: grid;
+  min-width: 90px;
+  justify-items: end;
+}
+
+.ssb-subagent-status,
+.ssb-subagent-action {
+  grid-area: 1 / 1;
+}
+
+.ssb-subagent-action {
+  display: inline-flex;
+  width: 24px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--ink-faint);
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    background-color var(--ease-smooth),
+    border-color var(--ease-smooth),
+    color var(--ease-smooth),
+    opacity var(--ease-smooth);
+}
+
+.ssb-subagent-action:hover,
+.ssb-subagent-action:focus-visible {
+  border-color: var(--edge);
+  background: var(--surface-hover);
+  color: var(--ink);
+}
+
+.ssb-subagent-item:hover .ssb-subagent-status,
+.ssb-subagent-item:focus-within .ssb-subagent-status {
+  opacity: 0;
+}
+
+.ssb-subagent-item:hover .ssb-subagent-action,
+.ssb-subagent-item:focus-within .ssb-subagent-action {
+  opacity: 1;
+  pointer-events: auto;
 }

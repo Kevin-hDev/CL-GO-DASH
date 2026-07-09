@@ -1,7 +1,8 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useSessionSummary } from "../use-session-summary";
-import type { AgentMessage, AgentSession, StreamEvent } from "@/types/agent";
+import { AGENT_SESSIONS_CHANGED } from "../agent-session-events";
+import type { AgentMessage, AgentSession, AgentSessionMeta, StreamEvent } from "@/types/agent";
 
 const invokeMock = vi.fn();
 const listeners = new Map<string, ((event: { payload: unknown }) => void)[]>();
@@ -87,6 +88,48 @@ describe("useSessionSummary", () => {
 
     expect(result.current.changes).toEqual({ additions: 2, deletions: 0, files: 1 });
   });
+
+  it("rafraîchit les sous-agents quand les sessions changent", async () => {
+    let children = [subagentMeta("child-1", "s1")];
+    invokeMock.mockImplementation((command: string) => {
+      if (command === "list_subagents") return Promise.resolve(children);
+      return Promise.resolve(session([], "s1"));
+    });
+
+    const { result } = renderHook(() => useSessionSummary("s1"));
+    await waitFor(() => expect(result.current.subagents).toHaveLength(1));
+
+    children = [];
+    void act(() => window.dispatchEvent(new Event(AGENT_SESSIONS_CHANGED)));
+
+    await waitFor(() => expect(result.current.subagents).toHaveLength(0));
+  });
+
+  it("rafraîchit les sous-agents quand archive_subagent termine pendant le stream", async () => {
+    let children = [subagentMeta("child-1", "s1")];
+    invokeMock.mockImplementation((command: string) => {
+      if (command === "list_subagents") return Promise.resolve(children);
+      return Promise.resolve(session([], "s1"));
+    });
+
+    const { result } = renderHook(() => useSessionSummary("s1"));
+    await waitFor(() => expect(result.current.subagents).toHaveLength(1));
+
+    children = [];
+    act(() => {
+      emit("s1", {
+        event: "toolResult",
+        data: {
+          name: "archive_subagent",
+          content: "Sous-agent archivé.",
+          isError: false,
+          toolCallIndex: 0,
+        },
+      });
+    });
+
+    await waitFor(() => expect(result.current.subagents).toHaveLength(0));
+  });
 });
 
 function emit(sessionId: string, event: StreamEvent) {
@@ -116,5 +159,19 @@ function assistant(id: string, tools: AgentMessage["tool_activities"]): AgentMes
     files: [],
     timestamp: "2026-07-01T12:00:00Z",
     tool_activities: tools,
+  };
+}
+
+function subagentMeta(id: string, parentId: string): AgentSessionMeta {
+  return {
+    id,
+    name: "Geminitor",
+    created_at: "2026-07-01T12:00:00Z",
+    model: "gpt",
+    provider: "openai",
+    message_count: 1,
+    parent_session_id: parentId,
+    subagent_type: "explorer",
+    subagent_status: "completed",
   };
 }

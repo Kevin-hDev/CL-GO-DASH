@@ -93,7 +93,7 @@
 
 .sa-agent-row {
   display: grid;
-  grid-template-columns: 14px minmax(0, 1fr) max-content;
+  grid-template-columns: 18px minmax(0, 1fr) max-content;
   align-items: center;
   gap: 8px;
   min-height: 46px;
@@ -102,20 +102,9 @@
   font-size: var(--text-sm);
 }
 
-.sa-agent-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
-
-.sa-dot-geminitor,
-.sa-dot-explorer {
-  background: var(--subagent-geminitor);
-}
-
-.sa-dot-claudiator,
-.sa-dot-coder {
-  background: var(--subagent-claudiator);
+.sa-agent-icon {
+  width: 18px;
+  height: 18px;
 }
 
 .sa-agent-main {
@@ -210,7 +199,7 @@
 
 @container (max-width: 520px) {
   .sa-agent-row {
-    grid-template-columns: 14px minmax(0, 1fr);
+    grid-template-columns: 18px minmax(0, 1fr);
   }
 
   .sa-agent-actions {

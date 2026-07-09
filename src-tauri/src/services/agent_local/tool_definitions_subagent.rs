@@ -68,22 +68,6 @@ pub fn subagent_control_definitions() -> Vec<Value> {
             }),
         ),
         tool_def(
-            "wait_subagent",
-            "Wait for one or more child subagents to finish and return their final reports.",
-            serde_json::json!({
-                "type": "object",
-                "properties": {
-                    "subagent_id": { "type": "string", "description": "Child subagent session id" },
-                    "subagent_ids": {
-                        "type": "array",
-                        "items": { "type": "string" },
-                        "description": "Child subagent session ids"
-                    },
-                    "timeout_ms": { "type": "integer", "description": "Maximum wait time, default 30000, max 300000" }
-                }
-            }),
-        ),
-        tool_def(
             "cancel_subagent",
             "Cancel a running child subagent owned by this parent session.",
             serde_json::json!({
@@ -102,6 +86,17 @@ pub fn subagent_control_definitions() -> Vec<Value> {
                     "prompt": { "type": "string", "description": "Instruction to send to the child subagent" }
                 },
                 "required": ["subagent_id", "prompt"]
+            }),
+        ),
+        tool_def(
+            "archive_subagent",
+            "Archive a completed child subagent session owned by this parent. Running subagents must be cancelled first.",
+            serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "subagent_id": { "type": "string", "description": "Child subagent session id" }
+                },
+                "required": ["subagent_id"]
             }),
         ),
     ]

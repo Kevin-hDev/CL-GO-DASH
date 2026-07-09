@@ -103,15 +103,12 @@ mod tests {
         .unwrap();
         assert!(cleaned.get("mode").is_none());
         assert!(validate(
-            "wait_subagent",
-            &json!({"subagent_ids": ["a", "b"], "timeout_ms": 1000})
-        )
-        .is_ok());
-        assert!(validate(
             "message_subagent",
             &json!({"subagent_id": "a", "prompt": "Suite"})
         )
         .is_ok());
+        assert!(validate("archive_subagent", &json!({"subagent_id": "a"})).is_ok());
+        assert!(validate("archive_subagent", &json!({})).is_err());
     }
 
     #[test]

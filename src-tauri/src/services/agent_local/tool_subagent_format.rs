@@ -18,14 +18,6 @@ pub(super) fn format_meta(meta: AgentSessionMeta) -> String {
     )
 }
 
-pub(super) fn format_children(children: &[AgentSession]) -> String {
-    children
-        .iter()
-        .map(format_child)
-        .collect::<Vec<_>>()
-        .join("\n")
-}
-
 pub(super) fn format_child(child: &AgentSession) -> String {
     let activity = child
         .subagent_last_activity

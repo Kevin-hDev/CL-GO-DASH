@@ -7,8 +7,7 @@ const MAX_FAMILY_SCAN: usize = 4096;
 pub async fn archive_family(id: &str) -> Result<(), String> {
     validate_session_id(id)?;
     let metas = super::session_index::read_index().await?;
-    let ids = family_ids(&metas, id);
-    for session_id in ids {
+    for session_id in archive_targets(&metas, id) {
         if session_id == id {
             super::session_archive::archive(&session_id).await?;
         } else {
@@ -25,8 +24,8 @@ pub async fn restore_with_parent(id: &str) -> Result<(), String> {
         .iter()
         .find(|entry| entry.id == id)
         .ok_or_else(generic_restore_error)?;
-    let ancestors = ancestor_ids(&metas, meta)?;
-    for ancestor in ancestors.iter().rev() {
+    let targets = restore_targets(&metas, meta)?;
+    for ancestor in targets.iter().filter(|target| target.as_str() != id) {
         super::session_archive::restore(ancestor).await?;
     }
     super::session_archive::restore(id).await?;
@@ -44,12 +43,31 @@ pub async fn restore_with_parent(id: &str) -> Result<(), String> {
 pub async fn delete_family(id: &str) -> Result<(), String> {
     validate_session_id(id)?;
     let metas = super::session_index::read_index().await?;
-    let ids = family_ids(&metas, id);
-    for session_id in ids.iter().rev() {
-        let _ = super::session_tabs::remove_session_from_tabs(session_id).await;
-        let _ = super::session_store::delete_one(session_id).await;
+    for session_id in delete_targets(&metas, id) {
+        let _ = super::session_tabs::remove_session_from_tabs(&session_id).await;
+        let _ = super::session_store::delete_one(&session_id).await;
     }
     Ok(())
+}
+
+pub(crate) fn archive_targets(metas: &[AgentSessionMeta], id: &str) -> Vec<String> {
+    family_ids(metas, id)
+}
+
+pub(crate) fn delete_targets(metas: &[AgentSessionMeta], id: &str) -> Vec<String> {
+    let mut ids = family_ids(metas, id);
+    ids.reverse();
+    ids
+}
+
+pub(crate) fn restore_targets(
+    metas: &[AgentSessionMeta],
+    meta: &AgentSessionMeta,
+) -> Result<Vec<String>, String> {
+    let mut targets = ancestor_ids(metas, meta)?;
+    targets.reverse();
+    targets.push(meta.id.clone());
+    Ok(targets)
 }
 
 pub(crate) fn family_ids(metas: &[AgentSessionMeta], id: &str) -> Vec<String> {
@@ -102,51 +120,5 @@ fn generic_restore_error() -> String {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use chrono::Utc;
-
-    fn meta(id: &str, parent: Option<&str>, clone_parent: Option<&str>) -> AgentSessionMeta {
-        AgentSessionMeta {
-            id: id.into(),
-            name: id.into(),
-            created_at: Utc::now(),
-            updated_at: None,
-            archived_at: None,
-            model: "llama3".into(),
-            provider: "ollama".into(),
-            thinking_enabled: false,
-            reasoning_mode: None,
-            message_count: 0,
-            is_heartbeat: false,
-            is_gateway: false,
-            gateway_channel_key: None,
-            project_id: None,
-            parent_session_id: parent.map(str::to_string),
-            subagent_type: None,
-            subagent_status: None,
-            subagent_run_id: None,
-            subagent_description: None,
-            subagent_color_key: None,
-            subagent_summary: None,
-            subagent_last_activity: None,
-            clone_parent_session_id: clone_parent.map(str::to_string),
-            clone_parent_message_id: None,
-            clone_mode: None,
-            clone_root_session_id: None,
-            git_branch: None,
-        }
-    }
-
-    #[test]
-    fn family_ids_collects_clones_and_subagents_recursively() {
-        let metas = vec![
-            meta("root", None, None),
-            meta("clone", None, Some("root")),
-            meta("sub", Some("root"), None),
-            meta("nested", Some("clone"), None),
-        ];
-        let ids = family_ids(&metas, "root");
-        assert_eq!(ids, vec!["root", "clone", "sub", "nested"]);
-    }
-}
+#[path = "session_family_tests.rs"]
+mod tests;

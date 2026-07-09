@@ -1,7 +1,6 @@
 use super::*;
 use crate::services::agent_local::types_session::AgentSession;
 use chrono::Utc;
-use serde_json::json;
 
 #[tokio::test]
 async fn running_child_has_pending_work() {
@@ -14,22 +13,11 @@ async fn running_child_has_pending_work() {
 }
 
 #[tokio::test]
-async fn queued_prompt_keeps_completed_child_active_for_wait() {
+async fn queued_prompt_keeps_completed_child_pending() {
     let mut child = child("completed");
     child.subagent_queued_prompts.push("suite".into());
 
     assert!(child_has_pending_work(&child).await);
-}
-
-#[test]
-fn wait_subagent_rejects_too_many_ids() {
-    let ids = (0..=MAX_WAIT_SUBAGENT_IDS)
-        .map(|idx| json!(format!("child-{idx}")))
-        .collect::<Vec<_>>();
-
-    let result = subagent_ids(&json!({ "subagent_ids": ids }));
-
-    assert!(result.is_err());
 }
 
 #[test]
@@ -55,6 +43,29 @@ fn enqueue_prompt_rejects_full_queue() {
 
     assert!(result.is_err());
     assert_eq!(child.subagent_queued_prompts.len(), MAX_QUEUED_PROMPTS);
+}
+
+#[test]
+fn archive_subagent_refuses_pending_child() {
+    let result = can_archive_child(true);
+
+    assert!(result.is_err());
+    assert_eq!(result.unwrap_err().content, "Sous-agent encore actif.");
+}
+
+#[test]
+fn archive_subagent_accepts_completed_child() {
+    assert!(can_archive_child(false).is_ok());
+}
+
+#[test]
+fn archive_subagent_requires_parent_ownership() {
+    let mut agent = child("completed");
+
+    assert!(is_owned_by_parent(&agent, "parent"));
+
+    agent.parent_session_id = Some("other-parent".into());
+    assert!(!is_owned_by_parent(&agent, "parent"));
 }
 
 fn child(status: &str) -> AgentSession {

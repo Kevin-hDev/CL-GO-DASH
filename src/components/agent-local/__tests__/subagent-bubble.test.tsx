@@ -32,8 +32,9 @@ describe("SubagentBubble", () => {
     expect(container.querySelector(".sb-root")).toBeTruthy();
     expect(getByText("Claudiator")).toBeTruthy();
     expect(getByText("Geminitor")).toBeTruthy();
-    expect(container.querySelector(".sb-dot-claudiator")).toBeTruthy();
-    expect(container.querySelector(".sb-dot-geminitor")).toBeTruthy();
+    expect(container.querySelector(".sai-claudiator")).toBeTruthy();
+    expect(container.querySelector(".sai-geminitor")).toBeTruthy();
+    expect(container.querySelector(".sai-running")).toBeNull();
   });
 });
 

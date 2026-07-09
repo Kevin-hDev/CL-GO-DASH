@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { invoke } from "@tauri-apps/api/core";
 import { useAgentSessions } from "../use-agent-sessions";
+import { AGENT_SESSIONS_CHANGED } from "../agent-session-events";
 import type { AgentSessionMeta } from "@/types/agent";
 
 vi.mock("@tauri-apps/api/core", () => ({
@@ -127,9 +128,12 @@ describe("useAgentSessions", () => {
   });
 
   it("archive appelle invoke archive_agent_session puis refresh", async () => {
+    const listener = vi.fn();
+    window.addEventListener(AGENT_SESSIONS_CHANGED, listener);
     vi.mocked(invoke)
       .mockResolvedValueOnce([mockSession])
       .mockResolvedValueOnce(undefined)
+      .mockResolvedValueOnce([])
       .mockResolvedValueOnce([]);
 
     const { result } = renderHook(() => useAgentSessions());
@@ -142,6 +146,8 @@ describe("useAgentSessions", () => {
 
     expect(invoke).toHaveBeenCalledWith("archive_agent_session", { id: "session-1" });
     expect(result.current.sessions).toEqual([]);
+    expect(listener).toHaveBeenCalledTimes(1);
+    window.removeEventListener(AGENT_SESSIONS_CHANGED, listener);
   });
 
   it("restore appelle invoke restore_agent_session puis refresh", async () => {

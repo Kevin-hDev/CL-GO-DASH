@@ -10,9 +10,9 @@ fn defaults_match_product_choice() {
             "delegate_task",
             "list_subagents",
             "get_subagent",
-            "wait_subagent",
             "cancel_subagent",
             "message_subagent",
+            "archive_subagent",
             "planmode",
             "exitplanmode"
         ]

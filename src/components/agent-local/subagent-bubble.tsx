@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { subagentColorKey, subagentDisplayName, subagentSecondaryText } from "@/lib/subagent-display";
+import { subagentDisplayName, subagentSecondaryText } from "@/lib/subagent-display";
 import type { SubagentInfo } from "@/types/agent";
+import { SubagentIcon } from "./subagent-icon";
 import "./subagent-bubble.css";
 
 interface SubagentBubbleProps {
@@ -37,7 +38,7 @@ export function SubagentBubble({ subagents, onOpen }: SubagentBubbleProps) {
                 onClick={() => onOpen(agent.sessionId)}
                 type="button"
               >
-                <span className={`sb-dot ${colorClass("sb-dot", agent)}`} />
+                <SubagentIcon agent={agent} className="sb-agent-icon" />
                 <span className="sb-agent-text">
                   <span className="sb-agent-name">{subagentDisplayName(agent)}</span>
                   <span className="sb-agent-description">
@@ -51,9 +52,4 @@ export function SubagentBubble({ subagents, onOpen }: SubagentBubbleProps) {
       </div>
     </div>
   );
-}
-
-function colorClass(prefix: string, agent: SubagentInfo): string {
-  const key = subagentColorKey(agent);
-  return `${prefix}-${key}`;
 }

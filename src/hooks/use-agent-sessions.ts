@@ -3,7 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { cleanupTauriListener } from "@/lib/tauri-listen";
 import type { AgentSessionMeta } from "@/types/agent";
-import { AGENT_SESSIONS_CHANGED } from "./agent-session-events";
+import { AGENT_SESSIONS_CHANGED, notifyAgentSessionsChanged } from "./agent-session-events";
 
 export function useAgentSessions() {
   const [sessions, setSessions] = useState<AgentSessionMeta[]>([]);
@@ -90,6 +90,7 @@ export function useAgentSessions() {
   const archive = useCallback(async (id: string) => {
     await invoke("archive_agent_session", { id });
     await refresh();
+    notifyAgentSessionsChanged();
   }, [refresh]);
 
   const restore = useCallback(async (id: string) => {

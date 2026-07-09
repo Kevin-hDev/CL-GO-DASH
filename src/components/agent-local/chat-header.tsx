@@ -32,6 +32,7 @@ interface ChatHeaderProps {
   onRenameSessionTab?: (tabId: string, label: string) => void;
   onOpenPlan?: (plan: AgentPlanRun) => void;
   onOpenSubagent?: (sessionId: string) => void;
+  onArchiveSubagent?: (sessionId: string) => void;
 }
 
 export function ChatHeader({
@@ -54,6 +55,7 @@ export function ChatHeader({
   onRenameSessionTab,
   onOpenPlan,
   onOpenSubagent,
+  onArchiveSubagent,
 }: ChatHeaderProps) {
   const { t } = useTranslation();
   const hasSession = Boolean(sessionId);
@@ -98,6 +100,7 @@ export function ChatHeader({
               git={summaryGit}
               onOpenPlan={onOpenPlan}
               onOpenSubagent={onOpenSubagent}
+              onArchiveSubagent={onArchiveSubagent}
             />
           )}
           <Tooltip label={`${t("filePreview.togglePanel")} (${ALT}${MOD}B)`} align="right">
