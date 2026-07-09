@@ -60,12 +60,14 @@ mod tests {
             "delegate_task",
             "list_subagents",
             "get_subagent",
+            "archive_subagent",
             "forecast",
         ]);
 
         assert!(listing.contains("- subagents:"));
         assert!(!listing.contains("- delegate_task:"));
         assert!(!listing.contains("- list_subagents:"));
+        assert!(!listing.contains("- archive_subagent:"));
         assert!(listing.contains("- forecast:"));
     }
 }

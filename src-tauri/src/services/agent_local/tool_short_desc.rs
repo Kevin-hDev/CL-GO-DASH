@@ -16,6 +16,7 @@ pub fn tool_short_desc(id: &str) -> Option<&'static str> {
         "get_subagent" => "Inspect one child subagent",
         "cancel_subagent" => "Cancel a running child subagent",
         "message_subagent" => "Send a new instruction to a child subagent",
+        "archive_subagent" => "Archive a completed child subagent",
         "planmode" => "Publish a plan and request user approval (Plan mode)",
         "exitplanmode" => "Exit Plan mode after the plan is approved",
         // todo_list

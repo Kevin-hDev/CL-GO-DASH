@@ -27,11 +27,18 @@ interface SessionSummaryBubbleProps {
   git?: SessionSummaryGitState;
   onOpenPlan?: (plan: AgentPlanRun) => void;
   onOpenSubagent?: (sessionId: string) => void;
+  onArchiveSubagent?: (sessionId: string) => void;
 }
 
 type SectionKey = "todos" | "plans" | "subagents";
 
-export function SessionSummaryBubble({ summary, git, onOpenPlan, onOpenSubagent }: SessionSummaryBubbleProps) {
+export function SessionSummaryBubble({
+  summary,
+  git,
+  onOpenPlan,
+  onOpenSubagent,
+  onArchiveSubagent,
+}: SessionSummaryBubbleProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [sections, setSections] = useState<Record<SectionKey, boolean>>({
@@ -108,6 +115,9 @@ export function SessionSummaryBubble({ summary, git, onOpenPlan, onOpenSubagent 
               onOpen={(id) => {
                 setOpen(false);
                 onOpenSubagent?.(id);
+              }}
+              onArchive={(id) => {
+                void onArchiveSubagent?.(id);
               }}
             />
           </SessionSummarySection>

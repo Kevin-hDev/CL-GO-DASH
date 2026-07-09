@@ -123,6 +123,7 @@ fn schema(tool: &str) -> Option<Schema> {
         "get_subagent" => SUBAGENT_ID,
         "cancel_subagent" => SUBAGENT_ID,
         "message_subagent" => MESSAGE_SUBAGENT,
+        "archive_subagent" => SUBAGENT_ID,
         "read_spreadsheet" => READ_SPREADSHEET,
         "read_document" => READ_DOCUMENT,
         "read_image" => READ_IMAGE,

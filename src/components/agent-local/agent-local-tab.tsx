@@ -27,7 +27,7 @@ export const AgentLocalTab = memo(function AgentLocalTab({
 }: AgentLocalTabProps) {
   const { t } = useTranslation();
   const s = useAgentLocalTab({ navState, onSessionChange, onNavChange, listFocused });
-  const { sessions, refresh, rename, updateModel } = s;
+  const { sessions, refresh, rename, archive, updateModel } = s;
   const { projectsHook, terminal, activeSession, activeSessionId } = s;
   const { model, provider, currentDefault, activeProject } = s;
   const { filePreview, fileOperations, setFileOperations } = s;
@@ -139,6 +139,7 @@ export const AgentLocalTab = memo(function AgentLocalTab({
           onRenameSessionTab={(id, label) => void sessionTabs.renameTab(id, label)}
           onOpenPlan={filePreview.openPlan}
           onOpenSubagent={(id) => void handleSelectById(id)}
+          onArchiveSubagent={(id) => void archive(id)}
           onToggleTerminal={() => {
             if (!terminal.isOpen && terminal.tabs.length === 0) {
               terminal.addTab(terminalCwd);
@@ -216,7 +217,7 @@ export const AgentLocalTab = memo(function AgentLocalTab({
       )}
     </div>
   ), [
-    activeSession?.name, activeSessionId, currentDefault.model, currentDefault.provider, displayModel, displayProject?.path,
+    activeSession?.name, activeSessionId, archive, currentDefault.model, currentDefault.provider, displayModel, displayProject?.path,
     displayProvider, displayReasoningMode, displaySession?.clone_parent_session_id, displaySession?.parent_session_id,
     displaySessionId,
     fileOperations, filePreview, fileTreeNav, forecastNav.panelMode, forecastNav.setPanelMode, forecastContent,

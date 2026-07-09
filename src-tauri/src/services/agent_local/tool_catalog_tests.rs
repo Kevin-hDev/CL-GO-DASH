@@ -12,6 +12,7 @@ fn defaults_match_product_choice() {
             "get_subagent",
             "cancel_subagent",
             "message_subagent",
+            "archive_subagent",
             "planmode",
             "exitplanmode"
         ]

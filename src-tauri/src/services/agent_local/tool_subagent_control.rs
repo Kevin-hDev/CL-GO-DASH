@@ -17,6 +17,7 @@ pub async fn dispatch(tool_name: &str, args: &Value, parent_id: &str) -> Option<
         "get_subagent" => get(args, parent_id).await,
         "cancel_subagent" => cancel(args, parent_id).await,
         "message_subagent" => message(args, parent_id).await,
+        "archive_subagent" => archive(args, parent_id).await,
         _ => return None,
     })
 }
@@ -105,6 +106,26 @@ async fn message(args: &Value, parent_id: &str) -> ToolResult {
     super::tool_dispatcher_delegate::dispatch_delegate(&payload, parent_id).await
 }
 
+async fn archive(args: &Value, parent_id: &str) -> ToolResult {
+    let Ok(child) = owned_child(args, parent_id).await else {
+        return ToolResult::err("Sous-agent introuvable.");
+    };
+    if let Err(result) = can_archive_child(child_has_pending_work(&child).await) {
+        return result;
+    }
+    match super::session_store::archive(&child.id).await {
+        Ok(()) => ToolResult::ok("Sous-agent archivé.".to_string()),
+        Err(_) => ToolResult::err("Sous-agent indisponible."),
+    }
+}
+
+fn can_archive_child(has_pending_work: bool) -> Result<(), ToolResult> {
+    if has_pending_work {
+        return Err(ToolResult::err("Sous-agent encore actif."));
+    }
+    Ok(())
+}
+
 fn enqueue_prompt(child: &mut AgentSession, prompt: &str) -> Result<(), ToolResult> {
     if child.subagent_queued_prompts.len() >= MAX_QUEUED_PROMPTS {
         return Err(ToolResult::err("File de consignes sous-agent pleine."));
@@ -126,10 +147,14 @@ async fn owned_child_by_id(id: &str, parent_id: &str) -> Result<AgentSession, To
     let child = super::session_store::get(id)
         .await
         .map_err(|_| ToolResult::err("Sous-agent introuvable."))?;
-    if child.parent_session_id.as_deref() != Some(parent_id) {
+    if !is_owned_by_parent(&child, parent_id) {
         return Err(ToolResult::err("Sous-agent introuvable."));
     }
     Ok(child)
+}
+
+fn is_owned_by_parent(child: &AgentSession, parent_id: &str) -> bool {
+    child.parent_session_id.as_deref() == Some(parent_id)
 }
 
 async fn is_child_session(session_id: &str) -> bool {

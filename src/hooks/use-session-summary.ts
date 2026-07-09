@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { cleanupTauriListener } from "@/lib/tauri-listen";
+import { AGENT_SESSIONS_CHANGED } from "@/hooks/agent-session-events";
 import { isHiddenAgentTool } from "@/lib/hidden-agent-tools";
 import { toolsToRecords, type ToolActivity } from "./agent-chat-utils";
 import {
@@ -30,6 +31,8 @@ const REFRESH_EVENTS = new Set<StreamEvent["event"]>([
   "subagentCompleted",
   "compressionComplete",
 ]);
+
+const SUMMARY_REFRESH_TOOLS = new Set(["archive_subagent"]);
 
 export function useSessionSummary(sessionId: string | null) {
   const [session, setSession] = useState<AgentSession | null>(null);
@@ -108,6 +111,9 @@ export function useSessionSummary(sessionId: string | null) {
           liveRequestChangesRef.current = addChangeSummaries(liveRequestChangesRef.current, summary);
           setLiveChanges({ sessionId, summary: liveRequestChangesRef.current });
         }
+        if (!payload.event.data.isError && SUMMARY_REFRESH_TOOLS.has(payload.event.data.name)) {
+          scheduleRefresh(80);
+        }
         return;
       }
       if (payload.event.event === "done" || payload.event.event === "error") {
@@ -118,9 +124,12 @@ export function useSessionSummary(sessionId: string | null) {
       scheduleRefresh(payload.event.event === "done" ? 300 : 80);
     });
     const sessionUnlisten = listen("agent-session-updated", () => scheduleRefresh(80));
+    const refreshFromWindow = () => scheduleRefresh(80);
+    window.addEventListener(AGENT_SESSIONS_CHANGED, refreshFromWindow);
     return () => {
       cleanupTauriListener(streamUnlisten);
       cleanupTauriListener(sessionUnlisten);
+      window.removeEventListener(AGENT_SESSIONS_CHANGED, refreshFromWindow);
     };
   }, [scheduleRefresh, sessionId]);
 

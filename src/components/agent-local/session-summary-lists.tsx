@@ -1,6 +1,13 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { CheckCircle2, ChevronDown, Circle, Clock3, PauseCircle } from "@/components/ui/lucide-icons";
+import {
+  Archive,
+  CheckCircle2,
+  ChevronDown,
+  Circle,
+  Clock3,
+  PauseCircle,
+} from "@/components/ui/lucide-icons";
 import { FileText } from "@/components/ui/icons";
 import { subagentDisplayName, subagentSecondaryText } from "@/lib/subagent-display";
 import type { AgentPlanRun, AgentTodoItem, AgentTodoRun, SubagentInfo } from "@/types/agent";
@@ -89,9 +96,11 @@ export function SessionSummaryPlanList({
 export function SessionSummarySubagentList({
   subagents,
   onOpen,
+  onArchive,
 }: {
   subagents: SubagentInfo[];
   onOpen: (sessionId: string) => void;
+  onArchive?: (sessionId: string) => void;
 }) {
   const { t } = useTranslation();
   if (subagents.length === 0) {
@@ -100,20 +109,47 @@ export function SessionSummarySubagentList({
   return subagents.map((agent) => {
     const name = subagentDisplayName(agent);
     const secondary = subagentSecondaryText(agent);
+    const open = () => onOpen(agent.sessionId);
+    const canArchive = Boolean(onArchive && agent.status !== "running");
     return (
-      <button
-        className="ssb-item ssb-item-button"
+      <div
+        className="ssb-item ssb-item-button ssb-subagent-item"
         key={agent.sessionId}
-        type="button"
-        onClick={() => onOpen(agent.sessionId)}
+        role="button"
+        tabIndex={0}
+        onClick={open}
+        onKeyDown={(event) => {
+          if (event.target !== event.currentTarget) return;
+          if (event.key !== "Enter" && event.key !== " ") return;
+          event.preventDefault();
+          open();
+        }}
       >
         <SubagentIcon agent={agent} className="ssb-item-icon ssb-subagent-icon" />
         <span className="ssb-item-main ssb-subagent-main" title={`${name} - ${secondary}`}>
           <span className="ssb-subagent-name">{name}</span>
           <span className="ssb-subagent-desc">{secondary}</span>
         </span>
-        <span className="ssb-item-meta">{t(`subagents.${agent.status}`)}</span>
-      </button>
+        <span className="ssb-subagent-action-wrap">
+          <span className="ssb-item-meta ssb-subagent-status">
+            {t(`subagents.${agent.status}`)}
+          </span>
+          {canArchive && (
+            <button
+              className="ssb-subagent-action"
+              type="button"
+              aria-label={t("history.archive")}
+              title={t("history.archive")}
+              onClick={(event) => {
+                event.stopPropagation();
+                onArchive?.(agent.sessionId);
+              }}
+            >
+              <Archive aria-hidden="true" size="var(--icon-sm)" />
+            </button>
+          )}
+        </span>
+      </div>
     );
   });
 }

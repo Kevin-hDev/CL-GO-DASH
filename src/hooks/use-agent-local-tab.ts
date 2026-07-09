@@ -181,7 +181,7 @@ export function useAgentLocalTab({ navState, onSessionChange, onNavChange, listF
   }, [archive, onSessionChange]);
 
   return {
-    sessions, refresh, rename, remove, updateModel: updateModelWithReasoning,
+    sessions, refresh, rename, remove, archive, updateModel: updateModelWithReasoning,
     projectsHook, terminal, activeSession, activeSessionId,
     model, provider, currentDefault, activeProject,
     filePreview, fileOperations, setFileOperations,

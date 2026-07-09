@@ -88,6 +88,17 @@ pub fn subagent_control_definitions() -> Vec<Value> {
                 "required": ["subagent_id", "prompt"]
             }),
         ),
+        tool_def(
+            "archive_subagent",
+            "Archive a completed child subagent session owned by this parent. Running subagents must be cancelled first.",
+            serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "subagent_id": { "type": "string", "description": "Child subagent session id" }
+                },
+                "required": ["subagent_id"]
+            }),
+        ),
     ]
 }
 

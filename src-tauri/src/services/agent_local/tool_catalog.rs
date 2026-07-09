@@ -18,6 +18,7 @@ pub const SUBAGENT_TOOLS: &[&str] = &[
     "get_subagent",
     "cancel_subagent",
     "message_subagent",
+    "archive_subagent",
 ];
 
 const LOCKED_TOOLS: &[ToolCatalogEntry] = &[
@@ -41,6 +42,7 @@ const OPTIONAL_TOOLS: &[ToolCatalogEntry] = &[
     optional_default("get_subagent", "subagents"),
     optional_default("cancel_subagent", "subagents"),
     optional_default("message_subagent", "subagents"),
+    optional_default("archive_subagent", "subagents"),
     optional_default("planmode", "workflow"),
     optional_default("exitplanmode", "workflow"),
     optional_off("todo_write", "todo"),

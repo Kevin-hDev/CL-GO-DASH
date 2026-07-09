@@ -45,6 +45,29 @@ fn enqueue_prompt_rejects_full_queue() {
     assert_eq!(child.subagent_queued_prompts.len(), MAX_QUEUED_PROMPTS);
 }
 
+#[test]
+fn archive_subagent_refuses_pending_child() {
+    let result = can_archive_child(true);
+
+    assert!(result.is_err());
+    assert_eq!(result.unwrap_err().content, "Sous-agent encore actif.");
+}
+
+#[test]
+fn archive_subagent_accepts_completed_child() {
+    assert!(can_archive_child(false).is_ok());
+}
+
+#[test]
+fn archive_subagent_requires_parent_ownership() {
+    let mut agent = child("completed");
+
+    assert!(is_owned_by_parent(&agent, "parent"));
+
+    agent.parent_session_id = Some("other-parent".into());
+    assert!(!is_owned_by_parent(&agent, "parent"));
+}
+
 fn child(status: &str) -> AgentSession {
     AgentSession {
         id: uuid::Uuid::new_v4().to_string(),
