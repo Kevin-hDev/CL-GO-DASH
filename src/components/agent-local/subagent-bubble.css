@@ -5,9 +5,9 @@
   margin: 6px auto var(--space-md);
   padding: 0;
   overflow: hidden;
-  border: 0.5px solid var(--chat-composer-border);
-  border-radius: 20px;
-  background: var(--chat-composer-bg);
+  border: 0.5px solid var(--tooltip-border);
+  border-radius: 18px;
+  background: var(--surface);
   color: var(--ink);
 }
 
@@ -118,4 +118,12 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+[data-theme="light"] .sb-root {
+  background: rgba(215, 215, 220, 0.40);
+}
+
+[data-theme="dark"] .sb-root {
+  background: var(--surface-glass);
 }
