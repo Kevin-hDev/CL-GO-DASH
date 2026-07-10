@@ -58,40 +58,32 @@ pub async fn run(
             )
         }
     };
-    let finalized = match finalize_session_after_run(&child_session_id, &status, &summary).await {
+    let finalized = match super::subagent_completion::persist_terminal_completion(
+        &parent_session_id,
+        &child_session_id,
+        &subagent_type,
+        &status,
+        &summary,
+    )
+    .await
+    {
         Ok(value) => value,
         Err(_) => {
-            eprintln!("[subagent] persistance statut {}", child_session_id);
             success = false;
             status = super::subagent_status::FAILED.to_string();
-            summary = "Le sous-agent n'a pas pu terminer correctement.".to_string();
-            let _ = super::session_subagents::mark_status(
-                &child_session_id,
-                super::subagent_status::FAILED,
-            )
-            .await;
-            subagent_registry::unregister(&child_session_id).await;
-            FinalizedSubagent {
-                queued_followup: false,
-                session_status: super::subagent_status::FAILED.to_string(),
-            }
+            summary = super::subagent_completion::SUBAGENT_COMPLETION_ERROR.to_string();
+            let _ = parent_emitter.send(StreamEvent::SubagentCompleted {
+                subagent_session_id: child_session_id.clone(),
+                success,
+                status,
+                summary,
+                run_id,
+            });
+            super::subagent_working_dir::cleanup(&child_session_id).await;
+            session_store::remove_session_lock(&child_session_id).await;
+            return;
         }
     };
-
-    let child_name = get_child_name(&child_session_id).await;
-    let report = super::subagent_hidden_reports::build_report(
-        child_session_id.clone(),
-        child_name.clone(),
-        subagent_type.clone(),
-        finalized.session_status.clone(),
-        summary.clone(),
-    );
-    if super::subagent_hidden_reports::append(&parent_session_id, report)
-        .await
-        .is_err()
-    {
-        eprintln!("[subagent] rapport parent {}", parent_session_id);
-    }
 
     if !finalized.queued_followup {
         let _ = parent_emitter.send(StreamEvent::SubagentCompleted {
@@ -104,10 +96,6 @@ pub async fn run(
     }
 
     super::subagent_working_dir::cleanup(&child_session_id).await;
-
-    if finalized.queued_followup {
-        subagent_registry::unregister(&child_session_id).await;
-    }
 
     if finalized.queued_followup {
         match super::subagent_queued::spawn_next_if_present(next_run).await {
@@ -123,13 +111,6 @@ pub async fn run(
     }
 }
 
-async fn get_child_name(child_id: &str) -> String {
-    session_store::get(child_id)
-        .await
-        .map(|s| s.name.clone())
-        .unwrap_or_else(|_| "agent".to_string())
-}
-
 pub fn effective_session_status(status: &str, queued_followup: bool) -> &str {
     if queued_followup {
         super::subagent_status::RUNNING
@@ -138,7 +119,7 @@ pub fn effective_session_status(status: &str, queued_followup: bool) -> &str {
     }
 }
 
-async fn finalize_session_after_run(
+pub(super) async fn finalize_session_after_run(
     session_id: &str,
     status: &str,
     summary: &str,
@@ -147,18 +128,13 @@ async fn finalize_session_after_run(
     let _guard = lock.lock().await;
     let mut session = session_store::get(session_id).await?;
     let finalized = apply_finalized_subagent_state(&mut session, status, summary);
-    let queued_followup = finalized.queued_followup;
     session.subagent_last_activity = Some(super::types_session::SubagentLastActivity {
         kind: "status".to_string(),
         label: final_activity_label(&finalized.session_status).to_string(),
         detail: Some(summary.chars().take(220).collect()),
         updated_at: chrono::Utc::now(),
     });
-    let save_result = session_store::save(&session).await;
-    if !queued_followup {
-        subagent_registry::unregister(session_id).await;
-    }
-    save_result.map(|_| finalized)
+    session_store::save(&session).await.map(|_| finalized)
 }
 
 pub(super) fn apply_finalized_subagent_state(

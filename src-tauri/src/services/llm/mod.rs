@@ -7,6 +7,7 @@
 pub mod agent_loop;
 mod agent_loop_compression;
 mod agent_loop_message;
+mod agent_loop_request;
 pub(crate) mod agent_loop_tools;
 pub mod catalog;
 pub mod compress_hook;

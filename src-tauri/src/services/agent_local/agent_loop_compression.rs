@@ -3,7 +3,7 @@ use super::compress_hook;
 use super::stream_events::AgentEventEmitter;
 use super::tool_executor_compression::{ToolCompression, ToolCompressionProvider};
 use super::types_ollama::{ChatMessage, StreamResult};
-use crate::services::compress::{realtime_budget::RealtimeBudget, token_estimate};
+use crate::services::compress::token_estimate;
 use crate::services::token_counting;
 use std::path::Path;
 use tokio_util::sync::CancellationToken;
@@ -64,10 +64,6 @@ impl LoopCompression<'_> {
             cancel,
         )
         .await
-    }
-
-    pub fn realtime_budget(&self, messages: &[ChatMessage]) -> Option<RealtimeBudget> {
-        RealtimeBudget::from_messages(self.configured_context, messages)
     }
 
     pub async fn handle_interrupted(

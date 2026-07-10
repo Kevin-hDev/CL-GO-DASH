@@ -1,11 +1,10 @@
 use super::agent_loop_compression::{LastCounts, LoopCompression};
+use super::agent_loop_ollama_request::OllamaRequestParams;
 use super::stream_events::AgentEventEmitter;
 use super::types_ollama::{ChatMessage, OllamaThink, StreamEvent};
 use super::write_guard_registry;
 use super::{
-    agent_loop_limits::MAX_TURNS, agent_loop_plan, agent_loop_support, agent_loop_thinking_retry,
-    circuit_breaker, context_budget, eager_dispatch, ollama_stream,
-    stream_diagnostics_model as model_diag, stream_diagnostics_payload as payload_diag,
+    agent_loop_limits::MAX_TURNS, agent_loop_plan, agent_loop_support, circuit_breaker,
     subagent_orchestration, tool_executor, tool_result_budget,
 };
 use crate::services::token_counting;
@@ -48,60 +47,26 @@ pub async fn run_agent_loop(
         if cancel.is_cancelled() {
             return Err("Annulé".to_string());
         }
-        subagents.prepare_for_model_request(messages).await;
-        tool_result_budget::apply_budget(messages);
-        context_budget::prepare_for_request(messages, configured_context);
-        let realtime_budget = compression.realtime_budget(messages);
-        let plan_active = agent_loop_plan::active(&session_id, plan_mode_active).await;
-        let request = agent_loop_support::build_request(model, messages, &tools, think.clone());
-        model_diag::record_model_request(&session_id, &request_id, turn, messages).await;
-        payload_diag::record_ollama_payload(&session_id, &request_id, turn, &request).await;
-        let (tool_tx, tool_rx) = tokio::sync::mpsc::unbounded_channel();
-        let mut eager_handle = tokio::spawn(eager_dispatch::collect_eager_results(
-            tool_rx,
-            working_dir.clone(),
-            session_id.clone(),
-            request_id.clone(),
-        ));
-        super::stream_diagnostics::mark_phase(
-            &session_id,
-            &request_id,
-            "model_stream",
-            "Stream modèle démarré.",
-        )
-        .await;
-        let outcome = ollama_stream::stream_chat_with_tool_notify(
+        let request_output = super::agent_loop_ollama_request::run(OllamaRequestParams {
             on_event,
-            &request,
-            cancel.clone(),
-            tool_tx,
-            plan_active,
-            realtime_budget.clone(),
-        )
+            messages,
+            model,
+            tools: &tools,
+            think: &think,
+            working_dir: &working_dir,
+            session_id: &session_id,
+            request_id: &request_id,
+            cancel: cancel.clone(),
+            configured_context,
+            plan_mode_active,
+            turn,
+            subagents: &mut subagents,
+        })
         .await?;
-        let interrupted = outcome.is_interrupted();
-        let mut result = outcome.into_result();
-        model_diag::record_model_result(&session_id, &request_id, turn, &result).await;
-        if !interrupted {
-            let retry = agent_loop_thinking_retry::retry_if_needed(
-                agent_loop_thinking_retry::ThinkingRetryParams {
-                    on_event,
-                    request: &request,
-                    result,
-                    eager_handle,
-                    turn,
-                    working_dir: working_dir.clone(),
-                    session_id: session_id.clone(),
-                    request_id: request_id.clone(),
-                    cancel: cancel.clone(),
-                    plan_active,
-                    realtime_budget,
-                },
-            )
-            .await?;
-            result = retry.result;
-            eager_handle = retry.eager_handle;
-        }
+        let eager_handle = request_output.eager_handle;
+        let interrupted = request_output.interrupted;
+        let plan_active = request_output.plan_active;
+        let result = request_output.result;
         if interrupted {
             super::stream_buffer::finalize_interrupted_content(on_event, &result, plan_active);
             eager_handle.abort();

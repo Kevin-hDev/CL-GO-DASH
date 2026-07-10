@@ -7,6 +7,7 @@ pub mod agent_loop_completion;
 mod agent_loop_compression;
 pub mod agent_loop_errors;
 pub mod agent_loop_limits;
+mod agent_loop_ollama_request;
 pub mod agent_loop_plan;
 pub mod agent_loop_support;
 pub mod agent_loop_thinking_retry;
@@ -109,11 +110,17 @@ pub mod stream_diagnostics_tests;
 pub mod stream_diagnostics_tools;
 pub mod stream_events;
 pub mod subagent_activity;
+pub mod subagent_completion;
+#[cfg(test)]
+mod subagent_completion_tests;
 pub mod subagent_context;
 pub mod subagent_hidden_reports;
 pub mod subagent_live_state;
 pub mod subagent_orchestration;
 pub mod subagent_orchestration_context;
+pub mod subagent_panic_supervisor;
+#[cfg(test)]
+mod subagent_panic_supervisor_tests;
 pub mod subagent_profile;
 pub mod subagent_prompts;
 #[cfg(test)]
@@ -122,6 +129,7 @@ pub mod subagent_queued;
 pub mod subagent_registry;
 #[cfg(test)]
 pub mod subagent_registry_tests;
+mod subagent_report_context;
 pub mod subagent_spawn_channel;
 pub mod subagent_startup_cleanup;
 pub mod subagent_status;
@@ -130,6 +138,7 @@ pub mod subagent_task;
 pub mod subagent_task_stream;
 #[cfg(test)]
 pub mod subagent_task_tests;
+mod subagent_terminal_signal;
 pub mod subagent_working_dir;
 pub mod subagent_worktree;
 pub mod tool_bash;

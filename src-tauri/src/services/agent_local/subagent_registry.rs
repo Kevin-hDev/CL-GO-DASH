@@ -3,6 +3,9 @@ use std::sync::LazyLock;
 use tokio::sync::Mutex;
 use tokio_util::sync::CancellationToken;
 
+pub use super::subagent_terminal_signal::SubagentTerminalKind;
+use super::subagent_terminal_signal::{SubagentTerminalNotifier, SubagentTerminalState};
+
 const MAX_PER_PARENT: usize = 4;
 const MAX_TOTAL: usize = 8;
 
@@ -10,6 +13,7 @@ struct SubagentEntry {
     pub cancel: CancellationToken,
     pub parent_session_id: String,
     pub run_id: String,
+    pub terminal_notifier: SubagentTerminalNotifier,
 }
 
 struct RegistryState {
@@ -61,6 +65,12 @@ pub async fn register(
         .entry(parent_id.to_string())
         .or_insert_with(|| uuid::Uuid::new_v4().to_string())
         .clone();
+    let terminal_notifier = state
+        .entries
+        .values()
+        .find(|entry| entry.parent_session_id == parent_id)
+        .map(|entry| entry.terminal_notifier.clone())
+        .unwrap_or_else(super::subagent_terminal_signal::notifier);
     release_claim_locked(&mut state, parent_id);
     state.entries.insert(
         child_id.to_string(),
@@ -68,6 +78,7 @@ pub async fn register(
             cancel,
             parent_session_id: parent_id.to_string(),
             run_id: run_id.clone(),
+            terminal_notifier,
         },
     );
     Ok(run_id)
@@ -133,6 +144,27 @@ pub async fn active_children_for_parent(parent_id: &str) -> Vec<String> {
         .filter(|(_, entry)| entry.parent_session_id == parent_id)
         .map(|(child_id, _)| child_id.clone())
         .collect()
+}
+
+pub async fn terminal_notifier_for_child(child_id: &str) -> Option<SubagentTerminalNotifier> {
+    REGISTRY
+        .lock()
+        .await
+        .entries
+        .get(child_id)
+        .map(|entry| entry.terminal_notifier.clone())
+}
+
+pub async fn subscribe_for_parent(
+    parent_id: &str,
+) -> Option<tokio::sync::watch::Receiver<SubagentTerminalState>> {
+    REGISTRY
+        .lock()
+        .await
+        .entries
+        .values()
+        .find(|entry| entry.parent_session_id == parent_id)
+        .map(|entry| entry.terminal_notifier.subscribe())
 }
 
 pub async fn cancel_one(child_id: &str) -> bool {

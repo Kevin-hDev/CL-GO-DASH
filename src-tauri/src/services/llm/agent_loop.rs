@@ -1,17 +1,13 @@
 use super::agent_loop_compression::{LastCounts, LoopCompression};
+use super::agent_loop_request::ApiRequestParams;
 use super::agent_loop_tools;
-use super::retry;
 use crate::services::agent_local::agent_loop_errors;
 use crate::services::agent_local::agent_loop_limits::MAX_TURNS;
 use crate::services::agent_local::agent_loop_plan;
 use crate::services::agent_local::circuit_breaker;
-use crate::services::agent_local::context_budget;
-use crate::services::agent_local::stream_diagnostics_model as model_diag;
-use crate::services::agent_local::stream_diagnostics_payload as payload_diag;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::subagent_orchestration;
 use crate::services::agent_local::tool_executor;
-use crate::services::agent_local::tool_result_budget;
 use crate::services::agent_local::types_ollama::{ChatMessage, StreamEvent};
 use crate::services::agent_local::write_guard_registry;
 use crate::services::token_counting;
@@ -57,39 +53,26 @@ pub async fn run_agent_loop(
         if cancel.is_cancelled() {
             return Err("Annulé".to_string());
         }
-        subagents.prepare_for_model_request(messages).await;
-        tool_result_budget::apply_budget(messages);
-        context_budget::prepare_for_request(messages, configured_context);
-        let realtime_budget = compression.realtime_budget(messages);
-        let plan_active = agent_loop_plan::active(&session_id, plan_mode_active).await;
-        model_diag::record_model_request(&session_id, &request_id, turn, messages).await;
-        payload_diag::record_api_payload(&session_id, &request_id, turn, provider_id, messages)
-            .await;
-        crate::services::agent_local::stream_diagnostics::mark_phase(
-            &session_id,
-            &request_id,
-            "model_stream",
-            "Stream modèle démarré.",
-        )
-        .await;
-        let outcome = retry::retry_stream(
+        let request_output = super::agent_loop_request::run(ApiRequestParams {
             on_event,
-            &session_id,
-            &request_id,
+            messages,
             provider_id,
             model,
-            messages,
             tools,
             think,
             reasoning_mode,
-            cancel.clone(),
-            plan_active,
-            realtime_budget,
-        )
+            session_id: &session_id,
+            request_id: &request_id,
+            cancel: cancel.clone(),
+            configured_context,
+            plan_mode_active,
+            turn,
+            subagents: &mut subagents,
+        })
         .await?;
-        let interrupted = outcome.is_interrupted();
-        let result = outcome.into_result();
-        model_diag::record_model_result(&session_id, &request_id, turn, &result).await;
+        let interrupted = request_output.interrupted;
+        let plan_active = request_output.plan_active;
+        let result = request_output.result;
         if interrupted {
             crate::services::agent_local::stream_buffer::finalize_interrupted_content(
                 on_event,

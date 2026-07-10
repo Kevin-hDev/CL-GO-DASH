@@ -2,7 +2,8 @@
 mod tests {
     use crate::services::agent_local::subagent_registry::{
         active_children_for_parent, cancel_one, get_or_create_run_id, get_run_id_for_child,
-        register, release_run_claim, unregister,
+        register, release_run_claim, subscribe_for_parent, terminal_notifier_for_child, unregister,
+        SubagentTerminalKind,
     };
     use crate::services::agent_local::types_session::AgentSessionMeta;
     use chrono::Utc;
@@ -53,6 +54,40 @@ mod tests {
         unregister(&child).await;
         assert_eq!(get_run_id_for_child(&child).await, None);
         assert!(active_children_for_parent(&parent).await.is_empty());
+
+        // --- shared completion signal, including notify-before-subscribe/wait ---
+        let parent = uid();
+        let first_child = uid();
+        let second_child = uid();
+        register(&parent, &first_child, CancellationToken::new())
+            .await
+            .unwrap();
+        register(&parent, &second_child, CancellationToken::new())
+            .await
+            .unwrap();
+        let first_notifier = terminal_notifier_for_child(&first_child)
+            .await
+            .expect("first notifier");
+        unregister(&first_child).await;
+        first_notifier.notify(SubagentTerminalKind::ReportPersisted);
+
+        let mut receiver = subscribe_for_parent(&parent)
+            .await
+            .expect("shared receiver");
+        assert_eq!(receiver.borrow().sequence, 1);
+        assert!(!receiver.borrow().report_persistence_failed);
+
+        let second_notifier = terminal_notifier_for_child(&second_child)
+            .await
+            .expect("second notifier");
+        unregister(&second_child).await;
+        second_notifier.notify(SubagentTerminalKind::ReportPersistenceFailed);
+        tokio::time::timeout(std::time::Duration::from_secs(1), receiver.changed())
+            .await
+            .expect("signal before wait is retained")
+            .expect("sender remains available through notifier");
+        assert_eq!(receiver.borrow().sequence, 2);
+        assert!(receiver.borrow().report_persistence_failed);
 
         // --- cancel_one ---
         let parent = uid();
