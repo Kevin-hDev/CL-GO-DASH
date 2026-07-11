@@ -24,40 +24,36 @@ pub async fn chat_stream(
     plan_mode: Option<bool>,
     streams: tauri::State<'_, ActiveStreams>,
 ) -> Result<u64, String> {
-    const MAX_ACTIVE_STREAMS: usize = 32;
     let cancel = CancellationToken::new();
     let generation = crate::STREAM_GENERATION.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-    let old_stream = {
-        let mut map = streams.0.lock().await;
-        if map.len() >= MAX_ACTIVE_STREAMS {
-            return Err("Trop de flux actifs simultanément".to_string());
-        }
-        map.remove(&session_id)
-    };
-    if let Some((old_token, _, old_request_id)) = old_stream {
-        crate::services::agent_local::session_locks::cancel_with_lock(&session_id, &old_token)
-            .await;
-        crate::services::agent_local::stream_diagnostics::record_cancelled(
-            &session_id,
-            &old_request_id,
-        )
-        .await;
-    }
-    crate::services::agent_local::subagent_registry::adopt_children_for_parent_stream(
+    let cancelled_session_id = session_id.clone();
+    let request_session_id = session_id.clone();
+    let request_id = super::agent_chat_streams::replace_active_stream(
+        &streams,
         &session_id,
-        &cancel,
-    )
-    .await;
-    let request_id =
-        crate::services::agent_local::stream_diagnostics::start_request(&session_id, generation)
+        cancel.clone(),
+        generation,
+        move |(old_token, _, old_request_id)| async move {
+            crate::services::agent_local::session_locks::cancel_with_lock(
+                &cancelled_session_id,
+                &old_token,
+            )
             .await;
-    {
-        let mut map = streams.0.lock().await;
-        map.insert(
-            session_id.clone(),
-            (cancel.clone(), generation, request_id.clone()),
-        );
-    }
+            crate::services::agent_local::stream_diagnostics::record_cancelled(
+                &cancelled_session_id,
+                &old_request_id,
+            )
+            .await;
+        },
+        move || async move {
+            crate::services::agent_local::stream_diagnostics::start_request(
+                &request_session_id,
+                generation,
+            )
+            .await
+        },
+    )
+    .await?;
     let provider = provider.unwrap_or_else(|| "ollama".to_string());
     let resolved_working_dir =
         match super::agent_working_dir::resolve_for_session(&session_id, working_dir.as_deref())

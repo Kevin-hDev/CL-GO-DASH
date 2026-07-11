@@ -47,16 +47,20 @@ async fn replacement_adopts_existing_children_and_current_stop_cancels_them() {
 
 #[test]
 fn chat_stream_transfers_and_cancels_parent_stream_ownership() {
-    let source = include_str!("../../commands/agent_chat.rs");
-    let adopt = source
+    let command = include_str!("../../commands/agent_chat.rs");
+    let replacement = include_str!("../../commands/agent_chat_streams.rs");
+    let adopt = replacement
         .find("adopt_children_for_parent_stream")
-        .expect("chat stream adopts children");
-    let start = source
-        .find("stream_diagnostics::start_request")
-        .expect("chat stream starts request");
+        .expect("replacement adopts children");
+    let insert = replacement.find("map.insert").expect("replacement inserts winner");
+    let cancel = replacement
+        .find("cancel_previous(old_stream).await")
+        .expect("replacement cancels loser");
 
-    assert!(adopt < start);
-    assert!(source.contains("cancel_stopped_parent_stream_children"));
+    assert!(insert < adopt);
+    assert!(adopt < cancel);
+    assert!(command.contains("agent_chat_streams::replace_active_stream"));
+    assert!(command.contains("cancel_stopped_parent_stream_children"));
 }
 
 async fn run(child_id: &str) -> subagent_registry::ActiveSubagentRun {

@@ -1,4 +1,7 @@
 pub mod agent_chat;
+#[cfg(test)]
+mod agent_chat_stream_replacement_tests;
+pub(crate) mod agent_chat_streams;
 pub(crate) mod agent_chat_task;
 pub mod agent_clone;
 pub mod agent_md;
