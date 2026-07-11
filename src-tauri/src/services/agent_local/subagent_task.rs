@@ -91,7 +91,7 @@ pub async fn run(
         .await;
         let (mut success, mut status, mut summary, completed_messages) = match result {
             Ok((success, status, summary, messages)) => {
-                (success, status, summary, Some(messages))
+                (success, status, summary, messages)
             }
             Err(error) if super::subagent_instruction_delivery::is_delivery_error(&error) => {
                 let reported = super::subagent_completion_events::persist_instruction_failure(
