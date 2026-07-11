@@ -27,13 +27,17 @@ export function setStreamGeneration(record: StreamRecord, generation: number): b
   return true;
 }
 
+function quarantineGeneration(record: StreamRecord, generation: number) {
+  record.cancelledGenerations = [
+    ...record.cancelledGenerations.filter((item) => item !== generation),
+    generation,
+  ].slice(-MAX_CANCELLED_GENERATIONS);
+}
+
 export function markStreamCancelled(record: StreamRecord, generation?: number | null) {
   const resolved = typeof generation === "number" ? generation : record.activeGeneration;
   if (typeof resolved === "number") {
-    record.cancelledGenerations = [
-      ...record.cancelledGenerations.filter((item) => item !== resolved),
-      resolved,
-    ].slice(-MAX_CANCELLED_GENERATIONS);
+    quarantineGeneration(record, resolved);
   } else {
     record.cancelledWithoutGeneration = true;
   }
@@ -47,7 +51,10 @@ export function acceptsStreamEvent(
 ): boolean {
   if (typeof generation === "number") {
     if (record.cancelledGenerations.includes(generation)) return false;
-    if (record.activeGeneration !== null && record.activeGeneration !== generation) return false;
+    if (record.activeGeneration !== null && record.activeGeneration !== generation) {
+      quarantineGeneration(record, generation);
+      return false;
+    }
     setStreamGeneration(record, generation);
     return true;
   }

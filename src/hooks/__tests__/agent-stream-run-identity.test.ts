@@ -37,6 +37,7 @@ describe("identité des runs backend", () => {
   beforeEach(() => {
     records.clear();
     vi.clearAllMocks();
+    mocks.invoke.mockResolvedValue(undefined);
     vi.stubGlobal("requestAnimationFrame", vi.fn());
     vi.stubGlobal("cancelAnimationFrame", vi.fn());
     mocks.listen.mockImplementation((_name: string, listener: typeof handler) => {
@@ -76,10 +77,17 @@ describe("identité des runs backend", () => {
     emit("shared", 201, { event: "token", data: { content: "backend", tokenCount: 1, tps: 1 } });
     emit("shared", 201, done());
     emit("shared", 7, { event: "token", data: { content: "UI-2", tokenCount: 1, tps: 1 } });
+    emit("shared", 7, done());
+    emit("shared", 201, {
+      event: "token",
+      data: { content: "backend-tardif", tokenCount: 1, tps: 1 },
+    });
 
     const snapshot = agentStreamManager.getSnapshot("shared");
-    expect(snapshot?.isStreaming).toBe(true);
-    expect(snapshot?.currentContent).toBe("UI-1UI-2");
+    const messages = snapshot?.messages ?? [];
+    expect(snapshot?.isStreaming).toBe(false);
+    expect(snapshot?.currentContent).toBe("");
+    expect(messages[messages.length - 1]?.content).toBe("UI-1UI-2");
   });
 
   it("accepte le snapshot, les tokens et la fin d'un run subagent identifié", async () => {
