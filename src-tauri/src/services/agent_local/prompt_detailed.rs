@@ -6,8 +6,9 @@ use super::prompt_detailed_sections::{
 
 pub fn build(working_dir: &Path, is_git: bool, git_root: Option<&Path>) -> String {
     format!(
-        "{IDENTITY}\n\n{CAPABILITIES}\n\n{}\n\n{TOOLS}\n\n{CODE}\n\n{GIT}\n\n{SAFETY}\n\n{ERRORS}\n\n{WEB_SEARCH}\n\n{HONESTY}\n\n{VERIFICATION}\n\n{STYLE}",
+        "{IDENTITY}\n\n{CAPABILITIES}\n\n{}\n\n{TOOLS}\n\n{}\n\n{CODE}\n\n{GIT}\n\n{SAFETY}\n\n{ERRORS}\n\n{WEB_SEARCH}\n\n{HONESTY}\n\n{VERIFICATION}\n\n{STYLE}",
         env_section(working_dir, is_git, git_root),
+        super::subagent_parent_guidance::PARENT_GUIDANCE,
     )
 }
 

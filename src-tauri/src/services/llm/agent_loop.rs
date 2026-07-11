@@ -174,6 +174,9 @@ pub async fn run_agent_loop(
         if !compressed_after_tools {
             let _ = on_event.send(StreamEvent::TurnEnd {});
         }
+        subagents
+            .wait_after_tool_batch(&result.tool_calls, messages, cancel.clone())
+            .await?;
     }
     let token_total = crate::services::agent_local::agent_loop_completion::emit_done(
         on_event,

@@ -28,11 +28,18 @@ pub fn ensure_report_policy(messages: &mut Vec<ChatMessage>) {
         ),
         ..Default::default()
     };
+    insert_leading_system_message(messages, policy);
+}
+
+pub(crate) fn insert_leading_system_message(
+    messages: &mut Vec<ChatMessage>,
+    message: ChatMessage,
+) {
     let leading_system_end = messages
         .iter()
         .position(|message| message.role != "system")
         .unwrap_or(messages.len());
-    messages.insert(leading_system_end, policy);
+    messages.insert(leading_system_end, message);
 }
 
 #[cfg(test)]

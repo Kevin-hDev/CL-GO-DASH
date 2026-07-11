@@ -3,32 +3,18 @@ use super::types_ollama::ChatMessage;
 use super::types_session::AgentSession;
 use super::types_stream::{StreamEvent, StreamResult};
 use std::collections::BTreeSet;
-use std::time::{Duration, Instant};
 use tokio_util::sync::CancellationToken;
-
-pub const REMINDER_INTERVAL: Duration = Duration::from_secs(10 * 60);
-const POLL_INTERVAL: Duration = Duration::from_secs(1);
 
 pub struct ParentSubagentOrchestrator {
     parent_session_id: String,
-    initial_active: BTreeSet<String>,
-    last_reminder_at: Option<Instant>,
-    reminder_sent: bool,
     reports_injected_since_last_request: bool,
     report_delivery: super::subagent_report_delivery::SubagentReportDelivery,
 }
 
 impl ParentSubagentOrchestrator {
     pub async fn new(parent_session_id: &str) -> Self {
-        let initial_active = super::subagent_registry::active_children_for_parent(parent_session_id)
-            .await
-            .into_iter()
-            .collect();
         Self {
             parent_session_id: parent_session_id.to_string(),
-            initial_active,
-            last_reminder_at: None,
-            reminder_sent: false,
             reports_injected_since_last_request: false,
             report_delivery: super::subagent_report_delivery::SubagentReportDelivery::new(
                 parent_session_id,
@@ -80,7 +66,7 @@ impl ParentSubagentOrchestrator {
     ) {
         let awaiting_report = super::subagent_hidden_reports::has_pending_except(
             &self.parent_session_id,
-            &self.initial_active,
+            &BTreeSet::new(),
         )
         .await;
         let terminal_failure = self.report_delivery.persistence_failed();
@@ -104,6 +90,18 @@ impl ParentSubagentOrchestrator {
         Ok(should_continue)
     }
 
+    pub async fn wait_after_tool_batch(
+        &mut self,
+        tool_calls: &[(String, serde_json::Value)],
+        messages: &mut Vec<ChatMessage>,
+        cancel: CancellationToken,
+    ) -> Result<(), String> {
+        if super::subagent_tool_control::is_control_only(tool_calls) {
+            let _ = self.after_no_tool_turn(messages, cancel).await?;
+        }
+        Ok(())
+    }
+
     pub async fn after_no_tool_turn(
         &mut self,
         messages: &mut Vec<ChatMessage>,
@@ -113,6 +111,8 @@ impl ParentSubagentOrchestrator {
             if cancel.is_cancelled() {
                 return Err("Annulé".to_string());
             }
+            let mut terminal_signal =
+                super::subagent_registry::subscribe_for_parent(&self.parent_session_id).await;
             self.report_delivery.refresh_terminal_signal().await;
             if self.report_delivery.persistence_failed() {
                 return Err(super::subagent_completion::SUBAGENT_COMPLETION_ERROR.to_string());
@@ -122,11 +122,7 @@ impl ParentSubagentOrchestrator {
                 return Ok(true);
             }
             let snapshot = super::subagent_registry::parent_snapshot(&self.parent_session_id).await;
-            let active_ids = snapshot
-                .active_child_ids
-                .into_iter()
-                .filter(|id| !self.initial_active.contains(id))
-                .collect::<Vec<_>>();
+            let active_ids = snapshot.active_child_ids;
             if active_ids.is_empty() {
                 if snapshot
                     .terminal_state
@@ -146,36 +142,27 @@ impl ParentSubagentOrchestrator {
                 }
                 return Ok(false);
             }
-            let active = sessions_for_ids(active_ids).await;
-            if should_emit_reminder(self.reminder_sent, self.last_reminder_at, Instant::now()) {
-                super::subagent_orchestration_context::replace_gate_context(
-                    messages, &active, false,
-                );
-                self.reminder_sent = true;
-                self.last_reminder_at = Some(Instant::now());
-                return Ok(true);
-            }
+            let signal = terminal_signal
+                .as_mut()
+                .ok_or_else(|| super::subagent_completion::SUBAGENT_COMPLETION_ERROR.to_string())?;
             tokio::select! {
                 _ = cancel.cancelled() => return Err("Annulé".to_string()),
-                _ = tokio::time::sleep(POLL_INTERVAL) => {}
+                changed = signal.changed() => {
+                    changed.map_err(|_| {
+                        super::subagent_completion::SUBAGENT_COMPLETION_ERROR.to_string()
+                    })?;
+                }
             }
         }
     }
 
     async fn current_turn_active(&self) -> Vec<AgentSession> {
-        current_turn_active(&self.parent_session_id, &self.initial_active).await
+        current_turn_active(&self.parent_session_id).await
     }
 }
 
-async fn current_turn_active(
-    parent_session_id: &str,
-    initial_active: &BTreeSet<String>,
-) -> Vec<AgentSession> {
-    let ids = super::subagent_registry::active_children_for_parent(parent_session_id)
-        .await
-        .into_iter()
-        .filter(|id| !initial_active.contains(id))
-        .collect::<Vec<_>>();
+async fn current_turn_active(parent_session_id: &str) -> Vec<AgentSession> {
+    let ids = super::subagent_registry::active_children_for_parent(parent_session_id).await;
     sessions_for_ids(ids).await
 }
 
@@ -187,10 +174,6 @@ async fn sessions_for_ids(ids: Vec<String>) -> Vec<AgentSession> {
         }
     }
     sessions
-}
-
-pub fn should_emit_reminder(sent: bool, last_at: Option<Instant>, now: Instant) -> bool {
-    !sent || last_at.is_some_and(|last| now.duration_since(last) >= REMINDER_INTERVAL)
 }
 
 #[cfg(test)]

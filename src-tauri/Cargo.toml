@@ -145,3 +145,5 @@ rstest = "0.26"
 pretty_assertions = "1"
 # Macros de test async (buffers, channels)
 tokio-test = "0.4"
+# Horloge simulée pour les attentes événementielles
+tokio = { version = "1", features = ["test-util"] }

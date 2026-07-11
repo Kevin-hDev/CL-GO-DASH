@@ -118,8 +118,18 @@ pub mod subagent_hidden_reports;
 pub mod subagent_live_state;
 pub mod subagent_orchestration;
 #[cfg(test)]
+mod subagent_event_wait_tests;
+#[cfg(test)]
 mod subagent_orchestration_race_tests;
+#[cfg(test)]
+#[path = "subagent_terminal_wait_tests.rs"]
+mod subagent_event_terminal_tests;
+#[cfg(test)]
+mod subagent_terminal_wait_test_support;
 pub mod subagent_orchestration_context;
+pub mod subagent_parent_guidance;
+#[cfg(test)]
+mod subagent_parent_guidance_tests;
 pub mod subagent_panic_supervisor;
 #[cfg(test)]
 mod subagent_panic_supervisor_tests;
@@ -153,3 +163,6 @@ pub mod subagent_task_stream;
 #[cfg(test)]
 pub mod subagent_task_tests;
 mod subagent_terminal_signal;
+pub mod subagent_tool_control;
+#[cfg(test)]
+mod subagent_tool_control_tests;

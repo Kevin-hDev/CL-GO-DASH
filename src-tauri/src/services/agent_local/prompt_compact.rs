@@ -2,8 +2,9 @@ use std::path::Path;
 
 pub fn build(working_dir: &Path, is_git: bool, git_root: Option<&Path>) -> String {
     format!(
-        "{IDENTITY}\n\n{CAPABILITIES}\n\n{}\n\n{TOOLS}\n\n{CODE}\n\n{GIT}\n\n{}\n\n{}\n\n{WEB_SEARCH}\n\n{SAFETY}\n\n{HONESTY}\n\n{STYLE}",
+        "{IDENTITY}\n\n{CAPABILITIES}\n\n{}\n\n{TOOLS}\n\n{}\n\n{CODE}\n\n{GIT}\n\n{}\n\n{}\n\n{WEB_SEARCH}\n\n{SAFETY}\n\n{HONESTY}\n\n{STYLE}",
         env_section(working_dir, is_git, git_root),
+        super::subagent_parent_guidance::PARENT_GUIDANCE,
         super::prompt_todo::TODO,
         super::prompt_interactive::INTERACTIVE,
     )
@@ -78,7 +79,6 @@ Prefer dedicated tools over bash when one fits:
 - To read/process images: use read_image/process_image (not Python/ImageMagick via bash)
 - When adding totals or computed values to spreadsheets, use set_formula with Excel formulas (=SUM, =AVERAGE) instead of computing values yourself.
 - Reserve bash for system commands and shell operations that dedicated tools cannot handle.
-Use subagents only for independent parallel work. Do not duplicate their work; review their result before relying on it.
 Call multiple independent tools in parallel when possible.
 Keep going until the task is fully resolved. Do not stop halfway.
 Never guess file contents — read the file first.
