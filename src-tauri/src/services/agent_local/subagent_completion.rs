@@ -11,28 +11,26 @@ pub(super) async fn persist_terminal_completion(
     status: &str,
     summary: &str,
 ) -> Result<FinalizedSubagent, String> {
-    let notifier = super::subagent_registry::terminal_notifier_for_child(child_session_id)
-        .await
-        .ok_or_else(|| SUBAGENT_COMPLETION_ERROR.to_string())?;
     let finalized =
         match super::subagent_task::finalize_session_after_run(child_session_id, status, summary)
             .await
         {
             Ok(finalized) => finalized,
             Err(_) => {
-                persist_failed_status(child_session_id).await;
-                let report_persisted = append_report(
+                persist_failure_state(
                     parent_session_id,
                     child_session_id,
                     subagent_type,
-                    super::subagent_status::FAILED,
-                    SUBAGENT_COMPLETION_ERROR,
+                    true,
                 )
-                .await;
-                finish_registry(child_session_id, &notifier, report_persisted).await;
+                .await?;
                 return Err(SUBAGENT_COMPLETION_ERROR.to_string());
             }
         };
+
+    if finalized.queued_followup {
+        return Ok(finalized);
+    }
 
     if !append_report(
         parent_session_id,
@@ -43,12 +41,11 @@ pub(super) async fn persist_terminal_completion(
     )
     .await
     {
-        persist_failed_status(child_session_id).await;
-        finish_registry(child_session_id, &notifier, false).await;
+        persist_failure_state(parent_session_id, child_session_id, subagent_type, false).await?;
         return Err(SUBAGENT_COMPLETION_ERROR.to_string());
     }
 
-    finish_registry(child_session_id, &notifier, true).await;
+    finish_registry(child_session_id, true).await?;
     Ok(finalized)
 }
 
@@ -75,21 +72,42 @@ async fn append_report(
         .is_ok()
 }
 
-async fn persist_failed_status(child_session_id: &str) {
-    let _ = super::session_subagents::mark_status(child_session_id, super::subagent_status::FAILED)
+async fn persist_failed_status(child_session_id: &str) -> Result<(), String> {
+    super::session_subagents::mark_status(child_session_id, super::subagent_status::FAILED).await
+}
+
+async fn persist_failure_state(
+    parent_session_id: &str,
+    child_session_id: &str,
+    subagent_type: &str,
+    append_generic_report: bool,
+) -> Result<(), String> {
+    let status_result = persist_failed_status(child_session_id).await;
+    let report_persisted = !append_generic_report
+        || append_report(
+            parent_session_id,
+            child_session_id,
+            subagent_type,
+            super::subagent_status::FAILED,
+            SUBAGENT_COMPLETION_ERROR,
+        )
         .await;
+    finish_registry(child_session_id, false).await?;
+    status_result.map_err(|_| SUBAGENT_COMPLETION_ERROR.to_string())?;
+    if !report_persisted {
+        return Err(SUBAGENT_COMPLETION_ERROR.to_string());
+    }
+    Ok(())
 }
 
 async fn finish_registry(
     child_session_id: &str,
-    notifier: &super::subagent_terminal_signal::SubagentTerminalNotifier,
     report_persisted: bool,
-) {
-    super::subagent_registry::unregister(child_session_id).await;
+) -> Result<(), String> {
     let kind = if report_persisted {
         SubagentTerminalKind::ReportPersisted
     } else {
         SubagentTerminalKind::ReportPersistenceFailed
     };
-    notifier.notify(kind);
+    super::subagent_registry::complete_child(child_session_id, kind).await
 }

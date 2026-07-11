@@ -1,12 +1,12 @@
 #[cfg(test)]
 mod tests {
     use crate::services::agent_local::subagent_registry::{
-        active_children_for_parent, cancel_one, get_or_create_run_id, get_run_id_for_child,
-        register, release_run_claim, subscribe_for_parent, terminal_notifier_for_child, unregister,
+        active_children_for_parent, cancel_one, capacity_error, complete_child, consume_terminal,
+        get_or_create_run_id, get_run_id_for_child, parent_snapshot, register,
+        release_run_claim, renew_child, subscribe_for_parent, terminal_state_for_parent, unregister,
         SubagentTerminalKind,
     };
-    use crate::services::agent_local::types_session::AgentSessionMeta;
-    use chrono::Utc;
+    use crate::services::agent_local::subagent_registry_test_support::meta;
     use tokio_util::sync::CancellationToken;
 
     const MAX_PER_PARENT: usize = 4;
@@ -55,39 +55,78 @@ mod tests {
         assert_eq!(get_run_id_for_child(&child).await, None);
         assert!(active_children_for_parent(&parent).await.is_empty());
 
-        // --- shared completion signal, including notify-before-subscribe/wait ---
+        // --- terminal state survives last child and waves do not reuse stale state ---
         let parent = uid();
         let first_child = uid();
-        let second_child = uid();
         register(&parent, &first_child, CancellationToken::new())
             .await
             .unwrap();
+        complete_child(
+            &first_child,
+            SubagentTerminalKind::ReportPersistenceFailed,
+        )
+        .await
+        .unwrap();
+
+        assert!(active_children_for_parent(&parent).await.is_empty());
+        let first_receiver = subscribe_for_parent(&parent)
+            .await
+            .expect("last-child terminal state remains subscribable");
+        let first_state = *first_receiver.borrow();
+        assert_eq!(first_state.sequence, 1);
+        assert!(first_state.report_persistence_failed);
+        assert_eq!(terminal_state_for_parent(&parent).await, Some(first_state));
+        assert!(consume_terminal(&parent, first_state.generation).await);
+        assert!(subscribe_for_parent(&parent).await.is_none());
+
+        let second_child = uid();
         register(&parent, &second_child, CancellationToken::new())
             .await
             .unwrap();
-        let first_notifier = terminal_notifier_for_child(&first_child)
+        let mut second_receiver = subscribe_for_parent(&parent)
             .await
-            .expect("first notifier");
-        unregister(&first_child).await;
-        first_notifier.notify(SubagentTerminalKind::ReportPersisted);
+            .expect("second-wave receiver");
+        let second_generation = second_receiver.borrow().generation;
+        assert_ne!(second_generation, first_state.generation);
+        assert_eq!(second_receiver.borrow().sequence, 0);
+        complete_child(&second_child, SubagentTerminalKind::ReportPersisted)
+            .await
+            .unwrap();
+        second_receiver.changed().await.expect("second-wave signal");
+        assert_eq!(second_receiver.borrow().sequence, 1);
+        assert!(!second_receiver.borrow().report_persistence_failed);
+        assert!(consume_terminal(&parent, second_generation).await);
 
-        let mut receiver = subscribe_for_parent(&parent)
+        // --- removal and terminal notification are one registry transition ---
+        let parent = uid();
+        let child = uid();
+        register(&parent, &child, CancellationToken::new())
             .await
-            .expect("shared receiver");
-        assert_eq!(receiver.borrow().sequence, 1);
-        assert!(!receiver.borrow().report_persistence_failed);
-
-        let second_notifier = terminal_notifier_for_child(&second_child)
+            .unwrap();
+        let completing_child = child.clone();
+        let completion = tokio::spawn(async move {
+            complete_child(
+                &completing_child,
+                SubagentTerminalKind::ReportPersisted,
+            )
             .await
-            .expect("second notifier");
-        unregister(&second_child).await;
-        second_notifier.notify(SubagentTerminalKind::ReportPersistenceFailed);
-        tokio::time::timeout(std::time::Duration::from_secs(1), receiver.changed())
-            .await
-            .expect("signal before wait is retained")
-            .expect("sender remains available through notifier");
-        assert_eq!(receiver.borrow().sequence, 2);
-        assert!(receiver.borrow().report_persistence_failed);
+            .unwrap();
+        });
+        let terminal = loop {
+            let snapshot = parent_snapshot(&parent).await;
+            assert!(
+                !snapshot.active_child_ids.is_empty()
+                    || snapshot
+                        .terminal_state
+                        .is_some_and(|state| state.sequence > 0)
+            );
+            if let Some(state) = snapshot.terminal_state.filter(|state| state.sequence > 0) {
+                break state;
+            }
+            tokio::task::yield_now().await;
+        };
+        completion.await.unwrap();
+        assert!(consume_terminal(&parent, terminal.generation).await);
 
         // --- cancel_one ---
         let parent = uid();
@@ -98,71 +137,30 @@ mod tests {
         assert!(token.is_cancelled());
         unregister(&child).await;
 
-        // --- max_per_parent limit ---
+        // --- capacity rules without saturating the shared test registry ---
+        assert!(capacity_error(MAX_TOTAL, 0).is_some());
+        assert!(capacity_error(0, MAX_PER_PARENT).is_some());
+        assert!(capacity_error(MAX_TOTAL - 1, MAX_PER_PARENT - 1).is_none());
+
+        // --- queued follow-up renews in place ---
         let parent = uid();
-        let mut children = vec![];
-        for _ in 0..MAX_PER_PARENT {
-            let c = uid();
-            register(&parent, &c, CancellationToken::new())
+        let renewed = uid();
+        register(&parent, &renewed, CancellationToken::new())
+            .await
+            .unwrap();
+        let renewed_run = renew_child(&parent, &renewed, CancellationToken::new())
+            .await
+            .expect("renew an existing child");
+        assert_eq!(get_run_id_for_child(&renewed).await, Some(renewed_run));
+        assert_eq!(active_children_for_parent(&parent).await.len(), 1);
+        assert_eq!(
+            terminal_state_for_parent(&parent)
                 .await
-                .unwrap();
-            children.push(c);
-        }
-        let extra = uid();
-        assert!(register(&parent, &extra, CancellationToken::new())
-            .await
-            .is_err());
-        for c in &children {
-            unregister(c).await;
-        }
-
-        // --- max_total limit ---
-        let mut all_children = vec![];
-        for _ in 0..MAX_TOTAL {
-            let p = uid();
-            let c = uid();
-            register(&p, &c, CancellationToken::new()).await.unwrap();
-            all_children.push(c);
-        }
-        let extra_p = uid();
-        let extra_c = uid();
-        assert!(register(&extra_p, &extra_c, CancellationToken::new())
-            .await
-            .is_err());
-        for c in &all_children {
-            unregister(c).await;
-        }
+                .expect("follow-up terminal state")
+                .sequence,
+            0
+        );
+        unregister(&renewed).await;
     }
 
-    fn meta(id: &str, status: &str) -> AgentSessionMeta {
-        AgentSessionMeta {
-            id: id.into(),
-            name: "Geminitor".into(),
-            created_at: Utc::now(),
-            updated_at: Some(Utc::now()),
-            archived_at: None,
-            model: "llama3".into(),
-            provider: "ollama".into(),
-            thinking_enabled: false,
-            reasoning_mode: None,
-            message_count: 0,
-            is_heartbeat: false,
-            is_gateway: false,
-            gateway_channel_key: None,
-            project_id: None,
-            parent_session_id: Some("parent".into()),
-            subagent_type: Some("explorer".into()),
-            subagent_status: Some(status.into()),
-            subagent_run_id: Some("saved-run".into()),
-            subagent_description: Some("Analyse".into()),
-            subagent_color_key: Some("geminitor".into()),
-            subagent_summary: None,
-            subagent_last_activity: None,
-            clone_parent_session_id: None,
-            clone_parent_message_id: None,
-            clone_mode: None,
-            clone_root_session_id: None,
-            git_branch: None,
-        }
-    }
 }

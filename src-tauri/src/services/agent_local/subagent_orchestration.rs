@@ -8,7 +8,6 @@ use tokio_util::sync::CancellationToken;
 
 pub const REMINDER_INTERVAL: Duration = Duration::from_secs(10 * 60);
 const POLL_INTERVAL: Duration = Duration::from_secs(1);
-const REPORT_ACK_ERROR: &str = "Impossible de finaliser les rapports de sous-agents.";
 
 pub struct ParentSubagentOrchestrator {
     parent_session_id: String,
@@ -16,10 +15,7 @@ pub struct ParentSubagentOrchestrator {
     last_reminder_at: Option<Instant>,
     reminder_sent: bool,
     reports_injected_since_last_request: bool,
-    pending_report_ids: BTreeSet<String>,
-    terminal_signal: Option<
-        tokio::sync::watch::Receiver<super::subagent_terminal_signal::SubagentTerminalState>,
-    >,
+    report_delivery: super::subagent_report_delivery::SubagentReportDelivery,
 }
 
 impl ParentSubagentOrchestrator {
@@ -31,48 +27,29 @@ impl ParentSubagentOrchestrator {
             last_reminder_at: None,
             reminder_sent: false,
             reports_injected_since_last_request: false,
-            pending_report_ids: BTreeSet::new(),
-            terminal_signal: None,
+            report_delivery: super::subagent_report_delivery::SubagentReportDelivery::new(
+                parent_session_id,
+            ),
         }
     }
 
     pub async fn inject_pending_reports(&mut self, messages: &mut Vec<ChatMessage>) -> bool {
-        let available = super::subagent_hidden_reports::peek_reports(&self.parent_session_id).await;
-        self.pending_report_ids
-            .retain(|id| available.iter().any(|report| report.id == id.as_str()));
-        let reports = available
-            .into_iter()
-            .filter(|report| !self.pending_report_ids.contains(&report.id))
-            .collect::<Vec<_>>();
-        if reports.is_empty() {
-            return false;
-        }
-        self.pending_report_ids
-            .extend(reports.iter().map(|report| report.id.clone()));
-        while self.pending_report_ids.len() > super::subagent_hidden_reports::MAX_PENDING_REPORTS {
-            self.pending_report_ids.pop_first();
-        }
-        super::subagent_hidden_reports::append_context(messages, &reports);
-        true
+        self.report_delivery.inject_pending_reports(messages).await
     }
 
-    pub async fn complete_model_request(&mut self, successful: bool) -> Result<(), String> {
-        if !successful || self.pending_report_ids.is_empty() {
-            return Ok(());
-        }
-        let report_ids = self.pending_report_ids.iter().cloned().collect::<Vec<_>>();
-        super::subagent_hidden_reports::acknowledge_reports(&self.parent_session_id, &report_ids)
+    pub async fn complete_model_request(
+        &mut self,
+        successful: bool,
+        cancel: &CancellationToken,
+        payload: &[ChatMessage],
+    ) -> Result<(), String> {
+        self.report_delivery
+            .complete_model_request(successful, cancel, payload)
             .await
-            .map_err(|_| REPORT_ACK_ERROR.to_string())?;
-        self.pending_report_ids.clear();
-        Ok(())
     }
 
     pub async fn prepare_for_model_request(&mut self, messages: &mut Vec<ChatMessage>) {
-        if self.terminal_signal.is_none() {
-            self.terminal_signal =
-                super::subagent_registry::subscribe_for_parent(&self.parent_session_id).await;
-        }
+        self.report_delivery.refresh_terminal_signal().await;
         super::subagent_orchestration_context::remove_gate_context(messages);
         let reports_injected =
             self.reports_injected_since_last_request || self.inject_pending_reports(messages).await;
@@ -96,10 +73,7 @@ impl ParentSubagentOrchestrator {
             &self.initial_active,
         )
         .await;
-        let terminal_failure = self
-            .terminal_signal
-            .as_ref()
-            .is_some_and(|receiver| receiver.borrow().report_persistence_failed);
+        let terminal_failure = self.report_delivery.persistence_failed();
         super::stream_buffer::finalize_content_phase(
             on_event,
             result,
@@ -129,21 +103,40 @@ impl ParentSubagentOrchestrator {
             if cancel.is_cancelled() {
                 return Err("Annulé".to_string());
             }
-            if self
-                .terminal_signal
-                .as_ref()
-                .is_some_and(|receiver| receiver.borrow().report_persistence_failed)
-            {
+            self.report_delivery.refresh_terminal_signal().await;
+            if self.report_delivery.persistence_failed() {
                 return Err(super::subagent_completion::SUBAGENT_COMPLETION_ERROR.to_string());
             }
             if self.inject_pending_reports(messages).await {
                 self.reports_injected_since_last_request = true;
                 return Ok(true);
             }
-            let active = self.current_turn_active().await;
-            if active.is_empty() {
+            let snapshot = super::subagent_registry::parent_snapshot(&self.parent_session_id).await;
+            let active_ids = snapshot
+                .active_child_ids
+                .into_iter()
+                .filter(|id| !self.initial_active.contains(id))
+                .collect::<Vec<_>>();
+            if active_ids.is_empty() {
+                if snapshot
+                    .terminal_state
+                    .is_some_and(|state| state.report_persistence_failed)
+                {
+                    return Err(super::subagent_completion::SUBAGENT_COMPLETION_ERROR.to_string());
+                }
+                if snapshot
+                    .terminal_state
+                    .is_some_and(|state| state.sequence > 0)
+                {
+                    if self.inject_pending_reports(messages).await {
+                        self.reports_injected_since_last_request = true;
+                        return Ok(true);
+                    }
+                    return Err(super::subagent_completion::SUBAGENT_COMPLETION_ERROR.to_string());
+                }
                 return Ok(false);
             }
+            let active = sessions_for_ids(active_ids).await;
             if should_emit_reminder(self.reminder_sent, self.last_reminder_at, Instant::now()) {
                 super::subagent_orchestration_context::replace_gate_context(
                     messages, &active, false,
@@ -173,6 +166,10 @@ async fn current_turn_active(
         .into_iter()
         .filter(|id| !initial_active.contains(id))
         .collect::<Vec<_>>();
+    sessions_for_ids(ids).await
+}
+
+async fn sessions_for_ids(ids: Vec<String>) -> Vec<AgentSession> {
     let mut sessions = Vec::with_capacity(ids.len());
     for id in ids {
         if let Ok(session) = super::session_store::get(&id).await {

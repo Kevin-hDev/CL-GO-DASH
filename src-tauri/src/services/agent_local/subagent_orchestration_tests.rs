@@ -76,7 +76,7 @@ async fn failed_cancelled_or_replaced_model_request_keeps_reports() {
             .await
     );
     replacement
-        .complete_model_request(false)
+        .complete_model_request(false, &CancellationToken::new(), &replacement_messages)
         .await
         .expect("record cancelled outcome");
 
@@ -102,7 +102,7 @@ async fn successful_model_outcome_acknowledges_injected_reports() {
     assert!(orchestrator.inject_pending_reports(&mut messages).await);
 
     orchestrator
-        .complete_model_request(true)
+        .complete_model_request(true, &CancellationToken::new(), &messages)
         .await
         .expect("acknowledge successful outcome");
 
@@ -126,11 +126,12 @@ async fn report_persistence_failure_signal_stops_parent_without_finalizing() {
     let mut orchestrator = ParentSubagentOrchestrator::new(&parent.id).await;
     let mut messages = Vec::new();
     orchestrator.prepare_for_model_request(&mut messages).await;
-    let notifier = super::super::subagent_registry::terminal_notifier_for_child(&child_id)
-        .await
-        .expect("terminal notifier");
-    super::super::subagent_registry::unregister(&child_id).await;
-    notifier.notify(super::super::subagent_registry::SubagentTerminalKind::ReportPersistenceFailed);
+    super::super::subagent_registry::complete_child(
+        &child_id,
+        super::super::subagent_registry::SubagentTerminalKind::ReportPersistenceFailed,
+    )
+    .await
+    .expect("atomic terminal failure");
 
     let error = orchestrator
         .after_no_tool_turn(&mut messages, CancellationToken::new())
@@ -159,12 +160,12 @@ fn chat_entrypoint_does_not_inject_reports_before_the_model_loop() {
 }
 
 fn assert_shared_model_outcomes(source: &str) {
-    assert!(source.contains("complete_model_request(!interrupted)"));
+    assert!(source.contains("complete_model_request(!interrupted, &completion_cancel, params.messages)"));
     let model_result = source
         .find("record_model_result")
         .expect("model result is recorded");
     let acknowledgement = source
-        .find("complete_model_request(!interrupted)")
+        .find("complete_model_request(!interrupted, &completion_cancel, params.messages)")
         .expect("successful model outcome is finalized");
     assert!(model_result < acknowledgement);
 }

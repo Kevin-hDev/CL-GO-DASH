@@ -4,6 +4,7 @@ use super::ollama_thinking_retry::{build_thinking_disabled_retry, is_thinking_on
 use super::stream_diagnostics_model as model_diag;
 use super::stream_events::AgentEventEmitter;
 use super::types_ollama::{ChatRequest, StreamResult};
+use super::types_stream::StreamOutcome;
 use crate::services::agent_local::types_tools::ToolResult;
 use crate::services::compress::realtime_budget::RealtimeBudget;
 use std::collections::HashMap;
@@ -30,6 +31,7 @@ pub struct ThinkingRetryParams<'a> {
 pub struct ThinkingRetryOutput {
     pub result: StreamResult,
     pub eager_handle: EagerHandle,
+    pub interrupted: bool,
 }
 
 pub async fn retry_if_needed(
@@ -39,6 +41,7 @@ pub async fn retry_if_needed(
         return Ok(ThinkingRetryOutput {
             result: params.result,
             eager_handle: params.eager_handle,
+            interrupted: false,
         });
     };
 
@@ -74,14 +77,20 @@ pub async fn retry_if_needed(
         params.realtime_budget,
     )
     .await?;
-    let result = retry_outcome.into_result();
+    let (result, interrupted) = split_retry_outcome(retry_outcome);
     model_diag::record_model_result(&params.session_id, &params.request_id, params.turn, &result)
         .await;
 
     Ok(ThinkingRetryOutput {
         result,
         eager_handle,
+        interrupted,
     })
+}
+
+fn split_retry_outcome(outcome: StreamOutcome) -> (StreamResult, bool) {
+    let interrupted = outcome.is_interrupted();
+    (outcome.into_result(), interrupted)
 }
 
 fn retry_request(request: &ChatRequest, result: &StreamResult) -> Option<ChatRequest> {
@@ -89,4 +98,21 @@ fn retry_request(request: &ChatRequest, result: &StreamResult) -> Option<ChatReq
         return build_thinking_disabled_retry(request);
     }
     None
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn interrupted_thinking_retry_keeps_interrupted_outcome() {
+        let (result, interrupted) = split_retry_outcome(
+            StreamOutcome::InterruptedForCompression(StreamResult {
+                content: "partiel".into(),
+                ..Default::default()
+            }),
+        );
+
+        assert_eq!(result.content, "partiel");
+        assert!(interrupted);
+    }
 }

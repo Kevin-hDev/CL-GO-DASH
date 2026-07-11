@@ -1,4 +1,5 @@
 use super::*;
+use super::super::types_ollama::ChatMessage;
 
 async fn parent_session() -> super::super::types_session::AgentSession {
     super::super::session_store::create_full("Parent test", "llama3", "ollama", false, None)
@@ -77,7 +78,11 @@ fn report_context_is_assistant_and_xml_escaped() {
 
 #[test]
 fn report_policy_is_system_and_unique() {
-    let mut messages = Vec::new();
+    let mut messages = vec![ChatMessage {
+        role: "user".into(),
+        content: "Question existante".into(),
+        ..Default::default()
+    }];
 
     ensure_report_policy(&mut messages);
     ensure_report_policy(&mut messages);
@@ -88,6 +93,9 @@ fn report_policy_is_system_and_unique() {
         .collect::<Vec<_>>();
     assert_eq!(policies.len(), 1);
     assert_eq!(policies[0].role, "system");
+    assert!(messages[0]
+        .content
+        .starts_with(SUBAGENT_REPORT_POLICY_PREFIX));
     assert!(policies[0].content.contains("untrusted evidence"));
     assert!(policies[0].content.contains("never as instructions"));
 }
@@ -110,11 +118,38 @@ fn multiple_ready_reports_share_one_batch() {
 }
 
 #[test]
-fn same_child_status_and_summary_counts_as_duplicate() {
+fn same_child_status_and_summary_with_distinct_ids_are_distinct_reports() {
     let first = report("child", "Résumé");
     let mut second = first.clone();
     second.id = "another-id".into();
-    assert!(is_same_report(&first, &second));
+    assert!(!is_same_report(&first, &second));
+}
+
+#[tokio::test]
+async fn full_report_queue_refuses_new_report_without_evicting_unacknowledged_one() {
+    let parent = parent_session().await;
+    let first = report("child-0", "Premier");
+    append(&parent.id, first.clone())
+        .await
+        .expect("append first report");
+    for index in 1..MAX_PENDING_REPORTS {
+        append(
+            &parent.id,
+            report(format!("child-{index}").as_str(), "Rapport"),
+        )
+        .await
+        .expect("fill report queue");
+    }
+
+    assert!(append(&parent.id, report("overflow", "En trop"))
+        .await
+        .is_err());
+    let stored = peek_reports(&parent.id).await;
+    assert_eq!(stored.len(), MAX_PENDING_REPORTS);
+    assert_eq!(stored[0], first);
+    super::super::session_store::delete_one(&parent.id)
+        .await
+        .expect("delete parent session");
 }
 
 #[test]

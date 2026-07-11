@@ -1,3 +1,5 @@
+pub mod subagent_working_dir;
+pub mod subagent_worktree;
 pub mod tool_bash;
 pub mod tool_bash_background;
 pub mod tool_bash_changes;

@@ -30,12 +30,13 @@ pub(super) struct OllamaRequestOutput {
 }
 
 pub(super) async fn run(params: OllamaRequestParams<'_>) -> Result<OllamaRequestOutput, String> {
+    let completion_cancel = params.cancel.clone();
     params
         .subagents
         .prepare_for_model_request(params.messages)
         .await;
     super::tool_result_budget::apply_budget(params.messages);
-    super::context_budget::prepare_for_request(params.messages, params.configured_context);
+    super::context_budget::prepare_for_request(params.messages, params.configured_context)?;
     let realtime_budget = RealtimeBudget::from_messages(params.configured_context, params.messages);
     let plan_active =
         super::agent_loop_plan::active(params.session_id, params.plan_mode_active).await;
@@ -82,7 +83,7 @@ pub(super) async fn run(params: OllamaRequestParams<'_>) -> Result<OllamaRequest
         realtime_budget.clone(),
     )
     .await?;
-    let interrupted = outcome.is_interrupted();
+    let mut interrupted = outcome.is_interrupted();
     let mut result = outcome.into_result();
     super::stream_diagnostics_model::record_model_result(
         params.session_id,
@@ -101,17 +102,18 @@ pub(super) async fn run(params: OllamaRequestParams<'_>) -> Result<OllamaRequest
             working_dir: params.working_dir.to_path_buf(),
             session_id: params.session_id.to_string(),
             request_id: params.request_id.to_string(),
-            cancel: params.cancel,
+            cancel: params.cancel.clone(),
             plan_active,
             realtime_budget,
         })
         .await?;
         result = retry.result;
         eager_handle = retry.eager_handle;
+        interrupted = retry.interrupted;
     }
     params
         .subagents
-        .complete_model_request(!interrupted)
+        .complete_model_request(!interrupted, &completion_cancel, params.messages)
         .await?;
     Ok(OllamaRequestOutput {
         result,

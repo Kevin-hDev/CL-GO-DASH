@@ -13,13 +13,13 @@ struct SubagentEntry {
     pub cancel: CancellationToken,
     pub parent_session_id: String,
     pub run_id: String,
-    pub terminal_notifier: SubagentTerminalNotifier,
 }
 
 struct RegistryState {
     entries: HashMap<String, SubagentEntry>,
     run_ids: HashMap<String, String>,
     run_claims: HashMap<String, usize>,
+    terminal_signals: HashMap<String, SubagentTerminalNotifier>,
 }
 
 static REGISTRY: LazyLock<Mutex<RegistryState>> = LazyLock::new(|| {
@@ -27,6 +27,7 @@ static REGISTRY: LazyLock<Mutex<RegistryState>> = LazyLock::new(|| {
         entries: HashMap::new(),
         run_ids: HashMap::new(),
         run_claims: HashMap::new(),
+        terminal_signals: HashMap::new(),
     })
 });
 
@@ -47,30 +48,20 @@ pub async fn register(
     cancel: CancellationToken,
 ) -> Result<String, String> {
     let mut state = REGISTRY.lock().await;
-    if state.entries.len() >= MAX_TOTAL {
-        return Err(format!("Limite de {MAX_TOTAL} sous-agents actifs atteinte"));
-    }
     let parent_count = state
         .entries
         .values()
         .filter(|e| e.parent_session_id == parent_id)
         .count();
-    if parent_count >= MAX_PER_PARENT {
-        return Err(format!(
-            "Limite de {MAX_PER_PARENT} sous-agents par session atteinte"
-        ));
+    if let Some(error) = capacity_error(state.entries.len(), parent_count) {
+        return Err(error);
     }
+    ensure_parent_signal_locked(&mut state, parent_id)?;
     let run_id = state
         .run_ids
         .entry(parent_id.to_string())
         .or_insert_with(|| uuid::Uuid::new_v4().to_string())
         .clone();
-    let terminal_notifier = state
-        .entries
-        .values()
-        .find(|entry| entry.parent_session_id == parent_id)
-        .map(|entry| entry.terminal_notifier.clone())
-        .unwrap_or_else(super::subagent_terminal_signal::notifier);
     release_claim_locked(&mut state, parent_id);
     state.entries.insert(
         child_id.to_string(),
@@ -78,24 +69,42 @@ pub async fn register(
             cancel,
             parent_session_id: parent_id.to_string(),
             run_id: run_id.clone(),
-            terminal_notifier,
         },
     );
     Ok(run_id)
 }
 
+pub(super) fn capacity_error(total: usize, parent_count: usize) -> Option<String> {
+    if total >= MAX_TOTAL {
+        return Some(format!("Limite de {MAX_TOTAL} sous-agents actifs atteinte"));
+    }
+    if parent_count >= MAX_PER_PARENT {
+        return Some(format!(
+            "Limite de {MAX_PER_PARENT} sous-agents par session atteinte"
+        ));
+    }
+    None
+}
+
+pub async fn renew_child(
+    parent_id: &str,
+    child_id: &str,
+    cancel: CancellationToken,
+) -> Result<String, String> {
+    let mut state = REGISTRY.lock().await;
+    let entry = state
+        .entries
+        .get_mut(child_id)
+        .filter(|entry| entry.parent_session_id == parent_id)
+        .ok_or_else(|| "Sous-agent actif indisponible".to_string())?;
+    entry.cancel = cancel;
+    Ok(entry.run_id.clone())
+}
+
 pub async fn unregister(child_id: &str) {
     let mut state = REGISTRY.lock().await;
     if let Some(entry) = state.entries.remove(child_id) {
-        let parent = &entry.parent_session_id;
-        let remaining = state
-            .entries
-            .values()
-            .any(|e| e.parent_session_id == *parent);
-        let has_claims = state.run_claims.get(parent).copied().unwrap_or(0) > 0;
-        if !remaining && !has_claims {
-            state.run_ids.remove(parent);
-        }
+        cleanup_parent_locked(&mut state, &entry.parent_session_id, true);
     }
 }
 
@@ -146,26 +155,7 @@ pub async fn active_children_for_parent(parent_id: &str) -> Vec<String> {
         .collect()
 }
 
-pub async fn terminal_notifier_for_child(child_id: &str) -> Option<SubagentTerminalNotifier> {
-    REGISTRY
-        .lock()
-        .await
-        .entries
-        .get(child_id)
-        .map(|entry| entry.terminal_notifier.clone())
-}
-
-pub async fn subscribe_for_parent(
-    parent_id: &str,
-) -> Option<tokio::sync::watch::Receiver<SubagentTerminalState>> {
-    REGISTRY
-        .lock()
-        .await
-        .entries
-        .values()
-        .find(|entry| entry.parent_session_id == parent_id)
-        .map(|entry| entry.terminal_notifier.subscribe())
-}
+include!("subagent_registry_terminal.rs");
 
 pub async fn cancel_one(child_id: &str) -> bool {
     let state = REGISTRY.lock().await;

@@ -28,6 +28,7 @@ pub(super) struct ApiRequestOutput {
 }
 
 pub(super) async fn run(params: ApiRequestParams<'_>) -> Result<ApiRequestOutput, String> {
+    let completion_cancel = params.cancel.clone();
     params
         .subagents
         .prepare_for_model_request(params.messages)
@@ -36,7 +37,7 @@ pub(super) async fn run(params: ApiRequestParams<'_>) -> Result<ApiRequestOutput
     crate::services::agent_local::context_budget::prepare_for_request(
         params.messages,
         params.configured_context,
-    );
+    )?;
     let realtime_budget = RealtimeBudget::from_messages(params.configured_context, params.messages);
     let plan_active = crate::services::agent_local::agent_loop_plan::active(
         params.session_id,
@@ -75,7 +76,7 @@ pub(super) async fn run(params: ApiRequestParams<'_>) -> Result<ApiRequestOutput
         params.tools,
         params.think,
         params.reasoning_mode,
-        params.cancel,
+        params.cancel.clone(),
         plan_active,
         realtime_budget,
     )
@@ -91,7 +92,7 @@ pub(super) async fn run(params: ApiRequestParams<'_>) -> Result<ApiRequestOutput
     .await;
     params
         .subagents
-        .complete_model_request(!interrupted)
+        .complete_model_request(!interrupted, &completion_cancel, params.messages)
         .await?;
     Ok(ApiRequestOutput {
         result,

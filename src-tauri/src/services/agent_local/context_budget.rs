@@ -5,6 +5,7 @@ const RESPONSE_RESERVE_PERCENT: u64 = 15;
 const RESPONSE_RESERVE_MIN: u64 = 4_096;
 const RESPONSE_RESERVE_MAX: u64 = 16_384;
 const CHARS_PER_TOKEN: usize = 4;
+const REQUIRED_CONTEXT_ERROR: &str = "Le rapport du sous-agent dépasse la capacité du modèle.";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ContextBudgetReport {
@@ -16,35 +17,57 @@ pub struct ContextBudgetReport {
 pub fn prepare_for_request(
     messages: &mut Vec<ChatMessage>,
     context_window: u64,
-) -> ContextBudgetReport {
+) -> Result<ContextBudgetReport, String> {
     let estimated = token_estimate::estimate_tokens(messages);
     let Some(max_input) = max_input_tokens(context_window) else {
-        return ContextBudgetReport {
+        return Ok(ContextBudgetReport {
             estimated_tokens: estimated,
             max_input_tokens: None,
             pruned_messages: 0,
-        };
+        });
     };
     if estimated <= max_input {
-        return ContextBudgetReport {
+        return Ok(ContextBudgetReport {
             estimated_tokens: estimated,
             max_input_tokens: Some(max_input),
             pruned_messages: 0,
-        };
+        });
     }
 
     let original_len = messages.len();
-    let capsule = context_capsules::recent_file_context_message(messages, context_window);
     let mut next: Vec<ChatMessage> = messages
         .iter()
         .filter(|m| m.role == "system")
         .cloned()
         .collect();
+    let required_reports = messages
+        .iter()
+        .filter(|message| is_required_report(message))
+        .cloned()
+        .collect::<Vec<_>>();
+    let required_tokens = token_estimate::estimate_tokens(&next)
+        .saturating_add(token_estimate::estimate_tokens(&required_reports));
+    if required_tokens > max_input {
+        return Err(REQUIRED_CONTEXT_ERROR.to_string());
+    }
+
+    let capsule = context_capsules::recent_file_context_message(messages, context_window)
+        .filter(|message| {
+            required_tokens.saturating_add(token_estimate::estimate_tokens(
+                std::slice::from_ref(message),
+            )) <= max_input
+        });
     context_capsules::insert_after_system(&mut next, capsule);
 
-    let mut remaining_budget = max_input.saturating_sub(token_estimate::estimate_tokens(&next));
+    let mut remaining_budget = max_input
+        .saturating_sub(token_estimate::estimate_tokens(&next))
+        .saturating_sub(token_estimate::estimate_tokens(&required_reports));
     let mut tail = Vec::new();
-    for msg in messages.iter().rev().filter(|m| m.role != "system") {
+    for msg in messages
+        .iter()
+        .rev()
+        .filter(|m| m.role != "system" && !is_required_report(m))
+    {
         if remaining_budget == 0 {
             break;
         }
@@ -59,13 +82,20 @@ pub fn prepare_for_request(
     }
     tail.reverse();
     next.extend(tail);
+    next.extend(required_reports);
     *messages = next;
 
-    ContextBudgetReport {
+    Ok(ContextBudgetReport {
         estimated_tokens: token_estimate::estimate_tokens(messages),
         max_input_tokens: Some(max_input),
         pruned_messages: original_len.saturating_sub(messages.len()),
-    }
+    })
+}
+
+fn is_required_report(message: &ChatMessage) -> bool {
+    message
+        .content
+        .starts_with(super::subagent_report_context::SUBAGENT_REPORT_CONTEXT_PREFIX)
 }
 
 pub fn max_input_tokens(context_window: u64) -> Option<usize> {
@@ -102,35 +132,5 @@ fn truncate_chars(input: &str, max_chars: usize) -> String {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn msg(role: &str, content: &str) -> ChatMessage {
-        ChatMessage {
-            role: role.to_string(),
-            content: content.to_string(),
-            ..Default::default()
-        }
-    }
-
-    #[test]
-    fn unknown_context_does_not_prune() {
-        let mut messages = vec![msg("user", &"x".repeat(100_000))];
-        let report = prepare_for_request(&mut messages, 0);
-        assert_eq!(report.max_input_tokens, None);
-        assert_eq!(messages.len(), 1);
-    }
-
-    #[test]
-    fn preserves_system_and_recent_tail() {
-        let mut messages = vec![
-            msg("system", "rules"),
-            msg("user", &"a".repeat(80_000)),
-            msg("assistant", "recent"),
-        ];
-        let report = prepare_for_request(&mut messages, 20_000);
-        assert!(report.pruned_messages > 0);
-        assert_eq!(messages[0].role, "system");
-        assert!(messages.last().unwrap().content.contains("recent"));
-    }
-}
+#[path = "context_budget_tests.rs"]
+mod tests;

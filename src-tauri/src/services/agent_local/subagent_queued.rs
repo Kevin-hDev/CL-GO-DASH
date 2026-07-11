@@ -23,7 +23,7 @@ pub async fn spawn_next_if_present(params: QueuedSubagentRun) -> Result<bool, St
     }
 
     let cancel = CancellationToken::new();
-    let run_id = match super::subagent_registry::register(
+    let run_id = match super::subagent_registry::renew_child(
         &params.parent_session_id,
         &params.child_session_id,
         cancel.clone(),

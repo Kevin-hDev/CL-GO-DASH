@@ -24,10 +24,10 @@ pub async fn append(parent_id: &str, report: SubagentHiddenReport) -> Result<(),
     {
         return Ok(());
     }
-    session.subagent_hidden_reports.push(report);
-    while session.subagent_hidden_reports.len() > MAX_PENDING_REPORTS {
-        session.subagent_hidden_reports.remove(0);
+    if session.subagent_hidden_reports.len() >= MAX_PENDING_REPORTS {
+        return Err("La file de rapports de sous-agents est pleine.".to_string());
     }
+    session.subagent_hidden_reports.push(report);
     super::session_store::save(&session).await
 }
 
@@ -85,9 +85,6 @@ pub fn build_report(
 
 fn is_same_report(seen: &SubagentHiddenReport, report: &SubagentHiddenReport) -> bool {
     seen.id == report.id
-        || (seen.child_session_id == report.child_session_id
-            && seen.status == report.status
-            && seen.summary == report.summary)
 }
 
 fn truncate_chars(value: &str, max_chars: usize) -> String {
