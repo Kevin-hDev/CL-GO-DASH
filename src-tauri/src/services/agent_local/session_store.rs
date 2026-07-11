@@ -6,6 +6,7 @@ use uuid::Uuid;
 pub use super::session_id::validate_session_id;
 pub(crate) use super::session_locks::lock_session;
 pub use super::session_locks::remove_session_lock;
+pub use super::session_store_messages::add_messages;
 
 fn sessions_dir() -> PathBuf {
     crate::services::paths::data_dir().join("agent-sessions")
@@ -146,40 +147,6 @@ pub async fn save(session: &AgentSession) -> Result<(), String> {
     let meta = crate::services::agent_local::session_index::meta_from_session(session);
     let _ = crate::services::agent_local::session_index::upsert_entry(meta).await;
     Ok(())
-}
-
-const MAX_MESSAGES_PER_SESSION: usize = 2000;
-
-pub async fn add_messages(
-    id: &str,
-    mut new_messages: Vec<crate::services::agent_local::types_session::AgentMessage>,
-    tokens: u32,
-) -> Result<(), String> {
-    validate_session_id(id)?;
-    let lock = lock_session(id).await;
-    let _guard = lock.lock().await;
-    let mut session = get(id).await?;
-    let has_user_message = new_messages.iter().any(|m| m.role == "user");
-    let todo_housekeeping =
-        super::session_store_todos::apply_user_turn(&mut session, has_user_message);
-    if tokens > 0 {
-        if let Some(last) = new_messages.last_mut() {
-            last.tokens = tokens;
-        }
-    }
-    session.messages.extend(new_messages);
-    session.updated_at = Some(Utc::now());
-    if session.messages.len() > MAX_MESSAGES_PER_SESSION {
-        let excess = session.messages.len() - MAX_MESSAGES_PER_SESSION;
-        session.messages.drain(..excess);
-    }
-    session.accumulated_tokens =
-        crate::services::token_counting::estimate_agent_messages_tokens(&session.messages);
-    let result = save(&session).await;
-    if result.is_ok() && todo_housekeeping.should_emit_empty_update {
-        super::tool_todo::emit_update(id, Vec::new());
-    }
-    result
 }
 
 pub async fn rename(id: &str, name: &str) -> Result<(), String> {

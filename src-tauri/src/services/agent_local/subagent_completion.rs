@@ -22,6 +22,39 @@ pub(super) async fn persist_terminal_completion(
     .await
 }
 
+pub(super) async fn persist_instruction_delivery_failure(
+    parent_session_id: &str,
+    child_session_id: &str,
+    subagent_type: &str,
+) -> Result<(), String> {
+    let lock = super::session_store::lock_session(child_session_id).await;
+    let _guard = lock.lock().await;
+    let mut child = match super::session_store::get(child_session_id).await {
+        Ok(child) => child,
+        Err(_) => {
+            super::subagent_completion_boundary::complete_missing(
+                parent_session_id,
+                child_session_id,
+                subagent_type,
+                || async {},
+            )
+            .await?;
+            return Err(SUBAGENT_COMPLETION_ERROR.to_string());
+        }
+    };
+    super::subagent_completion_boundary::complete_failure(
+        parent_session_id,
+        child_session_id,
+        subagent_type,
+        &mut child,
+        true,
+        true,
+        true,
+        || async {},
+    )
+    .await
+}
+
 #[cfg(test)]
 pub(super) async fn persist_terminal_completion_with_after_report<F, Fut>(
     parent_session_id: &str,
@@ -115,6 +148,8 @@ where
             subagent_type,
             &mut child,
             true,
+            false,
+            false,
             after_report,
         )
         .await?;
@@ -136,20 +171,4 @@ where
     )
     .await?;
     Ok(finalized)
-}
-
-pub(super) async fn persist_unstarted_followup_failure(
-    parent_session_id: &str,
-    child_session_id: &str,
-    subagent_type: &str,
-) -> Result<(), String> {
-    persist_terminal_completion(
-        parent_session_id,
-        child_session_id,
-        subagent_type,
-        super::subagent_status::FAILED,
-        SUBAGENT_COMPLETION_ERROR,
-    )
-    .await
-    .map(|_| ())
 }

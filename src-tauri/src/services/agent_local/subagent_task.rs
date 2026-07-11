@@ -23,92 +23,88 @@ pub async fn run(
     cancel: CancellationToken,
     project_id: Option<String>,
 ) {
-    let next_run = super::subagent_queued::QueuedSubagentRun {
-        app: app.clone(),
-        parent_session_id: parent_session_id.clone(),
-        child_session_id: child_session_id.clone(),
-        model: model.clone(),
-        provider: provider.clone(),
-        subagent_type: subagent_type.clone(),
-        parent_emitter: parent_emitter.clone(),
-        project_id: project_id.clone(),
-    };
-    let result = super::subagent_task_stream::run_inner(
-        app,
-        child_session_id.clone(),
-        model,
-        provider,
-        prompt,
-        subagent_type.clone(),
-        cancel,
-        project_id,
-    )
-    .await;
-
-    let run_id = subagent_registry::get_run_id_for_child(&child_session_id).await;
-
-    let (mut success, mut status, mut summary) = match result {
-        Ok(s) => s,
-        Err(_) => {
-            eprintln!("[subagent] échec {}", child_session_id);
-            (
-                false,
-                super::subagent_status::FAILED.to_string(),
-                "Le sous-agent n'a pas pu terminer correctement.".to_string(),
-            )
+    loop {
+        let result = super::subagent_task_stream::run_inner(
+            app.clone(),
+            child_session_id.clone(),
+            model.clone(),
+            provider.clone(),
+            prompt.clone(),
+            subagent_type.clone(),
+            cancel.clone(),
+            project_id.clone(),
+        )
+        .await;
+        let run_id = subagent_registry::get_run_id_for_child(&child_session_id).await;
+        let (mut success, mut status, mut summary) = match result {
+            Ok(value) => value,
+            Err(error) if super::subagent_instruction_delivery::is_delivery_error(&error) => {
+                let success = false;
+                let status = super::subagent_status::FAILED.to_string();
+                let summary = super::subagent_completion::SUBAGENT_COMPLETION_ERROR.to_string();
+                let _ = super::subagent_completion::persist_instruction_delivery_failure(
+                    &parent_session_id,
+                    &child_session_id,
+                    &subagent_type,
+                )
+                .await;
+                let _ = parent_emitter.send(StreamEvent::SubagentCompleted {
+                    subagent_session_id: child_session_id.clone(),
+                    success,
+                    status,
+                    summary,
+                    run_id,
+                });
+                break;
+            }
+            Err(_) => {
+                eprintln!("[subagent] échec {}", child_session_id);
+                (
+                    false,
+                    super::subagent_status::FAILED.to_string(),
+                    "Le sous-agent n'a pas pu terminer correctement.".to_string(),
+                )
+            }
+        };
+        let finalized = match super::subagent_completion::persist_terminal_completion(
+            &parent_session_id,
+            &child_session_id,
+            &subagent_type,
+            &status,
+            &summary,
+        )
+        .await
+        {
+            Ok(value) => value,
+            Err(_) => {
+                success = false;
+                status = super::subagent_status::FAILED.to_string();
+                summary = super::subagent_completion::SUBAGENT_COMPLETION_ERROR.to_string();
+                let _ = parent_emitter.send(StreamEvent::SubagentCompleted {
+                    subagent_session_id: child_session_id.clone(),
+                    success,
+                    status,
+                    summary,
+                    run_id,
+                });
+                break;
+            }
+        };
+        if finalized.queued_followup {
+            continue;
         }
-    };
-    let finalized = match super::subagent_completion::persist_terminal_completion(
-        &parent_session_id,
-        &child_session_id,
-        &subagent_type,
-        &status,
-        &summary,
-    )
-    .await
-    {
-        Ok(value) => value,
-        Err(_) => {
-            success = false;
-            status = super::subagent_status::FAILED.to_string();
-            summary = super::subagent_completion::SUBAGENT_COMPLETION_ERROR.to_string();
-            let _ = parent_emitter.send(StreamEvent::SubagentCompleted {
-                subagent_session_id: child_session_id.clone(),
-                success,
-                status,
-                summary,
-                run_id,
-            });
-            super::subagent_working_dir::cleanup(&child_session_id).await;
-            session_store::remove_session_lock(&child_session_id).await;
-            return;
-        }
-    };
-
-    if !finalized.queued_followup {
         let _ = parent_emitter.send(StreamEvent::SubagentCompleted {
             subagent_session_id: child_session_id.clone(),
             success,
-            status: status.clone(),
-            summary: summary.clone(),
+            status,
+            summary,
             run_id,
         });
+        break;
     }
 
     super::subagent_working_dir::cleanup(&child_session_id).await;
-
-    if finalized.queued_followup {
-        match super::subagent_queued::spawn_next_if_present(next_run).await {
-            Ok(true) => {}
-            Ok(false) => session_store::remove_session_lock(&child_session_id).await,
-            Err(_) => {
-                eprintln!("[subagent] relance file {}", child_session_id);
-                session_store::remove_session_lock(&child_session_id).await;
-            }
-        }
-    } else {
-        session_store::remove_session_lock(&child_session_id).await;
-    }
+    session_store::remove_session_lock(&child_session_id).await;
 }
 
 pub fn effective_session_status(status: &str, queued_followup: bool) -> &str {
@@ -117,6 +113,10 @@ pub fn effective_session_status(status: &str, queued_followup: bool) -> &str {
     } else {
         status
     }
+}
+
+pub(super) fn should_continue_same_run(status: &str, has_queued_prompt: bool) -> bool {
+    status == super::subagent_status::COMPLETED && has_queued_prompt
 }
 
 pub(super) fn finalize_loaded_session_after_run(
@@ -140,7 +140,7 @@ pub(super) fn apply_finalized_subagent_state(
     summary: &str,
 ) -> FinalizedSubagent {
     let queued_followup =
-        status == super::subagent_status::COMPLETED && !session.subagent_queued_prompts.is_empty();
+        should_continue_same_run(status, !session.subagent_queued_prompts.is_empty());
     let session_status = effective_session_status(status, queued_followup);
     if !queued_followup {
         session.subagent_queued_prompts.clear();

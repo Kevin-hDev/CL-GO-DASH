@@ -85,6 +85,7 @@ pub mod session_index;
 pub mod session_locks;
 pub mod session_ops;
 pub mod session_store;
+mod session_store_messages;
 pub mod session_store_todos;
 pub mod session_store_updates;
 pub mod session_subagents;
@@ -116,6 +117,13 @@ mod subagent_completion_capacity_tests;
 mod subagent_completion_tests;
 pub mod subagent_context;
 pub mod subagent_hidden_reports;
+pub(crate) mod subagent_instruction_delivery;
+#[cfg(test)]
+mod subagent_instruction_delivery_tests;
+#[cfg(test)]
+mod subagent_instruction_limit_tests;
+#[cfg(test)]
+mod subagent_instruction_wiring_tests;
 pub mod subagent_live_state;
 pub mod subagent_orchestration;
 #[cfg(test)]
@@ -142,12 +150,6 @@ pub mod subagent_profile;
 pub mod subagent_prompts;
 #[cfg(test)]
 pub mod subagent_prompts_tests;
-pub mod subagent_queued;
-mod subagent_queued_transition;
-#[cfg(test)]
-mod subagent_queued_tests;
-#[cfg(test)]
-mod subagent_queued_test_support;
 pub mod subagent_registry;
 #[cfg(test)]
 pub mod subagent_registry_tests;
@@ -167,6 +169,8 @@ pub mod subagent_task;
 pub mod subagent_task_stream;
 #[cfg(test)]
 pub mod subagent_task_tests;
+#[cfg(test)]
+mod subagent_same_run_tests;
 mod subagent_terminal_signal;
 pub mod subagent_tool_control;
 #[cfg(test)]

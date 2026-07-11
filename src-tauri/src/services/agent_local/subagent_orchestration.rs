@@ -40,6 +40,7 @@ impl ParentSubagentOrchestrator {
         &mut self,
         messages: &mut Vec<ChatMessage>,
     ) -> Result<(), String> {
+        super::subagent_instruction_delivery::drain(&self.parent_session_id, messages).await?;
         self.report_delivery.refresh_terminal_signal().await;
         if self.report_delivery.persistence_failed() {
             return Err(super::subagent_completion::SUBAGENT_COMPLETION_ERROR.to_string());
@@ -82,7 +83,13 @@ impl ParentSubagentOrchestrator {
         messages: &mut Vec<ChatMessage>,
         cancel: CancellationToken,
     ) -> Result<bool, String> {
-        let should_continue = self.after_no_tool_turn(messages, cancel).await?;
+        let should_continue = super::subagent_instruction_delivery::drain(
+            &self.parent_session_id,
+            messages,
+        )
+        .await?
+            > 0
+            || self.after_no_tool_turn(messages, cancel).await?;
         if should_continue {
             let _ = on_event.send(StreamEvent::TurnEnd {});
         }

@@ -1,10 +1,12 @@
+#[cfg(test)]
+use super::subagent_instruction_delivery::{MAX_PROMPT_SIZE, MAX_QUEUED_PROMPTS};
+#[cfg(test)]
+use super::tool_subagent_message::{build_resume_payload, enqueue_prompt};
+use super::tool_subagent_message::run as message;
 use super::tool_subagent_format::{format_child, format_meta};
 use super::types_session::AgentSession;
 use super::types_tools::ToolResult;
-use serde_json::{json, Value};
-
-const MAX_PROMPT_SIZE: usize = 50_000;
-const MAX_QUEUED_PROMPTS: usize = 8;
+use serde_json::Value;
 
 pub async fn dispatch(tool_name: &str, args: &Value, parent_id: &str) -> Option<ToolResult> {
     if is_child_session(parent_id).await {
@@ -65,47 +67,6 @@ async fn cancel(args: &Value, parent_id: &str) -> ToolResult {
     ToolResult::ok("Sous-agent déjà terminé.".to_string())
 }
 
-async fn message(args: &Value, parent_id: &str) -> ToolResult {
-    let prompt = match args["prompt"].as_str().map(str::trim) {
-        Some(value) if !value.is_empty() && value.chars().count() <= MAX_PROMPT_SIZE => value,
-        _ => return ToolResult::err("Instruction sous-agent invalide."),
-    };
-    let Some(child_id) = args["subagent_id"]
-        .as_str()
-        .map(str::trim)
-        .filter(|id| !id.is_empty())
-    else {
-        return ToolResult::err("Sous-agent introuvable.");
-    };
-    if super::session_store::validate_session_id(child_id).is_err() {
-        return ToolResult::err("Sous-agent introuvable.");
-    }
-    let payload = {
-        let lock = super::session_store::lock_session(child_id).await;
-        let _guard = lock.lock().await;
-        let Ok(mut child) = owned_child_by_id(child_id, parent_id).await else {
-            return ToolResult::err("Sous-agent introuvable.");
-        };
-        if child_has_pending_work(&child).await {
-            if let Err(result) = enqueue_prompt(&mut child, prompt) {
-                return result;
-            }
-            if super::session_store::save(&child).await.is_err() {
-                return ToolResult::err("Sous-agent indisponible.");
-            }
-            return ToolResult::ok("Instruction ajoutée à la file du sous-agent.".to_string());
-        }
-        json!({
-            "subagent_id": child.id,
-            "subagent_type": child.subagent_type.unwrap_or_else(|| "explorer".to_string()),
-            "display_name": child.name,
-            "description": child.subagent_description.unwrap_or_default(),
-            "prompt": prompt
-        })
-    };
-    super::tool_dispatcher_delegate::dispatch_delegate(&payload, parent_id).await
-}
-
 async fn archive(args: &Value, parent_id: &str) -> ToolResult {
     let Ok(child) = owned_child(args, parent_id).await else {
         return ToolResult::err("Sous-agent introuvable.");
@@ -126,16 +87,6 @@ fn can_archive_child(has_pending_work: bool) -> Result<(), ToolResult> {
     Ok(())
 }
 
-fn enqueue_prompt(child: &mut AgentSession, prompt: &str) -> Result<(), ToolResult> {
-    if child.subagent_queued_prompts.len() >= MAX_QUEUED_PROMPTS {
-        return Err(ToolResult::err("File de consignes sous-agent pleine."));
-    }
-    child.subagent_queued_prompts.push(prompt.to_string());
-    child.subagent_status = Some(super::subagent_status::RUNNING.to_string());
-    child.updated_at = Some(chrono::Utc::now());
-    Ok(())
-}
-
 async fn owned_child(args: &Value, parent_id: &str) -> Result<AgentSession, ToolResult> {
     let Some(id) = args["subagent_id"].as_str() else {
         return Err(ToolResult::err("Sous-agent introuvable."));
@@ -143,7 +94,10 @@ async fn owned_child(args: &Value, parent_id: &str) -> Result<AgentSession, Tool
     owned_child_by_id(id, parent_id).await
 }
 
-async fn owned_child_by_id(id: &str, parent_id: &str) -> Result<AgentSession, ToolResult> {
+pub(super) async fn owned_child_by_id(
+    id: &str,
+    parent_id: &str,
+) -> Result<AgentSession, ToolResult> {
     let child = super::session_store::get(id)
         .await
         .map_err(|_| ToolResult::err("Sous-agent introuvable."))?;
@@ -171,3 +125,9 @@ async fn child_has_pending_work(child: &AgentSession) -> bool {
 #[cfg(test)]
 #[path = "tool_subagent_control_tests.rs"]
 mod tests;
+#[cfg(test)]
+#[path = "tool_subagent_message_tests.rs"]
+mod message_tests;
+#[cfg(test)]
+#[path = "tool_subagent_terminal_message_tests.rs"]
+mod terminal_message_tests;

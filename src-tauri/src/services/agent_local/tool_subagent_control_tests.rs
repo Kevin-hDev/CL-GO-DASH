@@ -33,6 +33,31 @@ fn enqueue_prompt_marks_child_running() {
 }
 
 #[test]
+fn enqueue_prompt_deduplicates_spacing_without_changing_original() {
+    let mut child = child("running");
+    let original = "  corrige ceci\n\n```rust\n  let x = 1;\n```  ";
+
+    assert!(enqueue_prompt(&mut child, original).is_ok());
+    assert!(enqueue_prompt(
+        &mut child,
+        "corrige   ceci ```rust let x = 1; ```",
+    )
+    .is_ok());
+
+    assert_eq!(child.subagent_queued_prompts, vec![original]);
+}
+
+#[test]
+fn enqueue_prompt_ignores_instruction_already_delivered_as_user_message() {
+    let mut child = child("running");
+    child.messages.push(user_message("Corrige   le résultat"));
+
+    assert!(enqueue_prompt(&mut child, " Corrige le résultat ").is_ok());
+
+    assert!(child.subagent_queued_prompts.is_empty());
+}
+
+#[test]
 fn enqueue_prompt_rejects_full_queue() {
     let mut child = child("running");
     child
@@ -117,5 +142,23 @@ fn child(status: &str) -> AgentSession {
         clone_modified_files: Vec::new(),
         clone_root_session_id: None,
         git_branch: None,
+    }
+}
+
+fn user_message(content: &str) -> crate::services::agent_local::types_session::AgentMessage {
+    crate::services::agent_local::types_session::AgentMessage {
+        id: uuid::Uuid::new_v4().to_string(),
+        role: "user".into(),
+        content: content.into(),
+        thinking: None,
+        tool_calls: None,
+        tool_name: None,
+        tool_activities: None,
+        segments: None,
+        files: Vec::new(),
+        timestamp: Utc::now(),
+        tokens: 0,
+        work_duration_ms: None,
+        skill_names: None,
     }
 }

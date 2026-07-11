@@ -15,6 +15,11 @@ struct SubagentEntry {
     pub run_id: String,
 }
 
+pub struct ActiveSubagentRun {
+    pub run_id: String,
+    pub cancelled: bool,
+}
+
 struct RegistryState {
     entries: HashMap<String, SubagentEntry>,
     run_ids: HashMap<String, String>,
@@ -86,21 +91,6 @@ pub(super) fn capacity_error(total: usize, parent_count: usize) -> Option<String
     None
 }
 
-pub async fn renew_child(
-    parent_id: &str,
-    child_id: &str,
-    cancel: CancellationToken,
-) -> Result<String, String> {
-    let mut state = REGISTRY.lock().await;
-    let entry = state
-        .entries
-        .get_mut(child_id)
-        .filter(|entry| entry.parent_session_id == parent_id)
-        .ok_or_else(|| "Sous-agent actif indisponible".to_string())?;
-    entry.cancel = cancel;
-    Ok(entry.run_id.clone())
-}
-
 pub async fn unregister(child_id: &str) {
     let mut state = REGISTRY.lock().await;
     if let Some(entry) = state.entries.remove(child_id) {
@@ -136,12 +126,21 @@ fn release_claim_locked(state: &mut RegistryState, parent_id: &str) {
 }
 
 pub async fn get_run_id_for_child(child_id: &str) -> Option<String> {
+    active_run_for_child(child_id)
+        .await
+        .map(|state| state.run_id)
+}
+
+pub async fn active_run_for_child(child_id: &str) -> Option<ActiveSubagentRun> {
     REGISTRY
         .lock()
         .await
         .entries
         .get(child_id)
-        .map(|e| e.run_id.clone())
+        .map(|entry| ActiveSubagentRun {
+            run_id: entry.run_id.clone(),
+            cancelled: entry.cancel.is_cancelled(),
+        })
 }
 
 pub async fn active_children_for_parent(parent_id: &str) -> Vec<String> {

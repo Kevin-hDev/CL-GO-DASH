@@ -3,7 +3,7 @@ mod tests {
     use crate::services::agent_local::subagent_registry::{
         active_children_for_parent, cancel_one, capacity_error, complete_child, consume_terminal,
         get_or_create_run_id, get_run_id_for_child, parent_snapshot, register,
-        release_run_claim, renew_child, subscribe_for_parent, terminal_state_for_parent, unregister,
+        release_run_claim, subscribe_for_parent, terminal_state_for_parent, unregister,
         SubagentTerminalKind, PRODUCTION_MAX_TERMINAL_PARENTS,
     };
     use crate::services::agent_local::subagent_registry_test_support::meta;
@@ -155,25 +155,6 @@ mod tests {
         assert!(capacity_error(0, MAX_PER_PARENT).is_some());
         assert!(capacity_error(MAX_TOTAL - 1, MAX_PER_PARENT - 1).is_none());
 
-        // --- queued follow-up renews in place ---
-        let parent = uid();
-        let renewed = uid();
-        register(&parent, &renewed, CancellationToken::new())
-            .await
-            .unwrap();
-        let renewed_run = renew_child(&parent, &renewed, CancellationToken::new())
-            .await
-            .expect("renew an existing child");
-        assert_eq!(get_run_id_for_child(&renewed).await, Some(renewed_run));
-        assert_eq!(active_children_for_parent(&parent).await.len(), 1);
-        assert_eq!(
-            terminal_state_for_parent(&parent)
-                .await
-                .expect("follow-up terminal state")
-                .sequence,
-            0
-        );
-        unregister(&renewed).await;
     }
 
 }

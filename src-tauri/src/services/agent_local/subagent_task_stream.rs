@@ -87,6 +87,7 @@ async fn finalize_stream_result(
             super::subagent_status::CANCELLED.to_string(),
             "Sous-agent annulé.".to_string(),
         )),
+        Err(e) if super::subagent_instruction_delivery::is_delivery_error(&e) => Err(e),
         Err(_) => {
             super::stream_diagnostics::record_failure(
                 child_session_id,

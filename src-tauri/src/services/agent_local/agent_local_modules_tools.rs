@@ -114,6 +114,7 @@ pub mod tool_spreadsheet_write_new;
 pub mod tool_spreadsheet_write_tests;
 pub mod tool_subagent_control;
 pub mod tool_subagent_format;
+mod tool_subagent_message;
 pub mod tool_todo;
 #[cfg(test)]
 mod tool_todo_memory_tests;
