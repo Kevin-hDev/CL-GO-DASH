@@ -54,7 +54,8 @@ pub async fn remove(worktree_path: &str) -> Result<(), String> {
     let root = data_dir().join("subagent-worktrees");
     let canonical_root = match tokio::fs::canonicalize(&root).await {
         Ok(root) => root,
-        Err(_) => return Ok(()),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(()),
+        Err(_) => return Err("Chemin worktree invalide".to_string()),
     };
     let child_dir = managed_child_dir(&path, &canonical_root).await;
     let removal = remove_managed_path(&path, &canonical_root).await;
@@ -84,14 +85,24 @@ pub(super) async fn remove_managed_path_with_runner(
         return Err("Chemin worktree hors du répertoire géré".to_string());
     }
 
-    if git_remove(runner, &canonical_path, false).await || !canonical_path.exists() {
-        return verify_removed(&canonical_path);
+    let first_removed = git_remove(runner, &canonical_path, false).await;
+    match path_state(&canonical_path).await? {
+        ManagedPathState::Missing => return Ok(()),
+        ManagedPathState::Present if first_removed => {
+            return Err("Suppression du worktree impossible".to_string());
+        }
+        ManagedPathState::Present => {}
     }
-    if git_remove(runner, &canonical_path, true).await || !canonical_path.exists() {
-        return verify_removed(&canonical_path);
+    let retry_removed = git_remove(runner, &canonical_path, true).await;
+    match path_state(&canonical_path).await? {
+        ManagedPathState::Missing => return Ok(()),
+        ManagedPathState::Present if retry_removed => {
+            return Err("Suppression du worktree impossible".to_string());
+        }
+        ManagedPathState::Present => {}
     }
     remove_partial_directory(&canonical_path).await?;
-    verify_removed(&canonical_path)
+    verify_removed(&canonical_path).await
 }
 
 async fn git_remove(runner: &dyn GitRemoveRunner, path: &Path, retry_locked: bool) -> bool {
@@ -102,7 +113,10 @@ async fn git_remove(runner: &dyn GitRemoveRunner, path: &Path, retry_locked: boo
 }
 
 async fn remove_partial_directory(path: &Path) -> Result<(), String> {
-    if tokio::fs::symlink_metadata(path.join(".git")).await.is_ok() {
+    if matches!(
+        path_state(&path.join(".git")).await?,
+        ManagedPathState::Present
+    ) {
         return Err("Suppression du worktree impossible".to_string());
     }
     tokio::fs::remove_dir_all(path)
@@ -138,10 +152,24 @@ async fn cleanup_empty_parent(child_dir: Option<&Path>) -> Result<(), String> {
     }
 }
 
-fn verify_removed(path: &Path) -> Result<(), String> {
-    if path.exists() {
-        Err("Suppression du worktree impossible".to_string())
-    } else {
-        Ok(())
+async fn verify_removed(path: &Path) -> Result<(), String> {
+    match path_state(path).await? {
+        ManagedPathState::Missing => Ok(()),
+        ManagedPathState::Present => Err("Suppression du worktree impossible".to_string()),
+    }
+}
+
+enum ManagedPathState {
+    Present,
+    Missing,
+}
+
+async fn path_state(path: &Path) -> Result<ManagedPathState, String> {
+    match tokio::fs::symlink_metadata(path).await {
+        Ok(_) => Ok(ManagedPathState::Present),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+            Ok(ManagedPathState::Missing)
+        }
+        Err(_) => Err("Suppression du worktree impossible".to_string()),
     }
 }
