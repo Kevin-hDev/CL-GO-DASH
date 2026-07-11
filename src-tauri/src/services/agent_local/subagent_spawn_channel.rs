@@ -49,42 +49,6 @@ where
     Ok(())
 }
 
-#[cfg(test)]
-mod tests {
-    use super::try_send_then;
-    use std::sync::atomic::{AtomicBool, Ordering};
-
-    #[test]
-    fn full_channel_does_not_publish_spawned_event() {
-        let (sender, _receiver) = tokio::sync::mpsc::channel(1);
-        sender.try_send(1).expect("fill channel");
-        let published = AtomicBool::new(false);
-
-        assert!(try_send_then(&sender, 2, || published.store(true, Ordering::SeqCst)).is_err());
-        assert!(!published.load(Ordering::SeqCst));
-    }
-
-    #[test]
-    fn closed_channel_does_not_publish_spawned_event() {
-        let (sender, receiver) = tokio::sync::mpsc::channel(1);
-        drop(receiver);
-        let published = AtomicBool::new(false);
-
-        assert!(try_send_then(&sender, 1, || published.store(true, Ordering::SeqCst)).is_err());
-        assert!(!published.load(Ordering::SeqCst));
-    }
-
-    #[test]
-    fn accepted_request_publishes_once() {
-        let (sender, _receiver) = tokio::sync::mpsc::channel(1);
-        let published = AtomicBool::new(false);
-
-        try_send_then(&sender, 1, || published.store(true, Ordering::SeqCst))
-            .expect("accept request");
-        assert!(published.load(Ordering::SeqCst));
-    }
-}
-
 async fn receiver_loop(mut rx: mpsc::Receiver<SpawnRequest>) {
     while let Some(req) = rx.recv().await {
         tauri::async_runtime::spawn(async move {
@@ -142,5 +106,41 @@ async fn receiver_loop(mut rx: mpsc::Receiver<SpawnRequest>) {
             })
             .await;
         });
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::try_send_then;
+    use std::sync::atomic::{AtomicBool, Ordering};
+
+    #[test]
+    fn full_channel_does_not_publish_spawned_event() {
+        let (sender, _receiver) = tokio::sync::mpsc::channel(1);
+        sender.try_send(1).expect("fill channel");
+        let published = AtomicBool::new(false);
+
+        assert!(try_send_then(&sender, 2, || published.store(true, Ordering::SeqCst)).is_err());
+        assert!(!published.load(Ordering::SeqCst));
+    }
+
+    #[test]
+    fn closed_channel_does_not_publish_spawned_event() {
+        let (sender, receiver) = tokio::sync::mpsc::channel(1);
+        drop(receiver);
+        let published = AtomicBool::new(false);
+
+        assert!(try_send_then(&sender, 1, || published.store(true, Ordering::SeqCst)).is_err());
+        assert!(!published.load(Ordering::SeqCst));
+    }
+
+    #[test]
+    fn accepted_request_publishes_once() {
+        let (sender, _receiver) = tokio::sync::mpsc::channel(1);
+        let published = AtomicBool::new(false);
+
+        try_send_then(&sender, 1, || published.store(true, Ordering::SeqCst))
+            .expect("accept request");
+        assert!(published.load(Ordering::SeqCst));
     }
 }

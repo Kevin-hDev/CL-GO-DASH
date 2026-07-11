@@ -168,6 +168,7 @@ pub async fn cancel_one(child_id: &str) -> bool {
     }
 }
 
+#[cfg(test)]
 pub async fn cancel_all_for_parent(parent_id: &str) {
     let state = REGISTRY.lock().await;
     for entry in state.entries.values() {
