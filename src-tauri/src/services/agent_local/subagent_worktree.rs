@@ -3,50 +3,10 @@ use std::path::{Component, Path, PathBuf};
 use tokio::process::Command;
 
 pub async fn remove(worktree_path: &str) -> Result<(), String> {
-    if has_forbidden_component(worktree_path) {
-        return Err("Chemin worktree invalide".to_string());
-    }
-    let path = PathBuf::from(worktree_path);
-    let root = data_dir().join("subagent-worktrees");
-    let canonical_root = match tokio::fs::canonicalize(&root).await {
-        Ok(root) => root,
-        Err(_) => return Ok(()),
-    };
-    let canonical_path = match tokio::fs::canonicalize(&path).await {
-        Ok(path) => path,
-        Err(_) => match tokio::fs::symlink_metadata(&path).await {
-            Ok(_) => return Err("Chemin worktree invalide".to_string()),
-            Err(err) if err.kind() == std::io::ErrorKind::NotFound => return Ok(()),
-            Err(_) => return Err("Chemin worktree invalide".to_string()),
-        },
-    };
-    if canonical_path == canonical_root || !canonical_path.starts_with(&canonical_root) {
-        return Err("Chemin worktree hors du répertoire géré".to_string());
-    }
-
-    let output = Command::new("git")
-        .args(["-C"])
-        .arg(&canonical_path)
-        .args(["worktree", "remove", "--force"])
-        .arg(&canonical_path)
-        .kill_on_drop(true)
-        .output()
-        .await;
-
-    if output.map(|o| !o.status.success()).unwrap_or(true) && canonical_path.exists() {
-        tokio::fs::remove_dir_all(&canonical_path)
-            .await
-            .map_err(|_| "Suppression du worktree impossible".to_string())?;
-    }
-
-    if canonical_path.exists() {
-        return Err("Suppression du worktree impossible".to_string());
-    }
-
-    Ok(())
+    super::subagent_worktree_cleanup::remove(worktree_path).await
 }
 
-fn has_forbidden_component(path: &str) -> bool {
+pub(super) fn has_forbidden_component(path: &str) -> bool {
     path.contains('\0')
         || Path::new(path)
             .components()

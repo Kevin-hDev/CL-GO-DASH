@@ -9,6 +9,8 @@ mod subagent_cancellation_tests;
 #[cfg(test)]
 mod subagent_parent_stream_ownership_tests;
 #[cfg(test)]
+mod subagent_worktree_cleanup_tests;
+#[cfg(test)]
 mod subagent_spawn_event_order_tests;
 mod subagent_completion_events;
 mod subagent_completion_ownership;
@@ -17,6 +19,7 @@ mod subagent_history;
 mod subagent_history_tests;
 #[cfg(test)]
 mod subagent_history_failure_tests;
+mod subagent_worktree_cleanup;
 #[cfg(test)]
 mod subagent_max_turn_tests;
 mod subagent_turn_limit;
