@@ -2,8 +2,18 @@ use super::subagent_instruction_delivery::{EnqueueOutcome, MAX_PROMPT_SIZE};
 use super::types_session::AgentSession;
 use super::types_tools::ToolResult;
 use serde_json::{json, Value};
+use tokio_util::sync::CancellationToken;
 
+#[cfg(test)]
 pub(super) async fn run(args: &Value, parent_id: &str) -> ToolResult {
+    run_with_cancel(args, parent_id, CancellationToken::new()).await
+}
+
+pub(super) async fn run_with_cancel(
+    args: &Value,
+    parent_id: &str,
+    cancel: CancellationToken,
+) -> ToolResult {
     let Some(prompt) = valid_prompt(args) else {
         return ToolResult::err("Instruction sous-agent invalide.");
     };
@@ -42,7 +52,7 @@ pub(super) async fn run(args: &Value, parent_id: &str) -> ToolResult {
             Err(result) => return result,
         }
     };
-    super::tool_dispatcher_delegate::dispatch_delegate(&payload, parent_id).await
+    super::tool_dispatcher_delegate::dispatch_delegate(&payload, parent_id, cancel).await
 }
 
 fn valid_prompt(args: &Value) -> Option<&str> {

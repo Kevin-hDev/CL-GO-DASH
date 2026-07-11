@@ -39,7 +39,14 @@ pub async fn collect_eager_results(
                 false,
             )
             .await;
-            let result = tool_dispatcher::dispatch(&name, &args, &wd, &sid).await;
+            let result = tool_dispatcher::dispatch(
+                &name,
+                &args,
+                &wd,
+                &sid,
+                tokio_util::sync::CancellationToken::new(),
+            )
+            .await;
             super::stream_diagnostics::record_tool(
                 &sid,
                 &rid,

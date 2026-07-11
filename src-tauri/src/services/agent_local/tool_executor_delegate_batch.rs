@@ -1,5 +1,5 @@
 use crate::services::agent_local::stream_events::AgentEventEmitter;
-use crate::services::agent_local::tool_hooks::{run_post_hooks, run_pre_hooks, PreHookDecision};
+use crate::services::agent_local::tool_hooks::run_post_hooks;
 use crate::services::agent_local::types_ollama::ChatMessage;
 use crate::services::agent_local::types_tools::ToolResult;
 use serde_json::Value;
@@ -46,7 +46,14 @@ pub async fn run_delegate_batch(
             working_dir,
         )
         .await;
-        match launch_delegate(item.args, session_id, plan_mode_active).await {
+        match super::tool_executor_delegate_launch::launch(
+            item.args,
+            session_id,
+            plan_mode_active,
+            cancel.clone(),
+        )
+        .await
+        {
             Ok(delegate) => pending.push(PendingOutput {
                 index: item.index,
                 summary,
@@ -131,40 +138,6 @@ pub async fn run_delegate_only_tools(
         }
     }
     compressed
-}
-
-async fn launch_delegate(
-    args: &Value,
-    session_id: &str,
-    plan_mode_active: bool,
-) -> Result<super::tool_dispatcher_delegate::PendingDelegate, ToolResult> {
-    if let Err(msg) = super::tool_plan_guard::ensure_allowed_for_session(
-        DELEGATE_TOOL,
-        args,
-        session_id,
-        plan_mode_active,
-    )
-    .await
-    {
-        return Err(super::tool_dispatcher::enrich_error(
-            ToolResult::err(msg),
-            DELEGATE_TOOL,
-        ));
-    }
-    if super::tool_catalog::is_optional_tool(DELEGATE_TOOL)
-        && !super::agent_settings::is_tool_enabled(DELEGATE_TOOL).await
-    {
-        return Err(ToolResult::err("Outil désactivé dans les paramètres."));
-    }
-    match run_pre_hooks(DELEGATE_TOOL, args) {
-        PreHookDecision::Deny(msg) => Err(super::tool_dispatcher::enrich_error(
-            ToolResult::err(msg),
-            DELEGATE_TOOL,
-        )),
-        PreHookDecision::Allow => super::tool_dispatcher_delegate::spawn_delegate(args, session_id)
-            .await
-            .map_err(|tr| run_post_hooks(DELEGATE_TOOL, args, tr)),
-    }
 }
 
 async fn finish_diagnostics(

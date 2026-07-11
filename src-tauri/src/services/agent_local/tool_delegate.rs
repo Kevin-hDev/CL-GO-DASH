@@ -28,6 +28,7 @@ pub async fn prepare_delegate(
     app: AppHandle,
     parent_session_id: String,
     parent_emitter: AgentEventEmitter,
+    parent_cancel: CancellationToken,
 ) -> Result<SpawnedSubagent, ToolResult> {
     let prompt = super::tool_delegate_prompt::from_args(&args)?;
     let subagent_type = match args["subagent_type"].as_str() {
@@ -144,11 +145,12 @@ pub async fn prepare_delegate(
 
     let cancel = CancellationToken::new();
     let initial_prompt = persisted_prompt.initial_prompt();
-    let registered = match subagent_registry::register_execution_with_initial_prompt(
+    let registered = match subagent_registry::register_execution_for_parent_stream(
         &parent_session_id,
         &child_id,
         cancel.clone(),
         initial_prompt,
+        &parent_cancel,
     )
     .await
     {

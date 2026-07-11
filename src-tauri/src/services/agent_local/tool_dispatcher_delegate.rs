@@ -5,14 +5,22 @@ pub struct PendingDelegate {
     child_id: String,
 }
 
-pub async fn dispatch_delegate(args: &Value, session_id: &str) -> ToolResult {
-    match spawn_delegate(args, session_id).await {
+pub async fn dispatch_delegate(
+    args: &Value,
+    session_id: &str,
+    cancel: tokio_util::sync::CancellationToken,
+) -> ToolResult {
+    match spawn_delegate(args, session_id, cancel).await {
         Ok(pending) => pending.wait().await,
         Err(tr) => tr,
     }
 }
 
-pub async fn spawn_delegate(args: &Value, session_id: &str) -> Result<PendingDelegate, ToolResult> {
+pub async fn spawn_delegate(
+    args: &Value,
+    session_id: &str,
+    cancel: tokio_util::sync::CancellationToken,
+) -> Result<PendingDelegate, ToolResult> {
     let Some(app) = super::app_handle_global::get() else {
         return Err(ToolResult::err("AppHandle non initialisé"));
     };
@@ -25,6 +33,7 @@ pub async fn spawn_delegate(args: &Value, session_id: &str) -> Result<PendingDel
         app.clone(),
         session_id.to_string(),
         emitter,
+        cancel,
     )
     .await
     {

@@ -204,5 +204,5 @@ pub async fn dispatch_or_interactive(
     if name == "exitplanmode" {
         return super::tool_plan::execute_exit(args, on_event, session_id).await;
     }
-    super::tool_dispatcher::dispatch(name, args, working_dir, session_id).await
+    super::tool_dispatcher::dispatch(name, args, working_dir, session_id, cancel).await
 }

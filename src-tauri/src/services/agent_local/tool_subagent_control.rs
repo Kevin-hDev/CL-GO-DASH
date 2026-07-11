@@ -2,13 +2,20 @@
 use super::subagent_instruction_delivery::{MAX_PROMPT_SIZE, MAX_QUEUED_PROMPTS};
 #[cfg(test)]
 use super::tool_subagent_message::{build_resume_payload, enqueue_prompt};
+#[cfg(test)]
 use super::tool_subagent_message::run as message;
 use super::tool_subagent_format::{format_child, format_meta};
 use super::types_session::AgentSession;
 use super::types_tools::ToolResult;
 use serde_json::Value;
+use tokio_util::sync::CancellationToken;
 
-pub async fn dispatch(tool_name: &str, args: &Value, parent_id: &str) -> Option<ToolResult> {
+pub async fn dispatch(
+    tool_name: &str,
+    args: &Value,
+    parent_id: &str,
+    stream_cancel: CancellationToken,
+) -> Option<ToolResult> {
     if is_child_session(parent_id).await {
         return Some(ToolResult::err(
             "Les sous-agents ne peuvent pas piloter d'autres sous-agents.",
@@ -18,7 +25,9 @@ pub async fn dispatch(tool_name: &str, args: &Value, parent_id: &str) -> Option<
         "list_subagents" => list(parent_id).await,
         "get_subagent" => get(args, parent_id).await,
         "cancel_subagent" => cancel(args, parent_id).await,
-        "message_subagent" => message(args, parent_id).await,
+        "message_subagent" => {
+            super::tool_subagent_message::run_with_cancel(args, parent_id, stream_cancel).await
+        }
         "archive_subagent" => archive(args, parent_id).await,
         _ => return None,
     })

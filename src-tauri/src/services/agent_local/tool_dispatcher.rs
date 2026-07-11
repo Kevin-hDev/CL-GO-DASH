@@ -1,19 +1,22 @@
 use crate::services::agent_local::tool_skill_loader;
 use crate::services::agent_local::types_tools::ToolResult;
 use crate::services::agent_local::{
-    tool_bash, tool_files, tool_glob, tool_grep, tool_validate, tool_web_fetch, tool_web_search,
+    tool_bash, tool_files, tool_glob, tool_grep, tool_web_fetch, tool_web_search,
 };
 use serde_json::Value;
 use std::path::Path;
 
 pub use crate::services::agent_local::tool_definitions::get_tool_definitions;
 pub use crate::services::agent_local::tool_definitions_chat::get_chat_tool_definitions;
+pub use super::tool_dispatcher_entry::dispatch;
+pub(crate) use super::tool_dispatcher_entry::enrich_error;
 
-async fn dispatch_inner(
+pub(super) async fn dispatch_inner(
     tool_name: &str,
     args: &Value,
     working_dir: &Path,
     session_id: &str,
+    cancel: tokio_util::sync::CancellationToken,
 ) -> ToolResult {
     match tool_name {
         "bash" => {
@@ -150,11 +153,12 @@ async fn dispatch_inner(
             }
         }
         "delegate_task" => {
-            super::tool_dispatcher_delegate::dispatch_delegate(args, session_id).await
+            super::tool_dispatcher_delegate::dispatch_delegate(args, session_id, cancel.clone())
+                .await
         }
         _ => {
             if let Some(result) =
-                super::tool_subagent_control::dispatch(tool_name, args, session_id).await
+                super::tool_subagent_control::dispatch(tool_name, args, session_id, cancel).await
             {
                 return result;
             }
@@ -184,48 +188,4 @@ async fn dispatch_inner(
             }
         }
     }
-}
-
-/// Injecte un hint correctif dans le résultat d'erreur selon le pattern détecté.
-pub(crate) fn enrich_error(mut result: ToolResult, tool_name: &str) -> ToolResult {
-    if !result.is_error {
-        return result;
-    }
-    let hint = match tool_name {
-        "edit_file" if result.content.contains("non trouvée") => "",
-        "edit_file" if result.content.contains("fois") => {
-            "\n\n[HINT: old_string apparaît plusieurs fois. Ajouter plus de contexte (lignes avant/après) pour rendre la correspondance unique]"
-        }
-        "bash" if result.content.contains("command not found") => {
-            "\n\n[HINT: Commande introuvable. Vérifier l'orthographe ou installer le paquet nécessaire]"
-        }
-        "bash" if result.content.contains("Timeout") => {
-            "\n\n[HINT: Timeout dépassé. Augmenter le paramètre timeout ou utiliser une approche plus efficace]"
-        }
-        _ => "",
-    };
-    if !hint.is_empty() {
-        result.content.push_str(hint);
-    }
-    result
-}
-
-pub async fn dispatch(
-    tool_name: &str,
-    args: &Value,
-    working_dir: &Path,
-    session_id: &str,
-) -> ToolResult {
-    if super::tool_catalog::is_optional_tool(tool_name)
-        && !super::agent_settings::is_tool_enabled(tool_name).await
-    {
-        return ToolResult::err("Outil désactivé dans les paramètres.");
-    }
-    let args = match tool_validate::validate(tool_name, args) {
-        Ok(cleaned) => cleaned,
-        Err(msg) => return ToolResult::err(format!("[{tool_name}] {msg}")),
-    };
-    let result = dispatch_inner(tool_name, &args, working_dir, session_id).await;
-    let result = super::tool_result_truncate::truncate_result(result, tool_name, session_id);
-    enrich_error(result, tool_name)
 }

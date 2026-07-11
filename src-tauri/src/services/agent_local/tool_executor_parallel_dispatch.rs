@@ -14,7 +14,14 @@ pub async fn dispatch_read(
     let summary =
         super::tool_executor_diagnostics::started(session_id, request_id, name, args, working_dir)
             .await;
-    let result = tool_dispatcher::dispatch(name, args, working_dir, session_id).await;
+    let result = tool_dispatcher::dispatch(
+        name,
+        args,
+        working_dir,
+        session_id,
+        tokio_util::sync::CancellationToken::new(),
+    )
+    .await;
     super::tool_executor_diagnostics::completed(
         session_id,
         request_id,

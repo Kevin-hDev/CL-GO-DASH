@@ -70,13 +70,34 @@ pub async fn register_execution(
     register_execution_with_initial_prompt(parent_id, child_id, cancel, None).await
 }
 
+#[cfg(test)]
 pub async fn register_execution_with_initial_prompt(
     parent_id: &str,
     child_id: &str,
     cancel: CancellationToken,
     initial_prompt: Option<&str>,
 ) -> Result<RegisteredSubagent, String> {
+    register_execution_for_parent_stream(
+        parent_id,
+        child_id,
+        cancel,
+        initial_prompt,
+        &CancellationToken::new(),
+    )
+    .await
+}
+
+pub async fn register_execution_for_parent_stream(
+    parent_id: &str,
+    child_id: &str,
+    cancel: CancellationToken,
+    initial_prompt: Option<&str>,
+    parent_cancel: &CancellationToken,
+) -> Result<RegisteredSubagent, String> {
     let mut state = REGISTRY.lock().await;
+    if parent_cancel.is_cancelled() {
+        return Err("Délégation annulée.".to_string());
+    }
     let parent_count = state
         .entries
         .values()

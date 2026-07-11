@@ -58,6 +58,66 @@ async fn duplicate_registration_never_replaces_active_execution() {
     cleanup(&[&child.id, &parent.id]).await;
 }
 
+#[tokio::test]
+async fn stopped_parent_stream_rejects_late_registration_but_fresh_stream_succeeds() {
+    let parent = session("Parent stop", None).await;
+    let child = session("Child stop", Some(&parent.id)).await;
+    let stopped_stream = CancellationToken::new();
+    let old_run = subagent_registry::get_or_create_run_id(&parent.id).await;
+    stopped_stream.cancel();
+
+    let rejected = subagent_registry::register_execution_for_parent_stream(
+        &parent.id,
+        &child.id,
+        CancellationToken::new(),
+        None,
+        &stopped_stream,
+    )
+    .await;
+
+    assert!(rejected.is_err());
+    assert!(subagent_registry::active_children_for_parent(&parent.id)
+        .await
+        .is_empty());
+    subagent_registry::release_run_claim(&parent.id, &old_run).await;
+
+    let fresh_stream = CancellationToken::new();
+    let _fresh_run = subagent_registry::get_or_create_run_id(&parent.id).await;
+    let registered = subagent_registry::register_execution_for_parent_stream(
+        &parent.id,
+        &child.id,
+        CancellationToken::new(),
+        None,
+        &fresh_stream,
+    )
+    .await
+    .expect("fresh stream registers child");
+    subagent_registry::cancel_all_for_parent(&parent.id).await;
+    let active = subagent_registry::active_run_for_child(&child.id)
+        .await
+        .expect("registered child");
+    assert_eq!(active.execution_id, registered.execution_id);
+    assert!(active.cancelled);
+
+    cleanup(&[&child.id, &parent.id]).await;
+}
+
+#[test]
+fn parent_stream_token_reaches_delegate_registration_on_every_control_path() {
+    let batch = include_str!("tool_executor_delegate_batch.rs");
+    let dispatcher = include_str!("tool_dispatcher.rs");
+    let message = include_str!("tool_subagent_message.rs");
+    let delegate = include_str!("tool_delegate.rs");
+
+    assert!(batch.contains("tool_executor_delegate_launch::launch"));
+    assert!(batch.contains("cancel.clone()"));
+    assert!(dispatcher.contains("dispatch_delegate(args, session_id, cancel.clone())"));
+    assert!(dispatcher.contains("tool_subagent_control::dispatch(tool_name, args, session_id, cancel)"));
+    assert!(message.contains("dispatch_delegate(&payload, parent_id, cancel)"));
+    assert!(delegate.contains("register_execution_for_parent_stream"));
+    assert!(delegate.contains("&parent_cancel"));
+}
+
 async fn session(
     name: &str,
     parent_id: Option<&str>,
