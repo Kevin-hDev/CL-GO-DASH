@@ -9,7 +9,7 @@ pub(super) async fn persist_instruction_delivery_failure(
         child_session_id,
         subagent_type,
         None,
-        || async {},
+        |_| async {},
     )
     .await
     .map(|_| ())
@@ -23,7 +23,7 @@ pub(super) async fn persist_instruction_delivery_failure_inner<F, Fut>(
     after_report: F,
 ) -> Result<bool, String>
 where
-    F: FnOnce() -> Fut,
+    F: FnOnce(super::subagent_completion::TerminalOutcome) -> Fut,
     Fut: std::future::Future<Output = ()>,
 {
     let lock = super::session_store::lock_session(child_session_id).await;

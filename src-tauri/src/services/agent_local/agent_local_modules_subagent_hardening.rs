@@ -20,3 +20,5 @@ mod subagent_max_turn_tests;
 mod subagent_turn_limit;
 #[cfg(test)]
 mod subagent_terminal_event_order_tests;
+#[cfg(test)]
+mod subagent_terminal_event_consistency_tests;

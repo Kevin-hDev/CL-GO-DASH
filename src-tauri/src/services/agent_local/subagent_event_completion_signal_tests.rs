@@ -34,7 +34,7 @@ async fn durable_report_cannot_be_acknowledged_before_terminal_signal() {
             "explorer",
             subagent_status::COMPLETED,
             "Rapport final",
-            move || async move {
+            move |_outcome| async move {
                 let _ = saved_tx.send(());
                 let _ = release_rx.await;
             },

@@ -8,12 +8,13 @@ pub(super) async fn complete_success<F, Fut>(
     child_id: &str,
     subagent_type: &str,
     child: &mut AgentSession,
+    successful: bool,
     status: &str,
     summary: &str,
     after_report: F,
 ) -> Result<(), String>
 where
-    F: FnOnce() -> Fut,
+    F: FnOnce(super::subagent_completion::TerminalOutcome) -> Fut,
     Fut: Future<Output = ()>,
 {
     let parent_lock = super::session_store::lock_session(parent_id).await;
@@ -34,7 +35,12 @@ where
         status_result?;
         return Err(super::subagent_completion::SUBAGENT_COMPLETION_ERROR.to_string());
     }
-    after_report().await;
+    after_report(super::subagent_completion::TerminalOutcome::new(
+        successful,
+        status,
+        summary,
+    ))
+    .await;
     finish_registry(parent_id, child_id, true).await
 }
 
@@ -48,7 +54,7 @@ pub(super) async fn complete_failure<F, Fut>(
     after_report: F,
 ) -> Result<(), String>
 where
-    F: FnOnce() -> Fut,
+    F: FnOnce(super::subagent_completion::TerminalOutcome) -> Fut,
     Fut: Future<Output = ()>,
 {
     let status_result = persist_failed_child(child).await;
@@ -66,7 +72,7 @@ where
         )
         .await;
     if report_persisted {
-        after_report().await;
+        after_report(super::subagent_completion::TerminalOutcome::failure()).await;
     }
     let report_is_ready =
         generic_report_is_deliverable && status_result.is_ok() && report_persisted;
@@ -85,7 +91,7 @@ pub(super) async fn complete_missing<F, Fut>(
     after_report: F,
 ) -> Result<(), String>
 where
-    F: FnOnce() -> Fut,
+    F: FnOnce(super::subagent_completion::TerminalOutcome) -> Fut,
     Fut: Future<Output = ()>,
 {
     let parent_lock = super::session_store::lock_session(parent_id).await;
@@ -101,7 +107,7 @@ where
     )
     .await;
     if report_persisted {
-        after_report().await;
+        after_report(super::subagent_completion::TerminalOutcome::failure()).await;
     }
     finish_registry(parent_id, child_id, false).await
 }

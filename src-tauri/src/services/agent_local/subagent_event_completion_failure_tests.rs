@@ -27,7 +27,7 @@ async fn missing_child_generic_report_stays_hidden_until_single_failure_signal()
             "explorer",
             subagent_status::COMPLETED,
             "ignored",
-            move || async move {
+            move |_outcome| async move {
                 let _ = saved_tx.send(());
                 let _ = release_rx.await;
             },
@@ -88,7 +88,7 @@ async fn failed_child_save_generic_report_stays_hidden_until_single_failure_sign
                     .await
                     .expect("block child save path");
             },
-            move || async move {
+            move |_outcome| async move {
                 let _ = saved_tx.send(());
                 let _ = release_rx.await;
             },
