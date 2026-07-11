@@ -52,5 +52,10 @@ export function acceptsStreamEvent(
     return true;
   }
 
+  if (event.event === "sessionSnapshot") {
+    record.cancelledWithoutGeneration = false;
+    return true;
+  }
+
   return !(record.cancelledWithoutGeneration && STREAM_CONTINUATION_EVENTS.has(event.event));
 }

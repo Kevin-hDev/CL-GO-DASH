@@ -103,6 +103,33 @@ describe("agentStreamManager", () => {
     expect(after?.currentContent).toBe("nouveau");
   });
 
+  it("accepte tout le nouveau run backend sans génération après Stop", async () => {
+    await agentStreamManager.startSession("child", [message("u1", "user", "Mission")], 10);
+    agentStreamManager.stopSession("child");
+
+    emit("child", {
+      event: "sessionSnapshot",
+      data: { messages: [message("u2", "user", "Correction")], tokenCount: 11 },
+    });
+    emit("child", { event: "token", data: { content: "réponse", tokenCount: 1, tps: 1 } });
+    emit("child", {
+      event: "done",
+      data: {
+        evalCount: 1,
+        evalDurationNs: 0,
+        finalTps: 1,
+        promptTokens: 1,
+        contextTokens: 12,
+      },
+    });
+
+    const after = agentStreamManager.getSnapshot("child");
+    expect(after?.isStreaming).toBe(false);
+    expect(after?.completed).toBe(true);
+    const lastMessage = after?.messages[after.messages.length - 1];
+    expect(lastMessage?.content).toBe("réponse");
+  });
+
   it("retire une permission résolue du snapshot global", async () => {
     await agentStreamManager.startSession("s1", [message("u1", "user", "Question")], 10);
     emit("s1", {
