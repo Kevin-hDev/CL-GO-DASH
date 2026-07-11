@@ -174,10 +174,10 @@ pub async fn cancel_agent_request(
             eprintln!("[cancel] session={session_id} gen={gen}");
         }
     }
-    if crate::services::agent_local::subagent_registry::cancel_one(&session_id).await {
-        let _ =
-            crate::services::agent_local::session_subagents::mark_status(&session_id, "cancelled")
-                .await;
+    if crate::services::agent_local::subagent_cancellation::cancel(&session_id)
+        .await
+        .unwrap_or(false)
+    {
         cancelled = true;
     }
     if cancelled {

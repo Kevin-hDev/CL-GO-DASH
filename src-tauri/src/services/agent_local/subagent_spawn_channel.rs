@@ -79,27 +79,16 @@ async fn receiver_loop(mut rx: mpsc::Receiver<SpawnRequest>) {
                 execution_id.clone(),
             );
             super::subagent_panic_supervisor::run_guarded(child, move || async move {
-                if super::subagent_panic_supervisor::recover_panicked_completion(
+                super::subagent_panic_supervisor::recover_panicked_completion(
                     &parent_session_id,
                     &child_session_id,
                     &subagent_type,
                     &run_id,
                     &execution_id,
                     expected_worktree.as_deref(),
+                    Some(&parent_emitter),
                 )
-                .await
-                {
-                    let _ = parent_emitter.send(
-                        crate::services::agent_local::types_ollama::StreamEvent::SubagentCompleted {
-                            subagent_session_id: child_session_id,
-                            success: false,
-                            status: super::subagent_status::FAILED.to_string(),
-                            summary: super::subagent_panic_supervisor::SUBAGENT_PANIC_SUMMARY
-                                .to_string(),
-                            run_id: Some(run_id),
-                        },
-                    );
-                }
+                .await;
             })
             .await;
         });

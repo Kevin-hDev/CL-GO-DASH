@@ -20,8 +20,9 @@ pub async fn recover_panicked_completion(
     run_id: &str,
     execution_id: &str,
     expected_worktree_path: Option<&str>,
+    emitter: Option<&super::stream_events::AgentEventEmitter>,
 ) -> bool {
-    let completion = super::subagent_completion::persist_terminal_completion_for_execution(
+    let completion = super::subagent_completion_events::persist_terminal(
         parent_session_id,
         child_session_id,
         subagent_type,
@@ -29,6 +30,8 @@ pub async fn recover_panicked_completion(
         SUBAGENT_PANIC_SUMMARY,
         run_id,
         execution_id,
+        false,
+        emitter,
     )
     .await;
     cleanup(child_session_id, expected_worktree_path).await;

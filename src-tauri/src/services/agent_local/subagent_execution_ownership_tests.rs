@@ -17,6 +17,7 @@ async fn stale_panic_cannot_terminalize_redeployed_child_in_same_parent_run() {
         &old.run_id,
         &old.execution_id,
         None,
+        None,
     )
     .await;
 
@@ -40,6 +41,7 @@ async fn stale_preparation_failure_is_a_noop_for_redeployed_child() {
         "explorer",
         &old.run_id,
         &old.execution_id,
+        None,
     )
     .await;
 

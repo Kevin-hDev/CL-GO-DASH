@@ -101,6 +101,16 @@ pub async fn delete_agent_session(id: String) -> Result<(), String> {
 
 #[tauri::command]
 pub async fn archive_agent_session(id: String) -> Result<(), String> {
+    if session_store::get(&id)
+        .await
+        .is_ok_and(|session| session.parent_session_id.is_some())
+    {
+        return match crate::services::agent_local::subagent_archive::archive(&id).await {
+            Ok(crate::services::agent_local::subagent_archive::ArchiveOutcome::Archived) => Ok(()),
+            Ok(_) => Err("Impossible d'archiver cette session.".to_string()),
+            Err(_) => Err("Impossible d'archiver cette session.".to_string()),
+        };
+    }
     session_store::archive(&id).await
 }
 

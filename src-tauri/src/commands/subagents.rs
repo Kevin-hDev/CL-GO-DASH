@@ -1,8 +1,6 @@
 use super::subagents_validation::validate_session_id;
 use crate::services::agent_local::types_session::AgentSessionMeta;
-use crate::services::agent_local::{
-    session_store, session_subagents, subagent_live_state, subagent_registry,
-};
+use crate::services::agent_local::{session_store, subagent_cancellation, subagent_live_state};
 
 #[cfg(test)]
 pub use super::subagents_validation::validate_session_id_for_test;
@@ -33,10 +31,9 @@ pub async fn list_subagents(
 #[tauri::command]
 pub async fn cancel_subagent(subagent_session_id: String) -> Result<(), String> {
     validate_session_id(&subagent_session_id)?;
-    if subagent_registry::cancel_one(&subagent_session_id).await {
-        let _ = session_subagents::mark_status(&subagent_session_id, "cancelled").await;
-        Ok(())
-    } else {
-        Err("Sous-agent introuvable ou déjà terminé".to_string())
+    match subagent_cancellation::cancel(&subagent_session_id).await {
+        Ok(true) => Ok(()),
+        Ok(false) => Err("Sous-agent introuvable ou déjà terminé".to_string()),
+        Err(_) => Err("Sous-agent indisponible".to_string()),
     }
 }

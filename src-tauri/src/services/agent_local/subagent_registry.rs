@@ -85,6 +85,9 @@ pub async fn register_execution_with_initial_prompt(
     if let Some(error) = capacity_error(state.entries.len(), parent_count) {
         return Err(error);
     }
+    if state.entries.contains_key(child_id) {
+        return Err("Ce sous-agent est déjà en cours.".to_string());
+    }
     ensure_parent_signal_locked(&mut state, parent_id)?;
     let run_id = state
         .run_ids

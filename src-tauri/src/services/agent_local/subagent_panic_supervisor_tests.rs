@@ -45,6 +45,7 @@ async fn panic_persists_generic_failure_and_leaves_no_registry_ghost() {
                 &run_id,
                 &execution_id,
                 None,
+                None,
             )
             .await;
         },

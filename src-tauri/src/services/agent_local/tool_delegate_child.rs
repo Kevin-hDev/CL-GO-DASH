@@ -106,6 +106,9 @@ pub(super) async fn prepare_existing_child(
     if child.parent_session_id.as_deref() != Some(parent_session_id) {
         return Err(ToolResult::err("Sous-agent introuvable."));
     }
+    if child.archived_at.is_some() {
+        return Err(ToolResult::err("Sous-agent archivé."));
+    }
     if super::subagent_live_state::has_pending_work(&child).await {
         return Err(ToolResult::err("Ce sous-agent est déjà en cours."));
     }

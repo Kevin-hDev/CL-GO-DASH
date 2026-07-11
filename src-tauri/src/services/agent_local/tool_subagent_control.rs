@@ -56,30 +56,35 @@ async fn get(args: &Value, parent_id: &str) -> ToolResult {
 }
 
 async fn cancel(args: &Value, parent_id: &str) -> ToolResult {
-    let Ok(child) = owned_child(args, parent_id).await else {
+    let Some(child_id) = args["subagent_id"].as_str() else {
         return ToolResult::err("Sous-agent introuvable.");
     };
-    if super::subagent_registry::cancel_one(&child.id).await {
-        let _ = super::session_subagents::mark_status(&child.id, super::subagent_status::CANCELLED)
-            .await;
-        return ToolResult::ok("Sous-agent annulé.".to_string());
-    }
-    ToolResult::ok("Sous-agent déjà terminé.".to_string())
-}
-
-async fn archive(args: &Value, parent_id: &str) -> ToolResult {
-    let Ok(child) = owned_child(args, parent_id).await else {
-        return ToolResult::err("Sous-agent introuvable.");
-    };
-    if let Err(result) = can_archive_child(child_has_pending_work(&child).await) {
-        return result;
-    }
-    match super::session_store::archive(&child.id).await {
-        Ok(()) => ToolResult::ok("Sous-agent archivé.".to_string()),
+    match super::subagent_cancellation::cancel_owned(child_id, parent_id).await {
+        Ok(true) => ToolResult::ok("Sous-agent annulé.".to_string()),
+        Ok(false) => ToolResult::ok("Sous-agent déjà terminé.".to_string()),
         Err(_) => ToolResult::err("Sous-agent indisponible."),
     }
 }
 
+async fn archive(args: &Value, parent_id: &str) -> ToolResult {
+    let Some(child_id) = args["subagent_id"].as_str() else {
+        return ToolResult::err("Sous-agent introuvable.");
+    };
+    match super::subagent_archive::archive_owned(child_id, parent_id).await {
+        Ok(super::subagent_archive::ArchiveOutcome::Archived) => {
+            ToolResult::ok("Sous-agent archivé.".to_string())
+        }
+        Ok(super::subagent_archive::ArchiveOutcome::Active) => {
+            ToolResult::err("Sous-agent encore actif.")
+        }
+        Ok(super::subagent_archive::ArchiveOutcome::NotFound) => {
+            ToolResult::err("Sous-agent introuvable.")
+        }
+        Err(_) => ToolResult::err("Sous-agent indisponible."),
+    }
+}
+
+#[cfg(test)]
 fn can_archive_child(has_pending_work: bool) -> Result<(), ToolResult> {
     if has_pending_work {
         return Err(ToolResult::err("Sous-agent encore actif."));
@@ -118,6 +123,7 @@ async fn is_child_session(session_id: &str) -> bool {
         .unwrap_or(false)
 }
 
+#[cfg(test)]
 async fn child_has_pending_work(child: &AgentSession) -> bool {
     super::subagent_live_state::has_pending_work(child).await
 }

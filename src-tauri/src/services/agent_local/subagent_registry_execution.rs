@@ -120,6 +120,20 @@ fn prompt_hash(prompt: &str) -> [u8; 32] {
     Sha256::digest(normalized.as_bytes()).into()
 }
 
+pub async fn cancel_execution(child_id: &str, expected_execution_id: &str) -> bool {
+    let state = REGISTRY.lock().await;
+    let Some(entry) = state
+        .entries
+        .get(child_id)
+        .filter(|entry| entry.execution_id == expected_execution_id)
+    else {
+        return false;
+    };
+    entry.cancel.cancel();
+    true
+}
+
+#[cfg(test)]
 pub async fn cancel_one(child_id: &str) -> bool {
     let state = REGISTRY.lock().await;
     if let Some(entry) = state.entries.get(child_id) {
