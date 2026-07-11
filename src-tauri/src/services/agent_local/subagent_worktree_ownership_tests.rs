@@ -88,6 +88,37 @@ async fn old_cleanup_removes_only_old_path_after_new_execution_ended() {
     delete_sessions(&[&child.id, &sibling.id, &parent.id]).await;
 }
 
+#[tokio::test]
+async fn missing_session_after_creation_never_leaks_the_worktree() {
+    let repo = init_repo_with_commit();
+    let parent = session("Parent missing session").await;
+    let mut child = child_session(&parent.id, "Coder missing session").await;
+    let run = register(&parent.id, &child.id).await;
+    save_run(&mut child, &run.run_id).await;
+    let target = subagent_worktree::path_for_execution(&child.id, &run.execution_id)
+        .expect("execution target");
+    session_store::delete_one(&child.id)
+        .await
+        .expect("delete child before preparation");
+
+    let result = subagent_working_dir::create_coder_worktree_for_test(
+        repo.path(),
+        &child.id,
+        &run.run_id,
+        &run.execution_id,
+    )
+    .await;
+    let leaked = target.exists();
+    if leaked {
+        let _ = subagent_worktree::remove(&target.to_string_lossy()).await;
+    }
+    subagent_registry::unregister(&child.id).await;
+    delete_sessions(&[&parent.id]).await;
+
+    assert!(result.is_err());
+    assert!(!leaked);
+}
+
 async fn prepare(
     repo: &std::path::Path,
     child: &super::types_session::AgentSession,

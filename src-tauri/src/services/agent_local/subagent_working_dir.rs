@@ -54,7 +54,13 @@ async fn create_coder_worktree(
     )
     .await?;
     let path = worktree.to_string_lossy().to_string();
-    let mut session = session_store::get(child_session_id).await?;
+    let mut session = match session_store::get(child_session_id).await {
+        Ok(session) => session,
+        Err(_) => {
+            let _ = super::subagent_worktree::remove(&path).await;
+            return Err("Préparation du worktree isolé impossible".to_string());
+        }
+    };
     let owns_execution = session.subagent_run_id.as_deref() == Some(run_id)
         && super::subagent_registry::owns_execution(child_session_id, run_id, execution_id).await;
     if !owns_execution {
