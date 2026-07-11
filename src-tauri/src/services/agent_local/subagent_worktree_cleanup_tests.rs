@@ -1,6 +1,95 @@
-use super::{subagent_worktree, subagent_worktree_ownership_tests::init_repo_with_commit};
+use super::{
+    subagent_worktree,
+    subagent_worktree_cleanup::{
+        remove_managed_path_with_runner, GitRemoveRunner, GIT_REMOVE_TIMEOUT,
+    },
+    subagent_worktree_ownership_tests::init_repo_with_commit,
+};
+use std::future::Future;
+use std::pin::Pin;
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::sync::Arc;
+use std::task::{Context, Poll};
 use std::path::Path;
 use std::process::Command;
+
+struct BlockingRunner {
+    attempts: Arc<AtomicUsize>,
+    abandoned: Arc<AtomicUsize>,
+    retried_locked: Arc<AtomicBool>,
+}
+
+impl GitRemoveRunner for BlockingRunner {
+    fn run<'a>(
+        &'a self,
+        _path: &'a Path,
+        retry_locked: bool,
+    ) -> Pin<Box<dyn Future<Output = bool> + Send + 'a>> {
+        self.attempts.fetch_add(1, Ordering::SeqCst);
+        self.retried_locked
+            .fetch_or(retry_locked, Ordering::SeqCst);
+        Box::pin(BlockingProcess {
+            abandoned: Arc::clone(&self.abandoned),
+        })
+    }
+}
+
+struct BlockingProcess {
+    abandoned: Arc<AtomicUsize>,
+}
+
+impl Future for BlockingProcess {
+    type Output = bool;
+
+    fn poll(self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Self::Output> {
+        Poll::Pending
+    }
+}
+
+impl Drop for BlockingProcess {
+    fn drop(&mut self) {
+        self.abandoned.fetch_add(1, Ordering::SeqCst);
+    }
+}
+
+#[tokio::test(start_paused = true)]
+async fn blocked_git_remove_is_abandoned_bounded_and_fail_closed() {
+    let root = tempfile::tempdir().expect("managed root");
+    let target = root.path().join(id()).join(id());
+    tokio::fs::create_dir_all(&target)
+        .await
+        .expect("create sensitive target");
+    tokio::fs::write(target.join(".git"), "must stay")
+        .await
+        .expect("create git marker");
+    let canonical_root = tokio::fs::canonicalize(root.path())
+        .await
+        .expect("canonical managed root");
+    let attempts = Arc::new(AtomicUsize::new(0));
+    let abandoned = Arc::new(AtomicUsize::new(0));
+    let retried_locked = Arc::new(AtomicBool::new(false));
+    let runner = BlockingRunner {
+        attempts: Arc::clone(&attempts),
+        abandoned: Arc::clone(&abandoned),
+        retried_locked: Arc::clone(&retried_locked),
+    };
+    let started = tokio::time::Instant::now();
+
+    let result = tokio::time::timeout(
+        GIT_REMOVE_TIMEOUT * 3,
+        remove_managed_path_with_runner(&target, &canonical_root, &runner),
+    )
+    .await
+    .expect("cleanup must finish within its bounded recovery window");
+
+    assert!(result.is_err());
+    assert_eq!(attempts.load(Ordering::SeqCst), 2);
+    assert_eq!(abandoned.load(Ordering::SeqCst), 2);
+    assert!(retried_locked.load(Ordering::SeqCst));
+    assert_eq!(started.elapsed(), GIT_REMOVE_TIMEOUT * 2);
+    assert!(target.exists());
+    assert!(target.join(".git").exists());
+}
 
 #[tokio::test]
 async fn locked_worktree_cleanup_removes_git_metadata() {

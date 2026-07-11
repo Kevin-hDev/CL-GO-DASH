@@ -1,7 +1,50 @@
 use crate::services::paths::data_dir;
+use std::future::Future;
 use std::path::{Path, PathBuf};
+use std::pin::Pin;
 use std::process::Stdio;
 use tokio::process::Command;
+use tokio::time::{timeout, Duration};
+
+pub(super) const GIT_REMOVE_TIMEOUT: Duration = Duration::from_secs(3);
+
+pub(super) trait GitRemoveRunner: Sync {
+    fn run<'a>(
+        &'a self,
+        path: &'a Path,
+        retry_locked: bool,
+    ) -> Pin<Box<dyn Future<Output = bool> + Send + 'a>>;
+}
+
+struct CommandGitRemoveRunner;
+
+impl GitRemoveRunner for CommandGitRemoveRunner {
+    fn run<'a>(
+        &'a self,
+        path: &'a Path,
+        retry_locked: bool,
+    ) -> Pin<Box<dyn Future<Output = bool> + Send + 'a>> {
+        Box::pin(async move {
+            let mut command = Command::new("git");
+            command
+                .arg("-C")
+                .arg(path)
+                .args(["worktree", "remove", "--force"]);
+            if retry_locked {
+                command.arg("--force");
+            }
+            command
+                .arg(path)
+                .stdout(Stdio::null())
+                .stderr(Stdio::null())
+                .kill_on_drop(true)
+                .status()
+                .await
+                .map(|status| status.success())
+                .unwrap_or(false)
+        })
+    }
+}
 
 pub async fn remove(worktree_path: &str) -> Result<(), String> {
     if super::subagent_worktree::has_forbidden_component(worktree_path) {
@@ -21,6 +64,14 @@ pub async fn remove(worktree_path: &str) -> Result<(), String> {
 }
 
 async fn remove_managed_path(path: &Path, canonical_root: &Path) -> Result<(), String> {
+    remove_managed_path_with_runner(path, canonical_root, &CommandGitRemoveRunner).await
+}
+
+pub(super) async fn remove_managed_path_with_runner(
+    path: &Path,
+    canonical_root: &Path,
+    runner: &dyn GitRemoveRunner,
+) -> Result<(), String> {
     let canonical_path = match tokio::fs::canonicalize(path).await {
         Ok(path) => path,
         Err(_) => match tokio::fs::symlink_metadata(path).await {
@@ -33,34 +84,21 @@ async fn remove_managed_path(path: &Path, canonical_root: &Path) -> Result<(), S
         return Err("Chemin worktree hors du répertoire géré".to_string());
     }
 
-    if git_remove(&canonical_path, false).await || !canonical_path.exists() {
+    if git_remove(runner, &canonical_path, false).await || !canonical_path.exists() {
         return verify_removed(&canonical_path);
     }
-    if git_remove(&canonical_path, true).await || !canonical_path.exists() {
+    if git_remove(runner, &canonical_path, true).await || !canonical_path.exists() {
         return verify_removed(&canonical_path);
     }
     remove_partial_directory(&canonical_path).await?;
     verify_removed(&canonical_path)
 }
 
-async fn git_remove(path: &Path, retry_locked: bool) -> bool {
-    let mut command = Command::new("git");
-    command
-        .arg("-C")
-        .arg(path)
-        .args(["worktree", "remove", "--force"]);
-    if retry_locked {
-        command.arg("--force");
-    }
-    command
-        .arg(path)
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .kill_on_drop(true)
-        .status()
-        .await
-        .map(|status| status.success())
-        .unwrap_or(false)
+async fn git_remove(runner: &dyn GitRemoveRunner, path: &Path, retry_locked: bool) -> bool {
+    matches!(
+        timeout(GIT_REMOVE_TIMEOUT, runner.run(path, retry_locked)).await,
+        Ok(true)
+    )
 }
 
 async fn remove_partial_directory(path: &Path) -> Result<(), String> {
