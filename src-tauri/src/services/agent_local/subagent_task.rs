@@ -160,7 +160,12 @@ pub async fn run(
         break;
     }
 
-    super::subagent_working_dir::cleanup_owned(&child_session_id, prepared.worktree_path()).await;
+    super::subagent_working_dir::cleanup_owned(
+        &child_session_id,
+        &execution_id,
+        prepared.worktree_path(),
+    )
+    .await;
     session_store::remove_session_lock(&child_session_id).await;
 }
 

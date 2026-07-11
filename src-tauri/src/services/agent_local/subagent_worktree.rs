@@ -1,11 +1,27 @@
 use crate::services::paths::data_dir;
-use std::path::{Component, Path, PathBuf};
+#[cfg(test)]
+use std::path::Component;
+use std::path::{Path, PathBuf};
 use tokio::process::Command;
 
+#[cfg(test)]
 pub async fn remove(worktree_path: &str) -> Result<(), String> {
     super::subagent_worktree_cleanup::remove(worktree_path).await
 }
 
+pub async fn remove_owned(
+    worktree_path: &str,
+    child_id: &str,
+    execution_id: &str,
+) -> Result<(), String> {
+    super::subagent_worktree_cleanup::remove_owned(worktree_path, child_id, execution_id).await
+}
+
+pub async fn remove_for_child(worktree_path: &str, child_id: &str) -> Result<(), String> {
+    super::subagent_worktree_cleanup::remove_for_child(worktree_path, child_id).await
+}
+
+#[cfg(test)]
 pub(super) fn has_forbidden_component(path: &str) -> bool {
     path.contains('\0')
         || Path::new(path)
@@ -58,7 +74,7 @@ pub async fn create_for_execution(
     if output.status.success() && target.is_dir() {
         Ok(target)
     } else {
-        let _ = remove(&target.to_string_lossy()).await;
+        let _ = remove_owned(&target.to_string_lossy(), child_id, execution_id).await;
         Err("Création du worktree isolé impossible".to_string())
     }
 }

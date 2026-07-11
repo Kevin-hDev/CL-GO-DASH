@@ -57,19 +57,34 @@ async fn create_coder_worktree(
     let mut session = match session_store::get(child_session_id).await {
         Ok(session) => session,
         Err(_) => {
-            let _ = super::subagent_worktree::remove(&path).await;
+            let _ = super::subagent_worktree::remove_owned(
+                &path,
+                child_session_id,
+                execution_id,
+            )
+            .await;
             return Err("Préparation du worktree isolé impossible".to_string());
         }
     };
     let owns_execution = session.subagent_run_id.as_deref() == Some(run_id)
         && super::subagent_registry::owns_execution(child_session_id, run_id, execution_id).await;
     if !owns_execution {
-        let _ = super::subagent_worktree::remove(&worktree.to_string_lossy()).await;
+        let _ = super::subagent_worktree::remove_owned(
+            &worktree.to_string_lossy(),
+            child_session_id,
+            execution_id,
+        )
+        .await;
         return Err("Préparation du worktree isolé impossible".to_string());
     }
     session.subagent_worktree = Some(path.clone());
     if session_store::save(&session).await.is_err() {
-        let _ = super::subagent_worktree::remove(&path).await;
+        let _ = super::subagent_worktree::remove_owned(
+            &path,
+            child_session_id,
+            execution_id,
+        )
+        .await;
         return Err("Préparation du worktree isolé impossible".to_string());
     }
     Ok(PreparedWorkingDir {
@@ -78,24 +93,35 @@ async fn create_coder_worktree(
     })
 }
 
-pub async fn cleanup_owned(child_session_id: &str, expected_worktree_path: Option<&str>) {
+pub async fn cleanup_owned(
+    child_session_id: &str,
+    expected_execution_id: &str,
+    expected_worktree_path: Option<&str>,
+) {
     let Some(expected) = expected_worktree_path else {
         return;
     };
-    if super::subagent_worktree::remove(expected).await.is_err() {
-        eprintln!("[subagent] cleanup worktree");
-        return;
-    }
     let lock = session_store::lock_session(child_session_id).await;
     let _guard = lock.lock().await;
     let Ok(mut session) = session_store::get(child_session_id).await else {
         return;
     };
-    if session.subagent_worktree.as_deref() != Some(expected) {
+    let clear_current = session.subagent_worktree.as_deref() == Some(expected);
+    if super::subagent_worktree::remove_owned(
+        expected,
+        child_session_id,
+        expected_execution_id,
+    )
+    .await
+    .is_err()
+    {
+        eprintln!("[subagent] cleanup worktree");
         return;
     }
-    session.subagent_worktree = None;
-    let _ = session_store::save(&session).await;
+    if clear_current {
+        session.subagent_worktree = None;
+        let _ = session_store::save(&session).await;
+    }
 }
 
 #[cfg(test)]

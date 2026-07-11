@@ -34,11 +34,20 @@ pub async fn recover_panicked_completion(
         emitter,
     )
     .await;
-    cleanup(child_session_id, expected_worktree_path).await;
+    cleanup(child_session_id, execution_id, expected_worktree_path).await;
     !matches!(completion, Ok(None))
 }
 
-async fn cleanup(child_session_id: &str, expected_worktree_path: Option<&str>) {
-    super::subagent_working_dir::cleanup_owned(child_session_id, expected_worktree_path).await;
+async fn cleanup(
+    child_session_id: &str,
+    execution_id: &str,
+    expected_worktree_path: Option<&str>,
+) {
+    super::subagent_working_dir::cleanup_owned(
+        child_session_id,
+        execution_id,
+        expected_worktree_path,
+    )
+    .await;
     super::session_store::remove_session_lock(child_session_id).await;
 }

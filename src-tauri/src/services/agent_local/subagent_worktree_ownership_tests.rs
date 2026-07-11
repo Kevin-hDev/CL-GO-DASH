@@ -38,8 +38,14 @@ async fn prepared_dir_survives_internal_turn_and_new_execution_is_distinct() {
     assert_ne!(prepared.path(), next.path());
 
     subagent_registry::unregister(&child.id).await;
-    subagent_working_dir::cleanup_owned(&child.id, prepared.worktree_path()).await;
-    subagent_working_dir::cleanup_owned(&child.id, next.worktree_path()).await;
+    subagent_working_dir::cleanup_owned(
+        &child.id,
+        &first_run.execution_id,
+        prepared.worktree_path(),
+    )
+    .await;
+    subagent_working_dir::cleanup_owned(&child.id, &next_run.execution_id, next.worktree_path())
+        .await;
     delete_sessions(&[&child.id, &parent.id]).await;
 }
 
@@ -78,13 +84,15 @@ async fn old_cleanup_removes_only_old_path_after_new_execution_ended() {
     subagent_registry::unregister(&child.id).await;
     subagent_registry::unregister(&sibling.id).await;
 
-    subagent_working_dir::cleanup_owned(&child.id, old_dir.worktree_path()).await;
+    subagent_working_dir::cleanup_owned(&child.id, &old.execution_id, old_dir.worktree_path())
+        .await;
     let saved = session_store::get(&child.id).await.expect("saved child");
     assert!(!old_dir.path().exists());
     assert!(new_dir.path().exists());
     assert_eq!(saved.subagent_worktree.as_deref(), new_dir.worktree_path());
 
-    subagent_working_dir::cleanup_owned(&child.id, new_dir.worktree_path()).await;
+    subagent_working_dir::cleanup_owned(&child.id, &new.execution_id, new_dir.worktree_path())
+        .await;
     delete_sessions(&[&child.id, &sibling.id, &parent.id]).await;
 }
 

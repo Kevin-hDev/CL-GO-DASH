@@ -15,6 +15,8 @@ mod subagent_worktree_cleanup_tests;
 #[cfg(test)]
 mod subagent_worktree_inspection_tests;
 #[cfg(test)]
+mod subagent_worktree_owner_validation_tests;
+#[cfg(test)]
 mod subagent_spawn_event_order_tests;
 mod subagent_completion_events;
 mod subagent_completion_ownership;
@@ -26,6 +28,7 @@ mod subagent_history_tests;
 #[cfg(test)]
 mod subagent_history_failure_tests;
 mod subagent_worktree_cleanup;
+mod subagent_worktree_identity;
 #[cfg(test)]
 mod subagent_max_turn_tests;
 mod subagent_turn_limit;

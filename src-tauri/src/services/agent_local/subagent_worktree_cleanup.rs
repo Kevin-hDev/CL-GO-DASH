@@ -1,4 +1,3 @@
-use crate::services::paths::data_dir;
 use std::future::Future;
 use std::path::{Path, PathBuf};
 use std::pin::Pin;
@@ -46,19 +45,39 @@ impl GitRemoveRunner for CommandGitRemoveRunner {
     }
 }
 
+#[cfg(test)]
 pub async fn remove(worktree_path: &str) -> Result<(), String> {
-    if super::subagent_worktree::has_forbidden_component(worktree_path) {
-        return Err("Chemin worktree invalide".to_string());
-    }
-    let path = PathBuf::from(worktree_path);
-    let root = data_dir().join("subagent-worktrees");
-    let canonical_root = match tokio::fs::canonicalize(&root).await {
+    let identity = super::subagent_worktree_identity::ManagedWorktreeIdentity::parse(worktree_path)?;
+    remove_identity(identity).await
+}
+
+pub async fn remove_owned(
+    worktree_path: &str,
+    child_id: &str,
+    execution_id: &str,
+) -> Result<(), String> {
+    let identity = super::subagent_worktree_identity::ManagedWorktreeIdentity::parse(worktree_path)?;
+    identity.require_owner(child_id, execution_id)?;
+    remove_identity(identity).await
+}
+
+pub async fn remove_for_child(worktree_path: &str, child_id: &str) -> Result<(), String> {
+    let identity = super::subagent_worktree_identity::ManagedWorktreeIdentity::parse(worktree_path)?;
+    identity.require_child(child_id)?;
+    remove_identity(identity).await
+}
+
+async fn remove_identity(
+    identity: super::subagent_worktree_identity::ManagedWorktreeIdentity,
+) -> Result<(), String> {
+    identity.reject_symlinks().await?;
+    let canonical_root = match tokio::fs::canonicalize(&identity.root).await {
         Ok(root) => root,
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(()),
         Err(_) => return Err("Chemin worktree invalide".to_string()),
     };
-    let child_dir = managed_child_dir(&path, &canonical_root).await;
-    let removal = remove_managed_path(&path, &canonical_root).await;
+    let child_dir = managed_child_dir(&identity.path, &canonical_root).await;
+    let removal = remove_managed_path(&identity.path, &canonical_root).await;
     let parent_cleanup = cleanup_empty_parent(child_dir.as_deref()).await;
 
     removal.and(parent_cleanup)

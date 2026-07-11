@@ -70,7 +70,7 @@ pub(crate) async fn cleanup_orphans_in_dir(
 
         if remove_worktrees {
             if let Some(worktree) = &session.subagent_worktree {
-                if let Err(e) = subagent_worktree::remove(worktree).await {
+                if let Err(e) = subagent_worktree::remove_for_child(worktree, &session.id).await {
                     eprintln!(
                         "[startup-cleanup] suppression worktree {} (session {}): {e}",
                         worktree, meta.id

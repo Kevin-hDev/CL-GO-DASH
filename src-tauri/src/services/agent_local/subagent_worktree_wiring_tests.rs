@@ -65,7 +65,12 @@ async fn concurrent_preparation_allows_exactly_one_worktree_claim() {
     let owned_path = successes[0].worktree_path().map(ToString::to_string);
     drop(successes);
     subagent_registry::unregister(&child.id).await;
-    subagent_working_dir::cleanup_owned(&child.id, owned_path.as_deref()).await;
+    subagent_working_dir::cleanup_owned(
+        &child.id,
+        &registered.execution_id,
+        owned_path.as_deref(),
+    )
+    .await;
     session_store::delete_one(&child.id).await.expect("delete child");
     session_store::delete_one(&parent.id).await.expect("delete parent");
 }
