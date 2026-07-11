@@ -35,7 +35,10 @@ fn saved_to_chat(message: AgentMessage) -> Option<ChatMessage> {
         return None;
     }
     let tool_calls = message.tool_calls.map(convert_tool_calls);
-    if message.content.trim().is_empty() && tool_calls.as_ref().is_none_or(Vec::is_empty) {
+    if message.role != "tool"
+        && message.content.trim().is_empty()
+        && tool_calls.as_ref().is_none_or(Vec::is_empty)
+    {
         return None;
     }
     Some(ChatMessage {

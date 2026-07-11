@@ -69,7 +69,8 @@ fn to_saved(message: &ChatMessage) -> Option<AgentMessage> {
             })
             .collect::<Vec<_>>()
     });
-    if message.content.trim().is_empty()
+    if message.role != "tool"
+        && message.content.trim().is_empty()
         && tool_calls.as_ref().is_none_or(Vec::is_empty)
         && message.reasoning_content.as_deref().is_none_or(str::is_empty)
     {

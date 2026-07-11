@@ -14,6 +14,8 @@ mod subagent_worktree_cleanup_tests;
 mod subagent_spawn_event_order_tests;
 mod subagent_completion_events;
 mod subagent_completion_ownership;
+#[cfg(test)]
+mod subagent_empty_tool_history_tests;
 mod subagent_history;
 #[cfg(test)]
 mod subagent_history_tests;
