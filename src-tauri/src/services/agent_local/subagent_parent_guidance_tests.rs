@@ -15,7 +15,7 @@ fn compact_and_detailed_prompts_share_positive_subagent_guidance() {
 
 #[test]
 fn dynamic_context_uses_natural_guidance_without_lock_vocabulary() {
-    let context = super::subagent_orchestration_context::build_gate_content(&[], false);
+    let context = super::subagent_orchestration_context::build_gate_content(1, false);
 
     for forbidden in ["Final answer is locked", "Keep the stream active", "blocked"] {
         assert!(!context.contains(forbidden), "forbidden text: {forbidden}");

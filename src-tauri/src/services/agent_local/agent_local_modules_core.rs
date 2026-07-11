@@ -107,6 +107,7 @@ pub mod stream_diagnostics_tools;
 pub mod stream_events;
 pub mod subagent_activity;
 pub mod subagent_completion;
+mod subagent_completion_boundary;
 #[cfg(test)]
 mod subagent_completion_boundary_tests;
 #[cfg(test)]
@@ -119,6 +120,10 @@ pub mod subagent_live_state;
 pub mod subagent_orchestration;
 #[cfg(test)]
 mod subagent_event_wait_tests;
+#[cfg(test)]
+mod subagent_event_completion_signal_tests;
+#[cfg(test)]
+mod subagent_event_completion_failure_tests;
 #[cfg(test)]
 mod subagent_orchestration_race_tests;
 #[cfg(test)]

@@ -142,11 +142,16 @@ pub async fn run_agent_loop(
             return Err(agent_loop_errors::max_turns_message());
         }
         breaker.check(&result.tool_calls)?;
-        let mode = permission_mode.to_string();
-        let tool_compression = compression.tool_compression(
-            token_counting::sum_real_counts(last_prompt, last_eval),
-            cancel.clone(),
+        let control_only = crate::services::agent_local::subagent_tool_control::is_control_only(
+            &result.tool_calls,
         );
+        let mode = permission_mode.to_string();
+        let tool_compression = (!control_only).then(|| {
+            compression.tool_compression(
+                token_counting::sum_real_counts(last_prompt, last_eval),
+                cancel.clone(),
+            )
+        });
         let compressed_during_tools = tool_executor::run_tools(
             on_event,
             messages,
@@ -159,9 +164,12 @@ pub async fn run_agent_loop(
             &mut write_guard,
             plan_active,
             &result.tool_call_ids,
-            Some(&tool_compression),
+            tool_compression.as_ref(),
         )
         .await;
+        subagents
+            .wait_after_tool_batch(control_only, messages, cancel.clone())
+            .await?;
         let compressed_after_tools = compression
             .after_tools(
                 messages,
@@ -174,9 +182,6 @@ pub async fn run_agent_loop(
         if !compressed_after_tools {
             let _ = on_event.send(StreamEvent::TurnEnd {});
         }
-        subagents
-            .wait_after_tool_batch(&result.tool_calls, messages, cancel.clone())
-            .await?;
     }
     let token_total = crate::services::agent_local::agent_loop_completion::emit_done(
         on_event,

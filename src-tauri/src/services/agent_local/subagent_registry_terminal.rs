@@ -1,4 +1,9 @@
-const MAX_TERMINAL_PARENTS: usize = 16;
+pub(super) const PRODUCTION_MAX_TERMINAL_PARENTS: usize = 16;
+#[cfg(not(test))]
+const MAX_TERMINAL_PARENTS: usize = PRODUCTION_MAX_TERMINAL_PARENTS;
+// Unit tests share this global registry and run concurrently in the Rust harness.
+#[cfg(test)]
+const MAX_TERMINAL_PARENTS: usize = 64;
 const TERMINAL_STATE_ERROR: &str = "État terminal de sous-agent indisponible";
 
 pub struct ParentRegistrySnapshot {

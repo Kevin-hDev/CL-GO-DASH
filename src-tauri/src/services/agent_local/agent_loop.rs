@@ -2,10 +2,9 @@ use super::agent_loop_compression::{LastCounts, LoopCompression};
 use super::agent_loop_ollama_request::OllamaRequestParams;
 use super::stream_events::AgentEventEmitter;
 use super::types_ollama::{ChatMessage, OllamaThink, StreamEvent};
-use super::write_guard_registry;
 use super::{
     agent_loop_limits::MAX_TURNS, agent_loop_plan, agent_loop_support, circuit_breaker,
-    subagent_orchestration, tool_executor, tool_result_budget,
+    subagent_orchestration, tool_executor, tool_result_budget, write_guard_registry,
 };
 use crate::services::token_counting;
 use std::path::PathBuf;
@@ -144,12 +143,15 @@ pub async fn run_agent_loop(
             agent_loop_support::decharge_gpu(model).await;
             return Err(msg);
         }
+        let control_only = super::subagent_tool_control::is_control_only(&result.tool_calls);
         let eager_results = eager_handle.await.unwrap_or_default();
         let mode = permission_mode.to_string();
-        let tool_compression = compression.tool_compression(
-            token_counting::sum_real_counts(last_prompt, last_eval),
-            cancel.clone(),
-        );
+        let tool_compression = (!control_only).then(|| {
+            compression.tool_compression(
+                token_counting::sum_real_counts(last_prompt, last_eval),
+                cancel.clone(),
+            )
+        });
         let compressed_during_tools = tool_executor::run_tools_with_eager(
             on_event,
             messages,
@@ -163,9 +165,12 @@ pub async fn run_agent_loop(
             plan_active,
             Some(eager_results),
             &[],
-            Some(&tool_compression),
+            tool_compression.as_ref(),
         )
         .await;
+        subagents
+            .wait_after_tool_batch(control_only, messages, cancel.clone())
+            .await?;
         let compressed_after_tools = compression
             .after_tools(
                 messages,
@@ -178,9 +183,6 @@ pub async fn run_agent_loop(
         if !compressed_after_tools {
             let _ = on_event.send(StreamEvent::TurnEnd {});
         }
-        subagents
-            .wait_after_tool_batch(&result.tool_calls, messages, cancel.clone())
-            .await?;
     }
     let token_total = super::agent_loop_completion::emit_done(
         on_event,

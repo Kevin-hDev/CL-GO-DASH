@@ -13,10 +13,18 @@ pub use super::subagent_report_context::{
 pub(super) const MAX_PENDING_REPORTS: usize = 16;
 const MAX_REPORT_SUMMARY_CHARS: usize = 12_000;
 
+#[cfg(test)]
 pub async fn append(parent_id: &str, report: SubagentHiddenReport) -> Result<(), String> {
     let lock = super::session_store::lock_session(parent_id).await;
     let _guard = lock.lock().await;
     let mut session = super::session_store::get(parent_id).await?;
+    append_locked(&mut session, report).await
+}
+
+pub(super) async fn append_locked(
+    session: &mut super::types_session::AgentSession,
+    report: SubagentHiddenReport,
+) -> Result<(), String> {
     if session
         .subagent_hidden_reports
         .iter()
@@ -28,7 +36,7 @@ pub async fn append(parent_id: &str, report: SubagentHiddenReport) -> Result<(),
         return Err("La file de rapports de sous-agents est pleine.".to_string());
     }
     session.subagent_hidden_reports.push(report);
-    super::session_store::save(&session).await
+    super::session_store::save(session).await
 }
 
 pub async fn peek_reports(session_id: &str) -> Vec<SubagentHiddenReport> {

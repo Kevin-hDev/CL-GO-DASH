@@ -4,7 +4,7 @@ mod tests {
         active_children_for_parent, cancel_one, capacity_error, complete_child, consume_terminal,
         get_or_create_run_id, get_run_id_for_child, parent_snapshot, register,
         release_run_claim, renew_child, subscribe_for_parent, terminal_state_for_parent, unregister,
-        SubagentTerminalKind,
+        SubagentTerminalKind, PRODUCTION_MAX_TERMINAL_PARENTS,
     };
     use crate::services::agent_local::subagent_registry_test_support::meta;
     use tokio_util::sync::CancellationToken;
@@ -20,6 +20,8 @@ mod tests {
     // on the global static registry shared across parallel tokio tests.
     #[tokio::test]
     async fn test_registry_all() {
+        assert_eq!(PRODUCTION_MAX_TERMINAL_PARENTS, 16);
+
         // --- get_or_create_run_id ---
         let p1 = uid();
         let p2 = uid();

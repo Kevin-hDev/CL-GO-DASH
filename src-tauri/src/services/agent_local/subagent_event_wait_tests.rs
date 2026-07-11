@@ -103,7 +103,7 @@ async fn control_only_batch_waits_but_mixed_batch_continues() {
     let control_outcome = tokio::time::timeout(
         Duration::from_millis(25),
         orchestrator.wait_after_tool_batch(
-            &controls,
+            super::subagent_tool_control::is_control_only(&controls),
             &mut messages,
             CancellationToken::new(),
         ),
@@ -115,7 +115,11 @@ async fn control_only_batch_waits_but_mixed_batch_continues() {
     ];
     let mixed_outcome = tokio::time::timeout(
         Duration::from_millis(25),
-        orchestrator.wait_after_tool_batch(&mixed, &mut messages, CancellationToken::new()),
+        orchestrator.wait_after_tool_batch(
+            super::subagent_tool_control::is_control_only(&mixed),
+            &mut messages,
+            CancellationToken::new(),
+        ),
     )
     .await;
 

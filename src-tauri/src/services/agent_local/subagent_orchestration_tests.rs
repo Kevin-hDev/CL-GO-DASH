@@ -150,6 +150,23 @@ async fn report_persistence_failure_signal_stops_parent_without_finalizing() {
         .expect("delete parent session");
 }
 
+#[tokio::test]
+async fn active_registry_entry_survives_missing_child_session() {
+    let parent = parent_session().await;
+    let child_id = uuid::Uuid::new_v4().to_string();
+    super::super::subagent_registry::register(&parent.id, &child_id, CancellationToken::new())
+        .await
+        .expect("register missing child");
+
+    let active = current_turn_active_ids(&parent.id).await;
+
+    super::super::subagent_registry::unregister(&child_id).await;
+    super::super::session_store::delete_one(&parent.id)
+        .await
+        .expect("delete parent session");
+    assert_eq!(active.len(), 1);
+}
+
 #[test]
 fn api_and_ollama_ack_only_after_a_successful_model_outcome() {
     assert_shared_model_outcomes(include_str!("../llm/agent_loop_request.rs"));

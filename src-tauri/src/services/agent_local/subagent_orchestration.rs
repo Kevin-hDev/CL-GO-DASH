@@ -1,6 +1,5 @@
 use super::stream_events::AgentEventEmitter;
 use super::types_ollama::ChatMessage;
-use super::types_session::AgentSession;
 use super::types_stream::{StreamEvent, StreamResult};
 use std::collections::BTreeSet;
 use tokio_util::sync::CancellationToken;
@@ -49,10 +48,10 @@ impl ParentSubagentOrchestrator {
         let reports_injected =
             self.reports_injected_since_last_request || self.inject_pending_reports(messages).await;
         self.reports_injected_since_last_request = false;
-        let active = self.current_turn_active().await;
+        let active_ids = self.current_turn_active_ids().await;
         super::subagent_orchestration_context::replace_gate_context(
             messages,
-            &active,
+            active_ids.len(),
             reports_injected,
         );
         Ok(())
@@ -74,7 +73,7 @@ impl ParentSubagentOrchestrator {
             on_event,
             result,
             plan_active,
-            awaiting_report || terminal_failure || !self.current_turn_active().await.is_empty(),
+            awaiting_report || terminal_failure || !self.current_turn_active_ids().await.is_empty(),
         );
     }
     pub async fn continue_after_no_tool_turn(
@@ -92,11 +91,11 @@ impl ParentSubagentOrchestrator {
 
     pub async fn wait_after_tool_batch(
         &mut self,
-        tool_calls: &[(String, serde_json::Value)],
+        control_only: bool,
         messages: &mut Vec<ChatMessage>,
         cancel: CancellationToken,
     ) -> Result<(), String> {
-        if super::subagent_tool_control::is_control_only(tool_calls) {
+        if control_only {
             let _ = self.after_no_tool_turn(messages, cancel).await?;
         }
         Ok(())
@@ -156,24 +155,13 @@ impl ParentSubagentOrchestrator {
         }
     }
 
-    async fn current_turn_active(&self) -> Vec<AgentSession> {
-        current_turn_active(&self.parent_session_id).await
+    async fn current_turn_active_ids(&self) -> Vec<String> {
+        current_turn_active_ids(&self.parent_session_id).await
     }
 }
 
-async fn current_turn_active(parent_session_id: &str) -> Vec<AgentSession> {
-    let ids = super::subagent_registry::active_children_for_parent(parent_session_id).await;
-    sessions_for_ids(ids).await
-}
-
-async fn sessions_for_ids(ids: Vec<String>) -> Vec<AgentSession> {
-    let mut sessions = Vec::with_capacity(ids.len());
-    for id in ids {
-        if let Ok(session) = super::session_store::get(&id).await {
-            sessions.push(session);
-        }
-    }
-    sessions
+async fn current_turn_active_ids(parent_session_id: &str) -> Vec<String> {
+    super::subagent_registry::active_children_for_parent(parent_session_id).await
 }
 
 #[cfg(test)]
