@@ -25,7 +25,7 @@ async fn last_turn_keeps_correction_unconsumed_and_context_untouched() {
     child.subagent_run_id = Some(registered.run_id.clone());
     session_store::save(&child).await.expect("save child");
     let mut orchestrator = ParentSubagentOrchestrator::new(&child.id).await;
-    let messages = vec![ChatMessage {
+    let messages = [ChatMessage {
         role: "assistant".into(),
         content: "réponse terminale".into(),
         ..Default::default()
