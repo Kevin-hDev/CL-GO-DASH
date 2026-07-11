@@ -144,7 +144,7 @@ fn orchestrator_contains_no_temporal_wakeup() {
 }
 
 #[test]
-fn replacement_cancels_only_parent_while_stop_keeps_child_cancellation() {
+fn replacement_cancels_only_parent_while_stop_keeps_owned_child_cancellation() {
     let source = include_str!("../../commands/agent_chat.rs");
     let (_, cancel_command) = source
         .split_once("pub async fn cancel_agent_request")
@@ -155,6 +155,6 @@ fn replacement_cancels_only_parent_while_stop_keeps_child_cancellation() {
         .0;
 
     assert!(replacement.contains("cancel_with_lock"));
-    assert!(!replacement.contains("cancel_all_for_parent"));
-    assert!(cancel_command.contains("cancel_all_for_parent"));
+    assert!(!replacement.contains("cancel_stopped_parent_stream_children"));
+    assert!(cancel_command.contains("cancel_stopped_parent_stream_children"));
 }
