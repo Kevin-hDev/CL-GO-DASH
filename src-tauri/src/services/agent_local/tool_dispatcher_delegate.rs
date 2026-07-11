@@ -40,8 +40,10 @@ pub async fn spawn_delegate(
         Err(tr) => Err(tr),
         Ok(spawned) => {
             let child_id = spawned.child_id.clone();
-            if let Err(e) =
-                super::subagent_spawn_channel::send(super::subagent_spawn_channel::SpawnRequest {
+            let spawn_emitter = spawned.parent_emitter.clone();
+            let spawn_event = spawned.spawn_event;
+            if let Err(e) = super::subagent_spawn_channel::send(
+                super::subagent_spawn_channel::SpawnRequest {
                     app: spawned.app,
                     parent_session_id: session_id.to_string(),
                     child_session_id: spawned.child_id,
@@ -54,7 +56,11 @@ pub async fn spawn_delegate(
                     project_id: spawned.project_id,
                     run_id: spawned.run_id,
                     execution_id: spawned.execution_id,
-                })
+                },
+                move || {
+                    let _ = spawn_emitter.send(spawn_event);
+                },
+            )
             {
                 super::subagent_registry::unregister(&child_id).await;
                 if let Err(mark_err) =

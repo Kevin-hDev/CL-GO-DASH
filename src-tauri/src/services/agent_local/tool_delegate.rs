@@ -21,6 +21,7 @@ pub struct SpawnedSubagent {
     pub project_id: Option<String>,
     pub run_id: String,
     pub execution_id: String,
+    pub spawn_event: StreamEvent,
 }
 
 pub async fn prepare_delegate(
@@ -168,7 +169,7 @@ pub async fn prepare_delegate(
     let run_id = registered.run_id;
 
     let prompt_preview: String = prompt.chars().take(MAX_PROMPT_PREVIEW).collect();
-    let _ = parent_emitter.send(StreamEvent::SubagentSpawned {
+    let spawn_event = StreamEvent::SubagentSpawned {
         subagent_session_id: child_id.clone(),
         subagent_name: name.clone(),
         subagent_type: subagent_type.to_string(),
@@ -176,7 +177,7 @@ pub async fn prepare_delegate(
         subagent_color_key: color_key,
         prompt_preview: prompt_preview.clone(),
         run_id: Some(run_id.clone()),
-    });
+    };
 
     Ok(SpawnedSubagent {
         app,
@@ -190,5 +191,6 @@ pub async fn prepare_delegate(
         project_id: parent.project_id.clone(),
         run_id,
         execution_id: registered.execution_id,
+        spawn_event,
     })
 }

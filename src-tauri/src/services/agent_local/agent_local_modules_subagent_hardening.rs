@@ -8,6 +8,8 @@ pub mod subagent_cancellation;
 mod subagent_cancellation_tests;
 #[cfg(test)]
 mod subagent_parent_stream_ownership_tests;
+#[cfg(test)]
+mod subagent_spawn_event_order_tests;
 mod subagent_completion_events;
 mod subagent_completion_ownership;
 mod subagent_history;
