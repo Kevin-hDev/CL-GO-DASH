@@ -73,18 +73,34 @@ mod tests {
     }
 
     #[test]
-    fn finalized_state_clears_queue_for_terminal_status() {
-        let mut child = child_session("completed");
+    fn failed_or_interrupted_state_preserves_queue_for_explicit_redeployment() {
+        for status in ["failed", "interrupted"] {
+            let mut child = child_session("running");
+            child.subagent_queued_prompts.push("suite".into());
+
+            let finalized = super::super::subagent_task::apply_finalized_subagent_state(
+                &mut child, status, "rapport",
+            );
+
+            assert!(!finalized.queued_followup);
+            assert_eq!(finalized.session_status, status);
+            assert_eq!(child.subagent_queued_prompts, vec!["suite"]);
+            assert_eq!(child.subagent_summary.as_deref(), Some("rapport"));
+        }
+    }
+
+    #[test]
+    fn voluntary_cancellation_discards_queued_work() {
+        let mut child = child_session("running");
         child.subagent_queued_prompts.push("suite".into());
 
-        let finalized = super::super::subagent_task::apply_finalized_subagent_state(
-            &mut child, "failed", "rapport",
+        super::super::subagent_task::apply_finalized_subagent_state(
+            &mut child,
+            "cancelled",
+            "annulé",
         );
 
-        assert!(!finalized.queued_followup);
-        assert_eq!(finalized.session_status, "failed");
         assert!(child.subagent_queued_prompts.is_empty());
-        assert_eq!(child.subagent_summary.as_deref(), Some("rapport"));
     }
 
     fn child_session(status: &str) -> AgentSession {

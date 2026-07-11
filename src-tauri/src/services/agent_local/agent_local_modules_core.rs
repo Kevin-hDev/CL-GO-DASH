@@ -115,6 +115,8 @@ mod subagent_completion_boundary_tests;
 mod subagent_completion_capacity_tests;
 #[cfg(test)]
 mod subagent_completion_tests;
+#[cfg(test)]
+mod subagent_failure_queue_tests;
 pub mod subagent_context;
 pub mod subagent_hidden_reports;
 pub(crate) mod subagent_instruction_delivery;
@@ -128,6 +130,8 @@ mod subagent_instruction_wiring_tests;
 mod subagent_review_fail_closed_tests;
 #[cfg(test)]
 mod subagent_redeploy_atomic_tests;
+#[cfg(test)]
+mod subagent_delegate_prompt_tests;
 pub mod subagent_live_state;
 pub mod subagent_orchestration;
 #[cfg(test)]

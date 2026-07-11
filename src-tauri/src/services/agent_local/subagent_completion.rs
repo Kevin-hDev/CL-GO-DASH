@@ -154,7 +154,6 @@ where
             &mut child,
             true,
             false,
-            false,
             after_report,
         )
         .await?;

@@ -14,6 +14,7 @@ struct SubagentEntry {
     pub parent_session_id: String,
     pub run_id: String,
     pub execution_id: String,
+    pub initial_prompt_hash: Option<[u8; 32]>,
     pub delivered_prompt_hashes: Vec<[u8; 32]>,
 }
 
@@ -60,10 +61,20 @@ pub async fn register(
         .map(|registered| registered.run_id)
 }
 
+#[cfg(test)]
 pub async fn register_execution(
     parent_id: &str,
     child_id: &str,
     cancel: CancellationToken,
+) -> Result<RegisteredSubagent, String> {
+    register_execution_with_initial_prompt(parent_id, child_id, cancel, None).await
+}
+
+pub async fn register_execution_with_initial_prompt(
+    parent_id: &str,
+    child_id: &str,
+    cancel: CancellationToken,
+    initial_prompt: Option<&str>,
 ) -> Result<RegisteredSubagent, String> {
     let mut state = REGISTRY.lock().await;
     let parent_count = state
@@ -89,6 +100,7 @@ pub async fn register_execution(
             parent_session_id: parent_id.to_string(),
             run_id: run_id.clone(),
             execution_id: execution_id.clone(),
+            initial_prompt_hash: initial_prompt.map(prompt_hash),
             delivered_prompt_hashes: Vec::new(),
         },
     );

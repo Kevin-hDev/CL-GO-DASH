@@ -29,7 +29,7 @@ where
     )
     .await
     {
-        let status_result = persist_failed_child(child, false).await;
+        let status_result = persist_failed_child(child).await;
         finish_registry(parent_id, child_id, false).await?;
         status_result?;
         return Err(super::subagent_completion::SUBAGENT_COMPLETION_ERROR.to_string());
@@ -44,7 +44,6 @@ pub(super) async fn complete_failure<F, Fut>(
     subagent_type: &str,
     child: &mut AgentSession,
     append_generic_report: bool,
-    preserve_queue: bool,
     generic_report_is_deliverable: bool,
     after_report: F,
 ) -> Result<(), String>
@@ -52,7 +51,7 @@ where
     F: FnOnce() -> Fut,
     Fut: Future<Output = ()>,
 {
-    let status_result = persist_failed_child(child, preserve_queue).await;
+    let status_result = persist_failed_child(child).await;
     let parent_lock = super::session_store::lock_session(parent_id).await;
     let _parent_guard = parent_lock.lock().await;
     let mut parent = super::session_store::get(parent_id).await.ok();
@@ -130,19 +129,12 @@ async fn append_report(
         .is_ok()
 }
 
-async fn persist_failed_child(
-    child: &mut AgentSession,
-    preserve_queue: bool,
-) -> Result<(), String> {
-    let queued = preserve_queue.then(|| std::mem::take(&mut child.subagent_queued_prompts));
+async fn persist_failed_child(child: &mut AgentSession) -> Result<(), String> {
     super::subagent_task::finalize_loaded_session_after_run(
         child,
         super::subagent_status::FAILED,
         super::subagent_completion::SUBAGENT_COMPLETION_ERROR,
     );
-    if let Some(queued) = queued {
-        child.subagent_queued_prompts = queued;
-    }
     super::session_store::save(child)
         .await
         .map_err(|_| super::subagent_completion::SUBAGENT_COMPLETION_ERROR.to_string())

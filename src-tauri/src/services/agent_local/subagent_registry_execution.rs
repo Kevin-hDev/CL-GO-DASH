@@ -44,7 +44,10 @@ pub async fn prompt_was_delivered(child_id: &str, execution_id: &str, prompt: &s
         .entries
         .get(child_id)
         .filter(|entry| entry.execution_id == execution_id)
-        .is_some_and(|entry| entry.delivered_prompt_hashes.contains(&hash))
+        .is_some_and(|entry| {
+            entry.initial_prompt_hash == Some(hash)
+                || entry.delivered_prompt_hashes.contains(&hash)
+        })
 }
 
 pub async fn save_queued_prompt_for_execution(

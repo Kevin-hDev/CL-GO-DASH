@@ -64,7 +64,6 @@ async fn persist_instruction_delivery_failure_inner(
         &mut child,
         true,
         true,
-        true,
         || async {},
     )
     .await?;

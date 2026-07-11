@@ -8,7 +8,6 @@ use tauri::AppHandle;
 use tokio_util::sync::CancellationToken;
 
 const MAX_PROMPT_PREVIEW: usize = 120;
-const MAX_PROMPT_SIZE: usize = 50_000;
 
 pub struct SpawnedSubagent {
     pub app: AppHandle,
@@ -30,16 +29,7 @@ pub async fn prepare_delegate(
     parent_session_id: String,
     parent_emitter: AgentEventEmitter,
 ) -> Result<SpawnedSubagent, ToolResult> {
-    let prompt = match args["prompt"].as_str() {
-        Some(p) if !p.trim().is_empty() => {
-            let trimmed = p.trim();
-            if trimmed.chars().count() > MAX_PROMPT_SIZE {
-                return Err(ToolResult::err("Prompt sous-agent trop long."));
-            }
-            trimmed.to_string()
-        }
-        _ => return Err(ToolResult::err("Paramètre 'prompt' manquant ou vide")),
-    };
+    let prompt = super::tool_delegate_prompt::from_args(&args)?;
     let subagent_type = match args["subagent_type"].as_str() {
         Some("explorer") => "explorer",
         Some("coder") => "coder",
@@ -138,22 +128,27 @@ pub async fn prepare_delegate(
 
     let child_id = child.id.clone();
 
-    if let Err(result) = super::tool_delegate_child::persist_delegate_prompt(
+    let persisted_prompt = match super::tool_delegate_child::persist_delegate_prompt(
         &child_id,
         &prompt,
         existing_child_id.is_some(),
     )
     .await
     {
-        subagent_registry::release_run_claim(&parent_session_id, &run_id).await;
-        return Err(result);
-    }
+        Ok(persisted) => persisted,
+        Err(result) => {
+            subagent_registry::release_run_claim(&parent_session_id, &run_id).await;
+            return Err(result);
+        }
+    };
 
     let cancel = CancellationToken::new();
-    let registered = match subagent_registry::register_execution(
+    let initial_prompt = persisted_prompt.initial_prompt();
+    let registered = match subagent_registry::register_execution_with_initial_prompt(
         &parent_session_id,
         &child_id,
         cancel.clone(),
+        initial_prompt,
     )
     .await
     {

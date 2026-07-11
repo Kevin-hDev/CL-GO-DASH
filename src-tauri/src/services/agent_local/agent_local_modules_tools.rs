@@ -23,6 +23,7 @@ pub mod tool_definitions_todo;
 pub mod tool_definitions_web;
 pub mod tool_delegate;
 pub mod tool_delegate_child;
+mod tool_delegate_prompt;
 pub mod tool_dispatcher;
 pub mod tool_dispatcher_delegate;
 pub mod tool_dispatcher_forecast;

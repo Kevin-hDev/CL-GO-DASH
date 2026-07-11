@@ -45,10 +45,12 @@ pub async fn add_messages(
     result
 }
 
+#[cfg(test)]
 pub(super) async fn add_redeployment_prompt(id: &str, prompt: &str) -> Result<(), String> {
     add_redeployment_prompt_inner(id, prompt, || async {}).await
 }
 
+#[cfg(test)]
 async fn add_redeployment_prompt_inner<F, Fut>(
     id: &str,
     prompt: &str,

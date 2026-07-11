@@ -33,7 +33,7 @@ pub(super) fn apply_finalized_subagent_state(
     let queued_followup =
         should_continue_same_run(status, !session.subagent_queued_prompts.is_empty());
     let session_status = effective_session_status(status, queued_followup);
-    if !queued_followup {
+    if status == super::subagent_status::CANCELLED {
         session.subagent_queued_prompts.clear();
     }
     session.subagent_summary = Some(summary.to_string());

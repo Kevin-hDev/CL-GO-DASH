@@ -6,8 +6,8 @@ fn existing_delegate_uses_atomic_redeployment_helper() {
     let child = include_str!("tool_delegate_child.rs");
     assert!(delegate.contains("tool_delegate_child::persist_delegate_prompt"));
     assert!(delegate.contains("existing_child_id.is_some()"));
-    assert!(child.contains("if is_redeployment"));
-    assert!(child.contains("add_redeployment_prompt(child_id, prompt)"));
+    assert!(child.contains("persist_redeployment_prompt(child_id, prompt)"));
+    assert!(child.contains("unanswered_matching_prompt"));
     assert!(child.contains("session_store::add_messages"));
 }
 
