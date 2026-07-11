@@ -1,7 +1,7 @@
 use super::agent_loop_compression::{LastCounts, LoopCompression};
 use super::agent_loop_ollama_request::OllamaRequestParams;
 use super::stream_events::AgentEventEmitter;
-use super::types_ollama::{ChatMessage, OllamaThink, StreamEvent};
+use super::types_ollama::{ChatMessage, OllamaThink};
 use super::{
     agent_loop_limits::MAX_TURNS, agent_loop_plan, agent_loop_support, circuit_breaker,
     subagent_orchestration, tool_executor, tool_result_budget, write_guard_registry,
@@ -185,20 +185,14 @@ pub async fn run_agent_loop(
                 cancel.clone(),
             )
             .await;
-        if !compressed_after_tools {
-            let _ = on_event.send(StreamEvent::TurnEnd {});
-        }
+        super::agent_loop_finish::emit_turn_end(on_event, compressed_after_tools);
     }
-    let token_total = super::agent_loop_completion::emit_done(
+    Ok(super::agent_loop_finish::finish(
         on_event,
-        total_eval,
-        total_prompt,
-        last_prompt,
-        last_eval,
+        (total_eval, total_prompt, last_prompt, last_eval),
         start,
-    );
-
-    super::stream_diagnostics::record_completed(&session_id, &request_id).await;
-    agent_loop_support::decharge_gpu(model).await;
-    Ok(token_total)
+        (&session_id, &request_id),
+        Some(model),
+    )
+    .await)
 }

@@ -2,13 +2,14 @@ use super::agent_loop_compression::{LastCounts, LoopCompression};
 use super::agent_loop_request::ApiRequestParams;
 use super::agent_loop_tools;
 use crate::services::agent_local::agent_loop_errors;
+use crate::services::agent_local::agent_loop_finish;
 use crate::services::agent_local::agent_loop_limits::MAX_TURNS;
 use crate::services::agent_local::agent_loop_plan;
 use crate::services::agent_local::circuit_breaker;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::subagent_orchestration;
 use crate::services::agent_local::tool_executor;
-use crate::services::agent_local::types_ollama::{ChatMessage, StreamEvent};
+use crate::services::agent_local::types_ollama::ChatMessage;
 use crate::services::agent_local::write_guard_registry;
 use crate::services::token_counting;
 use std::path::PathBuf;
@@ -184,19 +185,14 @@ pub async fn run_agent_loop(
                 cancel.clone(),
             )
             .await;
-        if !compressed_after_tools {
-            let _ = on_event.send(StreamEvent::TurnEnd {});
-        }
+        agent_loop_finish::emit_turn_end(on_event, compressed_after_tools);
     }
-    let token_total = crate::services::agent_local::agent_loop_completion::emit_done(
+    Ok(agent_loop_finish::finish(
         on_event,
-        total_eval,
-        total_prompt,
-        last_prompt,
-        last_eval,
+        (total_eval, total_prompt, last_prompt, last_eval),
         start,
-    );
-    crate::services::agent_local::stream_diagnostics::record_completed(&session_id, &request_id)
-        .await;
-    Ok(token_total)
+        (&session_id, &request_id),
+        None,
+    )
+    .await)
 }

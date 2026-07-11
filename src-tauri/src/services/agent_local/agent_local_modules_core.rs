@@ -1,5 +1,6 @@
 pub mod agent_loop;
 pub mod agent_loop_completion;
+pub mod agent_loop_finish;
 mod agent_loop_compression;
 pub mod agent_loop_errors;
 pub mod agent_loop_limits;

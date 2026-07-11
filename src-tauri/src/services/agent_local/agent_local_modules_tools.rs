@@ -62,6 +62,7 @@ pub mod tool_executor_parallel_tests;
 pub mod tool_executor_parallel_write;
 pub mod tool_executor_plan;
 pub mod tool_executor_read_only;
+pub mod tool_executor_results;
 pub mod tool_executor_sequential;
 pub mod tool_executor_write;
 pub mod tool_files;
