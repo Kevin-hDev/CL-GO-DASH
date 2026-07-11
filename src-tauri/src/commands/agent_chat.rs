@@ -1,6 +1,6 @@
 use super::agent_chat_task::{run_stream_task, StreamCapabilityHints, StreamTaskParams};
 
-use crate::services::agent_local::stream_events::AgentEventEmitter;
+use crate::services::agent_local::stream_events::{self, AgentEventEmitter};
 use crate::services::agent_local::types_ollama::{ChatMessage, StreamEvent};
 use crate::ActiveStreams;
 use tauri::Manager;
@@ -25,7 +25,7 @@ pub async fn chat_stream(
     streams: tauri::State<'_, ActiveStreams>,
 ) -> Result<u64, String> {
     let cancel = CancellationToken::new();
-    let generation = crate::STREAM_GENERATION.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    let generation = stream_events::next_generation();
     let cancelled_session_id = session_id.clone();
     let request_session_id = session_id.clone();
     let request_id = super::agent_chat_streams::replace_active_stream(

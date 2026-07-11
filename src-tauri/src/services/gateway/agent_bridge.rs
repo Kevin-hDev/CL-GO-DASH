@@ -6,7 +6,7 @@ use tokio_util::sync::CancellationToken;
 use crate::commands::agent_chat_task::{run_stream_task, StreamCapabilityHints, StreamTaskParams};
 use crate::models::GatewayConfig;
 use crate::services::agent_local::session_store;
-use crate::services::agent_local::stream_events::AgentEventEmitter;
+use crate::services::agent_local::stream_events::{self, AgentEventEmitter};
 use crate::services::gateway::agent_bridge_support::{
     audit_msg, block, build_external_key, emit_session_updated, find_account_config,
     find_or_create_session, resolve_provider_model, sync_session_model, validate_inbound,
@@ -114,9 +114,14 @@ impl GatewayAgentBridge {
         .map_err(BridgeError::SessionError)?;
         emit_session_updated(&app, &session_id);
 
-        let emitter = AgentEventEmitter::new(app.clone(), session_id.clone());
-        let request_id =
-            crate::services::agent_local::stream_diagnostics::start_request(&session_id, 0).await;
+        let generation = stream_events::next_generation();
+        let emitter =
+            AgentEventEmitter::with_generation(app.clone(), session_id.clone(), generation);
+        let request_id = crate::services::agent_local::stream_diagnostics::start_request(
+            &session_id,
+            generation,
+        )
+        .await;
         let final_messages = match run_stream_task(StreamTaskParams {
             on_event: emitter,
             session_id: session_id.clone(),

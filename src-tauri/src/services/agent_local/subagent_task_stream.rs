@@ -1,6 +1,6 @@
 use crate::commands::agent_chat_task::{run_stream_task, StreamCapabilityHints, StreamTaskParams};
 use crate::services::agent_local::session_store;
-use crate::services::agent_local::stream_events::AgentEventEmitter;
+use crate::services::agent_local::stream_events::{self, AgentEventEmitter};
 use crate::services::agent_local::types_ollama::StreamEvent;
 use tauri::AppHandle;
 use tokio_util::sync::CancellationToken;
@@ -45,8 +45,11 @@ pub(super) async fn run_inner(
         prior_messages,
     )
     .await;
-    let emitter = AgentEventEmitter::new(app, child_session_id.clone());
-    let request_id = super::stream_diagnostics::start_request(&child_session_id, 0).await;
+    let generation = stream_events::next_generation();
+    let emitter =
+        AgentEventEmitter::with_generation(app, child_session_id.clone(), generation);
+    let request_id =
+        super::stream_diagnostics::start_request(&child_session_id, generation).await;
     super::subagent_activity::record_status(&child_session_id, "Démarré", None).await;
     if let Ok(child_session) = session_store::get(&child_session_id).await {
         let _ = emitter.send(StreamEvent::SessionSnapshot {

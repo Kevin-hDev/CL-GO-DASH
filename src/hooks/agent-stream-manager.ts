@@ -172,7 +172,7 @@ function handleStreamEvent(sessionId: string, event: StreamEvent, generation: nu
 
   const result = applyStreamEvent(record.state, event);
   record.state = result.state;
-  if (record.state.completed) record.activeGeneration = null;
+  if (record.state.completed) markStreamCancelled(record, generation);
   touchSession(sessionId, record);
   if (shouldDeferStreamEvent(event)) {
     scheduleFrameNotify(record, notify);

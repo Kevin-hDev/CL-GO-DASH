@@ -1,5 +1,7 @@
 pub mod subagent_archive;
 #[cfg(test)]
+mod backend_stream_generation_tests;
+#[cfg(test)]
 mod session_store_update_race_tests;
 #[cfg(test)]
 mod subagent_archive_tests;
