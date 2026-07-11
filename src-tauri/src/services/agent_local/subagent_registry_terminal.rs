@@ -139,13 +139,17 @@ pub async fn parent_snapshot(parent_id: &str) -> ParentRegistrySnapshot {
     }
 }
 
-pub async fn consume_terminal(parent_id: &str, generation: u64) -> bool {
+pub async fn consume_terminal(parent_id: &str, generation: u64, sequence: u64) -> bool {
     let mut state = REGISTRY.lock().await;
     let Some(signal) = state.terminal_signals.get(parent_id).cloned() else {
         return false;
     };
     let current = signal.state();
-    if current.generation != generation || current.sequence == 0 {
+    if current.generation != generation
+        || current.sequence != sequence
+        || current.sequence == 0
+        || current.report_persistence_failed
+    {
         return false;
     }
     if parent_has_entries(&state, parent_id) {

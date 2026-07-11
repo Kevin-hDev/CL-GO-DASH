@@ -92,6 +92,11 @@ impl SubagentReportDelivery {
         if !all_reports_present {
             return Err(REPORT_ACK_ERROR.to_string());
         }
+        let terminal_state = self
+            .terminal_signal
+            .as_ref()
+            .map(|receiver| *receiver.borrow())
+            .filter(|state| state.sequence > 0);
         let report_ids = self.pending_report_ids.iter().cloned().collect::<Vec<_>>();
         if cancel.is_cancelled() {
             return Err("Annulé".to_string());
@@ -105,18 +110,23 @@ impl SubagentReportDelivery {
         .map_err(|_| REPORT_ACK_ERROR.to_string())?;
         self.pending_report_ids.clear();
         self.pending_report_payloads.clear();
-        if let Some(state) = self
-            .terminal_signal
-            .as_ref()
-            .map(|receiver| *receiver.borrow())
-            .filter(|state| state.sequence > 0)
-        {
-            let _ = super::subagent_registry::consume_terminal(
+        if let Some(state) = terminal_state {
+            let consumed = super::subagent_registry::consume_terminal(
                 &self.parent_session_id,
                 state.generation,
+                state.sequence,
             )
             .await;
-            self.terminal_signal = None;
+            if consumed {
+                self.terminal_signal = None;
+            } else {
+                self.refresh_terminal_signal().await;
+                if self.persistence_failed() {
+                    return Err(
+                        super::subagent_completion::SUBAGENT_COMPLETION_ERROR.to_string(),
+                    );
+                }
+            }
         }
         Ok(())
     }

@@ -162,6 +162,8 @@ pub mod subagent_registry;
 #[cfg(test)]
 pub mod subagent_registry_tests;
 #[cfg(test)]
+mod subagent_terminal_consumption_tests;
+#[cfg(test)]
 mod subagent_registry_test_support;
 mod subagent_report_context;
 mod subagent_report_delivery;

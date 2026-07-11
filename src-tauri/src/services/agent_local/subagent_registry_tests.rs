@@ -3,8 +3,7 @@ mod tests {
     use crate::services::agent_local::subagent_registry::{
         active_children_for_parent, cancel_one, capacity_error, complete_child, consume_terminal,
         get_or_create_run_id, get_run_id_for_child, parent_snapshot, register,
-        release_run_claim, subscribe_for_parent, terminal_state_for_parent, unregister,
-        SubagentTerminalKind, PRODUCTION_MAX_TERMINAL_PARENTS,
+        release_run_claim, unregister, SubagentTerminalKind, PRODUCTION_MAX_TERMINAL_PARENTS,
     };
     use crate::services::agent_local::subagent_registry_test_support::meta;
     use tokio_util::sync::CancellationToken;
@@ -57,59 +56,6 @@ mod tests {
         assert_eq!(get_run_id_for_child(&child).await, None);
         assert!(active_children_for_parent(&parent).await.is_empty());
 
-        // --- terminal state survives last child and waves do not reuse stale state ---
-        let parent = uid();
-        let first_child = uid();
-        register(&parent, &first_child, CancellationToken::new())
-            .await
-            .unwrap();
-        complete_child(
-            &first_child,
-            SubagentTerminalKind::ReportPersistenceFailed,
-        )
-        .await
-        .unwrap();
-
-        assert!(active_children_for_parent(&parent).await.is_empty());
-        let first_receiver = subscribe_for_parent(&parent)
-            .await
-            .expect("last-child terminal state remains subscribable");
-        let first_state = *first_receiver.borrow();
-        assert_eq!(first_state.sequence, 1);
-        assert!(first_state.report_persistence_failed);
-        assert_eq!(terminal_state_for_parent(&parent).await, Some(first_state));
-        assert!(register(&parent, &uid(), CancellationToken::new())
-            .await
-            .is_err());
-        assert!(consume_terminal(&parent, first_state.generation).await);
-        assert!(subscribe_for_parent(&parent).await.is_none());
-
-        let second_child = uid();
-        let second_run = register(&parent, &second_child, CancellationToken::new())
-            .await
-            .unwrap();
-        let mut second_receiver = subscribe_for_parent(&parent)
-            .await
-            .expect("second-wave receiver");
-        let second_generation = second_receiver.borrow().generation;
-        assert_ne!(second_generation, first_state.generation);
-        assert_eq!(second_receiver.borrow().sequence, 0);
-        complete_child(&second_child, SubagentTerminalKind::ReportPersisted)
-            .await
-            .unwrap();
-        second_receiver.changed().await.expect("second-wave signal");
-        assert_eq!(second_receiver.borrow().sequence, 1);
-        assert!(!second_receiver.borrow().report_persistence_failed);
-        let restarted_child = uid();
-        let restarted_run = register(&parent, &restarted_child, CancellationToken::new())
-            .await
-            .expect("successful pending terminal permits explicit restart");
-        assert_ne!(second_run, restarted_run);
-        assert_eq!(second_receiver.borrow().sequence, 1);
-        assert!(consume_terminal(&parent, second_generation).await);
-        assert_eq!(second_receiver.borrow().sequence, 0);
-        unregister(&restarted_child).await;
-
         // --- removal and terminal notification are one registry transition ---
         let parent = uid();
         let child = uid();
@@ -139,7 +85,12 @@ mod tests {
             tokio::task::yield_now().await;
         };
         completion.await.unwrap();
-        assert!(consume_terminal(&parent, terminal.generation).await);
+        assert!(consume_terminal(
+            &parent,
+            terminal.generation,
+            terminal.sequence,
+        )
+        .await);
 
         // --- cancel_one ---
         let parent = uid();
