@@ -20,6 +20,8 @@ pub struct SpawnedSubagent {
     pub parent_emitter: AgentEventEmitter,
     pub cancel: CancellationToken,
     pub project_id: Option<String>,
+    pub run_id: String,
+    pub execution_id: String,
 }
 
 pub async fn prepare_delegate(
@@ -87,8 +89,12 @@ pub async fn prepare_delegate(
 
     let run_id = subagent_registry::get_or_create_run_id(&parent_session_id).await;
 
-    let child = match args["subagent_id"].as_str() {
-        Some(id) if !id.trim().is_empty() => {
+    let existing_child_id = args["subagent_id"]
+        .as_str()
+        .map(str::trim)
+        .filter(|id| !id.is_empty());
+    let child = match existing_child_id {
+        Some(id) => {
             match super::tool_delegate_child::prepare_existing_child(
                 id.trim(),
                 &parent_session_id,
@@ -132,44 +138,37 @@ pub async fn prepare_delegate(
 
     let child_id = child.id.clone();
 
-    let user_msg = crate::services::agent_local::types_session::AgentMessage {
-        id: uuid::Uuid::new_v4().to_string(),
-        role: "user".to_string(),
-        content: prompt.clone(),
-        thinking: None,
-        tool_calls: None,
-        tool_name: None,
-        tool_activities: None,
-        segments: None,
-        files: vec![],
-        timestamp: chrono::Utc::now(),
-        tokens: 0,
-        work_duration_ms: None,
-        skill_names: None,
-    };
-    if session_store::add_messages(&child_id, vec![user_msg], 0)
-        .await
-        .is_err()
+    if let Err(result) = super::tool_delegate_child::persist_delegate_prompt(
+        &child_id,
+        &prompt,
+        existing_child_id.is_some(),
+    )
+    .await
     {
-        // Fail closed : ne pas démarrer un sous-agent dont le prompt n'est
-        // pas persisté. On nettoie la session enfant créée plus haut.
-        eprintln!("[subagent] persistance prompt enfant {}", child_id);
-        let _ =
-            super::session_subagents::mark_status(&child_id, super::subagent_status::FAILED).await;
         subagent_registry::release_run_claim(&parent_session_id, &run_id).await;
-        return Err(ToolResult::err(
-            "Erreur interne lors de la création du sous-agent",
-        ));
+        return Err(result);
     }
 
     let cancel = CancellationToken::new();
-    if let Err(e) = subagent_registry::register(&parent_session_id, &child_id, cancel.clone()).await
+    let registered = match subagent_registry::register_execution(
+        &parent_session_id,
+        &child_id,
+        cancel.clone(),
+    )
+    .await
     {
-        let _ =
-            super::session_subagents::mark_status(&child_id, super::subagent_status::FAILED).await;
-        subagent_registry::release_run_claim(&parent_session_id, &run_id).await;
-        return Err(ToolResult::err(e));
-    }
+        Ok(registered) => registered,
+        Err(error) => {
+            let _ = super::session_subagents::mark_status(
+                &child_id,
+                super::subagent_status::FAILED,
+            )
+            .await;
+            subagent_registry::release_run_claim(&parent_session_id, &run_id).await;
+            return Err(ToolResult::err(error));
+        }
+    };
+    let run_id = registered.run_id;
 
     let prompt_preview: String = prompt.chars().take(MAX_PROMPT_PREVIEW).collect();
     let _ = parent_emitter.send(StreamEvent::SubagentSpawned {
@@ -192,16 +191,7 @@ pub async fn prepare_delegate(
         parent_emitter,
         cancel,
         project_id: parent.project_id.clone(),
+        run_id,
+        execution_id: registered.execution_id,
     })
-}
-
-#[cfg(test)]
-mod tests {
-    use super::MAX_PROMPT_SIZE;
-
-    // Vérification à la compilation que les bornes restent raisonnables.
-    // (const assert évite le warning clippy::assertions_on_constants.)
-    const _: () = {
-        assert!(MAX_PROMPT_SIZE <= 100_000);
-    };
 }

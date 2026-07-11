@@ -2,6 +2,44 @@ use crate::services::agent_local::session_store;
 use crate::services::agent_local::types_session::AgentSession;
 use crate::services::agent_local::types_tools::ToolResult;
 
+fn user_message(content: &str) -> super::types_session::AgentMessage {
+    super::types_session::AgentMessage {
+        id: uuid::Uuid::new_v4().to_string(),
+        role: "user".to_string(),
+        content: content.to_string(),
+        thinking: None,
+        tool_calls: None,
+        tool_name: None,
+        tool_activities: None,
+        segments: None,
+        files: Vec::new(),
+        timestamp: chrono::Utc::now(),
+        tokens: 0,
+        work_duration_ms: None,
+        skill_names: None,
+    }
+}
+
+pub(super) async fn persist_delegate_prompt(
+    child_id: &str,
+    prompt: &str,
+    is_redeployment: bool,
+) -> Result<(), ToolResult> {
+    let result = if is_redeployment {
+        super::session_store_messages::add_redeployment_prompt(child_id, prompt).await
+    } else {
+        session_store::add_messages(child_id, vec![user_message(prompt)], 0).await
+    };
+    if result.is_ok() {
+        return Ok(());
+    }
+    eprintln!("[subagent] persistance prompt enfant {child_id}");
+    let _ = super::session_subagents::mark_status(child_id, super::subagent_status::FAILED).await;
+    Err(ToolResult::err(
+        "Erreur interne lors de la création du sous-agent",
+    ))
+}
+
 pub(super) async fn prepare_existing_child(
     child_id: &str,
     parent_session_id: &str,

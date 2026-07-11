@@ -13,11 +13,13 @@ struct SubagentEntry {
     pub cancel: CancellationToken,
     pub parent_session_id: String,
     pub run_id: String,
+    pub execution_id: String,
+    pub delivered_prompt_hashes: Vec<[u8; 32]>,
 }
 
-pub struct ActiveSubagentRun {
+pub struct RegisteredSubagent {
     pub run_id: String,
-    pub cancelled: bool,
+    pub execution_id: String,
 }
 
 struct RegistryState {
@@ -47,11 +49,22 @@ pub async fn get_or_create_run_id(parent_id: &str) -> String {
     run_id
 }
 
+#[cfg(test)]
 pub async fn register(
     parent_id: &str,
     child_id: &str,
     cancel: CancellationToken,
 ) -> Result<String, String> {
+    register_execution(parent_id, child_id, cancel)
+        .await
+        .map(|registered| registered.run_id)
+}
+
+pub async fn register_execution(
+    parent_id: &str,
+    child_id: &str,
+    cancel: CancellationToken,
+) -> Result<RegisteredSubagent, String> {
     let mut state = REGISTRY.lock().await;
     let parent_count = state
         .entries
@@ -68,15 +81,21 @@ pub async fn register(
         .or_insert_with(|| uuid::Uuid::new_v4().to_string())
         .clone();
     release_claim_locked(&mut state, parent_id);
+    let execution_id = uuid::Uuid::new_v4().to_string();
     state.entries.insert(
         child_id.to_string(),
         SubagentEntry {
             cancel,
             parent_session_id: parent_id.to_string(),
             run_id: run_id.clone(),
+            execution_id: execution_id.clone(),
+            delivered_prompt_hashes: Vec::new(),
         },
     );
-    Ok(run_id)
+    Ok(RegisteredSubagent {
+        run_id,
+        execution_id,
+    })
 }
 
 pub(super) fn capacity_error(total: usize, parent_count: usize) -> Option<String> {
@@ -125,23 +144,7 @@ fn release_claim_locked(state: &mut RegistryState, parent_id: &str) {
     }
 }
 
-pub async fn get_run_id_for_child(child_id: &str) -> Option<String> {
-    active_run_for_child(child_id)
-        .await
-        .map(|state| state.run_id)
-}
-
-pub async fn active_run_for_child(child_id: &str) -> Option<ActiveSubagentRun> {
-    REGISTRY
-        .lock()
-        .await
-        .entries
-        .get(child_id)
-        .map(|entry| ActiveSubagentRun {
-            run_id: entry.run_id.clone(),
-            cancelled: entry.cancel.is_cancelled(),
-        })
-}
+include!("subagent_registry_execution.rs");
 
 pub async fn active_children_for_parent(parent_id: &str) -> Vec<String> {
     REGISTRY
@@ -155,22 +158,3 @@ pub async fn active_children_for_parent(parent_id: &str) -> Vec<String> {
 }
 
 include!("subagent_registry_terminal.rs");
-
-pub async fn cancel_one(child_id: &str) -> bool {
-    let state = REGISTRY.lock().await;
-    if let Some(entry) = state.entries.get(child_id) {
-        entry.cancel.cancel();
-        true
-    } else {
-        false
-    }
-}
-
-pub async fn cancel_all_for_parent(parent_id: &str) {
-    let state = REGISTRY.lock().await;
-    for entry in state.entries.values() {
-        if entry.parent_session_id == parent_id {
-            entry.cancel.cancel();
-        }
-    }
-}

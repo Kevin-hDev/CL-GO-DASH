@@ -40,7 +40,8 @@ async fn orphan_running_status_fails_closed_without_adding_to_queue() {
 async fn completed_child_builds_delegate_payload_with_existing_subagent_id() {
     let (parent, child) = inactive_child(Some(subagent_status::COMPLETED)).await;
 
-    let payload = build_resume_payload(&child, "reprends explicitement");
+    let payload = build_resume_payload(&child, "reprends explicitement")
+        .expect("valid explicit resume payload");
 
     cleanup(&parent.id, &child.id).await;
     assert_eq!(payload["subagent_id"], child.id);

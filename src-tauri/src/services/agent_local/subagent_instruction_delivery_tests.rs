@@ -26,6 +26,10 @@ async fn queued_instructions_are_drained_in_order_without_changing_run_id() {
     assert!(saved.subagent_queued_prompts.is_empty());
     assert_eq!(user_contents(&saved.messages), queued);
     assert_eq!(chat_user_contents(&request_messages), queued);
+    assert_eq!(
+        saved.accumulated_tokens,
+        crate::services::token_counting::estimate_agent_messages_tokens(&saved.messages)
+    );
 }
 
 #[tokio::test]
@@ -84,6 +88,15 @@ async fn save_failure_keeps_queue_and_terminalizes_without_registry_ghost() {
             .await
             .expect("restore child session");
     }
+    let active_run = subagent_registry::active_run_for_child(&child.id)
+        .await
+        .expect("active execution");
+    let marked_after_failed_save = subagent_registry::prompt_was_delivered(
+        &child.id,
+        &active_run.execution_id,
+        "correction durable",
+    )
+    .await;
     super::subagent_completion::persist_instruction_delivery_failure(
         &parent.id,
         &child.id,
@@ -105,6 +118,7 @@ async fn save_failure_keeps_queue_and_terminalizes_without_registry_ghost() {
     cleanup(&parent.id, &child.id).await;
 
     assert!(result.is_err());
+    assert!(!marked_after_failed_save);
     assert_eq!(saved.subagent_queued_prompts, vec!["correction durable"]);
     assert_eq!(saved.subagent_status.as_deref(), Some(subagent_status::FAILED));
     assert!(active.is_empty());

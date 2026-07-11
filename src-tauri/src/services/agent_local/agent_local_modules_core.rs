@@ -124,6 +124,10 @@ mod subagent_instruction_delivery_tests;
 mod subagent_instruction_limit_tests;
 #[cfg(test)]
 mod subagent_instruction_wiring_tests;
+#[cfg(test)]
+mod subagent_review_fail_closed_tests;
+#[cfg(test)]
+mod subagent_redeploy_atomic_tests;
 pub mod subagent_live_state;
 pub mod subagent_orchestration;
 #[cfg(test)]
@@ -171,6 +175,10 @@ pub mod subagent_task_stream;
 pub mod subagent_task_tests;
 #[cfg(test)]
 mod subagent_same_run_tests;
+#[cfg(test)]
+mod subagent_instruction_execution_race_tests;
+#[cfg(test)]
+mod subagent_correction_capacity_tests;
 mod subagent_terminal_signal;
 pub mod subagent_tool_control;
 #[cfg(test)]
