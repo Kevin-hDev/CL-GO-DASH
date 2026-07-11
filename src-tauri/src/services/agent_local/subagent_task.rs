@@ -53,6 +53,7 @@ pub async fn run(
         }
     };
     let working_dir = prepared.path().to_string_lossy().to_string();
+    let mut prior_messages = None;
     loop {
         let Some(active) = subagent_registry::active_run_for_child(&child_session_id).await else {
             break;
@@ -85,10 +86,13 @@ pub async fn run(
             cancel.clone(),
             project_id.clone(),
             working_dir.clone(),
+            prior_messages.take(),
         )
         .await;
-        let (success, status, summary) = match result {
-            Ok(value) => value,
+        let (mut success, mut status, mut summary, completed_messages) = match result {
+            Ok((success, status, summary, messages)) => {
+                (success, status, summary, Some(messages))
+            }
             Err(error) if super::subagent_instruction_delivery::is_delivery_error(&error) => {
                 let reported = super::subagent_completion_events::persist_instruction_failure(
                     &parent_session_id,
@@ -111,9 +115,28 @@ pub async fn run(
                     false,
                     super::subagent_status::FAILED.to_string(),
                     "Le sous-agent n'a pas pu terminer correctement.".to_string(),
+                    None,
                 )
             }
         };
+        if let Some(messages) = completed_messages {
+            match super::subagent_history::persist_for_execution(
+                &child_session_id,
+                &run_id,
+                &execution_id,
+                &messages,
+            )
+            .await
+            {
+                Ok(true) => prior_messages = Some(messages),
+                Ok(false) => break,
+                Err(_) => {
+                    success = false;
+                    status = super::subagent_status::FAILED.to_string();
+                    summary = super::subagent_completion::SUBAGENT_COMPLETION_ERROR.to_string();
+                }
+            }
+        }
         let finalized = match super::subagent_completion_events::persist_terminal(
             &parent_session_id,
             &child_session_id,

@@ -15,7 +15,8 @@ pub(super) async fn run_inner(
     cancel: CancellationToken,
     project_id: Option<String>,
     working_dir: String,
-) -> Result<(bool, String, String), String> {
+    prior_messages: Option<Vec<super::types_ollama::ChatMessage>>,
+) -> Result<(bool, String, String, Vec<super::types_ollama::ChatMessage>), String> {
     let is_explorer = subagent_type == "explorer";
     let tools = if is_explorer {
         super::tool_definitions_subagent::get_explorer_tool_definitions()
@@ -29,8 +30,13 @@ pub(super) async fn run_inner(
         super::subagent_prompts::coder_system(project_id.as_deref()).await
     };
 
-    let messages =
-        super::subagent_context::build_messages(&child_session_id, system_prompt, &prompt).await;
+    let messages = super::subagent_context::build_messages(
+        &child_session_id,
+        system_prompt,
+        &prompt,
+        prior_messages,
+    )
+    .await;
     let emitter = AgentEventEmitter::new(app, child_session_id.clone());
     let request_id = super::stream_diagnostics::start_request(&child_session_id, 0).await;
     super::subagent_activity::record_status(&child_session_id, "Démarré", None).await;
@@ -67,7 +73,7 @@ async fn finalize_stream_result(
     child_session_id: &str,
     request_id: &str,
     cancel: CancellationToken,
-) -> Result<(bool, String, String), String> {
+) -> Result<(bool, String, String, Vec<super::types_ollama::ChatMessage>), String> {
     let was_cancelled = cancel.is_cancelled();
     match result {
         Ok(final_msgs) => {
@@ -77,12 +83,13 @@ async fn finalize_stream_result(
             } else {
                 super::subagent_status::COMPLETED
             };
-            Ok((!was_cancelled, status.to_string(), summary))
+            Ok((!was_cancelled, status.to_string(), summary, final_msgs))
         }
         Err(e) if was_cancelled || e == "Annulé" => Ok((
             false,
             super::subagent_status::CANCELLED.to_string(),
             "Sous-agent annulé.".to_string(),
+            Vec::new(),
         )),
         Err(e) if super::subagent_instruction_delivery::is_delivery_error(&e) => Err(e),
         Err(_) => {

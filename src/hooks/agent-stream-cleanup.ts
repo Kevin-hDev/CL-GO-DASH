@@ -15,9 +15,8 @@ export interface StreamRecord {
   cleanupTimer: ReturnType<typeof setTimeout> | null;
   notifyHandle: { cancel: () => void } | null;
   started: boolean;
-  /** true si la session a été initiée par le gateway (pas de startSession() appelé depuis l'UI).
-   *  Dans ce cas le backend persiste déjà les messages — le frontend ne doit pas appeler persistAssistant. */
-  isGateway: boolean;
+  backendOwnsPersistence: boolean;
+  isSubagentBackendStream: boolean;
   activeGeneration: number | null;
   cancelledGenerations: number[];
   cancelledWithoutGeneration: boolean;

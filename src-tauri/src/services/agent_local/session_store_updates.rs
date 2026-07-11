@@ -56,6 +56,18 @@ pub async fn update_reasoning(
 }
 
 pub async fn update_working_dir(id: &str, dir: &str) -> Result<(), String> {
+    update_working_dir_inner(id, dir, || async {}).await
+}
+
+async fn update_working_dir_inner<F, Fut>(
+    id: &str,
+    dir: &str,
+    after_load: F,
+) -> Result<(), String>
+where
+    F: FnOnce() -> Fut,
+    Fut: std::future::Future<Output = ()>,
+{
     validate_session_id(id)?;
     let path = std::path::Path::new(dir);
     if !path.is_absolute() || !path.is_dir() {
@@ -64,7 +76,23 @@ pub async fn update_working_dir(id: &str, dir: &str) -> Result<(), String> {
     let canonical = path
         .canonicalize()
         .map_err(|e| format!("Canonicalize : {e}"))?;
+    let lock = super::session_store::lock_session(id).await;
+    let _guard = lock.lock().await;
     let mut session = get(id).await?;
+    after_load().await;
     session.working_dir = canonical.to_string_lossy().to_string();
     save(&session).await
+}
+
+#[cfg(test)]
+pub(super) async fn update_working_dir_with_after_load<F, Fut>(
+    id: &str,
+    dir: &str,
+    after_load: F,
+) -> Result<(), String>
+where
+    F: FnOnce() -> Fut,
+    Fut: std::future::Future<Output = ()>,
+{
+    update_working_dir_inner(id, dir, after_load).await
 }

@@ -5,6 +5,7 @@ pub async fn build_messages(
     child_session_id: &str,
     system_prompt: String,
     fallback_prompt: &str,
+    prior_messages: Option<Vec<ChatMessage>>,
 ) -> Vec<ChatMessage> {
     let mut messages = vec![ChatMessage {
         role: "system".to_string(),
@@ -12,7 +13,9 @@ pub async fn build_messages(
         ..Default::default()
     }];
 
-    if let Ok(child) = super::session_store::get(child_session_id).await {
+    if let Some(prior) = prior_messages {
+        messages.extend(prior.into_iter().filter(|message| message.role != "system"));
+    } else if let Ok(child) = super::session_store::get(child_session_id).await {
         messages.extend(child.messages.into_iter().filter_map(saved_to_chat));
     }
 
@@ -42,7 +45,7 @@ fn saved_to_chat(message: AgentMessage) -> Option<ChatMessage> {
         tool_calls,
         tool_name: message.tool_name,
         tool_call_id: None,
-        reasoning_content: None,
+        reasoning_content: message.thinking,
     })
 }
 
@@ -87,5 +90,44 @@ mod tests {
         assert!(saved_to_chat(saved("user", "Suite")).is_some());
         assert!(saved_to_chat(saved("assistant", "Ok")).is_some());
         assert!(saved_to_chat(saved("system", "Ignore")).is_none());
+    }
+
+    #[tokio::test]
+    async fn in_memory_history_keeps_provider_tool_ids_under_one_fresh_system_message() {
+        let prior = vec![
+            ChatMessage {
+                role: "system".into(),
+                content: "ancien système".into(),
+                ..Default::default()
+            },
+            ChatMessage {
+                role: "assistant".into(),
+                content: "appel".into(),
+                tool_calls: Some(vec![ToolCallOllama {
+                    id: Some("call-exact".into()),
+                    extra_content: None,
+                    function: ToolCallFunction {
+                        name: "read_file".into(),
+                        arguments: serde_json::json!({"path": "README.md"}),
+                    },
+                }]),
+                ..Default::default()
+            },
+            ChatMessage {
+                role: "tool".into(),
+                content: "résultat".into(),
+                tool_name: Some("read_file".into()),
+                tool_call_id: Some("call-exact".into()),
+                ..Default::default()
+            },
+        ];
+
+        let messages = build_messages("missing", "nouveau système".into(), "fallback", Some(prior))
+            .await;
+
+        assert_eq!(messages.iter().filter(|message| message.role == "system").count(), 1);
+        assert_eq!(messages[0].content, "nouveau système");
+        assert_eq!(messages[1].tool_calls.as_ref().unwrap()[0].id.as_deref(), Some("call-exact"));
+        assert_eq!(messages[2].tool_call_id.as_deref(), Some("call-exact"));
     }
 }

@@ -8,7 +8,6 @@ import {
 import {
   MAX_EVENTS_PER_SESSION,
   scheduleCleanup, clearCleanup, trimSubscribers,
-  type StreamRecord,
 } from "./agent-stream-cleanup";
 import {
   flushFrameNotify,
@@ -18,7 +17,6 @@ import {
 import {
   acceptsStreamEvent,
   markStreamCancelled,
-  setStreamGeneration as applyStreamGeneration,
 } from "./agent-stream-generations";
 import {
   getOrCreateRecord,
@@ -29,9 +27,20 @@ import {
   touchSession,
   type StreamSnapshot,
 } from "./agent-stream-records";
-import { estimateAgentMessagesTokens } from "./agent-token-estimate";
-import { emitStreamActivity, subscribeStreamActivity, toStreamActivity } from "./agent-stream-activity";
+import { subscribeStreamActivity } from "./agent-stream-activity";
+import { getActivity, getSnapshot, isStreaming, setSessionGeneration } from "./agent-stream-access";
 import { handleCompressionComplete } from "./agent-stream-compression-complete";
+import {
+  finishPersistenceRun,
+  frontendShouldPersist,
+  markIncomingBackendRun,
+  startUiPersistence,
+} from "./agent-stream-persistence-owner";
+import { applySessionSnapshot } from "./agent-stream-snapshot";
+import {
+  notifyRecord as notify,
+  notifyRecordActivity as notifyActivity,
+} from "./agent-stream-notify-dispatch";
 import { showToast } from "@/lib/toast-emitter";
 import { clearStreamPermission } from "./agent-stream-permissions";
 import type { AgentMessage, StreamEvent } from "@/types/agent";
@@ -70,18 +79,12 @@ async function startSession(sessionId: string, messages: AgentMessage[], session
   record.state = createManagedStreamState(messages, sessionTokenCount);
   record.history = [];
   record.started = true;
-  record.isGateway = false; // session UI explicite — le frontend gère la persistance
+  startUiPersistence(record);
   record.activeGeneration = null;
   record.cancelledWithoutGeneration = false;
   touchSession(sessionId, record);
   flushFrameNotify(record, notify);
   notifyActivity(sessionId, record);
-}
-
-function setSessionGeneration(sessionId: string, generation: number) {
-  const record = getRecord(sessionId);
-  if (!record) return;
-  applyStreamGeneration(record, generation);
 }
 
 function stopSession(sessionId: string, generation?: number | null) {
@@ -92,9 +95,10 @@ function stopSession(sessionId: string, generation?: number | null) {
   record.state = result.state;
   flushFrameNotify(record, notify);
   notifyActivity(sessionId, record);
-  if (result.assistantMessage && !record.state.persisted && !record.isGateway) {
+  if (result.assistantMessage && !record.state.persisted && frontendShouldPersist(record)) {
     persistAssistant(sessionId, record, result.assistantMessage, 0, notify);
   }
+  finishPersistenceRun(record);
 }
 
 function failSession(sessionId: string) {
@@ -103,25 +107,10 @@ function failSession(sessionId: string) {
   record.activeGeneration = null;
   record.state = { ...record.state, isStreaming: false, completed: true,
     activeStreamItem: null, error: i18n.t("errors.streamStartFailed"), updatedAt: Date.now() };
+  finishPersistenceRun(record);
   flushFrameNotify(record, notify);
   notifyActivity(sessionId, record);
   scheduleCleanup(sessionId, record, records);
-}
-
-function getSnapshot(sessionId: string): StreamSnapshot | null {
-  const record = getRecord(sessionId);
-  if (!record?.started) return null;
-  return snapshot(record.state);
-}
-
-function getActivity(sessionId: string) {
-  const record = getRecord(sessionId);
-  if (!record?.started) return null;
-  return toStreamActivity(sessionId, record.state);
-}
-
-function isStreaming(sessionId: string): boolean {
-  return getRecord(sessionId)?.state.isStreaming ?? false;
 }
 
 function subscribe(sessionId: string, subscriber: Subscriber): () => void {
@@ -144,13 +133,7 @@ function handleStreamEvent(sessionId: string, event: StreamEvent, generation: nu
   const record = getOrCreateRecord(sessionId);
   clearCleanup(record);
 
-  // Si le premier event arrive sans que startSession() ait été appelé,
-  // c'est une session gateway : le backend a déjà persisté les messages.
-  // On marque isGateway=true pour bloquer persistAssistant côté frontend.
-  if (!record.started) {
-    record.isGateway = true;
-    record.started = true;
-  }
+  markIncomingBackendRun(record);
 
   if (!acceptsStreamEvent(record, generation, event)) return;
 
@@ -160,16 +143,7 @@ function handleStreamEvent(sessionId: string, event: StreamEvent, generation: nu
   }
 
   if (event.event === "sessionSnapshot") {
-    record.state = {
-      ...record.state,
-      messages: event.data.messages,
-      sessionTokenCount: estimateAgentMessagesTokens(event.data.messages),
-      sessionTokenCountEstimated: true,
-      isStreaming: true,
-      activeStreamItem: null,
-      persisted: false,
-      completed: false,
-    };
+    applySessionSnapshot(record, event.data.messages);
     flushFrameNotify(record, notify);
     notifyActivity(sessionId, record);
     return;
@@ -207,24 +181,12 @@ function handleStreamEvent(sessionId: string, event: StreamEvent, generation: nu
   }
   notifyActivity(sessionId, record);
 
-  // Pour les sessions gateway, le backend persiste déjà — skip persistAssistant.
-  // Pour les sessions UI normales, persistAssistant comme avant.
-  if (result.assistantMessage && !record.state.persisted && !record.isGateway) {
+  if (result.assistantMessage && !record.state.persisted && frontendShouldPersist(record)) {
     persistAssistant(sessionId, record, result.assistantMessage, result.assistantTokens ?? 0, notify);
   }
+  if (record.state.completed) finishPersistenceRun(record);
 
   if (record.state.completed && record.subscribers.size === 0) {
     scheduleCleanup(sessionId, record, records);
   }
-}
-
-function notify(record: StreamRecord) {
-  if (!record.started) return;
-  const value = snapshot(record.state);
-  for (const subscriber of record.subscribers.values()) (subscriber as Subscriber)(value);
-}
-
-function notifyActivity(sessionId: string, record: StreamRecord) {
-  if (!record.started) return;
-  emitStreamActivity(sessionId, record.state);
 }

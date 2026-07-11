@@ -120,7 +120,12 @@ pub async fn run_agent_loop(
         if result.tool_calls.is_empty() {
             eager_handle.abort();
             if subagents
-                .continue_after_no_tool_turn(on_event, messages, cancel.clone())
+                .continue_after_no_tool_turn(
+                    on_event,
+                    messages,
+                    cancel.clone(),
+                    turn + 1 < MAX_TURNS,
+                )
                 .await?
             {
                 continue;
