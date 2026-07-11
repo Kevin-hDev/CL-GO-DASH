@@ -1,8 +1,11 @@
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::types_ollama::StreamEvent;
-use crate::services::agent_local::types_session::AgentMessage;
 use tauri::AppHandle;
 use tokio_util::sync::CancellationToken;
+
+pub(super) use super::subagent_queued_transition::{
+    finalize_unstarted_followup, prepare_next_followup,
+};
 
 const MAX_PROMPT_PREVIEW: usize = 120;
 
@@ -17,128 +20,75 @@ pub struct QueuedSubagentRun {
     pub project_id: Option<String>,
 }
 
-pub async fn spawn_next_if_present(params: QueuedSubagentRun) -> Result<bool, String> {
-    if !has_next_prompt(&params.child_session_id).await? {
-        return Ok(false);
-    }
+pub(super) struct PreparedFollowup {
+    pub cancel: CancellationToken,
+    pub color_key: String,
+    pub description: String,
+    pub name: String,
+    pub prompt: String,
+    pub run_id: String,
+}
 
-    let cancel = CancellationToken::new();
-    let run_id = match super::subagent_registry::renew_child(
+pub async fn spawn_next_if_present(params: QueuedSubagentRun) -> Result<bool, String> {
+    let Some(prepared) = prepare_next_followup(
         &params.parent_session_id,
         &params.child_session_id,
-        cancel.clone(),
+        &params.subagent_type,
     )
-    .await
-    {
-        Ok(run_id) => run_id,
-        Err(e) => {
-            let _ = super::session_subagents::mark_status(
-                &params.child_session_id,
-                super::subagent_status::FAILED,
-            )
-            .await;
-            super::session_store::remove_session_lock(&params.child_session_id).await;
-            return Err(e);
-        }
-    };
-    let Some((prompt, name, description, color_key)) =
-        take_next_prompt(&params.child_session_id, &run_id).await?
+    .await?
     else {
-        super::subagent_registry::unregister(&params.child_session_id).await;
         return Ok(false);
     };
 
-    let preview = prompt.chars().take(MAX_PROMPT_PREVIEW).collect();
+    let preview = prepared.prompt.chars().take(MAX_PROMPT_PREVIEW).collect();
     let _ = params.parent_emitter.send(StreamEvent::SubagentSpawned {
         subagent_session_id: params.child_session_id.clone(),
-        subagent_name: name,
+        subagent_name: prepared.name,
         subagent_type: params.subagent_type.clone(),
-        subagent_description: description,
-        subagent_color_key: color_key,
+        subagent_description: prepared.description,
+        subagent_color_key: prepared.color_key,
         prompt_preview: preview,
-        run_id: Some(run_id),
+        run_id: Some(prepared.run_id),
     });
 
-    if let Err(e) =
+    let failure_parent_id = params.parent_session_id.clone();
+    let failure_child_id = params.child_session_id.clone();
+    let failure_subagent_type = params.subagent_type.clone();
+    let send_result =
         super::subagent_spawn_channel::send(super::subagent_spawn_channel::SpawnRequest {
             app: params.app,
             parent_session_id: params.parent_session_id,
             child_session_id: params.child_session_id.clone(),
             model: params.model,
             provider: params.provider,
-            prompt,
+            prompt: prepared.prompt,
             subagent_type: params.subagent_type,
             parent_emitter: params.parent_emitter,
-            cancel,
+            cancel: prepared.cancel,
             project_id: params.project_id,
-        })
-    {
-        super::subagent_registry::unregister(&params.child_session_id).await;
-        let _ = super::session_subagents::mark_status(
-            &params.child_session_id,
-            super::subagent_status::FAILED,
-        )
-        .await;
-        super::session_store::remove_session_lock(&params.child_session_id).await;
-        return Err(e);
-    }
+        });
+    finalize_spawn_send_result(
+        send_result,
+        &failure_parent_id,
+        &failure_child_id,
+        &failure_subagent_type,
+    )
+    .await?;
 
     Ok(true)
 }
 
-async fn has_next_prompt(child_id: &str) -> Result<bool, String> {
-    let lock = super::session_store::lock_session(child_id).await;
-    let _guard = lock.lock().await;
-    let child = super::session_store::get(child_id).await?;
-    Ok(!child.subagent_queued_prompts.is_empty())
-}
-
-async fn take_next_prompt(
-    child_id: &str,
-    run_id: &str,
-) -> Result<Option<(String, String, String, String)>, String> {
-    let lock = super::session_store::lock_session(child_id).await;
-    let _guard = lock.lock().await;
-    let mut child = super::session_store::get(child_id).await?;
-    if child.subagent_queued_prompts.is_empty() {
-        return Ok(None);
-    }
-    let prompt = child.subagent_queued_prompts.remove(0);
-    child.subagent_prompt = Some(prompt.clone());
-    child.subagent_status = Some(super::subagent_status::RUNNING.to_string());
-    child.subagent_run_id = Some(run_id.to_string());
-    child.subagent_summary = None;
-    child.subagent_last_activity = Some(super::types_session::SubagentLastActivity {
-        kind: "status".to_string(),
-        label: "Relancé".to_string(),
-        detail: Some(prompt.chars().take(220).collect()),
-        updated_at: chrono::Utc::now(),
-    });
-    child.updated_at = Some(chrono::Utc::now());
-    let name = child.name.clone();
-    let description = child.subagent_description.clone().unwrap_or_default();
-    let color_key = child.subagent_color_key.clone().unwrap_or_else(|| {
-        super::subagent_profile::default_color_key(
-            child.subagent_type.as_deref().unwrap_or("explorer"),
-        )
-        .to_string()
-    });
-    let user_msg = AgentMessage {
-        id: uuid::Uuid::new_v4().to_string(),
-        role: "user".to_string(),
-        content: prompt.clone(),
-        thinking: None,
-        tool_calls: None,
-        tool_name: None,
-        tool_activities: None,
-        segments: None,
-        files: vec![],
-        timestamp: chrono::Utc::now(),
-        tokens: 0,
-        work_duration_ms: None,
-        skill_names: None,
+pub(super) async fn finalize_spawn_send_result(
+    send_result: Result<(), String>,
+    parent_session_id: &str,
+    child_session_id: &str,
+    subagent_type: &str,
+) -> Result<(), String> {
+    let Err(original_error) = send_result else {
+        return Ok(());
     };
-    child.messages.push(user_msg);
-    super::session_store::save(&child).await?;
-    Ok(Some((prompt, name, description, color_key)))
+    match finalize_unstarted_followup(parent_session_id, child_session_id, subagent_type).await {
+        Ok(()) => Err(original_error),
+        Err(error) => Err(error),
+    }
 }

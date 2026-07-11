@@ -74,12 +74,12 @@ impl SubagentReportDelivery {
         cancel: &tokio_util::sync::CancellationToken,
         payload: &[ChatMessage],
     ) -> Result<(), String> {
-        if !successful || self.pending_report_ids.is_empty() {
-            return Ok(());
-        }
         self.refresh_terminal_signal().await;
         if self.persistence_failed() {
             return Err(super::subagent_completion::SUBAGENT_COMPLETION_ERROR.to_string());
+        }
+        if !successful || self.pending_report_ids.is_empty() {
+            return Ok(());
         }
         if cancel.is_cancelled() {
             return Err("Annulé".to_string());
@@ -96,9 +96,13 @@ impl SubagentReportDelivery {
         if cancel.is_cancelled() {
             return Err("Annulé".to_string());
         }
-        super::subagent_hidden_reports::acknowledge_reports(&self.parent_session_id, &report_ids)
-            .await
-            .map_err(|_| REPORT_ACK_ERROR.to_string())?;
+        super::subagent_hidden_reports::acknowledge_reports_cancellable(
+            &self.parent_session_id,
+            &report_ids,
+            cancel,
+        )
+        .await
+        .map_err(|_| REPORT_ACK_ERROR.to_string())?;
         self.pending_report_ids.clear();
         self.pending_report_payloads.clear();
         if let Some(state) = self

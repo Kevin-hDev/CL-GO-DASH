@@ -20,7 +20,10 @@ pub struct ParentSubagentOrchestrator {
 
 impl ParentSubagentOrchestrator {
     pub async fn new(parent_session_id: &str) -> Self {
-        let initial_active = active_set(parent_session_id).await;
+        let initial_active = super::subagent_registry::active_children_for_parent(parent_session_id)
+            .await
+            .into_iter()
+            .collect();
         Self {
             parent_session_id: parent_session_id.to_string(),
             initial_active,
@@ -48,8 +51,14 @@ impl ParentSubagentOrchestrator {
             .await
     }
 
-    pub async fn prepare_for_model_request(&mut self, messages: &mut Vec<ChatMessage>) {
+    pub async fn prepare_for_model_request(
+        &mut self,
+        messages: &mut Vec<ChatMessage>,
+    ) -> Result<(), String> {
         self.report_delivery.refresh_terminal_signal().await;
+        if self.report_delivery.persistence_failed() {
+            return Err(super::subagent_completion::SUBAGENT_COMPLETION_ERROR.to_string());
+        }
         super::subagent_orchestration_context::remove_gate_context(messages);
         let reports_injected =
             self.reports_injected_since_last_request || self.inject_pending_reports(messages).await;
@@ -60,6 +69,7 @@ impl ParentSubagentOrchestrator {
             &active,
             reports_injected,
         );
+        Ok(())
     }
 
     pub async fn finalize_content_phase(
@@ -177,13 +187,6 @@ async fn sessions_for_ids(ids: Vec<String>) -> Vec<AgentSession> {
         }
     }
     sessions
-}
-
-async fn active_set(parent_session_id: &str) -> BTreeSet<String> {
-    super::subagent_registry::active_children_for_parent(parent_session_id)
-        .await
-        .into_iter()
-        .collect()
 }
 
 pub fn should_emit_reminder(sent: bool, last_at: Option<Instant>, now: Instant) -> bool {

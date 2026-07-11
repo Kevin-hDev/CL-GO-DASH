@@ -125,7 +125,10 @@ async fn report_persistence_failure_signal_stops_parent_without_finalizing() {
         .expect("register child");
     let mut orchestrator = ParentSubagentOrchestrator::new(&parent.id).await;
     let mut messages = Vec::new();
-    orchestrator.prepare_for_model_request(&mut messages).await;
+    orchestrator
+        .prepare_for_model_request(&mut messages)
+        .await
+        .expect("prepare parent request");
     super::super::subagent_registry::complete_child(
         &child_id,
         super::super::subagent_registry::SubagentTerminalKind::ReportPersistenceFailed,

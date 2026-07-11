@@ -40,7 +40,10 @@ async fn sequential_waves_consume_old_terminal_state_before_registering_new_sign
     .await
     .expect("complete first wave");
     let mut messages = Vec::new();
-    orchestrator.prepare_for_model_request(&mut messages).await;
+    orchestrator
+        .prepare_for_model_request(&mut messages)
+        .await
+        .expect("prepare first report");
     orchestrator
         .complete_model_request(true, &CancellationToken::new(), &messages)
         .await
@@ -147,7 +150,10 @@ async fn report_policy_and_body_match_api_and_ollama_payloads() {
         content: "Question".into(),
         ..Default::default()
     }];
-    orchestrator.prepare_for_model_request(&mut messages).await;
+    orchestrator
+        .prepare_for_model_request(&mut messages)
+        .await
+        .expect("prepare payload");
     super::context_budget::prepare_for_request(&mut messages, 12_000)
         .expect("payload budget");
     let ollama = super::agent_loop_support::build_request(

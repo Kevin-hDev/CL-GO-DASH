@@ -32,7 +32,7 @@ pub(super) async fn run(params: ApiRequestParams<'_>) -> Result<ApiRequestOutput
     params
         .subagents
         .prepare_for_model_request(params.messages)
-        .await;
+        .await?;
     crate::services::agent_local::tool_result_budget::apply_budget(params.messages);
     crate::services::agent_local::context_budget::prepare_for_request(
         params.messages,

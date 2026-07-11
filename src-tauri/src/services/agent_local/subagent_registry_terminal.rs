@@ -18,7 +18,10 @@ fn ensure_parent_signal_locked(
     parent_id: &str,
 ) -> Result<(), String> {
     if let Some(signal) = state.terminal_signals.get(parent_id) {
-        if !parent_has_entries(state, parent_id) && signal.state().sequence > 0 {
+        if !parent_has_entries(state, parent_id)
+            && signal.state().sequence > 0
+            && signal.state().report_persistence_failed
+        {
             return Err("Un résultat de sous-agent reste à traiter".to_string());
         }
         return Ok(());
@@ -50,6 +53,7 @@ fn cleanup_parent_locked(state: &mut RegistryState, parent_id: &str, drop_idle_s
     }
 }
 
+#[cfg(test)]
 pub async fn complete_child(
     child_id: &str,
     kind: SubagentTerminalKind,
@@ -68,6 +72,29 @@ pub async fn complete_child(
     state.entries.remove(child_id);
     signal.notify(kind);
     cleanup_parent_locked(&mut state, &parent_id, false);
+    Ok(())
+}
+
+pub async fn complete_child_or_parent(
+    parent_id: &str,
+    child_id: &str,
+    kind: SubagentTerminalKind,
+) -> Result<(), String> {
+    let mut state = REGISTRY.lock().await;
+    if let Some(entry) = state.entries.get(child_id) {
+        if entry.parent_session_id != parent_id {
+            return Err(TERMINAL_STATE_ERROR.to_string());
+        }
+        state.entries.remove(child_id);
+    }
+    ensure_parent_signal_locked(&mut state, parent_id)?;
+    let signal = state
+        .terminal_signals
+        .get(parent_id)
+        .cloned()
+        .ok_or_else(|| TERMINAL_STATE_ERROR.to_string())?;
+    signal.notify(kind);
+    cleanup_parent_locked(&mut state, parent_id, false);
     Ok(())
 }
 

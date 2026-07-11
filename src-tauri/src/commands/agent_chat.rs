@@ -35,7 +35,8 @@ pub async fn chat_stream(
         map.remove(&session_id)
     };
     if let Some((old_token, _, old_request_id)) = old_stream {
-        old_token.cancel();
+        crate::services::agent_local::session_locks::cancel_with_lock(&session_id, &old_token)
+            .await;
         crate::services::agent_local::stream_diagnostics::record_cancelled(
             &session_id,
             &old_request_id,
@@ -162,7 +163,8 @@ pub async fn cancel_agent_request(
             let request_id = request_id.clone();
             map.remove(&session_id);
             drop(map);
-            token.cancel();
+            crate::services::agent_local::session_locks::cancel_with_lock(&session_id, &token)
+                .await;
             crate::services::agent_local::stream_diagnostics::record_cancelled(
                 &session_id,
                 &request_id,

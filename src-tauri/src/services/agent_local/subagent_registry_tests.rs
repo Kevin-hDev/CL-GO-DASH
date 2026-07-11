@@ -76,11 +76,14 @@ mod tests {
         assert_eq!(first_state.sequence, 1);
         assert!(first_state.report_persistence_failed);
         assert_eq!(terminal_state_for_parent(&parent).await, Some(first_state));
+        assert!(register(&parent, &uid(), CancellationToken::new())
+            .await
+            .is_err());
         assert!(consume_terminal(&parent, first_state.generation).await);
         assert!(subscribe_for_parent(&parent).await.is_none());
 
         let second_child = uid();
-        register(&parent, &second_child, CancellationToken::new())
+        let second_run = register(&parent, &second_child, CancellationToken::new())
             .await
             .unwrap();
         let mut second_receiver = subscribe_for_parent(&parent)
@@ -95,7 +98,15 @@ mod tests {
         second_receiver.changed().await.expect("second-wave signal");
         assert_eq!(second_receiver.borrow().sequence, 1);
         assert!(!second_receiver.borrow().report_persistence_failed);
+        let restarted_child = uid();
+        let restarted_run = register(&parent, &restarted_child, CancellationToken::new())
+            .await
+            .expect("successful pending terminal permits explicit restart");
+        assert_ne!(second_run, restarted_run);
+        assert_eq!(second_receiver.borrow().sequence, 1);
         assert!(consume_terminal(&parent, second_generation).await);
+        assert_eq!(second_receiver.borrow().sequence, 0);
+        unregister(&restarted_child).await;
 
         // --- removal and terminal notification are one registry transition ---
         let parent = uid();

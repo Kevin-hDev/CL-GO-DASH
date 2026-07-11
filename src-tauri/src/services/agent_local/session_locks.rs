@@ -47,6 +47,12 @@ pub async fn remove_session_lock(id: &str) {
     }
 }
 
+pub async fn cancel_with_lock(id: &str, token: &tokio_util::sync::CancellationToken) {
+    let lock = lock_session(id).await;
+    let _guard = lock.lock().await;
+    token.cancel();
+}
+
 fn evict_unused_locks(state: &mut SessionLockState) {
     while state.entries.len() > MAX_SESSION_LOCKS {
         let Some(oldest_unused) = state

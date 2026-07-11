@@ -119,22 +119,19 @@ pub fn effective_session_status(status: &str, queued_followup: bool) -> &str {
     }
 }
 
-pub(super) async fn finalize_session_after_run(
-    session_id: &str,
+pub(super) fn finalize_loaded_session_after_run(
+    session: &mut AgentSession,
     status: &str,
     summary: &str,
-) -> Result<FinalizedSubagent, String> {
-    let lock = session_store::lock_session(session_id).await;
-    let _guard = lock.lock().await;
-    let mut session = session_store::get(session_id).await?;
-    let finalized = apply_finalized_subagent_state(&mut session, status, summary);
+) -> FinalizedSubagent {
+    let finalized = apply_finalized_subagent_state(session, status, summary);
     session.subagent_last_activity = Some(super::types_session::SubagentLastActivity {
         kind: "status".to_string(),
         label: final_activity_label(&finalized.session_status).to_string(),
         detail: Some(summary.chars().take(220).collect()),
         updated_at: chrono::Utc::now(),
     });
-    session_store::save(&session).await.map(|_| finalized)
+    finalized
 }
 
 pub(super) fn apply_finalized_subagent_state(

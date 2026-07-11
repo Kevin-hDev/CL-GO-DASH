@@ -40,7 +40,20 @@ pub async fn peek_reports(session_id: &str) -> Vec<SubagentHiddenReport> {
         .unwrap_or_default()
 }
 
+#[cfg(test)]
 pub async fn acknowledge_reports(session_id: &str, report_ids: &[String]) -> Result<(), String> {
+    let cancel = tokio_util::sync::CancellationToken::new();
+    acknowledge_reports_cancellable(session_id, report_ids, &cancel).await
+}
+
+pub async fn acknowledge_reports_cancellable(
+    session_id: &str,
+    report_ids: &[String],
+    cancel: &tokio_util::sync::CancellationToken,
+) -> Result<(), String> {
+    if cancel.is_cancelled() {
+        return Err("Annulé".to_string());
+    }
     let lock = super::session_store::lock_session(session_id).await;
     let _guard = lock.lock().await;
     let mut session = super::session_store::get(session_id).await?;
@@ -48,6 +61,9 @@ pub async fn acknowledge_reports(session_id: &str, report_ids: &[String]) -> Res
     session
         .subagent_hidden_reports
         .retain(|report| !report_ids.contains(&report.id));
+    if cancel.is_cancelled() {
+        return Err("Annulé".to_string());
+    }
     super::session_store::save(&session).await
 }
 

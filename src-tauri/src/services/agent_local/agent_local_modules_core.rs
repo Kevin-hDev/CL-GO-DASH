@@ -108,6 +108,8 @@ pub mod stream_events;
 pub mod subagent_activity;
 pub mod subagent_completion;
 #[cfg(test)]
+mod subagent_completion_boundary_tests;
+#[cfg(test)]
 mod subagent_completion_capacity_tests;
 #[cfg(test)]
 mod subagent_completion_tests;
@@ -126,6 +128,11 @@ pub mod subagent_prompts;
 #[cfg(test)]
 pub mod subagent_prompts_tests;
 pub mod subagent_queued;
+mod subagent_queued_transition;
+#[cfg(test)]
+mod subagent_queued_tests;
+#[cfg(test)]
+mod subagent_queued_test_support;
 pub mod subagent_registry;
 #[cfg(test)]
 pub mod subagent_registry_tests;
@@ -135,6 +142,8 @@ mod subagent_report_context;
 mod subagent_report_delivery;
 #[cfg(test)]
 mod subagent_report_delivery_tests;
+#[cfg(test)]
+mod subagent_report_ack_tests;
 pub mod subagent_spawn_channel;
 pub mod subagent_startup_cleanup;
 pub mod subagent_status;
