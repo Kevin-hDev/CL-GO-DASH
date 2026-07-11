@@ -133,6 +133,30 @@ pub async fn cancel_execution(child_id: &str, expected_execution_id: &str) -> bo
     true
 }
 
+pub async fn adopt_children_for_parent_stream(
+    parent_id: &str,
+    parent_cancel: &CancellationToken,
+) {
+    if parent_cancel.is_cancelled() {
+        return;
+    }
+    let mut state = REGISTRY.lock().await;
+    for entry in state.entries.values_mut() {
+        if entry.parent_session_id == parent_id {
+            entry.parent_stream_cancel = parent_cancel.clone();
+        }
+    }
+}
+
+pub async fn cancel_stopped_parent_stream_children(parent_id: &str) {
+    let state = REGISTRY.lock().await;
+    for entry in state.entries.values() {
+        if entry.parent_session_id == parent_id && entry.parent_stream_cancel.is_cancelled() {
+            entry.cancel.cancel();
+        }
+    }
+}
+
 #[cfg(test)]
 pub async fn cancel_one(child_id: &str) -> bool {
     let state = REGISTRY.lock().await;

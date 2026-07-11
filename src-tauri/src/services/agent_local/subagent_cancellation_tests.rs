@@ -118,6 +118,47 @@ fn parent_stream_token_reaches_delegate_registration_on_every_control_path() {
     assert!(delegate.contains("&parent_cancel"));
 }
 
+#[tokio::test]
+async fn stale_parent_stop_does_not_cancel_a_new_stream_child() {
+    let parent_id = uuid::Uuid::new_v4().to_string();
+    let old_child = uuid::Uuid::new_v4().to_string();
+    let new_child = uuid::Uuid::new_v4().to_string();
+    let old_owner = CancellationToken::new();
+    let new_owner = CancellationToken::new();
+    subagent_registry::register_execution_for_parent_stream(
+        &parent_id,
+        &old_child,
+        CancellationToken::new(),
+        None,
+        &old_owner,
+    )
+    .await
+    .expect("register old child");
+    subagent_registry::register_execution_for_parent_stream(
+        &parent_id,
+        &new_child,
+        CancellationToken::new(),
+        None,
+        &new_owner,
+    )
+    .await
+    .expect("register new child");
+    old_owner.cancel();
+
+    subagent_registry::cancel_stopped_parent_stream_children(&parent_id).await;
+
+    assert!(subagent_registry::active_run_for_child(&old_child)
+        .await
+        .expect("old child")
+        .cancelled);
+    assert!(!subagent_registry::active_run_for_child(&new_child)
+        .await
+        .expect("new child")
+        .cancelled);
+    subagent_registry::unregister(&old_child).await;
+    subagent_registry::unregister(&new_child).await;
+}
+
 async fn session(
     name: &str,
     parent_id: Option<&str>,

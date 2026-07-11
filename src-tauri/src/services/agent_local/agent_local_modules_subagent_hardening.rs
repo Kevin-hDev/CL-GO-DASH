@@ -6,6 +6,8 @@ mod subagent_archive_tests;
 pub mod subagent_cancellation;
 #[cfg(test)]
 mod subagent_cancellation_tests;
+#[cfg(test)]
+mod subagent_parent_stream_ownership_tests;
 mod subagent_completion_events;
 mod subagent_completion_ownership;
 mod subagent_history;

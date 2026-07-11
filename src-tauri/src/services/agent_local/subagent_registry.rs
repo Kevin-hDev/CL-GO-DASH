@@ -11,6 +11,7 @@ const MAX_TOTAL: usize = 8;
 
 struct SubagentEntry {
     pub cancel: CancellationToken,
+    pub parent_stream_cancel: CancellationToken,
     pub parent_session_id: String,
     pub run_id: String,
     pub execution_id: String,
@@ -121,6 +122,7 @@ pub async fn register_execution_for_parent_stream(
         child_id.to_string(),
         SubagentEntry {
             cancel,
+            parent_stream_cancel: parent_cancel.clone(),
             parent_session_id: parent_id.to_string(),
             run_id: run_id.clone(),
             execution_id: execution_id.clone(),

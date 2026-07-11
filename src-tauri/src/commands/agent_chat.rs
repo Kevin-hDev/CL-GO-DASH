@@ -43,6 +43,11 @@ pub async fn chat_stream(
         )
         .await;
     }
+    crate::services::agent_local::subagent_registry::adopt_children_for_parent_stream(
+        &session_id,
+        &cancel,
+    )
+    .await;
     let request_id =
         crate::services::agent_local::stream_diagnostics::start_request(&session_id, generation)
             .await;
@@ -181,7 +186,10 @@ pub async fn cancel_agent_request(
         cancelled = true;
     }
     if cancelled {
-        crate::services::agent_local::subagent_registry::cancel_all_for_parent(&session_id).await;
+        crate::services::agent_local::subagent_registry::cancel_stopped_parent_stream_children(
+            &session_id,
+        )
+        .await;
     }
     Ok(())
 }
