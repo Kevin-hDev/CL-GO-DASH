@@ -44,7 +44,11 @@ where
 fn bounded_saved_messages(messages: &[ChatMessage]) -> Vec<AgentMessage> {
     let mut saved = messages.iter().filter_map(to_saved).collect::<Vec<_>>();
     if saved.len() > MAX_MESSAGES {
-        saved.drain(..saved.len() - MAX_MESSAGES);
+        let mut first_kept = saved.len() - MAX_MESSAGES;
+        while first_kept < saved.len() && saved[first_kept].role == "tool" {
+            first_kept += 1;
+        }
+        saved.drain(..first_kept);
     }
     saved
 }
@@ -101,4 +105,47 @@ where
     Fut: std::future::Future<Output = ()>,
 {
     persist_inner(child_id, run_id, execution_id, messages, before_save).await
+}
+
+#[cfg(test)]
+mod boundary_tests {
+    use super::*;
+    use crate::services::agent_local::types_ollama::{ToolCallFunction, ToolCallOllama};
+
+    #[test]
+    fn message_limit_never_keeps_a_tool_result_without_its_call() {
+        let mut messages = vec![
+            ChatMessage {
+                role: "assistant".into(),
+                content: "appel".into(),
+                tool_calls: Some(vec![ToolCallOllama {
+                    id: Some("call-boundary".into()),
+                    extra_content: None,
+                    function: ToolCallFunction {
+                        name: "read_file".into(),
+                        arguments: serde_json::json!({"path": "README.md"}),
+                    },
+                }]),
+                ..Default::default()
+            },
+            ChatMessage {
+                role: "tool".into(),
+                content: "résultat".into(),
+                tool_name: Some("read_file".into()),
+                tool_call_id: Some("call-boundary".into()),
+                ..Default::default()
+            },
+        ];
+        messages.extend((0..1_999).map(|index| ChatMessage {
+            role: "user".into(),
+            content: format!("message-{index}"),
+            ..Default::default()
+        }));
+
+        let saved = bounded_saved_messages(&messages);
+
+        assert_eq!(saved.len(), 1_999);
+        assert_eq!(saved[0].role, "user");
+        assert!(saved.iter().all(|message| message.role != "tool"));
+    }
 }
