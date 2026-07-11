@@ -17,27 +17,25 @@ pub async fn recover_panicked_completion(
     parent_session_id: &str,
     child_session_id: &str,
     subagent_type: &str,
+    run_id: &str,
+    execution_id: &str,
+    expected_worktree_path: Option<&str>,
 ) -> bool {
-    if super::subagent_registry::get_run_id_for_child(child_session_id)
-        .await
-        .is_none()
-    {
-        cleanup(child_session_id).await;
-        return false;
-    }
-    let _ = super::subagent_completion::persist_terminal_completion(
+    let completion = super::subagent_completion::persist_terminal_completion_for_execution(
         parent_session_id,
         child_session_id,
         subagent_type,
         super::subagent_status::FAILED,
         SUBAGENT_PANIC_SUMMARY,
+        run_id,
+        execution_id,
     )
     .await;
-    cleanup(child_session_id).await;
-    true
+    cleanup(child_session_id, expected_worktree_path).await;
+    !matches!(completion, Ok(None))
 }
 
-async fn cleanup(child_session_id: &str) {
-    super::subagent_working_dir::cleanup(child_session_id).await;
+async fn cleanup(child_session_id: &str, expected_worktree_path: Option<&str>) {
+    super::subagent_working_dir::cleanup_owned(child_session_id, expected_worktree_path).await;
     super::session_store::remove_session_lock(child_session_id).await;
 }

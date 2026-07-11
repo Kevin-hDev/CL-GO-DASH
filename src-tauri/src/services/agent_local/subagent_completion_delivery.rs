@@ -1,3 +1,4 @@
+#[cfg(test)]
 pub(super) async fn persist_instruction_delivery_failure(
     parent_session_id: &str,
     child_session_id: &str,

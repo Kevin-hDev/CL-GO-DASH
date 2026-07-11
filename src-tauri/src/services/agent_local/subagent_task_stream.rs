@@ -14,6 +14,7 @@ pub(super) async fn run_inner(
     subagent_type: String,
     cancel: CancellationToken,
     project_id: Option<String>,
+    working_dir: String,
 ) -> Result<(bool, String, String), String> {
     let is_explorer = subagent_type == "explorer";
     let tools = if is_explorer {
@@ -30,10 +31,6 @@ pub(super) async fn run_inner(
 
     let messages =
         super::subagent_context::build_messages(&child_session_id, system_prompt, &prompt).await;
-    let working_dir =
-        super::subagent_working_dir::resolve(project_id.as_deref(), &child_session_id, is_explorer)
-            .await?;
-
     let emitter = AgentEventEmitter::new(app, child_session_id.clone());
     let request_id = super::stream_diagnostics::start_request(&child_session_id, 0).await;
     super::subagent_activity::record_status(&child_session_id, "Démarré", None).await;
@@ -53,7 +50,7 @@ pub(super) async fn run_inner(
         tools,
         think: false,
         provider,
-        working_dir: Some(working_dir.to_string_lossy().to_string()),
+        working_dir: Some(working_dir),
         capability_hints: StreamCapabilityHints::default(),
         reasoning_mode: None,
         permission_mode_override: Some("subagent".to_string()),

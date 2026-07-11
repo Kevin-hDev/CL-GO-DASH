@@ -18,20 +18,33 @@ async fn panic_persists_generic_failure_and_leaves_no_registry_ghost() {
     child.subagent_type = Some("explorer".into());
     child.subagent_status = Some(subagent_status::RUNNING.into());
     session_store::save(&child).await.expect("save child");
-    subagent_registry::register(&parent.id, &child.id, CancellationToken::new())
+    let registered = subagent_registry::register_execution(
+        &parent.id,
+        &child.id,
+        CancellationToken::new(),
+    )
         .await
         .expect("register child");
+    child.subagent_run_id = Some(registered.run_id.clone());
+    session_store::save(&child).await.expect("save run id");
     let mut signal = subagent_registry::subscribe_for_parent(&parent.id)
         .await
         .expect("subscribe signal");
     let parent_id = parent.id.clone();
     let child_id = child.id.clone();
+    let run_id = registered.run_id;
+    let execution_id = registered.execution_id;
 
     subagent_panic_supervisor::run_guarded(
         async { panic!("internal panic must stay private") },
         move || async move {
             subagent_panic_supervisor::recover_panicked_completion(
-                &parent_id, &child_id, "explorer",
+                &parent_id,
+                &child_id,
+                "explorer",
+                &run_id,
+                &execution_id,
+                None,
             )
             .await;
         },

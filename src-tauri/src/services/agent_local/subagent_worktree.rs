@@ -53,20 +53,35 @@ fn has_forbidden_component(path: &str) -> bool {
             .any(|component| matches!(component, Component::ParentDir))
 }
 
-pub async fn create_for_child(project_path: &Path, child_id: &str) -> Result<PathBuf, String> {
+pub fn path_for_execution(child_id: &str, execution_id: &str) -> Result<PathBuf, String> {
+    if uuid::Uuid::parse_str(child_id).is_err() || uuid::Uuid::parse_str(execution_id).is_err() {
+        return Err("ID de sous-agent invalide".to_string());
+    }
+    Ok(data_dir()
+        .join("subagent-worktrees")
+        .join(child_id)
+        .join(execution_id))
+}
+
+pub async fn create_for_execution(
+    project_path: &Path,
+    child_id: &str,
+    execution_id: &str,
+) -> Result<PathBuf, String> {
     if !project_path.is_dir() {
         return Err("Projet introuvable".to_string());
     }
-    let root = data_dir().join("subagent-worktrees");
-    tokio::fs::create_dir_all(&root)
+    let target = path_for_execution(child_id, execution_id)?;
+    let parent = target
+        .parent()
+        .ok_or_else(|| "Chemin worktree invalide".to_string())?;
+    tokio::fs::create_dir_all(parent)
         .await
         .map_err(|_| "Création du worktree impossible".to_string())?;
-    if uuid::Uuid::parse_str(child_id).is_err() {
-        return Err("ID de sous-agent invalide".to_string());
-    }
-    let target = root.join(child_id);
-    if target.exists() {
-        remove(&target.to_string_lossy()).await?;
+    match tokio::fs::symlink_metadata(&target).await {
+        Ok(_) => return Err("Collision de worktree isolé".to_string()),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+        Err(_) => return Err("Création du worktree impossible".to_string()),
     }
 
     let output = Command::new("git")
@@ -90,33 +105,37 @@ pub async fn create_for_child(project_path: &Path, child_id: &str) -> Result<Pat
 
 #[cfg(test)]
 mod tests {
-    use super::create_for_child;
+    use super::create_for_execution;
+
+    fn execution_id() -> String {
+        uuid::Uuid::new_v4().to_string()
+    }
 
     #[tokio::test]
     async fn test_reject_path_traversal_dotdot() {
         let tmp = std::env::temp_dir();
-        let result = create_for_child(&tmp, "../../etc").await;
+        let result = create_for_execution(&tmp, "../../etc", &execution_id()).await;
         assert!(result.is_err(), "child_id avec '..' doit être rejeté");
     }
 
     #[tokio::test]
     async fn test_reject_path_traversal_slash() {
         let tmp = std::env::temp_dir();
-        let result = create_for_child(&tmp, "foo/bar").await;
+        let result = create_for_execution(&tmp, "foo/bar", &execution_id()).await;
         assert!(result.is_err(), "child_id avec '/' doit être rejeté");
     }
 
     #[tokio::test]
     async fn test_reject_path_traversal_backslash() {
         let tmp = std::env::temp_dir();
-        let result = create_for_child(&tmp, "foo\\bar").await;
+        let result = create_for_execution(&tmp, "foo\\bar", &execution_id()).await;
         assert!(result.is_err(), "child_id avec '\\\\' doit être rejeté");
     }
 
     #[tokio::test]
     async fn test_reject_empty_child_id() {
         let tmp = std::env::temp_dir();
-        let result = create_for_child(&tmp, "").await;
+        let result = create_for_execution(&tmp, "", &execution_id()).await;
         assert!(result.is_err(), "child_id vide doit être rejeté");
     }
 

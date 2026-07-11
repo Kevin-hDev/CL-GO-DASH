@@ -14,6 +14,8 @@ pub struct SpawnRequest {
     pub parent_emitter: AgentEventEmitter,
     pub cancel: tokio_util::sync::CancellationToken,
     pub project_id: Option<String>,
+    pub run_id: String,
+    pub execution_id: String,
 }
 
 const MAX_QUEUED: usize = 8;
@@ -40,7 +42,28 @@ async fn receiver_loop(mut rx: mpsc::Receiver<SpawnRequest>) {
             let child_session_id = req.child_session_id.clone();
             let subagent_type = req.subagent_type.clone();
             let parent_emitter = req.parent_emitter.clone();
-            let run_id = super::subagent_registry::get_run_id_for_child(&child_session_id).await;
+            let run_id = req.run_id.clone();
+            let execution_id = req.execution_id.clone();
+            if !super::subagent_registry::owns_execution(
+                &child_session_id,
+                &run_id,
+                &execution_id,
+            )
+            .await
+            {
+                return;
+            }
+            let expected_worktree = if req.subagent_type == "coder" {
+                let Ok(path) = super::subagent_worktree::path_for_execution(
+                    &child_session_id,
+                    &execution_id,
+                ) else {
+                    return;
+                };
+                Some(path.to_string_lossy().to_string())
+            } else {
+                None
+            };
             let child = super::subagent_task::run(
                 req.app,
                 req.parent_session_id,
@@ -52,12 +75,17 @@ async fn receiver_loop(mut rx: mpsc::Receiver<SpawnRequest>) {
                 req.parent_emitter,
                 req.cancel,
                 req.project_id,
+                run_id.clone(),
+                execution_id.clone(),
             );
             super::subagent_panic_supervisor::run_guarded(child, move || async move {
                 if super::subagent_panic_supervisor::recover_panicked_completion(
                     &parent_session_id,
                     &child_session_id,
                     &subagent_type,
+                    &run_id,
+                    &execution_id,
+                    expected_worktree.as_deref(),
                 )
                 .await
                 {
@@ -68,7 +96,7 @@ async fn receiver_loop(mut rx: mpsc::Receiver<SpawnRequest>) {
                             status: super::subagent_status::FAILED.to_string(),
                             summary: super::subagent_panic_supervisor::SUBAGENT_PANIC_SUMMARY
                                 .to_string(),
-                            run_id,
+                            run_id: Some(run_id),
                         },
                     );
                 }

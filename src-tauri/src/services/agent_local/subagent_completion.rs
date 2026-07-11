@@ -3,6 +3,7 @@ use super::subagent_task::FinalizedSubagent;
 pub(super) const SUBAGENT_COMPLETION_ERROR: &str =
     "Le sous-agent n'a pas pu finaliser son rapport.";
 
+#[cfg(test)]
 pub(super) async fn persist_terminal_completion(
     parent_session_id: &str,
     child_session_id: &str,

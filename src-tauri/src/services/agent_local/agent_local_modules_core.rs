@@ -176,6 +176,12 @@ pub mod subagent_task_tests;
 #[cfg(test)]
 mod subagent_same_run_tests;
 #[cfg(test)]
+mod subagent_worktree_ownership_tests;
+#[cfg(test)]
+mod subagent_execution_ownership_tests;
+#[cfg(test)]
+mod subagent_worktree_wiring_tests;
+#[cfg(test)]
 mod subagent_instruction_execution_race_tests;
 #[cfg(test)]
 mod subagent_correction_capacity_tests;

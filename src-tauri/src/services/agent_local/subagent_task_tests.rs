@@ -14,7 +14,16 @@ mod tests {
     #[tokio::test]
     async fn test_coder_worktree_creation_failure_is_blocking() {
         let project = temp_dir();
-        let result = create_coder_worktree_for_test(&project, "child-session").await;
+        let child_id = Uuid::new_v4().to_string();
+        let run_id = Uuid::new_v4().to_string();
+        let execution_id = Uuid::new_v4().to_string();
+        let result = create_coder_worktree_for_test(
+            &project,
+            &child_id,
+            &run_id,
+            &execution_id,
+        )
+        .await;
 
         assert!(
             result.is_err(),
