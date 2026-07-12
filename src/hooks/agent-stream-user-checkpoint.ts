@@ -56,6 +56,8 @@ function buildAssistant(segments: StreamSegment[], state: ManagedStreamState): A
     thinking: built.thinking, tool_activities: built.toolRecords,
     segments: built.segments, files: [], timestamp: new Date().toISOString(),
     work_duration_ms: elapsed > 0 ? elapsed : undefined, tokens: 0,
+    stream_run_id: state.streamRunId,
+    stream_part: "checkpoint",
     is_stream_checkpoint: true,
   };
   message.tokens = estimateAgentMessagesTokens([message]);

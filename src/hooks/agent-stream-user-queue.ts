@@ -13,7 +13,11 @@ export function queueUserMessage(sessionId: string, message: AgentMessage): bool
   ) return false;
   record.state = {
     ...record.state,
-    queuedUserMessages: [...record.state.queuedUserMessages, message],
+    queuedUserMessages: [...record.state.queuedUserMessages, {
+      ...message,
+      stream_run_id: record.state.streamRunId,
+      stream_part: "input",
+    }],
     updatedAt: Date.now(),
   };
   flushFrameNotify(record, notifyRecord);

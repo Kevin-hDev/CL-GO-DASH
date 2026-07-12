@@ -1,17 +1,15 @@
-import { memo } from "react";
+import { Fragment, memo } from "react";
 import { UserMessage } from "./user-message";
 import { AssistantMessage } from "./assistant-message";
 import { SavedToolTimeline, StreamToolTimeline } from "./message-tool-timeline";
 import { CompressionIndicator } from "./compression-indicator";
 import { ContextCompressionMarker } from "./context-compression-marker";
-import { SubagentBubble } from "./subagent-bubble";
 import { PlanPreviewBubble } from "./plan-preview-bubble";
-import { FileChangeBubble } from "./file-change-bubble";
+import { StreamEndArtifacts } from "./stream-end-artifacts";
 import { LoadingIndicator } from "./working-stats";
 import { useCompression } from "@/hooks/use-compression";
 import { isCompressionContextOnlyMessage, isCompressionSummaryMessage } from "@/lib/context-messages";
-import { collectMessageFileOperations } from "@/lib/file-preview-utils";
-import { collectMessageSubagents } from "@/lib/message-subagents";
+import { planStreamEndArtifacts } from "@/lib/stream-end-artifacts";
 import type { AgentMessage, AgentPlanPreview, SubagentInfo, TokenPhase } from "@/types/agent";
 import type { ToolActivity, StreamSegment } from "@/hooks/agent-chat-utils";
 import type { ActiveStreamItem } from "@/hooks/active-stream-item";
@@ -34,6 +32,7 @@ interface MessageListProps {
   totalElapsedMs: number;
   segmentStartedAt: number | null;
   liveTokenCount: number;
+  streamRunId?: string;
   onReload?: (messageId: string) => void;
   onEdit?: (messageId: string, newContent: string) => void;
   onCloneMessage?: (messageId: string) => void;
@@ -51,13 +50,28 @@ export function MessageList({
   currentContentPhase, currentThinking,
   currentTools, activeStreamItem = null, isStreaming, tps, totalElapsedMs, segmentStartedAt,
   liveTokenCount, onReload, onEdit, onCloneMessage, onFileClick, onFilePreview, onFileReview,
-  projectPath, knownSubagents = [], onOpenSubagent, planPreview,
+  projectPath, knownSubagents = [], onOpenSubagent, planPreview, streamRunId = "",
 }: MessageListProps) {
   const lastAssistantIdx = findLastIndex(messages, (m) => m.role === "assistant");
   const { isCompressing } = useCompression(sessionId);
   const streamStartedAt = segmentStartedAt;
   const hasCompressionMarker = messages.some(isCompressionSummaryMessage);
   const showCompressionIndicator = isCompressing && !hasCompressionMarker;
+  const endArtifacts = planStreamEndArtifacts(messages, isStreaming, streamRunId);
+
+  const artifactsAfter = (messageId: string) => {
+    const placement = endArtifacts.get(messageId);
+    if (!placement) return null;
+    return (
+      <StreamEndArtifacts
+        messages={placement.messages}
+        projectPath={projectPath}
+        knownSubagents={knownSubagents}
+        onOpenSubagent={onOpenSubagent}
+        onFileReview={onFileReview}
+      />
+    );
+  };
 
   return (
     <>
@@ -66,32 +80,37 @@ export function MessageList({
         if (isCompressionContextOnlyMessage(msg)) return null;
         if (msg.role === "user") {
           return (
-            <UserMessage
-              key={msg.id} content={msg.content} files={msg.files}
-              skillNames={msg.skill_names} isStreaming={isStreaming}
-              onReload={onReload ? () => onReload(msg.id) : undefined}
-              onEdit={onEdit ? (c) => onEdit(msg.id, c) : undefined}
-              onClone={onCloneMessage ? () => onCloneMessage(msg.id) : undefined}
-              onFileClick={onFileClick}
-            />
+            <Fragment key={msg.id}>
+              <UserMessage
+                content={msg.content} files={msg.files}
+                skillNames={msg.skill_names} isStreaming={isStreaming}
+                onReload={onReload ? () => onReload(msg.id) : undefined}
+                onEdit={onEdit ? (c) => onEdit(msg.id, c) : undefined}
+                onClone={onCloneMessage ? () => onCloneMessage(msg.id) : undefined}
+                onFileClick={onFileClick}
+              />
+              {artifactsAfter(msg.id)}
+            </Fragment>
           );
         }
         if (msg.role === "assistant") {
           const isLast = idx === lastAssistantIdx && !isStreaming;
           return (
-            <SegmentedAssistantMessage
-              key={msg.id} msg={msg} onReload={onReload}
-              onClone={onCloneMessage}
-              onFilePreview={onFilePreview}
-              onFileReview={onFileReview}
-              projectPath={projectPath}
-              knownSubagents={knownSubagents}
-              onOpenSubagent={onOpenSubagent}
-              tps={isLast ? tps : 0}
-              totalElapsedMs={isLast ? totalElapsedMs : 0}
-              workDurationMs={msg.work_duration_ms}
-              liveCheckpoint={isStreaming && msg.is_stream_checkpoint === true}
-            />
+            <Fragment key={msg.id}>
+              <SegmentedAssistantMessage
+                msg={msg} onReload={onReload}
+                onClone={onCloneMessage}
+                onFilePreview={onFilePreview}
+                projectPath={projectPath}
+                tps={isLast ? tps : 0}
+                totalElapsedMs={isLast ? totalElapsedMs : 0}
+                workDurationMs={msg.work_duration_ms}
+                liveCheckpoint={isStreaming && (
+                  msg.stream_run_id === streamRunId || msg.is_stream_checkpoint === true
+                )}
+              />
+              {artifactsAfter(msg.id)}
+            </Fragment>
           );
         }
         return null;
@@ -132,18 +151,14 @@ export function MessageList({
 }
 
 export const SegmentedAssistantMessage = memo(function SegmentedAssistantMessage({
-  msg, onReload, onClone, onFilePreview, onFileReview, tps, totalElapsedMs, workDurationMs,
-  projectPath, knownSubagents = [], onOpenSubagent,
+  msg, onReload, onClone, onFilePreview, tps, totalElapsedMs, workDurationMs, projectPath,
   liveCheckpoint = false,
 }: {
   msg: AgentMessage; onReload?: (id: string) => void; onFilePreview?: (path: string) => void;
-  onClone?: (id: string) => void; onFileReview?: (operation: FileOperation) => void; tps: number; totalElapsedMs: number;
-  workDurationMs?: number; projectPath?: string; knownSubagents?: SubagentInfo[];
-  onOpenSubagent?: (sessionId: string) => void;
+  onClone?: (id: string) => void; tps: number; totalElapsedMs: number;
+  workDurationMs?: number; projectPath?: string;
   liveCheckpoint?: boolean;
 }) {
-  const fileChanges = collectMessageFileOperations(msg, projectPath);
-  const messageSubagents = collectMessageSubagents(msg, knownSubagents);
   if (msg.segments && msg.segments.length > 0) {
     return (
       <>
@@ -158,8 +173,6 @@ export const SegmentedAssistantMessage = memo(function SegmentedAssistantMessage
           liveCheckpoint={liveCheckpoint}
           onClone={() => onClone?.(msg.id)}
         />
-        <SubagentBubble subagents={messageSubagents} onOpen={(id) => onOpenSubagent?.(id)} />
-        <FileChangeBubble operations={fileChanges} baseDir={projectPath} onReview={onFileReview} />
       </>
     );
   }
@@ -174,8 +187,6 @@ export const SegmentedAssistantMessage = memo(function SegmentedAssistantMessage
         tokens={msg.tokens}
         tps={tps}
       />
-      <SubagentBubble subagents={messageSubagents} onOpen={(id) => onOpenSubagent?.(id)} />
-      <FileChangeBubble operations={fileChanges} baseDir={projectPath} onReview={onFileReview} />
     </>
   );
 });

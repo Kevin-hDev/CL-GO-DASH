@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, afterEach } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { SegmentedAssistantMessage } from "../message-list";
+import { StreamEndArtifacts } from "../stream-end-artifacts";
 import type { AgentMessage } from "@/types/agent";
 import type { FileOperation } from "@/types/file-preview";
 
@@ -57,14 +57,13 @@ vi.mock("react-i18next", () => ({
 describe("FileChangeBubble", () => {
   it("affiche les fichiers modifiés sous une réponse assistant", () => {
     render(
-      <SegmentedAssistantMessage
-        msg={assistant([
+      <StreamEndArtifacts
+        messages={[assistant([
           { name: "write_file", summary: "/repo/src/a.ts", content: "one\ntwo" },
           { name: "edit_file", summary: "/repo/src/b.ts", old_text: "old", new_text: "new" },
-        ])}
+        ])]}
         projectPath="/repo"
-        tps={0}
-        totalElapsedMs={0}
+        knownSubagents={[]}
       />,
     );
 
@@ -80,11 +79,10 @@ describe("FileChangeBubble", () => {
 
   it("n'affiche rien si la réponse ne modifie aucun fichier", () => {
     const { container } = render(
-      <SegmentedAssistantMessage
-        msg={assistant([{ name: "read_file", summary: "/repo/src/a.ts", result: "ok" }])}
+      <StreamEndArtifacts
+        messages={[assistant([{ name: "read_file", summary: "/repo/src/a.ts", result: "ok" }])]}
         projectPath="/repo"
-        tps={0}
-        totalElapsedMs={0}
+        knownSubagents={[]}
       />,
     );
 
@@ -93,11 +91,10 @@ describe("FileChangeBubble", () => {
 
   it("affiche directement le fichier s'il est seul", () => {
     render(
-      <SegmentedAssistantMessage
-        msg={assistant([{ name: "write_file", summary: "/repo/src/a.ts", content: "one" }])}
+      <StreamEndArtifacts
+        messages={[assistant([{ name: "write_file", summary: "/repo/src/a.ts", content: "one" }])]}
         projectPath="/repo"
-        tps={0}
-        totalElapsedMs={0}
+        knownSubagents={[]}
       />,
     );
 
@@ -110,12 +107,11 @@ describe("FileChangeBubble", () => {
   it("ouvre le review avec l'opération du fichier concerné", () => {
     const onReview = vi.fn<(operation: FileOperation) => void>();
     render(
-      <SegmentedAssistantMessage
-        msg={assistant([{ name: "edit_file", summary: "/repo/src/b.ts", old_text: "old", new_text: "new" }])}
+      <StreamEndArtifacts
+        messages={[assistant([{ name: "edit_file", summary: "/repo/src/b.ts", old_text: "old", new_text: "new" }])]}
         projectPath="/repo"
         onFileReview={onReview}
-        tps={0}
-        totalElapsedMs={0}
+        knownSubagents={[]}
       />,
     );
 

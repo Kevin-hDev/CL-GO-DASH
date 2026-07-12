@@ -29,6 +29,23 @@ export function collectMessageSubagents(
   return collected;
 }
 
+export function collectMessagesSubagents(
+  messages: AgentMessage[],
+  knownSubagents: SubagentInfo[] = [],
+): SubagentInfo[] {
+  const collected: SubagentInfo[] = [];
+  const seen = new Set<string>();
+  for (const message of messages.slice(0, MAX_SEGMENTS_INSPECTED)) {
+    for (const subagent of collectMessageSubagents(message, knownSubagents)) {
+      if (collected.length >= MAX_MESSAGE_SUBAGENTS) return collected;
+      if (seen.has(subagent.sessionId)) continue;
+      seen.add(subagent.sessionId);
+      collected.push(subagent);
+    }
+  }
+  return collected;
+}
+
 function* messageSubagentTools(message: AgentMessage): Generator<ToolActivityRecord> {
   let inspectedTools = 0;
   if (message.segments?.length) {

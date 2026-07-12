@@ -26,7 +26,7 @@ vi.mock("../subagent-bubble", () => ({
 }));
 vi.mock("../plan-preview-bubble", () => ({ PlanPreviewBubble: () => null }));
 vi.mock("../file-change-bubble", () => ({ FileChangeBubble: () => null }));
-vi.mock("@/lib/file-preview-utils", () => ({ collectMessageFileOperations: () => [] }));
+vi.mock("@/lib/file-preview-utils", () => ({ collectFileOperations: () => [] }));
 vi.mock("../chat.css", () => ({}));
 vi.mock("../messages.css", () => ({}));
 
@@ -101,6 +101,7 @@ describe("MessageList subagents", () => {
     const bubble = renderedBubble();
     expect(timeline.compareDocumentPosition(bubble)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
   });
+
 });
 
 function renderedBubble() {

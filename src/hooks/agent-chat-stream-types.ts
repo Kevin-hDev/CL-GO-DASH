@@ -38,6 +38,7 @@ export interface ChatState {
   streamStartedAt: number | null;
   segmentStartedAt: number | null;
   totalElapsedMs: number;
+  streamRunId: string;
   error?: string;
   isConnectionError?: boolean;
   diagnosticSummary?: string;
@@ -63,6 +64,7 @@ export const EMPTY_CHAT_STATE: ChatState = {
   tps: 0, sessionTokenCount: 0, sessionTokenCountEstimated: true, lastRequestTokens: 0,
   liveTokenCount: 0, streamStartedAt: null, segmentStartedAt: null,
   totalElapsedMs: 0,
+  streamRunId: "",
 };
 
 export interface StreamApplyResult {
@@ -79,6 +81,7 @@ export function createManagedStreamState(
   const now = Date.now();
   return {
     ...EMPTY_CHAT_STATE, messages, sessionTokenCount, isStreaming: true,
+    streamRunId: crypto.randomUUID(),
     streamStartedAt: now, segmentStartedAt: now,
     pendingPermissions: [], completed: false, persisted: false,
     updatedAt: now,
@@ -100,6 +103,7 @@ export function toChatState(state: ManagedStreamState): ChatState {
     streamStartedAt: state.streamStartedAt,
     segmentStartedAt: state.segmentStartedAt,
     totalElapsedMs: state.totalElapsedMs,
+    streamRunId: state.streamRunId,
     error: state.error,
     isConnectionError: state.isConnectionError,
     diagnosticSummary: state.diagnosticSummary,

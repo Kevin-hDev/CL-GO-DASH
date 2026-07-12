@@ -43,6 +43,7 @@ export function ChatMessagePanel({
       totalElapsedMs={chat.totalElapsedMs}
       segmentStartedAt={chat.streamStartedAt}
       liveTokenCount={chat.liveTokenCount}
+      streamRunId={chat.streamRunId}
       planPreview={chat.planPreview}
       onReload={runtime.handleReload}
       onEdit={runtime.handleEdit}

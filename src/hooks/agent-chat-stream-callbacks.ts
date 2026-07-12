@@ -121,7 +121,7 @@ export function applyStreamEvent(
       next.error = errorKey ? i18n.t(errorKey) : i18n.t("errors.streamInterrupted");
       next.isConnectionError = (event.data as Record<string, unknown>).isConnection === true;
       next.diagnosticSummary = event.data.diagnostic?.safeSummary;
-      const partial = finalizeStream(next, null, 0, null);
+      const partial = finalizeStream(next, null, 0, null, false);
       partial.state.error = next.error;
       partial.state.isConnectionError = next.isConnectionError;
       partial.state.diagnosticSummary = next.diagnosticSummary;

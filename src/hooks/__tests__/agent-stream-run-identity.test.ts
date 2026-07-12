@@ -105,6 +105,31 @@ describe("identité des runs backend", () => {
     expect(messages[messages.length - 1]?.content).toBe("réponse");
   });
 
+  it("reprend l'identifiant persistant d'un stream après rechargement", async () => {
+    const runId = "7c8e3a14-8811-4d88-9a54-d234547d8d22";
+    await agentStreamManager.startSession("reload", [], 0);
+    emit("reload", 302, {
+      event: "sessionSnapshot",
+      data: {
+        messages: [{
+          ...message("checkpoint", "assistant", "Travail"),
+          stream_run_id: runId,
+          stream_part: "checkpoint",
+        }],
+        tokenCount: 1,
+      },
+    });
+
+    expect(agentStreamManager.getSnapshot("reload")?.streamRunId).toBe(runId);
+    emit("reload", 302, { event: "token", data: { content: "Fin", tokenCount: 1, tps: 1 } });
+    emit("reload", 302, done());
+
+    const saved = agentStreamManager.getSnapshot("reload")?.messages ?? [];
+    const final = saved[saved.length - 1];
+    expect(final?.stream_run_id).toBe(runId);
+    expect(final?.stream_part).toBe("final");
+  });
+
   it("accepte un run gateway sans snapshot après Stop", async () => {
     await agentStreamManager.startSession("gateway", [], 0);
     agentStreamManager.setSessionGeneration("gateway", 9);

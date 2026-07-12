@@ -40,6 +40,12 @@ describe("active stream user queue", () => {
     ]);
     expect(after?.completedSegments).toEqual([]);
     expect(after?.queuedUserMessages).toEqual([]);
+    const checkpoint = after?.messages[1] as StreamGroupedMessage;
+    const input = after?.messages[2] as StreamGroupedMessage;
+    expect(checkpoint.stream_run_id).toMatch(UUID_RE);
+    expect(checkpoint.stream_part).toBe("checkpoint");
+    expect(input.stream_run_id).toBe(checkpoint.stream_run_id);
+    expect(input.stream_part).toBe("input");
     await vi.waitFor(() => expect(mocks.invoke).toHaveBeenCalledWith(
       "add_messages_to_session",
       expect.objectContaining({
@@ -59,7 +65,11 @@ describe("active stream user queue", () => {
     });
     await vi.waitFor(() => expect(mocks.invoke).toHaveBeenCalledTimes(2));
     expect(mocks.invoke.mock.calls[1]?.[1]).toEqual(expect.objectContaining({
-      messages: [expect.objectContaining({ content: "Réponse suivante" })],
+      messages: [expect.objectContaining({
+        content: "Réponse suivante",
+        stream_run_id: checkpoint.stream_run_id,
+        stream_part: "final",
+      })],
     }));
   });
 });
@@ -67,6 +77,13 @@ describe("active stream user queue", () => {
 function message(id: string, content: string): AgentMessage {
   return { id, role: "user", content, files: [], timestamp: "2026-07-12T10:00:00Z" };
 }
+
+interface StreamGroupedMessage extends AgentMessage {
+  stream_run_id?: string;
+  stream_part?: "checkpoint" | "input" | "final";
+}
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function emit(event: StreamEvent) {
   streamHandler?.({ payload: { sessionId: "s1", generation: 7, event } });

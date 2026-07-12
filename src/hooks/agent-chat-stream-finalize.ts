@@ -9,14 +9,18 @@ import {
 import type { AgentMessage, StreamEvent } from "@/types/agent";
 
 export function finishPartialStream(state: ManagedStreamState): StreamApplyResult {
-  return finalizeStream(markPendingToolsCancelled(markUnconfirmedContentAsWork(state)), null, state.tps, null);
+  return finalizeStream(
+    markPendingToolsCancelled(markUnconfirmedContentAsWork(state)), null, state.tps, null, false,
+  );
 }
 
 export function finishStream(
   state: ManagedStreamState,
   event: Extract<StreamEvent, { event: "done" }>,
 ) {
-  return finalizeStream(state, event.data.evalCount, event.data.finalTps, event.data.contextTokens);
+  return finalizeStream(
+    state, event.data.evalCount, event.data.finalTps, event.data.contextTokens, true,
+  );
 }
 
 export function finalizeStream(
@@ -24,10 +28,13 @@ export function finalizeStream(
   outputTokens: number | null,
   tps: number,
   contextTokens: number | null,
+  terminalResponse: boolean,
 ): StreamApplyResult {
   const segments = streamSegments(state);
   const totalMs = state.streamStartedAt ? Date.now() - state.streamStartedAt : 0;
-  const assistantMessage = buildAssistant(segments, totalMs, outputTokens);
+  const assistantMessage = buildAssistant(
+    segments, totalMs, outputTokens, state.streamRunId, terminalResponse,
+  );
   const persistedMessages = assistantMessage
     ? [assistantMessage, ...state.queuedUserMessages]
     : [...state.queuedUserMessages];
@@ -68,6 +75,7 @@ function streamSegments(state: ManagedStreamState): StreamSegment[] {
 
 function buildAssistant(
   segments: StreamSegment[], totalMs: number, outputTokens: number | null,
+  streamRunId: string, terminalResponse: boolean,
 ): AgentMessage | undefined {
   if (segments.length === 0) return undefined;
   const built = buildSegmentedMessage(segments);
@@ -76,6 +84,8 @@ function buildAssistant(
     thinking: built.thinking, tool_activities: built.toolRecords,
     segments: built.segments, files: [], timestamp: new Date().toISOString(), tokens: 0,
     work_duration_ms: totalMs > 0 ? totalMs : undefined,
+    stream_run_id: streamRunId,
+    stream_part: terminalResponse ? "final" : "checkpoint",
   };
   message.tokens = outputTokens ?? estimateAgentMessagesTokens([message]);
   return message;
