@@ -5,10 +5,7 @@ use crate::services::agent_local::types_session::AgentSession;
 use tauri::AppHandle;
 use tokio_util::sync::CancellationToken;
 
-pub(super) struct FinalizedSubagent {
-    pub(super) queued_followup: bool,
-    pub(super) session_status: String,
-}
+pub(super) use super::subagent_task_failure::finish_preparation_failure;
 
 pub async fn run(
     app: AppHandle,
@@ -54,6 +51,8 @@ pub async fn run(
         }
     };
     let working_dir = prepared.path().to_string_lossy().to_string();
+    let project_path = super::subagent_prompts::resolve_project_dir(project_id.as_deref()).await;
+    let mut retain_branch = false;
     let mut prior_messages = None;
     loop {
         let Some(active) = subagent_registry::active_run_for_child(&child_session_id).await else {
@@ -139,6 +138,28 @@ pub async fn run(
                 }
             }
         }
+        if !is_explorer {
+            match super::subagent_task_change::capture(
+                &project_path,
+                &child_session_id,
+                &execution_id,
+                prepared.path(),
+            )
+            .await
+            {
+                Ok(Some(metadata)) => {
+                    summary.push_str(&metadata);
+                    retain_branch = true;
+                }
+                Ok(None) => {}
+                Err(_) => {
+                    success = false;
+                    status = super::subagent_status::FAILED.to_string();
+                    summary = "Le changement du sous-agent n'a pas pu être conservé.".into();
+                    retain_branch = true;
+                }
+            }
+        }
         let finalized = match super::subagent_completion_events::persist_terminal(
             &parent_session_id,
             &child_session_id,
@@ -168,33 +189,10 @@ pub async fn run(
         prepared.worktree_path(),
     )
     .await;
+    if !is_explorer && !retain_branch {
+        super::subagent_task_change::delete_empty_branch(&project_path, &execution_id).await;
+    }
     session_store::remove_session_lock(&child_session_id).await;
-}
-
-pub(super) async fn finish_preparation_failure(
-    parent_id: &str,
-    child_id: &str,
-    subagent_type: &str,
-    run_id: &str,
-    execution_id: &str,
-    emitter: Option<&AgentEventEmitter>,
-) -> bool {
-    let summary = "Le sous-agent n'a pas pu terminer correctement.";
-    !matches!(
-        super::subagent_completion_events::persist_terminal(
-            parent_id,
-            child_id,
-            subagent_type,
-            super::subagent_status::FAILED,
-            summary,
-            run_id,
-            execution_id,
-            false,
-            emitter,
-        )
-        .await,
-        Ok(None)
-    )
 }
 
 include!("subagent_task_state.rs");

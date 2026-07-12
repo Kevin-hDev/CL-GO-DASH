@@ -22,12 +22,40 @@ pub async fn recover_panicked_completion(
     expected_worktree_path: Option<&str>,
     emitter: Option<&super::stream_events::AgentEventEmitter>,
 ) -> bool {
+    let mut summary = SUBAGENT_PANIC_SUMMARY.to_string();
+    let mut retain_branch = false;
+    let project_path = if subagent_type == "coder" {
+        let project_id = super::session_store::get(child_session_id)
+            .await
+            .ok()
+            .and_then(|session| session.project_id);
+        Some(super::subagent_prompts::resolve_project_dir(project_id.as_deref()).await)
+    } else {
+        None
+    };
+    if let (Some(project), Some(worktree)) = (project_path.as_deref(), expected_worktree_path) {
+        match super::subagent_task_change::capture(
+            project,
+            child_session_id,
+            execution_id,
+            std::path::Path::new(worktree),
+        )
+        .await
+        {
+            Ok(Some(metadata)) => {
+                summary.push_str(&metadata);
+                retain_branch = true;
+            }
+            Ok(None) => {}
+            Err(_) => retain_branch = true,
+        }
+    }
     let completion = super::subagent_completion_events::persist_terminal(
         parent_session_id,
         child_session_id,
         subagent_type,
         super::subagent_status::FAILED,
-        SUBAGENT_PANIC_SUMMARY,
+        &summary,
         run_id,
         execution_id,
         false,
@@ -35,6 +63,11 @@ pub async fn recover_panicked_completion(
     )
     .await;
     cleanup(child_session_id, execution_id, expected_worktree_path).await;
+    if !retain_branch {
+        if let Some(project) = project_path.as_deref() {
+            super::subagent_task_change::delete_empty_branch(project, execution_id).await;
+        }
+    }
     !matches!(completion, Ok(None))
 }
 

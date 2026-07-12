@@ -1,3 +1,8 @@
+pub(super) struct FinalizedSubagent {
+    pub(super) queued_followup: bool,
+    pub(super) session_status: String,
+}
+
 pub fn effective_session_status(status: &str, queued_followup: bool) -> &str {
     if queued_followup {
         super::subagent_status::RUNNING

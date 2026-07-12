@@ -37,6 +37,16 @@ pub(crate) mod subagent_tool_profile;
 mod subagent_explorer_bash;
 mod subagent_prompt_sections;
 mod subagent_runtime_context;
+mod subagent_change_store;
+mod subagent_git_actions;
+mod subagent_git_command;
+mod subagent_git_run;
+mod subagent_task_change;
+mod subagent_task_failure;
+mod types_subagent_change;
+mod tool_subagent_changes;
+#[cfg(test)]
+mod subagent_git_lifecycle_tests;
 mod tool_delegate_spawned;
 #[cfg(test)]
 mod subagent_tool_profile_tests;

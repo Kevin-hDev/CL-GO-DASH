@@ -12,6 +12,7 @@ pub fn get_tool_definitions() -> Vec<Value> {
     defs.extend(super::tool_definitions_plan::plan_tool_definitions());
     defs.push(super::tool_definitions_subagent::delegate_task_definition());
     defs.extend(super::tool_definitions_subagent::subagent_control_definitions());
+    defs.extend(super::tool_definitions_subagent::subagent_change_definitions());
     defs.extend(super::tool_definitions_forecast::forecast_tool_definitions());
     defs.extend(super::tool_definitions_office::office_tool_definitions());
     defs.extend(super::tool_definitions_mcp::mcp_tool_definitions());

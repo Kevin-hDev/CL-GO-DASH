@@ -54,43 +54,42 @@ async fn create_coder_worktree(
     )
     .await?;
     let path = worktree.to_string_lossy().to_string();
+    if super::subagent_git_run::seed_pending(base, child_session_id, execution_id, &worktree)
+        .await
+        .is_err()
+    {
+        cleanup_failed(base, &path, child_session_id, execution_id).await;
+        return Err("Préparation du worktree isolé impossible".to_string());
+    }
     let mut session = match session_store::get(child_session_id).await {
         Ok(session) => session,
         Err(_) => {
-            let _ = super::subagent_worktree::remove_owned(
-                &path,
-                child_session_id,
-                execution_id,
-            )
-            .await;
+            cleanup_failed(base, &path, child_session_id, execution_id).await;
             return Err("Préparation du worktree isolé impossible".to_string());
         }
     };
     let owns_execution = session.subagent_run_id.as_deref() == Some(run_id)
         && super::subagent_registry::owns_execution(child_session_id, run_id, execution_id).await;
     if !owns_execution {
-        let _ = super::subagent_worktree::remove_owned(
-            &worktree.to_string_lossy(),
-            child_session_id,
-            execution_id,
-        )
-        .await;
+        cleanup_failed(base, &path, child_session_id, execution_id).await;
         return Err("Préparation du worktree isolé impossible".to_string());
     }
     session.subagent_worktree = Some(path.clone());
     if session_store::save(&session).await.is_err() {
-        let _ = super::subagent_worktree::remove_owned(
-            &path,
-            child_session_id,
-            execution_id,
-        )
-        .await;
+        cleanup_failed(base, &path, child_session_id, execution_id).await;
         return Err("Préparation du worktree isolé impossible".to_string());
     }
     Ok(PreparedWorkingDir {
         path: worktree,
         worktree_path: Some(path),
     })
+}
+
+async fn cleanup_failed(base: &Path, path: &str, child_id: &str, execution_id: &str) {
+    let _ = super::subagent_worktree::remove_owned(path, child_id, execution_id).await;
+    if let Ok(branch) = super::subagent_worktree::branch_for_execution(execution_id) {
+        let _ = super::subagent_git_command::delete_branch(base, &branch).await;
+    }
 }
 
 pub async fn cleanup_owned(

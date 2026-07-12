@@ -39,6 +39,17 @@ pub fn path_for_execution(child_id: &str, execution_id: &str) -> Result<PathBuf,
         .join(execution_id))
 }
 
+pub fn branch_for_execution(execution_id: &str) -> Result<String, String> {
+    if uuid::Uuid::parse_str(execution_id)
+        .ok()
+        .and_then(|id| id.get_version())
+        != Some(uuid::Version::Random)
+    {
+        return Err("ID d'exécution invalide".into());
+    }
+    Ok(format!("cl-go/subagent/{execution_id}"))
+}
+
 pub async fn create_for_execution(
     project_path: &Path,
     child_id: &str,
@@ -63,7 +74,8 @@ pub async fn create_for_execution(
     let output = Command::new("git")
         .args(["-C"])
         .arg(project_path)
-        .args(["worktree", "add", "--detach"])
+        .args(["worktree", "add", "-b"])
+        .arg(branch_for_execution(execution_id)?)
         .arg(&target)
         .arg("HEAD")
         .kill_on_drop(true)
@@ -75,6 +87,9 @@ pub async fn create_for_execution(
         Ok(target)
     } else {
         let _ = remove_owned(&target.to_string_lossy(), child_id, execution_id).await;
+        if let Ok(branch) = branch_for_execution(execution_id) {
+            let _ = super::subagent_git_command::delete_branch(project_path, &branch).await;
+        }
         Err("Création du worktree isolé impossible".to_string())
     }
 }

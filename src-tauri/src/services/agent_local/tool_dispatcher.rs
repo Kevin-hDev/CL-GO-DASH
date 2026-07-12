@@ -164,6 +164,16 @@ pub(super) async fn dispatch_inner(
                 .await
         }
         _ => {
+            if let Some(result) = super::tool_subagent_changes::dispatch(
+                tool_name,
+                args,
+                working_dir,
+                session_id,
+            )
+            .await
+            {
+                return result;
+            }
             if let Some(result) =
                 super::tool_subagent_control::dispatch(tool_name, args, session_id, cancel).await
             {

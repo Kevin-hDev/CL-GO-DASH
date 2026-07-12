@@ -14,7 +14,6 @@ use super::project_store;
 use super::session_index;
 use super::session_store::validate_session_id;
 use super::subagent_status;
-use super::subagent_worktree;
 use super::types_session::{AgentSession, AgentSessionMeta};
 
 const PRUNE_TIMEOUT_SECS: u64 = 3;
@@ -69,13 +68,8 @@ pub(crate) async fn cleanup_orphans_in_dir(
         cleaned += 1;
 
         if remove_worktrees {
-            if let Some(worktree) = &session.subagent_worktree {
-                if let Err(e) = subagent_worktree::remove_for_child(worktree, &session.id).await {
-                    eprintln!(
-                        "[startup-cleanup] suppression worktree {} (session {}): {e}",
-                        worktree, meta.id
-                    );
-                }
+            if let Err(e) = super::subagent_task_change::recover_and_remove_orphan(&session).await {
+                eprintln!("[startup-cleanup] récupération worktree {}: {e}", meta.id);
             }
         }
     }

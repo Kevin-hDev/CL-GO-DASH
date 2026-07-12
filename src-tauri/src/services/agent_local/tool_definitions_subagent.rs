@@ -101,3 +101,28 @@ pub fn subagent_control_definitions() -> Vec<Value> {
         ),
     ]
 }
+
+pub fn subagent_change_definitions() -> Vec<Value> {
+    use super::tool_definitions::tool_def;
+    [
+        ("inspect_subagent_changes", "Inspect a coder subagent change before deciding what to do."),
+        ("apply_subagent_changes", "Apply a coder subagent change to the current parent branch."),
+        ("discard_subagent_changes", "Discard a coder subagent change and delete its temporary branch."),
+    ]
+    .into_iter()
+    .map(|(name, description)| {
+        tool_def(
+            name,
+            description,
+            serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "subagent_id": { "type": "string" },
+                    "change_id": { "type": "string" }
+                },
+                "required": ["subagent_id", "change_id"]
+            }),
+        )
+    })
+    .collect()
+}
