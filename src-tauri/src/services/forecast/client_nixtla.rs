@@ -103,7 +103,7 @@ fn parse_response(
 
     Ok(ForecastResult {
         id: Uuid::new_v4().to_string(),
-        name: format!("Forecast {}", &request.target_column),
+        name: format!("Forecast {}", request.target_column),
         target_column: request.target_column.clone(),
         created_at: Utc::now().to_rfc3339(),
         session_id: session_id.map(|s| s.to_string()),

@@ -40,7 +40,7 @@ pub async fn fetch_preview(url: &str) -> Result<LinkPreview, String> {
         } else {
             "http"
         },
-        &domain
+        domain
     );
 
     let site_name = parse::extract_og(&html, "og:site_name");
