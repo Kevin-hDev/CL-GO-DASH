@@ -82,6 +82,7 @@ pub async fn run(
             model.clone(),
             provider.clone(),
             runtime_context.clone(),
+            parent_emitter.clone(),
             prompt.clone(),
             subagent_type.clone(),
             cancel.clone(),

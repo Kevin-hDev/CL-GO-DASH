@@ -11,7 +11,12 @@ use crate::services::agent_local::types_ollama::ChatMessage;
 
 pub(crate) use common::merge_personality;
 
-pub(crate) async fn run_stream_task(params: StreamTaskParams) -> Result<Vec<ChatMessage>, String> {
+pub(crate) async fn run_stream_task(
+    mut params: StreamTaskParams,
+) -> Result<Vec<ChatMessage>, String> {
+    if let Some(permission_emitter) = params.permission_emitter.take() {
+        params.on_event = params.on_event.with_permission_emitter(permission_emitter);
+    }
     if compress::is_compress_command(&params.messages) {
         let working_dir = common::resolve_working_dir(&params.working_dir)?;
         common::update_working_dir(&params.session_id, &working_dir).await;

@@ -14,11 +14,14 @@ pub fn data_dir() -> PathBuf {
     static TEST_DATA_DIR: OnceLock<PathBuf> = OnceLock::new();
     TEST_DATA_DIR
         .get_or_init(|| {
-            std::env::temp_dir().join("cl-go-dash-tests").join(format!(
+            let path = std::env::temp_dir().join("cl-go-dash-tests").join(format!(
                 "{}-{}",
                 std::process::id(),
                 uuid::Uuid::new_v4()
-            ))
+            ));
+            std::fs::create_dir_all(&path).expect("create isolated test data directory");
+            path.canonicalize()
+                .expect("canonicalize isolated test data directory")
         })
         .clone()
 }
@@ -33,6 +36,9 @@ mod tests {
             .join(".local/share/cl-go-dash");
 
         assert_ne!(actual, production);
-        assert!(actual.starts_with(std::env::temp_dir()));
+        let temp = std::env::temp_dir()
+            .canonicalize()
+            .expect("canonicalize system temp directory");
+        assert!(actual.starts_with(temp));
     }
 }

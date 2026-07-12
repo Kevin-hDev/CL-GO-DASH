@@ -22,6 +22,7 @@ pub(crate) struct StreamTaskParams {
     pub capability_hints: StreamCapabilityHints,
     pub reasoning_mode: Option<String>,
     pub permission_mode_override: Option<String>,
+    pub permission_emitter: Option<AgentEventEmitter>,
     pub subagent_profile:
         Option<crate::services::agent_local::subagent_tool_profile::SubagentToolProfile>,
     pub plan_mode: Option<bool>,

@@ -101,6 +101,7 @@ pub async fn chat_stream(
             },
             reasoning_mode,
             permission_mode_override: permission_mode,
+            permission_emitter: None,
             subagent_profile: None,
             plan_mode,
             cancel,

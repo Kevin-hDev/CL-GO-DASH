@@ -14,6 +14,7 @@ pub struct AgentEventEmitter {
     app: AppHandle,
     session_id: String,
     generation: Option<u64>,
+    permission_emitter: Option<Box<AgentEventEmitter>>,
 }
 
 #[derive(Clone, Serialize)]
@@ -31,6 +32,7 @@ impl AgentEventEmitter {
             app,
             session_id,
             generation: None,
+            permission_emitter: None,
         }
     }
 
@@ -39,10 +41,21 @@ impl AgentEventEmitter {
             app,
             session_id,
             generation: Some(generation),
+            permission_emitter: None,
         }
     }
 
+    pub fn with_permission_emitter(mut self, emitter: AgentEventEmitter) -> Self {
+        self.permission_emitter = Some(Box::new(emitter));
+        self
+    }
+
     pub fn send(&self, event: StreamEvent) -> Result<(), String> {
+        if is_permission_request(&event) {
+            if let Some(emitter) = self.permission_emitter.as_deref() {
+                return emitter.send(event);
+            }
+        }
         self.app
             .emit(
                 AGENT_STREAM_EVENT,
@@ -53,5 +66,26 @@ impl AgentEventEmitter {
                 },
             )
             .map_err(|_| "Emission evenement impossible".to_string())
+    }
+}
+
+fn is_permission_request(event: &StreamEvent) -> bool {
+    matches!(event, StreamEvent::PermissionRequest { .. })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn only_permission_requests_use_the_parent_route() {
+        assert!(is_permission_request(&StreamEvent::PermissionRequest {
+            id: "request".into(),
+            tool_name: "bash".into(),
+            arguments: serde_json::json!({}),
+        }));
+        assert!(!is_permission_request(&StreamEvent::Notice {
+            message_key: "child-content".into(),
+        }));
     }
 }
