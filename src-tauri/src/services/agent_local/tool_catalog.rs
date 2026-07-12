@@ -11,7 +11,7 @@ pub struct ToolCatalogEntry {
     pub group: &'static str,
 }
 
-pub const MAX_OPTIONAL_TOOLS: usize = 28;
+pub const MAX_OPTIONAL_TOOLS: usize = 31;
 pub const SUBAGENT_TOOLS: &[&str] = &[
     "delegate_task",
     "list_subagents",
@@ -19,6 +19,9 @@ pub const SUBAGENT_TOOLS: &[&str] = &[
     "cancel_subagent",
     "message_subagent",
     "archive_subagent",
+    "inspect_subagent_changes",
+    "apply_subagent_changes",
+    "discard_subagent_changes",
 ];
 
 const LOCKED_TOOLS: &[ToolCatalogEntry] = &[
@@ -43,6 +46,9 @@ const OPTIONAL_TOOLS: &[ToolCatalogEntry] = &[
     optional_default("cancel_subagent", "subagents"),
     optional_default("message_subagent", "subagents"),
     optional_default("archive_subagent", "subagents"),
+    optional_default("inspect_subagent_changes", "subagents"),
+    optional_default("apply_subagent_changes", "subagents"),
+    optional_default("discard_subagent_changes", "subagents"),
     optional_default("planmode", "workflow"),
     optional_default("exitplanmode", "workflow"),
     optional_off("todo_write", "todo"),

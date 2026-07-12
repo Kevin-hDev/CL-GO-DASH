@@ -11,6 +11,10 @@ fn compact_and_detailed_prompts_share_positive_subagent_guidance() {
         assert!(prompt.contains("Do not repeatedly inspect subagents while they run"));
         assert!(prompt.contains("finish the turn without a tool call"));
         assert!(prompt.contains("When a coder report includes a pending change"));
+        assert!(prompt.contains("captured in the coder's isolated workspace"));
+        assert!(prompt.contains("not applied to the parent project"));
+        assert!(prompt.contains("until apply_subagent_changes succeeds"));
+        assert!(prompt.contains("Do not infer its state by checking whether files exist"));
         assert!(prompt.contains("inspect_subagent_changes"));
         assert!(prompt.contains("apply_subagent_changes"));
         assert!(prompt.contains("discard_subagent_changes"));
