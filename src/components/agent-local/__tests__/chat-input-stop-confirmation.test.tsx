@@ -8,12 +8,28 @@ vi.mock("react-i18next", () => ({
 }));
 
 vi.mock("../chat-input-editor", () => ({
-  ChatInputEditor: () => <div data-testid="chat-input-editor" />,
+  ChatInputEditor: ({ onTextChange }: { onTextChange: (value: string, cursor: number) => void }) => (
+    <button type="button" onClick={() => onTextChange("Correction", 10)}>
+      type message
+    </button>
+  ),
 }));
 
 vi.mock("../chat-input-actions-row", () => ({
-  ChatInputActionsRow: ({ buttonState, onStop }: { buttonState: string; onStop: () => void }) => (
-    <button type="button" data-state={buttonState} onClick={onStop}>
+  ChatInputActionsRow: ({
+    buttonState,
+    onSend,
+    onStop,
+  }: {
+    buttonState: string;
+    onSend: () => void;
+    onStop: () => void;
+  }) => (
+    <button
+      type="button"
+      data-state={buttonState}
+      onClick={buttonState === "send" ? onSend : onStop}
+    >
       stop action
     </button>
   ),
@@ -89,5 +105,18 @@ describe("ChatInput stop confirmation", () => {
     fireEvent.click(stopAction);
 
     expect(onStop).toHaveBeenCalledOnce();
+  });
+
+  it("permet d'envoyer un nouveau message pendant le stream", () => {
+    const onSend = vi.fn();
+
+    render(<ChatInput {...baseProps} onSend={onSend} />);
+
+    fireEvent.click(screen.getByText("type message"));
+    const action = screen.getByText("stop action");
+
+    expect(action).toHaveAttribute("data-state", "send");
+    fireEvent.click(action);
+    expect(onSend).toHaveBeenCalledWith("Correction", undefined, []);
   });
 });

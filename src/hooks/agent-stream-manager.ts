@@ -137,7 +137,13 @@ function handleStreamEvent(sessionId: string, event: StreamEvent, generation: nu
 
   if (!acceptsStreamEvent(record, generation, event)) return;
 
-  if (event.event === "subagentSpawned" || event.event === "subagentCompleted" || event.event === "todoUpdated") {
+  if (event.event === "subagentCompleted") {
+    if (isStreaming(event.data.subagentSessionId)) stopSession(event.data.subagentSessionId);
+    flushFrameNotify(record, notify);
+    return;
+  }
+
+  if (event.event === "subagentSpawned" || event.event === "todoUpdated") {
     flushFrameNotify(record, notify);
     return;
   }

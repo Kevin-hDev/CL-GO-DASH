@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 import { useOllamaConnectionRetry } from "@/hooks/use-ollama-connection-retry";
 import type { DroppedFile } from "@/hooks/use-file-drop";
 import type { AgentMessage } from "@/types/agent-message";
@@ -14,10 +14,6 @@ interface Params {
     isConnectionError?: boolean;
     isStreaming: boolean;
     retryIndicator?: RetryIndicatorState | null;
-  };
-  permission: {
-    family: "chat" | "tools" | null;
-    refresh: () => Promise<void>;
   };
   projectPath?: string;
   activeSessionTab?: SessionTab | null;
@@ -36,18 +32,6 @@ export function useChatViewRuntime(params: Params) {
   const {
     messages, reload, edit, error, isConnectionError, isStreaming, retryIndicator,
   } = params.chat;
-  const { family: permissionFamily, refresh: refreshPermission } = params.permission;
-  useEffect(() => {
-    if (messages.length > 0 && permissionFamily === null && isStreaming) {
-      void refreshPermission();
-    }
-  }, [
-    isStreaming,
-    messages.length,
-    permissionFamily,
-    refreshPermission,
-  ]);
-
   const handleRetry = useCallback(() => {
     const message = [...messages].reverse().find((item) => item.role === "user");
     if (message) void reload(message.id);

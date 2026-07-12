@@ -103,6 +103,22 @@ describe("agentStreamManager", () => {
     expect(after?.currentContent).toBe("nouveau");
   });
 
+  it("termine le loader enfant quand le parent reçoit sa fin", async () => {
+    await agentStreamManager.startSession("child", [message("u1", "user", "Mission")], 10);
+
+    emit("parent", {
+      event: "subagentCompleted",
+      data: {
+        subagentSessionId: "child",
+        success: false,
+        status: "cancelled",
+        summary: "Sous-agent annulé.",
+      },
+    });
+
+    expect(agentStreamManager.getSnapshot("child")?.isStreaming).toBe(false);
+  });
+
   it("accepte tout le nouveau run backend sans génération après Stop", async () => {
     await agentStreamManager.startSession("child", [message("u1", "user", "Mission")], 10);
     agentStreamManager.stopSession("child");

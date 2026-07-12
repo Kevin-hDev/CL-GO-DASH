@@ -22,6 +22,7 @@ export function useAgentChat(
   supportsVision?: boolean,
   reasoningMode?: string | null,
   permissionMode?: string,
+  onStreamStarted?: () => void | Promise<void>,
 ) {
   const [state, setState] = useState<ChatState>(EMPTY_CHAT_STATE);
   const planMode = useAgentPlanMode(sessionId, setState);
@@ -133,7 +134,8 @@ export function useAgentChat(
       permissionMode,
       planModeEnabled,
     );
-  }, [model, planModeEnabled, provider, startStream, state.sessionTokenCount, supportsTools, supportsThinking, supportsVision]);
+    await onStreamStarted?.();
+  }, [model, onStreamStarted, planModeEnabled, provider, startStream, state.sessionTokenCount, supportsTools, supportsThinking, supportsVision]);
   const sendMessage = useAgentMessageSend({
     sessionId,
     messages: state.messages,

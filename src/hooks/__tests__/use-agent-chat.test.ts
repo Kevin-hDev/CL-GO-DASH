@@ -127,6 +127,21 @@ describe("useAgentChat", () => {
     );
   });
 
+  it("rafraîchit le verrou des modes après le démarrage accepté", async () => {
+    const onStreamStarted = vi.fn();
+    const { result } = renderHook(() => useAgentChat(
+      "session-1", "llama3", "ollama", undefined,
+      true, true, false, "auto", "manual", onStreamStarted,
+    ));
+    await waitFor(() => expect(result.current.sessionLoading).toBe(false));
+
+    await act(async () => {
+      await result.current.sendMessage("Premier message");
+    });
+
+    expect(onStreamStarted).toHaveBeenCalledOnce();
+  });
+
   it("conserve les fichiers quand un message utilisateur est édité", async () => {
     const imageFile: FileAttachment = {
       name: "logo.png",

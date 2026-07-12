@@ -40,12 +40,12 @@ export function ChatInput({
   const hasContent = hasText || hasFiles;
 
   const handleSend = useCallback(() => {
-    if (!hasContent || isStreaming || interactivePending) return;
+    if (!hasContent || interactivePending) return;
     onSend(text.trim(), hasFiles ? files : undefined, skills.getSkillsPayload());
     setText("");
     skills.clearSkills();
     onClearFiles?.();
-  }, [text, hasContent, hasFiles, files, skills, isStreaming, interactivePending, onSend, onClearFiles]);
+  }, [text, hasContent, hasFiles, files, skills, interactivePending, onSend, onClearFiles]);
 
   const handleChange = useCallback((value: string, cursorPos: number) => {
     setText(value);
@@ -108,8 +108,8 @@ export function ChatInput({
     return () => document.removeEventListener("mousedown", handler);
   }, [slash.showDropdown, slash]);
 
-  const buttonState = isStreaming ? (isConfirmingStop ? "confirmStop" as const : "stop" as const)
-    : hasContent && !interactivePending ? "send" as const
+  const buttonState = hasContent && !interactivePending ? "send" as const
+    : isStreaming ? (isConfirmingStop ? "confirmStop" as const : "stop" as const)
     : "hidden" as const;
 
   return (

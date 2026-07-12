@@ -50,6 +50,7 @@ export function ChatView({
     selectedModelCaps?.supports_vision,
     reasoningMode,
     permMode.mode,
+    permMode.refresh,
   );
   const subagents = useSubagents(isSubagent ? undefined : sessionId);
   const knownSubagents = [...subagents.active, ...subagents.completed];
@@ -91,7 +92,6 @@ export function ChatView({
   });
   const runtime = useChatViewRuntime({
     chat,
-    permission: permMode,
     projectPath: proj.selectedProject?.path,
     activeSessionTab,
     onLinkCloneGitBranch,
