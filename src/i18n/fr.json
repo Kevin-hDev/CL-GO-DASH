@@ -378,6 +378,13 @@
     "manualDescription": "Toujours demander avant de modifier les fichiers externes et d’utiliser Internet",
     "toggleHint": "Modifier les permissions (Shift+Tab)"
   },
+  "missingDirectory": {
+    "title": "Ce dossier n’existe plus",
+    "parent": "Dossier disponible : {{path}}",
+    "switch": "Switcher",
+    "create": "Créer",
+    "error": "Impossible de préparer le dossier de cette session."
+  },
   "permissionDialog": {
     "title": "Autoriser à {{action}} ?",
     "allow": "Autoriser une fois",

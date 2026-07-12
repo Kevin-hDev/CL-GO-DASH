@@ -378,6 +378,13 @@
     "manualDescription": "Pedir siempre antes de modificar archivos externos o usar Internet",
     "toggleHint": "Cambiar permisos (Shift+Tab)"
   },
+  "missingDirectory": {
+    "title": "Esta carpeta ya no existe",
+    "parent": "Carpeta disponible: {{path}}",
+    "switch": "Cambiar",
+    "create": "Crear",
+    "error": "No se pudo preparar la carpeta de esta sesión."
+  },
   "permissionDialog": {
     "title": "¿Permitir {{action}}?",
     "allow": "Permitir una vez",

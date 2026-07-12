@@ -24,10 +24,13 @@ interface TruncatePayload {
 
 let lastStreamMessages: AgentMessage[] | null = null;
 let lastTruncatePayload: TruncatePayload | null = null;
+let prepareResult: Record<string, unknown> = { status: "ready" };
 
 function mockSessionInvoke(currentSession: AgentSession) {
   vi.mocked(invoke).mockImplementation((command: string, payload?: unknown) => {
     if (command === "get_agent_session") return Promise.resolve(currentSession);
+    if (command === "prepare_agent_send") return Promise.resolve(prepareResult);
+    if (command === "resolve_missing_session_directory") return Promise.resolve("/tmp");
     if (command === "truncate_and_replace_at") {
       lastTruncatePayload = payload as TruncatePayload;
     }
@@ -64,6 +67,7 @@ describe("useAgentChat", () => {
     vi.clearAllMocks();
     lastStreamMessages = null;
     lastTruncatePayload = null;
+    prepareResult = { status: "ready" };
     startStream.mockImplementation((_sessionId, _model, _provider, messages) => {
       lastStreamMessages = messages;
     });
@@ -148,5 +152,28 @@ describe("useAgentChat", () => {
     expect(lastTruncatePayload?.replacement?.content).toBe("Décris mieux cette image");
     expect(lastTruncatePayload?.replacement?.files).toEqual([imageFile]);
     expect(lastStreamMessages?.[0]?.files).toEqual([imageFile]);
+  });
+
+  it("diffère l'envoi puis le rejoue une seule fois après Switcher", async () => {
+    prepareResult = {
+      status: "missing",
+      missing_path: "/tmp/gone/project",
+      nearest_parent: "/tmp",
+    };
+    const { result } = renderHook(() => useAgentChat("session-1", "llama3", "ollama"));
+    await waitFor(() => expect(result.current.sessionLoading).toBe(false));
+
+    await act(async () => {
+      await result.current.sendMessage("Message différé");
+    });
+    expect(result.current.missingDirectory?.missing_path).toBe("/tmp/gone/project");
+    expect(startStream).not.toHaveBeenCalled();
+    expect(vi.mocked(invoke).mock.calls.filter(([command]) => command === "add_messages_to_session")).toHaveLength(0);
+
+    await act(async () => {
+      await result.current.resolveMissingDirectory("switch");
+    });
+    expect(startStream).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(invoke).mock.calls.filter(([command]) => command === "add_messages_to_session")).toHaveLength(1);
   });
 });

@@ -378,6 +378,13 @@
     "manualDescription": "修改外部文件或使用互联网前始终先询问",
     "toggleHint": "修改权限（Shift+Tab）"
   },
+  "missingDirectory": {
+    "title": "此文件夹已不存在",
+    "parent": "可用文件夹：{{path}}",
+    "switch": "切换",
+    "create": "创建",
+    "error": "无法准备此会话的文件夹。"
+  },
   "permissionDialog": {
     "title": "允许 {{action}}？",
     "allow": "允许一次",

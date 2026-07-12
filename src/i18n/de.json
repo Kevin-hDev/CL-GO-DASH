@@ -378,6 +378,13 @@
     "manualDescription": "Immer fragen, bevor externe Dateien geändert oder das Internet genutzt wird",
     "toggleHint": "Berechtigungen ändern (Shift+Tab)"
   },
+  "missingDirectory": {
+    "title": "Dieser Ordner existiert nicht mehr",
+    "parent": "Verfügbarer Ordner: {{path}}",
+    "switch": "Wechseln",
+    "create": "Erstellen",
+    "error": "Der Sitzungsordner konnte nicht vorbereitet werden."
+  },
   "permissionDialog": {
     "title": "{{action}} erlauben?",
     "allow": "Einmal erlauben",

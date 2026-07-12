@@ -378,6 +378,13 @@
     "manualDescription": "Always ask before changing external files or using the Internet",
     "toggleHint": "Change permissions (Shift+Tab)"
   },
+  "missingDirectory": {
+    "title": "This folder no longer exists",
+    "parent": "Available folder: {{path}}",
+    "switch": "Switch",
+    "create": "Create",
+    "error": "Could not prepare this session folder."
+  },
   "permissionDialog": {
     "title": "Allow {{action}}?",
     "allow": "Allow once",

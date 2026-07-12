@@ -378,6 +378,13 @@
     "manualDescription": "Chiedere sempre prima di modificare file esterni o usare Internet",
     "toggleHint": "Modifica i permessi (Shift+Tab)"
   },
+  "missingDirectory": {
+    "title": "Questa cartella non esiste più",
+    "parent": "Cartella disponibile: {{path}}",
+    "switch": "Cambia",
+    "create": "Crea",
+    "error": "Impossibile preparare la cartella della sessione."
+  },
   "permissionDialog": {
     "title": "Autorizzare {{action}}?",
     "allow": "Consenti una volta",

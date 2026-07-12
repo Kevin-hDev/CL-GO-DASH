@@ -153,7 +153,10 @@ export function ChatView({
               onInteractiveResolved={chat.clearInteractiveChoice}
               permissionMode={permMode.mode}
               availablePermissionModes={permMode.availableModes}
+              missingDirectory={chat.missingDirectory}
+              missingDirectoryResolving={chat.missingDirectoryResolving}
               onPermissionModeChange={(m) => void permMode.change(m)}
+              onResolveMissingDirectory={(action) => void chat.resolveMissingDirectory(action)}
               planModeEnabled={chat.planModeEnabled}
               onPlanModeChange={(enabled) => void chat.setPlanModeEnabled(enabled)}
               onRemoveFile={fileDrop.removeFile} onPreviewFile={setPreview} onSend={handleSend}

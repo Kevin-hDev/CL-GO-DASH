@@ -34,6 +34,9 @@ mod subagent_max_turn_tests;
 mod subagent_turn_limit;
 mod subagent_tool_guard;
 pub(crate) mod session_permission_state;
+pub(crate) mod agent_send_preflight;
+#[cfg(test)]
+mod agent_send_preflight_tests;
 #[cfg(test)]
 mod session_permission_state_tests;
 pub(crate) mod subagent_tool_profile;

@@ -22,8 +22,8 @@ export function ChatInput({
   modelName, providerName, isStreaming, reasoningMode, files,
   contextUsed, contextMax, contextBreakdown, retryIndicator,
   interactiveRequest, onInteractiveResolved,
-  permissionMode, availablePermissionModes, planModeEnabled = false,
-  onPermissionModeChange, onPlanModeChange,
+  permissionMode, availablePermissionModes, missingDirectory, missingDirectoryResolving,
+  planModeEnabled = false, onPermissionModeChange, onResolveMissingDirectory, onPlanModeChange,
   onSend, onStop, onFileImport, onModelChange, onReasoningModeChange,
   onRemoveFile, onPreviewFile, onClearFiles,
 }: ChatInputProps) {
@@ -155,10 +155,13 @@ export function ChatInput({
             contextBreakdown={contextBreakdown}
             permissionMode={permissionMode}
             availablePermissionModes={availablePermissionModes}
+            missingDirectory={missingDirectory}
+            missingDirectoryResolving={missingDirectoryResolving}
             planModeEnabled={planModeEnabled}
             retryIndicator={retryIndicator}
             buttonState={buttonState}
             onPermissionModeChange={onPermissionModeChange}
+            onResolveMissingDirectory={onResolveMissingDirectory}
             onPlanModeChange={onPlanModeChange}
             onFileImport={onFileImport}
             onModelChange={onModelChange}

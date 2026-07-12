@@ -378,6 +378,13 @@
     "manualDescription": "外部ファイルを変更したりインターネットを使う前に必ず確認します",
     "toggleHint": "権限を変更（Shift+Tab）"
   },
+  "missingDirectory": {
+    "title": "このフォルダは存在しません",
+    "parent": "利用可能なフォルダ: {{path}}",
+    "switch": "切り替え",
+    "create": "作成",
+    "error": "このセッションのフォルダを準備できませんでした。"
+  },
   "permissionDialog": {
     "title": "{{action}} を許可しますか？",
     "allow": "一度だけ許可",

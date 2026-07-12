@@ -6,7 +6,9 @@ import { useAgentPermissionDelivery } from "./use-agent-permission-delivery";
 import { listenGatewaySessionUpdates } from "./use-gateway-session-updates";
 import { EMPTY_CHAT_STATE, type ChatState } from "./agent-chat-stream-callbacks";
 import { resolveSessionTokenCount } from "./agent-token-estimate";
-import { createEditedUserMessage, createUserMessage, pendingFilesToAttachments } from "./agent-message-builders";
+import { createEditedUserMessage } from "./agent-message-builders";
+import { useAgentMissingDirectory } from "./use-agent-missing-directory";
+import { useAgentMessageSend } from "./use-agent-message-send";
 import { showToast } from "@/lib/toast-emitter";
 import i18n from "@/i18n";
 import type { AgentMessage, AgentSession } from "@/types/agent";
@@ -23,6 +25,13 @@ export function useAgentChat(
 ) {
   const [state, setState] = useState<ChatState>(EMPTY_CHAT_STATE);
   const planMode = useAgentPlanMode(sessionId, setState);
+  const missingDirectory = useAgentMissingDirectory(sessionId);
+  const {
+    missingDirectory: missingDirectoryState,
+    resolving: missingDirectoryResolving,
+    runOrDefer,
+    resolve: resolveMissingDirectory,
+  } = missingDirectory;
   const {
     enabled: planModeEnabled,
     reset: resetPlanMode,
@@ -125,36 +134,14 @@ export function useAgentChat(
       planModeEnabled,
     );
   }, [model, planModeEnabled, provider, startStream, state.sessionTokenCount, supportsTools, supportsThinking, supportsVision]);
-  const sendMessage = useCallback(async (
-    text: string,
-    sentFiles?: { name: string; path?: string; preview?: string }[],
-    workingDir?: string,
-    projectId?: string,
-    skills?: { name: string; content: string }[],
-  ) => {
-    const hasText = !!text.trim();
-    const hasFiles = !!sentFiles && sentFiles.length > 0;
-    const hasSkill = !!skills && skills.length > 0;
-    if (!sessionId || (!hasText && !hasFiles && !hasSkill)) return;
-    while (savingRef.current) await new Promise((r) => setTimeout(r, 50));
-    if (projectId && state.messages.length === 0) {
-      const session = await invoke<Record<string, unknown>>("get_agent_session", { id: sessionId });
-      if (!session.project_id) { session.project_id = projectId; await invoke("save_agent_session", { session }).catch(() => showToast(i18n.t("errors.sessionSaveFailed"), "error")); }
-    }
-    const files = pendingFilesToAttachments(sentFiles);
-    const skillNames = hasSkill ? skills.map((s) => s.name) : undefined;
-    const userMsg = createUserMessage(text || "", files, skillNames);
-    const displayMsgs = [...state.messages, userMsg];
-    const llmMsgs = [...state.messages];
-    if (hasSkill) {
-      for (const s of skills) {
-        llmMsgs.push({ id: "skill-" + crypto.randomUUID(), role: "user", content: `The user has loaded the following skill. Follow its instructions exactly:\n\n${s.content}`, files: [], timestamp: new Date().toISOString() });
-      }
-    }
-    llmMsgs.push(userMsg);
-    await invoke("add_messages_to_session", { id: sessionId, messages: [userMsg], tokens: 0 }).catch(() => showToast(i18n.t("errors.sessionSaveFailed"), "error"));
-    await doStream(llmMsgs, displayMsgs, sessionId, workingDir, undefined, permModeRef.current);
-  }, [sessionId, state.messages, doStream]);
+  const sendMessage = useAgentMessageSend({
+    sessionId,
+    messages: state.messages,
+    permissionModeRef: permModeRef,
+    savingRef,
+    runOrDefer,
+    doStream,
+  });
   const syncTokenCount = useCallback(async (): Promise<number> => {
     if (!sessionId) return state.sessionTokenCount;
     const session = await invoke<AgentSession>("get_agent_session", { id: sessionId }).catch(() => null);
@@ -199,6 +186,9 @@ export function useAgentChat(
   return {
     ...state, ready, sessionLoading,
     planModeEnabled, setPlanModeEnabled,
+    missingDirectory: missingDirectoryState,
+    missingDirectoryResolving,
+    resolveMissingDirectory,
     sendMessage, reload, edit, stop, clearInteractiveChoice,
   };
 }

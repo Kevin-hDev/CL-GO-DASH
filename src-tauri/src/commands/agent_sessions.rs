@@ -41,6 +41,23 @@ pub async fn set_session_permission_mode(
 }
 
 #[tauri::command]
+pub async fn prepare_agent_send(
+    id: String,
+    working_dir: Option<String>,
+) -> Result<crate::services::agent_local::agent_send_preflight::PrepareAgentSend, String> {
+    crate::services::agent_local::agent_send_preflight::prepare(&id, working_dir.as_deref()).await
+}
+
+#[tauri::command]
+pub async fn resolve_missing_session_directory(
+    id: String,
+    missing_path: String,
+    action: crate::services::agent_local::agent_send_preflight::MissingDirectoryAction,
+) -> Result<String, String> {
+    crate::services::agent_local::agent_send_preflight::resolve(&id, &missing_path, action).await
+}
+
+#[tauri::command]
 pub async fn add_messages_to_session(
     id: String,
     messages: Vec<AgentMessage>,

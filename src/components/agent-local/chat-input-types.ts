@@ -3,6 +3,7 @@ import type { ContextUsageBreakdown } from "@/hooks/context-usage-breakdown";
 import type { PermissionMode } from "@/hooks/use-permission-mode";
 import type { ReasoningMode } from "@/lib/reasoning-modes";
 import type { AgentInteractiveChoiceRequest, RetryIndicatorState } from "@/types/agent";
+import type { MissingSessionDirectory } from "@/hooks/use-agent-missing-directory";
 
 export interface ChatInputProps {
   modelName: string;
@@ -18,8 +19,11 @@ export interface ChatInputProps {
   onInteractiveResolved?: () => void;
   permissionMode: PermissionMode;
   availablePermissionModes?: PermissionMode[];
+  missingDirectory?: MissingSessionDirectory | null;
+  missingDirectoryResolving?: boolean;
   planModeEnabled?: boolean;
   onPermissionModeChange: (mode: PermissionMode) => void;
+  onResolveMissingDirectory?: (action: "switch" | "create") => void;
   onPlanModeChange?: (enabled: boolean) => void;
   onSend: (
     text: string,
