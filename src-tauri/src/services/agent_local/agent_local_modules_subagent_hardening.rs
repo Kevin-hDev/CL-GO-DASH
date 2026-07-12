@@ -33,6 +33,9 @@ mod subagent_worktree_identity;
 mod subagent_max_turn_tests;
 mod subagent_turn_limit;
 mod subagent_tool_guard;
+pub(crate) mod session_permission_state;
+#[cfg(test)]
+mod session_permission_state_tests;
 pub(crate) mod subagent_tool_profile;
 mod subagent_explorer_bash;
 mod subagent_prompt_sections;

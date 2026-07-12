@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState } from "react";
 import { MessageList } from "./message-list";
 import { ChatInput } from "./chat-input";
 import { ErrorBubble } from "./error-bubble";
@@ -24,8 +24,8 @@ import { useSubagents } from "@/hooks/use-subagents";
 import { useChatActions } from "@/hooks/use-chat-actions";
 import { useChatClone } from "@/hooks/use-chat-clone";
 import { useCloneGitBranchAction } from "@/hooks/use-clone-git-branch-action";
-import { useAvailableModels } from "@/hooks/use-available-models";
-import { useOllamaConnectionRetry } from "@/hooks/use-ollama-connection-retry";
+import { useSelectedModelCapabilities } from "@/hooks/use-selected-model-capabilities";
+import { useChatViewRuntime } from "@/hooks/use-chat-view-runtime";
 import { PermissionDialog } from "./permission-dialog";
 import type { ChatViewProps } from "./chat-view-types";
 import { useGitBranch } from "@/hooks/use-git-branch";
@@ -42,11 +42,7 @@ export function ChatView({
 }: ChatViewProps) {
   const permissions = usePermissionRequests();
   const permMode = usePermissionMode(sessionId);
-  const { groups: availableModels } = useAvailableModels();
-  const selectedModelCaps = useMemo(
-    () => availableModels.get(provider)?.find((entry) => entry.id === model) ?? null,
-    [availableModels, provider, model],
-  );
+  const selectedModelCaps = useSelectedModelCapabilities(provider, model);
   const chat = useAgentChat(sessionId, model, provider, (id, toolName, args) =>
     permissions.enqueue({ id, toolName, arguments: args }),
     selectedModelCaps?.supports_tools,
@@ -56,10 +52,7 @@ export function ChatView({
     permMode.mode,
   );
   const subagents = useSubagents(isSubagent ? undefined : sessionId);
-  const knownSubagents = useMemo(
-    () => [...subagents.active, ...subagents.completed],
-    [subagents.active, subagents.completed],
-  );
+  const knownSubagents = [...subagents.active, ...subagents.completed];
   const fileDrop = useFileDrop();
   const context = useContextProgress(model, chat.sessionTokenCount, provider);
   const [preview, setPreview] = useState<DroppedFile | null>(null);
@@ -70,15 +63,13 @@ export function ChatView({
     planMode: chat.planModeEnabled, supportsTools: selectedModelCaps?.supports_tools,
   });
   const git = useGitBranch(proj.selectedProject?.path, sessionId);
-  const fileOperations = useSessionFileGroups(
+  useSessionFileGroups(
     chat.messages,
     chat.completedSegments,
     chat.currentTools,
     proj.selectedProject?.path,
+    onFileOperationsChange,
   );
-  useEffect(() => {
-    onFileOperationsChange?.(fileOperations);
-  }, [fileOperations, onFileOperationsChange]);
   const { handleSend, handleFileImport } = useChatActions({
     chat, selectedProjectPath: proj.selectedProject?.path,
     selectedProjectId: proj.selectedProjectId ?? undefined,
@@ -90,7 +81,6 @@ export function ChatView({
     sessionId, chat.isStreaming,
     [chat.currentContent, chat.currentContentPhase, chat.currentThinking, chat.completedSegments, chat.messages, chat.planPreview],
   );
-  const { messages, reload } = chat;
   const clone = useChatClone(sessionId, chat.messages, onCloneMessage, onCancelCloneSummary);
   const cloneGitBranch = useCloneGitBranchAction({
     projectPath: proj.selectedProject?.path,
@@ -99,30 +89,14 @@ export function ChatView({
     activeSessionTab,
     onCreateCloneGitBranch,
   });
-  const handleBranchReady = useCallback(async (branchName: string) => {
-    const projectPath = proj.selectedProject?.path;
-    if (!projectPath || !activeSessionTab || activeSessionTab.is_main || activeSessionTab.git_branch) {
-      return;
-    }
-    await onLinkCloneGitBranch?.(projectPath, activeSessionTab.session_id, branchName);
-  }, [activeSessionTab, onLinkCloneGitBranch, proj.selectedProject?.path]);
-  const handleRetry = useCallback(() => {
-    const u = [...messages].reverse().find((m) => m.role === "user");
-    if (u) void reload(u.id);
-  }, [messages, reload]);
-  const connectionRetry = useOllamaConnectionRetry({
-    error: chat.error,
-    isConnectionError: chat.isConnectionError,
-    isStreaming: chat.isStreaming,
-    onRetry: handleRetry,
+  const runtime = useChatViewRuntime({
+    chat,
+    permission: permMode,
+    projectPath: proj.selectedProject?.path,
+    activeSessionTab,
+    onLinkCloneGitBranch,
+    setPreview,
   });
-  const retryIndicator = chat.retryIndicator ?? connectionRetry.indicator;
-  const showError = !!chat.error && !chat.isStreaming && !connectionRetry.suppressError;
-  const handleReload = useCallback((id: string) => void chat.reload(id), [chat]);
-  const handleEdit = useCallback((id: string, c: string) => void chat.edit(id, c), [chat]);
-  const handleFileClick = useCallback((f: { name: string; path?: string; thumbnail?: string }) => {
-    setPreview({ name: f.name, path: f.path, type: "", size: 0, preview: f.thumbnail });
-  }, []);
   const { pendingSwitch, setPendingSwitch, handleModelSelect, rememberedRef } = useModelSwitch({
     currentModel: model, currentProvider: provider,
     messagesLength: chat.messages.length, onApplySwitch, onNewSession,
@@ -142,9 +116,9 @@ export function ChatView({
             isStreaming={chat.isStreaming} tps={chat.tps} totalElapsedMs={chat.totalElapsedMs}
             segmentStartedAt={chat.streamStartedAt} liveTokenCount={chat.liveTokenCount}
             planPreview={chat.planPreview}
-            onReload={handleReload} onEdit={handleEdit}
+            onReload={runtime.handleReload} onEdit={runtime.handleEdit}
             onCloneMessage={canCloneMessages && onCloneMessage ? clone.requestClone : undefined}
-            onFileClick={handleFileClick} onFilePreview={onFilePreviewPath} projectPath={proj.selectedProject?.path}
+            onFileClick={runtime.handleFileClick} onFilePreview={onFilePreviewPath} projectPath={proj.selectedProject?.path}
             onFileReview={onFilePreviewPath}
             knownSubagents={knownSubagents}
             onOpenSubagent={onOpenSubagent}
@@ -163,21 +137,23 @@ export function ChatView({
             {permissions.current && (
               <PermissionDialog request={permissions.current} onDecide={(id, decision) => void permissions.respond(id, decision)} />
             )}
-            {showError && chat.error && (
+            {runtime.showError && chat.error && (
               <ErrorBubble
                 message={chat.error}
                 isConnection={chat.isConnectionError}
                 diagnosticSummary={chat.diagnosticSummary}
-                onRetry={handleRetry}
+                onRetry={runtime.handleRetry}
               />
             )}
             <ChatInput
               modelName={model} providerName={provider} isStreaming={chat.isStreaming} reasoningMode={reasoningMode}
               files={fileDrop.files} contextUsed={contextUsage.used} contextMax={context.max} contextBreakdown={contextUsage}
-              retryIndicator={retryIndicator}
+              retryIndicator={runtime.retryIndicator}
               interactiveRequest={chat.interactiveChoice}
               onInteractiveResolved={chat.clearInteractiveChoice}
-              permissionMode={permMode.mode} onPermissionModeChange={(m) => void permMode.change(m)}
+              permissionMode={permMode.mode}
+              availablePermissionModes={permMode.availableModes}
+              onPermissionModeChange={(m) => void permMode.change(m)}
               planModeEnabled={chat.planModeEnabled}
               onPlanModeChange={(enabled) => void chat.setPlanModeEnabled(enabled)}
               onRemoveFile={fileDrop.removeFile} onPreviewFile={setPreview} onSend={handleSend}
@@ -194,7 +170,7 @@ export function ChatView({
                 : null}
               onScrollBottom={scrollToBottom}
               onWorktreeSelect={worktreeSwitch.request}
-              onBranchReady={handleBranchReady}
+              onBranchReady={runtime.handleBranchReady}
               cloneGitBranch={cloneGitBranch}
             />
           </div>

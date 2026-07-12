@@ -21,6 +21,7 @@ export function useSessionFileGroups(
   completedSegments: StreamSegment[] = [],
   currentTools: ToolActivity[] = [],
   baseDir?: string,
+  onChange?: (groups: FileOperationGroups) => void,
 ) {
   const liveTools = useMemo(
     () => toolsToRecords([
@@ -33,7 +34,15 @@ export function useSessionFileGroups(
     () => collectFileOperationGroups(messages, { liveTools, baseDir }),
     [messages, liveTools, baseDir],
   );
-  return useExistingFileOperationGroups(groups, baseDir, liveActivityKey(completedSegments, currentTools));
+  const existing = useExistingFileOperationGroups(
+    groups,
+    baseDir,
+    liveActivityKey(completedSegments, currentTools),
+  );
+  useEffect(() => {
+    onChange?.(existing);
+  }, [existing, onChange]);
+  return existing;
 }
 
 function useExistingFileOperationGroups(

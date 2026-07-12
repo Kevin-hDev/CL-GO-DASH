@@ -22,6 +22,25 @@ pub async fn save_agent_session(session: AgentSession) -> Result<(), String> {
 }
 
 #[tauri::command]
+pub async fn get_session_permission_state(
+    id: String,
+) -> Result<crate::services::agent_local::session_permission_state::SessionPermissionState, String>
+{
+    crate::services::agent_local::session_permission_state::load(&id).await
+}
+
+#[tauri::command]
+pub async fn set_session_permission_mode(
+    id: String,
+    mode: String,
+) -> Result<crate::services::agent_local::session_permission_state::SessionPermissionState, String>
+{
+    let mode =
+        crate::services::agent_local::session_permission_state::PermissionMode::parse(&mode)?;
+    crate::services::agent_local::session_permission_state::set_mode(&id, mode).await
+}
+
+#[tauri::command]
 pub async fn add_messages_to_session(
     id: String,
     messages: Vec<AgentMessage>,

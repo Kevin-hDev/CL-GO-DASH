@@ -186,6 +186,8 @@ pub fn run() {
             commands::list_archived_agent_sessions,
             commands::get_agent_session,
             commands::save_agent_session,
+            commands::get_session_permission_state,
+            commands::set_session_permission_mode,
             commands::add_messages_to_session,
             commands::create_agent_session,
             commands::rename_agent_session,

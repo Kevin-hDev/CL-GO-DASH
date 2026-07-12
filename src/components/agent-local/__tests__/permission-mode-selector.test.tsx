@@ -53,4 +53,20 @@ describe("PermissionModeSelector", () => {
     expect(document.body.querySelector(".perm-mode-dropdown")).toBeTruthy();
     expect(container.querySelector(".perm-mode-dropdown")).toBeNull();
   });
+
+  it("masque Chatbot pour une session outillée verrouillée", () => {
+    render(
+      <PermissionModeSelector
+        mode="manual"
+        availableModes={["manual", "auto"]}
+        onChange={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button"));
+
+    expect(screen.queryByText("Chatbot")).toBeNull();
+    expect(screen.getAllByText("Demander l’autorisation").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("Accès complet")).toBeTruthy();
+  });
 });

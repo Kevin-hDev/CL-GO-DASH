@@ -16,7 +16,20 @@ vi.mock("@/hooks/use-fs-event", () => ({
 describe("usePermissionMode", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(invoke).mockResolvedValue({ permission_mode: "auto" });
+    vi.mocked(invoke).mockImplementation((command, args) => {
+      if (command === "get_agent_settings") return Promise.resolve({ permission_mode: "auto" });
+      if (command === "get_session_permission_state") {
+        return Promise.resolve({ permission_family: null, permission_mode: "auto" });
+      }
+      if (command === "set_session_permission_mode") {
+        const mode = (args as { mode: "auto" | "manual" | "chat" }).mode;
+        return Promise.resolve({
+          permission_family: null,
+          permission_mode: mode,
+        });
+      }
+      return Promise.resolve(undefined);
+    });
   });
 
   it("mode par défaut est 'auto' après chargement", async () => {
@@ -127,19 +140,37 @@ describe("usePermissionMode", () => {
   });
 
   it("avec sessionId, le mode est stocké par session", async () => {
-    vi.mocked(invoke).mockResolvedValue({ permission_mode: "auto" });
     const { result } = renderHook(() => usePermissionMode("session-abc"));
 
     await waitFor(() => expect(result.current.loaded).toBe(true));
 
-    vi.mocked(invoke).mockResolvedValue(undefined);
     await act(async () => {
       await result.current.change("manual");
     });
 
     expect(result.current.mode).toBe("manual");
-    // Le mode est bien stocké dans sessionModes (vérifié indirectement via le state)
+    expect(result.current.family).toBeNull();
+    expect(result.current.availableModes).toEqual(["chat", "manual", "auto"]);
+    expect(invoke).toHaveBeenCalledWith("set_session_permission_mode", {
+      id: "session-abc",
+      mode: "manual",
+    });
     expect(invoke).toHaveBeenCalledWith("set_permission_mode", { mode: "manual" });
+  });
+
+  it("une session Chatbot ne propose plus les modes outillés", async () => {
+    vi.mocked(invoke).mockImplementation((command) => {
+      if (command === "get_session_permission_state") {
+        return Promise.resolve({ permission_family: "chat", permission_mode: "chat" });
+      }
+      return Promise.resolve(undefined);
+    });
+    const { result } = renderHook(() => usePermissionMode("session-chat"));
+
+    await waitFor(() => expect(result.current.loaded).toBe(true));
+
+    expect(result.current.mode).toBe("chat");
+    expect(result.current.availableModes).toEqual(["chat"]);
   });
 
   it("sans sessionId, utilise defaultMode rechargé depuis le backend", async () => {

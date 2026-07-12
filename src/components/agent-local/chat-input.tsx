@@ -8,12 +8,7 @@ import { useActiveSkills } from "@/hooks/use-active-skills";
 import { SlashAutocomplete } from "./slash-autocomplete";
 import { FileThumbnail } from "./file-thumbnail";
 import { useStopConfirmation } from "./use-stop-confirmation";
-import type { DroppedFile } from "@/hooks/use-file-drop";
-import type { ContextUsageBreakdown } from "@/hooks/context-usage-breakdown";
-import type { PermissionMode } from "@/hooks/use-permission-mode";
-import type { ReasoningMode } from "@/lib/reasoning-modes";
-import type { AgentInteractiveChoiceRequest } from "@/types/agent";
-import type { RetryIndicatorState } from "@/types/agent";
+import type { ChatInputProps } from "./chat-input-types";
 import "./chat.css";
 import "./chat-input-textarea.css";
 import "./chat-input-responsive.css";
@@ -23,37 +18,12 @@ const K_DOWN = "ArrowDown";
 const K_ENTER = "Enter";
 const K_ESC = "Escape";
 
-interface ChatInputProps {
-  modelName: string;
-  providerName: string;
-  isStreaming: boolean;
-  reasoningMode?: string | null;
-  files?: DroppedFile[];
-  contextUsed: number;
-  contextMax: number;
-  contextBreakdown?: ContextUsageBreakdown;
-  retryIndicator?: RetryIndicatorState | null;
-  interactiveRequest?: AgentInteractiveChoiceRequest | null;
-  onInteractiveResolved?: () => void;
-  permissionMode: PermissionMode;
-  planModeEnabled?: boolean;
-  onPermissionModeChange: (mode: PermissionMode) => void;
-  onPlanModeChange?: (enabled: boolean) => void;
-  onSend: (text: string, files?: DroppedFile[], skills?: { name: string; content: string }[]) => void;
-  onStop: () => void;
-  onFileImport: () => void;
-  onModelChange: (model: string, provider: string) => void;
-  onReasoningModeChange: (mode: ReasoningMode) => void;
-  onRemoveFile?: (index: number) => void;
-  onPreviewFile?: (file: DroppedFile) => void;
-  onClearFiles?: () => void;
-}
-
 export function ChatInput({
   modelName, providerName, isStreaming, reasoningMode, files,
   contextUsed, contextMax, contextBreakdown, retryIndicator,
   interactiveRequest, onInteractiveResolved,
-  permissionMode, planModeEnabled = false, onPermissionModeChange, onPlanModeChange,
+  permissionMode, availablePermissionModes, planModeEnabled = false,
+  onPermissionModeChange, onPlanModeChange,
   onSend, onStop, onFileImport, onModelChange, onReasoningModeChange,
   onRemoveFile, onPreviewFile, onClearFiles,
 }: ChatInputProps) {
@@ -184,6 +154,7 @@ export function ChatInput({
             contextMax={contextMax}
             contextBreakdown={contextBreakdown}
             permissionMode={permissionMode}
+            availablePermissionModes={availablePermissionModes}
             planModeEnabled={planModeEnabled}
             retryIndicator={retryIndicator}
             buttonState={buttonState}

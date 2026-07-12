@@ -20,6 +20,7 @@ interface ChatInputActionsRowProps {
   contextMax: number;
   contextBreakdown?: ContextUsageBreakdown;
   permissionMode: PermissionMode;
+  availablePermissionModes?: PermissionMode[];
   planModeEnabled: boolean;
   retryIndicator?: RetryIndicatorState | null;
   buttonState: ButtonState;
@@ -40,6 +41,7 @@ export function ChatInputActionsRow({
   contextMax,
   contextBreakdown,
   permissionMode,
+  availablePermissionModes,
   planModeEnabled,
   retryIndicator,
   buttonState,
@@ -59,7 +61,11 @@ export function ChatInputActionsRow({
         onPlanModeChange={onPlanModeChange ?? (() => {})}
       />
       <ContextProgress used={contextUsed} max={contextMax} breakdown={contextBreakdown} />
-      <PermissionModeSelector mode={permissionMode} onChange={onPermissionModeChange} />
+      <PermissionModeSelector
+        mode={permissionMode}
+        availableModes={availablePermissionModes}
+        onChange={onPermissionModeChange}
+      />
       <RetryIndicator indicator={retryIndicator} />
       {planModeEnabled && <PlanModeBadge onDisable={() => onPlanModeChange?.(false)} />}
       <div className="chat-input-spacer" />

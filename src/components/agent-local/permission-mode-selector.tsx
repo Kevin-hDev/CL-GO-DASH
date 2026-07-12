@@ -10,23 +10,24 @@ import "./permission-mode-selector.css";
 
 interface Props {
   mode: PermissionMode;
+  availableModes?: PermissionMode[];
   onChange: (mode: PermissionMode) => void;
 }
 
 const MODES: PermissionMode[] = ["chat", "manual", "auto"];
 
-export function PermissionModeSelector({ mode, onChange }: Props) {
+export function PermissionModeSelector({ mode, availableModes = MODES, onChange }: Props) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const { anchorRef, floatingRef, floatingStyle } = useFloatingMenuPosition(open, "left", 6);
-  const navItems = useMemo(() => MODES.map((m) => ({
+  const navItems = useMemo(() => availableModes.map((m) => ({
     id: modeNavId(m),
     onSelect: () => {
       onChange(m);
       setOpen(false);
     },
-  })), [onChange]);
+  })), [availableModes, onChange]);
   const { activate, getItemRef, isActive, listProps } = useLocalListNavigation({
     items: navItems,
     enabled: open,
@@ -49,15 +50,15 @@ export function PermissionModeSelector({ mode, onChange }: Props) {
       }
       switch (pressed) {
         case "1":
-          onChange("chat");
+          if (availableModes.includes("chat")) onChange("chat");
           setOpen(false);
           break;
         case "2":
-          onChange("manual");
+          if (availableModes.includes("manual")) onChange("manual");
           setOpen(false);
           break;
         case "3":
-          onChange("auto");
+          if (availableModes.includes("auto")) onChange("auto");
           setOpen(false);
           break;
       }
@@ -68,7 +69,7 @@ export function PermissionModeSelector({ mode, onChange }: Props) {
       document.removeEventListener("mousedown", onDoc);
       document.removeEventListener("keydown", onKey);
     };
-  }, [floatingRef, open, onChange]);
+  }, [availableModes, floatingRef, open, onChange]);
 
   useEffect(() => {
     if (!open) return;
@@ -110,7 +111,7 @@ export function PermissionModeSelector({ mode, onChange }: Props) {
           style={floatingStyle}
           onKeyDown={listProps.onKeyDown}
         >
-          {MODES.map((m) => {
+          {availableModes.map((m) => {
             const navId = modeNavId(m);
             return (
               <button
