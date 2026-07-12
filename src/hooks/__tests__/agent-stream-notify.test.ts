@@ -21,6 +21,8 @@ function makeRecord(): StreamRecord {
     activeGeneration: null,
     cancelledGenerations: [],
     cancelledWithoutGeneration: false,
+    persistenceQueue: Promise.resolve(),
+    persistencePending: false,
   };
 }
 

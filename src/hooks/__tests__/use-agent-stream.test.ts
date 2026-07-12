@@ -13,6 +13,8 @@ const mocks = vi.hoisted(() => ({
   subscribe: vi.fn(),
   getSnapshot: vi.fn(),
   isStreaming: vi.fn(),
+  queueUserMessage: vi.fn(),
+  removeQueuedUserMessage: vi.fn(),
 }));
 
 vi.mock("@tauri-apps/api/core", () => ({
@@ -32,6 +34,8 @@ vi.mock("../agent-stream-manager", () => ({
     subscribe: mocks.subscribe,
     getSnapshot: mocks.getSnapshot,
     isStreaming: mocks.isStreaming,
+    queueUserMessage: mocks.queueUserMessage,
+    removeQueuedUserMessage: mocks.removeQueuedUserMessage,
   },
 }));
 
@@ -50,6 +54,7 @@ describe("useAgentStream", () => {
     vi.clearAllMocks();
     mocks.invoke.mockResolvedValue(1);
     mocks.startSession.mockResolvedValue(undefined);
+    mocks.queueUserMessage.mockReturnValue(true);
   });
 
   it("renvoie une image depuis son thumbnail quand le chemin n'est plus lisible", async () => {
@@ -147,5 +152,33 @@ describe("useAgentStream", () => {
       sessionId: "session-1",
       generation: 42,
     });
+  });
+
+  it("ajoute un message au stream courant sans en démarrer un autre", async () => {
+    const first = userMessage([]);
+    const queued = { ...userMessage([]), id: "m2", content: "Ajoute une comparaison" };
+    mocks.invoke.mockResolvedValueOnce(42).mockResolvedValueOnce(true);
+    const { result } = renderHook(() => useAgentStream());
+
+    await act(async () => {
+      await result.current.startStream(
+        "session-1",
+        "model",
+        "provider",
+        [first],
+        false,
+        { displayMessages: [first], baseTokenCount: 0 },
+      );
+      await result.current.queueStreamMessage("session-1", [queued], queued);
+    });
+
+    expect(mocks.startSession).toHaveBeenCalledTimes(1);
+    expect(mocks.queueUserMessage).toHaveBeenCalledWith("session-1", queued);
+    expect(mocks.invoke).toHaveBeenLastCalledWith("queue_agent_message", {
+      sessionId: "session-1",
+      generation: 42,
+      messages: [expect.objectContaining({ role: "user", content: "Ajoute une comparaison" })],
+    });
+    expect(mocks.stopSession).not.toHaveBeenCalled();
   });
 });

@@ -10,6 +10,7 @@ import type { ActiveStreamItem } from "./active-stream-item";
 
 export const MAX_PENDING_PERMISSIONS = 32;
 export const MAX_MESSAGES_PER_SESSION = 2000;
+export const MAX_QUEUED_USER_MESSAGES = 8;
 
 export const KNOWN_ERROR_KEYS: Record<string, string> = {
   ollama_connection_lost: "errors.ollamaConnectionLost",
@@ -21,6 +22,7 @@ export const KNOWN_ERROR_KEYS: Record<string, string> = {
 
 export interface ChatState {
   messages: AgentMessage[];
+  queuedUserMessages: AgentMessage[];
   completedSegments: StreamSegment[];
   currentContent: string;
   currentContentPhase?: TokenPhase;
@@ -55,7 +57,7 @@ export interface ManagedStreamState extends ChatState {
 }
 
 export const EMPTY_CHAT_STATE: ChatState = {
-  messages: [], completedSegments: [], currentContent: "",
+  messages: [], queuedUserMessages: [], completedSegments: [], currentContent: "",
   currentContentPhase: undefined, currentThinking: "", currentTools: [],
   activeStreamItem: null, isStreaming: false,
   tps: 0, sessionTokenCount: 0, sessionTokenCountEstimated: true, lastRequestTokens: 0,
@@ -67,6 +69,7 @@ export interface StreamApplyResult {
   state: ManagedStreamState;
   assistantMessage?: AgentMessage;
   assistantTokens?: number;
+  messagesToPersist?: AgentMessage[];
 }
 
 export function createManagedStreamState(
@@ -84,7 +87,8 @@ export function createManagedStreamState(
 
 export function toChatState(state: ManagedStreamState): ChatState {
   return {
-    messages: state.messages, completedSegments: state.completedSegments,
+    messages: state.messages, queuedUserMessages: state.queuedUserMessages,
+    completedSegments: state.completedSegments,
     currentContent: state.currentContent, currentContentPhase: state.currentContentPhase,
     currentThinking: state.currentThinking,
     currentTools: state.currentTools, activeStreamItem: state.activeStreamItem,

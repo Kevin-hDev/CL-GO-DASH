@@ -1,20 +1,20 @@
-import { buildSegmentedMessage } from "./agent-chat-utils";
 import type { StreamSegment } from "./agent-chat-utils";
-import type { AgentMessage, StreamEvent, TokenPhase } from "@/types/agent";
+import type { StreamEvent, TokenPhase } from "@/types/agent";
 import i18n from "@/i18n";
 import { isHiddenAgentTool } from "@/lib/hidden-agent-tools";
 import {
-  MAX_PENDING_PERMISSIONS, MAX_MESSAGES_PER_SESSION, KNOWN_ERROR_KEYS,
+  MAX_PENDING_PERMISSIONS, KNOWN_ERROR_KEYS,
   type ChatState, type ManagedStreamState, type StreamApplyResult,
   type PermissionRequestState,
 } from "./agent-chat-stream-types";
-import { estimateAgentMessagesTokens } from "./agent-token-estimate";
-import { markUnconfirmedContentAsWork } from "./agent-chat-stream-partial";
 import { activeItemAfterToolResult, pendingToolIndices, thinkingItem, toolItems } from "./active-stream-item";
 import { applyToolResult } from "./agent-chat-tool-results";
+import { checkpointQueuedUserMessages } from "./agent-stream-user-checkpoint";
+import { finalizeStream, finishStream } from "./agent-chat-stream-finalize";
 
 export type { ChatState, ManagedStreamState, PermissionRequestState, StreamApplyResult };
 export { EMPTY_CHAT_STATE, createManagedStreamState, toChatState } from "./agent-chat-stream-types";
+export { finishPartialStream } from "./agent-chat-stream-finalize";
 
 export function applyStreamEvent(
   state: ManagedStreamState,
@@ -77,6 +77,10 @@ export function applyStreamEvent(
     }
     case "turnEnd":
       next.retryIndicator = null;
+      {
+        const checkpoint = checkpointQueuedUserMessages(next);
+        if (checkpoint) return checkpoint;
+      }
       next.completedSegments = appendCurrentSegment(next);
       next.currentContent = "";
       next.currentContentPhase = undefined;
@@ -160,71 +164,4 @@ function addPermission(
   requests: PermissionRequestState[], request: PermissionRequestState,
 ): PermissionRequestState[] {
   return [...requests.filter((r) => r.id !== request.id), request].slice(-MAX_PENDING_PERMISSIONS);
-}
-
-export function finishPartialStream(state: ManagedStreamState): StreamApplyResult {
-  return finalizeStream(markPendingToolsCancelled(markUnconfirmedContentAsWork(state)), null, state.tps, null);
-}
-
-function markPendingToolsCancelled(state: ManagedStreamState): ManagedStreamState {
-  if (state.currentTools.every((tool) => tool.result)) return state;
-  return {
-    ...state,
-    currentTools: state.currentTools.map((tool) => tool.result
-      ? tool
-      : { ...tool, result: "Annulé.", isError: true }),
-    activeStreamItem: null,
-  };
-}
-
-function finishStream(state: ManagedStreamState, event: Extract<StreamEvent, { event: "done" }>) {
-  return finalizeStream(
-    state,
-    event.data.evalCount,
-    event.data.finalTps,
-    event.data.contextTokens,
-  );
-}
-
-function finalizeStream(
-  state: ManagedStreamState, outputTokens: number | null, tps: number, contextTokens: number | null,
-): StreamApplyResult {
-  const all = state.currentContent || state.currentThinking || state.currentTools.length > 0
-    ? appendCurrentSegment(state) : state.completedSegments;
-  const totalMs = state.streamStartedAt ? Date.now() - state.streamStartedAt : 0;
-  const built = all.length > 0 ? buildSegmentedMessage(all) : null;
-  const assistantMessage: AgentMessage | undefined = built ? {
-    id: crypto.randomUUID(), role: "assistant", content: built.content,
-    thinking: built.thinking, tool_activities: built.toolRecords,
-    segments: built.segments, files: [], timestamp: new Date().toISOString(),
-    tokens: 0, work_duration_ms: totalMs > 0 ? totalMs : undefined,
-  } : undefined;
-  if (assistantMessage) {
-    const messageTokens = estimateAgentMessagesTokens([assistantMessage]);
-    assistantMessage.tokens = outputTokens ?? messageTokens;
-  }
-  const allMessages = assistantMessage ? [...state.messages, assistantMessage] : [...state.messages];
-  if (allMessages.length > MAX_MESSAGES_PER_SESSION) {
-    allMessages.splice(0, allMessages.length - MAX_MESSAGES_PER_SESSION);
-  }
-  const visibleSessionTokens = estimateAgentMessagesTokens(allMessages);
-  const hasRealContextTokens = contextTokens !== null;
-  const resolvedSessionTokenCount = hasRealContextTokens ? contextTokens : visibleSessionTokens;
-  const next: ManagedStreamState = {
-    ...state, completedSegments: [], currentContent: "", currentThinking: "",
-    currentContentPhase: undefined, currentTools: [], activeStreamItem: null,
-    isStreaming: false, tps,
-    sessionTokenCount: resolvedSessionTokenCount,
-    sessionTokenCountEstimated: !hasRealContextTokens,
-    lastRequestTokens: assistantMessage?.tokens ?? outputTokens ?? 0, liveTokenCount: 0,
-    streamStartedAt: null, segmentStartedAt: null, totalElapsedMs: totalMs,
-    pendingPermissions: [], interactiveChoice: undefined,
-    completed: true, updatedAt: Date.now(),
-  };
-  if (all.length === 0) return { state: next };
-  if (!assistantMessage) return { state: next };
-  return {
-    state: { ...next, messages: allMessages },
-    assistantMessage, assistantTokens: assistantMessage.tokens ?? outputTokens ?? 0,
-  };
 }

@@ -21,7 +21,7 @@ import {
 import {
   getOrCreateRecord,
   getRecord,
-  persistAssistant,
+  persistMessages,
   records,
   snapshot,
   touchSession,
@@ -45,6 +45,8 @@ import { showToast } from "@/lib/toast-emitter";
 import { clearStreamPermission } from "./agent-stream-permissions";
 import type { AgentMessage, StreamEvent } from "@/types/agent";
 import { webToolErrorToastMessage } from "./web-tool-error-toast";
+import { queueUserMessage, removeQueuedUserMessage } from "./agent-stream-user-queue";
+import { failSession } from "./agent-stream-failure";
 
 export type { StreamSnapshot } from "./agent-stream-records";
 const EVENT_NAME = "agent-stream-event";
@@ -56,7 +58,8 @@ type Subscriber = (snapshot: StreamSnapshot) => void;
 let listenPromise: Promise<UnlistenFn> | null = null;
 
 export const agentStreamManager = { startSession, stopSession, failSession, setSessionGeneration,
-  clearPermission: clearStreamPermission, getSnapshot, getActivity, isStreaming, subscribe, subscribeActivity: subscribeStreamActivity };
+  clearPermission: clearStreamPermission, getSnapshot, getActivity, isStreaming, subscribe,
+  queueUserMessage, removeQueuedUserMessage, subscribeActivity: subscribeStreamActivity };
 
 function ensureListener() {
   if (!listenPromise) {
@@ -95,22 +98,10 @@ function stopSession(sessionId: string, generation?: number | null) {
   record.state = result.state;
   flushFrameNotify(record, notify);
   notifyActivity(sessionId, record);
-  if (result.assistantMessage && !record.state.persisted && frontendShouldPersist(record)) {
-    persistAssistant(sessionId, record, result.assistantMessage, 0, notify);
+  if (result.messagesToPersist && !record.state.persisted && frontendShouldPersist(record)) {
+    persistMessages(sessionId, record, result.messagesToPersist, 0, true, notify);
   }
   finishPersistenceRun(record);
-}
-
-function failSession(sessionId: string) {
-  const record = getRecord(sessionId);
-  if (!record) return;
-  record.activeGeneration = null;
-  record.state = { ...record.state, isStreaming: false, completed: true,
-    activeStreamItem: null, error: i18n.t("errors.streamStartFailed"), updatedAt: Date.now() };
-  finishPersistenceRun(record);
-  flushFrameNotify(record, notify);
-  notifyActivity(sessionId, record);
-  scheduleCleanup(sessionId, record, records);
 }
 
 function subscribe(sessionId: string, subscriber: Subscriber): () => void {
@@ -187,8 +178,15 @@ function handleStreamEvent(sessionId: string, event: StreamEvent, generation: nu
   }
   notifyActivity(sessionId, record);
 
-  if (result.assistantMessage && !record.state.persisted && frontendShouldPersist(record)) {
-    persistAssistant(sessionId, record, result.assistantMessage, result.assistantTokens ?? 0, notify);
+  if (result.messagesToPersist && !record.state.persisted && frontendShouldPersist(record)) {
+    persistMessages(
+      sessionId,
+      record,
+      result.messagesToPersist,
+      result.assistantTokens ?? 0,
+      record.state.completed,
+      notify,
+    );
   }
   if (record.state.completed) finishPersistenceRun(record);
 

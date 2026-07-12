@@ -24,6 +24,11 @@ interface PersistAgentMessageOptions extends AgentSendPayload {
     baseTokenCount?: number,
     permissionMode?: string,
   ) => Promise<void>;
+  queueStreamMessage?: (
+    sessionId: string,
+    messages: AgentMessage[],
+    displayMessage: AgentMessage,
+  ) => Promise<boolean>;
 }
 
 export async function persistAgentMessage(options: PersistAgentMessageOptions) {
@@ -42,9 +47,9 @@ export async function persistAgentMessage(options: PersistAgentMessageOptions) {
   const skillNames = options.skills?.map((skill) => skill.name);
   const userMessage = createUserMessage(options.text || "", files, skillNames);
   const displayMessages = [...options.messages, userMessage];
-  const llmMessages = [...options.messages];
+  const queuedLlmMessages: AgentMessage[] = [];
   for (const skill of options.skills ?? []) {
-    llmMessages.push({
+    queuedLlmMessages.push({
       id: `skill-${crypto.randomUUID()}`,
       role: "user",
       content: `The user has loaded the following skill. Follow its instructions exactly:\n\n${skill.content}`,
@@ -52,7 +57,13 @@ export async function persistAgentMessage(options: PersistAgentMessageOptions) {
       timestamp: new Date().toISOString(),
     });
   }
-  llmMessages.push(userMessage);
+  queuedLlmMessages.push(userMessage);
+  if (await options.queueStreamMessage?.(
+    options.sessionId,
+    queuedLlmMessages,
+    userMessage,
+  )) return;
+  const llmMessages = [...options.messages, ...queuedLlmMessages];
   await invoke("add_messages_to_session", {
     id: options.sessionId,
     messages: [userMessage],

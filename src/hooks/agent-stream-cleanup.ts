@@ -20,6 +20,8 @@ export interface StreamRecord {
   activeGeneration: number | null;
   cancelledGenerations: number[];
   cancelledWithoutGeneration: boolean;
+  persistenceQueue: Promise<void>;
+  persistencePending: boolean;
 }
 
 export function enforceSessionLimit(records: Map<string, StreamRecord>) {

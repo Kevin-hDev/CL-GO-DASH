@@ -44,7 +44,9 @@ export function useAgentChat(
   const savingRef = useRef(false);
   const sessionRef = useRef(sessionId);
   const permissions = useAgentPermissionDelivery(onPermissionRequest);
-  const { startStream, stopStream, subscribeToStream, getStreamSnapshot } = useAgentStream();
+  const {
+    startStream, queueStreamMessage, stopStream, subscribeToStream, getStreamSnapshot,
+  } = useAgentStream();
   // eslint-disable-next-line react-hooks/refs -- callback capture pattern for stable closures
   sessionRef.current = sessionId;
   const reasoningModeRef = useRef(reasoningMode);
@@ -143,6 +145,7 @@ export function useAgentChat(
     savingRef,
     runOrDefer,
     doStream,
+    queueStreamMessage,
   });
   const syncTokenCount = useCallback(async (): Promise<number> => {
     if (!sessionId) return state.sessionTokenCount;

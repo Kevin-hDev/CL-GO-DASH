@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MessageList } from "./message-list";
+import { ChatMessagePanel } from "./chat-message-panel";
 import { ChatInput } from "./chat-input";
 import { ErrorBubble } from "./error-bubble";
 import { FileDropZone } from "./file-drop-zone";
@@ -108,19 +108,15 @@ export function ChatView({
     <FileDropZone dragging={fileDrop.dragging} onDragChange={fileDrop.setDragging} onDropPaths={(paths) => void fileDrop.addByPaths(paths)}>
       <div className="chat-zone" style={{ opacity: chat.sessionLoading ? 0 : 1 }}>
         <div className="chat-messages" ref={containerRef}>
-          <MessageList
-            sessionId={sessionId} messages={chat.messages} completedSegments={chat.completedSegments}
-            currentContent={chat.currentContent} currentContentPhase={chat.currentContentPhase}
-            currentThinking={chat.currentThinking} currentTools={chat.currentTools}
-            activeStreamItem={chat.activeStreamItem}
-            isStreaming={chat.isStreaming} tps={chat.tps} totalElapsedMs={chat.totalElapsedMs}
-            segmentStartedAt={chat.streamStartedAt} liveTokenCount={chat.liveTokenCount}
-            planPreview={chat.planPreview}
-            onReload={runtime.handleReload} onEdit={runtime.handleEdit}
-            onCloneMessage={canCloneMessages && onCloneMessage ? clone.requestClone : undefined}
-            onFileClick={runtime.handleFileClick} onFilePreview={onFilePreviewPath} projectPath={proj.selectedProject?.path}
-            onFileReview={onFilePreviewPath}
+          <ChatMessagePanel
+            sessionId={sessionId}
+            chat={chat}
+            runtime={runtime}
+            projectPath={proj.selectedProject?.path}
             knownSubagents={knownSubagents}
+            cloneEnabled={canCloneMessages && !!onCloneMessage}
+            requestClone={clone.requestClone}
+            onFilePreviewPath={onFilePreviewPath}
             onOpenSubagent={onOpenSubagent}
           />
         </div>

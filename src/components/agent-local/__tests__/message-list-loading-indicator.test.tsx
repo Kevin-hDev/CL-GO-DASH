@@ -40,7 +40,9 @@ vi.mock("../compression-indicator", () => ({
   CompressionIndicator: () => <div data-testid="compression-indicator" />,
 }));
 vi.mock("../context-compression-marker", () => ({ ContextCompressionMarker: () => null }));
-vi.mock("../user-message", () => ({ UserMessage: () => null }));
+vi.mock("../user-message", () => ({
+  UserMessage: ({ content }: { content: string }) => <div data-testid="user-message">{content}</div>,
+}));
 vi.mock("../assistant-message", () => ({ AssistantMessage: () => null }));
 vi.mock("../subagent-bubble", () => ({ SubagentBubble: () => null }));
 vi.mock("../plan-preview-bubble", () => ({ PlanPreviewBubble: () => null }));
@@ -112,5 +114,32 @@ describe("MessageList loading indicator", () => {
     const view = renderStreaming({ segmentStartedAt: null });
 
     expect(view.queryByTestId("loading-indicator")).toBeNull();
+  });
+
+  it("affiche le message en attente après le travail courant", () => {
+    const view = renderStreaming({ currentContent: "travail visible" });
+    view.rerender(
+      <MessageList
+        sessionId="session-1"
+        messages={[]}
+        queuedUserMessages={[{
+          id: "u2", role: "user", content: "nouvelle précision", files: [], timestamp: "2026-07-12",
+        }]}
+        completedSegments={[]}
+        currentContent="travail visible"
+        currentThinking=""
+        currentTools={[]}
+        isStreaming
+        tps={0}
+        totalElapsedMs={0}
+        segmentStartedAt={123}
+        liveTokenCount={7}
+      />,
+    );
+
+    const timeline = view.getByTestId("stream-timeline");
+    const user = view.getByTestId("user-message");
+    expect(timeline.compareDocumentPosition(user) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(user.textContent).toBe("nouvelle précision");
   });
 });

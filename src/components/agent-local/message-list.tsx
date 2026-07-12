@@ -22,6 +22,7 @@ import "./messages.css";
 interface MessageListProps {
   sessionId: string;
   messages: AgentMessage[];
+  queuedUserMessages?: AgentMessage[];
   completedSegments: StreamSegment[];
   currentContent: string;
   currentContentPhase?: TokenPhase;
@@ -46,7 +47,8 @@ interface MessageListProps {
 }
 
 export function MessageList({
-  sessionId, messages, completedSegments, currentContent, currentContentPhase, currentThinking,
+  sessionId, messages, queuedUserMessages = [], completedSegments, currentContent,
+  currentContentPhase, currentThinking,
   currentTools, activeStreamItem = null, isStreaming, tps, totalElapsedMs, segmentStartedAt,
   liveTokenCount, onReload, onEdit, onCloneMessage, onFileClick, onFilePreview, onFileReview,
   projectPath, knownSubagents = [], onOpenSubagent, planPreview,
@@ -107,6 +109,16 @@ export function MessageList({
           projectPath={projectPath}
         />
       )}
+      {queuedUserMessages.map((message) => (
+        <UserMessage
+          key={message.id}
+          content={message.content}
+          files={message.files}
+          skillNames={message.skill_names}
+          isStreaming
+          onFileClick={onFileClick}
+        />
+      ))}
       {planPreview && <PlanPreviewBubble plan={planPreview} />}
       {isStreaming && streamStartedAt != null && (
         <LoadingIndicator startedAt={streamStartedAt} liveTokenCount={liveTokenCount} />

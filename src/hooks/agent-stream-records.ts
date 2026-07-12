@@ -39,6 +39,8 @@ export function getOrCreateRecord(sessionId: string): StreamRecord {
     activeGeneration: null,
     cancelledGenerations: [],
     cancelledWithoutGeneration: false,
+    persistenceQueue: Promise.resolve(),
+    persistencePending: false,
   };
   records.set(sessionId, record);
   enforceSessionLimit(records);
@@ -67,14 +69,31 @@ export function persistAssistant(
   tokens: number,
   notify: (record: StreamRecord) => void,
 ) {
-  record.state = { ...record.state, persisted: true };
-  invoke("add_messages_to_session", {
-    id: sessionId,
-    messages: [message],
-    tokens,
-  }).catch(() => {
-    console.warn("persist failed for session", sessionId.slice(0, 8));
-    record.state = { ...record.state, persisted: false };
+  persistMessages(sessionId, record, [message], tokens, true, notify);
+}
+
+export function persistMessages(
+  sessionId: string,
+  record: StreamRecord,
+  messages: AgentMessage[],
+  tokens: number,
+  final: boolean,
+  notify: (record: StreamRecord) => void,
+) {
+  if (final) record.state = { ...record.state, persisted: true };
+  const run = () => Promise.resolve(invoke("add_messages_to_session", {
+    id: sessionId, messages, tokens,
+  })).then(() => undefined).catch(() => {
+    console.warn("Session persistence failed.");
+    if (final) record.state = { ...record.state, persisted: false };
     flushFrameNotify(record, notify);
+  });
+  const persistence = record.persistencePending
+    ? record.persistenceQueue.catch(() => undefined).then(run)
+    : run();
+  record.persistencePending = true;
+  record.persistenceQueue = persistence;
+  void persistence.finally(() => {
+    if (record.persistenceQueue === persistence) record.persistencePending = false;
   });
 }
