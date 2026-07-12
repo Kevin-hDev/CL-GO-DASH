@@ -31,9 +31,17 @@ async fn empty_directory_can_be_prepared_for_a_coder() {
 async fn directory_conflict_preserves_user_files_and_can_be_discarded() {
     let project = tempfile::tempdir().expect("project");
     std::fs::write(project.path().join("README.md"), "baseline\n").expect("seed");
-    let parent = session_store::create_full("Parent", "model", "provider", false, None)
+    let mut parent = session_store::create_full(
+        "Parent",
+        "model",
+        "provider",
+        false,
+        Some("project".into()),
+    )
         .await
         .expect("parent");
+    parent.working_dir = project.path().to_string_lossy().to_string();
+    session_store::save(&parent).await.expect("save parent");
     let mut child = session_store::create_full(
         "Child",
         "model",
@@ -75,6 +83,9 @@ async fn directory_conflict_preserves_user_files_and_can_be_discarded() {
     .await
     .expect("capture")
     .expect("change");
+    let mut running_child = session_store::get(&child.id).await.expect("running child");
+    running_child.working_dir = prepared.path().to_string_lossy().to_string();
+    session_store::save(&running_child).await.expect("save worktree path");
     subagent_working_dir::cleanup_owned(
         &child.id,
         &run.execution_id,

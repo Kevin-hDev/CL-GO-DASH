@@ -69,6 +69,8 @@ mod tool_subagent_changes;
 #[cfg(test)]
 mod subagent_git_lifecycle_tests;
 #[cfg(test)]
+mod subagent_git_dirty_parent_tests;
+#[cfg(test)]
 mod subagent_git_hook_tests;
 #[cfg(test)]
 mod subagent_directory_workspace_tests;

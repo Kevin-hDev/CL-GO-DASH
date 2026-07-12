@@ -66,9 +66,17 @@ async fn directory_change_is_captured_and_applied_transactionally() {
     let project = tempfile::tempdir().expect("project");
     std::fs::write(project.path().join("README.md"), "original\n").expect("seed project");
     std::fs::write(project.path().join("delete.txt"), "delete\n").expect("seed delete");
-    let parent = session_store::create_full("Parent apply", "model", "provider", false, None)
-        .await
-        .expect("parent");
+    let mut parent = session_store::create_full(
+        "Parent apply",
+        "model",
+        "provider",
+        false,
+        Some("project".into()),
+    )
+    .await
+    .expect("parent");
+    parent.working_dir = project.path().to_string_lossy().to_string();
+    session_store::save(&parent).await.expect("save parent");
     let mut child = session_store::create_full(
         "Child apply",
         "model",

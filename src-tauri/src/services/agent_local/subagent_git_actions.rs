@@ -5,6 +5,7 @@ use chrono::Utc;
 use std::path::Path;
 
 const MAX_PATCH_CHARS: usize = 12_000;
+const MAX_STATUS_BYTES: usize = 1024 * 1024;
 
 pub async fn inspect(
     project_path: &Path,
@@ -13,7 +14,7 @@ pub async fn inspect(
     change_id: &str,
 ) -> Result<(SubagentChangeMeta, String, bool), String> {
     let meta = owned_change(parent_id, child_id, change_id).await?;
-    validate_project(project_path, &meta).await?;
+    validate_project(project_path, parent_id, &meta).await?;
     let patch = match meta.workspace_kind {
         SubagentWorkspaceKind::Git => {
             super::subagent_git_command::text(
@@ -39,7 +40,7 @@ pub async fn apply(
 ) -> Result<SubagentChangeMeta, String> {
     let _guard = super::subagent_git_lock::acquire(project_path).await?;
     let mut meta = owned_change(parent_id, child_id, change_id).await?;
-    validate_project(project_path, &meta).await?;
+    validate_project(project_path, parent_id, &meta).await?;
     if meta.workspace_kind == SubagentWorkspaceKind::Directory {
         return super::subagent_directory_apply::apply(project_path, meta).await;
     }
@@ -47,8 +48,12 @@ pub async fn apply(
         super::subagent_git_command::delete_branch(project_path, &meta.branch).await?;
         return Ok(meta);
     }
-    if !matches!(meta.status, SubagentChangeStatus::Pending | SubagentChangeStatus::Conflict)
-        || !super::subagent_git_command::is_clean(project_path).await?
+    if !matches!(meta.status, SubagentChangeStatus::Pending | SubagentChangeStatus::Conflict) {
+        return Err("Dépôt parent non prêt".into());
+    }
+    let status_before = status_snapshot(project_path, &[]).await?;
+    if !super::subagent_git_command::success(project_path, &["diff", "--cached", "--quiet"]).await?
+        || !changed_paths_are_clean(project_path, &meta).await?
     {
         return Err("Dépôt parent non prêt".into());
     }
@@ -60,7 +65,7 @@ pub async fn apply(
     if !super::subagent_git_command::success(project_path, &["cherry-pick", &meta.commit]).await? {
         let aborted = super::subagent_git_command::success(project_path, &["cherry-pick", "--abort"]).await?;
         let restored = super::subagent_git_command::text(project_path, &["rev-parse", "HEAD"]).await? == head
-            && super::subagent_git_command::is_clean(project_path).await?;
+            && status_snapshot(project_path, &[]).await? == status_before;
         if !aborted || !restored {
             return Err("Restauration du dépôt parent impossible".into());
         }
@@ -87,7 +92,7 @@ pub async fn discard(
 ) -> Result<SubagentChangeMeta, String> {
     let _guard = super::subagent_git_lock::acquire(project_path).await?;
     let mut meta = owned_change(parent_id, child_id, change_id).await?;
-    validate_project(project_path, &meta).await?;
+    validate_project(project_path, parent_id, &meta).await?;
     if meta.workspace_kind == SubagentWorkspaceKind::Directory {
         return super::subagent_directory_apply::discard(meta).await;
     }
@@ -128,8 +133,15 @@ async fn owned_change(
     Ok(meta)
 }
 
-async fn validate_project(project_path: &Path, meta: &SubagentChangeMeta) -> Result<(), String> {
+async fn validate_project(
+    project_path: &Path,
+    parent_id: &str,
+    meta: &SubagentChangeMeta,
+) -> Result<(), String> {
     let child = super::session_store::get(&meta.child_session_id)
+        .await
+        .map_err(|_| "Projet sous-agent indisponible".to_string())?;
+    let parent = super::session_store::get(parent_id)
         .await
         .map_err(|_| "Projet sous-agent indisponible".to_string())?;
     if !project_path.is_dir() {
@@ -141,17 +153,42 @@ async fn validate_project(project_path: &Path, meta: &SubagentChangeMeta) -> Res
         }
         return Ok(());
     }
-    let expected = std::path::Path::new(&child.working_dir)
+    let expected = std::path::Path::new(&parent.working_dir)
         .canonicalize()
         .map_err(|_| "Projet sous-agent indisponible".to_string())?;
     let actual = project_path
         .canonicalize()
         .map_err(|_| "Projet sous-agent indisponible".to_string())?;
-    let identity_matches = child.project_id.as_deref() == Some(&meta.project_id)
-        || child.project_id.is_none()
+    let identity_matches = parent.project_id.as_deref() == Some(&meta.project_id)
+        || parent.project_id.is_none()
             && meta.project_id == super::subagent_directory_change::DIRECTORY_PROJECT;
     if !identity_matches || actual != expected {
         return Err("Projet sous-agent indisponible".into());
     }
     Ok(())
+}
+
+async fn changed_paths_are_clean(
+    project_path: &Path,
+    meta: &SubagentChangeMeta,
+) -> Result<bool, String> {
+    let paths = meta
+        .changed_paths
+        .iter()
+        .map(|changed| changed.path.as_str())
+        .collect::<Vec<_>>();
+    Ok(status_snapshot(project_path, &paths).await?.is_empty())
+}
+
+async fn status_snapshot(project_path: &Path, paths: &[&str]) -> Result<Vec<u8>, String> {
+    let mut args = vec!["status", "--porcelain=v1", "-z", "--untracked-files=all"];
+    if !paths.is_empty() {
+        args.push("--");
+        args.extend_from_slice(paths);
+    }
+    let output = super::subagent_git_command::output(project_path, &args).await?;
+    if !output.status.success() || output.stdout.len() > MAX_STATUS_BYTES {
+        return Err("Dépôt parent non prêt".into());
+    }
+    Ok(output.stdout)
 }

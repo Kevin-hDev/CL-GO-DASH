@@ -26,10 +26,6 @@ pub async fn success(repo: &Path, args: &[&str]) -> Result<bool, String> {
     Ok(output(repo, args).await?.status.success())
 }
 
-pub async fn is_clean(repo: &Path) -> Result<bool, String> {
-    Ok(text(repo, &["status", "--porcelain=v1"]).await?.is_empty())
-}
-
 pub async fn delete_branch(repo: &Path, branch: &str) -> Result<(), String> {
     let reference = format!("refs/heads/{branch}");
     if !success(repo, &["show-ref", "--verify", "--quiet", &reference]).await? {
