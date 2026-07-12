@@ -49,6 +49,7 @@ pub async fn spawn_delegate(
                     child_session_id: spawned.child_id,
                     model: spawned.model,
                     provider: spawned.provider,
+                    runtime_context: spawned.runtime_context,
                     prompt: spawned.prompt,
                     subagent_type: spawned.subagent_type,
                     parent_emitter: spawned.parent_emitter,

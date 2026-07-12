@@ -10,10 +10,11 @@ pub(super) async fn run_inner(
     child_session_id: String,
     model: String,
     provider: String,
+    runtime_context: super::subagent_runtime_context::SubagentRuntimeContext,
     prompt: String,
     subagent_type: String,
     cancel: CancellationToken,
-    project_id: Option<String>,
+    _project_id: Option<String>,
     working_dir: String,
     prior_messages: Option<Vec<super::types_ollama::ChatMessage>>,
 ) -> Result<
@@ -28,15 +29,16 @@ pub(super) async fn run_inner(
     let profile = super::subagent_tool_profile::SubagentToolProfile::from_session_type(Some(
         &subagent_type,
     ))?;
-    let is_explorer = profile == super::subagent_tool_profile::SubagentToolProfile::Explorer;
     let skills_enabled = super::agent_settings::is_tool_enabled("load_skill").await;
     let tools = profile.definitions(skills_enabled);
-
-    let system_prompt = if is_explorer {
-        super::subagent_prompts::explorer_system()
-    } else {
-        super::subagent_prompts::coder_system(project_id.as_deref()).await
-    };
+    let response_language = crate::commands::agent_chat_task::common::response_language();
+    let system_prompt = super::subagent_prompts::system(
+        profile,
+        std::path::Path::new(&working_dir),
+        skills_enabled,
+        &response_language,
+    )
+    .await;
 
     let messages = super::subagent_context::build_messages(
         &child_session_id,
@@ -65,12 +67,13 @@ pub(super) async fn run_inner(
         model,
         messages,
         tools,
-        think: false,
+        think: runtime_context.think,
         provider,
         working_dir: Some(working_dir),
         capability_hints: StreamCapabilityHints::default(),
-        reasoning_mode: None,
-        permission_mode_override: Some("subagent".to_string()),
+        reasoning_mode: runtime_context.reasoning_mode,
+        permission_mode_override: Some(runtime_context.permission_mode),
+        subagent_profile: Some(profile),
         plan_mode: Some(false),
         cancel: cancel.clone(),
     })

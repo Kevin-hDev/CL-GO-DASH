@@ -30,28 +30,32 @@ pub(crate) async fn run(
         });
     }
 
-    let agent_md = common::agent_md_content(&mode, &working_dir).await;
-    let skills = common::skills_tuples(
-        !mode.is_chat
-            && !mode.is_subagent
-            && tool_catalog::has_tool(&enabled_tool_names, "load_skill"),
-    )
-    .await;
-    common::prepare_with_context(
-        &mut messages,
-        common::PromptContext {
-            working_dir: &working_dir,
-            snap: &snap,
-            has_tools: true,
-            agent_md_content: agent_md,
-            skills: &skills,
-            model: &params.model,
-            mode: &mode.mode,
-            response_language: &response_language,
-            plan_mode_active,
-            enabled_tool_names: &enabled_tool_names,
-        },
-    );
+    if params.subagent_profile.is_some() {
+        common::append_git_section(&mut messages, &snap);
+    } else {
+        let agent_md = common::agent_md_content(&mode, &working_dir).await;
+        let skills = common::skills_tuples(
+            !mode.is_chat
+                && !mode.is_subagent
+                && tool_catalog::has_tool(&enabled_tool_names, "load_skill"),
+        )
+        .await;
+        common::prepare_with_context(
+            &mut messages,
+            common::PromptContext {
+                working_dir: &working_dir,
+                snap: &snap,
+                has_tools: true,
+                agent_md_content: agent_md,
+                skills: &skills,
+                model: &params.model,
+                mode: &mode.mode,
+                response_language: &response_language,
+                plan_mode_active,
+                enabled_tool_names: &enabled_tool_names,
+            },
+        );
+    }
     if todo_tools_enabled(&enabled_tool_names) {
         crate::services::agent_local::tool_todo::append_session_reminder(
             &mut messages,

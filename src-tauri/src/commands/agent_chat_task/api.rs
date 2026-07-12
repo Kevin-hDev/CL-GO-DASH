@@ -30,32 +30,36 @@ pub(crate) async fn run(
         resolve_plan_mode(&params).await && tool_catalog::has_plan_tools(&enabled_tool_names);
 
     let snap = common::collect_git_snapshot(&working_dir).await;
-    let agent_md = common::agent_md_content(&mode, &working_dir).await;
     let has_tools = !final_tools.is_empty();
-    let skills = common::skills_tuples(
-        !mode.is_chat
-            && !mode.is_subagent
-            && has_tools
-            && tool_catalog::has_tool(&enabled_tool_names, "load_skill"),
-    )
-    .await;
     let mut messages = params.messages;
     sanitize_images(&params.on_event, &mut messages, caps.vision);
-    common::prepare_with_context(
-        &mut messages,
-        common::PromptContext {
-            working_dir: &working_dir,
-            snap: &snap,
-            has_tools,
-            agent_md_content: agent_md,
-            skills: &skills,
-            model: &params.model,
-            mode: &mode.mode,
-            response_language: &response_language,
-            plan_mode_active,
-            enabled_tool_names: &enabled_tool_names,
-        },
-    );
+    if params.subagent_profile.is_some() {
+        common::append_git_section(&mut messages, &snap);
+    } else {
+        let agent_md = common::agent_md_content(&mode, &working_dir).await;
+        let skills = common::skills_tuples(
+            !mode.is_chat
+                && !mode.is_subagent
+                && has_tools
+                && tool_catalog::has_tool(&enabled_tool_names, "load_skill"),
+        )
+        .await;
+        common::prepare_with_context(
+            &mut messages,
+            common::PromptContext {
+                working_dir: &working_dir,
+                snap: &snap,
+                has_tools,
+                agent_md_content: agent_md,
+                skills: &skills,
+                model: &params.model,
+                mode: &mode.mode,
+                response_language: &response_language,
+                plan_mode_active,
+                enabled_tool_names: &enabled_tool_names,
+            },
+        );
+    }
     if todo_tools_enabled(&enabled_tool_names) {
         crate::services::agent_local::tool_todo::append_session_reminder(
             &mut messages,

@@ -52,6 +52,14 @@ impl SubagentToolProfile {
                 definition_name(definition)
                     .is_some_and(|name| allowed.contains(&name))
             })
+            .map(|mut definition| {
+                if let Some(name) = definition_name(&definition) {
+                    if let Some(description) = self.description(name) {
+                        definition["function"]["description"] = Value::String(description.into());
+                    }
+                }
+                definition
+            })
             .collect()
     }
 
@@ -72,6 +80,38 @@ impl SubagentToolProfile {
 
     pub fn allows(self, tool_name: &str, skills_enabled: bool) -> bool {
         self.tool_names(skills_enabled).contains(&tool_name)
+    }
+
+    pub fn prompt_tools(self, skills_enabled: bool) -> String {
+        self.definitions(skills_enabled)
+            .iter()
+            .filter_map(|definition| {
+                let function = definition.get("function")?;
+                Some(format!(
+                    "- {}: {}",
+                    function.get("name")?.as_str()?,
+                    function.get("description")?.as_str()?
+                ))
+            })
+            .collect::<Vec<_>>()
+            .join("\n")
+    }
+
+    fn description(self, tool_name: &str) -> Option<&'static str> {
+        match (self, tool_name) {
+            (Self::Explorer, "bash") => Some("Run one approved informational command without a shell. Pipes, redirections, mutations, network commands, find, and paths outside the project are refused."),
+            (Self::Coder, "bash") => Some("Run build, test, Git, and development commands inside the assigned worktree. Explicit attempts to leave the worktree are refused."),
+            (_, "read_file") => Some("Read a UTF-8 text file inside the assigned directory with line numbers."),
+            (Self::Coder, "write_file") => Some("Create or replace a file inside the assigned worktree. Read existing files first."),
+            (Self::Coder, "edit_file") => Some("Replace one exact string in a previously read file inside the assigned worktree."),
+            (_, "list_dir") => Some("List files and directories inside the assigned directory."),
+            (_, "grep") => Some("Search file contents inside the assigned directory with a regular expression."),
+            (_, "glob") => Some("Find files by name pattern inside the assigned directory."),
+            (_, "web_search") => Some("Search the web for current information."),
+            (_, "web_fetch") => Some("Fetch and extract content from a web URL."),
+            (Self::Coder, "load_skill") => Some("Load one skill from the accessible skill list."),
+            _ => None,
+        }
     }
 }
 

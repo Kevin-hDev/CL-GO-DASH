@@ -9,20 +9,7 @@ use tokio_util::sync::CancellationToken;
 
 const MAX_PROMPT_PREVIEW: usize = 120;
 
-pub struct SpawnedSubagent {
-    pub app: AppHandle,
-    pub child_id: String,
-    pub model: String,
-    pub provider: String,
-    pub prompt: String,
-    pub subagent_type: String,
-    pub parent_emitter: AgentEventEmitter,
-    pub cancel: CancellationToken,
-    pub project_id: Option<String>,
-    pub run_id: String,
-    pub execution_id: String,
-    pub spawn_event: StreamEvent,
-}
+pub use super::tool_delegate_spawned::SpawnedSubagent;
 
 pub async fn prepare_delegate(
     args: Value,
@@ -85,7 +72,7 @@ pub async fn prepare_delegate(
         .as_str()
         .map(str::trim)
         .filter(|id| !id.is_empty());
-    let child = match existing_child_id {
+    let mut child = match existing_child_id {
         Some(id) => {
             match super::tool_delegate_child::prepare_existing_child(
                 id.trim(),
@@ -127,6 +114,16 @@ pub async fn prepare_delegate(
             }
         }
     };
+
+    if super::tool_delegate_child::inherit_parent_context(&mut child, &parent)
+        .await
+        .is_err()
+    {
+        subagent_registry::release_run_claim(&parent_session_id, &run_id).await;
+        return Err(ToolResult::err(
+            "Erreur interne lors de la préparation du sous-agent",
+        ));
+    }
 
     let child_id = child.id.clone();
 
@@ -184,6 +181,10 @@ pub async fn prepare_delegate(
         child_id,
         model: parent.model.clone(),
         provider: parent.provider.clone(),
+        runtime_context: super::subagent_runtime_context::SubagentRuntimeContext::from_parent(
+            &parent,
+        )
+        .await,
         prompt,
         subagent_type: subagent_type.to_string(),
         parent_emitter,

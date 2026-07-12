@@ -152,8 +152,21 @@ pub(super) async fn create_child(
     child.subagent_run_id = Some(run_id.to_string());
     child.subagent_description = Some(description.to_string());
     child.subagent_color_key = Some(color_key.to_string());
+    child.thinking_enabled = parent.thinking_enabled;
+    child.reasoning_mode = parent.reasoning_mode.clone();
     session_store::save(&child)
         .await
         .map_err(|_| ToolResult::err("Erreur interne lors de la création du sous-agent"))?;
     Ok(child)
+}
+
+pub(super) async fn inherit_parent_context(
+    child: &mut AgentSession,
+    parent: &AgentSession,
+) -> Result<(), String> {
+    child.model = parent.model.clone();
+    child.provider = parent.provider.clone();
+    child.thinking_enabled = parent.thinking_enabled;
+    child.reasoning_mode = parent.reasoning_mode.clone();
+    session_store::save(child).await
 }

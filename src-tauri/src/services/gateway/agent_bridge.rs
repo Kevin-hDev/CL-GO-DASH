@@ -135,6 +135,7 @@ impl GatewayAgentBridge {
             capability_hints: StreamCapabilityHints::default(),
             reasoning_mode: None,
             permission_mode_override: Some("auto".to_string()),
+            subagent_profile: None,
             plan_mode: Some(false),
             cancel: CancellationToken::new(),
         })
