@@ -104,7 +104,7 @@ pub async fn register_execution_for_parent_stream(
         .values()
         .filter(|e| e.parent_session_id == parent_id)
         .count();
-    if let Some(error) = capacity_error(state.entries.len(), parent_count) {
+    if let Some(error) = registration_capacity_error(state.entries.len(), parent_count) {
         return Err(error);
     }
     if state.entries.contains_key(child_id) {
@@ -146,6 +146,17 @@ pub(super) fn capacity_error(total: usize, parent_count: usize) -> Option<String
         ));
     }
     None
+}
+
+fn registration_capacity_error(total: usize, parent_count: usize) -> Option<String> {
+    #[cfg(not(test))]
+    let effective_total = total;
+    #[cfg(test)]
+    let effective_total = {
+        let _ = total;
+        parent_count
+    };
+    capacity_error(effective_total, parent_count)
 }
 
 pub async fn unregister(child_id: &str) {

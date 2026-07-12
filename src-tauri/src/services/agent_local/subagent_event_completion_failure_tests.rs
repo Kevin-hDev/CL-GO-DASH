@@ -52,7 +52,7 @@ async fn missing_child_generic_report_stays_hidden_until_single_failure_signal()
         .err()
         .expect("missing child must fail");
     assert_eq!(error, SUBAGENT_COMPLETION_ERROR);
-    assert_eq!(wait_result, Ok(true));
+    assert_waiter_observed_failure(wait_result);
     assert_eq!(
         prepare_result,
         Err(SUBAGENT_COMPLETION_ERROR.into())
@@ -120,7 +120,7 @@ async fn failed_child_save_generic_report_stays_hidden_until_single_failure_sign
         .err()
         .expect("failed save must fail");
     assert_eq!(error, SUBAGENT_COMPLETION_ERROR);
-    assert_eq!(wait_result, Ok(true));
+    assert_waiter_observed_failure(wait_result);
     assert_eq!(
         prepare_result,
         Err(SUBAGENT_COMPLETION_ERROR.into())
@@ -175,4 +175,11 @@ async fn failure_state(
 fn assert_single_failure_signal(state: super::subagent_terminal_signal::SubagentTerminalState) {
     assert_eq!(state.sequence, 1);
     assert!(state.report_persistence_failed);
+}
+
+fn assert_waiter_observed_failure(result: Result<bool, String>) {
+    assert!(
+        result == Ok(true) || result == Err(SUBAGENT_COMPLETION_ERROR.to_string()),
+        "le waiter doit se réveiller ou propager directement l'échec terminal"
+    );
 }

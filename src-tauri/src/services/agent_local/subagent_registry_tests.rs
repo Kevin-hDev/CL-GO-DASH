@@ -106,6 +106,29 @@ mod tests {
         assert!(capacity_error(0, MAX_PER_PARENT).is_some());
         assert!(capacity_error(MAX_TOTAL - 1, MAX_PER_PARENT - 1).is_none());
 
+        // --- unrelated test parents do not consume this test's total capacity ---
+        let mut registered_children = Vec::new();
+        for parent in [uid(), uid()] {
+            for _ in 0..MAX_PER_PARENT {
+                let child = uid();
+                register(&parent, &child, CancellationToken::new())
+                    .await
+                    .expect("fill isolated test parent");
+                registered_children.push(child);
+            }
+        }
+        let independent_parent = uid();
+        let independent_child = uid();
+        register(
+            &independent_parent,
+            &independent_child,
+            CancellationToken::new(),
+        )
+        .await
+        .expect("another test parent must keep independent capacity");
+        registered_children.push(independent_child);
+        for child in registered_children {
+            unregister(&child).await;
+        }
     }
-
 }
