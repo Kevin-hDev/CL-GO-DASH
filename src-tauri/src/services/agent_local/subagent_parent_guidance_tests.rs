@@ -10,6 +10,12 @@ fn compact_and_detailed_prompts_share_positive_subagent_guidance() {
         assert!(prompt.contains("After delegate_task, continue useful independent work"));
         assert!(prompt.contains("Do not repeatedly inspect subagents while they run"));
         assert!(prompt.contains("finish the turn without a tool call"));
+        assert!(prompt.contains("When a coder report includes a pending change"));
+        assert!(prompt.contains("inspect_subagent_changes"));
+        assert!(prompt.contains("apply_subagent_changes"));
+        assert!(prompt.contains("discard_subagent_changes"));
+        assert!(prompt.contains("fix it yourself"));
+        assert!(!prompt.contains("never redo the coder's work"));
     }
 }
 
