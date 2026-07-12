@@ -56,7 +56,12 @@ pub async fn run_tools_with_eager(
     tool_call_ids: &[String],
     compression: Option<&ToolCompression<'_>>,
 ) -> bool {
-    if !tool_calls.is_empty()
+    let can_use_delegate_batch = matches!(
+        super::subagent_tool_guard::profile_for_session(session_id).await,
+        Ok(None)
+    );
+    if can_use_delegate_batch
+        && !tool_calls.is_empty()
         && tool_calls
             .iter()
             .all(|(name, _)| name == super::tool_executor_delegate_batch::DELEGATE_TOOL)
@@ -106,6 +111,7 @@ pub async fn run_tools_with_eager(
             plan_mode_active,
             tool_call_ids,
             compression,
+            can_use_delegate_batch,
         )
         .await
     }

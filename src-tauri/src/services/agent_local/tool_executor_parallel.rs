@@ -25,6 +25,7 @@ pub async fn run_with_parallel_reads(
     plan_mode_active: bool,
     tool_call_ids: &[String],
     compression: Option<&ToolCompression<'_>>,
+    can_use_delegate_batch: bool,
 ) -> bool {
     let mut read_batch: Vec<BatchEntry> = Vec::new();
     let mut indexed_results: Vec<Option<(&str, ToolResult)>> = vec![None; tool_calls.len()];
@@ -52,7 +53,9 @@ pub async fn run_with_parallel_reads(
             if is_last {
                 break;
             }
-            if tool_calls[i].0 == super::tool_executor_delegate_batch::DELEGATE_TOOL {
+            if can_use_delegate_batch
+                && tool_calls[i].0 == super::tool_executor_delegate_batch::DELEGATE_TOOL
+            {
                 let mut delegate_items = Vec::new();
                 while i < tool_calls.len()
                     && tool_calls[i].0 == super::tool_executor_delegate_batch::DELEGATE_TOOL

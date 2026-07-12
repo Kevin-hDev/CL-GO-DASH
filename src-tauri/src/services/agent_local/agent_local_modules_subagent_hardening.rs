@@ -32,6 +32,15 @@ mod subagent_worktree_identity;
 #[cfg(test)]
 mod subagent_max_turn_tests;
 mod subagent_turn_limit;
+mod subagent_tool_guard;
+mod subagent_tool_profile;
+mod subagent_explorer_bash;
+#[cfg(test)]
+mod subagent_tool_profile_tests;
+#[cfg(test)]
+mod subagent_tool_guard_tests;
+#[cfg(test)]
+mod subagent_tool_runtime_tests;
 #[cfg(test)]
 mod subagent_terminal_event_order_tests;
 #[cfg(test)]

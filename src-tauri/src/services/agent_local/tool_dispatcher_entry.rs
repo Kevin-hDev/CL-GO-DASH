@@ -15,6 +15,17 @@ pub async fn dispatch(
     {
         return ToolResult::err("Outil désactivé dans les paramètres.");
     }
+    let profile = match super::subagent_tool_guard::validate_for_session(
+        session_id,
+        tool_name,
+        args,
+        working_dir,
+    )
+    .await
+    {
+        Ok(profile) => profile,
+        Err(msg) => return ToolResult::err(msg),
+    };
     let args = match super::tool_validate::validate(tool_name, args) {
         Ok(cleaned) => cleaned,
         Err(msg) => return ToolResult::err(format!("[{tool_name}] {msg}")),
@@ -25,6 +36,7 @@ pub async fn dispatch(
         working_dir,
         session_id,
         cancel,
+        profile,
     )
     .await;
     let result = super::tool_result_truncate::truncate_result(result, tool_name, session_id);

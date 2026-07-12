@@ -25,12 +25,12 @@ pub(super) async fn run_inner(
     ),
     String,
 > {
-    let is_explorer = subagent_type == "explorer";
-    let tools = if is_explorer {
-        super::tool_definitions_subagent::get_explorer_tool_definitions()
-    } else {
-        super::tool_dispatcher::get_tool_definitions()
-    };
+    let profile = super::subagent_tool_profile::SubagentToolProfile::from_session_type(Some(
+        &subagent_type,
+    ))?;
+    let is_explorer = profile == super::subagent_tool_profile::SubagentToolProfile::Explorer;
+    let skills_enabled = super::agent_settings::is_tool_enabled("load_skill").await;
+    let tools = profile.definitions(skills_enabled);
 
     let system_prompt = if is_explorer {
         super::subagent_prompts::explorer_system()

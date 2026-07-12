@@ -17,12 +17,19 @@ pub(super) async fn dispatch_inner(
     working_dir: &Path,
     session_id: &str,
     cancel: tokio_util::sync::CancellationToken,
+    profile: Option<super::subagent_tool_profile::SubagentToolProfile>,
 ) -> ToolResult {
     match tool_name {
         "bash" => {
             let cmd = args["command"].as_str().unwrap_or("");
             let timeout = args["timeout"].as_u64();
-            match tool_bash::execute_shell(cmd, working_dir, timeout).await {
+            let execution = match profile {
+                Some(super::subagent_tool_profile::SubagentToolProfile::Explorer) => {
+                    super::subagent_explorer_bash::execute(cmd, working_dir, timeout).await
+                }
+                _ => tool_bash::execute_shell(cmd, working_dir, timeout).await,
+            };
+            match execution {
                 Ok(out) => {
                     if let Some(ref cwd) = out.new_cwd {
                         if let Err(e) =

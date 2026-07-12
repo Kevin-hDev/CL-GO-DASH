@@ -36,6 +36,37 @@ pub async fn run_sequential(
             working_dir,
         )
         .await;
+        if let Err(msg) = super::subagent_tool_guard::validate_for_session(
+            session_id,
+            name,
+            args,
+            working_dir,
+        )
+        .await
+        {
+            let tr = tool_dispatcher::enrich_error(ToolResult::err(msg), name);
+            super::tool_executor_diagnostics::completed(
+                session_id,
+                request_id,
+                name,
+                arg_summary,
+                true,
+            )
+            .await;
+            compressed |= push_and_compress(
+                on_event,
+                messages,
+                name,
+                args,
+                working_dir,
+                tr,
+                idx,
+                tool_call_ids,
+                compression,
+            )
+            .await;
+            continue;
+        }
         let plan_check = super::tool_plan_guard::ensure_allowed_for_session(
             name,
             args,
