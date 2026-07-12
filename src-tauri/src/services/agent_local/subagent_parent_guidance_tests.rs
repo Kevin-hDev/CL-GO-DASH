@@ -19,6 +19,14 @@ fn compact_and_detailed_prompts_share_positive_subagent_guidance() {
         assert!(prompt.contains("apply_subagent_changes"));
         assert!(prompt.contains("discard_subagent_changes"));
         assert!(prompt.contains("fix it yourself"));
+        assert!(prompt.contains("An apply failure leaves the isolated change unresolved"));
+        assert!(prompt.contains(
+            "After integrating or recreating the intended result yourself, call \
+discard_subagent_changes"
+        ));
+        assert!(prompt.contains(
+            "Do not claim completion while the isolated change remains pending or conflicted"
+        ));
         assert!(!prompt.contains("never redo the coder's work"));
     }
 }

@@ -2,6 +2,10 @@ use super::types_tools::ToolResult;
 use serde_json::{json, Value};
 use std::path::Path;
 
+const APPLY_ERROR: &str = "Application du changement sous-agent impossible. Le changement isolé \
+reste non résolu. Inspectez son état. Après une intégration manuelle, appelez \
+discard_subagent_changes pour nettoyer le changement et sa branche temporaire.";
+
 pub async fn dispatch(
     tool_name: &str,
     args: &Value,
@@ -48,7 +52,7 @@ pub async fn dispatch(
         }
         "apply_subagent_changes" => action_result(
             super::subagent_git_actions::apply(working_dir, parent_id, child_id, change_id).await,
-            "Application du changement sous-agent impossible.",
+            APPLY_ERROR,
         ),
         "discard_subagent_changes" => action_result(
             super::subagent_git_actions::discard(working_dir, parent_id, child_id, change_id).await,
@@ -84,4 +88,22 @@ fn id_arg<'a>(args: &'a Value, key: &str) -> Result<&'a str, ToolResult> {
 
 fn unavailable() -> ToolResult {
     ToolResult::err("Changement sous-agent indisponible.")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{action_result, APPLY_ERROR};
+    use crate::services::agent_local::types_subagent_change::SubagentChangeMeta;
+
+    #[test]
+    fn apply_failure_explains_that_manual_resolution_requires_cleanup() {
+        let result = action_result(
+            Err::<SubagentChangeMeta, _>("conflit".to_string()),
+            APPLY_ERROR,
+        );
+
+        assert!(result.is_error);
+        assert!(result.content.contains("reste non résolu"));
+        assert!(result.content.contains("discard_subagent_changes"));
+    }
 }

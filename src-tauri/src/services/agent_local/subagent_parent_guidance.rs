@@ -13,5 +13,9 @@ parent project. Use inspect_subagent_changes to review its current status and di
 the request, use apply_subagent_changes and only report it as integrated after that succeeds. If \
 it does not satisfy the request, choose the most appropriate response: request a correction, use \
 discard_subagent_changes and fix it yourself, or discard it and delegate new work. \
+An apply failure leaves the isolated change unresolved. Inspect its state before deciding how to \
+continue. After integrating or recreating the intended result yourself, call \
+discard_subagent_changes to clean up the obsolete isolated change and temporary branch. Do not \
+claim completion while the isolated change remains pending or conflicted. \
 When no useful independent work remains, give at most one short progress update and \
 finish the turn without a tool call.";

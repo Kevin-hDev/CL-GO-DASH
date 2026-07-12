@@ -107,7 +107,10 @@ pub fn subagent_change_definitions() -> Vec<Value> {
     [
         ("inspect_subagent_changes", "Inspect a coder subagent change before deciding what to do."),
         ("apply_subagent_changes", "Apply a coder subagent change to the current parent branch."),
-        ("discard_subagent_changes", "Discard a coder subagent change and delete its temporary branch."),
+        (
+            "discard_subagent_changes",
+            "Discard a rejected or manually reproduced coder change and delete its temporary branch.",
+        ),
     ]
     .into_iter()
     .map(|(name, description)| {
