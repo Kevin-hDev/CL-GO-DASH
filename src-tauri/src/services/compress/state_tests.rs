@@ -27,6 +27,8 @@ fn agent(role: &str, content: &str) -> AgentMessage {
         tokens: 0,
         work_duration_ms: None,
         skill_names: None,
+        stream_run_id: None,
+        stream_part: None,
     }
 }
 

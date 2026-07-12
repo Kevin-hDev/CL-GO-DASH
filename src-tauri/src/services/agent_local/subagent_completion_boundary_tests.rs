@@ -93,7 +93,9 @@ async fn message_between_terminal_save_and_registry_completion_is_never_stranded
                 timestamp: chrono::Utc::now(),
                 tokens: 0,
                 work_duration_ms: None,
-                skill_names: None,
+        skill_names: None,
+        stream_run_id: None,
+        stream_part: None,
             }],
             0,
         )

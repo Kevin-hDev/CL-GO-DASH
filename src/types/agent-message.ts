@@ -12,9 +12,13 @@ export interface AgentMessage {
   skill_names?: string[];
   tokens?: number;
   work_duration_ms?: number;
+  stream_run_id?: string;
+  stream_part?: StreamMessagePart;
   /** Marqueur frontend temporaire : ce bloc appartient encore au stream actif. */
   is_stream_checkpoint?: boolean;
 }
+
+export type StreamMessagePart = "checkpoint" | "input" | "final";
 
 export interface SavedSegment {
   thinking?: string;

@@ -90,6 +90,8 @@ fn to_saved(message: &ChatMessage) -> Option<AgentMessage> {
         tokens: 0,
         work_duration_ms: None,
         skill_names: None,
+        stream_run_id: None,
+        stream_part: None,
     })
 }
 

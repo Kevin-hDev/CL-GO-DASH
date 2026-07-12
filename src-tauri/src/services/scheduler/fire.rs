@@ -85,6 +85,8 @@ async fn dispatch(_app: &AppHandle, wakeup: &ScheduledWakeup) -> Result<(String,
         tokens: 0,
         work_duration_ms: None,
         skill_names: None,
+        stream_run_id: None,
+        stream_part: None,
     };
 
     let assistant_msg = AgentMessage {
@@ -101,6 +103,8 @@ async fn dispatch(_app: &AppHandle, wakeup: &ScheduledWakeup) -> Result<(String,
         tokens,
         work_duration_ms: None,
         skill_names: None,
+        stream_run_id: None,
+        stream_part: None,
     };
 
     session_store::add_messages(&session_id, vec![user_msg, assistant_msg], tokens).await?;

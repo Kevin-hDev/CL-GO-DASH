@@ -24,6 +24,9 @@ pub async fn add_messages(
     tokens: u32,
 ) -> Result<(), String> {
     super::session_store::validate_session_id(id)?;
+    for message in &new_messages {
+        message.validate_stream_metadata()?;
+    }
     let lock = super::session_store::lock_session(id).await;
     let _guard = lock.lock().await;
     let mut session = super::session_store::get(id).await?;

@@ -19,6 +19,7 @@ export type {
   SavedSegment,
   SearchResult,
   SkillInfo,
+  StreamMessagePart,
   ToolActivityRecord,
   ToolCallRequest,
   ToolResult,
