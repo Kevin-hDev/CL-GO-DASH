@@ -143,26 +143,16 @@ async fn prune_one_project(path: &std::path::Path) -> bool {
 
     match tokio::time::timeout(Duration::from_secs(PRUNE_TIMEOUT_SECS), fut).await {
         Ok(Ok(output)) if output.status.success() => true,
-        Ok(Ok(output)) => {
-            eprintln!(
-                "[startup-cleanup] git worktree prune échoué sur {}: {}",
-                path.display(),
-                String::from_utf8_lossy(&output.stderr).trim()
-            );
+        Ok(Ok(_)) => {
+            eprintln!("[startup-cleanup] git worktree prune échoué");
             false
         }
-        Ok(Err(e)) => {
-            eprintln!(
-                "[startup-cleanup] git worktree prune erreur sur {}: {e}",
-                path.display()
-            );
+        Ok(Err(_)) => {
+            eprintln!("[startup-cleanup] git worktree prune indisponible");
             false
         }
         Err(_) => {
-            eprintln!(
-                "[startup-cleanup] git worktree prune timeout sur {}",
-                path.display()
-            );
+            eprintln!("[startup-cleanup] git worktree prune timeout");
             false
         }
     }

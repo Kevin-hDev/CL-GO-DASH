@@ -4,9 +4,10 @@ use regex::Regex;
 use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::LazyLock;
-use std::time::{Duration, Instant};
 use tokio::sync::{oneshot, Mutex};
 use tokio_util::sync::CancellationToken;
+
+pub use super::permission_allow_cache::{clear_session, is_allowed, mark_allowed};
 
 #[derive(Debug, Clone, Copy)]
 pub enum PermissionDecision {
@@ -180,43 +181,4 @@ pub async fn respond(id: &str, decision: PermissionDecision) {
     } else {
         log_diagnostic("respond_missing", None, Some("stale_or_unknown_permission"));
     }
-}
-
-const SESSION_ALLOW_TTL: Duration = Duration::from_secs(3600);
-
-static ALLOWED: LazyLock<Mutex<HashMap<String, HashMap<String, Instant>>>> =
-    LazyLock::new(|| Mutex::new(HashMap::new()));
-
-const NO_SESSION_ALLOW: &[&str] = &["bash", "search_mcp_tools"];
-
-pub async fn is_allowed(session_id: &str, tool: &str) -> bool {
-    if NO_SESSION_ALLOW.contains(&tool) {
-        return false;
-    }
-    let mut guard = ALLOWED.lock().await;
-    let session_map = match guard.get_mut(session_id) {
-        Some(m) => m,
-        None => return false,
-    };
-    match session_map.get(tool) {
-        Some(granted_at) if granted_at.elapsed() < SESSION_ALLOW_TTL => true,
-        Some(_) => {
-            session_map.remove(tool);
-            false
-        }
-        None => false,
-    }
-}
-
-pub async fn mark_allowed(session_id: &str, tool: &str) {
-    ALLOWED
-        .lock()
-        .await
-        .entry(session_id.to_string())
-        .or_default()
-        .insert(tool.to_string(), Instant::now());
-}
-
-pub async fn clear_session(session_id: &str) {
-    ALLOWED.lock().await.remove(session_id);
 }

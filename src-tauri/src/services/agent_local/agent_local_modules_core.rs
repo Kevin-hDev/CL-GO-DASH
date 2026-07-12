@@ -63,6 +63,7 @@ pub mod ollama_tool_role;
 #[cfg(test)]
 mod ollama_tool_role_tests;
 pub mod permission_gate;
+mod permission_allow_cache;
 #[cfg(test)]
 pub mod permission_gate_tests;
 pub mod permission_policy;
