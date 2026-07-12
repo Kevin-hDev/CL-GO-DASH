@@ -63,6 +63,8 @@ mod types_subagent_change;
 mod tool_subagent_changes;
 #[cfg(test)]
 mod subagent_git_lifecycle_tests;
+#[cfg(test)]
+mod subagent_git_hook_tests;
 mod tool_delegate_spawned;
 #[cfg(test)]
 mod subagent_tool_profile_tests;

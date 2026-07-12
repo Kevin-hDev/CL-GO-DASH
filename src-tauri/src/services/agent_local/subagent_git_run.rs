@@ -105,7 +105,15 @@ pub async fn capture(
     let committed = tokio::process::Command::new("git")
         .args(["-C"])
         .arg(worktree)
-        .args(["-c", "user.name=CL-GO", "-c", "user.email=cl-go@local", "commit", "-m"])
+        .args([
+            "-c",
+            "user.name=CL-GO",
+            "-c",
+            "user.email=cl-go@local",
+            "commit",
+            "--no-verify",
+            "-m",
+        ])
         .arg(message)
         .kill_on_drop(true)
         .output()
