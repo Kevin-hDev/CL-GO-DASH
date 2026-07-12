@@ -1,11 +1,8 @@
 use super::types_subagent_change::{SubagentChangeMeta, SubagentChangeStatus};
 use chrono::Utc;
 use std::path::Path;
-use std::sync::LazyLock;
-use tokio::sync::Mutex;
 
 const MAX_PATCH_CHARS: usize = 12_000;
-static GIT_ACTION_LOCK: LazyLock<Mutex<()>> = LazyLock::new(|| Mutex::new(()));
 
 pub async fn inspect(
     project_path: &Path,
@@ -31,7 +28,7 @@ pub async fn apply(
     child_id: &str,
     change_id: &str,
 ) -> Result<SubagentChangeMeta, String> {
-    let _guard = GIT_ACTION_LOCK.lock().await;
+    let _guard = super::subagent_git_lock::acquire(project_path).await?;
     let mut meta = owned_change(parent_id, child_id, change_id).await?;
     validate_project(project_path, &meta).await?;
     if meta.status == SubagentChangeStatus::Applied {
@@ -76,7 +73,7 @@ pub async fn discard(
     child_id: &str,
     change_id: &str,
 ) -> Result<SubagentChangeMeta, String> {
-    let _guard = GIT_ACTION_LOCK.lock().await;
+    let _guard = super::subagent_git_lock::acquire(project_path).await?;
     let mut meta = owned_change(parent_id, child_id, change_id).await?;
     validate_project(project_path, &meta).await?;
     if meta.status == SubagentChangeStatus::Discarded {

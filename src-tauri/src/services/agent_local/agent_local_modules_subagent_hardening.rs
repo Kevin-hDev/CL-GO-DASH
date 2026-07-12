@@ -53,6 +53,9 @@ mod subagent_change_permission_tests;
 mod subagent_change_store_tests;
 mod subagent_git_actions;
 mod subagent_git_command;
+mod subagent_git_lock;
+#[cfg(test)]
+mod subagent_git_lock_tests;
 mod subagent_git_run;
 mod subagent_task_change;
 mod subagent_task_failure;

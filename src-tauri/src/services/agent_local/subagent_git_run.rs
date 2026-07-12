@@ -4,7 +4,18 @@ use super::types_subagent_change::{
 use chrono::Utc;
 use std::path::Path;
 
+#[cfg(test)]
 pub async fn seed_pending(
+    project_path: &Path,
+    child_id: &str,
+    execution_id: &str,
+    worktree: &Path,
+) -> Result<(), String> {
+    let _guard = super::subagent_git_lock::acquire(project_path).await?;
+    seed_pending_locked(project_path, child_id, execution_id, worktree).await
+}
+
+pub async fn seed_pending_locked(
     project_path: &Path,
     child_id: &str,
     execution_id: &str,
@@ -44,6 +55,7 @@ pub async fn capture(
     execution_id: &str,
     worktree: &Path,
 ) -> Result<Option<SubagentChangeMeta>, String> {
+    let _guard = super::subagent_git_lock::acquire(project_path).await?;
     super::types_subagent_change::validate_uuid(child_id)?;
     super::types_subagent_change::validate_uuid(execution_id)?;
     let child = super::session_store::get(child_id)

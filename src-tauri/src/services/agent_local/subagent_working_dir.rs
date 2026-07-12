@@ -47,6 +47,7 @@ async fn create_coder_worktree(
     if !super::subagent_registry::owns_execution(child_session_id, run_id, execution_id).await {
         return Err("Préparation du worktree isolé impossible".to_string());
     }
+    let _git_guard = super::subagent_git_lock::acquire(base).await?;
     let worktree = super::subagent_worktree::create_for_execution(
         base,
         child_session_id,
@@ -54,7 +55,7 @@ async fn create_coder_worktree(
     )
     .await?;
     let path = worktree.to_string_lossy().to_string();
-    if super::subagent_git_run::seed_pending(base, child_session_id, execution_id, &worktree)
+    if super::subagent_git_run::seed_pending_locked(base, child_session_id, execution_id, &worktree)
         .await
         .is_err()
     {
