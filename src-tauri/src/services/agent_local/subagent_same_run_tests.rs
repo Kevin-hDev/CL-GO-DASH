@@ -8,7 +8,7 @@ fn queued_boundary_continues_same_future_without_spawn_renew_or_early_cleanup() 
         .find("if finalized.queued_followup")
         .expect("queued terminal continuation");
     let cleanup = task
-        .find("subagent_working_dir::cleanup")
+        .find("subagent_task_change::cleanup_execution")
         .expect("final worktree cleanup");
 
     assert!(task.contains("loop {"));
