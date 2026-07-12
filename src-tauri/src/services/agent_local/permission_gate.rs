@@ -24,6 +24,7 @@ const GATED_TOOLS: &[&str] = &[
     "process_image",
     "create_branch",
     "checkout_branch",
+    "apply_subagent_changes",
     "forecast",
 ];
 
