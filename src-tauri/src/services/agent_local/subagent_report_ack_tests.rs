@@ -104,8 +104,14 @@ async fn ack_queued_before_cancellation_commits_delivery() {
 #[test]
 fn parent_stream_cancellation_paths_use_the_delivery_lock() {
     let source = include_str!("../../commands/agent_chat.rs");
+    let stop_source = include_str!("../../commands/agent_chat_cancel.rs");
 
-    assert_eq!(source.matches("cancel_with_lock").count(), 2);
+    assert_eq!(
+        source.matches("cancel_with_lock").count()
+            + stop_source.matches("cancel_with_lock").count(),
+        2
+    );
     assert!(!source.contains("old_token.cancel()"));
     assert!(!source.contains("token.cancel();"));
+    assert!(!stop_source.contains("token.cancel();"));
 }
