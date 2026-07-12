@@ -69,7 +69,11 @@ pub async fn resolve(
     let text = path_text(&resolved)?;
     match action {
         MissingDirectoryAction::Switch => {
-            super::session_store::switch_working_dir(session_id, &text).await
+            let project = super::project_store::add(&text)
+                .await
+                .map_err(|_| generic_error())?;
+            super::session_store::switch_working_dir_to_project(session_id, &text, &project.id)
+                .await
         }
         MissingDirectoryAction::Create => {
             super::session_store::update_working_dir(session_id, &text).await

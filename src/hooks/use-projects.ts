@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { showToast } from "@/lib/toast-emitter";
 import i18n from "@/i18n";
 import type { Project } from "@/types/agent";
+import { AGENT_SESSIONS_CHANGED } from "./agent-session-events";
 
 export function useProjects() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -15,6 +16,9 @@ export function useProjects() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch→setState is intentional
     void refresh();
+    const refreshProjects = () => void refresh();
+    window.addEventListener(AGENT_SESSIONS_CHANGED, refreshProjects);
+    return () => window.removeEventListener(AGENT_SESSIONS_CHANGED, refreshProjects);
   }, [refresh]);
 
   const add = useCallback(

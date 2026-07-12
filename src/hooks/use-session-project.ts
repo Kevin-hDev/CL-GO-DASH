@@ -50,7 +50,7 @@ export function useSessionProject(
 
   const savedProject = projects.find((project) => project.id === selectedProjectId);
   const selectedProject = savedProject
-    ?? (!selectedProjectId && workingDir ? sessionDirectory(workingDir) : undefined);
+    ?? (workingDir ? sessionDirectory(workingDir) : undefined);
   const locked = hasMessages && !!selectedProject;
   const hidden = loading || (hasMessages && !selectedProject);
 

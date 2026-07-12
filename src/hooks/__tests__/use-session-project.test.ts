@@ -32,6 +32,19 @@ function session(projectId: string | undefined, workingDir: string): AgentSessio
 }
 
 describe("useSessionProject", () => {
+  it("affiche immédiatement le dossier de secours quand le projet référencé manque", async () => {
+    vi.mocked(invoke).mockResolvedValueOnce(session("missing-project", "/project"));
+
+    const { result } = renderHook(() =>
+      useSessionProject("session-1", [], vi.fn(), true),
+    );
+
+    await waitFor(() => expect(invoke).toHaveBeenCalled());
+    await waitFor(() => expect(result.current.selectedProject?.path).toBe("/project"));
+    expect(result.current.selectedProject?.name).toBe("project");
+    expect(result.current.hidden).toBe(false);
+  });
+
   it("affiche le dossier de session après un Switcher", async () => {
     vi.mocked(invoke)
       .mockResolvedValueOnce(session(project.id, project.path))

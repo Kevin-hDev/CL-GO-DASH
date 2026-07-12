@@ -61,6 +61,13 @@ async fn create_rebuilds_only_empty_path_and_switch_updates_session() {
     assert_eq!(switched, root.path().canonicalize().unwrap().to_string_lossy());
     let saved = super::session_store::get(&session.id).await.expect("saved");
     assert_eq!(saved.working_dir, switched);
-    assert_eq!(saved.project_id, None);
+    let project_id = saved.project_id.expect("switched project id");
+    let switched_project = super::project_store::list()
+        .await
+        .expect("projects")
+        .into_iter()
+        .find(|project| project.id == project_id)
+        .expect("registered parent project");
+    assert_eq!(switched_project.path, switched);
     super::session_store::delete_one(&session.id).await.expect("cleanup");
 }

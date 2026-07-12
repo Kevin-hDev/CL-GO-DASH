@@ -56,17 +56,26 @@ pub async fn update_reasoning(
 }
 
 pub async fn update_working_dir(id: &str, dir: &str) -> Result<(), String> {
-    update_working_dir_inner(id, dir, false, || async {}).await
+    update_working_dir_inner(id, dir, ProjectAssignment::Preserve, || async {}).await
 }
 
-pub async fn switch_working_dir(id: &str, dir: &str) -> Result<(), String> {
-    update_working_dir_inner(id, dir, true, || async {}).await
+pub async fn switch_working_dir_to_project(
+    id: &str,
+    dir: &str,
+    project_id: &str,
+) -> Result<(), String> {
+    update_working_dir_inner(id, dir, ProjectAssignment::Set(project_id), || async {}).await
+}
+
+enum ProjectAssignment<'a> {
+    Preserve,
+    Set(&'a str),
 }
 
 async fn update_working_dir_inner<F, Fut>(
     id: &str,
     dir: &str,
-    clear_project: bool,
+    project: ProjectAssignment<'_>,
     after_load: F,
 ) -> Result<(), String>
 where
@@ -86,8 +95,9 @@ where
     let mut session = get(id).await?;
     after_load().await;
     session.working_dir = canonical.to_string_lossy().to_string();
-    if clear_project {
-        session.project_id = None;
+    match project {
+        ProjectAssignment::Preserve => {}
+        ProjectAssignment::Set(project_id) => session.project_id = Some(project_id.to_string()),
     }
     save(&session).await
 }
@@ -102,5 +112,5 @@ where
     F: FnOnce() -> Fut,
     Fut: std::future::Future<Output = ()>,
 {
-    update_working_dir_inner(id, dir, false, after_load).await
+    update_working_dir_inner(id, dir, ProjectAssignment::Preserve, after_load).await
 }
