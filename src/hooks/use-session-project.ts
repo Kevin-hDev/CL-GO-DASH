@@ -2,6 +2,20 @@ import { useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { open as openFileDialog } from "@tauri-apps/plugin-dialog";
 import type { AgentSession, Project } from "@/types/agent";
+import { AGENT_SESSIONS_CHANGED } from "./agent-session-events";
+
+const SESSION_DIRECTORY_ID = "session-working-directory";
+
+function sessionDirectory(path: string): Project {
+  const parts = path.split(/[\\/]/).filter(Boolean);
+  return {
+    id: SESSION_DIRECTORY_ID,
+    name: parts[parts.length - 1] ?? path,
+    path,
+    order: 0,
+    created_at: "",
+  };
+}
 
 export function useSessionProject(
   sessionId: string,
@@ -10,28 +24,35 @@ export function useSessionProject(
   hasMessages: boolean,
 ) {
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [workingDir, setWorkingDir] = useState("");
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    let cancelled = false;
-    queueMicrotask(() => {
-      if (cancelled) return;
-      setLoading(true);
-      invoke<AgentSession>("get_agent_session", { id: sessionId })
-        .then((s) => {
-          if (!cancelled) setSelectedProjectId(s.project_id ?? null);
-        })
-        .catch((e) => console.warn("Session project load:", e))
-        .finally(() => {
-          if (!cancelled) setLoading(false);
-        });
-    });
-    return () => { cancelled = true; };
+  const reload = useCallback(async () => {
+    setLoading(true);
+    try {
+      const session = await invoke<AgentSession>("get_agent_session", { id: sessionId });
+      setSelectedProjectId(session.project_id ?? null);
+      setWorkingDir(session.working_dir ?? "");
+    } catch {
+      setSelectedProjectId(null);
+      setWorkingDir("");
+    } finally {
+      setLoading(false);
+    }
   }, [sessionId]);
 
-  const selectedProject = projects.find((p) => p.id === selectedProjectId);
-  const locked = hasMessages && !!selectedProjectId;
-  const hidden = loading || (hasMessages && !selectedProjectId);
+  useEffect(() => {
+    queueMicrotask(() => void reload());
+    const refresh = () => void reload();
+    window.addEventListener(AGENT_SESSIONS_CHANGED, refresh);
+    return () => window.removeEventListener(AGENT_SESSIONS_CHANGED, refresh);
+  }, [reload]);
+
+  const savedProject = projects.find((project) => project.id === selectedProjectId);
+  const selectedProject = savedProject
+    ?? (!selectedProjectId && workingDir ? sessionDirectory(workingDir) : undefined);
+  const locked = hasMessages && !!selectedProject;
+  const hidden = loading || (hasMessages && !selectedProject);
 
   const handleAddProject = useCallback(async () => {
     const result = await openFileDialog({ directory: true });
@@ -45,6 +66,7 @@ export function useSessionProject(
     selectedProjectId,
     setSelectedProjectId,
     selectedProject,
+    workingDir,
     locked,
     hidden,
     handleAddProject,

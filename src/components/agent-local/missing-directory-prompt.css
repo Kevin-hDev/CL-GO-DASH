@@ -9,7 +9,9 @@
   left: 0;
   z-index: 55;
   display: grid;
-  width: min(520px, calc(100vw - 32px));
+  width: fit-content;
+  min-width: min(280px, calc(100vw - 32px));
+  max-width: min(420px, calc(100vw - 32px));
   gap: var(--space-sm);
   padding: var(--space-md);
   color: var(--ink);
@@ -17,7 +19,11 @@
   border: 1px solid var(--edge);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-card);
+  backdrop-filter: var(--popover-backdrop-filter, none);
+  -webkit-backdrop-filter: var(--popover-backdrop-filter, none);
 }
+
+[data-theme="dark"] .mdp-root { border-color: transparent; }
 
 .mdp-copy {
   display: grid;

@@ -31,6 +31,7 @@ async fn create_rebuilds_only_empty_path_and_switch_updates_session() {
     let mut session = super::session_store::create_full("Recover", "model", "provider", false, None)
         .await
         .expect("session");
+    session.project_id = Some("deleted-project".into());
     session.working_dir = missing.to_string_lossy().to_string();
     super::session_store::save(&session).await.expect("save");
 
@@ -60,5 +61,6 @@ async fn create_rebuilds_only_empty_path_and_switch_updates_session() {
     assert_eq!(switched, root.path().canonicalize().unwrap().to_string_lossy());
     let saved = super::session_store::get(&session.id).await.expect("saved");
     assert_eq!(saved.working_dir, switched);
+    assert_eq!(saved.project_id, None);
     super::session_store::delete_one(&session.id).await.expect("cleanup");
 }

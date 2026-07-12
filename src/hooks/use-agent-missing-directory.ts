@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { showToast } from "@/lib/toast-emitter";
 import i18n from "@/i18n";
+import { notifyAgentSessionsChanged } from "./agent-session-events";
 
 export interface MissingSessionDirectory {
   missing_path: string;
@@ -14,9 +15,12 @@ type MissingDirectoryAction = "switch" | "create";
 export function useAgentMissingDirectory(sessionId: string | null) {
   const [missingDirectory, setMissingDirectory] = useState<MissingSessionDirectory | null>(null);
   const [resolving, setResolving] = useState(false);
-  const pendingRef = useRef<(() => Promise<void>) | null>(null);
+  const pendingRef = useRef<((workingDir?: string) => Promise<void>) | null>(null);
 
-  const runOrDefer = useCallback(async (workingDir: string | undefined, run: () => Promise<void>) => {
+  const runOrDefer = useCallback(async (
+    workingDir: string | undefined,
+    run: (resolvedWorkingDir?: string) => Promise<void>,
+  ) => {
     if (!sessionId || pendingRef.current) return;
     let result: PrepareResult;
     try {
@@ -36,14 +40,14 @@ export function useAgentMissingDirectory(sessionId: string | null) {
       });
       return;
     }
-    await run();
+    await run(workingDir);
   }, [sessionId]);
 
   const resolve = useCallback(async (action: MissingDirectoryAction) => {
     if (!sessionId || !missingDirectory || resolving) return;
     setResolving(true);
     try {
-      await invoke("resolve_missing_session_directory", {
+      const resolvedWorkingDir = await invoke<string>("resolve_missing_session_directory", {
         id: sessionId,
         missingPath: missingDirectory.missing_path,
         action,
@@ -51,7 +55,8 @@ export function useAgentMissingDirectory(sessionId: string | null) {
       const pending = pendingRef.current;
       pendingRef.current = null;
       setMissingDirectory(null);
-      if (pending) await pending();
+      notifyAgentSessionsChanged();
+      if (pending) await pending(resolvedWorkingDir);
     } catch {
       showToast(i18n.t("missingDirectory.error"), "error");
     } finally {

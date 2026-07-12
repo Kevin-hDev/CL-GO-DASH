@@ -7,7 +7,10 @@ interface Params {
   messages: AgentMessage[];
   permissionModeRef: RefObject<string | undefined>;
   savingRef: RefObject<boolean>;
-  runOrDefer: (workingDir: string | undefined, run: () => Promise<void>) => Promise<void>;
+  runOrDefer: (
+    workingDir: string | undefined,
+    run: (resolvedWorkingDir?: string) => Promise<void>,
+  ) => Promise<void>;
   doStream: Parameters<typeof persistAgentMessage>[0]["doStream"];
 }
 
@@ -36,6 +39,9 @@ export function useAgentMessageSend(params: Params) {
   ) => {
     if (!text.trim() && !sentFiles?.length && !skills?.length) return;
     const payload = { text, sentFiles, workingDir, projectId, skills };
-    await runOrDefer(workingDir, () => persist(payload));
+    await runOrDefer(workingDir, (resolvedWorkingDir) => persist({
+      ...payload,
+      workingDir: resolvedWorkingDir ?? workingDir,
+    }));
   }, [persist, runOrDefer]);
 }

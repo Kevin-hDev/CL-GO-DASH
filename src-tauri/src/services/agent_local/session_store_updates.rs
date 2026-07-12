@@ -56,12 +56,17 @@ pub async fn update_reasoning(
 }
 
 pub async fn update_working_dir(id: &str, dir: &str) -> Result<(), String> {
-    update_working_dir_inner(id, dir, || async {}).await
+    update_working_dir_inner(id, dir, false, || async {}).await
+}
+
+pub async fn switch_working_dir(id: &str, dir: &str) -> Result<(), String> {
+    update_working_dir_inner(id, dir, true, || async {}).await
 }
 
 async fn update_working_dir_inner<F, Fut>(
     id: &str,
     dir: &str,
+    clear_project: bool,
     after_load: F,
 ) -> Result<(), String>
 where
@@ -81,6 +86,9 @@ where
     let mut session = get(id).await?;
     after_load().await;
     session.working_dir = canonical.to_string_lossy().to_string();
+    if clear_project {
+        session.project_id = None;
+    }
     save(&session).await
 }
 
@@ -94,5 +102,5 @@ where
     F: FnOnce() -> Fut,
     Fut: std::future::Future<Output = ()>,
 {
-    update_working_dir_inner(id, dir, after_load).await
+    update_working_dir_inner(id, dir, false, after_load).await
 }

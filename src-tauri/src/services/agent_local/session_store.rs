@@ -186,7 +186,9 @@ pub async fn restore(id: &str) -> Result<(), String> {
 
 pub use super::session_archive::list_archived;
 pub use super::session_ops::{clear_project_id, export_markdown, truncate_and_replace};
-pub use super::session_store_updates::{update_model, update_reasoning, update_working_dir};
+pub use super::session_store_updates::{
+    switch_working_dir, update_model, update_reasoning, update_working_dir,
+};
 
 #[path = "session_store_tests.rs"]
 #[cfg(test)]
