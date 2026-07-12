@@ -136,6 +136,11 @@ mod subagent_redeploy_atomic_tests;
 mod subagent_delegate_prompt_tests;
 pub mod subagent_live_state;
 pub mod subagent_orchestration;
+pub(crate) mod parent_message_inbox;
+#[cfg(test)]
+mod parent_message_inbox_tests;
+#[cfg(test)]
+mod parent_message_wakeup_tests;
 #[cfg(test)]
 mod subagent_event_wait_tests;
 #[cfg(test)]

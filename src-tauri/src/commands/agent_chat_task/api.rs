@@ -89,6 +89,7 @@ pub(crate) async fn run(
         working_dir,
         params.session_id.clone(),
         params.request_id.clone(),
+        params.parent_message_inbox.clone(),
         params.cancel,
         ctx.native,
         ctx.configured,

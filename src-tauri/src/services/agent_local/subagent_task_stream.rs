@@ -75,6 +75,7 @@ pub(super) async fn run_inner(
         reasoning_mode: runtime_context.reasoning_mode,
         permission_mode_override: Some(runtime_context.permission_mode),
         permission_emitter: Some(permission_emitter),
+        parent_message_inbox: None,
         subagent_profile: Some(profile),
         plan_mode: Some(false),
         cancel: cancel.clone(),

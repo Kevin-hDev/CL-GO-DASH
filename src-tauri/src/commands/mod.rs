@@ -1,4 +1,6 @@
 pub mod agent_chat;
+pub mod agent_chat_cancel;
+pub mod agent_chat_queue;
 #[cfg(test)]
 mod agent_chat_stream_replacement_tests;
 pub(crate) mod agent_chat_streams;
@@ -72,6 +74,8 @@ pub(crate) mod subagents_validation;
 pub mod terminal;
 
 pub use agent_chat::*;
+pub use agent_chat_cancel::*;
+pub use agent_chat_queue::*;
 pub use agent_clone::*;
 pub use agent_md::*;
 pub use agent_ollama::*;

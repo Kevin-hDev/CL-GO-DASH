@@ -2,22 +2,33 @@ use super::stream_events::AgentEventEmitter;
 use super::types_ollama::ChatMessage;
 use super::types_stream::{StreamEvent, StreamResult};
 use std::collections::BTreeSet;
+use std::sync::Arc;
 use tokio_util::sync::CancellationToken;
 
 pub struct ParentSubagentOrchestrator {
     parent_session_id: String,
     reports_injected_since_last_request: bool,
     report_delivery: super::subagent_report_delivery::SubagentReportDelivery,
+    parent_message_inbox: Option<Arc<super::parent_message_inbox::ParentMessageInbox>>,
 }
 
 impl ParentSubagentOrchestrator {
+    #[cfg(test)]
     pub async fn new(parent_session_id: &str) -> Self {
+        Self::with_parent_inbox(parent_session_id, None).await
+    }
+
+    pub async fn with_parent_inbox(
+        parent_session_id: &str,
+        parent_message_inbox: Option<Arc<super::parent_message_inbox::ParentMessageInbox>>,
+    ) -> Self {
         Self {
             parent_session_id: parent_session_id.to_string(),
             reports_injected_since_last_request: false,
             report_delivery: super::subagent_report_delivery::SubagentReportDelivery::new(
                 parent_session_id,
             ),
+            parent_message_inbox,
         }
     }
 
@@ -88,7 +99,8 @@ impl ParentSubagentOrchestrator {
             self.ensure_no_followup_at_turn_limit().await?;
             return Ok(false);
         }
-        let should_continue = super::subagent_instruction_delivery::drain(
+        let should_continue = self.drain_parent_messages(messages).await > 0
+            || super::subagent_instruction_delivery::drain(
             &self.parent_session_id,
             messages,
         )
@@ -102,6 +114,9 @@ impl ParentSubagentOrchestrator {
     }
 
     pub async fn ensure_no_followup_at_turn_limit(&mut self) -> Result<(), String> {
+        if let Some(inbox) = &self.parent_message_inbox {
+            inbox.close().await;
+        }
         super::subagent_turn_limit::ensure(&self.parent_session_id, &mut self.report_delivery).await
     }
 
@@ -111,70 +126,36 @@ impl ParentSubagentOrchestrator {
         messages: &mut Vec<ChatMessage>,
         cancel: CancellationToken,
     ) -> Result<(), String> {
+        if self.drain_parent_messages(messages).await > 0 {
+            return Ok(());
+        }
         if control_only {
             let _ = self.after_no_tool_turn(messages, cancel).await?;
         }
         Ok(())
     }
 
-    pub async fn after_no_tool_turn(
-        &mut self,
-        messages: &mut Vec<ChatMessage>,
-        cancel: CancellationToken,
-    ) -> Result<bool, String> {
-        loop {
-            if cancel.is_cancelled() {
-                return Err("Annulé".to_string());
-            }
-            let mut terminal_signal =
-                super::subagent_registry::subscribe_for_parent(&self.parent_session_id).await;
-            self.report_delivery.refresh_terminal_signal().await;
-            if self.report_delivery.persistence_failed() {
-                return Err(super::subagent_completion::SUBAGENT_COMPLETION_ERROR.to_string());
-            }
-            if self.inject_pending_reports(messages).await {
-                self.reports_injected_since_last_request = true;
-                return Ok(true);
-            }
-            let snapshot = super::subagent_registry::parent_snapshot(&self.parent_session_id).await;
-            let active_ids = snapshot.active_child_ids;
-            if active_ids.is_empty() {
-                if snapshot
-                    .terminal_state
-                    .is_some_and(|state| state.report_persistence_failed)
-                {
-                    return Err(super::subagent_completion::SUBAGENT_COMPLETION_ERROR.to_string());
-                }
-                if snapshot
-                    .terminal_state
-                    .is_some_and(|state| state.sequence > 0)
-                {
-                    if self.inject_pending_reports(messages).await {
-                        self.reports_injected_since_last_request = true;
-                        return Ok(true);
-                    }
-                    return Err(super::subagent_completion::SUBAGENT_COMPLETION_ERROR.to_string());
-                }
-                return Ok(false);
-            }
-            let signal = terminal_signal
-                .as_mut()
-                .ok_or_else(|| super::subagent_completion::SUBAGENT_COMPLETION_ERROR.to_string())?;
-            tokio::select! {
-                _ = cancel.cancelled() => return Err("Annulé".to_string()),
-                changed = signal.changed() => {
-                    changed.map_err(|_| {
-                        super::subagent_completion::SUBAGENT_COMPLETION_ERROR.to_string()
-                    })?;
-                }
-            }
-        }
-    }
-
     async fn current_turn_active_ids(&self) -> Vec<String> {
         current_turn_active_ids(&self.parent_session_id).await
     }
+
+    async fn drain_parent_messages(&self, messages: &mut Vec<ChatMessage>) -> usize {
+        match &self.parent_message_inbox {
+            Some(inbox) => inbox.drain_into(messages).await,
+            None => 0,
+        }
+    }
+
+    async fn finish_parent_messages(&self, messages: &mut Vec<ChatMessage>) -> bool {
+        match &self.parent_message_inbox {
+            Some(inbox) => inbox.finish_or_drain(messages).await,
+            None => false,
+        }
+    }
 }
+
+#[path = "subagent_orchestration_wait.rs"]
+mod wait;
 
 async fn current_turn_active_ids(parent_session_id: &str) -> Vec<String> {
     super::subagent_registry::active_children_for_parent(parent_session_id).await

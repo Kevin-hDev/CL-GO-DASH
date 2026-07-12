@@ -16,6 +16,14 @@ fn chat_stream_uses_the_tested_replacement_path() {
     );
 }
 
+#[test]
+fn active_user_message_uses_the_current_stream_inbox() {
+    let backend = include_str!("agent_chat_queue.rs");
+
+    assert!(backend.contains("pub async fn queue_agent_message"));
+    assert!(backend.contains("inbox.enqueue"));
+}
+
 #[tokio::test]
 async fn later_start_wins_while_previous_cancellation_is_suspended() {
     let streams = Arc::new(ActiveStreams(Mutex::new(HashMap::new())));
@@ -25,7 +33,7 @@ async fn later_start_wins_while_previous_cancellation_is_suspended() {
     let child_cancel = CancellationToken::new();
     streams.0.lock().await.insert(
         session_id.clone(),
-        (old_owner.clone(), 0, "request-old".to_string()),
+        (old_owner.clone(), 0, "request-old".to_string(), inbox()),
     );
     subagent_registry::register_execution_for_parent_stream(
         &session_id,
@@ -51,7 +59,8 @@ async fn later_start_wins_while_previous_cancellation_is_suspended() {
                 &session_id,
                 first_cancel,
                 1,
-                move |(old_cancel, _, _)| async move {
+                inbox(),
+                move |(old_cancel, _, _, _)| async move {
                     let _ = at_boundary_tx.send(());
                     let _ = release_rx.await;
                     old_cancel.cancel();
@@ -70,7 +79,8 @@ async fn later_start_wins_while_previous_cancellation_is_suspended() {
         &session_id,
         second_cancel.clone(),
         2,
-        |(old_cancel, _, _)| async move { old_cancel.cancel() },
+        inbox(),
+        |(old_cancel, _, _, _)| async move { old_cancel.cancel() },
         || async { "request-b".to_string() },
     )
     .await
@@ -80,7 +90,7 @@ async fn later_start_wins_while_previous_cancellation_is_suspended() {
 
     let (tracked_count, tracked_generation, tracked_request) = {
         let map = streams.0.lock().await;
-        let (_, generation, request_id) = map.get(&session_id).expect("tracked winner");
+        let (_, generation, request_id, _) = map.get(&session_id).expect("tracked winner");
         (map.len(), *generation, request_id.clone())
     };
     second_cancel.cancel();
@@ -104,4 +114,8 @@ async fn later_start_wins_while_previous_cancellation_is_suspended() {
 
 fn id() -> String {
     uuid::Uuid::new_v4().to_string()
+}
+
+fn inbox() -> Arc<crate::services::agent_local::parent_message_inbox::ParentMessageInbox> {
+    Arc::new(crate::services::agent_local::parent_message_inbox::ParentMessageInbox::new())
 }

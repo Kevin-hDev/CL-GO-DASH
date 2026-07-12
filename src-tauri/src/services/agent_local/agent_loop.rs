@@ -18,6 +18,7 @@ pub async fn run_agent_loop(
     working_dir: PathBuf,
     session_id: String,
     request_id: String,
+    parent_message_inbox: Option<std::sync::Arc<super::parent_message_inbox::ParentMessageInbox>>,
     cancel: CancellationToken,
     native_context: u64,
     configured_context: u64,
@@ -31,7 +32,11 @@ pub async fn run_agent_loop(
     let write_guard_arc = write_guard_registry::lock(&session_id).await;
     let mut write_guard = write_guard_arc.lock().await;
     let mut plan_repairs = 0;
-    let mut subagents = subagent_orchestration::ParentSubagentOrchestrator::new(&session_id).await;
+    let mut subagents = subagent_orchestration::ParentSubagentOrchestrator::with_parent_inbox(
+        &session_id,
+        parent_message_inbox,
+    )
+    .await;
     let compression = LoopCompression {
         on_event,
         model,

@@ -23,9 +23,10 @@ use std::collections::HashMap;
 use tauri::Emitter;
 use tauri::Manager;
 use tokio::sync::Mutex;
-use tokio_util::sync::CancellationToken;
 
-pub struct ActiveStreams(pub Mutex<HashMap<String, (CancellationToken, u64, String)>>);
+pub struct ActiveStreams(
+    pub(crate) Mutex<HashMap<String, commands::agent_chat_streams::StreamEntry>>,
+);
 
 static STREAM_GENERATION: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
@@ -180,6 +181,7 @@ pub fn run() {
             commands::update_parameters,
             // Agent Local — Chat + Sessions
             commands::chat_stream,
+            commands::queue_agent_message,
             commands::estimate_context_hidden_usage,
             commands::cancel_agent_request,
             commands::list_agent_sessions,

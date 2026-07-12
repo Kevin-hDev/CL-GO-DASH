@@ -3,6 +3,7 @@ use super::agent_chat_task::{run_stream_task, StreamCapabilityHints, StreamTaskP
 use crate::services::agent_local::stream_events::{self, AgentEventEmitter};
 use crate::services::agent_local::types_ollama::{ChatMessage, StreamEvent};
 use crate::ActiveStreams;
+use std::sync::Arc;
 use tauri::Manager;
 use tokio_util::sync::CancellationToken;
 
@@ -32,6 +33,8 @@ pub async fn chat_stream(
         .await?,
     );
     let cancel = CancellationToken::new();
+    let parent_message_inbox =
+        Arc::new(crate::services::agent_local::parent_message_inbox::ParentMessageInbox::new());
     let generation = stream_events::next_generation();
     let cancelled_session_id = session_id.clone();
     let request_session_id = session_id.clone();
@@ -40,7 +43,9 @@ pub async fn chat_stream(
         &session_id,
         cancel.clone(),
         generation,
-        move |(old_token, _, old_request_id)| async move {
+        parent_message_inbox.clone(),
+        move |(old_token, _, old_request_id, old_inbox)| async move {
+            old_inbox.close().await;
             crate::services::agent_local::session_locks::cancel_with_lock(
                 &cancelled_session_id,
                 &old_token,
@@ -109,11 +114,13 @@ pub async fn chat_stream(
             reasoning_mode,
             permission_mode_override: permission_mode,
             permission_emitter: None,
+            parent_message_inbox: Some(parent_message_inbox.clone()),
             subagent_profile: None,
             plan_mode,
             cancel,
         })
         .await;
+        parent_message_inbox.close().await;
 
         // Cleanup : ne supprime que si NOTRE génération est encore active
         // (une nouvelle requête a pu remplacer notre entrée)
@@ -121,7 +128,7 @@ pub async fn chat_stream(
             let state = task_app.state::<ActiveStreams>();
             let mut map = state.0.lock().await;
             match map.get(&stream_session) {
-                Some((_, gen, _)) if *gen == generation => {
+                Some((_, gen, _, _)) if *gen == generation => {
                     map.remove(&stream_session);
                     true
                 }
@@ -156,45 +163,4 @@ pub async fn chat_stream(
     });
 
     Ok(generation)
-}
-
-#[tauri::command]
-pub async fn cancel_agent_request(
-    session_id: String,
-    generation: Option<u64>,
-    streams: tauri::State<'_, ActiveStreams>,
-) -> Result<(), String> {
-    let mut cancelled = false;
-    let mut map = streams.0.lock().await;
-    if let Some((token, gen, request_id)) = map.get(&session_id) {
-        if generation.is_none() || generation == Some(*gen) {
-            let token = token.clone();
-            let gen = *gen;
-            let request_id = request_id.clone();
-            map.remove(&session_id);
-            drop(map);
-            crate::services::agent_local::session_locks::cancel_with_lock(&session_id, &token)
-                .await;
-            crate::services::agent_local::stream_diagnostics::record_cancelled(
-                &session_id,
-                &request_id,
-            )
-            .await;
-            cancelled = true;
-            eprintln!("[cancel] session={session_id} gen={gen}");
-        }
-    }
-    if crate::services::agent_local::subagent_cancellation::cancel(&session_id)
-        .await
-        .unwrap_or(false)
-    {
-        cancelled = true;
-    }
-    if cancelled {
-        crate::services::agent_local::subagent_registry::cancel_stopped_parent_stream_children(
-            &session_id,
-        )
-        .await;
-    }
-    Ok(())
 }

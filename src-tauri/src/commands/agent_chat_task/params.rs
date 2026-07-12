@@ -23,6 +23,9 @@ pub(crate) struct StreamTaskParams {
     pub reasoning_mode: Option<String>,
     pub permission_mode_override: Option<String>,
     pub permission_emitter: Option<AgentEventEmitter>,
+    pub parent_message_inbox: Option<
+        std::sync::Arc<crate::services::agent_local::parent_message_inbox::ParentMessageInbox>,
+    >,
     pub subagent_profile:
         Option<crate::services::agent_local::subagent_tool_profile::SubagentToolProfile>,
     pub plan_mode: Option<bool>,

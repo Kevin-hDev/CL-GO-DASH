@@ -136,6 +136,7 @@ impl GatewayAgentBridge {
             reasoning_mode: None,
             permission_mode_override: Some("auto".to_string()),
             permission_emitter: None,
+            parent_message_inbox: None,
             subagent_profile: None,
             plan_mode: Some(false),
             cancel: CancellationToken::new(),

@@ -1,8 +1,14 @@
 use crate::ActiveStreams;
 use std::future::Future;
+use std::sync::Arc;
 use tokio_util::sync::CancellationToken;
 
-pub(crate) type StreamEntry = (CancellationToken, u64, String);
+pub(crate) type StreamEntry = (
+    CancellationToken,
+    u64,
+    String,
+    Arc<crate::services::agent_local::parent_message_inbox::ParentMessageInbox>,
+);
 
 const MAX_ACTIVE_STREAMS: usize = 32;
 
@@ -11,6 +17,7 @@ pub(crate) async fn replace_active_stream<Cancel, CancelFuture, Start, StartFutu
     session_id: &str,
     cancel: CancellationToken,
     generation: u64,
+    inbox: Arc<crate::services::agent_local::parent_message_inbox::ParentMessageInbox>,
     cancel_previous: Cancel,
     start_request: Start,
 ) -> Result<String, String>
@@ -34,7 +41,7 @@ where
         }
         let old_stream = map.insert(
             session_id.to_string(),
-            (cancel.clone(), generation, request_id.clone()),
+            (cancel.clone(), generation, request_id.clone(), inbox),
         );
         crate::services::agent_local::subagent_registry::adopt_children_for_parent_stream(
             session_id, &cancel,
@@ -47,7 +54,7 @@ where
     }
     let is_current = matches!(
         streams.0.lock().await.get(session_id),
-        Some((_, active_generation, _)) if *active_generation == generation
+        Some((_, active_generation, _, _)) if *active_generation == generation
     );
     if !is_current {
         cancel.cancel();
