@@ -37,7 +37,7 @@ pub async fn seed_pending(
         .await
         .map_err(|_| generic_error())?;
     if !fetched.success()
-        || !super::subagent_git_command::success(worktree, &["cherry-pick", &meta.commit]).await?
+        || !super::subagent_git_command::cherry_pick(worktree, &meta.commit).await?
     {
         let _ = super::subagent_git_command::success(worktree, &["cherry-pick", "--abort"]).await;
         return Err("Le changement précédent entre en conflit".into());
