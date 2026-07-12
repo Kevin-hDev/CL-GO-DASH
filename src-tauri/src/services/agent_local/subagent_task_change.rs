@@ -23,11 +23,28 @@ pub async fn capture(
     )))
 }
 
-pub async fn delete_empty_branch(project_path: &Path, execution_id: &str) {
-    let Ok(branch) = super::subagent_worktree::branch_for_execution(execution_id) else {
-        return;
-    };
-    let _ = super::subagent_git_command::delete_branch(project_path, &branch).await;
+pub async fn delete_empty_workspace(project_path: &Path, child_id: &str, execution_id: &str) {
+    if super::subagent_directory_workspace::is_git_repository(project_path).await {
+        let Ok(branch) = super::subagent_worktree::branch_for_execution(execution_id) else {
+            return;
+        };
+        let _ = super::subagent_git_command::delete_branch(project_path, &branch).await;
+    } else {
+        let _ = super::subagent_directory_workspace::remove_repository(child_id, execution_id).await;
+    }
+}
+
+pub async fn cleanup_execution(
+    project_path: &Path,
+    child_id: &str,
+    execution_id: &str,
+    worktree_path: Option<&str>,
+    retain_change: bool,
+) {
+    super::subagent_working_dir::cleanup_owned(child_id, execution_id, worktree_path).await;
+    if !retain_change {
+        delete_empty_workspace(project_path, child_id, execution_id).await;
+    }
 }
 
 pub async fn recover_and_remove_orphan(
@@ -41,15 +58,22 @@ pub async fn recover_and_remove_orphan(
     }
     let identity = super::subagent_worktree_identity::ManagedWorktreeIdentity::parse(worktree)?;
     identity.require_child(&session.id)?;
-    let project = super::project_store::list()
+    let saved_project = super::project_store::list()
         .await
         .unwrap_or_default()
         .into_iter()
         .find(|project| Some(project.id.as_str()) == session.project_id.as_deref());
-    let mut retain_branch = true;
-    if let Some(project) = project.as_ref() {
+    let project_path = saved_project
+        .map(|project| std::path::PathBuf::from(project.path))
+        .filter(|path| path.is_dir())
+        .or_else(|| {
+            let path = std::path::PathBuf::from(&session.working_dir);
+            path.is_dir().then_some(path)
+        });
+    let mut retain_branch = false;
+    if let Some(project) = project_path.as_deref() {
         retain_branch = capture(
-            Path::new(&project.path),
+            project,
             &session.id,
             &identity.execution_id,
             &identity.path,
@@ -61,8 +85,14 @@ pub async fn recover_and_remove_orphan(
     }
     super::subagent_worktree::remove_for_child(worktree, &session.id).await?;
     if !retain_branch {
-        if let Some(project) = project {
-            delete_empty_branch(Path::new(&project.path), &identity.execution_id).await;
+        if let Some(project) = project_path.as_deref() {
+            delete_empty_workspace(project, &session.id, &identity.execution_id).await;
+        } else {
+            let _ = super::subagent_directory_workspace::remove_repository(
+                &session.id,
+                &identity.execution_id,
+            )
+            .await;
         }
     }
     Ok(())

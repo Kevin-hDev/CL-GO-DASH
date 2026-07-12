@@ -60,9 +60,9 @@ pub async fn prepare_delegate(
             "Les sous-agents ne peuvent pas lancer d'autres sous-agents.",
         ));
     }
-    if subagent_type == "coder" && parent.project_id.is_none() {
+    if subagent_type == "coder" && !super::tool_delegate_child::has_coder_workspace(&parent) {
         return Err(ToolResult::err(
-            "Un sous-agent code doit être lancé depuis un projet.",
+            "Un sous-agent code doit être lancé depuis un dossier valide.",
         ));
     }
 

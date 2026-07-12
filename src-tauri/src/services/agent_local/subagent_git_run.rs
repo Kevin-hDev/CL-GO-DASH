@@ -55,6 +55,15 @@ pub async fn capture(
     execution_id: &str,
     worktree: &Path,
 ) -> Result<Option<SubagentChangeMeta>, String> {
+    if !super::subagent_directory_workspace::is_git_repository(project_path).await {
+        return super::subagent_directory_change::capture(
+            project_path,
+            child_id,
+            execution_id,
+            worktree,
+        )
+        .await;
+    }
     let _guard = super::subagent_git_lock::acquire(project_path).await?;
     super::types_subagent_change::validate_uuid(child_id)?;
     super::types_subagent_change::validate_uuid(execution_id)?;
@@ -132,6 +141,7 @@ pub async fn capture(
         commit,
         branch,
         target_branch,
+        workspace_kind: super::types_subagent_change::SubagentWorkspaceKind::Git,
         changed_paths: changed.0,
         paths_truncated: changed.1,
         status: SubagentChangeStatus::Pending,
@@ -143,10 +153,10 @@ pub async fn capture(
     Ok(Some(meta))
 }
 
-async fn changed_paths(worktree: &Path) -> Result<(Vec<SubagentChangedPath>, bool), String> {
+pub(super) async fn changed_paths(worktree: &Path) -> Result<(Vec<SubagentChangedPath>, bool), String> {
     let output = super::subagent_git_command::output(
         worktree,
-        &["diff", "--cached", "--name-status", "-z"],
+        &["diff", "--cached", "--name-status", "--no-renames", "-z"],
     )
     .await?;
     if !output.status.success() {

@@ -25,11 +25,9 @@ pub async fn recover_panicked_completion(
     let mut summary = SUBAGENT_PANIC_SUMMARY.to_string();
     let mut retain_branch = false;
     let project_path = if subagent_type == "coder" {
-        let project_id = super::session_store::get(child_session_id)
+        super::subagent_coder_project::for_child(child_session_id)
             .await
             .ok()
-            .and_then(|session| session.project_id);
-        Some(super::subagent_prompts::resolve_project_dir(project_id.as_deref()).await)
     } else {
         None
     };
@@ -65,7 +63,12 @@ pub async fn recover_panicked_completion(
     cleanup(child_session_id, execution_id, expected_worktree_path).await;
     if !retain_branch {
         if let Some(project) = project_path.as_deref() {
-            super::subagent_task_change::delete_empty_branch(project, execution_id).await;
+            super::subagent_task_change::delete_empty_workspace(
+                project,
+                child_session_id,
+                execution_id,
+            )
+            .await;
         }
     }
     !matches!(completion, Ok(None))

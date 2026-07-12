@@ -13,6 +13,14 @@ pub enum SubagentChangeStatus {
     Discarded,
 }
 
+#[derive(Debug, Default, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum SubagentWorkspaceKind {
+    #[default]
+    Git,
+    Directory,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct SubagentChangedPath {
     pub path: String,
@@ -28,6 +36,8 @@ pub struct SubagentChangeMeta {
     pub commit: String,
     pub branch: String,
     pub target_branch: String,
+    #[serde(default)]
+    pub workspace_kind: SubagentWorkspaceKind,
     pub changed_paths: Vec<SubagentChangedPath>,
     pub paths_truncated: bool,
     pub status: SubagentChangeStatus,

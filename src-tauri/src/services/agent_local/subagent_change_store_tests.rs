@@ -49,6 +49,7 @@ fn change(status: SubagentChangeStatus, age_minutes: i64) -> SubagentChangeMeta 
         commit: "b".repeat(40),
         branch: format!("cl-go/subagent/{}", uuid::Uuid::new_v4()),
         target_branch: "main".into(),
+        workspace_kind: super::types_subagent_change::SubagentWorkspaceKind::Git,
         changed_paths: Vec::new(),
         paths_truncated: false,
         status,

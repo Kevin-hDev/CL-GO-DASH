@@ -1,5 +1,7 @@
 pub mod subagent_working_dir;
 pub mod subagent_worktree;
+pub mod subagent_directory_workspace;
+pub mod subagent_coder_project;
 pub mod tool_bash;
 pub mod tool_bash_background;
 pub mod tool_bash_changes;

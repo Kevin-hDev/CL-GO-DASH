@@ -1,4 +1,6 @@
-use super::types_subagent_change::{SubagentChangeMeta, SubagentChangeStatus};
+use super::types_subagent_change::{
+    SubagentChangeMeta, SubagentChangeStatus, SubagentWorkspaceKind,
+};
 use chrono::Utc;
 use std::path::Path;
 
@@ -12,11 +14,18 @@ pub async fn inspect(
 ) -> Result<(SubagentChangeMeta, String, bool), String> {
     let meta = owned_change(parent_id, child_id, change_id).await?;
     validate_project(project_path, &meta).await?;
-    let patch = super::subagent_git_command::text(
-        project_path,
-        &["show", "--format=", "--binary", &meta.commit],
-    )
-    .await?;
+    let patch = match meta.workspace_kind {
+        SubagentWorkspaceKind::Git => {
+            super::subagent_git_command::text(
+                project_path,
+                &["show", "--format=", "--binary", &meta.commit],
+            )
+            .await?
+        }
+        SubagentWorkspaceKind::Directory => {
+            super::subagent_directory_change::patch(&meta).await?
+        }
+    };
     let truncated = patch.chars().count() > MAX_PATCH_CHARS;
     let patch = patch.chars().take(MAX_PATCH_CHARS).collect();
     Ok((meta, patch, truncated))
@@ -31,6 +40,9 @@ pub async fn apply(
     let _guard = super::subagent_git_lock::acquire(project_path).await?;
     let mut meta = owned_change(parent_id, child_id, change_id).await?;
     validate_project(project_path, &meta).await?;
+    if meta.workspace_kind == SubagentWorkspaceKind::Directory {
+        return super::subagent_directory_apply::apply(project_path, meta).await;
+    }
     if meta.status == SubagentChangeStatus::Applied {
         super::subagent_git_command::delete_branch(project_path, &meta.branch).await?;
         return Ok(meta);
@@ -76,6 +88,9 @@ pub async fn discard(
     let _guard = super::subagent_git_lock::acquire(project_path).await?;
     let mut meta = owned_change(parent_id, child_id, change_id).await?;
     validate_project(project_path, &meta).await?;
+    if meta.workspace_kind == SubagentWorkspaceKind::Directory {
+        return super::subagent_directory_apply::discard(meta).await;
+    }
     if meta.status == SubagentChangeStatus::Discarded {
         super::subagent_git_command::delete_branch(project_path, &meta.branch).await?;
         return Ok(meta);
@@ -117,7 +132,25 @@ async fn validate_project(project_path: &Path, meta: &SubagentChangeMeta) -> Res
     let child = super::session_store::get(&meta.child_session_id)
         .await
         .map_err(|_| "Projet sous-agent indisponible".to_string())?;
-    if child.project_id.as_deref() != Some(&meta.project_id) || !project_path.is_dir() {
+    if !project_path.is_dir() {
+        return Err("Projet sous-agent indisponible".into());
+    }
+    if meta.workspace_kind == SubagentWorkspaceKind::Git {
+        if child.project_id.as_deref() != Some(&meta.project_id) {
+            return Err("Projet sous-agent indisponible".into());
+        }
+        return Ok(());
+    }
+    let expected = std::path::Path::new(&child.working_dir)
+        .canonicalize()
+        .map_err(|_| "Projet sous-agent indisponible".to_string())?;
+    let actual = project_path
+        .canonicalize()
+        .map_err(|_| "Projet sous-agent indisponible".to_string())?;
+    let identity_matches = child.project_id.as_deref() == Some(&meta.project_id)
+        || child.project_id.is_none()
+            && meta.project_id == super::subagent_directory_change::DIRECTORY_PROJECT;
+    if !identity_matches || actual != expected {
         return Err("Projet sous-agent indisponible".into());
     }
     Ok(())

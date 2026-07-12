@@ -7,6 +7,11 @@ pub(super) enum DelegatePromptPersistence {
     Queued,
 }
 
+pub(super) fn has_coder_workspace(parent: &AgentSession) -> bool {
+    parent.project_id.is_some()
+        || !parent.working_dir.is_empty() && std::path::Path::new(&parent.working_dir).is_dir()
+}
+
 impl DelegatePromptPersistence {
     pub(super) fn initial_prompt(&self) -> Option<&str> {
         match self {
@@ -154,6 +159,7 @@ pub(super) async fn create_child(
     child.subagent_color_key = Some(color_key.to_string());
     child.thinking_enabled = parent.thinking_enabled;
     child.reasoning_mode = parent.reasoning_mode.clone();
+    child.working_dir = parent.working_dir.clone();
     session_store::save(&child)
         .await
         .map_err(|_| ToolResult::err("Erreur interne lors de la création du sous-agent"))?;
@@ -168,5 +174,6 @@ pub(super) async fn inherit_parent_context(
     child.provider = parent.provider.clone();
     child.thinking_enabled = parent.thinking_enabled;
     child.reasoning_mode = parent.reasoning_mode.clone();
+    child.working_dir = parent.working_dir.clone();
     session_store::save(child).await
 }

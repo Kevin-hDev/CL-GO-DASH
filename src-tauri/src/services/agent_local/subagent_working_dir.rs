@@ -3,6 +3,7 @@ use std::path::{Path, PathBuf};
 
 pub struct PreparedWorkingDir {
     path: PathBuf,
+    project_path: PathBuf,
     worktree_path: Option<String>,
 }
 
@@ -14,6 +15,10 @@ impl PreparedWorkingDir {
     pub fn worktree_path(&self) -> Option<&str> {
         self.worktree_path.as_deref()
     }
+
+    pub fn project_path(&self) -> &Path {
+        &self.project_path
+    }
 }
 
 pub async fn resolve(
@@ -23,14 +28,16 @@ pub async fn resolve(
     run_id: &str,
     execution_id: &str,
 ) -> Result<PreparedWorkingDir, String> {
-    if !is_explorer && project_id.is_none() {
-        return Err("Un sous-agent code doit être lancé depuis un projet.".to_string());
-    }
-    let base = super::subagent_prompts::resolve_project_dir(project_id).await;
-    if !is_explorer && project_id.is_some() && base != dirs::home_dir().unwrap_or_default() {
+    let base = if is_explorer {
+        super::subagent_prompts::resolve_project_dir(project_id).await
+    } else {
+        super::subagent_coder_project::resolve(project_id, child_session_id).await?
+    };
+    if !is_explorer {
         return create_coder_worktree(&base, child_session_id, run_id, execution_id).await;
     }
     Ok(PreparedWorkingDir {
+        project_path: base.clone(),
         path: base,
         worktree_path: None,
     })
@@ -48,48 +55,72 @@ async fn create_coder_worktree(
         return Err("Préparation du worktree isolé impossible".to_string());
     }
     let _git_guard = super::subagent_git_lock::acquire(base).await?;
-    let worktree = super::subagent_worktree::create_for_execution(
-        base,
-        child_session_id,
-        execution_id,
-    )
-    .await?;
+    let git_repository = super::subagent_directory_workspace::is_git_repository(base).await;
+    let worktree = if git_repository {
+        super::subagent_worktree::create_for_execution(base, child_session_id, execution_id).await?
+    } else {
+        super::subagent_directory_workspace::create(base, child_session_id, execution_id).await?
+    };
     let path = worktree.to_string_lossy().to_string();
-    if super::subagent_git_run::seed_pending_locked(base, child_session_id, execution_id, &worktree)
+    let seeded = if git_repository {
+        super::subagent_git_run::seed_pending_locked(
+            base,
+            child_session_id,
+            execution_id,
+            &worktree,
+        )
         .await
-        .is_err()
-    {
-        cleanup_failed(base, &path, child_session_id, execution_id).await;
+    } else {
+        super::subagent_directory_replay::seed_pending(
+            child_session_id,
+            execution_id,
+            &worktree,
+        )
+        .await
+    };
+    if seeded.is_err() {
+        cleanup_failed(base, &path, child_session_id, execution_id, git_repository).await;
         return Err("Préparation du worktree isolé impossible".to_string());
     }
     let mut session = match session_store::get(child_session_id).await {
         Ok(session) => session,
         Err(_) => {
-            cleanup_failed(base, &path, child_session_id, execution_id).await;
+            cleanup_failed(base, &path, child_session_id, execution_id, git_repository).await;
             return Err("Préparation du worktree isolé impossible".to_string());
         }
     };
     let owns_execution = session.subagent_run_id.as_deref() == Some(run_id)
         && super::subagent_registry::owns_execution(child_session_id, run_id, execution_id).await;
     if !owns_execution {
-        cleanup_failed(base, &path, child_session_id, execution_id).await;
+        cleanup_failed(base, &path, child_session_id, execution_id, git_repository).await;
         return Err("Préparation du worktree isolé impossible".to_string());
     }
     session.subagent_worktree = Some(path.clone());
     if session_store::save(&session).await.is_err() {
-        cleanup_failed(base, &path, child_session_id, execution_id).await;
+        cleanup_failed(base, &path, child_session_id, execution_id, git_repository).await;
         return Err("Préparation du worktree isolé impossible".to_string());
     }
     Ok(PreparedWorkingDir {
+        project_path: base.to_path_buf(),
         path: worktree,
         worktree_path: Some(path),
     })
 }
 
-async fn cleanup_failed(base: &Path, path: &str, child_id: &str, execution_id: &str) {
+async fn cleanup_failed(
+    base: &Path,
+    path: &str,
+    child_id: &str,
+    execution_id: &str,
+    git_repository: bool,
+) {
     let _ = super::subagent_worktree::remove_owned(path, child_id, execution_id).await;
-    if let Ok(branch) = super::subagent_worktree::branch_for_execution(execution_id) {
-        let _ = super::subagent_git_command::delete_branch(base, &branch).await;
+    if git_repository {
+        if let Ok(branch) = super::subagent_worktree::branch_for_execution(execution_id) {
+            let _ = super::subagent_git_command::delete_branch(base, &branch).await;
+        }
+    } else {
+        let _ = super::subagent_directory_workspace::remove_repository(child_id, execution_id).await;
     }
 }
 

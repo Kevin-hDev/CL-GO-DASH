@@ -51,7 +51,7 @@ pub async fn run(
         }
     };
     let working_dir = prepared.path().to_string_lossy().to_string();
-    let project_path = super::subagent_prompts::resolve_project_dir(project_id.as_deref()).await;
+    let project_path = prepared.project_path().to_path_buf();
     let mut retain_branch = false;
     let mut prior_messages = None;
     loop {
@@ -184,15 +184,13 @@ pub async fn run(
         break;
     }
 
-    super::subagent_working_dir::cleanup_owned(
+    super::subagent_task_change::cleanup_execution(
+        &project_path,
         &child_session_id,
         &execution_id,
         prepared.worktree_path(),
-    )
-    .await;
-    if !is_explorer && !retain_branch {
-        super::subagent_task_change::delete_empty_branch(&project_path, &execution_id).await;
-    }
+        is_explorer || retain_branch,
+    ).await;
     session_store::remove_session_lock(&child_session_id).await;
 }
 

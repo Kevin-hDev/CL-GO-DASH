@@ -57,6 +57,11 @@ mod subagent_git_lock;
 #[cfg(test)]
 mod subagent_git_lock_tests;
 mod subagent_git_run;
+mod subagent_directory_change;
+mod subagent_directory_apply;
+mod subagent_directory_replay;
+mod subagent_directory_limits;
+mod subagent_directory_transaction;
 mod subagent_task_change;
 mod subagent_task_failure;
 mod types_subagent_change;
@@ -65,6 +70,12 @@ mod tool_subagent_changes;
 mod subagent_git_lifecycle_tests;
 #[cfg(test)]
 mod subagent_git_hook_tests;
+#[cfg(test)]
+mod subagent_directory_workspace_tests;
+#[cfg(test)]
+mod subagent_directory_conflict_tests;
+#[cfg(test)]
+mod subagent_directory_recovery_tests;
 mod tool_delegate_spawned;
 #[cfg(test)]
 mod subagent_tool_profile_tests;
