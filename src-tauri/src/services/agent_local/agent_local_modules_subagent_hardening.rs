@@ -46,6 +46,8 @@ mod subagent_runtime_context;
 mod subagent_change_store;
 #[cfg(test)]
 mod subagent_change_permission_tests;
+#[cfg(test)]
+mod subagent_change_store_tests;
 mod subagent_git_actions;
 mod subagent_git_command;
 mod subagent_git_run;
