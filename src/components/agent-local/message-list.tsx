@@ -90,6 +90,7 @@ export function MessageList({
               tps={isLast ? tps : 0}
               totalElapsedMs={isLast ? totalElapsedMs : 0}
               workDurationMs={msg.work_duration_ms}
+              liveCheckpoint={isStreaming && msg.is_stream_checkpoint === true}
             />
           );
         }
@@ -133,11 +134,13 @@ export function MessageList({
 export const SegmentedAssistantMessage = memo(function SegmentedAssistantMessage({
   msg, onReload, onClone, onFilePreview, onFileReview, tps, totalElapsedMs, workDurationMs,
   projectPath, knownSubagents = [], onOpenSubagent,
+  liveCheckpoint = false,
 }: {
   msg: AgentMessage; onReload?: (id: string) => void; onFilePreview?: (path: string) => void;
   onClone?: (id: string) => void; onFileReview?: (operation: FileOperation) => void; tps: number; totalElapsedMs: number;
   workDurationMs?: number; projectPath?: string; knownSubagents?: SubagentInfo[];
   onOpenSubagent?: (sessionId: string) => void;
+  liveCheckpoint?: boolean;
 }) {
   const fileChanges = collectMessageFileOperations(msg, projectPath);
   const messageSubagents = collectMessageSubagents(msg, knownSubagents);
@@ -152,6 +155,7 @@ export const SegmentedAssistantMessage = memo(function SegmentedAssistantMessage
           totalElapsedMs={workDurationMs ?? totalElapsedMs}
           onFilePreview={onFilePreview}
           projectPath={projectPath}
+          liveCheckpoint={liveCheckpoint}
           onClone={() => onClone?.(msg.id)}
         />
         <SubagentBubble subagents={messageSubagents} onOpen={(id) => onOpenSubagent?.(id)} />

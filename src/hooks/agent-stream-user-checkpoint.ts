@@ -13,7 +13,6 @@ export function checkpointQueuedUserMessages(
     ? [assistantMessage, ...state.queuedUserMessages]
     : [...state.queuedUserMessages];
   const messages = trimMessages([...state.messages, ...persisted]);
-  const now = Date.now();
   return {
     state: {
       ...state,
@@ -25,9 +24,8 @@ export function checkpointQueuedUserMessages(
       currentThinking: "",
       currentTools: [],
       activeStreamItem: null,
-      liveTokenCount: 0,
-      streamStartedAt: now,
-      segmentStartedAt: now,
+      streamStartedAt: state.streamStartedAt,
+      segmentStartedAt: Date.now(),
       sessionTokenCount: estimateAgentMessagesTokens(messages),
       sessionTokenCountEstimated: true,
       lastRequestTokens: assistantMessage?.tokens ?? 0,
@@ -58,6 +56,7 @@ function buildAssistant(segments: StreamSegment[], state: ManagedStreamState): A
     thinking: built.thinking, tool_activities: built.toolRecords,
     segments: built.segments, files: [], timestamp: new Date().toISOString(),
     work_duration_ms: elapsed > 0 ? elapsed : undefined, tokens: 0,
+    is_stream_checkpoint: true,
   };
   message.tokens = estimateAgentMessagesTokens([message]);
   return message;

@@ -12,6 +12,8 @@ export interface AgentMessage {
   skill_names?: string[];
   tokens?: number;
   work_duration_ms?: number;
+  /** Marqueur frontend temporaire : ce bloc appartient encore au stream actif. */
+  is_stream_checkpoint?: boolean;
 }
 
 export interface SavedSegment {
