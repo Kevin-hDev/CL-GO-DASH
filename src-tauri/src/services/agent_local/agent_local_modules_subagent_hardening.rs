@@ -41,6 +41,9 @@ mod agent_send_preflight_tests;
 mod session_permission_state_tests;
 pub(crate) mod subagent_tool_profile;
 mod subagent_explorer_bash;
+mod subagent_explorer_bash_options;
+#[cfg(test)]
+mod subagent_explorer_bash_flags_tests;
 mod subagent_prompt_sections;
 mod subagent_runtime_context;
 mod subagent_change_store;

@@ -74,9 +74,11 @@ fn validate_tokens(tokens: &[String], working_dir: &Path) -> Result<(), String> 
     };
     match program {
         "pwd" if tokens.len() == 1 => Ok(()),
-        "ls" => validate_paths(&tokens[1..], working_dir),
+        "ls" => validate_command_paths("ls", &tokens[1..], working_dir),
         "tree" => validate_tree(&tokens[1..], working_dir),
-        "file" | "stat" | "wc" | "du" | "df" => validate_paths(&tokens[1..], working_dir),
+        "file" | "stat" | "wc" | "du" | "df" => {
+            validate_command_paths(program, &tokens[1..], working_dir)
+        }
         "git" => validate_git(&tokens[1..], working_dir),
         _ => Err("Commande d'exploration refusée.".to_string()),
     }
@@ -90,7 +92,19 @@ fn validate_tree(args: &[String], working_dir: &Path) -> Result<(), String> {
     if !(1..=8).contains(&depth) {
         return Err("Profondeur invalide.".to_string());
     }
+    if args[2..].iter().any(|arg| arg.starts_with('-')) {
+        return Err("Option tree refusée.".to_string());
+    }
     validate_paths(&args[2..], working_dir)
+}
+
+fn validate_command_paths(
+    program: &str,
+    args: &[String],
+    working_dir: &Path,
+) -> Result<(), String> {
+    super::subagent_explorer_bash_options::validate(program, args)?;
+    validate_paths(args, working_dir)
 }
 
 fn validate_paths(args: &[String], working_dir: &Path) -> Result<(), String> {
@@ -109,6 +123,7 @@ fn validate_git(args: &[String], working_dir: &Path) -> Result<(), String> {
     };
     match subcommand {
         "status" | "diff" | "log" | "show" | "rev-parse" | "ls-files" => {
+            super::subagent_explorer_bash_options::validate_git(subcommand, &args[1..])?;
             validate_paths(&args[1..], working_dir)
         }
         "remote" if args.get(1).map(String::as_str) == Some("-v") && args.len() == 2 => Ok(()),
