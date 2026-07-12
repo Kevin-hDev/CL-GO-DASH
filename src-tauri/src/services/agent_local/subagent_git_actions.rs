@@ -62,7 +62,7 @@ pub async fn apply(
         return Err("Branche cible incompatible".into());
     }
     let head = super::subagent_git_command::text(project_path, &["rev-parse", "HEAD"]).await?;
-    if !super::subagent_git_command::success(project_path, &["cherry-pick", &meta.commit]).await? {
+    if !super::subagent_git_command::cherry_pick(project_path, &meta.commit).await? {
         let aborted = super::subagent_git_command::success(project_path, &["cherry-pick", "--abort"]).await?;
         let restored = super::subagent_git_command::text(project_path, &["rev-parse", "HEAD"]).await? == head
             && status_snapshot(project_path, &[]).await? == status_before;

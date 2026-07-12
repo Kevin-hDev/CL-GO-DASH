@@ -32,7 +32,7 @@ pub async fn seed_pending_locked(
         return Err("Branche cible incompatible".into());
     }
     let base = super::subagent_git_command::text(project_path, &["rev-parse", "HEAD"]).await?;
-    if !super::subagent_git_command::success(worktree, &["cherry-pick", &meta.commit]).await? {
+    if !super::subagent_git_command::cherry_pick(worktree, &meta.commit).await? {
         let _ = super::subagent_git_command::success(worktree, &["cherry-pick", "--abort"]).await;
         return Err("Le changement précédent entre en conflit".into());
     }

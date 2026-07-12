@@ -26,6 +26,25 @@ pub async fn success(repo: &Path, args: &[&str]) -> Result<bool, String> {
     Ok(output(repo, args).await?.status.success())
 }
 
+pub async fn cherry_pick(repo: &Path, commit: &str) -> Result<bool, String> {
+    let result = Command::new("git")
+        .args(["-C"])
+        .arg(repo)
+        .args([
+            "-c",
+            "user.name=CL-GO",
+            "-c",
+            "user.email=cl-go@local",
+            "cherry-pick",
+        ])
+        .arg(commit)
+        .kill_on_drop(true)
+        .output()
+        .await
+        .map_err(|_| "Git indisponible".to_string())?;
+    Ok(result.status.success())
+}
+
 pub async fn delete_branch(repo: &Path, branch: &str) -> Result<(), String> {
     let reference = format!("refs/heads/{branch}");
     if !success(repo, &["show-ref", "--verify", "--quiet", &reference]).await? {

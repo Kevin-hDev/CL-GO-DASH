@@ -154,12 +154,14 @@ mod tests {
     }
 
     #[test]
-    fn read_path_allows_home_subpath() {
-        if let Some(home) = dirs::home_dir() {
-            let target = home.join(".local/share/cl-go-dash/test.json");
-            let working = std::env::temp_dir();
-            assert!(validate_read_path(&target, &working).is_ok());
-        }
+    fn read_path_allows_nested_app_data_subpath() {
+        let nested = crate::services::paths::data_dir()
+            .join(format!("security-test-{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&nested).expect("create nested app data directory");
+        let target = nested.join("test.json");
+        let working = std::env::temp_dir();
+        assert!(validate_read_path(&target, &working).is_ok());
+        std::fs::remove_dir(nested).expect("remove nested app data directory");
     }
 
     // --- implicit paths always allowed ---
