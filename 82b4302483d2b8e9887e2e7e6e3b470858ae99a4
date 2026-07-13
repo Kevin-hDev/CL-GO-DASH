@@ -1,0 +1,5 @@
+Relecture contradictoire du rapport du 13 juillet 2026 :
+
+- H-1 : constat partiel. Le flux LLM n'utilisait pas secure_http et lisait les erreurs sans borne, ce qui devait être corrigé. En revanche, le scénario de fuite cross-origin était incorrect : reqwest 0.13 retire Authorization lorsque le domaine ou le port change. Le flux refuse désormais toute redirection et borne les erreurs dans 9485c21d.
+- H-4 : vrai positif. Les formats AIza et webhook Slack manquaient au filtre commun ; correction dans ef10d184.
+- M-1 : le même scénario de fuite par redirection est surévalué pour Forecast : Nixtla utilise une URL HTTPS fixe, Chronos est local, et reqwest retire les credentials sur changement d'origine. La migration centralisée reste un durcissement souhaitable, pas la fuite MEDIUM décrite.
