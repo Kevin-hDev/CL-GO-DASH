@@ -4,4 +4,6 @@ Relecture contradictoire du rapport du 13 juillet 2026 :
 - H-2 : faux positif. register_attachment_paths vérifie scope.is_allowed sur le chemin brut ou canonique avant tout allow_file ; un appel arbitraire avec /etc/passwd ou une clé SSH est refusé s'il n'a pas déjà été choisi ou déposé via Tauri.
 - M-4 : non retenu. Le plan exigeait une preuve HMAC persistante liée au chemin canonique pour restaurer les anciennes sessions. Un TTL ou un lien à une session aurait contredit cette persistance et n'était pas dans la spécification.
 
-Complément après durcissement :\n\n- M-5 : durcissement appliqué dans 808f5b88. Le chemin d'origine est contrôlé avec symlink_metadata et un lien symbolique est refusé avant canonicalisation. Le risque initial restait limité par le périmètre Tauri, mais cette barrière supplémentaire est cohérente avec le modèle fail closed.
+Complément après durcissement :
+
+- M-5 : durcissement appliqué dans 808f5b88. Le chemin d'origine est contrôlé avec symlink_metadata et un lien symbolique est refusé avant canonicalisation. Le risque initial restait limité par le périmètre Tauri, mais cette barrière supplémentaire est cohérente avec le modèle fail closed.
