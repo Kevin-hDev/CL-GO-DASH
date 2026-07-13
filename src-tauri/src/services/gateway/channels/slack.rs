@@ -23,6 +23,7 @@ pub struct SlackAdapter {
 pub(super) struct SlackState {
     pub(super) app_token: Option<Zeroizing<String>>,
     pub(super) bot_token: Option<Zeroizing<String>>,
+    pub(super) bot_user_id: String,
 }
 
 impl SlackAdapter {
@@ -35,6 +36,7 @@ impl SlackAdapter {
             state: Arc::new(RwLock::new(SlackState {
                 app_token: None,
                 bot_token: None,
+                bot_user_id: String::new(),
             })),
         }
     }
@@ -70,6 +72,8 @@ impl ChannelAdapter for SlackAdapter {
         let client = self.client.clone();
         let cancel = ctx.cancel;
         let key = ctx.key;
+        let require_mention = ctx.config.require_mention;
+        let bot_user_id = self.state.read().await.bot_user_id.clone();
 
         Ok(tokio::spawn(async move {
             loop {
@@ -113,7 +117,12 @@ impl ChannelAdapter for SlackAdapter {
                             }
                             if let Some(payload) = &sm.payload {
                                 if let Some(evt) = &payload.event {
-                                    if let Some(inbound) = Self::to_inbound(evt, &key) {
+                                    if let Some(inbound) = Self::to_inbound(
+                                        evt,
+                                        &key,
+                                        require_mention,
+                                        &bot_user_id,
+                                    ) {
                                         let _ = sender.send(inbound).await;
                                     }
                                 }
@@ -132,10 +141,7 @@ impl ChannelAdapter for SlackAdapter {
                 .clone()
                 .ok_or_else(|| GatewayError::auth("pas de token bot"))?
         };
-        let body = serde_json::json!({
-            "channel": msg.chat_id,
-            "text": msg.content,
-        });
+        let body = Self::post_body(&msg);
         let resp: SlackPostResponse = self
             .client
             .post("https://slack.com/api/chat.postMessage")
@@ -143,15 +149,15 @@ impl ChannelAdapter for SlackAdapter {
             .json(&body)
             .send()
             .await
-            .map_err(|e| GatewayError::network(format!("send: {e}")))?
+            .map_err(|_| GatewayError::network("envoi Slack impossible"))?
             .json()
             .await
-            .map_err(|e| GatewayError::network(format!("parse: {e}")))?;
+            .map_err(|_| GatewayError::network("réponse Slack invalide"))?;
 
         if resp.ok && resp.ts.is_some() {
             Ok(())
         } else {
-            Err(GatewayError::network(resp.error.unwrap_or_default()))
+            Err(GatewayError::network("envoi Slack refusé"))
         }
     }
 }

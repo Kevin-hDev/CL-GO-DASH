@@ -1,6 +1,8 @@
+mod bounded_vec;
 pub mod capabilities;
 pub mod discord;
 pub mod discord_gateway;
+mod discord_http;
 mod discord_support;
 pub mod discord_types;
 pub mod slack;

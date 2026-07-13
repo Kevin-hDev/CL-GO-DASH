@@ -19,12 +19,12 @@ impl TelegramAdapter {
             .get(url.as_str())
             .send()
             .await
-            .map_err(|e| GatewayError::network(format!("getMe: {e}")))?
+            .map_err(|_| GatewayError::network("connexion Telegram impossible"))?
             .json()
             .await
-            .map_err(|e| GatewayError::network(format!("getMe parse: {e}")))?;
+            .map_err(|_| GatewayError::network("réponse Telegram invalide"))?;
         if !resp.ok {
-            return Err(GatewayError::auth(resp.error_message()));
+            return Err(GatewayError::auth("identifiants Telegram refusés"));
         }
         let bot_user = resp
             .result
@@ -49,25 +49,25 @@ impl TelegramAdapter {
         };
         let resp = client
             .get(url.as_str())
-            .query(&[("offset", offset + 1), ("timeout", 30)])
+            .query(&[("offset", offset + 1), ("timeout", 30), ("limit", 100)])
             .send()
             .await
-            .map_err(|e| GatewayError::network(format!("polling: {e}")))?;
+            .map_err(|_| GatewayError::network("réception Telegram impossible"))?;
         let status = resp.status().as_u16();
         if status == 401 || status == 403 {
             return Err(GatewayError::auth("token Telegram invalide"));
         }
         if status == 409 {
-            return Err(GatewayError::network("conflit 409 - un autre poller actif"));
+            return Err(GatewayError::network("réception Telegram indisponible"));
         }
-        let body: TgResponse<Vec<TgUpdate>> = resp
+        let body: TgResponse<TgUpdates> = resp
             .json()
             .await
-            .map_err(|e| GatewayError::network(format!("parse: {e}")))?;
+            .map_err(|_| GatewayError::network("réponse Telegram invalide"))?;
         if !body.ok {
-            return Err(GatewayError::network(body.error_message()));
+            return Err(GatewayError::network("réponse Telegram refusée"));
         }
-        let updates = body.result.unwrap_or_default();
+        let updates = body.result.map(TgUpdates::into_inner).unwrap_or_default();
         if let Some(last) = updates.last() {
             state.write().await.last_offset = last.update_id;
         }
@@ -92,9 +92,24 @@ impl TelegramAdapter {
             content: text.clone(),
             message_id: msg.message_id.to_string(),
             chat_id: msg.chat.id.to_string(),
-            thread_id: None,
+            thread_id: msg.message_thread_id.map(|id| id.to_string()),
             is_group: msg.chat.is_group(),
             mentions_bot: msg.has_bot_mention(bot_username),
         })
     }
+
+    pub(super) fn send_body(msg: &super::OutboundMessage) -> serde_json::Value {
+        let mut body = serde_json::json!({ "chat_id": msg.chat_id, "text": msg.content });
+        if let Some(thread_id) = &msg.thread_id {
+            body["message_thread_id"] = serde_json::Value::String(thread_id.clone());
+        }
+        if let Some(reply_to) = &msg.reply_to {
+            body["reply_to_message_id"] = serde_json::Value::String(reply_to.clone());
+        }
+        body
+    }
 }
+
+#[cfg(test)]
+#[path = "telegram_support_tests.rs"]
+mod tests;

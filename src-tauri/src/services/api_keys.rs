@@ -18,49 +18,7 @@ struct VaultState {
 static STATE: std::sync::LazyLock<Mutex<Option<VaultState>>> =
     std::sync::LazyLock::new(|| Mutex::new(None));
 
-fn registry_path() -> std::path::PathBuf {
-    crate::services::paths::data_dir().join("configured-providers.json")
-}
-
-fn read_registry() -> Vec<String> {
-    let path = registry_path();
-    let content = match std::fs::read_to_string(&path) {
-        Ok(c) => c,
-        Err(_) => return Vec::new(),
-    };
-    serde_json::from_str(&content).unwrap_or_default()
-}
-
-fn write_registry(ids: &[String]) -> Result<(), String> {
-    let path = registry_path();
-    if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent).map_err(|_| "erreur de stockage".to_string())?;
-    }
-    let json = serde_json::to_string_pretty(ids).map_err(|e| format!("json: {e}"))?;
-    let tmp = path.with_extension("tmp");
-    std::fs::write(&tmp, &json).map_err(|_| "erreur écriture registre".to_string())?;
-    std::fs::rename(&tmp, &path).map_err(|_| "erreur mise à jour registre".to_string())?;
-    Ok(())
-}
-
-fn add_to_registry(provider_id: &str) -> Result<(), String> {
-    let mut ids = read_registry();
-    if !ids.iter().any(|id| id == provider_id) {
-        ids.push(provider_id.to_string());
-        write_registry(&ids)?;
-    }
-    Ok(())
-}
-
-fn remove_from_registry(provider_id: &str) -> Result<(), String> {
-    let mut ids = read_registry();
-    let before = ids.len();
-    ids.retain(|id| id != provider_id);
-    if ids.len() != before {
-        write_registry(&ids)?;
-    }
-    Ok(())
-}
+include!("api_keys_registry.rs");
 
 struct ZeroizingMap(HashMap<String, String>);
 
@@ -172,88 +130,7 @@ pub fn delete_key(provider_id: &str) -> Result<(), String> {
     remove_from_registry(provider_id)
 }
 
-pub fn set_key_raw(key_id: &str, value: &str) -> Result<(), String> {
-    if key_id.is_empty() || key_id.len() > 128 {
-        return Err("identifiant invalide".to_string());
-    }
-    if value.is_empty() || value.len() > 256 {
-        return Err("valeur invalide".to_string());
-    }
-    let mut state = STATE.lock().map_err(|e| format!("lock: {e}"))?;
-    let s = state.as_mut().ok_or("vault not initialized")?;
-    if !s.keys.contains_key(key_id) && s.keys.len() >= MAX_VAULT_ENTRIES {
-        return Err("limite d'entrées vault atteinte".to_string());
-    }
-    s.keys
-        .insert(key_id.to_string(), Zeroizing::new(value.to_string()));
-    flush_vault(s)
-}
-
-pub fn delete_key_raw(key_id: &str) -> Result<(), String> {
-    if key_id.is_empty() || key_id.len() > 128 {
-        return Err("identifiant invalide".to_string());
-    }
-    let mut state = STATE.lock().map_err(|e| format!("lock: {e}"))?;
-    let s = state.as_mut().ok_or("vault not initialized")?;
-    s.keys.remove(key_id);
-    flush_vault(s)
-}
-
-pub fn has_key(provider_id: &str) -> bool {
-    let state = STATE.lock().ok();
-    state
-        .as_ref()
-        .and_then(|s| s.as_ref())
-        .map(|s| s.keys.contains_key(provider_id))
-        .unwrap_or(false)
-}
-
-pub fn list_configured() -> Vec<String> {
-    read_registry()
-}
-
-const MAX_RAW_VALUE_LEN: usize = 8192;
-const MAX_VAULT_ENTRIES: usize = 500;
-
-const RAW_PREFIX: &str = "raw:";
-
-pub fn set_raw(key: &str, value: &str) -> Result<(), String> {
-    if key.is_empty() || key.len() > 64 {
-        return Err("clé vault invalide".to_string());
-    }
-    if value.len() > MAX_RAW_VALUE_LEN {
-        return Err("valeur vault trop longue".to_string());
-    }
-    let prefixed = format!("{RAW_PREFIX}{key}");
-    let mut state = STATE.lock().map_err(|e| format!("lock: {e}"))?;
-    let s = state.as_mut().ok_or("vault not initialized")?;
-    if !s.keys.contains_key(&prefixed) && s.keys.len() >= MAX_VAULT_ENTRIES {
-        return Err("limite d'entrées vault atteinte".to_string());
-    }
-    s.keys.insert(prefixed, Zeroizing::new(value.to_string()));
-    flush_vault(s)
-}
-
-pub fn get_raw(key: &str) -> Result<Zeroizing<String>, String> {
-    let prefixed = format!("{RAW_PREFIX}{key}");
-    let state = STATE.lock().map_err(|e| format!("lock: {e}"))?;
-    let s = state.as_ref().ok_or("vault not initialized")?;
-    s.keys
-        .get(&prefixed)
-        .cloned()
-        .ok_or_else(|| "clé non trouvée".to_string())
-}
-
-pub fn delete_raw(key: &str) -> Result<(), String> {
-    if key.is_empty() || key.len() > 64 {
-        return Err("clé vault invalide".to_string());
-    }
-    let prefixed = format!("{RAW_PREFIX}{key}");
-    let mut state = STATE.lock().map_err(|e| format!("lock: {e}"))?;
-    let s = state.as_mut().ok_or("vault not initialized")?;
-    s.keys.remove(&prefixed);
-    flush_vault(s)
-}
+include!("api_keys_raw.rs");
 
 pub async fn test_key(provider_id: &str) -> Result<(), String> {
     if crate::services::llm::catalog::find(provider_id).is_some() {

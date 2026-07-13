@@ -1,11 +1,14 @@
 use serde::Deserialize;
 
+use super::bounded_vec::BoundedVec;
+
+const MAX_TELEGRAM_ENTITIES: usize = 100;
+const MAX_TELEGRAM_UPDATES: usize = 100;
+
 #[derive(Debug, Deserialize)]
 pub struct TgResponse<T> {
     pub ok: bool,
     pub result: Option<T>,
-    pub description: Option<String>,
-    pub error_code: Option<u16>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -17,10 +20,12 @@ pub struct TgUpdate {
 #[derive(Debug, Deserialize)]
 pub struct TgMessage {
     pub message_id: i64,
+    #[serde(default)]
+    pub message_thread_id: Option<i64>,
     pub from: Option<TgUser>,
     pub chat: TgChat,
     pub text: Option<String>,
-    pub entities: Option<Vec<TgEntity>>,
+    pub entities: Option<BoundedVec<TgEntity, MAX_TELEGRAM_ENTITIES>>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -47,17 +52,7 @@ pub struct TgEntity {
 #[derive(Debug, Deserialize)]
 pub struct TgSentMessage {}
 
-impl<T> TgResponse<T> {
-    pub fn error_message(self) -> String {
-        let description = self
-            .description
-            .unwrap_or_else(|| "réponse Telegram invalide".into());
-        match self.error_code {
-            Some(code) => format!("{description} ({code})"),
-            None => description,
-        }
-    }
-}
+pub type TgUpdates = BoundedVec<TgUpdate, MAX_TELEGRAM_UPDATES>;
 
 impl TgChat {
     pub fn is_group(&self) -> bool {
@@ -74,9 +69,7 @@ impl TgMessage {
         let lower_bot = bot_username.to_lowercase();
         for e in entities {
             if e.entity_type == "mention" {
-                let start = e.offset as usize;
-                let end = start + e.length as usize;
-                if let Some(mention) = text.get(start..end) {
+                if let Some(mention) = utf16_slice(text, e.offset, e.length) {
                     let clean = mention.trim_start_matches('@').to_lowercase();
                     if clean == lower_bot {
                         return true;
@@ -88,47 +81,31 @@ impl TgMessage {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn group_detection() {
-        let chat = TgChat {
-            id: 1,
-            chat_type: "group".into(),
-        };
-        assert!(chat.is_group());
-        let dm = TgChat {
-            id: 2,
-            chat_type: "private".into(),
-        };
-        assert!(!dm.is_group());
-        let super_g = TgChat {
-            id: 3,
-            chat_type: "supergroup".into(),
-        };
-        assert!(super_g.is_group());
+fn utf16_slice(text: &str, offset: u32, length: u32) -> Option<&str> {
+    let start_units = usize::try_from(offset).ok()?;
+    let end_units = start_units.checked_add(usize::try_from(length).ok()?)?;
+    let mut units = 0usize;
+    let mut start = None;
+    let mut end = None;
+    for (index, ch) in text.char_indices() {
+        if units == start_units {
+            start = Some(index);
+        }
+        if units == end_units {
+            end = Some(index);
+            break;
+        }
+        units = units.checked_add(ch.len_utf16())?;
     }
-
-    #[test]
-    fn bot_mention_detection() {
-        let msg = TgMessage {
-            message_id: 1,
-            from: None,
-            chat: TgChat {
-                id: 1,
-                chat_type: "group".into(),
-            },
-            text: Some("@MyBot hello".into()),
-            entities: Some(vec![TgEntity {
-                entity_type: "mention".into(),
-                offset: 0,
-                length: 6,
-            }]),
-        };
-        assert!(msg.has_bot_mention("MyBot"));
-        assert!(msg.has_bot_mention("mybot"));
-        assert!(!msg.has_bot_mention("OtherBot"));
+    if start.is_none() && units == start_units {
+        start = Some(text.len());
     }
+    if end.is_none() && units == end_units {
+        end = Some(text.len());
+    }
+    text.get(start?..end?)
 }
+
+#[cfg(test)]
+#[path = "telegram_types_tests.rs"]
+mod tests;

@@ -34,14 +34,18 @@ pub struct SlackAck {
 pub struct SlackSocketUrl {
     pub ok: bool,
     pub url: Option<String>,
-    pub error: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct SlackPostResponse {
     pub ok: bool,
     pub ts: Option<String>,
-    pub error: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct SlackAuthResponse {
+    pub ok: bool,
+    pub user_id: Option<String>,
 }
 
 impl SlackEvent {

@@ -103,10 +103,7 @@ impl ChannelAdapter for TelegramAdapter {
             .ok_or_else(|| GatewayError::auth("pas de token"))?;
         let url = Self::api_url(token, "sendMessage");
 
-        let mut body = serde_json::json!({ "chat_id": msg.chat_id, "text": msg.content });
-        if let Some(r) = &msg.reply_to {
-            body["reply_to_message_id"] = serde_json::Value::String(r.clone());
-        }
+        let body = Self::send_body(&msg);
 
         let resp: TgResponse<TgSentMessage> = self
             .client
@@ -114,15 +111,15 @@ impl ChannelAdapter for TelegramAdapter {
             .json(&body)
             .send()
             .await
-            .map_err(|e| GatewayError::network(format!("send: {e}")))?
+            .map_err(|_| GatewayError::network("envoi Telegram impossible"))?
             .json()
             .await
-            .map_err(|e| GatewayError::network(format!("parse: {e}")))?;
+            .map_err(|_| GatewayError::network("réponse Telegram invalide"))?;
 
         if resp.ok && resp.result.is_some() {
             Ok(())
         } else {
-            Err(GatewayError::network(resp.error_message()))
+            Err(GatewayError::network("envoi Telegram refusé"))
         }
     }
 }

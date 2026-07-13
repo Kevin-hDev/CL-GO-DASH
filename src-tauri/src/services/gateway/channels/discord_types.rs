@@ -69,7 +69,9 @@ pub struct MessageReference {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct SentMessage {}
+pub struct SentMessage {
+    pub id: String,
+}
 
 #[derive(Debug, Deserialize)]
 pub struct GatewayHello {

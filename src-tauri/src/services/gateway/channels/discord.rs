@@ -8,7 +8,7 @@ use tokio::sync::{mpsc, Mutex, RwLock};
 use tokio_tungstenite::tungstenite::Message as WsMessage;
 use zeroize::{Zeroize, Zeroizing};
 
-use super::discord_gateway::{build_identify, heartbeat_loop};
+use super::discord_gateway::{build_identify, heartbeat_loop, HeartbeatSequence};
 use super::discord_types::*;
 use super::{
     capabilities::ChannelCapabilities, ChannelAdapter, ChannelContext, GatewayError, GatewayResult,
@@ -89,7 +89,7 @@ impl ChannelAdapter for DiscordAdapter {
                 };
                 let (sink, mut stream) = ws.split();
                 let shared_sink = Arc::new(Mutex::new(sink));
-                let mut seq: Option<u64> = None;
+                let sequence = HeartbeatSequence::new();
 
                 while let Some(Ok(WsMessage::Text(txt))) = stream.next().await {
                     if cancel.is_cancelled() {
@@ -99,7 +99,7 @@ impl ChannelAdapter for DiscordAdapter {
                         continue;
                     };
                     if let Some(s) = payload.s {
-                        seq = Some(s);
+                        sequence.update(s).await;
                     }
                     match payload.op {
                         10 => {
@@ -111,7 +111,7 @@ impl ChannelAdapter for DiscordAdapter {
                                         shared_sink.clone(),
                                         cancel.clone(),
                                         interval,
-                                        seq,
+                                        sequence.clone(),
                                     ));
                                 }
                             }
@@ -156,33 +156,6 @@ impl ChannelAdapter for DiscordAdapter {
     }
 
     async fn send(&self, msg: OutboundMessage) -> GatewayResult<()> {
-        let token = {
-            let s = self.state.read().await;
-            s.bot_token
-                .clone()
-                .ok_or_else(|| GatewayError::auth("pas de token"))?
-        };
-        let url = format!(
-            "https://discord.com/api/v10/channels/{}/messages",
-            msg.chat_id
-        );
-        let body = SendMessage {
-            content: msg.content,
-            allowed_mentions: AllowedMentions { parse: vec![] },
-            message_reference: msg.reply_to.map(|id| MessageReference { message_id: id }),
-        };
-        let auth = Zeroizing::new(format!("Bot {}", token.as_str()));
-        let _resp: SentMessage = self
-            .client
-            .post(&url)
-            .header("Authorization", auth.as_str())
-            .json(&body)
-            .send()
-            .await
-            .map_err(|e| GatewayError::network(format!("send: {e}")))?
-            .json()
-            .await
-            .map_err(|e| GatewayError::network(format!("parse: {e}")))?;
-        Ok(())
+        self.send_message(msg).await
     }
 }

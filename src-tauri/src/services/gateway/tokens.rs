@@ -3,6 +3,8 @@ use zeroize::Zeroize;
 use crate::services::api_keys;
 use crate::services::gateway::security::{ids, secrets};
 
+include!("tokens_account.rs");
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum GatewayTokenKind {
     Default,
@@ -40,38 +42,6 @@ pub fn vault_key(
         "gateway.{channel_id}.{account_id}{}",
         kind.suffix()
     ))
-}
-
-pub fn set(
-    channel_id: &str,
-    account_id: &str,
-    token_kind: &str,
-    mut token: String,
-) -> Result<(), String> {
-    let kind = match GatewayTokenKind::parse(channel_id, token_kind) {
-        Ok(kind) => kind,
-        Err(err) => {
-            token.zeroize();
-            return Err(err);
-        }
-    };
-    if token.is_empty() || token.len() > 8192 {
-        token.zeroize();
-        return Err("token invalide".to_string());
-    }
-    let key = match vault_key(channel_id, account_id, kind) {
-        Ok(key) => key,
-        Err(err) => {
-            token.zeroize();
-            return Err(err);
-        }
-    };
-    let result = match api_keys::get_raw(&key) {
-        Ok(existing) if secrets::constant_time_eq(existing.as_bytes(), token.as_bytes()) => Ok(()),
-        _ => api_keys::set_raw(&key, &token),
-    };
-    token.zeroize();
-    result
 }
 
 pub fn has(channel_id: &str, account_id: &str, token_kind: &str) -> Result<bool, String> {
@@ -158,3 +128,7 @@ mod tests {
         assert!(vault_key("telegram", "../secret", GatewayTokenKind::Default).is_err());
     }
 }
+
+#[cfg(test)]
+#[path = "tokens_account_tests.rs"]
+mod account_tests;

@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { invoke } from "@tauri-apps/api/core";
 import { X } from "@/components/ui/icons";
-import type { ChannelType, GatewayTokenKind } from "@/types/channels";
+import type { ChannelType } from "@/types/channels";
+import { configureGatewayAccountTokens } from "./channels-config-api";
 
 interface ChannelsConfigDialogProps {
   channelId: ChannelType;
@@ -26,16 +26,27 @@ export function ChannelsConfigDialog({ channelId, onClose, onSaved }: ChannelsCo
   const [submitting, setSubmitting] = useState(false);
   const isSlack = channelId === "slack";
 
+  const clearSecrets = useCallback(() => {
+    setToken("");
+    setBotToken("");
+    setAppToken("");
+  }, []);
+
+  const handleClose = useCallback(() => {
+    clearSecrets();
+    onClose();
+  }, [clearSecrets, onClose]);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key.startsWith("Esc")) {
         e.preventDefault();
-        onClose();
+        handleClose();
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  }, [handleClose]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,24 +54,14 @@ export function ChannelsConfigDialog({ channelId, onClose, onSaved }: ChannelsCo
     setSubmitting(true);
     setTestState({ kind: "testing" });
     try {
-      if (isSlack) {
-        await setGatewayToken(channelId, accountId, "bot", botToken);
-        await setGatewayToken(channelId, accountId, "app", appToken);
-      } else {
-        await setGatewayToken(channelId, accountId, "default", token);
-      }
-      const verified = isSlack
-        ? await hasGatewayToken(channelId, accountId, "bot") && await hasGatewayToken(channelId, accountId, "app")
-        : await hasGatewayToken(channelId, accountId, "default");
-      if (!verified) {
-        setTestState({ kind: "error", message: t("channels.detail.testFailed") });
-        return;
-      }
+      const credentials = isSlack ? { botToken, appToken } : { token };
+      await configureGatewayAccountTokens(channelId, accountId, credentials);
       setTestState({ kind: "ok" });
       setTimeout(() => onSaved(accountId.trim()), 500);
     } catch {
       setTestState({ kind: "error", message: t("channels.detail.testFailed") });
     } finally {
+      clearSecrets();
       setSubmitting(false);
     }
   };
@@ -69,11 +70,11 @@ export function ChannelsConfigDialog({ channelId, onClose, onSaved }: ChannelsCo
   const canSubmit = Boolean(accountId.trim() && tokensReady(isSlack, token, botToken, appToken));
 
   return (
-    <div className="wk-dialog-overlay" role="presentation" onClick={onClose} onKeyDown={() => {}}>
+    <div className="wk-dialog-overlay" role="presentation" onClick={handleClose} onKeyDown={() => {}}>
       <div className="wk-dialog" role="presentation" onClick={(e) => e.stopPropagation()} onKeyDown={() => {}}>
         <header className="wk-dialog-header">
           <span>{t("channels.config.addTitle", { name: channelName })}</span>
-          <button type="button" className="wk-dialog-close" onClick={onClose}>
+          <button type="button" className="wk-dialog-close" onClick={handleClose}>
             <X size="var(--icon-md)" />
           </button>
         </header>
@@ -145,7 +146,7 @@ export function ChannelsConfigDialog({ channelId, onClose, onSaved }: ChannelsCo
           )}
 
           <footer className="wk-dialog-footer">
-            <button type="button" className="wk-btn-secondary" onClick={onClose} disabled={submitting}>
+            <button type="button" className="wk-btn-secondary" onClick={handleClose} disabled={submitting}>
               {t("channels.detail.cancel")}
             </button>
             <button
@@ -164,30 +165,4 @@ export function ChannelsConfigDialog({ channelId, onClose, onSaved }: ChannelsCo
 
 function tokensReady(isSlack: boolean, token: string, botToken: string, appToken: string): boolean {
   return isSlack ? Boolean(botToken.trim() && appToken.trim()) : Boolean(token.trim());
-}
-
-async function setGatewayToken(
-  channelId: ChannelType,
-  accountId: string,
-  tokenKind: GatewayTokenKind,
-  token: string,
-) {
-  await invoke("gateway_set_token", {
-    channelId,
-    accountId: accountId.trim(),
-    tokenKind,
-    token: token.trim(),
-  });
-}
-
-async function hasGatewayToken(
-  channelId: ChannelType,
-  accountId: string,
-  tokenKind: GatewayTokenKind,
-): Promise<boolean> {
-  return invoke<boolean>("gateway_has_token", {
-    channelId,
-    accountId: accountId.trim(),
-    tokenKind,
-  });
 }

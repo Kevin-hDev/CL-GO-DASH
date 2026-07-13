@@ -1,6 +1,8 @@
 use crate::models::GatewayConfig;
 use crate::services::gateway::service::GatewayService;
+use crate::services::gateway::token_probe::{self, ProbeEndpoints};
 use crate::services::gateway::tokens;
+use crate::services::gateway::tokens::AccountTokens;
 use crate::services::gateway::types::{ChannelStatus, GatewayHealth};
 use tauri::Emitter;
 
@@ -10,6 +12,15 @@ fn ensure_startable(config: &GatewayConfig) -> Result<(), String> {
     } else {
         Err("Gateway désactivé".to_string())
     }
+}
+
+async fn commit_after_validation<V, F>(validation: V, store: F) -> Result<(), String>
+where
+    V: std::future::Future<Output = Result<(), String>>,
+    F: FnOnce() -> Result<(), String>,
+{
+    validation.await?;
+    store()
 }
 
 #[tauri::command]
@@ -33,6 +44,7 @@ pub async fn gateway_start(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::atomic::{AtomicBool, Ordering};
 
     #[test]
     fn disabled_gateway_cannot_start() {
@@ -44,6 +56,19 @@ mod tests {
         let mut config = GatewayConfig::default();
         config.enabled = true;
         assert!(ensure_startable(&config).is_ok());
+    }
+
+    #[tokio::test]
+    async fn failed_token_probe_never_calls_storage() {
+        let called = AtomicBool::new(false);
+        let result = commit_after_validation(async { Err("échec".to_string()) }, || {
+            called.store(true, Ordering::Relaxed);
+            Ok(())
+        })
+        .await;
+
+        assert!(result.is_err());
+        assert!(!called.load(Ordering::Relaxed));
     }
 }
 
@@ -102,13 +127,21 @@ pub async fn gateway_set_config(
 }
 
 #[tauri::command]
-pub async fn gateway_set_token(
+pub async fn gateway_configure_account_tokens(
     channel_id: String,
     account_id: String,
-    token_kind: String,
-    token: String,
+    credentials: AccountTokens,
 ) -> Result<(), String> {
-    tokens::set(&channel_id, &account_id, &token_kind, token)
+    credentials
+        .vault_entries(&channel_id, &account_id)
+        .map_err(|_| "configuration des identifiants impossible".to_string())?;
+    let endpoints = ProbeEndpoints::production();
+    commit_after_validation(
+        token_probe::validate_tokens(&channel_id, &credentials, &endpoints),
+        || tokens::store_account_tokens(&channel_id, &account_id, &credentials),
+    )
+    .await
+    .map_err(|_| "configuration des identifiants impossible".to_string())
 }
 
 #[tauri::command]
