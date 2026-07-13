@@ -1,7 +1,8 @@
+use sha2::{Digest, Sha256};
 use tauri::Emitter;
 
 use super::agent_bridge::BridgeError;
-use super::channels::InboundMessage;
+use super::channels::{ChannelAdapter, InboundMessage, OutboundMessage};
 use super::security::{
     audit::{self, AuditAction},
     ids, validation,
@@ -29,6 +30,9 @@ pub(crate) fn validate_inbound(msg: &InboundMessage) -> Result<(), BridgeError> 
     ids::validate_external_id(&msg.user_id).map_err(BridgeError::Blocked)?;
     ids::validate_external_id(&msg.message_id).map_err(BridgeError::Blocked)?;
     ids::validate_external_id(&msg.chat_id).map_err(BridgeError::Blocked)?;
+    if let Some(thread_id) = &msg.thread_id {
+        ids::validate_external_id(thread_id).map_err(BridgeError::Blocked)?;
+    }
     let vr = validation::validate_message(&msg.content);
     if !vr.valid {
         return Err(BridgeError::Blocked(vr.reason.unwrap_or_default()));
@@ -71,6 +75,33 @@ pub(crate) async fn sync_session_model(session_id: &str, provider: &str, model: 
     }
 }
 
+pub(crate) async fn send_final_reply(
+    msg: &InboundMessage,
+    adapter: &dyn ChannelAdapter,
+    final_messages: &[crate::services::agent_local::types_ollama::ChatMessage],
+) -> Result<(), BridgeError> {
+    let Some(reply) = super::stream_capture::extract_final_reply(final_messages) else {
+        return Ok(());
+    };
+    let max_utf16 = adapter.capabilities().max_message_chars;
+    for chunk in super::stream_capture::prepare_for_channel(&reply, max_utf16) {
+        adapter
+            .send(OutboundMessage {
+                chat_id: msg.chat_id.clone(),
+                thread_id: msg.thread_id.clone(),
+                content: chunk,
+                reply_to: Some(msg.message_id.clone()),
+            })
+            .await
+            .map_err(|error| {
+                audit_msg(msg, AuditAction::MessageSent, None, Some(&error.message));
+                BridgeError::SendError(error.message)
+            })?;
+    }
+    audit_msg(msg, AuditAction::MessageSent, None, None);
+    Ok(())
+}
+
 pub(crate) fn find_account_config(
     config: &GatewayConfig,
     msg: &InboundMessage,
@@ -83,15 +114,33 @@ pub(crate) fn find_account_config(
     };
     accounts
         .iter()
-        .find(|a| a.account_id == msg.channel_key.account_id)
+        .find(|a| a.enabled && a.account_id == msg.channel_key.account_id)
         .cloned()
 }
 
 pub(crate) fn build_external_key(msg: &InboundMessage) -> String {
-    format!(
-        "{}/{}/{}",
-        msg.channel_key.channel_id, msg.channel_key.account_id, msg.user_id
-    )
+    let mut hasher = Sha256::new();
+    for value in [
+        msg.channel_key.channel_id.as_str(),
+        msg.channel_key.account_id.as_str(),
+        msg.user_id.as_str(),
+        msg.chat_id.as_str(),
+    ] {
+        hash_component(&mut hasher, value.as_bytes());
+    }
+    match &msg.thread_id {
+        Some(value) => {
+            hasher.update([1]);
+            hash_component(&mut hasher, value.as_bytes());
+        }
+        None => hasher.update([0]),
+    }
+    format!("gateway:v2:{:x}", hasher.finalize())
+}
+
+fn hash_component(hasher: &mut Sha256, value: &[u8]) {
+    hasher.update((value.len() as u64).to_be_bytes());
+    hasher.update(value);
 }
 
 pub(crate) async fn find_or_create_session(
@@ -123,3 +172,7 @@ pub(crate) async fn find_or_create_session(
     emit_session_updated(app, &session.id);
     Ok(session.id)
 }
+
+#[cfg(test)]
+#[path = "agent_bridge_support_tests.rs"]
+mod tests;

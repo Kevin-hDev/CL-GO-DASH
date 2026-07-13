@@ -1,12 +1,21 @@
 use std::collections::HashMap;
 use std::sync::LazyLock;
 
+use serde::{Deserialize, Serialize};
 use tokio::sync::Mutex;
 
 use crate::services::paths::data_dir;
 
 static MAP: LazyLock<Mutex<HashMap<String, String>>> =
     LazyLock::new(|| Mutex::new(load_from_disk().unwrap_or_default()));
+
+const MAP_VERSION: u8 = 2;
+
+#[derive(Deserialize, Serialize)]
+struct SessionMapFile {
+    version: u8,
+    entries: HashMap<String, String>,
+}
 
 fn map_path() -> std::path::PathBuf {
     data_dir()
@@ -16,7 +25,29 @@ fn map_path() -> std::path::PathBuf {
 
 fn load_from_disk() -> Option<HashMap<String, String>> {
     let data = std::fs::read_to_string(map_path()).ok()?;
-    serde_json::from_str(&data).ok()
+    parse_file(&data).ok()
+}
+
+fn parse_file(data: &str) -> Result<HashMap<String, String>, serde_json::Error> {
+    let parsed = serde_json::from_str::<SessionMapFile>(data);
+    match parsed {
+        Ok(file) if file.version == MAP_VERSION => Ok(file.entries),
+        Ok(_) => Ok(HashMap::new()),
+        Err(error) => {
+            if serde_json::from_str::<HashMap<String, String>>(data).is_ok() {
+                Ok(HashMap::new())
+            } else {
+                Err(error)
+            }
+        }
+    }
+}
+
+fn encode_file(map: &HashMap<String, String>) -> Result<String, serde_json::Error> {
+    serde_json::to_string_pretty(&SessionMapFile {
+        version: MAP_VERSION,
+        entries: map.clone(),
+    })
 }
 
 fn flush(map: &HashMap<String, String>) -> Result<(), String> {
@@ -25,7 +56,7 @@ fn flush(map: &HashMap<String, String>) -> Result<(), String> {
         std::fs::create_dir_all(parent).map_err(|e| format!("mkdir: {e}"))?;
     }
     let tmp = path.with_extension("json.tmp");
-    let json = serde_json::to_string_pretty(map).map_err(|e| format!("json: {e}"))?;
+    let json = encode_file(map).map_err(|e| format!("json: {e}"))?;
     std::fs::write(&tmp, json).map_err(|e| format!("write: {e}"))?;
     std::fs::rename(&tmp, &path).map_err(|e| format!("rename: {e}"))?;
     Ok(())
@@ -112,5 +143,21 @@ mod tests {
         let mut map = MAP.lock().await;
         map.clear();
         let _ = flush(&map);
+    }
+
+    #[test]
+    fn legacy_unversioned_map_is_not_reused() {
+        let legacy = r#"{"slack/work/U123":"session-1"}"#;
+        assert!(parse_file(legacy).unwrap().is_empty());
+    }
+
+    #[test]
+    fn version_two_map_round_trips() {
+        let mut entries = HashMap::new();
+        entries.insert("gateway:v2:abc".to_string(), "session-2".to_string());
+        let encoded = encode_file(&entries).unwrap();
+
+        assert_eq!(parse_file(&encoded).unwrap(), entries);
+        assert!(encoded.contains("\"version\": 2"));
     }
 }

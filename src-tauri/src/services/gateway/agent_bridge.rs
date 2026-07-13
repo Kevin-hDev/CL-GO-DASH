@@ -9,16 +9,17 @@ use crate::services::agent_local::session_store;
 use crate::services::agent_local::stream_events::{self, AgentEventEmitter};
 use crate::services::gateway::agent_bridge_support::{
     audit_msg, block, build_external_key, emit_session_updated, find_account_config,
-    find_or_create_session, resolve_provider_model, sync_session_model, validate_inbound,
+    find_or_create_session, resolve_provider_model, send_final_reply, sync_session_model,
+    validate_inbound,
 };
-use crate::services::gateway::channels::{ChannelAdapter, InboundMessage, OutboundMessage};
+use crate::services::gateway::channels::{ChannelAdapter, InboundMessage};
+use crate::services::gateway::conversation_locks::ConversationLocks;
 use crate::services::gateway::message_convert;
 use crate::services::gateway::security::{
     allowlist::Allowlist,
     audit::{self, AuditAction},
     rate_state::GatewayRateLimiters,
 };
-use crate::services::gateway::stream_capture;
 
 #[derive(Debug)]
 pub enum BridgeError {
@@ -41,11 +42,15 @@ impl std::fmt::Display for BridgeError {
 
 pub struct GatewayAgentBridge {
     limits: Arc<Mutex<GatewayRateLimiters>>,
+    conversations: ConversationLocks,
 }
 
 impl GatewayAgentBridge {
-    pub fn new(limits: Arc<Mutex<GatewayRateLimiters>>) -> Self {
-        Self { limits }
+    pub fn new(limits: Arc<Mutex<GatewayRateLimiters>>, max_conversations: usize) -> Self {
+        Self {
+            limits,
+            conversations: ConversationLocks::new(max_conversations),
+        }
     }
 
     fn read_config() -> GatewayConfig {
@@ -86,6 +91,11 @@ impl GatewayAgentBridge {
         }
 
         let channel_key = build_external_key(&msg);
+        let _conversation_guard = self
+            .conversations
+            .acquire(&channel_key)
+            .await
+            .map_err(|reason| block(&msg, &reason))?;
         let (provider, model) = resolve_provider_model(&account_cfg, &config);
         let session_id = find_or_create_session(
             &msg,
@@ -174,23 +184,7 @@ impl GatewayAgentBridge {
             .map_err(BridgeError::SessionError)?;
         emit_session_updated(&app, &session_id);
 
-        if let Some(reply) = stream_capture::extract_final_reply(&final_messages) {
-            let max_utf16 = adapter.capabilities().max_message_chars;
-            for chunk in stream_capture::prepare_for_channel(&reply, max_utf16) {
-                adapter
-                    .send(OutboundMessage {
-                        chat_id: msg.chat_id.clone(),
-                        content: chunk,
-                        reply_to: Some(msg.message_id.clone()),
-                    })
-                    .await
-                    .map_err(|e| {
-                        audit_msg(&msg, AuditAction::MessageSent, None, Some(&e.message));
-                        BridgeError::SendError(e.message)
-                    })?;
-            }
-            audit_msg(&msg, AuditAction::MessageSent, None, None);
-        }
+        send_final_reply(&msg, adapter.as_ref(), &final_messages).await?;
         Ok(())
     }
 }

@@ -41,13 +41,15 @@ impl GatewayService {
         self.start_channel_accounts(&mut state, "slack", &config.channels.slack, &tx, &app);
         self.start_channel_accounts(&mut state, "discord", &config.channels.discord, &tx, &app);
 
-        let bridge = Arc::new(GatewayAgentBridge::new(state.limits.clone()));
+        let bridge = Arc::new(GatewayAgentBridge::new(
+            state.limits.clone(),
+            config.max_sessions as usize,
+        ));
         let state_ref = self.state.clone();
         let app_ref = app.clone();
 
         tokio::spawn(async move {
             while let Some(msg) = rx.recv().await {
-                let _ = app_ref.emit("gateway-message-received", &msg);
                 let adapter = {
                     let s = state_ref.read().await;
                     s.adapters.get(&msg.channel_key).cloned()

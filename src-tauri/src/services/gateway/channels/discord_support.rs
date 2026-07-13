@@ -31,6 +31,7 @@ impl DiscordAdapter {
             content: msg.content.clone(),
             message_id: msg.id.clone(),
             chat_id: msg.channel_id.clone(),
+            thread_id: None,
             is_group,
             mentions_bot: msg.mentions_user(bot_user_id),
         })

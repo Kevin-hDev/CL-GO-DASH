@@ -76,6 +76,7 @@ mod tests {
             content: "hello".into(),
             message_id: format!("msg-{user_id}"),
             chat_id: "chat".into(),
+            thread_id: None,
             is_group: false,
             mentions_bot: false,
         }

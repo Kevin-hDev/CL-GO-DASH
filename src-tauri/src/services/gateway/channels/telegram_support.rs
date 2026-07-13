@@ -92,6 +92,7 @@ impl TelegramAdapter {
             content: text.clone(),
             message_id: msg.message_id.to_string(),
             chat_id: msg.chat.id.to_string(),
+            thread_id: None,
             is_group: msg.chat.is_group(),
             mentions_bot: msg.has_bot_mention(bot_username),
         })

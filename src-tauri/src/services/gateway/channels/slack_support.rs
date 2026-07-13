@@ -50,6 +50,7 @@ impl SlackAdapter {
             content: evt.text.clone()?,
             message_id: evt.thread_ts.clone().or_else(|| evt.ts.clone())?,
             chat_id: evt.channel.clone()?,
+            thread_id: evt.thread_ts.clone(),
             is_group: true,
             mentions_bot: false,
         })

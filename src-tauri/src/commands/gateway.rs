@@ -4,6 +4,14 @@ use crate::services::gateway::tokens;
 use crate::services::gateway::types::{ChannelStatus, GatewayHealth};
 use tauri::Emitter;
 
+fn ensure_startable(config: &GatewayConfig) -> Result<(), String> {
+    if config.enabled {
+        Ok(())
+    } else {
+        Err("Gateway désactivé".to_string())
+    }
+}
+
 #[tauri::command]
 pub async fn gateway_status(
     state: tauri::State<'_, GatewayService>,
@@ -17,8 +25,26 @@ pub async fn gateway_start(
     state: tauri::State<'_, GatewayService>,
 ) -> Result<(), String> {
     let config = state.config().await;
+    ensure_startable(&config)?;
     state.start(config, app).await;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn disabled_gateway_cannot_start() {
+        assert!(ensure_startable(&GatewayConfig::default()).is_err());
+    }
+
+    #[test]
+    fn enabled_gateway_can_start() {
+        let mut config = GatewayConfig::default();
+        config.enabled = true;
+        assert!(ensure_startable(&config).is_ok());
+    }
 }
 
 #[tauri::command]

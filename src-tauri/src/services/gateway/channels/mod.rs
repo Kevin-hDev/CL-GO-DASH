@@ -26,6 +26,7 @@ pub struct InboundMessage {
     pub content: String,
     pub message_id: String,
     pub chat_id: String,
+    pub thread_id: Option<String>,
     pub is_group: bool,
     pub mentions_bot: bool,
 }
@@ -33,6 +34,7 @@ pub struct InboundMessage {
 #[derive(Debug, Clone)]
 pub struct OutboundMessage {
     pub chat_id: String,
+    pub thread_id: Option<String>,
     pub content: String,
     pub reply_to: Option<String>,
 }
