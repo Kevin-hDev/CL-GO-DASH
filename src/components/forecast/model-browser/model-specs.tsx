@@ -32,7 +32,7 @@ interface SpecRow {
   mono?: boolean;
 }
 
-export function ModelSpecs({ model, provider, onRefresh }: ModelSpecsProps) {
+export function ModelSpecs({ model, provider, onBack, onRefresh }: ModelSpecsProps) {
   const { t } = useTranslation();
   const [details, setDetails] = useState<ForecastModelDetails | null>(null);
   const [translation, setTranslation] = useState<{
@@ -62,6 +62,9 @@ export function ModelSpecs({ model, provider, onRefresh }: ModelSpecsProps) {
   return (
     <div className="mp-root">
       <div className="mp-inner">
+        <button className="fs-back" onClick={onBack}>
+          ← {t("settings.llm.back")}
+        </button>
         <div className="mp-header">
           <h2 className="mp-title">{model.display_name}</h2>
           {!model.is_cloud && model.installable && !model.installed && (

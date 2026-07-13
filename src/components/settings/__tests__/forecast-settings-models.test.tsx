@@ -15,8 +15,11 @@ vi.mock("react-i18next", () => ({
 }));
 
 vi.mock("@/components/forecast/model-browser/model-specs", () => ({
-  ModelSpecs: ({ model }: { model: { display_name: string } }) => (
-    <div data-testid="model-specs">specs:{model.display_name}</div>
+  ModelSpecs: ({ model, onBack }: { model: { display_name: string }; onBack: () => void }) => (
+    <div data-testid="model-specs">
+      specs:{model.display_name}
+      <button data-testid="specs-back" onClick={onBack}>back</button>
+    </div>
   ),
 }));
 
@@ -177,10 +180,10 @@ describe("ForecastModelsView", () => {
     );
 
     expect(screen.getByTestId("model-specs")).toBeTruthy();
-    expect(screen.getByTestId("model-specs").textContent).toBe("specs:Chronos Bolt Small");
+    expect(screen.getByTestId("model-specs").textContent).toContain("specs:Chronos Bolt Small");
   });
 
-  it("appelle onBack quand on revient d'un modele", () => {
+  it("appelle onBackToFamily au clic sur le bouton retour de la fiche modele", () => {
     const onBackToFamily = vi.fn();
     render(
       <ForecastModelsView
@@ -196,6 +199,7 @@ describe("ForecastModelsView", () => {
       />,
     );
 
-    expect(screen.getByTestId("model-specs")).toBeTruthy();
+    fireEvent.click(screen.getByTestId("specs-back"));
+    expect(onBackToFamily).toHaveBeenCalledOnce();
   });
 });
