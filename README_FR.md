@@ -8,7 +8,9 @@ Application desktop agentique (Tauri 2 + React 19) pour LLM locaux via Ollama et
 - **Planification agent** : Plan mode avec exploration en lecture seule, plans Markdown locaux, validation utilisateur obligatoire et passage à l'implémentation
 - **Workflow agent UI** : progression todo en temps réel, historique todo caché pour l'agent, choix interactifs et diagnostics sécurisés après erreur de flux ou d'outil
 - **Outils** : bash, lecture/écriture de fichiers, web fetch/search, actions Git, arbre de fichiers, preview de fichiers, preview Office, link preview, outils MCP, outils Forecast, diagnostics, todos et choix interactifs
-- **Subagents** : lance des assistants isolés depuis une conversation et fusionne leurs résultats dans le chat principal
+- **Branching de sessions** : clone un chat depuis n'importe quel message dans un onglet d'en-tête, optionnellement avec un résumé caché, et garde les sessions branchées hors de la sidebar principale
+- **Chats archivés** : la suppression d'un chat l'archive d'abord ; restaure les sessions ou supprime-les définitivement depuis les Réglages
+- **Subagents contrôlés par le parent** : lance des assistants isolés coordonnés par l'agent parent, avec statut en temps réel, injection cachée des rapports, sessions enfant réutilisables et nettoyage plus sûr des runs en file
 - **Réveils** : scheduler interne qui prompt un LLM à heure fixe (ponctuel / journalier / hebdomadaire), réponses stockées dans une conversation dédiée par modèle
 - **Forecast** : prévisions de séries temporelles avec modèles locaux et cloud, historique, comparaisons, scénarios, notes, exports et analyses appelables par l'Agent Local
 - **Connecteurs MCP** : connecteurs cloud et locaux avec OAuth ou tokens d'environnement, test de statut et activation par chat
@@ -18,6 +20,8 @@ Application desktop agentique (Tauri 2 + React 19) pour LLM locaux via Ollama et
 - **Git branch management** : sélecteur de branche dans le chat avec switch, création inline, worktree navigation, file watcher temps réel, dialog de conflit avec commit WIP auto
 - **Terminal intégré** : PTY cross-platform avec onglets, raccourci Cmd/Ctrl+J
 - **Personnalité et mémoire** : édition des fichiers Markdown de contexte, injection de personnalité et dossiers mémoire locaux
+- **Indicateur de contexte** : l'anneau de l'input de chat affiche un résumé par messages, outils, MCP/connecteurs, skills, méta-contexte et system prompt
+- **Onboarding** : un écran au premier lancement pour configurer les préférences et Ollama
 - **Ollama browser** : recherche de modèles, pull, édition de modelfiles
 
 ## Providers supportés
@@ -29,9 +33,9 @@ Application desktop agentique (Tauri 2 + React 19) pour LLM locaux via Ollama et
 | LLM | [Mistral](https://console.mistral.ai/api-keys) | 1B tokens/month |
 | LLM | [Cerebras](https://cloud.cerebras.ai/) | 1M tokens/day |
 | LLM | [OpenRouter](https://openrouter.ai/settings/keys) | 30+ free models |
-| LLM | [OpenAI](https://platform.openai.com/api-keys) | $5 signup credits |
+| LLM | [OpenAI](https://platform.openai.com/api-keys) | GPT-5.6 Sol / Terra / Luna |
 | LLM | [DeepSeek](https://platform.deepseek.com/api_keys) | Low-cost ($0.14/Mtok) |
-| LLM | [xAI](https://console.x.ai) | Budget ($0.20/Mtok) |
+| LLM | [xAI](https://console.x.ai) | Grok 4.5 / 4.3 / 4.20 |
 | LLM | [Moonshot Kimi](https://platform.kimi.ai/console/api-keys) | Low-cost ($0.60/Mtok) |
 | LLM | [Z.ai GLM](https://z.ai/manage-apikey/apikey-list) | GLM-4.5-Flash gratuit |
 | Search | [Brave Search](https://api-dashboard.search.brave.com/app/keys) | 2 000 req/month |
@@ -154,14 +158,21 @@ src-tauri/                # Backend Rust + Tauri
 
 src/                      # Frontend React
 ├── components/
-│   ├── agent-local/      # Chat, permissions, tabs, outils, file tree, previews, panel Forecast
+│   ├── agent-local/      # Chat, permissions, tabs, outils, file tree, previews, panel Forecast, branching, archives
 │   ├── heartbeat/        # Grid réveils, popup création, détails
 │   ├── forecast/         # Espace Forecast, charts, scénarios, notes, gestion modèles
-│   ├── ollama/           # Modelfile editor, model browser
+│   ├── forecast-docs/    # Documentation Forecast intégrée à l'app
+│   ├── ollama/           # Model browser
+│   ├── modelfile/        # Éditeur de modelfiles
 │   ├── personality/      # Markdown viewer
-│   ├── settings/         # Général, Ollama, connecteurs, channels, API keys, forecast, LLM, avancé
+│   ├── connectors/       # Configuration connecteurs MCP
+│   ├── channels/         # Configuration channels Gateway (Telegram, Slack, Discord)
+│   ├── onboarding/       # Écran de configuration au premier lancement
+│   ├── settings/         # Général, Ollama, connecteurs, channels, API keys, forecast, LLM, avancé, archives
 │   ├── terminal/         # Terminal intégré PTY
 │   ├── api-keys/         # Configuration clés API
+│   ├── file-tree/        # Navigation arbre de fichiers
+│   ├── file-preview/     # Previews texte, binaire, image
 │   ├── layout/           # Sidebar, toolbar, drag region
 │   └── ui/               # Primitives réutilisables
 ├── hooks/                # Logique extraite par domaine
@@ -219,13 +230,15 @@ L'application embarque **Ollama** comme sidecar pour éviter toute dépendance e
 
 ## Sécurité
 
-- **Vault chiffré** : clés API chiffrées XChaCha20-Poly1305, master key dans le keyring OS natif
-- **Zéroïsation** : tous les secrets en mémoire dans `Zeroizing<String>`, buffers intermédiaires zéroïsés après usage
-- **JS ne voit jamais une clé** : aucune commande Tauri n'expose `get_api_key`
-- **Path traversal** : canonicalize + starts_with sur tout chemin venant du frontend
-- **Collections bornées** : ActiveStreams (32), PTY sessions (16), messages par session (2000)
-- **Diagnostics sécurisés** : les diagnostics agent stockent uniquement des résumés bornés et filtrés
-- **Logs filtrés** : body HTTP providers tronqué à 200 chars, jamais de secret dans les logs
+- **Vault chiffré** : clés API chiffrées XChaCha20-Poly1305, master key dans le keyring OS natif (Keychain / DPAPI / Secret Service)
+- **JS ne voit jamais une clé** : aucune commande Tauri n'expose `get_api_key` ; les secrets restent côté Rust et sont zéroïsés après usage
+- **Path traversal** : `canonicalize()` + `starts_with()` sur tout chemin venant du frontend
+- **Collections bornées** : ActiveStreams (32), PTY sessions (16), messages par session (2000), profondeur/taille JSON MCP limitées
+- **HTTP sécurisé pour les credentials** : redirections bloquées, HTTPS imposé, messages d'erreur sanitizés
+- **Durcissement MCP** : allowlist de programmes, pas de shell, validation des arguments, isolation de l'environnement
+- **Logs filtrés** : body HTTP providers tronqué à 200 chars, formats de credentials connus masqués
+
+Pour le modèle de menace complet, la politique de signalement de vulnérabilité et les recommandations d'usage sûr, voir **[SECURITY.md](SECURITY.md)**.
 
 ## Licence
 

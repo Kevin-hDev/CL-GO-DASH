@@ -8,7 +8,9 @@ Agentic desktop application (Tauri 2 + React 19) for local LLMs via Ollama and c
 - **Agent planning**: Plan mode with read-only exploration, local Markdown plans, approval gating, and implementation handoff
 - **Agent workflow UI**: live todo progress, hidden todo history for the agent, interactive choices, and safe structured diagnostics after stream/tool failures
 - **Tools**: bash, file read/write, web fetch/search, Git actions, file tree, file preview, Office preview, link preview, MCP tools, forecasting tools, diagnostics, todos, and interactive choices
-- **Subagents**: launch isolated assistant runs from a conversation and merge their results back into the main chat
+- **Session branching**: clone a chat from any message into a header tab, optionally carry forward a hidden summary, and keep branched sessions out of the main sidebar
+- **Archived chats**: deleting a chat archives it first; restore sessions or permanently delete them from Settings
+- **Parent-controlled subagents**: run isolated assistant sessions coordinated by the parent agent, with live status, hidden report injection, reusable child sessions, and safer cleanup of queued runs
 - **Wakeups**: internal scheduler that prompts an LLM at a fixed time (one-time / daily / weekly), with responses stored in a dedicated conversation per model
 - **Forecast**: time-series forecasting with local and cloud models, history, comparisons, scenarios, notes, exports, and agent-callable analysis
 - **MCP connectors**: cloud and local connectors with OAuth or environment tokens, status testing, and per-chat activation
@@ -18,6 +20,8 @@ Agentic desktop application (Tauri 2 + React 19) for local LLMs via Ollama and c
 - **Git branch management**: branch selector in chat with switching, inline creation, worktree navigation, real-time file watcher, conflict dialog with automatic WIP commit
 - **Integrated terminal**: cross-platform PTY with tabs, Cmd/Ctrl+J shortcut
 - **Personality and memory**: edit Markdown context files, personality injection, and local memory folders
+- **Context usage breakdown**: the chat input ring shows a compact breakdown by messages, tools, MCP/connectors, skills, meta context, and system prompt
+- **Onboarding**: a first-launch screen to set up preferences and Ollama
 - **Ollama browser**: model search, pull, modelfile editing
 
 ## Supported providers
@@ -29,9 +33,9 @@ Agentic desktop application (Tauri 2 + React 19) for local LLMs via Ollama and c
 | LLM | [Mistral](https://console.mistral.ai/api-keys) | 1B tokens/month |
 | LLM | [Cerebras](https://cloud.cerebras.ai/) | 1M tokens/day |
 | LLM | [OpenRouter](https://openrouter.ai/settings/keys) | 30+ free models |
-| LLM | [OpenAI](https://platform.openai.com/api-keys) | $5 signup credits |
+| LLM | [OpenAI](https://platform.openai.com/api-keys) | GPT-5.6 Sol / Terra / Luna |
 | LLM | [DeepSeek](https://platform.deepseek.com/api_keys) | Low-cost ($0.14/Mtok) |
-| LLM | [xAI](https://console.x.ai) | Budget ($0.20/Mtok) |
+| LLM | [xAI](https://console.x.ai) | Grok 4.5 / 4.3 / 4.20 |
 | LLM | [Moonshot Kimi](https://platform.kimi.ai/console/api-keys) | Low-cost ($0.60/Mtok) |
 | LLM | [Z.ai GLM](https://z.ai/manage-apikey/apikey-list) | GLM-4.5-Flash free |
 | Search | [Brave Search](https://api-dashboard.search.brave.com/app/keys) | 2,000 req/month |
@@ -154,14 +158,21 @@ src-tauri/                # Rust + Tauri backend
 
 src/                      # React frontend
 ├── components/
-│   ├── agent-local/      # Chat, permissions, tabs, tools, file tree, previews, forecast panel
+│   ├── agent-local/      # Chat, permissions, tabs, tools, file tree, previews, forecast panel, session branching, archived chats
 │   ├── heartbeat/        # Wakeup grid, creation popup, details
 │   ├── forecast/         # Forecast workspace, charts, scenarios, notes, model manager
-│   ├── ollama/           # Modelfile editor, model browser
+│   ├── forecast-docs/    # In-app Forecast documentation
+│   ├── ollama/           # Model browser
+│   ├── modelfile/        # Modelfile editor
 │   ├── personality/      # Markdown viewer
-│   ├── settings/         # General, Ollama, connectors, channels, API keys, forecast, LLM, advanced
+│   ├── connectors/       # MCP connector configuration
+│   ├── channels/         # Gateway channel configuration (Telegram, Slack, Discord)
+│   ├── onboarding/       # First-launch setup screen
+│   ├── settings/         # General, Ollama, connectors, channels, API keys, forecast, LLM, advanced, archived chats
 │   ├── terminal/         # Integrated PTY terminal
 │   ├── api-keys/         # API key configuration
+│   ├── file-tree/        # File tree navigation
+│   ├── file-preview/     # Text, binary, image previews
 │   ├── layout/           # Sidebar, toolbar, drag region
 │   └── ui/               # Reusable primitives
 ├── hooks/                # Logic extracted by domain
@@ -219,13 +230,15 @@ The application bundles **Ollama** as a sidecar to avoid external dependencies:
 
 ## Security
 
-- **Encrypted vault**: API keys encrypted with XChaCha20-Poly1305, master key in the native OS keyring
-- **Zeroization**: all secrets in memory use `Zeroizing<String>`, intermediate buffers are zeroized after use
-- **JS never sees a key**: no Tauri command exposes `get_api_key`
-- **Path traversal**: canonicalize + starts_with on every path coming from the frontend
-- **Bounded collections**: ActiveStreams (32), PTY sessions (16), messages per session (2000)
-- **Safe diagnostics**: agent diagnostics store bounded, redacted summaries only
-- **Filtered logs**: provider HTTP bodies truncated to 200 chars, never any secret in logs
+- **Encrypted vault**: API keys encrypted with XChaCha20-Poly1305, master key in the native OS keyring (Keychain / DPAPI / Secret Service)
+- **JS never sees a key**: no Tauri command exposes `get_api_key`; secrets stay in the Rust backend and are zeroized after use
+- **Path traversal protection**: `canonicalize()` + `starts_with()` on every path coming from the frontend
+- **Bounded collections**: ActiveStreams (32), PTY sessions (16), messages per session (2000), capped MCP JSON depth/size
+- **Secure HTTP for credentials**: redirects blocked, HTTPS enforced, error messages sanitized
+- **MCP hardening**: program allowlist, no shell, argument validation, environment isolation
+- **Filtered logs**: provider HTTP bodies truncated to 200 chars, known credential formats redacted
+
+For the full threat model, vulnerability reporting policy, and safe usage guidance, see **[SECURITY.md](SECURITY.md)**.
 
 ## License
 
