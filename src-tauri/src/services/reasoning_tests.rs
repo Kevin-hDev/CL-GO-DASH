@@ -72,3 +72,27 @@ fn unsupported_model_clears_mode() {
         None
     );
 }
+
+#[test]
+fn switchable_thinking_defaults_to_auto() {
+    assert_eq!(
+        normalize_for_model("groq", "qwen/qwen3-32b", None, true).as_deref(),
+        Some("auto")
+    );
+}
+
+#[test]
+fn adjustable_thinking_without_medium_defaults_to_first_enabled_mode() {
+    assert_eq!(
+        normalize_for_model("deepseek", "deepseek-v4-pro", None, true).as_deref(),
+        Some("high")
+    );
+}
+
+#[test]
+fn explicit_off_mode_is_preserved() {
+    assert_eq!(
+        normalize_for_model("deepseek", "deepseek-v4-pro", Some("off"), true).as_deref(),
+        Some("off")
+    );
+}

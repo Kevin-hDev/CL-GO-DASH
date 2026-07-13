@@ -124,5 +124,6 @@ export function normalizeReasoningMode(
     return requested as ReasoningMode;
   }
   if (options.some((option) => option.mode === "medium")) return "medium";
-  return options.some((option) => option.mode === "off") ? "off" : options[0].mode;
+  if (options.some((option) => option.mode === "auto")) return "auto";
+  return options.find((option) => option.mode !== "off")?.mode ?? options[0].mode;
 }

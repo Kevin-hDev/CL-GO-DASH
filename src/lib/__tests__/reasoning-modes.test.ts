@@ -84,4 +84,19 @@ describe("reasoning modes", () => {
     const options = reasoningModeOptions(model("codex-oauth", "gpt-5.5"));
     expect(normalizeReasoningMode("off", options)).toBe("medium");
   });
+
+  it("active le thinking en AUTO par défaut pour un modèle commutable", () => {
+    const options = reasoningModeOptions(model("groq", "qwen/qwen3-32b"));
+    expect(normalizeReasoningMode(null, options)).toBe("auto");
+  });
+
+  it("utilise le premier niveau actif quand MOYEN n'existe pas", () => {
+    const options = reasoningModeOptions(model("deepseek", "deepseek-v4-pro"));
+    expect(normalizeReasoningMode(null, options)).toBe("high");
+  });
+
+  it("conserve le choix explicite DÉSACTIVÉ de l'utilisateur", () => {
+    const options = reasoningModeOptions(model("deepseek", "deepseek-v4-pro"));
+    expect(normalizeReasoningMode("off", options)).toBe("off");
+  });
 });

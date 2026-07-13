@@ -107,8 +107,11 @@ pub fn normalize_for_model(
     if modes.contains(&"medium") {
         return Some("medium".to_string());
     }
-    if modes.contains(&"off") {
-        return Some("off".to_string());
+    if modes.contains(&"auto") {
+        return Some("auto".to_string());
+    }
+    if let Some(mode) = modes.iter().find(|mode| **mode != "off") {
+        return Some((*mode).to_string());
     }
     modes.first().map(|mode| mode.to_string())
 }
