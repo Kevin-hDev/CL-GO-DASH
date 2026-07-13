@@ -2,6 +2,7 @@ use super::stream_convert::messages_to_openai;
 use crate::services::agent_local::types_ollama::ChatMessage;
 use crate::services::api_keys;
 use crate::services::llm::catalog;
+use crate::services::secure_http::{read_bounded, AuthenticatedClient, PROVIDER_ERROR_LIMIT};
 pub struct RequestConfig<'a> {
     pub provider_id: &'a str,
     pub model: &'a str,
@@ -26,6 +27,26 @@ impl std::fmt::Display for RequestError {
                 f.write_str(s)
             }
         }
+    }
+}
+
+async fn send_json_request(
+    client: &AuthenticatedClient,
+    url: &str,
+    key: &str,
+    payload: &serde_json::Value,
+) -> Result<reqwest::Response, RequestError> {
+    let request = client.post(url).bearer_auth(key).json(payload);
+    client
+        .send(request)
+        .await
+        .map_err(|_| RequestError::Fatal("Connexion au fournisseur impossible".into()))
+}
+
+async fn read_provider_error(response: reqwest::Response) -> zeroize::Zeroizing<String> {
+    match read_bounded(response, PROVIDER_ERROR_LIMIT).await {
+        Ok(bytes) => zeroize::Zeroizing::new(String::from_utf8_lossy(&bytes).into_owned()),
+        Err(_) => zeroize::Zeroizing::new(String::new()),
     }
 }
 
@@ -79,20 +100,9 @@ pub async fn post_chat_request_with_timeout(
         });
     }
 
-    let client = reqwest::Client::builder()
-        .timeout(timeout)
-        .build()
-        .map_err(|e| RequestError::Fatal(format!("HTTP client: {e}")))?;
-
-    let resp = client
-        .post(&url)
-        .bearer_auth(&*key)
-        .json(&payload)
-        .send()
-        .await
-        .map_err(|e| {
-            RequestError::Fatal(format!("Connexion {} échouée: {e}", spec.display_name))
-        })?;
+    let client = AuthenticatedClient::new(timeout)
+        .map_err(|_| RequestError::Fatal("Connexion au fournisseur impossible".into()))?;
+    let resp = send_json_request(&client, &url, &key, &payload).await?;
 
     if matches!(cfg.provider_id, "groq" | "xai") {
         super::quota::update_ratelimit_headers(cfg.provider_id, resp.headers());
@@ -100,7 +110,7 @@ pub async fn post_chat_request_with_timeout(
 
     let status = resp.status();
     if !status.is_success() {
-        let body = resp.text().await.unwrap_or_default();
+        let body = read_provider_error(resp).await;
         eprintln!(
             "[llm stream] HTTP {} — {}",
             status,
@@ -134,3 +144,7 @@ fn classify_error(status: u16, body: &str, provider_name: &str) -> RequestError 
         _ => RequestError::Fatal(format!("{provider_name} HTTP {status}")),
     }
 }
+
+#[cfg(test)]
+#[path = "stream_http_tests.rs"]
+mod tests;
