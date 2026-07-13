@@ -1,17 +1,26 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Weak};
+use std::time::Duration;
 
 use tokio::sync::{Mutex, OwnedMutexGuard};
 
+const CONVERSATION_WAIT_TIMEOUT: Duration = Duration::from_secs(300);
+
 pub struct ConversationLocks {
     max_active: usize,
+    wait_timeout: Duration,
     entries: Mutex<HashMap<String, Weak<Mutex<()>>>>,
 }
 
 impl ConversationLocks {
     pub fn new(max_active: usize) -> Self {
+        Self::with_wait_timeout(max_active, CONVERSATION_WAIT_TIMEOUT)
+    }
+
+    fn with_wait_timeout(max_active: usize, wait_timeout: Duration) -> Self {
         Self {
             max_active: max_active.max(1),
+            wait_timeout,
             entries: Mutex::new(HashMap::new()),
         }
     }
@@ -31,7 +40,9 @@ impl ConversationLocks {
                 lock
             }
         };
-        Ok(lock.lock_owned().await)
+        tokio::time::timeout(self.wait_timeout, lock.lock_owned())
+            .await
+            .map_err(|_| "conversation busy".to_string())
     }
 }
 
@@ -76,5 +87,15 @@ mod tests {
         let _first = locks.acquire("one").await.unwrap();
 
         assert!(locks.acquire("two").await.is_err());
+    }
+
+    #[tokio::test]
+    async fn waiting_for_a_busy_conversation_has_a_deadline() {
+        let locks = ConversationLocks::with_wait_timeout(1, Duration::from_millis(20));
+        let _first = locks.acquire("same").await.unwrap();
+
+        let result = locks.acquire("same").await;
+
+        assert!(result.is_err());
     }
 }
