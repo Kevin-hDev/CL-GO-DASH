@@ -20,6 +20,7 @@
 - **Archived chats** — deleting a chat now archives it first; Settings includes a new Archived chats tab to restore sessions or permanently delete archived chats grouped by project and standalone discussions.
 - **Session branching** — clone a chat from a message into a header tab, optionally carry forward hidden summary context, and keep branch sessions out of the main sidebar.
 - **Parent-controlled subagents** — subagents now run as visible child sessions coordinated by the parent agent, with live status, hidden report injection, parent-side orchestration, reusable child sessions, and safer cleanup of queued runs.
+- **Updated cloud model catalogs** — added OpenAI GPT-5.6 Sol, Terra, and Luna for API and Codex OAuth, plus xAI Grok 4.5, Grok 4.3, Grok 4.20 reasoning variants, and Grok Build 0.1, with matching OpenRouter reasoning modes and migration for retired xAI model identifiers.
 
 ---
 

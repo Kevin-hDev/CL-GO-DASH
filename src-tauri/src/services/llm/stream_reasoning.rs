@@ -18,7 +18,7 @@ pub fn apply(
         "mistral" => apply_mistral(payload, think, reasoning_mode),
         "moonshot" => apply_moonshot(payload, model, reasoning_mode),
         "google" => apply_google(payload, model, think, reasoning_mode),
-        "openai" => apply_openai(payload, model, reasoning_mode),
+        "openai" => apply_openai(payload, model, think, reasoning_mode),
         "xai" => apply_xai(payload, model, reasoning_mode),
         _ => {}
     }
@@ -147,7 +147,10 @@ fn google_thinking_budget(effort: &str) -> u32 {
     }
 }
 
-fn apply_openai(payload: &mut Value, model: &str, reasoning_mode: Option<&str>) {
+fn apply_openai(payload: &mut Value, model: &str, think: bool, reasoning_mode: Option<&str>) {
+    if !think && reasoning_mode != Some("off") {
+        return;
+    }
     let supported = crate::services::reasoning::supported_modes("openai", model, true);
     if reasoning_mode.is_some_and(|mode| !supported.contains(&mode)) {
         return;

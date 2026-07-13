@@ -80,6 +80,24 @@ fn gpt_56_uses_max_completion_tokens_in_chat_payload() {
 }
 
 #[test]
+fn openrouter_gpt_56_uses_max_completion_tokens() {
+    let cfg = RequestConfig {
+        provider_id: "openrouter",
+        model: "openai/gpt-5.6-sol",
+        messages: &[],
+        tools: &[],
+        think: true,
+        reasoning_mode: Some("medium"),
+        max_tokens: Some(32_000),
+    };
+
+    let payload = build_chat_payload(&cfg, None);
+
+    assert_eq!(payload["max_completion_tokens"], 32_000);
+    assert!(payload.get("max_tokens").is_none());
+}
+
+#[test]
 fn other_providers_keep_max_tokens() {
     let cfg = RequestConfig {
         provider_id: "xai",

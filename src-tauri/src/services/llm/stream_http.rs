@@ -101,7 +101,8 @@ fn build_chat_payload(
         "stream_options": { "include_usage": true },
     });
     if let Some(max) = cfg.max_tokens.or(default_max_tokens) {
-        let field = if cfg.provider_id == "openai" && super::providers::openai::is_gpt_56(cfg.model)
+        let field = if matches!(cfg.provider_id, "openai" | "openrouter")
+            && super::providers::openai::is_gpt_56(cfg.model)
         {
             "max_completion_tokens"
         } else {
