@@ -17,11 +17,28 @@ pub const PROVIDER_ERROR_LIMIT: usize = 16 * 1024;
 const MAX_BODY_LIMIT: usize = MCP_BODY_LIMIT;
 const MAX_TIMEOUT: Duration = Duration::from_secs(300);
 
+#[derive(Clone, Copy)]
+enum UrlPolicy {
+    HttpsOnly,
+    LoopbackHttp,
+}
+
 #[derive(Clone)]
-pub struct AuthenticatedClient(reqwest::Client);
+pub struct AuthenticatedClient {
+    client: reqwest::Client,
+    url_policy: UrlPolicy,
+}
 
 impl AuthenticatedClient {
     pub fn new(timeout: Duration) -> Result<Self, SecureHttpError> {
+        Self::build(timeout, UrlPolicy::HttpsOnly)
+    }
+
+    pub(crate) fn new_loopback(timeout: Duration) -> Result<Self, SecureHttpError> {
+        Self::build(timeout, UrlPolicy::LoopbackHttp)
+    }
+
+    fn build(timeout: Duration, url_policy: UrlPolicy) -> Result<Self, SecureHttpError> {
         if timeout.is_zero() || timeout > MAX_TIMEOUT {
             return Err(SecureHttpError::Configuration);
         }
@@ -31,19 +48,27 @@ impl AuthenticatedClient {
             .timeout(timeout)
             .build()
             .map_err(|_| SecureHttpError::Configuration)?;
-        Ok(Self(client))
+        Ok(Self { client, url_policy })
     }
 
     pub fn get<U: IntoUrl>(&self, url: U) -> RequestBuilder {
-        self.0.get(url)
+        self.client.get(url)
     }
 
     pub fn post<U: IntoUrl>(&self, url: U) -> RequestBuilder {
-        self.0.post(url)
+        self.client.post(url)
     }
 
     pub async fn send(&self, request: RequestBuilder) -> Result<Response, SecureHttpError> {
-        let response = request.send().await.map_err(|_| SecureHttpError::Request)?;
+        let request = request.build().map_err(|_| SecureHttpError::Request)?;
+        if !self.url_is_allowed(request.url()) {
+            return Err(SecureHttpError::InsecureUrl);
+        }
+        let response = self
+            .client
+            .execute(request)
+            .await
+            .map_err(|_| SecureHttpError::Request)?;
         if response.status().is_redirection() {
             return Err(SecureHttpError::Redirect);
         }
@@ -56,6 +81,20 @@ impl AuthenticatedClient {
             Ok(response)
         } else {
             Err(SecureHttpError::Status)
+        }
+    }
+
+    fn url_is_allowed(&self, url: &reqwest::Url) -> bool {
+        if url.scheme() == "https" {
+            return true;
+        }
+        if url.scheme() != "http" || !matches!(self.url_policy, UrlPolicy::LoopbackHttp) {
+            return false;
+        }
+        match url.host() {
+            Some(url::Host::Ipv4(address)) => address.is_loopback(),
+            Some(url::Host::Ipv6(address)) => address.is_loopback(),
+            _ => false,
         }
     }
 }
@@ -105,6 +144,7 @@ pub async fn read_json_bounded<T: DeserializeOwned>(
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SecureHttpError {
     Configuration,
+    InsecureUrl,
     Request,
     Redirect,
     Status,

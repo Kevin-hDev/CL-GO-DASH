@@ -1,3 +1,4 @@
+use crate::services::forecast::client_http;
 use crate::services::forecast::client_local_response;
 use crate::services::forecast::input_data::{parse_request_input, ParsedInput};
 use crate::services::forecast::registry::{find_runtime, ForecastEngineKind};
@@ -13,14 +14,14 @@ pub async fn predict(
     let input = parse_request_input(request)?;
     let payload = build_payload(&input, request)?;
 
-    let client = reqwest::Client::new();
-    let resp = client
+    let client = client_http::loopback_client()?;
+    let http_request = client
         .post(format!("{base_url}/predict"))
         .header("Content-Type", "application/json")
         .header("X-CLGO-Forecast-Token", auth_token)
-        .json(&payload)
-        .timeout(std::time::Duration::from_secs(120))
-        .send()
+        .json(&payload);
+    let resp = client
+        .send(http_request)
         .await
         .map_err(|_| "Erreur du service de prédiction".to_string())?;
 
@@ -30,10 +31,7 @@ pub async fn predict(
         return Err("Erreur du service de prédiction".to_string());
     }
 
-    let body: Value = resp
-        .json()
-        .await
-        .map_err(|_| "Réponse du service de prédiction invalide".to_string())?;
+    let body: Value = client_http::read_json(resp).await?;
 
     client_local_response::parse_response(&body, request, &input, session_id)
 }

@@ -8,6 +8,26 @@ use wiremock::{Mock, MockServer, ResponseTemplate};
 use super::*;
 
 #[tokio::test]
+async fn default_client_rejects_plain_http_before_sending() {
+    let server = MockServer::start().await;
+    let client = AuthenticatedClient::new(Duration::from_secs(2)).unwrap();
+
+    let result = client.send(client.get(server.uri())).await;
+
+    assert!(result.is_err());
+    assert!(server.received_requests().await.unwrap().is_empty());
+}
+
+#[tokio::test]
+async fn loopback_client_rejects_non_loopback_plain_http() {
+    let client = AuthenticatedClient::new_loopback(Duration::from_secs(2)).unwrap();
+
+    let result = client.send(client.get("http://example.com/private")).await;
+
+    assert_eq!(result.unwrap_err(), SecureHttpError::InsecureUrl);
+}
+
+#[tokio::test]
 async fn redirects_never_forward_credentials_or_bodies() {
     for status in [302, 307, 308] {
         let destination = MockServer::start().await;
@@ -20,7 +40,7 @@ async fn redirects_never_forward_credentials_or_bodies() {
             .mount(&origin)
             .await;
 
-        let client = AuthenticatedClient::new(Duration::from_secs(2)).unwrap();
+        let client = AuthenticatedClient::new_loopback(Duration::from_secs(2)).unwrap();
         let request = client
             .post(format!("{}/start", origin.uri()))
             .bearer_auth("fixture-credential")
@@ -44,7 +64,7 @@ async fn chunked_response_without_length_is_stopped_at_the_limit() {
             .unwrap();
     });
 
-    let client = AuthenticatedClient::new(Duration::from_secs(2)).unwrap();
+    let client = AuthenticatedClient::new_loopback(Duration::from_secs(2)).unwrap();
     let response = client
         .send(client.get(format!("http://{address}/body")))
         .await

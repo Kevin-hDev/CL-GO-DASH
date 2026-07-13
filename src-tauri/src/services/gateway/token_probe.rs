@@ -13,6 +13,7 @@ pub(crate) struct ProbeEndpoints {
     telegram: String,
     slack: String,
     discord: String,
+    allow_loopback_http: bool,
 }
 
 impl ProbeEndpoints {
@@ -21,6 +22,7 @@ impl ProbeEndpoints {
             telegram: "https://api.telegram.org".into(),
             slack: "https://slack.com/api".into(),
             discord: "https://discord.com/api/v10".into(),
+            allow_loopback_http: false,
         }
     }
 
@@ -30,6 +32,7 @@ impl ProbeEndpoints {
             telegram: base.clone(),
             slack: base.clone(),
             discord: base,
+            allow_loopback_http: true,
         }
     }
 }
@@ -40,7 +43,12 @@ pub(crate) async fn validate_tokens(
     endpoints: &ProbeEndpoints,
 ) -> Result<(), String> {
     credentials.validate_for(channel_id)?;
-    let client = AuthenticatedClient::new(PROBE_TIMEOUT).map_err(|_| generic_error())?;
+    let client = if endpoints.allow_loopback_http {
+        AuthenticatedClient::new_loopback(PROBE_TIMEOUT)
+    } else {
+        AuthenticatedClient::new(PROBE_TIMEOUT)
+    }
+    .map_err(|_| generic_error())?;
     match channel_id {
         "telegram" => validate_telegram(&client, credentials, endpoints).await,
         "slack" => validate_slack(&client, credentials, endpoints).await,

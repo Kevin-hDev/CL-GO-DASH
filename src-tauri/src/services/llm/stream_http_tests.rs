@@ -17,8 +17,9 @@ async fn chat_request_refuses_redirects_before_forwarding_the_body() {
         .mount(&origin)
         .await;
 
-    let client = crate::services::secure_http::AuthenticatedClient::new(Duration::from_secs(2))
-        .expect("client");
+    let client =
+        crate::services::secure_http::AuthenticatedClient::new_loopback(Duration::from_secs(2))
+            .expect("client");
     let result = send_json_request(
         &client,
         &format!("{}/chat", origin.uri()),
@@ -46,8 +47,9 @@ async fn oversized_provider_error_is_not_loaded() {
         )
         .mount(&server)
         .await;
-    let client = crate::services::secure_http::AuthenticatedClient::new(Duration::from_secs(2))
-        .expect("client");
+    let client =
+        crate::services::secure_http::AuthenticatedClient::new_loopback(Duration::from_secs(2))
+            .expect("client");
     let response = client
         .send(client.get(server.uri()))
         .await

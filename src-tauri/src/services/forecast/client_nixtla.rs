@@ -1,3 +1,4 @@
+use crate::services::forecast::client_http;
 use crate::services::forecast::client_nixtla_options;
 use crate::services::forecast::client_nixtla_retry;
 use crate::services::forecast::input_data::{parse_request_input, ParsedInput};
@@ -23,7 +24,7 @@ pub async fn predict(
         format!("{API_BASE}/forecast")
     };
 
-    let client = reqwest::Client::new();
+    let client = client_http::internet_client()?;
     let resp =
         client_nixtla_retry::post_json_with_retry(&client, &endpoint, api_key, &payload).await?;
 
@@ -33,10 +34,7 @@ pub async fn predict(
         return Err("Erreur du service de prédiction".to_string());
     }
 
-    let body: Value = resp
-        .json()
-        .await
-        .map_err(|_| "Réponse du service de prédiction invalide".to_string())?;
+    let body: Value = client_http::read_json(resp).await?;
 
     parse_response(&body, request, &input, session_id)
 }

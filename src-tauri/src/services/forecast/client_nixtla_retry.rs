@@ -1,13 +1,15 @@
-use reqwest::{Client, Response, StatusCode};
+use reqwest::{Response, StatusCode};
 use serde_json::Value;
 use std::time::Duration;
 use zeroize::Zeroizing;
+
+use crate::services::secure_http::{AuthenticatedClient, SecureHttpError};
 
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(120);
 const RETRY_DELAYS_SECS: [u64; 5] = [2, 4, 8, 16, 32];
 
 pub async fn post_json_with_retry(
-    client: &Client,
+    client: &AuthenticatedClient,
     endpoint: &str,
     api_key: &Zeroizing<String>,
     payload: &Value,
@@ -31,19 +33,18 @@ pub async fn post_json_with_retry(
 }
 
 async fn send_once(
-    client: &Client,
+    client: &AuthenticatedClient,
     endpoint: &str,
     api_key: &Zeroizing<String>,
     payload: &Value,
-) -> Result<Response, reqwest::Error> {
-    client
+) -> Result<Response, SecureHttpError> {
+    let request = client
         .post(endpoint)
-        .header("Authorization", format!("Bearer {}", api_key.as_str()))
+        .bearer_auth(api_key.as_str())
         .header("Content-Type", "application/json")
         .json(payload)
-        .timeout(REQUEST_TIMEOUT)
-        .send()
-        .await
+        .timeout(REQUEST_TIMEOUT);
+    client.send(request).await
 }
 
 fn should_retry_status(status: StatusCode) -> bool {
@@ -56,6 +57,39 @@ fn should_retry_status(status: StatusCode) -> bool {
     )
 }
 
-fn should_retry_error(error: &reqwest::Error) -> bool {
-    error.is_timeout() || error.is_connect()
+fn should_retry_error(error: &SecureHttpError) -> bool {
+    matches!(error, SecureHttpError::Request)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use wiremock::matchers::any;
+    use wiremock::{Mock, MockServer, ResponseTemplate};
+
+    #[tokio::test]
+    async fn redirect_never_receives_forecast_secret_or_payload() {
+        let destination = MockServer::start().await;
+        let origin = MockServer::start().await;
+        Mock::given(any())
+            .respond_with(
+                ResponseTemplate::new(307)
+                    .insert_header("Location", format!("{}/sink", destination.uri())),
+            )
+            .mount(&origin)
+            .await;
+        let client = AuthenticatedClient::new_loopback(Duration::from_secs(2)).unwrap();
+        let key = Zeroizing::new("fixture-forecast-key".to_string());
+
+        let result = post_json_with_retry(
+            &client,
+            &format!("{}/forecast", origin.uri()),
+            &key,
+            &serde_json::json!({"secret_payload": true}),
+        )
+        .await;
+
+        assert!(result.is_err());
+        assert!(destination.received_requests().await.unwrap().is_empty());
+    }
 }
