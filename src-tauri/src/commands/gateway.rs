@@ -7,11 +7,11 @@ use crate::services::gateway::types::{ChannelStatus, GatewayHealth};
 use tauri::Emitter;
 
 fn ensure_startable(config: &GatewayConfig) -> Result<(), String> {
-    if config.enabled {
-        Ok(())
-    } else {
-        Err("Gateway désactivé".to_string())
+    crate::services::gateway::config_validation::validate(config)?;
+    if !config.enabled {
+        return Err("Gateway désactivé".to_string());
     }
+    Ok(())
 }
 
 async fn commit_after_validation<V, F>(validation: V, store: F) -> Result<(), String>
@@ -37,8 +37,7 @@ pub async fn gateway_start(
 ) -> Result<(), String> {
     let config = state.config().await;
     ensure_startable(&config)?;
-    state.start(config, app).await;
-    Ok(())
+    state.start(config, app).await
 }
 
 #[cfg(test)]
@@ -53,8 +52,10 @@ mod tests {
 
     #[test]
     fn enabled_gateway_can_start() {
-        let mut config = GatewayConfig::default();
-        config.enabled = true;
+        let config = GatewayConfig {
+            enabled: true,
+            ..GatewayConfig::default()
+        };
         assert!(ensure_startable(&config).is_ok());
     }
 
@@ -103,21 +104,20 @@ pub async fn gateway_set_config(
     state: tauri::State<'_, GatewayService>,
     config: GatewayConfig,
 ) -> Result<(), String> {
+    crate::services::gateway::config_validation::validate(&config)?;
     let current_health = state.health().await;
     let should_restart = current_health.running
         && current_health
             .channels
             .iter()
             .any(|c| matches!(c.status, ChannelStatus::Starting | ChannelStatus::Running));
-    state.update_config(config.clone()).await;
-
     let mut full = crate::services::config::read_config().unwrap_or_default();
     full.gateway = config.clone();
     crate::services::config::write_config(&full)?;
+    state.update_config(config.clone()).await;
 
     if should_restart && config.enabled {
-        state.start(config, app).await;
-        return Ok(());
+        return state.start(config, app).await;
     }
     if should_restart {
         state.stop().await;

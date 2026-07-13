@@ -66,7 +66,7 @@ pub fn create_tray(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error
                         gw.stop().await;
                     } else {
                         let config = gw.config().await;
-                        gw.start(config, handle.clone()).await;
+                        let _ = gw.start(config, handle.clone()).await;
                     }
                 });
             }

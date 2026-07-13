@@ -99,6 +99,11 @@
       "error": "Erreur",
       "stopping": "Arrêt…"
     },
+    "errors": {
+      "invalidConfig": "La configuration du canal est invalide.",
+      "unavailable": "Le canal est indisponible.",
+      "generic": "L’opération a échoué. Réessayez."
+    },
     "browse": {
       "title": "Canaux de messagerie",
       "subtitle": "Connectez vos bots de messagerie pour communiquer avec les LLM.",

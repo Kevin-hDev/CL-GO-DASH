@@ -99,6 +99,11 @@
       "error": "Errore",
       "stopping": "Arresto…"
     },
+    "errors": {
+      "invalidConfig": "La configurazione del canale non è valida.",
+      "unavailable": "Il canale non è disponibile.",
+      "generic": "L’operazione non è riuscita. Riprova."
+    },
     "browse": {
       "title": "Canali di messaggistica",
       "subtitle": "Collega i tuoi bot di messaggistica per comunicare con gli LLM.",

@@ -99,6 +99,11 @@
       "error": "エラー",
       "stopping": "停止中…"
     },
+    "errors": {
+      "invalidConfig": "チャンネル設定が無効です。",
+      "unavailable": "チャンネルを利用できません。",
+      "generic": "操作に失敗しました。もう一度お試しください。"
+    },
     "browse": {
       "title": "メッセージングチャネル",
       "subtitle": "メッセージングボットを接続して LLM と通信します。",

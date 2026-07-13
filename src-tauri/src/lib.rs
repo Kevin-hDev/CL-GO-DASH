@@ -127,7 +127,7 @@ pub fn run() {
                 let gw_handle = app.handle().clone();
                 tauri::async_runtime::spawn(async move {
                     let gw = gw_handle.state::<GatewayService>();
-                    gw.start(gw_config, gw_handle.clone()).await;
+                    let _ = gw.start(gw_config, gw_handle.clone()).await;
                 });
             }
 

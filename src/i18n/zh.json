@@ -99,6 +99,11 @@
       "error": "错误",
       "stopping": "停止中…"
     },
+    "errors": {
+      "invalidConfig": "频道配置无效。",
+      "unavailable": "频道不可用。",
+      "generic": "操作失败，请重试。"
+    },
     "browse": {
       "title": "消息渠道",
       "subtitle": "连接你的消息机器人以与 LLM 通信。",

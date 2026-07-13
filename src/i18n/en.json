@@ -99,6 +99,11 @@
       "error": "Error",
       "stopping": "Stopping…"
     },
+    "errors": {
+      "invalidConfig": "The channel configuration is invalid.",
+      "unavailable": "The channel is unavailable.",
+      "generic": "The operation failed. Try again."
+    },
     "browse": {
       "title": "Messaging channels",
       "subtitle": "Connect your messaging bots to communicate with LLMs.",

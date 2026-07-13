@@ -26,7 +26,12 @@ impl GatewayService {
         }
     }
 
-    pub async fn start(&self, config: GatewayConfig, app: tauri::AppHandle) {
+    pub async fn start(&self, config: GatewayConfig, app: tauri::AppHandle) -> Result<(), String> {
+        super::config_validation::validate(&config)?;
+        if !config.enabled {
+            return Err("Gateway désactivé".to_string());
+        }
+        audit::configure(&config.audit);
         let mut state = self.state.write().await;
         state.cancel.cancel();
         state.cancel = CancellationToken::new();
@@ -65,6 +70,7 @@ impl GatewayService {
         });
 
         let _ = app.emit("gateway-status-changed", build_health(&state));
+        Ok(())
     }
 
     fn start_channel_accounts(
@@ -94,15 +100,10 @@ impl GatewayService {
                     ChannelEntry {
                         status: ChannelStatus::Error,
                         cancel: child_cancel,
-                        error: Some("Configuration invalide".to_string()),
+                        error: Some("invalidConfig".to_string()),
                     },
                 );
-                emit_channel_status(
-                    app,
-                    &key,
-                    ChannelStatus::Error,
-                    Some("Configuration invalide"),
-                );
+                emit_channel_status(app, &key, ChannelStatus::Error, Some("invalidConfig"));
                 continue;
             }
             state.adapters.insert(key.clone(), Arc::clone(&adapter));
@@ -159,6 +160,7 @@ impl GatewayService {
         self.state.read().await.config.clone()
     }
     pub async fn update_config(&self, config: GatewayConfig) {
+        audit::configure(&config.audit);
         self.state.write().await.config = config;
     }
 }

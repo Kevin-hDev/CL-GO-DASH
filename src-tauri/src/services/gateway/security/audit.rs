@@ -1,13 +1,17 @@
-use std::fs::{self, OpenOptions};
-use std::io::Write;
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 
-use serde::Serialize;
-use sha2::{Digest, Sha256};
+use hmac::{Hmac, Mac};
+use serde::{Deserialize, Serialize};
+use sha2::Sha256;
 
-const MAX_LINES: usize = 10_000;
+use crate::models::AuditConfig;
 
-#[derive(Debug, Serialize)]
+const HMAC_VAULT_KEY: &str = "gateway.audit.hmac.v1";
+static ENABLED: AtomicBool = AtomicBool::new(true);
+static RETENTION_DAYS: AtomicU32 = AtomicU32::new(30);
+
+#[derive(Debug, Deserialize, Serialize)]
 pub struct AuditEntry {
     pub timestamp: String,
     pub channel: String,
@@ -18,7 +22,7 @@ pub struct AuditEntry {
     pub error: Option<String>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum AuditAction {
     MessageReceived,
@@ -31,26 +35,36 @@ pub enum AuditAction {
     AuthFailed,
 }
 
-pub fn hash_user_id(user_id: &str) -> String {
-    let mut hasher = Sha256::new();
-    hasher.update(user_id.as_bytes());
-    format!("{:x}", hasher.finalize())[..16].to_string()
+pub fn configure(config: &AuditConfig) {
+    ENABLED.store(config.enabled, Ordering::Relaxed);
+    RETENTION_DAYS.store(config.retention_days.clamp(1, 365), Ordering::Relaxed);
+}
+
+pub fn hash_user_id(user_id: &str) -> Result<String, String> {
+    if user_id.len() > 128 || user_id.chars().any(char::is_control) {
+        return Err("identité d'audit invalide".to_string());
+    }
+    let key = crate::services::api_keys::get_or_create_random_raw(HMAC_VAULT_KEY, 32)?;
+    hash_user_id_with_key(user_id, &key)
+}
+
+fn hash_user_id_with_key(user_id: &str, key: &[u8]) -> Result<String, String> {
+    let mut mac = Hmac::<Sha256>::new_from_slice(key)
+        .map_err(|_| "identité d'audit indisponible".to_string())?;
+    mac.update(user_id.as_bytes());
+    let digest = mac.finalize().into_bytes();
+    Ok(hex::encode(&digest[..8]))
 }
 
 pub fn log_audit(entry: &AuditEntry) {
-    let path = audit_path();
-    if let Some(parent) = path.parent() {
-        let _ = fs::create_dir_all(parent);
+    if !ENABLED.load(Ordering::Relaxed) {
+        return;
     }
-    let line = match serde_json::to_string(entry) {
-        Ok(l) => l,
-        Err(_) => return,
+    let Ok(line) = serde_json::to_string(entry) else {
+        return;
     };
-    let file = OpenOptions::new().create(true).append(true).open(&path);
-    if let Ok(mut f) = file {
-        let _ = writeln!(f, "{}", line);
-    }
-    let _ = maybe_trim(&path);
+    let retention = RETENTION_DAYS.load(Ordering::Relaxed);
+    let _ = append_serialized(&audit_path(), &line, retention);
 }
 
 pub fn log_gateway_action(
@@ -61,23 +75,34 @@ pub fn log_gateway_action(
     security_decision: Option<&str>,
     error: Option<&str>,
 ) {
+    let Ok(user_hash) = hash_user_id(user_id) else {
+        return;
+    };
     log_audit(&AuditEntry {
         timestamp: chrono::Utc::now().to_rfc3339(),
         channel: channel.to_string(),
         account_id: account_id.to_string(),
-        user_hash: hash_user_id(user_id),
+        user_hash,
         action,
-        security_decision: security_decision.map(str::to_string),
+        security_decision: security_decision.map(safe_code),
         error: error.map(sanitize_error),
     });
 }
 
-pub fn sanitize_error(error: &str) -> String {
-    let redacted = crate::services::gateway::stream_capture::redact_sensitive(error);
-    if redacted.len() > 200 {
-        redacted.chars().take(200).collect()
+pub fn sanitize_error(_error: &str) -> String {
+    "operation_failed".to_string()
+}
+
+fn safe_code(value: &str) -> String {
+    if !value.is_empty()
+        && value.len() <= 64
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_lowercase() || byte == b'_')
+    {
+        value.to_string()
     } else {
-        redacted
+        "blocked".to_string()
     }
 }
 
@@ -85,56 +110,8 @@ fn audit_path() -> PathBuf {
     crate::services::paths::data_dir().join("logs/gateway-audit.jsonl")
 }
 
-fn maybe_trim(path: &PathBuf) -> Result<(), std::io::Error> {
-    let content = fs::read_to_string(path)?;
-    let lines: Vec<&str> = content.lines().collect();
-    if lines.len() <= MAX_LINES {
-        return Ok(());
-    }
-    let keep = &lines[lines.len() - MAX_LINES..];
-    let tmp = path.with_extension("jsonl.tmp");
-    fs::write(&tmp, keep.join("\n") + "\n")?;
-    fs::rename(&tmp, path)?;
-    Ok(())
-}
+include!("audit_store.rs");
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn hash_is_deterministic() {
-        let a = hash_user_id("user42");
-        let b = hash_user_id("user42");
-        assert_eq!(a, b);
-        assert_eq!(a.len(), 16);
-    }
-
-    #[test]
-    fn different_users_different_hashes() {
-        assert_ne!(hash_user_id("alice"), hash_user_id("bob"));
-    }
-
-    #[test]
-    fn audit_entry_serializes() {
-        let entry = AuditEntry {
-            timestamp: "2026-05-10T12:00:00Z".into(),
-            channel: "telegram".into(),
-            account_id: "bot1".into(),
-            user_hash: hash_user_id("user42"),
-            action: AuditAction::MessageReceived,
-            security_decision: None,
-            error: None,
-        };
-        let json = serde_json::to_string(&entry).unwrap();
-        assert!(json.contains("message_received"));
-        assert!(!json.contains("user42"));
-    }
-
-    #[test]
-    fn sanitize_error_redacts_secret_like_values() {
-        let sanitized = sanitize_error("failed with Bearer abcdefghijklmnop");
-        assert!(!sanitized.contains("Bearer abc"));
-        assert!(sanitized.contains("[REDACTED]"));
-    }
-}
+#[path = "audit_tests.rs"]
+mod tests;

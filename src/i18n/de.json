@@ -99,6 +99,11 @@
       "error": "Fehler",
       "stopping": "Stoppt…"
     },
+    "errors": {
+      "invalidConfig": "Die Kanalkonfiguration ist ungültig.",
+      "unavailable": "Der Kanal ist nicht verfügbar.",
+      "generic": "Der Vorgang ist fehlgeschlagen. Versuche es erneut."
+    },
     "browse": {
       "title": "Messaging-Kanäle",
       "subtitle": "Verbinden Sie Ihre Messaging-Bots, um mit LLMs zu kommunizieren.",

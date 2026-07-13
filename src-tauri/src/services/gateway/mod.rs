@@ -1,6 +1,7 @@
 pub mod agent_bridge;
 pub mod agent_bridge_support;
 pub mod channels;
+pub mod config_validation;
 mod conversation_locks;
 pub mod message_convert;
 pub mod security;

@@ -79,16 +79,9 @@ export function gatewayConfig() {
     default_provider: "",
     default_model: "",
     max_sessions: 500,
-    max_messages_per_session: 100,
     message_max_chars: 8000,
     rate_limits: { per_user_per_minute: 12, per_channel_per_minute: 120, global_per_minute: 300 },
-    security: {
-      default_dm_policy: "allowlist",
-      allow_private_urls: false,
-      tools_enabled_by_default: false,
-      allow_wildcard_allowlist: false,
-    },
-    audit: { enabled: true, retention_days: 30, redact_content: true },
+    audit: { enabled: true, retention_days: 30 },
     channels: {
       telegram: [{ account_id: "test-telegram", enabled: true, allowlist: [], require_mention: true }],
       slack: [],

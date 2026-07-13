@@ -99,6 +99,11 @@
       "error": "Error",
       "stopping": "Deteniendo…"
     },
+    "errors": {
+      "invalidConfig": "La configuración del canal no es válida.",
+      "unavailable": "El canal no está disponible.",
+      "generic": "La operación ha fallado. Inténtalo de nuevo."
+    },
     "browse": {
       "title": "Canales de mensajería",
       "subtitle": "Conecta tus bots de mensajería para comunicarse con los LLM.",

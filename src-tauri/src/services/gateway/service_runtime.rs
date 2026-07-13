@@ -129,14 +129,7 @@ async fn handle_restart(
                 Some("restart_give_up"),
                 Some(&safe),
             );
-            set_status(
-                state,
-                app,
-                key,
-                ChannelStatus::Error,
-                Some("Canal indisponible"),
-            )
-            .await;
+            set_status(state, app, key, ChannelStatus::Error, Some("unavailable")).await;
             false
         }
     }

@@ -79,19 +79,10 @@ pub fn write_config(config: &ClgoConfig) -> Result<(), String> {
 
 /// Variante testable : écrit atomiquement (tmp + rename) le config vers `path`.
 pub(crate) fn write_config_to_path(path: &Path, config: &ClgoConfig) -> Result<(), String> {
-    if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent).map_err(|e| format!("Cannot create config dir: {}", e))?;
-    }
-    let tmp_path = path.with_extension("json.tmp");
-
     let content = serde_json::to_string_pretty(config)
-        .map_err(|e| format!("Cannot serialize config: {}", e))?;
-
-    // Atomic write: tmp + rename
-    fs::write(&tmp_path, &content).map_err(|e| format!("Cannot write tmp config: {}", e))?;
-    fs::rename(&tmp_path, path).map_err(|e| format!("Cannot rename config: {}", e))?;
-
-    Ok(())
+        .map_err(|_| "écriture de la configuration impossible".to_string())?;
+    crate::services::private_store::atomic_write(path, content.as_bytes())
+        .map_err(|_| "écriture de la configuration impossible".to_string())
 }
 
 #[cfg(test)]

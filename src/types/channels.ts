@@ -28,10 +28,8 @@ export interface GatewayConfig {
   default_provider: string;
   default_model: string;
   max_sessions: number;
-  max_messages_per_session: number;
   message_max_chars: number;
   rate_limits: RateLimitConfig;
-  security: GatewaySecurityConfig;
   audit: AuditConfig;
   channels: ChannelsConfig;
 }
@@ -42,17 +40,9 @@ export interface RateLimitConfig {
   global_per_minute: number;
 }
 
-export interface GatewaySecurityConfig {
-  default_dm_policy: "open" | "allowlist";
-  allow_private_urls: boolean;
-  tools_enabled_by_default: boolean;
-  allow_wildcard_allowlist: boolean;
-}
-
 export interface AuditConfig {
   enabled: boolean;
   retention_days: number;
-  redact_content: boolean;
 }
 
 export interface ChannelsConfig {

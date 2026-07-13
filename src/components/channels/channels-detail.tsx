@@ -8,6 +8,7 @@ import { CustomSelect } from "@/components/ui/custom-select";
 import { useAvailableModels } from "@/hooks/use-available-models";
 import { ChannelsAllowlist } from "./channels-allowlist";
 import { ChannelIcon } from "./channel-icon";
+import { channelErrorKey } from "./channel-error";
 import type { ChannelType, ChannelHealthEntry, GatewayConfig, ChannelAccountConfig } from "@/types/channels";
 import "./channels.css";
 
@@ -25,7 +26,17 @@ export function ChannelsDetail({ channelId, account, status, config, onSaveConfi
   const statusKey = status?.status ?? "off";
   const isRunning = statusKey === "running";
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [operationFailed, setOperationFailed] = useState(false);
   const { groups } = useAvailableModels();
+
+  const runOperation = async (operation: () => Promise<void>) => {
+    setOperationFailed(false);
+    try {
+      await operation();
+    } catch {
+      setOperationFailed(true);
+    }
+  };
 
   useEffect(() => {
     if (!confirmDelete) return;
@@ -39,28 +50,32 @@ export function ChannelsDetail({ channelId, account, status, config, onSaveConfi
     if (idx < 0) return;
     list[idx] = { ...list[idx], ...patch };
     const updated = { ...config, channels: { ...config.channels, [channelId]: list } };
-    await onSaveConfig(updated);
+    await runOperation(() => onSaveConfig(updated));
   };
 
   const handleConnect = async () => {
-    if (isRunning) {
-      await invoke("gateway_stop");
-    } else {
+    await runOperation(async () => {
+      if (isRunning) {
+        await invoke("gateway_stop");
+        return;
+      }
       const list = [...(config.channels[channelId] ?? [])];
       const idx = list.findIndex((a) => a.account_id === account.account_id);
       if (idx >= 0) list[idx] = { ...list[idx], enabled: true };
       const updated = { ...config, enabled: true, channels: { ...config.channels, [channelId]: list } };
       await onSaveConfig(updated);
       await invoke("gateway_start");
-    }
+    });
   };
 
   const handleDelete = async () => {
-    await invoke("gateway_delete_token", { channelId, accountId: account.account_id, tokenKind: null });
-    const list = (config.channels[channelId] ?? []).filter((a) => a.account_id !== account.account_id);
-    const updated = { ...config, channels: { ...config.channels, [channelId]: list } };
-    await onSaveConfig(updated);
-    onDelete();
+    await runOperation(async () => {
+      await invoke("gateway_delete_token", { channelId, accountId: account.account_id, tokenKind: null });
+      const list = (config.channels[channelId] ?? []).filter((a) => a.account_id !== account.account_id);
+      const updated = { ...config, channels: { ...config.channels, [channelId]: list } };
+      await onSaveConfig(updated);
+      onDelete();
+    });
   };
 
   const providerOptions = Array.from(groups.keys())
@@ -98,8 +113,11 @@ export function ChannelsDetail({ channelId, account, status, config, onSaveConfi
 
         {status?.error && (
           <div className="ch-error-bubble">
-            <span className="ch-error-text">{status.error}</span>
+            <span className="ch-error-text">{t(channelErrorKey(status.error))}</span>
           </div>
+        )}
+        {operationFailed && (
+          <div className="ch-error-bubble"><span className="ch-error-text">{t("channels.errors.generic")}</span></div>
         )}
 
         <SettingsCard>

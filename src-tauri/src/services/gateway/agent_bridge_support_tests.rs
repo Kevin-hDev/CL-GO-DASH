@@ -38,9 +38,11 @@ fn conversation_key_separates_chat_and_thread() {
 #[test]
 fn disabled_account_is_not_selected() {
     let mut config = GatewayConfig::default();
-    let mut account = crate::models::ChannelAccountConfig::default();
-    account.account_id = "work".into();
-    account.enabled = false;
+    let account = crate::models::ChannelAccountConfig {
+        account_id: "work".into(),
+        enabled: false,
+        ..crate::models::ChannelAccountConfig::default()
+    };
     config.channels.slack.push(account);
 
     assert!(find_account_config(&config, &inbound("C1", None)).is_none());
