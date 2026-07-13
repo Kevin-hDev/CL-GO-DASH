@@ -17,30 +17,47 @@ pub fn set_mcp_token(connector_id: &str, token_json: &str) -> Result<(), String>
         return Err("token vide".to_string());
     }
     let key_id = format!("{MCP_PREFIX}{connector_id}");
-    let mut state = STATE.lock().map_err(|e| format!("lock: {e}"))?;
-    let s = state.as_mut().ok_or("vault not initialized")?;
-    if !s.keys.contains_key(&key_id) && s.keys.len() >= MAX_VAULT_ENTRIES {
-        return Err("limite d'entrées vault atteinte".to_string());
-    }
-    s.keys.insert(key_id, Zeroizing::new(token_json.to_string()));
-    flush_vault(s)
+    transaction(|candidate| {
+        candidate.insert(key_id, token_json.to_string());
+        Ok(())
+    })
 }
 
 pub fn get_mcp_token(connector_id: &str) -> Result<Zeroizing<String>, String> {
     validate_mcp_connector_id(connector_id)?;
     let key_id = format!("{MCP_PREFIX}{connector_id}");
-    let state = STATE.lock().map_err(|e| format!("lock: {e}"))?;
-    let s = state.as_ref().ok_or("vault not initialized")?;
+    let state = STATE.lock().map_err(|_| "coffre indisponible".to_string())?;
+    let s = state.as_ref().ok_or("coffre indisponible")?;
     s.keys.get(&key_id).cloned().ok_or_else(|| "token non trouvé".to_string())
 }
 
 pub fn delete_mcp_token(connector_id: &str) -> Result<(), String> {
     validate_mcp_connector_id(connector_id)?;
     let key_id = format!("{MCP_PREFIX}{connector_id}");
-    let mut state = STATE.lock().map_err(|e| format!("lock: {e}"))?;
-    let s = state.as_mut().ok_or("vault not initialized")?;
-    s.keys.remove(&key_id);
-    flush_vault(s)
+    transaction(|candidate| {
+        candidate.remove(&key_id);
+        Ok(())
+    })
+}
+
+pub fn delete_mcp_bundle(connector_id: &str, raw_keys: &[&str]) -> Result<(), String> {
+    validate_mcp_connector_id(connector_id)?;
+    if !raw_keys.is_empty() {
+        validate_raw_keys(raw_keys)?;
+    }
+    let mcp_key = format!("{MCP_PREFIX}{connector_id}");
+    let prefixed: Vec<String> = raw_keys
+        .iter()
+        .map(|key| format!("{RAW_PREFIX}{key}"))
+        .collect();
+    transaction(|candidate| {
+        candidate.remove(&mcp_key);
+        for (raw, namespaced) in raw_keys.iter().zip(&prefixed) {
+            candidate.remove(*raw);
+            candidate.remove(namespaced);
+        }
+        Ok(())
+    })
 }
 
 pub fn has_mcp_token(connector_id: &str) -> bool {

@@ -128,3 +128,16 @@ fn encrypt_rejects_wrong_key_length() {
     let result = encrypt(&short_key, b"data");
     assert!(result.is_err(), "une clé trop courte doit être rejetée");
 }
+
+#[test]
+fn decrypt_rejects_nonce_with_wrong_length_without_panicking() {
+    for nonce in [vec![0_u8; 23], vec![0_u8; 25]] {
+        let malformed = VaultFile {
+            version: VAULT_VERSION,
+            nonce: B64.encode(nonce),
+            data: B64.encode(b"ciphertext"),
+        };
+        let bytes = serde_json::to_vec(&malformed).unwrap();
+        assert!(decrypt(&test_key(), &bytes).is_err());
+    }
+}

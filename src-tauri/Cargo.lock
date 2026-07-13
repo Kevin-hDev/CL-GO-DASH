@@ -815,6 +815,7 @@ dependencies = [
  "urlencoding",
  "uuid",
  "which",
+ "windows-sys 0.61.2",
  "wiremock",
  "zeroize",
  "zip 8.6.0",

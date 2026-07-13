@@ -4,18 +4,6 @@ const MAX_VAULT_ENTRIES: usize = 500;
 const MAX_BATCH_ENTRIES: usize = 8;
 const RAW_PREFIX: &str = "raw:";
 
-pub fn delete_key_raw(key_id: &str) -> Result<(), String> {
-    if key_id.is_empty() || key_id.len() > 128 {
-        return Err("identifiant invalide".to_string());
-    }
-    let mut state = STATE.lock().map_err(|_| "erreur de stockage".to_string())?;
-    let current = state
-        .as_mut()
-        .ok_or_else(|| "coffre indisponible".to_string())?;
-    current.keys.remove(key_id);
-    flush_vault(current)
-}
-
 pub fn has_key(provider_id: &str) -> bool {
     let state = STATE.lock().ok();
     state
@@ -26,7 +14,7 @@ pub fn has_key(provider_id: &str) -> bool {
 }
 
 pub fn list_configured() -> Vec<String> {
-    read_registry()
+    configured_from_state()
 }
 
 pub fn set_raw(key: &str, value: &str) -> Result<(), String> {
@@ -39,35 +27,12 @@ pub fn set_raw_batch(entries: &[(&str, &str)]) -> Result<(), String> {
         .iter()
         .map(|(key, _)| format!("{RAW_PREFIX}{key}"))
         .collect();
-    let mut state = STATE.lock().map_err(|_| "erreur de stockage".to_string())?;
-    let current = state
-        .as_mut()
-        .ok_or_else(|| "coffre indisponible".to_string())?;
-    let added = prefixed_keys
-        .iter()
-        .filter(|key| !current.keys.contains_key(*key))
-        .count();
-    if current.keys.len().saturating_add(added) > MAX_VAULT_ENTRIES {
-        return Err("limite du coffre atteinte".to_string());
-    }
-
-    let mut candidate = ZeroizingMap(
-        current
-            .keys
-            .iter()
-            .map(|(key, value)| (key.clone(), value.as_str().to_string()))
-            .collect(),
-    );
-    for (key, (_, value)) in prefixed_keys.iter().zip(entries) {
-        candidate.0.insert(key.clone(), (*value).to_string());
-    }
-    vault::write_vault(&current.master_key, &candidate.0)?;
-    for (key, (_, value)) in prefixed_keys.into_iter().zip(entries) {
-        current
-            .keys
-            .insert(key, Zeroizing::new((*value).to_string()));
-    }
-    Ok(())
+    transaction(|candidate| {
+        for (key, (_, value)) in prefixed_keys.iter().zip(entries) {
+            candidate.insert(key.clone(), (*value).to_string());
+        }
+        Ok(())
+    })
 }
 
 fn validate_raw_batch(entries: &[(&str, &str)]) -> Result<(), String> {
@@ -99,15 +64,68 @@ pub fn get_raw(key: &str) -> Result<Zeroizing<String>, String> {
         .ok_or_else(|| "clé non trouvée".to_string())
 }
 
-pub fn delete_raw(key: &str) -> Result<(), String> {
-    if key.is_empty() || key.len() > MAX_RAW_KEY_LEN {
+pub fn get_or_create_random_raw(key: &str, byte_len: usize) -> Result<Zeroizing<Vec<u8>>, String> {
+    use base64::Engine;
+    use rand::RngCore;
+
+    if key.is_empty() || key.len() > MAX_RAW_KEY_LEN || !(16..=64).contains(&byte_len) {
         return Err("clé du coffre invalide".to_string());
     }
     let prefixed = format!("{RAW_PREFIX}{key}");
-    let mut state = STATE.lock().map_err(|_| "erreur de stockage".to_string())?;
+    let mut state = STATE.lock().map_err(|_| "coffre indisponible".to_string())?;
     let current = state
         .as_mut()
         .ok_or_else(|| "coffre indisponible".to_string())?;
-    current.keys.remove(&prefixed);
-    flush_vault(current)
+    if let Some(encoded) = current.keys.get(&prefixed) {
+        let decoded = Zeroizing::new(
+            base64::engine::general_purpose::STANDARD
+                .decode(encoded.as_bytes())
+                .map_err(|_| "coffre invalide".to_string())?,
+        );
+        if decoded.len() != byte_len {
+            return Err("coffre invalide".to_string());
+        }
+        return Ok(decoded);
+    }
+
+    let mut random = Zeroizing::new(vec![0_u8; byte_len]);
+    rand::rngs::OsRng.fill_bytes(&mut random);
+    let encoded = Zeroizing::new(base64::engine::general_purpose::STANDARD.encode(&*random));
+    commit_candidate_with(
+        current,
+        |candidate| {
+            candidate.insert(prefixed, encoded.to_string());
+            Ok(())
+        },
+        vault::write_vault,
+    )?;
+    Ok(random)
+}
+
+pub fn delete_raw(key: &str) -> Result<(), String> {
+    delete_raw_batch(&[key])
+}
+
+pub fn delete_raw_batch(keys: &[&str]) -> Result<(), String> {
+    validate_raw_keys(keys)?;
+    let prefixed: Vec<String> = keys.iter().map(|key| format!("{RAW_PREFIX}{key}")).collect();
+    transaction(|candidate| {
+        for key in &prefixed {
+            candidate.remove(key);
+        }
+        Ok(())
+    })
+}
+
+fn validate_raw_keys(keys: &[&str]) -> Result<(), String> {
+    if keys.is_empty() || keys.len() > MAX_BATCH_ENTRIES {
+        return Err("lot de secrets invalide".to_string());
+    }
+    let mut unique = std::collections::HashSet::with_capacity(keys.len());
+    for key in keys {
+        if key.is_empty() || key.len() > MAX_RAW_KEY_LEN || !unique.insert(*key) {
+            return Err("clé du coffre invalide".to_string());
+        }
+    }
+    Ok(())
 }

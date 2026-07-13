@@ -10,14 +10,15 @@ struct Stored {
     access: String,
     refresh: String,
     expires_at: i64,
-    account_id: String,
+    #[serde(rename = "account_id")]
+    account_hint: String,
 }
 
 impl Drop for Stored {
     fn drop(&mut self) {
         self.access.zeroize();
         self.refresh.zeroize();
-        self.account_id.zeroize();
+        self.account_hint.zeroize();
     }
 }
 
@@ -25,7 +26,8 @@ pub struct CodexTokens {
     pub access: Zeroizing<String>,
     pub refresh: Zeroizing<String>,
     pub expires_at: i64,
-    pub account_id: Zeroizing<String>,
+    /// Indice de routage non vérifié. Le serveur valide le bearer token.
+    pub account_hint: Zeroizing<String>,
 }
 
 impl CodexTokens {
@@ -39,7 +41,7 @@ pub fn save(tokens: &CodexTokens) -> Result<(), String> {
         access: tokens.access.to_string(),
         refresh: tokens.refresh.to_string(),
         expires_at: tokens.expires_at,
-        account_id: tokens.account_id.as_str().to_string(),
+        account_hint: tokens.account_hint.as_str().to_string(),
     };
     let mut json = serde_json::to_string(&raw).map_err(|e| format!("json: {e}"))?;
     let result = api_keys::set_raw(VAULT_KEY, &json);
@@ -56,7 +58,7 @@ pub fn load() -> Result<Option<CodexTokens>, String> {
                 access: Zeroizing::new(std::mem::take(&mut raw.access)),
                 refresh: Zeroizing::new(std::mem::take(&mut raw.refresh)),
                 expires_at: raw.expires_at,
-                account_id: Zeroizing::new(std::mem::take(&mut raw.account_id)),
+                account_hint: Zeroizing::new(std::mem::take(&mut raw.account_hint)),
             };
             Ok(Some(tokens))
         }

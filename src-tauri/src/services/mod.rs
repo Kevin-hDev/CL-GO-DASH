@@ -31,6 +31,7 @@ pub mod ollama_port;
 pub mod ollama_ps;
 pub mod paths;
 pub mod personality_injection;
+pub mod private_store;
 pub mod reasoning;
 mod reasoning_google;
 #[cfg(test)]

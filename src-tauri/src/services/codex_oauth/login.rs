@@ -35,14 +35,14 @@ pub async fn login() -> Result<String, String> {
     let state = generate_state();
     let url = build_auth_url(&pair.challenge, &state);
 
-    open::that(&url).map_err(|e| format!("impossible d'ouvrir le navigateur: {e}"))?;
+    open::that(&url).map_err(|_| "impossible d'ouvrir le navigateur".to_string())?;
     eprintln!("[codex] navigateur ouvert, attente du callback...");
 
     let cb = callback::wait_for_callback(&state).await?;
     eprintln!("[codex] code reçu, échange en cours...");
 
-    let creds = token::exchange_code(&cb.code, pair.verifier.as_str()).await?;
-    let email = jwt::extract_claims(&creds.access)
+    let creds = token::exchange_code(cb.code.as_str(), pair.verifier.as_str()).await?;
+    let email = jwt::extract_display_claims(&creds.access)
         .ok()
         .and_then(|c| c.email)
         .unwrap_or_else(|| "inconnu".to_string());

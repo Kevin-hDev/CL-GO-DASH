@@ -52,14 +52,8 @@ fn encode_file(map: &HashMap<String, String>) -> Result<String, serde_json::Erro
 
 fn flush(map: &HashMap<String, String>) -> Result<(), String> {
     let path = map_path();
-    if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent).map_err(|e| format!("mkdir: {e}"))?;
-    }
-    let tmp = path.with_extension("json.tmp");
-    let json = encode_file(map).map_err(|e| format!("json: {e}"))?;
-    std::fs::write(&tmp, json).map_err(|e| format!("write: {e}"))?;
-    std::fs::rename(&tmp, &path).map_err(|e| format!("rename: {e}"))?;
-    Ok(())
+    let json = encode_file(map).map_err(|_| "stockage des sessions impossible".to_string())?;
+    crate::services::private_store::atomic_write(&path, json.as_bytes())
 }
 
 pub async fn find(channel_key: &str) -> Option<String> {

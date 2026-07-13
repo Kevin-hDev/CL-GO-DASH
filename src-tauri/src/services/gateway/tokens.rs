@@ -57,8 +57,9 @@ pub fn delete(channel_id: &str, account_id: &str, token_kind: Option<&str>) -> R
             api_keys::delete_raw(&vault_key(channel_id, account_id, kind)?)
         }
         None if channel_id == "slack" => {
-            api_keys::delete_raw(&vault_key(channel_id, account_id, GatewayTokenKind::Bot)?)?;
-            api_keys::delete_raw(&vault_key(channel_id, account_id, GatewayTokenKind::App)?)
+            let bot = vault_key(channel_id, account_id, GatewayTokenKind::Bot)?;
+            let app = vault_key(channel_id, account_id, GatewayTokenKind::App)?;
+            api_keys::delete_raw_batch(&[bot.as_str(), app.as_str()])
         }
         None => api_keys::delete_raw(&vault_key(
             channel_id,

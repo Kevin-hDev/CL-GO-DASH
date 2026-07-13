@@ -1,5 +1,4 @@
 use std::fs;
-use std::io::Write;
 use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
@@ -155,24 +154,13 @@ pub(crate) fn save_to_path(path: &Path, list: &[StoredConnector]) -> Result<(), 
     for connector in list {
         validate_connector(connector)?;
     }
-    let parent = path.parent().ok_or("chemin invalide")?;
-    fs::create_dir_all(parent).map_err(|_| "écriture connecteurs impossible".to_string())?;
-    let tmp = tmp_path(path);
     let data = serde_json::to_vec_pretty(list).map_err(|_| "sérialisation échouée")?;
-    let mut file = fs::File::create(&tmp).map_err(|_| "écriture connecteurs impossible")?;
-    file.write_all(&data)
-        .map_err(|_| "écriture connecteurs impossible".to_string())?;
-    file.sync_all()
-        .map_err(|_| "écriture connecteurs impossible".to_string())?;
-    fs::rename(&tmp, path).map_err(|_| "écriture connecteurs impossible".to_string())
+    crate::services::private_store::atomic_write(path, &data)
+        .map_err(|_| "écriture connecteurs impossible".to_string())
 }
 
 fn storage_path() -> PathBuf {
     crate::services::paths::data_dir().join(FILENAME)
-}
-
-fn tmp_path(path: &Path) -> PathBuf {
-    path.with_file_name(format!("{FILENAME}.tmp"))
 }
 
 fn is_valid_status(status: &str) -> bool {

@@ -5,7 +5,7 @@ use tokio::io::{AsyncWriteExt, BufReader};
 async fn rejects_a_line_before_it_can_exceed_the_limit() {
     let (mut writer, reader) = tokio::io::duplex(64);
     let producer = tokio::spawn(async move {
-        writer.write_all(&vec![b'x'; 65]).await.unwrap();
+        writer.write_all(&[b'x'; 65]).await.unwrap();
         writer.shutdown().await.unwrap();
     });
     let mut reader = BufReader::with_capacity(16, reader);

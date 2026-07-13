@@ -5,6 +5,7 @@ use super::types::{CodexRequest, ReasoningConfig, CODEX_API_BASE};
 use crate::services::agent_local::types_ollama::ChatMessage;
 use crate::services::codex_oauth::store::CodexTokens;
 use crate::services::codex_oauth::token;
+use crate::services::secure_http::AuthenticatedClient;
 
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(180);
 
@@ -89,29 +90,20 @@ async fn send_request(
         reasoning,
         include,
     };
-    let url = format!("{CODEX_API_BASE}/responses");
-    let body_json = serde_json::to_string(&body).map_err(|e| format!("json: {e}"))?;
-
-    let client = reqwest::Client::builder()
-        .timeout(options.timeout)
-        .build()
-        .map_err(|e| format!("http client: {e}"))?;
-
-    let resp = client
-        .post(&url)
+    let body_json =
+        serde_json::to_string(&body).map_err(|_| "requête Codex invalide".to_string())?;
+    let client = AuthenticatedClient::new(options.timeout)
+        .map_err(|_| "requête Codex refusée".to_string())?;
+    let request = client
+        .post(format!("{CODEX_API_BASE}/responses"))
         .bearer_auth(creds.access.as_str())
-        .header("chatgpt-account-id", creds.account_id.as_str())
+        .header("chatgpt-account-id", creds.account_hint.as_str())
         .header("OpenAI-Beta", "responses=experimental")
         .header("Content-Type", "application/json")
         .header("Accept", "text/event-stream")
-        .body(body_json)
-        .send()
+        .body(body_json);
+    client
+        .send_success(request)
         .await
-        .map_err(|e| format!("codex request: {e}"))?;
-
-    if !resp.status().is_success() {
-        let status = resp.status();
-        return Err(format!("Codex API {status}"));
-    }
-    Ok(resp)
+        .map_err(|_| "requête Codex refusée".to_string())
 }

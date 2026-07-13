@@ -71,13 +71,13 @@ async fn parse_response(resp: reqwest::Response) -> Result<CodexTokens, String> 
     let expires_in = raw.expires_in.unwrap_or(3600).clamp(1, 86_400);
     let expires_at = chrono::Utc::now().timestamp() + expires_in;
 
-    let claims = jwt::extract_claims(&access)?;
+    let claims = jwt::extract_display_claims(&access)?;
 
     Ok(CodexTokens {
         access,
         refresh: refresh_val,
         expires_at,
-        account_id: Zeroizing::new(claims.account_id),
+        account_hint: Zeroizing::new(claims.account_hint),
     })
 }
 

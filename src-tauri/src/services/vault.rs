@@ -109,16 +109,19 @@ pub(crate) fn decrypt(master_key: &[u8], vault_bytes: &[u8]) -> Result<Vec<u8>, 
     let nonce_bytes = B64
         .decode(&vf.nonce)
         .map_err(|e| format!("nonce decode: {e}"))?;
+    let nonce_array: [u8; 24] = nonce_bytes
+        .try_into()
+        .map_err(|_| "vault nonce invalide".to_string())?;
     let ciphertext = B64
         .decode(&vf.data)
         .map_err(|e| format!("data decode: {e}"))?;
 
-    let nonce = XNonce::from_slice(&nonce_bytes);
+    let nonce = XNonce::from(nonce_array);
     let cipher =
         XChaCha20Poly1305::new_from_slice(master_key).map_err(|e| format!("cipher init: {e}"))?;
 
     cipher
-        .decrypt(nonce, ciphertext.as_ref())
+        .decrypt(&nonce, ciphertext.as_ref())
         .map_err(|e| format!("decrypt: {e}"))
 }
 
@@ -136,18 +139,12 @@ pub fn read_vault(master_key: &[u8]) -> Result<HashMap<String, String>, String> 
 
 pub fn write_vault(master_key: &[u8], map: &HashMap<String, String>) -> Result<(), String> {
     let path = vault_path();
-    if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent).map_err(|e| format!("mkdir: {e}"))?;
-    }
     let mut plaintext = serde_json::to_vec(map).map_err(|e| format!("json: {e}"))?;
     let encrypt_result = encrypt(master_key, &plaintext);
     plaintext.zeroize();
     let encrypted = encrypt_result?;
 
-    let tmp = path.with_extension("tmp");
-    std::fs::write(&tmp, &encrypted).map_err(|e| format!("write: {e}"))?;
-    std::fs::rename(&tmp, &path).map_err(|e| format!("rename: {e}"))?;
-    Ok(())
+    crate::services::private_store::atomic_write(&path, &encrypted)
 }
 
 pub fn read_legacy_keychain_keys() -> HashMap<String, Zeroizing<String>> {

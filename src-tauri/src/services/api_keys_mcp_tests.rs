@@ -4,21 +4,21 @@
 //! Les fonctions set_mcp_token / get_mcp_token / delete_mcp_token valident
 //! l'id du connecteur AVANT de locker le STATE global. Donc :
 //!   - id invalide  -> Err("identifiant connecteur invalide")  (avant STATE)
-//!   - id valide    -> Err("vault not initialized")            (validation OK)
+//!   - id valide    -> Err("coffre indisponible")              (validation OK)
 //!
 //! Cette distinction nous permet de tester la validation purement, sans
 //! initialiser le vault ni toucher au keyring OS.
 
 use super::{delete_mcp_token, get_mcp_token, has_mcp_token, set_mcp_token};
 
-/// Un id valide doit passer la validation puis échouer sur "vault not
-/// initialized". On l'utilise pour distinguer "validation OK" des autres.
-const VAULT_UNINIT: &str = "vault not initialized";
+/// Un id valide doit passer la validation puis échouer sur le coffre absent.
+/// On l'utilise pour distinguer "validation OK" des autres.
+const VAULT_UNINIT: &str = "coffre indisponible";
 
 /// Helper : prouve que l'id passe la validation (échec attendu = STATE absent).
 fn passes_validation(connector_id: &str) -> bool {
     // set_mcp_token valide d'abord l'id, puis tente un lock STATE. Si l'id est
-    // valide, on atteint l'erreur "vault not initialized".
+    // valide, on atteint l'erreur générique du coffre absent.
     match set_mcp_token(connector_id, "{\"token\":\"x\"}") {
         Err(msg) if msg.contains(VAULT_UNINIT) => true,
         Ok(_) => true,

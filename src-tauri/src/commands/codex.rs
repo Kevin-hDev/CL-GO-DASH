@@ -26,7 +26,7 @@ pub fn codex_status() -> Result<CodexStatus, String> {
     let logged_in = store::is_logged_in();
     let email = if logged_in {
         store::load()?
-            .and_then(|t| jwt::extract_claims(&t.access).ok())
+            .and_then(|t| jwt::extract_display_claims(&t.access).ok())
             .and_then(|c| c.email)
     } else {
         None

@@ -1,5 +1,5 @@
+use crate::services::api_keys;
 use crate::services::mcp_bridge::{config, env_tokens, process_manager, registry};
-use crate::services::{api_keys, mcp_oauth::storage};
 use tauri::Emitter;
 
 #[tauri::command]
@@ -84,10 +84,12 @@ pub async fn configure_mcp_connector_tokens(
         .zip(&env_tokens)
         .map(|(key, token)| (key.as_str(), token.value.as_str()))
         .collect();
+    let previous = config::find(&connector.id)?;
     commit_after_probe(
         probe,
-        || api_keys::set_raw_batch(&entries),
         || config::upsert(connector.clone()),
+        || api_keys::set_raw_batch(&entries),
+        || restore_connector(&connector.id, previous),
     )?;
     registry::invalidate_cache(&connector.id);
     let _ = app.emit("fs:connectors-changed", ());
@@ -96,29 +98,43 @@ pub async fn configure_mcp_connector_tokens(
 
 fn commit_after_probe(
     probe: Result<(), String>,
-    store_secrets: impl FnOnce() -> Result<(), String>,
     store_config: impl FnOnce() -> Result<(), String>,
+    store_secrets: impl FnOnce() -> Result<(), String>,
+    rollback_config: impl FnOnce() -> Result<(), String>,
 ) -> Result<(), String> {
     probe?;
-    store_secrets()?;
-    store_config()
+    store_config()?;
+    if let Err(error) = store_secrets() {
+        let _ = rollback_config();
+        return Err(error);
+    }
+    Ok(())
+}
+
+fn restore_connector(
+    connector_id: &str,
+    previous: Option<config::StoredConnector>,
+) -> Result<(), String> {
+    match previous {
+        Some(connector) => config::upsert(connector),
+        None => config::remove(connector_id).map(|_| ()),
+    }
 }
 
 fn delete_connector_secrets(
     connector_id: &str,
     connector: Option<&config::StoredConnector>,
 ) -> Result<(), String> {
-    storage::delete_tokens(connector_id)?;
-    let Some(connector) = connector else {
-        return Ok(());
-    };
-    let env_keys = config::validated_env_keys(connector.env_keys.as_deref())?;
-    for env_key in env_keys {
-        let vault_key = env_tokens::vault_key(connector_id, &env_key);
-        api_keys::delete_raw(&vault_key)?;
-        api_keys::delete_key_raw(&vault_key)?;
-    }
-    Ok(())
+    let env_keys = connector
+        .map(|value| config::validated_env_keys(value.env_keys.as_deref()))
+        .transpose()?
+        .unwrap_or_default();
+    let vault_keys: Vec<String> = env_keys
+        .iter()
+        .map(|env_key| env_tokens::vault_key(connector_id, env_key))
+        .collect();
+    let refs: Vec<&str> = vault_keys.iter().map(String::as_str).collect();
+    api_keys::delete_mcp_bundle(connector_id, &refs)
 }
 
 #[cfg(test)]
@@ -140,9 +156,26 @@ mod tests {
                 config_write.store(true, Ordering::SeqCst);
                 Ok(())
             },
+            || Ok(()),
         );
         assert!(result.is_err());
         assert!(!secret_write.load(Ordering::SeqCst));
         assert!(!config_write.load(Ordering::SeqCst));
+    }
+
+    #[test]
+    fn failed_secret_write_rolls_back_configuration() {
+        let rollback = AtomicBool::new(false);
+        let result = commit_after_probe(
+            Ok(()),
+            || Ok(()),
+            || Err("vault failed".to_string()),
+            || {
+                rollback.store(true, Ordering::SeqCst);
+                Ok(())
+            },
+        );
+        assert!(result.is_err());
+        assert!(rollback.load(Ordering::SeqCst));
     }
 }

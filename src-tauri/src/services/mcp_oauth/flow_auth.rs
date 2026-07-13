@@ -68,19 +68,32 @@ fn open_url_native(url: &str) -> Result<(), String> {
 }
 
 pub fn verify_state_constant_time(expected: &str, received: &str) -> Result<(), String> {
-    let a = expected.as_bytes();
-    let b = received.as_bytes();
-    if a.len() != b.len() {
-        return Err("état OAuth invalide".to_string());
-    }
-    let mut diff: u8 = 0;
-    for (x, y) in a.iter().zip(b.iter()) {
-        diff |= x ^ y;
+    const STATE_LEN: usize = 43;
+    let mut expected_fixed = [0_u8; STATE_LEN];
+    let mut received_fixed = [0_u8; STATE_LEN];
+    let mut diff = copy_fixed_state(expected, &mut expected_fixed)
+        | copy_fixed_state(received, &mut received_fixed);
+    for index in 0..STATE_LEN {
+        diff |= expected_fixed[index] ^ received_fixed[index];
     }
     if diff != 0 {
         return Err("état OAuth invalide".to_string());
     }
     Ok(())
+}
+
+fn copy_fixed_state(input: &str, output: &mut [u8; 43]) -> u8 {
+    let bytes = input.as_bytes();
+    let valid = u8::from(
+        bytes.len() == output.len()
+            && bytes
+                .iter()
+                .all(|byte| byte.is_ascii_alphanumeric() || *byte == b'-' || *byte == b'_'),
+    );
+    for (index, byte) in bytes.iter().take(output.len()).enumerate() {
+        output[index] = *byte;
+    }
+    valid ^ 1
 }
 
 pub async fn register_client(
@@ -161,3 +174,7 @@ pub async fn exchange_code(
         client_secret,
     ))
 }
+
+#[cfg(test)]
+#[path = "flow_auth_tests.rs"]
+mod tests;

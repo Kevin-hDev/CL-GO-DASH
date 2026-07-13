@@ -2,42 +2,35 @@ fn registry_path() -> std::path::PathBuf {
     crate::services::paths::data_dir().join("configured-providers.json")
 }
 
-fn read_registry() -> Vec<String> {
-    let path = registry_path();
-    let content = match std::fs::read_to_string(&path) {
-        Ok(content) => content,
-        Err(_) => return Vec::new(),
-    };
-    serde_json::from_str(&content).unwrap_or_default()
+fn provider_ids<'a>(keys: impl Iterator<Item = &'a str>) -> Vec<String> {
+    let mut ids: Vec<String> = keys
+        .filter(|id| validate::validate_provider(id).is_ok())
+        .map(str::to_string)
+        .collect();
+    ids.sort_unstable();
+    ids.dedup();
+    ids
 }
 
 fn write_registry(ids: &[String]) -> Result<(), String> {
     let path = registry_path();
-    if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent).map_err(|_| "erreur de stockage".to_string())?;
-    }
     let json = serde_json::to_string_pretty(ids).map_err(|_| "erreur de stockage".to_string())?;
-    let tmp = path.with_extension("tmp");
-    std::fs::write(&tmp, &json).map_err(|_| "erreur de stockage".to_string())?;
-    std::fs::rename(&tmp, &path).map_err(|_| "erreur de stockage".to_string())?;
-    Ok(())
+    crate::services::private_store::atomic_write(&path, json.as_bytes())
 }
 
-fn add_to_registry(provider_id: &str) -> Result<(), String> {
-    let mut ids = read_registry();
-    if !ids.iter().any(|id| id == provider_id) {
-        ids.push(provider_id.to_string());
-        write_registry(&ids)?;
-    }
-    Ok(())
+fn configured_from_state() -> Vec<String> {
+    let Ok(state) = STATE.lock() else {
+        return Vec::new();
+    };
+    let Some(current) = state.as_ref() else {
+        return Vec::new();
+    };
+    provider_ids(current.keys.keys().map(String::as_str))
 }
 
-fn remove_from_registry(provider_id: &str) -> Result<(), String> {
-    let mut ids = read_registry();
-    let before = ids.len();
-    ids.retain(|id| id != provider_id);
-    if ids.len() != before {
-        write_registry(&ids)?;
+fn sync_registry_cache() {
+    let ids = configured_from_state();
+    if write_registry(&ids).is_err() {
+        eprintln!("[vault] provider registry synchronization failed");
     }
-    Ok(())
 }

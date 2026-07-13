@@ -8,7 +8,7 @@ fn tokens_with_expiry(expires_at: i64) -> CodexTokens {
         access: Zeroizing::new("access-token".to_string()),
         refresh: Zeroizing::new("refresh-token".to_string()),
         expires_at,
-        account_id: Zeroizing::new("acct_123".to_string()),
+        account_hint: Zeroizing::new("acct_123".to_string()),
     }
 }
 
