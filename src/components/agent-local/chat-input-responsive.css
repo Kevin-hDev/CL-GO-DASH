@@ -12,13 +12,15 @@
 }
 
 .perm-mode-root,
-.ms-root {
+.ms-root,
+.rs-root {
   flex: 0 0 auto;
   min-width: 0;
 }
 
 .perm-mode-trigger,
-.ms-trigger {
+.ms-trigger,
+.rs-trigger {
   min-width: 0;
   max-width: 100%;
 }
@@ -35,18 +37,20 @@
 }
 
 .perm-mode-dropdown,
-.ms-dropdown {
+.ms-dropdown,
+.rs-dropdown {
   z-index: 1000;
 }
 
 @container (max-width: 430px) {
   .perm-mode-text,
-  .ms-trigger-reasoning span {
+  .rs-trigger-label {
     display: none;
   }
 
   .perm-mode-caret,
-  .ms-trigger-caret {
+  .ms-trigger-caret,
+  .rs-trigger-caret {
     opacity: 1;
   }
 

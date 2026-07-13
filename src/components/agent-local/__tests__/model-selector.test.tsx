@@ -48,25 +48,24 @@ function model(overrides: Partial<AvailableModel>): AvailableModel {
 }
 
 describe("ModelSelector", () => {
-  it("remplace le libellé Activée par l'icône cerveau pour un toggle simple", () => {
+  it("n'affiche plus la réflexion dans le sélecteur de modèle", () => {
     groups = new Map([["ollama", [model({ id: "llama3" })]]]);
 
     const { container } = render(
       <ModelSelector
+        groups={groups}
         selectedModel="llama3"
         selectedProvider="ollama"
-        reasoningMode="auto"
         onSelect={vi.fn()}
-        onReasoningModeChange={vi.fn()}
       />,
     );
 
     expect(screen.getByText("llama3")).toBeTruthy();
     expect(screen.queryByText("Activée")).toBeNull();
-    expect(container.querySelector(".ms-trigger-reasoning-icon")).toBeTruthy();
+    expect(container.querySelector(".ms-trigger-reasoning-icon")).toBeNull();
   });
 
-  it("garde le libellé d'effort et ajoute l'icône cerveau", () => {
+  it("réserve le bouton au nom du modèle", () => {
     groups = new Map([["openai", [model({
       id: "gpt-5",
       provider_id: "openai",
@@ -76,17 +75,16 @@ describe("ModelSelector", () => {
 
     const { container } = render(
       <ModelSelector
+        groups={groups}
         selectedModel="gpt-5"
         selectedProvider="openai"
-        reasoningMode="high"
         onSelect={vi.fn()}
-        onReasoningModeChange={vi.fn()}
       />,
     );
 
     expect(screen.getByText("gpt-5")).toBeTruthy();
-    expect(screen.getByText("Forte")).toBeTruthy();
-    expect(container.querySelector(".ms-trigger-reasoning-icon")).toBeTruthy();
+    expect(screen.queryByText("Forte")).toBeNull();
+    expect(container.querySelector(".ms-trigger-reasoning-icon")).toBeNull();
   });
 
   it("ouvre la liste des modèles dans un portail global", () => {
@@ -95,11 +93,10 @@ describe("ModelSelector", () => {
     const { container } = render(
       <div data-testid="host">
         <ModelSelector
+          groups={groups}
           selectedModel="llama3"
           selectedProvider="ollama"
-          reasoningMode="auto"
           onSelect={vi.fn()}
-          onReasoningModeChange={vi.fn()}
         />
       </div>,
     );

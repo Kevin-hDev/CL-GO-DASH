@@ -1,6 +1,6 @@
 import { ChatPlusMenu } from "./chat-plus-menu";
 import { ContextProgress } from "./context-progress";
-import { ModelSelector } from "./model-selector";
+import { ModelControls } from "./model-controls";
 import { PermissionModeSelector } from "./permission-mode-selector";
 import { MissingDirectoryPrompt } from "./missing-directory-prompt";
 import { PlanModeBadge } from "./plan-mode-badge";
@@ -86,7 +86,7 @@ export function ChatInputActionsRow({
       <RetryIndicator indicator={retryIndicator} />
       {planModeEnabled && <PlanModeBadge onDisable={() => onPlanModeChange?.(false)} />}
       <div className="chat-input-spacer" />
-      <ModelSelector
+      <ModelControls
         selectedModel={modelName}
         selectedProvider={providerName}
         onSelect={onModelChange}

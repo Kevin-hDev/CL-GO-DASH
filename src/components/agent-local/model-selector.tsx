@@ -5,35 +5,25 @@ import { useKeyboard } from "@/hooks/use-keyboard";
 import { Tooltip } from "@/components/ui/tooltip";
 import { floatingMenuPortalRoot, useFloatingMenuPosition } from "@/hooks/use-floating-menu-position";
 import { focusLocalListItem } from "@/hooks/use-local-list-navigation";
-import { Brain, CaretDown, MagnifyingGlass } from "@/components/ui/icons";
-import {
-  useAvailableModels,
-  type AvailableModel,
-} from "@/hooks/use-available-models";
+import { CaretDown, MagnifyingGlass } from "@/components/ui/icons";
+import type { AvailableModel } from "@/hooks/use-available-models";
 import { useFavoriteModels } from "@/hooks/use-favorite-models";
-import {
-  normalizeReasoningMode,
-  reasoningModeOptions,
-  type ReasoningMode,
-} from "@/lib/reasoning-modes";
 import { ModelSelectorList } from "./model-selector-list";
 import "./model-selector.css";
 
 interface ModelSelectorProps {
+  groups: Map<string, AvailableModel[]>;
   selectedModel: string;
   selectedProvider: string;
   onSelect: (model: string, provider: string) => void;
-  reasoningMode?: string | null;
-  onReasoningModeChange: (mode: ReasoningMode) => void;
   align?: "left" | "right";
 }
 
 export function ModelSelector({
+  groups,
   selectedModel,
   selectedProvider,
   onSelect,
-  reasoningMode,
-  onReasoningModeChange,
   align = "left",
 }: ModelSelectorProps) {
   const { t } = useTranslation();
@@ -42,7 +32,6 @@ export function ModelSelector({
   const ref = useRef<HTMLDivElement>(null);
   const { anchorRef, floatingRef, floatingStyle, updateFloatingPosition } =
     useFloatingMenuPosition(open, align, 4);
-  const { groups } = useAvailableModels();
   const { favorites, isFavorite, toggle: toggleFav } = useFavoriteModels();
 
   useKeyboard({ onEscape: () => setOpen(false) });
@@ -57,18 +46,6 @@ export function ModelSelector({
     document.addEventListener("mousedown", onDoc);
     return () => document.removeEventListener("mousedown", onDoc);
   }, [floatingRef, open]);
-
-  const selectedEntry = useMemo(() => {
-    const list = groups.get(selectedProvider);
-    return list?.find((m) => m.id === selectedModel) ?? null;
-  }, [groups, selectedProvider, selectedModel]);
-
-  const modeOptions = useMemo(() => reasoningModeOptions(selectedEntry), [selectedEntry]);
-  const selectedReasoningMode = normalizeReasoningMode(reasoningMode, modeOptions);
-  const selectedReasoningLabel = modeOptions.find((option) => option.mode === selectedReasoningMode)?.labelKey;
-  const simpleReasoningToggle = selectedReasoningMode === "auto"
-    && modeOptions.every((option) => option.mode === "off" || option.mode === "auto");
-  const showReasoningModes = modeOptions.length > 0;
 
   const filteredGroups = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -89,7 +66,7 @@ export function ModelSelector({
       ref={floatingRef}
       style={floatingStyle}
       data-keyboard-scope="local"
-      className={`ms-dropdown${showReasoningModes ? " ms-dropdown-with-reasoning" : ""}`}
+      className="ms-dropdown"
     >
       <div className="ms-main">
         <div className="ms-search">
@@ -128,21 +105,6 @@ export function ModelSelector({
           />
         </div>
       </div>
-      {showReasoningModes && (
-        <aside className="ms-reasoning-panel" aria-label={t("agentLocal.reasoningTitle")}>
-          <div className="ms-reasoning-title">{t("agentLocal.reasoningTitle")}</div>
-          {modeOptions.map((option) => (
-            <button
-              key={option.mode}
-              type="button"
-              className={`ms-reasoning-option${selectedReasoningMode === option.mode ? " ms-reasoning-option-active" : ""}`}
-              onClick={() => onReasoningModeChange(option.mode)}
-            >
-              {t(option.labelKey)}
-            </button>
-          ))}
-        </aside>
-      )}
     </div>
   ) : null;
   const portalRoot = floatingMenuPortalRoot();
@@ -172,12 +134,6 @@ export function ModelSelector({
           className={`ms-trigger${selectedModel ? "" : " ms-trigger-empty"}`}
         >
           <span className="ms-trigger-label">{selectedModel || t("agentLocal.selectModel")}</span>
-          {selectedReasoningLabel && selectedReasoningMode !== "off" && (
-            <span className="ms-trigger-reasoning">
-              <Brain size="var(--icon-xs)" className="ms-trigger-reasoning-icon" />
-              {!simpleReasoningToggle && <span>{t(selectedReasoningLabel)}</span>}
-            </span>
-          )}
           <CaretDown size="var(--icon-2xs)" className="ms-trigger-caret" />
         </button>
       </Tooltip>

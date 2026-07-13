@@ -55,19 +55,6 @@
   color: var(--ink-faint);
 }
 
-.ms-trigger-reasoning {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  margin-left: 4px;
-  color: var(--select-text);
-  flex-shrink: 0;
-}
-
-.ms-trigger-reasoning-icon {
-  flex-shrink: 0;
-}
-
 .ms-dropdown {
   position: absolute;
   bottom: 100%;
@@ -80,7 +67,7 @@
   border-radius: var(--radius-md);
   border: 1px solid var(--edge);
   background: var(--popover-bg, var(--shell));
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-lg);
   z-index: 50;
   overflow: hidden;
   backdrop-filter: var(--popover-backdrop-filter, none);
@@ -90,13 +77,6 @@
 .ms-root-align-right .ms-dropdown {
   right: 0;
   left: auto;
-}
-
-.ms-dropdown-with-reasoning {
-  width: 439px;
-  max-width: min(439px, calc(100vw - 24px));
-  flex-direction: row;
-  align-items: stretch;
 }
 
 .ms-main {
@@ -139,52 +119,6 @@
   overflow-x: hidden;
   flex: 1;
   min-width: 0;
-}
-
-.ms-reasoning-panel {
-  width: 97px;
-  flex: 0 0 97px;
-  border-left: 1px solid var(--edge);
-  padding: 8px;
-  background: var(--shell);
-}
-
-[data-theme="dark"] .ms-reasoning-panel {
-  background: rgba(255, 255, 255, 0.03);
-}
-
-.ms-reasoning-title {
-  padding: 4px 6px 8px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0;
-  text-transform: uppercase;
-  color: var(--ink-faint);
-}
-
-.ms-reasoning-option {
-  width: 100%;
-  border: 0;
-  border-radius: var(--radius-sm);
-  padding: 7px 8px;
-  background: transparent;
-  color: var(--ink-muted);
-  cursor: pointer;
-  font: inherit;
-  font-size: var(--text-xs);
-  text-align: left;
-}
-
-.ms-reasoning-option:hover,
-.ms-reasoning-option:focus-visible {
-  background: var(--surface);
-  color: var(--ink);
-  outline: none;
-}
-
-.ms-reasoning-option-active {
-  background: var(--select-bg);
-  color: var(--select-text);
 }
 
 .ms-empty {
