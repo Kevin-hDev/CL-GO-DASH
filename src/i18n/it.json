@@ -933,6 +933,7 @@
       }
     },
     "comingSoon": "Presto",
+    "localSecurityWarning": "Un connettore MCP locale esegue codice con i permessi del tuo account utente.",
     "config": {
       "addTitle": "Aggiungi {{name}}",
       "token": "Token",

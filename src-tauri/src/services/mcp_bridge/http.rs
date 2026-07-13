@@ -4,8 +4,7 @@ use async_trait::async_trait;
 use serde_json::Value;
 
 use super::response;
-use super::transport::{next_id, sanitize_tools, McpToolDef, McpTransport};
-use crate::services::mcp_oauth::storage;
+use super::transport::{next_id, validate_tools, McpToolDef, McpTransport};
 use crate::services::secure_http::AuthenticatedClient;
 
 const TIMEOUT: Duration = Duration::from_secs(30);
@@ -14,21 +13,13 @@ const ACCEPT: &str = "application/json, text/event-stream";
 pub struct HttpTransport {
     pub connector_id: String,
     pub endpoint: String,
-}
-
-impl HttpTransport {
-    pub fn new(connector_id: String, endpoint: String) -> Self {
-        Self {
-            connector_id,
-            endpoint,
-        }
-    }
+    pub transient_token: Option<zeroize::Zeroizing<String>>,
 }
 
 #[async_trait]
 impl McpTransport for HttpTransport {
     async fn list_tools(&self) -> Result<Vec<McpToolDef>, String> {
-        let token = storage::get_valid_token(&self.connector_id).await?;
+        let token = self.resolve_token().await?;
         let session_id = initialize(&self.endpoint, token.as_str()).await?;
 
         let body = serde_json::json!({
@@ -45,11 +36,11 @@ impl McpTransport for HttpTransport {
         let tools: Vec<McpToolDef> =
             serde_json::from_value(tools_val).map_err(|_| "format tools invalide")?;
 
-        Ok(sanitize_tools(tools))
+        validate_tools(tools)
     }
 
     async fn call_tool(&self, name: &str, args: Value) -> Result<String, String> {
-        let token = storage::get_valid_token(&self.connector_id).await?;
+        let token = self.resolve_token().await?;
         let session_id = initialize(&self.endpoint, token.as_str()).await?;
 
         let body = serde_json::json!({
@@ -64,18 +55,7 @@ impl McpTransport for HttpTransport {
         }
 
         let result = resp.result.ok_or("réponse vide du serveur MCP")?;
-
-        if let Some(content) = result.get("content").and_then(|c| c.as_array()) {
-            let texts: Vec<&str> = content
-                .iter()
-                .filter_map(|item| item.get("text").and_then(|t| t.as_str()))
-                .collect();
-            if !texts.is_empty() {
-                return Ok(texts.join("\n"));
-            }
-        }
-
-        Ok(serde_json::to_string_pretty(&result).unwrap_or_default())
+        super::transport::extract_tool_result(&serde_json::json!({ "result": result }))
     }
 }
 

@@ -11,3 +11,14 @@
   color: var(--ink-muted);
   line-height: 1.4;
 }
+
+.mcc-security-warning {
+  margin: 0 var(--space-lg) var(--space-md);
+  padding: var(--space-sm);
+  border: 1px solid var(--signal-warning);
+  border-radius: var(--radius-sm);
+  background: var(--signal-warning-bg);
+  color: var(--ink-primary);
+  font-size: var(--text-xs);
+  line-height: 1.4;
+}

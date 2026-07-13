@@ -2,7 +2,6 @@ import { useCallback, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { MCP_CATALOG } from "@/lib/mcp-catalog";
-import { connectorPayload } from "@/lib/mcp-connector-payload";
 import { cleanupTauriListener } from "@/lib/tauri-listen";
 
 export type GithubBranchAuthState = "idle" | "connecting" | "testing" | "error";
@@ -39,29 +38,20 @@ export function useGithubBranchAuth(onConnected?: () => void) {
     cleanup();
     setState("connecting");
 
-    const handleOAuthResult = async (payload: Record<string, unknown>) => {
+    const handleOAuthResult = (payload: Record<string, unknown>) => {
       if (payload.connector_id !== "github") return;
       cleanup();
       if (payload.success !== true) {
         setState("error");
         return;
       }
-      try {
-        setState("testing");
-        const connector = connectorPayload(GITHUB_CONNECTOR);
-        await invoke("test_mcp_connector", { connector });
-        await invoke("add_mcp_connector", { connector });
-        onConnected?.();
-        setOpen(false);
-        setState("idle");
-      } catch {
-        await invoke("delete_mcp_oauth_token", { connectorId: "github" }).catch(() => {});
-        setState("error");
-      }
+      onConnected?.();
+      setOpen(false);
+      setState("idle");
     };
 
     const unlistenPromise = listen<Record<string, unknown>>("mcp-oauth-result", (event) => {
-      void handleOAuthResult(event.payload);
+      handleOAuthResult(event.payload);
     });
     unlistenRef.current = unlistenPromise;
 

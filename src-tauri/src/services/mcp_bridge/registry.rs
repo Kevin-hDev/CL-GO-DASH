@@ -5,7 +5,7 @@ use std::time::Instant;
 use super::http::HttpTransport;
 use super::stdio::StdioTransport;
 use super::transport::{McpToolDef, McpTransport};
-use super::{config, token_validation, trusted};
+use super::{config, process_manager, token_validation, trusted};
 
 const MAX_CACHE: usize = 32;
 const CACHE_TTL_SECS: u64 = 300;
@@ -76,22 +76,40 @@ pub async fn get_tools(connector: &EnabledConnector) -> Result<Vec<McpToolDef>, 
     Ok(tools)
 }
 
-pub async fn test_connector(connector: config::StoredConnector) -> Result<(), String> {
-    config::validate_connector(&connector)?;
-    token_validation::validate_connector_tokens(&connector).await?;
-    let id = connector.id.clone();
-    let enabled = build_connector(connector).ok_or("connecteur MCP invalide")?;
-    invalidate_cache(&id);
-    let tools = tokio::time::timeout(
-        std::time::Duration::from_secs(TEST_TIMEOUT_SECS),
-        enabled.transport.list_tools(),
-    )
-    .await
-    .map_err(|_| "test MCP expiré".to_string())?
-    .map_err(|_| "test MCP échoué".to_string())?;
-    set_cached(&id, &tools);
-    Ok(())
+pub async fn resolve_enabled_tool(
+    connector_id: &str,
+    tool_name: &str,
+) -> Result<(EnabledConnector, McpToolDef), String> {
+    config::validate_connector_id(connector_id)?;
+    let connector = get_enabled_connectors()?
+        .into_iter()
+        .find(|connector| connector.id == connector_id)
+        .ok_or_else(|| "outil MCP indisponible".to_string())?;
+    let tools = get_tools(&connector).await?;
+    let active = config::find(connector_id)?
+        .is_some_and(|stored| stored.status == "connected" && stored.enabled_in_chat);
+    if !active {
+        return Err("outil MCP indisponible".to_string());
+    }
+    let tool = select_exact_tool(&tools, tool_name)?;
+    Ok((connector, tool))
 }
+
+pub(crate) fn select_exact_tool(
+    tools: &[McpToolDef],
+    tool_name: &str,
+) -> Result<McpToolDef, String> {
+    let mut matches = tools.iter().filter(|tool| tool.name == tool_name);
+    let tool = matches
+        .next()
+        .ok_or_else(|| "outil MCP indisponible".to_string())?;
+    if matches.next().is_some() {
+        return Err("catalogue MCP invalide".to_string());
+    }
+    Ok(tool.clone())
+}
+
+include!("registry_probe.rs");
 
 pub fn invalidate_cache(connector_id: &str) {
     if let Ok(mut cache) = TOOL_CACHE.lock() {

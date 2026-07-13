@@ -897,6 +897,7 @@
       }
     },
     "comingSoon": "Soon",
+    "localSecurityWarning": "A local MCP connector runs code with your user account permissions.",
     "config": {
       "addTitle": "Add {{name}}",
       "token": "Token",

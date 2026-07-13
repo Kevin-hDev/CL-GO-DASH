@@ -46,28 +46,8 @@ export function McpOauthDialog({ connector, onClose, onConnected }: McpOauthDial
       if (typeof p?.connector_id !== "string" || typeof p?.success !== "boolean") return;
       if (p.connector_id !== connector.id) return;
       if (p.success) {
-        setState("testing");
-        invoke("test_mcp_connector", {
-          connector: {
-            id: connector.id,
-            status: "connected",
-            enabled_in_chat: true,
-            endpoint: connector.endpoint,
-            install_command: connector.install_command,
-            env_keys: connector.env_keys,
-          },
-        })
-          .then(() => {
-            if (!mountedRef.current) return;
-            setState("success");
-            setTimeout(() => onConnected(), 600);
-          })
-          .catch(() => {
-            if (!mountedRef.current) return;
-            invoke("delete_mcp_oauth_token", { connectorId: connector.id }).catch(() => {});
-            setState("error");
-            setError(t("connectors.oauth.errorGeneric"));
-          });
+        setState("success");
+        setTimeout(() => onConnected(), 600);
       } else {
         setState("error");
         setError(t("connectors.oauth.errorGeneric"));

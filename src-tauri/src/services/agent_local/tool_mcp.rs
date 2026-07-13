@@ -3,16 +3,14 @@ use serde_json::Value;
 use crate::services::agent_local::types_tools::ToolResult;
 use crate::services::mcp_bridge::registry;
 use crate::services::mcp_bridge::transport::McpToolDef;
-use std::time::Duration;
 
 const MAX_TOOLS_PER_SERVICE: usize = 15;
-const MCP_CALL_TIMEOUT: Duration = Duration::from_secs(60);
 
 pub async fn execute(args: &Value) -> ToolResult {
     let mode = args["mode"].as_str().unwrap_or("search");
     match mode {
         "search" => search(args).await,
-        "call" => call(args).await,
+        "call" => super::tool_mcp_call::call(args).await,
         _ => ToolResult::err("mode invalide : utiliser 'search' ou 'call'".to_string()),
     }
 }
@@ -99,77 +97,4 @@ fn matches_keywords(tool: &McpToolDef, keywords: &[&str], connector_id: &str) ->
     keywords
         .iter()
         .any(|kw| name.contains(kw) || desc.contains(kw) || cid.contains(kw))
-}
-
-async fn call(args: &Value) -> ToolResult {
-    let tool_id = match args["tool_id"].as_str() {
-        Some(id) if id.contains('.') => id,
-        _ => return ToolResult::err("tool_id requis (format: connecteur.outil)".to_string()),
-    };
-
-    let (connector_id, tool_name) = match tool_id.split_once('.') {
-        Some(pair) => pair,
-        None => return ToolResult::err("format tool_id invalide".to_string()),
-    };
-
-    if !is_valid_id(connector_id) || !is_valid_tool_name(tool_name) {
-        return ToolResult::err("identifiant invalide".to_string());
-    }
-
-    let connectors = match registry::get_enabled_connectors() {
-        Ok(connectors) => connectors,
-        Err(_) => return ToolResult::err("configuration MCP indisponible".to_string()),
-    };
-    let connector = match connectors.iter().find(|c| c.id == connector_id) {
-        Some(c) => c,
-        None => return ToolResult::err(format!("connecteur '{connector_id}' non disponible")),
-    };
-
-    let arguments = args
-        .get("arguments")
-        .cloned()
-        .unwrap_or(Value::Object(Default::default()));
-
-    let args_size = serde_json::to_string(&arguments)
-        .map(|s| s.len())
-        .unwrap_or(0);
-    if args_size > 65_536 {
-        return ToolResult::err("arguments MCP trop volumineux (max 64 Ko)".to_string());
-    }
-
-    match tokio::time::timeout(
-        MCP_CALL_TIMEOUT,
-        connector.transport.call_tool(tool_name, arguments),
-    )
-    .await
-    {
-        Ok(Ok(result)) => ToolResult::ok(sanitize_mcp_output(&result)),
-        Ok(Err(_)) => ToolResult::err("appel MCP échoué".to_string()),
-        Err(_) => ToolResult::err("Le connecteur MCP n'a pas répondu dans les temps.".to_string()),
-    }
-}
-
-fn is_valid_id(s: &str) -> bool {
-    !s.is_empty()
-        && s.len() <= 64
-        && s.bytes()
-            .all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
-}
-
-fn is_valid_tool_name(s: &str) -> bool {
-    !s.is_empty()
-        && s.len() <= 128
-        && s.bytes()
-            .all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
-}
-
-fn is_bidi_override(c: char) -> bool {
-    matches!(c, '\u{202A}'..='\u{202E}' | '\u{2066}'..='\u{2069}' | '\u{200F}' | '\u{200E}')
-}
-
-fn sanitize_mcp_output(s: &str) -> String {
-    s.chars()
-        .take(4096)
-        .filter(|c| (!c.is_control() || *c == '\n' || *c == '\t') && !is_bidi_override(*c))
-        .collect()
 }

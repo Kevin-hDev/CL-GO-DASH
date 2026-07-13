@@ -933,6 +933,7 @@
       }
     },
     "comingSoon": "近日公開",
+    "localSecurityWarning": "ローカル MCP コネクタは、ユーザーアカウントの権限でコードを実行します。",
     "config": {
       "addTitle": "{{name}} を追加",
       "token": "トークン",

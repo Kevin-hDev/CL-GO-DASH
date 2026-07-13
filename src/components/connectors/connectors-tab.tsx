@@ -135,10 +135,10 @@ export function useConnectorsTabSlots({ navState, onNavChange, onNavReplace }: C
           onClose={() => {
             setDialog(dialog.returnTo === "browse" ? { kind: "browse" } : { kind: "none" });
           }}
-          onValidated={async () => {
-            await addConnector(dialog.connector.id);
+          onValidated={() => {
             onNavChange({ connectorId: dialog.connector.id });
             setDialog({ kind: "none" });
+            return Promise.resolve();
           }}
         />
       )}
@@ -149,10 +149,8 @@ export function useConnectorsTabSlots({ navState, onNavChange, onNavReplace }: C
             setDialog(dialog.returnTo === "browse" ? { kind: "browse" } : { kind: "none" });
           }}
           onConnected={() => {
-            void addConnector(dialog.connector.id).then(() => {
-              onNavChange({ connectorId: dialog.connector.id });
-              setDialog({ kind: "none" });
-            });
+            onNavChange({ connectorId: dialog.connector.id });
+            setDialog({ kind: "none" });
           }}
         />
       )}

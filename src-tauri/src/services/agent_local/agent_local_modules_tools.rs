@@ -89,6 +89,7 @@ pub mod tool_interactive_parse;
 #[cfg(test)]
 pub mod tool_interactive_tests;
 pub mod tool_mcp;
+mod tool_mcp_call;
 pub mod tool_office_limits;
 pub mod tool_office_utils;
 pub mod tool_plan;

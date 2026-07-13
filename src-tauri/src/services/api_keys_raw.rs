@@ -1,27 +1,8 @@
 const MAX_RAW_VALUE_LEN: usize = 8192;
+const MAX_RAW_KEY_LEN: usize = 160;
 const MAX_VAULT_ENTRIES: usize = 500;
 const MAX_BATCH_ENTRIES: usize = 8;
 const RAW_PREFIX: &str = "raw:";
-
-pub fn set_key_raw(key_id: &str, value: &str) -> Result<(), String> {
-    if key_id.is_empty() || key_id.len() > 128 {
-        return Err("identifiant invalide".to_string());
-    }
-    if value.is_empty() || value.len() > 256 {
-        return Err("valeur invalide".to_string());
-    }
-    let mut state = STATE.lock().map_err(|_| "erreur de stockage".to_string())?;
-    let current = state
-        .as_mut()
-        .ok_or_else(|| "coffre indisponible".to_string())?;
-    if !current.keys.contains_key(key_id) && current.keys.len() >= MAX_VAULT_ENTRIES {
-        return Err("limite du coffre atteinte".to_string());
-    }
-    current
-        .keys
-        .insert(key_id.to_string(), Zeroizing::new(value.to_string()));
-    flush_vault(current)
-}
 
 pub fn delete_key_raw(key_id: &str) -> Result<(), String> {
     if key_id.is_empty() || key_id.len() > 128 {
@@ -95,7 +76,7 @@ fn validate_raw_batch(entries: &[(&str, &str)]) -> Result<(), String> {
     }
     let mut unique = std::collections::HashSet::with_capacity(entries.len());
     for (key, value) in entries {
-        if key.is_empty() || key.len() > 64 || !unique.insert(*key) {
+        if key.is_empty() || key.len() > MAX_RAW_KEY_LEN || !unique.insert(*key) {
             return Err("clé du coffre invalide".to_string());
         }
         if value.is_empty() || value.len() > MAX_RAW_VALUE_LEN {
@@ -119,7 +100,7 @@ pub fn get_raw(key: &str) -> Result<Zeroizing<String>, String> {
 }
 
 pub fn delete_raw(key: &str) -> Result<(), String> {
-    if key.is_empty() || key.len() > 64 {
+    if key.is_empty() || key.len() > MAX_RAW_KEY_LEN {
         return Err("clé du coffre invalide".to_string());
     }
     let prefixed = format!("{RAW_PREFIX}{key}");

@@ -933,6 +933,7 @@
       }
     },
     "comingSoon": "即将推出",
+    "localSecurityWarning": "本地 MCP 连接器会使用您的用户账户权限执行代码。",
     "config": {
       "addTitle": "添加 {{name}}",
       "token": "令牌",

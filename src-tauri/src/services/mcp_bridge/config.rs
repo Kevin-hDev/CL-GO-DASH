@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 
-pub use super::env_keys::{validate_env_key, validated_env_keys};
+pub use super::env_keys::validated_env_keys;
 use super::{config_migration, stdio_catalog, stdio_cmd, trusted};
 
 pub const MAX_CONNECTORS: usize = 32;

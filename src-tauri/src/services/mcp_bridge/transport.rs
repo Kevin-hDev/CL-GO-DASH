@@ -1,6 +1,7 @@
 use async_trait::async_trait;
 use serde::Deserialize;
 use serde_json::Value;
+use std::collections::HashSet;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 pub static REQUEST_ID: AtomicU64 = AtomicU64::new(1);
@@ -22,13 +23,16 @@ pub struct McpToolDef {
     pub input_schema: Option<Value>,
 }
 
-pub fn sanitize_tool_def(tool: &mut McpToolDef) {
-    tool.name = tool
-        .name
-        .chars()
-        .filter(|c| c.is_ascii_alphanumeric() || *c == '_' || *c == '-')
-        .take(MAX_NAME_CHARS)
-        .collect();
+fn validate_tool_def(tool: &mut McpToolDef) -> Result<(), String> {
+    if tool.name.is_empty()
+        || tool.name.len() > MAX_NAME_CHARS
+        || !tool
+            .name
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || byte == b'_' || byte == b'-')
+    {
+        return Err("catalogue MCP invalide".to_string());
+    }
     if let Some(ref desc) = tool.description {
         let sanitized: String = desc
             .chars()
@@ -37,43 +41,25 @@ pub fn sanitize_tool_def(tool: &mut McpToolDef) {
             .collect();
         tool.description = Some(sanitized);
     }
-    if let Some(ref schema) = tool.input_schema {
-        if json_depth(schema) > 4 || json_property_count(schema) > 20 {
-            tool.input_schema = None;
+    let schema = tool
+        .input_schema
+        .as_ref()
+        .ok_or_else(|| "catalogue MCP invalide".to_string())?;
+    super::schema::validate_definition(schema).map_err(|_| "catalogue MCP invalide".to_string())
+}
+
+pub fn validate_tools(mut tools: Vec<McpToolDef>) -> Result<Vec<McpToolDef>, String> {
+    if tools.len() > MAX_TOOLS {
+        return Err("catalogue MCP invalide".to_string());
+    }
+    let mut names = HashSet::with_capacity(tools.len());
+    for tool in &mut tools {
+        validate_tool_def(tool)?;
+        if !names.insert(tool.name.clone()) {
+            return Err("catalogue MCP invalide".to_string());
         }
     }
-}
-
-fn json_depth(val: &Value) -> usize {
-    match val {
-        Value::Object(map) => 1 + map.values().map(json_depth).max().unwrap_or(0),
-        Value::Array(arr) => 1 + arr.iter().map(json_depth).max().unwrap_or(0),
-        _ => 0,
-    }
-}
-
-fn json_property_count(val: &Value) -> usize {
-    match val {
-        Value::Object(map) => {
-            let own = map.len();
-            let nested: usize = map.values().map(json_property_count).sum();
-            own + nested
-        }
-        Value::Array(arr) => arr.iter().map(json_property_count).sum(),
-        _ => 0,
-    }
-}
-
-pub fn sanitize_tools(tools: Vec<McpToolDef>) -> Vec<McpToolDef> {
-    tools
-        .into_iter()
-        .take(MAX_TOOLS)
-        .map(|mut t| {
-            sanitize_tool_def(&mut t);
-            t
-        })
-        .filter(|t| !t.name.is_empty())
-        .collect()
+    Ok(tools)
 }
 
 pub fn extract_tool_result(resp: &Value) -> Result<String, String> {
@@ -82,6 +68,7 @@ pub fn extract_tool_result(resp: &Value) -> Result<String, String> {
     }
 
     let result = resp.get("result").ok_or("réponse vide du serveur MCP")?;
+    super::schema_limits::validate(result).map_err(|_| "réponse MCP invalide".to_string())?;
 
     if let Some(content) = result.get("content").and_then(|c| c.as_array()) {
         let texts: Vec<&str> = content

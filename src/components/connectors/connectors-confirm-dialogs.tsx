@@ -31,6 +31,9 @@ export function ConnectorsConfirmDialogs({
         <div className="wk-dialog" role="presentation" onClick={(e) => e.stopPropagation()} onKeyDown={() => {}}>
           <h3>{t("connectors.config.addTitle", { name: dialog.connector.display_name })}</h3>
           <p className="ct-confirm-desc">{t("connectors.config.confirmAddDesc", { name: dialog.connector.display_name })}</p>
+          {dialog.connector.install_command && (
+            <p className="mcc-security-warning">{t("connectors.localSecurityWarning")}</p>
+          )}
           {confirmAddError && <div className="ak-test-result error">{t("connectors.config.testError")}</div>}
           <div className="wk-dialog-footer">
             <button type="button" className="wk-btn-secondary" onClick={() => onCloseAdd(dialog.returnTo)}>{t("connectors.detail.cancel")}</button>

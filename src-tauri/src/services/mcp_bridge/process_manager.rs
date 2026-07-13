@@ -4,7 +4,7 @@ use std::time::Instant;
 
 use std::process::Stdio;
 use std::sync::Arc;
-use tokio::io::{AsyncBufReadExt, BufReader};
+use tokio::io::{AsyncReadExt, BufReader};
 use tokio::process::{Child, ChildStdin, ChildStdout, Command};
 use zeroize::Zeroizing;
 
@@ -78,11 +78,10 @@ pub fn spawn(
 
     if let Some(stderr) = child.stderr.take() {
         tokio::spawn(async move {
-            let mut reader = BufReader::new(stderr);
-            let mut buf = String::new();
+            let mut reader = stderr;
+            let mut buffer = [0_u8; 4096];
             loop {
-                buf.clear();
-                match reader.read_line(&mut buf).await {
+                match reader.read(&mut buffer).await {
                     Ok(0) | Err(_) => break,
                     _ => {}
                 }

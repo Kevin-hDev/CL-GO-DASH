@@ -105,8 +105,24 @@ async fn run_inner(
     )
     .await?;
 
-    storage::store_tokens(connector_id, &tokens)?;
     drop(verifier);
+    let connector = crate::services::mcp_bridge::config::StoredConnector {
+        id: connector_id.to_string(),
+        status: "connected".to_string(),
+        enabled_in_chat: true,
+        endpoint: Some(endpoint.to_string()),
+        install_command: None,
+        env_keys: None,
+    };
+    crate::services::mcp_bridge::registry::test_connector_with_oauth_token(
+        connector.clone(),
+        tokens.access_token.clone(),
+    )
+    .await?;
+    storage::store_tokens(connector_id, &tokens)?;
+    crate::services::mcp_bridge::config::upsert(connector)?;
+    crate::services::mcp_bridge::registry::invalidate_cache(connector_id);
+    let _ = app.emit("fs:connectors-changed", ());
     Ok(())
 }
 
