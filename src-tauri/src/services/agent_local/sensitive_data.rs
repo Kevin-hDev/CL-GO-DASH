@@ -48,6 +48,8 @@ static TOKEN_RE: LazyLock<Regex> = LazyLock::new(|| {
           | xox[a-z]-[a-z0-9-]{8,}
           | [0-9]{5,}:[a-z0-9_-]{20,}
           | (?:AKIA|ASIA)[A-Z0-9]{16}
+          | AIza[a-z0-9_-]{35}
+          | https://hooks[.]slack[.]com/services/[a-z0-9_-]{8,64}/[a-z0-9_-]{8,64}/[a-z0-9_-]{8,128}
           | [a-z0-9_-]{20,}\.[a-z0-9_-]{5,}\.[a-z0-9_-]{20,}
         )",
     )

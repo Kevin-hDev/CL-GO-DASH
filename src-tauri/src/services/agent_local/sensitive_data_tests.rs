@@ -32,6 +32,13 @@ fn redacts_all_supported_credential_shapes() {
         ["sk", "-proj-", &"D".repeat(24)].concat(),
         ["github", "_pat_", &"E".repeat(24)].concat(),
         ["AK", "IA", &"F".repeat(16)].concat(),
+        ["AI", "za", &"K".repeat(35)].concat(),
+        [
+            "https://hooks.slack.com/services/",
+            "T00000000/B00000000/",
+            &"S".repeat(24),
+        ]
+        .concat(),
         format!("{}.{}.{}", "G".repeat(24), "H".repeat(6), "I".repeat(28)),
         ["Bear", "er ", &"J".repeat(24)].concat(),
     ];
