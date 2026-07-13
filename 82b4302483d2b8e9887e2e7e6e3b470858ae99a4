@@ -7,3 +7,7 @@ Relecture contradictoire du rapport du 13 juillet 2026 :
 Complément après durcissement :
 
 - M-1 et M-6 : durcissements appliqués dans 0ec1f18f. Forecast utilise maintenant AuthenticatedClient, les réponses sont bornées, HTTPS est imposé par défaut et l'exception HTTP est limitée aux adresses IP de boucle locale pour Chronos. Cette correction améliore la défense en profondeur sans modifier l'analyse précédente sur le scénario de fuite surévalué.
+
+Complément de la seconde revue :
+
+- H-5 : vrai écart de couverture, corrigé dans 149c016c. Les appels /models, chat non-streaming, test de connexion et quotas utilisent désormais AuthenticatedClient, refusent les redirections et bornent leurs réponses. La qualification HIGH reste surévaluée pour une redirection même origine, puisque le fournisseur reçoit déjà la clé sur la requête initiale ; la correction ferme néanmoins complètement la règle de transport centralisée.
