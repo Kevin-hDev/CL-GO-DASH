@@ -775,6 +775,7 @@ dependencies = [
  "ignore",
  "image",
  "include_dir",
+ "indexmap 2.14.0",
  "keyring",
  "libc",
  "notify",

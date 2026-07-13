@@ -1,12 +1,12 @@
-use std::collections::HashMap;
 use std::sync::LazyLock;
 
+use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use tokio::sync::Mutex;
 
 use crate::services::paths::data_dir;
 
-static MAP: LazyLock<Mutex<HashMap<String, String>>> =
+static MAP: LazyLock<Mutex<IndexMap<String, String>>> =
     LazyLock::new(|| Mutex::new(load_from_disk().unwrap_or_default()));
 
 const MAP_VERSION: u8 = 2;
@@ -14,7 +14,7 @@ const MAP_VERSION: u8 = 2;
 #[derive(Deserialize, Serialize)]
 struct SessionMapFile {
     version: u8,
-    entries: HashMap<String, String>,
+    entries: IndexMap<String, String>,
 }
 
 fn map_path() -> std::path::PathBuf {
@@ -23,19 +23,19 @@ fn map_path() -> std::path::PathBuf {
         .join("gateway-session-map.json")
 }
 
-fn load_from_disk() -> Option<HashMap<String, String>> {
+fn load_from_disk() -> Option<IndexMap<String, String>> {
     let data = std::fs::read_to_string(map_path()).ok()?;
     parse_file(&data).ok()
 }
 
-fn parse_file(data: &str) -> Result<HashMap<String, String>, serde_json::Error> {
+fn parse_file(data: &str) -> Result<IndexMap<String, String>, serde_json::Error> {
     let parsed = serde_json::from_str::<SessionMapFile>(data);
     match parsed {
         Ok(file) if file.version == MAP_VERSION => Ok(file.entries),
-        Ok(_) => Ok(HashMap::new()),
+        Ok(_) => Ok(IndexMap::new()),
         Err(error) => {
-            if serde_json::from_str::<HashMap<String, String>>(data).is_ok() {
-                Ok(HashMap::new())
+            if serde_json::from_str::<IndexMap<String, String>>(data).is_ok() {
+                Ok(IndexMap::new())
             } else {
                 Err(error)
             }
@@ -43,14 +43,14 @@ fn parse_file(data: &str) -> Result<HashMap<String, String>, serde_json::Error> 
     }
 }
 
-fn encode_file(map: &HashMap<String, String>) -> Result<String, serde_json::Error> {
+fn encode_file(map: &IndexMap<String, String>) -> Result<String, serde_json::Error> {
     serde_json::to_string_pretty(&SessionMapFile {
         version: MAP_VERSION,
         entries: map.clone(),
     })
 }
 
-fn flush(map: &HashMap<String, String>) -> Result<(), String> {
+fn flush(map: &IndexMap<String, String>) -> Result<(), String> {
     let path = map_path();
     let json = encode_file(map).map_err(|_| "stockage des sessions impossible".to_string())?;
     crate::services::private_store::atomic_write(&path, json.as_bytes())
@@ -70,10 +70,9 @@ pub async fn insert_bounded(
     let limit = max_mappings.max(1);
     if !map.contains_key(channel_key) {
         while map.len() >= limit {
-            let Some(oldest) = map.keys().next().cloned() else {
+            if map.shift_remove_index(0).is_none() {
                 break;
-            };
-            map.remove(&oldest);
+            }
         }
     }
     map.insert(channel_key.to_string(), session_id.to_string());
@@ -92,7 +91,7 @@ mod tests {
         let mut map = MAP.lock().await;
         map.insert("test/key".to_string(), "uuid-123".to_string());
         assert_eq!(map.get("test/key"), Some(&"uuid-123".to_string()));
-        map.remove("test/key");
+        map.shift_remove("test/key");
     }
 
     #[tokio::test]
@@ -116,6 +115,8 @@ mod tests {
 
         let map = MAP.lock().await;
         assert_eq!(map.len(), 2);
+        assert!(!map.contains_key("a"));
+        assert_eq!(map.get("b"), Some(&"2".to_string()));
         assert_eq!(map.get("c"), Some(&"3".to_string()));
         let mut map = map;
         map.clear();
@@ -147,7 +148,7 @@ mod tests {
 
     #[test]
     fn version_two_map_round_trips() {
-        let mut entries = HashMap::new();
+        let mut entries = IndexMap::new();
         entries.insert("gateway:v2:abc".to_string(), "session-2".to_string());
         let encoded = encode_file(&entries).unwrap();
 
