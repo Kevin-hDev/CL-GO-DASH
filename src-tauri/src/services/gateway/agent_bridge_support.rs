@@ -41,8 +41,10 @@ pub(crate) fn validate_inbound(msg: &InboundMessage) -> Result<(), BridgeError> 
 }
 
 pub(crate) fn block(msg: &InboundMessage, reason: &str) -> BridgeError {
-    audit_msg(msg, AuditAction::Blocked, Some(reason), None);
-    BridgeError::Blocked(reason.to_string())
+    match audit_msg(msg, AuditAction::Blocked, Some(reason), None) {
+        Ok(()) => BridgeError::Blocked(reason.to_string()),
+        Err(error) => error,
+    }
 }
 
 pub(crate) fn audit_msg(
@@ -50,7 +52,7 @@ pub(crate) fn audit_msg(
     action: AuditAction,
     decision: Option<&str>,
     error: Option<&str>,
-) {
+) -> Result<(), BridgeError> {
     audit::log_gateway_action(
         &msg.channel_key.channel_id,
         &msg.channel_key.account_id,
@@ -58,7 +60,8 @@ pub(crate) fn audit_msg(
         action,
         decision,
         error,
-    );
+    )
+    .map_err(|_| BridgeError::AuditError)
 }
 
 pub(crate) fn emit_session_updated(app: &tauri::AppHandle, session_id: &str) {
@@ -85,20 +88,20 @@ pub(crate) async fn send_final_reply(
     };
     let max_utf16 = adapter.capabilities().max_message_chars;
     for chunk in super::stream_capture::prepare_for_channel(&reply, max_utf16) {
-        adapter
+        let result = adapter
             .send(OutboundMessage {
                 chat_id: msg.chat_id.clone(),
                 thread_id: msg.thread_id.clone(),
                 content: chunk,
                 reply_to: Some(msg.message_id.clone()),
             })
-            .await
-            .map_err(|error| {
-                audit_msg(msg, AuditAction::MessageSent, None, Some(&error.message));
-                BridgeError::SendError(error.message)
-            })?;
+            .await;
+        if let Err(error) = result {
+            audit_msg(msg, AuditAction::MessageSent, None, Some(&error.message))?;
+            return Err(BridgeError::SendError(error.message));
+        }
     }
-    audit_msg(msg, AuditAction::MessageSent, None, None);
+    audit_msg(msg, AuditAction::MessageSent, None, None)?;
     Ok(())
 }
 

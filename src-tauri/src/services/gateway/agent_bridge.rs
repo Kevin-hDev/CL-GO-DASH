@@ -24,6 +24,7 @@ use crate::services::gateway::security::{
 #[derive(Debug)]
 pub enum BridgeError {
     Blocked(String),
+    AuditError,
     SessionError(String),
     AgentError(String),
     SendError(String),
@@ -33,6 +34,7 @@ impl std::fmt::Display for BridgeError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Blocked(r) => write!(f, "blocked: {r}"),
+            Self::AuditError => f.write_str("audit: unavailable"),
             Self::SessionError(e) => write!(f, "session: {e}"),
             Self::AgentError(e) => write!(f, "agent: {e}"),
             Self::SendError(e) => write!(f, "send: {e}"),
@@ -67,7 +69,7 @@ impl GatewayAgentBridge {
     ) -> Result<(), BridgeError> {
         let config = Self::read_config();
         validate_inbound(&msg)?;
-        audit_msg(&msg, AuditAction::MessageReceived, None, None);
+        audit_msg(&msg, AuditAction::MessageReceived, None, None)?;
 
         let account_cfg = find_account_config(&config, &msg)
             .ok_or_else(|| block(&msg, "account not configured"))?;
@@ -86,7 +88,7 @@ impl GatewayAgentBridge {
                 AuditAction::RateLimited,
                 Some("rate_limited"),
                 Some(&retry),
-            );
+            )?;
             return Err(BridgeError::Blocked("rate limited".into()));
         }
 
@@ -163,7 +165,7 @@ impl GatewayAgentBridge {
                 )
                 .await;
                 let safe = audit::sanitize_error(&e);
-                audit_msg(&msg, AuditAction::AgentError, None, Some(&safe));
+                audit_msg(&msg, AuditAction::AgentError, None, Some(&safe))?;
                 return Err(BridgeError::AgentError(safe));
             }
         };

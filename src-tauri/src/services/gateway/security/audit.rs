@@ -56,15 +56,18 @@ fn hash_user_id_with_key(user_id: &str, key: &[u8]) -> Result<String, String> {
     Ok(hex::encode(&digest[..8]))
 }
 
-pub fn log_audit(entry: &AuditEntry) {
+pub fn log_audit(entry: &AuditEntry) -> Result<(), String> {
     if !ENABLED.load(Ordering::Relaxed) {
-        return;
+        return Ok(());
     }
-    let Ok(line) = serde_json::to_string(entry) else {
-        return;
-    };
+    log_audit_to_path(entry, &audit_path())
+}
+
+fn log_audit_to_path(entry: &AuditEntry, path: &std::path::Path) -> Result<(), String> {
+    let line =
+        serde_json::to_string(entry).map_err(|_| "journal d'audit indisponible".to_string())?;
     let retention = RETENTION_DAYS.load(Ordering::Relaxed);
-    let _ = append_serialized(&audit_path(), &line, retention);
+    append_serialized(path, &line, retention)
 }
 
 pub fn log_gateway_action(
@@ -74,10 +77,8 @@ pub fn log_gateway_action(
     action: AuditAction,
     security_decision: Option<&str>,
     error: Option<&str>,
-) {
-    let Ok(user_hash) = hash_user_id(user_id) else {
-        return;
-    };
+) -> Result<(), String> {
+    let user_hash = hash_user_id(user_id)?;
     log_audit(&AuditEntry {
         timestamp: chrono::Utc::now().to_rfc3339(),
         channel: channel.to_string(),
@@ -86,7 +87,7 @@ pub fn log_gateway_action(
         action,
         security_decision: security_decision.map(safe_code),
         error: error.map(sanitize_error),
-    });
+    })
 }
 
 pub fn sanitize_error(_error: &str) -> String {

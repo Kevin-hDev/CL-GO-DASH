@@ -4,9 +4,9 @@ use std::time::Duration;
 use tauri::Emitter;
 use tokio::sync::{mpsc, RwLock};
 
-use super::channels::{ChannelAdapter, ChannelContext, GatewayError, InboundMessage};
-use super::security::audit::{self, AuditAction};
+use super::channels::{ChannelAdapter, ChannelContext, InboundMessage};
 use super::security::ids;
+use super::service_audit;
 use super::service_state::{build_health, GatewayState};
 use super::supervisor::{ChannelSupervisor, RestartDecision};
 use super::types::{ChannelHealthEntry, ChannelKey, ChannelStatus};
@@ -28,18 +28,6 @@ pub(crate) fn validate_account(channel_id: &str, acc: &ChannelAccountConfig) -> 
         }
     }
     Ok(())
-}
-
-pub(crate) fn audit_invalid_account_config(channel_id: &str, account_id: &str, message: &str) {
-    let safe = audit::sanitize_error(message);
-    audit::log_gateway_action(
-        channel_id,
-        account_id,
-        "",
-        AuditAction::Blocked,
-        Some("invalid_config"),
-        Some(&safe),
-    );
 }
 
 pub(crate) async fn run_supervised_channel(
@@ -71,7 +59,18 @@ pub(crate) async fn run_supervised_channel(
                 }
             }
             Err(e) => {
-                audit_auth_error(&key, &e);
+                if service_audit::auth_error(&key, &e).is_err() {
+                    set_status(
+                        &state,
+                        &app,
+                        &key,
+                        ChannelStatus::Error,
+                        Some("auditUnavailable"),
+                    )
+                    .await;
+                    watchdog.stop();
+                    return;
+                }
                 if !handle_restart(&mut supervisor, &state, &app, &key, e.is_auth).await {
                     watchdog.stop();
                     return;
@@ -90,15 +89,19 @@ async fn handle_channel_run(
     ctx: &ChannelContext,
 ) -> bool {
     supervisor.mark_started();
+    if service_audit::channel_started(key).is_err() {
+        handle.abort();
+        set_status(
+            state,
+            app,
+            key,
+            ChannelStatus::Error,
+            Some("auditUnavailable"),
+        )
+        .await;
+        return false;
+    }
     set_status(state, app, key, ChannelStatus::Running, None).await;
-    audit::log_gateway_action(
-        &key.channel_id,
-        &key.account_id,
-        "",
-        AuditAction::ChannelStarted,
-        None,
-        None,
-    );
     let _ = handle.await;
     if ctx.cancel.is_cancelled() {
         return false;
@@ -120,32 +123,17 @@ async fn handle_restart(
             true
         }
         RestartDecision::GiveUp(reason) => {
-            let safe = audit::sanitize_error(&reason);
-            audit::log_gateway_action(
-                &key.channel_id,
-                &key.account_id,
-                "",
-                AuditAction::ChannelStopped,
-                Some("restart_give_up"),
-                Some(&safe),
-            );
-            set_status(state, app, key, ChannelStatus::Error, Some("unavailable")).await;
+            let audit_failed =
+                service_audit::channel_stopped(key, Some("restart_give_up"), Some(&reason))
+                    .is_err();
+            let code = if audit_failed {
+                "auditUnavailable"
+            } else {
+                "unavailable"
+            };
+            set_status(state, app, key, ChannelStatus::Error, Some(code)).await;
             false
         }
-    }
-}
-
-fn audit_auth_error(key: &ChannelKey, e: &GatewayError) {
-    if e.is_auth {
-        let safe = audit::sanitize_error(&e.message);
-        audit::log_gateway_action(
-            &key.channel_id,
-            &key.account_id,
-            "",
-            AuditAction::AuthFailed,
-            None,
-            Some(&safe),
-        );
     }
 }
 

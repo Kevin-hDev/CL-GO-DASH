@@ -6,6 +6,7 @@ mod conversation_locks;
 pub mod message_convert;
 pub mod security;
 pub mod service;
+mod service_audit;
 pub mod service_runtime;
 pub mod service_state;
 pub mod session_map;

@@ -6,11 +6,10 @@ use tokio_util::sync::CancellationToken;
 use super::agent_bridge::GatewayAgentBridge;
 use super::channels::telegram::TelegramAdapter;
 use super::channels::{ChannelAdapter, ChannelContext, InboundMessage};
-use super::security::audit::{self, AuditAction};
+use super::security::audit;
 use super::security::rate_state::GatewayRateLimiters;
-use super::service_runtime::{
-    audit_invalid_account_config, emit_channel_status, run_supervised_channel, validate_account,
-};
+use super::service_audit;
+use super::service_runtime::{emit_channel_status, run_supervised_channel, validate_account};
 use super::service_state::{build_health, shared_state, ChannelEntry, GatewayState};
 use super::types::{ChannelKey, ChannelStatus, GatewayHealth};
 use crate::models::{ChannelAccountConfig, GatewayConfig};
@@ -94,16 +93,23 @@ impl GatewayService {
                 _ => continue,
             };
             if let Err(message) = validate_account(channel_id, acc) {
-                audit_invalid_account_config(channel_id, &acc.account_id, &message);
+                let error =
+                    if service_audit::invalid_account_config(channel_id, &acc.account_id, &message)
+                        .is_err()
+                    {
+                        "auditUnavailable"
+                    } else {
+                        "invalidConfig"
+                    };
                 state.channels.insert(
                     key.clone(),
                     ChannelEntry {
                         status: ChannelStatus::Error,
                         cancel: child_cancel,
-                        error: Some("invalidConfig".to_string()),
+                        error: Some(error.to_string()),
                     },
                 );
-                emit_channel_status(app, &key, ChannelStatus::Error, Some("invalidConfig"));
+                emit_channel_status(app, &key, ChannelStatus::Error, Some(error));
                 continue;
             }
             state.adapters.insert(key.clone(), Arc::clone(&adapter));
@@ -136,14 +142,9 @@ impl GatewayService {
         for (key, entry) in state.channels.iter_mut() {
             entry.cancel.cancel();
             entry.status = ChannelStatus::Stopping;
-            audit::log_gateway_action(
-                &key.channel_id,
-                &key.account_id,
-                "",
-                AuditAction::ChannelStopped,
-                None,
-                None,
-            );
+            if service_audit::channel_stopped(key, None, None).is_err() {
+                entry.error = Some("auditUnavailable".to_string());
+            }
         }
         state.adapters.clear();
     }

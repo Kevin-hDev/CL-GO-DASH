@@ -52,3 +52,12 @@ fn concurrent_audit_writes_are_complete_json_lines() {
         .iter()
         .all(|line| serde_json::from_str::<AuditEntry>(line).is_ok()));
 }
+
+#[test]
+fn audit_write_failure_is_returned_to_the_caller() {
+    let dir = tempfile::tempdir().expect("tempdir");
+
+    let result = log_audit_to_path(&entry(1), dir.path());
+
+    assert!(result.is_err());
+}
