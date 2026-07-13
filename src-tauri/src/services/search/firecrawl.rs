@@ -9,7 +9,7 @@
 use crate::services::agent_local::types_tools::SearchResult;
 use crate::services::api_keys;
 use crate::services::search::common;
-use reqwest::Client;
+use crate::services::secure_http::AuthenticatedClient;
 use std::time::Duration;
 
 const SEARCH_URL: &str = "https://api.firecrawl.dev/v2/search";
@@ -19,25 +19,19 @@ const TIMEOUT: Duration = Duration::from_secs(30);
 pub async fn search(query: &str) -> Result<Vec<SearchResult>, String> {
     let query = common::validate_query(query)?;
     let key = api_keys::get_key("firecrawl")?;
-    let client = Client::new();
+    let client = AuthenticatedClient::new(TIMEOUT).map_err(|_| "Firecrawl: erreur interne")?;
 
     let payload = serde_json::json!({
         "query": query,
         "limit": common::MAX_RESULTS,
     });
 
+    let request = client.post(SEARCH_URL).bearer_auth(&*key).json(&payload);
     let resp = client
-        .post(SEARCH_URL)
-        .bearer_auth(&*key)
-        .json(&payload)
-        .timeout(TIMEOUT)
-        .send()
+        .send(request)
         .await
-        .map_err(|e| format!("Firecrawl: {e}"))?;
-
-    if !resp.status().is_success() {
-        return Err(format!("Firecrawl: HTTP {}", resp.status()));
-    }
+        .map_err(|_| "Firecrawl: requête impossible".to_string())?;
+    let resp = common::ensure_success(resp, "Firecrawl").await?;
 
     let json = common::read_json_bounded(resp, "Firecrawl").await?;
 
@@ -62,21 +56,20 @@ pub async fn search(query: &str) -> Result<Vec<SearchResult>, String> {
 
 pub async fn test_connection() -> Result<(), String> {
     let key = api_keys::get_key("firecrawl")?;
-    let client = Client::new();
+    let client = AuthenticatedClient::new(Duration::from_secs(10))
+        .map_err(|_| "Firecrawl: erreur interne")?;
 
+    let request = client.get(CREDIT_URL).bearer_auth(&*key);
     let resp = client
-        .get(CREDIT_URL)
-        .bearer_auth(&*key)
-        .timeout(Duration::from_secs(10))
-        .send()
+        .send(request)
         .await
-        .map_err(|e| format!("Firecrawl: {e}"))?;
+        .map_err(|_| "Firecrawl: requête impossible".to_string())?;
 
     if resp.status().is_success() {
         Ok(())
     } else if resp.status().as_u16() == 401 {
         Err("Clé Firecrawl invalide".into())
     } else {
-        Err(format!("Firecrawl: HTTP {}", resp.status()))
+        Err("Firecrawl: requête refusée".into())
     }
 }

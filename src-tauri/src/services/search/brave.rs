@@ -3,7 +3,7 @@
 use crate::services::agent_local::types_tools::SearchResult;
 use crate::services::api_keys;
 use crate::services::search::common;
-use reqwest::Client;
+use crate::services::secure_http::AuthenticatedClient;
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
 
@@ -38,22 +38,19 @@ pub async fn search(query: &str) -> Result<Vec<SearchResult>, String> {
     let query = common::validate_query(query)?;
     wait_rate_limit().await;
     let key = api_keys::get_key("brave")?;
-    let client = Client::new();
-    let resp = client
+    let client = AuthenticatedClient::new(TIMEOUT).map_err(|_| "Brave: erreur interne")?;
+    let request = client
         .get(URL)
         .query(&[
             ("q", query.as_str()),
             ("count", &common::MAX_RESULTS.to_string()),
         ])
-        .header("X-Subscription-Token", &*key)
-        .timeout(TIMEOUT)
-        .send()
+        .header("X-Subscription-Token", &*key);
+    let resp = client
+        .send(request)
         .await
-        .map_err(|e| format!("Brave: {e}"))?;
-
-    if !resp.status().is_success() {
-        return Err(format!("Brave: HTTP {}", resp.status()));
-    }
+        .map_err(|_| "Brave: requête impossible".to_string())?;
+    let resp = common::ensure_success(resp, "Brave").await?;
 
     let json = common::read_json_bounded(resp, "Brave").await?;
 

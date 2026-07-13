@@ -30,14 +30,32 @@ const SENSITIVE_PATH_MARKERS: &[&str] = &[
 
 static SECRET_VALUE_RE: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(
-        r#"(?i)\b(api[_-]?key|apikey|token|secret|password|authorization|client_secret|access_token|refresh_token)(\s*[:=]\s*)("[^"]*"|'[^']*'|[^\s,}]+)"#,
+        r#"(?i)\b(api[_-]?key|apikey|token|secret|password|authorization|client_secret|access_token|refresh_token)("?\s*[:=]\s*)("[^"]*"|'[^']*'|[^\s,}]+)"#,
     )
     .expect("secret value regex")
 });
 
 static TOKEN_RE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"(?i)(sk-|Bearer |ghp_|gho_|glpat-|xox[baprs]-)[A-Za-z0-9_-]{8,}")
-        .expect("token regex")
+    Regex::new(
+        r"(?ix)
+        (?:
+            sk-(?:proj-)?[a-z0-9_-]{8,}
+          | bearer[\t ]+[a-z0-9._~+/=-]{8,}
+          | gh(?:p|o|u|s|r)_[a-z0-9_-]{8,}
+          | github_pat_[a-z0-9_-]{8,}
+          | glpat-[a-z0-9_-]{8,}
+          | xapp-[a-z0-9-]{8,}
+          | xox[a-z]-[a-z0-9-]{8,}
+          | [0-9]{5,}:[a-z0-9_-]{20,}
+          | (?:AKIA|ASIA)[A-Z0-9]{16}
+          | [a-z0-9_-]{20,}\.[a-z0-9_-]{5,}\.[a-z0-9_-]{20,}
+        )",
+    )
+    .expect("token regex")
+});
+
+static BEARER_RE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r#"(?i)Bearer\s+[^\s,}\"']+"#).expect("bearer regex")
 });
 
 static PEM_BLOCK_RE: LazyLock<Regex> = LazyLock::new(|| {
@@ -110,7 +128,8 @@ fn heredoc_delimiter(line: &str) -> Option<String> {
 
 pub fn redact_text(content: &str) -> String {
     let pem_redacted = PEM_BLOCK_RE.replace_all(content, "[REDACTED]");
-    let tokens_redacted = TOKEN_RE.replace_all(&pem_redacted, "[REDACTED]");
+    let bearer_redacted = BEARER_RE.replace_all(&pem_redacted, "[REDACTED]");
+    let tokens_redacted = TOKEN_RE.replace_all(&bearer_redacted, "[REDACTED]");
     SECRET_VALUE_RE
         .replace_all(&tokens_redacted, "$1$2[REDACTED]")
         .into_owned()
@@ -161,82 +180,5 @@ fn redact_json_inner(value: &Value, depth: usize) -> Value {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use serde_json::json;
-
-    #[test]
-    fn detects_env_file() {
-        assert!(bash_touches_sensitive_data("cat .env"));
-    }
-
-    #[test]
-    fn detects_ssh_key() {
-        assert!(bash_touches_sensitive_data("head ~/.ssh/id_ed25519"));
-    }
-
-    #[test]
-    fn detects_app_secret_file() {
-        assert!(bash_touches_sensitive_data(
-            "cat ~/.local/share/cl-go-dash/secrets.enc"
-        ));
-    }
-
-    #[test]
-    fn ignores_normal_project_search() {
-        assert!(!bash_touches_sensitive_data("grep -r token src/"));
-    }
-
-    #[test]
-    fn redacts_secret_assignments() {
-        let text = "API_KEY=abcd PASSWORD: hunter2";
-        let redacted = redact_text(text);
-        assert!(!redacted.contains("abcd"));
-        assert!(!redacted.contains("hunter2"));
-    }
-
-    #[test]
-    fn redacts_known_token_prefixes() {
-        let redacted = redact_text("Authorization: Bearer abcdefghijklmnop");
-        assert!(!redacted.contains("abcdefghijklmnop"));
-    }
-
-    #[test]
-    fn redacts_json_strings() {
-        let value = json!({ "command": "echo token=abcdefghi" });
-        let redacted = redact_json(&value);
-        assert!(!redacted.to_string().contains("abcdefghi"));
-    }
-
-    #[test]
-    fn ignores_env_mentioned_in_heredoc_body() {
-        // Cas réel : un .gitignore qui liste .env ne doit pas déclencher l'alerte
-        let cmd = "cd /tmp && cat > .gitignore << 'EOF'\n# Env files\n.env\n.env.local\nEOF";
-        assert!(!bash_touches_sensitive_data(cmd));
-    }
-
-    #[test]
-    fn detects_env_as_real_target_outside_heredoc() {
-        // cat .env directement → toujours dangereux
-        assert!(bash_touches_sensitive_data("cat .env"));
-    }
-
-    #[test]
-    fn detects_env_redirect_outside_heredoc() {
-        // echo X > .env → dangereux (cible réelle)
-        assert!(bash_touches_sensitive_data("echo SECRET=1 > .env"));
-    }
-
-    #[test]
-    fn ignores_ssh_mentioned_in_heredoc_body() {
-        let cmd = "cat > README.md << 'EOF'\nSee ~/.ssh/id_rsa for keys\nEOF";
-        assert!(!bash_touches_sensitive_data(cmd));
-    }
-
-    #[test]
-    fn heredoc_start_line_still_scanned_for_targets() {
-        // Le .env est sur la ligne de commande (pas dans le corps) → dangereux
-        let cmd = "cat .env << 'EOF'\nsome content\nEOF";
-        assert!(bash_touches_sensitive_data(cmd));
-    }
-}
+#[path = "sensitive_data_tests.rs"]
+mod tests;

@@ -1,4 +1,3 @@
-use reqwest::Client;
 use zeroize::Zeroizing;
 
 use super::slack::SlackAdapter;
@@ -6,6 +5,7 @@ use super::slack_types::*;
 use super::{GatewayError, GatewayResult, InboundMessage};
 use crate::services::api_keys;
 use crate::services::gateway::types::ChannelKey;
+use crate::services::secure_http::{read_json_bounded, AuthenticatedClient, SLACK_BODY_LIMIT};
 
 impl SlackAdapter {
     pub(super) async fn load_tokens(&self, vault_prefix: &str) -> GatewayResult<()> {
@@ -21,14 +21,18 @@ impl SlackAdapter {
         Ok(())
     }
 
-    async fn get_bot_user_id(client: &Client, bot_token: &str) -> GatewayResult<String> {
-        let resp: SlackAuthResponse = client
+    async fn get_bot_user_id(
+        client: &AuthenticatedClient,
+        bot_token: &str,
+    ) -> GatewayResult<String> {
+        let request = client
             .post("https://slack.com/api/auth.test")
-            .bearer_auth(bot_token)
-            .send()
+            .bearer_auth(bot_token);
+        let response = client
+            .send(request)
             .await
-            .map_err(|_| GatewayError::network("identité Slack indisponible"))?
-            .json()
+            .map_err(|_| GatewayError::network("identité Slack indisponible"))?;
+        let resp: SlackAuthResponse = read_json_bounded(response, SLACK_BODY_LIMIT)
             .await
             .map_err(|_| GatewayError::network("réponse Slack invalide"))?;
         if !resp.ok {
@@ -40,16 +44,17 @@ impl SlackAdapter {
     }
 
     pub(super) async fn get_ws_url(
-        client: &Client,
+        client: &AuthenticatedClient,
         app_token: &str,
     ) -> GatewayResult<Zeroizing<String>> {
-        let resp: SlackSocketUrl = client
+        let request = client
             .post("https://slack.com/api/apps.connections.open")
-            .bearer_auth(app_token)
-            .send()
+            .bearer_auth(app_token);
+        let response = client
+            .send(request)
             .await
-            .map_err(|_| GatewayError::network("connexion Slack impossible"))?
-            .json()
+            .map_err(|_| GatewayError::network("connexion Slack impossible"))?;
+        let resp: SlackSocketUrl = read_json_bounded(response, SLACK_BODY_LIMIT)
             .await
             .map_err(|_| GatewayError::network("réponse Slack invalide"))?;
         if !resp.ok {

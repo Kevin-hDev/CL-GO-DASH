@@ -1,6 +1,5 @@
 use crate::services::agent_local::sensitive_data;
 use crate::services::agent_local::types_tools::SearchResult;
-use futures_util::StreamExt;
 
 pub const MAX_RESULTS: usize = 10;
 pub const MAX_QUERY_CHARS: usize = 512;
@@ -26,16 +25,24 @@ pub async fn read_json_bounded(
     resp: reqwest::Response,
     provider: &str,
 ) -> Result<serde_json::Value, String> {
-    let mut body = Vec::new();
-    let mut stream = resp.bytes_stream();
-    while let Some(chunk) = stream.next().await {
-        let chunk = chunk.map_err(|e| format!("{provider} lecture: {e}"))?;
-        if body.len().saturating_add(chunk.len()) > MAX_JSON_BYTES {
-            return Err(format!("{provider}: réponse trop volumineuse"));
-        }
-        body.extend_from_slice(&chunk);
+    crate::services::secure_http::read_json_bounded(resp, MAX_JSON_BYTES)
+        .await
+        .map_err(|_| format!("{provider}: réponse invalide"))
+}
+
+pub async fn ensure_success(
+    resp: reqwest::Response,
+    provider: &str,
+) -> Result<reqwest::Response, String> {
+    if resp.status().is_success() {
+        return Ok(resp);
     }
-    serde_json::from_slice(&body).map_err(|e| format!("{provider} parse: {e}"))
+    let _ = crate::services::secure_http::read_bounded(
+        resp,
+        crate::services::secure_http::PROVIDER_ERROR_LIMIT,
+    )
+    .await;
+    Err(format!("{provider}: requête refusée"))
 }
 
 pub fn make_result(title: &str, url: &str, snippet: &str) -> Option<SearchResult> {

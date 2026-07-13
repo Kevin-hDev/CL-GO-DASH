@@ -1,11 +1,11 @@
 use std::time::Duration;
 
-use reqwest::redirect::Policy;
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
 use zeroize::Zeroizing;
 
 use super::tokens::AccountTokens;
+use crate::services::secure_http::{read_json_bounded, AuthenticatedClient, TOKEN_BODY_LIMIT};
 
 const PROBE_TIMEOUT: Duration = Duration::from_secs(10);
 
@@ -40,11 +40,7 @@ pub(crate) async fn validate_tokens(
     endpoints: &ProbeEndpoints,
 ) -> Result<(), String> {
     credentials.validate_for(channel_id)?;
-    let client = reqwest::Client::builder()
-        .redirect(Policy::none())
-        .timeout(PROBE_TIMEOUT)
-        .build()
-        .map_err(|_| generic_error())?;
+    let client = AuthenticatedClient::new(PROBE_TIMEOUT).map_err(|_| generic_error())?;
     match channel_id {
         "telegram" => validate_telegram(&client, credentials, endpoints).await,
         "slack" => validate_slack(&client, credentials, endpoints).await,
@@ -54,13 +50,13 @@ pub(crate) async fn validate_tokens(
 }
 
 async fn validate_telegram(
-    client: &reqwest::Client,
+    client: &AuthenticatedClient,
     credentials: &AccountTokens,
     endpoints: &ProbeEndpoints,
 ) -> Result<(), String> {
     let token = credentials.token().ok_or_else(generic_error)?;
     let url = Zeroizing::new(format!("{}/bot{token}/getMe", endpoints.telegram));
-    let body: TelegramResponse = checked_json(client.get(url.as_str()).send().await).await?;
+    let body: TelegramResponse = checked_json(client, client.get(url.as_str())).await?;
     if body.ok && body.result.is_some_and(|user| !user.id.is_empty()) {
         Ok(())
     } else {
@@ -69,27 +65,25 @@ async fn validate_telegram(
 }
 
 async fn validate_slack(
-    client: &reqwest::Client,
+    client: &AuthenticatedClient,
     credentials: &AccountTokens,
     endpoints: &ProbeEndpoints,
 ) -> Result<(), String> {
     let bot: SlackResponse = checked_json(
+        client,
         client
             .post(format!("{}/auth.test", endpoints.slack))
-            .bearer_auth(credentials.bot_token().ok_or_else(generic_error)?)
-            .send()
-            .await,
+            .bearer_auth(credentials.bot_token().ok_or_else(generic_error)?),
     )
     .await?;
     if !bot.ok || bot.user_id.is_none_or(|id| id.is_empty()) {
         return Err(generic_error());
     }
     let app: SlackResponse = checked_json(
+        client,
         client
             .post(format!("{}/apps.connections.open", endpoints.slack))
-            .bearer_auth(credentials.app_token().ok_or_else(generic_error)?)
-            .send()
-            .await,
+            .bearer_auth(credentials.app_token().ok_or_else(generic_error)?),
     )
     .await?;
     if !app.ok || app.url.is_none_or(|url| !url.starts_with("wss://")) {
@@ -99,7 +93,7 @@ async fn validate_slack(
 }
 
 async fn validate_discord(
-    client: &reqwest::Client,
+    client: &AuthenticatedClient,
     credentials: &AccountTokens,
     endpoints: &ProbeEndpoints,
 ) -> Result<(), String> {
@@ -108,11 +102,10 @@ async fn validate_discord(
         credentials.token().ok_or_else(generic_error)?
     ));
     let body: DiscordResponse = checked_json(
+        client,
         client
             .get(format!("{}/users/@me", endpoints.discord))
-            .header("Authorization", auth.as_str())
-            .send()
-            .await,
+            .header("Authorization", auth.as_str()),
     )
     .await?;
     if body.id.is_empty() {
@@ -123,13 +116,16 @@ async fn validate_discord(
 }
 
 async fn checked_json<T: DeserializeOwned>(
-    response: Result<reqwest::Response, reqwest::Error>,
+    client: &AuthenticatedClient,
+    request: reqwest::RequestBuilder,
 ) -> Result<T, String> {
-    let response = response.map_err(|_| generic_error())?;
+    let response = client.send(request).await.map_err(|_| generic_error())?;
     if !response.status().is_success() {
         return Err(generic_error());
     }
-    response.json().await.map_err(|_| generic_error())
+    read_json_bounded(response, TOKEN_BODY_LIMIT)
+        .await
+        .map_err(|_| generic_error())
 }
 
 fn generic_error() -> String {

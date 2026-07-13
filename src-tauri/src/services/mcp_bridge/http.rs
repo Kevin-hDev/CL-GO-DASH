@@ -6,6 +6,7 @@ use serde_json::Value;
 use super::response;
 use super::transport::{next_id, sanitize_tools, McpToolDef, McpTransport};
 use crate::services::mcp_oauth::storage;
+use crate::services::secure_http::AuthenticatedClient;
 
 const TIMEOUT: Duration = Duration::from_secs(30);
 const ACCEPT: &str = "application/json, text/event-stream";
@@ -90,20 +91,16 @@ async fn initialize(endpoint: &str, token: &str) -> Result<Option<String>, Strin
 
     let client = build_client()?;
 
-    let resp = client
+    let request = client
         .post(endpoint)
         .bearer_auth(token)
         .header("Accept", ACCEPT)
         .header("Content-Type", "application/json")
-        .json(&init_body)
-        .send()
+        .json(&init_body);
+    let resp = client
+        .send_success(request)
         .await
         .map_err(|_| "impossible de contacter le serveur MCP")?;
-
-    if !resp.status().is_success() {
-        let status = resp.status().as_u16();
-        return Err(format!("initialisation MCP refusée (HTTP {status})"));
-    }
 
     let session_id = resp
         .headers()
@@ -128,8 +125,8 @@ async fn initialize(endpoint: &str, token: &str) -> Result<Option<String>, Strin
         req = req.header("Mcp-Session-Id", sid);
     }
 
-    req.json(&notif)
-        .send()
+    client
+        .send_success(req.json(&notif))
         .await
         .map_err(|_| "notification initialized échouée".to_string())?;
     Ok(session_id)
@@ -153,23 +150,14 @@ async fn mcp_post(
         req = req.header("Mcp-Session-Id", sid);
     }
 
-    let resp = req
-        .json(body)
-        .send()
+    let resp = client
+        .send_success(req.json(body))
         .await
         .map_err(|_| "impossible de contacter le serveur MCP")?;
-
-    if !resp.status().is_success() {
-        let status = resp.status().as_u16();
-        return Err(format!("requête MCP refusée (HTTP {status})"));
-    }
 
     response::parse(resp).await
 }
 
-fn build_client() -> Result<reqwest::Client, String> {
-    reqwest::Client::builder()
-        .timeout(TIMEOUT)
-        .build()
-        .map_err(|_| "erreur interne".to_string())
+fn build_client() -> Result<AuthenticatedClient, String> {
+    AuthenticatedClient::new(TIMEOUT).map_err(|_| "erreur interne".to_string())
 }

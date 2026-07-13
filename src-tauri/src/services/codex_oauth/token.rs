@@ -1,9 +1,10 @@
-use reqwest::Client;
+use serde::Deserialize;
 use std::time::Duration;
 use zeroize::{Zeroize, Zeroizing};
 
 use super::jwt;
 use super::store::CodexTokens;
+use crate::services::secure_http::{read_json_bounded, AuthenticatedClient, OAUTH_BODY_LIMIT};
 
 const TOKEN_URL: &str = "https://auth.openai.com/oauth/token";
 
@@ -33,15 +34,14 @@ pub async fn refresh(refresh_val: &str) -> Result<CodexTokens, String> {
 
 async fn post_form(body: &str) -> Result<reqwest::Response, String> {
     let client = build_client()?;
-    let resp = client
+    let request = client
         .post(TOKEN_URL)
         .header("Content-Type", "application/x-www-form-urlencoded")
-        .body(body.to_string())
-        .send()
+        .body(body.to_string());
+    client
+        .send_success(request)
         .await
-        .map_err(|e| format!("OAuth request: {e}"))?;
-    check_status(&resp)?;
-    Ok(resp)
+        .map_err(|_| "échange OAuth refusé".to_string())
 }
 
 pub async fn ensure_valid() -> Result<CodexTokens, String> {
@@ -55,39 +55,20 @@ pub async fn ensure_valid() -> Result<CodexTokens, String> {
     Ok(new_creds)
 }
 
-fn build_client() -> Result<Client, String> {
-    Client::builder()
-        .timeout(Duration::from_secs(15))
-        .build()
-        .map_err(|e| format!("http client: {e}"))
-}
-
-fn check_status(resp: &reqwest::Response) -> Result<(), String> {
-    if resp.status().is_success() {
-        return Ok(());
-    }
-    Err(format!("OAuth endpoint: HTTP {}", resp.status()))
+fn build_client() -> Result<AuthenticatedClient, String> {
+    AuthenticatedClient::new(Duration::from_secs(15)).map_err(|_| "erreur interne".to_string())
 }
 
 async fn parse_response(resp: reqwest::Response) -> Result<CodexTokens, String> {
-    let json: serde_json::Value = resp
-        .json()
+    let mut raw: CodexTokenResponse = read_json_bounded(resp, OAUTH_BODY_LIMIT)
         .await
-        .map_err(|e| format!("parse response: {e}"))?;
-
-    let access = Zeroizing::new(
-        json["access_token"]
-            .as_str()
-            .ok_or("access_token manquant")?
-            .to_string(),
-    );
-    let refresh_val = Zeroizing::new(
-        json["refresh_token"]
-            .as_str()
-            .ok_or("refresh_token manquant")?
-            .to_string(),
-    );
-    let expires_in = json["expires_in"].as_i64().unwrap_or(3600);
+        .map_err(|_| "réponse OAuth invalide".to_string())?;
+    if raw.access_token.is_empty() || raw.refresh_token.is_empty() {
+        return Err("réponse OAuth invalide".to_string());
+    }
+    let access = Zeroizing::new(std::mem::take(&mut raw.access_token));
+    let refresh_val = Zeroizing::new(std::mem::take(&mut raw.refresh_token));
+    let expires_in = raw.expires_in.unwrap_or(3600).clamp(1, 86_400);
     let expires_at = chrono::Utc::now().timestamp() + expires_in;
 
     let claims = jwt::extract_claims(&access)?;
@@ -98,4 +79,18 @@ async fn parse_response(resp: reqwest::Response) -> Result<CodexTokens, String> 
         expires_at,
         account_id: Zeroizing::new(claims.account_id),
     })
+}
+
+#[derive(Deserialize)]
+struct CodexTokenResponse {
+    access_token: String,
+    refresh_token: String,
+    expires_in: Option<i64>,
+}
+
+impl Drop for CodexTokenResponse {
+    fn drop(&mut self) {
+        self.access_token.zeroize();
+        self.refresh_token.zeroize();
+    }
 }

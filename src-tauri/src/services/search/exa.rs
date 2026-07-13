@@ -6,7 +6,7 @@
 use crate::services::agent_local::types_tools::SearchResult;
 use crate::services::api_keys;
 use crate::services::search::common;
-use reqwest::Client;
+use crate::services::secure_http::AuthenticatedClient;
 use std::time::Duration;
 
 const URL: &str = "https://api.exa.ai/search";
@@ -15,7 +15,7 @@ const TIMEOUT: Duration = Duration::from_secs(15);
 pub async fn search(query: &str) -> Result<Vec<SearchResult>, String> {
     let query = common::validate_query(query)?;
     let key = api_keys::get_key("exa")?;
-    let client = Client::new();
+    let client = AuthenticatedClient::new(TIMEOUT).map_err(|_| "Exa: erreur interne")?;
 
     let payload = serde_json::json!({
         "query": query,
@@ -25,18 +25,12 @@ pub async fn search(query: &str) -> Result<Vec<SearchResult>, String> {
         }
     });
 
+    let request = client.post(URL).header("x-api-key", &*key).json(&payload);
     let resp = client
-        .post(URL)
-        .header("x-api-key", &*key)
-        .json(&payload)
-        .timeout(TIMEOUT)
-        .send()
+        .send(request)
         .await
-        .map_err(|e| format!("Exa: {e}"))?;
-
-    if !resp.status().is_success() {
-        return Err(format!("Exa: HTTP {}", resp.status()));
-    }
+        .map_err(|_| "Exa: requête impossible".to_string())?;
+    let resp = common::ensure_success(resp, "Exa").await?;
 
     let json = common::read_json_bounded(resp, "Exa").await?;
 

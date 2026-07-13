@@ -2,7 +2,6 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use async_trait::async_trait;
-use reqwest::Client;
 use tokio::sync::{mpsc, RwLock};
 use zeroize::Zeroizing;
 
@@ -12,9 +11,10 @@ use super::{
     InboundMessage, OutboundMessage,
 };
 use crate::services::gateway::tokens;
+use crate::services::secure_http::{read_json_bounded, AuthenticatedClient, TELEGRAM_BODY_LIMIT};
 
 pub struct TelegramAdapter {
-    pub(super) client: Client,
+    pub(super) client: AuthenticatedClient,
     pub(super) state: Arc<RwLock<TelegramState>>,
 }
 
@@ -27,10 +27,7 @@ pub(super) struct TelegramState {
 impl TelegramAdapter {
     pub fn new() -> Self {
         Self {
-            client: Client::builder()
-                .timeout(Duration::from_secs(35))
-                .build()
-                .expect("http client"),
+            client: AuthenticatedClient::new(Duration::from_secs(35)).expect("http client"),
             state: Arc::new(RwLock::new(TelegramState {
                 bot_token: None,
                 bot_username: String::new(),
@@ -105,14 +102,16 @@ impl ChannelAdapter for TelegramAdapter {
 
         let body = Self::send_body(&msg);
 
-        let resp: TgResponse<TgSentMessage> = self
+        let request = self.client.post(url.as_str()).json(&body);
+        let response = self
             .client
-            .post(url.as_str())
-            .json(&body)
-            .send()
+            .send(request)
             .await
-            .map_err(|_| GatewayError::network("envoi Telegram impossible"))?
-            .json()
+            .map_err(|_| GatewayError::network("envoi Telegram impossible"))?;
+        if !response.status().is_success() {
+            return Err(GatewayError::network("envoi Telegram refusé"));
+        }
+        let resp: TgResponse<TgSentMessage> = read_json_bounded(response, TELEGRAM_BODY_LIMIT)
             .await
             .map_err(|_| GatewayError::network("réponse Telegram invalide"))?;
 

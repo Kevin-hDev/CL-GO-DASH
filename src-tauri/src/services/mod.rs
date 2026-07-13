@@ -38,6 +38,7 @@ mod reasoning_tests;
 pub mod scheduler;
 pub mod search;
 pub mod searxng;
+pub mod secure_http;
 pub mod stream_utils;
 pub mod terminal;
 pub mod token_counting;

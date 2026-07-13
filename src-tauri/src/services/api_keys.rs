@@ -1,8 +1,5 @@
 use std::collections::HashMap;
 use std::sync::Mutex;
-use std::time::Duration;
-
-use reqwest::Client;
 use zeroize::{Zeroize, Zeroizing};
 
 use super::vault;
@@ -132,43 +129,7 @@ pub fn delete_key(provider_id: &str) -> Result<(), String> {
 
 include!("api_keys_raw.rs");
 
-pub async fn test_key(provider_id: &str) -> Result<(), String> {
-    if crate::services::llm::catalog::find(provider_id).is_some() {
-        let p = crate::services::llm::openai_compat::OpenAiCompatProvider::new(provider_id)
-            .map_err(|e| e.to_string())?;
-        return p.test_connection().await.map_err(|e| e.to_string());
-    }
-    let key = get_key(provider_id)?;
-    let client = Client::builder()
-        .timeout(Duration::from_secs(10))
-        .build()
-        .map_err(|e| format!("http client: {e}"))?;
-    let resp = match provider_id {
-        "google" => client
-            .get("https://generativelanguage.googleapis.com/v1beta/models")
-            .header("x-goog-api-key", key.as_str()),
-        "brave" => client
-            .get("https://api.search.brave.com/res/v1/web/search?q=test&count=1")
-            .header("X-Subscription-Token", &*key),
-        "exa" => client
-            .post("https://api.exa.ai/search")
-            .header("x-api-key", &*key)
-            .json(&serde_json::json!({ "query": "test", "numResults": 1 })),
-        "firecrawl" => client
-            .get("https://api.firecrawl.dev/v2/team/credit-usage")
-            .bearer_auth(&*key),
-        "nixtla" => client
-            .get("https://api.nixtla.io/models")
-            .bearer_auth(&*key),
-        other => return Err(format!("Provider inconnu : {other}")),
-    }
-    .send()
-    .await
-    .map_err(|e| format!("network: {e}"))?;
-    check_status(resp)
-}
-
-include!("api_keys_test_raw.rs");
+include!("api_keys_http.rs");
 include!("api_keys_mcp.rs");
 
 #[cfg(test)]

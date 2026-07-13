@@ -3,21 +3,22 @@ use std::time::Duration;
 
 use async_trait::async_trait;
 use futures_util::{SinkExt, StreamExt};
-use reqwest::Client;
 use tokio::sync::{mpsc, Mutex, RwLock};
 use tokio_tungstenite::tungstenite::Message as WsMessage;
 use zeroize::{Zeroize, Zeroizing};
 
 use super::discord_gateway::{build_identify, heartbeat_loop, HeartbeatSequence};
 use super::discord_types::*;
+use super::websocket_limits::bounded_websocket_config;
 use super::{
     capabilities::ChannelCapabilities, ChannelAdapter, ChannelContext, GatewayError, GatewayResult,
     InboundMessage, OutboundMessage,
 };
 use crate::services::gateway::tokens;
+use crate::services::secure_http::{AuthenticatedClient, DISCORD_BODY_LIMIT};
 
 pub struct DiscordAdapter {
-    pub(super) client: Client,
+    pub(super) client: AuthenticatedClient,
     pub(super) state: Arc<RwLock<DiscordState>>,
 }
 
@@ -29,10 +30,7 @@ pub(super) struct DiscordState {
 impl DiscordAdapter {
     pub fn new() -> Self {
         Self {
-            client: Client::builder()
-                .timeout(Duration::from_secs(30))
-                .build()
-                .expect("http client"),
+            client: AuthenticatedClient::new(Duration::from_secs(30)).expect("http client"),
             state: Arc::new(RwLock::new(DiscordState {
                 bot_token: None,
                 bot_user_id: String::new(),
@@ -80,7 +78,13 @@ impl ChannelAdapter for DiscordAdapter {
                         None => break,
                     }
                 };
-                let ws = match tokio_tungstenite::connect_async(GATEWAY_URL).await {
+                let ws = match tokio_tungstenite::connect_async_with_config(
+                    GATEWAY_URL,
+                    Some(bounded_websocket_config(DISCORD_BODY_LIMIT)),
+                    false,
+                )
+                .await
+                {
                     Ok((s, _)) => s,
                     Err(_) => {
                         tokio::time::sleep(Duration::from_secs(5)).await;

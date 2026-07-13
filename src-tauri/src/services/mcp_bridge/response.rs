@@ -1,7 +1,5 @@
 use serde::Deserialize;
 
-const MAX_BODY_BYTES: usize = 10 * 1024 * 1024; // 10 MB
-
 #[derive(Deserialize)]
 pub struct JsonRpcResponse {
     pub result: Option<serde_json::Value>,
@@ -16,16 +14,12 @@ pub async fn parse(resp: reqwest::Response) -> Result<JsonRpcResponse, String> {
         .unwrap_or("")
         .to_string();
 
-    if let Some(len) = resp.content_length() {
-        if len as usize > MAX_BODY_BYTES {
-            return Err("réponse MCP trop volumineuse".to_string());
-        }
-    }
-
-    let bytes = resp.bytes().await.map_err(|_| "réponse illisible")?;
-    if bytes.len() > MAX_BODY_BYTES {
-        return Err("réponse MCP trop volumineuse".to_string());
-    }
+    let bytes = crate::services::secure_http::read_bounded(
+        resp,
+        crate::services::secure_http::MCP_BODY_LIMIT,
+    )
+    .await
+    .map_err(|_| "réponse MCP invalide".to_string())?;
 
     let body_text = std::str::from_utf8(&bytes).map_err(|_| "réponse non UTF-8")?;
 

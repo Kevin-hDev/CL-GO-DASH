@@ -3,6 +3,7 @@ use zeroize::Zeroizing;
 use super::discord::DiscordAdapter;
 use super::discord_types::{AllowedMentions, MessageReference, SendMessage, SentMessage};
 use super::{GatewayError, GatewayResult, OutboundMessage};
+use crate::services::secure_http::{read_bounded, DISCORD_BODY_LIMIT};
 
 pub(super) fn validate_sent_message(status: u16, body: &[u8]) -> GatewayResult<()> {
     if !(200..300).contains(&status) {
@@ -35,17 +36,18 @@ impl DiscordAdapter {
             message_reference: msg.reply_to.map(|id| MessageReference { message_id: id }),
         };
         let auth = Zeroizing::new(format!("Bot {}", token.as_str()));
-        let response = self
+        let request = self
             .client
             .post(url)
             .header("Authorization", auth.as_str())
-            .json(&body)
-            .send()
+            .json(&body);
+        let response = self
+            .client
+            .send(request)
             .await
             .map_err(|_| GatewayError::network("envoi Discord impossible"))?;
         let status = response.status().as_u16();
-        let bytes = response
-            .bytes()
+        let bytes = read_bounded(response, DISCORD_BODY_LIMIT)
             .await
             .map_err(|_| GatewayError::network("réponse Discord invalide"))?;
         validate_sent_message(status, &bytes)

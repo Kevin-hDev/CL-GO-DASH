@@ -1,8 +1,7 @@
 use std::time::Duration;
 
-use reqwest::Client;
-
 use super::types::{AuthServerMetadata, ProtectedResourceMetadata};
+use crate::services::secure_http::AuthenticatedClient;
 
 const TIMEOUT: Duration = Duration::from_secs(15);
 
@@ -11,24 +10,21 @@ pub async fn discover_auth_server(endpoint: &str) -> Result<AuthServerMetadata, 
         return Ok(meta);
     }
 
-    let client = Client::builder()
-        .timeout(TIMEOUT)
-        .redirect(reqwest::redirect::Policy::none())
-        .build()
-        .map_err(|_| "erreur interne".to_string())?;
+    let client = AuthenticatedClient::new(TIMEOUT).map_err(|_| "erreur interne".to_string())?;
 
     let issuer = discover_issuer(&client, endpoint).await?;
     fetch_auth_server_metadata(&client, &issuer).await
 }
 
-async fn discover_issuer(client: &Client, endpoint: &str) -> Result<String, String> {
+async fn discover_issuer(client: &AuthenticatedClient, endpoint: &str) -> Result<String, String> {
     let endpoint_host = extract_host(endpoint).unwrap_or_default();
 
-    let resp = client
+    let request = client
         .post(endpoint)
         .header("Content-Type", "application/json")
-        .body(r#"{"jsonrpc":"2.0","method":"initialize","id":1}"#)
-        .send()
+        .body(r#"{"jsonrpc":"2.0","method":"initialize","id":1}"#);
+    let resp = client
+        .send(request)
         .await
         .map_err(|_| "impossible de contacter le serveur MCP".to_string())?;
 
@@ -67,7 +63,7 @@ async fn discover_issuer(client: &Client, endpoint: &str) -> Result<String, Stri
     ];
 
     for url in &auth_candidates {
-        let resp = client.get(url).send().await;
+        let resp = client.send(client.get(url)).await;
         if let Ok(r) = resp {
             if r.status().is_success() {
                 return Ok(base_url);
@@ -105,10 +101,12 @@ fn is_same_domain(url: &str, reference_host: &str) -> bool {
     url_host == reference_host || url_host.ends_with(&format!(".{reference_host}"))
 }
 
-async fn fetch_issuer_from_resource_meta(client: &Client, url: &str) -> Result<String, String> {
+async fn fetch_issuer_from_resource_meta(
+    client: &AuthenticatedClient,
+    url: &str,
+) -> Result<String, String> {
     let resp = client
-        .get(url)
-        .send()
+        .send(client.get(url))
         .await
         .map_err(|_| "serveur non disponible".to_string())?;
     if !resp.status().is_success() {
@@ -121,7 +119,7 @@ async fn fetch_issuer_from_resource_meta(client: &Client, url: &str) -> Result<S
 }
 
 async fn fetch_auth_server_metadata(
-    client: &Client,
+    client: &AuthenticatedClient,
     issuer: &str,
 ) -> Result<AuthServerMetadata, String> {
     let issuer_clean = issuer.trim_end_matches('/');
@@ -153,8 +151,14 @@ async fn fetch_auth_server_metadata(
     Err("métadonnées du serveur d'autorisation non trouvées".to_string())
 }
 
-async fn try_fetch_metadata(client: &Client, url: &str) -> Result<AuthServerMetadata, String> {
-    let resp = client.get(url).send().await.map_err(|e| format!("{e}"))?;
+async fn try_fetch_metadata(
+    client: &AuthenticatedClient,
+    url: &str,
+) -> Result<AuthServerMetadata, String> {
+    let resp = client
+        .send(client.get(url))
+        .await
+        .map_err(|_| "serveur non disponible".to_string())?;
     if !resp.status().is_success() {
         return Err("not found".to_string());
     }

@@ -11,6 +11,7 @@ pub mod slack_types;
 pub mod telegram;
 mod telegram_support;
 pub mod telegram_types;
+mod websocket_limits;
 
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};

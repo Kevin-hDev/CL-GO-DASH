@@ -5,6 +5,7 @@ use zeroize::Zeroizing;
 
 use super::types::{OAuthTokens, TokenResponse};
 use crate::services::api_keys;
+use crate::services::secure_http::AuthenticatedClient;
 
 static REFRESH_LOCKS: std::sync::LazyLock<
     std::sync::Mutex<HashMap<String, Arc<tokio::sync::Mutex<()>>>>,
@@ -71,9 +72,7 @@ async fn refresh_access_token(
 ) -> Result<Zeroizing<String>, String> {
     super::trusted_oauth::validate_endpoint(connector_id, &old.token_endpoint)?;
 
-    let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(15))
-        .build()
+    let client = AuthenticatedClient::new(std::time::Duration::from_secs(15))
         .map_err(|_| "erreur interne".to_string())?;
 
     let mut params: Vec<(&str, &str)> = vec![
@@ -89,17 +88,14 @@ async fn refresh_access_token(
         params.push(("client_secret", secret.as_str()));
     }
 
-    let resp = client
+    let request = client
         .post(&old.token_endpoint)
         .header("Accept", "application/json")
-        .form(&params)
-        .send()
+        .form(&params);
+    let resp = client
+        .send_success(request)
         .await
         .map_err(|_| "échec du rafraîchissement du token".to_string())?;
-
-    if !resp.status().is_success() {
-        return Err("échec du rafraîchissement du token".to_string());
-    }
 
     let mut raw: TokenResponse = super::bounded_json(resp).await?;
 

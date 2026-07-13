@@ -1,0 +1,43 @@
+use super::*;
+use serde_json::json;
+
+#[test]
+fn detects_sensitive_paths_but_ignores_heredoc_bodies() {
+    assert!(bash_touches_sensitive_data("cat .env"));
+    assert!(bash_touches_sensitive_data("head ~/.ssh/id_ed25519"));
+    assert!(bash_touches_sensitive_data(
+        "cat ~/.local/share/cl-go-dash/secrets.enc"
+    ));
+    assert!(!bash_touches_sensitive_data("grep -r token src/"));
+    let heredoc = "cat > README.md << 'EOF'\nSee ~/.ssh/id_rsa and .env\nEOF";
+    assert!(!bash_touches_sensitive_data(heredoc));
+}
+
+#[test]
+fn redacts_assignments_and_json() {
+    let text = "API_KEY=abcd PASSWORD: hunter2";
+    let redacted = redact_text(text);
+    assert!(!redacted.contains("abcd"));
+    assert!(!redacted.contains("hunter2"));
+    let value = json!({ "command": "echo token=abcdefghi" });
+    assert!(!redact_json(&value).to_string().contains("abcdefghi"));
+}
+
+#[test]
+fn redacts_all_supported_credential_shapes() {
+    let fixtures = [
+        ["123456789", ":", &"A".repeat(35)].concat(),
+        ["xapp", "-1-", &"B".repeat(30)].concat(),
+        ["xoxb", "-", &"C".repeat(30)].concat(),
+        ["sk", "-proj-", &"D".repeat(24)].concat(),
+        ["github", "_pat_", &"E".repeat(24)].concat(),
+        ["AK", "IA", &"F".repeat(16)].concat(),
+        format!("{}.{}.{}", "G".repeat(24), "H".repeat(6), "I".repeat(28)),
+        ["Bear", "er ", &"J".repeat(24)].concat(),
+    ];
+    for (index, fixture) in fixtures.into_iter().enumerate() {
+        let redacted = redact_text(&format!("échec: {fixture}"));
+        assert!(!redacted.contains(&fixture), "fixture {index}");
+        assert!(redacted.contains("[REDACTED]"), "fixture {index}");
+    }
+}

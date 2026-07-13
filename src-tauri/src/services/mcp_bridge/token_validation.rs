@@ -4,6 +4,7 @@ use serde_json::Value;
 use zeroize::Zeroizing;
 
 use super::config::StoredConnector;
+use crate::services::secure_http::{read_json_bounded, AuthenticatedClient, TOKEN_BODY_LIMIT};
 
 const TIMEOUT: Duration = Duration::from_secs(10);
 const TOKEN_ERROR: &str = "token MCP invalide";
@@ -35,10 +36,12 @@ fn env_token(connector: &StoredConnector, env_key: &str) -> Result<Zeroizing<Str
 }
 
 async fn validate_huggingface(token: &str) -> Result<(), String> {
-    let resp = client()?
+    let client = client()?;
+    let request = client
         .get("https://huggingface.co/api/whoami-v2")
-        .bearer_auth(token)
-        .send()
+        .bearer_auth(token);
+    let resp = client
+        .send(request)
         .await
         .map_err(|_| TOKEN_ERROR.to_string())?;
     if resp.status().is_success() {
@@ -49,20 +52,21 @@ async fn validate_huggingface(token: &str) -> Result<(), String> {
 }
 
 async fn validate_producthunt(token: &str) -> Result<(), String> {
-    let resp = client()?
+    let client = client()?;
+    let request = client
         .post("https://api.producthunt.com/v2/api/graphql")
         .bearer_auth(token)
         .json(&serde_json::json!({
             "query": "query TokenProbe { posts(first: 1) { edges { node { id } } } }"
-        }))
-        .send()
+        }));
+    let resp = client
+        .send(request)
         .await
         .map_err(|_| TOKEN_ERROR.to_string())?;
     if !resp.status().is_success() {
         return Err(TOKEN_ERROR.to_string());
     }
-    let body = resp
-        .json::<Value>()
+    let body: Value = read_json_bounded(resp, TOKEN_BODY_LIMIT)
         .await
         .map_err(|_| TOKEN_ERROR.to_string())?;
     if body.get("errors").is_some() {
@@ -81,11 +85,8 @@ async fn validate_producthunt(token: &str) -> Result<(), String> {
     }
 }
 
-fn client() -> Result<reqwest::Client, String> {
-    reqwest::Client::builder()
-        .timeout(TIMEOUT)
-        .build()
-        .map_err(|_| "erreur interne".to_string())
+fn client() -> Result<AuthenticatedClient, String> {
+    AuthenticatedClient::new(TIMEOUT).map_err(|_| "erreur interne".to_string())
 }
 
 #[cfg(test)]

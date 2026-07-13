@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use reqwest::Client;
 use tokio::sync::RwLock;
 
 use super::telegram::{TelegramAdapter, TelegramState};
@@ -8,19 +7,23 @@ use super::telegram_types::*;
 use super::{GatewayError, GatewayResult, InboundMessage};
 use crate::services::api_keys;
 use crate::services::gateway::types::ChannelKey;
+use crate::services::secure_http::{read_json_bounded, AuthenticatedClient, TELEGRAM_BODY_LIMIT};
 
 impl TelegramAdapter {
     pub(super) async fn load_token_and_identity(&self, vault_key: &str) -> GatewayResult<()> {
         let token = api_keys::get_raw(vault_key)
             .map_err(|_| GatewayError::auth("token Telegram manquant dans le vault"))?;
         let url = Self::api_url(&token, "getMe");
-        let resp: TgResponse<TgUser> = self
+        let request = self.client.get(url.as_str());
+        let response = self
             .client
-            .get(url.as_str())
-            .send()
+            .send(request)
             .await
-            .map_err(|_| GatewayError::network("connexion Telegram impossible"))?
-            .json()
+            .map_err(|_| GatewayError::network("connexion Telegram impossible"))?;
+        if !response.status().is_success() {
+            return Err(GatewayError::auth("identifiants Telegram refusés"));
+        }
+        let resp: TgResponse<TgUser> = read_json_bounded(response, TELEGRAM_BODY_LIMIT)
             .await
             .map_err(|_| GatewayError::network("réponse Telegram invalide"))?;
         if !resp.ok {
@@ -36,7 +39,7 @@ impl TelegramAdapter {
     }
 
     pub(super) async fn poll_updates(
-        client: &Client,
+        client: &AuthenticatedClient,
         state: &Arc<RwLock<TelegramState>>,
     ) -> GatewayResult<Vec<TgUpdate>> {
         let (url, offset) = {
@@ -47,10 +50,13 @@ impl TelegramAdapter {
                 .ok_or_else(|| GatewayError::auth("pas de token"))?;
             (Self::api_url(token, "getUpdates"), s.last_offset)
         };
+        let request = client.get(url.as_str()).query(&[
+            ("offset", offset + 1),
+            ("timeout", 30),
+            ("limit", 100),
+        ]);
         let resp = client
-            .get(url.as_str())
-            .query(&[("offset", offset + 1), ("timeout", 30), ("limit", 100)])
-            .send()
+            .send(request)
             .await
             .map_err(|_| GatewayError::network("réception Telegram impossible"))?;
         let status = resp.status().as_u16();
@@ -60,8 +66,7 @@ impl TelegramAdapter {
         if status == 409 {
             return Err(GatewayError::network("réception Telegram indisponible"));
         }
-        let body: TgResponse<TgUpdates> = resp
-            .json()
+        let body: TgResponse<TgUpdates> = read_json_bounded(resp, TELEGRAM_BODY_LIMIT)
             .await
             .map_err(|_| GatewayError::network("réponse Telegram invalide"))?;
         if !body.ok {

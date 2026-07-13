@@ -3,6 +3,7 @@ use std::time::Duration;
 use zeroize::Zeroizing;
 
 use super::types::{DcrResponse, OAuthTokens, TokenResponse};
+use crate::services::secure_http::AuthenticatedClient;
 
 pub fn build_auth_url(
     auth_endpoint: &str,
@@ -88,9 +89,7 @@ pub async fn register_client(
     redirect_uri: &str,
 ) -> Result<String, String> {
     super::trusted_oauth::validate_endpoint(connector_id, registration_url)?;
-    let client = reqwest::Client::builder()
-        .timeout(Duration::from_secs(15))
-        .build()
+    let client = AuthenticatedClient::new(Duration::from_secs(15))
         .map_err(|_| "erreur interne".to_string())?;
 
     let body = serde_json::json!({
@@ -102,16 +101,11 @@ pub async fn register_client(
         "token_endpoint_auth_method": "none",
     });
 
+    let request = client.post(registration_url).json(&body);
     let resp = client
-        .post(registration_url)
-        .json(&body)
-        .send()
+        .send_success(request)
         .await
         .map_err(|_| "échec de l'enregistrement du client".to_string())?;
-
-    if !resp.status().is_success() {
-        return Err("enregistrement du client refusé".to_string());
-    }
 
     let dcr: DcrResponse = super::bounded_json(resp).await?;
 
@@ -130,9 +124,7 @@ pub async fn exchange_code(
 ) -> Result<OAuthTokens, String> {
     super::trusted_oauth::validate_endpoint(connector_id, token_endpoint)?;
 
-    let client = reqwest::Client::builder()
-        .timeout(Duration::from_secs(15))
-        .build()
+    let client = AuthenticatedClient::new(Duration::from_secs(15))
         .map_err(|_| "erreur interne".to_string())?;
 
     let mut params: Vec<(&str, &str)> = vec![
@@ -147,17 +139,14 @@ pub async fn exchange_code(
         params.push(("client_secret", secret));
     }
 
-    let resp = client
+    let request = client
         .post(token_endpoint)
         .header("Accept", "application/json")
-        .form(&params)
-        .send()
+        .form(&params);
+    let resp = client
+        .send_success(request)
         .await
         .map_err(|_| "échec de l'échange du code".to_string())?;
-
-    if !resp.status().is_success() {
-        return Err("le serveur a refusé le code d'autorisation".to_string());
-    }
 
     let mut raw: TokenResponse = super::bounded_json(resp).await?;
 

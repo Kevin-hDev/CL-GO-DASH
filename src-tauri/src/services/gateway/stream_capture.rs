@@ -9,11 +9,6 @@ static PATH_RE: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"(?:/[a-zA-Z0-9_./-]{10,}|[A-Z]:\\[a-zA-Z0-9_.\\ /-]{10,})").expect("path regex")
 });
 
-static TOKEN_RE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"(?i)(sk-|Bearer |ghp_|xox[baprs]-|gho_|glpat-)[A-Za-z0-9_-]{8,}")
-        .expect("token regex")
-});
-
 static IP_RE: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"\b(?:10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(?:1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|127\.\d{1,3}\.\d{1,3}\.\d{1,3})\b").expect("ip regex")
 });
@@ -27,7 +22,7 @@ pub fn extract_final_reply(messages: &[ChatMessage]) -> Option<String> {
 }
 
 pub fn redact_sensitive(content: &str) -> String {
-    let step1 = TOKEN_RE.replace_all(content, "[REDACTED]");
+    let step1 = crate::services::agent_local::sensitive_data::redact_text(content);
     let step2 = PATH_RE.replace_all(&step1, "[REDACTED]");
     IP_RE.replace_all(&step2, "[REDACTED]").into_owned()
 }

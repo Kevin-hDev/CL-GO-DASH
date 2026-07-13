@@ -3,20 +3,21 @@ use std::time::Duration;
 
 use async_trait::async_trait;
 use futures_util::{SinkExt, StreamExt};
-use reqwest::Client;
 use tokio::sync::{mpsc, RwLock};
 use tokio_tungstenite::tungstenite::Message as WsMessage;
 use zeroize::Zeroizing;
 
 use super::slack_types::*;
+use super::websocket_limits::bounded_websocket_config;
 use super::{
     capabilities::ChannelCapabilities, ChannelAdapter, ChannelContext, GatewayError, GatewayResult,
     InboundMessage, OutboundMessage,
 };
 use crate::services::gateway::tokens;
+use crate::services::secure_http::{read_json_bounded, AuthenticatedClient, SLACK_BODY_LIMIT};
 
 pub struct SlackAdapter {
-    pub(super) client: Client,
+    pub(super) client: AuthenticatedClient,
     pub(super) state: Arc<RwLock<SlackState>>,
 }
 
@@ -29,10 +30,7 @@ pub(super) struct SlackState {
 impl SlackAdapter {
     pub fn new() -> Self {
         Self {
-            client: Client::builder()
-                .timeout(Duration::from_secs(30))
-                .build()
-                .expect("http client"),
+            client: AuthenticatedClient::new(Duration::from_secs(30)).expect("http client"),
             state: Arc::new(RwLock::new(SlackState {
                 app_token: None,
                 bot_token: None,
@@ -94,7 +92,13 @@ impl ChannelAdapter for SlackAdapter {
                         continue;
                     }
                 };
-                let ws = match tokio_tungstenite::connect_async(ws_url.as_str()).await {
+                let ws = match tokio_tungstenite::connect_async_with_config(
+                    ws_url.as_str(),
+                    Some(bounded_websocket_config(SLACK_BODY_LIMIT)),
+                    false,
+                )
+                .await
+                {
                     Ok((s, _)) => s,
                     Err(_) => {
                         tokio::time::sleep(Duration::from_secs(5)).await;
@@ -142,15 +146,17 @@ impl ChannelAdapter for SlackAdapter {
                 .ok_or_else(|| GatewayError::auth("pas de token bot"))?
         };
         let body = Self::post_body(&msg);
-        let resp: SlackPostResponse = self
+        let request = self
             .client
             .post("https://slack.com/api/chat.postMessage")
             .bearer_auth(token.as_str())
-            .json(&body)
-            .send()
+            .json(&body);
+        let response = self
+            .client
+            .send(request)
             .await
-            .map_err(|_| GatewayError::network("envoi Slack impossible"))?
-            .json()
+            .map_err(|_| GatewayError::network("envoi Slack impossible"))?;
+        let resp: SlackPostResponse = read_json_bounded(response, SLACK_BODY_LIMIT)
             .await
             .map_err(|_| GatewayError::network("réponse Slack invalide"))?;
 

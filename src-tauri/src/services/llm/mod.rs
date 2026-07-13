@@ -45,60 +45,12 @@ pub mod vision;
 mod sanitize_log_body_tests;
 
 pub(crate) fn sanitize_log_body(body: &str) -> String {
-    let truncated = if body.len() > 200 {
-        &body[..body
-            .char_indices()
-            .nth(200)
-            .map(|(i, _)| i)
-            .unwrap_or(body.len())]
-    } else {
-        body
-    };
-    let mut cleaned = truncated.replace(|c: char| c.is_control(), " ");
-    for sensitive in &[
-        "key",
-        "token",
-        "secret",
-        "password",
-        "authorization",
-        "api_key",
-        "apikey",
-    ] {
-        if let Some(pos) = cleaned.to_lowercase().find(sensitive) {
-            // Localise le séparateur de valeur (':' pour JSON/YAML, '=' pour
-            // query params / headers).
-            let sep = cleaned[pos..]
-                .find(':')
-                .or_else(|| cleaned[pos..].find('='))
-                .map(|i| pos + i);
-            if let Some(sep_pos) = sep {
-                // Cas JSON : "api_key":"value" — le séparateur ':' est suivi
-                // d'un '"' ouvrant qu'il faut ignorer pour atteindre la vraie
-                // valeur. Sinon (query param / header), la valeur suit le ':'.
-                let bytes = cleaned.as_bytes();
-                let is_json = sep_pos + 1 < bytes.len() && bytes[sep_pos + 1] == b'"';
-                let value_start = if is_json { sep_pos + 2 } else { sep_pos + 1 };
-                // Fin de la valeur : en contexte JSON, on cherche le '"'
-                // fermant (pour capter "Bearer sk-xxx" avec espaces). Sinon,
-                // on s'arrête au prochain délimiteur classique.
-                let end = if is_json {
-                    cleaned[value_start..]
-                        .find('"')
-                        .map(|i| value_start + i)
-                        .unwrap_or(cleaned.len())
-                } else {
-                    cleaned[value_start..]
-                        .find(&['"', ',', '}', '&', ' '][..])
-                        .map(|i| value_start + i)
-                        .unwrap_or(cleaned.len())
-                };
-                if value_start <= end {
-                    cleaned.replace_range(value_start..end, "[REDACTED]");
-                }
-            }
-        }
-    }
-    cleaned
+    let redacted = crate::services::agent_local::sensitive_data::redact_text(body);
+    redacted
+        .replace(|character: char| character.is_control(), " ")
+        .chars()
+        .take(200)
+        .collect()
 }
 
 /// Helper non-streaming pour appels simples (utilisé par le scheduler heartbeat).
