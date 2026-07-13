@@ -52,6 +52,7 @@ export interface FileAttachment {
   mime_type: string;
   size: number;
   thumbnail?: string;
+  access_grant?: string;
 }
 
 export interface ToolResult {

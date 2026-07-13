@@ -1,4 +1,5 @@
 use base64::{engine::general_purpose::STANDARD as B64, Engine};
+use tauri::WebviewWindow;
 
 const MAX_BINARY_SIZE: u64 = 50 * 1024 * 1024;
 const MAX_SPREADSHEET_SIZE: u64 = 50 * 1024 * 1024;
@@ -13,6 +14,25 @@ pub async fn read_spreadsheet_preview(
     max_rows: Option<usize>,
 ) -> Result<String, String> {
     let resolved = super::file_preview::resolve_preview_path(&path, base_dir.as_deref())?;
+    read_spreadsheet_path(resolved, sheet, max_rows).await
+}
+
+#[tauri::command]
+pub async fn read_selected_spreadsheet_preview(
+    window: WebviewWindow,
+    path: String,
+    sheet: Option<String>,
+    max_rows: Option<usize>,
+) -> Result<String, String> {
+    let resolved = super::attachments::require_selected_file(&window, &path, MAX_SPREADSHEET_SIZE)?;
+    read_spreadsheet_path(resolved, sheet, max_rows).await
+}
+
+async fn read_spreadsheet_path(
+    resolved: std::path::PathBuf,
+    sheet: Option<String>,
+    max_rows: Option<usize>,
+) -> Result<String, String> {
     let max = max_rows.unwrap_or(DEFAULT_MAX_ROWS).min(HARD_MAX_ROWS);
 
     let metadata = tokio::fs::metadata(&resolved)

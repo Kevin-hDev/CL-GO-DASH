@@ -4,15 +4,19 @@ export interface PendingChatFile {
   name: string;
   path?: string;
   preview?: string;
+  type?: string;
+  size?: number;
+  accessGrant?: string;
 }
 
 export function pendingFilesToAttachments(files?: PendingChatFile[]): FileAttachment[] {
   return (files ?? []).map((file) => ({
     name: file.name,
     path: file.path ?? "",
-    mime_type: "",
-    size: 0,
+    mime_type: file.type ?? "",
+    size: file.size ?? 0,
     thumbnail: file.preview,
+    access_grant: file.accessGrant,
   }));
 }
 

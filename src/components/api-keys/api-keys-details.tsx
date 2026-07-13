@@ -34,7 +34,7 @@ export function ApiKeysDetails({ provider, onEdit, onDelete, onAddConnector }: A
     setQuotaLoading(true);
     invoke<ProviderQuota | null>("get_provider_quota", { providerId: provider.id })
       .then((q) => { if (!cancelled) setQuota(q); })
-      .catch((e) => console.warn("Quota load:", e))
+      .catch(() => undefined)
       .finally(() => { if (!cancelled) setQuotaLoading(false); });
     return () => { cancelled = true; };
   }, [provider.id]);

@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
-import { readFile, stat } from "@tauri-apps/plugin-fs";
+import { invoke } from "@tauri-apps/api/core";
+import { readFile } from "@tauri-apps/plugin-fs";
 import i18n from "@/i18n";
 
 const MAX_FILES = 15;
@@ -12,6 +13,13 @@ export interface DroppedFile {
   type: string;
   size: number;
   preview?: string;
+  accessGrant?: string;
+}
+
+interface RegisteredAttachment {
+  path: string;
+  size: number;
+  access_grant: string;
 }
 
 export function useFileDrop() {
@@ -23,6 +31,11 @@ export function useFileDrop() {
     const newFiles = Array.from(fileList);
     if (files.length + newFiles.length > MAX_FILES) {
       setError(i18n.t("errors.maxFiles", { max: MAX_FILES }));
+      return;
+    }
+    const oversized = newFiles.find((file) => file.size > MAX_SIZE);
+    if (oversized) {
+      setError(i18n.t("errors.fileTooLarge", { name: oversized.name }));
       return;
     }
     setError(null);
@@ -42,20 +55,18 @@ export function useFileDrop() {
       return;
     }
     setError(null);
-    const dropped: DroppedFile[] = [];
-    for (const p of paths) {
-      try {
-        const meta = await stat(p);
-        const name = p.split("/").pop() ?? p;
+    try {
+      const registered = await invoke<RegisteredAttachment[]>("register_attachment_paths", {
+        paths,
+      });
+      if (!isValidRegistration(registered)) throw new Error("invalid registration");
+      const dropped: DroppedFile[] = [];
+      for (const file of registered) {
+        const name = file.path.split(/[\\/]/).pop() ?? file.path;
         const ext = name.split(".").pop()?.toLowerCase() ?? "";
-        const size = meta.size ?? 0;
-        if (size > MAX_SIZE) {
-          setError(i18n.t("errors.fileTooLarge", { name }));
-          continue;
-        }
         let preview: string | undefined;
         if (IMAGE_EXTS.includes(ext)) {
-          const bytes = await readFile(p);
+          const bytes = await readFile(file.path);
           let binary = "";
           for (let i = 0; i < bytes.length; i++) {
             binary += String.fromCharCode(bytes[i]);
@@ -66,12 +77,19 @@ export function useFileDrop() {
           };
           preview = `data:${mimeMap[ext] ?? "image/png"};base64,${btoa(binary)}`;
         }
-        dropped.push({ name, path: p, type: ext, size, preview });
-      } catch (e: unknown) {
-        console.error("Erreur ajout fichier:", e);
+        dropped.push({
+          name,
+          path: file.path,
+          type: ext,
+          size: file.size,
+          preview,
+          accessGrant: file.access_grant,
+        });
       }
+      setFiles((prev) => [...prev, ...dropped]);
+    } catch {
+      setError(i18n.t("errors.operationFailed"));
     }
-    setFiles((prev) => [...prev, ...dropped]);
   }, [files.length]);
 
   const removeFile = useCallback((index: number) => {
@@ -84,6 +102,18 @@ export function useFileDrop() {
   }, []);
 
   return { files, dragging, error, addFiles, addByPaths, removeFile, clearFiles, setDragging };
+}
+
+function isValidRegistration(value: unknown): value is RegisteredAttachment[] {
+  if (!Array.isArray(value) || value.length > MAX_FILES) return false;
+  const items: unknown[] = value;
+  return items.every((item) => {
+    if (typeof item !== "object" || item === null) return false;
+    const file = item as Record<string, unknown>;
+    return typeof file.path === "string" && file.path.length > 0 && file.path.length <= 4096
+      && typeof file.size === "number" && file.size >= 0 && file.size <= MAX_SIZE
+      && typeof file.access_grant === "string" && file.access_grant.length === 67;
+  });
 }
 
 function readAsDataUrl(file: File): Promise<string> {

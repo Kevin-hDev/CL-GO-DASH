@@ -2,7 +2,7 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "CL-GO Dashboard capabilities",
-  "windows": ["main", "forecast-docs"],
+  "windows": ["main"],
   "permissions": [
     "core:default",
     "core:webview:allow-create-webview-window",
@@ -37,18 +37,7 @@
         { "path": "$HOME/.claude/skills/**" }
       ]
     },
-    {
-      "identifier": "fs:allow-read-file",
-      "allow": [
-        { "path": "**" }
-      ]
-    },
-    {
-      "identifier": "fs:allow-stat",
-      "allow": [
-        { "path": "**" }
-      ]
-    },
+    "fs:allow-read-file",
     {
       "identifier": "fs:allow-mkdir",
       "allow": [

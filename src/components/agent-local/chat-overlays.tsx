@@ -49,6 +49,7 @@ export function ChatOverlays({
           name={preview.name}
           path={preview.path}
           thumbnail={preview.preview}
+          accessGrant={preview.accessGrant}
           isImage={!!preview.preview}
           onClose={onClosePreview}
         />

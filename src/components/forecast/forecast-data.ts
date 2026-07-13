@@ -19,7 +19,7 @@ interface SpreadsheetPreview {
 }
 
 export async function loadForecastDraftFromFile(path: string): Promise<ForecastDraftData> {
-  const raw = await invoke<string>("read_spreadsheet_preview", {
+  const raw = await invoke<string>("read_selected_spreadsheet_preview", {
     path,
     maxRows: MAX_ROWS,
   });

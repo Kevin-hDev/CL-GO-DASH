@@ -1,12 +1,16 @@
 import { invoke } from "@tauri-apps/api/core";
-import { createUserMessage, pendingFilesToAttachments } from "./agent-message-builders";
+import {
+  createUserMessage,
+  pendingFilesToAttachments,
+  type PendingChatFile,
+} from "./agent-message-builders";
 import { showToast } from "@/lib/toast-emitter";
 import i18n from "@/i18n";
 import type { AgentMessage } from "@/types/agent";
 
 export interface AgentSendPayload {
   text: string;
-  sentFiles?: { name: string; path?: string; preview?: string }[];
+  sentFiles?: PendingChatFile[];
   workingDir?: string;
   projectId?: string;
   skills?: { name: string; content: string }[];

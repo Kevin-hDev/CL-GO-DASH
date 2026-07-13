@@ -1,4 +1,5 @@
 import { readFile } from "@tauri-apps/plugin-fs";
+import { invoke } from "@tauri-apps/api/core";
 import { expandSegmentsToChat, expandToolActivities } from "./agent-chat-utils";
 import type { AgentMessage, FileAttachment } from "@/types/agent";
 
@@ -38,6 +39,7 @@ async function resolveMessage(message: AgentMessage) {
   }
   const textFiles = message.files?.filter((file) => file.path && hasExtension(file.name, TEXT_EXTS)) ?? [];
   for (const file of textFiles) {
+    if (!await restoreAttachmentAccess(file)) continue;
     try {
       const text = new TextDecoder().decode(await readFile(file.path));
       const allowed = Math.min(MAX_TEXT_CHARS_PER_FILE, remainingTextChars);
@@ -46,9 +48,7 @@ async function resolveMessage(message: AgentMessage) {
         : "[File omitted: text attachment budget reached]";
       remainingTextChars = Math.max(0, remainingTextChars - allowed);
       content += `\n\n--- Fichier: ${file.name} ---\n${body}`;
-    } catch {
-      console.warn("Lecture fichier texte impossible.");
-    }
+    } catch { /* Erreur volontairement masquée. */ }
   }
   return { message, content, images };
 }
@@ -58,7 +58,7 @@ function hasExtension(name: string, allowed: string[]): boolean {
 }
 
 async function imageAttachmentToBase64(file: FileAttachment): Promise<string | null> {
-  if (file.path) {
+  if (file.path && await restoreAttachmentAccess(file)) {
     try {
       return uint8ToBase64(await readFile(file.path));
     } catch {
@@ -66,6 +66,19 @@ async function imageAttachmentToBase64(file: FileAttachment): Promise<string | n
     }
   }
   return thumbnailToBase64(file.thumbnail);
+}
+
+async function restoreAttachmentAccess(file: FileAttachment): Promise<boolean> {
+  if (!file.path || !file.access_grant) return false;
+  try {
+    await invoke("restore_attachment_access", {
+      path: file.path,
+      accessGrant: file.access_grant,
+    });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function uint8ToBase64(bytes: Uint8Array): string {

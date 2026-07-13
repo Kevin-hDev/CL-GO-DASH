@@ -4,16 +4,20 @@ import { X } from "@/components/ui/icons";
 import { useClickOutside } from "@/hooks/use-click-outside";
 import { useKeyboard } from "@/hooks/use-keyboard";
 import { readTextFile } from "@tauri-apps/plugin-fs";
+import { invoke } from "@tauri-apps/api/core";
 
 interface FilePreviewProps {
   name: string;
   path?: string;
   thumbnail?: string;
+  accessGrant?: string;
   isImage: boolean;
   onClose: () => void;
 }
 
-export function FilePreview({ name, path, thumbnail, isImage, onClose }: FilePreviewProps) {
+export function FilePreview({
+  name, path, thumbnail, accessGrant, isImage, onClose,
+}: FilePreviewProps) {
   const { t } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
   const [textContent, setTextContent] = useState<string | null>(null);
@@ -26,14 +30,19 @@ export function FilePreview({ name, path, thumbnail, isImage, onClose }: FilePre
     if (isImage || !path) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch→setState is intentional
     setLoading(true);
-    readTextFile(path)
+    if (!accessGrant) {
+      setTextContent(t("agentLocal.fileReadError"));
+      setLoading(false);
+      return;
+    }
+    invoke("restore_attachment_access", { path, accessGrant })
+      .then(() => readTextFile(path))
       .then(setTextContent)
-      .catch((e: unknown) => {
-        console.error("File read error:", e);
+      .catch(() => {
         setTextContent(t("agentLocal.fileReadError"));
       })
       .finally(() => setLoading(false));
-  }, [path, isImage, name, t]);
+  }, [path, accessGrant, isImage, name, t]);
 
   return (
     <div style={{

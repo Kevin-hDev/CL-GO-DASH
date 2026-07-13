@@ -37,7 +37,12 @@ interface MessageListProps {
   onReload?: (messageId: string) => void;
   onEdit?: (messageId: string, newContent: string) => void;
   onCloneMessage?: (messageId: string) => void;
-  onFileClick?: (file: { name: string; path?: string; thumbnail?: string }) => void;
+  onFileClick?: (file: {
+    name: string;
+    path?: string;
+    thumbnail?: string;
+    access_grant?: string;
+  }) => void;
   onFilePreview?: (path: string) => void;
   onFileReview?: (operation: FileOperation) => void;
   projectPath?: string;

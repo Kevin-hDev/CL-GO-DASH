@@ -13,6 +13,7 @@ interface FileInfo {
   name: string;
   path?: string;
   thumbnail?: string;
+  access_grant?: string;
 }
 
 interface UserMessageProps {

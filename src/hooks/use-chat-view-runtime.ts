@@ -51,13 +51,19 @@ export function useChatViewRuntime(params: Params) {
     (id: string, content: string) => void edit(id, content),
     [edit],
   );
-  const handleFileClick = useCallback((file: { name: string; path?: string; thumbnail?: string }) => {
+  const handleFileClick = useCallback((file: {
+    name: string;
+    path?: string;
+    thumbnail?: string;
+    access_grant?: string;
+  }) => {
     setPreview({
       name: file.name,
       path: file.path,
       type: "",
       size: 0,
       preview: file.thumbnail,
+      accessGrant: file.access_grant,
     });
   }, [setPreview]);
 

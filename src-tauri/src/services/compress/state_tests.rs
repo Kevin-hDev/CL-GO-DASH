@@ -121,6 +121,7 @@ fn keeps_rich_fields_from_persisted_recent_messages() {
         mime_type: "image/png".to_string(),
         size: 10,
         thumbnail: None,
+        access_grant: None,
     }];
     rich.skill_names = Some(vec!["rust".to_string()]);
 

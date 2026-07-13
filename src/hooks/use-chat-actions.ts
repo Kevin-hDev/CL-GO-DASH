@@ -5,7 +5,7 @@ import type { DroppedFile } from "@/hooks/use-file-drop";
 interface ChatActionsOptions {
   chat: {
     messages: { role: string; id: string }[];
-    sendMessage: (text: string, files?: { name: string; path?: string; preview?: string }[], workingDir?: string, projectId?: string, skills?: { name: string; content: string }[]) => Promise<void>;
+    sendMessage: (text: string, files?: DroppedFile[], workingDir?: string, projectId?: string, skills?: { name: string; content: string }[]) => Promise<void>;
     reload: (id: string) => Promise<void>;
     isStreaming: boolean;
   };
@@ -35,7 +35,7 @@ export function useChatActions({
     if (hasContent && !initialSent.current) {
       initialSent.current = true;
       const workingDir = initialWorkingDir ?? selectedProjectPath;
-      const files = initialFiles?.map((f) => ({ name: f.name, path: f.path, preview: f.preview }));
+      const files = initialFiles?.map((file) => ({ ...file }));
       void chat.sendMessage(initialMessage || "", files, workingDir, selectedProjectId, initialSkills)
         .then(() => onInitialMessageSent?.());
     }
@@ -44,7 +44,7 @@ export function useChatActions({
 
   const handleSend = useCallback((
     text: string,
-    sentFiles?: { name: string; path?: string; preview?: string }[],
+    sentFiles?: DroppedFile[],
     skills?: { name: string; content: string }[],
   ) => {
     const isFirst = chat.messages.length < 1;
