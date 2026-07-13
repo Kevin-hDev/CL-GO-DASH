@@ -9,7 +9,9 @@ vi.mock("@/hooks/use-compression", () => ({
   useCompression: () => ({ isCompressing: false }),
 }));
 vi.mock("../message-tool-timeline", () => ({
-  SavedToolTimeline: () => <div data-testid="saved-timeline">Réponse finale</div>,
+  SavedToolTimeline: ({ segments }: { segments: AgentMessage["segments"] }) => (
+    <div data-testid="saved-timeline">{JSON.stringify(segments)}</div>
+  ),
   StreamToolTimeline: () => null,
 }));
 vi.mock("../working-stats", () => ({ LoadingIndicator: () => null }));
@@ -39,6 +41,40 @@ const messages: AgentMessage[] = [{
 }];
 
 describe("MessageList subagents", () => {
+  it("affiche l'historique technique enfant avec la timeline du parent", () => {
+    const rawHistory: AgentMessage[] = [
+      ...messages,
+      {
+        id: "work", role: "assistant", content: "Je vérifie", thinking: "Analyse",
+        tool_calls: [{ function: { name: "read_file", arguments: { path: "README.md" } } }],
+        timestamp: "2026-07-07T10:00:01Z", files: [],
+      },
+      {
+        id: "tool", role: "tool", content: "Contenu du projet", tool_name: "read_file",
+        timestamp: "2026-07-07T10:00:02Z", files: [],
+      },
+      {
+        id: "final", role: "assistant", content: "Rapport final",
+        timestamp: "2026-07-07T10:00:03Z", files: [],
+      },
+    ];
+
+    const { getAllByTestId } = render(
+      <MessageList
+        sessionId="child" messages={rawHistory} completedSegments={[]}
+        currentContent="" currentThinking="" currentTools={[]} isStreaming={false}
+        tps={0} totalElapsedMs={0} segmentStartedAt={null} liveTokenCount={0}
+      />,
+    );
+
+    const timelines = getAllByTestId("saved-timeline");
+    expect(timelines).toHaveLength(1);
+    expect(timelines[0]).toHaveTextContent("Analyse");
+    expect(timelines[0]).toHaveTextContent("read_file");
+    expect(timelines[0]).toHaveTextContent("Contenu du projet");
+    expect(timelines[0]).toHaveTextContent("Rapport final");
+  });
+
   it("affiche uniquement les sous-agents créés par le message sauvegardé", () => {
     const { queryByTestId } = render(
       <MessageList

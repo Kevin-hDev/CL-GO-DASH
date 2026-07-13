@@ -10,6 +10,7 @@ import { LoadingIndicator } from "./working-stats";
 import { useCompression } from "@/hooks/use-compression";
 import { isCompressionContextOnlyMessage, isCompressionSummaryMessage } from "@/lib/context-messages";
 import { planStreamEndArtifacts } from "@/lib/stream-end-artifacts";
+import { normalizeSavedToolHistory } from "@/lib/saved-tool-history";
 import type { AgentMessage, AgentPlanPreview, SubagentInfo, TokenPhase } from "@/types/agent";
 import type { ToolActivity, StreamSegment } from "@/hooks/agent-chat-utils";
 import type { ActiveStreamItem } from "@/hooks/active-stream-item";
@@ -52,12 +53,13 @@ export function MessageList({
   liveTokenCount, onReload, onEdit, onCloneMessage, onFileClick, onFilePreview, onFileReview,
   projectPath, knownSubagents = [], onOpenSubagent, planPreview, streamRunId = "",
 }: MessageListProps) {
-  const lastAssistantIdx = findLastIndex(messages, (m) => m.role === "assistant");
+  const displayMessages = normalizeSavedToolHistory(messages);
+  const lastAssistantIdx = displayMessages.map((message) => message.role).lastIndexOf("assistant");
   const { isCompressing } = useCompression(sessionId);
   const streamStartedAt = segmentStartedAt;
-  const hasCompressionMarker = messages.some(isCompressionSummaryMessage);
+  const hasCompressionMarker = displayMessages.some(isCompressionSummaryMessage);
   const showCompressionIndicator = isCompressing && !hasCompressionMarker;
-  const endArtifacts = planStreamEndArtifacts(messages, isStreaming, streamRunId);
+  const endArtifacts = planStreamEndArtifacts(displayMessages, isStreaming, streamRunId);
 
   const artifactsAfter = (messageId: string) => {
     const placement = endArtifacts.get(messageId);
@@ -75,7 +77,7 @@ export function MessageList({
 
   return (
     <>
-      {messages.map((msg, idx) => {
+      {displayMessages.map((msg, idx) => {
         if (isCompressionSummaryMessage(msg)) return <ContextCompressionMarker key={msg.id} />;
         if (isCompressionContextOnlyMessage(msg)) return null;
         if (msg.role === "user") {
@@ -190,10 +192,3 @@ export const SegmentedAssistantMessage = memo(function SegmentedAssistantMessage
     </>
   );
 });
-
-function findLastIndex<T>(arr: T[], pred: (item: T) => boolean): number {
-  for (let i = arr.length - 1; i >= 0; i--) {
-    if (pred(arr[i])) return i;
-  }
-  return -1;
-}
