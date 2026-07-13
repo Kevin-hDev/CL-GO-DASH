@@ -47,6 +47,22 @@ fn traversal_is_refused_before_canonicalization() {
     assert!(result.is_err());
 }
 
+#[cfg(unix)]
+#[test]
+fn symbolic_link_is_refused_before_canonicalization() {
+    use std::os::unix::fs::symlink;
+
+    let dir = tempdir().unwrap();
+    let target = dir.path().join("target.txt");
+    let link = dir.path().join("selected.txt");
+    fs::write(&target, b"safe").unwrap();
+    symlink(&target, &link).unwrap();
+
+    let result = register_paths(&[link.to_string_lossy().to_string()], &TEST_KEY, |_| true);
+
+    assert!(result.is_err());
+}
+
 #[test]
 fn forged_grant_is_refused() {
     let dir = tempdir().unwrap();

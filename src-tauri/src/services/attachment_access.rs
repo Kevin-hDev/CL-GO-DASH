@@ -126,6 +126,12 @@ fn validate_raw_path(raw: &str) -> Result<&Path, String> {
 }
 
 fn validate_file(path: &Path, max_size: u64) -> Result<(PathBuf, u64), String> {
+    let source = path
+        .symlink_metadata()
+        .map_err(|_| ERROR_CODE.to_string())?;
+    if source.file_type().is_symlink() || !source.is_file() {
+        return Err(ERROR_CODE.into());
+    }
     let canonical = path.canonicalize().map_err(|_| ERROR_CODE.to_string())?;
     let metadata = canonical.metadata().map_err(|_| ERROR_CODE.to_string())?;
     if !metadata.is_file() || metadata.len() > max_size {
