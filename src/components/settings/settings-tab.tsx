@@ -168,7 +168,7 @@ export const SettingsTab = memo(function SettingsTab({
     if (subTab === "shortcuts") return <ShortcutsSettings />;
     if (subTab === "about") return <AboutSettings />;
     return null;
-  }, [navState, navState.llmView, onNavChange, onNavReplace, onThemeChange, settings, subTab, themeChoice]);
+  }, [navState, onNavChange, onNavReplace, onThemeChange, settings, subTab, themeChoice]);
 
   return (
     <>

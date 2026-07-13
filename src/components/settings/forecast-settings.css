@@ -144,6 +144,11 @@
   color: var(--ink-muted);
 }
 
+.fs-cloud-badge {
+  color: var(--signal-info);
+  font-size: var(--text-base);
+}
+
 .fs-input {
   width: 140px;
 }

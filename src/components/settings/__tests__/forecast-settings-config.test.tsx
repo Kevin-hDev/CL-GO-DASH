@@ -5,10 +5,10 @@ import { ForecastConfigView } from "../forecast-settings-config";
 import type { ForecastModelEntry } from "@/components/forecast/forecast-model-meta";
 import type { ForecastModelConfig } from "@/components/forecast/model-browser/forecast-config-types";
 
-const invokeMock = vi.fn();
+const invokeMock = vi.fn<(cmd: string, args?: Record<string, unknown>) => Promise<unknown>>();
 
 vi.mock("@tauri-apps/api/core", () => ({
-  invoke: (cmd: string, args?: Record<string, unknown>) => invokeMock(cmd, args),
+  invoke: (cmd: string, args?: Record<string, unknown>): Promise<unknown> => invokeMock(cmd, args),
 }));
 
 vi.mock("react-i18next", () => ({
