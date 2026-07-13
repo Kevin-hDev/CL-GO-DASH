@@ -4,7 +4,7 @@
 //! Z.ai et les autres n'exposent pas d'endpoint → retourne None.
 
 use crate::services::api_keys;
-use reqwest::Client;
+use crate::services::secure_http::{read_json_bounded, AuthenticatedClient, QUOTA_BODY_LIMIT};
 use serde::Serialize;
 use std::collections::HashMap;
 use std::sync::Mutex;
@@ -21,8 +21,8 @@ const TIMEOUT: Duration = Duration::from_secs(10);
 static RATELIMIT_CACHE: std::sync::LazyLock<Mutex<HashMap<String, HashMap<String, String>>>> =
     std::sync::LazyLock::new(|| Mutex::new(HashMap::new()));
 
-fn quota_client() -> Option<Client> {
-    Client::builder().timeout(TIMEOUT).build().ok()
+fn quota_client() -> Option<AuthenticatedClient> {
+    AuthenticatedClient::new(TIMEOUT).ok()
 }
 
 /// Appelé par stream_http après chaque réponse pour capturer les headers rate-limit.
@@ -82,18 +82,7 @@ fn fetch_ratelimit(provider_id: &str) -> Option<ProviderQuota> {
 }
 
 async fn fetch_deepseek() -> Option<ProviderQuota> {
-    let key = api_keys::get_key("deepseek").ok()?;
-    let client = quota_client()?;
-    let resp = client
-        .get("https://api.deepseek.com/user/balance")
-        .bearer_auth(&*key)
-        .send()
-        .await
-        .ok()?;
-    if !resp.status().is_success() {
-        return None;
-    }
-    let body: serde_json::Value = resp.json().await.ok()?;
+    let body = fetch_json("deepseek", "https://api.deepseek.com/user/balance").await?;
     let infos = body["balance_infos"].as_array()?;
     let first = infos.first()?;
     let total: f64 = first["total_balance"].as_str()?.parse().ok()?;
@@ -119,18 +108,7 @@ async fn fetch_deepseek() -> Option<ProviderQuota> {
 }
 
 async fn fetch_moonshot() -> Option<ProviderQuota> {
-    let key = api_keys::get_key("moonshot").ok()?;
-    let client = quota_client()?;
-    let resp = client
-        .get("https://api.moonshot.ai/v1/users/me/balance")
-        .bearer_auth(&*key)
-        .send()
-        .await
-        .ok()?;
-    if !resp.status().is_success() {
-        return None;
-    }
-    let body: serde_json::Value = resp.json().await.ok()?;
+    let body = fetch_json("moonshot", "https://api.moonshot.ai/v1/users/me/balance").await?;
     let data = &body["data"];
     let available: f64 = data["available_balance"].as_f64().unwrap_or(0.0);
     let voucher: f64 = data["voucher_balance"].as_f64().unwrap_or(0.0);
@@ -146,18 +124,7 @@ async fn fetch_moonshot() -> Option<ProviderQuota> {
 }
 
 async fn fetch_openrouter() -> Option<ProviderQuota> {
-    let key = api_keys::get_key("openrouter").ok()?;
-    let client = quota_client()?;
-    let resp = client
-        .get("https://openrouter.ai/api/v1/credits")
-        .bearer_auth(&*key)
-        .send()
-        .await
-        .ok()?;
-    if !resp.status().is_success() {
-        return None;
-    }
-    let body: serde_json::Value = resp.json().await.ok()?;
+    let body = fetch_json("openrouter", "https://openrouter.ai/api/v1/credits").await?;
     let total: f64 = body["data"]["total_credits"].as_f64()?;
     let used: f64 = body["data"]["total_usage"].as_f64().unwrap_or(0.0);
     let remaining = total - used;
@@ -170,3 +137,18 @@ async fn fetch_openrouter() -> Option<ProviderQuota> {
         label,
     })
 }
+
+async fn fetch_json(provider_id: &str, url: &str) -> Option<serde_json::Value> {
+    let key = api_keys::get_key(provider_id).ok()?;
+    let client = quota_client()?;
+    let request = client.get(url).bearer_auth(&*key);
+    let response = client.send(request).await.ok()?;
+    if !response.status().is_success() {
+        return None;
+    }
+    read_json_bounded(response, QUOTA_BODY_LIMIT).await.ok()
+}
+
+#[cfg(test)]
+#[path = "quota_http_tests.rs"]
+mod tests;

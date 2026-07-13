@@ -10,11 +10,11 @@ use super::openai_compat_parsing::{
 };
 use super::types::{ChatRequest, ChatResponse, LlmError, ModelInfo};
 use crate::services::api_keys;
-use reqwest::Client;
+use crate::services::secure_http::{read_json_bounded, AuthenticatedClient, LLM_BODY_LIMIT};
 
 pub struct OpenAiCompatProvider {
     spec: &'static ProviderSpec,
-    client: Client,
+    client: AuthenticatedClient,
 }
 
 pub fn ping_model(provider_id: &str) -> &'static str {
@@ -25,10 +25,8 @@ impl OpenAiCompatProvider {
     pub fn new(provider_id: &str) -> Result<Self, LlmError> {
         let spec = catalog::find(provider_id)
             .ok_or_else(|| LlmError::Provider(format!("provider inconnu : {}", provider_id)))?;
-        let client = Client::builder()
-            .timeout(super::timeouts::request_timeout())
-            .build()
-            .map_err(|e| LlmError::Network(e.to_string()))?;
+        let client = AuthenticatedClient::new(super::timeouts::request_timeout())
+            .map_err(|_| network_error())?;
         Ok(Self { spec, client })
     }
 
@@ -40,22 +38,14 @@ impl OpenAiCompatProvider {
         let key = api_keys::get_key(self.spec.id).map_err(|_| LlmError::Unauthorized)?;
         let url = format!("{}{}", self.spec.base_url, self.spec.models_endpoint);
 
-        let resp = self
-            .client
-            .get(&url)
-            .bearer_auth(&*key)
-            .send()
-            .await
-            .map_err(|e| LlmError::Network(e.to_string()))?;
+        let request = self.client.get(&url).bearer_auth(&*key);
+        let resp = self.send(request).await?;
 
         if !resp.status().is_success() {
             return Err(map_error_status(resp).await);
         }
 
-        let body: serde_json::Value = resp
-            .json()
-            .await
-            .map_err(|e| LlmError::Parse(e.to_string()))?;
+        let body = read_json(resp).await?;
         parse_models_list(&body, self.spec.id)
     }
 
@@ -65,23 +55,14 @@ impl OpenAiCompatProvider {
         let url = format!("{}/chat/completions", self.spec.base_url);
         let payload = build_payload(&req, false);
 
-        let resp = self
-            .client
-            .post(&url)
-            .bearer_auth(&*key)
-            .json(&payload)
-            .send()
-            .await
-            .map_err(|e| LlmError::Network(e.to_string()))?;
+        let request = self.client.post(&url).bearer_auth(&*key).json(&payload);
+        let resp = self.send(request).await?;
 
         if !resp.status().is_success() {
             return Err(map_error_status(resp).await);
         }
 
-        let body: serde_json::Value = resp
-            .json()
-            .await
-            .map_err(|e| LlmError::Parse(e.to_string()))?;
+        let body = read_json(resp).await?;
         parse_chat_response(&body)
     }
 
@@ -101,17 +82,29 @@ impl OpenAiCompatProvider {
             "messages": [{"role": "user", "content": "hi"}],
             "max_tokens": 1,
         });
-        let resp = self
-            .client
-            .post(&url)
-            .bearer_auth(&*key)
-            .json(&payload)
-            .send()
-            .await
-            .map_err(|e| LlmError::Network(e.to_string()))?;
+        let request = self.client.post(&url).bearer_auth(&*key).json(&payload);
+        let resp = self.send(request).await?;
         if resp.status().is_success() {
             return Ok(());
         }
         Err(map_error_status(resp).await)
     }
+
+    async fn send(&self, request: reqwest::RequestBuilder) -> Result<reqwest::Response, LlmError> {
+        self.client.send(request).await.map_err(|_| network_error())
+    }
 }
+
+async fn read_json(response: reqwest::Response) -> Result<serde_json::Value, LlmError> {
+    read_json_bounded(response, LLM_BODY_LIMIT)
+        .await
+        .map_err(|_| LlmError::Parse("réponse invalide".to_string()))
+}
+
+fn network_error() -> LlmError {
+    LlmError::Network("requête refusée".to_string())
+}
+
+#[cfg(test)]
+#[path = "openai_compat_http_tests.rs"]
+mod tests;

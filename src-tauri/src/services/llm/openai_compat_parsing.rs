@@ -1,6 +1,7 @@
 //! Helpers de parsing/construction pour `openai_compat.rs`.
 
 use super::types::{ChatRequest, ChatResponse, LlmError, ModelInfo, TokenUsage};
+use crate::services::secure_http::{read_bounded, PROVIDER_ERROR_LIMIT};
 use reqwest::Response;
 
 /// Construit le payload JSON pour `POST /chat/completions`.
@@ -147,7 +148,10 @@ pub async fn map_error_status(resp: Response) -> LlmError {
             LlmError::RateLimit { retry_after_secs }
         }
         _ => {
-            let body = resp.text().await.unwrap_or_default();
+            let body = read_bounded(resp, PROVIDER_ERROR_LIMIT)
+                .await
+                .map(|bytes| String::from_utf8_lossy(&bytes).into_owned())
+                .unwrap_or_default();
             eprintln!(
                 "[llm] HTTP {} — {}",
                 status,
