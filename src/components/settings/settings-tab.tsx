@@ -10,6 +10,7 @@ import { ThemedIcon } from "@/components/ui/themed-icon";
 import { GeneralSettings } from "./general-settings";
 import { AdvancedSettings } from "./advanced-settings";
 import { ToolsSettings } from "./tools-settings";
+import { ForecastSettings } from "./forecast-settings";
 import { ArchivedChatsSettings } from "./archived-chats-settings";
 import { ShortcutsSettings } from "./shortcuts-settings";
 import { AboutSettings } from "./about-settings";
@@ -153,6 +154,15 @@ export const SettingsTab = memo(function SettingsTab({
       return <LlmExplorer navState={navState.llmView} onNavChange={(llmView) => onNavChange({ llmView })} />;
     }
     if (subTab === "tools") return <ToolsSettings />;
+    if (subTab === "forecast") {
+      return (
+        <ForecastSettings
+          navState={navState}
+          onNavChange={onNavChange}
+          onNavReplace={onNavReplace}
+        />
+      );
+    }
     if (subTab === "archived-chats") return <ArchivedChatsSettings />;
     if (subTab === "advanced") return <AdvancedSettings />;
     if (subTab === "shortcuts") return <ShortcutsSettings />;

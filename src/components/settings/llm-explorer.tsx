@@ -4,6 +4,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { LlmFamilyGrid } from "./llm-family-grid";
 import { LlmModelList } from "./llm-model-list";
 import { LlmModelDetail } from "./llm-model-detail";
+import { SettingsCard } from "./settings-card";
 import type { RegistryModelInfo, FamilyGroup } from "./llm-types";
 import type { LlmNavState } from "@/types/navigation";
 import "./llm-explorer.css";
@@ -107,24 +108,28 @@ export function LlmExplorer({ navState, onNavChange }: LlmExplorerProps) {
           LLM
         </h2>
 
-        <div className="llm-search-bar">
-          <input
-            className="llm-search-input"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => { if (e.key.startsWith("Ent")) void handleSearch(); }}
-            placeholder={t("settings.llm.searchPlaceholder")}
-          />
-          <button
-            className={`llm-family-btn ${showFamilies ? "active" : ""}`}
-            onClick={toggleFamilies}
-          >
-            {t("settings.llm.families")}
-          </button>
-        </div>
+        <SettingsCard>
+          <div className="llm-search-bar">
+            <input
+              className="llm-search-input"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => { if (e.key.startsWith("Ent")) void handleSearch(); }}
+              placeholder={t("settings.llm.searchPlaceholder")}
+            />
+            <button
+              className={`llm-family-btn ${showFamilies ? "active" : ""}`}
+              onClick={toggleFamilies}
+            >
+              {t("settings.llm.families")}
+            </button>
+          </div>
+        </SettingsCard>
 
         {showFamilies && viewIs(view, "idle") && (
-          <LlmFamilyGrid families={families} onSelect={(f) => void handleFamilyClick(f)} />
+          <SettingsCard>
+            <LlmFamilyGrid families={families} onSelect={(f) => void handleFamilyClick(f)} />
+          </SettingsCard>
         )}
 
         {viewIs(view, "search") && (
