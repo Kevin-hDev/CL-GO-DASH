@@ -4,4 +4,6 @@ Relecture contradictoire du rapport du 13 juillet 2026 :
 - H-4 : vrai positif. Les formats AIza et webhook Slack manquaient au filtre commun ; correction dans ef10d184.
 - M-1 : le même scénario de fuite par redirection est surévalué pour Forecast : Nixtla utilise une URL HTTPS fixe, Chronos est local, et reqwest retire les credentials sur changement d'origine. La migration centralisée reste un durcissement souhaitable, pas la fuite MEDIUM décrite.
 
-Complément après durcissement :\n\n- M-1 et M-6 : durcissements appliqués dans 0ec1f18f. Forecast utilise maintenant AuthenticatedClient, les réponses sont bornées, HTTPS est imposé par défaut et l'exception HTTP est limitée aux adresses IP de boucle locale pour Chronos. Cette correction améliore la défense en profondeur sans modifier l'analyse précédente sur le scénario de fuite surévalué.
+Complément après durcissement :
+
+- M-1 et M-6 : durcissements appliqués dans 0ec1f18f. Forecast utilise maintenant AuthenticatedClient, les réponses sont bornées, HTTPS est imposé par défaut et l'exception HTTP est limitée aux adresses IP de boucle locale pour Chronos. Cette correction améliore la défense en profondeur sans modifier l'analyse précédente sur le scénario de fuite surévalué.
