@@ -13,7 +13,7 @@ export const CONTEXT_USAGE_KEYS = [
   "systemPrompt",
 ] as const;
 
-export type ContextUsageKey = typeof CONTEXT_USAGE_KEYS[number];
+type ContextUsageKey = typeof CONTEXT_USAGE_KEYS[number];
 
 export interface ContextUsageItem {
   key: ContextUsageKey;

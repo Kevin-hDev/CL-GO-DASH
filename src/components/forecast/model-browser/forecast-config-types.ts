@@ -1,4 +1,4 @@
-export type ForecastConfigKind =
+type ForecastConfigKind =
   | "integer"
   | "number"
   | "boolean"

@@ -16,13 +16,3 @@ export function useFsEvent(event: FsEvent, callback: () => void) {
     return () => { cleanupTauriListener(unlisten); };
   }, [event, callback]);
 }
-
-export function useFsEventWithPayload<T>(
-  event: FsEvent,
-  callback: (payload: T) => void,
-) {
-  useEffect(() => {
-    const unlisten = listen<T>(event, (e) => callback(e.payload));
-    return () => { cleanupTauriListener(unlisten); };
-  }, [event, callback]);
-}

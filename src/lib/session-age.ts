@@ -4,7 +4,7 @@ const DAY_MS = 24 * HOUR_MS;
 const MONTH_MS = 30 * DAY_MS;
 const YEAR_MS = 365 * DAY_MS;
 
-export type SessionAgeUnit = "minute" | "hour" | "day" | "month" | "year";
+type SessionAgeUnit = "minute" | "hour" | "day" | "month" | "year";
 
 export interface SessionAge {
   count: number;

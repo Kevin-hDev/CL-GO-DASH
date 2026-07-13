@@ -5,7 +5,7 @@ import type { AgentTodoItem, AgentTodoRun } from "./agent-todo";
 export type CloneMode = "cut" | "summary";
 export type SubagentStatus = "running" | "completed" | "failed" | "cancelled" | "interrupted";
 
-export interface SubagentLastActivity {
+interface SubagentLastActivity {
   kind: string;
   label: string;
   detail?: string;
@@ -20,7 +20,7 @@ export interface Project {
   created_at: string;
 }
 
-export interface AgentStreamFailure {
+interface AgentStreamFailure {
   code: string;
   occurred_at: string;
   is_connection: boolean;

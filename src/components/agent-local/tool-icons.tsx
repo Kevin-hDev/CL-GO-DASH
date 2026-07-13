@@ -41,7 +41,7 @@ const ICONS = {
   Plugs,
 } as const;
 
-export type ToolIconName = keyof typeof ICONS;
+type ToolIconName = keyof typeof ICONS;
 
 type IconComponentProps = ComponentProps<(typeof ICONS)[ToolIconName]>;
 

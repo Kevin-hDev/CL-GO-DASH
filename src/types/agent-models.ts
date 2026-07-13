@@ -45,20 +45,6 @@ export interface ModelInfo {
   license: string;
 }
 
-export interface ModelProfile {
-  name: string;
-  parameter_size: string;
-  file_size: number;
-  architecture: string;
-  context_length: number;
-  family: string;
-  quantization: string;
-  capabilities: string[];
-  is_moe: boolean;
-  has_audio: boolean;
-  license: string;
-}
-
 export interface RegistryModel {
   name: string;
   description: string;

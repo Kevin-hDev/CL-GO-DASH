@@ -3,7 +3,7 @@ import { useClickOutside } from "@/hooks/use-click-outside";
 import { useLocalListNavigation } from "@/hooks/use-local-list-navigation";
 import "./custom-select.css";
 
-export interface SelectOption {
+interface SelectOption {
   value: string;
   label: string;
 }

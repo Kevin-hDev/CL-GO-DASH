@@ -32,10 +32,6 @@ vi.mock("@/components/ui/icons", () => ({
   PencilSimple: () => <span />,
 }));
 
-vi.mock("@/components/ui/wastebasket-icon", () => ({
-  WastebasketIcon: () => <span />,
-}));
-
 vi.mock("@/components/ui/lucide-icons", () => ({
   Archive: () => <span />,
 }));

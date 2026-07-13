@@ -4,7 +4,7 @@ type SubagentType = SubagentInfo["type"];
 
 const LEGACY_NAMES = new Set(["", "agent", "explore", "explorer", "coder"]);
 
-export function subagentDefaultName(type: SubagentType): string {
+function subagentDefaultName(type: SubagentType): string {
   return type === "coder" ? "Claudiator" : "Geminitor";
 }
 

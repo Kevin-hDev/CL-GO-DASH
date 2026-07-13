@@ -55,28 +55,9 @@ export interface FileAttachment {
   access_grant?: string;
 }
 
-export interface ToolResult {
-  content: string;
-  is_error: boolean;
-  truncated?: boolean;
-  affected_paths?: string[];
-}
-
-export interface SearchResult {
-  title: string;
-  url: string;
-  snippet: string;
-}
-
 export interface SkillInfo {
   name: string;
   description: string;
   path: string;
   source: string;
-}
-
-export interface PullProgress {
-  status: string;
-  completed?: number;
-  total?: number;
 }

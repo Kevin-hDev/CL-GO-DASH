@@ -1,8 +1,8 @@
 import { useState, useRef, useCallback } from "react";
 
-export type SwitchChoice = "new" | "continue";
+type SwitchChoice = "new" | "continue";
 
-export interface PendingSwitch {
+interface PendingSwitch {
   model: string;
   provider: string;
 }

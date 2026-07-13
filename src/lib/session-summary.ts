@@ -29,7 +29,7 @@ export function summarizeLastRequestChanges(messages: AgentMessage[]): SessionCh
   return EMPTY_CHANGE_SUMMARY;
 }
 
-export function summarizeToolChanges(tools: ToolActivityRecord[]): SessionChangeSummary {
+function summarizeToolChanges(tools: ToolActivityRecord[]): SessionChangeSummary {
   return tools.reduce<SessionChangeSummary>((summary, tool) => {
     const next = summarizeToolChange(tool);
     return addChangeSummaries(summary, next);

@@ -22,7 +22,7 @@ export function countLines(text?: string): number {
   return text.split(/\r?\n/).length;
 }
 
-export const MAX_FILE_OPERATIONS = 500;
+const MAX_FILE_OPERATIONS = 500;
 
 interface CollectFileOperationsOptions {
   liveTools?: ToolActivityRecord[];
@@ -33,7 +33,7 @@ export function normalizeFileOperationPath(path: string): string {
   return path.replaceAll("\\", "/").replace(/\/+$/, "");
 }
 
-export function fileOperationKey(path: string, baseDir?: string): string {
+function fileOperationKey(path: string, baseDir?: string): string {
   const normalizedPath = normalizeFileOperationPath(path);
   if (!baseDir || isAbsolutePath(normalizedPath)) return normalizedPath;
   const normalizedBase = normalizeFileOperationPath(baseDir);

@@ -19,7 +19,7 @@ function panelStorageKey(sessionId: string | null): string {
   return `clgo-file-preview-panel:${sessionId ?? "none"}`;
 }
 
-export function clampFilePreviewWidth(value: unknown): number {
+function clampFilePreviewWidth(value: unknown): number {
   const maxWidth = typeof window === "undefined" ? 1600 : Math.max(FILE_PREVIEW_MIN_WIDTH, window.innerWidth - CHAT_MIN_WIDTH);
   const width = typeof value === "number" && Number.isFinite(value) ? value : FILE_PREVIEW_DEFAULT_WIDTH;
   return Math.min(maxWidth, Math.max(FILE_PREVIEW_MIN_WIDTH, width));

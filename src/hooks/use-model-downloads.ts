@@ -3,9 +3,9 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { cleanupTauriListener } from "@/lib/tauri-listen";
 
-export type ModelDownloadKind = "ollama" | "forecast";
-export type ModelDownloadStatus = "running" | "completed" | "failed" | "cancelled";
-export type ModelDownloadPhase = "starting" | "downloading" | "installing" | "completed";
+type ModelDownloadKind = "ollama" | "forecast";
+type ModelDownloadStatus = "running" | "completed" | "failed" | "cancelled";
+type ModelDownloadPhase = "starting" | "downloading" | "installing" | "completed";
 
 export interface ModelDownloadState {
   id: string;

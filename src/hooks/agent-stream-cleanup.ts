@@ -2,9 +2,9 @@ import type { ManagedStreamState } from "./agent-chat-stream-callbacks";
 
 const CLEANUP_DELAY_MS = 5 * 60 * 1000;
 
-export const MAX_SESSIONS = 64;
+const MAX_SESSIONS = 64;
 export const MAX_EVENTS_PER_SESSION = 4096;
-export const MAX_SUBSCRIBERS_PER_SESSION = 32;
+const MAX_SUBSCRIBERS_PER_SESSION = 32;
 export const MAX_CANCELLED_GENERATIONS = 16;
 
 export interface StreamRecord {

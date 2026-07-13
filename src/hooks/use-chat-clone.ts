@@ -14,7 +14,7 @@ export interface PendingCloneDialog {
   error?: string | null;
 }
 
-export interface CloneActivationOptions {
+interface CloneActivationOptions {
   operationId?: string;
   shouldActivateOnComplete?: () => boolean;
 }

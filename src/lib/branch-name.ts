@@ -1,4 +1,4 @@
-export type BranchNameValidationReason = "invalid_name" | "name_too_long";
+type BranchNameValidationReason = "invalid_name" | "name_too_long";
 
 export interface BranchNameValidation {
   valid: boolean;

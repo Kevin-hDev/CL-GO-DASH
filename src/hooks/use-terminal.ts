@@ -5,7 +5,6 @@ import { generateId, folderName, DEFAULT_GROUP_KEY } from "./terminal-types";
 import type { TerminalTab, TerminalGroup } from "./terminal-types";
 
 export type { TerminalTab, TerminalGroup };
-export { DEFAULT_GROUP_KEY } from "./terminal-types";
 
 const DEFAULT_HEIGHT = 120;
 const MIN_HEIGHT = 80;

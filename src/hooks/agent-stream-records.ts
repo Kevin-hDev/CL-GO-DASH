@@ -62,16 +62,6 @@ export function snapshot(state: StreamRecord["state"]): StreamSnapshot {
   };
 }
 
-export function persistAssistant(
-  sessionId: string,
-  record: StreamRecord,
-  message: AgentMessage,
-  tokens: number,
-  notify: (record: StreamRecord) => void,
-) {
-  persistMessages(sessionId, record, [message], tokens, true, notify);
-}
-
 export function persistMessages(
   sessionId: string,
   record: StreamRecord,

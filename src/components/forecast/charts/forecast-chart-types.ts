@@ -1,6 +1,6 @@
 import type { ForecastLayerState } from "../forecast-layer-matrix";
 
-export interface Point {
+interface Point {
   date: string;
   value: number;
 }
@@ -18,7 +18,7 @@ export interface VariableLine {
   rawValues: Array<number | null>;
 }
 
-export type ForecastChartMode = "main" | "scenario" | "comparison" | "notes";
+type ForecastChartMode = "main" | "scenario" | "comparison" | "notes";
 
 export interface ForecastChartAnnotation {
   id: string;

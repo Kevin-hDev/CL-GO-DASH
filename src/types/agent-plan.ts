@@ -1,4 +1,4 @@
-export type AgentPlanStatus = "draft" | "awaiting_approval" | "approved" | "rejected" | "cancelled";
+type AgentPlanStatus = "draft" | "awaiting_approval" | "approved" | "rejected" | "cancelled";
 
 export type AgentPlanWorkflowStatus =
   | "needs_context"

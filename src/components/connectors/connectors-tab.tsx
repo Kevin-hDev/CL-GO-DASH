@@ -168,7 +168,6 @@ export function useConnectorsTabSlots({ navState, onNavChange, onNavReplace }: C
   ), [
     browseHeader,
     catalog,
-    addConnector,
     configured,
     configuredIds,
     confirmAddBusy,

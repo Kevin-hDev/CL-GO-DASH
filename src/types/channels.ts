@@ -1,4 +1,4 @@
-export type ChannelStatus = "off" | "starting" | "running" | "error" | "stopping";
+type ChannelStatus = "off" | "starting" | "running" | "error" | "stopping";
 
 export interface ChannelHealthEntry {
   channel_id: string;
@@ -34,22 +34,21 @@ export interface GatewayConfig {
   channels: ChannelsConfig;
 }
 
-export interface RateLimitConfig {
+interface RateLimitConfig {
   per_user_per_minute: number;
   per_channel_per_minute: number;
   global_per_minute: number;
 }
 
-export interface AuditConfig {
+interface AuditConfig {
   enabled: boolean;
   retention_days: number;
 }
 
-export interface ChannelsConfig {
+interface ChannelsConfig {
   telegram: ChannelAccountConfig[];
   slack: ChannelAccountConfig[];
   discord: ChannelAccountConfig[];
 }
 
 export type ChannelType = "telegram" | "slack" | "discord";
-export type GatewayTokenKind = "default" | "bot" | "app";

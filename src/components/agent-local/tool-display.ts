@@ -19,7 +19,7 @@ const FILE_TOOLS = new Set([
 ]);
 
 /** Nombre maximum de dossiers parents affichés avant le nom du fichier. */
-export const MAX_PARENT_DIRS = 3;
+const MAX_PARENT_DIRS = 3;
 
 /**
  * Coupe un chemin pour ne garder que les `maxDirs` derniers dossiers parents

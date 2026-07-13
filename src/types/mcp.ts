@@ -7,8 +7,8 @@ export type McpCategory =
   | "scraping"
   | "community";
 
-export type McpAuthType = "oauth" | "token" | "none";
-export type McpLocale = "fr" | "en" | "es" | "de" | "it" | "zh" | "ja";
+type McpAuthType = "oauth" | "token" | "none";
+type McpLocale = "fr" | "en" | "es" | "de" | "it" | "zh" | "ja";
 
 export interface McpConnectorSpec {
   id: string;
@@ -26,7 +26,7 @@ export interface McpConnectorSpec {
   coming_soon?: boolean;
 }
 
-export type McpConnectorStatus = "connected" | "disconnected";
+type McpConnectorStatus = "connected" | "disconnected";
 
 export interface ConfiguredMcp {
   id: string;

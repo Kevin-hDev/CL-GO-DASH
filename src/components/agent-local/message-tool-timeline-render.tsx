@@ -92,7 +92,7 @@ export function TimelineWorkBlock<T extends ToolActivity | SavedSegment["tools"]
   );
 }
 
-export function TimelineNarrative<T>({ block }: { block: ToolTimelineBlock<T> }) {
+function TimelineNarrative<T>({ block }: { block: ToolTimelineBlock<T> }) {
   return (
     <>
       {block.thinking && <ThinkingSection content={block.thinking} />}

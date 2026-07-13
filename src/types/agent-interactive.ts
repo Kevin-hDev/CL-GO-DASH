@@ -1,4 +1,4 @@
-export interface AgentInteractiveOption {
+interface AgentInteractiveOption {
   id?: string;
   label: string;
   description: string;

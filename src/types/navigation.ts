@@ -1,13 +1,13 @@
 import type { FilePreviewActiveTab } from "@/types/file-preview";
 import type { ForecastSection, PanelMode } from "@/hooks/use-forecast-panel";
 
-export type MainTabId = "heartbeat" | "personality" | "agent-local" | "settings";
+type MainTabId = "heartbeat" | "personality" | "agent-local" | "settings";
 export type SettingsSubTab =
   | "general" | "ollama" | "connectors" | "channels" | "api-keys"
   | "forecast" | "llm" | "tools" | "archived-chats" | "advanced" | "shortcuts" | "about";
 
-export type OllamaSettingsSubTab = "modelfile" | "models";
-export type ForecastSettingsSubTab = "config" | "models";
+type OllamaSettingsSubTab = "modelfile" | "models";
+type ForecastSettingsSubTab = "config" | "models";
 
 export interface AgentLocalNavState {
   sessionId: string | null;

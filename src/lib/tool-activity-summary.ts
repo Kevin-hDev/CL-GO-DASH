@@ -73,7 +73,7 @@ function emptyCounts(): ToolActivityCounts {
   };
 }
 
-export function getToolActivityKind(name: string): ToolActivityGroupKind {
+function getToolActivityKind(name: string): ToolActivityGroupKind {
   if (READ_TOOLS.has(name) || SEARCH_TOOLS.has(name) || name === "list_dir") {
     return "exploration";
   }
@@ -84,11 +84,11 @@ export function getToolActivityKind(name: string): ToolActivityGroupKind {
   return "other";
 }
 
-export function hasToolResult(tool: ToolActivitySummaryInput): boolean {
+function hasToolResult(tool: ToolActivitySummaryInput): boolean {
   return tool.result !== undefined || tool.is_error !== undefined || tool.isError !== undefined;
 }
 
-export function toolHasError(tool: ToolActivitySummaryInput): boolean {
+function toolHasError(tool: ToolActivitySummaryInput): boolean {
   return tool.is_error === true || tool.isError === true;
 }
 

@@ -4,7 +4,7 @@ import type { AgentPlanPreview } from "./agent-plan";
 import type { SubagentStatus } from "./agent-session";
 import type { AgentTodoItem } from "./agent-todo";
 
-export interface AgentErrorDiagnosticSummary {
+interface AgentErrorDiagnosticSummary {
   requestId: string;
   phase: string;
   errorType: string;

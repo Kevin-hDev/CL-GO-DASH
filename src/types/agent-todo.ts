@@ -1,5 +1,5 @@
-export type AgentTodoStatus = "pending" | "in_progress" | "completed";
-export type AgentTodoRunStatus = "active" | "paused" | "completed";
+type AgentTodoStatus = "pending" | "in_progress" | "completed";
+type AgentTodoRunStatus = "active" | "paused" | "completed";
 
 export interface AgentTodoItem {
   content: string;

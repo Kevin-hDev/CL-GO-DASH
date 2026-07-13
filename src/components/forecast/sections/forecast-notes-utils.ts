@@ -54,11 +54,6 @@ export function midpointDate(range: NoteRange): string {
   return new Date(range.start + (range.end - range.start) / 2).toISOString();
 }
 
-export function basename(path: string): string {
-  const normalized = path.replaceAll("\\", "/");
-  return normalized.split("/").pop() ?? path;
-}
-
 export function appScopedPath(path: string): string {
   const normalized = path.replaceAll("\\", "/");
   const marker = "/cl-go-dash/";

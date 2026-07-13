@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useMemo } from "react";
 
 export const FONT_SIZE_MIN = 10;
 export const FONT_SIZE_MAX = 24;
-export const FONT_SIZE_DEFAULT = 18;
+const FONT_SIZE_DEFAULT = 18;
 export type FontSize = number;
 
 const LEGACY_FONT_SIZE_PX: Record<string, FontSize> = {

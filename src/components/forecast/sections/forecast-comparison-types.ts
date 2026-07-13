@@ -4,7 +4,7 @@ export interface ForecastPoint {
   series_id?: string | null;
 }
 
-export interface ForecastComparisonScenario {
+interface ForecastComparisonScenario {
   id: string;
   name: string;
   predictions: ForecastPoint[];
@@ -39,7 +39,7 @@ export interface ForecastComparisonMeta {
   scenarios_count: number;
 }
 
-export type ForecastComparisonKind = "scenario" | "forecast";
+type ForecastComparisonKind = "scenario" | "forecast";
 
 export interface ForecastComparisonOption {
   id: string;

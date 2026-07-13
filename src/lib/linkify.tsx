@@ -90,9 +90,3 @@ function linkifyText(text: string): React.ReactNode[] {
 
   return parts.length > 0 ? parts : [text];
 }
-
-export function linkify(text: string): React.ReactNode[] {
-  const { text: nodes, previews } = linkifyWithPreviews(text);
-  if (previews) return [...nodes, previews];
-  return nodes;
-}

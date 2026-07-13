@@ -1,14 +1,15 @@
 import { useTranslation } from "react-i18next";
 import { open as openFileDialog } from "@tauri-apps/plugin-dialog";
 import { Tooltip } from "@/components/ui/tooltip";
-import { IS_MAC } from "@/lib/platform";
+import { IS_WINDOWS } from "@/lib/platform";
+import "./path-list-editor.css";
 
 interface PathListEditorProps {
   paths: string[];
   onChange: (paths: string[]) => void;
 }
 
-const DEFAULT_PATH = IS_MAC || navigator.userAgent.includes("Linux") ? "/" : "C:\\";
+const DEFAULT_PATH = IS_WINDOWS ? "C:\\" : "/";
 
 function formatLabel(path: string, t: (key: string) => string): string {
   if (path === "/" || path === "C:\\") return t("settings.advanced.fullDisk");
@@ -34,78 +35,31 @@ export function PathListEditor({ paths, onChange }: PathListEditorProps) {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-      {paths.map((p, i) => (
-        <div key={p} style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          padding: "6px 10px",
-          background: "var(--surface)",
-          borderRadius: "var(--radius-sm)",
-          border: "1px solid var(--edge)",
-        }}>
-          <span style={{
-            flex: 1,
-            fontSize: "var(--text-sm)",
-            color: "var(--ink)",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-          }}>
-            {formatLabel(p, t)}
-          </span>
-          <span style={{
-            fontSize: "var(--text-xs)",
-            color: "var(--ink-muted)",
-            flexShrink: 0,
-            marginRight: 4,
-          }}>
-            {p !== formatLabel(p, t) ? "" : p}
-          </span>
-          <Tooltip label={t("common.delete")}>
-            <button
-              onClick={() => handleRemove(i)}
-              style={{
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                color: "var(--ink-muted)",
-                fontSize: 16,
-                lineHeight: 1,
-                padding: "0 2px",
-                flexShrink: 0,
-              }}
-            >
-              ×
-            </button>
-          </Tooltip>
-        </div>
-      ))}
+    <div className="ple-root">
+      {paths.map((path, index) => {
+        const label = formatLabel(path, t);
+        return (
+          <div key={path} className="ple-item">
+            <span className="ple-path-label">{label}</span>
+            <span className="ple-path-raw">{path === label ? path : ""}</span>
+            <Tooltip label={t("common.delete")}>
+              <button
+                type="button"
+                onClick={() => handleRemove(index)}
+                className="ple-remove-btn"
+              >
+                ×
+              </button>
+            </Tooltip>
+          </div>
+        );
+      })}
 
-      <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
-        <button onClick={() => void handleAdd()} style={{
-          padding: "6px 14px",
-          fontSize: "var(--text-sm)",
-          fontWeight: 500,
-          color: "var(--ink)",
-          background: "var(--surface)",
-          border: "1px solid var(--edge)",
-          borderRadius: "var(--radius-sm)",
-          cursor: "pointer",
-        }}>
+      <div className="ple-actions">
+        <button type="button" onClick={() => void handleAdd()} className="ple-add-btn">
           + {t("settings.advanced.addPath")}
         </button>
-        <button onClick={handleReset} style={{
-          padding: "6px 14px",
-          fontSize: "var(--text-sm)",
-          fontWeight: 500,
-          color: "var(--ink-muted)",
-          background: "none",
-          border: "1px solid var(--edge)",
-          borderRadius: "var(--radius-sm)",
-          cursor: "pointer",
-        }}>
+        <button type="button" onClick={handleReset} className="ple-reset-btn">
           {t("settings.advanced.resetPaths")}
         </button>
       </div>

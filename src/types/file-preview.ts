@@ -1,5 +1,5 @@
-export type FileOperationType = "read" | "write" | "edit";
-export type FileOperationKind = "file" | "plan";
+type FileOperationType = "read" | "write" | "edit";
+type FileOperationKind = "file" | "plan";
 
 export interface FileOperation {
   id: string;

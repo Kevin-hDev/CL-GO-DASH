@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, memo } from "react";
+import { useMemo, memo } from "react";
 import { useTranslation } from "react-i18next";
 import { ConversationList } from "./conversation-list";
 import { ChatHeader } from "./chat-header";
@@ -13,9 +13,11 @@ import { useGitBranch } from "@/hooks/use-git-branch";
 import { useSessionSummary } from "@/hooks/use-session-summary";
 import { useSessionTabs } from "@/hooks/use-session-tabs";
 import { useAgentLocalTabGit } from "@/hooks/use-agent-local-tab-git";
-import { ForecastPanel } from "@/components/forecast/forecast-panel";
-import { openForecastDocsWindow } from "@/components/forecast/open-forecast-docs";
 import { PanelSlot } from "@/components/layout/panel-slots";
+import {
+  resolveDisplayModel, resolveDisplayProject, resolveDisplayReasoningMode, resolveDisplaySession,
+} from "./agent-local-display";
+import { useAgentLocalForecastContent } from "./use-agent-local-forecast-content";
 import type { AgentLocalTabProps } from "./agent-local-tab-types";
 import "./agent-local-tab.css";
 
@@ -44,17 +46,10 @@ export const AgentLocalTab = memo(function AgentLocalTab({
   } = sessionActions;
   const sessionTabs = useSessionTabs(activeSessionId, refresh);
   const displaySessionId = sessionTabs.activeSessionId ?? activeSessionId;
-  const displaySession = displaySessionId
-    ? sessions.find((session) => session.id === displaySessionId) ?? activeSession
-    : null;
-  const displayProject = displaySession?.project_id
-    ? projectsHook.projects.find((project) => project.id === displaySession.project_id) ?? activeProject
-    : activeProject;
-  const displayModel = displaySession?.model ?? model;
-  const displayProvider = displaySession?.provider ?? provider;
-  const displayReasoningMode = displaySession
-    ? displaySession.reasoning_mode ?? (displaySession.thinking_enabled ? "auto" : null)
-    : reasoningMode;
+  const displaySession = resolveDisplaySession(sessions, displaySessionId, activeSession);
+  const displayProject = resolveDisplayProject(projectsHook.projects, displaySession, activeProject);
+  const { displayModel, displayProvider } = resolveDisplayModel(displaySession, model, provider);
+  const displayReasoningMode = resolveDisplayReasoningMode(displaySession, reasoningMode);
   const terminalCwd = displayProject?.path || "";
   const sessionSummary = useSessionSummary(displaySessionId ?? null);
   const summaryGit = useGitBranch(displayProject?.path, displaySessionId ?? undefined);
@@ -68,37 +63,9 @@ export const AgentLocalTab = memo(function AgentLocalTab({
   const forecast = useForecastPanel(displaySessionId ?? null);
   useAgentLocalPanelNav({ navState, fileTree, forecast });
   const { fileTreeNav, forecastNav } = useAgentLocalControlledPanels({ navState, fileTree, forecast, onNavChange });
-  const [fullscreenSwitching, setFullscreenSwitching] = useState(false);
-  const fullscreenTimerRef = useRef<number | null>(null);
-  const handlePreviewFullscreenChange = useCallback((value: boolean) => {
-    if (fullscreenTimerRef.current !== null) window.clearTimeout(fullscreenTimerRef.current);
-    setFullscreenSwitching(true);
-    filePreview.setFullscreen(value);
-    fullscreenTimerRef.current = window.setTimeout(() => setFullscreenSwitching(false), 80);
-  }, [filePreview]);
-
-  useEffect(() => () => {
-    if (fullscreenTimerRef.current !== null) window.clearTimeout(fullscreenTimerRef.current);
-  }, []);
-
-  const handleOpenForecastDocs = useCallback(() => {
-    void openForecastDocsWindow(t("forecast.docs.windowTitle")).catch(() => {});
-  }, [t]);
-  const forecastContent = useMemo(() => (
-    <ForecastPanel
-      activeSection={forecastNav.activeSection}
-      navOpen={forecastNav.navOpen}
-      currentAnalysisId={forecastNav.currentAnalysisId}
-      fullscreen={filePreview.fullscreen}
-      onSectionChange={forecastNav.setSection}
-      onToggleNav={forecastNav.toggleNav}
-      onLoadAnalysis={forecastNav.loadAnalysis}
-      onFocusAnalysis={forecastNav.focusAnalysis}
-      onPanelExtraWidthChange={filePreview.setExtraWidth}
-      onCloseAnalysis={forecastNav.closeAnalysis}
-      onFullscreenChange={handlePreviewFullscreenChange}
-    />
-  ), [filePreview.fullscreen, filePreview.setExtraWidth, forecastNav, handlePreviewFullscreenChange]);
+  const {
+    forecastContent, fullscreenSwitching, handleOpenForecastDocs, handlePreviewFullscreenChange,
+  } = useAgentLocalForecastContent({ forecastNav, filePreview, docsWindowTitle: t("forecast.docs.windowTitle") });
 
   const list = useMemo(() => (
     <ConversationList
@@ -218,7 +185,7 @@ export const AgentLocalTab = memo(function AgentLocalTab({
     </div>
   ), [
     activeSession?.name, activeSessionId, archive, currentDefault.model, currentDefault.provider, displayModel, displayProject?.path,
-    displayProvider, displayReasoningMode, displaySession?.clone_parent_session_id, displaySession?.parent_session_id,
+    displayProvider, displayReasoningMode, displaySession?.parent_session_id,
     displaySessionId,
     fileOperations, filePreview, fileTreeNav, forecastNav.panelMode, forecastNav.setPanelMode, forecastContent,
     fullscreenSwitching, handleAutoRename, handleCreateInProjectWithModel, handleCreateWithModel,

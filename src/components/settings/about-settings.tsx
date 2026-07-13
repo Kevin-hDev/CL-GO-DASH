@@ -4,9 +4,12 @@ import { getVersion, getTauriVersion } from "@tauri-apps/api/app";
 import { open } from "@tauri-apps/plugin-shell";
 import { ArrowSquareOut } from "@/components/ui/icons";
 import { ThemedIcon } from "@/components/ui/themed-icon";
+import { cn } from "@/lib/utils";
+import { IS_LINUX, IS_MAC, IS_WINDOWS } from "@/lib/platform";
 import { SettingsCard } from "./settings-card";
 import logoDark from "@/assets/logo-dark.png";
 import logoLight from "@/assets/logo-light.png";
+import "./about-settings.css";
 
 const GITHUB_URL = "https://github.com/Kevin-hDev/CL-GO-DASH";
 
@@ -20,29 +23,19 @@ export function AboutSettings() {
     getTauriVersion().then(setTauriVersion).catch(() => {});
   }, []);
 
-  const ua = navigator.userAgent;
-  const platform = ua.includes("Mac") ? "macOS"
-    : ua.includes("Windows") ? "Windows"
-    : ua.includes("Linux") ? "Linux" : "—";
+  const platform = IS_MAC ? "macOS"
+    : IS_WINDOWS ? "Windows"
+    : IS_LINUX ? "Linux" : "—";
 
   return (
-    <div style={{ padding: 24, overflowY: "auto", flex: 1 }}>
-      <div style={{ maxWidth: 460, width: "100%", margin: "0 auto" }}>
-        <div style={{
-          display: "flex", flexDirection: "column",
-          alignItems: "center", gap: 8, marginBottom: 32,
-        }}>
+    <div className="as-root">
+      <div className="as-inner">
+        <div className="as-hero">
           <ThemedIcon darkSrc={logoDark} lightSrc={logoLight} size="4rem" />
-          <h2 style={{
-            fontSize: "var(--text-xl)", fontWeight: 700,
-            color: "var(--ink)", margin: 0,
-          }}>
+          <h2 className="as-title">
             CL-GO
           </h2>
-          <span style={{
-            fontSize: "var(--text-sm)", color: "var(--ink-muted)",
-            textAlign: "center", maxWidth: 300,
-          }}>
+          <span className="as-subtitle">
             {t("about.description")}
           </span>
         </div>
@@ -53,27 +46,11 @@ export function AboutSettings() {
           <InfoRow label={t("about.os")} value={platform} last />
         </SettingsCard>
 
-        <div style={{ marginTop: 16 }}>
+        <div className="as-links">
           <button
             type="button"
             onClick={() => void open(GITHUB_URL)}
-            style={{
-              width: "100%",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              gap: 8, padding: "10px 16px",
-              background: "var(--surface)", border: "1px solid var(--edge)",
-              borderRadius: "var(--radius-sm)", color: "var(--ink)",
-              fontSize: "var(--text-sm)", fontWeight: 500,
-              cursor: "pointer", transition: "all 150ms ease",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = "var(--ink-faint)";
-              e.currentTarget.style.background = "var(--surface-hover)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = "var(--edge)";
-              e.currentTarget.style.background = "var(--surface)";
-            }}
+            className="as-github-btn"
           >
             {t("about.viewOnGithub")} <ArrowSquareOut size="var(--icon-sm)" />
           </button>
@@ -85,19 +62,11 @@ export function AboutSettings() {
 
 function InfoRow({ label, value, last }: { label: string; value: string; last?: boolean }) {
   return (
-    <div style={{
-      display: "flex", justifyContent: "space-between", alignItems: "center",
-      padding: "10px 20px",
-      borderBottom: last ? "none" : "1px solid var(--edge)",
-      fontSize: "var(--text-sm)",
-    }}>
-      <span style={{
-        color: "var(--ink-muted)", fontSize: "var(--text-xs)",
-        fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.5px",
-      }}>
+    <div className={cn("as-info-row", !last && "as-info-row-border")}>
+      <span className="as-info-label">
         {label}
       </span>
-      <span style={{ color: "var(--ink)", fontFamily: "var(--font-mono)" }}>{value}</span>
+      <span className="as-info-value">{value}</span>
     </div>
   );
 }
