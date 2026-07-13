@@ -142,6 +142,14 @@ async fn preview_file_exists(path: &str, base_dir: Option<&str>) -> bool {
 }
 
 pub(crate) fn resolve_preview_path(path: &str, base_dir: Option<&str>) -> Result<PathBuf, String> {
+    resolve_preview_path_with_roots(path, base_dir, &security::allowed_read_roots())
+}
+
+fn resolve_preview_path_with_roots(
+    path: &str,
+    base_dir: Option<&str>,
+    allowed_roots: &[PathBuf],
+) -> Result<PathBuf, String> {
     validate_path_text(path)?;
     let raw_path = Path::new(path);
     let joined = if raw_path.is_absolute() {
@@ -154,7 +162,7 @@ pub(crate) fn resolve_preview_path(path: &str, base_dir: Option<&str>) -> Result
     let working_dir = base_dir
         .map(PathBuf::from)
         .unwrap_or_else(|| std::env::current_dir().unwrap_or_else(|_| PathBuf::from(".")));
-    security::validate_read_path(&joined, &working_dir)
+    security::validate_read_path_in_roots(&joined, &working_dir, allowed_roots)
 }
 
 fn validate_path_text(path: &str) -> Result<(), String> {
@@ -179,38 +187,5 @@ fn spawn_cmd(command: &str, args: &[&std::ffi::OsStr]) -> Result<(), String> {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[tokio::test]
-    async fn check_preview_files_exist_reports_existing_and_missing_files() {
-        let dir = tempfile::tempdir().expect("tempdir");
-        std::fs::write(dir.path().join("kept.txt"), "ok").expect("write file");
-
-        let results = check_preview_files_exist(
-            vec!["kept.txt".to_string(), "deleted.txt".to_string()],
-            Some(dir.path().to_string_lossy().to_string()),
-        )
-        .await
-        .expect("check files");
-
-        assert_eq!(results.len(), 2);
-        assert!(results[0].exists);
-        assert!(!results[1].exists);
-        assert_eq!(results[0].path, "kept.txt");
-    }
-
-    #[tokio::test]
-    async fn check_preview_files_exist_treats_invalid_paths_as_missing() {
-        let dir = tempfile::tempdir().expect("tempdir");
-        let results = check_preview_files_exist(
-            vec!["../secret.txt".to_string()],
-            Some(dir.path().to_string_lossy().to_string()),
-        )
-        .await
-        .expect("check files");
-
-        assert_eq!(results.len(), 1);
-        assert!(!results[0].exists);
-    }
-}
+#[path = "file_preview_tests.rs"]
+mod tests;

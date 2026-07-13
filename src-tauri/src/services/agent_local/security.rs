@@ -72,18 +72,7 @@ pub fn allowed_read_roots() -> Vec<PathBuf> {
 }
 
 pub fn validate_read_path(path: &Path, working_dir: &Path) -> Result<PathBuf, String> {
-    let canonical = if path.exists() {
-        path.canonicalize().map_err(sanitize_error)?
-    } else {
-        let parent = path.parent().ok_or("Chemin invalide")?;
-        let filename = path.file_name().ok_or("Chemin sans nom de fichier")?;
-        let canonical_parent = if parent.as_os_str().is_empty() {
-            working_dir.canonicalize().map_err(sanitize_error)?
-        } else {
-            parent.canonicalize().map_err(sanitize_error)?
-        };
-        canonical_parent.join(filename)
-    };
+    let canonical = canonicalize_candidate(path, working_dir)?;
 
     let working_canonical = working_dir
         .canonicalize()
@@ -98,6 +87,33 @@ pub fn validate_read_path(path: &Path, working_dir: &Path) -> Result<PathBuf, St
     } else {
         Err("Lecture interdite hors des zones autorisées".into())
     }
+}
+
+pub(crate) fn validate_read_path_in_roots(
+    path: &Path,
+    resolution_base: &Path,
+    roots: &[PathBuf],
+) -> Result<PathBuf, String> {
+    let canonical = canonicalize_candidate(path, resolution_base)?;
+    if roots.iter().any(|root| canonical.starts_with(root)) {
+        Ok(canonical)
+    } else {
+        Err("Lecture interdite hors des zones autorisées".into())
+    }
+}
+
+fn canonicalize_candidate(path: &Path, resolution_base: &Path) -> Result<PathBuf, String> {
+    if path.exists() {
+        return path.canonicalize().map_err(sanitize_error);
+    }
+    let parent = path.parent().ok_or("Chemin invalide")?;
+    let filename = path.file_name().ok_or("Chemin sans nom de fichier")?;
+    let canonical_parent = if parent.as_os_str().is_empty() {
+        resolution_base.canonicalize().map_err(sanitize_error)?
+    } else {
+        parent.canonicalize().map_err(sanitize_error)?
+    };
+    Ok(canonical_parent.join(filename))
 }
 
 pub fn validate_write_path(path: &Path) -> Result<PathBuf, String> {
