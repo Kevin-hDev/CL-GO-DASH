@@ -1,1 +1,4 @@
-Complément après durcissement :\n\n- M-3 : durcissement appliqué dans 24326254. La map v2 utilise IndexMap et évince toujours la plus ancienne association.\n- L-3 : durcissement appliqué dans 5d801de6. L'attente d'une conversation occupée est limitée à cinq minutes, avec une erreur générique en cas d'expiration.
+Complément après durcissement :
+
+- M-3 : durcissement appliqué dans 24326254. La map v2 utilise IndexMap et évince toujours la plus ancienne association.
+- L-3 : durcissement appliqué dans 5d801de6. L'attente d'une conversation occupée est limitée à cinq minutes, avec une erreur générique en cas d'expiration.
