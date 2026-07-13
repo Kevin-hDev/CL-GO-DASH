@@ -1,0 +1,3 @@
+Relecture contradictoire du rapport du 13 juillet 2026 :
+
+- H-3 : vrai positif. Les erreurs de création du HMAC d'audit et d'écriture du journal étaient ignorées. Corrigé dans dd16da0f : les erreurs sont propagées et, lorsque l'audit est activé, le message ou le canal concerné s'arrête avec un code générique au lieu de continuer silencieusement.
