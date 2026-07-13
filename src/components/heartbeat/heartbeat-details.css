@@ -99,67 +99,53 @@
 
 
 .wk-details-body {
-  padding: var(--space-lg);
+  padding: 24px;
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
+  max-width: 600px;
+  width: 100%;
+  margin: 0 auto;
 }
 
-.wk-field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.wk-field-label {
-  font-size: var(--text-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--ink-faint);
-  font-weight: 500;
-}
-
-.wk-field-value {
+.wk-row-value {
   font-size: var(--text-sm);
   color: var(--ink);
-  padding: var(--space-sm);
-  background: var(--surface);
-  border: 1px solid var(--edge);
-  border-radius: var(--radius-sm);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  text-align: right;
+  word-break: break-word;
 }
 
-.wk-field-multi {
+.wk-row-multi {
   white-space: pre-wrap;
   font-family: var(--font-mono, ui-monospace, monospace);
-  min-height: 60px;
+  max-height: 240px;
+  overflow-y: auto;
 }
 
 .wk-history {
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
+  margin-top: var(--space-md);
 }
 
 .wk-history-title {
-  font-size: var(--text-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--ink-faint);
-  font-weight: 500;
+  margin: 0;
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--ink);
 }
 
-.wk-history-empty,
-.wk-history-row {
-  padding: var(--space-sm);
-  border: 1px solid var(--edge);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
+.wk-history-empty {
+  padding: var(--space-md) var(--space-lg);
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
 }
 
 .wk-history-list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
 }
 
 .wk-history-row {
@@ -167,7 +153,13 @@
   grid-template-columns: auto minmax(0, 1fr);
   gap: var(--space-xs);
   align-items: center;
+  padding: 12px 20px;
   font-size: var(--text-xs);
+  border-bottom: 1px solid var(--edge);
+}
+
+.wk-history-row:last-child {
+  border-bottom: none;
 }
 
 .wk-history-status {

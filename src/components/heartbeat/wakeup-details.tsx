@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CaretLeft, Pencil, Trash } from "@/components/ui/icons";
 import { Tooltip } from "@/components/ui/tooltip";
+import { SettingsCard } from "@/components/settings/settings-card";
+import { SettingsRow } from "@/components/settings/settings-row";
 import type { ScheduledWakeup, WakeupRun, WakeupStatusSummary } from "@/types/wakeup";
 import { formatDateTime, formatRunStatus, formatSchedule } from "@/lib/wakeup-format";
 import { ActiveBadge } from "./badges";
@@ -126,46 +128,40 @@ export function WakeupDetails({
       </div>
 
       <div className="wk-details-body">
-        <Field label={t("heartbeat.fields.name")} value={wakeup.name} />
-        <Field label={t("heartbeat.fields.provider")} value={wakeup.provider} />
-        <Field label={t("heartbeat.fields.model")} value={wakeup.model} />
-        <Field label={t("heartbeat.fields.schedule")} value={formatSchedule(wakeup.schedule)} />
-        <Field
-          label={t("heartbeat.fields.nextFire")}
-          value={formatDateTime(summary?.next_fire_at)}
-        />
-        <Field
-          label={t("heartbeat.fields.lastStatus")}
-          value={formatRunStatus(lastRun?.status)}
-        />
-        <Field
-          label={t("heartbeat.fields.lastRun")}
-          value={formatDateTime(lastRun?.fired_at)}
-        />
-        <Field label={t("heartbeat.fields.description")} value={wakeup.description || "—"} />
-        <Field
-          label={t("heartbeat.fields.prompt")}
-          value={wakeup.prompt}
-          multiline
-        />
+        <SettingsCard>
+          <SettingsRow title={t("heartbeat.fields.name")} description={wakeup.provider}>
+            <ActiveBadge active={wakeup.active} />
+          </SettingsRow>
+          <SettingsRow title={t("heartbeat.fields.model")} description={wakeup.provider}>
+            <span className="wk-row-value">{wakeup.model}</span>
+          </SettingsRow>
+          <SettingsRow title={t("heartbeat.fields.description")}>
+            <span className="wk-row-value">{wakeup.description || "—"}</span>
+          </SettingsRow>
+        </SettingsCard>
+
+        <SettingsCard>
+          <SettingsRow title={t("heartbeat.fields.schedule")}>
+            <span className="wk-row-value">{formatSchedule(wakeup.schedule)}</span>
+          </SettingsRow>
+          <SettingsRow title={t("heartbeat.fields.nextFire")}>
+            <span className="wk-row-value">{formatDateTime(summary?.next_fire_at) || "—"}</span>
+          </SettingsRow>
+          <SettingsRow title={t("heartbeat.fields.lastStatus")}>
+            <span className="wk-row-value">{formatRunStatus(lastRun?.status) || "—"}</span>
+          </SettingsRow>
+          <SettingsRow title={t("heartbeat.fields.lastRun")}>
+            <span className="wk-row-value">{formatDateTime(lastRun?.fired_at) || "—"}</span>
+          </SettingsRow>
+        </SettingsCard>
+
+        <SettingsCard>
+          <SettingsRow title={t("heartbeat.fields.prompt")}>
+            <span className="wk-row-value wk-row-multi">{wakeup.prompt}</span>
+          </SettingsRow>
+        </SettingsCard>
+
         <WakeupHistory runs={runs} />
-      </div>
-    </div>
-  );
-}
-
-interface FieldProps {
-  label: string;
-  value: string;
-  multiline?: boolean;
-}
-
-function Field({ label, value, multiline }: FieldProps) {
-  return (
-    <div className="wk-field">
-      <div className="wk-field-label">{label}</div>
-      <div className={multiline ? "wk-field-value wk-field-multi" : "wk-field-value"}>
-        {value}
       </div>
     </div>
   );

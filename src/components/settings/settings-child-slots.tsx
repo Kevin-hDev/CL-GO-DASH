@@ -4,7 +4,6 @@ import { useOllamaTabSlots } from "@/components/ollama/ollama-tab";
 import { useApiKeysTabSlots } from "@/components/api-keys/api-keys-tab";
 import { useConnectorsTabSlots } from "@/components/connectors/connectors-tab";
 import { useChannelsTabSlots } from "@/components/channels/channels-tab";
-import { useForecastTabSlots } from "@/components/forecast/model-browser/forecast-tab";
 import type { PanelContentSlots } from "@/components/layout/panel-slots";
 import type { DeepPartial, SettingsNavState, SettingsSubTab } from "@/types/navigation";
 
@@ -28,8 +27,7 @@ export function usesSettingsChildSlots(subTab: SettingsSubTab): boolean {
   return subTab === "ollama"
     || subTab === "connectors"
     || subTab === "channels"
-    || subTab === "api-keys"
-    || subTab === "forecast";
+    || subTab === "api-keys";
 }
 
 export function SettingsChildSlots({
@@ -44,7 +42,6 @@ export function SettingsChildSlots({
   if (subTab === "connectors") return <ConnectorsSlotPortal {...portalProps} />;
   if (subTab === "channels") return <ChannelsSlotPortal {...portalProps} />;
   if (subTab === "api-keys") return <ApiKeysSlotPortal {...portalProps} />;
-  if (subTab === "forecast") return <ForecastSlotPortal {...portalProps} />;
   return null;
 }
 
@@ -65,11 +62,6 @@ const ChannelsSlotPortal = memo(function ChannelsSlotPortal(props: SlotPortalPro
 
 const ApiKeysSlotPortal = memo(function ApiKeysSlotPortal(props: SlotPortalProps) {
   const slots = useApiKeysTabSlots(childProps(props));
-  return <SlotPortals slots={slots} listTarget={props.listTarget} detailTarget={props.detailTarget} />;
-});
-
-const ForecastSlotPortal = memo(function ForecastSlotPortal(props: SlotPortalProps) {
-  const slots = useForecastTabSlots(childProps(props));
   return <SlotPortals slots={slots} listTarget={props.listTarget} detailTarget={props.detailTarget} />;
 });
 

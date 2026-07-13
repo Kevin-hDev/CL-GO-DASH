@@ -35,7 +35,8 @@
 
 .chat-md th,
 .chat-md td {
-  padding: 10px 16px;
+  padding: 8px 12px;
+  min-width: 4rem;
   text-align: left;
   border-radius: 4px;
   vertical-align: top;
@@ -43,25 +44,6 @@
   white-space: normal;
   word-break: normal;
   overflow-wrap: break-word;
-}
-
-.chat-md th:first-child,
-.chat-md td:first-child {
-  width: 6.5rem;
-  min-width: 6.5rem;
-  white-space: nowrap;
-}
-
-.chat-md th:nth-child(2),
-.chat-md td:nth-child(2) {
-  width: clamp(10rem, 28%, 14rem);
-  min-width: 10rem;
-}
-
-.chat-md th:last-child,
-.chat-md td:last-child {
-  width: auto;
-  min-width: 18rem;
 }
 
 .chat-md .chat-md-cell-list-break {

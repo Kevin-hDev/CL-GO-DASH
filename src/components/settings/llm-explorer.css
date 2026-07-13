@@ -2,7 +2,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 28px;
+  padding: 12px 20px;
 }
 
 .llm-search-input {
@@ -47,6 +47,7 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
+  padding: 12px 20px;
 }
 
 .llm-family-card {
@@ -54,7 +55,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 10px 14px;
-  background: var(--shell);
+  background: var(--surface);
   border: 1px solid var(--edge);
   border-radius: var(--radius-sm);
   cursor: pointer;
