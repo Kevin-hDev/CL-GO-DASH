@@ -2,11 +2,50 @@ use serde::Serialize;
 
 pub const CODEX_API_BASE: &str = "https://chatgpt.com/backend-api/codex";
 
-pub const CODEX_MODELS: &[(&str, u32)] = &[
-    ("gpt-5.5", 258_000),
-    ("gpt-5.4", 258_000),
-    ("gpt-5.4-mini", 258_000),
-    ("gpt-5.4-pro", 258_000),
+pub struct CodexModelSpec {
+    pub id: &'static str,
+    pub context_length: u32,
+    pub reasoning_modes: &'static [&'static str],
+}
+
+const STANDARD_REASONING_MODES: &[&str] = &["low", "medium", "high", "xhigh"];
+
+pub const CODEX_MODELS: &[CodexModelSpec] = &[
+    CodexModelSpec {
+        id: "gpt-5.6-sol",
+        context_length: 372_000,
+        reasoning_modes: &["low", "medium", "high", "xhigh", "max", "ultra"],
+    },
+    CodexModelSpec {
+        id: "gpt-5.6-terra",
+        context_length: 372_000,
+        reasoning_modes: &["low", "medium", "high", "xhigh", "max", "ultra"],
+    },
+    CodexModelSpec {
+        id: "gpt-5.6-luna",
+        context_length: 372_000,
+        reasoning_modes: &["low", "medium", "high", "xhigh", "max"],
+    },
+    CodexModelSpec {
+        id: "gpt-5.5",
+        context_length: 258_000,
+        reasoning_modes: STANDARD_REASONING_MODES,
+    },
+    CodexModelSpec {
+        id: "gpt-5.4",
+        context_length: 258_000,
+        reasoning_modes: STANDARD_REASONING_MODES,
+    },
+    CodexModelSpec {
+        id: "gpt-5.4-mini",
+        context_length: 258_000,
+        reasoning_modes: STANDARD_REASONING_MODES,
+    },
+    CodexModelSpec {
+        id: "gpt-5.4-pro",
+        context_length: 258_000,
+        reasoning_modes: STANDARD_REASONING_MODES,
+    },
 ];
 
 #[derive(Serialize)]

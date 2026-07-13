@@ -3,9 +3,18 @@ use super::reasoning::*;
 
 #[test]
 fn codex_default_is_medium_and_no_off() {
-    assert_eq!(codex_effort(None), "medium");
-    assert_eq!(codex_effort(Some("off")), "medium");
-    assert_eq!(codex_effort(Some("xhigh")), "xhigh");
+    assert_eq!(codex_effort("gpt-5.6-sol", None), "medium");
+    assert_eq!(codex_effort("gpt-5.6-sol", Some("off")), "medium");
+    assert_eq!(codex_effort("gpt-5.6-sol", Some("xhigh")), "xhigh");
+}
+
+#[test]
+fn codex_effort_rejects_levels_unsupported_by_the_model() {
+    assert_eq!(codex_effort("gpt-5.6-sol", Some("ultra")), "ultra");
+    assert_eq!(codex_effort("gpt-5.6-terra", Some("max")), "max");
+    assert_eq!(codex_effort("gpt-5.6-luna", Some("max")), "max");
+    assert_eq!(codex_effort("gpt-5.6-luna", Some("ultra")), "medium");
+    assert_eq!(codex_effort("gpt-5.5", Some("max")), "medium");
 }
 
 #[test]
@@ -53,6 +62,14 @@ fn provider_specific_modes_are_distinct() {
     );
     assert_eq!(
         supported_modes("moonshot", "kimi-k2.7-code", true),
+        &["auto"]
+    );
+    assert_eq!(
+        supported_modes("xai", "grok-4.5", true),
+        &["low", "medium", "high"]
+    );
+    assert_eq!(
+        supported_modes("xai", "grok-4.20-0309-reasoning", true),
         &["auto"]
     );
 }

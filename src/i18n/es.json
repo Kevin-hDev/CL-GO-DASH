@@ -204,6 +204,8 @@
     "reasoningMedium": "Medio",
     "reasoningHigh": "Alto",
     "reasoningXhigh": "Muy alto",
+    "reasoningMax": "Máximo",
+    "reasoningUltra": "Ultra",
     "send": "Enviar",
     "cancel": "Cancelar",
     "stop": "Detener",

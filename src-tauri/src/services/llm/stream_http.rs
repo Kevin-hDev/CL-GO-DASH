@@ -67,16 +67,47 @@ pub async fn post_chat_request_with_timeout(
         RequestError::Fatal(format!("clé API non configurée pour {}", spec.display_name))
     })?;
     let url = format!("{}/chat/completions", spec.base_url);
-    let openai_messages = messages_to_openai(cfg.messages, cfg.provider_id);
+    let payload = build_chat_payload(cfg, spec.default_max_tokens);
 
+    let client = AuthenticatedClient::new(timeout)
+        .map_err(|_| RequestError::Fatal("Connexion au fournisseur impossible".into()))?;
+    let resp = send_json_request(&client, &url, &key, &payload).await?;
+
+    if matches!(cfg.provider_id, "groq" | "xai") {
+        super::quota::update_ratelimit_headers(cfg.provider_id, resp.headers());
+    }
+
+    let status = resp.status();
+    if !status.is_success() {
+        let body = read_provider_error(resp).await;
+        eprintln!(
+            "[llm stream] HTTP {} — {}",
+            status,
+            super::sanitize_log_body(&body)
+        );
+        return Err(classify_error(status.as_u16(), &body, spec.display_name));
+    }
+    Ok(resp)
+}
+
+fn build_chat_payload(
+    cfg: &RequestConfig<'_>,
+    default_max_tokens: Option<u32>,
+) -> serde_json::Value {
     let mut payload = serde_json::json!({
         "model": cfg.model,
-        "messages": openai_messages,
+        "messages": messages_to_openai(cfg.messages, cfg.provider_id),
         "stream": true,
         "stream_options": { "include_usage": true },
     });
-    if let Some(max) = cfg.max_tokens.or(spec.default_max_tokens) {
-        payload["max_tokens"] = max.into();
+    if let Some(max) = cfg.max_tokens.or(default_max_tokens) {
+        let field = if cfg.provider_id == "openai" && super::providers::openai::is_gpt_56(cfg.model)
+        {
+            "max_completion_tokens"
+        } else {
+            "max_tokens"
+        };
+        payload[field] = max.into();
     }
     super::stream_reasoning::apply(
         &mut payload,
@@ -99,26 +130,7 @@ pub async fn post_chat_request_with_timeout(
             "allow_fallbacks": true,
         });
     }
-
-    let client = AuthenticatedClient::new(timeout)
-        .map_err(|_| RequestError::Fatal("Connexion au fournisseur impossible".into()))?;
-    let resp = send_json_request(&client, &url, &key, &payload).await?;
-
-    if matches!(cfg.provider_id, "groq" | "xai") {
-        super::quota::update_ratelimit_headers(cfg.provider_id, resp.headers());
-    }
-
-    let status = resp.status();
-    if !status.is_success() {
-        let body = read_provider_error(resp).await;
-        eprintln!(
-            "[llm stream] HTTP {} — {}",
-            status,
-            super::sanitize_log_body(&body)
-        );
-        return Err(classify_error(status.as_u16(), &body, spec.display_name));
-    }
-    Ok(resp)
+    payload
 }
 
 fn classify_error(status: u16, body: &str, provider_name: &str) -> RequestError {

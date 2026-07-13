@@ -73,9 +73,20 @@ async fn lookup_api_context(provider: &str, model: &str) -> u64 {
     if provider == "codex-oauth" {
         return crate::services::codex_client::types::CODEX_MODELS
             .iter()
-            .find(|(id, _)| *id == model)
-            .map(|(_, ctx)| *ctx as u64)
+            .find(|spec| spec.id == model)
+            .map(|spec| spec.context_length as u64)
             .unwrap_or(128_000);
+    }
+
+    if matches!(provider, "openai" | "openrouter") {
+        if let Some(context) = crate::services::llm::providers::openai::context_length(model) {
+            return context as u64;
+        }
+    }
+    if provider == "xai" {
+        if let Some(context) = crate::services::llm::providers::xai::context_length(model) {
+            return context as u64;
+        }
     }
     use crate::services::llm::model_registry;
 
@@ -109,5 +120,19 @@ mod tests {
         };
         assert_eq!(ctx.native, 131_072);
         assert_eq!(ctx.configured, 32_768);
+    }
+
+    #[tokio::test]
+    async fn official_api_contexts_override_registry() {
+        assert_eq!(lookup_api_context("openai", "gpt-5.6-sol").await, 1_050_000);
+        assert_eq!(
+            lookup_api_context("openrouter", "openai/gpt-5.6-terra-pro").await,
+            1_050_000
+        );
+        assert_eq!(lookup_api_context("xai", "grok-4.5").await, 500_000);
+        assert_eq!(
+            lookup_api_context("codex-oauth", "gpt-5.6-luna").await,
+            372_000
+        );
     }
 }

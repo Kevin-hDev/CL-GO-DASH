@@ -44,15 +44,54 @@ pub struct CodexStatus {
 pub fn codex_models() -> Vec<ModelInfo> {
     CODEX_MODELS
         .iter()
-        .map(|(id, ctx)| ModelInfo {
-            id: id.to_string(),
+        .map(|spec| ModelInfo {
+            id: spec.id.to_string(),
             owned_by: Some("openai".to_string()),
-            context_length: Some(*ctx),
+            context_length: Some(spec.context_length),
             supports_tools: true,
             supports_vision: true,
             supports_thinking: true,
-            reasoning_modes: Vec::new(),
+            reasoning_modes: spec
+                .reasoning_modes
+                .iter()
+                .map(|mode| mode.to_string())
+                .collect(),
             is_free: true,
         })
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn codex_models_include_gpt_56_with_exact_modes() {
+        let models = codex_models();
+        let sol = models
+            .iter()
+            .find(|model| model.id == "gpt-5.6-sol")
+            .unwrap();
+        let terra = models
+            .iter()
+            .find(|model| model.id == "gpt-5.6-terra")
+            .unwrap();
+        let luna = models
+            .iter()
+            .find(|model| model.id == "gpt-5.6-luna")
+            .unwrap();
+
+        assert_eq!(sol.context_length, Some(372_000));
+        assert_eq!(terra.context_length, Some(372_000));
+        assert_eq!(luna.context_length, Some(372_000));
+        assert_eq!(
+            sol.reasoning_modes,
+            ["low", "medium", "high", "xhigh", "max", "ultra"]
+        );
+        assert_eq!(terra.reasoning_modes, sol.reasoning_modes);
+        assert_eq!(
+            luna.reasoning_modes,
+            ["low", "medium", "high", "xhigh", "max"]
+        );
+    }
 }

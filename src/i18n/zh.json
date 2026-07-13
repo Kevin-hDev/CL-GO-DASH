@@ -204,6 +204,8 @@
     "reasoningMedium": "中",
     "reasoningHigh": "高",
     "reasoningXhigh": "最高",
+    "reasoningMax": "最大",
+    "reasoningUltra": "超高",
     "send": "发送",
     "cancel": "取消",
     "stop": "停止",

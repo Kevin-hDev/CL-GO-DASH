@@ -27,13 +27,48 @@ describe("reasoning modes", () => {
     expect(modes("codex-oauth", "gpt-5.5")).toEqual(["low", "medium", "high", "xhigh"]);
   });
 
+  it("expose Max et Ultra uniquement aux modèles Codex compatibles", () => {
+    expect(modes("codex-oauth", "gpt-5.6-sol")).toEqual([
+      "low",
+      "medium",
+      "high",
+      "xhigh",
+      "max",
+      "ultra",
+    ]);
+    expect(modes("codex-oauth", "gpt-5.6-terra")).toEqual([
+      "low",
+      "medium",
+      "high",
+      "xhigh",
+      "max",
+      "ultra",
+    ]);
+    expect(modes("codex-oauth", "gpt-5.6-luna")).toEqual([
+      "low",
+      "medium",
+      "high",
+      "xhigh",
+      "max",
+    ]);
+  });
+
   it("affiche les niveaux Ollama GPT-OSS sans OFF", () => {
     expect(modes("ollama", "gpt-oss:20b")).toEqual(["low", "medium", "high"]);
   });
 
-  it("n'affiche pas OFF pour les modèles X.ai reasoning dédiés", () => {
-    expect(modes("xai", "grok-4-1-fast-reasoning")).toEqual(["low", "medium", "high", "xhigh"]);
-    expect(modes("xai", "grok-4.20-multi-agent-beta-0309")).toEqual(["low", "medium", "high", "xhigh"]);
+  it("adapte exactement les niveaux xAI actifs", () => {
+    expect(modes("xai", "grok-4.5")).toEqual(["low", "medium", "high"]);
+    expect(modes("xai", "grok-4.3")).toEqual(["off", "low", "medium", "high"]);
+    expect(modes("xai", "grok-4.20-0309-reasoning")).toEqual(["auto"]);
+    expect(modes("xai", "grok-build-0.1")).toEqual(["auto"]);
+  });
+
+  it("expose les niveaux GPT-5.6 pour OpenAI et OpenRouter", () => {
+    const expected: ReasoningMode[] = ["off", "low", "medium", "high", "xhigh", "max"];
+    expect(modes("openai", "gpt-5.6-sol")).toEqual(expected);
+    expect(modes("openrouter", "openai/gpt-5.6-terra")).toEqual(expected);
+    expect(modes("openrouter", "x-ai/grok-4.5")).toEqual(["low", "medium", "high"]);
   });
 
   it("adapte Groq selon la famille reasoning", () => {

@@ -59,3 +59,40 @@ async fn oversized_provider_error_is_not_loaded() {
 
     assert!(body.is_empty());
 }
+
+#[test]
+fn gpt_56_uses_max_completion_tokens_in_chat_payload() {
+    let cfg = RequestConfig {
+        provider_id: "openai",
+        model: "gpt-5.6-luna",
+        messages: &[],
+        tools: &[],
+        think: true,
+        reasoning_mode: Some("medium"),
+        max_tokens: Some(32_000),
+    };
+
+    let payload = build_chat_payload(&cfg, None);
+
+    assert_eq!(payload["max_completion_tokens"], 32_000);
+    assert!(payload.get("max_tokens").is_none());
+    assert_eq!(payload["reasoning_effort"], "medium");
+}
+
+#[test]
+fn other_providers_keep_max_tokens() {
+    let cfg = RequestConfig {
+        provider_id: "xai",
+        model: "grok-4.5",
+        messages: &[],
+        tools: &[],
+        think: true,
+        reasoning_mode: Some("medium"),
+        max_tokens: Some(8_000),
+    };
+
+    let payload = build_chat_payload(&cfg, None);
+
+    assert_eq!(payload["max_tokens"], 8_000);
+    assert!(payload.get("max_completion_tokens").is_none());
+}

@@ -40,6 +40,9 @@ fn mistral_tool_capable() {
 fn openai_tool_capable() {
     assert!(supports_tools("openai", "gpt-4o"));
     assert!(supports_tools("openai", "gpt-5.4"));
+    assert!(supports_tools("openai", "gpt-5.6-sol"));
+    assert!(supports_thinking("openai", "gpt-5.6-terra"));
+    assert!(supports_vision("openai", "gpt-5.6-luna"));
     assert!(supports_tools("openai", "o4-mini"));
     assert!(!supports_tools("openai", "text-embedding-3-small"));
 }

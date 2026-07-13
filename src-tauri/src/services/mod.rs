@@ -36,6 +36,7 @@ pub mod paths;
 pub mod personality_injection;
 pub mod private_store;
 pub mod reasoning;
+mod reasoning_effort;
 mod reasoning_google;
 #[cfg(test)]
 mod reasoning_tests;

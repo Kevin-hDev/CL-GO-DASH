@@ -12,7 +12,12 @@ pub fn build_payload(req: &ChatRequest, stream: bool) -> serde_json::Value {
         "stream": stream,
     });
     if let Some(max) = req.max_tokens {
-        payload["max_tokens"] = max.into();
+        let field = if super::providers::openai::is_gpt_56(&req.model) {
+            "max_completion_tokens"
+        } else {
+            "max_tokens"
+        };
+        payload[field] = max.into();
     }
     if let Some(t) = req.temperature {
         payload["temperature"] = t.into();
@@ -43,7 +48,8 @@ pub fn parse_models_list(
                 .as_u64()
                 .or_else(|| m["context_window"].as_u64())
                 .or_else(|| m["max_context_length"].as_u64())
-                .map(|v| v as u32);
+                .map(|v| v as u32)
+                .or_else(|| known_context_length(provider_id, &id));
             let supported_parameters = supported_parameters(m);
             let has_param = |name: &str| supported_parameters.iter().any(|p| p == name);
             // OpenRouter: `supported_parameters` incluant "tools"
@@ -51,7 +57,8 @@ pub fn parse_models_list(
             let supports_tools = has_param("tools")
                 || m["capabilities"]["function_calling"]
                     .as_bool()
-                    .unwrap_or(false);
+                    .unwrap_or(false)
+                || super::tool_capable::supports_tools(provider_id, &id);
             let is_chat = m["capabilities"]["completion_chat"]
                 .as_bool()
                 .unwrap_or(true);
@@ -66,7 +73,8 @@ pub fn parse_models_list(
                 || m["architecture"]["input_modalities"]
                     .as_array()
                     .map(|arr| arr.iter().any(|v| v.as_str() == Some("image")))
-                    .unwrap_or(false);
+                    .unwrap_or(false)
+                || super::tool_capable::supports_vision(provider_id, &id);
             let is_free = is_price_free(&m["pricing"]["prompt"])
                 && is_price_free(&m["pricing"]["completion"]);
             let supports_thinking = has_param("reasoning")
@@ -95,6 +103,13 @@ pub fn parse_models_list(
         .collect();
 
     Ok(models)
+}
+
+fn known_context_length(provider_id: &str, model_id: &str) -> Option<u32> {
+    match provider_id {
+        "openai" | "openrouter" => super::providers::openai::context_length(model_id),
+        _ => None,
+    }
 }
 
 /// Parse la réponse de `POST /chat/completions` (non-streaming).

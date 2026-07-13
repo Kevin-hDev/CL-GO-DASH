@@ -69,7 +69,9 @@ pub fn supports_thinking(provider_id: &str, model_id: &str) -> bool {
     match provider_id {
         "deepseek" => super::providers::deepseek::supports_thinking(&model),
         "groq" => super::providers::groq::supports_thinking(&model),
-        "openai" => model.starts_with("o3") || model.starts_with("o4"),
+        "openai" => {
+            model.starts_with("o3") || model.starts_with("o4") || model.starts_with("gpt-5")
+        }
         "google" => supports_google_thinking(&model),
         "openrouter" => false,
         "mistral" => super::providers::mistral::supports_thinking(&model),

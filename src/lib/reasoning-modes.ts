@@ -1,6 +1,14 @@
 import type { AvailableModel } from "@/hooks/use-available-models";
 
-export type ReasoningMode = "off" | "auto" | "low" | "medium" | "high" | "xhigh";
+export type ReasoningMode =
+  | "off"
+  | "auto"
+  | "low"
+  | "medium"
+  | "high"
+  | "xhigh"
+  | "max"
+  | "ultra";
 
 export interface ReasoningModeOption {
   mode: ReasoningMode;
@@ -14,6 +22,8 @@ const LABELS: Record<ReasoningMode, string> = {
   medium: "agentLocal.reasoningMedium",
   high: "agentLocal.reasoningHigh",
   xhigh: "agentLocal.reasoningXhigh",
+  max: "agentLocal.reasoningMax",
+  ultra: "agentLocal.reasoningUltra",
 };
 
 function option(mode: ReasoningMode): ReasoningModeOption {
@@ -60,9 +70,26 @@ function isMoonshotForced(model: AvailableModel | null): boolean {
   );
 }
 
-function isGrokMultiAgent(model: AvailableModel | null): boolean {
+function isGrokFixedReasoning(model: AvailableModel | null): boolean {
   const name = modelName(model);
-  return name.includes("reasoning") || name.includes("multi-agent") || name.includes("4.20-reasoning");
+  return name === "grok-4.20-0309-reasoning" || name === "grok-build-0.1";
+}
+
+function isGpt56(model: AvailableModel | null): boolean {
+  return modelName(model).includes("gpt-5.6");
+}
+
+function isGpt56CodexUltra(model: AvailableModel | null): boolean {
+  const name = modelName(model);
+  return name === "gpt-5.6-sol" || name === "gpt-5.6-terra";
+}
+
+function isGpt56Codex(model: AvailableModel | null): boolean {
+  return modelName(model).startsWith("gpt-5.6-");
+}
+
+function isGrok45(model: AvailableModel | null): boolean {
+  return modelName(model).endsWith("grok-4.5");
 }
 
 function isGeminiForcedReasoning(model: AvailableModel | null): boolean {
@@ -79,13 +106,25 @@ export function reasoningModeOptions(model: AvailableModel | null): ReasoningMod
   if (model.reasoning_modes?.length) return options(model.reasoning_modes);
   switch (model.provider_id) {
     case "codex-oauth":
+      if (isGpt56CodexUltra(model)) {
+        return options(["low", "medium", "high", "xhigh", "max", "ultra"]);
+      }
+      if (isGpt56Codex(model)) {
+        return options(["low", "medium", "high", "xhigh", "max"]);
+      }
       return options(["low", "medium", "high", "xhigh"]);
     case "ollama":
       return isGptOss(model)
         ? options(["low", "medium", "high"])
         : options(["off", "auto"]);
     case "openai":
-      return options(["off", "low", "medium", "high", "xhigh"]);
+      return isGpt56(model)
+        ? options(["off", "low", "medium", "high", "xhigh", "max"])
+        : options(["off", "low", "medium", "high", "xhigh"]);
+    case "openrouter":
+      if (isGpt56(model)) return options(["off", "low", "medium", "high", "xhigh", "max"]);
+      if (isGrok45(model)) return options(["low", "medium", "high"]);
+      return options(["off", "auto", "low", "medium", "high", "xhigh"]);
     case "google":
       return isGeminiForcedReasoning(model)
         ? options(["low", "medium", "high"])
@@ -97,9 +136,9 @@ export function reasoningModeOptions(model: AvailableModel | null): ReasoningMod
     case "deepseek":
       return options(["off", "high", "xhigh"]);
     case "xai":
-      return isGrokMultiAgent(model)
-        ? options(["low", "medium", "high", "xhigh"])
-        : options(["off", "low", "medium", "high"]);
+      if (isGrok45(model)) return options(["low", "medium", "high"]);
+      if (isGrokFixedReasoning(model)) return options(["auto"]);
+      return options(["off", "low", "medium", "high"]);
     case "mistral":
       if (isMistralNative(model)) return options(["auto"]);
       if (isMistralAdjustable(model)) return options(["off", "high"]);

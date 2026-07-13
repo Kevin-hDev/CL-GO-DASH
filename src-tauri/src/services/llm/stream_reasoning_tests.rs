@@ -94,3 +94,40 @@ fn mistral_adjustable_uses_reasoning_effort() {
         "high"
     );
 }
+
+#[test]
+fn openai_chat_completions_uses_top_level_reasoning_effort() {
+    let payload = payload("openai", "gpt-5.6-sol", Some("max"));
+
+    assert_eq!(payload["reasoning_effort"], "max");
+    assert!(payload.get("reasoning").is_none());
+}
+
+#[test]
+fn openrouter_gpt_56_keeps_nested_reasoning_shape() {
+    let payload = payload("openrouter", "openai/gpt-5.6-terra", Some("max"));
+
+    assert_eq!(payload["reasoning"], json!({ "effort": "max" }));
+    assert!(payload.get("reasoning_effort").is_none());
+}
+
+#[test]
+fn xai_only_sends_configurable_effort_for_supported_models() {
+    assert_eq!(
+        payload("xai", "grok-4.5", Some("medium"))["reasoning_effort"],
+        "medium"
+    );
+    assert_eq!(
+        payload("xai", "grok-4.3", Some("off"))["reasoning_effort"],
+        "none"
+    );
+    assert!(payload("xai", "grok-4.5", Some("off"))
+        .get("reasoning_effort")
+        .is_none());
+    assert!(payload("xai", "grok-4.20-0309-reasoning", Some("auto"))
+        .get("reasoning_effort")
+        .is_none());
+    assert!(payload("xai", "grok-build-0.1", Some("auto"))
+        .get("reasoning_effort")
+        .is_none());
+}

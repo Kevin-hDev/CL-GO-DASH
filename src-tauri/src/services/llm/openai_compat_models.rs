@@ -50,48 +50,24 @@ const ZAI_MODELS: &[StaticModel] = &[
 
 const XAI_MODELS: &[StaticModel] = &[
     StaticModel {
+        id: "grok-4.5",
+        ctx: 500_000,
+    },
+    StaticModel {
         id: "grok-4.3",
         ctx: 1_000_000,
     },
     StaticModel {
-        id: "grok-4",
+        id: "grok-4.20-0309-reasoning",
+        ctx: 1_000_000,
+    },
+    StaticModel {
+        id: "grok-4.20-0309-non-reasoning",
+        ctx: 1_000_000,
+    },
+    StaticModel {
+        id: "grok-build-0.1",
         ctx: 256_000,
-    },
-    StaticModel {
-        id: "grok-4-fast-reasoning",
-        ctx: 2_000_000,
-    },
-    StaticModel {
-        id: "grok-4-fast-non-reasoning",
-        ctx: 2_000_000,
-    },
-    StaticModel {
-        id: "grok-4.20-reasoning",
-        ctx: 256_000,
-    },
-    StaticModel {
-        id: "grok-4.20-non-reasoning",
-        ctx: 256_000,
-    },
-    StaticModel {
-        id: "grok-3",
-        ctx: 131_072,
-    },
-    StaticModel {
-        id: "grok-3-mini",
-        ctx: 131_072,
-    },
-    StaticModel {
-        id: "grok-3-fast",
-        ctx: 131_072,
-    },
-    StaticModel {
-        id: "grok-2-vision",
-        ctx: 32_768,
-    },
-    StaticModel {
-        id: "grok-code-fast",
-        ctx: 131_072,
     },
 ];
 
@@ -103,15 +79,25 @@ pub(super) fn static_model_infos(provider_id: &str) -> Option<Vec<ModelInfo>> {
     static_models(provider_id).map(|models| {
         models
             .iter()
-            .map(|m| ModelInfo {
-                id: m.id.to_string(),
-                owned_by: None,
-                context_length: Some(m.ctx),
-                supports_tools: super::tool_capable::supports_tools(provider_id, m.id),
-                supports_vision: super::tool_capable::supports_vision(provider_id, m.id),
-                supports_thinking: super::tool_capable::supports_thinking(provider_id, m.id),
-                reasoning_modes: Vec::new(),
-                is_free: false,
+            .map(|m| {
+                let supports_thinking = super::tool_capable::supports_thinking(provider_id, m.id);
+                ModelInfo {
+                    id: m.id.to_string(),
+                    owned_by: None,
+                    context_length: Some(m.ctx),
+                    supports_tools: super::tool_capable::supports_tools(provider_id, m.id),
+                    supports_vision: super::tool_capable::supports_vision(provider_id, m.id),
+                    supports_thinking,
+                    reasoning_modes: crate::services::reasoning::supported_modes(
+                        provider_id,
+                        m.id,
+                        supports_thinking,
+                    )
+                    .iter()
+                    .map(|mode| mode.to_string())
+                    .collect(),
+                    is_free: false,
+                }
             })
             .collect()
     })
@@ -120,7 +106,7 @@ pub(super) fn static_model_infos(provider_id: &str) -> Option<Vec<ModelInfo>> {
 pub(super) fn ping_model(provider_id: &str) -> &'static str {
     match provider_id {
         "zai" => "glm-4.5-flash",
-        "xai" => "grok-3-mini",
+        "xai" => "grok-4.3",
         _ => "test",
     }
 }
@@ -140,11 +126,31 @@ mod tests {
     #[test]
     fn xai_static_models_expose_reasoning_capabilities() {
         let models = static_model_infos("xai").unwrap();
-        let grok_mini = models.iter().find(|m| m.id == "grok-3-mini").unwrap();
-        let grok_plain = models.iter().find(|m| m.id == "grok-4").unwrap();
+        let ids = models
+            .iter()
+            .map(|model| model.id.as_str())
+            .collect::<Vec<_>>();
 
-        assert!(grok_mini.supports_thinking);
-        assert!(!grok_plain.supports_thinking);
+        assert_eq!(
+            ids,
+            [
+                "grok-4.5",
+                "grok-4.3",
+                "grok-4.20-0309-reasoning",
+                "grok-4.20-0309-non-reasoning",
+                "grok-build-0.1",
+            ]
+        );
+        assert_eq!(models[0].context_length, Some(500_000));
+        assert_eq!(models[1].context_length, Some(1_000_000));
+        assert_eq!(models[4].context_length, Some(256_000));
+        assert_eq!(models[0].reasoning_modes, ["low", "medium", "high"]);
+        assert_eq!(models[1].reasoning_modes, ["off", "low", "medium", "high"]);
+        assert_eq!(models[2].reasoning_modes, ["auto"]);
+        assert!(!models[3].supports_thinking);
+        assert!(models[3].reasoning_modes.is_empty());
+        assert_eq!(models[4].reasoning_modes, ["auto"]);
+        assert_eq!(ping_model("xai"), "grok-4.3");
     }
 
     #[test]

@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useAgentSessions } from "@/hooks/use-agent-sessions";
 import { useProjects } from "@/hooks/use-projects";
@@ -12,6 +12,7 @@ import { useAgentLocalTabPanelSync } from "@/hooks/use-agent-local-tab-panel-syn
 import { useAgentLocalControlledPreview } from "@/hooks/use-agent-local-controlled-preview";
 import { useAgentLocalControlledTerminal } from "@/hooks/use-agent-local-controlled-terminal";
 import { useArrowNavigation } from "@/hooks/use-arrow-navigation";
+import { useUnavailableModelFallback } from "@/hooks/use-unavailable-model-fallback";
 import type { FileOperationGroups } from "@/types/file-preview";
 import type { AgentLocalNavState, DeepPartial } from "@/types/navigation";
 import {
@@ -74,22 +75,15 @@ export function useAgentLocalTab({ navState, onSessionChange, onNavChange, listF
   );
   const filePreviewState = useFilePreview(activeSessionId ?? null, fileOperations.all, activeProject?.path);
 
-  useEffect(() => {
-    if (!model || availableModels.size === 0) return;
-    const providerModels = availableModels.get(provider);
-    if (!providerModels) return;
-    const stillExists = providerModels.some((m) => m.id === model);
-    if (stillExists) return;
-    const allModels = Array.from(availableModels.values()).flat();
-    if (allModels.length === 0) return;
-    const fallback = allModels[0];
-    if (activeSessionId) {
-      void updateModel(activeSessionId, fallback.id, fallback.provider_id);
-    } else {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- fallback when selected model is removed
-      setWelcomeModel({ model: fallback.id, provider: fallback.provider_id });
-    }
-  }, [availableModels, model, provider, activeSessionId, updateModel]);
+  useUnavailableModelFallback({
+    availableModels,
+    model,
+    provider,
+    reasoningMode,
+    activeSessionId,
+    updateModel,
+    setWelcomeModel,
+  });
 
   const sessionActions = useSessionActions({
     create,

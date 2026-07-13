@@ -1,21 +1,21 @@
 use crate::services::agent_local::types_ollama::OllamaThink;
 
+pub use super::reasoning_effort::{
+    codex as codex_effort, openai as openai_effort, openrouter as openrouter_effort,
+    simple as simple_effort, zai as zai_effort,
+};
+
 pub fn sanitize_mode(mode: Option<String>) -> Option<String> {
     mode.filter(|value| {
         matches!(
             value.as_str(),
-            "off" | "auto" | "low" | "medium" | "high" | "xhigh"
+            "off" | "auto" | "low" | "medium" | "high" | "xhigh" | "max" | "ultra"
         )
     })
 }
 
 fn is_gpt_oss(model: &str) -> bool {
     model.to_lowercase().contains("gpt-oss")
-}
-
-fn is_xai_fixed_reasoning(model: &str) -> bool {
-    let model = model.to_lowercase();
-    model.contains("reasoning") || model.contains("multi-agent") || model.contains("4.20-reasoning")
 }
 
 fn lower(model: &str) -> String {
@@ -35,10 +35,21 @@ pub fn supported_modes(
         return &[];
     }
     match provider {
+        "codex-oauth" if model == "gpt-5.6-sol" || model == "gpt-5.6-terra" => {
+            &["low", "medium", "high", "xhigh", "max", "ultra"]
+        }
+        "codex-oauth" if model == "gpt-5.6-luna" => &["low", "medium", "high", "xhigh", "max"],
         "codex-oauth" => &["low", "medium", "high", "xhigh"],
         "ollama" if is_gpt_oss(model) => &["low", "medium", "high"],
         "ollama" => &["off", "auto"],
+        "openai" if crate::services::llm::providers::openai::is_gpt_56(model) => {
+            &["off", "low", "medium", "high", "xhigh", "max"]
+        }
         "openai" => &["off", "low", "medium", "high", "xhigh"],
+        "openrouter" if crate::services::llm::providers::openai::is_gpt_56(model) => {
+            &["off", "low", "medium", "high", "xhigh", "max"]
+        }
+        "openrouter" if model.to_lowercase().ends_with("grok-4.5") => &["low", "medium", "high"],
         "openrouter" => &["off", "auto", "low", "medium", "high", "xhigh"],
         "google" => crate::services::reasoning_google::supported_modes(model),
         "groq" if crate::services::llm::providers::groq::is_gpt_oss_effort(&lower(model)) => {
@@ -66,8 +77,7 @@ pub fn supported_modes(
             &["auto"]
         }
         "moonshot" => &["off", "auto"],
-        "xai" if is_xai_fixed_reasoning(model) => &["low", "medium", "high", "xhigh"],
-        "xai" => &["off", "low", "medium", "high"],
+        "xai" => crate::services::llm::providers::xai::reasoning_modes(model),
         "zai" if is_zai_effort_reasoning(model) => {
             &["off", "auto", "low", "medium", "high", "xhigh"]
         }
@@ -133,13 +143,6 @@ pub fn enabled(mode: Option<&str>, fallback: bool) -> bool {
     }
 }
 
-pub fn codex_effort(mode: Option<&str>) -> String {
-    match mode {
-        Some("low" | "medium" | "high" | "xhigh") => mode.unwrap().to_string(),
-        _ => "medium".to_string(),
-    }
-}
-
 pub fn ollama_think(model: &str, mode: Option<&str>, fallback: bool) -> Option<OllamaThink> {
     if is_gpt_oss(model) {
         let effort = match mode {
@@ -150,49 +153,4 @@ pub fn ollama_think(model: &str, mode: Option<&str>, fallback: bool) -> Option<O
         return Some(OllamaThink::Level(effort.to_string()));
     }
     Some(OllamaThink::Bool(enabled(mode, fallback)))
-}
-
-pub fn openai_effort(mode: Option<&str>) -> Option<&'static str> {
-    match mode {
-        Some("off") => Some("none"),
-        Some("low") => Some("low"),
-        Some("medium") | Some("auto") => Some("medium"),
-        Some("high") => Some("high"),
-        Some("xhigh") => Some("xhigh"),
-        None => None,
-        _ => None,
-    }
-}
-
-pub fn simple_effort(mode: Option<&str>) -> Option<&'static str> {
-    match mode {
-        Some("off") => Some("none"),
-        Some("low") => Some("low"),
-        Some("medium") | Some("auto") => Some("medium"),
-        Some("high") | Some("xhigh") => Some("high"),
-        None => None,
-        _ => None,
-    }
-}
-
-pub fn zai_effort(mode: Option<&str>) -> Option<&'static str> {
-    match mode {
-        Some("off") => Some("none"),
-        Some("low") => Some("low"),
-        Some("medium") => Some("medium"),
-        Some("high") => Some("high"),
-        Some("xhigh") => Some("xhigh"),
-        _ => None,
-    }
-}
-
-pub fn openrouter_effort(mode: Option<&str>) -> Option<&'static str> {
-    match mode {
-        Some("off") => Some("none"),
-        Some("low") => Some("low"),
-        Some("medium") => Some("medium"),
-        Some("high") => Some("high"),
-        Some("xhigh") => Some("xhigh"),
-        _ => None,
-    }
 }

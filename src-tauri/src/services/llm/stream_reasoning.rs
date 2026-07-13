@@ -12,14 +12,14 @@ pub fn apply(
     }
     match provider_id {
         "zai" => apply_zai(payload, model, reasoning_mode),
-        "openrouter" => apply_openrouter(payload, think, reasoning_mode),
+        "openrouter" => apply_openrouter(payload, model, think, reasoning_mode),
         "deepseek" => apply_deepseek(payload, reasoning_mode),
         "groq" => apply_groq(payload, model, think, reasoning_mode),
         "mistral" => apply_mistral(payload, think, reasoning_mode),
         "moonshot" => apply_moonshot(payload, model, reasoning_mode),
         "google" => apply_google(payload, model, think, reasoning_mode),
-        "openai" => apply_openai(payload, think, reasoning_mode),
-        "xai" => apply_simple_effort(payload, think, reasoning_mode),
+        "openai" => apply_openai(payload, model, reasoning_mode),
+        "xai" => apply_xai(payload, model, reasoning_mode),
         _ => {}
     }
 }
@@ -39,7 +39,11 @@ fn apply_zai(payload: &mut Value, model: &str, reasoning_mode: Option<&str>) {
     }
 }
 
-fn apply_openrouter(payload: &mut Value, think: bool, reasoning_mode: Option<&str>) {
+fn apply_openrouter(payload: &mut Value, model: &str, think: bool, reasoning_mode: Option<&str>) {
+    let supported = crate::services::reasoning::supported_modes("openrouter", model, true);
+    if reasoning_mode.is_some_and(|mode| !supported.contains(&mode)) {
+        return;
+    }
     if reasoning_mode == Some("off") {
         payload["reasoning"] = serde_json::json!({ "effort": "none" });
     } else if think && reasoning_mode == Some("auto") {
@@ -105,11 +109,11 @@ fn apply_moonshot(payload: &mut Value, model: &str, reasoning_mode: Option<&str>
     payload["thinking"] = serde_json::json!({ "type": "disabled" });
 }
 
-fn apply_simple_effort(payload: &mut Value, think: bool, reasoning_mode: Option<&str>) {
-    if think {
-        if let Some(effort) = crate::services::reasoning::simple_effort(reasoning_mode) {
-            payload["reasoning_effort"] = effort.into();
-        }
+fn apply_xai(payload: &mut Value, model: &str, reasoning_mode: Option<&str>) {
+    if let Some(effort) =
+        crate::services::llm::providers::xai::reasoning_effort(model, reasoning_mode)
+    {
+        payload["reasoning_effort"] = effort.into();
     }
 }
 
@@ -143,10 +147,12 @@ fn google_thinking_budget(effort: &str) -> u32 {
     }
 }
 
-fn apply_openai(payload: &mut Value, think: bool, reasoning_mode: Option<&str>) {
-    if think {
-        if let Some(effort) = crate::services::reasoning::openai_effort(reasoning_mode) {
-            payload["reasoning"] = serde_json::json!({ "effort": effort });
-        }
+fn apply_openai(payload: &mut Value, model: &str, reasoning_mode: Option<&str>) {
+    let supported = crate::services::reasoning::supported_modes("openai", model, true);
+    if reasoning_mode.is_some_and(|mode| !supported.contains(&mode)) {
+        return;
+    }
+    if let Some(effort) = crate::services::reasoning::openai_effort(reasoning_mode) {
+        payload["reasoning_effort"] = effort.into();
     }
 }

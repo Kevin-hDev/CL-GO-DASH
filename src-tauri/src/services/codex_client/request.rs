@@ -65,31 +65,7 @@ async fn send_request(
     reasoning_mode: Option<&str>,
     options: RequestOptions,
 ) -> Result<reqwest::Response, String> {
-    let (instructions, input) = convert::convert_messages(messages);
-    let converted_tools = convert::convert_tools_to_responses_api(tools);
-
-    let effort = crate::services::reasoning::codex_effort(reasoning_mode);
-    let reasoning = Some(ReasoningConfig {
-        effort,
-        summary: "auto".to_string(),
-    });
-    let include = Some(vec!["reasoning.encrypted_content".to_string()]);
-
-    let body = CodexRequest {
-        model: model.to_string(),
-        instructions,
-        input,
-        stream: true,
-        store: false,
-        tools: converted_tools,
-        tool_choice: if tools.is_empty() {
-            None
-        } else {
-            Some("auto".to_string())
-        },
-        reasoning,
-        include,
-    };
+    let body = build_codex_request(model, messages, tools, reasoning_mode);
     let body_json =
         serde_json::to_string(&body).map_err(|_| "requête Codex invalide".to_string())?;
     let client = AuthenticatedClient::new(options.timeout)
@@ -106,4 +82,46 @@ async fn send_request(
         .send_success(request)
         .await
         .map_err(|_| "requête Codex refusée".to_string())
+}
+
+fn build_codex_request(
+    model: &str,
+    messages: &[ChatMessage],
+    tools: &[serde_json::Value],
+    reasoning_mode: Option<&str>,
+) -> CodexRequest {
+    let (instructions, input) = convert::convert_messages(messages);
+    let converted_tools = convert::convert_tools_to_responses_api(tools);
+    CodexRequest {
+        model: model.to_string(),
+        instructions,
+        input,
+        stream: true,
+        store: false,
+        tools: converted_tools,
+        tool_choice: if tools.is_empty() {
+            None
+        } else {
+            Some("auto".to_string())
+        },
+        reasoning: Some(ReasoningConfig {
+            effort: crate::services::reasoning::codex_effort(model, reasoning_mode),
+            summary: "auto".to_string(),
+        }),
+        include: Some(vec!["reasoning.encrypted_content".to_string()]),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn codex_request_keeps_only_model_supported_effort() {
+        let sol = build_codex_request("gpt-5.6-sol", &[], &[], Some("ultra"));
+        let luna = build_codex_request("gpt-5.6-luna", &[], &[], Some("ultra"));
+
+        assert_eq!(sol.reasoning.unwrap().effort, "ultra");
+        assert_eq!(luna.reasoning.unwrap().effort, "medium");
+    }
 }
