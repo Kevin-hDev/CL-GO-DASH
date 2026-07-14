@@ -1,26 +1,41 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { FORECAST_DOC_PAGES } from "./forecast-docs-data";
+import { loadForecastDocPages } from "./forecast-docs-data";
 import { ForecastDocsAccordion } from "./forecast-docs-accordion";
 import { ForecastDocsMarkdown } from "./forecast-docs-markdown";
 import { ForecastDocsSidebar } from "./forecast-docs-sidebar";
+import type { ForecastDocPage } from "./forecast-docs-types";
 import "./forecast-docs.css";
 
 export function ForecastDocsWindow() {
-  const { t } = useTranslation();
-  const [activeId, setActiveId] = useState(FORECAST_DOC_PAGES[0]?.id ?? "");
+  const { t, i18n } = useTranslation();
+  const [pages, setPages] = useState<ForecastDocPage[]>([]);
+  const [activeId, setActiveId] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    void loadForecastDocPages().then((loaded) => {
+      if (cancelled) return;
+      setPages(loaded);
+      setActiveId((prev) => prev && loaded.some((p) => p.id === prev) ? prev : (loaded[0]?.id ?? ""));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [i18n.language]);
+
   const activePage = useMemo(
-    () => FORECAST_DOC_PAGES.find((page) => page.id === activeId) ?? FORECAST_DOC_PAGES[0],
-    [activeId],
+    () => pages.find((page) => page.id === activeId) ?? pages[0],
+    [pages, activeId],
   );
+
+  if (!activePage) {
+    return <main className="fd-window" />;
+  }
 
   return (
     <main className="fd-window">
-      <ForecastDocsSidebar
-        pages={FORECAST_DOC_PAGES}
-        activeId={activePage.id}
-        onSelect={setActiveId}
-      />
+      <ForecastDocsSidebar pages={pages} activeId={activePage.id} onSelect={setActiveId} />
       <article className="fd-content">
         <header className="fd-header">
           <div>

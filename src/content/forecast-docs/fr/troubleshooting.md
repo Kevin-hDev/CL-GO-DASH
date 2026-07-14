@@ -6,7 +6,7 @@ Cette rubrique aide à comprendre pourquoi une prévision ne donne pas le résul
 
 Cette erreur signifie que Forecast n'a pas reçu un tableau exploitable.
 
-Ca peut venir de :
+Ça peut venir de :
 
 - JSON mal formé ;
 - fichier non converti correctement ;

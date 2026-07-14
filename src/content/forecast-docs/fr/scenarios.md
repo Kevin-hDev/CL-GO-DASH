@@ -67,6 +67,23 @@ Quand un scénario est sélectionné, le graphe doit permettre de comparer :
 - variables de contexte affichées ;
 - différence entre base et scénario.
 
+Schéma typique d'une comparaison :
+
+```text
+valeur
+  ^
+  |              ╭───── scenar (VIX +20 %)
+  |           ╭──╯
+  |       · ·─·      ← prévision de base
+  |     ·
+  |   ·
+  | ·
+  ──────────────────────────────> temps
+       historique    │   futur
+                     │
+                horizon
+```
+
 La question principale n'est pas "la courbe est-elle différente ?", mais "quelle hypothèse a déplacé la trajectoire, à quelle date, et de combien ?"
 
 ## Bon usage
