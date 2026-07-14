@@ -2,25 +2,34 @@
 
 ## [Unreleased]
 
-### Fixed
-
-- Manual Git branch creation now reports clear typed errors for empty repositories, duplicate branches, invalid names, and internal failures.
-
-### Changed
-
-- Manual Git branch creation now validates branch names before submit, blocks duplicate submits, and shows success feedback.
-- Session branching can now manually link clone tabs to isolated Git branches and clean those branches during archive.
-
 ---
 
 ## v0.9.6
 
-### Changes
+### Features
 
 - **Archived chats** — deleting a chat now archives it first; Settings includes a new Archived chats tab to restore sessions or permanently delete archived chats grouped by project and standalone discussions.
-- **Session branching** — clone a chat from a message into a header tab, optionally carry forward hidden summary context, and keep branch sessions out of the main sidebar.
-- **Parent-controlled subagents** — subagents now run as visible child sessions coordinated by the parent agent, with live status, hidden report injection, parent-side orchestration, reusable child sessions, and safer cleanup of queued runs.
+- **Session branching** — clone a chat from any message, preserve cumulative hidden context, optionally isolate the clone in a Git branch or worktree, and safely clean linked branches during archive.
+- **Parent-controlled subagents** — subagents now run as visible child sessions coordinated by the parent, with live status, corrections, archiving, explicit change review, and safer cancellation and cleanup.
+- **Queued user messages** — messages sent during an active response remain attached to the live stream and are processed without losing conversation history or visual grouping.
+
+### Models and reasoning
+
 - **Updated cloud model catalogs** — added OpenAI GPT-5.6 Sol, Terra, and Luna for API and Codex OAuth, plus xAI Grok 4.5, Grok 4.3, Grok 4.20 reasoning variants, and Grok Build 0.1, with matching OpenRouter reasoning modes and migration for retired xAI model identifiers.
+- **Separate reasoning selector** — model and reasoning choices now use independent controls, unsupported models hide the reasoning selector, and compatible models start at Medium while preserving the user's session choice.
+
+### Security and reliability
+
+- **Authenticated transports** — hardened redirects, credentials, error handling, and request validation across gateway channels, OAuth, MCP, vault storage, attachments, previews, and authenticated LLM streams.
+- **Subagent lifecycle** — made completion, cancellation, worktree ownership, permission routing, cleanup, and concurrent Git operations safer and deterministic.
+- **Git branch creation** — added validated branch names, duplicate-submit protection, typed errors, success feedback, and safer handling for empty repositories.
+
+### Interface and documentation
+
+- **Live agent activity** — improved concurrent stream indicators, subagent history, tool rows, cancellation states, file-preview links, and thinking alignment.
+- **Settings and Forecast** — refreshed Settings organization, Forecast model configuration, wakeup details, model navigation, tooltips, table sizing, and splash styling.
+- **Seven-language documentation** — translated Forecast documentation and rewrote Tools settings descriptions in French, English, Spanish, German, Italian, Chinese, and Japanese.
+- **Maintenance** — removed unused frontend code and dependencies while keeping provider, session, and interface behavior covered by tests.
 
 ---
 

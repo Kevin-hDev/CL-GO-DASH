@@ -1,4 +1,62 @@
 {
+  "0.9.6": {
+    "de": [
+      "Archivierte Chats können wiederhergestellt oder endgültig gelöscht werden, und Unterhaltungen lassen sich in isolierte Zweige klonen.",
+      "Vom Elternagenten gesteuerte Subagenten laufen nun als sichtbare Sitzungen mit sichererer Koordination, Beendigung und Änderungsprüfung.",
+      "Gateway, OAuth, Vault, Anhänge, Vorschauen, MCP und authentifizierte LLM-Verbindungen wurden umfassend abgesichert.",
+      "Modell- und Reasoning-Auswahl sind nun getrennt, Medium ist der Standard, und neue OpenAI- und xAI-Modelle sind verfügbar.",
+      "Einstellungen, Forecast, Wakeup-Details, Tooltips, Tabellen, Startbildschirm und Live-Chat-Anzeigen wurden verbessert.",
+      "Forecast-Dokumentation und Tool-Beschreibungen sind jetzt in allen sieben unterstützten Sprachen verfügbar."
+    ],
+    "en": [
+      "Archived chats can now be restored or permanently deleted, and conversations can be cloned into isolated branches.",
+      "Parent-controlled subagents now run as visible child sessions with safer orchestration, cancellation, cleanup, and change review.",
+      "Gateway, OAuth, vault, attachment, preview, MCP, and authenticated LLM paths received broad security hardening.",
+      "Model and reasoning controls are now separate, reasoning defaults to Medium, and new OpenAI and xAI models are available.",
+      "Settings, Forecast, wakeup details, tooltips, tables, splash styling, and live chat activity received interface improvements.",
+      "Forecast documentation and tool descriptions are now available in all seven supported languages."
+    ],
+    "es": [
+      "Los chats archivados ahora se pueden restaurar o eliminar definitivamente, y las conversaciones se pueden clonar en ramas aisladas.",
+      "Los subagentes controlados por el agente principal ahora son sesiones visibles con coordinación, cancelación y revisión más seguras.",
+      "Gateway, OAuth, la bóveda, los adjuntos, las vistas previas, MCP y las conexiones LLM autenticadas tienen mayor seguridad.",
+      "Los controles de modelo y razonamiento ahora están separados, Medium es el valor inicial y hay nuevos modelos de OpenAI y xAI.",
+      "Se mejoraron Ajustes, Forecast, los detalles de wakeups, tooltips, tablas, la pantalla inicial y la actividad del chat.",
+      "La documentación de Forecast y las descripciones de herramientas ya están disponibles en los siete idiomas admitidos."
+    ],
+    "fr": [
+      "Les chats archivés peuvent maintenant être restaurés ou supprimés définitivement, et les conversations peuvent être clonées dans des branches isolées.",
+      "Les sous-agents contrôlés par le parent deviennent des sessions visibles avec une orchestration, une annulation et une révision plus sûres.",
+      "La sécurité a été renforcée pour Gateway, OAuth, le coffre, les pièces jointes, les aperçus, MCP et les connexions LLM authentifiées.",
+      "Les choix du modèle et du raisonnement sont séparés, Medium devient la valeur initiale et de nouveaux modèles OpenAI et xAI sont disponibles.",
+      "Les réglages, Forecast, les réveils, les infobulles, les tableaux, l'écran de démarrage et l'activité du chat ont été améliorés.",
+      "La documentation Forecast et les descriptions des outils sont maintenant disponibles dans les sept langues prises en charge."
+    ],
+    "it": [
+      "Le chat archiviate ora possono essere ripristinate o eliminate definitivamente e le conversazioni si possono clonare in branch isolati.",
+      "I subagenti controllati dal genitore ora sono sessioni visibili con coordinamento, annullamento e revisione delle modifiche più sicuri.",
+      "Gateway, OAuth, vault, allegati, anteprime, MCP e connessioni LLM autenticate hanno ricevuto ampi miglioramenti di sicurezza.",
+      "I controlli di modello e ragionamento ora sono separati, Medium è il valore iniziale e sono disponibili nuovi modelli OpenAI e xAI.",
+      "Impostazioni, Forecast, dettagli dei wakeup, tooltip, tabelle, schermata iniziale e attività della chat sono stati migliorati.",
+      "La documentazione Forecast e le descrizioni degli strumenti sono ora disponibili in tutte le sette lingue supportate."
+    ],
+    "ja": [
+      "アーカイブしたチャットを復元または完全削除でき、会話を分離されたブランチへ複製できるようになりました。",
+      "親エージェントが管理するサブエージェントは、調整、停止、整理、変更確認がより安全な表示可能セッションとして動作します。",
+      "Gateway、OAuth、Vault、添付ファイル、プレビュー、MCP、認証済み LLM 接続のセキュリティを強化しました。",
+      "モデルと推論の選択を分離し、初期値を Medium に変更して、新しい OpenAI と xAI モデルを追加しました。",
+      "設定、Forecast、Wakeup 詳細、ツールチップ、表、起動画面、ライブチャット表示を改善しました。",
+      "Forecast ドキュメントとツール説明を、対応する七つの言語すべてで利用できるようにしました。"
+    ],
+    "zh": [
+      "归档的聊天现在可以恢复或永久删除，对话也可以克隆到隔离的分支中。",
+      "由父代理控制的子代理现在会作为可见会话运行，并改进了协调、取消、清理和变更审查。",
+      "Gateway、OAuth、保险库、附件、预览、MCP 和已认证 LLM 连接的安全性已全面加强。",
+      "模型和推理控制现在相互独立，默认推理级别为 Medium，并新增了 OpenAI 和 xAI 模型。",
+      "设置、Forecast、唤醒详情、工具提示、表格、启动画面和实时聊天活动均已改进。",
+      "Forecast 文档和工具说明现在已支持全部七种应用语言。"
+    ]
+  },
   "0.9.5": {
     "de": [
       "Der Chat zeigt jetzt eine kompakte Zusammenfassung der Sitzung mit Todos, Plänen, Subagenten, Git-Status und zuletzt geänderten Dateien.",
