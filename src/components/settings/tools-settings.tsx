@@ -66,6 +66,7 @@ export function ToolsSettings() {
     <div className="ats-page">
       <div className="ats-inner">
         <h2 className="ats-title">{t("settings.tabs.tools")}</h2>
+        <p className="ats-intro">{t("settings.tools.intro")}</p>
 
         <h3 className="ats-section-title">{t("settings.tools.lockedTitle")}</h3>
         <SettingsCard>

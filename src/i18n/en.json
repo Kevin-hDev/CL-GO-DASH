@@ -604,26 +604,27 @@
       "linkPreviewDesc": "Show a preview card for URLs in chat"
     },
     "tools": {
+      "intro": "These tools define what the agent can do for you. Essential tools are always on. Optional tools turn on or off based on your needs: the agent will only use what's enabled.",
       "lockedTitle": "Essential tools",
       "optionalTitle": "Optional tools",
       "lockedBadge": "Always on",
       "groups": {
-        "terminal": { "title": "Terminal", "description": "Runs shell commands for git, tests, builds, and local tools." },
-        "files": { "title": "Files", "description": "Reads, creates, edits, and lists workspace files." },
-        "file_search": { "title": "File search", "description": "Finds files and searches text or patterns across the project." },
-        "web": { "title": "Web", "description": "Searches the web and opens pages when current information is needed." },
-        "mcp": { "title": "MCP connectors", "description": "Lets the model discover tools from enabled MCP connectors." },
-        "skills": { "title": "Skills", "description": "Loads specialized workflows only when the task needs them." },
-        "user_choice": { "title": "User choices", "description": "Lets the model ask you to choose between important options." },
-        "subagents": { "title": "Subagents", "description": "Lets the model create and control child sessions for independent tasks." },
-        "plan_mode": { "title": "Plan mode", "description": "Lets the model draft a plan and leave Plan mode after validation." },
-        "todo_list": { "title": "Todo list", "description": "Lets the model create, update, pause, resume, and delete work checklists." },
-        "agent_diagnostics": { "title": "Agent diagnostics", "description": "Lets the model read recent diagnostics after an error or interruption." },
-        "git_branches": { "title": "Git branches", "description": "Lets the model create a branch or switch to an existing branch." },
-        "forecast": { "title": "Forecast", "description": "Lets the model run forecasts, inspect models, read analyses, and add scenarios." },
-        "spreadsheet": { "title": "Spreadsheet / Excel", "description": "Lets the model read or create Excel, ODS, CSV, and TSV files." },
-        "document": { "title": "Document / Word", "description": "Lets the model extract text from documents or create Word files." },
-        "images": { "title": "Images", "description": "Lets the model inspect, resize, crop, or convert images." }
+        "terminal": { "title": "Terminal", "description": "Lets the agent run commands directly on your machine (git, builds, scripts). This is the most powerful tool: anything your terminal can do, the agent can do." },
+        "files": { "title": "Files", "description": "Lets the agent read, create, and edit files in your project: code, configs, notes, documents." },
+        "file_search": { "title": "File search", "description": "Lets the agent dig through your project to find a file or search for a specific word in the code." },
+        "web": { "title": "Web", "description": "Lets the agent search for information online and open web pages when it needs current data." },
+        "mcp": { "title": "External connectors", "description": "Lets the agent use the external connectors you configured in the Connectors tab." },
+        "skills": { "title": "Skills", "description": "Lets the agent follow specialized guides (skills) for certain tasks. Turn off if you don't use them." },
+        "user_choice": { "title": "User choices", "description": "Lets the agent ask for your input when it hesitates between several options. Turn off if you'd rather it decide on its own." },
+        "subagents": { "title": "Subagents", "description": "Lets the agent delegate a subtask to a secondary agent, then pick up the result. Turn off if you want to keep everything in a single conversation." },
+        "plan_mode": { "title": "Plan mode", "description": "Lets the agent propose an action plan and wait for your approval before acting. Turn off if you'd rather it jump straight to action." },
+        "todo_list": { "title": "Todo list", "description": "Lets the agent keep a checklist during a long task, so nothing gets forgotten. Turn off if checklists aren't useful to you." },
+        "agent_diagnostics": { "title": "Agent diagnostics", "description": "Lets the agent review its recent errors to self-correct after a failure. Turn off if you don't want it spending time analyzing its failures." },
+        "git_branches": { "title": "Git branches", "description": "Lets the agent create or switch Git branches to isolate its work. Turn off if you prefer to manage branches yourself." },
+        "forecast": { "title": "Forecast", "description": "Lets the agent use the Forecast module: run forecasts, read the results, add scenarios. Turn off if you don't use Forecast." },
+        "spreadsheet": { "title": "Spreadsheet / Excel", "description": "Lets the agent read or create spreadsheets (Excel, ODS, CSV, TSV). Turn off if you don't work with this kind of file." },
+        "document": { "title": "Document / Word", "description": "Lets the agent extract text from existing documents or create Word files. Turn off if you don't work with these documents." },
+        "images": { "title": "Images", "description": "Lets the agent inspect, resize, crop, or convert images. Turn off if you don't need to process images." }
       }
     },
     "advanced": {

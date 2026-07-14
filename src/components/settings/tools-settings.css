@@ -11,10 +11,17 @@
 }
 
 .ats-title {
-  margin: 0 0 28px;
+  margin: 0 0 12px;
   color: var(--ink);
   font-size: var(--text-xl);
   font-weight: 700;
+}
+
+.ats-intro {
+  margin: 0 0 28px;
+  color: var(--ink-muted);
+  font-size: var(--text-sm);
+  line-height: 1.5;
 }
 
 .ats-section-title {

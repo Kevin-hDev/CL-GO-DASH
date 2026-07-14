@@ -604,26 +604,75 @@
       "linkPreviewDesc": "Afficher une carte d'aperçu pour les URL dans le chat"
     },
     "tools": {
+      "intro": "Ces outils définissent ce que l'agent peut faire pour toi. Les outils essentiels sont toujours actifs. Les outils optionnels s'activent ou se désactivent selon tes besoins : l'agent n'utilisera que ce qui est activé.",
       "lockedTitle": "Tools essentiels",
       "optionalTitle": "Tools optionnels",
       "lockedBadge": "Toujours actif",
       "groups": {
-        "terminal": { "title": "Terminal", "description": "Exécute les commandes shell utiles pour git, tests, builds et outils locaux." },
-        "files": { "title": "Fichiers", "description": "Lit, crée, modifie et liste les fichiers du projet." },
-        "file_search": { "title": "Recherche de fichiers", "description": "Trouve des fichiers et recherche du texte ou des motifs dans le projet." },
-        "web": { "title": "Web", "description": "Recherche sur le web et ouvre des pages quand des informations actuelles sont nécessaires." },
-        "mcp": { "title": "Connecteurs MCP", "description": "Permet de découvrir les outils fournis par les connecteurs MCP activés." },
-        "skills": { "title": "Skills", "description": "Charge des workflows spécialisés quand une tâche en a besoin." },
-        "user_choice": { "title": "Choix utilisateur", "description": "Permet au modèle de vous demander de choisir entre des options importantes." },
-        "subagents": { "title": "Sous-agents", "description": "Permet de créer et piloter des sessions enfants pour des tâches indépendantes." },
-        "plan_mode": { "title": "Plan mode", "description": "Permet de préparer un plan puis de quitter le mode plan après validation." },
-        "todo_list": { "title": "Todo list", "description": "Permet de créer, mettre à jour, mettre en pause, reprendre et supprimer les checklists de travail." },
-        "agent_diagnostics": { "title": "Diagnostics agent", "description": "Permet de lire les diagnostics récents après une erreur ou une interruption." },
-        "git_branches": { "title": "Branches Git", "description": "Permet de créer une branche Git ou de basculer vers une branche existante." },
-        "forecast": { "title": "Forecast", "description": "Permet de lancer des prévisions, lire les analyses, inspecter les modèles et ajouter des scénarios." },
-        "spreadsheet": { "title": "Spreadsheet / Excel", "description": "Permet de lire ou créer des fichiers Excel, ODS, CSV et TSV." },
-        "document": { "title": "Document / Word", "description": "Permet d'extraire du texte de documents ou de créer des fichiers Word." },
-        "images": { "title": "Images", "description": "Permet d'inspecter, redimensionner, recadrer ou convertir des images." }
+        "terminal": {
+          "title": "Terminal",
+          "description": "Permet à l'agent de lancer des commandes directement sur ta machine (git, builds, scripts). C'est l'outil le plus puissant : tout ce que ton terminal peut faire, l'agent peut le faire."
+        },
+        "files": {
+          "title": "Fichiers",
+          "description": "Permet à l'agent de lire, créer et modifier les fichiers de ton projet : code, configs, notes, documents."
+        },
+        "file_search": {
+          "title": "Recherche de fichiers",
+          "description": "Permet à l'agent de fouiller ton projet pour retrouver un fichier ou chercher un mot précis dans le code."
+        },
+        "web": {
+          "title": "Web",
+          "description": "Permet à l'agent de chercher des infos en ligne et d'ouvrir des pages web quand il a besoin de données actuelles."
+        },
+        "mcp": {
+          "title": "Connecteurs externes",
+          "description": "Permet à l'agent d'utiliser les connecteurs externes que tu as configurés dans l'onglet Connecteurs."
+        },
+        "skills": {
+          "title": "Skills",
+          "description": "Permet à l'agent de suivre des guides spécialisés (skills) pour certaines tâches. Désactive si tu n'en utilises pas."
+        },
+        "user_choice": {
+          "title": "Choix utilisateur",
+          "description": "Permet à l'agent de te demander ton avis quand il hésite entre plusieurs options. Désactive si tu préfères qu'il décide seul."
+        },
+        "subagents": {
+          "title": "Sous-agents",
+          "description": "Permet à l'agent de déléguer une sous-tâche à un agent secondaire, puis de reprendre le résultat. Désactive si tu veux tout garder dans une seule conversation."
+        },
+        "plan_mode": {
+          "title": "Plan mode",
+          "description": "Permet à l'agent de te proposer un plan d'action et d'attendre ton accord avant d'agir. Désactive si tu préfères qu'il passe directement à l'action."
+        },
+        "todo_list": {
+          "title": "Todo list",
+          "description": "Permet à l'agent de tenir une checklist pendant un long travail, pour ne rien oublier. Désactive si les checklists ne te servent pas."
+        },
+        "agent_diagnostics": {
+          "title": "Diagnostics agent",
+          "description": "Permet à l'agent de relire ses erreurs récentes pour se corriger après un échec. Désactive si tu ne veux pas qu'il perde du temps à analyser ses échecs."
+        },
+        "git_branches": {
+          "title": "Branches Git",
+          "description": "Permet à l'agent de créer ou changer de branche Git pour isoler son travail. Désactive si tu préfères gérer les branches toi-même."
+        },
+        "forecast": {
+          "title": "Forecast",
+          "description": "Permet à l'agent d'utiliser le module Forecast : lancer des prévisions, lire les résultats, ajouter des scénarios. Désactive si tu n'utilises pas Forecast."
+        },
+        "spreadsheet": {
+          "title": "Spreadsheet / Excel",
+          "description": "Permet à l'agent de lire ou créer des tableurs (Excel, ODS, CSV, TSV). Désactive si tu ne travailles pas avec ce genre de fichiers."
+        },
+        "document": {
+          "title": "Document / Word",
+          "description": "Permet à l'agent d'extraire le texte de documents existants ou de créer des fichiers Word. Désactive si tu ne travailles pas avec ces documents."
+        },
+        "images": {
+          "title": "Images",
+          "description": "Permet à l'agent d'inspecter, redimensionner, recadrer ou convertir des images. Désactive si tu n'as pas besoin de traiter d'images."
+        }
       }
     },
     "advanced": {
