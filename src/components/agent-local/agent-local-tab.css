@@ -46,7 +46,7 @@ body.al-panel-resizing .agent-detail-with-preview * {
   pointer-events: none !important;
 }
 
-body.al-panel-resizing .fp-panel,
+body.al-panel-resizing .asp-panel,
 body.al-panel-resizing .ft-panel,
 body.al-panel-resizing .agent-detail-chat {
   transition: none !important;

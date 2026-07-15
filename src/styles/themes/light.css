@@ -31,6 +31,7 @@
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.04);
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 4px 24px rgba(0, 0, 0, 0.15);
+  --dialog-backdrop: rgba(26, 26, 26, 0.25);
 
   /* Surface variants */
   --surface-glass: rgba(220, 220, 225, 0.55);

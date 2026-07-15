@@ -1,4 +1,6 @@
-use super::{atomic_write, repair_path};
+use super::atomic_write;
+#[cfg(unix)]
+use super::repair_path;
 use rand::RngCore;
 
 fn test_dir() -> std::path::PathBuf {

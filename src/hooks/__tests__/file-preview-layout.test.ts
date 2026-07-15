@@ -29,12 +29,12 @@ describe("file preview layout", () => {
       <div class="agent-detail-with-preview">
         <aside class="project-sidebar"></aside>
         <main class="agent-detail-chat"></main>
-        <section class="fp-panel open"></section>
+        <section class="asp-panel open"></section>
       </div>
     `;
     const container = document.querySelector(".agent-detail-with-preview")!;
     const sidebar = document.querySelector(".project-sidebar")!;
-    const panel = document.querySelector(".fp-panel")!;
+    const panel = document.querySelector(".asp-panel")!;
     setWidth(sidebar, 220);
     setWidth(panel, 500);
 
@@ -46,12 +46,12 @@ describe("file preview layout", () => {
       <div class="agent-detail-with-preview">
         <aside class="project-sidebar"></aside>
         <main class="agent-detail-chat"></main>
-        <section class="fp-panel open"></section>
+        <section class="asp-panel open"></section>
       </div>
     `;
     const container = document.querySelector(".agent-detail-with-preview")!;
     const sidebar = document.querySelector(".project-sidebar")!;
-    const panel = document.querySelector(".fp-panel")!;
+    const panel = document.querySelector(".asp-panel")!;
     setWidth(container, 1200);
     setWidth(sidebar, 240);
 
@@ -66,7 +66,7 @@ describe("file preview layout", () => {
     document.body.innerHTML = `
       <div class="agent-detail-with-preview" style="--agent-chat-min-width: 0px">
         <main class="agent-detail-chat"></main>
-        <section class="fp-panel open"></section>
+        <section class="asp-panel open"></section>
       </div>
     `;
     const container = document.querySelector(".agent-detail-with-preview")!;

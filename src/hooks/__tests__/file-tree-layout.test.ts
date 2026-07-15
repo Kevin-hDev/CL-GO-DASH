@@ -49,12 +49,12 @@ describe("file tree layout", () => {
     document.body.innerHTML = `
       <div class="agent-detail-with-preview">
         <main class="agent-detail-chat"></main>
-        <aside class="fp-panel open"></aside>
+        <aside class="asp-panel open"></aside>
         <aside class="ft-panel open"></aside>
       </div>
     `;
     const container = document.querySelector(".agent-detail-with-preview")!;
-    const preview = document.querySelector(".fp-panel")!;
+    const preview = document.querySelector(".asp-panel")!;
     const tree = document.querySelector(".ft-panel")!;
     setWidth(container, 1200);
     setWidth(preview, 420);

@@ -77,10 +77,10 @@ fn is_forecast_process(pid: u32) -> bool {
         let output = Command::new("powershell")
             .args(["-NoProfile", "-Command", &query])
             .output();
-        return output
+        output
             .ok()
             .map(|o| process_text_matches(&String::from_utf8_lossy(&o.stdout)))
-            .unwrap_or(false);
+            .unwrap_or(false)
     }
 }
 

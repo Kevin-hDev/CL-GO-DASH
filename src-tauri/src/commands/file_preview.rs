@@ -113,7 +113,7 @@ fn validate_editor_path(editor_path: &str) -> Result<(), String> {
     #[cfg(target_os = "windows")]
     {
         let p = Path::new(editor_path);
-        if !p.is_absolute() || !p.extension().is_some_and(|e| e == "exe") || !p.is_file() {
+        if !p.is_absolute() || p.extension().is_none_or(|e| e != "exe") || !p.is_file() {
             return Err("Éditeur non autorisé".into());
         }
     }

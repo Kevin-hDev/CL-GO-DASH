@@ -83,7 +83,6 @@ pub fn tree_kill(pid: u32) {
             .args(["/PID", &pid.to_string(), "/F", "/T"])
             .output();
         eprintln!("[ollama] tree-kill Windows pid={pid}");
-        return;
     }
 
     #[cfg(unix)]

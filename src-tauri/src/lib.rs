@@ -9,12 +9,15 @@
 mod app_events;
 mod commands;
 mod invoke_handler;
+mod invoke_handler_tail;
 mod models;
 mod ollama_polling;
 mod services;
 mod storage_migration;
 mod storage_migration_files;
 mod tray;
+#[cfg(target_os = "windows")]
+mod windows_entry;
 
 use services::agent_local::ollama_client::OllamaClient;
 use services::gateway::GatewayService;
@@ -31,7 +34,17 @@ pub struct ActiveStreams(
 
 static STREAM_GENERATION: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
+pub fn prepare_browser_native_application() -> bool {
+    services::browser::prepare_native_application()
+}
+
+#[cfg(target_os = "windows")]
+pub fn launch_windows_browser_host() -> i32 {
+    windows_entry::launch_development_bootstrap()
+}
+
 pub fn run() {
+    let _data_dir = services::paths::data_dir();
     let app = tauri::Builder::default()
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_shell::init())
@@ -53,6 +66,9 @@ pub fn run() {
         .manage(services::model_downloads::ModelDownloadManager::new())
         .manage(services::searxng::SearxngSidecar::new())
         .manage(services::terminal::PtyManager::new())
+        .manage(services::browser::BrowserRuntimeHandle::default())
+        .manage(services::browser::BrowserSessionService::default())
+        .manage(services::browser::LocalSiteScanner::default())
         .manage(GatewayService::new())
         .manage(commands::file_tree_watcher::FileTreeWatcher::new())
         .manage(services::forecast::sidecar::ChronosSidecar::new())
@@ -151,5 +167,10 @@ pub fn run() {
         .build(tauri::generate_context!())
         .expect("error while building tauri application");
 
-    app.run(app_events::handle_run_event);
+    let app_handle = app.handle().clone();
+    app.run(|app_handle, event| {
+        services::browser::setup_on_run_event(app_handle, &event);
+        app_events::handle_run_event(app_handle, event);
+    });
+    services::browser::shutdown(&app_handle);
 }

@@ -43,7 +43,7 @@ fn registry() -> &'static Mutex<VecDeque<BackgroundProcess>> {
     BACKGROUND_PROCESSES.get_or_init(|| Mutex::new(VecDeque::new()))
 }
 
-#[cfg(test)]
+#[cfg(all(test, not(target_os = "windows")))]
 pub(crate) fn abort_all_for_test() {
     let mut processes = registry().lock().unwrap();
     for process in processes.drain(..) {

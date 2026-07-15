@@ -57,7 +57,7 @@ export function useAgentPanelsAutoSidebar(
     let raf = 0;
     const sync = () => {
       const agentDetail = detail.querySelector(".agent-detail-with-preview");
-      const previewOpen = !!agentDetail?.querySelector(".fp-panel.open");
+      const previewOpen = !!agentDetail?.querySelector(".asp-panel.open");
       const fileTreeOpen = !!agentDetail?.querySelector(".ft-panel.open");
       const sidebarWidth = sidebarProjectionWidth(sidebar, sidebarOpenRef.current);
       const projectedDetailWidth = projectedDetailWidthWithSidebarOpen(

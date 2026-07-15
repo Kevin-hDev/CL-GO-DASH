@@ -1,7 +1,9 @@
 import type { CSSProperties } from "react";
 import { ChatView } from "./chat-view";
+import { AgentSidePanel } from "@/components/agent-side-panel/agent-side-panel";
 import { FilePreviewPanel } from "@/components/file-preview/file-preview-panel";
 import { FileTreePanel } from "@/components/file-tree/file-tree-panel";
+import { BrowserPanel } from "@/components/internal-browser/browser-panel";
 import type { useFilePreview } from "@/hooks/use-file-preview";
 import type { useFileTree } from "@/hooks/use-file-tree";
 import { useAgentPanelLayout } from "@/hooks/use-agent-panel-layout";
@@ -112,34 +114,44 @@ export function AgentChatDetail(props: AgentChatDetailProps) {
           onLinkCloneGitBranch={props.onLinkCloneGitBranch}
         />
       </div>
-      <FilePreviewPanel
+      <AgentSidePanel
         open={props.filePreview.open}
         fullscreen={props.filePreview.fullscreen}
-        width={props.filePreview.width}
         displayWidth={layout.previewWidth}
-        extraWidth={props.filePreview.extraWidth}
         fullscreenWidth={props.filePreview.fullscreenWidth}
         fullscreenSwitching={props.fullscreenSwitching}
         resizing={props.filePreview.resizing}
-        allOperations={props.fileOperations.all}
-        latestOperations={props.fileOperations.latest}
-        tabs={props.filePreview.tabs}
-        activeTab={props.filePreview.activeTab}
-        listMode={props.filePreview.listMode}
-        baseDir={props.activeProjectPath}
-        onClose={props.filePreview.closePanel}
-        onFullscreenChange={props.onPreviewFullscreenChange}
-        onActiveTabChange={props.filePreview.setActiveTab}
-        onListModeChange={props.filePreview.setListMode}
-        onOpenOperation={props.filePreview.openOperation}
-        onOpenFilePath={props.filePreview.openFullPath}
-        onCloseTab={props.filePreview.closeTab}
         onResizeStart={props.filePreview.startResize}
-        hasProject={props.fileTree.hasProject}
-        treeOpen={props.fileTree.open}
-        onToggleTree={props.fileTree.toggleOpen}
-        panelMode={props.panelMode}
+        mode={props.panelMode ?? "preview"}
+        previewContent={(
+          <FilePreviewPanel
+            fullscreen={props.filePreview.fullscreen}
+            allOperations={props.fileOperations.all}
+            latestOperations={props.fileOperations.latest}
+            tabs={props.filePreview.tabs}
+            activeTab={props.filePreview.activeTab}
+            listMode={props.filePreview.listMode}
+            baseDir={props.activeProjectPath}
+            onFullscreenChange={props.onPreviewFullscreenChange}
+            onActiveTabChange={props.filePreview.setActiveTab}
+            onListModeChange={props.filePreview.setListMode}
+            onOpenOperation={props.filePreview.openOperation}
+            onOpenFilePath={props.filePreview.openFullPath}
+            onCloseTab={props.filePreview.closeTab}
+            hasProject={props.fileTree.hasProject}
+            treeOpen={props.fileTree.open}
+            onToggleTree={props.fileTree.toggleOpen}
+          />
+        )}
         forecastContent={props.forecastContent}
+        browserContent={(
+          <BrowserPanel
+            conversationId={props.sessionId}
+            active={props.filePreview.open && props.panelMode === "browser" && !props.fullscreenSwitching}
+            fullscreen={props.filePreview.fullscreen}
+            onFullscreenChange={props.onPreviewFullscreenChange}
+          />
+        )}
       />
       <FileTreePanel
         tree={props.fileTree}

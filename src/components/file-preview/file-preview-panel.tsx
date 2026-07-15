@@ -3,7 +3,6 @@ import { Maximize2, Minimize2, FolderTree } from "@/components/ui/lucide-icons";
 import { Tooltip } from "@/components/ui/tooltip";
 import { openPreviewFile, openPreviewWithEditor } from "@/services/file-preview";
 import type { FileOperation, FilePreviewActiveTab, FilePreviewListMode } from "@/types/file-preview";
-import type { PanelMode } from "@/hooks/use-forecast-panel";
 import { shouldWrapFile } from "@/lib/code-language";
 import { FilePreviewBreadcrumb } from "./file-preview-breadcrumb";
 import { FilePreviewContent } from "./file-preview-content";
@@ -15,33 +14,22 @@ import "./file-preview-tabs.css";
 import "./file-preview-highlight.css";
 
 interface FilePreviewPanelProps {
-  open: boolean;
   fullscreen: boolean;
-  width: number;
-  displayWidth?: number;
-  extraWidth?: number;
-  fullscreenWidth: number;
-  fullscreenSwitching: boolean;
-  resizing: boolean;
   allOperations: FileOperation[];
   latestOperations: FileOperation[];
   tabs: FileOperation[];
   activeTab: FilePreviewActiveTab;
   listMode: FilePreviewListMode;
   baseDir?: string;
-  onClose: () => void;
   onFullscreenChange: (fullscreen: boolean) => void;
   onActiveTabChange: (tab: FilePreviewActiveTab) => void;
   onListModeChange: (mode: FilePreviewListMode) => void;
   onOpenOperation: (operation: FileOperation) => void;
   onOpenFilePath: (path: string) => void;
   onCloseTab: (id: string) => void;
-  onResizeStart: (event: React.PointerEvent) => void;
   hasProject?: boolean;
   treeOpen?: boolean;
   onToggleTree?: () => void;
-  panelMode?: PanelMode;
-  forecastContent?: React.ReactNode;
 }
 
 export function FilePreviewPanel(props: FilePreviewPanelProps) {
@@ -58,18 +46,7 @@ export function FilePreviewPanel(props: FilePreviewPanelProps) {
   };
 
   return (
-    <aside
-      className={`fp-panel ${props.open ? "open" : ""} ${props.fullscreen ? "fullscreen" : ""} ${props.fullscreenSwitching ? "fullscreen-switching" : ""} ${props.resizing ? "resizing" : ""}`}
-      data-nav-zone="filePreview"
-      style={{
-        "--fp-width": `${props.displayWidth ?? props.width + (props.extraWidth ?? 0)}px`,
-        "--fp-full-width": `${props.fullscreenWidth}px`,
-      } as React.CSSProperties}
-      aria-hidden={!props.open}
-    >
-      <div className="fp-resize" onPointerDown={props.onResizeStart} />
-      <div className={`fp-slide-wrapper ${props.panelMode === "forecast" ? "fp-slide-forecast" : "fp-slide-preview"}`}>
-        <div className="fp-slide-child">
+    <div className="fp-preview-root">
           <div className="fp-head">
             <FilePreviewTabs
               tabs={props.tabs}
@@ -125,11 +102,6 @@ export function FilePreviewPanel(props: FilePreviewPanelProps) {
               </>
             )}
           </div>
-        </div>
-        <div className="fp-slide-child">
-          {props.forecastContent}
-        </div>
-      </div>
-    </aside>
+    </div>
   );
 }

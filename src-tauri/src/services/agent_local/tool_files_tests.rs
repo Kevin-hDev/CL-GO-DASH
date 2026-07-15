@@ -1,4 +1,6 @@
-use crate::services::agent_local::tool_files::{read_file, write_file, DEFAULT_LIMIT};
+use crate::services::agent_local::tool_files::{read_file, DEFAULT_LIMIT};
+#[cfg(unix)]
+use crate::services::agent_local::tool_files::write_file;
 // MAX_LIMIT est 50_000 — on le réimporte pour les tests de borne
 const MAX_LIMIT: usize = 50_000;
 use std::io::Write;

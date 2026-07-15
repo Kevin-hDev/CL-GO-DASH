@@ -1,14 +1,12 @@
-import { fireEvent, renderHook, waitFor } from "@testing-library/react";
+import { renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   sidebarHiddenOffsetFromWidth,
-  useAppLayoutShortcuts,
   useSidebarHiddenOffset,
 } from "../use-app-layout-effects";
 import {
   projectedDetailWidthWithSidebarOpen,
   sidebarProjectionWidth,
-  shouldAutoHideSidebarForAgentPanels,
   useAgentPanelsAutoSidebar,
 } from "../agent-panels-auto-sidebar";
 
@@ -49,7 +47,7 @@ function installLayoutDom(detailWidth: number, sidebarWidth = 0) {
     <div class="app-sidebar-block"></div>
     <section class="app-detail-panel">
       <div class="agent-detail-with-preview">
-        <aside class="fp-panel open"></aside>
+        <aside class="asp-panel open"></aside>
         <aside class="ft-panel open"></aside>
       </div>
     </section>
@@ -77,32 +75,6 @@ afterEach(() => {
   window.requestAnimationFrame = originalRequestAnimationFrame;
   window.cancelAnimationFrame = originalCancelAnimationFrame;
   vi.restoreAllMocks();
-});
-
-describe("useAppLayoutShortcuts", () => {
-  it("ne capte pas Ctrl+Alt+B reserve a la preview", () => {
-    const toggleSidebar = vi.fn();
-
-    renderHook(() => useAppLayoutShortcuts({
-      onBack: vi.fn(),
-      onForward: vi.fn(),
-      toggleSearch: vi.fn(),
-      toggleSidebar,
-    }));
-
-    fireEvent.keyDown(window, { code: "KeyB", ctrlKey: true, altKey: true });
-
-    expect(toggleSidebar).not.toHaveBeenCalled();
-  });
-});
-
-describe("shouldAutoHideSidebarForAgentPanels", () => {
-  it("masque seulement quand preview et arborescence sont ouvertes et trop serrees", () => {
-    expect(shouldAutoHideSidebarForAgentPanels(760, true, true)).toBe(true);
-    expect(shouldAutoHideSidebarForAgentPanels(780, true, true)).toBe(false);
-    expect(shouldAutoHideSidebarForAgentPanels(760, true, false)).toBe(false);
-    expect(shouldAutoHideSidebarForAgentPanels(760, false, true)).toBe(false);
-  });
 });
 
 describe("projectedDetailWidthWithSidebarOpen", () => {

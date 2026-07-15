@@ -3,6 +3,7 @@ pub mod api_keys;
 pub mod attachment_access;
 #[cfg(test)]
 mod attachment_access_tests;
+pub mod browser;
 pub mod codex_client;
 pub mod codex_oauth;
 pub mod compress;

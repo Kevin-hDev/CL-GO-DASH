@@ -1,6 +1,5 @@
 import { useMemo, memo } from "react";
 import { useTranslation } from "react-i18next";
-import { ConversationList } from "./conversation-list";
 import { ChatHeader } from "./chat-header";
 import { AgentChatDetail } from "./agent-chat-detail";
 import { WelcomeView } from "./welcome-view";
@@ -18,6 +17,8 @@ import {
   resolveDisplayModel, resolveDisplayProject, resolveDisplayReasoningMode, resolveDisplaySession,
 } from "./agent-local-display";
 import { useAgentLocalForecastContent } from "./use-agent-local-forecast-content";
+import { useAgentLocalConversationList } from "./use-agent-local-conversation-list";
+import { useAvailablePanelMode } from "@/hooks/use-available-panel-mode";
 import type { AgentLocalTabProps } from "./agent-local-tab-types";
 import "./agent-local-tab.css";
 
@@ -29,20 +30,20 @@ export const AgentLocalTab = memo(function AgentLocalTab({
 }: AgentLocalTabProps) {
   const { t } = useTranslation();
   const s = useAgentLocalTab({ navState, onSessionChange, onNavChange, listFocused });
-  const { sessions, refresh, rename, archive, updateModel } = s;
+  const { sessions, refresh, archive, updateModel } = s;
   const { projectsHook, terminal, activeSession, activeSessionId } = s;
   const { model, provider, currentDefault, activeProject } = s;
   const { filePreview, fileOperations, setFileOperations } = s;
   const { reasoningMode, setReasoningMode, setWelcomeModel } = s;
-  const { sessionActions, handleSelectById, handleDeleteProject, handleDeleteSession } = s;
+  const { sessionActions, handleSelectById } = s;
   const {
     pendingMessage, setPendingMessage,
     pendingWorkingDir, setPendingWorkingDir,
     pendingSkills, setPendingSkills,
     pendingFiles, setPendingFiles,
-    handleCreate, handleCreateWithModel,
+    handleCreateWithModel,
     handleWelcomeSend, handleAutoRename,
-    handleCreateInProject, handleCreateInProjectWithModel,
+    handleCreateInProjectWithModel,
   } = sessionActions;
   const sessionTabs = useSessionTabs(activeSessionId, refresh);
   const displaySessionId = sessionTabs.activeSessionId ?? activeSessionId;
@@ -63,26 +64,12 @@ export const AgentLocalTab = memo(function AgentLocalTab({
   const forecast = useForecastPanel(displaySessionId ?? null);
   useAgentLocalPanelNav({ navState, fileTree, forecast });
   const { fileTreeNav, forecastNav } = useAgentLocalControlledPanels({ navState, fileTree, forecast, onNavChange });
+  const availablePanel = useAvailablePanelMode(forecastNav.panelMode);
   const {
     forecastContent, fullscreenSwitching, handleOpenForecastDocs, handlePreviewFullscreenChange,
   } = useAgentLocalForecastContent({ forecastNav, filePreview, docsWindowTitle: t("forecast.docs.windowTitle") });
 
-  const list = useMemo(() => (
-    <ConversationList
-      sessions={sessions}
-      projects={projectsHook.projects}
-      selectedId={activeSessionId}
-      onSelect={(id) => void handleSelectById(id)}
-      onCreate={handleCreate}
-      onRename={(id, name) => void rename(id, name)}
-      onDelete={(id) => void handleDeleteSession(id)}
-      onNewSessionInProject={(pid) => void handleCreateInProject(pid)}
-      onRenameProject={(id, name) => void projectsHook.rename(id, name)}
-      onDeleteProject={handleDeleteProject}
-      onOpenFolder={(path) => void projectsHook.openFolder(path)}
-      onReorderProjects={(ids) => void projectsHook.reorder(ids)}
-    />
-  ), [activeSessionId, handleCreate, handleCreateInProject, handleDeleteProject, handleDeleteSession, handleSelectById, projectsHook, rename, sessions]);
+  const list = useAgentLocalConversationList(s, activeSessionId);
 
   const detail = useMemo(() => (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
@@ -92,8 +79,9 @@ export const AgentLocalTab = memo(function AgentLocalTab({
           sessionId={activeSessionId ?? null}
           terminalOpen={terminal.isOpen}
           previewOpen={filePreview.open}
-          panelMode={forecastNav.panelMode}
-          showForecastDocs={filePreview.open && forecastNav.panelMode === "forecast"}
+          panelMode={availablePanel.panelMode}
+          browserStatus={availablePanel.browserStatus}
+          showForecastDocs={filePreview.open && availablePanel.panelMode === "forecast"}
           onTogglePreview={filePreview.toggleOpen}
           onOpenForecastDocs={handleOpenForecastDocs}
           onPanelModeChange={forecastNav.setPanelMode}
@@ -149,7 +137,7 @@ export const AgentLocalTab = memo(function AgentLocalTab({
           }}
           onFileOperationsChange={setFileOperations}
           onPreviewFullscreenChange={handlePreviewFullscreenChange}
-          panelMode={forecastNav.panelMode}
+          panelMode={availablePanel.panelMode}
           forecastContent={forecastContent}
           parentSessionId={displaySession?.parent_session_id}
           onOpenSubagent={(id) => void handleSelectById(id)}
@@ -187,7 +175,7 @@ export const AgentLocalTab = memo(function AgentLocalTab({
     activeSession?.name, activeSessionId, archive, currentDefault.model, currentDefault.provider, displayModel, displayProject?.path,
     displayProvider, displayReasoningMode, displaySession?.parent_session_id,
     displaySessionId,
-    fileOperations, filePreview, fileTreeNav, forecastNav.panelMode, forecastNav.setPanelMode, forecastContent,
+    availablePanel, fileOperations, filePreview, fileTreeNav, forecastNav.setPanelMode, forecastContent,
     fullscreenSwitching, handleAutoRename, handleCreateInProjectWithModel, handleCreateWithModel,
     handleOpenForecastDocs, handlePreviewFullscreenChange, handleSelectById, handleWelcomeSend,
     pendingFiles, pendingMessage, pendingSkills, pendingWorkingDir, projectsHook, refresh,

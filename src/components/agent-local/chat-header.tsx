@@ -5,6 +5,7 @@ import { Tooltip } from "@/components/ui/tooltip";
 import { svgSizeProps } from "@/components/ui/icon-size";
 import { MOD, ALT } from "@/lib/platform";
 import type { PanelMode } from "@/hooks/use-forecast-panel";
+import type { BrowserCapability } from "@/hooks/use-browser-capability";
 import type { SessionSummaryHookState } from "@/hooks/use-session-summary";
 import type { AgentPlanRun, SessionTabs } from "@/types/agent";
 import { ModeSelector } from "./mode-selector";
@@ -19,6 +20,7 @@ interface ChatHeaderProps {
   previewOpen: boolean;
   showForecastDocs?: boolean;
   panelMode?: PanelMode;
+  browserStatus?: BrowserCapability["status"];
   onToggleTerminal: () => void;
   onTogglePreview: () => void;
   onOpenForecastDocs?: () => void;
@@ -42,6 +44,7 @@ export function ChatHeader({
   previewOpen,
   showForecastDocs,
   panelMode,
+  browserStatus,
   onToggleTerminal,
   onTogglePreview,
   onOpenForecastDocs,
@@ -92,7 +95,11 @@ export function ChatHeader({
             </Tooltip>
           )}
           {previewOpen && panelMode && onPanelModeChange && (
-            <ModeSelector mode={panelMode} onChange={onPanelModeChange} />
+            <ModeSelector
+              mode={panelMode}
+              browserStatus={browserStatus}
+              onChange={onPanelModeChange}
+            />
           )}
           {sessionSummary && (
             <SessionSummaryBubble

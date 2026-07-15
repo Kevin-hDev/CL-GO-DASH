@@ -1,5 +1,6 @@
 [package]
 name = "cl-go-dash"
+default-run = "cl-go-dash"
 version = "0.9.6"
 edition = "2021"
 license = "Apache-2.0"
@@ -8,9 +9,22 @@ license = "Apache-2.0"
 name = "cl_go_dash_lib"
 crate-type = ["lib", "cdylib", "staticlib"]
 
+[features]
+default = []
+# Profil isolé réservé aux validations manuelles CEF. Les builds normaux
+# n'incluent pas cette redirection.
+cef-test-profile = []
+# Permet de vérifier le code Windows depuis un autre OS sans télécharger ni
+# lier le runtime natif. Les installateurs n'activent jamais cette option.
+cef-cross-check = ["cef/dox"]
+
 [[bin]]
 name = "cl-go-dash"
 path = "src/main.rs"
+
+[[bin]]
+name = "cl-go-dash-helper"
+path = "src/bin/cl-go-dash-helper.rs"
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
@@ -31,6 +45,7 @@ dirs = "6"
 chrono = { version = "0.4", features = ["serde"] }
 tokio = { version = "1", features = ["full"] }
 reqwest = { version = "0.13", features = ["json", "stream", "rustls", "query", "form"] }
+netstat2 = "=0.11.2"
 
 # Gateway messaging
 url = "2"
@@ -131,12 +146,19 @@ resvg = "0.47.0"
 [target.'cfg(target_os = "macos")'.dependencies]
 notify = { version = "7", features = ["macos_fsevent"] }
 core-foundation = "0.10"
+objc2 = "0.6"
+objc2-app-kit = { version = "0.3", features = ["NSApplication", "NSEvent", "NSView"] }
+objc2-foundation = { version = "0.3", default-features = false, features = ["std", "NSDate", "NSGeometry", "NSObject", "NSObjCRuntime", "NSRunLoop", "NSString", "NSTimer", "objc2-core-foundation"] }
+# Cargo ignore le suffixe build dans une contrainte semver ; Cargo.lock fixe
+# précisément le paquet publié 150.0.0+150.0.10.
+cef = { version = "=150.0.0", default-features = false, features = ["sandbox"] }
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"
 
 [target.'cfg(windows)'.dependencies]
-windows-sys = { version = "0.61", features = ["Win32_Storage_FileSystem"] }
+windows-sys = { version = "0.61", features = ["Win32_Storage_FileSystem", "Win32_UI_WindowsAndMessaging"] }
+cef = { version = "=150.0.0", default-features = false, features = ["sandbox"] }
 
 [dev-dependencies]
 # Mock de serveur HTTP pour tests d'intégration (LLM, search, gateway, forecast)

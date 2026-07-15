@@ -1,0 +1,64 @@
+.ib-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg);
+  background: var(--dialog-backdrop);
+  z-index: 10000;
+}
+
+.ib-dialog {
+  width: min(100%, 24rem);
+  padding: var(--space-lg);
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-lg);
+  background: var(--shell-opaque);
+  box-shadow: var(--shadow-lg);
+}
+
+.ib-dialog h2 {
+  margin: 0 0 var(--space-sm);
+  color: var(--ink);
+  font-size: var(--text-lg);
+}
+
+.ib-dialog p {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+.ib-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+}
+
+.ib-dialog-button {
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.ib-dialog-button:hover:not(:disabled) {
+  background: var(--surface-hover);
+}
+
+.ib-dialog-confirm {
+  border-color: var(--pulse);
+  background: var(--pulse);
+  color: var(--ink-on-pulse);
+}
+
+.ib-dialog-confirm:hover:not(:disabled) {
+  background: var(--pulse);
+}

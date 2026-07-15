@@ -8,7 +8,7 @@ export interface FilePreviewLayout {
 }
 
 export function findOpenPreviewPanel(): Element | null {
-  return document.querySelector(".fp-panel.open");
+  return document.querySelector(".asp-panel.open");
 }
 
 export function siblingPanelWidth(panel: Element | null, container: Element | null): number {

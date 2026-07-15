@@ -2,6 +2,9 @@ import { createElement, forwardRef } from "react";
 import type { LucideIcon, LucideProps } from "lucide-react";
 import {
   Archive as LuArchive,
+  ArrowLeft as LuArrowLeft,
+  ArrowRight as LuArrowRight,
+  ArrowUpRight as LuArrowUpRight,
   BookOpen as LuBookOpen,
   Check as LuCheck,
   CheckCircle2 as LuCheckCircle2,
@@ -10,6 +13,7 @@ import {
   Circle as LuCircle,
   Clock3 as LuClock3,
   FolderTree as LuFolderTree,
+  Globe2 as LuGlobe2,
   HelpCircle as LuHelpCircle,
   List as LuList,
   ListChecks as LuListChecks,
@@ -19,6 +23,7 @@ import {
   PanelRightOpen as LuPanelRightOpen,
   PauseCircle as LuPauseCircle,
   Plus as LuPlus,
+  RotateCw as LuRotateCw,
   Search as LuSearch,
   Settings as LuSettings,
   Square as LuSquare,
@@ -42,6 +47,9 @@ function withSafeCssSize(Component: LucideIcon): LucideIcon {
 }
 
 export const Archive = withSafeCssSize(LuArchive);
+export const ArrowLeft = withSafeCssSize(LuArrowLeft);
+export const ArrowRight = withSafeCssSize(LuArrowRight);
+export const ArrowUpRight = withSafeCssSize(LuArrowUpRight);
 export const BookOpen = withSafeCssSize(LuBookOpen);
 export const Check = withSafeCssSize(LuCheck);
 export const CheckCircle2 = withSafeCssSize(LuCheckCircle2);
@@ -50,6 +58,7 @@ export const ChevronRight = withSafeCssSize(LuChevronRight);
 export const Circle = withSafeCssSize(LuCircle);
 export const Clock3 = withSafeCssSize(LuClock3);
 export const FolderTree = withSafeCssSize(LuFolderTree);
+export const Globe2 = withSafeCssSize(LuGlobe2);
 export const HelpCircle = withSafeCssSize(LuHelpCircle);
 export const List = withSafeCssSize(LuList);
 export const ListChecks = withSafeCssSize(LuListChecks);
@@ -59,6 +68,7 @@ export const PanelRightClose = withSafeCssSize(LuPanelRightClose);
 export const PanelRightOpen = withSafeCssSize(LuPanelRightOpen);
 export const PauseCircle = withSafeCssSize(LuPauseCircle);
 export const Plus = withSafeCssSize(LuPlus);
+export const RotateCw = withSafeCssSize(LuRotateCw);
 export const Search = withSafeCssSize(LuSearch);
 export const Settings = withSafeCssSize(LuSettings);
 export const Square = withSafeCssSize(LuSquare);

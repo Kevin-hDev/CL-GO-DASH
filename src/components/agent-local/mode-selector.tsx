@@ -2,27 +2,40 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@/components/ui/tooltip";
+import { acquireBrowserNativeOcclusion } from "@/components/internal-browser/browser-native-occlusion";
+import type { BrowserCapability } from "@/hooks/use-browser-capability";
 import type { PanelMode } from "@/hooks/use-forecast-panel";
 import "./mode-selector.css";
 
 interface ModeSelectorProps {
   mode: PanelMode;
+  browserStatus?: BrowserCapability["status"];
   onChange: (mode: PanelMode) => void;
 }
 
-export function ModeSelector({ mode, onChange }: ModeSelectorProps) {
+export function ModeSelector({ mode, browserStatus = "hidden", onChange }: ModeSelectorProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const btnRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const releaseOcclusionRef = useRef<(() => void) | null>(null);
   const [pos, setPos] = useState({ top: 0, right: 0 });
 
   const openMenu = useCallback(() => {
+    const release = acquireBrowserNativeOcclusion();
+    if (!release) return;
+    releaseOcclusionRef.current = release;
     if (btnRef.current) {
       const r = btnRef.current.getBoundingClientRect();
       setPos({ top: r.bottom + 6, right: window.innerWidth - r.right });
     }
     setOpen(true);
+  }, []);
+
+  const closeMenu = useCallback(() => {
+    setOpen(false);
+    releaseOcclusionRef.current?.();
+    releaseOcclusionRef.current = null;
   }, []);
 
   useEffect(() => {
@@ -31,21 +44,26 @@ export function ModeSelector({ mode, onChange }: ModeSelectorProps) {
       const target = e.target as Node;
       if (btnRef.current?.contains(target)) return;
       if (menuRef.current?.contains(target)) return;
-      setOpen(false);
+      closeMenu();
     };
     document.addEventListener("mousedown", close);
     return () => document.removeEventListener("mousedown", close);
-  }, [open]);
+  }, [closeMenu, open]);
 
-  const pick = (m: PanelMode) => { onChange(m); setOpen(false); };
+  useEffect(() => () => {
+    releaseOcclusionRef.current?.();
+    releaseOcclusionRef.current = null;
+  }, []);
+
+  const pick = (m: PanelMode) => { onChange(m); closeMenu(); };
 
   return (
     <>
       <Tooltip label={t("forecast.panelMode.title")}>
         <button
           ref={btnRef}
-          className={`tab-action-btn ${mode === "forecast" ? "active" : ""}`}
-          onClick={() => (open ? setOpen(false) : openMenu())}
+          className={`tab-action-btn ${mode !== "preview" ? "active" : ""}`}
+          onClick={() => (open ? closeMenu() : openMenu())}
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
             stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"
@@ -57,15 +75,26 @@ export function ModeSelector({ mode, onChange }: ModeSelectorProps) {
         </button>
       </Tooltip>
       {open && createPortal(
-        <div ref={menuRef} className="ms-menu" style={{ top: pos.top, right: pos.right }}>
-          <button className="ms-item" onClick={() => pick("preview")}>
-            <span className={`ms-dot ${mode === "preview" ? "ms-dot-active" : ""}`} />
+        <div ref={menuRef} className="asp-mode-menu" style={{ top: pos.top, right: pos.right }}>
+          <button className="asp-mode-item" onClick={() => pick("preview")}>
+            <span className={`asp-mode-dot ${mode === "preview" ? "asp-mode-dot-active" : ""}`} />
             {t("forecast.panelMode.preview")}
           </button>
-          <button className="ms-item" onClick={() => pick("forecast")}>
-            <span className={`ms-dot ${mode === "forecast" ? "ms-dot-active" : ""}`} />
+          <button className="asp-mode-item" onClick={() => pick("forecast")}>
+            <span className={`asp-mode-dot ${mode === "forecast" ? "asp-mode-dot-active" : ""}`} />
             {t("forecast.panelMode.forecast")}
           </button>
+          {browserStatus !== "hidden" && (
+            <button
+              className="asp-mode-item"
+              disabled={browserStatus !== "ready"}
+              title={browserStatus === "unavailable" ? t("browser.unavailable") : undefined}
+              onClick={() => pick("browser")}
+            >
+              <span className={`asp-mode-dot ${mode === "browser" ? "asp-mode-dot-active" : ""}`} />
+              {t("browser.title")}
+            </button>
+          )}
         </div>,
         document.body,
       )}

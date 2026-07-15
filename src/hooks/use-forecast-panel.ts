@@ -3,7 +3,7 @@ import { listen } from "@tauri-apps/api/event";
 import { cleanupTauriListener } from "@/lib/tauri-listen";
 
 export type ForecastSection = "view" | "scenarios" | "comparisons" | "analysis" | "notes" | "history";
-export type PanelMode = "preview" | "forecast";
+export type PanelMode = "preview" | "forecast" | "browser";
 
 export interface ForecastPanelState {
   activeSection: ForecastSection;
@@ -35,7 +35,9 @@ function normalizePanelState(value: unknown): ForecastPanelState {
       : DEFAULT_PANEL_STATE.activeSection,
     navOpen: typeof raw.navOpen === "boolean" ? raw.navOpen : DEFAULT_PANEL_STATE.navOpen,
     currentAnalysisId: typeof raw.currentAnalysisId === "string" ? raw.currentAnalysisId : null,
-    panelMode: raw.panelMode === "forecast" ? "forecast" : "preview",
+    panelMode: raw.panelMode === "forecast" || raw.panelMode === "browser"
+      ? raw.panelMode
+      : "preview",
   };
 }
 

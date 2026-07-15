@@ -1,4 +1,4 @@
-.ms-menu {
+.asp-mode-menu {
   position: fixed;
   min-width: 160px;
   padding: 4px;
@@ -11,7 +11,7 @@
   -webkit-backdrop-filter: var(--popover-backdrop-filter, none);
 }
 
-.ms-item {
+.asp-mode-item {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -27,18 +27,28 @@
   cursor: pointer;
 }
 
-.ms-item:hover {
+.asp-mode-item:hover {
   color: var(--ink);
   background: var(--surface-hover);
 }
 
-.ms-dot {
+.asp-mode-item:disabled {
+  color: var(--ink-faint);
+  cursor: not-allowed;
+}
+
+.asp-mode-item:disabled:hover {
+  color: var(--ink-faint);
+  background: transparent;
+}
+
+.asp-mode-dot {
   width: 6px;
   height: 6px;
   border-radius: 999px;
   flex-shrink: 0;
 }
 
-.ms-dot-active {
+.asp-mode-dot-active {
   background: var(--pulse);
 }

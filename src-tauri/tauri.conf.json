@@ -5,7 +5,7 @@
   "identifier": "com.clgo.dash",
   "build": {
     "beforeDevCommand": "npm run dev",
-    "beforeBuildCommand": "npm run build && cd src-tauri && bash scripts/prepare-searxng.sh",
+    "beforeBuildCommand": "npm run build && cd src-tauri && bash scripts/prepare-searxng.sh && bash scripts/prepare-cef.sh",
     "devUrl": "http://localhost:5173",
     "frontendDist": "../dist"
   },
@@ -44,6 +44,17 @@
       "default-skills/**/*",
       "resources/forecast-sidecar/**/*",
       "resources/searxng-sidecar/**/*"
-    ]
+    ],
+    "macOS": {
+      "signingIdentity": "-",
+      "hardenedRuntime": false,
+      "frameworks": [
+        "target/cef-runtime/macos/Chromium Embedded Framework.framework"
+      ],
+      "files": {
+        "Frameworks": "target/cef-runtime/macos/helpers",
+        "Resources/cef/LICENSE.txt": "target/cef-runtime/macos/LICENSE.txt"
+      }
+    }
   }
 }
