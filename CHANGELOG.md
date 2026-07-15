@@ -4,6 +4,30 @@
 
 ---
 
+## v0.9.7
+
+### Features
+
+- **Embedded Chromium browser** — added a CEF-powered browser directly inside the shared side panel on macOS and Windows, without opening a separate native window.
+- **Multi-tab browser sessions** — added up to ten tabs per conversation, internal popup interception, lazy page restoration, shared cookies and signed-in sessions, and bounded native-view eviction.
+- **Local development discovery** — the browser home page now detects active local HTML sites without scanning every port and opens them with one click.
+- **Smart address bar** — web addresses work without an explicit protocol, localhost uses HTTP automatically, and other text is sent to Google Search.
+
+### Interface
+
+- **Shared panel integration** — File Preview, Forecast, and Browser now share the same mode selector, resizing, conversation preferences, and internal full-screen behavior.
+- **Responsive browser controls** — added compact tab and navigation bars, translated empty states and errors, light and dark themes, and layouts that adapt from narrow panels to full screen.
+- **Stable native layout** — Chromium now follows panel resizing, window resizing, mode changes, sidebars, menus, dialogs, reloads, and full-screen transitions without stale views or visual overflow.
+
+### Security and packaging
+
+- **Hardened browsing boundary** — limited navigation to validated HTTP and HTTPS URLs, blocked invalid certificates and external protocols, refused sensitive permissions and downloads, and exposed no Tauri bridge to visited pages.
+- **Protected browser data** — encrypted restored tab state with the existing OS-backed vault, kept the Chromium profile private, bounded browser collections, and verified cookie protection before enabling the feature.
+- **Verified CEF runtime** — pinned CEF `150.0.0+150.0.10`, added SHA-256 integrity checks, sandboxed helper processes, and bundled the required Chromium frameworks, helpers, resources, and licenses for macOS and Windows.
+- **Platform availability** — Linux continues to compile and run without CEF, and the Browser entry remains hidden until an embedded Linux engine is supported.
+
+---
+
 ## v0.9.6
 
 ### Features

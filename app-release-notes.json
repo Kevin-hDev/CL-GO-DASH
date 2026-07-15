@@ -1,4 +1,55 @@
 {
+  "0.9.7": {
+    "de": [
+      "Ein Chromium-Browser ist jetzt unter macOS und Windows in das gemeinsame Seitenpanel integriert, einschließlich Tabs, Navigation, Größenänderung und internem Vollbild.",
+      "Browser-Tabs werden pro Unterhaltung wiederhergestellt, während ein gemeinsames Profil Cookies und angemeldete Sitzungen beibehält.",
+      "Die Startseite erkennt lokale Entwicklungsseiten, und die Adressleiste akzeptiert Webadressen oder Google-Suchen.",
+      "Browserdaten, Berechtigungen, Zertifikate, externe Protokolle, CEF-Dateien und die Position nativer Ansichten werden strenger geschützt.",
+      "Unter Linux bleibt der Browser-Eintrag verborgen, bis die eingebettete CEF-Engine dort unterstützt wird."
+    ],
+    "en": [
+      "A Chromium browser is now built into the shared side panel on macOS and Windows, with tabs, navigation, resizing, and internal full screen.",
+      "Browser tabs are restored per conversation, while a shared profile keeps cookies and signed-in sessions available.",
+      "The home page detects local development sites, and the address bar accepts web addresses or Google searches.",
+      "Browser state, permissions, certificates, external protocols, CEF files, and native view positioning now use stricter security controls.",
+      "Linux keeps the Browser entry hidden until the embedded CEF engine is supported there."
+    ],
+    "es": [
+      "Un navegador Chromium está integrado en el panel lateral compartido de macOS y Windows, con pestañas, navegación, tamaño ajustable y pantalla completa interna.",
+      "Las pestañas se restauran por conversación, mientras un perfil compartido conserva las cookies y las sesiones iniciadas.",
+      "La página de inicio detecta sitios de desarrollo locales y la barra acepta direcciones web o búsquedas de Google.",
+      "El estado, los permisos, los certificados, los protocolos externos, los archivos CEF y la posición de la vista tienen controles más estrictos.",
+      "En Linux, la entrada Navegador permanece oculta hasta que el motor CEF integrado sea compatible."
+    ],
+    "fr": [
+      "Un navigateur Chromium est maintenant intégré au panneau latéral partagé sur macOS et Windows, avec onglets, navigation, redimensionnement et plein écran interne.",
+      "Les onglets sont restaurés par conversation, tandis qu'un profil partagé conserve les cookies et les sessions connectées.",
+      "La page d'accueil détecte les sites de développement locaux et la barre accepte les adresses web ou les recherches Google.",
+      "L'état, les permissions, les certificats, les protocoles externes, les fichiers CEF et le placement natif utilisent des contrôles renforcés.",
+      "Sous Linux, l'entrée Navigateur reste masquée jusqu'à la prise en charge du moteur CEF intégré."
+    ],
+    "it": [
+      "Un browser Chromium è ora integrato nel pannello laterale condiviso su macOS e Windows, con schede, navigazione, ridimensionamento e schermo intero interno.",
+      "Le schede vengono ripristinate per conversazione, mentre un profilo condiviso conserva cookie e sessioni connesse.",
+      "La pagina iniziale rileva i siti di sviluppo locali e la barra accetta indirizzi web o ricerche Google.",
+      "Stato, permessi, certificati, protocolli esterni, file CEF e posizione della vista nativa usano controlli più rigorosi.",
+      "Su Linux, la voce Browser resta nascosta finché il motore CEF integrato non sarà supportato."
+    ],
+    "ja": [
+      "macOS と Windows の共有サイドパネルに Chromium ブラウザーを統合し、タブ、ナビゲーション、サイズ変更、内部全画面表示に対応しました。",
+      "ブラウザータブは会話ごとに復元され、共有プロファイルによって Cookie とログイン状態が維持されます。",
+      "ホーム画面でローカル開発サイトを検出でき、アドレスバーから Web アドレスまたは Google 検索を開けます。",
+      "状態、権限、証明書、外部プロトコル、CEF ファイル、ネイティブビュー配置の保護を強化しました。",
+      "Linux では、組み込み CEF エンジンが対応するまでブラウザー項目は表示されません。"
+    ],
+    "zh": [
+      "macOS 和 Windows 的共享侧边面板现已集成 Chromium 浏览器，并支持标签页、导航、调整大小和应用内全屏。",
+      "浏览器标签页会按对话恢复，共享配置文件会保留 Cookie 和登录会话。",
+      "主页可以检测本地开发站点，地址栏可以打开网页地址或执行 Google 搜索。",
+      "浏览器状态、权限、证书、外部协议、CEF 文件和原生视图定位现在使用更严格的安全控制。",
+      "Linux 会继续隐藏浏览器入口，直到支持嵌入式 CEF 引擎。"
+    ]
+  },
   "0.9.6": {
     "de": [
       "Archivierte Chats können wiederhergestellt oder endgültig gelöscht werden, und Unterhaltungen lassen sich in isolierte Zweige klonen.",
