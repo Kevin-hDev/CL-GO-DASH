@@ -15,6 +15,8 @@ HELPERS=(
 SIGNING_IDENTITY="${APPLE_SIGNING_IDENTITY:--}"
 DEV_PREP="${CLGO_CEF_DEV_PREP:-0}"
 ALLOW_ADHOC_SIGNING="${CLGO_CEF_ALLOW_ADHOC_SIGNING:-0}"
+BUILD_TARGET="${CARGO_BUILD_TARGET:-}"
+TARGET_RELEASE_DIR="target/release"
 if [[ -z "$SIGNING_IDENTITY" || ${#SIGNING_IDENTITY} -gt 256 \
   || "$SIGNING_IDENTITY" == *$'\n'* || "$SIGNING_IDENTITY" == *$'\r'* \
   || "$SIGNING_IDENTITY" == *$'\t'* ]]; then
@@ -28,6 +30,13 @@ fi
 if [[ "$ALLOW_ADHOC_SIGNING" != "0" && "$ALLOW_ADHOC_SIGNING" != "1" ]]; then
   echo "CEF signing mode is invalid" >&2
   exit 1
+fi
+if [[ -n "$BUILD_TARGET" ]]; then
+  if [[ "$BUILD_TARGET" != "aarch64-apple-darwin" ]]; then
+    echo "CEF build target is invalid" >&2
+    exit 1
+  fi
+  TARGET_RELEASE_DIR="target/$BUILD_TARGET/release"
 fi
 if [[ "$SIGNING_IDENTITY" == "-" && "$DEV_PREP" != "1" \
   && "$ALLOW_ADHOC_SIGNING" != "1" ]]; then
@@ -76,7 +85,7 @@ for helper in "${HELPERS[@]}"; do
   app="$STAGE/helpers/$helper.app"
   destination="$STAGE/helpers/$helper.app/Contents/MacOS/$helper"
   mkdir -p "$(dirname "$destination")"
-  install -m 755 "target/release/cl-go-dash-helper" "$destination"
+  install -m 755 "$TARGET_RELEASE_DIR/cl-go-dash-helper" "$destination"
   codesign --force --options runtime --entitlements "$ENTITLEMENTS" \
     --sign "$SIGNING_IDENTITY" "$destination"
   codesign --force --options runtime --entitlements "$ENTITLEMENTS" \

@@ -57,6 +57,11 @@ if ([string]::IsNullOrWhiteSpace($BuildTarget)) {
   }
   $TargetDir = Join-Path $TauriDir "target\$BuildTarget\release"
 }
+$CargoManifest = Join-Path $TauriDir "Cargo.toml"
+& cargo build --release --lib --manifest-path $CargoManifest
+if ($LASTEXITCODE -ne 0) {
+  throw "CEF runtime validation failed"
+}
 $StageDir = Join-Path $TauriDir "target\cef-runtime\windows"
 $CefRoot = Join-Path $TauriDir ".cef-verified\current"
 if (-not (Test-Path -LiteralPath $CefRoot -PathType Container)) {

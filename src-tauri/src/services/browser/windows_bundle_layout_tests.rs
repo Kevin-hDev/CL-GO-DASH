@@ -42,6 +42,13 @@ fn windows_bundle_hook_pins_and_verifies_the_cef_bootstrap() {
     assert!(script.contains("CREDITS.html"));
     assert!(script.contains("$env:CARGO_BUILD_TARGET"));
     assert!(script.contains("target\\$BuildTarget\\release"));
+    let library_build = script
+        .find("cargo build --release --lib")
+        .expect("explicit Windows application DLL build");
+    let library_staging = script
+        .find("$ApplicationDll")
+        .expect("Windows application DLL staging");
+    assert!(library_build < library_staging);
 }
 
 #[test]

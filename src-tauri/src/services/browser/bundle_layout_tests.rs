@@ -142,6 +142,9 @@ fn macos_development_runner_uses_a_real_application_bundle() {
     assert!(preparation.contains("Release/Chromium Embedded Framework.framework"));
     assert!(preparation.contains("CLGO_CEF_ALLOW_ADHOC_SIGNING"));
     assert!(preparation.contains("CEF ad hoc release signing must be explicitly allowed"));
+    assert!(preparation.contains("CARGO_BUILD_TARGET"));
+    assert!(preparation.contains("target/$BUILD_TARGET/release"));
+    assert!(preparation.contains("$TARGET_RELEASE_DIR/cl-go-dash-helper"));
 
     let workflow = std::fs::read_to_string(root.join("../.github/workflows/release.yml"))
         .expect("release workflow");
