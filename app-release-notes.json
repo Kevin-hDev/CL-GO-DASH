@@ -1,4 +1,41 @@
 {
+  "0.9.8": {
+    "de": [
+      "Windows-Installationspakete können wieder erstellt werden, da die Chromium-Dateien nun in der erwarteten Struktur vorbereitet werden.",
+      "macOS-Disk-Images verwenden jetzt ausdrücklich die lokale Signaturmethode des Projekts.",
+      "Veraltete Chromium-Caches werden automatisch ersetzt, und neue Tests schützen die Release-Builds."
+    ],
+    "en": [
+      "Windows installers can be built again because Chromium files are now prepared in the expected layout.",
+      "macOS disk images now explicitly use the project's local signing method.",
+      "Outdated Chromium caches are replaced automatically, and new tests protect release builds."
+    ],
+    "es": [
+      "Los instaladores de Windows se pueden volver a crear porque los archivos de Chromium ahora usan la estructura esperada.",
+      "Las imágenes de disco de macOS ahora utilizan explícitamente el método de firma local del proyecto.",
+      "Las cachés antiguas de Chromium se reemplazan automáticamente y nuevas pruebas protegen las compilaciones de publicación."
+    ],
+    "fr": [
+      "Les installateurs Windows peuvent de nouveau être créés, car les fichiers Chromium utilisent maintenant la structure attendue.",
+      "Les images disque macOS utilisent maintenant explicitement la méthode de signature locale du projet.",
+      "Les anciens caches Chromium sont remplacés automatiquement et de nouveaux tests protègent les builds de publication."
+    ],
+    "it": [
+      "Gli installer Windows possono essere creati di nuovo perché i file Chromium ora usano la struttura prevista.",
+      "Le immagini disco macOS ora utilizzano esplicitamente il metodo di firma locale del progetto.",
+      "Le vecchie cache Chromium vengono sostituite automaticamente e nuovi test proteggono le build di rilascio."
+    ],
+    "ja": [
+      "Chromium ファイルを必要な構成で準備するよう修正し、Windows インストーラーを再び作成できるようにしました。",
+      "macOS のディスクイメージで、プロジェクトのローカル署名方式を明示的に使用するようにしました。",
+      "古い Chromium キャッシュを自動的に置き換え、リリースビルドを守るテストを追加しました。"
+    ],
+    "zh": [
+      "Chromium 文件现在会按预期结构准备，因此可以再次构建 Windows 安装程序。",
+      "macOS 磁盘映像现在会明确使用项目的本地签名方式。",
+      "旧的 Chromium 缓存会自动替换，并新增测试来保护发布构建。"
+    ]
+  },
   "0.9.7": {
     "de": [
       "Ein Chromium-Browser ist jetzt unter macOS und Windows in das gemeinsame Seitenpanel integriert, einschließlich Tabs, Navigation, Größenänderung und internem Vollbild.",

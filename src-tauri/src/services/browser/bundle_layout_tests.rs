@@ -140,5 +140,11 @@ fn macos_development_runner_uses_a_real_application_bundle() {
     let preparation = std::fs::read_to_string(root.join("scripts/prepare-cef.sh"))
         .expect("CEF runtime preparation");
     assert!(preparation.contains("Release/Chromium Embedded Framework.framework"));
-    assert!(preparation.contains("CEF release signing identity is required"));
+    assert!(preparation.contains("CLGO_CEF_ALLOW_ADHOC_SIGNING"));
+    assert!(preparation.contains("CEF ad hoc release signing must be explicitly allowed"));
+
+    let workflow = std::fs::read_to_string(root.join("../.github/workflows/release.yml"))
+        .expect("release workflow");
+    assert!(workflow
+        .contains("CLGO_CEF_ALLOW_ADHOC_SIGNING: ${{ runner.os == 'macOS' && '1' || '0' }}"));
 }

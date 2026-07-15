@@ -51,13 +51,11 @@ if ($LASTEXITCODE -ne 0) {
 $TargetDir = Join-Path $TauriDir "target\release"
 $StageDir = Join-Path $TauriDir "target\cef-runtime\windows"
 $CefRoot = Join-Path $TauriDir ".cef-verified\current"
-$ReleaseDir = Join-Path $CefRoot "Release"
-$ResourcesDir = Join-Path $CefRoot "Resources"
 if (-not (Test-Path -LiteralPath $CefRoot -PathType Container)) {
   throw "CEF runtime validation failed"
 }
 
-$Bootstrap = Join-Path $ReleaseDir "bootstrap.exe"
+$Bootstrap = Join-Path $CefRoot "bootstrap.exe"
 Assert-RegularFile $Bootstrap
 $BootstrapSha256 = (Get-FileHash -LiteralPath $Bootstrap -Algorithm SHA256).Hash.ToLowerInvariant()
 if ($BootstrapSha256 -ne $ExpectedBootstrapSha256) {
@@ -74,13 +72,13 @@ New-Item -ItemType Directory -Path $LocalesDir | Out-Null
 New-Item -ItemType Directory -Path $LicensesDir | Out-Null
 
 foreach ($Name in $BinaryFiles) {
-  Copy-CheckedFile (Join-Path $ReleaseDir $Name) (Join-Path $StageDir $Name)
+  Copy-CheckedFile (Join-Path $CefRoot $Name) (Join-Path $StageDir $Name)
 }
 foreach ($Name in $ResourceFiles) {
-  Copy-CheckedFile (Join-Path $ResourcesDir $Name) (Join-Path $StageDir $Name)
+  Copy-CheckedFile (Join-Path $CefRoot $Name) (Join-Path $StageDir $Name)
 }
 foreach ($Name in $LocaleFiles) {
-  Copy-CheckedFile (Join-Path $ResourcesDir "locales\$Name") (Join-Path $LocalesDir $Name)
+  Copy-CheckedFile (Join-Path $CefRoot "locales\$Name") (Join-Path $LocalesDir $Name)
 }
 
 $Credits = Join-Path $CefRoot "CREDITS.html"

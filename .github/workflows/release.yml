@@ -76,6 +76,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ""
           APPIMAGE_EXTRACT_AND_RUN: "1"
+          CLGO_CEF_ALLOW_ADHOC_SIGNING: ${{ runner.os == 'macOS' && '1' || '0' }}
         with:
           tagName: ${{ inputs.version || github.ref_name }}
           releaseName: "CL-GO ${{ inputs.version || github.ref_name }}"

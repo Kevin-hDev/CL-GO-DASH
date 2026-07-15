@@ -34,8 +34,9 @@ fn windows_bundle_hook_pins_and_verifies_the_cef_bootstrap() {
     assert!(!script.contains("ExpectedArchiveSha1"));
     assert!(!script.contains("Algorithm SHA1"));
     assert!(script.contains("eab5d939293a666b210b8f5faec191324a017d6105485cfc45150863607bd367"));
-    assert!(script.contains("Release"));
-    assert!(script.contains("Resources"));
+    assert!(!script.contains("Join-Path $CefRoot \"Release\""));
+    assert!(!script.contains("Join-Path $CefRoot \"Resources\""));
+    assert!(script.contains("Join-Path $CefRoot \"locales"));
     assert!(script.contains("cl-go-dash.dll"));
     assert!(script.contains("LICENSE.txt"));
     assert!(script.contains("CREDITS.html"));

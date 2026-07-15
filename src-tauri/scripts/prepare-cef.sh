@@ -14,6 +14,7 @@ HELPERS=(
 )
 SIGNING_IDENTITY="${APPLE_SIGNING_IDENTITY:--}"
 DEV_PREP="${CLGO_CEF_DEV_PREP:-0}"
+ALLOW_ADHOC_SIGNING="${CLGO_CEF_ALLOW_ADHOC_SIGNING:-0}"
 if [[ -z "$SIGNING_IDENTITY" || ${#SIGNING_IDENTITY} -gt 256 \
   || "$SIGNING_IDENTITY" == *$'\n'* || "$SIGNING_IDENTITY" == *$'\r'* \
   || "$SIGNING_IDENTITY" == *$'\t'* ]]; then
@@ -24,8 +25,13 @@ if [[ "$DEV_PREP" != "0" && "$DEV_PREP" != "1" ]]; then
   echo "CEF build mode is invalid" >&2
   exit 1
 fi
-if [[ "$SIGNING_IDENTITY" == "-" && "$DEV_PREP" != "1" ]]; then
-  echo "CEF release signing identity is required" >&2
+if [[ "$ALLOW_ADHOC_SIGNING" != "0" && "$ALLOW_ADHOC_SIGNING" != "1" ]]; then
+  echo "CEF signing mode is invalid" >&2
+  exit 1
+fi
+if [[ "$SIGNING_IDENTITY" == "-" && "$DEV_PREP" != "1" \
+  && "$ALLOW_ADHOC_SIGNING" != "1" ]]; then
+  echo "CEF ad hoc release signing must be explicitly allowed" >&2
   exit 1
 fi
 ENTITLEMENTS="Entitlements.plist"
