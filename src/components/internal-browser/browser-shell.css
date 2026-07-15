@@ -142,10 +142,6 @@
   flex: 1;
 }
 
-.ib-address-form:focus-within {
-  border-color: var(--pulse);
-}
-
 .ib-address-input {
   min-width: 0;
   padding: var(--browser-field-padding-y) var(--space-sm);
