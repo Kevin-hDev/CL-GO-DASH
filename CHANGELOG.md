@@ -19,6 +19,10 @@
 - **Responsive browser controls** — added compact tab and navigation bars, translated empty states and errors, light and dark themes, and layouts that adapt from narrow panels to full screen.
 - **Stable native layout** — Chromium now follows panel resizing, window resizing, mode changes, sidebars, menus, dialogs, reloads, and full-screen transitions without stale views or visual overflow.
 
+### Bug Fixes
+
+- **Windows startup** — fixed an issue that could close the app immediately after launch while private storage permissions were being checked.
+
 ### Security and packaging
 
 - **Hardened browsing boundary** — limited navigation to validated HTTP and HTTPS URLs, blocked invalid certificates and external protocols, refused sensitive permissions and downloads, and exposed no Tauri bridge to visited pages.

@@ -1,8 +1,6 @@
+use super::{windows_acl, windows_token};
 use std::os::windows::ffi::OsStrExt;
 use std::path::Path;
-use std::process::Command;
-
-const MAX_OUTPUT: usize = 65_536;
 
 pub fn replace_file(source: &Path, destination: &Path) -> Result<(), String> {
     use windows_sys::Win32::Storage::FileSystem::{
@@ -23,62 +21,22 @@ pub fn replace_file(source: &Path, destination: &Path) -> Result<(), String> {
 }
 
 pub fn secure_acl(path: &Path) -> Result<(), String> {
-    let sid = current_user_sid()?;
-    let grant = if path.is_dir() {
-        format!("*{sid}:(OI)(CI)F")
-    } else {
-        format!("*{sid}:(F)")
+    let user = windows_token::current_user()?;
+    let path = wide(path);
+    let is_directory = path_is_directory(path.as_slice())?;
+    windows_acl::apply_and_verify(&path, user.sid(), is_directory)
+}
+
+fn path_is_directory(path: &[u16]) -> Result<bool, String> {
+    use windows_sys::Win32::Storage::FileSystem::{
+        GetFileAttributesW, FILE_ATTRIBUTE_DIRECTORY, INVALID_FILE_ATTRIBUTES,
     };
-    let status = Command::new("icacls")
-        .arg(path.as_os_str())
-        .args(["/inheritance:r", "/grant:r"])
-        .arg(&grant)
-        .args(["/remove:g", "*S-1-1-0", "*S-1-5-11", "*S-1-5-32-545"])
-        .status()
-        .map_err(|_| "stockage privé indisponible".to_string())?;
-    if !status.success() {
-        return Err("stockage privé indisponible".to_string());
+    let attributes = unsafe { GetFileAttributesW(path.as_ptr()) };
+    if attributes == INVALID_FILE_ATTRIBUTES {
+        Err("stockage privé indisponible".to_string())
+    } else {
+        Ok(attributes & FILE_ATTRIBUTE_DIRECTORY != 0)
     }
-    verify_acl(path, &sid)
-}
-
-fn current_user_sid() -> Result<String, String> {
-    let output = Command::new("whoami")
-        .args(["/user", "/fo", "csv", "/nh"])
-        .output()
-        .map_err(|_| "stockage privé indisponible".to_string())?;
-    if !output.status.success() || output.stdout.len() > MAX_OUTPUT {
-        return Err("stockage privé indisponible".to_string());
-    }
-    let text =
-        String::from_utf8(output.stdout).map_err(|_| "stockage privé indisponible".to_string())?;
-    let sid = text
-        .split(',')
-        .nth(1)
-        .map(|value| value.trim().trim_matches('"').to_string())
-        .ok_or_else(|| "stockage privé indisponible".to_string())?;
-    let valid = regex::Regex::new(r"^S-\d(?:-\d+)+$")
-        .map_err(|_| "stockage privé indisponible".to_string())?;
-    valid
-        .is_match(&sid)
-        .then_some(sid)
-        .ok_or_else(|| "stockage privé indisponible".to_string())
-}
-
-fn verify_acl(path: &Path, sid: &str) -> Result<(), String> {
-    let output = Command::new("icacls")
-        .arg(path.as_os_str())
-        .output()
-        .map_err(|_| "stockage privé indisponible".to_string())?;
-    if !output.status.success() || output.stdout.len() > MAX_OUTPUT {
-        return Err("stockage privé indisponible".to_string());
-    }
-    let text = String::from_utf8_lossy(&output.stdout);
-    let forbidden = ["S-1-1-0", "S-1-5-11", "S-1-5-32-545"];
-    if !text.contains(sid) || forbidden.iter().any(|entry| text.contains(entry)) {
-        return Err("stockage privé indisponible".to_string());
-    }
-    Ok(())
 }
 
 fn wide(path: &Path) -> Vec<u16> {

@@ -131,6 +131,10 @@ fn sync_parent(_parent: &Path) -> Result<(), String> {
 
 #[cfg(windows)]
 mod private_store_windows;
+#[cfg(windows)]
+mod windows_acl;
+#[cfg(windows)]
+mod windows_token;
 
 #[cfg(test)]
 #[path = "private_store_tests.rs"]
