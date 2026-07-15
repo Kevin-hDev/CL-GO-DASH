@@ -54,11 +54,18 @@ fn windows_release_exposes_the_explicit_cargo_target_to_the_bundle_hook() {
 }
 
 #[test]
-fn windows_ci_prefers_the_verified_cef_runtime_when_starting_tests() {
+fn windows_ci_places_the_verified_cef_runtime_next_to_test_binaries() {
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
     let workflow =
         std::fs::read_to_string(root.join("../.github/workflows/ci.yml")).expect("CI workflow");
+    let preparation =
+        std::fs::read_to_string(root.join("scripts/prepare-cef-windows-test-runtime.ps1"))
+            .expect("Windows test runtime preparation");
 
-    assert!(workflow.contains("Resolve-Path \".cef-verified/current\""));
-    assert!(workflow.contains("$env:PATH = \"$cefRoot;$env:PATH\""));
+    assert!(workflow.contains("cargo test --lib services::private_store::tests --no-run"));
+    assert!(workflow.contains("prepare-cef-windows-test-runtime.ps1"));
+    assert!(preparation.contains("target\\debug\\deps"));
+    assert!(preparation.contains("libcef.dll"));
+    assert!(preparation.contains("dxcompiler.dll"));
+    assert!(preparation.contains("dxil.dll"));
 }
