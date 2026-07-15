@@ -98,6 +98,10 @@ pub(super) enum SurfaceUpdate {
 }
 
 impl SurfaceTracker {
+    pub(super) fn reset(&mut self) {
+        self.last = None;
+    }
+
     pub(super) fn classify(&mut self, next: BrowserSurfaceBounds) -> SurfaceUpdate {
         if next.validate().is_err() {
             return SurfaceUpdate::Stale;

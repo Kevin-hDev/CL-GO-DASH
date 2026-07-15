@@ -118,7 +118,6 @@ export function AgentChatDetail(props: AgentChatDetailProps) {
         open={props.filePreview.open}
         fullscreen={props.filePreview.fullscreen}
         displayWidth={layout.previewWidth}
-        fullscreenWidth={props.filePreview.fullscreenWidth}
         fullscreenSwitching={props.fullscreenSwitching}
         resizing={props.filePreview.resizing}
         onResizeStart={props.filePreview.startResize}

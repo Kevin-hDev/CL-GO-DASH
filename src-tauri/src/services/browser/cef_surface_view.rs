@@ -81,6 +81,13 @@ impl CefBrowserView {
         Ok(())
     }
 
+    pub(super) fn hide_current(&mut self, app: &tauri::AppHandle) -> Result<(), ()> {
+        if let Some((browser, bounds)) = self.slot.hide_requested_surface()? {
+            native_surface::update_browser(app, &browser, &bounds)?;
+        }
+        Ok(())
+    }
+
     pub(super) fn action(&mut self, action: BrowserNavigationAction) -> Result<(), ()> {
         let browser = self.slot.browser().ok_or(())?;
         match action {
@@ -102,9 +109,8 @@ impl CefBrowserView {
         app: Option<&tauri::AppHandle>,
     ) -> Option<super::runtime_revision::RuntimeStamp> {
         let stamp = self.slot.next_runtime_stamp();
-        if let (Some(app), Ok(Some((browser, bounds)))) = (app, self.slot.hide_requested_surface())
-        {
-            let _ = native_surface::update_browser(app, &browser, &bounds);
+        if let Some(app) = app {
+            let _ = self.hide_current(app);
         }
         self.slot.close();
         self.client = None;

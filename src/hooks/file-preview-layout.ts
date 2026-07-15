@@ -7,10 +7,6 @@ export interface FilePreviewLayout {
   chatMinWidth: number;
 }
 
-export function findOpenPreviewPanel(): Element | null {
-  return document.querySelector(".asp-panel.open");
-}
-
 export function findPanelForResizeHandle(handle: HTMLElement): Element | null {
   const slot = handle.closest(".asp-resize-slot");
   const panel = slot?.nextElementSibling ?? null;
@@ -39,9 +35,4 @@ export function measurePreviewLayout(panel: Element | null, extraWidth: number):
     reservedWidth: extraWidth + siblingPanelWidth(panel, container),
     chatMinWidth: chatMinWidthForContainer(container),
   };
-}
-
-export function measurePreviewFullscreenWidth(panel: Element | null): number {
-  const layout = measurePreviewLayout(panel, 0);
-  return Math.max(0, layout.containerWidth - layout.reservedWidth);
 }

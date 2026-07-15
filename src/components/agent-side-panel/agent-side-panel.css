@@ -36,9 +36,10 @@
 }
 
 .asp-panel.fullscreen {
-  width: var(--asp-full-width) !important;
+  width: auto !important;
   max-width: 100%;
   border-left: 0;
+  flex: 1 1 0;
 }
 
 .asp-slide-wrapper {

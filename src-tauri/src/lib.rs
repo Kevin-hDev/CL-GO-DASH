@@ -72,6 +72,13 @@ pub fn run() {
         .manage(GatewayService::new())
         .manage(commands::file_tree_watcher::FileTreeWatcher::new())
         .manage(services::forecast::sidecar::ChronosSidecar::new())
+        .on_page_load(|webview, payload| {
+            if webview.label() == "main"
+                && matches!(payload.event(), tauri::webview::PageLoadEvent::Started)
+            {
+                services::browser::reset_page_surface(webview.app_handle());
+            }
+        })
         .setup(|app| {
             let startup_cutoff = chrono::Utc::now();
             services::agent_local::app_handle_global::init(app.handle().clone());

@@ -94,6 +94,17 @@ impl BrowserSurfaceManager {
         }
     }
 
+    pub(super) fn reset_page_surface(&mut self, app: &tauri::AppHandle) -> Result<(), ()> {
+        let mut failed = false;
+        for view in &mut self.views {
+            failed |= view.hide_current(app).is_err();
+        }
+        self.active = None;
+        self.tracked_key = None;
+        self.tracker.reset();
+        (!failed).then_some(()).ok_or(())
+    }
+
     pub(super) fn close(&mut self) {
         for view in &mut self.views {
             let _ = view.close(None);

@@ -31,8 +31,7 @@ export function useFilePreview(
   const [listMode, setListMode] = useState<FilePreviewListMode>("latest");
   const [tabIds, setTabIds] = useState<string[]>(() => readStoredFilePreviewTabs(sessionId));
   const [fallbackOps, setFallbackOps] = useState<FileOperation[]>([]);
-  const { fullscreenWidth, resizing, startResize } = useFilePreviewResize({
-    open,
+  const { resizing, startResize } = useFilePreviewResize({
     width,
     extraWidth,
     setWidth,
@@ -135,7 +134,6 @@ export function useFilePreview(
     tabs,
     width,
     extraWidth,
-    fullscreenWidth,
     resizing,
     setOpen,
     setFullscreen,

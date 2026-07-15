@@ -12,7 +12,6 @@ function filePreviewState() {
     tabs: [],
     width: 360,
     extraWidth: 0,
-    fullscreenWidth: 1200,
     resizing: false,
     setOpen: vi.fn(),
     setFullscreen: vi.fn(),

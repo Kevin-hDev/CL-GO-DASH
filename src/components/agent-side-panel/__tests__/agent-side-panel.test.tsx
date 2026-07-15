@@ -12,7 +12,6 @@ describe("AgentSidePanel", () => {
         open
         fullscreen={false}
         displayWidth={600}
-        fullscreenWidth={1000}
         fullscreenSwitching={false}
         resizing={false}
         mode="browser"
@@ -28,5 +27,24 @@ describe("AgentSidePanel", () => {
     expect(slot).not.toBeNull();
     expect(slot?.nextElementSibling).toBe(panel);
     expect(handle?.parentElement).toBe(slot);
+  });
+
+  it("laisse le layout flex remplir le plein écran sans largeur figée", () => {
+    const view = render(
+      <AgentSidePanel
+        open
+        fullscreen
+        displayWidth={600}
+        fullscreenSwitching={false}
+        resizing={false}
+        mode="browser"
+        onResizeStart={vi.fn()}
+        previewContent={null}
+      />,
+    );
+
+    const panel = view.container.querySelector<HTMLElement>(".asp-panel");
+
+    expect(panel?.style.getPropertyValue("--asp-full-width")).toBe("");
   });
 });

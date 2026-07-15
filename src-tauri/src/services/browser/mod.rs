@@ -185,6 +185,24 @@ pub(crate) fn setup_on_run_event(app: &tauri::AppHandle, event: &tauri::RunEvent
     cef_engine::initialize(app.clone(), runtime);
 }
 
+pub(crate) fn reset_page_surface(_app: &tauri::AppHandle) {
+    #[cfg(any(target_os = "macos", target_os = "windows"))]
+    {
+        let app = _app;
+        let main_app = app.clone();
+        if app
+            .run_on_main_thread(move || {
+                if cef_engine::reset_page_surface(&main_app).is_err() {
+                    eprintln!("[browser] surface reset failed");
+                }
+            })
+            .is_err()
+        {
+            eprintln!("[browser] surface reset unavailable");
+        }
+    }
+}
+
 pub fn capability(app: &tauri::AppHandle) -> BrowserCapability {
     capability_for_runtime(app.state::<BrowserRuntimeHandle>().inner())
 }

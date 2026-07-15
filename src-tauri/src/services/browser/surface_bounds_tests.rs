@@ -42,6 +42,15 @@ fn surface_tracker_ignores_stale_and_identical_updates() {
 }
 
 #[test]
+fn surface_tracker_accepts_a_fresh_generation_after_page_reload() {
+    let mut tracker = SurfaceTracker::default();
+
+    assert_eq!(tracker.classify(bounds(9)), SurfaceUpdate::Changed);
+    tracker.reset();
+    assert_eq!(tracker.classify(bounds(1)), SurfaceUpdate::Changed);
+}
+
+#[test]
 fn css_coordinates_are_flipped_for_the_native_macos_view() {
     assert_eq!(
         bounds(1).native_rect(900),

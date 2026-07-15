@@ -137,6 +137,16 @@ pub(super) fn close_view(app: &tauri::AppHandle, key: &BrowserViewKey) -> Result
     })
 }
 
+pub(super) fn reset_page_surface(app: &tauri::AppHandle) -> Result<(), ()> {
+    ENGINE.with(|engine| {
+        let mut engine = engine.borrow_mut();
+        let Some(engine) = engine.as_mut() else {
+            return Ok(());
+        };
+        engine.surface.reset_page_surface(app)
+    })
+}
+
 pub(super) fn shutdown(runtime: &BrowserRuntimeHandle) {
     if !runtime.begin_stopping() {
         return;

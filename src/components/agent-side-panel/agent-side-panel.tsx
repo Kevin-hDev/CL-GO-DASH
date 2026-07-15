@@ -6,7 +6,6 @@ interface AgentSidePanelProps {
   open: boolean;
   fullscreen: boolean;
   displayWidth: number;
-  fullscreenWidth: number;
   fullscreenSwitching: boolean;
   resizing: boolean;
   mode: PanelMode;
@@ -27,7 +26,6 @@ export function AgentSidePanel(props: AgentSidePanelProps) {
         data-nav-zone="sharedPanel"
         style={{
           "--asp-width": `${props.displayWidth}px`,
-          "--asp-full-width": `${props.fullscreenWidth}px`,
         } as CSSProperties}
         aria-hidden={!props.open}
       >

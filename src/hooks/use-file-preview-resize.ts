@@ -1,30 +1,23 @@
 import { useCallback, useEffect, useRef, useState, type SetStateAction } from "react";
 import {
   findPanelForResizeHandle,
-  findOpenPreviewPanel,
-  measurePreviewFullscreenWidth,
   measurePreviewLayout,
 } from "./file-preview-layout";
 import { clampFilePreviewWidthForContainer } from "./file-preview-storage";
 import { beginPanelResize } from "./panel-resize";
 
 interface FilePreviewResizeOptions {
-  open: boolean;
   width: number;
   extraWidth: number;
   setWidth: (action: SetStateAction<number>) => void;
 }
 
 export function useFilePreviewResize({
-  open,
   width,
   extraWidth,
   setWidth,
 }: FilePreviewResizeOptions) {
   const [resizing, setResizing] = useState(false);
-  const [fullscreenWidth, setFullscreenWidth] = useState(() => (
-    typeof window === "undefined" ? width : window.innerWidth
-  ));
   const resizeRef = useRef<{
     startX: number;
     startWidth: number;
@@ -50,24 +43,6 @@ export function useFilePreviewResize({
     };
     setResizing(true);
   }, [width, extraWidth]);
-
-  useEffect(() => {
-    if (!open) return;
-    const panel = findOpenPreviewPanel();
-    const updateWidth = () => setFullscreenWidth((current) => {
-      const next = measurePreviewFullscreenWidth(panel);
-      return next === current ? current : next;
-    });
-    updateWidth();
-    const layout = measurePreviewLayout(panel, 0);
-    if (!layout.container || typeof ResizeObserver === "undefined") return;
-    const observer = new ResizeObserver(updateWidth);
-    observer.observe(layout.container);
-    for (const child of layout.container.children) {
-      if (child !== panel && !child.classList.contains("agent-detail-chat")) observer.observe(child);
-    }
-    return () => observer.disconnect();
-  }, [open]);
 
   useEffect(() => {
     const onMove = (event: PointerEvent) => {
@@ -100,5 +75,5 @@ export function useFilePreviewResize({
     };
   }, [setWidth]);
 
-  return { fullscreenWidth, resizing, startResize };
+  return { resizing, startResize };
 }
