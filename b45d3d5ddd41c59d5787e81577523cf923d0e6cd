@@ -1,0 +1,32 @@
+Avis technique sur la review de sécurité CEF (21 points)
+
+Confirmé et corrigé
+- #1 et #2 : la chaîne CEF reposait sur SHA-1 et pouvait atteindre le code CEF avant une vérification forte. Les archives CEF 150 et Ninja sont désormais figées par URL, taille et SHA-256, vérifiées en temps constant avant extraction et avant Cargo. Le téléchargement implicite de cef-dll-sys est bloqué.
+- #6 : toutes les frontières de callbacks CEF/Objective-C concernées ont maintenant une barrière catch_unwind avec repli fail-closed.
+- #8 : le hardened runtime macOS est activé. Une préparation release sans vraie identité Apple échoue désormais. L exception disable-library-validation est limitée au développement ad-hoc.
+- #11 : la détection localhost a maintenant une limite temporelle côté Rust, indépendante du frontend.
+- #18 : les unsafe impl Send/Sync de PumpWake ont été supprimés. La durée de vie Objective-C est portée par MainThreadBound.
+
+Remarques partiellement valides, durcissement ajouté
+- #3 : CEF ne fournit pas ici de manifeste amont signé exploitable. Une empreinte SHA-256 indépendante, figée dans le dépôt et limitée à l origine officielle fixe, remplace la confiance faible dans SHA-1.
+- #5 : le diagnostic de fuite/UAF sur &mut CefString.into() était inexact car cette conversion ne consomme pas la valeur. Le secret est néanmoins zéroïsé puis libéré explicitement avec cef_string_utf16_clear afin de rendre le nettoyage non ambigu.
+- #14 : les variables CLGO_ lues par build.rs n étaient pas référencées par le binaire, donc pas nécessairement intégrées. Le mécanisme mort rustc-env a été supprimé pour éliminer le risque.
+- #20 : la chaîne C de cef_load_library vivait déjà pendant tout l appel. La portée est maintenant explicitée et documentée.
+
+Points non retenus comme vulnérabilités dans cette architecture
+- #4 : il s agit volontairement d un navigateur HTTP/HTTPS général. Les pages visitées ne reçoivent aucun pont Tauri ; limiter toute navigation au localhost contredirait le produit.
+- #7 : selon le contrat CEF, retourner 0 sur certificat invalide annule immédiatement et interdit d appeler le callback.
+- #9 : la capacité ready est déjà conditionnée par le cookie gate via ensure_ready ; les tests de politique le couvrent.
+- #10 : auto-hasher une DLL placée à côté d un exécutable dans un répertoire modifiable ne protège pas contre un attaquant capable de remplacer les deux. La défense correcte est Authenticode et les ACL de l installation ; elle nécessite l identité Windows de publication, indisponible ici.
+- #12 : lire un titre HTML nettoyé et borné est la fonction attendue de la découverte localhost, pas un secret. La page distante ne peut pas déclencher la commande Tauri.
+- #13 : un GET / borné vers les seuls ports TCP déjà en écoute est nécessaire pour reconnaître une page HTML ; ce n est pas un balayage de ports.
+- #15 : les logs Chromium bruts restent désactivés pour éviter de divulguer des URL complètes. Les erreurs de cycle de vie sont remontées de façon nettoyée par l application.
+- #16 : un service écoutant sur 0.0.0.0 est testé uniquement via 127.0.0.1/localhost/::1 ; la connexion reste donc locale.
+- #17 : HTTP est accepté uniquement sur boucle locale et la lecture maximale de 64 Kio est une limite volontaire.
+- #19 : le sandbox Chromium/CEF est activé. Apple App Sandbox est un modèle de distribution distinct et son absence ne signifie pas que Chromium tourne sans sandbox.
+- #21 : les popups sont validées dans Rust, émises comme demandes d onglet, revalidées côté TypeScript puis de nouveau par Rust lors de la navigation.
+
+Validation et limites
+- Validation réelle macOS effectuée dans CL-GO Dev : vue Chromium enfant intégrée, HTTPS, onglets restaurés, redimensionnement, plein écran interne puis réduction.
+- Le bundle dev est signé et vérifié, avec entitlement de développement explicite. Aucun DMG n a été généré pendant cette correction.
+- Windows n a pas pu être validé en exécution réelle. Les contrôles de structure et tests automatisés passent, mais Authenticode reste une condition de publication Windows.
