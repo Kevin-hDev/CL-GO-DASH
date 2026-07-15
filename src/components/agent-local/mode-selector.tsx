@@ -1,10 +1,10 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@/components/ui/tooltip";
-import { acquireBrowserNativeOcclusion } from "@/components/internal-browser/browser-native-occlusion";
 import type { BrowserCapability } from "@/hooks/use-browser-capability";
 import type { PanelMode } from "@/hooks/use-forecast-panel";
+import { resolveModeMenuPosition } from "./mode-selector-position";
 import "./mode-selector.css";
 
 interface ModeSelectorProps {
@@ -18,25 +18,34 @@ export function ModeSelector({ mode, browserStatus = "hidden", onChange }: ModeS
   const [open, setOpen] = useState(false);
   const btnRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  const releaseOcclusionRef = useRef<(() => void) | null>(null);
   const [pos, setPos] = useState({ top: 0, right: 0 });
 
   const openMenu = useCallback(() => {
-    const release = acquireBrowserNativeOcclusion();
-    if (!release) return;
-    releaseOcclusionRef.current = release;
     if (btnRef.current) {
       const r = btnRef.current.getBoundingClientRect();
-      setPos({ top: r.bottom + 6, right: window.innerWidth - r.right });
+      setPos({ top: r.bottom, right: window.innerWidth - r.right });
     }
     setOpen(true);
   }, []);
 
   const closeMenu = useCallback(() => {
     setOpen(false);
-    releaseOcclusionRef.current?.();
-    releaseOcclusionRef.current = null;
   }, []);
+
+  useLayoutEffect(() => {
+    const anchor = btnRef.current;
+    const menu = menuRef.current;
+    if (!open || !anchor || !menu) return;
+    const surface = document.querySelector<HTMLElement>(".ib-surface");
+    const surfaceRect = surface?.getBoundingClientRect() ?? null;
+    const next = resolveModeMenuPosition(
+      anchor.getBoundingClientRect(),
+      menu.getBoundingClientRect(),
+      surfaceRect,
+      { width: window.innerWidth, height: window.innerHeight },
+    );
+    setPos((current) => current.top === next.top && current.right === next.right ? current : next);
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -49,11 +58,6 @@ export function ModeSelector({ mode, browserStatus = "hidden", onChange }: ModeS
     document.addEventListener("mousedown", close);
     return () => document.removeEventListener("mousedown", close);
   }, [closeMenu, open]);
-
-  useEffect(() => () => {
-    releaseOcclusionRef.current?.();
-    releaseOcclusionRef.current = null;
-  }, []);
 
   const pick = (m: PanelMode) => { onChange(m); closeMenu(); };
 
@@ -75,7 +79,11 @@ export function ModeSelector({ mode, browserStatus = "hidden", onChange }: ModeS
         </button>
       </Tooltip>
       {open && createPortal(
-        <div ref={menuRef} className="asp-mode-menu" style={{ top: pos.top, right: pos.right }}>
+        <div
+          ref={menuRef}
+          className="asp-mode-menu"
+          style={{ top: pos.top, right: pos.right }}
+        >
           <button className="asp-mode-item" onClick={() => pick("preview")}>
             <span className={`asp-mode-dot ${mode === "preview" ? "asp-mode-dot-active" : ""}`} />
             {t("forecast.panelMode.preview")}
