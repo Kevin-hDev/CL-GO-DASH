@@ -87,7 +87,10 @@ pub async fn close_native_view(
     tab_id: String,
 ) -> Result<(), BrowserCommandError> {
     let key = BrowserViewKey::new(conversation_id, tab_id).map_err(invalid)?;
-    run_on_main(app, move |_| super::cef_engine::close_view(&key)).await
+    run_on_main(app, move |main_app| {
+        super::cef_engine::close_view(main_app, &key)
+    })
+    .await
 }
 
 #[cfg(not(any(target_os = "macos", target_os = "windows")))]

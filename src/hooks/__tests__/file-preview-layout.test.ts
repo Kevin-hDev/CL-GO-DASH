@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import {
   chatMinWidthForContainer,
+  findPanelForResizeHandle,
   measurePreviewLayout,
   siblingPanelWidth,
 } from "../file-preview-layout";
@@ -72,5 +73,19 @@ describe("file preview layout", () => {
     const container = document.querySelector(".agent-detail-with-preview")!;
 
     expect(chatMinWidthForContainer(container)).toBe(0);
+  });
+
+  it("retrouve le panneau placé juste après la poignée extérieure", () => {
+    document.body.innerHTML = `
+      <div class="agent-detail-with-preview">
+        <main class="agent-detail-chat"></main>
+        <div class="asp-resize-slot"><div class="asp-resize"></div></div>
+        <aside class="asp-panel open"></aside>
+      </div>
+    `;
+    const handle = document.querySelector<HTMLElement>(".asp-resize")!;
+    const panel = document.querySelector(".asp-panel");
+
+    expect(findPanelForResizeHandle(handle)).toBe(panel);
   });
 });

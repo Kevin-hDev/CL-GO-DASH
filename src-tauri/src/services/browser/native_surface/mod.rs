@@ -4,6 +4,6 @@ mod macos;
 mod windows;
 
 #[cfg(target_os = "macos")]
-pub(super) use macos::{resolve_parent, update_browser};
+pub(super) use macos::{destroy_browser, resolve_parent, update_browser};
 #[cfg(target_os = "windows")]
-pub(super) use windows::{resolve_parent, update_browser};
+pub(super) use windows::{destroy_browser, resolve_parent, update_browser};

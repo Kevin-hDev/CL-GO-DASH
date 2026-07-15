@@ -1,5 +1,5 @@
 use super::super::surface_bounds::{BrowserSurfaceBounds, NativeSurfaceRect};
-use cef::{Browser, ImplBrowser, ImplBrowserHost, Rect, WindowInfo};
+use cef::{Browser, ImplBrowser, ImplBrowserHost, Rect, RuntimeStyle, WindowInfo};
 use objc2::MainThreadMarker;
 use objc2_app_kit::NSView;
 use objc2_foundation::{NSPoint, NSRect, NSSize};
@@ -12,7 +12,7 @@ pub(crate) struct NativeParent {
 
 impl NativeParent {
     pub(crate) fn window_info(&self) -> WindowInfo {
-        WindowInfo::default().set_as_child(
+        let mut info = WindowInfo::default().set_as_child(
             self.view,
             &Rect {
                 x: self.rect.x,
@@ -20,8 +20,21 @@ impl NativeParent {
                 width: self.rect.width,
                 height: self.rect.height,
             },
-        )
+        );
+        info.runtime_style = RuntimeStyle::ALLOY;
+        info
     }
+}
+
+pub(crate) fn destroy_browser(browser: &Browser) -> Result<(), ()> {
+    MainThreadMarker::new().ok_or(())?;
+    let host = browser.host().ok_or(())?;
+    host.was_hidden(1);
+    let pointer = host.window_handle();
+    let view = unsafe { pointer.cast::<NSView>().as_ref() }.ok_or(())?;
+    view.setHidden(true);
+    view.removeFromSuperview();
+    Ok(())
 }
 
 pub(crate) fn resolve_parent(

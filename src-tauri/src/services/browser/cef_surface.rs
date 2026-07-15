@@ -43,13 +43,11 @@ impl BrowserSurfaceManager {
             return Ok(());
         }
         let Some(url) = url.filter(|_| bounds.visible) else {
-            self.hide_active(app, &bounds)?;
+            self.hide_all(app, &bounds)?;
             self.active = None;
             return Ok(());
         };
-        if self.active.as_ref() != Some(&key) {
-            self.hide_active(app, &bounds)?;
-        }
+        self.hide_all_except(app, &key, &bounds)?;
         if let Some(view) = self.views.iter_mut().find(|view| view.key() == &key) {
             view.apply(app, &url, &bounds)?;
             self.recency.touch(key.clone(), None);
@@ -85,10 +83,10 @@ impl BrowserSurfaceManager {
         view.navigate(url)
     }
 
-    pub(super) fn close_view(&mut self, key: &BrowserViewKey) {
+    pub(super) fn close_view(&mut self, app: &tauri::AppHandle, key: &BrowserViewKey) {
         if let Some(index) = self.views.iter().position(|view| view.key() == key) {
             let mut view = self.views.remove(index);
-            let _ = view.close();
+            let _ = view.close(Some(app));
         }
         self.recency.remove(key);
         if self.active.as_ref() == Some(key) {
@@ -98,29 +96,45 @@ impl BrowserSurfaceManager {
 
     pub(super) fn close(&mut self) {
         for view in &mut self.views {
-            let _ = view.close();
+            let _ = view.close(None);
         }
         self.views.clear();
         self.active = None;
     }
 
-    fn hide_active(
+    fn hide_all_except(
+        &mut self,
+        app: &tauri::AppHandle,
+        active: &BrowserViewKey,
+        bounds: &BrowserSurfaceBounds,
+    ) -> Result<(), ()> {
+        let mut hidden = bounds.clone();
+        hidden.visible = false;
+        let mut failed = false;
+        for view in self.views.iter_mut().filter(|view| view.key() != active) {
+            failed |= view.hide(app, &hidden).is_err();
+        }
+        (!failed).then_some(()).ok_or(())
+    }
+
+    fn hide_all(
         &mut self,
         app: &tauri::AppHandle,
         bounds: &BrowserSurfaceBounds,
     ) -> Result<(), ()> {
-        let Some(active) = self.active.clone() else {
-            return Ok(());
-        };
         let mut hidden = bounds.clone();
         hidden.visible = false;
-        self.view_mut(&active)?.hide(app, &hidden)
+        let mut failed = false;
+        for view in &mut self.views {
+            failed |= view.hide(app, &hidden).is_err();
+        }
+        (!failed).then_some(()).ok_or(())
     }
 
     fn evict(&mut self, app: &tauri::AppHandle, key: &BrowserViewKey) {
         if let Some(index) = self.views.iter().position(|view| view.key() == key) {
             let mut view = self.views.remove(index);
-            if let Some(stamp) = view.close() {
+            if let Some(stamp) = view.close(Some(app)) {
                 mark_view_released(app, key.clone(), stamp);
             }
         }

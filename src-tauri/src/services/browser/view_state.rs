@@ -42,7 +42,11 @@ impl ViewState {
     }
 
     pub(super) fn begin_closing(&mut self) -> bool {
-        self.transition(ViewPhase::Ready, ViewPhase::Closing)
+        if !matches!(self.phase, ViewPhase::Creating | ViewPhase::Ready) {
+            return false;
+        }
+        self.phase = ViewPhase::Closing;
+        true
     }
 
     pub(super) fn mark_closed(&mut self) -> bool {

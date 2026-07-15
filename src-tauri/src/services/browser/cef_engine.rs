@@ -1,4 +1,5 @@
 use super::cef_app::BrowserApp;
+use super::cef_engine_config::{prepare_profile, to_cef_settings};
 #[cfg(target_os = "macos")]
 use super::cef_library::CefLibrary;
 use super::cef_surface::BrowserSurfaceManager;
@@ -7,7 +8,7 @@ use super::native_paths::resolve_runtime_files;
 use super::process_role::validate_browser_process_result;
 use super::pump_scheduler::PumpScheduler;
 use super::runtime_handle::BrowserRuntimeHandle;
-use super::settings::{cef_settings_policy, CefSettingsPolicy};
+use super::settings::cef_settings_policy;
 use super::surface_bounds::BrowserSurfaceBounds;
 use super::url_policy::ValidatedUrl;
 use super::{browser_api_types::BrowserNavigationAction, browser_view_key::BrowserViewKey};
@@ -124,41 +125,16 @@ pub(super) fn navigate(key: &BrowserViewKey, url: &ValidatedUrl) -> Result<(), (
     })
 }
 
-pub(super) fn close_view(key: &BrowserViewKey) -> Result<(), ()> {
+pub(super) fn close_view(app: &tauri::AppHandle, key: &BrowserViewKey) -> Result<(), ()> {
     ENGINE.with(|engine| {
         engine
             .borrow_mut()
             .as_mut()
             .ok_or(())?
             .surface
-            .close_view(key);
+            .close_view(app, key);
         Ok(())
     })
-}
-
-fn prepare_profile() -> Result<std::path::PathBuf, ()> {
-    let browser_root = crate::services::paths::data_dir().join("browser");
-    let profile = browser_root.join("profile");
-    std::fs::create_dir_all(&profile).map_err(|_| ())?;
-    crate::services::private_store::repair_path(&browser_root).map_err(|_| ())?;
-    crate::services::private_store::repair_path(&profile).map_err(|_| ())?;
-    Ok(profile)
-}
-
-fn to_cef_settings(policy: CefSettingsPolicy) -> Settings {
-    Settings {
-        no_sandbox: i32::from(policy.no_sandbox),
-        browser_subprocess_path: CefString::from(policy.helper.to_string_lossy().as_ref()),
-        multi_threaded_message_loop: i32::from(policy.multi_threaded_message_loop),
-        external_message_pump: i32::from(policy.external_message_pump),
-        command_line_args_disabled: i32::from(policy.command_line_args_disabled),
-        cache_path: CefString::from(policy.profile.to_string_lossy().as_ref()),
-        root_cache_path: CefString::from(policy.profile.to_string_lossy().as_ref()),
-        persist_session_cookies: i32::from(policy.persist_session_cookies),
-        log_severity: LogSeverity::DISABLE,
-        remote_debugging_port: policy.remote_debugging_port.map(i32::from).unwrap_or(0),
-        ..Default::default()
-    }
 }
 
 pub(super) fn shutdown(runtime: &BrowserRuntimeHandle) {

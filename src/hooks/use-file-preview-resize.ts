@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type SetStateAction } from "react";
 import {
+  findPanelForResizeHandle,
   findOpenPreviewPanel,
   measurePreviewFullscreenWidth,
   measurePreviewLayout,
@@ -35,7 +36,8 @@ export function useFilePreviewResize({
 
   const startResize = useCallback((event: React.PointerEvent) => {
     const target = event.currentTarget as HTMLElement;
-    const panel = target.closest(".asp-panel");
+    const panel = findPanelForResizeHandle(target);
+    if (!panel) return;
     const layout = measurePreviewLayout(panel, extraWidth);
     stopResizeRef.current?.();
     stopResizeRef.current = beginPanelResize(event, ".asp-panel");

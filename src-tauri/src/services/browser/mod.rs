@@ -21,6 +21,8 @@ mod cef_display_handler;
 mod cef_download_handler;
 #[cfg(any(target_os = "macos", target_os = "windows"))]
 mod cef_engine;
+#[cfg(any(target_os = "macos", target_os = "windows"))]
+mod cef_engine_config;
 #[cfg(target_os = "macos")]
 mod cef_library;
 #[cfg(any(target_os = "macos", target_os = "windows"))]
@@ -86,6 +88,8 @@ mod view_state;
 #[cfg(target_os = "windows")]
 pub(crate) mod windows_sandbox;
 
+#[cfg(all(test, any(target_os = "macos", target_os = "windows")))]
+mod browser_slot_tests;
 #[cfg(test)]
 mod build_policy_tests;
 #[cfg(all(test, target_os = "macos"))]

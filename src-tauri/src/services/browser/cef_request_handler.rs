@@ -58,8 +58,9 @@ cef::wrap_request_handler! {
                 if let Some(stamp) = self.slot.next_runtime_stamp() {
                     mark_view_released(&app, key.clone(), stamp);
                 }
+                let main_app = app.clone();
                 let _ = app.run_on_main_thread(move || {
-                    let _ = super::cef_engine::close_view(&key);
+                    let _ = super::cef_engine::close_view(&main_app, &key);
                 });
                 if let Some(generation) = next_event_generation() {
                     let _ = self.app.emit(

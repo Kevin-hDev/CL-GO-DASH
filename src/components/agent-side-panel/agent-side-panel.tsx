@@ -18,21 +18,25 @@ interface AgentSidePanelProps {
 
 export function AgentSidePanel(props: AgentSidePanelProps) {
   return (
-    <aside
-      className={`asp-panel ${props.open ? "open" : ""} ${props.fullscreen ? "fullscreen" : ""} ${props.fullscreenSwitching ? "fullscreen-switching" : ""} ${props.resizing ? "resizing" : ""}`}
-      data-nav-zone="sharedPanel"
-      style={{
-        "--asp-width": `${props.displayWidth}px`,
-        "--asp-full-width": `${props.fullscreenWidth}px`,
-      } as CSSProperties}
-      aria-hidden={!props.open}
-    >
-      <div className="asp-resize" onPointerDown={props.onResizeStart} />
-      <div className={`asp-slide-wrapper asp-slide-${props.mode}`}>
-        <div className="asp-slide-child">{props.previewContent}</div>
-        <div className="asp-slide-child">{props.forecastContent}</div>
-        <div className="asp-slide-child">{props.browserContent}</div>
+    <>
+      <div className={`asp-resize-slot ${props.open && !props.fullscreen ? "open" : ""}`}>
+        <div className="asp-resize" onPointerDown={props.onResizeStart} />
       </div>
-    </aside>
+      <aside
+        className={`asp-panel ${props.open ? "open" : ""} ${props.fullscreen ? "fullscreen" : ""} ${props.fullscreenSwitching ? "fullscreen-switching" : ""} ${props.resizing ? "resizing" : ""}`}
+        data-nav-zone="sharedPanel"
+        style={{
+          "--asp-width": `${props.displayWidth}px`,
+          "--asp-full-width": `${props.fullscreenWidth}px`,
+        } as CSSProperties}
+        aria-hidden={!props.open}
+      >
+        <div className={`asp-slide-wrapper asp-slide-${props.mode}`}>
+          <div className="asp-slide-child">{props.previewContent}</div>
+          <div className="asp-slide-child">{props.forecastContent}</div>
+          <div className="asp-slide-child">{props.browserContent}</div>
+        </div>
+      </aside>
+    </>
   );
 }

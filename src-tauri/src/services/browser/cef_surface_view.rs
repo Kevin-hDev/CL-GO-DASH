@@ -22,6 +22,9 @@ impl CefBrowserView {
         if !slot.begin_creation() {
             return Err(());
         }
+        slot.request_surface(bounds).inspect_err(|_| {
+            slot.mark_creation_failed();
+        })?;
         slot.observe_url(url.as_str());
         let parent = native_surface::resolve_parent(app, bounds).inspect_err(|_| {
             slot.mark_creation_failed();
@@ -56,7 +59,7 @@ impl CefBrowserView {
         _url: &ValidatedUrl,
         bounds: &BrowserSurfaceBounds,
     ) -> Result<(), ()> {
-        let Some(browser) = self.slot.browser() else {
+        let Some(browser) = self.slot.request_surface(bounds)? else {
             return Ok(());
         };
         native_surface::update_browser(app, &browser, bounds)?;
@@ -72,7 +75,7 @@ impl CefBrowserView {
         app: &tauri::AppHandle,
         bounds: &BrowserSurfaceBounds,
     ) -> Result<(), ()> {
-        if let Some(browser) = self.slot.browser() {
+        if let Some(browser) = self.slot.request_surface(bounds)? {
             native_surface::update_browser(app, &browser, bounds)?;
         }
         Ok(())
@@ -94,8 +97,15 @@ impl CefBrowserView {
         Ok(())
     }
 
-    pub(super) fn close(&mut self) -> Option<super::runtime_revision::RuntimeStamp> {
+    pub(super) fn close(
+        &mut self,
+        app: Option<&tauri::AppHandle>,
+    ) -> Option<super::runtime_revision::RuntimeStamp> {
         let stamp = self.slot.next_runtime_stamp();
+        if let (Some(app), Ok(Some((browser, bounds)))) = (app, self.slot.hide_requested_surface())
+        {
+            let _ = native_surface::update_browser(app, &browser, &bounds);
+        }
         self.slot.close();
         self.client = None;
         stamp

@@ -6,6 +6,7 @@ use super::{
     browser_slot::BrowserSlot,
     browser_view_key::BrowserViewKey,
     cef_text::validated_cef_url,
+    native_surface,
 };
 use cef::*;
 use tauri::Emitter;
@@ -56,25 +57,50 @@ cef::wrap_life_span_handler! {
 
         fn on_after_created(&self, browser: Option<&mut Browser>) {
             super::ffi_guard::unit(|| {
-                if browser.is_some_and(|browser| self.slot.mark_created(browser)) {
-                    let Some(generation) = next_event_generation() else {
-                        return;
-                    };
-                    let _ = self.app.emit(
-                        VIEW_READY_EVENT,
-                        BrowserTabEvent {
-                            event_version: EVENT_VERSION,
-                            generation,
-                            conversation_id: self.key.session_id.clone(),
-                            tab_id: self.key.tab_id.clone(),
-                        },
-                    );
+                let Some(browser) = browser else {
+                    return;
+                };
+                let Some(bounds) = self.slot.mark_created(browser) else {
+                    close_browser(browser);
+                    return;
+                };
+                if native_surface::update_browser(&self.app, browser, &bounds).is_err() {
+                    close_browser(browser);
+                    return;
                 }
+                let Some(generation) = next_event_generation() else {
+                    close_browser(browser);
+                    return;
+                };
+                let _ = self.app.emit(
+                    VIEW_READY_EVENT,
+                    BrowserTabEvent {
+                        event_version: EVENT_VERSION,
+                        generation,
+                        conversation_id: self.key.session_id.clone(),
+                        tab_id: self.key.tab_id.clone(),
+                    },
+                );
             });
+        }
+
+        fn do_close(&self, browser: Option<&mut Browser>) -> std::os::raw::c_int {
+            super::ffi_guard::value(1, || {
+                if let Some(browser) = browser {
+                    let _ = native_surface::destroy_browser(browser);
+                }
+                1
+            })
         }
 
         fn on_before_close(&self, _browser: Option<&mut Browser>) {
             super::ffi_guard::unit(|| self.slot.mark_closed());
         }
+    }
+}
+
+fn close_browser(browser: &Browser) {
+    if let Some(host) = browser.host() {
+        host.close_browser(1);
     }
 }

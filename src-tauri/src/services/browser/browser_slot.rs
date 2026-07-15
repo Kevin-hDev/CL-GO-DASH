@@ -1,5 +1,6 @@
 use super::{
-    navigation_target::NavigationTarget, runtime_revision::RuntimeStamp, view_state::ViewState,
+    navigation_target::NavigationTarget, runtime_revision::RuntimeStamp,
+    surface_bounds::BrowserSurfaceBounds, view_state::ViewState,
 };
 use cef::{Browser, CefString, ImplBrowser, ImplBrowserHost, ImplFrame};
 use std::sync::{
@@ -18,6 +19,7 @@ struct BrowserSlotInner {
     browser: Option<Browser>,
     lifecycle: ViewState,
     navigation: NavigationTarget,
+    desired_surface: Option<BrowserSurfaceBounds>,
     runtime_epoch: u64,
     runtime_revision: u64,
 }
@@ -34,6 +36,7 @@ impl BrowserSlot {
                 browser: None,
                 lifecycle: ViewState::default(),
                 navigation: NavigationTarget::default(),
+                desired_surface: None,
                 runtime_epoch,
                 runtime_revision: 0,
             })),
@@ -52,23 +55,43 @@ impl BrowserSlot {
         }
     }
 
-    pub(super) fn mark_created(&self, browser: &Browser) -> bool {
-        let pending = {
+    pub(super) fn mark_created(&self, browser: &Browser) -> Option<BrowserSurfaceBounds> {
+        let (pending, surface) = {
             let Ok(mut inner) = self.inner.lock() else {
-                return false;
+                return None;
             };
             if !inner.lifecycle.mark_ready() {
-                return false;
+                return None;
             }
             inner.browser = Some(browser.clone());
-            inner.navigation.take_pending()
+            (
+                inner.navigation.take_pending(),
+                inner.desired_surface.clone(),
+            )
         };
         if let Some(url) = pending {
             if let Some(frame) = browser.main_frame() {
                 frame.load_url(Some(&CefString::from(url.as_str())));
             }
         }
-        true
+        surface
+    }
+
+    pub(super) fn request_surface(
+        &self,
+        bounds: &BrowserSurfaceBounds,
+    ) -> Result<Option<Browser>, ()> {
+        let mut inner = self.inner.lock().map_err(|_| ())?;
+        inner.desired_surface = Some(bounds.clone());
+        Ok(inner.browser.clone())
+    }
+
+    #[cfg(test)]
+    pub(super) fn desired_surface(&self) -> Option<BrowserSurfaceBounds> {
+        self.inner
+            .lock()
+            .ok()
+            .and_then(|inner| inner.desired_surface.clone())
     }
 
     pub(super) fn browser(&self) -> Option<Browser> {
@@ -113,6 +136,9 @@ impl BrowserSlot {
 
     pub(super) fn close(&self) {
         let browser = self.inner.lock().ok().and_then(|mut inner| {
+            if let Some(surface) = inner.desired_surface.as_mut() {
+                surface.visible = false;
+            }
             inner
                 .lifecycle
                 .begin_closing()
@@ -123,6 +149,18 @@ impl BrowserSlot {
                 host.close_browser(1);
             }
         }
+    }
+
+    pub(super) fn hide_requested_surface(
+        &self,
+    ) -> Result<Option<(Browser, BrowserSurfaceBounds)>, ()> {
+        let mut inner = self.inner.lock().map_err(|_| ())?;
+        let Some(surface) = inner.desired_surface.as_mut() else {
+            return Ok(None);
+        };
+        surface.visible = false;
+        let hidden = surface.clone();
+        Ok(inner.browser.clone().map(|browser| (browser, hidden)))
     }
 
     pub(super) fn mark_closed(&self) {

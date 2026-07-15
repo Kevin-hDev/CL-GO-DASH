@@ -1,8 +1,9 @@
 use super::super::surface_bounds::{BrowserSurfaceBounds, NativeSurfaceRect};
-use cef::{Browser, ImplBrowser, ImplBrowserHost, Rect, WindowInfo};
+use cef::{Browser, ImplBrowser, ImplBrowserHost, Rect, RuntimeStyle, WindowInfo};
 use tauri::Manager;
 use windows_sys::Win32::UI::WindowsAndMessaging::{
-    SetWindowPos, ShowWindow, SWP_NOACTIVATE, SWP_NOOWNERZORDER, SWP_NOZORDER, SW_HIDE, SW_SHOWNA,
+    DestroyWindow, SetWindowPos, ShowWindow, SWP_NOACTIVATE, SWP_NOOWNERZORDER, SWP_NOZORDER,
+    SW_HIDE, SW_SHOWNA,
 };
 
 pub(crate) struct NativeParent {
@@ -12,7 +13,7 @@ pub(crate) struct NativeParent {
 
 impl NativeParent {
     pub(crate) fn window_info(&self) -> WindowInfo {
-        WindowInfo::default().set_as_child(
+        let mut info = WindowInfo::default().set_as_child(
             self.window,
             &Rect {
                 x: self.rect.x,
@@ -20,8 +21,22 @@ impl NativeParent {
                 width: self.rect.width,
                 height: self.rect.height,
             },
-        )
+        );
+        info.runtime_style = RuntimeStyle::ALLOY;
+        info
     }
+}
+
+pub(crate) fn destroy_browser(browser: &Browser) -> Result<(), ()> {
+    let host = browser.host().ok_or(())?;
+    host.was_hidden(1);
+    let handle = host.window_handle();
+    if handle.0.is_null() {
+        return Err(());
+    }
+    (unsafe { DestroyWindow(handle.0.cast()) } != 0)
+        .then_some(())
+        .ok_or(())
 }
 
 pub(crate) fn resolve_parent(

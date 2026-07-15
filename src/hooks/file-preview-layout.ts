@@ -11,6 +11,12 @@ export function findOpenPreviewPanel(): Element | null {
   return document.querySelector(".asp-panel.open");
 }
 
+export function findPanelForResizeHandle(handle: HTMLElement): Element | null {
+  const slot = handle.closest(".asp-resize-slot");
+  const panel = slot?.nextElementSibling ?? null;
+  return panel?.classList.contains("asp-panel") ? panel : null;
+}
+
 export function siblingPanelWidth(panel: Element | null, container: Element | null): number {
   if (!container || !panel) return 0;
   return [...container.children].reduce((total, child) => {
