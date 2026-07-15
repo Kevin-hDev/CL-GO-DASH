@@ -24,7 +24,7 @@ fn every_cef_helper_has_a_bounded_valid_bundle_manifest() {
 }
 
 #[test]
-fn macos_bundle_enables_the_hardened_runtime_and_cef_entitlements() {
+fn macos_ad_hoc_release_allows_loading_the_bundled_cef_framework() {
     let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("tauri.conf.json");
     let content = std::fs::read_to_string(path).expect("tauri config");
     assert!(content.len() < 65_536);
@@ -54,7 +54,7 @@ fn macos_bundle_enables_the_hardened_runtime_and_cef_entitlements() {
         std::fs::read_to_string(Path::new(env!("CARGO_MANIFEST_DIR")).join("Entitlements.plist"))
             .expect("CEF entitlements");
     assert!(entitlements.contains("com.apple.security.cs.allow-jit"));
-    assert!(!entitlements.contains("com.apple.security.cs.disable-library-validation"));
+    assert!(entitlements.contains("com.apple.security.cs.disable-library-validation"));
 
     let dev_entitlements = std::fs::read_to_string(
         Path::new(env!("CARGO_MANIFEST_DIR")).join("Entitlements.dev.plist"),

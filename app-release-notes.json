@@ -1,4 +1,41 @@
 {
+  "0.9.9": {
+    "de": [
+      "Die Windows-Version lädt wieder die mitgelieferte Oberfläche, statt eine lokale Entwicklungsadresse zu öffnen.",
+      "Der sichere Chromium-Browser ist in lokal signierten macOS-Versionen wieder verfügbar.",
+      "Neue Release-Prüfungen verhindern, dass diese beiden Paketierungsfehler erneut veröffentlicht werden."
+    ],
+    "en": [
+      "The Windows release now loads the bundled interface instead of opening a local development address.",
+      "The secure Chromium browser is available again in locally signed macOS releases.",
+      "New release checks prevent these two packaging regressions from being published again."
+    ],
+    "es": [
+      "La versión de Windows vuelve a cargar la interfaz incluida en lugar de abrir una dirección de desarrollo local.",
+      "El navegador Chromium seguro vuelve a estar disponible en las versiones de macOS con firma local.",
+      "Nuevas comprobaciones evitan que estos dos errores de empaquetado se vuelvan a publicar."
+    ],
+    "fr": [
+      "La version Windows charge de nouveau l’interface intégrée au lieu d’ouvrir une adresse de développement locale.",
+      "Le navigateur Chromium sécurisé est de nouveau disponible dans les versions macOS signées localement.",
+      "De nouveaux contrôles empêchent que ces deux erreurs de packaging soient publiées à nouveau."
+    ],
+    "it": [
+      "La versione Windows carica di nuovo l’interfaccia inclusa invece di aprire un indirizzo di sviluppo locale.",
+      "Il browser Chromium sicuro è nuovamente disponibile nelle versioni macOS con firma locale.",
+      "Nuovi controlli impediscono che questi due errori di pacchettizzazione vengano pubblicati di nuovo."
+    ],
+    "ja": [
+      "Windows 版はローカルの開発用アドレスではなく、同梱された画面を再び読み込むようになりました。",
+      "ローカル署名された macOS 版で、安全な Chromium ブラウザーを再び利用できるようになりました。",
+      "新しいリリース検査により、この二つのパッケージ問題の再発を防止します。"
+    ],
+    "zh": [
+      "Windows 版本现在会重新加载内置界面，而不是打开本地开发地址。",
+      "经过本地签名的 macOS 版本现在可以再次使用安全的 Chromium 浏览器。",
+      "新的发布检查可防止这两个打包问题再次进入正式版本。"
+    ]
+  },
   "0.9.8": {
     "de": [
       "Windows-Installationspakete können wieder erstellt werden, da die Chromium-Dateien nun in der erwarteten Struktur vorbereitet werden.",

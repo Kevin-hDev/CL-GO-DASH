@@ -45,6 +45,7 @@ fn windows_bundle_hook_pins_and_verifies_the_cef_bootstrap() {
     let library_build = script
         .find("cargo build --release --lib")
         .expect("explicit Windows application DLL build");
+    assert!(script.contains("--features tauri/custom-protocol"));
     let library_staging = script
         .find("$ApplicationDll")
         .expect("Windows application DLL staging");

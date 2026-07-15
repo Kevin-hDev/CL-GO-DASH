@@ -4,6 +4,23 @@
 
 ---
 
+## v0.9.9
+
+### Bug Fixes
+
+- **Windows production startup** — rebuilt the CEF-hosted Tauri DLL with the production custom protocol so packaged installs load the bundled interface instead of trying to reach the development server on localhost.
+- **macOS browser availability** — allowed locally signed hardened-runtime builds to load the bundled CEF framework and helpers, restoring the secure Browser in release builds.
+
+### Reliability
+
+- **Release regression coverage** — added checks that require the Windows production protocol and the macOS library-validation entitlement before a release bundle can pass its test suite.
+
+### Security
+
+- **Targeted macOS compatibility** — kept the Hardened Runtime, CEF sandbox, verified runtime paths, and existing CEF integrity checks enabled while applying the required library-loading exception to locally signed executables.
+
+---
+
 ## v0.9.8
 
 ### Bug Fixes
