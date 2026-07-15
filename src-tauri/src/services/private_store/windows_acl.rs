@@ -3,7 +3,7 @@ use windows_sys::Win32::Foundation::{LocalFree, ERROR_SUCCESS, HLOCAL};
 use windows_sys::Win32::Security::Authorization::{
     GetExplicitEntriesFromAclW, GetNamedSecurityInfoW, SetEntriesInAclW, SetNamedSecurityInfoW,
     EXPLICIT_ACCESS_W, GRANT_ACCESS, NO_MULTIPLE_TRUSTEE, SET_ACCESS, SE_FILE_OBJECT,
-    TRUSTEE_IS_SID, TRUSTEE_IS_USER, TRUSTEE_W,
+    TRUSTEE_IS_SID, TRUSTEE_IS_UNKNOWN, TRUSTEE_IS_USER, TRUSTEE_W,
 };
 use windows_sys::Win32::Security::{
     EqualSid, GetSecurityDescriptorControl, IsValidSid, ACL, DACL_SECURITY_INFORMATION,
@@ -92,12 +92,16 @@ fn verify_entries(acl: *const ACL, sid: PSID, inheritance: u32) -> Result<(), St
         && entry.grfAccessPermissions & FILE_ALL_ACCESS == FILE_ALL_ACCESS
         && entry.grfInheritance == inheritance
         && entry.Trustee.TrusteeForm == TRUSTEE_IS_SID
-        && entry.Trustee.TrusteeType == TRUSTEE_IS_USER
+        && valid_trustee_type(entry.Trustee.TrusteeType)
         && !entry_sid.is_null()
         && unsafe { IsValidSid(entry_sid) } != 0
         && unsafe { EqualSid(entry_sid, sid) } != 0;
     drop(entries_guard);
     valid.then_some(()).ok_or_else(|| ERROR.to_string())
+}
+
+fn valid_trustee_type(trustee_type: i32) -> bool {
+    matches!(trustee_type, TRUSTEE_IS_UNKNOWN | TRUSTEE_IS_USER)
 }
 
 fn explicit_access(sid: PSID, inheritance: u32) -> EXPLICIT_ACCESS_W {
@@ -130,5 +134,17 @@ impl Drop for LocalAllocation {
         if !self.0.is_null() {
             unsafe { LocalFree(self.0) };
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn accepts_valid_user_and_unknown_trustee_types() {
+        assert!(valid_trustee_type(TRUSTEE_IS_USER));
+        assert!(valid_trustee_type(TRUSTEE_IS_UNKNOWN));
+        assert!(!valid_trustee_type(TRUSTEE_IS_USER + 1));
     }
 }
