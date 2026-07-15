@@ -4,6 +4,23 @@
 
 ---
 
+## v1.0.0
+
+### Bug Fixes
+
+- **Windows browser availability** — stopped inspecting Chromium's live cookie database after startup, which is exclusively locked on modern Windows builds and previously left the embedded browser unavailable.
+
+### Reliability
+
+- **Platform-aware browser validation** — Windows now validates cookie storage through supported CEF set, flush, and delete operations, while macOS keeps its existing at-rest protection check.
+- **Regression coverage** — added release tests that prevent Windows production builds from reintroducing direct access to Chromium's locked cookie database.
+
+### Security
+
+- **Browser protections preserved** — kept the CEF sandbox, Chromium database locking, fail-closed callbacks, and existing macOS disk verification enabled.
+
+---
+
 ## v0.9.9
 
 ### Bug Fixes

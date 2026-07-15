@@ -1,4 +1,41 @@
 {
+  "1.0.0": {
+    "de": [
+      "CL-GO erreicht offiziell Version 1.0.",
+      "Der sichere Chromium-Browser ist unter Windows nun verfügbar, da die Prüfung den Datenbankschutz von Chromium berücksichtigt.",
+      "CEF-Schutz und Sandbox bleiben unter Windows aktiv, während macOS seine bestehende Festplattenprüfung beibehält."
+    ],
+    "en": [
+      "CL-GO officially reaches version 1.0.",
+      "The secure Chromium browser is now available on Windows after adapting validation to Chromium's database lock.",
+      "CEF protections and the sandbox remain enabled on Windows, while macOS keeps its existing disk protection check."
+    ],
+    "es": [
+      "CL-GO alcanza oficialmente la versión 1.0.",
+      "El navegador Chromium seguro ya está disponible en Windows gracias a una validación compatible con el bloqueo de la base de Chromium.",
+      "Las protecciones de CEF y el sandbox siguen activos en Windows, mientras macOS conserva su comprobación en disco."
+    ],
+    "fr": [
+      "CL-GO atteint officiellement la version 1.0.",
+      "Le navigateur Chromium sécurisé est maintenant disponible sous Windows grâce à une validation compatible avec le verrouillage de Chromium.",
+      "Les protections CEF et le sandbox restent actifs sous Windows, tandis que le contrôle sur disque de macOS est conservé."
+    ],
+    "it": [
+      "CL-GO raggiunge ufficialmente la versione 1.0.",
+      "Il browser Chromium sicuro è ora disponibile su Windows grazie a una verifica compatibile con il blocco del database di Chromium.",
+      "Le protezioni CEF e la sandbox restano attive su Windows, mentre macOS mantiene il controllo su disco esistente."
+    ],
+    "ja": [
+      "CL-GO は正式にバージョン 1.0 になりました。",
+      "Chromium のデータベースロックに対応した検証により、Windows でも安全な Chromium ブラウザーを利用できるようになりました。",
+      "Windows では CEF の保護とサンドボックスを維持し、macOS では既存のディスク保護確認を継続します。"
+    ],
+    "zh": [
+      "CL-GO 正式迈入 1.0 版本。",
+      "安全的 Chromium 浏览器现已可在 Windows 上使用，验证流程已兼容 Chromium 的数据库锁定机制。",
+      "Windows 继续启用 CEF 安全保护和沙箱，macOS 则保留现有的磁盘保护检查。"
+    ]
+  },
   "0.9.9": {
     "de": [
       "Die Windows-Version lädt wieder die mitgelieferte Oberfläche, statt eine lokale Entwicklungsadresse zu öffnen.",
