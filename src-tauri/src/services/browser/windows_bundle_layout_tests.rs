@@ -66,7 +66,6 @@ fn windows_private_storage_ci_does_not_load_the_cef_runtime() {
     let workflow =
         std::fs::read_to_string(root.join("../.github/workflows/ci.yml")).expect("CI workflow");
 
-    assert!(workflow
-        .contains("cargo test --lib services::private_store::tests --features cef-cross-check"));
+    assert!(workflow.contains("cargo test --manifest-path tests/windows-private-store/Cargo.toml"));
     assert!(!workflow.contains("prepare-cef-windows-test-runtime.ps1"));
 }

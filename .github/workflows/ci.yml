@@ -61,7 +61,7 @@ jobs:
 
       - name: Windows private storage tests
         working-directory: src-tauri
-        run: cargo test --lib services::private_store::tests --features cef-cross-check
+        run: cargo test --manifest-path tests/windows-private-store/Cargo.toml
 
   frontend:
     name: Frontend (TS/React)
