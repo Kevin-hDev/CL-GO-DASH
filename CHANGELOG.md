@@ -9,12 +9,14 @@
 ### Bug Fixes
 
 - **Windows release builds** — normalized the verified CEF archive layout before Rust compilation so Windows tests and NSIS installer builds can find Chromium runtime files and locales.
+- **Windows startup permissions** — accepted valid private ACL entries whose trustee type is reported as unspecified by Windows while still verifying the exact user SID, access rights, inheritance, and entry count.
 - **macOS release builds** — explicitly enabled the project's ad hoc signing policy for CEF release bundles while keeping production entitlements and fail-closed validation.
 
 ### Reliability
 
 - **CEF cache migration** — invalidated older incompatible CEF layouts automatically instead of reusing a cache that would fail during compilation.
 - **Release regression coverage** — added cross-platform checks for Windows CEF staging and macOS signing workflow configuration.
+- **Windows storage coverage** — added an isolated native Windows test for private writes, ACL repair, and repeated permission checks without loading the browser runtime.
 
 ---
 
