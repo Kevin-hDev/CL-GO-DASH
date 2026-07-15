@@ -149,6 +149,20 @@ describe("BrowserPanel", () => {
     expect(address).toHaveValue("https://typing.example/");
   });
 
+  it("signale la présence réelle de la surface CEF", () => {
+    const { container, rerender } = render(
+      <BrowserPanel conversationId="session-test" active fullscreen={false} onFullscreenChange={vi.fn()} />,
+    );
+    expect(container.querySelector(".ib-surface")).toHaveAttribute("data-native-active", "false");
+
+    api.session = {
+      ...blankSession(2),
+      tabs: [{ ...blankSession().tabs[0], url: "https://example.com/" }],
+    };
+    rerender(<BrowserPanel conversationId="session-test" active fullscreen={false} onFullscreenChange={vi.fn()} />);
+    expect(container.querySelector(".ib-surface")).toHaveAttribute("data-native-active", "true");
+  });
+
   it("confirme avant de remplacer le plus ancien onglet inactif", async () => {
     vi.mocked(api.createTab)
       .mockResolvedValueOnce({

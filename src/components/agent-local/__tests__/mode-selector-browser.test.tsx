@@ -85,7 +85,7 @@ describe("ModeSelector browser mode", () => {
 
     render(
       <>
-        <div className="ib-surface" />
+        <div className="ib-surface" data-native-active="true" />
         <ModeSelector mode="browser" browserStatus="ready" onChange={vi.fn()} />
       </>,
     );
@@ -93,6 +93,33 @@ describe("ModeSelector browser mode", () => {
 
     const menu = document.body.querySelector<HTMLElement>(".asp-mode-menu");
     await waitFor(() => expect(Number.parseFloat(menu?.style.top ?? "NaN")).toBeLessThanOrEqual(16));
+  });
+
+  it("reste aligné au bouton quand l'onglet navigateur est vide", async () => {
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+      if (this.classList.contains("ib-surface")) {
+        return rect({ left: 500, top: 120, width: 500, height: 580 });
+      }
+      if (this.classList.contains("asp-mode-menu")) {
+        return rect({ left: 680, top: 44, width: 160, height: 100 });
+      }
+      if (this instanceof HTMLButtonElement) {
+        return rect({ left: 800, top: 10, width: 40, height: 30 });
+      }
+      return rect({ left: 0, top: 0, width: 0, height: 0 });
+    });
+
+    render(
+      <>
+        <div className="ib-surface" data-native-active="false" />
+        <ModeSelector mode="browser" browserStatus="ready" onChange={vi.fn()} />
+      </>,
+    );
+    fireEvent.click(screen.getByRole("button"));
+
+    const menu = document.body.querySelector<HTMLElement>(".asp-mode-menu");
+    await waitFor(() => expect(menu?.style.top).toBe("44px"));
+    expect(menu?.style.right).toBe("184px");
   });
 });
 

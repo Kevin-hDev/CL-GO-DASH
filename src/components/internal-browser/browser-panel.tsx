@@ -136,6 +136,7 @@ export function BrowserPanel(props: BrowserPanelProps) {
         setSurfaceElement={setSurfaceElement}
         loading={loading}
         homeVisible={homeVisible}
+        nativeActive={Boolean(props.active && activeTab && activeTab.url !== null)}
         sites={localSites.sites}
         statusKey={statusKey}
         onOpenLocalSite={(url) => {

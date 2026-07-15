@@ -36,7 +36,7 @@ export function ModeSelector({ mode, browserStatus = "hidden", onChange }: ModeS
     const anchor = btnRef.current;
     const menu = menuRef.current;
     if (!open || !anchor || !menu) return;
-    const surface = document.querySelector<HTMLElement>(".ib-surface");
+    const surface = document.querySelector<HTMLElement>('.ib-surface[data-native-active="true"]');
     const surfaceRect = surface?.getBoundingClientRect() ?? null;
     const next = resolveModeMenuPosition(
       anchor.getBoundingClientRect(),
