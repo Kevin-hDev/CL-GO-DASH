@@ -48,6 +48,7 @@ pub(super) struct PersistedBrowserSession {
 }
 
 #[derive(Default)]
+#[cfg(any(test, target_os = "macos", target_os = "windows"))]
 pub(super) struct BrowserRuntimeTabUpdate {
     pub(super) title: Option<String>,
     pub(super) url: Option<String>,

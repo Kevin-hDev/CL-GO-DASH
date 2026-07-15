@@ -1,8 +1,8 @@
-use super::{
-    browser_api_types::{BrowserCommandError, BrowserNavigationAction, BrowserSurfaceRequest},
-    browser_view_key::BrowserViewKey,
-    runtime_handle::BrowserCapability,
+use super::browser_api_types::{
+    BrowserCommandError, BrowserNavigationAction, BrowserSurfaceRequest,
 };
+#[cfg(any(target_os = "macos", target_os = "windows"))]
+use super::{browser_view_key::BrowserViewKey, runtime_handle::BrowserCapability};
 
 #[cfg(any(target_os = "macos", target_os = "windows"))]
 pub async fn apply_surface(
@@ -27,8 +27,15 @@ pub async fn apply_surface(
 #[cfg(not(any(target_os = "macos", target_os = "windows")))]
 pub async fn apply_surface(
     _app: tauri::AppHandle,
-    _request: BrowserSurfaceRequest,
+    request: BrowserSurfaceRequest,
 ) -> Result<(), BrowserCommandError> {
+    let BrowserSurfaceRequest {
+        conversation_id,
+        tab_id,
+        url,
+        bounds,
+    } = request;
+    drop((conversation_id, tab_id, url, bounds));
     Err(BrowserCommandError::Unavailable)
 }
 
@@ -119,12 +126,14 @@ async fn run_on_main(
         .map_err(|_| BrowserCommandError::Unavailable)
 }
 
+#[cfg(any(target_os = "macos", target_os = "windows"))]
 fn ensure_ready(app: &tauri::AppHandle) -> Result<(), BrowserCommandError> {
     matches!(super::capability(app), BrowserCapability::Ready { .. })
         .then_some(())
         .ok_or(BrowserCommandError::Unavailable)
 }
 
+#[cfg(any(target_os = "macos", target_os = "windows"))]
 fn invalid(_: ()) -> BrowserCommandError {
     BrowserCommandError::InvalidInput
 }

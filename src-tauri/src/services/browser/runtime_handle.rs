@@ -1,7 +1,10 @@
+#[cfg(any(test, target_os = "macos", target_os = "windows"))]
 use super::lifecycle::{Lifecycle, RuntimePhase};
 use serde::Serialize;
+#[cfg(any(test, target_os = "macos", target_os = "windows"))]
 use std::sync::{Arc, Mutex};
 
+#[cfg(any(test, target_os = "macos", target_os = "windows"))]
 pub(super) const CEF_VERSION: &str = "150.0.0+150.0.10";
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -18,6 +21,7 @@ pub enum BrowserCapability {
 
 #[derive(Clone, Default)]
 pub struct BrowserRuntimeHandle {
+    #[cfg(any(test, target_os = "macos", target_os = "windows"))]
     lifecycle: Arc<Mutex<Lifecycle>>,
 }
 
@@ -30,6 +34,7 @@ impl BrowserRuntimeHandle {
             .unwrap_or(false)
     }
 
+    #[cfg(any(test, target_os = "macos", target_os = "windows"))]
     pub fn capability(&self) -> BrowserCapability {
         let Ok(lifecycle) = self.lifecycle.lock() else {
             return BrowserCapability::Unavailable;
@@ -42,6 +47,12 @@ impl BrowserRuntimeHandle {
         }
     }
 
+    #[cfg(not(any(test, target_os = "macos", target_os = "windows")))]
+    pub fn capability(&self) -> BrowserCapability {
+        BrowserCapability::Unavailable
+    }
+
+    #[cfg(any(test, target_os = "macos", target_os = "windows"))]
     pub(super) fn mark_application_prepared(&self) -> bool {
         self.lifecycle
             .lock()
@@ -49,6 +60,7 @@ impl BrowserRuntimeHandle {
             .unwrap_or(false)
     }
 
+    #[cfg(any(test, target_os = "macos", target_os = "windows"))]
     pub(super) fn mark_running(&self) -> bool {
         self.lifecycle
             .lock()
@@ -56,6 +68,7 @@ impl BrowserRuntimeHandle {
             .unwrap_or(false)
     }
 
+    #[cfg(any(test, target_os = "macos", target_os = "windows"))]
     pub(super) fn mark_failed(&self) -> bool {
         self.lifecycle
             .lock()
@@ -63,6 +76,7 @@ impl BrowserRuntimeHandle {
             .unwrap_or(false)
     }
 
+    #[cfg(any(test, target_os = "macos", target_os = "windows"))]
     pub(super) fn begin_stopping(&self) -> bool {
         self.lifecycle
             .lock()
@@ -70,6 +84,7 @@ impl BrowserRuntimeHandle {
             .unwrap_or(false)
     }
 
+    #[cfg(any(test, target_os = "macos", target_os = "windows"))]
     pub(super) fn mark_stopped(&self) -> bool {
         self.lifecycle
             .lock()

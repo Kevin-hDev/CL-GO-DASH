@@ -1,10 +1,13 @@
+#[cfg(any(test, target_os = "macos", target_os = "windows"))]
 use super::{
     browser_view_key::BrowserViewKey,
-    live_session_registry::LiveSessionRegistry,
     runtime_revision::{RuntimeRevisionCache, RuntimeStamp},
+    session_types::BrowserRuntimeTabUpdate,
+};
+use super::{
+    live_session_registry::LiveSessionRegistry,
     session_model::{BrowserSessionState, BrowserTabCreation, SessionModel},
     session_persistence,
-    session_types::BrowserRuntimeTabUpdate,
     tab_id::new_secure_tab_id,
     BrowserCommandError,
 };
@@ -14,6 +17,7 @@ use std::sync::{Arc, Mutex};
 pub struct BrowserSessionService {
     gate: Arc<Mutex<()>>,
     live_sessions: Arc<Mutex<LiveSessionRegistry>>,
+    #[cfg(any(test, target_os = "macos", target_os = "windows"))]
     runtime_revisions: Arc<Mutex<RuntimeRevisionCache>>,
 }
 
@@ -80,6 +84,7 @@ impl BrowserSessionService {
         })
     }
 
+    #[cfg(any(test, target_os = "macos", target_os = "windows"))]
     pub(super) fn update_runtime(
         &self,
         session_id: &str,
@@ -109,6 +114,7 @@ impl BrowserSessionService {
         })
     }
 
+    #[cfg(any(test, target_os = "macos", target_os = "windows"))]
     pub(super) fn mark_released(
         &self,
         session_id: &str,
@@ -164,6 +170,7 @@ fn validate_session_id(session_id: &str) -> Result<(), BrowserCommandError> {
         .map_err(|_| BrowserCommandError::InvalidInput)
 }
 
+#[cfg(any(test, target_os = "macos", target_os = "windows"))]
 fn validated_view_key(
     session_id: &str,
     tab_id: &str,

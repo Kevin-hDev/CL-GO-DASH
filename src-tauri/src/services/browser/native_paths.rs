@@ -33,6 +33,7 @@ pub(super) const WINDOWS_RUNTIME_FILES: [&str; 23] = [
 #[cfg(any(test, target_os = "windows"))]
 const MAX_RUNTIME_FILE_BYTES: u64 = 512 * 1024 * 1024;
 
+#[cfg(any(target_os = "macos", target_os = "windows"))]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct RuntimeFiles {
     #[cfg(target_os = "macos")]

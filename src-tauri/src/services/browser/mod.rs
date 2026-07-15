@@ -4,6 +4,7 @@ mod browser_events;
 #[cfg(any(target_os = "macos", target_os = "windows"))]
 mod browser_slot;
 mod browser_surface_api;
+#[cfg(any(test, target_os = "macos", target_os = "windows"))]
 mod browser_view_key;
 #[cfg(any(target_os = "macos", target_os = "windows"))]
 mod cef_app;
@@ -41,9 +42,11 @@ mod cef_surface;
 mod cef_surface_view;
 #[cfg(any(target_os = "macos", target_os = "windows"))]
 mod cef_text;
+#[cfg(any(test, target_os = "macos", target_os = "windows"))]
 mod cookie_store_probe;
 #[cfg(any(target_os = "macos", target_os = "windows"))]
 mod ffi_guard;
+#[cfg(any(test, target_os = "macos", target_os = "windows"))]
 mod lifecycle;
 mod live_session_registry;
 mod local_site_candidates;
@@ -55,6 +58,7 @@ mod local_site_scanner;
 mod local_site_types;
 #[cfg(target_os = "macos")]
 mod native_application;
+#[cfg(any(test, target_os = "macos", target_os = "windows"))]
 mod native_paths;
 #[cfg(target_os = "macos")]
 mod native_pump;
@@ -62,6 +66,7 @@ mod native_pump;
 mod native_pump_wake;
 #[cfg(any(target_os = "macos", target_os = "windows"))]
 mod native_surface;
+#[cfg(any(test, target_os = "macos", target_os = "windows"))]
 mod navigation_target;
 #[cfg(any(test, target_os = "macos"))]
 mod process_role;
@@ -70,8 +75,11 @@ mod pump_gate;
 #[cfg(any(target_os = "macos", target_os = "windows"))]
 mod pump_scheduler;
 mod runtime_handle;
+mod runtime_integration;
+#[cfg(any(test, target_os = "macos", target_os = "windows"))]
 mod runtime_revision;
 mod session_model;
+#[cfg(any(test, target_os = "macos", target_os = "windows"))]
 mod session_model_runtime;
 mod session_persistence;
 mod session_service;
@@ -83,7 +91,9 @@ mod settings;
 mod surface_bounds;
 mod tab_id;
 mod url_policy;
+#[cfg(any(test, target_os = "macos", target_os = "windows"))]
 mod view_recency;
+#[cfg(any(test, target_os = "macos", target_os = "windows"))]
 mod view_state;
 #[cfg(target_os = "windows")]
 pub(crate) mod windows_sandbox;
@@ -145,7 +155,6 @@ mod view_state_tests;
 #[cfg(test)]
 mod windows_bundle_layout_tests;
 
-use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::Manager;
 
 pub use browser_api_types::{BrowserCommandError, BrowserNavigationAction, BrowserSurfaceRequest};
@@ -155,53 +164,11 @@ pub use browser_surface_api::{
 pub use local_site_scanner::LocalSiteScanner;
 pub use local_site_types::{LocalSiteScanResult, LOCAL_SITES_CHANGED_EVENT};
 pub use runtime_handle::{BrowserCapability, BrowserRuntimeHandle};
+pub(crate) use runtime_integration::{
+    prepare_native_application, reset_page_surface, setup_on_run_event, shutdown,
+};
 pub use session_model::{BrowserSessionState, BrowserTabCreation};
 pub use session_service::BrowserSessionService;
-
-static NATIVE_APPLICATION_READY: AtomicBool = AtomicBool::new(false);
-
-#[cfg(target_os = "macos")]
-pub(crate) fn prepare_native_application() -> bool {
-    let ready = native_application::prepare().is_ok();
-    NATIVE_APPLICATION_READY.store(ready, Ordering::Release);
-    ready
-}
-
-#[cfg(not(target_os = "macos"))]
-pub(crate) fn prepare_native_application() -> bool {
-    NATIVE_APPLICATION_READY.store(true, Ordering::Release);
-    true
-}
-
-pub(crate) fn setup_on_run_event(app: &tauri::AppHandle, event: &tauri::RunEvent) {
-    if !matches!(event, tauri::RunEvent::Ready) {
-        return;
-    }
-    let runtime = app.state::<BrowserRuntimeHandle>().inner().clone();
-    if !NATIVE_APPLICATION_READY.load(Ordering::Acquire) || !runtime.mark_application_prepared() {
-        return;
-    }
-    #[cfg(any(target_os = "macos", target_os = "windows"))]
-    cef_engine::initialize(app.clone(), runtime);
-}
-
-pub(crate) fn reset_page_surface(_app: &tauri::AppHandle) {
-    #[cfg(any(target_os = "macos", target_os = "windows"))]
-    {
-        let app = _app;
-        let main_app = app.clone();
-        if app
-            .run_on_main_thread(move || {
-                if cef_engine::reset_page_surface(&main_app).is_err() {
-                    eprintln!("[browser] surface reset failed");
-                }
-            })
-            .is_err()
-        {
-            eprintln!("[browser] surface reset unavailable");
-        }
-    }
-}
 
 pub fn capability(app: &tauri::AppHandle) -> BrowserCapability {
     capability_for_runtime(app.state::<BrowserRuntimeHandle>().inner())
@@ -220,9 +187,4 @@ pub(super) fn capability_for_runtime(runtime: &BrowserRuntimeHandle) -> BrowserC
             runtime_capability
         }
     }
-}
-
-pub(crate) fn shutdown(app: &tauri::AppHandle) {
-    #[cfg(any(target_os = "macos", target_os = "windows"))]
-    cef_engine::shutdown(app.state::<BrowserRuntimeHandle>().inner());
 }
