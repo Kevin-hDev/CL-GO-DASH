@@ -11,9 +11,10 @@
 }
 
 .ib-home-icon {
+  display: block;
   width: var(--icon-2xl);
   height: var(--icon-2xl);
-  color: var(--ink-muted);
+  object-fit: contain;
 }
 
 .ib-home-title {

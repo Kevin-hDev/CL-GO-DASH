@@ -110,9 +110,13 @@ describe("BrowserPanel", () => {
   });
 
   it("affiche l'accueil, les localhost et valide la barre d'adresse", async () => {
-    render(<BrowserPanel conversationId="session-test" active fullscreen={false} onFullscreenChange={vi.fn()} />);
+    const { container } = render(
+      <BrowserPanel conversationId="session-test" active fullscreen={false} onFullscreenChange={vi.fn()} />,
+    );
 
     expect(screen.getByText("Nouvel onglet")).toBeTruthy();
+    expect(container.querySelector("img.ib-tab-icon")).toHaveAttribute("alt", "");
+    expect(container.querySelector("img.ib-home-icon")).toHaveAttribute("alt", "");
     expect(screen.getByRole("button", { name: "Retour" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Avancer" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Recharger" })).toBeDisabled();

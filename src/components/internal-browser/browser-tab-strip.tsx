@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { Globe2, Plus, X } from "@/components/ui/lucide-icons";
+import { Plus, X } from "@/components/ui/lucide-icons";
+import { BrowserIcon } from "./browser-icon";
 import type { BrowserTabState } from "./browser-types";
 
 interface BrowserTabStripProps {
@@ -28,7 +29,7 @@ export function BrowserTabStrip(props: BrowserTabStripProps) {
                 title={title}
                 onClick={() => props.onSelect(tab.id)}
               >
-                <Globe2 size="var(--icon-md)" aria-hidden="true" />
+                <BrowserIcon className="ib-tab-icon" />
                 <span className="ib-tab-title">{title}</span>
               </button>
               <button

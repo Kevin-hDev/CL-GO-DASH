@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Globe2 } from "@/components/ui/lucide-icons";
+import { BrowserIcon } from "./browser-icon";
 import type { LocalSite } from "./browser-types";
 
 interface BrowserHomeProps {
@@ -11,7 +11,7 @@ export function BrowserHome({ sites, onOpen }: BrowserHomeProps) {
   const { t } = useTranslation();
   return (
     <div className="ib-home">
-      <Globe2 className="ib-home-icon" aria-hidden="true" />
+      <BrowserIcon className="ib-home-icon" />
       <h2 className="ib-home-title">{t("browser.startTitle")}</h2>
       <p className="ib-home-description">{t("browser.startDescription")}</p>
       {sites.length > 0 && (

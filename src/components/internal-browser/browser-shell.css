@@ -75,6 +75,14 @@
   white-space: nowrap;
 }
 
+.ib-tab-icon {
+  display: block;
+  width: var(--icon-md);
+  height: var(--icon-md);
+  object-fit: contain;
+  flex: 0 0 auto;
+}
+
 .ib-tab-close,
 .ib-tab-add,
 .ib-nav-button,
