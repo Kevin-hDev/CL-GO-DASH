@@ -14,8 +14,24 @@ pub(super) const CEF_VERSION: &str = "150.0.0+150.0.10";
     rename_all_fields = "camelCase"
 )]
 pub enum BrowserCapability {
-    Ready { engine_version: String },
+    #[cfg_attr(
+        all(not(test), target_os = "linux"),
+        expect(
+            dead_code,
+            reason = "native-only capability kept in the shared IPC schema"
+        )
+    )]
+    Ready {
+        engine_version: String,
+    },
     Unavailable,
+    #[cfg_attr(
+        all(not(test), any(target_os = "macos", target_os = "windows")),
+        expect(
+            dead_code,
+            reason = "Linux-only capability kept in the shared IPC schema"
+        )
+    )]
     Hidden,
 }
 
@@ -68,7 +84,7 @@ impl BrowserRuntimeHandle {
             .unwrap_or(false)
     }
 
-    #[cfg(any(test, target_os = "macos", target_os = "windows"))]
+    #[cfg(any(target_os = "macos", target_os = "windows"))]
     pub(super) fn mark_failed(&self) -> bool {
         self.lifecycle
             .lock()
@@ -76,7 +92,7 @@ impl BrowserRuntimeHandle {
             .unwrap_or(false)
     }
 
-    #[cfg(any(test, target_os = "macos", target_os = "windows"))]
+    #[cfg(any(target_os = "macos", target_os = "windows"))]
     pub(super) fn begin_stopping(&self) -> bool {
         self.lifecycle
             .lock()
@@ -84,7 +100,7 @@ impl BrowserRuntimeHandle {
             .unwrap_or(false)
     }
 
-    #[cfg(any(test, target_os = "macos", target_os = "windows"))]
+    #[cfg(any(target_os = "macos", target_os = "windows"))]
     pub(super) fn mark_stopped(&self) -> bool {
         self.lifecycle
             .lock()

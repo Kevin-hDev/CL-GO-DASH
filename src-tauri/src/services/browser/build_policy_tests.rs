@@ -35,3 +35,26 @@ fn native_runtime_modules_are_not_built_in_linux_library() {
         );
     }
 }
+
+#[test]
+fn native_runtime_entrypoints_stay_out_of_linux_tests() {
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("src/services/browser");
+    let runtime = std::fs::read_to_string(root.join("runtime_handle.rs")).expect("runtime handle");
+    let sessions =
+        std::fs::read_to_string(root.join("session_service.rs")).expect("session service");
+    let native = "#[cfg(any(target_os = \"macos\", target_os = \"windows\"))]";
+
+    for signature in [
+        "pub(super) fn mark_failed",
+        "pub(super) fn begin_stopping",
+        "pub(super) fn mark_stopped",
+    ] {
+        assert!(runtime.contains(&format!("{native}\n    {signature}")));
+    }
+    for signature in [
+        "pub(super) fn update_runtime",
+        "pub(super) fn mark_released",
+    ] {
+        assert!(sessions.contains(&format!("{native}\n    {signature}")));
+    }
+}

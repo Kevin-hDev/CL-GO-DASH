@@ -174,17 +174,19 @@ pub fn capability(app: &tauri::AppHandle) -> BrowserCapability {
     capability_for_runtime(app.state::<BrowserRuntimeHandle>().inner())
 }
 
+#[cfg(any(target_os = "macos", target_os = "windows"))]
 pub(super) fn capability_for_runtime(runtime: &BrowserRuntimeHandle) -> BrowserCapability {
-    if cfg!(target_os = "linux") {
-        BrowserCapability::Hidden
+    let runtime_capability = runtime.capability();
+    if matches!(runtime_capability, BrowserCapability::Ready { .. })
+        && session_store::session_key().is_err()
+    {
+        BrowserCapability::Unavailable
     } else {
-        let runtime_capability = runtime.capability();
-        if matches!(runtime_capability, BrowserCapability::Ready { .. })
-            && session_store::session_key().is_err()
-        {
-            BrowserCapability::Unavailable
-        } else {
-            runtime_capability
-        }
+        runtime_capability
     }
+}
+
+#[cfg(not(any(target_os = "macos", target_os = "windows")))]
+pub(super) fn capability_for_runtime(_runtime: &BrowserRuntimeHandle) -> BrowserCapability {
+    BrowserCapability::Hidden
 }

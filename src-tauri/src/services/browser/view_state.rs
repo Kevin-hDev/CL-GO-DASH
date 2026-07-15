@@ -20,6 +20,7 @@ impl Default for ViewState {
 }
 
 impl ViewState {
+    #[cfg(any(target_os = "macos", target_os = "windows"))]
     pub(super) fn is_ready(&self) -> bool {
         self.phase == ViewPhase::Ready
     }
