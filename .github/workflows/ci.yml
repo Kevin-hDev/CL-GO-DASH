@@ -54,22 +54,6 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Install Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 24
-
-      - name: Cache verified CEF archives
-        uses: actions/cache@v5
-        with:
-          path: |
-            src-tauri/.cef-cache
-            src-tauri/.cef-tool-cache
-          key: cef-windows-${{ hashFiles('src-tauri/cef-artifacts.json', 'src-tauri/cef-build-tools.json') }}
-
-      - name: Prepare verified CEF source
-        run: node scripts/cef/prepare-cef-source.mjs
-
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
         with:
@@ -77,10 +61,7 @@ jobs:
 
       - name: Windows private storage tests
         working-directory: src-tauri
-        run: |
-          cargo test --lib services::private_store::tests --no-run
-          powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/prepare-cef-windows-test-runtime.ps1
-          cargo test --lib services::private_store::tests
+        run: cargo test --lib services::private_store::tests --features cef-cross-check
 
   frontend:
     name: Frontend (TS/React)
