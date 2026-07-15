@@ -782,10 +782,10 @@
   "browser": {
     "title": "Navigateur",
     "addressLabel": "Adresse du navigateur",
-    "addressPlaceholder": "Saisir une URL",
+    "addressPlaceholder": "Saisir une URL ou rechercher",
     "openAddress": "Ouvrir l’adresse",
     "startTitle": "Commencez à naviguer",
-    "startDescription": "Saisissez une URL pour ouvrir une page",
+    "startDescription": "Saisissez une URL ou lancez une recherche",
     "invalidUrl": "Saisissez une adresse HTTP ou HTTPS valide.",
     "tabsLabel": "Onglets du navigateur",
     "newTab": "Nouvel onglet",

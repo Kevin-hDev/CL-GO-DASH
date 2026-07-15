@@ -734,10 +734,10 @@
   "browser": {
     "title": "Browser",
     "addressLabel": "Browseradresse",
-    "addressPlaceholder": "URL eingeben",
+    "addressPlaceholder": "URL eingeben oder suchen",
     "openAddress": "Adresse öffnen",
     "startTitle": "Jetzt surfen",
-    "startDescription": "Gib eine URL ein, um eine Seite zu öffnen",
+    "startDescription": "Gib eine URL ein oder suche im Web",
     "invalidUrl": "Gib eine gültige HTTP- oder HTTPS-Adresse ein.",
     "tabsLabel": "Browser-Tabs",
     "newTab": "Neuer Tab",

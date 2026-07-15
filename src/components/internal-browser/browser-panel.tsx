@@ -4,7 +4,7 @@ import { BrowserNavigationBar } from "./browser-navigation-bar";
 import { BrowserReplaceDialog } from "./browser-replace-dialog";
 import { BrowserTabStrip } from "./browser-tab-strip";
 import { BrowserViewport } from "./browser-viewport";
-import { normalizeBrowserUrl } from "./browser-types";
+import { resolveBrowserAddress } from "./browser-address";
 import { useBrowserSession } from "./use-browser-session";
 import { useBrowserSurface } from "./use-browser-surface";
 import { useBrowserTabCreation } from "./use-browser-tab-creation";
@@ -85,7 +85,7 @@ export function BrowserPanel(props: BrowserPanelProps) {
 
   const submitAddress = () => {
     if (!activeTab) return;
-    const url = normalizeBrowserUrl(address);
+    const url = resolveBrowserAddress(address);
     if (!url) {
       setInvalidTabId(activeTab.id);
       return;

@@ -734,10 +734,10 @@
   "browser": {
     "title": "Browser",
     "addressLabel": "Indirizzo del browser",
-    "addressPlaceholder": "Inserisci un URL",
+    "addressPlaceholder": "Inserisci un URL o cerca",
     "openAddress": "Apri indirizzo",
     "startTitle": "Inizia a navigare",
-    "startDescription": "Inserisci un URL per aprire una pagina",
+    "startDescription": "Inserisci un URL o cerca sul web",
     "invalidUrl": "Inserisci un indirizzo HTTP o HTTPS valido.",
     "tabsLabel": "Schede del browser",
     "newTab": "Nuova scheda",

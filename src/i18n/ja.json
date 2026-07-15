@@ -734,10 +734,10 @@
   "browser": {
     "title": "ブラウザ",
     "addressLabel": "ブラウザのアドレス",
-    "addressPlaceholder": "URLを入力",
+    "addressPlaceholder": "URLを入力または検索",
     "openAddress": "アドレスを開く",
     "startTitle": "ブラウジングを開始",
-    "startDescription": "URLを入力してページを開きます",
+    "startDescription": "URLを入力するかウェブを検索します",
     "invalidUrl": "有効なHTTPまたはHTTPSアドレスを入力してください。",
     "tabsLabel": "ブラウザーのタブ",
     "newTab": "新しいタブ",

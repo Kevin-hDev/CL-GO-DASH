@@ -129,7 +129,7 @@ describe("BrowserPanel", () => {
     fireEvent.submit(screen.getByRole("form", { name: "Adresse du navigateur" }));
     expect(address).toHaveAttribute("aria-invalid", "true");
 
-    fireEvent.change(address, { target: { value: "https://example.com" } });
+    fireEvent.change(address, { target: { value: "example.com" } });
     fireEvent.submit(screen.getByRole("form", { name: "Adresse du navigateur" }));
     await waitFor(() => expect(api.navigate).toHaveBeenCalledWith(TAB_ONE, "https://example.com/"));
   });
