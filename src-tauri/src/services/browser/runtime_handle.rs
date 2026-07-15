@@ -21,9 +21,14 @@ pub enum BrowserCapability {
             reason = "native-only capability kept in the shared IPC schema"
         )
     )]
-    Ready {
-        engine_version: String,
-    },
+    Ready { engine_version: String },
+    #[cfg_attr(
+        all(not(test), target_os = "linux"),
+        expect(
+            dead_code,
+            reason = "native-only capability kept in the shared IPC schema"
+        )
+    )]
     Unavailable,
     #[cfg_attr(
         all(not(test), any(target_os = "macos", target_os = "windows")),
@@ -61,11 +66,6 @@ impl BrowserRuntimeHandle {
             },
             _ => BrowserCapability::Unavailable,
         }
-    }
-
-    #[cfg(not(any(test, target_os = "macos", target_os = "windows")))]
-    pub fn capability(&self) -> BrowserCapability {
-        BrowserCapability::Unavailable
     }
 
     #[cfg(any(test, target_os = "macos", target_os = "windows"))]
