@@ -12,11 +12,11 @@ wrap_app! {
 
     impl App {
         fn browser_process_handler(&self) -> Option<BrowserProcessHandler> {
-            Some(BrowserProcessCallbacks::new(
+            super::ffi_guard::value(None, || Some(BrowserProcessCallbacks::new(
                 self.pump.clone(),
                 self.runtime.clone(),
                 self.profile.clone(),
-            ))
+            )))
         }
     }
 }
@@ -30,15 +30,23 @@ wrap_browser_process_handler! {
 
     impl BrowserProcessHandler {
         fn on_context_initialized(&self) {
-            super::cef_cookie_gate::start(
-                self.pump.app().clone(),
-                self.profile.clone(),
-                self.runtime.clone(),
+            let runtime = self.runtime.clone();
+            super::ffi_guard::unit_or(
+                || {
+                    let _ = runtime.mark_failed();
+                },
+                || {
+                    super::cef_cookie_gate::start(
+                        self.pump.app().clone(),
+                        self.profile.clone(),
+                        self.runtime.clone(),
+                    );
+                },
             );
         }
 
         fn on_schedule_message_pump_work(&self, delay_ms: i64) {
-            self.pump.schedule(delay_ms);
+            super::ffi_guard::unit(|| self.pump.schedule(delay_ms));
         }
     }
 }

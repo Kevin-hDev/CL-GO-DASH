@@ -19,27 +19,27 @@ cef::wrap_client! {
 
     impl Client {
         fn display_handler(&self) -> Option<DisplayHandler> {
-            Some(self.display_handler.clone())
+            super::ffi_guard::value(None, || Some(self.display_handler.clone()))
         }
 
         fn download_handler(&self) -> Option<DownloadHandler> {
-            Some(self.download_handler.clone())
+            super::ffi_guard::value(None, || Some(self.download_handler.clone()))
         }
 
         fn life_span_handler(&self) -> Option<LifeSpanHandler> {
-            Some(self.life_span_handler.clone())
+            super::ffi_guard::value(None, || Some(self.life_span_handler.clone()))
         }
 
         fn request_handler(&self) -> Option<RequestHandler> {
-            Some(self.request_handler.clone())
+            super::ffi_guard::value(None, || Some(self.request_handler.clone()))
         }
 
         fn load_handler(&self) -> Option<LoadHandler> {
-            Some(self.load_handler.clone())
+            super::ffi_guard::value(None, || Some(self.load_handler.clone()))
         }
 
         fn permission_handler(&self) -> Option<PermissionHandler> {
-            Some(self.permission_handler.clone())
+            super::ffi_guard::value(None, || Some(self.permission_handler.clone()))
         }
     }
 }

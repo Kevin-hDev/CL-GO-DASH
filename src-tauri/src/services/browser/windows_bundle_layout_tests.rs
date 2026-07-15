@@ -24,14 +24,18 @@ fn windows_bundle_stages_the_sandboxed_cef_runtime_at_the_app_root() {
 
 #[test]
 fn windows_bundle_hook_pins_and_verifies_the_cef_bootstrap() {
-    let script = std::fs::read_to_string(
-        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("scripts/prepare-cef-windows.ps1"),
-    )
-    .expect("Windows CEF bundle hook");
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+    let script = std::fs::read_to_string(root.join("scripts/prepare-cef-windows.ps1"))
+        .expect("Windows CEF bundle hook");
+    let manifest =
+        std::fs::read_to_string(root.join("cef-artifacts.json")).expect("CEF artifact manifest");
 
-    assert!(script.contains("150.0.10+g8042e43"));
-    assert!(script.contains("bce95ec52696c6725447fd0bf993cc928aefecd4"));
+    assert!(manifest.contains("150.0.10+g8042e43"));
+    assert!(!script.contains("ExpectedArchiveSha1"));
+    assert!(!script.contains("Algorithm SHA1"));
     assert!(script.contains("eab5d939293a666b210b8f5faec191324a017d6105485cfc45150863607bd367"));
+    assert!(script.contains("Release"));
+    assert!(script.contains("Resources"));
     assert!(script.contains("cl-go-dash.dll"));
     assert!(script.contains("LICENSE.txt"));
     assert!(script.contains("CREDITS.html"));

@@ -30,3 +30,8 @@ graphify-out/
 # Generated security/static-analysis reports
 .supply-chain-risk-auditor/
 static_analysis_*/
+src-tauri/.cef-cache/
+src-tauri/.cef-tool-cache/
+src-tauri/.cef-tools/
+src-tauri/.cef-verified/current/*
+!src-tauri/.cef-verified/current/.gitkeep

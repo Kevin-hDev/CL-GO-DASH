@@ -10,31 +10,43 @@ use objc2_foundation::{
 use std::cell::RefCell;
 use std::sync::Arc;
 
+pub(super) use super::native_pump_wake::PumpWake;
+
 define_class! {
     #[unsafe(super(NSObject))]
     #[ivars = Arc<PumpGate>]
-    struct PumpTarget;
+    pub(super) struct PumpTarget;
 
     impl PumpTarget {
         #[unsafe(method(scheduleWork:))]
         fn schedule_work(&self, delay: &NSNumber) {
-            if !self.ivars().begin_dispatch() {
-                return;
-            }
-            if let Ok(delay_ms) = i64::try_from(delay.integerValue()) {
-                with_pump(|pump| pump.schedule_work(delay_ms, self));
-            }
-            self.finish_dispatch();
+            super::ffi_guard::unit_or(
+                || self.finish_dispatch(),
+                || {
+                    if !self.ivars().begin_dispatch() {
+                        return;
+                    }
+                    if let Ok(delay_ms) = i64::try_from(delay.integerValue()) {
+                        with_pump(|pump| pump.schedule_work(delay_ms, self));
+                    }
+                    self.finish_dispatch();
+                },
+            );
         }
 
         #[unsafe(method(timerTimeout:))]
         fn timer_timeout(&self, _timer: &NSTimer) {
-            let _ = self.ivars().request();
-            if !self.ivars().begin_dispatch() {
-                return;
-            }
-            with_pump(|pump| pump.timer_timeout(self));
-            self.finish_dispatch();
+            super::ffi_guard::unit_or(
+                || self.finish_dispatch(),
+                || {
+                    let _ = self.ivars().request();
+                    if !self.ivars().begin_dispatch() {
+                        return;
+                    }
+                    with_pump(|pump| pump.timer_timeout(self));
+                    self.finish_dispatch();
+                },
+            );
         }
     }
 
@@ -51,30 +63,6 @@ impl PumpTarget {
         if self.ivars().complete_and_requeue() {
             queue_on_thread(self, &NSThread::currentThread(), 0);
         }
-    }
-}
-
-#[derive(Clone)]
-pub(super) struct PumpWake {
-    gate: Arc<PumpGate>,
-    owner_thread: Retained<NSThread>,
-    target: Retained<PumpTarget>,
-}
-
-// `performSelector:onThread:` is explicitly safe to call from any thread.
-unsafe impl Send for PumpWake {}
-unsafe impl Sync for PumpWake {}
-
-impl PumpWake {
-    pub(super) fn notify(&self, delay_ms: i64) {
-        if self.gate.request() {
-            queue_on_thread(&self.target, &self.owner_thread, delay_ms);
-        }
-    }
-
-    fn start(&self) {
-        let _ = self.gate.request();
-        queue_on_thread(&self.target, &self.owner_thread, 0);
     }
 }
 
@@ -139,16 +127,14 @@ thread_local! {
 }
 
 pub(super) fn start(gate: Arc<PumpGate>) -> Result<PumpWake, ()> {
-    MainThreadMarker::new().ok_or(())?;
+    let marker = MainThreadMarker::new().ok_or(())?;
     NATIVE_PUMP.with(|slot| {
         if slot.borrow().is_some() {
             return Err(());
         }
-        let wake = PumpWake {
-            owner_thread: NSThread::currentThread(),
-            target: PumpTarget::new(gate.clone()),
-            gate,
-        };
+        let owner_thread = NSThread::currentThread();
+        let target = PumpTarget::new(gate.clone());
+        let wake = PumpWake::new(gate, owner_thread, target, marker);
         *slot.borrow_mut() = Some(NativePump { timer: None });
         wake.start();
         Ok(wake)
@@ -163,7 +149,7 @@ fn with_pump(action: impl FnOnce(&mut NativePump)) {
     });
 }
 
-fn queue_on_thread(target: &PumpTarget, thread: &NSThread, delay_ms: i64) {
+pub(super) fn queue_on_thread(target: &PumpTarget, thread: &NSThread, delay_ms: i64) {
     let number = NSNumber::numberWithInteger(delay_ms.clamp(0, isize::MAX as i64) as isize);
     unsafe {
         target.performSelector_onThread_withObject_waitUntilDone(

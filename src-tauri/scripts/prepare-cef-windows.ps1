@@ -1,14 +1,12 @@
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 
-$ExpectedArchive = "cef_binary_150.0.10+g8042e43+chromium-150.0.7871.101_windows64_minimal.tar.bz2"
-$ExpectedArchiveSha1 = "bce95ec52696c6725447fd0bf993cc928aefecd4"
 $ExpectedBootstrapSha256 = "eab5d939293a666b210b8f5faec191324a017d6105485cfc45150863607bd367"
 $ExpectedLicenseSha256 = "2e69c36a7eaa4fa153426eab635c607ea0356cbc7a68a70f42a49e8ab8eb8106"
 $ExpectedCreditsSha256 = "333620129bfec11001385ea24d68de049ce0eeb8d012d2a1382b5340d7d62daf"
 $MaxFileBytes = 536870912
 
-$RuntimeFiles = @(
+$BinaryFiles = @(
   "chrome_elf.dll",
   "d3dcompiler_47.dll",
   "dxcompiler.dll",
@@ -19,7 +17,9 @@ $RuntimeFiles = @(
   "v8_context_snapshot.bin",
   "vk_swiftshader.dll",
   "vk_swiftshader_icd.json",
-  "vulkan-1.dll",
+  "vulkan-1.dll"
+)
+$ResourceFiles = @(
   "chrome_100_percent.pak",
   "chrome_200_percent.pak",
   "icudtl.dat",
@@ -43,37 +43,21 @@ function Copy-CheckedFile([string] $Source, [string] $Destination) {
 }
 
 $TauriDir = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
+$PrepareSource = Join-Path $TauriDir "..\scripts\cef\prepare-cef-source.mjs"
+& node $PrepareSource
+if ($LASTEXITCODE -ne 0) {
+  throw "CEF runtime validation failed"
+}
 $TargetDir = Join-Path $TauriDir "target\release"
-$BuildDir = Join-Path $TargetDir "build"
 $StageDir = Join-Path $TauriDir "target\cef-runtime\windows"
-$BuildCandidates = @(
-  Get-ChildItem -LiteralPath $BuildDir -Directory -Filter "cef-dll-sys-*" |
-    Select-Object -First 17
-)
-if ($BuildCandidates.Count -eq 0 -or $BuildCandidates.Count -gt 16) {
+$CefRoot = Join-Path $TauriDir ".cef-verified\current"
+$ReleaseDir = Join-Path $CefRoot "Release"
+$ResourcesDir = Join-Path $CefRoot "Resources"
+if (-not (Test-Path -LiteralPath $CefRoot -PathType Container)) {
   throw "CEF runtime validation failed"
 }
 
-$Validated = @()
-foreach ($Candidate in $BuildCandidates) {
-  $OutDir = Join-Path $Candidate.FullName "out"
-  $Archive = Join-Path $OutDir $ExpectedArchive
-  $CefRoot = Join-Path $OutDir "cef_windows_x86_64"
-  if ((Test-Path -LiteralPath $Archive -PathType Leaf) -and
-      (Test-Path -LiteralPath $CefRoot -PathType Container)) {
-    $ActualSha1 = (Get-FileHash -LiteralPath $Archive -Algorithm SHA1).Hash.ToLowerInvariant()
-    if ($ActualSha1 -eq $ExpectedArchiveSha1) {
-      $Validated += ,@($Archive, $CefRoot)
-    }
-  }
-}
-if ($Validated.Count -ne 1) {
-  throw "CEF runtime validation failed"
-}
-$Archive = $Validated[0][0]
-$CefRoot = $Validated[0][1]
-
-$Bootstrap = Join-Path $CefRoot "bootstrap.exe"
+$Bootstrap = Join-Path $ReleaseDir "bootstrap.exe"
 Assert-RegularFile $Bootstrap
 $BootstrapSha256 = (Get-FileHash -LiteralPath $Bootstrap -Algorithm SHA256).Hash.ToLowerInvariant()
 if ($BootstrapSha256 -ne $ExpectedBootstrapSha256) {
@@ -89,11 +73,14 @@ $LicensesDir = Join-Path $StageDir "cef"
 New-Item -ItemType Directory -Path $LocalesDir | Out-Null
 New-Item -ItemType Directory -Path $LicensesDir | Out-Null
 
-foreach ($Name in $RuntimeFiles) {
-  Copy-CheckedFile (Join-Path $CefRoot $Name) (Join-Path $StageDir $Name)
+foreach ($Name in $BinaryFiles) {
+  Copy-CheckedFile (Join-Path $ReleaseDir $Name) (Join-Path $StageDir $Name)
+}
+foreach ($Name in $ResourceFiles) {
+  Copy-CheckedFile (Join-Path $ResourcesDir $Name) (Join-Path $StageDir $Name)
 }
 foreach ($Name in $LocaleFiles) {
-  Copy-CheckedFile (Join-Path $CefRoot "locales\$Name") (Join-Path $LocalesDir $Name)
+  Copy-CheckedFile (Join-Path $ResourcesDir "locales\$Name") (Join-Path $LocalesDir $Name)
 }
 
 $Credits = Join-Path $CefRoot "CREDITS.html"
@@ -102,21 +89,12 @@ if ((Get-FileHash -LiteralPath $Credits -Algorithm SHA256).Hash.ToLowerInvariant
   throw "CEF runtime validation failed"
 }
 
-$ExtractDir = Join-Path $StageDir "license-extract"
-New-Item -ItemType Directory -Path $ExtractDir | Out-Null
-$ArchiveRoot = $ExpectedArchive.Substring(0, $ExpectedArchive.Length - ".tar.bz2".Length)
-$LicenseMember = "$ArchiveRoot/LICENSE.txt"
-& tar.exe "-xf" $Archive "-C" $ExtractDir $LicenseMember
-if ($LASTEXITCODE -ne 0) {
-  throw "CEF runtime validation failed"
-}
-$License = Join-Path $ExtractDir "$ArchiveRoot\LICENSE.txt"
+$License = Join-Path $CefRoot "LICENSE.txt"
 Assert-RegularFile $License
 if ((Get-FileHash -LiteralPath $License -Algorithm SHA256).Hash.ToLowerInvariant() -ne $ExpectedLicenseSha256) {
   throw "CEF runtime validation failed"
 }
 Copy-Item -LiteralPath $License -Destination (Join-Path $LicensesDir "LICENSE.txt") -Force
-Remove-Item -LiteralPath $ExtractDir -Recurse -Force
 
 $ApplicationDll = Join-Path $TargetDir "cl_go_dash_lib.dll"
 Copy-CheckedFile $ApplicationDll (Join-Path $StageDir "cl-go-dash.dll")

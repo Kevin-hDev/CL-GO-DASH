@@ -45,7 +45,9 @@ ditto "$FRAMEWORK_SOURCE" "$APP_FRAMEWORKS/Chromium Embedded Framework.framework
 ditto "$HELPERS_SOURCE" "$APP_FRAMEWORKS"
 install -m 644 "$PLIST_SOURCE" "$APP_ROOT/Contents/Info.plist"
 install -m 755 "$BINARY" "$APP_EXECUTABLE"
-codesign --force --sign - "$APP_EXECUTABLE" >/dev/null
-codesign --force --sign - "$APP_ROOT" >/dev/null
+codesign --force --options runtime --entitlements Entitlements.dev.plist \
+  --sign - "$APP_EXECUTABLE" >/dev/null
+codesign --force --options runtime --entitlements Entitlements.dev.plist \
+  --sign - "$APP_ROOT" >/dev/null
 
 exec "$APP_EXECUTABLE" "$@"

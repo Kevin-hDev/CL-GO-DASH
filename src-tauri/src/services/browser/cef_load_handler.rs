@@ -19,20 +19,22 @@ cef::wrap_load_handler! {
             can_go_back: std::os::raw::c_int,
             can_go_forward: std::os::raw::c_int,
         ) {
-            let Some(stamp) = self.slot.next_runtime_stamp() else {
-                return;
-            };
-            submit_runtime_update(
-                &self.app,
-                self.key.clone(),
-                stamp,
-                BrowserRuntimeTabUpdate {
-                    loading: Some(is_loading == 1),
-                    can_go_back: Some(can_go_back == 1),
-                    can_go_forward: Some(can_go_forward == 1),
-                    ..Default::default()
-                },
-            );
+            super::ffi_guard::unit(|| {
+                let Some(stamp) = self.slot.next_runtime_stamp() else {
+                    return;
+                };
+                submit_runtime_update(
+                    &self.app,
+                    self.key.clone(),
+                    stamp,
+                    BrowserRuntimeTabUpdate {
+                        loading: Some(is_loading == 1),
+                        can_go_back: Some(can_go_back == 1),
+                        can_go_forward: Some(can_go_forward == 1),
+                        ..Default::default()
+                    },
+                );
+            });
         }
     }
 }

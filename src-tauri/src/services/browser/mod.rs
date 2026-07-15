@@ -40,12 +40,15 @@ mod cef_surface_view;
 #[cfg(any(target_os = "macos", target_os = "windows"))]
 mod cef_text;
 mod cookie_store_probe;
+#[cfg(any(target_os = "macos", target_os = "windows"))]
+mod ffi_guard;
 mod lifecycle;
 mod live_session_registry;
 mod local_site_candidates;
 mod local_site_policy;
 mod local_site_probe;
 mod local_site_scan_state;
+mod local_site_scan_throttle;
 mod local_site_scanner;
 mod local_site_types;
 #[cfg(target_os = "macos")]
@@ -53,6 +56,8 @@ mod native_application;
 mod native_paths;
 #[cfg(target_os = "macos")]
 mod native_pump;
+#[cfg(target_os = "macos")]
+mod native_pump_wake;
 #[cfg(any(target_os = "macos", target_os = "windows"))]
 mod native_surface;
 mod navigation_target;
@@ -81,12 +86,16 @@ mod view_state;
 #[cfg(target_os = "windows")]
 pub(crate) mod windows_sandbox;
 
+#[cfg(test)]
+mod build_policy_tests;
 #[cfg(all(test, target_os = "macos"))]
 mod bundle_layout_tests;
 #[cfg(test)]
 mod cef_cookie_gate_policy_tests;
 #[cfg(test)]
 mod cookie_store_probe_tests;
+#[cfg(all(test, any(target_os = "macos", target_os = "windows")))]
+mod ffi_guard_tests;
 #[cfg(test)]
 mod lifecycle_tests;
 #[cfg(test)]
@@ -100,7 +109,11 @@ mod local_site_probe_tests;
 #[cfg(test)]
 mod local_site_scan_state_tests;
 #[cfg(test)]
+mod local_site_scan_throttle_tests;
+#[cfg(test)]
 mod native_paths_tests;
+#[cfg(all(test, target_os = "macos"))]
+mod native_pump_policy_tests;
 #[cfg(test)]
 mod navigation_target_tests;
 #[cfg(test)]

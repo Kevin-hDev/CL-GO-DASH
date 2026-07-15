@@ -34,43 +34,47 @@ cef::wrap_life_span_handler! {
             _extra_info: Option<&mut Option<DictionaryValue>>,
             _no_javascript_access: Option<&mut std::os::raw::c_int>,
         ) -> std::os::raw::c_int {
-            if let (Some(url), Some(generation)) = (
-                target_url.and_then(validated_cef_url),
-                next_event_generation(),
-            ) {
-                let _ = self.app.emit(
-                    POPUP_REQUEST_EVENT,
-                    PopupRequestEvent {
-                        event_version: EVENT_VERSION,
-                        generation,
-                        conversation_id: self.key.session_id.clone(),
-                        source_tab_id: self.key.tab_id.clone(),
-                        url,
-                    },
-                );
-            }
-            1
+            super::ffi_guard::value(1, || {
+                if let (Some(url), Some(generation)) = (
+                    target_url.and_then(validated_cef_url),
+                    next_event_generation(),
+                ) {
+                    let _ = self.app.emit(
+                        POPUP_REQUEST_EVENT,
+                        PopupRequestEvent {
+                            event_version: EVENT_VERSION,
+                            generation,
+                            conversation_id: self.key.session_id.clone(),
+                            source_tab_id: self.key.tab_id.clone(),
+                            url,
+                        },
+                    );
+                }
+                1
+            })
         }
 
         fn on_after_created(&self, browser: Option<&mut Browser>) {
-            if browser.is_some_and(|browser| self.slot.mark_created(browser)) {
-                let Some(generation) = next_event_generation() else {
-                    return;
-                };
-                let _ = self.app.emit(
-                    VIEW_READY_EVENT,
-                    BrowserTabEvent {
-                        event_version: EVENT_VERSION,
-                        generation,
-                        conversation_id: self.key.session_id.clone(),
-                        tab_id: self.key.tab_id.clone(),
-                    },
-                );
-            }
+            super::ffi_guard::unit(|| {
+                if browser.is_some_and(|browser| self.slot.mark_created(browser)) {
+                    let Some(generation) = next_event_generation() else {
+                        return;
+                    };
+                    let _ = self.app.emit(
+                        VIEW_READY_EVENT,
+                        BrowserTabEvent {
+                            event_version: EVENT_VERSION,
+                            generation,
+                            conversation_id: self.key.session_id.clone(),
+                            tab_id: self.key.tab_id.clone(),
+                        },
+                    );
+                }
+            });
         }
 
         fn on_before_close(&self, _browser: Option<&mut Browser>) {
-            self.slot.mark_closed();
+            super::ffi_guard::unit(|| self.slot.mark_closed());
         }
     }
 }

@@ -24,7 +24,7 @@ fn every_cef_helper_has_a_bounded_valid_bundle_manifest() {
 }
 
 #[test]
-fn unsigned_release_uses_a_verifiable_adhoc_bundle_signature() {
+fn macos_bundle_enables_the_hardened_runtime_and_cef_entitlements() {
     let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("tauri.conf.json");
     let content = std::fs::read_to_string(path).expect("tauri config");
     assert!(content.len() < 65_536);
@@ -43,12 +43,32 @@ fn unsigned_release_uses_a_verifiable_adhoc_bundle_signature() {
         macos
             .get("hardenedRuntime")
             .and_then(|value| value.as_bool()),
-        Some(false)
+        Some(true)
     );
+    assert_eq!(
+        macos.get("entitlements").and_then(|value| value.as_str()),
+        Some("Entitlements.plist")
+    );
+
+    let entitlements =
+        std::fs::read_to_string(Path::new(env!("CARGO_MANIFEST_DIR")).join("Entitlements.plist"))
+            .expect("CEF entitlements");
+    assert!(entitlements.contains("com.apple.security.cs.allow-jit"));
+    assert!(!entitlements.contains("com.apple.security.cs.disable-library-validation"));
+
+    let dev_entitlements = std::fs::read_to_string(
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("Entitlements.dev.plist"),
+    )
+    .expect("development CEF entitlements");
+    assert!(dev_entitlements.contains("com.apple.security.cs.disable-library-validation"));
+
+    let cargo = std::fs::read_to_string(Path::new(env!("CARGO_MANIFEST_DIR")).join("Cargo.toml"))
+        .expect("Cargo manifest");
+    assert!(cargo.contains("vendored-openssl"));
 }
 
 #[test]
-fn development_command_starts_vite_without_waiting_for_cef() {
+fn development_command_verifies_cef_before_starting_vite() {
     let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("tauri.conf.json");
     let content = std::fs::read_to_string(path).expect("tauri config");
     let config: serde_json::Value = serde_json::from_str(&content).expect("valid tauri config");
@@ -57,7 +77,40 @@ fn development_command_starts_vite_without_waiting_for_cef() {
         .and_then(|value| value.as_str())
         .expect("beforeDevCommand");
 
-    assert_eq!(command, "npm run dev");
+    let preparation = command
+        .find("prepare-cef-source.mjs")
+        .expect("verified CEF preparation");
+    let vite = command.find("npm run dev").expect("Vite command");
+    assert!(preparation < vite);
+}
+
+#[test]
+fn cargo_is_forced_to_use_the_preverified_cef_directory() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let cargo_config =
+        std::fs::read_to_string(root.join(".cargo/config.toml")).expect("Cargo configuration");
+
+    assert!(cargo_config.contains("CEF_PATH"));
+    assert!(cargo_config.contains(".cef-verified/current"));
+    assert!(cargo_config.contains("force = true"));
+    assert!(cargo_config.contains("cef-download-disabled.invalid"));
+}
+
+#[test]
+fn cef_manifest_pins_sha256_for_supported_desktops() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let manifest =
+        std::fs::read_to_string(root.join("cef-artifacts.json")).expect("CEF artifact manifest");
+
+    assert!(manifest.contains("ef5fe464184e2e00381a2cc73e911bb4b8cc219f0e6f9fd610af0bc89d0ea58d"));
+    assert!(manifest.contains("ff10d09944e976e281b2eaed17a20eaecb60ae5142ee2bd06fe2f7b38a23bf73"));
+    assert!(manifest.contains("https://cef-builds.spotifycdn.com/"));
+    assert!(!manifest.to_ascii_lowercase().contains("sha1"));
+
+    let tools = std::fs::read_to_string(root.join("cef-build-tools.json"))
+        .expect("CEF build tools manifest");
+    assert!(tools.contains("89a287444b5b3e98f88a945afa50ce937b8ffd1dcc59c555ad9b1baf855298c9"));
+    assert!(tools.contains("f550fec705b6d6ff58f2db3c374c2277a37691678d6aba463adcbb129108467a"));
 }
 
 #[test]
@@ -81,5 +134,11 @@ fn macos_development_runner_uses_a_real_application_bundle() {
     assert!(runner.contains("CL-GO Dev.app/Contents/MacOS"));
     assert!(runner.contains("exec \"$APP_EXECUTABLE\""));
     assert!(runner.contains("exec \"$BINARY\" \"$@\""));
+    assert!(runner.contains("--options runtime --entitlements Entitlements.dev.plist"));
     assert!(!runner.contains("--no-sandbox"));
+
+    let preparation = std::fs::read_to_string(root.join("scripts/prepare-cef.sh"))
+        .expect("CEF runtime preparation");
+    assert!(preparation.contains("Release/Chromium Embedded Framework.framework"));
+    assert!(preparation.contains("CEF release signing identity is required"));
 }

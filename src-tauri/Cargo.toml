@@ -145,10 +145,12 @@ resvg = "0.47.0"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 notify = { version = "7", features = ["macos_fsevent"] }
+git2 = { version = "0.20", features = ["vendored-openssl"] }
 core-foundation = "0.10"
 objc2 = "0.6"
 objc2-app-kit = { version = "0.3", features = ["NSApplication", "NSEvent", "NSView"] }
 objc2-foundation = { version = "0.3", default-features = false, features = ["std", "NSDate", "NSGeometry", "NSObject", "NSObjCRuntime", "NSRunLoop", "NSString", "NSTimer", "objc2-core-foundation"] }
+dispatch2 = "0.3"
 # Cargo ignore le suffixe build dans une contrainte semver ; Cargo.lock fixe
 # précisément le paquet publié 150.0.0+150.0.10.
 cef = { version = "=150.0.0", default-features = false, features = ["sandbox"] }

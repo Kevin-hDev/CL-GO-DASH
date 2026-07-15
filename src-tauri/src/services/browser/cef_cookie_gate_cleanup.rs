@@ -20,14 +20,20 @@ wrap_completion_callback! {
 
     impl CompletionCallback {
         fn on_complete(&self) {
-            let secure = self
-                .context
-                .probe_copy()
-                .and_then(|probe| {
-                    cookie_store_hides_probe(self.context.profile(), probe.as_ref())
-                })
-                .unwrap_or(false);
-            delete_probe(self.context.clone(), secure);
+            let failed = self.context.clone();
+            super::ffi_guard::unit_or(
+                || failed.complete(false),
+                || {
+                    let secure = self
+                        .context
+                        .probe_copy()
+                        .and_then(|probe| {
+                            cookie_store_hides_probe(self.context.profile(), probe.as_ref())
+                        })
+                        .unwrap_or(false);
+                    delete_probe(self.context.clone(), secure);
+                },
+            );
         }
     }
 }
@@ -53,11 +59,17 @@ wrap_delete_cookies_callback! {
 
     impl DeleteCookiesCallback {
         fn on_complete(&self, num_deleted: i32) {
-            if num_deleted < 1 {
-                self.context.complete(false);
-                return;
-            }
-            flush_cleanup(self.context.clone(), self.secure);
+            let failed = self.context.clone();
+            super::ffi_guard::unit_or(
+                || failed.complete(false),
+                || {
+                    if num_deleted < 1 {
+                        self.context.complete(false);
+                        return;
+                    }
+                    flush_cleanup(self.context.clone(), self.secure);
+                },
+            );
         }
     }
 }
@@ -81,7 +93,11 @@ wrap_completion_callback! {
 
     impl CompletionCallback {
         fn on_complete(&self) {
-            self.context.complete(self.secure);
+            let failed = self.context.clone();
+            super::ffi_guard::unit_or(
+                || failed.complete(false),
+                || self.context.complete(self.secure),
+            );
         }
     }
 }

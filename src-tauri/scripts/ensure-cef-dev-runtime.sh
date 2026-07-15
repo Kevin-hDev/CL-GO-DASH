@@ -21,6 +21,8 @@ INPUTS=(
   "Cargo.toml"
   "Cargo.lock"
   "build.rs"
+  "Entitlements.dev.plist"
+  "scripts/prepare-cef.sh"
   "src/bin/cl-go-dash-helper.rs"
 )
 
@@ -51,4 +53,4 @@ if [[ "$CACHE_VALID" == true ]]; then
   exit 0
 fi
 
-bash scripts/prepare-cef.sh
+CLGO_CEF_DEV_PREP=1 bash scripts/prepare-cef.sh

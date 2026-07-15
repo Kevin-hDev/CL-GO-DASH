@@ -4,8 +4,8 @@
   "version": "0.9.6",
   "identifier": "com.clgo.dash",
   "build": {
-    "beforeDevCommand": "npm run dev",
-    "beforeBuildCommand": "npm run build && cd src-tauri && bash scripts/prepare-searxng.sh && bash scripts/prepare-cef.sh",
+    "beforeDevCommand": "node scripts/cef/prepare-cef-source.mjs && npm run dev",
+    "beforeBuildCommand": "node scripts/cef/prepare-cef-source.mjs && npm run build && cd src-tauri && bash scripts/prepare-searxng.sh && bash scripts/prepare-cef.sh",
     "devUrl": "http://localhost:5173",
     "frontendDist": "../dist"
   },
@@ -47,7 +47,8 @@
     ],
     "macOS": {
       "signingIdentity": "-",
-      "hardenedRuntime": false,
+      "hardenedRuntime": true,
+      "entitlements": "Entitlements.plist",
       "frameworks": [
         "target/cef-runtime/macos/Chromium Embedded Framework.framework"
       ],

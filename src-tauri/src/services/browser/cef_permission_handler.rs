@@ -15,11 +15,13 @@ cef::wrap_permission_handler! {
             _requested_permissions: u32,
             callback: Option<&mut MediaAccessCallback>,
         ) -> std::os::raw::c_int {
-            self.notifier.publish_once();
-            if let Some(callback) = callback {
-                callback.cancel();
-            }
-            1
+            super::ffi_guard::value(1, || {
+                if let Some(callback) = callback {
+                    callback.cancel();
+                }
+                self.notifier.publish_once();
+                1
+            })
         }
 
         fn on_show_permission_prompt(
@@ -30,11 +32,13 @@ cef::wrap_permission_handler! {
             _requested_permissions: u32,
             callback: Option<&mut PermissionPromptCallback>,
         ) -> std::os::raw::c_int {
-            self.notifier.publish_once();
-            if let Some(callback) = callback {
-                callback.cont(PermissionRequestResult::DENY);
-            }
-            1
+            super::ffi_guard::value(1, || {
+                if let Some(callback) = callback {
+                    callback.cont(PermissionRequestResult::DENY);
+                }
+                self.notifier.publish_once();
+                1
+            })
         }
     }
 }

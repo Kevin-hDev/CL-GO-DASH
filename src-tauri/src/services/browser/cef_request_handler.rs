@@ -24,12 +24,14 @@ cef::wrap_request_handler! {
             _user_gesture: std::os::raw::c_int,
             _is_redirect: std::os::raw::c_int,
         ) -> std::os::raw::c_int {
-            let allowed = request.is_some_and(|request| {
-                let raw = request.url();
-                let value = CefString::from(&raw);
-                validated_cef_url(&value).is_some()
-            });
-            i32::from(!allowed)
+            super::ffi_guard::value(1, || {
+                let allowed = request.is_some_and(|request| {
+                    let raw = request.url();
+                    let value = CefString::from(&raw);
+                    validated_cef_url(&value).is_some()
+                });
+                i32::from(!allowed)
+            })
         }
 
         fn on_certificate_error(
@@ -40,7 +42,7 @@ cef::wrap_request_handler! {
             _ssl_info: Option<&mut Sslinfo>,
             _callback: Option<&mut Callback>,
         ) -> std::os::raw::c_int {
-            0
+            super::ffi_guard::value(0, || 0)
         }
 
         fn on_render_process_terminated(
@@ -50,25 +52,27 @@ cef::wrap_request_handler! {
             _error_code: std::os::raw::c_int,
             _error_string: Option<&CefString>,
         ) {
-            let key = self.key.clone();
-            let app = self.app.clone();
-            if let Some(stamp) = self.slot.next_runtime_stamp() {
-                mark_view_released(&app, key.clone(), stamp);
-            }
-            let _ = app.run_on_main_thread(move || {
-                let _ = super::cef_engine::close_view(&key);
+            super::ffi_guard::unit(|| {
+                let key = self.key.clone();
+                let app = self.app.clone();
+                if let Some(stamp) = self.slot.next_runtime_stamp() {
+                    mark_view_released(&app, key.clone(), stamp);
+                }
+                let _ = app.run_on_main_thread(move || {
+                    let _ = super::cef_engine::close_view(&key);
+                });
+                if let Some(generation) = next_event_generation() {
+                    let _ = self.app.emit(
+                        ENGINE_STOPPED_EVENT,
+                        BrowserTabEvent {
+                            event_version: EVENT_VERSION,
+                            generation,
+                            conversation_id: self.key.session_id.clone(),
+                            tab_id: self.key.tab_id.clone(),
+                        },
+                    );
+                }
             });
-            if let Some(generation) = next_event_generation() {
-                let _ = self.app.emit(
-                    ENGINE_STOPPED_EVENT,
-                    BrowserTabEvent {
-                        event_version: EVENT_VERSION,
-                        generation,
-                        conversation_id: self.key.session_id.clone(),
-                        tab_id: self.key.tab_id.clone(),
-                    },
-                );
-            }
         }
     }
 }

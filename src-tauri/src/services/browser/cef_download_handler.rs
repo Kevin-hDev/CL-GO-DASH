@@ -13,8 +13,10 @@ cef::wrap_download_handler! {
             _url: Option<&CefString>,
             _request_method: Option<&CefString>,
         ) -> std::os::raw::c_int {
-            self.notifier.publish_once();
-            0
+            super::ffi_guard::value(0, || {
+                self.notifier.publish_once();
+                0
+            })
         }
 
         fn on_download_updated(
@@ -23,10 +25,12 @@ cef::wrap_download_handler! {
             _download_item: Option<&mut DownloadItem>,
             callback: Option<&mut DownloadItemCallback>,
         ) {
-            self.notifier.publish_once();
-            if let Some(callback) = callback {
-                callback.cancel();
-            }
+            super::ffi_guard::unit(|| {
+                if let Some(callback) = callback {
+                    callback.cancel();
+                }
+                self.notifier.publish_once();
+            });
         }
     }
 }

@@ -91,7 +91,11 @@ wrap_completion_callback! {
 
     impl CompletionCallback {
         fn on_complete(&self) {
-            set_probe_cookie(self.context.clone());
+            let failed = self.context.clone();
+            super::ffi_guard::unit_or(
+                || failed.complete(false),
+                || set_probe_cookie(self.context.clone()),
+            );
         }
     }
 }
@@ -118,7 +122,7 @@ fn set_probe_cookie(context: CookieGateContext) {
     let url = CefString::from(PROBE_COOKIE_URL);
     let mut callback = ProbeCookieSet::new(context.clone());
     let accepted = manager.set_cookie(Some(&url), Some(&cookie), Some(&mut callback)) == 1;
-    zeroize_cef_string(&mut cookie.value);
+    clear_sensitive_cef_string(&mut cookie.value);
     if !accepted {
         context.complete(false);
     }
@@ -131,16 +135,22 @@ wrap_set_cookie_callback! {
 
     impl SetCookieCallback {
         fn on_complete(&self, success: i32) {
-            if success == 1 {
-                cef_cookie_gate_cleanup::flush_and_check(self.context.clone());
-            } else {
-                self.context.complete(false);
-            }
+            let failed = self.context.clone();
+            super::ffi_guard::unit_or(
+                || failed.complete(false),
+                || {
+                    if success == 1 {
+                        cef_cookie_gate_cleanup::flush_and_check(self.context.clone());
+                    } else {
+                        self.context.complete(false);
+                    }
+                },
+            );
         }
     }
 }
 
-fn zeroize_cef_string(value: &mut CefString) {
+fn clear_sensitive_cef_string(value: &mut CefString) {
     let raw: *mut cef::sys::_cef_string_utf16_t = value.into();
     let Some(raw) = (unsafe { raw.as_mut() }) else {
         return;
@@ -149,4 +159,5 @@ fn zeroize_cef_string(value: &mut CefString) {
         let utf16 = unsafe { std::slice::from_raw_parts_mut(raw.str_, raw.length) };
         utf16.zeroize();
     }
+    unsafe { cef::sys::cef_string_utf16_clear(raw) };
 }
