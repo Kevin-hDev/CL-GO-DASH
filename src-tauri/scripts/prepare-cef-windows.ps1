@@ -48,7 +48,15 @@ $PrepareSource = Join-Path $TauriDir "..\scripts\cef\prepare-cef-source.mjs"
 if ($LASTEXITCODE -ne 0) {
   throw "CEF runtime validation failed"
 }
-$TargetDir = Join-Path $TauriDir "target\release"
+$BuildTarget = $env:CARGO_BUILD_TARGET
+if ([string]::IsNullOrWhiteSpace($BuildTarget)) {
+  $TargetDir = Join-Path $TauriDir "target\release"
+} else {
+  if ($BuildTarget -ne "x86_64-pc-windows-msvc") {
+    throw "CEF runtime validation failed"
+  }
+  $TargetDir = Join-Path $TauriDir "target\$BuildTarget\release"
+}
 $StageDir = Join-Path $TauriDir "target\cef-runtime\windows"
 $CefRoot = Join-Path $TauriDir ".cef-verified\current"
 if (-not (Test-Path -LiteralPath $CefRoot -PathType Container)) {

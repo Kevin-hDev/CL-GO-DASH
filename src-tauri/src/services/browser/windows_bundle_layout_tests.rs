@@ -40,4 +40,25 @@ fn windows_bundle_hook_pins_and_verifies_the_cef_bootstrap() {
     assert!(script.contains("cl-go-dash.dll"));
     assert!(script.contains("LICENSE.txt"));
     assert!(script.contains("CREDITS.html"));
+    assert!(script.contains("$env:CARGO_BUILD_TARGET"));
+    assert!(script.contains("target\\$BuildTarget\\release"));
+}
+
+#[test]
+fn windows_release_exposes_the_explicit_cargo_target_to_the_bundle_hook() {
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+    let workflow = std::fs::read_to_string(root.join("../.github/workflows/release.yml"))
+        .expect("release workflow");
+
+    assert!(workflow.contains("CARGO_BUILD_TARGET: ${{ matrix.target }}"));
+}
+
+#[test]
+fn windows_ci_prefers_the_verified_cef_runtime_when_starting_tests() {
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+    let workflow =
+        std::fs::read_to_string(root.join("../.github/workflows/ci.yml")).expect("CI workflow");
+
+    assert!(workflow.contains("Resolve-Path \".cef-verified/current\""));
+    assert!(workflow.contains("$env:PATH = \"$cefRoot;$env:PATH\""));
 }

@@ -77,7 +77,10 @@ jobs:
 
       - name: Windows private storage tests
         working-directory: src-tauri
-        run: cargo test --lib services::private_store::tests
+        run: |
+          $cefRoot = (Resolve-Path ".cef-verified/current").Path
+          $env:PATH = "$cefRoot;$env:PATH"
+          cargo test --lib services::private_store::tests
 
   frontend:
     name: Frontend (TS/React)
