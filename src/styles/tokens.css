@@ -39,8 +39,10 @@
   --chrome-icon-lg: 18px;
   --chat-column-width: 720px;
 
-  --browser-toolbar-height: 2.5rem;
-  --browser-control-size: 2rem;
+  --browser-toolbar-height: 2rem;
+  --browser-control-size: 1.75rem;
+  --browser-toolbar-padding-y: 0.125rem;
+  --browser-field-padding-y: var(--space-xs);
   --browser-tab-max-width: 12rem;
   --browser-home-max-width: 26rem;
 

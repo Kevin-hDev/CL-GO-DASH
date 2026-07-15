@@ -23,7 +23,7 @@
 
 .ib-tabs-bar {
   gap: var(--space-xs);
-  padding: var(--space-xs) var(--space-sm);
+  padding: var(--browser-toolbar-padding-y) var(--space-sm);
 }
 
 .ib-tabs-scroll {
@@ -61,7 +61,7 @@
   align-items: center;
   gap: var(--space-sm);
   min-width: 0;
-  padding: var(--space-sm) var(--space-xs) var(--space-sm) var(--space-sm);
+  padding: var(--browser-field-padding-y) var(--space-xs) var(--browser-field-padding-y) var(--space-sm);
   border: 0;
   background: transparent;
   color: inherit;
@@ -109,7 +109,7 @@
 
 .ib-navigation-bar {
   gap: var(--space-xs);
-  padding: var(--space-xs) var(--space-sm);
+  padding: var(--browser-toolbar-padding-y) var(--space-sm);
 }
 
 .ib-navigation-actions {
@@ -140,7 +140,7 @@
 
 .ib-address-input {
   min-width: 0;
-  padding: var(--space-sm);
+  padding: var(--browser-field-padding-y) var(--space-sm);
   border: 0;
   outline: 0;
   background: transparent;
