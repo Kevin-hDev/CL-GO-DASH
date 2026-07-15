@@ -17,7 +17,6 @@ fn native_runtime_modules_are_not_built_in_linux_library() {
 
     for runtime_module in [
         "browser_view_key",
-        "cookie_store_probe",
         "lifecycle",
         "native_paths",
         "navigation_target",
@@ -34,6 +33,8 @@ fn native_runtime_modules_are_not_built_in_linux_library() {
             "{runtime_module} must be excluded from the Linux library build"
         );
     }
+
+    assert!(module.contains("#[cfg(any(test, target_os = \"macos\"))]\nmod cookie_store_probe;"));
 }
 
 #[test]

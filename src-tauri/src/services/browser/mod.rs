@@ -16,6 +16,8 @@ mod cef_client;
 mod cef_cookie_gate;
 #[cfg(any(target_os = "macos", target_os = "windows"))]
 mod cef_cookie_gate_cleanup;
+#[cfg(any(test, target_os = "macos", target_os = "windows"))]
+mod cef_cookie_gate_policy;
 #[cfg(any(target_os = "macos", target_os = "windows"))]
 mod cef_display_handler;
 #[cfg(any(target_os = "macos", target_os = "windows"))]
@@ -42,7 +44,7 @@ mod cef_surface;
 mod cef_surface_view;
 #[cfg(any(target_os = "macos", target_os = "windows"))]
 mod cef_text;
-#[cfg(any(test, target_os = "macos", target_os = "windows"))]
+#[cfg(any(test, target_os = "macos"))]
 mod cookie_store_probe;
 #[cfg(any(target_os = "macos", target_os = "windows"))]
 mod ffi_guard;

@@ -1,4 +1,6 @@
 use super::cef_cookie_gate::{CookieGateContext, PROBE_COOKIE_NAME, PROBE_COOKIE_URL};
+use super::cef_cookie_gate_policy::cef_cookie_gate_policy;
+#[cfg(target_os = "macos")]
 use super::cookie_store_probe::cookie_store_hides_probe;
 use cef::*;
 
@@ -24,18 +26,31 @@ wrap_completion_callback! {
             super::ffi_guard::unit_or(
                 || failed.complete(false),
                 || {
-                    let secure = self
-                        .context
-                        .probe_copy()
-                        .and_then(|probe| {
-                            cookie_store_hides_probe(self.context.profile(), probe.as_ref())
-                        })
-                        .unwrap_or(false);
+                    let secure = verify_flushed_store(&self.context);
                     delete_probe(self.context.clone(), secure);
                 },
             );
         }
     }
+}
+
+fn verify_flushed_store(_context: &CookieGateContext) -> bool {
+    if !cef_cookie_gate_policy().verify_store_on_disk {
+        // Chromium 132+ locks the live Cookies database exclusively on Windows.
+        // Successful CEF set/flush/delete callbacks are the supported live check.
+        return true;
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        _context
+            .probe_copy()
+            .and_then(|probe| cookie_store_hides_probe(_context.profile(), probe.as_ref()))
+            .unwrap_or(false)
+    }
+
+    #[cfg(target_os = "windows")]
+    false
 }
 
 fn delete_probe(context: CookieGateContext, secure: bool) {

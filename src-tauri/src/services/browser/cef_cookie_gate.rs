@@ -16,6 +16,7 @@ const GATE_TIMEOUT: Duration = Duration::from_secs(60);
 #[derive(Clone)]
 pub(super) struct CookieGateContext {
     app: tauri::AppHandle,
+    #[cfg(target_os = "macos")]
     profile: PathBuf,
     runtime: BrowserRuntimeHandle,
     secret: Arc<Mutex<Zeroizing<String>>>,
@@ -24,8 +25,11 @@ pub(super) struct CookieGateContext {
 
 impl CookieGateContext {
     fn new(app: tauri::AppHandle, profile: PathBuf, runtime: BrowserRuntimeHandle) -> Self {
+        #[cfg(target_os = "windows")]
+        drop(profile);
         Self {
             app,
+            #[cfg(target_os = "macos")]
             profile,
             runtime,
             secret: Arc::new(Mutex::new(generate_probe_value())),
@@ -33,10 +37,12 @@ impl CookieGateContext {
         }
     }
 
+    #[cfg(target_os = "macos")]
     pub(super) fn profile(&self) -> &PathBuf {
         &self.profile
     }
 
+    #[cfg(target_os = "macos")]
     pub(super) fn probe_copy(&self) -> Result<Zeroizing<Vec<u8>>, ()> {
         let secret = self.secret.lock().map_err(|_| ())?;
         Ok(Zeroizing::new(secret.as_bytes().to_vec()))
