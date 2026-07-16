@@ -2,13 +2,11 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { getVersion, getTauriVersion } from "@tauri-apps/api/app";
 import { open } from "@tauri-apps/plugin-shell";
+import logo from "@/assets/logo.png";
 import { ArrowSquareOut } from "@/components/ui/icons";
-import { ThemedIcon } from "@/components/ui/themed-icon";
 import { cn } from "@/lib/utils";
 import { IS_LINUX, IS_MAC, IS_WINDOWS } from "@/lib/platform";
 import { SettingsCard } from "./settings-card";
-import logoDark from "@/assets/logo-dark.png";
-import logoLight from "@/assets/logo-light.png";
 import "./about-settings.css";
 
 const GITHUB_URL = "https://github.com/Kevin-hDev/CL-GO-DASH";
@@ -31,7 +29,7 @@ export function AboutSettings() {
     <div className="as-root">
       <div className="as-inner">
         <div className="as-hero">
-          <ThemedIcon darkSrc={logoDark} lightSrc={logoLight} size="4rem" />
+          <img src={logo} alt="" className="as-app-logo" />
           <h2 className="as-title">
             CL-GO
           </h2>

@@ -358,11 +358,11 @@ Sur macOS, `CloseRequested` est intercepté dans `on_window_event` → `win.hide
 Au lancement, un écran avec l'icône de l'app s'affiche pendant que React charge :
 
 - Fond blur + transparent adapté au thème (dark/light), détecté via `localStorage("clgo-theme")`
-- Icône différente par thème (`splash-icon.png` dark, `splash-icon-light.png` light)
-- Images preloadées via `<link rel="preload">`
+- Castor SVG unique coloré via CSS selon le thème sombre ou clair
+- SVG préchargé via `<link rel="preload">`
 - Retiré instantanément (pas de fade) quand `ollamaReady` résout — couvre les deux chemins : setup screen (premier lancement) et app normale
 
-**Fichiers** : `index.html` (splash HTML/CSS/script), `src/App.tsx` (useEffect removal), `public/splash-icon.png`, `public/splash-icon-light.png`
+**Fichiers** : `index.html` (splash HTML/CSS/script), `src/App.tsx` (useEffect removal), `public/castor.svg`
 
 ---
 

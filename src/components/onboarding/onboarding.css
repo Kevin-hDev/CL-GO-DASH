@@ -46,6 +46,15 @@
   gap: var(--space-lg);
 }
 
+.ob-brand-castor {
+  width: 4.5rem;
+  height: 4.5rem;
+  flex-shrink: 0;
+  background: var(--ink);
+  -webkit-mask: url("/castor.svg") center / contain no-repeat;
+  mask: url("/castor.svg") center / contain no-repeat;
+}
+
 .ob-copy {
   display: flex;
   flex-direction: column;

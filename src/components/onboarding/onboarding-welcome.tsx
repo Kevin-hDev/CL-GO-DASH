@@ -1,7 +1,4 @@
 import { useTranslation } from "react-i18next";
-import logoDark from "@/assets/logo-dark.png";
-import logoLight from "@/assets/logo-light.png";
-import { ThemedIcon } from "@/components/ui/themed-icon";
 import { CaretRight } from "@/components/ui/icons";
 
 interface OnboardingWelcomeProps {
@@ -13,7 +10,7 @@ export function OnboardingWelcome({ onNext }: OnboardingWelcomeProps) {
 
   return (
     <div className="ob-page ob-page-centered">
-      <ThemedIcon darkSrc={logoDark} lightSrc={logoLight} size="4.5rem" alt="CL-GO" />
+      <span className="ob-brand-castor" aria-hidden="true" />
       <div className="ob-copy">
         <h1 className="ob-title">{t("onboarding.welcome.title")}</h1>
         <p className="ob-description">{t("onboarding.welcome.description")}</p>

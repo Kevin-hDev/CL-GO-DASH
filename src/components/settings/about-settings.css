@@ -20,6 +20,12 @@
   margin-bottom: 32px;
 }
 
+.as-app-logo {
+  width: 4rem;
+  height: 4rem;
+  object-fit: contain;
+}
+
 .as-title {
   font-size: var(--text-xl);
   font-weight: 700;

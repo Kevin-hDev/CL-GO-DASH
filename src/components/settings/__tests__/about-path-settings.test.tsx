@@ -19,7 +19,6 @@ vi.mock("@tauri-apps/api/app", () => ({
 
 vi.mock("@tauri-apps/plugin-shell", () => ({ open: mocks.openExternal }));
 vi.mock("@tauri-apps/plugin-dialog", () => ({ open: mocks.openDirectory }));
-vi.mock("@/components/ui/themed-icon", () => ({ ThemedIcon: () => <span /> }));
 vi.mock("@/components/ui/icons", () => ({ ArrowSquareOut: () => <span /> }));
 
 describe("settings CSS wiring", () => {
@@ -34,6 +33,7 @@ describe("settings CSS wiring", () => {
     expect(container.querySelectorAll(".as-info-row")).toHaveLength(3);
     expect(container.querySelectorAll(".as-info-row-border")).toHaveLength(2);
     expect(container.querySelector(".as-github-btn")).not.toBeNull();
+    expect(container.querySelector(".as-app-logo")).toBeInstanceOf(HTMLImageElement);
   });
 
   it("keeps path add, remove and reset actions connected", async () => {
