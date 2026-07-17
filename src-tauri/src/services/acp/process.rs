@@ -1,6 +1,6 @@
 use super::AcpConnection;
 use crate::services::oauth_providers::{
-    command_spec, profile_dir, profile_env_names, ProcessKind, ProviderId,
+    command_spec, process_environment, profile_dir, ProcessKind, ProviderId,
 };
 use std::path::Path;
 use tokio::process::{Child, ChildStdin, ChildStdout, Command};
@@ -22,9 +22,12 @@ impl AcpProcess {
         tokio::fs::create_dir_all(&home)
             .await
             .map_err(|_| "Client ACP indisponible".to_string())?;
+        tokio::fs::create_dir_all(home.join("agent-home"))
+            .await
+            .map_err(|_| "Client ACP indisponible".to_string())?;
         let mut command = Command::new(binary);
-        for name in profile_env_names(provider) {
-            command.env(name, &home);
+        for (name, value) in process_environment(provider) {
+            command.env(name, value);
         }
         let mut child = command
             .args(spec.args)

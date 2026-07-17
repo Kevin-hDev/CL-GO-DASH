@@ -1,6 +1,6 @@
 use super::{
-    command_spec, credentials_present_in, parse_login_hints, profile_dir, profile_env_names,
-    remove_credentials_in, ProviderId,
+    command_spec, credentials_present_in, parse_login_hints, process_environment, profile_dir,
+    profile_env_names, remove_credentials_in, ProviderId,
 };
 
 #[test]
@@ -31,6 +31,22 @@ fn isolated_profile_envs_support_current_and_legacy_kimi() {
     );
     assert_eq!(profile_env_names(ProviderId::Xai), ["GROK_HOME"]);
     assert!(profile_env_names(ProviderId::OpenAi).is_empty());
+}
+
+#[test]
+fn official_clients_cannot_discover_global_agent_resources() {
+    for provider in [ProviderId::Moonshot, ProviderId::Xai] {
+        let root = profile_dir(provider);
+        let environment = process_environment(provider);
+        let isolated_home = root.join("agent-home");
+
+        assert!(environment
+            .iter()
+            .any(|(name, value)| *name == "HOME" && value == &isolated_home));
+        assert!(environment
+            .iter()
+            .any(|(name, value)| *name == "USERPROFILE" && value == &isolated_home));
+    }
 }
 
 #[test]
@@ -93,6 +109,12 @@ fn official_credential_files_are_the_connection_source_of_truth() {
     std::fs::create_dir(&kimi_credentials).expect("Kimi credentials directory");
     std::fs::write(kimi_credentials.join("kimi-code.json"), b"credential")
         .expect("Kimi credential metadata");
+    assert!(!credentials_present_in(root.path(), ProviderId::Moonshot));
+    std::fs::write(
+        root.path().join("config.toml"),
+        "default_model = \"kimi-code/model\"\n",
+    )
+    .expect("Kimi model configuration");
     assert!(credentials_present_in(root.path(), ProviderId::Moonshot));
 
     std::fs::write(root.path().join("auth.json"), b"credential").expect("Grok credential metadata");

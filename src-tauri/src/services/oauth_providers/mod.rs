@@ -7,13 +7,16 @@ mod types;
 
 #[cfg(test)]
 pub(crate) use logout::remove_credentials_in;
+#[cfg(test)]
+pub use specs::profile_env_names;
 pub use specs::{
-    command_spec, parse_login_hints, profile_dir, profile_env_names, LoginHints, ProcessKind,
+    command_spec, parse_login_hints, process_environment, profile_dir, LoginHints, ProcessKind,
     ProviderId,
 };
 pub(crate) use status::binary_path;
 #[cfg(test)]
 pub(crate) use status::credentials_present_in;
+pub(crate) use status::is_connected;
 pub use status::list_statuses;
 pub use types::{OAuthClientState, OAuthLoginProgress, OAuthProviderStatus};
 

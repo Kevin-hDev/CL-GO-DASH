@@ -11,6 +11,10 @@ const HANDSHAKE_TIMEOUT: Duration = Duration::from_secs(10);
 pub async fn run(params: StreamTaskParams, mode: StreamMode) -> Result<Vec<ChatMessage>, String> {
     let provider = crate::services::acp::provider_from_chat(&params.provider)
         .ok_or_else(|| "Provider ACP invalide".to_string())?;
+    if !crate::services::oauth_providers::is_connected(provider) {
+        crate::services::oauth_providers::invalidate_external_login(provider);
+        return Err("Connexion OAuth requise".to_string());
+    }
     let working_dir = common::resolve_working_dir(&params.working_dir)?;
     common::update_working_dir(&params.session_id, &working_dir).await;
     let prompt = params

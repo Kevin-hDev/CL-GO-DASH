@@ -69,6 +69,7 @@ pub enum AcpUpdate {
         content: Option<String>,
     },
     Plan(Value),
+    Ignored,
     Unknown(String),
 }
 
@@ -105,6 +106,7 @@ impl AcpUpdate {
                 content: tool_content(update),
             },
             Some("plan") => Self::Plan(update.clone()),
+            Some("available_commands_update" | "user_message_chunk") => Self::Ignored,
             _ => Self::Unknown(
                 update["sessionUpdate"]
                     .as_str()

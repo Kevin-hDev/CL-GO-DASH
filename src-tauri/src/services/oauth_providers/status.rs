@@ -1,6 +1,8 @@
 use super::{profile_dir, OAuthClientState, OAuthProviderStatus, ProviderId};
 use std::path::PathBuf;
 
+const MAX_KIMI_CONFIG_BYTES: u64 = 256 * 1024;
+
 const OPENAI_INSTALL: &str = "https://chatgpt.com/";
 const KIMI_INSTALL: &str = "https://www.kimi.com/code/docs/en/";
 const GROK_INSTALL: &str = "https://docs.x.ai/build/overview";
@@ -103,8 +105,37 @@ pub fn credentials_present_in(root: &std::path::Path, provider: ProviderId) -> b
     match provider {
         ProviderId::OpenAi => false,
         ProviderId::Xai => root.join("auth.json").is_file(),
-        ProviderId::Moonshot => kimi_credentials_present(root),
+        ProviderId::Moonshot => kimi_credentials_present(root) && kimi_configuration_present(root),
     }
+}
+
+fn kimi_configuration_present(root: &std::path::Path) -> bool {
+    let path = root.join("config.toml");
+    let Ok(metadata) = std::fs::metadata(&path) else {
+        return false;
+    };
+    if !metadata.is_file() || metadata.len() > MAX_KIMI_CONFIG_BYTES {
+        return false;
+    }
+    let Ok(config) = std::fs::read_to_string(path).map(zeroize::Zeroizing::new) else {
+        return false;
+    };
+    config.lines().take(4096).any(|line| {
+        let Some(value) = line.trim().strip_prefix("default_model") else {
+            return false;
+        };
+        let Some(value) = value.trim().strip_prefix('=') else {
+            return false;
+        };
+        let value = value.trim();
+        let Some(value) = value
+            .strip_prefix('"')
+            .and_then(|item| item.strip_suffix('"'))
+        else {
+            return false;
+        };
+        !value.is_empty() && value.len() <= 256 && !value.chars().any(char::is_control)
+    })
 }
 
 fn kimi_credentials_present(root: &std::path::Path) -> bool {

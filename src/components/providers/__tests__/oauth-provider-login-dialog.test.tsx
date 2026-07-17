@@ -91,4 +91,22 @@ describe("OAuthProviderLoginDialog", () => {
     expect(clipboardWrite).toHaveBeenCalledWith("45JE-V2VK");
     expect(screen.queryByRole("textbox")).toBeNull();
   });
+
+  it("ne présente pas le code technique du lien complet Kimi", async () => {
+    render(<OAuthProviderLoginDialog provider={moonshot} onClose={vi.fn()} onConnected={vi.fn()} />);
+    await waitFor(() => expect(progress).toBeTypeOf("function"));
+
+    progress?.({
+      payload: {
+        provider_id: "moonshot",
+        stage: "verification",
+        user_code: "KIMI-CODE",
+        verification_url: "https://www.kimi.com/code/device?code=hidden",
+      },
+    });
+
+    expect(await screen.findByText("connectors.oauth.message")).toBeTruthy();
+    expect(screen.queryByText("KIMI-CODE")).toBeNull();
+    expect(screen.queryByText("providers.oauth.copyCode")).toBeNull();
+  });
 });

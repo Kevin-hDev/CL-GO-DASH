@@ -19,7 +19,6 @@ interface OAuthProviderLoginDialogProps {
 export function OAuthProviderLoginDialog({ provider, onClose, onConnected }: OAuthProviderLoginDialogProps) {
   const { t } = useTranslation();
   const [state, setState] = useState<LoginState>("loading");
-  const [hint, setHint] = useState<string | null>(null);
   const [userCode, setUserCode] = useState<string | null>(null);
   const [verificationUrl, setVerificationUrl] = useState<string | null>(null);
   const mountedRef = useRef(true);
@@ -30,7 +29,6 @@ export function OAuthProviderLoginDialog({ provider, onClose, onConnected }: OAu
   }, [onConnected]);
 
   const startFlow = useCallback(async () => {
-    setHint(null);
     setUserCode(null);
     setVerificationUrl(null);
     if (provider.client_state !== "ready") {
@@ -57,7 +55,6 @@ export function OAuthProviderLoginDialog({ provider, onClose, onConnected }: OAu
         setState("success");
         successTimer = setTimeout(() => onConnectedRef.current(), 600);
       } else if (payload.stage === "waiting" || payload.stage === "verification") {
-        setHint(payload.hint ?? null);
         setUserCode(payload.user_code ?? null);
         setVerificationUrl(payload.verification_url ?? null);
         setState("waiting");
@@ -83,14 +80,15 @@ export function OAuthProviderLoginDialog({ provider, onClose, onConnected }: OAu
     onClose();
   };
   const missingClient = provider.client_state !== "ready";
+  const visibleUserCode = provider.id === "xai" ? userCode : null;
   const message = missingClient
     ? t(provider.client_state === "missing" ? "providers.oauth.clientRequired" : "providers.oauth.clientIncompatible")
-    : userCode ? t("providers.oauth.deviceInstructions") : hint ?? t(state === "waiting" ? "connectors.oauth.message" : state === "success" ? "providers.oauth.successMessage" : state === "error" ? "connectors.oauth.errorGeneric" : "connectors.oauth.discovering");
+    : visibleUserCode ? t("providers.oauth.deviceInstructions") : t(state === "waiting" ? "connectors.oauth.message" : state === "success" ? "providers.oauth.successMessage" : state === "error" ? "connectors.oauth.errorGeneric" : "connectors.oauth.discovering");
 
   const copyCode = async () => {
-    if (!userCode) return;
+    if (!visibleUserCode) return;
     try {
-      await navigator.clipboard.writeText(userCode);
+      await navigator.clipboard.writeText(visibleUserCode);
     } catch {
       // Clipboard access can be denied by the operating system.
     }
@@ -107,10 +105,10 @@ export function OAuthProviderLoginDialog({ provider, onClose, onConnected }: OAu
         </div>
         <h3 className="mco-title">{t(state === "success" ? "connectors.oauth.successTitle" : "connectors.oauth.title")}</h3>
         <p className={`mco-message ${state === "error" ? "mco-error" : ""}`}>{message}</p>
-        {userCode && (
+        {visibleUserCode && (
           <div className="mco-device-code">
             <span>{t("providers.oauth.codeLabel")}</span>
-            <strong>{userCode}</strong>
+            <strong>{visibleUserCode}</strong>
             <button type="button" className="ollama-btn" onClick={() => void copyCode()}>{t("providers.oauth.copyCode")}</button>
           </div>
         )}

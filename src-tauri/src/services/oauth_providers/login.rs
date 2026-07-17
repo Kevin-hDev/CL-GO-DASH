@@ -1,5 +1,5 @@
 use super::{
-    command_spec, parse_login_hints, profile_dir, profile_env_names, ProcessKind, ProviderId,
+    command_spec, parse_login_hints, process_environment, profile_dir, ProcessKind, ProviderId,
 };
 use std::collections::HashMap;
 use std::sync::LazyLock;
@@ -56,11 +56,14 @@ async fn run_registered(
     tokio::fs::create_dir_all(&home)
         .await
         .map_err(|_| "Connexion impossible".to_string())?;
+    tokio::fs::create_dir_all(home.join("agent-home"))
+        .await
+        .map_err(|_| "Connexion impossible".to_string())?;
     super::logout::remove_credentials_in(&home, provider).await?;
     super::status::mark_connected(provider)?;
     let mut command = Command::new(binary);
-    for name in profile_env_names(provider) {
-        command.env(name, &home);
+    for (name, value) in process_environment(provider) {
+        command.env(name, value);
     }
     let mut child = command
         .args(spec.args)
@@ -98,10 +101,11 @@ async fn run_registered(
         }
     };
     let _ = tokio::join!(stdout_task, stderr_task);
-    status
-        .success()
-        .then_some(())
-        .ok_or_else(|| "Connexion impossible".to_string())
+    if status.success() && super::status::credentials_present_in(&home, provider) {
+        Ok(())
+    } else {
+        Err("Connexion impossible".to_string())
+    }
 }
 
 async fn read_hints<R: AsyncRead + Unpin>(

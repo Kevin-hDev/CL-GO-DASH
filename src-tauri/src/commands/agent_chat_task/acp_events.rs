@@ -116,6 +116,7 @@ impl AcpTurnState {
                 Ok(())
             }
             AcpUpdate::Plan(plan) => self.emit_aux(provider, "agent_plan", plan, on_event),
+            AcpUpdate::Ignored => Ok(()),
             AcpUpdate::Unknown(kind) => self.emit_aux(
                 provider,
                 "acp_activity",

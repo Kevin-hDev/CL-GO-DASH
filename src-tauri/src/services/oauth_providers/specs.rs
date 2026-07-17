@@ -83,6 +83,18 @@ pub fn profile_env_names(provider: ProviderId) -> &'static [&'static str] {
     }
 }
 
+pub fn process_environment(provider: ProviderId) -> Vec<(&'static str, PathBuf)> {
+    let profile = profile_dir(provider);
+    let isolated_home = profile.join("agent-home");
+    let mut environment = Vec::with_capacity(4);
+    for name in profile_env_names(provider) {
+        environment.push((*name, profile.clone()));
+    }
+    environment.push(("HOME", isolated_home.clone()));
+    environment.push(("USERPROFILE", isolated_home));
+    environment
+}
+
 pub fn profile_dir(provider: ProviderId) -> PathBuf {
     crate::services::paths::data_dir()
         .join("oauth-providers")

@@ -4,11 +4,14 @@ use std::path::PathBuf;
 
 const MAX_FILE_BYTES: u64 = 2048;
 const MAX_ACP_SESSION_ID_CHARS: usize = 256;
+const CURRENT_ISOLATION_VERSION: u8 = 1;
 
 #[derive(Serialize, Deserialize)]
 struct Metadata {
     provider: ProviderId,
     acp_session_id: String,
+    #[serde(default)]
+    isolation_version: u8,
 }
 
 fn path(session_id: &str) -> Result<PathBuf, String> {
@@ -42,6 +45,7 @@ pub async fn save(
     let data = serde_json::to_vec(&Metadata {
         provider,
         acp_session_id: acp_session_id.to_string(),
+        isolation_version: CURRENT_ISOLATION_VERSION,
     })
     .map_err(|_| "Session ACP invalide".to_string())?;
     let temp = directory.join(format!(".{session_id}.{}.acp.tmp", uuid::Uuid::new_v4()));
@@ -69,7 +73,10 @@ pub async fn load(session_id: &str, provider: ProviderId) -> Result<Option<Strin
         .map_err(|_| "Session ACP inaccessible".to_string())?;
     let stored: Metadata =
         serde_json::from_slice(&data).map_err(|_| "Session ACP invalide".to_string())?;
-    if stored.provider != provider || !valid_acp_id(&stored.acp_session_id) {
+    if stored.provider != provider
+        || stored.isolation_version != CURRENT_ISOLATION_VERSION
+        || !valid_acp_id(&stored.acp_session_id)
+    {
         return Ok(None);
     }
     Ok(Some(stored.acp_session_id))
@@ -80,5 +87,28 @@ pub async fn remove(session_id: &str) -> Result<(), String> {
         Ok(()) => Ok(()),
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
         Err(_) => Err("Session ACP inaccessible".to_string()),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn refuses_sessions_created_before_home_isolation() {
+        let session_id = uuid::Uuid::new_v4().to_string();
+        let target = path(&session_id).expect("session metadata path");
+        tokio::fs::create_dir_all(target.parent().expect("session metadata directory"))
+            .await
+            .expect("session metadata directory");
+        tokio::fs::write(
+            &target,
+            br#"{"provider":"xai","acp_session_id":"legacy-session"}"#,
+        )
+        .await
+        .expect("legacy session metadata");
+
+        assert_eq!(load(&session_id, ProviderId::Xai).await.unwrap(), None);
+        remove(&session_id).await.unwrap();
     }
 }

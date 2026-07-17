@@ -54,6 +54,14 @@ fn maps_known_and_unknown_session_updates() {
 }
 
 #[test]
+fn ignores_protocol_updates_that_are_not_user_visible_activities() {
+    for kind in ["available_commands_update", "user_message_chunk"] {
+        let message = json!({"params":{"update":{"sessionUpdate":kind}}});
+        assert_eq!(AcpUpdate::from_message(&message), AcpUpdate::Ignored);
+    }
+}
+
+#[test]
 fn distinguishes_native_and_cl_go_tool_sources() {
     let native = json!({"params":{"update":{
         "sessionUpdate":"tool_call", "toolCallId":"one", "title":"Bash",
