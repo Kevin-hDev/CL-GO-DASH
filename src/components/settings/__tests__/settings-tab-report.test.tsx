@@ -64,10 +64,10 @@ describe("SettingsTab slots", () => {
     expect(await screen.findByText("Moonshot AI")).toBeTruthy();
     fireEvent.click(screen.getByText("Moonshot AI"));
     await waitFor(() => {
-      expect(invokeCalls()).toContainEqual([
-        "start_oauth_provider_login",
-        { providerId: "moonshot" },
-      ]);
+      const call = invokeCalls().find(([command]) => command === "start_oauth_provider_login");
+      const args = call?.[1] as Record<string, unknown> | undefined;
+      expect(args?.providerId).toBe("moonshot");
+      expect(typeof args?.diagnosticId).toBe("string");
     });
     expect(screen.getByText("connectors.oauth.title")).toBeTruthy();
     expect(screen.queryByText("providers.oauth.install")).toBeNull();
@@ -91,10 +91,10 @@ describe("SettingsTab slots", () => {
 
     setXaiOAuthState({ ready: true });
     await waitFor(() => {
-      expect(invokeCalls()).toContainEqual([
-        "start_oauth_provider_login",
-        { providerId: "xai" },
-      ]);
+      const call = invokeCalls().find(([command]) => command === "start_oauth_provider_login");
+      const args = call?.[1] as Record<string, unknown> | undefined;
+      expect(args?.providerId).toBe("xai");
+      expect(typeof args?.diagnosticId).toBe("string");
     }, { timeout: 3500 });
   });
 

@@ -7,6 +7,13 @@ const OPENAI_INSTALL: &str = "https://chatgpt.com/";
 const KIMI_INSTALL: &str = "https://www.kimi.com/code/docs/en/";
 const GROK_INSTALL: &str = "https://docs.x.ai/build/overview";
 
+pub(super) struct ConnectionEvidence {
+    pub credential_files: bool,
+    pub configuration_ready: bool,
+    pub invalid_marker: bool,
+    pub connected: bool,
+}
+
 pub fn list_statuses() -> Vec<OAuthProviderStatus> {
     vec![
         openai_status(),
@@ -71,7 +78,24 @@ fn marker_path(provider: ProviderId) -> PathBuf {
 }
 
 pub fn is_connected(provider: ProviderId) -> bool {
-    credentials_present_in(&profile_dir(provider), provider) && !marker_path(provider).is_file()
+    connection_evidence(provider).connected
+}
+
+pub(super) fn connection_evidence(provider: ProviderId) -> ConnectionEvidence {
+    let root = profile_dir(provider);
+    let credential_files = credential_files_present_in(&root, provider);
+    let configuration_ready = match provider {
+        ProviderId::Moonshot => kimi_configuration_present(&root),
+        ProviderId::Xai => true,
+        ProviderId::OpenAi => false,
+    };
+    let invalid_marker = marker_path(provider).is_file();
+    ConnectionEvidence {
+        credential_files,
+        configuration_ready,
+        invalid_marker,
+        connected: credential_files && configuration_ready && !invalid_marker,
+    }
 }
 
 pub fn mark_connected(provider: ProviderId) -> Result<(), String> {
@@ -102,10 +126,19 @@ fn remove_marker(marker: PathBuf, message: &str) -> Result<(), String> {
 }
 
 pub fn credentials_present_in(root: &std::path::Path, provider: ProviderId) -> bool {
+    credential_files_present_in(root, provider)
+        && match provider {
+            ProviderId::Moonshot => kimi_configuration_present(root),
+            ProviderId::Xai => true,
+            ProviderId::OpenAi => false,
+        }
+}
+
+fn credential_files_present_in(root: &std::path::Path, provider: ProviderId) -> bool {
     match provider {
         ProviderId::OpenAi => false,
         ProviderId::Xai => root.join("auth.json").is_file(),
-        ProviderId::Moonshot => kimi_credentials_present(root) && kimi_configuration_present(root),
+        ProviderId::Moonshot => kimi_credentials_present(root),
     }
 }
 

@@ -19,7 +19,7 @@
       "progress": { "waiting": "In attesa dell'accesso…", "verification": "Verifica richiesta", "success": "Connesso", "cancelled": "Accesso annullato", "error": "Connessione impossibile" },
       "client": { "ready": "Disponibile", "missing": "Non installato", "incompatible": "Incompatibile" },
       "clientRequired": "Il client ufficiale deve essere installato prima di accedere.", "clientIncompatible": "Il client ufficiale installato non è compatibile con questa connessione.", "installationGuide": "Apri la guida di installazione", "successMessage": "Il provider è stato connesso correttamente.",
-      "kimiAccountAccessRequired": "L’autenticazione è riuscita, ma questo account non può accedere a Kimi Code. Controlla l’abbonamento o i crediti Moonshot AI.",
+      "kimiAccountAccessRequired": "L’autenticazione è riuscita, ma Kimi non può verificare l’abbonamento in questo momento. Attendi e riprova. Se il problema continua, controlla l’abbonamento Kimi Code.",
       "deviceInstructions": "Inserisci questo codice nella pagina aperta nel browser.", "codeLabel": "Codice di accesso", "copyCode": "Copia codice", "openVerification": "Riapri la pagina di accesso",
       "descriptions": { "openai": "ChatGPT tramite Codex", "moonshot": "Kimi Code tramite ACP", "xai": "Grok CLI tramite ACP" }
     }

@@ -10,6 +10,15 @@ import "@/components/connectors/mcp-oauth-dialog.css";
 
 type LoginState = "loading" | "waiting" | "success" | "error" | "accountAccessRequired";
 
+function logOAuthDiagnostic(id: string, provider: string, stage: string, facts = "") {
+  console.info(`[oauth-diagnostic] id=${id} provider=${provider} layer=ui stage=${stage}${facts}`);
+}
+
+function safeProgressStage(stage: string) {
+  const known = ["waiting", "verification", "success", "cancelled", "error", "account_access_required"];
+  return known.includes(stage) ? stage : "unknown";
+}
+
 interface OAuthProviderLoginDialogProps {
   provider: OAuthProviderStatus;
   onClose: () => void;
@@ -22,6 +31,7 @@ export function OAuthProviderLoginDialog({ provider, onClose, onConnected }: OAu
   const [userCode, setUserCode] = useState<string | null>(null);
   const [verificationUrl, setVerificationUrl] = useState<string | null>(null);
   const mountedRef = useRef(true);
+  const diagnosticIdRef = useRef<string | null>(null);
   const onConnectedRef = useRef(onConnected);
 
   useEffect(() => {
@@ -29,6 +39,9 @@ export function OAuthProviderLoginDialog({ provider, onClose, onConnected }: OAu
   }, [onConnected]);
 
   const startFlow = useCallback(async () => {
+    const diagnosticId = crypto.randomUUID();
+    diagnosticIdRef.current = diagnosticId;
+    logOAuthDiagnostic(diagnosticId, provider.id, "start");
     setUserCode(null);
     setVerificationUrl(null);
     if (provider.client_state !== "ready") {
@@ -38,9 +51,12 @@ export function OAuthProviderLoginDialog({ provider, onClose, onConnected }: OAu
     setState("loading");
     try {
       await invoke("cancel_oauth_provider_login", { providerId: provider.id });
+      logOAuthDiagnostic(diagnosticId, provider.id, "previous_attempt_cancelled");
       if (!mountedRef.current) return;
-      await invoke("start_oauth_provider_login", { providerId: provider.id });
+      await invoke("start_oauth_provider_login", { providerId: provider.id, diagnosticId });
+      logOAuthDiagnostic(diagnosticId, provider.id, "command_resolved");
     } catch {
+      logOAuthDiagnostic(diagnosticId, provider.id, "command_rejected");
       if (mountedRef.current) {
         setState((current) => current === "accountAccessRequired" ? current : "error");
       }
@@ -53,6 +69,11 @@ export function OAuthProviderLoginDialog({ provider, onClose, onConnected }: OAu
     let successTimer: ReturnType<typeof setTimeout> | undefined;
     const unlisten = listen<OAuthLoginProgress>("oauth-login-progress", ({ payload }) => {
       if (!mountedRef.current || payload.provider_id !== provider.id) return;
+      const diagnosticId = diagnosticIdRef.current;
+      if (diagnosticId) {
+        const facts = ` has_url=${Boolean(payload.verification_url)} has_code=${Boolean(payload.user_code)}`;
+        logOAuthDiagnostic(diagnosticId, provider.id, safeProgressStage(payload.stage), facts);
+      }
       if (payload.stage === "success") {
         setState("success");
         successTimer = setTimeout(() => onConnectedRef.current(), 600);

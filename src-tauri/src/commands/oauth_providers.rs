@@ -26,6 +26,7 @@ pub async fn list_oauth_provider_statuses() -> Vec<oauth_providers::OAuthProvide
 pub async fn start_oauth_provider_login(
     app: tauri::AppHandle,
     provider_id: String,
+    diagnostic_id: String,
 ) -> Result<(), String> {
     let provider = ProviderId::parse(&provider_id)?;
     match provider {
@@ -38,7 +39,7 @@ pub async fn start_oauth_provider_login(
             emit_openai_progress(&app, "success");
         }
         ProviderId::Moonshot | ProviderId::Xai => {
-            oauth_providers::login_external(app.clone(), provider).await?;
+            oauth_providers::login_external(app.clone(), provider, &diagnostic_id).await?;
         }
     }
     let _ = app.emit(STATUS_EVENT, ());

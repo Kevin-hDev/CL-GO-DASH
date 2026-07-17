@@ -1,6 +1,11 @@
 mod login;
+mod login_diagnostics;
+#[cfg(test)]
+mod login_diagnostics_tests;
 mod login_output;
 mod login_progress;
+mod login_registry;
+mod login_wait;
 mod logout;
 mod specs;
 mod status;
@@ -21,16 +26,22 @@ pub(crate) use status::is_connected;
 pub use status::list_statuses;
 pub use types::{OAuthClientState, OAuthLoginProgress, OAuthProviderStatus};
 
-pub async fn login_external(app: tauri::AppHandle, provider: ProviderId) -> Result<(), String> {
-    login::run(app, provider).await
+pub async fn login_external(
+    app: tauri::AppHandle,
+    provider: ProviderId,
+    diagnostic_id: &str,
+) -> Result<(), String> {
+    let diagnostic = login_diagnostics::LoginDiagnostic::from_ui(provider, diagnostic_id)?;
+    diagnostic.stage("command_received");
+    login::run(app, provider, diagnostic).await
 }
 
 pub async fn cancel_login(provider: ProviderId) {
-    login::cancel(provider).await;
+    login_registry::cancel(provider).await;
 }
 
 pub async fn cancel_all() {
-    login::cancel_all().await;
+    login_registry::cancel_all().await;
 }
 
 pub async fn logout_external(provider: ProviderId) -> Result<(), String> {

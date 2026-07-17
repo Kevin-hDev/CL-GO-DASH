@@ -3,7 +3,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { StrictMode } from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { OAuthLoginProgress, OAuthProviderStatus } from "@/types/oauth-provider";
 import { OAuthProviderLoginDialog } from "../oauth-provider-login-dialog";
 
@@ -23,6 +23,7 @@ const moonshot: OAuthProviderStatus = {
   client_state: "ready",
   install_url: "https://www.kimi.com/code/docs/en/",
 };
+const diagnosticId = "12345678-1234-4234-8234-123456789abc";
 
 describe("OAuthProviderLoginDialog", () => {
   let progress: ((event: { payload: OAuthLoginProgress }) => void) | undefined;
@@ -39,12 +40,21 @@ describe("OAuthProviderLoginDialog", () => {
       configurable: true,
       value: { writeText: clipboardWrite },
     });
+    Object.defineProperty(globalThis.crypto, "randomUUID", {
+      configurable: true,
+      value: () => diagnosticId,
+    });
   });
+
+  afterEach(() => vi.restoreAllMocks());
 
   it("lance la connexion, affiche l'attente et permet de relancer", async () => {
     render(<StrictMode><OAuthProviderLoginDialog provider={moonshot} onClose={vi.fn()} onConnected={vi.fn()} /></StrictMode>);
 
-    await waitFor(() => expect(invoke).toHaveBeenCalledWith("start_oauth_provider_login", { providerId: "moonshot" }));
+    await waitFor(() => expect(invoke).toHaveBeenCalledWith("start_oauth_provider_login", {
+      providerId: "moonshot",
+      diagnosticId,
+    }));
     expect(vi.mocked(invoke).mock.calls.filter(([command]) => command === "start_oauth_provider_login")).toHaveLength(1);
     progress?.({ payload: { provider_id: "moonshot", stage: "waiting" } });
     expect(await screen.findByText("connectors.oauth.message")).toBeTruthy();
@@ -93,6 +103,7 @@ describe("OAuthProviderLoginDialog", () => {
   });
 
   it("ne présente pas le code technique du lien complet Kimi", async () => {
+    const consoleInfo = vi.spyOn(console, "info").mockImplementation(() => undefined);
     render(<OAuthProviderLoginDialog provider={moonshot} onClose={vi.fn()} onConnected={vi.fn()} />);
     await waitFor(() => expect(progress).toBeTypeOf("function"));
 
@@ -108,6 +119,10 @@ describe("OAuthProviderLoginDialog", () => {
     expect(await screen.findByText("connectors.oauth.message")).toBeTruthy();
     expect(screen.queryByText("KIMI-CODE")).toBeNull();
     expect(screen.queryByText("providers.oauth.copyCode")).toBeNull();
+    const diagnostics = consoleInfo.mock.calls.flat().join(" ");
+    expect(diagnostics).toContain(diagnosticId);
+    expect(diagnostics).not.toContain("KIMI-CODE");
+    expect(diagnostics).not.toContain("hidden");
   });
 
   it("explique quand OAuth réussit mais que le compte n'a pas accès à Kimi Code", async () => {
