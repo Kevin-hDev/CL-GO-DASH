@@ -27,45 +27,6 @@ describe("toolCall", () => {
 });
 
 describe("toolResult", () => {
-  it("associe les mises à jour ACP par identifiant stable", () => {
-    const currentTools = [
-      { name: "bash", args: {}, toolCallId: "session:xai:mcp:first" },
-      { name: "bash", args: {}, toolCallId: "session:xai:mcp:second" },
-    ];
-    const result = applyStreamEvent(makeState({ currentTools }), {
-      event: "toolResult",
-      data: {
-        name: "bash",
-        toolCallIndex: 0,
-        toolCallId: "session:xai:mcp:second",
-        content: "ok",
-        isError: false,
-        status: "completed",
-      },
-    });
-
-    expect(result.state.currentTools[0].result).toBeUndefined();
-    expect(result.state.currentTools[1].result).toBe("ok");
-  });
-
-  it("conserve une sortie ACP progressive sans terminer la carte", () => {
-    const currentTools = [{ name: "bash", args: {}, toolCallId: "stable" }];
-    const result = applyStreamEvent(makeState({ currentTools }), {
-      event: "toolResult",
-      data: {
-        name: "bash",
-        toolCallIndex: 0,
-        toolCallId: "stable",
-        content: "progression",
-        isError: false,
-        status: "in_progress",
-      },
-    });
-
-    expect(result.state.currentTools[0].result).toBeUndefined();
-    expect(result.state.currentTools[0].partialResult).toBe("progression");
-  });
-
   it("assigne le résultat par index valide", () => {
     const currentTools = [{ name: "bash", args: {} }, { name: "grep", args: {} }];
     const state = makeState({ currentTools });

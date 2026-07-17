@@ -133,11 +133,13 @@ function OAuthProviderDetail({ provider, refresh }: { provider: OAuthProviderSta
       setLoading(false);
     }
   };
-  const clientLabel = t(`providers.oauth.client.${provider.client_state}`);
+  const connectionLabel = provider.experimental
+    ? `${t("providers.oauth.nativeConnection")} · ${t("providers.oauth.experimental")}`
+    : t("providers.oauth.nativeConnection");
   return (
     <div className="prv-oauth-detail">
-      <div className="prv-oauth-identity"><ProviderIcon providerId={provider.id} displayName={provider.display_name} size={40} /><div><strong>{provider.display_name}</strong><span>{provider.account ?? clientLabel}</span></div></div>
-      <div className="prv-oauth-status"><span>{t("providers.oauth.clientLabel")}</span><strong>{clientLabel}</strong></div>
+      <div className="prv-oauth-identity"><ProviderIcon providerId={provider.id} displayName={provider.display_name} size={40} /><div><strong>{provider.display_name}</strong><span>{provider.account ?? connectionLabel}</span></div></div>
+      <div className="prv-oauth-status"><span>{t("providers.oauth.connectionLabel")}</span><strong>{connectionLabel}</strong></div>
       <div className="prv-oauth-actions">
         <button type="button" className="ollama-btn" disabled={loading} onClick={() => void disconnect()}>{t("providers.oauth.disconnect")}</button>
       </div>

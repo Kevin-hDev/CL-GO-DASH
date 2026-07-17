@@ -13,15 +13,13 @@
     "tabs": { "apiKeys": "API Keys", "oauth": "OAuth" },
     "oauth": {
       "title": "OAuth connections", "openCatalog": "Providers", "catalogTitle": "OAuth providers",
-      "catalogSubtitle": "Connect an account through the official client.", "connected": "Connected",
+      "catalogSubtitle": "Native web sign-in, no installation required.", "connected": "Connected",
       "emptySidebar": "No OAuth connection", "empty": "No OAuth provider selected",
-      "clientLabel": "Official client", "connect": "Connect", "disconnect": "Disconnect", "install": "Install", "cancel": "Cancel",
+      "connectionLabel": "Connection", "nativeConnection": "Native web — no installation required", "experimental": "Experimental / unofficial", "connect": "Connect", "disconnect": "Disconnect", "cancel": "Cancel",
       "progress": { "waiting": "Waiting for sign-in…", "verification": "Verification required", "success": "Connected", "cancelled": "Sign-in cancelled", "error": "Unable to connect" },
-      "client": { "ready": "Available", "missing": "Not installed", "incompatible": "Incompatible" },
-      "clientRequired": "The official client must be installed before you can sign in.", "clientIncompatible": "The installed official client is not compatible with this connection.", "installationGuide": "View installation guide", "successMessage": "The provider was connected successfully.",
-      "kimiAccountAccessRequired": "Authentication succeeded, but Kimi cannot verify your membership right now. Wait and retry. If the issue persists, check your Kimi Code subscription.",
+      "successMessage": "The provider was connected successfully.",
       "deviceInstructions": "Enter this code on the page opened in your browser.", "codeLabel": "Sign-in code", "copyCode": "Copy code", "openVerification": "Reopen sign-in page",
-      "descriptions": { "openai": "ChatGPT through Codex", "moonshot": "Kimi Code through ACP", "xai": "Grok CLI through ACP" }
+      "descriptions": { "openai": "ChatGPT through Codex", "moonshot": "Kimi through native web sign-in, without a client", "xai": "Grok through native web sign-in, without a client" }
     }
   },
   "apiKeys": {

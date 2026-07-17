@@ -13,15 +13,13 @@
     "tabs": { "apiKeys": "Chiavi API", "oauth": "OAuth" },
     "oauth": {
       "title": "Connessioni OAuth", "openCatalog": "Provider", "catalogTitle": "Provider OAuth",
-      "catalogSubtitle": "Collega un account con il client ufficiale.", "connected": "Connessi",
+      "catalogSubtitle": "Accesso web nativo, nessuna installazione richiesta.", "connected": "Connessi",
       "emptySidebar": "Nessuna connessione OAuth", "empty": "Nessun provider OAuth selezionato",
-      "clientLabel": "Client ufficiale", "connect": "Connetti", "disconnect": "Disconnetti", "install": "Installa", "cancel": "Annulla",
+      "connectionLabel": "Connessione", "nativeConnection": "Web nativo — nessuna installazione richiesta", "experimental": "Sperimentale / non ufficiale", "connect": "Connetti", "disconnect": "Disconnetti", "cancel": "Annulla",
       "progress": { "waiting": "In attesa dell'accesso…", "verification": "Verifica richiesta", "success": "Connesso", "cancelled": "Accesso annullato", "error": "Connessione impossibile" },
-      "client": { "ready": "Disponibile", "missing": "Non installato", "incompatible": "Incompatibile" },
-      "clientRequired": "Il client ufficiale deve essere installato prima di accedere.", "clientIncompatible": "Il client ufficiale installato non è compatibile con questa connessione.", "installationGuide": "Apri la guida di installazione", "successMessage": "Il provider è stato connesso correttamente.",
-      "kimiAccountAccessRequired": "L’autenticazione è riuscita, ma Kimi non può verificare l’abbonamento in questo momento. Attendi e riprova. Se il problema continua, controlla l’abbonamento Kimi Code.",
+      "successMessage": "Il provider è stato connesso correttamente.",
       "deviceInstructions": "Inserisci questo codice nella pagina aperta nel browser.", "codeLabel": "Codice di accesso", "copyCode": "Copia codice", "openVerification": "Riapri la pagina di accesso",
-      "descriptions": { "openai": "ChatGPT tramite Codex", "moonshot": "Kimi Code tramite ACP", "xai": "Grok CLI tramite ACP" }
+      "descriptions": { "openai": "ChatGPT tramite Codex", "moonshot": "Kimi tramite accesso web nativo, senza client", "xai": "Grok tramite accesso web nativo, senza client" }
     }
   },
   "apiKeys": {

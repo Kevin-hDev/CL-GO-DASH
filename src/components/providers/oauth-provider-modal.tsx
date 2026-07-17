@@ -37,7 +37,10 @@ export function OAuthProviderModal({ providers, onPick, onClose }: OAuthProvider
               <ProviderIcon providerId={provider.id} displayName={provider.display_name} size={40} />
               <div className="ak-connector-card-body">
                 <div className="ak-connector-card-name">{provider.display_name}</div>
-                <div className="ak-connector-card-desc">{t(`providers.oauth.descriptions.${provider.id}`)}</div>
+                <div className="ak-connector-card-desc">
+                  {t(`providers.oauth.descriptions.${provider.id}`)}
+                  {provider.experimental ? ` · ${t("providers.oauth.experimental")}` : ""}
+                </div>
               </div>
               <div className={`ak-connector-card-action ${provider.connected ? "done" : ""}`}>
                 {provider.connected ? <Check size="var(--icon-md)" weight="bold" /> : <Plus size="var(--icon-md)" weight="bold" />}

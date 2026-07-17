@@ -64,3 +64,14 @@ fn legacy_security_fields_are_ignored_and_disappear() {
     assert!(!serialized.contains("allow_private_urls"));
     assert!(!serialized.contains("redact_content"));
 }
+
+#[test]
+fn rejects_interactive_only_oauth_providers() {
+    for provider in ["xai-oauth", "moonshot-oauth"] {
+        let mut config = GatewayConfig::default();
+        let mut account = enabled_account();
+        account.provider = provider.to_string();
+        config.channels.telegram.push(account);
+        assert!(validate(&config).is_err());
+    }
+}

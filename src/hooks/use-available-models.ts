@@ -21,6 +21,7 @@ export interface AvailableModel {
   reasoning_modes?: ReasoningMode[];
   is_free?: boolean;
   hint?: string;
+  interactive_only?: boolean;
 }
 
 interface LlmModelInfo {
@@ -173,4 +174,15 @@ export function useAvailableModels() {
   }, [refresh, refreshOllama]);
 
   return { groups, loading, refresh };
+}
+
+export function withoutInteractiveOnlyModels(
+  groups: Map<string, AvailableModel[]>,
+): Map<string, AvailableModel[]> {
+  const filtered = new Map<string, AvailableModel[]>();
+  for (const [providerId, models] of groups) {
+    const allowed = models.filter((model) => !model.interactive_only);
+    if (allowed.length > 0) filtered.set(providerId, allowed);
+  }
+  return filtered;
 }

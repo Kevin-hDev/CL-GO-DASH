@@ -99,6 +99,9 @@ impl GatewayAgentBridge {
             .await
             .map_err(|reason| block(&msg, &reason))?;
         let (provider, model) = resolve_provider_model(&account_cfg, &config);
+        if crate::services::llm::route::is_interactive_only(&provider) {
+            return Err(block(&msg, "provider restricted to interactive chat"));
+        }
         let session_id = find_or_create_session(
             &msg,
             &channel_key,

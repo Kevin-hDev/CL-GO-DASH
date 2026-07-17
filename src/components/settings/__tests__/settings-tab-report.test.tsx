@@ -81,15 +81,12 @@ describe("SettingsTab slots", () => {
     await waitFor(() => expect(screen.queryByText("codex.title")).toBeNull());
   });
 
-  it("détecte l'installation du client Grok sans redémarrer l'application", async () => {
+  it("lance Grok OAuth sans installation de client", async () => {
     render(<SettingsHarness />);
     fireEvent.click((await screen.findAllByText("settings.tabs.providers"))[0]);
     fireEvent.click(await screen.findByText("providers.tabs.oauth"));
     fireEvent.click(await screen.findByText("providers.oauth.openCatalog"));
     fireEvent.click(await screen.findByText("xAI"));
-    expect(await screen.findByText("providers.oauth.clientRequired")).toBeTruthy();
-
-    setXaiOAuthState({ ready: true });
     await waitFor(() => {
       const call = invokeCalls().find(([command]) => command === "start_oauth_provider_login");
       const args = call?.[1] as Record<string, unknown> | undefined;

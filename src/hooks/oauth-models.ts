@@ -11,6 +11,7 @@ export interface OAuthModelInfo {
   supports_vision: boolean;
   supports_thinking: boolean;
   reasoning_modes?: ReasoningMode[];
+  interactive_only: boolean;
 }
 
 const PROVIDERS = {
@@ -34,6 +35,7 @@ export function mapOAuthModels(models: OAuthModelInfo[]): Map<string, AvailableM
       supports_thinking: model.supports_thinking,
       reasoning_modes: model.reasoning_modes,
       is_free: true,
+      interactive_only: model.interactive_only,
       hint: model.context_length ? `${Math.round(model.context_length / 1000)}K ctx` : undefined,
     };
     groups.set(provider.id, [...(groups.get(provider.id) ?? []), mapped]);

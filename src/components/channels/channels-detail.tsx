@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
 import { Trash } from "@/components/ui/icons";
 import { Tooltip } from "@/components/ui/tooltip";
 import { SettingsCard } from "@/components/settings/settings-card";
 import { CustomSelect } from "@/components/ui/custom-select";
-import { useAvailableModels } from "@/hooks/use-available-models";
+import { useAvailableModels, withoutInteractiveOnlyModels } from "@/hooks/use-available-models";
 import { ChannelsAllowlist } from "./channels-allowlist";
 import { ChannelIcon } from "./channel-icon";
 import { channelErrorKey } from "./channel-error";
@@ -28,6 +28,7 @@ export function ChannelsDetail({ channelId, account, status, config, onSaveConfi
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [operationFailed, setOperationFailed] = useState(false);
   const { groups } = useAvailableModels();
+  const channelGroups = useMemo(() => withoutInteractiveOnlyModels(groups), [groups]);
 
   const runOperation = async (operation: () => Promise<void>) => {
     setOperationFailed(false);
@@ -78,10 +79,10 @@ export function ChannelsDetail({ channelId, account, status, config, onSaveConfi
     });
   };
 
-  const providerOptions = Array.from(groups.keys())
+  const providerOptions = Array.from(channelGroups.keys())
     .map((p) => ({ value: p, label: p.charAt(0).toUpperCase() + p.slice(1) }));
 
-  const modelOptions = (groups.get(account.provider) ?? [])
+  const modelOptions = (channelGroups.get(account.provider) ?? [])
     .map((m) => ({ value: m.id, label: m.id }));
 
   const channelName = channelId.charAt(0).toUpperCase() + channelId.slice(1);

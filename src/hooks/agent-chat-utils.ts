@@ -3,12 +3,6 @@ import type { ToolActivityRecord, TokenPhase } from "@/types/agent";
 export interface ToolActivity {
   name: string;
   args: Record<string, unknown>;
-  toolCallId?: string;
-  providerId?: string;
-  source?: string;
-  status?: string;
-  kind?: string;
-  partialResult?: string;
   result?: string;
   isError?: boolean;
   /** Chemin absolu résolu côté backend (working_dir + path). Utilisé pour l'affichage. */
@@ -56,11 +50,6 @@ export function toolsToRecords(tools: ToolActivity[]): ToolActivityRecord[] {
       is_error: t.isError,
       resolved_path: t.resolvedPath,
       affected_paths: t.affectedPaths,
-      tool_call_id: t.toolCallId,
-      provider_id: t.providerId,
-      source: t.source,
-      status: t.status,
-      kind: t.kind,
       content: t.name === "write_file" ? str(a.content)
         : t.name === "write_document" ? JSON.stringify(Array.isArray(a.content) ? a.content : [])
         : t.name === "write_spreadsheet" ? JSON.stringify(Array.isArray(a.operations) ? a.operations : [])

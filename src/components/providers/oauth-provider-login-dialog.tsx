@@ -8,16 +8,7 @@ import { cleanupTauriListener } from "@/lib/tauri-listen";
 import type { OAuthLoginProgress, OAuthProviderStatus } from "@/types/oauth-provider";
 import "@/components/connectors/mcp-oauth-dialog.css";
 
-type LoginState = "loading" | "waiting" | "success" | "error" | "accountAccessRequired";
-
-function logOAuthDiagnostic(id: string, provider: string, stage: string, facts = "") {
-  console.info(`[oauth-diagnostic] id=${id} provider=${provider} layer=ui stage=${stage}${facts}`);
-}
-
-function safeProgressStage(stage: string) {
-  const known = ["waiting", "verification", "success", "cancelled", "error", "account_access_required"];
-  return known.includes(stage) ? stage : "unknown";
-}
+type LoginState = "loading" | "waiting" | "success" | "error";
 
 interface OAuthProviderLoginDialogProps {
   provider: OAuthProviderStatus;
@@ -31,7 +22,6 @@ export function OAuthProviderLoginDialog({ provider, onClose, onConnected }: OAu
   const [userCode, setUserCode] = useState<string | null>(null);
   const [verificationUrl, setVerificationUrl] = useState<string | null>(null);
   const mountedRef = useRef(true);
-  const diagnosticIdRef = useRef<string | null>(null);
   const onConnectedRef = useRef(onConnected);
 
   useEffect(() => {
@@ -39,29 +29,20 @@ export function OAuthProviderLoginDialog({ provider, onClose, onConnected }: OAu
   }, [onConnected]);
 
   const startFlow = useCallback(async () => {
-    const diagnosticId = crypto.randomUUID();
-    diagnosticIdRef.current = diagnosticId;
-    logOAuthDiagnostic(diagnosticId, provider.id, "start");
     setUserCode(null);
     setVerificationUrl(null);
-    if (provider.client_state !== "ready") {
-      setState("error");
-      return;
-    }
     setState("loading");
     try {
       await invoke("cancel_oauth_provider_login", { providerId: provider.id });
-      logOAuthDiagnostic(diagnosticId, provider.id, "previous_attempt_cancelled");
       if (!mountedRef.current) return;
-      await invoke("start_oauth_provider_login", { providerId: provider.id, diagnosticId });
-      logOAuthDiagnostic(diagnosticId, provider.id, "command_resolved");
+      await invoke("start_oauth_provider_login", {
+        providerId: provider.id,
+        diagnosticId: crypto.randomUUID(),
+      });
     } catch {
-      logOAuthDiagnostic(diagnosticId, provider.id, "command_rejected");
-      if (mountedRef.current) {
-        setState((current) => current === "accountAccessRequired" ? current : "error");
-      }
+      if (mountedRef.current) setState("error");
     }
-  }, [provider.client_state, provider.id]);
+  }, [provider.id]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -69,22 +50,15 @@ export function OAuthProviderLoginDialog({ provider, onClose, onConnected }: OAu
     let successTimer: ReturnType<typeof setTimeout> | undefined;
     const unlisten = listen<OAuthLoginProgress>("oauth-login-progress", ({ payload }) => {
       if (!mountedRef.current || payload.provider_id !== provider.id) return;
-      const diagnosticId = diagnosticIdRef.current;
-      if (diagnosticId) {
-        const facts = ` has_url=${Boolean(payload.verification_url)} has_code=${Boolean(payload.user_code)}`;
-        logOAuthDiagnostic(diagnosticId, provider.id, safeProgressStage(payload.stage), facts);
-      }
       if (payload.stage === "success") {
         setState("success");
         successTimer = setTimeout(() => onConnectedRef.current(), 600);
-      } else if (payload.stage === "account_access_required") {
-        setState("accountAccessRequired");
-      } else if (payload.stage === "waiting" || payload.stage === "verification") {
+      } else if (payload.stage === "cancelled" || payload.stage === "error") {
+        setState("error");
+      } else {
         setUserCode(payload.user_code ?? null);
         setVerificationUrl(payload.verification_url ?? null);
         setState("waiting");
-      } else {
-        setState("error");
       }
     });
     void unlisten.then(() => { if (active) void startFlow(); });
@@ -104,16 +78,14 @@ export function OAuthProviderLoginDialog({ provider, onClose, onConnected }: OAu
     void invoke("cancel_oauth_provider_login", { providerId: provider.id });
     onClose();
   };
-  const missingClient = provider.client_state !== "ready";
-  const visibleUserCode = provider.id === "xai" ? userCode : null;
-  const message = missingClient
-    ? t(provider.client_state === "missing" ? "providers.oauth.clientRequired" : "providers.oauth.clientIncompatible")
-    : visibleUserCode ? t("providers.oauth.deviceInstructions") : t(state === "waiting" ? "connectors.oauth.message" : state === "success" ? "providers.oauth.successMessage" : state === "accountAccessRequired" ? "providers.oauth.kimiAccountAccessRequired" : state === "error" ? "connectors.oauth.errorGeneric" : "connectors.oauth.discovering");
+  const message = userCode
+    ? t("providers.oauth.deviceInstructions")
+    : t(state === "waiting" ? "connectors.oauth.message" : state === "success" ? "providers.oauth.successMessage" : state === "error" ? "connectors.oauth.errorGeneric" : "connectors.oauth.discovering");
 
   const copyCode = async () => {
-    if (!visibleUserCode) return;
+    if (!userCode) return;
     try {
-      await navigator.clipboard.writeText(visibleUserCode);
+      await navigator.clipboard.writeText(userCode);
     } catch {
       // Clipboard access can be denied by the operating system.
     }
@@ -129,22 +101,19 @@ export function OAuthProviderLoginDialog({ provider, onClose, onConnected }: OAu
           <div className="mco-icon-box"><span className="mco-app-icon">CL</span></div>
         </div>
         <h3 className="mco-title">{t(state === "success" ? "connectors.oauth.successTitle" : "connectors.oauth.title")}</h3>
-        <p className={`mco-message ${state === "error" || state === "accountAccessRequired" ? "mco-error" : ""}`}>{message}</p>
-        {visibleUserCode && (
+        <p className={`mco-message ${state === "error" ? "mco-error" : ""}`}>{message}</p>
+        {userCode && (
           <div className="mco-device-code">
             <span>{t("providers.oauth.codeLabel")}</span>
-            <strong>{visibleUserCode}</strong>
+            <strong>{userCode}</strong>
             <button type="button" className="ollama-btn" onClick={() => void copyCode()}>{t("providers.oauth.copyCode")}</button>
           </div>
         )}
         {verificationUrl && state === "waiting" && (
           <button type="button" className="mco-retry-link" onClick={() => void open(verificationUrl)}>{t("providers.oauth.openVerification")}</button>
         )}
-        {!missingClient && (state === "waiting" || state === "error" || state === "accountAccessRequired") && (
+        {(state === "waiting" || state === "error") && (
           <button type="button" className="mco-retry-link" onClick={() => void startFlow()}>{t("connectors.oauth.retry")}</button>
-        )}
-        {missingClient && (
-          <button type="button" className="mco-retry-link" onClick={() => void open(provider.install_url)}>{t("providers.oauth.installationGuide")}</button>
         )}
         <div className="wk-dialog-footer mco-footer">
           <button type="button" className="wk-btn-secondary" onClick={handleClose}>{t("connectors.oauth.cancel")}</button>

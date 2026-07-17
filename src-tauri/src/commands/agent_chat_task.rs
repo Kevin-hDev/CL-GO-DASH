@@ -1,7 +1,5 @@
-mod acp;
-mod acp_events;
-mod acp_permission;
 mod api;
+mod api_images;
 pub(crate) mod common;
 mod compress;
 mod gemma4_thinking_guard;
@@ -13,6 +11,20 @@ pub(crate) use params::{StreamCapabilityHints, StreamTaskParams};
 use crate::services::agent_local::types_ollama::ChatMessage;
 
 pub(crate) use common::merge_personality;
+
+#[derive(Debug, PartialEq, Eq)]
+enum ChatEngine {
+    Ollama,
+    NativeApi,
+}
+
+fn chat_engine(provider: &str) -> ChatEngine {
+    if provider == "ollama" {
+        ChatEngine::Ollama
+    } else {
+        ChatEngine::NativeApi
+    }
+}
 
 pub(crate) async fn run_stream_task(
     mut params: StreamTaskParams,
@@ -38,14 +50,24 @@ pub(crate) async fn run_stream_task(
     }
 
     let mode = common::resolve_permission_mode(params.permission_mode_override.as_deref()).await;
-    if crate::services::acp::provider_from_chat(&params.provider).is_some() {
-        return acp::run(params, mode).await;
-    }
     let response_language = common::response_language();
 
-    if params.provider == "ollama" {
+    if chat_engine(&params.provider) == ChatEngine::Ollama {
         ollama::run(params, mode, response_language).await
     } else {
         api::run(params, mode, response_language).await
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn grok_and_kimi_oauth_use_the_native_agent_loop() {
+        assert_eq!(chat_engine("xai-oauth"), ChatEngine::NativeApi);
+        assert_eq!(chat_engine("moonshot-oauth"), ChatEngine::NativeApi);
+        assert_eq!(chat_engine("xai"), ChatEngine::NativeApi);
+        assert_eq!(chat_engine("moonshot"), ChatEngine::NativeApi);
     }
 }

@@ -88,6 +88,9 @@ async fn lookup_api_context(provider: &str, model: &str) -> u64 {
             return context as u64;
         }
     }
+    if let Some(model) = crate::services::llm::runtime_models::lookup(provider, model) {
+        return model.context_length.unwrap_or(0) as u64;
+    }
     use crate::services::llm::model_registry;
 
     let reg = model_registry::get_lock().read().await;

@@ -1,19 +1,16 @@
 export type OAuthProviderId = "openai" | "moonshot" | "xai";
 
-export type OAuthClientState = "ready" | "missing" | "incompatible";
-
 export interface OAuthProviderStatus {
   id: OAuthProviderId;
   display_name: string;
   connected: boolean;
   account: string | null;
-  client_state: OAuthClientState;
-  install_url: string;
+  experimental: boolean;
 }
 
 export interface OAuthLoginProgress {
   provider_id: OAuthProviderId;
-  stage: "waiting" | "verification" | "success" | "cancelled" | "error" | "account_access_required";
+  stage: "starting" | "browser_open" | "device_code" | "waiting" | "success" | "cancelled" | "error";
   hint?: string;
   verification_url?: string;
   user_code?: string;

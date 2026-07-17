@@ -1,58 +1,68 @@
-mod client_compatibility;
-mod legacy_kimi_profile;
-mod login;
-mod login_diagnostics;
-#[cfg(test)]
-mod login_diagnostics_tests;
-mod login_output;
-mod login_progress;
-mod login_registry;
-mod login_wait;
-mod logout;
-mod specs;
-mod status;
 mod types;
 
-#[cfg(test)]
-pub(crate) use logout::remove_credentials_in;
-#[cfg(test)]
-pub use specs::profile_env_names;
-pub use specs::{
-    command_spec, parse_login_hints, process_environment, profile_dir, LoginHints, ProcessKind,
-    ProviderId,
-};
-pub(crate) use status::compatible_binary_path;
-#[cfg(test)]
-pub(crate) use status::credentials_present_in;
-pub(crate) use status::is_connected;
-pub use status::list_statuses;
-pub use types::{OAuthClientState, OAuthLoginProgress, OAuthProviderStatus};
+use crate::services::llm_oauth::{self, LlmOAuthProvider};
+
+pub use types::{OAuthLoginProgress, OAuthProviderStatus, ProviderId};
+
+pub fn list_statuses() -> Vec<OAuthProviderStatus> {
+    let codex = crate::services::codex_oauth::store::load().ok().flatten();
+    let codex_account = codex.as_ref().and_then(|tokens| {
+        crate::services::codex_oauth::jwt::extract_display_claims(&tokens.access)
+            .ok()
+            .and_then(|claims| claims.email)
+    });
+    vec![
+        OAuthProviderStatus {
+            id: ProviderId::OpenAi,
+            display_name: "OpenAI",
+            connected: codex.is_some(),
+            account: codex_account,
+            experimental: false,
+        },
+        external_status(ProviderId::Xai),
+        external_status(ProviderId::Moonshot),
+    ]
+}
 
 pub async fn login_external(
     app: tauri::AppHandle,
     provider: ProviderId,
-    diagnostic_id: &str,
+    _diagnostic_id: &str,
 ) -> Result<(), String> {
-    let diagnostic = login_diagnostics::LoginDiagnostic::from_ui(provider, diagnostic_id)?;
-    diagnostic.stage("command_received");
-    login::run(app, provider, diagnostic).await
+    llm_oauth::login(app, provider.as_llm_oauth()?).await
 }
 
 pub async fn cancel_login(provider: ProviderId) {
-    login_registry::cancel(provider).await;
+    if let Ok(provider) = provider.as_llm_oauth() {
+        llm_oauth::cancel(provider).await;
+    }
 }
 
 pub async fn cancel_all() {
-    login_registry::cancel_all().await;
+    llm_oauth::cancel_all().await;
 }
 
 pub async fn logout_external(provider: ProviderId) -> Result<(), String> {
-    logout::run(provider).await
+    llm_oauth::logout(provider.as_llm_oauth()?)
 }
 
-pub fn invalidate_external_login(provider: ProviderId) {
-    let _ = status::mark_invalid(provider);
+fn external_status(id: ProviderId) -> OAuthProviderStatus {
+    let connected = id.as_llm_oauth().is_ok_and(llm_oauth::is_connected);
+    OAuthProviderStatus {
+        id,
+        display_name: id.display_name(),
+        connected,
+        account: None,
+        experimental: id == ProviderId::Moonshot,
+    }
 }
 
-#[cfg(test)]
-mod tests;
+impl ProviderId {
+    fn as_llm_oauth(self) -> Result<LlmOAuthProvider, String> {
+        match self {
+            Self::Xai => Ok(LlmOAuthProvider::Xai),
+            Self::Moonshot => Ok(LlmOAuthProvider::Kimi),
+            Self::OpenAi => Err("Fournisseur invalide".to_string()),
+        }
+    }
+}

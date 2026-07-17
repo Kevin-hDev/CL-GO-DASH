@@ -2,15 +2,11 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { StrictMode } from "react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { OAuthLoginProgress, OAuthProviderStatus } from "@/types/oauth-provider";
 import { OAuthProviderLoginDialog } from "../oauth-provider-login-dialog";
 
-vi.mock("react-i18next", () => ({
-  useTranslation: () => ({ t: (key: string) => key }),
-}));
-
+vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
 vi.mock("@tauri-apps/api/core", () => ({ invoke: vi.fn(() => Promise.resolve()) }));
 vi.mock("@tauri-apps/api/event", () => ({ listen: vi.fn() }));
 vi.mock("@tauri-apps/plugin-shell", () => ({ open: vi.fn(() => Promise.resolve()) }));
@@ -20,10 +16,8 @@ const moonshot: OAuthProviderStatus = {
   display_name: "Moonshot AI",
   connected: false,
   account: null,
-  client_state: "ready",
-  install_url: "https://www.kimi.com/code/docs/en/",
+  experimental: true,
 };
-const diagnosticId = "12345678-1234-4234-8234-123456789abc";
 
 describe("OAuthProviderLoginDialog", () => {
   let progress: ((event: { payload: OAuthLoginProgress }) => void) | undefined;
@@ -42,96 +36,37 @@ describe("OAuthProviderLoginDialog", () => {
     });
     Object.defineProperty(globalThis.crypto, "randomUUID", {
       configurable: true,
-      value: () => diagnosticId,
+      value: () => "12345678-1234-4234-8234-123456789abc",
     });
   });
 
-  afterEach(() => vi.restoreAllMocks());
-
-  it("lance la connexion, affiche l'attente et permet de relancer", async () => {
-    render(<StrictMode><OAuthProviderLoginDialog provider={moonshot} onClose={vi.fn()} onConnected={vi.fn()} /></StrictMode>);
-
+  it("lance directement la connexion web native", async () => {
+    render(<OAuthProviderLoginDialog provider={moonshot} onClose={vi.fn()} onConnected={vi.fn()} />);
     await waitFor(() => expect(invoke).toHaveBeenCalledWith("start_oauth_provider_login", {
       providerId: "moonshot",
-      diagnosticId,
+      diagnosticId: "12345678-1234-4234-8234-123456789abc",
     }));
-    expect(vi.mocked(invoke).mock.calls.filter(([command]) => command === "start_oauth_provider_login")).toHaveLength(1);
-    progress?.({ payload: { provider_id: "moonshot", stage: "waiting" } });
-    expect(await screen.findByText("connectors.oauth.message")).toBeTruthy();
+  });
 
-    fireEvent.click(screen.getByText("connectors.oauth.retry"));
-    await waitFor(() => {
-      expect(vi.mocked(invoke).mock.calls.filter(([command]) => command === "start_oauth_provider_login")).toHaveLength(2);
-    });
+  it("affiche et copie le code d'appareil pour Kimi", async () => {
+    render(<OAuthProviderLoginDialog provider={moonshot} onClose={vi.fn()} onConnected={vi.fn()} />);
+    await waitFor(() => expect(progress).toBeTypeOf("function"));
+    progress?.({ payload: {
+      provider_id: "moonshot",
+      stage: "device_code",
+      user_code: "KIMI-CODE",
+      verification_url: "https://auth.kimi.com/activate",
+    } });
+    expect(await screen.findByText("KIMI-CODE")).toBeTruthy();
+    fireEvent.click(screen.getByText("providers.oauth.copyCode"));
+    expect(clipboardWrite).toHaveBeenCalledWith("KIMI-CODE");
   });
 
   it("ne valide la connexion qu'après le signal de succès", async () => {
     const onConnected = vi.fn();
     render(<OAuthProviderLoginDialog provider={moonshot} onClose={vi.fn()} onConnected={onConnected} />);
     await waitFor(() => expect(progress).toBeTypeOf("function"));
-    expect(onConnected).not.toHaveBeenCalled();
-
     progress?.({ payload: { provider_id: "moonshot", stage: "success" } });
     await waitFor(() => expect(onConnected).toHaveBeenCalledTimes(1));
-  });
-
-  it("explique le client manquant sans présenter Installer comme action OAuth", async () => {
-    render(<OAuthProviderLoginDialog provider={{ ...moonshot, id: "xai", display_name: "xAI", client_state: "missing" }} onClose={vi.fn()} onConnected={vi.fn()} />);
-
-    expect(await screen.findByText("providers.oauth.clientRequired")).toBeTruthy();
-    expect(screen.queryByText("providers.oauth.install")).toBeNull();
-    expect(invoke).not.toHaveBeenCalledWith("start_oauth_provider_login", expect.anything());
-  });
-
-  it("affiche et copie le code que Grok demande de saisir dans le navigateur", async () => {
-    render(<OAuthProviderLoginDialog provider={{ ...moonshot, id: "xai", display_name: "xAI" }} onClose={vi.fn()} onConnected={vi.fn()} />);
-    await waitFor(() => expect(progress).toBeTypeOf("function"));
-
-    progress?.({
-      payload: {
-        provider_id: "xai",
-        stage: "verification",
-        user_code: "45JE-V2VK",
-        verification_url: "https://auth.x.ai/device",
-      },
-    });
-
-    expect(await screen.findByText("45JE-V2VK")).toBeTruthy();
-    fireEvent.click(screen.getByText("providers.oauth.copyCode"));
-    expect(clipboardWrite).toHaveBeenCalledWith("45JE-V2VK");
-    expect(screen.queryByRole("textbox")).toBeNull();
-  });
-
-  it("ne présente pas le code technique du lien complet Kimi", async () => {
-    const consoleInfo = vi.spyOn(console, "info").mockImplementation(() => undefined);
-    render(<OAuthProviderLoginDialog provider={moonshot} onClose={vi.fn()} onConnected={vi.fn()} />);
-    await waitFor(() => expect(progress).toBeTypeOf("function"));
-
-    progress?.({
-      payload: {
-        provider_id: "moonshot",
-        stage: "verification",
-        user_code: "KIMI-CODE",
-        verification_url: "https://www.kimi.com/code/device?code=hidden",
-      },
-    });
-
-    expect(await screen.findByText("connectors.oauth.message")).toBeTruthy();
-    expect(screen.queryByText("KIMI-CODE")).toBeNull();
-    expect(screen.queryByText("providers.oauth.copyCode")).toBeNull();
-    const diagnostics = consoleInfo.mock.calls.flat().join(" ");
-    expect(diagnostics).toContain(diagnosticId);
-    expect(diagnostics).not.toContain("KIMI-CODE");
-    expect(diagnostics).not.toContain("hidden");
-  });
-
-  it("explique quand OAuth réussit mais que le compte n'a pas accès à Kimi Code", async () => {
-    render(<OAuthProviderLoginDialog provider={moonshot} onClose={vi.fn()} onConnected={vi.fn()} />);
-    await waitFor(() => expect(progress).toBeTypeOf("function"));
-
-    progress?.({ payload: { provider_id: "moonshot", stage: "account_access_required" } });
-
-    expect(await screen.findByText("providers.oauth.kimiAccountAccessRequired")).toBeTruthy();
-    expect(screen.getByText("connectors.oauth.retry")).toBeTruthy();
   });
 });

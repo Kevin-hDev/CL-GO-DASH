@@ -1,7 +1,6 @@
 use super::stream_convert::messages_to_openai;
 use crate::services::agent_local::types_ollama::ChatMessage;
-use crate::services::api_keys;
-use crate::services::llm::catalog;
+use crate::services::llm::route::{self, LlmRoute, RouteError};
 use crate::services::secure_http::{read_bounded, AuthenticatedClient, PROVIDER_ERROR_LIMIT};
 pub struct RequestConfig<'a> {
     pub provider_id: &'a str,
@@ -32,15 +31,25 @@ impl std::fmt::Display for RequestError {
 
 async fn send_json_request(
     client: &AuthenticatedClient,
+    route: &LlmRoute,
     url: &str,
-    key: &str,
     payload: &serde_json::Value,
 ) -> Result<reqwest::Response, RequestError> {
-    let request = client.post(url).bearer_auth(key).json(payload);
-    client
-        .send(request)
+    route
+        .send_authenticated(client, |token, headers| {
+            client
+                .post(url)
+                .headers(headers)
+                .bearer_auth(token)
+                .json(payload)
+        })
         .await
-        .map_err(|_| RequestError::Fatal("Connexion au fournisseur impossible".into()))
+        .map_err(|error| match error {
+            RouteError::Unauthorized => RequestError::Fatal("Connexion requise".into()),
+            RouteError::Network => {
+                RequestError::Fatal("Connexion au fournisseur impossible".into())
+            }
+        })
 }
 
 async fn read_provider_error(response: reqwest::Response) -> zeroize::Zeroizing<String> {
@@ -61,20 +70,17 @@ pub async fn post_chat_request_with_timeout(
     if cfg.model.len() > 128 {
         return Err(RequestError::Fatal("nom de modèle trop long".into()));
     }
-    let spec = catalog::find(cfg.provider_id)
-        .ok_or_else(|| RequestError::Fatal(format!("provider inconnu : {}", cfg.provider_id)))?;
-    let key = api_keys::get_key(cfg.provider_id).map_err(|_| {
-        RequestError::Fatal(format!("clé API non configurée pour {}", spec.display_name))
-    })?;
-    let url = format!("{}/chat/completions", spec.base_url);
-    let payload = build_chat_payload(cfg, spec.default_max_tokens);
+    let route = route::resolve(cfg.provider_id)
+        .ok_or_else(|| RequestError::Fatal("Fournisseur inconnu".to_string()))?;
+    let url = format!("{}/chat/completions", route.base_url);
+    let payload = build_chat_payload(cfg, &route);
 
     let client = AuthenticatedClient::new(timeout)
         .map_err(|_| RequestError::Fatal("Connexion au fournisseur impossible".into()))?;
-    let resp = send_json_request(&client, &url, &key, &payload).await?;
+    let resp = send_json_request(&client, &route, &url, &payload).await?;
 
-    if matches!(cfg.provider_id, "groq" | "xai") {
-        super::quota::update_ratelimit_headers(cfg.provider_id, resp.headers());
+    if !route.is_oauth() && matches!(route.chat_provider_id, "groq" | "xai") {
+        super::quota::update_ratelimit_headers(route.chat_provider_id, resp.headers());
     }
 
     let status = resp.status();
@@ -85,23 +91,26 @@ pub async fn post_chat_request_with_timeout(
             status,
             super::sanitize_log_body(&body)
         );
-        return Err(classify_error(status.as_u16(), &body, spec.display_name));
+        return Err(classify_error(
+            status.as_u16(),
+            &body,
+            route.display_name,
+            route.is_oauth(),
+        ));
     }
     Ok(resp)
 }
 
-fn build_chat_payload(
-    cfg: &RequestConfig<'_>,
-    default_max_tokens: Option<u32>,
-) -> serde_json::Value {
+fn build_chat_payload(cfg: &RequestConfig<'_>, route: &LlmRoute) -> serde_json::Value {
+    let provider_id = route.canonical_provider_id;
     let mut payload = serde_json::json!({
         "model": cfg.model,
-        "messages": messages_to_openai(cfg.messages, cfg.provider_id),
+        "messages": messages_to_openai(cfg.messages, provider_id),
         "stream": true,
         "stream_options": { "include_usage": true },
     });
-    if let Some(max) = cfg.max_tokens.or(default_max_tokens) {
-        let field = if matches!(cfg.provider_id, "openai" | "openrouter")
+    if let Some(max) = cfg.max_tokens.or(route.default_max_tokens) {
+        let field = if matches!(provider_id, "openai" | "openrouter")
             && super::providers::openai::is_gpt_56(cfg.model)
         {
             "max_completion_tokens"
@@ -112,20 +121,20 @@ fn build_chat_payload(
     }
     super::stream_reasoning::apply(
         &mut payload,
-        cfg.provider_id,
+        provider_id,
         cfg.model,
         cfg.think,
         cfg.reasoning_mode,
     );
     if !cfg.tools.is_empty() {
-        let tools = super::tool_schema::tools_for_provider(cfg.provider_id, cfg.model, cfg.tools);
+        let tools = super::tool_schema::tools_for_provider(provider_id, cfg.model, cfg.tools);
         payload["tools"] = serde_json::Value::Array(tools);
         payload["tool_choice"] = "auto".into();
-        if cfg.provider_id == "zai" {
+        if provider_id == "zai" {
             payload["tool_stream"] = true.into();
         }
     }
-    if cfg.provider_id == "openrouter" {
+    if provider_id == "openrouter" {
         payload["provider"] = serde_json::json!({
             "require_parameters": true,
             "allow_fallbacks": true,
@@ -134,8 +143,9 @@ fn build_chat_payload(
     payload
 }
 
-fn classify_error(status: u16, body: &str, provider_name: &str) -> RequestError {
+fn classify_error(status: u16, body: &str, provider_name: &str, oauth: bool) -> RequestError {
     match status {
+        401 | 403 if oauth => RequestError::Fatal("Connexion OAuth requise".into()),
         401 | 403 => RequestError::Fatal("Clé API invalide ou non autorisée".into()),
         413 => RequestError::Fatal("Requête trop volumineuse (limite TPM dépassée)".into()),
         429 => RequestError::Fatal("Rate limit atteint, réessaie plus tard".into()),

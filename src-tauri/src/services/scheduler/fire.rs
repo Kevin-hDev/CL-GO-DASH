@@ -48,6 +48,9 @@ pub async fn fire_wakeup(app: AppHandle, wakeup: ScheduledWakeup, scheduled_for:
 }
 
 async fn dispatch(_app: &AppHandle, wakeup: &ScheduledWakeup) -> Result<(String, u32), String> {
+    if llm::route::is_interactive_only(&wakeup.provider) {
+        return Err("Provider réservé aux conversations manuelles".to_string());
+    }
     // 1. Appel LLM EN PREMIER : si fail, on ne crée aucune session vide.
     //    Route selon provider : Ollama (local) ou LLM API (via catalog).
     let (reply, tokens) = if wakeup.provider == "ollama" {

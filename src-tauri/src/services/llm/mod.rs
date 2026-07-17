@@ -21,6 +21,8 @@ pub(crate) mod providers;
 pub mod quota;
 pub mod registry_search;
 mod retry;
+pub mod route;
+pub mod runtime_models;
 pub mod stream;
 mod stream_chunk;
 #[cfg(test)]

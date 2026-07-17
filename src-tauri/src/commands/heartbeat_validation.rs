@@ -164,6 +164,18 @@ mod tests {
     }
 
     #[test]
+    fn rejects_interactive_only_oauth_providers() {
+        let schedule = WakeupSchedule::Daily {
+            time: "08:00".into(),
+        };
+        for provider in ["xai-oauth", "moonshot-oauth"] {
+            assert!(
+                validate_input(provider, "Test", "model", "Ping", "", &schedule, true).is_err()
+            );
+        }
+    }
+
+    #[test]
     fn rejects_too_long_prompt() {
         let schedule = WakeupSchedule::Daily {
             time: "08:00".into(),

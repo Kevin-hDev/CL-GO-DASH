@@ -1,4 +1,3 @@
-pub mod acp;
 pub mod agent_local;
 pub mod api_keys;
 pub mod attachment_access;
@@ -18,9 +17,9 @@ pub mod git;
 pub mod git_context;
 pub mod gpu_detect;
 pub mod gpu_vram;
-pub mod internal_mcp;
 pub mod link_preview;
 pub mod llm;
+pub mod llm_oauth;
 pub mod mcp_bridge;
 pub mod mcp_oauth;
 pub mod model_downloads;

@@ -20,13 +20,14 @@ async fn chat_request_refuses_redirects_before_forwarding_the_body() {
     let client =
         crate::services::secure_http::AuthenticatedClient::new_loopback(Duration::from_secs(2))
             .expect("client");
-    let result = send_json_request(
-        &client,
-        &format!("{}/chat", origin.uri()),
-        "fixture-secret",
-        &serde_json::json!({"private": "payload"}),
-    )
-    .await;
+    let result = client
+        .send(
+            client
+                .post(format!("{}/chat", origin.uri()))
+                .bearer_auth("fixture-secret")
+                .json(&serde_json::json!({"private": "payload"})),
+        )
+        .await;
 
     assert!(result.is_err());
     assert!(destination
@@ -72,7 +73,8 @@ fn gpt_56_uses_max_completion_tokens_in_chat_payload() {
         max_tokens: Some(32_000),
     };
 
-    let payload = build_chat_payload(&cfg, None);
+    let route = route::resolve("openai").unwrap();
+    let payload = build_chat_payload(&cfg, &route);
 
     assert_eq!(payload["max_completion_tokens"], 32_000);
     assert!(payload.get("max_tokens").is_none());
@@ -91,7 +93,8 @@ fn openrouter_gpt_56_uses_max_completion_tokens() {
         max_tokens: Some(32_000),
     };
 
-    let payload = build_chat_payload(&cfg, None);
+    let route = route::resolve("openrouter").unwrap();
+    let payload = build_chat_payload(&cfg, &route);
 
     assert_eq!(payload["max_completion_tokens"], 32_000);
     assert!(payload.get("max_tokens").is_none());
@@ -109,7 +112,8 @@ fn other_providers_keep_max_tokens() {
         max_tokens: Some(8_000),
     };
 
-    let payload = build_chat_payload(&cfg, None);
+    let route = route::resolve("xai").unwrap();
+    let payload = build_chat_payload(&cfg, &route);
 
     assert_eq!(payload["max_tokens"], 8_000);
     assert!(payload.get("max_completion_tokens").is_none());

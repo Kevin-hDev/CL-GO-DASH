@@ -18,6 +18,7 @@ pub fn validate(config: &GatewayConfig) -> Result<(), String> {
     bounded_nonzero(config.rate_limits.global_per_minute, MAX_RATE)?;
     bounded_nonzero(config.audit.retention_days, MAX_RETENTION_DAYS)?;
     validate_text(&config.default_provider)?;
+    reject_interactive_only(&config.default_provider)?;
     validate_text(&config.default_model)?;
     validate_accounts(&config.channels.telegram)?;
     validate_accounts(&config.channels.slack)?;
@@ -46,6 +47,7 @@ fn validate_accounts(accounts: &[ChannelAccountConfig]) -> Result<(), String> {
             return Err("configuration Gateway invalide".to_string());
         }
         validate_text(&account.provider)?;
+        reject_interactive_only(&account.provider)?;
         validate_text(&account.model)?;
         let mut users = HashSet::with_capacity(account.allowlist.len());
         for user in &account.allowlist {
@@ -58,6 +60,14 @@ fn validate_accounts(accounts: &[ChannelAccountConfig]) -> Result<(), String> {
         }
     }
     Ok(())
+}
+
+fn reject_interactive_only(provider: &str) -> Result<(), String> {
+    if crate::services::llm::route::is_interactive_only(provider) {
+        Err("configuration Gateway invalide".to_string())
+    } else {
+        Ok(())
+    }
 }
 
 fn validate_text(value: &str) -> Result<(), String> {

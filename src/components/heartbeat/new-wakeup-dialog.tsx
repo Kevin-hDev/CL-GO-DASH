@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { X } from "@/components/ui/icons";
 import { CustomSelect } from "@/components/ui/custom-select";
 import type { CreateWakeupInput, ScheduledWakeup, WakeupSchedule } from "@/types/wakeup";
-import { useAvailableModels } from "@/hooks/use-available-models";
+import { useAvailableModels, withoutInteractiveOnlyModels } from "@/hooks/use-available-models";
 import { SchedulePicker } from "./schedule-picker";
 
 interface NewWakeupDialogProps {
@@ -25,6 +25,7 @@ export function NewWakeupDialog({
 }: NewWakeupDialogProps) {
   const { t } = useTranslation();
   const { groups } = useAvailableModels();
+  const heartbeatGroups = useMemo(() => withoutInteractiveOnlyModels(groups), [groups]);
   const [name, setName] = useState(initial?.name ?? "");
   const [provider, setProvider] = useState(initial?.provider ?? "ollama");
   const [model, setModel] = useState(initial?.model ?? "");
@@ -37,15 +38,15 @@ export function NewWakeupDialog({
   const [error, setError] = useState<string | null>(null);
 
   const availableProviders = useMemo(() => {
-    return Array.from(groups.keys()).map((id) => ({
+    return Array.from(heartbeatGroups.keys()).map((id) => ({
       id,
-      display_name: groups.get(id)?.[0]?.provider_name ?? id,
+      display_name: heartbeatGroups.get(id)?.[0]?.provider_name ?? id,
     }));
-  }, [groups]);
+  }, [heartbeatGroups]);
 
   const toolCapableModels = useMemo(() => {
-    return (groups.get(provider) ?? []).filter((m) => m.supports_tools);
-  }, [groups, provider]);
+    return (heartbeatGroups.get(provider) ?? []).filter((m) => m.supports_tools);
+  }, [heartbeatGroups, provider]);
 
   useEffect(() => {
     if (!toolCapableModels.find((m) => m.id === model)) {

@@ -1,6 +1,6 @@
 use super::common::{self, StreamMode};
 use super::params::StreamTaskParams;
-use crate::services::agent_local::types_ollama::{ChatMessage, StreamEvent};
+use crate::services::agent_local::types_ollama::ChatMessage;
 use crate::services::agent_local::{agent_settings::AgentSettings, tool_catalog, tool_dispatcher};
 use crate::services::llm;
 use crate::services::llm::{model_registry, tool_capable};
@@ -16,10 +16,11 @@ pub(crate) async fn run(
     mode: StreamMode,
     response_language: String,
 ) -> Result<Vec<ChatMessage>, String> {
+    let canonical_provider = llm::route::canonical_provider_id(&params.provider);
     let ctx =
-        crate::services::compress::context_resolve::resolve_api(&params.provider, &params.model)
+        crate::services::compress::context_resolve::resolve_api(canonical_provider, &params.model)
             .await;
-    let caps = resolve_capabilities(&params).await;
+    let caps = resolve_capabilities(&params, canonical_provider).await;
     let settings = crate::services::agent_local::agent_settings::load().await;
     let final_tools = resolve_tools(&params, &mode, caps.tools, &settings);
     let enabled_tool_names = tool_catalog::tool_names(&final_tools);
@@ -32,7 +33,7 @@ pub(crate) async fn run(
     let snap = common::collect_git_snapshot(&working_dir).await;
     let has_tools = !final_tools.is_empty();
     let mut messages = params.messages;
-    sanitize_images(&params.on_event, &mut messages, caps.vision);
+    super::api_images::sanitize_images(&params.on_event, &mut messages, caps.vision);
     if params.subagent_profile.is_some() {
         common::append_git_section(&mut messages, &snap);
     } else {
@@ -67,10 +68,10 @@ pub(crate) async fn run(
         )
         .await;
     }
-    super::gemma4_thinking_guard::apply(&mut messages, &params.provider, &params.model);
+    super::gemma4_thinking_guard::apply(&mut messages, canonical_provider, &params.model);
 
     let effective_reasoning_mode = crate::services::reasoning::normalize_for_model(
-        &params.provider,
+        canonical_provider,
         &params.model,
         params.reasoning_mode.as_deref(),
         caps.thinking,
@@ -107,15 +108,20 @@ async fn resolve_plan_mode(params: &StreamTaskParams) -> bool {
     }
 }
 
-async fn resolve_capabilities(params: &StreamTaskParams) -> ApiCapabilities {
-    let registry_caps = model_registry::lookup(&params.provider, &params.model).await;
+async fn resolve_capabilities(
+    params: &StreamTaskParams,
+    canonical_provider: &str,
+) -> ApiCapabilities {
+    let registry_caps = model_registry::lookup(canonical_provider, &params.model).await;
+    let runtime_caps = llm::runtime_models::lookup(canonical_provider, &params.model);
     ApiCapabilities {
         tools: params.capability_hints.supports_tools.unwrap_or_else(|| {
             registry_caps
                 .as_ref()
                 .map(|c| c.supports_tools)
+                .or_else(|| runtime_caps.as_ref().map(|model| model.supports_tools))
                 .unwrap_or(false)
-                || tool_capable::supports_tools(&params.provider, &params.model)
+                || tool_capable::supports_tools(canonical_provider, &params.model)
         }),
         thinking: params
             .capability_hints
@@ -126,15 +132,21 @@ async fn resolve_capabilities(params: &StreamTaskParams) -> ApiCapabilities {
                         .as_ref()
                         .map(|c| c.supports_thinking)
                         .unwrap_or(false)
-                    || tool_capable::supports_thinking(&params.provider, &params.model)
+                    || runtime_caps
+                        .as_ref()
+                        .is_some_and(|model| model.supports_thinking)
+                    || tool_capable::supports_thinking(canonical_provider, &params.model)
             }),
         vision: params.capability_hints.supports_vision.unwrap_or_else(|| {
             registry_caps
                 .as_ref()
                 .map(|c| c.supports_vision)
                 .unwrap_or(false)
+                || runtime_caps
+                    .as_ref()
+                    .is_some_and(|model| model.supports_vision)
                 || params.provider == "codex-oauth"
-                || tool_capable::supports_vision(&params.provider, &params.model)
+                || tool_capable::supports_vision(canonical_provider, &params.model)
         }),
     }
 }
@@ -169,21 +181,4 @@ fn todo_tools_enabled(enabled_tool_names: &[String]) -> bool {
             "agent_diagnostics",
         ],
     )
-}
-
-fn sanitize_images(
-    on_event: &crate::services::agent_local::stream_events::AgentEventEmitter,
-    messages: &mut [ChatMessage],
-    supports_vision: bool,
-) {
-    let image_report = crate::services::llm::vision::sanitize_messages(messages, supports_vision);
-    if image_report.unsupported_removed > 0 {
-        let _ = on_event.send(StreamEvent::Notice {
-            message_key: crate::services::llm::vision::NOTICE_UNSUPPORTED_MODEL.to_string(),
-        });
-    } else if image_report.invalid_removed > 0 {
-        let _ = on_event.send(StreamEvent::Notice {
-            message_key: crate::services::llm::vision::NOTICE_IMAGE_SKIPPED.to_string(),
-        });
-    }
 }

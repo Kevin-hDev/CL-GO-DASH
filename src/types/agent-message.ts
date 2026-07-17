@@ -39,11 +39,6 @@ export interface ToolActivityRecord {
   start_line?: number;
   resolved_path?: string;
   affected_paths?: string[];
-  tool_call_id?: string;
-  provider_id?: string;
-  source?: string;
-  status?: string;
-  kind?: string;
 }
 
 export interface ToolCallRequest {

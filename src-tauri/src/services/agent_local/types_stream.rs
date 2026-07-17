@@ -28,17 +28,6 @@ pub enum StreamEvent {
         name: String,
         arguments: serde_json::Value,
     },
-    #[serde(rename = "toolCall", rename_all = "camelCase")]
-    ProviderToolCall {
-        name: String,
-        arguments: serde_json::Value,
-        tool_call_id: String,
-        provider_id: String,
-        source: String,
-        status: String,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        kind: Option<String>,
-    },
     #[serde(rename_all = "camelCase")]
     ToolResult {
         name: String,
@@ -51,20 +40,6 @@ pub enum StreamEvent {
         resolved_path: Option<String>,
         #[serde(skip_serializing_if = "Vec::is_empty", default)]
         affected_paths: Vec<String>,
-    },
-    #[serde(rename = "toolResult", rename_all = "camelCase")]
-    ProviderToolResult {
-        name: String,
-        content: String,
-        is_error: bool,
-        truncated: bool,
-        tool_call_index: usize,
-        tool_call_id: String,
-        provider_id: String,
-        source: String,
-        status: String,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        kind: Option<String>,
     },
     TurnEnd {},
     #[serde(rename_all = "camelCase")]
