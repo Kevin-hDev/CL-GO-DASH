@@ -46,7 +46,7 @@ pub fn command_spec(provider: ProviderId, kind: ProcessKind) -> CommandSpec {
     match (provider, kind) {
         (ProviderId::Moonshot, ProcessKind::Login) => CommandSpec {
             program: "kimi",
-            args: &["login"],
+            args: &["login", "--json"],
         },
         (ProviderId::Moonshot, ProcessKind::Acp) => CommandSpec {
             program: "kimi",

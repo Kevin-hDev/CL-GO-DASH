@@ -8,7 +8,7 @@ import { cleanupTauriListener } from "@/lib/tauri-listen";
 import type { OAuthLoginProgress, OAuthProviderStatus } from "@/types/oauth-provider";
 import "@/components/connectors/mcp-oauth-dialog.css";
 
-type LoginState = "loading" | "waiting" | "success" | "error";
+type LoginState = "loading" | "waiting" | "success" | "error" | "accountAccessRequired";
 
 interface OAuthProviderLoginDialogProps {
   provider: OAuthProviderStatus;
@@ -41,7 +41,9 @@ export function OAuthProviderLoginDialog({ provider, onClose, onConnected }: OAu
       if (!mountedRef.current) return;
       await invoke("start_oauth_provider_login", { providerId: provider.id });
     } catch {
-      if (mountedRef.current) setState("error");
+      if (mountedRef.current) {
+        setState((current) => current === "accountAccessRequired" ? current : "error");
+      }
     }
   }, [provider.client_state, provider.id]);
 
@@ -54,6 +56,8 @@ export function OAuthProviderLoginDialog({ provider, onClose, onConnected }: OAu
       if (payload.stage === "success") {
         setState("success");
         successTimer = setTimeout(() => onConnectedRef.current(), 600);
+      } else if (payload.stage === "account_access_required") {
+        setState("accountAccessRequired");
       } else if (payload.stage === "waiting" || payload.stage === "verification") {
         setUserCode(payload.user_code ?? null);
         setVerificationUrl(payload.verification_url ?? null);
@@ -83,7 +87,7 @@ export function OAuthProviderLoginDialog({ provider, onClose, onConnected }: OAu
   const visibleUserCode = provider.id === "xai" ? userCode : null;
   const message = missingClient
     ? t(provider.client_state === "missing" ? "providers.oauth.clientRequired" : "providers.oauth.clientIncompatible")
-    : visibleUserCode ? t("providers.oauth.deviceInstructions") : t(state === "waiting" ? "connectors.oauth.message" : state === "success" ? "providers.oauth.successMessage" : state === "error" ? "connectors.oauth.errorGeneric" : "connectors.oauth.discovering");
+    : visibleUserCode ? t("providers.oauth.deviceInstructions") : t(state === "waiting" ? "connectors.oauth.message" : state === "success" ? "providers.oauth.successMessage" : state === "accountAccessRequired" ? "providers.oauth.kimiAccountAccessRequired" : state === "error" ? "connectors.oauth.errorGeneric" : "connectors.oauth.discovering");
 
   const copyCode = async () => {
     if (!visibleUserCode) return;
@@ -104,7 +108,7 @@ export function OAuthProviderLoginDialog({ provider, onClose, onConnected }: OAu
           <div className="mco-icon-box"><span className="mco-app-icon">CL</span></div>
         </div>
         <h3 className="mco-title">{t(state === "success" ? "connectors.oauth.successTitle" : "connectors.oauth.title")}</h3>
-        <p className={`mco-message ${state === "error" ? "mco-error" : ""}`}>{message}</p>
+        <p className={`mco-message ${state === "error" || state === "accountAccessRequired" ? "mco-error" : ""}`}>{message}</p>
         {visibleUserCode && (
           <div className="mco-device-code">
             <span>{t("providers.oauth.codeLabel")}</span>
@@ -115,7 +119,7 @@ export function OAuthProviderLoginDialog({ provider, onClose, onConnected }: OAu
         {verificationUrl && state === "waiting" && (
           <button type="button" className="mco-retry-link" onClick={() => void open(verificationUrl)}>{t("providers.oauth.openVerification")}</button>
         )}
-        {!missingClient && (state === "waiting" || state === "error") && (
+        {!missingClient && (state === "waiting" || state === "error" || state === "accountAccessRequired") && (
           <button type="button" className="mco-retry-link" onClick={() => void startFlow()}>{t("connectors.oauth.retry")}</button>
         )}
         {missingClient && (

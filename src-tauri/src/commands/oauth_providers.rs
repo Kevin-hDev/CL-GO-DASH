@@ -93,28 +93,35 @@ pub async fn list_oauth_provider_models() -> Vec<OAuthProviderModel> {
             }
         }));
     }
-    for (provider_id, id, display_name) in [
-        (ProviderId::Moonshot, "kimi-code", "Kimi Code"),
-        (ProviderId::Xai, "grok-build", "Grok Build"),
-    ] {
-        if statuses
-            .iter()
-            .any(|status| status.id == provider_id && status.connected)
-            && crate::services::acp::probe(provider_id).await
-        {
-            models.push(OAuthProviderModel {
-                id: id.to_string(),
-                provider_id,
-                display_name: display_name.to_string(),
-                context_length: None,
-                supports_tools: true,
-                supports_vision: false,
-                supports_thinking: true,
-                reasoning_modes: Vec::new(),
-            });
-        }
+    for (provider_id, id, display_name) in external_model_specs(&statuses) {
+        models.push(OAuthProviderModel {
+            id: id.to_string(),
+            provider_id,
+            display_name: display_name.to_string(),
+            context_length: None,
+            supports_tools: true,
+            supports_vision: false,
+            supports_thinking: true,
+            reasoning_modes: Vec::new(),
+        });
     }
     models
+}
+
+fn external_model_specs(
+    statuses: &[oauth_providers::OAuthProviderStatus],
+) -> Vec<(ProviderId, &'static str, &'static str)> {
+    [
+        (ProviderId::Moonshot, "kimi-code", "Kimi Code"),
+        (ProviderId::Xai, "grok-build", "Grok Build"),
+    ]
+    .into_iter()
+    .filter(|(provider_id, _, _)| {
+        statuses
+            .iter()
+            .any(|status| status.id == *provider_id && status.connected)
+    })
+    .collect()
 }
 
 fn emit_openai_progress(app: &tauri::AppHandle, stage: &'static str) {
@@ -128,4 +135,27 @@ fn emit_openai_progress(app: &tauri::AppHandle, stage: &'static str) {
             user_code: None,
         },
     );
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::services::oauth_providers::{OAuthClientState, OAuthProviderStatus};
+
+    #[test]
+    fn connected_external_models_do_not_require_a_second_acp_process() {
+        let statuses = vec![OAuthProviderStatus {
+            id: ProviderId::Xai,
+            display_name: "xAI",
+            connected: true,
+            account: None,
+            client_state: OAuthClientState::Ready,
+            install_url: "https://docs.x.ai/",
+        }];
+
+        assert_eq!(
+            external_model_specs(&statuses),
+            [(ProviderId::Xai, "grok-build", "Grok Build")]
+        );
+    }
 }

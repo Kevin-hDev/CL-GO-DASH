@@ -1,8 +1,10 @@
 mod connection;
+mod grok_skills;
 mod policy;
 mod process;
 mod protocol;
 pub(crate) mod session_store;
+mod skill_bridge;
 
 pub use connection::AcpConnection;
 pub use policy::{auth_method, native_tool_allowed};
@@ -17,6 +19,7 @@ pub fn provider_from_chat(value: &str) -> Option<crate::services::oauth_provider
     }
 }
 
+#[cfg(test)]
 pub async fn probe(provider: crate::services::oauth_providers::ProviderId) -> bool {
     let Ok(working_dir) = std::env::current_dir().and_then(|path| path.canonicalize()) else {
         return false;

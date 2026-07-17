@@ -109,4 +109,14 @@ describe("OAuthProviderLoginDialog", () => {
     expect(screen.queryByText("KIMI-CODE")).toBeNull();
     expect(screen.queryByText("providers.oauth.copyCode")).toBeNull();
   });
+
+  it("explique quand OAuth réussit mais que le compte n'a pas accès à Kimi Code", async () => {
+    render(<OAuthProviderLoginDialog provider={moonshot} onClose={vi.fn()} onConnected={vi.fn()} />);
+    await waitFor(() => expect(progress).toBeTypeOf("function"));
+
+    progress?.({ payload: { provider_id: "moonshot", stage: "account_access_required" } });
+
+    expect(await screen.findByText("providers.oauth.kimiAccountAccessRequired")).toBeTruthy();
+    expect(screen.getByText("connectors.oauth.retry")).toBeTruthy();
+  });
 });

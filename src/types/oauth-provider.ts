@@ -13,7 +13,7 @@ export interface OAuthProviderStatus {
 
 export interface OAuthLoginProgress {
   provider_id: OAuthProviderId;
-  stage: "waiting" | "verification" | "success" | "cancelled" | "error";
+  stage: "waiting" | "verification" | "success" | "cancelled" | "error" | "account_access_required";
   hint?: string;
   verification_url?: string;
   user_code?: string;

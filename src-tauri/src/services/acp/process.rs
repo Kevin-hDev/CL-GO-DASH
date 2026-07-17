@@ -25,6 +25,7 @@ impl AcpProcess {
         tokio::fs::create_dir_all(home.join("agent-home"))
             .await
             .map_err(|_| "Client ACP indisponible".to_string())?;
+        super::skill_bridge::prepare(provider).await?;
         let mut command = Command::new(binary);
         for (name, value) in process_environment(provider) {
             command.env(name, value);
