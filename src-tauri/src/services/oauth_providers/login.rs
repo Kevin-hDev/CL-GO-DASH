@@ -1,5 +1,6 @@
 use super::{
-    command_spec, profile_dir, sanitize_login_output, OAuthLoginProgress, ProcessKind, ProviderId,
+    command_spec, profile_dir, profile_env_names, sanitize_login_output, OAuthLoginProgress,
+    ProcessKind, ProviderId,
 };
 use std::collections::HashMap;
 use std::sync::LazyLock;
@@ -57,9 +58,12 @@ async fn run_registered(
     tokio::fs::create_dir_all(&home)
         .await
         .map_err(|_| "Connexion impossible".to_string())?;
-    let mut child = Command::new(binary)
+    let mut command = Command::new(binary);
+    for name in profile_env_names(provider) {
+        command.env(name, &home);
+    }
+    let mut child = command
         .args(spec.args)
-        .env(spec.home_env, &home)
         .stdin(std::process::Stdio::null())
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::piped())

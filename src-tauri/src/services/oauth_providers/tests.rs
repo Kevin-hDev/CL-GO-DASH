@@ -1,4 +1,4 @@
-use super::{command_spec, profile_dir, sanitize_login_output, ProviderId};
+use super::{command_spec, profile_dir, profile_env_names, sanitize_login_output, ProviderId};
 
 #[test]
 fn provider_ids_are_strictly_allowlisted() {
@@ -14,12 +14,20 @@ fn official_login_commands_use_separate_arguments() {
     let kimi = command_spec(ProviderId::Moonshot, super::ProcessKind::Login);
     assert_eq!(kimi.program, "kimi");
     assert_eq!(kimi.args, ["login"]);
-    assert_eq!(kimi.home_env, "KIMI_CODE_HOME");
 
     let grok = command_spec(ProviderId::Xai, super::ProcessKind::Login);
     assert_eq!(grok.program, "grok");
     assert_eq!(grok.args, ["login", "--device-auth"]);
-    assert_eq!(grok.home_env, "GROK_HOME");
+}
+
+#[test]
+fn isolated_profile_envs_support_current_and_legacy_kimi() {
+    assert_eq!(
+        profile_env_names(ProviderId::Moonshot),
+        ["KIMI_CODE_HOME", "KIMI_SHARE_DIR"]
+    );
+    assert_eq!(profile_env_names(ProviderId::Xai), ["GROK_HOME"]);
+    assert!(profile_env_names(ProviderId::OpenAi).is_empty());
 }
 
 #[test]

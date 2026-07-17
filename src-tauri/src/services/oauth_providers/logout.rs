@@ -1,4 +1,4 @@
-use super::{command_spec, profile_dir, ProcessKind, ProviderId};
+use super::{command_spec, profile_dir, profile_env_names, ProcessKind, ProviderId};
 use tokio::process::Command;
 
 const LOGOUT_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(30);
@@ -17,11 +17,14 @@ async fn run_grok_logout() -> Result<(), String> {
     let spec = command_spec(provider, ProcessKind::Logout);
     let binary = super::status::binary_path(provider)
         .ok_or_else(|| "Client officiel non installé".to_string())?;
+    let mut command = Command::new(binary);
+    for name in profile_env_names(provider) {
+        command.env(name, profile_dir(provider));
+    }
     let status = tokio::time::timeout(
         LOGOUT_TIMEOUT,
-        Command::new(binary)
+        command
             .args(spec.args)
-            .env(spec.home_env, profile_dir(provider))
             .stdin(std::process::Stdio::null())
             .stdout(std::process::Stdio::null())
             .stderr(std::process::Stdio::null())

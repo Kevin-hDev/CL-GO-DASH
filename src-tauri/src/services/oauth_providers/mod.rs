@@ -4,7 +4,9 @@ mod specs;
 mod status;
 mod types;
 
-pub use specs::{command_spec, profile_dir, sanitize_login_output, ProcessKind, ProviderId};
+pub use specs::{
+    command_spec, profile_dir, profile_env_names, sanitize_login_output, ProcessKind, ProviderId,
+};
 pub(crate) use status::binary_path;
 pub use status::list_statuses;
 pub use types::{OAuthClientState, OAuthLoginProgress, OAuthProviderStatus};

@@ -41,7 +41,6 @@ pub enum ProcessKind {
 pub struct CommandSpec {
     pub program: &'static str,
     pub args: &'static [&'static str],
-    pub home_env: &'static str,
 }
 
 pub fn command_spec(provider: ProviderId, kind: ProcessKind) -> CommandSpec {
@@ -49,22 +48,18 @@ pub fn command_spec(provider: ProviderId, kind: ProcessKind) -> CommandSpec {
         (ProviderId::Moonshot, ProcessKind::Login) => CommandSpec {
             program: "kimi",
             args: &["login"],
-            home_env: "KIMI_CODE_HOME",
         },
         (ProviderId::Moonshot, ProcessKind::Acp) => CommandSpec {
             program: "kimi",
             args: &["acp"],
-            home_env: "KIMI_CODE_HOME",
         },
         (ProviderId::Xai, ProcessKind::Login) => CommandSpec {
             program: "grok",
             args: &["login", "--device-auth"],
-            home_env: "GROK_HOME",
         },
         (ProviderId::Xai, ProcessKind::Logout) => CommandSpec {
             program: "grok",
             args: &["logout"],
-            home_env: "GROK_HOME",
         },
         (ProviderId::Xai, ProcessKind::Acp) => CommandSpec {
             program: "grok",
@@ -77,13 +72,19 @@ pub fn command_spec(provider: ProviderId, kind: ProcessKind) -> CommandSpec {
                 "agent",
                 "stdio",
             ],
-            home_env: "GROK_HOME",
         },
         _ => CommandSpec {
             program: "",
             args: &[],
-            home_env: "",
         },
+    }
+}
+
+pub fn profile_env_names(provider: ProviderId) -> &'static [&'static str] {
+    match provider {
+        ProviderId::OpenAi => &[],
+        ProviderId::Moonshot => &["KIMI_CODE_HOME", "KIMI_SHARE_DIR"],
+        ProviderId::Xai => &["GROK_HOME"],
     }
 }
 
