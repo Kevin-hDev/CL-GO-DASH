@@ -61,12 +61,7 @@ impl LoginDiagnostic {
         );
     }
 
-    pub fn output_drain(
-        &self,
-        stdout_done: bool,
-        stderr_done: bool,
-        account_error: bool,
-    ) {
+    pub fn output_drain(&self, stdout_done: bool, stderr_done: bool, account_error: bool) {
         eprintln!(
             "{} stage=output_drain stdout_done={stdout_done} stderr_done={stderr_done} account_error={account_error}",
             self.prefix()

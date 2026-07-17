@@ -1,3 +1,5 @@
+mod client_compatibility;
+mod legacy_kimi_profile;
 mod login;
 mod login_diagnostics;
 #[cfg(test)]
@@ -19,7 +21,7 @@ pub use specs::{
     command_spec, parse_login_hints, process_environment, profile_dir, LoginHints, ProcessKind,
     ProviderId,
 };
-pub(crate) use status::binary_path;
+pub(crate) use status::compatible_binary_path;
 #[cfg(test)]
 pub(crate) use status::credentials_present_in;
 pub(crate) use status::is_connected;

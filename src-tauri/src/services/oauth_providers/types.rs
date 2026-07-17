@@ -6,7 +6,6 @@ use serde::Serialize;
 pub enum OAuthClientState {
     Ready,
     Missing,
-    #[allow(dead_code)] // Kept in the serialized UI contract for negotiated ACP failures.
     Incompatible,
 }
 

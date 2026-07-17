@@ -15,7 +15,7 @@ impl AcpProcess {
         if !working_dir.is_absolute() || !working_dir.is_dir() {
             return Err("Répertoire ACP invalide".to_string());
         }
-        let binary = crate::services::oauth_providers::binary_path(provider)
+        let binary = crate::services::oauth_providers::compatible_binary_path(provider)
             .ok_or_else(|| "Client officiel non installé".to_string())?;
         let spec = command_spec(provider, ProcessKind::Acp);
         let home = profile_dir(provider);

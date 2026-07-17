@@ -16,7 +16,7 @@ fn provider_ids_are_strictly_allowlisted() {
 fn official_login_commands_use_separate_arguments() {
     let kimi = command_spec(ProviderId::Moonshot, super::ProcessKind::Login);
     assert_eq!(kimi.program, "kimi");
-    assert_eq!(kimi.args, ["login", "--json"]);
+    assert_eq!(kimi.args, ["login"]);
 
     let grok = command_spec(ProviderId::Xai, super::ProcessKind::Login);
     assert_eq!(grok.program, "grok");
@@ -24,11 +24,8 @@ fn official_login_commands_use_separate_arguments() {
 }
 
 #[test]
-fn isolated_profile_envs_support_current_and_legacy_kimi() {
-    assert_eq!(
-        profile_env_names(ProviderId::Moonshot),
-        ["KIMI_CODE_HOME", "KIMI_SHARE_DIR"]
-    );
+fn isolated_profile_envs_use_the_current_kimi_data_root() {
+    assert_eq!(profile_env_names(ProviderId::Moonshot), ["KIMI_CODE_HOME"]);
     assert_eq!(profile_env_names(ProviderId::Xai), ["GROK_HOME"]);
     assert!(profile_env_names(ProviderId::OpenAi).is_empty());
 }

@@ -47,16 +47,16 @@ fn external_status(provider: ProviderId) -> OAuthProviderStatus {
         ProviderId::Xai => ("xAI", GROK_INSTALL),
         ProviderId::OpenAi => unreachable!(),
     };
+    let binary = binary_path(provider);
     OAuthProviderStatus {
         id: provider,
         display_name,
         connected: is_connected(provider),
         account: None,
-        client_state: if binary_path(provider).is_some() {
-            OAuthClientState::Ready
-        } else {
-            OAuthClientState::Missing
-        },
+        client_state: binary
+            .as_deref()
+            .map(|path| super::client_compatibility::state(provider, path))
+            .unwrap_or(OAuthClientState::Missing),
         install_url,
     }
 }
@@ -71,6 +71,12 @@ pub fn binary_path(provider: ProviderId) -> Option<PathBuf> {
         .canonicalize()
         .ok()
         .filter(|path| path.is_file())
+}
+
+pub fn compatible_binary_path(provider: ProviderId) -> Option<PathBuf> {
+    let binary = binary_path(provider)?;
+    (super::client_compatibility::state(provider, &binary) == OAuthClientState::Ready)
+        .then_some(binary)
 }
 
 fn marker_path(provider: ProviderId) -> PathBuf {

@@ -109,6 +109,13 @@ pub async fn finish_readers(
 }
 
 fn kimi_account_access_required(raw: &str) -> bool {
+    if raw.len() > MAX_LOGIN_OUTPUT {
+        return false;
+    }
+    let normalized = raw.to_ascii_lowercase();
+    if normalized.contains("unable to verify your membership benefits") {
+        return true;
+    }
     raw.lines().any(|line| {
         let Ok(value) = serde_json::from_str::<serde_json::Value>(line) else {
             return false;
@@ -144,6 +151,9 @@ mod tests {
         assert!(kimi_account_access_required(
             r#"{"type":"error","message":"Failed to get models: 402, message='Payment Required'"}"#
         ));
+        assert!(kimi_account_access_required(
+            "We're unable to verify your membership benefits at this time."
+        ));
         assert!(!kimi_account_access_required(
             r#"{"type":"error","message":"Login failed: network unavailable"}"#
         ));
@@ -155,18 +165,17 @@ mod tests {
         let finished = tokio::spawn(async { LoginOutputSummary::default() });
         let started = std::time::Instant::now();
 
-        let account_error =
-            finish_readers(
-                stuck,
-                finished,
-                std::time::Duration::from_millis(20),
-                &super::super::login_diagnostics::LoginDiagnostic::from_ui(
-                    super::super::ProviderId::Moonshot,
-                    &uuid::Uuid::new_v4().to_string(),
-                )
-                .unwrap(),
+        let account_error = finish_readers(
+            stuck,
+            finished,
+            std::time::Duration::from_millis(20),
+            &super::super::login_diagnostics::LoginDiagnostic::from_ui(
+                super::super::ProviderId::Moonshot,
+                &uuid::Uuid::new_v4().to_string(),
             )
-            .await;
+            .unwrap(),
+        )
+        .await;
 
         assert!(!account_error);
         assert!(started.elapsed() < std::time::Duration::from_millis(200));

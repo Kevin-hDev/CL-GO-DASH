@@ -1,8 +1,8 @@
+use super::login_wait::{bounded_wait, wait_for_stop, LoginStop};
 use super::{
     command_spec, login_diagnostics::LoginDiagnostic, process_environment, profile_dir,
     ProcessKind, ProviderId,
 };
-use super::login_wait::{bounded_wait, wait_for_stop, LoginStop};
 use tauri::Emitter;
 use tokio::process::Command;
 use tokio_util::sync::CancellationToken;
@@ -47,12 +47,7 @@ pub async fn run(
         }
         Err(LoginFailure::AccountAccessRequired) if !cancel.is_cancelled() => {
             diagnostic.current_state("account_access_required");
-            super::login_progress::emit(
-                &app,
-                provider,
-                "account_access_required",
-                &diagnostic,
-            );
+            super::login_progress::emit(&app, provider, "account_access_required", &diagnostic);
         }
         Err(LoginFailure::Generic) if !cancel.is_cancelled() => {
             diagnostic.current_state("login_failed");
@@ -71,7 +66,7 @@ async fn run_registered(
 ) -> Result<(), LoginFailure> {
     let spec = command_spec(provider, ProcessKind::Login);
     diagnostic.current_state("preflight");
-    let binary = super::status::binary_path(provider).ok_or_else(|| {
+    let binary = super::status::compatible_binary_path(provider).ok_or_else(|| {
         diagnostic.stage("binary_missing");
         LoginFailure::Generic
     })?;
@@ -83,6 +78,11 @@ async fn run_registered(
     tokio::fs::create_dir_all(home.join("agent-home"))
         .await
         .map_err(|_| LoginFailure::Generic)?;
+    if provider == ProviderId::Moonshot {
+        super::legacy_kimi_profile::reset_if_needed(&home)
+            .await
+            .map_err(|_| LoginFailure::Generic)?;
+    }
     super::logout::remove_credentials_in(&home, provider)
         .await
         .map_err(|_| LoginFailure::Generic)?;
@@ -150,14 +150,13 @@ async fn run_registered(
         }
     };
     diagnostic.process_exit(status.success(), status.code());
-    let account_access_required =
-        super::login_output::finish_readers(
-            stdout_task,
-            stderr_task,
-            OUTPUT_DRAIN_TIMEOUT,
-            diagnostic,
-        )
-        .await;
+    let account_access_required = super::login_output::finish_readers(
+        stdout_task,
+        stderr_task,
+        OUTPUT_DRAIN_TIMEOUT,
+        diagnostic,
+    )
+    .await;
     if account_access_required {
         return Err(LoginFailure::AccountAccessRequired);
     }

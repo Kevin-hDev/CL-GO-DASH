@@ -46,7 +46,7 @@ pub fn command_spec(provider: ProviderId, kind: ProcessKind) -> CommandSpec {
     match (provider, kind) {
         (ProviderId::Moonshot, ProcessKind::Login) => CommandSpec {
             program: "kimi",
-            args: &["login", "--json"],
+            args: &["login"],
         },
         (ProviderId::Moonshot, ProcessKind::Acp) => CommandSpec {
             program: "kimi",
@@ -78,7 +78,7 @@ pub fn command_spec(provider: ProviderId, kind: ProcessKind) -> CommandSpec {
 pub fn profile_env_names(provider: ProviderId) -> &'static [&'static str] {
     match provider {
         ProviderId::OpenAi => &[],
-        ProviderId::Moonshot => &["KIMI_CODE_HOME", "KIMI_SHARE_DIR"],
+        ProviderId::Moonshot => &["KIMI_CODE_HOME"],
         ProviderId::Xai => &["GROK_HOME"],
     }
 }
