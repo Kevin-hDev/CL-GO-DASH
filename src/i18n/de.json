@@ -9,6 +9,19 @@
     "delete": "Löschen",
     "loading": "Wird geladen…"
   },
+  "providers": {
+    "tabs": { "apiKeys": "API-Schlüssel", "oauth": "OAuth" },
+    "oauth": {
+      "title": "OAuth-Verbindungen", "openCatalog": "Anbieter", "catalogTitle": "OAuth-Anbieter",
+      "catalogSubtitle": "Konto über den offiziellen Client verbinden.", "connected": "Verbunden",
+      "emptySidebar": "Keine OAuth-Verbindung", "empty": "Kein OAuth-Anbieter ausgewählt",
+      "clientLabel": "Offizieller Client", "connect": "Verbinden", "disconnect": "Trennen", "install": "Installieren", "cancel": "Abbrechen",
+      "progress": { "waiting": "Anmeldung wird erwartet…", "verification": "Bestätigung erforderlich", "success": "Verbunden", "cancelled": "Anmeldung abgebrochen", "error": "Verbindung nicht möglich" },
+      "client": { "ready": "Verfügbar", "missing": "Nicht installiert", "incompatible": "Inkompatibel" },
+      "clientRequired": "Der offizielle Client muss vor der Anmeldung installiert sein.", "clientIncompatible": "Der installierte offizielle Client ist mit dieser Verbindung nicht kompatibel.", "installationGuide": "Installationsanleitung öffnen", "successMessage": "Der Anbieter wurde erfolgreich verbunden.",
+      "descriptions": { "openai": "ChatGPT über Codex", "moonshot": "Kimi Code über ACP", "xai": "Grok CLI über ACP" }
+    }
+  },
   "apiKeys": {
     "main": {
       "title": "API Keys",
@@ -556,6 +569,7 @@
       "ollama": "Ollama",
       "connectors": "Verbindungen",
       "apiKeys": "API Keys",
+      "providers": "Anbieter",
       "llm": "LLM",
       "tools": "Tools",
       "archivedChats": "Archivierte Chats",

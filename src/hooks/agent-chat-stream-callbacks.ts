@@ -51,6 +51,11 @@ export function applyStreamEvent(
       if (isHiddenAgentTool(event.data.name)) break;
       next.currentTools = [...next.currentTools, {
         name: event.data.name, args: event.data.arguments,
+        toolCallId: event.data.toolCallId,
+        providerId: event.data.providerId,
+        source: event.data.source,
+        status: event.data.status,
+        kind: event.data.kind,
       }];
       next.activeStreamItem = toolItems(pendingToolIndices(next.currentTools));
       break;
@@ -70,8 +75,18 @@ export function applyStreamEvent(
         event.data.isError,
         event.data.resolvedPath,
         event.data.affectedPaths,
+        {
+          toolCallId: event.data.toolCallId,
+          providerId: event.data.providerId,
+          source: event.data.source,
+          status: event.data.status,
+          kind: event.data.kind,
+        },
       );
-      next.activeStreamItem = activeItemAfterToolResult(next.currentTools, toolCallIndex);
+      const updatedIndex = event.data.toolCallId
+        ? next.currentTools.findIndex((tool) => tool.toolCallId === event.data.toolCallId)
+        : toolCallIndex;
+      next.activeStreamItem = activeItemAfterToolResult(next.currentTools, updatedIndex);
       next.pendingPermissions = [];
       break;
     }

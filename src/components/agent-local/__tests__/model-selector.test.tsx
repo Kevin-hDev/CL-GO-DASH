@@ -40,6 +40,7 @@ function model(overrides: Partial<AvailableModel>): AvailableModel {
     id: "llama3",
     provider_id: "ollama",
     provider_name: "Ollama",
+    auth_source: "local",
     is_local: true,
     supports_tools: false,
     supports_thinking: true,

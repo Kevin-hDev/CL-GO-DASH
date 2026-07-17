@@ -23,7 +23,12 @@ vi.mock("@tauri-apps/api/core", async () => {
 
   return {
     invoke: mockVi.fn((cmd: string, args?: Record<string, unknown>) => {
-      if (cmd === "get_advanced_settings") return Promise.resolve({});
+      if (cmd === "get_advanced_settings") return Promise.resolve({
+        autostart: false, start_hidden: false, show_tray: true, default_model: "", keep_alive: "5m",
+        allowed_paths: ["/"], hardware_accel: "gpu", multi_model: false, show_gpu_status: false,
+        compression_enabled: true, compression_threshold: 85, response_language: "",
+        link_preview_enabled: true, ollama_setup_skipped: false,
+      });
       if (cmd === "get_agent_settings") return Promise.resolve(data.agentSettings());
       if (cmd === "list_agent_tool_catalog") return Promise.resolve(data.agentToolCatalog());
       if (cmd === "list_agent_tool_groups") return Promise.resolve(data.agentToolGroups());
@@ -39,6 +44,14 @@ vi.mock("@tauri-apps/api/core", async () => {
       if (cmd === "get_modelfile") return Promise.resolve("FROM llama3.2:latest\nPARAMETER temperature 0.7\n");
       if (cmd === "get_selected_forecast_model") return Promise.resolve("chronos-bolt-small");
       if (cmd === "list_configured_providers") return Promise.resolve(["groq", "brave", "nixtla"]);
+      if (cmd === "list_oauth_provider_statuses") {
+        return Promise.resolve([
+          { id: "openai", display_name: "OpenAI", connected: true, account: "user@example.com", client_state: "ready", install_url: "https://chatgpt.com/" },
+          { id: "moonshot", display_name: "Moonshot AI", connected: false, account: null, client_state: "ready", install_url: "https://www.kimi.com/code/docs/en/" },
+          { id: "xai", display_name: "xAI", connected: false, account: null, client_state: "missing", install_url: "https://docs.x.ai/build/overview" },
+        ]);
+      }
+      if (cmd === "start_oauth_provider_login" || cmd === "disconnect_oauth_provider" || cmd === "cancel_oauth_provider_login") return Promise.resolve();
       if (cmd === "list_llm_providers_catalog") {
         return Promise.resolve([data.provider("groq", "Groq", "llm"), data.provider("mistral", "Mistral", "llm")]);
       }

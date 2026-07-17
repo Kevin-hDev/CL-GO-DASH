@@ -24,8 +24,8 @@ export type StreamEvent =
   | { event: "token"; data: { content: string; tokenCount: number; tps: number; phase?: TokenPhase } }
   | { event: "contentPhase"; data: { phase: TokenPhase } }
   | { event: "thinking"; data: { content: string } }
-  | { event: "toolCall"; data: { name: string; arguments: Record<string, unknown> } }
-  | { event: "toolResult"; data: { name: string; content: string; isError: boolean; truncated?: boolean; toolCallIndex: number; resolvedPath?: string; affectedPaths?: string[] } }
+  | { event: "toolCall"; data: { name: string; arguments: Record<string, unknown>; toolCallId?: string; providerId?: string; source?: string; status?: string; kind?: string } }
+  | { event: "toolResult"; data: { name: string; content: string; isError: boolean; truncated?: boolean; toolCallIndex: number; resolvedPath?: string; affectedPaths?: string[]; toolCallId?: string; providerId?: string; source?: string; status?: string; kind?: string } }
   | { event: "turnEnd"; data: Record<string, never> }
   | { event: "permissionRequest"; data: { id: string; toolName: string; arguments: Record<string, unknown> } }
   | { event: "done"; data: { evalCount: number | null; evalDurationNs: number; finalTps: number; promptTokens: number | null; contextTokens: number | null } }

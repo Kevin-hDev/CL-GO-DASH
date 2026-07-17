@@ -3,11 +3,12 @@ import type { ForecastSection, PanelMode } from "@/hooks/use-forecast-panel";
 
 type MainTabId = "heartbeat" | "personality" | "agent-local" | "settings";
 export type SettingsSubTab =
-  | "general" | "ollama" | "connectors" | "channels" | "api-keys"
+  | "general" | "ollama" | "connectors" | "channels" | "providers"
   | "forecast" | "llm" | "tools" | "archived-chats" | "advanced" | "shortcuts" | "about";
 
 type OllamaSettingsSubTab = "modelfile" | "models";
 type ForecastSettingsSubTab = "config" | "models";
+export type ProvidersSettingsSubTab = "api" | "oauth";
 
 export interface AgentLocalNavState {
   sessionId: string | null;
@@ -25,6 +26,8 @@ export interface AgentLocalNavState {
 export interface SettingsNavState {
   subTab: SettingsSubTab;
   apiKeyProviderId: string | null;
+  oauthProviderId: string | null;
+  providersSubTab: ProvidersSettingsSubTab;
   connectorId: string | null;
   channelKey: string | null;
   ollamaSubTab: OllamaSettingsSubTab;
@@ -77,6 +80,8 @@ export const DEFAULT_APP_NAV: AppNavState = {
   settings: {
     subTab: "general",
     apiKeyProviderId: null,
+    oauthProviderId: null,
+    providersSubTab: "api",
     connectorId: null,
     channelKey: null,
     ollamaSubTab: "modelfile",
@@ -90,3 +95,21 @@ export const DEFAULT_APP_NAV: AppNavState = {
     llmView: { kind: "idle", showFamilies: false },
   },
 };
+
+export function migrateAppNav(input: AppNavState): AppNavState {
+  const settings = input.settings as Omit<SettingsNavState, "subTab"> & {
+    subTab: SettingsSubTab | "api-keys";
+    providersSubTab?: ProvidersSettingsSubTab;
+    oauthProviderId?: string | null;
+  };
+  const subTab: SettingsSubTab = settings.subTab === "api-keys" ? "providers" : settings.subTab;
+  return {
+    ...input,
+    settings: {
+      ...settings,
+      subTab,
+      providersSubTab: settings.providersSubTab ?? "api",
+      oauthProviderId: settings.oauthProviderId ?? null,
+    },
+  };
+}

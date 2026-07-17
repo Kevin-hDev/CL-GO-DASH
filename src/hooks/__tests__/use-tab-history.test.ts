@@ -4,6 +4,18 @@ import { useTabHistory } from "../use-tab-history";
 import { DEFAULT_APP_NAV } from "@/types/navigation";
 
 describe("useTabHistory", () => {
+  it("migre l'ancien onglet api-keys vers Providers", () => {
+    const legacy = {
+      ...DEFAULT_APP_NAV,
+      settings: { ...DEFAULT_APP_NAV.settings, subTab: "api-keys" },
+    } as unknown as typeof DEFAULT_APP_NAV;
+
+    const { result } = renderHook(() => useTabHistory(legacy));
+
+    expect(result.current.current.settings.subTab).toBe("providers");
+    expect(result.current.current.settings.providersSubTab).toBe("api");
+  });
+
   it("ignore les push identiques", () => {
     const { result } = renderHook(() => useTabHistory(DEFAULT_APP_NAV));
 
@@ -17,16 +29,16 @@ describe("useTabHistory", () => {
     const { result } = renderHook(() => useTabHistory(DEFAULT_APP_NAV));
 
     act(() => result.current.pushNav({ tab: "settings" }));
-    act(() => result.current.pushNav({ settings: { subTab: "api-keys" } }));
+    act(() => result.current.pushNav({ settings: { subTab: "providers" } }));
 
-    expect(result.current.current.settings.subTab).toBe("api-keys");
+    expect(result.current.current.settings.subTab).toBe("providers");
     act(() => result.current.goBack());
     expect(result.current.current.tab).toBe("settings");
     expect(result.current.current.settings.subTab).toBe("general");
 
     act(() => result.current.goForward());
     expect(result.current.current.tab).toBe("settings");
-    expect(result.current.current.settings.subTab).toBe("api-keys");
+    expect(result.current.current.settings.subTab).toBe("providers");
   });
 
   it("replaceNav ne cree pas d'entree historique", () => {

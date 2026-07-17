@@ -1,6 +1,7 @@
 use std::time::Duration;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
+use tokio_util::sync::CancellationToken;
 use zeroize::Zeroizing;
 
 const BIND_ADDR: &str = "127.0.0.1:1455";
@@ -15,14 +16,22 @@ pub struct CallbackResult {
     pub code: Zeroizing<String>,
 }
 
-pub async fn wait_for_callback(expected_state: &str) -> Result<CallbackResult, String> {
+pub async fn wait_for_callback(
+    expected_state: &str,
+    cancel: &CancellationToken,
+) -> Result<CallbackResult, String> {
     validate_state(expected_state)?;
     let listener = TcpListener::bind(BIND_ADDR)
         .await
         .map_err(|_| "callback OAuth indisponible".to_string())?;
-    tokio::time::timeout(TIMEOUT, accept_until_valid(&listener, expected_state))
-        .await
-        .map_err(|_| "callback OAuth expiré".to_string())?
+    tokio::time::timeout(TIMEOUT, async {
+        tokio::select! {
+            result = accept_until_valid(&listener, expected_state) => result,
+            _ = cancel.cancelled() => Err("callback OAuth annulé".to_string()),
+        }
+    })
+    .await
+    .map_err(|_| "callback OAuth expiré".to_string())?
 }
 
 async fn accept_until_valid(

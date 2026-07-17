@@ -39,7 +39,7 @@ const SUB_TABS: SubTabDef[] = [
   { id: "advanced", i18n: "settings.tabs.advanced", icon: Sliders },
   { id: "tools", i18n: "settings.tabs.tools", icon: Wrench },
   { id: "ollama", i18n: "settings.tabs.ollama", imgDark: ollamaDark, imgLight: ollamaLight },
-  { id: "api-keys", i18n: "settings.tabs.apiKeys", icon: Key },
+  { id: "providers", i18n: "settings.tabs.providers", icon: Key },
   { id: "connectors", i18n: "settings.tabs.connectors", icon: Plugs },
   { id: "channels", i18n: "settings.tabs.channels", icon: Broadcast },
   { id: "forecast", i18n: "forecast.title", icon: ChartLineUp },

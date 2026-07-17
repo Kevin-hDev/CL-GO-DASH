@@ -9,7 +9,6 @@ import { SettingsRow } from "./settings-row";
 import { SettingsSelect, type SelectGroup } from "./settings-select";
 import { PathListEditor } from "./path-list-editor";
 import { OllamaSettingsSection } from "./ollama-settings-section";
-import { CodexAuth } from "./codex-auth";
 import { notifySettingsChanged } from "@/hooks/use-setting-value";
 import { showToast } from "@/lib/toast-emitter";
 import i18n from "@/i18n";
@@ -184,15 +183,6 @@ export function AdvancedSettings() {
           </div>
         </SettingsCard>
 
-        <h3 style={subStyle}>{t("codex.title")}</h3>
-        <SettingsCard>
-          <div style={{ padding: "14px 20px" }}>
-            <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-muted)", marginBottom: 12 }}>
-              {t("codex.description")}
-            </div>
-            <CodexAuth />
-          </div>
-        </SettingsCard>
       </div>
     </div>
   );

@@ -1,3 +1,6 @@
+mod acp;
+mod acp_events;
+mod acp_permission;
 mod api;
 pub(crate) mod common;
 mod compress;
@@ -35,6 +38,9 @@ pub(crate) async fn run_stream_task(
     }
 
     let mode = common::resolve_permission_mode(params.permission_mode_override.as_deref()).await;
+    if crate::services::acp::provider_from_chat(&params.provider).is_some() {
+        return acp::run(params, mode).await;
+    }
     let response_language = common::response_language();
 
     if params.provider == "ollama" {

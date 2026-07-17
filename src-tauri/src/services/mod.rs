@@ -1,3 +1,4 @@
+pub mod acp;
 pub mod agent_local;
 pub mod api_keys;
 pub mod attachment_access;
@@ -17,6 +18,7 @@ pub mod git;
 pub mod git_context;
 pub mod gpu_detect;
 pub mod gpu_vram;
+pub mod internal_mcp;
 pub mod link_preview;
 pub mod llm;
 pub mod mcp_bridge;
@@ -26,6 +28,7 @@ pub mod model_downloads_store;
 #[cfg(test)]
 mod model_downloads_store_tests;
 pub mod model_downloads_types;
+pub mod oauth_providers;
 pub mod ollama_env;
 pub mod ollama_kill;
 #[cfg(test)]

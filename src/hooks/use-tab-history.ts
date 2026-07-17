@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from "react";
-import type { AppNavPatch, AppNavState } from "@/types/navigation";
+import { migrateAppNav, type AppNavPatch, type AppNavState } from "@/types/navigation";
 
 const MAX_HISTORY = 50;
 
@@ -23,10 +23,10 @@ function sameNav(a: AppNavState, b: AppNavState): boolean {
 }
 
 export function useTabHistory(initial: AppNavState) {
-  const [current, setCurrent] = useState(initial);
+  const [current, setCurrent] = useState(() => migrateAppNav(initial));
   const [navIndex, setNavIndex] = useState(0);
-  const history = useRef<AppNavState[]>([initial]);
-  const live = useRef(initial);
+  const history = useRef<AppNavState[]>([current]);
+  const live = useRef(current);
 
   const pushNav = useCallback((partial: AppNavPatch) => {
     const next = mergePatch(live.current, partial);

@@ -9,6 +9,19 @@
     "delete": "删除",
     "loading": "加载中…"
   },
+  "providers": {
+    "tabs": { "apiKeys": "API 密钥", "oauth": "OAuth" },
+    "oauth": {
+      "title": "OAuth 连接", "openCatalog": "提供商", "catalogTitle": "OAuth 提供商",
+      "catalogSubtitle": "通过官方客户端连接账户。", "connected": "已连接",
+      "emptySidebar": "没有 OAuth 连接", "empty": "未选择 OAuth 提供商",
+      "clientLabel": "官方客户端", "connect": "连接", "disconnect": "断开连接", "install": "安装", "cancel": "取消",
+      "progress": { "waiting": "等待登录…", "verification": "需要验证", "success": "已连接", "cancelled": "登录已取消", "error": "无法连接" },
+      "client": { "ready": "可用", "missing": "未安装", "incompatible": "不兼容" },
+      "clientRequired": "登录前必须安装官方客户端。", "clientIncompatible": "已安装的官方客户端与此连接不兼容。", "installationGuide": "查看安装指南", "successMessage": "提供商连接成功。",
+      "descriptions": { "openai": "通过 Codex 使用 ChatGPT", "moonshot": "通过 ACP 使用 Kimi Code", "xai": "通过 ACP 使用 Grok CLI" }
+    }
+  },
   "apiKeys": {
     "main": {
       "title": "API 密钥",
@@ -556,6 +569,7 @@
       "ollama": "Ollama",
       "connectors": "连接器",
       "apiKeys": "API 密钥",
+      "providers": "提供商",
       "llm": "LLM",
       "tools": "Tools",
       "archivedChats": "已归档聊天",

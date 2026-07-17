@@ -31,7 +31,7 @@ describe("SettingsTab slots", () => {
     ["ollama", "settings.tabs.ollama", "llama3.2:latest"],
     ["connectors", "settings.tabs.connectors", "Canva"],
     ["channels", "settings.tabs.channels", "test-telegram"],
-    ["api-keys", "settings.tabs.apiKeys", "Groq"],
+    ["providers", "settings.tabs.providers", "Groq"],
     ["forecast", "forecast.title", "Chronos Bolt Small"],
   ] as Array<[SettingsSubTab, string, string]>)("ouvre %s sans crash ni boucle", async (_subTab, label, expectedContent) => {
     render(<StrictMode><SettingsHarness /></StrictMode>);
@@ -45,6 +45,39 @@ describe("SettingsTab slots", () => {
     });
 
     await waitFor(() => expect(screen.getAllByText(expectedContent).length).toBeGreaterThan(0));
+  });
+
+  it("bascule de Clés API vers OAuth avec une sidebar contextuelle", async () => {
+    render(<StrictMode><SettingsHarness /></StrictMode>);
+    fireEvent.click((await screen.findAllByText("settings.tabs.providers"))[0]);
+
+    expect(await screen.findByText("providers.tabs.apiKeys")).toBeTruthy();
+    fireEvent.click(screen.getByText("providers.tabs.oauth"));
+
+    await waitFor(() => expect(screen.getAllByText("OpenAI").length).toBeGreaterThan(0));
+    expect(screen.getByTestId("settings-detail").querySelector(".prv-subtabs")).toBeTruthy();
+    expect(screen.getByTestId("settings-detail").querySelector(".prv-oauth-inner")).toBeTruthy();
+    expect(screen.queryByText("Moonshot AI")).toBeNull();
+
+    fireEvent.click(screen.getByText("providers.oauth.openCatalog"));
+    expect(await screen.findByText("Moonshot AI")).toBeTruthy();
+    fireEvent.click(screen.getByText("Moonshot AI"));
+    await waitFor(() => {
+      expect(invokeCalls()).toContainEqual([
+        "start_oauth_provider_login",
+        { providerId: "moonshot" },
+      ]);
+    });
+    expect(screen.getByText("connectors.oauth.title")).toBeTruthy();
+    expect(screen.queryByText("providers.oauth.install")).toBeNull();
+    expect(within(screen.getByTestId("settings-list")).queryByText("Moonshot AI")).toBeNull();
+  });
+
+  it("ne montre plus la connexion OpenAI dans Avancé", async () => {
+    render(<StrictMode><SettingsHarness /></StrictMode>);
+    fireEvent.click((await screen.findAllByText("settings.tabs.advanced"))[0]);
+
+    await waitFor(() => expect(screen.queryByText("codex.title")).toBeNull());
   });
 
   it("ouvre Tools avec tools verrouillés, optionnels et état grisé", async () => {

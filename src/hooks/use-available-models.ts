@@ -5,11 +5,15 @@ import { cleanupTauriListener } from "@/lib/tauri-listen";
 import type { OllamaModel } from "@/types/agent";
 import type { ProviderSpec } from "@/types/api";
 import type { ReasoningMode } from "@/lib/reasoning-modes";
+import { fetchOAuthModels, mapOAuthModels } from "./oauth-models";
+
+export { mapOAuthModels };
 
 export interface AvailableModel {
   id: string;
   provider_id: string;
   provider_name: string;
+  auth_source?: "local" | "api" | "oauth";
   is_local: boolean;
   supports_tools: boolean;
   supports_vision?: boolean;
@@ -40,6 +44,7 @@ async function fetchOllamaModels(): Promise<AvailableModel[]> {
       id: m.name,
       provider_id: "ollama",
       provider_name: "Ollama",
+      auth_source: "local",
       is_local: true,
       supports_tools: m.capabilities?.includes("tools") ?? false,
       supports_vision: m.capabilities?.includes("vision") ?? false,
@@ -75,6 +80,7 @@ async function fetchCloudModels(): Promise<Map<string, AvailableModel[]>> {
         id: m.id,
         provider_id: spec.id,
         provider_name: spec.display_name,
+        auth_source: "api",
         is_local: false,
         supports_tools: m.supports_tools,
         supports_vision: m.supports_vision ?? false,
@@ -89,37 +95,13 @@ async function fetchCloudModels(): Promise<Map<string, AvailableModel[]>> {
   return result;
 }
 
-async function fetchCodexModels(): Promise<AvailableModel[]> {
-  try {
-    const status = await invoke<{ logged_in: boolean }>("codex_status");
-    if (!status.logged_in) return [];
-    const models = await invoke<LlmModelInfo[]>("codex_models");
-    return models.map(
-      (m): AvailableModel => ({
-        id: m.id,
-        provider_id: "codex-oauth",
-        provider_name: "GPT (Codex)",
-        is_local: false,
-        supports_tools: m.supports_tools,
-        supports_vision: m.supports_vision ?? false,
-        supports_thinking: m.supports_thinking ?? false,
-        reasoning_modes: m.reasoning_modes,
-        is_free: true,
-        hint: m.context_length ? `${Math.round(m.context_length / 1000)}K ctx` : undefined,
-      }),
-    );
-  } catch {
-    return [];
-  }
-}
-
 async function fetchAllModels(): Promise<Map<string, AvailableModel[]>> {
   const result = new Map<string, AvailableModel[]>();
 
-  const [ollamaResult, cloudResult, codexResult] = await Promise.allSettled([
+  const [ollamaResult, cloudResult, oauthResult] = await Promise.allSettled([
     fetchOllamaModels(),
     fetchCloudModels(),
-    fetchCodexModels(),
+    fetchOAuthModels(),
   ]);
 
   if (ollamaResult.status === "fulfilled" && ollamaResult.value.length > 0) {
@@ -128,8 +110,8 @@ async function fetchAllModels(): Promise<Map<string, AvailableModel[]>> {
   if (cloudResult.status === "fulfilled") {
     for (const [k, v] of cloudResult.value) result.set(k, v);
   }
-  if (codexResult.status === "fulfilled" && codexResult.value.length > 0) {
-    result.set("codex-oauth", codexResult.value);
+  if (oauthResult.status === "fulfilled") {
+    for (const [key, models] of oauthResult.value) result.set(key, models);
   }
 
   cachedGroups = result;
@@ -178,12 +160,14 @@ export function useAvailableModels() {
     void refresh();
     const unsubOllama = listen("ollama-models-changed", () => void refreshOllama());
     const unsubFs = listen("fs:config-changed", () => void refresh());
+    const unsubOAuth = listen("oauth-provider-status-changed", () => void refresh());
     const unsubStatus = listen<boolean>("ollama-status", (e) => {
       if (e.payload) setTimeout(() => void refreshOllama(), 2000);
     });
     return () => {
       cleanupTauriListener(unsubOllama);
       cleanupTauriListener(unsubFs);
+      cleanupTauriListener(unsubOAuth);
       cleanupTauriListener(unsubStatus);
     };
   }, [refresh, refreshOllama]);
