@@ -1,64 +1,43 @@
-use super::{command_spec, profile_dir, profile_env_names, ProcessKind, ProviderId};
-use tokio::process::Command;
-
-const LOGOUT_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(30);
+use super::{profile_dir, ProviderId};
 
 pub async fn run(provider: ProviderId) -> Result<(), String> {
     match provider {
-        ProviderId::Moonshot => remove_kimi_credentials().await?,
-        ProviderId::Xai => run_grok_logout().await?,
+        ProviderId::Moonshot | ProviderId::Xai => {
+            remove_credentials_in(&profile_dir(provider), provider).await?
+        }
         ProviderId::OpenAi => return Err("Provider OAuth invalide".to_string()),
     }
     super::status::mark_disconnected(provider)
 }
 
-async fn run_grok_logout() -> Result<(), String> {
-    let provider = ProviderId::Xai;
-    let spec = command_spec(provider, ProcessKind::Logout);
-    let binary = super::status::binary_path(provider)
-        .ok_or_else(|| "Client officiel non installé".to_string())?;
-    let mut command = Command::new(binary);
-    for name in profile_env_names(provider) {
-        command.env(name, profile_dir(provider));
-    }
-    let status = tokio::time::timeout(
-        LOGOUT_TIMEOUT,
-        command
-            .args(spec.args)
-            .stdin(std::process::Stdio::null())
-            .stdout(std::process::Stdio::null())
-            .stderr(std::process::Stdio::null())
-            .kill_on_drop(true)
-            .status(),
-    )
-    .await
-    .map_err(|_| "Déconnexion impossible".to_string())?
-    .map_err(|_| "Déconnexion impossible".to_string())?;
-    status
-        .success()
-        .then_some(())
-        .ok_or_else(|| "Déconnexion impossible".to_string())
-}
-
-async fn remove_kimi_credentials() -> Result<(), String> {
-    let root = profile_dir(ProviderId::Moonshot);
+pub(crate) async fn remove_credentials_in(
+    root: &std::path::Path,
+    provider: ProviderId,
+) -> Result<(), String> {
     tokio::fs::create_dir_all(&root)
         .await
         .map_err(|_| "Déconnexion impossible".to_string())?;
     let root = root
         .canonicalize()
         .map_err(|_| "Déconnexion impossible".to_string())?;
-    let credentials = root.join("credentials");
-    if !credentials.exists() {
+    let target = match provider {
+        ProviderId::Moonshot => root.join("credentials"),
+        ProviderId::Xai => root.join("auth.json"),
+        ProviderId::OpenAi => return Err("Provider OAuth invalide".to_string()),
+    };
+    if !target.exists() {
         return Ok(());
     }
-    let resolved = credentials
+    let resolved = target
         .canonicalize()
         .map_err(|_| "Déconnexion impossible".to_string())?;
     if !resolved.starts_with(&root) {
         return Err("Déconnexion impossible".to_string());
     }
-    tokio::fs::remove_dir_all(resolved)
-        .await
-        .map_err(|_| "Déconnexion impossible".to_string())
+    if provider == ProviderId::Moonshot {
+        tokio::fs::remove_dir_all(resolved).await
+    } else {
+        tokio::fs::remove_file(resolved).await
+    }
+    .map_err(|_| "Déconnexion impossible".to_string())
 }

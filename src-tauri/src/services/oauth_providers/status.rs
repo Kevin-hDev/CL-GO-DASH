@@ -65,27 +65,61 @@ pub fn binary_path(provider: ProviderId) -> Option<PathBuf> {
 }
 
 fn marker_path(provider: ProviderId) -> PathBuf {
-    profile_dir(provider).join(".cl-go-connected")
+    profile_dir(provider).join(".cl-go-invalid")
 }
 
 pub fn is_connected(provider: ProviderId) -> bool {
-    marker_path(provider).is_file()
+    credentials_present_in(&profile_dir(provider), provider) && !marker_path(provider).is_file()
 }
 
 pub fn mark_connected(provider: ProviderId) -> Result<(), String> {
-    let root = profile_dir(provider);
-    std::fs::create_dir_all(&root).map_err(|_| "Connexion impossible".to_string())?;
-    let target = marker_path(provider);
-    let temp = root.join(format!(".connected-{}.tmp", uuid::Uuid::new_v4()));
-    std::fs::write(&temp, b"connected").map_err(|_| "Connexion impossible".to_string())?;
-    std::fs::rename(temp, target).map_err(|_| "Connexion impossible".to_string())
+    remove_marker(marker_path(provider), "Connexion impossible")
 }
 
 pub fn mark_disconnected(provider: ProviderId) -> Result<(), String> {
-    let marker = marker_path(provider);
+    remove_marker(marker_path(provider), "Déconnexion impossible")?;
+    remove_marker(
+        profile_dir(provider).join(".cl-go-connected"),
+        "Déconnexion impossible",
+    )
+}
+
+pub fn mark_invalid(provider: ProviderId) -> Result<(), String> {
+    let root = profile_dir(provider);
+    std::fs::create_dir_all(&root).map_err(|_| "Connexion impossible".to_string())?;
+    std::fs::write(marker_path(provider), b"invalid")
+        .map_err(|_| "Connexion impossible".to_string())
+}
+
+fn remove_marker(marker: PathBuf, message: &str) -> Result<(), String> {
     match std::fs::remove_file(marker) {
         Ok(()) => Ok(()),
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
-        Err(_) => Err("Déconnexion impossible".to_string()),
+        Err(_) => Err(message.to_string()),
     }
+}
+
+pub fn credentials_present_in(root: &std::path::Path, provider: ProviderId) -> bool {
+    match provider {
+        ProviderId::OpenAi => false,
+        ProviderId::Xai => root.join("auth.json").is_file(),
+        ProviderId::Moonshot => kimi_credentials_present(root),
+    }
+}
+
+fn kimi_credentials_present(root: &std::path::Path) -> bool {
+    let Ok(entries) = std::fs::read_dir(root.join("credentials")) else {
+        return false;
+    };
+    for entry in entries.take(32).flatten() {
+        let is_file = entry
+            .file_type()
+            .map(|kind| kind.is_file())
+            .unwrap_or(false);
+        let is_json = entry.path().extension().and_then(|ext| ext.to_str()) == Some("json");
+        if is_file && is_json {
+            return true;
+        }
+    }
+    false
 }

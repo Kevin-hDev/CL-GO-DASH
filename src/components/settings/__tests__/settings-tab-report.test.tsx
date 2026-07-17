@@ -8,6 +8,7 @@ import {
   invokeCalls,
   invokedCommands,
   resetSettingsTestEnvironment,
+  setXaiOAuthState,
   SettingsHarness,
 } from "../test-utils/settings-tab-test-setup";
 
@@ -78,6 +79,36 @@ describe("SettingsTab slots", () => {
     fireEvent.click((await screen.findAllByText("settings.tabs.advanced"))[0]);
 
     await waitFor(() => expect(screen.queryByText("codex.title")).toBeNull());
+  });
+
+  it("détecte l'installation du client Grok sans redémarrer l'application", async () => {
+    render(<SettingsHarness />);
+    fireEvent.click((await screen.findAllByText("settings.tabs.providers"))[0]);
+    fireEvent.click(await screen.findByText("providers.tabs.oauth"));
+    fireEvent.click(await screen.findByText("providers.oauth.openCatalog"));
+    fireEvent.click(await screen.findByText("xAI"));
+    expect(await screen.findByText("providers.oauth.clientRequired")).toBeTruthy();
+
+    setXaiOAuthState({ ready: true });
+    await waitFor(() => {
+      expect(invokeCalls()).toContainEqual([
+        "start_oauth_provider_login",
+        { providerId: "xai" },
+      ]);
+    }, { timeout: 3500 });
+  });
+
+  it("retire immédiatement un provider OAuth après sa déconnexion", async () => {
+    setXaiOAuthState({ ready: true, connected: true });
+    render(<SettingsHarness />);
+    fireEvent.click((await screen.findAllByText("settings.tabs.providers"))[0]);
+    fireEvent.click(await screen.findByText("providers.tabs.oauth"));
+    fireEvent.click((await screen.findAllByText("xAI"))[0]);
+    fireEvent.click(await screen.findByText("providers.oauth.disconnect"));
+
+    await waitFor(() => {
+      expect(within(screen.getByTestId("settings-list")).queryByText("xAI")).toBeNull();
+    });
   });
 
   it("ouvre Tools avec tools verrouillés, optionnels et état grisé", async () => {

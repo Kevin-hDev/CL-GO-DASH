@@ -1,4 +1,7 @@
-use super::{command_spec, profile_dir, profile_env_names, sanitize_login_output, ProviderId};
+use super::{
+    command_spec, credentials_present_in, parse_login_hints, profile_dir, profile_env_names,
+    remove_credentials_in, ProviderId,
+};
 
 #[test]
 fn provider_ids_are_strictly_allowlisted() {
@@ -59,10 +62,58 @@ fn isolated_profiles_stay_under_cl_go_data() {
 #[test]
 fn login_output_keeps_only_bounded_temporary_hints() {
     let raw = "debug token=secret\nOpen https://auth.example/device?access_token=leak and enter ABCD-EFGH\n";
-    let clean = sanitize_login_output(raw);
-    assert!(clean.contains("https://auth.example/device"));
-    assert!(clean.contains("ABCD-EFGH"));
-    assert!(!clean.contains("secret"));
-    assert!(!clean.contains("leak"));
-    assert!(clean.len() <= 512);
+    let hints = parse_login_hints(raw);
+    assert_eq!(
+        hints.verification_url.as_deref(),
+        Some("https://auth.example/device")
+    );
+    assert_eq!(hints.user_code.as_deref(), Some("ABCD-EFGH"));
+    assert!(!hints.verification_url.unwrap().contains("leak"));
+}
+
+#[test]
+fn login_hints_separate_the_browser_url_and_device_code() {
+    let hints = parse_login_hints(
+        "Open https://auth.x.ai/device?secret=hidden and enter 45JE-V2VK in the browser",
+    );
+    assert_eq!(
+        hints.verification_url.as_deref(),
+        Some("https://auth.x.ai/device")
+    );
+    assert_eq!(hints.user_code.as_deref(), Some("45JE-V2VK"));
+}
+
+#[test]
+fn official_credential_files_are_the_connection_source_of_truth() {
+    let root = tempfile::tempdir().expect("temporary OAuth profile");
+    assert!(!credentials_present_in(root.path(), ProviderId::Moonshot));
+    assert!(!credentials_present_in(root.path(), ProviderId::Xai));
+
+    let kimi_credentials = root.path().join("credentials");
+    std::fs::create_dir(&kimi_credentials).expect("Kimi credentials directory");
+    std::fs::write(kimi_credentials.join("kimi-code.json"), b"credential")
+        .expect("Kimi credential metadata");
+    assert!(credentials_present_in(root.path(), ProviderId::Moonshot));
+
+    std::fs::write(root.path().join("auth.json"), b"credential").expect("Grok credential metadata");
+    assert!(credentials_present_in(root.path(), ProviderId::Xai));
+}
+
+#[tokio::test]
+async fn disconnect_removes_only_the_isolated_official_credentials() {
+    let root = tempfile::tempdir().expect("temporary OAuth profile");
+    let credentials = root.path().join("credentials");
+    std::fs::create_dir(&credentials).expect("Kimi credentials directory");
+    std::fs::write(credentials.join("kimi-code.json"), b"credential")
+        .expect("Kimi credential metadata");
+    remove_credentials_in(root.path(), ProviderId::Moonshot)
+        .await
+        .expect("Kimi disconnect");
+    assert!(!credentials.exists());
+
+    std::fs::write(root.path().join("auth.json"), b"credential").expect("Grok credential metadata");
+    remove_credentials_in(root.path(), ProviderId::Xai)
+        .await
+        .expect("Grok disconnect");
+    assert!(!root.path().join("auth.json").exists());
 }

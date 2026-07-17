@@ -1,6 +1,5 @@
 use super::{
-    command_spec, profile_dir, profile_env_names, sanitize_login_output, OAuthLoginProgress,
-    ProcessKind, ProviderId,
+    command_spec, parse_login_hints, profile_dir, profile_env_names, ProcessKind, ProviderId,
 };
 use std::collections::HashMap;
 use std::sync::LazyLock;
@@ -13,7 +12,6 @@ use tokio_util::sync::CancellationToken;
 const MAX_ACTIVE_LOGINS: usize = 2;
 const MAX_LOGIN_OUTPUT: usize = 16 * 1024;
 const LOGIN_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(10 * 60);
-const PROGRESS_EVENT: &str = "oauth-login-progress";
 const STATUS_EVENT: &str = "oauth-provider-status-changed";
 
 static ACTIVE: LazyLock<Mutex<HashMap<ProviderId, CancellationToken>>> =
@@ -28,10 +26,10 @@ pub async fn run(app: tauri::AppHandle, provider: ProviderId) -> Result<(), Stri
     ACTIVE.lock().await.remove(&provider);
     if result.is_ok() {
         super::status::mark_connected(provider)?;
-        emit_progress(&app, provider, "success", None);
+        super::login_progress::emit(&app, provider, "success");
         let _ = app.emit(STATUS_EVENT, ());
     } else if !cancel.is_cancelled() {
-        emit_progress(&app, provider, "error", None);
+        super::login_progress::emit(&app, provider, "error");
     }
     result
 }
@@ -58,6 +56,8 @@ async fn run_registered(
     tokio::fs::create_dir_all(&home)
         .await
         .map_err(|_| "Connexion impossible".to_string())?;
+    super::logout::remove_credentials_in(&home, provider).await?;
+    super::status::mark_connected(provider)?;
     let mut command = Command::new(binary);
     for name in profile_env_names(provider) {
         command.env(name, &home);
@@ -70,7 +70,7 @@ async fn run_registered(
         .kill_on_drop(true)
         .spawn()
         .map_err(|_| "Connexion impossible".to_string())?;
-    emit_progress(app, provider, "waiting", None);
+    super::login_progress::emit(app, provider, "waiting");
     let stdout = child
         .stdout
         .take()
@@ -87,7 +87,7 @@ async fn run_registered(
             let _ = child.kill().await;
             stdout_task.abort();
             stderr_task.abort();
-            emit_progress(app, provider, "cancelled", None);
+            super::login_progress::emit(app, provider, "cancelled");
             return Err("Connexion annulée".to_string());
         },
         _ = tokio::time::sleep(LOGIN_TIMEOUT) => {
@@ -111,7 +111,7 @@ async fn read_hints<R: AsyncRead + Unpin>(
 ) {
     let mut collected = Vec::new();
     let mut chunk = [0u8; 1024];
-    let mut last_hint = String::new();
+    let mut last_hints = None;
     while collected.len() < MAX_LOGIN_OUTPUT {
         let remaining = MAX_LOGIN_OUTPUT - collected.len();
         let read_len = remaining.min(chunk.len());
@@ -123,10 +123,10 @@ async fn read_hints<R: AsyncRead + Unpin>(
         }
         collected.extend_from_slice(&chunk[..count]);
         let raw = String::from_utf8_lossy(&collected);
-        let hint = sanitize_login_output(&raw);
-        if !hint.is_empty() && hint != last_hint {
-            emit_progress(&app, provider, "verification", Some(hint.clone()));
-            last_hint = hint;
+        let hints = parse_login_hints(&raw);
+        if hints != Default::default() && Some(&hints) != last_hints.as_ref() {
+            super::login_progress::emit_verification(&app, provider, &hints);
+            last_hints = Some(hints);
         }
     }
 }
@@ -152,22 +152,6 @@ pub async fn cancel_all() {
     for token in tokens {
         token.cancel();
     }
-}
-
-fn emit_progress(
-    app: &tauri::AppHandle,
-    provider: ProviderId,
-    stage: &'static str,
-    hint: Option<String>,
-) {
-    let _ = app.emit(
-        PROGRESS_EVENT,
-        OAuthLoginProgress {
-            provider_id: provider,
-            stage,
-            hint,
-        },
-    );
 }
 
 #[cfg(test)]

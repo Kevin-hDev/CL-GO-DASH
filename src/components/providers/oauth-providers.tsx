@@ -17,7 +17,9 @@ interface OAuthProvidersProps {
   onNavReplace: (partial: DeepPartial<SettingsNavState>) => void;
 }
 
-type DialogState = { kind: "none" } | { kind: "catalog" } | { kind: "login"; provider: OAuthProviderStatus };
+type DialogState = { kind: "none" } | { kind: "catalog" } | { kind: "login"; providerId: OAuthProviderId };
+
+const STATUS_POLL_MS = 1500;
 
 export function useOAuthProviderSlots({ navState, onNavChange, onNavReplace }: OAuthProvidersProps) {
   const { t } = useTranslation();
@@ -41,11 +43,18 @@ export function useOAuthProviderSlots({ navState, onNavChange, onNavReplace }: O
     // eslint-disable-next-line react-hooks/set-state-in-effect -- initial provider status load
     void refresh();
     const unlisten = listen("oauth-provider-status-changed", () => { void refresh(); });
-    return () => cleanupTauriListener(unlisten);
+    const poll = window.setInterval(() => { void refresh(); }, STATUS_POLL_MS);
+    return () => {
+      window.clearInterval(poll);
+      cleanupTauriListener(unlisten);
+    };
   }, [refresh]);
 
   const connected = useMemo(() => providers.filter((provider) => provider.connected), [providers]);
   const selected = connected.find((provider) => provider.id === selectedId) ?? null;
+  const loginProvider = dialog.kind === "login"
+    ? providers.find((provider) => provider.id === dialog.providerId) ?? null
+    : null;
 
   useEffect(() => {
     if (!selected && connected[0]) onNavReplace({ oauthProviderId: connected[0].id });
@@ -86,19 +95,19 @@ export function useOAuthProviderSlots({ navState, onNavChange, onNavReplace }: O
               onNavChange({ oauthProviderId: provider.id });
               setDialog({ kind: "none" });
             } else {
-              setDialog({ kind: "login", provider });
+              setDialog({ kind: "login", providerId: provider.id });
             }
           }}
         />
       )}
-      {dialog.kind === "login" && (
+      {dialog.kind === "login" && loginProvider && (
         <OAuthProviderLoginDialog
-          provider={dialog.provider}
+          provider={loginProvider}
           onClose={() => { void refresh(); setDialog({ kind: "catalog" }); }}
           onConnected={() => {
             void refresh().then((items) => {
-              if (items.some((item) => item.id === dialog.provider.id && item.connected)) {
-                onNavChange({ oauthProviderId: dialog.provider.id });
+              if (items.some((item) => item.id === loginProvider.id && item.connected)) {
+                onNavChange({ oauthProviderId: loginProvider.id });
                 setDialog({ kind: "none" });
               }
             });

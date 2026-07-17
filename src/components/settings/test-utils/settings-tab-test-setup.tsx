@@ -45,11 +45,17 @@ vi.mock("@tauri-apps/api/core", async () => {
       if (cmd === "get_selected_forecast_model") return Promise.resolve("chronos-bolt-small");
       if (cmd === "list_configured_providers") return Promise.resolve(["groq", "brave", "nixtla"]);
       if (cmd === "list_oauth_provider_statuses") {
+        const xaiReady = globalThis.localStorage?.getItem("test:xai-client") === "ready";
+        const xaiConnected = globalThis.localStorage?.getItem("test:xai-connected") === "true";
         return Promise.resolve([
           { id: "openai", display_name: "OpenAI", connected: true, account: "user@example.com", client_state: "ready", install_url: "https://chatgpt.com/" },
           { id: "moonshot", display_name: "Moonshot AI", connected: false, account: null, client_state: "ready", install_url: "https://www.kimi.com/code/docs/en/" },
-          { id: "xai", display_name: "xAI", connected: false, account: null, client_state: "missing", install_url: "https://docs.x.ai/build/overview" },
+          { id: "xai", display_name: "xAI", connected: xaiConnected, account: null, client_state: xaiReady ? "ready" : "missing", install_url: "https://docs.x.ai/build/overview" },
         ]);
+      }
+      if (cmd === "disconnect_oauth_provider" && args?.providerId === "xai") {
+        globalThis.localStorage?.removeItem("test:xai-connected");
+        return Promise.resolve();
       }
       if (cmd === "start_oauth_provider_login" || cmd === "disconnect_oauth_provider" || cmd === "cancel_oauth_provider_login") return Promise.resolve();
       if (cmd === "list_llm_providers_catalog") {
@@ -126,4 +132,11 @@ export function invokedCommands() {
 
 export function invokeCalls() {
   return vi.mocked(invoke).mock.calls;
+}
+
+export function setXaiOAuthState({ ready, connected = false }: { ready: boolean; connected?: boolean }) {
+  if (ready) localStorage.setItem("test:xai-client", "ready");
+  else localStorage.removeItem("test:xai-client");
+  if (connected) localStorage.setItem("test:xai-connected", "true");
+  else localStorage.removeItem("test:xai-connected");
 }

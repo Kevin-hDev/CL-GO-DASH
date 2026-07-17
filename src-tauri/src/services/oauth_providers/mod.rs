@@ -1,13 +1,19 @@
 mod login;
+mod login_progress;
 mod logout;
 mod specs;
 mod status;
 mod types;
 
+#[cfg(test)]
+pub(crate) use logout::remove_credentials_in;
 pub use specs::{
-    command_spec, profile_dir, profile_env_names, sanitize_login_output, ProcessKind, ProviderId,
+    command_spec, parse_login_hints, profile_dir, profile_env_names, LoginHints, ProcessKind,
+    ProviderId,
 };
 pub(crate) use status::binary_path;
+#[cfg(test)]
+pub(crate) use status::credentials_present_in;
 pub use status::list_statuses;
 pub use types::{OAuthClientState, OAuthLoginProgress, OAuthProviderStatus};
 
@@ -28,7 +34,7 @@ pub async fn logout_external(provider: ProviderId) -> Result<(), String> {
 }
 
 pub fn invalidate_external_login(provider: ProviderId) {
-    let _ = status::mark_disconnected(provider);
+    let _ = status::mark_invalid(provider);
 }
 
 #[cfg(test)]

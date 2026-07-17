@@ -15,4 +15,6 @@ export interface OAuthLoginProgress {
   provider_id: OAuthProviderId;
   stage: "waiting" | "verification" | "success" | "cancelled" | "error";
   hint?: string;
+  verification_url?: string;
+  user_code?: string;
 }

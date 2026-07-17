@@ -19,16 +19,7 @@ pub struct OAuthProviderModel {
 
 #[tauri::command]
 pub async fn list_oauth_provider_statuses() -> Vec<oauth_providers::OAuthProviderStatus> {
-    let mut statuses = oauth_providers::list_statuses();
-    for status in &mut statuses {
-        if matches!(status.id, ProviderId::Moonshot | ProviderId::Xai)
-            && status.client_state == oauth_providers::OAuthClientState::Ready
-            && !crate::services::acp::probe(status.id).await
-        {
-            status.client_state = oauth_providers::OAuthClientState::Incompatible;
-        }
-    }
-    statuses
+    oauth_providers::list_statuses()
 }
 
 #[tauri::command]
@@ -133,6 +124,8 @@ fn emit_openai_progress(app: &tauri::AppHandle, stage: &'static str) {
             provider_id: ProviderId::OpenAi,
             stage,
             hint: None,
+            verification_url: None,
+            user_code: None,
         },
     );
 }

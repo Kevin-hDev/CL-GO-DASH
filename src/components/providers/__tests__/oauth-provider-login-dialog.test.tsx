@@ -26,12 +26,18 @@ const moonshot: OAuthProviderStatus = {
 
 describe("OAuthProviderLoginDialog", () => {
   let progress: ((event: { payload: OAuthLoginProgress }) => void) | undefined;
+  let clipboardWrite: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     vi.mocked(invoke).mockClear().mockResolvedValue(undefined);
     vi.mocked(listen).mockImplementation((_event, handler) => {
       progress = handler as typeof progress;
       return Promise.resolve(() => undefined);
+    });
+    clipboardWrite = vi.fn(() => Promise.resolve());
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText: clipboardWrite },
     });
   });
 
@@ -65,5 +71,24 @@ describe("OAuthProviderLoginDialog", () => {
     expect(await screen.findByText("providers.oauth.clientRequired")).toBeTruthy();
     expect(screen.queryByText("providers.oauth.install")).toBeNull();
     expect(invoke).not.toHaveBeenCalledWith("start_oauth_provider_login", expect.anything());
+  });
+
+  it("affiche et copie le code que Grok demande de saisir dans le navigateur", async () => {
+    render(<OAuthProviderLoginDialog provider={{ ...moonshot, id: "xai", display_name: "xAI" }} onClose={vi.fn()} onConnected={vi.fn()} />);
+    await waitFor(() => expect(progress).toBeTypeOf("function"));
+
+    progress?.({
+      payload: {
+        provider_id: "xai",
+        stage: "verification",
+        user_code: "45JE-V2VK",
+        verification_url: "https://auth.x.ai/device",
+      },
+    });
+
+    expect(await screen.findByText("45JE-V2VK")).toBeTruthy();
+    fireEvent.click(screen.getByText("providers.oauth.copyCode"));
+    expect(clipboardWrite).toHaveBeenCalledWith("45JE-V2VK");
+    expect(screen.queryByRole("textbox")).toBeNull();
   });
 });

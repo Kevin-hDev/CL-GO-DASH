@@ -6,6 +6,7 @@ use serde::Serialize;
 pub enum OAuthClientState {
     Ready,
     Missing,
+    #[allow(dead_code)] // Kept in the serialized UI contract for negotiated ACP failures.
     Incompatible,
 }
 
@@ -25,4 +26,8 @@ pub struct OAuthLoginProgress {
     pub stage: &'static str,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub hint: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub verification_url: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub user_code: Option<String>,
 }

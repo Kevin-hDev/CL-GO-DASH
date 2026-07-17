@@ -19,6 +19,7 @@
       "progress": { "waiting": "ログイン待機中…", "verification": "確認が必要です", "success": "接続済み", "cancelled": "ログインをキャンセルしました", "error": "接続できません" },
       "client": { "ready": "利用可能", "missing": "未インストール", "incompatible": "非互換" },
       "clientRequired": "ログインするには公式クライアントのインストールが必要です。", "clientIncompatible": "インストール済みの公式クライアントはこの接続に対応していません。", "installationGuide": "インストールガイドを見る", "successMessage": "プロバイダーに接続しました。",
+      "deviceInstructions": "ブラウザで開いたページにこのコードを入力してください。", "codeLabel": "ログインコード", "copyCode": "コードをコピー", "openVerification": "ログインページを再度開く",
       "descriptions": { "openai": "Codex 経由の ChatGPT", "moonshot": "ACP 経由の Kimi Code", "xai": "ACP 経由の Grok CLI" }
     }
   },

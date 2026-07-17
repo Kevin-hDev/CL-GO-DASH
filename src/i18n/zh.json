@@ -19,6 +19,7 @@
       "progress": { "waiting": "等待登录…", "verification": "需要验证", "success": "已连接", "cancelled": "登录已取消", "error": "无法连接" },
       "client": { "ready": "可用", "missing": "未安装", "incompatible": "不兼容" },
       "clientRequired": "登录前必须安装官方客户端。", "clientIncompatible": "已安装的官方客户端与此连接不兼容。", "installationGuide": "查看安装指南", "successMessage": "提供商连接成功。",
+      "deviceInstructions": "请在浏览器中打开的页面上输入此代码。", "codeLabel": "登录代码", "copyCode": "复制代码", "openVerification": "重新打开登录页面",
       "descriptions": { "openai": "通过 Codex 使用 ChatGPT", "moonshot": "通过 ACP 使用 Kimi Code", "xai": "通过 ACP 使用 Grok CLI" }
     }
   },

@@ -20,6 +20,8 @@ export function OAuthProviderLoginDialog({ provider, onClose, onConnected }: OAu
   const { t } = useTranslation();
   const [state, setState] = useState<LoginState>("loading");
   const [hint, setHint] = useState<string | null>(null);
+  const [userCode, setUserCode] = useState<string | null>(null);
+  const [verificationUrl, setVerificationUrl] = useState<string | null>(null);
   const mountedRef = useRef(true);
   const onConnectedRef = useRef(onConnected);
 
@@ -29,6 +31,8 @@ export function OAuthProviderLoginDialog({ provider, onClose, onConnected }: OAu
 
   const startFlow = useCallback(async () => {
     setHint(null);
+    setUserCode(null);
+    setVerificationUrl(null);
     if (provider.client_state !== "ready") {
       setState("error");
       return;
@@ -54,6 +58,8 @@ export function OAuthProviderLoginDialog({ provider, onClose, onConnected }: OAu
         successTimer = setTimeout(() => onConnectedRef.current(), 600);
       } else if (payload.stage === "waiting" || payload.stage === "verification") {
         setHint(payload.hint ?? null);
+        setUserCode(payload.user_code ?? null);
+        setVerificationUrl(payload.verification_url ?? null);
         setState("waiting");
       } else {
         setState("error");
@@ -68,6 +74,10 @@ export function OAuthProviderLoginDialog({ provider, onClose, onConnected }: OAu
     };
   }, [provider.id, startFlow]);
 
+  useEffect(() => {
+    if (provider.connected) onConnectedRef.current();
+  }, [provider.connected]);
+
   const handleClose = () => {
     void invoke("cancel_oauth_provider_login", { providerId: provider.id });
     onClose();
@@ -75,7 +85,16 @@ export function OAuthProviderLoginDialog({ provider, onClose, onConnected }: OAu
   const missingClient = provider.client_state !== "ready";
   const message = missingClient
     ? t(provider.client_state === "missing" ? "providers.oauth.clientRequired" : "providers.oauth.clientIncompatible")
-    : hint ?? t(state === "waiting" ? "connectors.oauth.message" : state === "success" ? "providers.oauth.successMessage" : state === "error" ? "connectors.oauth.errorGeneric" : "connectors.oauth.discovering");
+    : userCode ? t("providers.oauth.deviceInstructions") : hint ?? t(state === "waiting" ? "connectors.oauth.message" : state === "success" ? "providers.oauth.successMessage" : state === "error" ? "connectors.oauth.errorGeneric" : "connectors.oauth.discovering");
+
+  const copyCode = async () => {
+    if (!userCode) return;
+    try {
+      await navigator.clipboard.writeText(userCode);
+    } catch {
+      // Clipboard access can be denied by the operating system.
+    }
+  };
 
   return (
     <div className="wk-dialog-overlay" role="presentation" onClick={handleClose} onKeyDown={() => undefined}>
@@ -88,6 +107,16 @@ export function OAuthProviderLoginDialog({ provider, onClose, onConnected }: OAu
         </div>
         <h3 className="mco-title">{t(state === "success" ? "connectors.oauth.successTitle" : "connectors.oauth.title")}</h3>
         <p className={`mco-message ${state === "error" ? "mco-error" : ""}`}>{message}</p>
+        {userCode && (
+          <div className="mco-device-code">
+            <span>{t("providers.oauth.codeLabel")}</span>
+            <strong>{userCode}</strong>
+            <button type="button" className="ollama-btn" onClick={() => void copyCode()}>{t("providers.oauth.copyCode")}</button>
+          </div>
+        )}
+        {verificationUrl && state === "waiting" && (
+          <button type="button" className="mco-retry-link" onClick={() => void open(verificationUrl)}>{t("providers.oauth.openVerification")}</button>
+        )}
         {!missingClient && (state === "waiting" || state === "error") && (
           <button type="button" className="mco-retry-link" onClick={() => void startFlow()}>{t("connectors.oauth.retry")}</button>
         )}

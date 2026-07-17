@@ -34,7 +34,6 @@ impl ProviderId {
 #[derive(Debug, Clone, Copy)]
 pub enum ProcessKind {
     Login,
-    Logout,
     Acp,
 }
 
@@ -56,10 +55,6 @@ pub fn command_spec(provider: ProviderId, kind: ProcessKind) -> CommandSpec {
         (ProviderId::Xai, ProcessKind::Login) => CommandSpec {
             program: "grok",
             args: &["login", "--device-auth"],
-        },
-        (ProviderId::Xai, ProcessKind::Logout) => CommandSpec {
-            program: "grok",
-            args: &["logout"],
         },
         (ProviderId::Xai, ProcessKind::Acp) => CommandSpec {
             program: "grok",
@@ -94,7 +89,13 @@ pub fn profile_dir(provider: ProviderId) -> PathBuf {
         .join(provider.as_str())
 }
 
-pub fn sanitize_login_output(raw: &str) -> String {
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct LoginHints {
+    pub verification_url: Option<String>,
+    pub user_code: Option<String>,
+}
+
+pub fn parse_login_hints(raw: &str) -> LoginHints {
     static URL: LazyLock<Regex> = LazyLock::new(|| {
         Regex::new(r"https://[A-Za-z0-9.-]{1,120}(?::[0-9]{1,5})?(?:/[A-Za-z0-9._~:/%+-]{0,180})?")
             .expect("valid login URL regex")
@@ -102,13 +103,10 @@ pub fn sanitize_login_output(raw: &str) -> String {
     static CODE: LazyLock<Regex> = LazyLock::new(|| {
         Regex::new(r"\b[A-Z0-9]{4,8}-[A-Z0-9]{4,8}\b").expect("valid device code regex")
     });
-    let url = URL.find(raw).map(|item| item.as_str()).unwrap_or("");
-    let code = CODE.find(raw).map(|item| item.as_str()).unwrap_or("");
-    let result = match (url.is_empty(), code.is_empty()) {
-        (false, false) => format!("{url}\n{code}"),
-        (false, true) => url.to_string(),
-        (true, false) => code.to_string(),
-        (true, true) => String::new(),
-    };
-    result.chars().take(512).collect()
+    LoginHints {
+        verification_url: URL
+            .find(raw)
+            .map(|item| item.as_str().chars().take(320).collect()),
+        user_code: CODE.find(raw).map(|item| item.as_str().to_string()),
+    }
 }
