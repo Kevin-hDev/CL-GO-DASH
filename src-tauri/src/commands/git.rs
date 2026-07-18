@@ -11,11 +11,8 @@ pub(super) async fn registered_project_path(path: &str) -> Result<PathBuf, Strin
 }
 
 #[tauri::command]
-pub fn start_git_watcher(app: tauri::AppHandle, path: String) -> Result<(), String> {
-    let repo_path = PathBuf::from(&path);
-    if !repo_path.is_dir() {
-        return Ok(());
-    }
+pub async fn start_git_watcher(app: tauri::AppHandle, path: String) -> Result<(), String> {
+    let repo_path = registered_project_path(&path).await?;
     watcher::setup_git_watcher(app, repo_path)
 }
 

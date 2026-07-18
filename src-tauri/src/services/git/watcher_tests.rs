@@ -5,8 +5,9 @@
 //! de résolution du dossier Git réel, extraite en fn PURE pour etre testée
 //! sans toucher au système de fichiers.
 
-use super::watcher::parse_gitdir_content;
-use std::path::PathBuf;
+use super::watcher::{parse_gitdir_content, read_dirty_count, update_dirty_count};
+use git2::{Repository, Signature};
+use std::path::{Path, PathBuf};
 
 #[test]
 fn parses_absolute_gitdir() {
@@ -65,4 +66,54 @@ fn handles_trailing_newline_only() {
         parse_gitdir_content(content),
         Some(PathBuf::from("/path/to/.git/worktrees/main"))
     );
+}
+
+#[test]
+fn detects_a_new_change_after_a_clean_commit() {
+    let tmp = init_repo();
+    let mut previous = read_dirty_count(tmp.path());
+    assert_eq!(previous, Some(0));
+
+    std::fs::write(tmp.path().join("tracked.txt"), "changed\n").expect("modify tracked file");
+    let current = read_dirty_count(tmp.path());
+
+    assert_eq!(current, Some(1));
+    assert!(update_dirty_count(&mut previous, current));
+    assert_eq!(previous, Some(1));
+
+    std::fs::write(tmp.path().join("new.txt"), "new\n").expect("create untracked file");
+    let current = read_dirty_count(tmp.path());
+
+    assert_eq!(current, Some(2));
+    assert!(update_dirty_count(&mut previous, current));
+}
+
+#[test]
+fn ignores_unchanged_or_temporarily_unavailable_status() {
+    let mut previous = Some(1);
+
+    assert!(!update_dirty_count(&mut previous, Some(1)));
+    assert!(!update_dirty_count(&mut previous, None));
+    assert_eq!(previous, Some(1));
+}
+
+fn init_repo() -> tempfile::TempDir {
+    let tmp = tempfile::tempdir().expect("temp repo");
+    let repo = Repository::init(tmp.path()).expect("init repo");
+    std::fs::write(tmp.path().join("tracked.txt"), "initial\n").expect("write tracked file");
+    commit_all(&repo);
+    tmp
+}
+
+fn commit_all(repo: &Repository) {
+    let mut index = repo.index().expect("index");
+    index
+        .add_path(Path::new("tracked.txt"))
+        .expect("stage file");
+    index.write().expect("write index");
+    let tree_id = index.write_tree().expect("write tree");
+    let tree = repo.find_tree(tree_id).expect("find tree");
+    let signature = Signature::now("Test", "test@example.com").expect("signature");
+    repo.commit(Some("HEAD"), &signature, &signature, "initial", &tree, &[])
+        .expect("commit");
 }

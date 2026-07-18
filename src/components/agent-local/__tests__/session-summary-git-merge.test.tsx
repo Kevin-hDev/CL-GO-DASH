@@ -8,6 +8,8 @@ vi.mock("react-i18next", () => ({
     t: (key: string, opts?: Record<string, unknown>) => {
       const text: Record<string, string> = {
         "agentLocal.sessionSummary.branch": "Branch",
+        "agentLocal.sessionSummary.git.commit": "Commit",
+        "agentLocal.sessionSummary.git.push": "Push",
         "agentLocal.sessionSummary.git.mergeSource": "Source branch",
         "agentLocal.sessionSummary.git.cancel": "Cancel",
         "agentLocal.sessionSummary.git.commitDescription": "Commit message",
@@ -138,6 +140,20 @@ describe("SessionSummaryGitSection Merge", () => {
     fireEvent.click(getByRole("button", { name: "Branch: feature" }));
 
     expect(getByRole("button", { name: "Merge into feature" })).toBeTruthy();
+  });
+
+  it("remplace Push par Commit après un nouveau changement", () => {
+    const { getByRole, queryByRole, rerender } = render(
+      <SessionSummaryGitSection git={{ ...baseGit, aheadCount: 1 }} />,
+    );
+    fireEvent.click(getByRole("button", { name: "Branch: main" }));
+    expect(getByRole("button", { name: "Push" })).toBeTruthy();
+
+    rerender(<SessionSummaryGitSection git={{ ...baseGit, aheadCount: 1, dirtyCount: 1 }} />);
+
+    expect(queryByRole("button", { name: "Push" })).toBeNull();
+    expect(getByRole("button", { name: "Commit" })).toBeTruthy();
+    expect(getByRole("button", { name: "Merge into main" })).toBeTruthy();
   });
 });
 
