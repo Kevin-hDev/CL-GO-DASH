@@ -10,7 +10,9 @@ mod branch_create_tests;
 pub mod branch_delete;
 #[cfg(test)]
 mod branch_delete_tests;
-mod branch_merge;
+pub mod branch_merge;
+#[cfg(test)]
+mod branch_merge_tests;
 pub mod github_auth;
 pub mod remote;
 mod remote_credentials;

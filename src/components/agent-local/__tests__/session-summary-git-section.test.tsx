@@ -44,6 +44,7 @@ const baseGit: SessionSummaryGitState = {
   isGitRepo: true,
   isLoading: false,
   currentBranch: "main",
+  branches: [{ name: "main", is_current: true, is_remote: false, dirty_count: 0 }],
   dirtyCount: 0,
   hasRemote: true,
   isGithubRemote: true,
@@ -54,6 +55,8 @@ const baseGit: SessionSummaryGitState = {
   listDirtyFiles: vi.fn().mockResolvedValue([]),
   commit: vi.fn().mockResolvedValue({ ok: true }),
   push: vi.fn().mockResolvedValue({ ok: true }),
+  previewBranchMerge: vi.fn(),
+  mergeBranch: vi.fn().mockResolvedValue({ ok: true }),
   refresh: vi.fn(),
 };
 

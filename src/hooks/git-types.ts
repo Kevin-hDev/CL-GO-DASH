@@ -47,6 +47,13 @@ export interface WorktreeDeletePreview {
   dirty_files: GitDirtyFile[];
 }
 
+export interface BranchMergePreview {
+  source_branch: string;
+  target_branch: string;
+  commits: number;
+  dirty_files: GitDirtyFile[];
+}
+
 export type GitDeleteMode = "clean" | "discard" | "preserve";
 
 export interface GitPushTarget {
@@ -65,4 +72,8 @@ export type GitActionErrorKind =
   | "remote_changed"
   | "network_unavailable"
   | "context_changed"
+  | "branch_unavailable"
+  | "dirty_worktree"
+  | "nothing_to_merge"
+  | "merge_conflict"
   | "internal_error";

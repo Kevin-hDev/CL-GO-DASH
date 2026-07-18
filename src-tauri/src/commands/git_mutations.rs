@@ -1,7 +1,7 @@
 use serde::Deserialize;
 use std::path::PathBuf;
 
-use crate::services::git::{branch_commit, branch_delete, remote, worktree_delete};
+use crate::services::git::{branch_commit, branch_delete, branch_merge, remote, worktree_delete};
 
 use super::git::registered_project_path;
 
@@ -58,6 +58,46 @@ pub async fn push_git_branch(
     })
         .await
         .map_err(|_| remote::PushError::InternalError)?
+}
+
+#[tauri::command]
+pub async fn preview_git_branch_merge(
+    path: String,
+    source_branch: String,
+    expected_target: String,
+) -> Result<branch_merge::BranchMergePreview, branch_merge::MergeError> {
+    let repo_path = registered_project_path(&path)
+        .await
+        .map_err(|_| branch_merge::MergeError::InternalError)?;
+    tokio::task::spawn_blocking(move || {
+        branch_merge::preview(&repo_path, &source_branch, &expected_target)
+    })
+    .await
+    .map_err(|_| branch_merge::MergeError::InternalError)?
+}
+
+#[tauri::command]
+pub async fn merge_git_branch(
+    path: String,
+    source_branch: String,
+    expected_target: String,
+    commit_changes: bool,
+    commit_description: Option<String>,
+) -> Result<(), branch_merge::MergeError> {
+    let repo_path = registered_project_path(&path)
+        .await
+        .map_err(|_| branch_merge::MergeError::InternalError)?;
+    tokio::task::spawn_blocking(move || {
+        branch_merge::merge_current(
+            &repo_path,
+            &source_branch,
+            &expected_target,
+            commit_changes,
+            commit_description,
+        )
+    })
+    .await
+    .map_err(|_| branch_merge::MergeError::InternalError)?
 }
 
 #[tauri::command]

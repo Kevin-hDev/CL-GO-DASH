@@ -38,6 +38,8 @@
   --chrome-icon-docs: 17px;
   --chrome-icon-lg: 18px;
   --chat-column-width: 720px;
+  --dialog-compact-min-width: 18.75rem;
+  --dialog-compact-max-width: 27.5rem;
 
   --browser-toolbar-height: 2rem;
   --browser-control-size: 1.75rem;

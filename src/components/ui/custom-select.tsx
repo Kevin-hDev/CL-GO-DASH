@@ -14,6 +14,7 @@ interface CustomSelectProps {
   onChange: (value: string) => void;
   placeholder?: string;
   disabled?: boolean;
+  ariaLabel?: string;
 }
 
 export function CustomSelect({
@@ -22,6 +23,7 @@ export function CustomSelect({
   onChange,
   placeholder,
   disabled,
+  ariaLabel,
 }: CustomSelectProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -58,6 +60,7 @@ export function CustomSelect({
           if (open) listProps.onKeyDown(event);
         }}
         disabled={disabled}
+        aria-label={ariaLabel}
       >
         <span className={selected ? "cs-trigger-label" : "cs-trigger-label cs-placeholder"}>
           {selected?.label ?? placeholder ?? "—"}

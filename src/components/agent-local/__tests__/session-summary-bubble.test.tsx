@@ -49,6 +49,7 @@ const git = {
   isGitRepo: true,
   isLoading: false,
   currentBranch: "main",
+  branches: [{ name: "main", is_current: true, is_remote: false, dirty_count: 0 }],
   worktrees: [],
   dirtyCount: 0,
   hasRemote: true,
@@ -59,6 +60,8 @@ const git = {
   listDirtyFiles: vi.fn().mockResolvedValue([]),
   commit: vi.fn().mockResolvedValue({ ok: true }),
   push: vi.fn().mockResolvedValue({ ok: true }),
+  previewBranchMerge: vi.fn(),
+  mergeBranch: vi.fn().mockResolvedValue({ ok: true }),
   refresh: vi.fn(),
 };
 

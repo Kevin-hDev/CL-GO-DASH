@@ -3,6 +3,7 @@ import type { RefObject } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import type {
   BranchDeletePreview,
+  BranchMergePreview,
   GitActionErrorKind,
   GitActionResult,
   GitDeleteMode,
@@ -18,6 +19,10 @@ const ACTION_ERROR_KINDS = new Set<GitActionErrorKind>([
   "remote_changed",
   "network_unavailable",
   "context_changed",
+  "branch_unavailable",
+  "dirty_worktree",
+  "nothing_to_merge",
+  "merge_conflict",
   "internal_error",
 ]);
 
@@ -55,6 +60,43 @@ export function useGitMutations(
       await refresh();
       return { ok: true };
     } catch (error) {
+      return { ok: false, kind: readActionErrorKind(error) };
+    }
+  }, [pathRef, refresh]);
+
+  const previewBranchMerge = useCallback(async (
+    sourceBranch: string,
+    expectedTarget: string,
+  ): Promise<BranchMergePreview> => {
+    const path = pathRef.current;
+    if (!path) throw new Error("git unavailable");
+    return invoke<BranchMergePreview>("preview_git_branch_merge", {
+      path,
+      sourceBranch,
+      expectedTarget,
+    });
+  }, [pathRef]);
+
+  const mergeBranch = useCallback(async (
+    sourceBranch: string,
+    expectedTarget: string,
+    commitChanges: boolean,
+    commitDescription?: string,
+  ): Promise<GitActionResult> => {
+    const path = pathRef.current;
+    if (!path) return internalError();
+    try {
+      await invoke("merge_git_branch", {
+        path,
+        sourceBranch,
+        expectedTarget,
+        commitChanges,
+        commitDescription,
+      });
+      await refresh();
+      return { ok: true };
+    } catch (error) {
+      await refresh();
       return { ok: false, kind: readActionErrorKind(error) };
     }
   }, [pathRef, refresh]);
@@ -110,6 +152,8 @@ export function useGitMutations(
     commit,
     listDirtyFiles,
     push,
+    previewBranchMerge,
+    mergeBranch,
     previewBranchDeletion,
     deleteBranch,
     previewWorktreeDeletion,

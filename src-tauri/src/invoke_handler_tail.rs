@@ -71,6 +71,8 @@ macro_rules! generate_tail {
             crate::commands::get_git_remote_status,
             crate::commands::commit_git_changes,
             crate::commands::push_git_branch,
+            crate::commands::preview_git_branch_merge,
+            crate::commands::merge_git_branch,
             crate::commands::preview_git_branch_deletion,
             crate::commands::delete_git_branch,
             crate::commands::preview_git_worktree_deletion,

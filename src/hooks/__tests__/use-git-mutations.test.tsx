@@ -86,4 +86,33 @@ describe("useGitMutations", () => {
     });
     expect(refresh).toHaveBeenCalledOnce();
   });
+
+  it("inspecte puis merge une branche dans la branche attendue", async () => {
+    const preview = {
+      source_branch: "feature",
+      target_branch: "main",
+      commits: 2,
+      dirty_files: [],
+    };
+    vi.mocked(invoke).mockResolvedValueOnce(preview).mockResolvedValueOnce(undefined);
+    const refresh = vi.fn().mockResolvedValue(undefined);
+    const { result } = renderHook(() => {
+      const pathRef = useRef<string | undefined>("/repo");
+      return useGitMutations(pathRef, refresh);
+    });
+
+    await expect(result.current.previewBranchMerge("feature", "main")).resolves.toEqual(preview);
+    await act(async () => {
+      expect(await result.current.mergeBranch("feature", "main", false)).toEqual({ ok: true });
+    });
+
+    expect(invoke).toHaveBeenLastCalledWith("merge_git_branch", {
+      path: "/repo",
+      sourceBranch: "feature",
+      expectedTarget: "main",
+      commitChanges: false,
+      commitDescription: undefined,
+    });
+    expect(refresh).toHaveBeenCalledOnce();
+  });
 });

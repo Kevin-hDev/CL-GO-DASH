@@ -63,8 +63,15 @@
   font-size: var(--text-sm);
 }
 
+.ssb-git-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
 .ssb-git-action {
-  margin-top: 8px;
+  margin-top: 0;
   padding: 6px 10px;
   border: 1px solid var(--edge);
   border-radius: var(--radius-sm);

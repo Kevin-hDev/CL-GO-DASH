@@ -1,7 +1,7 @@
 .gdd-dialog {
   width: fit-content;
-  min-width: min(300px, calc(100vw - 24px));
-  max-width: min(440px, calc(100vw - 24px));
+  min-width: min(var(--dialog-compact-min-width), calc(100vw - 24px));
+  max-width: min(var(--dialog-compact-max-width), calc(100vw - 24px));
 }
 
 .gdd-warning {
