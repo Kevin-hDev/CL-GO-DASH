@@ -14,6 +14,24 @@ export interface OAuthModelInfo {
   interactive_only: boolean;
 }
 
+export type OAuthProviderIssueCode =
+  | "moonshot_membership_unverified"
+  | "xai_subscription_or_credits_required"
+  | "oauth_reauthentication_required"
+  | "rate_limit"
+  | "provider_access_unavailable"
+  | "model_catalog_unavailable";
+
+export interface OAuthModelsResponse {
+  models: OAuthModelInfo[];
+  issues: Array<{ provider_id: OAuthModelInfo["provider_id"]; code: OAuthProviderIssueCode }>;
+}
+
+export interface OAuthModelsResult {
+  groups: Map<string, AvailableModel[]>;
+  issues: Map<OAuthModelInfo["provider_id"], OAuthProviderIssueCode>;
+}
+
 const PROVIDERS = {
   openai: { id: "codex-oauth", name: "OpenAI · OAuth" },
   moonshot: { id: "moonshot-oauth", name: "Moonshot AI · OAuth" },
@@ -24,6 +42,7 @@ export function mapOAuthModels(models: OAuthModelInfo[]): Map<string, AvailableM
   const groups = new Map<string, AvailableModel[]>();
   for (const model of models) {
     const provider = PROVIDERS[model.provider_id];
+    if (!provider || typeof model.id !== "string" || model.id.length === 0 || model.id.length > 128) continue;
     const mapped: AvailableModel = {
       id: model.id,
       provider_id: provider.id,
@@ -43,7 +62,45 @@ export function mapOAuthModels(models: OAuthModelInfo[]): Map<string, AvailableM
   return groups;
 }
 
-export async function fetchOAuthModels(): Promise<Map<string, AvailableModel[]>> {
-  const models = await invoke<OAuthModelInfo[]>("list_oauth_provider_models");
-  return mapOAuthModels(models);
+const ISSUE_CODES = new Set<OAuthProviderIssueCode>([
+  "moonshot_membership_unverified", "xai_subscription_or_credits_required",
+  "oauth_reauthentication_required", "rate_limit",
+  "provider_access_unavailable", "model_catalog_unavailable",
+]);
+const CACHE_MS = 15_000;
+export const OAUTH_MODELS_UPDATED_EVENT = "cl-go:oauth-models-updated";
+let cached: { value: OAuthModelsResult; at: number } | null = null;
+let pending: Promise<OAuthModelsResult> | null = null;
+
+export function mapOAuthResponse(response: OAuthModelsResponse): OAuthModelsResult {
+  const models = Array.isArray(response.models) ? response.models.slice(0, 600) : [];
+  const issues = new Map<OAuthModelInfo["provider_id"], OAuthProviderIssueCode>();
+  if (Array.isArray(response.issues)) {
+    for (const issue of response.issues.slice(0, 3)) {
+      if (PROVIDERS[issue.provider_id] && ISSUE_CODES.has(issue.code)) {
+        issues.set(issue.provider_id, issue.code);
+      }
+    }
+  }
+  return { groups: mapOAuthModels(models), issues };
+}
+
+export function invalidateOAuthModelsCache() {
+  cached = null;
+}
+
+export function notifyOAuthModelsChanged() {
+  window.dispatchEvent(new Event(OAUTH_MODELS_UPDATED_EVENT));
+}
+
+export async function fetchOAuthModels(force = false): Promise<OAuthModelsResult> {
+  if (!force && cached && Date.now() - cached.at < CACHE_MS) return cached.value;
+  pending ??= invoke<OAuthModelsResponse>("list_oauth_provider_models")
+    .then(mapOAuthResponse)
+    .then((value) => {
+      cached = { value, at: Date.now() };
+      return value;
+    })
+    .finally(() => { pending = null; });
+  return pending;
 }

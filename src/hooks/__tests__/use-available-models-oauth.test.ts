@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mapOAuthModels, withoutInteractiveOnlyModels } from "../use-available-models";
+import { mapOAuthModels, mapOAuthResponse, withoutInteractiveOnlyModels } from "../use-available-models";
 
 describe("OAuth models", () => {
   it("utilise des ids et libellés distincts des providers API", () => {
@@ -20,5 +20,15 @@ describe("OAuth models", () => {
     expect(automated.has("moonshot-oauth")).toBe(false);
     expect(automated.has("xai-oauth")).toBe(false);
     expect(automated.has("codex-oauth")).toBe(true);
+  });
+
+  it("conserve les erreurs de catalogue sûres sans inventer de modèle", () => {
+    const result = mapOAuthResponse({
+      models: [],
+      issues: [{ provider_id: "moonshot", code: "moonshot_membership_unverified" }],
+    });
+
+    expect(result.groups.has("moonshot-oauth")).toBe(false);
+    expect(result.issues.get("moonshot")).toBe("moonshot_membership_unverified");
   });
 });

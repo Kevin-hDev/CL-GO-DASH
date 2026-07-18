@@ -17,7 +17,8 @@
       "emptySidebar": "Sin conexión OAuth", "empty": "Ningún proveedor OAuth seleccionado",
       "connectionLabel": "Conexión", "nativeConnection": "Web nativa — sin instalación", "experimental": "Experimental / no oficial", "connect": "Conectar", "disconnect": "Desconectar", "cancel": "Cancelar",
       "progress": { "waiting": "Esperando la conexión…", "verification": "Verificación necesaria", "success": "Conectado", "cancelled": "Conexión cancelada", "error": "No se pudo conectar" },
-      "successMessage": "El proveedor se conectó correctamente.",
+      "successMessage": "El proveedor se conectó correctamente.", "retryCatalog": "Reintentar",
+      "issues": { "moonshotMembershipUnverified": "La conexión se completó, pero Moonshot no puede confirmar una suscripción activa a Kimi Code. Comprueba la suscripción y vuelve a intentarlo.", "xaiSubscriptionOrCreditsRequired": "xAI indica que falta una suscripción a Grok o que los créditos requeridos se han agotado.", "reauthenticationRequired": "La conexión ha caducado. Vuelve a conectar este proveedor.", "rateLimited": "El catálogo está limitado temporalmente. Inténtalo de nuevo en breve.", "accessUnavailable": "El proveedor rechaza actualmente el acceso al catálogo.", "catalogUnavailable": "El catálogo de modelos no está disponible temporalmente." },
       "deviceInstructions": "Introduce este código en la página abierta en tu navegador.", "codeLabel": "Código de acceso", "copyCode": "Copiar código", "openVerification": "Volver a abrir la página de acceso",
       "descriptions": { "openai": "ChatGPT mediante Codex", "moonshot": "Kimi con acceso web nativo, sin cliente", "xai": "Grok con acceso web nativo, sin cliente" }
     }
@@ -826,6 +827,10 @@
     "modelNotFound": "Modelo no encontrado",
     "rateLimited": "Demasiadas solicitudes, inténtalo de nuevo en un momento",
     "authFailed": "Autenticación fallida, verifica tu clave API",
+    "moonshotMembershipUnverified": "Moonshot no puede confirmar una suscripción activa a Kimi Code.",
+    "xaiSubscriptionOrCreditsRequired": "xAI indica que se requiere una suscripción a Grok o créditos.",
+    "providerAccessUnavailable": "El proveedor rechaza actualmente el acceso al modelo.",
+    "oauthReauthenticationRequired": "La conexión OAuth ha caducado. Vuelve a conectar el proveedor.",
     "toolFailed": "La herramienta falló",
     "webToolFailed": "La herramienta web falló: {{message}}"
   },

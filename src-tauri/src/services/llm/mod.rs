@@ -17,6 +17,7 @@ mod openai_compat_models;
 mod openai_compat_parsing;
 #[cfg(test)]
 mod openai_compat_parsing_tests;
+pub mod provider_error;
 pub(crate) mod providers;
 pub mod quota;
 pub mod registry_search;

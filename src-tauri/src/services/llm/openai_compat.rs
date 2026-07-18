@@ -36,7 +36,7 @@ impl OpenAiCompatProvider {
             .send(|token, headers| self.client.get(&url).headers(headers).bearer_auth(token))
             .await?;
         if !response.status().is_success() {
-            return Err(map_error_status(response).await);
+            return Err(map_error_status(response, self.route.chat_provider_id).await);
         }
         let body = read_json(response).await?;
         parse_models_list(&body, canonical)
@@ -55,7 +55,7 @@ impl OpenAiCompatProvider {
             })
             .await?;
         if !response.status().is_success() {
-            return Err(map_error_status(response).await);
+            return Err(map_error_status(response, self.route.chat_provider_id).await);
         }
         parse_chat_response(&read_json(response).await?)
     }
@@ -86,7 +86,7 @@ impl OpenAiCompatProvider {
         if response.status().is_success() {
             Ok(())
         } else {
-            Err(map_error_status(response).await)
+            Err(map_error_status(response, self.route.chat_provider_id).await)
         }
     }
 

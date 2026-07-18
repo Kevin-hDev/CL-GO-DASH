@@ -149,8 +149,8 @@ fn is_price_free(v: &serde_json::Value) -> bool {
 }
 
 /// Mappe un statut HTTP d'erreur vers un `LlmError` approprié.
-/// On ne log jamais le body brut côté UI — uniquement en stderr pour dev.
-pub async fn map_error_status(resp: Response) -> LlmError {
+/// Le body fournisseur est lu de façon bornée puis remplacé par un code sûr dans les logs.
+pub async fn map_error_status(resp: Response, provider_id: &str) -> LlmError {
     let status = resp.status().as_u16();
     match status {
         401 | 403 => LlmError::Unauthorized,
@@ -163,15 +163,18 @@ pub async fn map_error_status(resp: Response) -> LlmError {
             LlmError::RateLimit { retry_after_secs }
         }
         _ => {
-            let body = read_bounded(resp, PROVIDER_ERROR_LIMIT)
-                .await
-                .map(|bytes| String::from_utf8_lossy(&bytes).into_owned())
-                .unwrap_or_default();
-            eprintln!(
-                "[llm] HTTP {} — {}",
-                status,
-                super::sanitize_log_body(&body)
+            let body = zeroize::Zeroizing::new(
+                read_bounded(resp, PROVIDER_ERROR_LIMIT)
+                    .await
+                    .map(|bytes| String::from_utf8_lossy(&bytes).into_owned())
+                    .unwrap_or_default(),
             );
+            let code = super::provider_error::classify_http(provider_id, status, &body);
+            let log_code = super::provider_error::safe_log_code(provider_id, status, &body);
+            eprintln!("[llm] HTTP {status} code={log_code}");
+            if status == 402 {
+                return LlmError::KnownProvider(code);
+            }
             LlmError::Http {
                 status,
                 message: "erreur serveur provider".into(),

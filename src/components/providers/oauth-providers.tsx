@@ -9,6 +9,7 @@ import { cleanupTauriListener } from "@/lib/tauri-listen";
 import type { DeepPartial, SettingsNavState } from "@/types/navigation";
 import type { OAuthProviderId, OAuthProviderStatus } from "@/types/oauth-provider";
 import { OAuthProviderLoginDialog } from "./oauth-provider-login-dialog";
+import { OAuthProviderDetail } from "./oauth-provider-detail";
 import { OAuthProviderModal } from "./oauth-provider-modal";
 
 interface OAuthProvidersProps {
@@ -83,7 +84,7 @@ export function useOAuthProviderSlots({ navState, onNavChange, onNavReplace }: O
             <h2>{selected?.display_name ?? t("providers.oauth.title")}</h2>
             <button type="button" className="ak-connectors-btn" onClick={() => { void refresh(); setDialog({ kind: "catalog" }); }}><Plus size="var(--icon-sm)" weight="bold" />{t("providers.oauth.openCatalog")}</button>
           </div>
-          {selected ? <OAuthProviderDetail provider={selected} refresh={refresh} /> : <EmptyState message={t("providers.oauth.empty")} />}
+          {selected ? <OAuthProviderDetail key={selected.id} provider={selected} refresh={refresh} /> : <EmptyState message={t("providers.oauth.empty")} />}
         </div>
       </div>
       {dialog.kind === "catalog" && (
@@ -117,32 +118,4 @@ export function useOAuthProviderSlots({ navState, onNavChange, onNavReplace }: O
     </>
   );
   return { list, detail };
-}
-
-function OAuthProviderDetail({ provider, refresh }: { provider: OAuthProviderStatus; refresh: () => Promise<OAuthProviderStatus[]> }) {
-  const { t } = useTranslation();
-  const [loading, setLoading] = useState(false);
-  const disconnect = async () => {
-    setLoading(true);
-    try {
-      await invoke("disconnect_oauth_provider", { providerId: provider.id });
-      await refresh();
-    } catch {
-      // The provider status remains unchanged and no internal error is exposed.
-    } finally {
-      setLoading(false);
-    }
-  };
-  const connectionLabel = provider.experimental
-    ? `${t("providers.oauth.nativeConnection")} · ${t("providers.oauth.experimental")}`
-    : t("providers.oauth.nativeConnection");
-  return (
-    <div className="prv-oauth-detail">
-      <div className="prv-oauth-identity"><ProviderIcon providerId={provider.id} displayName={provider.display_name} size={40} /><div><strong>{provider.display_name}</strong><span>{provider.account ?? connectionLabel}</span></div></div>
-      <div className="prv-oauth-status"><span>{t("providers.oauth.connectionLabel")}</span><strong>{connectionLabel}</strong></div>
-      <div className="prv-oauth-actions">
-        <button type="button" className="ollama-btn" disabled={loading} onClick={() => void disconnect()}>{t("providers.oauth.disconnect")}</button>
-      </div>
-    </div>
-  );
 }

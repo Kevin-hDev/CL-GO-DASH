@@ -87,6 +87,7 @@ pub struct ModelInfo {
 pub enum LlmError {
     Unauthorized,
     RateLimit { retry_after_secs: Option<u64> },
+    KnownProvider(super::provider_error::ProviderErrorCode),
     Http { status: u16, message: String },
     Network(String),
     Parse(String),
@@ -101,6 +102,7 @@ impl std::fmt::Display for LlmError {
                 Some(s) => write!(f, "rate limit atteint, réessaie dans {}s", s),
                 None => write!(f, "rate limit atteint, réessaie plus tard"),
             },
+            LlmError::KnownProvider(code) => f.write_str(code.as_str()),
             LlmError::Http { status, message } => write!(f, "HTTP {}: {}", status, message),
             LlmError::Network(_) => write!(f, "erreur réseau — vérifiez votre connexion"),
             LlmError::Parse(m) => write!(f, "erreur de parsing : {}", m),

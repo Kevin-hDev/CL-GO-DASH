@@ -45,7 +45,10 @@ async fn send_json_request(
         })
         .await
         .map_err(|error| match error {
-            RouteError::Unauthorized => RequestError::Fatal("Connexion requise".into()),
+            RouteError::Unauthorized if route.is_oauth() => {
+                RequestError::Fatal("oauth_reauthentication_required".into())
+            }
+            RouteError::Unauthorized => RequestError::Fatal("auth_failed".into()),
             RouteError::Network => {
                 RequestError::Fatal("Connexion au fournisseur impossible".into())
             }
@@ -86,15 +89,14 @@ pub async fn post_chat_request_with_timeout(
     let status = resp.status();
     if !status.is_success() {
         let body = read_provider_error(resp).await;
-        eprintln!(
-            "[llm stream] HTTP {} — {}",
-            status,
-            super::sanitize_log_body(&body)
-        );
+        let log_code =
+            super::provider_error::safe_log_code(route.chat_provider_id, status.as_u16(), &body);
+        eprintln!("[llm stream] HTTP {status} code={log_code}");
         return Err(classify_error(
             status.as_u16(),
             &body,
             route.display_name,
+            route.chat_provider_id,
             route.is_oauth(),
         ));
     }
@@ -143,12 +145,24 @@ fn build_chat_payload(cfg: &RequestConfig<'_>, route: &LlmRoute) -> serde_json::
     payload
 }
 
-fn classify_error(status: u16, body: &str, provider_name: &str, oauth: bool) -> RequestError {
+fn classify_error(
+    status: u16,
+    body: &str,
+    provider_name: &str,
+    provider_id: &str,
+    oauth: bool,
+) -> RequestError {
     match status {
-        401 | 403 if oauth => RequestError::Fatal("Connexion OAuth requise".into()),
-        401 | 403 => RequestError::Fatal("Clé API invalide ou non autorisée".into()),
+        402 => RequestError::Fatal(
+            super::provider_error::classify_http(provider_id, status, body)
+                .as_str()
+                .to_string(),
+        ),
+        401 if oauth => RequestError::Fatal("oauth_reauthentication_required".into()),
+        403 if oauth => RequestError::Fatal("provider_access_unavailable".into()),
+        401 | 403 => RequestError::Fatal("auth_failed".into()),
         413 => RequestError::Fatal("Requête trop volumineuse (limite TPM dépassée)".into()),
-        429 => RequestError::Fatal("Rate limit atteint, réessaie plus tard".into()),
+        429 => RequestError::Fatal("rate_limit".into()),
         400 if body.contains("Developer instruction") || body.contains("system_instruction") => {
             RequestError::Fatal("Ce modèle ne supporte pas les instructions système via ce provider. Essaie un autre modèle.".into())
         }

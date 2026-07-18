@@ -17,7 +17,8 @@
       "emptySidebar": "No OAuth connection", "empty": "No OAuth provider selected",
       "connectionLabel": "Connection", "nativeConnection": "Native web — no installation required", "experimental": "Experimental / unofficial", "connect": "Connect", "disconnect": "Disconnect", "cancel": "Cancel",
       "progress": { "waiting": "Waiting for sign-in…", "verification": "Verification required", "success": "Connected", "cancelled": "Sign-in cancelled", "error": "Unable to connect" },
-      "successMessage": "The provider was connected successfully.",
+      "successMessage": "The provider was connected successfully.", "retryCatalog": "Try again",
+      "issues": { "moonshotMembershipUnverified": "Sign-in succeeded, but Moonshot cannot confirm an active Kimi Code membership. Check the subscription and try again.", "xaiSubscriptionOrCreditsRequired": "xAI reports that a Grok subscription or the required credits are missing or exhausted.", "reauthenticationRequired": "The connection has expired. Reconnect this provider.", "rateLimited": "The catalog is temporarily rate limited. Try again shortly.", "accessUnavailable": "The provider is currently refusing access to the catalog.", "catalogUnavailable": "The model catalog is temporarily unavailable." },
       "deviceInstructions": "Enter this code on the page opened in your browser.", "codeLabel": "Sign-in code", "copyCode": "Copy code", "openVerification": "Reopen sign-in page",
       "descriptions": { "openai": "ChatGPT through Codex", "moonshot": "Kimi through native web sign-in, without a client", "xai": "Grok through native web sign-in, without a client" }
     }
@@ -826,6 +827,10 @@
     "modelNotFound": "Model not found",
     "rateLimited": "Too many requests, try again shortly",
     "authFailed": "Authentication failed, check your API key",
+    "moonshotMembershipUnverified": "Moonshot cannot confirm an active Kimi Code membership.",
+    "xaiSubscriptionOrCreditsRequired": "xAI reports that a Grok subscription or credits are required.",
+    "providerAccessUnavailable": "The provider is currently refusing access to the model.",
+    "oauthReauthenticationRequired": "The OAuth connection has expired. Reconnect the provider.",
     "toolFailed": "Tool failed",
     "webToolFailed": "Web tool failed: {{message}}"
   },

@@ -17,7 +17,8 @@
       "emptySidebar": "没有 OAuth 连接", "empty": "未选择 OAuth 提供商",
       "connectionLabel": "连接", "nativeConnection": "原生网页 — 无需安装", "experimental": "实验性 / 非官方", "connect": "连接", "disconnect": "断开连接", "cancel": "取消",
       "progress": { "waiting": "等待登录…", "verification": "需要验证", "success": "已连接", "cancelled": "登录已取消", "error": "无法连接" },
-      "successMessage": "提供商连接成功。",
+      "successMessage": "提供商连接成功。", "retryCatalog": "重试",
+      "issues": { "moonshotMembershipUnverified": "登录成功，但 Moonshot 无法确认有效的 Kimi Code 订阅。请检查订阅后重试。", "xaiSubscriptionOrCreditsRequired": "xAI 表示缺少 Grok 订阅或所需额度已用尽。", "reauthenticationRequired": "连接已过期。请重新连接此提供商。", "rateLimited": "模型目录暂时受到限流。请稍后重试。", "accessUnavailable": "提供商当前拒绝访问模型目录。", "catalogUnavailable": "模型目录暂时不可用。" },
       "deviceInstructions": "请在浏览器中打开的页面上输入此代码。", "codeLabel": "登录代码", "copyCode": "复制代码", "openVerification": "重新打开登录页面",
       "descriptions": { "openai": "通过 Codex 使用 ChatGPT", "moonshot": "Kimi 原生网页登录，无需客户端", "xai": "Grok 原生网页登录，无需客户端" }
     }
@@ -826,6 +827,10 @@
     "modelNotFound": "未找到模型",
     "rateLimited": "请求过多，请稍后重试",
     "authFailed": "认证失败，请检查 API 密钥",
+    "moonshotMembershipUnverified": "Moonshot 无法确认有效的 Kimi Code 订阅。",
+    "xaiSubscriptionOrCreditsRequired": "xAI 表示需要 Grok 订阅或额度。",
+    "providerAccessUnavailable": "提供商当前拒绝访问该模型。",
+    "oauthReauthenticationRequired": "OAuth 连接已过期。请重新连接提供商。",
     "toolFailed": "工具执行失败",
     "webToolFailed": "网页工具执行失败：{{message}}"
   },

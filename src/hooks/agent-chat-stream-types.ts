@@ -17,6 +17,10 @@ export const KNOWN_ERROR_KEYS: Record<string, string> = {
   model_not_found: "errors.modelNotFound",
   rate_limit: "errors.rateLimited",
   auth_failed: "errors.authFailed",
+  moonshot_membership_unverified: "errors.moonshotMembershipUnverified",
+  xai_subscription_or_credits_required: "errors.xaiSubscriptionOrCreditsRequired",
+  provider_access_unavailable: "errors.providerAccessUnavailable",
+  oauth_reauthentication_required: "errors.oauthReauthenticationRequired",
   ollama_server_error: "errors.ollamaServerError",
 };
 

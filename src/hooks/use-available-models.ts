@@ -5,9 +5,12 @@ import { cleanupTauriListener } from "@/lib/tauri-listen";
 import type { OllamaModel } from "@/types/agent";
 import type { ProviderSpec } from "@/types/api";
 import type { ReasoningMode } from "@/lib/reasoning-modes";
-import { fetchOAuthModels, mapOAuthModels } from "./oauth-models";
+import {
+  fetchOAuthModels, invalidateOAuthModelsCache, mapOAuthModels, mapOAuthResponse,
+  OAUTH_MODELS_UPDATED_EVENT,
+} from "./oauth-models";
 
-export { mapOAuthModels };
+export { mapOAuthModels, mapOAuthResponse };
 
 export interface AvailableModel {
   id: string;
@@ -112,7 +115,7 @@ async function fetchAllModels(): Promise<Map<string, AvailableModel[]>> {
     for (const [k, v] of cloudResult.value) result.set(k, v);
   }
   if (oauthResult.status === "fulfilled") {
-    for (const [key, models] of oauthResult.value) result.set(key, models);
+    for (const [key, models] of oauthResult.value.groups) result.set(key, models);
   }
 
   cachedGroups = result;
@@ -161,7 +164,12 @@ export function useAvailableModels() {
     void refresh();
     const unsubOllama = listen("ollama-models-changed", () => void refreshOllama());
     const unsubFs = listen("fs:config-changed", () => void refresh());
-    const unsubOAuth = listen("oauth-provider-status-changed", () => void refresh());
+    const unsubOAuth = listen("oauth-provider-status-changed", () => {
+      invalidateOAuthModelsCache();
+      void refresh();
+    });
+    const refreshOAuthModels = () => { void refresh(); };
+    window.addEventListener(OAUTH_MODELS_UPDATED_EVENT, refreshOAuthModels);
     const unsubStatus = listen<boolean>("ollama-status", (e) => {
       if (e.payload) setTimeout(() => void refreshOllama(), 2000);
     });
@@ -170,6 +178,7 @@ export function useAvailableModels() {
       cleanupTauriListener(unsubFs);
       cleanupTauriListener(unsubOAuth);
       cleanupTauriListener(unsubStatus);
+      window.removeEventListener(OAUTH_MODELS_UPDATED_EVENT, refreshOAuthModels);
     };
   }, [refresh, refreshOllama]);
 

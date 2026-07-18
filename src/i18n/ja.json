@@ -17,7 +17,8 @@
       "emptySidebar": "OAuth 接続なし", "empty": "OAuth プロバイダーが未選択です",
       "connectionLabel": "接続", "nativeConnection": "ネイティブウェブ — インストール不要", "experimental": "実験的 / 非公式", "connect": "接続", "disconnect": "切断", "cancel": "キャンセル",
       "progress": { "waiting": "ログイン待機中…", "verification": "確認が必要です", "success": "接続済み", "cancelled": "ログインをキャンセルしました", "error": "接続できません" },
-      "successMessage": "プロバイダーに接続しました。",
+      "successMessage": "プロバイダーに接続しました。", "retryCatalog": "再試行",
+      "issues": { "moonshotMembershipUnverified": "サインインは成功しましたが、Moonshot は有効な Kimi Code サブスクリプションを確認できません。契約状況を確認して再試行してください。", "xaiSubscriptionOrCreditsRequired": "xAI は、Grok サブスクリプションがないか、必要なクレジットが不足していると報告しています。", "reauthenticationRequired": "接続の有効期限が切れました。このプロバイダーに再接続してください。", "rateLimited": "モデルカタログは一時的に制限されています。しばらくしてから再試行してください。", "accessUnavailable": "プロバイダーは現在、モデルカタログへのアクセスを拒否しています。", "catalogUnavailable": "モデルカタログは一時的に利用できません。" },
       "deviceInstructions": "ブラウザで開いたページにこのコードを入力してください。", "codeLabel": "ログインコード", "copyCode": "コードをコピー", "openVerification": "ログインページを再度開く",
       "descriptions": { "openai": "Codex 経由の ChatGPT", "moonshot": "ネイティブウェブログインで Kimi、クライアント不要", "xai": "ネイティブウェブログインで Grok、クライアント不要" }
     }
@@ -826,6 +827,10 @@
     "modelNotFound": "モデルが見つかりません",
     "rateLimited": "リクエストが多すぎます。しばらくしてから再試行してください",
     "authFailed": "認証に失敗しました。API キーを確認してください",
+    "moonshotMembershipUnverified": "Moonshot は有効な Kimi Code サブスクリプションを確認できません。",
+    "xaiSubscriptionOrCreditsRequired": "xAI は Grok サブスクリプションまたはクレジットが必要だと報告しています。",
+    "providerAccessUnavailable": "プロバイダーは現在、このモデルへのアクセスを拒否しています。",
+    "oauthReauthenticationRequired": "OAuth 接続の有効期限が切れました。プロバイダーに再接続してください。",
     "toolFailed": "ツールが失敗しました",
     "webToolFailed": "Web ツールが失敗しました： {{message}}"
   },

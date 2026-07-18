@@ -36,6 +36,18 @@ describe("error", () => {
     }).state.error).toBe("errors.ollamaServerError");
   });
 
+  it("traduit les codes sûrs Grok et Kimi sans afficher le corps HTTP", () => {
+    expect(applyStreamEvent(makeState(), {
+      event: "error", data: { message: "moonshot_membership_unverified" },
+    }).state.error).toBe("errors.moonshotMembershipUnverified");
+    expect(applyStreamEvent(makeState(), {
+      event: "error", data: { message: "xai_subscription_or_credits_required" },
+    }).state.error).toBe("errors.xaiSubscriptionOrCreditsRequired");
+    expect(applyStreamEvent(makeState(), {
+      event: "error", data: { message: "provider_access_unavailable" },
+    }).state.error).toBe("errors.providerAccessUnavailable");
+  });
+
   it("marque isConnectionError=true quand le flag est présent", () => {
     const result = applyStreamEvent(makeState(), {
       event: "error", data: { message: "err", isConnection: true } as unknown as { message: string },

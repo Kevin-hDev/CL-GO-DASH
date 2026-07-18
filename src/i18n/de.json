@@ -17,7 +17,8 @@
       "emptySidebar": "Keine OAuth-Verbindung", "empty": "Kein OAuth-Anbieter ausgewählt",
       "connectionLabel": "Verbindung", "nativeConnection": "Natives Web — keine Installation erforderlich", "experimental": "Experimentell / inoffiziell", "connect": "Verbinden", "disconnect": "Trennen", "cancel": "Abbrechen",
       "progress": { "waiting": "Anmeldung wird erwartet…", "verification": "Bestätigung erforderlich", "success": "Verbunden", "cancelled": "Anmeldung abgebrochen", "error": "Verbindung nicht möglich" },
-      "successMessage": "Der Anbieter wurde erfolgreich verbunden.",
+      "successMessage": "Der Anbieter wurde erfolgreich verbunden.", "retryCatalog": "Erneut versuchen",
+      "issues": { "moonshotMembershipUnverified": "Die Anmeldung war erfolgreich, aber Moonshot kann kein aktives Kimi-Code-Abonnement bestätigen. Prüfe das Abonnement und versuche es erneut.", "xaiSubscriptionOrCreditsRequired": "xAI meldet, dass ein Grok-Abonnement fehlt oder die erforderlichen Guthaben aufgebraucht sind.", "reauthenticationRequired": "Die Verbindung ist abgelaufen. Verbinde diesen Anbieter erneut.", "rateLimited": "Der Katalog ist vorübergehend begrenzt. Versuche es gleich erneut.", "accessUnavailable": "Der Anbieter verweigert derzeit den Zugriff auf den Katalog.", "catalogUnavailable": "Der Modellkatalog ist vorübergehend nicht verfügbar." },
       "deviceInstructions": "Gib diesen Code auf der im Browser geöffneten Seite ein.", "codeLabel": "Anmeldecode", "copyCode": "Code kopieren", "openVerification": "Anmeldeseite erneut öffnen",
       "descriptions": { "openai": "ChatGPT über Codex", "moonshot": "Kimi über native Web-Anmeldung, ohne Client", "xai": "Grok über native Web-Anmeldung, ohne Client" }
     }
@@ -826,6 +827,10 @@
     "modelNotFound": "Modell nicht gefunden",
     "rateLimited": "Zu viele Anfragen, versuche es gleich erneut",
     "authFailed": "Authentifizierung fehlgeschlagen, überprüfe deinen API-Schlüssel",
+    "moonshotMembershipUnverified": "Moonshot kann kein aktives Kimi-Code-Abonnement bestätigen.",
+    "xaiSubscriptionOrCreditsRequired": "xAI meldet, dass ein Grok-Abonnement oder Guthaben erforderlich ist.",
+    "providerAccessUnavailable": "Der Anbieter verweigert derzeit den Zugriff auf das Modell.",
+    "oauthReauthenticationRequired": "Die OAuth-Verbindung ist abgelaufen. Verbinde den Anbieter erneut.",
     "toolFailed": "Werkzeug fehlgeschlagen",
     "webToolFailed": "Web-Werkzeug fehlgeschlagen: {{message}}"
   },
