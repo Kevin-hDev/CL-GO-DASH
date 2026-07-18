@@ -16,6 +16,8 @@ describe("provider usage translations", () => {
       expect(serialized).toContain('"unavailable"');
       expect(serialized).toContain('"usage_fetch_failed"');
       expect(serialized).toContain('"remainingPercent"');
+      expect(serialized).toContain('"generalLimitsTitle"');
+      expect(serialized).toContain('"namedLimitsTitle"');
     }
   });
 });

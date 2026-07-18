@@ -49,7 +49,7 @@ pub fn codex_models() -> Vec<ModelInfo> {
             owned_by: Some("openai".to_string()),
             context_length: Some(spec.context_length),
             supports_tools: true,
-            supports_vision: true,
+            supports_vision: spec.supports_vision,
             supports_thinking: true,
             reasoning_modes: spec
                 .reasoning_modes
@@ -93,5 +93,20 @@ mod tests {
             luna.reasoning_modes,
             ["low", "medium", "high", "xhigh", "max"]
         );
+    }
+
+    #[test]
+    fn codex_models_include_text_only_spark() {
+        let models = codex_models();
+        let spark = models
+            .iter()
+            .find(|model| model.id == "gpt-5.3-codex-spark")
+            .unwrap();
+
+        assert_eq!(spark.context_length, Some(128_000));
+        assert!(spark.supports_tools);
+        assert!(!spark.supports_vision);
+        assert!(spark.supports_thinking);
+        assert_eq!(spark.reasoning_modes, ["low", "medium", "high", "xhigh"]);
     }
 }

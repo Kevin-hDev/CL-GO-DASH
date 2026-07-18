@@ -21,6 +21,8 @@ fn parse_openrouter(body: &serde_json::Value) -> RemoteData {
     if used.is_some() || limit.is_some() || remaining.is_some() {
         windows.push(ProviderWindow {
             label_code: "key_limit".into(),
+            group_code: None,
+            group_name: None,
             used,
             limit,
             remaining,
@@ -43,6 +45,8 @@ fn push_openrouter_window(windows: &mut Vec<ProviderWindow>, label: &str, used: 
     let Some(used) = finite(used) else { return };
     windows.push(ProviderWindow {
         label_code: label.into(),
+        group_code: None,
+        group_name: None,
         used: Some(used),
         ..Default::default()
     });

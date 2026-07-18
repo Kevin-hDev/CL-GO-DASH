@@ -114,6 +114,9 @@ pub fn normalize_for_model(
     if let Some(mode) = requested.filter(|mode| modes.contains(mode)) {
         return Some(mode.to_string());
     }
+    if provider == "codex-oauth" && model == "gpt-5.3-codex-spark" {
+        return Some("high".to_string());
+    }
     if modes.contains(&"medium") {
         return Some("medium".to_string());
     }

@@ -80,6 +80,8 @@ fn push_window(
         });
     windows.push(ProviderWindow {
         label_code: label.to_string(),
+        group_code: None,
+        group_name: None,
         used,
         limit: Some(limit),
         remaining,

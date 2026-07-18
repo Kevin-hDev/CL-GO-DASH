@@ -16,37 +16,69 @@ export function ProviderUsageLimits({ snapshot, loading, siteUrl }: Props) {
   if (loading && !snapshot) return <SettingsCard><StatusRow value={t("common.loading")} /></SettingsCard>;
 
   const hasRemoteData = Boolean(snapshot?.windows.length || snapshot?.balances.length);
+  const groups = groupWindows(snapshot?.windows ?? []);
+  const showRemaining = snapshot?.auth_source === "oauth";
+  const windowRows = (windows: UsageWindow[]) => windows.map((window, index) => {
+    const progress = progressValue(window, showRemaining);
+    return (
+      <div className="settings-row puc-window" key={`${window.label_code}-${index}`}>
+        <div className="puc-row">
+          <span>{t(`providers.usage.windows.${window.label_code}`, window.label_code)}</span>
+          <strong>{windowValue(window, showRemaining, i18n.language, t)}</strong>
+        </div>
+        {progress !== null && window.limit !== null && (
+          <div
+            className="puc-progress"
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={Math.round(progress)}
+          >
+            <span style={{ width: `${progress}%` }} />
+          </div>
+        )}
+        {window.resets_at && (
+          <div className="puc-reset">
+            {t("providers.usage.resetsAt", { date: formatDate(window.resets_at, i18n.language) })}
+          </div>
+        )}
+      </div>
+    );
+  });
+
+  if (groups) {
+    return (
+      <div className="puc-limit-groups">
+        {groups.map((group) => (
+          <section className="puc-limit-group" key={group.code}>
+            <h4>
+              {group.name
+                ? t("providers.usage.namedLimitsTitle", { name: group.name })
+                : t("providers.usage.generalLimitsTitle")}
+            </h4>
+            <SettingsCard>{windowRows(group.windows)}</SettingsCard>
+          </section>
+        ))}
+        <SettingsCard>
+          <DetailRows snapshot={snapshot} siteUrl={siteUrl} />
+        </SettingsCard>
+      </div>
+    );
+  }
+
   return (
     <SettingsCard>
       {!hasRemoteData && <StatusRow value={t("providers.usage.remoteUnavailable")} />}
-      {snapshot?.windows.map((window, index) => {
-        const showRemaining = snapshot.auth_source === "oauth";
-        const progress = progressValue(window, showRemaining);
-        return (
-          <div className="settings-row puc-window" key={`${window.label_code}-${index}`}>
-            <div className="puc-row">
-              <span>{t(`providers.usage.windows.${window.label_code}`, window.label_code)}</span>
-              <strong>{windowValue(window, showRemaining, i18n.language, t)}</strong>
-            </div>
-            {progress !== null && window.limit !== null && (
-              <div
-                className="puc-progress"
-                role="progressbar"
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-valuenow={Math.round(progress)}
-              >
-                <span style={{ width: `${progress}%` }} />
-              </div>
-            )}
-            {window.resets_at && (
-              <div className="puc-reset">
-                {t("providers.usage.resetsAt", { date: formatDate(window.resets_at, i18n.language) })}
-              </div>
-            )}
-          </div>
-        );
-      })}
+      {windowRows(snapshot?.windows ?? [])}
+      <DetailRows snapshot={snapshot} siteUrl={siteUrl} />
+    </SettingsCard>
+  );
+}
+
+function DetailRows({ snapshot, siteUrl }: Pick<Props, "snapshot" | "siteUrl">) {
+  const { t, i18n } = useTranslation();
+  return (
+    <>
       {snapshot?.balances.map((balance, index) => (
         <div className="settings-row puc-row" key={`${balance.label_code}-${index}`}>
           <span>{t(`providers.usage.balances.${balance.label_code}`, balance.label_code)}</span>
@@ -67,7 +99,7 @@ export function ProviderUsageLimits({ snapshot, loading, siteUrl }: Props) {
           {t("providers.usage.openProviderSite")} <ArrowSquareOut size="var(--icon-xs)" />
         </button>
       </div>
-    </SettingsCard>
+    </>
   );
 }
 
@@ -76,6 +108,27 @@ function StatusRow({ value }: { value: string }) {
 }
 
 type UsageWindow = ProviderUsageSnapshot["windows"][number];
+
+interface WindowGroup {
+  code: string;
+  name: string | null;
+  windows: UsageWindow[];
+}
+
+function groupWindows(windows: UsageWindow[]): WindowGroup[] | null {
+  if (!windows.some((window) => window.group_code)) return null;
+  const groups: WindowGroup[] = [];
+  for (const window of windows) {
+    const code = window.group_code ?? "general";
+    const existing = groups.find((group) => group.code === code);
+    if (existing) {
+      existing.windows.push(window);
+    } else {
+      groups.push({ code, name: window.group_name ?? null, windows: [window] });
+    }
+  }
+  return groups;
+}
 
 function windowValue(
   window: UsageWindow,

@@ -1,7 +1,12 @@
 pub fn codex(model: &str, mode: Option<&str>) -> String {
     let supported = super::reasoning::supported_modes("codex-oauth", model, true);
+    let default = if model == "gpt-5.3-codex-spark" {
+        "high"
+    } else {
+        "medium"
+    };
     mode.filter(|value| supported.contains(value))
-        .unwrap_or("medium")
+        .unwrap_or(default)
         .to_string()
 }
 

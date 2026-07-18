@@ -8,6 +8,27 @@
   min-width: 0;
 }
 
+.puc-limit-groups,
+.puc-limit-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.puc-limit-groups {
+  gap: var(--space-md);
+}
+
+.puc-limit-group {
+  gap: var(--space-sm);
+}
+
+.puc-limit-group h4 {
+  margin: 0;
+  color: var(--ink);
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
 .puc-heading {
   display: flex;
   align-items: center;

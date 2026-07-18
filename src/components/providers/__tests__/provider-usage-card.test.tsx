@@ -6,7 +6,10 @@ import type { ProviderUsageSnapshot, UsageAggregate, UsagePeriodId } from "@/typ
 import { ProviderUsageCard } from "../usage/provider-usage-card";
 
 vi.mock("react-i18next", () => ({
-  useTranslation: () => ({ t: (key: string) => key, i18n: { language: "fr" } }),
+  useTranslation: () => ({
+    t: (key: string, values?: Record<string, string>) => values?.name ? `${key}:${values.name}` : key,
+    i18n: { language: "fr" },
+  }),
 }));
 vi.mock("@tauri-apps/plugin-shell", () => ({ open: vi.fn(() => Promise.resolve()) }));
 
@@ -82,6 +85,42 @@ describe("ProviderUsageCard", () => {
     render(<ProviderUsageCard connectionId="codex-oauth" siteUrl="https://chatgpt.com" />);
     expect(await screen.findByText("providers.usage.remainingPercent")).toBeInTheDocument();
     expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "96");
+  });
+
+  it("sépare les limites générales et celles de Codex Spark", async () => {
+    vi.mocked(invoke).mockResolvedValue({
+      ...snapshot,
+      connection_id: "codex-oauth",
+      canonical_provider_id: "openai",
+      auth_source: "oauth",
+      windows: [
+        {
+          ...snapshot.windows[0],
+          group_code: "general",
+          group_name: null,
+          used: 4,
+          remaining: 96,
+          used_percent: 4,
+        },
+        {
+          ...snapshot.windows[0],
+          group_code: "codex_bengalfox",
+          group_name: "GPT-5.3-Codex-Spark",
+          used: 0,
+          remaining: 100,
+          used_percent: 0,
+        },
+      ],
+    });
+
+    render(<ProviderUsageCard connectionId="codex-oauth" siteUrl="https://chatgpt.com" />);
+
+    expect(await screen.findByText("providers.usage.generalLimitsTitle")).toBeInTheDocument();
+    expect(
+      screen.getByText("providers.usage.namedLimitsTitle:GPT-5.3-Codex-Spark"),
+    ).toBeInTheDocument();
+    expect(screen.getAllByRole("progressbar").map((bar) => bar.getAttribute("aria-valuenow")))
+      .toEqual(["96", "100"]);
   });
 
   it("change de période et force une actualisation manuelle", async () => {

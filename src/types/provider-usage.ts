@@ -40,6 +40,8 @@ export interface ProviderUsageSnapshot {
   availability: UsageAvailability;
   windows: Array<{
     label_code: string;
+    group_code?: string | null;
+    group_name?: string | null;
     used: number | null;
     limit: number | null;
     remaining: number | null;

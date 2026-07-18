@@ -4,6 +4,7 @@ mod ledger_aggregate;
 mod pricing;
 mod remote;
 mod remote_api;
+mod remote_codex;
 mod remote_oauth;
 mod remote_parse;
 mod request_usage;

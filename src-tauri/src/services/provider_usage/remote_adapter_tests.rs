@@ -68,6 +68,42 @@ fn codex_windows_and_credits_are_bounded() {
 }
 
 #[test]
+fn codex_preserves_general_and_named_limit_groups() {
+    let parsed = remote_oauth::parse(
+        "codex-oauth",
+        &json!({
+            "rate_limit": {"primary_window": {
+                "used_percent": 4,
+                "limit_window_seconds": 604800,
+                "reset_at": 1900000000
+            }},
+            "additional_rate_limits": [{
+                "limit_name": "GPT-5.3-Codex-Spark",
+                "metered_feature": "codex_bengalfox",
+                "rate_limit": {"primary_window": {
+                    "used_percent": 0,
+                    "limit_window_seconds": 604800,
+                    "reset_at": 1900000100
+                }}
+            }]
+        }),
+    )
+    .unwrap();
+
+    assert_eq!(parsed.windows.len(), 2);
+    assert_eq!(parsed.windows[0].group_code.as_deref(), Some("general"));
+    assert_eq!(parsed.windows[0].group_name, None);
+    assert_eq!(
+        parsed.windows[1].group_code.as_deref(),
+        Some("codex_bengalfox")
+    );
+    assert_eq!(
+        parsed.windows[1].group_name.as_deref(),
+        Some("GPT-5.3-Codex-Spark")
+    );
+}
+
+#[test]
 fn absent_kimi_usage_never_invents_a_limit() {
     let parsed = remote_oauth::parse("moonshot-oauth", &json!({})).unwrap();
     assert!(parsed.windows.is_empty());

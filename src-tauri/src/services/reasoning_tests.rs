@@ -18,6 +18,15 @@ fn codex_effort_rejects_levels_unsupported_by_the_model() {
 }
 
 #[test]
+fn codex_spark_defaults_to_high_reasoning() {
+    assert_eq!(codex_effort("gpt-5.3-codex-spark", None), "high");
+    assert_eq!(
+        default_mode("codex-oauth", "gpt-5.3-codex-spark").as_deref(),
+        Some("high")
+    );
+}
+
+#[test]
 fn gpt_oss_uses_string_effort() {
     let think = ollama_think("gpt-oss:20b", Some("low"), false).unwrap();
     assert_eq!(think, OllamaThink::Level("low".to_string()));

@@ -92,6 +92,10 @@ pub struct LocalSnapshot {
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ProviderWindow {
     pub label_code: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub group_code: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub group_name: Option<String>,
     pub used: Option<f64>,
     pub limit: Option<f64>,
     pub remaining: Option<f64>,

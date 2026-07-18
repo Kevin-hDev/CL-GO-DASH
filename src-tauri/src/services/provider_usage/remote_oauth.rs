@@ -2,66 +2,9 @@ use super::types::{ProviderBalance, ProviderWindow, RemoteData, BALANCE_LIMIT, W
 
 pub fn parse(connection_id: &str, body: &serde_json::Value) -> Option<RemoteData> {
     match connection_id {
-        "codex-oauth" => Some(parse_codex(body)),
+        "codex-oauth" => Some(super::remote_codex::parse(body)),
         "moonshot-oauth" => Some(parse_kimi(body)),
         _ => None,
-    }
-}
-
-fn parse_codex(body: &serde_json::Value) -> RemoteData {
-    let mut windows = Vec::new();
-    if let Some(rate_limit) = body.get("rate_limit").and_then(non_null) {
-        push_codex_windows(rate_limit, &mut windows);
-    }
-    if let Some(additional) = body["additional_rate_limits"].as_array() {
-        for item in additional.iter().take(WINDOW_LIMIT) {
-            if let Some(rate_limit) = item.get("rate_limit").and_then(non_null) {
-                push_codex_windows(rate_limit, &mut windows);
-            }
-        }
-    }
-    let mut balances = Vec::new();
-    if let Some(amount) = body
-        .pointer("/credits/balance")
-        .and_then(super::remote_api::decimal_value)
-    {
-        balances.push(ProviderBalance {
-            label_code: "remaining_credits".into(),
-            amount,
-            currency: "USD".into(),
-        });
-    }
-    if let Some(count) = body
-        .pointer("/rate_limit_reset_credits/available_count")
-        .and_then(serde_json::Value::as_u64)
-    {
-        balances.push(ProviderBalance {
-            label_code: "reset_credits".into(),
-            amount: count.min(1_000_000).to_string(),
-            currency: "CREDITS".into(),
-        });
-    }
-    finish(windows, balances, None)
-}
-
-fn push_codex_windows(rate_limit: &serde_json::Value, windows: &mut Vec<ProviderWindow>) {
-    for key in ["primary_window", "secondary_window"] {
-        let Some(window) = rate_limit.get(key).and_then(non_null) else {
-            continue;
-        };
-        let percent = finite(window["used_percent"].as_f64());
-        let seconds = window["limit_window_seconds"].as_u64().unwrap_or(0);
-        windows.push(ProviderWindow {
-            label_code: duration_label(seconds).into(),
-            used: percent,
-            limit: Some(100.0),
-            remaining: percent.map(|value| (100.0 - value).max(0.0)),
-            used_percent: percent,
-            resets_at: timestamp(&window["reset_at"]),
-        });
-        if windows.len() >= WINDOW_LIMIT {
-            break;
-        }
     }
 }
 
@@ -110,6 +53,8 @@ fn kimi_window(value: &serde_json::Value, label: &str) -> Option<ProviderWindow>
     }
     Some(ProviderWindow {
         label_code: label.into(),
+        group_code: None,
+        group_name: None,
         used,
         limit,
         remaining,
@@ -140,20 +85,6 @@ fn finish(
         fetched_at: chrono::Utc::now().timestamp(),
         stale: false,
     }
-}
-
-fn duration_label(seconds: u64) -> &'static str {
-    if (14_400..=21_600).contains(&seconds) {
-        "rolling_five_hours"
-    } else if seconds >= 518_400 {
-        "weekly"
-    } else {
-        "provider_limit"
-    }
-}
-
-fn non_null(value: &serde_json::Value) -> Option<&serde_json::Value> {
-    (!value.is_null()).then_some(value)
 }
 
 fn finite(value: Option<f64>) -> Option<f64> {

@@ -6,6 +6,7 @@ pub struct CodexModelSpec {
     pub id: &'static str,
     pub context_length: u32,
     pub reasoning_modes: &'static [&'static str],
+    pub supports_vision: bool,
 }
 
 const STANDARD_REASONING_MODES: &[&str] = &["low", "medium", "high", "xhigh"];
@@ -15,36 +16,49 @@ pub const CODEX_MODELS: &[CodexModelSpec] = &[
         id: "gpt-5.6-sol",
         context_length: 372_000,
         reasoning_modes: &["low", "medium", "high", "xhigh", "max", "ultra"],
+        supports_vision: true,
     },
     CodexModelSpec {
         id: "gpt-5.6-terra",
         context_length: 372_000,
         reasoning_modes: &["low", "medium", "high", "xhigh", "max", "ultra"],
+        supports_vision: true,
     },
     CodexModelSpec {
         id: "gpt-5.6-luna",
         context_length: 372_000,
         reasoning_modes: &["low", "medium", "high", "xhigh", "max"],
+        supports_vision: true,
+    },
+    CodexModelSpec {
+        id: "gpt-5.3-codex-spark",
+        context_length: 128_000,
+        reasoning_modes: STANDARD_REASONING_MODES,
+        supports_vision: false,
     },
     CodexModelSpec {
         id: "gpt-5.5",
         context_length: 258_000,
         reasoning_modes: STANDARD_REASONING_MODES,
+        supports_vision: true,
     },
     CodexModelSpec {
         id: "gpt-5.4",
         context_length: 258_000,
         reasoning_modes: STANDARD_REASONING_MODES,
+        supports_vision: true,
     },
     CodexModelSpec {
         id: "gpt-5.4-mini",
         context_length: 258_000,
         reasoning_modes: STANDARD_REASONING_MODES,
+        supports_vision: true,
     },
     CodexModelSpec {
         id: "gpt-5.4-pro",
         context_length: 258_000,
         reasoning_modes: STANDARD_REASONING_MODES,
+        supports_vision: true,
     },
 ];
 
