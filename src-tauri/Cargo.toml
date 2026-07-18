@@ -126,8 +126,8 @@ regex = "1"
 notify = "7"
 notify-debouncer-mini = "0.5"
 
-# Git operations (branch, status, worktree)
-git2 = { version = "0.21", features = ["cred"] }
+# Git operations (branch, status, worktree, HTTPS/SSH push)
+git2 = { version = "0.21", features = ["https", "ssh"] }
 
 # Tools grep/glob (crates de ripgrep)
 grep-regex = "0.1"
