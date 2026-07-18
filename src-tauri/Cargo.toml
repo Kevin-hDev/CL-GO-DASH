@@ -127,7 +127,7 @@ notify = "7"
 notify-debouncer-mini = "0.5"
 
 # Git operations (branch, status, worktree)
-git2 = "0.21"
+git2 = { version = "0.21", features = ["cred"] }
 
 # Tools grep/glob (crates de ripgrep)
 grep-regex = "0.1"

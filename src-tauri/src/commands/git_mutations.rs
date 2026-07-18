@@ -33,7 +33,10 @@ pub async fn commit_git_changes(
 }
 
 #[tauri::command]
-pub async fn push_git_branch(path: String) -> Result<(), remote::PushError> {
+pub async fn push_git_branch(
+    path: String,
+    expected_branch: String,
+) -> Result<(), remote::PushError> {
     let repo_path = registered_project_path(&path)
         .await
         .map_err(|_| remote::PushError::InternalError)?;
@@ -43,16 +46,16 @@ pub async fn push_git_branch(path: String) -> Result<(), remote::PushError> {
     })
     .await
     .map_err(|_| remote::PushError::InternalError)?;
-    let token = if github {
-        Some(
-            crate::services::mcp_oauth::storage::get_valid_token("github")
-                .await
-                .map_err(|_| remote::PushError::AuthenticationRequired)?,
-        )
+    let token = if github && crate::services::mcp_oauth::storage::has_tokens("github") {
+        crate::services::mcp_oauth::storage::get_valid_token("github")
+            .await
+            .ok()
     } else {
         None
     };
-    tokio::task::spawn_blocking(move || remote::push_current(&repo_path, token))
+    tokio::task::spawn_blocking(move || {
+        remote::push_current(&repo_path, Some(&expected_branch), token)
+    })
         .await
         .map_err(|_| remote::PushError::InternalError)?
 }

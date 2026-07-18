@@ -2410,6 +2410,7 @@ dependencies = [
  "libgit2-sys",
  "log",
  "openssl-sys",
+ "url",
 ]
 
 [[package]]

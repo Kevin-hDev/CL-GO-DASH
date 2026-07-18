@@ -1,5 +1,5 @@
-import { act, fireEvent, render } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { act, fireEvent, render, waitFor, within } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SessionSummaryGitSection, type SessionSummaryGitState } from "../session-summary-git-section";
 
 vi.mock("react-i18next", () => ({
@@ -7,34 +7,47 @@ vi.mock("react-i18next", () => ({
     t: (key: string, opts?: Record<string, unknown>) => {
       const text: Record<string, string> = {
         "agentLocal.sessionSummary.branch": "Branch",
-        "agentLocal.sessionSummary.git.save": "Save changes",
-        "agentLocal.sessionSummary.git.push": "Send branch",
-        "agentLocal.sessionSummary.git.commitTitle": "Save changes",
+        "agentLocal.sessionSummary.git.commit": "Commit",
+        "agentLocal.sessionSummary.git.push": "Push",
+        "agentLocal.sessionSummary.git.commitTitle": "Commit changes",
         "agentLocal.sessionSummary.git.commitDescription": "Describe the work",
         "agentLocal.sessionSummary.git.cancel": "Cancel",
-        "agentLocal.sessionSummary.git.confirmCommit": "Save",
+        "agentLocal.sessionSummary.git.confirmCommit": "Commit",
         "agentLocal.sessionSummary.git.pushError": "Unable to send the branch",
+        "agentLocal.sessionSummary.git.destinationGithub": "GitHub",
       };
       if (key.endsWith(".toggle")) return `Branch: ${typeof opts?.branch === "string" ? opts.branch : ""}`;
-      if (key.endsWith(".changesToSave")) return `${numberValue(opts?.count)} files to save`;
-      if (key.endsWith(".commitsToPush")) return `${numberValue(opts?.count)} commits ready`;
+      if (key.endsWith(".changesToCommit")) return `${numberValue(opts?.count)} files to Commit`;
+      if (key.endsWith(".commitsToPush")) {
+        return `${numberValue(opts?.count)} commits to Push to GitHub · ${textValue(opts?.branch)}`;
+      }
+      if (key.endsWith(".localBranch")) return `Local branch · no Push to ${textValue(opts?.branch)}`;
       return text[key] ?? key;
     },
   }),
 }));
 
+const githubAuth = vi.hoisted(() => ({
+  request: vi.fn(),
+  onConnected: undefined as (() => void) | undefined,
+}));
+
 vi.mock("@/hooks/use-github-branch-auth", () => ({
-  useGithubBranchAuth: () => ({ open: false, state: "idle", request: vi.fn() }),
+  useGithubBranchAuth: (onConnected?: () => void) => {
+    githubAuth.onConnected = onConnected;
+    return { open: false, state: "idle", request: githubAuth.request };
+  },
 }));
 
 const baseGit: SessionSummaryGitState = {
+  repositoryPath: "/repo",
   isGitRepo: true,
   isLoading: false,
   currentBranch: "main",
   dirtyCount: 0,
   hasRemote: true,
   isGithubRemote: true,
-  hasUpstream: true,
+  hasRemoteBranch: true,
   aheadCount: 0,
   behindCount: 0,
   worktrees: [],
@@ -45,6 +58,11 @@ const baseGit: SessionSummaryGitState = {
 };
 
 describe("SessionSummaryGitSection", () => {
+  beforeEach(() => {
+    githubAuth.request.mockReset();
+    githubAuth.onConnected = undefined;
+  });
+
   it("deplie la branche et enregistre les modifications", async () => {
     const commit = vi.fn().mockResolvedValue({ ok: true });
     const listDirtyFiles = vi.fn().mockResolvedValue([{
@@ -55,9 +73,10 @@ describe("SessionSummaryGitSection", () => {
     );
 
     fireEvent.click(getByRole("button", { name: "Branch: main" }));
-    fireEvent.click(getByRole("button", { name: "Save changes" }));
+    fireEvent.click(getByRole("button", { name: "Commit" }));
     await act(async () => {});
-    fireEvent.click(getByRole("button", { name: "Save" }));
+    fireEvent.click(within(getByRole("dialog", { name: "Commit changes" }))
+      .getByRole("button", { name: "Commit" }));
 
     await act(async () => {});
     expect(commit).toHaveBeenCalledWith(undefined);
@@ -70,8 +89,8 @@ describe("SessionSummaryGitSection", () => {
     );
 
     fireEvent.click(getByRole("button", { name: "Branch: main" }));
-    expect(getByText("2 commits ready")).toBeTruthy();
-    fireEvent.click(getByRole("button", { name: "Send branch" }));
+    expect(getByText("2 commits to Push to GitHub · main")).toBeTruthy();
+    fireEvent.click(getByRole("button", { name: "Push" }));
 
     await act(async () => {});
     expect(push).toHaveBeenCalledOnce();
@@ -86,13 +105,60 @@ describe("SessionSummaryGitSection", () => {
     );
 
     fireEvent.click(getByRole("button", { name: "Branch: main" }));
-    fireEvent.click(getByRole("button", { name: "Send branch" }));
+    fireEvent.click(getByRole("button", { name: "Push" }));
     await act(async () => {});
 
-    expect(getByText("Unable to send the branch")).toBeTruthy();
+    expect(getByText("agentLocal.sessionSummary.git.authenticationError")).toBeTruthy();
+  });
+
+  it("utilise Push quand la branche distante n'est pas encore connue", async () => {
+    const push = vi.fn().mockResolvedValue({ ok: true });
+    const { getByRole, getByText, queryByText } = render(
+      <SessionSummaryGitSection
+        git={{ ...baseGit, hasRemoteBranch: false, push }}
+      />,
+    );
+
+    fireEvent.click(getByRole("button", { name: "Branch: main" }));
+    expect(getByText("Local branch · no Push to main")).toBeTruthy();
+    expect(queryByText(/Publish/i)).toBeNull();
+    fireEvent.click(getByRole("button", { name: "Push" }));
+
+    await act(async () => {});
+    expect(push).toHaveBeenCalledOnce();
+  });
+
+  it("relance automatiquement le Push apres la connexion GitHub", async () => {
+    const push = vi.fn()
+      .mockResolvedValueOnce({ ok: false, kind: "authentication_required" })
+      .mockResolvedValueOnce({ ok: true });
+    const { getByRole } = render(
+      <SessionSummaryGitSection git={{ ...baseGit, aheadCount: 1, push }} />,
+    );
+
+    fireEvent.click(getByRole("button", { name: "Branch: main" }));
+    fireEvent.click(getByRole("button", { name: "Push" }));
+    await waitFor(() => expect(githubAuth.request).toHaveBeenCalledOnce());
+
+    act(() => githubAuth.onConnected?.());
+    await waitFor(() => expect(push).toHaveBeenCalledTimes(2));
+  });
+
+  it("ne propose pas Push quand la branche distante est plus recente", () => {
+    const { getByRole, queryByRole } = render(
+      <SessionSummaryGitSection git={{ ...baseGit, aheadCount: 1, behindCount: 1 }} />,
+    );
+
+    fireEvent.click(getByRole("button", { name: "Branch: main" }));
+
+    expect(queryByRole("button", { name: "Push" })).toBeNull();
   });
 });
 
 function numberValue(value: unknown) {
   return typeof value === "number" || typeof value === "string" ? value : "";
+}
+
+function textValue(value: unknown) {
+  return typeof value === "string" ? value : "";
 }

@@ -45,6 +45,7 @@ vi.mock("@/hooks/use-github-branch-auth", () => ({
 }));
 
 const git = {
+  repositoryPath: "/repo",
   isGitRepo: true,
   isLoading: false,
   currentBranch: "main",
@@ -52,7 +53,7 @@ const git = {
   dirtyCount: 0,
   hasRemote: true,
   isGithubRemote: true,
-  hasUpstream: true,
+  hasRemoteBranch: true,
   aheadCount: 0,
   behindCount: 0,
   listDirtyFiles: vi.fn().mockResolvedValue([]),

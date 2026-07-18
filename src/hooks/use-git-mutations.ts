@@ -7,13 +7,17 @@ import type {
   GitActionResult,
   GitDeleteMode,
   GitDirtyFile,
+  GitPushTarget,
   WorktreeDeletePreview,
 } from "@/hooks/git-types";
 
 const ACTION_ERROR_KINDS = new Set<GitActionErrorKind>([
   "no_remote",
   "authentication_required",
+  "permission_denied",
   "remote_changed",
+  "network_unavailable",
+  "context_changed",
   "internal_error",
 ]);
 
@@ -43,11 +47,11 @@ export function useGitMutations(
     }
   }, [pathRef]);
 
-  const push = useCallback(async (): Promise<GitActionResult> => {
+  const push = useCallback(async (target: GitPushTarget): Promise<GitActionResult> => {
     const path = pathRef.current;
-    if (!path) return internalError();
+    if (!path || path !== target.repositoryPath) return contextChanged();
     try {
-      await invoke("push_git_branch", { path });
+      await invoke("push_git_branch", { path, expectedBranch: target.branch });
       await refresh();
       return { ok: true };
     } catch (error) {
@@ -115,6 +119,10 @@ export function useGitMutations(
 
 function internalError(): GitActionResult {
   return { ok: false, kind: "internal_error" };
+}
+
+function contextChanged(): GitActionResult {
+  return { ok: false, kind: "context_changed" };
 }
 
 function readActionErrorKind(error: unknown): GitActionErrorKind {

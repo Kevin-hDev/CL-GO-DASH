@@ -35,8 +35,27 @@ describe("useGitMutations", () => {
     });
 
     await act(async () => {
-      expect(await result.current.push()).toEqual({ ok: false, kind: "remote_changed" });
+      expect(await result.current.push({ repositoryPath: "/repo", branch: "main" }))
+        .toEqual({ ok: false, kind: "remote_changed" });
     });
+    expect(invoke).toHaveBeenCalledWith("push_git_branch", {
+      path: "/repo",
+      expectedBranch: "main",
+    });
+  });
+
+  it("refuse le push si le projet a change avant l'appel", async () => {
+    const { result } = renderHook(() => {
+      const pathRef = useRef<string | undefined>("/repo");
+      return useGitMutations(pathRef, vi.fn());
+    });
+
+    await act(async () => {
+      expect(await result.current.push({ repositoryPath: "/other", branch: "main" }))
+        .toEqual({ ok: false, kind: "context_changed" });
+    });
+
+    expect(invoke).not.toHaveBeenCalled();
   });
 
   it("inspecte puis supprime une branche avec le mode explicite", async () => {

@@ -12,13 +12,14 @@ export interface WorktreeInfo {
 }
 
 export interface GitBranchState {
+  repositoryPath: string;
   branches: BranchInfo[];
   worktrees: WorktreeInfo[];
   currentBranch: string;
   dirtyCount: number;
   hasRemote: boolean;
   isGithubRemote: boolean;
-  hasUpstream: boolean;
+  hasRemoteBranch: boolean;
   aheadCount: number;
   behindCount: number;
   isGitRepo: boolean;
@@ -48,6 +49,11 @@ export interface WorktreeDeletePreview {
 
 export type GitDeleteMode = "clean" | "discard" | "preserve";
 
+export interface GitPushTarget {
+  repositoryPath: string;
+  branch: string;
+}
+
 export type GitActionResult =
   | { ok: true }
   | { ok: false; kind: GitActionErrorKind };
@@ -55,5 +61,8 @@ export type GitActionResult =
 export type GitActionErrorKind =
   | "no_remote"
   | "authentication_required"
+  | "permission_denied"
   | "remote_changed"
+  | "network_unavailable"
+  | "context_changed"
   | "internal_error";

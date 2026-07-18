@@ -50,13 +50,14 @@ function readCreateBranchKind(value: unknown): GitCreateBranchErrorKind | null {
 }
 
 const INITIAL_STATE: GitBranchState = {
+  repositoryPath: "",
   branches: [],
   worktrees: [],
   currentBranch: "",
   dirtyCount: 0,
   hasRemote: false,
   isGithubRemote: false,
-  hasUpstream: false,
+  hasRemoteBranch: false,
   aheadCount: 0,
   behindCount: 0,
   isGitRepo: false,
@@ -80,7 +81,13 @@ export function useGitBranch(projectPath: string | undefined, sessionId?: string
   const refresh = useCallback(async () => {
     const path = pathRef.current;
     if (!path) {
-      setState((s) => ({ ...s, isGitRepo: false, branches: [], worktrees: [] }));
+      setState((s) => ({
+        ...s,
+        repositoryPath: "",
+        isGitRepo: false,
+        branches: [],
+        worktrees: [],
+      }));
       return;
     }
 
@@ -93,21 +100,28 @@ export function useGitBranch(projectPath: string | undefined, sessionId?: string
           "get_git_context", { path },
         ),
         invoke<WorktreeInfo[]>("list_git_worktrees", { path }),
-        invoke<{ has_remote: boolean; is_github: boolean; has_upstream: boolean; ahead: number; behind: number }>(
+        invoke<{ has_remote: boolean; is_github: boolean; has_remote_branch: boolean; ahead: number; behind: number }>(
           "get_git_remote_status", { path },
-        ).catch(() => ({ has_remote: false, is_github: false, has_upstream: false, ahead: 0, behind: 0 })),
+        ).catch(() => ({
+          has_remote: false,
+          is_github: false,
+          has_remote_branch: false,
+          ahead: 0,
+          behind: 0,
+        })),
       ]);
 
       if (!mountedRef.current || path !== pathRef.current) return;
 
       setState({
+        repositoryPath: path,
         branches,
         worktrees,
         currentBranch: context.branch,
         dirtyCount: context.dirty_count,
         hasRemote: remote.has_remote,
         isGithubRemote: remote.is_github,
-        hasUpstream: remote.has_upstream,
+        hasRemoteBranch: remote.has_remote_branch,
         aheadCount: remote.ahead,
         behindCount: remote.behind,
         isGitRepo: context.is_git_repo,

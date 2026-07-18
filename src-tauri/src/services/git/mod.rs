@@ -14,6 +14,8 @@ mod branch_merge;
 pub mod github_auth;
 pub mod remote;
 mod remote_credentials;
+mod remote_status;
+mod remote_target;
 #[cfg(test)]
 mod remote_tests;
 pub mod repo;
