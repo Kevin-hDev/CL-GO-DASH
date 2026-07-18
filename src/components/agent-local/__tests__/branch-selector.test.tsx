@@ -18,6 +18,12 @@ vi.mock("react-i18next", () => ({
         const count = typeof opts.count === "number" || typeof opts.count === "string" ? opts.count : "";
         return `Non validés : ${count} fichier(s)`;
       }
+      if (key === "branches.deleteBranch" && typeof opts?.name === "string") {
+        return `Supprimer ${opts.name}`;
+      }
+      if (key === "branches.deleteWorktree" && typeof opts?.name === "string") {
+        return `Supprimer le worktree ${opts.name}`;
+      }
       return translations[key] ?? key;
     },
   }),
@@ -48,6 +54,10 @@ const baseMockGit = {
   refresh: vi.fn(),
   checkout: vi.fn().mockResolvedValue({ ok: true }),
   create: vi.fn().mockResolvedValue({ ok: true }),
+  previewBranchDeletion: vi.fn(),
+  deleteBranch: vi.fn().mockResolvedValue({ ok: true }),
+  previewWorktreeDeletion: vi.fn(),
+  deleteWorktree: vi.fn().mockResolvedValue({ ok: true }),
 };
 
 function makeMockGit(overrides = {}) {
@@ -111,7 +121,7 @@ describe("BranchSelector", () => {
       el.textContent?.includes("feat/login"),
     ) as HTMLElement;
 
-    fireEvent.click(item);
+    fireEvent.click(item.querySelector(".bs-item-select") as HTMLElement);
 
     await waitFor(() => expect(checkout).toHaveBeenCalledWith("feat/login"));
     expect(onWorktreeSelect).not.toHaveBeenCalled();
@@ -166,7 +176,7 @@ describe("BranchSelector", () => {
       el.textContent?.includes("worktree-agent-abc"),
     ) as HTMLElement;
 
-    fireEvent.click(item);
+    fireEvent.click(item.querySelector(".bs-item-select") as HTMLElement);
 
     expect(onWorktreeSelect).toHaveBeenCalledWith("/tmp/wt-1", "worktree-agent-abc");
   });
@@ -184,17 +194,4 @@ describe("BranchSelector", () => {
     expect(branchItems.filter((text) => text === "worktree-agent-abc")).toHaveLength(1);
   });
 
-  it("notifies parent when github auth is required for branch creation", async () => {
-    const onGithubAuthRequired = vi.fn();
-    const { container } = renderSelector(
-      { create: vi.fn().mockResolvedValue({ ok: false, reason: "github_auth_required" }) },
-      { onGithubAuthRequired },
-    );
-    openDropdown(container);
-    const items = Array.from(container.querySelectorAll(".bs-item"));
-    fireEvent.click(items[items.length - 1]);
-    fireEvent.change(container.querySelector(".bs-create-input") as HTMLInputElement, { target: { value: "new-branch" } });
-    fireEvent.keyDown(container.querySelector(".bs-create-input") as HTMLInputElement, { key: "Enter" });
-    await waitFor(() => expect(onGithubAuthRequired).toHaveBeenCalled());
-  });
 });

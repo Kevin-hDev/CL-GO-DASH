@@ -2,28 +2,10 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { cleanupTauriListener } from "@/lib/tauri-listen";
+import { useGitMutations } from "@/hooks/use-git-mutations";
+import type { BranchInfo, GitBranchState, WorktreeInfo } from "@/hooks/git-types";
 
-export interface BranchInfo {
-  name: string;
-  is_current: boolean;
-  is_remote: boolean;
-  dirty_count: number;
-}
-
-export interface WorktreeInfo {
-  path: string;
-  branch: string;
-  is_current: boolean;
-}
-
-interface GitBranchState {
-  branches: BranchInfo[];
-  worktrees: WorktreeInfo[];
-  currentBranch: string;
-  dirtyCount: number;
-  isGitRepo: boolean;
-  isLoading: boolean;
-}
+export type { BranchInfo, WorktreeInfo } from "@/hooks/git-types";
 
 export type GitCreateBranchErrorKind =
   | "invalid_name"
@@ -72,6 +54,11 @@ const INITIAL_STATE: GitBranchState = {
   worktrees: [],
   currentBranch: "",
   dirtyCount: 0,
+  hasRemote: false,
+  isGithubRemote: false,
+  hasUpstream: false,
+  aheadCount: 0,
+  behindCount: 0,
   isGitRepo: false,
   isLoading: false,
 };
@@ -100,12 +87,15 @@ export function useGitBranch(projectPath: string | undefined, sessionId?: string
     setState((s) => ({ ...s, isLoading: true }));
 
     try {
-      const [branches, context, worktrees] = await Promise.all([
+      const [branches, context, worktrees, remote] = await Promise.all([
         invoke<BranchInfo[]>("list_git_branches", { path }),
         invoke<{ branch: string; is_detached: boolean; dirty_count: number; is_git_repo: boolean }>(
           "get_git_context", { path },
         ),
         invoke<WorktreeInfo[]>("list_git_worktrees", { path }),
+        invoke<{ has_remote: boolean; is_github: boolean; has_upstream: boolean; ahead: number; behind: number }>(
+          "get_git_remote_status", { path },
+        ).catch(() => ({ has_remote: false, is_github: false, has_upstream: false, ahead: 0, behind: 0 })),
       ]);
 
       if (!mountedRef.current || path !== pathRef.current) return;
@@ -115,6 +105,11 @@ export function useGitBranch(projectPath: string | undefined, sessionId?: string
         worktrees,
         currentBranch: context.branch,
         dirtyCount: context.dirty_count,
+        hasRemote: remote.has_remote,
+        isGithubRemote: remote.is_github,
+        hasUpstream: remote.has_upstream,
+        aheadCount: remote.ahead,
+        behindCount: remote.behind,
         isGitRepo: context.is_git_repo,
         isLoading: false,
       });
@@ -177,5 +172,7 @@ export function useGitBranch(projectPath: string | undefined, sessionId?: string
     }
   }, [refresh]);
 
-  return { ...state, refresh, checkout, create };
+  const mutations = useGitMutations(pathRef, refresh);
+
+  return { ...state, refresh, checkout, create, ...mutations };
 }

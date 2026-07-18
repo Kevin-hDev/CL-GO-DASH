@@ -9,7 +9,9 @@ import type { SessionTabs } from "@/types/agent";
 interface Options {
   rootSessionId: string | null | undefined;
   tabs: SessionTabs | null;
-  git: ReturnType<typeof useGitBranch>;
+  git: Pick<ReturnType<typeof useGitBranch>,
+    "branches" | "currentBranch" | "isLoading" | "checkout" | "refresh"
+  >;
   projectPath?: string;
   onSelectTab: (tabId: string) => Promise<void>;
   onUnlinkCloneGitBranch: (cloneSessionId: string) => Promise<void>;

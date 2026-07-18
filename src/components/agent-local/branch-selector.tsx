@@ -1,31 +1,22 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { GitBranch, CaretDown } from "@/components/ui/icons";
-import { BranchSelectorCreateForm } from "./branch-selector-create-form";
-import { BranchSelectorBranchItem, BranchSelectorCreateItem, BranchSelectorLockedIndicator, BranchSelectorWorktreeItem } from "./branch-selector-items";
+import { BranchSelectorLockedIndicator } from "./branch-selector-items";
+import { BranchSelectorMenu } from "./branch-selector-menu";
 import { branchCreateErrorKey, getVisibleBranchOptions } from "./branch-selector-utils";
 import { useKeyboard } from "@/hooks/use-keyboard";
 import { useClickOutside } from "@/hooks/use-click-outside";
-import type { useGitBranch } from "@/hooks/use-git-branch";
 import { showToast } from "@/lib/toast-emitter";
 import { validateBranchName } from "@/lib/branch-name";
+import { useGitDeletionFlow } from "@/hooks/use-git-deletion-flow";
+import type { BranchSelectorProps } from "./branch-selector-types";
 import "./branch-selector.css";
-type GitBranchHook = ReturnType<typeof useGitBranch>;
-
-interface BranchSelectorProps {
-  git: GitBranchHook;
-  locked: boolean;
-  lockedLabel?: string;
-  onConflict: (branchName: string, dirtyCount: number) => void;
-  onWorktreeSelect: (path: string, branch: string) => void;
-  onGithubAuthRequired: () => void;
-  onBranchReady?: (branchName: string) => Promise<void> | void;
-}
 
 export function BranchSelector({
   git, locked, lockedLabel, onConflict, onWorktreeSelect, onGithubAuthRequired, onBranchReady,
 }: BranchSelectorProps) {
   const { t } = useTranslation();
+  const deletion = useGitDeletionFlow(git);
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [creating, setCreating] = useState(false);
@@ -147,67 +138,30 @@ export function BranchSelector({
         <CaretDown size="var(--icon-2xs)" />
       </button>
       {open && (
-        <div className="bs-dropdown">
-          <input
-            ref={searchRef}
-            className="bs-dropdown-search"
-            placeholder={t("branches.search")}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-
-          <div className="bs-section-label">{t("branches.title")}</div>
-
-          {filteredBranches.length === 0 && (
-            <div className="bs-empty">{t("branches.noMatch")}</div>
-          )}
-
-          {filteredBranches.map((b) => (
-            <BranchSelectorBranchItem
-              key={b.name}
-              branch={b}
-              dirtyLabel={b.is_current && b.dirty_count > 0
-                ? t("branches.uncommitted", { count: b.dirty_count })
-                : undefined}
-              onSelect={(name) => void handleSelect(name)}
-            />
-          ))}
-
-          {filteredWorktrees.length > 0 && (
-            <>
-              <div className="bs-sep" />
-              <div className="bs-section-label">{t("branches.worktrees")}</div>
-              {filteredWorktrees.map((w) => (
-                <BranchSelectorWorktreeItem
-                  key={w.path}
-                  worktree={w}
-                  onSelect={handleWorktreeSelect}
-                />
-              ))}
-            </>
-          )}
-
-          <div className="bs-sep" />
-
-          {creating ? (
-            <BranchSelectorCreateForm
-              inputRef={createRef}
-              value={createName}
-              error={createError}
-              isCreating={isCreating}
-              placeholder={t("branches.createPlaceholder")}
-              onValueChange={(value) => { setCreateName(value); setCreateError(""); }}
-              onSubmit={() => void handleCreate()}
-              onCancel={cancelCreate}
-            />
-          ) : (
-            <BranchSelectorCreateItem
-              label={t("branches.createNew")}
-              onStart={() => setCreating(true)}
-            />
-          )}
-        </div>
+        <BranchSelectorMenu
+          branches={filteredBranches}
+          worktrees={filteredWorktrees}
+          search={search}
+          searchRef={searchRef}
+          creating={creating}
+          createRef={createRef}
+          createName={createName}
+          createError={createError}
+          isCreating={isCreating}
+          onSearchChange={setSearch}
+          onSelectBranch={(name) => void handleSelect(name)}
+          onSelectWorktree={handleWorktreeSelect}
+          onInspectBranch={deletion.inspectBranch}
+          onDeleteBranch={deletion.deleteCleanBranch}
+          onInspectWorktree={deletion.inspectWorktree}
+          onDeleteWorktree={deletion.deleteCleanWorktree}
+          onCreateNameChange={(value) => { setCreateName(value); setCreateError(""); }}
+          onCreate={() => void handleCreate()}
+          onCancelCreate={cancelCreate}
+          onStartCreate={() => setCreating(true)}
+        />
       )}
+      {deletion.dialog}
     </div>
   );
 }

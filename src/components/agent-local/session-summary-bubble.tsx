@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ClipboardText, FilePlus, GitBranch } from "@/components/ui/icons";
+import { ClipboardText, FilePlus } from "@/components/ui/icons";
 import { Tooltip } from "@/components/ui/tooltip";
 import { useClickOutside } from "@/hooks/use-click-outside";
 import type { useSessionSummary } from "@/hooks/use-session-summary";
@@ -11,16 +11,13 @@ import {
   SessionSummaryTodoList,
 } from "./session-summary-lists";
 import { SessionSummarySection } from "./session-summary-section";
+import { SessionSummaryGitSection } from "./session-summary-git-section";
+import type { SessionSummaryGitState } from "./session-summary-git-section";
 import "./session-summary-bubble.css";
 
 type SessionSummaryState = ReturnType<typeof useSessionSummary>;
 
-export interface SessionSummaryGitState {
-  isGitRepo: boolean;
-  isLoading: boolean;
-  currentBranch: string;
-  worktrees: { branch: string; path: string; is_current: boolean }[];
-}
+export type { SessionSummaryGitState } from "./session-summary-git-section";
 
 interface SessionSummaryBubbleProps {
   summary: SessionSummaryState;
@@ -49,7 +46,6 @@ export function SessionSummaryBubble({
   const rootRef = useRef<HTMLSpanElement>(null);
   useClickOutside(rootRef, () => setOpen(false));
 
-  const branch = useMemo(() => branchLabel(git, t), [git, t]);
   const toggleSection = (key: SectionKey) => {
     setSections((current) => ({ ...current, [key]: !current[key] }));
   };
@@ -91,11 +87,7 @@ export function SessionSummaryBubble({
             <span className="ssb-row-label">{t("agentLocal.sessionSummary.modifications")}</span>
             <ChangeStats additions={summary.changes.additions} deletions={summary.changes.deletions} />
           </div>
-          <div className="ssb-row">
-            <GitBranch size="var(--icon-md)" className="ssb-row-icon" />
-            <span className="ssb-row-label">{t("agentLocal.sessionSummary.branch")}</span>
-            <span className="ssb-row-value" title={branch}>{branch}</span>
-          </div>
+          <SessionSummaryGitSection git={git} />
           <div className="ssb-separator" />
           <SessionSummarySection title={t("agentLocal.sessionSummary.sections.todos")} count={summary.todoRuns.length} open={sections.todos} onToggle={() => toggleSection("todos")}>
             <SessionSummaryTodoList runs={summary.todoRuns} />
@@ -138,11 +130,4 @@ function ChangeStats({ additions, deletions }: { additions: number; deletions: n
       <span className="ssb-change-del">-{deletions}</span>
     </span>
   );
-}
-
-function branchLabel(git: SessionSummaryGitState | undefined, t: (key: string) => string): string {
-  if (!git) return t("agentLocal.sessionSummary.noGit");
-  if (git.isLoading && !git.currentBranch) return t("common.loading");
-  if (!git.isGitRepo) return t("agentLocal.sessionSummary.noGit");
-  return git.currentBranch || t("branches.detachedHead");
 }

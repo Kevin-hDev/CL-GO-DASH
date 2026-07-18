@@ -80,10 +80,7 @@
 .bs-item {
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
-  padding: var(--space-xs) var(--space-sm);
   border-radius: var(--radius-sm);
-  cursor: pointer;
   font-size: var(--text-xs);
   color: var(--ink-muted);
   transition: background var(--ease-smooth);
@@ -95,6 +92,61 @@
 
 .bs-item.bs-selected {
   color: var(--ink);
+}
+
+.bs-item-select {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-xs) var(--space-sm);
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.bs-delete-btn {
+  display: inline-flex;
+  min-width: 28px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  margin-right: 2px;
+  padding: 0 7px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--ink-faint);
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 600;
+  opacity: 0;
+  transition: opacity var(--ease-smooth), color var(--ease-smooth), border-color var(--ease-smooth);
+}
+
+.bs-item:hover .bs-delete-btn,
+.bs-delete-btn:focus-visible,
+.bs-delete-btn[data-confirming="true"] {
+  opacity: 1;
+}
+
+.bs-delete-btn:hover,
+.bs-delete-btn[data-confirming="true"] {
+  border-color: var(--signal-error);
+  color: var(--signal-error);
+}
+
+.bs-delete-btn[data-confirming="true"] {
+  animation: bs-confirm-pulse 1s ease-in-out infinite;
+}
+
+@keyframes bs-confirm-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--signal-error-bg); }
+  50% { box-shadow: 0 0 0 4px transparent; }
 }
 
 .bs-item-info {

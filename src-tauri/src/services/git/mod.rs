@@ -1,12 +1,21 @@
 pub mod branch;
 pub mod branch_commit;
 #[cfg(test)]
+mod branch_commit_direct_tests;
+#[cfg(test)]
 mod branch_commit_tests;
 mod branch_create;
 #[cfg(test)]
 mod branch_create_tests;
 pub mod branch_delete;
+#[cfg(test)]
+mod branch_delete_tests;
+mod branch_merge;
 pub mod github_auth;
+pub mod remote;
+mod remote_credentials;
+#[cfg(test)]
+mod remote_tests;
 pub mod repo;
 pub mod status;
 #[cfg(test)]
@@ -16,4 +25,7 @@ mod tests;
 pub mod watcher;
 #[cfg(test)]
 mod watcher_tests;
+pub mod worktree_delete;
+#[cfg(test)]
+mod worktree_delete_tests;
 pub mod worktree_list;

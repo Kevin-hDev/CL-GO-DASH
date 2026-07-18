@@ -23,6 +23,10 @@ function git(overrides = {}) {
     refresh: vi.fn(),
     checkout: vi.fn().mockResolvedValue({ ok: true }),
     create: vi.fn().mockResolvedValue({ ok: true }),
+    previewBranchDeletion: vi.fn(),
+    deleteBranch: vi.fn().mockResolvedValue({ ok: true }),
+    previewWorktreeDeletion: vi.fn(),
+    deleteWorktree: vi.fn().mockResolvedValue({ ok: true }),
     ...overrides,
   };
 }
@@ -50,7 +54,7 @@ describe("BranchSelector clone branch linking", () => {
     const item = Array.from(container.querySelectorAll(".bs-item")).find((el) =>
       el.textContent?.includes("feature/manual"),
     ) as HTMLElement;
-    fireEvent.click(item);
+    fireEvent.click(item.querySelector(".bs-item-select") as HTMLElement);
 
     await waitFor(() => expect(checkout).toHaveBeenCalledWith("feature/manual"));
     await waitFor(() => expect(onBranchReady).toHaveBeenCalledWith("feature/manual"));
@@ -71,5 +75,21 @@ describe("BranchSelector clone branch linking", () => {
 
     await waitFor(() => expect(create).toHaveBeenCalledWith("feature/manual"));
     await waitFor(() => expect(onBranchReady).toHaveBeenCalledWith("feature/manual"));
+  });
+
+  it("notifies parent when github auth is required for branch creation", async () => {
+    const onGithubAuthRequired = vi.fn();
+    const { container } = renderSelector(
+      { create: vi.fn().mockResolvedValue({ ok: false, reason: "github_auth_required" }) },
+      { onGithubAuthRequired },
+    );
+    fireEvent.click(container.querySelector(".bs-btn") as HTMLElement);
+    const items = Array.from(container.querySelectorAll(".bs-item"));
+    fireEvent.click(items[items.length - 1]);
+    const input = container.querySelector(".bs-create-input") as HTMLInputElement;
+    fireEvent.change(input, { target: { value: "new-branch" } });
+    fireEvent.keyDown(input, { key: "Enter" });
+
+    await waitFor(() => expect(onGithubAuthRequired).toHaveBeenCalled());
   });
 });

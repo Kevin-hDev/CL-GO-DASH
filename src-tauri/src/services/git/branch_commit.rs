@@ -6,6 +6,26 @@ use super::{branch, repo};
 
 const MAX_COMMIT_DESCRIPTION_CHARS: usize = 2_000;
 
+pub fn commit_all(repo_path: &Path, description: Option<String>) -> Result<(), String> {
+    let git_repo = repo::open(repo_path)?;
+    let workdir = repo::workdir(&git_repo)?;
+    let dirty =
+        branch::count_dirty_files(&git_repo).map_err(|_| "Vérification impossible".to_string())?;
+    if dirty == 0 {
+        return Ok(());
+    }
+
+    let description = sanitize_description(description)?;
+    let signature = commit_signature(&git_repo, &workdir)?;
+    let index_backup = IndexBackup::capture(&git_repo)?;
+    let message = description.as_deref().unwrap_or("Save changes from CL-GO");
+    if let Err(error) = create_commit(&git_repo, message, &signature) {
+        index_backup.restore();
+        return Err(error);
+    }
+    Ok(())
+}
+
 pub fn commit_all_and_checkout(
     repo_path: &Path,
     target_branch: &str,
@@ -46,6 +66,15 @@ fn create_wip_commit(
     description: Option<&str>,
     signature: &Signature<'_>,
 ) -> Result<(), String> {
+    let message = build_commit_message(target_branch, description);
+    create_commit(repo, &message, signature)
+}
+
+fn create_commit(
+    repo: &Repository,
+    message: &str,
+    signature: &Signature<'_>,
+) -> Result<(), String> {
     let mut index = repo.index().map_err(|e| format!("Index : {e}"))?;
     index
         .add_all(["*"], IndexAddOption::DEFAULT, None)
@@ -60,9 +89,15 @@ fn create_wip_commit(
         .head()
         .and_then(|h| h.peel_to_commit())
         .map_err(|e| format!("Commit parent : {e}"))?;
-    let msg = build_commit_message(target_branch, description);
-    repo.commit(Some("HEAD"), signature, signature, &msg, &tree, &[&parent])
-        .map_err(|e| format!("Commit : {e}"))?;
+    repo.commit(
+        Some("HEAD"),
+        signature,
+        signature,
+        message,
+        &tree,
+        &[&parent],
+    )
+    .map_err(|e| format!("Commit : {e}"))?;
     Ok(())
 }
 

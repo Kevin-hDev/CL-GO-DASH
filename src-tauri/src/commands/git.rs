@@ -2,7 +2,7 @@ use crate::services::agent_local::project_store;
 use crate::services::git::{branch, branch_commit, status, watcher, worktree_list};
 use std::path::{Path, PathBuf};
 
-async fn registered_project_path(path: &str) -> Result<PathBuf, String> {
+pub(super) async fn registered_project_path(path: &str) -> Result<PathBuf, String> {
     let repo_path = Path::new(path);
     if !repo_path.is_dir() {
         return Err("Répertoire introuvable".to_string());

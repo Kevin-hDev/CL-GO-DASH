@@ -9,7 +9,7 @@ type CloneGitBranchActionState = "idle" | "loading" | "success";
 
 interface Options {
   projectPath?: string;
-  git: ReturnType<typeof useGitBranch>;
+  git: Pick<ReturnType<typeof useGitBranch>, "isGitRepo" | "refresh">;
   isStreaming: boolean;
   activeSessionTab?: SessionTab | null;
   onCreateCloneGitBranch?: (path: string, cloneSessionId: string) => Promise<string>;

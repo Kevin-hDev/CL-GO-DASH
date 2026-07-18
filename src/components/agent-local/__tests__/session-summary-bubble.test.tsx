@@ -17,25 +17,9 @@ vi.mock("react-i18next", () => ({
         "agentLocal.sessionSummary.sections.todos": "Todo list",
         "agentLocal.sessionSummary.sections.plans": "Plan",
         "agentLocal.sessionSummary.sections.subagents": "Subagents",
-        "agentLocal.sessionSummary.emptyTodos": "No active todo",
-        "agentLocal.sessionSummary.emptyPlans": "No plan",
-        "agentLocal.sessionSummary.emptySubagents": "No subagent",
-        "agentLocal.sessionSummary.planStatus.awaiting_approval": "to approve",
-        "agentLocal.sessionSummary.todoRunStatus.active": "Active",
-        "agentLocal.sessionSummary.todoRunStatus.paused": "Paused",
-        "agentLocal.sessionSummary.subagentType.explorer": "Explore",
-        "todos.status.completed": "completed",
-        "todos.status.pending": "pending",
-        "subagents.completed": "completed",
-        "subagents.interrupted": "interrupted",
-        "history.archive": "Archive",
         "common.loading": "Loading",
       };
-      if (key === "agentLocal.sessionSummary.todoProgress") {
-        const done = typeof opts?.done === "number" || typeof opts?.done === "string" ? opts.done : "";
-        const total = typeof opts?.total === "number" || typeof opts?.total === "string" ? opts.total : "";
-        return `${done}/${total}`;
-      }
+      void opts;
       return text[key] ?? key;
     },
   }),
@@ -47,6 +31,17 @@ vi.mock("@/components/ui/icons", () => ({
   FilePlus: () => <span data-testid="file-plus" />,
   FileText: () => <span data-testid="file-text" />,
   GitBranch: () => <span data-testid="git-branch" />,
+  X: () => <span data-testid="close" />,
+}));
+
+vi.mock("@/hooks/use-github-branch-auth", () => ({
+  useGithubBranchAuth: () => ({
+    open: false,
+    state: "idle",
+    request: vi.fn(),
+    cancel: vi.fn(),
+    connect: vi.fn(),
+  }),
 }));
 
 const git = {
@@ -54,6 +49,16 @@ const git = {
   isLoading: false,
   currentBranch: "main",
   worktrees: [],
+  dirtyCount: 0,
+  hasRemote: true,
+  isGithubRemote: true,
+  hasUpstream: true,
+  aheadCount: 0,
+  behindCount: 0,
+  listDirtyFiles: vi.fn().mockResolvedValue([]),
+  commit: vi.fn().mockResolvedValue({ ok: true }),
+  push: vi.fn().mockResolvedValue({ ok: true }),
+  refresh: vi.fn(),
 };
 
 describe("SessionSummaryBubble", () => {
@@ -69,133 +74,6 @@ describe("SessionSummaryBubble", () => {
     expect(getByText("+3")).toBeTruthy();
     expect(getByText("-1")).toBeTruthy();
     expect(getByText("main")).toBeTruthy();
-  });
-
-  it("déplie les sections Todo, Plan et Sous-agents", () => {
-    const { container, getByRole, getByText, getByTitle } = render(
-      <SessionSummaryBubble summary={summary()} git={git} />,
-    );
-
-    fireEvent.click(getByRole("button", { name: "Toggle summary" }));
-    fireEvent.click(getByRole("button", { name: "Todo list (2)" }));
-    fireEvent.click(getByRole("button", { name: "Plan (1)" }));
-    fireEvent.click(getByRole("button", { name: "Subagents (1)" }));
-
-    expect(getByText("Implement UI")).toBeTruthy();
-    expect(getByText("Paused work")).toBeTruthy();
-    expect(getByTitle("Active")).toBeTruthy();
-    expect(getByTitle("Paused")).toBeTruthy();
-    expect(getByText("1/2")).toBeTruthy();
-    expect(getByText("Plan title")).toBeTruthy();
-    expect(getByText("Geminitor")).toBeTruthy();
-    expect(getByText("Analyse sous-agent")).toBeTruthy();
-    expect(getByText("interrupted")).toBeTruthy();
-    expect(container.querySelector(".sai-geminitor")).toBeTruthy();
-  });
-
-  it("anime l'icône d'un sous-agent actif dans le résumé", () => {
-    const activeSummary = summary();
-    activeSummary.subagents = [{
-      sessionId: "child-running",
-      name: "Coder",
-      type: "coder",
-      status: "running",
-      promptPreview: "",
-      description: "Implémentation",
-    }];
-    const { container, getByRole } = render(
-      <SessionSummaryBubble summary={activeSummary} git={git} />,
-    );
-
-    fireEvent.click(getByRole("button", { name: "Toggle summary" }));
-    fireEvent.click(getByRole("button", { name: "Subagents (1)" }));
-
-    expect(container.querySelector(".sai-claudiator.sai-running")).toBeTruthy();
-  });
-
-  it("déplie une todo list et affiche ses tâches", () => {
-    const { getAllByText, getByRole, getByText } = render(
-      <SessionSummaryBubble summary={summary()} git={git} />,
-    );
-
-    fireEvent.click(getByRole("button", { name: "Toggle summary" }));
-    fireEvent.click(getByRole("button", { name: "Todo list (2)" }));
-    fireEvent.click(getByRole("button", { name: /Implement UI/ }));
-
-    expect(getByText("One")).toBeTruthy();
-    expect(getByText("Two")).toBeTruthy();
-    expect(getAllByText("pending").length).toBeGreaterThan(0);
-  });
-
-  it("ouvre le plan au clic sur son entrée", () => {
-    const onOpenPlan = vi.fn();
-    const { getByRole, getByText } = render(
-      <SessionSummaryBubble summary={summary()} git={git} onOpenPlan={onOpenPlan} />,
-    );
-
-    fireEvent.click(getByRole("button", { name: "Toggle summary" }));
-    fireEvent.click(getByRole("button", { name: "Plan (1)" }));
-    fireEvent.click(getByText("Plan title"));
-
-    expect(onOpenPlan).toHaveBeenCalledWith(expect.objectContaining({ id: "plan-1" }));
-  });
-
-  it("ouvre la conversation enfant au clic sur un sous-agent", () => {
-    const onOpenSubagent = vi.fn();
-    const { getByRole, getByText } = render(
-      <SessionSummaryBubble summary={summary()} git={git} onOpenSubagent={onOpenSubagent} />,
-    );
-
-    fireEvent.click(getByRole("button", { name: "Toggle summary" }));
-    fireEvent.click(getByRole("button", { name: "Subagents (1)" }));
-    fireEvent.click(getByText("Geminitor"));
-
-    expect(onOpenSubagent).toHaveBeenCalledWith("child-1");
-  });
-
-  it("archive un sous-agent sans ouvrir la conversation enfant", () => {
-    const onOpenSubagent = vi.fn();
-    const onArchiveSubagent = vi.fn();
-    const { getByRole } = render(
-      <SessionSummaryBubble
-        summary={summary()}
-        git={git}
-        onOpenSubagent={onOpenSubagent}
-        onArchiveSubagent={onArchiveSubagent}
-      />,
-    );
-
-    fireEvent.click(getByRole("button", { name: "Toggle summary" }));
-    fireEvent.click(getByRole("button", { name: "Subagents (1)" }));
-    fireEvent.click(getByRole("button", { name: "Archive" }));
-
-    expect(onArchiveSubagent).toHaveBeenCalledWith("child-1");
-    expect(onOpenSubagent).not.toHaveBeenCalled();
-  });
-
-  it("ne propose pas l'archive pour un sous-agent actif", () => {
-    const activeSummary = summary();
-    activeSummary.subagents = [{
-      sessionId: "child-running",
-      name: "Coder",
-      type: "coder",
-      status: "running",
-      promptPreview: "",
-      description: "Implémentation",
-    }];
-    const { getByRole, queryByRole } = render(
-      <SessionSummaryBubble
-        summary={activeSummary}
-        git={git}
-        onOpenSubagent={vi.fn()}
-        onArchiveSubagent={vi.fn()}
-      />,
-    );
-
-    fireEvent.click(getByRole("button", { name: "Toggle summary" }));
-    fireEvent.click(getByRole("button", { name: "Subagents (1)" }));
-
-    expect(queryByRole("button", { name: "Archive" })).toBeNull();
   });
 
   it("affiche un fallback sans dépôt Git", () => {

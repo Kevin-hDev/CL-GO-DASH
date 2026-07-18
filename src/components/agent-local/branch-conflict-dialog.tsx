@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
 import { CaretDown, X } from "@/components/ui/icons";
 import { useKeyboard } from "@/hooks/use-keyboard";
+import { GitDirtyFileList } from "./git-dirty-file-list";
 import "./branch-conflict-dialog.css";
 
 interface DirtyFile {
@@ -48,11 +49,6 @@ export function BranchConflictDialog({
     if (e.target === overlayRef.current) onCancel();
   }, [onCancel]);
 
-  const statLabel = (f: DirtyFile) => ({
-    add: `+${f.additions}`,
-    del: `-${f.deletions}`,
-  });
-
   return (
     <div className="bcd-overlay" ref={overlayRef} role="presentation" onClick={handleOverlayClick} onKeyDown={() => {}}>
       <div className="bcd-dialog" ref={dialogRef} tabIndex={-1}>
@@ -64,25 +60,10 @@ export function BranchConflictDialog({
 
         <div className="bcd-description">{t("branches.conflictDescription")}</div>
 
-        <div className="bcd-file-list">
-          {files.map((f) => {
-            const stat = statLabel(f);
-            return (
-              <div key={f.path} className="bcd-file">
-                <span>{f.path}</span>
-                <span className="bcd-file-stat">
-                  <span className="bcd-file-stat-add">{stat.add}</span>{" "}
-                  <span className="bcd-file-stat-del">{stat.del}</span>
-                </span>
-              </div>
-            );
-          })}
-          {files.length === 0 && (
-            <div className="bcd-hint">
-              {t("branches.uncommitted", { count: dirtyCount })}
-            </div>
-          )}
-        </div>
+        <GitDirtyFileList
+          files={files}
+          fallback={files.length === 0 ? t("branches.uncommitted", { count: dirtyCount }) : undefined}
+        />
 
         <div className="bcd-description-section">
           <button
