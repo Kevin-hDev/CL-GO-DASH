@@ -4,6 +4,26 @@
 
 ---
 
+## v1.0.1
+
+### Features
+
+- **Native Grok and Kimi authentication** — added direct web authentication for xAI Grok and Moonshot Kimi subscriptions without installing Grok Build, Kimi Code, or another provider CLI. Kimi remains an experimental, unofficial integration.
+- **Full CL-GO-DASH agent experience** — Grok and Kimi OAuth models now run through CL-GO-DASH's native agent loop in manual chats, including tools, skills, MCP connectors, permissions, plans, context compression, and subagents.
+
+### Usage and costs
+
+- **Provider usage details** — Settings now shows available limits, reset times, remaining credits, token usage, request counts, and exact or estimated costs for configured API and OAuth connections.
+- **Local usage history** — added Today, 7 days, 30 days, and Total views with input, output, cache, and reasoning token breakdowns, without storing prompts or conversations.
+- **Codex allowance labels** — separated the general Codex weekly allowance from the dedicated GPT-5.3-Codex-Spark weekly allowance, and added the model to the Codex selector.
+
+### Security and reliability
+
+- **OAuth and telemetry hardening** — protected concurrent login, refresh, logout, account switching, usage refreshes, timestamps, and provider-specific price resolution while keeping API and OAuth credentials strictly separated.
+- **Clear subscription errors** — Grok and Kimi membership or credit errors now use stable, non-sensitive error codes instead of exposing provider response bodies.
+
+---
+
 ## v1.0.0
 
 ### Bug Fixes

@@ -1,4 +1,55 @@
 {
+  "1.0.1": {
+    "de": [
+      "Grok und Kimi können jetzt über eine native Web-Anmeldung verbunden werden, ohne eine Anbieter-CLI zu installieren; Kimi bleibt experimentell und inoffiziell.",
+      "OAuth-Modelle nutzen in manuellen Chats die Agentenschleife, Werkzeuge, Skills, MCP-Verbindungen, Berechtigungen, Pläne und Subagenten von CL-GO-DASH.",
+      "Die Anbieter-Einstellungen zeigen nun Limits, Rücksetzzeiten, Guthaben, Tokenverbrauch, Anfragen sowie exakte oder geschätzte Kosten für API- und OAuth-Verbindungen.",
+      "Die Codex-Nutzung unterscheidet jetzt zwischen dem allgemeinen Wochenlimit und dem eigenen Wochenlimit von GPT-5.3-Codex-Spark.",
+      "OAuth-Lebenszyklus, Kontowechsel, Nutzungsaktualisierung und Kostenberechnung wurden zusätzlich abgesichert."
+    ],
+    "en": [
+      "Grok and Kimi can now be connected through native web authentication without installing a provider CLI; Kimi remains experimental and unofficial.",
+      "OAuth models use CL-GO-DASH's agent loop, tools, skills, MCP connectors, permissions, plans, and subagents in manual chats.",
+      "Provider settings now show limits, reset times, credits, token usage, requests, and exact or estimated costs for API and OAuth connections.",
+      "Codex usage now separates the general weekly allowance from the dedicated GPT-5.3-Codex-Spark weekly allowance.",
+      "OAuth lifecycle, account switching, usage refreshes, and cost calculation received additional security hardening."
+    ],
+    "es": [
+      "Grok y Kimi ya se pueden conectar mediante autenticación web nativa sin instalar una CLI del proveedor; Kimi sigue siendo experimental y no oficial.",
+      "Los modelos OAuth utilizan el bucle de agente, las herramientas, las skills, los conectores MCP, los permisos, los planes y los subagentes de CL-GO-DASH en los chats manuales.",
+      "Los ajustes de proveedores ahora muestran límites, reinicios, créditos, consumo de tokens, solicitudes y costes exactos o estimados para conexiones API y OAuth.",
+      "El consumo de Codex ahora separa el límite semanal general del límite semanal específico de GPT-5.3-Codex-Spark.",
+      "Se reforzó la seguridad del ciclo OAuth, los cambios de cuenta, la actualización del consumo y el cálculo de costes."
+    ],
+    "fr": [
+      "Grok et Kimi peuvent maintenant être connectés par authentification web native sans installer de CLI fournisseur ; Kimi reste expérimental et non officiel.",
+      "Les modèles OAuth utilisent la boucle agentique, les outils, les skills, les connecteurs MCP, les permissions, les plans et les sous-agents de CL-GO-DASH dans les chats manuels.",
+      "Les réglages des fournisseurs affichent maintenant les limites, réinitialisations, crédits, tokens, requêtes et coûts exacts ou estimés des connexions API et OAuth.",
+      "La consommation Codex distingue maintenant la limite hebdomadaire générale de la limite hebdomadaire dédiée à GPT-5.3-Codex-Spark.",
+      "Le cycle OAuth, les changements de compte, l'actualisation de la consommation et le calcul des coûts ont reçu un renforcement de sécurité supplémentaire."
+    ],
+    "it": [
+      "Grok e Kimi possono ora essere collegati tramite autenticazione web nativa senza installare una CLI del provider; Kimi resta sperimentale e non ufficiale.",
+      "Nei chat manuali, i modelli OAuth usano il ciclo agente, gli strumenti, le skill, i connettori MCP, i permessi, i piani e i subagenti di CL-GO-DASH.",
+      "Le impostazioni dei provider mostrano ora limiti, ripristini, crediti, consumo di token, richieste e costi esatti o stimati per le connessioni API e OAuth.",
+      "Il consumo Codex distingue ora il limite settimanale generale dal limite settimanale dedicato a GPT-5.3-Codex-Spark.",
+      "Il ciclo OAuth, i cambi di account, l'aggiornamento dei consumi e il calcolo dei costi hanno ricevuto ulteriori protezioni di sicurezza."
+    ],
+    "ja": [
+      "Grok と Kimi をプロバイダーの CLI をインストールせずに、ネイティブ Web 認証で接続できるようになりました。Kimi は引き続き実験的な非公式連携です。",
+      "手動チャットの OAuth モデルは、CL-GO-DASH のエージェントループ、ツール、スキル、MCP コネクター、権限、プラン、サブエージェントを利用します。",
+      "プロバイダー設定で、API と OAuth 接続の上限、リセット時刻、クレジット、トークン使用量、リクエスト数、正確または推定の費用を確認できるようになりました。",
+      "Codex の使用量で、全体の週間上限と GPT-5.3-Codex-Spark 専用の週間上限を分けて表示するようになりました。",
+      "OAuth のライフサイクル、アカウント切り替え、使用量の更新、費用計算の安全性をさらに強化しました。"
+    ],
+    "zh": [
+      "现在无需安装提供商 CLI，即可通过原生网页认证连接 Grok 和 Kimi；Kimi 仍属于实验性非官方集成。",
+      "在手动聊天中，OAuth 模型会使用 CL-GO-DASH 的代理循环、工具、技能、MCP 连接器、权限、计划和子代理。",
+      "提供商设置现在会显示 API 和 OAuth 连接的限额、重置时间、余额、Token 用量、请求次数以及精确或估算费用。",
+      "Codex 用量现在会分别显示通用每周限额和 GPT-5.3-Codex-Spark 专用每周限额。",
+      "OAuth 生命周期、账户切换、用量刷新和费用计算获得了进一步的安全加固。"
+    ]
+  },
   "1.0.0": {
     "de": [
       "CL-GO erreicht offiziell Version 1.0.",
