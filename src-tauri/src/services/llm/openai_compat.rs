@@ -54,6 +54,11 @@ impl OpenAiCompatProvider {
                     .json(&payload)
             })
             .await?;
+        crate::services::provider_usage::capture_headers(
+            self.route.chat_provider_id,
+            response.headers(),
+        )
+        .await;
         if !response.status().is_success() {
             return Err(map_error_status(response, self.route.chat_provider_id).await);
         }
@@ -83,6 +88,11 @@ impl OpenAiCompatProvider {
                     .json(&payload)
             })
             .await?;
+        crate::services::provider_usage::capture_headers(
+            self.route.chat_provider_id,
+            response.headers(),
+        )
+        .await;
         if response.status().is_success() {
             Ok(())
         } else {

@@ -14,7 +14,6 @@ pub const SLACK_BODY_LIMIT: usize = 512 * 1024;
 pub const DISCORD_BODY_LIMIT: usize = 512 * 1024;
 pub const MCP_BODY_LIMIT: usize = 10 * 1024 * 1024;
 pub const LLM_BODY_LIMIT: usize = 10 * 1024 * 1024;
-pub const QUOTA_BODY_LIMIT: usize = 512 * 1024;
 pub const PROVIDER_ERROR_LIMIT: usize = 16 * 1024;
 const MAX_BODY_LIMIT: usize = MCP_BODY_LIMIT;
 const MAX_TIMEOUT: Duration = Duration::from_secs(300);

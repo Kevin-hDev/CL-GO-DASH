@@ -82,9 +82,7 @@ pub async fn post_chat_request_with_timeout(
         .map_err(|_| RequestError::Fatal("Connexion au fournisseur impossible".into()))?;
     let resp = send_json_request(&client, &route, &url, &payload).await?;
 
-    if !route.is_oauth() && matches!(route.chat_provider_id, "groq" | "xai") {
-        super::quota::update_ratelimit_headers(route.chat_provider_id, resp.headers());
-    }
+    crate::services::provider_usage::capture_headers(route.chat_provider_id, resp.headers()).await;
 
     let status = resp.status();
     if !status.is_success() {

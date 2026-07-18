@@ -118,10 +118,12 @@ fn returns_tool_calls_and_usage() {
         chunks,
         vec![
             ParsedChunk::ToolCalls(vec![json!({ "id": "a" })]),
-            ParsedChunk::Usage {
-                completion_tokens: Some(3),
-                prompt_tokens: Some(2)
-            }
+            ParsedChunk::Usage(crate::services::provider_usage::RequestUsage {
+                input_tokens: Some(2),
+                output_tokens: Some(3),
+                total_tokens: Some(5),
+                ..Default::default()
+            })
         ]
     );
 }
@@ -131,10 +133,12 @@ fn usage_missing_fields_stays_unavailable() {
     let chunks = parse(json!({ "usage": { "prompt_tokens": 2 } }));
     assert_eq!(
         chunks,
-        vec![ParsedChunk::Usage {
-            completion_tokens: None,
-            prompt_tokens: Some(2)
-        }]
+        vec![ParsedChunk::Usage(
+            crate::services::provider_usage::RequestUsage {
+                input_tokens: Some(2),
+                ..Default::default()
+            }
+        )]
     );
 }
 

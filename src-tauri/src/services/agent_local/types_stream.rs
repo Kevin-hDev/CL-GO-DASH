@@ -135,6 +135,7 @@ pub struct StreamResult {
     pub tool_call_extra_content: Vec<Option<serde_json::Value>>,
     pub eval_count: Option<u32>,
     pub prompt_tokens: Option<u32>,
+    pub usage: Option<crate::services::provider_usage::RequestUsage>,
     /// Diagnostic Ollama : raison de fin renvoyée par le chunk `done:true`
     /// (ex: "stop", "length", "tool_call"). None si le champ est absent.
     pub done_reason: Option<String>,

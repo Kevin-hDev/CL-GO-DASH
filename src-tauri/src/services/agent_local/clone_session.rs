@@ -111,7 +111,14 @@ async fn complete_summary(
 ) -> Result<(), String> {
     let serialized = clone_summary::serialize_messages(suffix);
     let messages = clone_summary::build_summary_messages(&serialized, custom_focus);
-    let summary = collect_summary(&clone.provider, &clone.model, messages, cancel).await?;
+    let summary = collect_summary(
+        &clone.provider,
+        &clone.model,
+        &clone.id,
+        messages,
+        cancel,
+    )
+    .await?;
     let summary = crate::services::compress::prompt::extract_summary(&summary);
     let (read_files, modified_files) = clone_summary::extract_traced_files(suffix);
     clone.clone_summary = Some(summary.clone());
@@ -127,6 +134,7 @@ async fn complete_summary(
 async fn collect_summary(
     provider: &str,
     model: &str,
+    session_id: &str,
     messages: Vec<ChatMessage>,
     cancel: CancellationToken,
 ) -> Result<String, String> {
@@ -142,15 +150,23 @@ async fn collect_summary(
             result = request => result.map(|(content, _)| content),
         };
     }
-    crate::services::llm::stream::collect_chat_silent_for_compression(
+    let result = crate::services::llm::stream::collect_chat_silent_for_compression(
         provider,
         model,
         &messages,
         SUMMARY_MAX_TOKENS,
         cancel,
     )
-    .await
-    .map(|result| result.content)
+    .await?;
+    crate::services::provider_usage::record_for_session(
+        provider,
+        model,
+        session_id,
+        crate::services::provider_usage::UsageWorkload::Compression,
+        result.usage.as_ref(),
+    )
+    .await;
+    Ok(result.content)
 }
 
 fn validate_simple_id(id: &str, max_len: usize) -> Result<(), String> {

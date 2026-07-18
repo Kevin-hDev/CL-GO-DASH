@@ -13,7 +13,7 @@ macro_rules! generate_tail {
             crate::commands::list_llm_models,
             crate::commands::test_llm_connection,
             crate::commands::supports_tool_use,
-            crate::commands::get_provider_quota,
+            crate::commands::get_provider_usage,
             crate::commands::list_search_providers_catalog,
             crate::commands::test_search_connection,
             crate::commands::search_registry,

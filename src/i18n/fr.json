@@ -21,6 +21,16 @@
       "issues": { "moonshotMembershipUnverified": "Connexion réussie, mais Moonshot ne parvient pas à confirmer un abonnement Kimi Code actif. Vérifie l’abonnement puis réessaie.", "xaiSubscriptionOrCreditsRequired": "xAI indique que l’abonnement Grok ou les crédits requis sont absents ou épuisés.", "reauthenticationRequired": "La connexion a expiré. Reconnecte ce provider.", "rateLimited": "Le catalogue est temporairement limité. Réessaie dans un instant.", "accessUnavailable": "Le provider refuse actuellement l’accès au catalogue.", "catalogUnavailable": "Le catalogue de modèles est temporairement indisponible." },
       "deviceInstructions": "Saisissez ce code sur la page ouverte dans votre navigateur.", "codeLabel": "Code de connexion", "copyCode": "Copier le code", "openVerification": "Rouvrir la page de connexion",
       "descriptions": { "openai": "ChatGPT via Codex", "moonshot": "Kimi par connexion web native, sans client", "xai": "Grok par connexion web native, sans client" }
+    },
+    "usage": {
+      "providerTitle": "Limites et crédits du fournisseur", "localTitle": "Consommation dans CL-GO-DASH", "refresh": "Actualiser", "remoteUnavailable": "Les données du compte ne sont pas disponibles", "remainingPercent": "{{value}} % restants", "updated": "Actualisé", "stale": "Données anciennes", "resetsAt": "Réinitialisation : {{date}}", "openProviderSite": "Voir chez le fournisseur", "periodLabel": "Période", "historyEmpty": "Aucune consommation enregistrée", "requests": "Appels", "inputTokens": "Tokens entrants", "outputTokens": "Tokens sortants", "cachedTokens": "Tokens en cache", "reasoningTokens": "Tokens de raisonnement", "totalTokens": "Tokens totaux", "cost": "Coût", "byOrigin": "Répartition par origine", "byWorkload": "Répartition par travail",
+      "periods": { "today": "Aujourd’hui", "seven_days": "7 jours", "thirty_days": "30 jours", "all_time": "Total" },
+      "quality": { "exact": "Exact", "estimated": "Estimé", "partial": "Partiel", "unavailable": "Indisponible" },
+      "origins": { "manual_chat": "Chat manuel", "external_channel": "Canal externe", "automation": "Automatisation" },
+      "workloads": { "primary": "Principal", "subagent": "Sous-agent", "compression": "Compression" },
+      "windows": { "today": "Aujourd’hui", "seven_days": "7 jours", "thirty_days": "30 jours", "key_limit": "Limite de la clé", "requests_day": "Requêtes par jour", "tokens_minute": "Tokens par minute", "requests_limit": "Limite de requêtes", "tokens_limit": "Limite de tokens", "rolling_five_hours": "Fenêtre de 5 heures", "weekly": "Limite hebdomadaire", "provider_limit": "Limite du fournisseur" },
+      "balances": { "remaining_credits": "Crédits restants", "available_balance": "Solde disponible", "voucher_balance": "Solde bons", "cash_balance": "Solde espèces", "reset_credits": "Crédits de réinitialisation" },
+      "notices": { "usage_fetch_failed": "Impossible d’actualiser les données du fournisseur. Les dernières données valides restent affichées lorsqu’elles sont récentes.", "provider_usage_site_only": "xAI ne publie pas d’accès à ces limites. La consommation locale reste disponible.", "provider_account_usage_unavailable": "Ce fournisseur ne publie pas les limites du compte avec cette connexion." }
     }
   },
   "apiKeys": {

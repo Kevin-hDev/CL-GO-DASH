@@ -21,6 +21,11 @@
       "issues": { "moonshotMembershipUnverified": "サインインは成功しましたが、Moonshot は有効な Kimi Code サブスクリプションを確認できません。契約状況を確認して再試行してください。", "xaiSubscriptionOrCreditsRequired": "xAI は、Grok サブスクリプションがないか、必要なクレジットが不足していると報告しています。", "reauthenticationRequired": "接続の有効期限が切れました。このプロバイダーに再接続してください。", "rateLimited": "モデルカタログは一時的に制限されています。しばらくしてから再試行してください。", "accessUnavailable": "プロバイダーは現在、モデルカタログへのアクセスを拒否しています。", "catalogUnavailable": "モデルカタログは一時的に利用できません。" },
       "deviceInstructions": "ブラウザで開いたページにこのコードを入力してください。", "codeLabel": "ログインコード", "copyCode": "コードをコピー", "openVerification": "ログインページを再度開く",
       "descriptions": { "openai": "Codex 経由の ChatGPT", "moonshot": "ネイティブウェブログインで Kimi、クライアント不要", "xai": "ネイティブウェブログインで Grok、クライアント不要" }
+    },
+    "usage": {
+      "providerTitle": "プロバイダーの上限とクレジット", "localTitle": "CL-GO-DASH での使用量", "refresh": "更新", "remoteUnavailable": "アカウントの使用量データを取得できません", "remainingPercent": "残り {{value}}%", "updated": "更新済み", "stale": "古いデータ", "resetsAt": "リセット：{{date}}", "openProviderSite": "プロバイダーで確認", "periodLabel": "期間", "historyEmpty": "使用量の記録はありません", "requests": "リクエスト", "inputTokens": "入力トークン", "outputTokens": "出力トークン", "cachedTokens": "キャッシュトークン", "reasoningTokens": "推論トークン", "totalTokens": "合計トークン", "cost": "費用", "byOrigin": "送信元別", "byWorkload": "作業別",
+      "periods": { "today": "今日", "seven_days": "7 日", "thirty_days": "30 日", "all_time": "全期間" }, "quality": { "exact": "正確", "estimated": "推定", "partial": "一部", "unavailable": "利用不可" }, "origins": { "manual_chat": "手動チャット", "external_channel": "外部チャネル", "automation": "自動化" }, "workloads": { "primary": "メイン", "subagent": "サブエージェント", "compression": "圧縮" },
+      "windows": { "today": "今日", "seven_days": "7 日", "thirty_days": "30 日", "key_limit": "キー上限", "requests_day": "1 日のリクエスト", "tokens_minute": "1 分のトークン", "requests_limit": "リクエスト上限", "tokens_limit": "トークン上限", "rolling_five_hours": "5 時間枠", "weekly": "週間上限", "provider_limit": "プロバイダー上限" }, "balances": { "remaining_credits": "残りクレジット", "available_balance": "利用可能残高", "voucher_balance": "バウチャー残高", "cash_balance": "現金残高", "reset_credits": "リセットクレジット" }, "notices": { "usage_fetch_failed": "プロバイダーのデータを更新できませんでした。直近の有効なデータは引き続き表示されます。", "provider_usage_site_only": "xAI はこれらの上限へのアクセスを公開していません。ローカル使用量は確認できます。", "provider_account_usage_unavailable": "このプロバイダーは、この接続のアカウント上限を公開していません。" }
     }
   },
   "apiKeys": {

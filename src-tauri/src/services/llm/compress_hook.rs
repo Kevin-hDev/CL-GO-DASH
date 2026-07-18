@@ -65,6 +65,14 @@ pub async fn try_auto_compress(
     .await
     {
         Ok(result) => {
+            crate::services::provider_usage::record_for_session(
+                provider_id,
+                model,
+                session_id,
+                crate::services::provider_usage::UsageWorkload::Compression,
+                result.usage.as_ref(),
+            )
+            .await;
             let summary = prompt::extract_summary(&result.content);
             let mode = state::CompressionMode::Auto {
                 request_start_index: state::request_start_index(messages),

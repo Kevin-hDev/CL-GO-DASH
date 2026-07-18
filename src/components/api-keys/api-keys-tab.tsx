@@ -77,6 +77,7 @@ export function useApiKeysTabSlots({ navState, onNavChange, onNavReplace }: ApiK
     <>
       {selected ? (
         <ApiKeysDetails
+          key={selected.id}
           provider={selected}
           onEdit={() =>
             setDialog({

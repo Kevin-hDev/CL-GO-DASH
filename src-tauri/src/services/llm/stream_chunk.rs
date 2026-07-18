@@ -1,3 +1,4 @@
+use crate::services::provider_usage::RequestUsage;
 use serde_json::Value;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -5,10 +6,7 @@ pub enum ParsedChunk {
     Thinking(String),
     Content(String),
     ToolCalls(Vec<Value>),
-    Usage {
-        completion_tokens: Option<u32>,
-        prompt_tokens: Option<u32>,
-    },
+    Usage(RequestUsage),
 }
 
 pub fn parse(data: &str) -> Vec<ParsedChunk> {
@@ -20,17 +18,9 @@ pub fn parse(data: &str) -> Vec<ParsedChunk> {
     if let Some(choice) = chunk["choices"].as_array().and_then(|a| a.first()) {
         parse_delta(&choice["delta"], &mut out);
     }
-    if let Some(usage) = chunk["usage"].as_object() {
-        out.push(ParsedChunk::Usage {
-            completion_tokens: usage
-                .get("completion_tokens")
-                .and_then(|v| v.as_u64())
-                .map(|v| v as u32),
-            prompt_tokens: usage
-                .get("prompt_tokens")
-                .and_then(|v| v.as_u64())
-                .map(|v| v as u32),
-        });
+    let usage_value = chunk.get("usage").or_else(|| chunk.get("usageMetadata"));
+    if let Some(usage) = usage_value.and_then(RequestUsage::from_json) {
+        out.push(ParsedChunk::Usage(usage));
     }
     out
 }

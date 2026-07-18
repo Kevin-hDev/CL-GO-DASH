@@ -1,16 +1,13 @@
 use serde::Deserialize;
 use std::collections::HashMap;
-use std::path::PathBuf;
 use std::sync::OnceLock;
 use tokio::sync::RwLock;
 
 static REGISTRY: OnceLock<RwLock<HashMap<String, ModelEntry>>> = OnceLock::new();
 
 const EMBEDDED_JSON: &str = include_str!("../../../resources/litellm-models.json");
-const GITHUB_RAW_URL: &str =
-    "https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json";
 const MAX_REGISTRY_ENTRIES: usize = 3_500;
-const MAX_BODY_BYTES: usize = 20 * 1024 * 1024; // 20 Mo max
+pub(crate) const MAX_BODY_BYTES: usize = 20 * 1024 * 1024; // 20 Mo max
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct ModelEntry {
@@ -38,6 +35,7 @@ pub struct ModelEntry {
     pub supports_system_messages: bool,
     pub input_cost_per_token: Option<f64>,
     pub output_cost_per_token: Option<f64>,
+    pub cache_read_input_token_cost: Option<f64>,
     pub mode: Option<String>,
 }
 
@@ -46,10 +44,6 @@ pub struct ModelCapabilities {
     pub supports_tools: bool,
     pub supports_vision: bool,
     pub supports_thinking: bool,
-}
-
-fn cache_path() -> PathBuf {
-    crate::services::paths::data_dir().join("litellm-models.json")
 }
 
 pub(crate) fn parse_registry(json: &str) -> HashMap<String, ModelEntry> {
@@ -73,8 +67,7 @@ pub(crate) fn parse_registry(json: &str) -> HashMap<String, ModelEntry> {
 
 pub(crate) fn get_lock() -> &'static RwLock<HashMap<String, ModelEntry>> {
     REGISTRY.get_or_init(|| {
-        let data = std::fs::read_to_string(cache_path())
-            .ok()
+        let data = super::model_registry_refresh::read_cache()
             .and_then(|s| {
                 let map = parse_registry(&s);
                 if map.len() > 100 {
@@ -90,73 +83,7 @@ pub(crate) fn get_lock() -> &'static RwLock<HashMap<String, ModelEntry>> {
 
 pub async fn init() {
     let _ = get_lock();
-    tokio::spawn(async { refresh_from_github().await });
-}
-
-async fn refresh_from_github() {
-    let client = match reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(30))
-        .build()
-    {
-        Ok(c) => c,
-        Err(_) => return,
-    };
-
-    let cached = cache_path();
-    let mut req = client.get(GITHUB_RAW_URL);
-    if let Ok(meta) = std::fs::metadata(&cached) {
-        if let Ok(modified) = meta.modified() {
-            let http_date = httpdate::fmt_http_date(modified);
-            req = req.header("If-Modified-Since", http_date);
-        }
-    }
-
-    let resp = match req.send().await {
-        Ok(r) => r,
-        Err(_) => return,
-    };
-
-    if resp.status() == 304 {
-        return;
-    }
-    if !resp.status().is_success() {
-        return;
-    }
-
-    if let Some(host) = resp.url().host_str() {
-        if !is_trusted_host(host) {
-            eprintln!("[registry] source rejetée : hôte inattendu '{host}'");
-            return;
-        }
-    }
-
-    let content_len = resp.content_length().unwrap_or(0) as usize;
-    if !is_body_size_ok(content_len) {
-        eprintln!("[registry] rejeté : body trop volumineux ({content_len} octets)");
-        return;
-    }
-
-    let body = match resp.text().await {
-        Ok(b) if is_body_size_ok(b.len()) => b,
-        Ok(_) => {
-            eprintln!("[registry] rejeté : body dépasse {MAX_BODY_BYTES} octets");
-            return;
-        }
-        Err(_) => return,
-    };
-
-    let map = parse_registry(&body);
-    if map.len() < 100 {
-        return;
-    }
-
-    if let Some(parent) = cached.parent() {
-        let _ = std::fs::create_dir_all(parent);
-    }
-    let _ = std::fs::write(&cached, &body);
-
-    let mut reg = get_lock().write().await;
-    *reg = map;
+    tokio::spawn(async { super::model_registry_refresh::refresh().await });
 }
 
 fn map_provider_prefix(provider_id: &str) -> &str {

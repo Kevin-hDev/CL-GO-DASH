@@ -1,6 +1,6 @@
 //! Helpers de parsing/construction pour `openai_compat.rs`.
 
-use super::types::{ChatRequest, ChatResponse, LlmError, ModelInfo, TokenUsage};
+use super::types::{ChatRequest, ChatResponse, LlmError, ModelInfo};
 use crate::services::secure_http::{read_bounded, PROVIDER_ERROR_LIMIT};
 use reqwest::Response;
 
@@ -119,11 +119,10 @@ pub fn parse_chat_response(body: &serde_json::Value) -> Result<ChatResponse, Llm
         .unwrap_or("")
         .to_string();
 
-    let usage = TokenUsage {
-        prompt_tokens: body["usage"]["prompt_tokens"].as_u64().unwrap_or(0) as u32,
-        completion_tokens: body["usage"]["completion_tokens"].as_u64().unwrap_or(0) as u32,
-        total_tokens: body["usage"]["total_tokens"].as_u64().unwrap_or(0) as u32,
-    };
+    let usage_value = body.get("usage").or_else(|| body.get("usageMetadata"));
+    let usage = usage_value
+        .and_then(crate::services::provider_usage::RequestUsage::from_json)
+        .unwrap_or_default();
 
     Ok(ChatResponse { content, usage })
 }

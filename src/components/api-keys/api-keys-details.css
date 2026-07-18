@@ -44,6 +44,10 @@
   align-items: center;
 }
 
+.akd-connection-card {
+  margin-top: var(--space-lg);
+}
+
 
 .ak-confirm-delete {
   display: block;

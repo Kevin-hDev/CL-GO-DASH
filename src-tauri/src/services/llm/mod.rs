@@ -11,7 +11,9 @@ mod agent_loop_request;
 pub(crate) mod agent_loop_tools;
 pub mod catalog;
 pub mod compress_hook;
+pub mod model_pricing;
 pub mod model_registry;
+mod model_registry_refresh;
 pub mod openai_compat;
 mod openai_compat_models;
 mod openai_compat_parsing;
@@ -19,7 +21,6 @@ mod openai_compat_parsing;
 mod openai_compat_parsing_tests;
 pub mod provider_error;
 pub(crate) mod providers;
-pub mod quota;
 pub mod registry_search;
 mod retry;
 pub mod route;
@@ -80,6 +81,12 @@ pub async fn collect_chat(
             tokio_util::sync::CancellationToken::new(),
         )
         .await?;
+        crate::services::provider_usage::record_automation(
+            provider_id,
+            model,
+            result.usage.as_ref(),
+        )
+        .await;
         let total = crate::services::token_counting::sum_real_counts(
             result.prompt_tokens,
             result.eval_count,
@@ -99,6 +106,17 @@ pub async fn collect_chat(
         ..Default::default()
     };
     let resp = provider.chat_completion(req).await.map_err(String::from)?;
-    let total = resp.usage.completion_tokens + resp.usage.prompt_tokens;
+    crate::services::provider_usage::record_automation(provider_id, model, Some(&resp.usage)).await;
+    let total = resp
+        .usage
+        .total_tokens
+        .or_else(
+            || match (resp.usage.input_tokens, resp.usage.output_tokens) {
+                (Some(input), Some(output)) => Some(input.saturating_add(output)),
+                _ => None,
+            },
+        )
+        .and_then(|value| value.try_into().ok())
+        .unwrap_or(0);
     Ok((resp.content, total))
 }

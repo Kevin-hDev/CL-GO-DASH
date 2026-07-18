@@ -42,6 +42,7 @@ pub fn repair_app_storage() -> Result<(), String> {
         root.join("secrets.enc"),
         root.join("configured-providers.json"),
         root.join("mcp-connectors.json"),
+        root.join("provider-usage.json"),
         root.join("agent-sessions/gateway-session-map.json"),
         root.join("logs/gateway-audit.jsonl"),
     ] {

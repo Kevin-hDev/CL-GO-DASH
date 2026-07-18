@@ -8,6 +8,9 @@ import {
   type OAuthProviderIssueCode,
 } from "@/hooks/oauth-models";
 import type { OAuthProviderStatus } from "@/types/oauth-provider";
+import { SettingsCard } from "@/components/settings/settings-card";
+import { ProviderUsageCard } from "./usage/provider-usage-card";
+import { oauthUsageConnectionId, oauthUsageLink } from "./usage/provider-usage-links";
 
 const ISSUE_KEYS: Record<OAuthProviderIssueCode, string> = {
   moonshot_membership_unverified: "providers.oauth.issues.moonshotMembershipUnverified",
@@ -75,9 +78,6 @@ export function OAuthProviderDetail({ provider, refresh }: Props) {
         <ProviderIcon providerId={provider.id} displayName={provider.display_name} size={40} />
         <div><strong>{provider.display_name}</strong><span>{provider.account ?? connectionLabel}</span></div>
       </div>
-      <div className="prv-oauth-status">
-        <span>{t("providers.oauth.connectionLabel")}</span><strong>{connectionLabel}</strong>
-      </div>
       {issue && (
         <div className="prv-oauth-issue" role="status">
           <span>{t(ISSUE_KEYS[issue])}</span>
@@ -86,6 +86,15 @@ export function OAuthProviderDetail({ provider, refresh }: Props) {
           </button>
         </div>
       )}
+      <ProviderUsageCard
+        connectionId={oauthUsageConnectionId(provider.id)}
+        siteUrl={oauthUsageLink(provider.id)}
+      />
+      <SettingsCard>
+        <div className="prv-oauth-status">
+          <span>{t("providers.oauth.connectionLabel")}</span><strong>{connectionLabel}</strong>
+        </div>
+      </SettingsCard>
       <div className="prv-oauth-actions">
         <button type="button" className="ollama-btn" disabled={disconnecting} onClick={() => void disconnect()}>
           {t("providers.oauth.disconnect")}

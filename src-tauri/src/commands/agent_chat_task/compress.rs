@@ -55,15 +55,23 @@ pub(crate) async fn handle_compress_command(
         &msgs_without_command,
         summary_instruction.as_deref(),
     );
-    let summary_raw =
-        match collect_summary(provider, model, compress_msgs, output_limit, cancel).await {
-            Ok(summary) => summary,
-            Err(err) => {
-                eprintln!("[compress] manual failed session={session_id}: {err}");
-                send_compressing_done(on_event);
-                return Err(err);
-            }
-        };
+    let summary_raw = match collect_summary(
+        provider,
+        model,
+        session_id,
+        compress_msgs,
+        output_limit,
+        cancel,
+    )
+    .await
+    {
+        Ok(summary) => summary,
+        Err(err) => {
+            eprintln!("[compress] manual failed session={session_id}: {err}");
+            send_compressing_done(on_event);
+            return Err(err);
+        }
+    };
     let summary = prompt::extract_summary(&summary_raw);
     let current_tokens = state::apply_and_save(
         session_id,
@@ -84,6 +92,7 @@ pub(crate) async fn handle_compress_command(
 async fn collect_summary(
     provider: &str,
     model: &str,
+    session_id: &str,
     messages: Vec<ChatMessage>,
     output_limit: u32,
     cancel: CancellationToken,
@@ -104,7 +113,7 @@ async fn collect_summary(
                 .map_err(|err| format!("Compression Ollama : {err}")),
         };
     }
-    crate::services::llm::stream::collect_chat_silent_for_compression(
+    let result = crate::services::llm::stream::collect_chat_silent_for_compression(
         provider,
         model,
         &messages,
@@ -112,8 +121,16 @@ async fn collect_summary(
         cancel,
     )
     .await
-    .map(|result| result.content)
-    .map_err(|err| format!("Compression LLM : {err}"))
+    .map_err(|err| format!("Compression LLM : {err}"))?;
+    crate::services::provider_usage::record_for_session(
+        provider,
+        model,
+        session_id,
+        crate::services::provider_usage::UsageWorkload::Compression,
+        result.usage.as_ref(),
+    )
+    .await;
+    Ok(result.content)
 }
 
 async fn resolve_context_window(provider: &str, model: &str) -> u64 {

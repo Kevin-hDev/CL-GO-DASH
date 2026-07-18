@@ -75,10 +75,11 @@ pub async fn supports_tool_use(provider_id: String, model_id: String) -> bool {
 }
 
 #[tauri::command]
-pub async fn get_provider_quota(
-    provider_id: String,
-) -> Result<Option<crate::services::llm::quota::ProviderQuota>, String> {
-    Ok(crate::services::llm::quota::fetch_quota(&provider_id).await)
+pub async fn get_provider_usage(
+    connection_id: String,
+    force_refresh: bool,
+) -> Result<crate::services::provider_usage::ProviderUsageSnapshot, String> {
+    crate::services::provider_usage::snapshot(&connection_id, force_refresh).await
 }
 
 fn is_provider_all_free(provider_id: &str) -> bool {

@@ -1,7 +1,6 @@
 use super::agent_loop_compression::{LastCounts, LoopCompression};
 use super::agent_loop_request::ApiRequestParams;
 use super::agent_loop_tools;
-use crate::services::agent_local::agent_loop_errors;
 use crate::services::agent_local::agent_loop_finish;
 use crate::services::agent_local::agent_loop_limits::MAX_TURNS;
 use crate::services::agent_local::agent_loop_plan;
@@ -122,11 +121,10 @@ pub async fn run_agent_loop(
         subagents
             .finalize_content_phase(on_event, &result, plan_active)
             .await;
-        let mut assistant_message = super::agent_loop_message::build_assistant_message(&result);
-        if plan_active && !result.tool_calls.is_empty() {
-            assistant_message.content.clear();
-        }
-        messages.push(assistant_message);
+        messages.push(super::agent_loop_message::build_for_plan(
+            &result,
+            plan_active,
+        ));
         compression
             .try_run_and_reset(messages, &mut last_prompt, &mut last_eval, cancel.clone())
             .await;
@@ -144,21 +142,15 @@ pub async fn run_agent_loop(
             }
             break;
         }
-        agent_loop_tools::record_detected_tool_calls(
+        let control_only = agent_loop_tools::prepare_tool_batch(
             &session_id,
             &request_id,
             &result.tool_calls,
             &working_dir,
+            turn,
+            &mut breaker,
         )
-        .await;
-        if turn == MAX_TURNS - 1 {
-            return Err(agent_loop_errors::max_turns_message());
-        }
-        breaker.check(&result.tool_calls)?;
-        let control_only = crate::services::agent_local::subagent_tool_control::is_control_only(
-            &result.tool_calls,
-        );
-        let mode = permission_mode.to_string();
+        .await?;
         let tool_compression = (!control_only).then(|| {
             compression.tool_compression(
                 token_counting::sum_real_counts(last_prompt, last_eval),
@@ -170,7 +162,7 @@ pub async fn run_agent_loop(
             messages,
             &result.tool_calls,
             &working_dir,
-            &mode,
+            permission_mode,
             &session_id,
             &request_id,
             cancel.clone(),

@@ -127,8 +127,13 @@ async fn consume_sse(
             }
             "response.done" | "response.completed" => {
                 if let Some(usage) = parsed.pointer("/response/usage") {
-                    result.prompt_tokens = usage["input_tokens"].as_u64().map(|v| v as u32);
-                    result.eval_count = usage["output_tokens"].as_u64().map(|v| v as u32);
+                    result.usage = crate::services::provider_usage::RequestUsage::from_json(usage);
+                    if let Some(usage) = &result.usage {
+                        result.prompt_tokens =
+                            usage.input_tokens.and_then(|value| value.try_into().ok());
+                        result.eval_count =
+                            usage.output_tokens.and_then(|value| value.try_into().ok());
+                    }
                 }
                 break;
             }

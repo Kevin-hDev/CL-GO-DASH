@@ -1,18 +1,13 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-shell";
 import { Pencil, Trash, ArrowSquareOut } from "@/components/ui/icons";
 import { Tooltip } from "@/components/ui/tooltip";
 import { SettingsCard } from "@/components/settings/settings-card";
 import { ProviderIcon } from "@/lib/provider-icons";
 import { getProviderDescription, type ProviderSpec } from "@/types/api";
+import { ProviderUsageCard } from "@/components/providers/usage/provider-usage-card";
 import "./api-keys-details.css";
-
-interface ProviderQuota {
-  available: boolean;
-  label: string;
-}
 
 interface ApiKeysDetailsProps {
   provider: ProviderSpec;
@@ -24,20 +19,6 @@ interface ApiKeysDetailsProps {
 export function ApiKeysDetails({ provider, onEdit, onDelete, onAddConnector }: ApiKeysDetailsProps) {
   const { t, i18n } = useTranslation();
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [quota, setQuota] = useState<ProviderQuota | null>(null);
-  const [quotaLoading, setQuotaLoading] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch→setState is intentional
-    setQuota(null);
-    setQuotaLoading(true);
-    invoke<ProviderQuota | null>("get_provider_quota", { providerId: provider.id })
-      .then((q) => { if (!cancelled) setQuota(q); })
-      .catch(() => undefined)
-      .finally(() => { if (!cancelled) setQuotaLoading(false); });
-    return () => { cancelled = true; };
-  }, [provider.id]);
 
   useEffect(() => {
     if (!confirmDelete) return;
@@ -96,12 +77,12 @@ export function ApiKeysDetails({ provider, onEdit, onDelete, onAddConnector }: A
           </div>
         </div>
 
-        <SettingsCard>
+        {provider.category === "llm" && (
+          <ProviderUsageCard connectionId={provider.id} siteUrl={provider.signup_url} />
+        )}
+
+        <SettingsCard className={provider.category === "llm" ? "akd-connection-card" : undefined}>
           <DetailRow label={t("apiKeys.details.freeTier")} value={provider.free_tier_label} />
-          <DetailRow
-            label={t("apiKeys.details.quota")}
-            value={quotaLoading ? "..." : quota ? quota.label : t("apiKeys.details.quotaUnavailable")}
-          />
           <DetailRow label={t("apiKeys.details.signupLink")}>
             <button type="button" className="ak-signup-link" onClick={() => void open(provider.signup_url)}>
               {t("apiKeys.details.openSite")} <ArrowSquareOut size="var(--icon-xs)" />

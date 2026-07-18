@@ -35,3 +35,11 @@ pub fn build_assistant_message(result: &StreamResult) -> ChatMessage {
         ..Default::default()
     }
 }
+
+pub fn build_for_plan(result: &StreamResult, plan_active: bool) -> ChatMessage {
+    let mut message = build_assistant_message(result);
+    if plan_active && !result.tool_calls.is_empty() {
+        message.content.clear();
+    }
+    message
+}

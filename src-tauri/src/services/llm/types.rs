@@ -52,14 +52,7 @@ pub struct ChatRequest {
 #[derive(Debug, Clone)]
 pub struct ChatResponse {
     pub content: String,
-    pub usage: TokenUsage,
-}
-
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
-pub struct TokenUsage {
-    pub prompt_tokens: u32,
-    pub completion_tokens: u32,
-    pub total_tokens: u32,
+    pub usage: crate::services::provider_usage::RequestUsage,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

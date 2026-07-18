@@ -83,6 +83,14 @@ pub(super) async fn run(params: ApiRequestParams<'_>) -> Result<ApiRequestOutput
     .await?;
     let interrupted = outcome.is_interrupted();
     let result = outcome.into_result();
+    crate::services::provider_usage::record_for_session(
+        params.provider_id,
+        params.model,
+        params.session_id,
+        crate::services::provider_usage::UsageWorkload::Primary,
+        result.usage.as_ref(),
+    )
+    .await;
     crate::services::agent_local::stream_diagnostics_model::record_model_result(
         params.session_id,
         params.request_id,

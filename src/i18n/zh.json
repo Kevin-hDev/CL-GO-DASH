@@ -21,6 +21,11 @@
       "issues": { "moonshotMembershipUnverified": "登录成功，但 Moonshot 无法确认有效的 Kimi Code 订阅。请检查订阅后重试。", "xaiSubscriptionOrCreditsRequired": "xAI 表示缺少 Grok 订阅或所需额度已用尽。", "reauthenticationRequired": "连接已过期。请重新连接此提供商。", "rateLimited": "模型目录暂时受到限流。请稍后重试。", "accessUnavailable": "提供商当前拒绝访问模型目录。", "catalogUnavailable": "模型目录暂时不可用。" },
       "deviceInstructions": "请在浏览器中打开的页面上输入此代码。", "codeLabel": "登录代码", "copyCode": "复制代码", "openVerification": "重新打开登录页面",
       "descriptions": { "openai": "通过 Codex 使用 ChatGPT", "moonshot": "Kimi 原生网页登录，无需客户端", "xai": "Grok 原生网页登录，无需客户端" }
+    },
+    "usage": {
+      "providerTitle": "提供商限制与额度", "localTitle": "CL-GO-DASH 中的用量", "refresh": "刷新", "remoteUnavailable": "账户用量数据不可用", "remainingPercent": "剩余 {{value}}%", "updated": "已更新", "stale": "较早的数据", "resetsAt": "重置时间：{{date}}", "openProviderSite": "前往提供商查看", "periodLabel": "时间范围", "historyEmpty": "尚无用量记录", "requests": "请求次数", "inputTokens": "输入 Token", "outputTokens": "输出 Token", "cachedTokens": "缓存 Token", "reasoningTokens": "推理 Token", "totalTokens": "Token 总数", "cost": "费用", "byOrigin": "按来源", "byWorkload": "按工作类型",
+      "periods": { "today": "今天", "seven_days": "7 天", "thirty_days": "30 天", "all_time": "全部" }, "quality": { "exact": "精确", "estimated": "估算", "partial": "部分", "unavailable": "不可用" }, "origins": { "manual_chat": "手动聊天", "external_channel": "外部频道", "automation": "自动化" }, "workloads": { "primary": "主要", "subagent": "子代理", "compression": "压缩" },
+      "windows": { "today": "今天", "seven_days": "7 天", "thirty_days": "30 天", "key_limit": "密钥限制", "requests_day": "每日请求", "tokens_minute": "每分钟 Token", "requests_limit": "请求限制", "tokens_limit": "Token 限制", "rolling_five_hours": "5 小时窗口", "weekly": "每周限制", "provider_limit": "提供商限制" }, "balances": { "remaining_credits": "剩余额度", "available_balance": "可用余额", "voucher_balance": "代金券余额", "cash_balance": "现金余额", "reset_credits": "重置额度" }, "notices": { "usage_fetch_failed": "无法刷新提供商数据。近期有效数据仍会保留显示。", "provider_usage_site_only": "xAI 未公开这些限制的访问方式。本地用量仍可查看。", "provider_account_usage_unavailable": "此提供商未针对该连接公开账户限制。" }
     }
   },
   "apiKeys": {

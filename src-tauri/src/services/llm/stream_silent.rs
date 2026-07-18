@@ -143,12 +143,10 @@ fn process_chunk_silent(
             }
             ParsedChunk::Thinking(_) => {}
             ParsedChunk::ToolCalls(tool_calls) => acc.ingest(&tool_calls),
-            ParsedChunk::Usage {
-                completion_tokens,
-                prompt_tokens,
-            } => {
-                result.eval_count = completion_tokens;
-                result.prompt_tokens = prompt_tokens;
+            ParsedChunk::Usage(usage) => {
+                result.eval_count = usage.output_tokens.and_then(|value| value.try_into().ok());
+                result.prompt_tokens = usage.input_tokens.and_then(|value| value.try_into().ok());
+                result.usage = Some(usage);
             }
         }
     }

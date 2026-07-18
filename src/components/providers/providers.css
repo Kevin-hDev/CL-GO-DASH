@@ -89,9 +89,7 @@
   display: flex;
   justify-content: space-between;
   padding: var(--space-md);
-  background: var(--surface);
-  border: 1px solid var(--edge);
-  border-radius: var(--radius-sm);
+  gap: var(--space-md);
 }
 
 .prv-oauth-actions {
