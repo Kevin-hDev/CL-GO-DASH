@@ -8,18 +8,20 @@ vi.mock("react-i18next", () => ({
     t: (key: string, opts?: Record<string, unknown>) => {
       const text: Record<string, string> = {
         "agentLocal.sessionSummary.branch": "Branch",
-        "agentLocal.sessionSummary.git.merge": "Merge",
-        "agentLocal.sessionSummary.git.mergeSource": "Branch to Merge",
+        "agentLocal.sessionSummary.git.mergeSource": "Source branch",
         "agentLocal.sessionSummary.git.cancel": "Cancel",
-        "agentLocal.sessionSummary.git.confirmMerge": "Merge",
-        "agentLocal.sessionSummary.git.commitAndMerge": "Commit then Merge",
         "agentLocal.sessionSummary.git.commitDescription": "Commit message",
       };
       if (key.endsWith(".toggle")) return `Branch: ${stringValue(opts?.branch)}`;
+      if (key.endsWith(".merge")) return `Merge into ${stringValue(opts?.branch)}`;
       if (key.endsWith(".mergeTitle")) return `Merge into ${stringValue(opts?.branch)}`;
       if (key.endsWith(".mergeDescription")) return `Choose a branch for ${stringValue(opts?.branch)}`;
       if (key.endsWith(".mergeSummary")) return `${stringValue(opts?.count)} commits into ${stringValue(opts?.branch)}`;
       if (key.endsWith(".mergeDirty")) return `${stringValue(opts?.count)} local changes`;
+      if (key.endsWith(".confirmMerge")) return `Merge into ${stringValue(opts?.branch)}`;
+      if (key.endsWith(".commitAndMerge")) {
+        return `Commit then Merge into ${stringValue(opts?.branch)}`;
+      }
       return text[key] ?? key;
     },
   }),
@@ -72,12 +74,12 @@ describe("SessionSummaryGitSection Merge", () => {
     );
 
     fireEvent.click(getByRole("button", { name: "Branch: main" }));
-    fireEvent.click(getByRole("button", { name: "Merge" }));
+    fireEvent.click(getByRole("button", { name: "Merge into main" }));
     const dialog = await findByRole("dialog", { name: "Merge into main" });
-    fireEvent.click(within(dialog).getByRole("button", { name: "Branch to Merge" }));
+    fireEvent.click(within(dialog).getByRole("button", { name: "Source branch" }));
     fireEvent.click(within(dialog).getByRole("option", { name: "release" }));
     await waitFor(() => expect(within(dialog).getByText("2 commits into main")).toBeTruthy());
-    fireEvent.click(within(dialog).getByRole("button", { name: "Merge" }));
+    fireEvent.click(within(dialog).getByRole("button", { name: "Merge into main" }));
 
     await waitFor(() => expect(mergeBranch).toHaveBeenCalledWith("release", "main", false, undefined));
   });
@@ -100,11 +102,11 @@ describe("SessionSummaryGitSection Merge", () => {
     );
 
     fireEvent.click(getByRole("button", { name: "Branch: main" }));
-    fireEvent.click(getByRole("button", { name: "Merge" }));
+    fireEvent.click(getByRole("button", { name: "Merge into main" }));
     const dialog = await findByRole("dialog", { name: "Merge into main" });
     await waitFor(() => expect(within(dialog).getByText("src/app.tsx")).toBeTruthy());
     fireEvent.change(within(dialog).getByRole("textbox"), { target: { value: "Prepare merge" } });
-    fireEvent.click(within(dialog).getByRole("button", { name: "Commit then Merge" }));
+    fireEvent.click(within(dialog).getByRole("button", { name: "Commit then Merge into main" }));
 
     await act(async () => {});
     expect(mergeBranch).toHaveBeenCalledWith("feature", "main", true, "Prepare merge");
@@ -121,7 +123,21 @@ describe("SessionSummaryGitSection Merge", () => {
 
     fireEvent.click(getByRole("button", { name: "Branch: HEAD" }));
 
-    expect(queryByRole("button", { name: "Merge" })).toBeNull();
+    expect(queryByRole("button", { name: /Merge into/ })).toBeNull();
+  });
+
+  it("affiche toujours la branche de destination sur le bouton", () => {
+    const branches = baseGit.branches.map((branch) => ({
+      ...branch,
+      is_current: branch.name === "feature",
+    }));
+    const { getByRole } = render(
+      <SessionSummaryGitSection git={{ ...baseGit, branches, currentBranch: "feature" }} />,
+    );
+
+    fireEvent.click(getByRole("button", { name: "Branch: feature" }));
+
+    expect(getByRole("button", { name: "Merge into feature" })).toBeTruthy();
   });
 });
 

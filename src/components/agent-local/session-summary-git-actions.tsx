@@ -105,7 +105,7 @@ export function SessionSummaryGitActions({ git }: { git: SessionSummaryGitState 
             setCommitOpen(false);
             setMergeOpen(true);
           }} disabled={busy}>
-            {t("agentLocal.sessionSummary.git.merge")}
+            {t("agentLocal.sessionSummary.git.merge", { branch: git.currentBranch })}
           </button>
         )}
       </div>

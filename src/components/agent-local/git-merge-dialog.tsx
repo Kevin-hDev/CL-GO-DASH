@@ -124,9 +124,12 @@ export function GitMergeDialog({
             onClick={() => onMerge(source, dirtyCount > 0, description || undefined)}
             disabled={busy || loading || previewFailed || !preview || alreadyMerged}
           >
-            {t(dirtyCount > 0
-              ? "agentLocal.sessionSummary.git.commitAndMerge"
-              : "agentLocal.sessionSummary.git.confirmMerge")}
+            {t(
+              dirtyCount > 0
+                ? "agentLocal.sessionSummary.git.commitAndMerge"
+                : "agentLocal.sessionSummary.git.confirmMerge",
+              { branch: targetBranch },
+            )}
           </button>
         </div>
       </div>
