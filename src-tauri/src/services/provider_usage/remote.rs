@@ -1,24 +1,53 @@
 use super::types::RemoteData;
 use crate::services::secure_http::{read_json_bounded, AuthenticatedClient};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 const RESPONSE_LIMIT: usize = 256 * 1024;
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(10);
 const CODEX_USAGE_URL: &str = "https://chatgpt.com/backend-api/wham/usage";
 
 pub async fn resolve(connection_id: &str, force_refresh: bool) -> RemoteData {
+    let requested_at = Instant::now();
     if !force_refresh {
         if let Some(cached) = super::cache::get(connection_id).await {
             return cached;
         }
     }
-    match fetch(connection_id).await {
+    let Some(mut gate) = super::remote_gate::lock(connection_id).await else {
+        return local_only(connection_id);
+    };
+    if super::remote_gate::should_skip(&gate, requested_at, force_refresh) {
+        return cached_or_fallback(connection_id).await;
+    }
+    if !force_refresh {
+        if let Some(cached) = super::cache::get(connection_id).await {
+            return cached;
+        }
+    }
+    let Some(generation) = super::credential_epoch::current(connection_id) else {
+        super::remote_gate::complete(&mut gate);
+        return local_only(connection_id);
+    };
+    let result = match fetch(connection_id).await {
         Ok(remote) => {
-            super::cache::put(connection_id, remote.clone()).await;
-            let _ = super::ledger::save_remote(connection_id, remote.clone()).await;
-            remote
+            if !super::credential_epoch::is_current(connection_id, generation) {
+                local_only(connection_id)
+            } else {
+                super::cache::put(connection_id, generation, remote.clone()).await;
+                let _ = super::ledger::save_remote(connection_id, generation, remote.clone()).await;
+                remote
+            }
         }
         Err(()) => fallback(connection_id).await,
+    };
+    super::remote_gate::complete(&mut gate);
+    result
+}
+
+async fn cached_or_fallback(connection_id: &str) -> RemoteData {
+    match super::cache::get(connection_id).await {
+        Some(cached) => cached,
+        None => fallback(connection_id).await,
     }
 }
 
@@ -35,7 +64,8 @@ async fn fetch(connection_id: &str) -> Result<RemoteData, ()> {
 }
 
 async fn recent_headers(connection_id: &str) -> RemoteData {
-    super::ledger::recent_remote(connection_id)
+    let generation = super::credential_epoch::current(connection_id).unwrap_or_default();
+    super::ledger::recent_remote(connection_id, generation)
         .await
         .unwrap_or_else(|| local_only(connection_id))
 }
@@ -75,9 +105,11 @@ async fn fetch_kimi() -> Result<RemoteData, ()> {
     let client = client()?;
     let url = format!("{}/usages", route.base_url);
     let response = route
-        .send_authenticated(&client, |token, headers| {
-            client.get(&url).headers(headers).bearer_auth(token)
-        })
+        .send_authenticated(
+            &client,
+            crate::services::llm::request_purpose::RequestPurpose::AccountMetadata,
+            |token, headers| client.get(&url).headers(headers).bearer_auth(token),
+        )
         .await
         .map_err(|_| ())?;
     if !response.status().is_success() {
@@ -94,7 +126,8 @@ async fn parse_oauth(connection_id: &str, response: reqwest::Response) -> Result
 }
 
 async fn fallback(connection_id: &str) -> RemoteData {
-    if let Some(mut previous) = super::ledger::recent_remote(connection_id).await {
+    let generation = super::credential_epoch::current(connection_id).unwrap_or_default();
+    if let Some(mut previous) = super::ledger::recent_remote(connection_id, generation).await {
         previous.notice_code = Some("usage_fetch_failed".into());
         return previous;
     }

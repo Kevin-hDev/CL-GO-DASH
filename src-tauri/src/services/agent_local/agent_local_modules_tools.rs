@@ -116,6 +116,7 @@ pub mod tool_spreadsheet_read;
 pub mod tool_spreadsheet_read_tests;
 pub mod tool_spreadsheet_write;
 pub mod tool_spreadsheet_write_edit;
+mod tool_spreadsheet_write_format;
 pub mod tool_spreadsheet_write_new;
 #[cfg(test)]
 pub mod tool_spreadsheet_write_tests;

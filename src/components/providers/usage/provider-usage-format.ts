@@ -27,8 +27,16 @@ export function formatBalance(amount: string, currency: string, locale: string):
 }
 
 export function formatDate(timestamp: number, locale: string): string {
-  return new Intl.DateTimeFormat(locale, {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(new Date(timestamp * 1000));
+  const maximum = Math.floor(Date.now() / 1000) + 366 * 24 * 60 * 60;
+  if (!Number.isSafeInteger(timestamp) || timestamp < 946_684_800 || timestamp > maximum) {
+    return "—";
+  }
+  try {
+    return new Intl.DateTimeFormat(locale, {
+      dateStyle: "short",
+      timeStyle: "short",
+    }).format(new Date(timestamp * 1000));
+  } catch {
+    return "—";
+  }
 }

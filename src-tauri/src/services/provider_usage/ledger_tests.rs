@@ -47,6 +47,24 @@ fn connections_are_bounded_and_oldest_is_evicted() {
 }
 
 #[test]
+fn clearing_remote_preserves_local_totals() {
+    let mut ledger = Ledger::default();
+    let mut connection = ConnectionLedger {
+        last_remote: Some(RemoteData::default()),
+        last_remote_generation: Some(8),
+        ..Default::default()
+    };
+    connection.all_time.totals.request_count = 7;
+    ledger.connections.insert("xai".into(), connection);
+    assert!(clear_remote_in(&mut ledger, "xai", 42));
+    let connection = ledger.connections.get("xai").unwrap();
+    assert!(connection.last_remote.is_none());
+    assert!(connection.last_remote_generation.is_none());
+    assert_eq!(connection.all_time.totals.request_count, 7);
+    assert_eq!(connection.updated_at, 42);
+}
+
+#[test]
 fn cache_and_reasoning_tokens_are_subtotals() {
     let usage = RequestUsage {
         input_tokens: Some(100),

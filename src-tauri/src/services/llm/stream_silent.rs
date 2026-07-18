@@ -6,6 +6,7 @@ use super::{
 };
 use crate::services::agent_local::types_ollama::ChatMessage;
 use crate::services::agent_local::types_ollama::StreamResult;
+use crate::services::llm::request_purpose::RequestPurpose;
 use crate::services::stream_utils::{FilteredChunk, ThinkTagFilter};
 use eventsource_stream::Eventsource;
 use futures_util::StreamExt;
@@ -16,6 +17,7 @@ pub async fn collect_chat_silent(
     provider_id: &str,
     model: &str,
     messages: &[ChatMessage],
+    purpose: RequestPurpose,
     cancel: CancellationToken,
 ) -> Result<StreamResult, String> {
     if provider_id == "codex-oauth" {
@@ -38,6 +40,7 @@ pub async fn collect_chat_silent(
         think: false,
         reasoning_mode: None,
         max_tokens: None,
+        purpose,
     };
     let resp = post_chat_request(&cfg).await.map_err(|e| e.to_string())?;
     consume_silent(resp, cancel, super::timeouts::idle_timeout()).await
@@ -48,6 +51,7 @@ pub async fn collect_chat_silent_for_compression(
     model: &str,
     messages: &[ChatMessage],
     max_tokens: u32,
+    purpose: RequestPurpose,
     cancel: CancellationToken,
 ) -> Result<StreamResult, String> {
     let timeout = crate::services::compress::timeouts::compression_timeout();
@@ -71,6 +75,7 @@ pub async fn collect_chat_silent_for_compression(
         think: false,
         reasoning_mode: None,
         max_tokens: Some(max_tokens),
+        purpose,
     };
     let resp = post_chat_request_with_timeout(&cfg, timeout)
         .await

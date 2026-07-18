@@ -61,7 +61,7 @@ fn current_branch_name(root: &Path) -> String {
         .head()
         .expect("head")
         .shorthand()
-        .expect("branch name")
+        .expect("valid branch name")
         .to_string()
 }
 

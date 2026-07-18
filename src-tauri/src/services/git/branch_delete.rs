@@ -8,7 +8,7 @@ pub fn delete_branch(repo_path: &Path, branch_name: &str) -> Result<(), String> 
     let current = repo
         .head()
         .ok()
-        .and_then(|head| head.shorthand().map(str::to_string));
+        .and_then(|head| head.shorthand().ok().map(str::to_string));
     if current.as_deref() == Some(branch_name) {
         return Err("Branche active".into());
     }

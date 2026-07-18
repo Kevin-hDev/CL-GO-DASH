@@ -71,6 +71,7 @@ fn gpt_56_uses_max_completion_tokens_in_chat_payload() {
         think: true,
         reasoning_mode: Some("medium"),
         max_tokens: Some(32_000),
+        purpose: crate::services::llm::request_purpose::RequestPurpose::ManualChat,
     };
 
     let route = route::resolve("openai").unwrap();
@@ -91,6 +92,7 @@ fn openrouter_gpt_56_uses_max_completion_tokens() {
         think: true,
         reasoning_mode: Some("medium"),
         max_tokens: Some(32_000),
+        purpose: crate::services::llm::request_purpose::RequestPurpose::ManualChat,
     };
 
     let route = route::resolve("openrouter").unwrap();
@@ -110,6 +112,7 @@ fn other_providers_keep_max_tokens() {
         think: true,
         reasoning_mode: Some("medium"),
         max_tokens: Some(8_000),
+        purpose: crate::services::llm::request_purpose::RequestPurpose::ManualChat,
     };
 
     let route = route::resolve("xai").unwrap();

@@ -1,6 +1,7 @@
 use reqwest::{header::HeaderMap, RequestBuilder, Response};
 
 use super::catalog;
+use super::request_purpose::RequestPurpose;
 use crate::services::llm_oauth::{self, LlmOAuthProvider};
 use crate::services::secure_http::AuthenticatedClient;
 
@@ -31,6 +32,7 @@ pub struct LlmRoute {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RouteError {
     Unauthorized,
+    Forbidden,
     Network,
 }
 
@@ -38,11 +40,15 @@ impl LlmRoute {
     pub async fn send_authenticated<F>(
         &self,
         client: &AuthenticatedClient,
+        purpose: RequestPurpose,
         build: F,
     ) -> Result<Response, RouteError>
     where
         F: Fn(&str, HeaderMap) -> RequestBuilder,
     {
+        if !self.permits(purpose) {
+            return Err(RouteError::Forbidden);
+        }
         match self.auth_source {
             AuthSource::ApiKey(provider_id) => {
                 let key = crate::services::api_keys::get_key(provider_id)
@@ -66,7 +72,7 @@ impl LlmRoute {
                 let response = send_oauth(client, provider, &refreshed.value, &build).await?;
                 if oauth_401_action(response.status().as_u16(), true) == OAuth401Action::Invalidate
                 {
-                    llm_oauth::invalidate(provider);
+                    llm_oauth::invalidate(provider).await;
                 }
                 Ok(response)
             }
@@ -75,6 +81,10 @@ impl LlmRoute {
 
     pub const fn is_oauth(self) -> bool {
         matches!(self.auth_source, AuthSource::OAuth(_))
+    }
+
+    fn permits(self, purpose: RequestPurpose) -> bool {
+        self.usage_scope == UsageScope::Any || purpose.allows_interactive_oauth()
     }
 }
 

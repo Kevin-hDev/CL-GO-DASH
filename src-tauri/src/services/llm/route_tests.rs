@@ -30,6 +30,19 @@ fn oauth_routes_are_interactive_only() {
 }
 
 #[test]
+fn interactive_oauth_is_refused_for_background_and_unknown_requests() {
+    let oauth = resolve("xai-oauth").unwrap();
+    let api = resolve("xai").unwrap();
+
+    assert!(oauth.permits(RequestPurpose::ManualChat));
+    assert!(oauth.permits(RequestPurpose::AccountMetadata));
+    assert!(!oauth.permits(RequestPurpose::Automation));
+    assert!(!oauth.permits(RequestPurpose::ExternalChannel));
+    assert!(!oauth.permits(RequestPurpose::Unknown));
+    assert!(api.permits(RequestPurpose::Automation));
+}
+
+#[test]
 fn only_first_401_refreshes_and_second_401_invalidates() {
     assert_eq!(oauth_401_action(401, false), OAuth401Action::Refresh);
     assert_eq!(oauth_401_action(401, true), OAuth401Action::Invalidate);

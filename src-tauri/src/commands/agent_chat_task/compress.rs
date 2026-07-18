@@ -113,11 +113,14 @@ async fn collect_summary(
                 .map_err(|err| format!("Compression Ollama : {err}")),
         };
     }
+    let purpose =
+        crate::services::llm::request_purpose::RequestPurpose::for_session(session_id).await;
     let result = crate::services::llm::stream::collect_chat_silent_for_compression(
         provider,
         model,
         &messages,
         output_limit,
+        purpose,
         cancel,
     )
     .await

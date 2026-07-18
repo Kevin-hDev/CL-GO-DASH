@@ -27,6 +27,8 @@ struct ConnectionLedger {
     all_time: UsageBreakdown,
     days: BTreeMap<String, UsageBreakdown>,
     last_remote: Option<RemoteData>,
+    #[serde(default)]
+    last_remote_generation: Option<u64>,
 }
 
 pub async fn record(
@@ -69,7 +71,11 @@ pub async fn local_snapshot(connection_id: &str) -> LocalSnapshot {
     }
 }
 
-pub async fn save_remote(connection_id: &str, mut remote: RemoteData) -> Result<(), String> {
+pub async fn save_remote(
+    connection_id: &str,
+    generation: u64,
+    mut remote: RemoteData,
+) -> Result<(), String> {
     let _guard = STORE_LOCK.lock().await;
     let mut ledger = load();
     remote.windows.truncate(super::types::WINDOW_LIMIT);
@@ -77,20 +83,46 @@ pub async fn save_remote(connection_id: &str, mut remote: RemoteData) -> Result<
     let now = Utc::now().timestamp();
     let connection = connection_mut(&mut ledger, connection_id, now);
     connection.last_remote = Some(remote);
+    connection.last_remote_generation = Some(generation);
     connection.updated_at = now;
     save(&ledger)
 }
 
-pub async fn recent_remote(connection_id: &str) -> Option<RemoteData> {
+pub async fn recent_remote(connection_id: &str, generation: u64) -> Option<RemoteData> {
     let _guard = STORE_LOCK.lock().await;
     let ledger = load();
-    let mut remote = ledger.connections.get(connection_id)?.last_remote.clone()?;
+    let connection = ledger.connections.get(connection_id)?;
+    if connection.last_remote_generation != Some(generation) {
+        return None;
+    }
+    let mut remote = connection.last_remote.clone()?;
     let now = Utc::now().timestamp();
     if !is_recent_timestamp(remote.fetched_at, now) {
         return None;
     }
     remote.stale = true;
     Some(remote)
+}
+
+pub async fn clear_remote(connection_id: &str) -> Result<(), String> {
+    let _guard = STORE_LOCK.lock().await;
+    let mut ledger = load();
+    if !clear_remote_in(&mut ledger, connection_id, Utc::now().timestamp()) {
+        return Ok(());
+    }
+    save(&ledger)
+}
+
+fn clear_remote_in(ledger: &mut Ledger, connection_id: &str, now: i64) -> bool {
+    let Some(connection) = ledger.connections.get_mut(connection_id) else {
+        return false;
+    };
+    if connection.last_remote.take().is_none() {
+        return false;
+    }
+    connection.last_remote_generation = None;
+    connection.updated_at = now;
+    true
 }
 
 fn is_recent_timestamp(fetched_at: i64, now: i64) -> bool {
@@ -148,6 +180,11 @@ fn load() -> Ledger {
         if let Some(remote) = &mut connection.last_remote {
             remote.windows.truncate(super::types::WINDOW_LIMIT);
             remote.balances.truncate(super::types::BALANCE_LIMIT);
+            for window in &mut remote.windows {
+                window.resets_at = window
+                    .resets_at
+                    .and_then(super::types::valid_reset_timestamp);
+            }
         }
     }
     ledger

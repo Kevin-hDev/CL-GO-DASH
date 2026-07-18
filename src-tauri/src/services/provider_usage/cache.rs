@@ -7,6 +7,7 @@ const TTL: Duration = Duration::from_secs(60);
 
 struct Entry {
     connection_id: String,
+    generation: u64,
     value: RemoteData,
     inserted_at: Instant,
 }
@@ -18,17 +19,21 @@ pub async fn get(connection_id: &str) -> Option<RemoteData> {
     cache.retain(|entry| entry.inserted_at.elapsed() <= TTL);
     cache
         .iter()
-        .find(|entry| entry.connection_id == connection_id)
+        .find(|entry| {
+            entry.connection_id == connection_id
+                && super::credential_epoch::is_current(connection_id, entry.generation)
+        })
         .map(|entry| entry.value.clone())
 }
 
-pub async fn put(connection_id: &str, value: RemoteData) {
+pub async fn put(connection_id: &str, generation: u64, value: RemoteData) {
     let mut cache = CACHE.lock().await;
     if let Some(entry) = cache
         .iter_mut()
         .find(|entry| entry.connection_id == connection_id)
     {
         entry.value = value;
+        entry.generation = generation;
         entry.inserted_at = Instant::now();
         return;
     }
@@ -37,9 +42,17 @@ pub async fn put(connection_id: &str, value: RemoteData) {
     }
     cache.push(Entry {
         connection_id: connection_id.to_string(),
+        generation,
         value,
         inserted_at: Instant::now(),
     });
+}
+
+pub async fn remove(connection_id: &str) {
+    CACHE
+        .lock()
+        .await
+        .retain(|entry| entry.connection_id != connection_id);
 }
 
 #[cfg(test)]

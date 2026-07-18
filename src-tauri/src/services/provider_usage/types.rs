@@ -4,6 +4,8 @@ pub const CONNECTION_LIMIT: usize = 32;
 pub const DAY_LIMIT: usize = 400;
 pub const WINDOW_LIMIT: usize = 8;
 pub const BALANCE_LIMIT: usize = 4;
+const MIN_RESET_TIMESTAMP: i64 = 946_684_800;
+const MAX_RESET_HORIZON_SECONDS: i64 = 366 * 24 * 60 * 60;
 
 const CONNECTIONS: &[&str] = &[
     "groq",
@@ -20,6 +22,7 @@ const CONNECTIONS: &[&str] = &[
     "xai-oauth",
     "moonshot-oauth",
 ];
+pub(super) const CONNECTION_COUNT: usize = CONNECTIONS.len();
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -126,19 +129,26 @@ pub fn validate_connection_id(value: &str) -> Result<(), String> {
         .ok_or_else(|| "Fournisseur invalide".to_string())
 }
 
+pub(super) fn connection_index(value: &str) -> Option<usize> {
+    CONNECTIONS.iter().position(|candidate| *candidate == value)
+}
+
+pub(super) fn valid_reset_timestamp(value: i64) -> Option<i64> {
+    let maximum = chrono::Utc::now()
+        .timestamp()
+        .saturating_add(MAX_RESET_HORIZON_SECONDS);
+    (value >= MIN_RESET_TIMESTAMP && value <= maximum).then_some(value)
+}
+
 pub async fn context_for_session(
     session_id: &str,
     requested_workload: UsageWorkload,
 ) -> (UsageOrigin, UsageWorkload) {
+    let origin = origin_for_session(session_id)
+        .await
+        .unwrap_or(UsageOrigin::ManualChat);
     let Ok(session) = crate::services::agent_local::session_store::get(session_id).await else {
-        return (UsageOrigin::ManualChat, requested_workload);
-    };
-    let origin = if session.is_heartbeat {
-        UsageOrigin::Automation
-    } else if session.is_gateway {
-        UsageOrigin::ExternalChannel
-    } else {
-        UsageOrigin::ManualChat
+        return (origin, requested_workload);
     };
     let workload = if requested_workload == UsageWorkload::Primary
         && (session.parent_session_id.is_some() || session.subagent_type.is_some())
@@ -148,4 +158,37 @@ pub async fn context_for_session(
         requested_workload
     };
     (origin, workload)
+}
+
+pub(crate) async fn origin_for_session(session_id: &str) -> Option<UsageOrigin> {
+    let mut current_id = session_id.to_string();
+    for _ in 0..=8 {
+        let session = crate::services::agent_local::session_store::get(&current_id)
+            .await
+            .ok()?;
+        if session.is_heartbeat {
+            return Some(UsageOrigin::Automation);
+        }
+        if session.is_gateway {
+            return Some(UsageOrigin::ExternalChannel);
+        }
+        let Some(parent_id) = session.parent_session_id else {
+            return Some(UsageOrigin::ManualChat);
+        };
+        current_id = parent_id;
+    }
+    None
+}
+
+#[cfg(test)]
+mod tests {
+    use super::valid_reset_timestamp;
+
+    #[test]
+    fn reset_timestamps_must_be_plausible() {
+        let soon = chrono::Utc::now().timestamp().saturating_add(3_600);
+        assert_eq!(valid_reset_timestamp(soon), Some(soon));
+        assert_eq!(valid_reset_timestamp(i64::MAX), None);
+        assert_eq!(valid_reset_timestamp(-1), None);
+    }
 }

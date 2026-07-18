@@ -43,7 +43,7 @@ pub async fn cancel_all() {
 }
 
 pub async fn logout_external(provider: ProviderId) -> Result<(), String> {
-    llm_oauth::logout(provider.as_llm_oauth()?)
+    llm_oauth::logout(provider.as_llm_oauth()?).await
 }
 
 fn external_status(id: ProviderId) -> OAuthProviderStatus {

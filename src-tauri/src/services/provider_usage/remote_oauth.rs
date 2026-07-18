@@ -92,7 +92,7 @@ fn finite(value: Option<f64>) -> Option<f64> {
 }
 
 fn timestamp(value: &serde_json::Value) -> Option<i64> {
-    value.as_i64().filter(|value| *value > 0)
+    value.as_i64().and_then(super::types::valid_reset_timestamp)
 }
 
 fn parse_reset(value: &serde_json::Value) -> Option<i64> {
@@ -100,7 +100,7 @@ fn parse_reset(value: &serde_json::Value) -> Option<i64> {
         let raw = value.as_str().filter(|value| value.len() <= 64)?;
         chrono::DateTime::parse_from_rfc3339(raw)
             .ok()
-            .map(|date| date.timestamp())
+            .and_then(|date| super::types::valid_reset_timestamp(date.timestamp()))
     })
 }
 
@@ -108,7 +108,7 @@ fn reset_after(value: &serde_json::Value) -> Option<i64> {
     let seconds = ["reset_in", "resetIn", "ttl", "window"]
         .iter()
         .find_map(|key| value.get(*key).and_then(parse_seconds))?;
-    Some(
+    super::types::valid_reset_timestamp(
         chrono::Utc::now()
             .timestamp()
             .saturating_add(seconds as i64),

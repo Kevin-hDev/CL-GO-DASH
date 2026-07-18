@@ -23,7 +23,18 @@ impl Drop for StoredTokens {
     }
 }
 
-pub fn save(provider: LlmOAuthProvider, tokens: &TokenBundle) -> Result<u64, String> {
+pub fn save_if_generation(
+    provider: LlmOAuthProvider,
+    tokens: &TokenBundle,
+    expected_generation: u64,
+) -> Result<u64, String> {
+    if generation(provider) != expected_generation {
+        return Err("Connexion modifiée".to_string());
+    }
+    save(provider, tokens)
+}
+
+fn save(provider: LlmOAuthProvider, tokens: &TokenBundle) -> Result<u64, String> {
     validate(tokens)?;
     let stored = StoredTokens {
         access: tokens.access.to_string(),
@@ -98,5 +109,17 @@ mod tests {
         );
         assert!(LlmOAuthProvider::Xai.vault_key().starts_with('_'));
         assert!(LlmOAuthProvider::Kimi.vault_key().starts_with('_'));
+    }
+
+    #[test]
+    fn stale_generation_is_rejected_before_storage() {
+        let provider = LlmOAuthProvider::Kimi;
+        let tokens = TokenBundle {
+            access: Zeroizing::new("access".to_string()),
+            refresh: Zeroizing::new("refresh".to_string()),
+            expires_at: 1,
+        };
+        let stale = generation(provider).saturating_add(1);
+        assert!(save_if_generation(provider, &tokens, stale).is_err());
     }
 }

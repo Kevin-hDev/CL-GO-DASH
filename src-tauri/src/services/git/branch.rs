@@ -29,7 +29,7 @@ pub fn list_branches(repo_path: &Path) -> Result<Vec<BranchInfo>, String> {
     let current_name = repo
         .head()
         .ok()
-        .and_then(|h| h.shorthand().map(String::from));
+        .and_then(|head| head.shorthand().ok().map(String::from));
 
     let dirty_count = count_dirty_files(&repo).unwrap_or(0);
     let mut branches = Vec::new();
@@ -86,7 +86,7 @@ pub fn get_context(repo_path: &Path) -> GitContext {
     let branch = repo
         .head()
         .ok()
-        .and_then(|h| h.shorthand().map(String::from))
+        .and_then(|head| head.shorthand().ok().map(String::from))
         .unwrap_or_else(|| "HEAD".to_string());
     let dirty_count = count_dirty_files(&repo).unwrap_or(0);
 
@@ -115,7 +115,10 @@ pub fn checkout_branch(repo_path: &Path, branch_name: &str) -> Result<(), String
     repo.checkout_tree(&object, None)
         .map_err(|e| format!("Checkout impossible : {e}"))?;
 
-    if let Some(refname) = reference.as_ref().and_then(|r| r.name()) {
+    if let Some(refname) = reference
+        .as_ref()
+        .and_then(|reference| reference.name().ok())
+    {
         repo.set_head(refname)
             .map_err(|e| format!("Mise à jour HEAD : {e}"))?;
     }

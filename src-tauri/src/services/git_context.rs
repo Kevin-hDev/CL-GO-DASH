@@ -75,12 +75,12 @@ fn detect_current_branch(repo: &Repository) -> Option<String> {
     }
     repo.head()
         .ok()
-        .and_then(|h| h.shorthand().map(String::from))
+        .and_then(|head| head.shorthand().ok().map(String::from))
 }
 
 fn detect_default_branch(repo: &Repository) -> Option<String> {
     if let Ok(r) = repo.find_reference("refs/remotes/origin/HEAD") {
-        if let Some(target) = r.symbolic_target() {
+        if let Ok(Some(target)) = r.symbolic_target() {
             let short = target
                 .strip_prefix("refs/remotes/origin/")
                 .unwrap_or(target);
@@ -144,7 +144,7 @@ fn build_recent_commits(repo: &Repository) -> Option<String> {
         let oid = oid_result.ok()?;
         let commit = repo.find_commit(oid).ok()?;
         let short = &oid.to_string()[..7];
-        let summary = commit.summary().unwrap_or("(no message)");
+        let summary = commit.summary().ok().flatten().unwrap_or("(no message)");
         lines.push(format!("{short} {summary}"));
     }
 

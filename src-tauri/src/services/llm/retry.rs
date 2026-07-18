@@ -6,6 +6,7 @@ use super::stream;
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::types_ollama::{ChatMessage, StreamOutcome};
 use crate::services::compress::realtime_budget::RealtimeBudget;
+use crate::services::llm::request_purpose::RequestPurpose;
 use tokio_util::sync::CancellationToken;
 
 const MAX_RETRIES: usize = 5;
@@ -32,6 +33,7 @@ pub async fn retry_stream(
     session_id: &str,
     request_id: &str,
     provider_id: &str,
+    purpose: RequestPurpose,
     model: &str,
     messages: &[ChatMessage],
     tools: &[serde_json::Value],
@@ -60,6 +62,7 @@ pub async fn retry_stream(
         match stream::stream_chat_no_done(
             on_event,
             provider_id,
+            purpose,
             model,
             messages,
             tools,

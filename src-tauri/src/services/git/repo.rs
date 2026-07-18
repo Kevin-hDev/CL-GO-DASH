@@ -15,12 +15,16 @@ pub fn has_github_remote(repo: &Repository) -> bool {
     let Ok(remotes) = repo.remotes() else {
         return false;
     };
-    for name in remotes.iter().flatten().take(32) {
+    for name in remotes
+        .iter()
+        .filter_map(|name| name.ok().flatten())
+        .take(32)
+    {
         let Ok(remote) = repo.find_remote(name) else {
             continue;
         };
-        if remote.url().map(is_github_url).unwrap_or(false)
-            || remote.pushurl().map(is_github_url).unwrap_or(false)
+        if remote.url().ok().is_some_and(is_github_url)
+            || remote.pushurl().ok().flatten().is_some_and(is_github_url)
         {
             return true;
         }

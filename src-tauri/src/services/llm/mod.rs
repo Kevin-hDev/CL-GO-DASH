@@ -22,6 +22,7 @@ mod openai_compat_parsing_tests;
 pub mod provider_error;
 pub(crate) mod providers;
 pub mod registry_search;
+pub(crate) mod request_purpose;
 mod retry;
 pub mod route;
 pub mod runtime_models;
@@ -78,6 +79,7 @@ pub async fn collect_chat(
             provider_id,
             model,
             &[msg],
+            request_purpose::RequestPurpose::Automation,
             tokio_util::sync::CancellationToken::new(),
         )
         .await?;
@@ -105,7 +107,10 @@ pub async fn collect_chat(
         }],
         ..Default::default()
     };
-    let resp = provider.chat_completion(req).await.map_err(String::from)?;
+    let resp = provider
+        .chat_completion(req, request_purpose::RequestPurpose::Automation)
+        .await
+        .map_err(String::from)?;
     crate::services::provider_usage::record_automation(provider_id, model, Some(&resp.usage)).await;
     let total = resp
         .usage

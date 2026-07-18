@@ -25,6 +25,14 @@ impl ProviderId {
             Self::Xai => "xAI",
         }
     }
+
+    pub const fn usage_connection_id(self) -> &'static str {
+        match self {
+            Self::OpenAi => "codex-oauth",
+            Self::Moonshot => "moonshot-oauth",
+            Self::Xai => "xai-oauth",
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize)]

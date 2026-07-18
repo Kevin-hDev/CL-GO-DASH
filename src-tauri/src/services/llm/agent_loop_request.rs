@@ -66,11 +66,14 @@ pub(super) async fn run(params: ApiRequestParams<'_>) -> Result<ApiRequestOutput
         "Stream modèle démarré.",
     )
     .await;
+    let purpose =
+        crate::services::llm::request_purpose::RequestPurpose::for_session(params.session_id).await;
     let outcome = super::retry::retry_stream(
         params.on_event,
         params.session_id,
         params.request_id,
         params.provider_id,
+        purpose,
         params.model,
         params.messages,
         params.tools,

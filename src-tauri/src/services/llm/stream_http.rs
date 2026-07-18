@@ -1,5 +1,6 @@
 use super::stream_convert::messages_to_openai;
 use crate::services::agent_local::types_ollama::ChatMessage;
+use crate::services::llm::request_purpose::RequestPurpose;
 use crate::services::llm::route::{self, LlmRoute, RouteError};
 use crate::services::secure_http::{read_bounded, AuthenticatedClient, PROVIDER_ERROR_LIMIT};
 pub struct RequestConfig<'a> {
@@ -10,6 +11,7 @@ pub struct RequestConfig<'a> {
     pub think: bool,
     pub reasoning_mode: Option<&'a str>,
     pub max_tokens: Option<u32>,
+    pub purpose: RequestPurpose,
 }
 
 #[derive(Debug)]
@@ -34,9 +36,10 @@ async fn send_json_request(
     route: &LlmRoute,
     url: &str,
     payload: &serde_json::Value,
+    purpose: RequestPurpose,
 ) -> Result<reqwest::Response, RequestError> {
     route
-        .send_authenticated(client, |token, headers| {
+        .send_authenticated(client, purpose, |token, headers| {
             client
                 .post(url)
                 .headers(headers)
@@ -49,6 +52,7 @@ async fn send_json_request(
                 RequestError::Fatal("oauth_reauthentication_required".into())
             }
             RouteError::Unauthorized => RequestError::Fatal("auth_failed".into()),
+            RouteError::Forbidden => RequestError::Fatal("provider_access_unavailable".into()),
             RouteError::Network => {
                 RequestError::Fatal("Connexion au fournisseur impossible".into())
             }
@@ -80,9 +84,16 @@ pub async fn post_chat_request_with_timeout(
 
     let client = AuthenticatedClient::new(timeout)
         .map_err(|_| RequestError::Fatal("Connexion au fournisseur impossible".into()))?;
-    let resp = send_json_request(&client, &route, &url, &payload).await?;
+    let usage_generation =
+        crate::services::provider_usage::credential_generation(route.chat_provider_id);
+    let resp = send_json_request(&client, &route, &url, &payload, cfg.purpose).await?;
 
-    crate::services::provider_usage::capture_headers(route.chat_provider_id, resp.headers()).await;
+    crate::services::provider_usage::capture_headers(
+        route.chat_provider_id,
+        usage_generation,
+        resp.headers(),
+    )
+    .await;
 
     let status = resp.status();
     if !status.is_success() {

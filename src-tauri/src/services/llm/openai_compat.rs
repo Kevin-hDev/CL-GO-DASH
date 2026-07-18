@@ -4,6 +4,7 @@ use super::openai_compat_models;
 use super::openai_compat_parsing::{
     build_payload, map_error_status, parse_chat_response, parse_models_list,
 };
+use super::request_purpose::RequestPurpose;
 use super::route::{self, LlmRoute, RouteError};
 use super::types::{ChatRequest, ChatResponse, LlmError, ModelInfo};
 use crate::services::secure_http::{read_json_bounded, AuthenticatedClient, LLM_BODY_LIMIT};
@@ -33,7 +34,9 @@ impl OpenAiCompatProvider {
         }
         let url = format!("{}{}", self.route.base_url, self.route.models_endpoint);
         let response = self
-            .send(|token, headers| self.client.get(&url).headers(headers).bearer_auth(token))
+            .send(RequestPurpose::AccountMetadata, |token, headers| {
+                self.client.get(&url).headers(headers).bearer_auth(token)
+            })
             .await?;
         if !response.status().is_success() {
             return Err(map_error_status(response, self.route.chat_provider_id).await);
@@ -42,11 +45,17 @@ impl OpenAiCompatProvider {
         parse_models_list(&body, canonical)
     }
 
-    pub async fn chat_completion(&self, request: ChatRequest) -> Result<ChatResponse, LlmError> {
+    pub async fn chat_completion(
+        &self,
+        request: ChatRequest,
+        purpose: RequestPurpose,
+    ) -> Result<ChatResponse, LlmError> {
         let url = format!("{}/chat/completions", self.route.base_url);
         let payload = build_payload(&request, false);
+        let usage_generation =
+            crate::services::provider_usage::credential_generation(self.route.chat_provider_id);
         let response = self
-            .send(|token, headers| {
+            .send(purpose, |token, headers| {
                 self.client
                     .post(&url)
                     .headers(headers)
@@ -56,6 +65,7 @@ impl OpenAiCompatProvider {
             .await?;
         crate::services::provider_usage::capture_headers(
             self.route.chat_provider_id,
+            usage_generation,
             response.headers(),
         )
         .await;
@@ -79,8 +89,10 @@ impl OpenAiCompatProvider {
             "messages": [{"role": "user", "content": "hi"}],
             "max_tokens": 1,
         });
+        let usage_generation =
+            crate::services::provider_usage::credential_generation(self.route.chat_provider_id);
         let response = self
-            .send(|token, headers| {
+            .send(RequestPurpose::AccountMetadata, |token, headers| {
                 self.client
                     .post(&url)
                     .headers(headers)
@@ -90,6 +102,7 @@ impl OpenAiCompatProvider {
             .await?;
         crate::services::provider_usage::capture_headers(
             self.route.chat_provider_id,
+            usage_generation,
             response.headers(),
         )
         .await;
@@ -100,15 +113,20 @@ impl OpenAiCompatProvider {
         }
     }
 
-    async fn send<F>(&self, build: F) -> Result<reqwest::Response, LlmError>
+    async fn send<F>(
+        &self,
+        purpose: RequestPurpose,
+        build: F,
+    ) -> Result<reqwest::Response, LlmError>
     where
         F: Fn(&str, reqwest::header::HeaderMap) -> reqwest::RequestBuilder,
     {
         self.route
-            .send_authenticated(&self.client, build)
+            .send_authenticated(&self.client, purpose, build)
             .await
             .map_err(|error| match error {
                 RouteError::Unauthorized => LlmError::Unauthorized,
+                RouteError::Forbidden => LlmError::Provider("usage non interactif refusé".into()),
                 RouteError::Network => network_error(),
             })
     }

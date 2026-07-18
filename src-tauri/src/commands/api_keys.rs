@@ -16,6 +16,7 @@ pub async fn set_api_key(
     let result = api_keys::set_key(&provider, &key);
     key.zeroize();
     if result.is_ok() {
+        crate::services::provider_usage::invalidate_remote(&provider).await;
         let _ = app.emit("providers-changed", ());
     }
     result
@@ -24,6 +25,7 @@ pub async fn set_api_key(
 #[tauri::command]
 pub async fn delete_api_key(app: tauri::AppHandle, provider: String) -> Result<(), String> {
     api_keys::delete_key(&provider)?;
+    crate::services::provider_usage::invalidate_remote(&provider).await;
     let _ = app.emit("providers-changed", ());
     Ok(())
 }

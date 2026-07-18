@@ -121,5 +121,5 @@ fn finite(value: Option<f64>) -> Option<f64> {
 }
 
 fn timestamp(value: &serde_json::Value) -> Option<i64> {
-    value.as_i64().filter(|value| *value > 0)
+    value.as_i64().and_then(super::types::valid_reset_timestamp)
 }

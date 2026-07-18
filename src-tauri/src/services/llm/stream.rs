@@ -3,11 +3,13 @@ use super::stream_http::{post_chat_request, RequestConfig, RequestError};
 use crate::services::agent_local::stream_events::AgentEventEmitter;
 use crate::services::agent_local::types_ollama::{ChatMessage, StreamEvent, StreamOutcome};
 use crate::services::compress::realtime_budget::RealtimeBudget;
+use crate::services::llm::request_purpose::RequestPurpose;
 use crate::services::llm::vision;
 use tokio_util::sync::CancellationToken;
 pub async fn stream_chat_no_done(
     on_event: &AgentEventEmitter,
     provider_id: &str,
+    purpose: RequestPurpose,
     model: &str,
     messages: &[ChatMessage],
     tools: &[serde_json::Value],
@@ -39,6 +41,7 @@ pub async fn stream_chat_no_done(
         think,
         reasoning_mode,
         max_tokens: None,
+        purpose,
     };
     match post_chat_request(&cfg).await {
         Ok(resp) => {
@@ -56,6 +59,7 @@ pub async fn stream_chat_no_done(
                 think,
                 reasoning_mode,
                 max_tokens: None,
+                purpose,
             };
             let resp = post_chat_request(&cfg2).await.map_err(|e| e.to_string())?;
             let (outcome, _, _) =
@@ -78,6 +82,7 @@ pub async fn stream_chat_no_done(
                 think,
                 reasoning_mode,
                 max_tokens: None,
+                purpose,
             };
             let resp = post_chat_request(&cfg2).await.map_err(|e| e.to_string())?;
             let (outcome, _, _) =

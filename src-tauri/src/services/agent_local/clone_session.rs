@@ -150,11 +150,13 @@ async fn collect_summary(
             result = request => result.map(|(content, _)| content),
         };
     }
+    let purpose = crate::services::llm::request_purpose::RequestPurpose::for_session(session_id).await;
     let result = crate::services::llm::stream::collect_chat_silent_for_compression(
         provider,
         model,
         &messages,
         SUMMARY_MAX_TOKENS,
+        purpose,
         cancel,
     )
     .await?;

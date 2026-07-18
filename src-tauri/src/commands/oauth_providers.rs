@@ -28,6 +28,7 @@ pub async fn start_oauth_provider_login(
             oauth_providers::login_external(app.clone(), provider, &diagnostic_id).await?;
         }
     }
+    crate::services::provider_usage::invalidate_remote(provider.usage_connection_id()).await;
     let _ = app.emit(STATUS_EVENT, ());
     Ok(())
 }
@@ -55,6 +56,7 @@ pub async fn disconnect_oauth_provider(
             oauth_providers::logout_external(provider).await?;
         }
     }
+    crate::services::provider_usage::invalidate_remote(provider.usage_connection_id()).await;
     let _ = app.emit(STATUS_EVENT, ());
     Ok(())
 }

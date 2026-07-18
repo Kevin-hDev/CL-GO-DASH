@@ -2,6 +2,7 @@ mod callback;
 mod device_flow;
 mod headers;
 mod kimi;
+mod lifecycle;
 mod login_registry;
 mod oauth_http;
 mod refresh;
@@ -32,15 +33,31 @@ struct LoginProgress<'a> {
 
 pub async fn login(app: AppHandle, provider: LlmOAuthProvider) -> Result<(), String> {
     let cancel = login_registry::register(provider).await?;
+    let expected_generation = store::generation(provider);
     emit_progress(&app, provider, "starting", None, None);
     let result = match provider {
         LlmOAuthProvider::Xai => xai::login(&app, &cancel).await,
         LlmOAuthProvider::Kimi => kimi::login(&app, &cancel).await,
     };
     let outcome = match result {
-        Ok(tokens) => store::save(provider, &tokens).map(|_| {
-            emit_progress(&app, provider, "success", None, None);
-        }),
+        Ok(tokens) => {
+            let _guard = lifecycle::lock(provider).await;
+            if cancel.is_cancelled() {
+                emit_progress(&app, provider, "cancelled", None, None);
+                Err("Connexion annulée".to_string())
+            } else {
+                match store::save_if_generation(provider, &tokens, expected_generation) {
+                    Ok(_) => {
+                        emit_progress(&app, provider, "success", None, None);
+                        Ok(())
+                    }
+                    Err(_) => {
+                        emit_progress(&app, provider, "error", None, None);
+                        Err("Connexion impossible".to_string())
+                    }
+                }
+            }
+        }
         Err(OAuthFailure::Cancelled) => {
             emit_progress(&app, provider, "cancelled", None, None);
             Err("Connexion annulée".to_string())
@@ -62,11 +79,14 @@ pub async fn cancel_all() {
     login_registry::cancel_all().await;
 }
 
-pub fn logout(provider: LlmOAuthProvider) -> Result<(), String> {
+pub async fn logout(provider: LlmOAuthProvider) -> Result<(), String> {
+    login_registry::cancel(provider).await;
+    let _guard = lifecycle::lock(provider).await;
     store::clear(provider)
 }
 
-pub fn invalidate(provider: LlmOAuthProvider) {
+pub async fn invalidate(provider: LlmOAuthProvider) {
+    let _guard = lifecycle::lock(provider).await;
     let _ = store::clear(provider);
 }
 

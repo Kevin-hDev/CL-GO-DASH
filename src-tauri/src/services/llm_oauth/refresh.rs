@@ -1,10 +1,4 @@
-use std::sync::LazyLock;
-
-use tokio::sync::Mutex;
-
-use super::{kimi, store, xai, AccessToken, LlmOAuthProvider, OAuthFailure};
-
-static REFRESH_LOCKS: LazyLock<[Mutex<()>; 2]> = LazyLock::new(|| [Mutex::new(()), Mutex::new(())]);
+use super::{kimi, lifecycle, store, xai, AccessToken, LlmOAuthProvider, OAuthFailure};
 
 pub async fn access_token(provider: LlmOAuthProvider) -> Result<AccessToken, String> {
     let tokens = store::load(provider)?.ok_or_else(not_connected)?;
@@ -29,7 +23,7 @@ async fn refresh_locked(
     provider: LlmOAuthProvider,
     expected_generation: u64,
 ) -> Result<AccessToken, String> {
-    let _guard = REFRESH_LOCKS[provider.index()].lock().await;
+    let _guard = lifecycle::lock(provider).await;
     let current = store::load(provider)?.ok_or_else(not_connected)?;
     let current_generation = store::generation(provider);
     if current_generation != expected_generation && current.is_fresh() {
@@ -44,7 +38,7 @@ async fn refresh_locked(
     };
     match refreshed {
         Ok(tokens) => {
-            let generation = store::save(provider, &tokens)?;
+            let generation = store::save_if_generation(provider, &tokens, current_generation)?;
             Ok(AccessToken {
                 value: tokens.access,
                 generation,
@@ -60,26 +54,4 @@ async fn refresh_locked(
 
 fn not_connected() -> String {
     "Connexion requise".to_string()
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::sync::atomic::{AtomicBool, Ordering};
-
-    #[tokio::test]
-    async fn same_provider_refreshes_are_serialized() {
-        let first = REFRESH_LOCKS[LlmOAuthProvider::Xai.index()].lock().await;
-        let entered = std::sync::Arc::new(AtomicBool::new(false));
-        let observed = entered.clone();
-        let waiting = tokio::spawn(async move {
-            let _second = REFRESH_LOCKS[LlmOAuthProvider::Xai.index()].lock().await;
-            observed.store(true, Ordering::SeqCst);
-        });
-        tokio::task::yield_now().await;
-        assert!(!entered.load(Ordering::SeqCst));
-        drop(first);
-        waiting.await.unwrap();
-        assert!(entered.load(Ordering::SeqCst));
-    }
 }

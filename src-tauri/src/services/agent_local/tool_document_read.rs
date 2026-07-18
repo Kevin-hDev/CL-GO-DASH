@@ -151,8 +151,10 @@ fn extract_text_from_ooxml(xml: &str) -> Result<String, String> {
                 }
             }
             Ok(Event::Text(ref e)) if in_paragraph => {
-                if let Ok(s) = e.unescape() {
-                    para_text.push_str(&s);
+                if let Ok(decoded) = e.xml10_content() {
+                    if let Ok(unescaped) = quick_xml::escape::unescape(&decoded) {
+                        para_text.push_str(&unescaped);
+                    }
                 }
             }
             Ok(Event::Eof) if in_paragraph || !para_text.is_empty() => {

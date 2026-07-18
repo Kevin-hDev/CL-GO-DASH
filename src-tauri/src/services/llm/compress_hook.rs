@@ -55,11 +55,14 @@ pub async fn try_auto_compress(
     eprintln!(
         "[compress] auto llm start session={session_id} provider={provider_id} input_tokens={estimated} output_limit={output_limit}"
     );
+    let purpose =
+        crate::services::llm::request_purpose::RequestPurpose::for_session(session_id).await;
     match stream::collect_chat_silent_for_compression(
         provider_id,
         model,
         &compress_msgs,
         output_limit,
+        purpose,
         cancel.clone(),
     )
     .await
