@@ -1,0 +1,11 @@
+Analyse de la review Git du 19 juillet 2026.
+
+Vrais problèmes corrigés dans ce commit : course entre deux sélections de commit, aperçu PDF ou DOCX Git trop volumineux ramené de 50 Mio à 10 Mio avant copie et encodage, erreur de lecture du statut distant auparavant confondue avec une absence de remote, watcher Git désormais arrêté au changement de projet et au démontage.
+
+Points partiellement vrais : les erreurs génériques des mutations limitent le diagnostic mais respectent la règle de non-divulgation; un nettoyage de requête au démontage reste une amélioration mineure; la validation supplémentaire des chemins issus de git2 serait du durcissement défensif, pas une faille démontrée.
+
+Points rejetés ou exagérés : les watchers ne s'accumulaient pas car le backend remplaçait déjà le précédent; les doubles clics sont déjà bloqués par les états busy de l'interface; un try catch autour de lowlight ne préviendrait pas un gel; les chemins gitdir absolus sont normaux pour les worktrees et ne doivent pas être confinés au dossier de données; la règle CSS signalée vise des classes différentes; la validation runtime des réponses IPC est une option de robustesse et non une frontière de sécurité; la taille des tableurs était déjà contrôlée avant le fichier temporaire.
+
+Précisions sur les points annoncés solides : dangerouslySetInnerHTML est utilisé dans plusieurs composants mais reçoit des données échappées; certains noms de branche ressemblant à une commande peuvent être valides dans Git, sans risque d'injection puisque tous les arguments système sont séparés et aucun shell intermédiaire n'est utilisé.
+
+Tests ajoutés : sélection tardive A vers B, pagination des commits, erreur de statut distant, cycle de vie du watcher, limite des blobs avant copie, échappement XSS de highlightLines, suppression propre et forcée de worktrees, rejet d'un dossier non-worktree et suppression de worktree depuis l'interface.
