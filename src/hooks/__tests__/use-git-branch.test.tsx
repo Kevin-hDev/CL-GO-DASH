@@ -86,8 +86,10 @@ describe("useGitBranch", () => {
     mockGitCommands(false, { dirtyCount: 1, snapshot: snapshot.promise });
     const { result } = renderHook(() => useGitBranch("/repo"));
 
-    await waitFor(() => expect(result.current.uncommittedSnapshotStatus).toBe("loading"));
-    expect(result.current.dirtyCount).toBe(1);
+    await waitFor(() => {
+      expect(result.current.uncommittedSnapshotStatus).toBe("loading");
+      expect(result.current.dirtyCount).toBe(1);
+    });
 
     snapshot.resolve(emptySnapshot());
     await waitFor(() => expect(result.current.uncommittedSnapshotStatus).toBe("ready"));

@@ -35,6 +35,7 @@ pub(super) async fn run(params: OllamaRequestParams<'_>) -> Result<OllamaRequest
         .subagents
         .prepare_for_model_request(params.messages)
         .await?;
+    super::session_security::sanitize_chat_messages(params.messages);
     super::tool_result_budget::apply_budget(params.messages);
     super::context_budget::prepare_for_request(params.messages, params.configured_context)?;
     let realtime_budget = RealtimeBudget::from_messages(params.configured_context, params.messages);

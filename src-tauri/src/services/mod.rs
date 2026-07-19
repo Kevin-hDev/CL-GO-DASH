@@ -48,6 +48,7 @@ pub mod scheduler;
 pub mod search;
 pub mod searxng;
 pub mod secure_http;
+pub mod security_cleanup;
 pub mod stream_utils;
 pub mod terminal;
 pub mod token_counting;

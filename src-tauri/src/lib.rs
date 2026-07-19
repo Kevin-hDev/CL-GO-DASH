@@ -87,6 +87,9 @@ pub fn run() {
                 eprintln!("[storage migration] {}", e);
             }
             services::private_store::repair_app_storage().map_err(std::io::Error::other)?;
+            if services::security_cleanup::run().is_err() {
+                eprintln!("[security cleanup] cleanup failed");
+            }
             // Cleanup des sous-agents orphelins (crash précédent) : non bloquant.
             tauri::async_runtime::spawn(async move {
                 services::agent_local::subagent_startup_cleanup::cleanup_orphans(startup_cutoff)

@@ -25,6 +25,12 @@ pub fn atomic_write(path: &Path, bytes: &[u8]) -> Result<(), String> {
     result
 }
 
+pub async fn atomic_write_async(path: PathBuf, bytes: Vec<u8>) -> Result<(), String> {
+    tokio::task::spawn_blocking(move || atomic_write(&path, &bytes))
+        .await
+        .map_err(|_| "stockage privé indisponible".to_string())?
+}
+
 pub fn repair_path(path: &Path) -> Result<(), String> {
     if !path.exists() {
         return Ok(());

@@ -1,7 +1,3 @@
-use regex::Regex;
-use serde_json::{Map, Value};
-use std::sync::LazyLock;
-
 pub const PROTECTED_APP_FILES: &[&str] = &[
     "config.json",
     "secrets.enc",
@@ -27,43 +23,6 @@ const SENSITIVE_PATH_MARKERS: &[&str] = &[
     "login.keychain",
     "keychain-db",
 ];
-
-static SECRET_VALUE_RE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(
-        r#"(?i)\b(api[_-]?key|apikey|token|secret|password|authorization|client_secret|access_token|refresh_token)("?\s*[:=]\s*)("[^"]*"|'[^']*'|[^\s,}]+)"#,
-    )
-    .expect("secret value regex")
-});
-
-static TOKEN_RE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(
-        r"(?ix)
-        (?:
-            sk-(?:proj-)?[a-z0-9_-]{8,}
-          | bearer[\t ]+[a-z0-9._~+/=-]{8,}
-          | gh(?:p|o|u|s|r)_[a-z0-9_-]{8,}
-          | github_pat_[a-z0-9_-]{8,}
-          | glpat-[a-z0-9_-]{8,}
-          | xapp-[a-z0-9-]{8,}
-          | xox[a-z]-[a-z0-9-]{8,}
-          | [0-9]{5,}:[a-z0-9_-]{20,}
-          | (?:AKIA|ASIA)[A-Z0-9]{16}
-          | AIza[a-z0-9_-]{35}
-          | https://hooks[.]slack[.]com/services/[a-z0-9_-]{8,64}/[a-z0-9_-]{8,64}/[a-z0-9_-]{8,128}
-          | [a-z0-9_-]{20,}\.[a-z0-9_-]{5,}\.[a-z0-9_-]{20,}
-        )",
-    )
-    .expect("token regex")
-});
-
-static BEARER_RE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r#"(?i)Bearer\s+[^\s,}\"']+"#).expect("bearer regex")
-});
-
-static PEM_BLOCK_RE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"(?is)-----BEGIN [A-Z0-9 ]*(PRIVATE KEY|CERTIFICATE)[A-Z0-9 ]*-----.*?-----END [A-Z0-9 ]*(PRIVATE KEY|CERTIFICATE)[A-Z0-9 ]*-----")
-        .expect("pem regex")
-});
 
 pub fn bash_touches_sensitive_data(command: &str) -> bool {
     // On retire le contenu des heredocs avant l'analyse : un fichier qui
@@ -136,19 +95,6 @@ fn heredoc_delimiter(line: &str) -> Option<String> {
     }
 }
 
-pub fn redact_text(content: &str) -> String {
-    let pem_redacted = PEM_BLOCK_RE.replace_all(content, "[REDACTED]");
-    let bearer_redacted = BEARER_RE.replace_all(&pem_redacted, "[REDACTED]");
-    let tokens_redacted = TOKEN_RE.replace_all(&bearer_redacted, "[REDACTED]");
-    SECRET_VALUE_RE
-        .replace_all(&tokens_redacted, "$1$2[REDACTED]")
-        .into_owned()
-}
-
-pub fn redact_json(value: &Value) -> Value {
-    redact_json_inner(value, 0)
-}
-
 fn mentions_protected_app_file(normalized_command: &str) -> bool {
     let data_dir = crate::services::paths::data_dir()
         .to_string_lossy()
@@ -164,30 +110,7 @@ fn mentions_protected_app_file(normalized_command: &str) -> bool {
     })
 }
 
-fn redact_json_inner(value: &Value, depth: usize) -> Value {
-    if depth > 8 {
-        return Value::String("[REDACTED]".to_string());
-    }
-    match value {
-        Value::String(s) => Value::String(redact_text(s)),
-        Value::Array(items) => Value::Array(
-            items
-                .iter()
-                .take(64)
-                .map(|item| redact_json_inner(item, depth + 1))
-                .collect(),
-        ),
-        Value::Object(map) => {
-            let redacted: Map<String, Value> = map
-                .iter()
-                .take(64)
-                .map(|(k, v)| (k.clone(), redact_json_inner(v, depth + 1)))
-                .collect();
-            Value::Object(redacted)
-        }
-        _ => value.clone(),
-    }
-}
+include!("sensitive_data_redaction.rs");
 
 #[cfg(test)]
 #[path = "sensitive_data_tests.rs"]

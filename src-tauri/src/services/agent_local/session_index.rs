@@ -1,23 +1,15 @@
 use super::session_store::validate_session_id;
+use super::session_security;
+use super::session_index_io::{
+    index_fingerprint, index_path, read_index_raw, write_index, IndexFingerprint,
+};
+pub(crate) use super::session_index_io::write_index_to;
 use crate::services::agent_local::types_session::{AgentSession, AgentSessionMeta};
-use std::path::{Path, PathBuf};
-use std::time::SystemTime;
+use std::path::Path;
 use tokio::sync::Mutex;
 
 static INDEX_LOCK: Mutex<()> = Mutex::const_new(());
 static INDEX_RECONCILE_FINGERPRINT: Mutex<Option<IndexFingerprint>> = Mutex::const_new(None);
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-struct IndexFingerprint {
-    len: u64,
-    modified: Option<SystemTime>,
-}
-
-fn index_path() -> PathBuf {
-    crate::services::paths::data_dir()
-        .join("agent-sessions")
-        .join("index.json")
-}
 
 pub async fn read_index() -> Result<Vec<AgentSessionMeta>, String> {
     let mut last_fingerprint = INDEX_RECONCILE_FINGERPRINT.lock().await;
@@ -48,14 +40,6 @@ pub async fn read_index() -> Result<Vec<AgentSessionMeta>, String> {
     }
 }
 
-async fn index_fingerprint(path: &Path) -> Option<IndexFingerprint> {
-    let metadata = tokio::fs::metadata(path).await.ok()?;
-    Some(IndexFingerprint {
-        len: metadata.len(),
-        modified: metadata.modified().ok(),
-    })
-}
-
 async fn reconcile_index(
     index_path: &Path,
     entries: Vec<AgentSessionMeta>,
@@ -82,15 +66,16 @@ async fn reconcile_index(
 }
 
 fn index_meta_drifted(meta: &AgentSessionMeta, session: &AgentSession) -> bool {
+    let expected = meta_from_session(session);
     meta.archived_at != session.archived_at
         || meta.parent_session_id != session.parent_session_id
         || meta.subagent_type != session.subagent_type
         || meta.subagent_status != session.subagent_status
         || meta.subagent_run_id != session.subagent_run_id
-        || meta.subagent_description != session.subagent_description
+        || meta.subagent_description != expected.subagent_description
         || meta.subagent_color_key != session.subagent_color_key
-        || meta.subagent_summary != session.subagent_summary
-        || meta.subagent_last_activity != session.subagent_last_activity
+        || meta.subagent_summary != expected.subagent_summary
+        || meta.subagent_last_activity != expected.subagent_last_activity
         || meta.clone_parent_session_id != session.clone_parent_session_id
         || meta.clone_parent_message_id != session.clone_parent_message_id
         || meta.clone_mode != session.clone_mode
@@ -152,7 +137,9 @@ pub async fn remove_entry(id: &str) -> Result<(), String> {
 pub fn meta_from_session(session: &AgentSession) -> AgentSessionMeta {
     AgentSessionMeta {
         id: session.id.clone(),
-        name: session.name.clone(),
+        name: crate::services::agent_local::sensitive_data::redact_high_confidence_text(
+            &session.name,
+        ),
         created_at: session.created_at,
         updated_at: session.updated_at,
         archived_at: session.archived_at,
@@ -163,52 +150,22 @@ pub fn meta_from_session(session: &AgentSession) -> AgentSessionMeta {
         message_count: session.messages.len(),
         is_heartbeat: session.is_heartbeat,
         is_gateway: session.is_gateway,
-        gateway_channel_key: session.gateway_channel_key.clone(),
+        gateway_channel_key: session_security::redacted_optional(&session.gateway_channel_key),
         project_id: session.project_id.clone(),
         parent_session_id: session.parent_session_id.clone(),
         subagent_type: session.subagent_type.clone(),
         subagent_status: session.subagent_status.clone(),
         subagent_run_id: session.subagent_run_id.clone(),
-        subagent_description: session.subagent_description.clone(),
+        subagent_description: session_security::redacted_optional(&session.subagent_description),
         subagent_color_key: session.subagent_color_key.clone(),
-        subagent_summary: session.subagent_summary.clone(),
-        subagent_last_activity: session.subagent_last_activity.clone(),
+        subagent_summary: session_security::redacted_optional(&session.subagent_summary),
+        subagent_last_activity: session_security::redacted_activity(&session.subagent_last_activity),
         clone_parent_session_id: session.clone_parent_session_id.clone(),
         clone_parent_message_id: session.clone_parent_message_id.clone(),
         clone_mode: session.clone_mode.clone(),
         clone_root_session_id: session.clone_root_session_id.clone(),
         git_branch: session.git_branch.clone(),
     }
-}
-
-async fn read_index_raw() -> Vec<AgentSessionMeta> {
-    let path = index_path();
-    if let Ok(data) = tokio::fs::read_to_string(&path).await {
-        serde_json::from_str(&data).unwrap_or_default()
-    } else {
-        Vec::new()
-    }
-}
-
-async fn write_index(entries: &[AgentSessionMeta]) -> Result<(), String> {
-    let dir = crate::services::paths::data_dir().join("agent-sessions");
-    write_index_to(&dir, entries).await
-}
-
-pub(crate) async fn write_index_to(dir: &Path, entries: &[AgentSessionMeta]) -> Result<(), String> {
-    tokio::fs::create_dir_all(dir)
-        .await
-        .map_err(|e| e.to_string())?;
-    let path = dir.join("index.json");
-    let tmp = dir.join(format!(".index.{}.tmp", uuid::Uuid::new_v4()));
-    let data = serde_json::to_string_pretty(entries).map_err(|e| e.to_string())?;
-    tokio::fs::write(&tmp, &data)
-        .await
-        .map_err(|e| e.to_string())?;
-    tokio::fs::rename(&tmp, &path)
-        .await
-        .map_err(|e| e.to_string())?;
-    Ok(())
 }
 
 async fn refresh_reconcile_fingerprint() {

@@ -136,16 +136,11 @@ pub async fn save(session: &AgentSession) -> Result<(), String> {
         .await
         .map_err(|e| e.to_string())?;
     let path = dir.join(format!("{}.json", session.id));
-    let tmp = dir.join(format!(".{}.{}.tmp", session.id, Uuid::new_v4()));
     let mut value = serde_json::to_value(session).map_err(|e| e.to_string())?;
     super::session_permission_state::merge_into_serialized(&session.id, &mut value).await;
+    super::session_security::sanitize_session_value(&mut value);
     let data = serde_json::to_string_pretty(&value).map_err(|e| e.to_string())?;
-    tokio::fs::write(&tmp, &data)
-        .await
-        .map_err(|e| e.to_string())?;
-    tokio::fs::rename(&tmp, &path)
-        .await
-        .map_err(|e| e.to_string())?;
+    crate::services::private_store::atomic_write_async(path, data.into_bytes()).await?;
     let meta = crate::services::agent_local::session_index::meta_from_session(session);
     let _ = crate::services::agent_local::session_index::upsert_entry(meta).await;
     Ok(())
