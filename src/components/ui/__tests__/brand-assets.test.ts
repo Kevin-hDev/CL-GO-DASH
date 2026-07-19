@@ -61,7 +61,8 @@ describe("assets de marque", () => {
     const splash = readText("index.html");
     const onboarding = readText("src/components/onboarding/onboarding.css");
 
-    expect(splash).toContain("width: 144px");
+    expect(splash).toContain("width: 170px");
+    expect(splash).toContain("height: 170px");
     expect(splash).toContain("--splash-mark: #c8c8ce");
     expect(splash).toContain("--splash-mark: #1a1a1a");
     expect(splash).toContain('mask: url("/castor.svg")');
