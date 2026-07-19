@@ -7,6 +7,7 @@ vi.mock("react-i18next", () => ({
     t: (key: string) => {
       if (key === "settings.emeraldNight") return "Émeraude nocturne";
       if (key === "settings.cobaltFrost") return "Cobalt givré";
+      if (key === "settings.astralMist") return "Brume astrale";
       return key;
     },
   }),
@@ -31,5 +32,15 @@ describe("ThemeSelector", () => {
 
     expect(onChange).toHaveBeenCalledWith("cobalt-frost");
     expect(container.querySelector('[data-palette="cobalt-frost"]')).toHaveAttribute("data-theme", "light");
+  });
+
+  it("affiche et sélectionne Brume astrale comme thème sombre", () => {
+    const onChange = vi.fn();
+    const { container } = render(<ThemeSelector value="dark" onChange={onChange} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Brume astrale" }));
+
+    expect(onChange).toHaveBeenCalledWith("astral-mist");
+    expect(container.querySelector('[data-palette="astral-mist"]')).toHaveAttribute("data-theme", "dark");
   });
 });

@@ -26,9 +26,19 @@ describe("app themes", () => {
     expect(getThemeColorScheme("cobalt-frost")).toBe("light");
   });
 
+  it("déclare Brume astrale comme une palette sombre", () => {
+    expect(THEME_OPTIONS).toContainEqual({
+      id: "astral-mist",
+      labelKey: "settings.astralMist",
+      colorScheme: "dark",
+    });
+    expect(getThemeColorScheme("astral-mist")).toBe("dark");
+  });
+
   it("valide uniquement les choix de thème connus", () => {
     expect(isThemeChoice("emerald-night")).toBe(true);
     expect(isThemeChoice("cobalt-frost")).toBe(true);
+    expect(isThemeChoice("astral-mist")).toBe(true);
     expect(isThemeChoice("unknown-theme")).toBe(false);
     expect(isThemeChoice(null)).toBe(false);
   });
@@ -38,12 +48,14 @@ describe("app themes", () => {
     expect(resolveTheme("system", false)).toBe("light");
     expect(resolveTheme("emerald-night", false)).toBe("emerald-night");
     expect(resolveTheme("cobalt-frost", true)).toBe("cobalt-frost");
+    expect(resolveTheme("astral-mist", false)).toBe("astral-mist");
   });
 
   it("inclut les palettes personnalisées dans le cycle des thèmes", () => {
     expect(getNextThemeChoice("dark")).toBe("emerald-night");
     expect(getNextThemeChoice("emerald-night")).toBe("cobalt-frost");
-    expect(getNextThemeChoice("cobalt-frost")).toBe("system");
+    expect(getNextThemeChoice("cobalt-frost")).toBe("astral-mist");
+    expect(getNextThemeChoice("astral-mist")).toBe("system");
     expect(getNextThemeChoice("system")).toBe("light");
   });
 });

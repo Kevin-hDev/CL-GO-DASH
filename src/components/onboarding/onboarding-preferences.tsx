@@ -15,10 +15,8 @@ interface OnboardingPreferencesProps {
 function getThemeIcon(theme: ThemeChoice): ReactNode {
   if (theme === "light") return <Sun size="var(--icon-lg)" />;
   if (theme === "dark") return <Moon size="var(--icon-lg)" />;
-  if (theme === "emerald-night" || theme === "cobalt-frost") {
-    return <Sparkle size="var(--icon-lg)" />;
-  }
-  return <Gear size="var(--icon-lg)" />;
+  if (theme === "system") return <Gear size="var(--icon-lg)" />;
+  return <Sparkle size="var(--icon-lg)" />;
 }
 
 export function OnboardingPreferences({

@@ -5,6 +5,7 @@ const darkCss = readFileSync("src/styles/themes/dark.css", "utf8");
 const lightCss = readFileSync("src/styles/themes/light.css", "utf8");
 const emeraldCss = readFileSync("src/styles/themes/emerald-night.css", "utf8");
 const cobaltCss = readFileSync("src/styles/themes/cobalt-frost.css", "utf8");
+const astralCss = readFileSync("src/styles/themes/astral-mist.css", "utf8");
 const toolPreviewsCss = readFileSync("src/components/agent-local/tool-previews.css", "utf8");
 const gitDiffCss = readFileSync("src/components/file-preview/git-diff-preview.css", "utf8");
 
@@ -73,5 +74,24 @@ describe("Cobalt Frost palette", () => {
     expect(toolPreviewsCss).toContain("background: var(--diff-del-bg);");
     expect(toolPreviewsCss).toContain("color: var(--diff-new);");
     expect(gitDiffCss).toContain("color: var(--diff-new);");
+  });
+});
+
+describe("Astral Mist palette", () => {
+  it("définit tous les tokens du thème sombre", () => {
+    expect(tokenNames(astralCss)).toEqual(tokenNames(darkCss));
+  });
+
+  it("maintient des contrastes lisibles pour les textes et actions", () => {
+    expect(contrast("#dce4ee", "#030817")).toBeGreaterThanOrEqual(7);
+    expect(contrast("#aab9cb", "#030817")).toBeGreaterThanOrEqual(4.5);
+    expect(contrast("#9ab5d5", "#07111f")).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("distingue les nouvelles lignes gris-bleu des anciennes lignes rouges", () => {
+    expect(astralCss).toContain("--diff-new: #9cb6d3;");
+    expect(astralCss).toContain("--diff-old: #f07680;");
+    expect(contrast("#9cb6d3", "#030817")).toBeGreaterThanOrEqual(4.5);
+    expect(contrast("#f07680", "#030817")).toBeGreaterThanOrEqual(4.5);
   });
 });

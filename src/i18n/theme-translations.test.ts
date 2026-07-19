@@ -11,6 +11,7 @@ interface ThemeLocale {
   settings: {
     emeraldNight: string;
     cobaltFrost: string;
+    astralMist: string;
   };
 }
 
@@ -21,6 +22,7 @@ describe("theme translations", () => {
     for (const locale of locales) {
       expect(locale.settings.emeraldNight.trim()).not.toBe("");
       expect(locale.settings.cobaltFrost.trim()).not.toBe("");
+      expect(locale.settings.astralMist.trim()).not.toBe("");
     }
   });
 });

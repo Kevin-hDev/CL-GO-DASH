@@ -3,6 +3,7 @@ export const RESOLVED_THEME_OPTIONS = [
   { id: "dark", labelKey: "settings.dark", colorScheme: "dark" },
   { id: "emerald-night", labelKey: "settings.emeraldNight", colorScheme: "dark" },
   { id: "cobalt-frost", labelKey: "settings.cobaltFrost", colorScheme: "light" },
+  { id: "astral-mist", labelKey: "settings.astralMist", colorScheme: "dark" },
 ] as const;
 
 export const THEME_OPTIONS = [
@@ -14,6 +15,10 @@ export type ResolvedTheme = (typeof RESOLVED_THEME_OPTIONS)[number]["id"];
 export type ThemeChoice = (typeof THEME_OPTIONS)[number]["id"];
 export type ThemeColorScheme = "light" | "dark";
 
+const COLOR_SCHEME_BY_THEME = Object.fromEntries(
+  RESOLVED_THEME_OPTIONS.map(({ id, colorScheme }) => [id, colorScheme]),
+) as Record<ResolvedTheme, ThemeColorScheme>;
+
 export function isThemeChoice(value: string | null): value is ThemeChoice {
   return THEME_OPTIONS.some((option) => option.id === value);
 }
@@ -24,7 +29,7 @@ export function resolveTheme(choice: ThemeChoice, prefersDark: boolean): Resolve
 }
 
 export function getThemeColorScheme(theme: ResolvedTheme): ThemeColorScheme {
-  return theme === "dark" || theme === "emerald-night" ? "dark" : "light";
+  return COLOR_SCHEME_BY_THEME[theme];
 }
 
 export function getNextThemeChoice(choice: ThemeChoice): ThemeChoice {

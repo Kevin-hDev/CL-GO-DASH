@@ -80,4 +80,15 @@ describe("useTheme", () => {
     expect(document.documentElement).toHaveAttribute("data-theme", "light");
     expect(document.documentElement).toHaveAttribute("data-palette", "cobalt-frost");
   });
+
+  it("restaure et applique Brume astrale comme thème sombre", async () => {
+    localStorage.setItem("clgo-theme", "astral-mist");
+
+    const { result } = renderHook(() => useTheme());
+
+    await waitFor(() => expect(result.current.theme).toBe("astral-mist"));
+    expect(result.current.choice).toBe("astral-mist");
+    expect(document.documentElement).toHaveAttribute("data-theme", "dark");
+    expect(document.documentElement).toHaveAttribute("data-palette", "astral-mist");
+  });
 });
