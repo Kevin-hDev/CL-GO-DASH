@@ -33,7 +33,7 @@ pub fn read_blob(
     Ok(blob.content().to_vec())
 }
 
-fn validate_repo_path(value: &str) -> Result<(), String> {
+pub(super) fn validate_repo_path(value: &str) -> Result<(), String> {
     let path = Path::new(value);
     if value.is_empty()
         || value.len() > MAX_PATH_LEN

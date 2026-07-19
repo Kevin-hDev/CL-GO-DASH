@@ -851,6 +851,8 @@
     "filesModified": "Dateien",
     "loading": "Datei wird gelesen...",
     "fileNotFound": "Die Datei konnte nicht gelesen werden. Sie wurde möglicherweise gelöscht oder verschoben.",
+    "diffUnavailable": "Die Änderungen dieser Datei können nicht angezeigt werden.",
+    "diffTruncated": "Begrenzte Vorschau: Diese Datei enthält weitere Änderungen.",
     "togglePanel": "Dateivorschau",
     "reduce": "Verkleinern",
     "fullscreen": "Vollbild",

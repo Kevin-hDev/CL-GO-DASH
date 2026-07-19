@@ -28,6 +28,7 @@ export interface GitBranchState {
 
 export interface GitDirtyFile {
   path: string;
+  previous_path?: string | null;
   status: string;
   additions: number;
   deletions: number;
@@ -47,7 +48,7 @@ export interface GitCommitPage {
 
 export interface GitCommitFile {
   path: string;
-  previous_path?: string;
+  previous_path?: string | null;
   status: "added" | "deleted" | "renamed" | "copied" | "modified" | "changed";
   additions: number;
   deletions: number;

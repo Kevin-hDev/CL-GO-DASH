@@ -1,5 +1,10 @@
 import { invoke } from "@tauri-apps/api/core";
-import type { GitFilePreviewSource, PreviewEditor } from "@/types/file-preview";
+import type {
+  GitDiffPreview,
+  GitDiffPreviewSource,
+  GitFilePreviewSource,
+  PreviewEditor,
+} from "@/types/file-preview";
 
 export interface PreviewFileExistence {
   path: string;
@@ -44,6 +49,18 @@ export function readGitFilePreview(source: GitFilePreviewSource, repositoryPath?
   return args
     ? invoke<string>("read_git_file_preview", args)
     : Promise.reject(new Error("git unavailable"));
+}
+
+export function readGitDiffPreview(source: GitDiffPreviewSource, repositoryPath?: string) {
+  if (!repositoryPath) return Promise.reject(new Error("git unavailable"));
+  return invoke<GitDiffPreview>("read_git_diff_preview", {
+    path: repositoryPath,
+    expectedBranch: source.expectedBranch,
+    commitId: source.commitId,
+    filePath: source.filePath,
+    previousPath: source.previousPath,
+    mode: source.mode,
+  });
 }
 
 export function readGitBinaryPreview(source: GitFilePreviewSource, repositoryPath?: string) {

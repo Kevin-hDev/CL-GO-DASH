@@ -1,4 +1,4 @@
-use crate::services::git::{blob_preview, commit_files, history};
+use crate::services::git::{blob_preview, commit_files, diff_preview, history};
 use base64::{engine::general_purpose::STANDARD as B64, Engine};
 use std::io::Write;
 use std::path::Path;
@@ -46,6 +46,38 @@ pub async fn list_git_uncommitted_files(
     let repo_path = super::git::registered_project_path(&path).await?;
     tokio::task::spawn_blocking(move || {
         history::list_uncommitted(&repo_path, &expected_branch)
+    })
+    .await
+    .map_err(|_| unavailable())?
+    .map_err(|_| unavailable())
+}
+
+#[tauri::command]
+pub async fn read_git_diff_preview(
+    path: String,
+    expected_branch: String,
+    commit_id: String,
+    file_path: String,
+    previous_path: Option<String>,
+    mode: String,
+) -> Result<diff_preview::GitDiffPreview, String> {
+    let repo_path = super::git::registered_project_path(&path).await?;
+    tokio::task::spawn_blocking(move || match mode.as_str() {
+        "commit" => diff_preview::read_commit_diff(
+            &repo_path,
+            &expected_branch,
+            &commit_id,
+            &file_path,
+            previous_path.as_deref(),
+        ),
+        "working" => diff_preview::read_working_diff(
+            &repo_path,
+            &expected_branch,
+            &commit_id,
+            &file_path,
+            previous_path.as_deref(),
+        ),
+        _ => Err(unavailable()),
     })
     .await
     .map_err(|_| unavailable())?

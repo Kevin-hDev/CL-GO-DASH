@@ -4,7 +4,11 @@ import type {
   GitCommitSummary,
   GitUncommittedSnapshot,
 } from "@/hooks/git-types";
-import type { FileOperation, GitFilePreviewSource } from "@/types/file-preview";
+import type {
+  FileOperation,
+  GitDiffPreviewSource,
+  GitFilePreviewSource,
+} from "@/types/file-preview";
 
 export function commitFileOperation(
   commit: GitCommitSummary,
@@ -21,6 +25,7 @@ export function commitFileOperation(
     additions: file.additions,
     deletions: file.deletions,
     source: gitSource(commit.id, file.path, branch, useParent),
+    gitDiff: gitDiffSource("commit", commit.id, file.path, branch, file.previous_path),
   };
 }
 
@@ -36,10 +41,29 @@ export function uncommittedFileOperations(
     timestamp: new Date().toISOString(),
     additions: file.additions,
     deletions: file.deletions,
+    gitDiff: gitDiffSource(
+      "working",
+      snapshot.head_commit,
+      file.path,
+      branch,
+      file.previous_path,
+    ),
     source: file.status === "deleted"
       ? gitSource(snapshot.head_commit, file.path, branch, false)
       : undefined,
   }));
+}
+
+function gitDiffSource(
+  mode: GitDiffPreviewSource["mode"],
+  commitId: string,
+  filePath: string,
+  expectedBranch: string,
+  previousPath?: string | null,
+): GitDiffPreviewSource {
+  const source: GitDiffPreviewSource = { kind: "git-diff", mode, commitId, filePath, expectedBranch };
+  if (previousPath) source.previousPath = previousPath;
+  return source;
 }
 
 function gitSource(

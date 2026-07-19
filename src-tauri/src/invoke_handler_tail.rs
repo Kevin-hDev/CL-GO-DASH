@@ -70,6 +70,7 @@ macro_rules! generate_tail {
             crate::commands::list_git_uncommitted_files,
             crate::commands::list_git_commits,
             crate::commands::list_git_commit_files,
+            crate::commands::read_git_diff_preview,
             crate::commands::read_git_file_preview,
             crate::commands::read_git_binary_preview,
             crate::commands::read_git_spreadsheet_preview,

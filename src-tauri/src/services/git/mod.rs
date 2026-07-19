@@ -16,6 +16,11 @@ pub mod branch_merge;
 mod branch_merge_tests;
 pub mod github_auth;
 pub mod commit_files;
+pub mod diff_preview;
+mod diff_preview_model;
+mod diff_preview_serialize;
+#[cfg(test)]
+mod diff_preview_tests;
 pub mod history;
 #[cfg(test)]
 mod history_tests;

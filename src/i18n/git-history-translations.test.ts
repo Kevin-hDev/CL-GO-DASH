@@ -10,11 +10,17 @@ import zh from "./zh.json";
 describe("git history translations", () => {
   it("contient les libellés dans les sept langues", () => {
     const locales = [fr, en, es, de, itJson, zh, ja] as Array<{
-      filePreview: { listModes: { uncommitted: string } };
+      filePreview: {
+        listModes: { uncommitted: string };
+        diffUnavailable: string;
+        diffTruncated: string;
+      };
       agentLocal: { sessionSummary: { commits: { title: string; error: string } } };
     }>;
     for (const locale of locales) {
       expect(locale.filePreview.listModes.uncommitted).toBeTruthy();
+      expect(locale.filePreview.diffUnavailable).toBeTruthy();
+      expect(locale.filePreview.diffTruncated).toBeTruthy();
       expect(locale.agentLocal.sessionSummary.commits.title).toBeTruthy();
       expect(locale.agentLocal.sessionSummary.commits.error).toBeTruthy();
     }

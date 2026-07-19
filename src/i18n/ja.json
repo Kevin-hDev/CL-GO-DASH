@@ -851,6 +851,8 @@
     "filesModified": "ファイル",
     "loading": "ファイルを読み込み中…",
     "fileNotFound": "ファイルを読み取れませんでした。削除または移動された可能性があります。",
+    "diffUnavailable": "このファイルの変更を表示できません。",
+    "diffTruncated": "プレビューは制限されています。このファイルにはさらに変更があります。",
     "togglePanel": "ファイルプレビュー",
     "reduce": "縮小",
     "fullscreen": "全画面",

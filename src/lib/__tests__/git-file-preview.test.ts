@@ -14,6 +14,11 @@ describe("git-file-preview", () => {
       expectedBranch: "main",
       useParent: true,
     }));
+    expect(operation.gitDiff).toEqual(expect.objectContaining({
+      mode: "commit",
+      commitId: "a".repeat(40),
+      filePath: "src/old.ts",
+    }));
   });
 
   it("borne et mappe les changements non commit", () => {
@@ -30,5 +35,25 @@ describe("git-file-preview", () => {
       id: "git-uncommitted:feature:file-0.txt",
       path: "file-0.txt",
     }));
+    expect(operations[0]?.gitDiff).toEqual(expect.objectContaining({
+      mode: "working",
+      commitId: "b".repeat(40),
+      expectedBranch: "feature",
+    }));
+  });
+
+  it("conserve l'ancien chemin d'un fichier renommé", () => {
+    const [operation] = uncommittedFileOperations({
+      head_commit: "c".repeat(40),
+      files: [{
+        path: "src/new.ts",
+        previous_path: "src/old.ts",
+        status: "renamed",
+        additions: 1,
+        deletions: 1,
+      }],
+    }, "feature");
+
+    expect(operation.gitDiff?.previousPath).toBe("src/old.ts");
   });
 });

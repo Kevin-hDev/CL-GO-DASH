@@ -9,6 +9,36 @@ export interface GitFilePreviewSource {
   useParent: boolean;
 }
 
+export interface GitDiffPreviewSource {
+  kind: "git-diff";
+  mode: "commit" | "working";
+  commitId: string;
+  filePath: string;
+  previousPath?: string;
+  expectedBranch: string;
+}
+
+export interface GitDiffLine {
+  kind: "context" | "added" | "deleted";
+  content: string;
+  old_line: number | null;
+  new_line: number | null;
+}
+
+export interface GitDiffHunk {
+  old_start: number;
+  old_lines: number;
+  new_start: number;
+  new_lines: number;
+  lines: GitDiffLine[];
+}
+
+export interface GitDiffPreview {
+  hunks: GitDiffHunk[];
+  truncated: boolean;
+  binary: boolean;
+}
+
 export interface FileOperation {
   id: string;
   path: string;
@@ -23,6 +53,7 @@ export interface FileOperation {
   additions: number;
   deletions: number;
   source?: GitFilePreviewSource;
+  gitDiff?: GitDiffPreviewSource;
 }
 
 export interface FileOperationGroups {

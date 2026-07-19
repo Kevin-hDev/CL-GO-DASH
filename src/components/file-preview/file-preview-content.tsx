@@ -6,6 +6,7 @@ import { highlightLines } from "@/lib/highlight";
 import { cleanupTauriListener } from "@/lib/tauri-listen";
 import type { FileOperation } from "@/types/file-preview";
 import { FilePreviewDiff } from "./file-preview-diff";
+import { GitDiffPreview } from "./git-diff-preview";
 import "@/components/agent-local/tool-previews.css";
 
 const SpreadsheetPreview = lazy(() =>
@@ -53,6 +54,10 @@ export function FilePreviewContent({ operation, baseDir }: FilePreviewContentPro
         <PdfPreview path={operation.path} baseDir={baseDir} source={operation.source} />
       </Suspense>
     );
+  }
+
+  if (operation.gitDiff) {
+    return <GitDiffPreview source={operation.gitDiff} path={operation.path} baseDir={baseDir} />;
   }
 
   return <TextPreviewContent operation={operation} baseDir={baseDir} />;

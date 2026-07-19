@@ -1,5 +1,5 @@
 use super::repo as git_repo;
-use git2::{Patch, StatusOptions};
+use git2::{DiffFindOptions, DiffOptions, Patch, StatusEntry, StatusOptions};
 use serde::Serialize;
 use std::collections::HashMap;
 use std::path::Path;
@@ -10,6 +10,7 @@ const MAX_PATH_LEN: usize = 4096;
 #[derive(Debug, Clone, Serialize)]
 pub struct DirtyFile {
     pub path: String,
+    pub previous_path: Option<String>,
     pub status: String,
     pub additions: u32,
     pub deletions: u32,
@@ -20,7 +21,10 @@ pub fn list_dirty_files(repo_path: &Path) -> Result<Vec<DirtyFile>, String> {
     let workdir = git_repo::workdir(&repo)?;
 
     let mut opts = StatusOptions::new();
-    opts.include_untracked(true).recurse_untracked_dirs(false);
+    opts.include_untracked(true)
+        .recurse_untracked_dirs(true)
+        .renames_head_to_index(true)
+        .renames_index_to_workdir(true);
 
     let statuses = repo
         .statuses(Some(&mut opts))
@@ -33,21 +37,16 @@ pub fn list_dirty_files(repo_path: &Path) -> Result<Vec<DirtyFile>, String> {
         if files.len() >= MAX_DIRTY_FILES {
             break;
         }
-        let Ok(raw_path) = entry.path() else { continue };
-        if raw_path.is_empty() || raw_path.len() > MAX_PATH_LEN || raw_path.contains('\0') {
+        let Some((path, previous_path, label)) = describe_status(&entry) else {
+            continue;
+        };
+        if !valid_path(&path)
+            || previous_path
+                .as_deref()
+                .is_some_and(|value| !valid_path(value))
+        {
             continue;
         }
-        let path = raw_path.to_string();
-        let st = entry.status();
-        let label = if st.is_index_new() || st.is_wt_new() {
-            "new"
-        } else if st.is_index_modified() || st.is_wt_modified() {
-            "modified"
-        } else if st.is_index_deleted() || st.is_wt_deleted() {
-            "deleted"
-        } else {
-            "changed"
-        };
 
         let (additions, deletions) = diff_stats.get(&path).copied().unwrap_or_else(|| {
             if label == "new" {
@@ -59,6 +58,7 @@ pub fn list_dirty_files(repo_path: &Path) -> Result<Vec<DirtyFile>, String> {
 
         files.push(DirtyFile {
             path,
+            previous_path,
             status: label.to_string(),
             additions,
             deletions,
@@ -67,12 +67,53 @@ pub fn list_dirty_files(repo_path: &Path) -> Result<Vec<DirtyFile>, String> {
     Ok(files)
 }
 
+fn describe_status(entry: &StatusEntry<'_>) -> Option<(String, Option<String>, &'static str)> {
+    let status = entry.status();
+    if status.is_index_renamed() || status.is_wt_renamed() {
+        let delta = if status.is_wt_renamed() {
+            entry.index_to_workdir()
+        } else {
+            entry.head_to_index()
+        }?;
+        let old_path = delta.old_file().path()?.to_str()?.to_string();
+        let new_path = delta.new_file().path()?.to_str()?.to_string();
+        return Some((new_path, Some(old_path), "renamed"));
+    }
+    let path = entry.path().ok()?.to_string();
+    let label = if status.is_index_new() || status.is_wt_new() {
+        "new"
+    } else if status.is_index_modified() || status.is_wt_modified() {
+        "modified"
+    } else if status.is_index_deleted() || status.is_wt_deleted() {
+        "deleted"
+    } else {
+        "changed"
+    };
+    Some((path, None, label))
+}
+
 fn get_diff_stats(repo: &git2::Repository) -> HashMap<String, (u32, u32)> {
     let mut map = HashMap::new();
-    let Ok(tree) = repo.head().and_then(|head| head.peel_to_tree()) else { return map };
-    let Ok(diff) = repo.diff_tree_to_workdir_with_index(Some(&tree), None) else { return map };
+    let Ok(tree) = repo.head().and_then(|head| head.peel_to_tree()) else {
+        return map;
+    };
+    let mut options = DiffOptions::new();
+    options
+        .include_untracked(true)
+        .recurse_untracked_dirs(true)
+        .show_untracked_content(true);
+    let Ok(mut diff) = repo.diff_tree_to_workdir_with_index(Some(&tree), Some(&mut options)) else {
+        return map;
+    };
+    let mut find = DiffFindOptions::new();
+    find.renames(true).copies(false).for_untracked(true);
+    if diff.find_similar(Some(&mut find)).is_err() {
+        return map;
+    }
     for (index, delta) in diff.deltas().take(MAX_DIRTY_FILES).enumerate() {
-        let Some(path) = delta.new_file().path().or_else(|| delta.old_file().path()) else { continue };
+        let Some(path) = delta.new_file().path().or_else(|| delta.old_file().path()) else {
+            continue;
+        };
         let Some(path) = path.to_str() else { continue };
         if path.is_empty() || path.len() > MAX_PATH_LEN || path.contains('\0') {
             continue;
@@ -82,10 +123,17 @@ fn get_diff_stats(repo: &git2::Repository) -> HashMap<String, (u32, u32)> {
             .flatten()
             .and_then(|patch| patch.line_stats().ok());
         if let Some((_, additions, deletions)) = stats {
-            map.insert(path.to_string(), (bounded_u32(additions), bounded_u32(deletions)));
+            map.insert(
+                path.to_string(),
+                (bounded_u32(additions), bounded_u32(deletions)),
+            );
         }
     }
     map
+}
+
+fn valid_path(path: &str) -> bool {
+    !path.is_empty() && path.len() <= MAX_PATH_LEN && !path.contains('\0')
 }
 
 fn bounded_u32(value: usize) -> u32 {
