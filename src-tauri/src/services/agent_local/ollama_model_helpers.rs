@@ -27,13 +27,6 @@ pub(crate) fn dedupe_by_digest(models: Vec<OllamaModel>) -> Vec<OllamaModel> {
     result
 }
 
-pub(crate) fn needs_from_override(from: Option<&str>) -> bool {
-    match from {
-        None => true,
-        Some(f) => f.starts_with('/') || f.contains("/blobs/sha256-"),
-    }
-}
-
 pub(crate) fn build_model_from_tags(
     m: &serde_json::Value,
     info: Option<ModelInfo>,

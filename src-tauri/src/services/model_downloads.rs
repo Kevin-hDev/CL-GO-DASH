@@ -4,8 +4,7 @@ pub use super::model_downloads_types::{
 };
 
 use crate::services::agent_local::{
-    model_customizations, modelfile_parser::ParsedModelfile, ollama_client::OllamaClient,
-    ollama_registry, types_ollama::PullProgress,
+    model_customizations, ollama_client::OllamaClient, ollama_registry, types_ollama::PullProgress,
 };
 use crate::services::forecast::model_manager;
 use tauri::{AppHandle, Emitter};
@@ -60,7 +59,7 @@ async fn finish_ollama(
     manager: ModelDownloadManager,
     state: ModelDownloadState,
     result: Result<(), String>,
-    saved: Option<ParsedModelfile>,
+    saved: Option<String>,
     digests: Vec<String>,
 ) {
     let id = state.id.clone();

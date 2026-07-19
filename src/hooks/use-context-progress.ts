@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { cleanupTauriListener } from "@/lib/tauri-listen";
@@ -25,12 +25,20 @@ export function useContextProgress(
   provider: string = "ollama",
 ): ContextProgressState {
   const [max, setMax] = useState(0);
+  const previousUsedTokens = useRef(usedTokens);
 
   const refresh = useCallback(async () => {
     if (!model) { setMax(0); return; }
 
     if (provider === "ollama") {
       try {
+        const loadedContext = await invoke<number | null>("get_loaded_ollama_context", {
+          name: model,
+        }).catch(() => null);
+        if (loadedContext && loadedContext > 0) {
+          setMax(loadedContext);
+          return;
+        }
         const info = await invoke<ModelInfo>("show_ollama_model", { name: model });
         const fromModelfile = parseNumCtxFromModelfile(info.modelfile);
         if (fromModelfile) {
@@ -82,6 +90,14 @@ export function useContextProgress(
     const unlisten = listen("ollama-models-changed", () => { void refresh(); });
     return () => { cleanupTauriListener(unlisten); };
   }, [refresh, provider]);
+
+  useEffect(() => {
+    const previous = previousUsedTokens.current;
+    previousUsedTokens.current = usedTokens;
+    if (provider === "ollama" && usedTokens !== previous) {
+      void refresh();
+    }
+  }, [provider, refresh, usedTokens]);
 
   return { used: usedTokens, max };
 }

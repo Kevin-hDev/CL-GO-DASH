@@ -6,6 +6,7 @@ use super::ollama_retry_indicator::{
 use super::ollama_stream_retry::build_retry_request;
 use super::ollama_tool_parse_retry::{is_tool_parse_crash, MAX_PARSER_RETRIES};
 use super::ollama_tool_role::wrap_tool_results;
+use super::ollama_wire;
 use super::stream_events::AgentEventEmitter;
 use super::types_ollama::{ChatRequest, StreamEvent};
 use crate::services::llm::vision;
@@ -32,8 +33,8 @@ pub async fn open_chat_response(
     counts: RetryCounts,
     emit_retry_indicator: bool,
 ) -> Result<OpenChatResponse, String> {
-    let mut wire_request = request.clone();
-    wire_request.messages = wrap_tool_results(&request.messages);
+    let wire_messages = wrap_tool_results(&request.messages);
+    let wire_request = ollama_wire::chat_request(request, &wire_messages);
 
     let client = reqwest::Client::new();
     let resp = match client

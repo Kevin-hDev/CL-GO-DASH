@@ -4,12 +4,13 @@ use crate::services::agent_local::modelfile_parser::{
 };
 use crate::services::agent_local::ollama_base_url;
 use crate::services::agent_local::ollama_model_helpers::{
-    build_model_from_tags, dedupe_by_digest, needs_from_override, parse_show_response,
+    build_model_from_tags, dedupe_by_digest, parse_show_response,
 };
 use crate::services::agent_local::types_ollama::{ModelInfo, OllamaModel};
 use reqwest::Client;
 use std::time::Duration;
 const TIMEOUT: Duration = Duration::from_secs(5);
+const MAX_RUNTIME_RESPONSE_BYTES: usize = 2 * 1024 * 1024;
 
 pub struct OllamaClient {
     client: Client,
@@ -31,6 +32,31 @@ impl OllamaClient {
             .send()
             .await
             .is_ok()
+    }
+
+    pub async fn loaded_context_length(&self, name: &str) -> Result<Option<u64>, String> {
+        model_customizations::validate_model_name(name)?;
+        let resp = self
+            .client
+            .get(format!("{}/api/ps", ollama_base_url()))
+            .timeout(TIMEOUT)
+            .send()
+            .await
+            .map_err(|error| {
+                eprintln!("[ollama] /api/ps: {error}");
+                "ollama-runtime-error".to_string()
+            })?;
+        if !resp.status().is_success() {
+            return Err("ollama-runtime-error".into());
+        }
+        let body = resp
+            .bytes()
+            .await
+            .map_err(|_| "ollama-runtime-error".to_string())?;
+        if body.len() > MAX_RUNTIME_RESPONSE_BYTES {
+            return Err("ollama-response-too-large".into());
+        }
+        super::ollama_runtime::loaded_context_length(&body, name)
     }
 
     pub async fn list_models(&self) -> Result<Vec<OllamaModel>, String> {
@@ -66,12 +92,7 @@ impl OllamaClient {
     }
 
     pub async fn update_modelfile(&self, name: &str, content: &str) -> Result<(), String> {
-        let mut parsed = parse_modelfile(content);
-        if needs_from_override(parsed.from.as_deref()) {
-            parsed.from = Some(name.to_string());
-        }
-        let payload = parsed.to_api_payload(name);
-        self.post_create(&payload).await
+        super::ollama_modelfile_create::create_from_modelfile(name, content).await
     }
 
     pub async fn update_system_prompt(&self, name: &str, system: &str) -> Result<(), String> {

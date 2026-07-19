@@ -2,19 +2,21 @@ use crate::models::config::AdvancedSettings;
 use crate::services::gpu_detect::GpuVendor;
 
 const GPU_OVERHEAD_BYTES: &str = "1073741824";
+const LOAD_TIMEOUT: &str = "10m";
 
 pub fn build_env_vars(
     config: &AdvancedSettings,
     gpu: &GpuVendor,
     port: u16,
 ) -> Vec<(String, String)> {
-    let mut vars = Vec::with_capacity(12);
+    let mut vars = Vec::with_capacity(13);
 
     vars.push(("OLLAMA_HOST".into(), format!("127.0.0.1:{port}")));
     vars.push(("OLLAMA_FLASH_ATTENTION".into(), "1".into()));
     vars.push(("OLLAMA_KV_CACHE_TYPE".into(), "q8_0".into()));
     vars.push(("OLLAMA_NUM_PARALLEL".into(), "1".into()));
     vars.push(("OLLAMA_NO_CLOUD".into(), "1".into()));
+    vars.push(("OLLAMA_LOAD_TIMEOUT".into(), LOAD_TIMEOUT.into()));
 
     let num_ctx = crate::services::gpu_detect::compute_default_num_ctx();
     vars.push(("OLLAMA_CONTEXT_LENGTH".into(), num_ctx.to_string()));
@@ -136,5 +138,11 @@ mod tests {
     fn no_cloud_always_set() {
         let vars = build_env_vars(&default_config(), &GpuVendor::Unknown, 11500);
         assert_eq!(find_var(&vars, "OLLAMA_NO_CLOUD"), Some("1"));
+    }
+
+    #[test]
+    fn model_load_timeout_allows_slow_hardware() {
+        let vars = build_env_vars(&default_config(), &GpuVendor::Unknown, 11500);
+        assert_eq!(find_var(&vars, "OLLAMA_LOAD_TIMEOUT"), Some("10m"));
     }
 }

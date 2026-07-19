@@ -34,6 +34,14 @@ pub async fn is_ollama_running(ollama: tauri::State<'_, OllamaClient>) -> Result
 }
 
 #[tauri::command]
+pub async fn get_loaded_ollama_context(
+    name: String,
+    ollama: tauri::State<'_, OllamaClient>,
+) -> Result<Option<u64>, String> {
+    ollama.loaded_context_length(&name).await
+}
+
+#[tauri::command]
 pub async fn search_ollama_models(query: String) -> Result<Vec<RegistryModel>, String> {
     ollama_registry::search_models(&query).await
 }

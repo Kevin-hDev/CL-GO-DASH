@@ -1,5 +1,6 @@
 use crate::services::agent_local::ollama_base_url;
 use crate::services::agent_local::ollama_tool_role::wrap_tool_results;
+use crate::services::agent_local::ollama_wire;
 use crate::services::agent_local::types_ollama::ChatMessage;
 use std::time::Duration;
 
@@ -31,8 +32,9 @@ pub async fn collect_chat_with_timeout_and_limit(
     let wire_messages = wrap_tool_results(&messages);
     let mut body = serde_json::json!({
         "model": model,
-        "messages": wire_messages,
+        "messages": ollama_wire::messages_value(&wire_messages),
         "stream": false,
+        "truncate": false,
     });
     if let Some(limit) = num_predict {
         body["options"] = serde_json::json!({

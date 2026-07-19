@@ -1,4 +1,3 @@
-use crate::services::agent_local::modelfile_parser::{parse_modelfile, ParsedModelfile};
 use crate::services::agent_local::ollama_client::OllamaClient;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
@@ -34,29 +33,16 @@ pub fn clear_model_customized(name: &str) -> Result<(), String> {
     write_model_names(&names)
 }
 
-pub async fn save_for_update(ollama: &OllamaClient, name: &str) -> Option<ParsedModelfile> {
+pub async fn save_for_update(ollama: &OllamaClient, name: &str) -> Option<String> {
     if !is_model_customized(name) {
         return None;
     }
-    let modelfile = ollama.get_modelfile(name).await.ok()?;
-    let parsed = parse_modelfile(&modelfile);
-    if parsed.system.as_ref().is_some_and(|s| !s.trim().is_empty()) || !parsed.parameters.is_empty()
-    {
-        Some(parsed)
-    } else {
-        None
-    }
+    ollama.get_modelfile(name).await.ok()
 }
 
-pub async fn restore_after_update(ollama: &OllamaClient, name: &str, saved: &ParsedModelfile) {
-    let restored = ParsedModelfile {
-        from: Some(name.to_string()),
-        system: saved.system.clone(),
-        parameters: saved.parameters.clone(),
-        ..Default::default()
-    };
-    let payload = restored.to_api_payload(name);
-    if let Err(e) = ollama.post_create(&payload).await {
+pub async fn restore_after_update(ollama: &OllamaClient, name: &str, saved: &str) {
+    let restored = super::ollama_modelfile_create::use_updated_base(saved, name);
+    if let Err(e) = ollama.update_modelfile(name, &restored).await {
         eprintln!("[pull] restore perso {name} échoué: {e}");
     }
 }
@@ -104,7 +90,7 @@ fn store_path() -> PathBuf {
     crate::services::paths::data_dir().join("ollama-custom-models.json")
 }
 
-fn validate_model_name(name: &str) -> Result<(), String> {
+pub(crate) fn validate_model_name(name: &str) -> Result<(), String> {
     if name.is_empty() || name.len() > MAX_MODEL_NAME_LEN {
         return Err("ollama-model-name-invalid".into());
     }

@@ -33,6 +33,7 @@ macro_rules! generate {
             crate::commands::list_ollama_models,
             crate::commands::show_ollama_model,
             crate::commands::is_ollama_running,
+            crate::commands::get_loaded_ollama_context,
             crate::commands::search_ollama_models,
             crate::commands::get_registry_model_details,
             crate::commands::list_registry_tags,

@@ -46,11 +46,13 @@ pub mod modelfile_parser;
 pub mod ollama_client;
 pub mod ollama_collect;
 pub mod ollama_model_helpers;
+pub mod ollama_modelfile_create;
 pub mod ollama_registry;
 pub mod ollama_registry_details;
 #[cfg(test)]
 mod ollama_registry_tests;
 pub mod ollama_retry_indicator;
+pub mod ollama_runtime;
 pub mod ollama_stream;
 pub mod ollama_stream_process;
 #[cfg(test)]
@@ -62,6 +64,7 @@ pub mod ollama_tool_parse_retry;
 pub mod ollama_tool_role;
 #[cfg(test)]
 mod ollama_tool_role_tests;
+pub mod ollama_wire;
 pub mod permission_gate;
 mod permission_allow_cache;
 #[cfg(test)]

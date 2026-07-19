@@ -34,6 +34,24 @@ describe("useContextProgress — used", () => {
 });
 
 describe("useContextProgress — provider ollama", () => {
+  it("max vient en priorité du contexte réellement chargé par Ollama", async () => {
+    vi.mocked(invoke).mockImplementation((cmd: string) => {
+      if (cmd === "get_loaded_ollama_context") return Promise.resolve(65536);
+      if (cmd === "show_ollama_model")
+        return Promise.resolve({ modelfile: "PARAMETER num_ctx 32768", context_length: 32768 });
+      return Promise.resolve(0);
+    });
+
+    const { result } = renderHook(() =>
+      useContextProgress("gemma4:e2b", 0, "ollama"),
+    );
+
+    await waitFor(() => {
+      expect(result.current.max).toBe(65536);
+    });
+    expect(invoke).not.toHaveBeenCalledWith("show_ollama_model", expect.anything());
+  });
+
   it("max vient de num_ctx dans le modelfile", async () => {
     vi.mocked(invoke).mockImplementation((cmd: string) => {
       if (cmd === "show_ollama_model")

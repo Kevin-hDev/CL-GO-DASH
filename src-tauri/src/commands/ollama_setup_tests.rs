@@ -1,5 +1,5 @@
 use crate::commands::ollama_bundle_utils::is_valid_semver;
-use crate::commands::ollama_setup::FALLBACK_OLLAMA_VERSION;
+use crate::commands::ollama_setup::fallback_ollama_version;
 use tokio_util::sync::CancellationToken;
 
 #[test]
@@ -23,8 +23,8 @@ fn invalid_semver_rejected() {
 
 #[test]
 fn fallback_install_version_is_current_supported_release() {
-    assert_eq!(FALLBACK_OLLAMA_VERSION, "0.24.0");
-    assert!(is_valid_semver(FALLBACK_OLLAMA_VERSION));
+    assert_eq!(fallback_ollama_version(), "0.32.1");
+    assert!(is_valid_semver(fallback_ollama_version()));
 }
 
 #[test]

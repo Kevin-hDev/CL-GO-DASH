@@ -113,6 +113,7 @@ pub fn start_sidecar(app: &AppHandle) -> Result<bool, String> {
         "OLLAMA_KV_CACHE_TYPE",
         "OLLAMA_NUM_PARALLEL",
         "OLLAMA_NO_CLOUD",
+        "OLLAMA_LOAD_TIMEOUT",
         "OLLAMA_CONTEXT_LENGTH",
         "OLLAMA_MAX_LOADED_MODELS",
         "OLLAMA_KEEP_ALIVE",

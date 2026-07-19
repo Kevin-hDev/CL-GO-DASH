@@ -68,6 +68,7 @@ pub(crate) mod ollama_setup_install;
 pub(crate) mod ollama_setup_start;
 #[cfg(test)]
 mod ollama_setup_tests;
+pub(crate) mod ollama_setup_update;
 pub mod ollama_updates;
 pub mod ollama_version;
 pub mod personality;
@@ -118,6 +119,7 @@ pub use model_downloads::*;
 pub use oauth_provider_models::*;
 pub use oauth_providers::*;
 pub use ollama_setup::*;
+pub use ollama_setup_update::*;
 pub use ollama_updates::*;
 pub use ollama_version::*;
 pub use personality::*;

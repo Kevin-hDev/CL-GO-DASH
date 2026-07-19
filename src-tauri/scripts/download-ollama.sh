@@ -1,7 +1,14 @@
 #!/bin/bash
 set -euo pipefail
 
-OLLAMA_VERSION="${OLLAMA_VERSION:-0.21.1}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TAURI_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+DEFAULT_OLLAMA_VERSION="$(tr -d '[:space:]' < "${TAURI_DIR}/ollama-version.txt")"
+OLLAMA_VERSION="${OLLAMA_VERSION:-${DEFAULT_OLLAMA_VERSION}}"
+if [[ ! "${OLLAMA_VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+  echo "✗ Version Ollama invalide" >&2
+  exit 1
+fi
 OS="${1:-$(uname -s | tr '[:upper:]' '[:lower:]')}"
 ARCH="${2:-$(uname -m)}"
 
@@ -10,7 +17,7 @@ case "${ARCH}" in
   aarch64|arm64) ARCH="arm64" ;;
 esac
 
-DEST="resources/ollama-bundle"
+DEST="${TAURI_DIR}/resources/ollama-bundle"
 BASE_URL="https://github.com/ollama/ollama/releases/download/v${OLLAMA_VERSION}"
 SHA_URL="${BASE_URL}/sha256sum.txt"
 TMP_EXTRACT=$(mktemp -d)
