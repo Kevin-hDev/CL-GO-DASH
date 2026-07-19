@@ -7,7 +7,7 @@
 }
 
 .mfv-inner {
-  max-width: 600px;
+  max-width: var(--settings-content-max-width);
   width: 100%;
   margin: 0 auto;
 }

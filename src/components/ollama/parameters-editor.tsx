@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
 import { Tooltip } from "@/components/ui/tooltip";
+import { ModelEditorShell } from "./model-editor-shell";
 import type { ModelParameter } from "./modelfile-utils";
 import "./ollama.css";
 import "./parameters-editor.css";
@@ -56,31 +57,15 @@ export function ParametersEditor({
   };
 
   return (
-    <div className="pe-root">
-      <div className="ollama-detail-header">
-        <span className="ollama-detail-name">
-          {modelName} — {t("ollama.parameters")}
-        </span>
-        <div className="pe-actions">
-          <button className="ollama-btn" onClick={onCancel} disabled={saving}>
-            {t("ollama.cancel")}
-          </button>
-          <button
-            className="ollama-btn ollama-btn-primary"
-            onClick={() => void handleSave()}
-            disabled={saving}
-          >
-            {saving ? "..." : t("ollama.save")}
-          </button>
-        </div>
-      </div>
-
-      {error && (
-        <div className="pe-error">
-          {error}
-        </div>
-      )}
-
+    <ModelEditorShell
+      title={`${modelName} — ${t("ollama.parameters")}`}
+      cancelLabel={t("ollama.cancel")}
+      saveLabel={t("ollama.save")}
+      saving={saving}
+      error={error}
+      onCancel={onCancel}
+      onSave={() => void handleSave()}
+    >
       <div className="pe-body">
         {params.map((p, idx) => (
           <div key={idx} className="pe-row">
@@ -118,6 +103,6 @@ export function ParametersEditor({
           {t("ollama.commonParameters")} {t("ollama.commonParametersHint")}
         </div>
       </div>
-    </div>
+    </ModelEditorShell>
   );
 }

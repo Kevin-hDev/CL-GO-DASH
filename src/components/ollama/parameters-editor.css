@@ -1,41 +1,20 @@
 /* parameters-editor — styles colocalisés */
 
-.pe-root {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-.pe-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.pe-error {
-  padding: var(--space-sm) var(--space-md);
-  color: var(--signal-error);
-  font-size: var(--text-xs);
-  background: var(--signal-error-bg);
-  border-bottom: 1px solid var(--edge);
-}
-
 .pe-body {
-  flex: 1;
-  overflow: auto;
   padding: var(--space-md);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-sm);
 }
 
 .pe-row {
   display: flex;
-  gap: 8px;
+  gap: var(--space-sm);
   align-items: center;
 }
 
 .pe-input {
-  padding: 6px 10px;
+  padding: var(--space-sm) var(--space-md);
   background: var(--void);
   border: 1px solid var(--edge);
   border-radius: var(--radius-sm);
@@ -43,6 +22,10 @@
   font-size: var(--text-xs);
   font-family: var(--font-mono);
   outline: none;
+}
+
+.pe-input:focus-visible {
+  border-color: var(--pulse);
 }
 
 .pe-input-key {
@@ -59,7 +42,7 @@
 
 .pe-add-btn {
   align-self: flex-start;
-  margin-top: 4px;
+  margin-top: var(--space-xs);
 }
 
 .pe-hint {

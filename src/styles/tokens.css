@@ -53,6 +53,9 @@
   --browser-tab-max-width: 12rem;
   --browser-home-max-width: 26rem;
 
+  --settings-content-max-width: 37.5rem;
+  --settings-editor-min-height: 20rem;
+
   --nav-item-height: 1.75rem;
   --nav-item-gap: var(--space-xs);
   --nav-item-padding-x: var(--space-sm);

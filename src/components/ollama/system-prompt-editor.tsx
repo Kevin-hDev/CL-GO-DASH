@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
+import { ModelEditorShell } from "./model-editor-shell";
 import "./ollama.css";
 
 interface SystemPromptEditorProps {
@@ -33,46 +34,23 @@ export function SystemPromptEditor({
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      <div className="ollama-detail-header">
-        <span className="ollama-detail-name">
-          {modelName} — {t("ollama.systemPrompt")}
-        </span>
-        <div style={{ display: "flex", gap: 8 }}>
-          <button className="ollama-btn" onClick={onCancel} disabled={saving}>
-            {t("ollama.cancel")}
-          </button>
-          <button
-            className="ollama-btn ollama-btn-primary"
-            onClick={() => void handleSave()}
-            disabled={saving}
-          >
-            {saving ? "..." : t("ollama.save")}
-          </button>
-        </div>
-      </div>
-      {error && (
-        <div style={{
-          padding: "var(--space-sm) var(--space-md)",
-          color: "var(--signal-error)", fontSize: "var(--text-xs)",
-          background: "var(--signal-error-bg)",
-          borderBottom: "1px solid var(--edge)",
-        }}>
-          {error}
-        </div>
-      )}
+    <ModelEditorShell
+      title={`${modelName} — ${t("ollama.systemPrompt")}`}
+      cancelLabel={t("ollama.cancel")}
+      saveLabel={t("ollama.save")}
+      saving={saving}
+      fillAvailableSpace
+      error={error}
+      onCancel={onCancel}
+      onSave={() => void handleSave()}
+    >
       <textarea
         value={system}
         onChange={(e) => setSystem(e.target.value)}
         placeholder={t("ollama.systemPromptPlaceholder")}
-        style={{
-          flex: 1, padding: "var(--space-md)",
-          fontSize: "var(--text-sm)", fontFamily: "var(--font-sans)",
-          background: "var(--void)", color: "var(--ink)",
-          resize: "none", outline: "none", border: "none",
-          lineHeight: 1.6,
-        }}
+        aria-label={t("ollama.systemPrompt")}
+        className="mes-textarea sped-textarea"
       />
-    </div>
+    </ModelEditorShell>
   );
 }
