@@ -13,6 +13,13 @@ const WORKTREE_POLL_MS: u64 = 1_000;
 
 static WATCHER_ACTIVE: std::sync::Mutex<Option<Arc<AtomicBool>>> = std::sync::Mutex::new(None);
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) struct GitWatchState {
+    pub(super) head_name: Option<String>,
+    pub(super) head_oid: Option<git2::Oid>,
+    pub(super) dirty_count: usize,
+}
+
 fn resolve_git_dir(repo_path: &Path) -> Option<PathBuf> {
     let dot_git = repo_path.join(".git");
     if dot_git.is_dir() {
@@ -44,16 +51,26 @@ pub(super) fn parse_gitdir_content(content: &str) -> Option<PathBuf> {
     Some(PathBuf::from(gitdir))
 }
 
-pub(super) fn read_dirty_count(repo_path: &Path) -> Option<usize> {
+pub(super) fn read_watch_state(repo_path: &Path) -> Option<GitWatchState> {
     let repo = git_repo::open(repo_path).ok()?;
-    branch::count_dirty_files(&repo).ok()
+    let head = repo.head().ok();
+    Some(GitWatchState {
+        head_name: head
+            .as_ref()
+            .and_then(|reference| reference.shorthand().ok().map(str::to_string)),
+        head_oid: head.as_ref().and_then(|reference| reference.target()),
+        dirty_count: branch::count_dirty_files(&repo).ok()?,
+    })
 }
 
-pub(super) fn update_dirty_count(previous: &mut Option<usize>, current: Option<usize>) -> bool {
+pub(super) fn update_watch_state(
+    previous: &mut Option<GitWatchState>,
+    current: Option<GitWatchState>,
+) -> bool {
     let Some(current) = current else {
         return false;
     };
-    let changed = previous.is_some_and(|value| value != current);
+    let changed = previous.as_ref().is_some_and(|value| value != &current);
     *previous = Some(current);
     changed
 }
@@ -83,7 +100,7 @@ pub fn setup_git_watcher(app: AppHandle, repo_path: PathBuf) -> Result<(), Strin
     thread::spawn(move || {
         let (_channel_guard, rx) = mpsc::sync_channel::<()>(1);
         let event_tx = _channel_guard.clone();
-        let mut last_dirty_count = read_dirty_count(&repo_path);
+        let mut last_state = read_watch_state(&repo_path);
 
         let mut watcher = notify::recommended_watcher(move |res: Result<Event, _>| {
             if let Ok(event) = res {
@@ -125,12 +142,12 @@ pub fn setup_git_watcher(app: AppHandle, repo_path: PathBuf) -> Result<(), Strin
                     thread::sleep(Duration::from_millis(DEBOUNCE_MS));
                     while rx.try_recv().is_ok() {}
                     if !stop.load(Ordering::Relaxed) {
-                        update_dirty_count(&mut last_dirty_count, read_dirty_count(&repo_path));
+                        update_watch_state(&mut last_state, read_watch_state(&repo_path));
                         let _ = app.emit("git-branch-changed", ());
                     }
                 }
                 Err(mpsc::RecvTimeoutError::Timeout) => {
-                    if update_dirty_count(&mut last_dirty_count, read_dirty_count(&repo_path)) {
+                    if update_watch_state(&mut last_state, read_watch_state(&repo_path)) {
                         let _ = app.emit("git-branch-changed", ());
                     }
                 }
