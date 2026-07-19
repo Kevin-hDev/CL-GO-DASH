@@ -16,6 +16,7 @@ pub struct OAuthProviderModel {
     pub supports_vision: bool,
     pub supports_thinking: bool,
     pub reasoning_modes: Vec<String>,
+    pub default_reasoning_mode: Option<String>,
     pub interactive_only: bool,
 }
 
@@ -62,6 +63,7 @@ fn add_codex_models(
                 supports_vision: model.supports_vision,
                 supports_thinking: model.supports_thinking,
                 reasoning_modes: model.reasoning_modes,
+                default_reasoning_mode: model.default_reasoning_mode,
                 interactive_only: false,
             }),
     );
@@ -110,8 +112,12 @@ fn connected(statuses: &[oauth_providers::OAuthProviderStatus], provider: Provid
 }
 
 fn oauth_model(provider_id: ProviderId, model: ModelInfo) -> OAuthProviderModel {
+    let display_name = model
+        .display_name
+        .clone()
+        .unwrap_or_else(|| model.id.clone());
     OAuthProviderModel {
-        display_name: model.id.clone(),
+        display_name,
         id: model.id,
         provider_id,
         context_length: model.context_length,
@@ -119,6 +125,7 @@ fn oauth_model(provider_id: ProviderId, model: ModelInfo) -> OAuthProviderModel 
         supports_vision: model.supports_vision,
         supports_thinking: model.supports_thinking,
         reasoning_modes: model.reasoning_modes,
+        default_reasoning_mode: model.default_reasoning_mode,
         interactive_only: true,
     }
 }

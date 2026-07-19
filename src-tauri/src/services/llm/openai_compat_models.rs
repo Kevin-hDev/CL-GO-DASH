@@ -83,6 +83,7 @@ pub(super) fn static_model_infos(provider_id: &str) -> Option<Vec<ModelInfo>> {
                 let supports_thinking = super::tool_capable::supports_thinking(provider_id, m.id);
                 ModelInfo {
                     id: m.id.to_string(),
+                    display_name: None,
                     owned_by: None,
                     context_length: Some(m.ctx),
                     supports_tools: super::tool_capable::supports_tools(provider_id, m.id),
@@ -96,6 +97,7 @@ pub(super) fn static_model_infos(provider_id: &str) -> Option<Vec<ModelInfo>> {
                     .iter()
                     .map(|mode| mode.to_string())
                     .collect(),
+                    default_reasoning_mode: None,
                     is_free: false,
                 }
             })

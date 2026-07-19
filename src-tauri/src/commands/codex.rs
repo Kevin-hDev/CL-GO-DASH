@@ -46,6 +46,7 @@ pub fn codex_models() -> Vec<ModelInfo> {
         .iter()
         .map(|spec| ModelInfo {
             id: spec.id.to_string(),
+            display_name: None,
             owned_by: Some("openai".to_string()),
             context_length: Some(spec.context_length),
             supports_tools: true,
@@ -56,6 +57,7 @@ pub fn codex_models() -> Vec<ModelInfo> {
                 .iter()
                 .map(|mode| mode.to_string())
                 .collect(),
+            default_reasoning_mode: None,
             is_free: true,
         })
         .collect()

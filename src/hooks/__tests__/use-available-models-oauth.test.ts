@@ -31,4 +31,24 @@ describe("OAuth models", () => {
     expect(result.groups.has("moonshot-oauth")).toBe(false);
     expect(result.issues.get("moonshot")).toBe("moonshot_membership_unverified");
   });
+
+  it("conserve le nom officiel et les efforts de K3", () => {
+    const groups = mapOAuthModels([{
+      id: "k3",
+      display_name: "K3",
+      provider_id: "moonshot",
+      supports_tools: true,
+      supports_vision: true,
+      supports_thinking: true,
+      reasoning_modes: ["low", "high", "max"],
+      default_reasoning_mode: "max",
+      interactive_only: true,
+    }]);
+
+    const model = groups.get("moonshot-oauth")?.[0];
+    expect(model?.id).toBe("k3");
+    expect(model?.display_name).toBe("K3");
+    expect(model?.reasoning_modes).toEqual(["low", "high", "max"]);
+    expect(model?.default_reasoning_mode).toBe("max");
+  });
 });

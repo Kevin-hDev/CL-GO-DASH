@@ -42,7 +42,11 @@ impl OpenAiCompatProvider {
             return Err(map_error_status(response, self.route.chat_provider_id).await);
         }
         let body = read_json(response).await?;
-        parse_models_list(&body, canonical)
+        if self.route.chat_provider_id == "moonshot-oauth" {
+            super::kimi_models::parse_models_list(&body)
+        } else {
+            parse_models_list(&body, canonical)
+        }
     }
 
     pub async fn chat_completion(

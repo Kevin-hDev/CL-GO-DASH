@@ -1,4 +1,4 @@
-import type { AvailableModel } from "@/hooks/use-available-models";
+import type { AvailableModel } from "@/hooks/available-model-types";
 
 export type ReasoningMode =
   | "off"
@@ -67,7 +67,13 @@ function isMoonshotForced(model: AvailableModel | null): boolean {
     name.startsWith("kimi-k2.7-code")
     || name.includes("k2-thinking")
     || name.includes("thinking-preview")
+    || name.startsWith("kimi-for-coding")
   );
+}
+
+function isMoonshotK3(model: AvailableModel | null): boolean {
+  const name = modelName(model);
+  return name === "k3" || name.startsWith("kimi-k3");
 }
 
 function isGrokFixedReasoning(model: AvailableModel | null): boolean {
@@ -144,6 +150,8 @@ export function reasoningModeOptions(model: AvailableModel | null): ReasoningMod
       if (isMistralAdjustable(model)) return options(["off", "high"]);
       return [];
     case "moonshot":
+    case "moonshot-oauth":
+      if (isMoonshotK3(model)) return options(["low", "high", "max"]);
       return isMoonshotForced(model) ? options(["auto"]) : options(["off", "auto"]);
     case "zai":
       return isZaiEffortReasoning(model)
@@ -157,11 +165,13 @@ export function reasoningModeOptions(model: AvailableModel | null): ReasoningMod
 export function normalizeReasoningMode(
   requested: string | null | undefined,
   options: ReasoningModeOption[],
+  preferred?: ReasoningMode | null,
 ): ReasoningMode | null {
   if (options.length === 0) return null;
   if (requested && options.some((option) => option.mode === requested)) {
     return requested as ReasoningMode;
   }
+  if (preferred && options.some((option) => option.mode === preferred)) return preferred;
   if (options.some((option) => option.mode === "medium")) return "medium";
   if (options.some((option) => option.mode === "auto")) return "auto";
   return options.find((option) => option.mode !== "off")?.mode ?? options[0].mode;

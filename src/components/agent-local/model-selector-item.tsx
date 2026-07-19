@@ -64,7 +64,7 @@ export function ModelSelectorItem({
       >
         <Star size="var(--icon-xs)" weight={isFav ? "fill" : "regular"} />
       </span>
-      <span className="ms-item-name">{m.id}</span>
+      <span className="ms-item-name">{m.display_name ?? m.id}</span>
       <span className="ms-item-right">
         {m.supports_vision && (
           <Tooltip label={t("settings.llm.vision")}>

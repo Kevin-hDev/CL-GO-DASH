@@ -55,7 +55,7 @@ export function useAgentLocalTab({ navState, onSessionChange, onNavChange, listF
       const entry = availableModels.get(nextProvider)?.find((m) => m.id === nextModel) ?? null;
       const options = reasoningModeOptions(entry);
       return {
-        mode: normalizeReasoningMode(currentMode, options),
+        mode: normalizeReasoningMode(currentMode, options, entry?.default_reasoning_mode),
         supportsThinking: entry?.supports_thinking ?? false,
       };
     },

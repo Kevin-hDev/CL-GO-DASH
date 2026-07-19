@@ -16,7 +16,7 @@ pub fn apply(
         "deepseek" => apply_deepseek(payload, reasoning_mode),
         "groq" => apply_groq(payload, model, think, reasoning_mode),
         "mistral" => apply_mistral(payload, think, reasoning_mode),
-        "moonshot" => apply_moonshot(payload, model, reasoning_mode),
+        "moonshot" => apply_moonshot(payload, model, think, reasoning_mode),
         "google" => apply_google(payload, model, think, reasoning_mode),
         "openai" => apply_openai(payload, model, think, reasoning_mode),
         "xai" => apply_xai(payload, model, reasoning_mode),
@@ -99,14 +99,24 @@ fn apply_mistral(payload: &mut Value, think: bool, reasoning_mode: Option<&str>)
     }
 }
 
-fn apply_moonshot(payload: &mut Value, model: &str, reasoning_mode: Option<&str>) {
+fn apply_moonshot(payload: &mut Value, model: &str, think: bool, reasoning_mode: Option<&str>) {
     let model = model.to_lowercase();
-    if reasoning_mode != Some("off")
-        || crate::services::llm::providers::moonshot::is_forced_thinking(&model)
-    {
+    if crate::services::llm::providers::moonshot::is_forced_thinking(&model) {
+        let mut thinking = serde_json::json!({ "type": "enabled" });
+        if crate::services::llm::providers::moonshot::is_k3(&model) {
+            let effort = reasoning_mode
+                .filter(|effort| matches!(*effort, "low" | "high" | "max"))
+                .unwrap_or("max");
+            thinking["effort"] = effort.into();
+        }
+        payload["thinking"] = thinking;
         return;
     }
-    payload["thinking"] = serde_json::json!({ "type": "disabled" });
+    if reasoning_mode == Some("off") {
+        payload["thinking"] = serde_json::json!({ "type": "disabled" });
+    } else if think {
+        payload["thinking"] = serde_json::json!({ "type": "enabled" });
+    }
 }
 
 fn apply_xai(payload: &mut Value, model: &str, reasoning_mode: Option<&str>) {

@@ -107,4 +107,29 @@ describe("ModelSelector", () => {
     expect(document.body.querySelector(".ms-dropdown")).toBeTruthy();
     expect(container.querySelector(".ms-dropdown")).toBeNull();
   });
+
+  it("affiche le nom officiel mais sélectionne l'identifiant technique", () => {
+    const onSelect = vi.fn();
+    groups = new Map([["moonshot-oauth", [model({
+      id: "kimi-for-coding",
+      display_name: "K2.7 Coding",
+      provider_id: "moonshot-oauth",
+      provider_name: "Moonshot AI · OAuth",
+      is_local: false,
+    })]]]);
+
+    render(
+      <ModelSelector
+        groups={groups}
+        selectedModel="kimi-for-coding"
+        selectedProvider="moonshot-oauth"
+        onSelect={onSelect}
+      />,
+    );
+
+    fireEvent.click(screen.getByText("K2.7 Coding"));
+    fireEvent.click(screen.getAllByText("K2.7 Coding")[1]);
+
+    expect(onSelect).toHaveBeenCalledWith("kimi-for-coding", "moonshot-oauth");
+  });
 });

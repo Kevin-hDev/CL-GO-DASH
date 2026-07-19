@@ -91,12 +91,14 @@ pub fn parse_models_list(
             };
             Some(ModelInfo {
                 id,
+                display_name: None,
                 owned_by,
                 context_length,
                 supports_tools,
                 supports_vision,
                 supports_thinking,
                 reasoning_modes,
+                default_reasoning_mode: None,
                 is_free,
             })
         })
