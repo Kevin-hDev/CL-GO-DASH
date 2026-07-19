@@ -12,24 +12,12 @@ import { useKeyboard } from "@/hooks/use-keyboard";
 import { useMinuteNow } from "@/hooks/use-minute-now";
 import { useProjectDrag } from "@/hooks/use-project-drag";
 import { useSessionActivityIndicators } from "@/hooks/use-session-activity-indicators";
-import type { AgentSessionMeta, Project } from "@/types/agent";
 import { idMatch } from "@/lib/utils";
+import type { ConversationListProps } from "./conversation-list-types";
+import { useConversationCollapseState } from "./use-conversation-collapse-state";
 import "./conversation.css";
 import "./conversation-collapse.css";
-interface ConversationListProps {
-  sessions: AgentSessionMeta[];
-  projects: Project[];
-  selectedId: string | null;
-  onSelect: (id: string) => void;
-  onCreate: () => void;
-  onRename: (id: string, name: string) => void;
-  onDelete: (id: string) => void;
-  onNewSessionInProject: (projectId: string) => void;
-  onRenameProject: (id: string, name: string) => void;
-  onDeleteProject: (id: string) => void;
-  onOpenFolder: (path: string) => void;
-  onReorderProjects: (ids: string[]) => void;
-}
+
 export function ConversationList({
   sessions, projects, selectedId,
   onSelect, onCreate, onRename, onDelete,
@@ -41,17 +29,8 @@ export function ConversationList({
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const ghostRef = useRef<HTMLDivElement | null>(null);
-  const [projectsCollapsed, setProjectsCollapsed] = useState(false);
-  const [collapsedProjects, setCollapsedProjects] = useState<Set<string>>(new Set());
-  const [discussionsCollapsed, setDiscussionsCollapsed] = useState(false);
+  const collapse = useConversationCollapseState();
   const nowMs = useMinuteNow();
-  const toggleProject = useCallback((id: string) => {
-    setCollapsedProjects((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
-  }, []);
 
   const projectIds = projects.map((p) => p.id);
   const drag = useProjectDrag(projectIds, onReorderProjects);
@@ -133,10 +112,10 @@ export function ConversationList({
       <div className={`conv-list ${drag.draggingId ? "is-dragging" : ""}`}>
         {projects.length > 0 && (
           <>
-            <ConversationSectionToggle open={!projectsCollapsed} onToggle={() => setProjectsCollapsed((c) => !c)}>
+            <ConversationSectionToggle open={!collapse.projectsCollapsed} onToggle={collapse.toggleProjects}>
               {t("projects.title", "Projets")}
             </ConversationSectionToggle>
-            <CollapsePanel open={!projectsCollapsed}>
+            <CollapsePanel open={!collapse.projectsCollapsed}>
               {displayOrder.map((id) => {
                 const p = projectMap.get(id);
                 if (!p) return null;
@@ -158,8 +137,8 @@ export function ConversationList({
                     onRenameSession={onRename}
                     onDeleteSession={onDelete}
                     onGrab={drag.onGrab}
-                    collapsed={collapsedProjects.has(p.id)}
-                    onToggleCollapse={() => toggleProject(p.id)}
+                    collapsed={collapse.collapsedProjects.has(p.id)}
+                    onToggleCollapse={() => collapse.toggleProject(p.id)}
                     nowMs={nowMs}
                   />
                 );
@@ -171,11 +150,11 @@ export function ConversationList({
         {orphanSessions.length > 0 && (
           <>
             {projects.length > 0 && (
-              <ConversationSectionToggle open={!discussionsCollapsed} onToggle={() => setDiscussionsCollapsed((c) => !c)}>
+              <ConversationSectionToggle open={!collapse.discussionsCollapsed} onToggle={collapse.toggleDiscussions}>
                 {t("projects.discussions", "Discussions")}
               </ConversationSectionToggle>
             )}
-            <CollapsePanel open={!discussionsCollapsed}>
+            <CollapsePanel open={!collapse.discussionsCollapsed}>
               {orphanSessions.map((s) => {
                 const active = idMatch(selectedId, s.id);
                 const renaming = idMatch(renamingId, s.id);

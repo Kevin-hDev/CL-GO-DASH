@@ -45,8 +45,10 @@ vi.mock("@/components/ui/context-menu", () => ({
 }));
 
 vi.mock("../project-section", () => ({
-  ProjectSection: (props: { project: Project }) => (
-    <div data-testid={`project-${props.project.id}`}>{props.project.name}</div>
+  ProjectSection: (props: { project: Project; collapsed: boolean }) => (
+    <div data-testid={`project-${props.project.id}`} data-collapsed={props.collapsed}>
+      {props.project.name}
+    </div>
   ),
 }));
 
@@ -79,6 +81,7 @@ vi.mock("../conversation-collapse.css", () => ({}));
 describe("ConversationList projects", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.clear();
   });
 
   it("affiche les ProjectSection pour chaque projet", () => {
@@ -88,6 +91,17 @@ describe("ConversationList projects", () => {
 
     expect(getByTestId("project-p1")).not.toBeNull();
     expect(getByTestId("project-p2")).not.toBeNull();
+  });
+
+  it("restaure un projet replié depuis le stockage local", () => {
+    localStorage.setItem("clgo-conversation-collapse-v1", JSON.stringify({
+      projectsCollapsed: false,
+      discussionsCollapsed: false,
+      collapsedProjectIds: ["p1"],
+    }));
+    const { getByTestId } = render(<ConversationList {...defaultProps} projects={[makeProject()]} />);
+
+    expect(getByTestId("project-p1").getAttribute("data-collapsed")).toBe("true");
   });
 
   it("affiche comme orpheline une session dont le project_id ne correspond à aucun projet", () => {
