@@ -15,6 +15,7 @@ vi.mock("react-i18next", () => ({
         "agentLocal.sessionSummary.git.confirmCommit": "Commit",
         "agentLocal.sessionSummary.git.pushError": "Unable to send the branch",
         "agentLocal.sessionSummary.git.destinationGithub": "GitHub",
+        "agentLocal.sessionSummary.git.remoteStatusUnavailable": "Remote status unavailable",
       };
       if (key.endsWith(".toggle")) return `Branch: ${typeof opts?.branch === "string" ? opts.branch : ""}`;
       if (key.endsWith(".changesToCommit")) return `${numberValue(opts?.count)} files to Commit`;
@@ -47,6 +48,7 @@ const baseGit: SessionSummaryGitState = {
   branches: [{ name: "main", is_current: true, is_remote: false, dirty_count: 0 }],
   dirtyCount: 0,
   hasRemote: true,
+  remoteStatusError: false,
   isGithubRemote: true,
   hasRemoteBranch: true,
   aheadCount: 0,
@@ -156,6 +158,17 @@ describe("SessionSummaryGitSection", () => {
 
     fireEvent.click(getByRole("button", { name: "Branch: main" }));
 
+    expect(queryByRole("button", { name: "Push" })).toBeNull();
+  });
+
+  it("distingue un statut distant indisponible de l'absence de remote", () => {
+    const { getByRole, getByText, queryByRole } = render(
+      <SessionSummaryGitSection git={{ ...baseGit, remoteStatusError: true }} />,
+    );
+
+    fireEvent.click(getByRole("button", { name: "Branch: main" }));
+
+    expect(getByText("Remote status unavailable")).toBeTruthy();
     expect(queryByRole("button", { name: "Push" })).toBeNull();
   });
 });

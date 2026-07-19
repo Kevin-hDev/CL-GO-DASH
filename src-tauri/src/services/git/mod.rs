@@ -39,6 +39,8 @@ mod tests;
 pub mod watcher;
 #[cfg(test)]
 mod watcher_tests;
+#[cfg(test)]
+mod watcher_lifecycle_tests;
 pub mod worktree_delete;
 #[cfg(test)]
 mod worktree_delete_tests;

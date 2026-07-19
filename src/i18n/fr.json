@@ -336,6 +336,7 @@
         "mergeDirtyError": "De nouvelles modifications sont apparues. Vérifie-les avant le Merge.",
         "upToDate": "Tout est à jour",
         "noRemote": "Aucun dépôt distant",
+        "remoteStatusUnavailable": "Statut du dépôt distant indisponible.",
         "localBranch": "Branche locale · aucun Push vers {{branch}}",
         "destinationGithub": "GitHub",
         "destinationRemote": "le dépôt distant",

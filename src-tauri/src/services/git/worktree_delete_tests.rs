@@ -8,14 +8,7 @@ async fn previews_and_preserves_dirty_worktree_before_removal() {
     let repo_dir = init_repo();
     let worktree_root = tempfile::tempdir().expect("worktree parent");
     let worktree_path = worktree_root.path().join("feature-worktree");
-    let status = Command::new("git")
-        .args(["-C"])
-        .arg(repo_dir.path())
-        .args(["worktree", "add", "-b", "feature"])
-        .arg(&worktree_path)
-        .status()
-        .expect("worktree add");
-    assert!(status.success());
+    add_worktree(repo_dir.path(), &worktree_path, "feature");
     std::fs::write(worktree_path.join("dirty.txt"), "keep").expect("dirty file");
 
     let preview = worktree_delete::preview(repo_dir.path(), &worktree_path)
@@ -38,6 +31,56 @@ async fn previews_and_preserves_dirty_worktree_before_removal() {
     assert!(!worktree_path.exists());
     let repo = Repository::open(repo_dir.path()).expect("repo");
     assert!(repo.find_branch("feature", git2::BranchType::Local).is_ok());
+}
+
+#[tokio::test]
+async fn removes_a_clean_worktree_without_force() {
+    let repo_dir = init_repo();
+    let worktree_root = tempfile::tempdir().expect("worktree parent");
+    let worktree_path = worktree_root.path().join("clean-worktree");
+    add_worktree(repo_dir.path(), &worktree_path, "clean-feature");
+
+    worktree_delete::remove_clean(repo_dir.path(), &worktree_path)
+        .await
+        .expect("remove clean");
+
+    assert!(!worktree_path.exists());
+}
+
+#[tokio::test]
+async fn discards_dirty_files_before_removing_a_worktree() {
+    let repo_dir = init_repo();
+    let worktree_root = tempfile::tempdir().expect("worktree parent");
+    let worktree_path = worktree_root.path().join("dirty-worktree");
+    add_worktree(repo_dir.path(), &worktree_path, "dirty-feature");
+    std::fs::write(worktree_path.join("dirty.txt"), "discard").expect("dirty file");
+
+    worktree_delete::discard_and_remove(repo_dir.path(), &worktree_path)
+        .await
+        .expect("discard and remove");
+
+    assert!(!worktree_path.exists());
+}
+
+#[tokio::test]
+async fn rejects_a_directory_that_is_not_a_linked_worktree() {
+    let repo_dir = init_repo();
+    let unrelated = tempfile::tempdir().expect("unrelated directory");
+
+    assert!(worktree_delete::preview(repo_dir.path(), unrelated.path())
+        .await
+        .is_err());
+}
+
+fn add_worktree(repo_path: &Path, worktree_path: &Path, branch: &str) {
+    let status = Command::new("git")
+        .arg("-C")
+        .arg(repo_path)
+        .args(["worktree", "add", "-b", branch])
+        .arg(worktree_path)
+        .status()
+        .expect("worktree add");
+    assert!(status.success());
 }
 
 fn init_repo() -> tempfile::TempDir {

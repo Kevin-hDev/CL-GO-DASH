@@ -1,7 +1,6 @@
 use crate::services::git::{blob_preview, commit_files, diff_preview, history};
 use base64::{engine::general_purpose::STANDARD as B64, Engine};
 use std::io::Write;
-use std::path::Path;
 
 const MAX_TEXT_SIZE: usize = 2 * 1024 * 1024;
 const BINARY_EXTENSIONS: &[&str] = &["docx", "pdf"];
@@ -92,7 +91,15 @@ pub async fn read_git_file_preview(
     file_path: String,
     use_parent: bool,
 ) -> Result<String, String> {
-    let bytes = load_blob(path, expected_branch, commit_id, file_path, use_parent).await?;
+    let bytes = super::git_history_preview::load_blob_with_limit(
+        path,
+        expected_branch,
+        commit_id,
+        file_path,
+        use_parent,
+        MAX_TEXT_SIZE,
+    )
+    .await?;
     if bytes.len() > MAX_TEXT_SIZE || bytes.contains(&0) {
         return Err(unavailable());
     }
@@ -107,8 +114,16 @@ pub async fn read_git_binary_preview(
     file_path: String,
     use_parent: bool,
 ) -> Result<String, String> {
-    let _ = validate_extension(&file_path, BINARY_EXTENSIONS)?;
-    let bytes = load_blob(path, expected_branch, commit_id, file_path, use_parent).await?;
+    let _ = super::git_history_preview::validate_extension(&file_path, BINARY_EXTENSIONS)?;
+    let bytes = super::git_history_preview::load_blob_with_limit(
+        path,
+        expected_branch,
+        commit_id,
+        file_path,
+        use_parent,
+        blob_preview::MAX_GIT_BINARY_PREVIEW_SIZE,
+    )
+    .await?;
     Ok(B64.encode(bytes))
 }
 
@@ -122,8 +137,19 @@ pub async fn read_git_spreadsheet_preview(
     sheet: Option<String>,
     max_rows: Option<usize>,
 ) -> Result<String, String> {
-    let extension = validate_extension(&file_path, SPREADSHEET_EXTENSIONS)?;
-    let bytes = load_blob(path, expected_branch, commit_id, file_path, use_parent).await?;
+    let extension = super::git_history_preview::validate_extension(
+        &file_path,
+        SPREADSHEET_EXTENSIONS,
+    )?;
+    let bytes = super::git_history_preview::load_blob_with_limit(
+        path,
+        expected_branch,
+        commit_id,
+        file_path,
+        use_parent,
+        blob_preview::MAX_GIT_BLOB_SIZE,
+    )
+    .await?;
     let mut temp = tempfile::Builder::new()
         .suffix(&format!(".{extension}"))
         .tempfile()
@@ -136,41 +162,6 @@ pub async fn read_git_spreadsheet_preview(
     )
     .await
     .map_err(|_| unavailable())
-}
-
-async fn load_blob(
-    path: String,
-    expected_branch: String,
-    commit_id: String,
-    file_path: String,
-    use_parent: bool,
-) -> Result<Vec<u8>, String> {
-    let repo_path = super::git::registered_project_path(&path).await?;
-    tokio::task::spawn_blocking(move || {
-        blob_preview::read_blob(
-            &repo_path,
-            &expected_branch,
-            &commit_id,
-            &file_path,
-            use_parent,
-        )
-    })
-    .await
-    .map_err(|_| unavailable())?
-    .map_err(|_| unavailable())
-}
-
-fn validate_extension(file_path: &str, allowed: &[&str]) -> Result<String, String> {
-    let extension = Path::new(file_path)
-        .extension()
-        .and_then(|value| value.to_str())
-        .map(str::to_ascii_lowercase)
-        .ok_or_else(unavailable)?;
-    allowed
-        .contains(&extension.as_str())
-        .then_some(())
-        .ok_or_else(unavailable)?;
-    Ok(extension)
 }
 
 fn unavailable() -> String {

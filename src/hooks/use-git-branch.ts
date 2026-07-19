@@ -2,53 +2,21 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { cleanupTauriListener } from "@/lib/tauri-listen";
+import {
+  parseCreateBranchError,
+  type GitCreateBranchResult,
+} from "@/hooks/git-create-branch-error";
 import { useGitMutations } from "@/hooks/use-git-mutations";
 import { useGitHistory } from "@/hooks/use-git-history";
+import { useGitWatcher } from "@/hooks/use-git-watcher";
 import type { BranchInfo, GitBranchState, WorktreeInfo } from "@/hooks/git-types";
 
 export type { BranchInfo, WorktreeInfo } from "@/hooks/git-types";
-
-export type GitCreateBranchErrorKind =
-  | "invalid_name"
-  | "name_too_long"
-  | "already_exists"
-  | "unborn_head"
-  | "github_auth_required"
-  | "internal_error";
-
-export type GitCreateBranchResult =
-  | { ok: true }
-  | { ok: false; reason?: "github_auth_required"; kind?: GitCreateBranchErrorKind };
-
-const CREATE_BRANCH_ERROR_KINDS = new Set<GitCreateBranchErrorKind>([
-  "invalid_name",
-  "name_too_long",
-  "already_exists",
-  "unborn_head",
-  "github_auth_required",
-  "internal_error",
-]);
-
-export function parseCreateBranchError(error: unknown): GitCreateBranchErrorKind | null {
-  const fromObject = readCreateBranchKind(error);
-  if (fromObject) return fromObject;
-  if (typeof error !== "string") return null;
-  if (error.includes("GITHUB_AUTH_REQUIRED")) return "github_auth_required";
-  try {
-    return readCreateBranchKind(JSON.parse(error));
-  } catch {
-    return null;
-  }
-}
-
-function readCreateBranchKind(value: unknown): GitCreateBranchErrorKind | null {
-  if (!value || typeof value !== "object") return null;
-  const kind = (value as { kind?: unknown }).kind;
-  if (typeof kind !== "string") return null;
-  return CREATE_BRANCH_ERROR_KINDS.has(kind as GitCreateBranchErrorKind)
-    ? kind as GitCreateBranchErrorKind
-    : null;
-}
+export {
+  parseCreateBranchError,
+  type GitCreateBranchErrorKind,
+  type GitCreateBranchResult,
+} from "@/hooks/git-create-branch-error";
 
 const INITIAL_STATE: GitBranchState = {
   repositoryPath: "",
@@ -57,6 +25,7 @@ const INITIAL_STATE: GitBranchState = {
   currentBranch: "",
   dirtyCount: 0,
   hasRemote: false,
+  remoteStatusError: false,
   isGithubRemote: false,
   hasRemoteBranch: false,
   aheadCount: 0,
@@ -69,6 +38,7 @@ export function useGitBranch(projectPath: string | undefined, sessionId?: string
   const [state, setState] = useState<GitBranchState>(INITIAL_STATE);
   const pathRef = useRef(projectPath);
   const mountedRef = useRef(true);
+  useGitWatcher(projectPath);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -88,6 +58,7 @@ export function useGitBranch(projectPath: string | undefined, sessionId?: string
         isGitRepo: false,
         branches: [],
         worktrees: [],
+        remoteStatusError: false,
       }));
       return;
     }
@@ -103,12 +74,13 @@ export function useGitBranch(projectPath: string | undefined, sessionId?: string
         invoke<WorktreeInfo[]>("list_git_worktrees", { path }),
         invoke<{ has_remote: boolean; is_github: boolean; has_remote_branch: boolean; ahead: number; behind: number }>(
           "get_git_remote_status", { path },
-        ).catch(() => ({
+        ).then((value) => ({ ...value, status_error: false })).catch(() => ({
           has_remote: false,
           is_github: false,
           has_remote_branch: false,
           ahead: 0,
           behind: 0,
+          status_error: true,
         })),
       ]);
 
@@ -121,6 +93,7 @@ export function useGitBranch(projectPath: string | undefined, sessionId?: string
         currentBranch: context.branch,
         dirtyCount: context.dirty_count,
         hasRemote: remote.has_remote,
+        remoteStatusError: remote.status_error,
         isGithubRemote: remote.is_github,
         hasRemoteBranch: remote.has_remote_branch,
         aheadCount: remote.ahead,
@@ -136,9 +109,6 @@ export function useGitBranch(projectPath: string | undefined, sessionId?: string
 
   useEffect(() => {
     void refresh();
-    if (projectPath) {
-      void invoke("start_git_watcher", { path: projectPath }).catch(() => {});
-    }
   }, [projectPath, sessionId, refresh]);
 
   useEffect(() => {

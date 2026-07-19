@@ -336,6 +336,7 @@
         "mergeDirtyError": "New local changes appeared. Check them before the Merge.",
         "upToDate": "Everything is up to date",
         "noRemote": "No remote repository",
+        "remoteStatusUnavailable": "Remote repository status is unavailable.",
         "localBranch": "Local branch · no Push to {{branch}} yet",
         "destinationGithub": "GitHub",
         "destinationRemote": "the remote repository",

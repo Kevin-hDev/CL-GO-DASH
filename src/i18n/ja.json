@@ -331,6 +331,7 @@
         "mergeDirtyError": "新しいローカル変更があります。Merge の前に確認してください。",
         "upToDate": "すべて最新です",
         "noRemote": "リモートリポジトリなし",
+        "remoteStatusUnavailable": "リモートリポジトリの状態を取得できません。",
         "localBranch": "ローカルブランチ · {{branch}} への Push はまだありません",
         "destinationGithub": "GitHub",
         "destinationRemote": "リモートリポジトリ",

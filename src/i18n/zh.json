@@ -331,6 +331,7 @@
         "mergeDirtyError": "出现了新的本地修改。请在 Merge 前检查。",
         "upToDate": "已全部同步",
         "noRemote": "没有远程仓库",
+        "remoteStatusUnavailable": "远程仓库状态不可用。",
         "localBranch": "本地分支 · 尚未 Push 到 {{branch}}",
         "destinationGithub": "GitHub",
         "destinationRemote": "远程仓库",

@@ -65,6 +65,7 @@ function branchLabel(git: SessionSummaryGitState | undefined, t: (key: string) =
 
 function statusLabel(git: SessionSummaryGitState, t: (key: string, values?: Record<string, unknown>) => string) {
   if (git.dirtyCount > 0) return t("agentLocal.sessionSummary.git.changesToCommit", { count: git.dirtyCount });
+  if (git.remoteStatusError) return t("agentLocal.sessionSummary.git.remoteStatusUnavailable");
   if (!git.hasRemote) return t("agentLocal.sessionSummary.git.noRemote");
   if (git.behindCount > 0) return t("agentLocal.sessionSummary.git.remoteChanges");
   if (git.aheadCount > 0) {

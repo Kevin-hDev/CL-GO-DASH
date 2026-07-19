@@ -1,4 +1,5 @@
-import type { BranchInfo, GitCreateBranchErrorKind, WorktreeInfo } from "@/hooks/use-git-branch";
+import type { GitCreateBranchErrorKind } from "@/hooks/git-create-branch-error";
+import type { BranchInfo, WorktreeInfo } from "@/hooks/use-git-branch";
 
 export function getVisibleBranchOptions(
   branches: BranchInfo[],

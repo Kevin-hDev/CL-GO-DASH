@@ -18,6 +18,7 @@ export interface GitBranchState {
   currentBranch: string;
   dirtyCount: number;
   hasRemote: boolean;
+  remoteStatusError: boolean;
   isGithubRemote: boolean;
   hasRemoteBranch: boolean;
   aheadCount: number;

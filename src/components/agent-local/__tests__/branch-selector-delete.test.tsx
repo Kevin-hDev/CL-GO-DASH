@@ -17,6 +17,9 @@ vi.mock("react-i18next", () => ({
       if (key === "branches.deleteBranch") {
         return `Supprimer ${typeof opts?.name === "string" ? opts.name : ""}`;
       }
+      if (key === "branches.deleteWorktree") {
+        return `Supprimer le worktree ${typeof opts?.name === "string" ? opts.name : ""}`;
+      }
       if (key === "branches.deleteUnmerged") {
         const count = typeof opts?.count === "number" || typeof opts?.count === "string" ? opts.count : "";
         return `Commits non fusionnés : ${count}`;
@@ -114,5 +117,25 @@ describe("BranchSelector deletion", () => {
     await waitFor(() => expect(getByRole("dialog", { name: "Supprimer cette branche ?" })).toBeTruthy());
     expect(getByText("CL-GO passera sur feat/login avant de supprimer.")).toBeTruthy();
     expect(getByRole("button", { name: "Changer de branche et supprimer" })).toBeTruthy();
+  });
+
+  it("confirme puis supprime un worktree propre", async () => {
+    const previewWorktreeDeletion = vi.fn().mockResolvedValue({
+      path: "/repo-worktree",
+      branch: "feature-worktree",
+      dirty_files: [],
+    });
+    const deleteWorktree = vi.fn().mockResolvedValue({ ok: true });
+    const { getByRole } = renderSelector({
+      worktrees: [{ path: "/repo-worktree", branch: "feature-worktree", is_current: false }],
+      previewWorktreeDeletion,
+      deleteWorktree,
+    });
+
+    fireEvent.click(getByRole("button", { name: "Supprimer le worktree feature-worktree" }));
+    await waitFor(() => expect(getByRole("button", { name: "Confirmer" })).toBeTruthy());
+    fireEvent.click(getByRole("button", { name: "Confirmer" }));
+
+    await waitFor(() => expect(deleteWorktree).toHaveBeenCalledWith("/repo-worktree", "clean"));
   });
 });

@@ -33,6 +33,7 @@ export function SessionSummaryGitActions({ git }: { git: SessionSummaryGitState 
     ? git.branches.filter((branch) => !branch.is_remote && branch.name !== git.currentBranch)
     : [];
   const canPush = git.dirtyCount === 0
+    && !git.remoteStatusError
     && git.hasRemote
     && git.behindCount === 0
     && (!git.hasRemoteBranch || git.aheadCount > 0);

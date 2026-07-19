@@ -39,6 +39,7 @@ pub mod forecast_models;
 pub mod gateway;
 pub mod git;
 pub mod git_history;
+mod git_history_preview;
 pub mod git_mutations;
 pub mod heartbeat;
 mod heartbeat_validation;

@@ -25,6 +25,7 @@ export function SessionSummaryCommits({ git, onOpenFile }: SessionSummaryCommits
   const [error, setError] = useState(false);
   const loadingRef = useRef(false);
   const requestRef = useRef(0);
+  const selectionRequestRef = useRef(0);
 
   const loadPage = useCallback(async () => {
     if (!git || loadingRef.current || commits.length >= MAX_LOADED_COMMITS) return;
@@ -63,16 +64,21 @@ export function SessionSummaryCommits({ git, onOpenFile }: SessionSummaryCommits
       setSelected(null);
       setFiles(null);
       setError(false);
+      selectionRequestRef.current += 1;
     }
   };
 
   const selectCommit = async (commit: GitCommitSummary) => {
+    const request = ++selectionRequestRef.current;
     setSelected(commit);
     setFiles(null);
     setError(false);
     try {
-      setFiles((await git.listCommitFiles(commit.id)).slice(0, 200));
+      const nextFiles = (await git.listCommitFiles(commit.id)).slice(0, 200);
+      if (request !== selectionRequestRef.current) return;
+      setFiles(nextFiles);
     } catch {
+      if (request !== selectionRequestRef.current) return;
       setError(true);
       setFiles([]);
     }
@@ -105,7 +111,12 @@ export function SessionSummaryCommits({ git, onOpenFile }: SessionSummaryCommits
                 commit={selected}
                 files={files}
                 error={error}
-                onBack={() => { setSelected(null); setFiles(null); setError(false); }}
+                onBack={() => {
+                  selectionRequestRef.current += 1;
+                  setSelected(null);
+                  setFiles(null);
+                  setError(false);
+                }}
                 onOpen={(file) => onOpenFile?.(selected, file)}
               />
             ) : (

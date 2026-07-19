@@ -1,6 +1,7 @@
-import { fireEvent, render, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { SessionSummaryCommits } from "../session-summary-commits";
+import type { GitCommitFile, GitCommitSummary } from "@/hooks/git-types";
 import type { SessionSummaryGitState } from "../session-summary-git-types";
 
 vi.mock("react-i18next", () => ({
@@ -57,7 +58,74 @@ describe("SessionSummaryCommits", () => {
 
     expect(onOpenFile).toHaveBeenCalledWith(commit, file);
   });
+
+  it("ignore les fichiers d'un ancien commit après une nouvelle sélection", async () => {
+    const first = commit("a", "Premier commit");
+    const second = commit("b", "Deuxième commit");
+    const firstRequest = deferred<GitCommitFile[]>();
+    const secondRequest = deferred<GitCommitFile[]>();
+    const git = gitState({
+      listCommits: vi.fn().mockResolvedValue({ commits: [first, second] }),
+      listCommitFiles: vi.fn((id: string) => id === first.id ? firstRequest.promise : secondRequest.promise),
+    });
+    const view = render(<SessionSummaryCommits git={git} />);
+
+    fireEvent.click(view.getByRole("button", { name: "Afficher les commits" }));
+    await waitFor(() => expect(view.getByText("Premier commit")).toBeTruthy());
+    fireEvent.click(view.getByRole("button", { name: /Premier commit/ }));
+    fireEvent.click(view.getByRole("button", { name: /Premier commit/ }));
+    fireEvent.click(view.getByRole("button", { name: /Deuxième commit/ }));
+
+    await act(async () => {
+      secondRequest.resolve([file("second.ts")]);
+      await secondRequest.promise;
+    });
+    await waitFor(() => expect(view.getByText("second.ts")).toBeTruthy());
+    await act(async () => {
+      firstRequest.resolve([file("first.ts")]);
+      await firstRequest.promise;
+    });
+
+    expect(view.queryByText("first.ts")).toBeNull();
+    expect(view.getByText("second.ts")).toBeTruthy();
+  });
+
+  it("charge la page suivante en approchant de la fin", async () => {
+    const first = commit("a", "Premier commit");
+    const second = commit("b", "Deuxième commit");
+    const listCommits = vi.fn()
+      .mockResolvedValueOnce({ commits: [first], next_cursor: first.id })
+      .mockResolvedValueOnce({ commits: [second] });
+    const view = render(<SessionSummaryCommits git={gitState({ listCommits })} />);
+
+    fireEvent.click(view.getByRole("button", { name: "Afficher les commits" }));
+    await waitFor(() => expect(view.getByText("Premier commit")).toBeTruthy());
+    const scroll = view.container.querySelector(".ssbc-scroll") as HTMLDivElement;
+    Object.defineProperties(scroll, {
+      scrollHeight: { value: 100 },
+      scrollTop: { value: 70 },
+      clientHeight: { value: 20 },
+    });
+    fireEvent.scroll(scroll);
+
+    await waitFor(() => expect(view.getByText("Deuxième commit")).toBeTruthy());
+    expect(listCommits).toHaveBeenLastCalledWith(first.id);
+  });
 });
+
+function commit(seed: string, message: string): GitCommitSummary {
+  return { id: seed.repeat(40), short_id: seed.repeat(8), message, timestamp: 1_700_000_000 };
+}
+
+function file(path: string): GitCommitFile {
+  return { path, status: "modified", additions: 1, deletions: 1 };
+}
+
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((done) => { resolve = done; });
+  return { promise, resolve };
+}
 
 function gitState(overrides: Partial<SessionSummaryGitState>): SessionSummaryGitState {
   return {
@@ -69,6 +137,7 @@ function gitState(overrides: Partial<SessionSummaryGitState>): SessionSummaryGit
     worktrees: [],
     dirtyCount: 0,
     hasRemote: false,
+    remoteStatusError: false,
     isGithubRemote: false,
     hasRemoteBranch: false,
     aheadCount: 0,

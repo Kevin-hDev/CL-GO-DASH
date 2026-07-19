@@ -11,7 +11,12 @@ use tauri::{AppHandle, Emitter};
 const DEBOUNCE_MS: u64 = 200;
 const WORKTREE_POLL_MS: u64 = 1_000;
 
-static WATCHER_ACTIVE: std::sync::Mutex<Option<Arc<AtomicBool>>> = std::sync::Mutex::new(None);
+static WATCHER_ACTIVE: std::sync::Mutex<Option<ActiveWatcher>> = std::sync::Mutex::new(None);
+
+pub(super) struct ActiveWatcher {
+    pub(super) repo_path: PathBuf,
+    pub(super) stop: Arc<AtomicBool>,
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct GitWatchState {
@@ -85,12 +90,15 @@ pub fn setup_git_watcher(app: AppHandle, repo_path: PathBuf) -> Result<(), Strin
         .lock()
         .map_err(|_| "Lock error".to_string())?;
 
-    if let Some(prev) = guard.take() {
-        prev.store(true, Ordering::Relaxed);
+    if let Some(previous) = guard.take() {
+        previous.stop.store(true, Ordering::Relaxed);
     }
 
     let stop = Arc::new(AtomicBool::new(false));
-    *guard = Some(Arc::clone(&stop));
+    *guard = Some(ActiveWatcher {
+        repo_path: repo_path.clone(),
+        stop: Arc::clone(&stop),
+    });
     drop(guard);
 
     let head_path = git_dir.join("HEAD");
@@ -157,4 +165,23 @@ pub fn setup_git_watcher(app: AppHandle, repo_path: PathBuf) -> Result<(), Strin
     });
 
     Ok(())
+}
+
+pub fn stop_git_watcher(repo_path: &Path) -> Result<(), String> {
+    let mut guard = WATCHER_ACTIVE
+        .lock()
+        .map_err(|_| "Lock error".to_string())?;
+    stop_matching_watcher(&mut guard, repo_path);
+    Ok(())
+}
+
+pub(super) fn stop_matching_watcher(slot: &mut Option<ActiveWatcher>, repo_path: &Path) {
+    if slot
+        .as_ref()
+        .is_some_and(|watcher| watcher.repo_path == repo_path)
+    {
+        if let Some(watcher) = slot.take() {
+            watcher.stop.store(true, Ordering::Relaxed);
+        }
+    }
 }

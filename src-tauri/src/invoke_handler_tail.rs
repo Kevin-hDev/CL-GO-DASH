@@ -61,6 +61,7 @@ macro_rules! generate_tail {
             crate::commands::cancel_model_download,
             crate::commands::fetch_link_preview,
             crate::commands::start_git_watcher,
+            crate::commands::stop_git_watcher,
             crate::commands::list_git_branches,
             crate::commands::get_git_context,
             crate::commands::checkout_git_branch,

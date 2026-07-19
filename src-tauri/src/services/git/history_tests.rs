@@ -34,12 +34,13 @@ fn lists_deleted_file_and_reads_parent_version() {
     .expect("commit files");
     assert!(files.iter().any(|file| file.path == "deleted.txt" && file.status == "deleted"));
 
-    let bytes = blob_preview::read_blob(
+    let bytes = blob_preview::read_blob_with_limit(
         fixture.dir.path(),
         &fixture.branch,
         &fixture.deletion.to_string(),
         "deleted.txt",
         true,
+        blob_preview::MAX_GIT_BLOB_SIZE,
     )
     .expect("parent blob");
     assert_eq!(bytes, b"before deletion\n");
@@ -48,12 +49,13 @@ fn lists_deleted_file_and_reads_parent_version() {
 #[test]
 fn rejects_traversal_and_reports_bounded_uncommitted_files() {
     let fixture = fixture();
-    assert!(blob_preview::read_blob(
+    assert!(blob_preview::read_blob_with_limit(
         fixture.dir.path(),
         &fixture.branch,
         &fixture.deletion.to_string(),
         "../secret.txt",
         false,
+        blob_preview::MAX_GIT_BLOB_SIZE,
     )
     .is_err());
 
@@ -62,6 +64,22 @@ fn rejects_traversal_and_reports_bounded_uncommitted_files() {
         .expect("uncommitted");
     assert!(snapshot.files.len() <= 200);
     assert!(snapshot.files.iter().any(|file| file.path == "working.txt"));
+}
+
+#[test]
+fn rejects_a_blob_before_copying_it_past_the_preview_limit() {
+    let fixture = fixture();
+    let result = blob_preview::read_blob_with_limit(
+        fixture.dir.path(),
+        &fixture.branch,
+        &fixture.deletion.to_string(),
+        "deleted.txt",
+        true,
+        4,
+    );
+
+    assert!(result.is_err());
+    assert_eq!(blob_preview::MAX_GIT_BINARY_PREVIEW_SIZE, 10 * 1024 * 1024);
 }
 
 #[test]

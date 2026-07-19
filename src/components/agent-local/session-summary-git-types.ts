@@ -16,6 +16,7 @@ export interface SessionSummaryGitState {
   branches: BranchInfo[];
   dirtyCount: number;
   hasRemote: boolean;
+  remoteStatusError: boolean;
   isGithubRemote: boolean;
   hasRemoteBranch: boolean;
   aheadCount: number;

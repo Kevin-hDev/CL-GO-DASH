@@ -169,6 +169,7 @@ const baseGit: SessionSummaryGitState = {
   ],
   dirtyCount: 0,
   hasRemote: true,
+  remoteStatusError: false,
   isGithubRemote: true,
   hasRemoteBranch: true,
   aheadCount: 0,

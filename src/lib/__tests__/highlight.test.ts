@@ -19,4 +19,11 @@ describe("highlightLines", () => {
   it("applique la même règle au code coloré", () => {
     expect(highlightLines("const value = 1;\n", "example.ts")).toHaveLength(1);
   });
+
+  it("échappe le HTML avant son affichage dans la preview", () => {
+    const [html] = highlightLines("<img src=x onerror=alert(1)>", "notes.txt");
+
+    expect(html).toMatch(/&(?:lt|#x3C);img/);
+    expect(html).not.toContain("<img");
+  });
 });

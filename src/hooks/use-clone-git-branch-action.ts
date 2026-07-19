@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { branchCreateErrorKey } from "@/components/agent-local/branch-selector-utils";
-import { parseCreateBranchError, type useGitBranch } from "@/hooks/use-git-branch";
+import { parseCreateBranchError } from "@/hooks/git-create-branch-error";
+import type { useGitBranch } from "@/hooks/use-git-branch";
 import { showToast } from "@/lib/toast-emitter";
 import type { SessionTab } from "@/types/agent";
 

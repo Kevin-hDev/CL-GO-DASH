@@ -17,6 +17,12 @@ pub async fn start_git_watcher(app: tauri::AppHandle, path: String) -> Result<()
 }
 
 #[tauri::command]
+pub async fn stop_git_watcher(path: String) -> Result<(), String> {
+    let repo_path = registered_project_path(&path).await?;
+    watcher::stop_git_watcher(&repo_path)
+}
+
+#[tauri::command]
 pub async fn list_git_branches(path: String) -> Result<Vec<branch::BranchInfo>, String> {
     let repo_path = registered_project_path(&path).await?;
     tokio::task::spawn_blocking(move || branch::list_branches(&repo_path))
