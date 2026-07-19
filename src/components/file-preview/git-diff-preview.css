@@ -24,7 +24,7 @@
 }
 
 .gdp-status-added .gdp-status-label {
-  color: var(--signal-ok);
+  color: var(--diff-new);
 }
 
 .gdp-status-deleted .gdp-status-label {
@@ -68,7 +68,7 @@
 }
 
 .tp-line-ok .gdp-line-number {
-  color: var(--signal-ok);
+  color: var(--diff-new);
   background: var(--diff-add-gutter);
 }
 

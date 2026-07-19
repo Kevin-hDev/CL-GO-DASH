@@ -73,7 +73,7 @@
 }
 
 .bcd-file-stat-add {
-  color: var(--signal-ok);
+  color: var(--diff-new);
 }
 
 .bcd-file-stat-del {

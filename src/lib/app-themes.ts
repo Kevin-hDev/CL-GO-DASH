@@ -2,6 +2,7 @@ export const RESOLVED_THEME_OPTIONS = [
   { id: "light", labelKey: "settings.light", colorScheme: "light" },
   { id: "dark", labelKey: "settings.dark", colorScheme: "dark" },
   { id: "emerald-night", labelKey: "settings.emeraldNight", colorScheme: "dark" },
+  { id: "cobalt-frost", labelKey: "settings.cobaltFrost", colorScheme: "light" },
 ] as const;
 
 export const THEME_OPTIONS = [
@@ -23,7 +24,7 @@ export function resolveTheme(choice: ThemeChoice, prefersDark: boolean): Resolve
 }
 
 export function getThemeColorScheme(theme: ResolvedTheme): ThemeColorScheme {
-  return theme === "light" ? "light" : "dark";
+  return theme === "dark" || theme === "emerald-night" ? "dark" : "light";
 }
 
 export function getNextThemeChoice(choice: ThemeChoice): ThemeChoice {

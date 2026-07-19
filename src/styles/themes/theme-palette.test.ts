@@ -2,7 +2,11 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 const darkCss = readFileSync("src/styles/themes/dark.css", "utf8");
+const lightCss = readFileSync("src/styles/themes/light.css", "utf8");
 const emeraldCss = readFileSync("src/styles/themes/emerald-night.css", "utf8");
+const cobaltCss = readFileSync("src/styles/themes/cobalt-frost.css", "utf8");
+const toolPreviewsCss = readFileSync("src/components/agent-local/tool-previews.css", "utf8");
+const gitDiffCss = readFileSync("src/components/file-preview/git-diff-preview.css", "utf8");
 
 function tokenNames(css: string): string[] {
   return [...css.matchAll(/(--[a-z0-9-]+)\s*:/g)]
@@ -43,5 +47,31 @@ describe("Emerald Night palette", () => {
   it("conserve un orange distinct et lisible pour les anciennes lignes", () => {
     expect(emeraldCss).toContain("--diff-old: #f97316;");
     expect(contrast("#f97316", "#031f1c")).toBeGreaterThanOrEqual(4.5);
+  });
+});
+
+describe("Cobalt Frost palette", () => {
+  it("définit tous les tokens du thème clair", () => {
+    expect(tokenNames(cobaltCss)).toEqual(tokenNames(lightCss));
+  });
+
+  it("maintient des contrastes lisibles pour les textes et actions", () => {
+    expect(contrast("#101828", "#f7f9fd")).toBeGreaterThanOrEqual(7);
+    expect(contrast("#344054", "#f7f9fd")).toBeGreaterThanOrEqual(4.5);
+    expect(contrast("#ffffff", "#075dcc")).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("distingue clairement les nouvelles et anciennes lignes", () => {
+    expect(cobaltCss).toContain("--diff-new: #075dcc;");
+    expect(cobaltCss).toContain("--diff-old: #c5303c;");
+    expect(contrast("#075dcc", "#f7f9fd")).toBeGreaterThanOrEqual(4.5);
+    expect(contrast("#c5303c", "#f7f9fd")).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("applique les tokens de diff à toutes les parties des previews", () => {
+    expect(toolPreviewsCss).toContain("background: var(--diff-add-bg);");
+    expect(toolPreviewsCss).toContain("background: var(--diff-del-bg);");
+    expect(toolPreviewsCss).toContain("color: var(--diff-new);");
+    expect(gitDiffCss).toContain("color: var(--diff-new);");
   });
 });

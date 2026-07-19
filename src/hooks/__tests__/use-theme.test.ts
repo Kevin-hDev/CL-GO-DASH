@@ -69,4 +69,15 @@ describe("useTheme", () => {
     await waitFor(() => expect(result.current.theme).toBe("emerald-night"));
     expect(localStorage.getItem("clgo-theme")).toBe("emerald-night");
   });
+
+  it("restaure et applique Cobalt givré comme thème clair", async () => {
+    localStorage.setItem("clgo-theme", "cobalt-frost");
+
+    const { result } = renderHook(() => useTheme());
+
+    await waitFor(() => expect(result.current.theme).toBe("cobalt-frost"));
+    expect(result.current.choice).toBe("cobalt-frost");
+    expect(document.documentElement).toHaveAttribute("data-theme", "light");
+    expect(document.documentElement).toHaveAttribute("data-palette", "cobalt-frost");
+  });
 });

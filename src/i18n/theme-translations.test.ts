@@ -10,15 +10,17 @@ import zh from "./zh.json";
 interface ThemeLocale {
   settings: {
     emeraldNight: string;
+    cobaltFrost: string;
   };
 }
 
 describe("theme translations", () => {
-  it("nomme Émeraude nocturne dans les sept langues", () => {
+  it("nomme les thèmes personnalisés dans les sept langues", () => {
     const locales = [fr, en, es, de, itJson, zh, ja] as ThemeLocale[];
 
     for (const locale of locales) {
       expect(locale.settings.emeraldNight.trim()).not.toBe("");
+      expect(locale.settings.cobaltFrost.trim()).not.toBe("");
     }
   });
 });

@@ -17,8 +17,18 @@ describe("app themes", () => {
     expect(getThemeColorScheme("emerald-night")).toBe("dark");
   });
 
+  it("déclare Cobalt givré comme une palette claire", () => {
+    expect(THEME_OPTIONS).toContainEqual({
+      id: "cobalt-frost",
+      labelKey: "settings.cobaltFrost",
+      colorScheme: "light",
+    });
+    expect(getThemeColorScheme("cobalt-frost")).toBe("light");
+  });
+
   it("valide uniquement les choix de thème connus", () => {
     expect(isThemeChoice("emerald-night")).toBe(true);
+    expect(isThemeChoice("cobalt-frost")).toBe(true);
     expect(isThemeChoice("unknown-theme")).toBe(false);
     expect(isThemeChoice(null)).toBe(false);
   });
@@ -27,11 +37,13 @@ describe("app themes", () => {
     expect(resolveTheme("system", true)).toBe("dark");
     expect(resolveTheme("system", false)).toBe("light");
     expect(resolveTheme("emerald-night", false)).toBe("emerald-night");
+    expect(resolveTheme("cobalt-frost", true)).toBe("cobalt-frost");
   });
 
-  it("inclut Émeraude nocturne dans le cycle des thèmes", () => {
+  it("inclut les palettes personnalisées dans le cycle des thèmes", () => {
     expect(getNextThemeChoice("dark")).toBe("emerald-night");
-    expect(getNextThemeChoice("emerald-night")).toBe("system");
+    expect(getNextThemeChoice("emerald-night")).toBe("cobalt-frost");
+    expect(getNextThemeChoice("cobalt-frost")).toBe("system");
     expect(getNextThemeChoice("system")).toBe("light");
   });
 });

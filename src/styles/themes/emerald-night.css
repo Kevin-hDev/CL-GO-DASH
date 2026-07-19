@@ -68,6 +68,7 @@
   --diff-add-line-bg: rgba(78, 224, 122, 0.14);
   --diff-del-line-bg: rgba(255, 116, 116, 0.12);
 
+  --diff-new: #4ee07a;
   --diff-old: #f97316;
   --diff-old-bg: rgba(249, 115, 22, 0.18);
 

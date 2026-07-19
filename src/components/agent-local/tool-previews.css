@@ -23,11 +23,11 @@
 }
 
 .tp-line-ok {
-  background: var(--signal-ok-bg);
+  background: var(--diff-add-bg);
 }
 
 .tp-line-error {
-  background: var(--diff-old-bg);
+  background: var(--diff-del-bg);
 }
 
 .tp-num {
@@ -43,7 +43,7 @@
 }
 
 .tp-line-ok .tp-num {
-  color: var(--signal-ok);
+  color: var(--diff-new);
   background: var(--diff-add-gutter);
 }
 
@@ -61,7 +61,7 @@
 }
 
 .tp-code-ok {
-  color: var(--signal-ok);
+  color: var(--diff-new);
 }
 
 .tp-code-error {
