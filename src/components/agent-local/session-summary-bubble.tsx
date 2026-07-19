@@ -15,7 +15,7 @@ import { SessionSummaryGitSection } from "./session-summary-git-section";
 import { SessionSummaryCommits } from "./session-summary-commits";
 import type { SessionSummaryGitState } from "./session-summary-git-section";
 import type { GitCommitFile, GitCommitSummary } from "@/hooks/git-types";
-import { uncommittedChangeSummary } from "@/lib/git-file-preview";
+import { SessionSummaryChangeStats } from "./session-summary-change-stats";
 import "./session-summary-bubble.css";
 
 type SessionSummaryState = ReturnType<typeof useSessionSummary>;
@@ -50,8 +50,6 @@ export function SessionSummaryBubble({
   });
   const rootRef = useRef<HTMLSpanElement>(null);
   useClickOutside(rootRef, () => setOpen(false));
-  const changes = displayedChanges(summary, git);
-
   const toggleSection = (key: SectionKey) => {
     setSections((current) => ({ ...current, [key]: !current[key] }));
   };
@@ -91,7 +89,7 @@ export function SessionSummaryBubble({
           <div className="ssb-row">
             <FilePlus size="var(--icon-md)" className="ssb-row-icon" />
             <span className="ssb-row-label">{t("agentLocal.sessionSummary.modifications")}</span>
-            <ChangeStats additions={changes.additions} deletions={changes.deletions} />
+            <SessionSummaryChangeStats sessionChanges={summary.changes} git={git} />
           </div>
           <SessionSummaryGitSection git={git} />
           <SessionSummaryCommits
@@ -129,22 +127,6 @@ export function SessionSummaryBubble({
           </SessionSummarySection>
         </div>
       )}
-    </span>
-  );
-}
-
-function displayedChanges(summary: SessionSummaryState, git?: SessionSummaryGitState) {
-  if (git?.isLoading) return { additions: 0, deletions: 0 };
-  if (!git?.isGitRepo) return summary.changes;
-  if (git.dirtyCount === 0) return { additions: 0, deletions: 0 };
-  return uncommittedChangeSummary(git.uncommittedSnapshot);
-}
-
-function ChangeStats({ additions, deletions }: { additions: number; deletions: number }) {
-  return (
-    <span className="ssb-change-stats">
-      <span className="ssb-change-add">+{additions}</span>
-      <span className="ssb-change-del">-{deletions}</span>
     </span>
   );
 }

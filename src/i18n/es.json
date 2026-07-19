@@ -299,6 +299,8 @@
       "title": "Resumen de sesión",
       "environment": "Entorno",
       "modifications": "Cambios",
+      "modificationsUnavailable": "Los cambios no están disponibles temporalmente.",
+      "modificationsPartial": "{{count}} archivos modificados. Las cifras mostradas son parciales.",
       "branch": "Rama",
       "noGit": "Sin repositorio Git",
       "commits": {

@@ -299,6 +299,8 @@
       "title": "会话摘要",
       "environment": "环境",
       "modifications": "修改",
+      "modificationsUnavailable": "修改内容暂时不可用。",
+      "modificationsPartial": "已修改 {{count}} 个文件。显示的统计数据不完整。",
       "branch": "分支",
       "noGit": "无 Git 仓库",
       "commits": {

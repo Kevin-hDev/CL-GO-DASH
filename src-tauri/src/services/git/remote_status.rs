@@ -35,7 +35,14 @@ pub fn status(repo_path: &Path) -> Result<RemoteStatus, String> {
             .get()
             .target()
             .ok_or_else(|| "Référence distante invalide".to_string())?;
-        return counts(&repository, local_oid, remote_oid, has_remote, is_github, true);
+        return counts(
+            &repository,
+            local_oid,
+            remote_oid,
+            has_remote,
+            is_github,
+            true,
+        );
     }
 
     let Some(remote_oid) = cached_remote_oid(&repository, &name) else {
@@ -48,7 +55,14 @@ pub fn status(repo_path: &Path) -> Result<RemoteStatus, String> {
             behind: 0,
         });
     };
-    counts(&repository, local_oid, remote_oid, has_remote, is_github, false)
+    counts(
+        &repository,
+        local_oid,
+        remote_oid,
+        has_remote,
+        is_github,
+        false,
+    )
 }
 
 fn cached_remote_oid(repository: &git2::Repository, branch: &str) -> Option<git2::Oid> {

@@ -304,6 +304,8 @@
       "title": "Session summary",
       "environment": "Environment",
       "modifications": "Changes",
+      "modificationsUnavailable": "Changes are temporarily unavailable.",
+      "modificationsPartial": "{{count}} files changed. The displayed totals are partial.",
       "branch": "Branch",
       "noGit": "No Git repository",
       "commits": {

@@ -27,6 +27,8 @@ pub struct CommitPage {
 pub struct UncommittedSnapshot {
     pub head_commit: String,
     pub files: Vec<status::DirtyFile>,
+    pub total_files: usize,
+    pub truncated: bool,
 }
 
 pub fn list_commits(
@@ -58,7 +60,9 @@ pub fn list_commits(
             }
             continue;
         }
-        commits.push(to_summary(repo.find_commit(oid).map_err(|_| unavailable())?));
+        commits.push(to_summary(
+            repo.find_commit(oid).map_err(|_| unavailable())?,
+        ));
         if commits.len() > page_size {
             break;
         }
@@ -68,18 +72,33 @@ pub fn list_commits(
     }
     let has_more = commits.len() > page_size;
     commits.truncate(page_size);
-    let next_cursor = has_more.then(|| commits.last().map(|commit| commit.id.clone())).flatten();
-    Ok(CommitPage { commits, next_cursor })
+    let next_cursor = has_more
+        .then(|| commits.last().map(|commit| commit.id.clone()))
+        .flatten();
+    Ok(CommitPage {
+        commits,
+        next_cursor,
+    })
 }
 
 pub fn list_uncommitted(
     repo_path: &Path,
     expected_branch: &str,
 ) -> Result<UncommittedSnapshot, String> {
-    let (_, head) = open_current_branch(repo_path, expected_branch)?;
+    let (repo, head) = open_current_branch(repo_path, expected_branch)?;
+    let dirty = status::list_dirty_files_snapshot(&repo)?;
+    let current_head = repo.head().map_err(|_| unavailable())?;
+    if !current_head.is_branch()
+        || current_head.shorthand().ok() != Some(expected_branch)
+        || current_head.target() != Some(head)
+    {
+        return Err(unavailable());
+    }
     Ok(UncommittedSnapshot {
         head_commit: head.to_string(),
-        files: status::list_dirty_files(repo_path)?,
+        files: dirty.files,
+        total_files: dirty.total_files,
+        truncated: dirty.truncated,
     })
 }
 

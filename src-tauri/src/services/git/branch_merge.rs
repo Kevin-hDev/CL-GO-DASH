@@ -38,13 +38,15 @@ pub fn preview(
         .find_branch(source_branch, BranchType::Local)
         .map_err(|_| MergeError::BranchUnavailable)?;
     let source_oid = source.get().target().ok_or(MergeError::BranchUnavailable)?;
-    let target_oid = repo.head().ok().and_then(|head| head.target())
+    let target_oid = repo
+        .head()
+        .ok()
+        .and_then(|head| head.target())
         .ok_or(MergeError::InternalError)?;
     let (commits, _) = repo
         .graph_ahead_behind(source_oid, target_oid)
         .map_err(|_| MergeError::InternalError)?;
-    let dirty_files = status::list_dirty_files(repo_path)
-        .map_err(|_| MergeError::InternalError)?;
+    let dirty_files = status::list_dirty_files(repo_path).map_err(|_| MergeError::InternalError)?;
 
     Ok(BranchMergePreview {
         source_branch: source_branch.to_string(),
@@ -78,7 +80,9 @@ pub fn merge_current(
 
 pub(super) fn merge_branch(repo_path: &Path, source_branch: &str) -> Result<(), String> {
     let repo = git_repo::open(repo_path)?;
-    let target = repo.head().ok()
+    let target = repo
+        .head()
+        .ok()
         .and_then(|head| head.shorthand().ok().map(str::to_string))
         .ok_or_else(|| "Fusion impossible".to_string())?;
     drop(repo);
@@ -113,7 +117,10 @@ fn current_head_oid(repo_path: &Path, expected: &str) -> Result<Oid, MergeError>
     let repo = git_repo::open(repo_path).map_err(|_| MergeError::InternalError)?;
     ensure_current_branch(&repo, expected)?;
     ensure_repository_ready(&repo)?;
-    repo.head().ok().and_then(|head| head.target()).ok_or(MergeError::InternalError)
+    repo.head()
+        .ok()
+        .and_then(|head| head.target())
+        .ok_or(MergeError::InternalError)
 }
 
 fn ensure_repository_ready(repo: &Repository) -> Result<(), MergeError> {
@@ -142,9 +149,12 @@ fn git_command(repo_path: &Path, hooks_path: &Path) -> Command {
     hook_config.push(hooks_path);
     let mut command = Command::new("git");
     command
-        .arg("-c").arg(hook_config)
-        .arg("-c").arg("commit.gpgSign=false")
-        .arg("-C").arg(repo_path)
+        .arg("-c")
+        .arg(hook_config)
+        .arg("-c")
+        .arg("commit.gpgSign=false")
+        .arg("-C")
+        .arg(repo_path)
         .env("GIT_TERMINAL_PROMPT", "0")
         .stdout(Stdio::null())
         .stderr(Stdio::null());
@@ -158,7 +168,9 @@ fn abort_and_verify(
 ) -> Result<(), MergeError> {
     let merge_started = git_repo::open(repo_path)
         .map_err(|_| MergeError::InternalError)?
-        .path().join("MERGE_HEAD").exists();
+        .path()
+        .join("MERGE_HEAD")
+        .exists();
     if merge_started {
         let aborted = git_command(repo_path, hooks_path)
             .args(["merge", "--abort"])
@@ -172,7 +184,8 @@ fn abort_and_verify(
     let restored = repo.head().ok().and_then(|head| head.target()) == Some(original_head);
     let state_restored = repo.state() == RepositoryState::Clean;
     let clean = status::list_dirty_files(repo_path)
-        .map_err(|_| MergeError::InternalError)?.is_empty();
+        .map_err(|_| MergeError::InternalError)?
+        .is_empty();
     if restored && state_restored && clean {
         Ok(())
     } else {

@@ -142,6 +142,7 @@ function gitState(overrides: Partial<SessionSummaryGitState>): SessionSummaryGit
     hasRemoteBranch: false,
     aheadCount: 0,
     behindCount: 0,
+    uncommittedSnapshotStatus: "ready",
     listDirtyFiles: vi.fn().mockResolvedValue([]),
     listCommits: vi.fn().mockResolvedValue({ commits: [] }),
     listCommitFiles: vi.fn().mockResolvedValue([]),

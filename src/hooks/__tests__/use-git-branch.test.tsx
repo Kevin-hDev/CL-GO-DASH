@@ -2,6 +2,7 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { invoke } from "@tauri-apps/api/core";
 import { useGitBranch } from "@/hooks/use-git-branch";
+import type { GitUncommittedSnapshot } from "@/hooks/git-types";
 
 vi.mock("@tauri-apps/api/core", () => ({ invoke: vi.fn() }));
 vi.mock("@tauri-apps/api/event", () => ({
@@ -39,7 +40,9 @@ describe("useGitBranch", () => {
     });
 
     view.unmount();
-    expect(invoke).toHaveBeenCalledWith("stop_git_watcher", { path: "/other" });
+    await waitFor(() => {
+      expect(invoke).toHaveBeenCalledWith("stop_git_watcher", { path: "/other" });
+    });
   });
 
   it("affiche la branche sans attendre les informations Git secondaires", async () => {
@@ -75,6 +78,31 @@ describe("useGitBranch", () => {
     await waitFor(() => expect(result.current.uncommittedSnapshot).not.toBeNull());
 
     expect(result.current.uncommittedSnapshot?.head_commit).toBe("a".repeat(40));
+    expect(result.current.uncommittedSnapshotStatus).toBe("ready");
+  });
+
+  it("distingue le chargement du snapshot d'un worktree propre", async () => {
+    const snapshot = deferred<GitUncommittedSnapshot>();
+    mockGitCommands(false, { dirtyCount: 1, snapshot: snapshot.promise });
+    const { result } = renderHook(() => useGitBranch("/repo"));
+
+    await waitFor(() => expect(result.current.uncommittedSnapshotStatus).toBe("loading"));
+    expect(result.current.dirtyCount).toBe(1);
+
+    snapshot.resolve(emptySnapshot());
+    await waitFor(() => expect(result.current.uncommittedSnapshotStatus).toBe("ready"));
+  });
+
+  it("conserve un état d'erreur si le snapshot Git est indisponible", async () => {
+    mockGitCommands(false, {
+      dirtyCount: 1,
+      snapshot: Promise.reject(new Error("unavailable")),
+    });
+    const { result } = renderHook(() => useGitBranch("/repo"));
+
+    await waitFor(() => expect(result.current.uncommittedSnapshotStatus).toBe("error"));
+    expect(result.current.dirtyCount).toBe(1);
+    expect(result.current.uncommittedSnapshot).toBeNull();
   });
 });
 
@@ -96,13 +124,23 @@ const REMOTE_STATUS: RemoteStatus = {
 
 function mockGitCommands(
   remoteFailure: boolean,
-  pending: { worktrees?: Promise<never[]>; remote?: Promise<RemoteStatus> } = {},
+  pending: {
+    worktrees?: Promise<never[]>;
+    remote?: Promise<RemoteStatus>;
+    snapshot?: Promise<GitUncommittedSnapshot>;
+    dirtyCount?: number;
+  } = {},
 ) {
   vi.mocked(invoke).mockImplementation((command) => {
     switch (command) {
       case "list_git_branches": return Promise.resolve([]);
       case "get_git_context":
-        return Promise.resolve({ branch: "main", is_detached: false, dirty_count: 0, is_git_repo: true });
+        return Promise.resolve({
+          branch: "main",
+          is_detached: false,
+          dirty_count: pending.dirtyCount ?? 0,
+          is_git_repo: true,
+        });
       case "list_git_worktrees": return pending.worktrees ?? Promise.resolve([]);
       case "get_git_remote_status":
         if (pending.remote) return pending.remote;
@@ -110,7 +148,7 @@ function mockGitCommands(
           ? Promise.reject(new Error("unavailable"))
           : Promise.resolve(REMOTE_STATUS);
       case "list_git_uncommitted_files":
-        return Promise.resolve({ head_commit: "a".repeat(40), files: [] });
+        return pending.snapshot ?? Promise.resolve(emptySnapshot());
       case "commit_git_changes":
         return Promise.resolve();
       case "start_git_watcher":
@@ -120,6 +158,15 @@ function mockGitCommands(
         return Promise.reject(new Error("unexpected command"));
     }
   });
+}
+
+function emptySnapshot(): GitUncommittedSnapshot {
+  return {
+    head_commit: "a".repeat(40),
+    files: [],
+    total_files: 0,
+    truncated: false,
+  };
 }
 
 function deferred<T>() {

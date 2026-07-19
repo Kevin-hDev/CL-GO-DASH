@@ -299,6 +299,8 @@
       "title": "Sitzungsübersicht",
       "environment": "Umgebung",
       "modifications": "Änderungen",
+      "modificationsUnavailable": "Änderungen sind vorübergehend nicht verfügbar.",
+      "modificationsPartial": "{{count}} Dateien geändert. Die angezeigten Summen sind unvollständig.",
       "branch": "Branch",
       "noGit": "Kein Git-Repository",
       "commits": {

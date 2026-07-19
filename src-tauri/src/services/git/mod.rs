@@ -1,6 +1,6 @@
+pub mod blob_preview;
 pub mod branch;
 pub mod branch_commit;
-pub mod blob_preview;
 #[cfg(test)]
 mod branch_commit_direct_tests;
 #[cfg(test)]
@@ -14,13 +14,13 @@ mod branch_delete_tests;
 pub mod branch_merge;
 #[cfg(test)]
 mod branch_merge_tests;
-pub mod github_auth;
 pub mod commit_files;
 pub mod diff_preview;
 mod diff_preview_model;
 mod diff_preview_serialize;
 #[cfg(test)]
 mod diff_preview_tests;
+pub mod github_auth;
 pub mod history;
 #[cfg(test)]
 mod history_tests;
@@ -38,9 +38,11 @@ mod status_tests;
 mod tests;
 pub mod watcher;
 #[cfg(test)]
-mod watcher_tests;
-#[cfg(test)]
 mod watcher_lifecycle_tests;
+#[cfg(test)]
+mod watcher_path_tests;
+#[cfg(test)]
+mod watcher_tests;
 pub mod worktree_delete;
 #[cfg(test)]
 mod worktree_delete_tests;

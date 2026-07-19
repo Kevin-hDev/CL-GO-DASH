@@ -4,7 +4,6 @@ import { invoke } from "@tauri-apps/api/core";
 import type {
   GitCommitFile,
   GitCommitPage,
-  GitUncommittedSnapshot,
 } from "@/hooks/git-types";
 
 export function useGitHistory(
@@ -30,15 +29,7 @@ export function useGitHistory(
     });
   }, [expectedBranch, pathRef]);
 
-  const listUncommittedFiles = useCallback(async (): Promise<GitUncommittedSnapshot> => {
-    const path = requirePath(pathRef.current);
-    return invoke<GitUncommittedSnapshot>("list_git_uncommitted_files", {
-      path,
-      expectedBranch,
-    });
-  }, [expectedBranch, pathRef]);
-
-  return { listCommits, listCommitFiles, listUncommittedFiles };
+  return { listCommits, listCommitFiles };
 }
 
 function requirePath(path: string | undefined): string {

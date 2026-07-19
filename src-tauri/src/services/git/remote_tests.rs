@@ -114,7 +114,11 @@ fn push_refuses_when_the_selected_branch_changed() {
         .expect_err("changed branch must block push");
 
     assert_eq!(error, remote::PushError::ContextChanged);
-    assert!(!remote::status(local.path()).expect("status").has_remote_branch);
+    assert!(
+        !remote::status(local.path())
+            .expect("status")
+            .has_remote_branch
+    );
 }
 
 fn init_repo() -> tempfile::TempDir {

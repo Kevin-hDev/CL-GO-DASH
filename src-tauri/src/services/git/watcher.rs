@@ -9,7 +9,7 @@ use std::time::Duration;
 use tauri::{AppHandle, Emitter};
 
 const DEBOUNCE_MS: u64 = 200;
-const WORKTREE_POLL_MS: u64 = 1_000;
+const WORKTREE_POLL_MS: u64 = 3_000;
 
 static WATCHER_ACTIVE: std::sync::Mutex<Option<ActiveWatcher>> = std::sync::Mutex::new(None);
 

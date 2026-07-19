@@ -23,23 +23,25 @@ pub fn list_commit_files(
     let (repo, head) = open_current_branch(repo_path, expected_branch)?;
     let commit = find_reachable_commit(&repo, head, commit_id)?;
     let tree = commit.tree().map_err(|_| unavailable())?;
-    let parent_tree = commit
-        .parent(0)
-        .ok()
-        .and_then(|parent| parent.tree().ok());
+    let parent_tree = commit.parent(0).ok().and_then(|parent| parent.tree().ok());
     let mut diff = repo
         .diff_tree_to_tree(parent_tree.as_ref(), Some(&tree), None)
         .map_err(|_| unavailable())?;
     let mut find = DiffFindOptions::new();
     find.renames(true).copies(false);
-    diff.find_similar(Some(&mut find)).map_err(|_| unavailable())?;
+    diff.find_similar(Some(&mut find))
+        .map_err(|_| unavailable())?;
 
     let mut files = Vec::new();
     for (index, delta) in diff.deltas().take(MAX_COMMIT_FILES).enumerate() {
         let Some((path, previous_path, status)) = describe_delta(&delta) else {
             continue;
         };
-        if !valid_path(&path) || previous_path.as_deref().is_some_and(|value| !valid_path(value)) {
+        if !valid_path(&path)
+            || previous_path
+                .as_deref()
+                .is_some_and(|value| !valid_path(value))
+        {
             continue;
         }
         let (additions, deletions) = patch_stats(&diff, index);

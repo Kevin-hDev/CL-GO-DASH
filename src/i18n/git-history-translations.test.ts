@@ -18,6 +18,8 @@ describe("git history translations", () => {
       };
       agentLocal: {
         sessionSummary: {
+          modificationsUnavailable: string;
+          modificationsPartial: string;
           commits: { title: string; error: string };
           git: { remoteStatusUnavailable: string };
         };
@@ -34,6 +36,8 @@ describe("git history translations", () => {
       expect(locale.filePreview.gitStatus.renamed).toBeTruthy();
       expect(locale.agentLocal.sessionSummary.commits.title).toBeTruthy();
       expect(locale.agentLocal.sessionSummary.commits.error).toBeTruthy();
+      expect(locale.agentLocal.sessionSummary.modificationsUnavailable).toBeTruthy();
+      expect(locale.agentLocal.sessionSummary.modificationsPartial).toContain("{{count}}");
       expect(locale.agentLocal.sessionSummary.git.remoteStatusUnavailable).toBeTruthy();
     }
     expect(fr.filePreview.listModes.uncommitted).toBe("Non commit");

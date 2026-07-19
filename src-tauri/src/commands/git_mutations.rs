@@ -56,8 +56,8 @@ pub async fn push_git_branch(
     tokio::task::spawn_blocking(move || {
         remote::push_current(&repo_path, Some(&expected_branch), token)
     })
-        .await
-        .map_err(|_| remote::PushError::InternalError)?
+    .await
+    .map_err(|_| remote::PushError::InternalError)?
 }
 
 #[tauri::command]

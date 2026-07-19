@@ -304,6 +304,8 @@
       "title": "Résumé de session",
       "environment": "Environnement",
       "modifications": "Modifications",
+      "modificationsUnavailable": "Modifications temporairement indisponibles.",
+      "modificationsPartial": "{{count}} fichiers modifiés. Les chiffres affichés sont partiels.",
       "branch": "Branche",
       "noGit": "Aucun dépôt Git",
       "commits": {

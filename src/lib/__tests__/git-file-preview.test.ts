@@ -33,7 +33,12 @@ describe("git-file-preview", () => {
       additions: index,
       deletions: 0,
     }));
-    const operations = uncommittedFileOperations({ head_commit: "b".repeat(40), files }, "feature");
+    const operations = uncommittedFileOperations({
+      head_commit: "b".repeat(40),
+      files,
+      total_files: files.length,
+      truncated: true,
+    }, "feature");
 
     expect(operations).toHaveLength(200);
     expect(operations[0]).toEqual(expect.objectContaining({
@@ -51,6 +56,8 @@ describe("git-file-preview", () => {
   it("conserve l'ancien chemin d'un fichier renommé", () => {
     const [operation] = uncommittedFileOperations({
       head_commit: "c".repeat(40),
+      total_files: 1,
+      truncated: false,
       files: [{
         path: "src/new.ts",
         previous_path: "src/old.ts",
@@ -67,6 +74,8 @@ describe("git-file-preview", () => {
   it("présente un nouveau fichier comme créé", () => {
     const [operation] = uncommittedFileOperations({
       head_commit: "d".repeat(40),
+      total_files: 1,
+      truncated: false,
       files: [{ path: "new.txt", status: "new", additions: 2, deletions: 0 }],
     }, "main");
 
@@ -76,6 +85,8 @@ describe("git-file-preview", () => {
   it("additionne le diff Git net du worktree", () => {
     expect(uncommittedChangeSummary({
       head_commit: "e".repeat(40),
+      total_files: 2,
+      truncated: false,
       files: [
         { path: "a.ts", status: "modified", additions: 10, deletions: 2 },
         { path: "b.ts", status: "new", additions: 4, deletions: 4 },

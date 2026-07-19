@@ -299,6 +299,8 @@
       "title": "セッション概要",
       "environment": "環境",
       "modifications": "変更",
+      "modificationsUnavailable": "変更内容は一時的に利用できません。",
+      "modificationsPartial": "{{count}} 件のファイルが変更されています。表示されている集計は一部です。",
       "branch": "ブランチ",
       "noGit": "Git リポジトリなし",
       "commits": {

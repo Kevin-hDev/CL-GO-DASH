@@ -43,12 +43,10 @@ pub async fn list_git_uncommitted_files(
     expected_branch: String,
 ) -> Result<history::UncommittedSnapshot, String> {
     let repo_path = super::git::registered_project_path(&path).await?;
-    tokio::task::spawn_blocking(move || {
-        history::list_uncommitted(&repo_path, &expected_branch)
-    })
-    .await
-    .map_err(|_| unavailable())?
-    .map_err(|_| unavailable())
+    tokio::task::spawn_blocking(move || history::list_uncommitted(&repo_path, &expected_branch))
+        .await
+        .map_err(|_| unavailable())?
+        .map_err(|_| unavailable())
 }
 
 #[tauri::command]
@@ -137,10 +135,8 @@ pub async fn read_git_spreadsheet_preview(
     sheet: Option<String>,
     max_rows: Option<usize>,
 ) -> Result<String, String> {
-    let extension = super::git_history_preview::validate_extension(
-        &file_path,
-        SPREADSHEET_EXTENSIONS,
-    )?;
+    let extension =
+        super::git_history_preview::validate_extension(&file_path, SPREADSHEET_EXTENSIONS)?;
     let bytes = super::git_history_preview::load_blob_with_limit(
         path,
         expected_branch,
@@ -155,13 +151,9 @@ pub async fn read_git_spreadsheet_preview(
         .tempfile()
         .map_err(|_| unavailable())?;
     temp.write_all(&bytes).map_err(|_| unavailable())?;
-    super::file_preview_office::read_spreadsheet_path(
-        temp.path().to_path_buf(),
-        sheet,
-        max_rows,
-    )
-    .await
-    .map_err(|_| unavailable())
+    super::file_preview_office::read_spreadsheet_path(temp.path().to_path_buf(), sheet, max_rows)
+        .await
+        .map_err(|_| unavailable())
 }
 
 fn unavailable() -> String {

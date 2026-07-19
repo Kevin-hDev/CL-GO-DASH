@@ -26,7 +26,10 @@ export interface GitBranchState {
   isGitRepo: boolean;
   isLoading: boolean;
   uncommittedSnapshot: GitUncommittedSnapshot | null;
+  uncommittedSnapshotStatus: GitSnapshotStatus;
 }
+
+export type GitSnapshotStatus = "idle" | "loading" | "ready" | "error";
 
 export interface GitDirtyFile {
   path: string;
@@ -59,6 +62,8 @@ export interface GitCommitFile {
 export interface GitUncommittedSnapshot {
   head_commit: string;
   files: GitDirtyFile[];
+  total_files: number;
+  truncated: boolean;
 }
 
 export interface BranchDeletePreview {

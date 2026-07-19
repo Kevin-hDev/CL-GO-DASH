@@ -174,6 +174,7 @@ const baseGit: SessionSummaryGitState = {
   hasRemoteBranch: true,
   aheadCount: 0,
   behindCount: 0,
+  uncommittedSnapshotStatus: "ready",
   worktrees: [],
   listDirtyFiles: vi.fn().mockResolvedValue([]),
   listCommits: vi.fn().mockResolvedValue({ commits: [] }),

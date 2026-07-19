@@ -9,8 +9,14 @@ fn reports_modified_and_untracked_line_stats() {
     std::fs::write(fixture.path().join("new.txt"), "one\ntwo\n").expect("untracked");
 
     let files = list_dirty_files(fixture.path()).expect("dirty files");
-    let modified = files.iter().find(|file| file.path == "tracked.txt").expect("modified");
-    let added = files.iter().find(|file| file.path == "new.txt").expect("new");
+    let modified = files
+        .iter()
+        .find(|file| file.path == "tracked.txt")
+        .expect("modified");
+    let added = files
+        .iter()
+        .find(|file| file.path == "new.txt")
+        .expect("new");
     assert_eq!((modified.additions, modified.deletions), (2, 1));
     assert_eq!((added.additions, added.deletions), (2, 0));
 }
@@ -25,7 +31,10 @@ fn reports_staged_changes_against_head() {
     index.write().expect("index write");
 
     let files = list_dirty_files(fixture.path()).expect("dirty files");
-    let file = files.iter().find(|file| file.path == "tracked.txt").expect("staged");
+    let file = files
+        .iter()
+        .find(|file| file.path == "tracked.txt")
+        .expect("staged");
     assert_eq!((file.additions, file.deletions), (2, 1));
 }
 

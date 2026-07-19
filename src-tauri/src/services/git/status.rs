@@ -17,9 +17,21 @@ pub struct DirtyFile {
     pub deletions: u32,
 }
 
+pub(super) struct DirtyFilesSnapshot {
+    pub(super) files: Vec<DirtyFile>,
+    pub(super) total_files: usize,
+    pub(super) truncated: bool,
+}
+
 pub fn list_dirty_files(repo_path: &Path) -> Result<Vec<DirtyFile>, String> {
     let repo = git_repo::open(repo_path)?;
-    let workdir = git_repo::workdir(&repo)?;
+    Ok(list_dirty_files_snapshot(&repo)?.files)
+}
+
+pub(super) fn list_dirty_files_snapshot(
+    repo: &git2::Repository,
+) -> Result<DirtyFilesSnapshot, String> {
+    let workdir = git_repo::workdir(repo)?;
 
     let mut opts = StatusOptions::new();
     opts.include_untracked(true)
@@ -30,8 +42,9 @@ pub fn list_dirty_files(repo_path: &Path) -> Result<Vec<DirtyFile>, String> {
     let statuses = repo
         .statuses(Some(&mut opts))
         .map_err(|e| format!("Lecture du statut : {e}"))?;
+    let total_files = statuses.len();
 
-    let diff_stats = get_diff_stats(&repo);
+    let diff_stats = get_diff_stats(repo);
 
     let mut files = Vec::new();
     for entry in statuses.iter() {
@@ -65,7 +78,12 @@ pub fn list_dirty_files(repo_path: &Path) -> Result<Vec<DirtyFile>, String> {
             deletions,
         });
     }
-    Ok(files)
+    let truncated = total_files > files.len();
+    Ok(DirtyFilesSnapshot {
+        files,
+        total_files,
+        truncated,
+    })
 }
 
 pub(super) fn watch_signature(repo: &git2::Repository) -> Result<(usize, u64), String> {
@@ -75,7 +93,9 @@ pub(super) fn watch_signature(repo: &git2::Repository) -> Result<(usize, u64), S
         .recurse_untracked_dirs(true)
         .renames_head_to_index(true)
         .renames_index_to_workdir(true);
-    let statuses = repo.statuses(Some(&mut opts)).map_err(|_| "Statut Git indisponible")?;
+    let statuses = repo
+        .statuses(Some(&mut opts))
+        .map_err(|_| "Statut Git indisponible")?;
     let mut hasher = DefaultHasher::new();
     statuses.len().hash(&mut hasher);
     for entry in statuses.iter().take(MAX_DIRTY_FILES) {

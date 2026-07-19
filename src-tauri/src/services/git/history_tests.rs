@@ -32,7 +32,9 @@ fn lists_deleted_file_and_reads_parent_version() {
         &fixture.deletion.to_string(),
     )
     .expect("commit files");
-    assert!(files.iter().any(|file| file.path == "deleted.txt" && file.status == "deleted"));
+    assert!(files
+        .iter()
+        .any(|file| file.path == "deleted.txt" && file.status == "deleted"));
 
     let bytes = blob_preview::read_blob_with_limit(
         fixture.dir.path(),
@@ -60,10 +62,30 @@ fn rejects_traversal_and_reports_bounded_uncommitted_files() {
     .is_err());
 
     std::fs::write(fixture.dir.path().join("working.txt"), "pending\n").expect("working file");
-    let snapshot = history::list_uncommitted(fixture.dir.path(), &fixture.branch)
-        .expect("uncommitted");
+    let snapshot =
+        history::list_uncommitted(fixture.dir.path(), &fixture.branch).expect("uncommitted");
     assert!(snapshot.files.len() <= 200);
+    assert_eq!(snapshot.total_files, 1);
+    assert!(!snapshot.truncated);
     assert!(snapshot.files.iter().any(|file| file.path == "working.txt"));
+}
+
+#[test]
+fn reports_when_the_uncommitted_file_list_is_truncated() {
+    let fixture = fixture();
+    for index in 0..201 {
+        std::fs::write(
+            fixture.dir.path().join(format!("pending-{index}.txt")),
+            "pending\n",
+        )
+        .expect("working file");
+    }
+
+    let snapshot =
+        history::list_uncommitted(fixture.dir.path(), &fixture.branch).expect("uncommitted");
+    assert_eq!(snapshot.files.len(), 200);
+    assert_eq!(snapshot.total_files, 201);
+    assert!(snapshot.truncated);
 }
 
 #[test]
@@ -89,8 +111,8 @@ fn bounds_long_utf8_commit_messages() {
     let message = "é".repeat(1_000);
     commit(&repo, "long.txt", Some("long\n"), &message);
 
-    let page = history::list_commits(fixture.dir.path(), &fixture.branch, None, Some(1))
-        .expect("history");
+    let page =
+        history::list_commits(fixture.dir.path(), &fixture.branch, None, Some(1)).expect("history");
     assert!(page.commits[0].message.chars().count() <= 160);
 }
 
@@ -113,7 +135,11 @@ fn fixture() -> Fixture {
         .shorthand()
         .expect("branch")
         .to_string();
-    Fixture { dir, branch, deletion }
+    Fixture {
+        dir,
+        branch,
+        deletion,
+    }
 }
 
 fn commit(repo: &Repository, path: &str, content: Option<&str>, message: &str) -> Oid {
@@ -132,6 +158,13 @@ fn commit(repo: &Repository, path: &str, content: Option<&str>, message: &str) -
     let signature = Signature::now("CL-GO Test", "test@example.com").expect("signature");
     let parent = repo.head().ok().and_then(|head| head.peel_to_commit().ok());
     let parents: Vec<&git2::Commit<'_>> = parent.iter().collect();
-    repo.commit(Some("HEAD"), &signature, &signature, message, &tree, &parents)
-        .expect("commit")
+    repo.commit(
+        Some("HEAD"),
+        &signature,
+        &signature,
+        message,
+        &tree,
+        &parents,
+    )
+    .expect("commit")
 }

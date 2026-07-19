@@ -68,10 +68,8 @@ mod tests {
     #[test]
     fn github_token_is_a_bounded_fallback_after_the_credential_helper() {
         let config = Config::new().expect("config");
-        let mut provider = CredentialProvider::new(
-            config,
-            Some(Zeroizing::new("test-token".to_string())),
-        );
+        let mut provider =
+            CredentialProvider::new(config, Some(Zeroizing::new("test-token".to_string())));
         provider.helper_attempted = true;
 
         let credential = provider.credentials(

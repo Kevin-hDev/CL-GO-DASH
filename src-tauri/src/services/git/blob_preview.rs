@@ -41,7 +41,9 @@ pub(super) fn validate_repo_path(value: &str) -> Result<(), String> {
         || value.len() > MAX_PATH_LEN
         || value.contains('\0')
         || path.is_absolute()
-        || path.components().any(|part| matches!(part, Component::ParentDir))
+        || path
+            .components()
+            .any(|part| matches!(part, Component::ParentDir))
     {
         return Err(unavailable());
     }

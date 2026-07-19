@@ -57,9 +57,8 @@ pub fn push_current(
     let rejection_callback = Arc::clone(&rejection);
 
     let mut callbacks = RemoteCallbacks::new();
-    callbacks.credentials(move |url, username, allowed| {
-        credentials.credentials(url, username, allowed)
-    });
+    callbacks
+        .credentials(move |url, username, allowed| credentials.credentials(url, username, allowed));
     callbacks.push_update_reference(move |_, status| {
         if let Some(status) = status {
             let mut result = rejection_callback

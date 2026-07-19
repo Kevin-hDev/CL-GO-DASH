@@ -34,6 +34,8 @@ describe("useGitUncommittedFiles", () => {
 function snapshot(path: string) {
   return {
     head_commit: "a".repeat(40),
+    total_files: 1,
+    truncated: false,
     files: [{ path, status: "modified", additions: 1, deletions: 0 }],
   };
 }

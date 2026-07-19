@@ -53,6 +53,7 @@ const git = {
   branches: [{ name: "main", is_current: true, is_remote: false, dirty_count: 0 }],
   worktrees: [],
   dirtyCount: 0,
+  uncommittedSnapshotStatus: "ready" as const,
   hasRemote: true,
   remoteStatusError: false,
   isGithubRemote: true,
@@ -79,6 +80,8 @@ describe("SessionSummaryBubble", () => {
           dirtyCount: 1,
           uncommittedSnapshot: {
             head_commit: "a".repeat(40),
+            total_files: 1,
+            truncated: false,
             files: [{ path: "src/app.ts", status: "modified", additions: 14, deletions: 6 }],
           },
         }}

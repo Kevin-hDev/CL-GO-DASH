@@ -18,11 +18,6 @@ import {
 import type { GitBranchState } from "@/hooks/git-types";
 
 export type { BranchInfo, WorktreeInfo } from "@/hooks/git-types";
-export {
-  parseCreateBranchError,
-  type GitCreateBranchErrorKind,
-  type GitCreateBranchResult,
-} from "@/hooks/git-create-branch-error";
 
 const INITIAL_STATE: GitBranchState = {
   repositoryPath: "",
@@ -39,6 +34,7 @@ const INITIAL_STATE: GitBranchState = {
   isGitRepo: false,
   isLoading: false,
   uncommittedSnapshot: null,
+  uncommittedSnapshotStatus: "idle",
 };
 
 export function useGitBranch(projectPath: string | undefined) {
@@ -70,7 +66,12 @@ export function useGitBranch(projectPath: string | undefined) {
       && path === pathRef.current;
     setState((current) => current.repositoryPath === path
       ? { ...current, isLoading: true }
-      : { ...INITIAL_STATE, repositoryPath: path, isLoading: true });
+      : {
+        ...INITIAL_STATE,
+        repositoryPath: path,
+        isLoading: true,
+        uncommittedSnapshotStatus: "loading",
+      });
 
     try {
       const { branches, context } = await loadGitCore(path);
@@ -87,6 +88,10 @@ export function useGitBranch(projectPath: string | undefined) {
         uncommittedSnapshot: current.currentBranch === context.branch
           ? current.uncommittedSnapshot
           : null,
+        uncommittedSnapshotStatus: current.currentBranch === context.branch
+          && current.uncommittedSnapshot
+          ? current.uncommittedSnapshotStatus
+          : "loading",
       }));
 
       void loadGitWorktrees(path).then((worktrees) => {
@@ -108,10 +113,28 @@ export function useGitBranch(projectPath: string | undefined) {
       });
       if (context.is_git_repo && context.branch && context.branch !== "HEAD") {
         void loadGitUncommittedSnapshot(path, context.branch).then((snapshot) => {
-          if (isCurrent()) setState((current) => ({ ...current, uncommittedSnapshot: snapshot }));
+          if (isCurrent()) {
+            setState((current) => ({
+              ...current,
+              uncommittedSnapshot: snapshot,
+              uncommittedSnapshotStatus: "ready",
+            }));
+          }
         }).catch(() => {
-          if (isCurrent()) setState((current) => ({ ...current, uncommittedSnapshot: null }));
+          if (isCurrent()) {
+            setState((current) => ({
+              ...current,
+              uncommittedSnapshot: null,
+              uncommittedSnapshotStatus: "error",
+            }));
+          }
         });
+      } else if (isCurrent()) {
+        setState((current) => ({
+          ...current,
+          uncommittedSnapshot: null,
+          uncommittedSnapshotStatus: context.dirty_count === 0 ? "ready" : "error",
+        }));
       }
     } catch {
       if (!isCurrent()) return;

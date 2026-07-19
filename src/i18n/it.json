@@ -299,6 +299,8 @@
       "title": "Riepilogo sessione",
       "environment": "Ambiente",
       "modifications": "Modifiche",
+      "modificationsUnavailable": "Le modifiche non sono temporaneamente disponibili.",
+      "modificationsPartial": "{{count}} file modificati. I totali mostrati sono parziali.",
       "branch": "Branch",
       "noGit": "Nessun repository Git",
       "commits": {

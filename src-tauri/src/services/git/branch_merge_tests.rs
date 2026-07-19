@@ -39,8 +39,11 @@ fn existing_git_operation_is_preserved_and_blocks_merge() {
     branch::checkout_branch(repo.path(), "main").expect("checkout main");
     let opened = Repository::open(repo.path()).expect("open repo");
     let marker = opened.path().join("MERGE_HEAD");
-    std::fs::write(&marker, opened.head().unwrap().target().unwrap().to_string())
-        .expect("write merge state");
+    std::fs::write(
+        &marker,
+        opened.head().unwrap().target().unwrap().to_string(),
+    )
+    .expect("write merge state");
 
     let error = branch_merge::preview(repo.path(), "feature", "main")
         .expect_err("existing operation must block merge");
@@ -60,9 +63,16 @@ fn merge_adds_the_source_commits_and_keeps_both_branches() {
         .expect("merge feature");
 
     assert_eq!(branch::get_context(repo.path()).branch, "main");
-    assert!(branch_merge::preview(repo.path(), "feature", "main")
-        .expect("merged preview").commits == 0);
-    assert_eq!(std::fs::read_to_string(repo.path().join("feature.txt")).unwrap(), "merged");
+    assert!(
+        branch_merge::preview(repo.path(), "feature", "main")
+            .expect("merged preview")
+            .commits
+            == 0
+    );
+    assert_eq!(
+        std::fs::read_to_string(repo.path().join("feature.txt")).unwrap(),
+        "merged"
+    );
 }
 
 #[test]
@@ -77,7 +87,10 @@ fn dirty_worktree_requires_an_explicit_commit() {
         .expect_err("dirty merge must fail closed");
 
     assert_eq!(error, branch_merge::MergeError::DirtyWorktree);
-    assert_eq!(std::fs::read_to_string(repo.path().join("dirty.txt")).unwrap(), "keep me");
+    assert_eq!(
+        std::fs::read_to_string(repo.path().join("dirty.txt")).unwrap(),
+        "keep me"
+    );
 }
 
 #[test]
@@ -89,11 +102,22 @@ fn commit_then_merge_preserves_local_changes() {
     std::fs::write(repo.path().join("dirty.txt"), "preserved").expect("dirty file");
 
     branch_merge::merge_current(
-        repo.path(), "feature", "main", true, Some("Local work".to_string()),
-    ).expect("commit and merge");
+        repo.path(),
+        "feature",
+        "main",
+        true,
+        Some("Local work".to_string()),
+    )
+    .expect("commit and merge");
 
-    assert_eq!(std::fs::read_to_string(repo.path().join("dirty.txt")).unwrap(), "preserved");
-    assert_eq!(std::fs::read_to_string(repo.path().join("feature.txt")).unwrap(), "feature");
+    assert_eq!(
+        std::fs::read_to_string(repo.path().join("dirty.txt")).unwrap(),
+        "preserved"
+    );
+    assert_eq!(
+        std::fs::read_to_string(repo.path().join("feature.txt")).unwrap(),
+        "feature"
+    );
 }
 
 #[test]
@@ -109,7 +133,10 @@ fn conflict_is_aborted_and_restores_the_target() {
 
     assert_eq!(error, branch_merge::MergeError::MergeConflict);
     assert_eq!(branch::get_context(repo.path()).branch, "main");
-    assert_eq!(std::fs::read_to_string(repo.path().join("shared.txt")).unwrap(), "main");
+    assert_eq!(
+        std::fs::read_to_string(repo.path().join("shared.txt")).unwrap(),
+        "main"
+    );
     let opened = Repository::open(repo.path()).expect("open repo");
     assert!(!opened.path().join("MERGE_HEAD").exists());
 }
@@ -128,7 +155,9 @@ fn repository_hooks_are_disabled_during_merge() {
     let hook = opened.path().join("hooks/post-merge");
     std::fs::write(&hook, format!("#!/bin/sh\ntouch '{}'\n", marker.display()))
         .expect("write hook");
-    let mut permissions = std::fs::metadata(&hook).expect("hook metadata").permissions();
+    let mut permissions = std::fs::metadata(&hook)
+        .expect("hook metadata")
+        .permissions();
     permissions.set_mode(0o700);
     std::fs::set_permissions(&hook, permissions).expect("hook permissions");
 
@@ -143,11 +172,17 @@ fn init_repo() -> tempfile::TempDir {
     let repo = Repository::init(tmp.path()).expect("init repo");
     let mut config = repo.config().expect("config");
     config.set_str("user.name", "CL-GO Test").expect("name");
-    config.set_str("user.email", "test@example.com").expect("email");
+    config
+        .set_str("user.email", "test@example.com")
+        .expect("email");
     std::fs::write(tmp.path().join("README.md"), "init").expect("initial file");
     commit_path(&repo, Path::new("README.md"), "init");
-    repo.branch("main", &repo.head().unwrap().peel_to_commit().unwrap(), false)
-        .expect("main branch");
+    repo.branch(
+        "main",
+        &repo.head().unwrap().peel_to_commit().unwrap(),
+        false,
+    )
+    .expect("main branch");
     repo.set_head("refs/heads/main").expect("set main");
     drop(repo);
     tmp
@@ -168,6 +203,13 @@ fn commit_path(repo: &Repository, path: &Path, message: &str) {
     let signature = Signature::now("CL-GO Test", "test@example.com").expect("signature");
     let parent = repo.head().ok().and_then(|head| head.peel_to_commit().ok());
     let parents = parent.iter().collect::<Vec<_>>();
-    repo.commit(Some("HEAD"), &signature, &signature, message, &tree, &parents)
-        .expect("commit");
+    repo.commit(
+        Some("HEAD"),
+        &signature,
+        &signature,
+        message,
+        &tree,
+        &parents,
+    )
+    .expect("commit");
 }
