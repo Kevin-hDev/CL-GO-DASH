@@ -35,10 +35,20 @@ describe("app themes", () => {
     expect(getThemeColorScheme("astral-mist")).toBe("dark");
   });
 
+  it("déclare Éclipse écarlate comme une palette sombre", () => {
+    expect(THEME_OPTIONS).toContainEqual({
+      id: "crimson-eclipse",
+      labelKey: "settings.crimsonEclipse",
+      colorScheme: "dark",
+    });
+    expect(getThemeColorScheme("crimson-eclipse")).toBe("dark");
+  });
+
   it("valide uniquement les choix de thème connus", () => {
     expect(isThemeChoice("emerald-night")).toBe(true);
     expect(isThemeChoice("cobalt-frost")).toBe(true);
     expect(isThemeChoice("astral-mist")).toBe(true);
+    expect(isThemeChoice("crimson-eclipse")).toBe(true);
     expect(isThemeChoice("unknown-theme")).toBe(false);
     expect(isThemeChoice(null)).toBe(false);
   });
@@ -49,13 +59,15 @@ describe("app themes", () => {
     expect(resolveTheme("emerald-night", false)).toBe("emerald-night");
     expect(resolveTheme("cobalt-frost", true)).toBe("cobalt-frost");
     expect(resolveTheme("astral-mist", false)).toBe("astral-mist");
+    expect(resolveTheme("crimson-eclipse", false)).toBe("crimson-eclipse");
   });
 
   it("inclut les palettes personnalisées dans le cycle des thèmes", () => {
     expect(getNextThemeChoice("dark")).toBe("emerald-night");
     expect(getNextThemeChoice("emerald-night")).toBe("cobalt-frost");
     expect(getNextThemeChoice("cobalt-frost")).toBe("astral-mist");
-    expect(getNextThemeChoice("astral-mist")).toBe("system");
+    expect(getNextThemeChoice("astral-mist")).toBe("crimson-eclipse");
+    expect(getNextThemeChoice("crimson-eclipse")).toBe("system");
     expect(getNextThemeChoice("system")).toBe("light");
   });
 });

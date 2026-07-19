@@ -91,4 +91,15 @@ describe("useTheme", () => {
     expect(document.documentElement).toHaveAttribute("data-theme", "dark");
     expect(document.documentElement).toHaveAttribute("data-palette", "astral-mist");
   });
+
+  it("restaure et applique Éclipse écarlate comme thème sombre", async () => {
+    localStorage.setItem("clgo-theme", "crimson-eclipse");
+
+    const { result } = renderHook(() => useTheme());
+
+    await waitFor(() => expect(result.current.theme).toBe("crimson-eclipse"));
+    expect(result.current.choice).toBe("crimson-eclipse");
+    expect(document.documentElement).toHaveAttribute("data-theme", "dark");
+    expect(document.documentElement).toHaveAttribute("data-palette", "crimson-eclipse");
+  });
 });

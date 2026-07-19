@@ -4,6 +4,7 @@ export const RESOLVED_THEME_OPTIONS = [
   { id: "emerald-night", labelKey: "settings.emeraldNight", colorScheme: "dark" },
   { id: "cobalt-frost", labelKey: "settings.cobaltFrost", colorScheme: "light" },
   { id: "astral-mist", labelKey: "settings.astralMist", colorScheme: "dark" },
+  { id: "crimson-eclipse", labelKey: "settings.crimsonEclipse", colorScheme: "dark" },
 ] as const;
 
 export const THEME_OPTIONS = [

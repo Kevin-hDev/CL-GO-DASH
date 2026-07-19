@@ -6,6 +6,7 @@ const lightCss = readFileSync("src/styles/themes/light.css", "utf8");
 const emeraldCss = readFileSync("src/styles/themes/emerald-night.css", "utf8");
 const cobaltCss = readFileSync("src/styles/themes/cobalt-frost.css", "utf8");
 const astralCss = readFileSync("src/styles/themes/astral-mist.css", "utf8");
+const crimsonCss = readFileSync("src/styles/themes/crimson-eclipse.css", "utf8");
 const toolPreviewsCss = readFileSync("src/components/agent-local/tool-previews.css", "utf8");
 const gitDiffCss = readFileSync("src/components/file-preview/git-diff-preview.css", "utf8");
 
@@ -93,5 +94,24 @@ describe("Astral Mist palette", () => {
     expect(astralCss).toContain("--diff-old: #f07680;");
     expect(contrast("#9cb6d3", "#030817")).toBeGreaterThanOrEqual(4.5);
     expect(contrast("#f07680", "#030817")).toBeGreaterThanOrEqual(4.5);
+  });
+});
+
+describe("Crimson Eclipse palette", () => {
+  it("définit tous les tokens du thème sombre", () => {
+    expect(tokenNames(crimsonCss)).toEqual(tokenNames(darkCss));
+  });
+
+  it("maintient des contrastes lisibles pour les textes et actions", () => {
+    expect(contrast("#e4e4e7", "#070709")).toBeGreaterThanOrEqual(7);
+    expect(contrast("#b4b4bb", "#070709")).toBeGreaterThanOrEqual(4.5);
+    expect(contrast("#ff3038", "#130608")).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("conserve le vert pour les nouvelles lignes et le rouge pour les anciennes", () => {
+    expect(crimsonCss).toContain("--diff-new: #35c878;");
+    expect(crimsonCss).toContain("--diff-old: #ff5a63;");
+    expect(contrast("#35c878", "#070709")).toBeGreaterThanOrEqual(4.5);
+    expect(contrast("#ff5a63", "#070709")).toBeGreaterThanOrEqual(4.5);
   });
 });

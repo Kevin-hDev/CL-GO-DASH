@@ -12,6 +12,7 @@ interface ThemeLocale {
     emeraldNight: string;
     cobaltFrost: string;
     astralMist: string;
+    crimsonEclipse: string;
   };
 }
 
@@ -23,6 +24,7 @@ describe("theme translations", () => {
       expect(locale.settings.emeraldNight.trim()).not.toBe("");
       expect(locale.settings.cobaltFrost.trim()).not.toBe("");
       expect(locale.settings.astralMist.trim()).not.toBe("");
+      expect(locale.settings.crimsonEclipse.trim()).not.toBe("");
     }
   });
 });

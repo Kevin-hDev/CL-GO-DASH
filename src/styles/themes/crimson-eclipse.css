@@ -1,0 +1,112 @@
+/* Crimson Eclipse — carbon black, graphite grey and incandescent red */
+[data-theme="dark"][data-palette="crimson-eclipse"] {
+  color-scheme: dark;
+
+  --void: #070709;
+  --app-frame: #020203;
+  --shell: var(--surface-glass);
+  --shell-opaque: rgba(17, 17, 20, 0.98);
+  --shell-translucent: rgba(17, 17, 20, 0.90);
+  --surface: var(--surface-glass);
+  --surface-hover: rgba(255, 48, 56, 0.08);
+  --edge: rgba(228, 228, 231, 0.10);
+  --ink: #e4e4e7;
+  --ink-muted: #b4b4bb;
+  --ink-faint: #75757f;
+  --scrollbar-thumb: rgba(117, 117, 127, 0.38);
+  --pulse: #ff3038;
+  --pulse-muted: rgba(255, 48, 56, 0.16);
+  --ink-on-pulse: #130608;
+  --select-bg: rgba(255, 48, 56, 0.10);
+  --select-text: #d4d4d8;
+  --signal-idle: #66666f;
+  --signal-live: #ff3038;
+  --signal-error: #ff5a63;
+  --signal-error-border: rgba(255, 90, 99, 0.34);
+  --signal-error-pulse: rgba(255, 90, 99, 0.52);
+  --signal-error-pulse-fade: rgba(255, 90, 99, 0);
+  --signal-ok: #35c878;
+  --context-ring-fill: #b7b7bd;
+  --context-ring-track: rgba(183, 183, 189, 0.20);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.58), 0 8px 22px rgba(0, 0, 0, 0.38);
+  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.36);
+  --shadow-lg: 0 12px 38px rgba(0, 0, 0, 0.62);
+  --dialog-backdrop: rgba(0, 0, 0, 0.72);
+
+  /* Surface variants */
+  --surface-glass: rgba(24, 24, 27, 0.62);
+  --surface-overlay: rgba(31, 31, 35, 0.82);
+  --tooltip-bg: #18181b;
+  --tooltip-border: rgba(228, 228, 231, 0.14);
+  --tooltip-text: var(--ink);
+  --tooltip-shadow: 0 5px 18px rgba(0, 0, 0, 0.48);
+  --chat-composer-bg: rgba(31, 31, 35, 0.68);
+  --chat-composer-border: rgba(228, 228, 231, 0.16);
+  --code-block-border: rgba(228, 228, 231, 0.10);
+  --agent-trace-text: #707078;
+  --agent-trace-hover: #94949c;
+  --agent-trace-border: rgba(117, 117, 127, 0.30);
+
+  /* Signal backgrounds */
+  --signal-ok-bg: rgba(53, 200, 120, 0.14);
+  --signal-error-bg: rgba(255, 90, 99, 0.14);
+  --signal-warning: #d9a441;
+  --signal-warning-bg: rgba(217, 164, 65, 0.15);
+  --signal-info: #65a5f5;
+  --signal-info-bg: rgba(101, 165, 245, 0.15);
+
+  /* Toasts */
+  --toast-bg: rgba(17, 17, 20, 0.94);
+  --toast-error-text: #ff747c;
+  --toast-ok-text: #60d695;
+
+  /* Diff previews — classic green additions and red deletions */
+  --diff-add-bg: rgba(53, 200, 120, 0.20);
+  --diff-add-gutter: rgb(18, 52, 36);
+  --diff-del-bg: rgba(255, 90, 99, 0.18);
+  --diff-del-gutter: rgb(62, 22, 27);
+  --diff-add-line-bg: rgba(53, 200, 120, 0.13);
+  --diff-del-line-bg: rgba(255, 90, 99, 0.12);
+  --diff-new: #35c878;
+  --diff-old: #ff5a63;
+  --diff-old-bg: rgba(255, 90, 99, 0.16);
+
+  /* Lottie recolor → luminous red */
+  --lottie-orange-filter: brightness(0) saturate(100%) invert(28%) sepia(99%) saturate(4181%) hue-rotate(347deg) brightness(103%) contrast(103%);
+
+  --thinking-accent: var(--agent-trace-border);
+
+  /* Tool colors */
+  --tool-bash: #f25f3a;
+  --tool-read: #65a5f5;
+  --tool-write: #35c878;
+  --tool-web: #9b82e3;
+  --subagent-claudiator: #f25f3a;
+  --subagent-geminitor: #65a5f5;
+
+  /* Forecast panel */
+  --fc-chart-bg: var(--surface-glass);
+  --fc-tooltip-bg: rgba(9, 9, 11, 0.94);
+  --fc-tooltip-text: var(--ink);
+  --fc-line-history: var(--ink-muted);
+  --fc-line-predict: var(--pulse);
+  --fc-point-predict: #e4e4e7;
+  --fc-band-90: rgba(255, 48, 56, 0.06);
+  --fc-band-80: rgba(255, 48, 56, 0.13);
+  --fc-band-50: rgba(255, 48, 56, 0.21);
+  --fc-separator: var(--ink-faint);
+  --fc-annotation: var(--signal-info);
+  --fc-anomaly: var(--signal-error);
+  --fc-scenario-a: #ff4d55;
+  --fc-scenario-b: #9b82e3;
+  --fc-scenario-c: #35c878;
+  --fc-variable-a: #d9a441;
+  --fc-variable-b: #df6e9d;
+  --fc-variable-c: #4fb7c5;
+  --fc-variable-d: #91b85b;
+  --fc-kpi-bg: rgba(228, 228, 231, 0.05);
+  --fc-kpi-border: rgba(228, 228, 231, 0.09);
+  --fc-nav-active: var(--pulse);
+  --fc-progress: var(--pulse);
+  --fc-progress-bg: rgba(255, 48, 56, 0.10);
+}

@@ -8,6 +8,7 @@ vi.mock("react-i18next", () => ({
       if (key === "settings.emeraldNight") return "Émeraude nocturne";
       if (key === "settings.cobaltFrost") return "Cobalt givré";
       if (key === "settings.astralMist") return "Brume astrale";
+      if (key === "settings.crimsonEclipse") return "Éclipse écarlate";
       return key;
     },
   }),
@@ -42,5 +43,15 @@ describe("ThemeSelector", () => {
 
     expect(onChange).toHaveBeenCalledWith("astral-mist");
     expect(container.querySelector('[data-palette="astral-mist"]')).toHaveAttribute("data-theme", "dark");
+  });
+
+  it("affiche et sélectionne Éclipse écarlate comme thème sombre", () => {
+    const onChange = vi.fn();
+    const { container } = render(<ThemeSelector value="dark" onChange={onChange} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Éclipse écarlate" }));
+
+    expect(onChange).toHaveBeenCalledWith("crimson-eclipse");
+    expect(container.querySelector('[data-palette="crimson-eclipse"]')).toHaveAttribute("data-theme", "dark");
   });
 });
