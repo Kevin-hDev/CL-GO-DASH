@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { invoke } from "@tauri-apps/api/core";
 import { useGitBranch } from "@/hooks/use-git-branch";
@@ -17,7 +17,7 @@ describe("useGitBranch", () => {
     mockGitCommands(true);
     const { result } = renderHook(() => useGitBranch("/repo"));
 
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    await waitFor(() => expect(result.current.remoteStatusError).toBe(true));
 
     expect(result.current.isGitRepo).toBe(true);
     expect(result.current.hasRemote).toBe(false);
@@ -41,25 +41,67 @@ describe("useGitBranch", () => {
     view.unmount();
     expect(invoke).toHaveBeenCalledWith("stop_git_watcher", { path: "/other" });
   });
+
+  it("affiche la branche sans attendre les informations Git secondaires", async () => {
+    const worktrees = deferred<never[]>();
+    const remote = deferred<RemoteStatus>();
+    mockGitCommands(false, { worktrees: worktrees.promise, remote: remote.promise });
+
+    const { result } = renderHook(() => useGitBranch("/repo"));
+
+    await waitFor(() => expect(result.current.isGitRepo).toBe(true), { timeout: 250 });
+    expect(result.current.currentBranch).toBe("main");
+    expect(result.current.isLoading).toBe(false);
+  });
+
+  it("termine un commit sans attendre les informations Git secondaires", async () => {
+    mockGitCommands(false);
+    const { result } = renderHook(() => useGitBranch("/repo"));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    const worktrees = deferred<never[]>();
+    const remote = deferred<RemoteStatus>();
+    mockGitCommands(false, { worktrees: worktrees.promise, remote: remote.promise });
+
+    await act(async () => {
+      await expect(result.current.commit("Travail termine")).resolves.toEqual({ ok: true });
+    });
+  });
 });
 
-function mockGitCommands(remoteFailure: boolean) {
+interface RemoteStatus {
+  has_remote: boolean;
+  is_github: boolean;
+  has_remote_branch: boolean;
+  ahead: number;
+  behind: number;
+}
+
+const REMOTE_STATUS: RemoteStatus = {
+  has_remote: true,
+  is_github: true,
+  has_remote_branch: true,
+  ahead: 0,
+  behind: 0,
+};
+
+function mockGitCommands(
+  remoteFailure: boolean,
+  pending: { worktrees?: Promise<never[]>; remote?: Promise<RemoteStatus> } = {},
+) {
   vi.mocked(invoke).mockImplementation((command) => {
     switch (command) {
       case "list_git_branches": return Promise.resolve([]);
       case "get_git_context":
         return Promise.resolve({ branch: "main", is_detached: false, dirty_count: 0, is_git_repo: true });
-      case "list_git_worktrees": return Promise.resolve([]);
+      case "list_git_worktrees": return pending.worktrees ?? Promise.resolve([]);
       case "get_git_remote_status":
+        if (pending.remote) return pending.remote;
         return remoteFailure
           ? Promise.reject(new Error("unavailable"))
-          : Promise.resolve({
-            has_remote: true,
-            is_github: true,
-            has_remote_branch: true,
-            ahead: 0,
-            behind: 0,
-          });
+          : Promise.resolve(REMOTE_STATUS);
+      case "commit_git_changes":
+        return Promise.resolve();
       case "start_git_watcher":
       case "stop_git_watcher":
         return Promise.resolve();
@@ -67,4 +109,10 @@ function mockGitCommands(remoteFailure: boolean) {
         return Promise.reject(new Error("unexpected command"));
     }
   });
+}
+
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((done) => { resolve = done; });
+  return { promise, resolve };
 }

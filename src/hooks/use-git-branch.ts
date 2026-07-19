@@ -9,7 +9,12 @@ import {
 import { useGitMutations } from "@/hooks/use-git-mutations";
 import { useGitHistory } from "@/hooks/use-git-history";
 import { useGitWatcher } from "@/hooks/use-git-watcher";
-import type { BranchInfo, GitBranchState, WorktreeInfo } from "@/hooks/git-types";
+import {
+  loadGitCore,
+  loadGitRemoteStatus,
+  loadGitWorktrees,
+} from "@/hooks/git-refresh";
+import type { GitBranchState } from "@/hooks/git-types";
 
 export type { BranchInfo, WorktreeInfo } from "@/hooks/git-types";
 export {
@@ -38,6 +43,7 @@ export function useGitBranch(projectPath: string | undefined, sessionId?: string
   const [state, setState] = useState<GitBranchState>(INITIAL_STATE);
   const pathRef = useRef(projectPath);
   const mountedRef = useRef(true);
+  const refreshIdRef = useRef(0);
   useGitWatcher(projectPath);
 
   useEffect(() => {
@@ -51,59 +57,53 @@ export function useGitBranch(projectPath: string | undefined, sessionId?: string
 
   const refresh = useCallback(async () => {
     const path = pathRef.current;
+    const refreshId = ++refreshIdRef.current;
     if (!path) {
-      setState((s) => ({
-        ...s,
-        repositoryPath: "",
-        isGitRepo: false,
-        branches: [],
-        worktrees: [],
-        remoteStatusError: false,
-      }));
+      setState(INITIAL_STATE);
       return;
     }
 
-    setState((s) => ({ ...s, isLoading: true }));
+    const isCurrent = () => mountedRef.current
+      && refreshId === refreshIdRef.current
+      && path === pathRef.current;
+    setState((current) => current.repositoryPath === path
+      ? { ...current, isLoading: true }
+      : { ...INITIAL_STATE, repositoryPath: path, isLoading: true });
 
     try {
-      const [branches, context, worktrees, remote] = await Promise.all([
-        invoke<BranchInfo[]>("list_git_branches", { path }),
-        invoke<{ branch: string; is_detached: boolean; dirty_count: number; is_git_repo: boolean }>(
-          "get_git_context", { path },
-        ),
-        invoke<WorktreeInfo[]>("list_git_worktrees", { path }),
-        invoke<{ has_remote: boolean; is_github: boolean; has_remote_branch: boolean; ahead: number; behind: number }>(
-          "get_git_remote_status", { path },
-        ).then((value) => ({ ...value, status_error: false })).catch(() => ({
-          has_remote: false,
-          is_github: false,
-          has_remote_branch: false,
-          ahead: 0,
-          behind: 0,
-          status_error: true,
-        })),
-      ]);
+      const { branches, context } = await loadGitCore(path);
 
-      if (!mountedRef.current || path !== pathRef.current) return;
+      if (!isCurrent()) return;
 
-      setState({
-        repositoryPath: path,
+      setState((current) => ({
+        ...current,
         branches,
-        worktrees,
         currentBranch: context.branch,
         dirtyCount: context.dirty_count,
-        hasRemote: remote.has_remote,
-        remoteStatusError: remote.status_error,
-        isGithubRemote: remote.is_github,
-        hasRemoteBranch: remote.has_remote_branch,
-        aheadCount: remote.ahead,
-        behindCount: remote.behind,
         isGitRepo: context.is_git_repo,
         isLoading: false,
+      }));
+
+      void loadGitWorktrees(path).then((worktrees) => {
+        if (isCurrent()) setState((current) => ({ ...current, worktrees }));
+      }).catch(() => {});
+      void loadGitRemoteStatus(path).then((remote) => {
+        if (!isCurrent()) return;
+        setState((current) => ({
+          ...current,
+          hasRemote: remote.has_remote,
+          remoteStatusError: false,
+          isGithubRemote: remote.is_github,
+          hasRemoteBranch: remote.has_remote_branch,
+          aheadCount: remote.ahead,
+          behindCount: remote.behind,
+        }));
+      }).catch(() => {
+        if (isCurrent()) setState((current) => ({ ...current, remoteStatusError: true }));
       });
     } catch {
-      if (!mountedRef.current || path !== pathRef.current) return;
-      setState((s) => ({ ...s, isGitRepo: false, isLoading: false }));
+      if (!isCurrent()) return;
+      setState({ ...INITIAL_STATE, repositoryPath: path });
     }
   }, []);
 

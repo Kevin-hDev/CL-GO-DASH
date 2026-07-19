@@ -75,7 +75,7 @@ describe("SessionSummaryGitSection", () => {
     const listDirtyFiles = vi.fn().mockResolvedValue([{
       path: "src/app.tsx", status: "modified", additions: 3, deletions: 1,
     }]);
-    const { getByRole } = render(
+    const { getByRole, queryByRole } = render(
       <SessionSummaryGitSection git={{ ...baseGit, dirtyCount: 1, commit, listDirtyFiles }} />,
     );
 
@@ -87,6 +87,21 @@ describe("SessionSummaryGitSection", () => {
 
     await act(async () => {});
     expect(commit).toHaveBeenCalledWith(undefined);
+    expect(queryByRole("dialog", { name: "Commit changes" })).toBeNull();
+  });
+
+  it("ferme la fenetre de commit avec Annuler", async () => {
+    const { getByRole, queryByRole } = render(
+      <SessionSummaryGitSection git={{ ...baseGit, dirtyCount: 1 }} />,
+    );
+
+    fireEvent.click(getByRole("button", { name: "Branch: main" }));
+    fireEvent.click(getByRole("button", { name: "Commit" }));
+    await act(async () => {});
+    fireEvent.click(within(getByRole("dialog", { name: "Commit changes" }))
+      .getByRole("button", { name: "Cancel" }));
+
+    expect(queryByRole("dialog", { name: "Commit changes" })).toBeNull();
   });
 
   it("affiche le push seulement quand des commits sont prets", async () => {
