@@ -115,6 +115,7 @@ fn hint_present_when_some_tools_disabled() {
         "agent",
         "",
         &enabled,
+        None,
     );
     let system = messages
         .first()

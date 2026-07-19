@@ -4,12 +4,29 @@ use super::prompt_detailed_sections::{
     CAPABILITIES, CODE, ERRORS, GIT, HONESTY, SAFETY, STYLE, TOOLS, VERIFICATION, WEB_SEARCH,
 };
 
-pub fn build(working_dir: &Path, is_git: bool, git_root: Option<&Path>) -> String {
+pub fn build_with_behavior(
+    working_dir: &Path,
+    is_git: bool,
+    git_root: Option<&Path>,
+    behavior: Option<&str>,
+) -> String {
+    let identity = behavior.unwrap_or(IDENTITY);
+    let style = operational_style(behavior.is_some());
     format!(
-        "{IDENTITY}\n\n{CAPABILITIES}\n\n{}\n\n{TOOLS}\n\n{}\n\n{CODE}\n\n{GIT}\n\n{SAFETY}\n\n{ERRORS}\n\n{WEB_SEARCH}\n\n{HONESTY}\n\n{VERIFICATION}\n\n{STYLE}",
+        "{identity}\n\n{CAPABILITIES}\n\n{}\n\n{TOOLS}\n\n{}\n\n{CODE}\n\n{GIT}\n\n{SAFETY}\n\n{ERRORS}\n\n{WEB_SEARCH}\n\n{HONESTY}\n\n{VERIFICATION}\n\n{style}",
         env_section(working_dir, is_git, git_root),
         super::subagent_parent_guidance::PARENT_GUIDANCE,
     )
+}
+
+fn operational_style(custom_behavior: bool) -> &'static str {
+    if !custom_behavior {
+        return STYLE;
+    }
+    STYLE
+        .split_once("\n\n# Style")
+        .map(|(operational, _)| operational)
+        .unwrap_or(STYLE)
 }
 
 const IDENTITY: &str = "\

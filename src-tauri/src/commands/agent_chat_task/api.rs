@@ -58,6 +58,7 @@ pub(crate) async fn run(
                 response_language: &response_language,
                 plan_mode_active,
                 enabled_tool_names: &enabled_tool_names,
+                behavior: None,
             },
         );
     }

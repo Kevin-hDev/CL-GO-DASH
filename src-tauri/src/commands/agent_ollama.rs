@@ -1,4 +1,5 @@
 use crate::services::agent_local::model_customizations;
+use crate::services::agent_local::ollama_behavior_overrides;
 use crate::services::agent_local::ollama_client::OllamaClient;
 use crate::services::agent_local::ollama_registry;
 use crate::services::agent_local::ollama_registry_details;
@@ -74,7 +75,12 @@ pub async fn translate_description(
 
 #[tauri::command]
 pub async fn delete_ollama_model(app: tauri::AppHandle, name: String) -> Result<(), String> {
-    ollama_registry::delete_model(&name).await?;
+    let previous_behavior = ollama_behavior_overrides::get(&name);
+    ollama_behavior_overrides::set(&name, "")?;
+    if let Err(error) = ollama_registry::delete_model(&name).await {
+        restore_behavior(&name, previous_behavior.as_deref());
+        return Err(error);
+    }
     model_customizations::clear_model_customized(&name)?;
     let _ = app.emit("ollama-models-changed", ());
     Ok(())
@@ -96,8 +102,19 @@ pub async fn update_modelfile(
     ollama: tauri::State<'_, OllamaClient>,
 ) -> Result<(), String> {
     let was_customized = model_customizations::is_model_customized(&name);
-    model_customizations::mark_model_customized(&name)?;
+    let previous_behavior = ollama_behavior_overrides::get(&name);
+    if previous_behavior.is_some() {
+        let system = crate::services::agent_local::modelfile_parser::parse_modelfile(&content)
+            .system
+            .unwrap_or_default();
+        ollama_behavior_overrides::set(&name, &system)?;
+    }
+    if let Err(error) = model_customizations::mark_model_customized(&name) {
+        restore_behavior(&name, previous_behavior.as_deref());
+        return Err(error);
+    }
     if let Err(e) = ollama.update_modelfile(&name, &content).await {
+        restore_behavior(&name, previous_behavior.as_deref());
         if !was_customized {
             let _ = model_customizations::clear_model_customized(&name);
         }
@@ -115,8 +132,14 @@ pub async fn update_system_prompt(
     ollama: tauri::State<'_, OllamaClient>,
 ) -> Result<(), String> {
     let was_customized = model_customizations::is_model_customized(&name);
-    model_customizations::mark_model_customized(&name)?;
+    let previous_behavior = ollama_behavior_overrides::get(&name);
+    ollama_behavior_overrides::set(&name, &system)?;
+    if let Err(error) = model_customizations::mark_model_customized(&name) {
+        restore_behavior(&name, previous_behavior.as_deref());
+        return Err(error);
+    }
     if let Err(e) = ollama.update_system_prompt(&name, &system).await {
+        restore_behavior(&name, previous_behavior.as_deref());
         if !was_customized {
             let _ = model_customizations::clear_model_customized(&name);
         }
@@ -124,6 +147,12 @@ pub async fn update_system_prompt(
     }
     let _ = app.emit("modelfile-updated", &name);
     Ok(())
+}
+
+fn restore_behavior(name: &str, previous: Option<&str>) {
+    if let Err(error) = ollama_behavior_overrides::set(name, previous.unwrap_or_default()) {
+        eprintln!("[ollama] restore system behavior failed: {error}");
+    }
 }
 
 #[tauri::command]

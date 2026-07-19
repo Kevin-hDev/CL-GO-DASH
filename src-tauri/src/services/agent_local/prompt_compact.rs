@@ -1,12 +1,24 @@
 use std::path::Path;
 
-pub fn build(working_dir: &Path, is_git: bool, git_root: Option<&Path>) -> String {
+pub fn build_with_behavior(
+    working_dir: &Path,
+    is_git: bool,
+    git_root: Option<&Path>,
+    behavior: Option<&str>,
+) -> String {
+    let identity = behavior.unwrap_or(IDENTITY);
+    let default_style = if behavior.is_some() {
+        ""
+    } else {
+        super::prompt_compact_style::DEFAULT_STYLE
+    };
     format!(
-        "{IDENTITY}\n\n{CAPABILITIES}\n\n{}\n\n{TOOLS}\n\n{}\n\n{CODE}\n\n{GIT}\n\n{}\n\n{}\n\n{WEB_SEARCH}\n\n{SAFETY}\n\n{HONESTY}\n\n{STYLE}",
+        "{identity}\n\n{CAPABILITIES}\n\n{}\n\n{TOOLS}\n\n{}\n\n{CODE}\n\n{GIT}\n\n{}\n\n{}\n\n{WEB_SEARCH}\n\n{SAFETY}\n\n{HONESTY}\n\n{}\n\n{default_style}",
         env_section(working_dir, is_git, git_root),
         super::subagent_parent_guidance::PARENT_GUIDANCE,
         super::prompt_todo::TODO,
         super::prompt_interactive::INTERACTIVE,
+        super::prompt_compact_style::OPERATIONAL,
     )
 }
 
@@ -158,26 +170,3 @@ If you don't know, say so. If you haven't verified, say so. \
 Never invent files, test results, tool outputs, or behavior.
 If an approach fails, diagnose why before switching. \
 Do not retry blindly, but do not abandon a viable approach after one failure either.";
-
-const STYLE: &str = "\
-<communication_during_work>
-
-Normal assistant text is visible to the user.
-Before the first tool call, briefly say what you are going to inspect or do.
-During multi-step work, post brief updates to keep the user informed of your progress and any issues you run into.
-Do provide short updates at meaningful milestones. Do not write a separate update for every routine tool call, read, search, or command.
-Keep updates concrete: what you checked, what you found, and what you will do next.
-
-</communication_during_work>
-
-# Verification
-
-Before reporting a task complete, verify it actually works: run the test, compile the code, \
-check the output. If you cannot verify, say so explicitly instead of claiming success.
-
-# Style
-
-Be concise and direct. Lead with the action, not the reasoning.
-Do not restate what the user said. Do not add unnecessary preamble.
-If you can say it in one sentence, don't use three.
-Keep going until the task is complete.";

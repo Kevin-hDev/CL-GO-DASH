@@ -23,14 +23,19 @@ fn prepend_tool_system_prompt(
     is_git: bool,
     git_root: Option<&Path>,
     model: &str,
+    behavior: Option<&str>,
 ) {
     if messages.first().is_some_and(|m| m.role == "system") {
         return;
     }
     let tier = model_size::detect_tier(model);
     let prompt = match tier {
-        PromptTier::Compact => prompt_compact::build(working_dir, is_git, git_root),
-        PromptTier::Detailed => prompt_detailed::build(working_dir, is_git, git_root),
+        PromptTier::Compact => {
+            prompt_compact::build_with_behavior(working_dir, is_git, git_root, behavior)
+        }
+        PromptTier::Detailed => {
+            prompt_detailed::build_with_behavior(working_dir, is_git, git_root, behavior)
+        }
     };
     messages.insert(0, build_system_message(prompt));
 }
@@ -80,6 +85,7 @@ pub fn prepare_messages(
         mode,
         response_language,
         &enabled_tool_names,
+        None,
     );
 }
 
@@ -95,13 +101,14 @@ pub fn prepare_messages_with_tools(
     mode: &str,
     response_language: &str,
     enabled_tool_names: &[String],
+    behavior: Option<&str>,
 ) {
     if mode == "chat" {
-        prepend_chat_system_prompt(messages, working_dir, model);
+        prepend_chat_system_prompt(messages, working_dir, model, behavior);
         filter_tool_prompt(messages, enabled_tool_names);
         prepend_web_search_status(messages);
     } else {
-        prepend_tool_system_prompt(messages, working_dir, is_git, git_root, model);
+        prepend_tool_system_prompt(messages, working_dir, is_git, git_root, model, behavior);
         filter_tool_prompt(messages, enabled_tool_names);
         prepend_web_search_status(messages);
         super::disabled_tools_hint::prepend(messages, enabled_tool_names);
@@ -121,14 +128,19 @@ fn default_prompt_tool_names() -> Vec<String> {
         .collect()
 }
 
-fn prepend_chat_system_prompt(messages: &mut Vec<ChatMessage>, working_dir: &Path, model: &str) {
+fn prepend_chat_system_prompt(
+    messages: &mut Vec<ChatMessage>,
+    working_dir: &Path,
+    model: &str,
+    behavior: Option<&str>,
+) {
     if messages.first().is_some_and(|m| m.role == "system") {
         return;
     }
     let tier = model_size::detect_tier(model);
     let prompt = match tier {
-        PromptTier::Compact => prompt_chat_compact::build(working_dir),
-        PromptTier::Detailed => prompt_chat_detailed::build(working_dir),
+        PromptTier::Compact => prompt_chat_compact::build_with_behavior(working_dir, behavior),
+        PromptTier::Detailed => prompt_chat_detailed::build_with_behavior(working_dir, behavior),
     };
     messages.insert(0, build_system_message(prompt));
 }

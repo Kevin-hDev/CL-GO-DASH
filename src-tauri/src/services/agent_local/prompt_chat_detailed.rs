@@ -1,8 +1,10 @@
 use std::path::Path;
 
-pub fn build(working_dir: &Path) -> String {
+pub fn build_with_behavior(working_dir: &Path, behavior: Option<&str>) -> String {
+    let identity = behavior.unwrap_or(IDENTITY);
+    let style = if behavior.is_some() { "" } else { STYLE };
     format!(
-        "{IDENTITY}\n\n{CAPABILITIES}\n\n{}\n\n{WEB_SEARCH}\n\n{MODES}\n\n{}\n\n{STYLE}",
+        "{identity}\n\n{CAPABILITIES}\n\n{}\n\n{WEB_SEARCH}\n\n{MODES}\n\n{}\n\n{style}",
         super::prompt_interactive::INTERACTIVE,
         env_section(working_dir),
     )

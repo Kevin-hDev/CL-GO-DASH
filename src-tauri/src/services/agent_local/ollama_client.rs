@@ -97,11 +97,7 @@ impl OllamaClient {
 
     pub async fn update_system_prompt(&self, name: &str, system: &str) -> Result<(), String> {
         let current = self.get_modelfile(name).await?;
-        let mut parsed = parse_modelfile(&current);
-        parsed.system = Some(system.to_string());
-        parsed.from = Some(name.to_string());
-        parsed.license = None;
-        let payload = parsed.to_api_payload(name);
+        let payload = super::ollama_create_payload::system_prompt(name, &current, system)?;
         self.post_create(&payload).await
     }
 
@@ -129,10 +125,7 @@ impl OllamaClient {
     }
 
     pub(crate) async fn post_create(&self, payload: &serde_json::Value) -> Result<(), String> {
-        let mut enriched = payload.clone();
-        if let Some(obj) = enriched.as_object_mut() {
-            obj.insert("stream".into(), serde_json::json!(false));
-        }
+        let enriched = super::ollama_create_payload::non_streaming(payload)?;
         let resp = self
             .client
             .post(format!("{}/api/create", ollama_base_url()))

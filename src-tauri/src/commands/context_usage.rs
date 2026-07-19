@@ -39,6 +39,11 @@ pub async fn estimate_context_hidden_usage(
         Some(value) => value,
         None => crate::services::agent_local::tool_plan::is_enabled(&session_id).await,
     } && tool_catalog::has_plan_tools(&enabled_tool_names);
+    let behavior = if provider.as_deref() == Some("ollama") {
+        crate::services::agent_local::ollama_behavior_overrides::get(&model)
+    } else {
+        None
+    };
 
     let system_prompt_tokens = estimate(&base_prompt(
         &mode.mode,
@@ -46,6 +51,7 @@ pub async fn estimate_context_hidden_usage(
         &working_dir,
         &snap,
         &enabled_tool_names,
+        behavior.as_deref(),
     ));
     let meta_context_tokens = meta_context_tokens(&mode, &working_dir, &snap, plan_active).await;
     let skill_context_tokens = skill_context_tokens(
@@ -70,16 +76,27 @@ fn base_prompt(
     working_dir: &std::path::Path,
     snap: &crate::services::git_context::GitSnapshot,
     enabled_tool_names: &[String],
+    behavior: Option<&str>,
 ) -> String {
     let prompt = match (mode == "chat", model_size::detect_tier(model)) {
-        (true, PromptTier::Compact) => prompt_chat_compact::build(working_dir),
-        (true, PromptTier::Detailed) => prompt_chat_detailed::build(working_dir),
-        (false, PromptTier::Compact) => {
-            prompt_compact::build(working_dir, snap.is_git, snap.git_root.as_deref())
+        (true, PromptTier::Compact) => {
+            prompt_chat_compact::build_with_behavior(working_dir, behavior)
         }
-        (false, PromptTier::Detailed) => {
-            prompt_detailed::build(working_dir, snap.is_git, snap.git_root.as_deref())
+        (true, PromptTier::Detailed) => {
+            prompt_chat_detailed::build_with_behavior(working_dir, behavior)
         }
+        (false, PromptTier::Compact) => prompt_compact::build_with_behavior(
+            working_dir,
+            snap.is_git,
+            snap.git_root.as_deref(),
+            behavior,
+        ),
+        (false, PromptTier::Detailed) => prompt_detailed::build_with_behavior(
+            working_dir,
+            snap.is_git,
+            snap.git_root.as_deref(),
+            behavior,
+        ),
     };
     crate::services::agent_local::tool_prompt_filter::filter_system_prompt(
         &prompt,

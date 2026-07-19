@@ -22,6 +22,7 @@ pub(crate) async fn run(
 
     let snap = common::collect_git_snapshot(&working_dir).await;
     let ollama_think = resolve_ollama_think(&params);
+    let behavior = crate::services::agent_local::ollama_behavior_overrides::get(&params.model);
     let mut messages = params.messages;
     let image_report = crate::services::llm::vision::sanitize_messages(&mut messages, true);
     if image_report.invalid_removed > 0 {
@@ -53,6 +54,7 @@ pub(crate) async fn run(
                 response_language: &response_language,
                 plan_mode_active,
                 enabled_tool_names: &enabled_tool_names,
+                behavior: behavior.as_deref(),
             },
         );
     }

@@ -25,6 +25,7 @@ pub(crate) struct PromptContext<'a> {
     pub response_language: &'a str,
     pub plan_mode_active: bool,
     pub enabled_tool_names: &'a [String],
+    pub behavior: Option<&'a str>,
 }
 
 pub(crate) async fn resolve_permission_mode(override_mode: Option<&str>) -> StreamMode {
@@ -126,6 +127,7 @@ pub(crate) fn prepare_with_context(messages: &mut Vec<ChatMessage>, ctx: PromptC
         ctx.mode,
         ctx.response_language,
         ctx.enabled_tool_names,
+        ctx.behavior,
     );
     append_git_section(messages, ctx.snap);
     if plan_mode_active {

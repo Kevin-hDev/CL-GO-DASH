@@ -2,8 +2,8 @@ use std::path::Path;
 
 #[test]
 fn compact_and_detailed_prompts_share_positive_subagent_guidance() {
-    let compact = super::prompt_compact::build(Path::new("."), false, None);
-    let detailed = super::prompt_detailed::build(Path::new("."), false, None);
+    let compact = super::prompt_compact::build_with_behavior(Path::new("."), false, None, None);
+    let detailed = super::prompt_detailed::build_with_behavior(Path::new("."), false, None, None);
 
     for prompt in [compact, detailed] {
         assert_eq!(prompt.matches("# Working with subagents").count(), 1);

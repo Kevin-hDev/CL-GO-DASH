@@ -11,13 +11,6 @@ pub mod agent_loop_thinking_retry;
 pub mod agent_md;
 pub mod agent_settings;
 pub mod app_handle_global;
-pub mod chat_prompts;
-#[cfg(test)]
-pub mod chat_prompts_chat_tests;
-#[cfg(test)]
-pub mod chat_prompts_tests;
-#[cfg(test)]
-pub mod chat_prompts_web_status_tests;
 pub mod circuit_breaker;
 #[cfg(test)]
 pub mod circuit_breaker_tests;
@@ -43,10 +36,13 @@ pub mod interactive_choice_gate;
 pub mod model_customizations;
 pub mod model_size;
 pub mod modelfile_parser;
+pub mod ollama_behavior_overrides;
 pub mod ollama_client;
 pub mod ollama_collect;
+pub mod ollama_create_payload;
 pub mod ollama_model_helpers;
 pub mod ollama_modelfile_create;
+pub mod ollama_modelfile_system;
 pub mod ollama_registry;
 pub mod ollama_registry_details;
 #[cfg(test)]
@@ -73,14 +69,6 @@ pub mod permission_policy;
 pub mod plan_mode_controller;
 pub mod plan_mode_debug;
 pub mod project_store;
-pub mod prompt_chat_compact;
-pub mod prompt_chat_detailed;
-pub mod prompt_compact;
-pub mod prompt_detailed;
-pub mod prompt_detailed_sections;
-pub mod prompt_interactive;
-pub mod prompt_plan;
-pub mod prompt_todo;
 pub mod security;
 pub mod sensitive_data;
 pub mod session_archive;
