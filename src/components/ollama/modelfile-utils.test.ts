@@ -51,11 +51,18 @@ describe("extractParameters", () => {
     expect(params[0].value).toBe("User:");
   });
 
-  it("est insensible à la casse de PARAMETER (regex gm)", () => {
-    // La regex est "PARAMETER" littéral → sensible à la casse par défaut.
-    // On documente ce comportement.
+  it("est insensible à la casse de PARAMETER", () => {
     const modelfile = "parameter temperature 0.5";
-    expect(extractParameters(modelfile)).toEqual([]);
+    expect(extractParameters(modelfile)).toEqual([{ key: "temperature", value: "0.5" }]);
+  });
+
+  it("borne le nombre de paramètres extraits", () => {
+    const modelfile = Array.from(
+      { length: 140 },
+      (_, index) => `PARAMETER custom_${index} ${index}`,
+    ).join("\n");
+
+    expect(extractParameters(modelfile)).toHaveLength(128);
   });
 });
 

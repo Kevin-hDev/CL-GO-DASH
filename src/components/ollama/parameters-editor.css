@@ -1,53 +1,161 @@
-/* parameters-editor — styles colocalisés */
+/* Parameter catalog displayed inside the shared model editor card. */
 
 .pe-body {
-  padding: var(--space-md);
   display: flex;
   flex-direction: column;
+}
+
+.pe-intro {
+  margin: 0;
+  padding: var(--space-md) var(--space-lg);
+  color: var(--ink-muted);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+.pe-group,
+.pe-custom-section {
+  border-top: 1px solid var(--edge);
+}
+
+.pe-group-title {
+  margin: 0;
+  padding: var(--space-md) var(--space-lg) var(--space-sm);
+  color: var(--ink);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.pe-parameter-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(12rem, 0.7fr);
+  align-items: center;
+  gap: var(--space-lg);
+  padding: var(--space-md) var(--space-lg);
+}
+
+.pe-parameter-row + .pe-parameter-row {
+  border-top: 1px solid var(--edge);
+}
+
+.pe-parameter-info {
+  min-width: 0;
+}
+
+.pe-parameter-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: var(--space-sm);
 }
 
-.pe-row {
+.pe-parameter-name {
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.pe-type-badge,
+.pe-default-badge {
+  padding: 2px var(--space-sm);
+  border-radius: var(--radius-full);
+  background: var(--surface-hover);
+  color: var(--ink-faint);
+  font-size: var(--text-xs);
+  white-space: nowrap;
+}
+
+.pe-parameter-description,
+.pe-custom-hint {
+  margin: var(--space-xs) 0 0;
+  color: var(--ink-muted);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+}
+
+.pe-value-control,
+.pe-custom-row {
   display: flex;
-  gap: var(--space-sm);
   align-items: center;
+  gap: var(--space-sm);
+  min-width: 0;
 }
 
 .pe-input {
+  min-width: 0;
   padding: var(--space-sm) var(--space-md);
-  background: var(--void);
   border: 1px solid var(--edge);
   border-radius: var(--radius-sm);
-  color: var(--ink);
-  font-size: var(--text-xs);
-  font-family: var(--font-mono);
   outline: none;
+  background: var(--void);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
 }
 
 .pe-input:focus-visible {
-  border-color: var(--pulse);
+  border-color: var(--ink-faint);
 }
 
-.pe-input-key {
-  width: 180px;
-}
-
-.pe-input-value {
+.pe-fixed-input,
+.pe-custom-value {
   flex: 1;
 }
 
-.pe-remove-btn {
-  padding: 6px 10px;
+.pe-clear-btn {
+  flex-shrink: 0;
+  padding: var(--space-sm) var(--space-md);
+}
+
+.pe-stop-row {
+  align-items: flex-start;
+}
+
+.pe-stop-controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  min-width: 0;
+}
+
+.pe-inline-add-btn {
+  align-self: flex-start;
+}
+
+.pe-custom-hint {
+  padding: 0 var(--space-lg);
+}
+
+.pe-custom-row {
+  padding: var(--space-md) var(--space-lg) 0;
+}
+
+.pe-custom-key {
+  width: 11rem;
 }
 
 .pe-add-btn {
   align-self: flex-start;
-  margin-top: var(--space-xs);
+  margin: var(--space-md) var(--space-lg) var(--space-lg);
 }
 
-.pe-hint {
-  margin-top: var(--space-md);
-  font-size: var(--text-xs);
-  color: var(--ink-faint);
-  line-height: 1.6;
+@media (max-width: 720px) {
+  .pe-parameter-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-sm);
+  }
+
+  .pe-custom-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .pe-custom-key {
+    width: 100%;
+  }
+
+  .pe-custom-row .pe-clear-btn {
+    align-self: flex-end;
+  }
 }
