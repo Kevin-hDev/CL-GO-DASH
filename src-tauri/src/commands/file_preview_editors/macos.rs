@@ -92,6 +92,6 @@ pub fn detect(file_path: &Path) -> Vec<DetectedEditor> {
     // SAFETY: `raw_array` came from a Copy/Create API and has not been released yet.
     unsafe { core_foundation::base::CFRelease(raw_array as *const _) };
 
-    editors.sort_by(|a, b| b.is_default.cmp(&a.is_default));
+    editors.sort_by_key(|editor| std::cmp::Reverse(editor.is_default));
     editors
 }
