@@ -53,14 +53,12 @@ fn moonshot_switchable_can_disable_thinking() {
 
 #[test]
 fn moonshot_k3_sends_mandatory_thinking_effort() {
-    assert_eq!(
-        payload("moonshot", "k3", Some("low"))["thinking"],
-        json!({ "type": "enabled", "effort": "low" })
-    );
-    assert_eq!(
-        payload("moonshot", "k3", Some("max"))["thinking"],
-        json!({ "type": "enabled", "effort": "max" })
-    );
+    for effort in ["low", "high", "max"] {
+        assert_eq!(
+            payload("moonshot", "k3", Some(effort))["thinking"],
+            json!({ "type": "enabled", "effort": effort })
+        );
+    }
     assert_eq!(
         payload("moonshot", "k3", Some("off"))["thinking"],
         json!({ "type": "enabled", "effort": "max" })
