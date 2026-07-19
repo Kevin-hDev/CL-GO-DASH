@@ -675,6 +675,7 @@
   "settings": {
     "light": "浅色",
     "dark": "深色",
+    "emeraldNight": "夜幕翡翠",
     "system": "跟随系统",
     "tabs": {
       "general": "通用",

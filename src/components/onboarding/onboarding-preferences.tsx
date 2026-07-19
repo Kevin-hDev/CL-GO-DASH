@@ -1,9 +1,10 @@
 import { useTranslation } from "react-i18next";
 import type { ReactNode } from "react";
 import type { ThemeChoice } from "@/hooks/use-theme";
-import { Gear, Moon, Sun, CaretRight } from "@/components/ui/icons";
+import { Gear, Moon, Sun, Sparkle, CaretRight } from "@/components/ui/icons";
 import { SettingsSelect } from "@/components/settings/settings-select";
 import { LANGUAGE_OPTIONS } from "@/components/settings/general-settings-options";
+import { THEME_OPTIONS } from "@/lib/app-themes";
 
 interface OnboardingPreferencesProps {
   themeChoice: ThemeChoice;
@@ -11,11 +12,12 @@ interface OnboardingPreferencesProps {
   onNext: () => void;
 }
 
-const THEME_OPTIONS: { id: ThemeChoice; labelKey: string; icon: ReactNode }[] = [
-  { id: "light", labelKey: "settings.light", icon: <Sun size="var(--icon-lg)" /> },
-  { id: "dark", labelKey: "settings.dark", icon: <Moon size="var(--icon-lg)" /> },
-  { id: "system", labelKey: "settings.system", icon: <Gear size="var(--icon-lg)" /> },
-];
+function getThemeIcon(theme: ThemeChoice): ReactNode {
+  if (theme === "light") return <Sun size="var(--icon-lg)" />;
+  if (theme === "dark") return <Moon size="var(--icon-lg)" />;
+  if (theme === "emerald-night") return <Sparkle size="var(--icon-lg)" />;
+  return <Gear size="var(--icon-lg)" />;
+}
 
 export function OnboardingPreferences({
   themeChoice,
@@ -47,7 +49,7 @@ export function OnboardingPreferences({
                 className={`ob-theme-choice ${themeChoice === option.id ? "is-active" : ""}`}
                 onClick={() => onThemeChange(option.id)}
               >
-                {option.icon}
+                {getThemeIcon(option.id)}
                 <span>{t(option.labelKey)}</span>
               </button>
             ))}

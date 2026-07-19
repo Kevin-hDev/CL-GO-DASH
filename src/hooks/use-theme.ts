@@ -1,41 +1,62 @@
 import { useState, useCallback, useEffect } from "react";
+import {
+  getNextThemeChoice,
+  getThemeColorScheme,
+  isThemeChoice,
+  resolveTheme,
+  type ResolvedTheme,
+  type ThemeChoice,
+} from "@/lib/app-themes";
 
-export type ThemeChoice = "light" | "dark" | "system";
-export type Theme = "light" | "dark";
+export type { ThemeChoice } from "@/lib/app-themes";
 
-function getSystemTheme(): Theme {
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+function systemPrefersDark(): boolean {
+  return window.matchMedia("(prefers-color-scheme: dark)").matches;
 }
 
 function getInitialChoice(): ThemeChoice {
-  const saved = localStorage.getItem("clgo-theme");
-  if (saved === "light" || saved === "dark" || saved === "system") return saved;
-  return "system";
+  try {
+    const saved = localStorage.getItem("clgo-theme");
+    return isThemeChoice(saved) ? saved : "system";
+  } catch {
+    return "system";
+  }
 }
 
-function resolveTheme(choice: ThemeChoice): Theme {
-  return choice === "system" ? getSystemTheme() : choice;
+function persistThemeChoice(choice: ThemeChoice): void {
+  try {
+    localStorage.setItem("clgo-theme", choice);
+  } catch {
+    // Le thème reste appliqué même si le stockage local est indisponible.
+  }
+}
+
+function applyTheme(theme: ResolvedTheme): void {
+  document.documentElement.setAttribute("data-theme", getThemeColorScheme(theme));
+  document.documentElement.setAttribute("data-palette", theme);
 }
 
 export function useTheme() {
   const [choice, setChoiceState] = useState<ThemeChoice>(getInitialChoice);
-  const [resolved, setResolved] = useState<Theme>(() => resolveTheme(getInitialChoice()));
+  const [resolved, setResolved] = useState<ResolvedTheme>(() =>
+    resolveTheme(getInitialChoice(), systemPrefersDark()),
+  );
 
   useEffect(() => {
-    const r = resolveTheme(choice);
+    const nextTheme = resolveTheme(choice, systemPrefersDark());
     // eslint-disable-next-line react-hooks/set-state-in-effect -- derived theme resolution on choice change is intentional
-    setResolved(r);
-    document.documentElement.setAttribute("data-theme", r);
-    localStorage.setItem("clgo-theme", choice);
+    setResolved(nextTheme);
+    applyTheme(nextTheme);
+    persistThemeChoice(choice);
   }, [choice]);
 
   useEffect(() => {
     if (choice !== "system") return;
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
     const handler = () => {
-      const r = getSystemTheme();
-      setResolved(r);
-      document.documentElement.setAttribute("data-theme", r);
+      const nextTheme = resolveTheme("system", mq.matches);
+      setResolved(nextTheme);
+      applyTheme(nextTheme);
     };
     mq.addEventListener("change", handler);
     return () => mq.removeEventListener("change", handler);
@@ -46,11 +67,7 @@ export function useTheme() {
   }, []);
 
   const toggle = useCallback(() => {
-    setChoiceState((c) => {
-      if (c === "light") return "dark";
-      if (c === "dark") return "system";
-      return "light";
-    });
+    setChoiceState(getNextThemeChoice);
   }, []);
 
   return { theme: resolved, choice, setTheme, toggle } as const;

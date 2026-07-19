@@ -675,6 +675,7 @@
   "settings": {
     "light": "Chiaro",
     "dark": "Scuro",
+    "emeraldNight": "Smeraldo notturno",
     "system": "Sistema",
     "tabs": {
       "general": "Generale",

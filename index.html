@@ -6,11 +6,18 @@
     <title>CL-GO</title>
     <script>
       (function() {
-        var t = localStorage.getItem("clgo-theme");
-        if (t === "system" || (t !== "light" && t !== "dark")) {
-          t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        var choice = "system";
+        try {
+          choice = localStorage.getItem("clgo-theme") || "system";
+        } catch (_error) {
+          choice = "system";
         }
-        document.documentElement.setAttribute("data-theme", t);
+        if (choice !== "light" && choice !== "dark" && choice !== "emerald-night") {
+          choice = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        }
+        var colorScheme = choice === "light" ? "light" : "dark";
+        document.documentElement.setAttribute("data-theme", colorScheme);
+        document.documentElement.setAttribute("data-palette", choice);
       })();
     </script>
     <link rel="preload" href="/castor.svg" as="image" type="image/svg+xml" />
@@ -26,6 +33,10 @@
       [data-theme="dark"] #splash {
         background: #121212;
         --splash-mark: #c8c8ce;
+      }
+      [data-palette="emerald-night"] #splash {
+        background: #031f1c;
+        --splash-mark: #f1e2c3;
       }
       [data-theme="light"] #splash {
         background: #f7f7f9;

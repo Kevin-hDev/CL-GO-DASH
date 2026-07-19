@@ -680,6 +680,7 @@
   "settings": {
     "light": "Light",
     "dark": "Dark",
+    "emeraldNight": "Emerald Night",
     "system": "System",
     "tabs": {
       "general": "General",

@@ -675,6 +675,7 @@
   "settings": {
     "light": "Hell",
     "dark": "Dunkel",
+    "emeraldNight": "Smaragdnacht",
     "system": "System",
     "tabs": {
       "general": "Allgemein",

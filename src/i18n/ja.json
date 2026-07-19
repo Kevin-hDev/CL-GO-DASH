@@ -675,6 +675,7 @@
   "settings": {
     "light": "ライト",
     "dark": "ダーク",
+    "emeraldNight": "夜のエメラルド",
     "system": "システム",
     "tabs": {
       "general": "一般",
