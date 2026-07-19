@@ -11,6 +11,7 @@
 - **Native Grok and Kimi authentication** — added direct web authentication for xAI Grok and Moonshot Kimi subscriptions without installing Grok Build, Kimi Code, or another provider CLI. Kimi remains an experimental, unofficial integration.
 - **Full CL-GO-DASH agent experience** — Grok and Kimi OAuth models now run through CL-GO-DASH's native agent loop in manual chats, including tools, skills, MCP connectors, permissions, plans, context compression, and subagents.
 - **Integrated Git workflow** — added branch and worktree creation, selection, and deletion; local commits; authenticated pushes; explicit branch-to-branch merges; shared per-worktree state across sessions; uncommitted file browsing; recent commit history; and historical diff previews.
+- **Four new visual themes** — added Emerald Night, Frosted Cobalt, Astral Mist, and Crimson Eclipse, each with a dedicated accessible palette and theme-aware added and deleted line colors across code and file diff previews.
 
 ### Usage and costs
 
