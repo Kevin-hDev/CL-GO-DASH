@@ -35,7 +35,11 @@ export function ReasoningSelector({
   const rootRef = useRef<HTMLDivElement>(null);
   const { anchorRef, floatingRef, floatingStyle } = useFloatingMenuPosition(open, align, 4);
   const options = reasoningModeOptions(model);
-  const selectedMode = normalizeReasoningMode(reasoningMode, options);
+  const selectedMode = normalizeReasoningMode(
+    reasoningMode,
+    options,
+    model?.default_reasoning_mode,
+  );
   const selectedOption = options.find((option) => option.mode === selectedMode) ?? options[0];
 
   useKeyboard({ onEscape: () => setOpen(false) });

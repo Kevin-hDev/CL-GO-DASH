@@ -74,6 +74,10 @@ fn provider_specific_modes_are_distinct() {
         &["auto"]
     );
     assert_eq!(
+        supported_modes("moonshot", "k3", true),
+        &["low", "high", "max"]
+    );
+    assert_eq!(
         supported_modes("xai", "grok-4.5", true),
         &["low", "medium", "high"]
     );
@@ -120,5 +124,36 @@ fn explicit_off_mode_is_preserved() {
     assert_eq!(
         normalize_for_model("deepseek", "deepseek-v4-pro", Some("off"), true).as_deref(),
         Some("off")
+    );
+}
+
+#[test]
+fn kimi_k3_defaults_to_max_and_rejects_off() {
+    assert_eq!(
+        normalize_for_model("moonshot", "k3", None, true).as_deref(),
+        Some("max")
+    );
+    assert_eq!(
+        normalize_for_model("moonshot", "k3", Some("off"), true).as_deref(),
+        Some("max")
+    );
+}
+
+#[test]
+fn kimi_oauth_preserves_every_supported_k3_effort() {
+    assert!(provider_model_supports_thinking("moonshot-oauth", "k3"));
+    assert_eq!(
+        supported_modes("moonshot-oauth", "k3", true),
+        &["low", "high", "max"]
+    );
+    for effort in ["low", "high", "max"] {
+        assert_eq!(
+            normalize_for_model("moonshot-oauth", "k3", Some(effort), true).as_deref(),
+            Some(effort)
+        );
+    }
+    assert_eq!(
+        normalize_for_model("moonshot-oauth", "k3", None, true).as_deref(),
+        Some("max")
     );
 }

@@ -85,6 +85,8 @@ describe("reasoning modes", () => {
     expect(modes("moonshot", "kimi-k2.5")).toEqual(["off", "auto"]);
     expect(modes("moonshot", "kimi-k2-thinking")).toEqual(["auto"]);
     expect(modes("moonshot", "kimi-k2.7-code")).toEqual(["auto"]);
+    expect(modes("moonshot", "k3")).toEqual(["low", "high", "max"]);
+    expect(modes("moonshot-oauth", "k3")).toEqual(["low", "high", "max"]);
   });
 
   it("affiche OFF/AUTO pour Z.ai quand le modèle supporte le thinking", () => {
@@ -133,5 +135,14 @@ describe("reasoning modes", () => {
   it("conserve le choix explicite DÉSACTIVÉ de l'utilisateur", () => {
     const options = reasoningModeOptions(model("deepseek", "deepseek-v4-pro"));
     expect(normalizeReasoningMode("off", options)).toBe("off");
+  });
+
+  it("utilise Max par défaut pour K3", () => {
+    const k3 = model("moonshot-oauth", "k3", ["low", "high", "max"]);
+    k3.default_reasoning_mode = "max";
+    const options = reasoningModeOptions(k3);
+
+    expect(normalizeReasoningMode(null, options, k3.default_reasoning_mode)).toBe("max");
+    expect(normalizeReasoningMode("off", options, k3.default_reasoning_mode)).toBe("max");
   });
 });

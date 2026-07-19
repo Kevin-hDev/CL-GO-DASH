@@ -59,6 +59,8 @@ pub struct ChatResponse {
 pub struct ModelInfo {
     pub id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub display_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub owned_by: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub context_length: Option<u32>,
@@ -70,6 +72,8 @@ pub struct ModelInfo {
     pub supports_thinking: bool,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub reasoning_modes: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub default_reasoning_mode: Option<String>,
     #[serde(default)]
     pub is_free: bool,
 }

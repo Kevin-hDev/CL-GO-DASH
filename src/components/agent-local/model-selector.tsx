@@ -33,6 +33,10 @@ export function ModelSelector({
   const { anchorRef, floatingRef, floatingStyle, updateFloatingPosition } =
     useFloatingMenuPosition(open, align, 4);
   const { favorites, isFavorite, toggle: toggleFav } = useFavoriteModels();
+  const selectedEntry = groups
+    .get(selectedProvider)
+    ?.find((model) => model.id === selectedModel);
+  const selectedLabel = selectedEntry?.display_name ?? selectedModel;
 
   useKeyboard({ onEscape: () => setOpen(false) });
 
@@ -52,7 +56,10 @@ export function ModelSelector({
     if (!q) return groups;
     const out = new Map<string, AvailableModel[]>();
     for (const [key, models] of groups.entries()) {
-      const kept = models.filter((m) => m.id.toLowerCase().includes(q));
+      const kept = models.filter((model) =>
+        model.id.toLowerCase().includes(q)
+        || model.display_name?.toLowerCase().includes(q),
+      );
       if (kept.length > 0) out.set(key, kept);
     }
     return out;
@@ -133,7 +140,9 @@ export function ModelSelector({
           }}
           className={`ms-trigger${selectedModel ? "" : " ms-trigger-empty"}`}
         >
-          <span className="ms-trigger-label">{selectedModel || t("agentLocal.selectModel")}</span>
+          <span className="ms-trigger-label">
+            {selectedLabel || t("agentLocal.selectModel")}
+          </span>
           <CaretDown size="var(--icon-2xs)" className="ms-trigger-caret" />
         </button>
       </Tooltip>

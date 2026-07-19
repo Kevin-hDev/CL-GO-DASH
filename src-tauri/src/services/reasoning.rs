@@ -34,6 +34,7 @@ pub fn supported_modes(
     if !supports_thinking {
         return &[];
     }
+    let provider = crate::services::llm::route::canonical_provider_id(provider);
     match provider {
         "codex-oauth" if model == "gpt-5.6-sol" || model == "gpt-5.6-terra" => {
             &["low", "medium", "high", "xhigh", "max", "ultra"]
@@ -71,6 +72,9 @@ pub fn supported_modes(
             &["off", "high"]
         }
         "mistral" => &[],
+        "moonshot" if crate::services::llm::providers::moonshot::is_k3(&lower(model)) => {
+            &["low", "high", "max"]
+        }
         "moonshot"
             if crate::services::llm::providers::moonshot::is_forced_thinking(&lower(model)) =>
         {
@@ -87,6 +91,7 @@ pub fn supported_modes(
 }
 
 pub fn provider_model_supports_thinking(provider: &str, model: &str) -> bool {
+    let provider = crate::services::llm::route::canonical_provider_id(provider);
     match provider {
         "codex-oauth" => true,
         "ollama" => is_gpt_oss(model),
@@ -107,6 +112,7 @@ pub fn normalize_for_model(
     requested: Option<&str>,
     supports_thinking: bool,
 ) -> Option<String> {
+    let provider = crate::services::llm::route::canonical_provider_id(provider);
     let modes = supported_modes(provider, model, supports_thinking);
     if modes.is_empty() {
         return None;
@@ -116,6 +122,20 @@ pub fn normalize_for_model(
     }
     if provider == "codex-oauth" && model == "gpt-5.3-codex-spark" {
         return Some("high".to_string());
+    }
+    if provider == "moonshot" {
+        let preferred = crate::services::llm::runtime_models::lookup(provider, model)
+            .and_then(|entry| entry.default_reasoning_mode)
+            .or_else(|| {
+                crate::services::llm::providers::moonshot::default_reasoning_mode(&lower(model))
+                    .map(str::to_string)
+            });
+        if preferred
+            .as_ref()
+            .is_some_and(|mode| modes.contains(&mode.as_str()))
+        {
+            return preferred;
+        }
     }
     if modes.contains(&"medium") {
         return Some("medium".to_string());

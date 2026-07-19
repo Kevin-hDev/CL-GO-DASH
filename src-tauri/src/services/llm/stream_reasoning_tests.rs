@@ -42,13 +42,27 @@ fn moonshot_switchable_can_disable_thinking() {
     assert_eq!(off["thinking"], json!({ "type": "disabled" }));
 
     let auto = payload("moonshot", "kimi-k2.5", Some("auto"));
-    assert!(auto.get("thinking").is_none());
+    assert_eq!(auto["thinking"], json!({ "type": "enabled" }));
 
     let forced = payload("moonshot", "kimi-k2-thinking", Some("auto"));
-    assert!(forced.get("thinking").is_none());
+    assert_eq!(forced["thinking"], json!({ "type": "enabled" }));
 
     let k27 = payload("moonshot", "kimi-k2.7-code", Some("auto"));
-    assert!(k27.get("thinking").is_none());
+    assert_eq!(k27["thinking"], json!({ "type": "enabled" }));
+}
+
+#[test]
+fn moonshot_k3_sends_mandatory_thinking_effort() {
+    for effort in ["low", "high", "max"] {
+        assert_eq!(
+            payload("moonshot", "k3", Some(effort))["thinking"],
+            json!({ "type": "enabled", "effort": effort })
+        );
+    }
+    assert_eq!(
+        payload("moonshot", "k3", Some("off"))["thinking"],
+        json!({ "type": "enabled", "effort": "max" })
+    );
 }
 
 #[test]

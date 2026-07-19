@@ -62,14 +62,15 @@ impl LlmRoute {
                 let token = llm_oauth::access_token(provider)
                     .await
                     .map_err(|_| RouteError::Unauthorized)?;
-                let response = send_oauth(client, provider, &token.value, &build).await?;
+                let response = send_oauth(client, provider, purpose, &token.value, &build).await?;
                 if oauth_401_action(response.status().as_u16(), false) != OAuth401Action::Refresh {
                     return Ok(response);
                 }
                 let refreshed = llm_oauth::force_refresh(provider, token.generation)
                     .await
                     .map_err(|_| RouteError::Unauthorized)?;
-                let response = send_oauth(client, provider, &refreshed.value, &build).await?;
+                let response =
+                    send_oauth(client, provider, purpose, &refreshed.value, &build).await?;
                 if oauth_401_action(response.status().as_u16(), true) == OAuth401Action::Invalidate
                 {
                     llm_oauth::invalidate(provider).await;
@@ -106,13 +107,15 @@ fn oauth_401_action(status: u16, already_refreshed: bool) -> OAuth401Action {
 async fn send_oauth<F>(
     client: &AuthenticatedClient,
     provider: LlmOAuthProvider,
+    purpose: RequestPurpose,
     token: &str,
     build: &F,
 ) -> Result<Response, RouteError>
 where
     F: Fn(&str, HeaderMap) -> RequestBuilder,
 {
-    let headers = llm_oauth::request_headers(provider).map_err(|_| RouteError::Network)?;
+    let headers =
+        llm_oauth::request_headers_for(provider, purpose).map_err(|_| RouteError::Network)?;
     client
         .send(build(token, headers))
         .await

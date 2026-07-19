@@ -18,6 +18,9 @@ describe("provider usage translations", () => {
       expect(serialized).toContain('"remainingPercent"');
       expect(serialized).toContain('"generalLimitsTitle"');
       expect(serialized).toContain('"namedLimitsTitle"');
+      expect(serialized).toContain('"extra_usage_balance"');
+      expect(serialized).toContain('"extra_usage_monthly_limit"');
+      expect(serialized).toContain('"extra_usage_monthly_used"');
     }
   });
 });

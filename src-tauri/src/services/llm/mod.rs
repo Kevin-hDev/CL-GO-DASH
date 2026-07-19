@@ -11,6 +11,9 @@ mod agent_loop_request;
 pub(crate) mod agent_loop_tools;
 pub mod catalog;
 pub mod compress_hook;
+mod kimi_models;
+#[cfg(test)]
+mod kimi_models_tests;
 pub mod model_pricing;
 pub mod model_registry;
 mod model_registry_refresh;

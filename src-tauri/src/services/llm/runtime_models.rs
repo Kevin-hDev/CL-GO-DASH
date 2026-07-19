@@ -45,12 +45,14 @@ mod tests {
     fn model(id: String) -> ModelInfo {
         ModelInfo {
             id,
+            display_name: None,
             owned_by: None,
             context_length: Some(256_000),
             supports_tools: true,
             supports_vision: true,
             supports_thinking: true,
             reasoning_modes: vec!["auto".to_string()],
+            default_reasoning_mode: Some("auto".to_string()),
             is_free: true,
         }
     }

@@ -11,6 +11,7 @@ export interface OAuthModelInfo {
   supports_vision: boolean;
   supports_thinking: boolean;
   reasoning_modes?: ReasoningMode[];
+  default_reasoning_mode?: ReasoningMode;
   interactive_only: boolean;
 }
 
@@ -45,6 +46,7 @@ export function mapOAuthModels(models: OAuthModelInfo[]): Map<string, AvailableM
     if (!provider || typeof model.id !== "string" || model.id.length === 0 || model.id.length > 128) continue;
     const mapped: AvailableModel = {
       id: model.id,
+      display_name: model.display_name,
       provider_id: provider.id,
       provider_name: provider.name,
       auth_source: "oauth",
@@ -53,6 +55,7 @@ export function mapOAuthModels(models: OAuthModelInfo[]): Map<string, AvailableM
       supports_vision: model.supports_vision,
       supports_thinking: model.supports_thinking,
       reasoning_modes: model.reasoning_modes,
+      default_reasoning_mode: model.default_reasoning_mode,
       is_free: true,
       interactive_only: model.interactive_only,
       hint: model.context_length ? `${Math.round(model.context_length / 1000)}K ctx` : undefined,

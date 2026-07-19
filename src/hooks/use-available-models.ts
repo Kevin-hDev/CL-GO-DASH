@@ -5,36 +5,25 @@ import { cleanupTauriListener } from "@/lib/tauri-listen";
 import type { OllamaModel } from "@/types/agent";
 import type { ProviderSpec } from "@/types/api";
 import type { ReasoningMode } from "@/lib/reasoning-modes";
+import type { AvailableModel } from "./available-model-types";
 import {
   fetchOAuthModels, invalidateOAuthModelsCache, mapOAuthModels, mapOAuthResponse,
   OAUTH_MODELS_UPDATED_EVENT,
 } from "./oauth-models";
 
 export { mapOAuthModels, mapOAuthResponse };
-
-export interface AvailableModel {
-  id: string;
-  provider_id: string;
-  provider_name: string;
-  auth_source?: "local" | "api" | "oauth";
-  is_local: boolean;
-  supports_tools: boolean;
-  supports_vision?: boolean;
-  supports_thinking?: boolean;
-  reasoning_modes?: ReasoningMode[];
-  is_free?: boolean;
-  hint?: string;
-  interactive_only?: boolean;
-}
+export type { AvailableModel } from "./available-model-types";
 
 interface LlmModelInfo {
   id: string;
+  display_name?: string;
   owned_by?: string;
   context_length?: number;
   supports_tools: boolean;
   supports_vision?: boolean;
   supports_thinking?: boolean;
   reasoning_modes?: ReasoningMode[];
+  default_reasoning_mode?: ReasoningMode;
   is_free?: boolean;
 }
 
@@ -82,6 +71,7 @@ async function fetchCloudModels(): Promise<Map<string, AvailableModel[]>> {
     const mapped = models.map(
       (m): AvailableModel => ({
         id: m.id,
+        display_name: m.display_name,
         provider_id: spec.id,
         provider_name: spec.display_name,
         auth_source: "api",
@@ -90,6 +80,7 @@ async function fetchCloudModels(): Promise<Map<string, AvailableModel[]>> {
         supports_vision: m.supports_vision ?? false,
         supports_thinking: m.supports_thinking ?? false,
         reasoning_modes: m.reasoning_modes,
+        default_reasoning_mode: m.default_reasoning_mode,
         is_free: m.is_free ?? false,
         hint: m.context_length ? `${Math.round(m.context_length / 1000)}K ctx` : undefined,
       }),

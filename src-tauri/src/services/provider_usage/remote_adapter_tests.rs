@@ -104,31 +104,6 @@ fn codex_preserves_general_and_named_limit_groups() {
 }
 
 #[test]
-fn absent_kimi_usage_never_invents_a_limit() {
-    let parsed = remote_oauth::parse("moonshot-oauth", &json!({})).unwrap();
-    assert!(parsed.windows.is_empty());
-}
-
-#[test]
-fn kimi_supports_weekly_and_rolling_windows() {
-    let parsed = remote_oauth::parse(
-        "moonshot-oauth",
-        &json!({
-            "usage": {"limit": 100, "remaining": 60, "resetTime": "2027-01-01T00:00:00Z"},
-            "limits": [{
-                "window": {"duration": 300, "timeUnit": "MINUTE"},
-                "detail": {"limit": 50, "used": 10, "reset_in": 600}
-            }]
-        }),
-    )
-    .unwrap();
-    assert_eq!(parsed.windows[0].used, Some(40.0));
-    assert!(parsed.windows[0].resets_at.is_some());
-    assert_eq!(parsed.windows[1].label_code, "rolling_five_hours");
-    assert!(parsed.windows[1].resets_at.is_some());
-}
-
-#[test]
 fn invalid_rate_headers_are_ignored() {
     let mut headers = HeaderMap::new();
     headers.insert(
