@@ -21,6 +21,7 @@
 ### Security and reliability
 
 - **OAuth and telemetry hardening** — protected concurrent login, refresh, logout, account switching, usage refreshes, timestamps, and provider-specific price resolution while keeping API and OAuth credentials strictly separated.
+- **Credential and session protection** — added pre-provider secret redaction, private atomic session storage, and one-time cleanup of legacy OAuth artifacts and historical session data without changing active vault credentials.
 - **Clear subscription errors** — Grok and Kimi membership or credit errors now use stable, non-sensitive error codes instead of exposing provider response bodies.
 - **Reliable Git state and operations** — added validated and bounded Git inputs, safer delete and merge confirmations, conflict-aware merges, credential-safe push errors, synchronized worktree refreshes, and clear loading or partial-change states.
 
