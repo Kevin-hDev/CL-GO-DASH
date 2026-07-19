@@ -38,6 +38,7 @@ describe("GitDiffPreview", () => {
         source={{
           kind: "git-diff",
           mode: "working",
+          status: "modified",
           commitId: "a".repeat(40),
           filePath: "src/example.txt",
           expectedBranch: "main",
@@ -47,7 +48,9 @@ describe("GitDiffPreview", () => {
 
     await waitFor(() => expect(screen.getByText("old")).toBeInTheDocument());
     expect(screen.getByText("new")).toBeInTheDocument();
-    expect(container.querySelector(".gdp-hunk-header")).toHaveTextContent("@@ -4,2 +4,2 @@");
+    expect(screen.getByText("filePreview.gitStatus.modified")).toBeInTheDocument();
+    expect(container.querySelector(".gdp-hunk-header")).toBeNull();
+    expect(container).not.toHaveTextContent("@@");
     expect(screen.getByText("filePreview.diffTruncated")).toBeInTheDocument();
   });
 
@@ -61,6 +64,7 @@ describe("GitDiffPreview", () => {
         source={{
           kind: "git-diff",
           mode: "commit",
+          status: "renamed",
           commitId: "b".repeat(40),
           filePath: "src/new.txt",
           previousPath: "src/old.txt",
@@ -71,6 +75,48 @@ describe("GitDiffPreview", () => {
 
     await waitFor(() => expect(screen.getByText("src/old.txt")).toBeInTheDocument());
     expect(screen.getByText("src/new.txt")).toBeInTheDocument();
+    expect(screen.getByText("filePreview.gitStatus.renamed")).toBeInTheDocument();
     expect(screen.queryByText("filePreview.diffUnavailable")).not.toBeInTheDocument();
+  });
+
+  it("sépare simplement les modifications éloignées", async () => {
+    readGitDiffPreview.mockResolvedValue({
+      binary: false,
+      truncated: false,
+      hunks: [
+        {
+          old_start: 1,
+          old_lines: 1,
+          new_start: 1,
+          new_lines: 1,
+          lines: [{ kind: "added", content: "first", old_line: null, new_line: 1 }],
+        },
+        {
+          old_start: 20,
+          old_lines: 1,
+          new_start: 20,
+          new_lines: 1,
+          lines: [{ kind: "added", content: "second", old_line: null, new_line: 20 }],
+        },
+      ],
+    });
+
+    const { container } = render(
+      <GitDiffPreview
+        path="src/example.txt"
+        source={{
+          kind: "git-diff",
+          mode: "commit",
+          status: "modified",
+          commitId: "c".repeat(40),
+          filePath: "src/example.txt",
+          expectedBranch: "main",
+        }}
+      />,
+    );
+
+    await waitFor(() => expect(screen.getByText("second")).toBeInTheDocument());
+    expect(container.querySelectorAll(".gdp-hunk-separator")).toHaveLength(1);
+    expect(container).not.toHaveTextContent("@@");
   });
 });

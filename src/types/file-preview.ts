@@ -1,5 +1,6 @@
 type FileOperationType = "read" | "write" | "edit";
 type FileOperationKind = "file" | "plan";
+export type GitDiffFileStatus = "added" | "modified" | "deleted" | "renamed" | "copied" | "changed";
 
 export interface GitFilePreviewSource {
   kind: "git";
@@ -12,6 +13,7 @@ export interface GitFilePreviewSource {
 export interface GitDiffPreviewSource {
   kind: "git-diff";
   mode: "commit" | "working";
+  status: GitDiffFileStatus;
   commitId: string;
   filePath: string;
   previousPath?: string;

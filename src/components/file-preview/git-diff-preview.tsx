@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { highlightLines } from "@/lib/highlight";
 import { shouldWrapFile } from "@/lib/code-language";
@@ -54,34 +54,37 @@ export function GitDiffPreview({ source, path, baseDir }: GitDiffPreviewProps) {
 
   const content = (
     <>
-      {source.previousPath && (
-        <div className="gdp-rename">
-          <span>{source.previousPath}</span>
-          <span aria-hidden="true">→</span>
-          <span>{source.filePath}</span>
-        </div>
-      )}
+      <div className={`gdp-status gdp-status-${source.status}`}>
+        <span className="gdp-status-label">{t(`filePreview.gitStatus.${source.status}`)}</span>
+        {source.previousPath && (
+          <span className="gdp-status-paths">
+            <span>{source.previousPath}</span>
+            <span className="gdp-status-arrow" aria-hidden="true">→</span>
+            <span>{source.filePath}</span>
+          </span>
+        )}
+      </div>
       {hunks.map((hunk, hunkIndex) => (
-        <div className="gdp-hunk" key={`${hunk.old_start}:${hunk.new_start}:${hunkIndex}`}>
-          <div className="gdp-hunk-header">
-            {`@@ -${formatRange(hunk.old_start, hunk.old_lines)} +${formatRange(hunk.new_start, hunk.new_lines)} @@`}
+        <Fragment key={`${hunk.old_start}:${hunk.new_start}:${hunkIndex}`}>
+          {hunkIndex > 0 && <div className="gdp-hunk-separator" aria-hidden="true">…</div>}
+          <div className="gdp-hunk">
+            {hunk.lines.map((line, lineIndex) => {
+              const mode = line.kind === "added" ? "ok" : line.kind === "deleted" ? "error" : "context";
+              const prefix = line.kind === "added" ? "+" : line.kind === "deleted" ? "-" : " ";
+              return (
+                <div className={`tp-line tp-line-${mode}`} key={lineIndex}>
+                  <span className="gdp-line-number">{line.old_line ?? ""}</span>
+                  <span className="gdp-line-number">{line.new_line ?? ""}</span>
+                  <span className={`tp-prefix tp-prefix-${mode}`}>{prefix}</span>
+                  <span
+                    className={`tp-code tp-code-${mode}`}
+                    dangerouslySetInnerHTML={{ __html: hunk.highlighted[lineIndex] || " " }}
+                  />
+                </div>
+              );
+            })}
           </div>
-          {hunk.lines.map((line, lineIndex) => {
-            const mode = line.kind === "added" ? "ok" : line.kind === "deleted" ? "error" : "context";
-            const prefix = line.kind === "added" ? "+" : line.kind === "deleted" ? "-" : " ";
-            return (
-              <div className={`tp-line tp-line-${mode}`} key={lineIndex}>
-                <span className="gdp-line-number">{line.old_line ?? ""}</span>
-                <span className="gdp-line-number">{line.new_line ?? ""}</span>
-                <span className={`tp-prefix tp-prefix-${mode}`}>{prefix}</span>
-                <span
-                  className={`tp-code tp-code-${mode}`}
-                  dangerouslySetInnerHTML={{ __html: hunk.highlighted[lineIndex] || " " }}
-                />
-              </div>
-            );
-          })}
-        </div>
+        </Fragment>
       ))}
       {state.data?.truncated && <div className="gdp-note">{t("filePreview.diffTruncated")}</div>}
     </>
@@ -92,8 +95,4 @@ export function GitDiffPreview({ source, path, baseDir }: GitDiffPreviewProps) {
       {wrap ? content : <div className="tp-inner">{content}</div>}
     </div>
   );
-}
-
-function formatRange(start: number, count: number): string {
-  return count === 1 ? String(start) : `${start},${count}`;
 }

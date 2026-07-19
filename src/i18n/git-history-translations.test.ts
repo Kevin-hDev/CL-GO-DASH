@@ -14,6 +14,7 @@ describe("git history translations", () => {
         listModes: { uncommitted: string };
         diffUnavailable: string;
         diffTruncated: string;
+        gitStatus: Record<string, string>;
       };
       agentLocal: { sessionSummary: { commits: { title: string; error: string } } };
     }>;
@@ -21,6 +22,11 @@ describe("git history translations", () => {
       expect(locale.filePreview.listModes.uncommitted).toBeTruthy();
       expect(locale.filePreview.diffUnavailable).toBeTruthy();
       expect(locale.filePreview.diffTruncated).toBeTruthy();
+      expect(Object.keys(locale.filePreview.gitStatus)).toHaveLength(6);
+      expect(locale.filePreview.gitStatus.added).toBeTruthy();
+      expect(locale.filePreview.gitStatus.modified).toBeTruthy();
+      expect(locale.filePreview.gitStatus.deleted).toBeTruthy();
+      expect(locale.filePreview.gitStatus.renamed).toBeTruthy();
       expect(locale.agentLocal.sessionSummary.commits.title).toBeTruthy();
       expect(locale.agentLocal.sessionSummary.commits.error).toBeTruthy();
     }

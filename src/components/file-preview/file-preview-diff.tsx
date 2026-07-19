@@ -45,8 +45,8 @@ export function FilePreviewDiff({
   );
 
   const ctx = useMemo(
-    () => extractDiffContext(currentContent, startLine, (operation.newText ?? "").split("\n").length),
-    [currentContent, startLine, operation.newText],
+    () => extractDiffContext(currentContent, startLine, newLines.length),
+    [currentContent, startLine, newLines.length],
   );
 
   const beforeLines = useMemo(

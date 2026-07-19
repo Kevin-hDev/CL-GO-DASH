@@ -16,6 +16,7 @@ describe("git-file-preview", () => {
     }));
     expect(operation.gitDiff).toEqual(expect.objectContaining({
       mode: "commit",
+      status: "deleted",
       commitId: "a".repeat(40),
       filePath: "src/old.ts",
     }));
@@ -37,6 +38,7 @@ describe("git-file-preview", () => {
     }));
     expect(operations[0]?.gitDiff).toEqual(expect.objectContaining({
       mode: "working",
+      status: "modified",
       commitId: "b".repeat(40),
       expectedBranch: "feature",
     }));
@@ -55,5 +57,15 @@ describe("git-file-preview", () => {
     }, "feature");
 
     expect(operation.gitDiff?.previousPath).toBe("src/old.ts");
+    expect(operation.gitDiff?.status).toBe("renamed");
+  });
+
+  it("présente un nouveau fichier comme créé", () => {
+    const [operation] = uncommittedFileOperations({
+      head_commit: "d".repeat(40),
+      files: [{ path: "new.txt", status: "new", additions: 2, deletions: 0 }],
+    }, "main");
+
+    expect(operation.gitDiff?.status).toBe("added");
   });
 });

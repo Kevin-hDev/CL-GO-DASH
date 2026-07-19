@@ -853,6 +853,14 @@
     "fileNotFound": "ファイルを読み取れませんでした。削除または移動された可能性があります。",
     "diffUnavailable": "このファイルの変更を表示できません。",
     "diffTruncated": "プレビューは制限されています。このファイルにはさらに変更があります。",
+    "gitStatus": {
+      "added": "作成",
+      "modified": "変更",
+      "deleted": "削除",
+      "renamed": "名前変更",
+      "copied": "コピー",
+      "changed": "変更"
+    },
     "togglePanel": "ファイルプレビュー",
     "reduce": "縮小",
     "fullscreen": "全画面",

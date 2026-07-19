@@ -906,6 +906,14 @@
     "fileNotFound": "Le fichier n'a pas pu être lu. Il a peut-être été supprimé ou déplacé.",
     "diffUnavailable": "Les différences de ce fichier ne peuvent pas être affichées.",
     "diffTruncated": "Aperçu limité : le fichier contient davantage de modifications.",
+    "gitStatus": {
+      "added": "Créé",
+      "modified": "Modifié",
+      "deleted": "Supprimé",
+      "renamed": "Renommé",
+      "copied": "Copié",
+      "changed": "Modifié"
+    },
     "togglePanel": "Aperçu fichiers",
     "reduce": "Réduire",
     "fullscreen": "Plein écran",

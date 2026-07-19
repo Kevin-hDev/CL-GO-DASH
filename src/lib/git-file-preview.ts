@@ -6,6 +6,7 @@ import type {
 } from "@/hooks/git-types";
 import type {
   FileOperation,
+  GitDiffFileStatus,
   GitDiffPreviewSource,
   GitFilePreviewSource,
 } from "@/types/file-preview";
@@ -25,7 +26,14 @@ export function commitFileOperation(
     additions: file.additions,
     deletions: file.deletions,
     source: gitSource(commit.id, file.path, branch, useParent),
-    gitDiff: gitDiffSource("commit", commit.id, file.path, branch, file.previous_path),
+    gitDiff: gitDiffSource(
+      "commit",
+      file.status,
+      commit.id,
+      file.path,
+      branch,
+      file.previous_path,
+    ),
   };
 }
 
@@ -43,6 +51,7 @@ export function uncommittedFileOperations(
     deletions: file.deletions,
     gitDiff: gitDiffSource(
       "working",
+      normalizeStatus(file.status),
       snapshot.head_commit,
       file.path,
       branch,
@@ -56,14 +65,33 @@ export function uncommittedFileOperations(
 
 function gitDiffSource(
   mode: GitDiffPreviewSource["mode"],
+  status: GitDiffFileStatus,
   commitId: string,
   filePath: string,
   expectedBranch: string,
   previousPath?: string | null,
 ): GitDiffPreviewSource {
-  const source: GitDiffPreviewSource = { kind: "git-diff", mode, commitId, filePath, expectedBranch };
+  const source: GitDiffPreviewSource = {
+    kind: "git-diff",
+    mode,
+    status,
+    commitId,
+    filePath,
+    expectedBranch,
+  };
   if (previousPath) source.previousPath = previousPath;
   return source;
+}
+
+function normalizeStatus(status: string): GitDiffFileStatus {
+  switch (status) {
+    case "new": return "added";
+    case "modified": return "modified";
+    case "deleted": return "deleted";
+    case "renamed": return "renamed";
+    case "copied": return "copied";
+    default: return "changed";
+  }
 }
 
 function gitSource(

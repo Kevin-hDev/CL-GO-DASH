@@ -853,6 +853,14 @@
     "fileNotFound": "Die Datei konnte nicht gelesen werden. Sie wurde möglicherweise gelöscht oder verschoben.",
     "diffUnavailable": "Die Änderungen dieser Datei können nicht angezeigt werden.",
     "diffTruncated": "Begrenzte Vorschau: Diese Datei enthält weitere Änderungen.",
+    "gitStatus": {
+      "added": "Erstellt",
+      "modified": "Geändert",
+      "deleted": "Gelöscht",
+      "renamed": "Umbenannt",
+      "copied": "Kopiert",
+      "changed": "Geändert"
+    },
     "togglePanel": "Dateivorschau",
     "reduce": "Verkleinern",
     "fullscreen": "Vollbild",

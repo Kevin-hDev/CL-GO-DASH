@@ -61,10 +61,16 @@ export function highlightLines(code: string, path: string): string[] {
   const resolved = LANG_ALIASES[lang] ?? lang;
   const registered = lowlight.registered(resolved);
 
-  const lines = code.split("\n");
+  const lines = splitDisplayLines(code);
   if (!registered) return lines.map(escapeHtml);
 
   const tree = lowlight.highlight(resolved, code);
   const html = toHtml(tree);
-  return html.split("\n");
+  return splitDisplayLines(html);
+}
+
+function splitDisplayLines(value: string): string[] {
+  const lines = value.split("\n");
+  if (value.endsWith("\n") && lines.length > 1) lines.pop();
+  return lines;
 }
