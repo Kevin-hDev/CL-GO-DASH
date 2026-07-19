@@ -16,7 +16,9 @@ const CUSTOM_PARAMETER_KEY = /^[a-zA-Z][a-zA-Z0-9_]*$/;
 export interface ParameterEditorState {
   values: Record<SingleValueParameterKey, string>;
   stopValues: string[];
+  stopIds: string[];
   customParameters: ModelParameter[];
+  customParameterIds: string[];
 }
 
 export function createParameterEditorState(
@@ -44,7 +46,12 @@ export function createParameterEditorState(
   return {
     values,
     stopValues: stopValues.length > 0 ? stopValues : [""],
+    stopIds: Array.from(
+      { length: Math.max(stopValues.length, 1) },
+      createParameterRowId,
+    ),
     customParameters,
+    customParameterIds: Array.from({ length: customParameters.length }, createParameterRowId),
   };
 }
 
@@ -73,6 +80,20 @@ export function hasInvalidCustomParameter(state: ParameterEditorState): boolean 
       || trimmedKey.length > MAX_PARAMETER_KEY_LENGTH
       || trimmedValue.length > MAX_PARAMETER_VALUE_LENGTH;
   });
+}
+
+export function hasInvalidOfficialParameter(state: ParameterEditorState): boolean {
+  return MODEL_PARAMETER_DEFINITIONS.some((definition) => {
+    if (definition.key === "stop" || definition.valueType === "text") return false;
+    const value = state.values[definition.key].trim();
+    if (!value) return false;
+    if (definition.valueType === "integer") return !/^[+-]?\d+$/.test(value);
+    return !Number.isFinite(Number(value));
+  });
+}
+
+export function createParameterRowId(): string {
+  return globalThis.crypto.randomUUID();
 }
 
 function emptyOfficialValues(): Record<SingleValueParameterKey, string> {

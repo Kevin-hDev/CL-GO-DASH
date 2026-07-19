@@ -106,6 +106,7 @@ impl OllamaClient {
         name: &str,
         entries: Vec<(String, String)>,
     ) -> Result<(), String> {
+        super::ollama_parameter_validation::validate_parameter_entries(&entries)?;
         let current = self.get_modelfile(name).await?;
         let mut parsed = parse_modelfile(&current);
         parsed.parameters.clear();

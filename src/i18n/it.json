@@ -539,6 +539,7 @@
     "customParameterValue": "Valore",
     "addCustomParameter": "+ Aggiungi un parametro personalizzato",
     "invalidCustomParameter": "Controlla il nome e il valore del parametro personalizzato.",
+    "invalidOfficialParameter": "Controlla i valori numerici dei parametri ufficiali.",
     "parameterGroups": {
       "context": "Contesto",
       "length": "Lunghezza della risposta",

@@ -49,6 +49,7 @@ export function ParameterField({ definition, value, t, onChange }: ParameterFiel
 interface StopParameterFieldProps {
   definition: ModelParameterDefinition;
   values: string[];
+  rowIds: string[];
   t: TFunction;
   onChange: (index: number, value: string) => void;
   onAdd: () => void;
@@ -58,6 +59,7 @@ interface StopParameterFieldProps {
 export function StopParameterField({
   definition,
   values,
+  rowIds,
   t,
   onChange,
   onAdd,
@@ -70,7 +72,7 @@ export function StopParameterField({
       <ParameterInfo definition={definition} descriptionId={descriptionId} t={t} />
       <div className="pe-stop-controls">
         {values.map((value, index) => (
-          <div className="pe-value-control" key={index}>
+          <div className="pe-value-control" key={rowIds[index]}>
             <input
               value={value}
               onChange={(event) => onChange(index, event.target.value)}
@@ -81,7 +83,12 @@ export function StopParameterField({
               className="pe-input pe-fixed-input"
             />
             <Tooltip label={t("ollama.removeStopSequence")}>
-              <button type="button" className="ollama-btn pe-clear-btn" onClick={() => onRemove(index)}>
+              <button
+                type="button"
+                className="ollama-btn pe-clear-btn"
+                aria-label={t("ollama.removeStopSequence")}
+                onClick={() => onRemove(index)}
+              >
                 ×
               </button>
             </Tooltip>

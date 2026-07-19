@@ -95,6 +95,31 @@ describe("ParametersEditor catalog", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("ollama.invalidCustomParameter");
     expect(invoke).not.toHaveBeenCalled();
   });
+
+  it("conserve la bonne ligne quand une séquence stop intermédiaire est supprimée", () => {
+    renderEditor([
+      { key: "stop", value: "First" },
+      { key: "stop", value: "Second" },
+      { key: "stop", value: "Third" },
+    ]);
+    const thirdInput = screen.getByLabelText("stop 3");
+
+    fireEvent.click(screen.getAllByRole("button", {
+      name: "ollama.removeStopSequence",
+    })[1]);
+
+    expect(screen.getByLabelText("stop 2")).toBe(thirdInput);
+    expect(screen.getByLabelText("stop 2")).toHaveValue("Third");
+  });
+
+  it("bloque une valeur numérique officielle invalide", async () => {
+    renderEditor([{ key: "num_ctx", value: "1.5" }]);
+
+    fireEvent.click(screen.getByText("ollama.save"));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("ollama.invalidOfficialParameter");
+    expect(invoke).not.toHaveBeenCalled();
+  });
 });
 
 function renderEditor(

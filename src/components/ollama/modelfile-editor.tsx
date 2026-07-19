@@ -17,14 +17,16 @@ export function ModelfileEditor({
   const { t } = useTranslation();
   const [content, setContent] = useState(initialContent);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSave = async () => {
     setSaving(true);
+    setError(null);
     try {
       await invoke("update_modelfile", { name: modelName, content });
       onSave(content);
-    } catch (e: unknown) {
-      console.error("[ollama] save modelfile:", e);
+    } catch {
+      setError(t("errors.operationFailed"));
     } finally {
       setSaving(false);
     }
@@ -36,6 +38,7 @@ export function ModelfileEditor({
       cancelLabel={t("ollama.cancel")}
       saveLabel={t("ollama.save")}
       saving={saving}
+      error={error}
       fillAvailableSpace
       onCancel={onCancel}
       onSave={() => void handleSave()}

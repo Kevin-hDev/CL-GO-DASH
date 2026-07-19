@@ -103,18 +103,26 @@ pub async fn update_modelfile(
 ) -> Result<(), String> {
     let was_customized = model_customizations::is_model_customized(&name);
     let previous_behavior = ollama_behavior_overrides::get(&name);
-    if previous_behavior.is_some() {
-        let system = crate::services::agent_local::modelfile_parser::parse_modelfile(&content)
-            .system
-            .unwrap_or_default();
-        ollama_behavior_overrides::set(&name, &system)?;
+    let current_content = ollama.get_modelfile(&name).await?;
+    let updated_behavior =
+        crate::services::agent_local::ollama_behavior_sync::system_prompt_after_modelfile_edit(
+            previous_behavior.as_deref(),
+            &current_content,
+            &content,
+        );
+    if let Some(system) = updated_behavior.as_deref() {
+        ollama_behavior_overrides::set(&name, system)?;
     }
     if let Err(error) = model_customizations::mark_model_customized(&name) {
-        restore_behavior(&name, previous_behavior.as_deref());
+        if updated_behavior.is_some() {
+            restore_behavior(&name, previous_behavior.as_deref());
+        }
         return Err(error);
     }
     if let Err(e) = ollama.update_modelfile(&name, &content).await {
-        restore_behavior(&name, previous_behavior.as_deref());
+        if updated_behavior.is_some() {
+            restore_behavior(&name, previous_behavior.as_deref());
+        }
         if !was_customized {
             let _ = model_customizations::clear_model_customized(&name);
         }

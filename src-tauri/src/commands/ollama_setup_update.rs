@@ -88,8 +88,7 @@ async fn rollback_after_failed_restart(
 
     let failed = dest.with_file_name("ollama-bundle-failed");
     remove_temp_dir(&failed)?;
-    std::fs::rename(dest, &failed).map_err(|_| "ollama-rollback-error".to_string())?;
-    std::fs::rename(backup, dest).map_err(|_| "ollama-rollback-error".to_string())?;
+    restore_previous_install(dest, backup, &failed)?;
 
     let cancel = CancellationToken::new();
     let restored = super::ollama_setup_start::start_sidecar_and_wait(app, on_progress, &cancel)
@@ -101,6 +100,17 @@ async fn rollback_after_failed_restart(
     } else {
         Err("ollama-rollback-error".into())
     }
+}
+
+fn restore_previous_install(dest: &Path, backup: &Path, failed: &Path) -> Result<(), String> {
+    std::fs::rename(dest, failed).map_err(|_| "ollama-rollback-error".to_string())?;
+    if std::fs::rename(backup, dest).is_ok() {
+        return Ok(());
+    }
+    if std::fs::rename(failed, dest).is_err() {
+        eprintln!("[ollama-update] failed installation recovery failed");
+    }
+    Err("ollama-rollback-error".into())
 }
 
 fn remove_temp_dir(path: &Path) -> Result<(), String> {
@@ -145,5 +155,22 @@ mod tests {
             std::fs::read_to_string(backup.join("version")).unwrap(),
             "old"
         );
+    }
+
+    #[test]
+    fn failed_backup_restore_puts_the_new_install_back_in_place() {
+        let root = tempfile::tempdir().unwrap();
+        let dest = root.path().join("ollama-bundle");
+        let missing_backup = root.path().join("ollama-bundle-old");
+        let failed = root.path().join("ollama-bundle-failed");
+        std::fs::create_dir(&dest).unwrap();
+        std::fs::write(dest.join("version"), "new").unwrap();
+
+        assert!(restore_previous_install(&dest, &missing_backup, &failed).is_err());
+        assert_eq!(
+            std::fs::read_to_string(dest.join("version")).unwrap(),
+            "new"
+        );
+        assert!(!failed.exists());
     }
 }

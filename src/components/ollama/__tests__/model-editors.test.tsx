@@ -96,6 +96,22 @@ describe("Ollama model editors", () => {
     });
   });
 
+  it("affiche une erreur générique si le modelfile ne peut pas être sauvegardé", async () => {
+    vi.mocked(invoke).mockRejectedValueOnce(new Error("internal path"));
+    render(
+      <ModelfileEditor
+        modelName={modelName}
+        initialContent="FROM llama3.2"
+        onSave={vi.fn()}
+        onCancel={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByText("ollama.save"));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("errors.operationFailed");
+  });
+
   it("sauvegarde les paramètres depuis la carte", async () => {
     const onSave = vi.fn();
     render(

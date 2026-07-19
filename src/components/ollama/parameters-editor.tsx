@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
-import { Tooltip } from "@/components/ui/tooltip";
+import { CustomParameterFields } from "./custom-parameter-fields";
 import { ModelEditorShell } from "./model-editor-shell";
 import {
   MODEL_PARAMETER_DEFINITIONS,
@@ -9,12 +9,11 @@ import {
   type SingleValueParameterKey,
 } from "./model-parameter-catalog";
 import {
-  MAX_CUSTOM_PARAMETERS,
-  MAX_PARAMETER_KEY_LENGTH,
-  MAX_PARAMETER_VALUE_LENGTH,
   buildParameterPayload,
+  createParameterRowId,
   createParameterEditorState,
   hasInvalidCustomParameter,
+  hasInvalidOfficialParameter,
   type ParameterEditorState,
 } from "./parameter-editor-state";
 import { ParameterField, StopParameterField } from "./parameter-fields";
@@ -58,7 +57,9 @@ export function ParametersEditor({
   const removeStop = (index: number) => {
     setEditorState((current) => {
       const stopValues = current.stopValues.filter((_, itemIndex) => itemIndex !== index);
-      return { ...current, stopValues: stopValues.length > 0 ? stopValues : [""] };
+      const stopIds = current.stopIds.filter((_, itemIndex) => itemIndex !== index);
+      if (stopValues.length > 0) return { ...current, stopValues, stopIds };
+      return { ...current, stopValues: [""], stopIds: [createParameterRowId()] };
     });
   };
 
@@ -75,6 +76,9 @@ export function ParametersEditor({
     setEditorState((current) => ({
       ...current,
       customParameters: current.customParameters.filter((_, itemIndex) => itemIndex !== index),
+      customParameterIds: current.customParameterIds.filter(
+        (_, itemIndex) => itemIndex !== index,
+      ),
     }));
   };
 
@@ -84,6 +88,10 @@ export function ParametersEditor({
     try {
       if (hasInvalidCustomParameter(editorState)) {
         setError(t("ollama.invalidCustomParameter"));
+        return;
+      }
+      if (hasInvalidOfficialParameter(editorState)) {
+        setError(t("ollama.invalidOfficialParameter"));
         return;
       }
       const payload = buildParameterPayload(editorState);
@@ -121,11 +129,13 @@ export function ParametersEditor({
                       key={definition.key}
                       definition={definition}
                       values={editorState.stopValues}
+                      rowIds={editorState.stopIds}
                       t={t}
                       onChange={updateStop}
                       onAdd={() => setEditorState((current) => ({
                         ...current,
                         stopValues: [...current.stopValues, ""],
+                        stopIds: [...current.stopIds, createParameterRowId()],
                       }))}
                       onRemove={removeStop}
                     />
@@ -145,50 +155,18 @@ export function ParametersEditor({
           </section>
         ))}
 
-        <section className="pe-custom-section">
-          <h3 className="pe-group-title">{t("ollama.customParameters")}</h3>
-          <p className="pe-custom-hint">{t("ollama.customParametersHint")}</p>
-          {editorState.customParameters.map((parameter, index) => (
-            <div className="pe-custom-row" key={index}>
-              <input
-                value={parameter.key}
-                onChange={(event) => updateCustom(index, "key", event.target.value)}
-                placeholder={t("ollama.customParameterName")}
-                aria-label={`${t("ollama.customParameterName")} ${index + 1}`}
-                maxLength={MAX_PARAMETER_KEY_LENGTH}
-                className="pe-input pe-custom-key"
-              />
-              <input
-                value={parameter.value}
-                onChange={(event) => updateCustom(index, "value", event.target.value)}
-                placeholder={t("ollama.customParameterValue")}
-                aria-label={`${t("ollama.customParameterValue")} ${index + 1}`}
-                maxLength={MAX_PARAMETER_VALUE_LENGTH}
-                className="pe-input pe-custom-value"
-              />
-              <Tooltip label={t("ollama.remove")}>
-                <button
-                  type="button"
-                  className="ollama-btn pe-clear-btn"
-                  onClick={() => removeCustom(index)}
-                >
-                  ×
-                </button>
-              </Tooltip>
-            </div>
-          ))}
-          <button
-            type="button"
-            className="ollama-btn pe-add-btn"
-            onClick={() => setEditorState((current) => ({
-              ...current,
-              customParameters: [...current.customParameters, { key: "", value: "" }],
-            }))}
-            disabled={editorState.customParameters.length >= MAX_CUSTOM_PARAMETERS}
-          >
-            {t("ollama.addCustomParameter")}
-          </button>
-        </section>
+        <CustomParameterFields
+          parameters={editorState.customParameters}
+          rowIds={editorState.customParameterIds}
+          t={t}
+          onChange={updateCustom}
+          onRemove={removeCustom}
+          onAdd={() => setEditorState((current) => ({
+            ...current,
+            customParameters: [...current.customParameters, { key: "", value: "" }],
+            customParameterIds: [...current.customParameterIds, createParameterRowId()],
+          }))}
+        />
       </div>
     </ModelEditorShell>
   );

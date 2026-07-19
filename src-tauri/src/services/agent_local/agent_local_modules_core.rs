@@ -37,12 +37,14 @@ pub mod model_customizations;
 pub mod model_size;
 pub mod modelfile_parser;
 pub mod ollama_behavior_overrides;
+pub mod ollama_behavior_sync;
 pub mod ollama_client;
 pub mod ollama_collect;
 pub mod ollama_create_payload;
 pub mod ollama_model_helpers;
 pub mod ollama_modelfile_create;
 pub mod ollama_modelfile_system;
+pub mod ollama_parameter_validation;
 pub mod ollama_registry;
 pub mod ollama_registry_details;
 #[cfg(test)]

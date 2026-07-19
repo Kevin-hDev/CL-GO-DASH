@@ -539,6 +539,7 @@
     "customParameterValue": "Wert",
     "addCustomParameter": "+ Benutzerdefinierten Parameter hinzufügen",
     "invalidCustomParameter": "Prüfe Name und Wert des benutzerdefinierten Parameters.",
+    "invalidOfficialParameter": "Prüfe die Zahlenwerte der offiziellen Parameter.",
     "parameterGroups": {
       "context": "Kontext",
       "length": "Antwortlänge",

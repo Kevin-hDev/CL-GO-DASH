@@ -1,5 +1,4 @@
 use std::io::Write;
-use std::path::PathBuf;
 use std::process::Stdio;
 use std::time::Duration;
 use tokio::process::Command;
@@ -25,7 +24,7 @@ pub async fn create_from_modelfile(name: &str, content: &str) -> Result<(), Stri
     })?;
 
     let binary = crate::services::ollama_lifecycle::ollama_binary_path()
-        .unwrap_or_else(|_| PathBuf::from(system_binary_name()));
+        .map_err(|_| "ollama-create-error".to_string())?;
     let mut command = Command::new(binary);
     command
         .arg("create")
@@ -89,14 +88,6 @@ fn is_from_directive(line: &str) -> bool {
         .split_ascii_whitespace()
         .next()
         .is_some_and(|word| word.eq_ignore_ascii_case("FROM"))
-}
-
-fn system_binary_name() -> &'static str {
-    if cfg!(windows) {
-        "ollama.exe"
-    } else {
-        "ollama"
-    }
 }
 
 #[cfg(test)]

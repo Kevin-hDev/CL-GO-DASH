@@ -5,6 +5,7 @@ import {
   buildParameterPayload,
   createParameterEditorState,
   hasInvalidCustomParameter,
+  hasInvalidOfficialParameter,
 } from "./parameter-editor-state";
 
 describe("parameter editor state", () => {
@@ -50,5 +51,18 @@ describe("parameter editor state", () => {
 
     reserved.customParameters[0].key = "invalid-key";
     expect(hasInvalidCustomParameter(reserved)).toBe(true);
+  });
+
+  it("refuse les entiers non stricts et les décimaux non finis", () => {
+    const state = createParameterEditorState([]);
+    state.values.num_ctx = "1.5";
+    expect(hasInvalidOfficialParameter(state)).toBe(true);
+
+    state.values.num_ctx = "32768";
+    state.values.temperature = "1e309";
+    expect(hasInvalidOfficialParameter(state)).toBe(true);
+
+    state.values.temperature = "0.7";
+    expect(hasInvalidOfficialParameter(state)).toBe(false);
   });
 });

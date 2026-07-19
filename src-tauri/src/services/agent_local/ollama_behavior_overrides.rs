@@ -6,26 +6,40 @@ use std::sync::{Mutex, OnceLock};
 const MAX_PROMPTS: usize = 128;
 const MAX_STORE_BYTES: u64 = 8 * 1024 * 1024;
 
-#[derive(Default, Serialize, Deserialize)]
+#[derive(Clone, Default, Serialize, Deserialize)]
 struct BehaviorStore {
     prompts: BTreeMap<String, String>,
 }
 
 pub fn get(model: &str) -> Option<String> {
     super::model_customizations::validate_model_name(model).ok()?;
-    let _guard = store_lock().lock().ok()?;
-    read_store().prompts.remove(model)
+    let store = store_cache().lock().ok()?;
+    store.prompts.get(model).cloned()
 }
 
 pub fn set(model: &str, prompt: &str) -> Result<(), String> {
     super::model_customizations::validate_model_name(model)?;
     let normalized = super::ollama_modelfile_system::normalize_prompt(prompt)?;
-    let _guard = store_lock()
+    let mut store = store_cache()
         .lock()
         .map_err(|_| "ollama-system-store-write".to_string())?;
-    let mut store = read_store();
-    update_store(&mut store, model, normalized)?;
-    write_store(&store)
+    persist_update(&mut store, model, normalized, write_store)
+}
+
+fn persist_update<F>(
+    store: &mut BehaviorStore,
+    model: &str,
+    prompt: Option<String>,
+    persist: F,
+) -> Result<(), String>
+where
+    F: FnOnce(&BehaviorStore) -> Result<(), String>,
+{
+    let mut candidate = store.clone();
+    update_store(&mut candidate, model, prompt)?;
+    persist(&candidate)?;
+    *store = candidate;
+    Ok(())
 }
 
 fn update_store(
@@ -87,9 +101,9 @@ fn store_path() -> PathBuf {
     crate::services::paths::data_dir().join("ollama-system-prompts.json")
 }
 
-fn store_lock() -> &'static Mutex<()> {
-    static LOCK: OnceLock<Mutex<()>> = OnceLock::new();
-    LOCK.get_or_init(|| Mutex::new(()))
+fn store_cache() -> &'static Mutex<BehaviorStore> {
+    static CACHE: OnceLock<Mutex<BehaviorStore>> = OnceLock::new();
+    CACHE.get_or_init(|| Mutex::new(read_store()))
 }
 
 #[cfg(test)]
@@ -122,5 +136,19 @@ mod tests {
 
         assert!(!store.prompts.contains_key("first:model"));
         assert_eq!(store.prompts.get("second:model").map(String::as_str), Some("other"));
+    }
+
+    #[test]
+    fn failed_persistence_does_not_modify_the_memory_cache() {
+        let mut store = BehaviorStore::default();
+        update_store(&mut store, "model:old", Some("old".into())).unwrap();
+
+        let result = persist_update(&mut store, "model:new", Some("new".into()), |_| {
+            Err("write failed".to_string())
+        });
+
+        assert!(result.is_err());
+        assert_eq!(store.prompts.len(), 1);
+        assert_eq!(store.prompts.get("model:old").map(String::as_str), Some("old"));
     }
 }

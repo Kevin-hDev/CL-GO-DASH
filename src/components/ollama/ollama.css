@@ -80,20 +80,6 @@
   background: var(--select-bg);
 }
 
-.ollama-detail-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--space-md);
-  border-bottom: 1px solid var(--edge);
-}
-
-.ollama-detail-name {
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--ink);
-}
-
 .ollama-btn {
   font-size: var(--text-xs);
   padding: 4px 12px;
