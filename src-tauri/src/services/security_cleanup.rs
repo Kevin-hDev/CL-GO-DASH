@@ -60,6 +60,15 @@ fn sanitize_session_files(directory: &Path) -> Result<(), String> {
         if path.extension().and_then(|value| value.to_str()) != Some("json") {
             continue;
         }
+        let file_type = entry
+            .file_type()
+            .map_err(|_| "nettoyage de sécurité impossible".to_string())?;
+        if file_type.is_symlink() {
+            return Err("nettoyage de sécurité impossible".to_string());
+        }
+        if !file_type.is_file() {
+            continue;
+        }
         sanitize_session_file(&path)?;
     }
     Ok(())

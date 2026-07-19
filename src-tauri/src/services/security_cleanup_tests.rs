@@ -75,3 +75,15 @@ fn refuses_to_delete_a_directory_at_a_legacy_file_path() {
     assert!(unexpected.exists());
     assert!(!root.path().join(MARKER_FILE).exists());
 }
+
+#[test]
+fn ignores_a_directory_that_only_looks_like_a_session_file() {
+    let root = TempDir::new().unwrap();
+    let unexpected = root.path().join("agent-sessions/not-a-session.json");
+    fs::create_dir_all(&unexpected).unwrap();
+
+    run_in(root.path()).unwrap();
+
+    assert!(unexpected.is_dir());
+    assert!(root.path().join(MARKER_FILE).is_file());
+}
