@@ -1,5 +1,9 @@
 import { invoke } from "@tauri-apps/api/core";
-import type { BranchInfo, WorktreeInfo } from "@/hooks/git-types";
+import type {
+  BranchInfo,
+  GitUncommittedSnapshot,
+  WorktreeInfo,
+} from "@/hooks/git-types";
 
 export interface GitContextPayload {
   branch: string;
@@ -30,4 +34,11 @@ export function loadGitWorktrees(path: string) {
 
 export function loadGitRemoteStatus(path: string) {
   return invoke<GitRemoteStatusPayload>("get_git_remote_status", { path });
+}
+
+export function loadGitUncommittedSnapshot(path: string, expectedBranch: string) {
+  return invoke<GitUncommittedSnapshot>("list_git_uncommitted_files", {
+    path,
+    expectedBranch,
+  });
 }

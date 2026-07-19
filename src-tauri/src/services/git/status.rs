@@ -2,6 +2,7 @@ use super::repo as git_repo;
 use git2::{DiffFindOptions, DiffOptions, Patch, StatusEntry, StatusOptions};
 use serde::Serialize;
 use std::collections::HashMap;
+use std::hash::{DefaultHasher, Hash, Hasher};
 use std::path::Path;
 
 const MAX_DIRTY_FILES: usize = 200;
@@ -65,6 +66,28 @@ pub fn list_dirty_files(repo_path: &Path) -> Result<Vec<DirtyFile>, String> {
         });
     }
     Ok(files)
+}
+
+pub(super) fn watch_signature(repo: &git2::Repository) -> Result<(usize, u64), String> {
+    let workdir = git_repo::workdir(repo)?;
+    let mut opts = StatusOptions::new();
+    opts.include_untracked(true)
+        .recurse_untracked_dirs(true)
+        .renames_head_to_index(true)
+        .renames_index_to_workdir(true);
+    let statuses = repo.statuses(Some(&mut opts)).map_err(|_| "Statut Git indisponible")?;
+    let mut hasher = DefaultHasher::new();
+    statuses.len().hash(&mut hasher);
+    for entry in statuses.iter().take(MAX_DIRTY_FILES) {
+        entry.status().bits().hash(&mut hasher);
+        let Ok(path) = entry.path() else { continue };
+        path.hash(&mut hasher);
+        if let Ok(metadata) = workdir.join(path).symlink_metadata() {
+            metadata.len().hash(&mut hasher);
+            metadata.modified().ok().hash(&mut hasher);
+        }
+    }
+    Ok((statuses.len(), hasher.finish()))
 }
 
 fn describe_status(entry: &StatusEntry<'_>) -> Option<(String, Option<String>, &'static str)> {

@@ -306,7 +306,6 @@
       "modifications": "Changes",
       "branch": "Branch",
       "noGit": "No Git repository",
-      "noChanges": "No changes",
       "commits": {
         "title": "Commits",
         "toggle": "Expand commit history",

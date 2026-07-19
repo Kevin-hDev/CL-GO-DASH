@@ -25,6 +25,7 @@ export interface GitBranchState {
   behindCount: number;
   isGitRepo: boolean;
   isLoading: boolean;
+  uncommittedSnapshot: GitUncommittedSnapshot | null;
 }
 
 export interface GitDirtyFile {

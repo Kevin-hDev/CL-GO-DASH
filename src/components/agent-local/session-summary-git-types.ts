@@ -6,6 +6,7 @@ import type {
   GitCommitPage,
   GitDirtyFile,
   GitPushTarget,
+  GitUncommittedSnapshot,
 } from "@/hooks/git-types";
 
 export interface SessionSummaryGitState {
@@ -21,6 +22,7 @@ export interface SessionSummaryGitState {
   hasRemoteBranch: boolean;
   aheadCount: number;
   behindCount: number;
+  uncommittedSnapshot?: GitUncommittedSnapshot | null;
   worktrees: { branch: string; path: string; is_current: boolean }[];
   listDirtyFiles: () => Promise<GitDirtyFile[]>;
   listCommits: (cursor?: string) => Promise<GitCommitPage>;

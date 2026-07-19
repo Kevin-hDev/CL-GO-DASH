@@ -106,6 +106,21 @@ fn detects_an_edit_immediately_after_commit_with_the_same_dirty_count() {
 }
 
 #[test]
+fn detects_repeated_edits_while_the_file_is_already_dirty() {
+    let tmp = init_repo();
+    std::fs::write(tmp.path().join("tracked.txt"), "first edit\n").expect("first edit");
+    let mut previous = read_watch_state(tmp.path());
+
+    std::fs::write(tmp.path().join("tracked.txt"), "second edit with another size\n")
+        .expect("second edit");
+    let current = read_watch_state(tmp.path());
+
+    assert_eq!(dirty_count(&previous), Some(1));
+    assert_eq!(dirty_count(&current), Some(1));
+    assert!(update_watch_state(&mut previous, current));
+}
+
+#[test]
 fn ignores_unchanged_or_temporarily_unavailable_status() {
     let tmp = init_repo();
     let current = read_watch_state(tmp.path());

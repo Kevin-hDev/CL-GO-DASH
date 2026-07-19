@@ -28,10 +28,9 @@ import { useSelectedModelCapabilities } from "@/hooks/use-selected-model-capabil
 import { useChatViewRuntime } from "@/hooks/use-chat-view-runtime";
 import { PermissionDialog } from "./permission-dialog";
 import type { ChatViewProps } from "./chat-view-types";
-import { useGitBranch } from "@/hooks/use-git-branch";
 import "./chat.css";
 export function ChatView({
-  sessionId, model, provider, projects, onAddProject,
+  sessionId, model, provider, projects, git, onAddProject,
   onSessionsRefresh, onApplySwitch, onNewSession, onNewSessionInProject, onAutoRename,
   initialMessage, initialWorkingDir, initialSkills, initialFiles,
   reasoningMode, onReasoningModeChange, onInitialMessageSent,
@@ -63,7 +62,6 @@ export function ChatView({
     workingDir: proj.selectedProject?.path, permissionMode: permMode.mode,
     planMode: chat.planModeEnabled, supportsTools: selectedModelCaps?.supports_tools,
   });
-  const git = useGitBranch(proj.selectedProject?.path, sessionId);
   useSessionFileGroups(
     chat.messages,
     chat.completedSegments,

@@ -306,7 +306,6 @@
       "modifications": "Modifications",
       "branch": "Branche",
       "noGit": "Aucun dépôt Git",
-      "noChanges": "Aucune modification",
       "commits": {
         "title": "Commits",
         "toggle": "Déplier l’historique des commits",

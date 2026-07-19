@@ -55,7 +55,7 @@ export const AgentLocalTab = memo(function AgentLocalTab({
   const displayReasoningMode = resolveDisplayReasoningMode(displaySession, reasoningMode);
   const terminalCwd = displayProject?.path || "";
   const sessionSummary = useSessionSummary(displaySessionId ?? null);
-  const summaryGit = useGitBranch(displayProject?.path, displaySessionId ?? undefined);
+  const summaryGit = useGitBranch(displayProject?.path);
   const uncommittedFiles = useGitUncommittedFiles(summaryGit);
   const tabGit = useAgentLocalTabGit({
     rootSessionId: activeSessionId,
@@ -127,6 +127,7 @@ export const AgentLocalTab = memo(function AgentLocalTab({
           fullscreenSwitching={fullscreenSwitching}
           fileOperations={fileOperations}
           gitUncommittedFiles={uncommittedFiles}
+          git={summaryGit}
           fileTree={fileTreeNav}
           onAddProject={projectsHook.add}
           onSessionsRefresh={() => void refresh()}

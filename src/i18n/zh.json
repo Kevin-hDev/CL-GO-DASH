@@ -301,7 +301,6 @@
       "modifications": "修改",
       "branch": "分支",
       "noGit": "无 Git 仓库",
-      "noChanges": "无修改",
       "commits": {
         "title": "提交",
         "toggle": "展开提交历史",

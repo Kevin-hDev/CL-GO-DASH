@@ -301,7 +301,6 @@
       "modifications": "Modifiche",
       "branch": "Branch",
       "noGit": "Nessun repository Git",
-      "noChanges": "Nessuna modifica",
       "commits": {
         "title": "Commit",
         "toggle": "Espandi la cronologia dei commit",

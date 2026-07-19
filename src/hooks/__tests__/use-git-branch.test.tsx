@@ -67,6 +67,15 @@ describe("useGitBranch", () => {
       await expect(result.current.commit("Travail termine")).resolves.toEqual({ ok: true });
     });
   });
+
+  it("charge le snapshot non commit dans le même état Git", async () => {
+    mockGitCommands(false);
+    const { result } = renderHook(() => useGitBranch("/repo"));
+
+    await waitFor(() => expect(result.current.uncommittedSnapshot).not.toBeNull());
+
+    expect(result.current.uncommittedSnapshot?.head_commit).toBe("a".repeat(40));
+  });
 });
 
 interface RemoteStatus {
@@ -100,6 +109,8 @@ function mockGitCommands(
         return remoteFailure
           ? Promise.reject(new Error("unavailable"))
           : Promise.resolve(REMOTE_STATUS);
+      case "list_git_uncommitted_files":
+        return Promise.resolve({ head_commit: "a".repeat(40), files: [] });
       case "commit_git_changes":
         return Promise.resolve();
       case "start_git_watcher":

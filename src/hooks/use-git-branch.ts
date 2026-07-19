@@ -12,6 +12,7 @@ import { useGitWatcher } from "@/hooks/use-git-watcher";
 import {
   loadGitCore,
   loadGitRemoteStatus,
+  loadGitUncommittedSnapshot,
   loadGitWorktrees,
 } from "@/hooks/git-refresh";
 import type { GitBranchState } from "@/hooks/git-types";
@@ -37,9 +38,10 @@ const INITIAL_STATE: GitBranchState = {
   behindCount: 0,
   isGitRepo: false,
   isLoading: false,
+  uncommittedSnapshot: null,
 };
 
-export function useGitBranch(projectPath: string | undefined, sessionId?: string) {
+export function useGitBranch(projectPath: string | undefined) {
   const [state, setState] = useState<GitBranchState>(INITIAL_STATE);
   const pathRef = useRef(projectPath);
   const mountedRef = useRef(true);
@@ -82,6 +84,9 @@ export function useGitBranch(projectPath: string | undefined, sessionId?: string
         dirtyCount: context.dirty_count,
         isGitRepo: context.is_git_repo,
         isLoading: false,
+        uncommittedSnapshot: current.currentBranch === context.branch
+          ? current.uncommittedSnapshot
+          : null,
       }));
 
       void loadGitWorktrees(path).then((worktrees) => {
@@ -101,6 +106,13 @@ export function useGitBranch(projectPath: string | undefined, sessionId?: string
       }).catch(() => {
         if (isCurrent()) setState((current) => ({ ...current, remoteStatusError: true }));
       });
+      if (context.is_git_repo && context.branch && context.branch !== "HEAD") {
+        void loadGitUncommittedSnapshot(path, context.branch).then((snapshot) => {
+          if (isCurrent()) setState((current) => ({ ...current, uncommittedSnapshot: snapshot }));
+        }).catch(() => {
+          if (isCurrent()) setState((current) => ({ ...current, uncommittedSnapshot: null }));
+        });
+      }
     } catch {
       if (!isCurrent()) return;
       setState({ ...INITIAL_STATE, repositoryPath: path });
@@ -109,7 +121,7 @@ export function useGitBranch(projectPath: string | undefined, sessionId?: string
 
   useEffect(() => {
     void refresh();
-  }, [projectPath, sessionId, refresh]);
+  }, [projectPath, refresh]);
 
   useEffect(() => {
     const unlisten = listen("git-branch-changed", () => {

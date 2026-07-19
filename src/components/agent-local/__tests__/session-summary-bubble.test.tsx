@@ -13,7 +13,6 @@ vi.mock("react-i18next", () => ({
         "agentLocal.sessionSummary.modifications": "Changes",
         "agentLocal.sessionSummary.branch": "Branch",
         "agentLocal.sessionSummary.noGit": "No Git repository",
-        "agentLocal.sessionSummary.noChanges": "No changes",
         "agentLocal.sessionSummary.sections.todos": "Todo list",
         "agentLocal.sessionSummary.sections.plans": "Plan",
         "agentLocal.sessionSummary.sections.subagents": "Subagents",
@@ -73,15 +72,25 @@ const git = {
 describe("SessionSummaryBubble", () => {
   it("ouvre la bulle et affiche modifications + branche", () => {
     const { getByRole, getByText } = render(
-      <SessionSummaryBubble summary={summary()} git={git} />,
+      <SessionSummaryBubble
+        summary={summary()}
+        git={{
+          ...git,
+          dirtyCount: 1,
+          uncommittedSnapshot: {
+            head_commit: "a".repeat(40),
+            files: [{ path: "src/app.ts", status: "modified", additions: 14, deletions: 6 }],
+          },
+        }}
+      />,
     );
 
     fireEvent.click(getByRole("button", { name: "Toggle summary" }));
 
     expect(getByRole("dialog", { name: "Session summary" })).toBeTruthy();
     expect(getByText("Environment")).toBeTruthy();
-    expect(getByText("+3")).toBeTruthy();
-    expect(getByText("-1")).toBeTruthy();
+    expect(getByText("+14")).toBeTruthy();
+    expect(getByText("-6")).toBeTruthy();
     expect(getByText("main")).toBeTruthy();
   });
 
@@ -95,8 +104,22 @@ describe("SessionSummaryBubble", () => {
 
     fireEvent.click(getByRole("button", { name: "Toggle summary" }));
 
-    expect(getByText("No changes")).toBeTruthy();
+    expect(getByText("+0")).toBeTruthy();
+    expect(getByText("-0")).toBeTruthy();
     expect(getByText("No Git repository")).toBeTruthy();
+  });
+
+  it("ignore l'historique de session quand le worktree Git est propre", () => {
+    const { getByRole, getByText, queryByText } = render(
+      <SessionSummaryBubble summary={summary({ additions: 9, deletions: 4 })} git={git} />,
+    );
+
+    fireEvent.click(getByRole("button", { name: "Toggle summary" }));
+
+    expect(getByText("+0")).toBeTruthy();
+    expect(getByText("-0")).toBeTruthy();
+    expect(queryByText("+9")).toBeNull();
+    expect(queryByText("-4")).toBeNull();
   });
 
   it("affiche le fallback branche si git est absent", () => {

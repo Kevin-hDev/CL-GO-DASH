@@ -63,6 +63,16 @@ export function uncommittedFileOperations(
   }));
 }
 
+export function uncommittedChangeSummary(snapshot?: GitUncommittedSnapshot | null) {
+  return (snapshot?.files ?? []).reduce(
+    (summary, file) => ({
+      additions: summary.additions + file.additions,
+      deletions: summary.deletions + file.deletions,
+    }),
+    { additions: 0, deletions: 0 },
+  );
+}
+
 function gitDiffSource(
   mode: GitDiffPreviewSource["mode"],
   status: GitDiffFileStatus,

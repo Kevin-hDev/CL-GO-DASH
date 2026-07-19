@@ -15,6 +15,7 @@ import { SessionSummaryGitSection } from "./session-summary-git-section";
 import { SessionSummaryCommits } from "./session-summary-commits";
 import type { SessionSummaryGitState } from "./session-summary-git-section";
 import type { GitCommitFile, GitCommitSummary } from "@/hooks/git-types";
+import { uncommittedChangeSummary } from "@/lib/git-file-preview";
 import "./session-summary-bubble.css";
 
 type SessionSummaryState = ReturnType<typeof useSessionSummary>;
@@ -49,6 +50,7 @@ export function SessionSummaryBubble({
   });
   const rootRef = useRef<HTMLSpanElement>(null);
   useClickOutside(rootRef, () => setOpen(false));
+  const changes = displayedChanges(summary, git);
 
   const toggleSection = (key: SectionKey) => {
     setSections((current) => ({ ...current, [key]: !current[key] }));
@@ -89,11 +91,11 @@ export function SessionSummaryBubble({
           <div className="ssb-row">
             <FilePlus size="var(--icon-md)" className="ssb-row-icon" />
             <span className="ssb-row-label">{t("agentLocal.sessionSummary.modifications")}</span>
-            <ChangeStats additions={summary.changes.additions} deletions={summary.changes.deletions} />
+            <ChangeStats additions={changes.additions} deletions={changes.deletions} />
           </div>
           <SessionSummaryGitSection git={git} />
           <SessionSummaryCommits
-            key={`${git?.repositoryPath ?? "none"}:${git?.currentBranch ?? "none"}`}
+            key={`${git?.repositoryPath ?? "none"}:${git?.currentBranch ?? "none"}:${git?.uncommittedSnapshot?.head_commit ?? "none"}`}
             git={git}
             onOpenFile={(commit, file) => {
               setOpen(false);
@@ -131,11 +133,14 @@ export function SessionSummaryBubble({
   );
 }
 
+function displayedChanges(summary: SessionSummaryState, git?: SessionSummaryGitState) {
+  if (git?.isLoading) return { additions: 0, deletions: 0 };
+  if (!git?.isGitRepo) return summary.changes;
+  if (git.dirtyCount === 0) return { additions: 0, deletions: 0 };
+  return uncommittedChangeSummary(git.uncommittedSnapshot);
+}
+
 function ChangeStats({ additions, deletions }: { additions: number; deletions: number }) {
-  const { t } = useTranslation();
-  if (additions === 0 && deletions === 0) {
-    return <span className="ssb-row-value">{t("agentLocal.sessionSummary.noChanges")}</span>;
-  }
   return (
     <span className="ssb-change-stats">
       <span className="ssb-change-add">+{additions}</span>

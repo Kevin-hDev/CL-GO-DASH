@@ -1,4 +1,4 @@
-use super::{branch, repo as git_repo};
+use super::{repo as git_repo, status};
 use notify::{Event, EventKind, RecursiveMode, Watcher};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -23,6 +23,7 @@ pub(super) struct GitWatchState {
     pub(super) head_name: Option<String>,
     pub(super) head_oid: Option<git2::Oid>,
     pub(super) dirty_count: usize,
+    pub(super) worktree_signature: u64,
 }
 
 fn resolve_git_dir(repo_path: &Path) -> Option<PathBuf> {
@@ -59,12 +60,14 @@ pub(super) fn parse_gitdir_content(content: &str) -> Option<PathBuf> {
 pub(super) fn read_watch_state(repo_path: &Path) -> Option<GitWatchState> {
     let repo = git_repo::open(repo_path).ok()?;
     let head = repo.head().ok();
+    let (dirty_count, worktree_signature) = status::watch_signature(&repo).ok()?;
     Some(GitWatchState {
         head_name: head
             .as_ref()
             .and_then(|reference| reference.shorthand().ok().map(str::to_string)),
         head_oid: head.as_ref().and_then(|reference| reference.target()),
-        dirty_count: branch::count_dirty_files(&repo).ok()?,
+        dirty_count,
+        worktree_signature,
     })
 }
 

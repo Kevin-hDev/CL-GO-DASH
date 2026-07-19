@@ -14,6 +14,7 @@ import type { Project, SessionTab } from "@/types/agent";
 import type { FileOperation, FileOperationGroups } from "@/types/file-preview";
 import type { PanelMode } from "@/hooks/use-forecast-panel";
 import type { ReasoningMode } from "@/lib/reasoning-modes";
+import type { useGitBranch } from "@/hooks/use-git-branch";
 
 interface AgentChatDetailProps {
   sessionId: string;
@@ -31,6 +32,7 @@ interface AgentChatDetailProps {
   fullscreenSwitching: boolean;
   fileOperations: FileOperationGroups;
   gitUncommittedFiles: FileOperation[];
+  git: ReturnType<typeof useGitBranch>;
   onAddProject: (path: string) => Promise<Project>;
   onSessionsRefresh: () => void;
   onUpdateModel: (id: string, model: string, provider: string) => void;
@@ -89,6 +91,7 @@ export function AgentChatDetail(props: AgentChatDetailProps) {
           model={props.model}
           provider={props.provider}
           projects={props.projects}
+          git={props.git}
           onAddProject={props.onAddProject}
           onSessionsRefresh={props.onSessionsRefresh}
           onApplySwitch={(model, provider) => props.onUpdateModel(props.sessionId, model, provider)}

@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { commitFileOperation, uncommittedFileOperations } from "../git-file-preview";
+import {
+  commitFileOperation,
+  uncommittedChangeSummary,
+  uncommittedFileOperations,
+} from "../git-file-preview";
 
 describe("git-file-preview", () => {
   it("lit un fichier supprimé depuis le parent du commit", () => {
@@ -67,5 +71,15 @@ describe("git-file-preview", () => {
     }, "main");
 
     expect(operation.gitDiff?.status).toBe("added");
+  });
+
+  it("additionne le diff Git net du worktree", () => {
+    expect(uncommittedChangeSummary({
+      head_commit: "e".repeat(40),
+      files: [
+        { path: "a.ts", status: "modified", additions: 10, deletions: 2 },
+        { path: "b.ts", status: "new", additions: 4, deletions: 4 },
+      ],
+    })).toEqual({ additions: 14, deletions: 6 });
   });
 });

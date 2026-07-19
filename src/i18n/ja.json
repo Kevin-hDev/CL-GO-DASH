@@ -301,7 +301,6 @@
       "modifications": "変更",
       "branch": "ブランチ",
       "noGit": "Git リポジトリなし",
-      "noChanges": "変更なし",
       "commits": {
         "title": "コミット",
         "toggle": "コミット履歴を展開",

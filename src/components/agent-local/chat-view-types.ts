@@ -4,12 +4,14 @@ import type { useTerminal } from "@/hooks/use-terminal";
 import type { Project, SessionTab } from "@/types/agent";
 import type { FileOperation, FileOperationGroups } from "@/types/file-preview";
 import type { ReasoningMode } from "@/lib/reasoning-modes";
+import type { useGitBranch } from "@/hooks/use-git-branch";
 
 export interface ChatViewProps {
   sessionId: string;
   model: string;
   provider: string;
   projects: Project[];
+  git: ReturnType<typeof useGitBranch>;
   onAddProject: (path: string) => Promise<Project>;
   onSessionsRefresh?: () => void;
   onApplySwitch?: (model: string, provider: string) => void;

@@ -301,7 +301,6 @@
       "modifications": "Cambios",
       "branch": "Rama",
       "noGit": "Sin repositorio Git",
-      "noChanges": "Sin cambios",
       "commits": {
         "title": "Commits",
         "toggle": "Desplegar el historial de commits",
