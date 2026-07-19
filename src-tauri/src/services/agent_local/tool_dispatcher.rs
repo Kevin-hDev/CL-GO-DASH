@@ -32,23 +32,28 @@ pub(super) async fn dispatch_inner(
             match execution {
                 Ok(out) => {
                     if let Some(ref cwd) = out.new_cwd {
-                        if let Err(e) =
-                            crate::services::agent_local::session_store::update_working_dir(
-                                session_id, cwd,
-                            )
-                            .await
+                        if crate::services::agent_local::session_store::update_working_dir(
+                            session_id, cwd,
+                        )
+                        .await
+                        .is_err()
                         {
-                            return ToolResult::err(format!(
-                                "Commande exécutée, mais mise à jour du dossier courant impossible: {e}"
-                            ));
+                            return ToolResult::err(
+                                "Commande exécutée, mais changement de dossier impossible.",
+                            )
+                            .with_affected_paths(out.affected_paths)
+                            .with_file_changes(out.file_changes);
                         }
                     }
                     let content = format!("{}\n{}", out.stdout, out.stderr).trim().to_string();
-                    if out.exit_code != 0 {
+                    let result = if out.exit_code != 0 {
                         ToolResult::err(content)
                     } else {
-                        ToolResult::ok(content).with_affected_paths(out.affected_paths)
-                    }
+                        ToolResult::ok(content)
+                    };
+                    result
+                        .with_affected_paths(out.affected_paths)
+                        .with_file_changes(out.file_changes)
                 }
                 Err(e) => ToolResult::err(e),
             }

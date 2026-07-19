@@ -23,6 +23,7 @@ pub async fn execute_shell(
             timed_out: false,
             new_cwd: None,
             affected_paths: Vec::new(),
+            file_changes: Vec::new(),
         });
     }
 
@@ -64,6 +65,7 @@ pub async fn execute_shell(
                 timed_out: false,
                 new_cwd,
                 affected_paths: Vec::new(),
+                file_changes: Vec::new(),
             })
             .map(|output| with_changed_paths(output, working_dir, before))
         }
@@ -75,7 +77,9 @@ pub async fn execute_shell(
             timed_out: true,
             new_cwd: None,
             affected_paths: Vec::new(),
-        }),
+            file_changes: Vec::new(),
+        })
+        .map(|output| with_changed_paths(output, working_dir, before)),
     }
 }
 
@@ -84,10 +88,13 @@ fn with_changed_paths(
     working_dir: &Path,
     before: super::tool_bash_changes::FileSnapshot,
 ) -> ShellOutput {
-    if output.exit_code == 0 {
-        let after = super::tool_bash_changes::snapshot(working_dir);
-        output.affected_paths = super::tool_bash_changes::changed_paths(&before, &after);
-    }
+    let after = super::tool_bash_changes::snapshot(working_dir);
+    output.file_changes = super::tool_bash_changes::changes(&before, &after);
+    output.affected_paths = output
+        .file_changes
+        .iter()
+        .map(|change| change.path.clone())
+        .collect();
     output
 }
 
@@ -100,9 +107,11 @@ fn generate_cwd_marker() -> String {
 
 fn wrap_command_with_cwd(command: &str, marker: &str) -> String {
     if cfg!(target_os = "windows") {
-        format!("{command} ; Write-Output '{marker}' ; (Get-Location).Path")
+        format!(
+            "{command} ; $clgoStatus = if ($?) {{ 0 }} else {{ 1 }} ; Write-Output '{marker}' ; (Get-Location).Path ; exit $clgoStatus"
+        )
     } else {
-        format!("{command} ; echo '{marker}' ; pwd -P")
+        format!("{command}\nclgo_status=$?\necho '{marker}'\npwd -P\nexit $clgo_status")
     }
 }
 

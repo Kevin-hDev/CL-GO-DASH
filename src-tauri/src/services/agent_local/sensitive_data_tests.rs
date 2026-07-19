@@ -2,6 +2,17 @@ use super::*;
 use serde_json::json;
 
 #[test]
+fn sensitive_path_is_not_eligible_for_historical_content() {
+    assert!(is_sensitive_path(std::path::Path::new("/repo/.env")));
+    assert!(is_sensitive_path(std::path::Path::new(
+        "/home/user/.ssh/id_ed25519"
+    )));
+    assert!(!is_sensitive_path(std::path::Path::new(
+        "/repo/src/main.rs"
+    )));
+}
+
+#[test]
 fn detects_sensitive_paths_but_ignores_heredoc_bodies() {
     assert!(bash_touches_sensitive_data("cat .env"));
     assert!(bash_touches_sensitive_data("head ~/.ssh/id_ed25519"));

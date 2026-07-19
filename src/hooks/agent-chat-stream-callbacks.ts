@@ -70,6 +70,7 @@ export function applyStreamEvent(
         event.data.isError,
         event.data.resolvedPath,
         event.data.affectedPaths,
+        event.data.fileChanges,
       );
       next.activeStreamItem = activeItemAfterToolResult(next.currentTools, toolCallIndex);
       next.pendingPermissions = [];

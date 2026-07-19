@@ -55,7 +55,10 @@ function useExistingFileOperationGroups(
     values: new Map(),
   });
   const requestRef = useRef(0);
-  const paths = useMemo(() => groups.all.map((operation) => operation.path), [groups.all]);
+  const paths = useMemo(
+    () => groups.all.filter((operation) => !operation.recordedStatus).map((operation) => operation.path),
+    [groups.all],
+  );
   const pathListKey = useMemo(() => paths.join("\0"), [paths]);
   const existenceKey = useMemo(() => `${baseDir ?? ""}\0${pathListKey}`, [baseDir, pathListKey]);
   const pathsForCheck = useMemo(() => (
@@ -98,6 +101,8 @@ function useExistingFileOperationGroups(
   return useMemo(
     () => {
       const existing = (operation: FileOperation) => (
+        Boolean(operation.recordedStatus)
+        ||
         existence.key === existenceKey
           && existence.values.get(normalizeFileOperationPath(operation.path)) === true
       );
@@ -111,7 +116,7 @@ function useExistingFileOperationGroups(
 }
 
 function isCompletedTool(tool: ToolActivity): boolean {
-  return tool.result !== undefined && !tool.isError;
+  return tool.result !== undefined && (!tool.isError || Boolean(tool.fileChanges?.length));
 }
 
 function liveActivityKey(completedSegments: StreamSegment[], currentTools: ToolActivity[]): string {
@@ -122,5 +127,5 @@ function liveActivityKey(completedSegments: StreamSegment[], currentTools: ToolA
 }
 
 function toolStateKey(tool: ToolActivity): string {
-  return `${tool.name}:${tool.result === undefined ? "pending" : "done"}:${tool.isError ? "err" : "ok"}`;
+  return `${tool.name}:${tool.result === undefined ? "pending" : "done"}:${tool.isError ? "err" : "ok"}:${tool.fileChanges?.length ?? 0}`;
 }

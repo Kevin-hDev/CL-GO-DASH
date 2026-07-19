@@ -40,6 +40,8 @@ pub enum StreamEvent {
         resolved_path: Option<String>,
         #[serde(skip_serializing_if = "Vec::is_empty", default)]
         affected_paths: Vec<String>,
+        #[serde(skip_serializing_if = "Vec::is_empty", default)]
+        file_changes: Vec<super::types_tools::ToolFileChange>,
     },
     TurnEnd {},
     #[serde(rename_all = "camelCase")]

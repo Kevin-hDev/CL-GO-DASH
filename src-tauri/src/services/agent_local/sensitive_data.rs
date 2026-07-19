@@ -77,6 +77,14 @@ pub fn bash_touches_sensitive_data(command: &str) -> bool {
         || mentions_protected_app_file(&normalized)
 }
 
+pub fn is_sensitive_path(path: &std::path::Path) -> bool {
+    let normalized = path.to_string_lossy().replace('\\', "/").to_lowercase();
+    SENSITIVE_PATH_MARKERS
+        .iter()
+        .any(|marker| normalized.contains(marker))
+        || mentions_protected_app_file(&normalized)
+}
+
 /// Retire le corps des heredocs (`<<'EOF' ... EOF` ou `<<EOF ... EOF`) d'une
 /// commande shell. Conserve tout le reste (chemins cibles, redirections).
 fn strip_heredoc_bodies(command: &str) -> String {

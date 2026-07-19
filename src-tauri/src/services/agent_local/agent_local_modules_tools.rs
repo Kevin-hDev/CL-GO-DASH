@@ -67,6 +67,7 @@ pub mod tool_executor_read_only;
 pub mod tool_executor_results;
 pub mod tool_executor_sequential;
 pub mod tool_executor_write;
+pub mod tool_file_changes;
 pub mod tool_files;
 #[cfg(test)]
 pub mod tool_files_tests;

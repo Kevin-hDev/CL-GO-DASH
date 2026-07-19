@@ -30,7 +30,8 @@ pub async fn dispatch(
         Ok(cleaned) => cleaned,
         Err(msg) => return ToolResult::err(format!("[{tool_name}] {msg}")),
     };
-    let result = super::tool_dispatcher::dispatch_inner(
+    let before = super::tool_file_changes::direct_snapshot(tool_name, &args, working_dir);
+    let mut result = super::tool_dispatcher::dispatch_inner(
         tool_name,
         &args,
         working_dir,
@@ -39,6 +40,12 @@ pub async fn dispatch(
         profile,
     )
     .await;
+    if let Some(change) = before.and_then(super::tool_file_changes::direct_change) {
+        if result.affected_paths.is_empty() {
+            result.affected_paths.push(change.path.clone());
+        }
+        result.file_changes.push(change);
+    }
     let result = super::tool_result_truncate::truncate_result(result, tool_name, session_id);
     enrich_error(result, tool_name)
 }

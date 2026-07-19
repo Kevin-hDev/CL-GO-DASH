@@ -34,7 +34,7 @@ pub struct AgentMessage {
 
 impl AgentMessage {
     pub fn validate_stream_metadata(&self) -> Result<(), String> {
-        match (&self.stream_run_id, &self.stream_part) {
+        let metadata = match (&self.stream_run_id, &self.stream_part) {
             (None, None) => Ok(()),
             (Some(run_id), Some(part)) => {
                 uuid::Uuid::parse_str(run_id)
@@ -46,8 +46,46 @@ impl AgentMessage {
                 }
             }
             _ => Err("Metadonnees de message invalides.".to_string()),
+        };
+        metadata?;
+        validate_file_changes(self)
+    }
+}
+
+fn validate_file_changes(message: &AgentMessage) -> Result<(), String> {
+    let records = message.tool_activities.iter().flatten().chain(
+        message
+            .segments
+            .iter()
+            .flatten()
+            .flat_map(|segment| &segment.tools),
+    );
+    for record in records {
+        if record.file_changes.len() > super::tool_file_changes::MAX_FILE_CHANGES {
+            return Err("Historique de fichiers invalide.".to_string());
+        }
+        let mut total_diff_bytes = 0usize;
+        for change in &record.file_changes {
+            if let Some(diff) = &change.diff {
+                total_diff_bytes = total_diff_bytes.saturating_add(
+                    crate::services::git::diff_preview::preview_content_bytes(diff),
+                );
+            }
+            if change.path.is_empty()
+                || change.path.len() > 4_096
+                || change.path.contains('\0')
+                || change.additions > 2_000
+                || change.deletions > 2_000
+                || total_diff_bytes > super::tool_file_changes::MAX_FILE_CHANGE_DIFF_BYTES
+                || change.diff.as_ref().is_some_and(|diff| {
+                    !crate::services::git::diff_preview::is_bounded_preview(diff)
+                })
+            {
+                return Err("Historique de fichiers invalide.".to_string());
+            }
         }
     }
+    Ok(())
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -70,6 +108,8 @@ pub struct ToolActivityRecord {
     pub start_line: Option<u32>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub affected_paths: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub file_changes: Vec<super::types_tools::ToolFileChange>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -108,89 +148,5 @@ pub struct FileAttachment {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::{AgentMessage, SavedSegment};
-    use crate::services::agent_local::types_stream::TokenPhase;
-
-    #[test]
-    fn agent_message_accepts_missing_work_duration() {
-        let msg: AgentMessage = serde_json::from_value(serde_json::json!({
-            "id": "m1",
-            "role": "assistant",
-            "content": "ok",
-            "files": [],
-            "timestamp": "2026-07-01T12:00:00Z",
-            "tokens": 0
-        }))
-        .unwrap();
-
-        assert_eq!(msg.work_duration_ms, None);
-    }
-
-    #[test]
-    fn agent_message_serializes_work_duration_when_present() {
-        let msg: AgentMessage = serde_json::from_value(serde_json::json!({
-            "id": "m1",
-            "role": "assistant",
-            "content": "ok",
-            "files": [],
-            "timestamp": "2026-07-01T12:00:00Z",
-            "tokens": 0,
-            "work_duration_ms": 266000
-        }))
-        .unwrap();
-        let saved = serde_json::to_value(msg).unwrap();
-
-        assert_eq!(saved["work_duration_ms"], 266000);
-    }
-
-    #[test]
-    fn agent_message_persists_stream_group_metadata() {
-        let msg: AgentMessage = serde_json::from_value(serde_json::json!({
-            "id": "m-stream",
-            "role": "assistant",
-            "content": "travail",
-            "files": [],
-            "timestamp": "2026-07-12T12:00:00Z",
-            "stream_run_id": "7c8e3a14-8811-4d88-9a54-d234547d8d22",
-            "stream_part": "checkpoint"
-        }))
-        .unwrap();
-
-        let saved = serde_json::to_value(msg).unwrap();
-        assert_eq!(saved["stream_run_id"], "7c8e3a14-8811-4d88-9a54-d234547d8d22");
-        assert_eq!(saved["stream_part"], "checkpoint");
-    }
-
-    #[test]
-    fn agent_message_rejects_incomplete_or_invalid_stream_metadata() {
-        let incomplete: AgentMessage = serde_json::from_value(serde_json::json!({
-            "id": "m-stream", "role": "assistant", "content": "travail",
-            "files": [], "timestamp": "2026-07-12T12:00:00Z",
-            "stream_run_id": "7c8e3a14-8811-4d88-9a54-d234547d8d22"
-        }))
-        .unwrap();
-        assert!(incomplete.validate_stream_metadata().is_err());
-
-        let invalid: AgentMessage = serde_json::from_value(serde_json::json!({
-            "id": "m-stream", "role": "assistant", "content": "travail",
-            "files": [], "timestamp": "2026-07-12T12:00:00Z",
-            "stream_run_id": "7c8e3a14-8811-4d88-9a54-d234547d8d22",
-            "stream_part": "other"
-        }))
-        .unwrap();
-        assert!(invalid.validate_stream_metadata().is_err());
-    }
-
-    #[test]
-    fn saved_segment_accepts_phase() {
-        let segment: SavedSegment = serde_json::from_value(serde_json::json!({
-            "tools": [],
-            "content": "partial",
-            "phase": "work"
-        }))
-        .unwrap();
-
-        assert!(matches!(segment.phase, Some(TokenPhase::Work)));
-    }
-}
+#[path = "types_message_tests.rs"]
+mod tests;

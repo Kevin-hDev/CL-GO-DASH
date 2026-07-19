@@ -17,7 +17,6 @@ interface HighlightedHunk extends GitDiffHunk {
 }
 
 export function GitDiffPreview({ source, path, baseDir }: GitDiffPreviewProps) {
-  const { t } = useTranslation();
   const [state, setState] = useState<{
     loading: boolean;
     data?: GitDiffData;
@@ -38,29 +37,69 @@ export function GitDiffPreview({ source, path, baseDir }: GitDiffPreviewProps) {
     return () => { alive = false; };
   }, [source, baseDir]);
 
+  return (
+    <DiffPreviewView
+      data={state.data}
+      error={state.error}
+      loading={state.loading}
+      path={path}
+      previousPath={source.previousPath}
+      status={source.status}
+    />
+  );
+}
+
+interface RecordedDiffPreviewProps {
+  data?: GitDiffData;
+  path: string;
+  status: "added" | "modified" | "deleted";
+}
+
+export function RecordedDiffPreview({ data, path, status }: RecordedDiffPreviewProps) {
+  return (
+    <DiffPreviewView
+      data={data}
+      error={!data}
+      loading={false}
+      path={path}
+      status={status}
+    />
+  );
+}
+
+function DiffPreviewView({ data, error, loading, path, previousPath, status }: {
+  data?: GitDiffData;
+  error: boolean;
+  loading: boolean;
+  path: string;
+  previousPath?: string;
+  status: GitDiffPreviewSource["status"];
+}) {
+  const { t } = useTranslation();
+
   const hunks = useMemo<HighlightedHunk[]>(() => (
-    state.data?.hunks.map((hunk) => ({
+    data?.hunks.map((hunk) => ({
       ...hunk,
       highlighted: highlightLines(hunk.lines.map((line) => line.content).join("\n"), path),
     })) ?? []
-  ), [state.data, path]);
+  ), [data, path]);
 
-  if (state.loading) return <div className="fp-empty">{t("filePreview.loading")}</div>;
-  const isRename = Boolean(source.previousPath);
+  if (loading) return <div className="fp-empty">{t("filePreview.loading")}</div>;
+  const isRename = Boolean(previousPath);
   const wrap = shouldWrapFile(path);
-  if (state.error || state.data?.binary || (hunks.length === 0 && !isRename)) {
+  if (error || data?.binary || (hunks.length === 0 && !isRename)) {
     return <div className="fp-empty">{t("filePreview.diffUnavailable")}</div>;
   }
 
   const content = (
     <>
-      <div className={`gdp-status gdp-status-${source.status}`}>
-        <span className="gdp-status-label">{t(`filePreview.gitStatus.${source.status}`)}</span>
-        {source.previousPath && (
+      <div className={`gdp-status gdp-status-${status}`}>
+        <span className="gdp-status-label">{t(`filePreview.gitStatus.${status}`)}</span>
+        {previousPath && (
           <span className="gdp-status-paths">
-            <span>{source.previousPath}</span>
+            <span>{previousPath}</span>
             <span className="gdp-status-arrow" aria-hidden="true">→</span>
-            <span>{source.filePath}</span>
+            <span>{path}</span>
           </span>
         )}
       </div>
@@ -86,7 +125,7 @@ export function GitDiffPreview({ source, path, baseDir }: GitDiffPreviewProps) {
           </div>
         </Fragment>
       ))}
-      {state.data?.truncated && <div className="gdp-note">{t("filePreview.diffTruncated")}</div>}
+      {data?.truncated && <div className="gdp-note">{t("filePreview.diffTruncated")}</div>}
     </>
   );
 

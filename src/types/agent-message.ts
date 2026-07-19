@@ -39,6 +39,15 @@ export interface ToolActivityRecord {
   start_line?: number;
   resolved_path?: string;
   affected_paths?: string[];
+  file_changes?: ToolFileChangeRecord[];
+}
+
+export interface ToolFileChangeRecord {
+  path: string;
+  status: "added" | "modified" | "deleted";
+  additions: number;
+  deletions: number;
+  diff?: GitDiffPreview;
 }
 
 export interface ToolCallRequest {
@@ -61,3 +70,4 @@ export interface SkillInfo {
   path: string;
   source: string;
 }
+import type { GitDiffPreview } from "./file-preview";

@@ -114,6 +114,7 @@ fn keeps_rich_fields_from_persisted_recent_messages() {
         new_text: None,
         start_line: None,
         affected_paths: Vec::new(),
+        file_changes: Vec::new(),
     }]);
     rich.files = vec![FileAttachment {
         name: "a.png".to_string(),

@@ -1,10 +1,12 @@
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
-use std::time::UNIX_EPOCH;
+
+use super::tool_file_changes::{FileState, MAX_FILE_CHANGES, MAX_FILE_CHANGE_DIFF_BYTES};
+use super::types_tools::ToolFileChange;
 
 const MAX_SCAN_FILES: usize = 6_000;
 const MAX_SCAN_DEPTH: usize = 8;
-const MAX_CHANGED_PATHS: usize = 500;
+const MAX_SNAPSHOT_CONTENT_BYTES: usize = 32 * 1024 * 1024;
 const SKIPPED_DIRS: &[&str] = &[
     ".git",
     "node_modules",
@@ -17,15 +19,9 @@ const SKIPPED_DIRS: &[&str] = &[
     ".cache",
 ];
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-struct FileSignature {
-    len: u64,
-    modified_ms: u128,
-}
-
 #[derive(Default)]
 pub struct FileSnapshot {
-    files: BTreeMap<PathBuf, FileSignature>,
+    files: BTreeMap<PathBuf, FileState>,
     complete: bool,
 }
 
@@ -37,27 +33,52 @@ pub fn snapshot(root: &Path) -> FileSnapshot {
         files: BTreeMap::new(),
         complete: true,
     };
-    scan_dir(&root, 0, &mut snapshot);
+    let mut remaining_bytes = MAX_SNAPSHOT_CONTENT_BYTES;
+    scan_dir(&root, 0, &mut snapshot, &mut remaining_bytes);
     snapshot
 }
 
+#[cfg(test)]
 pub fn changed_paths(before: &FileSnapshot, after: &FileSnapshot) -> Vec<String> {
+    changes(before, after)
+        .into_iter()
+        .map(|change| change.path)
+        .collect()
+}
+
+pub fn changes(before: &FileSnapshot, after: &FileSnapshot) -> Vec<ToolFileChange> {
     if !before.complete || !after.complete {
         return Vec::new();
     }
 
-    after
+    let mut remaining_diff_bytes = MAX_FILE_CHANGE_DIFF_BYTES;
+    before
         .files
-        .iter()
-        .filter_map(|(path, after_sig)| match before.files.get(path) {
-            Some(before_sig) if before_sig == after_sig => None,
-            _ => path.to_str().map(str::to_string),
+        .keys()
+        .chain(after.files.keys())
+        .collect::<std::collections::BTreeSet<_>>()
+        .into_iter()
+        .filter_map(|path| {
+            let mut change = super::tool_file_changes::build_change(
+                path,
+                before.files.get(path),
+                after.files.get(path),
+            )?;
+            if let Some(diff) = &change.diff {
+                let size = crate::services::git::diff_preview::preview_content_bytes(diff);
+                if size > remaining_diff_bytes {
+                    change.diff = None;
+                } else {
+                    remaining_diff_bytes -= size;
+                }
+            }
+            Some(change)
         })
-        .take(MAX_CHANGED_PATHS)
+        .take(MAX_FILE_CHANGES)
         .collect()
 }
 
-fn scan_dir(root: &Path, depth: usize, snapshot: &mut FileSnapshot) {
+fn scan_dir(root: &Path, depth: usize, snapshot: &mut FileSnapshot, remaining_bytes: &mut usize) {
     if depth > MAX_SCAN_DEPTH || snapshot.files.len() >= MAX_SCAN_FILES {
         snapshot.complete = false;
         return;
@@ -79,9 +100,9 @@ fn scan_dir(root: &Path, depth: usize, snapshot: &mut FileSnapshot) {
             if should_skip_dir(&path) {
                 continue;
             }
-            scan_dir(&path, depth + 1, snapshot);
+            scan_dir(&path, depth + 1, snapshot, remaining_bytes);
         } else if file_type.is_file() {
-            record_file(&path, snapshot);
+            record_file(&path, snapshot, remaining_bytes);
         }
     }
 }
@@ -93,23 +114,10 @@ fn should_skip_dir(path: &Path) -> bool {
         .unwrap_or(false)
 }
 
-fn record_file(path: &Path, snapshot: &mut FileSnapshot) {
-    let Ok(metadata) = std::fs::metadata(path) else {
-        return;
-    };
-    let modified_ms = metadata
-        .modified()
-        .ok()
-        .and_then(|time| time.duration_since(UNIX_EPOCH).ok())
-        .map(|duration| duration.as_millis())
-        .unwrap_or(0);
-    snapshot.files.insert(
-        path.to_path_buf(),
-        FileSignature {
-            len: metadata.len(),
-            modified_ms,
-        },
-    );
+fn record_file(path: &Path, snapshot: &mut FileSnapshot, remaining_bytes: &mut usize) {
+    if let Some(state) = super::tool_file_changes::capture(path, remaining_bytes) {
+        snapshot.files.insert(path.to_path_buf(), state);
+    }
 }
 
 #[cfg(test)]
@@ -133,7 +141,7 @@ mod tests {
     }
 
     #[test]
-    fn ignores_deleted_files() {
+    fn detects_deleted_files() {
         let dir = tempfile::tempdir().expect("tempdir");
         let deleted = dir.path().join("deleted.md");
         std::fs::write(&deleted, "hello").expect("write");
@@ -141,7 +149,15 @@ mod tests {
 
         std::fs::remove_file(&deleted).expect("remove");
         let after = snapshot(dir.path());
+        let expected = dir
+            .path()
+            .canonicalize()
+            .expect("canonical root")
+            .join("deleted.md");
 
-        assert!(changed_paths(&before, &after).is_empty());
+        assert_eq!(
+            changed_paths(&before, &after),
+            vec![expected.to_string_lossy().to_string()]
+        );
     }
 }

@@ -1,3 +1,4 @@
+import type { ToolFileChangeRecord } from "@/types/agent";
 import type { ToolActivity } from "./agent-chat-utils";
 
 export function applyToolResult(
@@ -7,12 +8,14 @@ export function applyToolResult(
   isError: boolean,
   resolvedPath?: string,
   affectedPaths?: string[],
+  fileChanges?: ToolFileChangeRecord[],
 ): ToolActivity[] {
   const next = [...tools];
   const apply = (i: number) => {
     next[i] = { ...next[i], result: content, isError };
     if (resolvedPath) next[i].resolvedPath = resolvedPath;
     if (affectedPaths?.length) next[i].affectedPaths = affectedPaths;
+    if (fileChanges?.length) next[i].fileChanges = fileChanges;
   };
   if (index >= 0 && index < next.length && !next[index].result) {
     apply(index);

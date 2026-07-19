@@ -39,7 +39,7 @@ export function useFilePreview(
 
   const allOperations = useMemo(() => [...operations, ...fallbackOps], [operations, fallbackOps]);
   const filesystemFallbacks = useMemo(
-    () => fallbackOps.filter((operation) => !operation.source),
+    () => fallbackOps.filter((operation) => !operation.source && !operation.recordedStatus),
     [fallbackOps],
   );
   const operationById = useMemo(() => new Map(allOperations.map((op) => [op.id, op])), [allOperations]);

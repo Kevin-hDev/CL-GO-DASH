@@ -1,4 +1,4 @@
-import type { ToolActivityRecord, TokenPhase } from "@/types/agent";
+import type { ToolActivityRecord, ToolFileChangeRecord, TokenPhase } from "@/types/agent";
 
 export interface ToolActivity {
   name: string;
@@ -9,6 +9,8 @@ export interface ToolActivity {
   resolvedPath?: string;
   /** Fichiers touchés indirectement par l'outil, notamment via bash. */
   affectedPaths?: string[];
+  /** Diff historique figé au moment où l'outil a modifié le fichier. */
+  fileChanges?: ToolFileChangeRecord[];
 }
 
 export interface StreamSegment {
@@ -50,6 +52,7 @@ export function toolsToRecords(tools: ToolActivity[]): ToolActivityRecord[] {
       is_error: t.isError,
       resolved_path: t.resolvedPath,
       affected_paths: t.affectedPaths,
+      file_changes: t.fileChanges,
       content: t.name === "write_file" ? str(a.content)
         : t.name === "write_document" ? JSON.stringify(Array.isArray(a.content) ? a.content : [])
         : t.name === "write_spreadsheet" ? JSON.stringify(Array.isArray(a.operations) ? a.operations : [])

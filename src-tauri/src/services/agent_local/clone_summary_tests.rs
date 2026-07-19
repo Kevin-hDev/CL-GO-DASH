@@ -35,6 +35,7 @@ fn serialize_limits_tool_result() {
         new_text: None,
         start_line: None,
         affected_paths: vec![],
+        file_changes: vec![],
     };
     let serialized = serialize_messages(&[message_with_tool(tool)]);
     assert!(serialized.len() < MAX_TOOL_RESULT_CHARS + 500);
@@ -53,6 +54,7 @@ fn extract_files_uses_tool_traces() {
         new_text: None,
         start_line: None,
         affected_paths: vec!["src/lib.rs".into()],
+        file_changes: vec![],
     };
     let (read, modified) = extract_traced_files(&[message_with_tool(tool)]);
     assert!(read.is_empty());
@@ -72,6 +74,7 @@ fn serialize_adds_truncated_marker_at_limit() {
         new_text: None,
         start_line: None,
         affected_paths: vec![],
+        file_changes: vec![],
     });
     msg.content = "a".repeat(MAX_SUMMARY_INPUT_CHARS);
     let serialized = serialize_messages(&[msg]);

@@ -141,6 +141,48 @@ describe("collectFileOperations", () => {
     }));
   });
 
+  it("utilise le diff figé d'un remplacement complet", () => {
+    const diff = {
+      binary: false,
+      truncated: false,
+      hunks: [{
+        old_start: 1, old_lines: 1, new_start: 1, new_lines: 1,
+        lines: [
+          { kind: "deleted" as const, content: "old", old_line: 1, new_line: null },
+          { kind: "added" as const, content: "new", old_line: null, new_line: 1 },
+        ],
+      }],
+    };
+    const operations = collectFileOperations([
+      message("m1", [tool({
+        name: "write_file",
+        is_error: false,
+        file_changes: [{
+          path: "/repo/a.ts", status: "modified", additions: 1, deletions: 1, diff,
+        }],
+      })]),
+    ]);
+
+    expect(operations[0]).toEqual(expect.objectContaining({
+      path: "/repo/a.ts",
+      recordedStatus: "modified",
+      recordedDiff: diff,
+      additions: 1,
+      deletions: 1,
+    }));
+  });
+
+  it("donne un identifiant différent au même fichier dans deux requêtes", () => {
+    const first = collectMessageFileOperations(message("first", [
+      tool({ summary: "/repo/a.ts", content: "first" }),
+    ]));
+    const second = collectMessageFileOperations(message("second", [
+      tool({ summary: "/repo/a.ts", content: "second" }),
+    ]));
+
+    expect(first[0].id).not.toBe(second[0].id);
+  });
+
   it("utilise le chemin résolu quand il est fourni par le backend", () => {
     const operations = collectFileOperations([
       message("m1", [tool({

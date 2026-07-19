@@ -55,6 +55,28 @@ describe("toolResult", () => {
     expect(result.state.currentTools[0].affectedPaths).toEqual(["/repo/a.md"]);
   });
 
+  it("attache le diff historique au tool courant", () => {
+    const state = makeState({ currentTools: [{ name: "write_file", args: {} }] });
+    const fileChanges = [{
+      path: "/repo/a.md",
+      status: "modified" as const,
+      additions: 1,
+      deletions: 1,
+    }];
+    const result = applyStreamEvent(state, {
+      event: "toolResult",
+      data: {
+        name: "write_file",
+        toolCallIndex: 0,
+        content: "ok",
+        isError: false,
+        fileChanges,
+      },
+    });
+
+    expect(result.state.currentTools[0].fileChanges).toEqual(fileChanges);
+  });
+
   it("ignore les résultats des tools internes", () => {
     const state = makeState({ currentTools: [{ name: "bash", args: {} }] });
     const result = applyStreamEvent(state, {

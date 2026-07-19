@@ -70,6 +70,7 @@ pub async fn execute_background_shell(
                 timed_out: false,
                 new_cwd: None,
                 affected_paths: Vec::new(),
+                file_changes: Vec::new(),
             });
         }
 
@@ -180,6 +181,7 @@ fn background_started_output(child: Child, mut stdout: String, stderr: String) -
         timed_out: false,
         new_cwd: None,
         affected_paths: Vec::new(),
+        file_changes: Vec::new(),
     }
 }
 

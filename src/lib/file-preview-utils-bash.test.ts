@@ -42,6 +42,39 @@ describe("collectFileOperationGroups avec bash", () => {
       "/repo/old.ts",
     ]);
   });
+
+  it("conserve une suppression même si la commande shell échoue ensuite", () => {
+    const operations = collectFileOperations([], {
+      liveTools: [tool({
+        name: "bash",
+        result: "failed",
+        is_error: true,
+        file_changes: [{
+          path: "/repo/deleted.md",
+          status: "deleted",
+          additions: 0,
+          deletions: 2,
+          diff: {
+            binary: false,
+            truncated: false,
+            hunks: [{
+              old_start: 1, old_lines: 2, new_start: 0, new_lines: 0,
+              lines: [
+                { kind: "deleted", content: "one", old_line: 1, new_line: null },
+                { kind: "deleted", content: "two", old_line: 2, new_line: null },
+              ],
+            }],
+          },
+        }],
+      })],
+    });
+
+    expect(operations[0]).toEqual(expect.objectContaining({
+      path: "/repo/deleted.md",
+      recordedStatus: "deleted",
+      deletions: 2,
+    }));
+  });
 });
 
 function message(id: string, tools: ToolActivityRecord[]): AgentMessage {

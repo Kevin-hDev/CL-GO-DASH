@@ -1,5 +1,23 @@
 use serde::{Deserialize, Serialize};
 
+#[derive(Debug, Clone, Copy, Deserialize, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ToolFileChangeStatus {
+    Added,
+    Modified,
+    Deleted,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ToolFileChange {
+    pub path: String,
+    pub status: ToolFileChangeStatus,
+    pub additions: usize,
+    pub deletions: usize,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub diff: Option<crate::services::git::diff_preview::GitDiffPreview>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ToolResult {
     pub content: String,
@@ -8,6 +26,8 @@ pub struct ToolResult {
     pub truncated: bool,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub affected_paths: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub file_changes: Vec<ToolFileChange>,
 }
 
 impl ToolResult {
@@ -17,6 +37,7 @@ impl ToolResult {
             is_error: false,
             truncated: false,
             affected_paths: Vec::new(),
+            file_changes: Vec::new(),
         }
     }
 
@@ -26,11 +47,17 @@ impl ToolResult {
             is_error: true,
             truncated: false,
             affected_paths: Vec::new(),
+            file_changes: Vec::new(),
         }
     }
 
     pub fn with_affected_paths(mut self, paths: Vec<String>) -> Self {
         self.affected_paths = paths;
+        self
+    }
+
+    pub fn with_file_changes(mut self, changes: Vec<ToolFileChange>) -> Self {
+        self.file_changes = changes;
         self
     }
 }
@@ -45,6 +72,8 @@ pub struct ShellOutput {
     pub new_cwd: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub affected_paths: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub file_changes: Vec<ToolFileChange>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

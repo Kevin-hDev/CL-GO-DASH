@@ -30,6 +30,7 @@ pub fn emit_tool_result(
         tool_call_index,
         resolved_path,
         affected_paths: tr.affected_paths.clone(),
+        file_changes: tr.file_changes.clone(),
     });
 }
 

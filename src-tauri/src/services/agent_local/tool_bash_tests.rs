@@ -104,6 +104,30 @@ async fn test_execute_shell_reports_affected_paths() {
 
     assert_eq!(out.exit_code, 0);
     assert_eq!(paths, expected);
+    assert_eq!(out.file_changes.len(), 2);
+    assert!(out.file_changes.iter().all(|change| change.diff.is_some()));
+}
+
+#[cfg(not(target_os = "windows"))]
+#[tokio::test]
+async fn test_execute_shell_reports_delete_before_failure() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let deleted = dir.path().join("deleted.md");
+    std::fs::write(&deleted, "one\ntwo\n").expect("initial write");
+
+    let out = execute_shell("rm deleted.md && false", dir.path(), None)
+        .await
+        .expect("execute shell");
+
+    assert_ne!(out.exit_code, 0);
+    assert_eq!(out.file_changes.len(), 1);
+    let change = &out.file_changes[0];
+    assert!(matches!(
+        change.status,
+        super::super::types_tools::ToolFileChangeStatus::Deleted
+    ));
+    assert_eq!((change.additions, change.deletions), (0, 2));
+    assert!(change.diff.is_some());
 }
 
 #[test]

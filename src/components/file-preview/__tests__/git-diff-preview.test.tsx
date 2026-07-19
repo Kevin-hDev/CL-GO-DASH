@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { GitDiffPreview } from "../git-diff-preview";
+import { GitDiffPreview, RecordedDiffPreview } from "../git-diff-preview";
 import type { GitDiffPreview as GitDiffData } from "@/types/file-preview";
 
 const readGitDiffPreview = vi.fn<() => Promise<GitDiffData>>();
@@ -14,6 +14,30 @@ vi.mock("react-i18next", () => ({
 }));
 
 describe("GitDiffPreview", () => {
+  it("affiche directement un diff historique sans relire Git", () => {
+    render(
+      <RecordedDiffPreview
+        path="src/example.txt"
+        status="deleted"
+        data={{
+          binary: false,
+          truncated: false,
+          hunks: [{
+            old_start: 1,
+            old_lines: 1,
+            new_start: 0,
+            new_lines: 0,
+            lines: [{ kind: "deleted", content: "historical", old_line: 1, new_line: null }],
+          }],
+        }}
+      />,
+    );
+
+    expect(screen.getByText("historical")).toBeInTheDocument();
+    expect(screen.getByText("filePreview.gitStatus.deleted")).toBeInTheDocument();
+    expect(readGitDiffPreview).not.toHaveBeenCalled();
+  });
+
   it("affiche les anciennes et nouvelles lignes du diff", async () => {
     readGitDiffPreview.mockResolvedValue({
       binary: false,

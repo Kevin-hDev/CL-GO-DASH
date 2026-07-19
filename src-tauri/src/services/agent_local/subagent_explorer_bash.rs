@@ -35,6 +35,7 @@ pub async fn execute(
             timed_out: false,
             new_cwd: None,
             affected_paths: Vec::new(),
+            file_changes: Vec::new(),
         }),
         Ok(Err(_)) => Err("Commande d'exploration indisponible.".to_string()),
         Err(_) => Ok(ShellOutput {
@@ -44,6 +45,7 @@ pub async fn execute(
             timed_out: true,
             new_cwd: None,
             affected_paths: Vec::new(),
+            file_changes: Vec::new(),
         }),
     }
 }

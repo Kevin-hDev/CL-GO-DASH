@@ -56,6 +56,8 @@ export interface FileOperation {
   deletions: number;
   source?: GitFilePreviewSource;
   gitDiff?: GitDiffPreviewSource;
+  recordedStatus?: "added" | "modified" | "deleted";
+  recordedDiff?: GitDiffPreview;
 }
 
 export interface FileOperationGroups {

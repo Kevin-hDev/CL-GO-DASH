@@ -8,6 +8,53 @@ pub use super::diff_preview_model::GitDiffPreview;
 
 const MAX_DIFF_DELTAS: usize = 10_000;
 
+pub fn preview_buffers(
+    old_buffer: &[u8],
+    new_buffer: &[u8],
+    path: &Path,
+) -> Result<GitDiffPreview, String> {
+    let mut options = base_options();
+    let patch = Patch::from_buffers(
+        old_buffer,
+        Some(path),
+        new_buffer,
+        Some(path),
+        Some(&mut options),
+    )
+    .map_err(|_| unavailable())?;
+    Ok(serialize_patch(&patch))
+}
+
+pub fn is_bounded_preview(preview: &GitDiffPreview) -> bool {
+    if preview.hunks.len() > super::diff_preview_serialize::MAX_HUNKS {
+        return false;
+    }
+    let lines = preview.hunks.iter().flat_map(|hunk| &hunk.lines);
+    let mut line_count = 0usize;
+    let mut total_bytes = 0usize;
+    for line in lines {
+        line_count += 1;
+        total_bytes = total_bytes.saturating_add(line.content.len());
+        if line_count > super::diff_preview_serialize::MAX_LINES
+            || line.content.len() > super::diff_preview_serialize::MAX_LINE_BYTES
+            || total_bytes > super::diff_preview_serialize::MAX_TOTAL_BYTES
+        {
+            return false;
+        }
+    }
+    true
+}
+
+pub fn preview_content_bytes(preview: &GitDiffPreview) -> usize {
+    preview
+        .hunks
+        .iter()
+        .flat_map(|hunk| &hunk.lines)
+        .fold(0usize, |total, line| {
+            total.saturating_add(line.content.len())
+        })
+}
+
 pub fn read_commit_diff(
     repo_path: &Path,
     expected_branch: &str,

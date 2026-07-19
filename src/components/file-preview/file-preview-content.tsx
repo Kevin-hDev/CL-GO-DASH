@@ -6,7 +6,7 @@ import { highlightLines } from "@/lib/highlight";
 import { cleanupTauriListener } from "@/lib/tauri-listen";
 import type { FileOperation } from "@/types/file-preview";
 import { FilePreviewDiff } from "./file-preview-diff";
-import { GitDiffPreview } from "./git-diff-preview";
+import { GitDiffPreview, RecordedDiffPreview } from "./git-diff-preview";
 import "@/components/agent-local/tool-previews.css";
 
 const SpreadsheetPreview = lazy(() =>
@@ -33,6 +33,16 @@ interface FilePreviewContentProps {
 export function FilePreviewContent({ operation, baseDir }: FilePreviewContentProps) {
   const { t } = useTranslation();
   const ext = fileExt(operation.path);
+
+  if (operation.recordedStatus) {
+    return (
+      <RecordedDiffPreview
+        data={operation.recordedDiff}
+        path={operation.path}
+        status={operation.recordedStatus}
+      />
+    );
+  }
 
   if (SPREADSHEET_EXTS.has(ext)) {
     return (

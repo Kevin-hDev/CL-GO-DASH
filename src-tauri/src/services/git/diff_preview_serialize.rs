@@ -1,10 +1,10 @@
 use super::diff_preview_model::{GitDiffHunk, GitDiffLine, GitDiffPreview};
 use git2::{DiffLineType, Patch};
 
-const MAX_HUNKS: usize = 100;
-const MAX_LINES: usize = 2_000;
-const MAX_LINE_BYTES: usize = 16 * 1024;
-const MAX_TOTAL_BYTES: usize = 2 * 1024 * 1024;
+pub(super) const MAX_HUNKS: usize = 100;
+pub(super) const MAX_LINES: usize = 2_000;
+pub(super) const MAX_LINE_BYTES: usize = 16 * 1024;
+pub(super) const MAX_TOTAL_BYTES: usize = 2 * 1024 * 1024;
 
 pub(super) fn serialize_patch(patch: &Patch<'_>) -> GitDiffPreview {
     let mut preview = GitDiffPreview {
@@ -47,7 +47,7 @@ pub(super) fn serialize_patch(patch: &Patch<'_>) -> GitDiffPreview {
             total_bytes += content.len();
             total_lines += 1;
             lines.push(GitDiffLine {
-                kind,
+                kind: kind.to_string(),
                 content,
                 old_line: line.old_lineno(),
                 new_line: line.new_lineno(),

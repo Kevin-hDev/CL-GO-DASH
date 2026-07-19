@@ -17,6 +17,7 @@ export type {
   SkillInfo,
   StreamMessagePart,
   ToolActivityRecord,
+  ToolFileChangeRecord,
   ToolCallRequest,
 } from "./agent-message";
 export type {

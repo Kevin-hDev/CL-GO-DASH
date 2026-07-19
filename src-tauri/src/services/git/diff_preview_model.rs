@@ -1,13 +1,13 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct GitDiffPreview {
     pub hunks: Vec<GitDiffHunk>,
     pub truncated: bool,
     pub binary: bool,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct GitDiffHunk {
     pub old_start: u32,
     pub old_lines: u32,
@@ -16,9 +16,9 @@ pub struct GitDiffHunk {
     pub lines: Vec<GitDiffLine>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct GitDiffLine {
-    pub kind: &'static str,
+    pub kind: String,
     pub content: String,
     pub old_line: Option<u32>,
     pub new_line: Option<u32>,
