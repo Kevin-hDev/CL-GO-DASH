@@ -1,0 +1,23 @@
+import { describe, expect, it } from "vitest";
+import de from "./de.json";
+import en from "./en.json";
+import es from "./es.json";
+import fr from "./fr.json";
+import itJson from "./it.json";
+import ja from "./ja.json";
+import zh from "./zh.json";
+
+describe("git history translations", () => {
+  it("contient les libellés dans les sept langues", () => {
+    const locales = [fr, en, es, de, itJson, zh, ja] as Array<{
+      filePreview: { listModes: { uncommitted: string } };
+      agentLocal: { sessionSummary: { commits: { title: string; error: string } } };
+    }>;
+    for (const locale of locales) {
+      expect(locale.filePreview.listModes.uncommitted).toBeTruthy();
+      expect(locale.agentLocal.sessionSummary.commits.title).toBeTruthy();
+      expect(locale.agentLocal.sessionSummary.commits.error).toBeTruthy();
+    }
+    expect(fr.filePreview.listModes.uncommitted).toBe("Non commit");
+  });
+});

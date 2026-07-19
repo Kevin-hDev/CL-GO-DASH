@@ -33,6 +33,31 @@ export interface GitDirtyFile {
   deletions: number;
 }
 
+export interface GitCommitSummary {
+  id: string;
+  short_id: string;
+  message: string;
+  timestamp: number;
+}
+
+export interface GitCommitPage {
+  commits: GitCommitSummary[];
+  next_cursor?: string;
+}
+
+export interface GitCommitFile {
+  path: string;
+  previous_path?: string;
+  status: "added" | "deleted" | "renamed" | "copied" | "modified" | "changed";
+  additions: number;
+  deletions: number;
+}
+
+export interface GitUncommittedSnapshot {
+  head_commit: string;
+  files: GitDirtyFile[];
+}
+
 export interface BranchDeletePreview {
   branch: string;
   is_current: boolean;

@@ -1,7 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { listen } from "@tauri-apps/api/event";
-import { readFilePreview } from "@/services/file-preview";
+import { readFilePreview, readGitFilePreview } from "@/services/file-preview";
 import { highlightLines } from "@/lib/highlight";
 import { cleanupTauriListener } from "@/lib/tauri-listen";
 import type { FileOperation } from "@/types/file-preview";
@@ -36,21 +36,21 @@ export function FilePreviewContent({ operation, baseDir }: FilePreviewContentPro
   if (SPREADSHEET_EXTS.has(ext)) {
     return (
       <Suspense fallback={<div className="fp-empty">{t("filePreview.loading")}</div>}>
-        <SpreadsheetPreview path={operation.path} baseDir={baseDir} savedOps={operation.content} />
+        <SpreadsheetPreview path={operation.path} baseDir={baseDir} savedOps={operation.content} source={operation.source} />
       </Suspense>
     );
   }
   if (ext === "docx") {
     return (
       <Suspense fallback={<div className="fp-empty">{t("filePreview.loading")}</div>}>
-        <DocumentPreview path={operation.path} baseDir={baseDir} savedBlocks={operation.content} />
+        <DocumentPreview path={operation.path} baseDir={baseDir} savedBlocks={operation.content} source={operation.source} />
       </Suspense>
     );
   }
   if (ext === "pdf") {
     return (
       <Suspense fallback={<div className="fp-empty">{t("filePreview.loading")}</div>}>
-        <PdfPreview path={operation.path} baseDir={baseDir} />
+        <PdfPreview path={operation.path} baseDir={baseDir} source={operation.source} />
       </Suspense>
     );
   }
@@ -73,7 +73,7 @@ function TextPreviewContent({ operation, baseDir }: FilePreviewContentProps) {
     let alive = true;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch→setState is intentional
     setState({ loading: true, content: "", error: false });
-    readFilePreview(operation.path, baseDir)
+    readTextPreview(operation.path, operation.source, baseDir)
       .then((content) => {
         if (alive) setState({ loading: false, content, error: false });
       })
@@ -81,16 +81,17 @@ function TextPreviewContent({ operation, baseDir }: FilePreviewContentProps) {
         if (alive) setState({ loading: false, content: "", error: true });
       });
     return () => { alive = false; };
-  }, [operation.path, baseDir, hasSavedContent]);
+  }, [operation.path, operation.source, baseDir, hasSavedContent]);
 
   const reload = useCallback(() => {
     if (hasSavedContent) return;
-    readFilePreview(operation.path, baseDir)
+    readTextPreview(operation.path, operation.source, baseDir)
       .then((content) => setState({ loading: false, content, error: false }))
       .catch(() => {});
-  }, [operation.path, baseDir, hasSavedContent]);
+  }, [operation.path, operation.source, baseDir, hasSavedContent]);
 
   useEffect(() => {
+    if (operation.source) return;
     const unlisten = listen<{ path: string }>("file-tree-changed", (event) => {
       const changedDir = event.payload.path;
       const parentDir = operation.path.substring(0, operation.path.lastIndexOf("/"));
@@ -99,7 +100,7 @@ function TextPreviewContent({ operation, baseDir }: FilePreviewContentProps) {
       }
     });
     return () => { cleanupTauriListener(unlisten); };
-  }, [operation.path, reload]);
+  }, [operation.path, operation.source, reload]);
 
   const highlighted = useMemo(
     () => state.content ? highlightLines(state.content, operation.path) : [],
@@ -127,4 +128,14 @@ function TextPreviewContent({ operation, baseDir }: FilePreviewContentProps) {
       ))}
     </div>
   );
+}
+
+async function readTextPreview(
+  path: string,
+  source: FileOperation["source"],
+  baseDir?: string,
+) {
+  return source
+    ? readGitFilePreview(source, baseDir)
+    : readFilePreview(path, baseDir);
 }

@@ -9,6 +9,7 @@ import { useForecastPanel } from "@/hooks/use-forecast-panel";
 import { useAgentLocalPanelNav } from "@/hooks/use-agent-local-panel-nav";
 import { useAgentLocalControlledPanels } from "@/hooks/use-agent-local-controlled-panels";
 import { useGitBranch } from "@/hooks/use-git-branch";
+import { useGitUncommittedFiles } from "@/hooks/use-git-uncommitted-files";
 import { useSessionSummary } from "@/hooks/use-session-summary";
 import { useSessionTabs } from "@/hooks/use-session-tabs";
 import { useAgentLocalTabGit } from "@/hooks/use-agent-local-tab-git";
@@ -19,6 +20,7 @@ import {
 import { useAgentLocalForecastContent } from "./use-agent-local-forecast-content";
 import { useAgentLocalConversationList } from "./use-agent-local-conversation-list";
 import { useAvailablePanelMode } from "@/hooks/use-available-panel-mode";
+import { commitFileOperation } from "@/lib/git-file-preview";
 import type { AgentLocalTabProps } from "./agent-local-tab-types";
 import "./agent-local-tab.css";
 
@@ -54,6 +56,7 @@ export const AgentLocalTab = memo(function AgentLocalTab({
   const terminalCwd = displayProject?.path || "";
   const sessionSummary = useSessionSummary(displaySessionId ?? null);
   const summaryGit = useGitBranch(displayProject?.path, displaySessionId ?? undefined);
+  const uncommittedFiles = useGitUncommittedFiles(summaryGit);
   const tabGit = useAgentLocalTabGit({
     rootSessionId: activeSessionId,
     git: summaryGit,
@@ -95,6 +98,9 @@ export const AgentLocalTab = memo(function AgentLocalTab({
           onOpenPlan={filePreview.openPlan}
           onOpenSubagent={(id) => void handleSelectById(id)}
           onArchiveSubagent={(id) => void archive(id)}
+          onOpenGitFile={(commit, file) => filePreview.openOperation(
+            commitFileOperation(commit, file, summaryGit.currentBranch),
+          )}
           onToggleTerminal={() => {
             if (!terminal.isOpen && terminal.tabs.length === 0) {
               terminal.addTab(terminalCwd);
@@ -120,6 +126,7 @@ export const AgentLocalTab = memo(function AgentLocalTab({
           filePreview={filePreview}
           fullscreenSwitching={fullscreenSwitching}
           fileOperations={fileOperations}
+          gitUncommittedFiles={uncommittedFiles}
           fileTree={fileTreeNav}
           onAddProject={projectsHook.add}
           onSessionsRefresh={() => void refresh()}
@@ -175,7 +182,7 @@ export const AgentLocalTab = memo(function AgentLocalTab({
     activeSession?.name, activeSessionId, archive, currentDefault.model, currentDefault.provider, displayModel, displayProject?.path,
     displayProvider, displayReasoningMode, displaySession?.parent_session_id,
     displaySessionId,
-    availablePanel, fileOperations, filePreview, fileTreeNav, forecastNav.setPanelMode, forecastContent,
+    availablePanel, fileOperations, filePreview, fileTreeNav, forecastNav.setPanelMode, forecastContent, uncommittedFiles,
     fullscreenSwitching, handleAutoRename, handleCreateInProjectWithModel, handleCreateWithModel,
     handleOpenForecastDocs, handlePreviewFullscreenChange, handleSelectById, handleWelcomeSend,
     pendingFiles, pendingMessage, pendingSkills, pendingWorkingDir, projectsHook, refresh,

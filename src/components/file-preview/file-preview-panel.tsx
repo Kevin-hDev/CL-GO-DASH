@@ -17,6 +17,7 @@ interface FilePreviewPanelProps {
   fullscreen: boolean;
   allOperations: FileOperation[];
   latestOperations: FileOperation[];
+  uncommittedOperations: FileOperation[];
   tabs: FileOperation[];
   activeTab: FilePreviewActiveTab;
   listMode: FilePreviewListMode;
@@ -35,13 +36,19 @@ interface FilePreviewPanelProps {
 export function FilePreviewPanel(props: FilePreviewPanelProps) {
   const { t } = useTranslation();
   const activeOperation = props.tabs.find((tab) => tab.id === props.activeTab);
-  const summaryOperations = props.listMode === "latest" ? props.latestOperations : props.allOperations;
+  const summaryOperations = props.listMode === "latest"
+    ? props.latestOperations
+    : props.listMode === "uncommitted"
+      ? props.uncommittedOperations
+      : props.allOperations;
 
   const openDefault = (operation: FileOperation) => {
+    if (operation.source) return;
     openPreviewFile(operation.path, props.baseDir).catch(() => {});
   };
 
   const openWith = (operation: FileOperation, editorPath: string) => {
+    if (operation.source) return;
     openPreviewWithEditor(operation.path, editorPath, props.baseDir).catch(() => {});
   };
 

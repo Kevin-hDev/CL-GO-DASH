@@ -1,10 +1,11 @@
 use super::repo as git_repo;
-use git2::StatusOptions;
+use git2::{Patch, StatusOptions};
 use serde::Serialize;
 use std::collections::HashMap;
 use std::path::Path;
 
 const MAX_DIRTY_FILES: usize = 200;
+const MAX_PATH_LEN: usize = 4096;
 
 #[derive(Debug, Clone, Serialize)]
 pub struct DirtyFile {
@@ -25,14 +26,18 @@ pub fn list_dirty_files(repo_path: &Path) -> Result<Vec<DirtyFile>, String> {
         .statuses(Some(&mut opts))
         .map_err(|e| format!("Lecture du statut : {e}"))?;
 
-    let diff_stats = get_diff_stats(&workdir);
+    let diff_stats = get_diff_stats(&repo);
 
     let mut files = Vec::new();
     for entry in statuses.iter() {
         if files.len() >= MAX_DIRTY_FILES {
             break;
         }
-        let path = entry.path().unwrap_or("?").to_string();
+        let Ok(raw_path) = entry.path() else { continue };
+        if raw_path.is_empty() || raw_path.len() > MAX_PATH_LEN || raw_path.contains('\0') {
+            continue;
+        }
+        let path = raw_path.to_string();
         let st = entry.status();
         let label = if st.is_index_new() || st.is_wt_new() {
             "new"
@@ -62,41 +67,29 @@ pub fn list_dirty_files(repo_path: &Path) -> Result<Vec<DirtyFile>, String> {
     Ok(files)
 }
 
-fn get_diff_stats(repo_path: &Path) -> HashMap<String, (u32, u32)> {
-    let output = std::process::Command::new("git")
-        .args(["-C"])
-        .arg(repo_path)
-        .args(["diff", "HEAD", "--numstat"])
-        .output();
-
+fn get_diff_stats(repo: &git2::Repository) -> HashMap<String, (u32, u32)> {
     let mut map = HashMap::new();
-    let Ok(output) = output else { return map };
-    if !output.status.success() {
-        return map;
-    }
-
-    for line in String::from_utf8_lossy(&output.stdout).lines() {
-        if map.len() >= MAX_DIRTY_FILES {
-            break;
+    let Ok(tree) = repo.head().and_then(|head| head.peel_to_tree()) else { return map };
+    let Ok(diff) = repo.diff_tree_to_workdir_with_index(Some(&tree), None) else { return map };
+    for (index, delta) in diff.deltas().take(MAX_DIRTY_FILES).enumerate() {
+        let Some(path) = delta.new_file().path().or_else(|| delta.old_file().path()) else { continue };
+        let Some(path) = path.to_str() else { continue };
+        if path.is_empty() || path.len() > MAX_PATH_LEN || path.contains('\0') {
+            continue;
         }
-        if let Some((path, add, del)) = parse_numstat_line(line) {
-            map.insert(path, (add, del));
+        let stats = Patch::from_diff(&diff, index)
+            .ok()
+            .flatten()
+            .and_then(|patch| patch.line_stats().ok());
+        if let Some((_, additions, deletions)) = stats {
+            map.insert(path.to_string(), (bounded_u32(additions), bounded_u32(deletions)));
         }
     }
     map
 }
 
-/// Parse une ligne `git diff --numstat` au format `<add>\t<del>\t<path>`.
-/// Pour les fichiers binaires, git émet `-` à la place d'un nombre : on
-/// interprète ça comme 0. Retourne `None` si la ligne est malformée.
-pub(super) fn parse_numstat_line(line: &str) -> Option<(String, u32, u32)> {
-    let parts: Vec<&str> = line.split('\t').collect();
-    if parts.len() < 3 {
-        return None;
-    }
-    let add = parts[0].parse::<u32>().unwrap_or(0);
-    let del = parts[1].parse::<u32>().unwrap_or(0);
-    Some((parts[2].to_string(), add, del))
+fn bounded_u32(value: usize) -> u32 {
+    u32::try_from(value).unwrap_or(u32::MAX)
 }
 
 const MAX_FILE_READ: u64 = 1_048_576;

@@ -302,6 +302,14 @@
       "branch": "Rama",
       "noGit": "Sin repositorio Git",
       "noChanges": "Sin cambios",
+      "commits": {
+        "title": "Commits",
+        "toggle": "Desplegar el historial de commits",
+        "empty": "No hay commits en esta rama",
+        "noMessage": "Commit sin mensaje",
+        "noFiles": "No hay archivos en este commit",
+        "error": "El historial de commits no está disponible."
+      },
       "git": {
         "toggle": "Desplegar la rama {{branch}}",
         "changesToCommit": "{{count}} archivo(s) para Commit",
@@ -837,7 +845,8 @@
     "noFiles": "Ningún archivo creado o modificado en esta sesión.",
     "listModes": {
       "latest": "Última ejecución",
-      "all": "Todos los archivos"
+      "all": "Todos los archivos",
+      "uncommitted": "Sin commit"
     },
     "filesModified": "Archivos",
     "loading": "Leyendo archivo...",

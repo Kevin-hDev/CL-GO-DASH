@@ -12,7 +12,7 @@ interface FilePreviewSummarySelectorProps {
   onModeChange: (mode: FilePreviewListMode) => void;
 }
 
-const MODES: FilePreviewListMode[] = ["latest", "all"];
+const MODES: FilePreviewListMode[] = ["latest", "all", "uncommitted"];
 const VIEWPORT_PADDING = 12;
 const HIDDEN_STYLE: CSSProperties = {
   position: "fixed",

@@ -1,5 +1,6 @@
 pub mod branch;
 pub mod branch_commit;
+pub mod blob_preview;
 #[cfg(test)]
 mod branch_commit_direct_tests;
 #[cfg(test)]
@@ -14,6 +15,10 @@ pub mod branch_merge;
 #[cfg(test)]
 mod branch_merge_tests;
 pub mod github_auth;
+pub mod commit_files;
+pub mod history;
+#[cfg(test)]
+mod history_tests;
 pub mod remote;
 mod remote_credentials;
 mod remote_status;

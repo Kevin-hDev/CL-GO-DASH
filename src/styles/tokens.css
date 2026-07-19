@@ -40,6 +40,11 @@
   --chat-column-width: 720px;
   --dialog-compact-min-width: 18.75rem;
   --dialog-compact-max-width: 27.5rem;
+  --summary-commit-row-height: 2rem;
+  --summary-icon-column: 1.3333rem;
+  --summary-panel-indent: 1.8889rem;
+  --summary-caret-column: var(--chrome-icon-md);
+  --summary-file-icon-column: var(--chrome-icon-lg);
 
   --browser-toolbar-height: 2rem;
   --browser-control-size: 1.75rem;

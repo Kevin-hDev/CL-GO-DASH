@@ -12,7 +12,9 @@ import {
 } from "./session-summary-lists";
 import { SessionSummarySection } from "./session-summary-section";
 import { SessionSummaryGitSection } from "./session-summary-git-section";
+import { SessionSummaryCommits } from "./session-summary-commits";
 import type { SessionSummaryGitState } from "./session-summary-git-section";
+import type { GitCommitFile, GitCommitSummary } from "@/hooks/git-types";
 import "./session-summary-bubble.css";
 
 type SessionSummaryState = ReturnType<typeof useSessionSummary>;
@@ -25,6 +27,7 @@ interface SessionSummaryBubbleProps {
   onOpenPlan?: (plan: AgentPlanRun) => void;
   onOpenSubagent?: (sessionId: string) => void;
   onArchiveSubagent?: (sessionId: string) => void;
+  onOpenGitFile?: (commit: GitCommitSummary, file: GitCommitFile) => void;
 }
 
 type SectionKey = "todos" | "plans" | "subagents";
@@ -35,6 +38,7 @@ export function SessionSummaryBubble({
   onOpenPlan,
   onOpenSubagent,
   onArchiveSubagent,
+  onOpenGitFile,
 }: SessionSummaryBubbleProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -88,6 +92,14 @@ export function SessionSummaryBubble({
             <ChangeStats additions={summary.changes.additions} deletions={summary.changes.deletions} />
           </div>
           <SessionSummaryGitSection git={git} />
+          <SessionSummaryCommits
+            key={`${git?.repositoryPath ?? "none"}:${git?.currentBranch ?? "none"}`}
+            git={git}
+            onOpenFile={(commit, file) => {
+              setOpen(false);
+              onOpenGitFile?.(commit, file);
+            }}
+          />
           <div className="ssb-separator" />
           <SessionSummarySection title={t("agentLocal.sessionSummary.sections.todos")} count={summary.todoRuns.length} open={sections.todos} onToggle={() => toggleSection("todos")}>
             <SessionSummaryTodoList runs={summary.todoRuns} />

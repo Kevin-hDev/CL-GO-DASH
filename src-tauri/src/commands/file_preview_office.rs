@@ -28,7 +28,7 @@ pub async fn read_selected_spreadsheet_preview(
     read_spreadsheet_path(resolved, sheet, max_rows).await
 }
 
-async fn read_spreadsheet_path(
+pub(crate) async fn read_spreadsheet_path(
     resolved: std::path::PathBuf,
     sheet: Option<String>,
     max_rows: Option<usize>,

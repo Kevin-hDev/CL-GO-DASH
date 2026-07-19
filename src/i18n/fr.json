@@ -307,6 +307,14 @@
       "branch": "Branche",
       "noGit": "Aucun dépôt Git",
       "noChanges": "Aucune modification",
+      "commits": {
+        "title": "Commits",
+        "toggle": "Déplier l’historique des commits",
+        "empty": "Aucun commit sur cette branche",
+        "noMessage": "Commit sans message",
+        "noFiles": "Aucun fichier dans ce commit",
+        "error": "Historique des commits indisponible."
+      },
       "git": {
         "toggle": "Déplier la branche {{branch}}",
         "changesToCommit": "{{count}} fichier(s) à Commit",
@@ -890,7 +898,8 @@
     "noFiles": "Aucun fichier créé ou modifié dans cette session.",
     "listModes": {
       "latest": "Dernière exécution",
-      "all": "Tous les fichiers"
+      "all": "Tous les fichiers",
+      "uncommitted": "Non commit"
     },
     "filesModified": "Fichiers",
     "loading": "Lecture du fichier...",

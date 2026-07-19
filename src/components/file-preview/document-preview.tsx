@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { readBinaryPreview } from "@/services/file-preview";
+import { readBinaryPreview, readGitBinaryPreview } from "@/services/file-preview";
+import type { GitFilePreviewSource } from "@/types/file-preview";
 import "./document-preview.css";
 
 interface DocumentPreviewProps {
   path: string;
   baseDir?: string;
   savedBlocks?: string;
+  source?: GitFilePreviewSource;
 }
 
 function base64ToArrayBuffer(base64: string): ArrayBuffer {
@@ -18,9 +20,9 @@ function base64ToArrayBuffer(base64: string): ArrayBuffer {
   return bytes.buffer;
 }
 
-export function DocumentPreview({ path, baseDir, savedBlocks }: DocumentPreviewProps) {
+export function DocumentPreview({ path, baseDir, savedBlocks, source }: DocumentPreviewProps) {
   if (savedBlocks) return <SavedDocumentPreview blocksJson={savedBlocks} />;
-  return <LiveDocumentPreview path={path} baseDir={baseDir} />;
+  return <LiveDocumentPreview path={path} baseDir={baseDir} source={source} />;
 }
 
 interface ContentBlock {
@@ -96,7 +98,7 @@ function BlockRenderer({ block }: { block: ContentBlock }) {
   return null;
 }
 
-function LiveDocumentPreview({ path, baseDir }: { path: string; baseDir?: string }) {
+function LiveDocumentPreview({ path, baseDir, source }: DocumentPreviewProps) {
   const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
@@ -107,7 +109,10 @@ function LiveDocumentPreview({ path, baseDir }: { path: string; baseDir?: string
     // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch→setState is intentional
     setLoading(true);
     setError(false);
-    readBinaryPreview(path, baseDir)
+    const request = source
+      ? readGitBinaryPreview(source, baseDir)
+      : readBinaryPreview(path, baseDir);
+    request
       .then(async (base64) => {
         if (!alive || !containerRef.current) return;
         const buffer = base64ToArrayBuffer(base64);
@@ -131,7 +136,7 @@ function LiveDocumentPreview({ path, baseDir }: { path: string; baseDir?: string
         if (alive) { setError(true); setLoading(false); }
       });
     return () => { alive = false; };
-  }, [path, baseDir]);
+  }, [path, baseDir, source]);
 
   if (error) return <div className="fp-empty">{t("filePreview.fileNotFound")}</div>;
   return (

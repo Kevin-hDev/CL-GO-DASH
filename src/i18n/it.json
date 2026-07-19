@@ -302,6 +302,14 @@
       "branch": "Branch",
       "noGit": "Nessun repository Git",
       "noChanges": "Nessuna modifica",
+      "commits": {
+        "title": "Commit",
+        "toggle": "Espandi la cronologia dei commit",
+        "empty": "Nessun commit su questo branch",
+        "noMessage": "Commit senza messaggio",
+        "noFiles": "Nessun file in questo commit",
+        "error": "La cronologia dei commit non è disponibile."
+      },
       "git": {
         "toggle": "Espandi il ramo {{branch}}",
         "changesToCommit": "{{count}} file per il Commit",
@@ -837,7 +845,8 @@
     "noFiles": "Nessun file creato o modificato in questa sessione.",
     "listModes": {
       "latest": "Ultima esecuzione",
-      "all": "Tutti i file"
+      "all": "Tutti i file",
+      "uncommitted": "Non commit"
     },
     "filesModified": "File",
     "loading": "Lettura del file in corso...",

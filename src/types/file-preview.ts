@@ -1,6 +1,14 @@
 type FileOperationType = "read" | "write" | "edit";
 type FileOperationKind = "file" | "plan";
 
+export interface GitFilePreviewSource {
+  kind: "git";
+  commitId: string;
+  filePath: string;
+  expectedBranch: string;
+  useParent: boolean;
+}
+
 export interface FileOperation {
   id: string;
   path: string;
@@ -14,6 +22,7 @@ export interface FileOperation {
   startLine?: number;
   additions: number;
   deletions: number;
+  source?: GitFilePreviewSource;
 }
 
 export interface FileOperationGroups {
@@ -28,4 +37,4 @@ export interface PreviewEditor {
 }
 
 export type FilePreviewActiveTab = string;
-export type FilePreviewListMode = "latest" | "all";
+export type FilePreviewListMode = "latest" | "all" | "uncommitted";

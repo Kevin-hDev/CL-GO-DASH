@@ -30,6 +30,7 @@ interface AgentChatDetailProps {
   filePreview: ReturnType<typeof useFilePreview>;
   fullscreenSwitching: boolean;
   fileOperations: FileOperationGroups;
+  gitUncommittedFiles: FileOperation[];
   onAddProject: (path: string) => Promise<Project>;
   onSessionsRefresh: () => void;
   onUpdateModel: (id: string, model: string, provider: string) => void;
@@ -127,6 +128,7 @@ export function AgentChatDetail(props: AgentChatDetailProps) {
             fullscreen={props.filePreview.fullscreen}
             allOperations={props.fileOperations.all}
             latestOperations={props.fileOperations.latest}
+            uncommittedOperations={props.gitUncommittedFiles}
             tabs={props.filePreview.tabs}
             activeTab={props.filePreview.activeTab}
             listMode={props.filePreview.listMode}

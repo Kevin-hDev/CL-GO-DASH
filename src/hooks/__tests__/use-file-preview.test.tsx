@@ -62,6 +62,30 @@ describe("useFilePreview", () => {
       expect(result.current.activeTab).toBe("summary");
     });
   });
+
+  it("conserve un ancien fichier Git sans vérifier le disque actuel", async () => {
+    vi.mocked(checkPreviewFilesExist).mockResolvedValue([]);
+    const snapshot = operation({
+      id: "git:commit:file",
+      path: "src/deleted.ts",
+      type: "read",
+      source: {
+        kind: "git",
+        commitId: "a".repeat(40),
+        filePath: "src/deleted.ts",
+        expectedBranch: "main",
+        useParent: true,
+      },
+    });
+    const { result } = renderHook(() => useFilePreview("session-1", [], "/repo"));
+
+    act(() => {
+      result.current.openOperation(snapshot);
+    });
+
+    await waitFor(() => expect(result.current.tabs[0]?.id).toBe(snapshot.id));
+    expect(checkPreviewFilesExist).not.toHaveBeenCalled();
+  });
 });
 
 function operation(overrides: Partial<FileOperation>): FileOperation {

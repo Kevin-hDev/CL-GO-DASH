@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import type { PreviewEditor } from "@/types/file-preview";
+import type { GitFilePreviewSource, PreviewEditor } from "@/types/file-preview";
 
 export interface PreviewFileExistence {
   path: string;
@@ -37,4 +37,44 @@ export function readSpreadsheetPreview(
 
 export function readBinaryPreview(path: string, baseDir?: string) {
   return invoke<string>("read_binary_preview", { path, baseDir });
+}
+
+export function readGitFilePreview(source: GitFilePreviewSource, repositoryPath?: string) {
+  const args = gitPreviewArgs(source, repositoryPath);
+  return args
+    ? invoke<string>("read_git_file_preview", args)
+    : Promise.reject(new Error("git unavailable"));
+}
+
+export function readGitBinaryPreview(source: GitFilePreviewSource, repositoryPath?: string) {
+  const args = gitPreviewArgs(source, repositoryPath);
+  return args
+    ? invoke<string>("read_git_binary_preview", args)
+    : Promise.reject(new Error("git unavailable"));
+}
+
+export function readGitSpreadsheetPreview(
+  source: GitFilePreviewSource,
+  repositoryPath?: string,
+  sheet?: string,
+  maxRows?: number,
+) {
+  const args = gitPreviewArgs(source, repositoryPath);
+  if (!args) return Promise.reject(new Error("git unavailable"));
+  return invoke<string>("read_git_spreadsheet_preview", {
+    ...args,
+    sheet,
+    maxRows,
+  });
+}
+
+function gitPreviewArgs(source: GitFilePreviewSource, repositoryPath?: string) {
+  if (!repositoryPath) return null;
+  return {
+    path: repositoryPath,
+    expectedBranch: source.expectedBranch,
+    commitId: source.commitId,
+    filePath: source.filePath,
+    useParent: source.useParent,
+  };
 }

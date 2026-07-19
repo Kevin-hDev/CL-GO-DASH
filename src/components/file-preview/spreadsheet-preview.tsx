@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { readSpreadsheetPreview } from "@/services/file-preview";
+import { readGitSpreadsheetPreview, readSpreadsheetPreview } from "@/services/file-preview";
 import { reconstructFromOps, cellText, type SpreadsheetData } from "@/lib/spreadsheet-ops-parser";
+import type { GitFilePreviewSource } from "@/types/file-preview";
 import "./spreadsheet-preview.css";
 
 interface SpreadsheetPreviewProps {
   path: string;
   baseDir?: string;
   savedOps?: string;
+  source?: GitFilePreviewSource;
 }
 
 function colLetter(index: number): string {
@@ -20,13 +22,13 @@ function colLetter(index: number): string {
   return result;
 }
 
-export function SpreadsheetPreview({ path, baseDir, savedOps }: SpreadsheetPreviewProps) {
+export function SpreadsheetPreview({ path, baseDir, savedOps, source }: SpreadsheetPreviewProps) {
   const savedData = useMemo(() => savedOps ? reconstructFromOps(savedOps) : null, [savedOps]);
   if (savedData) return <SpreadsheetTable data={savedData} />;
-  return <LiveSpreadsheetPreview path={path} baseDir={baseDir} />;
+  return <LiveSpreadsheetPreview path={path} baseDir={baseDir} source={source} />;
 }
 
-function LiveSpreadsheetPreview({ path, baseDir }: { path: string; baseDir?: string }) {
+function LiveSpreadsheetPreview({ path, baseDir, source }: SpreadsheetPreviewProps) {
   const { t } = useTranslation();
   const [data, setData] = useState<SpreadsheetData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -38,7 +40,10 @@ function LiveSpreadsheetPreview({ path, baseDir }: { path: string; baseDir?: str
     // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch→setState is intentional
     setLoading(true);
     setError(false);
-    readSpreadsheetPreview(path, baseDir, activeSheet ?? undefined, 500)
+    const request = source
+      ? readGitSpreadsheetPreview(source, baseDir, activeSheet ?? undefined, 500)
+      : readSpreadsheetPreview(path, baseDir, activeSheet ?? undefined, 500);
+    request
       .then((json) => {
         if (!alive) return;
         const parsed = JSON.parse(json) as SpreadsheetData;
@@ -50,7 +55,7 @@ function LiveSpreadsheetPreview({ path, baseDir }: { path: string; baseDir?: str
         if (alive) { setError(true); setLoading(false); }
       });
     return () => { alive = false; };
-  }, [path, baseDir, activeSheet]);
+  }, [path, baseDir, activeSheet, source]);
 
   if (loading) return <div className="fp-empty">{t("filePreview.loading")}</div>;
   if (error || !data) return <div className="fp-empty">{t("filePreview.fileNotFound")}</div>;

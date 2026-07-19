@@ -2,6 +2,8 @@ import type {
   BranchInfo,
   BranchMergePreview,
   GitActionResult,
+  GitCommitFile,
+  GitCommitPage,
   GitDirtyFile,
   GitPushTarget,
 } from "@/hooks/git-types";
@@ -20,6 +22,8 @@ export interface SessionSummaryGitState {
   behindCount: number;
   worktrees: { branch: string; path: string; is_current: boolean }[];
   listDirtyFiles: () => Promise<GitDirtyFile[]>;
+  listCommits: (cursor?: string) => Promise<GitCommitPage>;
+  listCommitFiles: (commitId: string) => Promise<GitCommitFile[]>;
   commit: (description?: string) => Promise<GitActionResult>;
   push: (target: GitPushTarget) => Promise<GitActionResult>;
   previewBranchMerge: (

@@ -307,6 +307,14 @@
       "branch": "Branch",
       "noGit": "No Git repository",
       "noChanges": "No changes",
+      "commits": {
+        "title": "Commits",
+        "toggle": "Expand commit history",
+        "empty": "No commits on this branch",
+        "noMessage": "Commit without a message",
+        "noFiles": "No files in this commit",
+        "error": "Commit history is unavailable."
+      },
       "git": {
         "toggle": "Expand branch {{branch}}",
         "changesToCommit": "{{count}} file(s) to Commit",
@@ -842,7 +850,8 @@
     "noFiles": "No files created or modified in this session.",
     "listModes": {
       "latest": "Latest run",
-      "all": "All files"
+      "all": "All files",
+      "uncommitted": "Uncommitted"
     },
     "filesModified": "Files",
     "loading": "Reading file...",

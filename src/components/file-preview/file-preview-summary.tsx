@@ -57,19 +57,21 @@ export function FilePreviewSummary({
               <span className="fp-summary-name">{operation.name}</span>
             </span>
             <FilePreviewStats operation={operation} showZero />
-            <Tooltip label={t("filePreview.open")}>
-              <button
-                className="fp-summary-open"
-                type="button"
-                aria-label={t("filePreview.open")}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onOpenFile(operation);
-                }}
-              >
-                <ArrowSquareOut size="var(--icon-xs)" aria-hidden="true" />
-              </button>
-            </Tooltip>
+            {!operation.source && (
+              <Tooltip label={t("filePreview.open")}>
+                <button
+                  className="fp-summary-open"
+                  type="button"
+                  aria-label={t("filePreview.open")}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onOpenFile(operation);
+                  }}
+                >
+                  <ArrowSquareOut size="var(--icon-xs)" aria-hidden="true" />
+                </button>
+              </Tooltip>
+            )}
           </div>
         );
       })}

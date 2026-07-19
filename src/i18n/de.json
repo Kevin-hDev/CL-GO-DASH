@@ -302,6 +302,14 @@
       "branch": "Branch",
       "noGit": "Kein Git-Repository",
       "noChanges": "Keine Änderungen",
+      "commits": {
+        "title": "Commits",
+        "toggle": "Commit-Verlauf ausklappen",
+        "empty": "Keine Commits auf diesem Branch",
+        "noMessage": "Commit ohne Nachricht",
+        "noFiles": "Keine Dateien in diesem Commit",
+        "error": "Der Commit-Verlauf ist nicht verfügbar."
+      },
       "git": {
         "toggle": "Branch {{branch}} aufklappen",
         "changesToCommit": "{{count}} Datei(en) für Commit",
@@ -837,7 +845,8 @@
     "noFiles": "Keine Dateien in dieser Sitzung erstellt oder geändert.",
     "listModes": {
       "latest": "Letzte Ausführung",
-      "all": "Alle Dateien"
+      "all": "Alle Dateien",
+      "uncommitted": "Nicht committed"
     },
     "filesModified": "Dateien",
     "loading": "Datei wird gelesen...",

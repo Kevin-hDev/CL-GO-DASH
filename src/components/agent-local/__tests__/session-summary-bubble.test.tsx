@@ -31,6 +31,8 @@ vi.mock("@/components/ui/icons", () => ({
   FilePlus: () => <span data-testid="file-plus" />,
   FileText: () => <span data-testid="file-text" />,
   GitBranch: () => <span data-testid="git-branch" />,
+  Hash: () => <span data-testid="git-commit" />,
+  CaretLeft: () => <span data-testid="back" />,
   X: () => <span data-testid="close" />,
 }));
 
@@ -58,6 +60,8 @@ const git = {
   aheadCount: 0,
   behindCount: 0,
   listDirtyFiles: vi.fn().mockResolvedValue([]),
+  listCommits: vi.fn().mockResolvedValue({ commits: [] }),
+  listCommitFiles: vi.fn().mockResolvedValue([]),
   commit: vi.fn().mockResolvedValue({ ok: true }),
   push: vi.fn().mockResolvedValue({ ok: true }),
   previewBranchMerge: vi.fn(),

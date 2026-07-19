@@ -8,6 +8,7 @@ import type { PanelMode } from "@/hooks/use-forecast-panel";
 import type { BrowserCapability } from "@/hooks/use-browser-capability";
 import type { SessionSummaryHookState } from "@/hooks/use-session-summary";
 import type { AgentPlanRun, SessionTabs } from "@/types/agent";
+import type { GitCommitFile, GitCommitSummary } from "@/hooks/git-types";
 import { ModeSelector } from "./mode-selector";
 import { SessionTabsHeader } from "./session-tabs-header";
 import { SessionSummaryBubble, type SessionSummaryGitState } from "./session-summary-bubble";
@@ -35,6 +36,7 @@ interface ChatHeaderProps {
   onOpenPlan?: (plan: AgentPlanRun) => void;
   onOpenSubagent?: (sessionId: string) => void;
   onArchiveSubagent?: (sessionId: string) => void;
+  onOpenGitFile?: (commit: GitCommitSummary, file: GitCommitFile) => void;
 }
 
 export function ChatHeader({
@@ -59,6 +61,7 @@ export function ChatHeader({
   onOpenPlan,
   onOpenSubagent,
   onArchiveSubagent,
+  onOpenGitFile,
 }: ChatHeaderProps) {
   const { t } = useTranslation();
   const hasSession = Boolean(sessionId);
@@ -108,6 +111,7 @@ export function ChatHeader({
               onOpenPlan={onOpenPlan}
               onOpenSubagent={onOpenSubagent}
               onArchiveSubagent={onArchiveSubagent}
+              onOpenGitFile={onOpenGitFile}
             />
           )}
           <Tooltip label={`${t("filePreview.togglePanel")} (${ALT}${MOD}B)`} align="right">

@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { cleanupTauriListener } from "@/lib/tauri-listen";
 import { useGitMutations } from "@/hooks/use-git-mutations";
+import { useGitHistory } from "@/hooks/use-git-history";
 import type { BranchInfo, GitBranchState, WorktreeInfo } from "@/hooks/git-types";
 
 export type { BranchInfo, WorktreeInfo } from "@/hooks/git-types";
@@ -187,6 +188,7 @@ export function useGitBranch(projectPath: string | undefined, sessionId?: string
   }, [refresh]);
 
   const mutations = useGitMutations(pathRef, refresh);
+  const history = useGitHistory(pathRef, state.currentBranch);
 
-  return { ...state, refresh, checkout, create, ...mutations };
+  return { ...state, refresh, checkout, create, ...mutations, ...history };
 }

@@ -302,6 +302,14 @@
       "branch": "分支",
       "noGit": "无 Git 仓库",
       "noChanges": "无修改",
+      "commits": {
+        "title": "提交",
+        "toggle": "展开提交历史",
+        "empty": "此分支没有提交",
+        "noMessage": "无消息的提交",
+        "noFiles": "此提交中没有文件",
+        "error": "提交历史不可用。"
+      },
       "git": {
         "toggle": "展开分支 {{branch}}",
         "changesToCommit": "有 {{count}} 个文件待 Commit",
@@ -837,7 +845,8 @@
     "noFiles": "本次会话中未创建或修改任何文件。",
     "listModes": {
       "latest": "最近一次执行",
-      "all": "所有文件"
+      "all": "所有文件",
+      "uncommitted": "未提交"
     },
     "filesModified": "文件",
     "loading": "正在读取文件…",

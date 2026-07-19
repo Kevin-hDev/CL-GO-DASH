@@ -38,6 +38,7 @@ export function FilePreviewTabs({
   const handleContextMenu = (event: React.MouseEvent, tab: FileOperation) => {
     event.preventDefault();
     event.stopPropagation();
+    if (tab.source) return;
     detectEditorsForFile(tab.path, baseDir)
       .then((editors) => {
         setMenu({ x: event.clientX, y: event.clientY, operation: tab, editors });

@@ -38,6 +38,10 @@ export function useFilePreview(
   });
 
   const allOperations = useMemo(() => [...operations, ...fallbackOps], [operations, fallbackOps]);
+  const filesystemFallbacks = useMemo(
+    () => fallbackOps.filter((operation) => !operation.source),
+    [fallbackOps],
+  );
   const operationById = useMemo(() => new Map(allOperations.map((op) => [op.id, op])), [allOperations]);
   const tabs = tabIds.flatMap((id) => operationById.get(id) ?? []);
 
@@ -59,7 +63,7 @@ export function useFilePreview(
       !missingKeys.has(normalizeFileOperationPath(item.path))
     )));
   }, []);
-  usePreviewFallbackExistence(fallbackOps, baseDir, removeMissingFallbacks);
+  usePreviewFallbackExistence(filesystemFallbacks, baseDir, removeMissingFallbacks);
 
   const openOperation = useCallback((operation: FileOperation) => {
     setOpen(true);
