@@ -23,6 +23,7 @@ repo/
 # Local agent/tooling artifacts
 .claude/
 .codex/
+.zcode/
 .playwright-mcp/
 .serena/
 graphify-out/
