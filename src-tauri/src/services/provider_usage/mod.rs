@@ -7,6 +7,7 @@ mod remote;
 mod remote_api;
 mod remote_codex;
 mod remote_gate;
+mod remote_kimi_wallet;
 mod remote_oauth;
 mod remote_parse;
 mod request_usage;
@@ -121,3 +122,6 @@ mod tests;
 
 #[cfg(test)]
 mod remote_adapter_tests;
+
+#[cfg(test)]
+mod remote_kimi_tests;

@@ -3,12 +3,12 @@ use super::types::{ProviderBalance, ProviderWindow, RemoteData, BALANCE_LIMIT, W
 pub fn parse(connection_id: &str, body: &serde_json::Value) -> Option<RemoteData> {
     match connection_id {
         "codex-oauth" => Some(super::remote_codex::parse(body)),
-        "moonshot-oauth" => Some(parse_kimi(body)),
+        "moonshot-oauth" => parse_kimi(body),
         _ => None,
     }
 }
 
-fn parse_kimi(body: &serde_json::Value) -> RemoteData {
+fn parse_kimi(body: &serde_json::Value) -> Option<RemoteData> {
     let mut windows = Vec::new();
     if let Some(usage) = body.get("usage").and_then(serde_json::Value::as_object) {
         if let Some(window) = kimi_window(&serde_json::Value::Object(usage.clone()), "weekly") {
@@ -21,14 +21,11 @@ fn parse_kimi(body: &serde_json::Value) -> RemoteData {
                 .get("detail")
                 .filter(|value| value.is_object())
                 .unwrap_or(item);
-            let duration = item
-                .pointer("/window/duration")
-                .and_then(serde_json::Value::as_u64);
+            let duration = item.pointer("/window/duration").and_then(unsigned_integer);
             let unit = item
                 .pointer("/window/timeUnit")
                 .and_then(serde_json::Value::as_str);
-            let label = if duration == Some(300) && unit.is_some_and(|unit| unit.contains("MINUTE"))
-            {
+            let label = if is_five_hour_window(duration, unit) {
                 "rolling_five_hours"
             } else {
                 "provider_limit"
@@ -38,13 +35,17 @@ fn parse_kimi(body: &serde_json::Value) -> RemoteData {
             }
         }
     }
-    finish(windows, Vec::new(), None)
+    let balances = super::remote_kimi_wallet::parse(body);
+    if windows.is_empty() && balances.is_empty() {
+        return None;
+    }
+    Some(finish(windows, balances, None))
 }
 
 fn kimi_window(value: &serde_json::Value, label: &str) -> Option<ProviderWindow> {
-    let limit = finite(value["limit"].as_f64());
-    let remaining = finite(value["remaining"].as_f64());
-    let used = finite(value["used"].as_f64()).or_else(|| match (limit, remaining) {
+    let limit = number(&value["limit"]);
+    let remaining = number(&value["remaining"]);
+    let used = number(&value["used"]).or_else(|| match (limit, remaining) {
         (Some(limit), Some(remaining)) => Some((limit - remaining).max(0.0)),
         _ => None,
     });
@@ -71,6 +72,14 @@ fn kimi_window(value: &serde_json::Value, label: &str) -> Option<ProviderWindow>
     })
 }
 
+fn is_five_hour_window(duration: Option<u64>, unit: Option<&str>) -> bool {
+    let Some(unit) = unit.filter(|value| value.len() <= 16) else {
+        return false;
+    };
+    (duration == Some(300) && unit.eq_ignore_ascii_case("MINUTE"))
+        || (duration == Some(5) && unit.eq_ignore_ascii_case("HOUR"))
+}
+
 fn finish(
     mut windows: Vec<ProviderWindow>,
     mut balances: Vec<ProviderBalance>,
@@ -91,6 +100,32 @@ fn finite(value: Option<f64>) -> Option<f64> {
     value.filter(|value| value.is_finite() && *value >= 0.0 && *value <= 1e15)
 }
 
+fn number(value: &serde_json::Value) -> Option<f64> {
+    let parsed = value.as_f64().or_else(|| {
+        let raw = value.as_str()?.trim();
+        if raw.is_empty()
+            || raw.len() > 32
+            || !raw
+                .chars()
+                .all(|character| character.is_ascii_digit() || ".+-eE".contains(character))
+        {
+            return None;
+        }
+        raw.parse::<f64>().ok()
+    });
+    finite(parsed)
+}
+
+fn unsigned_integer(value: &serde_json::Value) -> Option<u64> {
+    value.as_u64().or_else(|| {
+        let raw = value.as_str()?;
+        if raw.is_empty() || raw.len() > 20 || !raw.bytes().all(|byte| byte.is_ascii_digit()) {
+            return None;
+        }
+        raw.parse::<u64>().ok()
+    })
+}
+
 fn timestamp(value: &serde_json::Value) -> Option<i64> {
     value.as_i64().and_then(super::types::valid_reset_timestamp)
 }
@@ -98,6 +133,12 @@ fn timestamp(value: &serde_json::Value) -> Option<i64> {
 fn parse_reset(value: &serde_json::Value) -> Option<i64> {
     timestamp(value).or_else(|| {
         let raw = value.as_str().filter(|value| value.len() <= 64)?;
+        if !raw.is_empty() && raw.bytes().all(|byte| byte.is_ascii_digit()) {
+            return raw
+                .parse::<i64>()
+                .ok()
+                .and_then(super::types::valid_reset_timestamp);
+        }
         chrono::DateTime::parse_from_rfc3339(raw)
             .ok()
             .and_then(|date| super::types::valid_reset_timestamp(date.timestamp()))

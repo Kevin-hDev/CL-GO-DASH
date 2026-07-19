@@ -14,7 +14,7 @@ use serde::Serialize;
 use tauri::{AppHandle, Emitter};
 
 pub use device_flow::DeviceFlowConfig;
-pub use headers::request_headers;
+pub use headers::request_headers_for;
 pub use types::{AccessToken, DeviceAuthorization, LlmOAuthProvider, OAuthFailure, TokenBundle};
 
 const PROGRESS_EVENT: &str = "oauth-login-progress";

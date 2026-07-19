@@ -4,6 +4,7 @@ use std::path::Path;
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue, USER_AGENT};
 
 use super::LlmOAuthProvider;
+use crate::services::llm::request_purpose::RequestPurpose;
 use crate::services::{paths, private_store};
 
 pub const KIMI_PLATFORM_HEADER: &str = "kimi_code_cli";
@@ -16,6 +17,18 @@ pub fn request_headers(provider: LlmOAuthProvider) -> Result<HeaderMap, String> 
         insert_kimi_identity(&mut headers, &kimi_device_id()?)?;
     }
     Ok(headers)
+}
+
+pub fn request_headers_for(
+    provider: LlmOAuthProvider,
+    purpose: RequestPurpose,
+) -> Result<HeaderMap, String> {
+    if provider == LlmOAuthProvider::Kimi && purpose == RequestPurpose::AccountMetadata {
+        let mut headers = HeaderMap::new();
+        insert_static(&mut headers, "accept", "application/json")?;
+        return Ok(headers);
+    }
+    request_headers(provider)
 }
 
 pub fn user_agent() -> String {
@@ -144,6 +157,16 @@ mod tests {
             headers[USER_AGENT],
             format!("CL-GO-DASH/{}", env!("CARGO_PKG_VERSION"))
         );
+    }
+
+    #[test]
+    fn kimi_usage_uses_only_the_official_accept_header() {
+        let headers =
+            request_headers_for(LlmOAuthProvider::Kimi, RequestPurpose::AccountMetadata).unwrap();
+        assert_eq!(headers.len(), 1);
+        assert_eq!(headers[reqwest::header::ACCEPT], "application/json");
+        assert!(!headers.contains_key(USER_AGENT));
+        assert!(!headers.contains_key("x-msh-platform"));
     }
 
     #[test]
