@@ -1,0 +1,72 @@
+/* Unified button system — Phase 1 spec §2.
+   One base, four variants, two sizes. Domain button classes are thin
+   aliases of this geometry (see ollama.css, heartbeat-dialog.css and the
+   settings components) and keep only their domain-specific colors. */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--chrome-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--ease-smooth), color var(--ease-smooth), border-color var(--ease-smooth);
+}
+
+.btn-sm {
+  height: 28px;
+  padding: 0 var(--chrome-3);
+}
+
+.btn-md {
+  height: 34px;
+  padding: 0 var(--chrome-4);
+}
+
+.btn-primary {
+  background: var(--pulse);
+  color: var(--ink-on-pulse);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--pulse) 88%, black);
+}
+
+.btn-secondary {
+  background: transparent;
+  border-color: var(--edge);
+  color: var(--ink);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--surface-hover);
+}
+
+.btn-danger {
+  background: var(--signal-error);
+  color: var(--ink-on-pulse);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--signal-error) 88%, black);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--ink-muted);
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: var(--surface-hover);
+  color: var(--ink);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
