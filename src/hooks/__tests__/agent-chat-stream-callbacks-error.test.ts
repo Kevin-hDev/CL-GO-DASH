@@ -48,6 +48,18 @@ describe("error", () => {
     }).state.error).toBe("errors.providerAccessUnavailable");
   });
 
+  it("traduit les erreurs réseau stables des fournisseurs", () => {
+    expect(applyStreamEvent(makeState(), {
+      event: "error", data: { message: "provider_connection_failed" },
+    }).state.error).toBe("errors.providerConnectionFailed");
+    expect(applyStreamEvent(makeState(), {
+      event: "error", data: { message: "provider_request_rejected" },
+    }).state.error).toBe("errors.providerRequestRejected");
+    expect(applyStreamEvent(makeState(), {
+      event: "error", data: { message: "provider_configuration_invalid" },
+    }).state.error).toBe("errors.providerConfigurationInvalid");
+  });
+
   it("marque isConnectionError=true quand le flag est présent", () => {
     const result = applyStreamEvent(makeState(), {
       event: "error", data: { message: "err", isConnection: true } as unknown as { message: string },

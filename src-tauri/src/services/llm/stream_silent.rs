@@ -54,7 +54,8 @@ pub async fn collect_chat_silent_for_compression(
     purpose: RequestPurpose,
     cancel: CancellationToken,
 ) -> Result<StreamResult, String> {
-    let timeout = crate::services::compress::timeouts::compression_timeout();
+    let request_timeout = crate::services::compress::timeouts::compression_request_timeout();
+    let idle_timeout = crate::services::compress::timeouts::compression_idle_timeout();
     if provider_id == "codex-oauth" {
         return crate::services::codex_client::stream::collect_chat_silent_for_compression(
             model,
@@ -77,10 +78,10 @@ pub async fn collect_chat_silent_for_compression(
         max_tokens: Some(max_tokens),
         purpose,
     };
-    let resp = post_chat_request_with_timeout(&cfg, timeout)
+    let resp = post_chat_request_with_timeout(&cfg, request_timeout)
         .await
         .map_err(|e| e.to_string())?;
-    consume_silent(resp, cancel, timeout).await
+    consume_silent(resp, cancel, idle_timeout).await
 }
 
 async fn consume_silent(

@@ -20,6 +20,9 @@ export const KNOWN_ERROR_KEYS: Record<string, string> = {
   moonshot_membership_unverified: "errors.moonshotMembershipUnverified",
   xai_subscription_or_credits_required: "errors.xaiSubscriptionOrCreditsRequired",
   provider_access_unavailable: "errors.providerAccessUnavailable",
+  provider_connection_failed: "errors.providerConnectionFailed",
+  provider_request_rejected: "errors.providerRequestRejected",
+  provider_configuration_invalid: "errors.providerConfigurationInvalid",
   oauth_reauthentication_required: "errors.oauthReauthenticationRequired",
   ollama_server_error: "errors.ollamaServerError",
 };

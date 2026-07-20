@@ -90,13 +90,21 @@ fn safe_code(message: &str) -> String {
     }
 }
 
-fn classify_error(message: &str, is_connection: bool) -> String {
+pub(super) fn classify_error(message: &str, is_connection: bool) -> String {
     let lower = message.to_ascii_lowercase();
     if is_connection || message.contains("ollama_connection_lost") {
         return "connection_lost".to_string();
     }
     if lower.contains("timeout") {
         return "timeout".to_string();
+    }
+    if matches!(
+        lower.as_str(),
+        "provider_connection_failed"
+            | "provider_request_rejected"
+            | "provider_configuration_invalid"
+    ) {
+        return "provider_error".to_string();
     }
     if message.contains("Limite de tours") {
         return "max_turns".to_string();

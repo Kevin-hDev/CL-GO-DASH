@@ -1,6 +1,18 @@
 use super::stream_diagnostics::push_failure;
+use super::stream_diagnostics_failure::classify_error;
 use super::types_session::AgentSession;
 use chrono::Utc;
+
+#[test]
+fn stable_provider_failures_are_provider_errors() {
+    for code in [
+        "provider_connection_failed",
+        "provider_request_rejected",
+        "provider_configuration_invalid",
+    ] {
+        assert_eq!(classify_error(code, false), "provider_error");
+    }
+}
 
 #[test]
 fn stream_failures_are_bounded_and_sanitized() {

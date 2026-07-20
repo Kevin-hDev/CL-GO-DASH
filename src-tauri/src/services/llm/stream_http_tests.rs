@@ -171,3 +171,24 @@ fn oauth_auth_and_rate_errors_use_frontend_codes() {
         "rate_limit"
     );
 }
+
+#[tokio::test]
+async fn timeout_above_secure_limit_uses_a_stable_code() {
+    let cfg = RequestConfig {
+        provider_id: "openai",
+        model: "gpt-5.6-luna",
+        messages: &[],
+        tools: &[],
+        think: false,
+        reasoning_mode: None,
+        max_tokens: None,
+        purpose: crate::services::llm::request_purpose::RequestPurpose::ManualChat,
+    };
+    let timeout = crate::services::secure_http::MAX_AUTHENTICATED_TIMEOUT + Duration::from_secs(1);
+
+    let error = post_chat_request_with_timeout(&cfg, timeout)
+        .await
+        .expect_err("timeout must be rejected");
+
+    assert_eq!(error.to_string(), "provider_configuration_invalid");
+}

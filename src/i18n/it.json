@@ -956,6 +956,9 @@
     "moonshotMembershipUnverified": "Moonshot non riesce a confermare un abbonamento Kimi Code attivo.",
     "xaiSubscriptionOrCreditsRequired": "xAI segnala che è richiesto un abbonamento Grok o dei crediti.",
     "providerAccessUnavailable": "Il provider rifiuta attualmente l’accesso al modello.",
+    "providerConnectionFailed": "Impossibile connettersi al provider.",
+    "providerRequestRejected": "Il provider ha rifiutato la richiesta.",
+    "providerConfigurationInvalid": "Non è stato possibile preparare la richiesta.",
     "oauthReauthenticationRequired": "La connessione OAuth è scaduta. Riconnetti il provider.",
     "toolFailed": "Strumento fallito",
     "webToolFailed": "Strumento web non riuscito: {{message}}"

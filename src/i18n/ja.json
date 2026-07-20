@@ -956,6 +956,9 @@
     "moonshotMembershipUnverified": "Moonshot は有効な Kimi Code サブスクリプションを確認できません。",
     "xaiSubscriptionOrCreditsRequired": "xAI は Grok サブスクリプションまたはクレジットが必要だと報告しています。",
     "providerAccessUnavailable": "プロバイダーは現在、このモデルへのアクセスを拒否しています。",
+    "providerConnectionFailed": "プロバイダーに接続できませんでした。",
+    "providerRequestRejected": "プロバイダーがリクエストを拒否しました。",
+    "providerConfigurationInvalid": "リクエストを準備できませんでした。",
     "oauthReauthenticationRequired": "OAuth 接続の有効期限が切れました。プロバイダーに再接続してください。",
     "toolFailed": "ツールが失敗しました",
     "webToolFailed": "Web ツールが失敗しました： {{message}}"

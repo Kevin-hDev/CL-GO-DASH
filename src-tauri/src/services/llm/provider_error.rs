@@ -10,6 +10,9 @@ pub enum ProviderErrorCode {
     OAuthReauthenticationRequired,
     RateLimited,
     ProviderAccessUnavailable,
+    ProviderConnectionFailed,
+    ProviderRequestRejected,
+    ProviderConfigurationInvalid,
     ModelCatalogUnavailable,
 }
 
@@ -21,6 +24,9 @@ impl ProviderErrorCode {
             Self::OAuthReauthenticationRequired => "oauth_reauthentication_required",
             Self::RateLimited => "rate_limit",
             Self::ProviderAccessUnavailable => "provider_access_unavailable",
+            Self::ProviderConnectionFailed => "provider_connection_failed",
+            Self::ProviderRequestRejected => "provider_request_rejected",
+            Self::ProviderConfigurationInvalid => "provider_configuration_invalid",
             Self::ModelCatalogUnavailable => "model_catalog_unavailable",
         }
     }

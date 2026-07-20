@@ -1,7 +1,11 @@
 use std::time::Duration;
 
-pub const COMPRESSION_TIMEOUT_SECS: u64 = 600;
+use crate::services::secure_http::MAX_AUTHENTICATED_TIMEOUT;
 
-pub fn compression_timeout() -> Duration {
-    Duration::from_secs(COMPRESSION_TIMEOUT_SECS)
+pub fn compression_request_timeout() -> Duration {
+    MAX_AUTHENTICATED_TIMEOUT
+}
+
+pub fn compression_idle_timeout() -> Duration {
+    Duration::from_secs(600)
 }

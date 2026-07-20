@@ -82,3 +82,19 @@ fn log_codes_do_not_mislabel_unrelated_statuses() {
         "provider_http_error"
     );
 }
+
+#[test]
+fn transport_failures_have_stable_safe_codes() {
+    assert_eq!(
+        ProviderErrorCode::ProviderConnectionFailed.as_str(),
+        "provider_connection_failed"
+    );
+    assert_eq!(
+        ProviderErrorCode::ProviderRequestRejected.as_str(),
+        "provider_request_rejected"
+    );
+    assert_eq!(
+        ProviderErrorCode::ProviderConfigurationInvalid.as_str(),
+        "provider_configuration_invalid"
+    );
+}

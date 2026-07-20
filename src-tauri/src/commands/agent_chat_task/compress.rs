@@ -97,7 +97,7 @@ async fn collect_summary(
     output_limit: u32,
     cancel: CancellationToken,
 ) -> Result<String, String> {
-    let timeout = crate::services::compress::timeouts::compression_timeout();
+    let timeout = crate::services::compress::timeouts::compression_request_timeout();
     if provider == "ollama" {
         let compression =
             crate::services::agent_local::ollama_stream::collect_chat_with_timeout_and_limit(
@@ -123,8 +123,7 @@ async fn collect_summary(
         purpose,
         cancel,
     )
-    .await
-    .map_err(|err| format!("Compression LLM : {err}"))?;
+    .await?;
     crate::services::provider_usage::record_for_session(
         provider,
         model,

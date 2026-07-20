@@ -1,4 +1,6 @@
+use super::provider_error::ProviderErrorCode;
 use super::stream_convert::messages_to_openai;
+pub(super) use super::stream_http_error::RequestError;
 use crate::services::agent_local::types_ollama::ChatMessage;
 use crate::services::llm::request_purpose::RequestPurpose;
 use crate::services::llm::route::{self, LlmRoute, RouteError};
@@ -12,23 +14,6 @@ pub struct RequestConfig<'a> {
     pub reasoning_mode: Option<&'a str>,
     pub max_tokens: Option<u32>,
     pub purpose: RequestPurpose,
-}
-
-#[derive(Debug)]
-pub enum RequestError {
-    Fatal(String),
-    RetryWithoutTools(String),
-    RetryWithoutImages(String),
-}
-
-impl std::fmt::Display for RequestError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Fatal(s) | Self::RetryWithoutTools(s) | Self::RetryWithoutImages(s) => {
-                f.write_str(s)
-            }
-        }
-    }
 }
 
 async fn send_json_request(
@@ -54,7 +39,7 @@ async fn send_json_request(
             RouteError::Unauthorized => RequestError::Fatal("auth_failed".into()),
             RouteError::Forbidden => RequestError::Fatal("provider_access_unavailable".into()),
             RouteError::Network => {
-                RequestError::Fatal("Connexion au fournisseur impossible".into())
+                RequestError::Fatal(ProviderErrorCode::ProviderConnectionFailed.as_str().into())
             }
         })
 }
@@ -82,8 +67,13 @@ pub async fn post_chat_request_with_timeout(
     let url = format!("{}/chat/completions", route.base_url);
     let payload = build_chat_payload(cfg, &route);
 
-    let client = AuthenticatedClient::new(timeout)
-        .map_err(|_| RequestError::Fatal("Connexion au fournisseur impossible".into()))?;
+    let client = AuthenticatedClient::new(timeout).map_err(|_| {
+        RequestError::Fatal(
+            ProviderErrorCode::ProviderConfigurationInvalid
+                .as_str()
+                .into(),
+        )
+    })?;
     let usage_generation =
         crate::services::provider_usage::credential_generation(route.chat_provider_id);
     let resp = send_json_request(&client, &route, &url, &payload, cfg.purpose).await?;

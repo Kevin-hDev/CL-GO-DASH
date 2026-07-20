@@ -45,17 +45,18 @@ pub async fn collect_chat_silent_for_compression(
     max_output_tokens: Option<u32>,
     cancel: CancellationToken,
 ) -> Result<StreamResult, String> {
-    let timeout = crate::services::compress::timeouts::compression_timeout();
+    let request_timeout = crate::services::compress::timeouts::compression_request_timeout();
+    let idle_timeout = crate::services::compress::timeouts::compression_idle_timeout();
     let resp = request::post_codex_stream_with_timeout(
         model,
         messages,
         tools,
         think,
         reasoning_mode,
-        timeout,
+        request_timeout,
     )
     .await?;
-    consume_sse_silent(resp, cancel, timeout, max_output_tokens).await
+    consume_sse_silent(resp, cancel, idle_timeout, max_output_tokens).await
 }
 
 async fn consume_sse_silent(

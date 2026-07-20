@@ -36,6 +36,7 @@ mod stream_chunk_tests;
 mod stream_consume;
 pub mod stream_convert;
 mod stream_http;
+mod stream_http_error;
 mod stream_reasoning;
 #[cfg(test)]
 mod stream_reasoning_tests;

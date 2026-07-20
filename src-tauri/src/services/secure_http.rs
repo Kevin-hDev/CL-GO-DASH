@@ -16,7 +16,7 @@ pub const MCP_BODY_LIMIT: usize = 10 * 1024 * 1024;
 pub const LLM_BODY_LIMIT: usize = 10 * 1024 * 1024;
 pub const PROVIDER_ERROR_LIMIT: usize = 16 * 1024;
 const MAX_BODY_LIMIT: usize = MCP_BODY_LIMIT;
-const MAX_TIMEOUT: Duration = Duration::from_secs(300);
+pub const MAX_AUTHENTICATED_TIMEOUT: Duration = Duration::from_secs(600);
 
 #[derive(Clone, Copy)]
 enum UrlPolicy {
@@ -40,7 +40,7 @@ impl AuthenticatedClient {
     }
 
     fn build(timeout: Duration, url_policy: UrlPolicy) -> Result<Self, SecureHttpError> {
-        if timeout.is_zero() || timeout > MAX_TIMEOUT {
+        if timeout.is_zero() || timeout > MAX_AUTHENTICATED_TIMEOUT {
             return Err(SecureHttpError::Configuration);
         }
         let client = reqwest::Client::builder()

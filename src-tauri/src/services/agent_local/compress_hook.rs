@@ -57,7 +57,7 @@ pub async fn try_auto_compress(
     let compression = ollama_stream::collect_chat_with_timeout_and_limit(
         model,
         compress_msgs,
-        crate::services::compress::timeouts::compression_timeout(),
+        crate::services::compress::timeouts::compression_request_timeout(),
         Some(output_limit),
     );
     match tokio::select! {
