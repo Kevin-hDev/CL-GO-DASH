@@ -46,11 +46,12 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
+  height: 28px;
+  padding: 0 var(--chrome-3);
   background: var(--pulse);
   border: 1px solid var(--pulse);
   border-radius: var(--radius-sm);
-  color: white;
+  color: var(--ink-on-pulse);
   font-size: var(--text-sm);
   font-weight: 500;
   cursor: pointer;

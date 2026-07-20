@@ -82,7 +82,11 @@
 }
 
 .ak-icon-btn {
-  padding: 8px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  align-items: center;
+  justify-content: center;
   background: transparent;
   border: 1px solid var(--edge);
   border-radius: var(--radius-sm);

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { AppUpdate, OllamaModelUpdate, OllamaBinaryUpdate, PullingState } from "@/hooks/use-update-checker";
 import { BubbleItem, type ItemData } from "./bubble-item";
 import "./update-notifications.css";
+import "./update-notifications-controls.css";
 
 interface UpdateNotificationsProps {
   isOpen: boolean;
