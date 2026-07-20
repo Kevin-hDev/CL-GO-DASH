@@ -126,7 +126,7 @@ export function BubbleItem({
             </button>
             {canExpand && (
               <button
-                className="update-bubble-toggle"
+                className="icon-btn update-bubble-toggle"
                 type="button"
                 aria-expanded={expanded}
                 aria-label={expanded ? t("updates.hideDetails") : t("updates.showDetails")}

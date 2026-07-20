@@ -126,7 +126,7 @@ export function ForecastPanel({
           activeSection === "scenarios" && hasAnalysis ? (
             <Tooltip label={t("forecast.scenarios.togglePredictions")} align="right">
               <button
-                className={`fp-icon-btn ${scenarioPickerOpen ? "fp-icon-btn-active" : ""}`}
+                className={`icon-btn icon-btn-lg fp-icon-btn ${scenarioPickerOpen ? "fp-icon-btn-active" : ""}`}
                 onClick={() => setScenarioPickerOpen((open) => !open)}
               >
                 {scenarioPickerOpen ? <PanelRightClose size="var(--icon-md)" /> : <PanelRightOpen size="var(--icon-md)" />}

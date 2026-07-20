@@ -125,22 +125,9 @@
   gap: 6px;
 }
 
+/* Chevron toggle — composes .icon-btn (src/styles/buttons.css). */
 .update-bubble-toggle {
-  width: 26px;
-  height: 26px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 0;
-  border-radius: var(--radius-sm);
-  background: transparent;
   color: var(--ink-faint);
-  cursor: pointer;
-}
-
-.update-bubble-toggle:hover {
-  background: var(--surface-hover);
-  color: var(--ink);
 }
 
 .update-bubble-caret {

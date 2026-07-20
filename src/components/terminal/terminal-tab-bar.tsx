@@ -164,12 +164,12 @@ export function TerminalTabBar({
         );
       })}
       <Tooltip label={t("terminal.newTab")}>
-        <button className="terminal-tab-add" onClick={onAdd}>
+        <button className="icon-btn terminal-tab-add" onClick={onAdd}>
           <Plus size="var(--icon-sm)" />
         </button>
       </Tooltip>
       <Tooltip label={t("terminal.closePanel")} align="right">
-        <button className="terminal-tab-bar-close" onClick={onClosePanel}>
+        <button className="icon-btn terminal-tab-bar-close" onClick={onClosePanel}>
           <XIcon size="var(--icon-sm)" />
         </button>
       </Tooltip>

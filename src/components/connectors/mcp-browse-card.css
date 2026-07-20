@@ -55,19 +55,18 @@
 }
 .mcbc-link:hover { background: var(--select-bg); }
 
+/* Add/done action — composes .icon-btn/.icon-btn-lg
+   (src/styles/buttons.css); keeps its shell background, card-hover pulse
+   and done state. */
 .mcbc-action {
-  flex-shrink: 0;
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   background: var(--shell);
   color: var(--ink-muted);
-  border: none;
-  cursor: pointer;
-  transition: all var(--ease-smooth);
+  transition: background var(--ease-smooth), color var(--ease-smooth);
+}
+
+.mcbc-action:disabled {
+  opacity: 1;
+  cursor: default;
 }
 
 .mcbc-card:hover .mcbc-action:not(.done):not(:disabled) { background: var(--pulse); color: white; }

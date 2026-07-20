@@ -51,7 +51,7 @@ export function ForecastHeader({
         {rightSlot}
         <Tooltip label={fullscreen ? t("a11y.minimize") : t("a11y.maximize")} align="right">
           <button
-            className="fp-icon-btn"
+            className="icon-btn icon-btn-lg fp-icon-btn"
             onClick={() => onFullscreenChange(!fullscreen)}
           >
             {fullscreen ? <Minimize2 size="var(--icon-md)" /> : <Maximize2 size="var(--icon-md)" />}
@@ -59,7 +59,7 @@ export function ForecastHeader({
         </Tooltip>
         {hasAnalysis && (
           <Tooltip label={t("a11y.close")} align="right">
-            <button className="fp-icon-btn" onClick={onCloseAnalysis}>
+            <button className="icon-btn icon-btn-lg fp-icon-btn" onClick={onCloseAnalysis}>
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none"
                 stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
                 <path d="M3 3l8 8M11 3l-8 8" />

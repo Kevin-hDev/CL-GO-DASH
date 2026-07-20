@@ -24,20 +24,16 @@
   gap: 8px;
 }
 
+/* Panel actions — compose .icon-btn/.icon-btn-lg (src/styles/buttons.css);
+   keep their border and chart background. */
 .fcn-icon-btn {
-  width: 34px;
-  height: 34px;
-  display: grid;
-  place-items: center;
   border: 1px solid var(--edge);
-  border-radius: var(--radius-sm);
   background: var(--fc-chart-bg);
   color: var(--ink-muted);
-  cursor: pointer;
   transition: background var(--ease-smooth), color var(--ease-smooth);
 }
 
-.fcn-icon-btn:hover {
+.fcn-icon-btn:hover:not(:disabled) {
   background: var(--fcs-hover-bg);
   color: var(--ink);
 }

@@ -112,27 +112,20 @@
   flex-shrink: 0;
 }
 
+/* Panel actions — compose .icon-btn/.icon-btn-lg (src/styles/buttons.css);
+   keep their border and danger hover. */
 .fch-icon-btn {
-  min-width: 33px;
-  height: 33px;
-  padding: 8px;
   border: 1px solid var(--edge);
-  border-radius: var(--radius-sm);
-  background: transparent;
   color: var(--ink-muted);
-  cursor: pointer;
-  transition: all var(--ease-smooth);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  transition: background var(--ease-smooth), color var(--ease-smooth), border-color var(--ease-smooth);
 }
 
-.fch-icon-btn:hover {
+.fch-icon-btn:hover:not(:disabled) {
   background: var(--surface);
   color: var(--ink);
 }
 
-.fch-icon-btn-danger:hover {
+.fch-icon-btn-danger:hover:not(:disabled) {
   background: var(--signal-error-bg);
   color: var(--signal-error);
   border-color: var(--signal-error-border);

@@ -46,7 +46,7 @@ export function PathListEditor({ paths, onChange }: PathListEditorProps) {
               <button
                 type="button"
                 onClick={() => handleRemove(index)}
-                className="ple-remove-btn"
+                className="icon-btn ple-remove-btn"
               >
                 ×
               </button>

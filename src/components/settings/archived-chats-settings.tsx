@@ -160,7 +160,7 @@ function ArchiveBubble({
             </div>
             <div className="acs-actions">
               <ConfirmButton
-                className="acs-icon-btn acs-delete-confirm"
+                className="icon-btn icon-btn-lg acs-icon-btn acs-delete-confirm"
                 title={deleteLabel}
                 ariaLabel={deleteLabel}
                 label={<Trash size="var(--icon-sm)" />}

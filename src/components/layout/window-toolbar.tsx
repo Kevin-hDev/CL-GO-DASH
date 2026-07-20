@@ -30,35 +30,35 @@ export function WindowToolbar({
   return (
     <div className={`window-toolbar${IS_MAC ? " is-mac" : ""}`}>
       <Tooltip label={`${t("settings.shortcuts.toggleSidebar")} (${MOD}B)`}>
-        <button className="toolbar-btn" onClick={onToggleSidebar}>
+        <button className="icon-btn toolbar-btn" onClick={onToggleSidebar}>
           <SidebarToggleIcon size="var(--chrome-icon-md)" />
         </button>
       </Tooltip>
       <Tooltip label={`${t("settings.shortcuts.goBack")} (${MOD}◀)`}>
-        <button className="toolbar-btn" onClick={onBack} disabled={!canGoBack}>
+        <button className="icon-btn toolbar-btn" onClick={onBack} disabled={!canGoBack}>
           <ArrowLeftIcon size="var(--chrome-icon-md)" />
         </button>
       </Tooltip>
       <Tooltip label={`${t("settings.shortcuts.goForward")} (${MOD}▶)`}>
-        <button className="toolbar-btn" onClick={onForward} disabled={!canGoForward}>
+        <button className="icon-btn toolbar-btn" onClick={onForward} disabled={!canGoForward}>
           <ArrowRightIcon size="var(--chrome-icon-md)" />
         </button>
       </Tooltip>
       <Tooltip label={`${t("settings.shortcuts.searchDialog")} (${MOD}G)`}>
-        <button className="toolbar-btn" onClick={onSearch}>
+        <button className="icon-btn toolbar-btn" onClick={onSearch}>
           <SearchIcon size="var(--chrome-icon-md)" />
         </button>
       </Tooltip>
       {sidebarOpen && updatesCount > 0 && (
         <Tooltip label={t("updates.tooltip")}>
-          <button className="toolbar-btn toolbar-btn-update" onClick={onToggleUpdates}>
+          <button className="icon-btn toolbar-btn toolbar-btn-update" onClick={onToggleUpdates}>
             <img src={updateIcon} alt="" style={{ width: "var(--chrome-icon-md)", height: "var(--chrome-icon-md)" }} />
           </button>
         </Tooltip>
       )}
       {!sidebarOpen && (
         <Tooltip label={`${t("settings.shortcuts.newSession")} (${ALT}${MOD}N)`}>
-          <button className="toolbar-btn" onClick={onNewSession}>
+          <button className="icon-btn toolbar-btn" onClick={onNewSession}>
             <ComposeIcon size="var(--chrome-icon-md)" />
           </button>
         </Tooltip>

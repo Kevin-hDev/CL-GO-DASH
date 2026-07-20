@@ -41,14 +41,13 @@
   font-size: var(--text-sm);
 }
 
+/* Delete action — composes .icon-btn/.icon-btn-lg (src/styles/buttons.css);
+   keeps its danger hover. */
 .acs-icon-btn {
-  width: 32px;
-  min-height: 32px;
   color: var(--ink-faint);
-  background: transparent;
 }
 
-.acs-icon-btn:hover {
+.acs-icon-btn:hover:not(:disabled) {
   color: var(--danger);
   background: color-mix(in srgb, var(--danger) 12%, transparent);
 }

@@ -71,7 +71,7 @@ export function ForecastScenarioContextFields({
           />
           <Tooltip label={t("forecast.scenarios.removeContext")}>
             <button
-              className="fcs-icon-btn"
+              className="icon-btn icon-btn-lg fcs-icon-btn"
               type="button"
               onClick={() => removeAdjustment(index)}
             >

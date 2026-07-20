@@ -69,7 +69,7 @@ export function FilePreviewPanel(props: FilePreviewPanelProps) {
             {props.hasProject && (
               <Tooltip label={t("fileTree.toggleTree")}>
                 <button
-                  className={`fp-icon-btn ${props.treeOpen ? "fp-icon-btn-active" : ""}`}
+                  className={`icon-btn icon-btn-lg fp-icon-btn ${props.treeOpen ? "fp-icon-btn-active" : ""}`}
                   onClick={props.onToggleTree}
                 >
                   <FolderTree size="var(--icon-md)" />
@@ -78,7 +78,7 @@ export function FilePreviewPanel(props: FilePreviewPanelProps) {
             )}
             <Tooltip label={props.fullscreen ? t("filePreview.reduce") : t("filePreview.fullscreen")} align="right">
               <button
-                className="fp-icon-btn"
+                className="icon-btn icon-btn-lg fp-icon-btn"
                 onClick={() => props.onFullscreenChange(!props.fullscreen)}
               >
                 {props.fullscreen ? <Minimize2 size="var(--icon-md)" /> : <Maximize2 size="var(--icon-md)" />}

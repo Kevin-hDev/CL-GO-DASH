@@ -64,23 +64,10 @@
   background: var(--scrollbar-thumb);
 }
 
+/* Panel actions — compose .icon-btn/.icon-btn-lg (src/styles/buttons.css);
+   keep the active state. */
 .fp-icon-btn {
-  width: 30px;
-  height: 30px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  border-radius: var(--radius-sm);
-  background: none;
   color: var(--ink-muted);
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-.fp-icon-btn:hover {
-  color: var(--ink);
-  background: var(--surface-hover);
 }
 
 .fp-icon-btn-active {

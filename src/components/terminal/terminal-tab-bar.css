@@ -84,37 +84,23 @@
   outline: none;
 }
 
+/* Tab bar actions — compose .icon-btn (src/styles/buttons.css); keep
+   their color-only hover. */
 .terminal-tab-add {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  background: none;
-  border: none;
   color: var(--ink-muted);
-  cursor: pointer;
-  flex-shrink: 0;
 }
 
-.terminal-tab-add:hover {
+.terminal-tab-add:hover:not(:disabled) {
   color: var(--ink);
+  background: none;
 }
 
 .terminal-tab-bar-close {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
   margin-left: auto;
-  background: none;
-  border: none;
   color: var(--ink-muted);
-  cursor: pointer;
-  flex-shrink: 0;
 }
 
-.terminal-tab-bar-close:hover {
+.terminal-tab-bar-close:hover:not(:disabled) {
   color: var(--ink);
+  background: none;
 }

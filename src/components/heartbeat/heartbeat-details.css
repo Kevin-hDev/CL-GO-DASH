@@ -49,25 +49,13 @@
   gap: var(--space-xs);
 }
 
+/* Row actions — compose .icon-btn (src/styles/buttons.css); keep the
+   danger hover. */
 .wk-icon-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 6px;
-  border: none;
-  background: transparent;
   color: var(--ink-muted);
-  cursor: pointer;
-  border-radius: var(--radius-sm);
-  transition: all var(--ease-smooth);
 }
 
-.wk-icon-btn:hover {
-  background: var(--surface-hover);
-  color: var(--ink);
-}
-
-.wk-icon-btn-danger:hover {
+.wk-icon-btn-danger:hover:not(:disabled) {
   color: var(--signal-error);
   background: var(--signal-error-bg);
 }

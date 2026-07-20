@@ -59,23 +59,16 @@
   gap: 4px;
 }
 
+/* Panel actions — compose .icon-btn/.icon-btn-lg (src/styles/buttons.css);
+   keep their border and hover. */
 .fcs-icon-btn {
-  min-width: 33px;
-  height: 33px;
-  padding: 8px;
-  background: transparent;
   border: 1px solid var(--edge);
-  border-radius: var(--radius-sm);
   color: var(--ink-muted);
-  cursor: pointer;
-  transition: all var(--ease-smooth);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  transition: background var(--ease-smooth), color var(--ease-smooth), border-color var(--ease-smooth);
 }
 
-.fcs-icon-btn:hover,
-.fcs-icon-btn-danger:hover {
+.fcs-icon-btn:hover:not(:disabled),
+.fcs-icon-btn-danger:hover:not(:disabled) {
   background: var(--fcs-hover-bg);
   color: var(--ink);
   border-color: var(--edge);
