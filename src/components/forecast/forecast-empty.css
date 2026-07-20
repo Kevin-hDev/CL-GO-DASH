@@ -33,10 +33,10 @@
 .fc-empty-actions {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 6px;
   margin-top: 8px;
-  width: 100%;
-  max-width: 220px;
+  max-width: 100%;
 }
 
 /* Empty-state actions — thin aliases of the shared .btn system
