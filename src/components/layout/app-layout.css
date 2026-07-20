@@ -2,6 +2,8 @@
 body.os-mac {
   --popover-bg: var(--surface-glass);
   --popover-backdrop-filter: blur(20px);
+  /* Tooltips: lighter blur than menus/popovers (Phase 1 spec §5). */
+  --tooltip-backdrop-filter: blur(12px);
   /* Unified dialog contract (Phase 1 spec §4.1): overlay blur, macOS only. */
   --dialog-overlay-filter: blur(8px);
 }
@@ -138,6 +140,7 @@ body.os-mac {
 body.os-other {
   --popover-bg: var(--shell-opaque);
   --popover-backdrop-filter: none;
+  --tooltip-backdrop-filter: none;
   --dialog-overlay-filter: none;
 }
 

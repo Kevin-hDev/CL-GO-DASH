@@ -141,9 +141,9 @@
   padding: 5px;
   border: 1px solid var(--edge);
   border-radius: var(--radius-sm);
-  background: var(--surface-glass);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: var(--popover-bg, var(--surface-glass));
+  backdrop-filter: var(--popover-backdrop-filter, none);
+  -webkit-backdrop-filter: var(--popover-backdrop-filter, none);
   transform: translateY(-50%);
   box-shadow: var(--shadow-lg);
 }

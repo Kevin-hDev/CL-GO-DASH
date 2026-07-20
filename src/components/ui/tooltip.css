@@ -9,8 +9,10 @@
   left: 50%;
   transform: translateX(-50%);
   padding: 4px 10px;
-  border-radius: 6px;
-  background: var(--tooltip-bg);
+  border-radius: var(--radius-xs);
+  background: var(--popover-bg, var(--tooltip-bg));
+  backdrop-filter: var(--tooltip-backdrop-filter, none);
+  -webkit-backdrop-filter: var(--tooltip-backdrop-filter, none);
   border: 1px solid var(--tooltip-border);
   box-shadow: var(--tooltip-shadow);
   font-size: 11px;

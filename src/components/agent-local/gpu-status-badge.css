@@ -23,8 +23,10 @@
 .gpu-badge-tooltip {
   position: fixed;
   padding: 4px 8px;
-  border-radius: var(--radius-sm);
-  background: var(--tooltip-bg);
+  border-radius: var(--radius-xs);
+  background: var(--popover-bg, var(--tooltip-bg));
+  backdrop-filter: var(--tooltip-backdrop-filter, none);
+  -webkit-backdrop-filter: var(--tooltip-backdrop-filter, none);
   border: 1px solid var(--tooltip-border);
   color: var(--tooltip-text);
   font-size: 10px;

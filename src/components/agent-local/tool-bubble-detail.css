@@ -4,7 +4,9 @@
   width: max-content;
   max-width: 360px;
   background: var(--toast-bg);
-  border-radius: var(--radius-sm);
+  backdrop-filter: var(--tooltip-backdrop-filter, none);
+  -webkit-backdrop-filter: var(--tooltip-backdrop-filter, none);
+  border-radius: var(--radius-xs);
   padding: 6px 8px 6px 10px;
   box-shadow: var(--shadow-card);
   display: flex;
