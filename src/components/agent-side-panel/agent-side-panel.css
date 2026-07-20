@@ -68,7 +68,7 @@
   width: 0;
   height: 100%;
   flex: 0 0 0;
-  z-index: 2;
+  z-index: 2; /* local stacking: resize handle above panel content */
 }
 
 .asp-resize {

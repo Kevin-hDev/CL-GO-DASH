@@ -156,7 +156,7 @@
   border: 1px solid var(--edge);
   background: var(--surface);
   opacity: 0.85;
-  z-index: 10;
+  z-index: var(--z-sticky);
   color: var(--ink-muted);
 }
 

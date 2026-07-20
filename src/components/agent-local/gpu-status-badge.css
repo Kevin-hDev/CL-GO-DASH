@@ -34,5 +34,5 @@
   white-space: nowrap;
   pointer-events: none;
   box-shadow: var(--tooltip-shadow);
-  z-index: 9999;
+  z-index: var(--z-tooltip);
 }

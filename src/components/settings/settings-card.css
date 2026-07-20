@@ -17,7 +17,7 @@
 
 .settings-card:has(.ss-wrap.open),
 .settings-card:has(.cs-dropdown) {
-  z-index: 1000;
+  z-index: var(--z-panel); /* lifts the open card above its siblings */
   position: relative;
   overflow: visible;
 }

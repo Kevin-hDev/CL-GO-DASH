@@ -20,7 +20,7 @@
   color: var(--ink);
   backdrop-filter: var(--popover-backdrop-filter, none);
   -webkit-backdrop-filter: var(--popover-backdrop-filter, none);
-  z-index: 80;
+  z-index: var(--z-dropdown);
 }
 
 [data-theme="dark"] .ssb-popover {

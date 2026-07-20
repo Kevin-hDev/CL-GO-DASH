@@ -39,7 +39,7 @@
 .perm-mode-dropdown,
 .ms-dropdown,
 .rs-dropdown {
-  z-index: 1000;
+  z-index: var(--z-dropdown);
 }
 
 @container (max-width: 430px) {

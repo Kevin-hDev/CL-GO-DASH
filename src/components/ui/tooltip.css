@@ -19,7 +19,7 @@
   color: var(--tooltip-text);
   white-space: nowrap;
   pointer-events: none;
-  z-index: 9999;
+  z-index: var(--z-tooltip);
   animation: tooltip-in 100ms ease-out;
 }
 

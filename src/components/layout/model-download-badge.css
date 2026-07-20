@@ -2,7 +2,7 @@
   position: absolute;
   right: var(--space-md);
   bottom: var(--space-md);
-  z-index: 3;
+  z-index: var(--z-panel);
   display: flex;
   align-items: center;
   gap: var(--space-xs);

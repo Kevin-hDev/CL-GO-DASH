@@ -42,7 +42,7 @@
   border: 1px solid var(--edge);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
-  z-index: 50;
+  z-index: var(--z-dropdown);
   animation: exd-pop 120ms ease-out;
 }
 

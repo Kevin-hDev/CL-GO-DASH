@@ -348,7 +348,7 @@
 .conv-drag-ghost {
   position: fixed;
   pointer-events: none;
-  z-index: 999;
+  z-index: var(--z-toast); /* transient drag preview, above all app layers */
   padding: var(--space-xs) var(--space-sm);
   background: var(--surface);
   border: 1px solid var(--pulse);

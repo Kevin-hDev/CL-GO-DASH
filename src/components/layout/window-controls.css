@@ -5,7 +5,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  z-index: 200;
+  z-index: calc(var(--z-panel) + 1); /* traffic lights above the toolbar */
   cursor: default;
   user-select: none;
   -webkit-user-select: none;

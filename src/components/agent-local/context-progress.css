@@ -34,7 +34,7 @@
   pointer-events: none;
   transform: translateY(4px);
   transition: opacity 100ms ease, transform 100ms ease;
-  z-index: 60;
+  z-index: var(--z-dropdown);
   backdrop-filter: var(--popover-backdrop-filter, none);
   -webkit-backdrop-filter: var(--popover-backdrop-filter, none);
 }

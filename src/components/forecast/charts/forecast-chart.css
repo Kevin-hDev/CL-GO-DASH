@@ -31,7 +31,7 @@
   height: 18px;
   border-radius: 999px;
   background: transparent;
-  z-index: 3;
+  z-index: 3; /* local stacking: chart controls above the canvas */
   pointer-events: auto;
 }
 

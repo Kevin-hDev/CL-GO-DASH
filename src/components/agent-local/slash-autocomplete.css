@@ -10,7 +10,7 @@
   border: 1px solid var(--edge);
   background: var(--popover-bg, var(--shell));
   box-shadow: var(--shadow-card);
-  z-index: 50;
+  z-index: var(--z-dropdown);
   backdrop-filter: var(--popover-backdrop-filter, none);
   -webkit-backdrop-filter: var(--popover-backdrop-filter, none);
 }

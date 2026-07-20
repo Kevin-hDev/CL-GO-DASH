@@ -7,7 +7,7 @@
   position: absolute;
   bottom: calc(100% + var(--space-sm));
   left: 0;
-  z-index: 55;
+  z-index: var(--z-dropdown);
   display: grid;
   width: fit-content;
   min-width: min(280px, calc(100vw - 32px));

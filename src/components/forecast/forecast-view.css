@@ -116,7 +116,7 @@
   background: transparent;
   margin-bottom: -6px;
   position: relative;
-  z-index: 2;
+  z-index: 2; /* local stacking: resize handle above the chart */
   flex-shrink: 0;
 }
 

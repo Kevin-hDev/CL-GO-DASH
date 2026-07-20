@@ -1,6 +1,6 @@
 .fp-menu {
   position: fixed;
-  z-index: 1000;
+  z-index: var(--z-dropdown);
   min-width: 174px;
   padding: 6px;
   border: 1px solid var(--edge);
