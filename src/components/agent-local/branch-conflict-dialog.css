@@ -1,21 +1,28 @@
+/* Unified dialog contract (Phase 1 spec §4.1) — see heartbeat-dialog.css. */
 .bcd-overlay {
   position: fixed;
   inset: 0;
-  z-index: 200;
+  z-index: var(--z-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--dialog-backdrop);
+  backdrop-filter: var(--dialog-overlay-filter, none);
+  -webkit-backdrop-filter: var(--dialog-overlay-filter, none);
 }
 
 .bcd-dialog {
   max-width: 440px;
   width: 90%;
-  background: var(--surface);
+  background: var(--popover-bg, var(--surface-glass));
+  backdrop-filter: var(--popover-backdrop-filter, none);
+  -webkit-backdrop-filter: var(--popover-backdrop-filter, none);
+  border: 1px solid var(--edge);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
   padding: var(--space-md);
   position: relative;
+  z-index: var(--z-dialog);
 }
 
 /* Close — composes .icon-btn (src/styles/buttons.css); keeps its absolute
@@ -155,8 +162,3 @@
 /* Action buttons (.bcd-actions, .bcd-btn and variants) live in
    branch-conflict-dialog-controls.css, imported after this file. */
 
-[data-theme="dark"] .bcd-dialog {
-  background: var(--surface-glass);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-}

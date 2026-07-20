@@ -1,19 +1,23 @@
+/* Unified dialog contract (Phase 1 spec §4.1) — see heartbeat-dialog.css. */
 .spw-overlay {
   position: fixed;
   inset: 0;
-  z-index: 1000;
+  z-index: var(--z-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: var(--space-lg);
   background: var(--dialog-backdrop);
-  backdrop-filter: blur(2px);
+  backdrop-filter: var(--dialog-overlay-filter, none);
+  -webkit-backdrop-filter: var(--dialog-overlay-filter, none);
 }
 
 .spw-dialog {
   width: min(100%, 520px);
   padding: var(--space-lg);
-  background: var(--shell-opaque);
+  background: var(--popover-bg, var(--surface-glass));
+  backdrop-filter: var(--popover-backdrop-filter, none);
+  -webkit-backdrop-filter: var(--popover-backdrop-filter, none);
   border: 1px solid var(--edge);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
