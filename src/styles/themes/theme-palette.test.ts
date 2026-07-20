@@ -9,6 +9,7 @@ const astralCss = readFileSync("src/styles/themes/astral-mist.css", "utf8");
 const crimsonCss = readFileSync("src/styles/themes/crimson-eclipse.css", "utf8");
 const toolPreviewsCss = readFileSync("src/components/agent-local/tool-previews.css", "utf8");
 const gitDiffCss = readFileSync("src/components/file-preview/git-diff-preview.css", "utf8");
+const chatCss = readFileSync("src/components/agent-local/chat.css", "utf8");
 
 function tokenNames(css: string): string[] {
   return [...css.matchAll(/(--[a-z0-9-]+)\s*:/g)]
@@ -113,5 +114,12 @@ describe("Crimson Eclipse palette", () => {
     expect(crimsonCss).toContain("--diff-old: #ff5a63;");
     expect(contrast("#35c878", "#070709")).toBeGreaterThanOrEqual(4.5);
     expect(contrast("#ff5a63", "#070709")).toBeGreaterThanOrEqual(4.5);
+  });
+});
+
+describe("Chat composer relief", () => {
+  it("sépare le champ du fond avec deux contours opposés", () => {
+    expect(chatCss).toContain("-1px -1px 1px var(--chat-composer-edge-highlight)");
+    expect(chatCss).toContain("1px 1px 1px var(--chat-composer-edge-shade)");
   });
 });

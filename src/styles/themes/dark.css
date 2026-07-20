@@ -48,6 +48,8 @@
   --tooltip-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
   --chat-composer-bg: var(--surface-glass);
   --chat-composer-border: var(--tooltip-border);
+  --chat-composer-edge-highlight: rgba(255, 255, 255, 0.1);
+  --chat-composer-edge-shade: rgba(0, 0, 0, 0.48);
   --code-block-border: rgba(255, 255, 255, 0.08);
   --agent-trace-text: #5f5f68;
   --agent-trace-hover: #777783;

@@ -88,6 +88,9 @@
   border-radius: 20px;
   border: 0.5px solid var(--chat-composer-border);
   background: var(--chat-composer-bg);
+  box-shadow:
+    -1px -1px 1px var(--chat-composer-edge-highlight),
+    1px 1px 1px var(--chat-composer-edge-shade);
   display: flex;
   flex-direction: column;
 }
