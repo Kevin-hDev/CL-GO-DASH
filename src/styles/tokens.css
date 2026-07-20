@@ -45,6 +45,7 @@
   --summary-panel-indent: 1.8889rem;
   --summary-caret-column: var(--chrome-icon-md);
   --summary-file-icon-column: var(--chrome-icon-lg);
+  --switch-unit: 10px;
 
   --browser-toolbar-height: 2rem;
   --browser-control-size: 1.75rem;

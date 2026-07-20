@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
 import type { ThemeChoice } from "@/hooks/use-theme";
 import type { useSettings } from "@/hooks/use-settings";
-import { RoundToggle } from "@/components/heartbeat/round-toggle";
+import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { showToast } from "@/lib/toast-emitter";
 import { SettingsCard } from "./settings-card";
 import { SettingsRow } from "./settings-row";
@@ -159,9 +159,10 @@ export function GeneralSettings({ themeChoice, onThemeChange, settings }: Genera
             title={t("settings.general.sidebarExpandTitle")}
             description={t("settings.general.sidebarExpandDesc")}
           >
-            <RoundToggle
+            <ToggleSwitch
               checked={settings.sidebarExpand}
-              onChange={settings.setSidebarExpand}
+              ariaLabel={t("settings.general.sidebarExpandTitle")}
+              onCheckedChange={settings.setSidebarExpand}
             />
           </SettingsRow>
 
@@ -169,9 +170,10 @@ export function GeneralSettings({ themeChoice, onThemeChange, settings }: Genera
             title={t("settings.general.linkPreviewTitle")}
             description={t("settings.general.linkPreviewDesc")}
           >
-            <RoundToggle
+            <ToggleSwitch
               checked={startup.link_preview_enabled}
-              onChange={(v) => saveAdvanced({ link_preview_enabled: v })}
+              ariaLabel={t("settings.general.linkPreviewTitle")}
+              onCheckedChange={(v) => saveAdvanced({ link_preview_enabled: v })}
             />
           </SettingsRow>
         </SettingsCard>
@@ -181,9 +183,10 @@ export function GeneralSettings({ themeChoice, onThemeChange, settings }: Genera
             title={t("settings.advanced.autostartTitle")}
             description={t("settings.advanced.autostartDesc")}
           >
-            <RoundToggle
+            <ToggleSwitch
               checked={startup.autostart}
-              onChange={(v) => saveAdvanced({ autostart: v })}
+              ariaLabel={t("settings.advanced.autostartTitle")}
+              onCheckedChange={(v) => saveAdvanced({ autostart: v })}
             />
           </SettingsRow>
 
@@ -191,10 +194,11 @@ export function GeneralSettings({ themeChoice, onThemeChange, settings }: Genera
             title={t("settings.advanced.startHiddenTitle")}
             description={t("settings.advanced.startHiddenDesc")}
           >
-            <RoundToggle
+            <ToggleSwitch
               checked={startup.autostart && startup.start_hidden}
+              ariaLabel={t("settings.advanced.startHiddenTitle")}
               disabled={!startup.autostart}
-              onChange={(v) => saveAdvanced({ start_hidden: v })}
+              onCheckedChange={(v) => saveAdvanced({ start_hidden: v })}
             />
           </SettingsRow>
         </SettingsCard>

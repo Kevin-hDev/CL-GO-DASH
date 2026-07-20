@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
 import { useAvailableModels } from "@/hooks/use-available-models";
 import { useFsEvent } from "@/hooks/use-fs-event";
-import { RoundToggle } from "@/components/heartbeat/round-toggle";
+import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { SettingsCard } from "./settings-card";
 import { SettingsRow } from "./settings-row";
 import { SettingsSelect, type SelectGroup } from "./settings-select";
@@ -103,9 +103,10 @@ export function AdvancedSettings() {
             title={t("settings.advanced.trayTitle")}
             description={t("settings.advanced.trayDesc")}
           >
-            <RoundToggle
+            <ToggleSwitch
               checked={state.show_tray}
-              onChange={(v) => save({ show_tray: v })}
+              ariaLabel={t("settings.advanced.trayTitle")}
+              onCheckedChange={(v) => save({ show_tray: v })}
             />
           </SettingsRow>
 
@@ -141,9 +142,10 @@ export function AdvancedSettings() {
             title={t("settings.advanced.compressionEnabledTitle")}
             description={t("settings.advanced.compressionEnabledDesc")}
           >
-            <RoundToggle
+            <ToggleSwitch
               checked={state.compression_enabled}
-              onChange={(v) => save({ compression_enabled: v })}
+              ariaLabel={t("settings.advanced.compressionEnabledTitle")}
+              onCheckedChange={(v) => save({ compression_enabled: v })}
             />
           </SettingsRow>
 

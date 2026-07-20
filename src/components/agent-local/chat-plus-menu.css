@@ -53,6 +53,20 @@
   white-space: nowrap;
 }
 
+.cpm-switch-copy {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--space-sm);
+  cursor: pointer;
+  flex: 1 1 auto;
+}
+
+.cpm-switch-copy > span:first-child {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 .cpm-separator {
   height: 1px;
   background: var(--edge);
@@ -97,6 +111,13 @@
 
 .cpm-disabled { opacity: 0.4; }
 
+.cpm-connector-label {
+  overflow: hidden;
+  cursor: pointer;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .cpm-sub-empty {
   padding: var(--space-sm);
   font-size: var(--text-xs);
@@ -104,29 +125,6 @@
   text-align: center;
 }
 
-.cpm-toggle {
-  width: 32px;
-  height: 18px;
-  border-radius: 9px;
-  background: var(--surface);
-  border: none;
+.cpm-connector-switch {
   margin-left: auto;
-  position: relative;
-  transition: background var(--ease-smooth);
-  flex-shrink: 0;
 }
-
-.cpm-toggle.on { background: var(--pulse); }
-
-.cpm-toggle-dot {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: white;
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  transition: transform var(--ease-smooth);
-}
-
-.cpm-toggle.on .cpm-toggle-dot { transform: translateX(14px); }

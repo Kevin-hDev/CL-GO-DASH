@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
 import { Trash } from "@/components/ui/icons";
 import { Tooltip } from "@/components/ui/tooltip";
+import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { SettingsCard } from "@/components/settings/settings-card";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { useAvailableModels, withoutInteractiveOnlyModels } from "@/hooks/use-available-models";
@@ -147,13 +148,11 @@ export function ChannelsDetail({ channelId, account, status, config, onSaveConfi
           </div>
           <div className="ctd-row">
             <span className="ctd-row-label">{t("channels.detail.requireMention")}</span>
-            <button
-              type="button"
-              className={`ch-toggle ${account.require_mention ? "ch-toggle--on" : ""}`}
-              onClick={() => void updateAccount({ require_mention: !account.require_mention })}
-            >
-              <span className="ch-toggle-knob" />
-            </button>
+            <ToggleSwitch
+              checked={account.require_mention}
+              ariaLabel={t("channels.detail.requireMention")}
+              onCheckedChange={(checked) => void updateAccount({ require_mention: checked })}
+            />
           </div>
         </SettingsCard>
 

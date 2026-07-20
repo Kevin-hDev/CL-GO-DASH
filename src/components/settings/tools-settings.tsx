@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
-import { RoundToggle } from "@/components/heartbeat/round-toggle";
+import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { showToast } from "@/lib/toast-emitter";
 import i18n from "@/i18n";
 import { SettingsCard } from "./settings-card";
@@ -93,9 +93,10 @@ export function ToolsSettings() {
                 description={t(`settings.tools.groups.${group.id}.description`)}
                 className={`ats-tool-row${enabled ? "" : " is-off"}`}
               >
-                <RoundToggle
+                <ToggleSwitch
                   checked={enabled}
-                  onChange={(checked) => toggleGroup(group, checked)}
+                  ariaLabel={t(`settings.tools.groups.${group.id}.title`)}
+                  onCheckedChange={(checked) => toggleGroup(group, checked)}
                   title={t(`settings.tools.groups.${group.id}.description`)}
                 />
               </SettingsRow>

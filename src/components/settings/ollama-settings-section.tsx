@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { invoke } from "@tauri-apps/api/core";
 import { IS_MAC } from "@/lib/platform";
 import { showToast } from "@/lib/toast-emitter";
-import { RoundToggle } from "@/components/heartbeat/round-toggle";
+import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { SettingsCard } from "./settings-card";
 import { SettingsRow } from "./settings-row";
 import { SettingsSelect, type SelectOption } from "./settings-select";
@@ -90,9 +90,10 @@ export function OllamaSettingsSection({
         title={t("settings.advanced.multiModelTitle")}
         description={t("settings.advanced.multiModelDesc")}
       >
-        <RoundToggle
+        <ToggleSwitch
           checked={multiModel}
-          onChange={(v) => { onSave({ multi_model: v }); setAccelChanged(true); }}
+          ariaLabel={t("settings.advanced.multiModelTitle")}
+          onCheckedChange={(v) => { onSave({ multi_model: v }); setAccelChanged(true); }}
         />
       </SettingsRow>
 
@@ -100,9 +101,10 @@ export function OllamaSettingsSection({
         title={t("settings.advanced.showGpuStatusTitle")}
         description={t("settings.advanced.showGpuStatusDesc")}
       >
-        <RoundToggle
+        <ToggleSwitch
           checked={showGpuStatus}
-          onChange={(v) => onSave({ show_gpu_status: v })}
+          ariaLabel={t("settings.advanced.showGpuStatusTitle")}
+          onCheckedChange={(v) => onSave({ show_gpu_status: v })}
         />
       </SettingsRow>
 

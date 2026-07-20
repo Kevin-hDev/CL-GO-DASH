@@ -17,34 +17,6 @@
   color: var(--ink);
 }
 
-.wk-sidebar-toggle {
-  width: 32px;
-  height: 18px;
-  border-radius: 18px;
-  border: 1px solid var(--edge);
-  background: var(--surface-hover);
-  cursor: pointer;
-  position: relative;
-  padding: 0;
-}
-
-.wk-sidebar-toggle[data-on="true"] {
-  background: var(--pulse);
-  border-color: var(--select-text);
-}
-
-.wk-sidebar-toggle .wk-toggle-dot {
-  width: 14px;
-  height: 14px;
-  top: 1px;
-  left: 1px;
-}
-
-.wk-sidebar-toggle[data-on="true"] .wk-toggle-dot {
-  transform: translateX(14px);
-  background: white;
-}
-
 .wk-sidebar-list {
   flex: 1;
   overflow-y: auto;

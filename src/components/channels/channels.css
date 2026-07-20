@@ -10,39 +10,6 @@
   color: var(--ink-muted);
 }
 
-.ch-toggle {
-  width: 36px;
-  height: 20px;
-  border-radius: 10px;
-  border: none;
-  background: var(--ink-faint);
-  cursor: pointer;
-  position: relative;
-  transition: background 0.2s;
-  padding: 0;
-  flex-shrink: 0;
-}
-
-.ch-toggle--on {
-  background: #28c840;
-}
-
-.ch-toggle-knob {
-  display: block;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: white;
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  transition: transform 0.2s;
-}
-
-.ch-toggle--on .ch-toggle-knob {
-  transform: translateX(16px);
-}
-
 .ch-error-bubble {
   max-width: 600px;
   border-radius: var(--radius-md);

@@ -8,7 +8,7 @@ import { WakeupGrid } from "./wakeup-grid";
 import { WakeupDetails } from "./wakeup-details";
 import { NewWakeupDialog } from "./new-wakeup-dialog";
 import type { ScheduledWakeup } from "@/types/wakeup";
-import { RoundToggle } from "./round-toggle";
+import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { PanelSlot } from "@/components/layout/panel-slots";
 import "./heartbeat.css";
 
@@ -70,9 +70,10 @@ export const HeartbeatTab = memo(function HeartbeatTab({
       <div className="wk-sidebar-header">
         <span className="wk-sidebar-title">{t("heartbeat.sidebar.title")}</span>
         <Tooltip label={globalPaused ? t("heartbeat.sidebar.resume") : t("heartbeat.sidebar.pause")} align="right">
-          <RoundToggle
+          <ToggleSwitch
             checked={!globalPaused}
-            onChange={(on) => void setPaused(!on)}
+            ariaLabel={globalPaused ? t("heartbeat.sidebar.resume") : t("heartbeat.sidebar.pause")}
+            onCheckedChange={(on) => void setPaused(!on)}
           />
         </Tooltip>
       </div>

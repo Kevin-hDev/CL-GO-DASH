@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CaretLeft, Pencil, Trash } from "@/components/ui/icons";
 import { Tooltip } from "@/components/ui/tooltip";
+import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { SettingsCard } from "@/components/settings/settings-card";
 import { SettingsRow } from "@/components/settings/settings-row";
 import type { ScheduledWakeup, WakeupRun, WakeupStatusSummary } from "@/types/wakeup";
@@ -100,30 +101,17 @@ export function WakeupDetails({
               </button>
             </Tooltip>
           )}
-          {disableToggle ? (
-            <Tooltip label={t("heartbeat.pausedHint")} align="right">
-              <button
-                className="wk-toggle-pill"
-                data-active={wakeup.active}
-                disabled
-                onClick={() => onToggle(!wakeup.active)}
-                type="button"
-              >
-                <span className="wk-toggle-dot" />
-              </button>
-            </Tooltip>
-          ) : (
-            <Tooltip label={t("heartbeat.toggle")} align="right">
-              <button
-                className="wk-toggle-pill"
-                data-active={wakeup.active}
-                onClick={() => onToggle(!wakeup.active)}
-                type="button"
-              >
-                <span className="wk-toggle-dot" />
-              </button>
-            </Tooltip>
-          )}
+          <Tooltip
+            label={disableToggle ? t("heartbeat.pausedHint") : t("heartbeat.toggle")}
+            align="right"
+          >
+            <ToggleSwitch
+              checked={wakeup.active}
+              ariaLabel={t("heartbeat.toggle")}
+              disabled={disableToggle}
+              onCheckedChange={onToggle}
+            />
+          </Tooltip>
         </div>
       </div>
 

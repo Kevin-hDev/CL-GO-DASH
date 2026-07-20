@@ -17,6 +17,12 @@
   --pulse: #ff8a4c;
   --pulse-muted: rgba(255, 138, 76, 0.15);
   --ink-on-pulse: #ffffff;
+  --switch-track-off: rgba(200, 200, 210, 0.14);
+  --switch-track-border: rgba(255, 255, 255, 0.08);
+  --switch-track-hover: rgba(255, 255, 255, 0.22);
+  --switch-track-on: var(--pulse);
+  --switch-knob: var(--ink-on-pulse);
+  --switch-focus-ring: var(--pulse-muted);
   --select-bg: rgba(200, 200, 210, 0.12);
   --select-text: #a3a3a3;
   --signal-idle: #5a5a64;

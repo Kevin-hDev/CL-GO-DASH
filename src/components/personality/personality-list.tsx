@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import type { PersonalityFile } from "@/types/personality";
 import { FileText } from "@/components/ui/icons";
 import { Tooltip } from "@/components/ui/tooltip";
-import { RoundToggle } from "@/components/heartbeat/round-toggle";
+import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import "./personality-list.css";
 
 interface PersonalityListProps {
@@ -32,9 +32,10 @@ export function PersonalityList({
       <div className="pers-header">
         <span className="pers-title">{t("personality.files")}</span>
         <div style={{ visibility: isAgentMd || !selectedFileName ? "hidden" : "visible" }}>
-          <RoundToggle
+          <ToggleSwitch
             checked={isInjected}
-            onChange={onToggleInjection}
+            ariaLabel={isInjected ? t("personality.injected") : t("personality.inject")}
+            onCheckedChange={onToggleInjection}
             title={isInjected ? t("personality.injected") : t("personality.inject")}
           />
         </div>

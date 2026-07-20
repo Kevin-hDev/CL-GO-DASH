@@ -118,10 +118,10 @@ describe("SettingsTab slots", () => {
     const forecastRow = screen.getByText("settings.tools.groups.forecast.title").closest(".settings-row");
 
     expect(webRow?.querySelector("input")).toBeNull();
-    expect(skillsRow ? within(skillsRow as HTMLElement).getByRole("checkbox") : null).toBeTruthy();
+    expect(skillsRow ? within(skillsRow as HTMLElement).getByRole("switch") : null).toBeTruthy();
     expect(forecastRow).toHaveClass("is-off");
 
-    const skillsToggle = within(skillsRow as HTMLElement).getByRole("checkbox");
+    const skillsToggle = within(skillsRow as HTMLElement).getByRole("switch");
     fireEvent.click(skillsToggle);
 
     await waitFor(() => {

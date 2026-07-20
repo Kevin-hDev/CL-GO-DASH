@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Plus, Image, Plugs, PuzzlePiece, CaretRight, ClipboardText } from "@/components/ui/icons";
 import { Tooltip } from "@/components/ui/tooltip";
+import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { useConnectors } from "@/hooks/use-connectors";
 import { McpIcon } from "@/lib/mcp-icons";
 import "./chat-plus-menu.css";
@@ -14,6 +15,7 @@ interface ChatPlusMenuProps {
 
 export function ChatPlusMenu({ onFileImport, planModeEnabled, onPlanModeChange }: ChatPlusMenuProps) {
   const { t } = useTranslation();
+  const planModeSwitchId = useId();
   const [open, setOpen] = useState(false);
   const [submenu, setSubmenu] = useState<"connectors" | "plugins" | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -59,18 +61,19 @@ export function ChatPlusMenu({ onFileImport, planModeEnabled, onPlanModeChange }
             <span>{t("chatMenu.addFile")}</span>
           </button>
 
-          <button
-            type="button"
-            className="cpm-item"
-            onClick={() => onPlanModeChange(!planModeEnabled)}
-          >
+          <div className="cpm-item">
             <ClipboardText size="var(--icon-md)" weight="regular" />
-            <span>{t("chatMenu.planMode")}</span>
-            <span className="cpm-item-desc">{t("chatMenu.planModeDesc")}</span>
-            <div className={`cpm-toggle ${planModeEnabled ? "on" : ""}`}>
-              <div className="cpm-toggle-dot" />
-            </div>
-          </button>
+            <label className="cpm-switch-copy" htmlFor={planModeSwitchId}>
+              <span>{t("chatMenu.planMode")}</span>
+              <span className="cpm-item-desc">{t("chatMenu.planModeDesc")}</span>
+            </label>
+            <ToggleSwitch
+              id={planModeSwitchId}
+              checked={planModeEnabled}
+              ariaLabel={t("chatMenu.planMode")}
+              onCheckedChange={onPlanModeChange}
+            />
+          </div>
 
           <div className="cpm-separator" />
 
@@ -102,13 +105,13 @@ export function ChatPlusMenu({ onFileImport, planModeEnabled, onPlanModeChange }
             <div className="cpm-sub-empty">{t("chatMenu.noConnectors")}</div>
           ) : (
             connectedItems.map((c) => (
-              <button key={c.id} type="button" className="cpm-sub-item" onClick={() => void toggleChatEnabled(c.id)}>
-                <McpIcon connectorId={c.id} displayName={c.display_name} size="var(--icon-lg)" />
-                <span className={c.enabled_in_chat ? "" : "cpm-disabled"}>{c.display_name}</span>
-                <div className={`cpm-toggle ${c.enabled_in_chat ? "on" : ""}`}>
-                  <div className="cpm-toggle-dot" />
-                </div>
-              </button>
+              <ConnectorToggleRow
+                key={c.id}
+                connectorId={c.id}
+                displayName={c.display_name}
+                enabled={c.enabled_in_chat}
+                onToggle={() => void toggleChatEnabled(c.id)}
+              />
             ))
           )}
         </div>
@@ -119,6 +122,38 @@ export function ChatPlusMenu({ onFileImport, planModeEnabled, onPlanModeChange }
           <div className="cpm-sub-empty">{t("chatMenu.pluginsEmpty")}</div>
         </div>
       )}
+    </div>
+  );
+}
+
+interface ConnectorToggleRowProps {
+  connectorId: string;
+  displayName: string;
+  enabled: boolean;
+  onToggle: () => void;
+}
+
+function ConnectorToggleRow({
+  connectorId,
+  displayName,
+  enabled,
+  onToggle,
+}: ConnectorToggleRowProps) {
+  const switchId = useId();
+
+  return (
+    <div className="cpm-sub-item">
+      <McpIcon connectorId={connectorId} displayName={displayName} size="var(--icon-lg)" />
+      <label className={enabled ? "cpm-connector-label" : "cpm-connector-label cpm-disabled"} htmlFor={switchId}>
+        {displayName}
+      </label>
+      <ToggleSwitch
+        id={switchId}
+        checked={enabled}
+        ariaLabel={displayName}
+        className="cpm-connector-switch"
+        onCheckedChange={onToggle}
+      />
     </div>
   );
 }
