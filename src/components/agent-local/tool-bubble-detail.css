@@ -4,7 +4,7 @@
   width: max-content;
   max-width: 360px;
   background: var(--toast-bg);
-  border-radius: var(--radius-sm, 6px);
+  border-radius: var(--radius-sm);
   padding: 6px 8px 6px 10px;
   box-shadow: var(--shadow-card);
   display: flex;

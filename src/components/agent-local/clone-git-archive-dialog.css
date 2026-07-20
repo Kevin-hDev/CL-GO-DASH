@@ -12,7 +12,7 @@
   width: min(420px, calc(100vw - 32px));
   padding: var(--space-xl);
   border: 1px solid var(--edge);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   background: var(--popover-bg, var(--shell));
   box-shadow: var(--shadow-card);
   backdrop-filter: var(--popover-backdrop-filter, none);

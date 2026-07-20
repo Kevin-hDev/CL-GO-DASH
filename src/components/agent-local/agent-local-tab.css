@@ -61,7 +61,7 @@ body.al-panel-resizing .agent-detail-chat {
   align-items: center;
   gap: 4px;
   padding: 4px 10px;
-  border-radius: var(--radius-sm, 6px);
+  border-radius: var(--radius-sm);
   border: 1px solid var(--border-subtle);
   background: var(--surface-secondary);
   color: var(--text-secondary);

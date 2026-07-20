@@ -1,7 +1,7 @@
 .tdp-panel {
   margin-bottom: 6px;
   border: 1px solid var(--edge);
-  border-radius: var(--radius-md, 8px);
+  border-radius: var(--radius-md);
   background: var(--surface);
   overflow: hidden;
 }

@@ -5,7 +5,7 @@
 .icp-tt-bubble {
   max-width: min(420px, calc(100vw - 24px));
   padding: 8px 12px;
-  border-radius: var(--radius-md, 8px);
+  border-radius: var(--radius-md);
   background: var(--popover-bg, var(--shell));
   border: 1px solid var(--edge);
   box-shadow: var(--shadow-card);
