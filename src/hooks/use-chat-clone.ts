@@ -37,12 +37,14 @@ export function useChatClone(
   const summaryRun = useCloneSummaryRun(sessionId);
   const pendingCloneRef = useRef<PendingCloneDialog | null>(null);
   const runIdRef = useRef(0);
+  const operationInFlightRef = useRef(false);
 
   useEffect(() => {
     pendingCloneRef.current = pendingClone;
   }, [pendingClone]);
 
   const requestClone = useCallback((id: string) => {
+    if (operationInFlightRef.current) return;
     const index = messages.findIndex((message) => message.id === id);
     const next = {
       messageId: id,
@@ -54,12 +56,18 @@ export function useChatClone(
   }, [messages]);
 
   const submitClone = useCallback(async (mode: CloneMode, customFocus?: string) => {
-    if (!pendingClone || !onCloneMessage) return;
+    if (!pendingClone || !onCloneMessage || operationInFlightRef.current) return;
     if (mode === "summary" && getCloneSummaryRun(sessionId)) return;
+    operationInFlightRef.current = true;
     const runId = ++runIdRef.current;
     const messageId = pendingClone.messageId;
     const operationId = crypto.randomUUID();
-    setCloneBusy(true);
+    const isSummary = mode === "summary";
+    setCloneBusy(isSummary);
+    if (!isSummary) {
+      pendingCloneRef.current = null;
+      setPendingClone(null);
+    }
     if (mode === "summary") {
       startCloneSummaryRun({ sessionId, messageId, operationId, visible: true });
     }
@@ -67,14 +75,17 @@ export function useChatClone(
       await onCloneMessage(messageId, mode, customFocus, {
         operationId: mode === "summary" ? operationId : undefined,
         shouldActivateOnComplete: () =>
-          runIdRef.current === runId && pendingCloneRef.current?.messageId === messageId,
+          runIdRef.current === runId
+          && (!isSummary || pendingCloneRef.current?.messageId === messageId),
       });
       finishCloneSummaryRun(sessionId, operationId);
       pendingCloneRef.current = null;
       setPendingClone(null);
     } catch {
       if (mode !== "summary") {
-        setPendingClone((current) => current ? { ...current, error: "failed" } : current);
+        const failedClone = { ...pendingClone, error: "failed" };
+        pendingCloneRef.current = failedClone;
+        setPendingClone(failedClone);
         return;
       }
       const stillRunning = getCloneSummaryRun(sessionId)?.operationId === operationId;
@@ -83,6 +94,7 @@ export function useChatClone(
         setPendingClone((current) => current ? { ...current, error: "failed" } : current);
       }
     } finally {
+      operationInFlightRef.current = false;
       if (runIdRef.current === runId) setCloneBusy(false);
     }
   }, [onCloneMessage, pendingClone, sessionId]);

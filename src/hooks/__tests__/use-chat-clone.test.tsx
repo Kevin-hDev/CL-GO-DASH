@@ -9,6 +9,42 @@ const messages: AgentMessage[] = [
 ];
 
 describe("useChatClone", () => {
+  it("ferme immédiatement le dialogue pour un clone sans résumé", async () => {
+    let finishClone!: () => void;
+    const onCloneMessage = vi.fn(() => new Promise<void>((resolve) => {
+      finishClone = resolve;
+    }));
+    const { result } = renderHook(() =>
+      useChatClone("parent", messages, onCloneMessage));
+
+    act(() => result.current.requestClone("m1"));
+    act(() => void result.current.submitClone("cut"));
+
+    expect(result.current.pendingClone).toBeNull();
+    expect(result.current.cloneBusy).toBe(false);
+    expect(result.current.summaryRun).toBeNull();
+
+    await act(async () => {
+      finishClone();
+      await Promise.resolve();
+    });
+  });
+
+  it("réouvre le dialogue si le clone simple échoue", async () => {
+    const onCloneMessage = vi.fn(() => Promise.reject(new Error("failed")));
+    const { result } = renderHook(() =>
+      useChatClone("parent", messages, onCloneMessage));
+
+    act(() => result.current.requestClone("m1"));
+    await act(async () => {
+      await result.current.submitClone("cut");
+    });
+
+    expect(result.current.pendingClone?.messageId).toBe("m1");
+    expect(result.current.pendingClone?.error).toBe("failed");
+    expect(result.current.cloneBusy).toBe(false);
+  });
+
   it("masque, réouvre puis annule une génération de résumé", async () => {
     let finishClone!: () => void;
     const onCloneMessage = vi.fn(() => new Promise<void>((resolve) => {
