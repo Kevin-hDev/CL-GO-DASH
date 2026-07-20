@@ -1,16 +1,21 @@
 use git2::{BranchType, IndexAddOption, Repository, Signature};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::process::Command;
 
-use super::{branch, repo};
+use super::{
+    action_error::GitActionError, branch, branch_index_backup::IndexBackup, repo,
+};
 
 const MAX_COMMIT_DESCRIPTION_CHARS: usize = 2_000;
 
-pub fn commit_all(repo_path: &Path, description: Option<String>) -> Result<(), String> {
-    let git_repo = repo::open(repo_path)?;
-    let workdir = repo::workdir(&git_repo)?;
+pub fn commit_all(
+    repo_path: &Path,
+    description: Option<String>,
+) -> Result<(), GitActionError> {
+    let git_repo = repo::open(repo_path).map_err(|_| GitActionError::RepositoryUnavailable)?;
+    let workdir = repo::workdir(&git_repo).map_err(|_| GitActionError::RepositoryUnavailable)?;
     let dirty =
-        branch::count_dirty_files(&git_repo).map_err(|_| "Vérification impossible".to_string())?;
+        branch::count_dirty_files(&git_repo).map_err(|_| GitActionError::InternalError)?;
     if dirty == 0 {
         return Ok(());
     }
@@ -30,14 +35,14 @@ pub fn commit_all_and_checkout(
     repo_path: &Path,
     target_branch: &str,
     description: Option<String>,
-) -> Result<(), String> {
-    branch::validate_branch_name(target_branch).map_err(|e| e.to_string())?;
-    let git_repo = repo::open(repo_path)?;
-    let workdir = repo::workdir(&git_repo)?;
+) -> Result<(), GitActionError> {
+    branch::validate_branch_name(target_branch).map_err(|_| GitActionError::BranchUnavailable)?;
+    let git_repo = repo::open(repo_path).map_err(|_| GitActionError::RepositoryUnavailable)?;
+    let workdir = repo::workdir(&git_repo).map_err(|_| GitActionError::RepositoryUnavailable)?;
     ensure_local_branch_exists(&git_repo, target_branch)?;
 
     let dirty =
-        branch::count_dirty_files(&git_repo).map_err(|_| "Vérification impossible".to_string())?;
+        branch::count_dirty_files(&git_repo).map_err(|_| GitActionError::InternalError)?;
     if dirty == 0 {
         return branch::checkout_branch(repo_path, target_branch);
     }
@@ -54,10 +59,13 @@ pub fn commit_all_and_checkout(
     branch::checkout_branch(repo_path, target_branch)
 }
 
-fn ensure_local_branch_exists(repo: &Repository, branch_name: &str) -> Result<(), String> {
+fn ensure_local_branch_exists(
+    repo: &Repository,
+    branch_name: &str,
+) -> Result<(), GitActionError> {
     repo.find_branch(branch_name, BranchType::Local)
         .map(|_| ())
-        .map_err(|_| "Branche introuvable".to_string())
+        .map_err(|_| GitActionError::BranchUnavailable)
 }
 
 fn create_wip_commit(
@@ -65,7 +73,7 @@ fn create_wip_commit(
     target_branch: &str,
     description: Option<&str>,
     signature: &Signature<'_>,
-) -> Result<(), String> {
+) -> Result<(), GitActionError> {
     let message = build_commit_message(target_branch, description);
     create_commit(repo, &message, signature)
 }
@@ -74,21 +82,21 @@ fn create_commit(
     repo: &Repository,
     message: &str,
     signature: &Signature<'_>,
-) -> Result<(), String> {
-    let mut index = repo.index().map_err(|e| format!("Index : {e}"))?;
+) -> Result<(), GitActionError> {
+    let mut index = repo.index().map_err(|_| GitActionError::CommitFailed)?;
     index
         .add_all(["*"], IndexAddOption::DEFAULT, None)
-        .map_err(|e| format!("Staging : {e}"))?;
-    index.write().map_err(|e| format!("Écriture index : {e}"))?;
+        .map_err(|_| GitActionError::CommitFailed)?;
+    index.write().map_err(|_| GitActionError::CommitFailed)?;
 
-    let tree_oid = index.write_tree().map_err(|e| format!("Arbre : {e}"))?;
+    let tree_oid = index.write_tree().map_err(|_| GitActionError::CommitFailed)?;
     let tree = repo
         .find_tree(tree_oid)
-        .map_err(|e| format!("Arbre : {e}"))?;
+        .map_err(|_| GitActionError::CommitFailed)?;
     let parent = repo
         .head()
         .and_then(|h| h.peel_to_commit())
-        .map_err(|e| format!("Commit parent : {e}"))?;
+        .map_err(|_| GitActionError::CommitFailed)?;
     repo.commit(
         Some("HEAD"),
         signature,
@@ -97,7 +105,7 @@ fn create_commit(
         &tree,
         &[&parent],
     )
-    .map_err(|e| format!("Commit : {e}"))?;
+    .map_err(|_| GitActionError::CommitFailed)?;
     Ok(())
 }
 
@@ -109,7 +117,9 @@ pub(super) fn build_commit_message(target_branch: &str, description: Option<&str
     }
 }
 
-pub(super) fn sanitize_description(description: Option<String>) -> Result<Option<String>, String> {
+pub(super) fn sanitize_description(
+    description: Option<String>,
+) -> Result<Option<String>, GitActionError> {
     let Some(description) = description else {
         return Ok(None);
     };
@@ -123,16 +133,19 @@ pub(super) fn sanitize_description(description: Option<String>) -> Result<Option
             .chars()
             .any(|c| c == '\0' || (c.is_control() && c != '\n' && c != '\t'))
     {
-        return Err("Description de commit invalide".to_string());
+        return Err(GitActionError::InvalidCommitDescription);
     }
     Ok(Some(trimmed.to_string()))
 }
 
-fn commit_signature(repo: &Repository, workdir: &Path) -> Result<Signature<'static>, String> {
+fn commit_signature(
+    repo: &Repository,
+    workdir: &Path,
+) -> Result<Signature<'static>, GitActionError> {
     if let Ok(sig) = repo.signature() {
         return Ok(sig);
     }
-    signature_from_git_var(workdir).ok_or_else(|| "Identité Git introuvable".to_string())
+    signature_from_git_var(workdir).ok_or(GitActionError::IdentityMissing)
 }
 
 fn signature_from_git_var(workdir: &Path) -> Option<Signature<'static>> {
@@ -159,37 +172,4 @@ pub(super) fn parse_git_ident(ident: &str) -> Option<(String, String)> {
         return None;
     }
     Some((name.to_string(), email.to_string()))
-}
-
-struct IndexBackup {
-    index_path: PathBuf,
-    backup: Option<tempfile::NamedTempFile>,
-}
-
-impl IndexBackup {
-    fn capture(repo: &Repository) -> Result<Self, String> {
-        let index_path = repo.path().join("index");
-        if !index_path.exists() {
-            return Ok(Self {
-                index_path,
-                backup: None,
-            });
-        }
-        let backup = tempfile::NamedTempFile::new_in(repo.path())
-            .map_err(|_| "Sauvegarde index impossible".to_string())?;
-        std::fs::copy(&index_path, backup.path())
-            .map_err(|_| "Sauvegarde index impossible".to_string())?;
-        Ok(Self {
-            index_path,
-            backup: Some(backup),
-        })
-    }
-
-    fn restore(&self) {
-        if let Some(backup) = &self.backup {
-            let _ = std::fs::copy(backup.path(), &self.index_path);
-        } else {
-            let _ = std::fs::remove_file(&self.index_path);
-        }
-    }
 }

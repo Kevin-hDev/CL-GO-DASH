@@ -10,6 +10,7 @@ import { CloneGitBranchButton } from "./clone-git-branch-button";
 import { useGithubBranchAuth } from "@/hooks/use-github-branch-auth";
 import type { useGitBranch } from "@/hooks/use-git-branch";
 import type { useSessionProject } from "@/hooks/use-session-project";
+import { appErrorMessage } from "@/lib/app-error";
 import type { Project } from "@/types/agent";
 
 interface ChatProjectControlsProps {
@@ -93,12 +94,11 @@ export function ChatProjectControls({
                 await git.refresh();
                 await onBranchReady?.(branch);
                 setBranchConflict(null);
-              } catch (e) {
-                console.error("commit_and_checkout:", e);
+              } catch (error) {
                 setBranchConflict((current) => current ? {
                   ...current,
                   busy: false,
-                  error: t("branches.commitSwitchError"),
+                  error: appErrorMessage(error, t, "branches.commitSwitchError"),
                 } : current);
                 return;
               }

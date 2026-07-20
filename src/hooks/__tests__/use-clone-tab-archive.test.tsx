@@ -62,4 +62,25 @@ describe("useCloneTabArchive", () => {
 
     await vi.waitFor(() => expect(afterCleanup).toHaveBeenCalled());
   });
+
+  it("explique qu'une branche principale est protégée", async () => {
+    const cleanup = vi.fn().mockRejectedValue({ kind: "protected_branch" });
+    const { result } = renderHook(() => useCloneTabArchive({
+      tabs,
+      projectPath: "/repo",
+      onCloseTab: vi.fn(),
+      onCloseTabWithGitCleanup: cleanup,
+      getMainBranch: () => "main",
+    }));
+
+    act(() => result.current.closeTab("branch-1"));
+    render(<>{result.current.dialog}</>);
+    fireEvent.click(screen.getByRole("button", { name: "agentLocal.clone.gitArchiveCleanup" }));
+
+    await vi.waitFor(() => expect(showToast).toHaveBeenCalledWith(
+      "branches.errorProtectedBranch",
+      "error",
+      3000,
+    ));
+  });
 });

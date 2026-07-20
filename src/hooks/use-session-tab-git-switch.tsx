@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useTranslation } from "react-i18next";
 import { BranchConflictDialog } from "@/components/agent-local/branch-conflict-dialog";
+import { appErrorMessage, showAppError } from "@/lib/app-error";
 import { showToast } from "@/lib/toast-emitter";
 import type { useGitBranch } from "@/hooks/use-git-branch";
 import type { SessionTabs } from "@/types/agent";
@@ -85,9 +86,11 @@ export function useSessionTabGitSwitch({
         setConflict({ tabId, branch: targetBranch, dirtyCount: result.dirtyCount });
         return;
       }
-      if (!target.is_main && target.git_branch) {
+      if (result.kind === "branch_unavailable" && !target.is_main && target.git_branch) {
         await onUnlinkCloneGitBranch(target.session_id);
         showToast(t("agentLocal.clone.gitBranchMissing"), "error", 3000);
+      } else {
+        showAppError(result, t, "branches.errorCheckoutFailed");
       }
       return;
     }
@@ -120,11 +123,11 @@ export function useSessionTabGitSwitch({
             const tabId = conflict.tabId;
             setConflict(null);
             await onSelectTab(tabId);
-          } catch {
+          } catch (error) {
             setConflict((current) => current ? {
               ...current,
               busy: false,
-              error: t("branches.commitSwitchError"),
+              error: appErrorMessage(error, t, "branches.commitSwitchError"),
             } : current);
           }
         })();

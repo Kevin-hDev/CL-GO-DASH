@@ -161,7 +161,7 @@ pub(super) async fn dispatch_inner(
             }
             match crate::services::git::branch::checkout_branch(working_dir, branch_name) {
                 Ok(()) => ToolResult::ok(format!("Basculé sur la branche '{}'", branch_name)),
-                Err(e) => ToolResult::err(e),
+                Err(e) => ToolResult::err(e.to_string()),
             }
         }
         "delegate_task" => {

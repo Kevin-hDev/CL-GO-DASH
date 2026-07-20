@@ -2,35 +2,23 @@ use super::{github_auth, repo as git_repo};
 use git2::{BranchType, ErrorCode};
 use serde::Serialize;
 use std::path::Path;
+use thiserror::Error;
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Error, Serialize)]
 #[serde(tag = "kind", content = "message", rename_all = "snake_case")]
 pub enum CreateBranchError {
+    #[error("invalid branch name")]
     InvalidName,
+    #[error("branch name too long")]
     NameTooLong,
+    #[error("branch already exists")]
     AlreadyExists,
+    #[error("repository has no commit")]
     UnbornHead,
+    #[error("github authentication required")]
     GithubAuthRequired,
+    #[error("internal git error")]
     InternalError,
-}
-
-impl CreateBranchError {
-    pub fn user_message(&self) -> &'static str {
-        match self {
-            Self::InvalidName => "invalid branch name",
-            Self::NameTooLong => "branch name too long",
-            Self::AlreadyExists => "branch already exists",
-            Self::UnbornHead => "repository has no commit",
-            Self::GithubAuthRequired => "github auth required",
-            Self::InternalError => "internal git error",
-        }
-    }
-}
-
-impl std::fmt::Display for CreateBranchError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(self.user_message())
-    }
 }
 
 pub fn create_branch(repo_path: &Path, branch_name: &str) -> Result<(), CreateBranchError> {

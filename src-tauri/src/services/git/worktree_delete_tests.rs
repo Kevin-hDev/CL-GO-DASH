@@ -1,4 +1,4 @@
-use super::worktree_delete;
+use super::{action_error::GitActionError, worktree_delete};
 use git2::{Repository, Signature};
 use std::path::Path;
 use std::process::Command;
@@ -45,6 +45,22 @@ async fn removes_a_clean_worktree_without_force() {
         .expect("remove clean");
 
     assert!(!worktree_path.exists());
+}
+
+#[tokio::test]
+async fn clean_removal_reports_dirty_worktree() {
+    let repo_dir = init_repo();
+    let worktree_root = tempfile::tempdir().expect("worktree parent");
+    let worktree_path = worktree_root.path().join("dirty-clean-worktree");
+    add_worktree(repo_dir.path(), &worktree_path, "dirty-clean-feature");
+    std::fs::write(worktree_path.join("dirty.txt"), "dirty").expect("dirty file");
+
+    let error = worktree_delete::remove_clean(repo_dir.path(), &worktree_path)
+        .await
+        .expect_err("clean removal must fail");
+
+    assert_eq!(error, GitActionError::DirtyWorktree { dirty_count: 1 });
+    assert!(worktree_path.exists());
 }
 
 #[tokio::test]

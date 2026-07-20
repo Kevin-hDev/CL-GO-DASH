@@ -4,27 +4,13 @@ import { invoke } from "@tauri-apps/api/core";
 import type {
   BranchDeletePreview,
   BranchMergePreview,
-  GitActionErrorKind,
   GitActionResult,
   GitDeleteMode,
   GitDirtyFile,
   GitPushTarget,
   WorktreeDeletePreview,
 } from "@/hooks/git-types";
-
-const ACTION_ERROR_KINDS = new Set<GitActionErrorKind>([
-  "no_remote",
-  "authentication_required",
-  "permission_denied",
-  "remote_changed",
-  "network_unavailable",
-  "context_changed",
-  "branch_unavailable",
-  "dirty_worktree",
-  "nothing_to_merge",
-  "merge_conflict",
-  "internal_error",
-]);
+import { parseAppError } from "@/lib/app-error";
 
 export function useGitMutations(
   pathRef: RefObject<string | undefined>,
@@ -37,8 +23,8 @@ export function useGitMutations(
       await invoke("commit_git_changes", { path, commitDescription: description });
       await refresh();
       return { ok: true };
-    } catch {
-      return internalError();
+    } catch (error) {
+      return failed(error);
     }
   }, [pathRef, refresh]);
 
@@ -60,7 +46,7 @@ export function useGitMutations(
       await refresh();
       return { ok: true };
     } catch (error) {
-      return { ok: false, kind: readActionErrorKind(error) };
+      return failed(error);
     }
   }, [pathRef, refresh]);
 
@@ -97,7 +83,7 @@ export function useGitMutations(
       return { ok: true };
     } catch (error) {
       await refresh();
-      return { ok: false, kind: readActionErrorKind(error) };
+      return failed(error);
     }
   }, [pathRef, refresh]);
 
@@ -118,8 +104,8 @@ export function useGitMutations(
       await invoke("delete_git_branch", { path, branchName, mode, commitDescription });
       await refresh();
       return { ok: true };
-    } catch {
-      return internalError();
+    } catch (error) {
+      return failed(error);
     }
   }, [pathRef, refresh]);
 
@@ -143,8 +129,8 @@ export function useGitMutations(
       await invoke("delete_git_worktree", { path, worktreePath, mode, commitDescription });
       await refresh();
       return { ok: true };
-    } catch {
-      return internalError();
+    } catch (error) {
+      return failed(error);
     }
   }, [pathRef, refresh]);
 
@@ -169,19 +155,6 @@ function contextChanged(): GitActionResult {
   return { ok: false, kind: "context_changed" };
 }
 
-function readActionErrorKind(error: unknown): GitActionErrorKind {
-  if (error && typeof error === "object") {
-    const kind = (error as { kind?: unknown }).kind;
-    if (typeof kind === "string" && ACTION_ERROR_KINDS.has(kind as GitActionErrorKind)) {
-      return kind as GitActionErrorKind;
-    }
-  }
-  if (typeof error === "string") {
-    try {
-      return readActionErrorKind(JSON.parse(error));
-    } catch {
-      return "internal_error";
-    }
-  }
-  return "internal_error";
+function failed(error: unknown): GitActionResult {
+  return { ok: false, ...(parseAppError(error) ?? { kind: "internal_error" }) };
 }

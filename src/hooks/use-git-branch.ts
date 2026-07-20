@@ -3,9 +3,10 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { cleanupTauriListener } from "@/lib/tauri-listen";
 import {
-  parseCreateBranchError,
+  isGitCreateBranchErrorKind,
+  parseAppError,
   type GitCreateBranchResult,
-} from "@/hooks/git-create-branch-error";
+} from "@/lib/app-error";
 import { useGitMutations } from "@/hooks/use-git-mutations";
 import { useGitHistory } from "@/hooks/use-git-history";
 import { useGitWatcher } from "@/hooks/use-git-watcher";
@@ -15,7 +16,7 @@ import {
   loadGitUncommittedSnapshot,
   loadGitWorktrees,
 } from "@/hooks/git-refresh";
-import type { GitBranchState } from "@/hooks/git-types";
+import type { GitActionResult, GitBranchState } from "@/hooks/git-types";
 
 export type { BranchInfo, WorktreeInfo } from "@/hooks/git-types";
 
@@ -156,22 +157,16 @@ export function useGitBranch(projectPath: string | undefined) {
     };
   }, [refresh]);
 
-  const checkout = useCallback(async (branchName: string): Promise<{ ok: boolean; dirtyCount?: number }> => {
+  const checkout = useCallback(async (branchName: string): Promise<GitActionResult> => {
     const path = pathRef.current;
-    if (!path) return { ok: false };
+    if (!path) return { ok: false, kind: "repository_unavailable" };
 
     try {
       await invoke("checkout_git_branch", { path, branchName });
       await refresh();
       return { ok: true };
-    } catch (e) {
-      const msg = String(e);
-      if (msg.includes("DIRTY:")) {
-        const match = /DIRTY:(\d+)/.exec(msg);
-        const count = match ? parseInt(match[1], 10) : 0;
-        return { ok: false, dirtyCount: count };
-      }
-      return { ok: false };
+    } catch (error) {
+      return { ok: false, ...(parseAppError(error) ?? { kind: "internal_error" }) };
     }
   }, [refresh]);
 
@@ -183,12 +178,13 @@ export function useGitBranch(projectPath: string | undefined) {
       await invoke("create_git_branch", { path, branchName });
       await refresh();
       return { ok: true };
-    } catch (e) {
-      const kind = parseCreateBranchError(e);
+    } catch (error) {
+      const kind = parseAppError(error)?.kind;
       if (kind === "github_auth_required") {
         return { ok: false, reason: "github_auth_required", kind };
       }
-      return { ok: false, kind: kind ?? "internal_error" };
+      if (isGitCreateBranchErrorKind(kind)) return { ok: false, kind };
+      return { ok: false, kind: "internal_error" };
     }
   }, [refresh]);
 

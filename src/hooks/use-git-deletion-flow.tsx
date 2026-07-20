@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { GitDeleteDialog, type DeleteRisk } from "@/components/agent-local/git-delete-dialog";
-import { showToast } from "@/lib/toast-emitter";
+import { appErrorMessage, showAppError } from "@/lib/app-error";
 import type { BranchSelectorGitState } from "@/components/agent-local/branch-selector-types";
 
 export function useGitDeletionFlow(git: BranchSelectorGitState) {
@@ -19,8 +19,8 @@ export function useGitDeletionFlow(git: BranchSelectorGitState) {
         return false;
       }
       return true;
-    } catch {
-      showToast(t("branches.deleteError"), "error", 3000);
+    } catch (error) {
+      showAppError(error, t, "branches.deleteError");
       return false;
     }
   }, [git, t]);
@@ -34,20 +34,20 @@ export function useGitDeletionFlow(git: BranchSelectorGitState) {
         return false;
       }
       return true;
-    } catch {
-      showToast(t("branches.deleteError"), "error", 3000);
+    } catch (error) {
+      showAppError(error, t, "branches.deleteError");
       return false;
     }
   }, [git, t]);
 
   const deleteCleanBranch = useCallback(async (branch: string) => {
     const result = await git.deleteBranch(branch, "clean");
-    if (!result.ok) showToast(t("branches.deleteError"), "error", 3000);
+    if (!result.ok) showAppError(result, t, "branches.deleteError");
   }, [git, t]);
 
   const deleteCleanWorktree = useCallback(async (path: string) => {
     const result = await git.deleteWorktree(path, "clean");
-    if (!result.ok) showToast(t("branches.deleteError"), "error", 3000);
+    if (!result.ok) showAppError(result, t, "branches.deleteError");
   }, [git, t]);
 
   const executeRisk = useCallback(async (preserve: boolean, description?: string) => {
@@ -60,7 +60,7 @@ export function useGitDeletionFlow(git: BranchSelectorGitState) {
     if (result.ok) {
       setRisk(null);
     } else {
-      setError(t("branches.deleteError"));
+      setError(appErrorMessage(result, t, "branches.deleteError"));
     }
     setBusy(false);
   }, [busy, git, risk, t]);

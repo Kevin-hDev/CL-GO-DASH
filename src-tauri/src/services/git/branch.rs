@@ -1,4 +1,4 @@
-use super::repo as git_repo;
+use super::{action_error::GitActionError, repo as git_repo};
 use git2::{BranchType, StatusOptions};
 use serde::Serialize;
 use std::path::Path;
@@ -98,29 +98,28 @@ pub fn get_context(repo_path: &Path) -> GitContext {
     }
 }
 
-pub fn checkout_branch(repo_path: &Path, branch_name: &str) -> Result<(), String> {
-    validate_branch_name(branch_name).map_err(|e| e.to_string())?;
+pub fn checkout_branch(repo_path: &Path, branch_name: &str) -> Result<(), GitActionError> {
+    validate_branch_name(branch_name).map_err(|_| GitActionError::BranchUnavailable)?;
 
-    let repo = git_repo::open(repo_path)?;
-
-    let dirty = count_dirty_files(&repo).map_err(|_| "Vérification impossible".to_string())?;
-    if dirty > 0 {
-        return Err(format!("DIRTY:{dirty}"));
-    }
-
+    let repo = git_repo::open(repo_path).map_err(|_| GitActionError::RepositoryUnavailable)?;
     let (object, reference) = repo
         .revparse_ext(&format!("refs/heads/{branch_name}"))
-        .map_err(|e| format!("Branche introuvable : {e}"))?;
+        .map_err(|_| GitActionError::BranchUnavailable)?;
+
+    let dirty = count_dirty_files(&repo).map_err(|_| GitActionError::InternalError)?;
+    if dirty > 0 {
+        return Err(GitActionError::DirtyWorktree { dirty_count: dirty });
+    }
 
     repo.checkout_tree(&object, None)
-        .map_err(|e| format!("Checkout impossible : {e}"))?;
+        .map_err(|_| GitActionError::CheckoutFailed)?;
 
     if let Some(refname) = reference
         .as_ref()
         .and_then(|reference| reference.name().ok())
     {
         repo.set_head(refname)
-            .map_err(|e| format!("Mise à jour HEAD : {e}"))?;
+            .map_err(|_| GitActionError::CheckoutFailed)?;
     }
 
     Ok(())

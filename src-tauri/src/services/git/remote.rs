@@ -2,21 +2,29 @@ use git2::{ErrorClass, ErrorCode, PushOptions, RemoteCallbacks};
 use serde::Serialize;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
+use thiserror::Error;
 use zeroize::Zeroizing;
 
 use super::{remote_credentials, remote_status, remote_target, repo};
 
 pub use remote_status::{status, RemoteStatus};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Error, Serialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum PushError {
+    #[error("remote unavailable")]
     NoRemote,
+    #[error("authentication required")]
     AuthenticationRequired,
+    #[error("remote permission denied")]
     PermissionDenied,
+    #[error("remote branch changed")]
     RemoteChanged,
+    #[error("network unavailable")]
     NetworkUnavailable,
+    #[error("git context changed")]
     ContextChanged,
+    #[error("internal git error")]
     InternalError,
 }
 

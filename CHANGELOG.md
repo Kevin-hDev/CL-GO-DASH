@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **Clear Git operation errors** — branch switching, commits, merges, branch and worktree deletion, and clone branch cleanup now show stable localized reasons instead of a generic failure.
+
+### Changed
+
+- **Typed UI error contract** — Git and clone commands now return structured `thiserror` codes, decoded through one frontend mapping that never exposes internal paths or backend details.
+
 ---
 
 ## v1.0.1

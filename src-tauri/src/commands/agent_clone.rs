@@ -2,6 +2,7 @@ use crate::services::agent_local::clone_git::CloneGitBranchResult;
 use crate::services::agent_local::clone_session::CloneSessionResult;
 use crate::services::agent_local::session_tabs::SessionTabs;
 use crate::services::agent_local::types_session::CloneMode;
+use crate::services::git::action_error::GitActionError;
 use crate::services::git::branch::CreateBranchError;
 use std::path::{Path, PathBuf};
 
@@ -84,7 +85,7 @@ pub async fn create_clone_git_branch(
 pub async fn unlink_clone_git_branch(
     session_id: String,
     clone_session_id: String,
-) -> Result<SessionTabs, String> {
+) -> Result<SessionTabs, GitActionError> {
     crate::services::agent_local::clone_git::unlink_branch(&session_id, &clone_session_id).await
 }
 
@@ -94,8 +95,10 @@ pub async fn link_clone_git_branch(
     clone_session_id: String,
     path: String,
     branch_name: String,
-) -> Result<SessionTabs, String> {
-    let repo_path = registered_project_path(&path).await?;
+) -> Result<SessionTabs, GitActionError> {
+    let repo_path = registered_project_path(&path)
+        .await
+        .map_err(|_| GitActionError::RepositoryUnavailable)?;
     crate::services::agent_local::clone_git_link::link_existing_branch(
         &session_id,
         &clone_session_id,
@@ -111,8 +114,10 @@ pub async fn close_session_tab_and_cleanup_git_branch(
     tab_id: String,
     path: String,
     fallback_branch: Option<String>,
-) -> Result<SessionTabs, String> {
-    let repo_path = registered_project_path(&path).await?;
+) -> Result<SessionTabs, GitActionError> {
+    let repo_path = registered_project_path(&path)
+        .await
+        .map_err(|_| GitActionError::RepositoryUnavailable)?;
     crate::services::agent_local::clone_git::close_tab_with_branch_cleanup(
         &session_id,
         &tab_id,

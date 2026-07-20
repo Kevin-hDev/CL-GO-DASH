@@ -1,9 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { branchCreateErrorKey } from "@/components/agent-local/branch-selector-utils";
-import { parseCreateBranchError } from "@/hooks/git-create-branch-error";
 import type { useGitBranch } from "@/hooks/use-git-branch";
-import { showToast } from "@/lib/toast-emitter";
+import { showAppError } from "@/lib/app-error";
 import type { SessionTab } from "@/types/agent";
 
 type CloneGitBranchActionState = "idle" | "loading" | "success";
@@ -77,8 +75,7 @@ export function useCloneGitBranchAction({
         await git.refresh();
         setRawState({ sessionId: activeSessionTab.session_id, status: "success" });
       } catch (error) {
-        const kind = parseCreateBranchError(error);
-        showToast(t(branchCreateErrorKey(kind ?? undefined)), "error", 3000);
+        showAppError(error, t, "branches.errorInternal");
         setRawState({ sessionId: activeSessionTab.session_id, status: "idle" });
       }
     })();

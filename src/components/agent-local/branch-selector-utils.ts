@@ -1,4 +1,4 @@
-import type { GitCreateBranchErrorKind } from "@/hooks/git-create-branch-error";
+import { appErrorKey, type GitCreateBranchErrorKind } from "@/lib/app-error";
 import type { BranchInfo, WorktreeInfo } from "@/hooks/use-git-branch";
 
 export function getVisibleBranchOptions(
@@ -23,18 +23,5 @@ export function getVisibleBranchOptions(
 }
 
 export function branchCreateErrorKey(kind?: GitCreateBranchErrorKind): string {
-  switch (kind) {
-    case "invalid_name":
-      return "branches.errorInvalidName";
-    case "name_too_long":
-      return "branches.errorNameTooLong";
-    case "already_exists":
-      return "branches.errorAlreadyExists";
-    case "unborn_head":
-      return "branches.errorUnbornHead";
-    case "github_auth_required":
-      return "branches.errorGithubAuth";
-    default:
-      return "branches.errorInternal";
-  }
+  return appErrorKey(kind, "branches.errorInternal");
 }

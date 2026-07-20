@@ -1,4 +1,4 @@
-use super::{branch, branch_delete};
+use super::{action_error::GitActionError, branch, branch_delete};
 use git2::{Repository, Signature};
 use std::path::Path;
 
@@ -61,7 +61,10 @@ fn clean_delete_rechecks_unmerged_commits() {
     commit_file(tmp.path(), "feature.txt", "feature");
     branch::checkout_branch(tmp.path(), "main").expect("checkout main");
 
-    assert!(branch_delete::delete_clean(tmp.path(), "abandoned").is_err());
+    assert_eq!(
+        branch_delete::delete_clean(tmp.path(), "abandoned"),
+        Err(GitActionError::UnmergedCommits { count: 1 }),
+    );
     assert!(branch_delete::branch_exists(tmp.path(), "abandoned").expect("exists"));
 }
 

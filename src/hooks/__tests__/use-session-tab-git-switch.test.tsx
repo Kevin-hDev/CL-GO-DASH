@@ -1,6 +1,7 @@
 import { renderHook, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { useSessionTabGitSwitch } from "../use-session-tab-git-switch";
+import { showToast } from "@/lib/toast-emitter";
 import type { SessionTabs } from "@/types/agent";
 
 vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
@@ -75,6 +76,23 @@ describe("useSessionTabGitSwitch", () => {
 
     await waitFor(() => expect(unlink).toHaveBeenCalledWith("clone"));
     await waitFor(() => expect(onSelectTab).toHaveBeenCalledWith("branch-1"));
+  });
+
+  it("affiche la raison structurée si le checkout échoue", async () => {
+    const checkout = vi.fn().mockResolvedValue({ ok: false, kind: "checkout_failed" });
+    const { result } = renderHook(() => useSessionTabGitSwitch({
+      rootSessionId: "root",
+      tabs,
+      git: git({ checkout }),
+      projectPath: "/repo",
+      onSelectTab: vi.fn(),
+      onUnlinkCloneGitBranch: vi.fn(),
+      onSaveMainCheckpointBranch: vi.fn(),
+    }));
+
+    await result.current.selectTab("branch-1");
+
+    expect(showToast).toHaveBeenCalledWith("branches.errorCheckoutFailed", "error", 3000);
   });
 
   it("persiste la branche principale quand aucun checkpoint n'existe", async () => {

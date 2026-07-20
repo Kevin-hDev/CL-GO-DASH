@@ -4,6 +4,7 @@ import { X } from "@/components/ui/icons";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { useKeyboard } from "@/hooks/use-keyboard";
 import type { BranchInfo, BranchMergePreview } from "@/hooks/git-types";
+import { appErrorMessage } from "@/lib/app-error";
 import { GitDirtyFileList } from "./git-dirty-file-list";
 import "./git-merge-dialog.css";
 
@@ -35,24 +36,27 @@ export function GitMergeDialog({
   const [previewState, setPreviewState] = useState<{
     source: string;
     value?: BranchMergePreview;
-    failed: boolean;
-  }>({ source: "", failed: false });
+    error?: string;
+  }>({ source: "" });
   const [description, setDescription] = useState("");
   useKeyboard({ onEscape: busy ? undefined : onCancel });
 
   useEffect(() => {
     let active = true;
     void onPreview(source).then((next) => {
-      if (active) setPreviewState({ source, value: next, failed: false });
-    }).catch(() => {
-      if (active) setPreviewState({ source, failed: true });
+      if (active) setPreviewState({ source, value: next });
+    }).catch((error) => {
+      if (active) setPreviewState({
+        source,
+        error: appErrorMessage(error, t, "agentLocal.sessionSummary.git.mergeError"),
+      });
     });
     return () => { active = false; };
-  }, [onPreview, source]);
+  }, [onPreview, source, t]);
 
   const previewReady = previewState.source === source;
   const preview = previewReady ? previewState.value : undefined;
-  const previewFailed = previewReady && previewState.failed;
+  const previewError = previewReady ? previewState.error : undefined;
   const loading = !previewReady;
   const dirtyCount = preview?.dirty_files.length ?? 0;
   const alreadyMerged = preview?.commits === 0;
@@ -80,7 +84,7 @@ export function GitMergeDialog({
           />
         </div>
         {loading && <div className="gmd-note">{t("common.loading")}</div>}
-        {previewFailed && <div className="bcd-error">{t("agentLocal.sessionSummary.git.mergeError")}</div>}
+        {previewError && <div className="bcd-error">{previewError}</div>}
         {preview && alreadyMerged && (
           <div className="gmd-note">
             {t("agentLocal.sessionSummary.git.mergeAlready", { branch: targetBranch })}
@@ -122,7 +126,7 @@ export function GitMergeDialog({
             className="bcd-btn bcd-btn-primary"
             type="button"
             onClick={() => onMerge(source, dirtyCount > 0, description || undefined)}
-            disabled={busy || loading || previewFailed || !preview || alreadyMerged}
+            disabled={busy || loading || !!previewError || !preview || alreadyMerged}
           >
             {t(
               dirtyCount > 0

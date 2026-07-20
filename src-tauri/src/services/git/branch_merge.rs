@@ -5,17 +5,7 @@ use std::path::Path;
 use std::process::{Command, Stdio};
 
 use super::{branch, branch_commit, repo as git_repo, status};
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
-#[serde(tag = "kind", rename_all = "snake_case")]
-pub enum MergeError {
-    BranchUnavailable,
-    ContextChanged,
-    DirtyWorktree,
-    NothingToMerge,
-    MergeConflict,
-    InternalError,
-}
+pub use super::branch_merge_error::MergeError;
 
 #[derive(Debug, Clone, Serialize)]
 pub struct BranchMergePreview {

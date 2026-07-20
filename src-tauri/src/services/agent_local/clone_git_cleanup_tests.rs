@@ -171,7 +171,7 @@ async fn cleanup_refuses_to_delete_main_branch() {
     let result =
         close_tab_with_branch_cleanup(&root_id, &tab_id, repo.path(), Some("master")).await;
 
-    assert!(result.is_err());
+    assert_eq!(result, Err(GitActionError::ProtectedBranch));
     assert!(branch_delete::branch_exists(repo.path(), branch_name).expect("branch check"));
 
     cleanup_sessions(&root_id, &[clone_id]).await;

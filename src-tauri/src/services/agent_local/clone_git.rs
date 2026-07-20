@@ -1,8 +1,8 @@
 use super::{
-    clone_git_checks::{ensure_clone_belongs_to_root, ensure_clone_belongs_to_root_string},
+    clone_git_checks::{ensure_clone_belongs_to_root, ensure_clone_belongs_to_root_action},
     session_store, session_tabs,
 };
-use crate::services::git::branch;
+use crate::services::git::{action_error::GitActionError, branch};
 use rand::RngCore;
 use serde::Serialize;
 use std::path::{Path, PathBuf};
@@ -55,12 +55,18 @@ pub async fn create_linked_branch(
 pub async fn unlink_branch(
     root_session_id: &str,
     clone_session_id: &str,
-) -> Result<session_tabs::SessionTabs, String> {
-    let mut clone = session_store::get(clone_session_id).await?;
-    ensure_clone_belongs_to_root_string(&clone, root_session_id).await?;
+) -> Result<session_tabs::SessionTabs, GitActionError> {
+    let mut clone = session_store::get(clone_session_id)
+        .await
+        .map_err(|_| GitActionError::CloneUnavailable)?;
+    ensure_clone_belongs_to_root_action(&clone, root_session_id).await?;
     clone.git_branch = None;
-    session_store::save(&clone).await?;
-    session_tabs::set_clone_git_branch(root_session_id, clone_session_id, None).await
+    session_store::save(&clone)
+        .await
+        .map_err(|_| GitActionError::InternalError)?;
+    session_tabs::set_clone_git_branch(root_session_id, clone_session_id, None)
+        .await
+        .map_err(|_| GitActionError::InternalError)
 }
 
 async fn create_unique_branch(repo_path: &Path) -> Result<String, branch::CreateBranchError> {

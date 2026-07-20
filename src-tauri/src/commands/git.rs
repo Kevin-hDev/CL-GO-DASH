@@ -1,5 +1,7 @@
 use crate::services::agent_local::project_store;
-use crate::services::git::{branch, branch_commit, status, watcher, worktree_list};
+use crate::services::git::{
+    action_error::GitActionError, branch, branch_commit, status, watcher, worktree_list,
+};
 use std::path::{Path, PathBuf};
 
 pub(super) async fn registered_project_path(path: &str) -> Result<PathBuf, String> {
@@ -45,13 +47,18 @@ pub async fn get_git_context(path: String) -> Result<branch::GitContext, String>
 }
 
 #[tauri::command]
-pub async fn checkout_git_branch(path: String, branch_name: String) -> Result<(), String> {
-    let repo_path = registered_project_path(&path).await?;
+pub async fn checkout_git_branch(
+    path: String,
+    branch_name: String,
+) -> Result<(), GitActionError> {
+    let repo_path = registered_project_path(&path)
+        .await
+        .map_err(|_| GitActionError::RepositoryUnavailable)?;
     tokio::task::spawn_blocking(move || branch::checkout_branch(&repo_path, &branch_name))
         .await
         .map_err(|e| {
             eprintln!("[git] checkout: {e}");
-            "Erreur interne".to_string()
+            GitActionError::InternalError
         })?
 }
 
@@ -76,15 +83,17 @@ pub async fn commit_and_checkout_git_branch(
     path: String,
     branch_name: String,
     commit_description: Option<String>,
-) -> Result<(), String> {
-    let repo_path = registered_project_path(&path).await?;
+) -> Result<(), GitActionError> {
+    let repo_path = registered_project_path(&path)
+        .await
+        .map_err(|_| GitActionError::RepositoryUnavailable)?;
     tokio::task::spawn_blocking(move || {
         branch_commit::commit_all_and_checkout(&repo_path, &branch_name, commit_description)
     })
     .await
     .map_err(|e| {
         eprintln!("[git] commit_and_checkout: {e}");
-        "Erreur interne".to_string()
+        GitActionError::InternalError
     })?
 }
 

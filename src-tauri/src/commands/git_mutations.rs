@@ -1,7 +1,10 @@
 use serde::Deserialize;
 use std::path::PathBuf;
 
-use crate::services::git::{branch_commit, branch_delete, branch_merge, remote, worktree_delete};
+use crate::services::git::{
+    action_error::GitActionError, branch_commit, branch_delete, branch_merge, remote,
+    worktree_delete,
+};
 
 use super::git::registered_project_path;
 
@@ -25,11 +28,13 @@ pub async fn get_git_remote_status(path: String) -> Result<remote::RemoteStatus,
 pub async fn commit_git_changes(
     path: String,
     commit_description: Option<String>,
-) -> Result<(), String> {
-    let repo_path = registered_project_path(&path).await?;
+) -> Result<(), GitActionError> {
+    let repo_path = registered_project_path(&path)
+        .await
+        .map_err(|_| GitActionError::RepositoryUnavailable)?;
     tokio::task::spawn_blocking(move || branch_commit::commit_all(&repo_path, commit_description))
         .await
-        .map_err(|_| "Erreur interne".to_string())?
+        .map_err(|_| GitActionError::InternalError)?
 }
 
 #[tauri::command]
@@ -104,11 +109,13 @@ pub async fn merge_git_branch(
 pub async fn preview_git_branch_deletion(
     path: String,
     branch_name: String,
-) -> Result<branch_delete::BranchDeletePreview, String> {
-    let repo_path = registered_project_path(&path).await?;
+) -> Result<branch_delete::BranchDeletePreview, GitActionError> {
+    let repo_path = registered_project_path(&path)
+        .await
+        .map_err(|_| GitActionError::RepositoryUnavailable)?;
     tokio::task::spawn_blocking(move || branch_delete::preview(&repo_path, &branch_name))
         .await
-        .map_err(|_| "Erreur interne".to_string())?
+        .map_err(|_| GitActionError::InternalError)?
 }
 
 #[tauri::command]
@@ -117,8 +124,10 @@ pub async fn delete_git_branch(
     branch_name: String,
     mode: GitDeleteMode,
     commit_description: Option<String>,
-) -> Result<(), String> {
-    let repo_path = registered_project_path(&path).await?;
+) -> Result<(), GitActionError> {
+    let repo_path = registered_project_path(&path)
+        .await
+        .map_err(|_| GitActionError::RepositoryUnavailable)?;
     tokio::task::spawn_blocking(move || match mode {
         GitDeleteMode::Clean => branch_delete::delete_clean(&repo_path, &branch_name),
         GitDeleteMode::Discard => branch_delete::discard_and_delete(&repo_path, &branch_name),
@@ -127,15 +136,17 @@ pub async fn delete_git_branch(
         }
     })
     .await
-    .map_err(|_| "Erreur interne".to_string())?
+    .map_err(|_| GitActionError::InternalError)?
 }
 
 #[tauri::command]
 pub async fn preview_git_worktree_deletion(
     path: String,
     worktree_path: String,
-) -> Result<worktree_delete::WorktreeDeletePreview, String> {
-    let repo_path = registered_project_path(&path).await?;
+) -> Result<worktree_delete::WorktreeDeletePreview, GitActionError> {
+    let repo_path = registered_project_path(&path)
+        .await
+        .map_err(|_| GitActionError::RepositoryUnavailable)?;
     worktree_delete::preview(&repo_path, &PathBuf::from(worktree_path)).await
 }
 
@@ -145,8 +156,10 @@ pub async fn delete_git_worktree(
     worktree_path: String,
     mode: GitDeleteMode,
     commit_description: Option<String>,
-) -> Result<(), String> {
-    let repo_path = registered_project_path(&path).await?;
+) -> Result<(), GitActionError> {
+    let repo_path = registered_project_path(&path)
+        .await
+        .map_err(|_| GitActionError::RepositoryUnavailable)?;
     let worktree_path = PathBuf::from(worktree_path);
     match mode {
         GitDeleteMode::Clean => worktree_delete::remove_clean(&repo_path, &worktree_path).await,

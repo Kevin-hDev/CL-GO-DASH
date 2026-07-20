@@ -9,6 +9,7 @@ import { useClickOutside } from "@/hooks/use-click-outside";
 import { showToast } from "@/lib/toast-emitter";
 import { validateBranchName } from "@/lib/branch-name";
 import { useGitDeletionFlow } from "@/hooks/use-git-deletion-flow";
+import { showAppError } from "@/lib/app-error";
 import type { BranchSelectorProps } from "./branch-selector-types";
 import "./branch-selector.css";
 
@@ -69,8 +70,10 @@ export function BranchSelector({
     } else if (result.dirtyCount != null) {
       setOpen(false);
       onConflict(name, result.dirtyCount);
+    } else {
+      showAppError(result, t, "branches.errorCheckoutFailed");
     }
-  }, [git, notifyBranchReady, onConflict]);
+  }, [git, notifyBranchReady, onConflict, t]);
 
   const handleCreate = useCallback(async () => {
     if (isCreating) return;

@@ -96,17 +96,5 @@ export interface GitPushTarget {
 
 export type GitActionResult =
   | { ok: true }
-  | { ok: false; kind: GitActionErrorKind };
-
-export type GitActionErrorKind =
-  | "no_remote"
-  | "authentication_required"
-  | "permission_denied"
-  | "remote_changed"
-  | "network_unavailable"
-  | "context_changed"
-  | "branch_unavailable"
-  | "dirty_worktree"
-  | "nothing_to_merge"
-  | "merge_conflict"
-  | "internal_error";
+  | ({ ok: false } & AppError);
+import type { AppError } from "@/lib/app-error";

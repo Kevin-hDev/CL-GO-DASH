@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CloneGitArchiveDialog } from "@/components/agent-local/clone-git-archive-dialog";
+import { showAppError } from "@/lib/app-error";
 import { showToast } from "@/lib/toast-emitter";
 import type { SessionTab, SessionTabs } from "@/types/agent";
 
@@ -40,7 +41,7 @@ export function useCloneTabArchive({
     setBusy(true);
     void onCloseTab(pending.tab_id)
       .then(() => setPending(null))
-      .catch(() => showToast(t("errors.operationFailed"), "error"))
+      .catch((error) => showAppError(error, t))
       .finally(() => setBusy(false));
   }, [onCloseTab, pending, t]);
 
@@ -55,7 +56,7 @@ export function useCloneTabArchive({
     void onCloseTabWithGitCleanup(pending.tab_id, projectPath, fallbackBranch)
       .then(() => onAfterCleanup?.())
       .then(() => setPending(null))
-      .catch(() => showToast(t("errors.operationFailed"), "error"))
+      .catch((error) => showAppError(error, t))
       .finally(() => setBusy(false));
   }, [getMainBranch, onAfterCleanup, onCloseTabWithGitCleanup, pending, projectPath, t]);
 

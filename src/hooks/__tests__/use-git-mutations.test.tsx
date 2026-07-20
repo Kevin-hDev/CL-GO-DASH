@@ -87,6 +87,23 @@ describe("useGitMutations", () => {
     expect(refresh).toHaveBeenCalledOnce();
   });
 
+  it("conserve le code et le compteur d'une erreur de suppression", async () => {
+    vi.mocked(invoke).mockRejectedValueOnce({ kind: "unmerged_commits", count: 2 });
+    const { result } = renderHook(() => {
+      const pathRef = useRef<string | undefined>("/repo");
+      return useGitMutations(pathRef, vi.fn());
+    });
+
+    await act(async () => {
+      expect(await result.current.deleteBranch("feature", "clean")).toEqual({
+        ok: false,
+        kind: "unmerged_commits",
+        count: 2,
+        dirtyCount: undefined,
+      });
+    });
+  });
+
   it("inspecte puis merge une branche dans la branche attendue", async () => {
     const preview = {
       source_branch: "feature",

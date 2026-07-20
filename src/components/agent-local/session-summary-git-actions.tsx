@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useGithubBranchAuth } from "@/hooks/use-github-branch-auth";
 import type { GitPushTarget } from "@/hooks/git-types";
+import { appErrorMessage } from "@/lib/app-error";
 import { BranchGithubAuthDialog } from "./branch-github-auth-dialog";
 import { GitCommitDialog } from "./git-commit-dialog";
 import { GitMergeDialog } from "./git-merge-dialog";
@@ -22,7 +23,7 @@ export function SessionSummaryGitActions({ git }: { git: SessionSummaryGitState 
     setBusy(true);
     setError(undefined);
     const result = await git.push(target);
-    if (!result.ok) setError(pushErrorLabel(result.kind, t));
+    if (!result.ok) setError(appErrorMessage(result, t, "agentLocal.sessionSummary.git.pushError"));
     setBusy(false);
   }, [git, t]);
   const githubAuth = useGithubBranchAuth(() => void retryPush());
@@ -49,7 +50,7 @@ export function SessionSummaryGitActions({ git }: { git: SessionSummaryGitState 
     setBusy(true);
     const result = await git.commit(description);
     if (result.ok) setCommitOpen(false);
-    else setError(t("agentLocal.sessionSummary.git.commitError"));
+    else setError(appErrorMessage(result, t, "agentLocal.sessionSummary.git.commitError"));
     setBusy(false);
   };
   const push = async () => {
@@ -63,7 +64,7 @@ export function SessionSummaryGitActions({ git }: { git: SessionSummaryGitState 
         pendingPushTarget.current = target;
         githubAuth.request();
       } else {
-        setError(pushErrorLabel(result.kind, t));
+        setError(appErrorMessage(result, t, "agentLocal.sessionSummary.git.pushError"));
       }
     }
     setBusy(false);
@@ -83,7 +84,7 @@ export function SessionSummaryGitActions({ git }: { git: SessionSummaryGitState 
       description,
     );
     if (result.ok) setMergeOpen(false);
-    else setError(mergeErrorLabel(result.kind, t));
+    else setError(appErrorMessage(result, t, "agentLocal.sessionSummary.git.mergeError"));
     setBusy(false);
   };
 
@@ -142,26 +143,4 @@ export function SessionSummaryGitActions({ git }: { git: SessionSummaryGitState 
       )}
     </>
   );
-}
-
-function pushErrorLabel(kind: string, t: (key: string) => string) {
-  const keys: Record<string, string> = {
-    no_remote: "agentLocal.sessionSummary.git.noRemote",
-    authentication_required: "agentLocal.sessionSummary.git.authenticationError",
-    permission_denied: "agentLocal.sessionSummary.git.permissionDenied",
-    remote_changed: "agentLocal.sessionSummary.git.remoteChanged",
-    network_unavailable: "agentLocal.sessionSummary.git.networkError",
-    context_changed: "agentLocal.sessionSummary.git.contextChanged",
-  };
-  return t(keys[kind] ?? "agentLocal.sessionSummary.git.pushError");
-}
-
-function mergeErrorLabel(kind: string, t: (key: string) => string) {
-  const keys: Record<string, string> = {
-    context_changed: "agentLocal.sessionSummary.git.mergeContextChanged",
-    dirty_worktree: "agentLocal.sessionSummary.git.mergeDirtyError",
-    nothing_to_merge: "agentLocal.sessionSummary.git.mergeAlready",
-    merge_conflict: "agentLocal.sessionSummary.git.mergeConflict",
-  };
-  return t(keys[kind] ?? "agentLocal.sessionSummary.git.mergeError");
 }

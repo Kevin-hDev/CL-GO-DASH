@@ -1,4 +1,4 @@
-use crate::services::git::branch;
+use crate::services::git::{action_error::GitActionError, branch};
 
 pub(super) async fn ensure_clone_belongs_to_root(
     clone: &super::types_session::AgentSession,
@@ -19,6 +19,17 @@ pub(super) async fn ensure_clone_belongs_to_root_string(
         Ok(())
     } else {
         Err("Action impossible".into())
+    }
+}
+
+pub(super) async fn ensure_clone_belongs_to_root_action(
+    clone: &super::types_session::AgentSession,
+    root_session_id: &str,
+) -> Result<(), GitActionError> {
+    if clone_belongs_to_root(clone, root_session_id).await {
+        Ok(())
+    } else {
+        Err(GitActionError::CloneUnavailable)
     }
 }
 
