@@ -13,6 +13,14 @@ export default defineConfig({
   resolve: {
     alias: { "@": path.resolve(__dirname, "./src") },
   },
+  build: {
+    rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, "index.html"),
+        mascot: path.resolve(__dirname, "mascot.html"),
+      },
+    },
+  },
   clearScreen: false,
   server: {
     port: 5173,

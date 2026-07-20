@@ -81,6 +81,14 @@ describe("SettingsTab slots", () => {
     await waitFor(() => expect(screen.queryByText("codex.title")).toBeNull());
   });
 
+  it("ouvre la page Mascotte et son aperçu", async () => {
+    render(<SettingsHarness />);
+    fireEvent.click((await screen.findAllByText("settings.tabs.mascot"))[0]);
+
+    expect(await screen.findByLabelText("settings.mascot.previewTitle")).toBeTruthy();
+    expect(screen.getAllByText("settings.mascot.beaverName").length).toBeGreaterThan(0);
+  });
+
   it("lance Grok OAuth sans installation de client", async () => {
     render(<SettingsHarness />);
     fireEvent.click((await screen.findAllByText("settings.tabs.providers"))[0]);

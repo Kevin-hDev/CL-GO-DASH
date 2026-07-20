@@ -37,6 +37,7 @@ pub async fn chat_stream(
         Arc::new(crate::services::agent_local::parent_message_inbox::ParentMessageInbox::new());
     let generation = stream_events::next_generation();
     let cancelled_session_id = session_id.clone();
+    let replacement_app = app.clone();
     let request_session_id = session_id.clone();
     let request_id = super::agent_chat_streams::replace_active_stream(
         &streams,
@@ -45,6 +46,7 @@ pub async fn chat_stream(
         generation,
         parent_message_inbox.clone(),
         move |(old_token, _, old_request_id, old_inbox)| async move {
+            crate::services::mascot::end_session(&replacement_app, &cancelled_session_id);
             old_inbox.close().await;
             crate::services::agent_local::session_locks::cancel_with_lock(
                 &cancelled_session_id,
@@ -85,6 +87,7 @@ pub async fn chat_stream(
             }
         };
     let working_dir = Some(resolved_working_dir.path.to_string_lossy().to_string());
+    crate::services::mascot::start_session(&app, &session_id);
     eprintln!("[stream] start session={session_id} gen={generation}");
     let stream_session = session_id.clone();
     let task_app = app.clone();

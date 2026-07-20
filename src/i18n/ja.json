@@ -700,11 +700,26 @@
       "providers": "プロバイダー",
       "llm": "LLM",
       "tools": "Tools",
+      "mascot": "マスコット",
       "archivedChats": "アーカイブ済みチャット",
       "advanced": "詳細設定",
       "shortcuts": "キーボードショートカット",
       "about": "このアプリについて",
       "channels": "チャンネル"
+    },
+    "mascot": {
+      "previewTitle": "マスコットのプレビュー",
+      "beaverName": "CL-GO ビーバー",
+      "previewActive": "アニメーションプレビュー",
+      "previewPaused": "アニメーション停止中",
+      "settingsTitle": "設定",
+      "enabledTitle": "マスコットを表示",
+      "enabledDesc": "ビーバーをデスクトップや他のアプリより手前に表示します",
+      "sizeTitle": "サイズ",
+      "sizeDesc": "画面上のマスコットの大きさを調整します",
+      "collectionTitle": "コレクション",
+      "beaverDesc": "CL-GO のメインマスコット",
+      "moveLabel": "マスコットを移動"
     },
     "archivedChats": {
       "title": "アーカイブ済みチャット",

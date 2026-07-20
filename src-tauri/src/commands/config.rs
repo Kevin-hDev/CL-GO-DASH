@@ -10,7 +10,12 @@ pub fn get_config() -> Result<ClgoConfig, String> {
 pub fn save_config(mut config: ClgoConfig) -> Result<(), String> {
     let current = config_service::read_config()?;
     config.advanced = protect_advanced_settings(config.advanced, &current);
+    keep_current_mascot(&mut config, &current);
     config_service::write_config(&config)
+}
+
+pub(crate) fn keep_current_mascot(config: &mut ClgoConfig, current: &ClgoConfig) {
+    config.mascot = current.mascot.clone();
 }
 
 #[tauri::command]

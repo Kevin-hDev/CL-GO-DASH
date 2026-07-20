@@ -103,6 +103,11 @@ pub fn start(app: &AppHandle) {
                 if let Some(event_name) = classify_path(&normalized) {
                     if emitted.insert(event_name) {
                         let _ = handle.emit(event_name, ());
+                        if event_name == EVENT_CONFIG {
+                            tauri::async_runtime::spawn(crate::services::mascot::sync_from_disk(
+                                handle.clone(),
+                            ));
+                        }
                     }
                 }
             }
@@ -111,160 +116,5 @@ pub fn start(app: &AppHandle) {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn classify_memory_core_file() {
-        assert_eq!(
-            classify_path("/Users/kevin/.local/share/cl-go-dash/memory/core/identity.md"),
-            Some(EVENT_PERSONALITY)
-        );
-    }
-
-    #[test]
-    fn classify_memory_core_dir() {
-        assert_eq!(
-            classify_path("/Users/kevin/.local/share/cl-go-dash/memory/core"),
-            Some(EVENT_PERSONALITY)
-        );
-    }
-
-    #[test]
-    fn classify_config_json() {
-        assert_eq!(
-            classify_path("/Users/kevin/.local/share/cl-go-dash/config.json"),
-            Some(EVENT_CONFIG)
-        );
-    }
-
-    #[test]
-    fn classify_wakeup_log() {
-        assert_eq!(
-            classify_path("/Users/kevin/.local/share/cl-go-dash/logs/wakeups.jsonl"),
-            Some(EVENT_LOGS)
-        );
-    }
-
-    #[test]
-    fn classify_inbox_file() {
-        assert_eq!(
-            classify_path("/Users/kevin/.local/share/cl-go-dash/inbox/idea-discovery.md"),
-            Some(EVENT_PERSONALITY)
-        );
-    }
-
-    #[test]
-    fn classify_unknown_returns_none() {
-        assert_eq!(
-            classify_path("/Users/kevin/.local/share/cl-go-dash/agent-sessions/abc.json"),
-            None
-        );
-    }
-
-    #[test]
-    fn classify_ds_store_returns_none() {
-        assert_eq!(
-            classify_path("/Users/kevin/.local/share/cl-go-dash/.DS_Store"),
-            None
-        );
-    }
-
-    #[test]
-    fn classify_temp_file_in_core() {
-        assert_eq!(
-            classify_path("/Users/kevin/.local/share/cl-go-dash/memory/core/.identity.md.tmp"),
-            Some(EVENT_PERSONALITY)
-        );
-    }
-
-    #[test]
-    fn classify_windows_backslash_paths() {
-        assert_eq!(
-            classify_path(
-                "C:\\Users\\kevin\\AppData\\Local\\cl-go-dash\\memory\\core\\identity.md"
-            ),
-            Some(EVENT_PERSONALITY)
-        );
-        assert_eq!(
-            classify_path("C:\\Users\\kevin\\AppData\\Local\\cl-go-dash\\inbox\\idea.md"),
-            Some(EVENT_PERSONALITY)
-        );
-    }
-
-    #[test]
-    fn dedup_emits_unique_events() {
-        let paths = [
-            "a/memory/core/identity.md",
-            "a/memory/core/principles.md",
-            "a/config.json",
-        ];
-        let mut emitted: HashSet<&str> = HashSet::new();
-        for p in &paths {
-            if let Some(ev) = classify_path(p) {
-                emitted.insert(ev);
-            }
-        }
-        assert!(emitted.contains(EVENT_PERSONALITY));
-        assert!(emitted.contains(EVENT_CONFIG));
-        assert_eq!(emitted.len(), 2);
-    }
-
-    #[test]
-    fn normalize_path_joins_with_slash() {
-        let normalized = normalize_path(&PathBuf::from("/Users/kevin/test/file.md"));
-        assert!(
-            normalized.contains("kevin")
-                && normalized.contains("test")
-                && normalized.contains("file.md")
-        );
-    }
-
-    #[test]
-    fn classify_connectors_json() {
-        assert_eq!(
-            classify_path("/Users/kevin/.local/share/cl-go-dash/mcp-connectors.json"),
-            Some(EVENT_CONNECTORS)
-        );
-    }
-
-    #[test]
-    fn classify_favorite_models() {
-        assert_eq!(
-            classify_path("/Users/kevin/.local/share/cl-go-dash/favorite-models.json"),
-            Some(EVENT_CONFIG)
-        );
-    }
-
-    #[test]
-    fn classify_agent_settings() {
-        assert_eq!(
-            classify_path("/Users/kevin/.local/share/cl-go-dash/agent-settings.json"),
-            Some(EVENT_CONFIG)
-        );
-    }
-
-    #[test]
-    fn classify_skills_dir() {
-        assert_eq!(
-            classify_path("/Users/kevin/.local/share/cl-go-dash/skills"),
-            Some(EVENT_SKILLS)
-        );
-    }
-
-    #[test]
-    fn classify_skills_subdir() {
-        assert_eq!(
-            classify_path("/Users/kevin/.local/share/cl-go-dash/skills/web-search/skill.md"),
-            Some(EVENT_SKILLS)
-        );
-    }
-
-    #[test]
-    fn classify_configured_providers() {
-        assert_eq!(
-            classify_path("/Users/kevin/.local/share/cl-go-dash/configured-providers.json"),
-            Some(EVENT_PROVIDERS)
-        );
-    }
-}
+#[path = "file_watcher_tests.rs"]
+mod tests;

@@ -700,11 +700,26 @@
       "providers": "Anbieter",
       "llm": "LLM",
       "tools": "Tools",
+      "mascot": "Maskottchen",
       "archivedChats": "Archivierte Chats",
       "advanced": "Erweitert",
       "shortcuts": "Tastenkürzel",
       "about": "Über",
       "channels": "Kanäle"
+    },
+    "mascot": {
+      "previewTitle": "Maskottchen-Vorschau",
+      "beaverName": "CL-GO-Biber",
+      "previewActive": "Animierte Vorschau",
+      "previewPaused": "Animation pausiert",
+      "settingsTitle": "Einstellungen",
+      "enabledTitle": "Maskottchen anzeigen",
+      "enabledDesc": "Den Biber über dem Desktop und anderen Anwendungen sichtbar halten",
+      "sizeTitle": "Größe",
+      "sizeDesc": "Die Größe des Maskottchens auf dem Bildschirm anpassen",
+      "collectionTitle": "Sammlung",
+      "beaverDesc": "Das Hauptmaskottchen von CL-GO",
+      "moveLabel": "Maskottchen verschieben"
     },
     "archivedChats": {
       "title": "Archivierte Chats",

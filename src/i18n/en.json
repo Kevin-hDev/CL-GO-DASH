@@ -705,11 +705,26 @@
       "providers": "Providers",
       "llm": "LLM",
       "tools": "Tools",
+      "mascot": "Mascot",
       "archivedChats": "Archived chats",
       "advanced": "Advanced",
       "shortcuts": "Keyboard Shortcuts",
       "about": "About",
       "channels": "Channels"
+    },
+    "mascot": {
+      "previewTitle": "Mascot preview",
+      "beaverName": "CL-GO Beaver",
+      "previewActive": "Animated preview",
+      "previewPaused": "Animation paused",
+      "settingsTitle": "Settings",
+      "enabledTitle": "Show mascot",
+      "enabledDesc": "Keep the beaver visible above the desktop and other applications",
+      "sizeTitle": "Size",
+      "sizeDesc": "Adjust the mascot size on screen",
+      "collectionTitle": "Collection",
+      "beaverDesc": "CL-GO's main mascot",
+      "moveLabel": "Move the mascot"
     },
     "archivedChats": {
       "title": "Archived chats",

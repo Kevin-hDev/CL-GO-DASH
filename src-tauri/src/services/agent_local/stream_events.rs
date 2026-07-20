@@ -56,6 +56,7 @@ impl AgentEventEmitter {
                 return emitter.send(event);
             }
         }
+        crate::services::mascot::observe_stream_event(&self.app, &self.session_id, &event);
         self.app
             .emit(
                 AGENT_STREAM_EVENT,

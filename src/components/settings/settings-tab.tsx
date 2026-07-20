@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useSettings } from "@/hooks/use-settings";
 import { useArrowNavigation } from "@/hooks/use-arrow-navigation";
 import type { ThemeChoice } from "@/hooks/use-theme";
-import { Archive, GearSix, Key, Sliders, Info, BookOpenText, Keyboard, Plugs, Broadcast, ChartLineUp, Wrench } from "@/components/ui/icons";
+import { Archive, GearSix, Key, Sliders, Info, BookOpenText, Keyboard, Plugs, Broadcast, ChartLineUp, Wrench, PawPrint } from "@/components/ui/icons";
 import { ThemedIcon } from "@/components/ui/themed-icon";
 import { GeneralSettings } from "./general-settings";
 import { AdvancedSettings } from "./advanced-settings";
@@ -13,6 +13,7 @@ import { ForecastSettings } from "./forecast-settings";
 import { ArchivedChatsSettings } from "./archived-chats-settings";
 import { ShortcutsSettings } from "./shortcuts-settings";
 import { AboutSettings } from "./about-settings";
+import { MascotSettings } from "./mascot-settings";
 import { LlmExplorer } from "./llm-explorer";
 import ollamaDark from "@/assets/ollama.png";
 import ollamaLight from "@/assets/ollama-light.png";
@@ -37,6 +38,7 @@ const SUB_TABS: SubTabDef[] = [
   { id: "general", i18n: "settings.tabs.general", icon: GearSix },
   { id: "advanced", i18n: "settings.tabs.advanced", icon: Sliders },
   { id: "tools", i18n: "settings.tabs.tools", icon: Wrench },
+  { id: "mascot", i18n: "settings.tabs.mascot", icon: PawPrint },
   { id: "ollama", i18n: "settings.tabs.ollama", imgDark: ollamaDark, imgLight: ollamaLight },
   { id: "providers", i18n: "settings.tabs.providers", icon: Key },
   { id: "connectors", i18n: "settings.tabs.connectors", icon: Plugs },
@@ -153,6 +155,7 @@ export const SettingsTab = memo(function SettingsTab({
       return <LlmExplorer navState={navState.llmView} onNavChange={(llmView) => onNavChange({ llmView })} />;
     }
     if (subTab === "tools") return <ToolsSettings />;
+    if (subTab === "mascot") return <MascotSettings />;
     if (subTab === "forecast") {
       return (
         <ForecastSettings

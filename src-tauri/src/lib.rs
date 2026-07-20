@@ -62,6 +62,7 @@ pub fn run() {
         }))
         .manage(OllamaClient::new())
         .manage(ActiveStreams(Mutex::new(HashMap::new())))
+        .manage(services::mascot::MascotRuntime::default())
         .manage(OllamaSidecar::new())
         .manage(services::model_downloads::ModelDownloadManager::new())
         .manage(services::searxng::SearxngSidecar::new())
@@ -122,6 +123,8 @@ pub fn run() {
             }
 
             let config = services::config::read_config().unwrap_or_default();
+            services::mascot::initialize(app.handle(), config.mascot.clone());
+            services::mascot::start_activity_cleanup(app.handle().clone());
 
             // Autostart : synchronise l'état OS avec le setting
             app_events::sync_autostart(app.handle(), config.advanced.autostart);
@@ -165,6 +168,9 @@ pub fn run() {
             Ok(())
         })
         .on_window_event(|_window, _event| {
+            if let tauri::WindowEvent::Focused(focused) = _event {
+                services::mascot::handle_window_focus(_window.app_handle(), *focused);
+            }
             #[cfg(target_os = "macos")]
             if let tauri::WindowEvent::CloseRequested { api, .. } = _event {
                 if _window.label() == "main" {

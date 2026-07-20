@@ -75,6 +75,7 @@ import {
   TreeStructure as PhTreeStructure,
   Users as PhUsers,
   Spinner as PhSpinner,
+  PawPrint as PhPawPrint,
 } from "@phosphor-icons/react";
 
 function withSafeCssSize(Component: Icon): Icon {
@@ -148,6 +149,7 @@ export const Link = withSafeCssSize(PhLink);
 export const Sparkle = withSafeCssSize(PhSparkle);
 export const Users = withSafeCssSize(PhUsers);
 export const Spinner = withSafeCssSize(PhSpinner);
+export const PawPrint = withSafeCssSize(PhPawPrint);
 
 export const Archive = withSafeCssSize(PhArchive);
 export const ArrowLeft = withSafeCssSize(PhArrowLeft);

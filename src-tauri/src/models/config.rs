@@ -9,6 +9,7 @@ pub struct ClgoConfig {
     pub heartbeat: HeartbeatConfig,
     pub advanced: AdvancedSettings,
     pub gateway: GatewayConfig,
+    pub mascot: super::mascot::MascotSettings,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

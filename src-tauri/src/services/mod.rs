@@ -20,6 +20,7 @@ pub mod gpu_vram;
 pub mod link_preview;
 pub mod llm;
 pub mod llm_oauth;
+pub mod mascot;
 pub mod mcp_bridge;
 pub mod mcp_oauth;
 pub mod model_downloads;

@@ -700,11 +700,26 @@
       "providers": "Provider",
       "llm": "LLM",
       "tools": "Tools",
+      "mascot": "Mascotte",
       "archivedChats": "Chat archiviate",
       "advanced": "Avanzate",
       "shortcuts": "Scorciatoie da tastiera",
       "about": "Informazioni",
       "channels": "Canali"
+    },
+    "mascot": {
+      "previewTitle": "Anteprima della mascotte",
+      "beaverName": "Castoro CL-GO",
+      "previewActive": "Anteprima animata",
+      "previewPaused": "Animazione in pausa",
+      "settingsTitle": "Impostazioni",
+      "enabledTitle": "Mostra la mascotte",
+      "enabledDesc": "Mantieni il castoro visibile sopra il desktop e le altre applicazioni",
+      "sizeTitle": "Dimensione",
+      "sizeDesc": "Regola la dimensione della mascotte sullo schermo",
+      "collectionTitle": "Collezione",
+      "beaverDesc": "La mascotte principale di CL-GO",
+      "moveLabel": "Sposta la mascotte"
     },
     "archivedChats": {
       "title": "Chat archiviate",

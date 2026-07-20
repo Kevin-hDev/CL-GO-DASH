@@ -705,11 +705,26 @@
       "providers": "Providers",
       "llm": "LLM",
       "tools": "Tools",
+      "mascot": "Mascotte",
       "archivedChats": "Chats archivés",
       "advanced": "Avancé",
       "shortcuts": "Raccourcis clavier",
       "about": "À propos",
       "channels": "Canaux"
+    },
+    "mascot": {
+      "previewTitle": "Aperçu de la mascotte",
+      "beaverName": "Castor CL-GO",
+      "previewActive": "Aperçu animé",
+      "previewPaused": "Animation en pause",
+      "settingsTitle": "Réglages",
+      "enabledTitle": "Afficher la mascotte",
+      "enabledDesc": "Garder le castor visible au-dessus du bureau et des autres applications",
+      "sizeTitle": "Taille",
+      "sizeDesc": "Ajuster la taille de la mascotte à l'écran",
+      "collectionTitle": "Collection",
+      "beaverDesc": "La mascotte principale de CL-GO",
+      "moveLabel": "Déplacer la mascotte"
     },
     "archivedChats": {
       "title": "Chats archivés",

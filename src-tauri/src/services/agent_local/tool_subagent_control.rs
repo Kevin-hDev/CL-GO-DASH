@@ -69,7 +69,12 @@ async fn cancel(args: &Value, parent_id: &str) -> ToolResult {
         return ToolResult::err("Sous-agent introuvable.");
     };
     match super::subagent_cancellation::cancel_owned(child_id, parent_id).await {
-        Ok(true) => ToolResult::ok("Sous-agent annulé.".to_string()),
+        Ok(true) => {
+            if let Some(app) = super::app_handle_global::get() {
+                crate::services::mascot::end_session(app, child_id);
+            }
+            ToolResult::ok("Sous-agent annulé.".to_string())
+        }
         Ok(false) => ToolResult::ok("Sous-agent déjà terminé.".to_string()),
         Err(_) => ToolResult::err("Sous-agent indisponible."),
     }

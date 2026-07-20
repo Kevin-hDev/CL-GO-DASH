@@ -1,5 +1,5 @@
 use crate::models::{
-    AdvancedSettings, ClgoConfig, GatewayConfig, HeartbeatConfig, ScheduledWakeup,
+    AdvancedSettings, ClgoConfig, GatewayConfig, HeartbeatConfig, MascotSettings, ScheduledWakeup,
 };
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -52,6 +52,12 @@ pub(crate) fn read_config_from_path(path: &Path, data_dir: &Path) -> Result<Clgo
 
     if let Some(gw) = obj.get("gateway") {
         config.gateway = serde_json::from_value::<GatewayConfig>(gw.clone()).unwrap_or_default();
+    }
+
+    if let Some(mascot) = obj.get("mascot") {
+        config.mascot = serde_json::from_value::<MascotSettings>(mascot.clone())
+            .unwrap_or_default()
+            .normalized();
     }
 
     if let Some(arr) = obj.get("scheduled_wakeups").and_then(|v| v.as_array()) {

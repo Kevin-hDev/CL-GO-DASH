@@ -2,6 +2,7 @@ use crate::ActiveStreams;
 
 #[tauri::command]
 pub async fn cancel_agent_request(
+    app: tauri::AppHandle,
     session_id: String,
     generation: Option<u64>,
     streams: tauri::State<'_, ActiveStreams>,
@@ -33,6 +34,7 @@ pub async fn cancel_agent_request(
         cancelled = true;
     }
     if cancelled {
+        crate::services::mascot::end_session(&app, &session_id);
         crate::services::agent_local::subagent_registry::cancel_stopped_parent_stream_children(
             &session_id,
         )

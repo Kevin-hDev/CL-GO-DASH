@@ -4,7 +4,7 @@ import type { ForecastSection, PanelMode } from "@/hooks/use-forecast-panel";
 type MainTabId = "heartbeat" | "personality" | "agent-local" | "settings";
 export type SettingsSubTab =
   | "general" | "ollama" | "connectors" | "channels" | "providers"
-  | "forecast" | "llm" | "tools" | "archived-chats" | "advanced" | "shortcuts" | "about";
+  | "forecast" | "llm" | "tools" | "mascot" | "archived-chats" | "advanced" | "shortcuts" | "about";
 
 type OllamaSettingsSubTab = "modelfile" | "models";
 type ForecastSettingsSubTab = "config" | "models";

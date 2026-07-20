@@ -700,11 +700,26 @@
       "providers": "提供商",
       "llm": "LLM",
       "tools": "Tools",
+      "mascot": "吉祥物",
       "archivedChats": "已归档聊天",
       "advanced": "高级",
       "shortcuts": "键盘快捷键",
       "about": "关于",
       "channels": "频道"
+    },
+    "mascot": {
+      "previewTitle": "吉祥物预览",
+      "beaverName": "CL-GO 海狸",
+      "previewActive": "动画预览",
+      "previewPaused": "动画已暂停",
+      "settingsTitle": "设置",
+      "enabledTitle": "显示吉祥物",
+      "enabledDesc": "让海狸始终显示在桌面和其他应用上方",
+      "sizeTitle": "大小",
+      "sizeDesc": "调整吉祥物在屏幕上的大小",
+      "collectionTitle": "收藏",
+      "beaverDesc": "CL-GO 的主要吉祥物",
+      "moveLabel": "移动吉祥物"
     },
     "archivedChats": {
       "title": "已归档聊天",
