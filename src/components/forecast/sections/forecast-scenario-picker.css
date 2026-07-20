@@ -97,7 +97,8 @@
   display: flex;
   justify-content: space-between;
   gap: 10px;
-  padding: 8px 10px;
+  min-height: 28px;
+  padding: 4px 10px;
   border: 1px solid var(--edge);
   border-radius: var(--radius-sm);
   background: transparent;

@@ -109,7 +109,8 @@
 /* Search results */
 .ollama-search-input {
   width: 100%;
-  padding: calc(var(--space-sm) - 4px) var(--space-md);
+  height: 28px;
+  padding: 0 var(--space-md);
   font-size: var(--text-sm);
   font-family: var(--font-sans);
   background: var(--void);

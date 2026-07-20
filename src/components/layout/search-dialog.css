@@ -52,7 +52,8 @@
 
 .search-input {
   width: 100%;
-  padding: 14px 16px;
+  height: 28px;
+  padding: 0 16px;
   background: transparent;
   border: none;
   border-bottom: 1px solid var(--surface-hover);

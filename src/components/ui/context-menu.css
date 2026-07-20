@@ -12,7 +12,8 @@
 }
 
 .context-item {
-  padding: var(--space-xs) var(--space-sm);
+  min-height: 28px;
+  padding: 0 var(--space-sm);
   font-size: var(--text-sm);
   border-radius: var(--radius-sm);
   cursor: pointer;

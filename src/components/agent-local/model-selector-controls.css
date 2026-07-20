@@ -76,7 +76,8 @@
 
 .ms-search-input {
   width: 100%;
-  padding: 6px 8px 6px 28px;
+  height: 28px;
+  padding: 0 8px 0 28px;
   border: none;
   border-radius: var(--radius-sm);
   background: var(--fc-chart-bg);

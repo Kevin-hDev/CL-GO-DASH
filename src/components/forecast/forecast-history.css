@@ -4,7 +4,8 @@
 
 .fch-search-input {
   width: 100%;
-  padding: 6px 10px;
+  height: 28px;
+  padding: 0 10px;
   border: 1px solid var(--edge);
   border-radius: var(--radius-sm);
   background: var(--surface-glass);

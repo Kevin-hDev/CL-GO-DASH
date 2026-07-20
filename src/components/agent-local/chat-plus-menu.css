@@ -24,7 +24,8 @@
   align-items: center;
   gap: var(--space-sm);
   width: 100%;
-  padding: 8px var(--space-sm);
+  min-height: 28px;
+  padding: 4px var(--space-sm);
   border: none;
   background: transparent;
   border-radius: var(--radius-sm);

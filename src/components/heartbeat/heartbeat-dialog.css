@@ -99,7 +99,8 @@
 }
 
 .wk-input {
-  padding: 8px 10px;
+  height: 28px;
+  padding: 0 10px;
   border: 1px solid var(--edge);
   border-radius: var(--radius-sm);
   background: var(--surface);

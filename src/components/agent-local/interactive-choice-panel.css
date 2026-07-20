@@ -166,7 +166,7 @@
 
 .icp-other-input {
   min-width: 0;
-  height: 32px;
+  height: 28px;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   background: var(--surface);

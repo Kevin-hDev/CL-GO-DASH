@@ -84,7 +84,8 @@
 
 .pe-input {
   min-width: 0;
-  padding: var(--space-sm) var(--space-md);
+  height: 28px;
+  padding: 0 var(--space-md);
   border: 1px solid var(--edge);
   border-radius: var(--radius-sm);
   outline: none;
