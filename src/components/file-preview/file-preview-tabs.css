@@ -28,7 +28,7 @@
   gap: 6px;
   padding: 0 10px;
   border: none;
-  border-radius: 13px;
+  border-radius: var(--radius-md);
   background: transparent;
   color: var(--ink-muted);
   cursor: pointer;
@@ -55,7 +55,7 @@
   opacity: 0;
   color: var(--ink);
   background: var(--surface-hover);
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
 }
 
 .fp-tab:hover .fp-tab-close {
@@ -90,7 +90,7 @@
   gap: 6px;
   padding: 0 10px;
   border: none;
-  border-radius: 13px;
+  border-radius: var(--radius-md);
   background: transparent;
   color: var(--ink-muted);
   cursor: pointer;

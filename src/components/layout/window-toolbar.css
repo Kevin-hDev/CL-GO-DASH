@@ -52,7 +52,7 @@
   min-width: 14px;
   height: 14px;
   padding: 0 3px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: var(--signal-ok);
   color: var(--void);
   font-size: 9px;

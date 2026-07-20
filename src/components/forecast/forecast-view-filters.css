@@ -173,14 +173,14 @@
   align-items: center;
   justify-content: center;
   border: 1px solid var(--edge);
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   flex-shrink: 0;
 }
 
 .fcf-checkbox-mark {
   width: 8px;
   height: 8px;
-  border-radius: 2px;
+  border-radius: var(--radius-xs);
   background: var(--pulse);
 }
 

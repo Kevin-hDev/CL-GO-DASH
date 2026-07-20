@@ -17,7 +17,7 @@
 }
 
 .fp-plan-scroll::-webkit-scrollbar-thumb {
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: var(--scrollbar-thumb);
 }
 

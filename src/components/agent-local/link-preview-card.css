@@ -44,7 +44,7 @@
 .lpc-favicon {
   width: 14px;
   height: 14px;
-  border-radius: 2px;
+  border-radius: var(--radius-xs);
   flex-shrink: 0;
   object-fit: contain;
 }
@@ -106,7 +106,7 @@
 .lpc-skeleton-line {
   height: 10px;
   width: 100%;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   background: var(--ink-faint);
   animation: lpc-pulse 1s ease-in-out infinite;
 }

@@ -80,7 +80,7 @@
   font-size: var(--text-xs);
   width: 100px;
   padding: 1px 4px;
-  border-radius: 3px;
+  border-radius: var(--radius-xs);
   outline: none;
 }
 

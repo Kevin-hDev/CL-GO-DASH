@@ -67,7 +67,7 @@
   height: 5px;
   margin-bottom: 12px;
   overflow: hidden;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: var(--context-ring-track);
 }
 

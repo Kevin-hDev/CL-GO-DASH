@@ -42,7 +42,7 @@
 
 .tb-result-md::-webkit-scrollbar-thumb {
   background: var(--scrollbar-thumb);
-  border-radius: 3px;
+  border-radius: var(--radius-xs);
 }
 
 /* Bloc de code sans couleur : juste un cadre sobre sur fond shell */
@@ -71,7 +71,7 @@
 .tb-result-md :not(pre) > code {
   background: var(--void);
   padding: 1px 5px;
-  border-radius: 3px;
+  border-radius: var(--radius-xs);
   font-family: var(--font-mono);
   font-size: 0.95em;
   color: var(--ink-muted);

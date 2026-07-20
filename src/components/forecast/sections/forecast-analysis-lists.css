@@ -33,7 +33,7 @@
 .fca-severity {
   width: 7px;
   height: 7px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: var(--ink-faint);
 }
 
@@ -106,7 +106,7 @@
 .fca-variable-track {
   height: 5px;
   margin-top: 8px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: var(--surface-hover);
   overflow: hidden;
 }

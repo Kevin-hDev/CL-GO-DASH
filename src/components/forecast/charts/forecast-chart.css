@@ -29,7 +29,7 @@
   gap: 8px;
   padding: 0 8px;
   height: 18px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: transparent;
   z-index: 3; /* local stacking: chart controls above the canvas */
   pointer-events: auto;
@@ -67,7 +67,7 @@
 
 .fcc-chart-zoom::-webkit-slider-runnable-track {
   height: 1px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: color-mix(in srgb, var(--ink-faint) 45%, transparent);
 }
 
@@ -83,7 +83,7 @@
 
 .fcc-chart-zoom::-moz-range-track {
   height: 1px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: color-mix(in srgb, var(--ink-faint) 45%, transparent);
 }
 

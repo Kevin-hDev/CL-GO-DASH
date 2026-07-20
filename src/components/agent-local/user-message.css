@@ -18,7 +18,7 @@
 .msg-user-bubble {
   max-width: 100%;
   min-width: 0;
-  border-radius: 18px 18px 4px 18px;
+  border-radius: 18px 18px 4px 18px; /* intentional: speech-bubble shape */
   padding: var(--space-sm) var(--space-md);
   font-size: var(--text-sm);
   overflow-wrap: break-word;
@@ -89,7 +89,7 @@
 .msg-file-card {
   width: 100px;
   height: 100px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--edge);
   cursor: pointer;
 }

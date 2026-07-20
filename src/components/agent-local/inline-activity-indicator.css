@@ -26,7 +26,7 @@
 .iai-bars span {
   width: 3px;
   height: 8px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: currentColor;
   animation: iai-bar 0.8s ease-in-out infinite;
 }

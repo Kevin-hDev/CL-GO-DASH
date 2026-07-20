@@ -140,7 +140,7 @@
   width: 7px;
   height: 7px;
   margin-top: 7px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   overflow: hidden;
   color: transparent;
   background: var(--pulse);

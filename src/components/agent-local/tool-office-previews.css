@@ -2,7 +2,7 @@
 
 .tp-spreadsheet {
   margin-top: 6px;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: thin;
@@ -79,7 +79,7 @@
 .tp-document {
   margin-top: 6px;
   padding: 6px 10px;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   background: color-mix(in srgb, var(--tool-read) 4%, transparent);
   border: 1px solid color-mix(in srgb, var(--tool-read) 15%, transparent);
   font-size: 11px;

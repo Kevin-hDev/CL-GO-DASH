@@ -38,7 +38,7 @@
   padding: 8px 12px;
   min-width: 4rem;
   text-align: left;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   vertical-align: top;
   line-height: 1.35;
   white-space: normal;
@@ -100,7 +100,7 @@
 .chat-md :not(pre) > code {
   background: var(--shell);
   padding: 1px 5px;
-  border-radius: 3px;
+  border-radius: var(--radius-xs);
   font-family: var(--font-mono);
   font-size: 0.9em;
 }
