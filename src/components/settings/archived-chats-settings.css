@@ -28,6 +28,7 @@
 .acs-toolbar {
   display: grid;
   grid-template-columns: minmax(240px, 1fr) minmax(210px, 280px);
+  align-items: center;
   gap: var(--space-sm);
   margin-bottom: var(--space-md);
 }
