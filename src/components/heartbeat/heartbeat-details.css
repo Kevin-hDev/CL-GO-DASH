@@ -72,19 +72,25 @@
   background: var(--signal-error-bg);
 }
 
+/* Inline delete confirm — alias of the shared .btn system with .btn-sm
+   geometry; keeps its danger colors and pulse animation. */
 .wk-confirm-delete {
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
+  justify-content: center;
+  gap: var(--chrome-2);
+  height: 28px;
+  padding: 0 var(--chrome-3);
   border: 1px solid var(--signal-error);
   background: var(--signal-error-bg);
   color: var(--signal-error);
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   font-weight: 600;
   border-radius: var(--radius-sm);
   cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--ease-smooth), color var(--ease-smooth), border-color var(--ease-smooth);
 }
 
 .wk-confirm-delete::after {
