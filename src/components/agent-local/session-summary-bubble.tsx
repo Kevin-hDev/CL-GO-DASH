@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ClipboardText, FilePlus } from "@/components/ui/icons";
+import { FilePlus } from "@/components/ui/icons";
+import { SessionSummaryIcon } from "@/components/ui/chat-header-icons";
 import { Tooltip } from "@/components/ui/tooltip";
 import { useClickOutside } from "@/hooks/use-click-outside";
 import type { useSessionSummary } from "@/hooks/use-session-summary";
@@ -80,7 +81,7 @@ export function SessionSummaryBubble({
             setOpen((value) => !value);
           }}
         >
-          <ClipboardText size="var(--chrome-icon-md)" />
+          <SessionSummaryIcon size="var(--chrome-icon-md)" />
         </button>
       </Tooltip>
       {open && (

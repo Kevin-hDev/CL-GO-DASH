@@ -30,7 +30,6 @@ vi.mock("@/components/ui/icons", () => ({
   CheckCircle2: () => <span />,
   ChevronDown: () => <span />,
   Circle: () => <span />,
-  ClipboardText: () => <span data-testid="clipboard" />,
   Clock3: () => <span />,
   FilePlus: () => <span data-testid="file-plus" />,
   FileText: () => <span data-testid="file-text" />,
