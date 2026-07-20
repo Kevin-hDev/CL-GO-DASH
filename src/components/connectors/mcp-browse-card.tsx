@@ -40,7 +40,7 @@ export function McpBrowseCard({ connector, configured, onAdd }: McpBrowseCardPro
       </div>
       <button
         type="button"
-        className={`icon-btn icon-btn-lg mcbc-action ${configured ? "done" : ""}`}
+        className={`icon-btn mcbc-action ${configured ? "done" : ""}`}
         onClick={configured || locked ? undefined : onAdd}
         disabled={configured || locked}
       >

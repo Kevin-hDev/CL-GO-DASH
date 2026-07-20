@@ -112,7 +112,7 @@
   flex-shrink: 0;
 }
 
-/* Panel actions — compose .icon-btn/.icon-btn-lg (src/styles/buttons.css);
+/* Panel actions — compose .icon-btn (src/styles/buttons.css);
    keep their border and danger hover. */
 .fch-icon-btn {
   border: 1px solid var(--edge);

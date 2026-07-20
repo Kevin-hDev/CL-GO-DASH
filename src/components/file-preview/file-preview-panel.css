@@ -64,7 +64,7 @@
   background: var(--scrollbar-thumb);
 }
 
-/* Panel actions — compose .icon-btn/.icon-btn-lg (src/styles/buttons.css);
+/* Panel actions — compose .icon-btn (src/styles/buttons.css);
    keep the active state. */
 .fp-icon-btn {
   color: var(--ink-muted);

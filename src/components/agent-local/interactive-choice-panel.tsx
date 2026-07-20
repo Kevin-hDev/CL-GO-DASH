@@ -153,7 +153,7 @@ function InteractiveChoicePanelInner({
             placeholder={t("interactiveChoice.otherPlaceholder")}
             autoFocus
           />
-          <button className="icon-btn icon-btn-lg icp-submit" type="button" onClick={submitOther} disabled={!otherText.trim()}>
+          <button className="icon-btn icp-submit" type="button" onClick={submitOther} disabled={!otherText.trim()}>
             <Check className="icp-submit-icon" aria-hidden="true" />
           </button>
         </div>

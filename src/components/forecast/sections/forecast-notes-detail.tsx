@@ -64,17 +64,17 @@ export function ForecastNotesDetail(props: ForecastNotesDetailProps) {
             </button>
           )}
           <Tooltip label={props.t("forecast.notes.open")}>
-            <button type="button" className="icon-btn icon-btn-lg fcn-icon-btn" onClick={() => props.onOpen(props.note as ForecastNote)}>
+            <button type="button" className="icon-btn fcn-icon-btn" onClick={() => props.onOpen(props.note as ForecastNote)}>
               <ArrowSquareOut size="var(--icon-15)" />
             </button>
           </Tooltip>
           <Tooltip label={props.t("forecast.notes.edit")}>
-            <button type="button" className="icon-btn icon-btn-lg fcn-icon-btn" onClick={() => props.onEdit(props.note as ForecastNote)}>
+            <button type="button" className="icon-btn fcn-icon-btn" onClick={() => props.onEdit(props.note as ForecastNote)}>
               <Pencil size="var(--icon-15)" />
             </button>
           </Tooltip>
           <Tooltip label={props.t("forecast.notes.delete")}>
-            <button type="button" className="icon-btn icon-btn-lg fcn-icon-btn" onClick={() => setConfirmDelete((value) => !value)}>
+            <button type="button" className="icon-btn fcn-icon-btn" onClick={() => setConfirmDelete((value) => !value)}>
               <Trash size="var(--icon-15)" />
             </button>
           </Tooltip>

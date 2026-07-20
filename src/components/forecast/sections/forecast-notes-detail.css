@@ -24,7 +24,7 @@
   gap: 8px;
 }
 
-/* Panel actions — compose .icon-btn/.icon-btn-lg (src/styles/buttons.css);
+/* Panel actions — compose .icon-btn (src/styles/buttons.css);
    keep their border and chart background. */
 .fcn-icon-btn {
   border: 1px solid var(--edge);
@@ -38,16 +38,16 @@
   color: var(--ink);
 }
 
-/* Inline delete confirm — alias of the shared .btn system with .btn-md
-   geometry; keeps its danger colors and pulse animation. */
+/* Inline delete confirm — alias of the shared .btn system with the shared
+   28px geometry; keeps its danger colors and pulse animation. */
 .fcn-confirm-delete {
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--chrome-2);
-  height: 34px;
-  padding: 0 var(--chrome-4);
+  height: 28px;
+  padding: 0 var(--chrome-3);
   border: 1px solid var(--signal-error);
   border-radius: var(--radius-sm);
   background: var(--signal-error);

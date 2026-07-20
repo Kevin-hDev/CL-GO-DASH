@@ -45,7 +45,7 @@ export function SendStopButton({ state, onSend, onStop }: SendStopButtonProps) {
       <button
         type="button"
         aria-label={isStop ? t("agentLocal.stop") : t("agentLocal.send")}
-        className={`icon-btn icon-btn-lg send-btn ${isStop ? "stop" : "send"}${state === "confirmStop" ? " confirm-stop" : ""}`}
+        className={`icon-btn send-btn ${isStop ? "stop" : "send"}${state === "confirmStop" ? " confirm-stop" : ""}`}
         onClick={isStop ? onStop : onSend}
         disabled={disabled}
       >

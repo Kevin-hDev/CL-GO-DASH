@@ -1,13 +1,13 @@
 /* Delete-all action — alias of the shared .btn system (src/styles/buttons.css)
-   with .btn-md geometry. Neutral by default (override below), danger while
-   confirming. */
+   with the shared 28px geometry. Neutral by default (override below), danger
+   while confirming. */
 .acs-delete-all {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--chrome-2);
-  height: 34px;
-  padding: 0 var(--chrome-4);
+  height: 28px;
+  padding: 0 var(--chrome-3);
   border: 1px solid color-mix(in srgb, var(--danger) 26%, transparent);
   border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--danger) 13%, transparent);
@@ -41,7 +41,7 @@
   font-size: var(--text-sm);
 }
 
-/* Delete action — composes .icon-btn/.icon-btn-lg (src/styles/buttons.css);
+/* Delete action — composes .icon-btn (src/styles/buttons.css);
    keeps its danger hover. */
 .acs-icon-btn {
   color: var(--ink-faint);

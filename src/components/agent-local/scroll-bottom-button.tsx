@@ -5,8 +5,8 @@ interface ScrollBottomButtonProps {
 
 export function ScrollBottomButton({ onClick, variant = "floating" }: ScrollBottomButtonProps) {
   const className = variant === "inline"
-    ? "icon-btn icon-btn-lg scroll-bottom-btn scroll-bottom-btn-inline"
-    : "icon-btn icon-btn-lg scroll-bottom-btn";
+    ? "icon-btn scroll-bottom-btn scroll-bottom-btn-inline"
+    : "icon-btn scroll-bottom-btn";
 
   return (
     <button type="button" className={className} onClick={onClick}>

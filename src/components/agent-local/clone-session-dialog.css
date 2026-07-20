@@ -96,11 +96,11 @@
 }
 
 /* Busy-state footer button — aligns the shared .wk-btn-secondary
-   on the .btn-md geometry of src/styles/buttons.css. */
+   on the shared 28px geometry of src/styles/buttons.css. */
 .csp-dialog-busy .wk-btn-secondary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 34px;
-  padding: 0 var(--chrome-4);
+  height: 28px;
+  padding: 0 var(--chrome-3);
 }

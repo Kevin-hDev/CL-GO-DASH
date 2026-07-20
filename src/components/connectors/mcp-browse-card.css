@@ -55,9 +55,8 @@
 }
 .mcbc-link:hover { background: var(--select-bg); }
 
-/* Add/done action — composes .icon-btn/.icon-btn-lg
-   (src/styles/buttons.css); keeps its shell background, card-hover pulse
-   and done state. */
+/* Add/done action — composes .icon-btn (src/styles/buttons.css);
+   keeps its shell background, card-hover pulse and done state. */
 .mcbc-action {
   background: var(--shell);
   color: var(--ink-muted);

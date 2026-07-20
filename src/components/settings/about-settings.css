@@ -45,15 +45,15 @@
 }
 
 /* GitHub link — full-width alias of the shared .btn system
-   (src/styles/buttons.css) with .btn-md geometry. */
+   (src/styles/buttons.css) with the shared 28px geometry. */
 .as-github-btn {
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: var(--chrome-2);
-  height: 34px;
-  padding: 0 var(--chrome-4);
+  height: 28px;
+  padding: 0 var(--chrome-3);
   background: var(--surface);
   border: 1px solid var(--edge);
   border-radius: var(--radius-sm);

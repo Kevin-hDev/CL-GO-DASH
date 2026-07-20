@@ -112,7 +112,7 @@
 
 .chat-input-spacer { flex: 1; }
 
-/* Send/stop — composes .icon-btn/.icon-btn-lg (src/styles/buttons.css);
+/* Send/stop — composes .icon-btn (src/styles/buttons.css);
    keeps its muted color, opacity-only hover and disabled dim. */
 .send-btn {
   color: var(--ink-muted);
@@ -147,7 +147,7 @@
 
 .chat-plus-btn:hover:not(:disabled) { color: var(--select-text); background: var(--select-bg); }
 
-/* Scroll-to-bottom — composes .icon-btn-lg; keeps its elevated surface,
+/* Scroll-to-bottom — composes .icon-btn; keeps its elevated surface,
    border, opacity and floating position. */
 .scroll-bottom-btn {
   position: absolute;

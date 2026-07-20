@@ -1,5 +1,5 @@
 /* Dialog action buttons — thin aliases of the shared .btn system
-   (src/styles/buttons.css) with .btn-md geometry. Split out of
+   (src/styles/buttons.css) with the shared 28px geometry. Split out of
    branch-conflict-dialog.css to keep both files under 200 lines;
    imported after it to preserve cascade order. */
 
@@ -14,8 +14,8 @@
   align-items: center;
   justify-content: center;
   gap: var(--chrome-2);
-  height: 34px;
-  padding: 0 var(--chrome-4);
+  height: 28px;
+  padding: 0 var(--chrome-3);
   border: 1px solid var(--edge);
   border-radius: var(--radius-sm);
   background: transparent;

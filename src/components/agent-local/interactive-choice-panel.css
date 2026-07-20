@@ -158,7 +158,7 @@
 
 .icp-other-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 34px;
+  grid-template-columns: minmax(0, 1fr) 28px;
   gap: 8px;
   padding: 8px 12px;
   border-top: 1px solid var(--border-subtle);
@@ -179,7 +179,7 @@
   border-color: var(--accent);
 }
 
-/* Submit "other" — composes .icon-btn-lg (src/styles/buttons.css);
+/* Submit "other" — composes .icon-btn (src/styles/buttons.css);
    keeps its border, surface background and disabled dim. */
 .icp-submit {
   border: 1px solid var(--border-subtle);

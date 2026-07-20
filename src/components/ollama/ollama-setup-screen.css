@@ -40,9 +40,9 @@
   text-align: center;
 }
 
-/* Hero CTA: .btn-md height, wide padding as its unique feature. */
+/* Hero CTA: shared 28px height, wide padding as its unique feature. */
 .oss-download-btn {
-  height: 34px;
+  height: 28px;
   padding: 0 var(--chrome-5);
 }
 
@@ -55,8 +55,8 @@
 
 .oss-skip-btn,
 .oss-cancel-btn {
-  height: 34px;
-  padding: 0 var(--chrome-4);
+  height: 28px;
+  padding: 0 var(--chrome-3);
 }
 
 .oss-error-block {

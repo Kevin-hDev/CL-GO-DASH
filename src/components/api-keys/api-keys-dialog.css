@@ -1,8 +1,8 @@
 /* === Dialog config — réutilise les classes .wk-* de heartbeat-dialog.css === */
 
 /* Confirmation de suppression — bouton rouge pulsant */
-/* Delete confirm — full-width alias of the shared .btn system with .btn-md
-   geometry; keeps its danger colors and pulse animation. */
+/* Delete confirm — full-width alias of the shared .btn system with the shared
+   28px geometry; keeps its danger colors and pulse animation. */
 .ak-confirm-delete {
   position: relative;
   display: inline-flex;
@@ -10,9 +10,9 @@
   justify-content: center;
   gap: var(--chrome-2);
   width: 100%;
-  height: 34px;
+  height: 28px;
   margin-top: var(--space-md);
-  padding: 0 var(--chrome-4);
+  padding: 0 var(--chrome-3);
   background: var(--signal-error);
   border: 1px solid var(--signal-error);
   border-radius: var(--radius-sm);
@@ -40,15 +40,15 @@
 }
 
 /* Bouton "Effacer la clé" — même style que Annuler, alias du système .btn
-   partagé (src/styles/buttons.css) avec la géométrie .btn-md. */
+   partagé (src/styles/buttons.css) avec la géométrie partagée 28px. */
 .ak-btn-danger-outline {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--chrome-2);
-  height: 34px;
+  height: 28px;
   margin-right: auto;
-  padding: 0 var(--chrome-4);
+  padding: 0 var(--chrome-3);
   background: transparent;
   border: 1px solid var(--edge);
   border-radius: var(--radius-sm);

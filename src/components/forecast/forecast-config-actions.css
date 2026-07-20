@@ -5,15 +5,15 @@
 }
 
 /* Launch action — full-width alias of the shared .btn system
-   (src/styles/buttons.css) with .btn-md geometry and primary colors. */
+   (src/styles/buttons.css) with the shared 28px geometry and primary colors. */
 .fcc-launch {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--chrome-2);
   width: 100%;
-  height: 34px;
-  padding: 0 var(--chrome-4);
+  height: 28px;
+  padding: 0 var(--chrome-3);
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
   background: var(--pulse);
