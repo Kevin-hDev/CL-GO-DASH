@@ -105,7 +105,6 @@
 
 .pe-clear-btn {
   flex-shrink: 0;
-  padding: var(--space-sm) var(--space-md);
 }
 
 .pe-stop-row {

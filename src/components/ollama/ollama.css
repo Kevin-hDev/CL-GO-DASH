@@ -80,39 +80,51 @@
   background: var(--select-bg);
 }
 
+/* Buttons — thin aliases of the shared .btn system (src/styles/buttons.css)
+   with .btn-sm geometry. Only domain-specific colors stay here. */
 .ollama-btn {
-  font-size: var(--text-xs);
-  padding: 4px 12px;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all var(--ease-smooth);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--chrome-2);
+  height: 28px;
+  padding: 0 var(--chrome-3);
   border: 1px solid var(--edge);
+  border-radius: var(--radius-sm);
   background: none;
   color: var(--ink-muted);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--ease-smooth), color var(--ease-smooth), border-color var(--ease-smooth);
 }
 
 .ollama-btn:hover {
   background: var(--select-bg);
 }
 
+.ollama-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 .ollama-btn-primary {
-  border: none;
+  border-color: transparent;
   background: var(--pulse);
   color: var(--ink-on-pulse);
 }
 
-.ollama-btn-primary:hover {
-  background: var(--pulse);
-  opacity: 0.9;
+.ollama-btn-primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--pulse) 88%, black);
 }
 
 .ollama-btn-cancel {
-  border: 1px solid var(--signal-error);
+  border-color: var(--signal-error);
   color: var(--signal-error);
-  background: none;
 }
 
-.ollama-btn-cancel:hover {
+.ollama-btn-cancel:hover:not(:disabled) {
   background: var(--signal-error-bg);
 }
 

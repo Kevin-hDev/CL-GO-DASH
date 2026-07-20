@@ -40,9 +40,10 @@
   text-align: center;
 }
 
+/* Hero CTA: .btn-md height, wide padding as its unique feature. */
 .oss-download-btn {
-  padding: 8px 24px;
-  font-size: var(--text-sm);
+  height: 34px;
+  padding: 0 var(--chrome-5);
 }
 
 .oss-actions {
@@ -52,14 +53,10 @@
   gap: 10px;
 }
 
-.oss-skip-btn {
-  padding: 8px 20px;
-  font-size: var(--text-sm);
-}
-
+.oss-skip-btn,
 .oss-cancel-btn {
-  padding: 8px 20px;
-  font-size: var(--text-sm);
+  height: 34px;
+  padding: 0 var(--chrome-4);
 }
 
 .oss-error-block {
