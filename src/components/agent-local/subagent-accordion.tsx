@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@/components/ui/tooltip";
-import { ChevronDown, Settings, Square } from "@/components/ui/lucide-icons";
+import { ChevronDown, Settings, Square } from "@/components/ui/icons";
 import { subagentDisplayName, subagentSecondaryText } from "@/lib/subagent-display";
 import type { SubagentInfo } from "@/types/agent";
 import { SubagentIcon } from "./subagent-icon";

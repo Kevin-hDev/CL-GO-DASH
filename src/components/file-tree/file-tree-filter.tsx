@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Search, X } from "@/components/ui/lucide-icons";
+import { Search, X } from "@/components/ui/icons";
 import { Tooltip } from "@/components/ui/tooltip";
 
 interface FileTreeFilterProps {

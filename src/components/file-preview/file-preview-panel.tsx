@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Maximize2, Minimize2, FolderTree } from "@/components/ui/lucide-icons";
+import { Maximize2, Minimize2, FolderTree } from "@/components/ui/icons";
 import { Tooltip } from "@/components/ui/tooltip";
 import { openPreviewFile, openPreviewWithEditor } from "@/services/file-preview";
 import type { FileOperation, FilePreviewActiveTab, FilePreviewListMode } from "@/types/file-preview";

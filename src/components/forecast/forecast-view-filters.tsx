@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ChevronDown } from "@/components/ui/lucide-icons";
+import { ChevronDown } from "@/components/ui/icons";
 import { useTranslation } from "react-i18next";
 import { focusLocalListItem, useLocalListNavigation, type LocalListNavItem } from "@/hooks/use-local-list-navigation";
 import type {

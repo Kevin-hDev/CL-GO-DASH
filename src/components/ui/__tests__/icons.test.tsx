@@ -1,8 +1,7 @@
 import { cleanup, render } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { SidebarToggleIcon } from "@/components/layout/toolbar-icons";
-import { Plus } from "../icons";
-import { TerminalSquare } from "../lucide-icons";
+import { PanelRightClose, PanelRightOpen, Plus, TerminalSquare } from "../icons";
 
 afterEach(() => cleanup());
 
@@ -18,13 +17,20 @@ describe("safe Phosphor icons", () => {
 });
 
 describe("safe SVG icon sizes", () => {
-  it("applies CSS variables via style for Lucide icons", () => {
+  it("applies CSS variables via style for migrated Phosphor icons", () => {
     const { container } = render(<TerminalSquare size="var(--chrome-icon-md)" />);
     const svg = container.querySelector("svg");
 
     expect(svg).toHaveStyle({ width: "var(--chrome-icon-md)", height: "var(--chrome-icon-md)" });
     expect(svg?.getAttribute("width")).not.toBe("var(--chrome-icon-md)");
     expect(svg?.getAttribute("height")).not.toBe("var(--chrome-icon-md)");
+  });
+
+  it("keeps distinct icons for opening and closing the right panel", () => {
+    const closed = render(<PanelRightOpen />);
+    const open = render(<PanelRightClose />);
+
+    expect(closed.container.innerHTML).not.toBe(open.container.innerHTML);
   });
 
   it("applies CSS variables via style for local toolbar icons", () => {

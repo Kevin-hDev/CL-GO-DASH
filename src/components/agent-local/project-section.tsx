@@ -1,10 +1,9 @@
 import { useState, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  FolderOpen, DotsThreeVertical, PencilSimple,
+  Archive, FolderOpen, DotsThreeVertical, PencilSimple,
   X,
 } from "@/components/ui/icons";
-import { Archive } from "@/components/ui/lucide-icons";
 import { ComposeIcon } from "@/components/ui/compose-icon";
 import { FolderStateIcon } from "@/components/ui/folder-state-icon";
 import { CollapsePanel } from "./collapse-panel";

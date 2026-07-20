@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Archive, Search } from "@/components/ui/lucide-icons";
-import { ChatsCircle, FolderSimple, Trash } from "@/components/ui/icons";
+import { Archive, ChatsCircle, FolderSimple, Search, Trash } from "@/components/ui/icons";
 import { useArchivedAgentSessions } from "@/hooks/use-archived-agent-sessions";
 import { useProjects } from "@/hooks/use-projects";
 import { showToast } from "@/lib/toast-emitter";

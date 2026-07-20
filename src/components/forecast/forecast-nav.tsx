@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { ChevronDown } from "@/components/ui/lucide-icons";
+import { ChevronDown } from "@/components/ui/icons";
 import type { ForecastSection } from "@/hooks/use-forecast-panel";
 import { focusLocalListItem, useLocalListNavigation, type LocalListNavItem } from "@/hooks/use-local-list-navigation";
 import "./forecast-nav.css";

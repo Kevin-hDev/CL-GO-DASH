@@ -28,7 +28,7 @@ vi.mock("@/components/ui/tooltip", () => ({
   Tooltip: ({ children }: { children: ReactNode }) => <>{children}</>,
 }));
 
-vi.mock("@/components/ui/lucide-icons", () => ({
+vi.mock("@/components/ui/icons", () => ({
   ChevronDown: (props: Record<string, unknown>) => <span data-testid="chevron" {...props} />,
   Settings: (props: Record<string, unknown>) => <span data-testid="settings" {...props} />,
   Square: (props: Record<string, unknown>) => <span data-testid="square" {...props} />,

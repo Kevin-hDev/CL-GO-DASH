@@ -36,6 +36,7 @@ vi.mock("react-i18next", () => ({
 }));
 
 vi.mock("@/components/ui/icons", () => ({
+  Archive: () => <span />,
   DotsThreeVertical: () => <span />,
   FolderOpen: () => <span />,
   PencilSimple: () => <span />,
@@ -46,10 +47,6 @@ vi.mock("@/components/ui/folder-state-icon", () => ({
   FolderStateIcon: ({ open }: { open: boolean }) => (
     <span data-testid="folder-state-icon" data-open={String(open)} />
   ),
-}));
-
-vi.mock("@/components/ui/lucide-icons", () => ({
-  Archive: () => <span />,
 }));
 
 vi.mock("@/components/ui/compose-icon", () => ({

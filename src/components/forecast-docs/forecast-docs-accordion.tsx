@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown } from "@/components/ui/lucide-icons";
+import { ChevronDown } from "@/components/ui/icons";
 import { ForecastDocsMarkdown } from "./forecast-docs-markdown";
 import type { ForecastDocSection } from "./forecast-docs-types";
 

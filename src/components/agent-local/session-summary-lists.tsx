@@ -6,9 +6,9 @@ import {
   ChevronDown,
   Circle,
   Clock3,
+  FileText,
   PauseCircle,
-} from "@/components/ui/lucide-icons";
-import { FileText } from "@/components/ui/icons";
+} from "@/components/ui/icons";
 import { subagentDisplayName, subagentSecondaryText } from "@/lib/subagent-display";
 import type { AgentPlanRun, AgentTodoItem, AgentTodoRun, SubagentInfo } from "@/types/agent";
 import { SubagentIcon } from "./subagent-icon";

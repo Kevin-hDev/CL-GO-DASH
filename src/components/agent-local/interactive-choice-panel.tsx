@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { Check, ChevronRight, HelpCircle } from "@/components/ui/lucide-icons";
+import { Check, ChevronRight, HelpCircle } from "@/components/ui/icons";
 import { useTranslation } from "react-i18next";
 import type {
   AgentInteractiveAnswer,

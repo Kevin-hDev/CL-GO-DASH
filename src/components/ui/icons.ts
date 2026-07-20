@@ -1,6 +1,12 @@
 import { createElement, forwardRef } from "react";
 import type { Icon, IconProps } from "@phosphor-icons/react";
 import {
+  Archive as PhArchive,
+  ArrowClockwise as PhArrowClockwise,
+  ArrowLeft as PhArrowLeft,
+  ArrowRight as PhArrowRight,
+  ArrowUpRight as PhArrowUpRight,
+  BookOpen as PhBookOpen,
   Pulse as PhPulse,
   ClipboardText as PhClipboardText,
   UserCircle as PhUserCircle,
@@ -12,6 +18,10 @@ import {
   Plus as PhPlus,
   Copy as PhCopy,
   Check as PhCheck,
+  CheckCircle as PhCheckCircle,
+  Circle as PhCircle,
+  CornersIn as PhCornersIn,
+  CornersOut as PhCornersOut,
   ShieldWarning as PhShieldWarning,
   ArrowsClockwise as PhArrowsClockwise,
   Gear as PhGear,
@@ -54,7 +64,15 @@ import {
   Wrench as PhWrench,
   FilePlus as PhFilePlus,
   Link as PhLink,
+  List as PhList,
+  ListChecks as PhListChecks,
+  PauseCircle as PhPauseCircle,
+  Question as PhQuestion,
+  Sidebar as PhSidebar,
+  SidebarSimple as PhSidebarSimple,
   Sparkle as PhSparkle,
+  Square as PhSquare,
+  TreeStructure as PhTreeStructure,
   Users as PhUsers,
   Spinner as PhSpinner,
 } from "@phosphor-icons/react";
@@ -130,3 +148,29 @@ export const Link = withSafeCssSize(PhLink);
 export const Sparkle = withSafeCssSize(PhSparkle);
 export const Users = withSafeCssSize(PhUsers);
 export const Spinner = withSafeCssSize(PhSpinner);
+
+export const Archive = withSafeCssSize(PhArchive);
+export const ArrowLeft = withSafeCssSize(PhArrowLeft);
+export const ArrowRight = withSafeCssSize(PhArrowRight);
+export const ArrowUpRight = withSafeCssSize(PhArrowUpRight);
+export const BookOpen = withSafeCssSize(PhBookOpen);
+export const CheckCircle2 = withSafeCssSize(PhCheckCircle);
+export const ChevronDown = withSafeCssSize(PhCaretDown);
+export const ChevronRight = withSafeCssSize(PhCaretRight);
+export const Circle = withSafeCssSize(PhCircle);
+export const Clock3 = withSafeCssSize(PhClock);
+export const FolderTree = withSafeCssSize(PhTreeStructure);
+export const Globe2 = withSafeCssSize(PhGlobe);
+export const HelpCircle = withSafeCssSize(PhQuestion);
+export const List = withSafeCssSize(PhList);
+export const ListChecks = withSafeCssSize(PhListChecks);
+export const Maximize2 = withSafeCssSize(PhCornersOut);
+export const Minimize2 = withSafeCssSize(PhCornersIn);
+export const PanelRightClose = withSafeCssSize(PhSidebarSimple);
+export const PanelRightOpen = withSafeCssSize(PhSidebar);
+export const PauseCircle = withSafeCssSize(PhPauseCircle);
+export const RotateCw = withSafeCssSize(PhArrowClockwise);
+export const Search = withSafeCssSize(PhMagnifyingGlass);
+export const Settings = withSafeCssSize(PhGear);
+export const Square = withSafeCssSize(PhSquare);
+export const TerminalSquare = withSafeCssSize(PhTerminalWindow);

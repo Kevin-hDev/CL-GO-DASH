@@ -1,7 +1,6 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Pencil } from "@/components/ui/icons";
-import { Archive } from "@/components/ui/lucide-icons";
+import { Archive, Pencil } from "@/components/ui/icons";
 import { ComposeIcon } from "@/components/ui/compose-icon";
 import { ContextMenu, type ContextMenuItem } from "@/components/ui/context-menu";
 import { ProjectSection } from "./project-section";

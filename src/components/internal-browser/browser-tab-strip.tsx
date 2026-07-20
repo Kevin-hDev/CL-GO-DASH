@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Plus, X } from "@/components/ui/lucide-icons";
+import { Plus, X } from "@/components/ui/icons";
 import { BrowserIcon } from "./browser-icon";
 import type { BrowserTabState } from "./browser-types";
 

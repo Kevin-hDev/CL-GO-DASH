@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Maximize2, Minimize2 } from "@/components/ui/lucide-icons";
+import { Maximize2, Minimize2 } from "@/components/ui/icons";
 import { Tooltip } from "@/components/ui/tooltip";
 import type { ForecastSection } from "@/hooks/use-forecast-panel";
 import { ForecastNav } from "./forecast-nav";

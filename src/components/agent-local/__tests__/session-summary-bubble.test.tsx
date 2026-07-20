@@ -25,12 +25,18 @@ vi.mock("react-i18next", () => ({
 }));
 
 vi.mock("@/components/ui/icons", () => ({
+  Archive: () => <span />,
   CaretDown: () => <span data-testid="caret" />,
+  CheckCircle2: () => <span />,
+  ChevronDown: () => <span />,
+  Circle: () => <span />,
   ClipboardText: () => <span data-testid="clipboard" />,
+  Clock3: () => <span />,
   FilePlus: () => <span data-testid="file-plus" />,
   FileText: () => <span data-testid="file-text" />,
   GitBranch: () => <span data-testid="git-branch" />,
   Hash: () => <span data-testid="git-commit" />,
+  PauseCircle: () => <span />,
   CaretLeft: () => <span data-testid="back" />,
   X: () => <span data-testid="close" />,
 }));

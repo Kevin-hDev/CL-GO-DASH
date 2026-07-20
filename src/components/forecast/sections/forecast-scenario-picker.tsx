@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { ChevronDown } from "@/components/ui/lucide-icons";
+import { ChevronDown } from "@/components/ui/icons";
 import { useTranslation } from "react-i18next";
 import "./forecast-scenario-picker.css";
 

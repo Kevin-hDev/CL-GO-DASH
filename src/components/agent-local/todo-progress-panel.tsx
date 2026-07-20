@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { CheckCircle2, ChevronDown, Circle, Clock3, ListChecks } from "@/components/ui/lucide-icons";
+import { CheckCircle2, ChevronDown, Circle, Clock3, ListChecks } from "@/components/ui/icons";
 import { useTranslation } from "react-i18next";
 import { useTodos } from "@/hooks/use-todos";
 import type { AgentTodoItem } from "@/types/agent";

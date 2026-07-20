@@ -50,14 +50,11 @@ vi.mock("@/hooks/use-projects", () => ({
   useProjects: () => ({ projects: [project] }),
 }));
 
-vi.mock("@/components/ui/lucide-icons", () => ({
-  Archive: () => <span />,
-  Search: () => <span />,
-}));
-
 vi.mock("@/components/ui/icons", () => ({
+  Archive: () => <span />,
   ChatsCircle: () => <span />,
   FolderSimple: () => <span />,
+  Search: () => <span />,
   Trash: () => <span />,
   CaretDown: () => <span />,
   MagnifyingGlass: () => <span />,

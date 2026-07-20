@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { TerminalSquare, X as XIcon, Plus } from "@/components/ui/lucide-icons";
+import { TerminalSquare, X as XIcon, Plus } from "@/components/ui/icons";
 import { Tooltip } from "@/components/ui/tooltip";
 import type { TerminalTab } from "@/hooks/use-terminal";
 import "./terminal-tab-bar.css";

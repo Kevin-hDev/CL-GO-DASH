@@ -1,4 +1,4 @@
-import { List, X } from "@/components/ui/lucide-icons";
+import { List, X } from "@/components/ui/icons";
 import { Tooltip } from "@/components/ui/tooltip";
 import { useTranslation } from "react-i18next";
 import { FileIcon } from "./file-icon";

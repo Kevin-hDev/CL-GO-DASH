@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { BookOpen, TerminalSquare } from "@/components/ui/lucide-icons";
+import { BookOpen, TerminalSquare } from "@/components/ui/icons";
 import { DragRegion } from "@/components/layout/drag-region";
 import { Tooltip } from "@/components/ui/tooltip";
 import { svgSizeProps } from "@/components/ui/icon-size";

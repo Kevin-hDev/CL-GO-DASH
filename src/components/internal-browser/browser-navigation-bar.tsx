@@ -7,7 +7,7 @@ import {
   Minimize2,
   RotateCw,
   Square,
-} from "@/components/ui/lucide-icons";
+} from "@/components/ui/icons";
 import { MAX_BROWSER_URL_LENGTH, type BrowserTabState } from "./browser-types";
 
 interface BrowserNavigationBarProps {

@@ -23,6 +23,7 @@ vi.mock("react-i18next", () => ({
 }));
 
 vi.mock("@/components/ui/icons", () => ({
+  Archive: () => <span />,
   Pencil: () => <span />,
   CaretRight: () => <span />,
   DotsThreeVertical: () => <span />,
@@ -30,10 +31,6 @@ vi.mock("@/components/ui/icons", () => ({
   FolderOpen: () => <span />,
   FolderSimple: () => <span />,
   PencilSimple: () => <span />,
-}));
-
-vi.mock("@/components/ui/lucide-icons", () => ({
-  Archive: () => <span />,
 }));
 
 vi.mock("@/components/ui/compose-icon", () => ({
