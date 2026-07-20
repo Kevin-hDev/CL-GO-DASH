@@ -88,7 +88,7 @@ export function ConversationSessionItem({
                 {t(`sessionAge.${age.unit}`, { count: age.count })}
               </span>
             )}
-            <button className="icon-btn conv-session-menu-btn" onClick={(e) => onMenu(e, session.id)}>
+            <button className="conv-session-menu-btn" onClick={(e) => onMenu(e, session.id)}>
               <DotsThreeVertical size="var(--icon-sm)" />
             </button>
           </span>

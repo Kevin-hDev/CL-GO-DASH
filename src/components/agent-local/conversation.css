@@ -273,13 +273,21 @@
   opacity: 1;
 }
 
-/* Project actions + session menu — compose .icon-btn
-   (src/styles/buttons.css); keep their hover and reveal behaviors. */
+/* Project actions + session menu — INLINE list-row buttons: they must stay
+   compact and follow the row's text size, NOT the fixed .icon-btn sizes
+   (28px inflates sidebar rows). Do not add .icon-btn here. */
 .conv-project-action-btn {
+  padding: 2px;
+  border-radius: var(--radius-sm);
   color: var(--ink-muted);
+  border: none;
+  background: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
 }
 
-.conv-project-action-btn:hover:not(:disabled) {
+.conv-project-action-btn:hover {
   color: var(--ink);
   background: var(--edge);
 }
@@ -287,9 +295,17 @@
 /* Session menu button (three dots) */
 .conv-session-menu-btn {
   grid-area: 1 / 1;
+  padding: 2px;
+  border-radius: var(--radius-sm);
   color: var(--ink-faint);
+  border: none;
+  background: none;
+  cursor: pointer;
   opacity: 0;
   transition: opacity var(--ease-smooth), background var(--ease-smooth), color var(--ease-smooth);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   line-height: 0;
   pointer-events: none;
   position: relative;
