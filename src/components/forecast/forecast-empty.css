@@ -39,37 +39,35 @@
   max-width: 220px;
 }
 
+/* Empty-state actions — thin aliases of the shared .btn system
+   (src/styles/buttons.css) with .btn-md geometry; only colors stay here. */
 .fc-empty-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 8px 14px;
+  gap: var(--chrome-2);
+  height: 34px;
+  padding: 0 var(--chrome-4);
   border: 1px solid var(--edge);
   border-radius: var(--radius-sm);
   background: none;
   color: var(--ink-muted);
   font-size: var(--text-sm);
-  font-family: var(--font-sans);
+  font-weight: 500;
   cursor: pointer;
-  transition: border-color 150ms ease, color 150ms ease, background 150ms ease;
+  white-space: nowrap;
+  transition: background var(--ease-smooth), color var(--ease-smooth), border-color var(--ease-smooth);
 }
 
-.fc-empty-btn:hover {
+.fc-empty-btn:hover:not(:disabled) {
   border-color: var(--ink-faint);
   color: var(--ink);
   background: var(--surface-hover);
 }
 
 .fc-empty-btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.fc-empty-btn:disabled:hover {
-  border-color: var(--edge);
-  color: var(--ink-muted);
-  background: transparent;
+  opacity: 0.6;
+  cursor: default;
 }
 
 .fc-empty-error {
@@ -80,16 +78,15 @@
 }
 
 .fc-empty-btn-primary {
+  border-color: transparent;
   background: var(--pulse);
-  border-color: var(--pulse);
   color: var(--ink-on-pulse);
 }
 
-.fc-empty-btn-primary:hover {
-  background: var(--pulse);
-  border-color: var(--pulse);
+.fc-empty-btn-primary:hover:not(:disabled) {
+  border-color: transparent;
+  background: color-mix(in srgb, var(--pulse) 88%, black);
   color: var(--ink-on-pulse);
-  opacity: 0.9;
 }
 
 .fc-recent {

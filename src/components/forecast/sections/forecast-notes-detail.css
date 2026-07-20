@@ -42,17 +42,25 @@
   color: var(--ink);
 }
 
+/* Inline delete confirm — alias of the shared .btn system with .btn-md
+   geometry; keeps its danger colors and pulse animation. */
 .fcn-confirm-delete {
   position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--chrome-2);
   height: 34px;
+  padding: 0 var(--chrome-4);
   border: 1px solid var(--signal-error);
   border-radius: var(--radius-sm);
   background: var(--signal-error);
   color: var(--ink-on-pulse);
-  padding: 0 18px;
   font-size: var(--text-sm);
   font-weight: 600;
   cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--ease-smooth), color var(--ease-smooth), border-color var(--ease-smooth);
 }
 
 .fcn-confirm-delete::after {
@@ -125,14 +133,23 @@
   margin-top: 12px;
 }
 
+/* Form actions — thin aliases of the shared .btn system
+   (src/styles/buttons.css) with .btn-sm geometry; only colors stay here. */
 .fcn-primary-btn,
 .fcn-secondary-btn {
-  min-height: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--chrome-2);
+  height: 28px;
+  padding: 0 var(--chrome-3);
+  border: 1px solid transparent;
   border-radius: var(--radius-sm);
-  padding: 4px 14px;
-  font-size: var(--text-xs);
-  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 500;
   cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--ease-smooth), color var(--ease-smooth), border-color var(--ease-smooth);
 }
 
 .fcn-primary-btn {

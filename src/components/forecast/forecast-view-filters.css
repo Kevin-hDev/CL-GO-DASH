@@ -5,19 +5,24 @@
   align-items: flex-start;
 }
 
+/* Filter trigger — thin alias of the shared .btn system
+   (src/styles/buttons.css) with .btn-sm geometry; keeps its shell look. */
 .fcf-trigger {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 3px 8px;
+  justify-content: center;
+  gap: var(--chrome-2);
+  height: 28px;
+  padding: 0 var(--chrome-3);
   border: 1px solid var(--edge);
   border-radius: var(--radius-sm);
   background: var(--shell);
   color: var(--ink-muted);
-  font-size: var(--text-xs);
-  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 500;
   cursor: pointer;
-  transition: background var(--ease-smooth), border-color var(--ease-smooth), color var(--ease-smooth);
+  white-space: nowrap;
+  transition: background var(--ease-smooth), color var(--ease-smooth), border-color var(--ease-smooth);
 }
 
 .fcf-trigger:hover,

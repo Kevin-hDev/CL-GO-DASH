@@ -22,20 +22,27 @@
   letter-spacing: 0.04em;
 }
 
+/* Toolbar "add" action — thin alias of the shared .btn system
+   (src/styles/buttons.css) with .btn-md geometry; only colors stay here. */
 .fcs-add-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--chrome-2);
+  height: 34px;
+  padding: 0 var(--chrome-4);
   border: 1px solid var(--edge);
   border-radius: var(--radius-sm);
   background: none;
   color: var(--ink-muted);
-  font-size: var(--text-xs);
-  font-family: var(--font-sans);
-  min-height: 33px;
-  padding: 0 10px;
+  font-size: var(--text-sm);
+  font-weight: 500;
   cursor: pointer;
-  transition: background var(--ease-smooth), color var(--ease-smooth);
+  white-space: nowrap;
+  transition: background var(--ease-smooth), color var(--ease-smooth), border-color var(--ease-smooth);
 }
 
-.fcs-add-btn:hover {
+.fcs-add-btn:hover:not(:disabled) {
   border-color: var(--edge);
   background: var(--fcs-hover-bg, var(--surface-hover));
   color: var(--ink);

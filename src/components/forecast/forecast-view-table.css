@@ -64,7 +64,7 @@
   width: fit-content;
   padding: 2px 7px;
   border: 1px solid var(--edge);
-  border-radius: 999px;
+  border-radius: var(--radius-xs);
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--ink);
