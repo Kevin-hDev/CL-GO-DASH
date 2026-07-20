@@ -24,25 +24,31 @@ export function FilePreviewTab({
   onContextMenu,
 }: FilePreviewTabProps) {
   const { t } = useTranslation();
+  const fileIcon = (
+    <span className="fp-tab-file-icon">
+      {summary ? <List size="var(--icon-15)" /> : <FileIcon name={operation?.name ?? label} size="var(--icon-15)" />}
+    </span>
+  );
+
   return (
     <button
       className={`fp-tab ${active ? "active" : ""}`}
       onClick={onSelect}
       onContextMenu={summary ? undefined : onContextMenu}
     >
-      <span className="fp-tab-icon">
-        <span className="fp-tab-file-icon">
-          {summary ? <List size="var(--icon-15)" /> : <FileIcon name={operation?.name ?? label} size="var(--icon-15)" />}
-        </span>
-        {!summary && (
-          <Tooltip label={t("filePreview.closeTab")}>
+      {summary ? (
+        <span className="fp-tab-icon">{fileIcon}</span>
+      ) : (
+        <Tooltip label={t("filePreview.closeTab")}>
+          <span className="fp-tab-icon">
+            {fileIcon}
             <X className="fp-tab-close" size="var(--icon-15)" onClick={(event) => {
               event.stopPropagation();
               onClose?.();
             }} />
-          </Tooltip>
-        )}
-      </span>
+          </span>
+        </Tooltip>
+      )}
       <span className="fp-tab-label">{label}</span>
     </button>
   );
