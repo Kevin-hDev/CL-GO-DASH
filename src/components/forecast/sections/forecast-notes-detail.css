@@ -43,6 +43,7 @@
 }
 
 .fcn-confirm-delete {
+  position: relative;
   height: 34px;
   border: 1px solid var(--signal-error);
   border-radius: var(--radius-sm);
@@ -52,6 +53,15 @@
   font-size: var(--text-sm);
   font-weight: 600;
   cursor: pointer;
+}
+
+.fcn-confirm-delete::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: 0 0 0 6px var(--signal-error-pulse);
   animation: fcn-confirm-pulse 1s ease-in-out infinite;
 }
 
@@ -61,8 +71,8 @@
 }
 
 @keyframes fcn-confirm-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 var(--signal-error-pulse); }
-  50% { box-shadow: 0 0 0 6px var(--signal-error-pulse-fade); }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
 }
 
 .fcn-form-grid {

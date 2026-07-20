@@ -11,9 +11,20 @@
 
 .acs-delete-all[data-confirming="true"],
 .acs-delete-confirm[data-confirming="true"] {
+  position: relative;
   border-color: var(--signal-error) !important;
   background: var(--signal-error-bg);
   color: var(--signal-error) !important;
+}
+
+.acs-delete-all[data-confirming="true"]::after,
+.acs-delete-confirm[data-confirming="true"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: 0 0 0 5px var(--signal-error-pulse);
   animation: acs-confirm-pulse 1.2s ease-in-out infinite;
 }
 
@@ -40,6 +51,6 @@
 }
 
 @keyframes acs-confirm-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 var(--signal-error-pulse); }
-  50% { box-shadow: 0 0 0 5px var(--signal-error-pulse-fade); }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
 }

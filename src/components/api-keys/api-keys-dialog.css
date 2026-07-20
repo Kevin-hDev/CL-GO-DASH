@@ -2,6 +2,7 @@
 
 /* Confirmation de suppression — bouton rouge pulsant */
 .ak-confirm-delete {
+  position: relative;
   width: 100%;
   margin-top: var(--space-md);
   padding: 10px;
@@ -12,12 +13,21 @@
   font-size: var(--text-sm);
   font-weight: 600;
   cursor: pointer;
+}
+
+.ak-confirm-delete::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: 0 0 0 6px rgba(239, 68, 68, 0.5);
   animation: ak-pulse 1s ease-in-out infinite;
 }
 
 @keyframes ak-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
-  50% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
 }
 
 /* Bouton "Effacer la clé" — même style que Annuler */

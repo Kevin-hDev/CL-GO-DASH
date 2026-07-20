@@ -28,6 +28,8 @@ body.os-mac {
               opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* WebKit bug workaround: forces continuous compositing so backdrop-filter
+   blur stays active even when the app loses focus. Do not remove. */
 @keyframes keep-compositing {
   0%, 100% { transform: translateZ(0); }
   50% { transform: translateZ(0.1px); }
