@@ -1,18 +1,27 @@
 /* === Dialog config — réutilise les classes .wk-* de heartbeat-dialog.css === */
 
 /* Confirmation de suppression — bouton rouge pulsant */
+/* Delete confirm — full-width alias of the shared .btn system with .btn-md
+   geometry; keeps its danger colors and pulse animation. */
 .ak-confirm-delete {
   position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--chrome-2);
   width: 100%;
+  height: 34px;
   margin-top: var(--space-md);
-  padding: 10px;
+  padding: 0 var(--chrome-4);
   background: var(--signal-error);
   border: 1px solid var(--signal-error);
   border-radius: var(--radius-sm);
-  color: white;
+  color: var(--ink-on-pulse);
   font-size: var(--text-sm);
   font-weight: 600;
   cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--ease-smooth), color var(--ease-smooth), border-color var(--ease-smooth);
 }
 
 .ak-confirm-delete::after {
@@ -30,10 +39,16 @@
   50% { opacity: 0; }
 }
 
-/* Bouton "Effacer la clé" — même style que Annuler */
+/* Bouton "Effacer la clé" — même style que Annuler, alias du système .btn
+   partagé (src/styles/buttons.css) avec la géométrie .btn-md. */
 .ak-btn-danger-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--chrome-2);
+  height: 34px;
   margin-right: auto;
-  padding: 8px 16px;
+  padding: 0 var(--chrome-4);
   background: transparent;
   border: 1px solid var(--edge);
   border-radius: var(--radius-sm);
@@ -41,7 +56,8 @@
   font-size: var(--text-sm);
   font-weight: 500;
   cursor: pointer;
-  transition: all var(--ease-smooth);
+  white-space: nowrap;
+  transition: background var(--ease-smooth), color var(--ease-smooth), border-color var(--ease-smooth);
 }
 
 .ak-btn-danger-outline:hover {
