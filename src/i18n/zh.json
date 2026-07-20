@@ -275,7 +275,7 @@
       "gitArchiveCancel": "取消",
       "gitArchiveCleanup": "清理分支并归档"
     },
-    "compression": "Compression",
+    "compression": "上下文压缩中",
     "retry": {
       "thinkingOnly": "正在重试...",
       "parserCrash": "正在修正格式...",

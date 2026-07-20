@@ -107,7 +107,6 @@ export function ChatView({
       <div className="chat-zone" style={{ opacity: chat.sessionLoading ? 0 : 1 }}>
         <div className="chat-messages" ref={containerRef}>
           <ChatMessagePanel
-            sessionId={sessionId}
             chat={chat}
             runtime={runtime}
             projectPath={proj.selectedProject?.path}

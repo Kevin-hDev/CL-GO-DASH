@@ -12,6 +12,8 @@ export const MAX_PENDING_PERMISSIONS = 32;
 export const MAX_MESSAGES_PER_SESSION = 2000;
 export const MAX_QUEUED_USER_MESSAGES = 8;
 
+export type StreamKind = "chat" | "compression";
+
 export const KNOWN_ERROR_KEYS: Record<string, string> = {
   ollama_connection_lost: "errors.ollamaConnectionLost",
   model_not_found: "errors.modelNotFound",
@@ -37,6 +39,7 @@ export interface ChatState {
   currentTools: ToolActivity[];
   activeStreamItem: ActiveStreamItem;
   isStreaming: boolean;
+  isCompressing: boolean;
   tps: number;
   sessionTokenCount: number;
   sessionTokenCountEstimated: boolean;
@@ -67,7 +70,7 @@ export interface ManagedStreamState extends ChatState {
 export const EMPTY_CHAT_STATE: ChatState = {
   messages: [], queuedUserMessages: [], completedSegments: [], currentContent: "",
   currentContentPhase: undefined, currentThinking: "", currentTools: [],
-  activeStreamItem: null, isStreaming: false,
+  activeStreamItem: null, isStreaming: false, isCompressing: false,
   tps: 0, sessionTokenCount: 0, sessionTokenCountEstimated: true, lastRequestTokens: 0,
   liveTokenCount: 0, streamStartedAt: null, segmentStartedAt: null,
   totalElapsedMs: 0,
@@ -84,10 +87,12 @@ export interface StreamApplyResult {
 export function createManagedStreamState(
   messages: AgentMessage[],
   sessionTokenCount: number,
+  streamKind: StreamKind = "chat",
 ): ManagedStreamState {
   const now = Date.now();
   return {
     ...EMPTY_CHAT_STATE, messages, sessionTokenCount, isStreaming: true,
+    isCompressing: streamKind === "compression",
     streamRunId: crypto.randomUUID(),
     streamStartedAt: now, segmentStartedAt: now,
     pendingPermissions: [], completed: false, persisted: false,
@@ -103,6 +108,7 @@ export function toChatState(state: ManagedStreamState): ChatState {
     currentThinking: state.currentThinking,
     currentTools: state.currentTools, activeStreamItem: state.activeStreamItem,
     isStreaming: state.isStreaming,
+    isCompressing: state.isCompressing,
     tps: state.tps, sessionTokenCount: state.sessionTokenCount,
     sessionTokenCountEstimated: state.sessionTokenCountEstimated,
     lastRequestTokens: state.lastRequestTokens,

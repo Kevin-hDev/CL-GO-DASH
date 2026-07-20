@@ -275,7 +275,7 @@
       "gitArchiveCancel": "Abbrechen",
       "gitArchiveCleanup": "Branch bereinigen und archivieren"
     },
-    "compression": "Compression",
+    "compression": "Kontextkomprimierung",
     "retry": {
       "thinkingOnly": "Erneuter Versuch...",
       "parserCrash": "Format wird korrigiert...",

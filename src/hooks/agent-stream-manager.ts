@@ -2,7 +2,6 @@ import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import i18n from "@/i18n";
 import {
   applyStreamEvent,
-  createManagedStreamState,
   finishPartialStream,
 } from "./agent-chat-stream-callbacks";
 import {
@@ -24,6 +23,7 @@ import {
   persistMessages,
   records,
   snapshot,
+  startStreamRecord,
   touchSession,
   type StreamSnapshot,
 } from "./agent-stream-records";
@@ -34,7 +34,6 @@ import {
   finishPersistenceRun,
   frontendShouldPersist,
   markIncomingBackendRun,
-  startUiPersistence,
 } from "./agent-stream-persistence-owner";
 import { applySessionSnapshot } from "./agent-stream-snapshot";
 import {
@@ -47,6 +46,7 @@ import type { AgentMessage, StreamEvent } from "@/types/agent";
 import { webToolErrorToastMessage } from "./web-tool-error-toast";
 import { queueUserMessage, removeQueuedUserMessage } from "./agent-stream-user-queue";
 import { failSession } from "./agent-stream-failure";
+import type { StreamKind } from "./agent-chat-stream-types";
 
 export type { StreamSnapshot } from "./agent-stream-records";
 const EVENT_NAME = "agent-stream-event";
@@ -75,17 +75,14 @@ function ensureListener() {
   return listenPromise;
 }
 
-async function startSession(sessionId: string, messages: AgentMessage[], sessionTokenCount: number) {
+async function startSession(
+  sessionId: string,
+  messages: AgentMessage[],
+  sessionTokenCount: number,
+  streamKind: StreamKind = "chat",
+) {
   await ensureListener();
-  const record = getOrCreateRecord(sessionId);
-  clearCleanup(record);
-  record.state = createManagedStreamState(messages, sessionTokenCount);
-  record.history = [];
-  record.started = true;
-  startUiPersistence(record);
-  record.activeGeneration = null;
-  record.cancelledWithoutGeneration = false;
-  touchSession(sessionId, record);
+  const record = startStreamRecord(sessionId, messages, sessionTokenCount, streamKind);
   flushFrameNotify(record, notify);
   notifyActivity(sessionId, record);
 }

@@ -24,6 +24,7 @@ export function handleCompressionComplete(
       streamStartedAt: null,
       segmentStartedAt: null,
       isStreaming: false,
+      isCompressing: false,
       sessionTokenCount: estimateAgentMessagesTokens(session.messages),
       sessionTokenCountEstimated: true,
       persisted: true,

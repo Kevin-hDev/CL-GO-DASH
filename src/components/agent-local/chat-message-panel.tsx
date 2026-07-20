@@ -5,7 +5,6 @@ import type { SubagentInfo } from "@/types/agent";
 import type { FileOperation } from "@/types/file-preview";
 
 interface ChatMessagePanelProps {
-  sessionId: string;
   chat: ReturnType<typeof useAgentChat>;
   runtime: ReturnType<typeof useChatViewRuntime>;
   projectPath?: string;
@@ -17,7 +16,6 @@ interface ChatMessagePanelProps {
 }
 
 export function ChatMessagePanel({
-  sessionId,
   chat,
   runtime,
   projectPath,
@@ -29,7 +27,6 @@ export function ChatMessagePanel({
 }: ChatMessagePanelProps) {
   return (
     <MessageList
-      sessionId={sessionId}
       messages={chat.messages}
       queuedUserMessages={chat.queuedUserMessages}
       completedSegments={chat.completedSegments}
@@ -39,6 +36,7 @@ export function ChatMessagePanel({
       currentTools={chat.currentTools}
       activeStreamItem={chat.activeStreamItem}
       isStreaming={chat.isStreaming}
+      isCompressing={chat.isCompressing}
       tps={chat.tps}
       totalElapsedMs={chat.totalElapsedMs}
       segmentStartedAt={chat.streamStartedAt}

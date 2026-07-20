@@ -275,7 +275,7 @@
       "gitArchiveCancel": "Annulla",
       "gitArchiveCleanup": "Pulisci il branch e archivia"
     },
-    "compression": "Compression",
+    "compression": "Compressione del contesto",
     "retry": {
       "thinkingOnly": "Nuovo tentativo...",
       "parserCrash": "Correzione formato...",

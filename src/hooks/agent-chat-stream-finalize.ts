@@ -46,7 +46,7 @@ export function finalizeStream(
     queuedUserMessages: [],
     completedSegments: [], currentContent: "", currentThinking: "",
     currentContentPhase: undefined, currentTools: [], activeStreamItem: null,
-    isStreaming: false, tps,
+    isStreaming: false, isCompressing: false, tps,
     sessionTokenCount: contextTokens ?? estimateAgentMessagesTokens(allMessages),
     sessionTokenCountEstimated: !hasRealContextTokens,
     lastRequestTokens: assistantMessage?.tokens ?? outputTokens ?? 0, liveTokenCount: 0,

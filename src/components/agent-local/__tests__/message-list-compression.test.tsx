@@ -3,16 +3,10 @@ import { cleanup, render } from "@testing-library/react";
 import { MessageList } from "../message-list";
 import type { AgentMessage } from "@/types/agent";
 
-const compressionState = vi.hoisted(() => ({ isCompressing: false }));
-
 afterEach(() => {
-  compressionState.isCompressing = false;
   cleanup();
 });
 
-vi.mock("@/hooks/use-compression", () => ({
-  useCompression: () => ({ isCompressing: compressionState.isCompressing }),
-}));
 vi.mock("../compression-indicator", () => ({
   CompressionIndicator: () => <div data-testid="compression-indicator" />,
 }));
@@ -28,34 +22,35 @@ vi.mock("../message-tool-timeline", () => ({
 vi.mock("../subagent-bubble", () => ({ SubagentBubble: () => null }));
 vi.mock("../plan-preview-bubble", () => ({ PlanPreviewBubble: () => null }));
 vi.mock("../file-change-bubble", () => ({ FileChangeBubble: () => null }));
-vi.mock("../working-stats", () => ({ LoadingIndicator: () => null }));
+vi.mock("../working-stats", () => ({
+  LoadingIndicator: () => <div data-testid="loading-indicator" />,
+}));
 vi.mock("@/lib/file-preview-utils", () => ({
   collectMessageFileOperations: () => [],
 }));
 vi.mock("../chat.css", () => ({}));
 vi.mock("../messages.css", () => ({}));
 
-function renderList(messages: AgentMessage[]) {
+function renderList(messages: AgentMessage[], isCompressing = false) {
   return render(
     <MessageList
-      sessionId="session-1"
       messages={messages}
       completedSegments={[]}
       currentContent=""
       currentThinking=""
       currentTools={[]}
-      isStreaming={false}
+      isStreaming={isCompressing}
+      isCompressing={isCompressing}
       tps={0}
       totalElapsedMs={0}
-      segmentStartedAt={null}
+      segmentStartedAt={isCompressing ? 123 : null}
       liveTokenCount={0}
     />,
   );
 }
 
 describe("MessageList compression indicator", () => {
-  it("masque l'animation quand le marqueur de compression existe déjà", () => {
-    compressionState.isCompressing = true;
+  it("affiche seulement l'animation dédiée pendant une nouvelle compression", () => {
     const compressedMessage: AgentMessage = {
       id: "compressed-1",
       role: "assistant",
@@ -64,9 +59,10 @@ describe("MessageList compression indicator", () => {
       timestamp: new Date(0).toISOString(),
     };
 
-    const view = renderList([compressedMessage]);
+    const view = renderList([compressedMessage], true);
 
-    expect(view.queryByTestId("compression-indicator")).toBeNull();
+    expect(view.getByTestId("compression-indicator")).toBeTruthy();
+    expect(view.queryByTestId("loading-indicator")).toBeNull();
     expect(view.getByTestId("context-marker")).toBeTruthy();
   });
 });

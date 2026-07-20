@@ -280,7 +280,7 @@
       "gitArchiveCancel": "Cancel",
       "gitArchiveCleanup": "Clean branch and archive"
     },
-    "compression": "Compression",
+    "compression": "Context compression",
     "retry": {
       "thinkingOnly": "Retrying...",
       "parserCrash": "Fixing format...",

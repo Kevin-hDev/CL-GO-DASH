@@ -3,10 +3,18 @@ import { invoke } from "@tauri-apps/api/core";
 import { agentStreamManager, type StreamSnapshot } from "./agent-stream-manager";
 import { resolveAgentStreamMessages } from "./agent-stream-message-resolver";
 import type { AgentMessage } from "@/types/agent";
+import type { StreamKind } from "./agent-chat-stream-types";
 
 interface StreamStartState {
   displayMessages: AgentMessage[];
   baseTokenCount: number;
+}
+
+function resolveStreamKind(messages: AgentMessage[]): StreamKind {
+  const lastMessage = messages[messages.length - 1];
+  return lastMessage?.role === "user" && lastMessage.content.trim() === "/compress"
+    ? "compression"
+    : "chat";
 }
 
 export function useAgentStream() {
@@ -37,6 +45,7 @@ export function useAgentStream() {
       sessionId,
       startState.displayMessages,
       startState.baseTokenCount,
+      resolveStreamKind(messages),
     );
 
     const chatMessages = await resolveAgentStreamMessages(messages);

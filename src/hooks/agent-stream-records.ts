@@ -5,8 +5,10 @@ import {
   type ChatState,
   type PermissionRequestState,
 } from "./agent-chat-stream-callbacks";
-import { enforceSessionLimit, type StreamRecord } from "./agent-stream-cleanup";
+import { clearCleanup, enforceSessionLimit, type StreamRecord } from "./agent-stream-cleanup";
 import { flushFrameNotify } from "./agent-stream-notify";
+import { startUiPersistence } from "./agent-stream-persistence-owner";
+import type { StreamKind } from "./agent-chat-stream-types";
 import type { AgentMessage } from "@/types/agent";
 
 export interface StreamSnapshot extends ChatState {
@@ -51,6 +53,24 @@ export function touchSession(sessionId: string, record: StreamRecord) {
   records.delete(sessionId);
   records.set(sessionId, record);
   enforceSessionLimit(records);
+}
+
+export function startStreamRecord(
+  sessionId: string,
+  messages: AgentMessage[],
+  sessionTokenCount: number,
+  streamKind: StreamKind,
+): StreamRecord {
+  const record = getOrCreateRecord(sessionId);
+  clearCleanup(record);
+  record.state = createManagedStreamState(messages, sessionTokenCount, streamKind);
+  record.history = [];
+  record.started = true;
+  startUiPersistence(record);
+  record.activeGeneration = null;
+  record.cancelledWithoutGeneration = false;
+  touchSession(sessionId, record);
+  return record;
 }
 
 export function snapshot(state: StreamRecord["state"]): StreamSnapshot {

@@ -280,7 +280,7 @@
       "gitArchiveCancel": "Annuler",
       "gitArchiveCleanup": "Nettoyer la branche et archiver"
     },
-    "compression": "Compression",
+    "compression": "Compression du contexte",
     "retry": {
       "thinkingOnly": "Relance...",
       "parserCrash": "Format corrigé...",

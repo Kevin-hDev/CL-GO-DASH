@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { cleanup, fireEvent, render } from "@testing-library/react";
 import { MessageList, SegmentedAssistantMessage } from "../message-list";
-import type { AgentMessage } from "@/types/agent";
+import { assistantWithSegmentTools } from "../test-utils/message-list-tool-aggregation-fixtures";
 
 afterEach(cleanup);
 
@@ -27,7 +27,6 @@ vi.mock("@/components/file-preview/file-icon", () => ({
 }));
 vi.mock("@tauri-apps/plugin-shell", () => ({ open: vi.fn() }));
 vi.mock("@/hooks/use-hover-class", () => ({ useHoverClass: () => ({ current: null }) }));
-vi.mock("@/hooks/use-compression", () => ({ useCompression: () => ({ isCompressing: false }) }));
 vi.mock("../working-stats", () => ({
   LoadingIndicator: () => <div data-testid="loading-indicator" />,
 }));
@@ -83,35 +82,6 @@ vi.mock("../chat.css", () => ({}));
 vi.mock("../messages.css", () => ({}));
 vi.mock("../tool-bubble.css", () => ({}));
 
-function assistantWithSegmentTools(): AgentMessage {
-  return {
-    id: "assistant-1",
-    role: "assistant",
-    content: "",
-    files: [],
-    timestamp: new Date(0).toISOString(),
-    segments: [
-      {
-        thinking: "first reflection",
-        content: "",
-        tools: [
-          { name: "bash", summary: "npm test", result: "ok" },
-          { name: "write_file", summary: "a.ts", result: "ok", content: "x" },
-        ],
-      },
-      {
-        content: "",
-        tools: [{ name: "edit_file", summary: "b.ts", result: "ok", old_text: "a", new_text: "b" }],
-      },
-      {
-        thinking: "second reflection",
-        content: "",
-        tools: [{ name: "bash", summary: "npm run build", result: "ok" }],
-      },
-    ],
-  };
-}
-
 describe("MessageList tool aggregation", () => {
   it("garde un flux compact par segment sauvegardé pour préserver l'ordre", () => {
     const { container } = render(
@@ -140,7 +110,6 @@ describe("MessageList tool aggregation", () => {
   it("garde les tools du stream sous le segment qui les a produits", () => {
     const { container } = render(
       <MessageList
-        sessionId="session-1"
         messages={[]}
         completedSegments={[
           {
@@ -162,6 +131,7 @@ describe("MessageList tool aggregation", () => {
         currentThinking=""
         currentTools={[{ name: "edit_file", args: { path: "b.ts", old_string: "a", new_string: "b" }, result: "ok" }]}
         isStreaming
+        isCompressing={false}
         tps={0}
         totalElapsedMs={0}
         segmentStartedAt={1}
@@ -184,7 +154,6 @@ describe("MessageList tool aggregation", () => {
   it("affiche la preview du plan après la timeline du stream", () => {
     const { container } = render(
       <MessageList
-        sessionId="session-1"
         messages={[]}
         completedSegments={[
           {
@@ -197,6 +166,7 @@ describe("MessageList tool aggregation", () => {
         currentThinking="thinking before plan"
         currentTools={[]}
         isStreaming
+        isCompressing={false}
         tps={0}
         totalElapsedMs={0}
         segmentStartedAt={1}

@@ -7,7 +7,6 @@ import { ContextCompressionMarker } from "./context-compression-marker";
 import { PlanPreviewBubble } from "./plan-preview-bubble";
 import { StreamEndArtifacts } from "./stream-end-artifacts";
 import { LoadingIndicator } from "./working-stats";
-import { useCompression } from "@/hooks/use-compression";
 import { isCompressionContextOnlyMessage, isCompressionSummaryMessage } from "@/lib/context-messages";
 import { planStreamEndArtifacts } from "@/lib/stream-end-artifacts";
 import { normalizeSavedToolHistory } from "@/lib/saved-tool-history";
@@ -19,7 +18,6 @@ import "./chat.css";
 import "./messages.css";
 
 interface MessageListProps {
-  sessionId: string;
   messages: AgentMessage[];
   queuedUserMessages?: AgentMessage[];
   completedSegments: StreamSegment[];
@@ -29,6 +27,7 @@ interface MessageListProps {
   currentTools: ToolActivity[];
   activeStreamItem?: ActiveStreamItem;
   isStreaming: boolean;
+  isCompressing: boolean;
   tps: number;
   totalElapsedMs: number;
   segmentStartedAt: number | null;
@@ -52,18 +51,15 @@ interface MessageListProps {
 }
 
 export function MessageList({
-  sessionId, messages, queuedUserMessages = [], completedSegments, currentContent,
+  messages, queuedUserMessages = [], completedSegments, currentContent,
   currentContentPhase, currentThinking,
   currentTools, activeStreamItem = null, isStreaming, tps, totalElapsedMs, segmentStartedAt,
-  liveTokenCount, onReload, onEdit, onCloneMessage, onFileClick, onFilePreview, onFileReview,
+  isCompressing, liveTokenCount, onReload, onEdit, onCloneMessage, onFileClick, onFilePreview, onFileReview,
   projectPath, knownSubagents = [], onOpenSubagent, planPreview, streamRunId = "",
 }: MessageListProps) {
   const displayMessages = normalizeSavedToolHistory(messages);
   const lastAssistantIdx = displayMessages.map((message) => message.role).lastIndexOf("assistant");
-  const { isCompressing } = useCompression(sessionId);
   const streamStartedAt = segmentStartedAt;
-  const hasCompressionMarker = displayMessages.some(isCompressionSummaryMessage);
-  const showCompressionIndicator = isCompressing && !hasCompressionMarker;
   const endArtifacts = planStreamEndArtifacts(displayMessages, isStreaming, streamRunId);
 
   const artifactsAfter = (messageId: string) => {
@@ -147,11 +143,11 @@ export function MessageList({
         />
       ))}
       {planPreview && <PlanPreviewBubble plan={planPreview} />}
-      {isStreaming && streamStartedAt != null && (
+      {isStreaming && !isCompressing && streamStartedAt != null && (
         <LoadingIndicator startedAt={streamStartedAt} liveTokenCount={liveTokenCount} />
       )}
 
-      {showCompressionIndicator && <CompressionIndicator />}
+      {isCompressing && <CompressionIndicator />}
 
     </>
   );

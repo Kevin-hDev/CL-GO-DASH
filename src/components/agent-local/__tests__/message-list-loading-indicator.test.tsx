@@ -3,16 +3,10 @@ import { cleanup, render } from "@testing-library/react";
 import { MessageList } from "../message-list";
 import type { ToolActivity } from "@/hooks/agent-chat-utils";
 
-const compressionState = vi.hoisted(() => ({ isCompressing: false }));
-
 afterEach(() => {
-  compressionState.isCompressing = false;
   cleanup();
 });
 
-vi.mock("@/hooks/use-compression", () => ({
-  useCompression: () => ({ isCompressing: compressionState.isCompressing }),
-}));
 vi.mock("../message-tool-timeline", () => ({
   SavedToolTimeline: () => null,
   StreamToolTimeline: ({
@@ -58,6 +52,7 @@ function renderStreaming(overrides: {
   currentThinking?: string;
   currentTools?: ToolActivity[];
   segmentStartedAt?: number | null;
+  isCompressing?: boolean;
 } = {}) {
   const segmentStartedAt = "segmentStartedAt" in overrides
     ? overrides.segmentStartedAt ?? null
@@ -65,13 +60,13 @@ function renderStreaming(overrides: {
 
   return render(
     <MessageList
-      sessionId="session-1"
       messages={[]}
       completedSegments={[]}
       currentContent={overrides.currentContent ?? ""}
       currentThinking={overrides.currentThinking ?? ""}
       currentTools={overrides.currentTools ?? []}
       isStreaming
+      isCompressing={overrides.isCompressing ?? false}
       tps={0}
       totalElapsedMs={0}
       segmentStartedAt={segmentStartedAt}
@@ -102,11 +97,10 @@ describe("MessageList loading indicator", () => {
     expect(view.getByTestId("loading-indicator")).toBeTruthy();
   });
 
-  it("reste visible pendant la compression du stream", () => {
-    compressionState.isCompressing = true;
-    const view = renderStreaming({ currentContent: "texte live" });
+  it("laisse place à l'animation dédiée pendant la compression", () => {
+    const view = renderStreaming({ currentContent: "texte live", isCompressing: true });
 
-    expect(view.getByTestId("loading-indicator")).toBeTruthy();
+    expect(view.queryByTestId("loading-indicator")).toBeNull();
     expect(view.getByTestId("compression-indicator")).toBeTruthy();
   });
 
@@ -120,7 +114,6 @@ describe("MessageList loading indicator", () => {
     const view = renderStreaming({ currentContent: "travail visible" });
     view.rerender(
       <MessageList
-        sessionId="session-1"
         messages={[]}
         queuedUserMessages={[{
           id: "u2", role: "user", content: "nouvelle précision", files: [], timestamp: "2026-07-12",
@@ -130,6 +123,7 @@ describe("MessageList loading indicator", () => {
         currentThinking=""
         currentTools={[]}
         isStreaming
+        isCompressing={false}
         tps={0}
         totalElapsedMs={0}
         segmentStartedAt={123}

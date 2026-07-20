@@ -6,7 +6,6 @@ import type { AgentMessage, SubagentInfo, StreamMessagePart } from "@/types/agen
 const RUN = "7c8e3a14-8811-4d88-9a54-d234547d8d22";
 
 afterEach(cleanup);
-vi.mock("@/hooks/use-compression", () => ({ useCompression: () => ({ isCompressing: false }) }));
 vi.mock("../message-tool-timeline", () => ({
   SavedToolTimeline: () => <div data-testid="saved-timeline" />,
   StreamToolTimeline: () => null,
@@ -46,8 +45,9 @@ describe("MessageList stream artifacts", () => {
 
 function renderList(messages: AgentMessage[], isStreaming: boolean) {
   return render(<MessageList
-    sessionId="parent" messages={messages} completedSegments={[]}
+    messages={messages} completedSegments={[]}
     currentContent="" currentThinking="" currentTools={[]} isStreaming={isStreaming}
+    isCompressing={false}
     streamRunId={RUN} tps={0} totalElapsedMs={0} segmentStartedAt={null}
     liveTokenCount={0} knownSubagents={[known()]}
   />);

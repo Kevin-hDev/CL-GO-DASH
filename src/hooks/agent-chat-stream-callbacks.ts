@@ -113,6 +113,12 @@ export function applyStreamEvent(
     case "retryIndicator":
       next.retryIndicator = event.data;
       break;
+    case "compressing":
+      next.isCompressing = event.data.status === "start";
+      break;
+    case "compressionComplete":
+      next.isCompressing = false;
+      break;
     case "done":
       next.retryIndicator = null;
       return finishStream(next, event);

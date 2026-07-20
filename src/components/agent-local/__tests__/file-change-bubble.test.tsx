@@ -26,10 +26,6 @@ vi.mock("../message-tool-timeline", () => ({
   StreamToolTimeline: () => <div data-testid="stream-timeline" />,
 }));
 
-vi.mock("@/hooks/use-compression", () => ({
-  useCompression: () => ({ isCompressing: false }),
-}));
-
 vi.mock("../working-stats", () => ({
   LoadingIndicator: () => <div data-testid="loading-indicator" />,
 }));

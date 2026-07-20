@@ -4,10 +4,6 @@ import { MessageList } from "../message-list";
 import type { AgentMessage, SubagentInfo } from "@/types/agent";
 
 afterEach(() => cleanup());
-
-vi.mock("@/hooks/use-compression", () => ({
-  useCompression: () => ({ isCompressing: false }),
-}));
 vi.mock("../message-tool-timeline", () => ({
   SavedToolTimeline: ({ segments }: { segments: AgentMessage["segments"] }) => (
     <div data-testid="saved-timeline">{JSON.stringify(segments)}</div>
@@ -61,8 +57,9 @@ describe("MessageList subagents", () => {
 
     const { getAllByTestId } = render(
       <MessageList
-        sessionId="child" messages={rawHistory} completedSegments={[]}
+        messages={rawHistory} completedSegments={[]}
         currentContent="" currentThinking="" currentTools={[]} isStreaming={false}
+        isCompressing={false}
         tps={0} totalElapsedMs={0} segmentStartedAt={null} liveTokenCount={0}
       />,
     );
@@ -78,13 +75,13 @@ describe("MessageList subagents", () => {
   it("affiche uniquement les sous-agents créés par le message sauvegardé", () => {
     const { queryByTestId } = render(
       <MessageList
-        sessionId="parent"
         messages={[...messages, assistantWithDelegate("child-current")]}
         completedSegments={[]}
         currentContent=""
         currentThinking=""
         currentTools={[]}
         isStreaming={false}
+        isCompressing={false}
         tps={0}
         totalElapsedMs={0}
         segmentStartedAt={null}
@@ -112,13 +109,13 @@ describe("MessageList subagents", () => {
   it("place la bubble sous la réponse finale sauvegardée", () => {
     render(
       <MessageList
-        sessionId="parent"
         messages={[assistantWithDelegate("child-current")]}
         completedSegments={[]}
         currentContent=""
         currentThinking=""
         currentTools={[]}
         isStreaming={false}
+        isCompressing={false}
         tps={0}
         totalElapsedMs={0}
         segmentStartedAt={null}

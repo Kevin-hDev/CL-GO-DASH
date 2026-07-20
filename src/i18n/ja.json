@@ -275,7 +275,7 @@
       "gitArchiveCancel": "キャンセル",
       "gitArchiveCleanup": "ブランチを削除してアーカイブ"
     },
-    "compression": "Compression",
+    "compression": "コンテキストを圧縮中",
     "retry": {
       "thinkingOnly": "再試行中...",
       "parserCrash": "形式を修正中...",
