@@ -1,6 +1,10 @@
-/* === Connectors Modal — plein écran === */
+/* === Connectors Modal — plein écran ===
+   Panel — follows the unified dialog contract (Phase 1 spec §4.1):
+   radius-md glass panel (OS-gated), border --edge, shadow --shadow-lg. */
 .ak-connectors-modal {
-  background: var(--shell);
+  background: var(--popover-bg, var(--surface-glass));
+  backdrop-filter: var(--popover-backdrop-filter, none);
+  -webkit-backdrop-filter: var(--popover-backdrop-filter, none);
   border: 1px solid var(--edge);
   border-radius: var(--radius-md);
   width: 100%;
@@ -9,14 +13,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-}
-
-[data-theme="dark"] .ak-connectors-modal {
-  background: var(--surface-overlay);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-color: transparent;
+  box-shadow: var(--shadow-lg);
 }
 
 .ak-connectors-header {

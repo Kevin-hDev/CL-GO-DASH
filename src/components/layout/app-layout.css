@@ -2,6 +2,8 @@
 body.os-mac {
   --popover-bg: var(--surface-glass);
   --popover-backdrop-filter: blur(20px);
+  /* Unified dialog contract (Phase 1 spec §4.1): overlay blur, macOS only. */
+  --dialog-overlay-filter: blur(8px);
 }
 
 .app-root {
@@ -136,6 +138,7 @@ body.os-mac {
 body.os-other {
   --popover-bg: var(--shell-opaque);
   --popover-backdrop-filter: none;
+  --dialog-overlay-filter: none;
 }
 
 .app-root.os-other {

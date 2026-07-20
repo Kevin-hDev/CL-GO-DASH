@@ -1,17 +1,24 @@
+/* Unified dialog contract — Phase 1 spec §4.1.
+   Overlay: --dialog-backdrop + OS-gated blur(8px), z --z-overlay.
+   Panel: radius-md glass (OS-gated via --popover-* tokens), border --edge,
+   shadow --shadow-lg. Shared by every .wk-dialog across the app. */
 .wk-dialog-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.55);
+  background: var(--dialog-backdrop);
+  backdrop-filter: var(--dialog-overlay-filter, none);
+  -webkit-backdrop-filter: var(--dialog-overlay-filter, none);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: var(--z-overlay);
   padding: var(--space-lg);
-  backdrop-filter: blur(2px);
 }
 
 .wk-dialog {
-  background: var(--shell);
+  background: var(--popover-bg, var(--surface-glass));
+  backdrop-filter: var(--popover-backdrop-filter, none);
+  -webkit-backdrop-filter: var(--popover-backdrop-filter, none);
   border: 1px solid var(--edge);
   border-radius: var(--radius-md);
   width: 100%;
@@ -20,17 +27,12 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-lg);
 }
 
-[data-theme="dark"] .wk-dialog {
-  background: var(--surface-overlay);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-color: transparent;
-}
-
-[data-theme="dark"] .wk-dialog:has(.cs-dropdown) {
+/* WebKit nested-blur workaround: disable the panel blur when the dialog
+   contains a custom-select dropdown. */
+.wk-dialog:has(.cs-dropdown) {
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
