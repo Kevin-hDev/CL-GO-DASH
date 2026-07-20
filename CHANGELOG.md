@@ -2,14 +2,6 @@
 
 ## [Unreleased]
 
-### Fixed
-
-- **Clear Git operation errors** — branch switching, commits, merges, branch and worktree deletion, and clone branch cleanup now show stable localized reasons instead of a generic failure.
-
-### Changed
-
-- **Typed UI error contract** — Git and clone commands now return structured `thiserror` codes, decoded through one frontend mapping that never exposes internal paths or backend details.
-
 ---
 
 ## v1.0.1
@@ -21,11 +13,20 @@
 - **Integrated Git workflow** — added branch and worktree creation, selection, and deletion; local commits; authenticated pushes; explicit branch-to-branch merges; shared per-worktree state across sessions; uncommitted file browsing; recent commit history; and historical diff previews.
 - **Four new visual themes** — added Emerald Night, Frosted Cobalt, Astral Mist, and Crimson Eclipse, each with a dedicated accessible palette and theme-aware added and deleted line colors across code and file diff previews.
 
+### Interface
+
+- **Unified visual system** — standardized buttons, icon buttons, dialogs, form controls, spacing, corner radii, layer ordering, glass menus, and popovers across the application.
+- **Smoother and more accessible motion** — moved animations to GPU-friendly properties, added reduced-motion support, refined the chat composer and session icons, and introduced the animated CL-GO companion.
+
 ### Usage and costs
 
 - **Provider usage details** — Settings now shows available limits, reset times, remaining credits, token usage, request counts, and exact or estimated costs for configured API and OAuth connections.
 - **Local usage history** — added Today, 7 days, 30 days, and Total views with input, output, cache, and reasoning token breakdowns, without storing prompts or conversations.
 - **Codex allowance labels** — separated the general Codex weekly allowance from the dedicated GPT-5.3-Codex-Spark weekly allowance, and added the model to the Codex selector.
+
+### Local models
+
+- **Safer Ollama customization** — added a model parameter catalog and per-model system prompt overrides while hardening native model creation and editing flows.
 
 ### Security and reliability
 
@@ -33,6 +34,9 @@
 - **Credential and session protection** — added pre-provider secret redaction, private atomic session storage, and one-time cleanup of legacy OAuth artifacts and historical session data without changing active vault credentials.
 - **Clear subscription errors** — Grok and Kimi membership or credit errors now use stable, non-sensitive error codes instead of exposing provider response bodies.
 - **Reliable Git state and operations** — added validated and bounded Git inputs, safer delete and merge confirmations, conflict-aware merges, credential-safe push errors, synchronized worktree refreshes, and clear loading or partial-change states.
+- **Clear Git operation errors** — branch switching, commits, merges, branch and worktree deletion, and clone branch cleanup now show stable localized reasons instead of a generic failure.
+- **Typed UI error contract** — Git and clone commands now return structured error codes decoded through one frontend mapping that never exposes internal paths or backend details.
+- **Reliable context compression** — restored compression requests, progress feedback, and tool history while keeping clone summaries hidden from the conversation.
 
 ---
 
