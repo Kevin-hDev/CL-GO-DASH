@@ -1,6 +1,16 @@
 use super::cef_cookie_gate_policy::cef_cookie_gate_policy_for_platform;
 
 #[test]
+fn runtime_policy_helper_is_only_compiled_with_the_cef_runtime() {
+    let policy = include_str!("cef_cookie_gate_policy.rs");
+
+    assert!(policy.contains(
+        "#[cfg(any(target_os = \"macos\", target_os = \"windows\"))]\n\
+         pub(super) fn cef_cookie_gate_policy()"
+    ));
+}
+
+#[test]
 fn security_gate_allows_time_for_system_approval() {
     let source = include_str!("cef_cookie_gate.rs");
 
