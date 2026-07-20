@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { CaretDown } from "@/components/ui/icons";
 
 interface SessionSummarySectionProps {
+  icon: ReactNode;
   title: string;
   count: number;
   open: boolean;
@@ -10,6 +11,7 @@ interface SessionSummarySectionProps {
 }
 
 export function SessionSummarySection({
+  icon,
   title,
   count,
   open,
@@ -19,7 +21,10 @@ export function SessionSummarySection({
   return (
     <section className="ssb-section">
       <button className="ssb-section-toggle" type="button" aria-expanded={open} onClick={onToggle}>
-        <span>{title} ({count})</span>
+        <span className="ssb-section-label">
+          <span className="ssb-section-icon">{icon}</span>
+          <span>{title} ({count})</span>
+        </span>
         <CaretDown
           className={`ssb-section-caret ${open ? "ssb-section-caret-open" : ""}`}
           size="var(--icon-sm)"

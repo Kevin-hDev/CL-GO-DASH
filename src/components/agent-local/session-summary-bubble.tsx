@@ -1,7 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { FilePlus } from "@/components/ui/icons";
 import { SessionSummaryIcon } from "@/components/ui/chat-header-icons";
+import {
+  ModificationIcon,
+  PlanIcon,
+  SubagentSummaryIcon,
+  TodoListIcon,
+} from "@/components/ui/session-summary-icons";
 import { Tooltip } from "@/components/ui/tooltip";
 import { useClickOutside } from "@/hooks/use-click-outside";
 import type { useSessionSummary } from "@/hooks/use-session-summary";
@@ -88,7 +93,7 @@ export function SessionSummaryBubble({
         <div className="ssb-popover" role="dialog" aria-label={t("agentLocal.sessionSummary.title")}>
           <div className="ssb-kicker">{t("agentLocal.sessionSummary.environment")}</div>
           <div className="ssb-row">
-            <FilePlus size="var(--icon-md)" className="ssb-row-icon" />
+            <ModificationIcon size="var(--icon-md)" className="ssb-row-icon" />
             <span className="ssb-row-label">{t("agentLocal.sessionSummary.modifications")}</span>
             <SessionSummaryChangeStats sessionChanges={summary.changes} git={git} />
           </div>
@@ -102,10 +107,22 @@ export function SessionSummaryBubble({
             }}
           />
           <div className="ssb-separator" />
-          <SessionSummarySection title={t("agentLocal.sessionSummary.sections.todos")} count={summary.todoRuns.length} open={sections.todos} onToggle={() => toggleSection("todos")}>
+          <SessionSummarySection
+            icon={<TodoListIcon />}
+            title={t("agentLocal.sessionSummary.sections.todos")}
+            count={summary.todoRuns.length}
+            open={sections.todos}
+            onToggle={() => toggleSection("todos")}
+          >
             <SessionSummaryTodoList runs={summary.todoRuns} />
           </SessionSummarySection>
-          <SessionSummarySection title={t("agentLocal.sessionSummary.sections.plans")} count={summary.plans.length} open={sections.plans} onToggle={() => toggleSection("plans")}>
+          <SessionSummarySection
+            icon={<PlanIcon />}
+            title={t("agentLocal.sessionSummary.sections.plans")}
+            count={summary.plans.length}
+            open={sections.plans}
+            onToggle={() => toggleSection("plans")}
+          >
             <SessionSummaryPlanList
               plans={summary.plans}
               onOpenPlan={(plan) => {
@@ -114,7 +131,13 @@ export function SessionSummaryBubble({
               }}
             />
           </SessionSummarySection>
-          <SessionSummarySection title={t("agentLocal.sessionSummary.sections.subagents")} count={summary.subagents.length} open={sections.subagents} onToggle={() => toggleSection("subagents")}>
+          <SessionSummarySection
+            icon={<SubagentSummaryIcon />}
+            title={t("agentLocal.sessionSummary.sections.subagents")}
+            count={summary.subagents.length}
+            open={sections.subagents}
+            onToggle={() => toggleSection("subagents")}
+          >
             <SessionSummarySubagentList
               subagents={summary.subagents}
               onOpen={(id) => {

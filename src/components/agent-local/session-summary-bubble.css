@@ -177,6 +177,27 @@
   color: var(--ink);
 }
 
+.ssb-section-label {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+}
+
+.ssb-section-icon {
+  display: inline-flex;
+  width: var(--summary-icon-column);
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-muted);
+  flex-shrink: 0;
+}
+
+.ssb-section-icon svg {
+  width: var(--icon-md);
+  height: var(--icon-md);
+}
+
 .ssb-section-caret {
   flex-shrink: 0;
   color: var(--ink-faint);

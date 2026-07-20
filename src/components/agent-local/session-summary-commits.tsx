@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState, type UIEvent } from "react";
 import { useTranslation } from "react-i18next";
-import { CaretDown, CaretLeft, Hash } from "@/components/ui/icons";
+import { CaretDown, CaretLeft } from "@/components/ui/icons";
+import { CommitIcon } from "@/components/ui/session-summary-icons";
 import { FileIcon } from "@/components/file-preview/file-icon";
 import type { GitCommitFile, GitCommitSummary } from "@/hooks/git-types";
 import type { SessionSummaryGitState } from "./session-summary-git-types";
@@ -99,7 +100,7 @@ export function SessionSummaryCommits({ git, onOpenFile }: SessionSummaryCommits
         aria-label={t("agentLocal.sessionSummary.commits.toggle")}
         onClick={toggle}
       >
-        <Hash size="var(--icon-md)" className="ssb-row-icon" />
+        <CommitIcon size="var(--icon-md)" className="ssb-row-icon" />
         <span className="ssb-row-label">{t("agentLocal.sessionSummary.commits.title")}</span>
         <CaretDown className={`ssb-section-caret ${open ? "ssb-section-caret-open" : ""}`} size="var(--icon-sm)" />
       </button>

@@ -22,7 +22,6 @@ vi.mock("react-i18next", () => ({
 vi.mock("@/components/ui/icons", () => ({
   CaretDown: () => <span />,
   CaretLeft: () => <span />,
-  Hash: () => <span />,
 }));
 
 vi.mock("@/components/file-preview/file-icon", () => ({

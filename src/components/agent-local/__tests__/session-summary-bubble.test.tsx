@@ -31,10 +31,8 @@ vi.mock("@/components/ui/icons", () => ({
   ChevronDown: () => <span />,
   Circle: () => <span />,
   Clock3: () => <span />,
-  FilePlus: () => <span data-testid="file-plus" />,
   FileText: () => <span data-testid="file-text" />,
   GitBranch: () => <span data-testid="git-branch" />,
-  Hash: () => <span data-testid="git-commit" />,
   PauseCircle: () => <span />,
   CaretLeft: () => <span data-testid="back" />,
   X: () => <span data-testid="close" />,
@@ -77,7 +75,7 @@ const git = {
 
 describe("SessionSummaryBubble", () => {
   it("ouvre la bulle et affiche modifications + branche", () => {
-    const { getByRole, getByText } = render(
+    const { container, getByRole, getByText } = render(
       <SessionSummaryBubble
         summary={summary()}
         git={{
@@ -100,6 +98,8 @@ describe("SessionSummaryBubble", () => {
     expect(getByText("+14")).toBeTruthy();
     expect(getByText("-6")).toBeTruthy();
     expect(getByText("main")).toBeTruthy();
+    expect(container.querySelectorAll(".ssb-section-icon")).toHaveLength(3);
+    expect(container.querySelectorAll(".ssb-row-icon[aria-hidden='true']")).toHaveLength(2);
   });
 
   it("affiche un fallback sans dépôt Git", () => {
