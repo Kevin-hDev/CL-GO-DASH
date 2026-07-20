@@ -5,7 +5,7 @@
   min-width: 0;
   min-height: 0;
   overflow-y: auto;
-  padding: var(--space-lg);
+  padding: var(--chrome-5);
 }
 
 .mes-inner {

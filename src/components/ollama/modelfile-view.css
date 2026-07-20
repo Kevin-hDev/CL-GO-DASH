@@ -1,7 +1,7 @@
 /* modelfile-view.css — ModelfileView component */
 
 .mfv-scroll {
-  padding: 24px;
+  padding: var(--chrome-5);
   overflow-y: auto;
   flex: 1;
 }

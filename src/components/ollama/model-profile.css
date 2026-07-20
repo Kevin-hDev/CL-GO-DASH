@@ -6,7 +6,7 @@
 }
 
 .mp-inner {
-  padding: 24px;
+  padding: var(--chrome-5);
   max-width: var(--settings-content-max-width);
   width: 100%;
   margin: 0 auto;
@@ -37,7 +37,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 20px;
+  padding: var(--chrome-3) 20px;
   font-size: var(--text-sm);
 }
 

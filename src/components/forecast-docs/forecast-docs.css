@@ -34,7 +34,7 @@
 
 .fd-nav-item {
   width: 100%;
-  padding: 9px 10px;
+  padding: var(--space-sm) var(--chrome-3);
   border: none;
   border-radius: var(--radius-sm);
   background: transparent;

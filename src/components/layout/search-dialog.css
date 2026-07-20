@@ -85,9 +85,9 @@
 .search-result-item {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--chrome-2);
   width: 100%;
-  padding: 8px 10px;
+  padding: var(--space-sm) var(--chrome-3);
   border: none;
   border-radius: var(--radius-xs);
   background: transparent;

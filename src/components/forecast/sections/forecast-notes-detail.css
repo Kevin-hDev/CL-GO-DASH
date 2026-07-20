@@ -1,5 +1,5 @@
 .fcn-detail {
-  padding: 18px;
+  padding: var(--chrome-5);
   min-width: 0;
 }
 
@@ -7,7 +7,7 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 14px;
+  gap: var(--chrome-4);
   margin-bottom: 16px;
 }
 
@@ -82,8 +82,8 @@
 .fcn-form-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 122px 102px;
-  gap: 10px;
-  margin-bottom: 10px;
+  gap: var(--chrome-3);
+  margin-bottom: var(--chrome-3);
 }
 
 .fcn-type-menu .fcs-menu-trigger {
@@ -106,7 +106,7 @@
 
 .fcn-input {
   height: 28px;
-  padding: 0 10px;
+  padding: 0 var(--chrome-3);
 }
 
 .fcn-textarea {
@@ -176,7 +176,7 @@
 .fcn-markdown ul,
 .fcn-markdown ol,
 .fcn-markdown pre {
-  margin: 0 0 14px;
+  margin: 0 0 var(--chrome-4);
 }
 
 .fcn-markdown code {
