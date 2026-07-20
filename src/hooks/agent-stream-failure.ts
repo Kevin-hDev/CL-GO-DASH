@@ -12,6 +12,7 @@ export function failSession(sessionId: string) {
   record.state = {
     ...record.state,
     isStreaming: false,
+    isCompressing: false,
     completed: true,
     activeStreamItem: null,
     error: i18n.t("errors.streamStartFailed"),

@@ -101,11 +101,14 @@ export interface SavedSegment {
   phase?: TokenPhase;
 }
 
-interface ChatMsg {
+export interface ChatMsg {
   role: string;
   content: string;
   images?: string[] | null;
-  tool_calls?: unknown[] | null;
+  tool_calls?: Array<{
+    id?: string;
+    function: { name: string; arguments: Record<string, unknown> };
+  }> | null;
   tool_name?: string | null;
   tool_call_id?: string | null;
 }

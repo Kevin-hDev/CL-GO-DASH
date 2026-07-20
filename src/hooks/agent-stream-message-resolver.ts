@@ -1,6 +1,10 @@
 import { readFile } from "@tauri-apps/plugin-fs";
 import { invoke } from "@tauri-apps/api/core";
-import { expandSegmentsToChat, expandToolActivities } from "./agent-chat-utils";
+import {
+  expandSegmentsToChat,
+  expandToolActivities,
+  type ChatMsg,
+} from "./agent-chat-utils";
 import type { AgentMessage, FileAttachment } from "@/types/agent";
 
 const IMAGE_EXTS = ["png", "jpg", "jpeg", "gif", "webp"];
@@ -10,10 +14,13 @@ const TEXT_EXTS = [
 ];
 const MAX_TEXT_CHARS_PER_FILE = 120_000;
 const MAX_TEXT_CHARS_PER_MESSAGE = 300_000;
+const MAX_TOOL_CALLS_PER_TURN = 64;
 
-export async function resolveAgentStreamMessages(messages: AgentMessage[]) {
+export async function resolveAgentStreamMessages(
+  messages: AgentMessage[],
+): Promise<ChatMsg[]> {
   const resolved = await Promise.all(messages.map(resolveMessage));
-  return resolved.flatMap(({ message, content, images }) => {
+  const flattened = resolved.flatMap(({ message, content, images }) => {
     if (message.role === "assistant" && message.segments?.length && !message.tool_calls) {
       return expandSegmentsToChat(message.segments, content);
     }
@@ -25,6 +32,33 @@ export async function resolveAgentStreamMessages(messages: AgentMessage[]) {
       tool_calls: message.tool_calls ?? null, tool_name: message.tool_name ?? null,
     }];
   });
+  return linkToolCallsToResults(flattened);
+}
+
+function linkToolCallsToResults(messages: ChatMsg[]): ChatMsg[] {
+  let pendingIds: string[] = [];
+  const linked = messages.map((message) => {
+    if (message.role === "assistant" && message.tool_calls?.length) {
+      if (pendingIds.length > 0 || message.tool_calls.length > MAX_TOOL_CALLS_PER_TURN) {
+        throw new Error("Invalid tool call history.");
+      }
+      const toolCalls = message.tool_calls.map((call) => ({
+        ...call,
+        id: crypto.randomUUID(),
+      }));
+      pendingIds = toolCalls.map((call) => call.id);
+      return { ...message, tool_calls: toolCalls };
+    }
+    if (message.role === "tool") {
+      const toolCallId = pendingIds.shift();
+      if (!toolCallId) throw new Error("Invalid tool result history.");
+      return { ...message, tool_call_id: toolCallId };
+    }
+    if (pendingIds.length > 0) throw new Error("Incomplete tool result history.");
+    return message;
+  });
+  if (pendingIds.length > 0) throw new Error("Incomplete tool result history.");
+  return linked;
 }
 
 async function resolveMessage(message: AgentMessage) {

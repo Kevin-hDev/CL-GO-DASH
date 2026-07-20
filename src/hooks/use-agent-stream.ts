@@ -48,9 +48,8 @@ export function useAgentStream() {
       resolveStreamKind(messages),
     );
 
-    const chatMessages = await resolveAgentStreamMessages(messages);
-
     try {
+      const chatMessages = await resolveAgentStreamMessages(messages);
       const gen = await invoke<number>("chat_stream", {
         sessionId,
         model,
