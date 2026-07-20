@@ -112,22 +112,19 @@
 
 .chat-input-spacer { flex: 1; }
 
+/* Send/stop — composes .icon-btn/.icon-btn-lg (src/styles/buttons.css);
+   keeps its muted color, opacity-only hover and disabled dim. */
 .send-btn {
-  width: 33px;
-  height: 33px;
-  border-radius: 50%;
-  border: none;
-  background: none;
-  padding: 0;
-  cursor: pointer;
+  color: var(--ink-muted);
   transition: opacity var(--ease-smooth), color var(--ease-smooth);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
 }
 
-.send-btn:hover { opacity: 0.85; }
+.send-btn:hover:not(:disabled) {
+  opacity: 0.85;
+  background: none;
+  color: var(--ink-muted);
+}
+
 .send-btn:disabled { cursor: default; opacity: 0.25; }
 
 .send-stop-icon { width: 24px; height: 24px; }
@@ -140,42 +137,34 @@
   letter-spacing: 0;
 }
 
-.send-btn { color: var(--ink-muted); }
-
+/* "+" menu trigger — composes .icon-btn; keeps its optical offset and
+   select-colors hover. */
 .chat-plus-btn {
-  padding: var(--space-xs);
-  border-radius: var(--radius-sm);
-  color: var(--ink-faint);
-  cursor: pointer;
-  border: none;
-  background: none;
-  display: flex;
-  align-items: center;
   position: relative;
   top: 4px;
+  color: var(--ink-faint);
 }
 
-.chat-plus-btn:hover { color: var(--select-text); background: var(--select-bg); }
+.chat-plus-btn:hover:not(:disabled) { color: var(--select-text); background: var(--select-bg); }
 
+/* Scroll-to-bottom — composes .icon-btn-lg; keeps its elevated surface,
+   border, opacity and floating position. */
 .scroll-bottom-btn {
   position: absolute;
   bottom: var(--space-md);
   right: var(--space-sm);
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-md);
   border: 1px solid var(--edge);
   background: var(--surface);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   opacity: 0.85;
   z-index: 10;
   color: var(--ink-muted);
 }
 
-.scroll-bottom-btn:hover { opacity: 1; }
+.scroll-bottom-btn:hover:not(:disabled) {
+  opacity: 1;
+  background: var(--surface);
+  color: var(--ink-muted);
+}
 
 .scroll-bottom-btn-inline {
   position: static;
@@ -185,12 +174,14 @@
 
 .scroll-bottom-icon { width: 16px; height: 16px; }
 
-[data-theme="light"] .scroll-bottom-btn {
+[data-theme="light"] .scroll-bottom-btn,
+[data-theme="light"] .scroll-bottom-btn:hover:not(:disabled) {
   background: rgba(215, 215, 220, 0.40);
   border-color: transparent;
 }
 
-[data-theme="dark"] .scroll-bottom-btn {
+[data-theme="dark"] .scroll-bottom-btn,
+[data-theme="dark"] .scroll-bottom-btn:hover:not(:disabled) {
   background: var(--surface-glass);
   border-color: transparent;
 }

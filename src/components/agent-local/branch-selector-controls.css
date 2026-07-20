@@ -75,18 +75,12 @@
   50% { opacity: 0; }
 }
 
+/* Create-branch submit — composes .icon-btn (src/styles/buttons.css);
+   keeps its border and flex basis. */
 .bs-create-submit {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
   flex: 0 0 28px;
   border: 1px solid var(--edge);
-  border-radius: var(--radius-sm);
-  background: transparent;
   color: var(--ink-muted);
-  cursor: pointer;
   transition: background var(--ease-smooth), color var(--ease-smooth), border-color var(--ease-smooth);
 }
 

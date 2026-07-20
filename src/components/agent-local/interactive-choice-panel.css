@@ -179,17 +179,12 @@
   border-color: var(--accent);
 }
 
+/* Submit "other" — composes .icon-btn-lg (src/styles/buttons.css);
+   keeps its border, surface background and disabled dim. */
 .icp-submit {
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
   background: var(--surface);
   color: var(--text-primary);
-  cursor: pointer;
-  padding: 0;
 }
 
 .icp-submit:disabled {

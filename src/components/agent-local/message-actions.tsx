@@ -30,27 +30,27 @@ export function MessageActions({
     <div className="msg-actions">
       {onReload && !isStreaming && (
         <Tooltip label={t("agentLocal.regenerate")}>
-          <button className="msg-action-btn" onClick={onReload}>
+          <button className="icon-btn msg-action-btn" onClick={onReload}>
             <ArrowsClockwise size="var(--icon-sm)" />
           </button>
         </Tooltip>
       )}
       {messageRole === "user" && onEdit && (
         <Tooltip label={t("agentLocal.editMessage")}>
-          <button className="msg-action-btn" onClick={onEdit}>
+          <button className="icon-btn msg-action-btn" onClick={onEdit}>
             <Pencil size="var(--icon-sm)" />
           </button>
         </Tooltip>
       )}
       {onClone && !isStreaming && (
         <Tooltip label={t("agentLocal.clone.action")}>
-          <button className="msg-action-btn" onClick={onClone}>
+          <button className="icon-btn msg-action-btn" onClick={onClone}>
             <GitFork size="var(--icon-sm)" />
           </button>
         </Tooltip>
       )}
       <Tooltip label={t("agentLocal.copy")}>
-        <button className="msg-action-btn" onClick={() => void handleCopy()}>
+        <button className="icon-btn msg-action-btn" onClick={() => void handleCopy()}>
           {copied ? <Check size="var(--icon-sm)" /> : <Copy size="var(--icon-sm)" />}
         </button>
       </Tooltip>

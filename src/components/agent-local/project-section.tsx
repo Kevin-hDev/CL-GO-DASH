@@ -117,10 +117,10 @@ export function ProjectSection({
             <FolderStateIcon open={!collapsed} size="var(--icon-sm)" className="conv-icon conv-folder-icon" />
             <span className="conv-project-name">{project.name}</span>
             <div className="conv-project-actions">
-              <button className="conv-project-action-btn" onClick={(e) => { e.stopPropagation(); setCtx({ x: e.clientX, y: e.clientY }); }}>
+              <button className="icon-btn conv-project-action-btn" onClick={(e) => { e.stopPropagation(); setCtx({ x: e.clientX, y: e.clientY }); }}>
                 <DotsThreeVertical size="var(--icon-sm)" />
               </button>
-              <button className="conv-project-action-btn" onClick={(e) => { e.stopPropagation(); onNewSession(project.id); }}>
+              <button className="icon-btn conv-project-action-btn" onClick={(e) => { e.stopPropagation(); onNewSession(project.id); }}>
                 <ComposeIcon size="var(--icon-xs)" />
               </button>
             </div>

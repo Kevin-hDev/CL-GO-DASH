@@ -65,22 +65,12 @@
   transform: translateY(4px);
 }
 
-/* Boutons d'action partagés (aussi utilisé par ModeSelector). */
+/* Boutons d'action partagés (aussi utilisé par ModeSelector).
+   Compose .icon-btn (src/styles/buttons.css); garde l'état actif. */
 .tab-action-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border: none;
-  border-radius: var(--radius-sm);
-  background: none;
   color: var(--ink-muted);
-  cursor: pointer;
-  transition: all var(--ease-smooth);
 }
 
-.tab-action-btn:hover,
 .tab-action-btn.active {
   color: var(--ink);
   background: var(--surface-hover);

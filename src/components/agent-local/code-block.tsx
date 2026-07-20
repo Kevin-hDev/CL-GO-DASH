@@ -78,7 +78,7 @@ export function CodeBlock({ code, language }: CodeBlockProps) {
           {iconName && <FileIcon name={iconName} size="var(--icon-sm)" />}
           {language || ""}
         </span>
-        <button className="msg-action-btn" onClick={() => void handleCopy()}>
+        <button className="icon-btn msg-action-btn" onClick={() => void handleCopy()}>
           {copied ? <Check size="var(--icon-sm)" /> : <Copy size="var(--icon-sm)" />}
         </button>
       </div>

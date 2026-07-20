@@ -87,7 +87,7 @@ export function ChatHeader({
           {showForecastDocs && onOpenForecastDocs && (
             <Tooltip label={t("forecast.docs.openTooltip")} align="right">
               <button
-                className="tab-action-btn"
+                className="icon-btn tab-action-btn"
                 onClick={(event) => {
                   event.stopPropagation();
                   onOpenForecastDocs();
@@ -116,7 +116,7 @@ export function ChatHeader({
           )}
           <Tooltip label={`${t("filePreview.togglePanel")} (${ALT}${MOD}B)`} align="right">
             <button
-              className={`tab-action-btn ${previewOpen ? "active" : ""}`}
+              className={`icon-btn tab-action-btn ${previewOpen ? "active" : ""}`}
               onClick={(event) => {
                 event.stopPropagation();
                 onTogglePreview();
@@ -127,7 +127,7 @@ export function ChatHeader({
           </Tooltip>
           <Tooltip label={`${t("settings.shortcuts.toggleTerminal")} (${MOD}J)`} align="right">
             <button
-              className={`tab-action-btn ${terminalOpen ? "active" : ""}`}
+              className={`icon-btn tab-action-btn ${terminalOpen ? "active" : ""}`}
               onClick={(event) => {
                 event.stopPropagation();
                 onToggleTerminal();

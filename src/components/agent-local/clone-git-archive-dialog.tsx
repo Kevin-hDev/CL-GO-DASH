@@ -29,7 +29,7 @@ export function CloneGitArchiveDialog({
   return (
     <div className="cga-overlay" ref={overlayRef} role="presentation" onClick={handleOverlayClick}>
       <div className="cga-dialog" role="dialog" aria-modal="true">
-        <button className="cga-close" type="button" onClick={onCancel} disabled={busy}>
+        <button className="icon-btn cga-close" type="button" onClick={onCancel} disabled={busy}>
           <X size="var(--icon-md)" />
         </button>
         <div className="cga-title">{t("agentLocal.clone.gitArchiveTitle")}</div>

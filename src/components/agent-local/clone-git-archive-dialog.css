@@ -19,14 +19,13 @@
   -webkit-backdrop-filter: var(--popover-backdrop-filter, none);
 }
 
+/* Close — composes .icon-btn (src/styles/buttons.css); keeps its absolute
+   position. */
 .cga-close {
   position: absolute;
   top: var(--space-sm);
   right: var(--space-sm);
-  border: 0;
-  background: transparent;
   color: var(--ink-muted);
-  cursor: pointer;
 }
 
 .cga-title {

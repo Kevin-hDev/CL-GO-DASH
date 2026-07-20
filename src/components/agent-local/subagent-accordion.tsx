@@ -53,7 +53,7 @@ export function SubagentAccordion({ subagents, onCancel, onOpen }: SubagentAccor
         </button>
         <Tooltip label={t("subagents.stopAll")}>
           <button
-            className="sa-stop-all"
+            className="icon-btn sa-stop-all"
             onClick={() => subagents.forEach((s) => onCancel(s.sessionId))}
             type="button"
           >
@@ -61,7 +61,7 @@ export function SubagentAccordion({ subagents, onCancel, onOpen }: SubagentAccor
           </button>
         </Tooltip>
         <button
-          className="sa-chevron-btn"
+          className="icon-btn sa-chevron-btn"
           onClick={() => setExpanded((v) => !v)}
           type="button"
         >
@@ -91,7 +91,7 @@ export function SubagentAccordion({ subagents, onCancel, onOpen }: SubagentAccor
                   )}
                   <Tooltip label={t("subagents.stop")}>
                     <button
-                      className="sa-btn-stop"
+                      className="icon-btn sa-btn-stop"
                       onClick={() => onCancel(agent.sessionId)}
                       type="button"
                     >

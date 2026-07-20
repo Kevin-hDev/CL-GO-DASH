@@ -59,7 +59,7 @@ export function ToolStatusIcon({
       onMouseLeave={leave}
     >
       <span className="tb-error-tooltip-text">{message}</span>
-      <button type="button" className="tb-error-tooltip-copy" onClick={copy}>
+      <button type="button" className="icon-btn tb-error-tooltip-copy" onClick={copy}>
         {copied ? <Check size="var(--icon-xs)" weight="bold" /> : <Copy size="var(--icon-xs)" />}
       </button>
     </div>,

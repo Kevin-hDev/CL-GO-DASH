@@ -67,7 +67,7 @@ export function GitMergeDialog({
       if (event.target === event.currentTarget && !busy) onCancel();
     }}>
       <div className="bcd-dialog gmd-dialog" role="dialog" aria-label={title}>
-        <button className="bcd-close" type="button" onClick={onCancel} disabled={busy}>
+        <button className="icon-btn bcd-close" type="button" onClick={onCancel} disabled={busy}>
           <X size="var(--icon-md)" />
         </button>
         <div className="bcd-title">{title}</div>

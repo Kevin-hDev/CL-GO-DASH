@@ -7,23 +7,16 @@
   top: 4px;
 }
 
+/* Trigger — composes .icon-btn (src/styles/buttons.css); keeps its
+   select-bg hover. */
 .context-ring-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  border: none;
-  border-radius: var(--radius-sm);
   color: var(--ink-faint);
-  background: none;
-  cursor: pointer;
 }
 
-.context-ring-button:hover,
+.context-ring-button:hover:not(:disabled),
 .context-ring-button:focus-visible {
   background: var(--select-bg);
+  color: var(--ink-faint);
 }
 
 .context-ring-panel {

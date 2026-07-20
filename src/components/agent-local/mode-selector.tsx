@@ -66,7 +66,7 @@ export function ModeSelector({ mode, browserStatus = "hidden", onChange }: ModeS
       <Tooltip label={t("forecast.panelMode.title")}>
         <button
           ref={btnRef}
-          className={`tab-action-btn ${mode !== "preview" ? "active" : ""}`}
+          className={`icon-btn tab-action-btn ${mode !== "preview" ? "active" : ""}`}
           onClick={() => (open ? closeMenu() : openMenu())}
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none"

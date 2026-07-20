@@ -22,21 +22,9 @@
   word-break: break-word;
 }
 
+/* Copy — composes .icon-btn (src/styles/buttons.css). */
 .tb-error-tooltip-copy {
-  background: none;
-  border: none;
   color: var(--ink-faint);
-  cursor: pointer;
-  padding: 2px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  border-radius: 3px;
-}
-
-.tb-error-tooltip-copy:hover {
-  color: var(--ink);
-  background: var(--surface-hover);
 }
 
 @keyframes tb-tooltip-in {

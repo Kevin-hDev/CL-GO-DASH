@@ -29,17 +29,13 @@
   pointer-events: auto;
 }
 
+/* Actions au survol — composes .icon-btn (src/styles/buttons.css);
+   keeps its muted hover. Pas de transition d'opacité (bug compositor WKWebView) */
 .msg-action-btn {
-  padding: var(--space-xs);
-  border-radius: var(--radius-sm);
   color: var(--ink-faint);
-  border: none;
-  background: none;
-  cursor: pointer;
-  transition: color var(--ease-smooth), background var(--ease-smooth);
 }
 
-.msg-action-btn:hover {
+.msg-action-btn:hover:not(:disabled) {
   color: var(--ink-muted);
   background: var(--edge);
 }

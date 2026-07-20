@@ -70,3 +70,39 @@
   opacity: 0.6;
   cursor: default;
 }
+
+/* Icon-only buttons — Phase 1 spec §3.
+   Two sizes only: 28px for dense toolbars, 32px for panel-level actions.
+   Domain classes compose this base (added alongside in the TSX) and keep
+   only their colors, positioning, animations and disabled states. */
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--ink-faint);
+  cursor: pointer;
+  transition: background var(--ease-smooth), color var(--ease-smooth);
+}
+
+.icon-btn:hover:not(:disabled) {
+  background: var(--surface-hover);
+  color: var(--ink);
+}
+
+.icon-btn-lg {
+  width: 32px;
+  height: 32px;
+}
+
+.icon-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

@@ -46,7 +46,7 @@ export function ContextProgress({ used, max, breakdown }: ContextProgressProps) 
 
   return (
     <span className="context-ring">
-      <button type="button" className="context-ring-button" aria-label={t("agentLocal.contextUsage.title")}>
+      <button type="button" className="icon-btn context-ring-button" aria-label={t("agentLocal.contextUsage.title")}>
         <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`}>
           <circle
             className="context-ring-track"

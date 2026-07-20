@@ -49,7 +49,7 @@ export function ChatPlusMenu({ onFileImport, planModeEnabled, onPlanModeChange }
   return (
     <div className="cpm-wrapper" ref={menuRef}>
       <Tooltip label={t("chatMenu.plusButtonHint")}>
-        <button className="chat-plus-btn" onClick={() => setOpen(!open)} type="button">
+        <button className="icon-btn chat-plus-btn" onClick={() => setOpen(!open)} type="button">
           <Plus size="var(--icon-md)" />
         </button>
       </Tooltip>

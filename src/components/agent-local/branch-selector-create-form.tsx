@@ -54,7 +54,7 @@ export function BranchSelectorCreateForm({
         />
         <button
           type="button"
-          className="bs-create-submit"
+          className="icon-btn bs-create-submit"
           aria-label={t("branches.createSubmit")}
           disabled={submitDisabled}
           onClick={onSubmit}

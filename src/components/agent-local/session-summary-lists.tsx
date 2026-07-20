@@ -136,7 +136,7 @@ export function SessionSummarySubagentList({
           </span>
           {canArchive && (
             <button
-              className="ssb-subagent-action"
+              className="icon-btn ssb-subagent-action"
               type="button"
               aria-label={t("history.archive")}
               title={t("history.archive")}

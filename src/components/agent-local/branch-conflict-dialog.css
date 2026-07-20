@@ -18,21 +18,18 @@
   position: relative;
 }
 
+/* Close — composes .icon-btn (src/styles/buttons.css); keeps its absolute
+   position and color-only hover. */
 .bcd-close {
   position: absolute;
   top: var(--space-sm);
   right: var(--space-sm);
-  border: none;
-  background: none;
   color: var(--ink-faint);
-  cursor: pointer;
-  padding: 4px;
-  border-radius: var(--radius-sm);
-  transition: color var(--ease-smooth);
 }
 
-.bcd-close:hover {
+.bcd-close:hover:not(:disabled) {
   color: var(--ink);
+  background: none;
 }
 
 .bcd-title {

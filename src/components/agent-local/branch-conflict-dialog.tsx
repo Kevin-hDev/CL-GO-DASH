@@ -53,7 +53,7 @@ export function BranchConflictDialog({
   return (
     <div className="bcd-overlay" ref={overlayRef} role="presentation" onClick={handleOverlayClick} onKeyDown={() => {}}>
       <div className="bcd-dialog" ref={dialogRef} tabIndex={-1}>
-        <button className="bcd-close" onClick={onCancel} type="button">
+        <button className="icon-btn bcd-close" onClick={onCancel} type="button">
           <X size="var(--icon-md)" />
         </button>
 

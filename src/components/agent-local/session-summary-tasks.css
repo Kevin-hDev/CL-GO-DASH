@@ -117,17 +117,11 @@
   grid-area: 1 / 1;
 }
 
+/* Row action — composes .icon-btn (src/styles/buttons.css); keeps its
+   border-on-hover and reveal behavior. */
 .ssb-subagent-action {
-  display: inline-flex;
-  width: 24px;
-  height: 24px;
-  align-items: center;
-  justify-content: center;
   border: 1px solid transparent;
-  border-radius: var(--radius-sm);
-  background: transparent;
   color: var(--ink-faint);
-  cursor: pointer;
   opacity: 0;
   pointer-events: none;
   transition:
@@ -137,7 +131,7 @@
     opacity var(--ease-smooth);
 }
 
-.ssb-subagent-action:hover,
+.ssb-subagent-action:hover:not(:disabled),
 .ssb-subagent-action:focus-visible {
   border-color: var(--edge);
   background: var(--surface-hover);

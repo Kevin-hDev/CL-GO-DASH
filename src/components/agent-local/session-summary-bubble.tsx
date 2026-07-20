@@ -78,7 +78,7 @@ export function SessionSummaryBubble({
     <span className="ssb-root" ref={rootRef}>
       <Tooltip label={t("agentLocal.sessionSummary.tooltip")} align="right">
         <button
-          className={`tab-action-btn ${open ? "active" : ""}`}
+          className={`icon-btn tab-action-btn ${open ? "active" : ""}`}
           type="button"
           aria-label={t("agentLocal.sessionSummary.tooltip")}
           aria-expanded={open}
