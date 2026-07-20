@@ -47,13 +47,24 @@
   gap: var(--space-xs);
 }
 
+/* Popover actions — thin aliases of the shared .btn system
+   (src/styles/buttons.css) with .btn-sm geometry. */
 .mdp-actions button {
-  padding: var(--space-xs) var(--space-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--chrome-2);
+  height: 28px;
+  padding: 0 var(--chrome-3);
   color: var(--ink);
   background: var(--select-bg);
   border: 1px solid var(--edge);
   border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  white-space: nowrap;
   cursor: pointer;
+  transition: background var(--ease-smooth), color var(--ease-smooth), border-color var(--ease-smooth);
 }
 
 .mdp-actions button:disabled {

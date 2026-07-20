@@ -12,6 +12,7 @@ import { useGitDeletionFlow } from "@/hooks/use-git-deletion-flow";
 import { showAppError } from "@/lib/app-error";
 import type { BranchSelectorProps } from "./branch-selector-types";
 import "./branch-selector.css";
+import "./branch-selector-controls.css";
 
 export function BranchSelector({
   git, locked, lockedLabel, onConflict, onWorktreeSelect, onGithubAuthRequired, onBranchReady,

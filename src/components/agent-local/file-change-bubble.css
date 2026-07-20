@@ -135,18 +135,25 @@
   text-overflow: ellipsis;
 }
 
+/* Review action — thin alias of the shared .btn system
+   (src/styles/buttons.css) with .btn-sm geometry; keeps its weight. */
 .fcb-review {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-width: 72px;
-  min-height: 32px;
-  padding: 0 12px;
+  height: 28px;
+  padding: 0 var(--chrome-3);
   border: 1px solid var(--edge);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--ink-muted);
   cursor: pointer;
   font: inherit;
   font-size: var(--text-sm);
   font-weight: 650;
+  white-space: nowrap;
+  transition: background var(--ease-smooth), color var(--ease-smooth);
 }
 
 .fcb-review:hover,

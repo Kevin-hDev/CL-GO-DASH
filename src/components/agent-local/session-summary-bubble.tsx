@@ -23,6 +23,7 @@ import type { SessionSummaryGitState } from "./session-summary-git-section";
 import type { GitCommitFile, GitCommitSummary } from "@/hooks/git-types";
 import { SessionSummaryChangeStats } from "./session-summary-change-stats";
 import "./session-summary-bubble.css";
+import "./session-summary-bubble-controls.css";
 
 type SessionSummaryState = ReturnType<typeof useSessionSummary>;
 

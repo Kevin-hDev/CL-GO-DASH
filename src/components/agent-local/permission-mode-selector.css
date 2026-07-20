@@ -5,18 +5,22 @@
   top: 4px;
 }
 
+/* Trigger — thin alias of the shared .btn system (src/styles/buttons.css)
+   with .btn-sm geometry; keeps its ghost look and optical offset. */
 .perm-mode-trigger {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 3px 6px;
+  height: 28px;
+  padding: 0 var(--chrome-3);
   border-radius: var(--radius-sm);
   border: 1px solid transparent;
   background: transparent;
   cursor: pointer;
-  font-size: var(--text-xs);
-  font-family: var(--font-sans);
-  transition: border-color 120ms ease, background-color 120ms ease;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  white-space: nowrap;
+  transition: border-color var(--ease-smooth), background-color var(--ease-smooth);
 }
 
 .perm-mode-trigger:hover,

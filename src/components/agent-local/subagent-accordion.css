@@ -51,29 +51,8 @@
   white-space: nowrap;
 }
 
-.sa-stop-all,
-.sa-chevron-btn {
-  width: 28px;
-  height: 28px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: none;
-  border: none;
-  color: var(--ink-faint);
-  cursor: pointer;
-  padding: 0;
-  border-radius: 50%;
-}
-
-.sa-stop-all:hover {
-  color: var(--signal-error);
-  background: var(--surface-hover);
-}
-
-.sa-chevron-btn:hover {
-  background: var(--surface-hover);
-}
+/* Button blocks (.sa-stop-all, .sa-chevron-btn, .sa-btn-stop, .sa-btn-open)
+   live in subagent-accordion-controls.css, imported after this file. */
 
 .sa-chevron {
   width: 16px;
@@ -154,47 +133,6 @@
   display: flex;
   align-items: center;
   gap: 4px;
-}
-
-.sa-btn-stop,
-.sa-btn-open {
-  background: none;
-  border: 0;
-  border-radius: 999px;
-  min-height: 28px;
-  padding: 0 8px;
-  font-size: var(--text-xs);
-  cursor: pointer;
-  color: var(--ink-muted);
-}
-
-.sa-btn-stop {
-  width: 28px;
-  padding: 0;
-}
-
-.sa-stop-all svg,
-.sa-btn-stop svg {
-  width: 12px;
-  height: 12px;
-  fill: currentColor;
-}
-
-.sa-btn-stop,
-.sa-btn-open,
-.sa-stop-all,
-.sa-chevron-btn {
-  transition: background var(--ease-smooth), color var(--ease-smooth);
-}
-
-.sa-btn-stop:hover {
-  color: var(--signal-error);
-  background: var(--surface-hover);
-}
-
-.sa-btn-open:hover {
-  color: var(--pulse);
-  background: var(--surface-hover);
 }
 
 @container (max-width: 520px) {

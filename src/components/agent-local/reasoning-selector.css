@@ -4,6 +4,8 @@
   min-width: 0;
 }
 
+/* Trigger — thin alias of the shared .btn system (src/styles/buttons.css)
+   with .btn-sm geometry; keeps its ghost look and optical offset. */
 .rs-trigger {
   position: relative;
   top: 3px;
@@ -12,15 +14,18 @@
   gap: 4px;
   min-width: 0;
   max-width: min(132px, 24cqw);
-  padding: 3px 6px;
+  height: 28px;
+  padding: 0 var(--chrome-3);
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
   background: none;
   color: var(--ink-faint);
   font-family: inherit;
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  white-space: nowrap;
   cursor: pointer;
-  transition: border-color 120ms ease, background-color 120ms ease, color 120ms ease;
+  transition: border-color var(--ease-smooth), background-color var(--ease-smooth), color var(--ease-smooth);
 }
 
 .rs-trigger:hover,

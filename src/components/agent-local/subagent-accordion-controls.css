@@ -1,0 +1,80 @@
+/* Button blocks — split out of subagent-accordion.css to keep both files
+   under 200 lines; imported after it to preserve cascade order. */
+
+.sa-stop-all,
+.sa-chevron-btn {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--ink-faint);
+  cursor: pointer;
+  padding: 0;
+  border-radius: 50%;
+}
+
+.sa-stop-all:hover {
+  color: var(--signal-error);
+  background: var(--surface-hover);
+}
+
+.sa-chevron-btn:hover {
+  background: var(--surface-hover);
+}
+
+.sa-btn-stop,
+.sa-btn-open {
+  background: none;
+  border: 0;
+  cursor: pointer;
+  color: var(--ink-muted);
+}
+
+.sa-btn-stop {
+  width: 28px;
+  min-height: 28px;
+  padding: 0;
+  border-radius: 999px;
+  font-size: var(--text-xs);
+}
+
+/* Open action — thin alias of the shared .btn system
+   (src/styles/buttons.css) with .btn-sm geometry. */
+.sa-btn-open {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  padding: 0 var(--chrome-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.sa-stop-all svg,
+.sa-btn-stop svg {
+  width: 12px;
+  height: 12px;
+  fill: currentColor;
+}
+
+.sa-btn-stop,
+.sa-btn-open,
+.sa-stop-all,
+.sa-chevron-btn {
+  transition: background var(--ease-smooth), color var(--ease-smooth);
+}
+
+.sa-btn-stop:hover {
+  color: var(--signal-error);
+  background: var(--surface-hover);
+}
+
+.sa-btn-open:hover {
+  color: var(--pulse);
+  background: var(--surface-hover);
+}

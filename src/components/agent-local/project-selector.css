@@ -5,18 +5,22 @@
   padding: 0 var(--space-xs);
 }
 
+/* Trigger — thin alias of the shared .btn system (src/styles/buttons.css)
+   with .btn-sm geometry; keeps its transparent/edge colors. */
 .project-selector-btn {
   display: flex;
   align-items: center;
   gap: var(--space-xs);
-  padding: var(--space-xs) var(--space-sm);
-  border-radius: 20px;
+  height: 28px;
+  padding: 0 var(--chrome-3);
+  border-radius: var(--radius-sm);
   border: 1px solid var(--edge);
   background: transparent;
   color: var(--ink-muted);
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
+  font-weight: 500;
   cursor: pointer;
-  transition: all var(--ease-smooth);
+  transition: background var(--ease-smooth), color var(--ease-smooth), border-color var(--ease-smooth);
   white-space: nowrap;
 }
 

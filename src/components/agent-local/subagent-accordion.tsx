@@ -6,6 +6,7 @@ import { subagentDisplayName, subagentSecondaryText } from "@/lib/subagent-displ
 import type { SubagentInfo } from "@/types/agent";
 import { SubagentIcon } from "./subagent-icon";
 import "./subagent-accordion.css";
+import "./subagent-accordion-controls.css";
 
 interface SubagentAccordionProps {
   subagents: SubagentInfo[];

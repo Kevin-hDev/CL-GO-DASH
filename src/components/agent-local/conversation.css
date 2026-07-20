@@ -191,7 +191,7 @@
   font-size: 9px;
   font-weight: 600;
   padding: 1px 4px;
-  border-radius: 3px;
+  border-radius: var(--radius-xs);
   background: rgba(59, 130, 246, 0.15);
   color: rgb(96, 165, 250);
   flex-shrink: 0;

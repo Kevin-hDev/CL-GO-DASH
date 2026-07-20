@@ -10,6 +10,7 @@ import type { AvailableModel } from "@/hooks/use-available-models";
 import { useFavoriteModels } from "@/hooks/use-favorite-models";
 import { ModelSelectorList } from "./model-selector-list";
 import "./model-selector.css";
+import "./model-selector-controls.css";
 
 interface ModelSelectorProps {
   groups: Map<string, AvailableModel[]>;

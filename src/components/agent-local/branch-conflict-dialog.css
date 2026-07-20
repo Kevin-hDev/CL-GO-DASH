@@ -155,39 +155,8 @@
   color: var(--signal-warning);
 }
 
-.bcd-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--space-sm);
-}
-
-.bcd-btn {
-  padding: var(--space-xs) var(--space-md);
-  border-radius: 20px;
-  font-size: var(--text-xs);
-  cursor: pointer;
-  transition: all var(--ease-smooth);
-  border: 1px solid var(--edge);
-  background: transparent;
-  color: var(--ink-muted);
-}
-
-.bcd-btn:hover {
-  color: var(--ink);
-  border-color: var(--ink-faint);
-}
-
-.bcd-btn-primary {
-  background: var(--ink);
-  color: var(--void);
-  border-color: var(--ink);
-}
-
-.bcd-btn-primary:hover {
-  background: var(--ink);
-  color: var(--void);
-  opacity: 0.9;
-}
+/* Action buttons (.bcd-actions, .bcd-btn and variants) live in
+   branch-conflict-dialog-controls.css, imported after this file. */
 
 [data-theme="dark"] .bcd-dialog {
   background: var(--surface-glass);

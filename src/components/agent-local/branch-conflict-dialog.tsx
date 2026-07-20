@@ -5,6 +5,7 @@ import { CaretDown, X } from "@/components/ui/icons";
 import { useKeyboard } from "@/hooks/use-keyboard";
 import { GitDirtyFileList } from "./git-dirty-file-list";
 import "./branch-conflict-dialog.css";
+import "./branch-conflict-dialog-controls.css";
 
 interface DirtyFile {
   path: string;
