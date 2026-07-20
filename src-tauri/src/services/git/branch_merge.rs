@@ -4,8 +4,8 @@ use std::ffi::OsString;
 use std::path::Path;
 use std::process::{Command, Stdio};
 
-use super::{branch, branch_commit, repo as git_repo, status};
 pub use super::branch_merge_error::MergeError;
+use super::{branch, branch_commit, repo as git_repo, status};
 
 #[derive(Debug, Clone, Serialize)]
 pub struct BranchMergePreview {

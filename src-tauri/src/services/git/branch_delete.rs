@@ -16,10 +16,7 @@ pub struct BranchDeletePreview {
     pub unmerged_commits: usize,
 }
 
-pub fn preview(
-    repo_path: &Path,
-    branch_name: &str,
-) -> Result<BranchDeletePreview, GitActionError> {
+pub fn preview(repo_path: &Path, branch_name: &str) -> Result<BranchDeletePreview, GitActionError> {
     branch::validate_branch_name(branch_name).map_err(|_| GitActionError::BranchUnavailable)?;
     let repo = git_repo::open(repo_path).map_err(|_| GitActionError::RepositoryUnavailable)?;
     let target = repo
@@ -112,9 +109,7 @@ pub fn delete_branch(repo_path: &Path, branch_name: &str) -> Result<(), GitActio
     let mut branch = repo
         .find_branch(branch_name, BranchType::Local)
         .map_err(|_| GitActionError::BranchUnavailable)?;
-    branch
-        .delete()
-        .map_err(|_| GitActionError::DeleteFailed)
+    branch.delete().map_err(|_| GitActionError::DeleteFailed)
 }
 
 pub fn branch_exists(repo_path: &Path, branch_name: &str) -> Result<bool, GitActionError> {
@@ -166,9 +161,7 @@ fn count_unmerged(
         .ok()
         .and_then(|branch| branch.get().target())
         .ok_or(GitActionError::NoFallbackBranch)?;
-    let mut walk = repo
-        .revwalk()
-        .map_err(|_| GitActionError::InternalError)?;
+    let mut walk = repo.revwalk().map_err(|_| GitActionError::InternalError)?;
     walk.push(target_oid)
         .map_err(|_| GitActionError::InternalError)?;
     walk.hide(fallback_oid)

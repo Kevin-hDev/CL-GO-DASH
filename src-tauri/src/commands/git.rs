@@ -47,10 +47,7 @@ pub async fn get_git_context(path: String) -> Result<branch::GitContext, String>
 }
 
 #[tauri::command]
-pub async fn checkout_git_branch(
-    path: String,
-    branch_name: String,
-) -> Result<(), GitActionError> {
+pub async fn checkout_git_branch(path: String, branch_name: String) -> Result<(), GitActionError> {
     let repo_path = registered_project_path(&path)
         .await
         .map_err(|_| GitActionError::RepositoryUnavailable)?;

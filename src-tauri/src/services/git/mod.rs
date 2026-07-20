@@ -4,7 +4,6 @@ mod action_error_tests;
 pub mod blob_preview;
 pub mod branch;
 pub mod branch_commit;
-mod branch_index_backup;
 #[cfg(test)]
 mod branch_commit_direct_tests;
 #[cfg(test)]
@@ -15,6 +14,7 @@ mod branch_create_tests;
 pub mod branch_delete;
 #[cfg(test)]
 mod branch_delete_tests;
+mod branch_index_backup;
 pub mod branch_merge;
 mod branch_merge_error;
 #[cfg(test)]

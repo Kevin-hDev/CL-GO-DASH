@@ -2,20 +2,14 @@ use git2::{BranchType, IndexAddOption, Repository, Signature};
 use std::path::Path;
 use std::process::Command;
 
-use super::{
-    action_error::GitActionError, branch, branch_index_backup::IndexBackup, repo,
-};
+use super::{action_error::GitActionError, branch, branch_index_backup::IndexBackup, repo};
 
 const MAX_COMMIT_DESCRIPTION_CHARS: usize = 2_000;
 
-pub fn commit_all(
-    repo_path: &Path,
-    description: Option<String>,
-) -> Result<(), GitActionError> {
+pub fn commit_all(repo_path: &Path, description: Option<String>) -> Result<(), GitActionError> {
     let git_repo = repo::open(repo_path).map_err(|_| GitActionError::RepositoryUnavailable)?;
     let workdir = repo::workdir(&git_repo).map_err(|_| GitActionError::RepositoryUnavailable)?;
-    let dirty =
-        branch::count_dirty_files(&git_repo).map_err(|_| GitActionError::InternalError)?;
+    let dirty = branch::count_dirty_files(&git_repo).map_err(|_| GitActionError::InternalError)?;
     if dirty == 0 {
         return Ok(());
     }
@@ -41,8 +35,7 @@ pub fn commit_all_and_checkout(
     let workdir = repo::workdir(&git_repo).map_err(|_| GitActionError::RepositoryUnavailable)?;
     ensure_local_branch_exists(&git_repo, target_branch)?;
 
-    let dirty =
-        branch::count_dirty_files(&git_repo).map_err(|_| GitActionError::InternalError)?;
+    let dirty = branch::count_dirty_files(&git_repo).map_err(|_| GitActionError::InternalError)?;
     if dirty == 0 {
         return branch::checkout_branch(repo_path, target_branch);
     }
@@ -59,10 +52,7 @@ pub fn commit_all_and_checkout(
     branch::checkout_branch(repo_path, target_branch)
 }
 
-fn ensure_local_branch_exists(
-    repo: &Repository,
-    branch_name: &str,
-) -> Result<(), GitActionError> {
+fn ensure_local_branch_exists(repo: &Repository, branch_name: &str) -> Result<(), GitActionError> {
     repo.find_branch(branch_name, BranchType::Local)
         .map(|_| ())
         .map_err(|_| GitActionError::BranchUnavailable)
@@ -89,7 +79,9 @@ fn create_commit(
         .map_err(|_| GitActionError::CommitFailed)?;
     index.write().map_err(|_| GitActionError::CommitFailed)?;
 
-    let tree_oid = index.write_tree().map_err(|_| GitActionError::CommitFailed)?;
+    let tree_oid = index
+        .write_tree()
+        .map_err(|_| GitActionError::CommitFailed)?;
     let tree = repo
         .find_tree(tree_oid)
         .map_err(|_| GitActionError::CommitFailed)?;

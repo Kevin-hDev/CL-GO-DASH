@@ -33,10 +33,7 @@ pub async fn preview(
     })
 }
 
-pub async fn remove_clean(
-    repo_path: &Path,
-    target_path: &Path,
-) -> Result<(), GitActionError> {
+pub async fn remove_clean(repo_path: &Path, target_path: &Path) -> Result<(), GitActionError> {
     let (target, _) = validate_target(repo_path, target_path).await?;
     let dirty_target = target.clone();
     let dirty_count = tokio::task::spawn_blocking(move || {
@@ -81,8 +78,8 @@ async fn validate_target(
     {
         return Err(GitActionError::WorktreeUnavailable);
     }
-    let target = std::fs::canonicalize(target_path)
-        .map_err(|_| GitActionError::WorktreeUnavailable)?;
+    let target =
+        std::fs::canonicalize(target_path).map_err(|_| GitActionError::WorktreeUnavailable)?;
     let worktrees = worktree_list::list_worktrees(repo_path)
         .await
         .map_err(|_| GitActionError::InternalError)?;
@@ -96,11 +93,7 @@ async fn validate_target(
     Ok((target, info))
 }
 
-async fn remove(
-    repo_path: &Path,
-    target_path: &Path,
-    force: bool,
-) -> Result<(), GitActionError> {
+async fn remove(repo_path: &Path, target_path: &Path, force: bool) -> Result<(), GitActionError> {
     let mut command = Command::new("git");
     command
         .arg("-C")
