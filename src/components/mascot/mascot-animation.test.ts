@@ -29,12 +29,18 @@ describe("mascot sprite playback", () => {
     expect(selectMascotAnimation("thinking", "grabbed")).toBe("grabbed");
   });
 
-  it("laisse une longue pause au repos et garde l'activité rapide", () => {
+  it("laisse une pause adaptée après chaque animation en boucle", () => {
     const idle = getMascotAnimation("idle");
+    const waiting = getMascotAnimation("waiting");
     const thinking = getMascotAnimation("thinking");
+    const exploration = getMascotAnimation("explore-book");
+    const work = getMascotAnimation("work-laptop");
 
     expect(mascotFrameDuration(idle, 0)).toBe(260);
     expect(mascotFrameDuration(idle, idle.frames - 1)).toBe(3500);
-    expect(mascotFrameDuration(thinking, thinking.frames - 1)).toBe(250);
+    expect(mascotFrameDuration(waiting, waiting.frames - 1)).toBe(2500);
+    expect(mascotFrameDuration(thinking, thinking.frames - 1)).toBe(1500);
+    expect(mascotFrameDuration(exploration, exploration.frames - 1)).toBe(2000);
+    expect(mascotFrameDuration(work, work.frames - 1)).toBe(1500);
   });
 });
