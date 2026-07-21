@@ -1,8 +1,12 @@
 use serde_json::Value;
 
+#[path = "tool_validate_definition.rs"]
+mod definition;
 #[path = "tool_validate_schema.rs"]
 mod schema;
 use schema::{schema, Ty};
+
+pub(crate) use definition::validate as validate_definition;
 
 fn type_ok(val: &Value, ty: Ty) -> bool {
     match ty {
@@ -27,6 +31,10 @@ fn ty_label(ty: Ty) -> &'static str {
 }
 
 pub fn validate(tool: &str, args: &Value) -> Result<Value, String> {
+    if tool == "forecast" {
+        let definition = super::tool_definitions_forecast::forecast_run_definition();
+        return validate_definition(tool, args, &definition);
+    }
     let specs = match schema(tool) {
         Some(s) => s,
         None => return Ok(args.clone()),

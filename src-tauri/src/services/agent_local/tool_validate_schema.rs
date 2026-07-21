@@ -74,18 +74,6 @@ static SEARCH_MCP: Schema = &[
     ("tool_id", Ty::Str, false),
     ("arguments", Ty::Obj, false),
 ];
-static FORECAST: Schema = &[
-    ("data", Ty::Str, false),
-    ("file_path", Ty::Str, false),
-    ("data_profile_id", Ty::Str, false),
-    ("target_column", Ty::Str, true),
-    ("date_column", Ty::Str, true),
-    ("series_column", Ty::Str, false),
-    ("covariate_columns", Ty::Arr, false),
-    ("horizon", Ty::Int, true),
-    ("frequency", Ty::Str, true),
-    ("confidence_level", Ty::Float, false),
-];
 static FORECAST_DATA_AUDIT: Schema = &[
     ("data", Ty::Str, false),
     ("file_path", Ty::Str, false),
@@ -144,7 +132,6 @@ pub(super) fn schema(tool: &str) -> Option<Schema> {
         "process_image" => PROCESS_IMAGE,
         "search_mcp_tools" => SEARCH_MCP,
         "forecast_data_audit" => FORECAST_DATA_AUDIT,
-        "forecast" => FORECAST,
         "forecast_analyze" => FORECAST_ANALYZE,
         "forecast_read" => FORECAST_READ,
         "forecast_models" => FORECAST_MODELS,

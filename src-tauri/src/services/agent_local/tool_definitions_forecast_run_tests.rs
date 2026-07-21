@@ -40,4 +40,20 @@ fn auto_schema_requires_a_candidate_model() {
         .as_str()
         .unwrap()
         .contains("call forecast_models"));
+
+    let args = serde_json::json!({
+        "target_column": "sales",
+        "date_column": "date",
+        "horizon": 7,
+        "frequency": "D",
+        "model": "chronos-bolt-small"
+    });
+    let cleaned = crate::services::agent_local::tool_validate::validate_definition(
+        "forecast",
+        &args,
+        &definition,
+    )
+    .unwrap();
+
+    assert_eq!(cleaned["model"], "chronos-bolt-small");
 }

@@ -9,7 +9,7 @@ mod forecast_data;
 
 pub fn forecast_tool_definitions() -> Vec<Value> {
     vec![
-        forecast_run::definition(),
+        forecast_run_definition(),
         forecast_audit::definition(),
         super::tool_definitions::tool_def(
             "forecast_models",
@@ -124,4 +124,8 @@ pub fn forecast_tool_definitions() -> Vec<Value> {
             }),
         ),
     ]
+}
+
+pub(super) fn forecast_run_definition() -> Value {
+    forecast_run::definition()
 }

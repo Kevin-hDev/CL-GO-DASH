@@ -1,8 +1,12 @@
+#[path = "tool_dispatcher_forecast_error.rs"]
+mod forecast_error;
+
+use self::forecast_error::model_error;
 use crate::services::agent_local::types_tools::ToolResult;
 use crate::services::forecast::types::ForecastRequest;
 use crate::services::forecast::{
     client_chronos, client_nixtla, data_profiles, model_manager, registry, selected_model, sidecar,
-    storage, validation,
+    selection_policy, storage, validation,
 };
 use serde_json::Value;
 use std::path::Path;
@@ -15,15 +19,34 @@ pub async fn handle(args: &Value, working_dir: &Path, session_id: &str) -> ToolR
     };
     let requested_model = request.model.clone();
     crate::services::forecast::request_normalize::normalize_request(&mut request);
-    let selected = match selected_model::apply_required(&mut request) {
+    let policy = match selection_policy::get() {
+        Ok(policy) => policy,
+        Err(error) => return model_error(None, "", requested_model.as_deref(), &error),
+    };
+    let selection_mode = policy.mode;
+    let policy_model = policy.manual_model_id.clone().unwrap_or_default();
+    let selected = match selected_model::apply_policy(&mut request, policy) {
         Ok(model) => model,
-        Err(error) => return forced_model_error("", requested_model.as_deref(), &error),
+        Err(error) => {
+            return model_error(
+                Some(selection_mode),
+                &policy_model,
+                requested_model.as_deref(),
+                &error,
+            )
+        }
     };
     if let Err(error) = data_profiles::hydrate_request(&mut request).await {
-        return forced_model_error(&selected, requested_model.as_deref(), &error);
+        return model_error(
+            Some(selection_mode),
+            &selected,
+            requested_model.as_deref(),
+            &error,
+        );
     }
     if request.data.is_none() && request.file_path.is_none() {
-        return forced_model_error(
+        return model_error(
+            Some(selection_mode),
             &selected,
             requested_model.as_deref(),
             "Il faut fournir data, file_path ou data_profile_id",
@@ -33,24 +56,49 @@ pub async fn handle(args: &Value, working_dir: &Path, session_id: &str) -> ToolR
         crate::services::forecast::file_input::ensure_request_data(&mut request, Some(working_dir))
             .await
     {
-        return forced_model_error(&selected, requested_model.as_deref(), &error);
+        return model_error(
+            Some(selection_mode),
+            &selected,
+            requested_model.as_deref(),
+            &error,
+        );
     }
     if let Err(error) = validation::validate_request(&request) {
-        return forced_model_error(&selected, requested_model.as_deref(), &error);
+        return model_error(
+            Some(selection_mode),
+            &selected,
+            requested_model.as_deref(),
+            &error,
+        );
     }
     let data_profile =
         match crate::services::forecast::data_quality::validate_and_bind(&mut request) {
             Ok(profile) => profile,
-            Err(error) => return forced_model_error(&selected, requested_model.as_deref(), &error),
+            Err(error) => {
+                return model_error(
+                    Some(selection_mode),
+                    &selected,
+                    requested_model.as_deref(),
+                    &error,
+                )
+            }
         };
     let model_id = match validation::model_id(&request) {
         Ok(id) => id,
-        Err(error) => return forced_model_error(&selected, requested_model.as_deref(), &error),
+        Err(error) => {
+            return model_error(
+                Some(selection_mode),
+                &selected,
+                requested_model.as_deref(),
+                &error,
+            )
+        }
     };
     let runtime = match registry::find_runtime(model_id) {
         Some(runtime) if registry::has_predict_adapter(runtime) => runtime,
         _ => {
-            return forced_model_error(
+            return model_error(
+                Some(selection_mode),
                 &selected,
                 requested_model.as_deref(),
                 "Moteur indisponible",
@@ -61,7 +109,8 @@ pub async fn handle(args: &Value, working_dir: &Path, session_id: &str) -> ToolR
         && !request.covariate_columns.is_empty()
         && !runtime.capabilities.future_covariates
     {
-        return forced_model_error(
+        return model_error(
+            Some(selection_mode),
             &selected,
             requested_model.as_deref(),
             "Variables futures non supportées par ce moteur",
@@ -75,11 +124,19 @@ pub async fn handle(args: &Value, working_dir: &Path, session_id: &str) -> ToolR
     };
     let forecast = match result {
         Ok(forecast) => forecast,
-        Err(error) => return forced_model_error(&selected, requested_model.as_deref(), &error),
+        Err(error) => {
+            return model_error(
+                Some(selection_mode),
+                &selected,
+                requested_model.as_deref(),
+                &error,
+            )
+        }
     };
     if let Some(profile) = &forecast.data_profile {
         if data_profiles::save(profile, &request).await.is_err() {
-            return forced_model_error(
+            return model_error(
+                Some(selection_mode),
                 &selected,
                 requested_model.as_deref(),
                 "Sauvegarde du profil de données échouée",
@@ -87,7 +144,8 @@ pub async fn handle(args: &Value, working_dir: &Path, session_id: &str) -> ToolR
         }
     }
     if storage::save(&forecast).await.is_err() {
-        return forced_model_error(
+        return model_error(
+            Some(selection_mode),
             &selected,
             requested_model.as_deref(),
             "Sauvegarde de la prévision échouée",
@@ -129,22 +187,6 @@ async fn run_local(
     .await;
     sidecar::schedule_idle_stop(chronos.inner());
     result
-}
-
-fn forced_model_error(selected: &str, requested: Option<&str>, error: &str) -> ToolResult {
-    let ignored = requested.filter(|model| *model != selected);
-    let payload = serde_json::json!({
-        "error": error,
-        "model_selection": {
-            "mode": "selector_forced",
-            "effective_model": selected,
-            "requested_model_ignored": ignored,
-            "selector_locked": true,
-            "next_step": "Corriger la requête ou demander à l'utilisateur de changer le modèle dans le sélecteur Forecast."
-        }
-    });
-    serde_json::to_string_pretty(&payload)
-        .map_or_else(|_| ToolResult::err(error), ToolResult::err)
 }
 
 fn emit_created(analysis_id: &str, session_id: &str) {

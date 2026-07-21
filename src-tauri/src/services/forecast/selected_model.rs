@@ -9,7 +9,7 @@ pub fn apply_required(request: &mut ForecastRequest) -> Result<String, String> {
     apply_policy(request, policy)
 }
 
-fn apply_policy(
+pub(crate) fn apply_policy(
     request: &mut ForecastRequest,
     policy: selection_policy::ForecastSelectionPolicy,
 ) -> Result<String, String> {
