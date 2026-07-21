@@ -11,15 +11,7 @@ pub fn forecast_tool_definitions() -> Vec<Value> {
     vec![
         forecast_run_definition(),
         forecast_audit::definition(),
-        super::tool_definitions::tool_def(
-            "forecast_models",
-            "Inspect the Forecast selection policy. In Manual, you use only forced_model. In Auto, you choose only one id from candidates and keep the user's policy unchanged. You do not call a capabilities-only candidate the best model.",
-            serde_json::json!({
-                "type": "object",
-                "properties": {},
-                "required": []
-            }),
-        ),
+        forecast_models_definition(),
         super::tool_definitions::tool_def(
             "forecast_analyze",
             "Operate on an existing saved forecast analysis. \
@@ -128,4 +120,67 @@ pub fn forecast_tool_definitions() -> Vec<Value> {
 
 pub(super) fn forecast_run_definition() -> Value {
     forecast_run::definition()
+}
+
+fn forecast_models_definition() -> Value {
+    let auto = crate::services::forecast::selection_policy::get()
+        .unwrap_or_default()
+        .mode
+        == crate::services::forecast::selection_policy::ForecastSelectionMode::Auto;
+    forecast_models_definition_for(auto)
+}
+
+fn forecast_models_definition_for(auto: bool) -> Value {
+    let properties = if auto {
+        serde_json::json!({
+            "data_profile_id": {
+                "type": "string",
+                "maxLength": 64,
+                "description": "Validated profile id returned by forecast_data_audit for the current task."
+            }
+        })
+    } else {
+        serde_json::json!({})
+    };
+    super::tool_definitions::tool_def(
+        "forecast_models",
+        "Inspect the Forecast selection policy. In Manual, use only forced_model. In Auto, pass the validated data_profile_id and choose only one compatible candidate. Hardware data is exposed only in this Forecast response. Never call the initial choice the best model without comparable backtests.",
+        serde_json::json!({
+            "type": "object",
+            "properties": properties,
+            "required": if auto { vec!["data_profile_id"] } else { Vec::<&str>::new() }
+        }),
+    )
+}
+
+pub(super) fn definition_for_tool(name: &str) -> Option<Value> {
+    forecast_tool_definitions().into_iter().find(|definition| {
+        definition
+            .pointer("/function/name")
+            .and_then(Value::as_str)
+            == Some(name)
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn auto_models_schema_requires_a_bounded_profile_id() {
+        let auto = forecast_models_definition_for(true);
+        let manual = forecast_models_definition_for(false);
+        let auto_parameters = &auto["function"]["parameters"];
+
+        assert_eq!(auto_parameters["properties"]["data_profile_id"]["maxLength"], 64);
+        assert!(auto_parameters["required"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|value| value == "data_profile_id"));
+        assert!(manual["function"]["parameters"]["required"]
+            .as_array()
+            .unwrap()
+            .is_empty());
+    }
 }

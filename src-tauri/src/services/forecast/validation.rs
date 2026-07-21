@@ -55,7 +55,21 @@ pub fn validate_request(request: &ForecastRequest) -> Result<(), String> {
     if request.horizon == 0 || request.horizon > horizon_max {
         return Err("Horizon invalide".into());
     }
+    if !supports_frequency(spec, &request.frequency) {
+        return Err("Fréquence non supportée par ce moteur".into());
+    }
     Ok(())
+}
+
+pub fn supports_frequency(spec: &catalog::ForecastModelSpec, frequency: &str) -> bool {
+    match spec.frequencies {
+        "Toutes" | "10S à Y" => ALLOWED_FREQUENCIES.contains(&frequency),
+        "T à Y" => matches!(
+            frequency,
+            "T" | "min" | "H" | "D" | "B" | "W" | "M" | "Q" | "Y"
+        ),
+        _ => false,
+    }
 }
 
 pub fn interval_support(model_id: &str) -> &'static str {

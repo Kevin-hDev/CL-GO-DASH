@@ -6,8 +6,21 @@ export interface ForecastWorkbenchContext {
 
 export interface ForecastWorkbenchSnapshot {
   context: ForecastWorkbenchContext;
+  draft: ForecastWorkbenchDraft;
   session_name: string;
   analysis_name: string | null;
+}
+
+export interface ForecastWorkbenchDraft {
+  section: ForecastWorkbenchSection;
+  revision: number;
+}
+
+export interface ForecastWorkbenchGeometry {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 }
 
 export type ForecastWorkbenchSection =
@@ -17,6 +30,11 @@ export type ForecastWorkbenchSection =
   | "comparison"
   | "scenarios"
   | "report";
+
+export function isForecastWorkbenchSection(value: unknown): value is ForecastWorkbenchSection {
+  return ["data", "forecast", "evaluation", "comparison", "scenarios", "report"]
+    .includes(String(value));
+}
 
 export function isForecastWorkbenchSnapshot(
   value: unknown,
@@ -32,6 +50,9 @@ export function isForecastWorkbenchSnapshot(
     typeof context?.revision === "number" &&
     Number.isSafeInteger(context.revision) &&
     context.revision > 0 &&
+    isForecastWorkbenchSection(snapshot.draft?.section) &&
+    Number.isSafeInteger(snapshot.draft?.revision) &&
+    Number(snapshot.draft?.revision) > 0 &&
     typeof snapshot.session_name === "string" &&
     snapshot.session_name.length <= 120 &&
     (snapshot.analysis_name === null || (

@@ -8,10 +8,17 @@ pub fn parse_finite_number(raw: &str) -> Result<f64, String> {
     let value = normalized
         .parse::<f64>()
         .map_err(|_| "Valeur numérique invalide".to_string())?;
-    if !value.is_finite() {
+    if !value.is_finite() || (value == 0.0 && has_non_zero_significand(&normalized)) {
         return Err("Valeur numérique invalide".into());
     }
     Ok(value)
+}
+
+fn has_non_zero_significand(value: &str) -> bool {
+    value
+        .split(['e', 'E'])
+        .next()
+        .is_some_and(|significand| significand.bytes().any(|byte| matches!(byte, b'1'..=b'9')))
 }
 
 fn normalize_separators(value: &str) -> Result<String, String> {
@@ -40,5 +47,12 @@ mod tests {
         assert!(parse_finite_number("1,234.56").is_err());
         assert!(parse_finite_number("1.234,56").is_err());
         assert!(parse_finite_number("1,234,56").is_err());
+    }
+
+    #[test]
+    fn rejects_non_zero_values_that_underflow_to_zero() {
+        assert!(parse_finite_number("1e-400").is_err());
+        assert!(parse_finite_number("-1e-400").is_err());
+        assert_eq!(parse_finite_number("0e-400"), Ok(0.0));
     }
 }

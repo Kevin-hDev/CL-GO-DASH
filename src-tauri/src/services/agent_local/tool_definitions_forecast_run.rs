@@ -19,7 +19,7 @@ fn definition_for(policy: selection_policy::ForecastSelectionPolicy) -> Value {
             (text, false)
         }
         ForecastSelectionMode::Auto => (
-            "Auto is active. You must call forecast_models before the first forecast or after the task changes, choose only one returned candidate, and pass its id in model. You must not call it the best model without comparable backtests or modify the user's policy.".to_string(),
+            "Auto is active. After forecast_data_audit, you must call forecast_models with the returned data_profile_id before the first forecast or after the task changes, choose only one returned candidate, and pass its id in model. You must not call it the best model without comparable backtests or modify the user's policy.".to_string(),
             true,
         ),
     };

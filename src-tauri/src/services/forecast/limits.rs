@@ -21,6 +21,33 @@ pub const MAX_TOOL_PREDICTIONS: usize = 200;
 pub const MAX_TOOL_ANALYSES: usize = 100;
 pub const MAX_TOOL_ANNOTATIONS: usize = 50;
 pub const MAX_AUTO_CANDIDATES: usize = 5;
+pub const MAX_AUTO_REASONS: usize = 8;
+pub const MAX_TOOL_MODELS: usize = 64;
+pub const MAX_PATH_CHARS: usize = 4_096;
+
+pub struct ToolSchemaLimits {
+    pub inline_data_chars: usize,
+    pub path_chars: usize,
+    pub id_chars: usize,
+    pub column_chars: usize,
+    pub covariates: usize,
+    pub horizon: u32,
+    pub frequency_chars: usize,
+}
+
+impl Default for ToolSchemaLimits {
+    fn default() -> Self {
+        Self {
+            inline_data_chars: MAX_INLINE_DATA_BYTES,
+            path_chars: MAX_PATH_CHARS,
+            id_chars: 64,
+            column_chars: MAX_COLUMN_CHARS,
+            covariates: MAX_COVARIATES,
+            horizon: MAX_HORIZON,
+            frequency_chars: 3,
+        }
+    }
+}
 
 pub fn validate_prediction_budget(series_count: usize, horizon: u32) -> Result<usize, String> {
     if series_count == 0 || series_count > MAX_SERIES {

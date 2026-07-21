@@ -11,6 +11,7 @@ pub mod data_profiles;
 pub mod data_quality;
 pub mod export;
 pub mod file_input;
+pub mod hardware_profile;
 pub mod input_data;
 pub mod input_dates;
 pub mod input_future;
@@ -47,10 +48,13 @@ mod sidecar_spawn;
 pub mod spreadsheet_mapping;
 pub mod storage;
 mod storage_io;
+mod storage_paths;
 pub mod target_domain;
 pub mod types;
 pub mod validation;
 pub mod workbench_context;
+pub mod workbench_drafts;
+pub mod workbench_geometry;
 
 #[cfg(test)]
 mod file_input_tests;

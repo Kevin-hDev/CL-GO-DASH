@@ -129,6 +129,9 @@ macro_rules! generate_tail {
             crate::commands::list_forecast_providers_catalog,
             crate::commands::set_forecast_workbench_context,
             crate::commands::get_forecast_workbench_context,
+            crate::commands::update_forecast_workbench_draft,
+            crate::commands::get_forecast_workbench_geometry,
+            crate::commands::save_forecast_workbench_geometry,
         ]
     };
 }

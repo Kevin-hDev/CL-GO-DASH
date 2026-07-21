@@ -1,7 +1,7 @@
 use crate::services::forecast::types::{ForecastAnalysisMeta, ForecastRequest, ForecastResult};
 use crate::services::forecast::{
-    client_chronos, client_nixtla, data_profiles, export, model_manager, notes, notes_cleanup,
-    registry, scenarios, selected_model, sidecar, storage, validation,
+    catalog, client_chronos, client_nixtla, data_profiles, export, model_manager, notes,
+    notes_cleanup, registry, scenarios, selected_model, sidecar, storage, validation,
 };
 use tauri::State;
 
@@ -19,6 +19,7 @@ pub async fn run_forecast(
     validation::validate_request(&request)?;
     let data_profile = crate::services::forecast::data_quality::validate_and_bind(&mut request)?;
     let model_id = validation::model_id(&request)?;
+    let spec = catalog::find_model(model_id).ok_or("Modèle inconnu")?;
     let runtime = registry::find_runtime(model_id).ok_or("Moteur indisponible")?;
     validate_future_context(&request, &data_profile, runtime)?;
     if !registry::has_predict_adapter(runtime) {
@@ -35,6 +36,7 @@ pub async fn run_forecast(
         if !model_manager::is_installed(model_id) {
             return Err("Modèle non installé".into());
         }
+        crate::services::forecast::hardware_profile::validate_model_resources(spec)?;
         let endpoint = sidecar::start(&chronos, model_id, runtime.family_id)
             .await
             .map_err(|_| "Impossible de démarrer le service de prédiction".to_string())?;

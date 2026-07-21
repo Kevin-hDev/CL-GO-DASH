@@ -1191,6 +1191,7 @@
       "openFailed": "Unable to open the Forecast workspace.",
       "loading": "Loading Forecast workspace…",
       "unavailable": "The Forecast context is unavailable.",
+      "draftSaveFailed": "Unable to save the Forecast workspace changes.",
       "newAnalysis": "New analysis",
       "workspace": "Workspace",
       "foundationTitle": "Structure ready",

@@ -117,6 +117,13 @@
   max-width: var(--forecast-workbench-copy-width);
 }
 
+.fcw-inline-error {
+  max-width: var(--forecast-workbench-copy-width);
+  margin: 0 0 var(--space-lg);
+  color: var(--signal-error);
+  font-size: var(--text-sm);
+}
+
 .fcw-content-heading h2 {
   font-size: var(--text-xl);
 }

@@ -2,46 +2,14 @@ use crate::services::forecast::limits::{
     MAX_ANALYSIS_INDEX_BYTES, MAX_STORED_ANALYSES, MAX_STORED_ANALYSIS_BYTES,
 };
 use crate::services::forecast::types::{ForecastAnalysisMeta, ForecastResult};
-use crate::services::paths::data_dir;
-use regex::Regex;
-use std::path::PathBuf;
-use std::sync::LazyLock;
 use tokio::sync::Mutex;
 
+use super::storage_paths::{
+    analysis_path_for_read, analysis_path_for_write, index_path, validate_analysis_id,
+    validate_analysis_name,
+};
+
 static INDEX_LOCK: Mutex<()> = Mutex::const_new(());
-
-static ANALYSIS_ID_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^[a-f0-9\-]+$").unwrap());
-
-fn validate_analysis_id(id: &str) -> Result<(), String> {
-    if id.is_empty() || id.len() > 64 {
-        return Err("Identifiant d'analyse invalide".into());
-    }
-    if !ANALYSIS_ID_REGEX.is_match(id) {
-        return Err("Identifiant d'analyse invalide".into());
-    }
-    Ok(())
-}
-
-fn validate_analysis_name(name: &str) -> Result<String, String> {
-    let trimmed = name.trim();
-    let len = trimmed.chars().count();
-    if len == 0 || len > 120 || trimmed.chars().any(|c| c.is_control()) {
-        return Err("Nom d'analyse invalide".into());
-    }
-    Ok(trimmed.to_string())
-}
-
-fn analyses_dir() -> PathBuf {
-    data_dir().join("forecast-analyses")
-}
-
-fn index_path() -> PathBuf {
-    analyses_dir().join("index.json")
-}
-
-fn analysis_path(id: &str) -> PathBuf {
-    analyses_dir().join(format!("{id}.json"))
-}
 
 pub async fn save(result: &ForecastResult) -> Result<(), String> {
     validate_analysis_id(&result.id)?;
@@ -50,7 +18,7 @@ pub async fn save(result: &ForecastResult) -> Result<(), String> {
     if json.len() > MAX_STORED_ANALYSIS_BYTES {
         return Err("Analyse Forecast trop volumineuse".into());
     }
-    let target = analysis_path(&result.id);
+    let target = analysis_path_for_write(&result.id).await?;
     let already_exists = tokio::fs::try_exists(&target)
         .await
         .map_err(|_| "Erreur de sauvegarde".to_string())?;
@@ -69,7 +37,9 @@ pub async fn save(result: &ForecastResult) -> Result<(), String> {
 
 pub async fn load(id: &str) -> Result<ForecastResult, String> {
     validate_analysis_id(id)?;
-    let path = analysis_path(id);
+    let path = analysis_path_for_read(id)
+        .await
+        .map_err(|_| "Analyse introuvable".to_string())?;
     let data = super::storage_io::read_bounded(&path, MAX_STORED_ANALYSIS_BYTES)
         .await
         .map_err(|_| "Analyse introuvable".to_string())?;
@@ -78,11 +48,12 @@ pub async fn load(id: &str) -> Result<ForecastResult, String> {
 
 pub async fn delete(id: &str) -> Result<(), String> {
     validate_analysis_id(id)?;
-    let path = analysis_path(id);
-    if path.exists() {
-        tokio::fs::remove_file(&path)
+    match analysis_path_for_read(id).await {
+        Ok(path) => tokio::fs::remove_file(&path)
             .await
-            .map_err(|_| "Suppression échouée".to_string())?;
+            .map_err(|_| "Suppression échouée".to_string())?,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+        Err(_) => return Err("Suppression échouée".to_string()),
     }
     remove_from_index(id).await
 }
@@ -182,7 +153,10 @@ async fn upsert_index(meta: ForecastAnalysisMeta) -> Result<(), String> {
     write_index(&entries).await?;
     for id in removed_ids {
         validate_analysis_id(&id)?;
-        tokio::fs::remove_file(analysis_path(&id))
+        let path = analysis_path_for_read(&id)
+            .await
+            .map_err(|_| "Nettoyage des analyses échoué".to_string())?;
+        tokio::fs::remove_file(path)
             .await
             .map_err(|_| "Nettoyage des analyses échoué".to_string())?;
     }

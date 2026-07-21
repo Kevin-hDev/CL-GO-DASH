@@ -11,6 +11,7 @@ const FIRST: ForecastWorkbenchSnapshot = {
     analysis_id: null,
     revision: 1,
   },
+  draft: { section: "data", revision: 1 },
   session_name: "Session ventes",
   analysis_name: null,
 };

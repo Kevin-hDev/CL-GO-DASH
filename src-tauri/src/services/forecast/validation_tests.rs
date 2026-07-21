@@ -50,3 +50,14 @@ fn rejects_confidence_unavailable_from_decile_only_model() {
     request.confidence_level = 0.8;
     assert!(validate_request(&request).is_ok());
 }
+
+#[test]
+fn rejects_frequency_outside_the_model_catalog_range() {
+    let mut request = make_request("timegpt-2-mini");
+    request.frequency = "10S".into();
+
+    assert_eq!(
+        validate_request(&request),
+        Err("Fréquence non supportée par ce moteur".into())
+    );
+}

@@ -28,6 +28,7 @@ describe("openForecastWorkbench", () => {
     });
     vi.mocked(invoke).mockResolvedValue({
       context: { session_id: SESSION_ID, analysis_id: ANALYSIS_ID, revision: 2 },
+      draft: { section: "data", revision: 1 },
       session_name: "Session ventes",
       analysis_name: "Prévision juillet",
     });

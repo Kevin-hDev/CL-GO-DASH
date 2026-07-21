@@ -5,4 +5,6 @@ export const FORECAST_WORKBENCH_WINDOW = {
   height: 820,
   minWidth: 820,
   minHeight: 600,
+  minVisible: 100,
+  geometrySaveDelayMs: 300,
 } as const;

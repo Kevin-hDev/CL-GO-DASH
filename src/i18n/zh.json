@@ -1175,6 +1175,7 @@
       "openFailed": "无法打开 Forecast 工作区。",
       "loading": "正在加载 Forecast 工作区…",
       "unavailable": "Forecast 上下文不可用。",
+      "draftSaveFailed": "无法保存 Forecast 工作区的更改。",
       "newAnalysis": "新分析",
       "workspace": "工作区",
       "foundationTitle": "结构已就绪",

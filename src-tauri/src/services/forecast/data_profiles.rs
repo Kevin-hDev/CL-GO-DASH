@@ -1,7 +1,6 @@
 use super::data_quality::DataProfile;
 use super::limits::{MAX_DATA_PROFILES, MAX_INLINE_DATA_BYTES};
 use super::types::ForecastRequest;
-use crate::services::paths::data_dir;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use tokio::io::AsyncReadExt;
@@ -48,8 +47,11 @@ pub async fn save(profile: &DataProfile, request: &ForecastRequest) -> Result<()
     let json =
         serde_json::to_vec_pretty(&stored).map_err(|_| "Profil de données invalide".to_string())?;
     let _guard = PROFILE_LOCK.lock().await;
-    let dir = profiles_dir();
-    let target = profile_path(&profile.id);
+    let target = profile_path_for_write(&profile.id).await?;
+    let dir = target
+        .parent()
+        .ok_or("Sauvegarde du profil impossible")?
+        .to_path_buf();
     let already_exists = tokio::fs::try_exists(&target)
         .await
         .map_err(|_| "Sauvegarde du profil impossible".to_string())?;
@@ -67,7 +69,11 @@ pub async fn save(profile: &DataProfile, request: &ForecastRequest) -> Result<()
 async fn load(id: &str) -> Result<StoredDataProfile, String> {
     validate_id(id)?;
     let max_bytes = MAX_INLINE_DATA_BYTES.saturating_add(64 * 1024);
-    let file = tokio::fs::File::open(profile_path(id))
+    let path =
+        crate::services::paths::data_file_for_read("forecast-data-profiles", &format!("{id}.json"))
+            .await
+            .map_err(|_| "Profil de données introuvable".to_string())?;
+    let file = tokio::fs::File::open(path)
         .await
         .map_err(|_| "Profil de données introuvable".to_string())?;
     let mut data = Vec::with_capacity(max_bytes.min(64 * 1024));
@@ -85,6 +91,10 @@ async fn load(id: &str) -> Result<StoredDataProfile, String> {
         return Err("Profil de données invalide".into());
     }
     Ok(stored)
+}
+
+pub async fn load_profile(id: &str) -> Result<DataProfile, String> {
+    load(id).await.map(|stored| stored.profile)
 }
 
 async fn cleanup(dir: &Path, keep: usize) -> Result<(), String> {
@@ -141,12 +151,10 @@ fn matches_request(profile: &DataProfile, request: &ForecastRequest) -> bool {
         && profile.horizon == request.horizon
 }
 
-fn profiles_dir() -> PathBuf {
-    data_dir().join("forecast-data-profiles")
-}
-
-fn profile_path(id: &str) -> PathBuf {
-    profiles_dir().join(format!("{id}.json"))
+async fn profile_path_for_write(id: &str) -> Result<PathBuf, String> {
+    crate::services::paths::data_file_for_write("forecast-data-profiles", &format!("{id}.json"))
+        .await
+        .map_err(|_| "Sauvegarde du profil impossible".to_string())
 }
 
 fn validate_id(id: &str) -> Result<(), String> {

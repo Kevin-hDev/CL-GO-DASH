@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { cleanupTauriListener } from "@/lib/tauri-listen";
 import { FORECAST_WORKBENCH_WINDOW } from "./forecast-workbench-constants";
+import { restoredForecastWorkbenchGeometry } from "./forecast-workbench-geometry";
 import {
   isForecastWorkbenchSnapshot,
   type ForecastWorkbenchSnapshot,
@@ -35,6 +36,7 @@ export async function openForecastWorkbench({
     await existing.setFocus();
     return;
   }
+  const geometry = await restoredForecastWorkbenchGeometry();
   const workbench = new WebviewWindow(FORECAST_WORKBENCH_WINDOW.label, {
     url: FORECAST_WORKBENCH_WINDOW.route,
     title: windowTitle,
@@ -42,6 +44,7 @@ export async function openForecastWorkbench({
     height: FORECAST_WORKBENCH_WINDOW.height,
     minWidth: FORECAST_WORKBENCH_WINDOW.minWidth,
     minHeight: FORECAST_WORKBENCH_WINDOW.minHeight,
+    ...geometry,
     decorations: true,
     transparent: false,
     resizable: true,

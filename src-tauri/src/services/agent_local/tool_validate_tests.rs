@@ -154,6 +154,24 @@ mod tests {
     }
 
     #[test]
+    fn forecast_tools_enforce_declared_bounds() {
+        assert!(validate("forecast_read", &json!({"offset": -1})).is_err());
+        assert!(validate("forecast_read", &json!({"limit": 0})).is_err());
+        assert!(validate("forecast_read", &json!({"limit": 201})).is_err());
+        assert!(validate(
+            "forecast_data_audit",
+            &json!({
+                "data": "[]",
+                "target_column": "x".repeat(81),
+                "date_column": "date",
+                "horizon": 1,
+                "frequency": "D"
+            })
+        )
+        .is_err());
+    }
+
+    #[test]
     fn forecast_audit_rejects_existing_profile_ids() {
         let cleaned = validate(
             "forecast_data_audit",

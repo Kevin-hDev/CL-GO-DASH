@@ -19,6 +19,27 @@ pub async fn get_forecast_workbench_context() -> Result<Option<ForecastWorkbench
     workbench_context::get().await
 }
 
+#[tauri::command]
+pub async fn update_forecast_workbench_draft(
+    section: String,
+) -> Result<crate::services::forecast::workbench_drafts::ForecastWorkbenchDraft, String> {
+    workbench_context::update_draft(section).await
+}
+
+#[tauri::command]
+pub async fn get_forecast_workbench_geometry(
+) -> Result<Option<crate::services::forecast::workbench_geometry::ForecastWorkbenchGeometry>, String>
+{
+    crate::services::forecast::workbench_geometry::get().await
+}
+
+#[tauri::command]
+pub async fn save_forecast_workbench_geometry(
+    geometry: crate::services::forecast::workbench_geometry::ForecastWorkbenchGeometry,
+) -> Result<(), String> {
+    crate::services::forecast::workbench_geometry::save(geometry).await
+}
+
 fn emit_context(app: &AppHandle, context: &ForecastWorkbenchContext) -> Result<(), String> {
     app.emit("forecast-workbench-context-changed", context)
         .map_err(|_| "Impossible d'actualiser Forecast".to_string())

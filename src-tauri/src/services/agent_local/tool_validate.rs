@@ -31,8 +31,7 @@ fn ty_label(ty: Ty) -> &'static str {
 }
 
 pub fn validate(tool: &str, args: &Value) -> Result<Value, String> {
-    if tool == "forecast" {
-        let definition = super::tool_definitions_forecast::forecast_run_definition();
+    if let Some(definition) = super::tool_definitions_forecast::definition_for_tool(tool) {
         return validate_definition(tool, args, &definition);
     }
     let specs = match schema(tool) {

@@ -45,6 +45,8 @@ fn validate_quantiles(result: &ForecastResult) -> Result<(), String> {
             .all(|value| value.is_finite())
             || lower > middle
             || middle > upper
+            || point < lower
+            || point > upper
         {
             return Err("Intervalles de prédiction invalides".into());
         }

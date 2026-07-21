@@ -90,3 +90,16 @@ fn rejects_wrong_dates_and_interval_order() {
     output.quantiles.q10[0] = 20.0;
     assert!(validate(&output, &request, &input).is_err());
 }
+
+#[test]
+fn rejects_point_outside_its_prediction_interval() {
+    let request = request();
+    let input = parse_request_input(&request).unwrap();
+    let mut output = result(&request);
+    output.predictions[0].value = 1_000.0;
+
+    assert!(validate(&output, &request, &input).is_err());
+
+    output.predictions[0].value = 10.0;
+    assert!(validate(&output, &request, &input).is_err());
+}

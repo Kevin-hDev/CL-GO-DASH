@@ -33,7 +33,7 @@ pub async fn handle(args: &Value, working_dir: &Path) -> ToolResult {
         "data_profile_id": profile.valid.then_some(profile.id.as_str()),
         "profile": profile,
         "next_step": if profile.valid {
-            "Use data_profile_id in forecast instead of resending data or file_path."
+            "In Auto, call forecast_models with data_profile_id, then use the chosen model and the same data_profile_id in forecast. In Manual, use data_profile_id directly in forecast."
         } else {
             "Correct every error issue, then run forecast_data_audit again."
         }

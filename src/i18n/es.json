@@ -1175,6 +1175,7 @@
       "openFailed": "No se pudo abrir el espacio Forecast.",
       "loading": "Cargando el espacio Forecast…",
       "unavailable": "El contexto Forecast no está disponible.",
+      "draftSaveFailed": "No se pueden guardar los cambios del espacio Forecast.",
       "newAnalysis": "Nuevo análisis",
       "workspace": "Espacio de trabajo",
       "foundationTitle": "Estructura preparada",

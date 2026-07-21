@@ -1175,6 +1175,7 @@
       "openFailed": "Der Forecast-Arbeitsbereich konnte nicht geöffnet werden.",
       "loading": "Forecast-Arbeitsbereich wird geladen…",
       "unavailable": "Der Forecast-Kontext ist nicht verfügbar.",
+      "draftSaveFailed": "Die Änderungen im Forecast-Arbeitsbereich konnten nicht gespeichert werden.",
       "newAnalysis": "Neue Analyse",
       "workspace": "Arbeitsbereich",
       "foundationTitle": "Struktur bereit",

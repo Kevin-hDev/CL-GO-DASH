@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use std::sync::{LazyLock, Mutex};
+use tokio::sync::Mutex;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ForecastWorkbenchContext {
@@ -11,12 +11,18 @@ pub struct ForecastWorkbenchContext {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct ForecastWorkbenchSnapshot {
     pub context: ForecastWorkbenchContext,
+    pub draft: super::workbench_drafts::ForecastWorkbenchDraft,
     pub session_name: String,
     pub analysis_name: Option<String>,
 }
 
-static ACTIVE_CONTEXT: LazyLock<Mutex<Option<ForecastWorkbenchContext>>> =
-    LazyLock::new(|| Mutex::new(None));
+#[derive(Clone)]
+struct ActiveWorkbench {
+    context: ForecastWorkbenchContext,
+    draft: super::workbench_drafts::ForecastWorkbenchDraft,
+}
+
+static ACTIVE_WORKBENCH: Mutex<Option<ActiveWorkbench>> = Mutex::const_new(None);
 const MAX_CONTEXT_NAME_CHARS: usize = 120;
 
 pub async fn set(
@@ -28,33 +34,55 @@ pub async fn set(
         .await
         .map_err(|_| context_error())?;
     let analysis = load_analysis(analysis_id.as_deref()).await?;
-    let context = {
-        let mut active = ACTIVE_CONTEXT.lock().map_err(|_| context_error())?;
-        let next = next_context(active.as_ref(), session_id, analysis_id);
-        *active = Some(next.clone());
-        next
-    };
+    let mut active = ACTIVE_WORKBENCH.lock().await;
+    if let Some(current) = active.as_ref() {
+        super::workbench_drafts::save(&current.context, &current.draft).await?;
+    }
+    let context = next_context(
+        active.as_ref().map(|current| &current.context),
+        session_id,
+        analysis_id,
+    );
+    let draft = super::workbench_drafts::load(&context).await?;
+    *active = Some(ActiveWorkbench {
+        context: context.clone(),
+        draft: draft.clone(),
+    });
     Ok(ForecastWorkbenchSnapshot {
         context,
+        draft,
         session_name: bounded_name(session.name),
         analysis_name: analysis.map(|value| bounded_name(value.name)),
     })
 }
 
 pub async fn get() -> Result<Option<ForecastWorkbenchSnapshot>, String> {
-    let context = ACTIVE_CONTEXT.lock().map_err(|_| context_error())?.clone();
-    let Some(context) = context else {
+    let active = ACTIVE_WORKBENCH.lock().await.clone();
+    let Some(active) = active else {
         return Ok(None);
     };
-    let session = crate::services::agent_local::session_store::get(&context.session_id)
+    let session = crate::services::agent_local::session_store::get(&active.context.session_id)
         .await
         .map_err(|_| context_error())?;
-    let analysis = load_analysis(context.analysis_id.as_deref()).await?;
+    let analysis = load_analysis(active.context.analysis_id.as_deref()).await?;
     Ok(Some(ForecastWorkbenchSnapshot {
-        context,
+        context: active.context,
+        draft: active.draft,
         session_name: bounded_name(session.name),
         analysis_name: analysis.map(|value| bounded_name(value.name)),
     }))
+}
+
+pub async fn update_draft(
+    section: String,
+) -> Result<super::workbench_drafts::ForecastWorkbenchDraft, String> {
+    let mut active = ACTIVE_WORKBENCH.lock().await;
+    let current = active.as_ref().ok_or_else(context_error)?;
+    let next = super::workbench_drafts::next(&current.draft, section)?;
+    super::workbench_drafts::save(&current.context, &next).await?;
+    let current = active.as_mut().ok_or_else(context_error)?;
+    current.draft = next.clone();
+    Ok(next)
 }
 
 async fn load_analysis(
