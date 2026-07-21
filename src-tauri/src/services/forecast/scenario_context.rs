@@ -189,7 +189,7 @@ fn has_target_value(value: Option<&Value>) -> bool {
 fn read_number(value: &Value) -> Option<f64> {
     match value {
         Value::Number(number) => number.as_f64(),
-        Value::String(text) => text.trim().replace(',', ".").parse::<f64>().ok(),
+        Value::String(text) => super::numeric_parse::parse_finite_number(text).ok(),
         _ => None,
     }
 }

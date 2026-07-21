@@ -1420,6 +1420,7 @@
       "rows_one": "{{count}} riga",
       "rows_other": "{{count}} righe",
       "validation": {
+        "horizonTooLong": "L'orizzonte supera il limite di questo modello ({{max}}).",
         "futureRowsMismatch": "Il numero di righe di futuro noto deve corrispondere all'orizzonte scelto.",
         "futureRowsPerSeriesMismatch": "Ogni serie deve avere lo stesso numero di righe di futuro noto.",
         "contextUnsupported": "Il modello selezionato non supporta le variabili di contesto.",
@@ -1446,6 +1447,7 @@
     },
     "frequency": {
       "D": "Giorno",
+      "B": "Giorno lavorativo",
       "W": "Settimana",
       "M": "Mese",
       "Q": "Trimestre",

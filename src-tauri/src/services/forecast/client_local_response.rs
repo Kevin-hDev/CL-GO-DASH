@@ -7,7 +7,7 @@ use chrono::Utc;
 use serde_json::Value;
 use uuid::Uuid;
 
-type ParsedPrediction = (Vec<Prediction>, Vec<f64>, Vec<f64>, Vec<f64>);
+pub(super) type ParsedPrediction = (Vec<Prediction>, Vec<f64>, Vec<f64>, Vec<f64>);
 
 pub fn parse_response(
     body: &Value,
@@ -32,7 +32,7 @@ pub fn parse_response(
         | ForecastEngineKind::LocalSundial => {
             parse_structured_or_simple_response(body, request, input)?
         }
-        _ => parse_simple_response(body, input)?,
+        _ => parse_simple_response(body, request, input)?,
     };
     target_domain::apply_non_negative_floor(
         request,
@@ -43,7 +43,7 @@ pub fn parse_response(
         &mut q90,
     );
 
-    Ok(ForecastResult {
+    let result = ForecastResult {
         id: Uuid::new_v4().to_string(),
         name: format!("Forecast {}", request.target_column),
         target_column: request.target_column.clone(),
@@ -53,18 +53,26 @@ pub fn parse_response(
         provider: runtime.family_id.to_string(),
         horizon: request.horizon,
         frequency: request.frequency.clone(),
+        confidence_level: request.confidence_level,
         input_summary: input.summary.clone(),
         input_data: input.snapshot.clone(),
+        data_profile: Some(input.data_profile.clone()),
         predictions,
         quantiles: Quantiles { q10, q50, q90 },
         covariates_used: request.covariate_columns.clone(),
         metrics: None,
         annotations: Vec::new(),
         scenarios: Vec::new(),
-    })
+    };
+    crate::services::forecast::result_validation::validate(&result, request, input)?;
+    Ok(result)
 }
 
-fn parse_simple_response(body: &Value, input: &ParsedInput) -> Result<ParsedPrediction, String> {
+fn parse_simple_response(
+    body: &Value,
+    request: &ForecastRequest,
+    input: &ParsedInput,
+) -> Result<ParsedPrediction, String> {
     let median = body["median"]
         .as_array()
         .ok_or("Réponse Forecast: champ median manquant")?;
@@ -72,20 +80,31 @@ fn parse_simple_response(body: &Value, input: &ParsedInput) -> Result<ParsedPred
     let predictions: Vec<Prediction> = median
         .iter()
         .enumerate()
-        .map(|(i, v)| Prediction {
-            date: input
-                .future_dates
-                .get(i)
-                .cloned()
-                .unwrap_or_else(|| format!("T+{}", i + 1)),
-            value: v.as_f64().unwrap_or(0.0),
-            series_id: None,
+        .map(|(i, value)| {
+            Ok(Prediction {
+                date: input
+                    .future_dates
+                    .get(i)
+                    .cloned()
+                    .ok_or("Dates futures invalides")?,
+                value: value
+                    .as_f64()
+                    .filter(|value| value.is_finite())
+                    .ok_or("Réponse Forecast: valeur invalide")?,
+                series_id: None,
+            })
         })
-        .collect();
+        .collect::<Result<_, String>>()?;
 
-    let q10 = client_quantiles::lower_array(body);
+    let q10 = client_quantiles::array_at_level(
+        body,
+        crate::services::forecast::intervals::lower_level(request.confidence_level),
+    );
     let q50: Vec<f64> = predictions.iter().map(|p| p.value).collect();
-    let q90 = client_quantiles::upper_array(body);
+    let q90 = client_quantiles::array_at_level(
+        body,
+        crate::services::forecast::intervals::upper_level(request.confidence_level),
+    );
     Ok((predictions, q10, q50, q90))
 }
 
@@ -95,69 +114,10 @@ fn parse_structured_or_simple_response(
     input: &ParsedInput,
 ) -> Result<ParsedPrediction, String> {
     if body["predictions"].is_array() {
-        return parse_structured_predictions(body, input);
+        return crate::services::forecast::client_local_structured::parse(body, request, input);
     }
     if request.series_column.is_some() {
         return Err("Réponse Forecast multi-séries invalide".into());
     }
-    parse_simple_response(body, input)
-}
-
-fn parse_structured_predictions(
-    body: &Value,
-    input: &ParsedInput,
-) -> Result<ParsedPrediction, String> {
-    let items = body["predictions"]
-        .as_array()
-        .ok_or("Réponse Forecast: champ predictions manquant")?;
-
-    let mut predictions = Vec::with_capacity(items.len());
-    let mut q10 = Vec::new();
-    let mut q50 = Vec::with_capacity(items.len());
-    let mut q90 = Vec::new();
-    let mut has_all_q10 = true;
-    let mut has_all_q90 = true;
-
-    for item in items {
-        let raw_date = item["date"]
-            .as_str()
-            .ok_or("Réponse Forecast: date manquante")?;
-        let value = item["value"]
-            .as_f64()
-            .ok_or("Réponse Forecast: valeur manquante")?;
-        predictions.push(Prediction {
-            date: output_date(raw_date, predictions.len(), input),
-            value,
-            series_id: item["series_id"].as_str().map(|value| value.to_string()),
-        });
-        match client_quantiles::lower_value(item) {
-            Some(value) if has_all_q10 => q10.push(value),
-            _ => has_all_q10 = false,
-        }
-        q50.push(item["q50"].as_f64().unwrap_or(value));
-        match client_quantiles::upper_value(item) {
-            Some(value) if has_all_q90 => q90.push(value),
-            _ => has_all_q90 = false,
-        }
-    }
-
-    if !has_all_q10 || q10.len() != predictions.len() {
-        q10.clear();
-    }
-    if !has_all_q90 || q90.len() != predictions.len() {
-        q90.clear();
-    }
-
-    Ok((predictions, q10, q50, q90))
-}
-
-fn output_date(raw_date: &str, index: usize, input: &ParsedInput) -> String {
-    if raw_date.trim().to_ascii_uppercase().starts_with("T+") {
-        return input
-            .future_dates
-            .get(index)
-            .cloned()
-            .unwrap_or_else(|| raw_date.to_string());
-    }
-    raw_date.to_string()
+    parse_simple_response(body, request, input)
 }

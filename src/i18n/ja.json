@@ -1420,6 +1420,7 @@
       "rows_one": "{{count}} 行",
       "rows_other": "{{count}} 行",
       "validation": {
+        "horizonTooLong": "予測期間がこのモデルの上限（{{max}}）を超えています。",
         "futureRowsMismatch": "既知の未来行の数は、選択した予測期間と一致している必要があります。",
         "futureRowsPerSeriesMismatch": "各系列は同じ数の既知の未来行を持つ必要があります。",
         "contextUnsupported": "選択したモデルはコンテキスト変数に対応していません。",
@@ -1446,6 +1447,7 @@
     },
     "frequency": {
       "D": "日",
+      "B": "営業日",
       "W": "週",
       "M": "月",
       "Q": "四半期",

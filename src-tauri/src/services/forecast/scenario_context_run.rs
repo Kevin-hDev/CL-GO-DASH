@@ -10,10 +10,17 @@ pub async fn rerun(
     rows: Vec<Value>,
     chronos: Option<&sidecar::ChronosSidecar>,
 ) -> Result<ForecastResult, String> {
-    let request = build_forecast_request(analysis, rows)?;
+    let mut request = build_forecast_request(analysis, rows)?;
     validation::validate_request(&request)?;
+    let profile = super::data_quality::validate_and_bind(&mut request)?;
     let model_id = validation::model_id(&request)?;
     let runtime = registry::find_runtime(model_id).ok_or("Moteur indisponible")?;
+    if profile.future_rows > 0
+        && !request.covariate_columns.is_empty()
+        && !runtime.capabilities.future_covariates
+    {
+        return Err("Variables futures non supportées par ce moteur".into());
+    }
     if !registry::has_predict_adapter(runtime) {
         return Err("Moteur indisponible".into());
     }
@@ -57,6 +64,7 @@ fn build_forecast_request(
     Ok(ForecastRequest {
         data: Some(data),
         file_path: None,
+        data_profile_id: None,
         target_column: analysis.target_column.clone(),
         date_column,
         series_column: analysis.input_data.series_column.clone(),
@@ -64,7 +72,7 @@ fn build_forecast_request(
         horizon: analysis.horizon,
         frequency: analysis.frequency.clone(),
         model: Some(analysis.model.clone()),
-        confidence_level: 0.9,
+        confidence_level: analysis.confidence_level,
     })
 }
 

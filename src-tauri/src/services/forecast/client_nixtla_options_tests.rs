@@ -6,32 +6,16 @@ use serde_json::{json, Map};
 // --- effective_level --------------------------------------------------------
 
 #[test]
-fn effective_level_uses_config_when_present() {
-    let mut config = Map::new();
-    config.insert("level".into(), json!(95));
-    assert_eq!(effective_level(&config, 0.9), 95);
-}
-
-#[test]
-fn effective_level_falls_back_to_confidence_percent() {
+fn effective_level_uses_selected_confidence() {
     // 0.9 → 90% ; 0.8 → 80%
-    let empty = Map::new();
-    assert_eq!(effective_level(&empty, 0.9), 90);
-    assert_eq!(effective_level(&empty, 0.8), 80);
-}
-
-#[test]
-fn effective_level_falls_back_when_level_not_u64() {
-    // level présent mais type invalide → fallback.
-    let mut config = Map::new();
-    config.insert("level".into(), json!("high"));
-    assert_eq!(effective_level(&config, 0.95), 95);
+    assert_eq!(effective_level(0.9), 90);
+    assert_eq!(effective_level(0.8), 80);
+    assert_eq!(effective_level(0.95), 95);
 }
 
 #[test]
 fn effective_level_zero_confidence() {
-    let empty = Map::new();
-    assert_eq!(effective_level(&empty, 0.0), 0);
+    assert_eq!(effective_level(0.0), 0);
 }
 
 // --- apply (merge des clés de config dans le payload) -----------------------

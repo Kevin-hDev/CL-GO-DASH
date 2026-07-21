@@ -1,4 +1,4 @@
-from .adapter_utils import forecast_quantile_index
+from .validation import forecast_quantile_index
 
 
 def select_standard_quantiles(matrix, horizon, quantile_levels, drop_mean=False):

@@ -83,12 +83,14 @@ fn historical_analysis() -> ForecastResult {
         provider: "provider".into(),
         horizon: 1,
         frequency: "D".into(),
+        confidence_level: 0.9,
         input_summary: InputSummary {
             points: 0,
             start: String::new(),
             end: String::new(),
         },
         input_data: InputSnapshot::default(),
+        data_profile: None,
         predictions: vec![],
         quantiles: Quantiles {
             q10: vec![],

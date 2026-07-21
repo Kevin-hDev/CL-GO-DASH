@@ -73,7 +73,7 @@ fn auto_candidates(models: &[Value], cloud_allowed: bool) -> Vec<Value> {
             let is_cloud = model["is_cloud"].as_bool().unwrap_or(false);
             !is_cloud || cloud_allowed
         })
-        .take(5)
+        .take(crate::services::forecast::limits::MAX_AUTO_CANDIDATES)
         .map(|model| {
             let is_cloud = model["is_cloud"].as_bool().unwrap_or(false);
             serde_json::json!({
@@ -99,6 +99,7 @@ fn compact_model(model: &Value, forced_model: Option<&str>) -> Option<Value> {
         "runtime_ready": model["runtime_ready"].as_bool().unwrap_or(false),
         "provider_configured": model["provider_configured"].as_bool().unwrap_or(false),
         "is_cloud": model["is_cloud"].as_bool().unwrap_or(false),
+        "interval_support": crate::services::forecast::validation::interval_support(id),
         "capabilities": model["capabilities"].clone()
     }))
 }

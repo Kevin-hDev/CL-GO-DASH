@@ -1484,6 +1484,7 @@
       "rows_one": "{{count}} ligne",
       "rows_other": "{{count}} lignes",
       "validation": {
+        "horizonTooLong": "L'horizon dépasse la limite de ce modèle ({{max}}).",
         "futureRowsMismatch": "Le nombre de lignes futures connues doit être égal à l'horizon choisi.",
         "futureRowsPerSeriesMismatch": "Chaque série doit avoir le même nombre de lignes futures connues.",
         "contextUnsupported": "Le modèle choisi ne prend pas en charge les variables de contexte.",
@@ -1510,6 +1511,7 @@
     },
     "frequency": {
       "D": "Jour",
+      "B": "Jour ouvré",
       "W": "Semaine",
       "M": "Mois",
       "Q": "Trimestre",

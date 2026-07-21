@@ -9,6 +9,7 @@ fn request(model: Option<&str>) -> ForecastRequest {
     ForecastRequest {
         data: Some("[]".into()),
         file_path: None,
+        data_profile_id: None,
         target_column: "value".into(),
         date_column: "date".into(),
         series_column: None,

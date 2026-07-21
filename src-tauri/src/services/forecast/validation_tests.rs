@@ -5,6 +5,7 @@ fn make_request(model: &str) -> ForecastRequest {
     ForecastRequest {
         data: Some(r#"[{"date":"2026-05-01","sales":100,"temp":22}]"#.to_string()),
         file_path: None,
+        data_profile_id: None,
         target_column: "sales".into(),
         date_column: "date".into(),
         series_column: None,
@@ -23,7 +24,9 @@ fn accepts_covariates_for_chronos2() {
 
 #[test]
 fn accepts_covariates_for_toto2() {
-    assert!(validate_request(&make_request("toto-2.0-2.5b")).is_ok());
+    let mut request = make_request("toto-2.0-2.5b");
+    request.confidence_level = 0.8;
+    assert!(validate_request(&request).is_ok());
 }
 
 #[test]
@@ -31,5 +34,19 @@ fn rejects_multiseries_for_timegpt_in_current_app() {
     let mut request = make_request("timegpt-2-mini");
     request.series_column = Some("asset_id".into());
 
+    assert!(validate_request(&request).is_ok());
+}
+
+#[test]
+fn rejects_confidence_unavailable_from_decile_only_model() {
+    let mut request = make_request("kairos-10m");
+    request.covariate_columns.clear();
+    request.confidence_level = 0.9;
+
+    assert_eq!(
+        validate_request(&request),
+        Err("Niveau de confiance non supporté par ce moteur".into())
+    );
+    request.confidence_level = 0.8;
     assert!(validate_request(&request).is_ok());
 }

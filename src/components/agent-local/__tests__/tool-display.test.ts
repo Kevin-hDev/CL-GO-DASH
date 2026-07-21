@@ -105,6 +105,7 @@ describe("toolDisplayInfo", () => {
   it("affiche les tools spécialisés avec des noms explicites", () => {
     expect(toolDisplayInfo({ name: "load_skill", summary: "context7-docs" }, undefined, t).label).toBe("Skill");
     expect(toolDisplayInfo({ name: "delegate_task", summary: "audit" }, undefined, t).label).toBe("Agent");
+    expect(toolDisplayInfo({ name: "forecast_data_audit", summary: "sales" }, undefined, t).label).toBe("Forecast");
     expect(toolDisplayInfo({ name: "forecast", summary: "sales" }, undefined, t).label).toBe("Read");
     expect(toolDisplayInfo({ name: "forecast_models", summary: "models" }, undefined, t).label).toBe("Read");
     expect(toolDisplayInfo({ name: "forecast_read", summary: "analysis" }, undefined, t).label).toBe("Read");
@@ -142,6 +143,7 @@ describe("toolDisplayInfo", () => {
       ["checkout_branch", "GitBranch"],
       ["load_skill", "Sparkle"],
       ["delegate_task", "Users"],
+      ["forecast_data_audit", "ChartLineUp"],
       ["forecast", "ChartLineUp"],
       ["forecast_analyze", "ChartLineUp"],
       ["search_mcp_tools", "Plugs"],

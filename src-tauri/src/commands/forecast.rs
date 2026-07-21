@@ -1,7 +1,7 @@
 use crate::services::forecast::types::{ForecastAnalysisMeta, ForecastRequest, ForecastResult};
 use crate::services::forecast::{
-    client_chronos, client_nixtla, export, model_manager, notes, notes_cleanup, registry,
-    scenarios, selected_model, sidecar, storage, validation,
+    client_chronos, client_nixtla, data_profiles, export, model_manager, notes, notes_cleanup,
+    registry, scenarios, selected_model, sidecar, storage, validation,
 };
 use tauri::State;
 
@@ -12,12 +12,15 @@ pub async fn run_forecast(
 ) -> Result<ForecastResult, String> {
     crate::services::forecast::request_normalize::normalize_request(&mut request);
     selected_model::apply_required(&mut request)?;
+    data_profiles::hydrate_request(&mut request).await?;
     crate::services::forecast::file_input::ensure_request_data(&mut request, None)
         .await
         .map_err(|_| "Impossible de lire les données source".to_string())?;
     validation::validate_request(&request)?;
+    let data_profile = crate::services::forecast::data_quality::validate_and_bind(&mut request)?;
     let model_id = validation::model_id(&request)?;
     let runtime = registry::find_runtime(model_id).ok_or("Moteur indisponible")?;
+    validate_future_context(&request, &data_profile, runtime)?;
     if !registry::has_predict_adapter(runtime) {
         return Err("Moteur indisponible".into());
     }
@@ -46,8 +49,25 @@ pub async fn run_forecast(
         prediction.map_err(|_| "Erreur du service de prédiction".to_string())?
     };
 
+    if let Some(profile) = &result.data_profile {
+        data_profiles::save(profile, &request).await?;
+    }
     storage::save(&result).await?;
     Ok(result)
+}
+
+fn validate_future_context(
+    request: &ForecastRequest,
+    profile: &crate::services::forecast::data_quality::DataProfile,
+    runtime: &registry::ForecastRuntimeSpec,
+) -> Result<(), String> {
+    if profile.future_rows > 0
+        && !request.covariate_columns.is_empty()
+        && !runtime.capabilities.future_covariates
+    {
+        return Err("Variables futures non supportées par ce moteur".into());
+    }
+    Ok(())
 }
 
 #[tauri::command]

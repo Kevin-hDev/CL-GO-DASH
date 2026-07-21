@@ -1,6 +1,6 @@
 use crate::services::agent_local::tool_definitions;
 use crate::services::forecast::selection_policy::{self, ForecastSelectionMode};
-use serde_json::{Map, Value};
+use serde_json::Value;
 
 pub(super) fn definition() -> Value {
     let policy = selection_policy::get().unwrap_or_default();
@@ -23,7 +23,7 @@ fn definition_for(policy: selection_policy::ForecastSelectionPolicy) -> Value {
             true,
         ),
     };
-    let mut properties = base_properties();
+    let mut properties = super::forecast_data::properties();
     if auto {
         properties.insert(
             "model".into(),
@@ -38,7 +38,7 @@ fn definition_for(policy: selection_policy::ForecastSelectionPolicy) -> Value {
         required.push("model");
     }
     let description = format!(
-        "Run a time series forecast from structured data. You provide either a JSON array in data or a CSV/Excel path in file_path. The tool returns a saved analysis_id; you call forecast_read with it for predictions and quantiles. {policy_text} You use series_column for multi-series data and covariate_columns only when the selected model supports them."
+        "Run a validated time series forecast. For every new dataset, you must call forecast_data_audit first and then pass its reusable data_profile_id instead of resending raw data. Direct data or file_path remains available for application compatibility. The tool returns a saved analysis_id; you call forecast_read with it for paginated predictions and quantiles. {policy_text} You use series_column for multi-series data and covariate_columns only when the selected model supports them."
     );
     tool_definitions::tool_def(
         "forecast",
@@ -54,28 +54,3 @@ fn definition_for(policy: selection_policy::ForecastSelectionPolicy) -> Value {
 #[cfg(test)]
 #[path = "tool_definitions_forecast_run_tests.rs"]
 mod tests;
-
-fn base_properties() -> Map<String, Value> {
-    serde_json::from_value(serde_json::json!({
-        "data": {
-            "type": "string",
-            "description": "JSON row array. Historical rows include date and target; future-known rows may omit target."
-        },
-        "file_path": {
-            "type": "string",
-            "description": "CSV or Excel path used instead of data."
-        },
-        "target_column": {"type": "string", "description": "Target column name."},
-        "date_column": {"type": "string", "description": "Date or timestamp column name."},
-        "series_column": {"type": "string", "description": "Optional series identifier column."},
-        "covariate_columns": {
-            "type": "array",
-            "items": {"type": "string"},
-            "description": "Optional compatible past or future-known context columns."
-        },
-        "horizon": {"type": "integer", "description": "Future steps to predict."},
-        "frequency": {"type": "string", "description": "Frequency such as D, W, M, Q, Y, H, or T."},
-        "confidence_level": {"type": "number", "description": "Prediction interval confidence, usually 0.9."}
-    }))
-    .unwrap_or_default()
-}

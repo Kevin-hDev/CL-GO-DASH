@@ -1,10 +1,9 @@
 use super::input_dates::build_future_dates;
 use super::input_series::read_series_id;
+use super::numeric_parse::parse_finite_number;
 use super::types::{ForecastRequest, Prediction};
 use serde_json::Value;
 use std::collections::{BTreeSet, HashMap};
-
-const MAX_INPUT_COLUMNS: usize = 256;
 
 pub fn collect_columns<'a, I>(columns: &mut Vec<String>, keys: I) -> Result<(), String>
 where
@@ -15,7 +14,7 @@ where
             columns.push(key.clone());
         }
     }
-    if columns.len() > MAX_INPUT_COLUMNS {
+    if columns.len() > super::limits::MAX_INPUT_COLUMNS {
         return Err("Trop de colonnes".into());
     }
     Ok(())
@@ -41,35 +40,23 @@ pub fn validate_columns(columns: &[String], request: &ForecastRequest) -> Result
 
 pub fn read_target_value(value: Option<&Value>) -> Result<Option<f64>, String> {
     match value {
-        Some(Value::Number(number)) => Ok(number.as_f64().filter(|numeric| numeric.is_finite())),
+        Some(Value::Number(number)) => number
+            .as_f64()
+            .filter(|numeric| numeric.is_finite())
+            .map(Some)
+            .ok_or("Colonne cible non numérique".into()),
         Some(Value::String(raw)) => {
             let trimmed = raw.trim();
             if trimmed.is_empty() {
                 return Ok(None);
             }
-            trimmed
-                .replace(',', ".")
-                .parse::<f64>()
+            parse_finite_number(trimmed)
                 .map(Some)
                 .map_err(|_| "Colonne cible non numérique".to_string())
         }
         Some(Value::Null) | None => Ok(None),
         _ => Err("Colonne cible non numérique".into()),
     }
-}
-
-pub fn build_summary_bounds(history: &[Prediction]) -> (String, String) {
-    let start = history
-        .iter()
-        .map(|point| point.date.as_str())
-        .min()
-        .unwrap_or_default();
-    let end = history
-        .iter()
-        .map(|point| point.date.as_str())
-        .max()
-        .unwrap_or_default();
-    (start.to_string(), end.to_string())
 }
 
 pub fn validate_multiseries_future_rows(

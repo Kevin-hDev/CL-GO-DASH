@@ -1,6 +1,7 @@
 from collections import OrderedDict
 
 from .config_utils import trim_history
+from .limits import MAX_PREDICTIONS, MAX_SERIES
 from .validation import (
     quantile_key,
     read_numeric_value,
@@ -116,6 +117,8 @@ def forecast_jobs(payload, horizon):
         value = read_numeric_value(row.get(target_column), "invalid_target")
         grouped.setdefault(series_id, []).append(value)
 
+    if len(grouped) > MAX_SERIES or len(grouped) * horizon > MAX_PREDICTIONS:
+        raise ValueError("prediction_budget_exceeded")
     future_dates = grouped_future_dates(payload, horizon)
     return [
         {
@@ -193,7 +196,3 @@ def squeeze_singletons(value):
 
 def looks_like_horizon_first(value, horizon):
     return len(value) >= horizon and isinstance(value[0], list) and len(value[0]) > 1
-
-
-def forecast_quantile_index(level):
-    return max(0, min(8, int(round(level * 10)) - 1))

@@ -1420,6 +1420,7 @@
       "rows_one": "{{count}} Zeile",
       "rows_other": "{{count}} Zeilen",
       "validation": {
+        "horizonTooLong": "Der Horizont überschreitet das Limit dieses Modells ({{max}}).",
         "futureRowsMismatch": "Die Anzahl bekannter Zukunftszeilen muss dem gewählten Horizont entsprechen.",
         "futureRowsPerSeriesMismatch": "Jede Serie muss die gleiche Anzahl bekannter Zukunftszeilen haben.",
         "contextUnsupported": "Das gewählte Modell unterstützt keine Kontextvariablen.",
@@ -1446,6 +1447,7 @@
     },
     "frequency": {
       "D": "Tag",
+      "B": "Arbeitstag",
       "W": "Woche",
       "M": "Monat",
       "Q": "Quartal",

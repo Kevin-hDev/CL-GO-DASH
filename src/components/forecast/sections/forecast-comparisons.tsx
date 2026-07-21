@@ -20,8 +20,8 @@ import type {
 } from "./forecast-comparison-types";
 import "../forecast-view.css";
 import "./forecast-comparisons.css";
+import { MAX_FORECAST_COMPARISON_ANALYSES } from "../forecast-limits";
 
-const MAX_COMPARISON_ANALYSES = 80;
 
 interface ForecastComparisonsProps {
   analysisId: string;
@@ -143,7 +143,7 @@ export function ForecastComparisons({ analysisId }: ForecastComparisonsProps) {
 async function loadComparisonData(analysisId: string) {
   const current = await invoke<ForecastComparisonAnalysis>("get_forecast_analysis", { id: analysisId });
   const metas = await invoke<ForecastComparisonMeta[]>("list_forecast_analyses");
-  const safeMetas = metas.slice(0, MAX_COMPARISON_ANALYSES);
+  const safeMetas = metas.slice(-MAX_FORECAST_COMPARISON_ANALYSES);
   const loaded = await Promise.allSettled(
     safeMetas.map((meta) => invoke<ForecastComparisonAnalysis>("get_forecast_analysis", { id: meta.id })),
   );

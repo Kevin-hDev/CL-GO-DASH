@@ -1420,6 +1420,7 @@
       "rows_one": "{{count}} fila",
       "rows_other": "{{count}} filas",
       "validation": {
+        "horizonTooLong": "El horizonte supera el límite de este modelo ({{max}}).",
         "futureRowsMismatch": "El número de filas de futuro conocido debe coincidir con el horizonte elegido.",
         "futureRowsPerSeriesMismatch": "Cada serie debe tener el mismo número de filas de futuro conocido.",
         "contextUnsupported": "El modelo seleccionado no admite variables de contexto.",
@@ -1446,6 +1447,7 @@
     },
     "frequency": {
       "D": "Día",
+      "B": "Día hábil",
       "W": "Semana",
       "M": "Mes",
       "Q": "Trimestre",

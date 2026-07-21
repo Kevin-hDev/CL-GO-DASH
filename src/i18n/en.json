@@ -1436,6 +1436,7 @@
       "rows_one": "{{count}} row",
       "rows_other": "{{count}} rows",
       "validation": {
+        "horizonTooLong": "The horizon exceeds this model's limit ({{max}}).",
         "futureRowsMismatch": "The number of known future rows must match the selected horizon.",
         "futureRowsPerSeriesMismatch": "Each series must have the same number of known future rows.",
         "contextUnsupported": "The selected model does not support context variables.",
@@ -1462,6 +1463,7 @@
     },
     "frequency": {
       "D": "Day",
+      "B": "Business day",
       "W": "Week",
       "M": "Month",
       "Q": "Quarter",

@@ -3,12 +3,11 @@ import argparse
 import hmac
 import json
 import os
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
 from forecast_runtime.adapters import load_adapter
+from forecast_runtime.limits import MAX_PAYLOAD_BYTES, MAX_RESPONSE_BYTES
 from forecast_runtime.validation import validate_horizon, validate_quantiles
-
-MAX_PAYLOAD_BYTES = 2 * 1024 * 1024
 
 ADAPTER = None
 MODEL_NAME = ""
@@ -53,7 +52,10 @@ class ForecastHandler(BaseHTTPRequestHandler):
         length = int(self.headers.get("content-length", "0"))
         if length <= 0 or length > MAX_PAYLOAD_BYTES:
             raise ValueError("invalid_payload")
-        return json.loads(self.rfile.read(length))
+        payload = json.loads(self.rfile.read(length))
+        if not isinstance(payload, dict):
+            raise ValueError("invalid_payload")
+        return payload
 
     def _is_authorized(self):
         provided = self.headers.get("x-clgo-forecast-token", "")
@@ -61,6 +63,9 @@ class ForecastHandler(BaseHTTPRequestHandler):
 
     def _send_json(self, status, payload):
         body = json.dumps(payload).encode("utf-8")
+        if len(body) > MAX_RESPONSE_BYTES:
+            status = 500
+            body = b'{"error":"response_too_large"}'
         self.send_response(status)
         self.send_header("content-type", "application/json")
         self.send_header("content-length", str(len(body)))
@@ -90,7 +95,7 @@ def main():
     device = os.environ.get("CLGO_FORECAST_DEVICE", "gpu")
     ADAPTER = load_adapter(args.family, args.model, args.models_dir, device)
 
-    server = ThreadingHTTPServer(("127.0.0.1", args.port), ForecastHandler)
+    server = HTTPServer(("127.0.0.1", args.port), ForecastHandler)
     try:
         server.serve_forever()
     except KeyboardInterrupt:

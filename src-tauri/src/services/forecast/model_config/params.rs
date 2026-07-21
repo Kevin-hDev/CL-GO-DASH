@@ -2,7 +2,12 @@ use super::schema::{ParamKind, ParamSpec};
 use serde_json::{json, Value};
 
 pub(super) fn horizon_override() -> ParamSpec {
-    int_param("horizon_max_override", 0, 0.0, 100_000.0)
+    int_param(
+        "horizon_max_override",
+        0,
+        0.0,
+        crate::services::forecast::limits::MAX_HORIZON as f64,
+    )
 }
 
 pub(super) fn context() -> ParamSpec {
@@ -11,10 +16,6 @@ pub(super) fn context() -> ParamSpec {
 
 pub(super) fn batch_size() -> ParamSpec {
     int_param("batch_size", 1, 1.0, 1024.0)
-}
-
-pub(super) fn level() -> ParamSpec {
-    int_param("level", 90, 50.0, 99.0)
 }
 
 pub(super) fn quantiles() -> ParamSpec {

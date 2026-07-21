@@ -1,10 +1,10 @@
 from .adapter_utils import (
     forecast_payload_result,
-    forecast_quantile_index,
     values_tensor,
 )
 from .config_utils import config_bool, standard_quantile_levels
 from .device_utils import move_model, move_tensor
+from .validation import forecast_quantile_index
 
 
 class KairosAdapter:
@@ -38,7 +38,7 @@ class KairosAdapter:
                 generation=generation,
                 preserve_positivity=preserve_positivity,
                 average_with_flipped_input=flipped,
-        )
+            )
         quantile_forecast = output["prediction_outputs"][0]
         median = quantile_forecast[forecast_quantile_index(0.5), :horizon]
         selected = [

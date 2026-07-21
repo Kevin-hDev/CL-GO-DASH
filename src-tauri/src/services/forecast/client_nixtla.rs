@@ -51,7 +51,7 @@ fn build_payload(input: &ParsedInput, request: &ForecastRequest) -> Result<Value
         .collect();
     let model = request.model.as_deref().unwrap_or("timegpt-2-standard");
     let model_config = client_nixtla_options::effective_config(model);
-    let level = client_nixtla_options::effective_level(&model_config, request.confidence_level);
+    let level = client_nixtla_options::effective_level(request.confidence_level);
 
     let mut payload = serde_json::json!({
         "timestamp": timestamps,
@@ -82,24 +82,32 @@ fn parse_response(
         let predictions: Vec<Prediction> = forecasts
             .iter()
             .enumerate()
-            .map(|(i, v)| Prediction {
-                date: input
-                    .future_dates
-                    .get(i)
-                    .cloned()
-                    .unwrap_or_else(|| format!("T+{}", i + 1)),
-                value: v.as_f64().unwrap_or(0.0),
-                series_id: None,
+            .map(|(index, value)| {
+                Ok(Prediction {
+                    date: input
+                        .future_dates
+                        .get(index)
+                        .cloned()
+                        .ok_or("Dates futures invalides")?,
+                    value: value
+                        .as_f64()
+                        .filter(|number| number.is_finite())
+                        .ok_or("Réponse Nixtla invalide")?,
+                    series_id: None,
+                })
             })
-            .collect();
+            .collect::<Result<_, String>>()?;
 
+        let level = client_nixtla_options::effective_level(request.confidence_level);
+        let q10 = client_nixtla_options::interval_array(body, &format!("lo-{level}"))?;
         let q50: Vec<f64> = predictions.iter().map(|p| p.value).collect();
-        (predictions, Vec::new(), q50, Vec::new())
+        let q90 = client_nixtla_options::interval_array(body, &format!("hi-{level}"))?;
+        (predictions, q10, q50, q90)
     };
 
     let model_name = request.model.as_deref().unwrap_or("timegpt-2-standard");
 
-    Ok(ForecastResult {
+    let result = ForecastResult {
         id: Uuid::new_v4().to_string(),
         name: format!("Forecast {}", request.target_column),
         target_column: request.target_column.clone(),
@@ -109,13 +117,17 @@ fn parse_response(
         provider: "nixtla".to_string(),
         horizon: request.horizon,
         frequency: request.frequency.clone(),
+        confidence_level: request.confidence_level,
         input_summary: input.summary.clone(),
         input_data: input.snapshot.clone(),
+        data_profile: Some(input.data_profile.clone()),
         predictions,
         quantiles: Quantiles { q10, q50, q90 },
         covariates_used: request.covariate_columns.clone(),
         metrics: None,
         annotations: Vec::new(),
         scenarios: Vec::new(),
-    })
+    };
+    crate::services::forecast::result_validation::validate(&result, request, input)?;
+    Ok(result)
 }

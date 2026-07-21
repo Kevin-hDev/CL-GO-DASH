@@ -9,7 +9,7 @@ pub fn apply_non_negative_floor(
     q50: &mut [f64],
     q90: &mut [f64],
 ) {
-    if !enabled_by_config(request) || !is_non_negative_target(request, input) {
+    if !requires_non_negative_output(request, input) {
         return;
     }
     for prediction in predictions {
@@ -18,6 +18,10 @@ pub fn apply_non_negative_floor(
     clamp_values(q10);
     clamp_values(q50);
     clamp_values(q90);
+}
+
+pub fn requires_non_negative_output(request: &ForecastRequest, input: &ParsedInput) -> bool {
+    enabled_by_config(request) && is_non_negative_target(request, input)
 }
 
 fn enabled_by_config(request: &ForecastRequest) -> bool {

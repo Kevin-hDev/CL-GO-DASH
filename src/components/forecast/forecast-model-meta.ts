@@ -27,6 +27,7 @@ export interface ForecastModelEntry {
   provider_configured?: boolean;
   engine_kind?: string;
   config_params?: string[];
+  interval_support?: "continuous" | "central_60_or_80";
   capabilities?: {
     past_covariates: boolean;
     future_covariates: boolean;

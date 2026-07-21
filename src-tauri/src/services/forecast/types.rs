@@ -8,6 +8,8 @@ pub const MAX_SCENARIOS: usize = 50;
 pub struct ForecastRequest {
     pub data: Option<String>,
     pub file_path: Option<String>,
+    #[serde(default)]
+    pub data_profile_id: Option<String>,
     pub target_column: String,
     pub date_column: String,
     pub series_column: Option<String>,
@@ -20,7 +22,7 @@ pub struct ForecastRequest {
     pub confidence_level: f64,
 }
 
-fn default_confidence() -> f64 {
+pub fn default_confidence() -> f64 {
     0.9
 }
 
@@ -36,9 +38,13 @@ pub struct ForecastResult {
     pub provider: String,
     pub horizon: u32,
     pub frequency: String,
+    #[serde(default = "default_confidence")]
+    pub confidence_level: f64,
     pub input_summary: InputSummary,
     #[serde(default)]
     pub input_data: InputSnapshot,
+    #[serde(default)]
+    pub data_profile: Option<super::data_quality::DataProfile>,
     pub predictions: Vec<Prediction>,
     pub quantiles: Quantiles,
     #[serde(default)]

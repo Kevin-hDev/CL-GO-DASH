@@ -47,7 +47,10 @@ fn build_payload(input: &ParsedInput, request: &ForecastRequest) -> Result<Value
     }
 
     let model_config = crate::services::forecast::model_config::effective_values(model)?;
-    let quantiles = config_quantiles(&model_config);
+    let quantiles = crate::services::forecast::intervals::configured_levels(
+        request.confidence_level,
+        &model_config,
+    );
 
     Ok(match runtime.engine_kind {
         ForecastEngineKind::LocalChronosBolt => serde_json::json!({
@@ -97,13 +100,4 @@ fn build_payload(input: &ParsedInput, request: &ForecastRequest) -> Result<Value
             return Err("Moteur local invalide".into());
         }
     })
-}
-
-fn config_quantiles(config: &serde_json::Map<String, Value>) -> Vec<f64> {
-    config
-        .get("quantiles")
-        .and_then(Value::as_array)
-        .map(|items| items.iter().filter_map(Value::as_f64).collect())
-        .filter(|items: &Vec<f64>| !items.is_empty())
-        .unwrap_or_else(|| vec![0.1, 0.5, 0.9])
 }

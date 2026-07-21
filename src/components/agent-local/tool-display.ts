@@ -71,6 +71,7 @@ const FILE_ICONS: Record<string, string> = {
   checkout_branch: "GitBranch",
   load_skill: "Sparkle",
   delegate_task: "Users",
+  forecast_data_audit: "ChartLineUp",
   forecast: "ChartLineUp",
   forecast_models: "ChartLineUp",
   forecast_read: "ChartLineUp",
@@ -113,7 +114,7 @@ function actionKey(name: string): string {
   if (name === "load_skill") return "skill";
   if (name === "delegate_task") return "agent";
   if (name === "forecast" || name === "forecast_models" || name === "forecast_read") return "read";
-  if (name === "forecast_analyze") return "forecast";
+  if (name === "forecast_data_audit" || name === "forecast_analyze") return "forecast";
   if (name === "search_mcp_tools") return "mcp";
   if (name === "list_dir") return "list";
   if (name === "grep" || name === "glob") return "search";

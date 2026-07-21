@@ -17,6 +17,7 @@ fn manual_schema_does_not_offer_model_override() {
     let parameters = &definition["function"]["parameters"];
 
     assert!(parameters["properties"].get("model").is_none());
+    assert!(parameters["properties"].get("data_profile_id").is_some());
     assert!(!parameters["required"]
         .as_array()
         .unwrap()

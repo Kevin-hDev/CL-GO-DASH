@@ -63,6 +63,10 @@ fn enrich_model_object(
         "family_id".into(),
         Value::String(model.family_id.to_string()),
     );
+    object.insert(
+        "interval_support".into(),
+        Value::String(super::validation::interval_support(model.id).to_string()),
+    );
     object.insert("installed".into(), Value::Bool(installed_model));
     object.insert("installable".into(), Value::Bool(installable(model)));
     object.insert(

@@ -1420,6 +1420,7 @@
       "rows_one": "{{count}} 行",
       "rows_other": "{{count}} 行",
       "validation": {
+        "horizonTooLong": "预测期超过了此模型的限制（{{max}}）。",
         "futureRowsMismatch": "已知未来行数必须与所选预测期一致。",
         "futureRowsPerSeriesMismatch": "每个序列都必须有相同数量的已知未来行。",
         "contextUnsupported": "所选模型不支持上下文变量。",
@@ -1446,6 +1447,7 @@
     },
     "frequency": {
       "D": "天",
+      "B": "工作日",
       "W": "周",
       "M": "月",
       "Q": "季度",

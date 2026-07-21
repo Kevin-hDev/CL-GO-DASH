@@ -144,6 +144,48 @@ mod tests {
     }
 
     #[test]
+    fn forecast_keeps_reusable_profile_and_read_pagination() {
+        let cleaned = validate(
+            "forecast",
+            &json!({
+                "data_profile_id": "profile-1",
+                "target_column": "sales",
+                "date_column": "date",
+                "horizon": 7,
+                "frequency": "D"
+            }),
+        )
+        .unwrap();
+        assert_eq!(cleaned["data_profile_id"], "profile-1");
+
+        let read = validate(
+            "forecast_read",
+            &json!({"analysis_id": "analysis-1", "offset": 200, "limit": 100}),
+        )
+        .unwrap();
+        assert_eq!(read["offset"], 200);
+        assert_eq!(read["limit"], 100);
+    }
+
+    #[test]
+    fn forecast_audit_rejects_existing_profile_ids() {
+        let cleaned = validate(
+            "forecast_data_audit",
+            &json!({
+                "data": "[]",
+                "data_profile_id": "profile-1",
+                "target_column": "sales",
+                "date_column": "date",
+                "horizon": 7,
+                "frequency": "D"
+            }),
+        )
+        .unwrap();
+
+        assert!(cleaned.get("data_profile_id").is_none());
+    }
+
+    #[test]
     fn null_required_arg_rejected() {
         let args = json!({"command": null});
         assert!(validate("bash", &args).is_err());

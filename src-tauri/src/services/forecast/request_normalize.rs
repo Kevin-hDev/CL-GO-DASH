@@ -6,6 +6,7 @@ pub fn normalize_request(request: &mut ForecastRequest) {
     request.frequency = request.frequency.trim().to_string();
     request.data = normalize_optional_payload(request.data.take());
     request.file_path = normalize_optional_string(request.file_path.take());
+    request.data_profile_id = normalize_optional_string(request.data_profile_id.take());
     request.series_column = normalize_optional_string(request.series_column.take());
     request.model = normalize_optional_string(request.model.take());
     request.covariate_columns = request

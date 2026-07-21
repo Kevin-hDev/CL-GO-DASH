@@ -136,7 +136,7 @@ fn save_scenario_result(
     result: Result<crate::services::forecast::types::ForecastResult, String>,
 ) -> ToolResult {
     match result {
-        Ok(updated) => match super::tool_dispatcher_forecast_output::analysis_payload(&updated) {
+        Ok(updated) => match super::tool_dispatcher_forecast_output::analysis_payload(&updated, 0, 100) {
             Ok(json) => ToolResult::ok(json),
             Err(e) => ToolResult::err(e),
         },

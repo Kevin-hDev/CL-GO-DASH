@@ -2,10 +2,15 @@ use serde_json::Value;
 
 #[path = "tool_definitions_forecast_run.rs"]
 mod forecast_run;
+#[path = "tool_definitions_forecast_audit.rs"]
+mod forecast_audit;
+#[path = "tool_definitions_forecast_data.rs"]
+mod forecast_data;
 
 pub fn forecast_tool_definitions() -> Vec<Value> {
     vec![
         forecast_run::definition(),
+        forecast_audit::definition(),
         super::tool_definitions::tool_def(
             "forecast_models",
             "Inspect the Forecast selection policy. In Manual, you use only forced_model. In Auto, you choose only one id from candidates and keep the user's policy unchanged. You do not call a capabilities-only candidate the best model.",
@@ -95,13 +100,24 @@ pub fn forecast_tool_definitions() -> Vec<Value> {
         ),
         super::tool_definitions::tool_def(
             "forecast_read",
-            "Read saved forecast analyses. Omit analysis_id, or pass an empty string, to list available analyses. Provide a non-empty analysis_id to read predictions, quantiles, metadata, annotations, and scenarios for one analysis.",
+            "Read saved forecast analyses. Omit analysis_id to list a bounded set. Provide analysis_id to read one bounded predictions page. Use offset and limit for later pages.",
             serde_json::json!({
                 "type": "object",
                 "properties": {
                     "analysis_id": {
                         "type": "string",
                         "description": "Optional. Omit or pass an empty string to list analyses. Provide a non-empty saved analysis id to read one analysis."
+                    },
+                    "offset": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "description": "Prediction offset. Defaults to 0."
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 200,
+                        "description": "Predictions per page. Defaults to 100 and is capped at 200."
                     }
                 },
                 "required": []

@@ -46,7 +46,6 @@ pub fn specs_for_family(family_id: &str) -> Vec<ParamSpec> {
         ],
         "timegpt-2" => vec![
             horizon_override(),
-            level(),
             bool_param("clean_ex_first", true),
             int_param("finetune_steps", 0, 0.0, 1000.0),
             select(

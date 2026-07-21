@@ -1,11 +1,12 @@
+use crate::services::forecast::limits::{
+    MAX_ANALYSIS_INDEX_BYTES, MAX_STORED_ANALYSES, MAX_STORED_ANALYSIS_BYTES,
+};
 use crate::services::forecast::types::{ForecastAnalysisMeta, ForecastResult};
 use crate::services::paths::data_dir;
 use regex::Regex;
 use std::path::PathBuf;
 use std::sync::LazyLock;
 use tokio::sync::Mutex;
-
-const MAX_ANALYSES: usize = 500;
 
 static INDEX_LOCK: Mutex<()> = Mutex::const_new(());
 
@@ -42,39 +43,37 @@ fn analysis_path(id: &str) -> PathBuf {
     analyses_dir().join(format!("{id}.json"))
 }
 
-pub async fn ensure_dir() -> Result<(), String> {
-    tokio::fs::create_dir_all(analyses_dir())
-        .await
-        .map_err(|_| "Impossible de créer le dossier forecast".into())
-}
-
 pub async fn save(result: &ForecastResult) -> Result<(), String> {
     validate_analysis_id(&result.id)?;
-    ensure_dir().await?;
     let json =
-        serde_json::to_string_pretty(result).map_err(|_| "Erreur de sérialisation".to_string())?;
-
-    let dir = analyses_dir();
-    let tmp = dir.join(format!(".{}.tmp", result.id));
+        serde_json::to_vec_pretty(result).map_err(|_| "Erreur de sérialisation".to_string())?;
+    if json.len() > MAX_STORED_ANALYSIS_BYTES {
+        return Err("Analyse Forecast trop volumineuse".into());
+    }
     let target = analysis_path(&result.id);
-
-    tokio::fs::write(&tmp, &json)
+    let already_exists = tokio::fs::try_exists(&target)
         .await
-        .map_err(|_| "Erreur d'écriture".to_string())?;
-    tokio::fs::rename(&tmp, &target)
+        .map_err(|_| "Erreur de sauvegarde".to_string())?;
+    crate::services::private_store::atomic_write_async(target.clone(), json)
         .await
         .map_err(|_| "Erreur de sauvegarde".to_string())?;
 
-    upsert_index(result.to_meta()).await
+    if let Err(error) = upsert_index(result.to_meta()).await {
+        if !already_exists {
+            let _ = tokio::fs::remove_file(target).await;
+        }
+        return Err(error);
+    }
+    Ok(())
 }
 
 pub async fn load(id: &str) -> Result<ForecastResult, String> {
     validate_analysis_id(id)?;
     let path = analysis_path(id);
-    let data = tokio::fs::read_to_string(&path)
+    let data = super::storage_io::read_bounded(&path, MAX_STORED_ANALYSIS_BYTES)
         .await
         .map_err(|_| "Analyse introuvable".to_string())?;
-    serde_json::from_str(&data).map_err(|_| "Données d'analyse corrompues".to_string())
+    serde_json::from_slice(&data).map_err(|_| "Données d'analyse corrompues".to_string())
 }
 
 pub async fn delete(id: &str) -> Result<(), String> {
@@ -104,25 +103,34 @@ pub async fn list() -> Result<Vec<ForecastAnalysisMeta>, String> {
 
 async fn read_index() -> Result<Vec<ForecastAnalysisMeta>, String> {
     let path = index_path();
-    match tokio::fs::read_to_string(&path).await {
-        Ok(data) => serde_json::from_str(&data).map_err(|_| "Index forecast corrompu".into()),
-        Err(_) => Ok(Vec::new()),
+    let data = match super::storage_io::read_bounded(&path, MAX_ANALYSIS_INDEX_BYTES).await {
+        Ok(data) => data,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(Vec::new()),
+        Err(_) => return Err("Index forecast indisponible".into()),
+    };
+    let entries: Vec<ForecastAnalysisMeta> =
+        serde_json::from_slice(&data).map_err(|_| "Index forecast corrompu".to_string())?;
+    if entries.len() > MAX_STORED_ANALYSES
+        || entries
+            .iter()
+            .any(|entry| validate_analysis_id(&entry.id).is_err())
+    {
+        return Err("Index forecast corrompu".into());
     }
+    Ok(entries)
 }
 
 async fn write_index(entries: &[ForecastAnalysisMeta]) -> Result<(), String> {
-    ensure_dir().await?;
+    if entries.len() > MAX_STORED_ANALYSES {
+        return Err("Index forecast trop volumineux".into());
+    }
     let json =
-        serde_json::to_string_pretty(entries).map_err(|_| "Index forecast invalide".to_string())?;
-
-    let dir = analyses_dir();
-    let tmp = dir.join(".index.tmp");
+        serde_json::to_vec_pretty(entries).map_err(|_| "Index forecast invalide".to_string())?;
+    if json.len() > MAX_ANALYSIS_INDEX_BYTES {
+        return Err("Index forecast trop volumineux".into());
+    }
     let target = index_path();
-
-    tokio::fs::write(&tmp, &json)
-        .await
-        .map_err(|_| "Écriture index forecast échouée".to_string())?;
-    tokio::fs::rename(&tmp, &target)
+    crate::services::private_store::atomic_write_async(target, json)
         .await
         .map_err(|_| "Finalisation index forecast échouée".to_string())
 }
@@ -150,33 +158,40 @@ async fn hydrate_index(
 }
 
 async fn read_scenarios_count(id: &str) -> Result<usize, String> {
-    let path = analysis_path(id);
-    let data = tokio::fs::read_to_string(&path)
-        .await
-        .map_err(|_| "Analyse introuvable".to_string())?;
-    let analysis: ForecastResult =
-        serde_json::from_str(&data).map_err(|_| "Données d'analyse corrompues".to_string())?;
+    let analysis = load(id).await?;
     Ok(analysis.scenarios.len())
 }
 
 async fn upsert_index(meta: ForecastAnalysisMeta) -> Result<(), String> {
     let _guard = INDEX_LOCK.lock().await;
-    let mut entries = read_index().await.unwrap_or_default();
+    let mut entries = read_index().await?;
+    let mut removed_ids = Vec::new();
     if let Some(pos) = entries.iter().position(|e| e.id == meta.id) {
         entries[pos] = meta;
     } else {
         entries.push(meta);
         // Borner la collection : supprimer les plus anciennes si dépassement
-        if entries.len() > MAX_ANALYSES {
-            entries.drain(0..entries.len() - MAX_ANALYSES);
+        if entries.len() > MAX_STORED_ANALYSES {
+            removed_ids.extend(
+                entries
+                    .drain(0..entries.len() - MAX_STORED_ANALYSES)
+                    .map(|entry| entry.id),
+            );
         }
     }
-    write_index(&entries).await
+    write_index(&entries).await?;
+    for id in removed_ids {
+        validate_analysis_id(&id)?;
+        tokio::fs::remove_file(analysis_path(&id))
+            .await
+            .map_err(|_| "Nettoyage des analyses échoué".to_string())?;
+    }
+    Ok(())
 }
 
 async fn remove_from_index(id: &str) -> Result<(), String> {
     let _guard = INDEX_LOCK.lock().await;
-    let mut entries = read_index().await.unwrap_or_default();
+    let mut entries = read_index().await?;
     entries.retain(|e| e.id != id);
     write_index(&entries).await
 }

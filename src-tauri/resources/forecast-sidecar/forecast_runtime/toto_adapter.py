@@ -1,6 +1,5 @@
 from .adapter_utils import (
     forecast_payload_result,
-    forecast_quantile_index,
     simple_result,
     values_tensor,
 )
@@ -8,7 +7,7 @@ from .config_utils import config_bool, config_int
 from .config_utils import standard_quantile_levels
 from .device_utils import move_model, move_tensor
 from .toto_covariates import build_covariate_jobs, format_covariate_predictions
-from .validation import validate_column_names
+from .validation import forecast_quantile_index, validate_column_names
 
 
 class TotoAdapter:

@@ -6,6 +6,7 @@ fn request() -> ForecastRequest {
     ForecastRequest {
         data: Some(r#"[{"date":"2026-05-01","sales":100}]"#.to_string()),
         file_path: Some("  ".into()),
+        data_profile_id: None,
         target_column: " sales ".into(),
         date_column: " date ".into(),
         series_column: Some("  ".into()),
@@ -13,7 +14,7 @@ fn request() -> ForecastRequest {
         horizon: 3,
         frequency: " D ".into(),
         model: Some(" kairos-10m ".into()),
-        confidence_level: 0.9,
+        confidence_level: 0.8,
     }
 }
 
