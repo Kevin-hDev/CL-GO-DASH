@@ -37,7 +37,7 @@
 .fmsel-mode {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: var(--space-sm);
   padding: var(--chrome-2) var(--chrome-3);
   border-bottom: 1px solid var(--edge);
@@ -50,16 +50,17 @@
 
 .fmsel-mode-options {
   display: inline-flex;
-  padding: var(--chrome-1);
-  border: 1px solid var(--edge);
-  border-radius: var(--radius-sm);
-  background: var(--surface-hover);
+  flex: 0 0 auto;
+  width: fit-content;
+  gap: var(--chrome-1);
 }
 
 .fmsel-mode-option {
-  border: 0;
-  border-radius: var(--radius-xs);
-  padding: var(--chrome-1) var(--chrome-2);
+  width: auto;
+  height: var(--compact-control-height);
+  padding: 0 var(--chrome-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--ink-faint);
   font: inherit;
@@ -70,12 +71,13 @@
 
 .fmsel-mode-option:hover,
 .fmsel-mode-option.is-active {
-  background: var(--surface);
+  border-color: var(--edge);
+  background: var(--app-frame);
   color: var(--ink);
 }
 
 .fmsel-mode-option.is-active {
-  box-shadow: var(--shadow-sm);
+  font-weight: 600;
 }
 
 .fmsel-mode-option:focus-visible {

@@ -69,6 +69,7 @@
 
   --browser-toolbar-height: 2rem;
   --browser-control-size: 1.75rem;
+  --compact-control-height: 24px;
   --browser-toolbar-padding-y: 0.125rem;
   --browser-field-padding-y: var(--space-xs);
   --browser-tab-max-width: 12rem;
