@@ -90,3 +90,23 @@ async fn errors_never_echo_request_details() {
     assert!(!error.contains("127.0.0.1"));
     assert!(!error.contains("private-path"));
 }
+
+#[tokio::test]
+async fn forecast_limit_accepts_a_small_loopback_response() {
+    let server = MockServer::start().await;
+    Mock::given(any())
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({"ok": true})))
+        .mount(&server)
+        .await;
+    let client = AuthenticatedClient::new_loopback(Duration::from_secs(2)).unwrap();
+    let response = client.send(client.get(server.uri())).await.unwrap();
+
+    let body: serde_json::Value = read_json_bounded(
+        response,
+        crate::services::forecast::limits::MAX_RESPONSE_BYTES,
+    )
+    .await
+    .unwrap();
+
+    assert_eq!(body["ok"], true);
+}

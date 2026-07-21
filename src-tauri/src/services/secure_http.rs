@@ -15,7 +15,7 @@ pub const DISCORD_BODY_LIMIT: usize = 512 * 1024;
 pub const MCP_BODY_LIMIT: usize = 10 * 1024 * 1024;
 pub const LLM_BODY_LIMIT: usize = 10 * 1024 * 1024;
 pub const PROVIDER_ERROR_LIMIT: usize = 16 * 1024;
-const MAX_BODY_LIMIT: usize = MCP_BODY_LIMIT;
+pub const MAX_AUTHENTICATED_BODY_LIMIT: usize = 32 * 1024 * 1024;
 pub const MAX_AUTHENTICATED_TIMEOUT: Duration = Duration::from_secs(600);
 
 #[derive(Clone, Copy)]
@@ -104,7 +104,7 @@ pub async fn read_bounded(
     response: Response,
     limit: usize,
 ) -> Result<Zeroizing<Vec<u8>>, SecureHttpError> {
-    if limit == 0 || limit > MAX_BODY_LIMIT {
+    if limit == 0 || limit > MAX_AUTHENTICATED_BODY_LIMIT {
         return Err(SecureHttpError::Configuration);
     }
     if response
