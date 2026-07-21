@@ -1,6 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
-import { listen } from "@tauri-apps/api/event";
-import { cleanupTauriListener } from "@/lib/tauri-listen";
+import { useState, useCallback } from "react";
 
 export type ForecastSection = "view" | "scenarios" | "comparisons" | "analysis" | "notes" | "history";
 export type PanelMode = "preview" | "forecast" | "browser";
@@ -10,11 +8,6 @@ export interface ForecastPanelState {
   navOpen: boolean;
   currentAnalysisId: string | null;
   panelMode: PanelMode;
-}
-
-interface ForecastAnalysisCreatedEvent {
-  analysis_id: string;
-  session_id: string;
 }
 
 const DEFAULT_PANEL_STATE = {
@@ -103,22 +96,6 @@ export function useForecastPanel(sessionId: string | null) {
     if (samePanelState(state, next)) return;
     persist(next);
   }, [state, persist]);
-
-  useEffect(() => {
-    if (!sessionId) return;
-    let cancelled = false;
-    const unlisten = listen<ForecastAnalysisCreatedEvent>(
-      "forecast-analysis-created",
-      (event) => {
-        if (cancelled || event.payload.session_id !== sessionId) return;
-        loadAnalysis(event.payload.analysis_id);
-      },
-    );
-    return () => {
-      cancelled = true;
-      cleanupTauriListener(unlisten);
-    };
-  }, [sessionId, loadAnalysis]);
 
   return {
     ...state,

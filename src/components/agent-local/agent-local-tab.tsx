@@ -65,7 +65,7 @@ export const AgentLocalTab = memo(function AgentLocalTab({
   const forecast = useForecastPanel(displaySessionId ?? null);
   useAgentLocalPanelNav({ navState, fileTree, forecast });
   const { fileTreeNav, forecastNav } = useAgentLocalControlledPanels({
-    navState, filePreview, fileTree, forecast, onNavChange,
+    navState, sessionId: displaySessionId ?? null, filePreview, fileTree, forecast, onNavChange,
   });
   const availablePanel = useAvailablePanelMode(forecastNav.panelMode);
   const {
