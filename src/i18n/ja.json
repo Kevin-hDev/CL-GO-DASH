@@ -1160,8 +1160,45 @@
     },
     "title": "予測",
     "noAnalysis": "分析が進行中ではありません",
+    "selection": {
+      "label": "選択",
+      "manual": "手動",
+      "auto": "Auto",
+      "loadFailed": "Forecast の選択を読み込めませんでした。",
+      "saveFailed": "Forecast の選択を保存できませんでした。"
+    },
+    "workbench": {
+      "windowTitle": "Forecast ワークスペース",
+      "kicker": "Forecast · アクティブセッション",
+      "navigation": "Forecast ワークスペース",
+      "open": "Forecast ワークスペースを開く",
+      "openFailed": "Forecast ワークスペースを開けませんでした。",
+      "loading": "Forecast ワークスペースを読み込み中…",
+      "unavailable": "Forecast のコンテキストを利用できません。",
+      "newAnalysis": "新しい分析",
+      "workspace": "ワークスペース",
+      "foundationTitle": "構造の準備が完了しました",
+      "foundationDescription": "このワークスペースは現在の会話に紐づいています。チャットを隠さず、手動ツールをここに追加します。",
+      "sections": {
+        "data": "データ",
+        "forecast": "予測",
+        "evaluation": "評価",
+        "comparison": "比較",
+        "scenarios": "シナリオ",
+        "report": "レポート"
+      },
+      "sectionDescriptions": {
+        "data": "予測前に時系列を準備、確認、修正します。",
+        "forecast": "対象、期間、モデル、実行を設定します。",
+        "evaluation": "ベースラインと時系列検証でモデルを評価します。",
+        "comparison": "モデルの品質、速度、制約を比較します。",
+        "scenarios": "基準予測を保ったまま仮説を作成、編集します。",
+        "report": "出典、メモ、高度なエクスポートをまとめます。"
+      }
+    },
     "docs": {
       "windowTitle": "Forecast ドキュメント",
+      "openFailed": "Forecast ドキュメントを開けません。",
       "kicker": "技術ドキュメント",
       "status": "Forecast ガイド",
       "navLabel": "Forecast ドキュメント",

@@ -13,20 +13,25 @@ import {
   groupForecastModels,
 } from "../forecast-model-meta";
 import { useAvailableForecastModels } from "../use-available-forecast-models";
+import type { ForecastSelectionMode } from "../model-selection/forecast-selection-types";
 import "@/components/agent-local/model-selector.css";
 import "./export-dropdown.css";
 import "./forecast-model-selector.css";
 
 interface ForecastModelSelectorProps {
   selectedModelId: string;
+  selectionMode: ForecastSelectionMode;
   selectionReady: boolean;
   onSelectModel: (modelId: string) => void;
+  onModeChange: (mode: ForecastSelectionMode) => void;
 }
 
 export function ForecastModelSelector({
   selectedModelId,
+  selectionMode,
   selectionReady,
   onSelectModel,
+  onModeChange,
 }: ForecastModelSelectorProps) {
   const { t } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
@@ -44,12 +49,12 @@ export function ForecastModelSelector({
   );
 
   useEffect(() => {
-    if (!selectionReady) return;
+    if (!selectionReady || selectionMode !== "manual") return;
     if (models.length === 0) return;
     if (!selectedModelId || !models.some((model) => model.id === selectedModelId)) {
       onSelectModel(models[0].id);
     }
-  }, [models, selectedModelId, selectionReady, onSelectModel]);
+  }, [models, selectedModelId, selectionMode, selectionReady, onSelectModel]);
 
   const groups = useMemo(() => {
     const lowered = query.trim().toLowerCase();
@@ -63,6 +68,7 @@ export function ForecastModelSelector({
         group.id,
         group.models.map((model) => ({
           id: model.id,
+          display_name: model.display_name,
           provider_id: getForecastFamilyId(model),
           provider_name: familyName === getForecastFamilyKey(group.id) ? group.id : familyName,
           is_local: !model.is_cloud,
@@ -84,6 +90,8 @@ export function ForecastModelSelector({
       <button
         className={`exd-trigger fmsel-trigger${selectedModel ? "" : " fmsel-trigger-empty"}`}
         type="button"
+        disabled={!selectionReady}
+        aria-busy={!selectionReady}
         onClick={() => setOpen((current) => !current)}
         onKeyDown={(event) => {
           if (!open && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
@@ -98,7 +106,9 @@ export function ForecastModelSelector({
         }}
       >
         <span className="fmsel-trigger-label">
-          {selectedModel?.display_name ?? t("forecast.config.model")}
+          {selectionMode === "auto"
+            ? t("forecast.selection.auto")
+            : selectedModel?.display_name ?? t("forecast.config.model")}
         </span>
         <CaretDown size="var(--icon-sm)" className={`fmsel-caret ${open ? "open" : ""}`} />
       </button>
@@ -119,6 +129,23 @@ export function ForecastModelSelector({
               className="ms-search-input"
               autoFocus
             />
+          </div>
+          <div className="fmsel-mode" aria-label={t("forecast.selection.label")}>
+            <span className="fmsel-mode-label">{t("forecast.selection.label")}</span>
+            <div className="fmsel-mode-options">
+              {(["manual", "auto"] as const).map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  disabled={!selectionReady}
+                  className={`fmsel-mode-option ${selectionMode === mode ? "is-active" : ""}`}
+                  aria-pressed={selectionMode === mode}
+                  onClick={() => onModeChange(mode)}
+                >
+                  {t(`forecast.selection.${mode}`)}
+                </button>
+              ))}
+            </div>
           </div>
           <div className="ms-list">
             <ModelSelectorList

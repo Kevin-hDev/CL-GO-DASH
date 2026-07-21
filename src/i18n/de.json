@@ -1160,8 +1160,45 @@
     },
     "title": "Prognose",
     "noAnalysis": "Keine laufende Analyse",
+    "selection": {
+      "label": "Auswahl",
+      "manual": "Manuell",
+      "auto": "Auto",
+      "loadFailed": "Die Forecast-Auswahl konnte nicht geladen werden.",
+      "saveFailed": "Die Forecast-Auswahl konnte nicht gespeichert werden."
+    },
+    "workbench": {
+      "windowTitle": "Forecast-Arbeitsbereich",
+      "kicker": "Forecast · Aktive Sitzung",
+      "navigation": "Forecast-Bereiche",
+      "open": "Forecast-Arbeitsbereich öffnen",
+      "openFailed": "Der Forecast-Arbeitsbereich konnte nicht geöffnet werden.",
+      "loading": "Forecast-Arbeitsbereich wird geladen…",
+      "unavailable": "Der Forecast-Kontext ist nicht verfügbar.",
+      "newAnalysis": "Neue Analyse",
+      "workspace": "Arbeitsbereich",
+      "foundationTitle": "Struktur bereit",
+      "foundationDescription": "Dieser Bereich ist mit der aktiven Unterhaltung verbunden. Manuelle Werkzeuge werden hier ergänzt, ohne den Chat auszublenden.",
+      "sections": {
+        "data": "Daten",
+        "forecast": "Prognose",
+        "evaluation": "Bewertung",
+        "comparison": "Vergleich",
+        "scenarios": "Szenarien",
+        "report": "Bericht"
+      },
+      "sectionDescriptions": {
+        "data": "Bereite Zeitreihen vor, prüfe und korrigiere sie vor der Prognose.",
+        "forecast": "Konfiguriere Ziel, Horizont, Modell und Ausführung.",
+        "evaluation": "Bewerte Modelle mit Baselines und zeitlicher Validierung.",
+        "comparison": "Vergleiche Qualität, Geschwindigkeit und Einschränkungen.",
+        "scenarios": "Erstelle und bearbeite Annahmen, ohne die Referenzprognose zu verlieren.",
+        "report": "Bündele Herkunft, Notizen und erweiterte Exporte."
+      }
+    },
     "docs": {
       "windowTitle": "Forecast-Dokumentation",
+      "openFailed": "Die Forecast-Dokumentation konnte nicht geöffnet werden.",
       "kicker": "Technische Dokumentation",
       "status": "Forecast-Leitfaden",
       "navLabel": "Forecast-Dokumentation",

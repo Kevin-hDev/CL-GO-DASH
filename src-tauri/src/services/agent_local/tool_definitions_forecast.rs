@@ -1,72 +1,14 @@
 use serde_json::Value;
 
+#[path = "tool_definitions_forecast_run.rs"]
+mod forecast_run;
+
 pub fn forecast_tool_definitions() -> Vec<Value> {
-    let selector_policy = match crate::services::forecast::selected_model::get() {
-        Some(model) => format!(
-            "The Forecast UI selector currently forces '{model}'. The model is selected by the app, not by you. Do not pass a model id. If the run fails, report the selected model error and keep the active model unchanged."
-        ),
-        None => "No Forecast model is currently selected in the UI. Ask the user to select one before running forecast.".to_string(),
-    };
-    let forecast_description = format!(
-        "Run a time series forecast from structured data. Use this when the user wants to predict future values of a series such as demand, sales, traffic, price, load, or trend. \
-         Provide either a JSON array in 'data' or a CSV/Excel path in 'file_path'. \
-         The tool returns a compact saved-analysis summary with analysis_id first. \
-         Call forecast_read with that analysis_id for predictions and quantiles. \
-         {selector_policy} \
-         Use forecast_models only when the user asks which Forecast models are available or when you need to inspect the current selector policy. \
-         Use series_column for multi-series models. Models with covariate support can use past columns and optional future-known rows."
-    );
     vec![
-        super::tool_definitions::tool_def(
-            "forecast",
-            &forecast_description,
-            serde_json::json!({
-                "type": "object",
-                "properties": {
-                    "data": {
-                        "type": "string",
-                        "description": "JSON array of row objects. Historical rows must include date and target. Optional future rows may omit the target and keep known future covariates."
-                    },
-                    "file_path": {
-                        "type": "string",
-                        "description": "Path to a CSV or Excel file. Use this instead of 'data' when the source already exists on disk."
-                    },
-                    "target_column": {
-                        "type": "string",
-                        "description": "Name of the target column to forecast."
-                    },
-                    "date_column": {
-                        "type": "string",
-                        "description": "Name of the date or timestamp column."
-                    },
-                    "series_column": {
-                        "type": "string",
-                        "description": "Optional series identifier column for multi-series forecasts."
-                    },
-                    "covariate_columns": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                        "description": "Optional context columns. For Chronos-2 they can be used as past covariates and future-known covariates if future rows are provided."
-                    },
-                    "horizon": {
-                        "type": "integer",
-                        "description": "Number of future steps to predict."
-                    },
-                    "frequency": {
-                        "type": "string",
-                        "description": "Time frequency such as D, W, M, Q, Y, H, or T."
-                    },
-                    "confidence_level": {
-                        "type": "number",
-                        "description": "Confidence level for prediction intervals, usually 0.9."
-                    }
-                },
-                "required": ["target_column", "date_column", "horizon", "frequency"]
-            }),
-        ),
+        forecast_run::definition(),
         super::tool_definitions::tool_def(
             "forecast_models",
-            "List Forecast model ids available to the app. Read selection_policy.forced_model_state first: it is the authoritative state of the model forced by the Forecast UI selector. Do not infer the selected model state from other variants in the same family, and do not use this tool to override the selector.",
+            "Inspect the Forecast selection policy. In Manual, you use only forced_model. In Auto, you choose only one id from candidates and keep the user's policy unchanged. You do not call a capabilities-only candidate the best model.",
             serde_json::json!({
                 "type": "object",
                 "properties": {},

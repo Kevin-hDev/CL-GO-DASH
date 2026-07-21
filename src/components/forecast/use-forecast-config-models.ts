@@ -6,7 +6,7 @@ import {
   type ForecastModelsResponse,
 } from "./forecast-model-meta";
 
-export function useForecastConfigModels(defaultModelId: string) {
+export function useForecastConfigModels(defaultModelId: string, selectFallbackModel = true) {
   const [models, setModels] = useState<ForecastModelEntry[]>([]);
   const [model, setModel] = useState(defaultModelId);
 
@@ -19,10 +19,10 @@ export function useForecastConfigModels(defaultModelId: string) {
           setModel(defaultModelId);
           return;
         }
-        if (visibleModels[0]) setModel(visibleModels[0].id);
+        setModel(selectFallbackModel ? visibleModels[0]?.id ?? "" : "");
       })
       .catch(() => {});
-  }, [defaultModelId]);
+  }, [defaultModelId, selectFallbackModel]);
 
   return { models, model, setModel };
 }

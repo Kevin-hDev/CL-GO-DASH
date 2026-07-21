@@ -1160,8 +1160,45 @@
     },
     "title": "预测",
     "noAnalysis": "没有正在进行的分析",
+    "selection": {
+      "label": "选择",
+      "manual": "手动",
+      "auto": "Auto",
+      "loadFailed": "无法加载 Forecast 选择。",
+      "saveFailed": "无法保存 Forecast 选择。"
+    },
+    "workbench": {
+      "windowTitle": "Forecast 工作区",
+      "kicker": "Forecast · 当前会话",
+      "navigation": "Forecast 工作区导航",
+      "open": "打开 Forecast 工作区",
+      "openFailed": "无法打开 Forecast 工作区。",
+      "loading": "正在加载 Forecast 工作区…",
+      "unavailable": "Forecast 上下文不可用。",
+      "newAnalysis": "新分析",
+      "workspace": "工作区",
+      "foundationTitle": "结构已就绪",
+      "foundationDescription": "此工作区与当前对话绑定。手动工具将在这里添加，不会隐藏聊天。",
+      "sections": {
+        "data": "数据",
+        "forecast": "预测",
+        "evaluation": "评估",
+        "comparison": "比较",
+        "scenarios": "场景",
+        "report": "报告"
+      },
+      "sectionDescriptions": {
+        "data": "在预测前准备、检查并修正时间序列。",
+        "forecast": "配置目标、预测范围、模型和运行。",
+        "evaluation": "使用基线和时间验证衡量模型。",
+        "comparison": "比较模型质量、速度和限制。",
+        "scenarios": "创建和修改假设，同时保留参考预测。",
+        "report": "汇总来源、备注和高级导出。"
+      }
+    },
     "docs": {
       "windowTitle": "Forecast 文档",
+      "openFailed": "无法打开 Forecast 文档。",
       "kicker": "技术文档",
       "status": "Forecast 指南",
       "navLabel": "Forecast 文档",

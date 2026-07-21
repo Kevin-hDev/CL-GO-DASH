@@ -123,9 +123,12 @@ fn capabilities_do_not_expose_global_or_docs_file_access() {
         serde_json::from_str(include_str!("../../capabilities/default.json")).unwrap();
     let docs: serde_json::Value =
         serde_json::from_str(include_str!("../../capabilities/forecast-docs.json")).unwrap();
+    let workbench: serde_json::Value =
+        serde_json::from_str(include_str!("../../capabilities/forecast-workbench.json")).unwrap();
 
     assert_eq!(main["windows"], serde_json::json!(["main"]));
     assert!(!main.to_string().contains("\"path\":\"**\""));
     assert!(!main.to_string().contains("fs:allow-stat"));
     assert!(!docs.to_string().contains("fs:"));
+    assert!(!workbench.to_string().contains("fs:"));
 }

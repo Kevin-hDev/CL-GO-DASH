@@ -1160,8 +1160,45 @@
     },
     "title": "Pronóstico",
     "noAnalysis": "Sin análisis en curso",
+    "selection": {
+      "label": "Selección",
+      "manual": "Manual",
+      "auto": "Auto",
+      "loadFailed": "No se pudo cargar la selección Forecast.",
+      "saveFailed": "No se pudo guardar la selección Forecast."
+    },
+    "workbench": {
+      "windowTitle": "Espacio Forecast",
+      "kicker": "Forecast · Sesión activa",
+      "navigation": "Espacios Forecast",
+      "open": "Abrir el espacio Forecast",
+      "openFailed": "No se pudo abrir el espacio Forecast.",
+      "loading": "Cargando el espacio Forecast…",
+      "unavailable": "El contexto Forecast no está disponible.",
+      "newAnalysis": "Nuevo análisis",
+      "workspace": "Espacio de trabajo",
+      "foundationTitle": "Estructura preparada",
+      "foundationDescription": "Este espacio está vinculado a la conversación activa. Las herramientas manuales se añadirán aquí sin ocultar el chat.",
+      "sections": {
+        "data": "Datos",
+        "forecast": "Previsión",
+        "evaluation": "Evaluación",
+        "comparison": "Comparación",
+        "scenarios": "Escenarios",
+        "report": "Informe"
+      },
+      "sectionDescriptions": {
+        "data": "Prepara, revisa y corrige las series antes de la previsión.",
+        "forecast": "Configura el objetivo, el horizonte, el modelo y la ejecución.",
+        "evaluation": "Mide los modelos con referencias y validación temporal.",
+        "comparison": "Compara la calidad, la velocidad y las restricciones.",
+        "scenarios": "Crea y modifica hipótesis sin perder la previsión de referencia.",
+        "report": "Reúne procedencia, notas y exportaciones avanzadas."
+      }
+    },
     "docs": {
       "windowTitle": "Documentación de Forecast",
+      "openFailed": "No se pudo abrir la documentación de Forecast.",
       "kicker": "Documentación técnica",
       "status": "Guía Forecast",
       "navLabel": "Documentación de Forecast",

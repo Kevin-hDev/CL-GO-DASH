@@ -22,26 +22,25 @@ import { useForecastLayerSources } from "./use-forecast-layer-sources";
 import { ForecastSectionRouter } from "./forecast-section-router";
 import { useCurrentForecastAnalysisName } from "./use-current-forecast-analysis-name";
 import { useForecastExport } from "./use-forecast-export";
-import { useSelectedForecastModel } from "./use-selected-forecast-model";
+import { useForecastSelectionPolicy } from "./model-selection/use-forecast-selection-policy";
 import "./forecast-panel.css";
 
 interface ForecastPanelProps {
   activeSection: ForecastSection;
   navOpen: boolean;
   currentAnalysisId: string | null;
-  fullscreen: boolean;
   onSectionChange: (section: ForecastSection) => void;
   onToggleNav: () => void;
   onLoadAnalysis: (id: string) => void;
   onFocusAnalysis: (id: string) => void;
   onPanelExtraWidthChange: (width: number) => void;
   onCloseAnalysis: () => void;
-  onFullscreenChange: (fs: boolean) => void;
+  onOpenWorkbench: () => void;
 }
 
 export function ForecastPanel({
-  activeSection, navOpen, currentAnalysisId, fullscreen,
-  onSectionChange, onToggleNav, onLoadAnalysis, onFocusAnalysis, onPanelExtraWidthChange, onCloseAnalysis, onFullscreenChange,
+  activeSection, navOpen, currentAnalysisId,
+  onSectionChange, onToggleNav, onLoadAnalysis, onFocusAnalysis, onPanelExtraWidthChange, onCloseAnalysis, onOpenWorkbench,
 }: ForecastPanelProps) {
   const { t } = useTranslation();
   const hasAnalysis = currentAnalysisId !== null;
@@ -51,7 +50,13 @@ export function ForecastPanel({
   const [layers, setLayers] = useState<ForecastLayerState>(createInitialLayerState);
   const [scenarioPickerOpen, setScenarioPickerOpen] = useState(false);
   const handleExport = useForecastExport();
-  const { selectedModelId, selectModel, ready: selectedModelReady } = useSelectedForecastModel();
+  const {
+    policy,
+    selectedModelId,
+    selectModel,
+    setMode,
+    ready: selectedModelReady,
+  } = useForecastSelectionPolicy();
   const currentAnalysisName = useCurrentForecastAnalysisName(currentAnalysisId);
   const layerSources = useForecastLayerSources(currentAnalysisId, setLayers);
   const filterGroups = buildForecastLayerGroups(
@@ -111,7 +116,6 @@ export function ForecastPanel({
         activeSection={activeSection}
         navOpen={navOpen}
         hasAnalysis={hasAnalysis}
-        fullscreen={fullscreen}
         contextLabel={activeSection === "scenarios" || activeSection === "comparisons" ? currentAnalysisName : null}
         filterSlot={
           hasAnalysis ? (
@@ -137,7 +141,7 @@ export function ForecastPanel({
         onToggleNav={onToggleNav}
         onSectionChange={onSectionChange}
         onCloseAnalysis={onCloseAnalysis}
-        onFullscreenChange={onFullscreenChange}
+        onOpenWorkbench={onOpenWorkbench}
       />
       <div className="fc-body">
         {draft ? (
@@ -145,7 +149,8 @@ export function ForecastPanel({
             draft={draft}
             launching={launching}
             error={error}
-            defaultModelId={selectedModelId}
+            defaultModelId={policy.mode === "manual" ? selectedModelId : ""}
+            selectFallbackModel={policy.mode === "manual"}
             onModelChange={handleSelectModel}
             onLaunch={(config) => void handleLaunch(config)}
             onBack={() => setDraft(null)}
@@ -173,8 +178,10 @@ export function ForecastPanel({
           {activeSection === "view" && (
             <ForecastModelSelector
               selectedModelId={selectedModelId}
+              selectionMode={policy.mode}
               selectionReady={selectedModelReady}
               onSelectModel={handleSelectModel}
+              onModeChange={setMode}
             />
           )}
           <ExportDropdown

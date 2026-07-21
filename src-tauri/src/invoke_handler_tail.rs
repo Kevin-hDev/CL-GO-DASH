@@ -119,11 +119,16 @@ macro_rules! generate_tail {
             crate::commands::list_forecast_models,
             crate::commands::get_selected_forecast_model,
             crate::commands::set_selected_forecast_model,
+            crate::commands::get_forecast_selection_policy,
+            crate::commands::set_forecast_selection_mode,
+            crate::commands::set_forecast_auto_cloud_allowed,
             crate::commands::get_forecast_model_config,
             crate::commands::set_forecast_model_config,
             crate::commands::get_forecast_model_details,
             crate::commands::uninstall_forecast_model,
             crate::commands::list_forecast_providers_catalog,
+            crate::commands::set_forecast_workbench_context,
+            crate::commands::get_forecast_workbench_context,
         ]
     };
 }

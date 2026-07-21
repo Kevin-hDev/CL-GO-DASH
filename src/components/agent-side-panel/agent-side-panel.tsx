@@ -28,11 +28,18 @@ export function AgentSidePanel(props: AgentSidePanelProps) {
           "--asp-width": `${props.displayWidth}px`,
         } as CSSProperties}
         aria-hidden={!props.open}
+        inert={!props.open}
       >
         <div className={`asp-slide-wrapper asp-slide-${props.mode}`}>
-          <div className="asp-slide-child">{props.previewContent}</div>
-          <div className="asp-slide-child">{props.forecastContent}</div>
-          <div className="asp-slide-child">{props.browserContent}</div>
+          <div className="asp-slide-child" aria-hidden={props.mode !== "preview"} inert={props.mode !== "preview"}>
+            {props.previewContent}
+          </div>
+          <div className="asp-slide-child" aria-hidden={props.mode !== "forecast"} inert={props.mode !== "forecast"}>
+            {props.forecastContent}
+          </div>
+          <div className="asp-slide-child" aria-hidden={props.mode !== "browser"} inert={props.mode !== "browser"}>
+            {props.browserContent}
+          </div>
         </div>
       </aside>
     </>

@@ -73,6 +73,11 @@
   --browser-field-padding-y: var(--space-xs);
   --browser-tab-max-width: 12rem;
   --browser-home-max-width: 26rem;
+  --forecast-model-trigger-max-width: 12.25rem;
+  --forecast-model-menu-width: 17.5rem;
+  --forecast-workbench-header-height: 4rem;
+  --forecast-workbench-nav-width: 13rem;
+  --forecast-workbench-copy-width: 42rem;
 
   --settings-content-max-width: 37.5rem;
   --settings-editor-min-height: 20rem;

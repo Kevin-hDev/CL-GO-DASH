@@ -1224,8 +1224,45 @@
     },
     "title": "Forecast",
     "noAnalysis": "Aucune analyse en cours",
+    "selection": {
+      "label": "Sélection",
+      "manual": "Manuel",
+      "auto": "Auto",
+      "loadFailed": "Impossible de charger la sélection Forecast.",
+      "saveFailed": "Impossible d'enregistrer la sélection Forecast."
+    },
+    "workbench": {
+      "windowTitle": "Espace Forecast",
+      "kicker": "Forecast · Session active",
+      "navigation": "Espaces Forecast",
+      "open": "Ouvrir l'espace Forecast",
+      "openFailed": "Impossible d'ouvrir l'espace Forecast.",
+      "loading": "Chargement de l'espace Forecast…",
+      "unavailable": "Le contexte Forecast est indisponible.",
+      "newAnalysis": "Nouvelle analyse",
+      "workspace": "Espace de travail",
+      "foundationTitle": "Structure prête",
+      "foundationDescription": "Cet espace est lié à la conversation active. Les outils manuels seront ajoutés ici sans masquer le chat.",
+      "sections": {
+        "data": "Données",
+        "forecast": "Prévision",
+        "evaluation": "Évaluation",
+        "comparison": "Comparaison",
+        "scenarios": "Scénarios",
+        "report": "Rapport"
+      },
+      "sectionDescriptions": {
+        "data": "Préparer, contrôler et corriger les séries avant une prévision.",
+        "forecast": "Configurer la cible, l'horizon, le modèle et le lancement.",
+        "evaluation": "Mesurer les modèles avec des baselines et des validations temporelles.",
+        "comparison": "Comparer la qualité, la vitesse et les contraintes des modèles.",
+        "scenarios": "Créer et modifier des hypothèses sans perdre la prévision de référence.",
+        "report": "Rassembler la provenance, les notes et les exports avancés."
+      }
+    },
     "docs": {
       "windowTitle": "Documentation Forecast",
+      "openFailed": "Impossible d'ouvrir la documentation Forecast.",
       "kicker": "Documentation technique",
       "status": "Guide Forecast",
       "navLabel": "Documentation Forecast",

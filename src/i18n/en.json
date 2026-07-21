@@ -1176,8 +1176,45 @@
     },
     "title": "Forecast",
     "noAnalysis": "No analysis in progress",
+    "selection": {
+      "label": "Selection",
+      "manual": "Manual",
+      "auto": "Auto",
+      "loadFailed": "Unable to load the Forecast selection.",
+      "saveFailed": "Unable to save the Forecast selection."
+    },
+    "workbench": {
+      "windowTitle": "Forecast workspace",
+      "kicker": "Forecast · Active session",
+      "navigation": "Forecast workspaces",
+      "open": "Open Forecast workspace",
+      "openFailed": "Unable to open the Forecast workspace.",
+      "loading": "Loading Forecast workspace…",
+      "unavailable": "The Forecast context is unavailable.",
+      "newAnalysis": "New analysis",
+      "workspace": "Workspace",
+      "foundationTitle": "Structure ready",
+      "foundationDescription": "This workspace is bound to the active conversation. Manual tools will be added here without hiding the chat.",
+      "sections": {
+        "data": "Data",
+        "forecast": "Forecast",
+        "evaluation": "Evaluation",
+        "comparison": "Comparison",
+        "scenarios": "Scenarios",
+        "report": "Report"
+      },
+      "sectionDescriptions": {
+        "data": "Prepare, inspect, and correct series before forecasting.",
+        "forecast": "Configure the target, horizon, model, and run.",
+        "evaluation": "Measure models with baselines and temporal validation.",
+        "comparison": "Compare model quality, speed, and constraints.",
+        "scenarios": "Create and edit assumptions without losing the reference forecast.",
+        "report": "Collect provenance, notes, and advanced exports."
+      }
+    },
     "docs": {
       "windowTitle": "Forecast documentation",
+      "openFailed": "Unable to open Forecast documentation.",
       "kicker": "Technical documentation",
       "status": "Forecast guide",
       "navLabel": "Forecast documentation",

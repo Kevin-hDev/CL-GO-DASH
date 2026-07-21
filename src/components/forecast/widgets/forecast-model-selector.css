@@ -5,7 +5,7 @@
 }
 
 .fmsel-trigger {
-  max-width: 220px;
+  max-width: var(--forecast-model-trigger-max-width);
 }
 
 .fmsel-trigger-empty {
@@ -21,7 +21,7 @@
 
 .fmsel-caret {
   flex-shrink: 0;
-  transition: transform 200ms ease;
+  transition: transform var(--ease-smooth);
 }
 
 .fmsel-caret.open {
@@ -29,7 +29,56 @@
 }
 
 .fmsel-dropdown {
-  bottom: calc(100% + 6px);
-  width: 280px;
+  bottom: calc(100% + var(--chrome-2));
+  width: var(--forecast-model-menu-width);
   margin-bottom: 0;
+}
+
+.fmsel-mode {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: var(--chrome-2) var(--chrome-3);
+  border-bottom: 1px solid var(--edge);
+}
+
+.fmsel-mode-label {
+  color: var(--ink-faint);
+  font-size: var(--text-xs);
+}
+
+.fmsel-mode-options {
+  display: inline-flex;
+  padding: var(--chrome-1);
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-sm);
+  background: var(--surface-hover);
+}
+
+.fmsel-mode-option {
+  border: 0;
+  border-radius: var(--radius-xs);
+  padding: var(--chrome-1) var(--chrome-2);
+  background: transparent;
+  color: var(--ink-faint);
+  font: inherit;
+  font-size: var(--text-xs);
+  cursor: pointer;
+  transition: background var(--ease-smooth), color var(--ease-smooth);
+}
+
+.fmsel-mode-option:hover,
+.fmsel-mode-option.is-active {
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.fmsel-mode-option.is-active {
+  box-shadow: var(--shadow-sm);
+}
+
+.fmsel-mode-option:focus-visible {
+  outline: 2px solid var(--pulse);
+  outline-offset: 1px;
 }

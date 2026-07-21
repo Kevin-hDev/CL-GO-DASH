@@ -28,6 +28,7 @@ pub mod scenario_context_run;
 pub mod scenario_percent;
 pub mod scenarios;
 pub mod selected_model;
+pub mod selection_policy;
 pub mod sidecar;
 mod sidecar_auth;
 mod sidecar_http;
@@ -39,6 +40,7 @@ pub mod storage;
 pub mod target_domain;
 pub mod types;
 pub mod validation;
+pub mod workbench_context;
 
 #[cfg(test)]
 mod file_input_tests;

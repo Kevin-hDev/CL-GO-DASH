@@ -15,6 +15,7 @@ interface ForecastConfigProps {
   launching: boolean;
   error: string | null;
   defaultModelId: string;
+  selectFallbackModel: boolean;
   onModelChange: (modelId: string) => void;
   onLaunch: (config: LaunchConfig) => void;
   onBack: () => void;
@@ -40,6 +41,7 @@ export function ForecastConfig({
   launching,
   error,
   defaultModelId,
+  selectFallbackModel,
   onModelChange,
   onLaunch,
   onBack,
@@ -52,7 +54,10 @@ export function ForecastConfig({
   const [horizon, setHorizon] = useState(12);
   const [frequency, setFrequency] = useState("M");
   const [confidence, setConfidence] = useState(0.9);
-  const { models, model, setModel } = useForecastConfigModels(defaultModelId);
+  const { models, model, setModel } = useForecastConfigModels(
+    defaultModelId,
+    selectFallbackModel,
+  );
 
   const covariateOptions = draft.columns.filter(
     (column) => column !== target && column !== dateCol && column !== seriesCol

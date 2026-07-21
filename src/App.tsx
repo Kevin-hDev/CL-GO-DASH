@@ -13,6 +13,7 @@ import { PersonalityTab } from "@/components/personality/personality-tab";
 import { AgentLocalTab } from "@/components/agent-local/agent-local-tab";
 import { SettingsTab } from "@/components/settings/settings-tab";
 import { ForecastDocsWindow } from "@/components/forecast-docs/forecast-docs-window";
+import { ForecastWorkbenchApp } from "@/components/forecast/workbench/forecast-workbench-app";
 import { cleanupTauriListener } from "@/lib/tauri-listen";
 import { useStartupGate } from "@/hooks/use-startup-gate";
 import type { TabId } from "@/components/layout/sidebar";
@@ -25,7 +26,9 @@ import {
 } from "@/types/navigation";
 
 export default function App() {
-  return window.location.hash === "#/forecast-docs" ? <ForecastDocsApp /> : <MainApp />;
+  if (window.location.hash === "#/forecast-docs") return <ForecastDocsApp />;
+  if (window.location.hash === "#/forecast-workbench") return <ForecastWorkbenchApp />;
+  return <MainApp />;
 }
 
 function ForecastDocsApp() {

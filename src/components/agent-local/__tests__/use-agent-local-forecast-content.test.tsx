@@ -29,7 +29,7 @@ describe("useAgentLocalForecastContent", () => {
         setFullscreen,
         setExtraWidth: vi.fn(),
       },
-      docsWindowTitle: "Forecast documentation",
+      sessionId: "550e8400-e29b-41d4-a716-446655440000",
     }));
 
     act(() => result.current.handlePreviewFullscreenChange(true));
