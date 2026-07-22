@@ -982,6 +982,9 @@
     "modelUpdate": "更新",
     "version": "版本 {{version}}",
     "ollamaBinaryUpdate": "更新",
+    "forecastDevRuntime": "开发 · 运行环境",
+    "forecastDevModel": "开发 · 模型",
+    "forecastDevReview": "检查",
     "releaseNotesTitle": "{{version}} 版本说明",
     "showDetails": "显示详情",
     "hideDetails": "隐藏详情"

@@ -3,11 +3,14 @@ use crate::services::paths::data_dir;
 use std::path::{Path, PathBuf};
 
 pub mod download;
-pub mod download_github;
+mod fs_safety;
 mod install;
 mod install_plan;
+mod model_artifacts;
+mod model_receipt;
 mod runtime_install;
 mod smoke;
+mod smoke_proof;
 mod uninstall;
 
 pub use install::install_with_callback;
@@ -34,6 +37,7 @@ pub fn is_ready(model_id: &str) -> bool {
         return false;
     };
     is_installed(model_id)
+        && model_receipt::is_current(&model_path(model_id), model_id)
         && crate::services::forecast::sidecar_runtime::family_runtime_ready(
             &sidecar_dir(),
             spec.family_id,
@@ -45,7 +49,7 @@ pub fn get_model_size(model_id: &str) -> u64 {
     if validation::validate_model_id(model_id).is_err() {
         return 0;
     }
-    walkdir_size(&model_path(model_id))
+    fs_safety::bounded_directory_size(&model_path(model_id)).unwrap_or(0)
 }
 
 fn is_installed_in(root: &Path, model_id: &str) -> bool {
@@ -53,32 +57,22 @@ fn is_installed_in(root: &Path, model_id: &str) -> bool {
 }
 
 fn has_downloaded_weights(root: &Path, model_id: &str) -> bool {
-    root.join(model_id).join(".complete").is_file()
+    let model = root.join(model_id);
+    fs_safety::is_real_directory(&model) && fs_safety::is_regular_file(&model.join(".complete"))
 }
 
 fn family_has_installed_model(models: &Path, family_id: &str) -> bool {
+    let Ok(runtime) = crate::services::forecast::sidecar_runtime::runtime_id(family_id) else {
+        return false;
+    };
     crate::services::forecast::catalog::FORECAST_MODELS
         .iter()
-        .filter(|model| !model.is_cloud && model.family_id == family_id)
-        .any(|model| is_installed_in(models, model.id))
-}
-
-fn walkdir_size(path: &Path) -> u64 {
-    std::fs::read_dir(path)
-        .ok()
-        .map(|entries| {
-            entries
-                .filter_map(Result::ok)
-                .map(|entry| {
-                    if entry.path().is_dir() {
-                        walkdir_size(&entry.path())
-                    } else {
-                        entry.metadata().map(|meta| meta.len()).unwrap_or(0)
-                    }
-                })
-                .sum()
+        .filter(|model| {
+            !model.is_cloud
+                && crate::services::forecast::sidecar_runtime::runtime_id(model.family_id)
+                    .is_ok_and(|candidate| candidate == runtime)
         })
-        .unwrap_or(0)
+        .any(|model| is_installed_in(models, model.id))
 }
 
 #[cfg(test)]

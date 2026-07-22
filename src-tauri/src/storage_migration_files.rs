@@ -67,15 +67,30 @@ fn sync_forecast_sidecar_from(
     target: &std::path::Path,
 ) -> Result<(), String> {
     validate_forecast_assets(resource_base)?;
-    copy_recursive(resource_base, target)
+    copy_forecast_runtime(resource_base, target)
         .map_err(|_| "Synchronisation Forecast impossible".to_string())?;
     validate_forecast_assets(target)
 }
 
+fn copy_forecast_runtime(
+    source: &std::path::Path,
+    target: &std::path::Path,
+) -> std::io::Result<()> {
+    const FILES: [&str; 3] = ["server.py", "test_model_smoke.py", "requirements.txt"];
+    for relative in FILES {
+        copy_recursive(&source.join(relative), &target.join(relative))?;
+    }
+    copy_recursive(
+        &source.join("forecast_runtime"),
+        &target.join("forecast_runtime"),
+    )
+}
+
 fn validate_forecast_assets(root: &std::path::Path) -> Result<(), String> {
-    const REQUIRED: [&str; 3] = [
+    const REQUIRED: [&str; 4] = [
         "server.py",
         "test_model_smoke.py",
+        "requirements.txt",
         "forecast_runtime/adapters.py",
     ];
     REQUIRED
@@ -128,7 +143,11 @@ fn copy_recursive_inner(
             "profondeur de copie maximale dépassée",
         ));
     }
-    if src.is_dir() {
+    let metadata = fs::symlink_metadata(src)?;
+    if metadata.file_type().is_symlink() {
+        return Err(std::io::Error::other("lien symbolique refusé"));
+    }
+    if metadata.is_dir() {
         fs::create_dir_all(dst)?;
         for entry in fs::read_dir(src)? {
             let entry = entry?;
@@ -140,11 +159,13 @@ fn copy_recursive_inner(
             }
             copy_recursive_inner(&entry.path(), &target, root_dst, depth + 1)?;
         }
-    } else {
+    } else if metadata.is_file() {
         if let Some(parent) = dst.parent() {
             fs::create_dir_all(parent)?;
         }
         fs::copy(src, dst)?;
+    } else {
+        return Err(std::io::Error::other("type de ressource refusé"));
     }
     Ok(())
 }

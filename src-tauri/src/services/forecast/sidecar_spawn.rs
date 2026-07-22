@@ -1,4 +1,6 @@
-use crate::services::forecast::{sidecar_http, sidecar_runtime, sidecar_settings::LaunchSettings};
+use crate::services::forecast::{
+    sidecar_http, sidecar_process_env, sidecar_runtime, sidecar_settings::LaunchSettings,
+};
 use crate::services::paths::data_dir;
 use std::path::{Path, PathBuf};
 use std::process::Child;
@@ -27,6 +29,7 @@ pub fn spawn_process(
     launch: &LaunchSettings,
 ) -> Result<Child, String> {
     let mut cmd = std::process::Command::new(runtime_python);
+    sidecar_process_env::configure(&mut cmd, &sidecar_dir())?;
     cmd.args([
         script.to_str().unwrap_or("server.py"),
         "--port",

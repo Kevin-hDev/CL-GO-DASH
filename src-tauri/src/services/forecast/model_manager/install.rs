@@ -1,13 +1,14 @@
 use super::{
-    download, download_github,
+    download, fs_safety,
     install_plan::{install_plan, should_remove_prepared_runtime, InstallPlan},
-    models_dir,
+    model_receipt, models_dir,
     runtime_install::prepare_runtime,
     sidecar_dir, smoke,
 };
 use crate::services::forecast::{catalog, sidecar_runtime, validation};
 use crate::services::model_downloads::{ModelDownloadPhase, ProgressUpdate};
 use std::path::Path;
+use tokio::io::AsyncWriteExt;
 use tokio_util::sync::CancellationToken;
 
 const DOWNLOAD_SHARE: u16 = 70;
@@ -38,9 +39,6 @@ async fn install_with_roots(
     on_progress: &(dyn Fn(ProgressUpdate) + Send + Sync),
 ) -> Result<(), String> {
     validation::validate_model_id(model_id)?;
-    if catalog::requires_remote_code(model_id) {
-        return Err("Modèle Forecast désactivé par la politique de sécurité".into());
-    }
     let spec =
         catalog::find_model(model_id).ok_or_else(|| "Modèle Forecast inconnu".to_string())?;
     let plan = install_plan(models, sidecar, model_id)?;
@@ -57,30 +55,12 @@ async fn install_with_roots(
             progress.percent = ((u16::from(progress.percent) * DOWNLOAD_SHARE) / 100) as u8;
             on_progress(progress);
         };
-        let result = if let Some(repo) = spec.hf_repo {
-            download::download_model(
-                repo,
-                spec.hf_revision,
-                catalog::hf_file(model_id),
-                &staging,
-                cancel,
-                &scaled,
-            )
-            .await
-        } else if let Some(repo) = spec.github_repo {
-            download_github::download_repo_snapshot(
-                repo,
-                spec.github_revision,
-                &staging,
-                cancel,
-                &scaled,
-            )
-            .await
-        } else {
-            Err("Source du modèle Forecast indisponible".to_string())
-        };
-        if let Err(error) = result {
-            let _ = tokio::fs::remove_dir_all(&staging).await;
+        if let Err(error) = download::download_model(model_id, &staging, cancel, &scaled).await {
+            let _ = fs_safety::remove_path(&staging).await;
+            return Err(error);
+        }
+        if let Err(error) = model_receipt::write_current(&staging, model_id).await {
+            let _ = fs_safety::remove_path(&staging).await;
             return Err(error);
         }
     }
@@ -89,7 +69,7 @@ async fn install_with_roots(
         Ok(python) => python,
         Err(error) => {
             if plan == InstallPlan::Full {
-                let _ = tokio::fs::remove_dir_all(&staging).await;
+                let _ = fs_safety::remove_path(&staging).await;
             }
             return Err(error);
         }
@@ -99,6 +79,12 @@ async fn install_with_roots(
     } else {
         &target
     };
+    if plan != InstallPlan::Full && !model_receipt::is_current(smoke_target, model_id) {
+        if let Err(error) = model_receipt::verify_and_write(smoke_target, model_id, cancel).await {
+            remove_unvalidated_runtime(runtime_was_ready, sidecar, spec.family_id).await;
+            return Err(error);
+        }
+    }
     if let Err(error) = smoke::validate_model(
         &runtime_python,
         sidecar,
@@ -110,7 +96,7 @@ async fn install_with_roots(
     .await
     {
         if plan == InstallPlan::Full {
-            let _ = tokio::fs::remove_dir_all(&staging).await;
+            let _ = fs_safety::remove_path(&staging).await;
         }
         remove_unvalidated_runtime(runtime_was_ready, sidecar, spec.family_id).await;
         return Err(error);
@@ -155,7 +141,9 @@ async fn remove_orphan_runtime(
 }
 
 async fn prepare_model_staging(staging: &Path) -> Result<(), String> {
-    let _ = tokio::fs::remove_dir_all(staging).await;
+    fs_safety::remove_path(staging)
+        .await
+        .map_err(|_| "Impossible de préparer l'installation".to_string())?;
     tokio::fs::create_dir_all(staging)
         .await
         .map_err(|_| "Impossible de préparer l'installation".to_string())
@@ -168,7 +156,7 @@ async fn finalize_model(
     on_progress: &(dyn Fn(ProgressUpdate) + Send + Sync),
 ) -> Result<(), String> {
     if cancel.is_cancelled() {
-        let _ = tokio::fs::remove_dir_all(staging).await;
+        let _ = fs_safety::remove_path(staging).await;
         return Err("cancelled".to_string());
     }
     on_progress(ProgressUpdate {
@@ -177,10 +165,24 @@ async fn finalize_model(
         total: 0,
         percent: 99,
     });
-    tokio::fs::write(staging.join(".complete"), b"ok")
+    let mut marker = tokio::fs::OpenOptions::new()
+        .create_new(true)
+        .write(true)
+        .open(staging.join(".complete"))
         .await
         .map_err(|_| "Validation installation échouée".to_string())?;
-    let _ = tokio::fs::remove_dir_all(target).await;
+    marker
+        .write_all(b"ok")
+        .await
+        .map_err(|_| "Validation installation échouée".to_string())?;
+    marker
+        .sync_all()
+        .await
+        .map_err(|_| "Validation installation échouée".to_string())?;
+    drop(marker);
+    fs_safety::remove_path(target)
+        .await
+        .map_err(|_| "Finalisation installation échouée".to_string())?;
     tokio::fs::rename(staging, target)
         .await
         .map_err(|_| "Finalisation installation échouée".to_string())

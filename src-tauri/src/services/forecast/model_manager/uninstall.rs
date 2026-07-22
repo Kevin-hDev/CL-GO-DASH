@@ -1,4 +1,4 @@
-use super::{family_has_installed_model, models_dir, sidecar_dir};
+use super::{family_has_installed_model, fs_safety, models_dir, sidecar_dir};
 use crate::services::forecast::{catalog, sidecar_runtime, validation};
 use std::path::Path;
 
@@ -15,17 +15,13 @@ pub(super) async fn uninstall_from_roots(
     let spec =
         catalog::find_model(model_id).ok_or_else(|| "Modèle Forecast inconnu".to_string())?;
     let model_path = models.join(model_id);
-    if model_path.exists() {
-        tokio::fs::remove_dir_all(&model_path)
-            .await
-            .map_err(|_| "Suppression du modèle Forecast impossible".to_string())?;
-    }
+    fs_safety::remove_path(&model_path)
+        .await
+        .map_err(|_| "Suppression du modèle Forecast impossible".to_string())?;
     let staging = models.join(format!(".{model_id}.staging"));
-    if staging.exists() {
-        tokio::fs::remove_dir_all(staging)
-            .await
-            .map_err(|_| "Suppression du modèle Forecast impossible".to_string())?;
-    }
+    fs_safety::remove_path(&staging)
+        .await
+        .map_err(|_| "Suppression du modèle Forecast impossible".to_string())?;
     if family_has_installed_model(models, spec.family_id) {
         return Ok(());
     }

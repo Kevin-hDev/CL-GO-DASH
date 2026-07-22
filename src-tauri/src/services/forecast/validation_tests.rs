@@ -72,15 +72,12 @@ fn rejects_multiseries_for_chronos_bolt() {
 }
 
 #[test]
-fn rejects_models_requiring_unapproved_remote_code() {
+fn accepts_the_hash_pinned_offline_sundial_model() {
     let mut request = make_request("sundial-128m");
     request.covariate_columns.clear();
     request.confidence_level = 0.8;
 
-    assert_eq!(
-        validate_request(&request),
-        Err("Modèle indisponible".into())
-    );
+    assert!(validate_request(&request).is_ok());
 }
 
 #[test]

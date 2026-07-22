@@ -1035,6 +1035,9 @@
     "modelUpdate": "Mettre à jour",
     "version": "Version {{version}}",
     "ollamaBinaryUpdate": "Mettre à jour",
+    "forecastDevRuntime": "DEV · Moteur",
+    "forecastDevModel": "DEV · Modèle",
+    "forecastDevReview": "Examiner",
     "releaseNotesTitle": "Notes de version {{version}}",
     "showDetails": "Afficher les détails",
     "hideDetails": "Masquer les détails"

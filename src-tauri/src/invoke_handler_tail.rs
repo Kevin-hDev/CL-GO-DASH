@@ -118,6 +118,7 @@ macro_rules! generate_tail {
             crate::commands::delete_forecast_note,
             crate::commands::open_forecast_note,
             crate::commands::list_forecast_models,
+            crate::commands::check_forecast_dev_updates,
             crate::commands::get_selected_forecast_model,
             crate::commands::set_selected_forecast_model,
             crate::commands::get_forecast_selection_policy,

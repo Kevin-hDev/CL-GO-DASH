@@ -1,4 +1,4 @@
-use super::manifest::validate_family_id;
+use super::manifest::runtime_id;
 use std::path::{Path, PathBuf};
 
 const REQUIREMENTS_STAMP: &str = ".requirements.stamp";
@@ -21,12 +21,12 @@ impl RuntimePaths {
 }
 
 pub(super) fn runtime_paths(sidecar_dir: &Path, family_id: &str) -> Result<RuntimePaths, String> {
-    validate_family_id(family_id)?;
+    let runtime = runtime_id(family_id)?;
     let root = sidecar_dir.join(".venvs");
     Ok(RuntimePaths {
-        live: root.join(family_id),
-        staging: root.join(format!(".{family_id}.staging")),
-        backup: root.join(format!(".{family_id}.backup")),
+        live: root.join(runtime),
+        staging: root.join(format!(".{runtime}.staging")),
+        backup: root.join(format!(".{runtime}.backup")),
     })
 }
 

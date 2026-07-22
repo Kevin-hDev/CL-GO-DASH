@@ -1,14 +1,10 @@
 use crate::services::process_tree;
-use sha2::{Digest, Sha256};
 use std::path::Path;
 use std::process::{Command, Stdio};
 use std::time::{Duration, Instant};
 use tokio_util::sync::CancellationToken;
 
 const SMOKE_TIMEOUT: Duration = Duration::from_secs(15 * 60);
-const SMOKE_MARKER: &str = ".smoke-v1";
-const MAX_SOURCE_FILES: usize = 128;
-const MAX_SOURCE_BYTES: u64 = 1024 * 1024;
 
 pub(super) async fn validate_model(
     runtime_python: &Path,
@@ -36,50 +32,11 @@ pub(super) async fn validate_model(
     })
     .await
     .map_err(|_| "Validation du modèle Forecast impossible".to_string())??;
-    let fingerprint = source_fingerprint(sidecar)?;
-    tokio::fs::write(model_dir.join(SMOKE_MARKER), fingerprint)
-        .await
-        .map_err(|_| "Validation du modèle Forecast impossible".to_string())
+    super::smoke_proof::write(model_dir, sidecar).await
 }
 
 pub(super) fn is_validated(model_dir: &Path, sidecar: &Path) -> bool {
-    let Ok(expected) = source_fingerprint(sidecar) else {
-        return false;
-    };
-    std::fs::read(model_dir.join(SMOKE_MARKER)).is_ok_and(|value| value == expected.as_bytes())
-}
-
-fn source_fingerprint(sidecar: &Path) -> Result<String, String> {
-    let runtime = sidecar.join("forecast_runtime");
-    let mut files = std::fs::read_dir(runtime)
-        .map_err(|_| "Validation du modèle Forecast impossible".to_string())?
-        .filter_map(Result::ok)
-        .map(|entry| entry.path())
-        .filter(|path| path.extension().and_then(|value| value.to_str()) == Some("py"))
-        .collect::<Vec<_>>();
-    files.sort();
-    if files.is_empty() || files.len() > MAX_SOURCE_FILES {
-        return Err("Validation du modèle Forecast impossible".into());
-    }
-    let mut digest = Sha256::new();
-    for path in files {
-        let metadata = std::fs::metadata(&path)
-            .map_err(|_| "Validation du modèle Forecast impossible".to_string())?;
-        if !metadata.is_file() || metadata.len() > MAX_SOURCE_BYTES {
-            return Err("Validation du modèle Forecast impossible".into());
-        }
-        let name = path
-            .file_name()
-            .and_then(|value| value.to_str())
-            .ok_or("Validation du modèle Forecast impossible")?;
-        let body = std::fs::read(&path)
-            .map_err(|_| "Validation du modèle Forecast impossible".to_string())?;
-        digest.update((name.len() as u64).to_be_bytes());
-        digest.update(name.as_bytes());
-        digest.update((body.len() as u64).to_be_bytes());
-        digest.update(body);
-    }
-    Ok(format!("{:x}", digest.finalize()))
+    super::smoke_proof::is_current(model_dir, sidecar)
 }
 
 fn run_smoke(
@@ -141,7 +98,7 @@ fn sidecar_fallback() -> &'static Path {
 
 #[cfg(test)]
 mod tests {
-    use super::{model_name, source_fingerprint};
+    use super::model_name;
     use std::path::Path;
 
     #[test]
@@ -151,17 +108,5 @@ mod tests {
             ".safe.staging"
         );
         assert!(model_name(Path::new("/")).is_err());
-    }
-
-    #[test]
-    fn smoke_fingerprint_changes_with_adapter_source() {
-        let temp = tempfile::tempdir().unwrap();
-        let runtime = temp.path().join("forecast_runtime");
-        std::fs::create_dir_all(&runtime).unwrap();
-        std::fs::write(runtime.join("adapter.py"), "first").unwrap();
-        let first = source_fingerprint(temp.path()).unwrap();
-        std::fs::write(runtime.join("adapter.py"), "second").unwrap();
-
-        assert_ne!(first, source_fingerprint(temp.path()).unwrap());
     }
 }

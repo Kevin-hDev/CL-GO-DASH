@@ -982,6 +982,9 @@
     "modelUpdate": "更新",
     "version": "バージョン {{version}}",
     "ollamaBinaryUpdate": "更新",
+    "forecastDevRuntime": "開発 · ランタイム",
+    "forecastDevModel": "開発 · モデル",
+    "forecastDevReview": "確認",
     "releaseNotesTitle": "バージョン {{version}} のリリースノート",
     "showDetails": "詳細を表示",
     "hideDetails": "詳細を非表示"

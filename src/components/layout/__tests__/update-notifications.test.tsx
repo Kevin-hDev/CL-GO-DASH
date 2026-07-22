@@ -3,6 +3,8 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { UpdateNotifications } from "../update-notifications";
 
+vi.mock("@tauri-apps/plugin-shell", () => ({ open: vi.fn(() => Promise.resolve()) }));
+
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     i18n: { language: "fr" },
@@ -20,6 +22,7 @@ const baseProps = {
   appUpdate: null,
   ollamaBinaryUpdate: null,
   ollamaUpdates: [],
+  forecastDevUpdates: [],
   pulling: null,
   ollamaBinaryUpdating: false,
   ollamaBinaryPercent: 0,
@@ -89,5 +92,43 @@ describe("UpdateNotifications", () => {
 
     expect(screen.getByText("CL-GO")).toBeTruthy();
     expect(screen.queryByLabelText("updates.showDetails")).toBeNull();
+  });
+
+  it("affiche une mise à jour Forecast uniquement comme information dev", () => {
+    render(
+      <UpdateNotifications
+        {...baseProps}
+        forecastDevUpdates={[{
+          id: "chronos",
+          displayName: "Chronos",
+          kind: "runtime",
+          current: "2.3.1",
+          latest: "2.4.0",
+          sourceUrl: "https://pypi.org/project/chronos-forecasting/",
+        }]}
+      />,
+    );
+
+    expect(screen.getByText("Chronos")).toBeTruthy();
+    expect(screen.getByText("updates.forecastDevRuntime · 2.3.1 → 2.4.0")).toBeTruthy();
+    expect(screen.getByText("updates.forecastDevReview")).toBeTruthy();
+  });
+
+  it("garde aussi les commits des moteurs Forecast compacts", () => {
+    render(
+      <UpdateNotifications
+        {...baseProps}
+        forecastDevUpdates={[{
+          id: "kairos-engine",
+          displayName: "Kairos engine",
+          kind: "runtime",
+          current: "0322393840ccf6e2bfe9c663f9dcd088a5a7ee07",
+          latest: "abcdef1234567890abcdef1234567890abcdef12",
+          sourceUrl: "https://github.com/foundation-model-research/Kairos",
+        }]}
+      />,
+    );
+
+    expect(screen.getByText("updates.forecastDevRuntime · 0322393 → abcdef1")).toBeTruthy();
   });
 });

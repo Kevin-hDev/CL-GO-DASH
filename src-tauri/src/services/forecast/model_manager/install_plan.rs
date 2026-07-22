@@ -1,4 +1,4 @@
-use super::{family_has_installed_model, has_downloaded_weights, smoke};
+use super::{family_has_installed_model, has_downloaded_weights, model_receipt, smoke};
 use crate::services::forecast::{catalog, sidecar_runtime};
 use std::path::Path;
 
@@ -27,7 +27,9 @@ pub(super) fn install_plan(
         catalog::find_model(model_id).ok_or_else(|| "Modèle Forecast inconnu".to_string())?;
     let weights = has_downloaded_weights(models, model_id);
     let runtime = sidecar_runtime::family_runtime_ready(sidecar, spec.family_id);
-    let smoke = smoke::is_validated(&models.join(model_id), sidecar);
+    let model_dir = models.join(model_id);
+    let smoke =
+        model_receipt::is_current(&model_dir, model_id) && smoke::is_validated(&model_dir, sidecar);
     Ok(plan_for_state(weights, runtime, smoke))
 }
 

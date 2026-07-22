@@ -104,9 +104,7 @@ fn empty_capabilities() -> Value {
 }
 
 fn installable(model: &catalog::ForecastModelSpec) -> bool {
-    !model.is_cloud
-        && !catalog::requires_remote_code(model.id)
-        && (model.hf_repo.is_some() || model.github_repo.is_some())
+    !model.is_cloud && (model.hf_repo.is_some() || model.github_repo.is_some())
 }
 
 fn runnable_state(
@@ -117,7 +115,6 @@ fn runnable_state(
     runtime_ready: bool,
 ) -> bool {
     match runtime {
-        Some(_) if catalog::requires_remote_code(model.id) => false,
         Some(spec) if registry::is_cloud(spec) => {
             registry::has_predict_adapter(spec) && provider_configured
         }

@@ -1,6 +1,6 @@
 from .adapter_utils import forecast_payload_result, values_tensor
 from .config_utils import config, standard_quantile_levels
-from .device_utils import move_model, move_tensor
+from .device_utils import move_tensor, resolve_torch_device
 from .quantile_utils import select_standard_quantiles
 
 
@@ -38,7 +38,15 @@ class TiRexAdapter:
 
     def _load_model(self):
         if self.model is None:
-            from tirex import load_model
+            from pathlib import Path
+            from tirex import TiRexZero
 
-            self.model = move_model(load_model(self.model_dir), self.device)
+            checkpoint = Path(self.model_dir).joinpath("model.ckpt")
+            if not checkpoint.is_file():
+                raise ValueError("model_checkpoint_missing")
+            self.model = TiRexZero.from_pretrained(
+                str(checkpoint),
+                backend="torch",
+                device=resolve_torch_device(self.device),
+            )
         return self.model

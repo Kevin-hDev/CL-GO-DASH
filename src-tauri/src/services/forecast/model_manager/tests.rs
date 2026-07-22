@@ -73,7 +73,7 @@ async fn shared_runtime_is_removed_only_after_the_last_model() {
     let temp = tempfile::tempdir().unwrap();
     let models = temp.path().join("models");
     let sidecar = temp.path().join("sidecar");
-    let runtime = sidecar.join(".venvs").join("chronos-bolt");
+    let runtime = sidecar.join(".venvs").join("chronos");
     mark_installed(&models, "chronos-bolt-tiny");
     mark_installed(&models, "chronos-bolt-mini");
     fs::create_dir_all(&runtime).unwrap();

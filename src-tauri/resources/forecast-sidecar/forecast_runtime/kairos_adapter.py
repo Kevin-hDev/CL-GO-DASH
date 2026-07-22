@@ -52,6 +52,6 @@ class KairosAdapter:
             from tsfm.model.kairos import AutoModel
 
             self.model = AutoModel.from_pretrained(
-                self.model_dir, trust_remote_code=True
+                self.model_dir, local_files_only=True
             )
         return self.model

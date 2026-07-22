@@ -52,7 +52,7 @@ class SundialAdapter:
         if self.model is None or getattr(self, "dtype_name", None) != dtype_name:
             from transformers import AutoModelForCausalLM
 
-            kwargs = {"trust_remote_code": True}
+            kwargs = {"trust_remote_code": True, "local_files_only": True}
             dtype = torch_dtype(payload, "dtype")
             if dtype is not None:
                 kwargs["torch_dtype"] = dtype

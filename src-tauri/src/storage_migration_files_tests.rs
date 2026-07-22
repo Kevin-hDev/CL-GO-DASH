@@ -4,6 +4,7 @@ fn write_required_assets(root: &std::path::Path) {
     std::fs::create_dir_all(root.join("forecast_runtime")).unwrap();
     std::fs::write(root.join("server.py"), "server").unwrap();
     std::fs::write(root.join("test_model_smoke.py"), "smoke").unwrap();
+    std::fs::write(root.join("requirements.txt"), "runtime").unwrap();
     std::fs::write(root.join("forecast_runtime/adapters.py"), "adapters").unwrap();
 }
 
@@ -27,6 +28,9 @@ fn forecast_sync_adds_new_assets_and_preserves_existing_runtimes() {
     let source = temp.path().join("source");
     let target = temp.path().join("target");
     write_required_assets(&source);
+    std::fs::create_dir_all(source.join("runtime-locks")).unwrap();
+    std::fs::write(source.join("runtime-locks/internal.lock"), "private").unwrap();
+    std::fs::write(source.join("test_contracts.py"), "dev only").unwrap();
     std::fs::create_dir_all(target.join(".venvs/chronos-bolt")).unwrap();
     std::fs::write(target.join(".venvs/chronos-bolt/keep"), "runtime").unwrap();
 
@@ -34,6 +38,8 @@ fn forecast_sync_adds_new_assets_and_preserves_existing_runtimes() {
 
     assert!(target.join("test_model_smoke.py").is_file());
     assert!(target.join(".venvs/chronos-bolt/keep").is_file());
+    assert!(!target.join("runtime-locks").exists());
+    assert!(!target.join("test_contracts.py").exists());
 }
 
 #[test]

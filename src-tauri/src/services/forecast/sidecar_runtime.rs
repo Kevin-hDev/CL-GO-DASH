@@ -1,8 +1,14 @@
 use std::path::{Path, PathBuf};
 use tokio_util::sync::CancellationToken;
 
+#[path = "sidecar_runtime_cache.rs"]
+mod cache;
+#[path = "sidecar_runtime_command.rs"]
+mod command;
 #[path = "sidecar_runtime_install.rs"]
 mod install;
+#[path = "sidecar_runtime_lock_data.rs"]
+mod lock_data;
 #[path = "sidecar_runtime_manifest.rs"]
 mod manifest;
 #[path = "sidecar_runtime_paths.rs"]
@@ -10,6 +16,7 @@ mod paths;
 
 pub use install::RuntimeInstallStep;
 use manifest::expected_requirements;
+pub(crate) use manifest::{locked_package_version, runtime_id};
 use paths::runtime_paths;
 #[cfg(test)]
 use paths::{commit_staged_runtime, RuntimePaths};

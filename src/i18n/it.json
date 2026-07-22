@@ -982,6 +982,9 @@
     "modelUpdate": "Aggiorna",
     "version": "Versione {{version}}",
     "ollamaBinaryUpdate": "Aggiorna",
+    "forecastDevRuntime": "DEV · Motore",
+    "forecastDevModel": "DEV · Modello",
+    "forecastDevReview": "Esamina",
     "releaseNotesTitle": "Note della versione {{version}}",
     "showDetails": "Mostra dettagli",
     "hideDetails": "Nascondi dettagli"

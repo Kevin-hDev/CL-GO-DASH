@@ -48,9 +48,6 @@ pub fn validate_request(request: &ForecastRequest) -> Result<(), String> {
     let model_id = model_id(request)?;
     validate_runnable_model_id(model_id)?;
     let spec = catalog::find_model(model_id).ok_or("Modèle inconnu")?;
-    if catalog::requires_remote_code(model_id) {
-        return Err("Modèle indisponible".into());
-    }
     let runtime = registry::find_runtime(model_id).ok_or("Moteur indisponible")?;
     validate_confidence_support(runtime, request.confidence_level)?;
 

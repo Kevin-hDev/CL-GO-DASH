@@ -987,6 +987,9 @@
     "modelUpdate": "Update",
     "version": "Version {{version}}",
     "ollamaBinaryUpdate": "Update",
+    "forecastDevRuntime": "DEV · Runtime",
+    "forecastDevModel": "DEV · Model",
+    "forecastDevReview": "Review",
     "releaseNotesTitle": "Version {{version}} release notes",
     "showDetails": "Show details",
     "hideDetails": "Hide details"
